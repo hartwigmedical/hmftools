@@ -118,13 +118,24 @@ public class SvFusionAnalyser
     private static boolean exonToExonInPhase(final Transcript startTrans, boolean startUpstream, final Transcript endTrans, boolean endUpstream)
     {
         // check phasing and offset since exon start or coding start
-        int calcStartPhase = calcPositionPhasing(startTrans, startUpstream);
-        int calcEndPhase = calcPositionPhasing(endTrans, endUpstream);
+        long calcStartPhase = calcPositionPhasing(startTrans, startUpstream);
+        long calcEndPhase = calcPositionPhasing(endTrans, endUpstream);
 
         return calcStartPhase == calcEndPhase;
     }
 
-    private static int calcPositionPhasing(final Transcript transcript, boolean isUpstream)
+    private static long calcPositionPhasing(final Transcript transcript, boolean isUpstream)
+    {
+        // if upstream then can just use the coding bases
+        // if downstream then coding bases are what's remaing
+        long codingBases = isUpstream ? transcript.codingBases() : transcript.totalCodingBases() - transcript.codingBases();
+
+        int adjustedPhase = (int)(codingBases % 3);
+
+        return adjustedPhase;
+    }
+
+    private static int calcPositionPhasing_v2(final Transcript transcript, boolean isUpstream)
     {
         // if the exon is completely translated, then determine bases since start of exon
         long position = transcript.parent().variant().position(transcript.parent().isStart());
@@ -143,10 +154,12 @@ public class SvFusionAnalyser
         {
             exonOffset = -1;
         }
+        /*
         else if(transcript.codingEnd() != null && position < transcript.codingEnd())
         {
             exonOffset = position - transcript.exonStart();
         }
+        */
 
         int phasing = isUpstream ? transcript.exonUpstreamPhase() : transcript.exonDownstreamPhase();
 

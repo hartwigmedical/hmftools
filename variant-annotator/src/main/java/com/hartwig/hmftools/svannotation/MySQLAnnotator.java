@@ -10,6 +10,7 @@ import static org.ensembl.database.homo_sapiens_core.tables.SeqRegion.SEQ_REGION
 import static org.ensembl.database.homo_sapiens_core.tables.Transcript.TRANSCRIPT;
 import static org.ensembl.database.homo_sapiens_core.tables.Translation.TRANSLATION;
 import static org.ensembl.database.homo_sapiens_core.tables.Xref.XREF;
+import static org.jooq.impl.DSL.boolAnd;
 import static org.jooq.impl.DSL.decode;
 import static org.jooq.impl.DSL.groupConcatDistinct;
 import static org.jooq.impl.DSL.when;
@@ -27,6 +28,8 @@ import com.hartwig.hmftools.common.variant.structural.annotation.GeneAnnotation;
 import com.hartwig.hmftools.common.variant.structural.annotation.StructuralVariantAnnotation;
 import com.hartwig.hmftools.common.variant.structural.annotation.Transcript;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.ensembl.database.homo_sapiens_core.enums.GeneStatus;
 import org.ensembl.database.homo_sapiens_core.enums.ObjectXrefEnsemblObjectType;
 import org.ensembl.database.homo_sapiens_core.tables.Exon;
@@ -53,8 +56,11 @@ public class MySQLAnnotator implements VariantAnnotator
     @NotNull
     private final UInteger coordSystemId;
 
+    private static final Logger LOGGER = LogManager.getLogger(MySQLAnnotator.class);
+
     @NotNull
-    public static VariantAnnotator make(@NotNull String url) throws SQLException {
+    public static VariantAnnotator make(@NotNull String url) throws SQLException
+    {
         return new MySQLAnnotator(url);
     }
 
@@ -147,6 +153,7 @@ public class MySQLAnnotator implements VariantAnnotator
             for (final Record transcriptRecord : transcripts)
             {
                 Transcript transcript = buildTranscript(geneAnnotation, transcriptRecord, position, canonicalTranscriptId, geneStrand > 0);
+                // Transcript transcript = buildTranscript_old(geneAnnotation, transcriptRecord, position, canonicalTranscriptId, geneStrand > 0);
 
                 if (transcript != null)
                     geneAnnotation.addTranscript(transcript);
@@ -203,9 +210,11 @@ public class MySQLAnnotator implements VariantAnnotator
     }
 
     @NotNull
-    private Result<?> queryTranscripts(@NotNull final UInteger geneId) {
+    private Result<?> queryTranscripts(@NotNull final UInteger geneId)
+    {
         final Exon EXON_START = EXON.as("cs");
         final Exon EXON_END = EXON.as("ce");
+
         return context.select(TRANSCRIPT.TRANSCRIPT_ID,
                 TRANSCRIPT.STABLE_ID,
                 when(TRANSCRIPT.SEQ_REGION_STRAND.eq((byte) -1), EXON_END.SEQ_REGION_END.minus(TRANSLATION.SEQ_END).plus(1)).otherwise(
@@ -223,8 +232,169 @@ public class MySQLAnnotator implements VariantAnnotator
                 .fetch();
     }
 
-    @Nullable
     private Transcript buildTranscript(
+            @NotNull GeneAnnotation parent, @NotNull Record transcript, long position,
+            @NotNull UInteger canonicalTranscriptId, boolean isForwardStrand)
+    {
+        // get all exons for this position and use them to work out:
+        // exon up and downstream, and phasing
+        // coding bases since start
+        // total coding bases
+        // total exons
+        final UInteger transcriptId = transcript.get(TRANSCRIPT.TRANSCRIPT_ID);
+        final boolean canonical = transcriptId.equals(canonicalTranscriptId);
+        final String transcriptStableId = transcript.get(TRANSCRIPT.STABLE_ID);
+
+        final Result<?> allExons = context.select(EXON_TRANSCRIPT.RANK, EXON.PHASE, EXON.END_PHASE, EXON.SEQ_REGION_START, EXON.SEQ_REGION_END)
+                .from(EXON_TRANSCRIPT)
+                .innerJoin(EXON)
+                .on(EXON.EXON_ID.eq(EXON_TRANSCRIPT.EXON_ID))
+                .where(EXON_TRANSCRIPT.TRANSCRIPT_ID.eq(transcriptId))
+                .orderBy(EXON.SEQ_REGION_START.asc())
+                .fetch();
+
+        int exonMax = allExons.size();
+
+        UInteger codingStartVal = (UInteger) transcript.get(CODING_START);
+        UInteger codingEndVal = (UInteger) transcript.get(CODING_END);
+
+        boolean isCoding = codingStartVal != null && codingEndVal != null;
+        long codingStart = codingStartVal != null ? codingStartVal.longValue() : 0;
+        long codingEnd =  codingEndVal != null ? codingEndVal.longValue() : 0;
+
+        // for the given position, determine how many coding bases occur prior to the position
+        // in the direction of the transcript
+        // strand direction will be corrected for afterwards
+
+        boolean inCodingRegion = false;
+        boolean codingRegionEnded = false;
+
+        long codingBases = 0;
+        long totalCodingBases = 0;
+        int prevExonRank = -1;
+        int prevExonPhase = 0;
+        int nextExonRank = -1;
+        int nextExonPhase = 0;
+
+        for (final Record exon : allExons)
+        {
+            long exonStart = exon.get(EXON.SEQ_REGION_START).longValue();
+            long exonEnd = exon.get(EXON.SEQ_REGION_END).longValue();
+
+            if(position >= exonStart && position <= exonEnd)
+            {
+                prevExonRank = exon.get(EXON_TRANSCRIPT.RANK);
+                prevExonPhase = exon.get(EXON.END_PHASE);
+                nextExonRank = exon.get(EXON_TRANSCRIPT.RANK);
+                nextExonPhase = exon.get(EXON.END_PHASE);
+            }
+            else if(position > exonEnd)
+            {
+                // continue setting this until past
+                prevExonRank = exon.get(EXON_TRANSCRIPT.RANK);
+                prevExonPhase = exon.get(EXON.END_PHASE);
+            }
+            else if(position < exonStart && nextExonRank == -1)
+            {
+                // set at the first opportunity
+                nextExonRank = exon.get(EXON_TRANSCRIPT.RANK);
+                nextExonPhase = exon.get(EXON.END_PHASE);
+            }
+
+            if(!isCoding)
+                continue;
+
+            if(!inCodingRegion)
+            {
+                if(exonEnd > codingStart)
+                {
+                    // coding region begins in this exon
+                    inCodingRegion = true;
+
+                    totalCodingBases += exonEnd - codingStart;
+
+                    // check whether the position falls in this exon and if so before or after the coding start
+                    if(position >= codingStart)
+                    {
+                        if(position < exonEnd)
+                            codingBases += position - codingStart;
+                        else
+                            codingBases += exonEnd - codingStart;
+                    }
+                }
+            }
+            else if(!codingRegionEnded)
+            {
+                if(exonStart >= codingEnd)
+                {
+                    codingRegionEnded = true;
+                }
+                else if(exonEnd > codingEnd)
+                {
+                    // coding region ends in this exon
+                    codingRegionEnded = true;
+
+                    totalCodingBases += codingEnd - exonStart;
+
+                    if(position >= exonStart)
+                    {
+                        if (position < codingEnd)
+                            codingBases += position - exonStart;
+                        else
+                            codingBases += codingEnd - exonStart;
+                    }
+                }
+                else
+                {
+                    // take all of the exon's bases
+                    totalCodingBases += exonEnd - exonStart;
+
+                    if(position >= exonStart)
+                    {
+                        if (position < exonEnd)
+                            codingBases += position - exonStart;
+                        else
+                            codingBases += exonEnd - exonStart;
+                    }
+                }
+            }
+
+            LOGGER.debug("transcript({}) exon({}: {} - {}) coding({} - {}) position({}) coding(pos={} total={}) region(coding={} ended={})",
+                    transcriptId, exon.get(EXON_TRANSCRIPT.RANK), exonStart, exonEnd, codingStart, codingEnd, position,
+                    codingBases, totalCodingBases, inCodingRegion, codingRegionEnded);
+
+            if(codingBases < 0 || totalCodingBases < 0)
+            {
+                break;
+            }
+        }
+
+        if(isForwardStrand)
+        {
+            return new Transcript(parent,
+                    transcriptStableId,
+                    prevExonRank, prevExonPhase,
+                    nextExonRank, nextExonPhase,
+                    codingBases, totalCodingBases,
+                    exonMax, canonical,
+                    codingStartVal != null ? codingStart : null,
+                    codingEndVal != null ? codingEnd : null);
+        }
+        else
+        {
+            return new Transcript(parent,
+                    transcriptStableId,
+                    nextExonRank, nextExonPhase, // note the switch
+                    prevExonRank, prevExonPhase,
+                    totalCodingBases - codingBases, totalCodingBases,
+                    exonMax, canonical,
+                    codingStartVal != null ? codingStart : null,
+                    codingEndVal != null ? codingEnd : null);
+        }
+    }
+
+    @Nullable
+    private Transcript buildTranscript_old(
             @NotNull GeneAnnotation parent, @NotNull Record transcript, long position,
             @NotNull UInteger canonicalTranscriptId, boolean isForwardStrand)
     {

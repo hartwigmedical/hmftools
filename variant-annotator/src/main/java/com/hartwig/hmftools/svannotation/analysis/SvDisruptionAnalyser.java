@@ -37,7 +37,6 @@ public class SvDisruptionAnalyser
 
         for (final StructuralVariantAnnotation annotation : annotations)
         {
-            @SuppressWarnings("ConstantConditions")
             final boolean pureIntronicDisruptionCanonical = annotation.start()
                     .stream()
                     .filter(gene -> gene.canonical() != null)

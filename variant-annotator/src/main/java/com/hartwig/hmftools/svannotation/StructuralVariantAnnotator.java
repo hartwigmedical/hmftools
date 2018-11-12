@@ -428,6 +428,13 @@ public class StructuralVariantAnnotator
 
             BufferedWriter writer = Files.newBufferedWriter(outputFile, StandardOpenOption.CREATE);
 
+            // write header
+            writer.write("SvId,Chromosome,Position,Orientation");
+            writer.write(",IsStart,GeneName, geneStableId, geneStrand, synonyms, entrezIds, karyotypeBand");
+            writer.write(",TranscriptId,ExonUpstream,ExonUpstreamPhase,ExonDownstream,ExonDownstreamPhase,CodingBases,TotalCodingBases");
+            writer.write(",ExonMax,Canonical,CodingStart,CodingEnd,RegionType,CodingType");
+            writer.newLine();
+
             for(final StructuralVariantAnnotation annotation : annotations)
             {
                 if(annotation.annotations().isEmpty())
@@ -458,7 +465,12 @@ public class StructuralVariantAnnotator
 
                     for(final Transcript transcript : geneAnnotation.transcripts())
                     {
-                        writer.write(String.format("%d", annotation.variant().primaryKey()));
+                        final StructuralVariant var = annotation.variant();
+
+                        boolean isStart = geneAnnotation.isStart();
+
+                        writer.write(String.format("%d,%s,%d,%d",
+                                var.primaryKey(), var.chromosome(isStart), var.position(isStart), var.orientation(isStart)));
 
                         // Gene info: isStart, geneName, geneStableId, geneStrand, synonyms, entrezIds, karyotypeBand
                         writer.write(
@@ -473,18 +485,23 @@ public class StructuralVariantAnnotator
 
                         // Transcript info: transcriptId,exonUpstream, exonUpstreamPhase, exonDownstream, exonDownstreamPhase, exonStart, exonEnd, exonMax, canonical, codingStart, codingEnd
                         writer.write(
-                                String.format(",%s,%d,%d,%d,%d,%d,%d,%d,%s,%d,%d",
+                                String.format(",%s,%d,%d,%d,%d,%d,%d",
                                         transcript.transcriptId(),
                                         transcript.exonUpstream(),
                                         transcript.exonUpstreamPhase(),
                                         transcript.exonDownstream(),
                                         transcript.exonDownstreamPhase(),
-                                        transcript.exonStart(),
-                                        transcript.exonEnd(),
+                                        transcript.codingBases(),
+                                        transcript.totalCodingBases()));
+
+                        writer.write(
+                                String.format(",%d,%s,%d,%d,%s,%s",
                                         transcript.exonMax(),
                                         transcript.isCanonical(),
                                         transcript.codingStart(),
-                                        transcript.codingEnd()));
+                                        transcript.codingEnd(),
+                                        transcript.getRegionType(),
+                                        transcript.getCodingType()));
 
                         writer.newLine();
                     }
@@ -519,9 +536,9 @@ public class StructuralVariantAnnotator
 
             writer.write("SampleId");
             writer.write(",StartSvId,StartChr,StartPos,StartOrient,StartType");
-            writer.write(",StartGene,StartTranscript,StartRegionType,StartExon,StartPhase,StartExonStart,StartExonEnd,StartCodingStart,StartCodingEnd");
+            writer.write(",StartGene,StartTranscript,StartRegionType,StartExon,StartPhase,StartCodingBases,StartTotalCodingBases,StartCodingStart,StartCodingEnd");
             writer.write(",EndSvId,EndChr,EndPos,EndOrient,EndType");
-            writer.write(",EndGene,EndTranscript,EndRegionType,EndExon,EndPhase,EndExonStart,EndExonEnd,EndCodingStart,EndCodingEnd");
+            writer.write(",EndGene,EndTranscript,EndRegionType,EndExon,EndPhase,EndCodingBases,EndTotalCodingBases,EndCodingStart,EndCodingEnd");
             writer.newLine();
 
             for(final GeneFusion fusion : fusions)
@@ -545,7 +562,7 @@ public class StructuralVariantAnnotator
                 writer.write(
                         String.format(",%s,%s,%s,%d,%d,%d,%d,%d,%d",
                                 startTrans.parent().geneName(), startTrans.transcriptId(), startTrans.getRegionType(), startTrans.exonUpstream(), startTrans.exonUpstreamPhase(),
-                                startTrans.exonStart(), startTrans.exonEnd(),
+                                startTrans.codingBases(), startTrans.totalCodingBases(),
                                 startTrans.codingStart() != null ? startTrans.codingStart() : 0,
                                 startTrans.codingEnd() != null ? startTrans.codingEnd() : 0));
 
@@ -556,7 +573,7 @@ public class StructuralVariantAnnotator
                 writer.write(
                         String.format(",%s,%s,%s,%d,%d,%d,%d,%d,%d",
                                 endTrans.parent().geneName(), endTrans.transcriptId(), endTrans.getRegionType(), endTrans.exonUpstream(), endTrans.exonUpstreamPhase(),
-                                endTrans.exonStart(), endTrans.exonEnd(),
+                                endTrans.codingBases(), endTrans.totalCodingBases(),
                                 endTrans.codingStart() != null ? endTrans.codingStart() : 0,
                                 endTrans.codingEnd() != null ? endTrans.codingEnd() : 0));
 
@@ -609,28 +626,31 @@ public class StructuralVariantAnnotator
     }
 
     private static int VAR_ID_COL_INDEX = 0;
+    private static int VAR_CHR_COL_INDEX = 1;
+    private static int VAR_POS_COL_INDEX = 2;
+    private static int VAR_ORIENT_COL_INDEX = 3;
 
     // gene data: isStart, geneName, geneStableId, geneStrand, synonyms, entrezIds, karyotypeBand
-    private static int GENE_IS_START_COL_INDEX = 1;
-    private static int GENE_NAME_COL_INDEX = 2;
-    private static int GENE_STABLE_ID_COL_INDEX = 3;
-    private static int GENE_STRAND_INDEX = 4;
-    private static int GENE_SYNS_COL_INDEX = 5;
-    private static int GENE_EIDS_COL_INDEX = 6;
-    private static int GENE_KARYOTYPE_COL_INDEX = 7;
+    private static int GENE_IS_START_COL_INDEX = 4;
+    private static int GENE_NAME_COL_INDEX = 5;
+    private static int GENE_STABLE_ID_COL_INDEX = 6;
+    private static int GENE_STRAND_INDEX = 7;
+    private static int GENE_SYNS_COL_INDEX = 8;
+    private static int GENE_EIDS_COL_INDEX = 9;
+    private static int GENE_KARYOTYPE_COL_INDEX = 10;
 
-    // transcript data: transcriptId, exonUpstream, exonUpstreamPhase, exonDownstream, exonDownstreamPhase, exonStart, exonEnd, exonMax, canonical, codingStart, codingEnd
-    private static int TRANSCRIPT_ID_COL_INDEX = 8;
-    private static int TRANSCRIPT_EUS_COL_INDEX = 9;
-    private static int TRANSCRIPT_EUP_COL_INDEX = 10;
-    private static int TRANSCRIPT_EDS_COL_INDEX = 11;
-    private static int TRANSCRIPT_EDP_COL_INDEX = 12;
-    private static int TRANSCRIPT_ESTART_COL_INDEX = 13;
-    private static int TRANSCRIPT_EEND_COL_INDEX = 14;
-    private static int TRANSCRIPT_EMAX_COL_INDEX = 15;
-    private static int TRANSCRIPT_CAN_COL_INDEX = 16;
-    private static int TRANSCRIPT_CS_COL_INDEX = 17;
-    private static int TRANSCRIPT_CE_COL_INDEX = 18;
+    // transcript data: transcriptId, exonUpstream, exonUpstreamPhase, exonDownstream, exonDownstreamPhase, codingBase, totalCodingBases, exonMax, canonical, codingStart, codingEnd
+    private static int TRANSCRIPT_ID_COL_INDEX = 11;
+    private static int TRANSCRIPT_EUS_COL_INDEX = 12;
+    private static int TRANSCRIPT_EUP_COL_INDEX = 13;
+    private static int TRANSCRIPT_EDS_COL_INDEX = 14;
+    private static int TRANSCRIPT_EDP_COL_INDEX = 15;
+    private static int TRANSCRIPT_CDB_COL_INDEX = 16;
+    private static int TRANSCRIPT_TCB_COL_INDEX = 17;
+    private static int TRANSCRIPT_EMAX_COL_INDEX = 18;
+    private static int TRANSCRIPT_CAN_COL_INDEX = 19;
+    private static int TRANSCRIPT_CS_COL_INDEX = 20;
+    private static int TRANSCRIPT_CE_COL_INDEX = 21;
 
     private final List<StructuralVariantAnnotation> loadAnnotations(List<EnrichedStructuralVariant> enrichedVariants)
     {
@@ -660,6 +680,8 @@ public class StructuralVariantAnnotator
             GeneAnnotation currentGene = null;
 
             int fileIndex = 0;
+
+            line = fileReader.readLine(); // skip header
 
             while (line != null)
             {
@@ -748,8 +770,8 @@ public class StructuralVariantAnnotator
                         Integer.parseInt(items[TRANSCRIPT_EUP_COL_INDEX]),
                         Integer.parseInt(items[TRANSCRIPT_EDS_COL_INDEX]),
                         Integer.parseInt(items[TRANSCRIPT_EDP_COL_INDEX]),
-                        Long.parseLong(items[TRANSCRIPT_ESTART_COL_INDEX]),
-                        Long.parseLong(items[TRANSCRIPT_EEND_COL_INDEX]),
+                        Long.parseLong(items[TRANSCRIPT_CDB_COL_INDEX]),
+                        Long.parseLong(items[TRANSCRIPT_TCB_COL_INDEX]),
                         Integer.parseInt(items[TRANSCRIPT_EMAX_COL_INDEX]),
                         Boolean.parseBoolean(items[TRANSCRIPT_CAN_COL_INDEX]),
                         items[TRANSCRIPT_CS_COL_INDEX].equals("null") ? null : Long.parseLong(items[TRANSCRIPT_CS_COL_INDEX]),

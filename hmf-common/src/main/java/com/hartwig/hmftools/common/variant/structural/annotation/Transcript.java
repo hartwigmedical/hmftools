@@ -15,8 +15,8 @@ public class Transcript {
     private final int exonDownstreamPhase;
     private final int exonMax;
 
-    private final long exonStart;
-    private final long exonEnd;
+    private final long codingBases;
+    private final long totalCodingBases;
 
     private final boolean canonical;
 
@@ -30,9 +30,14 @@ public class Transcript {
     public static String TRANS_REGION_TYPE_EXONIC = "Exonic";
     public static String TRANS_REGION_TYPE_INTRONIC = "Intronic";
 
+    public static String TRANS_CODING_TYPE_CODING = "Coding";
+    public static String TRANS_CODING_TYPE_UPSTREAM = "Upstream";
+    public static String TRANS_CODING_TYPE_DOWNSTREAM = "Downstream";
+    public static String TRANS_CODING_TYPE_NONE = "None";
+
     public Transcript(@NotNull final GeneAnnotation parent, @NotNull final String transcriptId,
             final int exonUpstream, final int exonUpstreamPhase, final int exonDownstream, final int exonDownstreamPhase,
-            final long exonStart, final long exonEnd,
+            final long codingBases, final long totalCodingBases,
             final int exonMax, final boolean canonical, @Nullable final Long codingStart, @Nullable final Long codingEnd)
     {
         this.parent = parent;
@@ -42,8 +47,8 @@ public class Transcript {
         this.exonDownstream = exonDownstream;
         this.exonDownstreamPhase = exonDownstreamPhase;
         this.exonMax = exonMax;
-        this.exonStart = exonStart;
-        this.exonEnd = exonEnd;
+        this.codingBases = codingBases;
+        this.totalCodingBases = totalCodingBases;
         this.canonical = canonical;
         this.codingStart = codingStart;
         this.codingEnd = codingEnd;
@@ -77,6 +82,18 @@ public class Transcript {
         return TRANS_REGION_TYPE_PROMOTOR;
     }
 
+    public final String getCodingType()
+    {
+        if(totalCodingBases == 0)
+            return TRANS_CODING_TYPE_NONE;
+        else if(codingBases == 0)
+            return TRANS_CODING_TYPE_UPSTREAM;
+        else if(codingBases == totalCodingBases)
+            return TRANS_CODING_TYPE_DOWNSTREAM;
+        else
+            return TRANS_CODING_TYPE_CODING;
+    }
+
     public boolean isCanonical() {
         return canonical;
     }
@@ -95,10 +112,10 @@ public class Transcript {
         return exonUpstream;
     }
     public int exonUpstreamPhase() { return exonUpstreamPhase; }
-    public long exonStart() {
-        return exonStart;
+    public long codingBases() {
+        return codingBases;
     }
-    public long exonEnd() { return exonEnd; }
+    public long totalCodingBases() { return totalCodingBases; }
 
     public int exonDownstream() {
         return exonDownstream;
