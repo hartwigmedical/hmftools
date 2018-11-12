@@ -68,7 +68,7 @@ public class HotspotEvidenceFactory {
                     tumorSelector.select(mnvRegion, tumorMnvEvidence);
                     if (tumorMnvEvidence.evidence() > 0) {
                         final MNVEvidence normalMnvEvidence = new MNVEvidence(hotspot);
-                        tumorSelector.select(mnvRegion, normalMnvEvidence);
+                        normalSelector.select(mnvRegion, normalMnvEvidence);
                         result.add(fromMNV(hotspot, tumorMnvEvidence, normalMnvEvidence));
                     }
                 } else {
