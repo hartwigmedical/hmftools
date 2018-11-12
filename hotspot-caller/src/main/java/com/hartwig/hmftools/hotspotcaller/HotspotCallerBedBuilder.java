@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.genepanel;
+package com.hartwig.hmftools.hotspotcaller;
 
 import static java.util.Collections.emptyList;
 
@@ -34,9 +34,9 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-public class HmfExonicBedBuilder {
+public class HotspotCallerBedBuilder {
 
-    private static final Logger LOGGER = LogManager.getLogger(HmfExonicBedBuilder.class);
+    private static final Logger LOGGER = LogManager.getLogger(HotspotCallerBedBuilder.class);
 
     private static final String OUT_PATH = "out";
     private static final String HOTSPOT = "hotspot";
@@ -51,31 +51,29 @@ public class HmfExonicBedBuilder {
 
         if (outputFilePath == null || hotspotPath == null) {
             final HelpFormatter formatter = new HelpFormatter();
-            formatter.printHelp("HmfExonicBedBuilder", options);
+            formatter.printHelp("HotspotCallerBedBuilder", options);
             System.exit(1);
         }
 
-        final Set<String> driverGenes = Sets.newHashSet();
-        driverGenes.addAll(DndsDriverGeneLikelihoodSupplier.tsgLikelihood().keySet());
-        driverGenes.addAll(DndsDriverGeneLikelihoodSupplier.oncoLikelihood().keySet());
+        final Set<String> driverGenes = DndsDriverGeneLikelihoodSupplier.oncoLikelihood().keySet();
+        LOGGER.info("Loaded {} oncogenes", driverGenes.size());
 
-        LOGGER.info("Loading hotspots from {}", hotspotPath);
         final ListMultimap<Chromosome, VariantHotspot> hotspots = VariantHotspotFile.read(hotspotPath);
+        LOGGER.info("Loaded {} hotspots from {}", hotspots.values().size(), hotspotPath);
 
-        LOGGER.info("Loading gene definitions");
         final ListMultimap<Chromosome, HmfTranscriptRegion> geneRegions = Multimaps.fromRegions(HmfGenePanelSupplier.allGeneList37()
                 .stream()
                 .filter(x -> driverGenes.contains(x.gene()))
                 .collect(Collectors.toList()));
 
-        LOGGER.info("Processing");
+        LOGGER.info("Merging oncogene coding regions with known hotspot locations");
         final List<String> bedResult = Lists.newArrayList();
         for (HumanChromosome chromosome : HumanChromosome.values()) {
             List<GenomeRegion> result = Lists.newArrayList();
             final List<HmfTranscriptRegion> chromosomeRegions =
                     geneRegions.containsKey(chromosome) ? geneRegions.get(chromosome) : emptyList();
             for (HmfTranscriptRegion gene : chromosomeRegions) {
-                result = addGene(gene, result);
+                result = addCodingRegions(gene, result);
             }
 
             final List<VariantHotspot> chromosomeHotspots = hotspots.containsKey(chromosome) ? hotspots.get(chromosome) : emptyList();
@@ -83,19 +81,21 @@ public class HmfExonicBedBuilder {
                 result = addVariantHotspot(hotspot, result);
             }
 
-            result.stream().map(HmfExonicBedBuilder::toBedFormat).forEach(bedResult::add);
+            result.stream().map(HotspotCallerBedBuilder::toBedFormat).forEach(bedResult::add);
         }
 
-        LOGGER.info("Writing bed output {}", outputFilePath);
+        LOGGER.info("Writing {} regions to bed file {}", bedResult.size(), outputFilePath);
         Files.write(new File(outputFilePath).toPath(), bedResult);
     }
 
     @NotNull
-    private static List<GenomeRegion> addGene(@NotNull final HmfTranscriptRegion gene, @NotNull final List<GenomeRegion> region) {
+    private static List<GenomeRegion> addCodingRegions(@NotNull final HmfTranscriptRegion gene, @NotNull final List<GenomeRegion> region) {
         List<GenomeRegion> result = region;
         for (HmfExonRegion exon : gene.exome()) {
-            for (long position = exon.start() - 2; position <= exon.end() + 2; position++) {
-                result = addPosition(exon.chromosome(), position, result);
+            for (long position = exon.start(); position <= exon.end(); position++) {
+                if (position >= gene.codingStart() && position <= gene.codingEnd()) {
+                    result = addPosition(exon.chromosome(), position, result);
+                }
             }
         }
 
