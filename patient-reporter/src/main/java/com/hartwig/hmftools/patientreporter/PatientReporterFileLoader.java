@@ -11,6 +11,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.chord.ChordAnalysis;
 import com.hartwig.hmftools.common.chord.ChordFileReader;
 import com.hartwig.hmftools.common.io.path.PathExtensionFinder;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
@@ -22,12 +23,9 @@ import com.hartwig.hmftools.common.purple.purity.PurityContext;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariantFactory;
 import com.hartwig.hmftools.common.variant.enrich.SomaticEnrichment;
-import com.hartwig.hmftools.common.chord.ChordAnalysis;
 import com.hartwig.hmftools.patientreporter.germline.BachelorFile;
 import com.hartwig.hmftools.patientreporter.germline.GermlineVariant;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -35,13 +33,13 @@ import htsjdk.variant.variantcontext.filter.PassingVariantFilter;
 
 public final class PatientReporterFileLoader {
 
-    private static final Logger LOGGER = LogManager.getLogger(PatientReporterFileLoader.class);
-
     private static final String PURPLE_DIRECTORY = "purple";
     private static final String CIRCOS_PLOT_DIRECTORY = "plot";
     private static final String CIRCOS_PLOT_EXTENSION = ".circos.png";
-    private static final String SV_EXTENSION_V3 = "_somaticSV_bpi.vcf";
-    private static final String SV_EXTENSION_V4 = "_somaticSV_bpi.vcf.gz";
+    private static final String MANTA_SV_EXTENSION_V3 = "_somaticSV_bpi.vcf";
+    private static final String MANTA_SV_EXTENSION_V4 = "_somaticSV_bpi.vcf.gz";
+    private static final String PURPLE_GRIDSS_SV = ".purple.sv.vcf.gz";
+
     private static final String SOMATIC_VCF_EXTENSION_V3 = "_post_processed_v2.2.vcf.gz";
     private static final String SOMATIC_VCF_EXTENSION_V4 = "_post_processed.vcf.gz";
     private static final String BACHELOR_DIRECTORY = "bachelor";
@@ -76,13 +74,21 @@ public final class PatientReporterFileLoader {
 
     @NotNull
     static Path findStructuralVariantVCF(@NotNull String runDirectory) throws IOException {
-        // TODO (KODU): Clean up once pipeline v3 no longer exists
-        Optional<Path> path = Files.walk(Paths.get(runDirectory)).filter(p -> p.toString().endsWith(SV_EXTENSION_V3)).findFirst();
+        // TODO (KODU): Clean up once pipeline v3 no longer exists and we switched to GRIDSS everywhere
+        Optional<Path> path = tryFindPathOnExtension(runDirectory + File.separator + PURPLE_DIRECTORY, PURPLE_GRIDSS_SV);
         if (!path.isPresent()) {
-            path = Files.walk(Paths.get(runDirectory)).filter(p -> p.toString().endsWith(SV_EXTENSION_V4)).findFirst();
+            path = tryFindPathOnExtension(runDirectory, MANTA_SV_EXTENSION_V3);
+            if (!path.isPresent()) {
+                path = tryFindPathOnExtension(runDirectory, MANTA_SV_EXTENSION_V4);
+            }
         }
         assert path.isPresent();
         return path.get();
+    }
+
+    @NotNull
+    private static Optional<Path> tryFindPathOnExtension(@NotNull String runDirectory, @NotNull String extension) throws IOException {
+        return Files.walk(Paths.get(runDirectory)).filter(p -> p.toString().endsWith(extension)).findFirst();
     }
 
     @NotNull
