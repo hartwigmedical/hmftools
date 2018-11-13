@@ -11,7 +11,7 @@ import org.jetbrains.annotations.NotNull;
 
 public final class MicrosatelliteAnalyzer {
 
-    private static final double NUMBER_OF_MB_PER_GENOME = 3095D;
+    private static final double NUMBER_OF_MB_PER_GENOME = 2859D;
 
     private static final int MIN_SEQUENCE_LENGTH_FOR_LONG_REPEATS = 2;
     private static final int MAX_SEQUENCE_LENGTH_FOR_LONG_REPEATS = 4;
