@@ -30,7 +30,7 @@ class MNVEvidence implements Consumer<Pileup> {
     }
 
     public int score() {
-        return score;
+        return mnv.ref().length() * score;
     }
 
     @Override

@@ -8,6 +8,8 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimaps;
+import com.hartwig.hmftools.common.position.GenomePosition;
+import com.hartwig.hmftools.common.position.GenomePositions;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -28,10 +30,16 @@ import htsjdk.variant.vcf.VCFInfoHeaderLine;
 
 public class HotspotEvidenceVCF {
 
+    private final static int MIN_TUMOR_EVIDENCE = 2;
     private final static int MIN_HOTSPOT_QUALITY = 100;
     private final static int MIN_INFRAME_QUALITY = 150;
-    private final static int MIN_TUMOR_EVIDENCE = 2;
+
+    private final static String PASS = "PASS";
+    private final static String HOTSPOT_FLAG = "HOTSPOT";
     private final static String LOW_CONFIDENCE = "LOW_CONFIDENCE";
+    private final static String LOW_CONFIDENCE_DESCRIPTION =
+            "Set if not true: AD[NormalAlt] = 0 && AD[TumorAlt] >= " + MIN_TUMOR_EVIDENCE + " && QUAL[Hotspot|Inframe] >= "
+                    + MIN_HOTSPOT_QUALITY + "|" + MIN_INFRAME_QUALITY;
 
     private final String tumorSample;
     private final String normalSample;
@@ -45,13 +53,9 @@ public class HotspotEvidenceVCF {
         header.addMetaDataLine(new VCFFormatHeaderLine("GT", 1, VCFHeaderLineType.String, "Genotype"));
         header.addMetaDataLine(new VCFFormatHeaderLine("DP", 1, VCFHeaderLineType.Integer, "Read Depth"));
         header.addMetaDataLine(new VCFFormatHeaderLine("AD", VCFHeaderLineCount.R, VCFHeaderLineType.Integer, "Allelic Depth"));
-        header.addMetaDataLine(new VCFInfoHeaderLine("HT",
-                1,
-                VCFHeaderLineType.String,
-                "Hotspot Type: INFRAME, SNV, MNV, INSERT or DELETE"));
-        header.addMetaDataLine(new VCFFilterHeaderLine(LOW_CONFIDENCE,
-                "Set if not true: AD[NormalAlt] = 0 && AD[TumorAlt] >= " + MIN_TUMOR_EVIDENCE + " && QUAL[Hotspot|Inframe] >= "
-                        + MIN_HOTSPOT_QUALITY + "|" + MIN_INFRAME_QUALITY));
+        header.addMetaDataLine(new VCFInfoHeaderLine(HOTSPOT_FLAG, 1, VCFHeaderLineType.String, "Hotspot Type: known, inframe"));
+        header.addMetaDataLine(new VCFFilterHeaderLine(PASS, "All filters passed"));
+        header.addMetaDataLine(new VCFFilterHeaderLine(LOW_CONFIDENCE, LOW_CONFIDENCE_DESCRIPTION));
     }
 
     public void write(@NotNull final String filename, @NotNull final List<HotspotEvidence> evidence) {
@@ -60,8 +64,8 @@ public class HotspotEvidenceVCF {
         writer.setHeader(header);
         writer.writeHeader(header);
 
-        final ListMultimap<RefPosition, HotspotEvidence> evidenceMultimap = Multimaps.index(evidence, HotspotEvidenceVCF::create);
-        for (RefPosition ref : evidenceMultimap.keySet()) {
+        final ListMultimap<GenomePosition, HotspotEvidence> evidenceMultimap = Multimaps.index(evidence, GenomePositions::create);
+        for (GenomePosition ref : evidenceMultimap.keySet()) {
             final List<HotspotEvidence> refEvidence = evidenceMultimap.get(ref);
             final VariantContext context = create(refEvidence);
             writer.add(context);
@@ -102,7 +106,7 @@ public class HotspotEvidenceVCF {
 
         final VariantContextBuilder builder = new VariantContextBuilder().chr(hotspotEvidence.chromosome())
                 .start(hotspotEvidence.position())
-                .attribute("HT", hotspotEvidence.type().toString())
+                .attribute(HOTSPOT_FLAG, hotspotEvidence.type().equals(HotspotEvidenceType.INFRAME) ? "inframe" : "known")
                 .computeEndFromAlleles(alleles, (int) hotspotEvidence.position())
                 .source(hotspotEvidence.type().toString())
                 .genotypes(tumor, normal)
@@ -110,6 +114,8 @@ public class HotspotEvidenceVCF {
 
         if (lowConfidence(hotspotEvidence)) {
             builder.filter(LOW_CONFIDENCE);
+        } else {
+            builder.filter(PASS);
         }
 
         final VariantContext context = builder.make();
@@ -117,14 +123,8 @@ public class HotspotEvidenceVCF {
         return context;
     }
 
-    @NotNull
-    private static RefPosition create(@NotNull final HotspotEvidence evidence) {
-        return ImmutableRefPosition.builder().from(evidence).ref(evidence.ref()).build();
-    }
-
     private static int compareEvidence(@NotNull final HotspotEvidence o1, @NotNull final HotspotEvidence o2) {
         int normalEvidence = Integer.compare(o1.normalAltCount(), o2.normalAltCount());
-        return normalEvidence == 0 ? -Integer.compare(o1.tumorAltCount(), o2.tumorAltCount()) : normalEvidence;
+        return normalEvidence == 0 ? -Integer.compare(o1.qualityScore(), o2.qualityScore()) : normalEvidence;
     }
-
 }

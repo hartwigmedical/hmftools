@@ -15,20 +15,18 @@ import htsjdk.variant.variantcontext.VariantContext;
 public class HotspotEvidenceVCFTest {
 
     private static final String CHROM = "1";
-    private static final String REF = "A";
     private static final int POS = 100;
 
     private static final int NORMAL_READS = 10;
     private static final int NORMAL_REF_COUNT = 5;
     private static final int TUMOR_READS = 100;
     private static final int TUMOR_REF_COUNT = 40;
-    private static final int QUALITY = 500;
 
     @Test
     public void testCombine() {
-        final HotspotEvidence first = create("G", 0, 20);
-        final HotspotEvidence second = create("C", 0, 10);
-        final HotspotEvidence third = create("T", 1, 30);
+        final HotspotEvidence first = create("GA", "AA", 0, 20, 1000);
+        final HotspotEvidence second = create("G", "C", 0, 10, 500);
+        final HotspotEvidence third = create("G", "T", 1, 30, 10000);
 
         final List<HotspotEvidence> unsorted = Lists.newArrayList(first, third, second);
         Collections.shuffle(unsorted);
@@ -43,23 +41,19 @@ public class HotspotEvidenceVCFTest {
         assertEquals(20, context.getGenotype("TUMOR").getAD()[1]);
     }
 
-    private static HotspotEvidence create(@NotNull final String alt, int normalAltCount, int tumorAltCount) {
-        return create().alt(alt).tumorAltCount(tumorAltCount).normalAltCount(normalAltCount).build();
+    private static HotspotEvidence create(@NotNull final String ref, @NotNull final String alt, int normalAltCount, int tumorAltCount,
+            int qualityScore) {
+        return create().ref(ref).alt(alt).qualityScore(qualityScore).tumorAltCount(tumorAltCount).normalAltCount(normalAltCount).build();
     }
 
     private static ImmutableHotspotEvidence.Builder create() {
         return ImmutableHotspotEvidence.builder()
                 .chromosome(CHROM)
                 .position(POS)
-                .ref(REF)
-                .alt(REF)
-                .qualityScore(QUALITY)
                 .type(HotspotEvidenceType.SNV)
                 .normalRefCount(NORMAL_REF_COUNT)
-                .normalAltCount(0)
                 .normalReads(NORMAL_READS)
                 .tumorRefCount(TUMOR_REF_COUNT)
-                .tumorAltCount(0)
                 .tumorReads(TUMOR_READS);
     }
 
