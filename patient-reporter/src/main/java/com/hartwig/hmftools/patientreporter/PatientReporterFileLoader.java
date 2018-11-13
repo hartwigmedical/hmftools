@@ -26,12 +26,16 @@ import com.hartwig.hmftools.common.variant.enrich.SomaticEnrichment;
 import com.hartwig.hmftools.patientreporter.germline.BachelorFile;
 import com.hartwig.hmftools.patientreporter.germline.GermlineVariant;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import htsjdk.variant.variantcontext.filter.PassingVariantFilter;
 
 public final class PatientReporterFileLoader {
+
+    private static final Logger LOGGER = LogManager.getLogger(PatientReporterFileLoader.class);
 
     private static final String PURPLE_DIRECTORY = "purple";
     private static final String CIRCOS_PLOT_DIRECTORY = "plot";
@@ -76,12 +80,17 @@ public final class PatientReporterFileLoader {
     static Path findStructuralVariantVCF(@NotNull String runDirectory) throws IOException {
         // TODO (KODU): Clean up once pipeline v3 no longer exists and we switched to GRIDSS everywhere
         Optional<Path> path = tryFindPathOnExtension(runDirectory + File.separator + PURPLE_DIRECTORY, PURPLE_GRIDSS_SV);
-        if (!path.isPresent()) {
+        if (path.isPresent()) {
+            LOGGER.info("Using SVs from GRIDSS/Purple");
+            return path.get();
+        } else {
+            LOGGER.info("Using SVs from Manta/BPI");
             path = tryFindPathOnExtension(runDirectory, MANTA_SV_EXTENSION_V3);
             if (!path.isPresent()) {
                 path = tryFindPathOnExtension(runDirectory, MANTA_SV_EXTENSION_V4);
             }
         }
+
         assert path.isPresent();
         return path.get();
     }
