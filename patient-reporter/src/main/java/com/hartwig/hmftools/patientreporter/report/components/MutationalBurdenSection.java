@@ -17,19 +17,15 @@ public final class MutationalBurdenSection {
 
     @NotNull
     public static ComponentBuilder<?, ?> build(double tumorMutationalBurdenIndicator, boolean hasReliablePurityFit) {
-        String formattingTumorMutationalBurdenIndicator =
-                PatientReportFormat.correctValueForFitReliability(new DecimalFormat("#.#").format(tumorMutationalBurdenIndicator),
-                        hasReliablePurityFit);
-
         final int graphValue = computeGraphValue(tumorMutationalBurdenIndicator);
 
         final GradientBar gradient =
-                formattingTumorMutationalBurdenIndicator.equals("N/A") ? ImmutableGradientBar.of(new Color(253, 235, 208),
+                !hasReliablePurityFit ? ImmutableGradientBar.of(new Color(253, 235, 208),
                         new Color(248, 196, 113),
                         "Low",
                         "High") : ImmutableGradientBar.of(new Color(253, 235, 208), new Color(248, 196, 113), "Low", "High", graphValue);
         final SliderSection sliderSection = ImmutableSliderSection.of("Tumor Mutational Burden",
-                interpret(formattingTumorMutationalBurdenIndicator),
+                interpret(tumorMutationalBurdenIndicator, hasReliablePurityFit),
                 description(),
                 gradient);
 
@@ -37,10 +33,16 @@ public final class MutationalBurdenSection {
     }
 
     @NotNull
-    private static String interpret(String formattingTumorMutationalBurdenIndicator) {
-        return formattingTumorMutationalBurdenIndicator.equals("N/A")
-                ? formattingTumorMutationalBurdenIndicator
-                : formattingTumorMutationalBurdenIndicator + " variants per Mb.";
+    private static String interpret(double tumorMutationalBurdenIndicator, boolean hasReliablePurityFit) {
+        String formattedTMB = new DecimalFormat("#.####").format(tumorMutationalBurdenIndicator);
+        String interpretedTMB;
+
+        if (hasReliablePurityFit) {
+            interpretedTMB = formattedTMB + " variants per Mb.";
+        } else {
+            interpretedTMB = formattedTMB;
+        }
+        return PatientReportFormat.correctValueForFitReliability(interpretedTMB, hasReliablePurityFit);
     }
 
     private static int computeGraphValue(double value) {
