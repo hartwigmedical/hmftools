@@ -14,14 +14,17 @@ public final class ChordSection {
     private static final int BUFFER = 3;
     private static final double START = 0;
     private static final double END = 1;
+    private static final Color COLOUR_BEGIN = new Color(214, 234, 248);
+    private static final Color COLOUR_END = new Color(174, 214, 241);
+
 
     @NotNull
     public static ComponentBuilder<?, ?> build(double chordHrdScore, boolean hasReliablePurityFit) {
         final int graphValue = computeGraphValue(chordHrdScore);
 
         final GradientBar gradient = !hasReliablePurityFit ?
-                ImmutableGradientBar.of(new Color(214, 234, 248), new Color(174, 214, 241), "Low", "High") :
-                ImmutableGradientBar.of(new Color(214, 234, 248), new Color(174, 214, 241), "Low", "High", graphValue);
+                ImmutableGradientBar.of(COLOUR_BEGIN, COLOUR_END, "Low", "High") :
+                ImmutableGradientBar.of(COLOUR_BEGIN, COLOUR_END, "Low", "High", graphValue);
 
         final SliderSection sliderSection =
                 ImmutableSliderSection.of("HR-Deficiency Score", interpret(chordHrdScore, hasReliablePurityFit), description(), gradient);

@@ -16,6 +16,8 @@ public final class MicrosatelliteSection {
     private static final int BUFFER = 3;
     private static final double START = 1E-2;
     private static final double END = 100;
+    private static final Color COLOUR_BEGIN = new Color(239, 239, 239);
+    private static final Color COLOUR_END = new Color(171, 191, 171);
 
     @NotNull
     public static ComponentBuilder<?, ?> build(double microsatelliteIndicator, boolean hasReliablePurityFit) {
@@ -23,9 +25,8 @@ public final class MicrosatelliteSection {
         final int markerValue = computeGraphValue(MSI_THRESHOLD);
 
         final GradientBar gradient = !hasReliablePurityFit
-                ? ImmutableGradientBar.ofOnlyMarker(new Color(239, 239, 239),
-                new Color(171, 191, 171), "MSS", "MSI", markerValue)
-                : ImmutableGradientBar.of(new Color(239, 239, 239), new Color(171, 191, 171), "MSS", "MSI", graphValue, markerValue);
+                ? ImmutableGradientBar.ofOnlyMarker(COLOUR_BEGIN, COLOUR_END, "MSS", "MSI", markerValue)
+                : ImmutableGradientBar.of(COLOUR_BEGIN, COLOUR_END, "MSS", "MSI", graphValue, markerValue);
         final SliderSection sliderSection = ImmutableSliderSection.of("Microsatellite Status",
                 interpret(microsatelliteIndicator, hasReliablePurityFit),
                 description(),

@@ -15,6 +15,8 @@ public final class MutationalLoadSection {
     private static final int BUFFER = 3;
     private static final int START = 1;
     private static final int END = 1000;
+    private static final Color COLOUR_BEGIN = new Color(239, 229, 203);
+    private static final Color COLOUR_END = new Color(159, 163, 193);
 
     @NotNull
     public static ComponentBuilder<?, ?> build(int mutationalLoad, boolean hasReliablePurityFit) {
@@ -22,8 +24,8 @@ public final class MutationalLoadSection {
         final int graphValue = computeGraphValue(mutationalLoad);
         final int markerValue = computeGraphValue(ML_THRESHOLD);
         final GradientBar gradient = !hasReliablePurityFit ?
-                ImmutableGradientBar.ofOnlyMarker(new Color(239, 229, 203), new Color(159, 163, 193), "Low", "High", markerValue) :
-                ImmutableGradientBar.of(new Color(239, 229, 203), new Color(159, 163, 193), "Low", "High", graphValue, markerValue);
+                ImmutableGradientBar.ofOnlyMarker(COLOUR_BEGIN, COLOUR_END, "Low", "High", markerValue) :
+                ImmutableGradientBar.of(COLOUR_BEGIN, COLOUR_END, "Low", "High", graphValue, markerValue);
 
 
         final SliderSection sliderSection = ImmutableSliderSection.of("Tumor Mutational Load",
