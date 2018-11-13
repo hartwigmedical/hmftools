@@ -22,6 +22,7 @@
             <xsd:enumeration value="stop_gained"/>
             <xsd:enumeration value="stop_lost"/>
             <xsd:enumeration value="prime_UTR_premature_start_codon_gain_variant"/>
+            <xsd:enumeration value="synonymous_variant"/>
         </xsd:restriction>
     </xsd:simpleType>
 
