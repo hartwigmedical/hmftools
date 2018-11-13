@@ -105,6 +105,6 @@ public abstract class ExplanationPage {
                         "The range of the disruption is indicated by the intron/exon/promoter region of the break point occurred "
                                 + "and the direction the disruption faces.",
                         "The type of disruption can be INV (inversion), DEL (deletion), DUP (duplication), "
-                                + "INS (insertion) or BND (translocation)."));
+                                + "INS (insertion), SGL (single) or BND (translocation)."));
     }
 }
