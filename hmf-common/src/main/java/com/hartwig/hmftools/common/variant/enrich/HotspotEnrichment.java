@@ -1,17 +1,16 @@
 package com.hartwig.hmftools.common.variant.enrich;
 
 import java.io.IOException;
-import java.util.Collection;
 import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.chromosome.Chromosome;
 import com.hartwig.hmftools.common.chromosome.HumanChromosome;
-import com.hartwig.hmftools.common.variant.Hotspot;
-import com.hartwig.hmftools.common.variant.ImmutableSomaticVariantImpl;
 import com.hartwig.hmftools.common.hotspot.VariantHotspot;
 import com.hartwig.hmftools.common.hotspot.VariantHotspotFile;
+import com.hartwig.hmftools.common.variant.Hotspot;
+import com.hartwig.hmftools.common.variant.ImmutableSomaticVariantImpl;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -20,7 +19,7 @@ import htsjdk.variant.variantcontext.VariantContext;
 
 public class HotspotEnrichment implements SomaticEnrichment {
 
-    private static final int DISTANCE = 5;
+    public static final int DISTANCE = 5;
     private static final String HOTSPOT_TAG = "HOTSPOT";
 
     private final Multimap<Chromosome, VariantHotspot> hotspots;
@@ -43,22 +42,37 @@ public class HotspotEnrichment implements SomaticEnrichment {
             return builder.hotspot(Hotspot.HOTSPOT);
         }
 
-        if (HumanChromosome.contains(context.getContig())) {
-            final Chromosome chromosome = HumanChromosome.fromString(context.getContig());
-            if (hotspots.containsKey(chromosome)) {
-                final Collection<VariantHotspot> chromosomeHotspots = hotspots.get(chromosome);
+        if (isOnHotspot(context)) {
+            return builder.hotspot(Hotspot.HOTSPOT);
+        }
 
-                if (chromosomeHotspots.stream().anyMatch(x -> exactMatch(x, context))) {
-                    return builder.hotspot(Hotspot.HOTSPOT);
-                }
-
-                if (chromosomeHotspots.stream().anyMatch(x -> overlaps(x, context))) {
-                    return builder.hotspot(Hotspot.NEAR_HOTSPOT);
-                }
-            }
+        if (isNearHotspot(context)) {
+            return builder.hotspot(Hotspot.NEAR_HOTSPOT);
         }
 
         return builder.hotspot(Hotspot.NON_HOTSPOT);
+    }
+
+    public boolean isOnHotspot(@NotNull final VariantContext context) {
+        if (HumanChromosome.contains(context.getContig())) {
+            final Chromosome chromosome = HumanChromosome.fromString(context.getContig());
+            if (hotspots.containsKey(chromosome)) {
+                return hotspots.get(chromosome).stream().anyMatch(x -> exactMatch(x, context));
+            }
+        }
+
+        return false;
+    }
+
+    public boolean isNearHotspot(@NotNull final VariantContext context) {
+        if (HumanChromosome.contains(context.getContig())) {
+            final Chromosome chromosome = HumanChromosome.fromString(context.getContig());
+            if (hotspots.containsKey(chromosome)) {
+                return hotspots.get(chromosome).stream().anyMatch(x -> overlaps(x, context));
+            }
+        }
+
+        return false;
     }
 
     private static boolean overlaps(@NotNull final VariantHotspot hotspot, @NotNull final VariantContext variant) {
