@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.common.hotspot;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 import java.util.Collections;
 import java.util.List;
@@ -38,14 +37,10 @@ public class HotspotEvidenceVCFTest {
         assertEquals(NORMAL_READS, context.getGenotype("NORMAL").getDP());
         assertEquals(NORMAL_REF_COUNT, context.getGenotype("NORMAL").getAD()[0]);
         assertEquals(0, context.getGenotype("NORMAL").getAD()[1]);
-        assertEquals(0, context.getGenotype("NORMAL").getAD()[2]);
-        assertEquals(1, context.getGenotype("NORMAL").getAD()[3]);
 
         assertEquals(TUMOR_READS, context.getGenotype("TUMOR").getDP());
         assertEquals(TUMOR_REF_COUNT, context.getGenotype("TUMOR").getAD()[0]);
         assertEquals(20, context.getGenotype("TUMOR").getAD()[1]);
-        assertEquals(10, context.getGenotype("TUMOR").getAD()[2]);
-        assertEquals(30, context.getGenotype("TUMOR").getAD()[3]);
     }
 
     private static HotspotEvidence create(@NotNull final String alt, int normalAltCount, int tumorAltCount) {

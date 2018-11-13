@@ -3,7 +3,6 @@ package com.hartwig.hmftools.common.hotspot;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.StringJoiner;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ListMultimap;
@@ -47,7 +46,7 @@ public class HotspotEvidenceVCF {
         header.addMetaDataLine(new VCFFormatHeaderLine("DP", 1, VCFHeaderLineType.Integer, "Read Depth"));
         header.addMetaDataLine(new VCFFormatHeaderLine("AD", VCFHeaderLineCount.R, VCFHeaderLineType.Integer, "Allelic Depth"));
         header.addMetaDataLine(new VCFInfoHeaderLine("HT",
-                VCFHeaderLineCount.A,
+                1,
                 VCFHeaderLineType.String,
                 "Hotspot Type: INFRAME, SNV, MNV, INSERT or DELETE"));
         header.addMetaDataLine(new VCFFilterHeaderLine(LOW_CONFIDENCE,
@@ -83,46 +82,38 @@ public class HotspotEvidenceVCF {
         assert (!evidence.isEmpty());
 
         List<HotspotEvidence> sortedEvidence = Lists.newArrayList(evidence);
-
         sortedEvidence.sort(HotspotEvidenceVCF::compareEvidence);
 
-        final HotspotEvidence primaryEvidence = sortedEvidence.get(0);
-        final List<Allele> alleles = Lists.newArrayList(Allele.create(primaryEvidence.ref(), true));
-        sortedEvidence.stream().map(x -> Allele.create(x.alt(), false)).forEach(alleles::add);
+        final HotspotEvidence hotspotEvidence = sortedEvidence.get(0);
 
-        final List<Integer> tumorAD = Lists.newArrayList(primaryEvidence.tumorRefCount());
-        sortedEvidence.stream().mapToInt(HotspotEvidence::tumorAltCount).forEach(tumorAD::add);
+        final Allele ref = Allele.create(hotspotEvidence.ref(), true);
+        final Allele alt = Allele.create(hotspotEvidence.alt(), false);
+        final List<Allele> alleles = Lists.newArrayList(ref, alt);
 
-        final List<Integer> normalAD = Lists.newArrayList(primaryEvidence.normalRefCount());
-        sortedEvidence.stream().mapToInt(HotspotEvidence::normalAltCount).forEach(normalAD::add);
-
-        final Genotype tumor = new GenotypeBuilder(tumorSample).DP(primaryEvidence.tumorReads())
-                .AD(tumorAD.stream().mapToInt(x -> x).toArray())
+        final Genotype tumor = new GenotypeBuilder(tumorSample).DP(hotspotEvidence.tumorReads())
+                .AD(new int[] { hotspotEvidence.tumorRefCount(), hotspotEvidence.tumorAltCount() })
                 .alleles(alleles)
                 .make();
 
-        final Genotype normal = new GenotypeBuilder(normalSample).DP(primaryEvidence.normalReads())
-                .AD(normalAD.stream().mapToInt(x -> x).toArray())
+        final Genotype normal = new GenotypeBuilder(normalSample).DP(hotspotEvidence.normalReads())
+                .AD(new int[] { hotspotEvidence.normalRefCount(), hotspotEvidence.normalAltCount() })
                 .alleles(alleles)
                 .make();
 
-        final StringJoiner htJoiner = new StringJoiner(",");
-        sortedEvidence.stream().map(x -> x.type().toString()).forEach(htJoiner::add);
-
-        final VariantContextBuilder builder = new VariantContextBuilder().chr(primaryEvidence.chromosome())
-                .start(primaryEvidence.position())
-                .computeEndFromAlleles(alleles, (int) primaryEvidence.position())
-                .attribute("HT", htJoiner.toString())
-                .source(primaryEvidence.type().toString())
+        final VariantContextBuilder builder = new VariantContextBuilder().chr(hotspotEvidence.chromosome())
+                .start(hotspotEvidence.position())
+                .attribute("HT", hotspotEvidence.type().toString())
+                .computeEndFromAlleles(alleles, (int) hotspotEvidence.position())
+                .source(hotspotEvidence.type().toString())
                 .genotypes(tumor, normal)
                 .alleles(alleles);
 
-        if (lowConfidence(primaryEvidence)) {
+        if (lowConfidence(hotspotEvidence)) {
             builder.filter(LOW_CONFIDENCE);
         }
 
         final VariantContext context = builder.make();
-        context.getCommonInfo().setLog10PError(primaryEvidence.qualityScore() / -10d);
+        context.getCommonInfo().setLog10PError(hotspotEvidence.qualityScore() / -10d);
         return context;
     }
 
