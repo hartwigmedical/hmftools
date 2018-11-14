@@ -148,7 +148,7 @@ public final class GeneCopyNumberFile {
                 .transcriptVersion(Integer.valueOf(values[11]))
                 .chromosomeBand(values[12]);
 
-                builder.minRegions(0)
+        builder.minRegions(0)
                 .minRegionStart(Long.valueOf(values[1]))
                 .minRegionEnd(Long.valueOf(values[2]))
                 .minRegionMethod(CopyNumberMethod.UNKNOWN)
@@ -173,7 +173,7 @@ public final class GeneCopyNumberFile {
                     .minRegionEndSupport(SegmentSupport.valueOf(values[17]))
                     .minRegionMethod(CopyNumberMethod.valueOf(values[18]));
         }
-        if (values.length ==29) {
+        if (values.length == 29) {
             builder.nonsenseBiallelicCount(Integer.valueOf(values[19]))
                     .nonsenseNonBiallelicCount(Integer.valueOf(values[20]))
                     .nonsenseNonBiallelicPloidy(Double.valueOf(values[21]))
