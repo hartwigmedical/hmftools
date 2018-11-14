@@ -11,7 +11,7 @@ import com.hartwig.hmftools.common.variant.SomaticVariant;
 
 import org.jetbrains.annotations.NotNull;
 
-public class SomaticDeviationFactory {
+public final class SomaticDeviationFactory {
 
     public static double deviation(final PurityAdjuster purityAdjuster, @NotNull Collection<FittedRegion> regions,
             Collection<SomaticVariant> variants) {

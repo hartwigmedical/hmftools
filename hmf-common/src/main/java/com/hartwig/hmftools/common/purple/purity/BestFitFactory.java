@@ -20,13 +20,11 @@ public class BestFitFactory {
     private static final double ABS_RANGE = 0.0005;
     private static final double MIN_SOMATIC_UNADJUSTED_VAF = 0.1;
 
-    private final FittedPurity fit;
-    private final FittedPurityScore score;
-    private final FittedPurityStatus status;
     private final double highlyDiploidPercentage;
     private final int minVariants;
     private double minSomaticPurity;
 
+    @NotNull
     private final BestFit bestFit;
 
     public BestFitFactory(int minVariants, int minPeak, double highlyDiploidPercentage, double minSomaticPurity,
@@ -41,8 +39,10 @@ public class BestFitFactory {
         Collections.sort(fittedPurities);
         FittedPurity lowestScore = fittedPurities.get(0);
 
-        score = FittedPurityScoreFactory.score(inRangeOfLowest(lowestScore.score(), fittedPurities));
+        final FittedPurityScore score = FittedPurityScoreFactory.score(inRangeOfLowest(lowestScore.score(), fittedPurities));
 
+        final FittedPurity fit;
+        final FittedPurityStatus status;
         if (Doubles.greaterOrEqual(score.puritySpread(), minSomaticPuritySpread) && isHighlyDiploid(score)) {
             final Optional<FittedPurity> somaticFit = new SomaticFitFactory(minPeak).fromSomatics(fittedPurities, somatics);
 
@@ -83,6 +83,7 @@ public class BestFitFactory {
         return Doubles.greaterOrEqual(score.maxDiploidProportion(), highlyDiploidPercentage);
     }
 
+    @NotNull
     public BestFit bestFit() {
         return bestFit;
     }
