@@ -1,0 +1,27 @@
+package com.hartwig.hmftools.common.hotspot;
+
+import com.hartwig.hmftools.common.position.GenomePosition;
+
+import org.immutables.value.Value;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
+@Value.Immutable
+@Value.Modifiable
+@Value.Style(passAnnotations = { NotNull.class, Nullable.class })
+public interface VariantHotspotEvidence extends GenomePosition {
+
+    @NotNull
+    String ref();
+
+    @NotNull
+    String alt();
+
+    int quality();
+
+    int readDepth();
+
+    int refSupport();
+
+    int altSupport();
+}
