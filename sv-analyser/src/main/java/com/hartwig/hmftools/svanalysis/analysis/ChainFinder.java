@@ -4,12 +4,14 @@ import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.Math.round;
+import static java.lang.Math.sin;
 
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INS;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INV;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.svanalysis.analysis.LinkFinder.MIN_TEMPLATED_INSERTION_LENGTH;
 import static com.hartwig.hmftools.svanalysis.analysis.LinkFinder.areLinkedSection;
+import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.calcTypeCount;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.getProximity;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.RELATION_TYPE_NEIGHBOUR;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_END;
@@ -605,18 +607,6 @@ public class ChainFinder
             SvLinkedPair closestStartPair = findNextLinkedPair(requiredLinks, unlinkedSvList, chainFirstSV, chainFirstUnlinkedOnStart);
             SvLinkedPair closestLastPair = findNextLinkedPair(requiredLinks, unlinkedSvList, chainLastSV, chainLastUnlinkedOnStart);
 
-            if(closestStartPair == null && closestLastPair == null && !chainsList.isEmpty()
-            && unlinkedSvList.size() == 1 && unlinkedSvList.get(0).type() == SGL)
-            {
-                closestStartPair = findInconsistentSvAndSingleLink(currentChain, unlinkedSvList.get(0), true);
-
-                if(closestStartPair == null)
-                {
-                    // form a link from these 2 variants
-                    closestLastPair = findInconsistentSvAndSingleLink(currentChain, unlinkedSvList.get(0), false);
-                }
-            }
-
             if(closestStartPair != null || closestLastPair != null)
             {
                 chainLinkAdded = true;
@@ -680,6 +670,11 @@ public class ChainFinder
                 if(chainComplete)
                     break;
             }
+        }
+
+        if(!chainComplete && !chainsList.isEmpty() && unlinkedSvList.size() == 1 && unlinkedSvList.get(0).type() == SGL)
+        {
+            tryUnlinkedSingle(chainsList, unlinkedSvList.get(0));
         }
     }
 
@@ -755,6 +750,74 @@ public class ChainFinder
         }
 
         return newPair;
+    }
+
+    private void tryUnlinkedSingle(List<SvChain> chains, SvVarData singleSV)
+    {
+        // test the spare SGL against any inconsistent SVs with matching copy number change or another open SGL on end of a chain
+        SvChain amendedChain = null;
+        boolean addToStart = true;
+        SvLinkedPair newPair = null;
+
+        for(SvChain chain : chains)
+        {
+            newPair = findInconsistentSvAndSingleLink(chain, singleSV, true);
+
+            if(newPair != null)
+            {
+                amendedChain = chain;
+                addToStart = true;
+                break;
+            }
+
+            newPair = findInconsistentSvAndSingleLink(chain, singleSV, false);
+
+            if(newPair != null)
+            {
+                amendedChain = chain;
+                addToStart = false;
+                break;
+            }
+
+            if (chain.getFirstSV().type() == SGL && !chain.getFirstSV().equals(singleSV, true))
+            {
+                newPair = new SvLinkedPair(chain.getFirstSV(), singleSV, LINK_TYPE_TI, false, false);
+                LOGGER.debug("adding linked pair({}) with SGL to chain({}) start", newPair.toString(), chain.getId());
+                amendedChain = chain;
+                addToStart = true;
+                break;
+            }
+
+            if (chain.getLastSV().type() == SGL && !chain.getLastSV().equals(singleSV, true))
+            {
+                newPair = new SvLinkedPair(chain.getLastSV(), singleSV, LINK_TYPE_TI, false, false);
+                LOGGER.debug("adding linked pair({}) with SGL to chain({}) end", newPair.toString(), chain.getId());
+                amendedChain = chain;
+                addToStart = false;
+                break;
+            }
+        }
+
+        if(amendedChain != null && newPair != null)
+        {
+            amendedChain.addLink(newPair, addToStart);
+
+            // check if any chains can now be joined
+            for(int index = 0; index < chains.size(); ++index)
+            {
+                final SvChain chain = chains.get(index);
+
+                if(chain == amendedChain)
+                    continue;
+
+                if (reconcileChains(amendedChain, chain))
+                {
+                    LOGGER.debug("adding existing chain({}) to current chain({})", chain.getId(), amendedChain.getId());
+                    chains.remove(index);
+                    break;
+                }
+            }
+        }
     }
 
     private final SvLinkedPair findInconsistentSvAndSingleLink(final SvChain chain, final SvVarData soloVar, boolean checkChainStart)

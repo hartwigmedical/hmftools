@@ -124,7 +124,7 @@ public final class ReportableGeneDisruptionFactory {
     @NotNull
     private static String locationField(@NotNull GeneDisruption disruption) {
         GeneAnnotation gene = gene(disruption);
-        return gene.variant().chromosome(gene.isStart()) + gene.karyotypeBand();
+        return gene.chromosome() + gene.karyotypeBand();
     }
 
     @NotNull
@@ -145,6 +145,6 @@ public final class ReportableGeneDisruptionFactory {
 
     private static boolean isUpstream(@NotNull GeneDisruption disruption) {
         GeneAnnotation gene = gene(disruption);
-        return gene.variant().orientation(gene.isStart()) * gene.strand() < 0;
+        return gene.orientation() * gene.strand() < 0;
     }
 }

@@ -16,6 +16,7 @@ import com.hartwig.hmftools.common.variant.structural.annotation.ImmutableGeneFu
 import com.hartwig.hmftools.common.variant.structural.annotation.StructuralVariantAnnotation;
 import com.hartwig.hmftools.common.variant.structural.annotation.Transcript;
 
+import org.apache.commons.cli.Options;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -23,6 +24,11 @@ import org.jetbrains.annotations.NotNull;
 
 public class SvFusionAnalyser
 {
+
+    public static final String FUSION_PAIRS_CSV = "fusion_pairs_csv";
+    public static final String PROMISCUOUS_FIVE_CSV = "promiscuous_five_csv";
+    public static final String PROMISCUOUS_THREE_CSV = "promiscuous_three_csv";
+
     private static final int EXON_THRESHOLD = 1;
 
     private final KnownFusionsModel mKnownFusionsModel;
@@ -34,85 +40,103 @@ public class SvFusionAnalyser
         mKnownFusionsModel = knownFusionsModel;
     }
 
+    public static void addCmdLineArgs(Options options)
+    {
+        options.addOption(FUSION_PAIRS_CSV, true, "Path towards a CSV containing white-listed gene fusion pairs.");
+        options.addOption(PROMISCUOUS_FIVE_CSV, true, "Path towards a CSV containing white-listed promiscuous 5' genes.");
+        options.addOption(PROMISCUOUS_THREE_CSV, true, "Path towards a CSV containing white-listed promiscuous 3' genes.");
+    }
+
     public final List<GeneFusion> findFusions(final List<StructuralVariantAnnotation> annotations)
     {
         LOGGER.debug("finding fusions in {} annotations", annotations.size());
 
-        // left is upstream, right is downstream
-        final List<List<Pair<Transcript, Transcript>>> fusionsPerVariant = Lists.newArrayList();
+        List<GeneFusion> fusions = Lists.newArrayList();
 
         for (final StructuralVariantAnnotation annotation : annotations)
         {
-            final List<Pair<Transcript, Transcript>> fusions = Lists.newArrayList();
+            List<GeneFusion> svFusions = findFusions(annotation.start(), annotation.end());
 
-            for (final GeneAnnotation startGene : annotation.start())
+            fusions.addAll(svFusions);
+        }
+
+        return fusions;
+    }
+
+    public final List<GeneFusion> findFusions(final List<GeneAnnotation> breakendGenes1, final List<GeneAnnotation> breakendGenes2)
+    {
+        final List<List<Pair<Transcript, Transcript>>> fusionTranscriptPairs = Lists.newArrayList();
+
+        final List<Pair<Transcript, Transcript>> potentialFusions = Lists.newArrayList();
+
+        for (final GeneAnnotation startGene : breakendGenes1)
+        {
+            // left is upstream, right is downstream
+            boolean startUpstream = isUpstream(startGene);
+
+            for (final GeneAnnotation endGene : breakendGenes2)
             {
-                boolean startUpstream = isUpstream(startGene);
+                boolean endUpstream = isUpstream(endGene);
 
-                for (final GeneAnnotation endGene : annotation.end())
+                if (startUpstream == endUpstream)
+                    continue;
+
+                for (final Transcript startTrans : startGene.transcripts())
                 {
-                    boolean endUpstream = isUpstream(endGene);
-
-                    if (startUpstream == endUpstream)
+                    if(startTrans.isPromoter())
                         continue;
 
-                    // final List<Transcript> transcripts1 = getIntronicTranscripts(startGene.transcripts());
-
-                    for (final Transcript startTrans : startGene.transcripts())
+                    for (final Transcript endTrans : endGene.transcripts())
                     {
-                        if(startTrans.isPromoter())
+                        if(endTrans.isPromoter())
                             continue;
 
-                        for (final Transcript endTrans : endGene.transcripts())
+                        if (!isPotentiallyRelevantFusion(startTrans, endTrans))
+                            continue;
+
+                        if(startTrans.isIntronic())
                         {
-                            if(endTrans.isPromoter())
-                                continue;
-
-                            if (!isPotentiallyRelevantFusion(startTrans, endTrans))
-                                continue;
-
-                            if(startTrans.isIntronic())
+                            // Intron -> Intron and Intron -> Exon are both fine if phased
+                            if (startUpstream && startTrans.exonUpstreamPhase() == endTrans.exonDownstreamPhase())
                             {
-                                // Intron -> Intron and Intron -> Exon are both fine if phased
-                                if (startUpstream && startTrans.exonUpstreamPhase() == endTrans.exonDownstreamPhase())
+                                addFusion(potentialFusions, startTrans, endTrans);
+                            }
+                            else if (!startUpstream && endTrans.exonUpstreamPhase() == startTrans.exonDownstreamPhase())
+                            {
+                                addFusion(potentialFusions, endTrans, startTrans);
+                            }
+                        }
+                        else if(startTrans.isExonic())
+                        {
+                            if(endTrans.isExonic())
+                            {
+                                if(exonToExonInPhase(startTrans, startUpstream, endTrans, endUpstream))
                                 {
-                                    addFusion(fusions, startTrans, endTrans);
+                                    addFusion(potentialFusions, startTrans, endTrans);
                                 }
-                                else if (!startUpstream && endTrans.exonUpstreamPhase() == startTrans.exonDownstreamPhase())
+                                else if(exonToExonInPhase(endTrans, endUpstream, startTrans, startUpstream))
                                 {
-                                    addFusion(fusions, endTrans, startTrans);
+                                    addFusion(potentialFusions, endTrans, startTrans);
                                 }
                             }
-                            else if(startTrans.isExonic())
-                            {
-                                if(endTrans.isExonic())
-                                {
-                                    if(exonToExonInPhase(startTrans, startUpstream, endTrans, endUpstream))
-                                    {
-                                        addFusion(fusions, startTrans, endTrans);
-                                    }
-                                    else if(exonToExonInPhase(endTrans, endUpstream, startTrans, startUpstream))
-                                    {
-                                        addFusion(fusions, endTrans, startTrans);
-                                    }
-                                }
 
-                                // Exon -> Intron is invalid
+                            // Exon -> Intron is invalid
 
-                            }
-                            else
-                            {
-                                // UTR region fusions not handled yet
-                            }
+                        }
+                        else
+                        {
+                            // UTR region fusions not handled yet
                         }
                     }
                 }
             }
-
-            fusionsPerVariant.add(fusions);
         }
 
-        return toReportableGeneFusions(fusionsPerVariant);
+        fusionTranscriptPairs.add(potentialFusions);
+
+        List<GeneFusion> fusions = toReportableGeneFusions(fusionTranscriptPairs);
+
+        return fusions;
     }
 
     private static boolean exonToExonInPhase(final Transcript startTrans, boolean startUpstream, final Transcript endTrans, boolean endUpstream)
@@ -138,7 +162,7 @@ public class SvFusionAnalyser
     private static int calcPositionPhasing_v2(final Transcript transcript, boolean isUpstream)
     {
         // if the exon is completely translated, then determine bases since start of exon
-        long position = transcript.parent().variant().position(transcript.parent().isStart());
+        long position = transcript.parent().position();
 
         long exonOffset = 0;
 
@@ -172,8 +196,7 @@ public class SvFusionAnalyser
     private void addFusion(List<Pair<Transcript, Transcript>> fusions, final Transcript startTrans, final Transcript endTrans)
     {
         LOGGER.debug("adding fusion between start SV({}) trans({}) and end SV({}) trans({})",
-                startTrans.parent().variant().primaryKey(), startTrans.toString(),
-                endTrans.parent().variant().primaryKey(), endTrans.toString());
+                startTrans.parent().id(), startTrans.toString(), endTrans.parent().id(), endTrans.toString());
 
         fusions.add(Pair.of(startTrans, endTrans));
     }
@@ -197,11 +220,11 @@ public class SvFusionAnalyser
     }
 
     @NotNull
-    private List<GeneFusion> toReportableGeneFusions(@NotNull List<List<Pair<Transcript, Transcript>>> fusionsPerVariant)
+    private List<GeneFusion> toReportableGeneFusions(@NotNull List<List<Pair<Transcript, Transcript>>> fusionTranscriptPairs)
     {
         final List<GeneFusion> result = Lists.newArrayList();
 
-        for (final List<Pair<Transcript, Transcript>> fusions : fusionsPerVariant)
+        for (final List<Pair<Transcript, Transcript>> fusions : fusionTranscriptPairs)
         {
             Optional<Pair<Transcript, Transcript>> reportableFusion = determineReportableFusion(fusions);
 
@@ -286,7 +309,7 @@ public class SvFusionAnalyser
             return null;
 
         final int strand = transcript.parent().strand();
-        final long position = transcript.parent().variant().position(transcript.parent().isStart());
+        final long position = transcript.parent().position();
 
         return (strand == 1 && position > codingEnd) || (strand == -1 && position < codingStart);
     }

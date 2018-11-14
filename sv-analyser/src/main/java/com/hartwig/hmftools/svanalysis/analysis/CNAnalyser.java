@@ -5,7 +5,7 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.Math.round;
 
-import static com.hartwig.hmftools.svanalysis.annotators.SvPONAnnotator.PON_FILTER_PON;
+import static com.hartwig.hmftools.common.variant.structural.annotation.SvPONAnnotator.PON_FILTER_PON;
 import static com.hartwig.hmftools.svanalysis.types.SvCNData.CN_SEG_NONE;
 import static com.hartwig.hmftools.svanalysis.types.SvCNData.CN_SEG_UNKNOWN;
 import static com.hartwig.hmftools.svanalysis.types.SvCNData.CN_SEG_TELOMERE;
@@ -30,7 +30,6 @@ import java.nio.file.StandardOpenOption;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
@@ -275,6 +274,8 @@ public class CNAnalyser {
             // negative CN change means sequence has come in from left (a lower position) and dropped at the breakend
             byte orientation = copyNumberDiff > 0 ? (byte)-1 : 1;
 
+            long position = orientation == -1 ? noneCnRecord.start() : noneCnRecord.start() - 1;
+
             int varId = startId++;
 
             svList.add(
@@ -283,7 +284,7 @@ public class CNAnalyser {
                             .vcfId("")
                             .type(StructuralVariantType.SGL)
                             .ploidy(copyNumber)
-                            .startPosition(noneCnRecord.start())
+                            .startPosition(position)
                             .startChromosome(noneCnRecord.chromosome())
                             .startOrientation(orientation)
                             .startAF(0.0)
@@ -332,22 +333,21 @@ public class CNAnalyser {
         || cnData.segStart().equals(CN_SEG_TELOMERE) || cnData.segStart().equals(CN_SEG_CENTROMERE))
             return null;
 
+        long svPosition = requiredOrient == -1 ? cnData.startPos() : cnData.startPos() - 1;
+
         for(final StructuralVariantData var : mSvDataList)
         {
             if(var.filter().equals(PON_FILTER_PON))
                 continue;
 
-            // if(svData.type() == StructuralVariantType.BND)
-            if(var.startChromosome().equals(cnData.chromosome()) && var.startPosition() == cnData.startPos())
+            if(var.startChromosome().equals(cnData.chromosome()) && var.startOrientation() == requiredOrient && var.startPosition() == svPosition)
             {
-                if(requiredOrient == 0 || var.startOrientation() == requiredOrient)
-                    return var;
+                return var;
             }
 
-            if(var.endChromosome().equals(cnData.chromosome()) && var.endPosition() == cnData.startPos())
+            if(var.endChromosome().equals(cnData.chromosome()) && var.endOrientation() == requiredOrient && var.endPosition() == svPosition)
             {
-                if(requiredOrient == 0 || var.endOrientation() == requiredOrient)
-                    return var;
+                return var;
             }
         }
 
@@ -466,7 +466,7 @@ public class CNAnalyser {
             boolean newChromosome = currentChr.isEmpty() || (!currentChr.isEmpty() && !cnData.chromosome().equals(currentChr));
             boolean reset = newChromosome;
 
-            if(isLohSection)
+            if(isLohSection || lohOnStartTelomere)
             {
                 if(minCN >= MIN_LOH_CN || reset)
                 {

@@ -39,6 +39,8 @@ public class StructuralVariantAnalyzer
         mGeneDataAnnotator = geneDataAnnotator;
     }
 
+    public final VariantAnnotator getGeneDataAnnotator() { return mGeneDataAnnotator; }
+
     @NotNull
     public StructuralVariantAnalysis run(final List<EnrichedStructuralVariant> variants)
     {
@@ -84,8 +86,7 @@ public class StructuralVariantAnalyzer
 
     public static boolean isUpstream(GeneAnnotation gene)
     {
-        int orientation = gene.variant().orientation(gene.isStart());
-        return gene.strand() * orientation > 0;
+        return gene.strand() * gene.orientation() > 0;
     }
 
     public static List<Transcript> getIntronicTranscripts(List<Transcript> transcripts)

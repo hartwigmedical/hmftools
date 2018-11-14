@@ -26,7 +26,7 @@ import org.apache.logging.log4j.Logger;
 
 public class SvVarData
 {
-    private final String mId; // sourced from either VCF or DB
+    private final String mIdStr; // sourced from DB so could be converted to int
 
     // full set of DB fields
     private final StructuralVariantData mSVData;
@@ -91,7 +91,8 @@ public class SvVarData
 
     public SvVarData(final StructuralVariantData svData)
     {
-        mId = svData.id();
+        mIdStr = svData.id();
+
         mSVData = svData;
 
         init();
@@ -167,7 +168,7 @@ public class SvVarData
     {
         init();
 
-        mId = other.getSvData().id() + "r";
+        mIdStr = other.getSvData().id() + "r";
         mSVData = other.getSvData();
         mNoneSegment = other.isNoneSegment();
         mStartArm = other.arm(true);
@@ -191,7 +192,13 @@ public class SvVarData
         mCluster = other.getCluster();
     }
 
-    public final String id() { return mId; }
+    public final String id() { return mIdStr; }
+
+    public final int dbId()
+    {
+        return Integer.parseInt(mSVData.id());
+    }
+
     public final StructuralVariantData getSvData() { return mSVData; }
     public void setNoneSegment(boolean toggle) { mNoneSegment = toggle; }
     public boolean isNoneSegment() { return mNoneSegment; }
@@ -260,9 +267,9 @@ public class SvVarData
         if(!otherId.isEmpty())
             mClusterReason += "_" + otherId;
 
-        if(otherId.equals(mId))
+        if(otherId.equals(mIdStr))
         {
-            LOGGER.warn("SV({}) reason({}) setting to own ID", mId, reason);
+            LOGGER.warn("SV({}) reason({}) setting to own ID", mIdStr, reason);
         }
     }
 
@@ -272,7 +279,7 @@ public class SvVarData
     public final SvVarData getReplicatedSv() { return mReplicatedSv; }
     public int getReplicatedCount() { return mReplicatedCount; }
     public void setReplicatedCount(int count) { mReplicatedCount = count; }
-    public final String origId() { return mReplicatedSv != null ? mReplicatedSv.id() : mId; }
+    public final String origId() { return mReplicatedSv != null ? mReplicatedSv.id() : mIdStr; }
     public boolean equals(final SvVarData other, boolean allowReplicated)
     {
         if(this == other)

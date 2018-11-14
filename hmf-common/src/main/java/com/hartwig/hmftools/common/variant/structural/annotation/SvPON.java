@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.svanalysis.types;
+package com.hartwig.hmftools.common.variant.structural.annotation;
 
 
 public class SvPON {

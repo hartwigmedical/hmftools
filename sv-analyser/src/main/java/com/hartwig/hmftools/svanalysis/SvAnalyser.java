@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.svanalysis;
 
-import static com.hartwig.hmftools.svanalysis.annotators.SvPONAnnotator.PON_FILTER_PON;
+import static com.hartwig.hmftools.common.variant.structural.annotation.SvPONAnnotator.PON_FILTER_PON;
 
 import java.sql.SQLException;
 import java.util.Arrays;
@@ -11,10 +11,12 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantData;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 import com.hartwig.hmftools.svanalysis.analysis.CNAnalyser;
+import com.hartwig.hmftools.svanalysis.analysis.FusionDisruptionAnalyser;
 import com.hartwig.hmftools.svanalysis.analysis.SvClusteringConfig;
 import com.hartwig.hmftools.svanalysis.analysis.SvSampleAnalyser;
 import com.hartwig.hmftools.svanalysis.annotators.ExtDataLinker;
 import com.hartwig.hmftools.svanalysis.types.SvVarData;
+import com.hartwig.hmftools.svannotation.analysis.SvFusionAnalyser;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -45,6 +47,7 @@ public class SvAnalyser {
     private static final String RUN_RESULTS_CHECKER = "run_results_checker";
     private static final String EXTERNAL_DATA_LINK_FILE = "ext_data_link_file";
     private static final String INCLUDE_NONE_SEGMENTS = "incl_none_segments";
+    private static final String GENE_TRANSCRIPTS_DIR = "gene_transcripts_dir";
 
     private static final String DB_USER = "db_user";
     private static final String DB_PASS = "db_pass";
@@ -108,6 +111,14 @@ public class SvAnalyser {
             SvClusteringConfig clusteringConfig = new SvClusteringConfig(cmd, tumorSample);
             SvSampleAnalyser sampleAnalyser = new SvSampleAnalyser(clusteringConfig);
 
+            FusionDisruptionAnalyser fusionAnalyser = null;
+
+            if(cmd.hasOption(GENE_TRANSCRIPTS_DIR))
+            {
+                fusionAnalyser = new FusionDisruptionAnalyser();
+                fusionAnalyser.loadFusionReferenceData(cmd);
+            }
+
             int count = 0;
             for (final String sample : samplesList)
             {
@@ -145,6 +156,12 @@ public class SvAnalyser {
                 else
                 {
                     sampleAnalyser.analyse();
+
+                    if(fusionAnalyser != null)
+                    {
+                        fusionAnalyser.loadSvGeneTranscriptData(sample, cmd.getOptionValue(GENE_TRANSCRIPTS_DIR));
+                        // fusionAnalyser.findFusions(svVarData, sampleAnalyser.getClusters(), mOu);
+                    }
                 }
             }
 
@@ -232,10 +249,11 @@ public class SvAnalyser {
         options.addOption(COPY_NUMBER_ANALYSIS, false, "Run copy number analysis");
         options.addOption(RUN_RESULTS_CHECKER, false, "Check results vs validation file");
         options.addOption(INCLUDE_NONE_SEGMENTS, false, "Include copy number NONE segments in SV analysis");
-
+        options.addOption(GENE_TRANSCRIPTS_DIR, true, "Optinonal: file with sample gene transcript data");
         SvClusteringConfig.addCmdLineArgs(options);
         ResultsChecker.addCmdLineArgs(options);
         CNAnalyser.addCmdLineArgs(options);
+        SvFusionAnalyser.addCmdLineArgs(options);
 
         return options;
     }

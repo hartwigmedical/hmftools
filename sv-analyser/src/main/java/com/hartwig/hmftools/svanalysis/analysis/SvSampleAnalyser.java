@@ -2,6 +2,7 @@ package com.hartwig.hmftools.svanalysis.analysis;
 
 import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.isConsistentCluster;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.CHROMOSOME_ARM_P;
+import static com.hartwig.hmftools.common.variant.structural.annotation.SvPONAnnotator.REGION_DISTANCE;
 import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.ASSEMBLY_MATCH_ASMB_ONLY;
 
 import com.google.common.collect.Lists;
@@ -11,10 +12,11 @@ import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 import com.hartwig.hmftools.svanalysis.annotators.ExternalSVAnnotator;
 import com.hartwig.hmftools.svanalysis.annotators.FragileSiteAnnotator;
 import com.hartwig.hmftools.svanalysis.annotators.LineElementAnnotator;
-import com.hartwig.hmftools.svanalysis.annotators.SvPONAnnotator;
+import com.hartwig.hmftools.common.variant.structural.annotation.SvPONAnnotator;
 import com.hartwig.hmftools.svanalysis.types.SvArmGroup;
 import com.hartwig.hmftools.svanalysis.types.SvChain;
 import com.hartwig.hmftools.svanalysis.types.SvCluster;
+import com.hartwig.hmftools.common.variant.structural.annotation.SvPON;
 import com.hartwig.hmftools.svanalysis.types.SvVarData;
 import com.hartwig.hmftools.svanalysis.types.SvLinkedPair;
 
@@ -102,6 +104,8 @@ public class SvSampleAnalyser {
         clearState();
     }
 
+    public final List<SvCluster> getClusters() { return mClusters; }
+
     private void clearState()
     {
         mSampleId = "";
@@ -186,7 +190,7 @@ public class SvSampleAnalyser {
             }
             else
             {
-                mSvPONAnnotator.setPonOccurenceCount(var);
+                setPonOccurenceCount(var);
                 var.setFragileSites(mFragileSiteAnnotator.isFragileSite(var, true), mFragileSiteAnnotator.isFragileSite(var, false));
                 var.setLineElement(mLineElementAnnotator.isLineElement(var, true), true);
                 var.setLineElement(mLineElementAnnotator.isLineElement(var, false), false);
@@ -403,6 +407,64 @@ public class SvSampleAnalyser {
         {
             LOGGER.error("error writing to outputFile: {}", e.toString());
         }
+    }
+
+    public void setPonOccurenceCount(SvVarData svData)
+    {
+        if(mSvPONAnnotator == null || !mSvPONAnnotator.hasEntries())
+            return;
+
+        if(mSvPONAnnotator.getPonList().isEmpty())
+            return;
+
+        final List<SvPON> ponList = mSvPONAnnotator.getPonList();
+        final Map<String, Integer> chrIndexMap = mSvPONAnnotator.getChrIndexMap();
+
+        // use CRMS to find start index
+        if(!chrIndexMap.containsKey(svData.chromosome(true)))
+            return;
+
+        int index = chrIndexMap.get(svData.chromosome(true));
+
+        for(; index < ponList.size(); ++index)
+        {
+            final SvPON svPon = ponList.get(index);
+
+            if(!svPon.chrStart().equals(svData.chromosome(true)))
+            {
+                return;
+            }
+
+            if(isMatch(svData, svPon,0))
+            {
+                LOGGER.debug("var({}) found in PON with count({})", svData.posId(), svPon.count());
+                svData.setPonCount(svPon.count());
+                svData.setPonRegionCount(svPon.count()); // set to match
+                return;
+            }
+            else if(svData.getPonRegionCount() == 0 && isMatch(svData, svPon, REGION_DISTANCE))
+            {
+                LOGGER.debug("var({}) found in PON region({}->{}) with count({})",
+                        svData.posId(), svPon.posStart(), svPon.posEnd(), svPon.count());
+
+                svData.setPonRegionCount(svPon.count());
+            }
+        }
+    }
+
+    private static boolean isMatch(final SvVarData svData, final SvPON svPon, final int permittedDiff)
+    {
+        if(!svPon.chrStart().equals(svData.chromosome(true))
+        || !svPon.chrEnd().equals(svData.chromosome(false))
+        || svPon.orientStart() != svData.orientation(true)
+        || svPon.orientEnd() != svData.orientation(false)
+        || !svPon.type().equals(svData.type().toString()))
+        {
+            return false;
+        }
+
+        return Math.abs(svPon.posStart() - svData.position(true)) <= permittedDiff
+                && Math.abs(svPon.posEnd() - svData.position(false)) <= permittedDiff;
     }
 
     private void logSampleClusterInfo()

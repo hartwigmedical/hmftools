@@ -59,7 +59,9 @@ public class ReportableGeneFusionFactoryTest {
     private static Transcript createFusionLeg(boolean isUpstream, @NotNull String gene, @NotNull String transcript, int exonUpstream,
             int exonDownstream, double ploidy) {
         EnrichedStructuralVariant variant = createEnrichedStructuralVariantBuilder().type(StructuralVariantType.BND)
+                .primaryKey(1)
                 .start(createEnrichedStructuralVariantLegBuilder().orientation((byte) 1).chromosome("any").build())
+                .end(createEnrichedStructuralVariantLegBuilder().orientation((byte) 1).chromosome("any").build())
                 .ploidy(ploidy)
                 .build();
         GeneAnnotation upstreamGene =

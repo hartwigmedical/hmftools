@@ -38,11 +38,13 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jooq.Condition;
 import org.jooq.DSLContext;
+import org.jooq.Query;
 import org.jooq.Record;
 import org.jooq.Result;
 import org.jooq.SQLDialect;
 import org.jooq.impl.DSL;
 import org.jooq.types.UInteger;
+import org.jooq.types.ULong;
 
 public class MySQLAnnotator implements VariantAnnotator
 {
@@ -212,6 +214,19 @@ public class MySQLAnnotator implements VariantAnnotator
     @NotNull
     private Result<?> queryTranscripts(@NotNull final UInteger geneId)
     {
+        // CHSH: query created manually since the structured version below doens't produce the same result
+        final String queryStr = "select t.transcript_id, t.stable_id,"
+                + " if(t.seq_region_strand = -1, ce.seq_region_end - tl.seq_end + 1, cs.seq_region_start + tl.seq_start - 1) as CODING_START,"
+                + " if(t.seq_region_strand = -1, cs.seq_region_end - tl.seq_start + 1, ce.seq_region_start + tl.seq_end - 1) as CODING_END"
+                + " from transcript as t"
+                + " left join translation tl on tl.transcript_id = t.transcript_id"
+                + " left join exon cs on cs.exon_id = tl.start_exon_id"
+                + " left join exon ce on ce.exon_id = tl.end_exon_id"
+                + " where t.gene_id = '" + geneId + "'";
+
+        return context.fetch(queryStr);
+
+        /*
         final Exon EXON_START = EXON.as("cs");
         final Exon EXON_END = EXON.as("ce");
 
@@ -230,6 +245,8 @@ public class MySQLAnnotator implements VariantAnnotator
                 .on(EXON_END.EXON_ID.eq(TRANSLATION.END_EXON_ID))
                 .where(TRANSCRIPT.GENE_ID.eq(geneId))
                 .fetch();
+        */
+
     }
 
     private Transcript buildTranscript(
@@ -255,8 +272,8 @@ public class MySQLAnnotator implements VariantAnnotator
 
         int exonMax = allExons.size();
 
-        UInteger codingStartVal = (UInteger) transcript.get(CODING_START);
-        UInteger codingEndVal = (UInteger) transcript.get(CODING_END);
+        ULong codingStartVal = (ULong) transcript.get(CODING_START);
+        ULong codingEndVal = (ULong) transcript.get(CODING_END);
 
         boolean isCoding = codingStartVal != null && codingEndVal != null;
         long codingStart = codingStartVal != null ? codingStartVal.longValue() : 0;
@@ -306,26 +323,26 @@ public class MySQLAnnotator implements VariantAnnotator
 
             if(!inCodingRegion)
             {
-                if(exonEnd > codingStart)
+                if(exonEnd >= codingStart)
                 {
                     // coding region begins in this exon
                     inCodingRegion = true;
 
-                    totalCodingBases += exonEnd - codingStart;
+                    totalCodingBases += exonEnd - codingStart + 1;
 
                     // check whether the position falls in this exon and if so before or after the coding start
                     if(position >= codingStart)
                     {
                         if(position < exonEnd)
-                            codingBases += position - codingStart;
+                            codingBases += position - codingStart + 1;
                         else
-                            codingBases += exonEnd - codingStart;
+                            codingBases += exonEnd - codingStart + 1;
                     }
                 }
             }
             else if(!codingRegionEnded)
             {
-                if(exonStart >= codingEnd)
+                if(exonStart > codingEnd)
                 {
                     codingRegionEnded = true;
                 }
@@ -334,40 +351,49 @@ public class MySQLAnnotator implements VariantAnnotator
                     // coding region ends in this exon
                     codingRegionEnded = true;
 
-                    totalCodingBases += codingEnd - exonStart;
+                    totalCodingBases += codingEnd - exonStart + 1;
 
                     if(position >= exonStart)
                     {
                         if (position < codingEnd)
-                            codingBases += position - exonStart;
+                            codingBases += position - exonStart + 1;
                         else
-                            codingBases += codingEnd - exonStart;
+                            codingBases += codingEnd - exonStart + 1;
                     }
                 }
                 else
                 {
                     // take all of the exon's bases
-                    totalCodingBases += exonEnd - exonStart;
+                    totalCodingBases += exonEnd - exonStart + 1;
 
                     if(position >= exonStart)
                     {
                         if (position < exonEnd)
-                            codingBases += position - exonStart;
+                            codingBases += position - exonStart + 1;
                         else
-                            codingBases += exonEnd - exonStart;
+                            codingBases += exonEnd - exonStart + 1;
                     }
                 }
             }
 
+            /*
             LOGGER.debug("transcript({}:{}) exon({}: {} - {}) coding({} - {}) position({}) coding(pos={} total={}) region(coding={} ended={})",
                     transcriptId, transcriptStableId, exon.get(EXON_TRANSCRIPT.RANK), exonStart, exonEnd,
                     codingStart, codingEnd, position, codingBases, totalCodingBases, inCodingRegion, codingRegionEnded);
+            */
 
             if(codingBases < 0 || totalCodingBases < 0)
             {
+                LOGGER.warn("transcript({}:{}) exon({}: {} - {}) coding({} - {}) position({}) coding(pos={} total={}) region(coding={} ended={})",
+                        transcriptId, transcriptStableId, exon.get(EXON_TRANSCRIPT.RANK), exonStart, exonEnd,
+                        codingStart, codingEnd, position, codingBases, totalCodingBases, inCodingRegion, codingRegionEnded);
                 break;
             }
         }
+
+//        // adjust for stop codon
+//        if(totalCodingBases >= 3)
+//            totalCodingBases -= 3;
 
         if(isForwardStrand)
         {

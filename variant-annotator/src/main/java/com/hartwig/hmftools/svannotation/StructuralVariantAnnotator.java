@@ -1,18 +1,16 @@
 package com.hartwig.hmftools.svannotation;
 
-import static com.hartwig.hmftools.svanalysis.annotators.SvPONAnnotator.PON_FILTER_PASS;
-import static com.hartwig.hmftools.svanalysis.annotators.SvPONAnnotator.PON_FILTER_PON;
+import static java.util.stream.Collectors.toList;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
+import static com.hartwig.hmftools.common.variant.structural.annotation.SvPONAnnotator.PON_FILTER_PASS;
+import static com.hartwig.hmftools.common.variant.structural.annotation.SvPONAnnotator.PON_FILTER_PON;
+import static com.hartwig.hmftools.svannotation.analysis.SvFusionAnalyser.FUSION_PAIRS_CSV;
+import static com.hartwig.hmftools.svannotation.analysis.SvFusionAnalyser.PROMISCUOUS_FIVE_CSV;
+import static com.hartwig.hmftools.svannotation.analysis.SvFusionAnalyser.PROMISCUOUS_THREE_CSV;
+
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileReader;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardOpenOption;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
@@ -43,12 +41,13 @@ import com.hartwig.hmftools.common.variant.structural.annotation.GeneAnnotation;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneDisruption;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion;
 import com.hartwig.hmftools.common.variant.structural.annotation.StructuralVariantAnnotation;
-import com.hartwig.hmftools.common.variant.structural.annotation.Transcript;
+import com.hartwig.hmftools.common.variant.structural.annotation.SvGeneTranscriptCollection;
+import com.hartwig.hmftools.common.variant.structural.annotation.SvPONAnnotator;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
-import com.hartwig.hmftools.svanalysis.annotators.SvPONAnnotator;
 import com.hartwig.hmftools.svannotation.analysis.ImmutableStructuralVariantAnalysis;
 import com.hartwig.hmftools.svannotation.analysis.StructuralVariantAnalysis;
 import com.hartwig.hmftools.svannotation.analysis.StructuralVariantAnalyzer;
+import com.hartwig.hmftools.svannotation.analysis.SvFusionAnalyser;
 import com.hartwig.hmftools.svannotation.dao.StructuralVariantAnnotationDAO;
 
 import org.apache.commons.cli.CommandLine;
@@ -71,26 +70,17 @@ import htsjdk.variant.vcf.VCFCodec;
 
 public class StructuralVariantAnnotator
 {
-
-    // Let PON filtered SVs through since GRIDSS PON filtering is performed upstream
-    private static Set<String> ALLOWED_FILTERS = Sets.newHashSet( "INFERRED", PON_FILTER_PON, PON_FILTER_PASS);
-    private static final Logger LOGGER = LogManager.getLogger(StructuralVariantAnnotator.class);
-
     private static final String SAMPLE = "sample";
     private static final String VCF_FILE = "vcf_file";
     private static final String ENSEMBL_DB = "ensembl_db";
     private static final String ENSEMBL_DB_USER = "ensembl_user";
     private static final String ENSEMBL_DB_PASS = "ensembl_pass";
-    private static final String FUSION_PAIRS_CSV = "fusion_pairs_csv";
-    private static final String PROMISCUOUS_FIVE_CSV = "promiscuous_five_csv";
-    private static final String PROMISCUOUS_THREE_CSV = "promiscuous_three_csv";
     private static final String REF_GENOME = "ref_genome";
     private static final String DATA_OUTPUT_DIR = "data_output_dir";
 
     private static final String SOURCE_SVS_FROM_DB = "source_svs_from_db";
     private static final String LOAD_ANNOTATIONS_FROM_FILE = "load_annotations";
     private static final String SKIP_DB_UPLOAD = "skip_db_upload";
-    private static final String WRITE_RESULTS_FILE = "write_results_file";
     private static final String LOG_DEBUG = "log_debug";
     private static final String SV_PON_FILE = "sv_pon_file";
 
@@ -101,17 +91,26 @@ public class StructuralVariantAnnotator
     private static final String TEST_SV_LIMIT = "test_limit_sv_count";
 
     private String mSampleId;
+    private String mDataPath;
 
     private final CommandLine mCmdLineArgs;
     private DatabaseAccess mDbAccess;
     private boolean mSourceSvFromDB;
+    private SvGeneTranscriptCollection mSvGeneTranscriptCollection;
+
+    // Let PON filtered SVs through since GRIDSS PON filtering is performed upstream
+    private static Set<String> ALLOWED_FILTERS = Sets.newHashSet( "INFERRED", PON_FILTER_PON, PON_FILTER_PASS);
+
+    private static final Logger LOGGER = LogManager.getLogger(StructuralVariantAnnotator.class);
 
     public StructuralVariantAnnotator(final CommandLine cmd)
     {
         mSampleId = "";
+        mDataPath = "";
         mDbAccess = null;
         mSourceSvFromDB = false;
         mCmdLineArgs = cmd;
+        mSvGeneTranscriptCollection = new SvGeneTranscriptCollection();
     }
 
     public boolean initialise()
@@ -130,41 +129,15 @@ public class StructuralVariantAnnotator
 
         mSourceSvFromDB = mCmdLineArgs.hasOption(SOURCE_SVS_FROM_DB);
 
+        mDataPath = mCmdLineArgs.hasOption(DATA_OUTPUT_DIR) ? mCmdLineArgs.getOptionValue(DATA_OUTPUT_DIR) : "";
+        mSvGeneTranscriptCollection.setDataPath(mDataPath);
+
         return true;
     }
 
     public boolean run()
     {
-        LOGGER.info("annotating variants for sample({})", mSampleId);
-
-        List<EnrichedStructuralVariant> enrichedVariants;
-
-        if(mSourceSvFromDB)
-        {
-            // optionally load existing SVs from the database rather than from VCF
-            enrichedVariants = mDbAccess.readStructuralVariants(mSampleId);
-
-            if (enrichedVariants.isEmpty())
-            {
-                LOGGER.info("no SVs loaded from DB");
-                return false;
-            }
-
-            LOGGER.debug("sample({}) loaded {} SVs from DB", mSampleId, enrichedVariants.size());
-        }
-        else
-        {
-            List<EnrichedStructuralVariant> svList = loadSVsFromFile();
-
-            LOGGER.info("persisting {} SVs to database", svList.size());
-
-            mDbAccess.writeStructuralVariants(mSampleId, svList);
-
-            // re-read the data to get primaryId field as a foreign key for disruptions and fusions
-            enrichedVariants = mDbAccess.readStructuralVariants(mSampleId);;
-        }
-
-        DatabaseAccess ensembleDBConn = null;
+        // create the annotator - typically a MySQL connection to the Ensembl database
         VariantAnnotator annotator = null;
 
         if(mCmdLineArgs.hasOption(ENSEMBL_DB))
@@ -179,14 +152,15 @@ public class StructuralVariantAnnotator
 
                 if (!ensembleUser.isEmpty() && !ensemblePassword.isEmpty())
                 {
-                    ensembleDBConn = new DatabaseAccess(ensembleUser, ensemblePassword, ensembleUrl);
+                    DatabaseAccess ensembleDBConn = new DatabaseAccess(ensembleUser, ensemblePassword, ensembleUrl);
                     annotator = new MySQLAnnotator(ensembleDBConn.context());
                 }
                 else
                 {
                     MySQLAnnotator.make(ensembleUrl);
                 }
-            } catch (SQLException e)
+            }
+            catch (SQLException e)
             {
                 LOGGER.warn("Ensembl DB connection failed: {}", e.toString());
                 return false;
@@ -215,71 +189,114 @@ public class StructuralVariantAnnotator
         }
 
         // TODO (KODU): Add potentially actionable genes, see also instantiation in patient reporter.
-        final StructuralVariantAnalyzer analyzer = new StructuralVariantAnalyzer(annotator, tsgDriverGeneIDs(), knownFusionsModel);
+        final StructuralVariantAnalyzer svAnalyser = new StructuralVariantAnalyzer(annotator, tsgDriverGeneIDs(), knownFusionsModel);
 
-        // final StructuralVariantAnalysis analysis = analyzer.run(enrichedVariants);
+        if(mSampleId.isEmpty() || mSampleId.equals("*"))
+        {
+            List<String> samplesList = mDbAccess.structuralVariantSampleList("");
+
+            LOGGER.info("loaded {} samples from database", samplesList.size());
+
+            for(final String sampleId : samplesList)
+            {
+                runSample(sampleId, svAnalyser);
+            }
+        }
+        else
+        {
+            runSample(mSampleId, svAnalyser);
+        }
+
+        return true;
+    }
+
+    private void runSample(final String sampleId, final StructuralVariantAnalyzer svAnalyser)
+    {
+        LOGGER.info("annotating variants for sample({})", sampleId);
+
+        List<EnrichedStructuralVariant> enrichedVariants;
+
+        if(mSourceSvFromDB)
+        {
+            // optionally load existing SVs from the database rather than from VCF
+            enrichedVariants = mDbAccess.readStructuralVariants(sampleId)
+                    .stream().filter(x -> x.filter().equals("PASS")).collect(toList());
+
+            if (enrichedVariants.isEmpty())
+            {
+                LOGGER.debug("sample({}) no SVs loaded from DB", sampleId);
+                return;
+            }
+
+            LOGGER.debug("sample({}) loaded {} SVs from DB", sampleId, enrichedVariants.size());
+        }
+        else
+        {
+            List<EnrichedStructuralVariant> svList = loadSVsFromVCF(sampleId);
+
+            LOGGER.info("persisting {} SVs to database", svList.size());
+
+            mDbAccess.writeStructuralVariants(sampleId, svList);
+
+            // re-read the data to get primaryId field as a foreign key for disruptions and fusions
+            enrichedVariants = mDbAccess.readStructuralVariants(sampleId);;
+        }
 
         List<StructuralVariantAnnotation> annotations;
-        if(mCmdLineArgs.hasOption(LOAD_ANNOTATIONS_FROM_FILE) && mCmdLineArgs.hasOption(DATA_OUTPUT_DIR))
+        if(mCmdLineArgs.hasOption(LOAD_ANNOTATIONS_FROM_FILE) && !mDataPath.isEmpty())
         {
-            annotations = loadAnnotations(enrichedVariants);
+            mSvGeneTranscriptCollection.loadSampleGeneTranscripts(sampleId);
+
+            annotations = createAnnotations(enrichedVariants);
 
             LOGGER.debug("loaded {} Ensembl annotations from file", annotations.size());
         }
-        else if(annotator != null)
+        else if(svAnalyser.getGeneDataAnnotator() != null)
         {
             int testSvLimit = Integer.parseInt(mCmdLineArgs.getOptionValue(TEST_SV_LIMIT, "0"));
 
             if(testSvLimit > 0)
             {
                 List<EnrichedStructuralVariant> subset = Lists.newArrayList(enrichedVariants.subList(0, testSvLimit));
-                annotations = analyzer.findAnnotations(subset);
+                annotations = svAnalyser.findAnnotations(subset);
             }
             else
             {
-                annotations = analyzer.findAnnotations(enrichedVariants);
+                annotations = svAnalyser.findAnnotations(enrichedVariants);
             }
 
-            LOGGER.debug("matched {} annotations from Ensembl database", annotations.size());
+            LOGGER.debug("sample({}) matched {} annotations from Ensembl database", sampleId, annotations.size());
 
             // optionally persist to save having to look up this Ensembl data again
-            if(mCmdLineArgs.hasOption(DATA_OUTPUT_DIR))
-                writeAnnotations(annotations);
+            if(!mDataPath.isEmpty())
+                mSvGeneTranscriptCollection.writeAnnotations(sampleId, annotations);
         }
         else
         {
             LOGGER.error("Ensemble data not loaded from DB nor file");
-            return false;
-        }
-
-        LOGGER.debug("finding disruptions and fusions");
-        final List<GeneFusion> fusions = analyzer.findFusions(annotations);
-        final List<GeneDisruption> disruptions = analyzer.findDisruptions(annotations);
-
-        LOGGER.debug("found {} disruptions and {} fusions", disruptions.size(), fusions.size());
-
-        final StructuralVariantAnalysis analysis = ImmutableStructuralVariantAnalysis.of(annotations, fusions, disruptions);
-
-        if(mCmdLineArgs.hasOption(WRITE_RESULTS_FILE))
-        {
-            writeFusions(analysis.fusions());
-            // writeDisruptions(analysis.disruptions());
+            return;
         }
 
         if(!mCmdLineArgs.hasOption(SKIP_DB_UPLOAD))
         {
+            LOGGER.debug("sample({}) finding disruptions and fusions", sampleId);
+
+            final List<GeneFusion> fusions = svAnalyser.findFusions(annotations);
+            final List<GeneDisruption> disruptions = svAnalyser.findDisruptions(annotations);
+
+            LOGGER.debug("sample({}) found {} disruptions and {} fusions", sampleId, disruptions.size(), fusions.size());
+
+            final StructuralVariantAnalysis analysis = ImmutableStructuralVariantAnalysis.of(annotations, fusions, disruptions);
+
             LOGGER.debug("persisting annotations to database");
             final StructuralVariantAnnotationDAO annotationDAO = new StructuralVariantAnnotationDAO(mDbAccess.context());
 
-            annotationDAO.deleteAnnotationsForSample(mSampleId);
-            annotationDAO.write(analysis, mSampleId);
-
+            annotationDAO.deleteAnnotationsForSample(sampleId);
+            annotationDAO.write(analysis, sampleId);
         }
-
-        return true;
     }
 
-    private List<EnrichedStructuralVariant> loadSVsFromFile()
+    private List<EnrichedStructuralVariant> loadSVsFromVCF(final String sampleId)
     {
         List<EnrichedStructuralVariant> svList = Lists.newArrayList();
 
@@ -293,7 +310,7 @@ public class StructuralVariantAnnotator
             final List<StructuralVariant> variants = readFromVcf(mCmdLineArgs.getOptionValue(VCF_FILE));
 
             LOGGER.debug("enriching structural variants based on purple data");
-            svList = enrichStructuralVariants(indexedFastaSequenceFile, variants);
+            svList = enrichStructuralVariants(sampleId,indexedFastaSequenceFile, variants);
         }
         catch(IOException e)
         {
@@ -395,20 +412,21 @@ public class StructuralVariantAnnotator
 
     @NotNull
     private List<EnrichedStructuralVariant> enrichStructuralVariants(
+            final String sampleId,
             @NotNull final IndexedFastaSequenceFile indexedFastaSequenceFile, @NotNull List<StructuralVariant> variants)
     {
-        final PurityContext purityContext = mDbAccess.readPurityContext(mSampleId);
+        final PurityContext purityContext = mDbAccess.readPurityContext(sampleId);
 
         if (purityContext == null)
         {
-            LOGGER.warn("sample({} unable to retrieve purple data, enrichment may be incomplete", mSampleId);
+            LOGGER.warn("sample({} unable to retrieve purple data, enrichment may be incomplete", sampleId);
         }
 
         final PurityAdjuster purityAdjuster = purityContext == null
                 ? new PurityAdjuster(Gender.FEMALE, 1, 1)
                 : new PurityAdjuster(purityContext.gender(), purityContext.bestFit().purity(), purityContext.bestFit().normFactor());
 
-        final List<PurpleCopyNumber> copyNumberList = mDbAccess.readCopynumbers(mSampleId);
+        final List<PurpleCopyNumber> copyNumberList = mDbAccess.readCopynumbers(sampleId);
 
         final Multimap<Chromosome, PurpleCopyNumber> copyNumbers =
                 Multimaps.index(copyNumberList, x -> HumanChromosome.fromString(x.chromosome()));
@@ -416,390 +434,29 @@ public class StructuralVariantAnnotator
         return new EnrichedStructuralVariantFactory(indexedFastaSequenceFile, purityAdjuster, copyNumbers).enrich(variants);
     }
 
-    private void writeAnnotations(final List<StructuralVariantAnnotation> annotations)
+    private final List<StructuralVariantAnnotation> createAnnotations(List<EnrichedStructuralVariant> enrichedVariants)
     {
-        LOGGER.debug("writing {} annotations to file", annotations.size());
+        final Map<Integer, List<GeneAnnotation>> svIdGeneTranscriptsMap = mSvGeneTranscriptCollection.getSvIdGeneTranscriptsMap();
 
-        String outputFilename = getSampleGeneAnnotationsFilename();
-
-        try
-        {
-            Path outputFile = Paths.get(outputFilename);
-
-            BufferedWriter writer = Files.newBufferedWriter(outputFile, StandardOpenOption.CREATE);
-
-            // write header
-            writer.write("SvId,Chromosome,Position,Orientation");
-            writer.write(",IsStart,GeneName, geneStableId, geneStrand, synonyms, entrezIds, karyotypeBand");
-            writer.write(",TranscriptId,ExonUpstream,ExonUpstreamPhase,ExonDownstream,ExonDownstreamPhase,CodingBases,TotalCodingBases");
-            writer.write(",ExonMax,Canonical,CodingStart,CodingEnd,RegionType,CodingType");
-            writer.newLine();
-
-            for(final StructuralVariantAnnotation annotation : annotations)
-            {
-                if(annotation.annotations().isEmpty())
-                {
-                    // LOGGER.debug("SV({}) has no annotations", annotation.variant().primaryKey());
-                    continue;
-                }
-
-                for(final GeneAnnotation geneAnnotation : annotation.annotations())
-                {
-                    String synonymnsStr = "";
-                    for(final String syn : geneAnnotation.synonyms())
-                    {
-                        if(!synonymnsStr.isEmpty())
-                            synonymnsStr += ";";
-
-                        synonymnsStr += syn;
-                    }
-
-                    String entrezIdsStr = "";
-                    for(final Integer eId : geneAnnotation.entrezIds())
-                    {
-                        if(!entrezIdsStr.isEmpty())
-                            entrezIdsStr += ";";
-
-                        entrezIdsStr += eId;
-                    }
-
-                    for(final Transcript transcript : geneAnnotation.transcripts())
-                    {
-                        final StructuralVariant var = annotation.variant();
-
-                        boolean isStart = geneAnnotation.isStart();
-
-                        if(transcript.codingBases() < 0)
-                        {
-                            LOGGER.error("invalid coding bases");
-                        }
-
-                        writer.write(String.format("%d,%s,%d,%d",
-                                var.primaryKey(), var.chromosome(isStart), var.position(isStart), var.orientation(isStart)));
-
-                        // Gene info: isStart, geneName, geneStableId, geneStrand, synonyms, entrezIds, karyotypeBand
-                        writer.write(
-                                String.format(",%s,%s,%s,%d,%s,%s,%s",
-                                        geneAnnotation.isStart(),
-                                        geneAnnotation.geneName(),
-                                        geneAnnotation.stableId(),
-                                        geneAnnotation.strand(),
-                                        synonymnsStr,
-                                        entrezIdsStr,
-                                        geneAnnotation.karyotypeBand()));
-
-                        // Transcript info: transcriptId,exonUpstream, exonUpstreamPhase, exonDownstream, exonDownstreamPhase, exonStart, exonEnd, exonMax, canonical, codingStart, codingEnd
-                        writer.write(
-                                String.format(",%s,%d,%d,%d,%d,%d,%d",
-                                        transcript.transcriptId(),
-                                        transcript.exonUpstream(),
-                                        transcript.exonUpstreamPhase(),
-                                        transcript.exonDownstream(),
-                                        transcript.exonDownstreamPhase(),
-                                        transcript.codingBases(),
-                                        transcript.totalCodingBases()));
-
-                        writer.write(
-                                String.format(",%d,%s,%d,%d,%s,%s",
-                                        transcript.exonMax(),
-                                        transcript.isCanonical(),
-                                        transcript.codingStart(),
-                                        transcript.codingEnd(),
-                                        transcript.getRegionType(),
-                                        transcript.getCodingType()));
-
-                        writer.newLine();
-                    }
-                }
-            }
-
-            writer.close();
-        }
-        catch (final IOException e)
-        {
-            LOGGER.error("error writing gene annotations");
-        }
-    }
-
-    private void writeFusions(final List<GeneFusion> fusions)
-    {
-        if(fusions.isEmpty())
-            return;
-
-        String outputFilename = mCmdLineArgs.getOptionValue(DATA_OUTPUT_DIR);
-
-        if(!outputFilename.endsWith("/"))
-            outputFilename += "/";
-
-        outputFilename += mSampleId + "_" + "sv_fusions.csv";
-
-        try
-        {
-            Path outputFile = Paths.get(outputFilename);
-
-            BufferedWriter writer = Files.newBufferedWriter(outputFile, StandardOpenOption.CREATE);
-
-            writer.write("SampleId");
-            writer.write(",StartSvId,StartChr,StartPos,StartOrient,StartType");
-            writer.write(",StartGene,StartTranscript,StartRegionType,StartExon,StartPhase,StartCodingBases,StartTotalCodingBases,StartCodingStart,StartCodingEnd");
-            writer.write(",EndSvId,EndChr,EndPos,EndOrient,EndType");
-            writer.write(",EndGene,EndTranscript,EndRegionType,EndExon,EndPhase,EndCodingBases,EndTotalCodingBases,EndCodingStart,EndCodingEnd");
-            writer.newLine();
-
-            for(final GeneFusion fusion : fusions)
-            {
-                final Transcript startTrans = fusion.upstreamLinkedAnnotation();
-                final Transcript endTrans = fusion.downstreamLinkedAnnotation();
-
-                boolean startUsesStart = startTrans.parent().isStart();
-                boolean endUsesStart = endTrans.parent().isStart();
-
-                final EnrichedStructuralVariant startVar = startTrans.parent().variant();
-                final EnrichedStructuralVariant endVar = endTrans.parent().variant();
-
-                writer.write(String.format("%s", mSampleId));
-
-                // write upstream SV, transcript and exon info
-                writer.write(
-                        String.format(",%d,%s,%d,%d,%s",
-                                startVar.primaryKey(), startVar.chromosome(startUsesStart), startVar.position(startUsesStart), startVar.orientation(startUsesStart), startVar.type()));
-
-                writer.write(
-                        String.format(",%s,%s,%s,%d,%d,%d,%d,%d,%d",
-                                startTrans.parent().geneName(), startTrans.transcriptId(), startTrans.getRegionType(), startTrans.exonUpstream(), startTrans.exonUpstreamPhase(),
-                                startTrans.codingBases(), startTrans.totalCodingBases(),
-                                startTrans.codingStart() != null ? startTrans.codingStart() : 0,
-                                startTrans.codingEnd() != null ? startTrans.codingEnd() : 0));
-
-                writer.write(
-                        String.format(",%d,%s,%d,%d,%s",
-                                endVar.primaryKey(), endVar.chromosome(endUsesStart), endVar.position(endUsesStart), endVar.orientation(endUsesStart), endVar.type()));
-
-                writer.write(
-                        String.format(",%s,%s,%s,%d,%d,%d,%d,%d,%d",
-                                endTrans.parent().geneName(), endTrans.transcriptId(), endTrans.getRegionType(), endTrans.exonUpstream(), endTrans.exonUpstreamPhase(),
-                                endTrans.codingBases(), endTrans.totalCodingBases(),
-                                endTrans.codingStart() != null ? endTrans.codingStart() : 0,
-                                endTrans.codingEnd() != null ? endTrans.codingEnd() : 0));
-
-                writer.newLine();
-            }
-
-            writer.close();
-        }
-        catch (final IOException e)
-        {
-            LOGGER.error("error writing gene annotations");
-        }
-    }
-
-    private void writeDisruptions(final List<GeneDisruption> disruptions)
-    {
-        if(disruptions.isEmpty())
-            return;
-
-        String outputFilename = mCmdLineArgs.getOptionValue(DATA_OUTPUT_DIR);
-
-        if(!outputFilename.endsWith("/"))
-            outputFilename += "/";
-
-        outputFilename += mSampleId + "_" + "sv_disruption.csv";
-
-        try
-        {
-            Path outputFile = Paths.get(outputFilename);
-
-            BufferedWriter writer = Files.newBufferedWriter(outputFile, StandardOpenOption.CREATE);
-
-            writer.close();
-        }
-        catch (final IOException e)
-        {
-            LOGGER.error("error writing gene annotations");
-        }
-    }
-
-
-    private final String getSampleGeneAnnotationsFilename()
-    {
-        String outputFilename = mCmdLineArgs.getOptionValue(DATA_OUTPUT_DIR);
-
-        if(!outputFilename.endsWith("/"))
-            outputFilename += "/";
-
-        return outputFilename + mSampleId + "_" + "sv_ensembl_data.csv";
-    }
-
-    private static int VAR_ID_COL_INDEX = 0;
-    private static int VAR_CHR_COL_INDEX = 1;
-    private static int VAR_POS_COL_INDEX = 2;
-    private static int VAR_ORIENT_COL_INDEX = 3;
-
-    // gene data: isStart, geneName, geneStableId, geneStrand, synonyms, entrezIds, karyotypeBand
-    private static int GENE_IS_START_COL_INDEX = 4;
-    private static int GENE_NAME_COL_INDEX = 5;
-    private static int GENE_STABLE_ID_COL_INDEX = 6;
-    private static int GENE_STRAND_INDEX = 7;
-    private static int GENE_SYNS_COL_INDEX = 8;
-    private static int GENE_EIDS_COL_INDEX = 9;
-    private static int GENE_KARYOTYPE_COL_INDEX = 10;
-
-    // transcript data: transcriptId, exonUpstream, exonUpstreamPhase, exonDownstream, exonDownstreamPhase, codingBase, totalCodingBases, exonMax, canonical, codingStart, codingEnd
-    private static int TRANSCRIPT_ID_COL_INDEX = 11;
-    private static int TRANSCRIPT_EUS_COL_INDEX = 12;
-    private static int TRANSCRIPT_EUP_COL_INDEX = 13;
-    private static int TRANSCRIPT_EDS_COL_INDEX = 14;
-    private static int TRANSCRIPT_EDP_COL_INDEX = 15;
-    private static int TRANSCRIPT_CDB_COL_INDEX = 16;
-    private static int TRANSCRIPT_TCB_COL_INDEX = 17;
-    private static int TRANSCRIPT_EMAX_COL_INDEX = 18;
-    private static int TRANSCRIPT_CAN_COL_INDEX = 19;
-    private static int TRANSCRIPT_CS_COL_INDEX = 20;
-    private static int TRANSCRIPT_CE_COL_INDEX = 21;
-
-    private final List<StructuralVariantAnnotation> loadAnnotations(List<EnrichedStructuralVariant> enrichedVariants)
-    {
         List<StructuralVariantAnnotation> annotations = Lists.newArrayList();
 
-        final String filename = getSampleGeneAnnotationsFilename();
-
-        if (filename.isEmpty())
-            return annotations;
-
-        try
+        for(final EnrichedStructuralVariant var : enrichedVariants)
         {
-            BufferedReader fileReader = new BufferedReader(new FileReader(filename));
+            StructuralVariantAnnotation annotation = new StructuralVariantAnnotation(var);
 
-            String line = fileReader.readLine();
+            List<GeneAnnotation> genesList = svIdGeneTranscriptsMap.get(var.primaryKey());
 
-            if (line == null)
+            if(genesList != null)
             {
-                LOGGER.error("empty copy number CSV file({})", filename);
-                return annotations;
+                for(GeneAnnotation geneAnnotation : genesList)
+                {
+                    geneAnnotation.setSvData(var);
+                }
+
+                annotation.annotations().addAll(genesList);
             }
 
-            int varIndex = 0;
-            EnrichedStructuralVariant currentVar = enrichedVariants.get(varIndex);
-            StructuralVariantAnnotation annotation = new StructuralVariantAnnotation(currentVar);
-
-            GeneAnnotation currentGene = null;
-
-            int fileIndex = 0;
-
-            line = fileReader.readLine(); // skip header
-
-            while (line != null)
-            {
-                // parse CSV data
-                String[] items = line.split(",");
-
-                // check if still on the same variant
-                final String varId = items[VAR_ID_COL_INDEX];
-
-                if(!varId.equals(currentVar.primaryKey().toString()))
-                {
-                    if(annotation != null)
-                    {
-                        // done with current variant and gene
-                        if(currentGene != null)
-                            annotation.annotations().add(currentGene);
-
-                        annotations.add(annotation);
-
-                        currentGene = null;
-                    }
-
-                    ++varIndex;
-
-                    if(varIndex >= enrichedVariants.size())
-                    {
-                        LOGGER.warn("variants exhausted before file end, at index({}): fileVar({})", fileIndex, varId);
-                        break;
-                    }
-
-                    currentVar = enrichedVariants.get(varIndex);
-                    annotation = null;
-
-                    if(!varId.equals(currentVar.primaryKey().toString()))
-                    {
-                        // it's possible that the SV has no ensembl data, in which it needs to be skipped over
-                        // LOGGER.debug("variant mismatch at index({}): currentVar({}) vs fileVar({}), skipping SV", fileIndex, currentVar.primaryKey(), varId);
-                        continue;
-                    }
-
-                    annotation = new StructuralVariantAnnotation(currentVar);
-                }
-
-                // isStart, geneName, geneStableId, geneStrand, synonyms, entrezIds, karyotypeBand
-                final String geneName = items[GENE_NAME_COL_INDEX];
-
-                if(currentGene == null || !currentGene.geneName().equals(geneName))
-                {
-                    if(currentGene != null)
-                    {
-                        // add to annotation and prepare a new one
-                        annotation.annotations().add(currentGene);
-                    }
-
-                    String[] synonymsStr = items[GENE_SYNS_COL_INDEX].split(";");
-                    final List<String> synonyms = Lists.newArrayList(synonymsStr);
-
-                    String[] entrezIdStr = items[GENE_EIDS_COL_INDEX].split(";");
-
-                    final List<Integer> entrezIds = Lists.newArrayList();
-
-                    for (int i = 0; i < entrezIdStr.length; ++i)
-                    {
-                        if(!entrezIdStr[i].isEmpty())
-                            entrezIds.add(Integer.parseInt(entrezIdStr[i]));
-                    }
-
-                    currentGene = new GeneAnnotation(
-                            currentVar,
-                            Boolean.parseBoolean(items[GENE_IS_START_COL_INDEX]),
-                            geneName,
-                            items[GENE_STABLE_ID_COL_INDEX],
-                            Integer.parseInt(items[GENE_STRAND_INDEX]),
-                            synonyms,
-                            entrezIds,
-                            items[GENE_KARYOTYPE_COL_INDEX]);
-                }
-
-                final String transcriptId = items[TRANSCRIPT_ID_COL_INDEX];
-
-                // transcriptId, exonUpstream, exonUpstreamPhase, exonDownstream, exonDownstreamPhase, exonMax, canonical, codingStart, codingEnd
-                Transcript transcript = new Transcript(
-                        currentGene,
-                        transcriptId,
-                        Integer.parseInt(items[TRANSCRIPT_EUS_COL_INDEX]),
-                        Integer.parseInt(items[TRANSCRIPT_EUP_COL_INDEX]),
-                        Integer.parseInt(items[TRANSCRIPT_EDS_COL_INDEX]),
-                        Integer.parseInt(items[TRANSCRIPT_EDP_COL_INDEX]),
-                        Long.parseLong(items[TRANSCRIPT_CDB_COL_INDEX]),
-                        Long.parseLong(items[TRANSCRIPT_TCB_COL_INDEX]),
-                        Integer.parseInt(items[TRANSCRIPT_EMAX_COL_INDEX]),
-                        Boolean.parseBoolean(items[TRANSCRIPT_CAN_COL_INDEX]),
-                        items[TRANSCRIPT_CS_COL_INDEX].equals("null") ? null : Long.parseLong(items[TRANSCRIPT_CS_COL_INDEX]),
-                        items[TRANSCRIPT_CE_COL_INDEX].equals("null") ? null : Long.parseLong(items[TRANSCRIPT_CE_COL_INDEX]));
-
-                currentGene.addTranscript(transcript);
-
-                line = fileReader.readLine();
-
-                if(line == null)
-                {
-                    // add the last annotation
-                    annotations.add(annotation);
-                    break;
-                }
-
-                ++fileIndex;
-            }
-
-        }
-        catch(IOException e)
-        {
-            LOGGER.error("failed to load sample gene annotations({}): {}", filename, e.toString());
+            annotations.add(annotation);
         }
 
         return annotations;
@@ -832,9 +489,6 @@ public class StructuralVariantAnnotator
         options.addOption(DB_USER, true, "Database user name.");
         options.addOption(DB_PASS, true, "Database password.");
         options.addOption(DB_URL, true, "Database url.");
-        options.addOption(FUSION_PAIRS_CSV, true, "Path towards a CSV containing white-listed gene fusion pairs.");
-        options.addOption(PROMISCUOUS_FIVE_CSV, true, "Path towards a CSV containing white-listed promiscuous 5' genes.");
-        options.addOption(PROMISCUOUS_THREE_CSV, true, "Path towards a CSV containing white-listed promiscuous 3' genes.");
         options.addOption(ENSEMBL_DB, true, "Annotate structural variants using this Ensembl DB URI");
         options.addOption(ENSEMBL_DB_PASS, true, "Ensembl DB password if required");
         options.addOption(ENSEMBL_DB_USER, true, "Ensembl DB username if required");
@@ -843,11 +497,12 @@ public class StructuralVariantAnnotator
         options.addOption(REF_GENOME, true, "Path to the ref genome fasta file.");
         options.addOption(DATA_OUTPUT_DIR, true, "Path to persist annotations to file");
 
+        SvFusionAnalyser.addCmdLineArgs(options);
+
         // testing options
         options.addOption(SOURCE_SVS_FROM_DB, false, "Skip annotations, including Ensemble DB data sync, for testing only)");
         options.addOption(LOAD_ANNOTATIONS_FROM_FILE, false, "Load existing annotations previously written to file");
         options.addOption(SKIP_DB_UPLOAD, false, "Skip uploading fusions and disruptions to database, off by default");
-        options.addOption(WRITE_RESULTS_FILE, false, "Write fusions and disruptions to file, off by default");
         options.addOption(TEST_SV_LIMIT, true, "Optional: only analyser X variants to save processing time");
 
         return options;

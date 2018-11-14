@@ -297,8 +297,6 @@ public class ClusterAnalyser {
         if(cluster.isResolved())
             return;
 
-        boolean logData = false;
-
         if (cluster.isSimpleSVs())
         {
             if(cluster.getCount() == 1)
@@ -309,7 +307,7 @@ public class ClusterAnalyser {
 
             if(cluster.getTypeCount(DEL) + cluster.getTypeCount(DUP) == 2)
             {
-                if(mClusteringMethods.markDelDupPairTypes(cluster, logData, mSampleId))
+                if(mClusteringMethods.markDelDupPairTypes(cluster, mSampleId))
                     return;
             }
 
@@ -322,11 +320,11 @@ public class ClusterAnalyser {
         {
             if(cluster.getTypeCount(BND) == 2)
             {
-                mClusteringMethods.markBndPairTypes(cluster, logData, mSampleId);
+                mClusteringMethods.markBndPairTypes(cluster, mSampleId);
             }
             else if(cluster.getTypeCount(INV) == 2)
             {
-                mClusteringMethods.markInversionPairTypes(cluster, logData, mSampleId);
+                mClusteringMethods.markInversionPairTypes(cluster, mSampleId);
             }
             else if(cluster.getTypeCount(SGL) == 2)
             {
@@ -699,12 +697,12 @@ public class ClusterAnalyser {
         return false;
     }
 
-    private boolean canMergeOpenSingles(final SvCluster cluster1, final SvCluster cluster2)
+    private boolean canMergeOpenSingles(final SvCluster otherCluster, final SvCluster soloSingleCluster)
     {
         // first cluster has the open single in a chain, the second is a solo single
         // can be merged if the open single is the closest cluster to this cluster
-        final SvArmGroup singleArmGroup = cluster2.getArmGroups().get(0);
-        final SvVarData soloVar = cluster2.getSVs().get(0);
+        final SvArmGroup singleArmGroup = soloSingleCluster.getArmGroups().get(0);
+        final SvVarData soloVar = soloSingleCluster.getSVs().get(0);
 
         final List<SvBreakend> breakendList = mClusteringMethods.getChrBreakendMap().get(singleArmGroup.chromosome());
 
@@ -715,11 +713,11 @@ public class ClusterAnalyser {
             if(breakend.getSV().equals(soloVar))
             {
                 // check if the preceding or next breakend is in the cluster with the open single chain
-                if((i > 0 && cluster1.getSVs().contains(breakendList.get(i - 1).getSV()))
-                || (i < breakendList.size() - 1 && cluster1.getSVs().contains(breakendList.get(i + 1).getSV())))
+                if((i > 0 && otherCluster.getSVs().contains(breakendList.get(i - 1).getSV()))
+                || (i < breakendList.size() - 1 && otherCluster.getSVs().contains(breakendList.get(i + 1).getSV())))
                 {
                     LOGGER.debug("inconsistent cluster({}) and cluster({}) have adjacent SVs with solo-single",
-                            cluster1.getId(), cluster2.getId());
+                            otherCluster.getId(), soloSingleCluster.getId());
 
                     return true;
                 }

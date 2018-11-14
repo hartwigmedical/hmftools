@@ -2,6 +2,7 @@ package com.hartwig.hmftools.svanalysis.types;
 
 import static java.lang.Math.abs;
 
+import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.svanalysis.analysis.LinkFinder.MIN_TEMPLATED_INSERTION_LENGTH;
 
 import java.util.List;
@@ -90,12 +91,37 @@ public class SvLinkedPair {
 
     public final String toString()
     {
+        /*
         boolean firstLinkBE = mLinkType == LINK_TYPE_SGL ? !mFirstLinkOnStart : mFirstLinkOnStart;
         boolean secondLinkBE = mLinkType == LINK_TYPE_SGL ? !mSecondLinkOnStart : mSecondLinkOnStart;
 
         return String.format("%s %s:%d:%s & %s %s:%d:%s",
                 first().id(), first().chromosome(firstLinkBE), first().position(firstLinkBE), firstLinkBE ? "start":"end",
                 second().id(), second().chromosome(secondLinkBE), second().position(secondLinkBE), secondLinkBE ? "start":"end");
+        */
+
+        return svToString(mFirst, mFirstLinkOnStart) + " & " + svToString(mSecond, mSecondLinkOnStart);
+    }
+
+    private static final String svToString(final SvVarData var, boolean linkedOnStart)
+    {
+        if(var.type() != SGL)
+        {
+            return String.format("%s %s:%d:%s",
+                    var.id(), var.chromosome(linkedOnStart), var.position(linkedOnStart), linkedOnStart ? "start" : "end");
+        }
+
+        if(linkedOnStart)
+        {
+            return String.format("%s %s:%d SGL-on-known",
+                    var.id(), var.chromosome(true), var.position(true));
+        }
+        else
+        {
+            return String.format("%s %s:%d SGL-on-null",
+                    var.id(), var.chromosome(true), var.position(true));
+        }
+
 
     }
 
