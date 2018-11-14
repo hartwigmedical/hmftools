@@ -80,16 +80,16 @@ public final class PatientReporterFileLoader {
     static Path findStructuralVariantVCF(@NotNull String runDirectory) throws IOException {
         // TODO (KODU): Clean up once pipeline v3 no longer exists and we switched to GRIDSS everywhere
         Optional<Path> path = tryFindPathOnExtension(runDirectory + File.separator + PURPLE_DIRECTORY, PURPLE_GRIDSS_SV);
-//        if (path.isPresent()) {
-//            LOGGER.info("Using SVs from GRIDSS/Purple");
-//            return path.get();
-//        } else {
+        if (path.isPresent()) {
+            LOGGER.info("Using SVs from GRIDSS/Purple");
+            return path.get();
+        } else {
             LOGGER.info("Using SVs from Manta/BPI");
             path = tryFindPathOnExtension(runDirectory, MANTA_SV_EXTENSION_V3);
             if (!path.isPresent()) {
                 path = tryFindPathOnExtension(runDirectory, MANTA_SV_EXTENSION_V4);
             }
-//        }
+        }
 
         assert path.isPresent();
         return path.get();
