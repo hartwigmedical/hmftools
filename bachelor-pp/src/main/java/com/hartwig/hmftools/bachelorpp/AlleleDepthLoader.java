@@ -1,8 +1,6 @@
 package com.hartwig.hmftools.bachelorpp;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.FileVisitOption;
 import java.nio.file.Files;
@@ -22,90 +20,21 @@ import org.apache.logging.log4j.Logger;
 
 public class AlleleDepthLoader {
 
-    private static final int BACHELOR_CSV_FIELD_COUNT = 16;
     private static final String MPILEUP_FILE_EXTN = ".mpu";
 
     private static final Logger LOGGER = LogManager.getLogger(AlleleDepthLoader.class);
 
-    private String sampleId;
-    private List<BachelorGermlineVariant> bachelorVariants;
-    private List<Pileup> pileupData;
+    private String mSampleId;
+    private List<Pileup> mPileupData;
 
     public AlleleDepthLoader()
     {
-        sampleId = "";
-        bachelorVariants = Lists.newArrayList();
-        pileupData = Lists.newArrayList();
+        mSampleId = "";
+        mPileupData = Lists.newArrayList();
     }
 
     public void setSampleId(final String sampleId) {
-        this.sampleId = sampleId;
-    }
-
-    public boolean loadBachelorMatchData(final String filename)
-    {
-        if (filename.isEmpty())
-            return false;
-
-        try {
-
-            BufferedReader fileReader = new BufferedReader(new FileReader(filename));
-
-            String line = fileReader.readLine(); // skip header
-
-            while ((line = fileReader.readLine()) != null) {
-
-                // parse CSV data
-                String[] items = line.split(",");
-
-                // CSV fields PATIENT,SOURCE,PROGRAM,ID,GENES,TRANSCRIPT_ID,CHROM,POS,REF,ALTS,EFFECTS
-
-                if (items.length != BACHELOR_CSV_FIELD_COUNT)
-                {
-                    LOGGER.warn("invalid item count({}), recordIndex({}) in file({})", items.length, bachelorVariants.size(), filename);
-                    return false;
-                }
-
-                final String patientId = items[0];
-
-                if (!sampleId.equals("*") && !sampleId.equals("") && !sampleId.contains(patientId)) {
-                    continue;
-                }
-
-                BachelorGermlineVariant bachRecord = new BachelorGermlineVariant(patientId,
-                        items[1],
-                        items[2],
-                        items[3],
-                        items[4],
-                        items[5],
-                        items[6],
-                        Long.parseLong(items[7]),
-                        items[8],
-                        items[9],
-                        items[10],
-                        items[11],
-                        items[12],
-                        items[15],
-                        Boolean.parseBoolean(items[13]),
-                        Integer.parseInt(items[14]));
-
-                bachelorVariants.add(bachRecord);
-            }
-
-            LOGGER.debug("loaded {} bachelor records", bachelorVariants.size());
-
-        }
-        catch (IOException exception)
-        {
-            LOGGER.error("Failed to read bachelor input CSV file({})", filename);
-            return false;
-        }
-
-        return true;
-    }
-
-    public final List<BachelorGermlineVariant> getBachelorVariants() {
-        return bachelorVariants;
+        mSampleId = sampleId;
     }
 
     public boolean loadMiniPileupData(final String mpDirectory)
@@ -132,10 +61,10 @@ public class AlleleDepthLoader {
                 LOGGER.debug("processing mini-pileup file({})", mpuFile.getName());
 
                 List<Pileup> pileups = PileupFile.read(mpuFile.getPath());
-                pileupData.addAll(pileups);
+                mPileupData.addAll(pileups);
             }
 
-            LOGGER.info("loaded {} pileup files, {} records", mpuFiles.size(), pileupData.size());
+            LOGGER.info("loaded {} pileup files, {} records", mpuFiles.size(), mPileupData.size());
         }
         catch (IOException e)
         {
@@ -143,19 +72,17 @@ public class AlleleDepthLoader {
             return false;
         }
 
-        boolean allRecordsMatched = applyPileupData();
-
-        return allRecordsMatched;
+        return true;
     }
 
-    private boolean applyPileupData()
+    public boolean applyPileupData(List<BachelorGermlineVariant> germlineVariants)
     {
         // match up read info from MP with the bachelor records
-        for (BachelorGermlineVariant bachRecord : bachelorVariants)
+        for (BachelorGermlineVariant bachRecord : germlineVariants)
         {
             boolean matched = false;
 
-            for (final Pileup pileup : pileupData)
+            for (final Pileup pileup : mPileupData)
             {
                 if (!bachRecord.chromosome().equals(pileup.chromosome()))
                     continue;
@@ -195,13 +122,13 @@ public class AlleleDepthLoader {
                 }
 
                 LOGGER.debug("sample({} chr({}) position({}) matched, counts(ref={} alt={})",
-                        sampleId, bachRecord.chromosome(), bachRecord.position(), bachRecord.getRefCount(), bachRecord.getAltCount());
+                        mSampleId, bachRecord.chromosome(), bachRecord.position(), bachRecord.getRefCount(), bachRecord.getAltCount());
             }
 
             if(!matched)
             {
                 LOGGER.warn("sample({} var({}) chr({}) position({}) no pile-up record found",
-                        sampleId, bachRecord.variantId(), bachRecord.chromosome(), bachRecord.position());
+                        mSampleId, bachRecord.variantId(), bachRecord.chromosome(), bachRecord.position());
                 return false;
             }
         }
@@ -210,7 +137,7 @@ public class AlleleDepthLoader {
     }
 
     public final List<Pileup> getPileupData() {
-        return pileupData;
+        return mPileupData;
     }
 
 }

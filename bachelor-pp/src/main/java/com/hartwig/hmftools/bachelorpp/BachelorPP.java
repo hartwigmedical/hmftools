@@ -1,5 +1,11 @@
 package com.hartwig.hmftools.bachelorpp;
 
+import static com.hartwig.hmftools.bachelorpp.BachelorDataCollection.loadBachelorFilters;
+import static com.hartwig.hmftools.common.variant.VariantConsequence.FRAMESHIFT_VARIANT;
+import static com.hartwig.hmftools.common.variant.VariantConsequence.MISSENSE_VARIANT;
+import static com.hartwig.hmftools.common.variant.VariantConsequence.SPLICE_ACCEPTOR_VARIANT;
+import static com.hartwig.hmftools.common.variant.VariantConsequence.SPLICE_DONOR_VARIANT;
+import static com.hartwig.hmftools.common.variant.VariantConsequence.SYNONYMOUS_VARIANT;
 import static com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotationFactory.SNPEFF_IDENTIFIER;
 
 import java.io.BufferedWriter;
@@ -8,7 +14,9 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.sql.SQLException;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -16,6 +24,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
 import com.hartwig.hmftools.bachelorpp.types.BachelorGermlineVariant;
+import com.hartwig.hmftools.bachelorpp.types.BachelorRecordFilter;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumberFile;
@@ -74,10 +83,13 @@ public class BachelorPP {
     private static final String LOG_DEBUG = "log_debug";
     private static final String SAMPLE_PATH = "sample_path";
     private static final String PURPLE_DATA_DIRECTORY = "purple_data_dir";
+    private static final String BACH_INPUT_FILE = "bachelor_file";
 
     // file locations
     private static final String BACHELOR_SUB_DIRECTORY = "bachelor";
-    private static final String BACH_INPUT_FILE = "bachelor_output.csv";
+    private static final String DEFAULT_BACH_INPUT_FILE = "bachelor_output.csv";
+    private static final String WHITELIST_FILE = "whitelist_file";
+    private static final String BLACKLIST_FILE = "blacklist_file";
 
     private static final String DB_USER = "db_user";
     private static final String DB_PASS = "db_pass";
@@ -108,22 +120,37 @@ public class BachelorPP {
 
         final String bachelorDirectory = sampleDirectory + BACHELOR_SUB_DIRECTORY;
 
-        final String bachelorInputFile = bachelorDirectory + "/" + BACH_INPUT_FILE;
+        String bachelorInputFile;
 
-        AlleleDepthLoader adLoader = new AlleleDepthLoader();
+        if(cmd.hasOption(BACH_INPUT_FILE))
+            bachelorInputFile = cmd.getOptionValue(BACH_INPUT_FILE);
+        else
+            bachelorInputFile = bachelorDirectory + "/" + BACH_INPUT_FILE;
 
-        adLoader.setSampleId(sampleId);
+        BachelorDataCollection dataCollection = new BachelorDataCollection();
+        dataCollection.setSampleId(sampleId);
 
-        if(!adLoader.loadBachelorMatchData(bachelorInputFile))
+        if(!dataCollection.loadBachelorData(bachelorInputFile))
             return;
 
-        if (adLoader.getBachelorVariants().isEmpty())
+        if (dataCollection.getBachelorVariants().isEmpty())
         {
             LOGGER.debug("sample({}) has no records to process", sampleId);
             return;
         }
 
-        if (!adLoader.loadMiniPileupData(bachelorDirectory))
+        final List<BachelorGermlineVariant> bachRecords = dataCollection.getBachelorVariants();
+
+        if(cmd.hasOption(WHITELIST_FILE) || cmd.hasOption(BLACKLIST_FILE))
+        {
+            filterBachelorRecords(bachRecords, cmd);
+            return;
+        }
+
+        AlleleDepthLoader adLoader = new AlleleDepthLoader();
+        adLoader.setSampleId(sampleId);
+
+        if (!adLoader.loadMiniPileupData(bachelorDirectory) || !adLoader.applyPileupData(bachRecords))
             return;
 
         DatabaseAccess dbAccess;
@@ -136,8 +163,6 @@ public class BachelorPP {
             LOGGER.error("DB connection failed");
             return;
         }
-
-        final List<BachelorGermlineVariant> bachRecords = adLoader.getBachelorVariants();
 
         // create variant objects for VCF file writing and enrichment, and cache aginst bachelor record
         buildVariants(sampleId, bachRecords);
@@ -172,6 +197,57 @@ public class BachelorPP {
         writeToFile(sampleId, bachRecords, bachelorDirectory);
 
         LOGGER.info("run complete");
+    }
+
+    private static void filterBachelorRecords(final List<BachelorGermlineVariant> bachRecords, CommandLine cmdLineArgs)
+    {
+        String outputDir = cmdLineArgs.getOptionValue(SAMPLE_PATH);
+
+        List<BachelorGermlineVariant> filteredBachRecords = Lists.newArrayList();
+
+        List<BachelorRecordFilter> whitelistFilters = loadBachelorFilters(cmdLineArgs.getOptionValue(WHITELIST_FILE));
+        List<BachelorRecordFilter> blacklistFilters = loadBachelorFilters(cmdLineArgs.getOptionValue(BLACKLIST_FILE));
+
+        for(final BachelorGermlineVariant var : bachRecords)
+        {
+            boolean keepRecord = false;
+
+            if(FRAMESHIFT_VARIANT.isParentTypeOf(var.effects())
+            || SPLICE_ACCEPTOR_VARIANT.isParentTypeOf(var.effects())
+            || SPLICE_DONOR_VARIANT.isParentTypeOf(var.effects()))
+            {
+                keepRecord = true;
+
+                for(final BachelorRecordFilter filter : blacklistFilters)
+                {
+                    if(filter.matches(var))
+                    {
+                        keepRecord = false;
+                        break;
+                    }
+                }
+            }
+            else if(MISSENSE_VARIANT.isParentTypeOf(var.effects())
+                || SYNONYMOUS_VARIANT.isParentTypeOf(var.effects()))
+            {
+                keepRecord = false;
+
+                for(final BachelorRecordFilter filter : whitelistFilters)
+                {
+                    if(filter.matches(var))
+                    {
+                        keepRecord = true;
+                        break;
+                    }
+                }
+            }
+
+            if(keepRecord)
+                filteredBachRecords.add(var);
+
+        }
+
+        rewriteFilteredRecordsToFile(filteredBachRecords, outputDir);
     }
 
     private static void buildVariants(final String sampleId, List<BachelorGermlineVariant> bachRecords)
@@ -453,6 +529,63 @@ public class BachelorPP {
         }
     }
 
+    public static void rewriteFilteredRecordsToFile(final List<BachelorGermlineVariant> bachRecords, final String outputDir)
+    {
+        String outputFileName = outputDir;
+        if (!outputFileName.endsWith("/"))
+        {
+            outputFileName += "/";
+        }
+
+        outputFileName += "bachelor_filtered_output.csv";
+
+        Path outputFile = Paths.get(outputFileName);
+
+        try {
+            BufferedWriter writer = Files.newBufferedWriter(outputFile, StandardOpenOption.CREATE);
+
+            writer.write("SAMPLEID,SOURCE,PROGRAM,ID,GENE,TRANSCRIPT_ID,CHROM,POS,REF,ALTS,EFFECTS,ANNOTATIONS,HGVS_PROTEIN,IS_HOMOZYGOUS,PHRED_SCORE,HGVS_CODING,MATCH_TYPE");
+            writer.newLine();
+
+            for (final BachelorGermlineVariant bachRecord : bachRecords)
+            {
+                writer.write(
+                        String.format("%s,%s,%s,%s",
+                                bachRecord.patient(),
+                                bachRecord.source(),
+                                bachRecord.program(),
+                                bachRecord.variantId()));
+
+                writer.write(
+                        String.format(",%s,%s,%s,%d,%s,%s",
+                                bachRecord.gene(),
+                                bachRecord.transcriptId(),
+                                bachRecord.chromosome(),
+                                bachRecord.position(),
+                                bachRecord.ref(),
+                                bachRecord.alts()));
+
+                writer.write(
+                        String.format(",%s,%s,%s,%s,%d,%s,%s",
+                                bachRecord.effects(),
+                                bachRecord.annotations(),
+                                bachRecord.hgvsProtein(),
+                                bachRecord.isHomozygous(),
+                                bachRecord.phredScore(),
+                                bachRecord.hgvsCoding(),
+                                bachRecord.matchType()));
+
+                writer.newLine();
+            }
+
+            writer.close();
+        }
+        catch (final IOException e)
+        {
+            LOGGER.error("error writing to outputFile");
+        }
+    }
+
     private static void writeVcfFile(final String sampleId, final List<BachelorGermlineVariant> bachRecords, final String outputDir, final String vcfHeaderFile)
     {
         LOGGER.debug("writing germline VCF");
@@ -509,6 +642,7 @@ public class BachelorPP {
         options.addOption(SAMPLE, true, "Tumor sample.");
 
         options.addOption(SAMPLE_PATH, true, "Sample directory with a 'bachelor' sub-directory expected");
+        options.addOption(BACH_INPUT_FILE, true, "Specific bachelor input file, if left out then assumes in sample path");
         options.addOption(VCF_HEADER_FILE, true, "Temp: VCF file header example");
         options.addOption(SAMPLE_PATH, true, "Name of input Mini Pileup file");
         options.addOption(REF_GENOME, true, "Path to the ref genome fasta file");
@@ -521,6 +655,8 @@ public class BachelorPP {
 
         options.addOption(WRITE_VCF_FILE, false, "Whether to output a VCF file");
         options.addOption(WRITE_TO_DB, false, "Whether to upload records to DB");
+        options.addOption(WHITELIST_FILE, true, "Additional whitelist checks on bachelor input file");
+        options.addOption(BLACKLIST_FILE, true, "Additional blacklist checks on bachelor input file");
 
         options.addOption(LOG_DEBUG, false, "Sets log level to Debug, default level is Info");
 
