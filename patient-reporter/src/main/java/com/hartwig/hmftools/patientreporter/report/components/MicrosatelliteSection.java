@@ -3,6 +3,7 @@ package com.hartwig.hmftools.patientreporter.report.components;
 import java.awt.Color;
 import java.text.DecimalFormat;
 
+import com.hartwig.hmftools.patientdb.data.Patient;
 import com.hartwig.hmftools.patientreporter.report.util.PatientReportFormat;
 
 import org.jetbrains.annotations.NotNull;
@@ -15,37 +16,36 @@ public final class MicrosatelliteSection {
     private static final int BUFFER = 3;
     private static final double START = 1E-2;
     private static final double END = 100;
+    private static final Color COLOUR_BEGIN = new Color(239, 239, 239);
+    private static final Color COLOUR_END = new Color(171, 191, 171);
 
     @NotNull
     public static ComponentBuilder<?, ?> build(double microsatelliteIndicator, boolean hasReliablePurityFit) {
-        final String formattedMicrosatelliteIndicator =
-                PatientReportFormat.correctValueForFitReliability(new DecimalFormat("#.####").format(microsatelliteIndicator),
-                        hasReliablePurityFit);
-
         final int graphValue = computeGraphValue(microsatelliteIndicator);
         final int markerValue = computeGraphValue(MSI_THRESHOLD);
 
-        final GradientBar gradient = formattedMicrosatelliteIndicator.equals("N/A")
-                ? ImmutableGradientBar.ofOnlyMarker(new Color(239, 239, 239),
-                new Color(171, 191, 171), "MSS", "MSI", markerValue)
-                : ImmutableGradientBar.of(new Color(239, 239, 239), new Color(171, 191, 171), "MSS", "MSI", graphValue, markerValue);
+        final GradientBar gradient = !hasReliablePurityFit
+                ? ImmutableGradientBar.ofOnlyMarker(COLOUR_BEGIN, COLOUR_END, "MSS", "MSI", markerValue)
+                : ImmutableGradientBar.of(COLOUR_BEGIN, COLOUR_END, "MSS", "MSI", graphValue, markerValue);
         final SliderSection sliderSection = ImmutableSliderSection.of("Microsatellite Status",
-                interpret(microsatelliteIndicator, formattedMicrosatelliteIndicator),
+                interpret(microsatelliteIndicator, hasReliablePurityFit),
                 description(),
                 gradient);
         return sliderSection.build();
     }
 
     @NotNull
-    private static String interpret(double microsatelliteIndicator, String formattedMicrosatelliteIndicator) {
-
-        if (microsatelliteIndicator > MSI_THRESHOLD && !formattedMicrosatelliteIndicator.equals("N/A")) {
-            return "Unstable (" + formattedMicrosatelliteIndicator + ")";
-        } else if (microsatelliteIndicator < MSI_THRESHOLD && !formattedMicrosatelliteIndicator.equals("N/A")) {
-            return "Stable (" + formattedMicrosatelliteIndicator + ")";
+    private static String interpret(double microsatelliteIndicator, boolean hasReliablePurityFit) {
+        String formattedMs = new DecimalFormat("#.####").format(microsatelliteIndicator);
+        String interpretedMs;
+        
+        if (microsatelliteIndicator > MSI_THRESHOLD) {
+            interpretedMs = "Unstable (" + formattedMs + ")";
         } else {
-            return "N/A";
+            interpretedMs = "Stable (" + formattedMs + ")";
         }
+
+        return PatientReportFormat.correctValueForFitReliability(interpretedMs, hasReliablePurityFit);
     }
 
     private static int computeGraphValue(double value) {

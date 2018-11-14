@@ -21,11 +21,15 @@ public interface HotspotEvidence extends GenomePosition {
 
     int qualityScore();
 
-    int tumorEvidence();
+    int tumorRefCount();
+
+    int tumorAltCount();
 
     int tumorReads();
 
-    int normalEvidence();
+    int normalRefCount();
+
+    int normalAltCount();
 
     int normalReads();
 }

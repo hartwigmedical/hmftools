@@ -12,7 +12,7 @@ import com.hartwig.hmftools.common.region.GenomeRegion;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class GenomePositionSelectorImpl<P extends GenomePosition> implements GenomePositionSelector<P> {
+class GenomePositionSelectorIteratorImpl<P extends GenomePosition> implements GenomePositionSelector<P> {
 
     @NotNull
     private final Iterator<P> positions;
@@ -21,7 +21,7 @@ public class GenomePositionSelectorImpl<P extends GenomePosition> implements Gen
     @Nullable
     private P next;
 
-    GenomePositionSelectorImpl(@NotNull Collection<P> positions) {
+    GenomePositionSelectorIteratorImpl(@NotNull Collection<P> positions) {
         this.positions = positions.iterator();
         next = this.positions.hasNext() ? this.positions.next() : null;
     }

@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.patientreporter.report.components;
 
 import java.awt.Color;
+import java.text.DecimalFormat;
 
 import com.hartwig.hmftools.patientreporter.report.util.PatientReportFormat;
 
@@ -14,36 +15,38 @@ public final class MutationalLoadSection {
     private static final int BUFFER = 3;
     private static final int START = 1;
     private static final int END = 1000;
+    private static final Color COLOUR_BEGIN = new Color(239, 229, 203);
+    private static final Color COLOUR_END = new Color(159, 163, 193);
 
     @NotNull
     public static ComponentBuilder<?, ?> build(int mutationalLoad, boolean hasReliablePurityFit) {
-        final String formattedMutationalLoad =
-                PatientReportFormat.correctValueForFitReliability(Integer.toString(mutationalLoad), hasReliablePurityFit);
 
         final int graphValue = computeGraphValue(mutationalLoad);
         final int markerValue = computeGraphValue(ML_THRESHOLD);
-        final GradientBar gradient = formattedMutationalLoad.equals("N/A") ?
-                ImmutableGradientBar.ofOnlyMarker(new Color(239, 229, 203), new Color(159, 163, 193), "Low", "High", markerValue) :
-                ImmutableGradientBar.of(new Color(239, 229, 203), new Color(159, 163, 193), "Low", "High", graphValue, markerValue);
+        final GradientBar gradient = !hasReliablePurityFit ?
+                ImmutableGradientBar.ofOnlyMarker(COLOUR_BEGIN, COLOUR_END, "Low", "High", markerValue) :
+                ImmutableGradientBar.of(COLOUR_BEGIN, COLOUR_END, "Low", "High", graphValue, markerValue);
 
 
         final SliderSection sliderSection = ImmutableSliderSection.of("Tumor Mutational Load",
-                interpret(mutationalLoad, formattedMutationalLoad),
+                interpret(mutationalLoad, hasReliablePurityFit),
                 description(),
                 gradient);
         return sliderSection.build();
     }
 
     @NotNull
-    private static String interpret(int mutationalLoad, String formattedMutationalLoad) {
+    private static String interpret(int mutationalLoad, boolean hasReliablePurityFit) {
+        String interpretedML;
 
-        if (mutationalLoad > ML_THRESHOLD && !formattedMutationalLoad.equals("N/A")) {
-            return "High (" + formattedMutationalLoad + ")";
-        } else if (mutationalLoad < ML_THRESHOLD && !formattedMutationalLoad.equals("N/A")){
-            return "Low (" + formattedMutationalLoad + ")";
+        if (mutationalLoad > ML_THRESHOLD) {
+            interpretedML = "High (" + mutationalLoad + ")";
         } else {
-            return "N/A";
+            interpretedML = "Low (" + mutationalLoad + ")";
         }
+
+        return PatientReportFormat.correctValueForFitReliability(interpretedML, hasReliablePurityFit);
+
     }
 
     private static int computeGraphValue(double value) {
