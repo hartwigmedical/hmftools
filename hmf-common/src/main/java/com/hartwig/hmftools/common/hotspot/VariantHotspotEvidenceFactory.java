@@ -1,10 +1,14 @@
 package com.hartwig.hmftools.common.hotspot;
 
+import static com.hartwig.hmftools.common.sam.SamRecords.avgQuality;
 import static com.hartwig.hmftools.common.sam.SamRecords.basesDeletedAfterPosition;
 import static com.hartwig.hmftools.common.sam.SamRecords.basesInsertedAfterPosition;
+import static com.hartwig.hmftools.common.sam.SamRecords.containsDelete;
+import static com.hartwig.hmftools.common.sam.SamRecords.containsInsert;
+import static com.hartwig.hmftools.common.sam.SamRecords.quality;
+import static com.hartwig.hmftools.common.sam.SamRecords.totalQuality;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.hartwig.hmftools.common.sam.SamRecords;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
@@ -17,7 +21,6 @@ import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 public class VariantHotspotEvidenceFactory {
 
     static final int MIN_BASE_QUALITY = 13;
-    static final int PHRED_OFFSET = 33;
 
     private static final int MIN_MAPPING_QUALITY = 1;
 
@@ -86,7 +89,8 @@ public class VariantHotspotEvidenceFactory {
         return result;
     }
 
-    static ModifiableVariantHotspotEvidence findEvidenceOfInsert(@NotNull final ModifiableVariantHotspotEvidence builder, @NotNull final VariantHotspot hotspot, @NotNull final SAMRecord record) {
+    static ModifiableVariantHotspotEvidence findEvidenceOfInsert(@NotNull final ModifiableVariantHotspotEvidence builder,
+            @NotNull final VariantHotspot hotspot, @NotNull final SAMRecord record) {
         assert (hotspot.isSimpleInsert());
 
         int hotspotStartPosition = (int) hotspot.position();
@@ -95,10 +99,10 @@ public class VariantHotspotEvidenceFactory {
             return builder;
         }
 
-        int recordStartQuality = baseQuality(record.getBaseQualityString().substring(recordStartPosition - 1, recordStartPosition));
+        int recordStartQuality = totalQuality(record.getBaseQualityString().substring(recordStartPosition - 1, recordStartPosition));
 
-        if (SamRecords.containsInsert(hotspotStartPosition, hotspot.alt(), record)) {
-            int quality = SamRecords.avgQuality(record.getBaseQualityString()
+        if (containsInsert(hotspotStartPosition, hotspot.alt(), record)) {
+            int quality = avgQuality(record.getBaseQualityString()
                     .substring(recordStartPosition - 1, recordStartPosition - 1 + hotspot.alt().length()));
             if (quality < MIN_BASE_QUALITY) {
                 return builder;
@@ -120,7 +124,8 @@ public class VariantHotspotEvidenceFactory {
         return builder.setReadDepth(builder.readDepth() + 1);
     }
 
-    static ModifiableVariantHotspotEvidence findEvidenceOfDelete(@NotNull final ModifiableVariantHotspotEvidence builder, @NotNull final VariantHotspot hotspot, @NotNull final SAMRecord record) {
+    static ModifiableVariantHotspotEvidence findEvidenceOfDelete(@NotNull final ModifiableVariantHotspotEvidence builder,
+            @NotNull final VariantHotspot hotspot, @NotNull final SAMRecord record) {
         assert (hotspot.isSimpleDelete());
 
         int hotspotStartPosition = (int) hotspot.position();
@@ -129,10 +134,12 @@ public class VariantHotspotEvidenceFactory {
             return builder;
         }
 
-        int recordStartQuality = baseQuality(record.getBaseQualityString().substring(recordStartPosition - 1, recordStartPosition));
+        int recordStartQuality = quality(record.getBaseQualityString().charAt(recordStartPosition - 1));
 
-        if (SamRecords.containsDelete(hotspotStartPosition, hotspot.ref(), record)) {
-            int quality = recordStartQuality; // TODO: Fix this line
+        if (containsDelete(hotspotStartPosition, hotspot.ref(), record)) {
+            int quality = record.getReadLength() > recordStartPosition
+                    ? quality(record.getBaseQualityString().charAt(recordStartPosition))
+                    : recordStartQuality;
             if (quality < MIN_BASE_QUALITY) {
                 return builder;
             }
@@ -155,14 +162,13 @@ public class VariantHotspotEvidenceFactory {
 
     @VisibleForTesting
     @NotNull
-    static ModifiableVariantHotspotEvidence findEvidenceOfMNV(@NotNull final ModifiableVariantHotspotEvidence builder, int start,
-            @NotNull final String refSequence, @NotNull final VariantHotspot hotspot, @NotNull final SAMRecord record) {
+    static ModifiableVariantHotspotEvidence findEvidenceOfMNV(@NotNull final ModifiableVariantHotspotEvidence builder, int start, @NotNull final String refSequence, @NotNull final VariantHotspot hotspot, @NotNull final SAMRecord record) {
 
         int hotspotStartPosition = (int) hotspot.position();
         int hotspotLength = Math.max(hotspot.ref().length(), hotspot.alt().length());
 
         int recordStartPosition = record.getReadPositionAtReferencePosition(hotspotStartPosition);
-        int recordStartQuality = baseQuality(record.getBaseQualityString().substring(recordStartPosition - 1, recordStartPosition));
+        int recordStartQuality = quality(record.getBaseQualityString().charAt(recordStartPosition - 1));
 
         if (isVariantPartOfLargerMNV(start, refSequence, hotspot, record)) {
             return recordStartQuality < MIN_BASE_QUALITY ? builder : builder.setReadDepth(builder.readDepth() + 1);
@@ -181,7 +187,7 @@ public class VariantHotspotEvidenceFactory {
                 return builder.setReadDepth(builder.readDepth() + 1);
             }
 
-            totalQuality += baseQuality(record.getBaseQualityString().substring(readPosition - 1, readPosition));
+            totalQuality += totalQuality(record.getBaseQualityString().substring(readPosition - 1, readPosition));
         }
 
         final String samBases = record.getReadString().substring(recordStartPosition - 1, recordStartPosition - 1 + hotspotLength);
@@ -280,16 +286,6 @@ public class VariantHotspotEvidenceFactory {
         }
 
         return false;
-    }
-
-    @VisibleForTesting
-    static int baseQuality(@NotNull final String baseQualities) {
-        int score = 0;
-        for (int index = 0; index < baseQualities.length(); index++) {
-            int baseScore = baseQualities.charAt(index) - PHRED_OFFSET;
-            score += baseScore;
-        }
-        return score;
     }
 
     @NotNull

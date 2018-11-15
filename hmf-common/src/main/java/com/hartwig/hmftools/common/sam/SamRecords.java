@@ -9,15 +9,19 @@ public class SamRecords {
     public static final int PHRED_OFFSET = 33;
 
     public static int avgQuality(@NotNull final String baseQualities) {
-        return (int) Math.floor(sumQuality(baseQualities) / baseQualities.length());
+        return (int) Math.floor(totalQuality(baseQualities) / baseQualities.length());
     }
 
-    public static int sumQuality(@NotNull final String baseQualities) {
+    public static int totalQuality(@NotNull final String baseQualities) {
         int score = 0;
         for (int index = 0; index < baseQualities.length(); index++) {
-            score += baseQualities.charAt(index) - PHRED_OFFSET;
+            score += quality(baseQualities.charAt(index));
         }
         return score;
+    }
+
+    public static int quality(final char quality) {
+        return quality  - PHRED_OFFSET;
     }
 
     public static boolean containsInsert(int position, @NotNull final String alt, @NotNull final SAMRecord record) {
