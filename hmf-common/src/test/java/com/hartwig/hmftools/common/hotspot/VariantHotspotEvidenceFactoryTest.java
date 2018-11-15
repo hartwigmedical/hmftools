@@ -115,6 +115,28 @@ public class VariantHotspotEvidenceFactoryTest {
 
     }
 
+    @Test
+    public void testInsertedBasesAfterPosition() {
+        assertEquals(0, VariantHotspotEvidenceFactory.insertedBasesAfterPosition(100, buildSamRecord(98, "6M", "GATACA")));
+        assertEquals(1, VariantHotspotEvidenceFactory.insertedBasesAfterPosition(100, buildSamRecord(98, "3M1I3M", "GATTACA")));
+        assertEquals(2, VariantHotspotEvidenceFactory.insertedBasesAfterPosition(100, buildSamRecord(98, "3M2I3M", "GATTTACA")));
+
+        assertEquals(0, VariantHotspotEvidenceFactory.insertedBasesAfterPosition(100, buildSamRecord(98, "6M", "GATACA")));
+        assertEquals(0, VariantHotspotEvidenceFactory.insertedBasesAfterPosition(100, buildSamRecord(98, "3M1D2M", "GATCA")));
+        assertEquals(0, VariantHotspotEvidenceFactory.insertedBasesAfterPosition(100, buildSamRecord(98, "3M2D1M", "GATA")));
+    }
+
+    @Test
+    public void testDeletedBasesAfterPosition() {
+        assertEquals(0, VariantHotspotEvidenceFactory.deletedBasesAfterPosition(100, buildSamRecord(98, "6M", "GATACA")));
+        assertEquals(0, VariantHotspotEvidenceFactory.deletedBasesAfterPosition(100, buildSamRecord(98, "3M1I3M", "GATTACA")));
+        assertEquals(0, VariantHotspotEvidenceFactory.deletedBasesAfterPosition(100, buildSamRecord(98, "3M2I3M", "GATTTACA")));
+
+        assertEquals(0, VariantHotspotEvidenceFactory.deletedBasesAfterPosition(100, buildSamRecord(98, "6M", "GATACA")));
+        assertEquals(1, VariantHotspotEvidenceFactory.deletedBasesAfterPosition(100, buildSamRecord(98, "3M1D2M", "GATCA")));
+        assertEquals(2, VariantHotspotEvidenceFactory.deletedBasesAfterPosition(100, buildSamRecord(98, "3M2D1M", "GATA")));
+    }
+
     @NotNull
     private static SAMRecord buildSamRecord(final int alignmentStart, @NotNull final String cigar, @NotNull final String readString) {
         final StringBuilder qualityString = new StringBuilder();
