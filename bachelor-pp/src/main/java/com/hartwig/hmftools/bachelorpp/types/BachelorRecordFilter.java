@@ -2,8 +2,6 @@ package com.hartwig.hmftools.bachelorpp.types;
 
 import static com.hartwig.hmftools.common.variant.VariantConsequence.STOP_GAINED;
 
-import javafx.geometry.Pos;
-
 public class BachelorRecordFilter
 {
     public final String Chromosome;
@@ -11,21 +9,22 @@ public class BachelorRecordFilter
     public final String Id;
     public final String Ref;
     public final String Alt;
-    public final String Qual;
-    public final String Filter;
-    public final String Info;
+    public final String Effects;
+
+    public final String Significance;
+    public final String Diagnosis;
 
     public BachelorRecordFilter(final String chromosome, final long position, final String id, final String ref, final String alt,
-            final String qual, final String filter, final String info)
+            final String diagnosis, final String sig, final String effects)
     {
         Chromosome = chromosome;
         Position = position;
         Ref = ref;
         Alt = alt;
         Id = id;
-        Qual = qual;
-        Info = info;
-        Filter = filter;
+        Diagnosis = diagnosis;
+        Significance = sig;
+        Effects = effects;
     }
 
     public boolean matches(final BachelorGermlineVariant var)
@@ -36,10 +35,10 @@ public class BachelorRecordFilter
             return false;
         }
 
-        if(var.effects().equals(STOP_GAINED) && Info.contains("nonsense"))
+        if(var.effects().equals(STOP_GAINED) && Effects.contains("nonsense"))
             return true;
 
-        if(!Info.contains(var.effects()))
+        if(!Effects.contains(var.effects()))
             return false;
 
         return true;

@@ -101,7 +101,7 @@ public class BachelorDataCollection
         return mGermlineVariants;
     }
 
-    private static int FILTER_CSV_FIELD_COUNT = 8;
+    private static int FILTER_CSV_FIELD_COUNT = 26;
 
     public static List<BachelorRecordFilter> loadBachelorFilters(final String filename)
     {
@@ -121,9 +121,14 @@ public class BachelorDataCollection
                 // parse CSV data
                 String[] items = line.split("\t");
 
-                // CSV fields CHROM  POS     ID      REF     ALT     QUAL    FILTER  INFO
+                //              0   1   2  3   4   5    6           13         17         25
+                // CSV fields CHROM,POS,ID,REF,ALT,QUAL,FILTER, ... CLNDN, .. CLNSIG, ... MC
 
-                if (items.length != FILTER_CSV_FIELD_COUNT)
+//                 [1] "CHROM"        "POS"          "ID"           "REF"          "ALT"          "QUAL"         "FILTER"       "AF_ESP"       "AF_EXAC"      "AF_TGP"
+//                        [11] "ALLELEID"     "CLNDISDB"     "CLNDISDBINCL" "CLNDN"        "CLNDNINCL"    "CLNHGVS"      "CLNREVSTAT"   "CLNSIG"       "CLNSIGCONF"   "CLNSIGINCL"
+//                        [21] "CLNVC"        "CLNVCSO"      "CLNVI"        "DBVARID"      "GENEINFO"     "MC"           "ORIGIN"       "RS"           "SSR"
+
+                if (items.length < FILTER_CSV_FIELD_COUNT)
                 {
                     LOGGER.warn("invalid item count({}), recordIndex({}) in file({})", items.length, filterRecords.size(), filename);
                     return filterRecords;
@@ -135,9 +140,9 @@ public class BachelorDataCollection
                         items[2],
                         items[3],
                         items[4],
-                        items[5],
-                        items[6],
-                        items[7]);
+                        items[13],
+                        items[17],
+                        items[25]);
 
                 filterRecords.add(filterRecord);
             }

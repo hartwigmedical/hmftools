@@ -5,6 +5,7 @@ import static com.hartwig.hmftools.common.variant.VariantConsequence.FRAMESHIFT_
 import static com.hartwig.hmftools.common.variant.VariantConsequence.MISSENSE_VARIANT;
 import static com.hartwig.hmftools.common.variant.VariantConsequence.SPLICE_ACCEPTOR_VARIANT;
 import static com.hartwig.hmftools.common.variant.VariantConsequence.SPLICE_DONOR_VARIANT;
+import static com.hartwig.hmftools.common.variant.VariantConsequence.STOP_GAINED;
 import static com.hartwig.hmftools.common.variant.VariantConsequence.SYNONYMOUS_VARIANT;
 import static com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotationFactory.SNPEFF_IDENTIFIER;
 
@@ -144,7 +145,7 @@ public class BachelorPP {
 
         if(cmd.hasOption(WHITELIST_FILE) || cmd.hasOption(BLACKLIST_FILE))
         {
-            filterBachelorRecords(bachRecords, cmd);
+            rewriteFilteredBachelorRecords(bachRecords, cmd);
             return;
         }
 
@@ -200,55 +201,113 @@ public class BachelorPP {
         LOGGER.info("run complete");
     }
 
-    private static void filterBachelorRecords(final List<BachelorGermlineVariant> bachRecords, CommandLine cmdLineArgs)
+    private static void rewriteFilteredBachelorRecords(final List<BachelorGermlineVariant> bachRecords, CommandLine cmdLineArgs)
     {
         String outputDir = cmdLineArgs.getOptionValue(SAMPLE_PATH);
-
-        List<BachelorGermlineVariant> filteredBachRecords = Lists.newArrayList();
 
         List<BachelorRecordFilter> whitelistFilters = loadBachelorFilters(cmdLineArgs.getOptionValue(WHITELIST_FILE));
         List<BachelorRecordFilter> blacklistFilters = loadBachelorFilters(cmdLineArgs.getOptionValue(BLACKLIST_FILE));
 
-        for(final BachelorGermlineVariant var : bachRecords)
+        if(whitelistFilters.isEmpty() && blacklistFilters.isEmpty())
+            return;
+
+        String outputFileName = outputDir;
+        if (!outputFileName.endsWith("/"))
         {
-            boolean keepRecord = false;
-
-            if(FRAMESHIFT_VARIANT.isParentTypeOf(var.effects())
-            || SPLICE_ACCEPTOR_VARIANT.isParentTypeOf(var.effects())
-            || SPLICE_DONOR_VARIANT.isParentTypeOf(var.effects()))
-            {
-                keepRecord = true;
-
-                for(final BachelorRecordFilter filter : blacklistFilters)
-                {
-                    if(filter.matches(var))
-                    {
-                        keepRecord = false;
-                        break;
-                    }
-                }
-            }
-            else if(MISSENSE_VARIANT.isParentTypeOf(var.effects())
-                || SYNONYMOUS_VARIANT.isParentTypeOf(var.effects()))
-            {
-                keepRecord = false;
-
-                for(final BachelorRecordFilter filter : whitelistFilters)
-                {
-                    if(filter.matches(var))
-                    {
-                        keepRecord = true;
-                        break;
-                    }
-                }
-            }
-
-            if(keepRecord)
-                filteredBachRecords.add(var);
-
+            outputFileName += "/";
         }
 
-        rewriteFilteredRecordsToFile(filteredBachRecords, outputDir);
+        outputFileName += "bachelor_filtered_output.csv";
+
+        Path outputFile = Paths.get(outputFileName);
+
+        try
+        {
+            BufferedWriter writer = Files.newBufferedWriter(outputFile, StandardOpenOption.CREATE);
+
+            writer.write("SAMPLEID,SOURCE,PROGRAM,ID,GENE,TRANSCRIPT_ID,CHROM,POS,REF,ALTS,EFFECTS,ANNOTATIONS,HGVS_PROTEIN,IS_HOMOZYGOUS,PHRED_SCORE,HGVS_CODING,MATCH_TYPE,CLNDN,CLNSIG");
+            writer.newLine();
+
+            for(final BachelorGermlineVariant bachRecord : bachRecords)
+            {
+                boolean keepRecord = false;
+                BachelorRecordFilter matchedFilter = null;
+
+                if(FRAMESHIFT_VARIANT.isParentTypeOf(bachRecord.effects())
+                || STOP_GAINED.isParentTypeOf(bachRecord.effects())
+                || SPLICE_ACCEPTOR_VARIANT.isParentTypeOf(bachRecord.effects())
+                || SPLICE_DONOR_VARIANT.isParentTypeOf(bachRecord.effects()))
+                {
+                    keepRecord = true;
+
+                    for(final BachelorRecordFilter filter : blacklistFilters)
+                    {
+                        if(filter.matches(bachRecord))
+                        {
+                            keepRecord = false;
+                            matchedFilter = filter;
+                            break;
+                        }
+                    }
+                }
+                else if(MISSENSE_VARIANT.isParentTypeOf(bachRecord.effects())
+                || SYNONYMOUS_VARIANT.isParentTypeOf(bachRecord.effects()))
+                {
+                    keepRecord = false;
+
+                    for(final BachelorRecordFilter filter : whitelistFilters)
+                    {
+                        if(filter.matches(bachRecord))
+                        {
+                            keepRecord = true;
+                            matchedFilter = filter;
+                            break;
+                        }
+                    }
+                }
+
+                if(keepRecord || matchedFilter != null)
+                {
+                    writer.write(
+                            String.format("%s,%s,%s,%s",
+                                    bachRecord.patient(),
+                                    bachRecord.source(),
+                                    bachRecord.program(),
+                                    bachRecord.variantId()));
+
+                    writer.write(
+                            String.format(",%s,%s,%s,%d,%s,%s",
+                                    bachRecord.gene(),
+                                    bachRecord.transcriptId(),
+                                    bachRecord.chromosome(),
+                                    bachRecord.position(),
+                                    bachRecord.ref(),
+                                    bachRecord.alts()));
+
+                    writer.write(
+                            String.format(",%s,%s,%s,%s,%d,%s,%s",
+                                    bachRecord.effects(),
+                                    bachRecord.annotations(),
+                                    bachRecord.hgvsProtein(),
+                                    bachRecord.isHomozygous(),
+                                    bachRecord.phredScore(),
+                                    bachRecord.hgvsCoding(),
+                                    bachRecord.matchType()));
+
+                    writer.write(String.format(",%s,%s",
+                        matchedFilter != null ? matchedFilter.Diagnosis : "",
+                        matchedFilter != null ? matchedFilter.Significance : ""));
+
+                    writer.newLine();
+                }
+            }
+
+            writer.close();
+        }
+        catch (final IOException e)
+        {
+            LOGGER.error("error writing to outputFile");
+        }
     }
 
     private static void buildVariants(final String sampleId, List<BachelorGermlineVariant> bachRecords)
@@ -465,7 +524,7 @@ public class BachelorPP {
 
             writer.write(",AdjCopyNumber,AdjustedVaf,HighConfidenceRegion,TrinucleotideContext,Microhomology,RepeatSequence,RepeatCount");
 
-            writer.write(",HgvsProtein,HgvsCoding,Biallelic,Hotspot,Mappability,GermlineStatus,MinorAllelePloidy,Filter");
+            writer.write(",HgvsProtein,HgvsCoding,Biallelic,Hotspot,Mappability,GermlineStatus,MinorAllelePloidy,Effects");
 
             writer.newLine();
 
@@ -542,7 +601,8 @@ public class BachelorPP {
 
         Path outputFile = Paths.get(outputFileName);
 
-        try {
+        try
+        {
             BufferedWriter writer = Files.newBufferedWriter(outputFile, StandardOpenOption.CREATE);
 
             writer.write("SAMPLEID,SOURCE,PROGRAM,ID,GENE,TRANSCRIPT_ID,CHROM,POS,REF,ALTS,EFFECTS,ANNOTATIONS,HGVS_PROTEIN,IS_HOMOZYGOUS,PHRED_SCORE,HGVS_CODING,MATCH_TYPE");
@@ -608,7 +668,7 @@ public class BachelorPP {
         // header.addMetaDataLine(new VCFHeaderLine("BachelorPP", BachelorPP.class.getPackage().getImplementationVersion()));
         // header.addMetaDataLine(new VCFHeaderLine("CHROM", "POS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tCPCT02040008T"));
 
-        // Filter.UpdateVCFHeader(header);
+        // Effects.UpdateVCFHeader(header);
         //  AlleleFrequency.UpdateVCFHeader(header);
 
         // setup VCF
