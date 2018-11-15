@@ -6,6 +6,20 @@ import htsjdk.samtools.SAMRecord;
 
 public class SamRecords {
 
+    public static final int PHRED_OFFSET = 33;
+
+    public static int avgQuality(@NotNull final String baseQualities) {
+        return (int) Math.floor(sumQuality(baseQualities) / baseQualities.length());
+    }
+
+    public static int sumQuality(@NotNull final String baseQualities) {
+        int score = 0;
+        for (int index = 0; index < baseQualities.length(); index++) {
+            score += baseQualities.charAt(index) - PHRED_OFFSET;
+        }
+        return score;
+    }
+
     public static int basesInsertedAfterPosition(int position, @NotNull final SAMRecord record) {
         int startReadPosition = record.getReadPositionAtReferencePosition(position);
         assert (startReadPosition != 0);
