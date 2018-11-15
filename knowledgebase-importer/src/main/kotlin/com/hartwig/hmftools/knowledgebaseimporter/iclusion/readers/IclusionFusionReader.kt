@@ -11,7 +11,8 @@ object IclusionFusionReader : SomaticEventReader<IclusionEvent, FusionEvent> {
 
     private fun match(event: IclusionEvent): Boolean {
         val variant = event.variant.toLowerCase()
-        return variant == "fusions" || variant.contains("fusion") || (variant.contains(IclusionFusionReader.FUSION_SEPARATOR)
+        return variant == "fusions" || variant == "rearrangement" || variant.contains("fusion") ||
+                (variant.contains(IclusionFusionReader.FUSION_SEPARATOR)
                 && event.gene.length > 2 && variant.contains(event.gene.toLowerCase().substring(0, 3)))
     }
 
