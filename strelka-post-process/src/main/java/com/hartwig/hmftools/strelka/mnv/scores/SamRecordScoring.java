@@ -5,7 +5,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.hartwig.hmftools.common.sam.SamRecords;
+import com.hartwig.hmftools.common.sam.SAMRecords;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
@@ -37,10 +37,10 @@ public final class SamRecordScoring {
             }
         }
         if (variant.isSimpleInsertion()) {
-            return SamRecords.containsInsert(variant.getStart(), alt.getBaseString(), record) ? ReadType.ALT : ReadType.REF;
+            return SAMRecords.containsInsert(record, variant.getStart(), alt.getBaseString()) ? ReadType.ALT : ReadType.REF;
         }
         if (variant.isSimpleDeletion()) {
-            return SamRecords.containsDelete(variant.getStart(), ref.getBaseString(), record) ? ReadType.ALT : ReadType.REF;
+            return SAMRecords.containsDelete(record, variant.getStart(), ref.getBaseString()) ? ReadType.ALT : ReadType.REF;
         }
         return ReadType.OTHER;
     }

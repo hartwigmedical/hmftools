@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.strelka.mnv.scores;
 
-import com.hartwig.hmftools.common.sam.SamRecords;
+import static com.hartwig.hmftools.common.sam.SAMRecords.getBaseQuality;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -19,6 +19,18 @@ public abstract class VariantScore {
     }
 
     public static VariantScore of(@NotNull final ReadType type, @NotNull final String baseQualities) {
-        return ImmutableVariantScore.of(type, SamRecords.avgQuality(baseQualities));
+        return ImmutableVariantScore.of(type, avgQuality(baseQualities));
+    }
+
+    private static int avgQuality(@NotNull final String baseQualities) {
+        return (int) Math.floor(totalQuality(baseQualities) / baseQualities.length());
+    }
+
+    private static int totalQuality(@NotNull final String baseQualities) {
+        int score = 0;
+        for (int index = 0; index < baseQualities.length(); index++) {
+            score += getBaseQuality(baseQualities.charAt(index));
+        }
+        return score;
     }
 }
