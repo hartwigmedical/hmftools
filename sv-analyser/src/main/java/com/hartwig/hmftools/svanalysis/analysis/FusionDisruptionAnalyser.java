@@ -108,6 +108,9 @@ public class FusionDisruptionAnalyser
             return genesList.stream().filter(GeneAnnotation::isEnd).collect(Collectors.toList());
     }
 
+    // private static String CHECK_VAR_ID = "";
+    private static String CHECK_VAR_ID = "580803";
+
     public void findFusions(final List<SvVarData> allVariants, final List<SvCluster> clusters, final List<SvVarData> svList)
     {
         if(mSampleId.isEmpty() || mFusionFinder == null)
@@ -127,6 +130,11 @@ public class FusionDisruptionAnalyser
         {
             if(var.isNullBreakend())
                 continue;
+
+            if(var.id().equals(CHECK_VAR_ID))
+            {
+                LOGGER.debug("specific var({})", var.posId());
+            }
 
             List<GeneAnnotation> breakendGenes1 = getSvGenesList(var, true);
             List<GeneAnnotation> breakendGenes2 = getSvGenesList(var, false);

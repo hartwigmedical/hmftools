@@ -44,10 +44,12 @@ public class Transcript {
     {
         this.parent = parent;
         this.transcriptId = transcriptId;
+
         this.exonUpstream = exonUpstream;
         this.exonUpstreamPhase = exonUpstreamPhase;
         this.exonDownstream = exonDownstream;
         this.exonDownstreamPhase = exonDownstreamPhase;
+
         this.exonMax = exonMax;
 
         if(totalCodingBases > STOP_CODON_LENGTH)
@@ -80,15 +82,18 @@ public class Transcript {
         return transcriptId;
     }
 
-    public boolean isExonic() {
+    public boolean isExonic()
+    {
         return exonUpstream > 0 && exonUpstream == exonDownstream;
     }
 
-    public boolean isPromoter() {
+    public boolean isPromoter()
+    {
         return exonUpstream == 0 && exonDownstream == 1;
     }
 
-    public boolean isIntronic() {
+    public boolean isIntronic()
+    {
         return exonUpstream > 0 && (exonDownstream - exonUpstream) == 1;
     }
 
@@ -115,48 +120,30 @@ public class Transcript {
             return TRANS_CODING_TYPE_CODING;
     }
 
-    public boolean isCanonical() {
-        return canonical;
-    }
+    public boolean isCanonical() { return canonical; }
 
     @NotNull
-    public GeneAnnotation parent() {
-        return parent;
-    }
+    public GeneAnnotation parent() { return parent; }
 
     @NotNull
-    public String geneName() {
-        return parent.geneName();
-    }
+    public String geneName() { return parent.geneName(); }
 
-    public int exonUpstream() {
-        return exonUpstream;
-    }
+    public int exonUpstream() { return exonUpstream; }
     public int exonUpstreamPhase() { return exonUpstreamPhase; }
 
-    public long codingBases() {
-        return mCodingBases;
-    }
+    public long codingBases() { return mCodingBases; }
     public long totalCodingBases() { return mTotalCodingBases; }
 
-    public int exonDownstream() {
-        return exonDownstream;
-    }
-    public int exonDownstreamPhase() {
-        return exonDownstreamPhase;
-    }
+    public int exonDownstream() { return exonDownstream; }
+    public int exonDownstreamPhase() { return exonDownstreamPhase; }
 
     public int exonMax() { return exonMax; }
 
     @Nullable
-    public Long codingStart() {
-        return codingStart;
-    }
+    public Long codingStart() { return codingStart; }
 
     @Nullable
-    public Long codingEnd() {
-        return codingEnd;
-    }
+    public Long codingEnd() { return codingEnd; }
 
     public final String toString()
     {

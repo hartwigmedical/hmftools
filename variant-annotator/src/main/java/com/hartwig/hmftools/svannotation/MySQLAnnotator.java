@@ -290,8 +290,10 @@ public class MySQLAnnotator implements VariantAnnotator
         long totalCodingBases = 0;
         int prevExonRank = -1;
         int prevExonPhase = 0;
+        int prevExonEndPhase = 0;
         int nextExonRank = -1;
         int nextExonPhase = 0;
+        int nextExonEndPhase = 0;
 
         for (final Record exon : allExons)
         {
@@ -300,22 +302,36 @@ public class MySQLAnnotator implements VariantAnnotator
 
             if(position >= exonStart && position <= exonEnd)
             {
+                // falls within an exon
                 prevExonRank = exon.get(EXON_TRANSCRIPT.RANK);
-                prevExonPhase = exon.get(EXON.END_PHASE);
+                prevExonPhase = exon.get(EXON.PHASE);
+                prevExonEndPhase = exon.get(EXON.END_PHASE);
+
                 nextExonRank = exon.get(EXON_TRANSCRIPT.RANK);
-                nextExonPhase = exon.get(EXON.END_PHASE);
+                nextExonPhase = exon.get(EXON.PHASE);
+                nextExonEndPhase = exon.get(EXON.END_PHASE);
             }
             else if(position > exonEnd)
             {
                 // continue setting this until past
                 prevExonRank = exon.get(EXON_TRANSCRIPT.RANK);
-                prevExonPhase = exon.get(EXON.END_PHASE);
+                prevExonPhase = exon.get(EXON.PHASE);
+                prevExonEndPhase = exon.get(EXON.END_PHASE);
             }
             else if(position < exonStart && nextExonRank == -1)
             {
                 // set at the first opportunity
                 nextExonRank = exon.get(EXON_TRANSCRIPT.RANK);
-                nextExonPhase = exon.get(EXON.END_PHASE);
+                nextExonPhase = exon.get(EXON.PHASE);
+                nextExonEndPhase = exon.get(EXON.END_PHASE);
+
+                if(prevExonRank == -1)
+                {
+                    // falls before the first exon
+                    prevExonRank = 0;
+                    prevExonPhase = -1;
+                    prevExonEndPhase = -1;
+                }
             }
 
             if(!isCoding)
@@ -391,15 +407,14 @@ public class MySQLAnnotator implements VariantAnnotator
             }
         }
 
-//        // adjust for stop codon
-//        if(totalCodingBases >= 3)
-//            totalCodingBases -= 3;
+        if(nextExonRank < 0 || prevExonRank < 0)
+            return null;
 
         if(isForwardStrand)
         {
             return new Transcript(parent,
                     transcriptStableId,
-                    prevExonRank, prevExonPhase,
+                    prevExonRank, prevExonEndPhase,
                     nextExonRank, nextExonPhase,
                     codingBases, totalCodingBases,
                     exonMax, canonical,
@@ -410,7 +425,7 @@ public class MySQLAnnotator implements VariantAnnotator
         {
             return new Transcript(parent,
                     transcriptStableId,
-                    nextExonRank, nextExonPhase, // note the switch
+                    nextExonRank, nextExonEndPhase, // note the switch
                     prevExonRank, prevExonPhase,
                     totalCodingBases - codingBases, totalCodingBases,
                     exonMax, canonical,

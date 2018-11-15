@@ -69,16 +69,16 @@ public class SvGeneTranscriptCollection
 
     // transcript data: transcriptId, exonUpstream, exonUpstreamPhase, exonDownstream, exonDownstreamPhase, codingBase, totalCodingBases, exonMax, canonical, codingStart, codingEnd
     private static int TRANSCRIPT_ID_COL_INDEX = 11;
-    private static int TRANSCRIPT_EUS_COL_INDEX = 12;
-    private static int TRANSCRIPT_EUP_COL_INDEX = 13;
-    private static int TRANSCRIPT_EDS_COL_INDEX = 14;
-    private static int TRANSCRIPT_EDP_COL_INDEX = 15;
+    private static int TRANSCRIPT_EUP_RANK_COL_INDEX = 12;
+    private static int TRANSCRIPT_EUP_PHASE_COL_INDEX = 13;
+    private static int TRANSCRIPT_EDN_RANK_COL_INDEX = 14;
+    private static int TRANSCRIPT_EDN_PHASE_COL_INDEX = 15;
     private static int TRANSCRIPT_CDB_COL_INDEX = 16;
     private static int TRANSCRIPT_TCB_COL_INDEX = 17;
     private static int TRANSCRIPT_EMAX_COL_INDEX = 18;
     private static int TRANSCRIPT_CAN_COL_INDEX = 19;
-    private static int TRANSCRIPT_CS_COL_INDEX = 20;
-    private static int TRANSCRIPT_CE_COL_INDEX = 21;
+    private static int TRANSCRIPT_CODE_S_COL_INDEX = 20;
+    private static int TRANSCRIPT_CODE_E_COL_INDEX = 21;
 
     public boolean loadSampleGeneTranscripts(final String sampleId)
     {
@@ -172,22 +172,39 @@ public class SvGeneTranscriptCollection
 
                 final String transcriptId = items[TRANSCRIPT_ID_COL_INDEX];
 
-                // transcriptId, exonUpstream, exonUpstreamPhase, exonDownstream, exonDownstreamPhase, exonMax, canonical, codingStart, codingEnd
-                Transcript transcript = new Transcript(
-                        currentGene,
-                        transcriptId,
-                        Integer.parseInt(items[TRANSCRIPT_EUS_COL_INDEX]),
-                        Integer.parseInt(items[TRANSCRIPT_EUP_COL_INDEX]),
-                        Integer.parseInt(items[TRANSCRIPT_EDS_COL_INDEX]),
-                        Integer.parseInt(items[TRANSCRIPT_EDP_COL_INDEX]),
-                        Long.parseLong(items[TRANSCRIPT_CDB_COL_INDEX]),
-                        Long.parseLong(items[TRANSCRIPT_TCB_COL_INDEX]),
-                        Integer.parseInt(items[TRANSCRIPT_EMAX_COL_INDEX]),
-                        Boolean.parseBoolean(items[TRANSCRIPT_CAN_COL_INDEX]),
-                        items[TRANSCRIPT_CS_COL_INDEX].equals("null") ? null : Long.parseLong(items[TRANSCRIPT_CS_COL_INDEX]),
-                        items[TRANSCRIPT_CE_COL_INDEX].equals("null") ? null : Long.parseLong(items[TRANSCRIPT_CE_COL_INDEX]));
 
-                currentGene.addTranscript(transcript);
+                int exonUpstreamRank = Integer.parseInt(items[TRANSCRIPT_EUP_RANK_COL_INDEX]);
+                int exonUpstreamPhase = Integer.parseInt(items[TRANSCRIPT_EUP_PHASE_COL_INDEX]);
+                int exonDownstreamRank = Integer.parseInt(items[TRANSCRIPT_EDN_RANK_COL_INDEX]);
+                int exonDownstreamPhase = Integer.parseInt(items[TRANSCRIPT_EDN_PHASE_COL_INDEX]);
+
+                // corrections for errors in Ensembl annotations
+
+                if(exonDownstreamRank == 1 && exonUpstreamRank == -1)
+                {
+                    exonUpstreamRank = 0;
+                    exonUpstreamPhase = -1;
+                }
+
+                if(exonUpstreamRank == -1 || exonDownstreamRank == -1)
+                {
+                    // skipped due to the position being outside this transcript
+                }
+                else
+                {
+                    // transcriptId, exonUpstream, exonUpstreamPhase, exonDownstream, exonDownstreamPhase, exonMax, canonical, codingStart, codingEnd
+                    Transcript transcript = new Transcript(
+                            currentGene, transcriptId,
+                            exonUpstreamRank, exonUpstreamPhase, exonDownstreamRank, exonDownstreamPhase,
+                            Long.parseLong(items[TRANSCRIPT_CDB_COL_INDEX]),
+                            Long.parseLong(items[TRANSCRIPT_TCB_COL_INDEX]),
+                            Integer.parseInt(items[TRANSCRIPT_EMAX_COL_INDEX]),
+                            Boolean.parseBoolean(items[TRANSCRIPT_CAN_COL_INDEX]),
+                            items[TRANSCRIPT_CODE_S_COL_INDEX].equals("null") ? null : Long.parseLong(items[TRANSCRIPT_CODE_S_COL_INDEX]),
+                            items[TRANSCRIPT_CODE_E_COL_INDEX].equals("null") ? null : Long.parseLong(items[TRANSCRIPT_CODE_E_COL_INDEX]));
+
+                    currentGene.addTranscript(transcript);
+                }
 
                 line = fileReader.readLine();
 
