@@ -2,6 +2,7 @@ package com.hartwig.hmftools.common.hotspot;
 
 import static com.hartwig.hmftools.common.hotspot.VariantHotspotEvidenceFactory.MIN_BASE_QUALITY;
 import static com.hartwig.hmftools.common.hotspot.VariantHotspotEvidenceFactory.create;
+import static com.hartwig.hmftools.common.hotspot.VariantHotspotEvidenceFactory.findEvidenceOfDelete;
 import static com.hartwig.hmftools.common.hotspot.VariantHotspotEvidenceFactory.findEvidenceOfInsert;
 import static com.hartwig.hmftools.common.hotspot.VariantHotspotEvidenceFactory.findEvidenceOfMNV;
 import static com.hartwig.hmftools.common.hotspot.VariantHotspotEvidenceFactory.isVariantPartOfLargerMNV;
@@ -26,8 +27,54 @@ public class VariantHotspotEvidenceFactoryTest {
 
     private static final String SNV_REF_SEQUENCE = "GATAC";
     private static final VariantHotspot SNV = ImmutableVariantHotspot.builder().chromosome("11").position(100).ref("T").alt("C").build();
-
     private static final VariantHotspot INS = ImmutableVariantHotspot.builder().chromosome("11").position(100).ref("T").alt("TTT").build();
+    private static final VariantHotspot DEL = ImmutableVariantHotspot.builder().chromosome("11").position(100).ref("TAC").alt("T").build();
+
+    @Test
+    public void testDelAlt() {
+        final VariantHotspotEvidence evidence = findEvidenceOfDelete(create(DEL), DEL, buildSamRecord(98, "3M2D1M", "GATA"));
+        assertEvidence(evidence, 1, 1, 0, MIN_BASE_QUALITY);
+    }
+
+    @Test
+    public void testDelAltAverageQuality() {
+        final VariantHotspotEvidence evidence = findEvidenceOfDelete(create(DEL),
+                DEL,
+                SAMRecordsTest.buildSamRecord(98, "3M2D1M", "GATA", buildQualities(13, 13, 16, 18)));
+        assertEvidence(evidence, 1, 1, 0, 17);
+    }
+
+    @Test
+    public void testDelAltInsufficientQuality() {
+        final VariantHotspotEvidence evidence = findEvidenceOfDelete(create(DEL),
+                DEL,
+                SAMRecordsTest.buildSamRecord(98, "3M2D1M", "GATA", buildQualities(13, 13, 12, 12)));
+        assertEvidence(evidence, 0, 0, 0, 0);
+    }
+
+    @Test
+    public void testDelAltNoBarrier() {
+        final VariantHotspotEvidence evidence = findEvidenceOfDelete(create(DEL),
+                DEL,
+                SAMRecordsTest.buildSamRecord(98, "3M2D", "GAT", buildQualities(13, 13, 16)));
+        assertEvidence(evidence, 1, 1, 0, 16);
+    }
+
+    @Test
+    public void testDelIsActualyInsert() {
+        final VariantHotspotEvidence evidence = findEvidenceOfDelete(create(DEL),
+                DEL,
+                SAMRecordsTest.buildSamRecord(98, "3M2I2M", "GATTTAC"));
+        assertEvidence(evidence, 1, 0, 0, 0);
+    }
+
+    @Test
+    public void testDelIsRef() {
+        final VariantHotspotEvidence evidence = findEvidenceOfDelete(create(DEL),
+                DEL,
+                SAMRecordsTest.buildSamRecord(98, "5M", "GATAC"));
+        assertEvidence(evidence, 1, 0, 1, 0);
+    }
 
     @Test
     public void testInsAlt() {
@@ -44,6 +91,14 @@ public class VariantHotspotEvidenceFactoryTest {
     }
 
     @Test
+    public void testInsAltInsufficientQuality() {
+        final VariantHotspotEvidence evidence = findEvidenceOfInsert(create(INS),
+                INS,
+                SAMRecordsTest.buildSamRecord(98, "3M2I2M", "GATTTAC", buildQualities(13, 13, 12, 12, 12, 13, 13)));
+        assertEvidence(evidence, 0, 0, 0, 0);
+    }
+
+    @Test
     public void testInsAltNoBarrier() {
         final VariantHotspotEvidence evidence = findEvidenceOfInsert(create(INS), INS, buildSamRecord(98, "3M2I", "GATTT"));
         assertEvidence(evidence, 1, 1, 0, MIN_BASE_QUALITY);
@@ -56,6 +111,12 @@ public class VariantHotspotEvidenceFactoryTest {
 
         evidence = findEvidenceOfInsert(create(INS), INS, buildSamRecord(98, "3M2D", "GAT"));
         assertEvidence(evidence, 1, 0, 0, 0);
+    }
+
+    @Test
+    public void testInsIsRef() {
+        final VariantHotspotEvidence evidence = findEvidenceOfInsert(create(INS), INS, buildSamRecord(98, "5M", "GATAC"));
+        assertEvidence(evidence, 1, 0, 1, 0);
     }
 
     @Test
