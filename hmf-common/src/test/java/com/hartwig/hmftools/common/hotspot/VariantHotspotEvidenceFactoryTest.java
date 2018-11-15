@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.common.hotspot;
 
+import static com.hartwig.hmftools.common.hotspot.VariantHotspotEvidenceFactory.*;
 import static com.hartwig.hmftools.common.hotspot.VariantHotspotEvidenceFactory.isVariantPartOfLargerMNV;
 
 import static org.junit.Assert.assertEquals;
@@ -21,9 +22,33 @@ public class VariantHotspotEvidenceFactoryTest {
     private static final String SNV_REF_SEQUENCE = "GATAC";
     private static final VariantHotspot SNV = ImmutableVariantHotspot.builder().chromosome("11").position(100).ref("T").alt("C").build();
 
+
+    private static final VariantHotspot INS = ImmutableVariantHotspot.builder().chromosome("11").position(100).ref("T").alt("TTT").build();
+
+    @Test
+    public void testInsAlt() {
+        final VariantHotspotEvidence evidence =  findEvidenceOfInsert(create(INS),  INS, buildSamRecord(98, "3M2I2M", "GATTTAC"));
+        assertEvidence(evidence, 1, 1, 0, MIN_BASE_QUALITY);
+    }
+
+    @Test
+    public void testInsAltNoBarrier() {
+        final VariantHotspotEvidence evidence =  findEvidenceOfInsert(create(INS),  INS, buildSamRecord(98, "3M2I", "GATTT"));
+        assertEvidence(evidence, 1, 1, 0, MIN_BASE_QUALITY);
+    }
+
+    @Test
+    public void testInsIsActuallyDel() {
+        VariantHotspotEvidence evidence =  findEvidenceOfInsert(create(INS),  INS, buildSamRecord(98, "3M2D1M", "GATA"));
+        assertEvidence(evidence, 1, 0, 0, 0);
+
+        evidence =  findEvidenceOfInsert(create(INS),  INS, buildSamRecord(98, "3M2D", "GAT"));
+        assertEvidence(evidence, 1, 0, 0, 0);
+    }
+
     @Test
     public void testSnvAlt() {
-        final VariantHotspotEvidence evidence = createSNVEvidence(buildSamRecord(98, "7M", "GACAC"));
+        final VariantHotspotEvidence evidence = createSNVEvidence(buildSamRecord(98, "5M", "GACAC"));
         assertEvidence(evidence, 1, 1, 0, 13);
     }
 
@@ -85,11 +110,11 @@ public class VariantHotspotEvidenceFactoryTest {
     }
 
     private VariantHotspotEvidence createMNVEvidence(SAMRecord record) {
-        return VariantHotspotEvidenceFactory.findEvidenceOfMNV(VariantHotspotEvidenceFactory.create(MNV), 98, MNV_REF_SEQUENCE, MNV, record);
+        return findEvidenceOfMNV(create(MNV), 98, MNV_REF_SEQUENCE, MNV, record);
     }
 
     private VariantHotspotEvidence createSNVEvidence(SAMRecord record) {
-        return VariantHotspotEvidenceFactory.findEvidenceOfMNV(VariantHotspotEvidenceFactory.create(SNV), 98, SNV_REF_SEQUENCE, SNV, record);
+        return findEvidenceOfMNV(create(SNV), 98, SNV_REF_SEQUENCE, SNV, record);
     }
 
     @Test
@@ -121,7 +146,7 @@ public class VariantHotspotEvidenceFactoryTest {
     public static SAMRecord buildSamRecord(final int alignmentStart, @NotNull final String cigar, @NotNull final String readString) {
         final StringBuilder qualityString = new StringBuilder();
         for (int i = 0; i < readString.length(); i++) {
-            qualityString.append((char) (VariantHotspotEvidenceFactory.MIN_BASE_QUALITY + VariantHotspotEvidenceFactory.PHRED_OFFSET));
+            qualityString.append((char) (MIN_BASE_QUALITY + PHRED_OFFSET));
         }
 
         return SamRecordsTest.buildSamRecord(alignmentStart, cigar, readString, qualityString.toString());
@@ -132,13 +157,13 @@ public class VariantHotspotEvidenceFactoryTest {
         assertEquals(readDepth, victim.readDepth());
         assertEquals(altCount, victim.altSupport());
         assertEquals(refCount, victim.refSupport());
-        assertEquals(quality, victim.quality());
+        assertEquals(quality, victim.altQuality());
     }
 
     private static String buildQualities(int... qualities) {
         final StringBuilder qualityString = new StringBuilder();
         for (final int quality : qualities) {
-            qualityString.append((char) (quality + VariantHotspotEvidenceFactory.PHRED_OFFSET));
+            qualityString.append((char) (quality + PHRED_OFFSET));
         }
         return qualityString.toString();
     }

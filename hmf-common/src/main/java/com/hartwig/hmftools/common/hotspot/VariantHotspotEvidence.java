@@ -17,11 +17,11 @@ public interface VariantHotspotEvidence extends GenomePosition {
     @NotNull
     String alt();
 
-    int quality();
-
     int readDepth();
 
     int refSupport();
 
     int altSupport();
+
+    int altQuality();
 }

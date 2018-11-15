@@ -179,11 +179,11 @@ public class HotspotEvidenceFactory {
             return pileup.mismatchCount(hotspot.alt().charAt(0));
         }
 
-        if (hotspot.isInsert()) {
+        if (hotspot.isSimpleInsert()) {
             return pileup.insertCount(hotspot.alt());
         }
 
-        if (hotspot.isDelete()) {
+        if (hotspot.isSimpleDelete()) {
             return pileup.deleteCount(hotspot.ref());
         }
 
@@ -196,11 +196,11 @@ public class HotspotEvidenceFactory {
             return tumor.mismatchScore(hotspot.alt().charAt(0));
         }
 
-        if (hotspot.isInsert()) {
+        if (hotspot.isSimpleInsert()) {
             return tumor.insertScore(hotspot.alt());
         }
 
-        if (hotspot.isDelete()) {
+        if (hotspot.isSimpleDelete()) {
             return tumor.deleteScore(hotspot.ref());
         }
 

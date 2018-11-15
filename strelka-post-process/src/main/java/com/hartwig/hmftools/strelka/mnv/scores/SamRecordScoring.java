@@ -1,13 +1,11 @@
 package com.hartwig.hmftools.strelka.mnv.scores;
 
-import static com.hartwig.hmftools.common.sam.SamRecords.basesDeletedAfterPosition;
-import static com.hartwig.hmftools.common.sam.SamRecords.basesInsertedAfterPosition;
-
 import java.util.Collection;
 import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.hartwig.hmftools.common.sam.SamRecords;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
@@ -24,6 +22,7 @@ public final class SamRecordScoring {
     @NotNull
     private static ReadType getReadType(@NotNull final SAMRecord record, @NotNull final VariantContext variant) {
         final Allele alt = variant.getAlternateAllele(0);
+        final Allele ref = variant.getReference();
         final int recordIdxOfVariantStart = record.getReadPositionAtReferencePosition(variant.getStart());
         if (recordIdxOfVariantStart == 0) {
             //MIVO: variant position was deleted
@@ -38,18 +37,10 @@ public final class SamRecordScoring {
             }
         }
         if (variant.isSimpleInsertion()) {
-            int insertedBases = basesInsertedAfterPosition(variant.getStart(), record);
-            if (insertedBases == alt.length() - 1 && record.getReadString()
-                    .substring(recordIdxOfVariantStart - 1, recordIdxOfVariantStart - 1 + alt.length())
-                    .equals(alt.getBaseString())) {
-                return ReadType.ALT;
-            }
-
-            return ReadType.REF;
+            return SamRecords.containsInsert(variant.getStart(), alt.getBaseString(), record) ? ReadType.ALT : ReadType.REF;
         }
         if (variant.isSimpleDeletion()) {
-            int deletedBases = basesDeletedAfterPosition(variant.getStart(), record);
-            return deletedBases == variant.getReference().length() - 1 ? ReadType.ALT : ReadType.REF;
+            return SamRecords.containsDelete(variant.getStart(), ref.getBaseString(), record) ? ReadType.ALT : ReadType.REF;
         }
         return ReadType.OTHER;
     }
@@ -76,8 +67,9 @@ public final class SamRecordScoring {
                 if (variant.isSNP()) {
                     return VariantScore.of(readType, record.getBaseQualityString().charAt(recordIdxOfVariantStart - 1));
                 } else if (variant.isSimpleInsertion()) {
-                    return VariantScore.of(readType, record.getBaseQualityString()
-                            .substring(recordIdxOfVariantStart - 1, recordIdxOfVariantStart - 1 + alt.length()));
+                    return VariantScore.of(readType,
+                            record.getBaseQualityString()
+                                    .substring(recordIdxOfVariantStart - 1, recordIdxOfVariantStart - 1 + alt.length()));
                 } else if (variant.isSimpleDeletion()) {
                     //MIVO: read score of next base after deletion if present, otherwise read score of base before deletion
                     if (record.getReadLength() > recordIdxOfVariantStart) {

@@ -20,6 +20,20 @@ public class SamRecords {
         return score;
     }
 
+    public static boolean containsInsert(int position, @NotNull final String alt, @NotNull final SAMRecord record) {
+        int recordIdxOfVariantStart = record.getReadPositionAtReferencePosition(position);
+
+        int insertedBases = basesInsertedAfterPosition(position, record);
+        return insertedBases == alt.length() - 1 && record.getReadString()
+                .substring(recordIdxOfVariantStart - 1, recordIdxOfVariantStart - 1 + alt.length())
+                .equals(alt);
+    }
+
+    public static boolean containsDelete(int position, @NotNull final String ref, @NotNull final SAMRecord record) {
+        int deletedBases = basesDeletedAfterPosition(position, record);
+        return deletedBases == ref.length() - 1;
+    }
+
     public static int basesInsertedAfterPosition(int position, @NotNull final SAMRecord record) {
         int startReadPosition = record.getReadPositionAtReferencePosition(position);
         assert (startReadPosition != 0);

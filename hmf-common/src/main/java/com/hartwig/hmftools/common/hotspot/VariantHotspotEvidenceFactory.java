@@ -4,6 +4,7 @@ import static com.hartwig.hmftools.common.sam.SamRecords.basesDeletedAfterPositi
 import static com.hartwig.hmftools.common.sam.SamRecords.basesInsertedAfterPosition;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.hartwig.hmftools.common.sam.SamRecords;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
@@ -85,30 +86,72 @@ public class VariantHotspotEvidenceFactory {
         return result;
     }
 
-    static ModifiableVariantHotspotEvidence findEvidenceOfIndel(@NotNull final ModifiableVariantHotspotEvidence builder, @NotNull final VariantHotspot hotspot, @NotNull final SAMRecord record) {
+    static ModifiableVariantHotspotEvidence findEvidenceOfInsert(@NotNull final ModifiableVariantHotspotEvidence builder, @NotNull final VariantHotspot hotspot, @NotNull final SAMRecord record) {
+        assert (hotspot.isSimpleInsert());
 
         int hotspotStartPosition = (int) hotspot.position();
-        int deletedBases = basesDeletedAfterPosition(hotspotStartPosition, record);
-        int insertedBases = basesInsertedAfterPosition(hotspotStartPosition, record);
-
-
-
-        int altLength = hotspot.alt().length();
-
         int recordStartPosition = record.getReadPositionAtReferencePosition(hotspotStartPosition);
-        assert (recordStartPosition != 0);
-
-        for (int i = 1; i < hotspot.alt().length(); i++) {
-            int altReferencePosition = record.getReferencePositionAtReadPosition(recordStartPosition + i);
-
+        if (recordStartPosition == 0) {
+            return builder;
         }
 
         int recordStartQuality = baseQuality(record.getBaseQualityString().substring(recordStartPosition - 1, recordStartPosition));
 
-        return builder;
+        if (SamRecords.containsInsert(hotspotStartPosition, hotspot.alt(), record)) {
+            int quality = SamRecords.avgQuality(record.getBaseQualityString()
+                    .substring(recordStartPosition - 1, recordStartPosition - 1 + hotspot.alt().length()));
+            if (quality < MIN_BASE_QUALITY) {
+                return builder;
+            }
+            return builder.setReadDepth(builder.readDepth() + 1)
+                    .setAltQuality(builder.altQuality() + quality)
+                    .setAltSupport(builder.altSupport() + 1);
+        }
+
+        if (recordStartQuality < MIN_BASE_QUALITY) {
+            return builder;
+        }
+
+        int deletedBases = basesDeletedAfterPosition(hotspotStartPosition, record);
+        if (deletedBases == 0 && record.getReadString().charAt(recordStartQuality - 1) == hotspot.ref().charAt(0)) {
+            builder.setRefSupport(builder.refSupport() + 1);
+        }
+
+        return builder.setReadDepth(builder.readDepth() + 1);
     }
 
+    static ModifiableVariantHotspotEvidence findEvidenceOfDelete(@NotNull final ModifiableVariantHotspotEvidence builder, @NotNull final VariantHotspot hotspot, @NotNull final SAMRecord record) {
+        assert (hotspot.isSimpleDelete());
 
+        int hotspotStartPosition = (int) hotspot.position();
+        int recordStartPosition = record.getReadPositionAtReferencePosition(hotspotStartPosition);
+        if (recordStartPosition == 0) {
+            return builder;
+        }
+
+        int recordStartQuality = baseQuality(record.getBaseQualityString().substring(recordStartPosition - 1, recordStartPosition));
+
+        if (SamRecords.containsDelete(hotspotStartPosition, hotspot.ref(), record)) {
+            int quality = recordStartQuality; // TODO: Fix this line
+            if (quality < MIN_BASE_QUALITY) {
+                return builder;
+            }
+            return builder.setReadDepth(builder.readDepth() + 1)
+                    .setAltQuality(builder.altQuality() + quality)
+                    .setAltSupport(builder.altSupport() + 1);
+        }
+
+        if (recordStartQuality < MIN_BASE_QUALITY) {
+            return builder;
+        }
+
+        int insertedBases = basesInsertedAfterPosition(hotspotStartPosition, record);
+        if (insertedBases == 0 && record.getReadString().charAt(recordStartQuality - 1) == hotspot.ref().charAt(0)) {
+            builder.setRefSupport(builder.refSupport() + 1);
+        }
+
+        return builder.setReadDepth(builder.readDepth() + 1);
+    }
 
     @VisibleForTesting
     @NotNull
@@ -148,7 +191,7 @@ public class VariantHotspotEvidenceFactory {
                 return builder;
             }
 
-            builder.setQuality(builder.quality() + totalQuality).setAltSupport(builder.altSupport() + 1);
+            builder.setAltQuality(builder.altQuality() + totalQuality).setAltSupport(builder.altSupport() + 1);
         } else if (samBases.equals(hotspot.ref())) {
             builder.setRefSupport(builder.refSupport() + 1);
         }
@@ -255,7 +298,7 @@ public class VariantHotspotEvidenceFactory {
                 .from(hotspot)
                 .setRef(hotspot.ref())
                 .setAlt(hotspot.alt())
-                .setQuality(0)
+                .setAltQuality(0)
                 .setAltSupport(0)
                 .setRefSupport(0)
                 .setReadDepth(0);

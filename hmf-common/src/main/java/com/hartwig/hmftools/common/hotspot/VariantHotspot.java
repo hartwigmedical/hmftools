@@ -24,11 +24,11 @@ public interface VariantHotspot extends GenomePosition {
         return ref().length() == alt().length() && ref().length() != 1;
     }
 
-    default boolean isInsert() {
-        return ref().length() == 1 && alt().length() > 1;
+    default boolean isSimpleInsert() {
+        return ref().length() == 1 && alt().length() > 1 && ref().charAt(0) == alt().charAt(0);
     }
 
-    default boolean isDelete() {
-        return alt().length() == 1 && ref().length() > 1;
+    default boolean isSimpleDelete() {
+        return alt().length() == 1 && ref().length() > 1 && ref().charAt(0) == alt().charAt(0);
     }
 }

@@ -11,11 +11,11 @@ public enum HotspotEvidenceType {
 
     @NotNull
     static HotspotEvidenceType fromVariantHotspot(@NotNull VariantHotspot hotspot) {
-        if (hotspot.isDelete()) {
+        if (hotspot.isSimpleDelete()) {
             return DELETE;
         }
 
-        if (hotspot.isInsert()) {
+        if (hotspot.isSimpleInsert()) {
             return INSERT;
         }
 
