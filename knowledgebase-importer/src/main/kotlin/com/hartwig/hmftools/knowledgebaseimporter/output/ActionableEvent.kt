@@ -26,8 +26,6 @@ data class CnvEvent(val gene: String, val cnvType: String) : ActionableEvent(), 
     companion object {
         fun amplification(gene: String) = CnvEvent(gene, "Amplification")
         fun deletion(gene: String) = CnvEvent(gene, "Deletion")
-        fun overExpression(gene: String) = CnvEvent(gene, "Overexpression")
-        fun lossOfFunction(gene: String) =CnvEvent(gene, "Loss-of-function")
     }
 
     override fun eventString(): String {
