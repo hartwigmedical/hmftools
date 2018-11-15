@@ -6,6 +6,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import com.hartwig.hmftools.common.sam.SamRecordsTest;
+
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
@@ -33,13 +35,13 @@ public class VariantHotspotEvidenceFactoryTest {
 
     @Test
     public void testMnvInsufficientQuality() {
-        final VariantHotspotEvidence evidence = createMNVEvidence(buildSamRecord(98, "7M", "GACATAA", buildQualities(12, 12, 12, 12, 12, 12, 12)));
+        final VariantHotspotEvidence evidence = createMNVEvidence(SamRecordsTest.buildSamRecord(98, "7M", "GACATAA", buildQualities(12, 12, 12, 12, 12, 12, 12)));
         assertEvidence(evidence, 0, 0, 0, 0);
     }
 
     @Test
     public void testMnvBarelySufficientQuality() {
-        final VariantHotspotEvidence evidence = createMNVEvidence(buildSamRecord(98, "7M", "GACATAA", buildQualities(13, 13, 12, 20, 20, 13, 13)));
+        final VariantHotspotEvidence evidence = createMNVEvidence(SamRecordsTest.buildSamRecord(98, "7M", "GACATAA", buildQualities(13, 13, 12, 20, 20, 13, 13)));
         assertEvidence(evidence, 1, 1, 0, 52);
     }
 
@@ -63,7 +65,7 @@ public class VariantHotspotEvidenceFactoryTest {
 
     @Test
     public void testInsInMnvButRefHasInsufficentQuality() {
-        final VariantHotspotEvidence evidence = createMNVEvidence(buildSamRecord(98, "4M1I3M", "GACATTAA", buildQualities(13, 13, 12, 13, 13, 13, 13, 13)));
+        final VariantHotspotEvidence evidence = createMNVEvidence(SamRecordsTest.buildSamRecord(98, "4M1I3M", "GACATTAA", buildQualities(13, 13, 12, 13, 13, 13, 13, 13)));
         assertEvidence(evidence, 0, 0, 0, 0);
     }
 
@@ -115,52 +117,16 @@ public class VariantHotspotEvidenceFactoryTest {
 
     }
 
-    @Test
-    public void testInsertedBasesAfterPosition() {
-        assertEquals(0, VariantHotspotEvidenceFactory.insertedBasesAfterPosition(100, buildSamRecord(98, "6M", "GATACA")));
-        assertEquals(1, VariantHotspotEvidenceFactory.insertedBasesAfterPosition(100, buildSamRecord(98, "3M1I3M", "GATTACA")));
-        assertEquals(2, VariantHotspotEvidenceFactory.insertedBasesAfterPosition(100, buildSamRecord(98, "3M2I3M", "GATTTACA")));
-
-        assertEquals(0, VariantHotspotEvidenceFactory.insertedBasesAfterPosition(100, buildSamRecord(98, "6M", "GATACA")));
-        assertEquals(0, VariantHotspotEvidenceFactory.insertedBasesAfterPosition(100, buildSamRecord(98, "3M1D2M", "GATCA")));
-        assertEquals(0, VariantHotspotEvidenceFactory.insertedBasesAfterPosition(100, buildSamRecord(98, "3M2D1M", "GATA")));
-    }
-
-    @Test
-    public void testDeletedBasesAfterPosition() {
-        assertEquals(0, VariantHotspotEvidenceFactory.deletedBasesAfterPosition(100, buildSamRecord(98, "6M", "GATACA")));
-        assertEquals(0, VariantHotspotEvidenceFactory.deletedBasesAfterPosition(100, buildSamRecord(98, "3M1I3M", "GATTACA")));
-        assertEquals(0, VariantHotspotEvidenceFactory.deletedBasesAfterPosition(100, buildSamRecord(98, "3M2I3M", "GATTTACA")));
-
-        assertEquals(0, VariantHotspotEvidenceFactory.deletedBasesAfterPosition(100, buildSamRecord(98, "6M", "GATACA")));
-        assertEquals(1, VariantHotspotEvidenceFactory.deletedBasesAfterPosition(100, buildSamRecord(98, "3M1D2M", "GATCA")));
-        assertEquals(2, VariantHotspotEvidenceFactory.deletedBasesAfterPosition(100, buildSamRecord(98, "3M2D1M", "GATA")));
-    }
-
     @NotNull
-    private static SAMRecord buildSamRecord(final int alignmentStart, @NotNull final String cigar, @NotNull final String readString) {
+    public static SAMRecord buildSamRecord(final int alignmentStart, @NotNull final String cigar, @NotNull final String readString) {
         final StringBuilder qualityString = new StringBuilder();
         for (int i = 0; i < readString.length(); i++) {
             qualityString.append((char) (VariantHotspotEvidenceFactory.MIN_BASE_QUALITY + VariantHotspotEvidenceFactory.PHRED_OFFSET));
         }
 
-        return buildSamRecord(alignmentStart, cigar, readString, qualityString.toString());
+        return SamRecordsTest.buildSamRecord(alignmentStart, cigar, readString, qualityString.toString());
     }
 
-    @NotNull
-    private static SAMRecord buildSamRecord(final int alignmentStart, @NotNull final String cigar, @NotNull final String readString,
-            @NotNull final String qualities) {
-        final SAMRecord record = new SAMRecord(null);
-        record.setAlignmentStart(alignmentStart);
-        record.setCigarString(cigar);
-        record.setReadString(readString);
-        record.setReadNegativeStrandFlag(false);
-        record.setBaseQualityString(qualities);
-        record.setMappingQuality(20);
-        record.setDuplicateReadFlag(false);
-        record.setReadUnmappedFlag(false);
-        return record;
-    }
 
     private static void assertEvidence(@NotNull VariantHotspotEvidence victim, int readDepth, int altCount, int refCount, int quality) {
         assertEquals(readDepth, victim.readDepth());

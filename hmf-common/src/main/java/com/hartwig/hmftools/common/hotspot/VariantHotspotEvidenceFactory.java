@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.common.hotspot;
 
+import static com.hartwig.hmftools.common.sam.SamRecords.basesDeletedAfterPosition;
+import static com.hartwig.hmftools.common.sam.SamRecords.basesInsertedAfterPosition;
+
 import com.google.common.annotations.VisibleForTesting;
 
 import org.apache.logging.log4j.util.Strings;
@@ -82,10 +85,14 @@ public class VariantHotspotEvidenceFactory {
         return result;
     }
 
-    static ModifiableVariantHotspotEvidence findEvidenceOfInsert(@NotNull final ModifiableVariantHotspotEvidence builder,
-            @NotNull final VariantHotspot hotspot, @NotNull final SAMRecord record) {
+    static ModifiableVariantHotspotEvidence findEvidenceOfIndel(@NotNull final ModifiableVariantHotspotEvidence builder, @NotNull final VariantHotspot hotspot, @NotNull final SAMRecord record) {
 
         int hotspotStartPosition = (int) hotspot.position();
+        int deletedBases = basesDeletedAfterPosition(hotspotStartPosition, record);
+        int insertedBases = basesInsertedAfterPosition(hotspotStartPosition, record);
+
+
+
         int altLength = hotspot.alt().length();
 
         int recordStartPosition = record.getReadPositionAtReferencePosition(hotspotStartPosition);
@@ -101,19 +108,7 @@ public class VariantHotspotEvidenceFactory {
         return builder;
     }
 
-    @VisibleForTesting
-    static int insertedBasesAfterPosition(int position, @NotNull final SAMRecord record) {
-        int recordStartPosition = record.getReadPositionAtReferencePosition(position);
-        int recordNextPosition = record.getReadPositionAtReferencePosition(position + 1);
-        return Math.max(0, recordNextPosition - recordStartPosition - 1);
-    }
 
-
-    @VisibleForTesting
-    static int deletedBasesAfterPosition(int position, @NotNull final SAMRecord record) {
-        int startReadPosition = record.getReadPositionAtReferencePosition(position);
-        return Math.max(0, record.getReferencePositionAtReadPosition(startReadPosition + 1) - position - 1);
-    }
 
     @VisibleForTesting
     @NotNull

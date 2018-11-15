@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.strelka.mnv.scores;
 
+import static com.hartwig.hmftools.common.sam.SamRecords.basesDeletedAfterPosition;
+import static com.hartwig.hmftools.common.sam.SamRecords.basesInsertedAfterPosition;
+
 import java.util.Collection;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -35,37 +38,18 @@ public final class SamRecordScoring {
             }
         }
         if (variant.isSimpleInsertion()) {
-            for (int index = 0; index < alt.length(); index++) {
-                final int recordIndex = recordIdxOfVariantStart + index;
-                if (recordIndex - 1 < record.getReadLength() && record.getReadString().charAt(recordIndex - 1) == alt.getBaseString()
-                        .charAt(index)) {
-                    if (index != 0 && record.getReferencePositionAtReadPosition(recordIndex) != 0) {
-                        return ReadType.REF;
-                    }
-                } else {
-                    return ReadType.REF;
-                }
+            int insertedBases = basesInsertedAfterPosition(variant.getStart(), record);
+            if (insertedBases == alt.length() - 1 && record.getReadString()
+                    .substring(recordIdxOfVariantStart - 1, recordIdxOfVariantStart - 1 + alt.length())
+                    .equals(alt.getBaseString())) {
+                return ReadType.ALT;
             }
-            // MIVO: check that this insertion is not part of a longer insertion
-            if (record.getReadLength() >= recordIdxOfVariantStart + alt.length()
-                    && record.getReferencePositionAtReadPosition(recordIdxOfVariantStart + alt.length()) == 0) {
-                return ReadType.REF;
-            }
-            return ReadType.ALT;
+
+            return ReadType.REF;
         }
         if (variant.isSimpleDeletion()) {
-            final Allele ref = variant.getReference();
-            for (int index = 0; index < ref.length(); index++) {
-                if (index != 0 && record.getReadPositionAtReferencePosition(variant.getStart() + index) != 0) {
-                    return ReadType.REF;
-                }
-            }
-            // MIVO: check that this deletion is not part of a longer deletion
-            if (record.getAlignmentEnd() >= variant.getStart() + ref.length()
-                    && record.getReadPositionAtReferencePosition(variant.getStart() + ref.length()) == 0) {
-                return ReadType.REF;
-            }
-            return ReadType.ALT;
+            int deletedBases = basesDeletedAfterPosition(variant.getStart(), record);
+            return deletedBases == variant.getReference().length() - 1 ? ReadType.ALT : ReadType.REF;
         }
         return ReadType.OTHER;
     }
