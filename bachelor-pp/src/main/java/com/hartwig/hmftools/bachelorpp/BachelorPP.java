@@ -146,6 +146,7 @@ public class BachelorPP {
         if(cmd.hasOption(WHITELIST_FILE) || cmd.hasOption(BLACKLIST_FILE))
         {
             rewriteFilteredBachelorRecords(bachRecords, cmd);
+            LOGGER.info("filtering complete");
             return;
         }
 
@@ -228,8 +229,15 @@ public class BachelorPP {
             writer.write("SAMPLEID,SOURCE,PROGRAM,ID,GENE,TRANSCRIPT_ID,CHROM,POS,REF,ALTS,EFFECTS,ANNOTATIONS,HGVS_PROTEIN,IS_HOMOZYGOUS,PHRED_SCORE,HGVS_CODING,MATCH_TYPE,CLNDN,CLNSIG");
             writer.newLine();
 
-            for(final BachelorGermlineVariant bachRecord : bachRecords)
+            for(int index = 0; index < bachRecords.size(); ++index)
             {
+                final BachelorGermlineVariant bachRecord = bachRecords.get(index);
+
+                if(index > 0 && (index % 1000) == 0)
+                {
+                    LOGGER.info("processed {} records", index);
+                }
+
                 boolean keepRecord = false;
                 BachelorRecordFilter matchedFilter = null;
 
