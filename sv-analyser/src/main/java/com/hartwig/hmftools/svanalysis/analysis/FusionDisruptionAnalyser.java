@@ -40,10 +40,14 @@ public class FusionDisruptionAnalyser
     private SvDisruptionAnalyser mDisruptionFinder;
 
     private String mSampleId;
+    private String mOutputDir;
+    private boolean mUseCombinedOutput;
     private SvGeneTranscriptCollection mSvGeneTranscriptCollection;
 
     private List<GeneFusion> mGeneFusions;
     private List<GeneDisruption> mGeneDisruptions;
+
+    private BufferedWriter mFusionWriter;
 
     private static final Logger LOGGER = LogManager.getLogger(FusionDisruptionAnalyser.class);
 
@@ -55,9 +59,12 @@ public class FusionDisruptionAnalyser
 
         mGeneFusions = Lists.newArrayList();
         mGeneDisruptions = Lists.newArrayList();
+        mFusionWriter= null;
+        mOutputDir = "";
+        mUseCombinedOutput = false;
     }
 
-    public boolean loadFusionReferenceData(final CommandLine cmdLineArgs)
+    public boolean loadFusionReferenceData(final CommandLine cmdLineArgs, final String outputDir, boolean useCombinedOutput)
     {
         try
         {
@@ -74,6 +81,9 @@ public class FusionDisruptionAnalyser
             LOGGER.error("failed to load known fusion files");
             return false;
         }
+
+        mOutputDir = outputDir;
+        mUseCombinedOutput = useCombinedOutput;
 
         return true;
     }
@@ -98,7 +108,7 @@ public class FusionDisruptionAnalyser
             return genesList.stream().filter(GeneAnnotation::isEnd).collect(Collectors.toList());
     }
 
-    public void findFusions(final List<SvVarData> allVariants, final List<SvCluster> clusters, final String outputDir)
+    public void findFusions(final List<SvVarData> allVariants, final List<SvCluster> clusters, final List<SvVarData> svList)
     {
         if(mSampleId.isEmpty() || mFusionFinder == null)
             return;
@@ -112,66 +122,126 @@ public class FusionDisruptionAnalyser
 
         mSvGeneTranscriptCollection.setSvData(svDataList);
 
-        List<GeneAnnotation> breakendGenes1 = Lists.newArrayList();
-        List<GeneAnnotation> breakendGenes2 = Lists.newArrayList();
-
-        // for now only consider simple SVs and resolved small clusters
-        for(final SvCluster cluster : clusters)
+        // always report SVs by themselves
+        for(final SvVarData var : svList)
         {
-            breakendGenes1.clear();
-            breakendGenes2.clear();
-
-            if(cluster.getCount() == 1)
-            {
-                final SvVarData var = cluster.getSVs().get(0);
-
-                breakendGenes1 = getSvGenesList(var, true);
-                breakendGenes2 = getSvGenesList(var, false);
-            }
-            else if(cluster.isResolved() && cluster.isFullyChained() && cluster.isConsistent() && cluster.getTypeCount(SGL) == 0)
-            {
-                final SvChain completeChain = cluster.getChains().get(0);
-                final SvVarData startVar = completeChain.getFirstSV();
-                final SvVarData endVar = completeChain.getLastSV();
-
-                breakendGenes1 = getSvGenesList(startVar, completeChain.firstLinkOpenOnStart());
-                breakendGenes2 = getSvGenesList(endVar, completeChain.lastLinkOpenOnStart());
-            }
-
-            if(breakendGenes1.isEmpty() || breakendGenes2.isEmpty())
+            if(var.isNullBreakend())
                 continue;
 
-            List<GeneFusion> fusions = mFusionFinder.findFusions(breakendGenes1, breakendGenes2);
+            List<GeneAnnotation> breakendGenes1 = getSvGenesList(var, true);
+            List<GeneAnnotation> breakendGenes2 = getSvGenesList(var, false);
 
+            checkFusions(breakendGenes1, breakendGenes2, var.getCluster());
         }
 
-        // writeFusions
+        boolean checkClusters = false;
+
+        if(checkClusters)
+        {
+            // for now only consider simple SVs and resolved small clusters
+            for (final SvCluster cluster : clusters)
+            {
+                List<GeneAnnotation> breakendGenes1 = Lists.newArrayList();
+                List<GeneAnnotation> breakendGenes2 = Lists.newArrayList();
+
+                /*
+                if(cluster.getId() == 651)
+                {
+                    LOGGER.debug("specific cluster");
+                }
+                */
+
+                if (cluster.getCount() == 1)
+                {
+                    continue;
+                }
+                else if (cluster.isResolved() && cluster.isFullyChained() && cluster.isConsistent()
+                        && cluster.getTypeCount(SGL) == 0)
+                {
+                    final SvChain completeChain = cluster.getChains().get(0);
+                    final SvVarData startVar = completeChain.getFirstSV();
+                    final SvVarData endVar = completeChain.getLastSV();
+
+                    breakendGenes1 = getSvGenesList(startVar, completeChain.firstLinkOpenOnStart());
+                    breakendGenes2 = getSvGenesList(endVar, completeChain.lastLinkOpenOnStart());
+                }
+
+                checkFusions(breakendGenes1, breakendGenes2, cluster);
+
+            }
+        }
     }
 
-    private void writeFusions(final List<GeneFusion> fusions, final String outputDir)
+    private void checkFusions(List<GeneAnnotation> breakendGenes1, List<GeneAnnotation> breakendGenes2, final SvCluster cluster)
+    {
+        if(breakendGenes1.isEmpty() || breakendGenes2.isEmpty())
+            return;
+
+        List<GeneFusion> fusions = mFusionFinder.findFusions(breakendGenes1, breakendGenes2);
+
+        if(fusions.isEmpty())
+            return;
+
+        if(LOGGER.isDebugEnabled())
+        {
+            for (final GeneFusion fusion : fusions)
+            {
+                if (fusion.reportable())
+                {
+                    final Transcript upstream = fusion.upstreamLinkedAnnotation();
+                    final Transcript downstream = fusion.downstreamLinkedAnnotation();
+                    final GeneAnnotation upGene = upstream.parent();
+                    final GeneAnnotation downGene = downstream.parent();
+
+                    LOGGER.debug("sample({}) fusion: up({} {} {} {}) upSV({}: {}:{}:{} start={} strand={}) up({} {} {} {}) upSV({}: {}:{}:{} start={} strand={})",
+                            mSampleId, upstream.geneName(), upstream.transcriptId(), upstream.getRegionType(), upstream.getCodingType(),
+                            upGene.id(), upGene.chromosome(), upGene.position(), upGene.orientation(), upGene.isStart(), upGene.strand(),
+                            downstream.geneName(), downstream.transcriptId(), downstream.getRegionType(), downstream.getCodingType(),
+                            downGene.id(), downGene.chromosome(), downGene.position(), downGene.orientation(), downGene.isStart(), downGene.strand());
+                }
+            }
+        }
+
+        writeFusions(fusions, cluster);
+    }
+
+    private void writeFusions(final List<GeneFusion> fusions, final SvCluster cluster)
     {
         if(fusions.isEmpty())
             return;
 
-        String outputFilename = outputDir;
-
-        if(!outputFilename.endsWith("/"))
-            outputFilename += "/";
-
-        outputFilename += mSampleId + "_" + "sv_fusions.csv";
-
         try
         {
-            Path outputFile = Paths.get(outputFilename);
+            BufferedWriter writer = null;
 
-            BufferedWriter writer = Files.newBufferedWriter(outputFile, StandardOpenOption.CREATE);
+            if(mFusionWriter == null)
+            {
+                String outputFilename = mOutputDir;
 
-            writer.write("SampleId");
-            writer.write(",StartSvId,StartChr,StartPos,StartOrient,StartType");
-            writer.write(",StartGene,StartTranscript,StartRegionType,StartExon,StartPhase,StartCodingBases,StartTotalCodingBases,StartCodingStart,StartCodingEnd");
-            writer.write(",EndSvId,EndChr,EndPos,EndOrient,EndType");
-            writer.write(",EndGene,EndTranscript,EndRegionType,EndExon,EndPhase,EndCodingBases,EndTotalCodingBases,EndCodingStart,EndCodingEnd");
-            writer.newLine();
+                if (!outputFilename.endsWith("/"))
+                    outputFilename += "/";
+
+                if(mUseCombinedOutput)
+                    outputFilename += "FUSIONS.csv";
+                else
+                    outputFilename += mSampleId + "_" + "sv_fusions.csv";
+
+                Path outputFile = Paths.get(outputFilename);
+
+                mFusionWriter = Files.newBufferedWriter(outputFile, StandardOpenOption.CREATE);
+                writer = mFusionWriter;
+
+                writer.write("SampleId,Reportable,PrimarySource,ClusterId,ClusterCount,ResolvedType");
+                writer.write(",StartSvId,StartChr,StartPos,StartOrient,StartType");
+                writer.write(",StartGene,StartTranscript,StartStrand,StartRegionType,StartCodingType,StartExon,StartPhase,StartCodingBases,StartTotalCodingBases,StartCodingStart,StartCodingEnd");
+                writer.write(",EndSvId,EndChr,EndPos,EndOrient,EndType");
+                writer.write(",EndGene,EndTranscript,EndStrand,EndRegionType,EndCodingType,EndExon,EndPhase,EndCodingBases,EndTotalCodingBases,EndCodingStart,EndCodingEnd");
+                writer.newLine();
+            }
+            else
+            {
+                writer = mFusionWriter;
+            }
 
             for(final GeneFusion fusion : fusions)
             {
@@ -181,7 +251,9 @@ public class FusionDisruptionAnalyser
                 final GeneAnnotation startVar = startTrans.parent();
                 final GeneAnnotation endVar = endTrans.parent();
 
-                writer.write(String.format("%s", mSampleId));
+                writer.write(String.format("%s,%s,%s,%d,%d,%s",
+                        mSampleId, fusion.reportable(), fusion.primarySource(),
+                        cluster.getId(), cluster.getUniqueSvCount(), cluster.getResolvedType()));
 
                 // write upstream SV, transcript and exon info
                 writer.write(
@@ -189,8 +261,10 @@ public class FusionDisruptionAnalyser
                                 startVar.id(), startVar.chromosome(), startVar.position(), startVar.orientation(), startVar.type()));
 
                 writer.write(
-                        String.format(",%s,%s,%s,%d,%d,%d,%d,%d,%d",
-                                startTrans.parent().geneName(), startTrans.transcriptId(), startTrans.getRegionType(), startTrans.exonUpstream(), startTrans.exonUpstreamPhase(),
+                        String.format(",%s,%s,%d,%s,%s,%d,%d,%d,%d,%d,%d",
+                                startTrans.parent().geneName(), startTrans.transcriptId(),
+                                startTrans.parent().strand(), startTrans.getRegionType(), startTrans.getCodingType(),
+                                startTrans.exonUpstream(), startTrans.exonUpstreamPhase(),
                                 startTrans.codingBases(), startTrans.totalCodingBases(),
                                 startTrans.codingStart() != null ? startTrans.codingStart() : 0,
                                 startTrans.codingEnd() != null ? startTrans.codingEnd() : 0));
@@ -200,22 +274,33 @@ public class FusionDisruptionAnalyser
                                 endVar.id(), endVar.chromosome(), endVar.position(), endVar.orientation(), endVar.type()));
 
                 writer.write(
-                        String.format(",%s,%s,%s,%d,%d,%d,%d,%d,%d",
-                                endTrans.parent().geneName(), endTrans.transcriptId(), endTrans.getRegionType(), endTrans.exonUpstream(), endTrans.exonUpstreamPhase(),
+                        String.format(",%s,%s,%d,%s,%s,%d,%d,%d,%d,%d,%d",
+                                endTrans.parent().geneName(), endTrans.transcriptId(),
+                                endTrans.parent().strand(), endTrans.getRegionType(), endTrans.getCodingType(),
+                                endTrans.exonUpstream(), endTrans.exonUpstreamPhase(),
                                 endTrans.codingBases(), endTrans.totalCodingBases(),
                                 endTrans.codingStart() != null ? endTrans.codingStart() : 0,
                                 endTrans.codingEnd() != null ? endTrans.codingEnd() : 0));
 
                 writer.newLine();
             }
-
-            writer.close();
         }
         catch (final IOException e)
         {
-            LOGGER.error("error writing gene annotations");
+            LOGGER.error("error writing fusions: {}", e.toString());
         }
     }
 
+    public void close()
+    {
+        try
+        {
+            if(mFusionWriter != null)
+                mFusionWriter.close();
+        }
+        catch (IOException e)
+        {
 
+        }
+    }
 }

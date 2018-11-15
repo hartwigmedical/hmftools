@@ -1305,7 +1305,7 @@ public class SvClusteringMethods {
 
         if(lp1 == null && lp2 == null)
         {
-            LOGGER.warn("cluster({} {}) has no linked pairs", cluster.getId(), cluster.getDesc());
+            LOGGER.debug("cluster({} {}) has no linked pairs", cluster.getId(), cluster.getDesc());
             return;
         }
 

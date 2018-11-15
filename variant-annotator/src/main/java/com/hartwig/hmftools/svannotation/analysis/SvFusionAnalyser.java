@@ -195,8 +195,8 @@ public class SvFusionAnalyser
 
     private void addFusion(List<Pair<Transcript, Transcript>> fusions, final Transcript startTrans, final Transcript endTrans)
     {
-        LOGGER.debug("adding fusion between start SV({}) trans({}) and end SV({}) trans({})",
-                startTrans.parent().id(), startTrans.toString(), endTrans.parent().id(), endTrans.toString());
+        //LOGGER.debug("adding fusion between start SV({}) trans({}) and end SV({}) trans({})",
+        //        startTrans.parent().id(), startTrans.toString(), endTrans.parent().id(), endTrans.toString());
 
         fusions.add(Pair.of(startTrans, endTrans));
     }

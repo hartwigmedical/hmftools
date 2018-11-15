@@ -116,7 +116,7 @@ public class SvAnalyser {
             if(cmd.hasOption(GENE_TRANSCRIPTS_DIR))
             {
                 fusionAnalyser = new FusionDisruptionAnalyser();
-                fusionAnalyser.loadFusionReferenceData(cmd);
+                fusionAnalyser.loadFusionReferenceData(cmd, cmd.getOptionValue(DATA_OUTPUT_PATH), samplesList.size() > 1);
             }
 
             int count = 0;
@@ -160,12 +160,15 @@ public class SvAnalyser {
                     if(fusionAnalyser != null)
                     {
                         fusionAnalyser.loadSvGeneTranscriptData(sample, cmd.getOptionValue(GENE_TRANSCRIPTS_DIR));
-                        // fusionAnalyser.findFusions(svVarData, sampleAnalyser.getClusters(), mOu);
+                        fusionAnalyser.findFusions(svVarData, sampleAnalyser.getClusters(), svVarData);
                     }
                 }
             }
 
             sampleAnalyser.close();
+
+            if(fusionAnalyser != null)
+                fusionAnalyser.close();
         }
 
         if(cmd.hasOption(RUN_RESULTS_CHECKER))

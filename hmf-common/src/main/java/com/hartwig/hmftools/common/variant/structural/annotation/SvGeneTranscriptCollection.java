@@ -109,8 +109,6 @@ public class SvGeneTranscriptCollection
             GeneAnnotation currentGene = null;
             List<GeneAnnotation> geneAnnotations = null;
 
-            int fileIndex = 0;
-
             line = fileReader.readLine(); // skip header
 
             while (line != null)
@@ -125,10 +123,16 @@ public class SvGeneTranscriptCollection
                 {
                     if(currentVarId >= 0)
                     {
-                        mSvIdGeneTranscriptsMap.put(varId, geneAnnotations);
+                        mSvIdGeneTranscriptsMap.put(currentVarId, geneAnnotations);
+                    }
+
+                    if(varId == 430450)
+                    {
+                        LOGGER.debug("specific var");
                     }
 
                     currentVarId = varId;
+                    currentGene = null;
 
                     // start a new list for the new variant
                     geneAnnotations = Lists.newArrayList();
@@ -136,15 +140,10 @@ public class SvGeneTranscriptCollection
 
                 // isStart, geneName, geneStableId, geneStrand, synonyms, entrezIds, karyotypeBand
                 final String geneName = items[GENE_NAME_COL_INDEX];
+                boolean geneIsStart = Boolean.parseBoolean(items[GENE_IS_START_COL_INDEX]);
 
-                if(currentGene == null || !currentGene.geneName().equals(geneName))
+                if(currentGene == null || !currentGene.geneName().equals(geneName) || currentGene.isStart() != geneIsStart)
                 {
-                    if(currentGene != null)
-                    {
-                        // add to annotation and prepare a new one
-                        geneAnnotations.add(currentGene);
-                    }
-
                     String[] synonymsStr = items[GENE_SYNS_COL_INDEX].split(";");
                     final List<String> synonyms = Lists.newArrayList(synonymsStr);
 
@@ -160,13 +159,15 @@ public class SvGeneTranscriptCollection
 
                     currentGene = new GeneAnnotation(
                             varId,
-                            Boolean.parseBoolean(items[GENE_IS_START_COL_INDEX]),
+                            geneIsStart,
                             geneName,
                             items[GENE_STABLE_ID_COL_INDEX],
                             Integer.parseInt(items[GENE_STRAND_INDEX]),
                             synonyms,
                             entrezIds,
                             items[GENE_KARYOTYPE_COL_INDEX]);
+
+                    geneAnnotations.add(currentGene);
                 }
 
                 final String transcriptId = items[TRANSCRIPT_ID_COL_INDEX];
@@ -193,12 +194,9 @@ public class SvGeneTranscriptCollection
                 if(line == null)
                 {
                     // add the last variant gene list
-                    geneAnnotations.add(currentGene);
                     mSvIdGeneTranscriptsMap.put(varId, geneAnnotations);
                     break;
                 }
-
-                ++fileIndex;
             }
 
         }

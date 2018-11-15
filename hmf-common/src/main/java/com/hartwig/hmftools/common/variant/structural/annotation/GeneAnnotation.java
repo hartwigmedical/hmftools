@@ -121,10 +121,6 @@ public class GeneAnnotation {
 
     public final EnrichedStructuralVariant variant() { return mVariant; }
 
-
-    // @NotNull
-    // public StructuralVariantData variant() { return mSvData; }
-
     public boolean isStart() { return mIsStart; }
     public boolean isEnd() { return !mIsStart; }
 
