@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.svannotation;
 
+import static java.lang.Math.abs;
+
 import static org.ensembl.database.homo_sapiens_core.tables.CoordSystem.COORD_SYSTEM;
 import static org.ensembl.database.homo_sapiens_core.tables.Exon.EXON;
 import static org.ensembl.database.homo_sapiens_core.tables.ExonTranscript.EXON_TRANSCRIPT;
@@ -249,6 +251,9 @@ public class MySQLAnnotator implements VariantAnnotator
 
     }
 
+    private static String SPECIFIC_TRANS = "";
+    // private static String SPECIFIC_TRANS = "ENST00000552327";
+
     private Transcript buildTranscript(
             @NotNull GeneAnnotation parent, @NotNull Record transcript, long position,
             @NotNull UInteger canonicalTranscriptId, boolean isForwardStrand)
@@ -269,6 +274,11 @@ public class MySQLAnnotator implements VariantAnnotator
                 .where(EXON_TRANSCRIPT.TRANSCRIPT_ID.eq(transcriptId))
                 .orderBy(EXON.SEQ_REGION_START.asc())
                 .fetch();
+
+        if(transcriptStableId.equals(SPECIFIC_TRANS))
+        {
+            LOGGER.debug("specific trans: {}", transcriptStableId);
+        }
 
         int exonMax = allExons.size();
 
@@ -313,25 +323,17 @@ public class MySQLAnnotator implements VariantAnnotator
             }
             else if(position > exonEnd)
             {
-                // continue setting this until past
+                // continue updating this until past the position
                 prevExonRank = exon.get(EXON_TRANSCRIPT.RANK);
                 prevExonPhase = exon.get(EXON.PHASE);
                 prevExonEndPhase = exon.get(EXON.END_PHASE);
             }
             else if(position < exonStart && nextExonRank == -1)
             {
-                // set at the first opportunity
+                // set at the first exon past this position
                 nextExonRank = exon.get(EXON_TRANSCRIPT.RANK);
                 nextExonPhase = exon.get(EXON.PHASE);
                 nextExonEndPhase = exon.get(EXON.END_PHASE);
-
-                if(prevExonRank == -1)
-                {
-                    // falls before the first exon
-                    prevExonRank = 0;
-                    prevExonPhase = -1;
-                    prevExonEndPhase = -1;
-                }
             }
 
             if(!isCoding)
@@ -407,8 +409,45 @@ public class MySQLAnnotator implements VariantAnnotator
             }
         }
 
-        if(nextExonRank < 0 || prevExonRank < 0)
+        if(prevExonRank == -1)
+        {
+            if(!isForwardStrand)
+            {
+                // falls after the last exon on forward strand or before the first on reverse strand makes this position downstream
+                LOGGER.debug("skipping transcript({}) position({}) after exon rank({} vs max={}) on reverse strand",
+                        transcriptStableId, position, nextExonRank, exonMax);
+                return null;
+            }
+            else
+            {
+                prevExonRank = 0;
+                prevExonPhase = -1;
+                prevExonEndPhase = -1;
+            }
+        }
+        else if(nextExonRank == -1)
+        {
+            if(isForwardStrand)
+            {
+                // falls after the last exon on forward strand or before the first on reverse strand makes this position downstream
+                LOGGER.debug("skipping transcript({}) position({}) after exon rank({} vs max={}) on forward strand",
+                        transcriptStableId, position, prevExonRank, exonMax);
+                return null;
+            }
+            else
+            {
+                nextExonRank = 0;
+                nextExonPhase = -1;
+                nextExonEndPhase = -1;
+            }
+        }
+
+        if(nextExonRank < 0 || prevExonRank < 0 || abs(nextExonRank - prevExonRank) > 1)
+        {
+            LOGGER.warn("transcript({}) invalid exon ranks(prev={} next={}) forwardStrand({}) position({})",
+                    transcriptStableId, prevExonRank, nextExonRank, isForwardStrand, position);
             return null;
+        }
 
         if(isForwardStrand)
         {

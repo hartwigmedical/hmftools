@@ -105,7 +105,10 @@ public class Transcript {
         if(isExonic())
             return TRANS_REGION_TYPE_EXONIC;
 
-        return TRANS_REGION_TYPE_PROMOTOR;
+        if(isPromoter())
+            return TRANS_REGION_TYPE_PROMOTOR;
+
+        return "Unknown";
     }
 
     public final String getCodingType()

@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.common.variant.structural.annotation;
 
+import static java.lang.Math.abs;
+
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.FileReader;
@@ -180,15 +182,10 @@ public class SvGeneTranscriptCollection
 
                 // corrections for errors in Ensembl annotations
 
-                if(exonDownstreamRank == 1 && exonUpstreamRank == -1)
+                if(exonDownstreamRank == -1 || exonUpstreamRank == -1 || abs(exonUpstreamRank - exonDownstreamRank) > 1)
                 {
-                    exonUpstreamRank = 0;
-                    exonUpstreamPhase = -1;
-                }
-
-                if(exonUpstreamRank == -1 || exonDownstreamRank == -1)
-                {
-                    // skipped due to the position being outside this transcript
+                    LOGGER.warn("skipping invalid transcript info: SV({}) trans({}) ranks(up={} down={})",
+                            varId, transcriptId, exonUpstreamRank, exonDownstreamRank);
                 }
                 else
                 {
