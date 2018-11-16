@@ -325,8 +325,8 @@ public class SvGeneTranscriptCollection
                                         transcript.isCanonical(),
                                         transcript.codingStart(),
                                         transcript.codingEnd(),
-                                        transcript.getRegionType(),
-                                        transcript.getCodingType()));
+                                        transcript.regionType(),
+                                        transcript.codingType()));
 
                         writer.newLine();
                     }

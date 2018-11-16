@@ -1,12 +1,13 @@
 package com.hartwig.hmftools.svannotation.analysis;
 
-import static com.hartwig.hmftools.svannotation.analysis.StructuralVariantAnalyzer.getIntronicTranscripts;
+import static com.hartwig.hmftools.common.variant.structural.annotation.Transcript.TRANS_CODING_TYPE_NON_CODING;
 import static com.hartwig.hmftools.svannotation.analysis.StructuralVariantAnalyzer.intronicDisruptionOnSameTranscript;
 import static com.hartwig.hmftools.svannotation.analysis.StructuralVariantAnalyzer.isUpstream;
 
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.fusions.KnownFusionsModel;
@@ -81,51 +82,56 @@ public class SvFusionAnalyser
                 if (startUpstream == endUpstream)
                     continue;
 
+                /* what is not allowed:
+                 - anything to exon coding except exon coding
+                 - end downstream of coding
+                 - start downstream of coding
+                 - end in non-coding transcript
+                 */
+
+                // anything else is allowed
+
                 for (final Transcript startTrans : startGene.transcripts())
                 {
-                    if(startTrans.isPromoter())
-                        continue;
-
                     for (final Transcript endTrans : endGene.transcripts())
                     {
-                        if(endTrans.isPromoter())
+                        final Transcript upstreamTrans = startUpstream ? startTrans : endTrans;
+                        final Transcript downstreamTrans = !startUpstream ? startTrans : endTrans;
+
+                        if(upstreamTrans.postCoding() || downstreamTrans.postCoding())
                             continue;
 
-                        if (!isPotentiallyRelevantFusion(startTrans, endTrans))
+                        if(downstreamTrans.codingType().equals(TRANS_CODING_TYPE_NON_CODING))
                             continue;
 
-                        if(startTrans.isIntronic())
+                        if(upstreamTrans.isCoding() && !downstreamTrans.isCoding())
+                            continue;
+
+                        /*
+                        // DEBUG
+                        if(upstreamTrans.transcriptId().equals("ENST00000312970") && downstreamTrans.transcriptId().equals("ENST00000438429"))
                         {
-                            // Intron -> Intron and Intron -> Exon are both fine if phased
-                            if (startUpstream && startTrans.exonUpstreamPhase() == endTrans.exonDownstreamPhase())
-                            {
-                                addFusion(potentialFusions, startTrans, endTrans);
-                            }
-                            else if (!startUpstream && endTrans.exonUpstreamPhase() == startTrans.exonDownstreamPhase())
-                            {
-                                addFusion(potentialFusions, endTrans, startTrans);
-                            }
+                            LOGGER.debug("trans match");
                         }
-                        else if(startTrans.isExonic())
+                        */
+
+                        if (!isPotentiallyRelevantFusion(upstreamTrans, downstreamTrans))
+                            continue;
+
+                        if(upstreamTrans.isCoding())
                         {
-                            if(endTrans.isExonic())
+                            if(exonToExonInPhase(upstreamTrans, true, downstreamTrans, false))
                             {
-                                if(exonToExonInPhase(startTrans, startUpstream, endTrans, endUpstream))
-                                {
-                                    addFusion(potentialFusions, startTrans, endTrans);
-                                }
-                                else if(exonToExonInPhase(endTrans, endUpstream, startTrans, startUpstream))
-                                {
-                                    addFusion(potentialFusions, endTrans, startTrans);
-                                }
+                                addFusion(potentialFusions, upstreamTrans, downstreamTrans);
                             }
-
-                            // Exon -> Intron is invalid
-
                         }
                         else
                         {
-                            // UTR region fusions not handled yet
+                            // just check for a phasing match
+                            if (upstreamTrans.exonUpstreamPhase() == downstreamTrans.exonDownstreamPhase())
+                            {
+                                addFusion(potentialFusions, upstreamTrans, downstreamTrans);
+                            }
                         }
                     }
                 }
@@ -155,40 +161,6 @@ public class SvFusionAnalyser
         long codingBases = isUpstream ? transcript.codingBases() : transcript.totalCodingBases() - transcript.codingBases();
 
         int adjustedPhase = (int)(codingBases % 3);
-
-        return adjustedPhase;
-    }
-
-    private static int calcPositionPhasing_v2(final Transcript transcript, boolean isUpstream)
-    {
-        // if the exon is completely translated, then determine bases since start of exon
-        long position = transcript.parent().position();
-
-        long exonOffset = 0;
-
-        if(transcript.codingStart() != null && position <= transcript.codingStart())
-        {
-            exonOffset = -1;
-        }
-        else if(transcript.codingStart() != null && position > transcript.codingStart())
-        {
-            exonOffset = position - transcript.codingStart();
-        }
-        if(transcript.codingEnd() != null && position >= transcript.codingEnd())
-        {
-            exonOffset = -1;
-        }
-        /*
-        else if(transcript.codingEnd() != null && position < transcript.codingEnd())
-        {
-            exonOffset = position - transcript.exonStart();
-        }
-        */
-
-        int phasing = isUpstream ? transcript.exonUpstreamPhase() : transcript.exonDownstreamPhase();
-
-        int combinedPhasing = (int)(phasing + exonOffset);
-        int adjustedPhase = (combinedPhasing % 3);
 
         return adjustedPhase;
     }
@@ -232,14 +204,30 @@ public class SvFusionAnalyser
             {
                 final Transcript upstream = fusion.getLeft();
                 final Transcript downstream = fusion.getRight();
-                final boolean matchesKnownFusion = transcriptsMatchKnownFusion(mKnownFusionsModel, upstream, downstream);
 
-                Boolean isPostCodingUpstream = postCoding(upstream);
-                Boolean isPostCodingDownstream = postCoding(downstream);
-
-                final boolean reportable = reportableFusion.isPresent() && reportableFusion.get() == fusion && matchesKnownFusion && (
+                /* previous logic
+                boolean reportable = reportableFusion.isPresent() && reportableFusion.get() == fusion && matchesKnownFusion && (
                         (isPostCodingDownstream != null && !isPostCodingDownstream) && (isPostCodingUpstream == null
                                 || !isPostCodingUpstream) && !(intragenic(upstream, downstream) && upstream.exonUpstreamPhase() == -1));
+                */
+
+                boolean reportable = false;
+
+                if(reportableFusion.isPresent() && reportableFusion.get() == fusion)
+                {
+                    Boolean isPostCodingUpstream = postCoding(upstream);
+                    Boolean isPostCodingDownstream = postCoding(downstream);
+
+                    boolean notPostCodingDownstream = isPostCodingDownstream != null && !isPostCodingDownstream;
+
+                    boolean postCodingUpstreamOk =
+                            (isPostCodingUpstream == null || !isPostCodingUpstream) && !(intragenic(upstream, downstream)
+                                    && upstream.exonUpstreamPhase() == -1);
+
+                    boolean intragenicOk = !(intragenic(upstream, downstream) && upstream.exonUpstreamPhase() == -1);
+
+                    reportable = notPostCodingDownstream && postCodingUpstreamOk && intragenicOk;
+                }
 
                 final GeneFusion geneFusion = ImmutableGeneFusion.builder()
                         .reportable(reportable)
@@ -255,18 +243,24 @@ public class SvFusionAnalyser
     }
 
     @NotNull
-    private static Optional<Pair<Transcript, Transcript>> determineReportableFusion(@NotNull List<Pair<Transcript, Transcript>> fusions)
+    private Optional<Pair<Transcript, Transcript>> determineReportableFusion(@NotNull List<Pair<Transcript, Transcript>> fusions)
     {
         // Select either the canonical -> canonical transcript fusion
         //  then the one with the most exons where one end is canonical
         //  then the one with the most exons combined transcript
 
+        List<Pair<Transcript, Transcript>> knownFusions = fusions.stream()
+                .filter(pair -> transcriptsMatchKnownFusion(mKnownFusionsModel, pair.getLeft(), pair.getRight()))
+                .collect(Collectors.toList());
+
+
         Optional<Pair<Transcript, Transcript>> reportableFusion =
-                fusions.stream().filter(pair -> pair.getLeft().isCanonical() && pair.getRight().isCanonical()).findFirst();
+                knownFusions.stream()
+                        .filter(pair -> pair.getLeft().isCanonical() && pair.getRight().isCanonical()).findFirst();
 
         if (!reportableFusion.isPresent())
         {
-            reportableFusion = fusions.stream()
+            reportableFusion = knownFusions.stream()
                     .filter(pair -> pair.getLeft().isCanonical() || pair.getRight().isCanonical())
                     .sorted(Comparator.comparingInt(a -> a.getLeft().exonMax() + a.getRight().exonMax()))
                     .reduce((a, b) -> b);
@@ -274,7 +268,7 @@ public class SvFusionAnalyser
 
         if (!reportableFusion.isPresent())
         {
-            reportableFusion = fusions.stream()
+            reportableFusion = knownFusions.stream()
                     .sorted(Comparator.comparingInt(a -> a.getLeft().exonMax() + a.getRight().exonMax()))
                     .reduce((a, b) -> b);
         }

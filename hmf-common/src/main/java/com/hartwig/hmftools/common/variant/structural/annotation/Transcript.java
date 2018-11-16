@@ -6,25 +6,28 @@ import org.jetbrains.annotations.Nullable;
 public class Transcript {
 
     @NotNull
-    private final GeneAnnotation parent;
-    @NotNull
-    private final String transcriptId;
-    private final int exonUpstream;
-    private final int exonUpstreamPhase;
-    private final int exonDownstream;
-    private final int exonDownstreamPhase;
-    private final int exonMax;
+    private final GeneAnnotation mGene;
+
+    private final String mTranscriptId;
+    private final int mExonUpstream;
+    private final int mExonUpstreamPhase;
+    private final int mExonDownstream;
+    private final int mExonDownstreamPhase;
+    private final int mExonMax;
 
     private final long mCodingBases;
     private final long mTotalCodingBases;
 
-    private final boolean canonical;
+    private final boolean mCanonical;
+
+    private final String mCodingType;
+    private final String mRegionType;
 
     @Nullable
-    private final Long codingStart;
+    private final Long mCodingStart;
 
     @Nullable
-    private final Long codingEnd;
+    private final Long mCodingEnd;
 
     public static String TRANS_REGION_TYPE_PROMOTOR = "Promotor";
     public static String TRANS_REGION_TYPE_EXONIC = "Exonic";
@@ -33,7 +36,7 @@ public class Transcript {
     public static String TRANS_CODING_TYPE_CODING = "Coding";
     public static String TRANS_CODING_TYPE_UPSTREAM = "Upstream";
     public static String TRANS_CODING_TYPE_DOWNSTREAM = "Downstream";
-    public static String TRANS_CODING_TYPE_NONE = "None";
+    public static String TRANS_CODING_TYPE_NON_CODING = "NonCoding";
 
     private static int STOP_CODON_LENGTH = 3;
 
@@ -42,15 +45,15 @@ public class Transcript {
             final long codingBases, final long totalCodingBases,
             final int exonMax, final boolean canonical, @Nullable final Long codingStart, @Nullable final Long codingEnd)
     {
-        this.parent = parent;
-        this.transcriptId = transcriptId;
+        mGene = parent;
+        mTranscriptId = transcriptId;
 
-        this.exonUpstream = exonUpstream;
-        this.exonUpstreamPhase = exonUpstreamPhase;
-        this.exonDownstream = exonDownstream;
-        this.exonDownstreamPhase = exonDownstreamPhase;
+        mExonUpstream = exonUpstream;
+        mExonUpstreamPhase = exonUpstreamPhase;
+        mExonDownstream = exonDownstream;
+        mExonDownstreamPhase = exonDownstreamPhase;
 
-        this.exonMax = exonMax;
+        mExonMax = exonMax;
 
         if(totalCodingBases > STOP_CODON_LENGTH)
         {
@@ -72,32 +75,52 @@ public class Transcript {
             mCodingBases = codingBases;
         }
 
-        this.canonical = canonical;
-        this.codingStart = codingStart;
-        this.codingEnd = codingEnd;
+        mCanonical = canonical;
+        mCodingStart = codingStart;
+        mCodingEnd = codingEnd;
+
+        mCodingType = calcCodingType();
+        mRegionType = calcRegionType();
     }
 
     @NotNull
-    public String transcriptId() {
-        return transcriptId;
-    }
+    public String transcriptId() { return mTranscriptId; }
 
     public boolean isExonic()
     {
-        return exonUpstream > 0 && exonUpstream == exonDownstream;
+        return mExonUpstream > 0 && mExonUpstream == mExonDownstream;
     }
 
     public boolean isPromoter()
     {
-        return exonUpstream == 0 && exonDownstream == 1;
+        return mExonUpstream == 0 && mExonDownstream == 1;
     }
 
     public boolean isIntronic()
     {
-        return exonUpstream > 0 && (exonDownstream - exonUpstream) == 1;
+        return mExonUpstream > 0 && (mExonDownstream - mExonUpstream) == 1;
     }
 
-    public final String getRegionType()
+    public final String codingType() { return mCodingType; }
+    public final String regionType() { return mRegionType; }
+
+    // for convenience
+    public boolean isCoding()
+    {
+        return mCodingType.equals(TRANS_CODING_TYPE_CODING) && mRegionType.equals(TRANS_REGION_TYPE_EXONIC);
+    }
+
+    public boolean postCoding()
+    {
+        return mCodingType.equals(TRANS_CODING_TYPE_DOWNSTREAM);
+    }
+
+    public boolean nonCoding()
+    {
+        return mCodingType.equals(TRANS_CODING_TYPE_NON_CODING);
+    }
+
+    private final String calcRegionType()
     {
         if(isIntronic())
             return TRANS_REGION_TYPE_INTRONIC;
@@ -111,10 +134,10 @@ public class Transcript {
         return "Unknown";
     }
 
-    public final String getCodingType()
+    private final String calcCodingType()
     {
         if(mTotalCodingBases == 0)
-            return TRANS_CODING_TYPE_NONE;
+            return TRANS_CODING_TYPE_NON_CODING;
         else if(mCodingBases == 0)
             return TRANS_CODING_TYPE_UPSTREAM;
         else if(mCodingBases == mTotalCodingBases)
@@ -123,33 +146,33 @@ public class Transcript {
             return TRANS_CODING_TYPE_CODING;
     }
 
-    public boolean isCanonical() { return canonical; }
+    public boolean isCanonical() { return mCanonical; }
 
     @NotNull
-    public GeneAnnotation parent() { return parent; }
+    public GeneAnnotation parent() { return mGene; }
 
     @NotNull
-    public String geneName() { return parent.geneName(); }
+    public String geneName() { return mGene.geneName(); }
 
-    public int exonUpstream() { return exonUpstream; }
-    public int exonUpstreamPhase() { return exonUpstreamPhase; }
+    public int exonUpstream() { return mExonUpstream; }
+    public int exonUpstreamPhase() { return mExonUpstreamPhase; }
 
     public long codingBases() { return mCodingBases; }
     public long totalCodingBases() { return mTotalCodingBases; }
 
-    public int exonDownstream() { return exonDownstream; }
-    public int exonDownstreamPhase() { return exonDownstreamPhase; }
+    public int exonDownstream() { return mExonDownstream; }
+    public int exonDownstreamPhase() { return mExonDownstreamPhase; }
 
-    public int exonMax() { return exonMax; }
-
-    @Nullable
-    public Long codingStart() { return codingStart; }
+    public int exonMax() { return mExonMax; }
 
     @Nullable
-    public Long codingEnd() { return codingEnd; }
+    public Long codingStart() { return mCodingStart; }
+
+    @Nullable
+    public Long codingEnd() { return mCodingEnd; }
 
     public final String toString()
     {
-        return parent.geneName() + " " + transcriptId;
+        return mGene.geneName() + " " + mTranscriptId;
     }
 }

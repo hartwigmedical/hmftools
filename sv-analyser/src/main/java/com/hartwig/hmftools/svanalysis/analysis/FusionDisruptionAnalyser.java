@@ -109,7 +109,7 @@ public class FusionDisruptionAnalyser
     }
 
     private static String CHECK_VAR_ID = "";
-    // private static String CHECK_VAR_ID = "580803";
+    // private static String CHECK_VAR_ID = "490303";
 
     public void findFusions(final List<SvVarData> allVariants, final List<SvCluster> clusters, final List<SvVarData> svList)
     {
@@ -142,7 +142,7 @@ public class FusionDisruptionAnalyser
             checkFusions(breakendGenes1, breakendGenes2, var.getCluster());
         }
 
-        boolean checkClusters = false;
+        boolean checkClusters = true;
 
         if(checkClusters)
         {
@@ -161,10 +161,10 @@ public class FusionDisruptionAnalyser
 
                 if (cluster.getCount() == 1)
                 {
+                    // checked above already
                     continue;
                 }
-                else if (cluster.isResolved() && cluster.isFullyChained() && cluster.isConsistent()
-                        && cluster.getTypeCount(SGL) == 0)
+                else if (cluster.isResolved() && cluster.isFullyChained() && cluster.isConsistent() && cluster.getTypeCount(SGL) == 0)
                 {
                     final SvChain completeChain = cluster.getChains().get(0);
                     final SvVarData startVar = completeChain.getFirstSV();
@@ -189,6 +189,9 @@ public class FusionDisruptionAnalyser
         if(fusions.isEmpty())
             return;
 
+        // for now only log reportable fusions
+        fusions = fusions.stream().filter(GeneFusion::reportable).collect(Collectors.toList());
+
         if(LOGGER.isDebugEnabled())
         {
             for (final GeneFusion fusion : fusions)
@@ -201,9 +204,9 @@ public class FusionDisruptionAnalyser
                     final GeneAnnotation downGene = downstream.parent();
 
                     LOGGER.debug("sample({}) fusion: up({} {} {} {}) upSV({}: {}:{}:{} start={} strand={}) up({} {} {} {}) upSV({}: {}:{}:{} start={} strand={})",
-                            mSampleId, upstream.geneName(), upstream.transcriptId(), upstream.getRegionType(), upstream.getCodingType(),
+                            mSampleId, upstream.geneName(), upstream.transcriptId(), upstream.regionType(), upstream.codingType(),
                             upGene.id(), upGene.chromosome(), upGene.position(), upGene.orientation(), upGene.isStart(), upGene.strand(),
-                            downstream.geneName(), downstream.transcriptId(), downstream.getRegionType(), downstream.getCodingType(),
+                            downstream.geneName(), downstream.transcriptId(), downstream.regionType(), downstream.codingType(),
                             downGene.id(), downGene.chromosome(), downGene.position(), downGene.orientation(), downGene.isStart(), downGene.strand());
                 }
             }
@@ -238,7 +241,7 @@ public class FusionDisruptionAnalyser
                 mFusionWriter = Files.newBufferedWriter(outputFile, StandardOpenOption.CREATE);
                 writer = mFusionWriter;
 
-                writer.write("SampleId,Reportable,PrimarySource,ClusterId,ClusterCount,ResolvedType");
+                writer.write("SampleId,Reportable,PrimarySource,ClusterId,ClusterCount,ResolvedType,SameVar");
                 writer.write(",StartSvId,StartChr,StartPos,StartOrient,StartType");
                 writer.write(",StartGene,StartTranscript,StartStrand,StartRegionType,StartCodingType,StartExon,StartPhase,StartCodingBases,StartTotalCodingBases,StartCodingStart,StartCodingEnd");
                 writer.write(",EndSvId,EndChr,EndPos,EndOrient,EndType");
@@ -258,9 +261,11 @@ public class FusionDisruptionAnalyser
                 final GeneAnnotation startVar = startTrans.parent();
                 final GeneAnnotation endVar = endTrans.parent();
 
-                writer.write(String.format("%s,%s,%s,%d,%d,%s",
+                boolean sameVar = startVar.id() == endVar.id();
+
+                writer.write(String.format("%s,%s,%s,%d,%d,%s,%s",
                         mSampleId, fusion.reportable(), fusion.primarySource(),
-                        cluster.getId(), cluster.getUniqueSvCount(), cluster.getResolvedType()));
+                        cluster.getId(), cluster.getUniqueSvCount(), cluster.getResolvedType(), sameVar));
 
                 // write upstream SV, transcript and exon info
                 writer.write(
@@ -270,7 +275,7 @@ public class FusionDisruptionAnalyser
                 writer.write(
                         String.format(",%s,%s,%d,%s,%s,%d,%d,%d,%d,%d,%d",
                                 startTrans.parent().geneName(), startTrans.transcriptId(),
-                                startTrans.parent().strand(), startTrans.getRegionType(), startTrans.getCodingType(),
+                                startTrans.parent().strand(), startTrans.regionType(), startTrans.codingType(),
                                 startTrans.exonUpstream(), startTrans.exonUpstreamPhase(),
                                 startTrans.codingBases(), startTrans.totalCodingBases(),
                                 startTrans.codingStart() != null ? startTrans.codingStart() : 0,
@@ -283,7 +288,7 @@ public class FusionDisruptionAnalyser
                 writer.write(
                         String.format(",%s,%s,%d,%s,%s,%d,%d,%d,%d,%d,%d",
                                 endTrans.parent().geneName(), endTrans.transcriptId(),
-                                endTrans.parent().strand(), endTrans.getRegionType(), endTrans.getCodingType(),
+                                endTrans.parent().strand(), endTrans.regionType(), endTrans.codingType(),
                                 endTrans.exonUpstream(), endTrans.exonUpstreamPhase(),
                                 endTrans.codingBases(), endTrans.totalCodingBases(),
                                 endTrans.codingStart() != null ? endTrans.codingStart() : 0,

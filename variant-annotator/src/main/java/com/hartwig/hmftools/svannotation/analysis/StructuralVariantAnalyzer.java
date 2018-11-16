@@ -89,9 +89,4 @@ public class StructuralVariantAnalyzer
         return gene.strand() * gene.orientation() > 0;
     }
 
-    public static List<Transcript> getIntronicTranscripts(List<Transcript> transcripts)
-    {
-        return transcripts.stream().filter(Transcript::isIntronic).collect(Collectors.toList());
-    }
-
 }
