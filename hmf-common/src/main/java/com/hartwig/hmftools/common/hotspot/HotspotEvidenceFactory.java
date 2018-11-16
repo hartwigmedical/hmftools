@@ -22,6 +22,7 @@ import com.hartwig.hmftools.common.region.GenomeRegionFactory;
 import org.jetbrains.annotations.NotNull;
 
 @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
+@Deprecated
 public class HotspotEvidenceFactory {
 
     private final Collection<VariantHotspot> hotspots;
@@ -209,7 +210,7 @@ public class HotspotEvidenceFactory {
 
     @NotNull
     private static VariantHotspot fromEvidence(@NotNull final HotspotEvidence evidence) {
-        return ImmutableVariantHotspot.builder()
+        return ImmutableVariantHotspotImpl.builder()
                 .chromosome(evidence.chromosome())
                 .position(evidence.position())
                 .ref(evidence.ref())

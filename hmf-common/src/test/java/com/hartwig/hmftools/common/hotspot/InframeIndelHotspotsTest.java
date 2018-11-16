@@ -62,7 +62,7 @@ public class InframeIndelHotspotsTest {
     }
 
     private void assertContains(@NotNull final Set<VariantHotspot> victim, int pos, @NotNull final String ref, @NotNull final String alt) {
-        final VariantHotspot expected = ImmutableVariantHotspot.builder().chromosome("*").position(pos).ref(ref).alt(alt).build();
+        final VariantHotspot expected = ImmutableVariantHotspotImpl.builder().chromosome("*").position(pos).ref(ref).alt(alt).build();
         assertTrue(victim.contains(expected));
     }
 

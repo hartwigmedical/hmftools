@@ -47,7 +47,7 @@ public class InframeIndelHotspots {
                 ? sequenceFile.getSubsequenceAt(hotspot.chromosome(), hotspot.position(), hotspot.position())
                 : sequenceFile.getSubsequenceAt(hotspot.chromosome(), hotspot.position(), hotspot.position() + hotspot.ref().length() - 1);
 
-        return ImmutableVariantHotspot.builder().from(hotspot).ref(refSequence.getBaseString()).build();
+        return ImmutableVariantHotspotImpl.builder().from(hotspot).ref(refSequence.getBaseString()).build();
     }
 
     @NotNull
@@ -79,14 +79,14 @@ public class InframeIndelHotspots {
     private static VariantHotspot createInsert(@NotNull final SAMRecord record, int readPosition, int refPosition, int length) {
         final String alt = record.getReadString().substring(readPosition - 1, readPosition - 1 + length);
         final String ref = alt.substring(0, 1);
-        return ImmutableVariantHotspot.builder().chromosome(record.getContig()).position(refPosition).ref(ref).alt(alt).build();
+        return ImmutableVariantHotspotImpl.builder().chromosome(record.getContig()).position(refPosition).ref(ref).alt(alt).build();
     }
 
     @NotNull
     private static VariantHotspot createDelete(@NotNull final SAMRecord record, int readPosition, int refPosition, int length) {
         final String alt = record.getReadString().substring(readPosition - 1, readPosition);
         final String ref = alt + Strings.repeat("N", length - 1);
-        return ImmutableVariantHotspot.builder().chromosome(record.getContig()).position(refPosition).ref(ref).alt(alt).build();
+        return ImmutableVariantHotspotImpl.builder().chromosome(record.getContig()).position(refPosition).ref(ref).alt(alt).build();
     }
 
     private static boolean containsInframeIndel(@NotNull final SAMRecord record) {

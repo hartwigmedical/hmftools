@@ -164,7 +164,7 @@ public class HotspotEvidenceFactoryTest {
 
     @NotNull
     private VariantHotspot create(long position, @NotNull final String ref, @NotNull final String alt) {
-        return ImmutableVariantHotspot.builder().chromosome(CHROM).position(position).ref(ref).alt(alt).build();
+        return ImmutableVariantHotspotImpl.builder().chromosome(CHROM).position(position).ref(ref).alt(alt).build();
     }
 
     @NotNull

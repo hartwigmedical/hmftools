@@ -23,12 +23,15 @@ public class VariantHotspotEvidenceFactoryTest {
 
     private static final String MNV_REF_SEQUENCE = "GATACAA";
     private static final VariantHotspot MNV =
-            ImmutableVariantHotspot.builder().chromosome("11").position(100).ref("TAC").alt("CAT").build();
+            ImmutableVariantHotspotImpl.builder().chromosome("11").position(100).ref("TAC").alt("CAT").build();
 
     private static final String SNV_REF_SEQUENCE = "GATAC";
-    private static final VariantHotspot SNV = ImmutableVariantHotspot.builder().chromosome("11").position(100).ref("T").alt("C").build();
-    private static final VariantHotspot INS = ImmutableVariantHotspot.builder().chromosome("11").position(100).ref("T").alt("TTT").build();
-    private static final VariantHotspot DEL = ImmutableVariantHotspot.builder().chromosome("11").position(100).ref("TAC").alt("T").build();
+    private static final VariantHotspot SNV =
+            ImmutableVariantHotspotImpl.builder().chromosome("11").position(100).ref("T").alt("C").build();
+    private static final VariantHotspot INS =
+            ImmutableVariantHotspotImpl.builder().chromosome("11").position(100).ref("T").alt("TTT").build();
+    private static final VariantHotspot DEL =
+            ImmutableVariantHotspotImpl.builder().chromosome("11").position(100).ref("TAC").alt("T").build();
 
     @Test
     public void testDelAlt() {
@@ -38,41 +41,35 @@ public class VariantHotspotEvidenceFactoryTest {
 
     @Test
     public void testDelAltAverageQuality() {
-        final VariantHotspotEvidence evidence = findEvidenceOfDelete(create(DEL),
-                DEL,
-                SAMRecordsTest.buildSamRecord(98, "3M2D1M", "GATA", buildQualities(13, 13, 16, 18)));
+        final VariantHotspotEvidence evidence =
+                findEvidenceOfDelete(create(DEL), DEL, SAMRecordsTest.buildSamRecord(98, "3M2D1M", "GATA", buildQualities(13, 13, 16, 18)));
         assertEvidence(evidence, 1, 1, 0, 17);
     }
 
     @Test
     public void testDelAltInsufficientQuality() {
-        final VariantHotspotEvidence evidence = findEvidenceOfDelete(create(DEL),
-                DEL,
-                SAMRecordsTest.buildSamRecord(98, "3M2D1M", "GATA", buildQualities(13, 13, 12, 12)));
+        final VariantHotspotEvidence evidence =
+                findEvidenceOfDelete(create(DEL), DEL, SAMRecordsTest.buildSamRecord(98, "3M2D1M", "GATA", buildQualities(13, 13, 12, 12)));
         assertEvidence(evidence, 0, 0, 0, 0);
     }
 
     @Test
     public void testDelAltNoBarrier() {
-        final VariantHotspotEvidence evidence = findEvidenceOfDelete(create(DEL),
-                DEL,
-                SAMRecordsTest.buildSamRecord(98, "3M2D", "GAT", buildQualities(13, 13, 16)));
+        final VariantHotspotEvidence evidence =
+                findEvidenceOfDelete(create(DEL), DEL, SAMRecordsTest.buildSamRecord(98, "3M2D", "GAT", buildQualities(13, 13, 16)));
         assertEvidence(evidence, 1, 1, 0, 16);
     }
 
     @Test
     public void testDelIsActualyInsert() {
-        final VariantHotspotEvidence evidence = findEvidenceOfDelete(create(DEL),
-                DEL,
-                SAMRecordsTest.buildSamRecord(98, "3M2I2M", "GATTTAC"));
+        final VariantHotspotEvidence evidence =
+                findEvidenceOfDelete(create(DEL), DEL, SAMRecordsTest.buildSamRecord(98, "3M2I2M", "GATTTAC"));
         assertEvidence(evidence, 1, 0, 0, 0);
     }
 
     @Test
     public void testDelIsRef() {
-        final VariantHotspotEvidence evidence = findEvidenceOfDelete(create(DEL),
-                DEL,
-                SAMRecordsTest.buildSamRecord(98, "5M", "GATAC"));
+        final VariantHotspotEvidence evidence = findEvidenceOfDelete(create(DEL), DEL, SAMRecordsTest.buildSamRecord(98, "5M", "GATAC"));
         assertEvidence(evidence, 1, 0, 1, 0);
     }
 
