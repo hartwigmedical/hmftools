@@ -234,7 +234,7 @@ public class StructuralVariantAnnotator
         {
             List<EnrichedStructuralVariant> svList = loadSVsFromVCF(sampleId);
 
-            LOGGER.info("persisting {} SVs to database", svList.size());
+            LOGGER.info("sample({}) persisting {} SVs to database", sampleId, svList.size());
 
             mDbAccess.writeStructuralVariants(sampleId, svList);
 
