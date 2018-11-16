@@ -153,6 +153,7 @@ searchTerm,primaryTumorLocation,subType
 "Oesophagal cancer (at transition from oesophagus to stomach)",Esophagus,""
 "Oesophago-gastric cancer (junctional)",Esophagus,"Esophagus-Gastric junction"
 "Oesophagus/Cardiacarcinoma",Stomach,"Cardiacarcinoma"
+"Other",Unknown,"Unknown"
 "Ovarian cancer",Ovary,""
 "Pancreatic cancer",Pancreas,""
 "Paraganglioma / NET lung?",NET,"Paraganglioma (lung?)"
