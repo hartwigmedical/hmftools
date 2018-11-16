@@ -4,6 +4,7 @@ import org.jetbrains.annotations.NotNull;
 
 public enum HotspotEvidenceType {
     INFRAME,
+    KNOWN,
     SNV,
     MNV,
     INSERT,

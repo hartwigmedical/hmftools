@@ -30,7 +30,20 @@ public class VariantHotspotEvidenceFactory {
     public VariantHotspotEvidenceFactory(@NotNull final IndexedFastaSequenceFile sequenceFile, @NotNull final SamReader samReader) {
         this.sequenceFile = sequenceFile;
         this.samReader = samReader;
-        requiredBuffer = 1;
+        requiredBuffer = 0;
+    }
+
+    @NotNull
+    public VariantHotspotEvidence evidence(@NotNull final VariantHotspot hotspot) {
+        if (hotspot.isSimpleInsert() || hotspot.isSimpleDelete()) {
+            return indel(hotspot);
+        }
+
+        if (hotspot.isSNV() || hotspot.isMNV()) {
+            return mnv(hotspot);
+        }
+
+        return create(hotspot);
     }
 
     @NotNull
@@ -38,20 +51,24 @@ public class VariantHotspotEvidenceFactory {
         final ModifiableVariantHotspotEvidence result = create(hotspot);
 
         int length = hotspot.ref().length();
-        int minAllignment = (int) Math.max(0, hotspot.position() - requiredBuffer);
-        int maxAllignment = (int) Math.min(sequenceFile.getSequence(hotspot.chromosome()).length(), hotspot.position() + length);
+        int hotspotStartPosition = (int) hotspot.position();
+        int hotspotEndPosition = (int) hotspot.position() + length - 1;
 
-        final SAMRecordIterator samIterator = samReader.queryOverlapping(hotspot.chromosome(), minAllignment, maxAllignment);
+        try (final SAMRecordIterator samIterator = samReader.queryOverlapping(hotspot.chromosome(),
+                hotspotStartPosition,
+                hotspotEndPosition)) {
+            while (samIterator.hasNext()) {
+                final SAMRecord record = samIterator.next();
 
-        while (samIterator.hasNext()) {
-            final SAMRecord record = samIterator.next();
-
-            if (!samRecordOverlapsVariant(minAllignment, maxAllignment, record) || !samRecordMeetsQualityRequirements(record)
-                    || !startPositionValid(hotspot, record)) {
-                continue;
+                if (samRecordOverlapsVariant(hotspotStartPosition, hotspotEndPosition, record) && samRecordMeetsQualityRequirements(record)
+                        && startPositionValid(hotspot, record)) {
+                    if (hotspot.isSimpleInsert()) {
+                        findEvidenceOfInsert(result, hotspot, record);
+                    } else if (hotspot.isSimpleDelete()) {
+                        findEvidenceOfDelete(result, hotspot, record);
+                    }
+                }
             }
-
-            //            findEvidenceOfMNV(result, bufferStartPosition, refSequence, hotspot, record);
         }
 
         return result;
@@ -69,20 +86,21 @@ public class VariantHotspotEvidenceFactory {
         int bufferStartPosition = Math.max(0, hotspotStartPosition - requiredBuffer);
         int bufferEndPosition = Math.min(sequenceFile.getSequence(hotspot.chromosome()).length(), hotspotEndPosition + requiredBuffer);
 
-        final SAMRecordIterator samIterator = samReader.queryOverlapping(hotspot.chromosome(), bufferStartPosition, bufferEndPosition);
         final String refSequence = requiredBuffer == 0
                 ? Strings.EMPTY
                 : sequenceFile.getSubsequenceAt(hotspot.chromosome(), bufferStartPosition, bufferEndPosition).getBaseString();
 
-        while (samIterator.hasNext()) {
-            final SAMRecord record = samIterator.next();
+        try (SAMRecordIterator samIterator = samReader.queryOverlapping(hotspot.chromosome(), bufferStartPosition, bufferEndPosition)) {
+            while (samIterator.hasNext()) {
+                final SAMRecord record = samIterator.next();
 
-            if (!samRecordOverlapsVariant(bufferStartPosition, bufferEndPosition, record) || !samRecordMeetsQualityRequirements(record)
-                    || !startPositionValid(hotspot, record)) {
-                continue;
+                if (!samRecordOverlapsVariant(bufferStartPosition, bufferEndPosition, record) || !samRecordMeetsQualityRequirements(record)
+                        || !startPositionValid(hotspot, record)) {
+                    continue;
+                }
+
+                findEvidenceOfMNV(result, bufferStartPosition, refSequence, hotspot, record);
             }
-
-            findEvidenceOfMNV(result, bufferStartPosition, refSequence, hotspot, record);
         }
 
         return result;

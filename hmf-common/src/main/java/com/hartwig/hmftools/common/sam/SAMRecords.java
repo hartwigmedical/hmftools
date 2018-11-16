@@ -12,17 +12,18 @@ public class SAMRecords {
         return quality - PHRED_OFFSET;
     }
 
-    public static int getBaseQuality(@NotNull final SAMRecord record, int position) {
-        return getAvgBaseQuality(record, position, 1);
+    public static int getBaseQuality(@NotNull final SAMRecord record, int readPosition) {
+        return getAvgBaseQuality(record, readPosition, 1);
     }
 
-    public static int getAvgBaseQuality(@NotNull final SAMRecord record, int position, int length) {
-        assert (position > 0);
+    public static int getAvgBaseQuality(@NotNull final SAMRecord record, int readPosition, int length) {
+        assert (readPosition > 0);
 
         int score = 0;
         final String baseQualities = record.getBaseQualityString();
-        for (int index = position - 1; index < Math.min(position - 1 + length, baseQualities.length()); index++) {
-            score += getBaseQuality(baseQualities.charAt(index));
+        for (int index = readPosition - 1; index < Math.min(readPosition - 1 + length, baseQualities.length()); index++) {
+            int baseScore = getBaseQuality(baseQualities.charAt(index));
+            score += baseScore;
         }
         return score / length;
     }

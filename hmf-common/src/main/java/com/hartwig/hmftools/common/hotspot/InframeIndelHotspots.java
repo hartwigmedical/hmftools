@@ -1,20 +1,75 @@
 package com.hartwig.hmftools.common.hotspot;
 
+import java.util.Collection;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import com.google.common.base.Strings;
+import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.chromosome.Chromosome;
+import com.hartwig.hmftools.common.chromosome.HumanChromosome;
+import com.hartwig.hmftools.common.collect.Multimaps;
+import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.common.sam.SAMRecords;
 
 import org.jetbrains.annotations.NotNull;
 
 import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.SAMRecord;
+import htsjdk.samtools.SAMRecordIterator;
+import htsjdk.samtools.SamReader;
+import htsjdk.samtools.reference.IndexedFastaSequenceFile;
+import htsjdk.samtools.reference.ReferenceSequence;
 
 public class InframeIndelHotspots {
 
+    private final IndexedFastaSequenceFile sequenceFile;
+    private final ListMultimap<Chromosome, GenomeRegion> codingRegions;
+
+    public InframeIndelHotspots(@NotNull final Collection<GenomeRegion> regions, @NotNull final IndexedFastaSequenceFile sequenceFile) {
+        this.sequenceFile = sequenceFile;
+        this.codingRegions = Multimaps.fromRegions(regions);
+    }
+
     @NotNull
-    static Set<VariantHotspot> findInframeIndels(@NotNull final SAMRecord record) {
+    public Set<VariantHotspot> findInframeIndels(@NotNull final SamReader samReader) {
+        final Set<VariantHotspot> indelsWithIncorrectRefs = Sets.newHashSet();
+
+        for (GenomeRegion codingRegion : codingRegions.values()) {
+            try (final SAMRecordIterator iterator = samReader.queryOverlapping(codingRegion.chromosome(),
+                    (int) codingRegion.start(),
+                    (int) codingRegion.end())) {
+                while (iterator.hasNext()) {
+                    final SAMRecord record = iterator.next();
+                    indelsWithIncorrectRefs.addAll(findInframeIndelsWithIncorrectRefs(record));
+                }
+            }
+        }
+
+        return indelsWithIncorrectRefs.stream()
+                .filter(this::isInCodingRegions)
+                .map(this::correctRef)
+                .filter(x -> x.isSimpleDelete() || x.isSimpleInsert())
+                .collect(Collectors.toSet());
+    }
+
+    private boolean isInCodingRegions(@NotNull final VariantHotspot hotspot) {
+        return codingRegions.get(HumanChromosome.fromString(hotspot.chromosome())).stream().anyMatch(x -> x.contains(hotspot));
+    }
+
+    @NotNull
+    private VariantHotspot correctRef(@NotNull final VariantHotspot hotspot) {
+
+        final ReferenceSequence refSequence = hotspot.isSimpleInsert()
+                ? sequenceFile.getSubsequenceAt(hotspot.chromosome(), hotspot.position(), hotspot.position())
+                : sequenceFile.getSubsequenceAt(hotspot.chromosome(), hotspot.position(), hotspot.position() + hotspot.ref().length() - 1);
+
+        return ImmutableVariantHotspot.builder().from(hotspot).ref(refSequence.getBaseString()).build();
+    }
+
+    @NotNull
+    static Set<VariantHotspot> findInframeIndelsWithIncorrectRefs(@NotNull final SAMRecord record) {
         Set<VariantHotspot> result = Sets.newHashSet();
         if (containsInframeIndel(record)) {
             for (int refPosition = record.getAlignmentStart(); refPosition <= record.getAlignmentEnd(); refPosition++) {
