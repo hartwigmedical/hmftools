@@ -7,10 +7,8 @@ import com.hartwig.hmftools.knowledgebaseimporter.knowledgebases.readers.Somatic
 object IclusionExonMutationReader : SomaticEventReader<IclusionEvent, ExonMutations> {
     private const val SINGLE_EXON_MUTATION_PATTERN = "exon\\s+[0-9]+\\s+mutation"
     private const val EXON_RANGE_MUTATION_PATTERN = "exon\\s+[0-9]+\\s*-\\s*[0-9]+\\s+mutation"
-    private const val EXON_20_MUTATION_PATTERN = "exon\\s+20+\\s+mutation"
     private val SINGLE_EXON_REGEX = SINGLE_EXON_MUTATION_PATTERN.toRegex(RegexOption.IGNORE_CASE)
     private val EXON_RANGE_REGEX = EXON_RANGE_MUTATION_PATTERN.toRegex(RegexOption.IGNORE_CASE)
-    private val EXON_20_REGEX = EXON_20_MUTATION_PATTERN.toRegex(RegexOption.IGNORE_CASE)
 
 
     override fun read(event: IclusionEvent): List<ExonMutations> {
@@ -23,10 +21,6 @@ object IclusionExonMutationReader : SomaticEventReader<IclusionEvent, ExonMutati
                 val exonNumbers = "([0-9]+)".toRegex().findAll(event.variant).toList().map { it.value }
                 val exonRange = IntRange(exonNumbers[0].toInt(), exonNumbers[1].toInt())
                 exonRange.map { exonNumber -> ExonMutations(event.gene, event.transcript, exonNumber) }
-            }
-            event.variant.matches(EXON_20_REGEX) -> {
-                val exonNumber = "20+".toRegex().find(event.variant)!!.value
-                listOf(ExonMutations(event.gene, event.transcript, exonNumber.toInt()))
             }
             else                                     -> emptyList()
         }
