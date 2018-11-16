@@ -14,16 +14,16 @@ public final class MutationalBurdenSection {
     private static final int BUFFER = 3;
     private static final double START = 1E-2;
     private static final double END = 120;
-    private static final Color COLOUR_BEGIN = new Color(253, 235, 208);
-    private static final Color COLOUR_END = new Color(248, 196, 113);
+    private static final Color COLOR_BEGIN = new Color(253, 235, 208);
+    private static final Color COLOR_END = new Color(248, 196, 113);
 
     @NotNull
     public static ComponentBuilder<?, ?> build(double tumorMutationalBurdenIndicator, boolean hasReliablePurityFit) {
         final int graphValue = computeGraphValue(tumorMutationalBurdenIndicator);
 
-        final GradientBar gradient =
-                !hasReliablePurityFit ? ImmutableGradientBar.of(COLOUR_BEGIN, COLOUR_END, "Low", "High")
-                        : ImmutableGradientBar.of(COLOUR_BEGIN, COLOUR_END, "Low", "High", graphValue);
+        final GradientBar gradient = !hasReliablePurityFit
+                ? ImmutableGradientBar.of(COLOR_BEGIN, COLOR_END, "Low", "High")
+                : ImmutableGradientBar.of(COLOR_BEGIN, COLOR_END, "Low", "High", graphValue);
         final SliderSection sliderSection = ImmutableSliderSection.of("Tumor Mutational Burden",
                 interpret(tumorMutationalBurdenIndicator, hasReliablePurityFit),
                 description(),

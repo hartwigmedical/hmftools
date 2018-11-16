@@ -16,6 +16,8 @@ object IclusionCnvReader : SomaticEventReader<IclusionEvent, CnvEvent> {
             "COPY-GAIN"     -> CnvEvent.amplification(event.gene)
             "DELETION"      -> CnvEvent.deletion(event.gene)
             "LOSS"          -> CnvEvent.deletion(event.gene)
+            "OVEREXPRESSION" -> CnvEvent.deletion(event.gene)
+            "LOSS-OF-FUNCTION" -> CnvEvent.amplification(event.gene)
             else            -> null
         }
     }

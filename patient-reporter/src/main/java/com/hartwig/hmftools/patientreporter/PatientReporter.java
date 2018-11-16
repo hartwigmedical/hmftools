@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.patientreporter;
 
 import java.io.IOException;
-import java.nio.file.Path;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -10,6 +9,7 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.actionability.EvidenceItem;
+import com.hartwig.hmftools.common.chord.ChordAnalysis;
 import com.hartwig.hmftools.common.chromosome.Chromosome;
 import com.hartwig.hmftools.common.collect.Multimaps;
 import com.hartwig.hmftools.common.context.ProductionRunContextFactory;
@@ -32,10 +32,8 @@ import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.structural.EnrichedStructuralVariant;
 import com.hartwig.hmftools.common.variant.structural.EnrichedStructuralVariantFactory;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
-import com.hartwig.hmftools.common.variant.structural.StructuralVariantFileLoader;
 import com.hartwig.hmftools.patientreporter.actionability.ClinicalTrialFactory;
 import com.hartwig.hmftools.patientreporter.actionability.ReportableEvidenceItemFactory;
-import com.hartwig.hmftools.common.chord.ChordAnalysis;
 import com.hartwig.hmftools.patientreporter.copynumber.CopyNumberAnalysis;
 import com.hartwig.hmftools.patientreporter.copynumber.CopyNumberAnalyzer;
 import com.hartwig.hmftools.patientreporter.germline.GermlineVariant;
@@ -211,9 +209,8 @@ abstract class PatientReporter {
     @NotNull
     private FusionDisruptionAnalysis analyzeStructuralVariants(@NotNull RunContext run, @NotNull CopyNumberAnalysis copyNumberAnalysis,
             @Nullable PatientTumorLocation patientTumorLocation) throws IOException {
-        final Path structuralVariantVCF = PatientReporterFileLoader.findStructuralVariantVCF(run.runDirectory());
         LOGGER.info("Loading structural variants...");
-        final List<StructuralVariant> structuralVariants = StructuralVariantFileLoader.fromFile(structuralVariantVCF.toString(), true);
+        final List<StructuralVariant> structuralVariants = PatientReporterFileLoader.loadPassedStructuralVariants(run.runDirectory());
         LOGGER.info(" " + structuralVariants.size() + " structural variants loaded");
 
         LOGGER.info("Enriching structural variants with purple data");

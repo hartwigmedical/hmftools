@@ -20,8 +20,11 @@ class OncoCnvReaderTest : StringSpec() {
         "will only read exact matches" {
             OncoCnvReader.read(actionable.copy(Alteration = "amplification")) shouldBe emptyList<CnvEvent>()
             OncoCnvReader.read(actionable.copy(Alteration = "amp")) shouldBe emptyList<CnvEvent>()
+            OncoCnvReader.read(actionable.copy(Alteration = "overexpression")) shouldBe emptyList<CnvEvent>()
             OncoCnvReader.read(actionable.copy(Alteration = "deletion")) shouldBe emptyList<CnvEvent>()
             OncoCnvReader.read(actionable.copy(Alteration = "del")) shouldBe emptyList<CnvEvent>()
+            OncoCnvReader.read(actionable.copy(Alteration = "loss-of-function")) shouldBe emptyList<CnvEvent>()
+
         }
     }
 }

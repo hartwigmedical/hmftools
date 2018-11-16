@@ -62,9 +62,9 @@ public abstract class EvidenceSummaryPage {
     private static ComponentBuilder<?, ?> evidenceItemReport(@NotNull List<EvidenceItem> items, @NotNull String title) {
         final ComponentBuilder<?, ?> table = items.size() > 0
                 ? cmp.subreport(monospaceBaseTable().fields(EvidenceItemDataSource.evidenceItemFields())
-                .columns(col.column("Event", EvidenceItemDataSource.EVENT_FIELD).setWidth(120),
+                .columns(col.column("Event", EvidenceItemDataSource.EVENT_FIELD).setMinWidth(140),
                         col.column("Match", EvidenceItemDataSource.SCOPE_FIELD),
-                        col.column("Drug", EvidenceItemDataSource.DRUG_FIELD).setWidth(190),
+                        col.column("Drug", EvidenceItemDataSource.DRUG_FIELD).setMinWidth(190),
                         col.column("Level", EvidenceItemDataSource.LEVEL_FIELD),
                         col.column("Response", EvidenceItemDataSource.RESPONSE_FIELD),
                         col.column("Source", EvidenceItemDataSource.SOURCE_FIELD)
@@ -82,7 +82,7 @@ public abstract class EvidenceSummaryPage {
     private static ComponentBuilder<?, ?> clinicalTrialReport(@NotNull AnalysedPatientReport report) {
         final ComponentBuilder<?, ?> table = report.clinicalTrials().size() > 0
                 ? cmp.subreport(monospaceBaseTable().fields(ClinicalTrialDataSource.clinicalTrialFields())
-                .columns(col.column("Event", ClinicalTrialDataSource.EVENT_FIELD).setWidth(120),
+                .columns(col.column("Event", ClinicalTrialDataSource.EVENT_FIELD).setMinWidth(140),
                         col.column("Trial", ClinicalTrialDataSource.TRIAL_FIELD),
                         col.column("Source", ClinicalTrialDataSource.SOURCE_FIELD)
                                 .setHyperLink(hyperLink(ClinicalTrialDataSource.sourceHyperlink()))

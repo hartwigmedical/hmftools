@@ -23,6 +23,8 @@ import com.hartwig.hmftools.common.purple.purity.PurityContext;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariantFactory;
 import com.hartwig.hmftools.common.variant.enrich.SomaticEnrichment;
+import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
+import com.hartwig.hmftools.common.variant.structural.StructuralVariantFileLoader;
 import com.hartwig.hmftools.patientreporter.germline.BachelorFile;
 import com.hartwig.hmftools.patientreporter.germline.GermlineVariant;
 
@@ -77,22 +79,24 @@ public final class PatientReporterFileLoader {
     }
 
     @NotNull
-    static Path findStructuralVariantVCF(@NotNull String runDirectory) throws IOException {
+    static List<StructuralVariant> loadPassedStructuralVariants(@NotNull String runDirectory) throws IOException {
         // TODO (KODU): Clean up once pipeline v3 no longer exists and we switched to GRIDSS everywhere
         Optional<Path> path = tryFindPathOnExtension(runDirectory + File.separator + PURPLE_DIRECTORY, PURPLE_GRIDSS_SV);
-        if (path.isPresent()) {
-            LOGGER.info("Using SVs from GRIDSS/Purple");
-            return path.get();
+        //        if (path.isPresent()) {
+        //            LOGGER.info("Using SVs from GRIDSS/Purple");
+        //        } else {
+        LOGGER.info("Using SVs from Manta/BPI");
+        path = tryFindPathOnExtension(runDirectory, MANTA_SV_EXTENSION_V3);
+        if (!path.isPresent()) {
+            path = tryFindPathOnExtension(runDirectory, MANTA_SV_EXTENSION_V4);
         } else {
-            LOGGER.info("Using SVs from Manta/BPI");
-            path = tryFindPathOnExtension(runDirectory, MANTA_SV_EXTENSION_V3);
-            if (!path.isPresent()) {
-                path = tryFindPathOnExtension(runDirectory, MANTA_SV_EXTENSION_V4);
-            }
+            LOGGER.info(" Reverting to Manta/BPI pipeline v3...");
         }
+        //        }
 
         assert path.isPresent();
-        return path.get();
+
+        return StructuralVariantFileLoader.fromFile(path.get().toString(), true);
     }
 
     @NotNull
