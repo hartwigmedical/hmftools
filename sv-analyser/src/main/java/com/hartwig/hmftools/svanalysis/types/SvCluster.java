@@ -3,10 +3,13 @@ package com.hartwig.hmftools.svanalysis.types;
 import static java.lang.Math.max;
 import static java.lang.Math.abs;
 
+import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.BND;
+import static com.hartwig.hmftools.svanalysis.analysis.ClusterAnalyser.SHORT_TI_LENGTH;
 import static com.hartwig.hmftools.svanalysis.analysis.ClusterAnalyser.SMALL_CLUSTER_SIZE;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.PERMITED_DUP_BE_DISTANCE;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.calcConsistency;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.variantMatchesBreakend;
+import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.ASSEMBLY_MATCH_INFER_ONLY;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_END;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_START;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.isStart;
@@ -58,6 +61,7 @@ public class SvCluster
     private List<SvVarData> mFoldbacks;
     private List<SvVarData> mLineElements;
     private List<SvVarData> mInversions;
+    private List<SvVarData> mUnlinkedBnds;
 
     private int mMinCopyNumber;
     private int mMaxCopyNumber;
@@ -112,6 +116,7 @@ public class SvCluster
         mFoldbacks = Lists.newArrayList();
         mLineElements = Lists.newArrayList();
         mInversions = Lists.newArrayList();
+        mUnlinkedBnds = Lists.newArrayList();
 
         mSubClusters = Lists.newArrayList();
         mChrCNDataMap = null;
@@ -147,6 +152,10 @@ public class SvCluster
         if(var.inLineElement())
         {
             mLineElements.add(var);
+        }
+        else if(var.type() == BND && !var.isReplicatedSv())
+        {
+            mUnlinkedBnds.add(var);
         }
 
         mUnchainedSVs.add(var);
@@ -208,56 +217,24 @@ public class SvCluster
         }
     }
 
-    // private static String SPECIFIC_CLUSTER_ID = "";
-    private static int SPECIFIC_CLUSTER_ID = 158;
-
-    public void mergeOtherCluster(final SvCluster other)
+    public boolean isSyntheticSimpleType()
     {
-        if(mClusterId == SPECIFIC_CLUSTER_ID)
+        if(!mIsResolved)
+            return false;
+
+        if(mResolvedType == RESOLVED_TYPE_DEL_EXT_TI || mResolvedType == RESOLVED_TYPE_DEL_INT_TI
+        || mResolvedType == RESOLVED_TYPE_DUP_INT_TI || mResolvedType == RESOLVED_TYPE_DUP_EXT_TI)
         {
-            LOGGER.debug("spec cluster");
+            return true;
         }
 
-        /*if(hasLinkingLineElements() != other.hasLinkingLineElements())
+        if(mResolvedType == RESOLVED_TYPE_SGL_PAIR_DEL || mResolvedType == RESOLVED_TYPE_SGL_PAIR_DEL
+        || mResolvedType == RESOLVED_TYPE_SGL_PAIR_DUP)
         {
-            LOGGER.info("cluster({}) and cluster({}) line element mismatch", getId(), other.getId());
-        }*/
-
-        // just add the other cluster's variants - no preservation of links or chains
-        if(other.getCount() > getCount())
-        {
-            LOGGER.debug("cluster({} svs={}) merges in other cluster({} svs={})",
-                    other.getId(), other.getCount(), getId(), getCount());
-
-            // maintain the id of the larger group
-            mClusterId = other.getId();
-        }
-        else
-        {
-            LOGGER.debug("cluster({} svs={}) merges in other cluster({} svs={})",
-                    getId(), getCount(), other.getId(), other.getCount());
+            return true;
         }
 
-        addVariantLists(other);
-    }
-
-    public void removeReplicatedSvs()
-    {
-        if(!mHasReplicatedSVs)
-            return;
-
-        int index = 0;
-        while (index < mSVs.size())
-        {
-            mSVs.get(index).setReplicatedCount(0);
-            if (mSVs.get(index).isReplicatedSv())
-                mSVs.remove(index);
-            else
-                ++index;
-        }
-
-        mHasReplicatedSVs = false;
-        updateClusterDetails();
+        return false;
     }
 
     public List<SvArmGroup> getArmGroups() { return mArmGroups; }
@@ -333,11 +310,46 @@ public class SvCluster
     public final List<SvLinkedPair> getInferredLinkedPairs() { return mInferredLinkedPairs; }
     public final List<SvLinkedPair> getAssemblyLinkedPairs() { return mAssemblyLinkedPairs; }
     public final List<SvVarData> getSpanningSVs() { return mSpanningSVs; }
-    public void setLinkedPairs(final List<SvLinkedPair> pairs) { mLinkedPairs = pairs; }
     public void setInferredLinkedPairs(final List<SvLinkedPair> pairs) { mInferredLinkedPairs = pairs; }
     public void setAssemblyLinkedPairs(final List<SvLinkedPair> pairs) { mAssemblyLinkedPairs = pairs; }
     public void setSpanningSVs(final List<SvVarData> svList) { mSpanningSVs = svList; }
 
+    // private static int SPECIFIC_CLUSTER_ID = 158;
+    public void mergeOtherCluster(final SvCluster other)
+    {
+        /*
+        if(mClusterId == SPECIFIC_CLUSTER_ID)
+        {
+            LOGGER.debug("spec cluster");
+        }
+        */
+
+        // just add the other cluster's variants - no preservation of links or chains
+        if(other.getCount() > getCount())
+        {
+            LOGGER.debug("cluster({} svs={}) merges in other cluster({} svs={})",
+                    other.getId(), other.getCount(), getId(), getCount());
+
+            // maintain the id of the larger group
+            mClusterId = other.getId();
+        }
+        else
+        {
+            LOGGER.debug("cluster({} svs={}) merges in other cluster({} svs={})",
+                    getId(), getCount(), other.getId(), other.getCount());
+        }
+
+        addVariantLists(other);
+
+        if(other.isFullyChained())
+        {
+            for (SvChain chain : other.getChains())
+            {
+                addChain(chain);
+            }
+        }
+
+    }
     public void addSubCluster(SvCluster cluster)
     {
         if(mSubClusters.contains(cluster))
@@ -419,7 +431,6 @@ public class SvCluster
 
         mConsistencyCount = calcConsistency(mSVs);
 
-        // for now, just link to this
         mIsConsistent = (mConsistencyCount == 0);
 
         mDesc = getClusterTypesAsString();
@@ -427,6 +438,17 @@ public class SvCluster
         setMinMaxCopyNumber();
 
         mRequiresRecalc = false;
+    }
+
+    public boolean hasConsistentArms()
+    {
+        for(final SvArmGroup armGroup : mArmGroups)
+        {
+            if(calcConsistency(armGroup.getSVs()) != 0)
+                return false;
+        }
+
+        return true;
     }
 
     public void logDetails()
@@ -471,6 +493,14 @@ public class SvCluster
                     otherInfo += " ";
 
                 otherInfo += String.format("inv=%d", mInversions.size());
+            }
+
+            if(!mUnlinkedBnds.isEmpty())
+            {
+                if (!otherInfo.isEmpty())
+                    otherInfo += " ";
+
+                otherInfo += String.format("bnd=%d", mUnlinkedBnds.size());
             }
 
             LOGGER.debug(String.format("cluster(%d) complex SVs(%d rep=%d) desc(%s res=%s) arms(%d) consis(%d) chains(%d perc=%.2f) replic(%s) %s",
@@ -552,6 +582,40 @@ public class SvCluster
         return false;
     }
 
+    public final List<SvVarData> getUnlinkedBnds() { return mUnlinkedBnds; }
+
+    public void setUnlinkedBnds()
+    {
+        mUnlinkedBnds.clear();
+
+        for(final SvVarData var : mUnchainedSVs)
+        {
+            if(var.type() == BND && !var.inLineElement() && !var.isReplicatedSv())
+            {
+                mUnlinkedBnds.add(var);
+            }
+        }
+
+        for(final SvChain chain : mChains)
+        {
+            // any BND which doesn't form a short TI is fair game
+            for(final SvLinkedPair pair : chain.getLinkedPairs())
+            {
+                if(pair.first().type() == BND && pair.second().type() == BND)
+                {
+                    if(pair.length() <= SHORT_TI_LENGTH)
+                        continue;
+                }
+
+                if(pair.first().type() == BND && !pair.first().inLineElement() && !mUnlinkedBnds.contains(pair.first()))
+                    mUnlinkedBnds.add(pair.first());
+
+                if(pair.second().type() == BND && !pair.second().inLineElement()  && !mUnlinkedBnds.contains(pair.second()))
+                    mUnlinkedBnds.add(pair.second());
+            }
+        }
+    }
+
     private void setMinMaxCopyNumber()
     {
         // first establish the lowest copy number change
@@ -578,6 +642,74 @@ public class SvCluster
             updateClusterDetails();
 
         return (mMaxCopyNumber > mMinCopyNumber && mMinCopyNumber > 0);
+    }
+
+    public void cacheLinkedPairs()
+    {
+        // moves assembly and inferred linked pairs which are used in chains to a set of 'final' linked pairs
+        List<SvLinkedPair> linkedPairs;
+
+        if(isFullyChained())
+        {
+            linkedPairs = mChains.get(0).getLinkedPairs();
+        }
+        else
+        {
+            linkedPairs = Lists.newArrayList();
+
+            // add all chained links
+            for(final SvChain chain : mChains)
+            {
+                linkedPairs.addAll(chain.getLinkedPairs());
+            }
+
+            // any any unchained assembly links
+            for(final SvLinkedPair pair : mAssemblyLinkedPairs)
+            {
+                if(!linkedPairs.contains(pair))
+                    linkedPairs.add(pair);
+            }
+
+            // finally add any other potential inferred links which don't clash with existing links
+            for(final SvLinkedPair pair : mInferredLinkedPairs)
+            {
+                if(linkedPairs.contains(pair))
+                    continue;
+
+                boolean hasClash = false;
+                for(final SvLinkedPair existingLink : linkedPairs)
+                {
+                    if (existingLink.hasLinkClash(pair))
+                    {
+                        hasClash = true;
+                        break;
+                    }
+                }
+
+                if(!hasClash)
+                    linkedPairs.add(pair);
+            }
+
+            // mark the resultant set of inferred links
+            for (SvLinkedPair pair : linkedPairs)
+            {
+                if(pair.isInferred())
+                {
+                    pair.first().setAssemblyMatchType(ASSEMBLY_MATCH_INFER_ONLY, pair.firstLinkOnStart());
+                    pair.second().setAssemblyMatchType(ASSEMBLY_MATCH_INFER_ONLY, pair.secondLinkOnStart());
+                }
+            }
+        }
+
+        /*
+        if(!linkedPairs.isEmpty())
+        {
+            LOGGER.debug("cluster({}: {} count={}) has {} linked pairs",
+                    mClusterId, mDesc, getUniqueSvCount(), linkedPairs.size());
+        }
+        */
+
+        mLinkedPairs = linkedPairs;
     }
 
     public final SvLinkedPair getLinkedPair(final SvVarData var, boolean useStart)

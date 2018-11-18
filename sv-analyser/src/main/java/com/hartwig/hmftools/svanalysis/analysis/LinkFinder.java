@@ -58,7 +58,7 @@ public class LinkFinder
         List<SvLinkedPair> assemblyLinkedPairs = createAssemblyLinkedPairs(cluster);
         List<SvLinkedPair> inferredLinkedPairs = createInferredLinkedPairs(cluster, false);
 
-        findSpanningSVs(sampleId, cluster, inferredLinkedPairs);
+        // findSpanningSVs(sampleId, cluster, inferredLinkedPairs);
 
         List<SvLinkedPair> singleBELinkedPairs = createSingleBELinkedPairs(cluster);
         inferredLinkedPairs.addAll(singleBELinkedPairs);
@@ -190,8 +190,8 @@ public class LinkFinder
 
             if(!skipReplicated)
             {
-                double cn1 = v1.copyNumber(v1Start);
-                double cn2 = v2.copyNumber(v2Start);
+                double cn1 = v1.copyNumberChange(v1Start);
+                double cn2 = v2.copyNumberChange(v2Start);
 
                 if(!copyNumbersEqual(cn1, cn2))
                     return false;
@@ -681,7 +681,7 @@ public class LinkFinder
 
                             if(hasValidTransData)
                             {
-                                LOGGER.info("cluster({}) spanSV({}) covers {} linked pairs",
+                                LOGGER.debug("cluster({}) spanSV({}) covers {} linked pairs",
                                         cluster.getId(), spanningSV.id(), transitiveSVs.size()/2);
 
                                 tiLength = totalTILength;

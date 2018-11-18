@@ -12,6 +12,7 @@ import java.util.Map;
 
 import static java.lang.Math.abs;
 import static java.lang.Math.max;
+import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_END;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_START;
@@ -312,13 +313,18 @@ public class SvUtilities {
         {
             boolean useStart = isStart(be);
 
-            if(!useStart && var.isNullBreakend())
-                continue;
-
-            consistencyCount += (var.arm(useStart) == CHROMOSOME_ARM_P ? 1 : -1) * var.orientation(useStart) * 1;
+            consistencyCount += calcConsistency(var, useStart);
         }
 
         return consistencyCount;
+    }
+
+    public static int calcConsistency(final SvVarData var, boolean useStart)
+    {
+        if(!useStart && var.isNullBreakend())
+            return 0;
+
+        return (var.arm(useStart) == CHROMOSOME_ARM_P ? 1 : -1) * var.orientation(useStart) * 1;
     }
 
     public static double DEFAULT_MAX_COPY_NUM_DIFF = 0.25;
@@ -331,6 +337,9 @@ public class SvUtilities {
 
     public static boolean copyNumbersEqual(double cn1, double cn2, double maxDiff, double maxDiffPerc)
     {
+        if(round(cn1) == round(cn1))
+            return true;
+
         double copyNumDiff = abs(cn2 - cn1);
         double copyNumDiffPerc = copyNumDiff / max(abs(cn1), abs(cn2));
 

@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.svanalysis.analysis;
 
-import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.isConsistentCluster;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.CHROMOSOME_ARM_P;
 import static com.hartwig.hmftools.common.variant.structural.annotation.SvPONAnnotator.REGION_DISTANCE;
 import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.ASSEMBLY_MATCH_ASMB_ONLY;
@@ -42,8 +41,6 @@ public class SvSampleAnalyser {
     // data per run (ie sample)
     private String mSampleId;
     private List<SvVarData> mAllVariants; // the original list to analyse
-
-    private List<SvCluster> mClusters;
 
     BufferedWriter mFileWriter;
     SvPONAnnotator mSvPONAnnotator;
@@ -95,8 +92,8 @@ public class SvSampleAnalyser {
 
         mPc1 = new PerformanceCounter("Annotate&Filter");
         mPc2 = new PerformanceCounter("ArmsStats");
-        mPc3 = new PerformanceCounter("Clusters");
-        mPc4 = new PerformanceCounter("Analyse");
+        mPc3 = new PerformanceCounter("ClusterAndAnalyse");
+        // mPc4 = new PerformanceCounter("Analyse");
         mPc5 = new PerformanceCounter("WriteCSV");
 
         mPerfCounter.start();
@@ -104,13 +101,12 @@ public class SvSampleAnalyser {
         clearState();
     }
 
-    public final List<SvCluster> getClusters() { return mClusters; }
+    public final List<SvCluster> getClusters() { return mAnalyser.getClusters(); }
 
     private void clearState()
     {
         mSampleId = "";
         mAllVariants = Lists.newArrayList();
-        mClusters = Lists.newArrayList();
     }
 
     public void loadFromDatabase(final String sampleId, final List<SvVarData> variants)
@@ -148,11 +144,17 @@ public class SvSampleAnalyser {
         mPc2.stop();
 
         mPc3.start();
+
+        mAnalyser.setSampleData(mSampleId, mAllVariants);
+        mAnalyser.clusterAndAnalyse();
+
+        mPc3.stop();
+
+        /*
         mClusteringMethods.clusterByBaseDistance(mAllVariants, mClusters);
-        mAnalyser.setClusterData(mSampleId, mClusters);
+        mAnalyser.setSampleId(mSampleId);
         mAnalyser.findSimpleCompleteChains();
         mClusteringMethods.mergeClusters(mSampleId, mClusters);
-        mPc3.stop();
 
         // log basic clustering details
         for(SvCluster cluster : mClusters)
@@ -165,6 +167,7 @@ public class SvSampleAnalyser {
         mAnalyser.findLinksAndChains();
         // mClusteringMethods.logInversionPairData(mSampleId, mClusters);
         mPc4.stop();
+        */
 
         logSampleClusterInfo();
 
@@ -474,13 +477,11 @@ public class SvSampleAnalyser {
         Map<String, Integer> armSimpleClusterCount = new HashMap();
         Map<String, Integer> armComplexClusterCount = new HashMap();
 
-        for(final SvCluster cluster : mClusters)
+        for(final SvCluster cluster : mAnalyser.getClusters())
         {
-            boolean isConsistent = isConsistentCluster(cluster);
-
             Map<String, Integer> targetMap;
 
-            if(isConsistent)
+            if(cluster.isResolved())
             {
                 ++simpleClusterCount;
                 targetMap = armSimpleClusterCount;
@@ -522,7 +523,7 @@ public class SvSampleAnalyser {
         if(complexClusterCount > simpleClusterCount || armsWithExcessComplexClusters >= 2)
         {
             LOGGER.info("sample({}) clusters total({}) simple({}) complex({}) excessComplexArms()",
-                    mSampleId, mClusters.size(), simpleClusterCount, complexClusterCount, armsWithExcessComplexClusters);
+                    mSampleId, mAnalyser.getClusters().size(), simpleClusterCount, complexClusterCount, armsWithExcessComplexClusters);
         }
     }
 
@@ -545,7 +546,7 @@ public class SvSampleAnalyser {
         mPc1.logStats(false);
         mPc2.logStats(false);
         mPc3.logStats(false);
-        mPc4.logStats(false);
+        // mPc4.logStats(false);
         mPc5.logStats(false);
 
         mAnalyser.logStats();

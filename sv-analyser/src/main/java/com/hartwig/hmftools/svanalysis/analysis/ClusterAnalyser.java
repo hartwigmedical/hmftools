@@ -10,14 +10,17 @@ import static com.hartwig.hmftools.common.variant.structural.StructuralVariantTy
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INS;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INV;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
+import static com.hartwig.hmftools.svanalysis.analysis.LinkFinder.MIN_TEMPLATED_INSERTION_LENGTH;
 import static com.hartwig.hmftools.svanalysis.analysis.LinkFinder.areLinkedSection;
+import static com.hartwig.hmftools.svanalysis.analysis.LinkFinder.areSectionBreak;
 import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.CLUSTER_REASON_COMMON_ARMS;
 import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.CLUSTER_REASON_FOLDBACKS;
 import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.CLUSTER_REASON_SOLO_SINGLE;
 import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.addClusterReason;
 import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.checkClusterDuplicates;
-import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.isConsistentCluster;
+import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.calcConsistency;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_COMPLEX_CHAIN;
+import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_NONE;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_SGL_PAIR_DEL;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_SGL_PAIR_DUP;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_SIMPLE_CHAIN;
@@ -38,7 +41,6 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 import com.hartwig.hmftools.svanalysis.types.SvArmGroup;
 import com.hartwig.hmftools.svanalysis.types.SvBreakend;
 import com.hartwig.hmftools.svanalysis.types.SvCNData;
@@ -50,6 +52,8 @@ import com.hartwig.hmftools.svanalysis.types.SvLinkedPair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import sun.java2d.opengl.OGLContext;
+
 public class ClusterAnalyser {
 
     final SvClusteringConfig mConfig;
@@ -57,11 +61,13 @@ public class ClusterAnalyser {
     SvClusteringMethods mClusteringMethods;
 
     String mSampleId;
+    private List<SvVarData> mAllVariants;
     List<SvCluster> mClusters;
     private ChainFinder mChainFinder;
     private LinkFinder mLinkFinder;
 
     public static int SMALL_CLUSTER_SIZE = 3;
+    public static int SHORT_TI_LENGTH = 1000;
 
     private static final Logger LOGGER = LogManager.getLogger(ClusterAnalyser.class);
 
@@ -70,20 +76,60 @@ public class ClusterAnalyser {
         mConfig = config;
         mUtils = utils;
         mClusteringMethods = clusteringMethods;
-        mClusters = null;
+        mClusters = Lists.newArrayList();
+        mAllVariants = Lists.newArrayList();
         mSampleId = "";
         mLinkFinder = new LinkFinder(mConfig, mUtils, mClusteringMethods);
         mChainFinder = new ChainFinder(mUtils);
         mChainFinder.setLogVerbose(mConfig.LogVerbose);
     }
 
-    public void setClusterData(final String sampleId, List<SvCluster> clusters)
+    public void setSampleData(final String sampleId, List<SvVarData> allVariants)
     {
         mSampleId = sampleId;
-        mClusters = clusters;
+        mAllVariants = allVariants;
+        mClusters.clear();
     }
 
-    public void findSimpleCompleteChains()
+    public final List<SvCluster> getClusters() { return mClusters; }
+
+    public void clusterAndAnalyse()
+    {
+        mClusters.clear();
+
+        mClusteringMethods.clusterByBaseDistance(mAllVariants, mClusters);
+
+        findSimpleCompleteChains();
+
+        mClusteringMethods.mergeClusters(mSampleId, mClusters);
+
+        // log basic clustering details
+        for(SvCluster cluster : mClusters)
+        {
+            if(cluster.getCount() > 1)
+                cluster.logDetails();
+        }
+
+        findLinksAndChains();
+
+        // INVs and other SV-pairs which make foldbacks are now used in the inconsistent clustering logic
+        markFoldbacks();
+
+        mergeClusters();
+
+        // checkClusterDuplicates(mClusters);
+
+        /*
+        for(SvCluster cluster : mClusters)
+        {
+            mLinkFinder.resolveTransitiveSVs(mSampleId, cluster);
+            // cluster.cacheLinkedPairs()
+            // reportChainFeatures(cluster);
+        }
+        */
+    }
+
+    private  void findSimpleCompleteChains()
     {
         // for small clusters, try to find a full chain through all SVs
         for(SvCluster cluster : mClusters)
@@ -104,11 +150,12 @@ public class ClusterAnalyser {
             // then look for fully-linked clusters, ie chains involving all SVs
             findChains(cluster);
 
-            cacheFinalLinkedPairs(cluster);
+            cluster.cacheLinkedPairs();
+            cluster.setUnlinkedBnds();
 
             setClusterResolvedState(cluster);
 
-            if(isConsistentCluster(cluster))
+            if(cluster.isFullyChained() && cluster.isConsistent())
             {
                 LOGGER.debug("sample({}) cluster({}) simple and consistent with {} SVs", mSampleId, cluster.getId(), cluster.getCount());
             }
@@ -117,17 +164,11 @@ public class ClusterAnalyser {
 
     public void findLinksAndChains()
     {
-        for(SvCluster cluster : mClusters)
+        for (SvCluster cluster : mClusters)
         {
-            if(cluster.isSimpleSingleSV())
-                continue;
-
-            if(cluster.isFullyChained())
-                continue;
-
-            if(cluster.getUniqueSvCount() < 2)
+            if (cluster.isSimpleSingleSV() || cluster.isFullyChained() || cluster.getUniqueSvCount() < 2)
             {
-                setClusterArmBoundaries(cluster);
+                // setClusterArmBoundaries(cluster);
                 continue;
             }
 
@@ -137,18 +178,19 @@ public class ClusterAnalyser {
             // then look for fully-linked clusters, ie chains involving all SVs
             findChains(cluster);
 
-            setClusterArmBoundaries(cluster);
+            // setClusterArmBoundaries(cluster);
 
-            cacheFinalLinkedPairs(cluster);
+            cluster.cacheLinkedPairs();
+            cluster.setUnlinkedBnds();
 
             setClusterResolvedState(cluster);
 
             cluster.logDetails();
         }
+    }
 
-        // INVs and other SV-pairs which make foldbacks are now used in the inconsistent clustering logic
-        markFoldbacks();
-
+    private void mergeClusters()
+    {
         // now look at merging unresolved & inconsistent clusters where they share the same chromosomal arms
         List<SvCluster> mergedClusters = Lists.newArrayList();
 
@@ -198,7 +240,7 @@ public class ClusterAnalyser {
 
             for(SvCluster cluster : mergedClusters)
             {
-                cacheFinalLinkedPairs(cluster);
+                cluster.cacheLinkedPairs();
 
                 setClusterResolvedState(cluster);
 
@@ -206,15 +248,7 @@ public class ClusterAnalyser {
             }
         }
 
-        // checkClusterDuplicates(mClusters);
 
-        for(SvCluster cluster : mClusters)
-        {
-            mLinkFinder.resolveTransitiveSVs(mSampleId, cluster);
-            // cacheFinalLinkedPairs(cluster);
-
-            // reportChainFeatures(cluster);
-        }
     }
 
     private void findChains(SvCluster cluster)
@@ -292,26 +326,73 @@ public class ClusterAnalyser {
         // cluster.removeReplicatedSvs();
     }
 
+    @ Deprecated
+    public static boolean isConsistentCluster(final SvCluster cluster)
+    {
+        if(cluster.isSimpleSVs() && cluster.getLongDelDups().isEmpty())
+            return true;
+
+        if(cluster.isResolved())
+            return true;
+
+        if(!cluster.isConsistent())
+            return false;
+
+        // each arm must be consistent
+        for(final SvArmGroup armGroup : cluster.getArmGroups())
+        {
+            if(!armGroup.isConsistent())
+                return false;
+        }
+
+        // finally must be fully chained or only composed of unchained simple SVs
+        if(cluster.isFullyChained())
+            return true;
+
+        // other wise check whether all remaining SVs are either in consistent chains
+        // or themselves consistent
+        for(final SvChain chain : cluster.getChains())
+        {
+            if(!chain.isConsistent())
+                return false;
+        }
+
+        for(final SvVarData var : cluster.getUnlinkedSVs())
+        {
+            if(!var.isLocal()) // so filters out cross arm, null breakends and translocation
+                return false;
+
+            if(calcConsistency(var) != 0)
+                return false;
+        }
+
+        return true;
+    }
+
     private void setClusterResolvedState(SvCluster cluster)
     {
-        if(cluster.isResolved())
+        if(!cluster.getResolvedType().equals(RESOLVED_TYPE_NONE))
             return;
 
         if (cluster.isSimpleSVs())
         {
-            if(cluster.getCount() == 1)
-            {
-                cluster.setResolved(true, RESOLVED_TYPE_SIMPLE_SV);
-                return;
-            }
-
             if(cluster.getTypeCount(DEL) + cluster.getTypeCount(DUP) == 2)
             {
-                if(mClusteringMethods.markDelDupPairTypes(cluster, mSampleId))
+                if(mClusteringMethods.markDelDupPairTypes(cluster))
                     return;
             }
 
-            cluster.setResolved(true, RESOLVED_TYPE_SIMPLE_SV);
+            boolean hasLongSVs = false;
+            for(SvVarData var : cluster.getSVs())
+            {
+                if(var.length() >= mClusteringMethods.getDelDupCutoffLength())
+                {
+                    hasLongSVs = true;
+                    break;
+                }
+            }
+
+            cluster.setResolved(!hasLongSVs, RESOLVED_TYPE_SIMPLE_SV);
             return;
         }
 
@@ -320,11 +401,11 @@ public class ClusterAnalyser {
         {
             if(cluster.getTypeCount(BND) == 2)
             {
-                mClusteringMethods.markBndPairTypes(cluster, mSampleId);
+                mClusteringMethods.markBndPairTypes(cluster);
             }
             else if(cluster.getTypeCount(INV) == 2)
             {
-                mClusteringMethods.markInversionPairTypes(cluster, mSampleId);
+                mClusteringMethods.markInversionPairTypes(cluster);
             }
             else if(cluster.getTypeCount(SGL) == 2)
             {
@@ -355,14 +436,15 @@ public class ClusterAnalyser {
 
         // next clusters with which start and end on the same arm, have the same start and end orientation
         // and the same start and end copy number
-        if(isConsistentCluster(cluster) || cluster.isFullyChained())
+        if(cluster.isFullyChained())
         {
-            boolean isResolved = cluster.isConsistent();
+            // boolean isResolved = cluster.isConsistent();
 
+            // set the type but don't consider long chains resolved
             if(!cluster.hasReplicatedSVs())
-                cluster.setResolved(isResolved, RESOLVED_TYPE_SIMPLE_CHAIN);
+                cluster.setResolved(false, RESOLVED_TYPE_SIMPLE_CHAIN);
             else
-                cluster.setResolved(isResolved, RESOLVED_TYPE_COMPLEX_CHAIN);
+                cluster.setResolved(false, RESOLVED_TYPE_COMPLEX_CHAIN);
 
             return;
         }
@@ -387,6 +469,9 @@ public class ClusterAnalyser {
     private void setClusterArmBoundaries(SvCluster cluster)
     {
         // for each arm group within the cluster, find the bounding SV breakends
+        // - TIs touching this arm which are less than 1K bases are excluded
+        // - DELs and DUPs less than the long length are excluded
+
         // excluding any which are part of a continuous chain (ends excluded)
         final List<SvVarData> unlinkedSVs = cluster.getUnlinkedSVs();
         final List<SvChain> chains = cluster.getChains();
@@ -504,6 +589,8 @@ public class ClusterAnalyser {
         // by proximity of overlaps must be put together to solve inconsistencies (ie loose ends)
         List<SvCluster> mergedClusters = Lists.newArrayList();
 
+        long longDelDupCutoffLength = mClusteringMethods.getDelDupCutoffLength();
+
         // merge any cluster which is itself not consistent and has breakends on the same arm as another
         int index1 = 0;
         while(index1 < mClusters.size())
@@ -516,16 +603,17 @@ public class ClusterAnalyser {
                 continue;
             }
 
-            boolean isConsistent1 = isConsistentCluster(cluster1);
-            // boolean hasLongDelDup1 = mClusteringMethods.clusterHasLongDelDup(cluster1);
             boolean hasOpenSingle1 = hasOneOpenSingleVariant(cluster1);
             boolean isSoloSingle1 = cluster1.getCount() == 1 && cluster1.getSVs().get(0).type() == SGL;
 
-            if(isConsistent1  && !hasOpenSingle1 && !isSoloSingle1) // && !hasLongDelDup1
+            /*
+            boolean isConsistent1 = isConsistentCluster(cluster1);
+            if(!hasOpenSingle1 && !isSoloSingle1) // && !hasLongDelDup1
             {
                 ++index1;
                 continue;
             }
+            */
 
             boolean cluster1Merged = false;
             SvCluster newCluster = null;
@@ -541,29 +629,15 @@ public class ClusterAnalyser {
                     continue;
                 }
 
-                boolean isConsistent2 = isConsistentCluster(cluster2);
+                // boolean isConsistent2 = isConsistentCluster(cluster2);
+                // used to check cluster 'consistency' before merging on foldbacks and common arms
 
                 boolean foundConnection = false;
 
-                if(!isConsistent1 && !isConsistent2)
-                {
-                    foundConnection = canMergeClustersOnFoldbacks(cluster1, cluster2);
+                foundConnection = canMergeClustersOnFoldbacks(cluster1, cluster2);
 
-                    if(!foundConnection)
-                        foundConnection = canMergeClustersOnCommonArms(cluster1, cluster2);
-                }
-
-                /*
-                if(!foundConnection && hasLongDelDup1)
-                {
-                    foundConnection = mClusteringMethods.canMergeClustersOnLongDelDups(cluster1, cluster2);
-                }
-
-                if(!foundConnection && mClusteringMethods.clusterHasLongDelDup(cluster2))
-                {
-                    foundConnection = mClusteringMethods.canMergeClustersOnLongDelDups(cluster2, cluster1);
-                }
-                */
+                if(!foundConnection)
+                    foundConnection = canMergeClustersOnCommonArms(cluster1, cluster2, longDelDupCutoffLength);
 
                 if(!foundConnection)
                 {
@@ -582,7 +656,7 @@ public class ClusterAnalyser {
                         addClusterReason(cluster1, CLUSTER_REASON_SOLO_SINGLE, "");
                     }
 
-                    if(!foundConnection && isSoloSingle1 && isSingleClosestTI(cluster2, cluster2.getSVs().get(0)))
+                    if(!foundConnection && isSoloSingle1 && isSingleClosestTI(cluster2, cluster1.getSVs().get(0)))
                     {
                         foundConnection = true;
                         addClusterReason(cluster1, CLUSTER_REASON_SOLO_SINGLE, "");
@@ -624,7 +698,7 @@ public class ClusterAnalyser {
                         cluster1.addSubCluster(cluster2);
                     }
 
-                    setClusterArmBoundaries(cluster1);
+                    // setClusterArmBoundaries(cluster1);
                 }
                 else
                 {
@@ -653,7 +727,7 @@ public class ClusterAnalyser {
                     }
 
                     mergedClusters.add(newCluster);
-                    setClusterArmBoundaries(newCluster);
+                    // setClusterArmBoundaries(newCluster);
                 }
 
                 if(cluster2Merged)
@@ -733,7 +807,7 @@ public class ClusterAnalyser {
     {
         // first cluster has the open single in a chain, the second is a solo single
         // can be merged if the open single is the closest cluster to this cluster
-        final SvArmGroup singleArmGroup = cluster.getArmGroups().get(0);
+        final SvArmGroup singleArmGroup = soloVar.getCluster().getArmGroups().get(0);
 
         final List<SvBreakend> breakendList = mClusteringMethods.getChrBreakendMap().get(singleArmGroup.chromosome());
 
@@ -827,19 +901,40 @@ public class ClusterAnalyser {
         return false;
     }
 
-    private boolean canMergeClustersOnCommonArms(final SvCluster cluster1, final SvCluster cluster2)
+    private boolean canMergeClustersOnCommonArms(final SvCluster cluster1, final SvCluster cluster2, long armWidthCutoff)
     {
         // merge if the 2 clusters have BNDs linking the same 2 arms, but not included any BNDs in the middle
         // of chains or those in line elements
-        if(cluster1.getTypeCount(BND) == 0 || cluster2.getTypeCount(BND) == 0)
+        if(cluster1.getUnlinkedBnds().isEmpty() || cluster2.getUnlinkedBnds().isEmpty())
             return false;
 
-        // int matchedArms = 0;
-        // String linkedSvStr = "";
-
         // check that the BNDs in these 2 common arm links are either unlinked or the ends of chains
-        final List<SvVarData> bndList1 = getUnlinkedTranslocation(cluster1);
-        final List<SvVarData> bndList2 = getUnlinkedTranslocation(cluster2);
+        final List<SvVarData> bndList1 = cluster1.getUnlinkedBnds();
+        final List<SvVarData> bndList2 = cluster2.getUnlinkedBnds();
+
+        List<SvArmGroup> applicableArms = Lists.newArrayList();
+
+        for(final SvArmGroup armGroup1 : cluster1.getArmGroups())
+        {
+            armGroup1.setBoundaries(bndList1);
+
+            if(armGroup1.isConsistent() && (!armGroup1.hasEndsSet() || armGroup1.posEnd() - armGroup1.posStart() < armWidthCutoff))
+                continue;
+
+            for(final SvArmGroup armGroup2 : cluster2.getArmGroups())
+            {
+                if(!armGroup1.matches(armGroup2))
+                    continue;
+
+                // check for a common BND from the unlinked lists
+                armGroup2.setBoundaries(bndList2);
+
+                if(armGroup2.isConsistent() && (!armGroup2.hasEndsSet() || armGroup2.posEnd() - armGroup2.posStart() < armWidthCutoff))
+                    continue;
+
+                applicableArms.add(armGroup1);
+            }
+        }
 
         for (final SvVarData var1 : bndList1)
         {
@@ -847,47 +942,30 @@ public class ClusterAnalyser {
             {
                 if(haveSameChrArms(var1, var2))
                 {
-                    LOGGER.debug("cluster({}) and cluster({}) have common links with SV({}) and SV({})",
-                            cluster1.getId(), cluster2.getId(), var1.posId(), var2.posId());
+                    // check if both breaks for these BNDs are in applicable arms
+                    int armCount = 0;
+                    for(final SvArmGroup armGroup : applicableArms)
+                    {
+                        if(armGroup.getSVs().contains(var1))
+                            ++armCount;
 
-                    final String commonArms = var1.id() + "_" + var2.id();
+                        if(armCount >= 2)
+                        {
+                            LOGGER.debug("cluster({}) and cluster({}) have common links with SV({}) and SV({})",
+                                    cluster1.getId(), cluster2.getId(), var1.posId(), var2.posId());
 
-                    addClusterReason(cluster1, CLUSTER_REASON_COMMON_ARMS, commonArms);
-                    addClusterReason(cluster2, CLUSTER_REASON_COMMON_ARMS, commonArms);
-                    return true;
+                            final String commonArms = var1.id() + "_" + var2.id();
+
+                            addClusterReason(cluster1, CLUSTER_REASON_COMMON_ARMS, commonArms);
+                            addClusterReason(cluster2, CLUSTER_REASON_COMMON_ARMS, commonArms);
+                            return true;
+                        }
+                    }
                 }
             }
         }
 
         return false;
-    }
-
-    private final List<SvVarData> getUnlinkedTranslocation(final SvCluster cluster)
-    {
-        List<SvVarData> bndList = Lists.newArrayList();
-
-        for(final SvVarData var : cluster.getUnlinkedSVs())
-        {
-            if(var.type() == BND && !var.inLineElement() && !var.isReplicatedSv())
-            {
-                bndList.add(var);
-            }
-        }
-
-        for(final SvChain chain : cluster.getChains())
-        {
-            if(chain.getFirstSV().type() == BND && !chain.getFirstSV().inLineElement())
-            {
-                bndList.add(chain.getFirstSV());
-            }
-
-            if(chain.getLastSV().type() == BND && !chain.getLastSV().inLineElement())
-            {
-                bndList.add(chain.getLastSV());
-            }
-        }
-
-        return bndList;
     }
 
     private void demergeClusters(List<SvCluster> mergedClusters)
@@ -1116,14 +1194,18 @@ public class ClusterAnalyser {
                 final SvBreakend breakend = breakendList.get(i);
                 final SvBreakend prevBreakend = breakendList.get(i - 1);
 
-                checkFoldbackBreakends(breakend, prevBreakend);
+                // pass in surrounding breakends as well to check for conflictinlinks
+                final SvBreakend prePrevBreakend = (i > 1) ? breakendList.get(i - 2) : null;
+                final SvBreakend nextBreakend = (i < breakendList.size() - 1) ? breakendList.get(i + 1) : null;
+
+                checkFoldbackBreakends(breakend, prevBreakend, nextBreakend, prePrevBreakend);
 
                 checkReplicatedBreakendFoldback(breakend);
             }
         }
     }
 
-    private void checkFoldbackBreakends(SvBreakend be1, SvBreakend be2)
+    private void checkFoldbackBreakends(SvBreakend be1, SvBreakend be2, SvBreakend postBe1, SvBreakend preBe2)
     {
         // consecutive breakends, same orientation, same var or part of a chain
         if(be1.orientation() != be2.orientation())
@@ -1138,7 +1220,7 @@ public class ClusterAnalyser {
         // skip unclustered DELs & DUPs, reciprocal INV or reciprocal BNDs
         final SvCluster cluster1 = var1.getCluster();
 
-        if(cluster1.isSimpleSVs() || (cluster1.getCount() == 2 && cluster1.isConsistent()))
+        if(cluster1.isResolved())
             return;
 
         SvCluster cluster2 = null;
@@ -1151,7 +1233,7 @@ public class ClusterAnalyser {
         {
             cluster2 = var2.getCluster();
 
-            if (cluster2.isSimpleSVs() || (cluster2.getCount() == 2 && cluster2.isConsistent()))
+            if (cluster2.isResolved())
                 return;
         }
 
@@ -1178,6 +1260,26 @@ public class ClusterAnalyser {
             if(!chain1.breakendsAreChained(var1, !v1Start, var2, !v2Start))
             {
                 return;
+            }
+
+            // check for a conflicting deletion bridge on the backmost of the 2 breakends
+            if(be2.orientation() == 1)
+            {
+                if(preBe2 != null && areSectionBreak(be2.getSV(), preBe2.getSV(), be2.usesStart(), preBe2.usesStart()))
+                {
+                    // if the DB length is short, consider this a conflicting link and skip the foldback
+                    if(be2.position() - preBe2.position() <= MIN_TEMPLATED_INSERTION_LENGTH)
+                        return;
+                }
+            }
+            else
+            {
+                if(postBe1 != null && areSectionBreak(be1.getSV(), postBe1.getSV(), be1.usesStart(), postBe1.usesStart()))
+                {
+                    // if the DB length is short, consider this a conflicting link and skip the foldback
+                    if(postBe1.position() - be1.position() <= MIN_TEMPLATED_INSERTION_LENGTH)
+                        return;
+                }
             }
         }
 
@@ -1328,71 +1430,6 @@ public class ClusterAnalyser {
         }
 
         cluster.setChrCNData(chrCNDataMap);
-    }
-
-    private void cacheFinalLinkedPairs(SvCluster cluster)
-    {
-        List<SvLinkedPair> linkedPairs;
-
-        if(cluster.isFullyChained())
-        {
-            linkedPairs = cluster.getChains().get(0).getLinkedPairs();
-        }
-        else
-        {
-            linkedPairs = Lists.newArrayList();
-
-            // add all chained links
-            for(final SvChain chain : cluster.getChains())
-            {
-                linkedPairs.addAll(chain.getLinkedPairs());
-            }
-
-            // any any unchained assembly links
-            for(final SvLinkedPair pair : cluster.getAssemblyLinkedPairs())
-            {
-                if(!linkedPairs.contains(pair))
-                    linkedPairs.add(pair);
-            }
-
-            // finally add any other potential inferred links which don't clash with existing links
-            for(final SvLinkedPair pair : cluster.getInferredLinkedPairs())
-            {
-                if(linkedPairs.contains(pair))
-                    continue;
-
-                boolean hasClash = false;
-                for(final SvLinkedPair existingLink : linkedPairs)
-                {
-                    if (existingLink.hasLinkClash(pair))
-                    {
-                        hasClash = true;
-                        break;
-                    }
-                }
-
-                if(!hasClash)
-                    linkedPairs.add(pair);
-            }
-
-            // mark the resultant set of inferred links
-            for (SvLinkedPair pair : linkedPairs)
-            {
-                if(pair.isInferred())
-                {
-                    pair.first().setAssemblyMatchType(ASSEMBLY_MATCH_INFER_ONLY, pair.firstLinkOnStart());
-                    pair.second().setAssemblyMatchType(ASSEMBLY_MATCH_INFER_ONLY, pair.secondLinkOnStart());
-                }
-            }
-        }
-
-        if(!linkedPairs.isEmpty())
-        {
-            LOGGER.debug("cluster({}: {} count={}) has {} linked pairs",
-                    cluster.getId(), cluster.getDesc(), cluster.getUniqueSvCount(), linkedPairs.size());
-        }
-
-        cluster.setLinkedPairs(linkedPairs);
     }
 
     public static void reduceInferredToShortestLinks(List<SvLinkedPair> linkedPairs, List<SvChain> chains)

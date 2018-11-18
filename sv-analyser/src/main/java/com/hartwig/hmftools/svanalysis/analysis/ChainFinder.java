@@ -471,7 +471,7 @@ public class ChainFinder
         else
             unlinkedSvList.addAll(svList);
 
-        // remove links and SVs already allocated to partial chains, but add the open ends of chains to the unlinked list
+        // maintain links and SVs already allocated to partial chains, but add the open ends of chains to the unlinked list
         for(final SvChain chain : partialChains)
         {
             chainedPairs.addAll(chain.getLinkedPairs());
@@ -510,7 +510,9 @@ public class ChainFinder
 
                     for(final SvLinkedPair pair : currentChain.getLinkedPairs())
                     {
-                        chainedPairs.add(pair);
+                        if(!chainedPairs.contains(pair))
+                            chainedPairs.add(pair);
+
                         reduceRemainingLists(pair, unlinkedSvList, remainingStartLinks);
                     }
 

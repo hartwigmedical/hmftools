@@ -80,8 +80,6 @@ public class SvClusteringMethods {
 
     private long mDelDupCutoffLength;
 
-    private boolean mFoldbackColsLogged;
-
     private static double REF_BASE_LENGTH = 10000000D;
     public static int MAX_SIMPLE_DUP_DEL_CUTOFF = 5000000;
     public static int MIN_SIMPLE_DUP_DEL_CUTOFF = 100000;
@@ -109,12 +107,12 @@ public class SvClusteringMethods {
         mChrCopyNumberMap = new HashMap();
         mChrCNDataMap = new HashMap();
         mSampleLohData = null;
-        mFoldbackColsLogged = false;
     }
 
     public Map<String, List<SvBreakend>> getChrBreakendMap() { return mChrBreakendMap; }
     public int getNextClusterId() { return mNextClusterId++; }
     public void setSampleLohData(final Map<String, List<SvLOH>> data) { mSampleLohData = data; }
+    public long getDelDupCutoffLength() { return mDelDupCutoffLength; }
 
     public void clusterByBaseDistance(List<SvVarData> allVariants, List<SvCluster> clusters)
     {
@@ -419,40 +417,13 @@ public class SvClusteringMethods {
         }
     }
 
-    public static boolean isConsistentCluster(final SvCluster cluster)
-    {
-        if(cluster.isSimpleSVs() || cluster.isResolved())
-            return true;
-
-        if(!cluster.isConsistent())
-            return false;
-
-        if(cluster.isFullyChained())
-            return true;
-
-        // other wise check whether all remaining SVs are either in consistent chains
-        // or themselves consistent
-        for(final SvChain chain : cluster.getChains())
-        {
-            if(!chain.isConsistent())
-                return false;
-        }
-
-        for(final SvVarData var : cluster.getUnlinkedSVs())
-        {
-            if(!var.isLocal()) // so filters out cross arm, null breakends and translocation
-                return false;
-
-            if(calcConsistency(var) != 0)
-                return false;
-        }
-
-        return true;
-    }
-
     private void markClusterInversions(final SvCluster cluster)
     {
-        if(isConsistentCluster(cluster) || cluster.getTypeCount(INV) == 0)
+        if(cluster.getTypeCount(INV) == 0)
+            return;
+
+        // skip cluster-2s which resolved to a simple type
+        if(cluster.isResolved() && cluster.isSyntheticSimpleType())
             return;
 
         for (final SvVarData var : cluster.getSVs())
@@ -466,11 +437,11 @@ public class SvClusteringMethods {
 
     private void markClusterLongDelDups(final SvCluster cluster)
     {
-        if(cluster.isSimpleSVs())
+        if(cluster.isResolved() && cluster.isSyntheticSimpleType())
         {
-            for(final SvVarData var : cluster.getSVs())
+            if(cluster.getLengthOverride() >= mDelDupCutoffLength)
             {
-                if((var.type() == DUP || var.type() == DEL) && var.length() >= mDelDupCutoffLength)
+                for (final SvVarData var : cluster.getSVs())
                 {
                     cluster.registerLongDelDup(var);
                 }
@@ -479,19 +450,13 @@ public class SvClusteringMethods {
             return;
         }
 
-        if(cluster.isResolved())
+        if(cluster.getTypeCount(DEL) > 0 || cluster.getTypeCount(DUP) > 0)
         {
-            if(cluster.getResolvedType() == RESOLVED_TYPE_DEL_EXT_TI
-            || cluster.getResolvedType() == RESOLVED_TYPE_DEL_INT_TI
-            || cluster.getResolvedType() == RESOLVED_TYPE_DUP_INT_TI
-            || cluster.getResolvedType() == RESOLVED_TYPE_DUP_EXT_TI)
+            for(final SvVarData var : cluster.getSVs())
             {
-                if (cluster.getLengthOverride() >= mDelDupCutoffLength)
+                if((var.type() == DUP || var.type() == DEL) && var.length() >= mDelDupCutoffLength)
                 {
-                    for (final SvVarData var : cluster.getSVs())
-                    {
-                        cluster.registerLongDelDup(var);
-                    }
+                    cluster.registerLongDelDup(var);
                 }
             }
         }
@@ -587,11 +552,12 @@ public class SvClusteringMethods {
 
     private boolean mergeOnUnresolvedSingles(List<SvCluster> clusters)
     {
-        // merge clusters with 1 or 2 unresolved singles with the following rules:
+        // merge clusters with 1 unresolved single with the following rules:
         // 2 x cluster-1s with SGLs that are each other's nearest neighbours
         //
         // use the chr-breakend map to walk through and find the closest links
         // only apply a rule between the 2 closest breakends at the exclusions of the cluster on their other end
+        // unless the other breakend is a short, simple SV
 
         boolean foundMerges = false;
 
@@ -615,6 +581,12 @@ public class SvClusteringMethods {
                 // check previous and next breakend's cluster
                 SvBreakend prevBreakend = (i > 0) ? breakendList.get(i - 1) : null;
                 SvBreakend nextBreakend = (i < breakendCount - 1) ? breakendList.get(i + 1) : null;
+
+                if(prevBreakend != null && prevBreakend.getSV().isSimpleType() && prevBreakend.getSV().length() < mDelDupCutoffLength)
+                    prevBreakend = null;
+
+                if(nextBreakend != null && nextBreakend.getSV().isSimpleType() && nextBreakend.getSV().length() < mDelDupCutoffLength)
+                    nextBreakend = null;
 
                 // additionally check that breakend after the next one isn't a closer SGL to the next breakend,
                 // which would invalidate this one being the nearest neighbour
@@ -737,14 +709,6 @@ public class SvClusteringMethods {
 
                 return RESOLVED_TYPE_SGL_PLUS_INCONSISTENT;
             }
-        }
-        else if(otherCluster.getCount() == 2 && otherCluster.getTypeCount(SGL) == 1)
-        {
-
-
-
-
-            return RESOLVED_TYPE_NONE;
         }
         else
         {
@@ -893,152 +857,6 @@ public class SvClusteringMethods {
         }
     }
 
-    private static double MAX_COPY_NUMBER_INTEGER_DIFF = 0.25;
-
-    public void calcCopyNumberData(final String sampleId)
-    {
-        // look for duplication on each chromosome by examining the copy number heading towards the telomeres
-        for (final Map.Entry<String, List<SvBreakend>> entry : mChrBreakendMap.entrySet())
-        {
-            final String chromosome = entry.getKey();
-            final List<SvBreakend> breakendList = entry.getValue();
-
-            int chrCopyNumber = 0;
-            boolean isValid = true;
-
-            for(int i = 0; i < 2; ++i)
-            {
-                final SvBreakend breakend = (i == 0) ? breakendList.get(i) : breakendList.get(breakendList.size() - 1);
-                final SvVarData var = breakend.getSV();
-                boolean useStart = breakend.usesStart();
-                double copyNumber = var.copyNumber(useStart);
-
-                double telomereCopyNumber;
-                boolean useCopyNumber;
-
-                if(!var.isTranslocation())
-                {
-                    if((i == 0 && var.orientation(true) == 1) || (i == 1 && var.orientation(false) == -1))
-                        useCopyNumber = true;
-                    else
-                        useCopyNumber = false;
-                }
-                else
-                {
-                    if((i == 0 && var.orientation(useStart) == 1) || (i == 1 && var.orientation(useStart) == -1))
-                        useCopyNumber = true;
-                    else
-                        useCopyNumber = false;
-                }
-
-                if(useCopyNumber)
-                {
-                    // coming from telemore already so just take copy number
-                    telomereCopyNumber = copyNumber;
-                }
-                else
-                {
-                    // section out to telomere on this chromatid has been lost, so whatever is left needs to be doubled
-                    double copyNumberChange = var.copyNumberChange(useStart);
-                    telomereCopyNumber = copyNumber - copyNumberChange;
-                    telomereCopyNumber *= 2;
-                }
-
-                int copyNumRounded = (int)round(telomereCopyNumber);
-
-                /*
-                if(abs(telomereCopyNumber - copyNumRounded) > MAX_COPY_NUMBER_INTEGER_DIFF)
-                {
-                    isValid = false;
-                    continue;
-                }
-                */
-
-                /*
-                LOGGER.debug(String.format("chromosome(%s) %s telomere has copyNumber(%d) from SV(%s pos=%d:%d cn=%.1f cnc=%.1f)",
-                        chromosome, i == 0 ? "start" : "end", copyNumRounded,
-                        var.id(), var.position(useStart), var.orientation(useStart),
-                        var.copyNumber(useStart), var.copyNumberChange(useStart)));
-                */
-
-                if(i == 0)
-                    chrCopyNumber = copyNumRounded;
-                else
-                    chrCopyNumber = min(chrCopyNumber, copyNumRounded);
-            }
-
-            if(chrCopyNumber > 2 && isValid)
-            {
-                LOGGER.debug("sample({}) chromosome({}) has copyNumber({})", sampleId, chromosome, chrCopyNumber);
-                mChrCopyNumberMap.put(chromosome, chrCopyNumber);
-            }
-            else
-            {
-                mChrCopyNumberMap.put(chromosome, 2);
-            }
-        }
-    }
-
-    public void createCopyNumberSegments()
-    {
-        mChrCNDataMap.clear();
-
-        int cnId = 0;
-
-        for(Map.Entry<String, List<SvBreakend>> entry : mChrBreakendMap.entrySet())
-        {
-            final String chromosome = entry.getKey();
-
-            List<SvBreakend> breakendList = entry.getValue();
-
-            List<SvCNData> copyNumberList = Lists.newArrayList();
-
-            for (int i = 0; i < breakendList.size(); ++i)
-            {
-                final SvBreakend breakend = breakendList.get(i);
-                final SvVarData var = breakend.getSV();
-
-                if(i == 0)
-                {
-                    // add a section for the telomere - note: copy number is unknown from just the SVs
-                    copyNumberList.add(
-                            new SvCNData(cnId++, chromosome, 0, breakend.position() - 1, CN_SEG_TELOMERE, var.type().toString(),
-                                    0, 0, 0, 2, ""));
-                }
-
-                double copyNumber = var.copyNumber(breakend.usesStart());
-
-                long nextPosition = 0;
-                String nextType;
-
-                if(i == breakendList.size() - 1)
-                {
-                    // last entry - add the other telomere
-                    if(!mUtils.CHROMOSOME_LENGTHS.containsKey(chromosome))
-                    {
-                        // LOGGER.debug("missing chromosome({})", chromosome);
-                        continue;
-                    }
-
-                    nextPosition = mUtils.CHROMOSOME_LENGTHS.get(chromosome);
-                    nextType = CN_SEG_TELOMERE;
-                }
-                else
-                {
-                    final SvBreakend nextBreakend = breakendList.get(i+1);
-                    final SvVarData nextVar = nextBreakend.getSV();
-                    nextType = nextVar.type().toString();
-                    nextPosition = nextBreakend.position() - 1;
-                }
-
-                copyNumberList.add(
-                        new SvCNData(cnId++, chromosome, breakend.position(), nextPosition, var.type().toString(), nextType, 0, 0, 0, copyNumber, ""));
-            }
-
-            mChrCNDataMap.put(chromosome, copyNumberList);
-        }
-    }
-
     public void annotateNearestSvData()
     {
         // mark each SV's nearest other SV and its relationship - neighbouring or overlapping
@@ -1093,7 +911,7 @@ public class SvClusteringMethods {
         }
     }
 
-    public void markInversionPairTypes(SvCluster cluster, final String sampleId)
+    public void markInversionPairTypes(SvCluster cluster)
     {
         if(cluster.getLinkedPairs().isEmpty())
         {
@@ -1149,7 +967,7 @@ public class SvClusteringMethods {
         }
         else
         {
-            LOGGER.error("sample({}) ids({} & {}) neither TI nor DB", sampleId, var1.id(), var2.id());
+            LOGGER.error("ids({} & {}) neither TI nor DB", var1.id(), var2.id());
             return;
         }
 
@@ -1200,20 +1018,16 @@ public class SvClusteringMethods {
             isTIEnclosed = true;
         }
 
-        StructuralVariantType invPairType;
         String invPairDesc = "";
 
         if(lp1.linkType() == LINK_TYPE_DB && lp2 != null && lp2.linkType() == LINK_TYPE_DB)
         {
-            invPairType = DEL;
             invPairDesc = RESOLVED_TYPE_DEL_INT_TI;
         }
         else
         {
             if (lp1.linkType() == LINK_TYPE_DB || lp2.linkType() == LINK_TYPE_DB)
             {
-                invPairType = DEL;
-
                 if (!isTIEnclosed)
                 {
                     invPairDesc = RESOLVED_TYPE_DEL_EXT_TI;
@@ -1225,8 +1039,6 @@ public class SvClusteringMethods {
             }
             else
             {
-                invPairType = DUP;
-
                 if (!isTIEnclosed)
                 {
                     invPairDesc = RESOLVED_TYPE_DUP_EXT_TI;
@@ -1238,40 +1050,13 @@ public class SvClusteringMethods {
             }
         }
 
-        long otherProximity = min(min(abs(mainPos1 - otherPos1), abs(mainPos1 - otherPos2)), min(abs(mainPos2 - otherPos1), abs(mainPos2 - otherPos2)));
-
-        // check if there are variants falling within the outer breakends, indicating that this pair
-        // are possibly not actually an isolated cluster 2
-        boolean overlapsOtherVariants = hasEnclosedBreakends(
-                var1.chromosome(true),
-                min(var1.position(true), var2.position(true)),
-                max(var1.position(false), var2.position(false)),
-                cluster.getSVs());
-
-        cluster.setResolved(true, invPairDesc);
-        cluster.setLengthOverride(lp1.length());
+        long syntheticLength = abs(mainPos2 - mainPos1);
+        boolean isResolved = syntheticLength < mDelDupCutoffLength;
+        cluster.setResolved(isResolved, invPairDesc);
+        cluster.setLengthOverride(syntheticLength);
     }
 
-    private boolean hasEnclosedBreakends(final String chromosome, long startPosition, long endPosition, List<SvVarData> skipList)
-    {
-        final List<SvBreakend> breakendList = mChrBreakendMap.get(chromosome);
-
-        if(breakendList == null)
-            return true;
-
-        for(final SvBreakend breakend : breakendList)
-        {
-            if(skipList.contains(breakend.getSV()))
-                continue;
-
-            if(breakend.position() > startPosition && breakend.position() < endPosition)
-                return true;
-        }
-
-        return false;
-    }
-
-    public void markBndPairTypes(SvCluster cluster, final String sampleId)
+    public void markBndPairTypes(SvCluster cluster)
     {
         if(cluster.getLinkedPairs().isEmpty())
         {
@@ -1313,8 +1098,7 @@ public class SvClusteringMethods {
 
         if(lp1 != null && lp2 != null)
         {
-            // take assembly pair if exists over inferred pair
-            // otherwise take the shorter of the 2
+            // take assembly pair if exists over inferred pair, otherwise take the shorter of the 2
             if(!lp1.isInferred())
                 tiLinkedPair = lp1;
             else if(!lp2.isInferred())
@@ -1336,33 +1120,25 @@ public class SvClusteringMethods {
         if(!var1.chromosome(v1OpenOnStart).equals(var2.chromosome(v2OpenOnStart)))
             return;
 
-        StructuralVariantType pairType;
         String pairDesc = "";
 
         if(areSectionBreak(var1, var2, v1OpenOnStart, v2OpenOnStart))
         {
-            pairType = DEL;
             pairDesc = RESOLVED_TYPE_DEL_EXT_TI;
         }
         else
         {
-            pairType = DUP;
             pairDesc = RESOLVED_TYPE_DUP_EXT_TI;
         }
 
-        long pairTypeLength = abs(var1.position(v1OpenOnStart) - var2.position(v2OpenOnStart));
+        long syntheticLength = abs(var1.position(v1OpenOnStart) - var2.position(v2OpenOnStart));
 
-        boolean overlapsOtherVariants = hasEnclosedBreakends(
-                var1.chromosome(v1OpenOnStart),
-                min(var1.position(v1OpenOnStart), var2.position(v2OpenOnStart)),
-                max(var1.position(v1OpenOnStart), var2.position(v2OpenOnStart)),
-                cluster.getSVs());
-
-        cluster.setResolved(true, pairDesc);
-        cluster.setLengthOverride(tiLinkedPair.length());
+        boolean isResolved = syntheticLength < mDelDupCutoffLength;
+        cluster.setResolved(isResolved, pairDesc);
+        cluster.setLengthOverride(syntheticLength);
     }
 
-    public boolean markDelDupPairTypes(SvCluster cluster, final String sampleId)
+    public boolean markDelDupPairTypes(SvCluster cluster)
     {
         final SvVarData var1 = cluster.getSVs().get(0);
         final SvVarData var2 = cluster.getSVs().get(1);
@@ -1426,7 +1202,6 @@ public class SvClusteringMethods {
             tiLinkedPair = lp1 != null ? lp1 : lp2;
         }
 
-        StructuralVariantType pairType;
         String pairDesc = "";
 
         long tiPos1 = tiLinkedPair.first().position(tiLinkedPair.firstLinkOnStart());
@@ -1435,32 +1210,18 @@ public class SvClusteringMethods {
         long otherPos1 = tiLinkedPair.first().position(!tiLinkedPair.firstLinkOnStart());
         long otherPos2 = tiLinkedPair.second().position(!tiLinkedPair.secondLinkOnStart());
 
-        long tiUpperPos = tiPos1 < tiPos2 ? tiPos2 : tiPos1;
-        long tiLowerPos = tiPos2 < tiPos1 ? tiPos2 : tiPos1;
-
-        long nonTiUpperPos = otherPos1 < otherPos2 ? otherPos2 : otherPos1;
-        long nonTiLowerPos = otherPos2 < otherPos1 ? otherPos2 : otherPos1;
-
-        boolean isTIEnclosing = tiUpperPos > nonTiUpperPos && tiLowerPos < nonTiLowerPos;
-
         boolean noOverlap = var1.position(false) < var2.position(true) || var2.position(false) < var1.position(true);
-
-        boolean isValid = true;
 
         if(var1.type() == DEL && var2.type() == DEL)
         {
             // must be non-overlapping otherwise wouldn't be clustered
             pairDesc = RESOLVED_TYPE_DEL_INT_TI;
-
-            isValid = noOverlap;
         }
         else if(var1.type() == DUP && var2.type() == DUP)
         {
             if(noOverlap)
             {
                 pairDesc = RESOLVED_TYPE_DEL_INT_TI;
-
-                isValid = isTIEnclosing;
             }
             else
             {
@@ -1481,14 +1242,10 @@ public class SvClusteringMethods {
             }
         }
 
-        if(!isValid)
-        {
-            LOGGER.debug("cluster({}) invalid classification", cluster.getId());
-            return false;
-        }
-
-        cluster.setResolved(true, pairDesc);
-        cluster.setLengthOverride(tiLinkedPair.length());
+        long syntheticLength = abs(otherPos1 - otherPos2);
+        boolean isResolved = syntheticLength < mDelDupCutoffLength;
+        cluster.setResolved(isResolved, pairDesc);
+        cluster.setLengthOverride(syntheticLength);
         return true;
     }
 
