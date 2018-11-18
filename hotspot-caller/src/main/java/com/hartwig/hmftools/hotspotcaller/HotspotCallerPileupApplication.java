@@ -23,9 +23,9 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-public class HotspotCallerApplication {
+public class HotspotCallerPileupApplication {
 
-    private static final Logger LOGGER = LogManager.getLogger(HotspotCallerApplication.class);
+    private static final Logger LOGGER = LogManager.getLogger(HotspotCallerPileupApplication.class);
 
     private static final String OUT_PATH = "out";
     private static final String HOTSPOT = "hotspot";
@@ -48,7 +48,7 @@ public class HotspotCallerApplication {
         if (outputFilePath == null || hotspotPath == null || tumorSample == null || tumorPileupPath == null || referenceSample == null
                 || referencePileupPath == null) {
             final HelpFormatter formatter = new HelpFormatter();
-            formatter.printHelp("HotspotCallerApplication", options);
+            formatter.printHelp("HotspotCallerPileupApplication", options);
             System.exit(1);
         }
 
