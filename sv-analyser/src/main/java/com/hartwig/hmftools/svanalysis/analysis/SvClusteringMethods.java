@@ -405,6 +405,10 @@ public class SvClusteringMethods {
             if(lohClusterStart == lohClusterEnd)
                 continue;
 
+            // skip if either end is in a line element
+            if(lohSvStart.inLineElement() || lohSvEnd.inLineElement())
+                continue;
+
             LOGGER.debug("cluster({} svs={}) merges in other cluster({} svs={}) on LOH event(sv1={} sv2={} len={})",
                     lohClusterStart.getId(), lohClusterStart.getUniqueSvCount(), lohClusterEnd.getId(), lohClusterEnd.getUniqueSvCount(),
                     lohEvent.StartSV, lohEvent.EndSV, lohEvent.Length);
