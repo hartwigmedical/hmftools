@@ -5,31 +5,25 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.util.Collection;
 import java.util.StringJoiner;
-import java.util.function.Function;
+import java.util.stream.Collectors;
 
-import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
 
 import org.jetbrains.annotations.NotNull;
 
 public class CircosLinkWriter {
 
-    public static void writeVariants(@NotNull final String filePath, @NotNull Collection<StructuralVariant> values)
-            throws IOException {
-        writeCircosFile(filePath, values, CircosLinkWriter::toString);
-    }
-
-    private static <T> void writeCircosFile(@NotNull final String filePath, @NotNull Collection<T> values,
-            Function<T, String> toStringFunction) throws IOException {
-        final Collection<String> lines = Lists.newArrayList();
-        values.stream().map(toStringFunction).forEach(lines::add);
+    public static void writeVariants(@NotNull final String filePath, @NotNull Collection<StructuralVariant> values) throws IOException {
+        final Collection<String> lines = values.stream()
+                .filter(x -> x.end() != null)
+                .map(CircosLinkWriter::toString)
+                .collect(Collectors.toList());
         Files.write(new File(filePath).toPath(), lines);
     }
 
-    private static String toString(StructuralVariant variant) {
-        if (variant.end() == null) return "";
-        return new StringJoiner("\t")
-                .add(CircosFileWriter.circosContig(variant.chromosome(true)))
+    @NotNull
+    private static String toString(@NotNull final StructuralVariant variant) {
+        return new StringJoiner("\t").add(CircosFileWriter.circosContig(variant.chromosome(true)))
                 .add(String.valueOf(variant.position(true)))
                 .add(String.valueOf(variant.position(true)))
                 .add(CircosFileWriter.circosContig(variant.chromosome(false)))
@@ -39,7 +33,8 @@ public class CircosLinkWriter {
                 .toString();
     }
 
-    private static String color(StructuralVariant variant) {
+    @NotNull
+    private static String color(@NotNull final StructuralVariant variant) {
         switch (variant.type()) {
             case DUP:
                 return "green";

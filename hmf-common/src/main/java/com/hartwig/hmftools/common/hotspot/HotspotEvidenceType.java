@@ -4,6 +4,7 @@ import org.jetbrains.annotations.NotNull;
 
 public enum HotspotEvidenceType {
     INFRAME,
+    KNOWN,
     SNV,
     MNV,
     INSERT,
@@ -11,11 +12,11 @@ public enum HotspotEvidenceType {
 
     @NotNull
     static HotspotEvidenceType fromVariantHotspot(@NotNull VariantHotspot hotspot) {
-        if (hotspot.isDelete()) {
+        if (hotspot.isSimpleDelete()) {
             return DELETE;
         }
 
-        if (hotspot.isInsert()) {
+        if (hotspot.isSimpleInsert()) {
             return INSERT;
         }
 

@@ -40,7 +40,7 @@ public final class VariantHotspotFile {
     @NotNull
     private static VariantHotspot fromString(@NotNull final String line) {
         String[] values = line.split(DELIMITER);
-        return ImmutableVariantHotspot.builder()
+        return ImmutableVariantHotspotImpl.builder()
                 .chromosome(values[0])
                 .position(Long.valueOf(values[1]))
                 .ref(values[2])

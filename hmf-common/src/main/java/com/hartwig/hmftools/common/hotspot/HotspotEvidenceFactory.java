@@ -22,6 +22,7 @@ import com.hartwig.hmftools.common.region.GenomeRegionFactory;
 import org.jetbrains.annotations.NotNull;
 
 @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
+@Deprecated
 public class HotspotEvidenceFactory {
 
     private final Collection<VariantHotspot> hotspots;
@@ -179,11 +180,11 @@ public class HotspotEvidenceFactory {
             return pileup.mismatchCount(hotspot.alt().charAt(0));
         }
 
-        if (hotspot.isInsert()) {
+        if (hotspot.isSimpleInsert()) {
             return pileup.insertCount(hotspot.alt());
         }
 
-        if (hotspot.isDelete()) {
+        if (hotspot.isSimpleDelete()) {
             return pileup.deleteCount(hotspot.ref());
         }
 
@@ -196,11 +197,11 @@ public class HotspotEvidenceFactory {
             return tumor.mismatchScore(hotspot.alt().charAt(0));
         }
 
-        if (hotspot.isInsert()) {
+        if (hotspot.isSimpleInsert()) {
             return tumor.insertScore(hotspot.alt());
         }
 
-        if (hotspot.isDelete()) {
+        if (hotspot.isSimpleDelete()) {
             return tumor.deleteScore(hotspot.ref());
         }
 
@@ -209,7 +210,7 @@ public class HotspotEvidenceFactory {
 
     @NotNull
     private static VariantHotspot fromEvidence(@NotNull final HotspotEvidence evidence) {
-        return ImmutableVariantHotspot.builder()
+        return ImmutableVariantHotspotImpl.builder()
                 .chromosome(evidence.chromosome())
                 .position(evidence.position())
                 .ref(evidence.ref())

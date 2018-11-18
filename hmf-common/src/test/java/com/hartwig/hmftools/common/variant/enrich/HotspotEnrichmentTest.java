@@ -4,13 +4,13 @@ import static org.junit.Assert.assertEquals;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.collect.Multimaps;
-import com.hartwig.hmftools.common.hotspot.ImmutableVariantHotspot;
+import com.hartwig.hmftools.common.hotspot.ImmutableVariantHotspotImpl;
+import com.hartwig.hmftools.common.hotspot.VariantHotspot;
 import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.common.variant.ImmutableSomaticVariantImpl;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariantTestBuilderFactory;
 import com.hartwig.hmftools.common.variant.VariantContextFromString;
-import com.hartwig.hmftools.common.hotspot.VariantHotspot;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
@@ -24,7 +24,7 @@ public class HotspotEnrichmentTest {
         final String hotspotRef = "GATTACA";
         final String variantRef = "T";
 
-        final VariantHotspot hotspot = ImmutableVariantHotspot.builder().chromosome("11").position(100).ref(hotspotRef).alt("A").build();
+        final VariantHotspot hotspot = ImmutableVariantHotspotImpl.builder().chromosome("11").position(100).ref(hotspotRef).alt("A").build();
         // Max should be 100 + 7 - 1 + 5
         // Min should be 100 - 1 + 1 - 5
 
@@ -47,7 +47,7 @@ public class HotspotEnrichmentTest {
     public void testExactMatch() {
         final String hotspotRef = "GATTACA";
 
-        final VariantHotspot hotspot = ImmutableVariantHotspot.builder().chromosome("11").position(100).ref(hotspotRef).alt("A").build();
+        final VariantHotspot hotspot = ImmutableVariantHotspotImpl.builder().chromosome("11").position(100).ref(hotspotRef).alt("A").build();
         assertOverlap(Hotspot.HOTSPOT, hotspot, 100, hotspotRef);
     }
 
