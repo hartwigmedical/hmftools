@@ -38,16 +38,18 @@ import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 
-public class HotspotCallerApplication2 {
+public class HotspotCallerApplication {
 
-    private static final Logger LOGGER = LogManager.getLogger(HotspotCallerApplication2.class);
+    private static final Logger LOGGER = LogManager.getLogger(HotspotCallerApplication.class);
 
+    private static final String OUT_PATH = "out";
     private static final String HOTSPOT = "hotspot";
+    private static final String TUMOR = "tumor";
     private static final String TUMOR_BAM = "tumor_bam";
+    private static final String REFERENCE = "reference";
     private static final String REFERENCE_BAM = "reference_bam";
     private static final String INFRAME_BED = "inframe_bed";
     private static final String REF_GENOME = "ref_genome";
-    private static final String OUT = "out";
 
     public static void main(String[] args) throws IOException, ParseException {
 
@@ -58,11 +60,11 @@ public class HotspotCallerApplication2 {
         final String referenceBam = cmd.getOptionValue(REFERENCE_BAM);
         final String refGenome = cmd.getOptionValue(REF_GENOME);
         final String inframeBed = cmd.getOptionValue(INFRAME_BED);
-        final String outputVCF = cmd.getOptionValue(OUT);
+        final String outputVCF = cmd.getOptionValue(OUT_PATH);
 
         if (hotspotPath == null || tumorBam == null || referenceBam == null || inframeBed == null || refGenome == null || outputVCF == null) {
             final HelpFormatter formatter = new HelpFormatter();
-            formatter.printHelp("HotspotCallerApplication2", options);
+            formatter.printHelp("HotspotCallerApplication", options);
             System.exit(1);
         }
 
@@ -136,12 +138,15 @@ public class HotspotCallerApplication2 {
     @NotNull
     private static Options createOptions() {
         final Options options = new Options();
-        options.addOption(OUT, true, "Tumor bam file.");
+        options.addOption(OUT_PATH, true, "Tumor bam file.");
         options.addOption(TUMOR_BAM, true, "Tumor bam file.");
         options.addOption(REFERENCE_BAM, true, "Reference bam file.");
         options.addOption(HOTSPOT, true, "Hotspot input file.");
         options.addOption(INFRAME_BED, true, "Hotspot input file.");
         options.addOption(REF_GENOME, true, "Hotspot input file.");
+        options.addOption(TUMOR, true, "Tumor sample name.");
+        options.addOption(REFERENCE, true, "Reference sample name.");
         return options;
     }
+
 }
