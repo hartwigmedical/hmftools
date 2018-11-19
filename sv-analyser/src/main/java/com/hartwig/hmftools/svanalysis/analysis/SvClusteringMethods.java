@@ -17,6 +17,7 @@ import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.CHROMOSOME_AR
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.CHROMOSOME_ARM_Q;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.PERMITED_DUP_BE_DISTANCE;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.calcConsistency;
+import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.copyNumbersEqual;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_LOW_QUALITY;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_DEL_EXT_TI;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_DEL_INT_TI;
@@ -337,7 +338,10 @@ public class SvClusteringMethods {
 
     public boolean isLowQualityVariant(final SvVarData var)
     {
-        return var.copyNumberChange(true) < LOW_QUALITY_CN_CHANGE && var.copyNumberChange(false) < LOW_QUALITY_CN_CHANGE;
+        if(var.isNullBreakend())
+            return var.copyNumberChange(true) < LOW_QUALITY_CN_CHANGE;
+        else
+            return var.copyNumberChange(true) < LOW_QUALITY_CN_CHANGE && var.copyNumberChange(false) < LOW_QUALITY_CN_CHANGE;
     }
 
     public boolean isEquivSingleBreakend(final SvVarData var)
@@ -664,8 +668,18 @@ public class SvClusteringMethods {
 
             if(otherVar.type() == SGL)
             {
+                if(otherCluster.isResolved())
+                    return RESOLVED_TYPE_NONE;
+
                 // to form a simple del or dup, they need to have different orientations
                 if(soloSingle.orientation(true) == otherVar.orientation(true))
+                    return RESOLVED_TYPE_NONE;
+
+                // check copy number consistency
+                double cn1 = soloSingle.copyNumberChange(true);
+                double cn2 = otherVar.copyNumberChange(true);
+
+                if(!copyNumbersEqual(cn1, cn2))
                     return RESOLVED_TYPE_NONE;
 
                 boolean ssFirst = soloSingle.position(true) < otherVar.position(true);
