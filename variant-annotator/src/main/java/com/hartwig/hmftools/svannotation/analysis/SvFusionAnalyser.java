@@ -82,15 +82,7 @@ public class SvFusionAnalyser
                 if (startUpstream == endUpstream)
                     continue;
 
-                /* what is not allowed:
-                 - anything to exon coding except exon coding
-                 - end downstream of coding
-                 - start downstream of coding
-                 - end in non-coding transcript
-                 */
-
-                // anything else is allowed
-
+                // see FV Fusions document for permitted combinations
                 for (final Transcript startTrans : startGene.transcripts())
                 {
                     for (final Transcript endTrans : endGene.transcripts())
@@ -100,7 +92,7 @@ public class SvFusionAnalyser
 
                         boolean checkExactMatch = false;
 
-                        if(upstreamTrans.postCoding() || downstreamTrans.postCoding())
+                        if(upstreamTrans.postCoding() || downstreamTrans.postCoding() || downstreamTrans.nonCoding())
                             continue;
 
                         if(upstreamTrans.isPromoter())
@@ -169,24 +161,6 @@ public class SvFusionAnalyser
                                 addFusion(potentialFusions, upstreamTrans, downstreamTrans);
                             }
                         }
-
-                        /*
-                        if(upstreamTrans.isCoding() && upstreamTrans.isExonic())
-                        {
-                            if(exonToExonInPhase(upstreamTrans, true, downstreamTrans, false))
-                            {
-                                addFusion(potentialFusions, upstreamTrans, downstreamTrans);
-                            }
-                        }
-                        else
-                        {
-                            // just check for a phasing match
-                            if (upstreamTrans.exonUpstreamPhase() == downstreamTrans.exonDownstreamPhase())
-                            {
-                                addFusion(potentialFusions, upstreamTrans, downstreamTrans);
-                            }
-                        }
-                        */
                     }
                 }
             }
@@ -229,18 +203,19 @@ public class SvFusionAnalyser
 
     private static boolean isPotentiallyRelevantFusion(final Transcript t1, final Transcript t2)
     {
-        final boolean sameGene = t1.geneName().equals(t2.geneName());
+        if(!t1.geneName().equals(t2.geneName()))
+            return true;
 
-        if (sameGene)
-        {
-            // skip fusions between different transcripts in the same gene,
-            if (!t1.transcriptId().equals(t2.transcriptId()))
-                return false;
+        // skip fusions between different transcripts in the same gene,
+        if (!t1.transcriptId().equals(t2.transcriptId()))
+            return false;
 
-            // skip fusions within the same intron
-            if (intronicDisruptionOnSameTranscript(t1, t2))
-                return false;
-        }
+        if(t1.nonCoding())
+            return false;
+
+        // skip fusions within the same intron
+        if(t1.isIntronic() && t2.isIntronic() && t1.exonUpstream() == t2.exonUpstream())
+            return false;
 
         return true;
     }
@@ -259,28 +234,25 @@ public class SvFusionAnalyser
                 final Transcript upstream = fusion.getLeft();
                 final Transcript downstream = fusion.getRight();
 
-                /* previous logic
-                boolean reportable = reportableFusion.isPresent() && reportableFusion.get() == fusion && matchesKnownFusion && (
-                        (isPostCodingDownstream != null && !isPostCodingDownstream) && (isPostCodingUpstream == null
-                                || !isPostCodingUpstream) && !(intragenic(upstream, downstream) && upstream.exonUpstreamPhase() == -1));
-                */
-
                 boolean reportable = false;
 
                 if(reportableFusion.isPresent() && reportableFusion.get() == fusion)
                 {
-                    Boolean isPostCodingUpstream = postCoding(upstream);
-                    Boolean isPostCodingDownstream = postCoding(downstream);
-
-                    boolean notPostCodingDownstream = isPostCodingDownstream != null && !isPostCodingDownstream;
-
-                    boolean postCodingUpstreamOk =
-                            (isPostCodingUpstream == null || !isPostCodingUpstream) && !(intragenic(upstream, downstream)
-                                    && upstream.exonUpstreamPhase() == -1);
-
                     boolean intragenicOk = !(intragenic(upstream, downstream) && upstream.exonUpstreamPhase() == -1);
 
-                    reportable = notPostCodingDownstream && postCodingUpstreamOk && intragenicOk;
+                    if(intragenicOk)
+                        reportable = true;
+                    else
+                        reportable = false;
+
+                    // old rule was checking (downstream: not non-coding and not downstream from coding)
+                    // AND (upstream: non-coding or not downstream of coding)
+                    // AND NOT (intragenic and upstream phase -1)
+                    /*
+                    boolean oldReportable = isPostCodingDownstream != null && !isPostCodingDownstream
+                            && (isPostCodingUpstream == null || !isPostCodingUpstream)
+                            && !(intragenic(upstream, downstream) && upstream.exonUpstreamPhase() == -1);
+                    */
                 }
 
                 final GeneFusion geneFusion = ImmutableGeneFusion.builder()
@@ -330,7 +302,6 @@ public class SvFusionAnalyser
         return reportableFusion;
     }
 
-
     private static boolean transcriptsMatchKnownFusion(final KnownFusionsModel fusionsModel, final Transcript five, final Transcript three)
     {
         if(fusionsModel.exactMatch(five.parent().synonyms(), three.parent().synonyms()))
@@ -346,20 +317,6 @@ public class SvFusionAnalyser
         }
 
         return false;
-    }
-
-    private static Boolean postCoding(@NotNull final Transcript transcript)
-    {
-        Long codingStart = transcript.codingStart();
-        Long codingEnd = transcript.codingEnd();
-
-        if (codingStart == null || codingEnd == null)
-            return null;
-
-        final int strand = transcript.parent().strand();
-        final long position = transcript.parent().position();
-
-        return (strand == 1 && position > codingEnd) || (strand == -1 && position < codingStart);
     }
 
     private static boolean intragenic(final Transcript upstream, final Transcript downstream)

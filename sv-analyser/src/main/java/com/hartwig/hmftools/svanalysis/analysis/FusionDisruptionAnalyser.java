@@ -108,8 +108,8 @@ public class FusionDisruptionAnalyser
             return genesList.stream().filter(GeneAnnotation::isEnd).collect(Collectors.toList());
     }
 
-    // private static String CHECK_VAR_ID = "";
-    private static String CHECK_VAR_ID = "468339";
+    private static String CHECK_VAR_ID = "";
+    // private static String CHECK_VAR_ID = "489585";
 
     public void findFusions(final List<SvVarData> allVariants, final List<SvCluster> clusters, final List<SvVarData> svList)
     {
