@@ -126,6 +126,8 @@ public class AlleleDepthLoader {
 
                 LOGGER.debug("sample({} chr({}) position({}) matched, counts(ref={} alt={})",
                         mSampleId, bachRecord.chromosome(), bachRecord.position(), bachRecord.getRefCount(), bachRecord.getAltCount());
+
+                break;
             }
 
             if(!matched)

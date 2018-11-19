@@ -127,7 +127,7 @@ public class BachelorPP {
         if(cmd.hasOption(BACH_INPUT_FILE))
             bachelorInputFile = cmd.getOptionValue(BACH_INPUT_FILE);
         else
-            bachelorInputFile = bachelorDirectory + "/" + BACH_INPUT_FILE;
+            bachelorInputFile = bachelorDirectory + "/" + DEFAULT_BACH_INPUT_FILE;
 
         BachelorDataCollection dataCollection = new BachelorDataCollection();
         dataCollection.setSampleId(sampleId);
@@ -163,7 +163,7 @@ public class BachelorPP {
         }
         catch (SQLException e)
         {
-            LOGGER.error("DB connection failed");
+            LOGGER.error("DB connection failed: {}", e.toString());
             return;
         }
 
@@ -200,121 +200,6 @@ public class BachelorPP {
         writeToFile(sampleId, bachRecords, bachelorDirectory);
 
         LOGGER.info("run complete");
-    }
-
-    private static void rewriteFilteredBachelorRecords(final List<BachelorGermlineVariant> bachRecords, CommandLine cmdLineArgs)
-    {
-        String outputDir = cmdLineArgs.getOptionValue(SAMPLE_PATH);
-
-        List<BachelorRecordFilter> whitelistFilters = loadBachelorFilters(cmdLineArgs.getOptionValue(WHITELIST_FILE));
-        List<BachelorRecordFilter> blacklistFilters = loadBachelorFilters(cmdLineArgs.getOptionValue(BLACKLIST_FILE));
-
-        if(whitelistFilters.isEmpty() && blacklistFilters.isEmpty())
-            return;
-
-        String outputFileName = outputDir;
-        if (!outputFileName.endsWith("/"))
-        {
-            outputFileName += "/";
-        }
-
-        outputFileName += "bachelor_filtered_output.csv";
-
-        Path outputFile = Paths.get(outputFileName);
-
-        try
-        {
-            BufferedWriter writer = Files.newBufferedWriter(outputFile, StandardOpenOption.CREATE);
-
-            writer.write("SAMPLEID,SOURCE,PROGRAM,ID,GENE,TRANSCRIPT_ID,CHROM,POS,REF,ALTS,EFFECTS,ANNOTATIONS,HGVS_PROTEIN,IS_HOMOZYGOUS,PHRED_SCORE,HGVS_CODING,MATCH_TYPE,ALT_COUNT,READ_DEPTH,CLNDN,CLNSIG");
-            writer.newLine();
-
-            for(int index = 0; index < bachRecords.size(); ++index)
-            {
-                final BachelorGermlineVariant bachRecord = bachRecords.get(index);
-
-                if(index > 0 && (index % 1000) == 0)
-                {
-                    LOGGER.info("processed {} records", index);
-                }
-
-                boolean keepRecord = false;
-                BachelorRecordFilter matchedFilter = null;
-
-                if(bachRecord.hasEffect(FRAMESHIFT_VARIANT) || bachRecord.hasEffect(STOP_GAINED)
-                || bachRecord.hasEffect(SPLICE_ACCEPTOR_VARIANT) || bachRecord.hasEffect(SPLICE_DONOR_VARIANT))
-                {
-                    keepRecord = true;
-
-                    for(final BachelorRecordFilter filter : blacklistFilters)
-                    {
-                        if(filter.matches(bachRecord))
-                        {
-                            keepRecord = false;
-                            matchedFilter = filter;
-                            break;
-                        }
-                    }
-                }
-                else if(bachRecord.hasEffect(MISSENSE_VARIANT) || bachRecord.hasEffect(SYNONYMOUS_VARIANT))
-                {
-                    keepRecord = false;
-
-                    for(final BachelorRecordFilter filter : whitelistFilters)
-                    {
-                        if(filter.matches(bachRecord))
-                        {
-                            keepRecord = true;
-                            matchedFilter = filter;
-                            break;
-                        }
-                    }
-                }
-
-                if(keepRecord || matchedFilter != null)
-                {
-                    writer.write(
-                            String.format("%s,%s,%s,%s",
-                                    bachRecord.patient(),
-                                    bachRecord.source(),
-                                    bachRecord.program(),
-                                    bachRecord.variantId()));
-
-                    writer.write(
-                            String.format(",%s,%s,%s,%d,%s,%s",
-                                    bachRecord.gene(),
-                                    bachRecord.transcriptId(),
-                                    bachRecord.chromosome(),
-                                    bachRecord.position(),
-                                    bachRecord.ref(),
-                                    bachRecord.alts()));
-
-                    writer.write(
-                            String.format(",%s,%s,%s,%s,%d,%s,%s,%d,%d",
-                                    bachRecord.effects(),
-                                    bachRecord.annotations(),
-                                    bachRecord.hgvsProtein(),
-                                    bachRecord.isHomozygous(),
-                                    bachRecord.phredScore(),
-                                    bachRecord.hgvsCoding(),
-                                    bachRecord.matchType(),
-                                    bachRecord.getAltCount(),
-                                    bachRecord.getReadDepth()));
-
-                    writer.write(String.format(",%s,%s",
-                        matchedFilter != null ? matchedFilter.Diagnosis : "",
-                        matchedFilter != null ? matchedFilter.Significance : ""));
-
-                    writer.newLine();
-                }
-            }
-
-            writer.close();
-        }
-        catch (final IOException e)
-        {
-            LOGGER.error("error writing to outputFile");
-        }
     }
 
     private static void buildVariants(final String sampleId, List<BachelorGermlineVariant> bachRecords)
@@ -596,64 +481,6 @@ public class BachelorPP {
         }
     }
 
-    public static void rewriteFilteredRecordsToFile(final List<BachelorGermlineVariant> bachRecords, final String outputDir)
-    {
-        String outputFileName = outputDir;
-        if (!outputFileName.endsWith("/"))
-        {
-            outputFileName += "/";
-        }
-
-        outputFileName += "bachelor_filtered_output.csv";
-
-        Path outputFile = Paths.get(outputFileName);
-
-        try
-        {
-            BufferedWriter writer = Files.newBufferedWriter(outputFile, StandardOpenOption.CREATE);
-
-            writer.write("SAMPLEID,SOURCE,PROGRAM,ID,GENE,TRANSCRIPT_ID,CHROM,POS,REF,ALTS,EFFECTS,ANNOTATIONS,HGVS_PROTEIN,IS_HOMOZYGOUS,PHRED_SCORE,HGVS_CODING,MATCH_TYPE");
-            writer.newLine();
-
-            for (final BachelorGermlineVariant bachRecord : bachRecords)
-            {
-                writer.write(
-                        String.format("%s,%s,%s,%s",
-                                bachRecord.patient(),
-                                bachRecord.source(),
-                                bachRecord.program(),
-                                bachRecord.variantId()));
-
-                writer.write(
-                        String.format(",%s,%s,%s,%d,%s,%s",
-                                bachRecord.gene(),
-                                bachRecord.transcriptId(),
-                                bachRecord.chromosome(),
-                                bachRecord.position(),
-                                bachRecord.ref(),
-                                bachRecord.alts()));
-
-                writer.write(
-                        String.format(",%s,%s,%s,%s,%d,%s,%s",
-                                bachRecord.effects(),
-                                bachRecord.annotations(),
-                                bachRecord.hgvsProtein(),
-                                bachRecord.isHomozygous(),
-                                bachRecord.phredScore(),
-                                bachRecord.hgvsCoding(),
-                                bachRecord.matchType()));
-
-                writer.newLine();
-            }
-
-            writer.close();
-        }
-        catch (final IOException e)
-        {
-            LOGGER.error("error writing to outputFile");
-        }
-    }
-
     private static void writeVcfFile(final String sampleId, final List<BachelorGermlineVariant> bachRecords, final String outputDir, final String vcfHeaderFile)
     {
         LOGGER.debug("writing germline VCF");
@@ -701,6 +528,121 @@ public class BachelorPP {
         }
 
         writer.close();
+    }
+
+    private static void rewriteFilteredBachelorRecords(final List<BachelorGermlineVariant> bachRecords, CommandLine cmdLineArgs)
+    {
+        String outputDir = cmdLineArgs.getOptionValue(SAMPLE_PATH);
+
+        List<BachelorRecordFilter> whitelistFilters = loadBachelorFilters(cmdLineArgs.getOptionValue(WHITELIST_FILE));
+        List<BachelorRecordFilter> blacklistFilters = loadBachelorFilters(cmdLineArgs.getOptionValue(BLACKLIST_FILE));
+
+        if(whitelistFilters.isEmpty() && blacklistFilters.isEmpty())
+            return;
+
+        String outputFileName = outputDir;
+        if (!outputFileName.endsWith("/"))
+        {
+            outputFileName += "/";
+        }
+
+        outputFileName += "bachelor_filtered_output.csv";
+
+        Path outputFile = Paths.get(outputFileName);
+
+        try
+        {
+            BufferedWriter writer = Files.newBufferedWriter(outputFile, StandardOpenOption.CREATE);
+
+            writer.write("SAMPLEID,SOURCE,PROGRAM,ID,GENE,TRANSCRIPT_ID,CHROM,POS,REF,ALTS,EFFECTS,ANNOTATIONS,HGVS_PROTEIN,IS_HOMOZYGOUS,PHRED_SCORE,HGVS_CODING,MATCH_TYPE,ALT_COUNT,READ_DEPTH,CLNDN,CLNSIG");
+            writer.newLine();
+
+            for(int index = 0; index < bachRecords.size(); ++index)
+            {
+                final BachelorGermlineVariant bachRecord = bachRecords.get(index);
+
+                if(index > 0 && (index % 1000) == 0)
+                {
+                    LOGGER.info("processed {} records", index);
+                }
+
+                boolean keepRecord = false;
+                BachelorRecordFilter matchedFilter = null;
+
+                if(bachRecord.hasEffect(FRAMESHIFT_VARIANT) || bachRecord.hasEffect(STOP_GAINED)
+                        || bachRecord.hasEffect(SPLICE_ACCEPTOR_VARIANT) || bachRecord.hasEffect(SPLICE_DONOR_VARIANT))
+                {
+                    keepRecord = true;
+
+                    for(final BachelorRecordFilter filter : blacklistFilters)
+                    {
+                        if(filter.matches(bachRecord))
+                        {
+                            keepRecord = false;
+                            matchedFilter = filter;
+                            break;
+                        }
+                    }
+                }
+                else if(bachRecord.hasEffect(MISSENSE_VARIANT) || bachRecord.hasEffect(SYNONYMOUS_VARIANT))
+                {
+                    keepRecord = false;
+
+                    for(final BachelorRecordFilter filter : whitelistFilters)
+                    {
+                        if(filter.matches(bachRecord))
+                        {
+                            keepRecord = true;
+                            matchedFilter = filter;
+                            break;
+                        }
+                    }
+                }
+
+                if(keepRecord || matchedFilter != null)
+                {
+                    writer.write(
+                            String.format("%s,%s,%s,%s",
+                                    bachRecord.patient(),
+                                    bachRecord.source(),
+                                    bachRecord.program(),
+                                    bachRecord.variantId()));
+
+                    writer.write(
+                            String.format(",%s,%s,%s,%d,%s,%s",
+                                    bachRecord.gene(),
+                                    bachRecord.transcriptId(),
+                                    bachRecord.chromosome(),
+                                    bachRecord.position(),
+                                    bachRecord.ref(),
+                                    bachRecord.alts()));
+
+                    writer.write(
+                            String.format(",%s,%s,%s,%s,%d,%s,%s,%d,%d",
+                                    bachRecord.effects(),
+                                    bachRecord.annotations(),
+                                    bachRecord.hgvsProtein(),
+                                    bachRecord.isHomozygous(),
+                                    bachRecord.phredScore(),
+                                    bachRecord.hgvsCoding(),
+                                    bachRecord.matchType(),
+                                    bachRecord.getAltCount(),
+                                    bachRecord.getReadDepth()));
+
+                    writer.write(String.format(",%s,%s",
+                            matchedFilter != null ? matchedFilter.Diagnosis : "",
+                            matchedFilter != null ? matchedFilter.Significance : ""));
+
+                    writer.newLine();
+                }
+            }
+
+            writer.close();
+        }
+        catch (final IOException e)
+        {
+            LOGGER.error("error writing to outputFile");
+        }
     }
 
     @NotNull

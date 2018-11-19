@@ -14,7 +14,10 @@ import org.apache.logging.log4j.Logger;
 
 public class BachelorDataCollection
 {
-    private static final int BACHELOR_CSV_FIELD_COUNT = 17;
+    private static final int BACHELOR_CSV_FIELD_COUNT = 16;
+    private static final int COL_INDEX_MATCH_TYPE = 16;
+    private static final int COL_INDEX_ALT_COUNT = 17;
+    private static final int COL_INDEX_READ_DEPTH = 18;
 
     private static final Logger LOGGER = LogManager.getLogger(BachelorDataCollection.class);
 
@@ -61,6 +64,9 @@ public class BachelorDataCollection
                     continue;
                 }
 
+                // extra fields from newer versions
+                final String matchType = items.length > COL_INDEX_MATCH_TYPE ? items[COL_INDEX_MATCH_TYPE] : "";
+
                 BachelorGermlineVariant bachRecord = new BachelorGermlineVariant(patientId,
                         items[1],
                         items[2],
@@ -77,12 +83,12 @@ public class BachelorDataCollection
                         Boolean.parseBoolean(items[13]),
                         Integer.parseInt(items[14]),
                         items[15],
-                        items[16]);
+                        matchType);
 
-                if(items.length == 19)
+                if(items.length > COL_INDEX_READ_DEPTH)
                 {
-                    int altCount = Integer.parseInt(items[17]);
-                    int readDepth = Integer.parseInt(items[18]);
+                    int altCount = Integer.parseInt(items[COL_INDEX_ALT_COUNT]);
+                    int readDepth = Integer.parseInt(items[COL_INDEX_READ_DEPTH]);
 
                     bachRecord.setAltReadData(altCount, readDepth);
                 }
