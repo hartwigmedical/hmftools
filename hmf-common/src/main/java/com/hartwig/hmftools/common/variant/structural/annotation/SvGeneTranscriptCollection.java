@@ -31,7 +31,6 @@ public class SvGeneTranscriptCollection
     private Map<String, Pair<Long,Long>> mTranscriptPositionsMap; // additional transcript annotations, may be scrapped
 
     public static String SV_GENE_TRANSCRIPTS_FILE_SUFFIX = "sv_ensembl_data.csv";
-    public static String TRANSCRIPTS_FILE = "ensembl_transcripts.csv";
 
     private static final Logger LOGGER = LogManager.getLogger(SvGeneTranscriptCollection.class);
 
@@ -84,8 +83,10 @@ public class SvGeneTranscriptCollection
     private static int TRANSCRIPT_TCB_COL_INDEX = 17;
     private static int TRANSCRIPT_EMAX_COL_INDEX = 18;
     private static int TRANSCRIPT_CAN_COL_INDEX = 19;
-    private static int TRANSCRIPT_CODE_S_COL_INDEX = 20;
-    private static int TRANSCRIPT_CODE_E_COL_INDEX = 21;
+    private static int TRANSCRIPT_TRANS_S_COL_INDEX = 20;
+    private static int TRANSCRIPT_TRANS_E_COL_INDEX = 21;
+    private static int TRANSCRIPT_CODE_S_COL_INDEX = 22;
+    private static int TRANSCRIPT_CODE_E_COL_INDEX = 23;
 
     public boolean loadSampleGeneTranscripts(final String sampleId)
     {
@@ -98,11 +99,6 @@ public class SvGeneTranscriptCollection
 
         if (filename.isEmpty())
             return false;
-
-        if(mTranscriptPositionsMap == null)
-        {
-            loadTranscriptData();
-        }
 
         try
         {
@@ -199,16 +195,6 @@ public class SvGeneTranscriptCollection
                 }
                 else
                 {
-                    Pair<Long,Long> transcriptPositions = mTranscriptPositionsMap.get(transcriptId);
-                    long transcriptStart = 0;
-                    long transcriptEnd = 0;
-
-                    if(transcriptPositions != null)
-                    {
-                        transcriptStart = transcriptPositions.getKey();
-                        transcriptEnd = transcriptPositions.getValue();
-                    }
-
                     // transcriptId, exonUpstream, exonUpstreamPhase, exonDownstream, exonDownstreamPhase, exonMax, canonical, codingStart, codingEnd
                     Transcript transcript = new Transcript(
                             currentGene, transcriptId,
@@ -217,7 +203,8 @@ public class SvGeneTranscriptCollection
                             Long.parseLong(items[TRANSCRIPT_TCB_COL_INDEX]),
                             Integer.parseInt(items[TRANSCRIPT_EMAX_COL_INDEX]),
                             Boolean.parseBoolean(items[TRANSCRIPT_CAN_COL_INDEX]),
-                            transcriptStart, transcriptEnd,
+                            Integer.parseInt(items[TRANSCRIPT_TRANS_S_COL_INDEX]),
+                            Integer.parseInt(items[TRANSCRIPT_TRANS_E_COL_INDEX]),
                             items[TRANSCRIPT_CODE_S_COL_INDEX].equals("null") ? null : Long.parseLong(items[TRANSCRIPT_CODE_S_COL_INDEX]),
                             items[TRANSCRIPT_CODE_E_COL_INDEX].equals("null") ? null : Long.parseLong(items[TRANSCRIPT_CODE_E_COL_INDEX]));
 
@@ -276,7 +263,7 @@ public class SvGeneTranscriptCollection
 
             // write header
             writer.write("SvId,Chromosome,Position,Orientation");
-            writer.write(",IsStart,GeneName, geneStableId, geneStrand, synonyms, entrezIds, karyotypeBand");
+            writer.write(",IsStart,GeneName, GeneStableId, GeneStrand, Synonyms, EntrezIds, KaryotypeBand");
             writer.write(",TranscriptId,ExonUpstream,ExonUpstreamPhase,ExonDownstream,ExonDownstreamPhase,CodingBases,TotalCodingBases");
             writer.write(",ExonMax,Canonical,TranscriptStart,TranscriptEnd,CodingStart,CodingEnd,RegionType,CodingType");
             writer.newLine();
@@ -364,7 +351,9 @@ public class SvGeneTranscriptCollection
         }
     }
 
-    public void loadTranscriptData()
+    private static String TRANSCRIPTS_FILE = "ensembl_transcripts.csv";
+
+    private void loadTranscriptData()
     {
         String filename = mDataPath;
 
@@ -411,4 +400,81 @@ public class SvGeneTranscriptCollection
             LOGGER.error("failed to load transcripts file({}): {}", filename, e.toString());
         }
     }
+
+    public void rewriteSampleTranscriptInfo(final String sampleId, final String sourceDir, final String destDir)
+    {
+        loadTranscriptData();
+
+        String inputFilename = getSampleGeneAnnotationsFilename(sourceDir, sampleId);
+        String outputFilename = getSampleGeneAnnotationsFilename(destDir, sampleId);
+
+        int transcriptStartEndColIndex = 20;
+
+        try
+        {
+            BufferedReader fileReader = new BufferedReader(new FileReader(inputFilename));
+            BufferedWriter writer = Files.newBufferedWriter(Paths.get(outputFilename), StandardOpenOption.CREATE);
+
+            // write header
+            writer.write("SvId,Chromosome,Position,Orientation"); // 3
+            writer.write(",IsStart,GeneName, GeneStableId, GeneStrand, Synonyms, EntrezIds, KaryotypeBand"); // 10
+            writer.write(",TranscriptId,ExonUpstream,ExonUpstreamPhase,ExonDownstream,ExonDownstreamPhase,CodingBases,TotalCodingBases"); // 17
+            writer.write(",ExonMax,Canonical,TranscriptStart,TranscriptEnd,CodingStart,CodingEnd,RegionType,CodingType");
+            writer.newLine();
+
+            String line = fileReader.readLine();
+
+            if (line == null)
+            {
+                LOGGER.error("empty ensembl data file({})", inputFilename);
+                return;
+            }
+
+            line = fileReader.readLine(); // skip header
+
+            while (line != null)
+            {
+                // parse CSV data
+                String[] items = line.split(",");
+
+                writer.write(String.format("%s", items[0]));
+
+                for(int i = 1; i < transcriptStartEndColIndex; ++i)
+                {
+                    writer.write(String.format(",%s", items[i]));
+                }
+
+                final String transcriptId = items[TRANSCRIPT_ID_COL_INDEX];
+
+                Pair<Long,Long> transcriptPositions = mTranscriptPositionsMap.get(transcriptId);
+
+                if(transcriptPositions == null)
+                {
+                    LOGGER.error("transcript({}) data not found", transcriptId);
+                    return;
+                }
+
+                long transcriptStart = transcriptPositions.getKey();
+                long transcriptEnd = transcriptPositions.getValue();
+
+                writer.write(String.format(",%d,%d", transcriptStart, transcriptEnd));
+
+                for(int i = transcriptStartEndColIndex; i < items.length; ++i)
+                {
+                    writer.write(String.format(",%s", items[i]));
+                }
+
+                writer.newLine();
+
+                line = fileReader.readLine();
+            }
+
+            writer.close();
+        }
+        catch (IOException e)
+        {
+            LOGGER.error("failed to load and rewrite transcript data: {}", e.toString());
+        }
+    }
+
 }
