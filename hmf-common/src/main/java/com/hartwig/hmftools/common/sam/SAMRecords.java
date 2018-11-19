@@ -28,6 +28,18 @@ public class SAMRecords {
         return score / length;
     }
 
+    public static int getMinBaseQuality(@NotNull final SAMRecord record, int readPosition, int length) {
+        assert (readPosition > 0);
+
+        int score = Integer.MAX_VALUE;
+        final String baseQualities = record.getBaseQualityString();
+        for (int index = readPosition - 1; index < Math.min(readPosition - 1 + length, baseQualities.length()); index++) {
+            int baseScore = getBaseQuality(baseQualities.charAt(index));
+            score = Math.min(baseScore, score);
+        }
+        return score == Integer.MAX_VALUE ? 0 : score;
+    }
+
     public static boolean containsInsert(@NotNull final SAMRecord record, int position, @NotNull final String alt) {
         int recordIdxOfVariantStart = record.getReadPositionAtReferencePosition(position);
 
