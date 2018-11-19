@@ -20,7 +20,7 @@ data class IclusionRecord(private val metadata: RecordMetadata, override val eve
 
     companion object {
         private val reader = KnowledgebaseEventReader("iclusion", IclusionTransvarReader, IclusionFusionReader, IclusionCnvReader,
-                IclusionGeneMutationReader, IclusionExonMutationReader, IclusionCodonReader)
+                IclusionGeneMutationReader, IclusionExonMutationReader, IclusionCodonReader, IclusionCodonRangeReader)
 
         operator fun invoke(studyDetails: IclusionStudyDetails, geneToTranscript: Map<String, String?>): List<IclusionRecord> {
             val events = studyDetails.mutations.map { IclusionEvent(it, geneToTranscript[it.geneName].orEmpty()) }
