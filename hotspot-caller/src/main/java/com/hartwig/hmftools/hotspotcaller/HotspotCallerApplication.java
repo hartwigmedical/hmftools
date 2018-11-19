@@ -61,8 +61,11 @@ public class HotspotCallerApplication {
         final String refGenome = cmd.getOptionValue(REF_GENOME);
         final String inframeBed = cmd.getOptionValue(INFRAME_BED);
         final String outputVCF = cmd.getOptionValue(OUT_PATH);
+        final String referenceSample = cmd.getOptionValue(REFERENCE);
+        final String tumorSample = cmd.getOptionValue(TUMOR);
 
-        if (hotspotPath == null || tumorBam == null || referenceBam == null || inframeBed == null || refGenome == null || outputVCF == null) {
+        if (hotspotPath == null || tumorBam == null || referenceBam == null || inframeBed == null || refGenome == null || outputVCF == null
+                || tumorSample == null || referenceSample == null) {
             final HelpFormatter formatter = new HelpFormatter();
             formatter.printHelp("HotspotCallerApplication", options);
             System.exit(1);
@@ -103,7 +106,7 @@ public class HotspotCallerApplication {
 
         LOGGER.info("Writing output to {}", outputVCF);
         Collections.sort(evidence);
-        new HotspotEvidenceVCF("REF", "TUMOR").write(outputVCF, evidence);
+        new HotspotEvidenceVCF(referenceSample, tumorSample).write(outputVCF, evidence);
 
         LOGGER.info("Complete");
     }
@@ -113,7 +116,8 @@ public class HotspotCallerApplication {
         return evidence.stream().collect(Collectors.toMap(x -> ImmutableVariantHotspotImpl.builder().from(x).build(), x -> x));
     }
 
-    private static HotspotEvidence createEvidence(boolean known, @NotNull final VariantHotspotEvidence tumor,  @NotNull final VariantHotspotEvidence normal) {
+    private static HotspotEvidence createEvidence(boolean known, @NotNull final VariantHotspotEvidence tumor,
+            @NotNull final VariantHotspotEvidence normal) {
         return ImmutableHotspotEvidence.builder()
                 .from(tumor)
                 .ref(tumor.ref())
