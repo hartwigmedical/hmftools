@@ -113,6 +113,7 @@ public class VariantHotspotEvidenceFactory {
                 return builder;
             }
             return builder.setReadDepth(builder.readDepth() + 1)
+                    .setIndelSupport(builder.indelSupport() + 1)
                     .setAltQuality(builder.altQuality() + quality)
                     .setAltSupport(builder.altSupport() + 1);
         }
@@ -121,9 +122,12 @@ public class VariantHotspotEvidenceFactory {
             return builder;
         }
 
+        int insertedBases = basesInsertedAfterPosition(record, hotspotStartPosition);
         int deletedBases = basesDeletedAfterPosition(record, hotspotStartPosition);
-        if (deletedBases == 0 && record.getReadString().charAt(recordStartPosition - 1) == hotspot.ref().charAt(0)) {
+        if (insertedBases == 0 && deletedBases == 0 && record.getReadString().charAt(recordStartPosition - 1) == hotspot.ref().charAt(0)) {
             builder.setRefSupport(builder.refSupport() + 1);
+        } else if (insertedBases > 0 || deletedBases > 0) {
+            builder.setIndelSupport(builder.indelSupport() + 1);
         }
 
         return builder.setReadDepth(builder.readDepth() + 1);
@@ -148,6 +152,7 @@ public class VariantHotspotEvidenceFactory {
                 return builder;
             }
             return builder.setReadDepth(builder.readDepth() + 1)
+                    .setIndelSupport(builder.indelSupport() + 1)
                     .setAltQuality(builder.altQuality() + quality)
                     .setAltSupport(builder.altSupport() + 1);
         }
@@ -157,8 +162,11 @@ public class VariantHotspotEvidenceFactory {
         }
 
         int insertedBases = basesInsertedAfterPosition(record, hotspotStartPosition);
-        if (insertedBases == 0 && record.getReadString().charAt(recordStartPosition - 1) == hotspot.ref().charAt(0)) {
+        int deletedBases = basesDeletedAfterPosition(record, hotspotStartPosition);
+        if (insertedBases == 0 && deletedBases == 0 && record.getReadString().charAt(recordStartPosition - 1) == hotspot.ref().charAt(0)) {
             builder.setRefSupport(builder.refSupport() + 1);
+        } else if (insertedBases > 0 || deletedBases > 0) {
+            builder.setIndelSupport(builder.indelSupport() + 1);
         }
 
         return builder.setReadDepth(builder.readDepth() + 1);
@@ -298,6 +306,7 @@ public class VariantHotspotEvidenceFactory {
                 .setAltQuality(0)
                 .setAltSupport(0)
                 .setRefSupport(0)
+                .setIndelSupport(0)
                 .setReadDepth(0);
     }
 

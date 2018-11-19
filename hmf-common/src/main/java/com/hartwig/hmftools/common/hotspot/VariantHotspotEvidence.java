@@ -16,4 +16,6 @@ public interface VariantHotspotEvidence extends VariantHotspot {
     int altSupport();
 
     int altQuality();
+
+    int indelSupport();
 }
