@@ -48,6 +48,7 @@ import org.jetbrains.annotations.NotNull;
 
 import htsjdk.samtools.util.CloseableIterator;
 import htsjdk.variant.variantcontext.Genotype;
+import htsjdk.variant.variantcontext.GenotypesContext;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.vcf.VCFFileReader;
 
@@ -119,43 +120,6 @@ class BachelorEligibility {
                 requiredEffects = panel.getSnpEffect().stream().map(SnpEffect::value).collect(Collectors.toList());
                 panelTranscripts = genes.stream().map(GeneIdentifier::getEnsembl).collect(Collectors.toList());
 
-
-                /*
-                final List<String> effects = requiredEffects;
-
-                final Predicate<VariantModel> panelPredicate = v -> genes.stream()
-                        .anyMatch(p -> v.sampleAnnotations()
-                                .stream()
-                                .anyMatch(a -> a.transcript().equals(p.getEnsembl()) && effects.stream()
-                                        .anyMatch(x -> a.effects().contains(x))));
-
-                final Predicate<VariantModel> effectsPredicate = v -> effects.stream()
-                        .anyMatch(p -> v.sampleAnnotations()
-                                .stream()
-                                .anyMatch(a -> a.effects().contains(p)));
-
-                Predicate<VariantModel> transcriptPredicate = v -> genes.stream()
-                        .anyMatch(p -> v.sampleAnnotations()
-                                .stream()
-                                .anyMatch(a -> a.transcript().equals(p.getEnsembl())));
-
-                transcriptPredicate = transcriptPredicate.and(effectsPredicate);
-
-                Predicate<VariantModel> hotspotPredicate = v -> hotspots.stream()
-                        .anyMatch(p -> v.context().getContig().equals(p.getChromosome())
-                                && v.context().getStart() == p.getPosition().intValue()
-                                && v.context().getReference().getBaseString().equals(p.getRef())
-                                && v.context().getAlleles().size() >= 2 && v.context().getAlleles().get(1).getBaseString().equals(p.getAlt()));
-
-                hotspotPredicate = hotspotPredicate.and(effectsPredicate);
-
-                final Predicate<VariantModel> combinedPredicate = transcriptPredicate.or(hotspotPredicate);
-
-                panelPredicates.add(combinedPredicate);
-
-                panelPredicates.add(effectsPredicate);
-                */
-
                 // update query targets
                 for (final GeneIdentifier g : genes)
                 {
@@ -184,12 +148,8 @@ class BachelorEligibility {
                 }
             }
 
-            // final Predicate<VariantModel> inPanel = v -> panelPredicates.stream().anyMatch(p -> p.test(v));
-            final Predicate<VariantModel> inPanel = v -> true; // manually checked for each variant since too difficult to express as a predicate
-
             final Predicate<VariantModel> inBlacklist = new BlacklistPredicate(geneToEnsemblMap.values(), program.getBlacklist());
             final Predicate<VariantModel> inWhitelist = new WhitelistPredicate(geneToEnsemblMap, program.getWhitelist());
-            // final Predicate<VariantModel> snvPredicate = v -> inPanel.test(v) ? !inBlacklist.test(v) : inWhitelist.test(v);
             final Predicate<VariantModel> snvPredicate = v -> !inBlacklist.test(v);
 
             BachelorProgram bachelorProgram = new BachelorProgram(program.getName(), snvPredicate, inWhitelist, requiredEffects, panelTranscripts, hotspots);
@@ -322,8 +282,21 @@ class BachelorEligibility {
                 continue;
             }
 
-            boolean isHomozygous = variant.getGenotype(0).isHom();
-            int phredScore = variant.getGenotype(0).getPL().length >= 1 ? variant.getGenotype(0).getPL()[0] : 0;
+            final Genotype refData = variant.getGenotype(0);
+
+            boolean isHomozygous = refData.isHom();
+            int phredScore = refData.getPL().length >= 1 ? refData.getPL()[0] : 0;
+
+            int altCount = 0;
+            int readDepth = 0;
+
+            if(variant.getGenotypes().size() >= 2)
+            {
+                final Genotype altData = variant.getGenotype(1);
+                int[] alleleData = altData.getAD();
+                altCount = alleleData[1];
+                readDepth = altData.getDP();
+            }
 
             EligibilityReport report = ImmutableEligibilityReport.builder()
                     .patient(patient)
@@ -343,6 +316,8 @@ class BachelorEligibility {
                     .hgvsCoding(relevantSnpEff.hgvsCoding())
                     .isHomozygous(isHomozygous)
                     .phredScore(phredScore)
+                    .altCount(altCount)
+                    .readDepth(readDepth)
                     .build();
 
             reportList.add(report);

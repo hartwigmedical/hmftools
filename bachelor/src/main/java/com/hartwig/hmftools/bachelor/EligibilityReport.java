@@ -66,4 +66,8 @@ abstract class EligibilityReport {
     public abstract boolean isHomozygous();
 
     public abstract int phredScore();
+
+    public abstract int altCount();
+
+    public abstract int readDepth();
 }
