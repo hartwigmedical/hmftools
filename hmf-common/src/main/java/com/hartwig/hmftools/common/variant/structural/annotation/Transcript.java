@@ -29,6 +29,9 @@ public class Transcript {
     @Nullable
     private final Long mCodingEnd;
 
+    private final long mTranscriptStart;
+    private final long mTranscriptEnd;
+
     public static String TRANS_REGION_TYPE_PROMOTOR = "Promotor";
     public static String TRANS_REGION_TYPE_EXONIC = "Exonic";
     public static String TRANS_REGION_TYPE_INTRONIC = "Intronic";
@@ -38,12 +41,15 @@ public class Transcript {
     public static String TRANS_CODING_TYPE_DOWNSTREAM = "Downstream";
     public static String TRANS_CODING_TYPE_NON_CODING = "NonCoding";
 
+    public static int PROMOTOR_REGION_MAX = 20000;
+
     private static int STOP_CODON_LENGTH = 3;
 
     public Transcript(@NotNull final GeneAnnotation parent, @NotNull final String transcriptId,
             final int exonUpstream, final int exonUpstreamPhase, final int exonDownstream, final int exonDownstreamPhase,
             final long codingBases, final long totalCodingBases,
-            final int exonMax, final boolean canonical, @Nullable final Long codingStart, @Nullable final Long codingEnd)
+            final int exonMax, final boolean canonical, final long transcriptStart, final long transcriptEnd,
+            @Nullable final Long codingStart, @Nullable final Long codingEnd)
     {
         mGene = parent;
         mTranscriptId = transcriptId;
@@ -78,9 +84,12 @@ public class Transcript {
         mCanonical = canonical;
         mCodingStart = codingStart;
         mCodingEnd = codingEnd;
+        mTranscriptStart = transcriptStart;
+        mTranscriptEnd = transcriptEnd;
 
         mCodingType = calcCodingType();
         mRegionType = calcRegionType();
+
     }
 
     @NotNull
@@ -101,13 +110,28 @@ public class Transcript {
         return mExonUpstream > 0 && (mExonDownstream - mExonUpstream) == 1;
     }
 
+    public boolean isPrePromotor()
+    {
+        if(!isPromoter())
+            return false;
+
+        if(mGene.strand() == 1 && mTranscriptStart > 0 && svPosition() < mTranscriptStart - PROMOTOR_REGION_MAX)
+            return true;
+        else if(mGene.strand() == -1 && mTranscriptEnd > 0 && svPosition() > mTranscriptEnd + PROMOTOR_REGION_MAX)
+            return true;
+        else
+            return false;
+    }
+
     public final String codingType() { return mCodingType; }
     public final String regionType() { return mRegionType; }
 
     // for convenience
-    public boolean isCoding()
+    public boolean isCoding() { return mCodingType.equals(TRANS_CODING_TYPE_CODING); }
+
+    public boolean preCoding()
     {
-        return mCodingType.equals(TRANS_CODING_TYPE_CODING) && mRegionType.equals(TRANS_REGION_TYPE_EXONIC);
+        return mCodingType.equals(TRANS_CODING_TYPE_UPSTREAM);
     }
 
     public boolean postCoding()
@@ -151,6 +175,8 @@ public class Transcript {
     @NotNull
     public GeneAnnotation parent() { return mGene; }
 
+    public long svPosition() { return mGene.position(); }
+
     @NotNull
     public String geneName() { return mGene.geneName(); }
 
@@ -164,6 +190,9 @@ public class Transcript {
     public int exonDownstreamPhase() { return mExonDownstreamPhase; }
 
     public int exonMax() { return mExonMax; }
+
+    public long transcriptStart() { return mTranscriptStart; }
+    public long transcriptEnd() { return mTranscriptEnd; }
 
     @Nullable
     public Long codingStart() { return mCodingStart; }

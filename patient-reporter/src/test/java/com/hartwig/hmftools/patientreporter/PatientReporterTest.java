@@ -53,7 +53,7 @@ public class PatientReporterTest {
                         Collections.singletonList("PNPLA7"),
                         Lists.newArrayList(375775),
                         "q13");
-                g1.addTranscript(new Transcript(g1, "ENST00000406427", 12, 0, 13, 0, 0, 0, 37, true, 100L, 200L));
+                g1.addTranscript(new Transcript(g1, "ENST00000406427", 12, 0, 13, 0, 0, 0, 37, true, 0, 0, 100L, 200L));
                 ann.annotations().add(g1);
 
                 final GeneAnnotation g2 = new GeneAnnotation(sv,
@@ -64,7 +64,7 @@ public class PatientReporterTest {
                         Collections.singletonList("TMPRSS2"),
                         Lists.newArrayList(7113),
                         "q14");
-                g2.addTranscript(new Transcript(g2, "ENST00000398585", 1, 0, 2, 0, 0, 0, 14, true, 300L, 400L));
+                g2.addTranscript(new Transcript(g2, "ENST00000398585", 1, 0, 2, 0, 0, 0, 14, true, 0, 0, 300L, 400L));
                 ann.annotations().add(g2);
 
                 result.add(ann);

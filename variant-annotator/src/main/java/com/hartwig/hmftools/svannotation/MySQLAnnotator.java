@@ -304,11 +304,21 @@ public class MySQLAnnotator implements VariantAnnotator
         int nextExonRank = -1;
         int nextExonPhase = 0;
         int nextExonEndPhase = 0;
+        long transcriptStart = 0;
+        long transcriptEnd = 0;
 
-        for (final Record exon : allExons)
+        for (int index = 0; index < allExons.size(); ++index)
         {
+            final Record exon = allExons.get(index);
+
             long exonStart = exon.get(EXON.SEQ_REGION_START).longValue();
             long exonEnd = exon.get(EXON.SEQ_REGION_END).longValue();
+
+            if(index == 0)
+                transcriptStart = exonStart;
+
+            if(index == allExons.size() - 1)
+                transcriptEnd = exonEnd;
 
             if(position >= exonStart && position <= exonEnd)
             {
@@ -317,9 +327,9 @@ public class MySQLAnnotator implements VariantAnnotator
                 prevExonPhase = exon.get(EXON.PHASE);
                 prevExonEndPhase = exon.get(EXON.END_PHASE);
 
-                nextExonRank = exon.get(EXON_TRANSCRIPT.RANK);
-                nextExonPhase = exon.get(EXON.PHASE);
-                nextExonEndPhase = exon.get(EXON.END_PHASE);
+                nextExonRank = prevExonRank;
+                nextExonPhase = prevExonPhase;
+                nextExonEndPhase = prevExonEndPhase;
             }
             else if(position > exonEnd)
             {
@@ -456,7 +466,7 @@ public class MySQLAnnotator implements VariantAnnotator
                     prevExonRank, prevExonEndPhase,
                     nextExonRank, nextExonPhase,
                     codingBases, totalCodingBases,
-                    exonMax, canonical,
+                    exonMax, canonical, transcriptStart, transcriptEnd,
                     codingStartVal != null ? codingStart : null,
                     codingEndVal != null ? codingEnd : null);
         }
@@ -467,7 +477,7 @@ public class MySQLAnnotator implements VariantAnnotator
                     nextExonRank, nextExonEndPhase, // note the switch
                     prevExonRank, prevExonPhase,
                     totalCodingBases - codingBases, totalCodingBases,
-                    exonMax, canonical,
+                    exonMax, canonical, transcriptStart, transcriptEnd,
                     codingStartVal != null ? codingStart : null,
                     codingEndVal != null ? codingEnd : null);
         }
@@ -557,10 +567,7 @@ public class MySQLAnnotator implements VariantAnnotator
                     exonUpstreamPhase,
                     exonDownstream,
                     exonDownstreamPhase,
-                    exonStart,
-                    exonEnd,
-                    exonMax,
-                    canonical,
+                    exonStart, exonEnd, exonMax, canonical,0, 0,
                     codingStart != null ? codingStart.longValue() : null,
                     codingEnd != null ? codingEnd.longValue() : null);
         }

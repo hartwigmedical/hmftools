@@ -97,7 +97,7 @@ public class FusionEvidenceAnalyzerTest {
 
         return new Transcript(upstreamGene, transcript,
                 exonUpstream, -1, exonDownstream, -1, 0, 0,
-                10, true, null, null);
+                10, true, 0, 0, null, null);
     }
 
     @NotNull

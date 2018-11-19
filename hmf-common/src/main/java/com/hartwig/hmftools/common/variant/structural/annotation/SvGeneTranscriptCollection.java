@@ -21,19 +21,24 @@ import com.hartwig.hmftools.common.variant.structural.StructuralVariantData;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import javafx.util.Pair;
+
 public class SvGeneTranscriptCollection
 {
     private String mDataPath;
 
     private Map<Integer, List<GeneAnnotation>> mSvIdGeneTranscriptsMap;
+    private Map<String, Pair<Long,Long>> mTranscriptPositionsMap; // additional transcript annotations, may be scrapped
 
     public static String SV_GENE_TRANSCRIPTS_FILE_SUFFIX = "sv_ensembl_data.csv";
+    public static String TRANSCRIPTS_FILE = "ensembl_transcripts.csv";
 
     private static final Logger LOGGER = LogManager.getLogger(SvGeneTranscriptCollection.class);
 
     public SvGeneTranscriptCollection()
     {
         mSvIdGeneTranscriptsMap = new HashMap();
+        mTranscriptPositionsMap = null;
     }
 
     public final Map<Integer, List<GeneAnnotation>> getSvIdGeneTranscriptsMap() { return mSvIdGeneTranscriptsMap; }
@@ -94,6 +99,11 @@ public class SvGeneTranscriptCollection
         if (filename.isEmpty())
             return false;
 
+        if(mTranscriptPositionsMap == null)
+        {
+            loadTranscriptData();
+        }
+
         try
         {
             BufferedReader fileReader = new BufferedReader(new FileReader(filename));
@@ -102,7 +112,7 @@ public class SvGeneTranscriptCollection
 
             if (line == null)
             {
-                LOGGER.error("empty copy number CSV file({})", filename);
+                LOGGER.error("empty ensembl data file({})", filename);
                 return false;
             }
 
@@ -189,6 +199,16 @@ public class SvGeneTranscriptCollection
                 }
                 else
                 {
+                    Pair<Long,Long> transcriptPositions = mTranscriptPositionsMap.get(transcriptId);
+                    long transcriptStart = 0;
+                    long transcriptEnd = 0;
+
+                    if(transcriptPositions != null)
+                    {
+                        transcriptStart = transcriptPositions.getKey();
+                        transcriptEnd = transcriptPositions.getValue();
+                    }
+
                     // transcriptId, exonUpstream, exonUpstreamPhase, exonDownstream, exonDownstreamPhase, exonMax, canonical, codingStart, codingEnd
                     Transcript transcript = new Transcript(
                             currentGene, transcriptId,
@@ -197,6 +217,7 @@ public class SvGeneTranscriptCollection
                             Long.parseLong(items[TRANSCRIPT_TCB_COL_INDEX]),
                             Integer.parseInt(items[TRANSCRIPT_EMAX_COL_INDEX]),
                             Boolean.parseBoolean(items[TRANSCRIPT_CAN_COL_INDEX]),
+                            transcriptStart, transcriptEnd,
                             items[TRANSCRIPT_CODE_S_COL_INDEX].equals("null") ? null : Long.parseLong(items[TRANSCRIPT_CODE_S_COL_INDEX]),
                             items[TRANSCRIPT_CODE_E_COL_INDEX].equals("null") ? null : Long.parseLong(items[TRANSCRIPT_CODE_E_COL_INDEX]));
 
@@ -257,7 +278,7 @@ public class SvGeneTranscriptCollection
             writer.write("SvId,Chromosome,Position,Orientation");
             writer.write(",IsStart,GeneName, geneStableId, geneStrand, synonyms, entrezIds, karyotypeBand");
             writer.write(",TranscriptId,ExonUpstream,ExonUpstreamPhase,ExonDownstream,ExonDownstreamPhase,CodingBases,TotalCodingBases");
-            writer.write(",ExonMax,Canonical,CodingStart,CodingEnd,RegionType,CodingType");
+            writer.write(",ExonMax,Canonical,TranscriptStart,TranscriptEnd,CodingStart,CodingEnd,RegionType,CodingType");
             writer.newLine();
 
             for(final StructuralVariantAnnotation annotation : annotations)
@@ -320,9 +341,11 @@ public class SvGeneTranscriptCollection
                                         transcript.totalCodingBases()));
 
                         writer.write(
-                                String.format(",%d,%s,%d,%d,%s,%s",
+                                String.format(",%d,%s,%d,%d,%d,%d,%s,%s",
                                         transcript.exonMax(),
                                         transcript.isCanonical(),
+                                        transcript.transcriptStart(),
+                                        transcript.transcriptEnd(),
                                         transcript.codingStart(),
                                         transcript.codingEnd(),
                                         transcript.regionType(),
@@ -338,6 +361,54 @@ public class SvGeneTranscriptCollection
         catch (final IOException e)
         {
             LOGGER.error("error writing gene annotations");
+        }
+    }
+
+    public void loadTranscriptData()
+    {
+        String filename = mDataPath;
+
+        if(!filename.endsWith("/"))
+            filename += "/";
+
+        filename += TRANSCRIPTS_FILE;
+
+        mTranscriptPositionsMap = new HashMap();
+
+        try
+        {
+            BufferedReader fileReader = new BufferedReader(new FileReader(filename));
+
+            String line = fileReader.readLine();
+
+            if (line == null)
+            {
+                return;
+            }
+
+            line = fileReader.readLine(); // skip header
+
+            while (line != null)
+            {
+                // parse CSV data
+                String[] items = line.split(",");
+
+                final String transcriptId = items[5];
+                long transcriptStart = Long.parseLong(items[2]);
+                long transcriptEnd = Long.parseLong(items[3]);
+
+                mTranscriptPositionsMap.put(transcriptId, new Pair(transcriptStart, transcriptEnd));
+                line = fileReader.readLine();
+
+                if(line == null)
+                {
+                    break;
+                }
+            }
+        }
+        catch(IOException e)
+        {
+            LOGGER.error("failed to load transcripts file({}): {}", filename, e.toString());
         }
     }
 }

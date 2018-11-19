@@ -98,14 +98,50 @@ public class SvFusionAnalyser
                         final Transcript upstreamTrans = startUpstream ? startTrans : endTrans;
                         final Transcript downstreamTrans = !startUpstream ? startTrans : endTrans;
 
+                        boolean checkExactMatch = false;
+
                         if(upstreamTrans.postCoding() || downstreamTrans.postCoding())
                             continue;
 
-                        if(downstreamTrans.codingType().equals(TRANS_CODING_TYPE_NON_CODING))
+                        if(upstreamTrans.isPromoter())
                             continue;
 
-                        if(upstreamTrans.isCoding() && !downstreamTrans.isCoding())
+                        if(downstreamTrans.isPrePromotor())
                             continue;
+
+                        if(upstreamTrans.preCoding())
+                        {
+                            if(upstreamTrans.isExonic() && !downstreamTrans.isExonic())
+                                continue;
+                            else if(downstreamTrans.isCoding())
+                                continue;
+
+                            // phasing match
+                        }
+                        else if(upstreamTrans.isCoding())
+                        {
+                            if(!downstreamTrans.isCoding())
+                                continue;
+
+                            if(upstreamTrans.isExonic())
+                            {
+                                if(!downstreamTrans.isExonic())
+                                    continue;
+
+                                checkExactMatch = true;
+                            }
+
+                            // phasing match
+                        }
+                        else if(upstreamTrans.nonCoding())
+                        {
+                            if(upstreamTrans.isExonic() && !downstreamTrans.isExonic())
+                                continue;
+                            else if(downstreamTrans.isCoding())
+                                continue;
+
+                            // phasing match
+                        }
 
                         /*
                         // DEBUG
@@ -118,7 +154,7 @@ public class SvFusionAnalyser
                         if (!isPotentiallyRelevantFusion(upstreamTrans, downstreamTrans))
                             continue;
 
-                        if(upstreamTrans.isCoding())
+                        if(checkExactMatch)
                         {
                             if(exonToExonInPhase(upstreamTrans, true, downstreamTrans, false))
                             {
@@ -133,6 +169,24 @@ public class SvFusionAnalyser
                                 addFusion(potentialFusions, upstreamTrans, downstreamTrans);
                             }
                         }
+
+                        /*
+                        if(upstreamTrans.isCoding() && upstreamTrans.isExonic())
+                        {
+                            if(exonToExonInPhase(upstreamTrans, true, downstreamTrans, false))
+                            {
+                                addFusion(potentialFusions, upstreamTrans, downstreamTrans);
+                            }
+                        }
+                        else
+                        {
+                            // just check for a phasing match
+                            if (upstreamTrans.exonUpstreamPhase() == downstreamTrans.exonDownstreamPhase())
+                            {
+                                addFusion(potentialFusions, upstreamTrans, downstreamTrans);
+                            }
+                        }
+                        */
                     }
                 }
             }
