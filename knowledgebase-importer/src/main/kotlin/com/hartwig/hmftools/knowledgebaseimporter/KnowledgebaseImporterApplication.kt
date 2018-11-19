@@ -130,7 +130,7 @@ private fun writeOutput(outputDir: String, knowledgebases: List<Knowledgebase>, 
     CsvWriter.writeTSV(actionableFusionPairs(knowledgebases), "$outputDir${File.separator}actionableFusionPairs.tsv")
     CsvWriter.writeTSV(actionablePromiscuousFive(knowledgebases), "$outputDir${File.separator}actionablePromiscuousFive.tsv")
     CsvWriter.writeTSV(actionablePromiscuousThree(knowledgebases), "$outputDir${File.separator}actionablePromiscuousThree.tsv")
-    CsvWriter.writeTSV(knowledgebases.flatMap { it.actionableCNVs }, "$outputDir${File.separator}actionableForCopyNumber.tsv")
+    CsvWriter.writeTSV(knowledgebases.flatMap { it.actionableCNVs }, "$outputDir${File.separator}actionableCNVs.tsv")
     CsvWriter.writeTSV(knowledgebases.flatMap { it.actionableRanges }, "$outputDir${File.separator}actionableRanges.tsv")
 
     val cancerTypeDOIDMappingLocation = "$outputDir${File.separator}knowledgebaseCancerTypes.tsv"

@@ -12,13 +12,13 @@ object IclusionCnvReader : SomaticEventReader<IclusionEvent, CnvEvent> {
 
     private fun readEvent(event: IclusionEvent): CnvEvent? {
         return when (event.variant) {
-            "AMPLIFICATION" -> CnvEvent.amplification(event.gene)
-            "COPY-GAIN"     -> CnvEvent.amplification(event.gene)
-            "DELETION"      -> CnvEvent.deletion(event.gene)
-            "LOSS"          -> CnvEvent.deletion(event.gene)
-            "OVEREXPRESSION" -> CnvEvent.deletion(event.gene)
-            "LOSS-OF-FUNCTION" -> CnvEvent.amplification(event.gene)
-            else            -> null
+            "AMPLIFICATION"     -> CnvEvent.amplification(event.gene)
+            "COPY-GAIN"         -> CnvEvent.amplification(event.gene)
+            "OVEREXPRESSION"    -> CnvEvent.amplification(event.gene)
+            "DELETION"          -> CnvEvent.deletion(event.gene)
+            "LOSS"              -> CnvEvent.deletion(event.gene)
+            "LOSS-OF-FUNCTION"  -> CnvEvent.deletion(event.gene)
+            else                -> null
         }
     }
 }
