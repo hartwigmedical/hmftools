@@ -139,8 +139,7 @@ public class BachelorGermlineVariant {
 
     public boolean isValid()
     {
-        return mRefCount > 0 && mAltCount > 0
-            && mSomaticVariant != null && mEnrichedVariant != null&& mVariantContext != null;
+        return mSomaticVariant != null && mEnrichedVariant != null && mVariantContext != null;
     }
 
     public int phredScore()
@@ -153,7 +152,6 @@ public class BachelorGermlineVariant {
     }
 
     public final SomaticVariant getSomaticVariant() { return mSomaticVariant; }
-    public final VariantContext getVariantContext() { return mVariantContext; }
     public final EnrichedSomaticVariant getEnrichedVariant() { return mEnrichedVariant; }
 
     public void setSomaticVariant(final SomaticVariant var) { mSomaticVariant = var; }

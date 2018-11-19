@@ -66,12 +66,13 @@ public class GermlineVariantDAO {
                 GERMLINEVARIANT.SOURCE,
                 GERMLINEVARIANT.MODIFIED);
 
-        for (final BachelorGermlineVariant bachRecord : bachRecords) {
-            if (!bachRecord.isValid()) {
+        for (final BachelorGermlineVariant bachRecord : bachRecords)
+        {
+            if (!bachRecord.isValid())
                 continue;
-            }
 
             final EnrichedSomaticVariant region = bachRecord.getEnrichedVariant();
+
             inserter.values(sampleId,
                     bachRecord.chromosome(),
                     bachRecord.position(),
