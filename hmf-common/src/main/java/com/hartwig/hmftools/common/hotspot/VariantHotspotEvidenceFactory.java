@@ -22,7 +22,6 @@ import com.hartwig.hmftools.common.collect.Multimaps;
 import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.common.sam.SAMRecords;
 
-import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 import htsjdk.samtools.SAMRecord;
@@ -32,18 +31,16 @@ import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 public class VariantHotspotEvidenceFactory {
 
     static final int MIN_BASE_QUALITY = 13;
-    private static final int MIN_MAPPING_QUALITY = 1;
+    private static final int SNV_MNV_BUFFER = 2;
 
     private final IndexedFastaSequenceFile sequenceFile;
     private final SamReader samReader;
-    private final int requiredBuffer;
     private final SAMSupplier samSupplier;
 
     public VariantHotspotEvidenceFactory(@NotNull final Collection<GenomeRegion> regions,
             @NotNull final IndexedFastaSequenceFile sequenceFile, @NotNull final SamReader samReader) {
         this.sequenceFile = sequenceFile;
         this.samReader = samReader;
-        requiredBuffer = 2;
         samSupplier = new SAMSupplier(regions);
     }
 
@@ -73,8 +70,8 @@ public class VariantHotspotEvidenceFactory {
                             findEvidenceOfInsert(evidence, hotspot, record);
                         } else if (hotspot.isMNV() || hotspot.isSNV()) {
                             int sequenceLength = sequenceFile.getSequenceDictionary().getSequence(hotspot.chromosome()).getSequenceLength();
-                            int bufferStartPosition = Math.max(0, hotspotStartPosition - requiredBuffer);
-                            int bufferEndPosition = Math.min(sequenceLength, hotspotEndPosition + requiredBuffer);
+                            int bufferStartPosition = Math.max(0, hotspotStartPosition - SNV_MNV_BUFFER);
+                            int bufferEndPosition = Math.min(sequenceLength, hotspotEndPosition + SNV_MNV_BUFFER);
                             if (samRecordOverlapsVariant(bufferStartPosition, bufferEndPosition, record)) {
                                 final String refSequence = refSequenceMap.computeIfAbsent(hotspot,
                                         x -> refSequence(bufferStartPosition, bufferEndPosition, record.getContig()));
@@ -92,7 +89,7 @@ public class VariantHotspotEvidenceFactory {
 
     @NotNull
     private String refSequence(int start, int end, String contig) {
-        return requiredBuffer == 0 ? Strings.EMPTY : sequenceFile.getSubsequenceAt(contig, start, end).getBaseString();
+        return sequenceFile.getSubsequenceAt(contig, start, end).getBaseString();
     }
 
     @NotNull
@@ -220,10 +217,6 @@ public class VariantHotspotEvidenceFactory {
 
     private boolean samRecordOverlapsVariant(int start, int end, @NotNull final SAMRecord record) {
         return record.getAlignmentStart() <= start && record.getAlignmentEnd() >= end;
-    }
-
-    private boolean samRecordMeetsQualityRequirements(@NotNull final SAMRecord record) {
-        return record.getMappingQuality() >= MIN_MAPPING_QUALITY && !record.getDuplicateReadFlag();
     }
 
     @VisibleForTesting

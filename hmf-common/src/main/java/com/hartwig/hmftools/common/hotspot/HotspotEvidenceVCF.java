@@ -31,15 +31,15 @@ import htsjdk.variant.vcf.VCFInfoHeaderLine;
 public class HotspotEvidenceVCF {
 
     private final static int MIN_TUMOR_EVIDENCE = 2;
-    private final static int MIN_HOTSPOT_QUALITY = 100;
+    private final static int MIN_KNOWN_QUALITY = 100;
     private final static int MIN_INFRAME_QUALITY = 150;
 
     private final static String PASS = "PASS";
     private final static String HOTSPOT_FLAG = "HOTSPOT";
     private final static String LOW_CONFIDENCE = "LOW_CONFIDENCE";
     private final static String LOW_CONFIDENCE_DESCRIPTION =
-            "Set if not true: AD[NormalAlt] = 0 && AD[TumorAlt] >= " + MIN_TUMOR_EVIDENCE + " && QUAL[Hotspot|Inframe] >= "
-                    + MIN_HOTSPOT_QUALITY + "|" + MIN_INFRAME_QUALITY;
+            "Set if not true: AD[NormalAlt] = 0 && AD[TumorAlt] >= " + MIN_TUMOR_EVIDENCE + " && QUAL[Known|Inframe] >= "
+                    + MIN_KNOWN_QUALITY + "|" + MIN_INFRAME_QUALITY;
 
     private final String tumorSample;
     private final String normalSample;
@@ -75,9 +75,11 @@ public class HotspotEvidenceVCF {
     }
 
     private static boolean lowConfidence(@NotNull HotspotEvidence hotspotEvidence) {
-        return hotspotEvidence.type() == HotspotEvidenceType.INFRAME && hotspotEvidence.qualityScore() < MIN_INFRAME_QUALITY
-                || hotspotEvidence.type() != HotspotEvidenceType.INFRAME && hotspotEvidence.qualityScore() < MIN_HOTSPOT_QUALITY
-                || hotspotEvidence.normalAltCount() > 0 || hotspotEvidence.tumorAltCount() < MIN_TUMOR_EVIDENCE;
+        return hotspotEvidence.isIndel() && hotspotEvidence.normalIndelCount() > 0
+                || hotspotEvidence.type() == HotspotEvidenceType.INFRAME && hotspotEvidence.qualityScore() < MIN_INFRAME_QUALITY
+                || hotspotEvidence.type() == HotspotEvidenceType.KNOWN && hotspotEvidence.qualityScore() < MIN_KNOWN_QUALITY
+                || hotspotEvidence.normalAltCount() > 0
+                || hotspotEvidence.tumorAltCount() < MIN_TUMOR_EVIDENCE;
     }
 
     @VisibleForTesting
@@ -106,7 +108,7 @@ public class HotspotEvidenceVCF {
 
         final VariantContextBuilder builder = new VariantContextBuilder().chr(hotspotEvidence.chromosome())
                 .start(hotspotEvidence.position())
-                .attribute(HOTSPOT_FLAG, hotspotEvidence.type().equals(HotspotEvidenceType.INFRAME) ? "inframe" : "known")
+                .attribute(HOTSPOT_FLAG, hotspotEvidence.type().toString().toLowerCase())
                 .computeEndFromAlleles(alleles, (int) hotspotEvidence.position())
                 .source(hotspotEvidence.type().toString())
                 .genotypes(tumor, normal)

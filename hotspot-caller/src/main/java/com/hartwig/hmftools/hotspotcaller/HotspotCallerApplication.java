@@ -131,6 +131,7 @@ public class HotspotCallerApplication {
                 .normalAltCount(normal.altSupport())
                 .normalRefCount(normal.refSupport())
                 .normalReads(normal.readDepth())
+                .normalIndelCount(normal.indelSupport())
                 .type(known ? HotspotEvidenceType.KNOWN : HotspotEvidenceType.INFRAME)
                 .build();
     }
