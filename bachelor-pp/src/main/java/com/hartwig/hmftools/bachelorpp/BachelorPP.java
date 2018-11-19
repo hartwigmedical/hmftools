@@ -226,7 +226,7 @@ public class BachelorPP {
         {
             BufferedWriter writer = Files.newBufferedWriter(outputFile, StandardOpenOption.CREATE);
 
-            writer.write("SAMPLEID,SOURCE,PROGRAM,ID,GENE,TRANSCRIPT_ID,CHROM,POS,REF,ALTS,EFFECTS,ANNOTATIONS,HGVS_PROTEIN,IS_HOMOZYGOUS,PHRED_SCORE,HGVS_CODING,MATCH_TYPE,CLNDN,CLNSIG");
+            writer.write("SAMPLEID,SOURCE,PROGRAM,ID,GENE,TRANSCRIPT_ID,CHROM,POS,REF,ALTS,EFFECTS,ANNOTATIONS,HGVS_PROTEIN,IS_HOMOZYGOUS,PHRED_SCORE,HGVS_CODING,MATCH_TYPE,ALT_COUNT,READ_DEPTH,CLNDN,CLNSIG");
             writer.newLine();
 
             for(int index = 0; index < bachRecords.size(); ++index)
@@ -241,10 +241,8 @@ public class BachelorPP {
                 boolean keepRecord = false;
                 BachelorRecordFilter matchedFilter = null;
 
-                if(FRAMESHIFT_VARIANT.isParentTypeOf(bachRecord.effects())
-                || STOP_GAINED.isParentTypeOf(bachRecord.effects())
-                || SPLICE_ACCEPTOR_VARIANT.isParentTypeOf(bachRecord.effects())
-                || SPLICE_DONOR_VARIANT.isParentTypeOf(bachRecord.effects()))
+                if(bachRecord.hasEffect(FRAMESHIFT_VARIANT) || bachRecord.hasEffect(STOP_GAINED)
+                || bachRecord.hasEffect(SPLICE_ACCEPTOR_VARIANT) || bachRecord.hasEffect(SPLICE_DONOR_VARIANT))
                 {
                     keepRecord = true;
 
@@ -258,8 +256,7 @@ public class BachelorPP {
                         }
                     }
                 }
-                else if(MISSENSE_VARIANT.isParentTypeOf(bachRecord.effects())
-                || SYNONYMOUS_VARIANT.isParentTypeOf(bachRecord.effects()))
+                else if(bachRecord.hasEffect(MISSENSE_VARIANT) || bachRecord.hasEffect(SYNONYMOUS_VARIANT))
                 {
                     keepRecord = false;
 
@@ -293,14 +290,16 @@ public class BachelorPP {
                                     bachRecord.alts()));
 
                     writer.write(
-                            String.format(",%s,%s,%s,%s,%d,%s,%s",
+                            String.format(",%s,%s,%s,%s,%d,%s,%s,%d,%d",
                                     bachRecord.effects(),
                                     bachRecord.annotations(),
                                     bachRecord.hgvsProtein(),
                                     bachRecord.isHomozygous(),
                                     bachRecord.phredScore(),
                                     bachRecord.hgvsCoding(),
-                                    bachRecord.matchType()));
+                                    bachRecord.matchType(),
+                                    bachRecord.getAltCount(),
+                                    bachRecord.getReadDepth()));
 
                     writer.write(String.format(",%s,%s",
                         matchedFilter != null ? matchedFilter.Diagnosis : "",

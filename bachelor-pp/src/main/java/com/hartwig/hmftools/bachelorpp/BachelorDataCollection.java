@@ -79,6 +79,14 @@ public class BachelorDataCollection
                         items[15],
                         items[16]);
 
+                if(items.length == 19)
+                {
+                    int altCount = Integer.parseInt(items[17]);
+                    int readDepth = Integer.parseInt(items[18]);
+
+                    bachRecord.setAltReadData(altCount, readDepth);
+                }
+
                 mGermlineVariants.add(bachRecord);
 
                 // if(mGermlineVariants.size() > 10000)

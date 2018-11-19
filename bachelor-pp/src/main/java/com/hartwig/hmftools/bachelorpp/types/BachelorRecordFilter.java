@@ -35,13 +35,16 @@ public class BachelorRecordFilter
             return false;
         }
 
-        if(STOP_GAINED.isParentTypeOf(var.effects()) && Effects.contains("nonsense"))
-            return true;
+        for(final String effect : var.effectsList())
+        {
+            if (STOP_GAINED.isParentTypeOf(var.effects()) && Effects.contains("nonsense"))
+                return true;
 
-        if(!Effects.contains(var.effects()))
-            return false;
+            if (Effects.contains(effect))
+                return true;
+        }
 
-        return true;
+        return false;
     }
 
 }

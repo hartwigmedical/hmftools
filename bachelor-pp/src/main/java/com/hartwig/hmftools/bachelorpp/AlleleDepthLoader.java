@@ -80,6 +80,9 @@ public class AlleleDepthLoader {
         // match up read info from MP with the bachelor records
         for (BachelorGermlineVariant bachRecord : germlineVariants)
         {
+            if(bachRecord.isReadDataSet())
+                continue;
+
             boolean matched = false;
 
             for (final Pileup pileup : mPileupData)

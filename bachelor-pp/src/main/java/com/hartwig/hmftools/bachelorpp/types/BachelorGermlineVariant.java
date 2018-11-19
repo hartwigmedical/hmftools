@@ -1,7 +1,12 @@
 package com.hartwig.hmftools.bachelorpp.types;
 
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
+
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
+import com.hartwig.hmftools.common.variant.VariantConsequence;
 
 import htsjdk.variant.variantcontext.VariantContext;
 
@@ -18,6 +23,7 @@ public class BachelorGermlineVariant {
     private String mRef;
     private String mAlts;
     private String mEffects;
+    private List<String> mEffectsList;
     private String mAnnotations;
     private int mPhredScore;
     private boolean mIsHomozygous;
@@ -27,6 +33,7 @@ public class BachelorGermlineVariant {
 
     private int mRefCount;
     private int mAltCount;
+    private boolean mReadDataSet;
 
     private double mAdjustedVaf;
 
@@ -62,8 +69,11 @@ public class BachelorGermlineVariant {
         mAlts = mAlts.replaceAll("\\*", "");
 
         mEffects = effects;
+        mEffectsList = Arrays.stream(effects.split("&")).collect(Collectors.toList());
+
         mRefCount = 0;
         mAltCount = 0;
+        mReadDataSet = false;
         mAdjustedVaf = 0;
 
         mSomaticVariant = null;
@@ -82,6 +92,7 @@ public class BachelorGermlineVariant {
     public final String ref() { return mRef; };
     public final String alts() { return mAlts; };
     public final String effects() { return mEffects; };
+    public final List<String> effectsList() { return mEffectsList; }
     public final String annotations() { return mAnnotations; };
     public final String hgvsProtein() { return mHgvsProtein; };
     public final String hgvsCoding() { return mHgvsCoding; };
@@ -89,8 +100,29 @@ public class BachelorGermlineVariant {
     public String matchType() { return mMatchType; }
     public int getRefCount() { return mRefCount; }
     public int getAltCount() { return mAltCount; }
+    public int getReadDepth() { return mAltCount + mRefCount; }
     public void setRefCount(int count) { mRefCount = count; }
     public void setAltCount(int count) { mAltCount = count; }
+
+    public void setAltReadData(int altCount, int readDepth)
+    {
+        mAltCount = altCount;
+        mRefCount = readDepth - altCount;
+        mReadDataSet = true;
+    }
+
+    public boolean hasEffect(final VariantConsequence consequence)
+    {
+        for(final String effect : mEffectsList)
+        {
+            if(consequence.isParentTypeOf(effect))
+                return true;
+        }
+
+        return false;
+    }
+
+    public boolean isReadDataSet() { return mReadDataSet; }
 
     public void setAdjustedVaf(double vaf) { mAdjustedVaf = vaf; }
     public double getAdjustedVaf() { return mAdjustedVaf; }
