@@ -43,28 +43,28 @@ public class SageHotspotApplication {
     private static final Logger LOGGER = LogManager.getLogger(SageHotspotApplication.class);
 
     private static final String OUT_PATH = "out";
-    private static final String HOTSPOT = "hotspot";
     private static final String TUMOR = "tumor";
     private static final String TUMOR_BAM = "tumor_bam";
     private static final String REFERENCE = "reference";
     private static final String REFERENCE_BAM = "reference_bam";
-    private static final String INFRAME_BED = "inframe_bed";
     private static final String REF_GENOME = "ref_genome";
+    private static final String CODING_REGIONS = "coding_regions";
+    private static final String KNOWN_HOTSPOTS = "known_hotspots";
 
     public static void main(String[] args) throws IOException, ParseException {
 
         final Options options = createOptions();
         final CommandLine cmd = createCommandLine(args, options);
-        final String hotspotPath = cmd.getOptionValue(HOTSPOT);
+        final String hotspotPath = cmd.getOptionValue(KNOWN_HOTSPOTS);
         final String tumorBam = cmd.getOptionValue(TUMOR_BAM);
         final String referenceBam = cmd.getOptionValue(REFERENCE_BAM);
         final String refGenome = cmd.getOptionValue(REF_GENOME);
-        final String inframeBed = cmd.getOptionValue(INFRAME_BED);
+        final String codingRegionBedFile = cmd.getOptionValue(CODING_REGIONS);
         final String outputVCF = cmd.getOptionValue(OUT_PATH);
         final String referenceSample = cmd.getOptionValue(REFERENCE);
         final String tumorSample = cmd.getOptionValue(TUMOR);
 
-        if (hotspotPath == null || tumorBam == null || referenceBam == null || inframeBed == null || refGenome == null || outputVCF == null
+        if (hotspotPath == null || tumorBam == null || referenceBam == null || codingRegionBedFile == null || refGenome == null || outputVCF == null
                 || tumorSample == null || referenceSample == null) {
             final HelpFormatter formatter = new HelpFormatter();
             formatter.printHelp("SAGE", options);
@@ -75,8 +75,8 @@ public class SageHotspotApplication {
         final SamReader tumorReader = SamReaderFactory.makeDefault().open(new File(tumorBam));
         final SamReader referenceReader = SamReaderFactory.makeDefault().open(new File(referenceBam));
 
-        LOGGER.info("Loading inframe bed regions from {}", inframeBed);
-        final Collection<GenomeRegion> codingRegions = BEDFileLoader.fromBedFile(inframeBed).values();
+        LOGGER.info("Loading coding regions from {}", codingRegionBedFile);
+        final Collection<GenomeRegion> codingRegions = BEDFileLoader.fromBedFile(codingRegionBedFile).values();
 
         LOGGER.info("Loading known hotspots from {}", hotspotPath);
         final Set<VariantHotspot> knownHotspots = Sets.newHashSet(VariantHotspotFile.read(hotspotPath).values());
@@ -148,8 +148,8 @@ public class SageHotspotApplication {
         options.addOption(OUT_PATH, true, "Tumor bam file.");
         options.addOption(TUMOR_BAM, true, "Tumor bam file.");
         options.addOption(REFERENCE_BAM, true, "Reference bam file.");
-        options.addOption(HOTSPOT, true, "Hotspot input file.");
-        options.addOption(INFRAME_BED, true, "Hotspot input file.");
+        options.addOption(KNOWN_HOTSPOTS, true, "Tab separated file of known hotspot locations.");
+        options.addOption(CODING_REGIONS, true, "Hotspot input file.");
         options.addOption(REF_GENOME, true, "Hotspot input file.");
         options.addOption(TUMOR, true, "Tumor sample name.");
         options.addOption(REFERENCE, true, "Reference sample name.");
