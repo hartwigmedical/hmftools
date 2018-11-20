@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.hotspotcaller;
+package com.hartwig.hmftools.sage;
 
 import java.io.File;
 import java.io.IOException;
@@ -38,9 +38,9 @@ import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 
-public class HotspotCallerApplication {
+public class SageHotspotApplication {
 
-    private static final Logger LOGGER = LogManager.getLogger(HotspotCallerApplication.class);
+    private static final Logger LOGGER = LogManager.getLogger(SageHotspotApplication.class);
 
     private static final String OUT_PATH = "out";
     private static final String HOTSPOT = "hotspot";
@@ -67,7 +67,7 @@ public class HotspotCallerApplication {
         if (hotspotPath == null || tumorBam == null || referenceBam == null || inframeBed == null || refGenome == null || outputVCF == null
                 || tumorSample == null || referenceSample == null) {
             final HelpFormatter formatter = new HelpFormatter();
-            formatter.printHelp("HotspotCallerApplication", options);
+            formatter.printHelp("SAGE", options);
             System.exit(1);
         }
 

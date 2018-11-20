@@ -19,6 +19,7 @@
         <module>patient-db</module>
         <module>break-point-inspector</module>
         <module>amber</module>
+        <module>sage</module>
         <module>count-bam-lines</module>
         <module>purity-ploidy-estimator</module>
         <module>hmf-gene-panel-builder</module>
@@ -34,7 +35,6 @@
         <module>knowledgebase-importer</module>
         <module>data_analyser</module>
         <module>actionability-vs-soc</module>
-        <module>hotspot-caller</module>
     </modules>
 
     <properties>
