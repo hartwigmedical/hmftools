@@ -85,7 +85,6 @@ public final class GeneCopyNumberFile {
                 .add("MissenseNonBiallelicCount")
                 .add("MissenseNonBiallelicPloidy")
                 .add("MinMinorAllelePloidy")
-                .add("ExonicBases")
                 .toString();
     }
 
