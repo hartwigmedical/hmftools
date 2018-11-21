@@ -12,7 +12,7 @@ import htsjdk.variant.variantcontext.VariantContext;
 
 public class BachelorGermlineVariant {
 
-    private String mPatient;
+    private String mSampleId;
     private String mSource;
     private String mProgram;
     private String mVariantId;
@@ -30,6 +30,9 @@ public class BachelorGermlineVariant {
     private String mHgvsProtein;
     private String mHgvsCoding;
     private String mMatchType;
+    private String mSignificance;
+    private String mDiagnosis;
+    private String mCodonInfo;
 
     private int mRefCount;
     private int mAltCount;
@@ -43,12 +46,12 @@ public class BachelorGermlineVariant {
 
     public static int PHRED_SCORE_CUTOFF = 150;
 
-    public BachelorGermlineVariant(String patient, String source, String program, String varId,
+    public BachelorGermlineVariant(String sampleId, String source, String program, String varId,
             String gene, String transcriptId, String chromosome, long position,
             String ref, String alts, String effects, String annotations, String hgvsProtein,
-            boolean isHomozygous, int phredScore, String hgvsCoding, String matchType)
+            boolean isHomozygous, int phredScore, String hgvsCoding, String matchType, String codonInfo)
     {
-        mPatient = patient;
+        mSampleId = sampleId;
         mSource = source;
         mProgram = program;
         mVariantId = varId;
@@ -64,6 +67,7 @@ public class BachelorGermlineVariant {
         mHgvsProtein = hgvsProtein;
         mHgvsCoding = hgvsCoding;
         mMatchType = matchType;
+        mCodonInfo = codonInfo;
 
         mRef = mRef.replaceAll("\\*", "");
         mAlts = mAlts.replaceAll("\\*", "");
@@ -76,13 +80,16 @@ public class BachelorGermlineVariant {
         mReadDataSet = false;
         mAdjustedVaf = 0;
 
+        mSignificance = "";
+        mDiagnosis = "";
+
         mSomaticVariant = null;
         mVariantContext = null;
         mEnrichedVariant = null;
     }
 
     public final String variantId() { return mVariantId; };
-    public final String patient() { return mPatient; };
+    public final String sampleId() { return mSampleId; };
     public final String source() { return mSource; };
     public final String program() { return mProgram; };
     public final String gene() { return mGene; };
@@ -103,6 +110,12 @@ public class BachelorGermlineVariant {
     public int getReadDepth() { return mAltCount + mRefCount; }
     public void setRefCount(int count) { mRefCount = count; }
     public void setAltCount(int count) { mAltCount = count; }
+    public final String getDiagnosis() { return mDiagnosis; }
+    public final String getSignificance() { return mSignificance; }
+    public final String codonInfo() { return mCodonInfo; }
+
+    public void setDiagnosis(final String text) { mDiagnosis = text; }
+    public void setSignificance(final String text) { mSignificance = text; }
 
     public void setAltReadData(int altCount, int readDepth)
     {

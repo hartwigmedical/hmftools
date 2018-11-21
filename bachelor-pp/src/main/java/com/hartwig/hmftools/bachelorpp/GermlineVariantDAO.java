@@ -25,7 +25,8 @@ public class GermlineVariantDAO {
         this.context = context;
     }
 
-    public void write(final String sampleId, final List<BachelorGermlineVariant> bachRecords) {
+    public void write(final String sampleId, final List<BachelorGermlineVariant> bachRecords)
+    {
         // CHSH: first remove any existing records for this patient
         context.delete(GERMLINEVARIANT).where(GERMLINEVARIANT.SAMPLEID.eq(sampleId)).execute();
 

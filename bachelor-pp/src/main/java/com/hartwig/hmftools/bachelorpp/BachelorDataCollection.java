@@ -18,6 +18,7 @@ public class BachelorDataCollection
     private static final int COL_INDEX_MATCH_TYPE = 16;
     private static final int COL_INDEX_ALT_COUNT = 17;
     private static final int COL_INDEX_READ_DEPTH = 18;
+    private static final int COL_INDEX_CODON_INFO = 19;
 
     private static final Logger LOGGER = LogManager.getLogger(BachelorDataCollection.class);
 
@@ -66,6 +67,7 @@ public class BachelorDataCollection
 
                 // extra fields from newer versions
                 final String matchType = items.length > COL_INDEX_MATCH_TYPE ? items[COL_INDEX_MATCH_TYPE] : "";
+                final String codonInfo = items.length > COL_INDEX_CODON_INFO ? items[COL_INDEX_CODON_INFO] : "";
 
                 BachelorGermlineVariant bachRecord = new BachelorGermlineVariant(patientId,
                         items[1],
@@ -83,7 +85,8 @@ public class BachelorDataCollection
                         Boolean.parseBoolean(items[13]),
                         Integer.parseInt(items[14]),
                         items[15],
-                        matchType);
+                        matchType,
+                        codonInfo);
 
                 if(items.length > COL_INDEX_READ_DEPTH)
                 {
