@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.hotspotcaller;
+package com.hartwig.hmftools.sage;
 
 import java.io.File;
 import java.io.IOException;

@@ -36,47 +36,59 @@ public class VariantHotspotEvidenceFactoryTest {
     @Test
     public void testDelAlt() {
         final VariantHotspotEvidence evidence = findEvidenceOfDelete(create(DEL), DEL, buildSamRecord(98, "3M2D1M", "GATA"));
-        assertEvidence(evidence, 1, 1, 0, MIN_BASE_QUALITY);
+        assertEvidence(evidence, 1, 1, 0, MIN_BASE_QUALITY, 1);
+    }
+
+    @Test
+    public void testDelAlt2() {
+        final VariantHotspotEvidence evidence = findEvidenceOfDelete(create(DEL), DEL, buildSamRecord(98, "3M1D1M", "GATCA"));
+        assertEvidence(evidence, 1, 0, 0, 0, 1);
     }
 
     @Test
     public void testDelAltAverageQuality() {
         final VariantHotspotEvidence evidence =
                 findEvidenceOfDelete(create(DEL), DEL, SAMRecordsTest.buildSamRecord(98, "3M2D1M", "GATA", buildQualities(13, 13, 16, 18)));
-        assertEvidence(evidence, 1, 1, 0, 17);
+        assertEvidence(evidence, 1, 1, 0, 17, 1);
     }
 
     @Test
     public void testDelAltInsufficientQuality() {
         final VariantHotspotEvidence evidence =
                 findEvidenceOfDelete(create(DEL), DEL, SAMRecordsTest.buildSamRecord(98, "3M2D1M", "GATA", buildQualities(13, 13, 12, 12)));
-        assertEvidence(evidence, 0, 0, 0, 0);
+        assertEvidence(evidence, 0, 0, 0, 0, 0);
     }
 
     @Test
     public void testDelAltNoBarrier() {
         final VariantHotspotEvidence evidence =
                 findEvidenceOfDelete(create(DEL), DEL, SAMRecordsTest.buildSamRecord(98, "3M2D", "GAT", buildQualities(13, 13, 16)));
-        assertEvidence(evidence, 1, 1, 0, 16);
+        assertEvidence(evidence, 1, 1, 0, 16, 1);
     }
 
     @Test
     public void testDelIsActualyInsert() {
         final VariantHotspotEvidence evidence =
                 findEvidenceOfDelete(create(DEL), DEL, SAMRecordsTest.buildSamRecord(98, "3M2I2M", "GATTTAC"));
-        assertEvidence(evidence, 1, 0, 0, 0);
+        assertEvidence(evidence, 1, 0, 0, 0, 1);
     }
 
     @Test
     public void testDelIsRef() {
         final VariantHotspotEvidence evidence = findEvidenceOfDelete(create(DEL), DEL, SAMRecordsTest.buildSamRecord(98, "5M", "GATAC"));
-        assertEvidence(evidence, 1, 0, 1, 0);
+        assertEvidence(evidence, 1, 0, 1, 0, 0);
     }
 
     @Test
     public void testInsAlt() {
         final VariantHotspotEvidence evidence = findEvidenceOfInsert(create(INS), INS, buildSamRecord(98, "3M2I2M", "GATTTAC"));
-        assertEvidence(evidence, 1, 1, 0, MIN_BASE_QUALITY);
+        assertEvidence(evidence, 1, 1, 0, MIN_BASE_QUALITY, 1);
+    }
+
+    @Test
+    public void testInsAlt2() {
+        final VariantHotspotEvidence evidence = findEvidenceOfInsert(create(INS), INS, buildSamRecord(98, "3M2I2M", "GATATAC"));
+        assertEvidence(evidence, 1, 0, 0, 0, 1);
     }
 
     @Test
@@ -84,7 +96,7 @@ public class VariantHotspotEvidenceFactoryTest {
         final VariantHotspotEvidence evidence = findEvidenceOfInsert(create(INS),
                 INS,
                 SAMRecordsTest.buildSamRecord(98, "3M2I2M", "GATTTAC", buildQualities(13, 13, 20, 9, 16, 13, 13)));
-        assertEvidence(evidence, 1, 1, 0, 15);
+        assertEvidence(evidence, 1, 1, 0, 15, 1);
     }
 
     @Test
@@ -92,13 +104,13 @@ public class VariantHotspotEvidenceFactoryTest {
         final VariantHotspotEvidence evidence = findEvidenceOfInsert(create(INS),
                 INS,
                 SAMRecordsTest.buildSamRecord(98, "3M2I2M", "GATTTAC", buildQualities(13, 13, 12, 12, 12, 13, 13)));
-        assertEvidence(evidence, 0, 0, 0, 0);
+        assertEvidence(evidence, 0, 0, 0, 0, 0);
     }
 
     @Test
     public void testInsAltNoBarrier() {
         final VariantHotspotEvidence evidence = findEvidenceOfInsert(create(INS), INS, buildSamRecord(98, "3M2I", "GATTT"));
-        assertEvidence(evidence, 1, 1, 0, MIN_BASE_QUALITY);
+        assertEvidence(evidence, 1, 1, 0, MIN_BASE_QUALITY, 1);
     }
 
     @Test
@@ -107,13 +119,13 @@ public class VariantHotspotEvidenceFactoryTest {
         assertEvidence(evidence, 1, 0, 0, 0);
 
         evidence = findEvidenceOfInsert(create(INS), INS, buildSamRecord(98, "3M2D", "GAT"));
-        assertEvidence(evidence, 1, 0, 0, 0);
+        assertEvidence(evidence, 1, 0, 0, 0, 1);
     }
 
     @Test
     public void testInsIsRef() {
         final VariantHotspotEvidence evidence = findEvidenceOfInsert(create(INS), INS, buildSamRecord(98, "5M", "GATAC"));
-        assertEvidence(evidence, 1, 0, 1, 0);
+        assertEvidence(evidence, 1, 0, 1, 0, 0);
     }
 
     @Test
@@ -230,6 +242,11 @@ public class VariantHotspotEvidenceFactoryTest {
         assertEquals(altCount, victim.altSupport());
         assertEquals(refCount, victim.refSupport());
         assertEquals(quality, victim.altQuality());
+    }
+
+    private static void assertEvidence(@NotNull VariantHotspotEvidence victim, int readDepth, int altCount, int refCount, int quality, int indelSupport) {
+        assertEvidence(victim, readDepth, altCount, refCount, quality);
+        assertEquals(indelSupport, victim.indelSupport());
     }
 
     private static String buildQualities(int... qualities) {

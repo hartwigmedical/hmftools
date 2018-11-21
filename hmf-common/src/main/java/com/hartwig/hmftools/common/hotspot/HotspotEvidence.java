@@ -32,4 +32,10 @@ public interface HotspotEvidence extends GenomePosition {
     int normalAltCount();
 
     int normalReads();
+
+    int normalIndelCount();
+
+    default boolean isIndel() {
+        return ref().length() != alt().length();
+    }
 }

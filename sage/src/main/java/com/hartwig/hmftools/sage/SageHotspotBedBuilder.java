@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.hotspotcaller;
+package com.hartwig.hmftools.sage;
 
 import static java.util.Collections.emptyList;
 
@@ -11,7 +11,6 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.chromosome.Chromosome;
 import com.hartwig.hmftools.common.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.collect.Multimaps;
@@ -34,9 +33,9 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-public class HotspotCallerBedBuilder {
+public class SageHotspotBedBuilder {
 
-    private static final Logger LOGGER = LogManager.getLogger(HotspotCallerBedBuilder.class);
+    private static final Logger LOGGER = LogManager.getLogger(SageHotspotBedBuilder.class);
 
     private static final String OUT_PATH = "out";
     private static final String HOTSPOT = "hotspot";
@@ -51,7 +50,7 @@ public class HotspotCallerBedBuilder {
 
         if (outputFilePath == null || hotspotPath == null) {
             final HelpFormatter formatter = new HelpFormatter();
-            formatter.printHelp("HotspotCallerBedBuilder", options);
+            formatter.printHelp("SageHotspotBedBuilder", options);
             System.exit(1);
         }
 
@@ -81,7 +80,7 @@ public class HotspotCallerBedBuilder {
                 result = addVariantHotspot(hotspot, result);
             }
 
-            result.stream().map(HotspotCallerBedBuilder::toBedFormat).forEach(bedResult::add);
+            result.stream().map(SageHotspotBedBuilder::toBedFormat).forEach(bedResult::add);
         }
 
         LOGGER.info("Writing {} regions to bed file {}", bedResult.size(), outputFilePath);
