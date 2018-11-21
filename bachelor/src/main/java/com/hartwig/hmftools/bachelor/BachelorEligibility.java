@@ -161,13 +161,13 @@ class BachelorEligibility {
     }
 
     @NotNull
-    private Collection<EligibilityReport> processVariant(final VariantContext variant, final String patient, final String sample, final EligibilityReport.ReportType type)
+    private Collection<EligibilityReport> processVariant(final VariantContext variant, final String patient, final String sampleId, final EligibilityReport.ReportType type)
     {
         if (variant.isFiltered())
             return Collections.emptyList();
 
         // we will skip when an ALT is not present in the sample
-        final Genotype genotype = variant.getGenotype(sample);
+        final Genotype genotype = variant.getGenotype(0);
 
         if (genotype == null || !(genotype.isHomVar() || genotype.isHet()))
         {
@@ -175,7 +175,7 @@ class BachelorEligibility {
         }
 
         // gather up the relevant alleles
-        VariantModel sampleVariant = new VariantModel(sample, variant);
+        VariantModel sampleVariant = new VariantModel(sampleId, variant);
 
         // apply the all relevant tests to see if this program has been matched
         final List<String> matchingPrograms = programs.stream()
@@ -298,8 +298,10 @@ class BachelorEligibility {
                 readDepth = altData.getDP();
             }
 
+            final String codonInfo = relevantSnpEff.aaPosAndLength();
+
             EligibilityReport report = ImmutableEligibilityReport.builder()
-                    .patient(patient)
+                    .sampleId(sampleId)
                     .source(type)
                     .program(program.name())
                     .matchType(matchType)
@@ -318,6 +320,7 @@ class BachelorEligibility {
                     .phredScore(phredScore)
                     .altCount(altCount)
                     .readDepth(readDepth)
+                    .condonInfo(codonInfo)
                     .build();
 
             reportList.add(report);
@@ -333,7 +336,7 @@ class BachelorEligibility {
     }
 
     @NotNull
-    Collection<EligibilityReport> processVCF(final String patient, final String sample, final EligibilityReport.ReportType type, final VCFFileReader reader)
+    Collection<EligibilityReport> processVCF(final String patient, final String sampleId, final EligibilityReport.ReportType type, final VCFFileReader reader)
     {
         final List<EligibilityReport> results = Lists.newArrayList();
 
@@ -347,8 +350,8 @@ class BachelorEligibility {
 
             while (query.hasNext()) {
                 final VariantContext variant = query.next();
-                // LOGGER.debug("patient({}) sample({}) processing variant({})", patient, sample, variant.getID());
-                results.addAll(processVariant(variant, patient, sample, type));
+                // LOGGER.debug("patient({}) sampleId({}) processing variant({})", patient, sampleId, variant.getID());
+                results.addAll(processVariant(variant, patient, sampleId, type));
             }
             query.close();
         }

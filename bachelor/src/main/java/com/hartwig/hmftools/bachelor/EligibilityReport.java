@@ -8,7 +8,7 @@ import org.jetbrains.annotations.Nullable;
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
 abstract class EligibilityReport {
     @NotNull
-    public abstract String patient();
+    public abstract String sampleId();
 
     enum ReportType {
         GERMLINE_MUTATION,
@@ -70,4 +70,6 @@ abstract class EligibilityReport {
     public abstract int altCount();
 
     public abstract int readDepth();
+
+    public abstract String condonInfo();
 }

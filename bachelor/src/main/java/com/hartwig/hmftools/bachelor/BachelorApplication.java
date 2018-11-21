@@ -1,14 +1,15 @@
 package com.hartwig.hmftools.bachelor;
 
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.FileVisitOption;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -17,9 +18,8 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
-import com.hartwig.hmftools.common.purple.gene.GeneCopyNumberFile;
-import com.hartwig.hmftools.common.variant.structural.StructuralVariantFactory;
+import com.hartwig.hmftools.common.context.ProductionRunContextFactory;
+import com.hartwig.hmftools.common.context.RunContext;
 
 import nl.hartwigmedicalfoundation.bachelor.Program;
 
@@ -36,11 +36,7 @@ import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.core.config.Configurator;
 import org.jetbrains.annotations.NotNull;
 
-import htsjdk.tribble.AbstractFeatureReader;
 import htsjdk.tribble.TribbleException;
-import htsjdk.tribble.readers.LineIterator;
-import htsjdk.variant.variantcontext.VariantContext;
-import htsjdk.variant.vcf.VCFCodec;
 import htsjdk.variant.vcf.VCFFileReader;
 
 public class BachelorApplication {
@@ -58,7 +54,7 @@ public class BachelorApplication {
     private static final String LOG_DEBUG = "log_debug";
     private static final String BATCH_MAX_DIR = "max_batch_dir"; // only for testingt
 
-    private static final String BACHELOR_DIR = "bachelor";
+    private static final String BATCH_DIR_FILE = "batch_dir_file";
 
     private Map<String, Program> mProgramMap;
     private BufferedWriter mMainDataWriter;
@@ -66,13 +62,12 @@ public class BachelorApplication {
 
     // config
     private String mOutputDir;
-    private String mBatchDirectoy;
+    private String mBatchDirectory;
+    private String mBatchDirectoryFile;
     private String mRunDirectoy;
     private boolean mIsBatchRun;
     private boolean mIsSingleRun;
     private String mSampleId;
-    private boolean mRunGermline;
-    private boolean mRunSomatic;
     private int mMaxBatchDirectories;
 
     public BachelorApplication()
@@ -83,6 +78,9 @@ public class BachelorApplication {
 
         mIsSingleRun = false;
         mIsBatchRun = false;
+        mBatchDirectoryFile = "";
+        mBatchDirectory = "";
+        mOutputDir = "";
         mMaxBatchDirectories = 0;
     }
 
@@ -90,17 +88,19 @@ public class BachelorApplication {
     private static Options createOptions()
     {
         final Options options = new Options();
-        options.addOption(Option.builder(CONFIG_DIRECTORY).required(false).hasArg().desc("folder to find program XMLs").build());
-        options.addOption(Option.builder(CONFIG_XML).required(false).hasArg().desc("single config XML to run").build());
-        options.addOption(Option.builder(OUTPUT_DIR).required().hasArg().desc("output file").build());
-        options.addOption(Option.builder(RUN_DIRECTORY).required(false).hasArg().desc("the run directory to look for inputs").build());
-        options.addOption(Option.builder(BATCH_DIRECTORY).required(false).hasArg().desc("runs directory to batch process").build());
-        options.addOption(Option.builder(BATCH_MAX_DIR).required(false).hasArg().desc("Max batch directories to batch process").build());
-        options.addOption(Option.builder(VALIDATE).required(false).desc("only validate the configs").build());
-        options.addOption(Option.builder(GERMLINE).required(false).desc("process the germline file").build());
-        options.addOption(Option.builder(SOMATIC).required(false).desc("process the somatic file").build());
-        options.addOption(Option.builder(SAMPLE).required(false).hasArg().desc("sample id").build());
-        options.addOption(Option.builder(LOG_DEBUG).required(false).desc("Sets log level to Debug, off by default").build());
+
+        options.addOption(CONFIG_DIRECTORY, true, "folder to find program XMLs");
+        options.addOption(CONFIG_XML, true, "single config XML to run");
+        options.addOption(OUTPUT_DIR, true, "output file");
+        options.addOption(RUN_DIRECTORY, true, "the run directory to look for inputs");
+        options.addOption(BATCH_DIRECTORY, true, "runs directory to batch process");
+        options.addOption(BATCH_MAX_DIR, true, "Max batch directories to batch process");
+        options.addOption(VALIDATE, false, "only validate the configs");
+        options.addOption(GERMLINE, false, "process the germline file");
+        options.addOption(BATCH_DIR_FILE, true, "Optional: list of directories to search");
+        options.addOption(SOMATIC, false, "process the somatic file");
+        options.addOption(SAMPLE, true, "sample id");
+        options.addOption(LOG_DEBUG, false, "Sets log level to Debug, off by default");
         return options;
     }
 
@@ -152,7 +152,8 @@ public class BachelorApplication {
 
         if(cmd.hasOption(BATCH_DIRECTORY))
         {
-            mBatchDirectoy = cmd.getOptionValue(BATCH_DIRECTORY);
+            mBatchDirectory = cmd.getOptionValue(BATCH_DIRECTORY);
+            mBatchDirectoryFile = cmd.getOptionValue(BATCH_DIR_FILE);
             mMaxBatchDirectories = Integer.parseInt(cmd.getOptionValue(BATCH_MAX_DIR, "0"));
             mIsBatchRun = true;
         }
@@ -172,9 +173,6 @@ public class BachelorApplication {
             LOGGER.error("single run requires sample to be specified");
             return false;
         }
-
-        mRunGermline = cmd.hasOption(GERMLINE);
-        mRunSomatic = cmd.hasOption(SOMATIC);
 
         return true;
     }
@@ -196,32 +194,46 @@ public class BachelorApplication {
         {
             if (mIsBatchRun)
             {
-                final Path root = Paths.get(mBatchDirectoy);
+                List<RunDirectory> runDirectories = Lists.newArrayList();
 
-                try (final Stream<Path> stream = Files.walk(root, 1, FileVisitOption.FOLLOW_LINKS).parallel())
+                if(!mBatchDirectoryFile.isEmpty())
                 {
-                    final List<RunDirectory> runDirectories = stream.filter(p -> p.toFile().isDirectory())
-                            .filter(p -> !p.equals(root))
+                    LOGGER.debug("loading batch directories from file");
+
+                    final List<String> batchDirectories = loadBatchDirectories(mBatchDirectory, mBatchDirectoryFile);
+                    runDirectories = batchDirectories.stream()
+                            .map(Paths::get)
                             .map(RunDirectory::new)
                             .collect(Collectors.toList());
+                }
+                else
+                {
+                    final Path root = Paths.get(mBatchDirectory);
 
-                    LOGGER.debug("found {} batch directories", runDirectories.size());
-
-                    // add the filtered and passed SV entries for each file
-                    for (int i = 0; i < runDirectories.size(); ++i)
+                    try (final Stream<Path> stream = Files.walk(root, 1, FileVisitOption.FOLLOW_LINKS).parallel())
                     {
-                        final RunDirectory runDir = runDirectories.get(i);
-
-                        // Path bachDir = Paths.get(runDir.prefix() + "/" + BACHELOR_DIR);
-                        process(eligibility, runDir, runDir.getPatientID());
-
-                        if(mMaxBatchDirectories > 0 && i >= mMaxBatchDirectories)
-                            break;
+                        runDirectories = stream.filter(p -> p.toFile().isDirectory())
+                                .filter(p -> !p.equals(root))
+                                .map(RunDirectory::new)
+                                .collect(Collectors.toList());
+                    }
+                    catch (Exception e)
+                    {
+                        LOGGER.error("failed walking batch directories: {}", e.toString());
                     }
                 }
-                catch (Exception e)
+
+                LOGGER.info("found {} batch directories", runDirectories.size());
+
+                // add the filtered and passed SV entries for each file
+                for (int i = 0; i < runDirectories.size(); ++i)
                 {
-                    LOGGER.error("failed walking batch directories");
+                    final RunDirectory runDir = runDirectories.get(i);
+
+                    process(eligibility, runDir, "");
+
+                    if(mMaxBatchDirectories > 0 && i >= mMaxBatchDirectories)
+                        break;
                 }
             }
             else if (mIsSingleRun)
@@ -253,19 +265,65 @@ public class BachelorApplication {
         return true;
     }
 
-    private static Collection<EligibilityReport> processVCF(final String patient, final boolean isGermline, final File vcf,
+    private static int BATCH_DIRECTORIES_CSV_FIELDS= 4;
+
+    private static List<String> loadBatchDirectories(final String rootDir, final String filename)
+    {
+        List<String> batchDirectories = Lists.newArrayList();
+
+        if (filename.isEmpty())
+            return batchDirectories;
+
+        try
+        {
+            BufferedReader fileReader = new BufferedReader(new FileReader(filename));
+
+            String line = fileReader.readLine(); // skip header
+
+            while ((line = fileReader.readLine()) != null)
+            {
+                String[] items = line.split(",");
+
+                // CSV fields Month,Date,Time,Directory
+
+                if (items.length < BATCH_DIRECTORIES_CSV_FIELDS)
+                {
+                    LOGGER.error("invalid CSV item length({})", items.length);
+                    return batchDirectories;
+                }
+
+                final String directory = rootDir + items[3];
+
+                batchDirectories.add(directory);
+            }
+
+            LOGGER.debug("loaded {} batch directories", batchDirectories.size());
+
+        }
+        catch (IOException exception)
+        {
+            LOGGER.error("Failed to read batch dirs input CSV file({})", filename);
+            return batchDirectories;
+        }
+
+        return batchDirectories;
+    }
+
+    private static Collection<EligibilityReport> processVCF(final String patient, final String sampleId, final File vcf,
             final BachelorEligibility eligibility)
     {
-        final EligibilityReport.ReportType type =
-                isGermline ? EligibilityReport.ReportType.GERMLINE_MUTATION : EligibilityReport.ReportType.SOMATIC_MUTATION;
+        if(vcf == null)
+            return Collections.emptyList();
 
-        LOGGER.info("processing {} vcf: {}", type, vcf.getPath());
+        final EligibilityReport.ReportType type = EligibilityReport.ReportType.GERMLINE_MUTATION;
+
+        LOGGER.debug("processing {} vcf: {}", type, vcf.getPath());
 
         try (final VCFFileReader reader = new VCFFileReader(vcf, true))
         {
             // assume that the first sample is the germline
-            final String sample = reader.getFileHeader().getGenotypeSamples().get(0);
-            return eligibility.processVCF(patient, sample, type, reader);
+            // final String sampleId = reader.getFileHeader().getGenotypeSamples().size() > 1 ? reader.getFileHeader().getGenotypeSamples().get(1) : reader.getFileHeader().getGenotypeSamples().get(0);
+            return eligibility.processVCF(patient, sampleId, type, reader);
         }
         catch (final TribbleException e)
         {
@@ -274,23 +332,30 @@ public class BachelorApplication {
         }
     }
 
-    private void process(final BachelorEligibility eligibility, final RunDirectory run, final String sampleId)
+    private void process(final BachelorEligibility eligibility, final RunDirectory runDir, String sampleId)
     {
-        final String patient = run.getPatientID();
-        final boolean doGermline = run.germline() != null && mRunGermline;
-        final boolean doSomatic = run.somatic() != null && mRunSomatic;
+        final String patient = runDir.getPatientID();
 
-        LOGGER.info("processing run for patient({}) from file({})", patient, run.prefix());
+        if(sampleId.isEmpty())
+        {
+            try
+            {
+                final RunContext runContext = ProductionRunContextFactory.fromRunDirectory(runDir.sampleDir().toString());
+
+                if(runContext != null)
+                    sampleId = runContext.tumorSample();
+            }
+            catch (Exception e)
+            {
+                // skip using meta data
+                sampleId = patient;
+            }
+        }
+
+        LOGGER.info("processing run for patient({}) sampleId({}) directory({})", patient, sampleId, runDir.sampleDir());
 
         final List<EligibilityReport> result = Lists.newArrayList();
-        if (doGermline)
-        {
-            result.addAll(processVCF(patient, true, run.germline(), eligibility));
-        }
-        if (doSomatic)
-        {
-            result.addAll(processVCF(patient, false, run.somatic(), eligibility));
-        }
+        result.addAll(processVCF(patient, sampleId, runDir.germline(), eligibility));
 
         if(result.isEmpty())
             return;
@@ -302,13 +367,13 @@ public class BachelorApplication {
             for (final EligibilityReport r : result)
             {
                 mMainDataWriter.write(String.format("%s,%s,%s,%s,%s,%s",
-                        sampleId, r.source().toString(), r.program(), r.id(), r.genes(), r.transcriptId()));
+                        r.sampleId(), r.source().toString(), r.program(), r.id(), r.genes(), r.transcriptId()));
 
                 mMainDataWriter.write(String.format(",%s,%d,%s,%s,%s,%s",
                         r.chrom(), r.pos(), r.ref(), r.alts(), r.effects(), r.annotations()));
 
-                mMainDataWriter.write(String.format(",%s,%s,%d,%s,%s,%d,%d",
-                        r.hgvsProtein(), r.isHomozygous(), r.phredScore(), r.hgvsCoding(), r.matchType(), r.altCount(), r.readDepth()));
+                mMainDataWriter.write(String.format(",%s,%s,%d,%s,%s,%d,%d,%s",
+                        r.hgvsProtein(), r.isHomozygous(), r.phredScore(), r.hgvsCoding(), r.matchType(), r.altCount(), r.readDepth(), r.condonInfo()));
 
                 mMainDataWriter.newLine();
 
@@ -338,7 +403,10 @@ public class BachelorApplication {
         try
         {
             mMainDataWriter = Files.newBufferedWriter(Paths.get(mainFileName), StandardOpenOption.CREATE);
-            mMainDataWriter.write(fileHeader());
+
+            mMainDataWriter.write("SAMPLEID,SOURCE,PROGRAM,ID,GENE,TRANSCRIPT_ID,CHROM,POS,REF,ALTS");
+            mMainDataWriter.write(",EFFECTS,ANNOTATIONS,HGVS_PROTEIN,IS_HOMOZYGOUS,PHRED_SCORE,HGVS_CODING,MATCH_TYPE,ALT_COUNT,READ_DEPTH,CODON_INFO");
+
             mMainDataWriter.newLine();
 
             mBedFileWriter = Files.newBufferedWriter(Paths.get(bedFileName), StandardOpenOption.CREATE);
@@ -347,14 +415,6 @@ public class BachelorApplication {
         {
             LOGGER.error("failed to create output files: {}", e.toString());
         }
-    }
-
-    private String fileHeader()
-    {
-        return String.join(",",
-                Arrays.asList("SAMPLEID", "SOURCE", "PROGRAM", "ID", "GENE", "TRANSCRIPT_ID", "CHROM", "POS",
-                        "REF", "ALTS", "EFFECTS",  "ANNOTATIONS", "HGVS_PROTEIN", "IS_HOMOZYGOUS",
-                        "PHRED_SCORE", "HGVS_CODING", "MATCH_TYPE", "ALT_COUNT", "READ_DEPTH"));
     }
 
     public static void main(final String... args)
@@ -388,6 +448,7 @@ public class BachelorApplication {
         }
         catch (Exception e)
         {
+
             e.printStackTrace();
         }
     }

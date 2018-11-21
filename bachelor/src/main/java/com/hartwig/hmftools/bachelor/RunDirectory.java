@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.nio.file.FileVisitOption;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.stream.Stream;
 
 import org.jetbrains.annotations.Nullable;
@@ -13,9 +14,6 @@ class RunDirectory {
 
     private final Path mSampleDir;
     private final File mGermline;
-    private final File mSomatic;
-    private final File mCopyNumber;
-    private final File structuralVariants;
 
     private String VCF_FILE_SUFFIX1 = "annotated.vcf";
     private String VCF_FILE_SUFFIX2 = "GoNLv5.vcf";
@@ -25,36 +23,36 @@ class RunDirectory {
     {
         mSampleDir = runDirectory;
         mGermline = findGermline();
-        mSomatic = findSomatic();
-        mCopyNumber = findCopyNumber();
-        structuralVariants = findStructuralVariants();
     }
 
-    public File germline() {
-        return mGermline;
-    }
+    public File germline() { return mGermline; }
 
-    public File somatic() {
-        return mSomatic;
-    }
-
-    public File copyNumber() {
-        return mCopyNumber;
-    }
-
-    public File structuralVariants() {
-        return structuralVariants;
-    }
-
-    public Path prefix() {
+    public Path sampleDir() {
         return mSampleDir;
     }
 
-    @Nullable
     private File findGermline()
     {
         try
         {
+            // first try for tbe expected possible germline file names
+            final String filePrefix = mSampleDir.toRealPath().toString() + "/" + mSampleDir.getFileName() + ".";
+
+            if(Files.exists(Paths.get(filePrefix + VCF_FILE_SUFFIX1)))
+            {
+                return new File(filePrefix + VCF_FILE_SUFFIX1);
+            }
+
+            if(Files.exists(Paths.get(filePrefix + VCF_FILE_SUFFIX2)))
+            {
+                return new File(filePrefix + VCF_FILE_SUFFIX2);
+            }
+
+            if(Files.exists(Paths.get(filePrefix + VCF_FILE_SUFFIX3)))
+            {
+                return new File(filePrefix + VCF_FILE_SUFFIX3);
+            }
+
             try (final Stream<Path> stream = Files.walk(mSampleDir.toRealPath(), 1, FileVisitOption.FOLLOW_LINKS))
             {
                 return stream.filter(p -> p.toString().endsWith(VCF_FILE_SUFFIX1)
@@ -71,60 +69,15 @@ class RunDirectory {
         }
     }
 
-    @Nullable
-    private File findSomatic()
-    {
-        try
-        {
-            try (final Stream<Path> stream = Files.walk(mSampleDir, FileVisitOption.FOLLOW_LINKS))
-            {
-                return stream.filter(p -> p.toString().endsWith("post_processed_v2.2.vcf.gz"))
-                        .map(Path::toFile)
-                        .findFirst()
-                        .orElse(null);
-            }
-        }
-        catch (final IOException e)
-        {
-            return null;
-        }
-    }
+    final String directoryName() { return mSampleDir.getFileName().toString(); }
 
-    @Nullable
-    private File findCopyNumber()
-    {
-        try
-        {
-            try (final Stream<Path> stream = Files.walk(mSampleDir, FileVisitOption.FOLLOW_LINKS))
-            {
-                return stream.filter(p -> p.toString().endsWith("purple.gene.cnv")).map(Path::toFile).findFirst().orElse(null);
-            }
-        }
-        catch (final IOException e)
-        {
-            return null;
-        }
-    }
-
-    @Nullable
-    private File findStructuralVariants()
-    {
-        try
-        {
-            try (final Stream<Path> stream = Files.walk(mSampleDir, FileVisitOption.FOLLOW_LINKS))
-            {
-                return stream.filter(p -> p.toString().endsWith("bpi.vcf")).map(Path::toFile).findFirst().orElse(null);
-            }
-        }
-        catch (final IOException e)
-        {
-            return null;
-        }
-    }
-
-    String getPatientID()
+    final String getPatientID()
     {
         final String[] split = mSampleDir.getFileName().toString().split("_");
+
+        if(split.length < 2)
+            return "";
+
         return split[split.length - 1];
     }
 }
