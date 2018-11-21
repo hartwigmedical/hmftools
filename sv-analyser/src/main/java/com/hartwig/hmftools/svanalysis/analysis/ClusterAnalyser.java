@@ -168,7 +168,6 @@ public class ClusterAnalyser {
         {
             if (cluster.isSimpleSingleSV() || cluster.isFullyChained() || cluster.getUniqueSvCount() < 2)
             {
-                // setClusterArmBoundaries(cluster);
                 continue;
             }
 
@@ -177,8 +176,6 @@ public class ClusterAnalyser {
 
             // then look for fully-linked clusters, ie chains involving all SVs
             findChains(cluster);
-
-            // setClusterArmBoundaries(cluster);
 
             cluster.cacheLinkedPairs();
             cluster.setUnlinkedBnds();
@@ -466,123 +463,6 @@ public class ClusterAnalyser {
         }
     }
 
-    private void setClusterArmBoundaries(SvCluster cluster)
-    {
-        // for each arm group within the cluster, find the bounding SV breakends
-        // - TIs touching this arm which are less than 1K bases are excluded
-        // - DELs and DUPs less than the long length are excluded
-
-        // excluding any which are part of a continuous chain (ends excluded)
-        final List<SvVarData> unlinkedSVs = cluster.getUnlinkedSVs();
-        final List<SvChain> chains = cluster.getChains();
-
-        for(final SvArmGroup armGroup : cluster.getArmGroups())
-        {
-            armGroup.setBreakend(null, true);
-            armGroup.setBreakend(null, false);
-
-            SvVarData startVar = null;
-            SvVarData endVar = null;
-            long startPosition = -1;
-            long endPosition = 0;
-
-            for(final SvVarData var : armGroup.getSVs())
-            {
-                if(var.isReplicatedSv())
-                    continue;
-
-                boolean checkStart = false;
-                boolean checkEnd = false;
-
-                if(unlinkedSVs.contains(var))
-                {
-                    if(var.type() == BND)
-                    {
-                        if(var.chromosome(true).equals(armGroup.chromosome()))
-                            checkStart = true;
-                        else if(var.chromosome(false).equals(armGroup.chromosome()))
-                            checkEnd = true;
-                    }
-                    else
-                    {
-                        checkStart = true;
-                        checkEnd = true;
-                    }
-                }
-                else
-                {
-                    // check chain ends for a match with this SV
-                    // translocations are skipped if their open end is on another arm
-                    for(final SvChain chain : chains)
-                    {
-                        if(chain.getFirstSV().equals(var)
-                        && (!var.isTranslocation() || var.chromosome(chain.firstLinkOpenOnStart()).equals(armGroup.chromosome())))
-                        {
-                            if(chain.firstLinkOpenOnStart())
-                                checkStart = true;
-                            else
-                                checkEnd = true;
-                        }
-
-                        if(chain.getLastSV().equals(var)
-                        && (!var.isTranslocation() || var.chromosome(chain.lastLinkOpenOnStart()).equals(armGroup.chromosome())))
-                        {
-                            if(chain.lastLinkOpenOnStart())
-                                checkStart = true;
-                            else
-                                checkEnd = true;
-                        }
-                    }
-                }
-
-                for(int be = SVI_START; be <= SVI_END; ++be)
-                {
-                    if((!checkStart && be == SVI_START) || (!checkEnd && be == SVI_END))
-                        continue;
-
-                    boolean useStart = isStart(be);
-
-                    long position = var.position(useStart);
-
-                    if(startPosition < 0 || position < startPosition)
-                    {
-                        startVar = var;
-                        startPosition = position;
-                    }
-
-                    if(position > endPosition)
-                    {
-                        endVar = var;
-                        endPosition = position;
-                    }
-                }
-            }
-
-            if(startVar != null)
-            {
-                boolean useStart = startVar.type() == BND ? startVar.chromosome(true).equals(armGroup.chromosome()) : true;
-                armGroup.setBreakend(new SvBreakend(startVar, useStart), true);
-            }
-
-            if(endVar != null)
-            {
-                boolean useStart = endVar.type() == BND ? endVar.chromosome(true).equals(armGroup.chromosome()) : false;
-                armGroup.setBreakend(new SvBreakend(endVar, useStart), false);
-            }
-
-            /*
-            if(cluster.getCount() > 1)
-            {
-                LOGGER.debug("cluster({}) arm({}) consistent({}) start({}) end({}) posBoundaries({} -> {})",
-                        cluster.getId(), armGroup.id(), armGroup.isConsistent(),
-                        armGroup.getBreakend(true) != null ? armGroup.getBreakend(true).toString() : "null",
-                        armGroup.getBreakend(false) != null ? armGroup.getBreakend(false).toString() : "null",
-                        armGroup.posStart(), armGroup.posEnd());
-            }
-            */
-        }
-    }
-
     private List<SvCluster> mergeInconsistentClusters(List<SvCluster> existingMergedClusters)
     {
         // it's possible that to resolve arms and more complex arrangements, clusters not merged
@@ -606,15 +486,6 @@ public class ClusterAnalyser {
             boolean hasOpenSingle1 = hasOneOpenSingleVariant(cluster1);
             boolean isSoloSingle1 = cluster1.getCount() == 1 && cluster1.getSVs().get(0).type() == SGL;
 
-            /*
-            boolean isConsistent1 = isConsistentCluster(cluster1);
-            if(!hasOpenSingle1 && !isSoloSingle1) // && !hasLongDelDup1
-            {
-                ++index1;
-                continue;
-            }
-            */
-
             boolean cluster1Merged = false;
             SvCluster newCluster = null;
 
@@ -628,9 +499,6 @@ public class ClusterAnalyser {
                     ++index2;
                     continue;
                 }
-
-                // boolean isConsistent2 = isConsistentCluster(cluster2);
-                // used to check cluster 'consistency' before merging on foldbacks and common arms
 
                 boolean foundConnection = false;
 
@@ -656,13 +524,13 @@ public class ClusterAnalyser {
                         addClusterReason(cluster1, CLUSTER_REASON_SOLO_SINGLE, "");
                     }
 
-                    if(!foundConnection && isSoloSingle1 && isSingleClosestTI(cluster2, cluster1.getSVs().get(0)))
+                    if(!foundConnection && isSoloSingle1 && isSingleClosestTI(cluster2, cluster1))
                     {
                         foundConnection = true;
                         addClusterReason(cluster1, CLUSTER_REASON_SOLO_SINGLE, "");
                     }
 
-                    if(!foundConnection && isSoloSingle2 && isSingleClosestTI(cluster1, cluster2.getSVs().get(0)))
+                    if(!foundConnection && isSoloSingle2 && isSingleClosestTI(cluster1, cluster2))
                     {
                         foundConnection = true;
                         addClusterReason(cluster2, CLUSTER_REASON_SOLO_SINGLE, "");
@@ -697,8 +565,6 @@ public class ClusterAnalyser {
                     {
                         cluster1.addSubCluster(cluster2);
                     }
-
-                    // setClusterArmBoundaries(cluster1);
                 }
                 else
                 {
@@ -727,7 +593,6 @@ public class ClusterAnalyser {
                     }
 
                     mergedClusters.add(newCluster);
-                    // setClusterArmBoundaries(newCluster);
                 }
 
                 if(cluster2Merged)
@@ -775,10 +640,9 @@ public class ClusterAnalyser {
     {
         // first cluster has the open single in a chain, the second is a solo single
         // can be merged if the open single is the closest cluster to this cluster
-        final SvArmGroup singleArmGroup = soloSingleCluster.getArmGroups().get(0);
         final SvVarData soloVar = soloSingleCluster.getSVs().get(0);
 
-        final List<SvBreakend> breakendList = mClusteringMethods.getChrBreakendMap().get(singleArmGroup.chromosome());
+        final List<SvBreakend> breakendList = mClusteringMethods.getChrBreakendMap().get(soloVar.chromosome(true));
 
         for (int i = 1; i < breakendList.size(); ++i)
         {
@@ -790,8 +654,8 @@ public class ClusterAnalyser {
                 if((i > 0 && otherCluster.getSVs().contains(breakendList.get(i - 1).getSV()))
                 || (i < breakendList.size() - 1 && otherCluster.getSVs().contains(breakendList.get(i + 1).getSV())))
                 {
-                    LOGGER.debug("inconsistent cluster({}) and cluster({}) have adjacent SVs with solo-single",
-                            otherCluster.getId(), soloSingleCluster.getId());
+                    LOGGER.debug("cluster({}) and cluster({}) have adjacent SVs with solo-single({})",
+                            otherCluster.getId(), soloSingleCluster.getId(), soloVar.id());
 
                     return true;
                 }
@@ -803,13 +667,13 @@ public class ClusterAnalyser {
         return false;
     }
 
-    private boolean isSingleClosestTI(final SvCluster cluster, final SvVarData soloVar)
+    private boolean isSingleClosestTI(final SvCluster otherCluster, final SvCluster soloSingleCluster)
     {
         // first cluster has the open single in a chain, the second is a solo single
         // can be merged if the open single is the closest cluster to this cluster
-        final SvArmGroup singleArmGroup = soloVar.getCluster().getArmGroups().get(0);
+        final SvVarData soloVar = soloSingleCluster.getSVs().get(0);
 
-        final List<SvBreakend> breakendList = mClusteringMethods.getChrBreakendMap().get(singleArmGroup.chromosome());
+        final List<SvBreakend> breakendList = mClusteringMethods.getChrBreakendMap().get(soloVar.chromosome(true));
 
         for (int i = 1; i < breakendList.size(); ++i)
         {
@@ -820,14 +684,14 @@ public class ClusterAnalyser {
                 // check if the preceding or next breakend is in the cluster with the open single chain
                 final SvBreakend prevBreakend = (i > 0) ? breakendList.get(i - 1) : null;
                 final SvBreakend nextBreakend = (i < breakendList.size() - 1) ? breakendList.get(i + 1) : null;
-                boolean checkPrev = prevBreakend != null && cluster.getSVs().contains(prevBreakend.getSV());
-                boolean checkNext = nextBreakend != null && cluster.getSVs().contains(nextBreakend.getSV());
+                boolean checkPrev = prevBreakend != null && otherCluster.getSVs().contains(prevBreakend.getSV());
+                boolean checkNext = nextBreakend != null && otherCluster.getSVs().contains(nextBreakend.getSV());
 
-                if((checkPrev && canFormTIWithChainEnd(cluster.getChains(), prevBreakend.getSV(), soloVar))
-                || (checkNext && canFormTIWithChainEnd(cluster.getChains(), nextBreakend.getSV(), soloVar)))
+                if((checkPrev && canFormTIWithChainEnd(otherCluster.getChains(), prevBreakend.getSV(), soloVar))
+                || (checkNext && canFormTIWithChainEnd(otherCluster.getChains(), nextBreakend.getSV(), soloVar)))
                 {
-                    LOGGER.debug("inconsistent cluster({}) can form TI with soloSingle({})",
-                            cluster.getId(), soloVar.id());
+                    LOGGER.debug("cluster({}) can form TI with cluster({}) and soloSingle({})",
+                            otherCluster.getId(), soloSingleCluster.getId(), soloVar.id());
                     return true;
                 }
 
