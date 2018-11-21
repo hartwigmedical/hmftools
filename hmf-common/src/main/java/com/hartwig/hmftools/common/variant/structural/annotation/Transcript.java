@@ -14,6 +14,7 @@ public class Transcript {
     private final int mExonDownstream;
     private final int mExonDownstreamPhase;
     private final int mExonMax;
+    private int mExactCodingBase;
 
     private final long mCodingBases;
     private final long mTotalCodingBases;
@@ -58,6 +59,8 @@ public class Transcript {
         mExonUpstreamPhase = exonUpstreamPhase;
         mExonDownstream = exonDownstream;
         mExonDownstreamPhase = exonDownstreamPhase;
+
+        mExactCodingBase = -1;
 
         mExonMax = exonMax;
 
@@ -190,6 +193,10 @@ public class Transcript {
     public int exonDownstreamPhase() { return mExonDownstreamPhase; }
 
     public int exonMax() { return mExonMax; }
+
+    public int exactCodingBase() { return mExactCodingBase; }
+    public void setExactCodingBase(int base) { mExactCodingBase = base; }
+
 
     public long transcriptStart() { return mTranscriptStart; }
     public long transcriptEnd() { return mTranscriptEnd; }

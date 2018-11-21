@@ -158,6 +158,10 @@ public class SvFusionAnalyser
                             // just check for a phasing match
                             if (upstreamTrans.exonUpstreamPhase() == downstreamTrans.exonDownstreamPhase())
                             {
+                                // all fusions to downstream exons may be excluded, but for now definitely exclude those which end in the last exon
+                                if(downstreamTrans.isExonic() && downstreamTrans.exonDownstream() == downstreamTrans.exonMax() && ! downstreamTrans.preCoding())
+                                    continue;
+
                                 addFusion(potentialFusions, upstreamTrans, downstreamTrans);
                             }
                         }
@@ -176,13 +180,16 @@ public class SvFusionAnalyser
     private static boolean exonToExonInPhase(final Transcript startTrans, boolean startUpstream, final Transcript endTrans, boolean endUpstream)
     {
         // check phasing and offset since exon start or coding start
-        long calcStartPhase = calcPositionPhasing(startTrans, startUpstream);
-        long calcEndPhase = calcPositionPhasing(endTrans, endUpstream);
+        int calcStartPhase = calcPositionPhasing(startTrans, startUpstream);
+        int calcEndPhase = calcPositionPhasing(endTrans, endUpstream);
+
+        startTrans.setExactCodingBase(calcStartPhase);
+        endTrans.setExactCodingBase(calcEndPhase);
 
         return calcStartPhase == calcEndPhase;
     }
 
-    private static long calcPositionPhasing(final Transcript transcript, boolean isUpstream)
+    private static int calcPositionPhasing(final Transcript transcript, boolean isUpstream)
     {
         // if upstream then can just use the coding bases
         // if downstream then coding bases are what's remaing

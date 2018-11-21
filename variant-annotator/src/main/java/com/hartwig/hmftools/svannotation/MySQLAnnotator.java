@@ -298,14 +298,18 @@ public class MySQLAnnotator implements VariantAnnotator
 
         long codingBases = 0;
         long totalCodingBases = 0;
+        long transcriptStart = 0;
+        long transcriptEnd = 0;
+
+        // previous here will be the earlier exon, ordered by increasing position (ie regardless of strand direction)
         int prevExonRank = -1;
         int prevExonPhase = 0;
         int prevExonEndPhase = 0;
+
+        // similarly the next exon will be exon immediately after the position for exons which increase with positino
         int nextExonRank = -1;
         int nextExonPhase = 0;
         int nextExonEndPhase = 0;
-        long transcriptStart = 0;
-        long transcriptEnd = 0;
 
         for (int index = 0; index < allExons.size(); ++index)
         {
@@ -323,13 +327,25 @@ public class MySQLAnnotator implements VariantAnnotator
             if(position >= exonStart && position <= exonEnd)
             {
                 // falls within an exon
-                prevExonRank = exon.get(EXON_TRANSCRIPT.RANK);
-                prevExonPhase = exon.get(EXON.PHASE);
-                prevExonEndPhase = exon.get(EXON.END_PHASE);
+                prevExonRank = nextExonRank = exon.get(EXON_TRANSCRIPT.RANK);
 
-                nextExonRank = prevExonRank;
-                nextExonPhase = prevExonPhase;
-                nextExonEndPhase = prevExonEndPhase;
+                if(isForwardStrand)
+                {
+                    prevExonEndPhase = exon.get(EXON.PHASE);
+                    nextExonPhase = exon.get(EXON.END_PHASE);
+
+                    // won't be used
+                    prevExonPhase = prevExonEndPhase;
+                    nextExonEndPhase = nextExonPhase;
+                }
+                else
+                {
+                    prevExonPhase = exon.get(EXON.END_PHASE);
+                    nextExonEndPhase = exon.get(EXON.PHASE);
+
+                    prevExonEndPhase = prevExonPhase;
+                    nextExonPhase = nextExonEndPhase;
+                }
             }
             else if(position > exonEnd)
             {
