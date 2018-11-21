@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.svannotation.dao;
 
-import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.STRUCTURALVARIANT;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.STRUCTURALVARIANTBREAKEND;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.STRUCTURALVARIANTDISRUPTION;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.STRUCTURALVARIANTFUSION;
@@ -20,10 +19,7 @@ import com.hartwig.hmftools.svannotation.analysis.StructuralVariantAnalysis;
 
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
-import org.jooq.InsertValuesStep13;
 import org.jooq.InsertValuesStep14;
-import org.jooq.InsertValuesStep2;
-import org.jooq.InsertValuesStep3;
 import org.jooq.InsertValuesStep4;
 import org.jooq.InsertValuesStep5;
 import org.jooq.types.UInteger;
@@ -119,8 +115,8 @@ public class StructuralVariantAnnotationDAO {
                     timestamp,
                     sampleId,
                     fusion.reportable(),
-                    id.get(fusion.upstreamLinkedAnnotation()),
-                    id.get(fusion.downstreamLinkedAnnotation()));
+                    id.get(fusion.upstreamTrans()),
+                    id.get(fusion.downstreamTrans()));
         }
         fusionInserter.execute();
 

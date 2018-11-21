@@ -1,22 +1,34 @@
 package com.hartwig.hmftools.common.variant.structural.annotation;
 
-import org.immutables.value.Value;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+public class GeneFusion
+{
+    private final Transcript mUpstreamTrans;
 
-@Value.Immutable
-@Value.Style(allParameters = true,
-             passAnnotations = { NotNull.class, Nullable.class })
-public abstract class GeneFusion {
+    private final Transcript mDownstream;
 
-    public abstract boolean reportable();
+    private final String mPrimarySource;
 
-    @NotNull
-    public abstract Transcript upstreamLinkedAnnotation();
+    private final boolean mIsPhaseMatch;
 
-    @NotNull
-    public abstract Transcript downstreamLinkedAnnotation();
+    private boolean mIsReportable;
 
-    @NotNull
-    public abstract String primarySource();
+    public GeneFusion(final Transcript upstreamTrans, final Transcript downstream, final String primarySource, boolean isReportable, boolean isPhaseMatch)
+    {
+        mUpstreamTrans = upstreamTrans;
+        mDownstream = downstream;
+        mPrimarySource = primarySource;
+        mIsReportable = isReportable;
+        mIsPhaseMatch = isPhaseMatch;
+    }
+
+    public boolean reportable(){ return mIsReportable; }
+    public void setReportable(boolean toggle) { mIsReportable = toggle; }
+
+    public Transcript upstreamTrans() { return mUpstreamTrans; }
+
+    public Transcript downstreamTrans() { return mDownstream; }
+
+    public String primarySource() { return mPrimarySource; }
+
+    public boolean isPhaseMatch() { return mIsPhaseMatch; }
 }

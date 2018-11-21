@@ -19,8 +19,8 @@ public final class ReportableGeneFusionFactory {
     public static List<ReportableGeneFusion> toReportableGeneFusions(@NotNull List<GeneFusion> fusions) {
         List<ReportableGeneFusion> reportableFusions = Lists.newArrayList();
         for (GeneFusion fusion : fusions) {
-            final Transcript upstream = fusion.upstreamLinkedAnnotation();
-            final Transcript downstream = fusion.downstreamLinkedAnnotation();
+            final Transcript upstream = fusion.upstreamTrans();
+            final Transcript downstream = fusion.downstreamTrans();
 
             reportableFusions.add(ImmutableReportableGeneFusion.builder()
                     .geneStart(upstream.geneName())
@@ -39,8 +39,8 @@ public final class ReportableGeneFusionFactory {
 
     @NotNull
     private static Double fusionPloidy(@NotNull GeneFusion fusion) {
-        Double upstreamPloidy = fusion.upstreamLinkedAnnotation().parent().variant().ploidy();
-        Double downstreamPloidy = fusion.downstreamLinkedAnnotation().parent().variant().ploidy();
+        Double upstreamPloidy = fusion.upstreamTrans().parent().variant().ploidy();
+        Double downstreamPloidy = fusion.downstreamTrans().parent().variant().ploidy();
 
         if (upstreamPloidy == null || downstreamPloidy == null) {
             // KODU: Not sure when ploidy would be null...

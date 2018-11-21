@@ -12,7 +12,6 @@ import com.hartwig.hmftools.common.variant.structural.ImmutableEnrichedStructura
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneAnnotation;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion;
-import com.hartwig.hmftools.common.variant.structural.annotation.ImmutableGeneFusion;
 import com.hartwig.hmftools.common.variant.structural.annotation.Transcript;
 
 import org.apache.logging.log4j.util.Strings;
@@ -75,12 +74,7 @@ public class FusionEvidenceAnalyzerTest {
         Transcript upstreamTranscript = createFusionLeg(true, startGene, startTranscript, startExonUpstream, startExonDownstream, ploidy);
         Transcript downstreamTranscript = createFusionLeg(false, endGene, endTranscript, endExonUpstream, endExonDownstream, ploidy);
 
-        return ImmutableGeneFusion.builder()
-                .reportable(true)
-                .primarySource(source)
-                .upstreamLinkedAnnotation(upstreamTranscript)
-                .downstreamLinkedAnnotation(downstreamTranscript)
-                .build();
+        return new GeneFusion(upstreamTranscript, downstreamTranscript, source, true, true);
     }
 
     @NotNull

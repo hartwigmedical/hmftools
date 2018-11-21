@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.svannotation.analysis;
 
-import static com.hartwig.hmftools.common.variant.structural.annotation.Transcript.TRANS_CODING_TYPE_NON_CODING;
-import static com.hartwig.hmftools.svannotation.analysis.StructuralVariantAnalyzer.intronicDisruptionOnSameTranscript;
 import static com.hartwig.hmftools.svannotation.analysis.StructuralVariantAnalyzer.isUpstream;
 
 import java.util.Comparator;
@@ -13,12 +11,10 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.fusions.KnownFusionsModel;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneAnnotation;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion;
-import com.hartwig.hmftools.common.variant.structural.annotation.ImmutableGeneFusion;
 import com.hartwig.hmftools.common.variant.structural.annotation.StructuralVariantAnnotation;
 import com.hartwig.hmftools.common.variant.structural.annotation.Transcript;
 
 import org.apache.commons.cli.Options;
-import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -34,11 +30,14 @@ public class SvFusionAnalyser
 
     private final KnownFusionsModel mKnownFusionsModel;
 
+    boolean mIncludePossibles;
+
     private static final Logger LOGGER = LogManager.getLogger(SvFusionAnalyser.class);
 
     public SvFusionAnalyser(final KnownFusionsModel knownFusionsModel)
     {
         mKnownFusionsModel = knownFusionsModel;
+        mIncludePossibles = false;
     }
 
     public static void addCmdLineArgs(Options options)
@@ -47,6 +46,8 @@ public class SvFusionAnalyser
         options.addOption(PROMISCUOUS_FIVE_CSV, true, "Path towards a CSV containing white-listed promiscuous 5' genes.");
         options.addOption(PROMISCUOUS_THREE_CSV, true, "Path towards a CSV containing white-listed promiscuous 3' genes.");
     }
+
+    public void setIncludePossibles(boolean toggle) { mIncludePossibles = toggle; }
 
     public final List<GeneFusion> findFusions(final List<StructuralVariantAnnotation> annotations)
     {
@@ -66,9 +67,7 @@ public class SvFusionAnalyser
 
     public final List<GeneFusion> findFusions(final List<GeneAnnotation> breakendGenes1, final List<GeneAnnotation> breakendGenes2)
     {
-        final List<List<Pair<Transcript, Transcript>>> fusionTranscriptPairs = Lists.newArrayList();
-
-        final List<Pair<Transcript, Transcript>> potentialFusions = Lists.newArrayList();
+        final List<GeneFusion> potentialFusions = Lists.newArrayList();
 
         for (final GeneAnnotation startGene : breakendGenes1)
         {
@@ -146,11 +145,18 @@ public class SvFusionAnalyser
                         if (!isPotentiallyRelevantFusion(upstreamTrans, downstreamTrans))
                             continue;
 
+                        if(!checkExactMatch)
+                        {
+                            // all fusions to downstream exons may be excluded, but for now definitely exclude those which end in the last exon
+                            if(downstreamTrans.isExonic() && downstreamTrans.exonDownstream() == downstreamTrans.exonMax() && ! downstreamTrans.preCoding())
+                                continue;
+                        }
+
                         if(checkExactMatch)
                         {
                             if(exonToExonInPhase(upstreamTrans, true, downstreamTrans, false))
                             {
-                                addFusion(potentialFusions, upstreamTrans, downstreamTrans);
+                                addFusion(potentialFusions, upstreamTrans, downstreamTrans, true);
                             }
                         }
                         else
@@ -158,23 +164,22 @@ public class SvFusionAnalyser
                             // just check for a phasing match
                             if (upstreamTrans.exonUpstreamPhase() == downstreamTrans.exonDownstreamPhase())
                             {
-                                // all fusions to downstream exons may be excluded, but for now definitely exclude those which end in the last exon
-                                if(downstreamTrans.isExonic() && downstreamTrans.exonDownstream() == downstreamTrans.exonMax() && ! downstreamTrans.preCoding())
-                                    continue;
-
-                                addFusion(potentialFusions, upstreamTrans, downstreamTrans);
+                                addFusion(potentialFusions, upstreamTrans, downstreamTrans, true);
                             }
+                        }
+
+                        if(mIncludePossibles && transcriptsMatchKnownFusion(upstreamTrans, downstreamTrans))
+                        {
+                            addFusion(potentialFusions, upstreamTrans, downstreamTrans, false);
                         }
                     }
                 }
             }
         }
 
-        fusionTranscriptPairs.add(potentialFusions);
+        setReportableGeneFusions(potentialFusions);
 
-        List<GeneFusion> fusions = toReportableGeneFusions(fusionTranscriptPairs);
-
-        return fusions;
+        return potentialFusions;
     }
 
     private static boolean exonToExonInPhase(final Transcript startTrans, boolean startUpstream, final Transcript endTrans, boolean endUpstream)
@@ -200,12 +205,17 @@ public class SvFusionAnalyser
         return adjustedPhase;
     }
 
-    private void addFusion(List<Pair<Transcript, Transcript>> fusions, final Transcript startTrans, final Transcript endTrans)
+    private void addFusion(List<GeneFusion> fusions, final Transcript upstreamTrans, final Transcript downstreamTrans, boolean phaseMatched)
     {
         //LOGGER.debug("adding fusion between start SV({}) trans({}) and end SV({}) trans({})",
         //        startTrans.parent().id(), startTrans.toString(), endTrans.parent().id(), endTrans.toString());
 
-        fusions.add(Pair.of(startTrans, endTrans));
+        fusions.add(new GeneFusion(
+                upstreamTrans,
+                downstreamTrans,
+                mKnownFusionsModel.primarySource(upstreamTrans.parent().synonyms(), downstreamTrans.parent().synonyms()),
+                false,
+                phaseMatched));
     }
 
     private static boolean isPotentiallyRelevantFusion(final Transcript t1, final Transcript t2)
@@ -227,98 +237,83 @@ public class SvFusionAnalyser
         return true;
     }
 
-    @NotNull
-    private List<GeneFusion> toReportableGeneFusions(@NotNull List<List<Pair<Transcript, Transcript>>> fusionTranscriptPairs)
+    private void setReportableGeneFusions(final List<GeneFusion> fusions)
     {
         final List<GeneFusion> result = Lists.newArrayList();
 
-        for (final List<Pair<Transcript, Transcript>> fusions : fusionTranscriptPairs)
+        Optional<GeneFusion> reportableFusion = determineReportableFusion(fusions);
+
+        if(!reportableFusion.isPresent() )
+            return;
+
+        for (final GeneFusion fusion : fusions)
         {
-            Optional<Pair<Transcript, Transcript>> reportableFusion = determineReportableFusion(fusions);
+            if(!fusion.isPhaseMatch())
+                continue;
 
-            for (final Pair<Transcript, Transcript> fusion : fusions)
+            if(reportableFusion.get() == fusion)
             {
-                final Transcript upstream = fusion.getLeft();
-                final Transcript downstream = fusion.getRight();
+                boolean intragenicOk = !(intragenic(fusion.upstreamTrans(), fusion.downstreamTrans()) && fusion.upstreamTrans().exonUpstreamPhase() == -1);
 
-                boolean reportable = false;
+                if(intragenicOk)
+                    fusion.setReportable(true);
 
-                if(reportableFusion.isPresent() && reportableFusion.get() == fusion)
-                {
-                    boolean intragenicOk = !(intragenic(upstream, downstream) && upstream.exonUpstreamPhase() == -1);
-
-                    if(intragenicOk)
-                        reportable = true;
-                    else
-                        reportable = false;
-
-                    // old rule was checking (downstream: not non-coding and not downstream from coding)
-                    // AND (upstream: non-coding or not downstream of coding)
-                    // AND NOT (intragenic and upstream phase -1)
-                    /*
-                    boolean oldReportable = isPostCodingDownstream != null && !isPostCodingDownstream
-                            && (isPostCodingUpstream == null || !isPostCodingUpstream)
-                            && !(intragenic(upstream, downstream) && upstream.exonUpstreamPhase() == -1);
-                    */
-                }
-
-                final GeneFusion geneFusion = ImmutableGeneFusion.builder()
-                        .reportable(reportable)
-                        .upstreamLinkedAnnotation(upstream)
-                        .downstreamLinkedAnnotation(downstream)
-                        .primarySource(mKnownFusionsModel.primarySource(upstream.parent().synonyms(), downstream.parent().synonyms()))
-                        .build();
-
-                result.add(geneFusion);
+                // old rule was checking (downstream: not non-coding and not downstream from coding)
+                // AND (upstream: non-coding or not downstream of coding)
+                // AND NOT (intragenic and upstream phase -1)
+                /*
+                boolean oldReportable = isPostCodingDownstream != null && !isPostCodingDownstream
+                        && (isPostCodingUpstream == null || !isPostCodingUpstream)
+                        && !(intragenic(upstream, downstream) && upstream.exonUpstreamPhase() == -1);
+                */
             }
         }
-        return result;
+
     }
 
     @NotNull
-    private Optional<Pair<Transcript, Transcript>> determineReportableFusion(@NotNull List<Pair<Transcript, Transcript>> fusions)
+    private Optional<GeneFusion> determineReportableFusion(final List<GeneFusion> fusions)
     {
         // Select either the canonical -> canonical transcript fusion
         //  then the one with the most exons where one end is canonical
         //  then the one with the most exons combined transcript
 
-        List<Pair<Transcript, Transcript>> knownFusions = fusions.stream()
-                .filter(pair -> transcriptsMatchKnownFusion(mKnownFusionsModel, pair.getLeft(), pair.getRight()))
+        List<GeneFusion> knownFusions = fusions.stream()
+                .filter(f -> transcriptsMatchKnownFusion(f.upstreamTrans(), f.downstreamTrans()))
                 .collect(Collectors.toList());
 
-
-        Optional<Pair<Transcript, Transcript>> reportableFusion =
+        Optional<GeneFusion> reportableFusion =
                 knownFusions.stream()
-                        .filter(pair -> pair.getLeft().isCanonical() && pair.getRight().isCanonical()).findFirst();
+                        .filter(f -> f.upstreamTrans().isCanonical() && f.downstreamTrans().isCanonical()).findFirst();
 
         if (!reportableFusion.isPresent())
         {
             reportableFusion = knownFusions.stream()
-                    .filter(pair -> pair.getLeft().isCanonical() || pair.getRight().isCanonical())
-                    .sorted(Comparator.comparingInt(a -> a.getLeft().exonMax() + a.getRight().exonMax()))
+                    .filter(f -> f.upstreamTrans().isCanonical() || f.downstreamTrans().isCanonical())
+                    .sorted(Comparator.comparingInt(a -> a.upstreamTrans().exonMax() + a.downstreamTrans().exonMax()))
                     .reduce((a, b) -> b);
         }
 
         if (!reportableFusion.isPresent())
         {
             reportableFusion = knownFusions.stream()
-                    .sorted(Comparator.comparingInt(a -> a.getLeft().exonMax() + a.getRight().exonMax()))
+                    .sorted(Comparator.comparingInt(a -> a.upstreamTrans().exonMax() + a.downstreamTrans().exonMax()))
                     .reduce((a, b) -> b);
         }
 
         return reportableFusion;
     }
 
-    private static boolean transcriptsMatchKnownFusion(final KnownFusionsModel fusionsModel, final Transcript five, final Transcript three)
+    private boolean transcriptsMatchKnownFusion(final Transcript upTrans, final Transcript downTrans)
     {
-        if(fusionsModel.exactMatch(five.parent().synonyms(), three.parent().synonyms()))
+        if(mKnownFusionsModel.exactMatch(upTrans.parent().synonyms(), downTrans.parent().synonyms()))
             return true;
 
-        if(fusionsModel.intergenicPromiscuousMatch(five.parent().synonyms(), three.parent().synonyms()))
+        if(mKnownFusionsModel.intergenicPromiscuousMatch(upTrans.parent().synonyms(), downTrans.parent().synonyms()))
             return true;
 
-        if(fusionsModel.intragenicPromiscuousMatch(five.parent().synonyms(), three.parent().synonyms())
-        && three.exonDownstream() - five.exonUpstream() > EXON_THRESHOLD)
+        if(mKnownFusionsModel.intragenicPromiscuousMatch(upTrans.parent().synonyms(), downTrans.parent().synonyms())
+        && downTrans.exonDownstream() - upTrans.exonUpstream() > EXON_THRESHOLD)
         {
             return true;
         }

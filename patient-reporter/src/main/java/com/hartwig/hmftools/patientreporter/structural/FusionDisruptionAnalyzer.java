@@ -53,8 +53,8 @@ public final class FusionDisruptionAnalyzer {
 
     private static boolean fiveThreeCombinationExists(@NotNull List<GeneFusion> fusions, @NotNull GeneFusion newFusion) {
         for (GeneFusion fusion : fusions) {
-            if (fusion.upstreamLinkedAnnotation().geneName().equals(newFusion.upstreamLinkedAnnotation().geneName())
-                    && fusion.downstreamLinkedAnnotation().geneName().equals(newFusion.downstreamLinkedAnnotation().geneName())) {
+            if (fusion.upstreamTrans().geneName().equals(newFusion.upstreamTrans().geneName())
+                    && fusion.downstreamTrans().geneName().equals(newFusion.downstreamTrans().geneName())) {
                 return true;
             }
         }

@@ -134,8 +134,8 @@ public class ActionabilityAnalyzer {
         Map<GeneFusion, List<EvidenceItem>> evidencePerFusion = Maps.newHashMap();
 
         List<GeneFusion> fusionsOnActionableGenes = fusions.stream()
-                .filter(fusion -> fusionAnalyzer.actionableGenes().contains(fusion.upstreamLinkedAnnotation().geneName())
-                        || fusionAnalyzer.actionableGenes().contains(fusion.downstreamLinkedAnnotation().geneName()))
+                .filter(fusion -> fusionAnalyzer.actionableGenes().contains(fusion.upstreamTrans().geneName())
+                        || fusionAnalyzer.actionableGenes().contains(fusion.downstreamTrans().geneName()))
                 .collect(Collectors.toList());
 
         // TODO (KODU): Should reuse "favor canonical" rules from SV analyser here but have re-implemented for now.
@@ -153,7 +153,7 @@ public class ActionabilityAnalyzer {
         Map<FiveThreePair, List<GeneFusion>> fusionsPerFiveThreePair = Maps.newHashMap();
         for (GeneFusion fusion : fusions) {
             FiveThreePair key =
-                    new FiveThreePair(fusion.upstreamLinkedAnnotation().geneName(), fusion.downstreamLinkedAnnotation().geneName());
+                    new FiveThreePair(fusion.upstreamTrans().geneName(), fusion.downstreamTrans().geneName());
             List<GeneFusion> fusionsForKey = fusionsPerFiveThreePair.get(key);
             if (fusionsForKey == null) {
                 fusionsForKey = Lists.newArrayList();
@@ -172,7 +172,7 @@ public class ActionabilityAnalyzer {
     @NotNull
     private static GeneFusion favorCanonical(@NotNull List<GeneFusion> fusions) {
         for (GeneFusion fusion : fusions) {
-            if (fusion.upstreamLinkedAnnotation().isCanonical() && fusion.downstreamLinkedAnnotation().isCanonical()) {
+            if (fusion.upstreamTrans().isCanonical() && fusion.downstreamTrans().isCanonical()) {
                 return fusion;
             }
         }
