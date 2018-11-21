@@ -14,10 +14,13 @@ class IclusionCnvReaderTest : StringSpec() {
         "can read amplification" {
             IclusionCnvReader.read(event.copy(variant = "AMPLIFICATION")) shouldBe listOf(CnvEvent.amplification(event.gene))
             IclusionCnvReader.read(event.copy(variant = "OVEREXPRESSION")) shouldBe listOf(CnvEvent.amplification(event.gene))
+            IclusionCnvReader.read(event.copy(variant = "COPY-GAIN")) shouldBe listOf(CnvEvent.amplification(event.gene))
         }
 
         "can read deletion" {
-        //    IclusionCnvReader.read(actionable.copy(variant = "Deletion")) shouldBe listOf(CnvEvent.deletion(actionable.gene))
+            IclusionCnvReader.read(event.copy(variant = "DELETION")) shouldBe listOf(CnvEvent.deletion(event.gene))
+            IclusionCnvReader.read(event.copy(variant = "LOSS")) shouldBe listOf(CnvEvent.deletion(event.gene))
+            IclusionCnvReader.read(event.copy(variant = "LOSS-OF-FUNCTION")) shouldBe listOf(CnvEvent.deletion(event.gene))
         }
 
         "will only read exact matches" {
