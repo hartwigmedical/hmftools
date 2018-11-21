@@ -18,8 +18,11 @@ import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.sql.SQLException;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
@@ -97,15 +100,56 @@ public class BachelorPP {
 
     private static final String VCF_FILE_SUFFIX = "_germline_variants.vcf";
 
-    public static void main(@NotNull final String[] args) throws ParseException
-    {
-        final Options options = createBasicOptions();
-        final CommandLine cmd = createCommandLine(args, options);
 
-        if (cmd.hasOption(LOG_DEBUG)) {
-            Configurator.setRootLevel(Level.DEBUG);
+    private DatabaseAccess mDbAccess;
+    private Multimap<String, GenomeRegion> mHighConfidenceRegions;
+    private IndexedFastaSequenceFile mIndexedFastaSequenceFile;
+
+
+    public BachelorPP()
+    {
+        mDbAccess = null;
+        mHighConfidenceRegions = null;
+        mIndexedFastaSequenceFile = null;
+    }
+
+    public boolean initialise(final CommandLine cmd)
+    {
+        try
+        {
+            mDbAccess = databaseAccess(cmd);
+        }
+        catch (SQLException e)
+        {
+            LOGGER.error("DB connection failed: {}", e.toString());
+            return false;
         }
 
+        if(cmd.hasOption(HIGH_CONFIDENCE_BED) && cmd.hasOption(REF_GENOME))
+        {
+            final String highConfidenceBed = cmd.getOptionValue(HIGH_CONFIDENCE_BED);
+            final String fastaFileLocation = cmd.getOptionValue(REF_GENOME);
+
+            try
+            {
+                LOGGER.debug("reading high confidence bed file");
+                mHighConfidenceRegions = BEDFileLoader.fromBedFile(highConfidenceBed);
+
+                LOGGER.debug("loading indexed fasta reference file");
+                mIndexedFastaSequenceFile = new IndexedFastaSequenceFile(new File(fastaFileLocation));
+            }
+            catch (IOException e)
+            {
+                LOGGER.error("reference file loading failed");
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    public boolean run(final CommandLine cmd)
+    {
         String sampleId = cmd.getOptionValue(SAMPLE);
 
         if (sampleId == null || sampleId.equals("*"))
@@ -118,7 +162,10 @@ public class BachelorPP {
         if(!sampleDirectory.endsWith("/"))
             sampleDirectory += "/";
 
-        final String bachelorDirectory = sampleDirectory + BACHELOR_SUB_DIRECTORY;
+        String bachelorDirectory = sampleDirectory;
+
+        if(!sampleId.isEmpty())
+            bachelorDirectory += BACHELOR_SUB_DIRECTORY;
 
         String bachelorInputFile;
 
@@ -131,12 +178,12 @@ public class BachelorPP {
         dataCollection.setSampleId(sampleId);
 
         if(!dataCollection.loadBachelorData(bachelorInputFile))
-            return;
+            return false;
 
         if (dataCollection.getBachelorVariants().isEmpty())
         {
             LOGGER.debug("sample({}) has no records to process", sampleId);
-            return;
+            return false;
         }
 
         List<BachelorGermlineVariant> bachRecords = dataCollection.getBachelorVariants();
@@ -145,12 +192,16 @@ public class BachelorPP {
 
         if(applyFilters)
         {
-            // rewriteFilteredBachelorRecords(bachRecords, cmd);
-            // LOGGER.info("filtering complete");
-            // return;
-
             LOGGER.debug("applying white and black list filters");
             bachRecords = applyFilters(bachRecords, cmd);
+
+            if (bachRecords.isEmpty())
+            {
+                LOGGER.info("all records were filtered out");
+                return true;
+            }
+
+            LOGGER.debug("{} records after filtering", bachRecords.size());
         }
 
         if(!applyFilters)
@@ -159,51 +210,92 @@ public class BachelorPP {
             adLoader.setSampleId(sampleId);
 
             if (!adLoader.loadMiniPileupData(bachelorDirectory) || !adLoader.applyPileupData(bachRecords))
-                return;
+                return false;
         }
 
-        DatabaseAccess dbAccess;
-        try
+        Map<String, List<BachelorGermlineVariant>> sampleRecordsMap = new HashMap();
+
+        if(sampleId.isEmpty() || sampleId.equals("*"))
         {
-            dbAccess = databaseAccess(cmd);
+            for (final BachelorGermlineVariant bachRecord : bachRecords)
+            {
+                List<BachelorGermlineVariant> sampleRecords = sampleRecordsMap.get(bachRecord.sampleId());
+
+                if(sampleRecords == null)
+                {
+                    sampleRecords = Lists.newArrayList();
+                    sampleRecordsMap.put(bachRecord.sampleId(), sampleRecords);
+                }
+
+                sampleRecords.add(bachRecord);
+            }
         }
-        catch (SQLException e)
+        else
         {
-            LOGGER.error("DB connection failed: {}", e.toString());
+            sampleRecordsMap.put(sampleId, bachRecords);
+        }
+
+        if(sampleRecordsMap.size() > 1)
+        {
+            LOGGER.debug("{} unique samples after filtering", sampleRecordsMap.size());
+        }
+
+        for(final Map.Entry<String, List<BachelorGermlineVariant>> entry : sampleRecordsMap.entrySet())
+        {
+            final String specificSample = entry.getKey();
+            List<BachelorGermlineVariant> sampleRecords = entry.getValue();
+
+            // create variant objects for VCF file writing and enrichment, and cache aginst bachelor record
+            buildVariants(specificSample, sampleRecords);
+
+            annotateRecords(specificSample, sampleRecords, cmd, sampleDirectory);
+
+            int validRecordCount = 0;
+            for (final BachelorGermlineVariant bachRecord : sampleRecords)
+            {
+                if (bachRecord.isValid())
+                    ++validRecordCount;
+            }
+
+            if(validRecordCount == 0)
+            {
+                LOGGER.info("sample({}) has no valid germline reports", specificSample, validRecordCount);
+                continue;
+            }
+
+            if (cmd.hasOption(WRITE_TO_DB))
+            {
+                LOGGER.info("sample({}) writing {} germline reports to database", specificSample, validRecordCount);
+                writeToDatabase(specificSample, sampleRecords);
+            }
+
+            writeToFile(specificSample, sampleRecords, bachelorDirectory, applyFilters);
+        }
+
+        return true;
+    }
+
+    public static void main(@NotNull final String[] args) throws ParseException
+    {
+        final Options options = createBasicOptions();
+        final CommandLine cmd = createCommandLine(args, options);
+
+        if (cmd.hasOption(LOG_DEBUG)) {
+            Configurator.setRootLevel(Level.DEBUG);
+        }
+
+        BachelorPP bachelorPP = new BachelorPP();
+
+        if(!bachelorPP.initialise(cmd))
             return;
-        }
 
-        // create variant objects for VCF file writing and enrichment, and cache aginst bachelor record
-        buildVariants(sampleId, bachRecords);
-
-        annotateRecords(sampleId, bachRecords, cmd, dbAccess, sampleDirectory);
-
-        int validRecordCount = 0;
-        for (final BachelorGermlineVariant bachRecord : bachRecords)
-        {
-            if (bachRecord.isValid())
-                ++validRecordCount;
-        }
-
-        if(validRecordCount == 0)
-        {
-            LOGGER.info("sample({})has no valid germline reports", sampleId, validRecordCount);
+        if(!bachelorPP.run(cmd))
             return;
-        }
-
-        LOGGER.info("sample({}) writing {} germline reports to database", sampleId, validRecordCount);
-
-        if (cmd.hasOption(WRITE_TO_DB))
-        {
-            writeToDatabase(sampleId, bachRecords, dbAccess);
-        }
-
-        writeToFile(sampleId, bachRecords, bachelorDirectory, applyFilters);
 
         LOGGER.info("run complete");
     }
 
-    private static void buildVariants(final String sampleId, List<BachelorGermlineVariant> bachRecords)
+    private void buildVariants(final String sampleId, List<BachelorGermlineVariant> bachRecords)
     {
         for (final BachelorGermlineVariant bachRecord : bachRecords)
         {
@@ -245,38 +337,9 @@ public class BachelorPP {
         }
     }
 
-    private static void annotateRecords(final String sampleId, List<BachelorGermlineVariant> bachRecords, final CommandLine cmd,
-            final DatabaseAccess dbAccess, final String sampleDirectory)
+    private void annotateRecords(final String sampleId, List<BachelorGermlineVariant> bachRecords, final CommandLine cmd,
+            final String sampleDirectory)
     {
-        final String highConfidenceBed = cmd.getOptionValue(HIGH_CONFIDENCE_BED);
-        final String fastaFileLocation = cmd.getOptionValue(REF_GENOME);
-
-        List<SomaticVariant> variants = Lists.newArrayList();
-        for (final BachelorGermlineVariant bachRecord : bachRecords)
-        {
-            if (bachRecord.getSomaticVariant() != null)
-            {
-                variants.add(bachRecord.getSomaticVariant());
-            }
-        }
-
-        Multimap<String, GenomeRegion> highConfidenceRegions;
-        IndexedFastaSequenceFile indexedFastaSequenceFile;
-
-        try
-        {
-            LOGGER.debug("reading high confidence bed file");
-            highConfidenceRegions = BEDFileLoader.fromBedFile(highConfidenceBed);
-
-            LOGGER.debug("loading indexed fasta reference file");
-            indexedFastaSequenceFile = new IndexedFastaSequenceFile(new File(fastaFileLocation));
-        }
-        catch (IOException e)
-        {
-            LOGGER.error("reference file loading failed");
-            return;
-        }
-
         final PurityContext purityContext;
         final Multimap<Chromosome, PurpleCopyNumber> copyNumbers;
         final Multimap<Chromosome, FittedRegion> copyNumberRegions;
@@ -285,7 +348,7 @@ public class BachelorPP {
         {
             final String purplePath = sampleDirectory + cmd.getOptionValue(PURPLE_DATA_DIRECTORY);
 
-            LOGGER.debug("loading purple data from file");
+            LOGGER.debug("sample({}) loading purple data from file", sampleId);
 
             try
             {
@@ -307,19 +370,33 @@ public class BachelorPP {
         }
         else
         {
-            LOGGER.debug("loading purple data from database");
+            LOGGER.debug("sample({}) loading purple data from database", sampleId);
 
-            purityContext = dbAccess.readPurityContext(sampleId);
+            purityContext = mDbAccess.readPurityContext(sampleId);
 
             if (purityContext == null)
             {
                 LOGGER.warn("failed to read purity data");
             }
 
-            copyNumbers = Multimaps.fromRegions(dbAccess.readCopynumbers(sampleId));
+            copyNumbers = Multimaps.fromRegions(mDbAccess.readCopynumbers(sampleId));
 
-            copyNumberRegions = Multimaps.fromRegions(dbAccess.readCopyNumberRegions(sampleId));
+            copyNumberRegions = Multimaps.fromRegions(mDbAccess.readCopyNumberRegions(sampleId));
         }
+
+        List<SomaticVariant> variants = bachRecords.stream()
+                .filter(x -> x.getSomaticVariant() != null)
+                .map(x -> x.getSomaticVariant())
+                .collect(Collectors.toList());
+
+//        List<SomaticVariant> variants = Lists.newArrayList();
+//        for (final BachelorGermlineVariant bachRecord : bachRecords)
+//        {
+//            if (bachRecord.getSomaticVariant() != null)
+//            {
+//                variants.add(bachRecord.getSomaticVariant());
+//            }
+//        }
 
         final PurityAdjuster purityAdjuster = purityContext == null
                 ? new PurityAdjuster(Gender.FEMALE, 1, 1)
@@ -354,9 +431,11 @@ public class BachelorPP {
             }
         }
 
-        LOGGER.debug("enriching variants");
-        final EnrichedSomaticVariantFactory enrichedSomaticVariantFactory = new EnrichedSomaticVariantFactory(highConfidenceRegions,
-                indexedFastaSequenceFile,
+        LOGGER.debug("sample({}) enriching variants", sampleId);
+
+        final EnrichedSomaticVariantFactory enrichedSomaticVariantFactory = new EnrichedSomaticVariantFactory(
+                mHighConfidenceRegions,
+                mIndexedFastaSequenceFile,
                 new ClonalityFactory(purityAdjuster, clonalPloidy));
 
         final List<EnrichedSomaticVariant> enrichedVariants = enrichedSomaticVariantFactory.enrich(purityAdjustedVariants);
@@ -448,13 +527,13 @@ public class BachelorPP {
         return filteredRecords;
     }
 
-    private static void writeToDatabase(final String sampleId, final List<BachelorGermlineVariant> bachRecords, final DatabaseAccess dbAccess)
+    private void writeToDatabase(final String sampleId, final List<BachelorGermlineVariant> bachRecords)
     {
-        final GermlineVariantDAO germlineDAO = new GermlineVariantDAO(dbAccess.context());
+        final GermlineVariantDAO germlineDAO = new GermlineVariantDAO(mDbAccess.context());
         germlineDAO.write(sampleId, bachRecords);
     }
 
-    public static void writeToFile(final String sampleId, final List<BachelorGermlineVariant> bachRecords, final String outputDir, boolean filtersApplied)
+    public void writeToFile(final String sampleId, final List<BachelorGermlineVariant> bachRecords, final String outputDir, boolean filtersApplied)
     {
         String outputFileName = outputDir;
         if (!outputFileName.endsWith("/"))
@@ -550,11 +629,11 @@ public class BachelorPP {
         }
         catch (final IOException e)
         {
-            LOGGER.error("error writing to outputFile");
+            LOGGER.error("error writing to outputFile: {}", e.toString());
         }
     }
 
-    private static void rewriteFilteredBachelorRecords(final List<BachelorGermlineVariant> bachRecords, CommandLine cmdLineArgs)
+    private void rewriteFilteredBachelorRecords(final List<BachelorGermlineVariant> bachRecords, CommandLine cmdLineArgs)
     {
         String outputDir = cmdLineArgs.getOptionValue(SAMPLE_PATH);
 
@@ -665,7 +744,7 @@ public class BachelorPP {
         }
         catch (final IOException e)
         {
-            LOGGER.error("error writing to outputFile");
+            LOGGER.error("error writing to outputFile: {}", e.toString());
         }
     }
 
