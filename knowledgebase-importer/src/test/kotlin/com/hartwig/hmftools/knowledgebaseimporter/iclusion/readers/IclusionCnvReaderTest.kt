@@ -7,12 +7,13 @@ import io.kotlintest.specs.StringSpec
 
 class IclusionCnvReaderTest : StringSpec() {
     companion object {
-        private val actionable = IclusionEvent("BRAF", "V600", "ENST0000000")
+        private val event = IclusionEvent("ERBB2", "ANY", "ENST0000000")
     }
 
     init {
         "can read amplification" {
-         //   IclusionCnvReader.read(actionable.copy() ) shouldBe listOf(CnvEvent.amplification(actionable.gene))
+            IclusionCnvReader.read(event.copy(variant = "AMPLIFICATION")) shouldBe listOf(CnvEvent.amplification(event.gene))
+            IclusionCnvReader.read(event.copy(variant = "OVEREXPRESSION")) shouldBe listOf(CnvEvent.amplification(event.gene))
         }
 
         "can read deletion" {
@@ -20,13 +21,9 @@ class IclusionCnvReaderTest : StringSpec() {
         }
 
         "will only read exact matches" {
-//            IclusionCnvReader.read(actionable.copy(variant = "amplification")) shouldBe emptyList<CnvEvent>()
-//            IclusionCnvReader.read(actionable.copy(variant = "amp")) shouldBe emptyList<CnvEvent>()
-//            IclusionCnvReader.read(actionable.copy(variant = "overexpression")) shouldBe emptyList<CnvEvent>()
-//            IclusionCnvReader.read(actionable.copy(variant = "deletion")) shouldBe emptyList<CnvEvent>()
-//            IclusionCnvReader.read(actionable.copy(variant = "del")) shouldBe emptyList<CnvEvent>()
-//            IclusionCnvReader.read(actionable.copy(variant = "loss-of-function")) shouldBe emptyList<CnvEvent>()
-
+            IclusionCnvReader.read(event.copy(variant = "amplification")) shouldBe emptyList<CnvEvent>()
+            IclusionCnvReader.read(event.copy(variant = "DEL")) shouldBe emptyList<CnvEvent>()
+            IclusionCnvReader.read(event.copy(variant = "V600")) shouldBe emptyList<CnvEvent>()
         }
     }
 
