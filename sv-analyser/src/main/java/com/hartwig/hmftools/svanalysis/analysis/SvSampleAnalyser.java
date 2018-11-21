@@ -2,6 +2,8 @@ package com.hartwig.hmftools.svanalysis.analysis;
 
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.CHROMOSOME_ARM_P;
 import static com.hartwig.hmftools.common.variant.structural.annotation.SvPONAnnotator.REGION_DISTANCE;
+import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_LOW_QUALITY;
+import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_SIMPLE_SV;
 import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.ASSEMBLY_MATCH_ASMB_ONLY;
 
 import com.google.common.collect.Lists;
@@ -481,7 +483,10 @@ public class SvSampleAnalyser {
         {
             Map<String, Integer> targetMap;
 
-            if(cluster.isResolved())
+            if(cluster.getResolvedType() == RESOLVED_LOW_QUALITY)
+                continue;
+
+            if(cluster.getResolvedType() == RESOLVED_TYPE_SIMPLE_SV || cluster.isSyntheticSimpleType())
             {
                 ++simpleClusterCount;
                 targetMap = armSimpleClusterCount;
@@ -522,7 +527,7 @@ public class SvSampleAnalyser {
 
         if(complexClusterCount > simpleClusterCount || armsWithExcessComplexClusters >= 2)
         {
-            LOGGER.info("sample({}) clusters total({}) simple({}) complex({}) excessComplexArms()",
+            LOGGER.info("sample({}) clusters total({}) simple({}) complex({}) excessComplexArms({})",
                     mSampleId, mAnalyser.getClusters().size(), simpleClusterCount, complexClusterCount, armsWithExcessComplexClusters);
         }
     }

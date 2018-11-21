@@ -68,7 +68,6 @@ public class SvCluster
 
     public static String RESOLVED_TYPE_SIMPLE_SV = "SimpleSV";
     public static String RESOLVED_TYPE_RECIPROCAL_TRANS = "RecipTrans";
-    // public static String RESOLVED_TYPE_RECIPROCAL_INV = "RecipInv";
 
     public static String RESOLVED_TYPE_NONE = "None";
     public static String RESOLVED_LOW_QUALITY = "LowQual";
