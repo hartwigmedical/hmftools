@@ -175,13 +175,7 @@ class BachelorEligibility {
         }
 
         // gather up the relevant alleles
-        VariantModel sampleVariant = new VariantModel(sampleId, variant);
-
-        // apply the all relevant tests to see if this program has been matched
-        final List<String> matchingPrograms = programs.stream()
-                .filter(program -> program.vcfProcessor().test(sampleVariant))
-                .map(BachelorProgram::name)
-                .collect(Collectors.toList());
+        VariantModel sampleVariant = new VariantModel(genotype.getSampleName(), variant);
 
         List<EligibilityReport> reportList = Lists.newArrayList();
 
