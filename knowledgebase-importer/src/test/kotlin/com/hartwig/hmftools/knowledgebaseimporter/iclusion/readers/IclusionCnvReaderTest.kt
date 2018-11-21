@@ -29,5 +29,4 @@ class IclusionCnvReaderTest : StringSpec() {
             IclusionCnvReader.read(event.copy(variant = "V600")) shouldBe emptyList<CnvEvent>()
         }
     }
-
 }
