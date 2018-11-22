@@ -25,7 +25,7 @@
       "analysis_type": "Somatic_R",
       "lab_sop_versions": "PREP013V23-QC037V20-SEQ008V25",
       "dna_conc": 143,
-      "primary_tum": "NA",
+      "ptum": "NA",
       "patho_plate": "NA",
       "sample_id": "FR00000001",
       "label": "CPCT"
@@ -55,7 +55,7 @@
       "arrival_date": "2016-02-05",
       "analysis_type": "Somatic_R",
       "dna_conc": 143,
-      "primary_tum": "NA",
+      "ptum": "NA",
       "patho_plate": "NA",
       "sample_id": "FR00000001",
       "label": "CPCT"

@@ -79,8 +79,14 @@ public class Lims {
         LimsJsonData sampleData = dataPerSample.get(sample);
         if (sampleData != null) {
             String tumorPercentageString = sampleData.tumorPercentageString();
+            String remarksSample = sampleData.labRemarks();
             if (tumorPercentageString == null) {
                 return null;
+            } else if (remarksSample == null) {
+                return null;
+            }
+            else if (tumorPercentageString.equals("NA") && remarksSample.contains("CPCT WIDE project")) {
+                return Double.parseDouble("Not Determined");
             }
             try {
                 return Double.parseDouble(tumorPercentageString) / 100D;
