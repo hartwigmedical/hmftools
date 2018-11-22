@@ -1,69 +1,31 @@
 cancerType,doids
-Acute Lymphoid Leukemia,
-All Solid Tumors,
 All Tumors,162
-Anaplastic oligodendroglioma,
 Any cancer type,162
 B cell lymphoma,707
-Billiary tract,4607
+Biliary tract,4607
 Bladder,11054
 Cervix,4362
-Cervix squamous cell,
 CNS Cancer,3620
 Dedifferentiated Liposarcoma,3382
-Dermatofibrosarcoma,
-Desmoid Fibromatosis,
-Embryonal Tumor,
-Endometrial Hyperplasia,
 Endometrium,1380
-Eosinophilic chronic leukemia,
-Epithelioid Hemangioendothelioma,
-Erdheim-Chester histiocytosis,
-Esophagogastric Cancer,
-Female germ cell tumor,
 Gastrointestinal stromal,9253
 Giant cell astrocytoma,3069
-Glioblastoma,
-Glioma,
 Hairy-Cell leukemia,285
 Head an neck,11934
 Head an neck squamous,5520
-Hematologic malignancies,
 Hepatic carcinoma,686
 Hepatocellular Mixed Fibrolamellar Carcinoma,0080182
-Histiocytic Disorder,
-Hyper eosinophilic advanced snydrome,
 Inflammatory myofibroblastic,0050905
-Lagerhans cell histiocytosis,
-Low-Grade Serous Ovarian Cancer,
 Lung,1324
 Lung squamous cell,3907
-Male germ cell tumor,
-Malignant astrocytoma,
-Malignant peripheral nerve sheat tumor,
-Malignant rhabdoid tumor,
-Megakaryoblastic leukemia,
 Mesothelioma,1790
-Myelodisplasic proliferative syndrome,
-Myelodisplasic syndrome,
-Myelodysplasia,
 Neuroendocrine,169
 Non-small cell lung,3908
 Ovary,2394
 Pancreas,1793
-Pediatric glioma,
-Pericytoma,
-PTEN Harmatoma Tumor Syndrome,
 Renal,263
 Salivary glands,8850
-"Skin Cancer, Non-Melanoma",
-Soft Tissue Sarcoma,
-Solid Tumor,
-Solid tumors,
 Stomach,10534
 Thymic,3277
 Thyroid,1781
-Urinary tract carcinoma,
-Waldenström macroglobulinemia,
-Waldenström's Macroglobulinemia,
 Well-Differentiated Liposarcoma,3382
