@@ -36,10 +36,7 @@ import org.apache.logging.log4j.Logger;
 
 public class ChainFinder
 {
-    private static double MIN_CHAIN_PERCENT = 0.25;
     private static double LOW_PLOIDY_LIMIT = 0.05;
-    private static int MAX_COMPLETE_CHAINS = 20;
-    private static int MAX_PATH_ITERATIONS = 250000;
 
     private static final Logger LOGGER = LogManager.getLogger(ChainFinder.class);
 
@@ -53,12 +50,9 @@ public class ChainFinder
     private boolean mHasExistingChains;
     private int mMinIncompleteChainCount;
     private int mReqChainCount;
-    private int mPathInterations;
     private boolean mLogVerbose;
-    private boolean mLogPathFinding;
 
     PerformanceCounter mContinuousFinderPc;
-    PerformanceCounter mRecursiveFinderPc;
 
     public ChainFinder(final SvUtilities utils)
     {
@@ -66,24 +60,19 @@ public class ChainFinder
         mCompleteChains = Lists.newArrayList();
         mIncompleteChains = Lists.newArrayList();
         mLogVerbose = false;
-        mPathInterations = 0;
         mReqChainCount = 0;
         mMinIncompleteChainCount = 0;
-        mLogPathFinding = false;
 
         mContinuousFinderPc = new PerformanceCounter("Continuous");
-        mRecursiveFinderPc = new PerformanceCounter("Recursive");
     }
 
     public final PerformanceCounter getContinuousFinderPc() { return mContinuousFinderPc; }
-    public final PerformanceCounter getRecursiveFinderPc() { return mRecursiveFinderPc; }
 
     public void initialise(final String sampleId, SvCluster cluster)
     {
         mSampleId = sampleId;
         mCluster = cluster;
         mHasExistingChains = !mCluster.getChains().isEmpty();
-        mPathInterations = 0;
         mReqChainCount = 0;
         mMinIncompleteChainCount = 0;
 
@@ -162,13 +151,15 @@ public class ChainFinder
 
     private List<SvLinkedPair> collectRelevantLinkedPairs()
     {
+        return mInferredLinkedPairs;
+
+        /*
         List<SvLinkedPair> inferredTIs = Lists.newArrayList();
         for (SvLinkedPair pair : mInferredLinkedPairs)
         {
             if (!(pair.linkType() == LINK_TYPE_TI || pair.linkType() == LINK_TYPE_SGL))
                 continue;
 
-            /*
             if(mRequireFullChains)
             {
                 // check for similarity of copy number change
@@ -180,12 +171,12 @@ public class ChainFinder
                 if (copyNumberChangeDiff > MAX_COPY_NUMBER_DIFF && copyNumberChangeDiffPerc > MAX_COPY_NUMBER_DIFF_PERC)
                     continue;
             }
-            */
 
             inferredTIs.add(pair);
         }
 
         return inferredTIs;
+        */
     }
 
     private List<SvVarData> collectRelevantSVs()

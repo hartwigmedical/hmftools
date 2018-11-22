@@ -6,7 +6,7 @@ import static java.lang.Math.max;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.PERMITED_DUP_BE_DISTANCE;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.copyNumbersEqual;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.getProximity;
-import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.sameChrArm;
+import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_RECIPROCAL_TRANS;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_END;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_START;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.haveLinkedAssemblies;
@@ -17,9 +17,11 @@ import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.LINK_TYPE_DB;
 import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.LINK_TYPE_TI;
 
 import java.util.List;
+import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
+import com.hartwig.hmftools.svanalysis.types.SvBreakend;
 import com.hartwig.hmftools.svanalysis.types.SvChain;
 import com.hartwig.hmftools.svanalysis.types.SvCluster;
 import com.hartwig.hmftools.svanalysis.types.SvVarData;
@@ -283,20 +285,17 @@ public class LinkFinder
                         if(var2.isAssemblyMatched(v2Start))
                             continue;
 
-                        SvLinkedPair newPair = null;
+                        if (!areLinkedSection(var1, var2, v1Start, v2Start))
+                            continue;
 
-                        if (areLinkedSection(var1, var2, v1Start, v2Start))
-                        {
                             // form a new TI from these 2 BEs
-                            newPair = new SvLinkedPair(var1, var2, LINK_TYPE_TI, v1Start, v2Start);
-                        }
-                        else if (areSectionBreak(var1, var2, v1Start, v2Start))
+                        SvLinkedPair newPair = new SvLinkedPair(var1, var2, LINK_TYPE_TI, v1Start, v2Start);
+
+                        if(newPair.linkType() == LINK_TYPE_DB)
                         {
-                            // form a new DB from these 2 BEs
-                            newPair = new SvLinkedPair(var1, var2, LINK_TYPE_DB, v1Start, v2Start);
-                        }
-                        else
-                        {
+                            // was considered too short to be a TI and so converted
+                            var1.setDBLink(newPair, v1Start);
+                            var2.setDBLink(newPair, v2Start);
                             continue;
                         }
 
@@ -313,16 +312,8 @@ public class LinkFinder
                             if(newPair.length() > pair.length() && newPair.hasLinkClash(pair))
                             {
                                 // allow a TI if only a DB has been found
-                                if(newPair.linkType() == LINK_TYPE_TI && pair.linkType() == LINK_TYPE_TI)
-                                    ++linkClashCount;
-                                else if(newPair.linkType() == LINK_TYPE_DB)
-                                    ++linkClashCount;
-
-                                if(linkClashCount >= 1)
-                                {
-                                    skipNewPair = true;
-                                    break;
-                                }
+                                skipNewPair = true;
+                                break;
                             }
 
                             if (pair.length() > newPair.length())
@@ -358,6 +349,59 @@ public class LinkFinder
         LOGGER.debug("cluster({}) has {} inferred linked pairs", cluster.getId(), linkedPairs.size());
 
         return linkedPairs;
+    }
+
+    public static void findDeletionBridges(final Map<String, List<SvBreakend>> chrBreakendMap)
+    {
+        for (final Map.Entry<String, List<SvBreakend>> entry : chrBreakendMap.entrySet())
+        {
+            final List<SvBreakend> breakendList = entry.getValue();
+
+            for (int i = 0; i < breakendList.size() - 1; ++i)
+            {
+                final SvBreakend breakend = breakendList.get(i);
+                final SvBreakend nextBreakend = breakendList.get(i+1);
+                SvVarData var1 = breakend.getSV();
+                SvVarData var2 = nextBreakend.getSV();
+
+                if(var1 == var2)
+                    continue;
+
+                if(areSectionBreak(var1, var2, breakend.usesStart(), nextBreakend.usesStart()))
+                {
+                    SvLinkedPair dbPair = new SvLinkedPair(var1, var2, LINK_TYPE_DB, breakend.usesStart(), nextBreakend.usesStart());
+                    var1.setDBLink(dbPair, breakend.usesStart());
+                    var2.setDBLink(dbPair, nextBreakend.usesStart());
+
+                    // can then skip the next breakend
+                    ++i;
+                }
+            }
+        }
+    }
+
+    public static boolean inDeletionBridge(final SvVarData var, final SvVarData other, boolean useStart)
+    {
+        if(var.getDBLink(useStart) == null)
+            return false;
+
+        return (var.getDBLink(useStart).first() == other || var.getDBLink(useStart).second() == other);
+    }
+
+    public static boolean arePairedDeletionBridges(final SvVarData var1, final SvVarData var2)
+    {
+        if(var1.getDBLink(true) == null || var1.getDBLink(false) == null
+        || var2.getDBLink(true) == null || var2.getDBLink(false) == null)
+        {
+            return false;
+        }
+
+        if(var1.getDBLink(true) == var2.getDBLink(true) && var1.getDBLink(false) == var2.getDBLink(false))
+            return true;
+        else if(var1.getDBLink(true) == var2.getDBLink(false) && var1.getDBLink(false) == var2.getDBLink(true))
+            return true;
+        else
+            return false;
     }
 
     private void findSpanningSVs(final String sampleId, SvCluster cluster, final List<SvLinkedPair> linkedPairs)

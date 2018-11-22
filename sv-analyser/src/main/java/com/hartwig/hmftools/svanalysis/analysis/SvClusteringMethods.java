@@ -7,12 +7,13 @@ import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DEL;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DUP;
-import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INS;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INV;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.svanalysis.analysis.LinkFinder.MIN_TEMPLATED_INSERTION_LENGTH;
 import static com.hartwig.hmftools.svanalysis.analysis.LinkFinder.areLinkedSection;
+import static com.hartwig.hmftools.svanalysis.analysis.LinkFinder.arePairedDeletionBridges;
 import static com.hartwig.hmftools.svanalysis.analysis.LinkFinder.areSectionBreak;
+import static com.hartwig.hmftools.svanalysis.analysis.LinkFinder.inDeletionBridge;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.CHROMOSOME_ARM_P;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.CHROMOSOME_ARM_Q;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.PERMITED_DUP_BE_DISTANCE;
@@ -25,7 +26,6 @@ import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_DUP_
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_DUP_INT_TI;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_NONE;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_RECIPROCAL_TRANS;
-import static com.hartwig.hmftools.svanalysis.types.SvCNData.CN_SEG_TELOMERE;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_SGL_PAIR_DEL;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_SGL_PAIR_DUP;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_SGL_PLUS_INCONSISTENT;
@@ -34,10 +34,6 @@ import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.LINK_TYPE_TI;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.ASSEMBLY_TYPE_EQV;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.RELATION_TYPE_NEIGHBOUR;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.RELATION_TYPE_OVERLAP;
-import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_END;
-import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_START;
-import static com.hartwig.hmftools.svanalysis.types.SvVarData.haveLinkedAssemblies;
-import static com.hartwig.hmftools.svanalysis.types.SvVarData.isStart;
 
 import java.util.Collections;
 import java.util.Comparator;
@@ -50,10 +46,8 @@ import java.util.Map;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
-import com.hartwig.hmftools.svanalysis.types.SvArmGroup;
 import com.hartwig.hmftools.svanalysis.types.SvBreakend;
 import com.hartwig.hmftools.svanalysis.types.SvCNData;
-import com.hartwig.hmftools.svanalysis.types.SvChain;
 import com.hartwig.hmftools.svanalysis.types.SvCluster;
 import com.hartwig.hmftools.svanalysis.types.SvLinkedPair;
 import com.hartwig.hmftools.svanalysis.types.SvVarData;
@@ -929,6 +923,8 @@ public class SvClusteringMethods {
         }
     }
 
+
+
     public void markInversionPairTypes(SvCluster cluster)
     {
         if(cluster.getLinkedPairs().isEmpty())
@@ -962,8 +958,7 @@ public class SvClusteringMethods {
          */
 
         // first work out if there are 1 or 2 templated insertions
-
-        final SvLinkedPair linkedPair1 = cluster.getLinkedPairs().get(0);
+        SvLinkedPair linkedPair1 = cluster.getLinkedPairs().get(0);
 
         boolean v1OpenOnStart = linkedPair1.first().equals(var1) ? linkedPair1.firstUnlinkedOnStart() : linkedPair1.secondUnlinkedOnStart();
         boolean v2OpenOnStart = linkedPair1.first().equals(var2) ? linkedPair1.firstUnlinkedOnStart() : linkedPair1.secondUnlinkedOnStart();
@@ -981,6 +976,7 @@ public class SvClusteringMethods {
         }
         else if(areSectionBreak(var1, var2, v1OpenOnStart, v2OpenOnStart))
         {
+            // could one be formed from the other 2 breakends
             linkedPair2 = new SvLinkedPair(var1, var2, LINK_TYPE_DB, v1OpenOnStart, v2OpenOnStart);
         }
         else
@@ -1076,12 +1072,16 @@ public class SvClusteringMethods {
 
     public void markBndPairTypes(SvCluster cluster)
     {
-        if(cluster.getLinkedPairs().isEmpty())
+        final SvVarData var1 = cluster.getSVs().get(0);
+        final SvVarData var2 = cluster.getSVs().get(1);
+
+        if(cluster.getLinkedPairs().isEmpty() && arePairedDeletionBridges(var1, var2))
         {
             cluster.setResolved(true, RESOLVED_TYPE_RECIPROCAL_TRANS);
             return;
         }
 
+        /*
         if(cluster.getLinkedPairs().size() == 2 && cluster.getArmGroups().size() == 2
         && cluster.getLinkedPairs().get(0).linkType() == LINK_TYPE_DB
         && cluster.getLinkedPairs().get(1).linkType() == LINK_TYPE_DB)
@@ -1089,9 +1089,7 @@ public class SvClusteringMethods {
             cluster.setResolved(true, RESOLVED_TYPE_RECIPROCAL_TRANS);
             return;
         }
-
-        final SvVarData var1 = cluster.getSVs().get(0);
-        final SvVarData var2 = cluster.getSVs().get(1);
+        */
 
         // first work out if there are 1 or 2 templated insertions
         final SvLinkedPair lp1;
@@ -1221,9 +1219,6 @@ public class SvClusteringMethods {
         }
 
         String pairDesc = "";
-
-        long tiPos1 = tiLinkedPair.first().position(tiLinkedPair.firstLinkOnStart());
-        long tiPos2 = tiLinkedPair.second().position(tiLinkedPair.secondLinkOnStart());
 
         long otherPos1 = tiLinkedPair.first().position(!tiLinkedPair.firstLinkOnStart());
         long otherPos2 = tiLinkedPair.second().position(!tiLinkedPair.secondLinkOnStart());

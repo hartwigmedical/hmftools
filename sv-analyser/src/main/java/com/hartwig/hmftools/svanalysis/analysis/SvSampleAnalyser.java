@@ -141,6 +141,7 @@ public class SvSampleAnalyser {
         // mClusteringMethods.calcCopyNumberData(mSampleId);
         // mClusteringMethods.createCopyNumberSegments();
         mClusteringMethods.annotateNearestSvData();
+        LinkFinder.findDeletionBridges(mClusteringMethods.getChrBreakendMap());
         mClusteringMethods.setSimpleVariantLengths(mSampleId);
         mLineElementAnnotator.setSuspectedLineElements(mClusteringMethods.getChrBreakendMap(), mConfig.ProximityDistance);
         mPc2.stop();
@@ -270,7 +271,7 @@ public class SvSampleAnalyser {
                 writer.write(",FSStart,FSEnd,LEStart,LEEnd,DupBEStart,DupBEEnd,ArmCountStart,ArmExpStart,ArmCountEnd,ArmExpEnd");
 
                 // linked pair info
-                writer.write(",LnkSvStart,LnkTypeStart,LnkLenStart,LnkInfoStart,LnkSvEnd,LnkTypeEnd,LnkLenEnd,LnkInfoEnd");
+                writer.write(",LnkSvStart,LnkTypeStart,LnkLenStart,LnkSvEnd,LnkTypeEnd,LnkLenEnd");
 
                 // GRIDDS caller info
                 writer.write(",AsmbStart,AsmbEnd,AsmbMatchStart,AsmbMatchEnd");
@@ -278,8 +279,8 @@ public class SvSampleAnalyser {
                 // chain info
                 writer.write(",ChainId,ChainCount,ChainIndex");
 
-                // proximity info
-                writer.write(",NearestLen,NearestType,FoldbackLnkStart,FoldbackLenStart,FoldbackLnkEnd,FoldbackLenEnd");
+                // proximity info and other link info
+                writer.write(",NearestLen,NearestType,DBLenStart,DBLenEnd,FbkLnkStart,FbkLenStart,FbkLnkEnd,FbkLenEnd");
 
                 // transitive info
                 // writer.write(",TransType,TransLen,TransSvLinks");
@@ -353,23 +354,23 @@ public class SvSampleAnalyser {
 
                 // linked pair info
                 final SvLinkedPair startLP = var.getLinkedPair(true) != null ? var.getLinkedPair(true) : cluster.getLinkedPair(var, true);
-                String startLinkStr = "0,,-1,";
+                String startLinkStr = "0,,-1";
                 String assemblyMatchStart = var.getAssemblyMatchType(true);
                 if(startLP != null)
                 {
-                    startLinkStr = String.format("%s,%s,%d,%s",
+                    startLinkStr = String.format("%s,%s,%d",
                             startLP.first().equals(var, true) ? startLP.second().origId() : startLP.first().origId(),
-                            startLP.linkType(), startLP.length(), startLP.getInfo());
+                            startLP.linkType(), startLP.length());
                 }
 
                 final SvLinkedPair endLP = var.getLinkedPair(false) != null ? var.getLinkedPair(false) : cluster.getLinkedPair(var, false);
-                String endLinkStr = "0,,-1,";
+                String endLinkStr = "0,,-1";
                 String assemblyMatchEnd = var.getAssemblyMatchType(false);
                 if(endLP != null)
                 {
-                    endLinkStr = String.format("%s,%s,%d,%s",
+                    endLinkStr = String.format("%s,%s,%d",
                             endLP.first().equals(var, true) ? endLP.second().origId() : endLP.first().origId(),
-                            endLP.linkType(), endLP.length(), endLP.getInfo());
+                            endLP.linkType(), endLP.length());
                 }
 
                 if(assemblyMatchStart.equals(ASSEMBLY_MATCH_ASMB_ONLY) || assemblyMatchEnd.equals(ASSEMBLY_MATCH_ASMB_ONLY))
@@ -392,9 +393,12 @@ public class SvSampleAnalyser {
 
                 writer.write(chainStr);
 
-                writer.write(String.format(",%d,%s,%s,%d,%s,%d",
+                writer.write(String.format(",%d,%s,%d,%d,%s,%d,%s,%d",
                         var.getNearestSvDistance(), var.getNearestSvRelation(),
-                        var.getFoldbackLink(true), var.getFoldbackLen(true), var.getFoldbackLink(false), var.getFoldbackLen(false)));
+                        var.getDBLink(true) != null ? var.getDBLink(true).length() : -1,
+                        var.getDBLink(false) != null ? var.getDBLink(false).length() : -1,
+                        var.getFoldbackLink(true), var.getFoldbackLen(true),
+                        var.getFoldbackLink(false), var.getFoldbackLen(false)));
 
                 // writer.write(String.format(",%s,%d,%s", var.getTransType(), var.getTransLength(), var.getTransSvLinks()));
 

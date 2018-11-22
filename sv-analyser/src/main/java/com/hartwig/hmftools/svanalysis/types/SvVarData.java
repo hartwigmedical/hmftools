@@ -61,8 +61,11 @@ public class SvVarData
     private long mNearestSvDistance;
     private String mNearestSvRelation;
 
-    private SvLinkedPair mStartLink;
+    private SvLinkedPair mStartLink; // templated insertion formed from this breakend to another
     private SvLinkedPair mEndLink;
+
+    private SvLinkedPair mStartDB; // deletion bridge formed from this breakend to another
+    private SvLinkedPair mEndDB;
     private List<String> mStartTempInsertionAssemblies;
     private List<String> mStartDsbAssemblies;
     private List<String> mStartOtherAssemblies;
@@ -77,7 +80,6 @@ public class SvVarData
 
     public static String ASSEMBLY_TYPE_DSB = "dsb";
     public static String ASSEMBLY_TYPE_TI = "asm";
-    public static String ASSEMBLY_TYPE_OTHER = "bpb";
     public static String ASSEMBLY_TYPE_EQV = "eqv";
 
     public static String RELATION_TYPE_NEIGHBOUR = "NHBR";
@@ -131,6 +133,8 @@ public class SvVarData
 
         mStartLink = null;
         mEndLink = null;
+        mStartDB = null;
+        mEndDB = null;
 
         mFoldbackLinkStart = "";
         mFoldbackLinkEnd = "";
@@ -352,6 +356,16 @@ public class SvVarData
             mStartLink = link;
         else
             mEndLink = link;
+    }
+
+    public final SvLinkedPair getDBLink(boolean isStart) { return isStart ? mStartDB : mEndDB; }
+
+    public void setDBLink(final SvLinkedPair link, boolean isStart)
+    {
+        if(isStart)
+            mStartDB = link;
+        else
+            mEndDB = link;
     }
 
     public String getFoldbackLink(boolean useStart) { return useStart ? mFoldbackLinkStart : mFoldbackLinkEnd; }

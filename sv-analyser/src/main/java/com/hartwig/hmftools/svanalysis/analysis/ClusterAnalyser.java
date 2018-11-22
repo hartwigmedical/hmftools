@@ -1036,8 +1036,6 @@ public class ClusterAnalyser {
 
                     boolean outAndBack = startChromosome.equals(endChromosome);
 
-                    nextPair.setInfo("TransTI");
-
                     // SampleId, ClusterId,ChainId,SvId1,SvId2,IsOutAndBack,TILength,IsAssembly,ChainLinks,HasReplication
                     LOGGER.info("CF_TRANS_TI: {},{},{},{},{},{},{},{},{},{}",
                             mSampleId, cluster.getId(), chain.getId(), svForward.id(), nextSvForward.id(),
@@ -1363,7 +1361,6 @@ public class ClusterAnalyser {
     public void logStats()
     {
         mChainFinder.getContinuousFinderPc().logStats(false);
-        mChainFinder.getRecursiveFinderPc().logStats(false);
     }
 
 }
