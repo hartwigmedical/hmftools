@@ -101,9 +101,7 @@ public class SageHotspotApplication {
             final VariantHotspot variant = entry.getKey();
             final VariantHotspotEvidence tumor = entry.getValue();
             final VariantHotspotEvidence normal = referenceEvidence.get(variant);
-            if (tumor.altSupport() > 0) {
                 evidence.add(createEvidence(knownHotspots.contains(variant), tumor, normal));
-            }
         }
 
         LOGGER.info("Writing output to {}", outputVCF);
