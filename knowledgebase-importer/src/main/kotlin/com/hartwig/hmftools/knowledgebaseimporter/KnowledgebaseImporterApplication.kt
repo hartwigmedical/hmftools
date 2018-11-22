@@ -86,8 +86,7 @@ private fun readKnowledgebases(cmd: CommandLine, diseaseOntology: DiseaseOntolog
     val cosmic = Cosmic(cmd.getOptionValue(COSMIC_FUSIONS_LOCATION))
     val iclusion = Iclusion(readIclusionStudies(cmd), diseaseOntology, recordAnalyzer)
 
-//    return listOf(oncoKb, cgi, civic, cosmic, iclusion)
-    return listOf(iclusion);
+    return listOf(oncoKb, cgi, civic, cosmic, iclusion)
 }
 
 private fun readIclusionStudies(cmd: CommandLine): List<IclusionStudyDetails> {
@@ -140,11 +139,23 @@ private fun writeOutput(outputDir: String, knowledgebases: List<Knowledgebase>, 
 }
 
 private fun knowledgebaseCancerDoids(knowledgebases: List<Knowledgebase>, ontology: DiseaseOntology): List<CancerTypeDoidOutput> {
+    val allCancerTypeDoids = knowledgebases.fold(mapOf<String, Set<Doid>>()) { map, it -> map + it.cancerTypes }
+
+    logger.info("Printing information gathered from knowledgebase cancer types")
+    allCancerTypeDoids.forEach { t, u -> logger.info(" " + t + " doids count: " + u.size) }
+
     val extraCancerTypeDoids = readExtraCancerTypeDoids().map {
         Pair(it.key, it.value.flatMap { doid -> ontology.findDoids(doid) }.toSet().sortedBy { it.value })
     }.toMap()
-    val allCancerTypeDoids = knowledgebases.fold(mapOf<String, Set<Doid>>()) { map, it -> map + it.cancerTypes }
-    return (allCancerTypeDoids + extraCancerTypeDoids).entries.map { CancerTypeDoidOutput(it.key, it.value.joinToString(";")) }
+
+    logger.info("Printing the extra manual cancer type annotation")
+    extraCancerTypeDoids.forEach { t, u -> logger.info(" " + t + " doids count: " + u.size) }
+
+    val mergedCancerTypeDoids = (allCancerTypeDoids + extraCancerTypeDoids)
+    logger.info("Printing the merged cancer types")
+    mergedCancerTypeDoids.forEach { t, u -> logger.info(" " + t + " doids count: " + u.size) }
+
+    return mergedCancerTypeDoids.entries.map { CancerTypeDoidOutput(it.key, it.value.joinToString(";")) }
 }
 
 private fun readExtraCancerTypeDoids(): Map<String, Set<Doid>> {
