@@ -1,9 +1,7 @@
 package com.hartwig.hmftools.sage;
 
-import java.util.Collections;
 import java.util.List;
 
-import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.hotspot.ImmutableVariantHotspotImpl;
 import com.hartwig.hmftools.common.hotspot.VariantHotspot;
 import com.hartwig.hmftools.common.region.GenomeRegion;
@@ -17,25 +15,9 @@ public class SageHotspotBedBuilderTest {
     private static final String CHROM = "1";
 
     @Test
-    public void testAddPosition() {
-        final List<Long> positions = Lists.newArrayList(1L, 1L, 2L, 3L, 5L, 6L, 7L, 9L, 10L, 10L);
-        Collections.shuffle(positions);
-
-        List<GenomeRegion> regions = Lists.newArrayList();
-        for (Long position : positions) {
-            regions = SageHotspotBedBuilder.addPosition(CHROM, position, regions);
-        }
-
-        Assert.assertEquals(3, regions.size());
-        assertRegion(regions.get(0), 1, 3);
-        assertRegion(regions.get(1), 5, 7);
-        assertRegion(regions.get(2), 9, 10);
-    }
-
-    @Test
     public void testAddMNV() {
         final VariantHotspot hotspot = ImmutableVariantHotspotImpl.builder().chromosome(CHROM).alt("GAT").ref("TAC").position(10).build();
-        final List<GenomeRegion> regions = SageHotspotBedBuilder.addVariantHotspot(hotspot, Lists.newArrayList());
+        final List<GenomeRegion> regions = SageHotspotBedBuilder.addVariantHotspot(hotspot);
         Assert.assertEquals(1, regions.size());
         assertRegion(regions.get(0), 10, 12);
     }
@@ -43,7 +25,7 @@ public class SageHotspotBedBuilderTest {
     @Test
     public void testAddIndel() {
         final VariantHotspot hotspot = ImmutableVariantHotspotImpl.builder().chromosome(CHROM).alt("G").ref("TAC").position(10).build();
-        final List<GenomeRegion> regions = SageHotspotBedBuilder.addVariantHotspot(hotspot, Lists.newArrayList());
+        final List<GenomeRegion> regions = SageHotspotBedBuilder.addVariantHotspot(hotspot);
         Assert.assertEquals(1, regions.size());
         assertRegion(regions.get(0), 10, 10);
     }
