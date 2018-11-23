@@ -5,7 +5,7 @@ import com.hartwig.hmftools.knowledgebaseimporter.knowledgebases.CodonRangeMutat
 import com.hartwig.hmftools.knowledgebaseimporter.knowledgebases.readers.SomaticEventReader
 
 object IclusionCodonRangeReader : SomaticEventReader<IclusionEvent, CodonRangeMutations> {
-    private val EXON_RANGE_MUTATION_PATTERN = "G12-G13".toRegex()
+    private val EXON_RANGE_MUTATION_PATTERN = "G12/G13".toRegex()
 
     private fun matches(event: IclusionEvent) = IclusionCodonRangeReader.EXON_RANGE_MUTATION_PATTERN.matches(event.variant)
 
