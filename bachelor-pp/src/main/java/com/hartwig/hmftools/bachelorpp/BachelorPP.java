@@ -165,17 +165,12 @@ public class BachelorPP {
         if(!sampleDirectory.endsWith("/"))
             sampleDirectory += "/";
 
-        String bachelorDirectory = sampleDirectory;
-
-        if(!mIsBatchMode)
-            bachelorDirectory += BACHELOR_SUB_DIRECTORY;
-
         String bachelorInputFile;
 
         if(cmd.hasOption(BACH_INPUT_FILE))
             bachelorInputFile = cmd.getOptionValue(BACH_INPUT_FILE);
         else
-            bachelorInputFile = bachelorDirectory + "/" + DEFAULT_BACH_INPUT_FILE;
+            bachelorInputFile = sampleDirectory + DEFAULT_BACH_INPUT_FILE;
 
         BachelorDataCollection dataCollection = new BachelorDataCollection();
         dataCollection.setSampleId(sampleId);
@@ -212,7 +207,7 @@ public class BachelorPP {
             AlleleDepthLoader adLoader = new AlleleDepthLoader();
             adLoader.setSampleId(sampleId);
 
-            if (!adLoader.loadMiniPileupData(bachelorDirectory) || !adLoader.applyPileupData(bachRecords))
+            if (!adLoader.loadMiniPileupData(sampleDirectory) || !adLoader.applyPileupData(bachRecords))
                 return false;
         }
 
@@ -272,7 +267,7 @@ public class BachelorPP {
                 writeToDatabase(specificSample, sampleRecords);
             }
 
-            writeToFile(specificSample, sampleRecords, bachelorDirectory);
+            writeToFile(specificSample, sampleRecords, sampleDirectory);
         }
 
         try
@@ -568,7 +563,7 @@ public class BachelorPP {
 
                 writer.write(",AdjCopyNumber,AdjustedVaf,HighConfidenceRegion,TrinucleotideContext,Microhomology,RepeatSequence,RepeatCount");
 
-                writer.write(",HgvsProtein,HgvsCoding,Biallelic,Hotspot,Mappability,GermlineStatus,MinorAllelePloidy,Effects,Filter,CodonInfo");
+                writer.write(",HgvsProtein,HgvsCoding,Biallelic,Hotspot,Mappability,GermlineStatus,MinorAllelePloidy,Filter,CodonInfo");
 
                 if(mApplyFilters)
                 {
