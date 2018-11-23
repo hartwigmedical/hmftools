@@ -7,11 +7,11 @@ import io.kotlintest.specs.StringSpec
 
 class IclusionCodonRangeReaderTest : StringSpec() {
     companion object {
-        private val event = IclusionEvent("NRAS", "G12-G13", "ENST0000000")
+        private val event = IclusionEvent("NRAS", "G12/G13", "ENST0000000")
     }
 
     init {
-        "can read G12-G13" {
+        "can read G12/G13" {
             IclusionCodonRangeReader.read(event) shouldBe listOf(CodonRangeMutations(event.gene, event.transcript, 12, 13))
         }
     }
