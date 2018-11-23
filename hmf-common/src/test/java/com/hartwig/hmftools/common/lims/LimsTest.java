@@ -48,9 +48,9 @@ public class LimsTest {
         assertNotNull(dnaAmount);
         assertEquals(500L, (int) dnaAmount);
 
-        Double tumorPerc = lims.tumorPercentageForSample(SAMPLE);
+        String tumorPerc = lims.tumorPercentageForSample(SAMPLE);
         assertNotNull(tumorPerc);
-        assertEquals(0.4, tumorPerc, 1.0E-10);
+        assertEquals(0.4, Double.parseDouble(tumorPerc), 1.0E-10);
 
         assertEquals(labSopVersions, lims.labProceduresForSample(SAMPLE));
         assertEquals(primaryTumor, lims.primaryTumorForSample(SAMPLE));

@@ -154,7 +154,7 @@ final class ExampleAnalysisTestFactory {
         final String sample = "COLO829T";
         return ImmutableSampleReport.of(sample,
                 ImmutablePatientTumorLocation.of("COLO829", "Skin", "Melanoma"),
-                0.8,
+                String.valueOf(0.8),
                 LocalDate.parse("05-Jan-2018", DATE_FORMATTER),
                 LocalDate.parse("01-Jan-2018", DATE_FORMATTER),
                 "PREP013V23-QC037V20-SEQ008V25",
