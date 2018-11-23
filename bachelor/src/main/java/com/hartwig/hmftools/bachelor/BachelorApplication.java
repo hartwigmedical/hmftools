@@ -153,7 +153,7 @@ public class BachelorApplication {
         if(cmd.hasOption(BATCH_DIRECTORY))
         {
             mBatchDirectory = cmd.getOptionValue(BATCH_DIRECTORY);
-            mBatchDirectoryFile = cmd.getOptionValue(BATCH_DIR_FILE);
+            mBatchDirectoryFile = cmd.getOptionValue(BATCH_DIR_FILE, "");
             mMaxBatchDirectories = Integer.parseInt(cmd.getOptionValue(BATCH_MAX_DIR, "0"));
             mIsBatchRun = true;
         }
