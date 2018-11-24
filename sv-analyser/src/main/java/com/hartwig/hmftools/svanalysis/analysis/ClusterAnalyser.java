@@ -84,6 +84,11 @@ public class ClusterAnalyser {
         mChainFinder.setLogVerbose(mConfig.LogVerbose);
     }
 
+    // access for unit testing
+    public final SvClusteringConfig getConfig() { return mConfig; }
+    public final SvUtilities getUtils() { return mUtils; }
+    public final SvClusteringMethods getClusterer() { return mClusteringMethods; }
+
     public void setSampleData(final String sampleId, List<SvVarData> allVariants)
     {
         mSampleId = sampleId;
@@ -117,19 +122,33 @@ public class ClusterAnalyser {
 
         mergeClusters();
 
+        // final clean-up and analysis
+        for(SvCluster cluster : mClusters)
+        {
+            if(!cluster.isResolved() && cluster.getResolvedType() != RESOLVED_TYPE_NONE)
+            {
+                // any cluster with a long DEL or DUP not merged can now be marked as resolved
+                if(cluster.getCount() == 1 &&  cluster.getResolvedType() == RESOLVED_TYPE_SIMPLE_SV)
+                    cluster.setResolved(true, RESOLVED_TYPE_SIMPLE_SV);
+
+                // mark off any fully chained simple clusters
+                if(cluster.getCount() == 1 &&  cluster.getResolvedType() == RESOLVED_TYPE_SIMPLE_CHAIN)
+                    cluster.setResolved(true, RESOLVED_TYPE_SIMPLE_CHAIN);
+            }
+        }
+
         // checkClusterDuplicates(mClusters);
 
         /*
         for(SvCluster cluster : mClusters)
         {
             mLinkFinder.resolveTransitiveSVs(mSampleId, cluster);
-            // cluster.cacheLinkedPairs()
             // reportChainFeatures(cluster);
         }
         */
     }
 
-    private  void findSimpleCompleteChains()
+    public void findSimpleCompleteChains()
     {
         // for small clusters, try to find a full chain through all SVs
         for(SvCluster cluster : mClusters)
@@ -244,8 +263,6 @@ public class ClusterAnalyser {
                 cluster.logDetails();
             }
         }
-
-
     }
 
     private void findChains(SvCluster cluster)

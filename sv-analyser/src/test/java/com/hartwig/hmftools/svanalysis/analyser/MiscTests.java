@@ -10,6 +10,7 @@ import static com.hartwig.hmftools.svanalysis.analyser.SvTestHelper.createDel;
 import static com.hartwig.hmftools.svanalysis.analyser.SvTestHelper.createDup;
 import static com.hartwig.hmftools.svanalysis.analyser.SvTestHelper.createInv;
 import static com.hartwig.hmftools.svanalysis.analyser.SvTestHelper.createSgl;
+import static com.hartwig.hmftools.svanalysis.analyser.SvTestHelper.createSv;
 import static com.hartwig.hmftools.svanalysis.analyser.SvTestHelper.createTestSv;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.calcConsistency;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.makeChrArmStr;
@@ -37,7 +38,7 @@ public class MiscTests
         final SvVarData del = createDel("1", "1", 100, 200);
         assertEquals(calcConsistency(del), 0);
 
-        final SvVarData ins = createTestSv("1", "1", "1", 100, 200, 1, -1, INS);
+        final SvVarData ins = createSv("1", "1", "1", 100, 200, 1, -1, INS);
         assertEquals(calcConsistency(ins), 0);
 
         final SvVarData dup = createDup("1", "1", 100, 200);
@@ -46,7 +47,7 @@ public class MiscTests
         final SvVarData inv = createInv("1", "1", 100, 200, 1);
         assertEquals(calcConsistency(inv), 2);
 
-        final SvVarData bnd = createTestSv("1", "1", "1", 100, 200, 1, -1, BND);
+        final SvVarData bnd = createSv("1", "1", "1", 100, 200, 1, -1, BND);
         assertEquals(calcConsistency(bnd), 0);
 
         final SvVarData sgl = createSgl("1", "1", 100, 1, false);

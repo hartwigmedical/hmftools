@@ -265,17 +265,6 @@ public class SvChain {
         return true;
     }
 
-    public boolean hasLinks(final List<SvLinkedPair> linkedPairs)
-    {
-        for(final SvLinkedPair linkedPair : linkedPairs)
-        {
-            if(!mLinkedPairs.contains(linkedPair))
-                return false;
-        }
-
-        return true;
-    }
-
     public void setIsValid()
     {
         if(mSvList.isEmpty() || mLinkedPairs.isEmpty())

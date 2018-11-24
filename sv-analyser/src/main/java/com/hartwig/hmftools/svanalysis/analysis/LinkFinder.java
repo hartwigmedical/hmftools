@@ -205,10 +205,6 @@ public class LinkFinder
 
     public static boolean areSectionBreak(final SvVarData v1, final SvVarData v2, boolean v1Start, boolean v2Start)
     {
-        // only relevant if on same chromosomal arm
-        // if(!sameChrArm(v1, v2, v1Start, v2Start))
-        //     return false;
-
         // start apart or equal and heading same direction
         long pos1 = v1.position(v1Start);
         boolean headsLeft1 = (v1.orientation(v1Start) == 1);

@@ -14,9 +14,8 @@ public class SvClusteringConfig {
     final public String GeneDataFile;
     final public String LOHDataFile;
     final public boolean UseCombinedOutputFile;
-    final public boolean UseGridss;
-    final public int SampleCopyNumber;
-    final public boolean LogVerbose;
+
+    public boolean LogVerbose;
 
     // config options
     private static final String CLUSTER_BASE_DISTANCE = "cluster_bases";
@@ -28,7 +27,6 @@ public class SvClusteringConfig {
     private static final String EXTERNAL_DATA_LINK_FILE = "ext_data_link_file";
     private static final String DRIVER_GENES_FILE = "driver_gene_file";
     private static final String LOH_DATA_FILE = "loh_file";
-    private static final String USE_GRIDSS = "use_gridss";
     private static final String LOG_VERBOSE = "log_verbose";
 
     public SvClusteringConfig(final CommandLine cmd, final String sampleId)
@@ -42,9 +40,21 @@ public class SvClusteringConfig {
         ExternalAnnotationsFile = cmd.getOptionValue(EXTERNAL_SV_DATA_FILE, "");
         GeneDataFile = cmd.getOptionValue(DRIVER_GENES_FILE, "");
         LOHDataFile = cmd.getOptionValue(LOH_DATA_FILE, "");
-        UseGridss = cmd.hasOption(USE_GRIDSS);
         LogVerbose = cmd.hasOption(LOG_VERBOSE);
-        SampleCopyNumber = 2;
+    }
+
+    public SvClusteringConfig(int proximityDistance)
+    {
+        ProximityDistance = proximityDistance;
+        OutputCsvPath = "";
+        SvPONFile = "";
+        FragileSiteFile = "";
+        LineElementFile = "";
+        ExternalAnnotationsFile = "";
+        GeneDataFile = "";
+        LOHDataFile = "";
+        UseCombinedOutputFile = false;
+        LogVerbose = false;
     }
 
     public static void addCmdLineArgs(Options options)
@@ -57,7 +67,6 @@ public class SvClusteringConfig {
         options.addOption(EXTERNAL_DATA_LINK_FILE, true, "External SV data file, mapped by position info");
         options.addOption(DRIVER_GENES_FILE, true, "Gene data file");
         options.addOption(LOH_DATA_FILE, true, "Copy Number LOH data file");
-        options.addOption(USE_GRIDSS, false, "Using GRIDSS variant calling input data");
         options.addOption(LOG_VERBOSE, false, "Log extra detail");
     }
 }

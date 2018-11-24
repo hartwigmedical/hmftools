@@ -24,8 +24,10 @@ import com.hartwig.hmftools.common.variant.structural.annotation.GeneDisruption;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion;
 import com.hartwig.hmftools.common.variant.structural.annotation.SvGeneTranscriptCollection;
 import com.hartwig.hmftools.common.variant.structural.annotation.Transcript;
+import com.hartwig.hmftools.svanalysis.types.SvBreakend;
 import com.hartwig.hmftools.svanalysis.types.SvChain;
 import com.hartwig.hmftools.svanalysis.types.SvCluster;
+import com.hartwig.hmftools.svanalysis.types.SvLinkedPair;
 import com.hartwig.hmftools.svanalysis.types.SvVarData;
 import com.hartwig.hmftools.svannotation.analysis.SvDisruptionAnalyser;
 import com.hartwig.hmftools.svannotation.analysis.SvFusionAnalyser;
@@ -96,23 +98,28 @@ public class FusionDisruptionAnalyser
         mSvGeneTranscriptCollection.loadSampleGeneTranscripts(sampleId);
     }
 
-    private final List<GeneAnnotation> getSvGenesList(final SvVarData var, boolean isStart)
+    private void setSvGenesList(final SvVarData var)
     {
         final List<GeneAnnotation> genesList = mSvGeneTranscriptCollection.getSvIdGeneTranscriptsMap().get(var.dbId());
 
-        if(genesList == null)
-            return Lists.newArrayList();
+        List<GeneAnnotation> startGenes = var.getGenesList(true);
+        List<GeneAnnotation> endGenes = var.getGenesList(false);
 
-        if(isStart)
-            return genesList.stream().filter(GeneAnnotation::isStart).collect(Collectors.toList());
-        else
-            return genesList.stream().filter(GeneAnnotation::isEnd).collect(Collectors.toList());
+        for(GeneAnnotation gene : genesList)
+        {
+            gene.setSvData(var.getSvData());
+
+            if(gene.isStart())
+                startGenes.add(gene);
+            else
+                endGenes.add(gene);
+        }
     }
 
     private static String CHECK_VAR_ID = "";
     // private static String CHECK_VAR_ID = "527632";
 
-    public void findFusions(final List<SvVarData> svList, final List<SvCluster> clusters)
+    public void findFusions(final List<SvVarData> svList, final List<SvCluster> clusters, final Map<String, List<SvBreakend>> chrBreakendMap)
     {
         if(mSampleId.isEmpty() || mFusionFinder == null)
             return;
@@ -122,13 +129,17 @@ public class FusionDisruptionAnalyser
         if(svGenesMap.isEmpty())
             return;
 
-        List<StructuralVariantData> svDataList = svList.stream().map(SvVarData::getSvData).collect(Collectors.toList());
-
-        mSvGeneTranscriptCollection.setSvData(svDataList);
+        List<GeneFusion> allFusions = Lists.newArrayList();
 
         // always report SVs by themselves
         for(final SvVarData var : svList)
         {
+            if(var.isReplicatedSv())
+                continue;
+
+            // cache transcript info against each SV
+            setSvGenesList(var);
+
             if(var.isNullBreakend())
                 continue;
 
@@ -137,22 +148,17 @@ public class FusionDisruptionAnalyser
                 LOGGER.debug("specific var({})", var.posId());
             }
 
-            List<GeneAnnotation> breakendGenes1 = getSvGenesList(var, true);
-            List<GeneAnnotation> breakendGenes2 = getSvGenesList(var, false);
-
-            checkFusions(breakendGenes1, breakendGenes2, var.getCluster());
+            checkFusions(var.getGenesList(true), var.getGenesList(false), var.getCluster());
         }
 
-        boolean checkClusters = true;
+        boolean checkClusters = false;
+        int maxClusterSize = 10;
 
         if(checkClusters)
         {
             // for now only consider simple SVs and resolved small clusters
             for (final SvCluster cluster : clusters)
             {
-                List<GeneAnnotation> breakendGenes1 = Lists.newArrayList();
-                List<GeneAnnotation> breakendGenes2 = Lists.newArrayList();
-
                 /*
                 if(cluster.getId() == 651)
                 {
@@ -160,38 +166,75 @@ public class FusionDisruptionAnalyser
                 }
                 */
 
-                if (cluster.getCount() == 1)
-                {
-                    // checked above already
+                if (cluster.getCount() == 1) // simple clusters already checked
                     continue;
-                }
-                else if (cluster.isResolved() && cluster.isFullyChained() && cluster.isConsistent() && cluster.getTypeCount(SGL) == 0)
-                {
-                    final SvChain completeChain = cluster.getChains().get(0);
-                    final SvVarData startVar = completeChain.getFirstSV();
-                    final SvVarData endVar = completeChain.getLastSV();
 
-                    breakendGenes1 = getSvGenesList(startVar, completeChain.firstLinkOpenOnStart());
-                    breakendGenes2 = getSvGenesList(endVar, completeChain.lastLinkOpenOnStart());
-                }
+                if(cluster.hasReplicatedSVs() || !cluster.isFullyChained() || cluster.getTypeCount(SGL) > 0)
+                    continue;
 
-                checkFusions(breakendGenes1, breakendGenes2, cluster);
+                if(cluster.getUniqueSvCount() > maxClusterSize)
+                    continue;
+
+                // test every breakend with every other one in the chain since the fusion could be formed at any point
+                GeneFusion fusion = findChainedFusion(cluster.getChains().get(0));
             }
         }
     }
 
+    private GeneFusion findChainedFusion(final SvChain chain)
+    {
+        for(int index1 = 0; index1 < chain.getSvList().size()-1; ++index1)
+        {
+            final SvVarData var1 = chain.getSvList().get(index1);
+
+            for(int index2 = index1+1; index2 < chain.getSvList().size(); ++index2)
+            {
+                final SvVarData var2 = chain.getSvList().get(index2);
+
+
+            }
+
+        }
+
+        /*
+        for(final SvLinkedPair linkedPair : chain.getLinkedPairs())
+        {
+            List<GeneAnnotation> breakendGenes1 = null;
+            List<GeneAnnotation> breakendGenes2 = null;
+        }
+
+
+            checkFusions(breakendGenes1, breakendGenes2, cluster);
+
+            final SvVarData startVar = completeChain.getFirstSV();
+            final SvVarData endVar = completeChain.getLastSV();
+
+            breakendGenes1 = getSvGenesList(startVar, completeChain.firstLinkOpenOnStart());
+            breakendGenes2 = getSvGenesList(endVar, completeChain.lastLinkOpenOnStart());
+
+
+        }
+        */
+
+        return null;
+    }
+
+    private boolean isFusionDisrupted(final GeneFusion fusion, final Map<String, List<SvBreakend>> chrBreakendMap)
+    {
+        return false;
+    }
+
     private void checkFusions(List<GeneAnnotation> breakendGenes1, List<GeneAnnotation> breakendGenes2, final SvCluster cluster)
     {
-        if(breakendGenes1.isEmpty() || breakendGenes2.isEmpty())
+        if (breakendGenes1.isEmpty() || breakendGenes2.isEmpty())
             return;
 
         List<GeneFusion> fusions = mFusionFinder.findFusions(breakendGenes1, breakendGenes2);
 
-        if(fusions.isEmpty())
+        if (fusions.isEmpty())
             return;
 
-        // for now only log reportable fusions
-        // fusions = fusions.stream().filter(GeneFusion::reportable).collect(Collectors.toList());
+        // fusions = fusions.stream().filter(GeneFusion::reportable).collect(Collectors.toList()); // restrict to reportable fusions
 
         if(LOGGER.isDebugEnabled())
         {

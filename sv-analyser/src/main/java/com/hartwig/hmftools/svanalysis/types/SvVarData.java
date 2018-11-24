@@ -20,6 +20,7 @@ import com.hartwig.hmftools.common.variant.structural.EnrichedStructuralVariant;
 import com.hartwig.hmftools.common.variant.structural.ImmutableStructuralVariantData;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantData;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
+import com.hartwig.hmftools.common.variant.structural.annotation.GeneAnnotation;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -77,6 +78,9 @@ public class SvVarData
     private boolean mIsReplicatedSv;
     private SvVarData mReplicatedSv;
     private int mReplicatedCount;
+
+    List<GeneAnnotation> mGenesStart;
+    List<GeneAnnotation> mGenesEnd;
 
     public static String ASSEMBLY_TYPE_DSB = "dsb";
     public static String ASSEMBLY_TYPE_TI = "asm";
@@ -140,6 +144,9 @@ public class SvVarData
         mFoldbackLinkEnd = "";
         mFoldbackLenStart = -1;
         mFoldbackLenEnd = -1;
+
+        mGenesStart = Lists.newArrayList();
+        mGenesEnd = Lists.newArrayList();
     }
 
     public static SvVarData from(final EnrichedStructuralVariant enrichedSV)
@@ -208,8 +215,6 @@ public class SvVarData
     public boolean isNoneSegment() { return mNoneSegment; }
 
     // for convenience
-    public boolean equals(final SvVarData other) { return id().equals(other.id()); }
-
     public final String chromosome(boolean isStart) { return isStart ? mSVData.startChromosome() : mSVData.endChromosome(); }
     public final long position(boolean isStart) { return isStart ? mSVData.startPosition() : mSVData.endPosition(); }
     public final byte orientation(boolean isStart){ return isStart ? mSVData.startOrientation() : mSVData.endOrientation(); }
@@ -441,6 +446,15 @@ public class SvVarData
     public List<String> getTempInsertionAssemblies(boolean useStart) { return useStart ? mStartTempInsertionAssemblies : mEndTempInsertionAssemblies; }
     public List<String> getDsbAssemblies(boolean useStart) { return useStart ? mStartDsbAssemblies : mEndDsbAssemblies; }
     public List<String> getOtherAssemblies(boolean useStart) { return useStart ? mStartOtherAssemblies : mEndOtherAssemblies; }
+
+    public final List<GeneAnnotation> getGenesList(boolean useStart) { return useStart ? mGenesStart : mGenesEnd; }
+    public void setGenesList(final List<GeneAnnotation> genesList, boolean isStart)
+    {
+        if(isStart)
+            mGenesStart.addAll(genesList);
+        else
+            mGenesEnd.addAll(genesList);
+    }
 
     public final String getAssemblyMatchType(boolean useStart) { return useStart ? mStartAssemblyMatchType : mEndAssemblyMatchType; }
     public boolean isAssemblyMatched(boolean useStart) { return getAssemblyMatchType(useStart).equals(ASSEMBLY_MATCH_MATCHED); }

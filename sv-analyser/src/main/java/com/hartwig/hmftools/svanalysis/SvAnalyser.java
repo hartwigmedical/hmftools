@@ -160,7 +160,7 @@ public class SvAnalyser {
                     if(fusionAnalyser != null)
                     {
                         fusionAnalyser.loadSvGeneTranscriptData(sample, cmd.getOptionValue(GENE_TRANSCRIPTS_DIR));
-                        fusionAnalyser.findFusions(svVarData, sampleAnalyser.getClusters());
+                        fusionAnalyser.findFusions(svVarData, sampleAnalyser.getClusters(), sampleAnalyser.getChrBreakendMap());
                     }
                 }
             }

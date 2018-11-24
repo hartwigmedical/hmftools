@@ -4,7 +4,6 @@ import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.CHROMOSOME_AR
 import static com.hartwig.hmftools.common.variant.structural.annotation.SvPONAnnotator.REGION_DISTANCE;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_LOW_QUALITY;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_SIMPLE_SV;
-import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.ASSEMBLY_MATCH_ASMB_ONLY;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
@@ -15,6 +14,7 @@ import com.hartwig.hmftools.svanalysis.annotators.FragileSiteAnnotator;
 import com.hartwig.hmftools.svanalysis.annotators.LineElementAnnotator;
 import com.hartwig.hmftools.common.variant.structural.annotation.SvPONAnnotator;
 import com.hartwig.hmftools.svanalysis.types.SvArmGroup;
+import com.hartwig.hmftools.svanalysis.types.SvBreakend;
 import com.hartwig.hmftools.svanalysis.types.SvChain;
 import com.hartwig.hmftools.svanalysis.types.SvCluster;
 import com.hartwig.hmftools.common.variant.structural.annotation.SvPON;
@@ -104,6 +104,7 @@ public class SvSampleAnalyser {
     }
 
     public final List<SvCluster> getClusters() { return mAnalyser.getClusters(); }
+    public final Map<String, List<SvBreakend>> getChrBreakendMap() { return mClusteringMethods.getChrBreakendMap(); }
 
     private void clearState()
     {
@@ -138,8 +139,6 @@ public class SvSampleAnalyser {
         mPc2.start();
         mClusteringMethods.setChromosomalArmStats(mAllVariants);
         mClusteringMethods.populateChromosomeBreakendMap(mAllVariants);
-        // mClusteringMethods.calcCopyNumberData(mSampleId);
-        // mClusteringMethods.createCopyNumberSegments();
         mClusteringMethods.annotateNearestSvData();
         LinkFinder.findDeletionBridges(mClusteringMethods.getChrBreakendMap());
         mClusteringMethods.setSimpleVariantLengths(mSampleId);
@@ -152,25 +151,6 @@ public class SvSampleAnalyser {
         mAnalyser.clusterAndAnalyse();
 
         mPc3.stop();
-
-        /*
-        mClusteringMethods.clusterByBaseDistance(mAllVariants, mClusters);
-        mAnalyser.setSampleId(mSampleId);
-        mAnalyser.findSimpleCompleteChains();
-        mClusteringMethods.mergeClusters(mSampleId, mClusters);
-
-        // log basic clustering details
-        for(SvCluster cluster : mClusters)
-        {
-            if(cluster.getCount() > 1)
-                cluster.logDetails();
-        }
-
-        mPc4.start();
-        mAnalyser.findLinksAndChains();
-        // mClusteringMethods.logInversionPairData(mSampleId, mClusters);
-        mPc4.stop();
-        */
 
         logSampleClusterInfo();
 
@@ -280,7 +260,10 @@ public class SvSampleAnalyser {
                 writer.write(",ChainId,ChainCount,ChainIndex");
 
                 // proximity info and other link info
-                writer.write(",NearestLen,NearestType,DBLenStart,DBLenEnd,FbkLnkStart,FbkLenStart,FbkLnkEnd,FbkLenEnd");
+                writer.write(",NearestLen,NearestType,DBLenStart,DBLenEnd,SynDelDupLen,SynDelDupTILen");
+
+                // proximity info and other link info
+                writer.write(",FoldbackLnkStart,FoldbackLenStart,FoldbackLnkEnd,FoldbackLenEnd");
 
                 // transitive info
                 // writer.write(",TransType,TransLen,TransSvLinks");
@@ -337,7 +320,8 @@ public class SvSampleAnalyser {
 
                 writer.write(
                         String.format(",%s,%s,%s,%d,%d",
-                                cluster.getDesc(), cluster.isResolved(), cluster.getResolvedType(), cluster.getConsistencyCount(), cluster.getChromosomalArmCount()));
+                                cluster.getDesc(), cluster.isResolved(), cluster.getResolvedType(),
+                                cluster.getConsistencyCount(), cluster.getChromosomalArmCount()));
 
                 writer.write(
                         String.format(",%s,%d,%d,%s,%s,%d,%.0f",
@@ -373,11 +357,6 @@ public class SvSampleAnalyser {
                             endLP.linkType(), endLP.length());
                 }
 
-                if(assemblyMatchStart.equals(ASSEMBLY_MATCH_ASMB_ONLY) || assemblyMatchEnd.equals(ASSEMBLY_MATCH_ASMB_ONLY))
-                {
-                    LOGGER.debug("sample({}) var({}) has unlinked assembly TIs", mSampleId, var.posId());
-                }
-
                 // assembly info
                 writer.write(String.format(",%s,%s,%s,%s,%s,%s",
                         startLinkStr, endLinkStr, var.getAssemblyData(true), var.getAssemblyData(false), assemblyMatchStart, assemblyMatchEnd));
@@ -393,10 +372,13 @@ public class SvSampleAnalyser {
 
                 writer.write(chainStr);
 
-                writer.write(String.format(",%d,%s,%d,%d,%s,%d,%s,%d",
+                writer.write(String.format(",%d,%s,%d,%d,%d,%d",
                         var.getNearestSvDistance(), var.getNearestSvRelation(),
                         var.getDBLink(true) != null ? var.getDBLink(true).length() : -1,
                         var.getDBLink(false) != null ? var.getDBLink(false).length() : -1,
+                        cluster.getSynDelDupLength(), cluster.getSynDelDupTILength()));
+
+                writer.write(String.format(",%s,%d,%s,%d",
                         var.getFoldbackLink(true), var.getFoldbackLen(true),
                         var.getFoldbackLink(false), var.getFoldbackLen(false)));
 
