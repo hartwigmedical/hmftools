@@ -21,7 +21,7 @@ public abstract class SampleReport {
     public abstract PatientTumorLocation patientTumorLocation();
 
     @Nullable
-    public abstract Double pathologyTumorPercentage();
+    public abstract String pathologyTumorPercentage();
 
     @NotNull
     @Value.Derived

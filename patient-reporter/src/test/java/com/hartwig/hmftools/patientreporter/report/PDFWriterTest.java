@@ -92,7 +92,7 @@ public class PDFWriterTest {
     private static JasperReportBuilder generateNotAnalysableCPCTReport(double pathologyTumorEstimate, @NotNull NotAnalysableReason reason) {
         SampleReport sampleReport = ImmutableSampleReport.of("CPCT02991111T",
                 ImmutablePatientTumorLocation.of("CPCT02991111", "Skin", "Melanoma"),
-                pathologyTumorEstimate,
+                String.valueOf(pathologyTumorEstimate),
                 LocalDate.parse("05-Jan-2018", DATE_FORMATTER),
                 LocalDate.parse("01-Jan-2018", DATE_FORMATTER),
                 "PREP013V23-QC037V20-SEQ008V25",

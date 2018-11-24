@@ -7,27 +7,26 @@ import io.kotlintest.specs.StringSpec
 
 class IclusionCnvReaderTest : StringSpec() {
     companion object {
-        private val actionable = IclusionEvent("BRAF", "V600", "ENST0000000")
+        private val event = IclusionEvent("ERBB2", "ANY", "ENST0000000")
     }
 
     init {
         "can read amplification" {
-         //   IclusionCnvReader.read(actionable.copy() ) shouldBe listOf(CnvEvent.amplification(actionable.gene))
+            IclusionCnvReader.read(event.copy(variant = "AMPLIFICATION")) shouldBe listOf(CnvEvent.amplification(event.gene))
+            IclusionCnvReader.read(event.copy(variant = "OVEREXPRESSION")) shouldBe listOf(CnvEvent.amplification(event.gene))
+            IclusionCnvReader.read(event.copy(variant = "COPY-GAIN")) shouldBe listOf(CnvEvent.amplification(event.gene))
         }
 
         "can read deletion" {
-        //    IclusionCnvReader.read(actionable.copy(variant = "Deletion")) shouldBe listOf(CnvEvent.deletion(actionable.gene))
+            IclusionCnvReader.read(event.copy(variant = "DELETION")) shouldBe listOf(CnvEvent.deletion(event.gene))
+            IclusionCnvReader.read(event.copy(variant = "LOSS")) shouldBe listOf(CnvEvent.deletion(event.gene))
+            IclusionCnvReader.read(event.copy(variant = "LOSS-OF-FUNCTION")) shouldBe listOf(CnvEvent.deletion(event.gene))
         }
 
         "will only read exact matches" {
-//            IclusionCnvReader.read(actionable.copy(variant = "amplification")) shouldBe emptyList<CnvEvent>()
-//            IclusionCnvReader.read(actionable.copy(variant = "amp")) shouldBe emptyList<CnvEvent>()
-//            IclusionCnvReader.read(actionable.copy(variant = "overexpression")) shouldBe emptyList<CnvEvent>()
-//            IclusionCnvReader.read(actionable.copy(variant = "deletion")) shouldBe emptyList<CnvEvent>()
-//            IclusionCnvReader.read(actionable.copy(variant = "del")) shouldBe emptyList<CnvEvent>()
-//            IclusionCnvReader.read(actionable.copy(variant = "loss-of-function")) shouldBe emptyList<CnvEvent>()
-
+            IclusionCnvReader.read(event.copy(variant = "amplification")) shouldBe emptyList<CnvEvent>()
+            IclusionCnvReader.read(event.copy(variant = "DEL")) shouldBe emptyList<CnvEvent>()
+            IclusionCnvReader.read(event.copy(variant = "V600")) shouldBe emptyList<CnvEvent>()
         }
     }
-
 }

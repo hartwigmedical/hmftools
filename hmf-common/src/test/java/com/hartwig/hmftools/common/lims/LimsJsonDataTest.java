@@ -44,6 +44,7 @@ public class LimsJsonDataTest {
                 .tumorPercentageString("50")
                 .primaryTumor("")
                 .labSopVersions(labSopVersions)
+                .labRemarks("")
                 .build();
     }
 }

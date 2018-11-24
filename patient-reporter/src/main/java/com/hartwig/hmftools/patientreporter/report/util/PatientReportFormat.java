@@ -15,8 +15,16 @@ public final class PatientReportFormat {
     }
 
     @NotNull
-    public static String formatNullablePercent(final @Nullable Double percentage) {
-        return percentage != null ? formatPercent(percentage) : "N/A";
+    public static String formatNullablePercent(final @Nullable String percentage) {
+        String formatTumorPercentage;
+        if (percentage != null && !percentage.equals("Not Determined")) {
+            formatTumorPercentage = formatPercent(Double.parseDouble(percentage));
+        } else if (percentage != null && percentage.equals("Not Determined")) {
+            formatTumorPercentage = "Not Determined";
+        } else {
+            formatTumorPercentage = "N/A";
+        }
+        return formatTumorPercentage;
     }
 
     @NotNull

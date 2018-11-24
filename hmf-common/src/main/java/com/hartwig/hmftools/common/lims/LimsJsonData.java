@@ -33,17 +33,22 @@ abstract class LimsJsonData {
     public abstract String samplingDateString();
 
     // KODU: Tumor biopsies analyzed in research context do not have a proper tumor percentage filled in.
+    // LISC: Tumor biopsies could be NA as tumor percentage
     @Nullable
     @SerializedName("tumor_perc")
     public abstract String tumorPercentageString();
 
     @NotNull
-    @SerializedName("primary_tum")
+    @SerializedName("ptum")
     public abstract String primaryTumor();
 
     @NotNull
     @SerializedName("lab_sop_versions")
     abstract String labSopVersions();
+
+    @Nullable
+    @SerializedName("lab_remarks")
+    public abstract String labRemarks();
 
     @NotNull
     @Value.Derived

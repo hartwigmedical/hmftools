@@ -11,7 +11,6 @@ import com.hartwig.hmftools.knowledgebaseimporter.oncoKb.input.OncoKnownInput
 import com.hartwig.hmftools.knowledgebaseimporter.output.*
 import org.apache.logging.log4j.LogManager
 
-
 class OncoKb(annotatedVariantsLocation: String, actionableVariantsLocation: String, diseaseOntology: DiseaseOntology,
              private val recordAnalyzer: RecordAnalyzer, treatmentTypeMap: Map<String, String>) : Knowledgebase,
         KnowledgebaseSource<OncoKnownRecord, ActionableRecord> {

@@ -75,15 +75,20 @@ public class Lims {
     }
 
     @Nullable
-    public Double tumorPercentageForSample(@NotNull final String sample) {
+    public String tumorPercentageForSample(@NotNull final String sample) {
         LimsJsonData sampleData = dataPerSample.get(sample);
         if (sampleData != null) {
             String tumorPercentageString = sampleData.tumorPercentageString();
+            String remarksSample = sampleData.labRemarks();
             if (tumorPercentageString == null) {
                 return null;
+            } else if (remarksSample == null) {
+                return null;
+            } else if (tumorPercentageString.equals("") && remarksSample.contains("CPCT WIDE project")) {
+                return "Not Determined";
             }
             try {
-                return Double.parseDouble(tumorPercentageString) / 100D;
+                return String.valueOf(Double.parseDouble(tumorPercentageString) / 100D);
             } catch (final NumberFormatException e) {
                 return null;
             }

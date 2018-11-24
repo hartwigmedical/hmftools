@@ -49,7 +49,7 @@ CREATE TABLE sample
     samplingDate DATE,
     dnaNanograms int,
     limsPrimaryTumor varchar(255),
-    tumorPercentage DOUBLE PRECISION,
+    tumorPercentage varchar(100),
     PRIMARY KEY (sampleId),
     FOREIGN KEY (patientId) REFERENCES patient(id)
 );

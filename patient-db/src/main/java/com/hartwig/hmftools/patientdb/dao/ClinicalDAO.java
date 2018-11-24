@@ -30,6 +30,7 @@ import com.hartwig.hmftools.patientdb.data.TumorMarkerData;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.jooq.DSLContext;
 
 class ClinicalDAO {
@@ -98,7 +99,7 @@ class ClinicalDAO {
                         Utils.toSQLDate(sample.samplingDate()),
                         sample.dnaNanograms(),
                         sample.limsPrimaryTumor(),
-                        sample.tumorPercentage())
+                        Utils.formatTumorPercentage(sample.tumorPercentage()))
                 .execute();
     }
 

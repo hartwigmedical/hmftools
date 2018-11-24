@@ -136,7 +136,9 @@ public class SomaticVariantFactory {
 
         if (filter.test(context) && genotype.hasAD() && genotype.getAD().length > 1) {
             final AllelicDepth allelicDepth = determineAlleleFrequencies(context.getGenotype(sample));
-            if (allelicDepth.totalReadCount() > 0) {
+            // KODU: Strelka can call HET-HOM transitions where a germline variant has completely disappeared in the tumor (0 reads).
+            // We want to filter out these calls for further use. See for instance FR14626506, DNMT3A variant.
+            if (allelicDepth.totalReadCount() > 0 && allelicDepth.alleleReadCount() > 0) {
                 return Optional.of(createVariantBuilder(allelicDepth, context, canonicalAnnotationFactory))
                         .map(x -> enrichment.enrich(x, context))
                         .map(ImmutableSomaticVariantImpl.Builder::build);

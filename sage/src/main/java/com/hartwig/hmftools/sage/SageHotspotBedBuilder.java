@@ -16,12 +16,12 @@ import com.hartwig.hmftools.common.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.collect.Multimaps;
 import com.hartwig.hmftools.common.dnds.DndsDriverGeneLikelihoodSupplier;
 import com.hartwig.hmftools.common.genepanel.HmfGenePanelSupplier;
-import com.hartwig.hmftools.common.region.GenomeRegion;
-import com.hartwig.hmftools.common.region.GenomeRegionFactory;
-import com.hartwig.hmftools.common.region.HmfExonRegion;
-import com.hartwig.hmftools.common.region.HmfTranscriptRegion;
 import com.hartwig.hmftools.common.hotspot.VariantHotspot;
 import com.hartwig.hmftools.common.hotspot.VariantHotspotFile;
+import com.hartwig.hmftools.common.region.GenomeRegion;
+import com.hartwig.hmftools.common.region.GenomeRegionBuilder;
+import com.hartwig.hmftools.common.region.HmfExonRegion;
+import com.hartwig.hmftools.common.region.HmfTranscriptRegion;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -72,12 +72,12 @@ public class SageHotspotBedBuilder {
             final List<HmfTranscriptRegion> chromosomeRegions =
                     geneRegions.containsKey(chromosome) ? geneRegions.get(chromosome) : emptyList();
             for (HmfTranscriptRegion gene : chromosomeRegions) {
-                result = addCodingRegions(gene, result);
+                result.addAll(addCodingRegions(gene));
             }
 
             final List<VariantHotspot> chromosomeHotspots = hotspots.containsKey(chromosome) ? hotspots.get(chromosome) : emptyList();
             for (VariantHotspot hotspot : chromosomeHotspots) {
-                result = addVariantHotspot(hotspot, result);
+                result.addAll(addVariantHotspot(hotspot));
             }
 
             result.stream().map(SageHotspotBedBuilder::toBedFormat).forEach(bedResult::add);
@@ -88,78 +88,27 @@ public class SageHotspotBedBuilder {
     }
 
     @NotNull
-    private static List<GenomeRegion> addCodingRegions(@NotNull final HmfTranscriptRegion gene, @NotNull final List<GenomeRegion> region) {
-        List<GenomeRegion> result = region;
+    private static List<GenomeRegion> addCodingRegions(@NotNull final HmfTranscriptRegion gene) {
+        final GenomeRegionBuilder builder = new GenomeRegionBuilder(gene.chromosome());
         for (HmfExonRegion exon : gene.exome()) {
             for (long position = exon.start(); position <= exon.end(); position++) {
                 if (position >= gene.codingStart() && position <= gene.codingEnd()) {
-                    result = addPosition(exon.chromosome(), position, result);
+                    builder.addPosition(position);
                 }
             }
         }
 
-        return result;
+        return builder.build();
     }
 
     @NotNull
-    static List<GenomeRegion> addVariantHotspot(@NotNull final VariantHotspot hotspot, @NotNull final List<GenomeRegion> region) {
-        List<GenomeRegion> result = region;
+    static List<GenomeRegion> addVariantHotspot(@NotNull final VariantHotspot hotspot) {
+        final GenomeRegionBuilder builder = new GenomeRegionBuilder(hotspot.chromosome());
         for (int i = 0; i < Math.min(hotspot.ref().length(), hotspot.alt().length()); i++) {
-            result = addPosition(hotspot.chromosome(), hotspot.position() + i, result);
+            builder.addPosition(hotspot.position() + i);
         }
 
-        return result;
-    }
-
-    @NotNull
-    static List<GenomeRegion> addPosition(@NotNull final String chromosome, final long position,
-            @NotNull final List<GenomeRegion> regions) {
-        GenomeRegion prev = null;
-
-        for (int i = 0; i < regions.size(); i++) {
-            GenomeRegion current = regions.get(i);
-            if (position >= current.start() && position <= current.end()) {
-                return regions;
-            }
-
-            if (position < current.start()) {
-                // Attach to previous
-                if (prev != null && position == prev.end() + 1) {
-                    if (current.start() == prev.end() + 2) {
-                        prev = GenomeRegionFactory.create(prev.chromosome(), prev.start(), current.end());
-                        regions.set(i - 1, prev);
-                        regions.remove(i);
-                        return regions;
-                    } else {
-                        prev = GenomeRegionFactory.create(prev.chromosome(), prev.start(), prev.end() + 1);
-                        regions.set(i - 1, prev);
-                        return regions;
-                    }
-                }
-
-                // Attach to current
-                if (position == current.start() - 1) {
-                    current = GenomeRegionFactory.create(current.chromosome(), current.start() - 1, current.end());
-                    regions.set(i, current);
-                    return regions;
-                }
-
-                // Attach between
-                regions.add(i, GenomeRegionFactory.create(chromosome, position, position));
-                return regions;
-            }
-
-            prev = current;
-        }
-
-        if (prev != null && position == prev.end() + 1) {
-            prev = GenomeRegionFactory.create(prev.chromosome(), prev.start(), prev.end() + 1);
-            regions.set(regions.size() - 1, prev);
-        } else {
-            regions.add(GenomeRegionFactory.create(chromosome, position, position));
-        }
-
-        return regions;
+        return builder.build();
     }
 
     @NotNull

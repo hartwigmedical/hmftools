@@ -19,6 +19,7 @@ data class IclusionRecord(private val metadata: RecordMetadata, override val eve
         RecordMetadata by metadata, KnownRecord, ActionableRecord {
 
     companion object {
+
         private val reader = KnowledgebaseEventReader("iclusion", IclusionTransvarReader, IclusionFusionReader, IclusionCnvReader,
                 IclusionGeneMutationReader, IclusionExonMutationReader, IclusionCodonReader, IclusionCodonRangeReader)
 
@@ -27,6 +28,7 @@ data class IclusionRecord(private val metadata: RecordMetadata, override val eve
             val actionability = readActionability(studyDetails)
             val doids = studyDetails.indications.map { Pair(it.indication_name_full, it.doidSet.map { Doid(it) }.toSet()) }
                     .toMap().filterValues { it.isNotEmpty() }
+
             // MIVO: for now, interpret each iclusion study mutation as separate record. Effectively treats the mutations as an OR predicate
             //      e.g. patient will match if ANY of the specified mutations match
             return events.map {

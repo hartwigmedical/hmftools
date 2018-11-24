@@ -18,13 +18,13 @@ import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMRecordIterator;
 import htsjdk.samtools.SamReader;
 
-class SAMSupplier {
+public class SAMSupplier {
 
     private static final int MIN_MAPPING_QUALITY = 1;
 
     private final ListMultimap<Chromosome, GenomeRegion> codingRegions;
 
-    SAMSupplier(@NotNull final Collection<GenomeRegion> regions) {
+    public SAMSupplier(@NotNull final Collection<GenomeRegion> regions) {
         this.codingRegions = Multimaps.fromRegions(regions);
     }
 

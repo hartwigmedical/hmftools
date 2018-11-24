@@ -27,7 +27,7 @@ public abstract class SampleData implements Comparable<SampleData> {
     public abstract String limsPrimaryTumor();
 
     @Nullable
-    public abstract Double tumorPercentage();
+    public abstract String tumorPercentage();
 
     @NotNull
     @Value.Derived

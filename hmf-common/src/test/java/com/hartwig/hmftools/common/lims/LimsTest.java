@@ -24,6 +24,7 @@ public class LimsTest {
         final String tumorPercentage = "40";
         final String primaryTumor = "Prostate";
         final String labSopVersions = "PREP1V2-QC1V2-SEQ1V2";
+        final String labRemarks ="CPCT WIDE project ";
 
         final LimsJsonData data = ImmutableLimsJsonData.builder()
                 .sampleId(SAMPLE)
@@ -33,6 +34,7 @@ public class LimsTest {
                 .tumorPercentageString(tumorPercentage)
                 .primaryTumor(primaryTumor)
                 .labSopVersions(labSopVersions)
+                .labRemarks(labRemarks)
                 .build();
 
         final Lims lims = buildTestLimsWithJsonData(SAMPLE, data);
@@ -46,9 +48,9 @@ public class LimsTest {
         assertNotNull(dnaAmount);
         assertEquals(500L, (int) dnaAmount);
 
-        Double tumorPerc = lims.tumorPercentageForSample(SAMPLE);
+        String tumorPerc = lims.tumorPercentageForSample(SAMPLE);
         assertNotNull(tumorPerc);
-        assertEquals(0.4, tumorPerc, 1.0E-10);
+        assertEquals(0.4, Double.parseDouble(tumorPerc), 1.0E-10);
 
         assertEquals(labSopVersions, lims.labProceduresForSample(SAMPLE));
         assertEquals(primaryTumor, lims.primaryTumorForSample(SAMPLE));
@@ -80,6 +82,7 @@ public class LimsTest {
                 .tumorPercentageString("IsNotANumber")
                 .primaryTumor("anything")
                 .labSopVersions("anything")
+                .labRemarks("anything")
                 .build();
 
         final Lims lims = buildTestLimsWithJsonData(SAMPLE, data);
