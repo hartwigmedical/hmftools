@@ -15,6 +15,8 @@ import org.jetbrains.annotations.Nullable;
  */
 public class BgSegment implements GenomeInterval {
     private PurpleCopyNumber _cn;
+    private double cnAdjustment = 0;
+
     public BgSegment(PurpleCopyNumber _cn) {
         this._cn = _cn;
     }
@@ -37,7 +39,7 @@ public class BgSegment implements GenomeInterval {
                 .build());
     }
     public double copyNumber() {
-        return _cn.averageTumorCopyNumber();
+        return _cn.averageTumorCopyNumber() + cnAdjustment;
     }
     @Nullable
     @Override
@@ -132,6 +134,15 @@ public class BgSegment implements GenomeInterval {
     public double maxMajorCopyNumber() {
         // TODO use BAF range to calculate
         return copyNumber();
+    }
+    public void pushCopyNumberChange(double ploidy) {
+        cnAdjustment += ploidy;
+    }
+    public void popCopyNumberChange(double ploidy) {
+        cnAdjustment -= ploidy;
+    }
+    public void resetCopyNumberChange() {
+        this.cnAdjustment = 0;
     }
     public static Ordering<BgSegment> ByPloidy = new Ordering<BgSegment>() {
         public int compare(BgSegment o1, BgSegment o2) {
