@@ -372,6 +372,17 @@ public class LinkFinder
                     // can then skip the next breakend
                     ++i;
                 }
+                else if(areLinkedSection(var1, var2, breakend.usesStart(), nextBreakend.usesStart())
+                && nextBreakend.position() - breakend.position() <= MIN_TEMPLATED_INSERTION_LENGTH)
+                {
+                    // will be converted into a DB
+                    SvLinkedPair dbPair = new SvLinkedPair(var1, var2, LINK_TYPE_TI, breakend.usesStart(), nextBreakend.usesStart());
+                    var1.setDBLink(dbPair, breakend.usesStart());
+                    var2.setDBLink(dbPair, nextBreakend.usesStart());
+
+                    // can then skip the next breakend
+                    ++i;
+                }
             }
         }
     }

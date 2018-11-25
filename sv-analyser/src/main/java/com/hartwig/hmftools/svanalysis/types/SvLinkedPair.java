@@ -22,6 +22,11 @@ public class SvLinkedPair {
     public static final String LINK_TYPE_DB = "DB";
     public static final String LINK_TYPE_SGL = "SGL";
 
+    public static String ASSEMBLY_MATCH_MATCHED = "MATCH";
+    public static String ASSEMBLY_MATCH_DIFF = "DIFF";
+    public static String ASSEMBLY_MATCH_INFER_ONLY = "INFER_ONLY";
+    public static String ASSEMBLY_MATCH_NONE = "NONE";
+
     public SvLinkedPair(SvVarData first, SvVarData second, final String linkType, boolean firstLinkOnStart, boolean secondLinkOnStart)
     {
         mFirst = first;
@@ -89,17 +94,19 @@ public class SvLinkedPair {
             || hasVariantBE(otherPair.second(), otherPair.secondLinkOnStart()));
     }
 
+    public void switchSVs()
+    {
+        final SvVarData tmp = mSecond;
+        mSecond = mFirst;
+        mFirst = tmp;
+
+        boolean tmp2 = mSecondLinkOnStart;
+        mSecondLinkOnStart = mFirstLinkOnStart;
+        mFirstLinkOnStart = tmp2;
+    }
+
     public final String toString()
     {
-        /*
-        boolean firstLinkBE = mLinkType == LINK_TYPE_SGL ? !mFirstLinkOnStart : mFirstLinkOnStart;
-        boolean secondLinkBE = mLinkType == LINK_TYPE_SGL ? !mSecondLinkOnStart : mSecondLinkOnStart;
-
-        return String.format("%s %s:%d:%s & %s %s:%d:%s",
-                first().id(), first().chromosome(firstLinkBE), first().position(firstLinkBE), firstLinkBE ? "start":"end",
-                second().id(), second().chromosome(secondLinkBE), second().position(secondLinkBE), secondLinkBE ? "start":"end");
-        */
-
         return svToString(mFirst, mFirstLinkOnStart) + " & " + svToString(mSecond, mSecondLinkOnStart);
     }
 
@@ -178,42 +185,6 @@ public class SvLinkedPair {
     {
         return (mFirst.equals(other.first(), true) || mSecond.equals(other.second(), true)
             || mFirst.equals(other.second(), true) || mSecond.equals(other.first(), true));
-    }
-
-    public static String ASSEMBLY_MATCH_MATCHED = "MATCH";
-    public static String ASSEMBLY_MATCH_DIFF = "DIFF";
-    public static String ASSEMBLY_MATCH_INFER_ONLY = "INFER_ONLY";
-    public static String ASSEMBLY_MATCH_NONE = "NONE";
-
-    public String getAssemblyMatchType(final SvVarData var)
-    {
-        final String firstAssembly = mFirstLinkOnStart ? mFirst.getAssemblyData(true) : mFirst.getAssemblyData(false);
-        final String secondAssembly = mSecondLinkOnStart ? mSecond.getAssemblyData(true) : mSecond.getAssemblyData(false);
-
-        if((var == mFirst && firstAssembly.isEmpty()) || (var == mSecond && secondAssembly.isEmpty()))
-        {
-            return ASSEMBLY_MATCH_INFER_ONLY;
-        }
-
-        if(firstAssembly.equals(secondAssembly))
-        {
-            return ASSEMBLY_MATCH_MATCHED;
-        }
-
-        String[] firstAssemblyList = firstAssembly.split(";");
-        String[] secondAssemblyList = secondAssembly.split(";");
-
-        for(int i = 0; i < firstAssemblyList.length; ++i)
-        {
-            for(int j = 0; j < secondAssemblyList.length; ++j)
-            {
-                if(firstAssemblyList[i].equals(secondAssemblyList[j]))
-                    return ASSEMBLY_MATCH_MATCHED;
-            }
-        }
-
-
-        return ASSEMBLY_MATCH_DIFF;
     }
 
 }

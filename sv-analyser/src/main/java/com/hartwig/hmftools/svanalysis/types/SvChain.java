@@ -14,12 +14,15 @@ import org.apache.logging.log4j.Logger;
 public class SvChain {
 
     private int mId;
+
+    // links are added in such a way the the 'first' SV in the link is the link to the preceding
+    // link in the chain, and the 'second' SV links to its other breakend in the next link in the chain
     private List<SvVarData> mSvList;
+    private List<SvLinkedPair> mLinkedPairs;
 
     // has an entry for each SV, indicating which end of the SV links to the preceding SV
     private List<Boolean> mSvLinkToPrecedingOnStart;
 
-    private List<SvLinkedPair> mLinkedPairs;
     private int mLength;
     private boolean mIsClosedLoop;
     private boolean mIsValid;
@@ -69,25 +72,13 @@ public class SvChain {
 
     public void addLink(final SvLinkedPair pair, boolean addToStart)
     {
-        if(mLinkedPairs.contains(pair))
-            return;
-
-        if(mLinkedPairs.isEmpty() || !addToStart)
-            mLinkedPairs.add(pair);
-        else
-            mLinkedPairs.add(0, pair);
-
-        final SvVarData first = pair.first();
-        final SvVarData second = pair.second();
-
-        boolean containsFirst = mSvList.contains(first);
-        boolean containsSecond = mSvList.contains(second);
-
-        if(mSvList.isEmpty())
+        if(mLinkedPairs.isEmpty())
         {
-            mSvList.add(first);
+            mLinkedPairs.add(pair);
+
+            mSvList.add(pair.first());
             mSvLinkToPrecedingOnStart.add(!pair.firstLinkOnStart());
-            mSvList.add(second);
+            mSvList.add(pair.second());
 
             // if this second variant in the linked pair is connected on its Start breakend, then
             // the precending SV link is 'Start'
@@ -96,6 +87,27 @@ public class SvChain {
             mSvLinkToPrecedingOnStart.add(pair.secondLinkOnStart());
             return;
         }
+
+        if(mLinkedPairs.contains(pair))
+            return;
+
+        // check ordering and switch if required so that the 'first' SV always links to the preceding link and vice versa
+        if((addToStart && pair.second() != mLinkedPairs.get(0).first())
+        || (!addToStart && pair.first() != mLinkedPairs.get(mLinkedPairs.size()-1).second()))
+        {
+            pair.switchSVs();
+        }
+
+        if(addToStart)
+            mLinkedPairs.add(0, pair); // insert at front
+        else
+            mLinkedPairs.add(pair);
+
+        final SvVarData first = pair.first();
+        final SvVarData second = pair.second();
+
+        boolean containsFirst = mSvList.contains(first);
+        boolean containsSecond = mSvList.contains(second);
 
         int lastIndex = mSvList.size() - 1;
 
@@ -155,6 +167,17 @@ public class SvChain {
     public SvLinkedPair getFirstLinkedPair() { return mLinkedPairs.isEmpty() ? null : mLinkedPairs.get(0); }
     public SvLinkedPair getLastLinkedPair() { return mLinkedPairs.isEmpty() ? null : mLinkedPairs.get(mLinkedPairs.size()-1); }
 
+    public boolean firstLinkOpenOnStart()
+    {
+        return !mLinkedPairs.isEmpty() ? mLinkedPairs.get(0).firstUnlinkedOnStart() : false;
+    }
+
+    public boolean lastLinkOpenOnStart()
+    {
+        return !mLinkedPairs.isEmpty() ? !mLinkedPairs.get(mLinkedPairs.size()-1).secondLinkOnStart() : false;
+    }
+
+    /*
     public boolean firstLinkOpenOnStart() { return mSvLinkToPrecedingOnStart.isEmpty() ? false : mSvLinkToPrecedingOnStart.get(0); }
 
     public boolean lastLinkOpenOnStart()
@@ -166,6 +189,7 @@ public class SvChain {
         // so if it's linked on the start backwards, the end must be open and vice versa
         return !mSvLinkToPrecedingOnStart.get(mSvList.size()-1);
     }
+    */
 
     public boolean isClosedLoop() { return mIsClosedLoop; }
 
@@ -383,7 +407,7 @@ public class SvChain {
 
     public boolean breakendsAreChained(final SvVarData var1, boolean v1Start, final SvVarData var2, boolean v2Start)
     {
-        // the 2 bool passed in are the ends which are linked through the chain
+        // the 2 boolean passed in are the ends which are linked through the chain
 
         // check whether these breakends face towards each other in the chain
         boolean be1FacesUp = false; // 'up' here means towards a higher index
@@ -423,17 +447,6 @@ public class SvChain {
     public boolean hasLinkedPair(final SvLinkedPair pair)
     {
         return mLinkedPairs.contains(pair);
-    }
-
-    public boolean hasLinkClash(final SvLinkedPair pair)
-    {
-        for(SvLinkedPair linkedPair : mLinkedPairs)
-        {
-            if (linkedPair.hasLinkClash(pair))
-                return true;
-        }
-
-        return false;
     }
 
 }

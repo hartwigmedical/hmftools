@@ -14,10 +14,12 @@ import static com.hartwig.hmftools.svanalysis.analyser.SvTestHelper.createSv;
 import static com.hartwig.hmftools.svanalysis.analyser.SvTestHelper.createTestSv;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.calcConsistency;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.makeChrArmStr;
+import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.LINK_TYPE_TI;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import com.hartwig.hmftools.svanalysis.types.SvLinkedPair;
 import com.hartwig.hmftools.svanalysis.types.SvVarData;
 
 import org.junit.Test;
@@ -58,6 +60,7 @@ public class MiscTests
     public void testMiscMethods()
     {
         assertTrue(makeChrArmStr("1", "P").equals("1_P"));
+
     }
 
 }
