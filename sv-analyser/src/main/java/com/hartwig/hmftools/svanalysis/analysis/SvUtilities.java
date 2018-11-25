@@ -120,28 +120,6 @@ public class SvUtilities {
         return true;
     }
 
-    public boolean areAllWithinRange(long start1, long end1, long start2, long end2, int permittedDistance)
-    {
-        if(start1 > start2 - permittedDistance && end1 < end2 + permittedDistance)
-            return true;
-
-        if(start2 > start1 - permittedDistance && end2 < end1 + permittedDistance)
-            return true;
-
-        return false;
-    }
-
-    public boolean areAnyWithinRange(long start1, long end1, long start2, long end2, int permittedDistance)
-    {
-        return isWithinRange(start1, start2) || isWithinRange(end1, end2)
-            || isWithinRange(end1, start2) || isWithinRange(start1, end2);
-    }
-
-    public static boolean areTypePair(final SvVarData v1, final SvVarData v2, StructuralVariantType type1, StructuralVariantType type2)
-    {
-        return (v1.type() == type1 && v2.type() == type2) || (v1.type() == type2 && v2.type() == type1);
-    }
-
     public boolean isWithinRange(long pos1, long pos2)
     {
         if(pos1 < 0 || pos2 < 0)
@@ -194,14 +172,16 @@ public class SvUtilities {
         // v1's right end overlaps with v2's left
         if(v1.position(true) < v2.position(true)
         && v1.position(false) < v2.position(false)
-        && v1.position(false) >= v2.position(true)) {
+        && v1.position(false) >= v2.position(true))
+        {
             return true;
         }
 
         // v1's left end overlaps with v2's right
         if(v1.position(false) > v2.position(false)
         && v1.position(true) > v2.position(true)
-        && v1.position(true) <= v2.position(false)) {
+        && v1.position(true) <= v2.position(false))
+        {
             return true;
         }
 

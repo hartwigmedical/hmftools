@@ -103,7 +103,7 @@ public class SvVarData
 
         init();
 
-        setAssemblyData(mSVData.startLinkedBy(), mSVData.endLinkedBy());
+        setAssemblyData();
     }
 
     private void init()
@@ -192,7 +192,7 @@ public class SvVarData
         mEndLineElement = other.getLineElement(false);
         mNearestSvDistance = other.getNearestSvDistance();
         mNearestSvRelation = other.getNearestSvRelation();
-        setAssemblyData(mSVData.startLinkedBy(), mSVData.endLinkedBy());
+        setAssemblyData();
         mStartAssemblyMatchType = other.getAssemblyMatchType(true);
         mEndAssemblyMatchType = other.getAssemblyMatchType(false);
         mDupBEStart = other.isDupBreakend(true);
@@ -442,6 +442,13 @@ public class SvVarData
     }
 
     public String getAssemblyData(boolean useStart) { return useStart ? mAssemblyStartData : mAssemblyEndData; }
+    public void setAssemblyData(boolean useStart, final String data)
+    {
+        if (useStart)
+            mAssemblyStartData = data;
+        else
+            mAssemblyEndData = data;
+    }
 
     public List<String> getTempInsertionAssemblies(boolean useStart) { return useStart ? mStartTempInsertionAssemblies : mEndTempInsertionAssemblies; }
     public List<String> getDsbAssemblies(boolean useStart) { return useStart ? mStartDsbAssemblies : mEndDsbAssemblies; }
@@ -467,7 +474,7 @@ public class SvVarData
             mEndAssemblyMatchType = type;
     }
 
-    private void setAssemblyData(final String assemblyStart, final String assemblyEnd)
+    private void setAssemblyData()
     {
         mStartTempInsertionAssemblies = Lists.newArrayList();
         mStartDsbAssemblies = Lists.newArrayList();

@@ -1,7 +1,9 @@
 package com.hartwig.hmftools.svanalysis.analyser;
 
+import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.BND;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DEL;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DUP;
+import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INS;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INV;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.DEFAULT_PROXIMITY_DISTANCE;
@@ -51,6 +53,30 @@ public class SvTestHelper
 
     public final String nextVarId() { return String.format("%d", mNextVarId++); }
 
+    public void preClusteringInit()
+    {
+        ClusteringMethods.populateChromosomeBreakendMap(AllVariants);
+        ClusteringMethods.annotateNearestSvData();
+        LinkFinder.findDeletionBridges(ClusteringMethods.getChrBreakendMap());
+        ClusteringMethods.setSimpleVariantLengths(SampleId);
+    }
+
+    public void addClusterAndSVs(final SvCluster cluster)
+    {
+        Analyser.getClusters().add(cluster);
+        AllVariants.addAll(cluster.getSVs());
+    }
+
+    public void clearClustersAndSVs()
+    {
+        AllVariants.clear();
+        Analyser.getClusters().clear();
+    }
+
+    public final List<SvCluster> getClusters() { return Analyser.getClusters(); }
+
+
+
     public static SvVarData createSv(final String varId, final String chrStart, final String chrEnd,
             long posStart, long posEnd, int orientStart, int orientEnd, StructuralVariantType type)
     {
@@ -62,6 +88,12 @@ public class SvTestHelper
     public static SvVarData createDel(final String varId, final String chromosome, long posStart, long posEnd)
     {
         return createTestSv(varId, chromosome, chromosome, posStart, posEnd, 1, -1, DEL,
+                1, 1, 1, 1, 1);
+    }
+
+    public static SvVarData createIns(final String varId, final String chromosome, long posStart, long posEnd)
+    {
+        return createTestSv(varId, chromosome, chromosome, posStart, posEnd, 1, -1, INS,
                 1, 1, 1, 1, 1);
     }
 
@@ -83,6 +115,14 @@ public class SvTestHelper
                 1, 0, 1, 0, 1);
 
         var.setNoneSegment(isNoneSegment);
+
+        return var;
+    }
+
+    public static SvVarData createBnd(final String varId, final String chrStart, long posStart, int orientStart, final String chrEnd, long posEnd, int orientEnd)
+    {
+        SvVarData var = createTestSv(varId, chrStart, chrEnd, posStart, posEnd, orientStart, orientEnd, BND,
+                1, 0, 1, 0, 1);
 
         return var;
     }
@@ -148,26 +188,6 @@ public class SvTestHelper
         var.setChromosomalArms(startArm, endArm);
 
         return var;
-    }
-
-    public void preClusteringInit()
-    {
-        ClusteringMethods.populateChromosomeBreakendMap(AllVariants);
-        ClusteringMethods.annotateNearestSvData();
-        LinkFinder.findDeletionBridges(ClusteringMethods.getChrBreakendMap());
-        ClusteringMethods.setSimpleVariantLengths(SampleId);
-    }
-
-    public void addClusterAndSVs(final SvCluster cluster)
-    {
-        Analyser.getClusters().add(cluster);
-        AllVariants.addAll(cluster.getSVs());
-    }
-
-    public void clearClustersAndSVs()
-    {
-        AllVariants.clear();
-        Analyser.getClusters().clear();
     }
 
 

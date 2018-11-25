@@ -19,6 +19,7 @@ import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.CHROMOSOME_AR
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.PERMITED_DUP_BE_DISTANCE;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.calcConsistency;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.copyNumbersEqual;
+import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.isOverlapping;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_LOW_QUALITY;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_DEL_EXT_TI;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_DEL_INT_TI;
@@ -165,12 +166,10 @@ public class SvClusteringMethods {
         {
             SvVarData currentVar = delSVs.get(currentIndex);
 
-            // make a new cluster
             SvCluster newCluster = new SvCluster(getNextClusterId());
 
-            // first remove the current SV from consideration
             newCluster.addVariant(currentVar);
-            delSVs.remove(currentIndex); // index will remain the same and so point to the next item
+            delSVs.remove(currentIndex);
 
             // and then search for all other linked ones
             findLinkedSVsByDistance(newCluster, delSVs, false);
@@ -198,12 +197,18 @@ public class SvClusteringMethods {
             boolean matched = false;
             for (SvVarData otherVar : cluster.getSVs())
             {
-                    // test each possible linkage
+                if(!allowOverlaps && isOverlapping(currentVar, otherVar))
+                {
+                    matched = false;
+                    break;
+                }
+
+                // test each possible linkage
                 if (!mUtils.areVariantsLinkedByDistance(currentVar, otherVar))
                     continue;
 
-                if(!allowOverlaps && !(currentVar.position(false) < otherVar.position(true) || otherVar.position(false) < currentVar.position(true)))
-                    continue;
+                //if(!allowOverlaps && !(currentVar.position(false) < otherVar.position(true) || otherVar.position(false) < currentVar.position(true)))
+                //    continue;
 
                 cluster.addVariant(currentVar);
                 currentVar.addClusterReason(CLUSTER_REASON_PROXIMITY, otherVar.id());
