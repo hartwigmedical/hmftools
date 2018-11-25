@@ -1,6 +1,7 @@
-package com.hartwig.hmftools.svanalysis.svgraph;
+package com.hartwig.hmftools.svgraphs;
 
 import java.util.Deque;
+import java.util.List;
 import java.util.Set;
 
 public class Subgraph {
@@ -9,6 +10,6 @@ public class Subgraph {
     public Set<BgSegment> internalSegments;
     public void calculatePathSets() {
     }
-    public Deque<BgAdjacency> path
+    public Deque<BgAdjacency> path;
     public List<BgAdjacency> paths;
 }

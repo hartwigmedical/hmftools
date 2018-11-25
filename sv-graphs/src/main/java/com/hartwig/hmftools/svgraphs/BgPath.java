@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.svanalysis.svgraph;
+package com.hartwig.hmftools.svgraphs;
 
 import java.util.ArrayDeque;
 import java.util.Collection;
@@ -22,11 +22,12 @@ public class BgPath {
         // - event matched with set of lower CN events
         // - double minute & fold-back inversions only possible way to increase CN without
         // adding teleomeres
+        throw new RuntimeException("NYI");
     }
     public Collection<BgAdjacency> dfsRecurse() {
-        for (BgAdjacency next : bg.nextBreakpointCandidates(path.getLast().edge)) {
-
+        for (BgAdjacency next : bg.nextBreakpointCandidates(path.getLast().edge, null)) {
         }
+        throw new RuntimeException("NYI");
     }
     public static class PathNode {
         public PathNode(BgAdjacency edge, double copyNumber) {

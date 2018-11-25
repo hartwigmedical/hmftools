@@ -17,6 +17,10 @@ import com.hartwig.hmftools.common.variant.structural.ImmutableEnrichedStructura
 import com.hartwig.hmftools.common.variant.structural.ImmutableEnrichedStructuralVariantLeg;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 
+import com.hartwig.hmftools.svgraphs.simplification.SimpleEventSimplifier;
+import com.hartwig.hmftools.svgraphs.simplification.SimpleSimplificationStrategy;
+import com.hartwig.hmftools.svgraphs.simplification.Simplification;
+import com.hartwig.hmftools.svgraphs.simplification.SimplificationType;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Test;
 
@@ -124,7 +128,7 @@ public class BreakpointGraphTest {
         List<PurpleCopyNumber> cns = ImmutableList.of(cn("chr1", 1, 10, 2), cn("chr1", 11, 20, 1), cn("chr1", 21, 30, 2));
         List<EnrichedStructuralVariant> svs = ImmutableList.of(breakpoint("chr1", 10, 1, "chr1", 21, -1, 1));
         BreakpointGraph bg = new BreakpointGraph(cns, svs);
-        Simplification sv = bg.simplify().get(0);
+        Simplification sv = new SimpleEventSimplifier(bg, new SimpleSimplificationStrategy()).simplify().get(0);
         assertEquals(svs.get(0), sv.variants().get(0));
         assertEquals(0, bg.getAllStructuralVariants().size());
     }
@@ -135,7 +139,7 @@ public class BreakpointGraphTest {
         List<EnrichedStructuralVariant> svs =
                 ImmutableList.of(breakpoint("chr1", 10, 1, "chr1", 21, -1, 1), breakpoint("chr1", 11, -1, "chr1", 1, -1, 1));
         BreakpointGraph bg = new BreakpointGraph(cns, svs);
-        List<Simplification> results = bg.simplify();
+        List<Simplification> results = new SimpleEventSimplifier(bg, new SimpleSimplificationStrategy()).simplify();
         assertEquals(0, results.size());
     }
 
@@ -144,7 +148,7 @@ public class BreakpointGraphTest {
         List<PurpleCopyNumber> cns = ImmutableList.of(cn("chr1", 1, 10, 2), cn("chr1", 11, 20, 3), cn("chr1", 21, 30, 2));
         List<EnrichedStructuralVariant> svs = ImmutableList.of(breakpoint("chr1", 11, -1, "chr1", 20, 1, 1));
         BreakpointGraph bg = new BreakpointGraph(cns, svs);
-        Simplification sv = bg.simplify().get(0);
+        Simplification sv = new SimpleEventSimplifier(bg, new SimpleSimplificationStrategy()).simplify().get(0);
         assertEquals(svs.get(0), sv.variants().get(0));
         assertEquals(0, bg.getAllStructuralVariants().size());
     }
@@ -155,7 +159,7 @@ public class BreakpointGraphTest {
         List<EnrichedStructuralVariant> svs =
                 ImmutableList.of(breakpoint("chr1", 11, -1, "chr1", 20, 1, 1), breakpoint("chr1", 11, -1, "chr1", 21, -1, 1));
         BreakpointGraph bg = new BreakpointGraph(cns, svs);
-        List<Simplification> results = bg.simplify();
+        List<Simplification> results = new SimpleEventSimplifier(bg, new SimpleSimplificationStrategy()).simplify();
         assertEquals(0, results.size());
     }
 
@@ -177,7 +181,7 @@ public class BreakpointGraphTest {
                         .endLinkedBy("asm_right")
                         .build());
         BreakpointGraph bg = new BreakpointGraph(cns, svs);
-        List<Simplification> sv = bg.simplify();
+        List<Simplification> sv = new SimpleEventSimplifier(bg, new SimpleSimplificationStrategy()).simplify();
         assertEquals(1, sv.size());
         assertEquals(2, sv.get(0).variants().size());
         assertEquals(1, bg.getAllStructuralVariants().size());
@@ -210,7 +214,7 @@ public class BreakpointGraphTest {
                 .findFirst()
                 .orElse(null);
         assertNotNull(ba);
-        List<BgAdjacency> result = bg.nextBreakpointCandidates(ba);
+        List<BgAdjacency> result = bg.nextBreakpointCandidates(ba, null);
         assertEquals(4, result.size());
     }
 
@@ -235,7 +239,7 @@ public class BreakpointGraphTest {
                 .findFirst()
                 .orElse(null);
         assertNotNull(ba);
-        List<BgAdjacency> result = bg.nextBreakpointCandidates(ba);
+        List<BgAdjacency> result = bg.nextBreakpointCandidates(ba, null);
         // sv3 is the only candidate left
         // sv2 has too low copyNumber
         // can't traverse to either sv4 or end of chromosome due to low CN
@@ -361,7 +365,7 @@ public class BreakpointGraphTest {
         BreakpointGraph bg = new BreakpointGraph(cns, ImmutableList.of(
                 breakpoint("left", "chr1", 11, -1, "chr2", 101, -1, 2),
                 breakpoint("right", "chr1", 20, 1, "chr2", 200, 1, 2)));
-        List<Simplification> simplifications = bg.simplify();
+        List<Simplification> simplifications = new SimpleEventSimplifier(bg, new SimpleSimplificationStrategy()).simplify();
         assertEquals(1, simplifications.size());
         assertEquals(SimplificationType.TranslocationInsertion, simplifications.get(0).type());
 
@@ -381,7 +385,7 @@ public class BreakpointGraphTest {
                 breakpoint("left", "chr1", 11, -1, "chr2", 101, -1, 1),
                 breakend("right", "chr1", 20, 1, 1),
                 breakend("remote", "chr2", 200, 1, 1)));
-        List<Simplification> simplifications = bg.simplify();
+        List<Simplification> simplifications = new SimpleEventSimplifier(bg, new SimpleSimplificationStrategy()).simplify();
         bg.mergeReferenceSegments(true);
         assertEquals(1, simplifications.size());
         assertEquals(3, simplifications.get(0).variants().size());
@@ -440,11 +444,11 @@ public class BreakpointGraphTest {
         BreakpointGraph bg = new BreakpointGraph(cns, ImmutableList.of(
                 breakpoint("left", "chr1", 11, -1, "chr1", 31, -1, 1),
                 breakpoint("right", "chr1", 20, 1, "chr1", 40, 1, 1)));
-        List<Simplification> simplifications = bg.findSimpleInversionSimplifications(9);
+        List<Simplification> simplifications = new SimpleEventSimplifier(bg, new SimpleSimplificationStrategy()).findSimpleInversionSimplifications(9);
         assertEquals(0, simplifications.size());
-        simplifications = bg.findSimpleInversionSimplifications(10);
+        simplifications = new SimpleEventSimplifier(bg, new SimpleSimplificationStrategy()).findSimpleInversionSimplifications(10);
         assertEquals(1, simplifications.size());
-        simplifications = bg.simplify();
+        simplifications = new SimpleEventSimplifier(bg, new SimpleSimplificationStrategy()).simplify();
         bg.mergeReferenceSegments(false);
         assertEquals(1, simplifications.size());
         assertEquals(SimplificationType.SimpleInversion, simplifications.get(0).type());
@@ -459,9 +463,9 @@ public class BreakpointGraphTest {
         BreakpointGraph bg = new BreakpointGraph(cns, ImmutableList.of(
                 breakpoint("left", "chr1", 11, -1, "chr1", 21, -1, 1),
                 breakpoint("right", "chr1", 10, 1, "chr1", 20, 1, 1)));
-        List<Simplification> simplifications = bg.findSimpleInversionSimplifications(10);
+        List<Simplification> simplifications = new SimpleEventSimplifier(bg, new SimpleSimplificationStrategy()).findSimpleInversionSimplifications(10);
         assertEquals(1, simplifications.size());
-        simplifications = bg.simplify();
+        simplifications = new SimpleEventSimplifier(bg, new SimpleSimplificationStrategy()).simplify();
         bg.mergeReferenceSegments(false);
         assertEquals(1, simplifications.size());
         assertEquals(SimplificationType.SimpleInversion, simplifications.get(0).type());
@@ -478,9 +482,9 @@ public class BreakpointGraphTest {
         BreakpointGraph bg = new BreakpointGraph(cns, ImmutableList.of(
                 breakpoint("left", "chr1", 21, -1, "chr1", 31, -1, 1),
                 breakpoint("right", "chr1", 10, 1, "chr1", 40, 1, 1)));
-        List<Simplification> simplifications = bg.findSimpleInversionSimplifications(10);
+        List<Simplification> simplifications = new SimpleEventSimplifier(bg, new SimpleSimplificationStrategy()).findSimpleInversionSimplifications(10);
         assertEquals(1, simplifications.size());
-        simplifications = bg.simplify();
+        simplifications = new SimpleEventSimplifier(bg, new SimpleSimplificationStrategy()).simplify();
         bg.mergeReferenceSegments(false);
         assertEquals(1, simplifications.size());
         assertEquals(SimplificationType.SimpleInversion, simplifications.get(0).type());
@@ -507,6 +511,6 @@ public class BreakpointGraphTest {
                 ImmutableEnrichedStructuralVariant.builder().from(
                         breakpoint("chain", "chr1", 50, 1, "chr1", 61, -1, 1))
                         .startLinkedBy("asm2").build()));
-        bg.simplify();
+        new SimpleEventSimplifier(bg, new SimpleSimplificationStrategy()).simplify();
     }
 }
