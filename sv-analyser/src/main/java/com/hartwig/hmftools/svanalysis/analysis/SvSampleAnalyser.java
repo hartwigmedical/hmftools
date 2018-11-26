@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.svanalysis.analysis;
 
+import static com.hartwig.hmftools.svanalysis.analysis.LinkFinder.MIN_TEMPLATED_INSERTION_LENGTH;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.CHROMOSOME_ARM_P;
 import static com.hartwig.hmftools.common.variant.structural.annotation.SvPONAnnotator.REGION_DISTANCE;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_LOW_QUALITY;
@@ -274,6 +275,8 @@ public class SvSampleAnalyser {
             int lineCount = 0;
             int svCount = 0;
 
+            int noDBLenMarker = -(MIN_TEMPLATED_INSERTION_LENGTH + 1);
+
             for(final SvVarData var : mAllVariants)
             {
                 final SvCluster cluster = var.getCluster();
@@ -374,8 +377,8 @@ public class SvSampleAnalyser {
 
                 writer.write(String.format(",%d,%s,%d,%d,%d,%d",
                         var.getNearestSvDistance(), var.getNearestSvRelation(),
-                        var.getDBLink(true) != null ? var.getDBLink(true).length() : -1,
-                        var.getDBLink(false) != null ? var.getDBLink(false).length() : -1,
+                        var.getDBLink(true) != null ? var.getDBLink(true).length() : noDBLenMarker,
+                        var.getDBLink(false) != null ? var.getDBLink(false).length() : noDBLenMarker,
                         cluster.getSynDelDupLength(), cluster.getSynDelDupTILength()));
 
                 writer.write(String.format(",%s,%d,%s,%d",

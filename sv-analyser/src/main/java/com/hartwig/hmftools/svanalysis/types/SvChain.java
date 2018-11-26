@@ -2,6 +2,8 @@ package com.hartwig.hmftools.svanalysis.types;
 
 import static java.lang.Math.abs;
 
+import static com.hartwig.hmftools.svanalysis.analysis.LinkFinder.areLinkedSection;
+import static com.hartwig.hmftools.svanalysis.analysis.LinkFinder.areSectionBreak;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.calcConsistency;
 
 import java.util.List;
@@ -20,9 +22,6 @@ public class SvChain {
     private List<SvVarData> mSvList;
     private List<SvLinkedPair> mLinkedPairs;
 
-    // has an entry for each SV, indicating which end of the SV links to the preceding SV
-    private List<Boolean> mSvLinkToPrecedingOnStart;
-
     private int mLength;
     private boolean mIsClosedLoop;
     private boolean mIsValid;
@@ -36,7 +35,6 @@ public class SvChain {
         mId = chainId;
         mSvList = Lists.newArrayList();
         mLinkedPairs = Lists.newArrayList();
-        mSvLinkToPrecedingOnStart = Lists.newArrayList();
         mLength = 0;
         mIsClosedLoop = false;
         mIsValid = true;
@@ -48,7 +46,6 @@ public class SvChain {
         mId = other.getId();
         mSvList = Lists.newArrayList();
         mLinkedPairs = Lists.newArrayList();
-        mSvLinkToPrecedingOnStart = Lists.newArrayList();
         mLength = 0;
         mIsClosedLoop = false;
         mIsValid = true;
@@ -77,14 +74,7 @@ public class SvChain {
             mLinkedPairs.add(pair);
 
             mSvList.add(pair.first());
-            mSvLinkToPrecedingOnStart.add(!pair.firstLinkOnStart());
             mSvList.add(pair.second());
-
-            // if this second variant in the linked pair is connected on its Start breakend, then
-            // the precending SV link is 'Start'
-            // if the other end of this variant is added as a new link, it will be on the other breakend,
-            // so for now the end of the chain is open on the opposite of this last boolean value
-            mSvLinkToPrecedingOnStart.add(pair.secondLinkOnStart());
             return;
         }
 
@@ -131,27 +121,21 @@ public class SvChain {
                 {
                     // second SV is the new one here
                     mSvList.add(0, second);
-
-                    // whichever end is not linked in this pair is the one exposed at the start of the chain
-                    mSvLinkToPrecedingOnStart.add(0, !pair.secondLinkOnStart());
                 }
                 else
                 {
                     mSvList.add(0, first);
-                    mSvLinkToPrecedingOnStart.add(0, !pair.firstLinkOnStart());
-                }
+               }
             }
             else
             {
                 if (mSvList.get(lastIndex-1) == first || mSvList.get(lastIndex) == first)
                 {
                     mSvList.add(second);
-                    mSvLinkToPrecedingOnStart.add(pair.secondLinkOnStart());
                 }
                 else
                 {
                     mSvList.add(first);
-                    mSvLinkToPrecedingOnStart.add(pair.firstLinkOnStart());
                 }
             }
         }
@@ -176,20 +160,6 @@ public class SvChain {
     {
         return !mLinkedPairs.isEmpty() ? !mLinkedPairs.get(mLinkedPairs.size()-1).secondLinkOnStart() : false;
     }
-
-    /*
-    public boolean firstLinkOpenOnStart() { return mSvLinkToPrecedingOnStart.isEmpty() ? false : mSvLinkToPrecedingOnStart.get(0); }
-
-    public boolean lastLinkOpenOnStart()
-    {
-        if(mSvLinkToPrecedingOnStart.isEmpty())
-            return false;
-
-        // the array of booleans refers to the the link to the preceding SV,
-        // so if it's linked on the start backwards, the end must be open and vice versa
-        return !mSvLinkToPrecedingOnStart.get(mSvList.size()-1);
-    }
-    */
 
     public boolean isClosedLoop() { return mIsClosedLoop; }
 
@@ -242,6 +212,16 @@ public class SvChain {
             return true;
         else
             return false;
+    }
+
+    public boolean couldFormLoop()
+    {
+        if(areLinkedSection(getFirstSV(), getLastSV(), firstLinkOpenOnStart(), lastLinkOpenOnStart()))
+        {
+            return true;
+        }
+
+        return false;
     }
 
     public boolean linkWouldCloseChain(final SvLinkedPair pair)
@@ -407,29 +387,38 @@ public class SvChain {
 
     public boolean breakendsAreChained(final SvVarData var1, boolean v1Start, final SvVarData var2, boolean v2Start)
     {
-        // the 2 boolean passed in are the ends which are linked through the chain
-
         // check whether these breakends face towards each other in the chain
         boolean be1FacesUp = false; // 'up' here means towards a higher index
         int be1Index = -1;
         boolean be2FacesUp = false;
         int be2Index = -1;
 
-        for(int i = 0; i < mSvList.size(); ++i)
+        // in every linked pair, the first element is lower in the chain (where 0 is considering the beginning) and the second is higher,
+        // so for every SV it's 'first' breakend in a given pair faces up, the 'second' faces down
+        for(int i = 0; i < mLinkedPairs.size(); ++i)
         {
-            final SvVarData var = mSvList.get(i);
+            final SvLinkedPair pair = mLinkedPairs.get(i);
 
-            if(var.equals(var1, true))
+            if(pair.first().equals(var1, true) && pair.firstLinkOnStart() == v1Start)
             {
                 be1Index = i;
-
-                // if start links to preceding then end is facing up, so true if is checking the end
-                be1FacesUp = mSvLinkToPrecedingOnStart.get(i) != v1Start;
+                be1FacesUp = true;
             }
-            else if(var.equals(var2, true))
+            else if(pair.second().equals(var1, true) && pair.secondLinkOnStart() == v1Start)
+            {
+                be1Index = i;
+                be1FacesUp = false;
+            }
+
+            if(pair.first().equals(var2, true) && pair.firstLinkOnStart() == v2Start)
+            {
+                be1Index = i;
+                be2FacesUp = true;
+            }
+            else if(pair.second().equals(var2, true) && pair.secondLinkOnStart() == v2Start)
             {
                 be2Index = i;
-                be2FacesUp = mSvLinkToPrecedingOnStart.get(i) != v2Start;
+                be2FacesUp = false;
             }
 
             if(be1Index >=0 && be2Index >= 0)
@@ -441,7 +430,7 @@ public class SvChain {
             }
         }
 
-        return false;
+        return true;
     }
 
     public boolean hasLinkedPair(final SvLinkedPair pair)

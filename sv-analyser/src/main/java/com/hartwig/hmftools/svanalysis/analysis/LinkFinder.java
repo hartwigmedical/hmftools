@@ -205,6 +205,9 @@ public class LinkFinder
 
     public static boolean areSectionBreak(final SvVarData v1, final SvVarData v2, boolean v1Start, boolean v2Start)
     {
+        if(!v1.chromosome(v1Start).equals(v2.chromosome(v2Start)))
+            return false;
+
         // start apart or equal and heading same direction
         long pos1 = v1.position(v1Start);
         boolean headsLeft1 = (v1.orientation(v1Start) == 1);

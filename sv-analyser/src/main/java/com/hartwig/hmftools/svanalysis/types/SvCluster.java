@@ -673,28 +673,6 @@ public class SvCluster
                     linkedPairs.add(pair);
                 }
             }
-
-            /*
-            // finally add any other potential inferred links which don't clash with existing links
-            for(final SvLinkedPair pair : mInferredLinkedPairs)
-            {
-                if(linkedPairs.contains(pair))
-                    continue;
-
-                boolean hasClash = false;
-                for(final SvLinkedPair existingLink : linkedPairs)
-                {
-                    if (existingLink.hasLinkClash(pair))
-                    {
-                        hasClash = true;
-                        break;
-                    }
-                }
-
-                if(!hasClash)
-                    linkedPairs.add(pair);
-            }
-            */
         }
 
         // mark the resultant set of inferred links - the assembly links will have already been marked
@@ -706,14 +684,6 @@ public class SvCluster
                 pair.second().setAssemblyMatchType(ASSEMBLY_MATCH_INFER_ONLY, pair.secondLinkOnStart());
             }
         }
-
-        /*
-        if(!linkedPairs.isEmpty())
-        {
-            LOGGER.debug("cluster({}: {} count={}) has {} linked pairs",
-                    mId, mDesc, getUniqueSvCount(), linkedPairs.size());
-        }
-        */
 
         mLinkedPairs = linkedPairs;
     }
