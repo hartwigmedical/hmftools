@@ -33,6 +33,7 @@ import org.apache.commons.cli.ParseException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
@@ -117,7 +118,7 @@ public class SageHotspotApplication {
     }
 
     private static HotspotEvidence createEvidence(boolean known, @NotNull final VariantHotspotEvidence tumor,
-            @NotNull final VariantHotspotEvidence normal) {
+            @Nullable final VariantHotspotEvidence normal) {
         return ImmutableHotspotEvidence.builder()
                 .from(tumor)
                 .ref(tumor.ref())
@@ -126,10 +127,10 @@ public class SageHotspotApplication {
                 .tumorAltCount(tumor.altSupport())
                 .tumorRefCount(tumor.refSupport())
                 .tumorReads(tumor.readDepth())
-                .normalAltCount(normal.altSupport())
-                .normalRefCount(normal.refSupport())
-                .normalReads(normal.readDepth())
-                .normalIndelCount(normal.indelSupport())
+                .normalAltCount(normal == null ? 0 : normal.altSupport())
+                .normalRefCount(normal == null ? 0 : normal.refSupport())
+                .normalReads(normal == null ? 0 : normal.readDepth())
+                .normalIndelCount(normal == null ? 0 : normal.indelSupport())
                 .type(known ? HotspotEvidenceType.KNOWN : HotspotEvidenceType.INFRAME)
                 .build();
     }
