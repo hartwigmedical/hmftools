@@ -13,7 +13,7 @@ final class Microhomology {
 
     @NotNull
     static String microhomology(int position, @NotNull final String sequence, @NotNull final String ref) {
-        if (sequence.length() < position) {
+        if (sequence.length() < position + ref.length()) {
             LOGGER.warn("Attempt to determine microhomology outside of sequence length");
             return Strings.EMPTY;
         }
