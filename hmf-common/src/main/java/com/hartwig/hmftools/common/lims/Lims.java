@@ -84,11 +84,10 @@ public class Lims {
             String remarksSample = sampleData.labRemarks();
             if (tumorPercentageString == null) {
                 return null;
-            } else if (remarksSample == null) {
-                return null;
-            } else if (tumorPercentageString.isEmpty() && remarksSample.contains("CPCT WIDE project")) {
+            } else if (tumorPercentageString.isEmpty() && remarksSample != null && remarksSample.contains("CPCT WIDE project")) {
                 return PATHOLOGY_TUMOR_ESTIMATE_NOT_DETERMINED;
             }
+
             try {
                 return String.valueOf(Double.parseDouble(tumorPercentageString) / 100D);
             } catch (final NumberFormatException e) {
