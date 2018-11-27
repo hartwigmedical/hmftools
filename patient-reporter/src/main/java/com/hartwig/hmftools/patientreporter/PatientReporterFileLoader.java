@@ -40,10 +40,9 @@ public final class PatientReporterFileLoader {
     private static final Logger LOGGER = LogManager.getLogger(PatientReporterFileLoader.class);
 
     private static final String PURPLE_DIRECTORY = "purple";
+    private static final String GRIDSS_DIRECTORY = "structuralVariants" + File.separator + "gridss";
     private static final String CIRCOS_PLOT_DIRECTORY = "plot";
     private static final String CIRCOS_PLOT_EXTENSION = ".circos.png";
-    private static final String MANTA_SV_EXTENSION_V3 = "_somaticSV_bpi.vcf";
-    private static final String MANTA_SV_EXTENSION_V4 = "_somaticSV_bpi.vcf.gz";
     private static final String PURPLE_GRIDSS_SV = ".purple.sv.vcf.gz";
 
     private static final String SOMATIC_VCF_EXTENSION_V3 = "_post_processed_v2.2.vcf.gz";
@@ -80,28 +79,19 @@ public final class PatientReporterFileLoader {
 
     @NotNull
     static List<StructuralVariant> loadPassedStructuralVariants(@NotNull String runDirectory) throws IOException {
-        // TODO (KODU): Clean up once pipeline v3 no longer exists and we switched to GRIDSS everywhere
-        Optional<Path> path = tryFindPathOnExtension(runDirectory + File.separator + PURPLE_DIRECTORY, PURPLE_GRIDSS_SV);
-        //        if (path.isPresent()) {
-        //            LOGGER.info("Using SVs from GRIDSS/Purple");
-        //        } else {
-        LOGGER.info("Using SVs from Manta/BPI");
-        path = tryFindPathOnExtension(runDirectory, MANTA_SV_EXTENSION_V3);
-        if (!path.isPresent()) {
-            path = tryFindPathOnExtension(runDirectory, MANTA_SV_EXTENSION_V4);
+        Path gridssPath = Paths.get(GRIDSS_DIRECTORY);
+
+        if (Files.exists(gridssPath) && Files.isDirectory(gridssPath)) {
+            String purpleDirectory = runDirectory + File.separator + PURPLE_DIRECTORY;
+            Optional<Path> path = Files.walk(Paths.get(purpleDirectory)).filter(p -> p.toString().endsWith(PURPLE_GRIDSS_SV)).findFirst();
+
+            assert path.isPresent();
+
+            return StructuralVariantFileLoader.fromFile(path.get().toString(), true);
         } else {
-            LOGGER.info(" Reverting to Manta/BPI pipeline v3...");
+            LOGGER.warn("Cannot load structural variants. No GRIDSS directory present in " + runDirectory + "!");
+            return Lists.newArrayList();
         }
-        //        }
-
-        assert path.isPresent();
-
-        return StructuralVariantFileLoader.fromFile(path.get().toString(), true);
-    }
-
-    @NotNull
-    private static Optional<Path> tryFindPathOnExtension(@NotNull String runDirectory, @NotNull String extension) throws IOException {
-        return Files.walk(Paths.get(runDirectory)).filter(p -> p.toString().endsWith(extension)).findFirst();
     }
 
     @NotNull
