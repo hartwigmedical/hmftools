@@ -89,14 +89,15 @@ public class BachelorPP {
     private static final String BACH_INPUT_FILE = "bachelor_file";
 
     // file locations
-    private static final String BACHELOR_SUB_DIRECTORY = "bachelor";
-    private static final String DEFAULT_BACH_INPUT_FILE = "bachelor_output.csv";
     private static final String WHITELIST_FILE = "whitelist_file";
     private static final String BLACKLIST_FILE = "blacklist_file";
 
     private static final String DB_USER = "db_user";
     private static final String DB_PASS = "db_pass";
     private static final String DB_URL = "db_url";
+
+    private static final String DEFAULT_BACH_DIRECTORY = "bachelor";
+    private static final String DEFAULT_BACH_INPUT_FILE = "bachelor_output.csv";
 
     private DatabaseAccess mDbAccess;
     private Multimap<String, GenomeRegion> mHighConfidenceRegions;
@@ -156,6 +157,7 @@ public class BachelorPP {
 
         if (sampleId == null || sampleId.equals("*"))
         {
+            LOGGER.info("running in batch mode");
             sampleId = "";
             mIsBatchMode = true;
         }
@@ -166,11 +168,18 @@ public class BachelorPP {
             sampleDirectory += "/";
 
         String bachelorInputFile;
+        String bachelorDataDir = sampleDirectory + DEFAULT_BACH_DIRECTORY + "/";
 
         if(cmd.hasOption(BACH_INPUT_FILE))
+        {
             bachelorInputFile = cmd.getOptionValue(BACH_INPUT_FILE);
+            LOGGER.info("loading specific input file: {}", bachelorInputFile);
+        }
         else
-            bachelorInputFile = sampleDirectory + DEFAULT_BACH_INPUT_FILE;
+        {
+            bachelorInputFile = bachelorDataDir + DEFAULT_BACH_INPUT_FILE;
+            LOGGER.info("loading sample default file: {}", bachelorInputFile);
+        }
 
         BachelorDataCollection dataCollection = new BachelorDataCollection();
         dataCollection.setSampleId(sampleId);
@@ -207,7 +216,7 @@ public class BachelorPP {
             AlleleDepthLoader adLoader = new AlleleDepthLoader();
             adLoader.setSampleId(sampleId);
 
-            if (!adLoader.loadMiniPileupData(sampleDirectory) || !adLoader.applyPileupData(bachRecords))
+            if (!adLoader.loadMiniPileupData(bachelorDataDir) || !adLoader.applyPileupData(bachRecords))
                 return false;
         }
 
@@ -638,11 +647,9 @@ public class BachelorPP {
     private static Options createBasicOptions()
     {
         final Options options = new Options();
-        options.addOption(SAMPLE, true, "Tumor sample.");
-
-        options.addOption(SAMPLE_PATH, true, "Sample directory with a 'bachelor' sub-directory expected");
-        options.addOption(BACH_INPUT_FILE, true, "Specific bachelor input file, if left out then assumes in sample path");
-        options.addOption(SAMPLE_PATH, true, "Name of input Mini Pileup file");
+        options.addOption(SAMPLE, true, "Tumor sample");
+        options.addOption(SAMPLE_PATH, true, "Typically the sample run directory and then assumes a 'bachelor' sub-directory for bachelor and mini-pileup input files");
+        options.addOption(BACH_INPUT_FILE, true, "Override for specific bachelor input file, if left out then assumes in sample path & 'bachelor' sub-directory");
         options.addOption(REF_GENOME, true, "Path to the ref genome fasta file");
         options.addOption(HIGH_CONFIDENCE_BED, true, "Path to the high confidence bed file");
         options.addOption(PURPLE_DATA_DIRECTORY, true, "Sub-directory with sample path for purple data");
