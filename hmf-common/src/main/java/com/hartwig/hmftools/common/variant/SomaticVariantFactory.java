@@ -19,6 +19,7 @@ import com.hartwig.hmftools.common.variant.enrich.SomaticEnrichment;
 import com.hartwig.hmftools.common.variant.filter.AlwaysPassFilter;
 import com.hartwig.hmftools.common.variant.filter.ChromosomeFilter;
 import com.hartwig.hmftools.common.variant.filter.HotspotFilter;
+import com.hartwig.hmftools.common.variant.filter.NTFilter;
 import com.hartwig.hmftools.common.variant.filter.NearIndelPonFilter;
 import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotation;
 import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotationFactory;
@@ -87,6 +88,7 @@ public class SomaticVariantFactory {
     private SomaticVariantFactory(@NotNull final VariantContextFilter filter, @NotNull final SomaticEnrichment enrichment) {
         this.filter = new CompoundFilter(true);
         this.filter.add(new ChromosomeFilter());
+        this.filter.add(new NTFilter());
         this.filter.add(filter);
 
         this.enrichment = enrichment;
@@ -136,9 +138,7 @@ public class SomaticVariantFactory {
 
         if (filter.test(context) && genotype.hasAD() && genotype.getAD().length > 1) {
             final AllelicDepth allelicDepth = determineAlleleFrequencies(context.getGenotype(sample));
-            // KODU: Strelka can call HET-HOM transitions where a germline variant has completely disappeared in the tumor (0 reads).
-            // We want to filter out these calls for further use. See for instance FR14626506, DNMT3A variant.
-            if (allelicDepth.totalReadCount() > 0 && allelicDepth.alleleReadCount() > 0) {
+            if (allelicDepth.totalReadCount() > 0) {
                 return Optional.of(createVariantBuilder(allelicDepth, context, canonicalAnnotationFactory))
                         .map(x -> enrichment.enrich(x, context))
                         .map(ImmutableSomaticVariantImpl.Builder::build);

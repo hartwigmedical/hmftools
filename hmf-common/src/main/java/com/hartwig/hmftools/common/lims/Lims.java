@@ -11,6 +11,8 @@ import org.jetbrains.annotations.Nullable;
 
 public class Lims {
 
+    public static final String PATHOLOGY_TUMOR_ESTIMATE_NOT_DETERMINED = "ND";
+
     private static final Logger LOGGER = LogManager.getLogger(Lims.class);
 
     @NotNull
@@ -75,18 +77,17 @@ public class Lims {
     }
 
     @Nullable
-    public String tumorPercentageForSample(@NotNull final String sample) {
+    public String tumorPercentageForSample(@NotNull String sample) {
         LimsJsonData sampleData = dataPerSample.get(sample);
         if (sampleData != null) {
             String tumorPercentageString = sampleData.tumorPercentageString();
             String remarksSample = sampleData.labRemarks();
             if (tumorPercentageString == null) {
                 return null;
-            } else if (remarksSample == null) {
-                return null;
-            } else if (tumorPercentageString.equals("") && remarksSample.contains("CPCT WIDE project")) {
-                return "Not Determined";
+            } else if (tumorPercentageString.isEmpty() && remarksSample != null && remarksSample.contains("CPCT WIDE project")) {
+                return PATHOLOGY_TUMOR_ESTIMATE_NOT_DETERMINED;
             }
+
             try {
                 return String.valueOf(Double.parseDouble(tumorPercentageString) / 100D);
             } catch (final NumberFormatException e) {

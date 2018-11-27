@@ -116,8 +116,6 @@ public class SageHotspotAnnotation {
             writer.add(context);
         }
         writer.close();
-        ;
-
     }
 
     @NotNull

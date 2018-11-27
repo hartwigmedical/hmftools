@@ -37,7 +37,6 @@ import com.hartwig.hmftools.patientreporter.actionability.ReportableEvidenceItem
 import com.hartwig.hmftools.patientreporter.copynumber.CopyNumberAnalysis;
 import com.hartwig.hmftools.patientreporter.copynumber.CopyNumberAnalyzer;
 import com.hartwig.hmftools.patientreporter.germline.GermlineVariant;
-import com.hartwig.hmftools.patientreporter.report.util.PatientReportFormat;
 import com.hartwig.hmftools.patientreporter.structural.FusionDisruptionAnalysis;
 import com.hartwig.hmftools.patientreporter.structural.FusionDisruptionAnalyzer;
 import com.hartwig.hmftools.patientreporter.variants.SomaticVariantAnalysis;
@@ -144,7 +143,7 @@ abstract class PatientReporter {
 
         LOGGER.info("Loading purple data for sample " + sample);
         final PurityContext purityContext = PatientReporterFileLoader.loadPurity(runDirectory, sample);
-        LOGGER.info(" Purple purity " + PatientReportFormat.formatPercent(purityContext.bestFit().purity()));
+        LOGGER.info(" Purple purity " + purityContext.bestFit().purity());
         LOGGER.info(" Purple average tumor ploidy: " + purityContext.bestFit().ploidy());
         LOGGER.info(" Purple status " + purityContext.status());
 

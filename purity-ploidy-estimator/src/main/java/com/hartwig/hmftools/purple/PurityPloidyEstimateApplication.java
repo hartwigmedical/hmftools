@@ -47,7 +47,6 @@ import com.hartwig.hmftools.common.variant.PurityAdjustedSomaticVariant;
 import com.hartwig.hmftools.common.variant.PurityAdjustedSomaticVariantFactory;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariantFactory;
-import com.hartwig.hmftools.common.variant.filter.NTFilter;
 import com.hartwig.hmftools.common.variant.filter.SGTFilter;
 import com.hartwig.hmftools.common.variant.recovery.RecoverStructuralVariants;
 import com.hartwig.hmftools.common.version.VersionInfo;
@@ -310,8 +309,7 @@ public class PurityPloidyEstimateApplication {
             String filename = config.file().get().toString();
             LOGGER.info("Loading somatic variants from {}", filename);
 
-            SomaticVariantFactory factory =
-                    SomaticVariantFactory.filteredInstance(new PassingVariantFilter(), new NTFilter(), new SGTFilter());
+            SomaticVariantFactory factory = SomaticVariantFactory.filteredInstance(new PassingVariantFilter(), new SGTFilter());
 
             return factory.fromVCFFile(configSupplier.commonConfig().tumorSample(), filename);
         } else {

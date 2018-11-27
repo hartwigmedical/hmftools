@@ -3,6 +3,7 @@ package com.hartwig.hmftools.patientreporter.report.util;
 import static com.google.common.base.Strings.repeat;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.variant.AllelicDepth;
 import com.hartwig.hmftools.common.variant.structural.annotation.Transcript;
 
@@ -15,12 +16,14 @@ public final class PatientReportFormat {
     }
 
     @NotNull
-    public static String formatNullablePercent(final @Nullable String percentage) {
+    public static String formatPathologyTumorPercentage(@Nullable String percentage) {
         String formatTumorPercentage;
-        if (percentage != null && !percentage.equals("Not Determined")) {
-            formatTumorPercentage = formatPercent(Double.parseDouble(percentage));
-        } else if (percentage != null && percentage.equals("Not Determined")) {
-            formatTumorPercentage = "Not Determined";
+        if (percentage != null) {
+            if (percentage.equals(Lims.PATHOLOGY_TUMOR_ESTIMATE_NOT_DETERMINED)) {
+                formatTumorPercentage = "not determined";
+            } else {
+                formatTumorPercentage = formatPercent(Double.parseDouble(percentage));
+            }
         } else {
             formatTumorPercentage = "N/A";
         }
