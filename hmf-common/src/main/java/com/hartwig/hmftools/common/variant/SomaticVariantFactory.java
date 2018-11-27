@@ -148,6 +148,16 @@ public class SomaticVariantFactory {
     }
 
     @NotNull
+    public SomaticVariant createSomaticVariant(@NotNull final String sample, @NotNull final VariantContext context)
+    {
+        final AllelicDepth allelicDepth = determineAlleleFrequencies(context.getGenotype(sample));
+
+        return Optional.of(createVariantBuilder(allelicDepth, context, canonicalAnnotationFactory))
+                .map(x -> enrichment.enrich(x, context))
+                .map(ImmutableSomaticVariantImpl.Builder::build).get();
+    }
+
+    @NotNull
     private static ImmutableSomaticVariantImpl.Builder createVariantBuilder(@NotNull final AllelicDepth allelicDepth,
             @NotNull final VariantContext context, @NotNull CanonicalAnnotation canonicalAnnotationFactory) {
 

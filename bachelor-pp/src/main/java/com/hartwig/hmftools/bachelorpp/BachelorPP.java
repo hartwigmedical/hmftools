@@ -332,16 +332,8 @@ public class BachelorPP {
 
             bachRecord.setVariantContext(variantContext);
 
-            Optional<SomaticVariant> somVariant = SomaticVariantFactory.unfilteredInstance().createVariant(sampleId, variantContext);
-
-            if (somVariant.isPresent())
-            {
-                bachRecord.setSomaticVariant(somVariant.get());
-            }
-            else
-            {
-                LOGGER.error("sample({}) var({}:{}) somatic variant creation failed", sampleId, bachRecord.variantId(), bachRecord.position());
-            }
+            SomaticVariant somVariant = SomaticVariantFactory.unfilteredInstance().createSomaticVariant(sampleId, variantContext);
+            bachRecord.setSomaticVariant(somVariant);
         }
     }
 
@@ -559,7 +551,7 @@ public class BachelorPP {
 
                 writer.write("SampleId,Program,Source,Chromosome,Position");
 
-                writer.write(",Type,Ref,Alt,Gene,TranscriptId,DbsnpId,CosmicId,Effects,WorstCodingEffect,AltCount,RefCount");
+                writer.write(",Type,Ref,Alt,Gene,TranscriptId,DbsnpId,CosmicId,Effects,WorstCodingEffect,RefCount,RefReadDepth,AltCount,AltReadDepth");
 
                 writer.write(",AdjCopyNumber,AdjustedVaf,HighConfidenceRegion,TrinucleotideContext,Microhomology,RepeatSequence,RepeatCount");
 
@@ -593,7 +585,7 @@ public class BachelorPP {
                 final EnrichedSomaticVariant region = bachRecord.getEnrichedVariant();
 
                 writer.write(
-                        String.format(",%s,%s,%s,%s,%s,%s,%s,%s,%s,%d,%d",
+                        String.format(",%s,%s,%s,%s,%s,%s,%s,%s,%s,%d,%d,%d,%d",
                         region.type(),
                         region.ref(),
                         region.alt(),
@@ -603,8 +595,8 @@ public class BachelorPP {
                         region.canonicalCosmicID() == null ? "" : region.canonicalCosmicID(),
                         bachRecord.effects(),
                         region.worstCodingEffect(),
-                        bachRecord.getAltCount(),
-                        bachRecord.getRefCount()));
+                        bachRecord.getRefCount(), bachRecord.getRefReadDepth(),
+                        bachRecord.getAltCount(), bachRecord.getAltReadDepth()));
 
                 writer.write(
                         String.format(",%.2f,%.2f,%s,%s,%s,%s,%d",

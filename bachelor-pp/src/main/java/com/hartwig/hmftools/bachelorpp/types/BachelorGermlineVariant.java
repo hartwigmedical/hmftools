@@ -35,7 +35,9 @@ public class BachelorGermlineVariant {
     private String mCodonInfo;
 
     private int mRefCount;
+    private int mRefReadDepth;
     private int mAltCount;
+    private int mAltReadDepth;
     private boolean mReadDataSet;
 
     private double mAdjustedVaf;
@@ -77,6 +79,8 @@ public class BachelorGermlineVariant {
 
         mRefCount = 0;
         mAltCount = 0;
+        mRefReadDepth = 0;
+        mAltReadDepth = 0;
         mReadDataSet = false;
         mAdjustedVaf = 0;
 
@@ -106,8 +110,9 @@ public class BachelorGermlineVariant {
     public boolean isHomozygous() { return mIsHomozygous; }
     public String matchType() { return mMatchType; }
     public int getRefCount() { return mRefCount; }
+    public int getRefReadDepth() { return mRefReadDepth; }
     public int getAltCount() { return mAltCount; }
-    public int getReadDepth() { return mAltCount + mRefCount; }
+    public int getAltReadDepth() { return mAltReadDepth; }
     public void setRefCount(int count) { mRefCount = count; }
     public void setAltCount(int count) { mAltCount = count; }
     public final String getDiagnosis() { return mDiagnosis; }
@@ -117,10 +122,12 @@ public class BachelorGermlineVariant {
     public void setDiagnosis(final String text) { mDiagnosis = text; }
     public void setSignificance(final String text) { mSignificance = text; }
 
-    public void setAltReadData(int altCount, int readDepth)
+    public void setReadData(int refCount, int refReadDepth, int altCount, int altReadDepth)
     {
+        mRefCount = refCount;
+        mRefReadDepth = refReadDepth;
         mAltCount = altCount;
-        mRefCount = readDepth - altCount;
+        mAltReadDepth = altReadDepth;
         mReadDataSet = true;
     }
 

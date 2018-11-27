@@ -281,15 +281,18 @@ class BachelorEligibility {
             boolean isHomozygous = refData.isHom();
             int phredScore = refData.getPL().length >= 1 ? refData.getPL()[0] : 0;
 
+            int refCount = refData.getAD()[1];
+            int refReadDepth = refData.getDP();
+
             int altCount = 0;
-            int readDepth = 0;
+            int altReadDepth = 0;
 
             if(variant.getGenotypes().size() >= 2)
             {
                 final Genotype altData = variant.getGenotype(1);
                 int[] alleleData = altData.getAD();
                 altCount = alleleData[1];
-                readDepth = altData.getDP();
+                altReadDepth = altData.getDP();
             }
 
             final String codonInfo = relevantSnpEff.aaPosAndLength();
@@ -312,8 +315,10 @@ class BachelorEligibility {
                     .hgvsCoding(relevantSnpEff.hgvsCoding())
                     .isHomozygous(isHomozygous)
                     .phredScore(phredScore)
+                    .refCount(refCount)
+                    .refReadDepth(refReadDepth)
                     .altCount(altCount)
-                    .readDepth(readDepth)
+                    .altReadDepth(altReadDepth)
                     .condonInfo(codonInfo)
                     .build();
 

@@ -16,9 +16,11 @@ public class BachelorDataCollection
 {
     private static final int BACHELOR_CSV_FIELD_COUNT = 16;
     private static final int COL_INDEX_MATCH_TYPE = 16;
-    private static final int COL_INDEX_ALT_COUNT = 17;
-    private static final int COL_INDEX_READ_DEPTH = 18;
-    private static final int COL_INDEX_CODON_INFO = 19;
+    private static final int COL_INDEX_REF_COUNT = 17;
+    private static final int COL_INDEX_REF_READ_DEPTH = 18;
+    private static final int COL_INDEX_ALT_COUNT = 19;
+    private static final int COL_INDEX_ALT_READ_DEPTH = 20;
+    private static final int COL_INDEX_CODON_INFO = 21;
 
     private static final Logger LOGGER = LogManager.getLogger(BachelorDataCollection.class);
 
@@ -50,8 +52,6 @@ public class BachelorDataCollection
 
                 // parse CSV data
                 String[] items = line.split(",");
-
-                // CSV fields PATIENT,SOURCE,PROGRAM,ID,GENES,TRANSCRIPT_ID,CHROM,POS,REF,ALTS,EFFECTS
 
                 if (items.length < BACHELOR_CSV_FIELD_COUNT)
                 {
@@ -88,12 +88,14 @@ public class BachelorDataCollection
                         matchType,
                         codonInfo);
 
-                if(items.length > COL_INDEX_READ_DEPTH)
+                if(items.length > COL_INDEX_ALT_READ_DEPTH)
                 {
+                    int refCount = Integer.parseInt(items[COL_INDEX_REF_COUNT]);
+                    int refReadDepth = Integer.parseInt(items[COL_INDEX_REF_READ_DEPTH]);
                     int altCount = Integer.parseInt(items[COL_INDEX_ALT_COUNT]);
-                    int readDepth = Integer.parseInt(items[COL_INDEX_READ_DEPTH]);
+                    int altReadDepth = Integer.parseInt(items[COL_INDEX_ALT_READ_DEPTH]);
 
-                    bachRecord.setAltReadData(altCount, readDepth);
+                    bachRecord.setReadData(refCount, refReadDepth, altCount, altReadDepth);
                 }
 
                 mGermlineVariants.add(bachRecord);

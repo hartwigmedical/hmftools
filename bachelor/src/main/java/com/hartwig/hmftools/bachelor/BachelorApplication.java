@@ -372,8 +372,9 @@ public class BachelorApplication {
                 mMainDataWriter.write(String.format(",%s,%d,%s,%s,%s,%s",
                         r.chrom(), r.pos(), r.ref(), r.alts(), r.effects(), r.annotations()));
 
-                mMainDataWriter.write(String.format(",%s,%s,%d,%s,%s,%d,%d,%s",
-                        r.hgvsProtein(), r.isHomozygous(), r.phredScore(), r.hgvsCoding(), r.matchType(), r.altCount(), r.readDepth(), r.condonInfo()));
+                mMainDataWriter.write(String.format(",%s,%s,%d,%s,%s,%d,%d,%d,%d,%s",
+                        r.hgvsProtein(), r.isHomozygous(), r.phredScore(), r.hgvsCoding(), r.matchType(),
+                        r.refCount(), r.refReadDepth(), r.altCount(), r.altReadDepth(), r.condonInfo()));
 
                 mMainDataWriter.newLine();
 
@@ -405,7 +406,8 @@ public class BachelorApplication {
             mMainDataWriter = Files.newBufferedWriter(Paths.get(mainFileName), StandardOpenOption.CREATE);
 
             mMainDataWriter.write("SAMPLEID,SOURCE,PROGRAM,ID,GENE,TRANSCRIPT_ID,CHROM,POS,REF,ALTS");
-            mMainDataWriter.write(",EFFECTS,ANNOTATIONS,HGVS_PROTEIN,IS_HOMOZYGOUS,PHRED_SCORE,HGVS_CODING,MATCH_TYPE,ALT_COUNT,READ_DEPTH,CODON_INFO");
+            mMainDataWriter.write(",EFFECTS,ANNOTATIONS,HGVS_PROTEIN,IS_HOMOZYGOUS,PHRED_SCORE,HGVS_CODING");
+            mMainDataWriter.write(",MATCH_TYPE,REF_COUNT,REF_READ_DEPTH,ALT_COUNT,ALT_READ_DEPTH,CODON_INFO");
 
             mMainDataWriter.newLine();
 
