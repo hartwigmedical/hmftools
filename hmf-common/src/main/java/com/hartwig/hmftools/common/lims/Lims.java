@@ -11,6 +11,8 @@ import org.jetbrains.annotations.Nullable;
 
 public class Lims {
 
+    public static final String PATHOLOGY_TUMOR_ESTIMATE_NOT_DETERMINED = "ND";
+
     private static final Logger LOGGER = LogManager.getLogger(Lims.class);
 
     @NotNull
@@ -85,7 +87,7 @@ public class Lims {
             } else if (remarksSample == null) {
                 return null;
             } else if (tumorPercentageString.isEmpty() && remarksSample.contains("CPCT WIDE project")) {
-                return "not determined";
+                return PATHOLOGY_TUMOR_ESTIMATE_NOT_DETERMINED;
             }
             try {
                 return String.valueOf(Double.parseDouble(tumorPercentageString) / 100D);
