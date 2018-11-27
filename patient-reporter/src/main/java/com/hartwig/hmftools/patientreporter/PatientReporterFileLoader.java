@@ -79,7 +79,7 @@ public final class PatientReporterFileLoader {
 
     @NotNull
     static List<StructuralVariant> loadPassedStructuralVariants(@NotNull String runDirectory) throws IOException {
-        Path gridssPath = Paths.get(GRIDSS_DIRECTORY);
+        Path gridssPath = Paths.get(runDirectory + File.separator + GRIDSS_DIRECTORY);
 
         if (Files.exists(gridssPath) && Files.isDirectory(gridssPath)) {
             String purpleDirectory = runDirectory + File.separator + PURPLE_DIRECTORY;
