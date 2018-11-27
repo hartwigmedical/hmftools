@@ -136,7 +136,7 @@ public class ClusterAnalyser {
                     cluster.setResolved(true, RESOLVED_TYPE_SIMPLE_CHAIN);
             }
 
-            reportChainFeatures(cluster);
+            // reportChainFeatures(cluster);
         }
 
         // checkClusterDuplicates(mClusters);

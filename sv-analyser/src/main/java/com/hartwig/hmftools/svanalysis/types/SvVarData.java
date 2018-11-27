@@ -34,6 +34,8 @@ public class SvVarData
     private boolean mNoneSegment; // created from a NONE copy number segment
     private String mStartArm;
     private String mEndArm;
+    private SvBreakend mBreakendStart;
+    private SvBreakend mBreakendEnd;
     private int mPonCount;
     private int mPonRegionCount; // allowing for a small buffer either side of a PON
     private String mStartFragileSite;
@@ -100,6 +102,11 @@ public class SvVarData
         mIdStr = svData.id();
 
         mSVData = svData;
+
+        mBreakendStart = new SvBreakend(this, true);
+
+        if(!isNullBreakend())
+            mBreakendEnd = new SvBreakend(this, false);
 
         init();
 
@@ -181,6 +188,8 @@ public class SvVarData
 
         mIdStr = other.getSvData().id() + "r";
         mSVData = other.getSvData();
+        mBreakendStart = other.getBreakend(true);
+        mBreakendEnd = other.getBreakend(false);
         mNoneSegment = other.isNoneSegment();
         mStartArm = other.arm(true);
         mEndArm = other.arm(false);
@@ -222,6 +231,8 @@ public class SvVarData
     public final double copyNumberChange(boolean isStart){ return isStart ? mSVData.adjustedStartCopyNumberChange() : mSVData.adjustedEndCopyNumberChange(); }
     public final StructuralVariantType type() { return mSVData.type(); }
 
+    public SvBreakend getBreakend(boolean isStart) { return isStart ? mBreakendStart : mBreakendEnd; }
+
     public boolean isNullBreakend() { return type() == SGL; }
 
     public final String posId()
@@ -241,7 +252,7 @@ public class SvVarData
 
     public final String posId(boolean useStart)
     {
-        return String.format("%s: %s %s:%d:%d)",
+        return String.format("%s: %s %s:%d:%d",
                 id(), useStart ? "start" :"end", chromosome(useStart), orientation(useStart), position(useStart));
     }
 

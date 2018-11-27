@@ -482,7 +482,7 @@ public class LinkFinder
                 if(length > MIN_TEMPLATED_INSERTION_LENGTH)
                     continue;
 
-                // form a new  from these 2 single breakends
+                // form a new from these 2 single breakends
                 SvLinkedPair newPair = new SvLinkedPair(var1, var2, SvLinkedPair.LINK_TYPE_SGL, false, false);
 
                 // insert in order

@@ -853,7 +853,7 @@ public class SvClusteringMethods {
                 if(!mChrBreakendMap.containsKey(chr))
                 {
                     List<SvBreakend> breakendList = Lists.newArrayList();
-                    breakendList.add(new SvBreakend(var, useStart));
+                    breakendList.add(var.getBreakend(useStart));
                     mChrBreakendMap.put(chr, breakendList);
                     continue;
                 }
@@ -870,7 +870,7 @@ public class SvClusteringMethods {
                         break;
                 }
 
-                breakendList.add(index, new SvBreakend(var, useStart));
+                breakendList.add(index, var.getBreakend(useStart));
             }
         }
     }

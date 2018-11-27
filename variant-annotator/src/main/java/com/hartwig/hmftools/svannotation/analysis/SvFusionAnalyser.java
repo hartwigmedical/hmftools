@@ -239,8 +239,6 @@ public class SvFusionAnalyser
 
     private void setReportableGeneFusions(final List<GeneFusion> fusions)
     {
-        final List<GeneFusion> result = Lists.newArrayList();
-
         Optional<GeneFusion> reportableFusion = determineReportableFusion(fusions);
 
         if(!reportableFusion.isPresent() )
@@ -279,6 +277,7 @@ public class SvFusionAnalyser
         //  then the one with the most exons combined transcript
 
         List<GeneFusion> knownFusions = fusions.stream()
+                .filter(GeneFusion::isPhaseMatch)
                 .filter(f -> transcriptsMatchKnownFusion(f.upstreamTrans(), f.downstreamTrans()))
                 .collect(Collectors.toList());
 
