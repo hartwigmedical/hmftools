@@ -93,6 +93,7 @@ public class MySQLAnnotator implements VariantAnnotator
     @NotNull
     public List<StructuralVariantAnnotation> annotateVariants(@NotNull List<EnrichedStructuralVariant> variants)
     {
+        LOGGER.debug("annotating {} variants with gene and transcript info from ensembl db", variants.size());
         return variants.stream().map(this::annotateVariant).collect(Collectors.toList());
     }
 
@@ -568,8 +569,8 @@ public class MySQLAnnotator implements VariantAnnotator
 
             if(exonUpstream == exonDownstream && exonRight != null)
             {
-                exonStart = ((UInteger)exonRight.get(EXON.SEQ_REGION_START)).longValue();
-                exonEnd = ((UInteger)exonRight.get(EXON.SEQ_REGION_END)).longValue();
+                exonStart = exonRight.get(EXON.SEQ_REGION_START).longValue();
+                exonEnd = exonRight.get(EXON.SEQ_REGION_END).longValue();
             }
 
             return new Transcript(parent,

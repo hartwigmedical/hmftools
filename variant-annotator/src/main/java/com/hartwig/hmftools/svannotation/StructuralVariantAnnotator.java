@@ -38,13 +38,10 @@ import com.hartwig.hmftools.common.variant.structural.ImmutableEnrichedStructura
 import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantFileLoader;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneAnnotation;
-import com.hartwig.hmftools.common.variant.structural.annotation.GeneDisruption;
-import com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion;
 import com.hartwig.hmftools.common.variant.structural.annotation.StructuralVariantAnnotation;
 import com.hartwig.hmftools.common.variant.structural.annotation.SvGeneTranscriptCollection;
 import com.hartwig.hmftools.common.variant.structural.annotation.SvPONAnnotator;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
-import com.hartwig.hmftools.svannotation.analysis.ImmutableStructuralVariantAnalysis;
 import com.hartwig.hmftools.svannotation.analysis.StructuralVariantAnalysis;
 import com.hartwig.hmftools.svannotation.analysis.StructuralVariantAnalyzer;
 import com.hartwig.hmftools.svannotation.analysis.SvFusionAnalyser;
@@ -235,7 +232,7 @@ public class StructuralVariantAnnotator
             mDbAccess.writeStructuralVariants(sampleId, svList);
 
             // re-read the data to get primaryId field as a foreign key for disruptions and fusions
-            enrichedVariants = mDbAccess.readStructuralVariants(sampleId);;
+            enrichedVariants = mDbAccess.readStructuralVariants(sampleId);
         }
 
         List<StructuralVariantAnnotation> annotations;
@@ -247,18 +244,18 @@ public class StructuralVariantAnnotator
 
             LOGGER.debug("loaded {} Ensembl annotations from file", annotations.size());
         }
-        else if(svAnalyser.getGeneDataAnnotator() != null)
+        else
         {
             int testSvLimit = Integer.parseInt(mCmdLineArgs.getOptionValue(TEST_SV_LIMIT, "0"));
 
             if(testSvLimit > 0)
             {
                 List<EnrichedStructuralVariant> subset = Lists.newArrayList(enrichedVariants.subList(0, testSvLimit));
-                annotations = svAnalyser.findAnnotations(subset);
+                annotations = svAnalyser.annotateVariants(subset);
             }
             else
             {
-                annotations = svAnalyser.findAnnotations(enrichedVariants);
+                annotations = svAnalyser.annotateVariants(enrichedVariants);
             }
 
             LOGGER.debug("sample({}) matched {} annotations from Ensembl database", sampleId, annotations.size());
@@ -267,22 +264,11 @@ public class StructuralVariantAnnotator
             if(!mDataPath.isEmpty())
                 mSvGeneTranscriptCollection.writeAnnotations(sampleId, annotations);
         }
-        else
-        {
-            LOGGER.error("Ensemble data not loaded from DB nor file");
-            return;
-        }
 
         if(!mCmdLineArgs.hasOption(SKIP_DB_UPLOAD))
         {
             LOGGER.debug("sample({}) finding disruptions and fusions", sampleId);
-
-            final List<GeneFusion> fusions = svAnalyser.findFusions(annotations);
-            final List<GeneDisruption> disruptions = svAnalyser.findDisruptions(annotations);
-
-            LOGGER.debug("sample({}) found {} disruptions and {} fusions", sampleId, disruptions.size(), fusions.size());
-
-            final StructuralVariantAnalysis analysis = ImmutableStructuralVariantAnalysis.of(annotations, fusions, disruptions);
+            final StructuralVariantAnalysis analysis = svAnalyser.runOnAnnotations(annotations);
 
             LOGGER.debug("persisting annotations to database");
             final StructuralVariantAnnotationDAO annotationDAO = new StructuralVariantAnnotationDAO(mDbAccess.context());
@@ -298,7 +284,7 @@ public class StructuralVariantAnnotator
 
         try
         {
-            LOGGER.debug("Loading indexed fasta reference file");
+            LOGGER.debug("loading indexed fasta reference file");
             final String fastaFileLocation = mCmdLineArgs.getOptionValue(REF_GENOME);
             final IndexedFastaSequenceFile indexedFastaSequenceFile = new IndexedFastaSequenceFile(new File(fastaFileLocation));
 
@@ -306,7 +292,7 @@ public class StructuralVariantAnnotator
             final List<StructuralVariant> variants = readFromVcf(mCmdLineArgs.getOptionValue(VCF_FILE));
 
             LOGGER.debug("enriching structural variants based on purple data");
-            svList = enrichStructuralVariants(sampleId,indexedFastaSequenceFile, variants);
+            svList = enrichStructuralVariants(sampleId, indexedFastaSequenceFile, variants);
         }
         catch(IOException e)
         {

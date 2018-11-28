@@ -221,7 +221,7 @@ abstract class PatientReporter {
                         structuralVariants);
 
         LOGGER.info("Analyzing structural variants...");
-        final StructuralVariantAnalysis structuralVariantAnalysis = structuralVariantAnalyzer().run(enrichedStructuralVariants);
+        final StructuralVariantAnalysis structuralVariantAnalysis = structuralVariantAnalyzer().runOnVariants(enrichedStructuralVariants);
 
         return FusionDisruptionAnalyzer.run(structuralVariantAnalysis,
                 copyNumberAnalysis.exomeGeneCopyNumbers(),

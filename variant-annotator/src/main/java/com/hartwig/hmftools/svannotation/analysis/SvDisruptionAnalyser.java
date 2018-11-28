@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.svannotation.analysis;
 
-import static com.hartwig.hmftools.svannotation.analysis.StructuralVariantAnalyzer.intronicDisruptionOnSameTranscript;
-
 import java.util.List;
 import java.util.Set;
 
@@ -17,6 +15,7 @@ import com.hartwig.hmftools.common.variant.structural.annotation.Transcript;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.NotNull;
 
 public class SvDisruptionAnalyser
 {
@@ -26,13 +25,13 @@ public class SvDisruptionAnalyser
 
     SvDisruptionAnalyser(final Set<String> disruptionGeneIDPanel)
     {
-        LOGGER.debug("creating SvDisruptionAnalyser on {} genes", disruptionGeneIDPanel.size());
+        LOGGER.debug("creating SvDisruptionAnalyser on {} genes: {}", disruptionGeneIDPanel.size(), disruptionGeneIDPanel);
         mDisruptionGeneIDPanel = disruptionGeneIDPanel;
     }
 
     public final List<GeneDisruption> findDisruptions(final List<StructuralVariantAnnotation> annotations)
     {
-        LOGGER.debug("finding disruptions");
+        LOGGER.debug("finding disruptions in {} annotations", annotations.size());
 
         final List<GeneAnnotation> geneAnnotations = Lists.newArrayList();
 
@@ -77,4 +76,12 @@ public class SvDisruptionAnalyser
         return disruptions;
     }
 
+    private static boolean intronicDisruptionOnSameTranscript(@NotNull Transcript t1, @NotNull Transcript t2)
+    {
+        boolean sameTranscript = t1.transcriptId().equals(t2.transcriptId());
+        boolean bothIntronic = t1.isIntronic() && t2.isIntronic();
+        boolean sameExonUpstream = t1.exonUpstream() == t2.exonUpstream();
+
+        return sameTranscript && bothIntronic && sameExonUpstream;
+    }
 }
