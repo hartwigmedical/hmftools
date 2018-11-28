@@ -16,12 +16,9 @@ public class HetrozygousFilter implements Predicate<NormalBAF> {
 
     @Override
     public boolean test(final NormalBAF bafEvidence) {
-        if (bafEvidence.isValid() && isHeterozygousRef(bafEvidence.refCount(), bafEvidence.readDepth())) {
-            final NormalBAF.Base alt = bafEvidence.alt();
-            return isHeterozygousAlt(bafEvidence.baseMap().get(alt), bafEvidence.readDepth());
-        }
-
-        return false;
+        return bafEvidence.isValid()
+                && isHeterozygousRef(bafEvidence.refSupport(), bafEvidence.readDepth())
+                && isHeterozygousAlt(bafEvidence.altSupport(), bafEvidence.readDepth());
     }
 
     private boolean isHeterozygousRef(int refSupport, int readDepth) {

@@ -50,19 +50,29 @@ import htsjdk.samtools.SamReaderFactory;
 public class AmberApplicationV2 {
     private static final Logger LOGGER = LogManager.getLogger(AmberApplicationV2.class);
 
-    static final double DEFAULT_MIN_HET_AF_PERCENTAGE = 0.4;
-    static final double DEFAULT_MAX_HET_AF_PERCENTAGE = 0.65;
-    static final double DEFAULT_MIN_DEPTH_PERCENTAGE = 0.5;
-    static final double DEFAULT_MAX_DEPTH_PERCENTAGE = 1.5;
+    private static final int DEFAULT_THREADS = 1;
+    private static final int DEFAULT_MIN_BASE_QUALITY = 13;
+    private static final int DEFAULT_MIN_MAPPING_QUALITY = 1;
+    private static final double DEFAULT_MIN_DEPTH_PERCENTAGE = 0.5;
+    private static final double DEFAULT_MAX_DEPTH_PERCENTAGE = 1.5;
+    private static final double DEFAULT_MIN_HET_AF_PERCENTAGE = 0.4;
+    private static final double DEFAULT_MAX_HET_AF_PERCENTAGE = 0.65;
 
+    private static final String TUMOR = "tumor";
+    private static final String BED_FILE = "bed";
     private static final String THREADS = "threads";
     private static final String REFERENCE = "reference";
-    private static final String REFERENCE_BAM = "reference_bam";
-    private static final String TUMOR = "tumor";
     private static final String TUMOR_BAM = "tumor_bam";
-    private static final String OUTPUT_DIR = "output_dir";
-    private static final String BED_FILE = "bed";
     private static final String REF_GENOME = "ref_genome";
+    private static final String OUTPUT_DIR = "output_dir";
+    private static final String REFERENCE_BAM = "reference_bam";
+    private static final String MIN_BASE_QUALITY = "min_base_quality";
+    private static final String MIN_MAPPING_QUALITY = "min_mapping_quality";
+
+    private static final String MIN_DEPTH_PERCENTAGE = "min_depth_percent";
+    private static final String MAX_DEPTH_PERCENTAGE = "max_depth_percent";
+    private static final String MIN_HET_AF_PERCENTAGE = "min_het_af_percent";
+    private static final String MAX_HET_AF_PERCENTAGE = "max_het_af_percent";
 
     public static void main(final String... args) throws ParseException, IOException, InterruptedException, ExecutionException {
         final VersionInfo versionInfo = new VersionInfo("amber.version");
@@ -83,19 +93,23 @@ public class AmberApplicationV2 {
             System.exit(1);
         }
 
+        int minBaseQuality =
+                cmd.hasOption(MIN_BASE_QUALITY) ? Integer.valueOf(cmd.getOptionValue(MIN_BASE_QUALITY)) : DEFAULT_MIN_BASE_QUALITY;
+
         final File outputDir = new File(outputDirectory);
         if (!outputDir.exists() && !outputDir.mkdirs()) {
             throw new IOException("Unable to write directory " + outputDirectory);
         }
 
-        final int threadCount = cmd.hasOption(THREADS) ? Integer.valueOf(cmd.getOptionValue(THREADS)) : 1;
+        final int threadCount = cmd.hasOption(THREADS) ? Integer.valueOf(cmd.getOptionValue(THREADS)) : DEFAULT_THREADS;
         final SamReaderFactory readerFactory = SamReaderFactory.make();
         final ThreadFactory namedThreadFactory = new ThreadFactoryBuilder().setNameFormat("-%d").build();
         final ExecutorService executorService = Executors.newFixedThreadPool(threadCount, namedThreadFactory);
 
         final ListMultimap<Chromosome, NormalBAF> normalBAFMap =
-                normal(readerFactory, executorService, bedFilePath, refGenomePath, referenceBamPath);
-        final Multimap<Chromosome, TumorBAF> tumorBAFMap = tumor(tumorBamPath, readerFactory, executorService, normalBAFMap);
+                normal(readerFactory, executorService, bedFilePath, refGenomePath, referenceBamPath, minBaseQuality);
+        final Multimap<Chromosome, TumorBAF> tumorBAFMap =
+                tumor(tumorBamPath, readerFactory, executorService, normalBAFMap, minBaseQuality);
 
         final List<TumorBAF> tumorBAFList = Lists.newArrayList(tumorBAFMap.values());
         Collections.sort(tumorBAFList);
@@ -127,14 +141,19 @@ public class AmberApplicationV2 {
     @NotNull
     private static ListMultimap<Chromosome, TumorBAF> tumor(@NotNull final String tumorBamPath,
             @NotNull final SamReaderFactory readerFactory, @NotNull final ExecutorService executorService,
-            @NotNull final ListMultimap<Chromosome, NormalBAF> normalBafs) throws ExecutionException, InterruptedException {
+            @NotNull final ListMultimap<Chromosome, NormalBAF> normalBafs, int minBaseQuality)
+            throws ExecutionException, InterruptedException {
         LOGGER.info("Processing tumor bam file {}", tumorBamPath);
         final List<Future<TumorEvidence>> futures = Lists.newArrayList();
         for (final Chromosome chromosome : normalBafs.keySet()) {
             final List<NormalBAF> chromosomeBafPoints = normalBafs.get(chromosome);
             if (!chromosomeBafPoints.isEmpty()) {
                 final String contig = chromosomeBafPoints.get(0).chromosome();
-                futures.add(executorService.submit(new TumorEvidence(contig, tumorBamPath, readerFactory, chromosomeBafPoints)));
+                futures.add(executorService.submit(new TumorEvidence(minBaseQuality,
+                        contig,
+                        tumorBamPath,
+                        readerFactory,
+                        chromosomeBafPoints)));
             }
         }
 
@@ -149,7 +168,7 @@ public class AmberApplicationV2 {
 
     @NotNull
     private static ListMultimap<Chromosome, NormalBAF> normal(final SamReaderFactory readerFactory, final ExecutorService executorService,
-            final String bedPath, final String refGenomePath, final String referenceBamPath)
+            final String bedPath, final String refGenomePath, final String referenceBamPath, int minBaseQuality)
             throws IOException, InterruptedException, ExecutionException {
         LOGGER.info("Loading bed file {}", bedPath);
         final SortedSetMultimap<String, GenomeRegion> bedRegionsSortedSet = BEDFileLoader.fromBedFile(bedPath);
@@ -157,8 +176,11 @@ public class AmberApplicationV2 {
         LOGGER.info("Processing reference bam file {}", referenceBamPath);
         final List<Future<NormalEvidence>> futures = Lists.newArrayList();
         for (final String contig : bedRegionsSortedSet.keySet()) {
-            final NormalEvidence chromosome =
-                    new NormalEvidence(contig, referenceBamPath, readerFactory, new ArrayList<>(bedRegionsSortedSet.get(contig)));
+            final NormalEvidence chromosome = new NormalEvidence(minBaseQuality,
+                    contig,
+                    referenceBamPath,
+                    readerFactory,
+                    new ArrayList<>(bedRegionsSortedSet.get(contig)));
             futures.add(executorService.submit(chromosome));
         }
         final ListMultimap<Chromosome, ModifiableNormalBAF> normalEvidence = ArrayListMultimap.create();
@@ -196,7 +218,7 @@ public class AmberApplicationV2 {
     @NotNull
     private static Options createOptions() {
         final Options options = new Options();
-        options.addOption(THREADS, true, "Number of threads. Default 1.");
+        options.addOption(THREADS, true, "Number of threads [" + DEFAULT_THREADS + "]");
         options.addOption(REFERENCE, true, "Name of reference sample");
         options.addOption(REFERENCE_BAM, true, "Reference bam file");
         options.addOption(TUMOR, true, "Name of tumor sample.");
@@ -204,6 +226,14 @@ public class AmberApplicationV2 {
         options.addOption(OUTPUT_DIR, true, "Output directory");
         options.addOption(BED_FILE, true, "Baf locations bed file.");
         options.addOption(REF_GENOME, true, "Path to the ref genome fasta file.");
+        options.addOption(MIN_BASE_QUALITY, true, "Minimum base quality for a base to be considered [" + DEFAULT_MIN_BASE_QUALITY + "]");
+        options.addOption(MIN_MAPPING_QUALITY,
+                true,
+                "Minimum mapping quality for an alignment to be used [" + DEFAULT_MIN_MAPPING_QUALITY + "]");
+        options.addOption(MIN_HET_AF_PERCENTAGE, true, "Min heterozygous AF% [" + DEFAULT_MIN_BASE_QUALITY + "]");
+        options.addOption(MAX_HET_AF_PERCENTAGE, true, "Max heterozygous AF% [" + DEFAULT_MIN_BASE_QUALITY + "]");
+        options.addOption(MIN_DEPTH_PERCENTAGE, true, "Max percentage of median depth [" + DEFAULT_MIN_DEPTH_PERCENTAGE + "]");
+        options.addOption(MAX_DEPTH_PERCENTAGE, true, "Min percentage of median depth [" + DEFAULT_MAX_DEPTH_PERCENTAGE + "]");
         return options;
     }
 

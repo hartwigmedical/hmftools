@@ -12,6 +12,7 @@ import com.hartwig.hmftools.common.hotspot.SAMSupplier;
 import com.hartwig.hmftools.common.position.GenomePositionSelector;
 import com.hartwig.hmftools.common.position.GenomePositionSelectorFactory;
 import com.hartwig.hmftools.common.region.GenomeRegion;
+import com.hartwig.hmftools.common.region.GenomeRegionBuilder;
 import com.hartwig.hmftools.common.region.GenomeRegionFactory;
 
 import org.jetbrains.annotations.NotNull;
@@ -28,21 +29,27 @@ public class NormalEvidence implements Callable<NormalEvidence> {
     private final List<GenomeRegion> bafRegions;
     private final List<ModifiableNormalBAF> evidence;
     private final GenomePositionSelector<ModifiableNormalBAF> selector;
+    private final NormalBAFFactory bafFactory;
 
-    public NormalEvidence(final String contig, final String bamFile, final SamReaderFactory samReaderFactory,
-            final List<GenomeRegion> bafRegions) {
+    NormalEvidence(int minBaseQuality, final String contig, final String bamFile, final SamReaderFactory samReaderFactory, final List<GenomeRegion> bafRegions) {
+        this.bafFactory = new NormalBAFFactory(minBaseQuality);
         this.contig = contig;
         this.bamFile = bamFile;
         this.samReaderFactory = samReaderFactory;
-        this.bafRegions = bafRegions;
+        final GenomeRegionBuilder builder = new GenomeRegionBuilder(contig, 1000);
+        bafRegions.forEach(x -> builder.addPosition(x.start()));
+        this.bafRegions = builder.build();
+
         this.evidence = bafRegions.stream().map(NormalBAFFactory::create).collect(Collectors.toList());
         this.selector = GenomePositionSelectorFactory.create(Multimaps.fromPositions(evidence));
     }
 
+    @NotNull
     public String contig() {
         return contig;
     }
 
+    @NotNull
     public List<ModifiableNormalBAF> getEvidence() {
         return evidence.stream().filter(x -> x.readDepth() > 0).collect(Collectors.toList());
     }
@@ -59,7 +66,7 @@ public class NormalEvidence implements Callable<NormalEvidence> {
     }
 
     private void record(@NotNull final SAMRecord record) {
-        selector.select(asRegion(record), bafEvidence -> NormalBAFFactory.addEvidence(bafEvidence, record));
+        selector.select(asRegion(record), bafEvidence -> bafFactory.addEvidence(bafEvidence, record));
     }
 
     @NotNull

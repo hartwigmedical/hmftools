@@ -28,18 +28,20 @@ public class TumorEvidence implements Callable<TumorEvidence> {
 
     private final String contig;
     private final String bamFile;
-    private final SamReaderFactory samReaderFactory;
+    private final TumorBAFFactory bafFactory;
     private final List<GenomeRegion> bafRegions;
     private final List<ModifiableTumorBAF> evidence;
+    private final SamReaderFactory samReaderFactory;
     private final GenomePositionSelector<ModifiableTumorBAF> selector;
 
-    public TumorEvidence(final String contig, final String bamFile, final SamReaderFactory samReaderFactory,
+    TumorEvidence(int minBaseQuality, final String contig, final String bamFile, final SamReaderFactory samReaderFactory,
             final List<NormalBAF> bafRegions) {
+        this.bafFactory = new TumorBAFFactory(minBaseQuality);
         this.contig = contig;
         this.bamFile = bamFile;
         this.samReaderFactory = samReaderFactory;
 
-        final GenomeRegionBuilder builder = new GenomeRegionBuilder(contig, 1);
+        final GenomeRegionBuilder builder = new GenomeRegionBuilder(contig, 1000);
         for (NormalBAF bafRegion : bafRegions) {
             builder.addPosition(bafRegion.position());
         }
@@ -49,10 +51,12 @@ public class TumorEvidence implements Callable<TumorEvidence> {
         this.selector = GenomePositionSelectorFactory.create(Multimaps.fromPositions(evidence));
     }
 
+    @NotNull
     public String contig() {
         return contig;
     }
 
+    @NotNull
     public List<TumorBAF> evidence() {
         return new ArrayList<>(evidence);
     }
@@ -69,7 +73,7 @@ public class TumorEvidence implements Callable<TumorEvidence> {
     }
 
     private void record(@NotNull final SAMRecord record) {
-        selector.select(asRegion(record), bafEvidence -> TumorBAFFactory.addEvidence(bafEvidence, record));
+        selector.select(asRegion(record), bafEvidence -> bafFactory.addEvidence(bafEvidence, record));
     }
 
     @NotNull
