@@ -2,7 +2,6 @@ package com.hartwig.hmftools.amber;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
@@ -13,6 +12,7 @@ import java.util.concurrent.ThreadFactory;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
+import com.google.common.base.Strings;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
@@ -107,9 +107,9 @@ public class AmberApplicationV2 {
         final ExecutorService executorService = Executors.newFixedThreadPool(threadCount, namedThreadFactory);
 
         final ListMultimap<Chromosome, NormalBAF> normalBAFMap =
-                normal(readerFactory, executorService, bedFilePath, refGenomePath, referenceBamPath, minBaseQuality);
+                normal(readerFactory, executorService, bedFilePath, refGenomePath, referenceBamPath, minBaseQuality, threadCount);
         final Multimap<Chromosome, TumorBAF> tumorBAFMap =
-                tumor(tumorBamPath, readerFactory, executorService, normalBAFMap, minBaseQuality);
+                tumor(tumorBamPath, readerFactory, executorService, normalBAFMap, minBaseQuality, threadCount);
 
         final List<TumorBAF> tumorBAFList = Lists.newArrayList(tumorBAFMap.values());
         Collections.sort(tumorBAFList);
@@ -141,19 +141,22 @@ public class AmberApplicationV2 {
     @NotNull
     private static ListMultimap<Chromosome, TumorBAF> tumor(@NotNull final String tumorBamPath,
             @NotNull final SamReaderFactory readerFactory, @NotNull final ExecutorService executorService,
-            @NotNull final ListMultimap<Chromosome, NormalBAF> normalBafs, int minBaseQuality)
+            @NotNull final ListMultimap<Chromosome, NormalBAF> normalBafs, int minBaseQuality, int threads)
             throws ExecutionException, InterruptedException {
-        LOGGER.info("Processing tumor bam file {}", tumorBamPath);
+        final int partitionSize = normalBafs.values().size() / threads;
+
+        LOGGER.info("Partitioning tumor bam {} into {} sized chunks", tumorBamPath, partitionSize);
         final List<Future<TumorEvidence>> futures = Lists.newArrayList();
         for (final Chromosome chromosome : normalBafs.keySet()) {
-            final List<NormalBAF> chromosomeBafPoints = normalBafs.get(chromosome);
-            if (!chromosomeBafPoints.isEmpty()) {
-                final String contig = chromosomeBafPoints.get(0).chromosome();
-                futures.add(executorService.submit(new TumorEvidence(minBaseQuality,
-                        contig,
-                        tumorBamPath,
-                        readerFactory,
-                        chromosomeBafPoints)));
+            for (final List<NormalBAF> chromosomeBafPoints : Lists.partition(normalBafs.get(chromosome), partitionSize)) {
+                if (!chromosomeBafPoints.isEmpty()) {
+                    final String contig = chromosomeBafPoints.get(0).chromosome();
+                    futures.add(executorService.submit(new TumorEvidence(minBaseQuality,
+                            contig,
+                            tumorBamPath,
+                            readerFactory,
+                            chromosomeBafPoints)));
+                }
             }
         }
 
@@ -168,24 +171,32 @@ public class AmberApplicationV2 {
 
     @NotNull
     private static ListMultimap<Chromosome, NormalBAF> normal(final SamReaderFactory readerFactory, final ExecutorService executorService,
-            final String bedPath, final String refGenomePath, final String referenceBamPath, int minBaseQuality)
+            final String bedPath, final String refGenomePath, final String referenceBamPath, int minBaseQuality, int threads)
             throws IOException, InterruptedException, ExecutionException {
         LOGGER.info("Loading bed file {}", bedPath);
         final SortedSetMultimap<String, GenomeRegion> bedRegionsSortedSet = BEDFileLoader.fromBedFile(bedPath);
+        final int partitionSize = bedRegionsSortedSet.size() / threads;
 
-        LOGGER.info("Processing reference bam file {}", referenceBamPath);
+        LOGGER.info("Partitioning reference bam {} into {} sized chunks", referenceBamPath, partitionSize);
         final List<Future<NormalEvidence>> futures = Lists.newArrayList();
         for (final String contig : bedRegionsSortedSet.keySet()) {
-            final NormalEvidence chromosome = new NormalEvidence(minBaseQuality,
-                    contig,
-                    referenceBamPath,
-                    readerFactory,
-                    new ArrayList<>(bedRegionsSortedSet.get(contig)));
-            futures.add(executorService.submit(chromosome));
+            for (final List<GenomeRegion> inner : Lists.partition(Lists.newArrayList(bedRegionsSortedSet.get(contig)), partitionSize)) {
+                final NormalEvidence chromosome = new NormalEvidence(minBaseQuality, contig, referenceBamPath, readerFactory, inner);
+                futures.add(executorService.submit(chromosome));
+            }
         }
+
+        int complete = 0;
+        double previousPercentComplete = 0;
         final ListMultimap<Chromosome, ModifiableNormalBAF> normalEvidence = ArrayListMultimap.create();
         for (Future<NormalEvidence> chromosomeBAFEvidenceFuture : futures) {
             NormalEvidence evidence = chromosomeBAFEvidenceFuture.get();
+            double percentComplete = ((double) ++complete) / futures.size();
+            if (percentComplete > previousPercentComplete + 0.1) {
+                LOGGER.info("{}", complete(percentComplete));
+                previousPercentComplete = percentComplete;
+            }
+
             normalEvidence.putAll(HumanChromosome.fromString(evidence.contig()), evidence.getEvidence());
         }
 
@@ -205,7 +216,7 @@ public class AmberApplicationV2 {
             normalBafs.putAll(chromosome, normalHetLocations);
         }
 
-        LOGGER.info("Identified {} heterozygous sites in reference bam", normalBafs.values().size());
+        LOGGER.info("Identified {} heterozygous sites", normalBafs.values().size());
         return normalBafs;
     }
 
@@ -230,8 +241,8 @@ public class AmberApplicationV2 {
         options.addOption(MIN_MAPPING_QUALITY,
                 true,
                 "Minimum mapping quality for an alignment to be used [" + DEFAULT_MIN_MAPPING_QUALITY + "]");
-        options.addOption(MIN_HET_AF_PERCENTAGE, true, "Min heterozygous AF% [" + DEFAULT_MIN_BASE_QUALITY + "]");
-        options.addOption(MAX_HET_AF_PERCENTAGE, true, "Max heterozygous AF% [" + DEFAULT_MIN_BASE_QUALITY + "]");
+        options.addOption(MIN_HET_AF_PERCENTAGE, true, "Min heterozygous AF% [" + DEFAULT_MIN_HET_AF_PERCENTAGE + "]");
+        options.addOption(MAX_HET_AF_PERCENTAGE, true, "Max heterozygous AF% [" + DEFAULT_MAX_HET_AF_PERCENTAGE + "]");
         options.addOption(MIN_DEPTH_PERCENTAGE, true, "Max percentage of median depth [" + DEFAULT_MIN_DEPTH_PERCENTAGE + "]");
         options.addOption(MAX_DEPTH_PERCENTAGE, true, "Min percentage of median depth [" + DEFAULT_MAX_DEPTH_PERCENTAGE + "]");
         return options;
@@ -255,4 +266,14 @@ public class AmberApplicationV2 {
     private static boolean isValid(@NotNull final AmberBAF baf) {
         return Doubles.isFinite(baf.tumorBAF()) & Doubles.isFinite(baf.normalBAF());
     }
+
+    @NotNull
+    private static String complete(double percent) {
+        int roundedPercent = (int) Math.round(percent * 100);
+        int hashCount = Math.min(20, roundedPercent / 5);
+        int gapCount = Math.max(0, 20 - hashCount);
+
+        return "  [" + Strings.repeat("#", hashCount) +  Strings.repeat(" ", gapCount)  + "] " + roundedPercent + "% complete";
+    }
+
 }
