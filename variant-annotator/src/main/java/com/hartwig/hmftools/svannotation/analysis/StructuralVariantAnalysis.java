@@ -32,10 +32,6 @@ public abstract class StructuralVariantAnalysis {
 
     @NotNull
     public List<GeneDisruption> reportableDisruptions() {
-        return disruptions().stream()
-                .filter(GeneDisruption::reportable)
-                .filter(disruption -> fusions().stream()
-                        .noneMatch(fusion -> fusion.upstreamTrans().parent().id() == disruption.linkedAnnotation().parent().id()))
-                .collect(Collectors.toList());
+        return disruptions().stream().filter(GeneDisruption::reportable).collect(Collectors.toList());
     }
 }

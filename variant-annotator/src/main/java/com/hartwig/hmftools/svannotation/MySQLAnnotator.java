@@ -23,6 +23,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.variant.structural.EnrichedStructuralVariant;
+import com.hartwig.hmftools.common.variant.structural.EnrichedStructuralVariantLeg;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneAnnotation;
 import com.hartwig.hmftools.common.variant.structural.annotation.StructuralVariantAnnotation;
 import com.hartwig.hmftools.common.variant.structural.annotation.Transcript;
@@ -104,9 +105,10 @@ public class MySQLAnnotator implements VariantAnnotator
 
         annotation.annotations().addAll(annotateBreakend(variant, true, variant.start().chromosome(), variant.start().position()));
 
-        if (variant.end() != null)
+        EnrichedStructuralVariantLeg endLeg = variant.end();
+        if (endLeg != null)
         {
-            annotation.annotations().addAll(annotateBreakend(variant, false, variant.end().chromosome(), variant.end().position()));
+            annotation.annotations().addAll(annotateBreakend(variant, false, endLeg.chromosome(), endLeg.position()));
         }
 
         return annotation;
