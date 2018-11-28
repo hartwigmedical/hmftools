@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.common.variant.structural;
 
 import java.util.List;
-import java.util.Optional;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
@@ -23,20 +22,14 @@ public final class EnrichedStructuralVariantFactory {
 
     private static final int DISTANCE = 10;
     private final PurityAdjuster purityAdjuster;
-    private final Optional<IndexedFastaSequenceFile> reference;
+    private final IndexedFastaSequenceFile reference;
     private final Multimap<Chromosome, PurpleCopyNumber> copyNumbers;
-
-    public EnrichedStructuralVariantFactory(@NotNull final PurityAdjuster purityAdjuster, @NotNull final Multimap<Chromosome, PurpleCopyNumber> copyNumbers) {
-        this.purityAdjuster = purityAdjuster;
-        this.copyNumbers = copyNumbers;
-        this.reference = Optional.empty();
-    }
 
     public EnrichedStructuralVariantFactory(@NotNull final IndexedFastaSequenceFile reference, @NotNull final PurityAdjuster purityAdjuster,
             @NotNull final Multimap<Chromosome, PurpleCopyNumber> copyNumbers) {
+        this.reference = reference;
         this.purityAdjuster = purityAdjuster;
         this.copyNumbers = copyNumbers;
-        this.reference = Optional.of(reference);
     }
 
     @NotNull
@@ -84,7 +77,7 @@ public final class EnrichedStructuralVariantFactory {
         }
 
         final ImmutableEnrichedStructuralVariantLeg.Builder builder = ImmutableEnrichedStructuralVariantLeg.builder().from(leg);
-        reference.map(x -> context(leg.chromosome(), leg.position(), x)).ifPresent(builder::refGenomeContext);
+        builder.refGenomeContext(context(leg.chromosome(), leg.position(), reference));
         return builder;
     }
 
