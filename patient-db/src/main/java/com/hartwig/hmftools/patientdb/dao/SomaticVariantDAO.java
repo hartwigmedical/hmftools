@@ -64,6 +64,7 @@ class SomaticVariantDAO {
                     SOMATICVARIANT.MAPPABILITY,
                     SOMATICVARIANT.GERMLINESTATUS,
                     SOMATICVARIANT.MINORALLELEPLOIDY,
+                    SOMATICVARIANT.RECOVERED,
                     SOMATICVARIANT.MODIFIED);
             splitRegions.forEach(variant -> addRecord(timestamp, inserter, sample, variant));
             inserter.execute();
@@ -105,6 +106,7 @@ class SomaticVariantDAO {
                 DatabaseUtil.decimal(variant.mappability()),
                 variant.germlineStatus(),
                 DatabaseUtil.decimal(variant.minorAllelePloidy()),
+                variant.recovered(),
                 timestamp);
     }
 

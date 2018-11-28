@@ -72,6 +72,7 @@ public class SomaticVariantEvidenceAnalyzerTest {
                 .canonicalHgvsProteinImpact(Strings.EMPTY)
                 .hotspot(Hotspot.NON_HOTSPOT)
                 .mappability(0D)
+                .recovered(false)
                 .build();
 
         assertTrue(analyzer.evidenceForSomaticVariant(variant, "Skin", cancerTypeAnalyzer).isEmpty());

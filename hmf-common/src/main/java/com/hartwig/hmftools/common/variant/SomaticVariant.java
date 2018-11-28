@@ -67,6 +67,8 @@ public interface SomaticVariant extends GenomePosition, AllelicDepth {
     @NotNull
     Hotspot hotspot();
 
+    boolean recovered();
+
     default boolean isHotspot() {
         return hotspot() == Hotspot.HOTSPOT;
     }

@@ -14,6 +14,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.variant.cosmic.CosmicAnnotation;
 import com.hartwig.hmftools.common.variant.cosmic.CosmicAnnotationFactory;
+import com.hartwig.hmftools.common.variant.enrich.HotspotEnrichment;
 import com.hartwig.hmftools.common.variant.enrich.NoSomaticEnrichment;
 import com.hartwig.hmftools.common.variant.enrich.SomaticEnrichment;
 import com.hartwig.hmftools.common.variant.filter.AlwaysPassFilter;
@@ -68,12 +69,11 @@ public class SomaticVariantFactory {
         return new SomaticVariantFactory(filter, somaticEnrichment);
     }
 
-    private static final HotspotFilter HOTSPOT_FILTER = new HotspotFilter();
-
     private static final String DBSNP_IDENTIFIER = "rs";
     private static final String COSMIC_IDENTIFIER = "COSM";
     private static final String ID_SEPARATOR = ";";
     private static final String MAPPABILITY_TAG = "MAPPABILITY";
+    private static final String RECOVERED_FLAG = "RECOVERED";
 
     static final String PASS_FILTER = "PASS";
     private static final String NEAR_INDEL_PON_FILTER = "NEAR_INDEL_PON";
@@ -168,7 +168,8 @@ public class SomaticVariantFactory {
                 .alt(alt(context))
                 .alleleReadCount(allelicDepth.alleleReadCount())
                 .totalReadCount(allelicDepth.totalReadCount())
-                .hotspot(HOTSPOT_FILTER.test(context) ? Hotspot.HOTSPOT : Hotspot.NON_HOTSPOT)
+                .hotspot(HotspotEnrichment.fromVariant(context))
+                .recovered(context.hasAttribute(RECOVERED_FLAG))
                 .mappability(context.getAttributeAsDouble(MAPPABILITY_TAG, 0));
 
         attachIDAndCosmicAnnotations(builder, context, canonicalAnnotationFactory);
