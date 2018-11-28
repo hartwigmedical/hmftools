@@ -165,6 +165,7 @@ public class SvCluster
         mRequiresRecalc = true;
         mIsResolved = false;
         mResolvedType = RESOLVED_TYPE_NONE;
+        mIsFullyChained = false;
         mSynDelDupTI = 0;
         mSynDelDupLength = 0;
 
@@ -281,6 +282,7 @@ public class SvCluster
 
     public void addChain(SvChain chain)
     {
+        chain.setId(mChains.size());
         mChains.add(chain);
 
         for(SvVarData var : chain.getSvList())

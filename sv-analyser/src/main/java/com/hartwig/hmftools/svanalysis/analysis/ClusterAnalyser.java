@@ -377,6 +377,9 @@ public class ClusterAnalyser {
         return true;
     }
 
+    // private static int SPECIFIC_CLUSTER_ID = 13;
+    private static int SPECIFIC_CLUSTER_ID = -1;
+
     private void setClusterResolvedState(SvCluster cluster)
     {
         if(!cluster.getResolvedType().equals(RESOLVED_TYPE_NONE))
@@ -440,6 +443,11 @@ public class ClusterAnalyser {
             }
 
             return;
+        }
+
+        if(cluster.getId() == SPECIFIC_CLUSTER_ID)
+        {
+            LOGGER.debug("spec cluster({})", cluster.getId());
         }
 
         // next clusters with which start and end on the same arm, have the same start and end orientation
