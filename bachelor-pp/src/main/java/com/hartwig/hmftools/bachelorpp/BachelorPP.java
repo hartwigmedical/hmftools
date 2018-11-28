@@ -407,7 +407,9 @@ public class BachelorPP {
 
         final List<PurityAdjustedSomaticVariant> purityAdjustedVariants = purityAdjustmentFactory.create(variants);
 
-        final double clonalPloidy = ClonalityCutoffKernel.clonalCutoff(purityAdjustedVariants);
+        final List<PurityAdjustedSomaticVariant> validVariants = purityAdjustedVariants.stream().filter(x -> !Double.isNaN(x.ploidy())).collect(Collectors.toList());
+
+        final double clonalPloidy = ClonalityCutoffKernel.clonalCutoff(validVariants);
 
         for(PurityAdjustedSomaticVariant var : purityAdjustedVariants)
         {
