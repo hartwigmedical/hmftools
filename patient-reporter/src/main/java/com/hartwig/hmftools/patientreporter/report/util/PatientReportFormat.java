@@ -20,12 +20,12 @@ public final class PatientReportFormat {
         String formatTumorPercentage;
         if (percentage != null) {
             if (percentage.equals(Lims.PATHOLOGY_TUMOR_ESTIMATE_NOT_DETERMINED)) {
-                formatTumorPercentage = "not determined";
+                formatTumorPercentage = Lims.PATHOLOGY_TUMOR_PERCENTAGE_NOT_DETERMINED;
             } else {
                 formatTumorPercentage = formatPercent(Double.parseDouble(percentage));
             }
         } else {
-            formatTumorPercentage = "N/A";
+            formatTumorPercentage = Lims.PATHOLOGY_TUMOR_NOT_DONE;
         }
         return formatTumorPercentage;
     }
