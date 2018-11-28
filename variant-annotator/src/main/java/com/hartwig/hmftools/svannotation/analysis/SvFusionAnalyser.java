@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.svannotation.analysis;
 
-import static com.hartwig.hmftools.svannotation.analysis.StructuralVariantAnalyzer.isUpstream;
-
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
@@ -325,4 +323,8 @@ public class SvFusionAnalyser
         return upstream.parent().synonyms().stream().anyMatch(downstream.parent().synonyms()::contains);
     }
 
+    private static boolean isUpstream(GeneAnnotation gene)
+    {
+        return gene.strand() * gene.orientation() > 0;
+    }
 }

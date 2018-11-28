@@ -87,9 +87,10 @@ public final class PatientReporterFileLoader {
 
             assert path.isPresent();
 
-            return StructuralVariantFileLoader.fromFile(path.get().toString(), true);
+            LOGGER.debug(" Using " + path.get().toString() + " as source for structural variants.");
+            return StructuralVariantFileLoader.fromFile(path.get().toString(), new PassingVariantFilter());
         } else {
-            LOGGER.warn("Cannot load structural variants. No GRIDSS directory present in " + runDirectory + "!");
+            LOGGER.warn(" Cannot load structural variants. No GRIDSS directory present in " + runDirectory + "!");
             return Lists.newArrayList();
         }
     }
@@ -105,6 +106,7 @@ public final class PatientReporterFileLoader {
             vcfPath = PathExtensionFinder.build().findPath(runDirectory, SOMATIC_VCF_EXTENSION_V4);
         }
 
+        LOGGER.debug(" Using " + vcfPath.toString() + " as source for somatic variants.");
         return SomaticVariantFactory.filteredInstanceWithEnrichment(new PassingVariantFilter(), somaticEnrichment)
                 .fromVCFFile(sample, vcfPath.toString());
     }

@@ -8,13 +8,17 @@ import org.jetbrains.annotations.NotNull;
 import htsjdk.tribble.AbstractFeatureReader;
 import htsjdk.tribble.readers.LineIterator;
 import htsjdk.variant.variantcontext.VariantContext;
+import htsjdk.variant.variantcontext.filter.VariantContextFilter;
 import htsjdk.variant.vcf.VCFCodec;
 
 public final class StructuralVariantFileLoader {
 
+    private StructuralVariantFileLoader() {
+    }
+
     @NotNull
-    public static List<StructuralVariant> fromFile(@NotNull final String vcfFileLocation, final boolean filterOnPasses) throws IOException {
-        final StructuralVariantFactory factory = new StructuralVariantFactory(filterOnPasses);
+    public static List<StructuralVariant> fromFile(@NotNull String vcfFileLocation, @NotNull VariantContextFilter filter) throws IOException {
+        final StructuralVariantFactory factory = new StructuralVariantFactory(filter);
 
         try (final AbstractFeatureReader<VariantContext, LineIterator> reader = AbstractFeatureReader.getFeatureReader(vcfFileLocation,
                 new VCFCodec(), false)) {

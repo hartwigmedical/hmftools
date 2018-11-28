@@ -12,6 +12,8 @@ import org.jetbrains.annotations.Nullable;
 public class Lims {
 
     public static final String PATHOLOGY_TUMOR_ESTIMATE_NOT_DETERMINED = "ND";
+    public static final String PATHOLOGY_TUMOR_PERCENTAGE_NOT_DETERMINED = "not determined";
+    public static final String PATHOLOGY_TUMOR_NOT_DONE = "N/A";
 
     private static final Logger LOGGER = LogManager.getLogger(Lims.class);
 

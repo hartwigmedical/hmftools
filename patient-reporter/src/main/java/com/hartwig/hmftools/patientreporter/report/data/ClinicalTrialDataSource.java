@@ -2,7 +2,6 @@ package com.hartwig.hmftools.patientreporter.report.data;
 
 import static net.sf.dynamicreports.report.builder.DynamicReports.field;
 
-import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -20,6 +19,7 @@ import net.sf.jasperreports.engine.JRDataSource;
 public class ClinicalTrialDataSource {
 
     public static final FieldBuilder<?> EVENT_FIELD = field("event", String.class);
+    public static final FieldBuilder<?> SCOPE_FIELD = field("scope", String.class);
     public static final FieldBuilder<?> TRIAL_FIELD = field("acronym", String.class);
     public static final FieldBuilder<?> SOURCE_FIELD = field("source", String.class);
     public static final FieldBuilder<?> CCMO_FIELD = field("ccmo", String.class);
@@ -30,12 +30,13 @@ public class ClinicalTrialDataSource {
 
     @NotNull
     public static FieldBuilder<?>[] clinicalTrialFields() {
-        return new FieldBuilder<?>[] { EVENT_FIELD, TRIAL_FIELD, SOURCE_FIELD, CCMO_FIELD, REFERENCE_FIELD};
+        return new FieldBuilder<?>[] { EVENT_FIELD, SCOPE_FIELD, TRIAL_FIELD, SOURCE_FIELD, CCMO_FIELD, REFERENCE_FIELD };
     }
 
     @NotNull
     public static JRDataSource fromClinicalTrials(@NotNull List<ClinicalTrial> trials) {
         final DRDataSource evidenceItemDataSource = new DRDataSource(EVENT_FIELD.getName(),
+                SCOPE_FIELD.getName(),
                 TRIAL_FIELD.getName(),
                 SOURCE_FIELD.getName(),
                 CCMO_FIELD.getName(),
@@ -45,6 +46,7 @@ public class ClinicalTrialDataSource {
             assert trial.source().isTrialSource();
 
             evidenceItemDataSource.add(trial.event(),
+                    trial.scope().readableString(),
                     trial.acronym(),
                     trial.source().sourceName(),
                     CCMOId(trial.reference()),
@@ -63,7 +65,13 @@ public class ClinicalTrialDataSource {
 
     @NotNull
     private static List<ClinicalTrial> sort(@NotNull List<ClinicalTrial> trials) {
-        return trials.stream().sorted(Comparator.comparing(ClinicalTrial::acronym)).collect(Collectors.toList());
+        return trials.stream().sorted((item1, item2) -> {
+            if (item1.event().equals(item2.event())) {
+                return item1.acronym().compareTo(item2.acronym());
+            } else {
+                return item1.event().compareTo(item2.event());
+            }
+        }).collect(Collectors.toList());
     }
 
     @NotNull

@@ -239,8 +239,8 @@ final class ExampleAnalysisTestFactory {
         ImmutableClinicalTrial.Builder iclusionBuilder =
                 ImmutableClinicalTrial.builder().cancerType(Strings.EMPTY).isOnLabel(true).source(ActionabilitySource.ICLUSION);
 
-        trials.add(iclusionBuilder.event("BRAF p.Val600Glu").acronym("IMPemBra").reference("EXT8846 (NL54421.031.15)").build());
-        trials.add(iclusionBuilder.event("BRAF p.Val600Glu").acronym("PROCLAIM-001").reference("EXT10151 (NL59299.042.17)").build());
+        trials.add(iclusionBuilder.event("BRAF p.Val600Glu").scope(EvidenceScope.SPECIFIC).acronym("IMPemBra").reference("EXT8846 (NL54421.031.15)").build());
+        trials.add(iclusionBuilder.event("BRAF p.Val600Glu").scope(EvidenceScope.SPECIFIC).acronym("PROCLAIM-001").reference("EXT10151 (NL59299.042.17)").build());
 
         return trials;
     }

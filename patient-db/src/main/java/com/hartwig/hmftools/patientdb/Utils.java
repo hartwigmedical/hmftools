@@ -6,6 +6,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.context.RunContext;
+import com.hartwig.hmftools.common.lims.Lims;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -22,12 +23,12 @@ public final class Utils {
     @NotNull
     public static String formatTumorPercentage(final @Nullable String percentage) {
         String formatTumorPercentage;
-        if (percentage != null && !percentage.equals("Not Determined")) {
+        if (percentage != null && !percentage.equals(Lims.PATHOLOGY_TUMOR_ESTIMATE_NOT_DETERMINED)) {
             formatTumorPercentage = percentage;
-        } else if (percentage != null && percentage.equals("Not Determined")) {
-            formatTumorPercentage = "Not Determined";
+        } else if (percentage != null && percentage.equals(Lims.PATHOLOGY_TUMOR_ESTIMATE_NOT_DETERMINED)) {
+            formatTumorPercentage = Lims.PATHOLOGY_TUMOR_PERCENTAGE_NOT_DETERMINED;
         } else {
-            formatTumorPercentage = "N/A";
+            formatTumorPercentage = Lims.PATHOLOGY_TUMOR_NOT_DONE;
         }
         return formatTumorPercentage;
     }

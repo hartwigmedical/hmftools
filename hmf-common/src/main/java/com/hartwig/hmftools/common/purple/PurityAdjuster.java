@@ -65,7 +65,6 @@ public class PurityAdjuster {
     public double purityAdjustedVAF(@NotNull final String chromosome, final double copyNumber, final double observedFrequency) {
         int typicalCopyNumber = typicalCopyNumber(chromosome);
         return purityAdjustedFrequency(typicalCopyNumber, 0, copyNumber, observedFrequency);
-
     }
 
     public double purityAdjustedBAFSimple(final String chromosome, final double copyNumber, final double observedFrequency) {

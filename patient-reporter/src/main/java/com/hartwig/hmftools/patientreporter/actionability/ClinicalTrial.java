@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.patientreporter.actionability;
 
 import com.hartwig.hmftools.common.actionability.ActionabilitySource;
+import com.hartwig.hmftools.common.actionability.EvidenceScope;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -27,4 +28,7 @@ public abstract class ClinicalTrial {
 
     @NotNull
     public abstract String cancerType();
+
+    @NotNull
+    public abstract EvidenceScope scope();
 }

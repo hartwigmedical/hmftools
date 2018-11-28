@@ -27,6 +27,7 @@ public final class ReportableGeneDisruptionFactory {
     @NotNull
     public static List<ReportableGeneDisruption> toReportableGeneDisruptions(@NotNull List<GeneDisruption> disruptions,
             @NotNull List<GeneCopyNumber> geneCopyNumbers) {
+        LOGGER.debug("Generating reportable disruptions based on {} disruptions", disruptions.size());
         Map<String, GeneCopyNumber> copyNumberPerGene = toGeneMap(geneCopyNumbers);
         Map<StructuralVariant, Pair<GeneDisruption, GeneDisruption>> pairedMap = mapDisruptionsPerStructuralVariant(disruptions);
 

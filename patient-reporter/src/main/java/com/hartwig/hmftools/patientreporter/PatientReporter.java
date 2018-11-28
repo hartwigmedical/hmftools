@@ -210,17 +210,18 @@ abstract class PatientReporter {
             @Nullable PatientTumorLocation patientTumorLocation) throws IOException {
         LOGGER.info("Loading structural variants...");
         final List<StructuralVariant> structuralVariants = PatientReporterFileLoader.loadPassedStructuralVariants(run.runDirectory());
-        LOGGER.info(" " + structuralVariants.size() + " structural variants loaded");
+        LOGGER.info(" " + structuralVariants.size() + " PASS structural variants loaded");
 
         LOGGER.info("Enriching structural variants with purple data");
         final PurityAdjuster purityAdjuster = new PurityAdjuster(copyNumberAnalysis.gender(), copyNumberAnalysis.fittedPurity());
         final Multimap<Chromosome, PurpleCopyNumber> copyNumberMap = Multimaps.fromRegions(copyNumberAnalysis.copyNumbers());
 
         final List<EnrichedStructuralVariant> enrichedStructuralVariants =
-                new EnrichedStructuralVariantFactory(purityAdjuster, copyNumberMap).enrich(structuralVariants);
+                new EnrichedStructuralVariantFactory(sequencedReportData().refGenomeFastaFile(), purityAdjuster, copyNumberMap).enrich(
+                        structuralVariants);
 
         LOGGER.info("Analyzing structural variants...");
-        final StructuralVariantAnalysis structuralVariantAnalysis = structuralVariantAnalyzer().run(enrichedStructuralVariants);
+        final StructuralVariantAnalysis structuralVariantAnalysis = structuralVariantAnalyzer().runOnVariants(enrichedStructuralVariants);
 
         return FusionDisruptionAnalyzer.run(structuralVariantAnalysis,
                 copyNumberAnalysis.exomeGeneCopyNumbers(),

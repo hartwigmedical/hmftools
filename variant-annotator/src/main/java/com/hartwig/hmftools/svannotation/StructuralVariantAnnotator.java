@@ -36,15 +36,12 @@ import com.hartwig.hmftools.common.variant.structural.EnrichedStructuralVariant;
 import com.hartwig.hmftools.common.variant.structural.EnrichedStructuralVariantFactory;
 import com.hartwig.hmftools.common.variant.structural.ImmutableEnrichedStructuralVariant;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
-import com.hartwig.hmftools.common.variant.structural.StructuralVariantFactory;
+import com.hartwig.hmftools.common.variant.structural.StructuralVariantFileLoader;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneAnnotation;
-import com.hartwig.hmftools.common.variant.structural.annotation.GeneDisruption;
-import com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion;
 import com.hartwig.hmftools.common.variant.structural.annotation.StructuralVariantAnnotation;
 import com.hartwig.hmftools.common.variant.structural.annotation.SvGeneTranscriptCollection;
 import com.hartwig.hmftools.common.variant.structural.annotation.SvPONAnnotator;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
-import com.hartwig.hmftools.svannotation.analysis.ImmutableStructuralVariantAnalysis;
 import com.hartwig.hmftools.svannotation.analysis.StructuralVariantAnalysis;
 import com.hartwig.hmftools.svannotation.analysis.StructuralVariantAnalyzer;
 import com.hartwig.hmftools.svannotation.analysis.SvFusionAnalyser;
@@ -62,11 +59,7 @@ import org.apache.logging.log4j.core.config.Configurator;
 import org.jetbrains.annotations.NotNull;
 
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
-import htsjdk.tribble.AbstractFeatureReader;
-import htsjdk.tribble.readers.LineIterator;
-import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.variantcontext.filter.VariantContextFilter;
-import htsjdk.variant.vcf.VCFCodec;
 
 public class StructuralVariantAnnotator
 {
@@ -99,11 +92,11 @@ public class StructuralVariantAnnotator
     private SvGeneTranscriptCollection mSvGeneTranscriptCollection;
 
     // Let PON filtered SVs through since GRIDSS PON filtering is performed upstream
-    private static Set<String> ALLOWED_FILTERS = Sets.newHashSet( "INFERRED", PON_FILTER_PON, PON_FILTER_PASS);
+    private static final Set<String> ALLOWED_FILTERS = Sets.newHashSet("INFERRED", PON_FILTER_PON, PON_FILTER_PASS);
 
     private static final Logger LOGGER = LogManager.getLogger(StructuralVariantAnnotator.class);
 
-    public StructuralVariantAnnotator(final CommandLine cmd)
+    private StructuralVariantAnnotator(final CommandLine cmd)
     {
         mSampleId = "";
         mDataPath = "";
@@ -113,7 +106,7 @@ public class StructuralVariantAnnotator
         mSvGeneTranscriptCollection = new SvGeneTranscriptCollection();
     }
 
-    public boolean initialise()
+    private boolean initialise()
     {
         mSampleId = mCmdLineArgs.getOptionValue(SAMPLE);
 
@@ -138,7 +131,7 @@ public class StructuralVariantAnnotator
     public boolean run()
     {
         // create the annotator - typically a MySQL connection to the Ensembl database
-        VariantAnnotator annotator = null;
+        VariantAnnotator annotator;
 
         if(mCmdLineArgs.hasOption(ENSEMBL_DB))
         {
@@ -157,7 +150,7 @@ public class StructuralVariantAnnotator
                 }
                 else
                 {
-                    MySQLAnnotator.make(ensembleUrl);
+                    annotator = MySQLAnnotator.make(ensembleUrl);
                 }
             }
             catch (SQLException e)
@@ -172,7 +165,7 @@ public class StructuralVariantAnnotator
         }
 
         LOGGER.debug("loading known fusion data");
-        KnownFusionsModel knownFusionsModel = null;
+        KnownFusionsModel knownFusionsModel;
 
         try
         {
@@ -239,7 +232,7 @@ public class StructuralVariantAnnotator
             mDbAccess.writeStructuralVariants(sampleId, svList);
 
             // re-read the data to get primaryId field as a foreign key for disruptions and fusions
-            enrichedVariants = mDbAccess.readStructuralVariants(sampleId);;
+            enrichedVariants = mDbAccess.readStructuralVariants(sampleId);
         }
 
         List<StructuralVariantAnnotation> annotations;
@@ -251,18 +244,18 @@ public class StructuralVariantAnnotator
 
             LOGGER.debug("loaded {} Ensembl annotations from file", annotations.size());
         }
-        else if(svAnalyser.getGeneDataAnnotator() != null)
+        else
         {
             int testSvLimit = Integer.parseInt(mCmdLineArgs.getOptionValue(TEST_SV_LIMIT, "0"));
 
             if(testSvLimit > 0)
             {
                 List<EnrichedStructuralVariant> subset = Lists.newArrayList(enrichedVariants.subList(0, testSvLimit));
-                annotations = svAnalyser.findAnnotations(subset);
+                annotations = svAnalyser.annotateVariants(subset);
             }
             else
             {
-                annotations = svAnalyser.findAnnotations(enrichedVariants);
+                annotations = svAnalyser.annotateVariants(enrichedVariants);
             }
 
             LOGGER.debug("sample({}) matched {} annotations from Ensembl database", sampleId, annotations.size());
@@ -271,22 +264,11 @@ public class StructuralVariantAnnotator
             if(!mDataPath.isEmpty())
                 mSvGeneTranscriptCollection.writeAnnotations(sampleId, annotations);
         }
-        else
-        {
-            LOGGER.error("Ensemble data not loaded from DB nor file");
-            return;
-        }
 
         if(!mCmdLineArgs.hasOption(SKIP_DB_UPLOAD))
         {
             LOGGER.debug("sample({}) finding disruptions and fusions", sampleId);
-
-            final List<GeneFusion> fusions = svAnalyser.findFusions(annotations);
-            final List<GeneDisruption> disruptions = svAnalyser.findDisruptions(annotations);
-
-            LOGGER.debug("sample({}) found {} disruptions and {} fusions", sampleId, disruptions.size(), fusions.size());
-
-            final StructuralVariantAnalysis analysis = ImmutableStructuralVariantAnalysis.of(annotations, fusions, disruptions);
+            final StructuralVariantAnalysis analysis = svAnalyser.runOnAnnotations(annotations);
 
             LOGGER.debug("persisting annotations to database");
             final StructuralVariantAnnotationDAO annotationDAO = new StructuralVariantAnnotationDAO(mDbAccess.context());
@@ -302,7 +284,7 @@ public class StructuralVariantAnnotator
 
         try
         {
-            LOGGER.debug("Loading indexed fasta reference file");
+            LOGGER.debug("loading indexed fasta reference file");
             final String fastaFileLocation = mCmdLineArgs.getOptionValue(REF_GENOME);
             final IndexedFastaSequenceFile indexedFastaSequenceFile = new IndexedFastaSequenceFile(new File(fastaFileLocation));
 
@@ -310,7 +292,7 @@ public class StructuralVariantAnnotator
             final List<StructuralVariant> variants = readFromVcf(mCmdLineArgs.getOptionValue(VCF_FILE));
 
             LOGGER.debug("enriching structural variants based on purple data");
-            svList = enrichStructuralVariants(sampleId,indexedFastaSequenceFile, variants);
+            svList = enrichStructuralVariants(sampleId, indexedFastaSequenceFile, variants);
         }
         catch(IOException e)
         {
@@ -399,15 +381,7 @@ public class StructuralVariantAnnotator
             return variantContext.isNotFiltered() || filters.isEmpty();
         };
 
-        final StructuralVariantFactory factory = new StructuralVariantFactory(filter);
-
-        try (final AbstractFeatureReader<VariantContext, LineIterator> reader = AbstractFeatureReader.getFeatureReader(vcfFileLocation,
-                new VCFCodec(),
-                false)) {
-            reader.iterator().forEach(factory::addVariantContext);
-        }
-
-        return factory.results();
+        return StructuralVariantFileLoader.fromFile(vcfFileLocation, filter);
     }
 
     @NotNull
@@ -434,7 +408,7 @@ public class StructuralVariantAnnotator
         return new EnrichedStructuralVariantFactory(indexedFastaSequenceFile, purityAdjuster, copyNumbers).enrich(variants);
     }
 
-    private final List<StructuralVariantAnnotation> createAnnotations(List<EnrichedStructuralVariant> enrichedVariants)
+    private List<StructuralVariantAnnotation> createAnnotations(List<EnrichedStructuralVariant> enrichedVariants)
     {
         final Map<Integer, List<GeneAnnotation>> svIdGeneTranscriptsMap = mSvGeneTranscriptCollection.getSvIdGeneTranscriptsMap();
 

@@ -10,12 +10,9 @@ import static org.ensembl.database.homo_sapiens_core.tables.Karyotype.KARYOTYPE;
 import static org.ensembl.database.homo_sapiens_core.tables.ObjectXref.OBJECT_XREF;
 import static org.ensembl.database.homo_sapiens_core.tables.SeqRegion.SEQ_REGION;
 import static org.ensembl.database.homo_sapiens_core.tables.Transcript.TRANSCRIPT;
-import static org.ensembl.database.homo_sapiens_core.tables.Translation.TRANSLATION;
 import static org.ensembl.database.homo_sapiens_core.tables.Xref.XREF;
-import static org.jooq.impl.DSL.boolAnd;
 import static org.jooq.impl.DSL.decode;
 import static org.jooq.impl.DSL.groupConcatDistinct;
-import static org.jooq.impl.DSL.when;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -26,6 +23,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.variant.structural.EnrichedStructuralVariant;
+import com.hartwig.hmftools.common.variant.structural.EnrichedStructuralVariantLeg;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneAnnotation;
 import com.hartwig.hmftools.common.variant.structural.annotation.StructuralVariantAnnotation;
 import com.hartwig.hmftools.common.variant.structural.annotation.Transcript;
@@ -34,13 +32,11 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.ensembl.database.homo_sapiens_core.enums.GeneStatus;
 import org.ensembl.database.homo_sapiens_core.enums.ObjectXrefEnsemblObjectType;
-import org.ensembl.database.homo_sapiens_core.tables.Exon;
 import org.ensembl.database.homo_sapiens_core.tables.Xref;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jooq.Condition;
 import org.jooq.DSLContext;
-import org.jooq.Query;
 import org.jooq.Record;
 import org.jooq.Result;
 import org.jooq.SQLDialect;
@@ -98,6 +94,7 @@ public class MySQLAnnotator implements VariantAnnotator
     @NotNull
     public List<StructuralVariantAnnotation> annotateVariants(@NotNull List<EnrichedStructuralVariant> variants)
     {
+        LOGGER.debug("annotating {} variants with gene and transcript info from ensembl db", variants.size());
         return variants.stream().map(this::annotateVariant).collect(Collectors.toList());
     }
 
@@ -108,9 +105,10 @@ public class MySQLAnnotator implements VariantAnnotator
 
         annotation.annotations().addAll(annotateBreakend(variant, true, variant.start().chromosome(), variant.start().position()));
 
-        if (variant.end() != null)
+        EnrichedStructuralVariantLeg endLeg = variant.end();
+        if (endLeg != null)
         {
-            annotation.annotations().addAll(annotateBreakend(variant, false, variant.end().chromosome(), variant.end().position()));
+            annotation.annotations().addAll(annotateBreakend(variant, false, endLeg.chromosome(), endLeg.position()));
         }
 
         return annotation;
@@ -440,8 +438,8 @@ public class MySQLAnnotator implements VariantAnnotator
             if(!isForwardStrand)
             {
                 // falls after the last exon on forward strand or before the first on reverse strand makes this position downstream
-                LOGGER.debug("skipping transcript({}) position({}) after exon rank({} vs max={}) on reverse strand",
-                        transcriptStableId, position, nextExonRank, exonMax);
+//                LOGGER.debug("skipping transcript({}) position({}) after exon rank({} vs max={}) on reverse strand",
+//                        transcriptStableId, position, nextExonRank, exonMax);
                 return null;
             }
             else
@@ -456,8 +454,8 @@ public class MySQLAnnotator implements VariantAnnotator
             if(isForwardStrand)
             {
                 // falls after the last exon on forward strand or before the first on reverse strand makes this position downstream
-                LOGGER.debug("skipping transcript({}) position({}) after exon rank({} vs max={}) on forward strand",
-                        transcriptStableId, position, prevExonRank, exonMax);
+//                LOGGER.debug("skipping transcript({}) position({}) after exon rank({} vs max={}) on forward strand",
+//                        transcriptStableId, position, prevExonRank, exonMax);
                 return null;
             }
             else
@@ -573,8 +571,8 @@ public class MySQLAnnotator implements VariantAnnotator
 
             if(exonUpstream == exonDownstream && exonRight != null)
             {
-                exonStart = ((UInteger)exonRight.get(EXON.SEQ_REGION_START)).longValue();
-                exonEnd = ((UInteger)exonRight.get(EXON.SEQ_REGION_END)).longValue();
+                exonStart = exonRight.get(EXON.SEQ_REGION_START).longValue();
+                exonEnd = exonRight.get(EXON.SEQ_REGION_END).longValue();
             }
 
             return new Transcript(parent,

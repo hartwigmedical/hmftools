@@ -63,11 +63,11 @@ public abstract class EvidenceSummaryPage {
         final ComponentBuilder<?, ?> table = items.size() > 0
                 ? cmp.subreport(monospaceBaseTable().fields(EvidenceItemDataSource.evidenceItemFields())
                 .columns(col.column("Event", EvidenceItemDataSource.EVENT_FIELD).setMinWidth(140),
-                        col.column("Match", EvidenceItemDataSource.SCOPE_FIELD),
+                        col.column("Match", EvidenceItemDataSource.SCOPE_FIELD).setMinWidth(40),
                         col.column("Drug", EvidenceItemDataSource.DRUG_FIELD).setMinWidth(190),
-                        col.column("Level", EvidenceItemDataSource.LEVEL_FIELD),
-                        col.column("Response", EvidenceItemDataSource.RESPONSE_FIELD),
-                        col.column("Source", EvidenceItemDataSource.SOURCE_FIELD)
+                        col.column("Level", EvidenceItemDataSource.LEVEL_FIELD).setMinWidth(40),
+                        col.column("Response", EvidenceItemDataSource.RESPONSE_FIELD).setMinWidth(40),
+                        col.column("Source", EvidenceItemDataSource.SOURCE_FIELD).setMinWidth(35)
                                 .setHyperLink(hyperLink(EvidenceItemDataSource.sourceHyperlink()))
                                 .setStyle(linkStyle()))
                 .setDataSource(EvidenceItemDataSource.fromEvidenceItems(items)))
@@ -83,11 +83,12 @@ public abstract class EvidenceSummaryPage {
         final ComponentBuilder<?, ?> table = report.clinicalTrials().size() > 0
                 ? cmp.subreport(monospaceBaseTable().fields(ClinicalTrialDataSource.clinicalTrialFields())
                 .columns(col.column("Event", ClinicalTrialDataSource.EVENT_FIELD).setMinWidth(140),
-                        col.column("Trial", ClinicalTrialDataSource.TRIAL_FIELD).setMinWidth(170),
-                        col.column("Source", ClinicalTrialDataSource.SOURCE_FIELD).setMinWidth(50)
+                        col.column("Match", ClinicalTrialDataSource.SCOPE_FIELD).setMinWidth(40),
+                        col.column("Trial", ClinicalTrialDataSource.TRIAL_FIELD).setMinWidth(190),
+                        col.column("CCMO", ClinicalTrialDataSource.CCMO_FIELD).setMinWidth(80),
+                        col.column("Source", ClinicalTrialDataSource.SOURCE_FIELD).setMinWidth(35)
                                 .setHyperLink(hyperLink(ClinicalTrialDataSource.sourceHyperlink()))
-                                .setStyle(linkStyle()),
-                        col.column("CCMO", ClinicalTrialDataSource.CCMO_FIELD).setMinWidth(50))
+                                .setStyle(linkStyle()))
                 .setDataSource(ClinicalTrialDataSource.fromClinicalTrials(report.clinicalTrials())))
                 : cmp.text("None").setStyle(fontStyle().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER));
 
