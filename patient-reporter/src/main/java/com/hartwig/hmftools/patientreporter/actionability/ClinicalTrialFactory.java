@@ -33,6 +33,7 @@ public final class ClinicalTrialFactory {
                 .reference(evidenceItem.reference())
                 .isOnLabel(evidenceItem.isOnLabel())
                 .cancerType(evidenceItem.cancerType())
+                .scope(evidenceItem.scope())
                 .build();
     }
 }

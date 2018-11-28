@@ -83,11 +83,12 @@ public abstract class EvidenceSummaryPage {
         final ComponentBuilder<?, ?> table = report.clinicalTrials().size() > 0
                 ? cmp.subreport(monospaceBaseTable().fields(ClinicalTrialDataSource.clinicalTrialFields())
                 .columns(col.column("Event", ClinicalTrialDataSource.EVENT_FIELD).setMinWidth(140),
+                        col.column("Match", ClinicalTrialDataSource.SCOPE_FIELD).setMinWidth(50),
                         col.column("Trial", ClinicalTrialDataSource.TRIAL_FIELD).setMinWidth(170),
                         col.column("Source", ClinicalTrialDataSource.SOURCE_FIELD).setMinWidth(50)
                                 .setHyperLink(hyperLink(ClinicalTrialDataSource.sourceHyperlink()))
                                 .setStyle(linkStyle()),
-                        col.column("CCMO", ClinicalTrialDataSource.CCMO_FIELD).setMinWidth(50))
+                        col.column("CCMO", ClinicalTrialDataSource.CCMO_FIELD).setMinWidth(60))
                 .setDataSource(ClinicalTrialDataSource.fromClinicalTrials(report.clinicalTrials())))
                 : cmp.text("None").setStyle(fontStyle().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER));
 
