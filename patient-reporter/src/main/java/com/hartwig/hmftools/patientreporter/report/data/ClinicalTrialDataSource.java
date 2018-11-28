@@ -2,7 +2,6 @@ package com.hartwig.hmftools.patientreporter.report.data;
 
 import static net.sf.dynamicreports.report.builder.DynamicReports.field;
 
-import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -31,7 +30,7 @@ public class ClinicalTrialDataSource {
 
     @NotNull
     public static FieldBuilder<?>[] clinicalTrialFields() {
-        return new FieldBuilder<?>[] { EVENT_FIELD, SCOPE_FIELD, TRIAL_FIELD, SOURCE_FIELD, CCMO_FIELD, REFERENCE_FIELD};
+        return new FieldBuilder<?>[] { EVENT_FIELD, SCOPE_FIELD, TRIAL_FIELD, SOURCE_FIELD, CCMO_FIELD, REFERENCE_FIELD };
     }
 
     @NotNull
@@ -68,11 +67,7 @@ public class ClinicalTrialDataSource {
     private static List<ClinicalTrial> sort(@NotNull List<ClinicalTrial> trials) {
         return trials.stream().sorted((item1, item2) -> {
             if (item1.event().equals(item2.event())) {
-                if (item1.acronym().equals(item2.acronym())) {
-                    return item1.event().compareTo(item2.event());
-                } else {
-                    return item1.acronym().compareTo(item2.acronym());
-                }
+                return item1.acronym().compareTo(item2.acronym());
             } else {
                 return item1.event().compareTo(item2.event());
             }
