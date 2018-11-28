@@ -2,7 +2,6 @@ package com.hartwig.hmftools.svannotation.analysis;
 
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.fusions.KnownFusionsModel;
@@ -13,7 +12,6 @@ import com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion;
 import com.hartwig.hmftools.common.variant.structural.annotation.StructuralVariantAnnotation;
 import com.hartwig.hmftools.common.variant.structural.annotation.Transcript;
 import com.hartwig.hmftools.svannotation.VariantAnnotator;
-
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -34,8 +32,6 @@ public class StructuralVariantAnalyzer
     {
         mDisruptionAnalyser = new SvDisruptionAnalyser(disruptionGeneIDPanel);
         mFusionAnalyser = new SvFusionAnalyser(knownFusionsModel);
-
-        // TODO (KODU) See if we can replace with a filter on gene name rather than gene ensembl ID.
         mGeneDataAnnotator = geneDataAnnotator;
     }
 
