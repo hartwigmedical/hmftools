@@ -25,7 +25,7 @@ public class SvDisruptionAnalyser
 
     SvDisruptionAnalyser(final Set<String> disruptionGeneIDPanel)
     {
-        LOGGER.debug("creating SvDisruptionAnalyser on {} genes: {}", disruptionGeneIDPanel.size(), disruptionGeneIDPanel);
+        LOGGER.debug("creating sv disruption analyzer using gene panel with {} genes: {}", disruptionGeneIDPanel.size());
         mDisruptionGeneIDPanel = disruptionGeneIDPanel;
     }
 
