@@ -41,24 +41,23 @@ public final class EnrichedStructuralVariantFactory {
         for (final StructuralVariant variant : variants) {
             ImmutableEnrichedStructuralVariant.Builder builder = ImmutableEnrichedStructuralVariant.builder().from(variant);
             ImmutableEnrichedStructuralVariantLeg.Builder startBuilder = createBuilder(variant.start());
-            ImmutableEnrichedStructuralVariantLeg.Builder endBuilder = null;
+            // KODU: Every SV should have a start, while end is optional.
+            assert startBuilder != null;
+            ImmutableEnrichedStructuralVariantLeg.Builder endBuilder = createBuilder(variant.end());
 
-            final List<StructuralVariantLegPloidy> ploidies = ploidyFactory.create(variant, copyNumbers);
+            List<StructuralVariantLegPloidy> ploidies = ploidyFactory.create(variant, copyNumbers);
             if (!ploidies.isEmpty()) {
-                Double roundedPloidy = round(ploidies.get(0).averageImpliedPloidy());
-                builder.ploidy(roundedPloidy);
-            }
+                builder.ploidy(round(ploidies.get(0).averageImpliedPloidy()));
 
-            if (ploidies.size() > 0) {
-                final StructuralVariantLegPloidy start = ploidies.get(0);
-                final StructuralVariantLegPloidy end = ploidies.size() <= 1 ? null : ploidies.get(1);
+                StructuralVariantLegPloidy start = ploidies.get(0);
+                StructuralVariantLegPloidy end = ploidies.size() <= 1 ? null : ploidies.get(1);
 
                 startBuilder.adjustedAlleleFrequency(round(adjustedVAF(purityAdjuster, start)));
                 startBuilder.adjustedCopyNumber(round(adjustedCopyNumber(start)));
                 startBuilder.adjustedCopyNumberChange(round(adjustedCopyNumberChange(start)));
 
                 if (end != null) {
-                    endBuilder = createBuilder(variant.end());
+                    assert endBuilder != null;
                     endBuilder.adjustedAlleleFrequency(round(adjustedVAF(purityAdjuster, end)));
                     endBuilder.adjustedCopyNumber(round(adjustedCopyNumber(end)));
                     endBuilder.adjustedCopyNumberChange(round(adjustedCopyNumberChange(end)));
@@ -71,18 +70,19 @@ public final class EnrichedStructuralVariantFactory {
         return result;
     }
 
-    @NotNull
+    @Nullable
     private ImmutableEnrichedStructuralVariantLeg.Builder createBuilder(@Nullable StructuralVariantLeg leg) {
-        assert leg != null;
+        if (leg == null) {
+            return null;
+        }
 
         final ImmutableEnrichedStructuralVariantLeg.Builder builder = ImmutableEnrichedStructuralVariantLeg.builder().from(leg);
         builder.refGenomeContext(context(leg.chromosome(), leg.position()));
         return builder;
     }
 
-    @Nullable
-    private static Double round(@Nullable Double value) {
-        return value == null ? null : Math.round(value * 1000d) / 1000d;
+    private static double round(double value) {
+        return Math.round(value * 1000d) / 1000d;
     }
 
     private static double adjustedVAF(@NotNull final PurityAdjuster purityAdjuster, @NotNull final StructuralVariantLegPloidy ploidy) {
