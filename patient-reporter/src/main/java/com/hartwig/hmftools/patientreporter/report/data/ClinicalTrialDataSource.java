@@ -66,7 +66,17 @@ public class ClinicalTrialDataSource {
 
     @NotNull
     private static List<ClinicalTrial> sort(@NotNull List<ClinicalTrial> trials) {
-        return trials.stream().sorted(Comparator.comparing(ClinicalTrial::acronym)).collect(Collectors.toList());
+        return trials.stream().sorted((item1, item2) -> {
+            if (item1.event().equals(item2.event())) {
+                if (item1.acronym().equals(item2.acronym())) {
+                    return item1.event().compareTo(item2.event());
+                } else {
+                    return item1.acronym().compareTo(item2.acronym());
+                }
+            } else {
+                return item1.event().compareTo(item2.event());
+            }
+        }).collect(Collectors.toList());
     }
 
     @NotNull
