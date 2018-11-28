@@ -11,17 +11,14 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.variant.filter.AlwaysPassFilter;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
-import com.hartwig.hmftools.common.variant.structural.StructuralVariantFactory;
+import com.hartwig.hmftools.common.variant.structural.StructuralVariantFileLoader;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
-import htsjdk.tribble.AbstractFeatureReader;
-import htsjdk.tribble.readers.LineIterator;
-import htsjdk.variant.variantcontext.VariantContext;
-import htsjdk.variant.vcf.VCFCodec;
 
 public class FilteredSVWriter {
 
@@ -120,15 +117,11 @@ public class FilteredSVWriter {
     }
 
     private List<StructuralVariant> readFromVcf(String vcfFilename) {
-        final StructuralVariantFactory factory = new StructuralVariantFactory(false);
-        try (final AbstractFeatureReader<VariantContext, LineIterator> reader = AbstractFeatureReader.getFeatureReader(vcfFilename,
-                new VCFCodec(),
-                false)) {
-            reader.iterator().forEach(factory::addVariantContext);
+        try {
+            return StructuralVariantFileLoader.fromFile(vcfFilename, new AlwaysPassFilter());
         } catch (Exception e) {
+            return Lists.newArrayList();
         }
-
-        return factory.results();
     }
 
     private void generateFilteredSVFile(final List<StructuralVariant> variants, final String sampleId) {

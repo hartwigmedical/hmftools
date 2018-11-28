@@ -23,6 +23,7 @@ import htsjdk.variant.variantcontext.Allele;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.variantcontext.VariantContextBuilder;
 import htsjdk.variant.variantcontext.VariantContextComparator;
+import htsjdk.variant.variantcontext.filter.PassingVariantFilter;
 import htsjdk.variant.variantcontext.writer.Options;
 import htsjdk.variant.variantcontext.writer.VariantContextWriter;
 import htsjdk.variant.variantcontext.writer.VariantContextWriterBuilder;
@@ -128,7 +129,7 @@ class PurpleStructuralVariantSupplier {
     public List<StructuralVariant> variants() {
         if (modified) {
             modified = false;
-            final StructuralVariantFactory factory = new StructuralVariantFactory(true);
+            final StructuralVariantFactory factory = new StructuralVariantFactory(new PassingVariantFilter());
             variantContexts.forEach(factory::addVariantContext);
 
             variants.clear();

@@ -88,7 +88,7 @@ public final class PatientReporterFileLoader {
             assert path.isPresent();
 
             LOGGER.info(" Using " + path.get().toString() + " as source for structural variants.");
-            return StructuralVariantFileLoader.fromFile(path.get().toString(), true);
+            return StructuralVariantFileLoader.fromFile(path.get().toString(), new PassingVariantFilter());
         } else {
             LOGGER.warn(" Cannot load structural variants. No GRIDSS directory present in " + runDirectory + "!");
             return Lists.newArrayList();

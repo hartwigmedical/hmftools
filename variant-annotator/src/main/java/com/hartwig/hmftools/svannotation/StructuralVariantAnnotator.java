@@ -36,7 +36,7 @@ import com.hartwig.hmftools.common.variant.structural.EnrichedStructuralVariant;
 import com.hartwig.hmftools.common.variant.structural.EnrichedStructuralVariantFactory;
 import com.hartwig.hmftools.common.variant.structural.ImmutableEnrichedStructuralVariant;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
-import com.hartwig.hmftools.common.variant.structural.StructuralVariantFactory;
+import com.hartwig.hmftools.common.variant.structural.StructuralVariantFileLoader;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneAnnotation;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneDisruption;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion;
@@ -62,11 +62,7 @@ import org.apache.logging.log4j.core.config.Configurator;
 import org.jetbrains.annotations.NotNull;
 
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
-import htsjdk.tribble.AbstractFeatureReader;
-import htsjdk.tribble.readers.LineIterator;
-import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.variantcontext.filter.VariantContextFilter;
-import htsjdk.variant.vcf.VCFCodec;
 
 public class StructuralVariantAnnotator
 {
@@ -399,15 +395,7 @@ public class StructuralVariantAnnotator
             return variantContext.isNotFiltered() || filters.isEmpty();
         };
 
-        final StructuralVariantFactory factory = new StructuralVariantFactory(filter);
-
-        try (final AbstractFeatureReader<VariantContext, LineIterator> reader = AbstractFeatureReader.getFeatureReader(vcfFileLocation,
-                new VCFCodec(),
-                false)) {
-            reader.iterator().forEach(factory::addVariantContext);
-        }
-
-        return factory.results();
+        return StructuralVariantFileLoader.fromFile(vcfFileLocation, filter);
     }
 
     @NotNull
@@ -434,7 +422,7 @@ public class StructuralVariantAnnotator
         return new EnrichedStructuralVariantFactory(indexedFastaSequenceFile, purityAdjuster, copyNumbers).enrich(variants);
     }
 
-    private final List<StructuralVariantAnnotation> createAnnotations(List<EnrichedStructuralVariant> enrichedVariants)
+    private List<StructuralVariantAnnotation> createAnnotations(List<EnrichedStructuralVariant> enrichedVariants)
     {
         final Map<Integer, List<GeneAnnotation>> svIdGeneTranscriptsMap = mSvGeneTranscriptCollection.getSvIdGeneTranscriptsMap();
 

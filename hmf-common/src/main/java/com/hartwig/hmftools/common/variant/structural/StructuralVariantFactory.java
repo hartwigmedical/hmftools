@@ -13,7 +13,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.variant.filter.AlwaysPassFilter;
 import com.hartwig.hmftools.common.variant.filter.ChromosomeFilter;
 import com.hartwig.hmftools.common.variant.filter.ExcludeCNVFilter;
 
@@ -24,7 +23,6 @@ import htsjdk.variant.variantcontext.Allele;
 import htsjdk.variant.variantcontext.Genotype;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.variantcontext.filter.CompoundFilter;
-import htsjdk.variant.variantcontext.filter.PassingVariantFilter;
 import htsjdk.variant.variantcontext.filter.VariantContextFilter;
 
 public class StructuralVariantFactory {
@@ -65,11 +63,7 @@ public class StructuralVariantFactory {
     @NotNull
     private final CompoundFilter filter;
 
-    public StructuralVariantFactory(boolean filterPassesOnly) {
-        this(filterPassesOnly ? new PassingVariantFilter() : new AlwaysPassFilter());
-    }
-
-    public StructuralVariantFactory(@NotNull final VariantContextFilter filter) {
+    public StructuralVariantFactory(@NotNull VariantContextFilter filter) {
         this.filter = new CompoundFilter(true);
         this.filter.add(new ChromosomeFilter());
         this.filter.add(new ExcludeCNVFilter());
