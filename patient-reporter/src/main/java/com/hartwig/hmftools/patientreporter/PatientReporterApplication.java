@@ -28,8 +28,10 @@ import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
+import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.core.config.Configurator;
 import org.jetbrains.annotations.NotNull;
 
 import net.sf.dynamicreports.report.exception.DRException;
@@ -63,6 +65,7 @@ public class PatientReporterApplication {
     private static final String ENSEMBL_DB_LOCAL = "local_ensembl";
     private static final String DB_USER = "db_user";
     private static final String DB_PASS = "db_pass";
+    private static final String LOG_DEBUG = "log_debug";
 
     private static final String FASTA_FILE_LOCATION = "fasta_file_location";
     private static final String HIGH_CONFIDENCE_BED = "high_confidence_bed";
@@ -78,6 +81,10 @@ public class PatientReporterApplication {
 
         if (!validInputForReportWriter(cmd) || !validInputForBaseReportData(cmd)) {
             printUsageAndExit(options);
+        }
+
+        if (cmd.hasOption(LOG_DEBUG)) {
+            Configurator.setRootLevel(Level.DEBUG);
         }
 
         LOGGER.info("Running patient reporter v" + VERSION);
@@ -274,6 +281,7 @@ public class PatientReporterApplication {
         options.addOption(ENSEMBL_DB_LOCAL, false, "Flag indicating to connect to local Ensembl DB");
         options.addOption(DB_USER, true, "Database user name to connect to local mysql instance.");
         options.addOption(DB_PASS, true, "Database password to connect to local mysql instance.");
+        options.addOption(LOG_DEBUG, false, "If provided, set the log level to debug rather than default.");
         options.addOption(FASTA_FILE_LOCATION, true, "Path towards the FASTA file containing the ref genome.");
         options.addOption(HIGH_CONFIDENCE_BED, true, "Path towards the high confidence BED file.");
         options.addOption(CENTER_CSV, true, "Path towards a CSV containing center (hospital) data.");
