@@ -99,7 +99,7 @@ public class StructuralVariantAnnotator
 
     private static final Logger LOGGER = LogManager.getLogger(StructuralVariantAnnotator.class);
 
-    public StructuralVariantAnnotator(final CommandLine cmd)
+    private StructuralVariantAnnotator(final CommandLine cmd)
     {
         mSampleId = "";
         mDataPath = "";
@@ -109,7 +109,7 @@ public class StructuralVariantAnnotator
         mSvGeneTranscriptCollection = new SvGeneTranscriptCollection();
     }
 
-    public boolean initialise()
+    private boolean initialise()
     {
         mSampleId = mCmdLineArgs.getOptionValue(SAMPLE);
 
@@ -168,7 +168,7 @@ public class StructuralVariantAnnotator
         }
 
         LOGGER.debug("loading known fusion data");
-        KnownFusionsModel knownFusionsModel = null;
+        KnownFusionsModel knownFusionsModel;
 
         try
         {
