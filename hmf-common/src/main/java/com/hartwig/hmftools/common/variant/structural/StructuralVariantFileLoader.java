@@ -12,6 +12,9 @@ import htsjdk.variant.vcf.VCFCodec;
 
 public final class StructuralVariantFileLoader {
 
+    private StructuralVariantFileLoader() {
+    }
+
     @NotNull
     public static List<StructuralVariant> fromFile(@NotNull final String vcfFileLocation, final boolean filterOnPasses) throws IOException {
         final StructuralVariantFactory factory = new StructuralVariantFactory(filterOnPasses);

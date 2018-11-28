@@ -99,7 +99,7 @@ public class StructuralVariantAnnotator
     private SvGeneTranscriptCollection mSvGeneTranscriptCollection;
 
     // Let PON filtered SVs through since GRIDSS PON filtering is performed upstream
-    private static Set<String> ALLOWED_FILTERS = Sets.newHashSet( "INFERRED", PON_FILTER_PON, PON_FILTER_PASS);
+    private static final Set<String> ALLOWED_FILTERS = Sets.newHashSet("INFERRED", PON_FILTER_PON, PON_FILTER_PASS);
 
     private static final Logger LOGGER = LogManager.getLogger(StructuralVariantAnnotator.class);
 

@@ -14,8 +14,8 @@ import org.apache.logging.log4j.Logger;
 
 public class SvPONAnnotator {
 
-    public static String PON_FILTER_PON = "PON";
-    public static String PON_FILTER_PASS = "PASS";
+    public static final String PON_FILTER_PON = "PON";
+    public static final String PON_FILTER_PASS = "PASS";
     public static final int REGION_DISTANCE = 100;
 
     private List<SvPON> mPonList;

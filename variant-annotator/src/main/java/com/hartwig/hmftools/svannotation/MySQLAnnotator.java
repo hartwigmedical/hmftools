@@ -10,12 +10,9 @@ import static org.ensembl.database.homo_sapiens_core.tables.Karyotype.KARYOTYPE;
 import static org.ensembl.database.homo_sapiens_core.tables.ObjectXref.OBJECT_XREF;
 import static org.ensembl.database.homo_sapiens_core.tables.SeqRegion.SEQ_REGION;
 import static org.ensembl.database.homo_sapiens_core.tables.Transcript.TRANSCRIPT;
-import static org.ensembl.database.homo_sapiens_core.tables.Translation.TRANSLATION;
 import static org.ensembl.database.homo_sapiens_core.tables.Xref.XREF;
-import static org.jooq.impl.DSL.boolAnd;
 import static org.jooq.impl.DSL.decode;
 import static org.jooq.impl.DSL.groupConcatDistinct;
-import static org.jooq.impl.DSL.when;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -34,13 +31,11 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.ensembl.database.homo_sapiens_core.enums.GeneStatus;
 import org.ensembl.database.homo_sapiens_core.enums.ObjectXrefEnsemblObjectType;
-import org.ensembl.database.homo_sapiens_core.tables.Exon;
 import org.ensembl.database.homo_sapiens_core.tables.Xref;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jooq.Condition;
 import org.jooq.DSLContext;
-import org.jooq.Query;
 import org.jooq.Record;
 import org.jooq.Result;
 import org.jooq.SQLDialect;
@@ -440,8 +435,8 @@ public class MySQLAnnotator implements VariantAnnotator
             if(!isForwardStrand)
             {
                 // falls after the last exon on forward strand or before the first on reverse strand makes this position downstream
-                LOGGER.debug("skipping transcript({}) position({}) after exon rank({} vs max={}) on reverse strand",
-                        transcriptStableId, position, nextExonRank, exonMax);
+//                LOGGER.debug("skipping transcript({}) position({}) after exon rank({} vs max={}) on reverse strand",
+//                        transcriptStableId, position, nextExonRank, exonMax);
                 return null;
             }
             else
@@ -456,8 +451,8 @@ public class MySQLAnnotator implements VariantAnnotator
             if(isForwardStrand)
             {
                 // falls after the last exon on forward strand or before the first on reverse strand makes this position downstream
-                LOGGER.debug("skipping transcript({}) position({}) after exon rank({} vs max={}) on forward strand",
-                        transcriptStableId, position, prevExonRank, exonMax);
+//                LOGGER.debug("skipping transcript({}) position({}) after exon rank({} vs max={}) on forward strand",
+//                        transcriptStableId, position, prevExonRank, exonMax);
                 return null;
             }
             else
