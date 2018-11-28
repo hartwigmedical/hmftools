@@ -210,7 +210,7 @@ abstract class PatientReporter {
             @Nullable PatientTumorLocation patientTumorLocation) throws IOException {
         LOGGER.info("Loading structural variants...");
         final List<StructuralVariant> structuralVariants = PatientReporterFileLoader.loadPassedStructuralVariants(run.runDirectory());
-        LOGGER.info(" " + structuralVariants.size() + " structural variants loaded");
+        LOGGER.info(" " + structuralVariants.size() + " PASS structural variants loaded");
 
         LOGGER.info("Enriching structural variants with purple data");
         final PurityAdjuster purityAdjuster = new PurityAdjuster(copyNumberAnalysis.gender(), copyNumberAnalysis.fittedPurity());
