@@ -50,6 +50,7 @@ import htsjdk.samtools.SamReaderFactory;
 public class AmberApplicationV2 {
     private static final Logger LOGGER = LogManager.getLogger(AmberApplicationV2.class);
 
+    private static final int MIN_PARITION = 10000;
     private static final int DEFAULT_THREADS = 1;
     private static final int DEFAULT_MIN_BASE_QUALITY = 13;
     private static final int DEFAULT_MIN_MAPPING_QUALITY = 1;
@@ -143,9 +144,9 @@ public class AmberApplicationV2 {
             @NotNull final SamReaderFactory readerFactory, @NotNull final ExecutorService executorService,
             @NotNull final ListMultimap<Chromosome, NormalBAF> normalBafs, int minBaseQuality, int threads)
             throws ExecutionException, InterruptedException {
-        final int partitionSize = normalBafs.values().size() / threads;
+        final int partitionSize = Math.max(MIN_PARITION, normalBafs.values().size() / threads);
 
-        LOGGER.info("Partitioning tumor bam {} into {} sized chunks", tumorBamPath, partitionSize);
+        LOGGER.info("Processing tumor bam {}", tumorBamPath);
         final List<Future<TumorEvidence>> futures = Lists.newArrayList();
         for (final Chromosome chromosome : normalBafs.keySet()) {
             for (final List<NormalBAF> chromosomeBafPoints : Lists.partition(normalBafs.get(chromosome), partitionSize)) {
@@ -161,10 +162,7 @@ public class AmberApplicationV2 {
         }
 
         final ListMultimap<Chromosome, TumorBAF> result = ArrayListMultimap.create();
-        for (Future<TumorEvidence> future : futures) {
-            final TumorEvidence evidence = future.get();
-            result.putAll(HumanChromosome.fromString(evidence.contig()), evidence.evidence());
-        }
+        getFuture(futures).forEach(x -> result.putAll(HumanChromosome.fromString(x.contig()), x.evidence()));
 
         return result;
     }
@@ -175,9 +173,9 @@ public class AmberApplicationV2 {
             throws IOException, InterruptedException, ExecutionException {
         LOGGER.info("Loading bed file {}", bedPath);
         final SortedSetMultimap<String, GenomeRegion> bedRegionsSortedSet = BEDFileLoader.fromBedFile(bedPath);
-        final int partitionSize = bedRegionsSortedSet.size() / threads;
+        final int partitionSize = Math.max(MIN_PARITION, bedRegionsSortedSet.size() / threads);
 
-        LOGGER.info("Partitioning reference bam {} into {} sized chunks", referenceBamPath, partitionSize);
+        LOGGER.info("Processing reference bam {}", referenceBamPath, partitionSize);
         final List<Future<NormalEvidence>> futures = Lists.newArrayList();
         for (final String contig : bedRegionsSortedSet.keySet()) {
             for (final List<GenomeRegion> inner : Lists.partition(Lists.newArrayList(bedRegionsSortedSet.get(contig)), partitionSize)) {
@@ -186,19 +184,8 @@ public class AmberApplicationV2 {
             }
         }
 
-        int complete = 0;
-        double previousPercentComplete = 0;
         final ListMultimap<Chromosome, ModifiableNormalBAF> normalEvidence = ArrayListMultimap.create();
-        for (Future<NormalEvidence> chromosomeBAFEvidenceFuture : futures) {
-            NormalEvidence evidence = chromosomeBAFEvidenceFuture.get();
-            double percentComplete = ((double) ++complete) / futures.size();
-            if (percentComplete > previousPercentComplete + 0.1) {
-                LOGGER.info("{}", complete(percentComplete));
-                previousPercentComplete = percentComplete;
-            }
-
-            normalEvidence.putAll(HumanChromosome.fromString(evidence.contig()), evidence.getEvidence());
-        }
+        getFuture(futures).forEach(x -> normalEvidence.putAll(HumanChromosome.fromString(x.contig()), x.evidence()));
 
         final ListMultimap<Chromosome, NormalBAF> normalBafs = ArrayListMultimap.create();
         final Predicate<NormalBAF> depthFilter =
@@ -268,12 +255,28 @@ public class AmberApplicationV2 {
     }
 
     @NotNull
+    private static <T> List<T> getFuture(@NotNull final List<Future<T>> futures) throws ExecutionException, InterruptedException {
+        final List<T> result = Lists.newArrayList();
+        int complete = 0;
+        double previousPercentComplete = 0;
+        for (Future<T> chromosomeBAFEvidenceFuture : futures) {
+            T evidence = chromosomeBAFEvidenceFuture.get();
+            double percentComplete = ((double) ++complete) / futures.size();
+            if (percentComplete > previousPercentComplete + 0.1) {
+                LOGGER.info("{}", complete(percentComplete));
+                previousPercentComplete = percentComplete;
+            }
+            result.add(evidence);
+        }
+        return result;
+    }
+
+    @NotNull
     private static String complete(double percent) {
         int roundedPercent = (int) Math.round(percent * 100);
         int hashCount = Math.min(20, roundedPercent / 5);
         int gapCount = Math.max(0, 20 - hashCount);
 
-        return "  [" + Strings.repeat("#", hashCount) +  Strings.repeat(" ", gapCount)  + "] " + roundedPercent + "% complete";
+        return "  [" + Strings.repeat("#", hashCount) + Strings.repeat(" ", gapCount) + "] " + roundedPercent + "% complete";
     }
-
 }

@@ -50,7 +50,7 @@ public class NormalEvidence implements Callable<NormalEvidence> {
     }
 
     @NotNull
-    public List<ModifiableNormalBAF> getEvidence() {
+    public List<ModifiableNormalBAF> evidence() {
         return evidence.stream().filter(x -> x.readDepth() > 0).collect(Collectors.toList());
     }
 
