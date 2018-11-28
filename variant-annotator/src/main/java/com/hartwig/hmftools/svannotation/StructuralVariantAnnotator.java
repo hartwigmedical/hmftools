@@ -134,7 +134,7 @@ public class StructuralVariantAnnotator
     public boolean run()
     {
         // create the annotator - typically a MySQL connection to the Ensembl database
-        VariantAnnotator annotator = null;
+        VariantAnnotator annotator;
 
         if(mCmdLineArgs.hasOption(ENSEMBL_DB))
         {
@@ -153,7 +153,7 @@ public class StructuralVariantAnnotator
                 }
                 else
                 {
-                    MySQLAnnotator.make(ensembleUrl);
+                    annotator = MySQLAnnotator.make(ensembleUrl);
                 }
             }
             catch (SQLException e)
