@@ -17,10 +17,10 @@ import org.jetbrains.annotations.Nullable;
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 import htsjdk.samtools.reference.ReferenceSequence;
 
-@SuppressWarnings("OptionalUsedAsFieldOrParameterType")
 public final class EnrichedStructuralVariantFactory {
 
     private static final int DISTANCE = 10;
+
     private final PurityAdjuster purityAdjuster;
     private final IndexedFastaSequenceFile reference;
     private final Multimap<Chromosome, PurpleCopyNumber> copyNumbers;
@@ -39,10 +39,9 @@ public final class EnrichedStructuralVariantFactory {
 
         final List<EnrichedStructuralVariant> result = Lists.newArrayList();
         for (final StructuralVariant variant : variants) {
-
-            final ImmutableEnrichedStructuralVariant.Builder builder = ImmutableEnrichedStructuralVariant.builder().from(variant);
-            final ImmutableEnrichedStructuralVariantLeg.Builder startBuilder = createBuilder(variant.start());
-            final ImmutableEnrichedStructuralVariantLeg.Builder endBuilder = createBuilder(variant.end());
+            ImmutableEnrichedStructuralVariant.Builder builder = ImmutableEnrichedStructuralVariant.builder().from(variant);
+            ImmutableEnrichedStructuralVariantLeg.Builder startBuilder = createBuilder(variant.start());
+            ImmutableEnrichedStructuralVariantLeg.Builder endBuilder = null;
 
             final List<StructuralVariantLegPloidy> ploidies = ploidyFactory.create(variant, copyNumbers);
             if (!ploidies.isEmpty()) {
@@ -59,6 +58,7 @@ public final class EnrichedStructuralVariantFactory {
                 startBuilder.adjustedCopyNumberChange(round(adjustedCopyNumberChange(start)));
 
                 if (end != null) {
+                    endBuilder = createBuilder(variant.end());
                     endBuilder.adjustedAlleleFrequency(round(adjustedVAF(purityAdjuster, end)));
                     endBuilder.adjustedCopyNumber(round(adjustedCopyNumber(end)));
                     endBuilder.adjustedCopyNumberChange(round(adjustedCopyNumberChange(end)));
@@ -71,13 +71,12 @@ public final class EnrichedStructuralVariantFactory {
         return result;
     }
 
+    @NotNull
     private ImmutableEnrichedStructuralVariantLeg.Builder createBuilder(@Nullable StructuralVariantLeg leg) {
-        if (leg == null) {
-            return null;
-        }
+        assert leg != null;
 
         final ImmutableEnrichedStructuralVariantLeg.Builder builder = ImmutableEnrichedStructuralVariantLeg.builder().from(leg);
-        builder.refGenomeContext(context(leg.chromosome(), leg.position(), reference));
+        builder.refGenomeContext(context(leg.chromosome(), leg.position()));
         return builder;
     }
 
@@ -86,7 +85,7 @@ public final class EnrichedStructuralVariantFactory {
         return value == null ? null : Math.round(value * 1000d) / 1000d;
     }
 
-    private static Double adjustedVAF(@NotNull final PurityAdjuster purityAdjuster, @NotNull final StructuralVariantLegPloidy ploidy) {
+    private static double adjustedVAF(@NotNull final PurityAdjuster purityAdjuster, @NotNull final StructuralVariantLegPloidy ploidy) {
         final Double adjustedCopyNumber = adjustedCopyNumber(ploidy);
         return purityAdjuster.purityAdjustedVAF(ploidy.chromosome(), Math.max(0.001, adjustedCopyNumber), ploidy.vaf());
     }
@@ -108,8 +107,8 @@ public final class EnrichedStructuralVariantFactory {
         return ploidy.orientation() == 1 ? leftCopyNumber - rightCopyNumber : rightCopyNumber - leftCopyNumber;
     }
 
-    @Nullable
-    private String context(@NotNull final String chromosome, long position, @NotNull final IndexedFastaSequenceFile reference) {
+    @NotNull
+    private String context(@NotNull String chromosome, long position) {
         final int chromosomeLength = reference.getSequenceDictionary().getSequence(chromosome).getSequenceLength();
         final ReferenceSequence sequence =
                 reference.getSubsequenceAt(chromosome, Math.max(1, position - DISTANCE), Math.min(position + DISTANCE, chromosomeLength));
