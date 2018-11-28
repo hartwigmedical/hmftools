@@ -24,8 +24,9 @@ public class SvDisruptionAnalyser
 
     private static final Logger LOGGER = LogManager.getLogger(SvDisruptionAnalyser.class);
 
-    public SvDisruptionAnalyser(final Set<String> disruptionGeneIDPanel)
+    SvDisruptionAnalyser(final Set<String> disruptionGeneIDPanel)
     {
+        LOGGER.debug("creating SvDisruptionAnalyser on {} genes", disruptionGeneIDPanel.size());
         mDisruptionGeneIDPanel = disruptionGeneIDPanel;
     }
 
