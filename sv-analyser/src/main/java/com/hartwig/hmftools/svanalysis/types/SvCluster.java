@@ -7,6 +7,7 @@ import static com.hartwig.hmftools.common.variant.structural.StructuralVariantTy
 import static com.hartwig.hmftools.svanalysis.analysis.ClusterAnalyser.SHORT_TI_LENGTH;
 import static com.hartwig.hmftools.svanalysis.analysis.ClusterAnalyser.SMALL_CLUSTER_SIZE;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.calcConsistency;
+import static com.hartwig.hmftools.svanalysis.annotators.LineElementAnnotator.hasPolyAorTMotif;
 import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.ASSEMBLY_MATCH_INFER_ONLY;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_END;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_START;
@@ -61,7 +62,7 @@ public class SvCluster
     // cached lists of identified special cases
     private List<SvVarData> mLongDelDups;
     private List<SvVarData> mFoldbacks;
-    private List<SvVarData> mLineElements;
+    private boolean mHasLinkingLineElements;
     private List<SvVarData> mInversions;
     private List<SvVarData> mUnlinkedBnds;
 
@@ -73,6 +74,7 @@ public class SvCluster
 
     public static String RESOLVED_TYPE_NONE = "None";
     public static String RESOLVED_LOW_QUALITY = "LowQual";
+    public static String RESOLVED_TYPE_LINE = "Line";
     public static String RESOLVED_TYPE_DEL_INT_TI = "DEL_Int_TI";
     public static String RESOLVED_TYPE_DEL_EXT_TI = "DEL_Ext_TI";
     public static String RESOLVED_TYPE_DUP_INT_TI = "DUP_Int_TI";
@@ -116,7 +118,7 @@ public class SvCluster
 
         mLongDelDups = Lists.newArrayList();
         mFoldbacks = Lists.newArrayList();
-        mLineElements = Lists.newArrayList();
+        mHasLinkingLineElements = false;
         mInversions = Lists.newArrayList();
         mUnlinkedBnds = Lists.newArrayList();
 
@@ -154,7 +156,7 @@ public class SvCluster
 
         if(var.inLineElement())
         {
-            mLineElements.add(var);
+            setLineStatus(var);
         }
         else if(var.type() == BND && !var.isReplicatedSv())
         {
@@ -163,8 +165,13 @@ public class SvCluster
 
         mUnchainedSVs.add(var);
         mRequiresRecalc = true;
-        mIsResolved = false;
-        mResolvedType = RESOLVED_TYPE_NONE;
+
+        if(!mHasLinkingLineElements)
+        {
+            mIsResolved = false;
+            mResolvedType = RESOLVED_TYPE_NONE;
+        }
+
         mIsFullyChained = false;
         mSynDelDupTI = 0;
         mSynDelDupLength = 0;
@@ -473,12 +480,12 @@ public class SvCluster
                 otherInfo += String.format("foldbacks=%d", mFoldbacks.size());
             }
 
-            if(!mLineElements.isEmpty())
+            if(mHasLinkingLineElements)
             {
                 if(!otherInfo.isEmpty())
                     otherInfo += " ";
 
-                otherInfo += String.format("line=%d", mLineElements.size());
+                otherInfo += String.format("isLine");
             }
 
             if(!mLongDelDups.isEmpty())
@@ -573,16 +580,23 @@ public class SvCluster
             mLongDelDups.add(var);
     }
 
-    public boolean hasLinkingLineElements()
+    private void setLineStatus(final SvVarData var)
     {
-        for (final SvVarData var : mLineElements)
-        {
-            if(var.isTranslocation() && var.inLineElement())
-                return true;
-        }
+        if (mHasLinkingLineElements)
+            return;
 
-        return false;
+        if (!var.inLineElement())
+            return;
+
+        if (var.type() == BND || hasPolyAorTMotif(var))
+        {
+            mHasLinkingLineElements = true;
+
+            setResolved(true, RESOLVED_TYPE_LINE);
+        }
     }
+
+    public boolean hasLinkingLineElements() { return mHasLinkingLineElements; }
 
     public final List<SvVarData> getUnlinkedBnds() { return mUnlinkedBnds; }
 

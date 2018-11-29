@@ -20,6 +20,7 @@ import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.addCl
 import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.checkClusterDuplicates;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.calcConsistency;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_COMPLEX_CHAIN;
+import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_LINE;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_NONE;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_SGL_PAIR_DEL;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_SGL_PAIR_DUP;
@@ -385,6 +386,13 @@ public class ClusterAnalyser {
         if(!cluster.getResolvedType().equals(RESOLVED_TYPE_NONE))
             return;
 
+        if(cluster.hasLinkingLineElements())
+        {
+            // skip further classification for now
+            cluster.setResolved(true, RESOLVED_TYPE_LINE);
+            return;
+        }
+
         if (cluster.isSimpleSVs())
         {
             if(cluster.getTypeCount(DEL) + cluster.getTypeCount(DUP) == 2)
@@ -465,13 +473,6 @@ public class ClusterAnalyser {
             return;
         }
 
-        if(cluster.hasLinkingLineElements())
-        {
-            // skip further classification for now
-            cluster.setResolved(false, "Line");
-            return;
-        }
-
         // cluster remains largely unresolved..
         if(!cluster.getChains().isEmpty())
         {
@@ -496,7 +497,7 @@ public class ClusterAnalyser {
         {
             SvCluster cluster1 = mClusters.get(index1);
 
-            if(cluster1.isResolved())
+            if(cluster1.isResolved() || cluster1.hasLinkingLineElements())
             {
                 ++index1;
                 continue;
@@ -513,7 +514,7 @@ public class ClusterAnalyser {
             {
                 SvCluster cluster2 = mClusters.get(index2);
 
-                if(cluster2.isResolved())
+                if(cluster2.isResolved() || cluster2.hasLinkingLineElements())
                 {
                     ++index2;
                     continue;
@@ -745,9 +746,6 @@ public class ClusterAnalyser {
 
         for (final SvVarData var1 : cluster1Foldbacks)
         {
-            if (var1.inLineElement())
-                continue;
-
             for (int be1 = SVI_START; be1 <= SVI_END; ++be1)
             {
                 boolean v1Start = isStart(be1);
@@ -762,9 +760,6 @@ public class ClusterAnalyser {
                         boolean v2Start = isStart(be2);
 
                         if (be2 == SVI_END && var2.type() != BND)
-                            continue;
-
-                        if (var2.inLineElement())
                             continue;
 
                         if (!var1.chromosome(v1Start).equals(var2.chromosome(v2Start)) || !var1.arm(v1Start).equals(var2.arm(v2Start)))
@@ -1108,7 +1103,27 @@ public class ClusterAnalyser {
         boolean v1Start = be1.usesStart();
         boolean v2Start = be2.usesStart();
 
-        if(!var1.equals(var2))
+        if(var1.equals(var2))
+        {
+            // constraint is that the ends of this INV don't link to BND taking the path off this chromosome
+            final SvChain chain = cluster1.findChain(var1);
+
+            if(chain != null)
+            {
+                int bndLinks = 0;
+                for (final SvLinkedPair pair : chain.getLinkedPairs())
+                {
+                    if (pair.first().equals(var1, true) && pair.second().type() == BND)
+                        ++bndLinks;
+                    else if (pair.second().equals(var1, true) && pair.first().type() == BND)
+                        ++bndLinks;
+
+                    if (bndLinks == 2)
+                        return;
+                }
+            }
+        }
+        else
         {
             // must be same cluster and part of the same chain
             if(cluster1 != cluster2)

@@ -249,7 +249,7 @@ public class ResultsChecker
                 return false;
             }
 
-            LOGGER.warn("loaded {} samples, {} records", sampleDataMap.size(), rowCount);
+            LOGGER.debug("loaded {} samples, {} records", sampleDataMap.size(), rowCount);
             return true;
         }
         catch (IOException exception)

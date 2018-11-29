@@ -379,11 +379,11 @@ public class SvClusteringMethods {
 
             for(SvCluster cluster : clusters)
             {
+                if(cluster.hasLinkingLineElements())
+                    continue;
+
                 for(final SvVarData var : cluster.getSVs())
                 {
-                    if(var.inLineElement())
-                        continue;
-
                     if(var.id().equals(lohEvent.StartSV))
                     {
                         lohClusterStart = cluster;
@@ -409,10 +409,6 @@ public class SvClusteringMethods {
             if(lohClusterStart == lohClusterEnd)
                 continue;
 
-            // skip if either end is in a line element
-            if(lohSvStart.inLineElement() || lohSvEnd.inLineElement())
-                continue;
-
             LOGGER.debug("cluster({} svs={}) merges in other cluster({} svs={}) on LOH event(sv1={} sv2={} len={})",
                     lohClusterStart.getId(), lohClusterStart.getUniqueSvCount(), lohClusterEnd.getId(), lohClusterEnd.getUniqueSvCount(),
                     lohEvent.StartSV, lohEvent.EndSV, lohEvent.Length);
@@ -427,7 +423,7 @@ public class SvClusteringMethods {
 
     private void markClusterInversions(final SvCluster cluster)
     {
-        if(cluster.getTypeCount(INV) == 0)
+        if(cluster.getTypeCount(INV) == 0 || cluster.hasLinkingLineElements())
             return;
 
         // skip cluster-2s which resolved to a simple type
@@ -436,15 +432,18 @@ public class SvClusteringMethods {
 
         for (final SvVarData var : cluster.getSVs())
         {
-            if(var.type() != INV || var.inLineElement())
-                continue;
-
-            cluster.registerInversion(var);
+            if(var.type() == INV)
+            {
+                cluster.registerInversion(var);
+            }
         }
     }
 
     private void markClusterLongDelDups(final SvCluster cluster)
     {
+        if(cluster.hasLinkingLineElements())
+            return;
+
         if(cluster.isResolved() && cluster.isSyntheticSimpleType())
         {
             if(cluster.getSynDelDupLength() >= mDelDupCutoffLength)
@@ -483,7 +482,7 @@ public class SvClusteringMethods {
         {
             SvCluster cluster1 = clusters.get(index1);
 
-            if(cluster1.getInversions().isEmpty() && cluster1.getLongDelDups().isEmpty())
+            if(cluster1.getInversions().isEmpty() && cluster1.getLongDelDups().isEmpty() || cluster1.hasLinkingLineElements())
             {
                 ++index1;
                 continue;
@@ -498,7 +497,7 @@ public class SvClusteringMethods {
             {
                 SvCluster cluster2 = clusters.get(index2);
 
-                if(cluster2.getInversions().isEmpty() && cluster2.getLongDelDups().isEmpty())
+                if(cluster2.getInversions().isEmpty() && cluster2.getLongDelDups().isEmpty() || cluster2.hasLinkingLineElements())
                 {
                     ++index2;
                     continue;
@@ -512,14 +511,8 @@ public class SvClusteringMethods {
 
                 for (final SvVarData var1 : cluster1Svs)
                 {
-                    if (var1.inLineElement())
-                        continue;
-
                     for (final SvVarData var2 : cluster2Svs)
                     {
-                        if (var2.inLineElement())
-                            continue;
-
                         if(!var1.chromosome(true).equals(var2.chromosome(true)))
                             continue;
 
@@ -1336,10 +1329,7 @@ public class SvClusteringMethods {
             }
 
             // exclude LINE elements from back-ground rates
-            if(var.isLineElement(true))
-            {
-                mChrArmSvCount.replace(chrArmStart, mChrArmSvCount.get(chrArmStart) + 1);
-            }
+            mChrArmSvCount.replace(chrArmStart, mChrArmSvCount.get(chrArmStart) + 1);
 
             if(!var.isNullBreakend())
             {
@@ -1348,10 +1338,7 @@ public class SvClusteringMethods {
                     mChrArmSvCount.put(chrArmEnd, 0);
                 }
 
-                if (var.isLineElement(false))
-                {
-                    mChrArmSvCount.replace(chrArmEnd, mChrArmSvCount.get(chrArmEnd) + 1);
-                }
+                mChrArmSvCount.replace(chrArmEnd, mChrArmSvCount.get(chrArmEnd) + 1);
             }
         }
 

@@ -30,10 +30,8 @@ public class LineElementAnnotator {
     private List<GenomeRegion> mIdentifiedLineElements;
     private static int PERMITTED_DISTANCE = 5000;
 
-    private static int POLY_A_T_LENGTH = 8;
-
-    private String mPolyAMotif;
-    private String mPolyTMotif;
+    private static String POLY_A_MOTIF = "AAAAAAAA";
+    private static String POLY_T_MOTIF = "TTTTTTTT";
 
     private static final Logger LOGGER = LogManager.getLogger(FragileSiteAnnotator.class);
 
@@ -41,14 +39,6 @@ public class LineElementAnnotator {
     {
         mKnownLineElements = Lists.newArrayList();
         mIdentifiedLineElements = Lists.newArrayList();
-
-        mPolyAMotif = "";
-        mPolyTMotif = "";
-        for(int i = 0; i < POLY_A_T_LENGTH; ++i)
-        {
-            mPolyTMotif += "T";
-            mPolyAMotif += "A";
-        }
     }
 
     public void loadLineElementsFile(final String filename)
@@ -129,6 +119,11 @@ public class LineElementAnnotator {
         return NO_LINE_ELEMENT;
     }
 
+    public static boolean hasPolyAorTMotif(final SvVarData var)
+    {
+        return var.getSvData().insertSequence().contains(POLY_A_MOTIF) || var.getSvData().insertSequence() .contains(POLY_T_MOTIF);
+    }
+
     public void setSuspectedLineElements(final Map<String, List<SvBreakend>> chrBreakendMap, int proximityLength)
     {
         // if there are 2 or more BNDs within the standard proximity window and they connect to 2 or more other arms,
@@ -184,7 +179,7 @@ public class LineElementAnnotator {
 
                             if(!hasPolyATMotify)
                             {
-                                if (var.getSvData().insertSequence().contains(mPolyAMotif) || var.getSvData().insertSequence() .contains(mPolyTMotif))
+                                if (hasPolyAorTMotif(var))
                                     hasPolyATMotify = true;
                             }
 
