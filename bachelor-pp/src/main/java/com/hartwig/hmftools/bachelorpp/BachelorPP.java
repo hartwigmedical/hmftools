@@ -17,14 +17,12 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.sql.SQLException;
-import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.bachelorpp.types.BachelorGermlineVariant;
 import com.hartwig.hmftools.bachelorpp.types.BachelorRecordFilter;
@@ -67,12 +65,6 @@ import htsjdk.variant.variantcontext.Genotype;
 import htsjdk.variant.variantcontext.GenotypeBuilder;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.variantcontext.VariantContextBuilder;
-import htsjdk.variant.variantcontext.writer.VariantContextWriter;
-import htsjdk.variant.variantcontext.writer.VariantContextWriterBuilder;
-import htsjdk.variant.vcf.VCFFileReader;
-import htsjdk.variant.vcf.VCFHeader;
-import htsjdk.variant.vcf.VCFHeaderLineType;
-import htsjdk.variant.vcf.VCFInfoHeaderLine;
 
 public class BachelorPP {
 
@@ -86,6 +78,7 @@ public class BachelorPP {
     private static final String LOG_DEBUG = "log_debug";
     private static final String SAMPLE_PATH = "sample_path";
     private static final String PURPLE_DATA_DIRECTORY = "purple_data_dir";
+    private static final String BACH_DIRECTORY = "bachelor_dir";
     private static final String BACH_INPUT_FILE = "bachelor_file";
 
     // file locations
@@ -106,7 +99,7 @@ public class BachelorPP {
     private boolean mApplyFilters;
     private BufferedWriter mWriter;
 
-    public BachelorPP()
+    private BachelorPP()
     {
         mDbAccess = null;
         mHighConfidenceRegions = null;
@@ -116,7 +109,7 @@ public class BachelorPP {
         mWriter = null;
     }
 
-    public boolean initialise(final CommandLine cmd)
+    private boolean initialise(final CommandLine cmd)
     {
         try
         {
@@ -151,7 +144,7 @@ public class BachelorPP {
         return true;
     }
 
-    public boolean run(final CommandLine cmd)
+    private boolean run(final CommandLine cmd)
     {
         String sampleId = cmd.getOptionValue(SAMPLE);
 
@@ -164,12 +157,25 @@ public class BachelorPP {
 
         String sampleDirectory = cmd.getOptionValue(SAMPLE_PATH);
 
-        if(!sampleDirectory.endsWith("/"))
-            sampleDirectory += "/";
+        if(!sampleDirectory.endsWith(File.separator))
+            sampleDirectory += File.separator;
+
+
+        String bachelorDataDir;
+        if(cmd.hasOption(BACH_DIRECTORY))
+        {
+            bachelorDataDir = sampleDirectory + cmd.getOptionValue(BACH_DIRECTORY);
+            if(!bachelorDataDir.endsWith(File.separator))
+                bachelorDataDir += File.separator;
+            LOGGER.debug("using configured bachelor directory: {}", bachelorDataDir);
+        }
+        else
+        {
+            bachelorDataDir = sampleDirectory + DEFAULT_BACH_DIRECTORY + File.separator;
+            LOGGER.debug("using default bachelor data dir: {}", bachelorDataDir);
+        }
 
         String bachelorInputFile;
-        String bachelorDataDir = sampleDirectory + DEFAULT_BACH_DIRECTORY + "/";
-
         if(cmd.hasOption(BACH_INPUT_FILE))
         {
             bachelorInputFile = cmd.getOptionValue(BACH_INPUT_FILE);
@@ -220,7 +226,7 @@ public class BachelorPP {
                 return false;
         }
 
-        Map<String, List<BachelorGermlineVariant>> sampleRecordsMap = new HashMap();
+        Map<String, List<BachelorGermlineVariant>> sampleRecordsMap = Maps.newHashMap();
 
         if(mIsBatchMode)
         {
@@ -276,7 +282,7 @@ public class BachelorPP {
                 writeToDatabase(specificSample, sampleRecords);
             }
 
-            writeToFile(specificSample, sampleRecords, sampleDirectory);
+            writeToFile(specificSample, sampleRecords, bachelorDataDir);
         }
 
         try
@@ -395,7 +401,7 @@ public class BachelorPP {
 
         List<SomaticVariant> variants = bachRecords.stream()
                 .filter(x -> x.getSomaticVariant() != null)
-                .map(x -> x.getSomaticVariant())
+                .map(BachelorGermlineVariant::getSomaticVariant)
                 .collect(Collectors.toList());
 
         final PurityAdjuster purityAdjuster = purityContext == null
@@ -417,7 +423,7 @@ public class BachelorPP {
             {
                 if (bachRecord.chromosome().equals(var.chromosome()) && bachRecord.position() == var.position())
                 {
-                    double adjVaf = 0;
+                    double adjVaf;
 
                     if(bachRecord.isHomozygous())
                         adjVaf = purityAdjuster.purityAdjustedVAFWithHomozygousNormal(var.chromosome(), var.adjustedCopyNumber(), var.alleleFrequency());
@@ -535,12 +541,12 @@ public class BachelorPP {
         germlineDAO.write(sampleId, bachRecords);
     }
 
-    public void writeToFile(final String sampleId, final List<BachelorGermlineVariant> bachRecords, final String outputDir)
+    private void writeToFile(final String sampleId, final List<BachelorGermlineVariant> bachRecords, final String outputDir)
     {
         String outputFileName = outputDir;
-        if (!outputFileName.endsWith("/"))
+        if (!outputFileName.endsWith(File.separator))
         {
-            outputFileName += "/";
+            outputFileName += File.separator;
         }
 
         if(sampleId.equals("*"))
@@ -552,7 +558,7 @@ public class BachelorPP {
 
         try
         {
-            BufferedWriter writer = null;
+            BufferedWriter writer;
 
             if(mWriter == null)
             {
@@ -651,7 +657,8 @@ public class BachelorPP {
         final Options options = new Options();
         options.addOption(SAMPLE, true, "Tumor sample");
         options.addOption(SAMPLE_PATH, true, "Typically the sample run directory and then assumes a 'bachelor' sub-directory for bachelor and mini-pileup input files");
-        options.addOption(BACH_INPUT_FILE, true, "Override for specific bachelor input file, if left out then assumes in sample path & 'bachelor' sub-directory");
+        options.addOption(BACH_DIRECTORY, true, "Override for specific bachelor input dir, if left out then assumes in sample path & 'bachelor' sub-directory");
+        options.addOption(BACH_INPUT_FILE, true, "Override for specific bachelor input file, if left out then assumes in bachelor_dir & *germline_variants.csv");
         options.addOption(REF_GENOME, true, "Path to the ref genome fasta file");
         options.addOption(HIGH_CONFIDENCE_BED, true, "Path to the high confidence bed file");
         options.addOption(PURPLE_DATA_DIRECTORY, true, "Sub-directory with sample path for purple data");
