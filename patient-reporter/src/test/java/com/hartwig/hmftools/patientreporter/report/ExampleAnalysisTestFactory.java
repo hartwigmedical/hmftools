@@ -16,6 +16,7 @@ import com.hartwig.hmftools.common.actionability.EvidenceItem;
 import com.hartwig.hmftools.common.actionability.EvidenceLevel;
 import com.hartwig.hmftools.common.actionability.EvidenceScope;
 import com.hartwig.hmftools.common.actionability.ImmutableEvidenceItem;
+import com.hartwig.hmftools.common.chord.ChordAnalysis;
 import com.hartwig.hmftools.common.chord.ImmutableChordAnalysis;
 import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.ecrf.projections.ImmutablePatientTumorLocation;
@@ -35,7 +36,6 @@ import com.hartwig.hmftools.patientreporter.ImmutableSampleReport;
 import com.hartwig.hmftools.patientreporter.SampleReport;
 import com.hartwig.hmftools.patientreporter.actionability.ClinicalTrial;
 import com.hartwig.hmftools.patientreporter.actionability.ImmutableClinicalTrial;
-import com.hartwig.hmftools.common.chord.ChordAnalysis;
 import com.hartwig.hmftools.patientreporter.germline.GermlineVariant;
 import com.hartwig.hmftools.patientreporter.germline.ImmutableGermlineVariant;
 import com.hartwig.hmftools.patientreporter.structural.ImmutableReportableGeneDisruption;
@@ -239,8 +239,41 @@ final class ExampleAnalysisTestFactory {
         ImmutableClinicalTrial.Builder iclusionBuilder =
                 ImmutableClinicalTrial.builder().cancerType(Strings.EMPTY).isOnLabel(true).source(ActionabilitySource.ICLUSION);
 
-        trials.add(iclusionBuilder.event("BRAF p.Val600Glu").scope(EvidenceScope.SPECIFIC).acronym("IMPemBra").reference("EXT8846 (NL54421.031.15)").build());
-        trials.add(iclusionBuilder.event("BRAF p.Val600Glu").scope(EvidenceScope.SPECIFIC).acronym("PROCLAIM-001").reference("EXT10151 (NL59299.042.17)").build());
+        trials.add(iclusionBuilder.event("BRAF p.Val600Glu")
+                .scope(EvidenceScope.BROAD)
+                .acronym("ERK inhibitor in tumors with MAPK pathway alterations")
+                .reference("EXT10454 (NL57739.031.16)")
+                .build());
+        trials.add(iclusionBuilder.event("BRAF p.Val600Glu")
+                .scope(EvidenceScope.SPECIFIC)
+                .acronym("IMPemBra")
+                .reference("EXT8846 (NL54421.031.15)")
+                .build());
+        trials.add(iclusionBuilder.event("BRAF p.Val600Glu")
+                .scope(EvidenceScope.BROAD)
+                .acronym("LXH254 in tumors with MAPK pathway alterations")
+                .reference("EXT10453 (NL55506.078.15)")
+                .build());
+        trials.add(iclusionBuilder.event("BRAF p.Val600Glu")
+                .scope(EvidenceScope.BROAD)
+                .acronym("Novartis CTMT212X2102")
+                .reference("EXT3437 (NL56240.056.16)")
+                .build());
+        trials.add(iclusionBuilder.event("BRAF p.Val600Glu")
+                .scope(EvidenceScope.SPECIFIC)
+                .acronym("PROCLAIM-001")
+                .reference("EXT10151 (NL59299.042.17)")
+                .build());
+        trials.add(iclusionBuilder.event("BRAF p.Val600Glu")
+                .scope(EvidenceScope.BROAD)
+                .acronym("iMATRIXcobi (GO29665)")
+                .reference("EXT6769 (NL52503.078.16)")
+                .build());
+        trials.add(iclusionBuilder.event("PTEN Deletion")
+                .scope(EvidenceScope.SPECIFIC)
+                .acronym("AZD5363 (AKT inhibitor) in advanced solid malignancies")
+                .reference("EXT2552 (NL33755.031.10)")
+                .build());
 
         return trials;
     }
