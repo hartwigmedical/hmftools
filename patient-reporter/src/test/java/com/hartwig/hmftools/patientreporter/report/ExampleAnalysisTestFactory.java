@@ -195,6 +195,15 @@ final class ExampleAnalysisTestFactory {
                 .build());
 
         evidenceItems.add(onLabelBuilder.event("BRAF p.Val600Glu")
+                .drug("Dabrafenib + Trametinib")
+                .level(EvidenceLevel.LEVEL_A)
+                .response("Responsive")
+                .reference("V600E")
+                .source(ActionabilitySource.ONCOKB)
+                .scope(EvidenceScope.SPECIFIC)
+                .build());
+
+        evidenceItems.add(onLabelBuilder.event("BRAF p.Val600Glu")
                 .drug("Trametinib")
                 .level(EvidenceLevel.LEVEL_A)
                 .response("Responsive")
@@ -213,7 +222,7 @@ final class ExampleAnalysisTestFactory {
                 .build());
 
         evidenceItems.add(onLabelBuilder.event("BRAF p.Val600Glu")
-                .drug("Dabrafenib + Trametinib")
+                .drug("Dabrafenib + Vemurafenib")
                 .level(EvidenceLevel.LEVEL_B)
                 .response("Responsive")
                 .reference("variant:12")
@@ -283,15 +292,6 @@ final class ExampleAnalysisTestFactory {
         List<EvidenceItem> evidenceItems = Lists.newArrayList();
 
         ImmutableEvidenceItem.Builder offLabelBuilder = evidenceBuilder().isOnLabel(false);
-
-        evidenceItems.add(offLabelBuilder.event("BRAF p.Val600Glu")
-                .drug("Dabrafenib + Trametinib")
-                .level(EvidenceLevel.LEVEL_A)
-                .response("Responsive")
-                .reference("V600E")
-                .source(ActionabilitySource.ONCOKB)
-                .scope(EvidenceScope.SPECIFIC)
-                .build());
 
         evidenceItems.add(offLabelBuilder.event("BRAF p.Val600Glu")
                 .drug("Alpelisib + Cetuximab + Encorafenib")
