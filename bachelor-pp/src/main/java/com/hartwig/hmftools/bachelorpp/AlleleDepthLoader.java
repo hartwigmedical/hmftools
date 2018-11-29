@@ -27,7 +27,7 @@ public class AlleleDepthLoader {
     private String mSampleId;
     private List<Pileup> mPileupData;
 
-    public AlleleDepthLoader()
+    AlleleDepthLoader()
     {
         mSampleId = "";
         mPileupData = Lists.newArrayList();
@@ -45,7 +45,7 @@ public class AlleleDepthLoader {
 
         try (final Stream<Path> stream = Files.walk(root, 1, FileVisitOption.FOLLOW_LINKS))
         {
-            mpuFiles = stream.map(p -> p.toFile())
+            mpuFiles = stream.map(Path::toFile)
                     .filter(p -> !p.isDirectory())
                     .filter(p_ -> p_.getName().endsWith(MPILEUP_FILE_EXTN))
                     .collect(Collectors.toList());
@@ -80,8 +80,11 @@ public class AlleleDepthLoader {
         // match up read info from MP with the bachelor records
         for (BachelorGermlineVariant bachRecord : germlineVariants)
         {
-            if(bachRecord.isReadDataSet())
+            if(bachRecord.isReadDataSet()) {
+                LOGGER.debug("sample({} var({}) chr({}) position({}) has already been assigned read count fields",
+                        mSampleId, bachRecord.variantId(), bachRecord.chromosome(), bachRecord.position());
                 continue;
+            }
 
             boolean matched = false;
 
@@ -140,9 +143,4 @@ public class AlleleDepthLoader {
 
         return true;
     }
-
-    public final List<Pileup> getPileupData() {
-        return mPileupData;
-    }
-
 }
