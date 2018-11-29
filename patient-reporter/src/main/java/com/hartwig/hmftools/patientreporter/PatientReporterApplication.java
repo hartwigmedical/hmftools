@@ -113,12 +113,16 @@ public class PatientReporterApplication {
 
     @NotNull
     private static BaseReportData buildBaseReportData(@NotNull final CommandLine cmd) throws IOException {
-        LOGGER.info("Loading ECRF CSV dump...");
-        final List<PatientTumorLocation> patientTumorLocations = PatientTumorLocation.readRecords(cmd.getOptionValue(TUMOR_LOCATION_CSV));
+        String tumorLocationCsv = cmd.getOptionValue(TUMOR_LOCATION_CSV);
+        LOGGER.info("Loading ECRF CSV dump from {}.", tumorLocationCsv);
+        final List<PatientTumorLocation> patientTumorLocations = PatientTumorLocation.readRecords(tumorLocationCsv);
         LOGGER.info(" Loaded data for {} patients.", patientTumorLocations.size());
-        LOGGER.info("Loading LIMS database...");
-        final Lims lims = LimsFactory.fromLimsJson(cmd.getOptionValue(LIMS_JSON));
+
+        String limsJsonPath = cmd.getOptionValue(LIMS_JSON);
+        LOGGER.info("Loading LIMS database from {}.", limsJsonPath);
+        final Lims lims = LimsFactory.fromLimsJson(limsJsonPath);
         LOGGER.info(" Loaded data for {} samples.", lims.sampleCount());
+
         final CenterModel centerModel = Center.readFromCSV(cmd.getOptionValue(CENTER_CSV));
         return ImmutableBaseReportData.of(patientTumorLocations,
                 lims,
