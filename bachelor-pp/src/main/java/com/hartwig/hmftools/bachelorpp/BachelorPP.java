@@ -363,7 +363,7 @@ public class BachelorPP {
         {
             final String purplePath = sampleDirectory + cmd.getOptionValue(PURPLE_DATA_DIRECTORY);
 
-            LOGGER.debug("sample({}) loading purple data from file", sampleId);
+            LOGGER.debug("sample({}) loading purple data from file using path {}", sampleId, purplePath);
 
             try
             {
