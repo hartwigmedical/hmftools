@@ -2,6 +2,8 @@ package com.hartwig.hmftools.common.purple.copynumber;
 
 import static org.junit.Assert.assertEquals;
 
+import java.util.List;
+
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.purple.PurpleDatamodelTest;
 import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
@@ -44,13 +46,30 @@ public class ExtendDiploidBAFTest {
 
     }
 
+    @Test
+    public void testTinyArmWithMultipleSources() {
+        CombinedRegion cr1 = create(1, 1000, SegmentSupport.NONE, 1000, 1, 1.9);
+        CombinedRegion cr2 = create(1001, 1030, SegmentSupport.NONE, 0, 0, 2.2);
+        CombinedRegion cr2a = create(1001, 1031, SegmentSupport.NONE, 0, 0, 2.2);
+        CombinedRegion cr3 = create(1031, 2000, SegmentSupport.NONE, 100, 1, 1.9);
+        CombinedRegion cr3a = create(1032, 2000, SegmentSupport.NONE, 100, 1, 1.9);
+        CombinedRegion cr4 = create(2001, 3000, SegmentSupport.NONE, 100, 0.666, 3);
+
+
+        List<CombinedRegion> result =  ExtendDiploidBAF.extendBAF(Lists.newArrayList(cr1, cr2, cr3, cr4));
+        assertEquals(0, result.get(1).region().minorAllelePloidy(),  EPSILON);
+
+        result =  ExtendDiploidBAF.extendBAF(Lists.newArrayList(cr1, cr2a, cr3a, cr4));
+        assertEquals(0.3, result.get(1).region().minorAllelePloidy(),  EPSILON);
+    }
+
 
     private void assertInferRegion(@NotNull final ExtendDiploidBAF.InferRegion victim, int expectedLeftSource, int expectedLeftTarget,
             int expectedRightTarget, int expectedRightSource) {
-        assertEquals(expectedLeftSource, victim.leftSource);
-        assertEquals(expectedLeftTarget, victim.leftTarget);
-        assertEquals(expectedRightTarget, victim.rightTarget);
-        assertEquals(expectedRightSource, victim.rightSource);
+        assertEquals(expectedLeftSource, victim.leftSourceIndex);
+        assertEquals(expectedLeftTarget, victim.leftTargetIndex);
+        assertEquals(expectedRightTarget, victim.rightTargetIndex);
+        assertEquals(expectedRightSource, victim.rightSourceIndex);
     }
 
     @NotNull
@@ -62,8 +81,12 @@ public class ExtendDiploidBAFTest {
     }
 
     @NotNull
-    private static ExtendDiploidBAF.InferRegion inferRegion(final int leftSource, final int leftTarget, final int rightTarget, final int rightSource) {
-        return new ExtendDiploidBAF.InferRegion(leftSource, leftTarget, rightTarget, rightSource);
+    private static CombinedRegion create(long start, long end, SegmentSupport support, int bafCount, double baf, double copyNumber) {
+        return new BafWeightedRegion(PurpleDatamodelTest.createDefaultFittedRegion("1", start, end)
+                .support(support)
+                .bafCount(bafCount)
+                .tumorBAF(baf)
+                .tumorCopyNumber(copyNumber)
+                .build());
     }
-
 }

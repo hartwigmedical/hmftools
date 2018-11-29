@@ -13,6 +13,7 @@ import org.jetbrains.annotations.NotNull;
 
 class ExtendDiploidBAF {
 
+    private static final long TINY_REGION_SIZE = 30;
     private static final double MIN_COPY_NUMBER_CHANGE = 0.5;
     private static final InferRegion INVALID_PAIR = new InferRegion(-1, -1, -1, -1);
     private static Set<SegmentSupport> IGNORE_SUPPORT =
@@ -58,11 +59,15 @@ class ExtendDiploidBAF {
         final Optional<FittedRegion> optionalDifferentSource;
 
         if (inferRegion.isLeftValid()) {
-            source = regions.get(inferRegion.leftSource).region();
+            source = regions.get(inferRegion.leftSourceIndex).region();
             optionalDifferentSource = lookLeft(inferRegion, regions);
         } else {
-            source = regions.get(inferRegion.rightSource).region();
+            source = regions.get(inferRegion.rightSourceIndex).region();
             optionalDifferentSource = lookRight(inferRegion, regions);
+        }
+
+        if (isSingleTinyRegionWithGreaterCopyNumber(inferRegion, regions, source)) {
+            return source.minorAllelePloidy();
         }
 
         if (optionalDifferentSource.isPresent()) {
@@ -79,23 +84,27 @@ class ExtendDiploidBAF {
 
         FittedRegion primarySource;
         FittedRegion secondarySource;
-        if (regions.get(inferRegion.leftSource).bafCount() > regions.get(inferRegion.rightSource).bafCount()) {
-            primarySource = regions.get(inferRegion.leftSource).region();
-            secondarySource = regions.get(inferRegion.rightSource).region();
+        if (regions.get(inferRegion.leftSourceIndex).bafCount() > regions.get(inferRegion.rightSourceIndex).bafCount()) {
+            primarySource = regions.get(inferRegion.leftSourceIndex).region();
+            secondarySource = regions.get(inferRegion.rightSourceIndex).region();
         } else {
-            primarySource = regions.get(inferRegion.rightSource).region();
-            secondarySource = regions.get(inferRegion.leftSource).region();
+            primarySource = regions.get(inferRegion.rightSourceIndex).region();
+            secondarySource = regions.get(inferRegion.leftSourceIndex).region();
         }
 
         if (isMinorAlleleDifferent(primarySource, secondarySource) || isMajorAlleleDifferent(primarySource, secondarySource)) {
             return minorOrMajorMovedTargetPloidy(primarySource, secondarySource);
         }
 
+        if (isSingleTinyRegionWithGreaterCopyNumber(inferRegion, regions, primarySource)) {
+            return primarySource.minorAllelePloidy();
+        }
+
         final Optional<FittedRegion> optionalNearestDifferentSource = nearestDifferentRegion(inferRegion, regions);
         if (optionalNearestDifferentSource.isPresent()) {
 
-            final FittedRegion leftSource = regions.get(inferRegion.leftSource).region();
-            final FittedRegion rightSource = regions.get(inferRegion.rightSource).region();
+            final FittedRegion leftSource = regions.get(inferRegion.leftSourceIndex).region();
+            final FittedRegion rightSource = regions.get(inferRegion.rightSourceIndex).region();
 
             secondarySource = optionalNearestDifferentSource.get();
             primarySource = secondarySource.start() < leftSource.start() ? rightSource : leftSource;
@@ -106,7 +115,8 @@ class ExtendDiploidBAF {
         return primarySource.minorAllelePloidy();
     }
 
-    private static double minorOrMajorMovedTargetPloidy(@NotNull final FittedRegion primarySource, @NotNull final FittedRegion secondarySource) {
+    private static double minorOrMajorMovedTargetPloidy(@NotNull final FittedRegion primarySource,
+            @NotNull final FittedRegion secondarySource) {
         boolean isMinorDifferent = isMinorAlleleDifferent(primarySource, secondarySource);
         boolean isMajorDifferent = isMajorAlleleDifferent(primarySource, secondarySource);
         assert (isMinorDifferent || isMajorDifferent);
@@ -131,7 +141,6 @@ class ExtendDiploidBAF {
         return primarySource.majorAllelePloidy();
     }
 
-
     private static void inferBetween(@NotNull InferRegion inferRegion, @NotNull final List<CombinedRegion> regions) {
         assert (inferRegion.isValid());
 
@@ -145,9 +154,9 @@ class ExtendDiploidBAF {
 
     @NotNull
     private static Optional<FittedRegion> lookRight(@NotNull InferRegion inferRegion, @NotNull final List<CombinedRegion> regions) {
-        final FittedRegion rightSource = regions.get(inferRegion.rightSource).region();
+        final FittedRegion rightSource = regions.get(inferRegion.rightSourceIndex).region();
 
-        for (int i = inferRegion.rightSource + 1; i < regions.size(); i++) {
+        for (int i = inferRegion.rightSourceIndex + 1; i < regions.size(); i++) {
             FittedRegion right = regions.get(i).region();
             if (right.bafCount() > 0 && !IGNORE_SUPPORT.contains(right.support()) && isEitherAlleleDifferent(right, rightSource)) {
                 return Optional.of(right);
@@ -159,9 +168,9 @@ class ExtendDiploidBAF {
 
     @NotNull
     private static Optional<FittedRegion> lookLeft(@NotNull InferRegion inferRegion, @NotNull final List<CombinedRegion> regions) {
-        final FittedRegion leftSource = regions.get(inferRegion.leftSource).region();
+        final FittedRegion leftSource = regions.get(inferRegion.leftSourceIndex).region();
 
-        for (int i = inferRegion.leftSource - 1; i >= 0; i--) {
+        for (int i = inferRegion.leftSourceIndex - 1; i >= 0; i--) {
             FittedRegion left = regions.get(i).region();
             if (left.bafCount() > 0 && !IGNORE_SUPPORT.contains(left.support()) && isEitherAlleleDifferent(left, leftSource)) {
                 return Optional.of(left);
@@ -175,8 +184,8 @@ class ExtendDiploidBAF {
     private static Optional<FittedRegion> nearestDifferentRegion(@NotNull InferRegion inferRegion,
             @NotNull final List<CombinedRegion> regions) {
 
-        final FittedRegion leftSource = regions.get(inferRegion.leftSource).region();
-        final FittedRegion rightSource = regions.get(inferRegion.rightSource).region();
+        final FittedRegion leftSource = regions.get(inferRegion.leftSourceIndex).region();
+        final FittedRegion rightSource = regions.get(inferRegion.rightSourceIndex).region();
 
         Optional<FittedRegion> optionalRight = lookRight(inferRegion, regions);
         Optional<FittedRegion> optionalLeft = lookLeft(inferRegion, regions);
@@ -211,7 +220,7 @@ class ExtendDiploidBAF {
     private static void extend(double targetAllele, @NotNull InferRegion inferRegion, @NotNull final List<CombinedRegion> regions) {
         assert (inferRegion.isLeftValid());
 
-        for (int i = inferRegion.leftTarget; i <= inferRegion.rightTarget; i++) {
+        for (int i = inferRegion.leftTargetIndex; i <= inferRegion.rightTargetIndex; i++) {
             final CombinedRegion target = regions.get(i);
 
             target.setInferredTumorBAF(bafForTargetAllele(targetAllele, target.tumorCopyNumber()));
@@ -221,17 +230,17 @@ class ExtendDiploidBAF {
     @NotNull
     static InferRegion nextRegion(boolean crossCentromere, @NotNull final List<CombinedRegion> regions) {
 
-        int leftScope = -1;
+        int leftSource = -1;
         boolean shouldInfer = false;
         int leftTarget = Integer.MAX_VALUE;
 
         for (int i = 0; i < regions.size(); i++) {
             CombinedRegion suspect = regions.get(i);
             if (suspect.support() == SegmentSupport.CENTROMERE && !crossCentromere) {
-                if (shouldInfer && leftScope > -1) {
-                    return new InferRegion(leftScope, leftTarget, i - 1, -1);
+                if (shouldInfer && leftSource > -1) {
+                    return new InferRegion(leftSource, leftTarget, i - 1, -1);
                 } else {
-                    leftScope = -1;
+                    leftSource = -1;
                     shouldInfer = false;
                     leftTarget = Integer.MAX_VALUE;
                 }
@@ -241,26 +250,33 @@ class ExtendDiploidBAF {
                 shouldInfer = true;
                 leftTarget = Math.min(leftTarget, i);
             } else if (shouldInfer) {
-                return new InferRegion(leftScope, leftTarget, i - 1, i);
+                return new InferRegion(leftSource, leftTarget, i - 1, i);
             } else {
-                leftScope = i;
+                leftSource = i;
             }
         }
 
-        return shouldInfer ? new InferRegion(leftScope, leftTarget, regions.size() - 1, -1) : INVALID_PAIR;
+        return shouldInfer ? new InferRegion(leftSource, leftTarget, regions.size() - 1, -1) : INVALID_PAIR;
+    }
+
+    private static boolean isSingleTinyRegionWithGreaterCopyNumber(@NotNull final InferRegion inferRegion,
+            @NotNull final List<CombinedRegion> regions, @NotNull final FittedRegion source) {
+        return inferRegion.leftTargetIndex == inferRegion.rightTargetIndex
+                && regions.get(inferRegion.leftTargetIndex).bases() <= TINY_REGION_SIZE
+                && Doubles.greaterThan(regions.get(inferRegion.leftTargetIndex).tumorCopyNumber(), source.tumorCopyNumber());
     }
 
     static class InferRegion {
-        final int leftSource;
-        final int leftTarget;
-        final int rightTarget;
-        final int rightSource;
+        final int leftSourceIndex;
+        final int leftTargetIndex;
+        final int rightTargetIndex;
+        final int rightSourceIndex;
 
-        InferRegion(final int leftSource, final int leftTarget, final int rightTarget, final int rightSource) {
-            this.leftSource = leftSource;
-            this.leftTarget = leftTarget;
-            this.rightTarget = rightTarget;
-            this.rightSource = rightSource;
+        InferRegion(final int leftSourceIndex, final int leftTargetIndex, final int rightTargetIndex, final int rightSourceIndex) {
+            this.leftSourceIndex = leftSourceIndex;
+            this.leftTargetIndex = leftTargetIndex;
+            this.rightTargetIndex = rightTargetIndex;
+            this.rightSourceIndex = rightSourceIndex;
         }
 
         boolean isValid() {
@@ -268,11 +284,11 @@ class ExtendDiploidBAF {
         }
 
         boolean isLeftValid() {
-            return leftSource != -1;
+            return leftSourceIndex != -1;
         }
 
         boolean isRightValid() {
-            return rightSource != -1;
+            return rightSourceIndex != -1;
         }
     }
 }

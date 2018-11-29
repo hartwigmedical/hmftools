@@ -234,8 +234,6 @@ class CopyNumberDAO {
                     .observedNormalRatio(record.getValue(COPYNUMBERREGION.OBSERVEDNORMALRATIO))
                     .depthWindowCount(record.getValue(COPYNUMBERREGION.DEPTHWINDOWCOUNT))
                     .gcContent(record.getValue(COPYNUMBERREGION.GCCONTENT))
-                    .minorAllelePloidy(record.getValue(COPYNUMBERREGION.MINORALLELEPLOIDY))
-                    .majorAllelePloidy(record.getValue(COPYNUMBERREGION.MAJORALLELEPLOIDY))
                     .tumorBAF(record.getValue(COPYNUMBERREGION.ACTUALTUMORBAF))
                     .tumorCopyNumber(record.getValue(COPYNUMBERREGION.ACTUALTUMORCOPYNUMBER))
                     .refNormalisedCopyNumber(record.getValue(COPYNUMBERREGION.REFNORMALISEDTUMORCOPYNUMBER))

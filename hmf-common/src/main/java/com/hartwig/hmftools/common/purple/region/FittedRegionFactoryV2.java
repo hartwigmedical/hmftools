@@ -77,8 +77,6 @@ public class FittedRegionFactoryV2 implements FittedRegionFactory {
                 .tumorCopyNumber(impliedCopyNumber)
                 .tumorBAF(impliedBAF)
                 .refNormalisedCopyNumber(Doubles.replaceNaNWithZero(refNormalisedCopyNumber))
-                .minorAllelePloidy(minorAllelePloidy)
-                .majorAllelePloidy(majorAllelePloidy)
                 .minorAllelePloidyDeviation(minorAllelePloidyDeviation)
                 .majorAllelePloidyDeviation(majorAllelePloidyDeviation)
                 .deviation(totalDeviation)
