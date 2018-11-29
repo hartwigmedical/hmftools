@@ -77,37 +77,42 @@ class PurpleStructuralVariantSupplier {
     }
 
     public void inferMissingVariant(@NotNull List<PurpleCopyNumber> copyNumbers) {
-
         for (int i = 1; i < copyNumbers.size(); i++) {
-
             PurpleCopyNumber copyNumber = copyNumbers.get(i);
             if (copyNumber.segmentStartSupport() == SegmentSupport.NONE) {
                 final PurpleCopyNumber prev = copyNumbers.get(i - 1);
-                final Collection<Allele> alleles =
-                        Doubles.greaterThan(copyNumber.averageTumorCopyNumber(), prev.averageTumorCopyNumber()) ? Lists.newArrayList(
-                                REF_ALLELE,
-                                INCREASING_ALLELE) : Lists.newArrayList(REF_ALLELE, DECREASING_ALLELE);
-
-                long lowerRange = Math.min(-500, copyNumber.minStart() - copyNumber.start());
-                long upperRange = Math.max(500, copyNumber.maxStart() - copyNumber.start());
-                long middleRange = (upperRange - lowerRange) / 2;
-
-                long middle = copyNumber.start() + lowerRange + middleRange;
-
-                String cipos = -1 * middleRange + "," + middleRange;
-
-                final VariantContext missing =
-                        new VariantContextBuilder("purple", copyNumber.chromosome(), middle, copyNumber.start(), alleles).filter(
-                                INFERRED_FLAG)
-                                .attribute("IMPRECISE", true)
-                                .id("purple_" + counter++)
-                                .attribute("CIPOS", cipos)
-                                .attribute("SVTYPE", "BND")
-                                .noGenotypes()
-                                .make();
-                variantContexts.add(missing);
+                variantContexts.add(infer(copyNumber, prev));
             }
         }
+    }
+
+    @NotNull
+    private VariantContext infer(@NotNull final PurpleCopyNumber copyNumber, @NotNull final PurpleCopyNumber prev) {
+
+        final long position;
+        final Allele allele;
+        if (Doubles.greaterThan(copyNumber.averageTumorCopyNumber(), prev.averageTumorCopyNumber())) {
+            allele = INCREASING_ALLELE;
+            position = copyNumber.start();
+        } else {
+            allele = DECREASING_ALLELE;
+            position = copyNumber.start() - 1;
+        }
+
+        final Collection<Allele> alleles = Lists.newArrayList(REF_ALLELE, allele);
+
+        long lowerRange = Math.min(-500, copyNumber.minStart() - copyNumber.start());
+        long upperRange = Math.max(500, copyNumber.maxStart() - copyNumber.start());
+
+        String cipos = lowerRange + "," + upperRange;
+
+        return new VariantContextBuilder("purple", copyNumber.chromosome(), position, copyNumber.start(), alleles).filter(INFERRED_FLAG)
+                .attribute("IMPRECISE", true)
+                .id("purple_" + counter++)
+                .attribute("CIPOS", cipos)
+                .attribute("SVTYPE", "BND")
+                .noGenotypes()
+                .make();
     }
 
     public void write() {
