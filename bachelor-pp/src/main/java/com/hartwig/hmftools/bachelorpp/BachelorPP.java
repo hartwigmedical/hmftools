@@ -258,7 +258,7 @@ public class BachelorPP {
             final String specificSample = entry.getKey();
             List<BachelorGermlineVariant> sampleRecords = entry.getValue();
 
-            // create variant objects for VCF file writing and enrichment, and cache aginst bachelor record
+            // create variant objects for VCF file writing and enrichment, and cache against bachelor record
             buildVariants(specificSample, sampleRecords);
 
             annotateRecords(specificSample, sampleRecords, cmd, sampleDirectory);
@@ -549,7 +549,7 @@ public class BachelorPP {
             outputFileName += File.separator;
         }
 
-        if(sampleId.equals("*"))
+        if (!sampleId.equals("*"))
             outputFileName += sampleId + "_germline_variants.csv";
         else
             outputFileName += "bachelor_germline_variants.csv";
