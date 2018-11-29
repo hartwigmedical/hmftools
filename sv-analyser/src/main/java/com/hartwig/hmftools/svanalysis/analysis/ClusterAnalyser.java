@@ -28,18 +28,19 @@ import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_SIMP
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_SGL_PAIR_INS;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_SIMPLE_SV;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.copyNumbersEqual;
+import static com.hartwig.hmftools.svanalysis.types.SvCluster.isSpecificCluster;
 import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.ASSEMBLY_MATCH_MATCHED;
 import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.LINK_TYPE_SGL;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_END;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_START;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.findVariantById;
-import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.ASSEMBLY_MATCH_INFER_ONLY;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.haveSameChrArms;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.isStart;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.svanalysis.types.SvArmGroup;
@@ -52,8 +53,6 @@ import com.hartwig.hmftools.svanalysis.types.SvLinkedPair;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
-import sun.java2d.opengl.OGLContext;
 
 public class ClusterAnalyser {
 
@@ -165,7 +164,6 @@ public class ClusterAnalyser {
             findChains(cluster);
 
             cluster.cacheLinkedPairs();
-            cluster.setUnlinkedBnds();
 
             setClusterResolvedState(cluster);
 
@@ -180,8 +178,11 @@ public class ClusterAnalyser {
     {
         for (SvCluster cluster : mClusters)
         {
-            if (cluster.isSimpleSingleSV() || cluster.isFullyChained() || cluster.getUniqueSvCount() < 2)
+            // isSpecificCluster(cluster);
+
+            if (cluster.isResolved() || cluster.isSimpleSingleSV() || cluster.isFullyChained() || cluster.getUniqueSvCount() < 2)
             {
+                // no need to chain these ones
                 continue;
             }
 
@@ -192,10 +193,8 @@ public class ClusterAnalyser {
             findChains(cluster);
 
             cluster.cacheLinkedPairs();
-            cluster.setUnlinkedBnds();
 
             setClusterResolvedState(cluster);
-
             cluster.logDetails();
         }
     }
@@ -262,6 +261,9 @@ public class ClusterAnalyser {
 
     private void findChains(SvCluster cluster)
     {
+        if(cluster.hasLinkingLineElements()) // skipped for now
+            return;
+
         mChainFinder.initialise(mSampleId, cluster);
         // mChainFinder.setRequireFullChains(true);
 
@@ -378,9 +380,6 @@ public class ClusterAnalyser {
         return true;
     }
 
-    // private static int SPECIFIC_CLUSTER_ID = 13;
-    private static int SPECIFIC_CLUSTER_ID = -1;
-
     private void setClusterResolvedState(SvCluster cluster)
     {
         if(!cluster.getResolvedType().equals(RESOLVED_TYPE_NONE))
@@ -453,10 +452,7 @@ public class ClusterAnalyser {
             return;
         }
 
-        if(cluster.getId() == SPECIFIC_CLUSTER_ID)
-        {
-            LOGGER.debug("spec cluster({})", cluster.getId());
-        }
+        // isSpecificCluster(cluster);
 
         // next clusters with which start and end on the same arm, have the same start and end orientation
         // and the same start and end copy number
@@ -781,63 +777,58 @@ public class ClusterAnalyser {
 
     private boolean canMergeClustersOnCommonArms(final SvCluster cluster1, final SvCluster cluster2, long armWidthCutoff)
     {
-        // merge if the 2 clusters have BNDs linking the same 2 arms, but not included any BNDs in the middle
-        // of chains or those in line elements
-        if(cluster1.getUnlinkedBnds().isEmpty() || cluster2.getUnlinkedBnds().isEmpty())
+        // merge if the 2 clusters have BNDs linking the same 2 inconsistent or long arms
+        isSpecificCluster(cluster1);
+
+        // re-check which BNDs may link arms
+        cluster1.setArmLinks();
+        cluster2.setArmLinks();
+
+        // frist find arm groups which are inconsistent in both clusters
+        // BNDs only touching an arm in a short TI are ignored from the common arm check
+        List<SvArmGroup> inconsistentArms1 = cluster1.getArmGroups().stream()
+                .filter(x -> x.canLink(armWidthCutoff))
+                .collect(Collectors.toList());
+
+        List<SvArmGroup> inconsistentArms2 = cluster2.getArmGroups().stream()
+                .filter(x -> x.canLink(armWidthCutoff))
+                .collect(Collectors.toList());
+
+        // now search for common BNDs where either end is in one of these inconsistent arms
+        if(inconsistentArms1.isEmpty() || inconsistentArms2.isEmpty())
             return false;
 
-        // check that the BNDs in these 2 common arm links are either unlinked or the ends of chains
         final List<SvVarData> bndList1 = cluster1.getUnlinkedBnds();
         final List<SvVarData> bndList2 = cluster2.getUnlinkedBnds();
 
-        List<SvArmGroup> applicableArms = Lists.newArrayList();
-
-        for(final SvArmGroup armGroup1 : cluster1.getArmGroups())
-        {
-            armGroup1.setBoundaries(bndList1);
-
-            if(armGroup1.isConsistent() && (!armGroup1.hasEndsSet() || armGroup1.posEnd() - armGroup1.posStart() < armWidthCutoff))
-                continue;
-
-            for(final SvArmGroup armGroup2 : cluster2.getArmGroups())
-            {
-                if(!armGroup1.matches(armGroup2))
-                    continue;
-
-                // check for a common BND from the unlinked lists
-                armGroup2.setBoundaries(bndList2);
-
-                if(armGroup2.isConsistent() && (!armGroup2.hasEndsSet() || armGroup2.posEnd() - armGroup2.posStart() < armWidthCutoff))
-                    continue;
-
-                applicableArms.add(armGroup1);
-            }
-        }
+        // now that the candidate arm groups have been established, just need to find a single BND
+        // from each cluster that falls into the same par of arm groups
 
         for (final SvVarData var1 : bndList1)
         {
             for (final SvVarData var2 : bndList2)
             {
-                if(haveSameChrArms(var1, var2))
+                if(!haveSameChrArms(var1, var2))
+                    continue;
+
+                for(final SvArmGroup armGroup1 : inconsistentArms1)
                 {
-                    // check if both breaks for these BNDs are in applicable arms
-                    int armCount = 0;
-                    for(final SvArmGroup armGroup : applicableArms)
+                    if (!armGroup1.getSVs().contains(var1))
+                        continue;
+
+                    for (final SvArmGroup armGroup2 : inconsistentArms2)
                     {
-                        if(armGroup.getSVs().contains(var1))
-                            ++armCount;
+                        if (!armGroup2.getSVs().contains(var2))
+                            continue;
 
-                        if(armCount >= 2)
-                        {
-                            LOGGER.debug("cluster({}) and cluster({}) have common links with SV({}) and SV({})",
-                                    cluster1.getId(), cluster2.getId(), var1.posId(), var2.posId());
+                        LOGGER.debug("cluster({}) and cluster({}) have common links with SV({}) and SV({})",
+                                cluster1.getId(), cluster2.getId(), var1.posId(), var2.posId());
 
-                            final String commonArms = var1.id() + "_" + var2.id();
+                        final String commonArms = var1.id() + "_" + var2.id();
 
-                            addClusterReason(cluster1, CLUSTER_REASON_COMMON_ARMS, commonArms);
-                            addClusterReason(cluster2, CLUSTER_REASON_COMMON_ARMS, commonArms);
-                            return true;
-                        }
+                        addClusterReason(cluster1, CLUSTER_REASON_COMMON_ARMS, commonArms);
+                        addClusterReason(cluster2, CLUSTER_REASON_COMMON_ARMS, commonArms);
+                        return true;
                     }
                 }
             }

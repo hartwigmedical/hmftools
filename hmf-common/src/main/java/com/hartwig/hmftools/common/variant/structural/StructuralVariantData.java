@@ -50,4 +50,8 @@ public abstract class StructuralVariantData {
     public abstract Integer endNormalReferenceFragmentCount();
     public abstract String startLinkedBy();
     public abstract String endLinkedBy();
+
+    public abstract String startRefContext();
+    public abstract String endRefContext();
+
 }

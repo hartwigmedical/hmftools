@@ -107,6 +107,8 @@ class StructuralVariantDAO {
                     .inexactHomologyOffsetEnd(getValueNotNull(record.getValue(STRUCTURALVARIANT.INEXACTHOMOLOGYOFFSETEND)))
                     .startLinkedBy(getValueNotNull(record.getValue(STRUCTURALVARIANT.STARTLINKEDBY)))
                     .endLinkedBy(getValueNotNull(record.getValue(STRUCTURALVARIANT.ENDLINKEDBY)))
+                    .startRefContext(getValueNotNull(record.getValue(STRUCTURALVARIANT.STARTREFCONTEXT)))
+                    .endRefContext(getValueNotNull(record.getValue(STRUCTURALVARIANT.ENDREFCONTEXT)))
                     .build());
         }
         return structuralVariants;

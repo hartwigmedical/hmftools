@@ -64,6 +64,9 @@ public class SvCluster
     private List<SvVarData> mFoldbacks;
     private boolean mHasLinkingLineElements;
     private List<SvVarData> mInversions;
+
+    private boolean mRecalcBndStatus;
+    private List<SvVarData> mShortTIBnds;
     private List<SvVarData> mUnlinkedBnds;
 
     private int mMinCopyNumber;
@@ -120,7 +123,9 @@ public class SvCluster
         mFoldbacks = Lists.newArrayList();
         mHasLinkingLineElements = false;
         mInversions = Lists.newArrayList();
+        mShortTIBnds = Lists.newArrayList();
         mUnlinkedBnds = Lists.newArrayList();
+        mRecalcBndStatus = false;
 
         mSubClusters = Lists.newArrayList();
         mChrCNDataMap = null;
@@ -158,10 +163,6 @@ public class SvCluster
         {
             setLineStatus(var);
         }
-        else if(var.type() == BND && !var.isReplicatedSv())
-        {
-            mUnlinkedBnds.add(var);
-        }
 
         mUnchainedSVs.add(var);
         mRequiresRecalc = true;
@@ -196,6 +197,9 @@ public class SvCluster
             {
                 mTypeCountMap.put(typeStr, 1);
             }
+
+            if(var.type() == BND)
+                mRecalcBndStatus = true;
         }
 
         // keep track of all SVs in their respective chromosomal arms
@@ -504,12 +508,20 @@ public class SvCluster
                 otherInfo += String.format("inv=%d", mInversions.size());
             }
 
+            if(!mShortTIBnds.isEmpty())
+            {
+                if (!otherInfo.isEmpty())
+                    otherInfo += " ";
+
+                otherInfo += String.format("sti-bnd=%d", mShortTIBnds.size());
+            }
+
             if(!mUnlinkedBnds.isEmpty())
             {
                 if (!otherInfo.isEmpty())
                     otherInfo += " ";
 
-                otherInfo += String.format("bnd=%d", mUnlinkedBnds.size());
+                otherInfo += String.format("unlnk-bnd=%d", mUnlinkedBnds.size());
             }
 
             LOGGER.debug(String.format("cluster(%d) complex SVs(%d rep=%d) desc(%s res=%s) arms(%d) consis(%d) chains(%d perc=%.2f) replic(%s) %s",
@@ -598,38 +610,47 @@ public class SvCluster
 
     public boolean hasLinkingLineElements() { return mHasLinkingLineElements; }
 
+    public final List<SvVarData> getShortTIBnds() { return mShortTIBnds; }
     public final List<SvVarData> getUnlinkedBnds() { return mUnlinkedBnds; }
 
-    public void setUnlinkedBnds()
+    public void setArmLinks()
     {
+        if(!mRecalcBndStatus)
+            return;
+
+        // keep track of BND which are or aren't candidates for links between arms
+        mShortTIBnds.clear();
         mUnlinkedBnds.clear();
 
-        for(final SvVarData var : mUnchainedSVs)
-        {
-            if(var.type() == BND && !var.inLineElement() && !var.isReplicatedSv())
-            {
-                mUnlinkedBnds.add(var);
-            }
-        }
-
-        for(final SvChain chain : mChains)
+        for (final SvChain chain : mChains)
         {
             // any BND which doesn't form a short TI is fair game
-            for(final SvLinkedPair pair : chain.getLinkedPairs())
+            for (final SvLinkedPair pair : chain.getLinkedPairs())
             {
-                if(pair.first().type() == BND && pair.second().type() == BND)
+                if (pair.first().type() == BND && pair.second().type() == BND && pair.length() <= SHORT_TI_LENGTH)
                 {
-                    if(pair.length() <= SHORT_TI_LENGTH)
-                        continue;
+                    if (!mShortTIBnds.contains(pair.first()))
+                        mShortTIBnds.add(pair.first());
+
+                    if (!mShortTIBnds.contains(pair.second()))
+                        mShortTIBnds.add(pair.second());
                 }
-
-                if(pair.first().type() == BND && !pair.first().inLineElement() && !mUnlinkedBnds.contains(pair.first()))
-                    mUnlinkedBnds.add(pair.first());
-
-                if(pair.second().type() == BND && !pair.second().inLineElement()  && !mUnlinkedBnds.contains(pair.second()))
-                    mUnlinkedBnds.add(pair.second());
             }
         }
+
+        mUnlinkedBnds = mSVs.stream()
+                .filter(x -> x.type() == BND)
+                .filter(x -> !x.inLineElement())
+                .filter(x -> !x.isReplicatedSv())
+                .filter(x -> !mShortTIBnds.contains(x))
+                .collect(Collectors.toList());
+
+        for (final SvArmGroup armGroup : mArmGroups)
+        {
+            armGroup.setBoundaries(mShortTIBnds);
+        }
+
+        mRecalcBndStatus = true;
     }
 
     private void setMinMaxCopyNumber()
@@ -730,6 +751,18 @@ public class SvCluster
 
         return null;
     }
+
+    private static int SPECIFIC_CLUSTER_ID = -1;
+    // private static int SPECIFIC_CLUSTER_ID = 330;
+
+    public static boolean isSpecificCluster(final SvCluster cluster)
+    {
+        if(cluster.getId() == SPECIFIC_CLUSTER_ID)
+            return true;
+
+        return false;
+    }
+
 
     public final List<String> getAnnotationList() { return mAnnotationList; }
     public final void addAnnotation(final String annotation)

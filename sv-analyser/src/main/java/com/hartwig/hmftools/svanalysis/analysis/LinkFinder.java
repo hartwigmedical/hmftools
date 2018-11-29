@@ -58,6 +58,11 @@ public class LinkFinder
     public void findLinkedPairs(final String sampleId, SvCluster cluster)
     {
         List<SvLinkedPair> assemblyLinkedPairs = createAssemblyLinkedPairs(cluster);
+        cluster.setAssemblyLinkedPairs(assemblyLinkedPairs);
+
+        if(cluster.hasLinkingLineElements())
+            return;
+
         List<SvLinkedPair> inferredLinkedPairs = createInferredLinkedPairs(cluster, false);
 
         // findSpanningSVs(sampleId, cluster, inferredLinkedPairs);
@@ -65,7 +70,6 @@ public class LinkFinder
         List<SvLinkedPair> singleBELinkedPairs = createSingleBELinkedPairs(cluster);
         inferredLinkedPairs.addAll(singleBELinkedPairs);
 
-        cluster.setAssemblyLinkedPairs(assemblyLinkedPairs);
         cluster.setInferredLinkedPairs(inferredLinkedPairs);
     }
 

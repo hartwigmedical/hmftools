@@ -15,6 +15,9 @@ import com.google.common.collect.Lists;
 
 import java.util.List;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 public class SvArmGroup {
 
     private final String mId;
@@ -30,8 +33,7 @@ public class SvArmGroup {
     private long mEndPos;
     private int mConsistency;
 
-    private SvBreakend mStartBreakend;
-    private SvBreakend mEndBreakend;
+    private static final Logger LOGGER = LogManager.getLogger(SvArmGroup.class);
 
     public SvArmGroup(final SvCluster cluster, final String chr, final String arm)
     {
@@ -46,13 +48,11 @@ public class SvArmGroup {
         mEndPos = -1;
         mConsistency = 0;
         mRequiresRecalc = true;
-
-        mStartBreakend = null;
-        mEndBreakend = null;
     }
 
     public final String id() { return mId; }
-    public final String posId() {
+    public final String posId()
+    {
         return String.format("cl %d: %s_%s %d:%d", mCluster.getId(), mChromosome, mArm, mStartPos, mEndPos);
     }
 
@@ -79,7 +79,7 @@ public class SvArmGroup {
         return mChromosome.equals(other.chromosome()) && mArm.equals(other.arm());
     }
 
-    public void setBoundaries(final List<SvVarData> unlinkedBnds)
+    public void setBoundaries(final List<SvVarData> bndIgnoreList)
     {
         if(!mRequiresRecalc)
             return;
@@ -90,7 +90,7 @@ public class SvArmGroup {
 
         for(final SvVarData var : mSVs)
         {
-            if(var.type() == BND && !unlinkedBnds.contains(var))
+            if(var.type() == BND && bndIgnoreList.contains(var)) // skip any BNDs only in this arm as a short TI
                 continue;
 
             for(int be = SVI_START; be <= SVI_END; ++be)
@@ -112,51 +112,23 @@ public class SvArmGroup {
             }
         }
 
+        LOGGER.debug("cluster({}) arm({}) SVs({}) range({} -> {}) consistency({})",
+                mCluster.getId(), mId, mSVs.size(), mStartPos, mEndPos, mConsistency);
+
         mRequiresRecalc = false;
-    }
-
-    public void setBreakend(SvBreakend breakend, boolean isStart)
-    {
-        if(isStart)
-            mStartBreakend = breakend;
-        else
-            mEndBreakend = breakend;
-    }
-
-    public boolean noOpenBreakends()
-    {
-        return mStartBreakend == null && mEndBreakend == null;
     }
 
     public boolean isConsistent() { return mConsistency == 0; }
 
-    /*
-    public boolean isConsistent()
+    public boolean canLink(long maxBoundaryLength)
     {
-        int consistency = calcConsistency(mSVs);
-
-        if(consistency != 0)
-            return false;
-
-        // has both breakends set, face out towards telomere and centromere and have the same copy number
-        // breakends can be from the same variant (should logically be a simple cluster-1)
-        if(noOpenBreakends())
+        if(!isConsistent())
             return true;
 
-        if(mStartBreakend == null || mEndBreakend == null)
-            return false;
+        if(hasEndsSet() && posEnd() - posStart() >= maxBoundaryLength)
+            return true;
 
-        if(!mStartBreakend.getSV().isSimpleType() && mStartBreakend.orientation() != 1)
-            return false;
-
-        if(!mEndBreakend.getSV().isSimpleType() && mEndBreakend.orientation() != -1)
-            return false;
-
-        double cnStart = mStartBreakend.getSV().copyNumber(mStartBreakend.usesStart());
-        double cnEnd = mEndBreakend.getSV().copyNumber(mEndBreakend.usesStart());
-
-        return copyNumbersEqual(cnStart, cnEnd);
+        return false;
     }
-    */
 
 }

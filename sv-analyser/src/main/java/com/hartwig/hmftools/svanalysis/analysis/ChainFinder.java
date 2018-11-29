@@ -111,8 +111,6 @@ public class ChainFinder
 
     public void setLogVerbose(boolean toggle) { mLogVerbose = toggle; }
 
-    public final List<SvChain> getCompleteChains() { return mCompleteChains; }
-
     public boolean formClusterChains()
     {
         // take the assembly links as a given and then try out the inferred links to see if a single chain can be formed from all the breakends
@@ -283,7 +281,7 @@ public class ChainFinder
         }
     }
 
-    public void findContinuousChains(final List<SvVarData> svList, List<SvLinkedPair> inferredLinkedPairs)
+    private void findContinuousChains(final List<SvVarData> svList, List<SvLinkedPair> inferredLinkedPairs)
     {
         List<SvChain> chains = Lists.newArrayList();
 
@@ -321,7 +319,7 @@ public class ChainFinder
         }
     }
 
-    public void findSvChainsIncrementally(final List<SvVarData> svList, List<SvChain> chainsList, List<SvLinkedPair> inferredLinkedPairs)
+    private void findSvChainsIncrementally(final List<SvVarData> svList, List<SvChain> chainsList, List<SvLinkedPair> inferredLinkedPairs)
     {
         // routine flow:
         // start with any existing partial chains and unconnected assembly links - these are always used

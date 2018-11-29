@@ -246,7 +246,7 @@ public class SvSampleAnalyser {
                 writer.write(",ClusterDesc,IsResolved,ResolvedType,Consistency,ArmCount");
 
                 // SV info
-                writer.write(",Homology,InexactHOStart,InexactHOEnd,InsertSeq,Imprecise,PONCount,QualScore");
+                writer.write(",Homology,InexactHOStart,InexactHOEnd,InsertSeq,Imprecise,PONCount,QualScore,RefContextStart,RefContextEnd");
 
                 // location attributes
                 writer.write(",FSStart,FSEnd,LEStart,LEEnd,DupBEStart,DupBEEnd,ArmCountStart,ArmExpStart,ArmCountEnd,ArmExpEnd");
@@ -326,11 +326,16 @@ public class SvSampleAnalyser {
                                 cluster.getDesc(), cluster.isResolved(), cluster.getResolvedType(),
                                 cluster.getConsistencyCount(), cluster.getChromosomalArmCount()));
 
+                int dbLenStart = var.getDBLink(true) != null ? var.getDBLink(true).length() : noDBLenMarker;
+                int dbLenEnd = var.getDBLink(false) != null ? var.getDBLink(false).length() : noDBLenMarker;
+
                 writer.write(
-                        String.format(",%s,%d,%d,%s,%s,%d,%.0f",
+                        String.format(",%s,%d,%d,%s,%s,%d,%.0f,%s,%s",
                                 dbData.insertSequence().isEmpty() && var.type() != StructuralVariantType.INS ? dbData.homology() : "",
                                 dbData.inexactHomologyOffsetStart(), dbData.inexactHomologyOffsetEnd(),
-                                dbData.insertSequence(), dbData.imprecise(), var.getPonCount(), dbData.qualityScore()));
+                                dbData.insertSequence(), dbData.imprecise(), var.getPonCount(), dbData.qualityScore(),
+                                dbLenStart > noDBLenMarker & dbLenStart < 0 ? dbData.startRefContext() : "",
+                                dbLenEnd > noDBLenMarker & dbLenEnd < 0 ? dbData.endRefContext() : ""));
 
                 writer.write(
                         String.format(",%s,%s,%s,%s,%s,%s,%s",
@@ -376,9 +381,7 @@ public class SvSampleAnalyser {
                 writer.write(chainStr);
 
                 writer.write(String.format(",%d,%s,%d,%d,%d,%d",
-                        var.getNearestSvDistance(), var.getNearestSvRelation(),
-                        var.getDBLink(true) != null ? var.getDBLink(true).length() : noDBLenMarker,
-                        var.getDBLink(false) != null ? var.getDBLink(false).length() : noDBLenMarker,
+                        var.getNearestSvDistance(), var.getNearestSvRelation(), dbLenStart, dbLenEnd,
                         cluster.getSynDelDupLength(), cluster.getSynDelDupTILength()));
 
                 writer.write(String.format(",%s,%d,%s,%d",

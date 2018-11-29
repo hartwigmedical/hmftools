@@ -321,6 +321,8 @@ public class CNAnalyser {
                             .inexactHomologyOffsetEnd(0)
                             .startLinkedBy("")
                             .endLinkedBy("")
+                            .startRefContext("")
+                            .endRefContext("")
                             .build());
         }
 
