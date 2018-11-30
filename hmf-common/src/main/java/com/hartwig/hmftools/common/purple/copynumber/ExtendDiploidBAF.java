@@ -38,10 +38,6 @@ class ExtendDiploidBAF {
     }
 
     static double bafForTargetAllele(double targetAllele, double copyNumber) {
-        if (Doubles.isZero(copyNumber)) {
-            return 0;
-        }
-
         if (Doubles.lessOrEqual(copyNumber, 1)) {
             return 1;
         }
@@ -81,9 +77,8 @@ class ExtendDiploidBAF {
     }
 
     private static double multiSourceTargetPloidy(@NotNull InferRegion inferRegion, @NotNull final List<CombinedRegion> regions) {
-
-        FittedRegion primarySource;
-        FittedRegion secondarySource;
+        final FittedRegion primarySource;
+        final FittedRegion secondarySource;
         if (regions.get(inferRegion.leftSourceIndex).bafCount() > regions.get(inferRegion.rightSourceIndex).bafCount()) {
             primarySource = regions.get(inferRegion.leftSourceIndex).region();
             secondarySource = regions.get(inferRegion.rightSourceIndex).region();
@@ -93,7 +88,7 @@ class ExtendDiploidBAF {
         }
 
         if (isMinorAlleleDifferent(primarySource, secondarySource) || isMajorAlleleDifferent(primarySource, secondarySource)) {
-            return minorOrMajorMovedTargetPloidy(primarySource, secondarySource);
+            return minorOrMajorMovedTargetPloidy(primarySource, primarySource, secondarySource);
         }
 
         if (isSingleTinyRegionWithGreaterCopyNumber(inferRegion, regions, primarySource)) {
@@ -106,39 +101,37 @@ class ExtendDiploidBAF {
             final FittedRegion leftSource = regions.get(inferRegion.leftSourceIndex).region();
             final FittedRegion rightSource = regions.get(inferRegion.rightSourceIndex).region();
 
-            secondarySource = optionalNearestDifferentSource.get();
-            primarySource = secondarySource.start() < leftSource.start() ? rightSource : leftSource;
+            final FittedRegion one = optionalNearestDifferentSource.get();
+            final FittedRegion two = secondarySource.start() < leftSource.start() ? rightSource : leftSource;
 
-            return minorOrMajorMovedTargetPloidy(primarySource, secondarySource);
+            return minorOrMajorMovedTargetPloidy(primarySource, one, two);
         }
 
         return primarySource.minorAllelePloidy();
     }
 
-    private static double minorOrMajorMovedTargetPloidy(@NotNull final FittedRegion primarySource,
-            @NotNull final FittedRegion secondarySource) {
-        boolean isMinorDifferent = isMinorAlleleDifferent(primarySource, secondarySource);
-        boolean isMajorDifferent = isMajorAlleleDifferent(primarySource, secondarySource);
+    private static double minorOrMajorMovedTargetPloidy(@NotNull final FittedRegion source, @NotNull final FittedRegion left,
+            @NotNull final FittedRegion right) {
+        boolean isMinorDifferent = isMinorAlleleDifferent(left, right);
+        boolean isMajorDifferent = isMajorAlleleDifferent(left, right);
         assert (isMinorDifferent || isMajorDifferent);
 
         if (isMinorDifferent && isMajorDifferent) {
 
-            if (Doubles.lessThan(Math.abs(primarySource.minorAllelePloidy() - secondarySource.majorAllelePloidy()),
-                    MIN_COPY_NUMBER_CHANGE)) {
-                return primarySource.minorAllelePloidy();
+            if (Doubles.lessThan(Math.abs(left.minorAllelePloidy() - right.majorAllelePloidy()), MIN_COPY_NUMBER_CHANGE)) {
+                return source.minorAllelePloidy();
             }
 
-            if (Doubles.lessThan(Math.abs(primarySource.majorAllelePloidy() - secondarySource.minorAllelePloidy()),
-                    MIN_COPY_NUMBER_CHANGE)) {
-                return primarySource.majorAllelePloidy();
+            if (Doubles.lessThan(Math.abs(left.majorAllelePloidy() - right.minorAllelePloidy()), MIN_COPY_NUMBER_CHANGE)) {
+                return source.majorAllelePloidy();
             }
         }
 
         if (isMajorDifferent) {
-            return primarySource.minorAllelePloidy();
+            return source.minorAllelePloidy();
         }
 
-        return primarySource.majorAllelePloidy();
+        return source.majorAllelePloidy();
     }
 
     private static void inferBetween(@NotNull InferRegion inferRegion, @NotNull final List<CombinedRegion> regions) {
@@ -157,7 +150,11 @@ class ExtendDiploidBAF {
         final FittedRegion rightSource = regions.get(inferRegion.rightSourceIndex).region();
 
         for (int i = inferRegion.rightSourceIndex + 1; i < regions.size(); i++) {
-            FittedRegion right = regions.get(i).region();
+            final FittedRegion right = regions.get(i).region();
+            if (right.support().equals(SegmentSupport.CENTROMERE)) {
+                return Optional.empty();
+            }
+
             if (right.bafCount() > 0 && !IGNORE_SUPPORT.contains(right.support()) && isEitherAlleleDifferent(right, rightSource)) {
                 return Optional.of(right);
             }
@@ -169,9 +166,13 @@ class ExtendDiploidBAF {
     @NotNull
     private static Optional<FittedRegion> lookLeft(@NotNull InferRegion inferRegion, @NotNull final List<CombinedRegion> regions) {
         final FittedRegion leftSource = regions.get(inferRegion.leftSourceIndex).region();
-
         for (int i = inferRegion.leftSourceIndex - 1; i >= 0; i--) {
-            FittedRegion left = regions.get(i).region();
+
+            if (regions.get(i + 1).region().support().equals(SegmentSupport.CENTROMERE)) {
+                return Optional.empty();
+            }
+
+            final FittedRegion left = regions.get(i).region();
             if (left.bafCount() > 0 && !IGNORE_SUPPORT.contains(left.support()) && isEitherAlleleDifferent(left, leftSource)) {
                 return Optional.of(left);
             }
