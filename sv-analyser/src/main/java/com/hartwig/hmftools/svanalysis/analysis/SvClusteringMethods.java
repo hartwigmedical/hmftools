@@ -17,8 +17,13 @@ import static com.hartwig.hmftools.svanalysis.analysis.LinkFinder.inDeletionBrid
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.CHROMOSOME_ARM_P;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.CHROMOSOME_ARM_Q;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.PERMITED_DUP_BE_DISTANCE;
+import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.areVariantsLinkedByDistance;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.calcConsistency;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.copyNumbersEqual;
+import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.getArmFromChrArm;
+import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.getChrFromChrArm;
+import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.getChromosomalArmLength;
+import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.getVariantChrArm;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.isOverlapping;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_LOW_QUALITY;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_DEL_EXT_TI;
@@ -61,8 +66,6 @@ public class SvClusteringMethods {
 
     private static final Logger LOGGER = LogManager.getLogger(SvClusteringMethods.class);
 
-    private final SvUtilities mUtils;
-
     private Map<String, Integer> mChrArmSvCount;
     private Map<String, Double> mChrArmSvExpected;
     private Map<String, Double> mChrArmSvRate;
@@ -75,11 +78,12 @@ public class SvClusteringMethods {
     private Map<String, List<SvLOH>> mSampleLohData;
 
     private long mDelDupCutoffLength;
+    private int mProximityDistance;
 
     private static double REF_BASE_LENGTH = 10000000D;
     public static int MAX_SIMPLE_DUP_DEL_CUTOFF = 5000000;
     public static int MIN_SIMPLE_DUP_DEL_CUTOFF = 100000;
-    public static int DEFAULT_PROXIMITY_DISTANCE = 10000;
+    public static int DEFAULT_PROXIMITY_DISTANCE = 5000;
 
     public static String CLUSTER_REASON_PROXIMITY = "Prox";
     public static String CLUSTER_REASON_LOH = "LOH";
@@ -89,9 +93,8 @@ public class SvClusteringMethods {
     public static String CLUSTER_REASON_INV_OVERLAP = "InvOverlap";
     public static String CLUSTER_REASON_LONG_DEL_DUP = "LongDelDup";
 
-    public SvClusteringMethods(final SvUtilities clusteringUtils)
+    public SvClusteringMethods(int proximityLength)
     {
-        mUtils = clusteringUtils;
         mChrArmSvCount = Maps.newHashMap();
         mChrArmSvExpected = Maps.newHashMap();
         mChrArmSvRate = Maps.newHashMap();
@@ -99,6 +102,7 @@ public class SvClusteringMethods {
         mNextClusterId = 0;
 
         mDelDupCutoffLength = 0;
+        mProximityDistance = proximityLength;
 
         mChrBreakendMap = new HashMap();
         mChrCopyNumberMap = new HashMap();
@@ -110,6 +114,7 @@ public class SvClusteringMethods {
     public int getNextClusterId() { return mNextClusterId++; }
     public void setSampleLohData(final Map<String, List<SvLOH>> data) { mSampleLohData = data; }
     public long getDelDupCutoffLength() { return mDelDupCutoffLength; }
+    public int getProximityDistance() { return mProximityDistance; }
 
     public void clusterByBaseDistance(List<SvVarData> allVariants, List<SvCluster> clusters)
     {
@@ -204,7 +209,7 @@ public class SvClusteringMethods {
                 }
 
                 // test each possible linkage
-                if (!mUtils.areVariantsLinkedByDistance(currentVar, otherVar))
+                if (!areVariantsLinkedByDistance(currentVar, otherVar, mProximityDistance))
                     continue;
 
                 //if(!allowOverlaps && !(currentVar.position(false) < otherVar.position(true) || otherVar.position(false) < currentVar.position(true)))
@@ -1319,8 +1324,8 @@ public class SvClusteringMethods {
         // form a map of unique arm to SV count
         for(final SvVarData var : allVariants)
         {
-            String chrArmStart = mUtils.getVariantChrArm(var,true);
-            String chrArmEnd = mUtils.getVariantChrArm(var,false);
+            String chrArmStart = getVariantChrArm(var,true);
+            String chrArmEnd = getVariantChrArm(var,false);
 
             // ensure an entry exists
             if (!mChrArmSvCount.containsKey(chrArmStart))
@@ -1347,10 +1352,10 @@ public class SvClusteringMethods {
         for(Map.Entry<String, Integer> entry : mChrArmSvCount.entrySet())
         {
             final String chrArm = entry.getKey();
-            final String chromosome = mUtils.getChrFromChrArm(chrArm);
-            final String arm = mUtils.getArmFromChrArm(chrArm);
+            final String chromosome = getChrFromChrArm(chrArm);
+            final String arm = getArmFromChrArm(chrArm);
 
-            long chrArmLength = mUtils.getChromosomalArmLength(chromosome, arm);
+            long chrArmLength = getChromosomalArmLength(chromosome, arm);
             int svCount = entry.getValue();
             double ratePerLength = svCount / (chrArmLength / REF_BASE_LENGTH); // the factor isn't important
 
@@ -1378,10 +1383,10 @@ public class SvClusteringMethods {
         for(Map.Entry<String, Double> entry : mChrArmSvRate.entrySet())
         {
             final String chrArm = entry.getKey();
-            final String chromosome = mUtils.getChrFromChrArm(chrArm);
-            final String arm = mUtils.getArmFromChrArm(chrArm);
+            final String chromosome = getChrFromChrArm(chrArm);
+            final String arm = getArmFromChrArm(chrArm);
 
-            long chrArmLength = mUtils.getChromosomalArmLength(chromosome, arm);
+            long chrArmLength = getChromosomalArmLength(chromosome, arm);
             double expectedSvCount = (int) round((chrArmLength / REF_BASE_LENGTH) * mMedianChrArmRate);
             LOGGER.debug("chrArm({}) expectedSvCount({}) vs actual({})", chrArm, expectedSvCount, mChrArmSvCount.get(chrArm));
 
@@ -1391,10 +1396,10 @@ public class SvClusteringMethods {
 
     public String getChrArmData(final SvVarData var)
     {
-        String chrArmStart = mUtils.getVariantChrArm(var,true);
+        String chrArmStart = getVariantChrArm(var,true);
 
         boolean hasEnd = !var.isNullBreakend();
-        String chrArmEnd = hasEnd ? mUtils.getVariantChrArm(var,false) : "";
+        String chrArmEnd = hasEnd ? getVariantChrArm(var,false) : "";
 
         // report Start SV count : Expected SV Count : End SV Count : Expected SV Count
         return String.format("%d,%.2f,%d,%.2f",

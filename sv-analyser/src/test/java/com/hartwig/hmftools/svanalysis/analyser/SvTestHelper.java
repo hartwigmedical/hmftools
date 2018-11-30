@@ -31,7 +31,6 @@ public class SvTestHelper
     public String SampleId;
     public List<SvVarData> AllVariants;
     public SvClusteringConfig Config;
-    public SvUtilities Utils;
     public SvClusteringMethods ClusteringMethods;
     public ClusterAnalyser Analyser;
 
@@ -40,9 +39,8 @@ public class SvTestHelper
     public SvTestHelper()
     {
         Config = new SvClusteringConfig(DEFAULT_PROXIMITY_DISTANCE);
-        Utils = new SvUtilities(DEFAULT_PROXIMITY_DISTANCE);
-        ClusteringMethods = new SvClusteringMethods(Utils);
-        Analyser = new ClusterAnalyser(Config, Utils, ClusteringMethods);
+        ClusteringMethods = new SvClusteringMethods(Config.ProximityDistance);
+        Analyser = new ClusterAnalyser(Config, ClusteringMethods);
 
         SampleId = "TEST";
         AllVariants = Lists.newArrayList();

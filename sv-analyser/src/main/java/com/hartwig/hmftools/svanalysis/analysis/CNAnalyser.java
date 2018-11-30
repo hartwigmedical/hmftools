@@ -6,6 +6,7 @@ import static java.lang.Math.min;
 import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.common.variant.structural.annotation.SvPONAnnotator.PON_FILTER_PON;
+import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.getChromosomalArmLength;
 import static com.hartwig.hmftools.svanalysis.types.SvCNData.CN_SEG_NONE;
 import static com.hartwig.hmftools.svanalysis.types.SvCNData.CN_SEG_UNKNOWN;
 import static com.hartwig.hmftools.svanalysis.types.SvCNData.CN_SEG_TELOMERE;
@@ -46,7 +47,6 @@ public class CNAnalyser {
     private static final Logger LOGGER = LogManager.getLogger(CNAnalyser.class);
 
     private final String mOutputPath;
-    private final SvUtilities mUtils;
     private Map<String, List<SvCNData>> mSampleCNData;
 
     private List<String> mSampleIds;
@@ -73,7 +73,6 @@ public class CNAnalyser {
     public CNAnalyser(final String outputPath, DatabaseAccess dbAccess)
     {
         mSampleCNData = new HashMap();
-        mUtils = new SvUtilities(0);
         mOutputPath = outputPath;
         mSampleIds = Lists.newArrayList();
         mFileWriter = null;
@@ -823,7 +822,7 @@ public class CNAnalyser {
                 mFileWriter.newLine();
             }
 
-            double armLengthRatio = 30000000.0 / mUtils.getChromosomalArmLength(chr, arm);
+            double armLengthRatio = 30000000.0 / getChromosomalArmLength(chr, arm);
 
             mFileWriter.write(String.format("%s,%s,%s,%.2f,%.2f,%.2f,%d,%d,%d,%d,%d,%.2f",
                     sampleId, chr, arm, startCN, minCN, maxCN, segCount, delCount, dupCount, invCount, bndCount, armLengthRatio));

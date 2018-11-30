@@ -3,7 +3,9 @@ package com.hartwig.hmftools.svanalysis.analysis;
 import static java.lang.Math.abs;
 import static java.lang.Math.max;
 
+import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.DEFAULT_PROXIMITY_DISTANCE;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.PERMITED_DUP_BE_DISTANCE;
+import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.breakendsMatch;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.copyNumbersEqual;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.getProximity;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_RECIPROCAL_TRANS;
@@ -32,25 +34,20 @@ import org.apache.logging.log4j.Logger;
 
 public class LinkFinder
 {
-    final SvClusteringConfig mConfig;
-    final SvUtilities mUtils;
-    SvClusteringMethods mClusteringMethods;
-
     private boolean mLogVerbose;
 
     public static int MIN_TEMPLATED_INSERTION_LENGTH = 30;
     private static int MAX_TEMPLATED_INSERTION_LENGTH = 500;
     public static int CLUSTER_SIZE_ANALYSIS_LIMIT = 500;
+    public static int SHORT_DB_LENGTH = 30;
 
     public static String TRANS_TYPE_TRANS = "TRANS";
     public static String TRANS_TYPE_SPAN = "SPAN";
 
     private static final Logger LOGGER = LogManager.getLogger(LinkFinder.class);
 
-    public LinkFinder(final SvClusteringConfig config, final SvUtilities utils, SvClusteringMethods clusteringMethods)
+    public LinkFinder()
     {
-        mConfig = config;
-        mUtils = utils;
     }
 
     public void setLogVerbose(boolean toggle) { mLogVerbose = toggle; }
@@ -497,13 +494,10 @@ public class LinkFinder
                     SvLinkedPair pair = linkedPairs.get(index);
 
                     // check for a matching BE on a pair that is shorter, and if so skip creating this new linked pair
-                    if(newPair.length() > mUtils.getBaseDistance())
+                    if(pair.hasAnySameVariant(newPair) && newPair.length() > pair.length())
                     {
-                        if(pair.hasAnySameVariant(newPair) && newPair.length() > pair.length())
-                        {
-                            skipNewPair = true;
-                            break;
-                        }
+                        skipNewPair = true;
+                        break;
                     }
 
                     if (pair.length() > newPair.length())
@@ -518,7 +512,7 @@ public class LinkFinder
                 else
                     linkedPairs.add(index, newPair);
 
-                if(newPair.length() < mUtils.getBaseDistance())
+                if(newPair.length() < DEFAULT_PROXIMITY_DISTANCE)
                 {
                     // to avoid logging unlikely long TIs
                     LOGGER.debug("cluster({}) adding inferred single-BE linked {} pair({}) length({}) at index({})",
@@ -550,10 +544,10 @@ public class LinkFinder
                     continue;
                 }
 
-                if(mUtils.breakendsMatch(spanningSV, pair.first(), true, !pair.firstLinkOnStart(), PERMITED_DUP_BE_DISTANCE)) {
+                if(breakendsMatch(spanningSV, pair.first(), true, !pair.firstLinkOnStart(), PERMITED_DUP_BE_DISTANCE)) {
                     startLink = pair.first();
                 }
-                else if(mUtils.breakendsMatch(spanningSV, pair.second(), true, !pair.secondLinkOnStart(), PERMITED_DUP_BE_DISTANCE)) {
+                else if(breakendsMatch(spanningSV, pair.second(), true, !pair.secondLinkOnStart(), PERMITED_DUP_BE_DISTANCE)) {
                     startLink = pair.second();
                 }
                 else
@@ -561,10 +555,10 @@ public class LinkFinder
                     continue;
                 }
 
-                if(mUtils.breakendsMatch(spanningSV, pair.first(), false, !pair.firstLinkOnStart(), PERMITED_DUP_BE_DISTANCE)) {
+                if(breakendsMatch(spanningSV, pair.first(), false, !pair.firstLinkOnStart(), PERMITED_DUP_BE_DISTANCE)) {
                     endLink = pair.first();
                 }
-                else if(mUtils.breakendsMatch(spanningSV, pair.second(), false, !pair.secondLinkOnStart(), PERMITED_DUP_BE_DISTANCE))
+                else if(breakendsMatch(spanningSV, pair.second(), false, !pair.secondLinkOnStart(), PERMITED_DUP_BE_DISTANCE))
                 {
                     endLink = pair.second();
                 }
@@ -616,11 +610,11 @@ public class LinkFinder
 
                 if (!startMatched)
                 {
-                    if(mUtils.breakendsMatch(spanningSV, pair.first(), true, !pair.firstLinkOnStart(), PERMITED_DUP_BE_DISTANCE)) {
+                    if(breakendsMatch(spanningSV, pair.first(), true, !pair.firstLinkOnStart(), PERMITED_DUP_BE_DISTANCE)) {
                         startLink = pair.first();
                         startLinkOnStart = !pair.firstLinkOnStart();
                     }
-                    else if(mUtils.breakendsMatch(spanningSV, pair.second(), true, !pair.secondLinkOnStart(), PERMITED_DUP_BE_DISTANCE)) {
+                    else if(breakendsMatch(spanningSV, pair.second(), true, !pair.secondLinkOnStart(), PERMITED_DUP_BE_DISTANCE)) {
                         startLink = pair.second();
                         startLinkOnStart = !pair.secondLinkOnStart();
                     }
@@ -635,11 +629,11 @@ public class LinkFinder
 
                 if (!endMatched)
                 {
-                    if(mUtils.breakendsMatch(spanningSV, pair.first(), false, !pair.firstLinkOnStart(), PERMITED_DUP_BE_DISTANCE)) {
+                    if(breakendsMatch(spanningSV, pair.first(), false, !pair.firstLinkOnStart(), PERMITED_DUP_BE_DISTANCE)) {
                         endLink = pair.first();
                         endLinkOnStart = !pair.firstLinkOnStart();
                     }
-                    else if(mUtils.breakendsMatch(spanningSV, pair.second(), false, !pair.secondLinkOnStart(), PERMITED_DUP_BE_DISTANCE))
+                    else if(breakendsMatch(spanningSV, pair.second(), false, !pair.secondLinkOnStart(), PERMITED_DUP_BE_DISTANCE))
                     {
                         endLink = pair.second();
                         endLinkOnStart = !pair.secondLinkOnStart();

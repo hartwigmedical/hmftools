@@ -38,7 +38,6 @@ public class ChainFinder
 {
     private static final Logger LOGGER = LogManager.getLogger(ChainFinder.class);
 
-    final SvUtilities mUtils;
     private String mSampleId;
     private SvCluster mCluster;
     private List<SvLinkedPair> mAssemblyLinkedPairs;
@@ -50,9 +49,8 @@ public class ChainFinder
 
     PerformanceCounter mContinuousFinderPc;
 
-    public ChainFinder(final SvUtilities utils)
+    public ChainFinder()
     {
-        mUtils = utils;
         mCompleteChains = Lists.newArrayList();
         mIncompleteChains = Lists.newArrayList();
         mLogVerbose = false;

@@ -159,11 +159,6 @@ public class SvCluster
         mSVs.add(var);
         var.setCluster(this);
 
-        if(var.inLineElement())
-        {
-            setLineStatus(var);
-        }
-
         mUnchainedSVs.add(var);
         mRequiresRecalc = true;
 
@@ -484,14 +479,6 @@ public class SvCluster
                 otherInfo += String.format("foldbacks=%d", mFoldbacks.size());
             }
 
-            if(mHasLinkingLineElements)
-            {
-                if(!otherInfo.isEmpty())
-                    otherInfo += " ";
-
-                otherInfo += String.format("isLine");
-            }
-
             if(!mLongDelDups.isEmpty())
             {
                 if(!otherInfo.isEmpty())
@@ -592,20 +579,10 @@ public class SvCluster
             mLongDelDups.add(var);
     }
 
-    private void setLineStatus(final SvVarData var)
+    public void markAsLine()
     {
-        if (mHasLinkingLineElements)
-            return;
-
-        if (!var.inLineElement())
-            return;
-
-        if (var.type() == BND || hasPolyAorTMotif(var))
-        {
-            mHasLinkingLineElements = true;
-
-            setResolved(true, RESOLVED_TYPE_LINE);
-        }
+        mHasLinkingLineElements = true;
+        setResolved(true, RESOLVED_TYPE_LINE);
     }
 
     public boolean hasLinkingLineElements() { return mHasLinkingLineElements; }

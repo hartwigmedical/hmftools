@@ -19,6 +19,7 @@ import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.CLUST
 import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.addClusterReason;
 import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.checkClusterDuplicates;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.calcConsistency;
+import static com.hartwig.hmftools.svanalysis.annotators.LineElementAnnotator.markLineCluster;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_COMPLEX_CHAIN;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_LINE;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_NONE;
@@ -43,6 +44,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.svanalysis.annotators.LineElementAnnotator;
 import com.hartwig.hmftools.svanalysis.types.SvArmGroup;
 import com.hartwig.hmftools.svanalysis.types.SvBreakend;
 import com.hartwig.hmftools.svanalysis.types.SvCNData;
@@ -57,7 +59,6 @@ import org.apache.logging.log4j.Logger;
 public class ClusterAnalyser {
 
     final SvClusteringConfig mConfig;
-    final SvUtilities mUtils;
     SvClusteringMethods mClusteringMethods;
 
     String mSampleId;
@@ -71,22 +72,20 @@ public class ClusterAnalyser {
 
     private static final Logger LOGGER = LogManager.getLogger(ClusterAnalyser.class);
 
-    public ClusterAnalyser(final SvClusteringConfig config, final SvUtilities utils, SvClusteringMethods clusteringMethods)
+    public ClusterAnalyser(final SvClusteringConfig config, SvClusteringMethods clusteringMethods)
     {
         mConfig = config;
-        mUtils = utils;
         mClusteringMethods = clusteringMethods;
         mClusters = Lists.newArrayList();
         mAllVariants = Lists.newArrayList();
         mSampleId = "";
-        mLinkFinder = new LinkFinder(mConfig, mUtils, mClusteringMethods);
-        mChainFinder = new ChainFinder(mUtils);
+        mLinkFinder = new LinkFinder();
+        mChainFinder = new ChainFinder();
         mChainFinder.setLogVerbose(mConfig.LogVerbose);
     }
 
     // access for unit testing
     public final SvClusteringConfig getConfig() { return mConfig; }
-    public final SvUtilities getUtils() { return mUtils; }
     public final SvClusteringMethods getClusterer() { return mClusteringMethods; }
 
     public void setSampleData(final String sampleId, List<SvVarData> allVariants)
@@ -103,6 +102,12 @@ public class ClusterAnalyser {
         mClusters.clear();
 
         mClusteringMethods.clusterByBaseDistance(mAllVariants, mClusters);
+
+        // mark line clusters since these are exluded from most subsequent logic
+        for(SvCluster cluster : mClusters)
+        {
+            markLineCluster(cluster, mClusteringMethods.getProximityDistance());
+        }
 
         findSimpleCompleteChains();
 
@@ -150,6 +155,14 @@ public class ClusterAnalyser {
             if(cluster.getCount() == 1 && cluster.isSimpleSVs())
             {
                 setClusterResolvedState(cluster);
+                continue;
+            }
+
+            if(cluster.hasLinkingLineElements())
+            {
+                // find assembly links but nothing else
+                mLinkFinder.findLinkedPairs(mSampleId, cluster);
+                cluster.cacheLinkedPairs();
                 continue;
             }
 

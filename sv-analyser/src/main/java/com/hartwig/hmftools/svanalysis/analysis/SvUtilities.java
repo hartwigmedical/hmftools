@@ -22,8 +22,6 @@ import static com.hartwig.hmftools.svanalysis.types.SvVarData.isStart;
 
 public class SvUtilities {
 
-    private int mClusterBaseDistance;
-
     private static final Map<String, GenomeRegion> CENTROMERES = Centromeres.grch37();
     public static final Map<String,Integer> CHROMOSOME_LENGTHS = ChromosomeLengths.getChromosomeLengths();
 
@@ -46,13 +44,6 @@ public class SvUtilities {
     public static String SV_GROUP_NEIGHBOURS = "NHRB";
 
     public static int PERMITED_DUP_BE_DISTANCE = 1;
-
-    public SvUtilities(int baseDistance)
-    {
-        mClusterBaseDistance = baseDistance;
-    }
-
-    public int getBaseDistance() { return mClusterBaseDistance; }
 
     public static final String getChromosomalArm(final String chromosome, final long position)
     {
@@ -86,26 +77,37 @@ public class SvUtilities {
         return chrLength - region.end();
     }
 
-    public boolean areVariantsLinkedByDistance(final SvVarData v1, final SvVarData v2)
+    public static boolean areVariantsLinkedByDistance(final SvVarData v1, final SvVarData v2, int permittedDistance)
     {
         if(v1.id().equals(v2.id()))
             return false;
 
-        if (this.areVariantsLinkedByDistance(v1, true, v2, true)
-        || this.areVariantsLinkedByDistance(v1, false, v2, true)
-        || this.areVariantsLinkedByDistance(v1, true, v2, false)
-        || this.areVariantsLinkedByDistance(v1, false, v2, false))
+        for(int be1 = SVI_START; be1 <= SVI_END; ++be1)
         {
-            return true;
+            if(be1 == SVI_END && v1.isNullBreakend())
+                continue;
+
+            boolean v1Start = isStart(be1);
+
+            for(int be2 = SVI_START; be2 <= SVI_END; ++be2)
+            {
+                if(be2 == SVI_END && v2.isNullBreakend())
+                    continue;
+
+                boolean v2Start = isStart(be2);
+
+                if (areVariantsLinkedByDistance(v1, v1Start, v2, v2Start, permittedDistance))
+                    return true;
+            }
         }
 
         return false;
     }
 
-    public boolean areVariantsLinkedByDistance(final SvVarData v1, final boolean v1UseStart, final SvVarData v2, final boolean v2UseStart)
+    public static boolean areVariantsLinkedByDistance(final SvVarData v1, final boolean v1UseStart, final SvVarData v2, final boolean v2UseStart, int permittedDistance)
     {
         // search all remaining SVs for proximity
-        if(v1.id().equals(v2.id()))
+        if(v1 == v2)
             return false;
 
         if(v1.position(v1UseStart) < 0 || v2.position(v2UseStart) < 0) // for single breakends
@@ -114,18 +116,18 @@ public class SvUtilities {
         if(!v1.chromosome(v1UseStart).equals(v2.chromosome(v2UseStart)))
             return false;
 
-        if (!isWithinRange(v1.position(v1UseStart), v2.position(v2UseStart)))
+        if (!isWithinRange(v1.position(v1UseStart), v2.position(v2UseStart), permittedDistance))
             return false;
 
         return true;
     }
 
-    public boolean isWithinRange(long pos1, long pos2)
+    public static boolean isWithinRange(long pos1, long pos2, int permittedDistance)
     {
         if(pos1 < 0 || pos2 < 0)
             return false;
 
-        return abs(pos1 - pos2) <= mClusterBaseDistance;
+        return abs(pos1 - pos2) <= permittedDistance;
     }
 
     public static boolean isWithin(final SvVarData outer, final SvVarData inner)

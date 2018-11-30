@@ -3,6 +3,7 @@ package com.hartwig.hmftools.svanalysis.analysis;
 import static com.hartwig.hmftools.svanalysis.analysis.LinkFinder.MIN_TEMPLATED_INSERTION_LENGTH;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.CHROMOSOME_ARM_P;
 import static com.hartwig.hmftools.common.variant.structural.annotation.SvPONAnnotator.REGION_DISTANCE;
+import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.getChromosomalArm;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_LOW_QUALITY;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_SIMPLE_SV;
 
@@ -38,7 +39,6 @@ import java.util.Map;
 public class SvSampleAnalyser {
 
     private final SvClusteringConfig mConfig;
-    private final SvUtilities mClusteringUtils;
     private final ClusterAnalyser mAnalyser;
 
     // data per run (ie sample)
@@ -65,9 +65,8 @@ public class SvSampleAnalyser {
     public SvSampleAnalyser(final SvClusteringConfig config)
     {
         mConfig = config;
-        mClusteringUtils = new SvUtilities(mConfig.ProximityDistance);
-        mClusteringMethods = new SvClusteringMethods(mClusteringUtils);
-        mAnalyser = new ClusterAnalyser(config, mClusteringUtils, mClusteringMethods);
+        mClusteringMethods = new SvClusteringMethods(mConfig.ProximityDistance);
+        mAnalyser = new ClusterAnalyser(config, mClusteringMethods);
 
         mFileWriter = null;
 
@@ -143,7 +142,7 @@ public class SvSampleAnalyser {
         mClusteringMethods.annotateNearestSvData();
         LinkFinder.findDeletionBridges(mClusteringMethods.getChrBreakendMap());
         mClusteringMethods.setSimpleVariantLengths(mSampleId);
-        mLineElementAnnotator.setSuspectedLineElements(mClusteringMethods.getChrBreakendMap(), mConfig.ProximityDistance);
+        // mLineElementAnnotator.setSuspectedLineElements(mClusteringMethods.getChrBreakendMap(), mConfig.ProximityDistance);
         mPc2.stop();
 
         mPc3.start();
@@ -191,11 +190,11 @@ public class SvSampleAnalyser {
                 continue;
             }
 
-            String startArm = mClusteringUtils.getChromosomalArm(var.chromosome(true), var.position(true));
+            String startArm = getChromosomalArm(var.chromosome(true), var.position(true));
 
             String endArm = "";
             if(!var.isNullBreakend())
-                endArm = mClusteringUtils.getChromosomalArm(var.chromosome(false), var.position(false));
+                endArm = getChromosomalArm(var.chromosome(false), var.position(false));
             else
                 endArm = CHROMOSOME_ARM_P;
 
