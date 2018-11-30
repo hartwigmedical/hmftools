@@ -21,10 +21,10 @@ class BAFFactory {
     private final double minDepthPercentage;
     private final double maxDepthPercentage;
 
-    BAFFactory(final double minBAFPercentage, final double minHetAFPercentage, final double minDepthPercentage,
+    BAFFactory(final double minHetAFPercentage, final double maxHetAFPercentage, final double minDepthPercentage,
             final double maxDepthPercentage) {
-        this.minHetAFPercentage = minBAFPercentage;
-        this.maxHetAFPercentage = minHetAFPercentage;
+        this.minHetAFPercentage = minHetAFPercentage;
+        this.maxHetAFPercentage = maxHetAFPercentage;
         this.minDepthPercentage = minDepthPercentage;
         this.maxDepthPercentage = maxDepthPercentage;
     }

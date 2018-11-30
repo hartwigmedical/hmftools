@@ -43,7 +43,7 @@ public class PatientReporterApplication {
     public static final String VERSION = PatientReporterApplication.class.getPackage().getImplementationVersion();
 
     // KODU: Uncomment this line when generating an example report using PDFWriterTest
-    //    public static final String VERSION = "5.1";
+//        public static final String VERSION = "5.5";
 
     private static final String TUMOR_LOCATION_CSV = "tumor_location_csv";
     private static final String LIMS_JSON = "lims_json";
@@ -113,12 +113,16 @@ public class PatientReporterApplication {
 
     @NotNull
     private static BaseReportData buildBaseReportData(@NotNull final CommandLine cmd) throws IOException {
-        LOGGER.info("Loading ECRF CSV dump...");
-        final List<PatientTumorLocation> patientTumorLocations = PatientTumorLocation.readRecords(cmd.getOptionValue(TUMOR_LOCATION_CSV));
+        String tumorLocationCsv = cmd.getOptionValue(TUMOR_LOCATION_CSV);
+        LOGGER.info("Loading ECRF CSV dump from {}.", tumorLocationCsv);
+        final List<PatientTumorLocation> patientTumorLocations = PatientTumorLocation.readRecords(tumorLocationCsv);
         LOGGER.info(" Loaded data for {} patients.", patientTumorLocations.size());
-        LOGGER.info("Loading LIMS database...");
-        final Lims lims = LimsFactory.fromLimsJson(cmd.getOptionValue(LIMS_JSON));
+
+        String limsJsonPath = cmd.getOptionValue(LIMS_JSON);
+        LOGGER.info("Loading LIMS database from {}.", limsJsonPath);
+        final Lims lims = LimsFactory.fromLimsJson(limsJsonPath);
         LOGGER.info(" Loaded data for {} samples.", lims.sampleCount());
+
         final CenterModel centerModel = Center.readFromCSV(cmd.getOptionValue(CENTER_CSV));
         return ImmutableBaseReportData.of(patientTumorLocations,
                 lims,

@@ -288,6 +288,7 @@ CREATE TABLE somaticVariant
     mappability DOUBLE PRECISION NOT NULL,
     germlineStatus varchar(255) NOT NULL,
     minorAllelePloidy DOUBLE PRECISION NOT NULL,
+    recovered BOOLEAN NOT NULL,
     PRIMARY KEY (id),
     INDEX(sampleId),
     INDEX(filter),

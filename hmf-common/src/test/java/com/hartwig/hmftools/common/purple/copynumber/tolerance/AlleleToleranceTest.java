@@ -23,8 +23,8 @@ public class AlleleToleranceTest {
 
     @Test
     public void testMinObservedBafDeviation() {
-        FittedRegion left = createBafRegion(1000, 0, 0);
-        FittedRegion right = createBafRegion(1000, 1, 0);
+        FittedRegion left = createBafRegion(1000, 1, 0);
+        FittedRegion right = createBafRegion(1000, 0.5, 0);
         assertTrue(victim.inTolerance(left, right));
 
         left = ImmutableFittedRegion.copyOf(left).withObservedBAF(0.031);
@@ -33,8 +33,8 @@ public class AlleleToleranceTest {
 
     @Test
     public void testMinBafCount() {
-        FittedRegion left = createBafRegion(0, 0, 0.031);
-        FittedRegion right = createBafRegion(1000, 1, 0);
+        FittedRegion left = createBafRegion(0, 1, 0.031);
+        FittedRegion right = createBafRegion(1000, 0.5, 0);
         assertTrue(victim.inTolerance(left, right));
 
         left = ImmutableFittedRegion.copyOf(left).withBafCount(1000);
@@ -52,10 +52,10 @@ public class AlleleToleranceTest {
         assertFalse(victim.inTolerance(left, right));
     }
 
-    private FittedRegion createBafRegion(int bafCount, double minAllelePloidy, double observervedBaf) {
+    private FittedRegion createBafRegion(int bafCount, double tumorBaf, double observervedBaf) {
         return PurpleDatamodelTest.createDefaultFittedRegion("1", 100, 200)
                 .bafCount(bafCount)
-                .minorAllelePloidy(minAllelePloidy)
+                .tumorBAF(tumorBaf)
                 .observedBAF(observervedBaf)
                 .tumorCopyNumber((double) 2)
                 .refNormalisedCopyNumber((double) 2)

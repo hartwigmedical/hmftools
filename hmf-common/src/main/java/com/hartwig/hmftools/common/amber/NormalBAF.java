@@ -30,7 +30,7 @@ public interface NormalBAF extends GenomePosition {
     int readDepth();
 
     default boolean isValid() {
-        return !baseMap().containsKey(Base.N) && !ref().equals(Base.N) && baseMap().size() > 1;
+        return !ref().equals(Base.N) && baseMap().keySet().stream().filter(x -> !x.equals(Base.N)).count() > 1;
     }
 
     @NotNull
@@ -49,11 +49,12 @@ public interface NormalBAF extends GenomePosition {
         return result;
     }
 
-    default int refCount() {
+    default int refSupport() {
         return baseMap().getOrDefault(ref(), 0);
     }
 
-    default int readCount(char base) {
-        return baseMap().getOrDefault(Base.valueOf(String.valueOf(base)), 0);
+    default int altSupport() {
+        return baseMap().getOrDefault(alt(), 0);
     }
+
 }

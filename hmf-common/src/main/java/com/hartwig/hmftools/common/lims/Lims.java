@@ -86,7 +86,7 @@ public class Lims {
             String remarksSample = sampleData.labRemarks();
             if (tumorPercentageString == null) {
                 return null;
-            } else if (tumorPercentageString.isEmpty() && remarksSample != null && remarksSample.contains("CPCT WIDE project")) {
+            } else if (tumorPercentageString.isEmpty() && remarksSample != null && remarksSample.contains("CPCTWIDE")) {
                 return PATHOLOGY_TUMOR_ESTIMATE_NOT_DETERMINED;
             }
 

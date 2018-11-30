@@ -14,9 +14,13 @@ public abstract class FittedRegion implements ObservedRegion {
     private static final double MAX_DIPLOID_PLOIDY = 1.2;
     private static final double MIN_DIPLOID_PLOIDY = 0.8;
 
-    public abstract double minorAllelePloidy();
+    public double minorAllelePloidy() {
+        return tumorCopyNumber() - majorAllelePloidy();
+    }
 
-    public abstract double majorAllelePloidy();
+    public double majorAllelePloidy() {
+        return tumorBAF() * tumorCopyNumber();
+    }
 
     public abstract double minorAllelePloidyDeviation();
 
@@ -37,10 +41,10 @@ public abstract class FittedRegion implements ObservedRegion {
     public abstract double fittedBAF();
 
     public boolean isDiploid() {
-        return Doubles.greaterOrEqual(majorAllelePloidy(), MIN_DIPLOID_PLOIDY) &&
-                Doubles.lessOrEqual(majorAllelePloidy(), MAX_DIPLOID_PLOIDY) &&
-                Doubles.greaterOrEqual(minorAllelePloidy(), MIN_DIPLOID_PLOIDY) &&
-                Doubles.lessOrEqual(minorAllelePloidy(), MAX_DIPLOID_PLOIDY);
+        return Doubles.greaterOrEqual(majorAllelePloidy(), MIN_DIPLOID_PLOIDY) && Doubles.lessOrEqual(majorAllelePloidy(),
+                MAX_DIPLOID_PLOIDY) && Doubles.greaterOrEqual(minorAllelePloidy(), MIN_DIPLOID_PLOIDY) && Doubles.lessOrEqual(
+                minorAllelePloidy(),
+                MAX_DIPLOID_PLOIDY);
 
     }
 

@@ -31,6 +31,7 @@ public final class SomaticVariantTestBuilderFactory {
                 .canonicalHgvsCodingImpact(Strings.EMPTY)
                 .canonicalHgvsProteinImpact(Strings.EMPTY)
                 .hotspot(Hotspot.NON_HOTSPOT)
+                .recovered(false)
                 .mappability(0D);
     }
 

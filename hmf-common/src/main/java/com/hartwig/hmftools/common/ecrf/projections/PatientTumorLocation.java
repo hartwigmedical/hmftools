@@ -13,6 +13,7 @@ import com.google.common.collect.Lists;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVPrinter;
+import org.apache.logging.log4j.util.Strings;
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -43,7 +44,7 @@ public abstract class PatientTumorLocation {
 
     public static void writeRecords(@NotNull final String outputPath, @NotNull final List<PatientTumorLocation> patientTumorLocations)
             throws IOException {
-        final CSVFormat format = CSVFormat.DEFAULT.withNullString("").withHeader(Header.class);
+        final CSVFormat format = CSVFormat.DEFAULT.withNullString(Strings.EMPTY).withHeader(Header.class);
         final CSVPrinter printer = new CSVPrinter(new FileWriter(outputPath), format);
         printer.printRecords(patientTumorLocations.stream().map(PatientTumorLocation::csvRecord).collect(Collectors.toList()));
         printer.close();

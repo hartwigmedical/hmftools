@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.sage;
 
+import static com.hartwig.hmftools.common.variant.enrich.HotspotEnrichment.*;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.Comparator;
@@ -39,10 +41,8 @@ public class SageHotspotAnnotation {
     private static final Logger LOGGER = LogManager.getLogger(SageHotspotApplication.class);
 
     // VCF FIELDS
-    private static final String HOTSPOT_FLAG = "HOTSPOT";
     private static final String HOTSPOT_DESCRIPTION = "Site is at a known hotspot location";
-    private static final String NEAR_HOTSPOT_FLAG = "NEAR_HOTSPOT";
-    private static final String NEAR_HOTSPOT_DESCRIPTION = "Variant within " + HotspotEnrichment.DISTANCE + " bases of hotspot";
+    private static final String NEAR_HOTSPOT_DESCRIPTION = "Variant within " + DISTANCE + " bases of hotspot";
     private static final String RECOVERED_FLAG = "RECOVERED";
     private static final String RECOVERED_FLAG_DESCRIPTION = "Variant has been recovered";
 
@@ -73,7 +73,7 @@ public class SageHotspotAnnotation {
     }
 
     private SageHotspotAnnotation(final String knownHotspotLocations) throws IOException {
-        hotspotEnrichment = HotspotEnrichment.fromHotspotsFile(knownHotspotLocations);
+        hotspotEnrichment = fromHotspotsFile(knownHotspotLocations);
     }
 
     private void merge(final String inputVcf, final String hotspotVcf, final String outputVCF) {

@@ -47,6 +47,7 @@ public final class EnrichedStructuralVariantFactory {
 
             List<StructuralVariantLegPloidy> ploidies = ploidyFactory.create(variant, copyNumbers);
             if (!ploidies.isEmpty()) {
+                // KODU: The implied ploidy should be equal between start and end, so doesn't matter what we pick.
                 builder.ploidy(round(ploidies.get(0).averageImpliedPloidy()));
 
                 StructuralVariantLegPloidy start = ploidies.get(0);

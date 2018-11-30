@@ -20,7 +20,8 @@ import htsjdk.variant.variantcontext.VariantContext;
 public class HotspotEnrichment implements SomaticEnrichment {
 
     public static final int DISTANCE = 5;
-    private static final String HOTSPOT_TAG = "HOTSPOT";
+    public static final String HOTSPOT_FLAG = "HOTSPOT";
+    public  static final String NEAR_HOTSPOT_FLAG = "NEAR_HOTSPOT";
 
     private final Multimap<Chromosome, VariantHotspot> hotspots;
 
@@ -38,8 +39,12 @@ public class HotspotEnrichment implements SomaticEnrichment {
     @Override
     public ImmutableSomaticVariantImpl.Builder enrich(@NotNull final ImmutableSomaticVariantImpl.Builder builder,
             @NotNull final VariantContext context) {
-        if (context.hasAttribute(HOTSPOT_TAG)) {
+        if (context.hasAttribute(HOTSPOT_FLAG)) {
             return builder.hotspot(Hotspot.HOTSPOT);
+        }
+
+        if (context.hasAttribute(NEAR_HOTSPOT_FLAG)) {
+            return builder.hotspot(Hotspot.NEAR_HOTSPOT);
         }
 
         if (isOnHotspot(context)) {
@@ -51,6 +56,19 @@ public class HotspotEnrichment implements SomaticEnrichment {
         }
 
         return builder.hotspot(Hotspot.NON_HOTSPOT);
+    }
+
+    @NotNull
+    public static Hotspot fromVariant(@NotNull final VariantContext context) {
+        if (context.hasAttribute(HOTSPOT_FLAG)) {
+            return Hotspot.HOTSPOT;
+        }
+
+        if (context.hasAttribute(NEAR_HOTSPOT_FLAG)) {
+            return Hotspot.NEAR_HOTSPOT;
+        }
+
+        return Hotspot.NON_HOTSPOT;
     }
 
     public boolean isOnHotspot(@NotNull final VariantContext context) {

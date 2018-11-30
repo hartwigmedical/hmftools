@@ -92,8 +92,7 @@ public abstract class ExplanationPage {
     @NotNull
     private static ComponentBuilder<?, ?> fusionExplanation() {
         return toList("Details on reported gene fusions",
-                Lists.newArrayList("Only intronic in-frame fusions or whole exon deletions are reported.",
-                        "The canonical, or otherwise longest transcript validly fused is reported.",
+                Lists.newArrayList("The canonical, or otherwise longest transcript validly fused is reported.",
                         "Fusions are restricted to those in a known fusion list based on CiViC, OncoKB, CGI and COSMIC",
                         "We additionally select fusions where one partner is promiscuous in either 5' or 3' position."));
     }
