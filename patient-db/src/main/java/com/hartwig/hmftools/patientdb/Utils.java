@@ -20,19 +20,6 @@ public final class Utils {
     private Utils() {
     }
 
-    @NotNull
-    public static String formatTumorPercentage(final @Nullable String percentage) {
-        String formatTumorPercentage;
-        if (percentage != null && !percentage.equals(Lims.PATHOLOGY_TUMOR_ESTIMATE_NOT_DETERMINED)) {
-            formatTumorPercentage = percentage;
-        } else if (percentage != null && percentage.equals(Lims.PATHOLOGY_TUMOR_ESTIMATE_NOT_DETERMINED)) {
-            formatTumorPercentage = Lims.PATHOLOGY_TUMOR_PERCENTAGE_NOT_DETERMINED;
-        } else {
-            formatTumorPercentage = Lims.PATHOLOGY_TUMOR_NOT_DONE;
-        }
-        return formatTumorPercentage;
-    }
-
     @Nullable
     public static java.sql.Date toSQLDate(@Nullable final LocalDate date) {
         return date != null ? java.sql.Date.valueOf(date) : null;

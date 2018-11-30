@@ -16,21 +16,6 @@ public final class PatientReportFormat {
     }
 
     @NotNull
-    public static String formatPathologyTumorPercentage(@Nullable String percentage) {
-        String formatTumorPercentage;
-        if (percentage != null) {
-            if (percentage.equals(Lims.PATHOLOGY_TUMOR_ESTIMATE_NOT_DETERMINED)) {
-                formatTumorPercentage = Lims.PATHOLOGY_TUMOR_PERCENTAGE_NOT_DETERMINED;
-            } else {
-                formatTumorPercentage = formatPercent(Double.parseDouble(percentage));
-            }
-        } else {
-            formatTumorPercentage = Lims.PATHOLOGY_TUMOR_NOT_DONE;
-        }
-        return formatTumorPercentage;
-    }
-
-    @NotNull
     public static String formatPercent(final double percentage) {
         return Long.toString(Math.round(percentage * 100D)) + "%";
     }
