@@ -171,6 +171,8 @@ public class SvTestHelper
                         .inexactHomologyOffsetEnd(0)
                         .startLinkedBy("")
                         .endLinkedBy("")
+                        .startRefContext("")
+                        .endRefContext("")
                         .build();
 
         SvVarData var = new SvVarData(svData);
