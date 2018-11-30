@@ -95,6 +95,21 @@ public class StructuralVariantImpliedTest {
         assertEquals(4, rightKnown, EPSILON);
     }
 
+    @Test
+    public void testImpliedCopyNumberCappedAtZero() {
+        final StructuralVariantLegPloidy left = create(1, Optional.of(0.5d), Optional.empty());
+        final StructuralVariantLegPloidy right = create(-1, Optional.empty(), Optional.of(0.9d));
+
+        final double bothKnown = StructuralVariantImplied.inferCopyNumberFromStructuralVariants(Optional.of(left), Optional.of(right));
+        assertEquals(0, bothKnown, EPSILON);
+
+        final double leftKnown = StructuralVariantImplied.inferCopyNumberFromStructuralVariants(Optional.of(left), Optional.empty());
+        assertEquals(0, leftKnown, EPSILON);
+
+        final double rightKnown = StructuralVariantImplied.inferCopyNumberFromStructuralVariants(Optional.empty(), Optional.of(right));
+        assertEquals(0, rightKnown, EPSILON);
+    }
+
     @NotNull
     private static StructuralVariant sv(long start, long end, StructuralVariantType type, double startAF, double endAF) {
         return PurpleDatamodelTest.createStructuralVariant(CONTIG, start, CONTIG, end, type, startAF, endAF).build();

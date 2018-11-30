@@ -95,7 +95,8 @@ class StructuralVariantImplied {
         final double endWeight = end.map(StructuralVariantLegPloidy::impliedLeftCopyNumberWeight).orElse(0d);
         final double endCopyNumber = end.map(StructuralVariantLegPloidy::impliedLeftCopyNumber).orElse(0d);
 
-        return (startCopyNumber * startWeight + endCopyNumber * endWeight) / (startWeight + endWeight);
+        double unconstrainedResult = (startCopyNumber * startWeight + endCopyNumber * endWeight) / (startWeight + endWeight);
+        return Math.max(0, unconstrainedResult);
     }
 
     @NotNull
