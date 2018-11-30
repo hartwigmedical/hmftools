@@ -41,7 +41,7 @@ class BachelorHelper {
         {
             if (result.containsKey(p.getName()))
             {
-                LOGGER.error("duplicate programs detected: {}", p.getName());
+                LOGGER.error("duplicate Programs detected: {}", p.getName());
                 System.exit(1);
             }
             else

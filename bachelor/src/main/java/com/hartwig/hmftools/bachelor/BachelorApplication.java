@@ -52,9 +52,12 @@ public class BachelorApplication {
     private static final String SOMATIC = "somatic";
     private static final String SAMPLE = "sample";
     private static final String LOG_DEBUG = "log_debug";
-    private static final String BATCH_MAX_DIR = "max_batch_dir"; // only for testingt
+    private static final String BATCH_MAX_DIR = "max_batch_dir"; // only for testing
 
     private static final String BATCH_DIR_FILE = "batch_dir_file";
+    private static final String SAMPLE_LIST_FILE = "sample_list_file";
+
+    private BachelorProgram mProgram;
 
     private Map<String, Program> mProgramMap;
     private BufferedWriter mMainDataWriter;
@@ -68,6 +71,7 @@ public class BachelorApplication {
     private boolean mIsBatchRun;
     private boolean mIsSingleRun;
     private String mSampleId;
+    private List<String> mLimitedSampleList;
     private int mMaxBatchDirectories;
 
     public BachelorApplication()
@@ -76,12 +80,14 @@ public class BachelorApplication {
         mMainDataWriter = null;
         mBedFileWriter = null;
 
+        mSampleId = "";
         mIsSingleRun = false;
         mIsBatchRun = false;
         mBatchDirectoryFile = "";
         mBatchDirectory = "";
         mOutputDir = "";
         mMaxBatchDirectories = 0;
+        mLimitedSampleList = Lists.newArrayList();
     }
 
     @NotNull
@@ -98,6 +104,7 @@ public class BachelorApplication {
         options.addOption(VALIDATE, false, "only validate the configs");
         options.addOption(GERMLINE, false, "process the germline file");
         options.addOption(BATCH_DIR_FILE, true, "Optional: list of directories to search");
+        options.addOption(SAMPLE_LIST_FILE, true, "Optional: limiting list of sample IDs to process");
         options.addOption(SOMATIC, false, "process the somatic file");
         options.addOption(SAMPLE, true, "sample id");
         options.addOption(LOG_DEBUG, false, "Sets log level to Debug, off by default");
@@ -143,12 +150,11 @@ public class BachelorApplication {
 
         if (mProgramMap.isEmpty())
         {
-            LOGGER.error("no programs loaded, exiting");
+            LOGGER.error("no Programs loaded, exiting");
             return false;
         }
 
         mOutputDir = cmd.getOptionValue(OUTPUT_DIR);
-        mSampleId = cmd.getOptionValue(SAMPLE);
 
         if(cmd.hasOption(BATCH_DIRECTORY))
         {
@@ -156,9 +162,13 @@ public class BachelorApplication {
             mBatchDirectoryFile = cmd.getOptionValue(BATCH_DIR_FILE, "");
             mMaxBatchDirectories = Integer.parseInt(cmd.getOptionValue(BATCH_MAX_DIR, "0"));
             mIsBatchRun = true;
+
+            if(cmd.hasOption(SAMPLE_LIST_FILE))
+                loadSampleListFile(cmd.getOptionValue(SAMPLE_LIST_FILE));
         }
         else if(cmd.hasOption(RUN_DIRECTORY))
         {
+            mSampleId = cmd.getOptionValue(SAMPLE);
             mIsSingleRun = true;
             mRunDirectoy = cmd.getOptionValue(RUN_DIRECTORY);
         }
@@ -179,7 +189,12 @@ public class BachelorApplication {
 
     public boolean run()
     {
-        final BachelorEligibility eligibility = BachelorEligibility.fromMap(mProgramMap);
+        mProgram = new BachelorProgram();
+
+        if(!mProgram.loadConfig(mProgramMap))
+            return false;
+
+        // final BachelorEligibility eligibility = BachelorEligibility.fromMap(mProgramMap);
 
         if (mIsBatchRun)
         {
@@ -230,7 +245,7 @@ public class BachelorApplication {
                 {
                     final RunDirectory runDir = runDirectories.get(i);
 
-                    process(eligibility, runDir, "");
+                    processSampleDirectory(runDir, "");
 
                     if(mMaxBatchDirectories > 0 && i >= mMaxBatchDirectories)
                         break;
@@ -246,7 +261,7 @@ public class BachelorApplication {
                     return false;
                 }
 
-                process(eligibility, new RunDirectory(path), mSampleId);
+                processSampleDirectory(new RunDirectory(path), mSampleId);
             }
 
             LOGGER.info("run complete");
@@ -309,30 +324,51 @@ public class BachelorApplication {
         return batchDirectories;
     }
 
-    private static Collection<EligibilityReport> processVCF(final String patient, final String sampleId, final File vcf,
-            final BachelorEligibility eligibility)
+    private void loadSampleListFile(final String filename)
+    {
+        try
+        {
+            BufferedReader fileReader = new BufferedReader(new FileReader(filename));
+
+            String line = fileReader.readLine(); // skip header
+
+            while ((line = fileReader.readLine()) != null)
+            {
+                String[] items = line.split(",");
+
+                final String sampleId = items[0];
+
+                mLimitedSampleList.add(items[0]);
+            }
+
+            LOGGER.info("loaded {} specific sample ids", mLimitedSampleList.size());
+
+        }
+        catch (IOException exception)
+        {
+            LOGGER.error("Failed to read sample list input CSV file({}): {}", filename, exception.toString());
+        }
+    }
+
+    private List<EligibilityReport> processVCF(final String sampleId, final File vcf)
     {
         if(vcf == null)
-            return Collections.emptyList();
+            return Lists.newArrayList();
 
-        final EligibilityReport.ReportType type = EligibilityReport.ReportType.GERMLINE_MUTATION;
-
-        LOGGER.debug("processing {} vcf: {}", type, vcf.getPath());
+        LOGGER.debug("processing vcf: {}", vcf.getPath());
 
         try (final VCFFileReader reader = new VCFFileReader(vcf, true))
         {
-            // assume that the first sample is the germline
-            // final String sampleId = reader.getFileHeader().getGenotypeSamples().size() > 1 ? reader.getFileHeader().getGenotypeSamples().get(1) : reader.getFileHeader().getGenotypeSamples().get(0);
-            return eligibility.processVCF(patient, sampleId, type, reader);
+            return mProgram.processVCF(sampleId, reader);
         }
         catch (final TribbleException e)
         {
             LOGGER.error("error with VCF file {}: {}", vcf.getPath(), e.getMessage());
-            return Collections.emptyList();
+            return Lists.newArrayList();
         }
     }
 
-    private void process(final BachelorEligibility eligibility, final RunDirectory runDir, String sampleId)
+    private void processSampleDirectory(final RunDirectory runDir, String sampleId)
     {
         final String patient = runDir.getPatientID();
 
@@ -352,10 +388,17 @@ public class BachelorApplication {
             }
         }
 
+        if(!mLimitedSampleList.isEmpty() && !mLimitedSampleList.contains(sampleId))
+        {
+            LOGGER.info("skipping sampleId({}) not in specified list", sampleId);
+            return;
+        }
+
         LOGGER.info("processing run for patient({}) sampleId({}) directory({})", patient, sampleId, runDir.sampleDir());
 
         final List<EligibilityReport> result = Lists.newArrayList();
-        result.addAll(processVCF(patient, sampleId, runDir.germline(), eligibility));
+
+        result.addAll(processVCF(sampleId, runDir.germline()));
 
         if(result.isEmpty())
             return;

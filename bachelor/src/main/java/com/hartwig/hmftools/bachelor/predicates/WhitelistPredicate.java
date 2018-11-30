@@ -21,23 +21,33 @@ public class WhitelistPredicate implements Predicate<VariantModel> {
     private final Set<String> dbSNPWhitelist = Sets.newHashSet();
     private static final Logger LOGGER = LogManager.getLogger(WhitelistPredicate.class);
 
-    public WhitelistPredicate(@NotNull final Multimap<String, String> geneToEnsemblMap, @Nullable final ProgramWhitelist whitelist) {
-        if (whitelist != null) {
-            for (final Object variantOrDbSNP : whitelist.getVariantOrDbSNP()) {
-                if (variantOrDbSNP instanceof ProgramWhitelist.Variant) {
+    public WhitelistPredicate(@NotNull final Multimap<String, String> geneToEnsemblMap, @Nullable final ProgramWhitelist whitelist)
+    {
+        if (whitelist != null)
+        {
+            for (final Object variantOrDbSNP : whitelist.getVariantOrDbSNP())
+            {
+                if (variantOrDbSNP instanceof ProgramWhitelist.Variant)
+                {
                     final ProgramWhitelist.Variant variant = (ProgramWhitelist.Variant) variantOrDbSNP;
-                    for (final String transcript : geneToEnsemblMap.get(variant.getGene().getName())) {
+                    for (final String transcript : geneToEnsemblMap.get(variant.getGene().getName()))
+                    {
                         transcriptProteinWhitelist.put(transcript, variant.getHGVSP());
                     }
-                } else if (variantOrDbSNP instanceof String) {
+                }
+                else if (variantOrDbSNP instanceof String)
+                {
                     dbSNPWhitelist.add((String) variantOrDbSNP);
                 }
             }
         }
     }
 
+    public boolean isEmpty() { return transcriptProteinWhitelist.isEmpty() && dbSNPWhitelist.isEmpty(); }
+
     @Override
-    public boolean test(final VariantModel variant) {
+    public boolean test(final VariantModel variant)
+    {
         if(inDbSNPWhitelist(variant))
         {
             LOGGER.debug("variant({}) found in dbSNP whitelist", variant.context().getID());
@@ -52,7 +62,8 @@ public class WhitelistPredicate implements Predicate<VariantModel> {
         return false;
     }
 
-    private boolean inProteinWhitelist(final VariantModel variant) {
+    private boolean inProteinWhitelist(final VariantModel variant)
+    {
         return variant.sampleAnnotations()
                 .stream()
                 .filter(a -> !a.hgvsProtein().isEmpty())
