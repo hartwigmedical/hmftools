@@ -99,6 +99,18 @@ public class Lims {
         return null;
     }
 
+    public static String formattingTumorPercentage(@Nullable String percentage) {
+        String formatTumorPercentage;
+        if (percentage != null && percentage.equals(Lims.PATHOLOGY_TUMOR_ESTIMATE_NOT_DETERMINED)) {
+            formatTumorPercentage = Lims.PATHOLOGY_TUMOR_PERCENTAGE_NOT_DETERMINED;
+        } else if (percentage != null && !percentage.equals(Lims.PATHOLOGY_TUMOR_ESTIMATE_NOT_DETERMINED)) {
+            formatTumorPercentage = Long.toString(Math.round(Double.valueOf(percentage) * 100D)) + "%";
+        } else {
+            formatTumorPercentage = Lims.PATHOLOGY_TUMOR_NOT_DONE;
+        }
+        return formatTumorPercentage;
+    }
+
     @NotNull
     public String primaryTumorForSample(@NotNull final String sample) {
         LimsJsonData sampleData = dataPerSample.get(sample);
