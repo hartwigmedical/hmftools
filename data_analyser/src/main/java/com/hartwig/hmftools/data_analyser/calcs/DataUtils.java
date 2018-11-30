@@ -536,7 +536,7 @@ public class DataUtils {
         String outputFileName = outputDir;
         if (!outputFileName.endsWith("/"))
         {
-            outputFileName += "/";
+            outputFileName += File.separator;
         }
 
         outputFileName += fileName;

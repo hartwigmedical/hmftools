@@ -16,7 +16,12 @@ public class SvLinkedPair {
     private String mLinkType;
     private int mLinkLength;
     private boolean mIsInferred;
-    private String mLinkInfo;
+
+    // other annotations
+    private int mAssembledChainCount;
+    private int mDBLenFirst;
+    private int mDBLenSecond;
+    private long mNearestSVDistance;
 
     public static final String LINK_TYPE_TI = "TI";
     public static final String LINK_TYPE_DB = "DB";
@@ -35,7 +40,11 @@ public class SvLinkedPair {
         mSecondLinkOnStart = secondLinkOnStart;
         mLinkType = linkType;
         mIsInferred = true;
-        mLinkInfo = "";
+
+        mAssembledChainCount = 0;
+        mDBLenFirst = 0;
+        mDBLenSecond = 0;
+        mNearestSVDistance = 0;
 
         int length = (int) (first.position(firstLinkOnStart) - second.position(secondLinkOnStart));
         mLinkLength = abs(length);
@@ -80,8 +89,17 @@ public class SvLinkedPair {
     public void setIsInferred(boolean toggle) { mIsInferred = toggle; }
     public boolean isInferred() { return mIsInferred; }
 
-    public void setInfo(final String info) { mLinkInfo = info; }
-    public final String getInfo() { return mLinkInfo; }
+    public void setAssembledChainCount(final int count) { mAssembledChainCount = count; }
+    public final int getAssembledChainCount() { return mAssembledChainCount; }
+
+    public void setDBLenFirst(final int length) { mDBLenFirst = length; }
+    public final int getDBLenFirst() { return mDBLenFirst; }
+
+    public void setDBLenSecond(final int length) { mDBLenSecond = length; }
+    public final int getDBLenSecond() { return mDBLenSecond; }
+
+    public void setNearestSVDistance(final long distance) { mNearestSVDistance = distance; }
+    public final long getNearestSVDistance() { return mNearestSVDistance; }
 
     public boolean hasVariantBE(final SvVarData var, boolean useStart)
     {

@@ -835,20 +835,20 @@ public class SvClusteringMethods {
         mChrBreakendMap.clear();
 
         // add each SV's breakends to a map keyed by chromosome, with the breakends in order of position lowest to highest
-        for(final SvVarData var : allVariants)
+        for (final SvVarData var : allVariants)
         {
             // add each breakend in turn
-            for(int i = 0; i < 2 ; ++i)
+            for (int i = 0; i < 2; ++i)
             {
                 boolean useStart = (i == 0);
 
-                if(!useStart && var.isNullBreakend())
+                if (!useStart && var.isNullBreakend())
                     continue;
 
                 final String chr = var.chromosome(useStart);
                 long position = var.position(useStart);
 
-                if(!mChrBreakendMap.containsKey(chr))
+                if (!mChrBreakendMap.containsKey(chr))
                 {
                     List<SvBreakend> breakendList = Lists.newArrayList();
                     breakendList.add(var.getBreakend(useStart));
@@ -860,15 +860,27 @@ public class SvClusteringMethods {
                 List<SvBreakend> breakendList = mChrBreakendMap.get(chr);
 
                 int index = 0;
-                for(;index < breakendList.size(); ++index)
+                for (; index < breakendList.size(); ++index)
                 {
                     final SvBreakend breakend = breakendList.get(index);
 
-                    if(position < breakend.position())
+                    if (position < breakend.position())
                         break;
                 }
 
                 breakendList.add(index, var.getBreakend(useStart));
+            }
+        }
+
+        // cache indicies for faster look-up
+        for (Map.Entry<String, List<SvBreakend>> entry : mChrBreakendMap.entrySet())
+        {
+            List<SvBreakend> breakendList = entry.getValue();
+
+            for (int i = 0; i < breakendList.size(); ++i)
+            {
+                final SvBreakend breakend = breakendList.get(i);
+                breakend.setChrPosIndex(i);
             }
         }
     }
@@ -921,8 +933,6 @@ public class SvClusteringMethods {
                     relationType = RELATION_TYPE_OVERLAP;
 
                 var.setNearestSvRelation(relationType);
-
-                // checkFoldbackSvs(breakend, prevBreakend);
             }
         }
     }

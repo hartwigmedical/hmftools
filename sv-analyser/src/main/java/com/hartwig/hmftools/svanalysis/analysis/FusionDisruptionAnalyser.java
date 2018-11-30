@@ -7,6 +7,7 @@ import static com.hartwig.hmftools.svannotation.analysis.SvFusionAnalyser.PROMIS
 import static com.hartwig.hmftools.svannotation.analysis.SvFusionAnalyser.PROMISCUOUS_THREE_CSV;
 
 import java.io.BufferedWriter;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -375,7 +376,7 @@ public class FusionDisruptionAnalyser
                 String outputFilename = mOutputDir;
 
                 if (!outputFilename.endsWith("/"))
-                    outputFilename += "/";
+                    outputFilename += File.separator;
 
                 if(mUseCombinedOutput)
                     outputFilename += "FUSIONS.csv";

@@ -130,7 +130,7 @@ public class FilteredSVWriter {
             {
                 String outputFileName = mOutputPath;
                 if (!outputFileName.endsWith("/")) {
-                    outputFileName += "/";
+                    outputFileName += File.separator;
                 }
 
                 outputFileName += "svs_incl_filtered.csv";
@@ -231,7 +231,7 @@ public class FilteredSVWriter {
             {
                 String outputFileName = mOutputPath;
                 if(!outputFileName.endsWith("/"))
-                    outputFileName += "/";
+                    outputFileName += File.separator;
 
                 outputFileName += "sv_extra_manta_data.csv";
 

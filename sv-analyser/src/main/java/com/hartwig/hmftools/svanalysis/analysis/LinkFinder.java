@@ -18,6 +18,7 @@ import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.ASSEMBLY_MATCH_
 import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.LINK_TYPE_DB;
 import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.LINK_TYPE_TI;
 
+import java.io.BufferedWriter;
 import java.util.List;
 import java.util.Map;
 
@@ -37,6 +38,7 @@ public class LinkFinder
     private boolean mLogVerbose;
 
     public static int MIN_TEMPLATED_INSERTION_LENGTH = 30;
+    public static int NO_DB_MARKER = -(MIN_TEMPLATED_INSERTION_LENGTH + 1);
     private static int MAX_TEMPLATED_INSERTION_LENGTH = 500;
     public static int CLUSTER_SIZE_ANALYSIS_LIMIT = 500;
     public static int SHORT_DB_LENGTH = 30;
@@ -48,9 +50,8 @@ public class LinkFinder
 
     public LinkFinder()
     {
+        mLogVerbose = false;
     }
-
-    public void setLogVerbose(boolean toggle) { mLogVerbose = toggle; }
 
     public void findLinkedPairs(final String sampleId, SvCluster cluster)
     {

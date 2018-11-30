@@ -4,6 +4,7 @@ import static com.hartwig.hmftools.common.utils.GenericDataCollection.GD_TYPE_ST
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -456,7 +457,7 @@ public class ResultsChecker
                 String outputFileName = mOutputDir;
 
                 if(!outputFileName.endsWith("/"))
-                    outputFileName += "/";
+                    outputFileName += File.separator;
 
                 outputFileName += "sva_result_mismatches.csv";
 

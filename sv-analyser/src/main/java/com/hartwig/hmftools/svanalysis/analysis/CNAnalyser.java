@@ -14,6 +14,7 @@ import static com.hartwig.hmftools.svanalysis.types.SvCNData.CN_SEG_CENTROMERE;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -553,7 +554,7 @@ public class CNAnalyser {
                 String outputFileName = mOutputPath;
 
                 if (!outputFileName.endsWith("/"))
-                    outputFileName += "/";
+                    outputFileName += File.separator;
 
                 outputFileName += "CN_LOH_ANALYSIS.csv";
 
@@ -808,7 +809,7 @@ public class CNAnalyser {
                 String outputFileName = mOutputPath;
 
                 if (!outputFileName.endsWith("/"))
-                    outputFileName += "/";
+                    outputFileName += File.separator;
 
                 outputFileName += "CN_ANALYSIS.csv";
 

@@ -1,11 +1,13 @@
 package com.hartwig.hmftools.svanalysis.analysis;
 
-import static com.hartwig.hmftools.svanalysis.analysis.LinkFinder.MIN_TEMPLATED_INSERTION_LENGTH;
+import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
+import static com.hartwig.hmftools.svanalysis.analysis.LinkFinder.NO_DB_MARKER;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.CHROMOSOME_ARM_P;
 import static com.hartwig.hmftools.common.variant.structural.annotation.SvPONAnnotator.REGION_DISTANCE;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.getChromosomalArm;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_LOW_QUALITY;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_SIMPLE_SV;
+import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.LINK_TYPE_TI;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
@@ -27,6 +29,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.io.BufferedWriter;
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -46,6 +49,7 @@ public class SvSampleAnalyser {
     private List<SvVarData> mAllVariants; // the original list to analyse
 
     BufferedWriter mFileWriter;
+    BufferedWriter mLinksFileWriter;
     SvPONAnnotator mSvPONAnnotator;
     FragileSiteAnnotator mFragileSiteAnnotator;
     LineElementAnnotator mLineElementAnnotator;
@@ -69,6 +73,7 @@ public class SvSampleAnalyser {
         mAnalyser = new ClusterAnalyser(config, mClusteringMethods);
 
         mFileWriter = null;
+        mLinksFileWriter = null;
 
         mSvPONAnnotator = new SvPONAnnotator();
         mSvPONAnnotator.loadPonFile(mConfig.SvPONFile);
@@ -142,7 +147,6 @@ public class SvSampleAnalyser {
         mClusteringMethods.annotateNearestSvData();
         LinkFinder.findDeletionBridges(mClusteringMethods.getChrBreakendMap());
         mClusteringMethods.setSimpleVariantLengths(mSampleId);
-        // mLineElementAnnotator.setSuspectedLineElements(mClusteringMethods.getChrBreakendMap(), mConfig.ProximityDistance);
         mPc2.stop();
 
         mPc3.start();
@@ -157,7 +161,12 @@ public class SvSampleAnalyser {
         mPc5.start();
 
         if(!mConfig.OutputCsvPath.isEmpty())
+        {
             writeClusterDataOutput();
+
+            mAnalyser.annotateTemplatedInsertions(getClusters());
+            writeClusterLinkData();
+        }
 
         mPc5.stop();
     }
@@ -220,7 +229,7 @@ public class SvSampleAnalyser {
                 String outputFileName = mConfig.OutputCsvPath;
 
                 if(!outputFileName.endsWith("/"))
-                    outputFileName += "/";
+                    outputFileName += File.separator;
 
                 if(mConfig.UseCombinedOutputFile)
                     outputFileName += "CLUSTER.csv";
@@ -274,8 +283,6 @@ public class SvSampleAnalyser {
             int lineCount = 0;
             int svCount = 0;
 
-            int noDBLenMarker = -(MIN_TEMPLATED_INSERTION_LENGTH + 1);
-
             for(final SvVarData var : mAllVariants)
             {
                 final SvCluster cluster = var.getCluster();
@@ -325,16 +332,16 @@ public class SvSampleAnalyser {
                                 cluster.getDesc(), cluster.isResolved(), cluster.getResolvedType(),
                                 cluster.getConsistencyCount(), cluster.getChromosomalArmCount()));
 
-                int dbLenStart = var.getDBLink(true) != null ? var.getDBLink(true).length() : noDBLenMarker;
-                int dbLenEnd = var.getDBLink(false) != null ? var.getDBLink(false).length() : noDBLenMarker;
+                int dbLenStart = var.getDBLink(true) != null ? var.getDBLink(true).length() : NO_DB_MARKER;
+                int dbLenEnd = var.getDBLink(false) != null ? var.getDBLink(false).length() : NO_DB_MARKER;
 
                 writer.write(
                         String.format(",%s,%d,%d,%s,%s,%d,%.0f,%s,%s",
                                 dbData.insertSequence().isEmpty() && var.type() != StructuralVariantType.INS ? dbData.homology() : "",
                                 dbData.inexactHomologyOffsetStart(), dbData.inexactHomologyOffsetEnd(),
                                 dbData.insertSequence(), dbData.imprecise(), var.getPonCount(), dbData.qualityScore(),
-                                dbLenStart > noDBLenMarker & dbLenStart < 0 ? dbData.startRefContext() : "",
-                                dbLenEnd > noDBLenMarker & dbLenEnd < 0 ? dbData.endRefContext() : ""));
+                                dbLenStart > NO_DB_MARKER & dbLenStart < 0 ? dbData.startRefContext() : "",
+                                dbLenEnd > NO_DB_MARKER & dbLenEnd < 0 ? dbData.endRefContext() : ""));
 
                 writer.write(
                         String.format(",%s,%s,%s,%s,%s,%s,%s",
@@ -402,6 +409,72 @@ public class SvSampleAnalyser {
         catch (final IOException e)
         {
             LOGGER.error("error writing to outputFile: {}", e.toString());
+        }
+    }
+
+    private void writeClusterLinkData()
+    {
+        try
+        {
+            BufferedWriter writer = null;
+
+            if(mLinksFileWriter != null)
+            {
+                // check if can continue appending to an existing file
+                writer = mLinksFileWriter;
+            }
+            else
+            {
+                String outputFileName = mConfig.OutputCsvPath;
+
+                if(!outputFileName.endsWith("/"))
+                    outputFileName += File.separator;
+
+                outputFileName += "CLUSTER_LINKS.csv";
+
+                Path outputFile = Paths.get(outputFileName);
+
+                writer = Files.newBufferedWriter(outputFile, StandardOpenOption.CREATE);
+                mLinksFileWriter = writer;
+
+                writer.write("SampleId,ClusterId,ClusterCount,ResovledType,ChainId,ChainCount,Id1,Id2");
+                writer.write(",IsAssembled,TILength,NextSVLength,DBlenStart,DBlenEnd,AssembledCount");
+                writer.newLine();
+            }
+
+            for(final SvCluster cluster : getClusters())
+            {
+                int clusterSvCount = cluster.getUniqueSvCount();
+
+                for (final SvChain chain : cluster.getChains())
+                {
+                    for (final SvLinkedPair pair : chain.getLinkedPairs())
+                    {
+                        if(pair.linkType() != LINK_TYPE_TI)
+                            continue;
+
+                        if(pair.first().type() == SGL || pair.second().type() == SGL)
+                            continue;
+
+                        writer.write(
+                                String.format("%s,%d,%d,%s,%d,%d,%s,%s",
+                                        mSampleId, cluster.getId(), clusterSvCount, cluster.getResolvedType(),
+                                        chain.getId(), chain.getUniqueSvCount(),
+                                        pair.first().origId(), pair.second().origId()));
+
+                        writer.write(
+                                String.format(",%s,%d,%d,%d,%d,%d",
+                                        !pair.isInferred(), pair.length(), pair.getNearestSVDistance(),
+                                        pair.getDBLenFirst(), pair.getDBLenSecond(), pair.getAssembledChainCount()));
+
+                        writer.newLine();
+                    }
+                }
+            }
+        }
+        catch (final IOException e)
+        {
+            LOGGER.error("error writing links to outputFile: {}", e.toString());
         }
     }
 
@@ -525,12 +598,13 @@ public class SvSampleAnalyser {
 
     public void close()
     {
-        if(mFileWriter == null)
-            return;
-
         try
         {
-            mFileWriter.close();
+            if(mFileWriter != null)
+                mFileWriter.close();
+
+            if(mLinksFileWriter != null)
+                mLinksFileWriter.close();
         }
         catch (final IOException e)
         {

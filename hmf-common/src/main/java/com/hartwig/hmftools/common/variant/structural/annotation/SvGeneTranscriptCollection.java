@@ -4,6 +4,7 @@ import static java.lang.Math.abs;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -52,7 +53,7 @@ public class SvGeneTranscriptCollection
         String filename = path;
 
         if(!path.endsWith("/"))
-                filename += "/";
+                filename += File.separator;
 
         filename += sampleId + "_" + SV_GENE_TRANSCRIPTS_FILE_SUFFIX;
 
@@ -358,7 +359,7 @@ public class SvGeneTranscriptCollection
         String filename = mDataPath;
 
         if(!filename.endsWith("/"))
-            filename += "/";
+            filename += File.separator;
 
         filename += TRANSCRIPTS_FILE;
 

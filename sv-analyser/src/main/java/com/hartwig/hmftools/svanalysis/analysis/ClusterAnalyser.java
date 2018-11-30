@@ -2,6 +2,7 @@ package com.hartwig.hmftools.svanalysis.analysis;
 
 import static java.lang.Math.abs;
 import static java.lang.Math.max;
+import static java.lang.Math.min;
 import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.BND;
@@ -11,6 +12,7 @@ import static com.hartwig.hmftools.common.variant.structural.StructuralVariantTy
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INV;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.svanalysis.analysis.LinkFinder.MIN_TEMPLATED_INSERTION_LENGTH;
+import static com.hartwig.hmftools.svanalysis.analysis.LinkFinder.NO_DB_MARKER;
 import static com.hartwig.hmftools.svanalysis.analysis.LinkFinder.areLinkedSection;
 import static com.hartwig.hmftools.svanalysis.analysis.LinkFinder.areSectionBreak;
 import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.CLUSTER_REASON_COMMON_ARMS;
@@ -32,6 +34,7 @@ import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.copyNumbersEq
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.isSpecificCluster;
 import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.ASSEMBLY_MATCH_MATCHED;
 import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.LINK_TYPE_SGL;
+import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.LINK_TYPE_TI;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_END;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_START;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.findVariantById;
@@ -1275,6 +1278,113 @@ public class ClusterAnalyser {
             var.setFoldbackLink(true, "", -1);
         else
             var.setFoldbackLink(false, "", -1);
+    }
+
+    public void annotateTemplatedInsertions(final List<SvCluster> clusters)
+    {
+        /* work out:
+            - whether a TI has a DB on either or both sides in the same cluster
+            - number of chained assembled TIs in a row
+            - if local, the distance to the next SV in the cluster
+         */
+
+        final Map<String, List<SvBreakend>> chrBreakendMap = mClusteringMethods.getChrBreakendMap();
+
+        for(final SvCluster cluster : clusters)
+        {
+            for(final SvChain chain : cluster.getChains())
+            {
+                List<SvLinkedPair> assembledLinks = Lists.newArrayList();
+
+                for(final SvLinkedPair pair : chain.getLinkedPairs())
+                {
+                    if(pair.linkType() != LINK_TYPE_TI)
+                        continue;
+
+                    if(pair.first().type() == SGL || pair.second().type() == SGL)
+                        continue;
+
+                    if(!pair.isInferred())
+                    {
+                        assembledLinks.add(pair);
+                    }
+                    else if(!assembledLinks.isEmpty())
+                    {
+                        for(final SvLinkedPair assembledPair : assembledLinks)
+                        {
+                            assembledPair.setAssembledChainCount(assembledLinks.size());
+                        }
+
+                        assembledLinks.clear();
+                    }
+
+                    // find closest SV in this cluster
+                    SvBreakend firstBreakend = pair.first().getBreakend(pair.firstLinkOnStart());
+                    final List<SvBreakend> breakendList = chrBreakendMap.get(firstBreakend.chromosome());
+                    long closestSvDistance = getDistanceToNextClusterSV(cluster, breakendList, pair);
+
+                    pair.setNearestSVDistance(closestSvDistance);
+
+                    SvLinkedPair dbFirst = pair.first().getDBLink(pair.firstUnlinkedOnStart());
+                    SvLinkedPair dbSecond = pair.second().getDBLink(pair.secondUnlinkedOnStart());
+
+                    pair.setDBLenFirst(dbFirst != null ? dbFirst.length() : NO_DB_MARKER);
+                    pair.setDBLenSecond(dbSecond != null ? dbSecond.length() : NO_DB_MARKER);
+                }
+            }
+        }
+    }
+
+    private static long getDistanceToNextClusterSV(final SvCluster cluster, final List<SvBreakend> breakendList, final SvLinkedPair pair)
+    {
+        // walk forward and backwards from this pair to the closest SV in the same cluster
+        long closestDistance = -1;
+
+        SvBreakend firstBreakend = pair.first().getBreakend(pair.firstLinkOnStart());
+        SvBreakend secondBreakend = pair.second().getBreakend(pair.secondLinkOnStart());
+        int lowerIndex = min(firstBreakend.getChrPosIndex(), secondBreakend.getChrPosIndex());
+        int upperIndex = max(firstBreakend.getChrPosIndex(), secondBreakend.getChrPosIndex());
+
+        if(lowerIndex > 0)
+        {
+            for (int i = lowerIndex - 1; i >= 0; --i)
+            {
+                final SvBreakend breakend = breakendList.get(i);
+                if(breakend.getSV().equals(pair.first()) || breakend.getSV().equals(pair.second()))
+                    continue;
+
+                if(breakend.getSV().getCluster() == cluster)
+                {
+                    final SvBreakend refBreakend = breakendList.get(lowerIndex);
+                    closestDistance = refBreakend.position() - breakend.position();
+                }
+
+                break;
+            }
+        }
+
+        if(upperIndex > 0)
+        {
+            for (int i = upperIndex + 1; i < breakendList.size(); ++i)
+            {
+                final SvBreakend breakend = breakendList.get(i);
+                if(breakend.getSV().equals(pair.first()) || breakend.getSV().equals(pair.second()))
+                    continue;
+
+                if(breakend.getSV().getCluster() == cluster)
+                {
+                    final SvBreakend refBreakend = breakendList.get(upperIndex);
+                    long distance = breakend.position() - refBreakend.position();
+
+                    if(closestDistance == -1 || distance < closestDistance)
+                        closestDistance = distance;
+                }
+
+                break;
+            }
+        }
+
+        return closestDistance;
     }
 
     private void createCopyNumberSegments(final String sampleId, final SvCluster cluster)
