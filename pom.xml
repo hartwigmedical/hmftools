@@ -33,7 +33,7 @@
         <module>sv-analyser</module>
         <module>sv-graphs</module>
         <module>knowledgebase-importer</module>
-        <module>data_analyser</module>
+        <module>sig_analyser</module>
         <module>actionability-vs-soc</module>
     </modules>
 
