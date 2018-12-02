@@ -385,13 +385,29 @@ public class SvChain {
         return -1;
     }
 
-    public boolean breakendsAreChained(final SvVarData var1, boolean v1Start, final SvVarData var2, boolean v2Start)
+    public int getAssemblyLinkCount()
+    {
+        int count = 0;
+        for(final SvLinkedPair pair : mLinkedPairs)
+        {
+            if(pair.isAssembled())
+                ++count;
+        }
+
+        return count;
+    }
+
+    public int breakendsAreChained(final SvVarData var1, boolean v1Start, final SvVarData var2, boolean v2Start)
     {
         // check whether these breakends face towards each other in the chain
+        // return the number of assembly links between these 2 SVs, or -1 if the BEs aren't chained
+
         boolean be1FacesUp = false; // 'up' here means towards a higher index
         int be1Index = -1;
         boolean be2FacesUp = false;
         int be2Index = -1;
+
+        int assemblyLinkCount = 0;
 
         // in every linked pair, the first element is lower in the chain (where 0 is considering the beginning) and the second is higher,
         // so for every SV it's 'first' breakend in a given pair faces up, the 'second' faces down
@@ -424,13 +440,19 @@ public class SvChain {
             if(be1Index >=0 && be2Index >= 0)
             {
                 if(be1Index < be2Index && be1FacesUp && !be2FacesUp)
-                    return true;
+                    return assemblyLinkCount;
                 else if(be1Index > be2Index && !be1FacesUp && be2FacesUp)
-                    return true;
+                    return assemblyLinkCount;
+            }
+
+            if(be1Index >= 0 || be2Index >= 0)
+            {
+                if(pair.isAssembled())
+                    ++assemblyLinkCount;
             }
         }
 
-        return true;
+        return -1;
     }
 
     public boolean hasLinkedPair(final SvLinkedPair pair)

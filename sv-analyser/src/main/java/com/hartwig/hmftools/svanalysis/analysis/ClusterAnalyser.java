@@ -313,6 +313,14 @@ public class ClusterAnalyser {
             return;
 
         int minCopyNumber = cluster.getMinCopyNumber();
+        int maxCopyNumber = cluster.getMaxCopyNumber();
+
+        if(maxCopyNumber > 5 * minCopyNumber)
+        {
+            LOGGER.debug("cluster({}) skipping replication for large CN variation(min={} max={})",
+                    cluster.getId(), minCopyNumber, maxCopyNumber);
+            return;
+        }
 
         for(SvCluster subCluster : cluster.getSubClusters())
         {
@@ -1110,6 +1118,8 @@ public class ClusterAnalyser {
         boolean v1Start = be1.usesStart();
         boolean v2Start = be2.usesStart();
 
+        int assemblyLinkCount = 0;
+
         if(var1.equals(var2))
         {
             // constraint is that the ends of this INV don't link to BND taking the path off this chromosome
@@ -1147,10 +1157,10 @@ public class ClusterAnalyser {
 
             // check if a path can be walked between these 2 breakends along the chain
             // without going back through this foldback point
-            if(!chain1.breakendsAreChained(var1, !v1Start, var2, !v2Start))
-            {
+            assemblyLinkCount = chain1.breakendsAreChained(var1, !v1Start, var2, !v2Start);
+
+            if(assemblyLinkCount == -1)
                 return;
-            }
 
             // check for a conflicting deletion bridge on the backmost of the 2 breakends
             if(be2.orientation() == 1)
@@ -1216,8 +1226,8 @@ public class ClusterAnalyser {
         if(!var2.getFoldbackLink(v2Start).isEmpty())
             clearFoldbackInfo(var2.getFoldbackLink(v2Start), var2.id(), cluster2, v2Start);
 
-        var1.setFoldbackLink(v1Start, var2.id(), length);
-        var2.setFoldbackLink(v2Start, var1.id(), length);
+        var1.setFoldbackLink(v1Start, var2.id(), length, assemblyLinkCount);
+        var2.setFoldbackLink(v2Start, var1.id(), length, assemblyLinkCount);
 
         if(var1.equals(var2))
         {
@@ -1258,8 +1268,9 @@ public class ClusterAnalyser {
             && chain.getLastSV().equals(var, true)
             && chain.firstLinkOpenOnStart() == chain.lastLinkOpenOnStart())
             {
-                var.setFoldbackLink(true, var.id(), 0);
-                var.setFoldbackLink(false, var.id(), 0);
+                int assemblyLinkCount = chain.getAssemblyLinkCount();
+                var.setFoldbackLink(true, var.id(), 0, assemblyLinkCount);
+                var.setFoldbackLink(false, var.id(), 0, assemblyLinkCount);
 
                 LOGGER.debug(String.format("cluster(%s) foldback translocation SV(%s) with self",
                         cluster.getId(), var.posId()));
@@ -1275,9 +1286,9 @@ public class ClusterAnalyser {
             return;
 
         if(var.getFoldbackLink(true).equals(matchVarId))
-            var.setFoldbackLink(true, "", -1);
+            var.setFoldbackLink(true, "", -1, 0);
         else
-            var.setFoldbackLink(false, "", -1);
+            var.setFoldbackLink(false, "", -1, 0);
     }
 
     public void annotateTemplatedInsertions(final List<SvCluster> clusters)

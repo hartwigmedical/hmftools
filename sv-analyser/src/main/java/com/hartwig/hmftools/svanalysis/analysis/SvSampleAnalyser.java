@@ -7,6 +7,7 @@ import static com.hartwig.hmftools.common.variant.structural.annotation.SvPONAnn
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.getChromosomalArm;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_LOW_QUALITY;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_SIMPLE_SV;
+import static com.hartwig.hmftools.svanalysis.types.SvCluster.isSpecificCluster;
 import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.LINK_TYPE_TI;
 
 import com.google.common.collect.Lists;
@@ -272,7 +273,7 @@ public class SvSampleAnalyser {
                 writer.write(",NearestLen,NearestType,DBLenStart,DBLenEnd,SynDelDupLen,SynDelDupTILen");
 
                 // proximity info and other link info
-                writer.write(",FoldbackLnkStart,FoldbackLenStart,FoldbackLnkEnd,FoldbackLenEnd");
+                writer.write(",FoldbackLnkStart,FoldbackLenStart,FoldbackAssemblyLinksStart,FoldbackLnkEnd,FoldbackLenEnd,FoldbackAssemblyLinksEnd");
 
                 // transitive info
                 // writer.write(",TransType,TransLen,TransSvLinks");
@@ -390,9 +391,9 @@ public class SvSampleAnalyser {
                         var.getNearestSvDistance(), var.getNearestSvRelation(), dbLenStart, dbLenEnd,
                         cluster.getSynDelDupLength(), cluster.getSynDelDupTILength()));
 
-                writer.write(String.format(",%s,%d,%s,%d",
-                        var.getFoldbackLink(true), var.getFoldbackLen(true),
-                        var.getFoldbackLink(false), var.getFoldbackLen(false)));
+                writer.write(String.format(",%s,%d,%s,%s,%d,%s",
+                        var.getFoldbackLink(true), var.getFoldbackLen(true), var.getFoldbackAssemblyLinks(true),
+                        var.getFoldbackLink(false), var.getFoldbackLen(false), var.getFoldbackAssemblyLinks(false)));
 
                 // writer.write(String.format(",%s,%d,%s", var.getTransType(), var.getTransLength(), var.getTransSvLinks()));
 
@@ -437,8 +438,8 @@ public class SvSampleAnalyser {
                 writer = Files.newBufferedWriter(outputFile, StandardOpenOption.CREATE);
                 mLinksFileWriter = writer;
 
-                writer.write("SampleId,ClusterId,ClusterCount,ResovledType,ChainId,ChainCount,Id1,Id2");
-                writer.write(",IsAssembled,TILength,NextSVLength,DBlenStart,DBlenEnd,AssembledCount");
+                writer.write("SampleId,ClusterId,ClusterCount,ResolvedType,ChainId,ChainCount,Id1,Id2");
+                writer.write(",IsAssembled,TILength,NextSVLength,DBLenStart,DBLenEnd,AssembledCount");
                 writer.newLine();
             }
 
@@ -446,8 +447,12 @@ public class SvSampleAnalyser {
             {
                 int clusterSvCount = cluster.getUniqueSvCount();
 
+                isSpecificCluster(cluster);
+
                 for (final SvChain chain : cluster.getChains())
                 {
+                    int chainSvCount = chain.getSvCount();
+
                     for (final SvLinkedPair pair : chain.getLinkedPairs())
                     {
                         if(pair.linkType() != LINK_TYPE_TI)
@@ -459,7 +464,7 @@ public class SvSampleAnalyser {
                         writer.write(
                                 String.format("%s,%d,%d,%s,%d,%d,%s,%s",
                                         mSampleId, cluster.getId(), clusterSvCount, cluster.getResolvedType(),
-                                        chain.getId(), chain.getUniqueSvCount(),
+                                        chain.getId(), chainSvCount,
                                         pair.first().origId(), pair.second().origId()));
 
                         writer.write(

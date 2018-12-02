@@ -60,6 +60,8 @@ public class SvVarData
     private String mFoldbackLinkEnd;
     private int mFoldbackLenStart;
     private int mFoldbackLenEnd;
+    private int mFoldbackAssemblyLinksStart;
+    private int mFoldbackAssemblyLinksEnd;
 
     private long mNearestSvDistance;
     private String mNearestSvRelation;
@@ -151,6 +153,8 @@ public class SvVarData
         mFoldbackLinkEnd = "";
         mFoldbackLenStart = -1;
         mFoldbackLenEnd = -1;
+        mFoldbackAssemblyLinksStart = 0;
+        mFoldbackAssemblyLinksEnd = 0;
 
         mGenesStart = Lists.newArrayList();
         mGenesEnd = Lists.newArrayList();
@@ -386,17 +390,20 @@ public class SvVarData
 
     public String getFoldbackLink(boolean useStart) { return useStart ? mFoldbackLinkStart : mFoldbackLinkEnd; }
     public int getFoldbackLen(boolean useStart) { return useStart ? mFoldbackLenStart : mFoldbackLenEnd; }
-    public void setFoldbackLink(boolean isStart, String link, int len)
+    public int getFoldbackAssemblyLinks(boolean useStart) { return useStart ? mFoldbackAssemblyLinksStart : mFoldbackAssemblyLinksEnd; }
+    public void setFoldbackLink(boolean isStart, String link, int length, int assemblyLinks)
     {
         if(isStart)
         {
             mFoldbackLinkStart = link;
-            mFoldbackLenStart = len;
+            mFoldbackLenStart = length;
+            mFoldbackAssemblyLinksStart = assemblyLinks;
         }
         else
         {
             mFoldbackLinkEnd = link;
-            mFoldbackLenEnd = len;
+            mFoldbackLenEnd = length;
+            mFoldbackAssemblyLinksEnd = assemblyLinks;
         }
 
         if(mCluster != null)

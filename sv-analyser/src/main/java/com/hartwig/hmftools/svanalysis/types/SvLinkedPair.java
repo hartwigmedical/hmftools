@@ -88,6 +88,7 @@ public class SvLinkedPair {
 
     public void setIsInferred(boolean toggle) { mIsInferred = toggle; }
     public boolean isInferred() { return mIsInferred; }
+    public boolean isAssembled() { return !mIsInferred; }
 
     public void setAssembledChainCount(final int count) { mAssembledChainCount = count; }
     public final int getAssembledChainCount() { return mAssembledChainCount; }
