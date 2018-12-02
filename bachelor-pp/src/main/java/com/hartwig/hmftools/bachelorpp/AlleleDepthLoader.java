@@ -123,11 +123,11 @@ public class AlleleDepthLoader {
                     }
                 }
 
-                bachRecord.setGermlineData(altCount, altCount + refCount);
+                bachRecord.setTumorData(altCount, altCount + refCount);
 
                 LOGGER.debug("sample({} chr({}) position({}) matched, counts(ref={} alt={} depth={})",
                         mSampleId, bachRecord.chromosome(), bachRecord.position(),
-                        bachRecord.getGermlineRefCount(), bachRecord.getGermlineAltCount(), bachRecord.getGermlineReadDepth());
+                        bachRecord.getTumorRefCount(), bachRecord.getTumorAltCount(), bachRecord.getTumorReadDepth());
 
                 break;
             }

@@ -116,10 +116,10 @@ public class BachelorGermlineVariant {
     public int getTumorRefCount() { return mTumorReadDepth - mTumorAltCount; }
     public int getTumorReadDepth() { return mTumorReadDepth; }
 
-    public void setGermlineData(int altCount, int readDepth)
+    public void setTumorData(int altCount, int readDepth)
     {
-        mGermlineAltCount = altCount;
-        mGermlineReadDepth = readDepth;
+        mTumorAltCount = altCount;
+        mTumorReadDepth = readDepth;
     }
 
     public void setTumorAltCount(int count) { mTumorAltCount = count; }

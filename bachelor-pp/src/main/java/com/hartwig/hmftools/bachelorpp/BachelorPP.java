@@ -334,7 +334,7 @@ public class BachelorPP {
             List<Genotype> genoTypes = Lists.newArrayList();
 
             GenotypeBuilder gBuilder = new GenotypeBuilder(sampleId, builder.getAlleles());
-            int[] adCounts = { bachRecord.getGermlineRefCount(), bachRecord.getGermlineAltCount() };
+            int[] adCounts = { bachRecord.getTumorRefCount(), bachRecord.getTumorAltCount() };
             gBuilder.AD(adCounts);
             gBuilder.DP(bachRecord.getGermlineReadDepth());
             genoTypes.add(gBuilder.make());
