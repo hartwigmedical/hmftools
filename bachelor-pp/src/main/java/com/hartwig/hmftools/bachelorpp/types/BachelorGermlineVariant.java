@@ -34,10 +34,10 @@ public class BachelorGermlineVariant {
     private String mDiagnosis;
     private String mCodonInfo;
 
-    private int mRefCount;
-    private int mRefReadDepth;
-    private int mAltCount;
-    private int mAltReadDepth;
+    private int mGermlineCount;
+    private int mGermlineReadDepth;
+    private int mTumorCount;
+    private int mTumorReadDepth;
     private boolean mReadDataSet;
 
     private double mAdjustedVaf;
@@ -77,10 +77,10 @@ public class BachelorGermlineVariant {
         mEffects = effects;
         mEffectsList = Arrays.stream(effects.split("&")).collect(Collectors.toList());
 
-        mRefCount = 0;
-        mAltCount = 0;
-        mRefReadDepth = 0;
-        mAltReadDepth = 0;
+        mGermlineCount = 0;
+        mTumorCount = 0;
+        mGermlineReadDepth = 0;
+        mTumorReadDepth = 0;
         mReadDataSet = false;
         mAdjustedVaf = 0;
 
@@ -109,12 +109,12 @@ public class BachelorGermlineVariant {
     public final String hgvsCoding() { return mHgvsCoding; };
     public boolean isHomozygous() { return mIsHomozygous; }
     public String matchType() { return mMatchType; }
-    public int getRefCount() { return mRefCount; }
-    public int getRefReadDepth() { return mRefReadDepth; }
-    public int getAltCount() { return mAltCount; }
-    public int getAltReadDepth() { return mAltReadDepth; }
-    public void setRefCount(int count) { mRefCount = count; }
-    public void setAltCount(int count) { mAltCount = count; }
+    public int getGermlineCount() { return mGermlineCount; }
+    public int getGermlineReadDepth() { return mGermlineReadDepth; }
+    public int getTumorCount() { return mTumorCount; }
+    public int getTumorReadDepth() { return mTumorReadDepth; }
+    public void setTumorRefCount(int count) { mGermlineCount = count; }
+    public void setTumorAltCount(int count) { mTumorCount = count; }
     public final String getDiagnosis() { return mDiagnosis; }
     public final String getSignificance() { return mSignificance; }
     public final String codonInfo() { return mCodonInfo; }
@@ -122,12 +122,12 @@ public class BachelorGermlineVariant {
     public void setDiagnosis(final String text) { mDiagnosis = text; }
     public void setSignificance(final String text) { mSignificance = text; }
 
-    public void setReadData(int refCount, int refReadDepth, int altCount, int altReadDepth)
+    public void setReadData(int glCount, int glReadDepth, int tumorCount, int tumorReadDepth)
     {
-        mRefCount = refCount;
-        mRefReadDepth = refReadDepth;
-        mAltCount = altCount;
-        mAltReadDepth = altReadDepth;
+        mGermlineCount = glCount;
+        mGermlineReadDepth = glReadDepth;
+        mTumorCount = tumorCount;
+        mTumorReadDepth = tumorReadDepth;
         mReadDataSet = true;
     }
 

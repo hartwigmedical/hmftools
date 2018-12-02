@@ -334,14 +334,14 @@ public class BachelorPP {
             List<Genotype> genoTypes = Lists.newArrayList();
 
             GenotypeBuilder gBuilder = new GenotypeBuilder(sampleId, builder.getAlleles());
-            int[] adCounts = { bachRecord.getRefCount(), bachRecord.getAltCount() };
+            int[] adCounts = { bachRecord.getGermlineCount(), bachRecord.getTumorCount() };
             gBuilder.AD(adCounts);
             genoTypes.add(gBuilder.make());
 
             builder.genotypes(genoTypes);
             VariantContext variantContext = builder.make();
 
-            variantContext.getCommonInfo().putAttribute("AD", bachRecord.getAltCount(), true);
+            variantContext.getCommonInfo().putAttribute("AD", bachRecord.getTumorCount(), true);
             variantContext.getCommonInfo().addFilter("PASS");
             variantContext.getCommonInfo().putAttribute(SNPEFF_IDENTIFIER, bachRecord.annotations());
 
@@ -568,7 +568,7 @@ public class BachelorPP {
 
                 writer.write("SampleId,Program,Source,Chromosome,Position");
 
-                writer.write(",Type,Ref,Alt,Gene,TranscriptId,DbsnpId,CosmicId,Effects,WorstCodingEffect,RefCount,RefReadDepth,AltCount,AltReadDepth");
+                writer.write(",Type,Ref,Alt,Gene,TranscriptId,DbsnpId,CosmicId,Effects,WorstCodingEffect,GermlineAltCount,GermlineReadDepth,TumorAltCount,TumorReadDepth");
 
                 writer.write(",AdjCopyNumber,AdjustedVaf,HighConfidenceRegion,TrinucleotideContext,Microhomology,RepeatSequence,RepeatCount");
 
@@ -612,8 +612,8 @@ public class BachelorPP {
                         region.canonicalCosmicID() == null ? "" : region.canonicalCosmicID(),
                         bachRecord.effects(),
                         region.worstCodingEffect(),
-                        bachRecord.getRefCount(), bachRecord.getRefReadDepth(),
-                        bachRecord.getAltCount(), bachRecord.getAltReadDepth()));
+                        bachRecord.getGermlineCount(), bachRecord.getGermlineReadDepth(),
+                        bachRecord.getTumorCount(), bachRecord.getTumorReadDepth()));
 
                 writer.write(
                         String.format(",%.2f,%.2f,%s,%s,%s,%s,%d",

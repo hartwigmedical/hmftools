@@ -80,12 +80,6 @@ public class AlleleDepthLoader {
         // match up read info from MP with the bachelor records
         for (BachelorGermlineVariant bachRecord : germlineVariants)
         {
-            if(bachRecord.isReadDataSet()) {
-                LOGGER.debug("sample({} var({}) chr({}) position({}) has already been assigned read count fields",
-                        mSampleId, bachRecord.variantId(), bachRecord.chromosome(), bachRecord.position());
-                continue;
-            }
-
             boolean matched = false;
 
             for (final Pileup pileup : mPileupData)
@@ -97,43 +91,43 @@ public class AlleleDepthLoader {
                     continue;
 
                 matched = true;
-                bachRecord.setRefCount(pileup.referenceCount());
+                bachRecord.setTumorRefCount(pileup.referenceCount());
 
                 if (pileup.insertCount() > 0)
                 {
-                    bachRecord.setAltCount(pileup.insertCount());
+                    bachRecord.setTumorAltCount(pileup.insertCount());
                 }
                 else if (pileup.deleteCount() > 0)
                 {
-                    bachRecord.setAltCount(pileup.deleteCount());
+                    bachRecord.setTumorAltCount(pileup.deleteCount());
                 }
                 else if (bachRecord.alts().length() == bachRecord.ref().length() && bachRecord.alts().length() == 1)
                 {
                     if (bachRecord.alts().charAt(0) == 'A')
                     {
-                        bachRecord.setAltCount(pileup.aMismatchCount());
+                        bachRecord.setTumorAltCount(pileup.aMismatchCount());
                     }
                     else if (bachRecord.alts().charAt(0) == 'C')
                     {
-                        bachRecord.setAltCount(pileup.cMismatchCount());
+                        bachRecord.setTumorAltCount(pileup.cMismatchCount());
                     }
                     else if (bachRecord.alts().charAt(0) == 'G')
                     {
-                        bachRecord.setAltCount(pileup.gMismatchCount());
+                        bachRecord.setTumorAltCount(pileup.gMismatchCount());
                     }
                     else if (bachRecord.alts().charAt(0) == 'T')
                     {
-                        bachRecord.setAltCount(pileup.tMismatchCount());
+                        bachRecord.setTumorAltCount(pileup.tMismatchCount());
                     }
                 }
 
                 LOGGER.debug("sample({} chr({}) position({}) matched, counts(ref={} alt={})",
-                        mSampleId, bachRecord.chromosome(), bachRecord.position(), bachRecord.getRefCount(), bachRecord.getAltCount());
+                        mSampleId, bachRecord.chromosome(), bachRecord.position(), bachRecord.getGermlineCount(), bachRecord.getTumorCount());
 
                 break;
             }
 
-            if(!matched)
+            if(!matched && !bachRecord.isReadDataSet())
             {
                 LOGGER.warn("sample({} var({}) chr({}) position({}) no pile-up record found",
                         mSampleId, bachRecord.variantId(), bachRecord.chromosome(), bachRecord.position());

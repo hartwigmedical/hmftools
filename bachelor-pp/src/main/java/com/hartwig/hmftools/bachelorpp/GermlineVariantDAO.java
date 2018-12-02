@@ -87,8 +87,8 @@ public class GermlineVariantDAO {
                     bachRecord.effects(),
                     region.worstCodingEffect(),
                     bachRecord.transcriptId(),
-                    bachRecord.getAltCount(),
-                    bachRecord.getAltCount() + bachRecord.getRefCount(),
+                    bachRecord.getTumorCount(),
+                    bachRecord.getTumorCount() + bachRecord.getGermlineCount(),
                     DatabaseUtil.decimal(region.adjustedCopyNumber()),
                     DatabaseUtil.decimal(bachRecord.getAdjustedVaf()), // region.adjustedVAF()
                     region.highConfidenceRegion(),
