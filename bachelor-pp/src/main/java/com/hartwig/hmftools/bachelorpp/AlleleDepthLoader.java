@@ -91,38 +91,43 @@ public class AlleleDepthLoader {
                     continue;
 
                 matched = true;
-                bachRecord.setTumorRefCount(pileup.referenceCount());
 
+                int refCount = pileup.referenceCount();
+
+                int altCount = 0;
                 if (pileup.insertCount() > 0)
                 {
-                    bachRecord.setTumorAltCount(pileup.insertCount());
+                    altCount = pileup.insertCount();
                 }
                 else if (pileup.deleteCount() > 0)
                 {
-                    bachRecord.setTumorAltCount(pileup.deleteCount());
+                    altCount = pileup.deleteCount();
                 }
                 else if (bachRecord.alts().length() == bachRecord.ref().length() && bachRecord.alts().length() == 1)
                 {
                     if (bachRecord.alts().charAt(0) == 'A')
                     {
-                        bachRecord.setTumorAltCount(pileup.aMismatchCount());
+                        altCount = pileup.aMismatchCount();
                     }
                     else if (bachRecord.alts().charAt(0) == 'C')
                     {
-                        bachRecord.setTumorAltCount(pileup.cMismatchCount());
+                        altCount = pileup.cMismatchCount();
                     }
                     else if (bachRecord.alts().charAt(0) == 'G')
                     {
-                        bachRecord.setTumorAltCount(pileup.gMismatchCount());
+                        altCount = pileup.gMismatchCount();
                     }
                     else if (bachRecord.alts().charAt(0) == 'T')
                     {
-                        bachRecord.setTumorAltCount(pileup.tMismatchCount());
+                        altCount = pileup.tMismatchCount();
                     }
                 }
 
-                LOGGER.debug("sample({} chr({}) position({}) matched, counts(ref={} alt={})",
-                        mSampleId, bachRecord.chromosome(), bachRecord.position(), bachRecord.getGermlineCount(), bachRecord.getTumorCount());
+                bachRecord.setGermlineData(altCount, altCount + refCount);
+
+                LOGGER.debug("sample({} chr({}) position({}) matched, counts(ref={} alt={} depth={})",
+                        mSampleId, bachRecord.chromosome(), bachRecord.position(),
+                        bachRecord.getGermlineRefCount(), bachRecord.getGermlineAltCount(), bachRecord.getGermlineReadDepth());
 
                 break;
             }

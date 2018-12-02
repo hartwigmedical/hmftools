@@ -304,18 +304,18 @@ public class BachelorProgram
         boolean isHomozygous = refGenotype.isHom();
         int phredScore = refGenotype.getPL().length >= 1 ? refGenotype.getPL()[0] : 0;
 
-        int refCount = refGenotype.getAD()[1];
-        int refReadDepth = refGenotype.getDP();
+        int germlineAltCount = refGenotype.getAD()[1];
+        int germlineReadDepth = refGenotype.getDP();
 
-        int altCount = 0;
-        int altReadDepth = 0;
+        int tumorAltCount = 0;
+        int tumorReadDepth = 0;
 
         if(variant.getGenotypes().size() >= 2)
         {
             final Genotype tumorGenotype = variant.getGenotype(1);
             int[] alleleData = tumorGenotype.getAD();
-            altCount = alleleData[1];
-            altReadDepth = tumorGenotype.getDP();
+            tumorAltCount = alleleData[1];
+            tumorReadDepth = tumorGenotype.getDP();
         }
 
         final String codonInfo = relevantSnpEff.aaPosAndLength();
@@ -338,10 +338,10 @@ public class BachelorProgram
                 .hgvsCoding(relevantSnpEff.hgvsCoding())
                 .isHomozygous(isHomozygous)
                 .phredScore(phredScore)
-                .refCount(refCount)
-                .refReadDepth(refReadDepth)
-                .altCount(altCount)
-                .altReadDepth(altReadDepth)
+                .germlineAltCount(germlineAltCount)
+                .germlineReadDepth(germlineReadDepth)
+                .tumorAltCount(tumorAltCount)
+                .tumorReadDepth(tumorReadDepth)
                 .condonInfo(codonInfo)
                 .build();
 

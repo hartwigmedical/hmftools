@@ -334,14 +334,14 @@ public class BachelorPP {
             List<Genotype> genoTypes = Lists.newArrayList();
 
             GenotypeBuilder gBuilder = new GenotypeBuilder(sampleId, builder.getAlleles());
-            int[] adCounts = { bachRecord.getGermlineCount(), bachRecord.getTumorCount() };
+            int[] adCounts = { bachRecord.getGermlineRefCount(), bachRecord.getGermlineAltCount() };
             gBuilder.AD(adCounts);
+            gBuilder.DP(bachRecord.getGermlineReadDepth());
             genoTypes.add(gBuilder.make());
 
             builder.genotypes(genoTypes);
             VariantContext variantContext = builder.make();
 
-            variantContext.getCommonInfo().putAttribute("AD", bachRecord.getTumorCount(), true);
             variantContext.getCommonInfo().addFilter("PASS");
             variantContext.getCommonInfo().putAttribute(SNPEFF_IDENTIFIER, bachRecord.annotations());
 
@@ -612,8 +612,8 @@ public class BachelorPP {
                         region.canonicalCosmicID() == null ? "" : region.canonicalCosmicID(),
                         bachRecord.effects(),
                         region.worstCodingEffect(),
-                        bachRecord.getGermlineCount(), bachRecord.getGermlineReadDepth(),
-                        bachRecord.getTumorCount(), bachRecord.getTumorReadDepth()));
+                        bachRecord.getGermlineAltCount(), bachRecord.getGermlineReadDepth(),
+                        bachRecord.getTumorAltCount(), bachRecord.getTumorReadDepth()));
 
                 writer.write(
                         String.format(",%.2f,%.2f,%s,%s,%s,%s,%d",

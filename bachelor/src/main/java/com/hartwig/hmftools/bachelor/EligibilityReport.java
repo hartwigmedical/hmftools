@@ -67,13 +67,13 @@ abstract class EligibilityReport {
 
     public abstract int phredScore();
 
-    public abstract int refCount();
+    public abstract int germlineAltCount();
 
-    public abstract int refReadDepth();
+    public abstract int germlineReadDepth();
 
-    public abstract int altCount();
+    public abstract int tumorAltCount();
 
-    public abstract int altReadDepth();
+    public abstract int tumorReadDepth();
 
     public abstract String condonInfo();
 }

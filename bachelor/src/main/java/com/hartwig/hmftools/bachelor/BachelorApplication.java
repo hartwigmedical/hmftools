@@ -355,7 +355,7 @@ public class BachelorApplication {
 
                 mMainDataWriter.write(String.format(",%s,%s,%d,%s,%s,%d,%d,%d,%d,%s",
                         r.hgvsProtein(), r.isHomozygous(), r.phredScore(), r.hgvsCoding(), r.matchType(),
-                        r.refCount(), r.refReadDepth(), r.altCount(), r.altReadDepth(), r.condonInfo()));
+                        r.germlineAltCount(), r.germlineReadDepth(), r.tumorAltCount(), r.tumorReadDepth(), r.condonInfo()));
 
                 mMainDataWriter.newLine();
 
@@ -388,7 +388,7 @@ public class BachelorApplication {
 
             mMainDataWriter.write("SAMPLEID,SOURCE,PROGRAM,ID,GENE,TRANSCRIPT_ID,CHROM,POS,REF,ALTS");
             mMainDataWriter.write(",EFFECTS,ANNOTATIONS,HGVS_PROTEIN,IS_HOMOZYGOUS,PHRED_SCORE,HGVS_CODING");
-            mMainDataWriter.write(",MATCH_TYPE,REF_COUNT,REF_READ_DEPTH,ALT_COUNT,ALT_READ_DEPTH,CODON_INFO");
+            mMainDataWriter.write(",MATCH_TYPE,GL_ALT_COUNT,GL_READ_DEPTH,TUMOR_ALT_COUNT,TUMOR_READ_DEPTH,CODON_INFO");
 
             mMainDataWriter.newLine();
 
