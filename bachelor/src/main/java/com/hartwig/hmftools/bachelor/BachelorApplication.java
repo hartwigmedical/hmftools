@@ -54,7 +54,6 @@ public class BachelorApplication {
     private static final String LOG_DEBUG = "log_debug";
     private static final String BATCH_MAX_DIR = "max_batch_dir"; // only for testing
 
-    private static final String BATCH_DIR_FILE = "batch_dir_file";
     private static final String SAMPLE_LIST_FILE = "sample_list_file";
 
     private BachelorProgram mProgram;
@@ -66,7 +65,6 @@ public class BachelorApplication {
     // config
     private String mOutputDir;
     private String mBatchDirectory;
-    private String mBatchDirectoryFile;
     private String mRunDirectoy;
     private boolean mIsBatchRun;
     private boolean mIsSingleRun;
@@ -83,7 +81,6 @@ public class BachelorApplication {
         mSampleId = "";
         mIsSingleRun = false;
         mIsBatchRun = false;
-        mBatchDirectoryFile = "";
         mBatchDirectory = "";
         mOutputDir = "";
         mMaxBatchDirectories = 0;
@@ -103,7 +100,6 @@ public class BachelorApplication {
         options.addOption(BATCH_MAX_DIR, true, "Max batch directories to batch process");
         options.addOption(VALIDATE, false, "only validate the configs");
         options.addOption(GERMLINE, false, "process the germline file");
-        options.addOption(BATCH_DIR_FILE, true, "Optional: list of directories to search");
         options.addOption(SAMPLE_LIST_FILE, true, "Optional: limiting list of sample IDs to process");
         options.addOption(SOMATIC, false, "process the somatic file");
         options.addOption(SAMPLE, true, "sample id");
@@ -159,7 +155,6 @@ public class BachelorApplication {
         if(cmd.hasOption(BATCH_DIRECTORY))
         {
             mBatchDirectory = cmd.getOptionValue(BATCH_DIRECTORY);
-            mBatchDirectoryFile = cmd.getOptionValue(BATCH_DIR_FILE, "");
             mMaxBatchDirectories = Integer.parseInt(cmd.getOptionValue(BATCH_MAX_DIR, "0"));
             mIsBatchRun = true;
 
@@ -211,31 +206,18 @@ public class BachelorApplication {
             {
                 List<RunDirectory> runDirectories = Lists.newArrayList();
 
-                if(!mBatchDirectoryFile.isEmpty())
-                {
-                    LOGGER.debug("loading batch directories from file");
+                final Path root = Paths.get(mBatchDirectory);
 
-                    final List<String> batchDirectories = loadBatchDirectories(mBatchDirectory, mBatchDirectoryFile);
-                    runDirectories = batchDirectories.stream()
-                            .map(Paths::get)
+                try (final Stream<Path> stream = Files.walk(root, 1, FileVisitOption.FOLLOW_LINKS).parallel())
+                {
+                    runDirectories = stream.filter(p -> p.toFile().isDirectory())
+                            .filter(p -> !p.equals(root))
                             .map(RunDirectory::new)
                             .collect(Collectors.toList());
                 }
-                else
+                catch (Exception e)
                 {
-                    final Path root = Paths.get(mBatchDirectory);
-
-                    try (final Stream<Path> stream = Files.walk(root, 1, FileVisitOption.FOLLOW_LINKS).parallel())
-                    {
-                        runDirectories = stream.filter(p -> p.toFile().isDirectory())
-                                .filter(p -> !p.equals(root))
-                                .map(RunDirectory::new)
-                                .collect(Collectors.toList());
-                    }
-                    catch (Exception e)
-                    {
-                        LOGGER.error("failed walking batch directories: {}", e.toString());
-                    }
+                    LOGGER.error("failed walking batch directories: {}", e.toString());
                 }
 
                 LOGGER.info("found {} batch directories", runDirectories.size());
@@ -278,50 +260,6 @@ public class BachelorApplication {
         }
 
         return true;
-    }
-
-    private static int BATCH_DIRECTORIES_CSV_FIELDS= 4;
-
-    private static List<String> loadBatchDirectories(final String rootDir, final String filename)
-    {
-        List<String> batchDirectories = Lists.newArrayList();
-
-        if (filename.isEmpty())
-            return batchDirectories;
-
-        try
-        {
-            BufferedReader fileReader = new BufferedReader(new FileReader(filename));
-
-            String line = fileReader.readLine(); // skip header
-
-            while ((line = fileReader.readLine()) != null)
-            {
-                String[] items = line.split(",");
-
-                // CSV fields Month,Date,Time,Directory
-
-                if (items.length < BATCH_DIRECTORIES_CSV_FIELDS)
-                {
-                    LOGGER.error("invalid CSV item length({})", items.length);
-                    return batchDirectories;
-                }
-
-                final String directory = rootDir + items[3];
-
-                batchDirectories.add(directory);
-            }
-
-            LOGGER.debug("loaded {} batch directories", batchDirectories.size());
-
-        }
-        catch (IOException exception)
-        {
-            LOGGER.error("Failed to read batch dirs input CSV file({})", filename);
-            return batchDirectories;
-        }
-
-        return batchDirectories;
     }
 
     private void loadSampleListFile(final String filename)
