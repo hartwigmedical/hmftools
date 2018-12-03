@@ -281,12 +281,16 @@ public class ClusterAnalyser {
             return;
 
         mChainFinder.initialise(mSampleId, cluster);
-        // mChainFinder.setRequireFullChains(true);
+
+        isSpecificCluster(cluster);
 
         boolean hasFullChain = mChainFinder.formClusterChains();
 
         if(!hasFullChain)
+        {
+            checkChainReplication(cluster);
             return;
+        }
 
         cluster.setIsFullyChained(true);
 
@@ -357,51 +361,52 @@ public class ClusterAnalyser {
             }
 
         }
-
-        // cluster.removeReplicatedSvs();
     }
 
-    @ Deprecated
-    public static boolean isConsistentCluster(final SvCluster cluster)
+    private void checkChainReplication(SvCluster cluster)
     {
-        if(cluster.isSimpleSVs() && cluster.getLongDelDups().isEmpty())
-            return true;
+        if(!cluster.hasReplicatedSVs())
+            return;
 
-        if(cluster.isResolved())
-            return true;
+        // check whether any chains are identical to others using replicated SVs
+        // in which case remove the replicated SVs and chains
+        List<SvChain> chains = cluster.getChains();
 
-        if(!cluster.isConsistent())
-            return false;
-
-        // each arm must be consistent
-        for(final SvArmGroup armGroup : cluster.getArmGroups())
+        int index1 = 0;
+        while(index1 < chains.size())
         {
-            if(!armGroup.isConsistent())
-                return false;
+            final SvChain chain1 = chains.get(index1);
+
+            for(int index2 = index1+1; index2 < chains.size(); ++index2)
+            {
+                final SvChain chain2 = chains.get(index2);
+
+                if(chain1.identicalChain(chain2))
+                {
+                    boolean allReplicatedSVs = chain2.getUniqueSvCount() == 0;
+
+                    LOGGER.debug("cluster({}) removing duplicate chain({}) vs origChain({}) all replicated({})",
+                            cluster.getId(), chain2.getId(), chain1.getId(), allReplicatedSVs);
+
+                    // remove these replicated SVs as well as the replicated chain
+                    if(allReplicatedSVs)
+                    {
+                        for (final SvVarData var : chain2.getSvList())
+                        {
+                            cluster.removeReplicatedSv(var);
+                        }
+                    }
+
+                    chains.remove(index2);
+                    continue;
+
+                }
+
+                ++index2;
+            }
+
+            ++index1;
         }
-
-        // finally must be fully chained or only composed of unchained simple SVs
-        if(cluster.isFullyChained())
-            return true;
-
-        // other wise check whether all remaining SVs are either in consistent chains
-        // or themselves consistent
-        for(final SvChain chain : cluster.getChains())
-        {
-            if(!chain.isConsistent())
-                return false;
-        }
-
-        for(final SvVarData var : cluster.getUnlinkedSVs())
-        {
-            if(!var.isLocal()) // so filters out cross arm, null breakends and translocation
-                return false;
-
-            if(calcConsistency(var) != 0)
-                return false;
-        }
-
-        return true;
     }
 
     private void setClusterResolvedState(SvCluster cluster)
@@ -709,8 +714,7 @@ public class ClusterAnalyser {
 
     private boolean isSingleClosestTI(final SvCluster otherCluster, final SvCluster soloSingleCluster)
     {
-        // first cluster has the open single in a chain, the second is a solo single
-        // can be merged if the open single is the closest cluster to this cluster
+        // first cluster has the closest VS to the solo single and can form a TI with it
         final SvVarData soloVar = soloSingleCluster.getSVs().get(0);
 
         final List<SvBreakend> breakendList = mClusteringMethods.getChrBreakendMap().get(soloVar.chromosome(true));

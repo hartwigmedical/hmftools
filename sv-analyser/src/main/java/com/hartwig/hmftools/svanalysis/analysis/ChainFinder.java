@@ -130,9 +130,9 @@ public class ChainFinder
                     svList.size(), mCluster.getCount(), mCluster.getChains().size());
         }
 
-        boolean hasChains = formChains(svList, inferredTIs);
+        boolean fullyChained = formChains(svList, inferredTIs);
 
-        return hasChains;
+        return fullyChained;
     }
 
     private List<SvLinkedPair> collectRelevantLinkedPairs()

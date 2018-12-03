@@ -9,6 +9,7 @@ import static com.hartwig.hmftools.svanalysis.analysis.ClusterAnalyser.SMALL_CLU
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.calcConsistency;
 import static com.hartwig.hmftools.svanalysis.annotators.LineElementAnnotator.hasPolyAorTMotif;
 import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.ASSEMBLY_MATCH_INFER_ONLY;
+import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.removedLinksWithSV;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_END;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_START;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.isStart;
@@ -228,6 +229,60 @@ public class SvCluster
         }
     }
 
+    public void removeReplicatedSv(final SvVarData var)
+    {
+        if(!var.isReplicatedSv())
+            return;
+
+        mSVs.remove(var);
+        mUnchainedSVs.remove(var);
+
+        // remove from any cached links
+        removedLinksWithSV(mAssemblyLinkedPairs, var);
+        removedLinksWithSV(mInferredLinkedPairs, var);
+        removedLinksWithSV(mLinkedPairs, var);
+
+        // deregister from the original SV
+        if(var.getReplicatedSv() != null)
+        {
+            int newReplicationCount = max(var.getReplicatedSv().getReplicatedCount() - 1, 0);
+            var.getReplicatedSv().setReplicatedCount(newReplicationCount);
+        }
+
+        for(int be = SVI_START; be <= SVI_END; ++be)
+        {
+            if (be == SVI_END && var.isNullBreakend())
+                continue;
+
+            if (be == SVI_END && var.isLocal())
+                continue;
+
+            boolean useStart = isStart(be);
+
+            for (SvArmGroup armGroup : mArmGroups)
+            {
+                if(armGroup.chromosome().equals(var.chromosome(useStart)) && armGroup.arm().equals(var.arm(useStart)))
+                {
+                    mArmGroups.remove(var);
+                    break;
+                }
+            }
+        }
+
+        // retest cluster status again
+        mHasReplicatedSVs = false;
+        for(final SvVarData sv : mSVs)
+        {
+            if (sv.isReplicatedSv())
+            {
+                mHasReplicatedSVs = true;
+                break;
+            }
+        }
+
+        mRequiresRecalc = true;
+    }
+
     public boolean isSyntheticSimpleType()
     {
         if(!mIsResolved)
@@ -326,16 +381,8 @@ public class SvCluster
     public void setAssemblyLinkedPairs(final List<SvLinkedPair> pairs) { mAssemblyLinkedPairs = pairs; }
     public void setSpanningSVs(final List<SvVarData> svList) { mSpanningSVs = svList; }
 
-    // private static int SPECIFIC_CLUSTER_ID = 158;
     public void mergeOtherCluster(final SvCluster other)
     {
-        /*
-        if(mId == SPECIFIC_CLUSTER_ID)
-        {
-            LOGGER.debug("spec cluster");
-        }
-        */
-
         // just add the other cluster's variants - no preservation of links or chains
         if(other.getCount() > getCount())
         {
@@ -569,13 +616,13 @@ public class SvCluster
 
     public void registerInversion(final SvVarData var)
     {
-        if(!mInversions.contains(var))
+        if(!mInversions.contains(var) && !var.isReplicatedSv())
             mInversions.add(var);
     }
 
     public void registerLongDelDup(final SvVarData var)
     {
-        if(!mLongDelDups.contains(var))
+        if(!mLongDelDups.contains(var) && !var.isReplicatedSv())
             mLongDelDups.add(var);
     }
 

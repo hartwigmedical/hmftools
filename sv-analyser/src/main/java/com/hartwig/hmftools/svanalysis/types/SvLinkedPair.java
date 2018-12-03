@@ -206,4 +206,23 @@ public class SvLinkedPair {
             || mFirst.equals(other.second(), true) || mSecond.equals(other.first(), true));
     }
 
+    public static void removedLinksWithSV(List<SvLinkedPair> list, final SvVarData var)
+    {
+        int index = 0;
+        while(index < list.size())
+        {
+            SvLinkedPair pair = list.get(index);
+
+            if(pair.first() == var || pair.second() == var)
+            {
+                list.remove(index);
+            }
+            else
+            {
+                ++index;
+            }
+        }
+    }
+
+
 }

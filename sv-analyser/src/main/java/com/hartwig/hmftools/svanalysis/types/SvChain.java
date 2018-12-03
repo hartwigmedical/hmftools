@@ -460,4 +460,25 @@ public class SvChain {
         return mLinkedPairs.contains(pair);
     }
 
+    public boolean identicalChain(final SvChain other)
+    {
+        // same SVs forming same links in the same order
+        if(mLinkedPairs.size() != other.getLinkCount())
+            return false;
+
+
+        for(int i = 0; i < mLinkedPairs.size(); ++i)
+        {
+            final SvLinkedPair pair = mLinkedPairs.get(i);
+            final SvLinkedPair otherPair = other.getLinkedPairs().get(i);
+
+            if(!pair.first().equals(otherPair.first(), true))
+                return false;
+
+            if(!pair.second().equals(otherPair.second(), true))
+                return false;
+        }
+
+        return true;
+    }
 }

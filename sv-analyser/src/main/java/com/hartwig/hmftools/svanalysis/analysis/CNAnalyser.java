@@ -283,7 +283,7 @@ public class CNAnalyser {
                             .id(Integer.toString(varId))
                             .vcfId("")
                             .type(StructuralVariantType.SGL)
-                            .ploidy(copyNumber)
+                            .ploidy(copyNumberChange)
                             .startPosition(position)
                             .startChromosome(noneCnRecord.chromosome())
                             .startOrientation(orientation)
