@@ -273,7 +273,7 @@ public class SvSampleAnalyser {
                 writer.write(",NearestLen,NearestType,DBLenStart,DBLenEnd,SynDelDupLen,SynDelDupTILen");
 
                 // proximity info and other link info
-                writer.write(",FoldbackLnkStart,FoldbackLenStart,FoldbackAssemblyLinksStart,FoldbackLnkEnd,FoldbackLenEnd,FoldbackAssemblyLinksEnd");
+                writer.write(",FoldbackLnkStart,FoldbackLenStart,FoldbackLinkInfoStart,FoldbackLnkEnd,FoldbackLenEnd,FoldbackLinkInfoEnd");
 
                 // transitive info
                 // writer.write(",TransType,TransLen,TransSvLinks");
@@ -392,8 +392,8 @@ public class SvSampleAnalyser {
                         cluster.getSynDelDupLength(), cluster.getSynDelDupTILength()));
 
                 writer.write(String.format(",%s,%d,%s,%s,%d,%s",
-                        var.getFoldbackLink(true), var.getFoldbackLen(true), var.getFoldbackAssemblyLinks(true),
-                        var.getFoldbackLink(false), var.getFoldbackLen(false), var.getFoldbackAssemblyLinks(false)));
+                        var.getFoldbackLink(true), var.getFoldbackLen(true), var.getFoldbackLinkInfo(true),
+                        var.getFoldbackLink(false), var.getFoldbackLen(false), var.getFoldbackLinkInfo(false)));
 
                 // writer.write(String.format(",%s,%d,%s", var.getTransType(), var.getTransLength(), var.getTransSvLinks()));
 

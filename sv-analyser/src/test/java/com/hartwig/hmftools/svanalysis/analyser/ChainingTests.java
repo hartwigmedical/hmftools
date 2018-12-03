@@ -2,6 +2,8 @@ package com.hartwig.hmftools.svanalysis.analyser;
 
 import static com.hartwig.hmftools.svanalysis.analyser.SvTestHelper.createDel;
 import static com.hartwig.hmftools.svanalysis.analyser.SvTestHelper.createDup;
+import static com.hartwig.hmftools.svanalysis.types.SvChain.CHAIN_ASSEMBLY_LINK_COUNT;
+import static com.hartwig.hmftools.svanalysis.types.SvChain.CHAIN_LINK_COUNT;
 import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.LINK_TYPE_DB;
 import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.LINK_TYPE_TI;
 
@@ -60,6 +62,7 @@ public class ChainingTests
         final SvVarData var1 = createDel("1", "1", 1100, 1200);
         final SvVarData var2 = createDel("2", "1", 1300, 1400);
         SvLinkedPair lp1 = new SvLinkedPair(var1, var2, LINK_TYPE_TI, false, true);
+        lp1.setIsInferred(false);
 
         // test adding linked pairs of various orientations to the start and end of a chain
         SvChain chain = new SvChain(0);
@@ -71,6 +74,7 @@ public class ChainingTests
 
         final SvVarData var3 = createDel("3", "1", 1500, 1600);
         SvLinkedPair lp2 = new SvLinkedPair(var3, var2, LINK_TYPE_TI, true, false);
+        lp2.setIsInferred(false);
 
         assertFalse(chain.canAddLinkedPairToStart(lp2));
         assertTrue(chain.canAddLinkedPairToEnd(lp2));
@@ -100,17 +104,41 @@ public class ChainingTests
         assertTrue(chain.canAddLinkedPairToStart(lp4));
         chain.addLink(lp4, true);
 
+        assertEquals(chain.getAssemblyLinkCount(), 2);
+
         SvLinkedPair lp5 = new SvLinkedPair(var5, var3, LINK_TYPE_TI, false, false);
 
         assertTrue(chain.canAddLinkedPairToEnd(lp5));
         assertTrue(chain.linkWouldCloseChain(lp5));
 
         // tests paths through the chain from various points
-        chain.breakendsAreChained(var4, false, var3, true);
-        chain.breakendsAreChained(var5, true, var2, true);
+        int[] chainData = chain.breakendsAreChained(var4, false, var3, true);
+        assertEquals(chainData[CHAIN_LINK_COUNT], 3);
+        assertEquals(chainData[CHAIN_ASSEMBLY_LINK_COUNT], 2);
 
-        chain.breakendsAreChained(var3, true, var4, false);
-        chain.breakendsAreChained(var5, false, var1, true);
+        // check works in the other direction
+        chainData = chain.breakendsAreChained(var3, true, var4, false);
+        assertEquals(chainData[CHAIN_LINK_COUNT], 3);
+        assertEquals(chainData[CHAIN_ASSEMBLY_LINK_COUNT], 2);
+
+        // check a single link
+        chainData = chain.breakendsAreChained(var1, false, var2, true);
+        assertEquals(chainData[CHAIN_LINK_COUNT], 1);
+        assertEquals(chainData[CHAIN_ASSEMBLY_LINK_COUNT], 1);
+
+        // check breakends facing the wrong way
+        chainData = chain.breakendsAreChained(var1, false, var2, false);
+        assertEquals(chainData[CHAIN_LINK_COUNT], 0);
+
+        chainData = chain.breakendsAreChained(var1, true, var2, false);
+        assertEquals(chainData[CHAIN_LINK_COUNT], 0);
+
+        chainData = chain.breakendsAreChained(var1, true, var2, true);
+        assertEquals(chainData[CHAIN_LINK_COUNT], 0);
+
+        // check no link
+        chainData = chain.breakendsAreChained(var5, false, var1, true);
+        assertEquals(chainData[CHAIN_LINK_COUNT], 0);
     }
 
 

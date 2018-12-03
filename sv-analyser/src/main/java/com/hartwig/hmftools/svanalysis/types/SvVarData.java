@@ -60,8 +60,8 @@ public class SvVarData
     private String mFoldbackLinkEnd;
     private int mFoldbackLenStart;
     private int mFoldbackLenEnd;
-    private int mFoldbackAssemblyLinksStart;
-    private int mFoldbackAssemblyLinksEnd;
+    private String mFoldbackLinkInfoStart;
+    private String mFoldbackLinkInfoEnd;
 
     private long mNearestSvDistance;
     private String mNearestSvRelation;
@@ -153,8 +153,8 @@ public class SvVarData
         mFoldbackLinkEnd = "";
         mFoldbackLenStart = -1;
         mFoldbackLenEnd = -1;
-        mFoldbackAssemblyLinksStart = 0;
-        mFoldbackAssemblyLinksEnd = 0;
+        mFoldbackLinkInfoStart = "";
+        mFoldbackLinkInfoEnd = "";
 
         mGenesStart = Lists.newArrayList();
         mGenesEnd = Lists.newArrayList();
@@ -390,20 +390,20 @@ public class SvVarData
 
     public String getFoldbackLink(boolean useStart) { return useStart ? mFoldbackLinkStart : mFoldbackLinkEnd; }
     public int getFoldbackLen(boolean useStart) { return useStart ? mFoldbackLenStart : mFoldbackLenEnd; }
-    public int getFoldbackAssemblyLinks(boolean useStart) { return useStart ? mFoldbackAssemblyLinksStart : mFoldbackAssemblyLinksEnd; }
-    public void setFoldbackLink(boolean isStart, String link, int length, int assemblyLinks)
+    public final String getFoldbackLinkInfo(boolean useStart) { return useStart ? mFoldbackLinkInfoStart : mFoldbackLinkInfoEnd; }
+    public void setFoldbackLink(boolean isStart, String link, int length, String linkInfo)
     {
         if(isStart)
         {
             mFoldbackLinkStart = link;
             mFoldbackLenStart = length;
-            mFoldbackAssemblyLinksStart = assemblyLinks;
+            mFoldbackLinkInfoStart = linkInfo;
         }
         else
         {
             mFoldbackLinkEnd = link;
             mFoldbackLenEnd = length;
-            mFoldbackAssemblyLinksEnd = assemblyLinks;
+            mFoldbackLinkInfoEnd = linkInfo;
         }
 
         if(mCluster != null)
@@ -435,15 +435,14 @@ public class SvVarData
         return chromosome(true).equals(chromosome(false)) && mStartArm.equals(mEndArm);
     }
 
+    public final boolean isCrossArm()
+    {
+        return type() != SGL && !isLocal();
+    }
+
     public final boolean isSimpleType()
     {
         return (type() == DEL || type() == DUP || type() == INS);
-    }
-
-    public static boolean isTranslocation(StructuralVariantType type) { return type == BND; }
-    public boolean isTranslocation()
-    {
-        return isTranslocation(type());
     }
 
     public static boolean isStart(int svIter) { return svIter == SVI_START; }

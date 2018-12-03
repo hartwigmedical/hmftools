@@ -22,6 +22,8 @@ import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.addCl
 import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.checkClusterDuplicates;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.calcConsistency;
 import static com.hartwig.hmftools.svanalysis.annotators.LineElementAnnotator.markLineCluster;
+import static com.hartwig.hmftools.svanalysis.types.SvChain.CHAIN_ASSEMBLY_LINK_COUNT;
+import static com.hartwig.hmftools.svanalysis.types.SvChain.CHAIN_LINK_COUNT;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_COMPLEX_CHAIN;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_LINE;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_NONE;
@@ -31,6 +33,7 @@ import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_SIMP
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_SGL_PAIR_INS;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_SIMPLE_SV;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.copyNumbersEqual;
+import static com.hartwig.hmftools.svanalysis.types.SvCluster.areSpecificClusters;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.isSpecificCluster;
 import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.ASSEMBLY_MATCH_MATCHED;
 import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.LINK_TYPE_SGL;
@@ -47,7 +50,6 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.svanalysis.annotators.LineElementAnnotator;
 import com.hartwig.hmftools.svanalysis.types.SvArmGroup;
 import com.hartwig.hmftools.svanalysis.types.SvBreakend;
 import com.hartwig.hmftools.svanalysis.types.SvCNData;
@@ -806,7 +808,7 @@ public class ClusterAnalyser {
     private boolean canMergeClustersOnCommonArms(final SvCluster cluster1, final SvCluster cluster2, long armWidthCutoff)
     {
         // merge if the 2 clusters have BNDs linking the same 2 inconsistent or long arms
-        isSpecificCluster(cluster1);
+        areSpecificClusters(cluster1, cluster2);
 
         // re-check which BNDs may link arms
         cluster1.setArmLinks();
@@ -826,15 +828,15 @@ public class ClusterAnalyser {
         if(inconsistentArms1.isEmpty() || inconsistentArms2.isEmpty())
             return false;
 
-        final List<SvVarData> bndList1 = cluster1.getUnlinkedBnds();
-        final List<SvVarData> bndList2 = cluster2.getUnlinkedBnds();
+        final List<SvVarData> crossArmList1 = cluster1.getUnlinkedRemoteSVs();
+        final List<SvVarData> crossArmList2 = cluster2.getUnlinkedRemoteSVs();
 
         // now that the candidate arm groups have been established, just need to find a single BND
         // from each cluster that falls into the same par of arm groups
 
-        for (final SvVarData var1 : bndList1)
+        for (final SvVarData var1 : crossArmList1)
         {
-            for (final SvVarData var2 : bndList2)
+            for (final SvVarData var2 : crossArmList2)
             {
                 if(!haveSameChrArms(var1, var2))
                     continue;
@@ -1122,7 +1124,7 @@ public class ClusterAnalyser {
         boolean v1Start = be1.usesStart();
         boolean v2Start = be2.usesStart();
 
-        int assemblyLinkCount = 0;
+        int[] chainData = {-1, -1};
 
         if(var1.equals(var2))
         {
@@ -1161,9 +1163,9 @@ public class ClusterAnalyser {
 
             // check if a path can be walked between these 2 breakends along the chain
             // without going back through this foldback point
-            assemblyLinkCount = chain1.breakendsAreChained(var1, !v1Start, var2, !v2Start);
+            chainData = chain1.breakendsAreChained(var1, !v1Start, var2, !v2Start);
 
-            if(assemblyLinkCount == -1)
+            if(chainData[CHAIN_LINK_COUNT] == 0)
                 return;
 
             // check for a conflicting deletion bridge on the backmost of the 2 breakends
@@ -1230,8 +1232,10 @@ public class ClusterAnalyser {
         if(!var2.getFoldbackLink(v2Start).isEmpty())
             clearFoldbackInfo(var2.getFoldbackLink(v2Start), var2.id(), cluster2, v2Start);
 
-        var1.setFoldbackLink(v1Start, var2.id(), length, assemblyLinkCount);
-        var2.setFoldbackLink(v2Start, var1.id(), length, assemblyLinkCount);
+        String chainInfo = String.format("%d;%d", chainData[CHAIN_LINK_COUNT], chainData[CHAIN_ASSEMBLY_LINK_COUNT]);
+
+        var1.setFoldbackLink(v1Start, var2.id(), length, chainInfo);
+        var2.setFoldbackLink(v2Start, var1.id(), length, chainInfo);
 
         if(var1.equals(var2))
         {
@@ -1272,9 +1276,9 @@ public class ClusterAnalyser {
             && chain.getLastSV().equals(var, true)
             && chain.firstLinkOpenOnStart() == chain.lastLinkOpenOnStart())
             {
-                int assemblyLinkCount = chain.getAssemblyLinkCount();
-                var.setFoldbackLink(true, var.id(), 0, assemblyLinkCount);
-                var.setFoldbackLink(false, var.id(), 0, assemblyLinkCount);
+                final String chainInfo = String.format("%d;%d", chain.getLinkCount(), chain.getAssemblyLinkCount());
+                var.setFoldbackLink(true, var.id(), 0, chainInfo);
+                var.setFoldbackLink(false, var.id(), 0, chainInfo);
 
                 LOGGER.debug(String.format("cluster(%s) foldback translocation SV(%s) with self",
                         cluster.getId(), var.posId()));
@@ -1290,9 +1294,9 @@ public class ClusterAnalyser {
             return;
 
         if(var.getFoldbackLink(true).equals(matchVarId))
-            var.setFoldbackLink(true, "", -1, 0);
+            var.setFoldbackLink(true, "", -1, "");
         else
-            var.setFoldbackLink(false, "", -1, 0);
+            var.setFoldbackLink(false, "", -1, "");
     }
 
     public void annotateTemplatedInsertions(final List<SvCluster> clusters)

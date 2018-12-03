@@ -7,7 +7,6 @@ import static com.hartwig.hmftools.common.variant.structural.StructuralVariantTy
 import static com.hartwig.hmftools.svanalysis.analysis.ClusterAnalyser.SHORT_TI_LENGTH;
 import static com.hartwig.hmftools.svanalysis.analysis.ClusterAnalyser.SMALL_CLUSTER_SIZE;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.calcConsistency;
-import static com.hartwig.hmftools.svanalysis.annotators.LineElementAnnotator.hasPolyAorTMotif;
 import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.ASSEMBLY_MATCH_INFER_ONLY;
 import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.removedLinksWithSV;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_END;
@@ -66,9 +65,10 @@ public class SvCluster
     private boolean mHasLinkingLineElements;
     private List<SvVarData> mInversions;
 
-    private boolean mRecalcBndStatus;
-    private List<SvVarData> mShortTIBnds;
-    private List<SvVarData> mUnlinkedBnds;
+    // state for SVs which link different arms or chromosomes
+    private boolean mRecalcRemoteSVStatus;
+    private List<SvVarData> mShortTIRemoteSVs;
+    private List<SvVarData> mUnlinkedRemoteSVs;
 
     private int mMinCopyNumber;
     private int mMaxCopyNumber;
@@ -124,9 +124,9 @@ public class SvCluster
         mFoldbacks = Lists.newArrayList();
         mHasLinkingLineElements = false;
         mInversions = Lists.newArrayList();
-        mShortTIBnds = Lists.newArrayList();
-        mUnlinkedBnds = Lists.newArrayList();
-        mRecalcBndStatus = false;
+        mShortTIRemoteSVs = Lists.newArrayList();
+        mUnlinkedRemoteSVs = Lists.newArrayList();
+        mRecalcRemoteSVStatus = false;
 
         mSubClusters = Lists.newArrayList();
         mChrCNDataMap = null;
@@ -194,8 +194,8 @@ public class SvCluster
                 mTypeCountMap.put(typeStr, 1);
             }
 
-            if(var.type() == BND)
-                mRecalcBndStatus = true;
+            if(var.type() == BND || var.isCrossArm())
+                mRecalcRemoteSVStatus = true;
         }
 
         // keep track of all SVs in their respective chromosomal arms
@@ -542,20 +542,20 @@ public class SvCluster
                 otherInfo += String.format("inv=%d", mInversions.size());
             }
 
-            if(!mShortTIBnds.isEmpty())
+            if(!mShortTIRemoteSVs.isEmpty())
             {
                 if (!otherInfo.isEmpty())
                     otherInfo += " ";
 
-                otherInfo += String.format("sti-bnd=%d", mShortTIBnds.size());
+                otherInfo += String.format("sti-bnd=%d", mShortTIRemoteSVs.size());
             }
 
-            if(!mUnlinkedBnds.isEmpty())
+            if(!mUnlinkedRemoteSVs.isEmpty())
             {
                 if (!otherInfo.isEmpty())
                     otherInfo += " ";
 
-                otherInfo += String.format("unlnk-bnd=%d", mUnlinkedBnds.size());
+                otherInfo += String.format("unlnk-bnd=%d", mUnlinkedRemoteSVs.size());
             }
 
             LOGGER.debug(String.format("cluster(%d) complex SVs(%d rep=%d) desc(%s res=%s) arms(%d) consis(%d) chains(%d perc=%.2f) replic(%s) %s",
@@ -634,47 +634,46 @@ public class SvCluster
 
     public boolean hasLinkingLineElements() { return mHasLinkingLineElements; }
 
-    public final List<SvVarData> getShortTIBnds() { return mShortTIBnds; }
-    public final List<SvVarData> getUnlinkedBnds() { return mUnlinkedBnds; }
+    public final List<SvVarData> getUnlinkedRemoteSVs() { return mUnlinkedRemoteSVs; }
 
     public void setArmLinks()
     {
-        if(!mRecalcBndStatus)
+        if(!mRecalcRemoteSVStatus)
             return;
 
         // keep track of BND which are or aren't candidates for links between arms
-        mShortTIBnds.clear();
-        mUnlinkedBnds.clear();
+        mShortTIRemoteSVs.clear();
+        mUnlinkedRemoteSVs.clear();
 
         for (final SvChain chain : mChains)
         {
-            // any BND which doesn't form a short TI is fair game
+            // any pair of remote SVs which don't form a short TI are fair game
             for (final SvLinkedPair pair : chain.getLinkedPairs())
             {
-                if (pair.first().type() == BND && pair.second().type() == BND && pair.length() <= SHORT_TI_LENGTH)
+                if (pair.first().isCrossArm() && pair.second().isCrossArm() && pair.length() <= SHORT_TI_LENGTH)
                 {
-                    if (!mShortTIBnds.contains(pair.first()))
-                        mShortTIBnds.add(pair.first());
+                    if (!mShortTIRemoteSVs.contains(pair.first()))
+                        mShortTIRemoteSVs.add(pair.first());
 
-                    if (!mShortTIBnds.contains(pair.second()))
-                        mShortTIBnds.add(pair.second());
+                    if (!mShortTIRemoteSVs.contains(pair.second()))
+                        mShortTIRemoteSVs.add(pair.second());
                 }
             }
         }
 
-        mUnlinkedBnds = mSVs.stream()
-                .filter(x -> x.type() == BND)
+        mUnlinkedRemoteSVs = mSVs.stream()
+                .filter(x -> x.isCrossArm())
                 .filter(x -> !x.inLineElement())
                 .filter(x -> !x.isReplicatedSv())
-                .filter(x -> !mShortTIBnds.contains(x))
+                .filter(x -> !mShortTIRemoteSVs.contains(x))
                 .collect(Collectors.toList());
 
         for (final SvArmGroup armGroup : mArmGroups)
         {
-            armGroup.setBoundaries(mShortTIBnds);
+            armGroup.setBoundaries(mShortTIRemoteSVs);
         }
 
-        mRecalcBndStatus = true;
+        mRecalcRemoteSVStatus = true;
     }
 
     private void setMinMaxCopyNumber()
@@ -776,8 +775,8 @@ public class SvCluster
         return null;
     }
 
-    // private static int SPECIFIC_CLUSTER_ID = -1;
-    private static int SPECIFIC_CLUSTER_ID = 178;
+    private static int SPECIFIC_CLUSTER_ID = -1;
+    // private static int SPECIFIC_CLUSTER_ID = 11;
 
     public static boolean isSpecificCluster(final SvCluster cluster)
     {
@@ -787,6 +786,17 @@ public class SvCluster
         return false;
     }
 
+    // private static int SPECIFIC_CLUSTER_ID_2 = 29;
+    private static int SPECIFIC_CLUSTER_ID_2 = -1;
+
+    public static boolean areSpecificClusters(final SvCluster cluster1, final SvCluster cluster2)
+    {
+        if((cluster1.getId() == SPECIFIC_CLUSTER_ID && cluster2.getId() == SPECIFIC_CLUSTER_ID_2)
+        || (cluster2.getId() == SPECIFIC_CLUSTER_ID && cluster1.getId() == SPECIFIC_CLUSTER_ID_2))
+            return true;
+
+        return false;
+    }
 
     public final List<String> getAnnotationList() { return mAnnotationList; }
     public final void addAnnotation(final String annotation)

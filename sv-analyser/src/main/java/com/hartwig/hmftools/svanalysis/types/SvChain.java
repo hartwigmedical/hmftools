@@ -397,17 +397,20 @@ public class SvChain {
         return count;
     }
 
-    public int breakendsAreChained(final SvVarData var1, boolean v1Start, final SvVarData var2, boolean v2Start)
+    public static int CHAIN_LINK_COUNT = 0;
+    public static int CHAIN_ASSEMBLY_LINK_COUNT = 1;
+
+    public int[] breakendsAreChained(final SvVarData var1, boolean v1Start, final SvVarData var2, boolean v2Start)
     {
         // check whether these breakends face towards each other in the chain
-        // return the number of assembly links between these 2 SVs, or -1 if the BEs aren't chained
+        // return info about the number of links including now many are assembled
 
         boolean be1FacesUp = false; // 'up' here means towards a higher index
         int be1Index = -1;
         boolean be2FacesUp = false;
         int be2Index = -1;
 
-        int assemblyLinkCount = 0;
+        int[] linkData = {0, 0};
 
         // in every linked pair, the first element is lower in the chain (where 0 is considering the beginning) and the second is higher,
         // so for every SV it's 'first' breakend in a given pair faces up, the 'second' faces down
@@ -428,7 +431,7 @@ public class SvChain {
 
             if(pair.first().equals(var2, true) && pair.firstLinkOnStart() == v2Start)
             {
-                be1Index = i;
+                be2Index = i;
                 be2FacesUp = true;
             }
             else if(pair.second().equals(var2, true) && pair.secondLinkOnStart() == v2Start)
@@ -437,22 +440,29 @@ public class SvChain {
                 be2FacesUp = false;
             }
 
-            if(be1Index >=0 && be2Index >= 0)
-            {
-                if(be1Index < be2Index && be1FacesUp && !be2FacesUp)
-                    return assemblyLinkCount;
-                else if(be1Index > be2Index && !be1FacesUp && be2FacesUp)
-                    return assemblyLinkCount;
-            }
-
             if(be1Index >= 0 || be2Index >= 0)
             {
+                ++linkData[CHAIN_LINK_COUNT];
+
                 if(pair.isAssembled())
-                    ++assemblyLinkCount;
+                    ++linkData[CHAIN_ASSEMBLY_LINK_COUNT];
+            }
+
+            if(be1Index >=0 && be2Index >= 0)
+            {
+                if((be1Index <= be2Index && be1FacesUp && !be2FacesUp)
+                || (be1Index >= be2Index && !be1FacesUp && be2FacesUp))
+                {
+                    return linkData;
+                }
             }
         }
 
-        return -1;
+        // reset since both links weren't found
+        linkData[CHAIN_LINK_COUNT] = 0;
+        linkData[CHAIN_ASSEMBLY_LINK_COUNT] = 0;
+
+        return linkData;
     }
 
     public boolean hasLinkedPair(final SvLinkedPair pair)
