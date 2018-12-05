@@ -54,6 +54,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 import com.hartwig.hmftools.svanalysis.types.SvArmGroup;
 import com.hartwig.hmftools.svanalysis.types.SvBreakend;
 import com.hartwig.hmftools.svanalysis.types.SvChain;
@@ -1167,6 +1168,29 @@ public class ClusterAnalyser {
 
         for(final SvCluster cluster : mClusters)
         {
+            if(cluster.getChains().isEmpty() || cluster.hasLinkingLineElements())
+                continue;
+
+            isSpecificCluster(cluster);
+
+            // gather up start and end arms from each chain
+            List<String> startEndArms = Lists.newArrayList();
+
+            for(final SvChain chain : cluster.getChains())
+            {
+                for (int be1 = SVI_START; be1 <= SVI_END; ++be1)
+                {
+                    boolean isFirst = isStart(be1);
+
+                    final SvBreakend chainEnd = chain.getChainEndSV(isFirst).getBreakend(chain.chainEndOpenOnStart(isFirst));
+                    if (chainEnd == null)
+                        continue;
+
+                    if (!startEndArms.contains(chainEnd.getChrArm()))
+                        startEndArms.add(chainEnd.getChrArm());
+                }
+            }
+
             for(final SvChain chain : cluster.getChains())
             {
                 List<SvLinkedPair> assembledLinks = Lists.newArrayList();
@@ -1200,6 +1224,8 @@ public class ClusterAnalyser {
                     final List<SvBreakend> breakendList = chrBreakendMap.get(firstBreakend.chromosome());
                     long closestSvDistance = getDistanceToNextClusterSV(cluster, breakendList, pair);
 
+                    pair.setTraversedUnclusteredCount(getUnclusteredTraversedSVs(cluster, breakendList, pair));
+
                     pair.setNearestSVDistance(closestSvDistance);
 
                     SvLinkedPair dbFirst = first.getDBLink(pair.firstLinkOnStart());
@@ -1207,6 +1233,11 @@ public class ClusterAnalyser {
 
                     pair.setDBLenFirst(dbFirst != null ? dbFirst.length() : NO_DB_MARKER);
                     pair.setDBLenSecond(dbSecond != null ? dbSecond.length() : NO_DB_MARKER);
+
+                    if(startEndArms.contains(firstBreakend.getChrArm()))
+                    {
+                        pair.setOnArmOfOrigin(true);
+                    }
 
                     // skip replicated SVs since more complicate to figure out, also those crossing centromere
                     boolean hasReplicatedSVs = (first.isReplicatedSv() || first.getReplicatedCount() > 0 || pair.second().isReplicatedSv() || pair.second().getReplicatedCount() > 0);
@@ -1228,6 +1259,33 @@ public class ClusterAnalyser {
                 }
             }
         }
+    }
+
+    private static int getUnclusteredTraversedSVs(final SvCluster cluster, final List<SvBreakend> breakendList, final SvLinkedPair pair)
+    {
+        // find any unclustered SGL, BND or INV crossed by this pair
+        final SvBreakend firstBreakend = pair.first().getBreakend(pair.firstLinkOnStart());
+        final SvBreakend secondBreakend = pair.second().getBreakend(pair.secondLinkOnStart());
+        int lowerIndex = min(firstBreakend.getChrPosIndex(), secondBreakend.getChrPosIndex());
+        int upperIndex = max(firstBreakend.getChrPosIndex(), secondBreakend.getChrPosIndex());
+
+        if(lowerIndex >= upperIndex - 1)
+            return 0;
+
+        int unclusteredTraversedCount = 0;
+
+        for (int i = lowerIndex + 1; i < upperIndex - 1; ++i)
+        {
+            final SvVarData var = breakendList.get(i).getSV();
+
+            if (var.getCluster() == cluster || var.getCluster().getCount() > 1)
+                continue;
+
+            if (var.type() == BND || var.type() == SGL || var.type() == INV)
+                ++unclusteredTraversedCount;
+        }
+
+        return unclusteredTraversedCount;
     }
 
     private static long getDistanceToNextClusterSV(final SvCluster cluster, final List<SvBreakend> breakendList, final SvLinkedPair pair)
@@ -1339,18 +1397,28 @@ public class ClusterAnalyser {
                 continue;
             }
 
-            final String startChrArm = makeChrArmStr(chain.getFirstSV(), chain.firstLinkOpenOnStart());
-            final String endChrArm = makeChrArmStr(chain.getLastSV(), chain.lastLinkOpenOnStart());
-
             Map<String, int[]> armDataMap = new HashMap();
 
-            armDataMap.put(startChrArm, new int[CHAIN_TI_ASMB_COUNT+1]);
-            armDataMap.put(endChrArm, new int[CHAIN_TI_ASMB_COUNT+1]);
+            final SvBreakend firstBreakend = chain.getFirstSV().getBreakend(chain.firstLinkOpenOnStart());
+            final SvBreakend lastBreakend = chain.getLastSV().getBreakend(chain.lastLinkOpenOnStart());
+
+            final String startChrArm = firstBreakend != null ? firstBreakend.getChrArm() : "";
+            final String endChrArm = lastBreakend != null ? lastBreakend.getChrArm() : "";
+
+            if(!startChrArm.isEmpty())
+                armDataMap.put(startChrArm, new int[CHAIN_TI_ASMB_COUNT+1]);
+
+            if(!endChrArm.isEmpty())
+                armDataMap.put(endChrArm, new int[CHAIN_TI_ASMB_COUNT+1]);
 
             for(final SvLinkedPair pair : chain.getLinkedPairs())
             {
                 final SvVarData first = pair.first();
-                final String chrArm = makeChrArmStr(first, pair.firstLinkOnStart());
+
+                if(pair.first().type() == SGL || pair.second().type() == SGL)
+                    continue;
+
+                final String chrArm = first.getBreakend(pair.firstLinkOnStart()).getChrArm();
 
                 int[] armData = armDataMap.get(chrArm);
 

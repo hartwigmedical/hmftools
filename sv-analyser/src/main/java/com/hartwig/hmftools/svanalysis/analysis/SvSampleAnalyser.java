@@ -509,7 +509,7 @@ public class SvSampleAnalyser {
 
                 writer.write("SampleId,ClusterId,ClusterDesc,ClusterCount,ResolvedType,IsLINE,FullyChained");
                 writer.write(",ChainId,ChainCount,ChainConsistent,Id1,Id2,ChrArm");
-                writer.write(",IsAssembled,TILength,NextSVLength,DBLenStart,DBLenEnd,CopyNumberGain,AssembledCount");
+                writer.write(",IsAssembled,TILength,NextSVLength,DBLenStart,DBLenEnd,OnArmOfOrigin,CopyNumberGain,TravUnclusteredCount,AssembledCount");
                 writer.newLine();
             }
 
@@ -560,10 +560,10 @@ public class SvSampleAnalyser {
                                         pair.first().getBreakend(pair.firstLinkOnStart()).getChrArm()));
 
                         writer.write(
-                                String.format(",%s,%d,%d,%d,%d,%s,%d",
+                                String.format(",%s,%d,%d,%d,%d,%s,%s,%d,%d",
                                         pair.isAssembled(), pair.length(), pair.getNearestSVDistance(),
-                                        pair.getDBLenFirst(), pair.getDBLenSecond(),
-                                        pair.hasCopyNumberGain(), pair.getAssembledChainCount()));
+                                        pair.getDBLenFirst(), pair.getDBLenSecond(), pair.onArmOfOrigin(),
+                                        pair.hasCopyNumberGain(), pair.getTraversedUnclusteredCount(), pair.getAssembledChainCount()));
 
                         writer.newLine();
                     }

@@ -21,8 +21,10 @@ public class SvLinkedPair {
     private int mAssembledChainCount;
     private int mDBLenFirst;
     private int mDBLenSecond;
+    private int mTraversedUnclusteredCount;
     private long mNearestSVDistance;
-    private boolean mCopyNumberGain; // for TIs, is this from an additional fragment
+    private boolean mCopyNumberGain; // for TIs, is this from an additional fragment, not impacting the actual or derivative chromosomes
+    private boolean mOnArmOfOrigin;
 
     public static final String LINK_TYPE_TI = "TI";
     public static final String LINK_TYPE_DB = "DB";
@@ -45,8 +47,10 @@ public class SvLinkedPair {
         mAssembledChainCount = 0;
         mDBLenFirst = 0;
         mDBLenSecond = 0;
+        mTraversedUnclusteredCount = 0;
         mNearestSVDistance = 0;
         mCopyNumberGain = false;
+        mOnArmOfOrigin = false;
 
         int length = (int) (first.position(firstLinkOnStart) - second.position(secondLinkOnStart));
         mLinkLength = abs(length);
@@ -106,6 +110,12 @@ public class SvLinkedPair {
 
     public void setCopyNumberGain(boolean isGain) { mCopyNumberGain = isGain; }
     public boolean hasCopyNumberGain() { return mCopyNumberGain; }
+
+    public void setOnArmOfOrigin(boolean toggle) { mOnArmOfOrigin = toggle; }
+    public boolean onArmOfOrigin() { return mOnArmOfOrigin; }
+
+    public void setTraversedUnclusteredCount(int count) { mTraversedUnclusteredCount = count; }
+    public int getTraversedUnclusteredCount() { return mTraversedUnclusteredCount; }
 
     public boolean hasVariantBE(final SvVarData var, boolean useStart)
     {

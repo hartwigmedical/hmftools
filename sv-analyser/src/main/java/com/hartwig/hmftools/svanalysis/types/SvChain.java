@@ -145,6 +145,7 @@ public class SvChain {
 
     public SvVarData getFirstSV() { return mSvList.isEmpty() ? null : mSvList.get(0); }
     public SvVarData getLastSV() { return mSvList.isEmpty() ? null : mSvList.get(mSvList.size()-1); }
+    public SvVarData getChainEndSV(boolean isFirst) { return isFirst ? getFirstSV() : getLastSV(); }
 
     public SvLinkedPair getFirstLinkedPair() { return mLinkedPairs.isEmpty() ? null : mLinkedPairs.get(0); }
     public SvLinkedPair getLastLinkedPair() { return mLinkedPairs.isEmpty() ? null : mLinkedPairs.get(mLinkedPairs.size()-1); }
@@ -153,11 +154,8 @@ public class SvChain {
     {
         return !mLinkedPairs.isEmpty() ? mLinkedPairs.get(0).firstUnlinkedOnStart() : false;
     }
-
-    public boolean lastLinkOpenOnStart()
-    {
-        return !mLinkedPairs.isEmpty() ? !mLinkedPairs.get(mLinkedPairs.size()-1).secondLinkOnStart() : false;
-    }
+    public boolean lastLinkOpenOnStart() { return !mLinkedPairs.isEmpty() ? !mLinkedPairs.get(mLinkedPairs.size()-1).secondLinkOnStart() : false; }
+    public boolean chainEndOpenOnStart(boolean isFirst) { return isFirst ? firstLinkOpenOnStart() : lastLinkOpenOnStart(); }
 
     public boolean isClosedLoop() { return mIsClosedLoop; }
 
