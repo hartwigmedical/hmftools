@@ -10,8 +10,8 @@ import com.hartwig.hmftools.common.variant.VariantConsequence;
 
 import htsjdk.variant.variantcontext.VariantContext;
 
-public class BachelorGermlineVariant {
-
+public class BachelorGermlineVariant implements Comparable<BachelorGermlineVariant>
+{
     private String mSampleId;
     private String mSource;
     private String mProgram;
@@ -90,6 +90,41 @@ public class BachelorGermlineVariant {
         mSomaticVariant = null;
         mVariantContext = null;
         mEnrichedVariant = null;
+    }
+
+    public int compareTo(final BachelorGermlineVariant other)
+    {
+        // sort based on Chromosome then Position
+        if(other.chromosome().equals(mChromosome))
+        {
+            return mPosition < other.position() ? -1 : 1;
+        }
+        else
+        {
+            int chr = chromosomeToInt(mChromosome);
+            int otherChr = chromosomeToInt(other.chromosome());
+
+            if(chr > 0 && otherChr > 0)
+                return chr < otherChr ? -1 : 1;
+            else if(chr > 0)
+                return -1;
+            else if(otherChr > 0)
+                return 1;
+            else
+                return mChromosome.compareTo(other.chromosome());
+        }
+    }
+
+    private static int chromosomeToInt(final String chr)
+    {
+        try
+        {
+            return Integer.parseInt(chr);
+        }
+        catch(Exception e)
+        {
+            return 0;
+        }
     }
 
     public final String variantId() { return mVariantId; };

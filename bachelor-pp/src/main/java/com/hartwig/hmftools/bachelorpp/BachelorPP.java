@@ -17,6 +17,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.sql.SQLException;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -230,14 +231,21 @@ public class BachelorPP {
 
         if(mIsBatchMode)
         {
+            String currentSample = "";
+            List<BachelorGermlineVariant> sampleRecords = null;
+
             for (final BachelorGermlineVariant bachRecord : bachRecords)
             {
-                List<BachelorGermlineVariant> sampleRecords = sampleRecordsMap.get(bachRecord.sampleId());
-
-                if(sampleRecords == null)
+                if(currentSample.isEmpty() || !currentSample.equals(bachRecord.sampleId()))
                 {
-                    sampleRecords = Lists.newArrayList();
-                    sampleRecordsMap.put(bachRecord.sampleId(), sampleRecords);
+                    currentSample = bachRecord.sampleId();
+                    sampleRecords = sampleRecordsMap.get(bachRecord.sampleId());
+
+                    if(sampleRecords == null)
+                    {
+                        sampleRecords = Lists.newArrayList();
+                        sampleRecordsMap.put(bachRecord.sampleId(), sampleRecords);
+                    }
                 }
 
                 sampleRecords.add(bachRecord);
@@ -257,6 +265,9 @@ public class BachelorPP {
         {
             final String specificSample = entry.getKey();
             List<BachelorGermlineVariant> sampleRecords = entry.getValue();
+
+            // sort by chromosome and position
+            Collections.sort(sampleRecords);
 
             // create variant objects for VCF file writing and enrichment, and cache against bachelor record
             buildVariants(specificSample, sampleRecords);
