@@ -504,6 +504,7 @@ CREATE TABLE structuralVariant
     recovered BOOLEAN NOT NULL,
     startRefContext varchar(255),
     endRefContext varchar(255),
+    insertSequenceAlignments varchar(512),
     PRIMARY KEY (id),
     INDEX(sampleId)
 );

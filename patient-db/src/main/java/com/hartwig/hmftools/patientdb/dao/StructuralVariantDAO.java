@@ -109,6 +109,7 @@ class StructuralVariantDAO {
                     .endLinkedBy(getValueNotNull(record.getValue(STRUCTURALVARIANT.ENDLINKEDBY)))
                     .startRefContext(getValueNotNull(record.getValue(STRUCTURALVARIANT.STARTREFCONTEXT)))
                     .endRefContext(getValueNotNull(record.getValue(STRUCTURALVARIANT.ENDREFCONTEXT)))
+                    .insertSequenceAlignments(record.getValue(STRUCTURALVARIANT.INSERTSEQUENCEALIGNMENTS))
                     .build());
         }
         return structuralVariants;
@@ -201,6 +202,7 @@ class StructuralVariantDAO {
                     .event(record.getValue(STRUCTURALVARIANT.EVENT))
                     .startLinkedBy(record.getValue(STRUCTURALVARIANT.STARTLINKEDBY))
                     .endLinkedBy(record.getValue(STRUCTURALVARIANT.ENDLINKEDBY))
+                    .insertSequenceAlignments(record.getValue(STRUCTURALVARIANT.INSERTSEQUENCEALIGNMENTS))
                     .build();
 
             regions.add(variant);
@@ -266,6 +268,7 @@ class StructuralVariantDAO {
                     STRUCTURALVARIANT.RECOVERED,
                     STRUCTURALVARIANT.STARTREFCONTEXT,
                     STRUCTURALVARIANT.ENDREFCONTEXT,
+                    STRUCTURALVARIANT.INSERTSEQUENCEALIGNMENTS,
                     STRUCTURALVARIANT.MODIFIED);
             batch.forEach(entry -> addRecord(timestamp, inserter, sample, entry));
             inserter.execute();
@@ -319,6 +322,7 @@ class StructuralVariantDAO {
                 variant.recovered(),
                 variant.start().refGenomeContext(),
                 variant.end() == null ? null : variant.end().refGenomeContext(),
+                variant.insertSequenceAlignments(),
                 timestamp);
     }
 

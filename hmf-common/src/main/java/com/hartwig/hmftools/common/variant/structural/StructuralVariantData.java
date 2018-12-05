@@ -53,5 +53,6 @@ public abstract class StructuralVariantData {
 
     public abstract String startRefContext();
     public abstract String endRefContext();
+    public abstract String insertSequenceAlignments();
 
 }
