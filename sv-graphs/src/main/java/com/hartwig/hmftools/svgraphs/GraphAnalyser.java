@@ -5,9 +5,10 @@ import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumberFile;
 import com.hartwig.hmftools.common.variant.structural.*;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
-import com.hartwig.hmftools.svgraphs.BreakpointGraph;
-import com.hartwig.hmftools.svgraphs.Simplification;
-import com.hartwig.hmftools.svgraphs.SimplificationFile;
+import com.hartwig.hmftools.svgraphs.simplification.SimpleEventSimplifier;
+import com.hartwig.hmftools.svgraphs.simplification.SimpleSimplificationStrategy;
+import com.hartwig.hmftools.svgraphs.simplification.Simplification;
+import com.hartwig.hmftools.svgraphs.simplification.SimplificationFile;
 import org.apache.commons.cli.*;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
@@ -20,6 +21,8 @@ import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.LongStream;
+import java.util.stream.Stream;
 
 public class GraphAnalyser {
 
@@ -67,14 +70,15 @@ public class GraphAnalyser {
 
         for (final String sample : samplesList) {
             List<EnrichedStructuralVariant> svRecords = dbAccess.readStructuralVariants(sample);
-            svRecords = hackFixPurpleOffByOne(svRecords);
-            svRecords = svRecords.stream().filter(sv -> sv.filter().equals("") || sv.filter().equals("PASS")).collect(Collectors.toList());
             List<PurpleCopyNumber> cnRecords = dbAccess.readCopynumbers(sample);
+            svRecords = hackFixPurpleOffByOne(svRecords, cnRecords);
+            svRecords = svRecords.stream().filter(sv -> sv.filter().equals("") || sv.filter().equals("PASS")).collect(Collectors.toList());
 
             LOGGER.info("sample({}) processing {} SVs, {} segments", sample, svRecords.size(), cnRecords.size());
 
             BreakpointGraph graph = new BreakpointGraph(cnRecords, svRecords);
-            List<Simplification> simplifications = graph.simplify();
+            SimpleEventSimplifier simplifier = new SimpleEventSimplifier(graph, new SimpleSimplificationStrategy());
+            List<Simplification> simplifications = simplifier.simplify();
 
             String cnFile = PurpleCopyNumberFile.generateFilename(cmd.getOptionValue(OUTPUT_DIRECTORY), String.format("%s_cn_reduced", sample));
             String remainingFile = EnrichedStructuralVariantFile.generateFilename(cmd.getOptionValue(OUTPUT_DIRECTORY), String.format("%s_sv_remaining.csv", sample));
@@ -89,20 +93,38 @@ public class GraphAnalyser {
         LOGGER.info("run complete");
     }
 
-    private static List<EnrichedStructuralVariant> hackFixPurpleOffByOne(List<EnrichedStructuralVariant> svRecords) {
+    private static List<EnrichedStructuralVariant> hackFixPurpleOffByOne(List<EnrichedStructuralVariant> svRecords, List<PurpleCopyNumber> cnRecords) {
         return svRecords.stream().map(sv ->
             ImmutableEnrichedStructuralVariant.builder().from(sv)
-                    .start(hackFixPurpleOffByOne(sv.start()))
-                    .end(hackFixPurpleOffByOne(sv.end()))
+                    .start(hackFixPurpleOffByOne(sv.start(), cnRecords))
+                    .end(hackFixPurpleOffByOne(sv.end(), cnRecords))
                     .build()
             ).collect(Collectors.toList());
     }
-
-    private static EnrichedStructuralVariantLeg hackFixPurpleOffByOne(EnrichedStructuralVariantLeg leg) {
-        if (leg == null || leg.orientation() == -1) return leg;
-        return ImmutableEnrichedStructuralVariantLeg.builder().from(leg)
-                .position(leg.position() - 1)
-                .build();
+    private static final long HACK_POSITION_ALLOWABLE_BP_ERROR = 2;
+    private static EnrichedStructuralVariantLeg hackFixPurpleOffByOne(EnrichedStructuralVariantLeg leg, List<PurpleCopyNumber> cnRecords) {
+        if (leg == null) return leg;
+        Stream<PurpleCopyNumber> candidateStream = cnRecords.stream()
+                .filter(cn -> cn.chromosome().equals(leg.chromosome()));
+        List<Long> candidates;
+        if (leg.orientation() == -1) {
+            candidates = candidateStream
+                    .filter(cn -> Math.abs(cn.start() - leg.position()) < HACK_POSITION_ALLOWABLE_BP_ERROR)
+                    .map(cn -> cn.start())
+                    .collect(Collectors.toList());
+        } else {
+            candidates = candidateStream
+                    .filter(cn -> Math.abs(cn.end() - leg.position()) < HACK_POSITION_ALLOWABLE_BP_ERROR)
+                    .map(cn -> cn.end())
+                    .collect(Collectors.toList());
+        }
+        if (candidates.contains(leg.position()) || candidates.size() == 0) {
+            return leg;
+        } else {
+            return ImmutableEnrichedStructuralVariantLeg.builder().from(leg)
+                    .position(candidates.get(0))
+                    .build();
+        }
     }
 
     private static List<String> getStructuralVariantSamplesList(@NotNull DatabaseAccess dbAccess)
