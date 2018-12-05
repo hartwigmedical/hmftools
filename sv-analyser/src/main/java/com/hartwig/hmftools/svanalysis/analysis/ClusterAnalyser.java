@@ -192,7 +192,7 @@ public class ClusterAnalyser {
 
             if(cluster.isFullyChained() && cluster.isConsistent())
             {
-                LOGGER.debug("sample({}) cluster({}) simple and consistent with {} SVs", mSampleId, cluster.getId(), cluster.getCount());
+                LOGGER.debug("sample({}) cluster({}) simple and consistent with {} SVs", mSampleId, cluster.id(), cluster.getCount());
             }
         }
     }
@@ -325,7 +325,7 @@ public class ClusterAnalyser {
         if(maxCopyNumber > 5 * minCopyNumber)
         {
             LOGGER.debug("cluster({}) skipping replication for large CN variation(min={} max={})",
-                    cluster.getId(), minCopyNumber, maxCopyNumber);
+                    cluster.id(), minCopyNumber, maxCopyNumber);
             return;
         }
 
@@ -351,7 +351,7 @@ public class ClusterAnalyser {
                 int svMultiple = calcCopyNumber / minCopyNumber;
 
                 LOGGER.debug("cluster({}) replicating SV({}) {} times, copyNumChg({} vs min={})",
-                        cluster.getId(), var.posId(), svMultiple, calcCopyNumber, minCopyNumber);
+                        cluster.id(), var.posId(), svMultiple, calcCopyNumber, minCopyNumber);
 
                 var.setReplicatedCount(svMultiple);
 
@@ -389,7 +389,7 @@ public class ClusterAnalyser {
                     boolean allReplicatedSVs = chain2.getUniqueSvCount() == 0;
 
                     LOGGER.debug("cluster({}) removing duplicate chain({}) vs origChain({}) all replicated({})",
-                            cluster.getId(), chain2.getId(), chain1.getId(), allReplicatedSVs);
+                            cluster.id(), chain2.id(), chain1.id(), allReplicatedSVs);
 
                     // remove these replicated SVs as well as the replicated chain
                     if(allReplicatedSVs)
@@ -596,7 +596,7 @@ public class ClusterAnalyser {
                 if(cluster1.hasSubClusters())
                 {
                     LOGGER.debug("cluster({} svs={}) merges in cluster({} svs={})",
-                            cluster1.getId(), cluster1.getCount(), cluster2.getId(), cluster2.getCount());
+                            cluster1.id(), cluster1.getCount(), cluster2.id(), cluster2.getCount());
 
                     cluster2Merged = true;
 
@@ -622,7 +622,7 @@ public class ClusterAnalyser {
                     newCluster = new SvCluster(mClusteringMethods.getNextClusterId());
 
                     LOGGER.debug("new cluster({}) from merge of cluster({} svs={}) and cluster({} svs={})",
-                            newCluster.getId(), cluster1.getId(), cluster1.getCount(), cluster2.getId(), cluster2.getCount());
+                            newCluster.id(), cluster1.id(), cluster1.getCount(), cluster2.id(), cluster2.getCount());
 
                     newCluster.addSubCluster(cluster1);
 
@@ -703,7 +703,7 @@ public class ClusterAnalyser {
                 || (i < breakendList.size() - 1 && otherCluster.getSVs().contains(breakendList.get(i + 1).getSV())))
                 {
                     LOGGER.debug("cluster({}) and cluster({}) have adjacent SVs with solo-single({})",
-                            otherCluster.getId(), soloSingleCluster.getId(), soloVar.id());
+                            otherCluster.id(), soloSingleCluster.id(), soloVar.id());
 
                     return true;
                 }
@@ -738,7 +738,7 @@ public class ClusterAnalyser {
                 || (checkNext && canFormTIWithChainEnd(otherCluster.getChains(), nextBreakend.getSV(), soloVar)))
                 {
                     LOGGER.debug("cluster({}) can form TI with cluster({}) and soloSingle({})",
-                            otherCluster.getId(), soloSingleCluster.getId(), soloVar.id());
+                            otherCluster.id(), soloSingleCluster.id(), soloVar.id());
                     return true;
                 }
 
@@ -793,7 +793,7 @@ public class ClusterAnalyser {
                             continue;
 
                         LOGGER.debug("cluster({}) SV({}) and cluster({}) SV({}) have foldbacks on same arm",
-                                cluster1.getId(), var1.posId(), cluster2.getId(), var2.posId());
+                                cluster1.id(), var1.posId(), cluster2.id(), var2.posId());
 
                         addClusterReason(cluster1, CLUSTER_REASON_FOLDBACKS, var2.id());
                         addClusterReason(cluster2, CLUSTER_REASON_FOLDBACKS, var1.id());
@@ -853,7 +853,7 @@ public class ClusterAnalyser {
                             continue;
 
                         LOGGER.debug("cluster({}) and cluster({}) have common links with SV({}) and SV({})",
-                                cluster1.getId(), cluster2.getId(), var1.posId(), var2.posId());
+                                cluster1.id(), cluster2.id(), var1.posId(), var2.posId());
 
                         final String commonArms = var1.id() + "_" + var2.id();
 
@@ -912,7 +912,7 @@ public class ClusterAnalyser {
             if(mainChainCount > 0)
             {
                 LOGGER.debug("removed cluster({}) since maxChainCount({}) less than subclusters({}) maxSubClusterChainCount({})",
-                        cluster.getId(), mainChainCount, cluster.getSubClusters().size(), maxSubClusterChainCount);
+                        cluster.id(), mainChainCount, cluster.getSubClusters().size(), maxSubClusterChainCount);
             }
 
             mClusters.remove(cluster);
@@ -1094,12 +1094,12 @@ public class ClusterAnalyser {
         if(var1.equals(var2))
         {
             LOGGER.debug(String.format("cluster(%s) foldback inversion SV(%s) length(%d) copyNumber(%.3f)",
-                    cluster1.getId(), var1.posId(), length, cn1));
+                    cluster1.id(), var1.posId(), length, cn1));
         }
         else
         {
             LOGGER.debug(String.format("cluster(%s) foldback be1(%s) be2(%s) length(%d) copyNumber(%.3f)",
-                    cluster1.getId(), be1.toString(), be2.toString(), length, cn1));
+                    cluster1.id(), be1.toString(), be2.toString(), length, cn1));
         }
     }
 
@@ -1137,7 +1137,7 @@ public class ClusterAnalyser {
                 var.setFoldbackLink(false, var.id(), 0, chainInfo);
 
                 LOGGER.debug(String.format("cluster(%s) foldback translocation SV(%s) with self",
-                        cluster.getId(), var.posId()));
+                        cluster.id(), var.posId()));
             }
         }
     }
@@ -1430,7 +1430,7 @@ public class ClusterAnalyser {
             chain.setDetails(chainInfo);
 
             LOGGER.debug("cluster({}) chain({}) {}",
-                    cluster.getId(), chain.getId(), chainInfo);
+                    cluster.id(), chain.id(), chainInfo);
         }
 
         if(allChainsConsistent)
@@ -1474,7 +1474,7 @@ public class ClusterAnalyser {
         if(hasHighCN)
         {
             LOGGER.info(String.format("sample(%s) cluster(%d) chain(%d) links(%d) closed loop, copyNumber(avg=%.1f max=%.2f) ploidy(%.1f)",
-                    mSampleId, cluster.getId(), chain.getId(), chain.getLinkCount(),
+                    mSampleId, cluster.id(), chain.id(), chain.getLinkCount(),
                     cnTotal/chain.getSvList().size(), maxCN, ploidyTotal/chain.getSvList().size()));
 
             cluster.addAnnotation(CLUSTER_ANNONTATION_DM);
@@ -1535,12 +1535,12 @@ public class ClusterAnalyser {
                     if(forwardRepeats.size() >= 4)
                     {
                         LOGGER.debug("sample({}) cluster({}) chain({}) {} sequence of {} SVs starting at index({}:{}) SV({})",
-                                mSampleId, cluster.getId(), chain.getId(), forwardSequence ? "forward" : "reverse",
+                                mSampleId, cluster.id(), chain.id(), forwardSequence ? "forward" : "reverse",
                                 forwardRepeats.size(), i, j, var1.id());
 
                         // ClusterId,ChainId,SequenceCount,VarIds,MatchDirection
                         LOGGER.debug("CF_REPEAT_SEQ: {},{},{},{},{},{}",
-                                mSampleId, cluster.getId(), chain.getId(), forwardRepeats.size(), svIds, forwardSequence);
+                                mSampleId, cluster.id(), chain.id(), forwardRepeats.size(), svIds, forwardSequence);
                     }
 
                     break;

@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.svanalysis.analysis;
 
-import static com.hartwig.hmftools.common.genepanel.HmfGenePanelSupplier.allGeneList37;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.svannotation.analysis.SvFusionAnalyser.FUSION_PAIRS_CSV;
 import static com.hartwig.hmftools.svannotation.analysis.SvFusionAnalyser.PROMISCUOUS_FIVE_CSV;
@@ -16,19 +15,15 @@ import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
-import com.google.common.collect.SortedSetMultimap;
 import com.hartwig.hmftools.common.chromosome.Chromosome;
 import com.hartwig.hmftools.common.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.collect.Multimaps;
 import com.hartwig.hmftools.common.fusions.KnownFusionsModel;
 import com.hartwig.hmftools.common.genepanel.HmfGenePanelSupplier;
-import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.common.region.HmfTranscriptRegion;
-import com.hartwig.hmftools.common.variant.structural.StructuralVariantData;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneAnnotation;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneDisruption;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion;
@@ -181,7 +176,7 @@ public class FusionDisruptionAnalyser
             // for now only consider simple SVs and resolved small clusters
             for (final SvCluster cluster : clusters)
             {
-                if(cluster.getId() == CHECK_CLUSTER_ID)
+                if(cluster.id() == CHECK_CLUSTER_ID)
                 {
                     LOGGER.debug("specific cluster");
                 }
@@ -274,7 +269,7 @@ public class FusionDisruptionAnalyser
                 traversesGene = true;
 
                 LOGGER.info("cluster({}) chain({}) potential fusion: be1({} {}) & be2({} {}) indices({} -> {}) section({}: {} - {}) traverses {} genes (eg {})",
-                        cluster.getId(), chain.getId(), beStart.toString(), genesListStart.get(0).geneName(), beEnd.toString(), genesListEnd.get(0).geneName(),
+                        cluster.id(), chain.id(), beStart.toString(), genesListStart.get(0).geneName(), beEnd.toString(), genesListEnd.get(0).geneName(),
                         startIndex, endIndex, chr, startPos, endPos, transcripts.size(), transcripts.get(0).geneID());
 
                 break;
@@ -285,7 +280,7 @@ public class FusionDisruptionAnalyser
                 if (startIndex < endIndex)
                 {
                     LOGGER.info("cluster({}) chain({}) potential fusion: be1({} {}) & be2({} {}) link indices({} -> {}) traversalLen({})",
-                            cluster.getId(), chain.getId(), beStart.toString(), genesListStart.get(0).geneName(),
+                            cluster.id(), chain.id(), beStart.toString(), genesListStart.get(0).geneName(),
                             beEnd.toString(), genesListEnd.get(0).geneName(), startIndex, endIndex, traversalLength);
                 }
 
@@ -410,7 +405,7 @@ public class FusionDisruptionAnalyser
 
                 writer.write(String.format("%s,%s,%s,%d,%d,%s,%s",
                         mSampleId, fusion.reportable(), fusion.primarySource(),
-                        cluster.getId(), cluster.getUniqueSvCount(), cluster.getResolvedType(), fusion.isPhaseMatch()));
+                        cluster.id(), cluster.getUniqueSvCount(), cluster.getResolvedType(), fusion.isPhaseMatch()));
 
                 // write upstream SV, transcript and exon info
                 writer.write(

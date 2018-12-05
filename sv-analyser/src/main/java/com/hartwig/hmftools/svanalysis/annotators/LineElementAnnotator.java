@@ -153,7 +153,7 @@ public class LineElementAnnotator {
 
         if(cluster.getUniqueSvCount() == knownLineSvs.size())
         {
-            LOGGER.debug("cluster({}) marked as line with all known({})", cluster.getId(), knownLineSvs.size());
+            LOGGER.debug("cluster({}) marked as line with all known({})", cluster.id(), knownLineSvs.size());
             cluster.markAsLine();
             return;
         }
@@ -323,7 +323,7 @@ public class LineElementAnnotator {
         if(!polyAorTSvs.isEmpty() && (!suspectLineSvs.isEmpty() || !knownLineSvs.isEmpty()))
         {
             LOGGER.debug("cluster({}) marked as line with known({}) suspect({}) polyA/T({})",
-                    cluster.getId(), knownLineSvs.size(), suspectLineSvs.size(), polyAorTSvs.size());
+                    cluster.id(), knownLineSvs.size(), suspectLineSvs.size(), polyAorTSvs.size());
             cluster.markAsLine();
         }
     }

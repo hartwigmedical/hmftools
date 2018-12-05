@@ -4,28 +4,21 @@ import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.Math.round;
-import static java.lang.Math.sin;
 
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INS;
-import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INV;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.svanalysis.analysis.LinkFinder.MIN_TEMPLATED_INSERTION_LENGTH;
 import static com.hartwig.hmftools.svanalysis.analysis.LinkFinder.areLinkedSection;
-import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.calcTypeCount;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.getProximity;
-import static com.hartwig.hmftools.svanalysis.types.SvVarData.RELATION_TYPE_NEIGHBOUR;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_END;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_START;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.isStart;
-import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.LINK_TYPE_SGL;
 import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.LINK_TYPE_TI;
 
 import java.util.List;
-import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
-import com.hartwig.hmftools.svanalysis.types.SvCNData;
 import com.hartwig.hmftools.svanalysis.types.SvChain;
 import com.hartwig.hmftools.svanalysis.types.SvCluster;
 import com.hartwig.hmftools.svanalysis.types.SvVarData;
@@ -126,7 +119,7 @@ public class ChainFinder
         if (mCluster.getCount() >= 4)
         {
             LOGGER.debug("sample({}) cluster({}) assemblyLinks({}) inferredLinks({} of total={}) svCount({} all={}) existingChains({})",
-                    mSampleId, mCluster.getId(), mAssemblyLinkedPairs.size(), inferredTIs.size(), mInferredLinkedPairs.size(),
+                    mSampleId, mCluster.id(), mAssemblyLinkedPairs.size(), inferredTIs.size(), mInferredLinkedPairs.size(),
                     svList.size(), mCluster.getCount(), mCluster.getChains().size());
         }
 
@@ -208,7 +201,7 @@ public class ChainFinder
         if(shortestFullChain.getLinkCount() >= 3)
         {
             LOGGER.info("sample({}) cluster({}) adding complete chain({}) length({}) with {} linked pairs",
-                    mSampleId, mCluster.getId(), shortestFullChain.getId(), shortestFullChain.getLength(), shortestFullChain.getLinkCount());
+                    mSampleId, mCluster.id(), shortestFullChain.id(), shortestFullChain.getLength(), shortestFullChain.getLinkCount());
 
             shortestFullChain.logLinks();
         }
@@ -269,7 +262,7 @@ public class ChainFinder
             if(maxLengthChain.getLinkCount() >= 3)
             {
                 LOGGER.debug("sample({}) cluster({}) adding incomplete chain({}) length({}) with {} linked pairs",
-                        mSampleId, mCluster.getId(), maxLengthChain.getId(), maxLengthChain.getLength(), maxLengthChain.getLinkCount());
+                        mSampleId, mCluster.id(), maxLengthChain.id(), maxLengthChain.getLength(), maxLengthChain.getLinkCount());
 
                 maxLengthChain.logLinks();
             }
@@ -313,7 +306,7 @@ public class ChainFinder
 
             if(mLogVerbose)
             {
-                LOGGER.debug("cluster({}) found incomplete chain({} svs={})", mCluster.getId(), chain.getId(), chain.getSvCount());
+                LOGGER.debug("cluster({}) found incomplete chain({} svs={})", mCluster.id(), chain.id(), chain.getSvCount());
             }
         }
     }
@@ -377,7 +370,7 @@ public class ChainFinder
                     if (mLogVerbose)
                     {
                         LOGGER.debug("sample({}) cluster({}) building from existing chain({}) with {} SVs",
-                                mSampleId, mCluster.getId(), currentChain.getId(), currentChain.getSvCount());
+                                mSampleId, mCluster.id(), currentChain.id(), currentChain.getSvCount());
                     }
 
                     for(final SvLinkedPair pair : currentChain.getLinkedPairs())
@@ -399,7 +392,7 @@ public class ChainFinder
                     if (mLogVerbose)
                     {
                         LOGGER.debug("sample({}) cluster({}) starting chain({}) with linked pair({})",
-                                mSampleId, mCluster.getId(), currentChain.getId(), linkedPair.toString());
+                                mSampleId, mCluster.id(), currentChain.id(), linkedPair.toString());
                     }
 
                     currentChain.addLink(linkedPair, true);
@@ -423,7 +416,7 @@ public class ChainFinder
 
                 if (reconcileChains(currentChain, partialChain))
                 {
-                    LOGGER.debug("adding existing chain({}) to current chain({})", partialChain.getId(), currentChain.getId());
+                    LOGGER.debug("adding existing chain({}) to current chain({})", partialChain.id(), currentChain.id());
                     chainLinkAdded = false;
                     partialChains.remove(chainIndex);
                 }
@@ -460,7 +453,7 @@ public class ChainFinder
                 }
 
                 LOGGER.debug("adding assembly linked pair({}) to chain({}) {}",
-                        assemblyLink.toString(), currentChain.getId(), addToStart ? "start" : "end");
+                        assemblyLink.toString(), currentChain.id(), addToStart ? "start" : "end");
 
                 remainingStartLinks.remove(index);
                 chainedPairs.add(assemblyLink);
@@ -499,7 +492,7 @@ public class ChainFinder
                     if (mLogVerbose)
                     {
                         LOGGER.debug("adding linked pair({}) to chain({}) start",
-                                closestStartPair.toString(), currentChain.getId());
+                                closestStartPair.toString(), currentChain.id());
                     }
 
                     // add this to the chain at the start
@@ -513,7 +506,7 @@ public class ChainFinder
                     if (mLogVerbose)
                     {
                         LOGGER.debug("adding linked pair({}) to chain({}) end",
-                                closestLastPair.toString(), currentChain.getId());
+                                closestLastPair.toString(), currentChain.id());
                     }
 
                     // add this to the chain at the start
@@ -535,7 +528,7 @@ public class ChainFinder
                 if(mLogVerbose)
                 {
                     LOGGER.debug("sample({}) cluster({}) adding {} chain({}) with {} linked pairs:",
-                            mSampleId, mCluster.getId(), chainComplete ? "complete" : "partial", currentChain.getId(), currentChain.getLinkCount());
+                            mSampleId, mCluster.id(), chainComplete ? "complete" : "partial", currentChain.id(), currentChain.getLinkCount());
                     currentChain.logLinks();
                 }
 
@@ -656,7 +649,7 @@ public class ChainFinder
             if (chain.getFirstSV().type() == SGL && !chain.getFirstSV().equals(singleSV, true))
             {
                 newPair = new SvLinkedPair(chain.getFirstSV(), singleSV, LINK_TYPE_TI, false, false);
-                LOGGER.debug("adding linked pair({}) with SGL to chain({}) start", newPair.toString(), chain.getId());
+                LOGGER.debug("adding linked pair({}) with SGL to chain({}) start", newPair.toString(), chain.id());
                 amendedChain = chain;
                 addToStart = true;
                 break;
@@ -665,7 +658,7 @@ public class ChainFinder
             if (chain.getLastSV().type() == SGL && !chain.getLastSV().equals(singleSV, true))
             {
                 newPair = new SvLinkedPair(chain.getLastSV(), singleSV, LINK_TYPE_TI, false, false);
-                LOGGER.debug("adding linked pair({}) with SGL to chain({}) end", newPair.toString(), chain.getId());
+                LOGGER.debug("adding linked pair({}) with SGL to chain({}) end", newPair.toString(), chain.id());
                 amendedChain = chain;
                 addToStart = false;
                 break;
@@ -686,7 +679,7 @@ public class ChainFinder
 
                 if (reconcileChains(amendedChain, chain))
                 {
-                    LOGGER.debug("adding existing chain({}) to current chain({})", chain.getId(), amendedChain.getId());
+                    LOGGER.debug("adding existing chain({}) to current chain({})", chain.id(), amendedChain.id());
                     chains.remove(index);
                     break;
                 }
@@ -721,7 +714,7 @@ public class ChainFinder
             return null;
 
         LOGGER.debug(String.format("cluster(%s) chain(%d) inconsistentSv(%s cnChg=%.2f ploidy=%.2f) joined to solo-single(%s chChg%.2f)",
-                mCluster.getId(), chain.getId(),
+                mCluster.id(), chain.id(),
                 inconsistentVar.id(), inconsistentVar.getSvData().ploidy(), inconsistentVar.copyNumberChange(inconsistentVarOpenOnStart),
                 soloVar.id(), soloVar.copyNumberChange(true)));
 

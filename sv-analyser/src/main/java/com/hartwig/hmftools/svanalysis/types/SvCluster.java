@@ -134,7 +134,7 @@ public class SvCluster
         mMaxCopyNumber = 0;
     }
 
-    public int getId() { return mId; }
+    public int id() { return mId; }
 
     public int getCount() { return mSVs.size(); }
 
@@ -395,15 +395,15 @@ public class SvCluster
         if(other.getCount() > getCount())
         {
             LOGGER.debug("cluster({} svs={}) merges in other cluster({} svs={})",
-                    other.getId(), other.getCount(), getId(), getCount());
+                    other.id(), other.getCount(), id(), getCount());
 
             // maintain the id of the larger group
-            mId = other.getId();
+            mId = other.id();
         }
         else
         {
             LOGGER.debug("cluster({} svs={}) merges in other cluster({} svs={})",
-                    getId(), getCount(), other.getId(), other.getCount());
+                    id(), getCount(), other.id(), other.getCount());
         }
 
         addVariantLists(other);
@@ -521,7 +521,7 @@ public class SvCluster
         if(isSimpleSingleSV())
         {
             LOGGER.debug("cluster({}) simple svCount({}) desc({}) armCount({}) consistency({}) ",
-                    getId(), getCount(), getDesc(), getArmCount(), getConsistencyCount());
+                    id(), getCount(), getDesc(), getArmCount(), getConsistencyCount());
         }
         else
         {
@@ -567,7 +567,7 @@ public class SvCluster
             }
 
             LOGGER.debug(String.format("cluster(%d) complex SVs(%d rep=%d) desc(%s res=%s) arms(%d) consis(%d) chains(%d perc=%.2f) replic(%s) %s",
-                    getId(), getUniqueSvCount(), getCount(), getDesc(), mResolvedType,
+                    id(), getUniqueSvCount(), getCount(), getDesc(), mResolvedType,
                     getArmCount(), getConsistencyCount(),
                     mChains.size(), chainedPerc, mHasReplicatedSVs, otherInfo));
         }
@@ -788,7 +788,7 @@ public class SvCluster
 
     public static boolean isSpecificCluster(final SvCluster cluster)
     {
-        if(cluster.getId() == SPECIFIC_CLUSTER_ID)
+        if(cluster.id() == SPECIFIC_CLUSTER_ID)
             return true;
 
         return false;
@@ -799,8 +799,8 @@ public class SvCluster
 
     public static boolean areSpecificClusters(final SvCluster cluster1, final SvCluster cluster2)
     {
-        if((cluster1.getId() == SPECIFIC_CLUSTER_ID && cluster2.getId() == SPECIFIC_CLUSTER_ID_2)
-        || (cluster2.getId() == SPECIFIC_CLUSTER_ID && cluster1.getId() == SPECIFIC_CLUSTER_ID_2))
+        if((cluster1.id() == SPECIFIC_CLUSTER_ID && cluster2.id() == SPECIFIC_CLUSTER_ID_2)
+        || (cluster2.id() == SPECIFIC_CLUSTER_ID && cluster1.id() == SPECIFIC_CLUSTER_ID_2))
             return true;
 
         return false;

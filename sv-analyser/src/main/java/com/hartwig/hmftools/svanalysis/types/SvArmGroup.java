@@ -53,7 +53,7 @@ public class SvArmGroup {
     public final String id() { return mId; }
     public final String posId()
     {
-        return String.format("cl %d: %s_%s %d:%d", mCluster.getId(), mChromosome, mArm, mStartPos, mEndPos);
+        return String.format("cl %d: %s_%s %d:%d", mCluster.id(), mChromosome, mArm, mStartPos, mEndPos);
     }
 
     public final String chromosome() { return mChromosome; }
@@ -113,7 +113,7 @@ public class SvArmGroup {
         }
 
         LOGGER.debug("cluster({}) arm({}) SVs({}) range({} -> {}) consistency({})",
-                mCluster.getId(), mId, mSVs.size(), mStartPos, mEndPos, mConsistency);
+                mCluster.id(), mId, mSVs.size(), mStartPos, mEndPos, mConsistency);
 
         mRequiresRecalc = false;
     }

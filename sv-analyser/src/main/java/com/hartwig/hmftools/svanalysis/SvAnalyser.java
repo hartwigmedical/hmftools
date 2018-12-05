@@ -14,7 +14,6 @@ import com.hartwig.hmftools.svanalysis.analysis.CNAnalyser;
 import com.hartwig.hmftools.svanalysis.analysis.FusionDisruptionAnalyser;
 import com.hartwig.hmftools.svanalysis.analysis.SvaConfig;
 import com.hartwig.hmftools.svanalysis.analysis.SvSampleAnalyser;
-import com.hartwig.hmftools.svanalysis.annotators.ExtDataLinker;
 import com.hartwig.hmftools.svanalysis.types.SvVarData;
 import com.hartwig.hmftools.svannotation.analysis.SvFusionAnalyser;
 
@@ -45,7 +44,6 @@ public class SvAnalyser {
     private static final String LINE_ELEMENT_FILE = "line_element_file";
     private static final String COPY_NUMBER_ANALYSIS = "run_cn_analysis";
     private static final String RUN_RESULTS_CHECKER = "run_results_checker";
-    private static final String EXTERNAL_DATA_LINK_FILE = "ext_data_link_file";
     private static final String INCLUDE_NONE_SEGMENTS = "incl_none_segments";
     private static final String GENE_TRANSCRIPTS_DIR = "gene_transcripts_dir";
 
@@ -100,14 +98,6 @@ public class SvAnalyser {
 
         if(cmd.hasOption(RUN_SVA))
         {
-            ExtDataLinker extDataLinker = null;
-
-            if (cmd.hasOption(EXTERNAL_DATA_LINK_FILE))
-            {
-                extDataLinker = new ExtDataLinker();
-                extDataLinker.loadFile(cmd.getOptionValue(EXTERNAL_DATA_LINK_FILE));
-            }
-
             SvaConfig clusteringConfig = new SvaConfig(cmd, tumorSample);
             SvSampleAnalyser sampleAnalyser = new SvSampleAnalyser(clusteringConfig);
 
@@ -149,19 +139,12 @@ public class SvAnalyser {
 
                 sampleAnalyser.loadFromDatabase(sample, svVarData);
 
-                if (extDataLinker != null && extDataLinker.hasData())
-                {
-                    extDataLinker.setSVData(sample, svVarData);
-                }
-                else
-                {
-                    sampleAnalyser.analyse();
+                sampleAnalyser.analyse();
 
-                    if(fusionAnalyser != null)
-                    {
-                        fusionAnalyser.loadSvGeneTranscriptData(sample, cmd.getOptionValue(GENE_TRANSCRIPTS_DIR));
-                        fusionAnalyser.findFusions(svVarData, sampleAnalyser.getClusters(), sampleAnalyser.getChrBreakendMap());
-                    }
+                if(fusionAnalyser != null)
+                {
+                    fusionAnalyser.loadSvGeneTranscriptData(sample, cmd.getOptionValue(GENE_TRANSCRIPTS_DIR));
+                    fusionAnalyser.findFusions(svVarData, sampleAnalyser.getClusters(), sampleAnalyser.getChrBreakendMap());
                 }
             }
 

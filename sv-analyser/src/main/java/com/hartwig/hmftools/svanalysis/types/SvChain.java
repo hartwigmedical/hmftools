@@ -3,7 +3,6 @@ package com.hartwig.hmftools.svanalysis.types;
 import static java.lang.Math.abs;
 
 import static com.hartwig.hmftools.svanalysis.analysis.LinkFinder.areLinkedSection;
-import static com.hartwig.hmftools.svanalysis.analysis.LinkFinder.areSectionBreak;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.calcConsistency;
 
 import java.util.List;
@@ -43,7 +42,7 @@ public class SvChain {
 
     public SvChain(final SvChain other)
     {
-        mId = other.getId();
+        mId = other.id();
         mSvList = Lists.newArrayList();
         mLinkedPairs = Lists.newArrayList();
         mLength = 0;
@@ -57,7 +56,7 @@ public class SvChain {
         }
     }
 
-    public int getId() { return mId; }
+    public int id() { return mId; }
     public void setId(int id) { mId = id; }
 
     public boolean isValid() { return mIsValid; }

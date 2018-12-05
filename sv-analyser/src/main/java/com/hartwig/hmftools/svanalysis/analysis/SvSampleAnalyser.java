@@ -18,7 +18,6 @@ import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.LINK_TYPE_TI;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantData;
-import com.hartwig.hmftools.svanalysis.annotators.ExternalSVAnnotator;
 import com.hartwig.hmftools.svanalysis.annotators.FragileSiteAnnotator;
 import com.hartwig.hmftools.svanalysis.annotators.LineElementAnnotator;
 import com.hartwig.hmftools.common.variant.structural.annotation.SvPONAnnotator;
@@ -60,7 +59,6 @@ public class SvSampleAnalyser {
     SvPONAnnotator mSvPONAnnotator;
     FragileSiteAnnotator mFragileSiteAnnotator;
     LineElementAnnotator mLineElementAnnotator;
-    ExternalSVAnnotator mExternalAnnotator;
     SvClusteringMethods mClusteringMethods;
     CNAnalyser mCnAnalyser;
 
@@ -91,9 +89,6 @@ public class SvSampleAnalyser {
 
         mLineElementAnnotator = new LineElementAnnotator();
         mLineElementAnnotator.loadLineElementsFile(mConfig.LineElementFile);
-
-        mExternalAnnotator = new ExternalSVAnnotator();
-        mExternalAnnotator.loadFile(mConfig.ExternalAnnotationsFile);
 
         mCnAnalyser = null;
         if(!mConfig.LOHDataFile.isEmpty())
@@ -190,17 +185,10 @@ public class SvSampleAnalyser {
         {
             SvVarData var = mAllVariants.get(currentIndex);
 
-            if(mExternalAnnotator.hasData())
-            {
-                mExternalAnnotator.setSVData(mSampleId, var);
-            }
-            else
-            {
-                setPonOccurenceCount(var);
-                var.setFragileSites(mFragileSiteAnnotator.isFragileSite(var, true), mFragileSiteAnnotator.isFragileSite(var, false));
-                var.setLineElement(mLineElementAnnotator.isLineElement(var, true), true);
-                var.setLineElement(mLineElementAnnotator.isLineElement(var, false), false);
-            }
+            setPonOccurenceCount(var);
+            var.setFragileSites(mFragileSiteAnnotator.isFragileSite(var, true), mFragileSiteAnnotator.isFragileSite(var, false));
+            var.setLineElement(mLineElementAnnotator.isLineElement(var, true), true);
+            var.setLineElement(mLineElementAnnotator.isLineElement(var, false), false);
 
             // exclude PON
             if (var.getPonCount() >= 2)
@@ -336,7 +324,7 @@ public class SvSampleAnalyser {
 
                 writer.write(
                         String.format(",%d,%d,%d,%s",
-                                cluster.getId(), subCluster.getId(), clusterSvCount, var.getClusterReason()));
+                                cluster.id(), subCluster.id(), clusterSvCount, var.getClusterReason()));
 
                 writer.write(
                         String.format(",%s,%s,%s,%d,%d",
@@ -392,7 +380,7 @@ public class SvSampleAnalyser {
 
                 if(chain != null)
                 {
-                    chainStr = String.format(",%d,%d,%s", chain.getId(), chain.getUniqueSvCount(), chain.getSvIndices(var));
+                    chainStr = String.format(",%d,%d,%s", chain.id(), chain.getUniqueSvCount(), chain.getSvIndices(var));
                 }
 
                 writer.write(chainStr);
@@ -461,7 +449,7 @@ public class SvSampleAnalyser {
 
                 writer.write(
                         String.format("%s,%d,%s,%d,%s,%s,%d",
-                                mSampleId, cluster.getId(), cluster.getDesc(), clusterSvCount, cluster.getResolvedType(),
+                                mSampleId, cluster.id(), cluster.getDesc(), clusterSvCount, cluster.getResolvedType(),
                                 cluster.isFullyChained(), cluster.getChains().size()));
 
                 writer.write(
@@ -562,12 +550,12 @@ public class SvSampleAnalyser {
 
                         writer.write(
                                 String.format("%s,%d,%s,%d,%s,%s,%s",
-                                        mSampleId, cluster.getId(), cluster.getDesc(), clusterSvCount, cluster.getResolvedType(),
+                                        mSampleId, cluster.id(), cluster.getDesc(), clusterSvCount, cluster.getResolvedType(),
                                         cluster.hasLinkingLineElements(), cluster.isFullyChained()));
 
                         writer.write(
                                 String.format(",%d,%d,%s,%s,%s,%s",
-                                        chain.getId(), chainSvCount, chainConsistent,
+                                        chain.id(), chainSvCount, chainConsistent,
                                         pair.first().origId(), pair.second().origId(),
                                         pair.first().getBreakend(pair.firstLinkOnStart()).getChrArm()));
 

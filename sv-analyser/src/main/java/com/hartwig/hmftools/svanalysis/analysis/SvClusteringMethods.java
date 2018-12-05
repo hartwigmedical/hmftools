@@ -300,9 +300,9 @@ public class SvClusteringMethods {
             {
                 final SvCluster cluster2 = clusters.get(j);
 
-                if(cluster1 == cluster2 || cluster1.getId() == cluster2.getId())
+                if(cluster1 == cluster2 || cluster1.id() == cluster2.id())
                 {
-                    LOGGER.error("cluster({}) exists twice in list", cluster1.getId());
+                    LOGGER.error("cluster({}) exists twice in list", cluster1.id());
                     return;
                 }
             }
@@ -322,7 +322,7 @@ public class SvClusteringMethods {
         if(maxCopyNumber > 5 * minCopyNumber)
         {
             LOGGER.debug("cluster({}) skipping replication for large CN variation(min={} max={})",
-                    cluster.getId(), minCopyNumber, maxCopyNumber);
+                    cluster.id(), minCopyNumber, maxCopyNumber);
             return;
         }
 
@@ -340,7 +340,7 @@ public class SvClusteringMethods {
             int svMultiple = calcCopyNumber / minCopyNumber;
 
             LOGGER.debug("cluster({}) replicating SV({}) {} times, copyNumChg({} vs min={})",
-                    cluster.getId(), var.posId(), svMultiple, calcCopyNumber, minCopyNumber);
+                    cluster.id(), var.posId(), svMultiple, calcCopyNumber, minCopyNumber);
 
             var.setReplicatedCount(svMultiple);
 
@@ -428,7 +428,7 @@ public class SvClusteringMethods {
                 continue;
 
             LOGGER.debug("cluster({} svs={}) merges in other cluster({} svs={}) on LOH event(sv1={} sv2={} len={})",
-                    lohClusterStart.getId(), lohClusterStart.getUniqueSvCount(), lohClusterEnd.getId(), lohClusterEnd.getUniqueSvCount(),
+                    lohClusterStart.id(), lohClusterStart.getUniqueSvCount(), lohClusterEnd.id(), lohClusterEnd.getUniqueSvCount(),
                     lohEvent.StartSV, lohEvent.EndSV, lohEvent.Length);
 
             lohSvStart.addClusterReason(CLUSTER_REASON_LOH, lohSvEnd.id());
@@ -538,7 +538,7 @@ public class SvClusteringMethods {
                             continue;
 
                         LOGGER.debug("cluster({}) SV({} {}) and cluster({}) SV({} {}) have inversion or longDelDup overlap",
-                                cluster1.getId(), var1.posId(), var1.type(), cluster2.getId(), var2.posId(), var2.type());
+                                cluster1.id(), var1.posId(), var1.type(), cluster2.id(), var2.posId(), var2.type());
 
                         var1.addClusterReason(var2.type() == INV ? CLUSTER_REASON_INV_OVERLAP : CLUSTER_REASON_LONG_DEL_DUP, var2.id());
                         var2.addClusterReason(var1.type() == INV ? CLUSTER_REASON_INV_OVERLAP : CLUSTER_REASON_LONG_DEL_DUP, var1.id());
@@ -701,7 +701,7 @@ public class SvClusteringMethods {
                 long length = abs(soloSingle.position(true) - otherVar.position(true));
 
                 LOGGER.debug("cluster({}) SV({}) and cluster({}) SV({}) syntheticType({}) length({})",
-                        soloSingleCluster.getId(), soloSingle.posId(), otherCluster.getId(), otherVar.posId(), syntheticType, length);
+                        soloSingleCluster.id(), soloSingle.posId(), otherCluster.id(), otherVar.posId(), syntheticType, length);
 
                 soloSingle.addClusterReason(CLUSTER_REASON_SOLO_SINGLE, syntheticType.toString() + "_" + otherVar.id());
                 otherVar.addClusterReason(CLUSTER_REASON_SOLO_SINGLE, syntheticType.toString() + "_" + soloSingle.id());
@@ -730,7 +730,7 @@ public class SvClusteringMethods {
                     return RESOLVED_TYPE_NONE;
 
                 LOGGER.debug(String.format("cluster(%s) SV(%s) and cluster(%s) SV(%s) potentially resolve CN inconsistency(%.2f vs %.2f)",
-                        soloSingleCluster.getId(), soloSingle.posId(), otherCluster.getId(), otherVar.posId(),
+                        soloSingleCluster.id(), soloSingle.posId(), otherCluster.id(), otherVar.posId(),
                         cnInconsistency, soloSingle.copyNumberChange(true)));
 
                 soloSingle.addClusterReason(CLUSTER_REASON_SOLO_SINGLE, "CnInc_" + otherVar.id());
@@ -1046,7 +1046,7 @@ public class SvClusteringMethods {
             }
             else
             {
-                LOGGER.warn("cluster({}) inversion-pair no DBs or TIs", cluster.getId());
+                LOGGER.warn("cluster({}) inversion-pair no DBs or TIs", cluster.id());
                 return;
             }
 
@@ -1089,7 +1089,7 @@ public class SvClusteringMethods {
         }
         else
         {
-            LOGGER.error("cluster({}) ids({} & {}) neither TI nor DB", cluster.getId(), var1.id(), var2.id());
+            LOGGER.error("cluster({}) ids({} & {}) neither TI nor DB", cluster.id(), var1.id(), var2.id());
             return false;
         }
 
@@ -1219,7 +1219,7 @@ public class SvClusteringMethods {
 
         if(lp1 == null && lp2 == null)
         {
-            LOGGER.debug("cluster({} {}) has no linked pairs", cluster.getId(), cluster.getDesc());
+            LOGGER.debug("cluster({} {}) has no linked pairs", cluster.id(), cluster.getDesc());
             return;
         }
 

@@ -8,7 +8,6 @@ import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.PERMITED_DUP_
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.breakendsMatch;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.copyNumbersEqual;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.getProximity;
-import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_RECIPROCAL_TRANS;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_END;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_START;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.haveLinkedAssemblies;
@@ -18,7 +17,6 @@ import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.ASSEMBLY_MATCH_
 import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.LINK_TYPE_DB;
 import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.LINK_TYPE_TI;
 
-import java.io.BufferedWriter;
 import java.util.List;
 import java.util.Map;
 
@@ -151,7 +149,7 @@ public class LinkFinder
 
                         // to avoid logging unlikely long TIs
                         LOGGER.debug("cluster({}) adding assembly linked {} pair({}) length({})",
-                                cluster.getId(), newPair.linkType(), newPair.toString(), newPair.length());
+                                cluster.id(), newPair.linkType(), newPair.toString(), newPair.length());
                     }
                 }
             }
@@ -334,7 +332,7 @@ public class LinkFinder
                         {
                             // to avoid logging unlikely long TIs
                             LOGGER.debug("cluster({}) adding inferred linked {} pair({}) length({}) at index({})",
-                                    cluster.getId(), newPair.linkType(), newPair.toString(), newPair.length(), index);
+                                    cluster.id(), newPair.linkType(), newPair.toString(), newPair.length(), index);
                         }
                     }
                 }
@@ -347,7 +345,7 @@ public class LinkFinder
         if(linkedPairs.isEmpty())
             return linkedPairs;
 
-        LOGGER.debug("cluster({}) has {} inferred linked pairs", cluster.getId(), linkedPairs.size());
+        LOGGER.debug("cluster({}) has {} inferred linked pairs", cluster.id(), linkedPairs.size());
 
         return linkedPairs;
     }
@@ -447,7 +445,7 @@ public class LinkFinder
         // prior to consolidating linked pairs, check for duplicate BE in the spanning SVs
         matchDuplicateBEToLinkedPairs(linkedPairs, spanningSVs);
 
-        LOGGER.debug("sample({}) cluster({}) has {} possible spanning SVs", sampleId, cluster.getId(), spanningSVs.size());
+        LOGGER.debug("sample({}) cluster({}) has {} possible spanning SVs", sampleId, cluster.id(), spanningSVs.size());
 
         cluster.setSpanningSVs(spanningSVs);
     }
@@ -517,7 +515,7 @@ public class LinkFinder
                 {
                     // to avoid logging unlikely long TIs
                     LOGGER.debug("cluster({}) adding inferred single-BE linked {} pair({}) length({}) at index({})",
-                            cluster.getId(), newPair.linkType(), newPair.toString(), newPair.length(), index);
+                            cluster.id(), newPair.linkType(), newPair.toString(), newPair.length(), index);
                 }
             }
         }
@@ -525,7 +523,7 @@ public class LinkFinder
         if(!linkedPairs.isEmpty())
         {
             LOGGER.debug("cluster({}) has {} inferred single-BE linked pairs",
-                    cluster.getId(), linkedPairs.size());
+                    cluster.id(), linkedPairs.size());
         }
 
         return linkedPairs;
@@ -660,7 +658,7 @@ public class LinkFinder
                 boolean hasValidTransData = true;
 
                 LOGGER.debug("cluster({}) spanSV({}) linked to transitives({} and {}) from {} linked pair",
-                        cluster.getId(), spanningSV.posId(), startLink.posId(), endLink.posId(),
+                        cluster.id(), spanningSV.posId(), startLink.posId(), endLink.posId(),
                         samePair ? "same" : "diff");
 
                 if(samePair)
@@ -685,7 +683,7 @@ public class LinkFinder
                         if(startIndex == -1 || endIndex == -1)
                         {
                             LOGGER.error("cluster({}) chain({}) index not found({} - {}) links({} & {})",
-                                    cluster.getId(), startChain.getId(), startIndex, endIndex, startLink, endLink);
+                                    cluster.id(), startChain.id(), startIndex, endIndex, startLink, endLink);
                             return;
                         }
 
@@ -703,7 +701,7 @@ public class LinkFinder
                                 if(transitiveSVs.contains(pair.first()) || transitiveSVs.contains(pair.second()))
                                 {
                                     LOGGER.debug("cluster({}) chain({}) attempt to re-add trans SVs, invalid",
-                                            cluster.getId(), startChain.getId());
+                                            cluster.id(), startChain.id());
 
                                     transitiveSVs.clear();
 
@@ -719,14 +717,14 @@ public class LinkFinder
                                 if(totalTILength > MAX_TEMPLATED_INSERTION_LENGTH * 3)
                                 {
                                     LOGGER.debug("cluster({}) chain({}) exceed valid totalLen({}) at index({}), invalid",
-                                            cluster.getId(), startChain.getId(), totalTILength, i);
+                                            cluster.id(), startChain.id(), totalTILength, i);
 
                                     hasValidTransData = false;
                                     break;
                                 }
 
                                 LOGGER.debug("cluster({}) chain({}) including index({}) totalLen({}) linkPair({}))",
-                                        cluster.getId(), startChain.getId(), i, totalTILength, pair.toString());
+                                        cluster.id(), startChain.id(), i, totalTILength, pair.toString());
 
                                 transitiveSVs.add(pair.first());
                                 transitiveSVs.add(pair.second());
@@ -735,7 +733,7 @@ public class LinkFinder
                             if(hasValidTransData)
                             {
                                 LOGGER.debug("cluster({}) spanSV({}) covers {} linked pairs",
-                                        cluster.getId(), spanningSV.id(), transitiveSVs.size()/2);
+                                        cluster.id(), spanningSV.id(), transitiveSVs.size()/2);
 
                                 tiLength = totalTILength;
                             }
@@ -743,7 +741,7 @@ public class LinkFinder
                         else
                         {
                             LOGGER.warn("cluster({}) chain({}) linked pairs have same index({}) but diff linked pair",
-                                    cluster.getId(), startChain.getId(), startIndex);
+                                    cluster.id(), startChain.id(), startIndex);
                         }
                     }
                     else if (startChain == null || endChain == null) {
@@ -765,7 +763,7 @@ public class LinkFinder
                     {
                         hasValidTransData = false;
                         LOGGER.debug("cluster({}) linked pairs have diff chains({} and {})",
-                                cluster.getId(), startChain.getId(), endChain.getId());
+                                cluster.id(), startChain.id(), endChain.id());
                     }
                 }
 
