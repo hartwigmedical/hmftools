@@ -3,10 +3,17 @@ package com.hartwig.hmftools.patientdb;
 import java.io.File;
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Stream;
 
+import com.hartwig.hmftools.common.actionability.ActionabilityAnalyzer;
+import com.hartwig.hmftools.common.actionability.EvidenceItem;
 import com.hartwig.hmftools.common.context.ProductionRunContextFactory;
 import com.hartwig.hmftools.common.context.RunContext;
+import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
+import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
+import com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 import com.hartwig.hmftools.patientdb.data.PotentialActionableCNV;
 import com.hartwig.hmftools.patientdb.data.PotentialActionableFusion;
@@ -28,7 +35,7 @@ public class LoadEvicenceData {
 
 
     private static final Logger LOGGER = LogManager.getLogger(LoadEvicenceData.class);
-
+    private static final String KNOWLEDGEBASE_PATH = "knowledgebase_path";
     private static final String DB_USER = "db_user";
     private static final String DB_PASS = "db_pass";
     private static final String DB_URL = "db_url";
@@ -58,15 +65,31 @@ public class LoadEvicenceData {
 
                 LOGGER.info("Reading clinical Data from DB");
                 final Stream<Pair<String, String>> tumorLocation = dbAccess.sampleAndTumorLocation(sample);
+                LOGGER.info(tumorLocation);
 
                 LOGGER.info("Reading somatic variants from DB");
                 final Stream<PotentialActionableVariant> somaticVariants = dbAccess.potentiallyActionableVariants(sample);
+                LOGGER.info(somaticVariants);
 
                 LOGGER.info("Reading gene copy from DB");
                 final Stream<PotentialActionableCNV> geneCopyNumber = dbAccess.potentiallyActionableCNVs(sample);
+                LOGGER.info(geneCopyNumber);
 
                 LOGGER.info("Reading gene fusions from DB");
                 final Stream<PotentialActionableFusion> geneFusion = dbAccess.potentiallyActionableFusions(sample);
+                LOGGER.info(geneFusion);
+
+                ActionabilityAnalyzer actionabilityAnalyzer = ActionabilityAnalyzer.fromKnowledgebase(KNOWLEDGEBASE_PATH);
+
+//                Map<EnrichedSomaticVariant, List<EvidenceItem>> evidencePerVariant =
+//                        actionabilityAnalyzer.evidenceForSomaticVariants(somaticVariants, tumorLocation.toString());
+//
+//                Map<GeneCopyNumber, List<EvidenceItem>> evidencePerGeneCopyNumber =
+//                        actionabilityAnalyzer.evidenceForCopyNumbers(significantCopyNumbers, primaryTumorLocation);
+//
+//                Map<GeneFusion, List<EvidenceItem>> evidencePerFusion =
+//                        actionabilityAnalyzer.evidenceForFusions(structuralVariantAnalysis.fusions(), primaryTumorLocation);
+
             }
         }
     }
@@ -77,6 +100,7 @@ public class LoadEvicenceData {
         options.addOption(DB_USER, true, "Database user name.");
         options.addOption(DB_PASS, true, "Database password.");
         options.addOption(DB_URL, true, "Database url.");
+        options.addOption(KNOWLEDGEBASE_PATH, true, "Path towards the folder containing knowledgebase files.");
         options.addOption(RUN_DIR, true, "Path towards the folder containing patient runs.");
         return options;
     }
