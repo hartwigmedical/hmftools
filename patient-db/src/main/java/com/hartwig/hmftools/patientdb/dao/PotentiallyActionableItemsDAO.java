@@ -9,7 +9,10 @@ import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.STRUCTU
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.STRUCTURALVARIANTBREAKEND;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.STRUCTURALVARIANTFUSION;
 
+import java.awt.List;
 import java.sql.ResultSet;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.stream.Stream;
 
@@ -38,25 +41,25 @@ public class PotentiallyActionableItemsDAO {
     }
 
     @NotNull
-    Stream<PotentialActionableVariant> potentiallyActionableVariants(@NotNull final Collection<String> samples) {
+    Stream<PotentialActionableVariant> potentiallyActionableVariants(@NotNull final String samples) {
         final ResultQuery<?> query = potentiallyActionableVariantsQuery(samples);
         return streamResults(query).map(PotentialActionableVariant::of);
     }
 
     @NotNull
-    Stream<PotentialActionableCNV> potentiallyActionableCNVs(@NotNull final Collection<String> sample) {
-        final ResultQuery<?> query = potentiallyActionableCNVsQuery(sample);
+    Stream<PotentialActionableCNV> potentiallyActionableCNVs(@NotNull final String samples) {
+        final ResultQuery<?> query = potentiallyActionableCNVsQuery(samples);
         return streamResults(query).map(PotentialActionableCNV::of).filter(cnv -> cnv.alteration() != CopyNumberAlteration.NEUTRAL);
     }
 
     @NotNull
-    Stream<PotentialActionableFusion> potentiallyActionableFusions(@NotNull final Collection<String> sample) {
-        final ResultQuery<?> query = potentiallyActionableFusionsQuery(sample);
+    Stream<PotentialActionableFusion> potentiallyActionableFusions(@NotNull final String samples) {
+        final ResultQuery<?> query = potentiallyActionableFusionsQuery(samples);
         return streamResults(query).map(PotentialActionableFusion::of);
     }
 
     @NotNull
-    private ResultQuery<?> potentiallyActionableVariantsQuery(@NotNull final Collection<String> samples) {
+    private ResultQuery<?> potentiallyActionableVariantsQuery(@NotNull final String samples) {
         SelectConditionStep<?> query = context.select(SOMATICVARIANT.SAMPLEID,
                 SOMATICVARIANT.GENE,
                 SOMATICVARIANT.CHROMOSOME,
@@ -70,28 +73,30 @@ public class PotentiallyActionableItemsDAO {
                 .where(SOMATICVARIANT.FILTER.eq("PASS")
                         .and(SOMATICVARIANT.WORSTCODINGEFFECT.ne("NONE"))
                         .and(SOMATICVARIANT.WORSTCODINGEFFECT.ne("SYNONYMOUS")));
-        if (samples.size() > 0) {
+        ArrayList<String> sample = new ArrayList<>(Arrays.asList(samples.split(",")));
+        if (sample.size() > 0) {
             query.and(SOMATICVARIANT.SAMPLEID.in(samples));
         }
         return query;
     }
 
     @NotNull
-    private ResultQuery<?> potentiallyActionableCNVsQuery(@NotNull final Collection<String> samples) {
+    private ResultQuery<?> potentiallyActionableCNVsQuery(@NotNull final String samples) {
         SelectConditionStep<?> query = context.select(GENECOPYNUMBER.SAMPLEID, GENECOPYNUMBER.GENE, GENECOPYNUMBER.MINCOPYNUMBER)
                 .from(GENECOPYNUMBER.join(PURITY).on(GENECOPYNUMBER.SAMPLEID.eq(PURITY.SAMPLEID)))
                 .where(PURITY.QCSTATUS.eq("PASS"))
                 .and(PURITY.STATUS.ne("NO_TUMOR"))
                 .and(PURITY.PURITY_.ge(0.2))
                 .and(GENECOPYNUMBER.MINCOPYNUMBER.le(0.5).or(GENECOPYNUMBER.MINCOPYNUMBER.div(PURITY.PLOIDY).ge(3.0)));
-        if (samples.size() > 0) {
+        ArrayList<String> sample = new ArrayList<>(Arrays.asList(samples.split(",")));
+        if (sample.size() > 0) {
             query.and(GENECOPYNUMBER.SAMPLEID.in(samples));
         }
         return query;
     }
 
     @NotNull
-    private ResultQuery<?> potentiallyActionableFusionsQuery(@NotNull final Collection<String> samples) {
+    private ResultQuery<?> potentiallyActionableFusionsQuery(@NotNull final String samples) {
         SelectConditionStep<?> query = context.select(STRUCTURALVARIANT.SAMPLEID, FIVE_BREAKEND.GENE, THREE_BREAKEND.GENE)
                 .from(STRUCTURALVARIANTFUSION.join(FIVE_BREAKEND)
                         .on(FIVE_BREAKEND.ID.eq(STRUCTURALVARIANTFUSION.FIVEPRIMEBREAKENDID))
@@ -100,7 +105,8 @@ public class PotentiallyActionableItemsDAO {
                         .join(STRUCTURALVARIANT)
                         .on(STRUCTURALVARIANT.ID.eq(FIVE_BREAKEND.STRUCTURALVARIANTID)))
                 .where(STRUCTURALVARIANTFUSION.ISREPORTED.eq((byte) 1));
-        if (samples.size() > 0) {
+        ArrayList<String> sample = new ArrayList<>(Arrays.asList(samples.split(",")));
+        if (sample.size() > 0) {
             query.and(STRUCTURALVARIANT.SAMPLEID.in(samples));
         }
         return query;

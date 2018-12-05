@@ -33,6 +33,7 @@ import com.hartwig.hmftools.patientdb.data.SampleData;
 import org.apache.commons.math3.util.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jooq.DSLContext;
@@ -134,31 +135,31 @@ public class DatabaseAccess {
 
     @NotNull
     public Stream<PotentialActionableVariant> allPotentiallyActionableVariants() {
-        return potentiallyActionableItemsDAO.potentiallyActionableVariants(Collections.emptyList());
+        return potentiallyActionableItemsDAO.potentiallyActionableVariants(Strings.EMPTY);
     }
 
     @NotNull
-    public Stream<PotentialActionableVariant> potentiallyActionableVariants(@NotNull final Collection<String> samples) {
-        return potentiallyActionableItemsDAO.potentiallyActionableVariants(samples);
+    public Stream<PotentialActionableVariant> potentiallyActionableVariants(@NotNull final String sample) {
+        return potentiallyActionableItemsDAO.potentiallyActionableVariants(sample);
     }
 
     @NotNull
     public Stream<PotentialActionableCNV> allPotentiallyActionableCNVs() {
-        return potentiallyActionableItemsDAO.potentiallyActionableCNVs(Collections.emptyList());
+        return potentiallyActionableItemsDAO.potentiallyActionableCNVs(Strings.EMPTY);
     }
 
     @NotNull
-    public Stream<PotentialActionableCNV> potentiallyActionableCNVs(@NotNull final Collection<String> sample) {
+    public Stream<PotentialActionableCNV> potentiallyActionableCNVs(@NotNull final String sample) {
         return potentiallyActionableItemsDAO.potentiallyActionableCNVs(sample);
     }
 
     @NotNull
     public Stream<PotentialActionableFusion> allPotentiallyActionableFusions() {
-        return potentiallyActionableItemsDAO.potentiallyActionableFusions(Collections.emptyList());
+        return potentiallyActionableItemsDAO.potentiallyActionableFusions(Strings.EMPTY);
     }
 
     @NotNull
-    public Stream<PotentialActionableFusion> potentiallyActionableFusions(@NotNull final Collection<String> sample) {
+    public Stream<PotentialActionableFusion> potentiallyActionableFusions(@NotNull final String sample) {
         return potentiallyActionableItemsDAO.potentiallyActionableFusions(sample);
     }
 

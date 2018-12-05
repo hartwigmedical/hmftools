@@ -3,21 +3,14 @@ package com.hartwig.hmftools.patientdb;
 import java.io.File;
 import java.io.IOException;
 import java.sql.SQLException;
-import java.util.List;
-import java.util.Map;
+import java.util.stream.Stream;
 
-import com.hartwig.hmftools.common.actionability.ActionabilityAnalyzer;
 import com.hartwig.hmftools.common.context.ProductionRunContextFactory;
 import com.hartwig.hmftools.common.context.RunContext;
-import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocation;
-import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocationFunctions;
-import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
-import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
-import com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
-import com.hartwig.hmftools.patientdb.data.Patient;
-import com.hartwig.hmftools.patientdb.data.SampleData;
-import com.hartwig.hmftools.patientdb.readers.RunsFolderReader;
+import com.hartwig.hmftools.patientdb.data.PotentialActionableCNV;
+import com.hartwig.hmftools.patientdb.data.PotentialActionableFusion;
+import com.hartwig.hmftools.patientdb.data.PotentialActionableVariant;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -25,9 +18,11 @@ import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
+import org.apache.commons.math3.util.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
+
 
 public class LoadEvicenceData {
 
@@ -61,18 +56,17 @@ public class LoadEvicenceData {
                 RunContext runContext = ProductionRunContextFactory.fromRunDirectory(runDirectory.toPath().toString());
                 final String sample = runContext.tumorSample();
 
-//                final PatientTumorLocation patientTumorLocation =
-//                        PatientTumorLocationFunctions.findPatientTumorLocationForSample(baseReportData().patientTumorLocations(), sample);
+                LOGGER.info("Reading clinical Data from DB");
+                final Stream<Pair<String, String>> tumorLocation = dbAccess.sampleAndTumorLocation(sample);
 
-                LOGGER.info("Reading somatic Variants from DB");
-                // final List<EnrichedSomaticVariant> variants = dbAccess.r
+                LOGGER.info("Reading somatic variants from DB");
+                final Stream<PotentialActionableVariant> somaticVariants = dbAccess.potentiallyActionableVariants(sample);
 
                 LOGGER.info("Reading gene copy from DB");
-                final List<GeneCopyNumber> geneCopyNumbers = dbAccess.readGeneCopynumbers(sample);
-
+                final Stream<PotentialActionableCNV> geneCopyNumber = dbAccess.potentiallyActionableCNVs(sample);
 
                 LOGGER.info("Reading gene fusions from DB");
-                //   final List<GeneFusion> geneFusions = dbAccess.re
+                final Stream<PotentialActionableFusion> geneFusion = dbAccess.potentiallyActionableFusions(sample);
             }
         }
     }
