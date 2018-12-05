@@ -18,19 +18,16 @@ import com.hartwig.hmftools.common.variant.structural.StructuralVariantData;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 import com.hartwig.hmftools.svanalysis.analysis.ClusterAnalyser;
 import com.hartwig.hmftools.svanalysis.analysis.LinkFinder;
-import com.hartwig.hmftools.svanalysis.analysis.SvClusteringConfig;
+import com.hartwig.hmftools.svanalysis.analysis.SvaConfig;
 import com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods;
-import com.hartwig.hmftools.svanalysis.analysis.SvUtilities;
 import com.hartwig.hmftools.svanalysis.types.SvCluster;
 import com.hartwig.hmftools.svanalysis.types.SvVarData;
-
-import htsjdk.variant.variantcontext.Allele;
 
 public class SvTestHelper
 {
     public String SampleId;
     public List<SvVarData> AllVariants;
-    public SvClusteringConfig Config;
+    public SvaConfig Config;
     public SvClusteringMethods ClusteringMethods;
     public ClusterAnalyser Analyser;
 
@@ -38,7 +35,7 @@ public class SvTestHelper
 
     public SvTestHelper()
     {
-        Config = new SvClusteringConfig(DEFAULT_PROXIMITY_DISTANCE);
+        Config = new SvaConfig(DEFAULT_PROXIMITY_DISTANCE);
         ClusteringMethods = new SvClusteringMethods(Config.ProximityDistance);
         Analyser = new ClusterAnalyser(Config, ClusteringMethods);
 

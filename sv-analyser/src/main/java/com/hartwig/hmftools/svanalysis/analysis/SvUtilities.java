@@ -349,6 +349,11 @@ public class SvUtilities {
         return makeChrArmStr(var.chromosome(isStart), var.arm(isStart));
     }
 
+    public static final String makeChrArmStr(final SvVarData var, boolean useStart)
+    {
+        return makeChrArmStr(var.chromosome(useStart), var.arm(useStart));
+    }
+
     public static final String makeChrArmStr(final String chr, final String arm) { return chr + "_" + arm; }
 
     public static final String getChrFromChrArm(final String chrArm)

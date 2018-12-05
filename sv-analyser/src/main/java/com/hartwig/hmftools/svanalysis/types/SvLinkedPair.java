@@ -22,6 +22,7 @@ public class SvLinkedPair {
     private int mDBLenFirst;
     private int mDBLenSecond;
     private long mNearestSVDistance;
+    private boolean mCopyNumberGain; // for TIs, is this from an additional fragment
 
     public static final String LINK_TYPE_TI = "TI";
     public static final String LINK_TYPE_DB = "DB";
@@ -45,6 +46,7 @@ public class SvLinkedPair {
         mDBLenFirst = 0;
         mDBLenSecond = 0;
         mNearestSVDistance = 0;
+        mCopyNumberGain = false;
 
         int length = (int) (first.position(firstLinkOnStart) - second.position(secondLinkOnStart));
         mLinkLength = abs(length);
@@ -90,17 +92,20 @@ public class SvLinkedPair {
     public boolean isInferred() { return mIsInferred; }
     public boolean isAssembled() { return !mIsInferred; }
 
-    public void setAssembledChainCount(final int count) { mAssembledChainCount = count; }
-    public final int getAssembledChainCount() { return mAssembledChainCount; }
+    public void setAssembledChainCount(int count) { mAssembledChainCount = count; }
+    public int getAssembledChainCount() { return mAssembledChainCount; }
 
-    public void setDBLenFirst(final int length) { mDBLenFirst = length; }
-    public final int getDBLenFirst() { return mDBLenFirst; }
+    public void setDBLenFirst(int length) { mDBLenFirst = length; }
+    public int getDBLenFirst() { return mDBLenFirst; }
 
-    public void setDBLenSecond(final int length) { mDBLenSecond = length; }
-    public final int getDBLenSecond() { return mDBLenSecond; }
+    public void setDBLenSecond(int length) { mDBLenSecond = length; }
+    public int getDBLenSecond() { return mDBLenSecond; }
 
-    public void setNearestSVDistance(final long distance) { mNearestSVDistance = distance; }
-    public final long getNearestSVDistance() { return mNearestSVDistance; }
+    public void setNearestSVDistance(long distance) { mNearestSVDistance = distance; }
+    public long getNearestSVDistance() { return mNearestSVDistance; }
+
+    public void setCopyNumberGain(boolean isGain) { mCopyNumberGain = isGain; }
+    public boolean hasCopyNumberGain() { return mCopyNumberGain; }
 
     public boolean hasVariantBE(final SvVarData var, boolean useStart)
     {

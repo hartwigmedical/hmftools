@@ -19,11 +19,15 @@ import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.CLUST
 import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.CLUSTER_REASON_FOLDBACKS;
 import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.CLUSTER_REASON_SOLO_SINGLE;
 import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.addClusterReason;
-import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.checkClusterDuplicates;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.calcConsistency;
+import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.makeChrArmStr;
 import static com.hartwig.hmftools.svanalysis.annotators.LineElementAnnotator.markLineCluster;
 import static com.hartwig.hmftools.svanalysis.types.SvChain.CHAIN_ASSEMBLY_LINK_COUNT;
+import static com.hartwig.hmftools.svanalysis.types.SvChain.CHAIN_LENGTH;
 import static com.hartwig.hmftools.svanalysis.types.SvChain.CHAIN_LINK_COUNT;
+import static com.hartwig.hmftools.svanalysis.types.SvChain.getRepeatedSvSequence;
+import static com.hartwig.hmftools.svanalysis.types.SvCluster.CLUSTER_ANNONTATION_CT;
+import static com.hartwig.hmftools.svanalysis.types.SvCluster.CLUSTER_ANNONTATION_DM;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_COMPLEX_CHAIN;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_LINE;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_NONE;
@@ -52,7 +56,6 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.svanalysis.types.SvArmGroup;
 import com.hartwig.hmftools.svanalysis.types.SvBreakend;
-import com.hartwig.hmftools.svanalysis.types.SvCNData;
 import com.hartwig.hmftools.svanalysis.types.SvChain;
 import com.hartwig.hmftools.svanalysis.types.SvCluster;
 import com.hartwig.hmftools.svanalysis.types.SvVarData;
@@ -63,7 +66,7 @@ import org.apache.logging.log4j.Logger;
 
 public class ClusterAnalyser {
 
-    final SvClusteringConfig mConfig;
+    final SvaConfig mConfig;
     SvClusteringMethods mClusteringMethods;
 
     String mSampleId;
@@ -77,7 +80,7 @@ public class ClusterAnalyser {
 
     private static final Logger LOGGER = LogManager.getLogger(ClusterAnalyser.class);
 
-    public ClusterAnalyser(final SvClusteringConfig config, SvClusteringMethods clusteringMethods)
+    public ClusterAnalyser(final SvaConfig config, SvClusteringMethods clusteringMethods)
     {
         mConfig = config;
         mClusteringMethods = clusteringMethods;
@@ -90,7 +93,7 @@ public class ClusterAnalyser {
     }
 
     // access for unit testing
-    public final SvClusteringConfig getConfig() { return mConfig; }
+    public final SvaConfig getConfig() { return mConfig; }
     public final SvClusteringMethods getClusterer() { return mClusteringMethods; }
 
     public void setSampleData(final String sampleId, List<SvVarData> allVariants)
@@ -132,6 +135,8 @@ public class ClusterAnalyser {
 
         mergeClusters();
 
+        annotateTemplatedInsertions();
+
         // final clean-up and analysis
         for(SvCluster cluster : mClusters)
         {
@@ -146,10 +151,10 @@ public class ClusterAnalyser {
                     cluster.setResolved(true, RESOLVED_TYPE_SIMPLE_CHAIN);
             }
 
-            // reportChainFeatures(cluster);
+            reportClusterFeatures(cluster);
         }
 
-        // checkClusterDuplicates(mClusters);
+        // validation-only: checkClusterDuplicates(mClusters);
     }
 
     public void findSimpleCompleteChains()
@@ -239,8 +244,6 @@ public class ClusterAnalyser {
 
         if(!mergedClusters.isEmpty())
         {
-            checkClusterDuplicates(mergedClusters);
-
             for(SvCluster cluster : mergedClusters)
             {
                 cluster.setDesc(cluster.getClusterTypesAsString());
@@ -293,8 +296,6 @@ public class ClusterAnalyser {
             checkChainReplication(cluster);
             return;
         }
-
-        cluster.setIsFullyChained(true);
 
         // remove any inferred link which isn't in the full chain
         final SvChain fullChain = cluster.getChains().get(0);
@@ -919,154 +920,6 @@ public class ClusterAnalyser {
         }
     }
 
-    private static double DOUBLE_MINUTE_COPY_NUMBER_THRESHOLD = 8;
-
-    public void reportChainFeatures(final SvCluster cluster)
-    {
-        for (final SvChain chain : cluster.getChains())
-        {
-            if(chain.getLinkedPairs().size() < 4)
-                continue;
-
-            findChainRepeatedSegments(cluster, chain);
-        }
-
-        if(cluster.isFullyChained() && cluster.getChains().get(0).getLinkCount() > 2 && cluster.getChains().get(0).couldFormLoop())
-        {
-            final SvChain chain = cluster.getChains().get(0);
-
-            // check for high copy number within this loop
-            boolean hasHighCN = false;
-            double cnTotal = 0;
-            double maxCN = 0;
-            double ploidyTotal = 0;
-
-            for(final SvVarData var : chain.getSvList())
-            {
-                ploidyTotal += var.getSvData().ploidy();
-                cnTotal += (var.copyNumber(true) + var.copyNumber(false)) * 0.5;
-                maxCN = max(maxCN, var.copyNumber(true));
-                maxCN = max(maxCN, var.copyNumber(false));
-
-                if(var.copyNumber(true) >= DOUBLE_MINUTE_COPY_NUMBER_THRESHOLD || var.copyNumber(false) >= DOUBLE_MINUTE_COPY_NUMBER_THRESHOLD)
-                {
-                    hasHighCN = true;
-                }
-            }
-
-            if(hasHighCN)
-            {
-                LOGGER.info(String.format("sample(%s) cluster(%d) chain(%d) links(%d) closed loop, copyNumber(avg=%.1f max=%.2f) ploidy(%.1f)",
-                        mSampleId, cluster.getId(), chain.getId(), chain.getLinkCount(),
-                        cnTotal/chain.getSvList().size(), maxCN, ploidyTotal/chain.getSvList().size()));
-            }
-        }
-    }
-
-    private void findChainRepeatedSegments(final SvCluster cluster, final SvChain chain)
-    {
-        if(!chain.hasReplicatedSVs())
-            return;
-
-        List<SvVarData> replicatedSVs = Lists.newArrayList();
-
-        final List<SvVarData> svList = chain.getSvList();
-
-        for (int i = 0; i < svList.size(); ++i)
-        {
-            final SvVarData var1 = svList.get(i);
-
-            if(replicatedSVs.contains(var1))
-                continue;
-
-            for (int j = i + 1; j < svList.size(); ++j)
-            {
-                final SvVarData var2 = svList.get(j);
-
-                if (!var1.equals(var2, true))
-                    continue;
-
-                replicatedSVs.add(var1);
-
-                // look for repeated sections forwards or backwards from this point
-                List<SvVarData> forwardRepeats = getRepeatedSvSequence(svList, i, j, true);
-
-                boolean forwardSequence = false;
-
-                if(!forwardRepeats.isEmpty())
-                {
-                    forwardSequence = true;
-                    replicatedSVs.addAll(forwardRepeats);
-                }
-                else
-                {
-                    forwardSequence = false;
-                    forwardRepeats = getRepeatedSvSequence(svList, i, j, false);
-                }
-
-                if(!forwardRepeats.isEmpty())
-                {
-                    replicatedSVs.addAll(forwardRepeats);
-
-                    forwardRepeats.set(0, var1);
-
-                    String svIds = var1.id();
-                    for(int k = 1; k < forwardRepeats.size(); ++k)
-                        svIds += ";" + forwardRepeats.get(k).id();
-
-                    if(forwardRepeats.size() >= 4)
-                    {
-                        LOGGER.info("sample({}) cluster({}) chain({}) {} sequence of {} SVs starting at index({}:{}) SV({})",
-                                mSampleId, cluster.getId(), chain.getId(), forwardSequence ? "forward" : "reverse",
-                                forwardRepeats.size(), i, j, var1.id());
-
-                        // ClusterId,ChainId,SequenceCount,VarIds,MatchDirection
-                        LOGGER.info("CF_REPEAT_SEQ: {},{},{},{},{},{}",
-                                mSampleId, cluster.getId(), chain.getId(), forwardRepeats.size(), svIds, forwardSequence);
-                    }
-
-                    break;
-                }
-
-                // no sequence found
-            }
-        }
-    }
-
-    private List<SvVarData> getRepeatedSvSequence(final List<SvVarData> svList, int firstIndex, int secondIndex, boolean walkForwards)
-    {
-        // walk forward from these 2 start points comparing SVs
-        List<SvVarData> sequence = Lists.newArrayList();
-
-        int i = firstIndex;
-        int j = secondIndex + 1;
-
-        if(walkForwards)
-            ++i;
-        else
-            --i;
-
-        while(i < secondIndex && i >= 0 && j < svList.size())
-        {
-            final SvVarData var1 = svList.get(i);
-            final SvVarData var2 = svList.get(j);
-
-            if(!var1.equals(var2, true))
-                break;
-
-            sequence.add(var1);
-
-            ++j;
-
-            if(walkForwards)
-                ++i;
-            else
-                --i;
-        }
-
-        return sequence;
-    }
-
     public void markFoldbacks()
     {
         for(final Map.Entry<String, List<SvBreakend>> entry : mClusteringMethods.getChrBreakendMap().entrySet())
@@ -1124,7 +977,7 @@ public class ClusterAnalyser {
         boolean v1Start = be1.usesStart();
         boolean v2Start = be2.usesStart();
 
-        int[] chainData = {-1, -1};
+        int[] chainData = {-1, -1, -1};
 
         if(var1.equals(var2))
         {
@@ -1232,7 +1085,8 @@ public class ClusterAnalyser {
         if(!var2.getFoldbackLink(v2Start).isEmpty())
             clearFoldbackInfo(var2.getFoldbackLink(v2Start), var2.id(), cluster2, v2Start);
 
-        String chainInfo = String.format("%d;%d", chainData[CHAIN_LINK_COUNT], chainData[CHAIN_ASSEMBLY_LINK_COUNT]);
+        String chainInfo = String.format("%d;%d;%d",
+                chainData[CHAIN_LINK_COUNT], chainData[CHAIN_ASSEMBLY_LINK_COUNT], chainData[CHAIN_LENGTH]);
 
         var1.setFoldbackLink(v1Start, var2.id(), length, chainInfo);
         var2.setFoldbackLink(v2Start, var1.id(), length, chainInfo);
@@ -1276,7 +1130,9 @@ public class ClusterAnalyser {
             && chain.getLastSV().equals(var, true)
             && chain.firstLinkOpenOnStart() == chain.lastLinkOpenOnStart())
             {
-                final String chainInfo = String.format("%d;%d", chain.getLinkCount(), chain.getAssemblyLinkCount());
+                final String chainInfo = String.format("%d;%d;%d",
+                        chain.getLinkCount(), chain.getAssemblyLinkCount(), chain.getLength());
+
                 var.setFoldbackLink(true, var.id(), 0, chainInfo);
                 var.setFoldbackLink(false, var.id(), 0, chainInfo);
 
@@ -1299,7 +1155,7 @@ public class ClusterAnalyser {
             var.setFoldbackLink(false, "", -1, "");
     }
 
-    public void annotateTemplatedInsertions(final List<SvCluster> clusters)
+    private void annotateTemplatedInsertions()
     {
         /* work out:
             - whether a TI has a DB on either or both sides in the same cluster
@@ -1309,7 +1165,7 @@ public class ClusterAnalyser {
 
         final Map<String, List<SvBreakend>> chrBreakendMap = mClusteringMethods.getChrBreakendMap();
 
-        for(final SvCluster cluster : clusters)
+        for(final SvCluster cluster : mClusters)
         {
             for(final SvChain chain : cluster.getChains())
             {
@@ -1338,17 +1194,37 @@ public class ClusterAnalyser {
                     }
 
                     // find closest SV in this cluster
-                    SvBreakend firstBreakend = pair.first().getBreakend(pair.firstLinkOnStart());
+                    final SvVarData first = pair.first();
+                    final SvVarData second = pair.second();
+                    SvBreakend firstBreakend = first.getBreakend(pair.firstLinkOnStart());
                     final List<SvBreakend> breakendList = chrBreakendMap.get(firstBreakend.chromosome());
                     long closestSvDistance = getDistanceToNextClusterSV(cluster, breakendList, pair);
 
                     pair.setNearestSVDistance(closestSvDistance);
 
-                    SvLinkedPair dbFirst = pair.first().getDBLink(pair.firstUnlinkedOnStart());
-                    SvLinkedPair dbSecond = pair.second().getDBLink(pair.secondUnlinkedOnStart());
+                    SvLinkedPair dbFirst = first.getDBLink(pair.firstLinkOnStart());
+                    SvLinkedPair dbSecond = pair.second().getDBLink(pair.secondLinkOnStart());
 
                     pair.setDBLenFirst(dbFirst != null ? dbFirst.length() : NO_DB_MARKER);
                     pair.setDBLenSecond(dbSecond != null ? dbSecond.length() : NO_DB_MARKER);
+
+                    // skip replicated SVs since more complicate to figure out, also those crossing centromere
+                    boolean hasReplicatedSVs = (first.isReplicatedSv() || first.getReplicatedCount() > 0 || pair.second().isReplicatedSv() || pair.second().getReplicatedCount() > 0);
+                    boolean sameArm = first.arm(pair.firstLinkOnStart()).equals(pair.second().arm(pair.secondLinkOnStart()));
+
+                    if(!hasReplicatedSVs && sameArm)
+                    {
+                        // estimate whether this TI gives copy number gain
+                        double maxTelomereCN = mClusteringMethods.chromosomeCopyNumber(firstBreakend.chromosome());
+
+                        boolean firstHasGain = first.copyNumber(pair.firstLinkOnStart()) - first.copyNumberChange(pair.firstLinkOnStart()) >= maxTelomereCN * 0.95;
+                        boolean secondHasGain = second.copyNumber(pair.secondLinkOnStart()) - second.copyNumberChange(pair.secondLinkOnStart()) >= maxTelomereCN * 0.95;
+
+                        if(firstHasGain && secondHasGain)
+                        {
+                            pair.setCopyNumberGain(true);
+                        }
+                    }
                 }
             }
         }
@@ -1406,108 +1282,271 @@ public class ClusterAnalyser {
         return closestDistance;
     }
 
-    private void createCopyNumberSegments(final String sampleId, final SvCluster cluster)
+    public void reportClusterFeatures(final SvCluster cluster)
     {
-        int cnId = 0;
-        final List<SvVarData> clusterSVs = cluster.getSVs();
-
-        Map<String, List<SvCNData>> chrCNDataMap = new HashMap();
-
-        for(Map.Entry<String, List<SvBreakend>> entry : mClusteringMethods.getChrBreakendMap().entrySet())
+        /*
+        for (final SvChain chain : cluster.getChains())
         {
-            final String chromosome = entry.getKey();
+            if(chain.getLinkedPairs().size() < 4)
+                continue;
 
-            List<SvBreakend> breakendList = entry.getValue();
-
-            List<SvCNData> copyNumberData = Lists.newArrayList();
-
-            for (int i = 0; i < breakendList.size(); ++i)
-            {
-                final SvBreakend breakend = breakendList.get(i);
-                final SvVarData var = breakend.getSV();
-
-                double copyNumber = var.copyNumber(breakend.usesStart());
-                double copyNumberChange = var.copyNumberChange(breakend.usesStart());
-                double prevCopyNumber = copyNumber - copyNumberChange;
-
-                int adjCopyNumber = (int)round(copyNumber/2 - 1);
-
-                //LOGGER.debug(String.format("sample(%s) chr(%s) seg %d: copyNumber(%d %.2f prev=%.2f chg=%.2f)",
-                //        sampleId, chromosome, i, adjCopyNumber, copyNumber, prevCopyNumber, copyNumberChange));
-
-                if(clusterSVs.contains(var))
-                {
-                    SvCNData cnData = new SvCNData(cnId++, chromosome, breakend.position(), 0, "", "", 0, 0, 0, adjCopyNumber, "");
-                    copyNumberData.add(cnData);
-                }
-            }
-
-            chrCNDataMap.put(chromosome, copyNumberData);
+            findChainRepeatedSegments(cluster, chain);
         }
+        */
 
-        cluster.setChrCNData(chrCNDataMap);
+        reportDoubleMinutes(cluster);
+
+        classifySimpleChainedClusters(cluster);
     }
 
-    public static void reduceInferredToShortestLinks(List<SvLinkedPair> linkedPairs, List<SvChain> chains)
+    private static int CHAIN_TI_COUNT = 0;
+    private static int CHAIN_TI_CN_GAIN = 1;
+    private static int CHAIN_TI_DB_COUNT = 2;
+    private static int CHAIN_TI_SHORT_COUNT = 3;
+    private static int CHAIN_TI_ASMB_COUNT = 4;
+
+    private void classifySimpleChainedClusters(final SvCluster cluster)
     {
-        // any linked pair used in a chain must be kept
-        List<SvLinkedPair> reqLinkedPairs = Lists.newArrayList();
-        for(SvChain chain : chains)
-        {
-            reqLinkedPairs.addAll(chain.getLinkedPairs());
-        }
+        if(cluster.isResolved() || cluster.hasReplicatedSVs() || !cluster.getFoldbacks().isEmpty())
+            return;
 
-        // now remove mutually exclusive linked sections by using the shortest first (they are already ordered)
-        int i = 0;
-        while(i < linkedPairs.size())
-        {
-            final SvLinkedPair pair = linkedPairs.get(i);
+        // for now just stick to clusters with high(er) degree of certainty
+        if(!cluster.isFullyChained() || cluster.getTypeCount(SGL) > 0)
+            return;
 
-            if(reqLinkedPairs.contains(pair))
+        // skip simple chained clusters
+        if(cluster.getArmCount() == 1 && cluster.getCount() == 2)
+            return;
+
+        /* data to gather for each arm in the chain
+            - number of links
+            - number of short TIs without proximate deletion bridges
+            - links with copy number gain
+            - start and end locations
+         */
+
+        long proximityCutoff = mClusteringMethods.getProximityDistance();
+
+        boolean allChainsConsistent = true;
+        List<String> originArms = Lists.newArrayList();
+        List<String> fragmentArms = Lists.newArrayList();
+
+        for (final SvChain chain : cluster.getChains())
+        {
+            if(!chain.isConsistent())
             {
-                ++i;
+                allChainsConsistent = false;
                 continue;
             }
 
-            boolean removeFirst = false;
+            final String startChrArm = makeChrArmStr(chain.getFirstSV(), chain.firstLinkOpenOnStart());
+            final String endChrArm = makeChrArmStr(chain.getLastSV(), chain.lastLinkOpenOnStart());
 
-            // search for another pair with a matching breakend
-            for(int j = i+1; j < linkedPairs.size();)
+            Map<String, int[]> armDataMap = new HashMap();
+
+            armDataMap.put(startChrArm, new int[CHAIN_TI_ASMB_COUNT+1]);
+            armDataMap.put(endChrArm, new int[CHAIN_TI_ASMB_COUNT+1]);
+
+            for(final SvLinkedPair pair : chain.getLinkedPairs())
             {
-                final SvLinkedPair pair2 = linkedPairs.get(j);
+                final SvVarData first = pair.first();
+                final String chrArm = makeChrArmStr(first, pair.firstLinkOnStart());
 
-                if((pair.first().equals(pair2.first()) && pair.firstLinkOnStart() == pair2.firstLinkOnStart())
-                || (pair.first().equals(pair2.second()) && pair.firstLinkOnStart() == pair2.secondLinkOnStart())
-                || (pair.second().equals(pair2.first()) && pair.secondLinkOnStart() == pair2.firstLinkOnStart())
-                || (pair.second().equals(pair2.second()) && pair.secondLinkOnStart() == pair2.secondLinkOnStart()))
+                int[] armData = armDataMap.get(chrArm);
+
+                if(armData == null)
                 {
-                    // to avoid logging unlikely long TIs
-                    //LOGGER.debug("removing duplicate linked pair({} len={}) vs shorter({} len={})",
-                    //        pair2.toString(), pair2.length(), pair.toString(), pair.length());
+                    armData = new int[CHAIN_TI_ASMB_COUNT+1];
+                    armDataMap.put(chrArm, armData);
+                }
 
-                    if(reqLinkedPairs.contains(pair2))
-                    {
-                        removeFirst = true;
-                        break;
-                    }
+                ++armData[CHAIN_TI_COUNT];
 
-                    // remove the longer pair with a duplicate breakend
-                    linkedPairs.remove(j);
+                if(pair.hasCopyNumberGain())
+                {
+                    ++armData[CHAIN_TI_CN_GAIN];
+                }
+
+                if((pair.getDBLenFirst() > NO_DB_MARKER && pair.getDBLenFirst() <= proximityCutoff)
+                || (pair.getDBLenSecond() > NO_DB_MARKER && pair.getDBLenSecond() <= proximityCutoff))
+                {
+                    ++armData[CHAIN_TI_DB_COUNT];
+                }
+
+                if(pair.length() <= SHORT_TI_LENGTH)
+                {
+                    ++armData[CHAIN_TI_SHORT_COUNT];
+
+                    if(pair.isAssembled())
+                        ++armData[CHAIN_TI_ASMB_COUNT];
+                }
+            }
+
+            String chainInfo = startChrArm + "-" + endChrArm;
+
+            for (Map.Entry<String,int[]> entry : armDataMap.entrySet())
+            {
+                final String chrArm = entry.getKey();
+                final int[] armData = entry.getValue();
+
+                int linkCount = armData[CHAIN_TI_COUNT];
+                int cnGain = armData[CHAIN_TI_CN_GAIN];
+                int dbCount = armData[CHAIN_TI_DB_COUNT];
+                int shortCount = armData[CHAIN_TI_SHORT_COUNT];
+                int assembledCount = armData[CHAIN_TI_ASMB_COUNT];
+
+                boolean isOrigin = false;
+                if(chrArm.equals(startChrArm) || chrArm.equals(endChrArm))
+                {
+                    isOrigin = true;
+                }
+                else if(cnGain == linkCount && shortCount > dbCount)
+                {
+                    isOrigin = false;
+                }
+
+                if(isOrigin)
+                {
+                    // if this arm exists twice already, then more than 2 chains end up on the same arm which is invalid
+                    long chrArmCount = originArms.stream().filter(x -> x.equals(chrArm)).count();
+
+                    if(chrArmCount >= 2)
+                        allChainsConsistent = false;
+
+                    originArms.add(chrArm);
+
+                    if(fragmentArms.contains(chrArm))
+                        fragmentArms.remove(chrArm);
+                }
+                else if(!isOrigin && !fragmentArms.contains(chrArm))
+                {
+                    fragmentArms.add(chrArm);
+                }
+
+                chainInfo += String.format(" %s %s: LK=%d CG=%d DB=%d SH=%d AS=%d",
+                        isOrigin ? "O" : "F", chrArm, linkCount, cnGain, dbCount, shortCount, assembledCount);
+            }
+
+            chain.setDetails(chainInfo);
+
+            LOGGER.debug("cluster({}) chain({}) {}",
+                    cluster.getId(), chain.getId(), chainInfo);
+        }
+
+        if(allChainsConsistent)
+        {
+            cluster.addAnnotation(String.format("%s ORIG=%d FRAG=%s",
+                    CLUSTER_ANNONTATION_CT, originArms.size(), fragmentArms.size()));
+        }
+    }
+
+    private static double DOUBLE_MINUTE_COPY_NUMBER_THRESHOLD = 8;
+
+    private void reportDoubleMinutes(final SvCluster cluster)
+    {
+        if(cluster.isResolved() || !cluster.isFullyChained() || cluster.getChains().get(0).getLinkCount() <= 2)
+            return;
+
+        if(!cluster.getChains().get(0).couldFormLoop())
+            return;
+
+        final SvChain chain = cluster.getChains().get(0);
+
+        // check for high copy number within this loop
+        boolean hasHighCN = false;
+        double cnTotal = 0;
+        double maxCN = 0;
+        double ploidyTotal = 0;
+
+        for(final SvVarData var : chain.getSvList())
+        {
+            ploidyTotal += var.getSvData().ploidy();
+            cnTotal += (var.copyNumber(true) + var.copyNumber(false)) * 0.5;
+            maxCN = max(maxCN, var.copyNumber(true));
+            maxCN = max(maxCN, var.copyNumber(false));
+
+            if(var.copyNumber(true) >= DOUBLE_MINUTE_COPY_NUMBER_THRESHOLD || var.copyNumber(false) >= DOUBLE_MINUTE_COPY_NUMBER_THRESHOLD)
+            {
+                hasHighCN = true;
+            }
+        }
+
+        if(hasHighCN)
+        {
+            LOGGER.info(String.format("sample(%s) cluster(%d) chain(%d) links(%d) closed loop, copyNumber(avg=%.1f max=%.2f) ploidy(%.1f)",
+                    mSampleId, cluster.getId(), chain.getId(), chain.getLinkCount(),
+                    cnTotal/chain.getSvList().size(), maxCN, ploidyTotal/chain.getSvList().size()));
+
+            cluster.addAnnotation(CLUSTER_ANNONTATION_DM);
+        }
+    }
+
+    private void findChainRepeatedSegments(final SvCluster cluster, final SvChain chain)
+    {
+        if(!chain.hasReplicatedSVs())
+            return;
+
+        List<SvVarData> replicatedSVs = Lists.newArrayList();
+
+        final List<SvVarData> svList = chain.getSvList();
+
+        for (int i = 0; i < svList.size(); ++i)
+        {
+            final SvVarData var1 = svList.get(i);
+
+            if(replicatedSVs.contains(var1))
+                continue;
+
+            for (int j = i + 1; j < svList.size(); ++j)
+            {
+                final SvVarData var2 = svList.get(j);
+
+                if (!var1.equals(var2, true))
+                    continue;
+
+                replicatedSVs.add(var1);
+
+                // look for repeated sections forwards or backwards from this point
+                List<SvVarData> forwardRepeats = getRepeatedSvSequence(svList, i, j, true);
+
+                boolean forwardSequence = false;
+
+                if(!forwardRepeats.isEmpty())
+                {
+                    forwardSequence = true;
+                    replicatedSVs.addAll(forwardRepeats);
                 }
                 else
                 {
-                    ++j;
+                    forwardSequence = false;
+                    forwardRepeats = getRepeatedSvSequence(svList, i, j, false);
                 }
-            }
 
-            if(removeFirst)
-            {
-                // LOGGER.debug("duplicate linked pair({} len={})", pair.toString(), pair.length(), pair.first().getTransSvLinks());
-                linkedPairs.remove(i);
-            }
-            else
-            {
-                ++i;
+                if(!forwardRepeats.isEmpty())
+                {
+                    replicatedSVs.addAll(forwardRepeats);
+
+                    forwardRepeats.set(0, var1);
+
+                    String svIds = var1.id();
+                    for(int k = 1; k < forwardRepeats.size(); ++k)
+                        svIds += ";" + forwardRepeats.get(k).id();
+
+                    if(forwardRepeats.size() >= 4)
+                    {
+                        LOGGER.debug("sample({}) cluster({}) chain({}) {} sequence of {} SVs starting at index({}:{}) SV({})",
+                                mSampleId, cluster.getId(), chain.getId(), forwardSequence ? "forward" : "reverse",
+                                forwardRepeats.size(), i, j, var1.id());
+
+                        // ClusterId,ChainId,SequenceCount,VarIds,MatchDirection
+                        LOGGER.debug("CF_REPEAT_SEQ: {},{},{},{},{},{}",
+                                mSampleId, cluster.getId(), chain.getId(), forwardRepeats.size(), svIds, forwardSequence);
+                    }
+
+                    break;
+                }
+
+                // no sequence found
             }
         }
     }

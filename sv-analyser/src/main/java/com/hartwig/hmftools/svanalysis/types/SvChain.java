@@ -26,7 +26,7 @@ public class SvChain {
     private boolean mIsClosedLoop;
     private boolean mIsValid;
 
-    private int mConsistencyCount;
+    private String mDetails;
 
     private static final Logger LOGGER = LogManager.getLogger(SvChain.class);
 
@@ -38,7 +38,7 @@ public class SvChain {
         mLength = 0;
         mIsClosedLoop = false;
         mIsValid = true;
-        mConsistencyCount = 0;
+        mDetails = "";
     }
 
     public SvChain(final SvChain other)
@@ -49,6 +49,7 @@ public class SvChain {
         mLength = 0;
         mIsClosedLoop = false;
         mIsValid = true;
+        mDetails = "";
 
         for(final SvLinkedPair pair : other.getLinkedPairs())
         {
@@ -141,8 +142,6 @@ public class SvChain {
         }
 
         setIsValid();
-
-        mConsistencyCount = calcConsistency(mSvList);
     }
 
     public SvVarData getFirstSV() { return mSvList.isEmpty() ? null : mSvList.get(0); }
@@ -179,7 +178,15 @@ public class SvChain {
         return false;
     }
 
-    public boolean isConsistent() { return mConsistencyCount == 0; }
+    public boolean isConsistent()
+    {
+        int consistency = calcConsistency(getFirstSV(), firstLinkOpenOnStart());
+        consistency += calcConsistency(getLastSV(), lastLinkOpenOnStart());
+        return consistency == 0;
+    }
+
+    public String getDetails() { return mDetails; }
+    public void setDetails(final String details) { mDetails = details; }
 
     public boolean canAddLinkedPairToStart(final SvLinkedPair pair)
     {
@@ -399,6 +406,7 @@ public class SvChain {
 
     public static int CHAIN_LINK_COUNT = 0;
     public static int CHAIN_ASSEMBLY_LINK_COUNT = 1;
+    public static int CHAIN_LENGTH = 2;
 
     public int[] breakendsAreChained(final SvVarData var1, boolean v1Start, final SvVarData var2, boolean v2Start)
     {
@@ -410,7 +418,7 @@ public class SvChain {
         boolean be2FacesUp = false;
         int be2Index = -1;
 
-        int[] linkData = {0, 0};
+        int[] linkData = new int[CHAIN_LENGTH+1];
 
         // in every linked pair, the first element is lower in the chain (where 0 is considering the beginning) and the second is higher,
         // so for every SV it's 'first' breakend in a given pair faces up, the 'second' faces down
@@ -443,6 +451,8 @@ public class SvChain {
             if(be1Index >= 0 || be2Index >= 0)
             {
                 ++linkData[CHAIN_LINK_COUNT];
+
+                linkData[CHAIN_LENGTH] += pair.length();
 
                 if(pair.isAssembled())
                     ++linkData[CHAIN_ASSEMBLY_LINK_COUNT];
@@ -490,5 +500,39 @@ public class SvChain {
         }
 
         return true;
+    }
+
+    public static List<SvVarData> getRepeatedSvSequence(final List<SvVarData> svList, int firstIndex, int secondIndex, boolean walkForwards)
+    {
+        // walk forward from these 2 start points comparing SVs
+        List<SvVarData> sequence = Lists.newArrayList();
+
+        int i = firstIndex;
+        int j = secondIndex + 1;
+
+        if(walkForwards)
+            ++i;
+        else
+            --i;
+
+        while(i < secondIndex && i >= 0 && j < svList.size())
+        {
+            final SvVarData var1 = svList.get(i);
+            final SvVarData var2 = svList.get(j);
+
+            if(!var1.equals(var2, true))
+                break;
+
+            sequence.add(var1);
+
+            ++j;
+
+            if(walkForwards)
+                ++i;
+            else
+                --i;
+        }
+
+        return sequence;
     }
 }

@@ -44,7 +44,6 @@ public class SvCluster
     private List<SvLinkedPair> mAssemblyLinkedPairs; // TIs found during assembly
     private List<SvVarData> mSpanningSVs; // having 2 duplicate (matching) BEs
     private List<SvArmGroup> mArmGroups;
-    private boolean mIsFullyChained;
     private List<SvVarData> mUnchainedSVs;
     private boolean mIsResolved;
     private String mResolvedType;
@@ -117,7 +116,6 @@ public class SvCluster
         mInferredLinkedPairs = Lists.newArrayList();
         mSpanningSVs = Lists.newArrayList();
         mChains = Lists.newArrayList();
-        mIsFullyChained = false;
         mUnchainedSVs = Lists.newArrayList();
 
         mLongDelDups = Lists.newArrayList();
@@ -169,7 +167,6 @@ public class SvCluster
             mResolvedType = RESOLVED_TYPE_NONE;
         }
 
-        mIsFullyChained = false;
         mSynDelDupTI = 0;
         mSynDelDupLength = 0;
 
@@ -352,8 +349,19 @@ public class SvCluster
         }
     }
 
-    public void setIsFullyChained(boolean toggle) { mIsFullyChained = toggle; mUnchainedSVs.clear(); }
-    public boolean isFullyChained() { return mIsFullyChained; }
+    public boolean isFullyChained()
+    {
+        if(!mUnchainedSVs.isEmpty() || mChains.isEmpty())
+            return false;
+
+        for (final SvChain chain : mChains)
+        {
+            if (!chain.isConsistent())
+                return false;
+        }
+
+        return true;
+    }
 
     public List<SvVarData> getUnlinkedSVs() { return mUnchainedSVs; }
 
@@ -513,7 +521,7 @@ public class SvCluster
         if(isSimpleSingleSV())
         {
             LOGGER.debug("cluster({}) simple svCount({}) desc({}) armCount({}) consistency({}) ",
-                    getId(), getCount(), getDesc(), getChromosomalArmCount(), getConsistencyCount());
+                    getId(), getCount(), getDesc(), getArmCount(), getConsistencyCount());
         }
         else
         {
@@ -560,12 +568,12 @@ public class SvCluster
 
             LOGGER.debug(String.format("cluster(%d) complex SVs(%d rep=%d) desc(%s res=%s) arms(%d) consis(%d) chains(%d perc=%.2f) replic(%s) %s",
                     getId(), getUniqueSvCount(), getCount(), getDesc(), mResolvedType,
-                    getChromosomalArmCount(), getConsistencyCount(),
+                    getArmCount(), getConsistencyCount(),
                     mChains.size(), chainedPerc, mHasReplicatedSVs, otherInfo));
         }
     }
 
-    public int getChromosomalArmCount() { return mArmGroups.size(); }
+    public int getArmCount() { return mArmGroups.size(); }
 
     public final String getClusterTypesAsString()
     {
@@ -635,6 +643,7 @@ public class SvCluster
     public boolean hasLinkingLineElements() { return mHasLinkingLineElements; }
 
     public final List<SvVarData> getUnlinkedRemoteSVs() { return mUnlinkedRemoteSVs; }
+    public final List<SvVarData> getShortTIRemoteSVs() { return mShortTIRemoteSVs; }
 
     public void setArmLinks()
     {
@@ -729,7 +738,6 @@ public class SvCluster
             {
                 if (!linkedPairs.contains(pair))
                 {
-                    LOGGER.warn("cluster({}) assembly linkedPair({}) was not chained", mId, pair.toString());
                     linkedPairs.add(pair);
                 }
             }
@@ -798,6 +806,9 @@ public class SvCluster
         return false;
     }
 
+    public static String CLUSTER_ANNONTATION_DM = "DM";
+    public static String CLUSTER_ANNONTATION_CT = "CT";
+
     public final List<String> getAnnotationList() { return mAnnotationList; }
     public final void addAnnotation(final String annotation)
     {
@@ -807,6 +818,6 @@ public class SvCluster
         mAnnotationList.add(annotation);
     }
 
-    public String getAnnotations() { return mAnnotationList.stream ().collect (Collectors.joining (";")); }
+    public String getAnnotations() { return mAnnotationList.stream().collect (Collectors.joining (";")); }
 
 }

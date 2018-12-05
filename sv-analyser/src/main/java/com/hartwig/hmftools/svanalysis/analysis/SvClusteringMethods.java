@@ -13,7 +13,6 @@ import static com.hartwig.hmftools.svanalysis.analysis.LinkFinder.MIN_TEMPLATED_
 import static com.hartwig.hmftools.svanalysis.analysis.LinkFinder.areLinkedSection;
 import static com.hartwig.hmftools.svanalysis.analysis.LinkFinder.arePairedDeletionBridges;
 import static com.hartwig.hmftools.svanalysis.analysis.LinkFinder.areSectionBreak;
-import static com.hartwig.hmftools.svanalysis.analysis.LinkFinder.inDeletionBridge;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.CHROMOSOME_ARM_P;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.CHROMOSOME_ARM_Q;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.PERMITED_DUP_BE_DISTANCE;
@@ -25,6 +24,7 @@ import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.getChrFromChr
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.getChromosomalArmLength;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.getVariantChrArm;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.isOverlapping;
+import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.makeChrArmStr;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_LOW_QUALITY;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_DEL_EXT_TI;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_DEL_INT_TI;
@@ -53,7 +53,6 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 import com.hartwig.hmftools.svanalysis.types.SvBreakend;
-import com.hartwig.hmftools.svanalysis.types.SvCNData;
 import com.hartwig.hmftools.svanalysis.types.SvCluster;
 import com.hartwig.hmftools.svanalysis.types.SvLinkedPair;
 import com.hartwig.hmftools.svanalysis.types.SvVarData;
@@ -73,9 +72,11 @@ public class SvClusteringMethods {
     private int mNextClusterId;
 
     private Map<String, List<SvBreakend>> mChrBreakendMap; // every breakend on a chromosome, ordered by asending position
-    private Map<String, Integer> mChrCopyNumberMap; // copy number for whole chromosomes if clear
-    private Map<String, List<SvCNData>> mChrCNDataMap; // copy number segments recreated from SVs
+    // private Map<String, List<SvCNData>> mChrCNDataMap; // copy number segments recreated from SVs
     private Map<String, List<SvLOH>> mSampleLohData;
+    private Map<String, Double> mTelomereCopyNumberMap;
+    private Map<String, Double> mChromosomeCopyNumberMap; // max of telomere for convenience
+
 
     private long mDelDupCutoffLength;
     private int mProximityDistance;
@@ -105,12 +106,13 @@ public class SvClusteringMethods {
         mProximityDistance = proximityLength;
 
         mChrBreakendMap = new HashMap();
-        mChrCopyNumberMap = new HashMap();
-        mChrCNDataMap = new HashMap();
+        mTelomereCopyNumberMap = new HashMap();
+        mChromosomeCopyNumberMap = new HashMap();
         mSampleLohData = null;
     }
 
     public Map<String, List<SvBreakend>> getChrBreakendMap() { return mChrBreakendMap; }
+    public Map<String, Double> getTelomereCopyNumberMap() { return mTelomereCopyNumberMap; }
     public int getNextClusterId() { return mNextClusterId++; }
     public void setSampleLohData(final Map<String, List<SvLOH>> data) { mSampleLohData = data; }
     public long getDelDupCutoffLength() { return mDelDupCutoffLength; }
@@ -250,6 +252,9 @@ public class SvClusteringMethods {
                 cluster.setResolved(true, RESOLVED_LOW_QUALITY);
                 continue;
             }
+
+            if(cluster.hasLinkingLineElements())
+                continue;
 
             applyCopyNumberReplication(sampleId, cluster);
 
@@ -889,8 +894,59 @@ public class SvClusteringMethods {
             {
                 final SvBreakend breakend = breakendList.get(i);
                 breakend.setChrPosIndex(i);
+
+                if(i == 0 || i == breakendList.size() - 1)
+                {
+                    // cache implied telomere copy numbers per chromosome
+                    final String chromosome = breakend.chromosome();
+                    final String chrArm = makeChrArmStr(chromosome, breakend.arm());
+
+                    double impliedCN;
+                    if((breakend.orientation() == 1 && i == 0) || (breakend.orientation() == -1 && i == breakendList.size() - 1))
+                    {
+                        impliedCN = breakend.getSV().copyNumber(breakend.usesStart());
+                    }
+                    else
+                    {
+                        impliedCN = breakend.getSV().copyNumber(breakend.usesStart()) - breakend.getSV().copyNumberChange(breakend.usesStart());
+                    }
+
+                    mTelomereCopyNumberMap.put(chrArm, impliedCN);
+
+                    if(i == 0)
+                    {
+                        if(breakend.arm() == CHROMOSOME_ARM_Q)
+                            mTelomereCopyNumberMap.put(makeChrArmStr(chromosome, CHROMOSOME_ARM_P), impliedCN);
+                    }
+                    else
+                    {
+                        if(breakend.arm() == CHROMOSOME_ARM_P)
+                            mTelomereCopyNumberMap.put(makeChrArmStr(chromosome, CHROMOSOME_ARM_Q), impliedCN);
+
+                        // record chromosome max copy number
+                        double maxCopyNumber = max(telomereCopyNumber(chromosome, CHROMOSOME_ARM_P), telomereCopyNumber(chromosome, CHROMOSOME_ARM_Q));
+                        mChromosomeCopyNumberMap.put(chromosome, maxCopyNumber);
+                    }
+                }
             }
         }
+    }
+
+    public double chromosomeCopyNumber(final String chromosome)
+    {
+        Double copyNumber = mChromosomeCopyNumberMap.get(chromosome);
+        return copyNumber != null ? copyNumber : 0;
+    }
+
+    public double telomereCopyNumber(final String chromosome, final String arm)
+    {
+        return telomereCopyNumber(makeChrArmStr(chromosome, arm));
+    }
+
+    public double telomereCopyNumber(final String chrArm)
+    {
+        Double copyNumber = mTelomereCopyNumberMap.get(chrArm);
+        return copyNumber != null ? copyNumber : 0;
     }
 
     public void annotateNearestSvData()

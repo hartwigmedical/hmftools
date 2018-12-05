@@ -204,6 +204,7 @@ public class ChainFinder
 
         shortestFullChain.setId(mCluster.getChains().size());
 
+        /*
         if(shortestFullChain.getLinkCount() >= 3)
         {
             LOGGER.info("sample({}) cluster({}) adding complete chain({}) length({}) with {} linked pairs",
@@ -211,10 +212,10 @@ public class ChainFinder
 
             shortestFullChain.logLinks();
         }
+        */
 
         mCluster.getChains().clear();
         mCluster.addChain(shortestFullChain);
-        mCluster.setIsFullyChained(true);
         return true;
     }
 

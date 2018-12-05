@@ -105,11 +105,6 @@ public class SvVarData
 
         mSVData = svData;
 
-        mBreakendStart = new SvBreakend(this, true);
-
-        if(!isNullBreakend())
-            mBreakendEnd = new SvBreakend(this, false);
-
         init();
 
         setAssemblyData();
@@ -265,6 +260,11 @@ public class SvVarData
     {
         mStartArm = start;
         mEndArm = end;
+
+        mBreakendStart = new SvBreakend(this, true);
+
+        if(!isNullBreakend())
+            mBreakendEnd = new SvBreakend(this, false);
     }
 
     public final SvCluster getCluster() { return mCluster; }

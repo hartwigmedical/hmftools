@@ -12,7 +12,7 @@ import com.hartwig.hmftools.common.variant.structural.StructuralVariantData;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 import com.hartwig.hmftools.svanalysis.analysis.CNAnalyser;
 import com.hartwig.hmftools.svanalysis.analysis.FusionDisruptionAnalyser;
-import com.hartwig.hmftools.svanalysis.analysis.SvClusteringConfig;
+import com.hartwig.hmftools.svanalysis.analysis.SvaConfig;
 import com.hartwig.hmftools.svanalysis.analysis.SvSampleAnalyser;
 import com.hartwig.hmftools.svanalysis.annotators.ExtDataLinker;
 import com.hartwig.hmftools.svanalysis.types.SvVarData;
@@ -108,7 +108,7 @@ public class SvAnalyser {
                 extDataLinker.loadFile(cmd.getOptionValue(EXTERNAL_DATA_LINK_FILE));
             }
 
-            SvClusteringConfig clusteringConfig = new SvClusteringConfig(cmd, tumorSample);
+            SvaConfig clusteringConfig = new SvaConfig(cmd, tumorSample);
             SvSampleAnalyser sampleAnalyser = new SvSampleAnalyser(clusteringConfig);
 
             FusionDisruptionAnalyser fusionAnalyser = null;
@@ -253,7 +253,7 @@ public class SvAnalyser {
         options.addOption(RUN_RESULTS_CHECKER, false, "Check results vs validation file");
         options.addOption(INCLUDE_NONE_SEGMENTS, false, "Include copy number NONE segments in SV analysis");
         options.addOption(GENE_TRANSCRIPTS_DIR, true, "Optinonal: file with sample gene transcript data");
-        SvClusteringConfig.addCmdLineArgs(options);
+        SvaConfig.addCmdLineArgs(options);
         ResultsChecker.addCmdLineArgs(options);
         CNAnalyser.addCmdLineArgs(options);
         SvFusionAnalyser.addCmdLineArgs(options);

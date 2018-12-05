@@ -3,7 +3,8 @@ package com.hartwig.hmftools.svanalysis.analysis;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
 
-public class SvClusteringConfig {
+public class SvaConfig
+{
 
     final public int ProximityDistance;
     final public String OutputCsvPath;
@@ -13,7 +14,7 @@ public class SvClusteringConfig {
     final public String ExternalAnnotationsFile;
     final public String GeneDataFile;
     final public String LOHDataFile;
-    final public boolean UseCombinedOutputFile;
+    final public String SampleId;
 
     public boolean LogVerbose;
 
@@ -29,11 +30,11 @@ public class SvClusteringConfig {
     private static final String LOH_DATA_FILE = "loh_file";
     private static final String LOG_VERBOSE = "log_verbose";
 
-    public SvClusteringConfig(final CommandLine cmd, final String sampleId)
+    public SvaConfig(final CommandLine cmd, final String sampleId)
     {
         OutputCsvPath = cmd.getOptionValue(DATA_OUTPUT_PATH);
         ProximityDistance = Integer.parseInt(cmd.getOptionValue(CLUSTER_BASE_DISTANCE, "0"));
-        UseCombinedOutputFile = sampleId.isEmpty() || sampleId.equals("*");
+        SampleId = sampleId;
         SvPONFile = cmd.getOptionValue(SV_PON_FILE, "");
         FragileSiteFile = cmd.getOptionValue(FRAGILE_SITE_FILE, "");
         LineElementFile = cmd.getOptionValue(LINE_ELEMENT_FILE, "");
@@ -43,7 +44,7 @@ public class SvClusteringConfig {
         LogVerbose = cmd.hasOption(LOG_VERBOSE);
     }
 
-    public SvClusteringConfig(int proximityDistance)
+    public SvaConfig(int proximityDistance)
     {
         ProximityDistance = proximityDistance;
         OutputCsvPath = "";
@@ -53,9 +54,11 @@ public class SvClusteringConfig {
         ExternalAnnotationsFile = "";
         GeneDataFile = "";
         LOHDataFile = "";
-        UseCombinedOutputFile = false;
+        SampleId = "";
         LogVerbose = false;
     }
+
+    public boolean hasMultipleSamples() { return SampleId.isEmpty() || SampleId.equals("*"); }
 
     public static void addCmdLineArgs(Options options)
     {
