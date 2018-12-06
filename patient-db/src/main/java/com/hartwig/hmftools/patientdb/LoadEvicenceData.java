@@ -3,17 +3,11 @@ package com.hartwig.hmftools.patientdb;
 import java.io.File;
 import java.io.IOException;
 import java.sql.SQLException;
-import java.util.List;
-import java.util.Map;
 import java.util.stream.Stream;
 
 import com.hartwig.hmftools.common.actionability.ActionabilityAnalyzer;
-import com.hartwig.hmftools.common.actionability.EvidenceItem;
 import com.hartwig.hmftools.common.context.ProductionRunContextFactory;
 import com.hartwig.hmftools.common.context.RunContext;
-import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
-import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
-import com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 import com.hartwig.hmftools.patientdb.data.PotentialActionableCNV;
 import com.hartwig.hmftools.patientdb.data.PotentialActionableFusion;
@@ -25,7 +19,6 @@ import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.apache.commons.math3.util.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -62,10 +55,11 @@ public class LoadEvicenceData {
 
                 RunContext runContext = ProductionRunContextFactory.fromRunDirectory(runDirectory.toPath().toString());
                 final String sample = runContext.tumorSample();
+                LOGGER.info("sample: " + sample);
 
                 LOGGER.info("Reading clinical Data from DB");
-                final Stream<Pair<String, String>> tumorLocation = dbAccess.sampleAndTumorLocation(sample);
-                LOGGER.info(tumorLocation);
+                final String primaryTumorLocation = dbAccess.sampleAndTumorLocation(sample).toString();
+                LOGGER.info(primaryTumorLocation);
 
                 LOGGER.info("Reading somatic variants from DB");
                 final Stream<PotentialActionableVariant> somaticVariants = dbAccess.potentiallyActionableVariants(sample);
@@ -82,13 +76,16 @@ public class LoadEvicenceData {
                 ActionabilityAnalyzer actionabilityAnalyzer = ActionabilityAnalyzer.fromKnowledgebase(KNOWLEDGEBASE_PATH);
 
 //                Map<EnrichedSomaticVariant, List<EvidenceItem>> evidencePerVariant =
-//                        actionabilityAnalyzer.evidenceForSomaticVariants(somaticVariants, tumorLocation.toString());
+//                        actionabilityAnalyzer.evidenceForSomaticVariants(somaticVariants, primaryTumorLocation);
 //
 //                Map<GeneCopyNumber, List<EvidenceItem>> evidencePerGeneCopyNumber =
-//                        actionabilityAnalyzer.evidenceForCopyNumbers(significantCopyNumbers, primaryTumorLocation);
+//                        actionabilityAnalyzer.evidenceForCopyNumbers(geneCopyNumber, primaryTumorLocation);
 //
 //                Map<GeneFusion, List<EvidenceItem>> evidencePerFusion =
-//                        actionabilityAnalyzer.evidenceForFusions(structuralVariantAnalysis.fusions(), primaryTumorLocation);
+//                        actionabilityAnalyzer.evidenceForFusions(geneFusion, primaryTumorLocation);
+
+                LOGGER.info("Writing evidence items to DB");
+                LOGGER.info("Writing clinical trials to DB");
 
             }
         }
