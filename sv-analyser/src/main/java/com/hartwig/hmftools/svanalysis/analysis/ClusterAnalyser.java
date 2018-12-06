@@ -489,26 +489,15 @@ public class ClusterAnalyser {
 
         // next clusters with which start and end on the same arm, have the same start and end orientation
         // and the same start and end copy number
-        if(cluster.isFullyChained())
+        if(!cluster.getChains().isEmpty())
         {
-            // boolean isResolved = cluster.isConsistent();
-
             // set the type but don't consider long chains resolved
-            if(!cluster.hasReplicatedSVs())
+            if(cluster.getFoldbacks().isEmpty())
                 cluster.setResolved(false, RESOLVED_TYPE_SIMPLE_CHAIN);
             else
                 cluster.setResolved(false, RESOLVED_TYPE_COMPLEX_CHAIN);
 
             return;
-        }
-
-        // cluster remains largely unresolved..
-        if(!cluster.getChains().isEmpty())
-        {
-            if(!cluster.hasReplicatedSVs())
-                cluster.setResolved(false, "SimplePartialChain");
-            else
-                cluster.setResolved(false, "ComplexPartialChain");
         }
     }
 
@@ -1224,7 +1213,7 @@ public class ClusterAnalyser {
                     final List<SvBreakend> breakendList = chrBreakendMap.get(firstBreakend.chromosome());
                     long closestSvDistance = getDistanceToNextClusterSV(cluster, breakendList, pair);
 
-                    pair.setTraversedUnclusteredCount(getUnclusteredTraversedSVs(cluster, breakendList, pair));
+                    pair.setTraversedSVCount(getTraversedSVs(cluster, breakendList, pair));
 
                     pair.setNearestSVDistance(closestSvDistance);
 
@@ -1261,9 +1250,9 @@ public class ClusterAnalyser {
         }
     }
 
-    private static int getUnclusteredTraversedSVs(final SvCluster cluster, final List<SvBreakend> breakendList, final SvLinkedPair pair)
+    private static int getTraversedSVs(final SvCluster cluster, final List<SvBreakend> breakendList, final SvLinkedPair pair)
     {
-        // find any unclustered SGL, BND or INV crossed by this pair
+        // count any non-trivial cluster's SVs crossed by this pair
         final SvBreakend firstBreakend = pair.first().getBreakend(pair.firstLinkOnStart());
         final SvBreakend secondBreakend = pair.second().getBreakend(pair.secondLinkOnStart());
         int lowerIndex = min(firstBreakend.getChrPosIndex(), secondBreakend.getChrPosIndex());
@@ -1276,13 +1265,12 @@ public class ClusterAnalyser {
 
         for (int i = lowerIndex + 1; i < upperIndex - 1; ++i)
         {
-            final SvVarData var = breakendList.get(i).getSV();
+            final SvCluster otherCluster = breakendList.get(i).getSV().getCluster();
 
-            if (var.getCluster() == cluster || var.getCluster().getCount() > 1)
+            if (otherCluster == cluster || otherCluster.isResolved())
                 continue;
 
-            if (var.type() == BND || var.type() == SGL || var.type() == INV)
-                ++unclusteredTraversedCount;
+            ++unclusteredTraversedCount;
         }
 
         return unclusteredTraversedCount;
@@ -1300,40 +1288,26 @@ public class ClusterAnalyser {
 
         if(lowerIndex > 0)
         {
-            for (int i = lowerIndex - 1; i >= 0; --i)
+            final SvBreakend breakend = breakendList.get(lowerIndex - 1);
+
+            if(breakend.getSV().getCluster() == cluster)
             {
-                final SvBreakend breakend = breakendList.get(i);
-                if(breakend.getSV().equals(pair.first()) || breakend.getSV().equals(pair.second()))
-                    continue;
-
-                if(breakend.getSV().getCluster() == cluster)
-                {
-                    final SvBreakend refBreakend = breakendList.get(lowerIndex);
-                    closestDistance = refBreakend.position() - breakend.position();
-                }
-
-                break;
+                final SvBreakend refBreakend = breakendList.get(lowerIndex);
+                closestDistance = refBreakend.position() - breakend.position();
             }
         }
 
-        if(upperIndex > 0)
+        if(upperIndex < breakendList.size() - 1)
         {
-            for (int i = upperIndex + 1; i < breakendList.size(); ++i)
+            final SvBreakend breakend = breakendList.get(upperIndex + 1);
+
+            if(breakend.getSV().getCluster() == cluster)
             {
-                final SvBreakend breakend = breakendList.get(i);
-                if(breakend.getSV().equals(pair.first()) || breakend.getSV().equals(pair.second()))
-                    continue;
+                final SvBreakend refBreakend = breakendList.get(upperIndex);
+                long distance = breakend.position() - refBreakend.position();
 
-                if(breakend.getSV().getCluster() == cluster)
-                {
-                    final SvBreakend refBreakend = breakendList.get(upperIndex);
-                    long distance = breakend.position() - refBreakend.position();
-
-                    if(closestDistance == -1 || distance < closestDistance)
-                        closestDistance = distance;
-                }
-
-                break;
+                if(closestDistance == -1 || distance < closestDistance)
+                    closestDistance = distance;
             }
         }
 
@@ -1541,7 +1515,7 @@ public class ClusterAnalyser {
 
         if(hasHighCN)
         {
-            LOGGER.info(String.format("sample(%s) cluster(%d) chain(%d) links(%d) closed loop, copyNumber(avg=%.1f max=%.2f) ploidy(%.1f)",
+            LOGGER.debug(String.format("sample(%s) cluster(%d) chain(%d) links(%d) closed loop, copyNumber(avg=%.1f max=%.2f) ploidy(%.1f)",
                     mSampleId, cluster.id(), chain.id(), chain.getLinkCount(),
                     cnTotal/chain.getSvList().size(), maxCN, ploidyTotal/chain.getSvList().size()));
 

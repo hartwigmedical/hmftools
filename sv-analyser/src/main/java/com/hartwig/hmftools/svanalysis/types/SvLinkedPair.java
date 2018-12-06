@@ -21,7 +21,7 @@ public class SvLinkedPair {
     private int mAssembledChainCount;
     private int mDBLenFirst;
     private int mDBLenSecond;
-    private int mTraversedUnclusteredCount;
+    private int mTraversedSVCount;
     private long mNearestSVDistance;
     private boolean mCopyNumberGain; // for TIs, is this from an additional fragment, not impacting the actual or derivative chromosomes
     private boolean mOnArmOfOrigin;
@@ -47,7 +47,7 @@ public class SvLinkedPair {
         mAssembledChainCount = 0;
         mDBLenFirst = 0;
         mDBLenSecond = 0;
-        mTraversedUnclusteredCount = 0;
+        mTraversedSVCount = 0;
         mNearestSVDistance = 0;
         mCopyNumberGain = false;
         mOnArmOfOrigin = false;
@@ -114,8 +114,8 @@ public class SvLinkedPair {
     public void setOnArmOfOrigin(boolean toggle) { mOnArmOfOrigin = toggle; }
     public boolean onArmOfOrigin() { return mOnArmOfOrigin; }
 
-    public void setTraversedUnclusteredCount(int count) { mTraversedUnclusteredCount = count; }
-    public int getTraversedUnclusteredCount() { return mTraversedUnclusteredCount; }
+    public void setTraversedSVCount(int count) { mTraversedSVCount = count; }
+    public int getTraversedSVCount() { return mTraversedSVCount; }
 
     public boolean hasVariantBE(final SvVarData var, boolean useStart)
     {
