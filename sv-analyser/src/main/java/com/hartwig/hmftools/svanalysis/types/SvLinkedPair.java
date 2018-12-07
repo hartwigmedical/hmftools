@@ -22,7 +22,8 @@ public class SvLinkedPair {
     private int mDBLenFirst;
     private int mDBLenSecond;
     private int mTraversedSVCount;
-    private long mNearestSVDistance;
+    private int mNextSVDistance;
+    private int mNextSVTraversedCount;
     private boolean mCopyNumberGain; // for TIs, is this from an additional fragment, not impacting the actual or derivative chromosomes
     private boolean mOnArmOfOrigin;
 
@@ -48,7 +49,8 @@ public class SvLinkedPair {
         mDBLenFirst = 0;
         mDBLenSecond = 0;
         mTraversedSVCount = 0;
-        mNearestSVDistance = 0;
+        mNextSVDistance = 0;
+        mNextSVTraversedCount = 0;
         mCopyNumberGain = false;
         mOnArmOfOrigin = false;
 
@@ -105,8 +107,14 @@ public class SvLinkedPair {
     public void setDBLenSecond(int length) { mDBLenSecond = length; }
     public int getDBLenSecond() { return mDBLenSecond; }
 
-    public void setNearestSVDistance(long distance) { mNearestSVDistance = distance; }
-    public long getNearestSVDistance() { return mNearestSVDistance; }
+    public void setNextSVData(int distance, int traversedCount)
+    {
+        mNextSVDistance = distance;
+        mNextSVTraversedCount = traversedCount;
+    }
+
+    public long getNextSVDistance() { return mNextSVDistance; }
+    public long getNextSVTraversedCount() { return mNextSVTraversedCount; }
 
     public void setCopyNumberGain(boolean isGain) { mCopyNumberGain = isGain; }
     public boolean hasCopyNumberGain() { return mCopyNumberGain; }

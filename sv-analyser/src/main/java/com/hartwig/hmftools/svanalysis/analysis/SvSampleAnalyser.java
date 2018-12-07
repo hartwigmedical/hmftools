@@ -508,8 +508,8 @@ public class SvSampleAnalyser {
                 mLinksFileWriter = writer;
 
                 writer.write("SampleId,ClusterId,ClusterDesc,ClusterCount,ResolvedType,IsLINE,FullyChained");
-                writer.write(",ChainId,ChainCount,ChainConsistent,Id1,Id2,ChrArm");
-                writer.write(",IsAssembled,TILength,NextSVLength,DBLenStart,DBLenEnd,OnArmOfOrigin,CopyNumberGain,TraversedSVCount,AssembledCount");
+                writer.write(",ChainId,ChainCount,ChainConsistent,Id1,Id2,ChrArm,IsAssembled,TILength");
+                writer.write(",NextSVDistance,NextSVTraversedCount,DBLenStart,DBLenEnd,OnArmOfOrigin,CopyNumberGain,TraversedSVCount");
                 writer.newLine();
             }
 
@@ -560,10 +560,10 @@ public class SvSampleAnalyser {
                                         pair.first().getBreakend(pair.firstLinkOnStart()).getChrArm()));
 
                         writer.write(
-                                String.format(",%s,%d,%d,%d,%d,%s,%s,%d,%d",
-                                        pair.isAssembled(), pair.length(), pair.getNearestSVDistance(),
+                                String.format(",%s,%d,%d,%d,%d,%d,%s,%s,%d",
+                                        pair.isAssembled(), pair.length(), pair.getNextSVDistance(), pair.getNextSVTraversedCount(),
                                         pair.getDBLenFirst(), pair.getDBLenSecond(), pair.onArmOfOrigin(),
-                                        pair.hasCopyNumberGain(), pair.getTraversedSVCount(), pair.getAssembledChainCount()));
+                                        pair.hasCopyNumberGain(), pair.getTraversedSVCount()));
 
                         writer.newLine();
                     }
