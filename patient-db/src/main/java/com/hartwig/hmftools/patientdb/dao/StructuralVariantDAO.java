@@ -26,7 +26,6 @@ import org.jooq.InsertValuesStepN;
 import org.jooq.Record;
 import org.jooq.Record1;
 import org.jooq.Result;
-import org.jooq.types.UInteger;
 
 class StructuralVariantDAO {
     @NotNull
@@ -326,28 +325,10 @@ class StructuralVariantDAO {
                 timestamp);
     }
 
-    void deleteStructuralVariantsForSample(@NotNull String sample)
-    {
-        /*
-        context.delete(STRUCTURALVARIANTDISRUPTION)
-                .where(STRUCTURALVARIANTDISRUPTION.BREAKENDID.in(selectBreakendsForSample(sample)))
-                .execute();
-        context.delete(STRUCTURALVARIANTFUSION)
-                .where(STRUCTURALVARIANTFUSION.FIVEPRIMEBREAKENDID.in(selectBreakendsForSample(sample)))
-                .execute();
-        context.delete(STRUCTURALVARIANTBREAKEND).where(STRUCTURALVARIANTBREAKEND.ID.in(selectBreakendsForSample(sample))).execute();
-        */
-
+    void deleteStructuralVariantsForSample(@NotNull String sample) {
+        context.delete(STRUCTURALVARIANTDISRUPTION).where(STRUCTURALVARIANTDISRUPTION.SAMPLEID.eq(sample)).execute();
+        context.delete(STRUCTURALVARIANTFUSION).where(STRUCTURALVARIANTFUSION.SAMPLEID.eq(sample)).execute();
+        context.delete(STRUCTURALVARIANTBREAKEND).where(STRUCTURALVARIANTBREAKEND.SAMPLEID.eq(sample)).execute();
         context.delete(STRUCTURALVARIANT).where(STRUCTURALVARIANT.SAMPLEID.eq(sample)).execute();
-    }
-
-    @NotNull
-    private List<Record1<UInteger>> selectBreakendsForSample(@NotNull String sample) {
-        return context.select(STRUCTURALVARIANTBREAKEND.ID)
-                .from(STRUCTURALVARIANTBREAKEND)
-                .innerJoin(STRUCTURALVARIANT)
-                .on(STRUCTURALVARIANT.ID.eq(STRUCTURALVARIANTBREAKEND.STRUCTURALVARIANTID))
-                .where(STRUCTURALVARIANT.SAMPLEID.eq(sample))
-                .fetch();
     }
 }

@@ -24,7 +24,6 @@ import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
-@SuppressWarnings("OptionalUsedAsFieldOrParameterType")
 public class StructuralVariantImpliedTest {
 
     private static final String CONTIG = "1";
