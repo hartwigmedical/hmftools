@@ -40,6 +40,7 @@ public interface StructuralVariant {
     @NotNull
     String insertSequence();
 
+    @Nullable
     String insertSequenceAlignments();
 
     @NotNull
