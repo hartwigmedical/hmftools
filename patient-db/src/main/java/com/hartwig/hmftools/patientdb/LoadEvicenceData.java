@@ -3,15 +3,10 @@ package com.hartwig.hmftools.patientdb;
 import java.io.File;
 import java.io.IOException;
 import java.sql.SQLException;
-import java.util.stream.Stream;
 
-import com.hartwig.hmftools.common.actionability.ActionabilityAnalyzer;
 import com.hartwig.hmftools.common.context.ProductionRunContextFactory;
 import com.hartwig.hmftools.common.context.RunContext;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
-import com.hartwig.hmftools.patientdb.data.PotentialActionableCNV;
-import com.hartwig.hmftools.patientdb.data.PotentialActionableFusion;
-import com.hartwig.hmftools.patientdb.data.PotentialActionableVariant;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -34,15 +29,15 @@ public class LoadEvicenceData {
     private static final String DB_URL = "db_url";
     private static final String RUN_DIR = "run_dir";
 
-    public static void main(@NotNull final String[] args) throws ParseException, SQLException, IOException {
+    public static void main(@NotNull final String[] args) throws ParseException, IOException, SQLException {
         final Options options = createOptions();
         final CommandLine cmd = createCommandLine(args, options);
         final String userName = cmd.getOptionValue(DB_USER);
         final String password = cmd.getOptionValue(DB_PASS);
         final String databaseUrl = cmd.getOptionValue(DB_URL);
-        final DatabaseAccess dbAccess = databaseAccess(cmd);
-
         final String runDirectoryPath = cmd.getOptionValue(RUN_DIR);
+
+        final DatabaseAccess dbAccess = databaseAccess(cmd);
 
         if (Utils.anyNull(userName, password, databaseUrl, runDirectoryPath)) {
             HelpFormatter formatter = new HelpFormatter();
@@ -58,34 +53,35 @@ public class LoadEvicenceData {
                 LOGGER.info("sample: " + sample);
 
                 LOGGER.info("Reading clinical Data from DB");
-                final String primaryTumorLocation = dbAccess.sampleAndTumorLocation(sample).toString();
+                final String primaryTumorLocation = "";
+
                 LOGGER.info(primaryTumorLocation);
 
                 LOGGER.info("Reading somatic variants from DB");
-                final Stream<PotentialActionableVariant> somaticVariants = dbAccess.potentiallyActionableVariants(sample);
-                LOGGER.info(somaticVariants);
+
+//                LOGGER.info("Writing evidence items of somatic variants to DB");
+//                dbWriter.writeClinicalEvidence(sample);
+//                LOGGER.info("Writing clinical trials of somatic variants to DB");
+//                dbWriter.writeClinicalTrial(sample);
 
                 LOGGER.info("Reading gene copy from DB");
-                final Stream<PotentialActionableCNV> geneCopyNumber = dbAccess.potentiallyActionableCNVs(sample);
-                LOGGER.info(geneCopyNumber);
-
-                LOGGER.info("Reading gene fusions from DB");
-                final Stream<PotentialActionableFusion> geneFusion = dbAccess.potentiallyActionableFusions(sample);
-                LOGGER.info(geneFusion);
-
-                ActionabilityAnalyzer actionabilityAnalyzer = ActionabilityAnalyzer.fromKnowledgebase(KNOWLEDGEBASE_PATH);
-
-//                Map<EnrichedSomaticVariant, List<EvidenceItem>> evidencePerVariant =
-//                        actionabilityAnalyzer.evidenceForSomaticVariants(somaticVariants, primaryTumorLocation);
+//                final List<GeneCopyNumber> geneCopyNumber = dbAccess.readGeneCopynumbers(sample);
+//                LOGGER.info(geneCopyNumber);
 //
+//                ActionabilityAnalyzer actionabilityAnalyzer = ActionabilityAnalyzer.fromKnowledgebase(KNOWLEDGEBASE_PATH);
 //                Map<GeneCopyNumber, List<EvidenceItem>> evidencePerGeneCopyNumber =
 //                        actionabilityAnalyzer.evidenceForCopyNumbers(geneCopyNumber, primaryTumorLocation);
 //
-//                Map<GeneFusion, List<EvidenceItem>> evidencePerFusion =
-//                        actionabilityAnalyzer.evidenceForFusions(geneFusion, primaryTumorLocation);
-
-                LOGGER.info("Writing evidence items to DB");
-                LOGGER.info("Writing clinical trials to DB");
+//                LOGGER.info("Writing evidence items of gene copy numbers to DB");
+//                dbWriter.writeClinicalEvidence(sample, evidencePerGeneCopyNumber);
+//                LOGGER.info("Writing clinical trials of gene copy numbers to DB");
+//                dbWriter.writeClinicalTrial(sample, evidencePerGeneCopyNumber);
+////
+                LOGGER.info("Reading gene fusions from DB");
+//                LOGGER.info("Writing evidence items of gene fusions to DB");
+//                dbWriter.writeClinicalEvidence(sample);
+//                LOGGER.info("Writing clinical trials of gene fusions to DB");
+//                dbWriter.writeClinicalTrial(sample);
 
             }
         }
@@ -98,7 +94,7 @@ public class LoadEvicenceData {
         options.addOption(DB_PASS, true, "Database password.");
         options.addOption(DB_URL, true, "Database url.");
         options.addOption(KNOWLEDGEBASE_PATH, true, "Path towards the folder containing knowledgebase files.");
-        options.addOption(RUN_DIR, true, "Path towards the folder containing patient runs.");
+        options.addOption(RUN_DIR, true, "Path towards the folder containing patient run.");
         return options;
     }
 
