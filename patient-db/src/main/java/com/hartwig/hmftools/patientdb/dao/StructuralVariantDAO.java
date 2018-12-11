@@ -274,6 +274,8 @@ class StructuralVariantDAO {
         }
     }
 
+    private static int MAX_HOM_SEQUENCE = 255;
+
     private static void addRecord(@NotNull Timestamp timestamp, @NotNull InsertValuesStepN inserter, @NotNull String sample,
             @NotNull EnrichedStructuralVariant variant) {
         //noinspection unchecked
@@ -284,8 +286,8 @@ class StructuralVariantDAO {
                 variant.end() == null ? null : variant.end().position(),
                 variant.start().orientation(),
                 variant.end() == null ? null : variant.end().orientation(),
-                variant.start().homology(),
-                variant.end() == null ? null : variant.end().homology(),
+                variant.start().homology().length() > MAX_HOM_SEQUENCE ? variant.start().homology().substring(0, MAX_HOM_SEQUENCE) : variant.start().homology(),
+                variant.end() == null ? null : (variant.end().homology().length() > MAX_HOM_SEQUENCE ? variant.end().homology().substring(0, MAX_HOM_SEQUENCE) : variant.end().homology()),
                 variant.insertSequence(),
                 variant.type(),
                 DatabaseUtil.decimal(variant.start().alleleFrequency()),
