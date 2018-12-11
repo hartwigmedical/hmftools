@@ -60,7 +60,6 @@ public class MiscTests
     public void testMiscMethods()
     {
         assertTrue(makeChrArmStr("1", "P").equals("1_P"));
-
     }
 
 }

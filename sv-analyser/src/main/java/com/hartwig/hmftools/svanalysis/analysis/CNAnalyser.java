@@ -323,6 +323,7 @@ public class CNAnalyser {
                             .endLinkedBy("")
                             .startRefContext("")
                             .endRefContext("")
+                            .insertSequenceAlignments("")
                             .build());
         }
 

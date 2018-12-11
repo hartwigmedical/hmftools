@@ -108,7 +108,7 @@ class StructuralVariantDAO {
                     .endLinkedBy(getValueNotNull(record.getValue(STRUCTURALVARIANT.ENDLINKEDBY)))
                     .startRefContext(getValueNotNull(record.getValue(STRUCTURALVARIANT.STARTREFCONTEXT)))
                     .endRefContext(getValueNotNull(record.getValue(STRUCTURALVARIANT.ENDREFCONTEXT)))
-                    .insertSequenceAlignments(record.getValue(STRUCTURALVARIANT.INSERTSEQUENCEALIGNMENTS))
+                    .insertSequenceAlignments(getValueNotNull(record.getValue(STRUCTURALVARIANT.INSERTSEQUENCEALIGNMENTS)))
                     .build());
         }
         return structuralVariants;
