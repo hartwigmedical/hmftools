@@ -5,7 +5,7 @@ import static net.sf.dynamicreports.report.builder.DynamicReports.field;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import com.hartwig.hmftools.patientreporter.actionability.ClinicalTrial;
+import com.hartwig.hmftools.common.actionability.ClinicalTrial;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;

@@ -34,7 +34,7 @@ import com.hartwig.hmftools.patientreporter.BaseReportData;
 import com.hartwig.hmftools.patientreporter.ImmutableAnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.ImmutableSampleReport;
 import com.hartwig.hmftools.patientreporter.SampleReport;
-import com.hartwig.hmftools.patientreporter.actionability.ClinicalTrial;
+import com.hartwig.hmftools.common.actionability.ClinicalTrial;
 import com.hartwig.hmftools.patientreporter.actionability.ImmutableClinicalTrial;
 import com.hartwig.hmftools.patientreporter.germline.GermlineVariant;
 import com.hartwig.hmftools.patientreporter.germline.ImmutableGermlineVariant;
