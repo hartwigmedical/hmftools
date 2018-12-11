@@ -19,7 +19,7 @@ public interface AmberConfig {
 
     Logger LOGGER = LogManager.getLogger(AmberConfig.class);
 
-    int MIN_PARITION = 10000;
+    int MIN_PARTITION = 10000;
     int DEFAULT_THREADS = 1;
     int DEFAULT_MIN_BASE_QUALITY = 13;
     int DEFAULT_MIN_MAPPING_QUALITY = 1;
@@ -54,7 +54,7 @@ public interface AmberConfig {
         options.addOption(OUTPUT_DIR, true, "Output directory");
         options.addOption(BED_FILE, true, "Path to BAF locations bed file");
         options.addOption(REF_GENOME, true, "Path to the ref genome fasta file");
-        options.addOption(MIN_BASE_QUALITY, true, "Minimum base quality for a base to be considered [" + DEFAULT_MIN_BASE_QUALITY + "]");
+        options.addOption(MIN_BASE_QUALITY, true, "Minimum quality for a base to be considered [" + DEFAULT_MIN_BASE_QUALITY + "]");
         options.addOption(MIN_MAPPING_QUALITY,
                 true,
                 "Minimum mapping quality for an alignment to be used [" + DEFAULT_MIN_MAPPING_QUALITY + "]");

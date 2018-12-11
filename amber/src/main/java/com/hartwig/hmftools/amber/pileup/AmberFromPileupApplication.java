@@ -93,7 +93,7 @@ public class AmberFromPileupApplication {
 
     private static void printUsageAndExit(@NotNull final Options options) {
         final HelpFormatter formatter = new HelpFormatter();
-        formatter.printHelp("AMBER", options);
+        formatter.printHelp("AmberFromPileupApplication", options);
         System.exit(1);
     }
 

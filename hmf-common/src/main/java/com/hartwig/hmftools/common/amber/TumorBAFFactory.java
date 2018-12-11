@@ -31,7 +31,6 @@ class TumorBAFFactory {
                 .setTumorAltSupport(0);
     }
 
-
     @NotNull
     public ModifiableTumorBAF addEvidence(@NotNull final ModifiableTumorBAF evidence, @NotNull final SAMRecord samRecord) {
         int quality = getBaseQuality(evidence, samRecord);

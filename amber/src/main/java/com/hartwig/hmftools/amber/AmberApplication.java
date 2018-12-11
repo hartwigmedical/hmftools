@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.amber;
 
-import static com.hartwig.hmftools.amber.AmberConfig.MIN_PARITION;
+import static com.hartwig.hmftools.amber.AmberConfig.MIN_PARTITION;
 
 import java.io.File;
 import java.io.IOException;
@@ -22,15 +22,15 @@ import com.google.common.collect.Multimap;
 import com.google.common.collect.SortedSetMultimap;
 import com.google.common.primitives.Doubles;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
-import com.hartwig.hmftools.common.amber.AmberVCF;
-import com.hartwig.hmftools.common.amber.NormalDepthFilter;
-import com.hartwig.hmftools.common.amber.NormalHetrozygousFilter;
 import com.hartwig.hmftools.common.amber.AmberBAF;
 import com.hartwig.hmftools.common.amber.AmberBAFFile;
+import com.hartwig.hmftools.common.amber.AmberVCF;
 import com.hartwig.hmftools.common.amber.ImmutableAmberBAF;
 import com.hartwig.hmftools.common.amber.ModifiableNormalBAF;
 import com.hartwig.hmftools.common.amber.NormalBAF;
 import com.hartwig.hmftools.common.amber.NormalBAFEvidence;
+import com.hartwig.hmftools.common.amber.NormalDepthFilter;
+import com.hartwig.hmftools.common.amber.NormalHetrozygousFilter;
 import com.hartwig.hmftools.common.amber.TumorBAF;
 import com.hartwig.hmftools.common.amber.TumorBAFEvidence;
 import com.hartwig.hmftools.common.amber.qc.AmberQC;
@@ -54,29 +54,26 @@ import org.jetbrains.annotations.NotNull;
 
 import htsjdk.samtools.SamReaderFactory;
 
-public class AmberApplicationV2 implements AutoCloseable {
-    private static final Logger LOGGER = LogManager.getLogger(AmberApplicationV2.class);
+public class AmberApplication implements AutoCloseable {
+    private static final Logger LOGGER = LogManager.getLogger(AmberApplication.class);
 
     private final AmberConfig config;
     private final ExecutorService executorService;
 
     public static void main(final String... args) throws IOException, InterruptedException, ExecutionException {
         final Options options = AmberConfig.createOptions();
-        try (final AmberApplicationV2 application = new AmberApplicationV2(options, args)) {
-
+        try (final AmberApplication application = new AmberApplication(options, args)) {
             final List<TumorBAF> bafs = application.createBAFs();
             application.persist(bafs);
-            LOGGER.info("Complete");
-
         } catch (ParseException e) {
             LOGGER.warn(e);
             final HelpFormatter formatter = new HelpFormatter();
-            formatter.printHelp("AmberFromPileupApplication", options);
+            formatter.printHelp("AmberApplication", options);
             System.exit(1);
         }
     }
 
-    private AmberApplicationV2(final Options options, final String... args) throws IOException, ParseException {
+    private AmberApplication(final Options options, final String... args) throws IOException, ParseException {
 
         final CommandLine cmd = createCommandLine(args, options);
         config = AmberConfig.createConfig(cmd);
@@ -108,7 +105,7 @@ public class AmberApplicationV2 implements AutoCloseable {
         new AmberVCF(config.normal(), config.tumor()).write(outputVcf, tumorBAFList);
 
         final List<AmberBAF> result =
-                tumorBAFList.stream().map(AmberApplicationV2::create).filter(AmberApplicationV2::isValid).collect(Collectors.toList());
+                tumorBAFList.stream().map(AmberApplication::create).filter(AmberApplication::isValid).collect(Collectors.toList());
 
         final AmberQC qcStats = AmberQCFactory.create(result);
         final String qcFilename = AmberQCFile.generateFilename(config.outputDirectory(), config.tumor());
@@ -127,7 +124,7 @@ public class AmberApplicationV2 implements AutoCloseable {
     @NotNull
     private ListMultimap<Chromosome, TumorBAF> tumor(@NotNull final SamReaderFactory readerFactory,
             @NotNull final ListMultimap<Chromosome, NormalBAF> normalBafs) throws ExecutionException, InterruptedException {
-        final int partitionSize = Math.max(MIN_PARITION, normalBafs.values().size() / config.threadCount());
+        final int partitionSize = Math.max(MIN_PARTITION, normalBafs.values().size() / config.threadCount());
 
         LOGGER.info("Processing tumor bam {}", config.tumorBamPath());
         final List<Future<TumorBAFEvidence>> futures = Lists.newArrayList();
@@ -156,7 +153,7 @@ public class AmberApplicationV2 implements AutoCloseable {
             throws IOException, InterruptedException, ExecutionException {
         LOGGER.info("Loading bed file {}", config.bedFilePath());
         final SortedSetMultimap<String, GenomeRegion> bedRegionsSortedSet = BEDFileLoader.fromBedFile(config.bedFilePath());
-        final int partitionSize = Math.max(MIN_PARITION, bedRegionsSortedSet.size() / config.threadCount());
+        final int partitionSize = Math.max(MIN_PARTITION, bedRegionsSortedSet.size() / config.threadCount());
 
         LOGGER.info("Processing reference bam {}", config.referenceBamPath(), partitionSize);
         final List<Future<NormalBAFEvidence>> futures = Lists.newArrayList();
@@ -248,7 +245,7 @@ public class AmberApplicationV2 implements AutoCloseable {
 
     @Override
     public void close() {
-        LOGGER.info("Shutting down executor service");
         executorService.shutdown();
+        LOGGER.info("Complete");
     }
 }
