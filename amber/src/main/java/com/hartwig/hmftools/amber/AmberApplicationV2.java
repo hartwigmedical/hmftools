@@ -182,6 +182,7 @@ public class AmberApplicationV2 implements AutoCloseable {
         for (final Chromosome chromosome : normalEvidence.keySet()) {
             final List<NormalBAF> normalHetLocations = normalEvidence.get(chromosome)
                     .stream()
+                    .filter(x -> x.indelCount() == 0)
                     .filter(depthFilter)
                     .map(refEnricher::enrich)
                     .filter(hetFilter)

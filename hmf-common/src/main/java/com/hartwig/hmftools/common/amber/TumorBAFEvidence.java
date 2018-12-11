@@ -55,7 +55,7 @@ public class TumorBAFEvidence implements Callable<TumorBAFEvidence> {
 
     @NotNull
     public List<TumorBAF> evidence() {
-        return new ArrayList<>(evidence);
+        return evidence.stream().filter(x -> x.tumorIndelCount() == 0).collect(Collectors.toList());
     }
 
     @Override

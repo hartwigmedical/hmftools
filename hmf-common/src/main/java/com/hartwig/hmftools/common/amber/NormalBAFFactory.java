@@ -24,6 +24,7 @@ class NormalBAFFactory {
                 .setChromosome(pos.chromosome())
                 .setPosition(pos.start())
                 .setBaseMap(new EnumMap<>(NormalBAF.Base.class))
+                .setIndelCount(0)
                 .setReadDepth(0);
     }
 
@@ -40,6 +41,8 @@ class NormalBAFFactory {
                     final char baseChar = samRecord.getReadString().charAt(readPosition - 1);
                     final NormalBAF.Base base = NormalBAF.Base.valueOf(String.valueOf(baseChar).toUpperCase());
                     evidence.baseMap().merge(base, 1, (integer, integer2) -> integer + integer2);
+                } else {
+                    evidence.setIndelCount(evidence.indelCount() + 1);
                 }
             }
         }

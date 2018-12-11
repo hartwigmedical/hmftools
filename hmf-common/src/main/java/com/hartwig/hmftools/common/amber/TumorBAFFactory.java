@@ -24,6 +24,7 @@ class TumorBAFFactory {
                 .setNormalReadDepth(normal.readDepth())
                 .setNormalRefSupport(normal.refSupport())
                 .setNormalAltSupport(normal.baseMap().get(normal.alt()))
+                .setTumorIndelCount(0)
                 .setTumorReadDepth(0)
                 .setTumorRefSupport(0)
                 .setTumorAltQuality(0)
@@ -47,6 +48,8 @@ class TumorBAFFactory {
                         evidence.setTumorAltSupport(evidence.tumorAltSupport() + 1);
                         evidence.setTumorAltQuality(evidence.tumorAltQuality() + quality);
                     }
+                } else {
+                    evidence.setTumorIndelCount(evidence.tumorIndelCount() + 1);
                 }
             }
         }

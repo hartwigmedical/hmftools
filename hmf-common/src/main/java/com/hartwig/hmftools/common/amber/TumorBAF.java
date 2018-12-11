@@ -28,4 +28,6 @@ public interface TumorBAF extends GenomePosition {
     int tumorAltSupport();
 
     int tumorAltQuality();
+
+    int tumorIndelCount();
 }
