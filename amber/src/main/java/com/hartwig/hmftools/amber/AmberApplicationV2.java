@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.amber;
 
+import static com.hartwig.hmftools.amber.AmberConfig.MIN_PARITION;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.Collections;
@@ -25,7 +27,9 @@ import com.hartwig.hmftools.common.amber.AmberBAFFile;
 import com.hartwig.hmftools.common.amber.ImmutableAmberBAF;
 import com.hartwig.hmftools.common.amber.ModifiableNormalBAF;
 import com.hartwig.hmftools.common.amber.NormalBAF;
+import com.hartwig.hmftools.common.amber.NormalBAFEvidence;
 import com.hartwig.hmftools.common.amber.TumorBAF;
+import com.hartwig.hmftools.common.amber.TumorBAFEvidence;
 import com.hartwig.hmftools.common.amber.qc.AmberQC;
 import com.hartwig.hmftools.common.amber.qc.AmberQCFactory;
 import com.hartwig.hmftools.common.amber.qc.AmberQCFile;
@@ -47,114 +51,91 @@ import org.jetbrains.annotations.NotNull;
 
 import htsjdk.samtools.SamReaderFactory;
 
-public class AmberApplicationV2 {
+public class AmberApplicationV2 implements AutoCloseable {
     private static final Logger LOGGER = LogManager.getLogger(AmberApplicationV2.class);
 
-    private static final int MIN_PARITION = 10000;
-    private static final int DEFAULT_THREADS = 1;
-    private static final int DEFAULT_MIN_BASE_QUALITY = 13;
-    private static final int DEFAULT_MIN_MAPPING_QUALITY = 1;
-    private static final double DEFAULT_MIN_DEPTH_PERCENTAGE = 0.5;
-    private static final double DEFAULT_MAX_DEPTH_PERCENTAGE = 1.5;
-    private static final double DEFAULT_MIN_HET_AF_PERCENTAGE = 0.4;
-    private static final double DEFAULT_MAX_HET_AF_PERCENTAGE = 0.65;
+    private final AmberConfig config;
+    private final ExecutorService executorService;
 
-    private static final String TUMOR = "tumor";
-    private static final String BED_FILE = "bed";
-    private static final String THREADS = "threads";
-    private static final String REFERENCE = "reference";
-    private static final String TUMOR_BAM = "tumor_bam";
-    private static final String REF_GENOME = "ref_genome";
-    private static final String OUTPUT_DIR = "output_dir";
-    private static final String REFERENCE_BAM = "reference_bam";
-    private static final String MIN_BASE_QUALITY = "min_base_quality";
-    private static final String MIN_MAPPING_QUALITY = "min_mapping_quality";
+    public static void main(final String... args) throws IOException, InterruptedException, ExecutionException {
+        final Options options = AmberConfig.createOptions();
+        try (final AmberApplicationV2 application = new AmberApplicationV2(options, args)) {
 
-    private static final String MIN_DEPTH_PERCENTAGE = "min_depth_percent";
-    private static final String MAX_DEPTH_PERCENTAGE = "max_depth_percent";
-    private static final String MIN_HET_AF_PERCENTAGE = "min_het_af_percent";
-    private static final String MAX_HET_AF_PERCENTAGE = "max_het_af_percent";
+            final List<TumorBAF> bafs = application.createBAFs();
+            application.persist(bafs);
+            LOGGER.info("Complete");
 
-    public static void main(final String... args) throws ParseException, IOException, InterruptedException, ExecutionException {
-        final VersionInfo versionInfo = new VersionInfo("amber.version");
-        final Options options = createOptions();
-        final CommandLine cmd = createCommandLine(args, options);
-        final String bedFilePath = cmd.getOptionValue(BED_FILE);
-        final String tumorBamPath = cmd.getOptionValue(TUMOR_BAM);
-        final String referenceBamPath = cmd.getOptionValue(REFERENCE_BAM);
-        final String refGenomePath = cmd.getOptionValue(REF_GENOME);
-        final String outputDirectory = cmd.getOptionValue(OUTPUT_DIR);
-        final String normal = cmd.getOptionValue(REFERENCE);
-        final String tumor = cmd.getOptionValue(TUMOR);
-
-        if (bedFilePath == null || referenceBamPath == null || tumorBamPath == null || outputDirectory == null || normal == null
-                || tumor == null) {
+        } catch (ParseException e) {
+            LOGGER.warn(e);
             final HelpFormatter formatter = new HelpFormatter();
-            formatter.printHelp("AbamberApplication", options);
+            formatter.printHelp("AmberFromPileupApplication", options);
             System.exit(1);
         }
+    }
 
-        int minBaseQuality =
-                cmd.hasOption(MIN_BASE_QUALITY) ? Integer.valueOf(cmd.getOptionValue(MIN_BASE_QUALITY)) : DEFAULT_MIN_BASE_QUALITY;
+    private AmberApplicationV2(final Options options, final String... args) throws IOException, ParseException {
 
-        final File outputDir = new File(outputDirectory);
+        final CommandLine cmd = createCommandLine(args, options);
+        config = AmberConfig.createConfig(cmd);
+
+        final File outputDir = new File(config.outputDirectory());
         if (!outputDir.exists() && !outputDir.mkdirs()) {
-            throw new IOException("Unable to write directory " + outputDirectory);
+            throw new IOException("Unable to write directory " + config.outputDirectory());
         }
 
-        final int threadCount = cmd.hasOption(THREADS) ? Integer.valueOf(cmd.getOptionValue(THREADS)) : DEFAULT_THREADS;
-        final SamReaderFactory readerFactory = SamReaderFactory.make();
         final ThreadFactory namedThreadFactory = new ThreadFactoryBuilder().setNameFormat("-%d").build();
-        final ExecutorService executorService = Executors.newFixedThreadPool(threadCount, namedThreadFactory);
+        executorService = Executors.newFixedThreadPool(config.threadCount(), namedThreadFactory);
+    }
 
-        final ListMultimap<Chromosome, NormalBAF> normalBAFMap =
-                normal(readerFactory, executorService, bedFilePath, refGenomePath, referenceBamPath, minBaseQuality, threadCount);
-        final Multimap<Chromosome, TumorBAF> tumorBAFMap =
-                tumor(tumorBamPath, readerFactory, executorService, normalBAFMap, minBaseQuality, threadCount);
+    @NotNull
+    private List<TumorBAF> createBAFs() throws InterruptedException, ExecutionException, IOException {
+        final SamReaderFactory readerFactory = SamReaderFactory.make();
+        final ListMultimap<Chromosome, NormalBAF> normalBAFMap = normal(readerFactory);
+        final Multimap<Chromosome, TumorBAF> tumorBAFMap = tumor(readerFactory, normalBAFMap);
 
-        final List<TumorBAF> tumorBAFList = Lists.newArrayList(tumorBAFMap.values());
-        Collections.sort(tumorBAFList);
+        final List<TumorBAF> result = Lists.newArrayList(tumorBAFMap.values());
+        Collections.sort(result);
 
-        final String outputVcf = outputDirectory + File.separator + tumor + ".amber.vcf.gz";
-        LOGGER.info("Writing vcf output to {}", outputVcf);
-        new AmberVCF(normal, tumor).write(outputVcf, tumorBAFMap.values());
+        return result;
+    }
+
+    private void persist(@NotNull final List<TumorBAF> tumorBAFList) throws IOException, InterruptedException {
+        LOGGER.info("Writing output to {}", config.outputDirectory());
+        final String outputVcf = config.outputDirectory() + File.separator + config.tumor() + ".amber.vcf.gz";
+        new AmberVCF(config.normal(), config.tumor()).write(outputVcf, tumorBAFList);
 
         final List<AmberBAF> result =
                 tumorBAFList.stream().map(AmberApplicationV2::create).filter(AmberApplicationV2::isValid).collect(Collectors.toList());
 
-        LOGGER.info("Generating QC Stats");
         final AmberQC qcStats = AmberQCFactory.create(result);
-        final String qcFilename = AmberQCFile.generateFilename(outputDirectory, tumor);
+        final String qcFilename = AmberQCFile.generateFilename(config.outputDirectory(), config.tumor());
 
-        final String filename = AmberBAFFile.generateAmberFilename(outputDirectory, tumor);
-        LOGGER.info("Persisting file {}", filename);
+        final String filename = AmberBAFFile.generateAmberFilename(config.outputDirectory(), config.tumor());
         AmberBAFFile.write(filename, result);
         AmberQCFile.write(qcFilename, qcStats);
-        versionInfo.write(outputDir.toString());
+
+        final VersionInfo versionInfo = new VersionInfo("amber.version");
+        versionInfo.write(config.outputDirectory());
 
         LOGGER.info("Applying pcf segmentation");
-        new BAFSegmentation(outputDirectory).applySegmentation(tumor);
-
-        executorService.shutdown();
-        LOGGER.info("Complete");
+        new BAFSegmentation(config.outputDirectory()).applySegmentation(config.tumor());
     }
 
     @NotNull
-    private static ListMultimap<Chromosome, TumorBAF> tumor(@NotNull final String tumorBamPath,
-            @NotNull final SamReaderFactory readerFactory, @NotNull final ExecutorService executorService,
-            @NotNull final ListMultimap<Chromosome, NormalBAF> normalBafs, int minBaseQuality, int threads)
-            throws ExecutionException, InterruptedException {
-        final int partitionSize = Math.max(MIN_PARITION, normalBafs.values().size() / threads);
+    private ListMultimap<Chromosome, TumorBAF> tumor(@NotNull final SamReaderFactory readerFactory,
+            @NotNull final ListMultimap<Chromosome, NormalBAF> normalBafs) throws ExecutionException, InterruptedException {
+        final int partitionSize = Math.max(MIN_PARITION, normalBafs.values().size() / config.threadCount());
 
-        LOGGER.info("Processing tumor bam {}", tumorBamPath);
-        final List<Future<TumorEvidence>> futures = Lists.newArrayList();
+        LOGGER.info("Processing tumor bam {}", config.tumorBamPath());
+        final List<Future<TumorBAFEvidence>> futures = Lists.newArrayList();
         for (final Chromosome chromosome : normalBafs.keySet()) {
             for (final List<NormalBAF> chromosomeBafPoints : Lists.partition(normalBafs.get(chromosome), partitionSize)) {
                 if (!chromosomeBafPoints.isEmpty()) {
                     final String contig = chromosomeBafPoints.get(0).chromosome();
-                    futures.add(executorService.submit(new TumorEvidence(minBaseQuality,
+                    futures.add(executorService.submit(new TumorBAFEvidence(config.minMappingQuality(),
+                            config.minBaseQuality(),
                             contig,
-                            tumorBamPath,
+                            config.tumorBamPath(),
                             readerFactory,
                             chromosomeBafPoints)));
                 }
@@ -168,18 +149,22 @@ public class AmberApplicationV2 {
     }
 
     @NotNull
-    private static ListMultimap<Chromosome, NormalBAF> normal(final SamReaderFactory readerFactory, final ExecutorService executorService,
-            final String bedPath, final String refGenomePath, final String referenceBamPath, int minBaseQuality, int threads)
+    private ListMultimap<Chromosome, NormalBAF> normal(final SamReaderFactory readerFactory)
             throws IOException, InterruptedException, ExecutionException {
-        LOGGER.info("Loading bed file {}", bedPath);
-        final SortedSetMultimap<String, GenomeRegion> bedRegionsSortedSet = BEDFileLoader.fromBedFile(bedPath);
-        final int partitionSize = Math.max(MIN_PARITION, bedRegionsSortedSet.size() / threads);
+        LOGGER.info("Loading bed file {}", config.bedFilePath());
+        final SortedSetMultimap<String, GenomeRegion> bedRegionsSortedSet = BEDFileLoader.fromBedFile(config.bedFilePath());
+        final int partitionSize = Math.max(MIN_PARITION, bedRegionsSortedSet.size() / config.threadCount());
 
-        LOGGER.info("Processing reference bam {}", referenceBamPath, partitionSize);
-        final List<Future<NormalEvidence>> futures = Lists.newArrayList();
+        LOGGER.info("Processing reference bam {}", config.referenceBamPath(), partitionSize);
+        final List<Future<NormalBAFEvidence>> futures = Lists.newArrayList();
         for (final String contig : bedRegionsSortedSet.keySet()) {
             for (final List<GenomeRegion> inner : Lists.partition(Lists.newArrayList(bedRegionsSortedSet.get(contig)), partitionSize)) {
-                final NormalEvidence chromosome = new NormalEvidence(minBaseQuality, contig, referenceBamPath, readerFactory, inner);
+                final NormalBAFEvidence chromosome = new NormalBAFEvidence(config.minMappingQuality(),
+                        config.minBaseQuality(),
+                        contig,
+                        config.referenceBamPath(),
+                        readerFactory,
+                        inner);
                 futures.add(executorService.submit(chromosome));
             }
         }
@@ -188,10 +173,9 @@ public class AmberApplicationV2 {
         getFuture(futures).forEach(x -> normalEvidence.putAll(HumanChromosome.fromString(x.contig()), x.evidence()));
 
         final ListMultimap<Chromosome, NormalBAF> normalBafs = ArrayListMultimap.create();
-        final Predicate<NormalBAF> depthFilter =
-                new DepthFilter(DEFAULT_MIN_DEPTH_PERCENTAGE, DEFAULT_MAX_DEPTH_PERCENTAGE, normalEvidence);
-        final RefEnricher refEnricher = new RefEnricher(refGenomePath);
-        final Predicate<NormalBAF> hetFilter = new HetrozygousFilter(DEFAULT_MIN_HET_AF_PERCENTAGE, DEFAULT_MAX_HET_AF_PERCENTAGE);
+        final Predicate<NormalBAF> depthFilter = new DepthFilter(config.minDepthPercent(), config.maxDepthPercent(), normalEvidence);
+        final RefEnricher refEnricher = new RefEnricher(config.refGenomePath());
+        final Predicate<NormalBAF> hetFilter = new HetrozygousFilter(config.minHetAfPercent(), config.maxHetAfPercent());
         for (final Chromosome chromosome : normalEvidence.keySet()) {
             final List<NormalBAF> normalHetLocations = normalEvidence.get(chromosome)
                     .stream()
@@ -211,28 +195,6 @@ public class AmberApplicationV2 {
     private static CommandLine createCommandLine(@NotNull String[] args, @NotNull Options options) throws ParseException {
         final CommandLineParser parser = new DefaultParser();
         return parser.parse(options, args);
-    }
-
-    @NotNull
-    private static Options createOptions() {
-        final Options options = new Options();
-        options.addOption(THREADS, true, "Number of threads [" + DEFAULT_THREADS + "]");
-        options.addOption(REFERENCE, true, "Name of reference sample");
-        options.addOption(REFERENCE_BAM, true, "Reference bam file");
-        options.addOption(TUMOR, true, "Name of tumor sample.");
-        options.addOption(TUMOR_BAM, true, "Tumor bam file");
-        options.addOption(OUTPUT_DIR, true, "Output directory");
-        options.addOption(BED_FILE, true, "Baf locations bed file.");
-        options.addOption(REF_GENOME, true, "Path to the ref genome fasta file.");
-        options.addOption(MIN_BASE_QUALITY, true, "Minimum base quality for a base to be considered [" + DEFAULT_MIN_BASE_QUALITY + "]");
-        options.addOption(MIN_MAPPING_QUALITY,
-                true,
-                "Minimum mapping quality for an alignment to be used [" + DEFAULT_MIN_MAPPING_QUALITY + "]");
-        options.addOption(MIN_HET_AF_PERCENTAGE, true, "Min heterozygous AF% [" + DEFAULT_MIN_HET_AF_PERCENTAGE + "]");
-        options.addOption(MAX_HET_AF_PERCENTAGE, true, "Max heterozygous AF% [" + DEFAULT_MAX_HET_AF_PERCENTAGE + "]");
-        options.addOption(MIN_DEPTH_PERCENTAGE, true, "Max percentage of median depth [" + DEFAULT_MIN_DEPTH_PERCENTAGE + "]");
-        options.addOption(MAX_DEPTH_PERCENTAGE, true, "Min percentage of median depth [" + DEFAULT_MAX_DEPTH_PERCENTAGE + "]");
-        return options;
     }
 
     @NotNull
@@ -278,5 +240,11 @@ public class AmberApplicationV2 {
         int gapCount = Math.max(0, 20 - hashCount);
 
         return "  [" + Strings.repeat("#", hashCount) + Strings.repeat(" ", gapCount) + "] " + roundedPercent + "% complete";
+    }
+
+    @Override
+    public void close() {
+        LOGGER.info("Shutting down executor service");
+        executorService.shutdown();
     }
 }

@@ -23,9 +23,9 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-public class AmberApplication {
+public class AmberFromPileupApplication {
 
-    private static final Logger LOGGER = LogManager.getLogger(AmberApplication.class);
+    private static final Logger LOGGER = LogManager.getLogger(AmberFromPileupApplication.class);
 
     private static final String SAMPLE = "sample";
     private static final String REFERENCE_PILEUP = "reference";
@@ -42,10 +42,10 @@ public class AmberApplication {
     static final double DEFAULT_MAX_DEPTH_PERCENTAGE = 1.5;
 
     public static void main(final String... args) throws ParseException, IOException, InterruptedException {
-        new AmberApplication(args);
+        new AmberFromPileupApplication(args);
     }
 
-    private AmberApplication(final String... args) throws ParseException, IOException, InterruptedException {
+    private AmberFromPileupApplication(final String... args) throws ParseException, IOException, InterruptedException {
         final VersionInfo versionInfo = new VersionInfo("amber.version");
         LOGGER.info("AMBER version: {}", versionInfo.version());
         final Options options = createOptions();

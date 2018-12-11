@@ -1,12 +1,10 @@
-package com.hartwig.hmftools.amber;
+package com.hartwig.hmftools.common.amber;
 
 import java.io.File;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
 
-import com.hartwig.hmftools.common.amber.ModifiableNormalBAF;
-import com.hartwig.hmftools.common.amber.NormalBAFFactory;
 import com.hartwig.hmftools.common.collect.Multimaps;
 import com.hartwig.hmftools.common.hotspot.SAMSupplier;
 import com.hartwig.hmftools.common.position.GenomePositionSelector;
@@ -21,27 +19,29 @@ import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 
-public class NormalEvidence implements Callable<NormalEvidence> {
+public class NormalBAFEvidence implements Callable<NormalBAFEvidence> {
 
     private final String contig;
     private final String bamFile;
     private final SamReaderFactory samReaderFactory;
-    private final List<GenomeRegion> bafRegions;
     private final List<ModifiableNormalBAF> evidence;
     private final GenomePositionSelector<ModifiableNormalBAF> selector;
     private final NormalBAFFactory bafFactory;
+    private final SAMSupplier supplier;
 
-    NormalEvidence(int minBaseQuality, final String contig, final String bamFile, final SamReaderFactory samReaderFactory, final List<GenomeRegion> bafRegions) {
+    public NormalBAFEvidence(int minMappingQuality, int minBaseQuality, final String contig, final String bamFile,
+            final SamReaderFactory samReaderFactory, final List<GenomeRegion> bafRegions) {
         this.bafFactory = new NormalBAFFactory(minBaseQuality);
         this.contig = contig;
         this.bamFile = bamFile;
         this.samReaderFactory = samReaderFactory;
         final GenomeRegionBuilder builder = new GenomeRegionBuilder(contig, 1000);
         bafRegions.forEach(x -> builder.addPosition(x.start()));
-        this.bafRegions = builder.build();
+        final List<GenomeRegion> bafRegions1 = builder.build();
 
         this.evidence = bafRegions.stream().map(NormalBAFFactory::create).collect(Collectors.toList());
         this.selector = GenomePositionSelectorFactory.create(Multimaps.fromPositions(evidence));
+        this.supplier = new SAMSupplier(minMappingQuality, bafRegions1);
     }
 
     @NotNull
@@ -55,9 +55,8 @@ public class NormalEvidence implements Callable<NormalEvidence> {
     }
 
     @Override
-    public NormalEvidence call() throws Exception {
+    public NormalBAFEvidence call() throws Exception {
 
-        final SAMSupplier supplier = new SAMSupplier(bafRegions);
         try (SamReader reader = samReaderFactory.open(new File(bamFile))) {
             supplier.readOnce(reader, this::record);
         }

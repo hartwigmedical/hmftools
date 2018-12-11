@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.amber;
+package com.hartwig.hmftools.common.amber;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -6,10 +6,6 @@ import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
 
-import com.hartwig.hmftools.common.amber.ModifiableTumorBAF;
-import com.hartwig.hmftools.common.amber.NormalBAF;
-import com.hartwig.hmftools.common.amber.TumorBAF;
-import com.hartwig.hmftools.common.amber.TumorBAFFactory;
 import com.hartwig.hmftools.common.collect.Multimaps;
 import com.hartwig.hmftools.common.hotspot.SAMSupplier;
 import com.hartwig.hmftools.common.position.GenomePositionSelector;
@@ -24,31 +20,32 @@ import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 
-public class TumorEvidence implements Callable<TumorEvidence> {
+public class TumorBAFEvidence implements Callable<TumorBAFEvidence> {
 
     private final String contig;
     private final String bamFile;
     private final TumorBAFFactory bafFactory;
-    private final List<GenomeRegion> bafRegions;
     private final List<ModifiableTumorBAF> evidence;
     private final SamReaderFactory samReaderFactory;
     private final GenomePositionSelector<ModifiableTumorBAF> selector;
+    private final SAMSupplier supplier;
 
-    TumorEvidence(int minBaseQuality, final String contig, final String bamFile, final SamReaderFactory samReaderFactory,
-            final List<NormalBAF> bafRegions) {
+    public TumorBAFEvidence(int minMappingQuality, int minBaseQuality, final String contig, final String bamFile,
+            final SamReaderFactory samReaderFactory, final List<NormalBAF> normalBafs) {
         this.bafFactory = new TumorBAFFactory(minBaseQuality);
         this.contig = contig;
         this.bamFile = bamFile;
         this.samReaderFactory = samReaderFactory;
 
         final GenomeRegionBuilder builder = new GenomeRegionBuilder(contig, 1000);
-        for (NormalBAF bafRegion : bafRegions) {
+        for (NormalBAF bafRegion : normalBafs) {
             builder.addPosition(bafRegion.position());
         }
 
-        this.bafRegions = builder.build();
-        this.evidence = bafRegions.stream().map(TumorBAFFactory::create).collect(Collectors.toList());
+        final List<GenomeRegion> bafRegions = builder.build();
+        this.evidence = normalBafs.stream().map(TumorBAFFactory::create).collect(Collectors.toList());
         this.selector = GenomePositionSelectorFactory.create(Multimaps.fromPositions(evidence));
+        this.supplier = new SAMSupplier(minMappingQuality, bafRegions);
     }
 
     @NotNull
@@ -62,9 +59,8 @@ public class TumorEvidence implements Callable<TumorEvidence> {
     }
 
     @Override
-    public TumorEvidence call() throws Exception {
+    public TumorBAFEvidence call() throws Exception {
 
-        final SAMSupplier supplier = new SAMSupplier(bafRegions);
         try (SamReader reader = samReaderFactory.open(new File(bamFile))) {
             supplier.readOnce(reader, this::record);
         }

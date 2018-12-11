@@ -27,6 +27,11 @@
             <artifactId>junit</artifactId>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>org.immutables</groupId>
+            <artifactId>value</artifactId>
+            <scope>provided</scope>
+        </dependency>
     </dependencies>
 
     <build>
@@ -53,7 +58,7 @@
                     <archive>
                         <manifest>
                             <addClasspath>true</addClasspath>
-                            <mainClass>com.hartwig.hmftools.amber.AmberApplication
+                            <mainClass>com.hartwig.hmftools.amber.AmberApplicationV2
                             </mainClass>
                         </manifest>
                     </archive>

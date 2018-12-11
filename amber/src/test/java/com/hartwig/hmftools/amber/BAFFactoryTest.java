@@ -1,9 +1,9 @@
 package com.hartwig.hmftools.amber;
 
-import static com.hartwig.hmftools.amber.AmberApplication.DEFAULT_MAX_DEPTH_PERCENTAGE;
-import static com.hartwig.hmftools.amber.AmberApplication.DEFAULT_MAX_HET_AF_PERCENTAGE;
-import static com.hartwig.hmftools.amber.AmberApplication.DEFAULT_MIN_DEPTH_PERCENTAGE;
-import static com.hartwig.hmftools.amber.AmberApplication.DEFAULT_MIN_HET_AF_PERCENTAGE;
+import static com.hartwig.hmftools.amber.AmberFromPileupApplication.DEFAULT_MAX_DEPTH_PERCENTAGE;
+import static com.hartwig.hmftools.amber.AmberFromPileupApplication.DEFAULT_MAX_HET_AF_PERCENTAGE;
+import static com.hartwig.hmftools.amber.AmberFromPileupApplication.DEFAULT_MIN_DEPTH_PERCENTAGE;
+import static com.hartwig.hmftools.amber.AmberFromPileupApplication.DEFAULT_MIN_HET_AF_PERCENTAGE;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;

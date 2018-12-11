@@ -24,16 +24,21 @@ import htsjdk.samtools.SamReader;
 
 public class SAMSupplier {
 
-    private static final int MIN_MAPPING_QUALITY = 1;
+    //    private static final int MIN_MAPPING_QUALITY = 1;
 
-    private final ListMultimap<Chromosome, GenomeRegion> codingRegions;
+    private final int minMappingQuality;
     private final Collection<GenomeRegion> regions;
+    private final ListMultimap<Chromosome, GenomeRegion> codingRegions;
 
     public SAMSupplier(@NotNull final Collection<GenomeRegion> regions) {
-        this.codingRegions = Multimaps.fromRegions(regions);
-        this.regions = regions;
+        this(1, regions);
     }
 
+    public SAMSupplier(final int minMappingQuality, @NotNull final Collection<GenomeRegion> regions) {
+        this.minMappingQuality = minMappingQuality;
+        this.regions = regions;
+        this.codingRegions = Multimaps.fromRegions(regions);
+    }
 
     public void readOnce(@NotNull final SamReader samReader, @NotNull final Consumer<SAMRecord> consumer) {
 
@@ -68,32 +73,9 @@ public class SAMSupplier {
         return codingRegions.get(HumanChromosome.fromString(hotspot.chromosome())).stream().anyMatch(x -> x.contains(hotspot));
     }
 
-    private boolean old(@NotNull final SAMRecord record) {
-        return record.getMappingQuality() >= MIN_MAPPING_QUALITY && !record.getDuplicateReadFlag();
-    }
-
     private boolean samRecordMeetsQualityRequirements(@NotNull SAMRecord record) {
-        return record.getMappingQuality() >= MIN_MAPPING_QUALITY && !record.getReadUnmappedFlag() && !record.getDuplicateReadFlag()
-                && !record.isSecondaryOrSupplementary();
-    }
-
-    public void readOnceWithoutQueryIntervals(@NotNull final SamReader samReader, @NotNull final Consumer<SAMRecord> consumer) {
-
-        final Set<String> processed = Sets.newHashSet();
-        for (GenomeRegion codingRegion : codingRegions.values()) {
-            try (final SAMRecordIterator iterator = samReader.queryOverlapping(codingRegion.chromosome(),
-                    (int) codingRegion.start(),
-                    (int) codingRegion.end())) {
-                while (iterator.hasNext()) {
-                    final SAMRecord record = iterator.next();
-                    if (samRecordMeetsQualityRequirements(record)) {
-                        if (processed.add(record.toString())) {
-                            consumer.accept(record);
-                        }
-                    }
-                }
-            }
-        }
+        return record.getMappingQuality() >= minMappingQuality && !record.getReadUnmappedFlag() && !record.getDuplicateReadFlag() && !record
+                .isSecondaryOrSupplementary();
     }
 
 }
