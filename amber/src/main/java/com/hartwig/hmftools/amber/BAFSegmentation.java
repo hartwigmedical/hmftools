@@ -6,25 +6,20 @@ import com.hartwig.hmftools.common.amber.AmberBAFFile;
 import com.hartwig.hmftools.common.pcf.PCFFile;
 import com.hartwig.hmftools.common.r.RExecutor;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-class BAFSegmentation {
-
-    private static final Logger LOGGER = LogManager.getLogger(BAFSegmentation.class);
+public class BAFSegmentation {
 
     @NotNull
     private final String outputDirectory;
 
-    BAFSegmentation(@NotNull final String outputDirectory) {
+    public BAFSegmentation(@NotNull final String outputDirectory) {
         this.outputDirectory = outputDirectory;
     }
 
-    void applySegmentation(@NotNull final String tumor) throws InterruptedException, IOException {
+    public void applySegmentation(@NotNull final String tumor) throws InterruptedException, IOException {
         final String ratioFile = AmberBAFFile.generateAmberFilename(outputDirectory, tumor);
         bafSegmentation(ratioFile, tumor);
-        LOGGER.info("BAFSegmentation Complete");
     }
 
     private void bafSegmentation(@NotNull final String ratioFile, @NotNull final String sample) throws IOException, InterruptedException {

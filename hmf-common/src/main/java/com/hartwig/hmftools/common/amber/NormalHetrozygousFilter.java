@@ -1,15 +1,15 @@
-package com.hartwig.hmftools.amber;
+package com.hartwig.hmftools.common.amber;
 
 import java.util.function.Predicate;
 
 import com.hartwig.hmftools.common.amber.NormalBAF;
 
-public class HetrozygousFilter implements Predicate<NormalBAF> {
+public class NormalHetrozygousFilter implements Predicate<NormalBAF> {
 
     private final double minHetAFPercentage;
     private final double maxHetAFPercentage;
 
-    HetrozygousFilter(final double minHetAFPercentage, final double maxHetAFPercentage) {
+    public NormalHetrozygousFilter(final double minHetAFPercentage, final double maxHetAFPercentage) {
         this.minHetAFPercentage = minHetAFPercentage;
         this.maxHetAFPercentage = maxHetAFPercentage;
     }

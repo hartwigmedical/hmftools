@@ -29,8 +29,10 @@ public interface NormalBAF extends GenomePosition {
 
     int readDepth();
 
+    int indelCount();
+
     default boolean isValid() {
-        return !ref().equals(Base.N) && baseMap().keySet().stream().filter(x -> !x.equals(Base.N)).count() > 1;
+        return indelCount() == 0 && !ref().equals(Base.N) && baseMap().keySet().stream().filter(x -> !x.equals(Base.N)).count() > 1;
     }
 
     @NotNull

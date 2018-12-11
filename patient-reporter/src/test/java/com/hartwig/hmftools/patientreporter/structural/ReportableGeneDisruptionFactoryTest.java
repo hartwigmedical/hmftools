@@ -117,6 +117,7 @@ public class ReportableGeneDisruptionFactoryTest {
         return ImmutableEnrichedStructuralVariant.builder()
                 .id(Strings.EMPTY)
                 .insertSequence(Strings.EMPTY)
+                .insertSequenceAlignments(Strings.EMPTY)
                 .qualityScore(0)
                 .recovered(false);
     }

@@ -47,6 +47,7 @@ public class StructuralVariantFactory {
     private final static String EVENT = "EVENT";
     private final static String LOCAL_LINKED_BY = "LOCAL_LINKED_BY";
     private final static String REMOTE_LINKED_BY = "REMOTE_LINKED_BY";
+    private final static String UNTEMPLATED_SEQUENCE_ALIGNMENTS = "BEALN";
     /**
      * Must match the small deldup threshold in scripts/gridss/gridss.config.R
      */
@@ -290,7 +291,11 @@ public class StructuralVariantFactory {
                         .filter(s -> !Strings.isNullOrEmpty(s))
                         .collect(Collectors.joining(",")))
                 .imprecise(imprecise(context))
-                .qualityScore(context.getPhredScaledQual());
+                .qualityScore(context.getPhredScaledQual())
+                .insertSequenceAlignments(context.getAttributeAsStringList(UNTEMPLATED_SEQUENCE_ALIGNMENTS, "")
+                        .stream()
+                        .filter(s -> !Strings.isNullOrEmpty(s))
+                        .collect(Collectors.joining(",")));
     }
 
     @NotNull

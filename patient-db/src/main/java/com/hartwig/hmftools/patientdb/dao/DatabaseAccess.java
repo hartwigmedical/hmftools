@@ -6,9 +6,11 @@ import java.sql.SQLException;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Stream;
 
+import com.hartwig.hmftools.common.actionability.EvidenceItem;
 import com.hartwig.hmftools.common.chord.ChordAnalysis;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.ecrf.EcrfModel;
@@ -75,6 +77,10 @@ public class DatabaseAccess {
     private final PotentiallyActionableItemsDAO potentiallyActionableItemsDAO;
     @NotNull
     private final ChordDAO chordDAO;
+    @NotNull
+    private final ClinialEvidenceDAO clinicalEvidenceDAO;
+    @NotNull
+    private final ClinicalTrialDAO clinicalTrialDAO;
 
     public DatabaseAccess(@NotNull final String userName, @NotNull final String password, @NotNull final String url) throws SQLException {
         // MIVO: disable annoying jooq self-ad message
@@ -97,6 +103,8 @@ public class DatabaseAccess {
         potentiallyActionableItemsDAO = new PotentiallyActionableItemsDAO(context);
         driverCatalogDAO = new DriverCatalogDAO(context);
         chordDAO = new ChordDAO(context);
+        clinicalEvidenceDAO = new ClinialEvidenceDAO(context);
+        clinicalTrialDAO = new ClinicalTrialDAO(context);
     }
 
     @NotNull
@@ -233,6 +241,14 @@ public class DatabaseAccess {
 
     public void writeChord(@NotNull String sample, @NotNull ChordAnalysis chordAnalysis) {
         chordDAO.writeChord(sample, chordAnalysis);
+    }
+
+    public void writeClinicalEvidence (@NotNull String sample, @NotNull Map<GeneCopyNumber, List<EvidenceItem>> evidencePerGeneCopyNumber) {
+        clinicalEvidenceDAO.writeClinicalEvidence(sample);
+    }
+
+    public void writeClinicalTrial (@NotNull String sample, @NotNull Map<GeneCopyNumber, List<EvidenceItem>> evidencePerGeneCopyNumber) {
+        clinicalTrialDAO.writeClinicalTrial(sample);
     }
 
     public void clearCpctEcrf() {

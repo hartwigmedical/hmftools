@@ -26,7 +26,6 @@ import org.jooq.InsertValuesStepN;
 import org.jooq.Record;
 import org.jooq.Record1;
 import org.jooq.Result;
-import org.jooq.types.UInteger;
 
 class StructuralVariantDAO {
     @NotNull
@@ -109,6 +108,7 @@ class StructuralVariantDAO {
                     .endLinkedBy(getValueNotNull(record.getValue(STRUCTURALVARIANT.ENDLINKEDBY)))
                     .startRefContext(getValueNotNull(record.getValue(STRUCTURALVARIANT.STARTREFCONTEXT)))
                     .endRefContext(getValueNotNull(record.getValue(STRUCTURALVARIANT.ENDREFCONTEXT)))
+                    .insertSequenceAlignments(record.getValue(STRUCTURALVARIANT.INSERTSEQUENCEALIGNMENTS))
                     .build());
         }
         return structuralVariants;
@@ -201,6 +201,7 @@ class StructuralVariantDAO {
                     .event(record.getValue(STRUCTURALVARIANT.EVENT))
                     .startLinkedBy(record.getValue(STRUCTURALVARIANT.STARTLINKEDBY))
                     .endLinkedBy(record.getValue(STRUCTURALVARIANT.ENDLINKEDBY))
+                    .insertSequenceAlignments(record.getValue(STRUCTURALVARIANT.INSERTSEQUENCEALIGNMENTS))
                     .build();
 
             regions.add(variant);
@@ -266,6 +267,7 @@ class StructuralVariantDAO {
                     STRUCTURALVARIANT.RECOVERED,
                     STRUCTURALVARIANT.STARTREFCONTEXT,
                     STRUCTURALVARIANT.ENDREFCONTEXT,
+                    STRUCTURALVARIANT.INSERTSEQUENCEALIGNMENTS,
                     STRUCTURALVARIANT.MODIFIED);
             batch.forEach(entry -> addRecord(timestamp, inserter, sample, entry));
             inserter.execute();
@@ -319,31 +321,14 @@ class StructuralVariantDAO {
                 variant.recovered(),
                 variant.start().refGenomeContext(),
                 variant.end() == null ? null : variant.end().refGenomeContext(),
+                variant.insertSequenceAlignments(),
                 timestamp);
     }
 
-    void deleteStructuralVariantsForSample(@NotNull String sample)
-    {
-        /*
-        context.delete(STRUCTURALVARIANTDISRUPTION)
-                .where(STRUCTURALVARIANTDISRUPTION.BREAKENDID.in(selectBreakendsForSample(sample)))
-                .execute();
-        context.delete(STRUCTURALVARIANTFUSION)
-                .where(STRUCTURALVARIANTFUSION.FIVEPRIMEBREAKENDID.in(selectBreakendsForSample(sample)))
-                .execute();
-        context.delete(STRUCTURALVARIANTBREAKEND).where(STRUCTURALVARIANTBREAKEND.ID.in(selectBreakendsForSample(sample))).execute();
-        */
-
+    void deleteStructuralVariantsForSample(@NotNull String sample) {
+        context.delete(STRUCTURALVARIANTDISRUPTION).where(STRUCTURALVARIANTDISRUPTION.SAMPLEID.eq(sample)).execute();
+        context.delete(STRUCTURALVARIANTFUSION).where(STRUCTURALVARIANTFUSION.SAMPLEID.eq(sample)).execute();
+        context.delete(STRUCTURALVARIANTBREAKEND).where(STRUCTURALVARIANTBREAKEND.SAMPLEID.eq(sample)).execute();
         context.delete(STRUCTURALVARIANT).where(STRUCTURALVARIANT.SAMPLEID.eq(sample)).execute();
-    }
-
-    @NotNull
-    private List<Record1<UInteger>> selectBreakendsForSample(@NotNull String sample) {
-        return context.select(STRUCTURALVARIANTBREAKEND.ID)
-                .from(STRUCTURALVARIANTBREAKEND)
-                .innerJoin(STRUCTURALVARIANT)
-                .on(STRUCTURALVARIANT.ID.eq(STRUCTURALVARIANTBREAKEND.STRUCTURALVARIANTID))
-                .where(STRUCTURALVARIANT.SAMPLEID.eq(sample))
-                .fetch();
     }
 }

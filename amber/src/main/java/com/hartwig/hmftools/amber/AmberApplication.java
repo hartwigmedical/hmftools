@@ -1,16 +1,45 @@
 package com.hartwig.hmftools.amber;
 
+import static com.hartwig.hmftools.amber.AmberConfig.MIN_PARTITION;
+
 import java.io.File;
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.ThreadFactory;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
+import com.google.common.base.Strings;
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.ListMultimap;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Multimap;
+import com.google.common.collect.SortedSetMultimap;
+import com.google.common.primitives.Doubles;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.hartwig.hmftools.common.amber.AmberBAF;
 import com.hartwig.hmftools.common.amber.AmberBAFFile;
+import com.hartwig.hmftools.common.amber.AmberVCF;
+import com.hartwig.hmftools.common.amber.ImmutableAmberBAF;
+import com.hartwig.hmftools.common.amber.ModifiableNormalBAF;
+import com.hartwig.hmftools.common.amber.NormalBAF;
+import com.hartwig.hmftools.common.amber.NormalBAFEvidence;
+import com.hartwig.hmftools.common.amber.NormalDepthFilter;
+import com.hartwig.hmftools.common.amber.NormalHetrozygousFilter;
+import com.hartwig.hmftools.common.amber.TumorBAF;
+import com.hartwig.hmftools.common.amber.TumorBAFEvidence;
 import com.hartwig.hmftools.common.amber.qc.AmberQC;
 import com.hartwig.hmftools.common.amber.qc.AmberQCFactory;
 import com.hartwig.hmftools.common.amber.qc.AmberQCFile;
-import com.hartwig.hmftools.common.pileup.Pileup;
-import com.hartwig.hmftools.common.pileup.PileupFile;
+import com.hartwig.hmftools.common.chromosome.Chromosome;
+import com.hartwig.hmftools.common.chromosome.HumanChromosome;
+import com.hartwig.hmftools.common.region.BEDFileLoader;
+import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.common.version.VersionInfo;
 
 import org.apache.commons.cli.CommandLine;
@@ -23,111 +52,200 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-public class AmberApplication {
+import htsjdk.samtools.SamReaderFactory;
 
+public class AmberApplication implements AutoCloseable {
     private static final Logger LOGGER = LogManager.getLogger(AmberApplication.class);
 
-    private static final String SAMPLE = "sample";
-    private static final String REFERENCE_PILEUP = "reference";
-    private static final String TUMOR_PILEUP = "tumor";
-    private static final String OUTPUT_DIR = "output_dir";
-    private static final String MIN_HET_AF_PERCENTAGE = "min_het_af_percent";
-    private static final String MAX_HET_AF_PERCENTAGE = "max_het_af_percent";
-    private static final String MIN_DEPTH_PERCENTAGE = "min_depth_percent";
-    private static final String MAX_DEPTH_PERCENTAGE = "max_depth_percent";
+    private final AmberConfig config;
+    private final ExecutorService executorService;
 
-    static final double DEFAULT_MIN_HET_AF_PERCENTAGE = 0.4;
-    static final double DEFAULT_MAX_HET_AF_PERCENTAGE = 0.65;
-    static final double DEFAULT_MIN_DEPTH_PERCENTAGE = 0.5;
-    static final double DEFAULT_MAX_DEPTH_PERCENTAGE = 1.5;
-
-    public static void main(final String... args) throws ParseException, IOException, InterruptedException {
-        new AmberApplication(args);
+    public static void main(final String... args) throws IOException, InterruptedException, ExecutionException {
+        final Options options = AmberConfig.createOptions();
+        try (final AmberApplication application = new AmberApplication(options, args)) {
+            final List<TumorBAF> bafs = application.createBAFs();
+            application.persist(bafs);
+        } catch (ParseException e) {
+            LOGGER.warn(e);
+            final HelpFormatter formatter = new HelpFormatter();
+            formatter.printHelp("AmberApplication", options);
+            System.exit(1);
+        }
     }
 
-    private AmberApplication(final String... args) throws ParseException, IOException, InterruptedException {
-        final VersionInfo versionInfo = new VersionInfo("amber.version");
-        LOGGER.info("AMBER version: {}", versionInfo.version());
-        final Options options = createOptions();
-        final CommandLine cmd = createCommandLine(options, args);
-        if (!cmd.hasOption(REFERENCE_PILEUP) || !cmd.hasOption(TUMOR_PILEUP) || !cmd.hasOption(OUTPUT_DIR) || !cmd.hasOption(SAMPLE)) {
-            printUsageAndExit(options);
-        }
+    private AmberApplication(final Options options, final String... args) throws IOException, ParseException {
 
-        final String outputDirectory = cmd.getOptionValue(OUTPUT_DIR);
-        final File outputDir = new File(outputDirectory);
+        final CommandLine cmd = createCommandLine(args, options);
+        config = AmberConfig.createConfig(cmd);
+
+        final File outputDir = new File(config.outputDirectory());
         if (!outputDir.exists() && !outputDir.mkdirs()) {
-            throw new IOException("Unable to write directory " + outputDirectory);
+            throw new IOException("Unable to write directory " + config.outputDirectory());
         }
 
-        final BAFFactory factory = new BAFFactory(defaultValue(cmd, MIN_HET_AF_PERCENTAGE, DEFAULT_MIN_HET_AF_PERCENTAGE),
-                defaultValue(cmd, MAX_HET_AF_PERCENTAGE, DEFAULT_MAX_HET_AF_PERCENTAGE),
-                defaultValue(cmd, MIN_DEPTH_PERCENTAGE, DEFAULT_MIN_DEPTH_PERCENTAGE),
-                defaultValue(cmd, MAX_DEPTH_PERCENTAGE, DEFAULT_MAX_DEPTH_PERCENTAGE));
+        final ThreadFactory namedThreadFactory = new ThreadFactoryBuilder().setNameFormat("-%d").build();
+        executorService = Executors.newFixedThreadPool(config.threadCount(), namedThreadFactory);
+    }
 
-        LOGGER.info("Loading tumor file {}", cmd.getOptionValue(TUMOR_PILEUP));
-        final List<Pileup> tumor = PileupFile.read(cmd.getOptionValue(TUMOR_PILEUP));
+    @NotNull
+    private List<TumorBAF> createBAFs() throws InterruptedException, ExecutionException, IOException {
+        final SamReaderFactory readerFactory = SamReaderFactory.make();
+        final ListMultimap<Chromosome, NormalBAF> normalBAFMap = normal(readerFactory);
+        final Multimap<Chromosome, TumorBAF> tumorBAFMap = tumor(readerFactory, normalBAFMap);
 
-        LOGGER.info("Loading reference file {}", cmd.getOptionValue(REFERENCE_PILEUP));
-        final List<Pileup> normal = PileupFile.read(cmd.getOptionValue(REFERENCE_PILEUP));
+        final List<TumorBAF> result = Lists.newArrayList(tumorBAFMap.values());
+        Collections.sort(result);
 
-        LOGGER.info("Calculating BAFs");
-        final List<AmberBAF> result = factory.create(normal, tumor);
+        return result;
+    }
 
-        LOGGER.info("Generating QC Stats");
+    private void persist(@NotNull final List<TumorBAF> tumorBAFList) throws IOException, InterruptedException {
+        LOGGER.info("Writing output to {}", config.outputDirectory());
+        final String outputVcf = config.outputDirectory() + File.separator + config.tumor() + ".amber.vcf.gz";
+        new AmberVCF(config.normal(), config.tumor()).write(outputVcf, tumorBAFList);
+
+        final List<AmberBAF> result =
+                tumorBAFList.stream().map(AmberApplication::create).filter(AmberApplication::isValid).collect(Collectors.toList());
+
         final AmberQC qcStats = AmberQCFactory.create(result);
-        final String qcFilename = AmberQCFile.generateFilename(outputDirectory, cmd.getOptionValue(SAMPLE));
+        final String qcFilename = AmberQCFile.generateFilename(config.outputDirectory(), config.tumor());
 
-        final String filename = AmberBAFFile.generateAmberFilename(outputDirectory, cmd.getOptionValue(SAMPLE));
-        LOGGER.info("Persisting file {}", filename);
+        final String filename = AmberBAFFile.generateAmberFilename(config.outputDirectory(), config.tumor());
         AmberBAFFile.write(filename, result);
         AmberQCFile.write(qcFilename, qcStats);
-        versionInfo.write(outputDir.toString());
+
+        final VersionInfo versionInfo = new VersionInfo("amber.version");
+        versionInfo.write(config.outputDirectory());
 
         LOGGER.info("Applying pcf segmentation");
-        new BAFSegmentation(outputDirectory).applySegmentation(cmd.getOptionValue(SAMPLE));
-
-        LOGGER.info("Complete");
-    }
-
-    private static void printUsageAndExit(@NotNull final Options options) {
-        final HelpFormatter formatter = new HelpFormatter();
-        formatter.printHelp("AMBER", options);
-        System.exit(1);
+        new BAFSegmentation(config.outputDirectory()).applySegmentation(config.tumor());
     }
 
     @NotNull
-    private static CommandLine createCommandLine(@NotNull final Options options, @NotNull final String... args) throws ParseException {
+    private ListMultimap<Chromosome, TumorBAF> tumor(@NotNull final SamReaderFactory readerFactory,
+            @NotNull final ListMultimap<Chromosome, NormalBAF> normalBafs) throws ExecutionException, InterruptedException {
+        final int partitionSize = Math.max(MIN_PARTITION, normalBafs.values().size() / config.threadCount());
+
+        LOGGER.info("Processing tumor bam {}", config.tumorBamPath());
+        final List<Future<TumorBAFEvidence>> futures = Lists.newArrayList();
+        for (final Chromosome chromosome : normalBafs.keySet()) {
+            for (final List<NormalBAF> chromosomeBafPoints : Lists.partition(normalBafs.get(chromosome), partitionSize)) {
+                if (!chromosomeBafPoints.isEmpty()) {
+                    final String contig = chromosomeBafPoints.get(0).chromosome();
+                    futures.add(executorService.submit(new TumorBAFEvidence(config.minMappingQuality(),
+                            config.minBaseQuality(),
+                            contig,
+                            config.tumorBamPath(),
+                            readerFactory,
+                            chromosomeBafPoints)));
+                }
+            }
+        }
+
+        final ListMultimap<Chromosome, TumorBAF> result = ArrayListMultimap.create();
+        getFuture(futures).forEach(x -> result.putAll(HumanChromosome.fromString(x.contig()), x.evidence()));
+
+        return result;
+    }
+
+    @NotNull
+    private ListMultimap<Chromosome, NormalBAF> normal(final SamReaderFactory readerFactory)
+            throws IOException, InterruptedException, ExecutionException {
+        LOGGER.info("Loading bed file {}", config.bedFilePath());
+        final SortedSetMultimap<String, GenomeRegion> bedRegionsSortedSet = BEDFileLoader.fromBedFile(config.bedFilePath());
+        final int partitionSize = Math.max(MIN_PARTITION, bedRegionsSortedSet.size() / config.threadCount());
+
+        LOGGER.info("Processing reference bam {}", config.referenceBamPath(), partitionSize);
+        final List<Future<NormalBAFEvidence>> futures = Lists.newArrayList();
+        for (final String contig : bedRegionsSortedSet.keySet()) {
+            for (final List<GenomeRegion> inner : Lists.partition(Lists.newArrayList(bedRegionsSortedSet.get(contig)), partitionSize)) {
+                final NormalBAFEvidence chromosome = new NormalBAFEvidence(config.minMappingQuality(),
+                        config.minBaseQuality(),
+                        contig,
+                        config.referenceBamPath(),
+                        readerFactory,
+                        inner);
+                futures.add(executorService.submit(chromosome));
+            }
+        }
+
+        final ListMultimap<Chromosome, ModifiableNormalBAF> normalEvidence = ArrayListMultimap.create();
+        getFuture(futures).forEach(x -> normalEvidence.putAll(HumanChromosome.fromString(x.contig()), x.evidence()));
+
+        final ListMultimap<Chromosome, NormalBAF> normalBafs = ArrayListMultimap.create();
+        final Predicate<NormalBAF> depthFilter = new NormalDepthFilter(config.minDepthPercent(), config.maxDepthPercent(), normalEvidence);
+        final RefEnricher refEnricher = new RefEnricher(config.refGenomePath());
+        final Predicate<NormalBAF> hetFilter = new NormalHetrozygousFilter(config.minHetAfPercent(), config.maxHetAfPercent());
+        for (final Chromosome chromosome : normalEvidence.keySet()) {
+            final List<NormalBAF> normalHetLocations = normalEvidence.get(chromosome)
+                    .stream()
+                    .filter(x -> x.indelCount() == 0)
+                    .filter(depthFilter)
+                    .map(refEnricher::enrich)
+                    .filter(hetFilter)
+                    .collect(Collectors.toList());
+
+            normalBafs.putAll(chromosome, normalHetLocations);
+        }
+
+        LOGGER.info("Identified {} heterozygous sites", normalBafs.values().size());
+        return normalBafs;
+    }
+
+    @NotNull
+    private static CommandLine createCommandLine(@NotNull String[] args, @NotNull Options options) throws ParseException {
         final CommandLineParser parser = new DefaultParser();
-        try {
-            return parser.parse(options, args);
-        } catch (ParseException e) {
-            printUsageAndExit(options);
-            throw e;
-        }
-    }
-
-    private static double defaultValue(@NotNull final CommandLine cmd, @NotNull final String opt, final double defaultValue) {
-        if (cmd.hasOption(opt)) {
-            final double result = Double.valueOf(cmd.getOptionValue(opt));
-            LOGGER.info("Using non default value {} for parameter {}", result, opt);
-            return result;
-        }
-
-        return defaultValue;
+        return parser.parse(options, args);
     }
 
     @NotNull
-    private static Options createOptions() {
-        final Options options = new Options();
-        options.addOption(REFERENCE_PILEUP, true, "Reference Pileup");
-        options.addOption(TUMOR_PILEUP, true, "Tumor Pileup");
-        options.addOption(OUTPUT_DIR, true, "Output directory");
-        options.addOption(SAMPLE, true, "Name of sample");
-        options.addOption(MIN_HET_AF_PERCENTAGE, true, "Min heterozygous AF%");
-        options.addOption(MAX_HET_AF_PERCENTAGE, true, "Max heterozygous AF%");
-        options.addOption(MIN_DEPTH_PERCENTAGE, true, "Max percentage of median depth");
-        options.addOption(MAX_DEPTH_PERCENTAGE, true, "Min percentage of median depth");
-        return options;
+    private static AmberBAF create(@NotNull final TumorBAF tumor) {
+        int tumorAltCount = tumor.tumorAltSupport();
+        double tumorBaf = tumorAltCount / (double) (tumorAltCount + tumor.tumorRefSupport());
+        int normalAltCount = tumor.normalAltSupport();
+        double normalBaf = normalAltCount / (double) (normalAltCount + tumor.normalRefSupport());
+        return ImmutableAmberBAF.builder()
+                .from(tumor)
+                .normalDepth(tumor.normalReadDepth())
+                .tumorDepth(tumor.tumorReadDepth())
+                .normalBAF(normalBaf)
+                .tumorBAF(tumorBaf)
+                .build();
+    }
+
+    private static boolean isValid(@NotNull final AmberBAF baf) {
+        return Doubles.isFinite(baf.tumorBAF()) & Doubles.isFinite(baf.normalBAF());
+    }
+
+    @NotNull
+    private static <T> List<T> getFuture(@NotNull final List<Future<T>> futures) throws ExecutionException, InterruptedException {
+        final List<T> result = Lists.newArrayList();
+        int complete = 0;
+        double previousPercentComplete = 0;
+        for (Future<T> chromosomeBAFEvidenceFuture : futures) {
+            T evidence = chromosomeBAFEvidenceFuture.get();
+            double percentComplete = ((double) ++complete) / futures.size();
+            if (percentComplete > previousPercentComplete + 0.1) {
+                LOGGER.info("{}", complete(percentComplete));
+                previousPercentComplete = percentComplete;
+            }
+            result.add(evidence);
+        }
+        return result;
+    }
+
+    @NotNull
+    private static String complete(double percent) {
+        int roundedPercent = (int) Math.round(percent * 100);
+        int hashCount = Math.min(20, roundedPercent / 5);
+        int gapCount = Math.max(0, 20 - hashCount);
+
+        return "  [" + Strings.repeat("#", hashCount) + Strings.repeat(" ", gapCount) + "] " + roundedPercent + "% complete";
+    }
+
+    @Override
+    public void close() {
+        executorService.shutdown();
+        LOGGER.info("Complete");
     }
 }

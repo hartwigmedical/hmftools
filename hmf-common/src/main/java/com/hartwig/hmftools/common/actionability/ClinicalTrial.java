@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.patientreporter.actionability;
+package com.hartwig.hmftools.common.actionability;
 
 import com.hartwig.hmftools.common.actionability.ActionabilitySource;
 import com.hartwig.hmftools.common.actionability.EvidenceScope;

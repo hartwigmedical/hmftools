@@ -17,6 +17,7 @@ import com.hartwig.hmftools.common.variant.structural.ImmutableStructuralVariant
 import com.hartwig.hmftools.common.variant.structural.ImmutableStructuralVariantLegImpl;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
@@ -55,7 +56,7 @@ public class PurpleDatamodelTest {
     }
 
     @NotNull
-    public static ImmutableEnrichedRegion.Builder createObservedRegion(@NotNull final String chromosome, final long start, final long end) {
+    private static ImmutableEnrichedRegion.Builder createObservedRegion(@NotNull final String chromosome, final long start, final long end) {
         return ImmutableEnrichedRegion.builder()
                 .observedBAF(0.5)
                 .bafCount(1)
@@ -97,7 +98,6 @@ public class PurpleDatamodelTest {
     @NotNull
     public static ImmutableStructuralVariantLegImpl.Builder createStartLeg(@NotNull final String startChromosome, final long startPosition,
             @NotNull final StructuralVariantType type) {
-
         final byte startOrientation;
         switch (type) {
             case DUP:
@@ -115,14 +115,13 @@ public class PurpleDatamodelTest {
         return ImmutableStructuralVariantLegImpl.builder()
                 .chromosome(startChromosome)
                 .position(startPosition)
-                .homology("")
+                .homology(Strings.EMPTY)
                 .orientation(startOrientation);
     }
 
     @NotNull
-    public static ImmutableStructuralVariantLegImpl.Builder createEndLeg(@NotNull final String endChromosome, final long endPosition,
+    private static ImmutableStructuralVariantLegImpl.Builder createEndLeg(@NotNull final String endChromosome, final long endPosition,
             @NotNull final StructuralVariantType type) {
-
         final byte endOrientation;
         switch (type) {
             case DUP:
@@ -148,10 +147,10 @@ public class PurpleDatamodelTest {
     public static ImmutableStructuralVariantImpl.Builder createStructuralVariant(@NotNull final String startChromosome,
             final long startPosition, @NotNull final String endChromosome, final long endPosition,
             @NotNull final StructuralVariantType type, double startVaf, double endVaf) {
-
         return ImmutableStructuralVariantImpl.builder()
-                .id("")
-                .insertSequence("")
+                .id(Strings.EMPTY)
+                .insertSequence(Strings.EMPTY)
+                .insertSequenceAlignments(Strings.EMPTY)
                 .type(type)
                 .recovered(false)
                 .qualityScore(0)
@@ -164,10 +163,10 @@ public class PurpleDatamodelTest {
     public static ImmutableStructuralVariantImpl.Builder createStructuralVariant(@NotNull final String startChromosome,
             final long startPosition, @NotNull final String endChromosome, final long endPosition,
             @NotNull final StructuralVariantType type) {
-
         return ImmutableStructuralVariantImpl.builder()
-                .id("")
-                .insertSequence("")
+                .id(Strings.EMPTY)
+                .insertSequence(Strings.EMPTY)
+                .insertSequenceAlignments(Strings.EMPTY)
                 .type(type)
                 .qualityScore(0)
                 .recovered(false)
@@ -179,8 +178,9 @@ public class PurpleDatamodelTest {
     public static ImmutableStructuralVariantImpl.Builder createStructuralVariantSingleBreakend(@NotNull final String startChromosome,
            final long startPosition, double startVaf) {
         return ImmutableStructuralVariantImpl.builder()
-                .id("")
-                .insertSequence("")
+                .id(Strings.EMPTY)
+                .insertSequence(Strings.EMPTY)
+                .insertSequenceAlignments(Strings.EMPTY)
                 .qualityScore(0)
                 .recovered(false)
                 .type(StructuralVariantType.BND)
@@ -216,5 +216,4 @@ public class PurpleDatamodelTest {
                 .leftCopyNumber(leftCopyNumber)
                 .rightCopyNumber(rightCopyNumber);
     }
-
 }

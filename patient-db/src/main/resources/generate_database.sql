@@ -504,6 +504,7 @@ CREATE TABLE structuralVariant
     recovered BOOLEAN NOT NULL,
     startRefContext varchar(255),
     endRefContext varchar(255),
+    insertSequenceAlignments varchar(512),
     PRIMARY KEY (id),
     INDEX(sampleId)
 );
@@ -528,6 +529,7 @@ CREATE TABLE structuralVariantBreakend
     exonMax SMALLINT NOT NULL,
     PRIMARY KEY (id),
     INDEX(structuralVariantId),
+    INDEX(sampleId),
     INDEX(gene),
     INDEX(geneId),
     INDEX(transcriptId)
@@ -541,7 +543,8 @@ CREATE TABLE structuralVariantDisruption
     breakendId INT UNSIGNED NOT NULL,
     isReported BOOLEAN NOT NULL,
     PRIMARY KEY (id),
-    INDEX(breakendId)
+    INDEX(breakendId),
+    INDEX(sampleId)
 );
 
 DROP TABLE IF EXISTS structuralVariantFusion;
@@ -554,7 +557,8 @@ CREATE TABLE structuralVariantFusion
     isReported BOOLEAN NOT NULL,
     PRIMARY KEY (id),
     INDEX(fivePrimeBreakendId),
-    INDEX(threePrimeBreakendId)
+    INDEX(threePrimeBreakendId),
+    INDEX(sampleId)
 );
 
 DROP TABLE IF EXISTS canonicalTranscript;

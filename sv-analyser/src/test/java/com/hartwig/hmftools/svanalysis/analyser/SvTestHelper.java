@@ -18,8 +18,8 @@ import com.hartwig.hmftools.common.variant.structural.StructuralVariantData;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 import com.hartwig.hmftools.svanalysis.analysis.ClusterAnalyser;
 import com.hartwig.hmftools.svanalysis.analysis.LinkFinder;
-import com.hartwig.hmftools.svanalysis.analysis.SvaConfig;
 import com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods;
+import com.hartwig.hmftools.svanalysis.analysis.SvaConfig;
 import com.hartwig.hmftools.svanalysis.types.SvCluster;
 import com.hartwig.hmftools.svanalysis.types.SvVarData;
 
@@ -148,6 +148,7 @@ public class SvTestHelper
                         .homology("")
                         .vcfId("")
                         .insertSequence("")
+                        .insertSequenceAlignments("")
                         .filter("PASS")
                         .imprecise(false)
                         .qualityScore(0.0)
@@ -176,7 +177,7 @@ public class SvTestHelper
 
         String startArm = getChromosomalArm(var.chromosome(true), var.position(true));
 
-        String endArm = "";
+        String endArm;
         if(!var.isNullBreakend())
             endArm = getChromosomalArm(var.chromosome(false), var.position(false));
         else
