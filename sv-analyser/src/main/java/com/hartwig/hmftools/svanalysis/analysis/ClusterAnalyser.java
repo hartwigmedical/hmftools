@@ -29,6 +29,7 @@ import static com.hartwig.hmftools.svanalysis.types.SvChain.getRepeatedSvSequenc
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.CLUSTER_ANNONTATION_CT;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.CLUSTER_ANNONTATION_DM;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_COMPLEX_CHAIN;
+import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_DEL_EXT_TI;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_LINE;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_NONE;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_SGL_PAIR_DEL;
@@ -947,7 +948,7 @@ public class ClusterAnalyser {
         // skip unclustered DELs & DUPs, reciprocal INV or reciprocal BNDs
         final SvCluster cluster1 = var1.getCluster();
 
-        if(cluster1.isResolved())
+        if(cluster1.isResolved() && cluster1.getTypeCount(INV) == 0)
             return;
 
         SvCluster cluster2 = null;
@@ -967,7 +968,7 @@ public class ClusterAnalyser {
         boolean v1Start = be1.usesStart();
         boolean v2Start = be2.usesStart();
 
-        int[] chainData = {-1, -1, -1};
+        String chainInfo = "";
 
         if(var1.equals(var2))
         {
@@ -1006,10 +1007,13 @@ public class ClusterAnalyser {
 
             // check if a path can be walked between these 2 breakends along the chain
             // without going back through this foldback point
-            chainData = chain1.breakendsAreChained(var1, !v1Start, var2, !v2Start);
+            int[] chainData = chain1.breakendsAreChained(var1, !v1Start, var2, !v2Start);
 
             if(chainData[CHAIN_LINK_COUNT] == 0)
                 return;
+
+            chainInfo = String.format("%d;%d;%d",
+                    chainData[CHAIN_LINK_COUNT], chainData[CHAIN_ASSEMBLY_LINK_COUNT], chainData[CHAIN_LENGTH]);
 
             // check for a conflicting deletion bridge on the backmost of the 2 breakends
             if(be2.orientation() == 1)
@@ -1074,9 +1078,6 @@ public class ClusterAnalyser {
 
         if(!var2.getFoldbackLink(v2Start).isEmpty())
             clearFoldbackInfo(var2.getFoldbackLink(v2Start), var2.id(), cluster2, v2Start);
-
-        String chainInfo = String.format("%d;%d;%d",
-                chainData[CHAIN_LINK_COUNT], chainData[CHAIN_ASSEMBLY_LINK_COUNT], chainData[CHAIN_LENGTH]);
 
         var1.setFoldbackLink(v1Start, var2.id(), length, chainInfo);
         var2.setFoldbackLink(v2Start, var1.id(), length, chainInfo);
@@ -1357,6 +1358,29 @@ public class ClusterAnalyser {
         reportDoubleMinutes(cluster);
 
         classifySimpleChainedClusters(cluster);
+
+        // analyseFoldbacks(cluster);
+    }
+
+    private void analyseFoldbacks(final SvCluster cluster)
+    {
+        if(cluster.getFoldbacks().isEmpty())
+            return;
+
+        if(cluster.getResolvedType() != RESOLVED_TYPE_DEL_EXT_TI && cluster.getTypeCount(INV) != 2)
+            return;
+
+        // check whether the shorter of the 2 INVs faces the centromere
+        final SvVarData var1 = cluster.getSV(0);
+        final SvVarData var2 = cluster.getSV(1);
+
+        boolean shorterInvFacesCentromere = false;
+
+        if(var1.length() < var2.length() && var1.orientation(true) == -1)
+            shorterInvFacesCentromere = true;
+        else if(var2.length() < var1.length() && var2.orientation(true) == -1)
+            shorterInvFacesCentromere = true;
+
     }
 
     private static int CHAIN_TI_COUNT = 0;
@@ -1367,12 +1391,11 @@ public class ClusterAnalyser {
 
     private void classifySimpleChainedClusters(final SvCluster cluster)
     {
-        if(cluster.isResolved() || cluster.hasReplicatedSVs() || !cluster.getFoldbacks().isEmpty())
+        if(cluster.isResolved())
             return;
 
-        // for now just stick to clusters with high(er) degree of certainty
-        if(!cluster.isFullyChained() || cluster.getTypeCount(SGL) > 0)
-            return;
+        boolean isComplex = cluster.hasReplicatedSVs() || !cluster.getFoldbacks().isEmpty();
+        boolean isIncomplete = !cluster.isFullyChained() || cluster.getTypeCount(SGL) > 0;
 
         // skip simple chained clusters
         if(cluster.getArmCount() == 1 && cluster.getCount() == 2)
@@ -1503,10 +1526,11 @@ public class ClusterAnalyser {
                     cluster.id(), chain.id(), chainInfo);
         }
 
-        if(allChainsConsistent)
+        cluster.setArmData(originArms.size(), fragmentArms.size());
+
+        if(allChainsConsistent && !isIncomplete && !isComplex)
         {
-            cluster.addAnnotation(String.format("%s ORIG=%d FRAG=%s",
-                    CLUSTER_ANNONTATION_CT, originArms.size(), fragmentArms.size()));
+            cluster.addAnnotation(String.format("%s", CLUSTER_ANNONTATION_CT));
         }
     }
 

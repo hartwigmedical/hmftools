@@ -5,6 +5,7 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.Math.round;
 
+import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.BND;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DEL;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DUP;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INV;
@@ -256,7 +257,7 @@ public class SvClusteringMethods {
             if(cluster.hasLinkingLineElements())
                 continue;
 
-            applyCopyNumberReplication(sampleId, cluster);
+            applyCopyNumberReplication(cluster);
 
             markClusterLongDelDups(cluster);
             markClusterInversions(cluster);
@@ -309,10 +310,14 @@ public class SvClusteringMethods {
         }
     }
 
-    public static void applyCopyNumberReplication(final String sampleId, SvCluster cluster)
+    private static void applyCopyNumberReplication(SvCluster cluster)
     {
         // use the relative copy number change to replicate some SVs within a cluster
         if(!cluster.hasVariedCopyNumber())
+            return;
+
+        // avoid what will likely be balanced translocations
+        if(cluster.getCount() == 2 && cluster.getTypeCount(BND) == 2)
             return;
 
         // first establish the lowest copy number change
@@ -1247,6 +1252,9 @@ public class SvClusteringMethods {
         boolean v2OpenOnStart = tiLinkedPair.first().equals(var2) ? tiLinkedPair.firstUnlinkedOnStart() : tiLinkedPair.secondUnlinkedOnStart();
 
         if(!var1.chromosome(v1OpenOnStart).equals(var2.chromosome(v2OpenOnStart)))
+            return;
+
+        if(var1.orientation(v1OpenOnStart) == var2.orientation(v2OpenOnStart))
             return;
 
         String pairDesc = "";

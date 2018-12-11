@@ -8,6 +8,7 @@ import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.PERMITED_DUP_
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.breakendsMatch;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.copyNumbersEqual;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.getProximity;
+import static com.hartwig.hmftools.svanalysis.types.SvCluster.isSpecificCluster;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_END;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_START;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.haveLinkedAssemblies;
@@ -78,8 +79,10 @@ public class LinkFinder
         if(cluster.getCount() < 2)
             return linkedPairs;
 
-        for (int i = 0; i < cluster.getCount(); ++i) {
+        isSpecificCluster(cluster);
 
+        for (int i = 0; i < cluster.getCount(); ++i)
+        {
             SvVarData var1 = cluster.getSVs().get(i);
 
             if(var1.type() == StructuralVariantType.INS || var1.isNullBreakend())

@@ -223,6 +223,11 @@ public class SvLinkedPair {
         return false;
     }
 
+    public final SvVarData getOtherSV(final SvVarData var)
+    {
+        return mFirst.equals(var, true) ? mSecond : mFirst;
+    }
+
     public boolean hasAnySameVariant(final SvLinkedPair other)
     {
         return (mFirst.equals(other.first(), true) || mSecond.equals(other.second(), true)

@@ -359,15 +359,30 @@ public class SvChain {
     public final String getSvIndices(final SvVarData var)
     {
         String varIndices = "";
-        for(int index = 0; index < mSvList.size(); ++index)
+
+        for(int index = 0; index < mLinkedPairs.size(); ++index)
         {
-            if(!mSvList.get(index).equals(var, true))
+            final SvLinkedPair pair = mLinkedPairs.get(index);
+
+            String linkInfo = "";
+
+            if(pair.first().equals(var,true))
+            {
+                linkInfo = String.format("%d%s", index, pair.firstLinkOnStart() ? "s" : "e");
+            }
+            else if(pair.second().equals(var,true))
+            {
+                linkInfo = String.format("%d%s", index, pair.secondLinkOnStart() ? "s" : "e");
+            }
+            else
+            {
                 continue;
+            }
 
             if(!varIndices.isEmpty())
                 varIndices += ";";
 
-            varIndices += index;
+            varIndices += linkInfo;
         }
 
         return varIndices;

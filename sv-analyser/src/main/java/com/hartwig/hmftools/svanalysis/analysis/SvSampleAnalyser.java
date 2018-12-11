@@ -438,8 +438,9 @@ public class SvSampleAnalyser {
 
                 writer.write("SampleId,ClusterId,ClusterDesc,ClusterCount,ResolvedType,FullyChained,ChainCount");
                 writer.write(",DelCount,DupCount,InsCount,InvCount,BndCount,SglCount");
-                writer.write(",Consistency,ArmCount,IsLINE,HasReplicated");
-                writer.write(",AssemblyLinks,LongDelDups,UnlinkedRemotes,ShortTIRemotes,Annotations,ChainInfo");
+                writer.write(",Consistency,ArmCount,OriginArms,FragmentArms,IsLINE,HasReplicated,Foldbacks,DSBs");
+                writer.write(",TotalLinks,AssemblyLinks,LongDelDups,UnlinkedRemotes,ShortTIRemotes,MinCopyNumber,MaxCopyNumber");
+                writer.write(",Annotations,ChainInfo");
                 writer.newLine();
             }
 
@@ -458,9 +459,10 @@ public class SvSampleAnalyser {
                                 cluster.getTypeCount(INV), cluster.getTypeCount(BND), cluster.getTypeCount(SGL)));
 
                 writer.write(
-                        String.format(",%d,%d,%s,%s",
-                                cluster.getConsistencyCount(), cluster.getArmCount(),
-                                cluster.hasLinkingLineElements(), cluster.hasReplicatedSVs()));
+                        String.format(",%d,%d,%d,%d,%s,%s,%d,%d",
+                                cluster.getConsistencyCount(), cluster.getArmCount(), cluster.getOriginArms(), cluster.getFragmentArms(),
+                                cluster.hasLinkingLineElements(), cluster.hasReplicatedSVs(),
+                                cluster.getFoldbacks().size(), cluster.getClusterDBCount()));
 
                 final String chainInfo = cluster.getChains().stream()
                         .filter(x -> !x.getDetails().isEmpty())
@@ -468,9 +470,13 @@ public class SvSampleAnalyser {
                         .collect (Collectors.joining (";"));
 
                 writer.write(
-                        String.format(",%d,%d,%d,%d,%s,%s",
-                                cluster.getAssemblyLinkedPairs().size(), cluster.getLongDelDups().size(),
+                        String.format(",%d,%d,%d,%d,%d,%d,%d",
+                                cluster.getLinkedPairs().size(), cluster.getAssemblyLinkedPairs().size(), cluster.getLongDelDups().size(),
                                 cluster.getUnlinkedRemoteSVs().size(), cluster.getShortTIRemoteSVs().size(),
+                                cluster.getMinCopyNumber(), cluster.getMaxCopyNumber()));
+
+                writer.write(
+                        String.format(",%s,%s",
                                 cluster.getAnnotations(), chainInfo));
 
                 writer.newLine();
@@ -508,7 +514,7 @@ public class SvSampleAnalyser {
                 mLinksFileWriter = writer;
 
                 writer.write("SampleId,ClusterId,ClusterDesc,ClusterCount,ResolvedType,IsLINE,FullyChained");
-                writer.write(",ChainId,ChainCount,ChainConsistent,Id1,Id2,ChrArm,IsAssembled,TILength");
+                writer.write(",ChainId,ChainCount,ChainConsistent,Id1,Id2,ChrArm,IsAssembled,TILength,SynDelDupLen");
                 writer.write(",NextSVDistance,NextSVTraversedCount,DBLenStart,DBLenEnd,OnArmOfOrigin,CopyNumberGain,TraversedSVCount");
                 writer.newLine();
             }
@@ -560,8 +566,9 @@ public class SvSampleAnalyser {
                                         pair.first().getBreakend(pair.firstLinkOnStart()).getChrArm()));
 
                         writer.write(
-                                String.format(",%s,%d,%d,%d,%d,%d,%s,%s,%d",
-                                        pair.isAssembled(), pair.length(), pair.getNextSVDistance(), pair.getNextSVTraversedCount(),
+                                String.format(",%s,%d,%d,%d,%d,%d,%d,%s,%s,%d",
+                                        pair.isAssembled(), pair.length(), cluster.getSynDelDupLength(),
+                                        pair.getNextSVDistance(), pair.getNextSVTraversedCount(),
                                         pair.getDBLenFirst(), pair.getDBLenSecond(), pair.onArmOfOrigin(),
                                         pair.hasCopyNumberGain(), pair.getTraversedSVCount()));
 

@@ -4,11 +4,13 @@ import static java.lang.Math.max;
 import static java.lang.Math.abs;
 
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.BND;
+import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DEL;
 import static com.hartwig.hmftools.svanalysis.analysis.ClusterAnalyser.SHORT_TI_LENGTH;
 import static com.hartwig.hmftools.svanalysis.analysis.ClusterAnalyser.SMALL_CLUSTER_SIZE;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.calcConsistency;
 import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.ASSEMBLY_MATCH_INFER_ONLY;
 import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.removedLinksWithSV;
+import static com.hartwig.hmftools.svanalysis.types.SvVarData.RELATION_TYPE_NEIGHBOUR;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_END;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_START;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.isStart;
@@ -72,6 +74,9 @@ public class SvCluster
     private int mMinCopyNumber;
     private int mMaxCopyNumber;
 
+    private int mOriginArms;
+    private int mFragmentArms;
+
     public static String RESOLVED_TYPE_SIMPLE_SV = "SimpleSV";
     public static String RESOLVED_TYPE_RECIPROCAL_TRANS = "RecipTrans";
 
@@ -132,6 +137,9 @@ public class SvCluster
 
         mMinCopyNumber = 0;
         mMaxCopyNumber = 0;
+
+        mOriginArms = 0;
+        mFragmentArms = 0;
     }
 
     public int id() { return mId; }
@@ -614,6 +622,9 @@ public class SvCluster
     {
         if(!mFoldbacks.contains(var))
             mFoldbacks.add(var);
+
+        if(mResolvedType == RESOLVED_TYPE_SIMPLE_CHAIN)
+            mResolvedType = RESOLVED_TYPE_COMPLEX_CHAIN;
     }
 
     public void deregisterFoldback(final SvVarData var)
@@ -783,8 +794,47 @@ public class SvCluster
         return null;
     }
 
-    // private static int SPECIFIC_CLUSTER_ID = -1;
-    private static int SPECIFIC_CLUSTER_ID = 29;
+    public int getClusterDBCount()
+    {
+        // deletion bridges formed between 2 SVs both in this cluster
+        int dbCount = 0;
+
+        for(final SvVarData var : mSVs)
+        {
+            if(var.isReplicatedSv())
+                continue;
+
+            // any DEL with nothing in between its breakends is itself a deletion bridge
+            if(var.type() == DEL && var.getNearestSvRelation() == RELATION_TYPE_NEIGHBOUR)
+            {
+                dbCount += 2;
+                continue;
+            }
+
+            for(int be = SVI_START; be <= SVI_END; ++be)
+            {
+                if (be == SVI_END && var.isNullBreakend())
+                    continue;
+
+                boolean useStart = isStart(be);
+
+                if(var.getDBLink(useStart) != null)
+                {
+                    if(var.getDBLink(useStart).getOtherSV(var).getCluster() == this)
+                        ++dbCount;
+                }
+            }
+        }
+
+        return dbCount / 2;
+    }
+
+    public void setArmData(int origins, int fragments) { mOriginArms = origins; mFragmentArms = fragments; }
+    public int getOriginArms() { return mOriginArms; }
+    public int getFragmentArms() { return mFragmentArms; }
+
+    private static int SPECIFIC_CLUSTER_ID = -1;
+    // private static int SPECIFIC_CLUSTER_ID = 58;
 
     public static boolean isSpecificCluster(final SvCluster cluster)
     {

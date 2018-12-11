@@ -16,13 +16,13 @@ import org.apache.logging.log4j.Logger;
 public class FragileSiteAnnotator {
 
     private List<GenomeRegion> mFragileSites;
-    private List<GenomeRegion> mIdentifiedFragileSites;
+    private List<GenomeRegion> mIdentifiedFragileSites; // not used any more
 
     public static final String KNOWN_FS = "true";
-    public static final String IDENTIFIED_FS = "ident";
     public static final String NO_FS = "false";
 
     private static final String CSV_FS_TYPE_IDENTIFIED = "Identified";
+    private static int CSV_REQUIRED_FIELDS = 4;
 
     private static final Logger LOGGER = LogManager.getLogger(FragileSiteAnnotator.class);
 
@@ -50,21 +50,14 @@ public class FragileSiteAnnotator {
                 // parse CSV data
                 String[] items = line.split(",");
 
-                if(items.length < 7)
+                if(items.length < CSV_REQUIRED_FIELDS)
                     continue;
 
                 final GenomeRegion genomeRegion = GenomeRegionFactory.create(items[0], Long.parseLong(items[1]), Long.parseLong(items[2]));
-
-                if(items[6].equals(CSV_FS_TYPE_IDENTIFIED))
-                    mIdentifiedFragileSites.add(genomeRegion);
-                else
-                    mFragileSites.add(genomeRegion);
-
-//                LOGGER.debug("loaded fragile site: chr({}) pos({}-{})",
-//                        genomeRegion.chromosome(), genomeRegion.start(), genomeRegion.end());
+                mFragileSites.add(genomeRegion);
             }
 
-            LOGGER.debug("loaded {} known fragile site records, {} identified", mFragileSites.size(), mIdentifiedFragileSites.size());
+            LOGGER.debug("loaded {} known fragile site records", mFragileSites.size());
         }
         catch(IOException exception)
         {
@@ -85,17 +78,6 @@ public class FragileSiteAnnotator {
                 LOGGER.debug("var({}) found in known fragile site",
                         svData.posId(), genomeRegion.chromosome(), genomeRegion.start(), genomeRegion.end());
                 return KNOWN_FS;
-            }
-        }
-
-        for(final GenomeRegion genomeRegion : mIdentifiedFragileSites)
-        {
-            if(genomeRegion.chromosome().equals(svData.chromosome(useStart))
-            && genomeRegion.start() <= svData.position(useStart) && genomeRegion.end() >= svData.position(useStart))
-            {
-                LOGGER.debug("var({}) found in identified fragile site",
-                        svData.posId(), genomeRegion.chromosome(), genomeRegion.start(), genomeRegion.end());
-                return IDENTIFIED_FS;
             }
         }
 

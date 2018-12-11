@@ -366,7 +366,7 @@ public class BucketAnalyser {
             }
             else
             {
-                LOGGER.error("sample({}) cannot find external data");
+                LOGGER.error("sample({}) cannot find external data", sample.getSampleName());
                 mHasErrors = true;
             }
 
@@ -1638,7 +1638,6 @@ public class BucketAnalyser {
 
             SigOptimiser sigOptim = new SigOptimiser(bucketGroup.getId(), samplesList, null, bucketGroup.getBucketRatios(), candidateBuckets);
             sigOptim.setLogVerbose(false);
-            // sigOptim.setUseRatioMethod(mUseRatioRanges);
 
             boolean isValid = sigOptim.optimiseBucketRatios(true, false);
 
