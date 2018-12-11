@@ -31,6 +31,7 @@ import htsjdk.variant.vcf.VCFFileReader;
 import htsjdk.variant.vcf.VCFHeader;
 import htsjdk.variant.vcf.VCFHeaderLineType;
 import htsjdk.variant.vcf.VCFInfoHeaderLine;
+import htsjdk.variant.vcf.VCFFilterHeaderLine;
 
 @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
 class PurpleStructuralVariantSupplier {
