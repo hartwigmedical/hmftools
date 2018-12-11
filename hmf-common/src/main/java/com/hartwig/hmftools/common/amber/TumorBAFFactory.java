@@ -1,18 +1,17 @@
 package com.hartwig.hmftools.common.amber;
 
+import static com.hartwig.hmftools.common.amber.NormalBAFFactory.getBaseQuality;
 import static com.hartwig.hmftools.common.amber.NormalBAFFactory.indel;
-
-import com.hartwig.hmftools.common.sam.SAMRecords;
 
 import org.jetbrains.annotations.NotNull;
 
 import htsjdk.samtools.SAMRecord;
 
-public class TumorBAFFactory {
+class TumorBAFFactory {
 
     private final int minBaseQuality;
 
-    public TumorBAFFactory(final int minBaseQuality) {
+    TumorBAFFactory(final int minBaseQuality) {
         this.minBaseQuality = minBaseQuality;
     }
 
@@ -31,16 +30,15 @@ public class TumorBAFFactory {
                 .setTumorAltSupport(0);
     }
 
+
     @NotNull
     public ModifiableTumorBAF addEvidence(@NotNull final ModifiableTumorBAF evidence, @NotNull final SAMRecord samRecord) {
-        int bafPosition = (int) evidence.position();
-
-        int readPosition = samRecord.getReadPositionAtReferencePosition((int) evidence.position());
-        if (readPosition != 0) {
-            int quality = SAMRecords.getBaseQuality(samRecord, readPosition);
-            if (quality >= minBaseQuality) {
-
-                evidence.setTumorReadDepth(evidence.tumorReadDepth() + 1);
+        int quality = getBaseQuality(evidence, samRecord);
+        if (quality >= minBaseQuality) {
+            evidence.setTumorReadDepth(evidence.tumorReadDepth() + 1);
+            int bafPosition = (int) evidence.position();
+            int readPosition = samRecord.getReadPositionAtReferencePosition(bafPosition);
+            if (readPosition != 0) {
                 if (!indel(bafPosition, readPosition, samRecord)) {
                     final String base = String.valueOf(samRecord.getReadString().charAt(readPosition - 1));
                     if (base.equals(evidence.ref())) {

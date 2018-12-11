@@ -2,6 +2,8 @@ package com.hartwig.hmftools.amber;
 
 import java.util.StringJoiner;
 
+import com.hartwig.hmftools.common.numeric.Doubles;
+
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
@@ -46,11 +48,11 @@ public interface AmberConfig {
         final Options options = new Options();
         options.addOption(THREADS, true, "Number of threads [" + DEFAULT_THREADS + "]");
         options.addOption(REFERENCE, true, "Name of reference sample");
-        options.addOption(REFERENCE_BAM, true, "Reference bam file");
+        options.addOption(REFERENCE_BAM, true, "Path to reference bam file");
         options.addOption(TUMOR, true, "Name of tumor sample");
-        options.addOption(TUMOR_BAM, true, "Tumor bam file");
+        options.addOption(TUMOR_BAM, true, "Path to tumor bam file");
         options.addOption(OUTPUT_DIR, true, "Output directory");
-        options.addOption(BED_FILE, true, "Baf locations bed file");
+        options.addOption(BED_FILE, true, "Path to BAF locations bed file");
         options.addOption(REF_GENOME, true, "Path to the ref genome fasta file");
         options.addOption(MIN_BASE_QUALITY, true, "Minimum base quality for a base to be considered [" + DEFAULT_MIN_BASE_QUALITY + "]");
         options.addOption(MIN_MAPPING_QUALITY,
@@ -137,7 +139,9 @@ public interface AmberConfig {
     static double defaultDoubleValue(@NotNull final CommandLine cmd, @NotNull final String opt, final double defaultValue) {
         if (cmd.hasOption(opt)) {
             final double result = Double.valueOf(cmd.getOptionValue(opt));
-            LOGGER.info("Using non default value {} for parameter {}", result, opt);
+            if (!Doubles.equal(result, defaultValue)) {
+                LOGGER.info("Using non default value {} for parameter {}", result, opt);
+            }
             return result;
         }
 
@@ -147,7 +151,9 @@ public interface AmberConfig {
     static int defaultIntValue(@NotNull final CommandLine cmd, @NotNull final String opt, final int defaultValue) {
         if (cmd.hasOption(opt)) {
             final int result = Integer.valueOf(cmd.getOptionValue(opt));
-            LOGGER.info("Using non default value {} for parameter {}", result, opt);
+            if (result != defaultValue) {
+                LOGGER.info("Using non default value {} for parameter {}", result, opt);
+            }
             return result;
         }
 
@@ -163,6 +169,5 @@ public interface AmberConfig {
         }
         return value;
     }
-
 
 }
