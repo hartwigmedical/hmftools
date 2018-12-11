@@ -22,6 +22,9 @@ import com.google.common.collect.Multimap;
 import com.google.common.collect.SortedSetMultimap;
 import com.google.common.primitives.Doubles;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import com.hartwig.hmftools.common.amber.AmberVCF;
+import com.hartwig.hmftools.common.amber.NormalDepthFilter;
+import com.hartwig.hmftools.common.amber.NormalHetrozygousFilter;
 import com.hartwig.hmftools.common.amber.AmberBAF;
 import com.hartwig.hmftools.common.amber.AmberBAFFile;
 import com.hartwig.hmftools.common.amber.ImmutableAmberBAF;
@@ -173,9 +176,9 @@ public class AmberApplicationV2 implements AutoCloseable {
         getFuture(futures).forEach(x -> normalEvidence.putAll(HumanChromosome.fromString(x.contig()), x.evidence()));
 
         final ListMultimap<Chromosome, NormalBAF> normalBafs = ArrayListMultimap.create();
-        final Predicate<NormalBAF> depthFilter = new DepthFilter(config.minDepthPercent(), config.maxDepthPercent(), normalEvidence);
+        final Predicate<NormalBAF> depthFilter = new NormalDepthFilter(config.minDepthPercent(), config.maxDepthPercent(), normalEvidence);
         final RefEnricher refEnricher = new RefEnricher(config.refGenomePath());
-        final Predicate<NormalBAF> hetFilter = new HetrozygousFilter(config.minHetAfPercent(), config.maxHetAfPercent());
+        final Predicate<NormalBAF> hetFilter = new NormalHetrozygousFilter(config.minHetAfPercent(), config.maxHetAfPercent());
         for (final Chromosome chromosome : normalEvidence.keySet()) {
             final List<NormalBAF> normalHetLocations = normalEvidence.get(chromosome)
                     .stream()

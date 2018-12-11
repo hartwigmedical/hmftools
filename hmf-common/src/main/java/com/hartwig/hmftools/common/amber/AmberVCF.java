@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.amber;
+package com.hartwig.hmftools.common.amber;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -23,7 +23,7 @@ import htsjdk.variant.vcf.VCFHeader;
 import htsjdk.variant.vcf.VCFHeaderLineCount;
 import htsjdk.variant.vcf.VCFHeaderLineType;
 
-class AmberVCF {
+public class AmberVCF {
 
     private final static String PASS = "PASS";
 
@@ -31,7 +31,7 @@ class AmberVCF {
     private final String normalSample;
     private final VCFHeader header;
 
-    AmberVCF(@NotNull final String normalSample, @NotNull final String tumorSample) {
+    public AmberVCF(@NotNull final String normalSample, @NotNull final String tumorSample) {
         this.tumorSample = tumorSample;
         this.normalSample = normalSample;
 
@@ -42,7 +42,7 @@ class AmberVCF {
         header.addMetaDataLine(new VCFFilterHeaderLine(PASS, "All filters passed"));
     }
 
-    void write(@NotNull final String filename, @NotNull final Collection<TumorBAF> evidence) {
+    public void write(@NotNull final String filename, @NotNull final Collection<TumorBAF> evidence) {
         final List<TumorBAF> list = Lists.newArrayList(evidence);
         Collections.sort(list);
 

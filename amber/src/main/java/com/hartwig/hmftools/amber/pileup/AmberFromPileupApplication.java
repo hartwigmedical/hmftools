@@ -1,9 +1,10 @@
-package com.hartwig.hmftools.amber;
+package com.hartwig.hmftools.amber.pileup;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
+import com.hartwig.hmftools.amber.BAFSegmentation;
 import com.hartwig.hmftools.common.amber.AmberBAF;
 import com.hartwig.hmftools.common.amber.AmberBAFFile;
 import com.hartwig.hmftools.common.amber.qc.AmberQC;

@@ -1,9 +1,9 @@
-package com.hartwig.hmftools.amber;
+package com.hartwig.hmftools.amber.pileup;
 
-import static com.hartwig.hmftools.amber.AmberFromPileupApplication.DEFAULT_MAX_DEPTH_PERCENTAGE;
-import static com.hartwig.hmftools.amber.AmberFromPileupApplication.DEFAULT_MAX_HET_AF_PERCENTAGE;
-import static com.hartwig.hmftools.amber.AmberFromPileupApplication.DEFAULT_MIN_DEPTH_PERCENTAGE;
-import static com.hartwig.hmftools.amber.AmberFromPileupApplication.DEFAULT_MIN_HET_AF_PERCENTAGE;
+import static com.hartwig.hmftools.amber.pileup.AmberFromPileupApplication.DEFAULT_MAX_DEPTH_PERCENTAGE;
+import static com.hartwig.hmftools.amber.pileup.AmberFromPileupApplication.DEFAULT_MAX_HET_AF_PERCENTAGE;
+import static com.hartwig.hmftools.amber.pileup.AmberFromPileupApplication.DEFAULT_MIN_DEPTH_PERCENTAGE;
+import static com.hartwig.hmftools.amber.pileup.AmberFromPileupApplication.DEFAULT_MIN_HET_AF_PERCENTAGE;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
@@ -11,6 +11,7 @@ import static org.junit.Assert.assertNotEquals;
 import java.util.Collections;
 import java.util.List;
 
+import com.hartwig.hmftools.amber.pileup.BAFFactory;
 import com.hartwig.hmftools.common.amber.AmberBAF;
 import com.hartwig.hmftools.common.pileup.Pileup;
 import com.hartwig.hmftools.common.pileup.PileupFile;

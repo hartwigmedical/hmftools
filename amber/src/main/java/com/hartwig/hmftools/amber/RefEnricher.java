@@ -14,7 +14,7 @@ public class RefEnricher implements AutoCloseable {
 
     private final IndexedFastaSequenceFile indexedFastaSequenceFile;
 
-    public RefEnricher(@NotNull final String refGenomePath) throws FileNotFoundException {
+    RefEnricher(@NotNull final String refGenomePath) throws FileNotFoundException {
         indexedFastaSequenceFile = new IndexedFastaSequenceFile(new File(refGenomePath));
     }
 

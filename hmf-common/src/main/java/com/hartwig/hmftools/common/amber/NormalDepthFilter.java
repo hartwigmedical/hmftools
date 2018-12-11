@@ -1,26 +1,24 @@
-package com.hartwig.hmftools.amber;
+package com.hartwig.hmftools.common.amber;
 
 import java.util.List;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Multimap;
-import com.hartwig.hmftools.common.amber.ModifiableNormalBAF;
-import com.hartwig.hmftools.common.amber.NormalBAF;
 import com.hartwig.hmftools.common.chromosome.Chromosome;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-public class DepthFilter implements Predicate<NormalBAF> {
+public class NormalDepthFilter implements Predicate<NormalBAF> {
 
-    private static final Logger LOGGER = LogManager.getLogger(DepthFilter.class);
+    private static final Logger LOGGER = LogManager.getLogger(NormalDepthFilter.class);
 
     private final int minDepth;
     private final int maxDepth;
 
-    DepthFilter(final double minDepthPercentage, final double maxDepthPercentage,
+    public NormalDepthFilter(final double minDepthPercentage, final double maxDepthPercentage,
             @NotNull final Multimap<Chromosome, ModifiableNormalBAF> evidence) {
         int medianDepth = medianDepth(evidence);
         minDepth = (int) Math.round(medianDepth * minDepthPercentage);

@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.amber;
+package com.hartwig.hmftools.amber.pileup;
 
 import java.util.List;
 import java.util.stream.Collectors;
