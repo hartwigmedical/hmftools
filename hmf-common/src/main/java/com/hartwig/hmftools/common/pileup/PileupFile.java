@@ -87,10 +87,6 @@ public final class PileupFile {
             }
         }
 
-        if (expectedReadCount != actualReadCount) {
-            System.out.println(line);
-        }
-
         return ImmutablePileup.builder()
                 .chromosome(values[0])
                 .position(Long.valueOf(values[1]))
