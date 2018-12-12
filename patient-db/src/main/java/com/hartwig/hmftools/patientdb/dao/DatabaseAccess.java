@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Stream;
 
+import com.hartwig.hmftools.common.actionability.ClinicalTrial;
 import com.hartwig.hmftools.common.actionability.EvidenceItem;
 import com.hartwig.hmftools.common.chord.ChordAnalysis;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
@@ -213,6 +214,11 @@ public class DatabaseAccess {
     }
 
     @NotNull
+    public List<EnrichedSomaticVariant> readSomaticVariants(@NotNull final String sample) {
+        return somaticVariantDAO.read(sample);
+    }
+
+    @NotNull
     public List<GeneCopyNumber> readGeneCopynumbers(@NotNull final String sample) {
         return geneCopyNumberDAO.read(sample);
     }
@@ -248,12 +254,12 @@ public class DatabaseAccess {
         chordDAO.writeChord(sample, chordAnalysis);
     }
 
-    public void writeClinicalEvidence (@NotNull String sample, @NotNull Map<GeneCopyNumber, List<EvidenceItem>> evidencePerGeneCopyNumber) {
-        clinicalEvidenceDAO.writeClinicalEvidence(sample);
+    public void writeClinicalEvidence (@NotNull String sample, @NotNull List<EvidenceItem> items) {
+        clinicalEvidenceDAO.writeClinicalEvidence(sample, items);
     }
 
-    public void writeClinicalTrial (@NotNull String sample, @NotNull Map<GeneCopyNumber, List<EvidenceItem>> evidencePerGeneCopyNumber) {
-        clinicalTrialDAO.writeClinicalTrial(sample);
+    public void writeClinicalTrial (@NotNull String sample, @NotNull List<ClinicalTrial> trials) {
+        clinicalTrialDAO.writeClinicalTrial(sample, trials);
     }
 
     public void clearCpctEcrf() {
@@ -322,6 +328,12 @@ public class DatabaseAccess {
 
         LOGGER.info("Deleting structural variant data for sample: " + sample);
         structuralVariantDAO.deleteStructuralVariantsForSample(sample);
+
+        LOGGER.info("Deleting clinical trials for sample: " + sample);
+        clinicalTrialDAO.deleteClinicalTrialForSample(sample);
+
+        LOGGER.info("Deleting evidence items for sample: " + sample);
+        clinicalEvidenceDAO.deleteClinicalEvidenceForSample(sample);
 
         LOGGER.info("All data for sample: " + sample + " is deleted");
     }

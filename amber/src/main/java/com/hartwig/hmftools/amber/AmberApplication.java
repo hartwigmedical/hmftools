@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.amber;
 
-import static com.hartwig.hmftools.amber.AmberConfig.MIN_PARTITION;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.Collections;
@@ -14,7 +12,6 @@ import java.util.concurrent.ThreadFactory;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-import com.google.common.base.Strings;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
@@ -124,20 +121,24 @@ public class AmberApplication implements AutoCloseable {
     @NotNull
     private ListMultimap<Chromosome, TumorBAF> tumor(@NotNull final SamReaderFactory readerFactory,
             @NotNull final ListMultimap<Chromosome, NormalBAF> normalBafs) throws ExecutionException, InterruptedException {
-        final int partitionSize = Math.max(MIN_PARTITION, normalBafs.values().size() / config.threadCount());
+        final int partitionSize = Math.max(config.minPartition(), normalBafs.values().size() / config.threadCount());
 
         LOGGER.info("Processing tumor bam {}", config.tumorBamPath());
+        final AmberTaskCompletion completion = new AmberTaskCompletion();
+
         final List<Future<TumorBAFEvidence>> futures = Lists.newArrayList();
         for (final Chromosome chromosome : normalBafs.keySet()) {
             for (final List<NormalBAF> chromosomeBafPoints : Lists.partition(normalBafs.get(chromosome), partitionSize)) {
                 if (!chromosomeBafPoints.isEmpty()) {
                     final String contig = chromosomeBafPoints.get(0).chromosome();
-                    futures.add(executorService.submit(new TumorBAFEvidence(config.minMappingQuality(),
+                    final TumorBAFEvidence evidence = new TumorBAFEvidence(config.typicalReadDepth(),
+                            config.minMappingQuality(),
                             config.minBaseQuality(),
                             contig,
                             config.tumorBamPath(),
                             readerFactory,
-                            chromosomeBafPoints)));
+                            chromosomeBafPoints);
+                    futures.add(executorService.submit(completion.task(evidence)));
                 }
             }
         }
@@ -153,19 +154,22 @@ public class AmberApplication implements AutoCloseable {
             throws IOException, InterruptedException, ExecutionException {
         LOGGER.info("Loading bed file {}", config.bedFilePath());
         final SortedSetMultimap<String, GenomeRegion> bedRegionsSortedSet = BEDFileLoader.fromBedFile(config.bedFilePath());
-        final int partitionSize = Math.max(MIN_PARTITION, bedRegionsSortedSet.size() / config.threadCount());
+        final int partitionSize = Math.max(config.minPartition(), bedRegionsSortedSet.size() / config.threadCount());
 
         LOGGER.info("Processing reference bam {}", config.referenceBamPath(), partitionSize);
+        final AmberTaskCompletion completion = new AmberTaskCompletion();
+
         final List<Future<NormalBAFEvidence>> futures = Lists.newArrayList();
         for (final String contig : bedRegionsSortedSet.keySet()) {
             for (final List<GenomeRegion> inner : Lists.partition(Lists.newArrayList(bedRegionsSortedSet.get(contig)), partitionSize)) {
-                final NormalBAFEvidence chromosome = new NormalBAFEvidence(config.minMappingQuality(),
+                final NormalBAFEvidence evidence = new NormalBAFEvidence(config.typicalReadDepth(),
+                        config.minMappingQuality(),
                         config.minBaseQuality(),
                         contig,
                         config.referenceBamPath(),
                         readerFactory,
                         inner);
-                futures.add(executorService.submit(chromosome));
+                futures.add(executorService.submit(completion.task(evidence)));
             }
         }
 
@@ -220,27 +224,10 @@ public class AmberApplication implements AutoCloseable {
     @NotNull
     private static <T> List<T> getFuture(@NotNull final List<Future<T>> futures) throws ExecutionException, InterruptedException {
         final List<T> result = Lists.newArrayList();
-        int complete = 0;
-        double previousPercentComplete = 0;
         for (Future<T> chromosomeBAFEvidenceFuture : futures) {
-            T evidence = chromosomeBAFEvidenceFuture.get();
-            double percentComplete = ((double) ++complete) / futures.size();
-            if (percentComplete > previousPercentComplete + 0.1) {
-                LOGGER.info("{}", complete(percentComplete));
-                previousPercentComplete = percentComplete;
-            }
-            result.add(evidence);
+            result.add(chromosomeBAFEvidenceFuture.get());
         }
         return result;
-    }
-
-    @NotNull
-    private static String complete(double percent) {
-        int roundedPercent = (int) Math.round(percent * 100);
-        int hashCount = Math.min(20, roundedPercent / 5);
-        int gapCount = Math.max(0, 20 - hashCount);
-
-        return "  [" + Strings.repeat("#", hashCount) + Strings.repeat(" ", gapCount) + "] " + roundedPercent + "% complete";
     }
 
     @Override

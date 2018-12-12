@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.common.amber;
 
 import java.io.File;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
@@ -30,14 +29,14 @@ public class TumorBAFEvidence implements Callable<TumorBAFEvidence> {
     private final GenomePositionSelector<ModifiableTumorBAF> selector;
     private final SAMSupplier supplier;
 
-    public TumorBAFEvidence(int minMappingQuality, int minBaseQuality, final String contig, final String bamFile,
+    public TumorBAFEvidence(int typicalReadDepth, int minMappingQuality, int minBaseQuality, final String contig, final String bamFile,
             final SamReaderFactory samReaderFactory, final List<NormalBAF> normalBafs) {
         this.bafFactory = new TumorBAFFactory(minBaseQuality);
         this.contig = contig;
         this.bamFile = bamFile;
         this.samReaderFactory = samReaderFactory;
 
-        final GenomeRegionBuilder builder = new GenomeRegionBuilder(contig, 1000);
+        final GenomeRegionBuilder builder = new GenomeRegionBuilder(contig, typicalReadDepth);
         for (NormalBAF bafRegion : normalBafs) {
             builder.addPosition(bafRegion.position());
         }
