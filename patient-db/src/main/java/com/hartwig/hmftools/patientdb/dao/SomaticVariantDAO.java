@@ -1,16 +1,15 @@
 package com.hartwig.hmftools.patientdb.dao;
 
 import static com.hartwig.hmftools.patientdb.Config.DB_BATCH_INSERT_SIZE;
-import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.GENECOPYNUMBER;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.SOMATICVARIANT;
 
 import java.sql.Timestamp;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.region.GermlineStatus;
 import com.hartwig.hmftools.common.variant.Clonality;
 import com.hartwig.hmftools.common.variant.CodingEffect;
@@ -21,7 +20,6 @@ import com.hartwig.hmftools.common.variant.VariantType;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.jooq.DSLContext;
 import org.jooq.InsertValuesStepN;
 import org.jooq.Record;
@@ -41,6 +39,8 @@ class SomaticVariantDAO {
         List<EnrichedSomaticVariant> variants = Lists.newArrayList();
 
         final Result<Record> result = context.select().from(SOMATICVARIANT).where(SOMATICVARIANT.SAMPLEID.eq(sample)).fetch();
+        List<String> emptyList = new ArrayList<>();
+        emptyList.add("");
 
         for (Record record : result) {
             variants.add(ImmutableEnrichedSomaticVariant.builder()
@@ -52,6 +52,7 @@ class SomaticVariantDAO {
                     .alt(record.getValue(SOMATICVARIANT.ALT))
                     .gene(record.getValue(SOMATICVARIANT.GENE))
                     .genesEffected(record.getValue(SOMATICVARIANT.GENESEFFECTED))
+                    .cosmicIDs(emptyList)
                     .dbsnpID(record.getValue(SOMATICVARIANT.DBSNPID))
                     .worstEffect(record.getValue(SOMATICVARIANT.WORSTEFFECT))
                     .worstCodingEffect(CodingEffect.valueOf(record.getValue(SOMATICVARIANT.WORSTCODINGEFFECT)))
@@ -63,11 +64,13 @@ class SomaticVariantDAO {
                     .totalReadCount(record.getValue(SOMATICVARIANT.TOTALREADCOUNT))
                     .adjustedCopyNumber(record.getValue(SOMATICVARIANT.ADJUSTEDCOPYNUMBER))
                     .adjustedVAF(record.getValue(SOMATICVARIANT.ADJUSTEDVAF))
+                    .highConfidenceRegion(false)
                     .trinucleotideContext(record.getValue(SOMATICVARIANT.TRINUCLEOTIDECONTEXT))
                     .microhomology(record.getValue(SOMATICVARIANT.MICROHOMOLOGY))
                     .repeatSequence(record.getValue(SOMATICVARIANT.REPEATSEQUENCE))
                     .repeatCount(record.getValue(SOMATICVARIANT.REPEATCOUNT))
                     .clonality(Clonality.valueOf(record.getValue(SOMATICVARIANT.CLONALITY)))
+                    .biallelic(false)
                     .hotspot(Hotspot.valueOf(record.getValue(SOMATICVARIANT.HOTSPOT)))
                     .mappability(record.getValue(SOMATICVARIANT.MAPPABILITY))
                     .germlineStatus(GermlineStatus.valueOf(record.getValue(SOMATICVARIANT.GERMLINESTATUS)))
