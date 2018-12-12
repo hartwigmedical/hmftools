@@ -85,10 +85,12 @@ public class LoadEvicenceData {
                 final List<ClinicalTrial> allClinicalTrials = extractAllTrials(AllEvidenceItems);
 
                 LOGGER.info("Writing evidence items of gene copy numbers to DB");
+                LOGGER.info("Counts of all evidence items: " + AllEvidenceItems.size());
                 dbWriter.writeClinicalEvidence(sample, AllEvidenceItems);
                 LOGGER.info("Writing clinical trials of gene copy numbers to DB");
+                LOGGER.info("Counts of all clinical trials: " + allClinicalTrials.size());
                 dbWriter.writeClinicalTrial(sample, allClinicalTrials);
-////
+
                 LOGGER.info("Reading gene fusions from DB");
 //                LOGGER.info("Writing evidence items of gene fusions to DB");
 //                dbWriter.writeClinicalEvidence(sample);
