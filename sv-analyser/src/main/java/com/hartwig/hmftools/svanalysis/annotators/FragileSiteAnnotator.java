@@ -16,12 +16,10 @@ import org.apache.logging.log4j.Logger;
 public class FragileSiteAnnotator {
 
     private List<GenomeRegion> mFragileSites;
-    private List<GenomeRegion> mIdentifiedFragileSites; // not used any more
 
     public static final String KNOWN_FS = "true";
     public static final String NO_FS = "false";
 
-    private static final String CSV_FS_TYPE_IDENTIFIED = "Identified";
     private static int CSV_REQUIRED_FIELDS = 4;
 
     private static final Logger LOGGER = LogManager.getLogger(FragileSiteAnnotator.class);
@@ -29,7 +27,6 @@ public class FragileSiteAnnotator {
     public FragileSiteAnnotator()
     {
         mFragileSites = Lists.newArrayList();
-        mIdentifiedFragileSites = Lists.newArrayList();
     }
 
     public void loadFragileSitesFile(final String filename)

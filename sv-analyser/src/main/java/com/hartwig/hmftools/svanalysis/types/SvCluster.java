@@ -493,7 +493,15 @@ public class SvCluster
         return mConsistencyCount;
     }
 
-    public void setResolved(boolean toggle, final String type) { mIsResolved = toggle; mResolvedType = type; }
+    public void setResolved(boolean toggle, final String type)
+    {
+        mIsResolved = toggle;
+        mResolvedType = type;
+
+        if(mDesc.isEmpty())
+            mDesc = getClusterTypesAsString();
+    }
+
     public boolean isResolved() { return mIsResolved; }
     public final String getResolvedType() { return mResolvedType; }
 

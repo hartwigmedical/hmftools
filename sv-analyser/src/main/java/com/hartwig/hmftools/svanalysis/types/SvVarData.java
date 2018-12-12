@@ -16,6 +16,7 @@ import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.ASSEMBLY_MATCH_
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.variant.structural.EnrichedStructuralVariant;
 import com.hartwig.hmftools.common.variant.structural.ImmutableStructuralVariantData;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantData;
@@ -49,10 +50,6 @@ public class SvVarData
     private boolean mDupBEStart;
     private boolean mDupBEEnd;
 
-    private String mTransType;
-    private int mTransLength;
-    private String mTransSvLinks;
-
     private SvCluster mCluster;
     private String mClusterReason;
 
@@ -72,11 +69,7 @@ public class SvVarData
     private SvLinkedPair mStartDB; // deletion bridge formed from this breakend to another
     private SvLinkedPair mEndDB;
     private List<String> mStartTempInsertionAssemblies;
-    private List<String> mStartDsbAssemblies;
-    private List<String> mStartOtherAssemblies;
     private List<String> mEndTempInsertionAssemblies;
-    private List<String> mEndDsbAssemblies;
-    private List<String> mEndOtherAssemblies;
     private String mStartAssemblyMatchType;
     private String mEndAssemblyMatchType;
     private boolean mIsReplicatedSv;
@@ -85,6 +78,9 @@ public class SvVarData
 
     List<GeneAnnotation> mGenesStart;
     List<GeneAnnotation> mGenesEnd;
+
+    DriverCatalog mDriverGeneStart;
+    DriverCatalog mDriverGeneEnd;
 
     public static String ASSEMBLY_TYPE_DSB = "dsb";
     public static String ASSEMBLY_TYPE_TI = "asm";
@@ -132,10 +128,6 @@ public class SvVarData
         mDupBEStart = false;
         mDupBEEnd = false;
 
-        mTransType = "";
-        mTransLength = 0;
-        mTransSvLinks = "";
-
         mClusterReason = "";
         mCluster = null;
 
@@ -153,6 +145,9 @@ public class SvVarData
 
         mGenesStart = Lists.newArrayList();
         mGenesEnd = Lists.newArrayList();
+
+        mDriverGeneStart = null;
+        mDriverGeneEnd = null;
     }
 
     public static SvVarData from(final EnrichedStructuralVariant enrichedSV)
@@ -447,17 +442,6 @@ public class SvVarData
 
     public static boolean isStart(int svIter) { return svIter == SVI_START; }
 
-    public String getTransType() { return mTransType; }
-    public int getTransLength() { return mTransLength; }
-    public String getTransSvLinks() { return mTransSvLinks; }
-
-    public void setTransData(String transType, int transLength, final String transSvLinks)
-    {
-        mTransType = transType;
-        mTransLength = transLength;
-        mTransSvLinks = transSvLinks;
-    }
-
     public String getAssemblyData(boolean useStart) { return useStart ? mAssemblyStartData : mAssemblyEndData; }
     public void setAssemblyData(boolean useStart, final String data)
     {
@@ -468,8 +452,6 @@ public class SvVarData
     }
 
     public List<String> getTempInsertionAssemblies(boolean useStart) { return useStart ? mStartTempInsertionAssemblies : mEndTempInsertionAssemblies; }
-    public List<String> getDsbAssemblies(boolean useStart) { return useStart ? mStartDsbAssemblies : mEndDsbAssemblies; }
-    public List<String> getOtherAssemblies(boolean useStart) { return useStart ? mStartOtherAssemblies : mEndOtherAssemblies; }
 
     public final List<GeneAnnotation> getGenesList(boolean useStart) { return useStart ? mGenesStart : mGenesEnd; }
     public void setGenesList(final List<GeneAnnotation> genesList, boolean isStart)
@@ -478,6 +460,15 @@ public class SvVarData
             mGenesStart.addAll(genesList);
         else
             mGenesEnd.addAll(genesList);
+    }
+
+    public final DriverCatalog getDriverGene(boolean useStart) { return useStart ? mDriverGeneStart : mDriverGeneEnd; }
+    public void setDriveGene(final DriverCatalog gene, boolean isStart)
+    {
+        if(isStart)
+            mDriverGeneStart = gene;
+        else
+            mDriverGeneEnd = gene;
     }
 
     public final String getAssemblyMatchType(boolean useStart) { return useStart ? mStartAssemblyMatchType : mEndAssemblyMatchType; }
@@ -494,11 +485,7 @@ public class SvVarData
     private void setAssemblyData()
     {
         mStartTempInsertionAssemblies = Lists.newArrayList();
-        mStartDsbAssemblies = Lists.newArrayList();
-        mStartOtherAssemblies = Lists.newArrayList();
         mEndTempInsertionAssemblies = Lists.newArrayList();
-        mEndDsbAssemblies = Lists.newArrayList();
-        mEndOtherAssemblies = Lists.newArrayList();
         mAssemblyStartData = "";
         mAssemblyEndData = "";
         mStartAssemblyMatchType = ASSEMBLY_MATCH_NONE;
@@ -514,10 +501,6 @@ public class SvVarData
             {
                 if(assemblyList[i].contains(ASSEMBLY_TYPE_TI))
                     mStartTempInsertionAssemblies.add(assemblyList[i]);
-                else if(assemblyList[i].contains(ASSEMBLY_TYPE_DSB))
-                    mStartDsbAssemblies.add(assemblyList[i]);
-                else
-                    mStartOtherAssemblies.add(assemblyList[i]);
             }
         }
 
@@ -530,10 +513,6 @@ public class SvVarData
             {
                 if(assemblyList[i].contains(ASSEMBLY_TYPE_TI))
                     mEndTempInsertionAssemblies.add(assemblyList[i]);
-                else if(assemblyList[i].contains(ASSEMBLY_TYPE_DSB))
-                    mEndDsbAssemblies.add(assemblyList[i]);
-                else
-                    mEndOtherAssemblies.add(assemblyList[i]);
             }
         }
     }

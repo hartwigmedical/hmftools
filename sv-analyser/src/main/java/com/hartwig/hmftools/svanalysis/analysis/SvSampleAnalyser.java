@@ -26,6 +26,7 @@ import com.hartwig.hmftools.svanalysis.types.SvBreakend;
 import com.hartwig.hmftools.svanalysis.types.SvChain;
 import com.hartwig.hmftools.svanalysis.types.SvCluster;
 import com.hartwig.hmftools.common.variant.structural.annotation.SvPON;
+import com.hartwig.hmftools.svanalysis.types.SvLOH;
 import com.hartwig.hmftools.svanalysis.types.SvVarData;
 import com.hartwig.hmftools.svanalysis.types.SvLinkedPair;
 
@@ -60,7 +61,6 @@ public class SvSampleAnalyser {
     FragileSiteAnnotator mFragileSiteAnnotator;
     LineElementAnnotator mLineElementAnnotator;
     SvClusteringMethods mClusteringMethods;
-    CNAnalyser mCnAnalyser;
 
     PerformanceCounter mPerfCounter;
     PerformanceCounter mPc1;
@@ -90,14 +90,6 @@ public class SvSampleAnalyser {
         mLineElementAnnotator = new LineElementAnnotator();
         mLineElementAnnotator.loadLineElementsFile(mConfig.LineElementFile);
 
-        mCnAnalyser = null;
-        if(!mConfig.LOHDataFile.isEmpty())
-        {
-            mCnAnalyser = new CNAnalyser(mConfig.OutputCsvPath, null);
-            mCnAnalyser.loadLOHFromCSV(mConfig.LOHDataFile, "");
-            mClusteringMethods.setSampleLohData(mCnAnalyser.getSampleLohData());
-        }
-
         mPerfCounter = new PerformanceCounter("Total");
 
         mPc1 = new PerformanceCounter("Annotate&Filter");
@@ -113,6 +105,7 @@ public class SvSampleAnalyser {
 
     public final List<SvCluster> getClusters() { return mAnalyser.getClusters(); }
     public final Map<String, List<SvBreakend>> getChrBreakendMap() { return mClusteringMethods.getChrBreakendMap(); }
+    public void setSampleLohData(final Map<String, List<SvLOH>> data) { mClusteringMethods.setSampleLohData(data); }
 
     private void clearState()
     {

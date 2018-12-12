@@ -226,6 +226,11 @@ public class DatabaseAccess {
     }
 
     @NotNull
+    public final List<DriverCatalog> readDriverCatalog(@NotNull final String sample) {
+        return driverCatalogDAO.readDriverData(sample);
+    }
+
+    @NotNull
     public List<PurpleCopyNumber> readCopynumbers(@NotNull final String sample) {
         return copyNumberDAO.read(sample);
     }

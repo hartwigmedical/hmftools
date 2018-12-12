@@ -455,7 +455,7 @@ public class SvClusteringMethods {
 
         for (final SvVarData var : cluster.getSVs())
         {
-            if(var.type() == INV)
+            if(var.type() == INV && !var.isCrossArm())
             {
                 cluster.registerInversion(var);
             }
@@ -484,7 +484,7 @@ public class SvClusteringMethods {
         {
             for(final SvVarData var : cluster.getSVs())
             {
-                if((var.type() == DUP || var.type() == DEL) && var.length() >= mDelDupCutoffLength)
+                if((var.type() == DUP || var.type() == DEL) && var.length() >= mDelDupCutoffLength && !var.isCrossArm())
                 {
                     cluster.registerLongDelDup(var);
                 }

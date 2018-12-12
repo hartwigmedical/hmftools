@@ -14,6 +14,7 @@ import com.hartwig.hmftools.svanalysis.analysis.CNAnalyser;
 import com.hartwig.hmftools.svanalysis.analysis.FusionDisruptionAnalyser;
 import com.hartwig.hmftools.svanalysis.analysis.SvaConfig;
 import com.hartwig.hmftools.svanalysis.analysis.SvSampleAnalyser;
+import com.hartwig.hmftools.svanalysis.annotators.DriverGeneAnnotator;
 import com.hartwig.hmftools.svanalysis.types.SvVarData;
 import com.hartwig.hmftools.svannotation.analysis.SvFusionAnalyser;
 
@@ -42,6 +43,7 @@ public class SvAnalyser {
     private static final String LOG_VCF_INSERTS = "log_vcf_inserts";
     private static final String LOG_VCF_MANTA_DATA = "log_vcf_manta_data";
     private static final String LINE_ELEMENT_FILE = "line_element_file";
+    private static final String DRIVERS_CHECK = "check_drivers";
     private static final String COPY_NUMBER_ANALYSIS = "run_cn_analysis";
     private static final String RUN_RESULTS_CHECKER = "run_results_checker";
     private static final String INCLUDE_NONE_SEGMENTS = "incl_none_segments";
@@ -98,8 +100,21 @@ public class SvAnalyser {
 
         if(cmd.hasOption(RUN_SVA))
         {
-            SvaConfig clusteringConfig = new SvaConfig(cmd, tumorSample);
-            SvSampleAnalyser sampleAnalyser = new SvSampleAnalyser(clusteringConfig);
+            SvaConfig svaConfig = new SvaConfig(cmd, tumorSample);
+            SvSampleAnalyser sampleAnalyser = new SvSampleAnalyser(svaConfig);
+
+            DriverGeneAnnotator driverGeneAnnotator = new DriverGeneAnnotator(dbAccess);
+            boolean checkDrivers = cmd.hasOption(DRIVERS_CHECK);
+
+            CNAnalyser cnAnalyser = new CNAnalyser(cmd.getOptionValue(DATA_OUTPUT_PATH), dbAccess);
+            boolean includeNoneSegments = cmd.hasOption(INCLUDE_NONE_SEGMENTS);
+
+            if(!svaConfig.LOHDataFile.isEmpty())
+            {
+                cnAnalyser.loadLOHFromCSV(svaConfig.LOHDataFile, "");
+                sampleAnalyser.setSampleLohData(cnAnalyser.getSampleLohData());
+                driverGeneAnnotator.setSampleLohData(cnAnalyser.getSampleLohData());
+            }
 
             FusionDisruptionAnalyser fusionAnalyser = null;
 
@@ -108,6 +123,7 @@ public class SvAnalyser {
                 fusionAnalyser = new FusionDisruptionAnalyser();
                 fusionAnalyser.loadFusionReferenceData(cmd, cmd.getOptionValue(DATA_OUTPUT_PATH), samplesList.size() > 1);
             }
+
 
             int count = 0;
             for (final String sample : samplesList)
@@ -120,10 +136,8 @@ public class SvAnalyser {
 
                 LOGGER.info("sample({}) processing {} SVs, totalProcessed({})", sample, svVarData.size(), count);
 
-                if (cmd.hasOption(INCLUDE_NONE_SEGMENTS))
+                if (includeNoneSegments)
                 {
-                    CNAnalyser cnAnalyser = new CNAnalyser(cmd.getOptionValue(DATA_OUTPUT_PATH), dbAccess);
-
                     int varCount = svVarData.size();
                     List<StructuralVariantData> noneSegmentSVs = cnAnalyser.loadNoneSegments(sample, varCount + 1);
 
@@ -140,6 +154,9 @@ public class SvAnalyser {
                 sampleAnalyser.loadFromDatabase(sample, svVarData);
 
                 sampleAnalyser.analyse();
+
+                if(checkDrivers)
+                    driverGeneAnnotator.annotateSVs(sample, sampleAnalyser.getClusters(), sampleAnalyser.getChrBreakendMap());
 
                 if(fusionAnalyser != null)
                 {
@@ -232,6 +249,7 @@ public class SvAnalyser {
         options.addOption(LOG_VCF_INSERTS, false, "Read INS from VCF files, write to CSV");
         options.addOption(LOG_VCF_MANTA_DATA, false, "Read extra manta data from VCF files, write to CSV");
         options.addOption(LINE_ELEMENT_FILE, true, "Line Elements file for SVs");
+        options.addOption(DRIVERS_CHECK, false, "Check SVs against drivers catalog");
         options.addOption(COPY_NUMBER_ANALYSIS, false, "Run copy number analysis");
         options.addOption(RUN_RESULTS_CHECKER, false, "Check results vs validation file");
         options.addOption(INCLUDE_NONE_SEGMENTS, false, "Include copy number NONE segments in SV analysis");

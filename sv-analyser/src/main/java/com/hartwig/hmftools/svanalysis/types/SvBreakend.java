@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.svanalysis.types;
 
+import static com.hartwig.hmftools.svanalysis.analysis.CNAnalyser.MIN_LOH_CN;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.makeChrArmStr;
 
 public class SvBreakend {
@@ -44,4 +45,17 @@ public class SvBreakend {
 
         return mSV.posId(mUsesStart);
     }
+
+    public double getCopyNumber(boolean lowSide)
+    {
+        if((mOrientation == 1 && lowSide) || (mOrientation == -1 && !lowSide))
+        {
+            return mSV.copyNumber(mUsesStart);
+        }
+        else
+        {
+            return mSV.copyNumber(mUsesStart) - mSV.copyNumberChange(mUsesStart);
+        }
+    }
+
 }

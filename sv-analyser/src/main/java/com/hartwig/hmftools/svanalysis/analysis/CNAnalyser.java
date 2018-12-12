@@ -69,7 +69,7 @@ public class CNAnalyser {
     private static double CN_CHANGE_MIN = 0.8;
     private static int DB_MAX_LENGTH = 1000;
 
-    private static double MIN_LOH_CN = 0.5;
+    public static double MIN_LOH_CN = 0.5;
 
     public CNAnalyser(final String outputPath, DatabaseAccess dbAccess)
     {
@@ -441,6 +441,9 @@ public class CNAnalyser {
         }
     }
 
+    // private static String SPECIFIC_CHR = "9";
+    private static String SPECIFIC_CHR = "";
+
     private void analyseLOH(final String sampleId, List<SvCNData> cnDataList)
     {
         String currentChr = "";
@@ -469,6 +472,11 @@ public class CNAnalyser {
             boolean newChromosome = currentChr.isEmpty() || (!currentChr.isEmpty() && !cnData.chromosome().equals(currentChr));
             boolean reset = newChromosome;
 
+            if(newChromosome && cnData.chromosome().equals(SPECIFIC_CHR))
+            {
+                LOGGER.debug("spec chr({})", SPECIFIC_CHR);
+            }
+
             if(isLohSection || lohOnStartTelomere)
             {
                 if(minCN >= MIN_LOH_CN || reset)
@@ -476,6 +484,9 @@ public class CNAnalyser {
                     if(lohOnStartTelomere || totalLoss)
                     {
                         // LOH section invalidated
+                        if(lohOnStartTelomere)
+                            writeLOHData(sampleId, currentChr, lohStartCN, cnData, priorCN, lohMinCN, lohSegments);
+
                         lohOnStartTelomere = false;
                         totalLoss = false;
                     }
@@ -530,10 +541,16 @@ public class CNAnalyser {
             if(reset)
             {
                 isLohSection = false;
-                lohOnStartTelomere = newChromosome && (minCN < MIN_LOH_CN); // if true, will persist until the LOH segment is finished, but not record it
+                lohOnStartTelomere = false;
                 lohSegments = 0;
                 lohStartCN = null;
                 totalLoss = false;
+
+                if(newChromosome && (minCN < MIN_LOH_CN))
+                {
+                    lohOnStartTelomere = true;
+                    lohStartCN = cnData;
+                }
 
                 currentChr = cnData.chromosome();
             }
@@ -581,7 +598,7 @@ public class CNAnalyser {
             }
             else
             {
-                // segment has either started and finished on the last (telomere) segement or finished the next chromosome
+                // segment has either started and finished on the last (telomere) segment or finished the next chromosome
                 endData = startData;
                 lohLength = startData.endPos() - startData.startPos() + 1;
             }
