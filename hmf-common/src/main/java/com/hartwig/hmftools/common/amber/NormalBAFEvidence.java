@@ -29,13 +29,13 @@ public class NormalBAFEvidence implements Callable<NormalBAFEvidence> {
     private final NormalBAFFactory bafFactory;
     private final SAMSupplier supplier;
 
-    public NormalBAFEvidence(int minMappingQuality, int minBaseQuality, final String contig, final String bamFile,
+    public NormalBAFEvidence(int typicalReadDepth, int minMappingQuality, int minBaseQuality, final String contig, final String bamFile,
             final SamReaderFactory samReaderFactory, final List<GenomeRegion> bafRegions) {
         this.bafFactory = new NormalBAFFactory(minBaseQuality);
         this.contig = contig;
         this.bamFile = bamFile;
         this.samReaderFactory = samReaderFactory;
-        final GenomeRegionBuilder builder = new GenomeRegionBuilder(contig, 1000);
+        final GenomeRegionBuilder builder = new GenomeRegionBuilder(contig, typicalReadDepth);
         bafRegions.forEach(x -> builder.addPosition(x.start()));
         final List<GenomeRegion> bafRegions1 = builder.build();
 

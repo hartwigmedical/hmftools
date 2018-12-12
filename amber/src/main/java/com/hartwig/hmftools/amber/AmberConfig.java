@@ -19,10 +19,11 @@ public interface AmberConfig {
 
     Logger LOGGER = LogManager.getLogger(AmberConfig.class);
 
-    int MIN_PARTITION = 10000;
     int DEFAULT_THREADS = 1;
     int DEFAULT_MIN_BASE_QUALITY = 13;
+    int DEFAULT_MIN_PARTITION = 10000;
     int DEFAULT_MIN_MAPPING_QUALITY = 1;
+    int DEFAULT_TYPICAL_READ_DEPTH = 151;
     double DEFAULT_MIN_DEPTH_PERCENTAGE = 0.5;
     double DEFAULT_MAX_DEPTH_PERCENTAGE = 1.5;
     double DEFAULT_MIN_HET_AF_PERCENTAGE = 0.4;
@@ -92,6 +93,14 @@ public interface AmberConfig {
     String normal();
 
     String tumor();
+
+    default int typicalReadDepth() {
+        return DEFAULT_TYPICAL_READ_DEPTH;
+    }
+
+    default int minPartition() {
+        return DEFAULT_MIN_PARTITION;
+    }
 
     @NotNull
     static AmberConfig createConfig(@NotNull final CommandLine cmd) throws ParseException {
