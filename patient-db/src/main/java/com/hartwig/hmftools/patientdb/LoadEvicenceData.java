@@ -3,9 +3,17 @@ package com.hartwig.hmftools.patientdb;
 import java.io.File;
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.List;
+import java.util.Map;
 
+import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.actionability.ActionabilityAnalyzer;
+import com.hartwig.hmftools.common.actionability.ClinicalTrial;
+import com.hartwig.hmftools.common.actionability.EvidenceItem;
+import com.hartwig.hmftools.common.actionability.ImmutableClinicalTrial;
 import com.hartwig.hmftools.common.context.ProductionRunContextFactory;
 import com.hartwig.hmftools.common.context.RunContext;
+import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 import org.apache.commons.cli.CommandLine;
@@ -36,6 +44,7 @@ public class LoadEvicenceData {
         final String password = cmd.getOptionValue(DB_PASS);
         final String databaseUrl = cmd.getOptionValue(DB_URL);
         final String runDirectoryPath = cmd.getOptionValue(RUN_DIR);
+        final String knowledgebase_path = cmd.getOptionValue(KNOWLEDGEBASE_PATH);
 
         final DatabaseAccess dbAccess = databaseAccess(cmd);
 
@@ -65,17 +74,20 @@ public class LoadEvicenceData {
 //                dbWriter.writeClinicalTrial(sample);
 
                 LOGGER.info("Reading gene copy from DB");
-//                final List<GeneCopyNumber> geneCopyNumber = dbAccess.readGeneCopynumbers(sample);
-//                LOGGER.info(geneCopyNumber);
-//
-//                ActionabilityAnalyzer actionabilityAnalyzer = ActionabilityAnalyzer.fromKnowledgebase(KNOWLEDGEBASE_PATH);
-//                Map<GeneCopyNumber, List<EvidenceItem>> evidencePerGeneCopyNumber =
-//                        actionabilityAnalyzer.evidenceForCopyNumbers(geneCopyNumber, primaryTumorLocation);
-//
-//                LOGGER.info("Writing evidence items of gene copy numbers to DB");
-//                dbWriter.writeClinicalEvidence(sample, evidencePerGeneCopyNumber);
-//                LOGGER.info("Writing clinical trials of gene copy numbers to DB");
-//                dbWriter.writeClinicalTrial(sample, evidencePerGeneCopyNumber);
+                final List<GeneCopyNumber> geneCopyNumber = dbAccess.readGeneCopynumbers(sample);
+                LOGGER.info(geneCopyNumber);
+
+                ActionabilityAnalyzer actionabilityAnalyzer = ActionabilityAnalyzer.fromKnowledgebase(knowledgebase_path);
+                Map<GeneCopyNumber, List<EvidenceItem>> evidencePerGeneCopyNumber =
+                        actionabilityAnalyzer.evidenceForCopyNumbers(geneCopyNumber, primaryTumorLocation);
+
+                final List<EvidenceItem> AllEvidenceItems = extractAllEvidenceItems(evidencePerGeneCopyNumber);
+                final List<ClinicalTrial> allClinicalTrials = extractAllTrials(AllEvidenceItems);
+
+                LOGGER.info("Writing evidence items of gene copy numbers to DB");
+                dbWriter.writeClinicalEvidence(sample, AllEvidenceItems);
+                LOGGER.info("Writing clinical trials of gene copy numbers to DB");
+                dbWriter.writeClinicalTrial(sample, allClinicalTrials);
 ////
                 LOGGER.info("Reading gene fusions from DB");
 //                LOGGER.info("Writing evidence items of gene fusions to DB");
@@ -85,6 +97,44 @@ public class LoadEvicenceData {
 
             }
         }
+    }
+
+    @NotNull
+    public static List<ClinicalTrial> extractAllTrials(@NotNull List<EvidenceItem> evidenceItems) {
+        List<ClinicalTrial> trials = Lists.newArrayList();
+        for (EvidenceItem evidence : evidenceItems) {
+            if (evidence.source().isTrialSource()) {
+                trials.add(toClinicalTrial(evidence));
+            }
+        }
+        return trials;
+    }
+
+    @NotNull
+    private static ClinicalTrial toClinicalTrial(@NotNull EvidenceItem evidenceItem) {
+        return ImmutableClinicalTrial.builder()
+                .event(evidenceItem.event())
+                .acronym(evidenceItem.drug())
+                .source(evidenceItem.source())
+                .reference(evidenceItem.reference())
+                .isOnLabel(evidenceItem.isOnLabel())
+                .cancerType(evidenceItem.cancerType())
+                .scope(evidenceItem.scope())
+                .build();
+    }
+
+    @NotNull
+    public static List<EvidenceItem> extractAllEvidenceItems(@NotNull Map<?, List<EvidenceItem>> evidenceItemMap) {
+        return toList(evidenceItemMap);
+    }
+
+    @NotNull
+    private static List<EvidenceItem> toList(@NotNull Map<?, List<EvidenceItem>> evidenceItemMap) {
+        List<EvidenceItem> evidenceItemList = Lists.newArrayList();
+        for (List<EvidenceItem> items : evidenceItemMap.values()) {
+            evidenceItemList.addAll(items);
+        }
+        return evidenceItemList;
     }
 
     @NotNull
