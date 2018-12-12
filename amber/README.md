@@ -53,11 +53,12 @@ java -cp -Xmx48G amber.jar com.hartwig.hmftools.amber.AmberApplication \
 ```
 
 ## Performance Characteristics
-Performance numbers were measured with COLO829 data on a 72 core machine. Time is measured in minutes.
+Performance numbers were measured on a 72 core machine using COLO829 data with an average read depth of 35 and 93 in the normal and tumor respectively. Elapsed time is measured in minutes. CPU time is minutes spent in user mode. 
 
 Version | Threads | Elapsed Time| CPU Time 
 ---|---|---|---
-1.7 | 1 | xx | xx | xx | xx%
+1.7 | 1 | 180 | 180 
+1.7 | 64 | 44 | 272 
 2 | 1 | 77 | 83 
 2 | 2 | 43 | 91
 2 | 4 | 22 | 113
