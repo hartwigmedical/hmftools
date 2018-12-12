@@ -14,6 +14,8 @@ import com.hartwig.hmftools.common.actionability.ImmutableClinicalTrial;
 import com.hartwig.hmftools.common.context.ProductionRunContextFactory;
 import com.hartwig.hmftools.common.context.RunContext;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
+import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
+import com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 import org.apache.commons.cli.CommandLine;
@@ -59,6 +61,8 @@ public class LoadEvicenceData {
 
                 RunContext runContext = ProductionRunContextFactory.fromRunDirectory(runDirectory.toPath().toString());
                 final String sample = runContext.tumorSample();
+                ActionabilityAnalyzer actionabilityAnalyzer = ActionabilityAnalyzer.fromKnowledgebase(knowledgebase_path);
+
                 LOGGER.info("sample: " + sample);
 
                 LOGGER.info("Reading clinical Data from DB");
@@ -67,32 +71,44 @@ public class LoadEvicenceData {
                 LOGGER.info(primaryTumorLocation);
 
                 LOGGER.info("Reading somatic variants from DB");
+                final List<EnrichedSomaticVariant> variants = dbAccess.readSomaticVariants(sample);
+                LOGGER.info(variants);
 
-//                LOGGER.info("Writing evidence items of somatic variants to DB");
-//                dbWriter.writeClinicalEvidence(sample);
-//                LOGGER.info("Writing clinical trials of somatic variants to DB");
-//                dbWriter.writeClinicalTrial(sample);
+                Map<EnrichedSomaticVariant, List<EvidenceItem>> evidencePerVariant =
+                        actionabilityAnalyzer.evidenceForSomaticVariants(variants, primaryTumorLocation);
+
+                final List<EvidenceItem> AllEvidenceItemsVariant = extractAllEvidenceItems(evidencePerVariant);
+                final List<ClinicalTrial> allClinicalTrialsVariants = extractAllTrials(AllEvidenceItemsVariant);
+
+                LOGGER.info("Writing evidence items of somatic variants to DB");
+                LOGGER.info("Counts of all evidence items: " + AllEvidenceItemsVariant.size());
+                dbWriter.writeClinicalEvidence(sample, AllEvidenceItemsVariant);
+                LOGGER.info("Writing clinical trials of somatic variants to DB");
+                LOGGER.info("Counts of all clinical trials: " + allClinicalTrialsVariants.size());
+                dbWriter.writeClinicalTrial(sample, allClinicalTrialsVariants);
 
                 LOGGER.info("Reading gene copy from DB");
                 final List<GeneCopyNumber> geneCopyNumber = dbAccess.readGeneCopynumbers(sample);
                 LOGGER.info(geneCopyNumber);
 
-                ActionabilityAnalyzer actionabilityAnalyzer = ActionabilityAnalyzer.fromKnowledgebase(knowledgebase_path);
                 Map<GeneCopyNumber, List<EvidenceItem>> evidencePerGeneCopyNumber =
                         actionabilityAnalyzer.evidenceForCopyNumbers(geneCopyNumber, primaryTumorLocation);
 
-                final List<EvidenceItem> AllEvidenceItems = extractAllEvidenceItems(evidencePerGeneCopyNumber);
-                final List<ClinicalTrial> allClinicalTrials = extractAllTrials(AllEvidenceItems);
+                final List<EvidenceItem> AllEvidenceItemsGeneCopyNumber = extractAllEvidenceItems(evidencePerGeneCopyNumber);
+                final List<ClinicalTrial> allClinicalTrialsGeneCopyNumber = extractAllTrials(AllEvidenceItemsGeneCopyNumber);
 
                 LOGGER.info("Writing evidence items of gene copy numbers to DB");
-                LOGGER.info("Counts of all evidence items: " + AllEvidenceItems.size());
-                dbWriter.writeClinicalEvidence(sample, AllEvidenceItems);
+                LOGGER.info("Counts of all evidence items: " + AllEvidenceItemsGeneCopyNumber.size());
+                dbWriter.writeClinicalEvidence(sample, AllEvidenceItemsGeneCopyNumber);
                 LOGGER.info("Writing clinical trials of gene copy numbers to DB");
-                LOGGER.info("Counts of all clinical trials: " + allClinicalTrials.size());
-                dbWriter.writeClinicalTrial(sample, allClinicalTrials);
+                LOGGER.info("Counts of all clinical trials: " + allClinicalTrialsGeneCopyNumber.size());
+                dbWriter.writeClinicalTrial(sample, allClinicalTrialsGeneCopyNumber);
 
                 LOGGER.info("Reading gene fusions from DB");
-//                LOGGER.info("Writing evidence items of gene fusions to DB");
+//                Map<GeneFusion, List<EvidenceItem>> evidencePerFusion =
+//                        actionabilityAnalyzer.evidenceForFusions(structuralVariantAnalysis.fusions(), primaryTumorLocation);
+
+                //                LOGGER.info("Writing evidence items of gene fusions to DB");
 //                dbWriter.writeClinicalEvidence(sample);
 //                LOGGER.info("Writing clinical trials of gene fusions to DB");
 //                dbWriter.writeClinicalTrial(sample);

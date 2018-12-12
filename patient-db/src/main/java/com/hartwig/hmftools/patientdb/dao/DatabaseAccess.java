@@ -214,6 +214,11 @@ public class DatabaseAccess {
     }
 
     @NotNull
+    public List<EnrichedSomaticVariant> readSomaticVariants(@NotNull final String sample) {
+        return somaticVariantDAO.read(sample);
+    }
+
+    @NotNull
     public List<GeneCopyNumber> readGeneCopynumbers(@NotNull final String sample) {
         return geneCopyNumberDAO.read(sample);
     }

@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.patientdb.dao;
 
 import static com.hartwig.hmftools.patientdb.Config.DB_BATCH_INSERT_SIZE;
+import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.GENECOPYNUMBER;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.SOMATICVARIANT;
 
 import java.sql.Timestamp;
@@ -8,13 +9,23 @@ import java.util.Date;
 import java.util.List;
 
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
+import com.hartwig.hmftools.common.purple.region.GermlineStatus;
+import com.hartwig.hmftools.common.variant.Clonality;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
+import com.hartwig.hmftools.common.variant.Hotspot;
+import com.hartwig.hmftools.common.variant.ImmutableEnrichedSomaticVariant;
+import com.hartwig.hmftools.common.variant.VariantType;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.jooq.DSLContext;
 import org.jooq.InsertValuesStepN;
+import org.jooq.Record;
+import org.jooq.Result;
 
 class SomaticVariantDAO {
 
@@ -23,6 +34,47 @@ class SomaticVariantDAO {
 
     SomaticVariantDAO(@NotNull final DSLContext context) {
         this.context = context;
+    }
+
+    @NotNull
+    public final List<EnrichedSomaticVariant> read(@NotNull final String sample) {
+        List<EnrichedSomaticVariant> variants = Lists.newArrayList();
+
+        final Result<Record> result = context.select().from(SOMATICVARIANT).where(SOMATICVARIANT.SAMPLEID.eq(sample)).fetch();
+
+        for (Record record : result) {
+            variants.add(ImmutableEnrichedSomaticVariant.builder()
+                    .chromosome(record.getValue(SOMATICVARIANT.CHROMOSOME))
+                    .position(record.getValue(SOMATICVARIANT.POSITION))
+                    .filter(record.getValue(SOMATICVARIANT.FILTER))
+                    .type(VariantType.valueOf(record.getValue(SOMATICVARIANT.TYPE)))
+                    .ref(record.getValue(SOMATICVARIANT.REF))
+                    .alt(record.getValue(SOMATICVARIANT.ALT))
+                    .gene(record.getValue(SOMATICVARIANT.GENE))
+                    .genesEffected(record.getValue(SOMATICVARIANT.GENESEFFECTED))
+                    .dbsnpID(record.getValue(SOMATICVARIANT.DBSNPID))
+                    .worstEffect(record.getValue(SOMATICVARIANT.WORSTEFFECT))
+                    .worstCodingEffect(CodingEffect.valueOf(record.getValue(SOMATICVARIANT.WORSTCODINGEFFECT)))
+                    .worstEffectTranscript(record.getValue(SOMATICVARIANT.WORSTEFFECTTRANSCRIPT))
+                    .canonicalEffect(record.getValue(SOMATICVARIANT.CANONICALEFFECT))
+                    .canonicalHgvsCodingImpact(record.getValue(SOMATICVARIANT.CANONICALHGVSCODINGIMPACT))
+                    .canonicalHgvsProteinImpact(record.getValue(SOMATICVARIANT.CANONICALHGVSPROTEINIMPACT))
+                    .alleleReadCount(record.getValue(SOMATICVARIANT.ALLELEREADCOUNT))
+                    .totalReadCount(record.getValue(SOMATICVARIANT.TOTALREADCOUNT))
+                    .adjustedCopyNumber(record.getValue(SOMATICVARIANT.ADJUSTEDCOPYNUMBER))
+                    .adjustedVAF(record.getValue(SOMATICVARIANT.ADJUSTEDVAF))
+                    .trinucleotideContext(record.getValue(SOMATICVARIANT.TRINUCLEOTIDECONTEXT))
+                    .microhomology(record.getValue(SOMATICVARIANT.MICROHOMOLOGY))
+                    .repeatSequence(record.getValue(SOMATICVARIANT.REPEATSEQUENCE))
+                    .repeatCount(record.getValue(SOMATICVARIANT.REPEATCOUNT))
+                    .clonality(Clonality.valueOf(record.getValue(SOMATICVARIANT.CLONALITY)))
+                    .hotspot(Hotspot.valueOf(record.getValue(SOMATICVARIANT.HOTSPOT)))
+                    .mappability(record.getValue(SOMATICVARIANT.MAPPABILITY))
+                    .germlineStatus(GermlineStatus.valueOf(record.getValue(SOMATICVARIANT.GERMLINESTATUS)))
+                    .minorAllelePloidy(record.getValue(SOMATICVARIANT.MINORALLELEPLOIDY))
+            .build());
+        }
+        return variants;
     }
 
     void write(@NotNull final String sample, @NotNull List<EnrichedSomaticVariant> variants) {
