@@ -1,7 +1,9 @@
-# AMBER (V2+)
+# AMBER
 AMBER is designed to generate a tumor BAF file for use in PURPLE. 
 
 Looking directly at the bam files, it locates heterozygous sites within the reference sample then calculates the allelic frequency of corresponding sites in the tumour. Finally, the Bioconductor copy number package is used to generate pcf segments from the BAF file.
+
+Prior versions of AMBER relied on mpileups of the tumor and reference rather than the bams themselves. This method is deprecated but still available in the jar file as AmberFromPileupApplication. See below for more details.  
 
 ## R Dependencies
 Segmentation is done with the Bioconductor [copynumber](http://bioconductor.org/packages/release/bioc/html/copynumber.html) package.
@@ -53,20 +55,26 @@ java -cp -Xmx48G amber.jar com.hartwig.hmftools.amber.AmberApplication \
 ```
 
 ## Performance Characteristics
-Performance numbers were measured on a 72 core machine using COLO829 data with an average read depth of 35 and 93 in the normal and tumor respectively. Elapsed time is measured in minutes. CPU time is minutes spent in user mode. 
+Performance numbers were taken from a 72 core machine using COLO829 data with an average read depth of 35 and 93 in the normal and tumor respectively. Elapsed time is measured in minutes. CPU time is minutes spent in user mode. 
 
-Version | Threads | Elapsed Time| CPU Time 
+Reading directly from the bam, AMBER has the following characteristics:
+
+Amber Method | Threads | Elapsed Time| CPU Time 
 ---|---|---|---
-1.7 | 1 | 180 | 180 
-1.7 | 64 | 44 | 272 
-2 | 1 | 77 | 83 
-2 | 2 | 43 | 91
-2 | 4 | 22 | 113
-2 | 8 | 14 | 110
-2 | 16 | 10 | 115 
-2 | 32 | 6 | 118
-2 | 64 | 4 | 168
+Bam | 1 | 77 | 83 
+Bam | 2 | 43 | 91
+Bam | 4 | 22 | 113
+Bam | 8 | 14 | 110
+Bam | 16 | 10 | 115 
+Bam | 32 | 6 | 118
+Bam | 64 | 4 | 168
 
+For comparison, the deprecated pileup method has the following characteristics:
+
+Amber Method | Threads | Elapsed Time| CPU Time 
+---|---|---|---
+Pileup | 1 | 180 | 180 
+Pileup | 64 | 44 | 272 
 
 ## Output
 File | Description
@@ -76,18 +84,14 @@ TUMOR.amber.baf.pcf | TSV of BAF segments using PCF algorithm.
 TUMOR.amber.qc | Contains median tumor baf and QC status. FAIL may indicate contamination in sample. 
 TUMOR.amber.vcf.gz | Similar information as BAF file but in VCF format. This file is not used by PURPLE.
  
-## Comparison to earlier versions
+## Comparison to pileup method
 Calculating the BAF directly from the bams is functionally equivalent to the pileup method when using the following samtools arguments:
 
 ``` -A -B -x -Q 13 -q 1 -f /path/to/refGenome/refGenome.fasta ```
 
-# AMBER From Pileup (V1.7) - Deprecated
+# AMBER From Pileup - Deprecated
 
-Note that this version is no longer supported. It is recommended you generate the BAFs direcly from the bams. 
-
-## Prerequisites
-
-AMBER relies on mpileups of the reference and tumor samples sliced at likely heterozygous locations. Sambamba (or samtools) can be used to generate the mpileups.
+This version of AMBER relies on mpileups of the reference and tumor samples sliced at likely heterozygous locations. Sambamba (or samtools) can be used to generate the mpileups. 
 
 Example generation:
 
@@ -97,13 +101,13 @@ export PATH=/path/to/samtools/:$PATH
 sambamba mpileup -t 6 /
     -L /path/to/bed/HeterozygousLocations.bed /
     /path/to/bam/REFERENCE.bam /
-    --samtools -q 1 -f /path/to/refGenome/refGenome.fasta /
+    --samtools -A -B -x -Q 13 -q 1 -f /path/to/refGenome/refGenome.fasta /
     > /path/to/mpileup/REFERENCE.mpileup
 
 sambamba mpileup -t 6 /
     -L /path/to/bed/HeterozygousLocations.bed /
     /path/to/bam/TUMOR.bam /
-    --samtools -q 1 -f /path/to/refGenome/refGenome.fasta /
+    --samtools -A -B -x -Q 13 -q 1 -f /path/to/refGenome/refGenome.fasta /
     > /path/to/mpileup/TUMOR.mpileup
 
 ```
@@ -123,7 +127,9 @@ Argument | Default | Description
 
 Arguments without default values are mandatory.
 
-### Example Usage
+## Example Usage
+
+Please note the application name has changed from earlier versions.
 
 ```
 java -cp amber.jar com.hartwig.hmftools.amber.pileup.AmberFromPileupApplication \ 
@@ -132,9 +138,3 @@ java -cp amber.jar com.hartwig.hmftools.amber.pileup.AmberFromPileupApplication 
     -reference /path/to/mpileup/REFERENCE.mpileup \
     -tumor /path/to/mpileup/TUMOR.mpileup
 ```
-
-This will write output to `/run_dir/amber/TUMOR.amber.baf`
-
-### Output
-
-The output is a tab delimited file containing the Chromosome, Position and BAF of the tumor.
