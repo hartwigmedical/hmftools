@@ -1,14 +1,18 @@
 # AMBER (V2+)
-AMBER is designed to generate a tumor BAF file for use in PURPLE. It locates heterozygous sites in the reference sample then calculates the allelic frequency of corresponding sites in the tumour.
+AMBER is designed to generate a tumor BAF file for use in PURPLE. 
 
-## Inputs
-AMBER requires:
- 
-1. Bams of both the normal and tumor sample. 
-2. Reference genome file in fasta format
-3. A bed file containing sites of likely heterozygous locations. The bed file used by HMF (GermlineHetPon.hg19.bed.gz) is available to download from [HMF-Pipeline-Resources.](https://resources.hartwigmedicalfoundation.nl) The sites were chosen by running the GATK HaplotypeCaller over 1700 germline samples and then selecting all SNP sites which are heterozygous in 800 to 900 of the samples. A HG38 bed file is also available.  
+First it locates heterozygous sites in the reference sample. Next, it calculates the allelic frequency of corresponding sites in the tumour. Finally, the Bioconductor copy number package is used to generate pcf segments from the BAF file.
 
-### Mandatory Arguments
+## R Dependencies
+Segmentation is done with the Bioconductor [copynumber](http://bioconductor.org/packages/release/bioc/html/copynumber.html) package.
+
+This can be installed in R with the following commands:
+```
+   source("https://bioconductor.org/biocLite.R")
+   biocLite("copynumber")
+```
+
+## Mandatory Arguments
 
 Argument | Description 
 ---|---
@@ -18,9 +22,11 @@ Argument | Description
 -reference_bam | Path to reference bam file
 -output_dir | Path to the output directory
 -ref_genome | Path to the ref genome fasta file
--bed | Path to bed file containing likely heterozygous sites (refer above). Gz files supported.  
+-bed | Path to bed file containing likely heterozygous sites (refer below). Gz files supported.  
 
-### Optional Arguments
+The bed file used by HMF (GermlineHetPon.hg19.bed.gz) is available to download from [HMF-Pipeline-Resources.](https://resources.hartwigmedicalfoundation.nl) The sites were chosen by running the GATK HaplotypeCaller over 1700 germline samples and then selecting all SNP sites which are heterozygous in 800 to 900 of the samples. A HG38 bed file is also available.
+
+## Optional Arguments
 
 Argument | Default | Description 
 ---|---|---
@@ -32,10 +38,11 @@ Argument | Default | Description
 -min_het_af_percent | 0.4 | Minimum allelic frequency to be considered heterozygous
 -max_het_af_percent | 0.65 | Maximum allelic frequency to be considered heterozygous
 
-### Example Usage
+## Example Usage
 
 ```
-java -cp amber.jar com.hartwig.hmftools.amber.AmberApplication \
+java -cp -Xmx48G amber.jar com.hartwig.hmftools.amber.AmberApplication \
+   -threads 24 \
    -tumor TUMOR \
    -tumor_bam /path/to/tumor/bam/TUMOR.bam \
    -reference REFERENCE \
@@ -45,10 +52,32 @@ java -cp amber.jar com.hartwig.hmftools.amber.AmberApplication \
    -bed /path/to/GermlineHetPon.hg19.bed.gz 
 ```
 
+## Performance
+Performance numbers were measured using COLO829 data on a 72 core machine. CPU time includes user and system time. 
+
+Version | Threads | Elapsed Time (mins) | CPU Time (mins)
+---|---|---|---
+1.7 (Pileup) | 32 | 45 | 330
+2 (Bam) | 1 | xxx | xxx
+2 (Bam) | 12 | 12 | 124
+2 (Bam) | 24 | 8 | 125
+2 (Bam) | 32 | 6 | 132
+2 (Bam) | 64 | 5 | 187
+
+
 ## Comparison to previous version
 Calculating the BAF directly from the bams is functionalluy equivalent to the pileup method when using the following samtools arguments:
 
 ``` -A -B -x -Q 13 -q 1 -f /path/to/refGenome/refGenome.fasta ```
+
+## Output
+File | Description
+--- | ---
+TUMOR.amber.baf | Tab separated values (TSV) containing reference and tumor BAF at each heterozygous site.
+TUMOR.amber.baf.pcf | TSV of BAF segments using PCF algorithm.
+TUMOR.amber.qc | Contains median tumor baf and QC status. FAIL may indicate contamination in sample. 
+TUMOR.amber.vcf.gz | Similar information as BAF file but in VCF format. This file is not used by PURPLE.
+ 
 
 
 # AMBER (Pileup) - Deprecated
