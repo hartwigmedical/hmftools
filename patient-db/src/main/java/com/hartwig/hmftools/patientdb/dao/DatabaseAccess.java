@@ -23,6 +23,7 @@ import com.hartwig.hmftools.common.region.CanonicalTranscript;
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
 import com.hartwig.hmftools.common.variant.structural.EnrichedStructuralVariant;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantData;
+import com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion;
 import com.hartwig.hmftools.patientdb.data.Patient;
 import com.hartwig.hmftools.patientdb.data.SampleData;
 
@@ -169,6 +170,11 @@ public class DatabaseAccess {
     @NotNull
     public List<EnrichedSomaticVariant> readSomaticVariants(@NotNull final String sample) {
         return somaticVariantDAO.read(sample);
+    }
+
+    @NotNull
+    public List<GeneFusion> readGeneFusions(@NotNull final String sample) {
+        return structuralVariantDAO.readFusions(sample);
     }
 
     @NotNull

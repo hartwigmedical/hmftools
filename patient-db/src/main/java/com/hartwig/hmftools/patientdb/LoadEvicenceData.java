@@ -105,10 +105,12 @@ public class LoadEvicenceData {
                 dbWriter.writeClinicalTrial(sample, allClinicalTrialsGeneCopyNumber);
 
                 LOGGER.info("Reading gene fusions from DB");
-//                Map<GeneFusion, List<EvidenceItem>> evidencePerFusion =
-//                        actionabilityAnalyzer.evidenceForFusions(structuralVariantAnalysis.fusions(), primaryTumorLocation);
+                final List<GeneFusion> geneFusions = dbAccess.readGeneFusions(sample);
 
-                //                LOGGER.info("Writing evidence items of gene fusions to DB");
+                Map<GeneFusion, List<EvidenceItem>> evidencePerFusion =
+                        actionabilityAnalyzer.evidenceForFusions(geneFusions, primaryTumorLocation);
+
+                LOGGER.info("Writing evidence items of gene fusions to DB");
 //                dbWriter.writeClinicalEvidence(sample);
 //                LOGGER.info("Writing clinical trials of gene fusions to DB");
 //                dbWriter.writeClinicalTrial(sample);
