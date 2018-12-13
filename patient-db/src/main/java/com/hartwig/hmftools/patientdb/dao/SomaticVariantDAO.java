@@ -4,7 +4,6 @@ import static com.hartwig.hmftools.patientdb.Config.DB_BATCH_INSERT_SIZE;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.SOMATICVARIANT;
 
 import java.sql.Timestamp;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -39,8 +38,6 @@ class SomaticVariantDAO {
         List<EnrichedSomaticVariant> variants = Lists.newArrayList();
 
         final Result<Record> result = context.select().from(SOMATICVARIANT).where(SOMATICVARIANT.SAMPLEID.eq(sample)).fetch();
-        List<String> emptyList = new ArrayList<>();
-        emptyList.add("");
 
         for (Record record : result) {
             variants.add(ImmutableEnrichedSomaticVariant.builder()
@@ -52,7 +49,7 @@ class SomaticVariantDAO {
                     .alt(record.getValue(SOMATICVARIANT.ALT))
                     .gene(record.getValue(SOMATICVARIANT.GENE))
                     .genesEffected(record.getValue(SOMATICVARIANT.GENESEFFECTED))
-                    .cosmicIDs(emptyList)
+                    .cosmicIDs(Lists.newArrayList())
                     .dbsnpID(record.getValue(SOMATICVARIANT.DBSNPID))
                     .worstEffect(record.getValue(SOMATICVARIANT.WORSTEFFECT))
                     .worstCodingEffect(CodingEffect.valueOf(record.getValue(SOMATICVARIANT.WORSTCODINGEFFECT)))

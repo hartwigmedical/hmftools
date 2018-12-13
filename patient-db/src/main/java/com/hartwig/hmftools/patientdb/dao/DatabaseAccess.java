@@ -61,6 +61,8 @@ public class DatabaseAccess {
     @NotNull
     private final SomaticVariantDAO somaticVariantDAO;
     @NotNull
+    private final StructuralVariantAnnotationDAO structuralVariantAnnotationDAO;
+    @NotNull
     private final StructuralVariantDAO structuralVariantDAO;
     @NotNull
     private final ValidationFindingDAO validationFindingsDAO;
@@ -85,6 +87,7 @@ public class DatabaseAccess {
         copyNumberDAO = new CopyNumberDAO(context);
         geneCopyNumberDAO = new GeneCopyNumberDAO(context);
         somaticVariantDAO = new SomaticVariantDAO(context);
+        structuralVariantAnnotationDAO = new StructuralVariantAnnotationDAO(context);
         structuralVariantDAO = new StructuralVariantDAO(context);
         ecrfDAO = new EcrfDAO(context);
         clinicalDAO = new ClinicalDAO(context);
@@ -279,13 +282,16 @@ public class DatabaseAccess {
         LOGGER.info("Deleting copy number data for sample: " + sample);
         copyNumberDAO.deleteCopyNumberForSample(sample);
 
-        LOGGER.info("Deleting gene copy number data for sample: " + sample);
+        LOGGER.info("Deleting gene copy numbers for sample: " + sample);
         geneCopyNumberDAO.deleteGeneCopyNumberForSample(sample);
 
-        LOGGER.info("Deleting somatic variant data for sample: " + sample);
+        LOGGER.info("Deleting somatic variants for sample: " + sample);
         somaticVariantDAO.deleteSomaticVariantForSample(sample);
 
-        LOGGER.info("Deleting structural variant data for sample: " + sample);
+        LOGGER.info("Deleting structural variant annotation data for sample: " + sample);
+        structuralVariantAnnotationDAO.deleteAnnotationsForSample(sample);
+
+        LOGGER.info("Deleting structural variants for sample: " + sample);
         structuralVariantDAO.deleteStructuralVariantsForSample(sample);
 
         LOGGER.info("Deleting clinical trials for sample: " + sample);
@@ -294,7 +300,7 @@ public class DatabaseAccess {
         LOGGER.info("Deleting evidence items for sample: " + sample);
         clinicalEvidenceDAO.deleteClinicalEvidenceForSample(sample);
 
-        LOGGER.info("All data for sample: " + sample + " is deleted");
+        LOGGER.info("All data for sample: " + sample + " has been deleted");
     }
 }
 

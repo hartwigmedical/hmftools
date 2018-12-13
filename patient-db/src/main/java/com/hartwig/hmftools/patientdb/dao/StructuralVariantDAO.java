@@ -3,7 +3,6 @@ package com.hartwig.hmftools.patientdb.dao;
 import static com.hartwig.hmftools.patientdb.Config.DB_BATCH_INSERT_SIZE;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.STRUCTURALVARIANT;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.STRUCTURALVARIANTBREAKEND;
-import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.STRUCTURALVARIANTDISRUPTION;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.STRUCTURALVARIANTFUSION;
 
 import java.sql.Timestamp;
@@ -42,21 +41,24 @@ class StructuralVariantDAO {
     public final List<GeneFusion> readFusions(@NotNull final String sample) {
         List<GeneFusion> geneFusions = Lists.newArrayList();
 
-        final Result<Record> result = context.select().from(STRUCTURALVARIANTFUSION)
-                .join(STRUCTURALVARIANTBREAKEND).on(STRUCTURALVARIANTBREAKEND.ID.eq(STRUCTURALVARIANTFUSION.FIVEPRIMEBREAKENDID))
-                .join(STRUCTURALVARIANTBREAKEND).on(STRUCTURALVARIANTBREAKEND.ID.eq(STRUCTURALVARIANTFUSION.THREEPRIMEBREAKENDID))
-                .join(STRUCTURALVARIANT).on(STRUCTURALVARIANT.ID.eq(STRUCTURALVARIANTBREAKEND.STRUCTURALVARIANTID))
+        final Result<Record> result = context.select()
+                .from(STRUCTURALVARIANTFUSION)
+                .join(STRUCTURALVARIANTBREAKEND)
+                .on(STRUCTURALVARIANTBREAKEND.ID.eq(STRUCTURALVARIANTFUSION.FIVEPRIMEBREAKENDID))
+                .join(STRUCTURALVARIANTBREAKEND)
+                .on(STRUCTURALVARIANTBREAKEND.ID.eq(STRUCTURALVARIANTFUSION.THREEPRIMEBREAKENDID))
+                .join(STRUCTURALVARIANT)
+                .on(STRUCTURALVARIANT.ID.eq(STRUCTURALVARIANTBREAKEND.STRUCTURALVARIANTID))
                 .where(STRUCTURALVARIANTFUSION.SAMPLEID.eq(sample))
                 .fetch();
 
-//        for (Record record : result) {
-//            geneFusions.add(ImmutableStructuralVariantData.builder()
-//                    .id(record.getValue(STRUCTURALVARIANTFUSION.FIVEPRIMEBREAKENDID))
-//                    .id(record.getValue(STRUCTURALVARIANTFUSION.THREEPRIMEBREAKENDID))
-//            .build());
-//
-//        }
-
+        //        for (Record record : result) {
+        //            geneFusions.add(ImmutableStructuralVariantData.builder()
+        //                    .id(record.getValue(STRUCTURALVARIANTFUSION.FIVEPRIMEBREAKENDID))
+        //                    .id(record.getValue(STRUCTURALVARIANTFUSION.THREEPRIMEBREAKENDID))
+        //            .build());
+        //
+        //        }
 
         return geneFusions;
     }
@@ -333,9 +335,6 @@ class StructuralVariantDAO {
     }
 
     void deleteStructuralVariantsForSample(@NotNull String sample) {
-        context.delete(STRUCTURALVARIANTDISRUPTION).where(STRUCTURALVARIANTDISRUPTION.SAMPLEID.eq(sample)).execute();
-        context.delete(STRUCTURALVARIANTFUSION).where(STRUCTURALVARIANTFUSION.SAMPLEID.eq(sample)).execute();
-        context.delete(STRUCTURALVARIANTBREAKEND).where(STRUCTURALVARIANTBREAKEND.SAMPLEID.eq(sample)).execute();
         context.delete(STRUCTURALVARIANT).where(STRUCTURALVARIANT.SAMPLEID.eq(sample)).execute();
     }
 
