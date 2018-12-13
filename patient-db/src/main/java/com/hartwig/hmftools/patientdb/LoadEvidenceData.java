@@ -28,7 +28,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-
 public class LoadEvidenceData {
 
 
@@ -66,7 +65,7 @@ public class LoadEvidenceData {
                 LOGGER.info("sample: " + sample);
 
                 LOGGER.info("Reading clinical Data from DB");
-                final String primaryTumorLocation = "";
+                final String primaryTumorLocation = dbAccess.readTumorLocation(sample);
 
                 LOGGER.info(primaryTumorLocation);
 

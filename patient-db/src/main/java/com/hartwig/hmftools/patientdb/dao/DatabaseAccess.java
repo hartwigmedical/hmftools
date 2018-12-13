@@ -32,6 +32,7 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jooq.DSLContext;
+import org.jooq.Result;
 import org.jooq.SQLDialect;
 import org.jooq.conf.MappedSchema;
 import org.jooq.conf.RenderMapping;
@@ -111,6 +112,10 @@ public class DatabaseAccess {
                 ? new Settings().withRenderMapping(new RenderMapping().withSchemata(new MappedSchema().withInput(DEV_CATALOG)
                 .withOutput(catalog)))
                 : null;
+    }
+
+    public String readTumorLocation(@NotNull String sample) {
+        return clinicalDAO.readTumorLocationPatient(sample);
     }
 
     public void writeCanonicalTranscripts(@NotNull final String assembly, @NotNull final List<CanonicalTranscript> transcripts) {

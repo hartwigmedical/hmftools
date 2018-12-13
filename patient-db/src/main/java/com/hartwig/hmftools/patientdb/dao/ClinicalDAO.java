@@ -13,7 +13,9 @@ import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.TREATME
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.TUMORMARKER;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.ecrf.formstatus.FormStatus;
 import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.patientdb.Utils;
@@ -33,6 +35,9 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jooq.DSLContext;
+import org.jooq.Record;
+import org.jooq.Record1;
+import org.jooq.Result;
 
 class ClinicalDAO {
 
@@ -59,6 +64,19 @@ class ClinicalDAO {
         context.truncate(RANOMEASUREMENT).execute();
         context.truncate(FORMSMETADATA).execute();
         context.execute("SET FOREIGN_KEY_CHECKS = 1;");
+    }
+
+    public String readTumorLocationPatient(@NotNull String sample) {
+        final Result<Record1<String>> result = context.select(BASELINE.PRIMARYTUMORLOCATION)
+                .from(SAMPLE.leftJoin(BASELINE).on(SAMPLE.PATIENTID.eq(BASELINE.PATIENTID)))
+                .where(SAMPLE.SAMPLEID.eq(sample))
+                .fetch();
+        List<String> tumorLocation = Lists.newArrayList();
+
+        for (Record record : result) {
+            tumorLocation.add(record.getValue(BASELINE.PRIMARYTUMORLOCATION));
+        }
+        return tumorLocation.stream().collect(Collectors.joining(","));
     }
 
     void writeFullClinicalData(@NotNull Patient patient) {
