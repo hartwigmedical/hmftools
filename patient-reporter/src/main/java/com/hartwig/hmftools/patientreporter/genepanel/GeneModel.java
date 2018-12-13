@@ -29,6 +29,9 @@ public abstract class GeneModel {
     public abstract Map<String, HmfTranscriptRegion> drupActionableGenes();
 
     @NotNull
+    public abstract Map<String, HmfTranscriptRegion> disruptionGeneWhiteList();
+
+    @NotNull
     public abstract Map<String, DriverCategory> geneDriverCategoryMap();
 
     @Value.Derived
@@ -64,6 +67,10 @@ public abstract class GeneModel {
             if (geneDriverCategoryMap().get(drupActionableGene.getKey()) != DriverCategory.ONCO) {
                 disruptionGeneIDPanel.add(drupActionableGene.getValue().geneID());
             }
+        }
+
+        for (Map.Entry<String, HmfTranscriptRegion> disruptionGene : disruptionGeneWhiteList().entrySet()) {
+            disruptionGeneIDPanel.add(disruptionGene.getValue().geneID());
         }
 
         return disruptionGeneIDPanel;

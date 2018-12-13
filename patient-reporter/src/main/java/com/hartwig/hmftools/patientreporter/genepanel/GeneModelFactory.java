@@ -4,6 +4,7 @@ import java.util.Map;
 import java.util.Set;
 
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.dnds.DndsDriverGeneLikelihoodSupplier;
 import com.hartwig.hmftools.common.drivercatalog.CNADrivers;
 import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
@@ -14,6 +15,8 @@ import com.hartwig.hmftools.patientreporter.actionability.DrupActionabilityModel
 import org.jetbrains.annotations.NotNull;
 
 public final class GeneModelFactory {
+
+    private static final Set<String> DISRUPTION_GENE_WHITE_LIST = Sets.newHashSet("ALK", "NTRK1", "NTRK2", "NTRK3", "RET", "ROS1", "NRG1");
 
     private GeneModelFactory() {
     }
@@ -45,6 +48,7 @@ public final class GeneModelFactory {
                 toGeneMap(CNADrivers.amplificationTargets(), geneMap),
                 toGeneMap(CNADrivers.deletionTargets(), geneMap),
                 toGeneMap(drupActionabilityModel.actionableGenes(), geneMap),
+                toGeneMap(DISRUPTION_GENE_WHITE_LIST, geneMap),
                 geneDriverCategoryMap);
     }
 
