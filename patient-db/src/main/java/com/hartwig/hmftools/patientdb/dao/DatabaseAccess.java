@@ -68,7 +68,7 @@ public class DatabaseAccess {
     @NotNull
     private final ChordDAO chordDAO;
     @NotNull
-    private final ClinialEvidenceDAO clinicalEvidenceDAO;
+    private final ClinicalEvidenceDAO clinicalEvidenceDAO;
     @NotNull
     private final ClinicalTrialDAO clinicalTrialDAO;
 
@@ -92,7 +92,7 @@ public class DatabaseAccess {
         metricDAO = new MetricDAO(context);
         driverCatalogDAO = new DriverCatalogDAO(context);
         chordDAO = new ChordDAO(context);
-        clinicalEvidenceDAO = new ClinialEvidenceDAO(context);
+        clinicalEvidenceDAO = new ClinicalEvidenceDAO(context);
         clinicalTrialDAO = new ClinicalTrialDAO(context);
     }
 

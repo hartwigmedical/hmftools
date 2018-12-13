@@ -12,12 +12,12 @@ import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
 import org.jooq.InsertValuesStep10;
 
-public class ClinialEvidenceDAO {
+public class ClinicalEvidenceDAO {
 
     @NotNull
     private final DSLContext context;
 
-    ClinialEvidenceDAO(@NotNull final DSLContext context) {
+    ClinicalEvidenceDAO(@NotNull final DSLContext context) {
         this.context = context;
     }
 
