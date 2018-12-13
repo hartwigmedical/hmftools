@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.svannotation.dao;
+package com.hartwig.hmftools.patientdb.dao;
 
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.STRUCTURALVARIANTBREAKEND;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.STRUCTURALVARIANTDISRUPTION;

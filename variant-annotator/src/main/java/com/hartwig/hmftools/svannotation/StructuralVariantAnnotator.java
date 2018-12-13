@@ -43,9 +43,9 @@ import com.hartwig.hmftools.common.variant.structural.annotation.StructuralVaria
 import com.hartwig.hmftools.common.variant.structural.annotation.SvGeneTranscriptCollection;
 import com.hartwig.hmftools.common.variant.structural.annotation.SvPONAnnotator;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
+import com.hartwig.hmftools.patientdb.dao.StructuralVariantAnnotationDAO;
 import com.hartwig.hmftools.svannotation.analysis.StructuralVariantAnalyzer;
 import com.hartwig.hmftools.svannotation.analysis.SvFusionAnalyser;
-import com.hartwig.hmftools.svannotation.dao.StructuralVariantAnnotationDAO;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
