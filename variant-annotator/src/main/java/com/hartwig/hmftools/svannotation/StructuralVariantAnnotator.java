@@ -38,11 +38,11 @@ import com.hartwig.hmftools.common.variant.structural.ImmutableEnrichedStructura
 import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantFileLoader;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneAnnotation;
+import com.hartwig.hmftools.common.variant.structural.annotation.StructuralVariantAnalysis;
 import com.hartwig.hmftools.common.variant.structural.annotation.StructuralVariantAnnotation;
 import com.hartwig.hmftools.common.variant.structural.annotation.SvGeneTranscriptCollection;
 import com.hartwig.hmftools.common.variant.structural.annotation.SvPONAnnotator;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
-import com.hartwig.hmftools.svannotation.analysis.StructuralVariantAnalysis;
 import com.hartwig.hmftools.svannotation.analysis.StructuralVariantAnalyzer;
 import com.hartwig.hmftools.svannotation.analysis.SvFusionAnalyser;
 import com.hartwig.hmftools.svannotation.dao.StructuralVariantAnnotationDAO;
