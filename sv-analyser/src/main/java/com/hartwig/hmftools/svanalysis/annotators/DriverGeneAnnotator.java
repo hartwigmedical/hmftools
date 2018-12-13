@@ -151,7 +151,7 @@ public class DriverGeneAnnotator
                 for (int j = i; j < breakendList.size(); ++j)
                 {
                     final SvBreakend lohBreakend = breakendList.get(j);
-                    if (isLOHEvent(lohBreakend))
+                    if (isLOHEvent(lohBreakend, false))
                     {
                         minBreakend = lohBreakend;
                         isStartBreakend = false;
@@ -238,7 +238,7 @@ public class DriverGeneAnnotator
             {
                 if(requireGOH)
                 {
-                    if(isLOHEvent(breakend))
+                    if(isLOHEvent(breakend, !walkForwards))
                         return breakend;
                 }
                 else
@@ -253,15 +253,18 @@ public class DriverGeneAnnotator
         return null;
     }
 
-    private boolean isLOHEvent(final SvBreakend breakend)
+    private boolean isLOHEvent(final SvBreakend breakend, boolean checkStart)
     {
         if (mSampleLOHData == null || mSampleLOHData.isEmpty())
             return false;
 
         for (final SvLOH lohEvent : mSampleLOHData)
         {
-            if (lohEvent.StartSV.equals(breakend.getSV().id()) || lohEvent.EndSV.equals(breakend.getSV().id()))
+            if ((checkStart && lohEvent.StartSV.equals(breakend.getSV().id()))
+            || (!checkStart && lohEvent.EndSV.equals(breakend.getSV().id())))
+            {
                 return true;
+            }
         }
 
         return false;

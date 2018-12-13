@@ -266,8 +266,8 @@ public class SvSampleAnalyser {
                 // proximity info and other link info
                 writer.write(",FoldbackLnkStart,FoldbackLenStart,FoldbackLinkInfoStart,FoldbackLnkEnd,FoldbackLenEnd,FoldbackLinkInfoEnd");
 
-                // transitive info
-                // writer.write(",TransType,TransLen,TransSvLinks");
+                // driver gene info
+                writer.write(",DriverStart,DriverEnd");
 
                 writer.newLine();
             }
@@ -386,7 +386,7 @@ public class SvSampleAnalyser {
                         var.getFoldbackLink(true), var.getFoldbackLen(true), var.getFoldbackLinkInfo(true),
                         var.getFoldbackLink(false), var.getFoldbackLen(false), var.getFoldbackLinkInfo(false)));
 
-                // writer.write(String.format(",%s,%d,%s", var.getTransType(), var.getTransLength(), var.getTransSvLinks()));
+                writer.write(String.format(",%s,%s", var.getDriverGene(true), var.getDriverGene(false)));
 
                 ++lineCount;
                 writer.newLine();
