@@ -29,10 +29,10 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 
-public class LoadEvicenceData {
+public class LoadEvidenceData {
 
 
-    private static final Logger LOGGER = LogManager.getLogger(LoadEvicenceData.class);
+    private static final Logger LOGGER = LogManager.getLogger(LoadEvidenceData.class);
     private static final String KNOWLEDGEBASE_PATH = "knowledgebase_path";
     private static final String DB_USER = "db_user";
     private static final String DB_PASS = "db_pass";
