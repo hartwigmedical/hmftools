@@ -3,12 +3,8 @@ package com.hartwig.hmftools.patientdb.dao;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
-import java.util.stream.Stream;
 
 import com.hartwig.hmftools.common.actionability.ClinicalTrial;
 import com.hartwig.hmftools.common.actionability.EvidenceItem;
@@ -28,15 +24,10 @@ import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
 import com.hartwig.hmftools.common.variant.structural.EnrichedStructuralVariant;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantData;
 import com.hartwig.hmftools.patientdb.data.Patient;
-import com.hartwig.hmftools.patientdb.data.PotentialActionableCNV;
-import com.hartwig.hmftools.patientdb.data.PotentialActionableFusion;
-import com.hartwig.hmftools.patientdb.data.PotentialActionableVariant;
 import com.hartwig.hmftools.patientdb.data.SampleData;
 
-import org.apache.commons.math3.util.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jooq.DSLContext;
@@ -75,8 +66,6 @@ public class DatabaseAccess {
     @NotNull
     private final CanonicalTranscriptDAO canonicalTranscriptDAO;
     @NotNull
-    private final PotentiallyActionableItemsDAO potentiallyActionableItemsDAO;
-    @NotNull
     private final ChordDAO chordDAO;
     @NotNull
     private final ClinialEvidenceDAO clinicalEvidenceDAO;
@@ -101,7 +90,6 @@ public class DatabaseAccess {
         validationFindingsDAO = new ValidationFindingDAO(context);
         canonicalTranscriptDAO = new CanonicalTranscriptDAO(context);
         metricDAO = new MetricDAO(context);
-        potentiallyActionableItemsDAO = new PotentiallyActionableItemsDAO(context);
         driverCatalogDAO = new DriverCatalogDAO(context);
         chordDAO = new ChordDAO(context);
         clinicalEvidenceDAO = new ClinialEvidenceDAO(context);
@@ -140,41 +128,6 @@ public class DatabaseAccess {
 
     public void writeSomaticVariants(@NotNull final String sampleId, @NotNull List<EnrichedSomaticVariant> variants) {
         somaticVariantDAO.write(sampleId, variants);
-    }
-
-    @NotNull
-    public Stream<PotentialActionableVariant> allPotentiallyActionableVariants() {
-        return potentiallyActionableItemsDAO.potentiallyActionableVariants(Strings.EMPTY);
-    }
-
-    @NotNull
-    public Stream<PotentialActionableVariant> potentiallyActionableVariants(@NotNull final String sample) {
-        return potentiallyActionableItemsDAO.potentiallyActionableVariants(sample);
-    }
-
-    @NotNull
-    public Stream<PotentialActionableCNV> allPotentiallyActionableCNVs() {
-        return potentiallyActionableItemsDAO.potentiallyActionableCNVs(Strings.EMPTY);
-    }
-
-    @NotNull
-    public Stream<PotentialActionableCNV> potentiallyActionableCNVs(@NotNull final String sample) {
-        return potentiallyActionableItemsDAO.potentiallyActionableCNVs(sample);
-    }
-
-    @NotNull
-    public Stream<PotentialActionableFusion> allPotentiallyActionableFusions() {
-        return potentiallyActionableItemsDAO.potentiallyActionableFusions(Strings.EMPTY);
-    }
-
-    @NotNull
-    public Stream<PotentialActionableFusion> potentiallyActionableFusions(@NotNull final String sample) {
-        return potentiallyActionableItemsDAO.potentiallyActionableFusions(sample);
-    }
-
-    @NotNull
-    public Stream<Pair<String, String>> sampleAndTumorLocation(@NotNull final String sampleId) {
-        return potentiallyActionableItemsDAO.sampleAndTumorLocation(sampleId);
     }
 
     public void writeStructuralVariants(@NotNull final String sampleId, @NotNull final List<EnrichedStructuralVariant> variants) {
