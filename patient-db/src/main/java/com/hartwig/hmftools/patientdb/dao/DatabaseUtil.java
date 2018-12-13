@@ -17,4 +17,9 @@ final public class DatabaseUtil {
         double multiplier = Math.pow(10, decimalPoints);
         return Math.round(number * multiplier) / multiplier;
     }
+
+    public static final String checkStringLength(final String str, int maxLength)
+    {
+        return str.length() > maxLength ? str.substring(0, maxLength) : str;
+    }
 }
