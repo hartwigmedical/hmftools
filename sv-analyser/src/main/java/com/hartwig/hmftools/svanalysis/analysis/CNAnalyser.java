@@ -441,7 +441,7 @@ public class CNAnalyser {
         }
     }
 
-    // private static String SPECIFIC_CHR = "9";
+    // private static String SPECIFIC_CHR = "10";
     private static String SPECIFIC_CHR = "";
 
     private void analyseLOH(final String sampleId, List<SvCNData> cnDataList)
@@ -485,7 +485,7 @@ public class CNAnalyser {
                     {
                         // LOH section invalidated
                         if(lohOnStartTelomere)
-                            writeLOHData(sampleId, currentChr, lohStartCN, cnData, priorCN, lohMinCN, lohSegments);
+                            writeLOHData(sampleId, currentChr, lohStartCN, cnData, priorCN, lohMinCN, lohSegments, false);
 
                         lohOnStartTelomere = false;
                         totalLoss = false;
@@ -493,7 +493,7 @@ public class CNAnalyser {
                     else
                     {
                         // log all relevant data for this completed section
-                        lohSVsMatchedCount += writeLOHData(sampleId, currentChr, lohStartCN, cnData, priorCN, lohMinCN, lohSegments);
+                        lohSVsMatchedCount += writeLOHData(sampleId, currentChr, lohStartCN, cnData, priorCN, lohMinCN, lohSegments, false);
                         ++lohSectionCount;
                     }
 
@@ -501,7 +501,8 @@ public class CNAnalyser {
                 }
                 else if(cnData.segEnd().equals(CN_SEG_TELOMERE))
                 {
-                    // rest of arm was lost so no linking SV for LOH section
+                    // rest of arm was lost so no linking SV for LOH section - but still record the event
+                    writeLOHData(sampleId, currentChr, lohStartCN, cnData, priorCN, lohMinCN, lohSegments, true);
                     reset = true;
                 }
                 else if(cnData.copyNumber() < 0.5)
@@ -562,8 +563,8 @@ public class CNAnalyser {
                 sampleId, lohSectionCount, lohSVsMatchedCount);
     }
 
-    private int writeLOHData(
-            final String sampleId, final String chr, SvCNData startData, SvCNData endData, double lastMinCN, double lohMinCN, int segCount)
+    private int writeLOHData(final String sampleId, final String chr, SvCNData startData, SvCNData endData,
+            double lastMinCN, double lohMinCN, int segCount, boolean incomplete)
     {
         try
         {
@@ -591,7 +592,13 @@ public class CNAnalyser {
             StructuralVariantData endSvData = null;
             long lohLength = 0;
 
-            if(endData.chromosome().equals(chr) && !startData.segEnd().equals(CN_SEG_TELOMERE))
+            if(incomplete)
+            {
+                // ended at the telomere
+                lohLength = endData.endPos() - startData.startPos();
+                endSvData = null;
+            }
+            else if(endData.chromosome().equals(chr) && !startData.segEnd().equals(CN_SEG_TELOMERE))
             {
                 lohLength = endData.startPos() - startData.startPos();
                 endSvData = findSvData(endData, -1);
@@ -630,7 +637,7 @@ public class CNAnalyser {
 
             mFileWriter.write(String.format("%s,%s,%d,%d,%d,%d,%s,%s",
                     sampleId, chr, startData.id(), endData.id(), startData.startPos(), endData.startPos(),
-                    startData.segStart(), endData.segStart()));
+                    startData.segStart(), incomplete ? endData.segEnd() : endData.segStart()));
 
             mFileWriter.write(String.format(",%.4f,%.4f,%.4f,%.4f,%d,%d,%s,%s",
                     lastMinCN, (1 - startData.actualBaf()) * startData.copyNumber(), (1 - endData.actualBaf()) * endData.copyNumber(),
