@@ -16,6 +16,7 @@ import com.hartwig.hmftools.common.context.RunContext;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion;
+import com.hartwig.hmftools.common.variant.structural.annotation.StructuralVariantAnalysis;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 import org.apache.commons.cli.CommandLine;
@@ -104,8 +105,11 @@ public class LoadEvidenceData {
                 dbWriter.writeClinicalTrial(sample, allClinicalTrialsGeneCopyNumber);
 
                 LOGGER.info("Reading gene fusions from DB");
-//                final List<GeneFusion> geneFusions = dbAccess.readGeneFusions(sample);
-//
+                final List<StructuralVariantAnalysis> analysesStructuralVarianten = dbAccess.readingStructuralVarianten(sample);
+
+                // reading gene fusions
+               // final List<GeneFusion> geneFusions = analysesStructuralVarianten.
+
 //                Map<GeneFusion, List<EvidenceItem>> evidencePerFusion =
 //                        actionabilityAnalyzer.evidenceForFusions(geneFusions, primaryTumorLocation);
 //

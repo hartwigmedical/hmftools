@@ -38,32 +38,6 @@ class StructuralVariantDAO {
     }
 
     @NotNull
-    public final List<GeneFusion> readFusions(@NotNull final String sample) {
-        List<GeneFusion> geneFusions = Lists.newArrayList();
-
-        final Result<Record> result = context.select()
-                .from(STRUCTURALVARIANTFUSION)
-                .join(STRUCTURALVARIANTBREAKEND)
-                .on(STRUCTURALVARIANTBREAKEND.ID.eq(STRUCTURALVARIANTFUSION.FIVEPRIMEBREAKENDID))
-                .join(STRUCTURALVARIANTBREAKEND)
-                .on(STRUCTURALVARIANTBREAKEND.ID.eq(STRUCTURALVARIANTFUSION.THREEPRIMEBREAKENDID))
-                .join(STRUCTURALVARIANT)
-                .on(STRUCTURALVARIANT.ID.eq(STRUCTURALVARIANTBREAKEND.STRUCTURALVARIANTID))
-                .where(STRUCTURALVARIANTFUSION.SAMPLEID.eq(sample))
-                .fetch();
-
-        //        for (Record record : result) {
-        //            geneFusions.add(ImmutableStructuralVariantData.builder()
-        //                    .id(record.getValue(STRUCTURALVARIANTFUSION.FIVEPRIMEBREAKENDID))
-        //                    .id(record.getValue(STRUCTURALVARIANTFUSION.THREEPRIMEBREAKENDID))
-        //            .build());
-        //
-        //        }
-
-        return geneFusions;
-    }
-
-    @NotNull
     public final List<StructuralVariantData> read(@NotNull final String sample) {
         List<StructuralVariantData> structuralVariants = Lists.newArrayList();
 

@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.patientdb.dao;
 
 import static com.hartwig.hmftools.patientdb.Config.DB_BATCH_INSERT_SIZE;
+import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.STRUCTURALVARIANT;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.STRUCTURALVARIANTBREAKEND;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.STRUCTURALVARIANTDISRUPTION;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.STRUCTURALVARIANTFUSION;
@@ -25,6 +26,8 @@ import org.jooq.DSLContext;
 import org.jooq.InsertValuesStep14;
 import org.jooq.InsertValuesStep4;
 import org.jooq.InsertValuesStep5;
+import org.jooq.Record;
+import org.jooq.Result;
 import org.jooq.types.UInteger;
 
 public class StructuralVariantAnnotationDAO {
@@ -40,6 +43,32 @@ public class StructuralVariantAnnotationDAO {
         context.delete(STRUCTURALVARIANTFUSION).where(STRUCTURALVARIANTFUSION.SAMPLEID.eq(sampleId)).execute();
         context.delete(STRUCTURALVARIANTDISRUPTION).where(STRUCTURALVARIANTDISRUPTION.SAMPLEID.eq(sampleId)).execute();
         context.delete(STRUCTURALVARIANTBREAKEND).where(STRUCTURALVARIANTBREAKEND.SAMPLEID.eq(sampleId)).execute();
+    }
+
+    @NotNull
+    public final List<StructuralVariantAnalysis> readStructuralVariantAnalysis(@NotNull final String sample) {
+        List<StructuralVariantAnalysis> structuralVariantAnalyses = Lists.newArrayList();
+
+        final Result<Record> result = context.select()
+                .from(STRUCTURALVARIANTFUSION)
+                .join(STRUCTURALVARIANTBREAKEND)
+                .on(STRUCTURALVARIANTBREAKEND.ID.eq(STRUCTURALVARIANTFUSION.FIVEPRIMEBREAKENDID))
+                .join(STRUCTURALVARIANTBREAKEND)
+                .on(STRUCTURALVARIANTBREAKEND.ID.eq(STRUCTURALVARIANTFUSION.THREEPRIMEBREAKENDID))
+                .join(STRUCTURALVARIANT)
+                .on(STRUCTURALVARIANT.ID.eq(STRUCTURALVARIANTBREAKEND.STRUCTURALVARIANTID))
+                .where(STRUCTURALVARIANTFUSION.SAMPLEID.eq(sample))
+                .fetch();
+
+        //        for (Record record : result) {
+        //            geneFusions.add(ImmutableStructuralVariantData.builder()
+        //                    .id(record.getValue(STRUCTURALVARIANTFUSION.FIVEPRIMEBREAKENDID))
+        //                    .id(record.getValue(STRUCTURALVARIANTFUSION.THREEPRIMEBREAKENDID))
+        //            .build());
+        //
+        //        }
+
+        return structuralVariantAnalyses;
     }
 
     @SuppressWarnings("unchecked")
