@@ -50,7 +50,7 @@ class SomaticVariantDAO {
                     .alt(record.getValue(SOMATICVARIANT.ALT))
                     .gene(record.getValue(SOMATICVARIANT.GENE))
                     .genesEffected(record.getValue(SOMATICVARIANT.GENESEFFECTED))
-                    .cosmicIDs(Lists.newArrayList())
+                    .cosmicIDs(Lists.newArrayList(record.getValue(SOMATICVARIANT.COSMICID)))
                     .dbsnpID(record.getValue(SOMATICVARIANT.DBSNPID))
                     .worstEffect(record.getValue(SOMATICVARIANT.WORSTEFFECT))
                     .worstCodingEffect(CodingEffect.NONE)
