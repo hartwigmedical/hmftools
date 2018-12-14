@@ -4,6 +4,7 @@ import static com.hartwig.hmftools.patientreporter.report.util.PatientReportForm
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -29,11 +30,10 @@ public final class ReportableGeneDisruptionFactory {
             @NotNull List<GeneCopyNumber> geneCopyNumbers) {
         LOGGER.debug("Generating reportable disruptions based on {} disruptions", disruptions.size());
         Map<String, GeneCopyNumber> copyNumberPerGene = toGeneMap(geneCopyNumbers);
-        Map<StructuralVariant, Pair<GeneDisruption, GeneDisruption>> pairedMap = mapDisruptionsPerStructuralVariant(disruptions);
+        Map<SvAndGeneKey, Pair<GeneDisruption, GeneDisruption>> pairedMap = mapDisruptionsPerStructuralVariant(disruptions);
 
         List<ReportableGeneDisruption> reportableDisruptions = Lists.newArrayList();
-        for (Map.Entry<StructuralVariant, Pair<GeneDisruption, GeneDisruption>> entry : pairedMap.entrySet()) {
-            Pair<GeneDisruption, GeneDisruption> pairedDisruption = entry.getValue();
+        for (Pair<GeneDisruption, GeneDisruption> pairedDisruption : pairedMap.values()) {
             GeneDisruption primaryDisruption = pairedDisruption.getLeft();
 
             String gene = gene(primaryDisruption).geneName();
@@ -75,28 +75,30 @@ public final class ReportableGeneDisruptionFactory {
     }
 
     @NotNull
-    private static Map<StructuralVariant, Pair<GeneDisruption, GeneDisruption>> mapDisruptionsPerStructuralVariant(
+    private static Map<SvAndGeneKey, Pair<GeneDisruption, GeneDisruption>> mapDisruptionsPerStructuralVariant(
             @NotNull List<GeneDisruption> disruptions) {
-        Map<StructuralVariant, List<GeneDisruption>> disruptionsPerVariant = Maps.newHashMap();
+        Map<SvAndGeneKey, List<GeneDisruption>> disruptionsPerSvAndGene = Maps.newHashMap();
         for (GeneDisruption disruption : disruptions) {
             StructuralVariant variant = disruption.linkedAnnotation().parent().variant();
-            List<GeneDisruption> currentDisruptions = disruptionsPerVariant.get(variant);
+            String gene = disruption.linkedAnnotation().parent().geneName();
+            SvAndGeneKey key = new SvAndGeneKey(variant, gene);
+            List<GeneDisruption> currentDisruptions = disruptionsPerSvAndGene.get(key);
             if (currentDisruptions == null) {
                 currentDisruptions = Lists.newArrayList();
             }
             currentDisruptions.add(disruption);
-            disruptionsPerVariant.put(variant, currentDisruptions);
+            disruptionsPerSvAndGene.put(key, currentDisruptions);
         }
 
-        return toPairedMap(disruptionsPerVariant);
+        return toPairedMap(disruptionsPerSvAndGene);
     }
 
     @NotNull
-    private static Map<StructuralVariant, Pair<GeneDisruption, GeneDisruption>> toPairedMap(
-            @NotNull Map<StructuralVariant, List<GeneDisruption>> disruptionsPerVariant) {
-        Map<StructuralVariant, Pair<GeneDisruption, GeneDisruption>> pairedMap = Maps.newHashMap();
+    private static Map<SvAndGeneKey, Pair<GeneDisruption, GeneDisruption>> toPairedMap(
+            @NotNull Map<SvAndGeneKey, List<GeneDisruption>> disruptionsPerVariant) {
+        Map<SvAndGeneKey, Pair<GeneDisruption, GeneDisruption>> pairedMap = Maps.newHashMap();
 
-        for (Map.Entry<StructuralVariant, List<GeneDisruption>> entry : disruptionsPerVariant.entrySet()) {
+        for (Map.Entry<SvAndGeneKey, List<GeneDisruption>> entry : disruptionsPerVariant.entrySet()) {
             List<GeneDisruption> disruptions = entry.getValue();
 
             if (disruptions.size() != 1 && disruptions.size() != 2) {
@@ -147,5 +149,34 @@ public final class ReportableGeneDisruptionFactory {
     private static boolean isUpstream(@NotNull GeneDisruption disruption) {
         GeneAnnotation gene = gene(disruption);
         return gene.orientation() * gene.strand() < 0;
+    }
+
+    private static class SvAndGeneKey {
+        @NotNull
+        private final StructuralVariant variant;
+        @NotNull
+        private final String gene;
+
+        private SvAndGeneKey(@NotNull final StructuralVariant variant, @NotNull final String gene) {
+            this.variant = variant;
+            this.gene = gene;
+        }
+
+        @Override
+        public boolean equals(final Object o) {
+            if (this == o) {
+                return true;
+            }
+            if (o == null || getClass() != o.getClass()) {
+                return false;
+            }
+            final SvAndGeneKey that = (SvAndGeneKey) o;
+            return Objects.equals(variant, that.variant) && Objects.equals(gene, that.gene);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(variant, gene);
+        }
     }
 }
