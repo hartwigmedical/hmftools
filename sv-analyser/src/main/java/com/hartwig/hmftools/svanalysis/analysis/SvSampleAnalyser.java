@@ -105,6 +105,7 @@ public class SvSampleAnalyser {
 
     public final List<SvCluster> getClusters() { return mAnalyser.getClusters(); }
     public final Map<String, List<SvBreakend>> getChrBreakendMap() { return mClusteringMethods.getChrBreakendMap(); }
+    public final Map<String, Double> getChrCopyNumberMap() { return mClusteringMethods.getChrCopyNumberMap(); }
     public void setSampleLohData(final Map<String, List<SvLOH>> data) { mClusteringMethods.setSampleLohData(data); }
 
     private void clearState()
@@ -153,7 +154,10 @@ public class SvSampleAnalyser {
         mPc3.stop();
 
         // logSampleClusterInfo();
+    }
 
+    public void writeOutput()
+    {
         mPc5.start();
 
         if(!mConfig.OutputCsvPath.isEmpty())
@@ -168,6 +172,7 @@ public class SvSampleAnalyser {
         }
 
         mPc5.stop();
+
     }
 
     private void annotateAndFilterVariants()
@@ -252,7 +257,7 @@ public class SvSampleAnalyser {
                 writer.write(",FSStart,FSEnd,LEStart,LEEnd,DupBEStart,DupBEEnd,ArmCountStart,ArmExpStart,ArmCountEnd,ArmExpEnd");
 
                 // linked pair info
-                writer.write(",LnkSvStart,LnkTypeStart,LnkLenStart,LnkSvEnd,LnkTypeEnd,LnkLenEnd");
+                writer.write(",LnkSvStart,LnkLenStart,LnkSvEnd,LnkLenEnd");
 
                 // GRIDDS caller info
                 writer.write(",AsmbStart,AsmbEnd,AsmbMatchStart,AsmbMatchEnd");
@@ -343,24 +348,24 @@ public class SvSampleAnalyser {
                                 mClusteringMethods.getChrArmData(var)));
 
                 // linked pair info
-                final SvLinkedPair startLP = var.getLinkedPair(true) != null ? var.getLinkedPair(true) : cluster.getLinkedPair(var, true);
-                String startLinkStr = "0,,-1";
+                final SvLinkedPair startLP = var.getLinkedPair(true);
+                String startLinkStr = "0,-1";
                 String assemblyMatchStart = var.getAssemblyMatchType(true);
                 if(startLP != null)
                 {
-                    startLinkStr = String.format("%s,%s,%d",
+                    startLinkStr = String.format("%s,%d",
                             startLP.first().equals(var, true) ? startLP.second().origId() : startLP.first().origId(),
-                            startLP.linkType(), startLP.length());
+                            startLP.length());
                 }
 
-                final SvLinkedPair endLP = var.getLinkedPair(false) != null ? var.getLinkedPair(false) : cluster.getLinkedPair(var, false);
-                String endLinkStr = "0,,-1";
+                final SvLinkedPair endLP = var.getLinkedPair(false);
+                String endLinkStr = "0,-1";
                 String assemblyMatchEnd = var.getAssemblyMatchType(false);
                 if(endLP != null)
                 {
-                    endLinkStr = String.format("%s,%s,%d",
+                    endLinkStr = String.format("%s,%d",
                             endLP.first().equals(var, true) ? endLP.second().origId() : endLP.first().origId(),
-                            endLP.linkType(), endLP.length());
+                            endLP.length());
                 }
 
                 // assembly info

@@ -76,11 +76,11 @@ public class SvVarData
     private SvVarData mReplicatedSv;
     private int mReplicatedCount;
 
-    List<GeneAnnotation> mGenesStart;
-    List<GeneAnnotation> mGenesEnd;
+    private List<GeneAnnotation> mGenesStart;
+    private List<GeneAnnotation> mGenesEnd;
 
-    DriverCatalog mDriverGeneStart;
-    DriverCatalog mDriverGeneEnd;
+    private String mDriverGeneStart;
+    private String mDriverGeneEnd;
 
     public static String ASSEMBLY_TYPE_DSB = "dsb";
     public static String ASSEMBLY_TYPE_TI = "asm";
@@ -146,8 +146,8 @@ public class SvVarData
         mGenesStart = Lists.newArrayList();
         mGenesEnd = Lists.newArrayList();
 
-        mDriverGeneStart = null;
-        mDriverGeneEnd = null;
+        mDriverGeneStart = "";
+        mDriverGeneEnd = "";
     }
 
     public static SvVarData from(final EnrichedStructuralVariant enrichedSV)
@@ -462,13 +462,17 @@ public class SvVarData
             mGenesEnd.addAll(genesList);
     }
 
-    public final DriverCatalog getDriverGene(boolean useStart) { return useStart ? mDriverGeneStart : mDriverGeneEnd; }
-    public void setDriveGene(final DriverCatalog gene, boolean isStart)
+    public final String getDriverGene(boolean useStart)
+    {
+        return useStart ? mDriverGeneStart : mDriverGeneEnd;
+    }
+
+    public void setDriveGene(final String geneInfo, boolean isStart)
     {
         if(isStart)
-            mDriverGeneStart = gene;
+            mDriverGeneStart = geneInfo;
         else
-            mDriverGeneEnd = gene;
+            mDriverGeneEnd = geneInfo;
     }
 
     public final String getAssemblyMatchType(boolean useStart) { return useStart ? mStartAssemblyMatchType : mEndAssemblyMatchType; }

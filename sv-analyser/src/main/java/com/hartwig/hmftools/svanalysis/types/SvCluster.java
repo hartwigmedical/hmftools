@@ -762,6 +762,12 @@ public class SvCluster
             }
         }
 
+        for(SvVarData var : mSVs)
+        {
+            var.setLinkedPair(null, true);
+            var.setLinkedPair(null, false);
+        }
+
         // mark the resultant set of inferred links - the assembly links will have already been marked
         for (SvLinkedPair pair : linkedPairs)
         {
@@ -770,6 +776,9 @@ public class SvCluster
                 pair.first().setAssemblyMatchType(ASSEMBLY_MATCH_INFER_ONLY, pair.firstLinkOnStart());
                 pair.second().setAssemblyMatchType(ASSEMBLY_MATCH_INFER_ONLY, pair.secondLinkOnStart());
             }
+
+            pair.first().setLinkedPair(pair, pair.firstLinkOnStart());
+            pair.second().setLinkedPair(pair, pair.secondLinkOnStart());
         }
 
         mLinkedPairs = linkedPairs;

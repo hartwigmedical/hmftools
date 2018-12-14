@@ -114,6 +114,7 @@ public class SvClusteringMethods {
 
     public Map<String, List<SvBreakend>> getChrBreakendMap() { return mChrBreakendMap; }
     public Map<String, Double> getTelomereCopyNumberMap() { return mTelomereCopyNumberMap; }
+    public Map<String, Double> getChrCopyNumberMap() { return mChromosomeCopyNumberMap; }
     public int getNextClusterId() { return mNextClusterId++; }
     public void setSampleLohData(final Map<String, List<SvLOH>> data) { mSampleLohData = data; }
     public long getDelDupCutoffLength() { return mDelDupCutoffLength; }

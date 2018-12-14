@@ -113,7 +113,7 @@ public class SvAnalyser {
             {
                 cnAnalyser.loadLOHFromCSV(svaConfig.LOHDataFile, "");
                 sampleAnalyser.setSampleLohData(cnAnalyser.getSampleLohData());
-                driverGeneAnnotator.setSampleLohData(cnAnalyser.getSampleLohData());
+                driverGeneAnnotator.setChromosomeData(cnAnalyser.getSampleLohData(), sampleAnalyser.getChrCopyNumberMap());
             }
 
             FusionDisruptionAnalyser fusionAnalyser = null;
@@ -157,6 +157,8 @@ public class SvAnalyser {
 
                 if(checkDrivers)
                     driverGeneAnnotator.annotateSVs(sample, sampleAnalyser.getClusters(), sampleAnalyser.getChrBreakendMap());
+
+                sampleAnalyser.writeOutput();
 
                 if(fusionAnalyser != null)
                 {

@@ -1522,8 +1522,7 @@ public class ClusterAnalyser {
 
             chain.setDetails(chainInfo);
 
-            LOGGER.debug("cluster({}) chain({}) {}",
-                    cluster.id(), chain.id(), chainInfo);
+            // LOGGER.debug("cluster({}) chain({}) {}", cluster.id(), chain.id(), chainInfo);
         }
 
         cluster.setArmData(originArms.size(), fragmentArms.size());
