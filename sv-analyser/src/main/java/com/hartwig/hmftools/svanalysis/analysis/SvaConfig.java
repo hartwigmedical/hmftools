@@ -13,6 +13,7 @@ public class SvaConfig
     final public String LineElementFile;
     final public String LOHDataFile;
     final public String SampleId;
+    final public int MaxSamples;
 
     public boolean LogVerbose;
 
@@ -24,6 +25,7 @@ public class SvaConfig
     private static final String LINE_ELEMENT_FILE = "line_element_file";
     private static final String LOH_DATA_FILE = "loh_file";
     private static final String LOG_VERBOSE = "log_verbose";
+    private static final String MAX_SAMPLES = "max_samples"; // for testing only
 
     public SvaConfig(final CommandLine cmd, final String sampleId)
     {
@@ -34,6 +36,7 @@ public class SvaConfig
         FragileSiteFile = cmd.getOptionValue(FRAGILE_SITE_FILE, "");
         LineElementFile = cmd.getOptionValue(LINE_ELEMENT_FILE, "");
         LOHDataFile = cmd.getOptionValue(LOH_DATA_FILE, "");
+        MaxSamples = Integer.parseInt(cmd.getOptionValue(MAX_SAMPLES, "0"));
         LogVerbose = cmd.hasOption(LOG_VERBOSE);
     }
 
@@ -46,6 +49,7 @@ public class SvaConfig
         LineElementFile = "";
         LOHDataFile = "";
         SampleId = "";
+        MaxSamples = 0;
         LogVerbose = false;
     }
 
@@ -58,6 +62,7 @@ public class SvaConfig
         options.addOption(LINE_ELEMENT_FILE, true, "Line Elements file for SVs");
         options.addOption(FRAGILE_SITE_FILE, true, "Fragile Site file for SVs");
         options.addOption(LOH_DATA_FILE, true, "Copy Number LOH data file");
+        options.addOption(MAX_SAMPLES, true, "Limit to X samples for testing");
         options.addOption(LOG_VERBOSE, false, "Log extra detail");
     }
 }

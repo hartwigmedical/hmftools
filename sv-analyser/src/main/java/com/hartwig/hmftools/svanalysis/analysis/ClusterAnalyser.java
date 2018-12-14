@@ -29,7 +29,6 @@ import static com.hartwig.hmftools.svanalysis.types.SvChain.getRepeatedSvSequenc
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.CLUSTER_ANNONTATION_CT;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.CLUSTER_ANNONTATION_DM;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_COMPLEX_CHAIN;
-import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_DEL_EXT_TI;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_LINE;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_NONE;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_SGL_PAIR_DEL;
@@ -55,7 +54,6 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 import com.hartwig.hmftools.svanalysis.types.SvArmGroup;
 import com.hartwig.hmftools.svanalysis.types.SvBreakend;
 import com.hartwig.hmftools.svanalysis.types.SvChain;
@@ -136,6 +134,8 @@ public class ClusterAnalyser {
         markFoldbacks();
 
         mergeClusters();
+
+        // analyseOverlappingTIs();
 
         annotateTemplatedInsertions();
 
@@ -1358,29 +1358,85 @@ public class ClusterAnalyser {
         reportDoubleMinutes(cluster);
 
         classifySimpleChainedClusters(cluster);
-
-        // analyseFoldbacks(cluster);
     }
 
-    private void analyseFoldbacks(final SvCluster cluster)
+    private void analyseOverlappingTIs()
     {
-        if(cluster.getFoldbacks().isEmpty())
-            return;
+        // look for any TIs where one falls within the bounds of the other, as a sign of replication after shattering
+        for(final Map.Entry<String, List<SvBreakend>> entry : mClusteringMethods.getChrBreakendMap().entrySet())
+        {
+            List<SvBreakend> breakendList = entry.getValue();
 
-        if(cluster.getResolvedType() != RESOLVED_TYPE_DEL_EXT_TI && cluster.getTypeCount(INV) != 2)
-            return;
+            for(int i = 1; i < breakendList.size() - 3; ++i)
+            {
+                final SvBreakend beStart1 = breakendList.get(i);
+                final SvBreakend beStart2 = breakendList.get(i + 1);
 
-        // check whether the shorter of the 2 INVs faces the centromere
-        final SvVarData var1 = cluster.getSV(0);
-        final SvVarData var2 = cluster.getSV(1);
+                if(beStart1.orientation() == 1 || beStart2.orientation() == 1)
+                    continue;
 
-        boolean shorterInvFacesCentromere = false;
+                final SvBreakend beEnd1 = breakendList.get(i + 2);
+                final SvBreakend beEnd2 = breakendList.get(i + 3);
 
-        if(var1.length() < var2.length() && var1.orientation(true) == -1)
-            shorterInvFacesCentromere = true;
-        else if(var2.length() < var1.length() && var2.orientation(true) == -1)
-            shorterInvFacesCentromere = true;
+                if(beEnd1.orientation() == -1 || beEnd2.orientation() == -1)
+                    continue;
 
+                // now the orientations are correct, check if these 2 sets of breakends form one TI enclosed by the other
+
+                SvLinkedPair pair1 = beStart1.getSV().getLinkedPair(beStart1.usesStart());
+                SvLinkedPair pair2 = beStart2.getSV().getLinkedPair(beStart2.usesStart());
+
+                boolean pair1Matched = pair1 != null && pair1.hasBreakend(beEnd2);
+                boolean pair2Matched = pair2 != null && pair2.hasBreakend(beEnd1);
+
+                boolean sameCluster = beStart1.getSV().getCluster() == beStart2.getSV().getCluster()
+                        && beStart1.getSV().getCluster() == beEnd1.getSV().getCluster()
+                        && beStart1.getSV().getCluster() == beEnd2.getSV().getCluster();
+
+                long startGap = beStart2.position() - beStart1.position();
+
+                if((pair1Matched && pair2Matched) || (pair1 != null && pair2 != null))
+                {
+                    LOGGER.info("sample({}) cluster({}) matched TIs: outer({}) inner({}) gap(start={} middle={} end={})",
+                            mSampleId, sameCluster ? beStart1.getSV().getCluster().id() : "multiple",
+                            pair1.toString(), pair2.toString(), beStart2.position() - beStart1.position(),
+                            beEnd2.position() - beStart2.position(), beEnd2.position() - beEnd1.position());
+
+                    long endGap = pair1.length() - pair2.length() - startGap;
+
+                    if(!pair1Matched || !pair2Matched)
+                    {
+                        if (endGap < 0)
+                            continue;
+                    }
+
+                    LOGGER.info("sample({}) cluster({}) enclosed TIs: outer({}) inner({}) gap(start={} middle={} end={})",
+                            mSampleId, sameCluster ? beStart1.getSV().getCluster().id() : "multiple",
+                            pair1.toString(), pair2.toString(), startGap, pair2.length(), endGap);
+
+                    LOGGER.info("ENCLOSED_TI: {},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{}",
+                            mSampleId, sameCluster ? beStart1.getSV().getCluster().id() : "multiple",
+                            pair1.first().chromosome(pair1.firstLinkOnStart()), pair1Matched, pair1Matched,
+                            pair1.first().id(), pair1.first().position(pair1.firstLinkOnStart()),
+                            pair1.second().id(), pair1.second().position(pair1.secondLinkOnStart()),
+                            pair2.first().id(), pair2.first().position(pair2.firstLinkOnStart()),
+                            pair2.second().id(), pair2.second().position(pair2.secondLinkOnStart()),
+                            pair1.length(), pair2.length(), startGap, endGap);
+
+                }
+                else
+                {
+                    // breakend form 2 TIs with one enclosed by pairings don't match for some reason
+                    LOGGER.info("ENCLOSED_TI: {},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{}",
+                            mSampleId, sameCluster ? beStart1.getSV().getCluster().id() : "multiple",
+                            beStart1.chromosome(), pair1Matched, pair1Matched,
+                            beStart1.getSV().id(), beStart1.position(), beStart2.getSV().id(), beStart2.position(),
+                            beEnd1.getSV().id(), beEnd1.position(), beEnd2.getSV().id(), beEnd2.position(),
+                            beEnd2.position() - beStart1.position(), beEnd1.position() - beStart2.position(),
+                            startGap, beEnd2.position() - beEnd1.position());
+                }
+            }
+        }
     }
 
     private static int CHAIN_TI_COUNT = 0;

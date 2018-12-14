@@ -580,7 +580,7 @@ public class ChainFinder
                 boolean isValid = true;
                 for(final SvLinkedPair pair : chainedPairs)
                 {
-                    if(pair.hasVariantBE(otherVar, otherVarStart))
+                    if(pair.hasBreakend(otherVar, otherVarStart))
                     {
                         isValid = false;
                         break;

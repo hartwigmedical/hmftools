@@ -125,15 +125,20 @@ public class SvLinkedPair {
     public void setTraversedSVCount(int count) { mTraversedSVCount = count; }
     public int getTraversedSVCount() { return mTraversedSVCount; }
 
-    public boolean hasVariantBE(final SvVarData var, boolean useStart)
+    public boolean hasBreakend(final SvVarData var, boolean useStart)
     {
         return (var.equals(mFirst) && mFirstLinkOnStart == useStart || var.equals(mSecond) && mSecondLinkOnStart == useStart);
     }
 
+    public boolean hasBreakend(final SvBreakend breakend)
+    {
+        return hasBreakend(breakend.getSV(),breakend.usesStart());
+    }
+
     public boolean hasLinkClash(final SvLinkedPair otherPair)
     {
-        return (hasVariantBE(otherPair.first(), otherPair.firstLinkOnStart())
-            || hasVariantBE(otherPair.second(), otherPair.secondLinkOnStart()));
+        return (hasBreakend(otherPair.first(), otherPair.firstLinkOnStart())
+            || hasBreakend(otherPair.second(), otherPair.secondLinkOnStart()));
     }
 
     public void switchSVs()
@@ -178,7 +183,7 @@ public class SvLinkedPair {
     {
         for(final SvLinkedPair pair : linkedPairs)
         {
-            if(pair.hasVariantBE(var, useStart))
+            if(pair.hasBreakend(var, useStart))
                 return pair;
         }
 

@@ -73,8 +73,7 @@ public class SvAnalyser {
 
         if (tumorSample.isEmpty())
         {
-            if(dbAccess != null)
-                samplesList = getStructuralVariantSamplesList(dbAccess);
+            samplesList = getStructuralVariantSamplesList(dbAccess);
         }
         else if (tumorSample.contains(","))
         {
@@ -164,6 +163,11 @@ public class SvAnalyser {
                 {
                     fusionAnalyser.loadSvGeneTranscriptData(sample, cmd.getOptionValue(GENE_TRANSCRIPTS_DIR));
                     fusionAnalyser.findFusions(svVarData, sampleAnalyser.getClusters(), sampleAnalyser.getChrBreakendMap());
+                }
+
+                if(svaConfig.MaxSamples > 0 && count >= svaConfig.MaxSamples)
+                {
+                    LOGGER.info("exiting after max sample count {} reached", count);
                 }
             }
 

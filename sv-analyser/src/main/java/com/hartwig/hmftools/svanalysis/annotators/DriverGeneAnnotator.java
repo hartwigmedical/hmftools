@@ -152,7 +152,7 @@ public class DriverGeneAnnotator
             || (minBreakend == null && breakend.position() > region.start() && breakend.position() < region.end()))
             {
                 // take the lower of the copy numbers
-                if (breakend.getCopyNumber(false) < nextBreakend.getCopyNumber(false))
+                if (nextBreakend == null || breakend.getCopyNumber(false) < nextBreakend.getCopyNumber(false))
                     minBreakend = breakend;
                 else
                     minBreakend = nextBreakend;
