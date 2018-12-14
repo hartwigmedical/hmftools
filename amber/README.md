@@ -36,7 +36,7 @@ threads | 1 | Number of threads to use
 min_mapping_quality | 1| Minimum mapping quality for an alignment to be used
 min_base_quality | 13| Minimum quality for a base to be considered
 min_depth_percent | 0.5 | Only include reference sites with read depth within min percentage of median reference read depth
-min_depth_percent | 1.5 | Only include reference sites with read depth within max percentage of median reference read depth
+max_depth_percent | 1.5 | Only include reference sites with read depth within max percentage of median reference read depth
 min_het_af_percent | 0.4 | Minimum allelic frequency to be considered heterozygous
 max_het_af_percent | 0.65 | Maximum allelic frequency to be considered heterozygous
 
