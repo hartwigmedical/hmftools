@@ -75,7 +75,7 @@ class SomaticVariantDAO {
                     .germlineStatus(GermlineStatus.valueOf(record.getValue(SOMATICVARIANT.GERMLINESTATUS)))
                     .minorAllelePloidy(record.getValue(SOMATICVARIANT.MINORALLELEPLOIDY))
                     .ploidy(1)
-                    .canonicalCodingEffect(CodingEffect.NONE)
+                    .canonicalCodingEffect(stringToBoolean(Strings.EMPTY) ? CodingEffect.UNDEFINED : CodingEffect.valueOf(record.getValue(SOMATICVARIANT.CANONICALCODINGEFFECT)))
                     .recovered(byteToBoolean(record.getValue(SOMATICVARIANT.RECOVERED)))
                     .build());
         }
