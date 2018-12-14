@@ -43,7 +43,7 @@ max_het_af_percent | 0.65 | Maximum allelic frequency to be considered heterozyg
 ## Example Usage
 
 ```
-java -cp -Xmx48G amber.jar com.hartwig.hmftools.amber.AmberApplication \
+java -Xmx48G -cp amber.jar com.hartwig.hmftools.amber.AmberApplication \
    -threads 12 \
    -tumor TUMOR \
    -tumor_bam /path/to/tumor/bam/TUMOR.bam \
