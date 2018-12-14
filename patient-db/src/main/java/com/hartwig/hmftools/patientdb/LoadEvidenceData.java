@@ -107,21 +107,21 @@ public class LoadEvidenceData {
                 LOGGER.info("Reading gene fusions from DB");
                 final List<StructuralVariantAnalysis> analysesStructuralVarianten = dbAccess.readingStructuralVarianten(sample);
 
-                // reading gene fusions
-               // final List<GeneFusion> geneFusions = analysesStructuralVarianten.
+                final List<GeneFusion> geneFusions = analysesStructuralVarianten.iterator().next().fusions();
+                LOGGER.info(geneFusions);
 
-//                Map<GeneFusion, List<EvidenceItem>> evidencePerFusion =
-//                        actionabilityAnalyzer.evidenceForFusions(geneFusions, primaryTumorLocation);
-//
-//                final List<EvidenceItem> AllEvidenceItemsGeneFusions = extractAllEvidenceItems(evidencePerFusion);
-//                final List<ClinicalTrial> allClinicalTrialsGeneFusions = extractAllTrials(AllEvidenceItemsGeneFusions);
-//
-//                LOGGER.info("Writing evidence items of gene fusions to DB");
-//                LOGGER.info("Counts of all evidence items: " + AllEvidenceItemsGeneFusions.size());
-//                dbWriter.writeClinicalEvidence(sample, AllEvidenceItemsGeneFusions);
-//                LOGGER.info("Writing clinical trials of gene fusions to DB");
-//                LOGGER.info("Counts of all clinical trials: " + allClinicalTrialsGeneFusions.size());
-//                dbWriter.writeClinicalTrial(sample, allClinicalTrialsGeneFusions);
+                Map<GeneFusion, List<EvidenceItem>> evidencePerFusion =
+                        actionabilityAnalyzer.evidenceForFusions(geneFusions, primaryTumorLocation);
+
+                final List<EvidenceItem> AllEvidenceItemsGeneFusions = extractAllEvidenceItems(evidencePerFusion);
+                final List<ClinicalTrial> allClinicalTrialsGeneFusions = extractAllTrials(AllEvidenceItemsGeneFusions);
+
+                LOGGER.info("Writing evidence items of gene fusions to DB");
+                LOGGER.info("Counts of all evidence items: " + AllEvidenceItemsGeneFusions.size());
+                dbWriter.writeClinicalEvidence(sample, AllEvidenceItemsGeneFusions);
+                LOGGER.info("Writing clinical trials of gene fusions to DB");
+                LOGGER.info("Counts of all clinical trials: " + allClinicalTrialsGeneFusions.size());
+                dbWriter.writeClinicalTrial(sample, allClinicalTrialsGeneFusions);
 
             }
         }
