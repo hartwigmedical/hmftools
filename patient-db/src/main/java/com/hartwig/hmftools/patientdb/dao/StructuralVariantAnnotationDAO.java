@@ -17,6 +17,7 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneAnnotation;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneDisruption;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion;
+import com.hartwig.hmftools.common.variant.structural.annotation.ImmutableStructuralVariantAnalysis;
 import com.hartwig.hmftools.common.variant.structural.annotation.StructuralVariantAnalysis;
 import com.hartwig.hmftools.common.variant.structural.annotation.StructuralVariantAnnotation;
 import com.hartwig.hmftools.common.variant.structural.annotation.Transcript;
@@ -60,13 +61,19 @@ public class StructuralVariantAnnotationDAO {
                 .where(STRUCTURALVARIANTFUSION.SAMPLEID.eq(sample))
                 .fetch();
 
-        //        for (Record record : result) {
-        //            geneFusions.add(ImmutableStructuralVariantData.builder()
-        //                    .id(record.getValue(STRUCTURALVARIANTFUSION.FIVEPRIMEBREAKENDID))
-        //                    .id(record.getValue(STRUCTURALVARIANTFUSION.THREEPRIMEBREAKENDID))
-        //            .build());
-        //
-        //        }
+//                for (Record record : result) {
+//                    structuralVariantAnalyses.add(ImmutableStructuralVariantAnalysis.builder()
+//                            .addAllAnnotations()
+//                            .addAllDisruptions()
+//                            .addAllFusions()
+//                            .addAnnotations()
+//                            .addDisruptions()
+//                            .addFusions()
+//                            .annotations()
+//                            .disruptions()
+//                            .fusions()
+//                            .build());
+//                }
 
         return structuralVariantAnalyses;
     }
