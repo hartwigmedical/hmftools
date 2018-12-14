@@ -61,22 +61,35 @@ public class StructuralVariantAnnotationDAO {
                 .where(STRUCTURALVARIANTFUSION.SAMPLEID.eq(sample))
                 .fetch();
 
-//                for (Record record : result) {
-//                    structuralVariantAnalyses.add(ImmutableStructuralVariantAnalysis.builder()
-//                            .addAllAnnotations()
-//                            .addAllDisruptions()
-//                            .addAllFusions()
-//                            .addAnnotations()
-//                            .addDisruptions()
-//                            .addFusions()
-//                            .annotations()
-//                            .disruptions()
-//                            .fusions()
-//                            .build());
-//                }
+                for (Record record : result) {
+                    structuralVariantAnalyses.add(ImmutableStructuralVariantAnalysis.builder()
+                            .addAllAnnotations(readingStructuralVariantAnnotator(record))
+                            .addAllDisruptions(readingGeneDisruption(record))
+                            .addAllFusions(readingGeneFusion(record))
+                            .annotations(readingStructuralVariantAnnotator(record))
+                            .disruptions(readingGeneDisruption(record))
+                            .fusions(readingGeneFusion(record))
+                            .build());
+                }
 
         return structuralVariantAnalyses;
     }
+
+    private List<StructuralVariantAnnotation> readingStructuralVariantAnnotator(@NotNull Record record) {
+        List<StructuralVariantAnnotation> structuralVariantAnnotation = Lists.newArrayList();
+        return structuralVariantAnnotation;
+    }
+
+    private List<GeneDisruption> readingGeneDisruption(@NotNull Record record) {
+        List<GeneDisruption> geneDisruptions = Lists.newArrayList();
+        return geneDisruptions;
+    }
+
+    private List<GeneFusion> readingGeneFusion(@NotNull Record record) {
+        List<GeneFusion> geneFusions = Lists.newArrayList();
+        return geneFusions;
+    }
+
 
     @SuppressWarnings("unchecked")
     public void write(@NotNull StructuralVariantAnalysis analysis, @NotNull String sampleId) {
