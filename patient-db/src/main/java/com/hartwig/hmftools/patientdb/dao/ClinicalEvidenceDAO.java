@@ -51,7 +51,7 @@ public class ClinicalEvidenceDAO {
                 evidenceItem.drugsType(),
                 evidenceItem.response(),
                 evidenceItem.cancerType(),
-                true,
+                evidenceItem.isOnLabel() ? "Tumor Type specific" : "Other tumor types specific",
                 evidenceItem.level().readableString(),
                 evidenceItem.source().sourceName());
 

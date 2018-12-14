@@ -46,7 +46,7 @@ public class ClinicalTrialDAO {
                 clinicalTrial.scope().readableString(),
                 clinicalTrial.acronym(),
                 clinicalTrial.cancerType(),
-                true,
+                clinicalTrial.isOnLabel() ? "Tumor Type specific" : "Other tumor types specific",
                 clinicalTrial.source().sourceName());
 
     }

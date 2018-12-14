@@ -5,7 +5,7 @@ CREATE TABLE clinicalTrials
     eventMatch varchar(255) NOT NULL,
     trial varchar(500) NOT NULL,
     cancerType varchar(500) NOT NULL,
-    label BOOLEAN NOT NULL,
+    label varchar(50) NOT NULL,
     evidenceSource varchar(255) NOT NULL,
     PRIMARY KEY (id),
     INDEX(sampleId)
