@@ -2,6 +2,7 @@ package com.hartwig.hmftools.patientdb.dao;
 
 import static com.hartwig.hmftools.patientdb.Config.DB_BATCH_INSERT_SIZE;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.SOMATICVARIANT;
+import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.STRUCTURALVARIANT;
 
 import java.sql.Timestamp;
 import java.util.Date;
@@ -53,7 +54,7 @@ class SomaticVariantDAO {
                     .cosmicIDs(Lists.newArrayList(record.getValue(SOMATICVARIANT.COSMICID)))
                     .dbsnpID(record.getValue(SOMATICVARIANT.DBSNPID))
                     .worstEffect(record.getValue(SOMATICVARIANT.WORSTEFFECT))
-                    .worstCodingEffect(CodingEffect.NONE)
+                    .worstCodingEffect(stringToBoolean(Strings.EMPTY) ? CodingEffect.UNDEFINED : CodingEffect.valueOf(record.getValue(SOMATICVARIANT.WORSTCODINGEFFECT)))
                     .worstEffectTranscript(record.getValue(SOMATICVARIANT.WORSTEFFECTTRANSCRIPT))
                     .canonicalEffect(record.getValue(SOMATICVARIANT.CANONICALEFFECT))
                     .canonicalHgvsCodingImpact(record.getValue(SOMATICVARIANT.CANONICALHGVSCODINGIMPACT))
@@ -79,6 +80,11 @@ class SomaticVariantDAO {
                     .build());
         }
         return variants;
+    }
+
+    @NotNull
+    private static Boolean stringToBoolean(String s) {
+       return s.equals("") ? true : false;
     }
 
     @Nullable
