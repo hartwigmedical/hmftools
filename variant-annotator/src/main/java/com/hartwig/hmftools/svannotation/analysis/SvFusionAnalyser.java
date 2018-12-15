@@ -117,6 +117,10 @@ public class SvFusionAnalyser
                                 if(!downstreamTrans.isExonic())
                                     continue;
 
+                                // skip chained fusions from exon-to-exon?
+                                if(upstreamTrans.parent().id() != downstreamTrans.parent().id())
+                                    continue;
+
                                 checkExactMatch = true;
                             }
 
@@ -184,6 +188,14 @@ public class SvFusionAnalyser
     {
         // check phasing and offset since exon start or coding start
         int calcStartPhase = calcPositionPhasing(startTrans, startUpstream);
+
+        // factor in insert sequence
+        if(!startTrans.parent().variant().insertSequence().isEmpty())
+        {
+            int insSeqAdjustment = (int)(startTrans.parent().variant().insertSequence().length() % 3);
+            calcStartPhase += insSeqAdjustment;
+        }
+
         int calcEndPhase = calcPositionPhasing(endTrans, endUpstream);
 
         startTrans.setExactCodingBase(calcStartPhase);

@@ -47,7 +47,7 @@ public class SvGeneTranscriptCollection
         mDataPath = dataPath;
     }
 
-    private static final String getSampleGeneAnnotationsFilename(final String path, final String sampleId)
+    public static final String getSampleGeneAnnotationsFilename(final String path, final String sampleId)
     {
         String filename = path;
 

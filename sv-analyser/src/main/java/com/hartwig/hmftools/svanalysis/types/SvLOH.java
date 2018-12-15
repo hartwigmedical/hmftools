@@ -19,6 +19,8 @@ public class SvLOH
     public final String StartSV;
     public final String EndSV;
 
+    public static String LOH_NO_SV = "0";
+
     public SvLOH(
             final String sampleId, final String chr, int cnIdStart,
             final int cnIdEnd,

@@ -134,7 +134,7 @@ public class FusionDisruptionAnalyser
     }
 
     private static String CHECK_VAR_ID = "";
-    // private static String CHECK_VAR_ID = "443842";
+    // private static String CHECK_VAR_ID = "4718976";
     private static int CHECK_CLUSTER_ID = -1;
     // private static int CHECK_CLUSTER_ID = 94;
 
@@ -291,9 +291,7 @@ public class FusionDisruptionAnalyser
             inPossibleFusion = false;
             traversedLinks.clear();
             startIndex = -1;
-            endIndex = -1;
             beStart = null;
-            beEnd = null;
             genesListStart = null;
         }
     }

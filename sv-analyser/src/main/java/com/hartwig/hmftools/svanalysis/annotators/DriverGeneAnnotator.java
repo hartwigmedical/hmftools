@@ -2,6 +2,7 @@ package com.hartwig.hmftools.svanalysis.annotators;
 
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DUP;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INV;
+import static com.hartwig.hmftools.svanalysis.types.SvLOH.LOH_NO_SV;
 
 import java.util.List;
 import java.util.Map;
@@ -107,11 +108,11 @@ public class DriverGeneAnnotator
 
             if(driverGene.driver() == DriverType.DEL)
             {
-                annotateDeleteEvent(driverGene, region, false);
+                annotateDeleteEvent(driverGene, region);
             }
             else if(driverGene.driver() == DriverType.BIALLELIC)
             {
-                annotateDeleteEvent(driverGene, region, true);
+                annotateBiallelicEvent(driverGene, region);
             }
             else if(driverGene.driver() == DriverType.AMP)
             {
@@ -120,7 +121,7 @@ public class DriverGeneAnnotator
         }
     }
 
-    private void annotateDeleteEvent(final DriverCatalog driverGene, HmfTranscriptRegion region, boolean isSingleEvent)
+    private void annotateDeleteEvent(final DriverCatalog driverGene, HmfTranscriptRegion region)
     {
         /* DEL identification:
             - 1 or 2 SVs which caused this, start from DEL region (ie gene) and work out
@@ -196,7 +197,7 @@ public class DriverGeneAnnotator
 
         if(minBreakend == null)
         {
-            LOGGER.warn("sample({}) gene(DEL: {}) not allocated to SVs", mSampleId, driverGene.gene());
+            LOGGER.warn("sample({}) gene({}) not allocated to SVs", mSampleId, geneToStr(driverGene, region));
             return;
         }
 
@@ -219,9 +220,6 @@ public class DriverGeneAnnotator
         if(endBreakend != null)
             annotateDelSV(endBreakend, driverGene, region, "MIN");
 
-        if(isSingleEvent)
-            return;
-
         // look to next event
         final SvBreakend preStartBreakend = startBreakend != null ? findDeletionBreakend(breakendList, startBreakend.getChrPosIndex(), false, true) : null;
         final SvBreakend postEndBreakend = endBreakend != null ? findDeletionBreakend(breakendList, endBreakend .getChrPosIndex(), true, true) : null;
@@ -231,6 +229,63 @@ public class DriverGeneAnnotator
 
         if(postEndBreakend != null)
             annotateDelSV(postEndBreakend, driverGene, region, "LOH");
+    }
+
+    private void annotateBiallelicEvent(final DriverCatalog driverGene, HmfTranscriptRegion region)
+    {
+        // for biallelic events, find the straddling LOH event
+
+        // first find the min copy number within the gene region
+        // then walk out in both directions to find the SV which caused the loss
+        // and then walk out again until heterozygosity is gained
+
+        final List<SvBreakend> breakendList = mChrBreakendMap.get(region.chromosome());
+
+        if (breakendList == null || breakendList.isEmpty())
+            return;
+
+        // find any LOH which cross over all or a part of this gene region
+        for (final SvLOH lohEvent : mSampleLOHData)
+        {
+            if(lohEvent.PosStart > region.end() || lohEvent.PosEnd < region.start())
+                continue;
+
+            // now find the corresponding breakends
+            SvBreakend startBreakend = null;
+            SvBreakend endBreakend = null;
+
+            for (int i = 0; i < breakendList.size(); ++i)
+            {
+                final SvBreakend breakend = breakendList.get(i);
+
+                if (lohEvent.StartSV.equals(breakend.getSV().id()))
+                    startBreakend = breakend;
+
+                if (lohEvent.EndSV.equals(breakend.getSV().id()))
+                    endBreakend = breakend;
+
+                if ((startBreakend != null || lohEvent.StartSV.equals(LOH_NO_SV))
+                && (endBreakend != null || lohEvent.EndSV.equals(LOH_NO_SV)))
+                {
+                    break;
+                }
+            }
+
+            if(startBreakend == null && endBreakend == null)
+            {
+                LOGGER.warn("sample({}) gene({}) not allocated to SVs",
+                        mSampleId, geneToStr(driverGene, region));
+                return;
+            }
+
+            if(startBreakend != null)
+                annotateDelSV(startBreakend, driverGene, region, "LOH");
+
+            if(endBreakend != null)
+                annotateDelSV(endBreakend, driverGene, region, "LOH");
+
+            break;
+        }
     }
 
     private SvBreakend findDeletionBreakend(final List<SvBreakend> breakendList, int startIndex, boolean walkForwards, boolean requireGOH)

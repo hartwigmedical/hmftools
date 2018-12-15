@@ -36,6 +36,7 @@ import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_RECI
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_SGL_PAIR_DEL;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_SGL_PAIR_DUP;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_SGL_PLUS_INCONSISTENT;
+import static com.hartwig.hmftools.svanalysis.types.SvLOH.LOH_NO_SV;
 import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.LINK_TYPE_DB;
 import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.LINK_TYPE_TI;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.ASSEMBLY_TYPE_EQV;
@@ -393,7 +394,7 @@ public class SvClusteringMethods {
 
         for(final SvLOH lohEvent : lohList)
         {
-            if(lohEvent.StartSV.isEmpty() || lohEvent.EndSV.isEmpty() || lohEvent.StartSV.equals("0") || lohEvent.EndSV.equals("0"))
+            if(lohEvent.StartSV.isEmpty() || lohEvent.EndSV.isEmpty() || lohEvent.StartSV.equals(LOH_NO_SV) || lohEvent.EndSV.equals(LOH_NO_SV))
                 continue;
 
             SvCluster lohClusterStart = null;

@@ -2,6 +2,7 @@ package com.hartwig.hmftools.svannotation;
 
 import static java.util.stream.Collectors.toList;
 
+import static com.hartwig.hmftools.common.variant.structural.annotation.SvGeneTranscriptCollection.getSampleGeneAnnotationsFilename;
 import static com.hartwig.hmftools.common.variant.structural.annotation.SvPONAnnotator.PON_FILTER_PASS;
 import static com.hartwig.hmftools.common.variant.structural.annotation.SvPONAnnotator.PON_FILTER_PON;
 import static com.hartwig.hmftools.svannotation.analysis.SvFusionAnalyser.FUSION_PAIRS_CSV;
@@ -11,6 +12,9 @@ import static com.hartwig.hmftools.svannotation.analysis.SvFusionAnalyser.PROMIS
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
@@ -76,6 +80,7 @@ public class StructuralVariantAnnotator
     private static final String SKIP_DB_UPLOAD = "skip_db_upload";
     private static final String LOG_DEBUG = "log_debug";
     private static final String SV_PON_FILE = "sv_pon_file";
+    private static final String OVERWRITE_ENSEMBL_FILE = "overwrite_ensembl";
 
     private static final String DB_USER = "db_user";
     private static final String DB_PASS = "db_pass";
@@ -90,6 +95,7 @@ public class StructuralVariantAnnotator
     private DatabaseAccess mDbAccess;
     private boolean mSourceSvFromDB;
     private SvGeneTranscriptCollection mSvGeneTranscriptCollection;
+    private boolean mOverwriteEnsembleFiles;
 
     // Let PON filtered SVs through since GRIDSS PON filtering is performed upstream
     private static final Set<String> ALLOWED_FILTERS = Sets.newHashSet("INFERRED", PON_FILTER_PON, PON_FILTER_PASS);
@@ -124,6 +130,7 @@ public class StructuralVariantAnnotator
 
         mDataPath = mCmdLineArgs.hasOption(DATA_OUTPUT_DIR) ? mCmdLineArgs.getOptionValue(DATA_OUTPUT_DIR) : "";
         mSvGeneTranscriptCollection.setDataPath(mDataPath);
+        mOverwriteEnsembleFiles = mCmdLineArgs.hasOption(OVERWRITE_ENSEMBL_FILE);
 
         return true;
     }
@@ -203,8 +210,20 @@ public class StructuralVariantAnnotator
         return true;
     }
 
+    private boolean outputFileExists(final String sampleId)
+    {
+        final String outputFilename = getSampleGeneAnnotationsFilename(mDataPath, sampleId);
+
+        Path outputFile = Paths.get(outputFilename);
+
+        return Files.exists(outputFile);
+    }
+
     private void runSample(final String sampleId, final StructuralVariantAnalyzer svAnalyser)
     {
+        if(!mOverwriteEnsembleFiles && outputFileExists(sampleId))
+            return;
+
         LOGGER.info("annotating variants for sample({})", sampleId);
 
         List<EnrichedStructuralVariant> enrichedVariants;
@@ -468,6 +487,7 @@ public class StructuralVariantAnnotator
         options.addOption(ENSEMBL_DB_USER, true, "Ensembl DB username if required");
         options.addOption(LOG_DEBUG, false, "Sets log level to Debug, off by default");
         options.addOption(SV_PON_FILE, true, "PON file for SVs");
+        options.addOption(OVERWRITE_ENSEMBL_FILE, false, "Whether to overwrite an existing sample ensembl file if exists");
         options.addOption(REF_GENOME, true, "Path to the ref genome fasta file.");
         options.addOption(DATA_OUTPUT_DIR, true, "Path to persist annotations to file");
 

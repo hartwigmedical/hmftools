@@ -249,6 +249,9 @@ public class MySQLAnnotator implements VariantAnnotator
 
     }
 
+    // private static String SPEC_TRANSCRIPT = "ENST00000453137";
+    private static String SPEC_TRANSCRIPT = "";
+
     private Transcript buildTranscript(
             @NotNull GeneAnnotation parent, @NotNull Record transcript, long position,
             @NotNull UInteger canonicalTranscriptId, boolean isForwardStrand)
@@ -261,6 +264,13 @@ public class MySQLAnnotator implements VariantAnnotator
         final UInteger transcriptId = transcript.get(TRANSCRIPT.TRANSCRIPT_ID);
         final boolean canonical = transcriptId.equals(canonicalTranscriptId);
         final String transcriptStableId = transcript.get(TRANSCRIPT.STABLE_ID);
+
+        /*
+        if(transcriptStableId.equals(SPEC_TRANSCRIPT))
+        {
+            LOGGER.debug("specific transcript({})", transcriptStableId);
+        }
+        */
 
         final Result<?> allExons = context.select(EXON_TRANSCRIPT.RANK, EXON.PHASE, EXON.END_PHASE, EXON.SEQ_REGION_START, EXON.SEQ_REGION_END)
                 .from(EXON_TRANSCRIPT)
