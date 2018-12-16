@@ -37,6 +37,7 @@ public class GeneAnnotation {
     private byte mOrientation;
     private long mPosition;
     private double mPloidy;
+    private String mInsertSequence;
 
     public GeneAnnotation(int varId,
             final boolean isStart, @NotNull final String geneName,
@@ -51,6 +52,7 @@ public class GeneAnnotation {
         mOrientation = 0;
         mPosition = -1;
         mPloidy = 0;
+        mInsertSequence = "";
 
         this.geneName = geneName;
         this.stableId = stableId;
@@ -73,6 +75,7 @@ public class GeneAnnotation {
         mPosition = -1;
         mPloidy = 0;
         mVarId = -1;
+        mInsertSequence = "";
 
         if(variant != null)
         {
@@ -82,6 +85,7 @@ public class GeneAnnotation {
             mPosition = variant.position(mIsStart);
             mChromosome = variant.chromosome(mIsStart);
             mSvType = variant.type();
+            mInsertSequence = variant.insertSequence();
         }
 
         this.geneName = geneName;
@@ -99,6 +103,7 @@ public class GeneAnnotation {
         mPosition = mIsStart ? var.startPosition() : var.endPosition();
         mChromosome = mIsStart ? var.startChromosome() : var.endChromosome();
         mSvType = var.type();
+        mInsertSequence = var.insertSequence();
     }
 
     public void setSvData(final EnrichedStructuralVariant var)
@@ -109,7 +114,7 @@ public class GeneAnnotation {
         mPosition = var.position(mIsStart);
         mChromosome = var.chromosome(mIsStart);
         mSvType = var.type();
-
+        mInsertSequence = var.insertSequence();
     }
 
     public int id() { return mVarId; }
@@ -118,6 +123,7 @@ public class GeneAnnotation {
     public StructuralVariantType type() { return mSvType; }
     public String chromosome() { return mChromosome; }
     public double ploidy() { return mPloidy; }
+    public String insertSequence() { return mInsertSequence; }
 
     public final EnrichedStructuralVariant variant() { return mVariant; }
 

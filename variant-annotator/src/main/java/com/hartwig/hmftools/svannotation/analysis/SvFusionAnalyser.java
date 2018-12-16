@@ -190,9 +190,9 @@ public class SvFusionAnalyser
         int calcStartPhase = calcPositionPhasing(startTrans, startUpstream);
 
         // factor in insert sequence
-        if(!startTrans.parent().variant().insertSequence().isEmpty())
+        if(!startTrans.parent().insertSequence().isEmpty())
         {
-            int insSeqAdjustment = (int)(startTrans.parent().variant().insertSequence().length() % 3);
+            int insSeqAdjustment = (int)(startTrans.parent().insertSequence().length() % 3);
             calcStartPhase += insSeqAdjustment;
         }
 
