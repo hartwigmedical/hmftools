@@ -343,10 +343,10 @@ public class FusionDisruptionAnalyser
                     final GeneAnnotation upGene = upstream.parent();
                     final GeneAnnotation downGene = downstream.parent();
 
-                    LOGGER.debug("sample({}) fusion: up({} {} {} {}) upSV({}: {}:{}:{} start={} strand={}) up({} {} {} {}) upSV({}: {}:{}:{} start={} strand={})",
-                            mSampleId, upstream.geneName(), upstream.transcriptId(), upstream.regionType(), upstream.codingType(),
+                    LOGGER.debug("sample({}) fusion: up({} {} {} {} ph={}) upSV({}: {}:{}:{} start={} strand={}) down({} {} {} {} ph={}) downSV({}: {}:{}:{} start={} strand={})",
+                            mSampleId, upstream.geneName(), upstream.transcriptId(), upstream.regionType(), upstream.codingType(), upstream.exonUpstreamPhase(),
                             upGene.id(), upGene.chromosome(), upGene.position(), upGene.orientation(), upGene.isStart(), upGene.strand(),
-                            downstream.geneName(), downstream.transcriptId(), downstream.regionType(), downstream.codingType(),
+                            downstream.geneName(), downstream.transcriptId(), downstream.regionType(), downstream.codingType(), downstream.exonDownstreamPhase(),
                             downGene.id(), downGene.chromosome(), downGene.position(), downGene.orientation(), downGene.isStart(), downGene.strand());
                 }
             }

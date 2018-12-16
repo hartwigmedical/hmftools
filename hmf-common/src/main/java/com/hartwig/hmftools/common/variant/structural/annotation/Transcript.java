@@ -56,9 +56,7 @@ public class Transcript {
         mTranscriptId = transcriptId;
 
         mExonUpstream = exonUpstream;
-        mExonUpstreamPhase = exonUpstreamPhase;
         mExonDownstream = exonDownstream;
-        mExonDownstreamPhase = exonDownstreamPhase;
 
         mExactCodingBase = -1;
 
@@ -93,6 +91,16 @@ public class Transcript {
         mCodingType = calcCodingType();
         mRegionType = calcRegionType();
 
+        if(preCoding())
+        {
+            mExonDownstreamPhase = -1;
+        }
+        else
+        {
+            mExonDownstreamPhase = exonDownstreamPhase;
+        }
+
+        mExonUpstreamPhase = exonUpstreamPhase;
     }
 
     @NotNull
@@ -164,13 +172,21 @@ public class Transcript {
     private final String calcCodingType()
     {
         if(mTotalCodingBases == 0)
+        {
             return TRANS_CODING_TYPE_NON_CODING;
+        }
         else if(mCodingBases == 0)
+        {
             return TRANS_CODING_TYPE_UPSTREAM;
+        }
         else if(mCodingBases == mTotalCodingBases)
+        {
             return TRANS_CODING_TYPE_DOWNSTREAM;
+        }
         else
+        {
             return TRANS_CODING_TYPE_CODING;
+        }
     }
 
     public boolean isCanonical() { return mCanonical; }
