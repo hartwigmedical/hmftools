@@ -1,6 +1,9 @@
 package com.hartwig.hmftools.sage;
 
-import static com.hartwig.hmftools.common.variant.enrich.HotspotEnrichment.*;
+import static com.hartwig.hmftools.common.variant.enrich.HotspotEnrichment.DISTANCE;
+import static com.hartwig.hmftools.common.variant.enrich.HotspotEnrichment.HOTSPOT_FLAG;
+import static com.hartwig.hmftools.common.variant.enrich.HotspotEnrichment.NEAR_HOTSPOT_FLAG;
+import static com.hartwig.hmftools.common.variant.enrich.HotspotEnrichment.fromHotspotsFile;
 
 import java.io.File;
 import java.io.IOException;
@@ -77,10 +80,9 @@ public class SageHotspotAnnotation {
     }
 
     private void merge(final String inputVcf, final String hotspotVcf, final String outputVCF) {
-        final VCFFileReader inputReader = new VCFFileReader(new File(inputVcf), true);
+        final VCFFileReader inputReader = new VCFFileReader(new File(inputVcf), false);
         final VCFFileReader hotspotReader = new VCFFileReader(new File(hotspotVcf), false);
-        final TreeSet<VariantContext> tree =
-                new TreeSet<>(new VCComparator(inputReader.getFileHeader().getSequenceDictionary()));
+        final TreeSet<VariantContext> tree = new TreeSet<>(new VCComparator(inputReader.getFileHeader().getSequenceDictionary()));
 
         LOGGER.info("Loading somatic variants from {}", inputVcf);
         try (CloseableIterator<VariantContext> inputIterator = inputReader.iterator()) {
@@ -89,17 +91,19 @@ public class SageHotspotAnnotation {
             }
         }
 
-        LOGGER.info("Loading hotspot variants from {}", hotspotVcf);
-        final List<VariantContext> hotspots =
-                hotspotReader.iterator().stream().map(SageHotspotAnnotation::recovered).collect(Collectors.toList());
-        for (VariantContext hotspot : hotspots) {
-            if (hotspot.isNotFiltered()) {
-                final List<VariantContext> overlapping = inputReader.query(hotspot.getContig(), hotspot.getStart(), hotspot.getEnd()).toList();
-                final VariantContext primary = primary(hotspot, overlapping);
-                if (primary.equals(hotspot)) {
-                    overlapping.forEach(tree::remove);
-                    tree.add(hotspot);
-                }
+        LOGGER.info("Loading sage variants from {}", hotspotVcf);
+        final List<VariantContext> sageVariants = hotspotReader.iterator()
+                .stream()
+                .filter(VariantContext::isNotFiltered)
+                .map(SageHotspotAnnotation::recovered)
+                .map(this::annotate)
+                .collect(Collectors.toList());
+        for (VariantContext sageVariant : sageVariants) {
+            final List<VariantContext> overlapping = inputReader.query(sageVariant.getContig(), sageVariant.getStart(), sageVariant.getEnd()).toList();
+            final VariantContext primary = primary(sageVariant, overlapping);
+            if (primary.equals(sageVariant)) {
+                overlapping.forEach(tree::remove);
+                tree.add(sageVariant);
             }
         }
 
@@ -134,10 +138,7 @@ public class SageHotspotAnnotation {
 
     @NotNull
     private static VariantContext recovered(@NotNull final VariantContext context) {
-        return new VariantContextBuilder(context).attribute(HOTSPOT_FLAG, true)
-                .attribute(NEAR_HOTSPOT_FLAG, false)
-                .attribute(RECOVERED_FLAG, true)
-                .make();
+        return new VariantContextBuilder(context).attribute(RECOVERED_FLAG, true).make();
     }
 
     @NotNull
