@@ -16,6 +16,7 @@ import com.hartwig.hmftools.common.context.RunContext;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion;
+import com.hartwig.hmftools.common.variant.structural.annotation.StructuralVariantAnalysis;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 import org.apache.commons.cli.CommandLine;
@@ -28,11 +29,10 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
+public class LoadEvidenceData {
 
-public class LoadEvicenceData {
 
-
-    private static final Logger LOGGER = LogManager.getLogger(LoadEvicenceData.class);
+    private static final Logger LOGGER = LogManager.getLogger(LoadEvidenceData.class);
     private static final String KNOWLEDGEBASE_PATH = "knowledgebase_path";
     private static final String DB_USER = "db_user";
     private static final String DB_PASS = "db_pass";
@@ -66,7 +66,7 @@ public class LoadEvicenceData {
                 LOGGER.info("sample: " + sample);
 
                 LOGGER.info("Reading clinical Data from DB");
-                final String primaryTumorLocation = "";
+                final String primaryTumorLocation = dbAccess.readTumorLocation(sample);
 
                 LOGGER.info(primaryTumorLocation);
 
@@ -105,13 +105,23 @@ public class LoadEvicenceData {
                 dbWriter.writeClinicalTrial(sample, allClinicalTrialsGeneCopyNumber);
 
                 LOGGER.info("Reading gene fusions from DB");
-//                Map<GeneFusion, List<EvidenceItem>> evidencePerFusion =
-//                        actionabilityAnalyzer.evidenceForFusions(structuralVariantAnalysis.fusions(), primaryTumorLocation);
+                final List<StructuralVariantAnalysis> analysesStructuralVarianten = dbAccess.readingStructuralVarianten(sample);
 
-                //                LOGGER.info("Writing evidence items of gene fusions to DB");
-//                dbWriter.writeClinicalEvidence(sample);
-//                LOGGER.info("Writing clinical trials of gene fusions to DB");
-//                dbWriter.writeClinicalTrial(sample);
+                final List<GeneFusion> geneFusions = analysesStructuralVarianten.iterator().next().fusions();
+                LOGGER.info(geneFusions);
+
+                Map<GeneFusion, List<EvidenceItem>> evidencePerFusion =
+                        actionabilityAnalyzer.evidenceForFusions(geneFusions, primaryTumorLocation);
+
+                final List<EvidenceItem> AllEvidenceItemsGeneFusions = extractAllEvidenceItems(evidencePerFusion);
+                final List<ClinicalTrial> allClinicalTrialsGeneFusions = extractAllTrials(AllEvidenceItemsGeneFusions);
+
+                LOGGER.info("Writing evidence items of gene fusions to DB");
+                LOGGER.info("Counts of all evidence items: " + AllEvidenceItemsGeneFusions.size());
+                dbWriter.writeClinicalEvidence(sample, AllEvidenceItemsGeneFusions);
+                LOGGER.info("Writing clinical trials of gene fusions to DB");
+                LOGGER.info("Counts of all clinical trials: " + allClinicalTrialsGeneFusions.size());
+                dbWriter.writeClinicalTrial(sample, allClinicalTrialsGeneFusions);
 
             }
         }

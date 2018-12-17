@@ -3,12 +3,8 @@ package com.hartwig.hmftools.patientdb.dao;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
-import java.util.stream.Stream;
 
 import com.hartwig.hmftools.common.actionability.ClinicalTrial;
 import com.hartwig.hmftools.common.actionability.EvidenceItem;
@@ -27,19 +23,17 @@ import com.hartwig.hmftools.common.region.CanonicalTranscript;
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
 import com.hartwig.hmftools.common.variant.structural.EnrichedStructuralVariant;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantData;
+import com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion;
+import com.hartwig.hmftools.common.variant.structural.annotation.StructuralVariantAnalysis;
 import com.hartwig.hmftools.patientdb.data.Patient;
-import com.hartwig.hmftools.patientdb.data.PotentialActionableCNV;
-import com.hartwig.hmftools.patientdb.data.PotentialActionableFusion;
-import com.hartwig.hmftools.patientdb.data.PotentialActionableVariant;
 import com.hartwig.hmftools.patientdb.data.SampleData;
 
-import org.apache.commons.math3.util.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jooq.DSLContext;
+import org.jooq.Result;
 import org.jooq.SQLDialect;
 import org.jooq.conf.MappedSchema;
 import org.jooq.conf.RenderMapping;
@@ -69,17 +63,17 @@ public class DatabaseAccess {
     @NotNull
     private final SomaticVariantDAO somaticVariantDAO;
     @NotNull
+    private final StructuralVariantAnnotationDAO structuralVariantAnnotationDAO;
+    @NotNull
     private final StructuralVariantDAO structuralVariantDAO;
     @NotNull
     private final ValidationFindingDAO validationFindingsDAO;
     @NotNull
     private final CanonicalTranscriptDAO canonicalTranscriptDAO;
     @NotNull
-    private final PotentiallyActionableItemsDAO potentiallyActionableItemsDAO;
-    @NotNull
     private final ChordDAO chordDAO;
     @NotNull
-    private final ClinialEvidenceDAO clinicalEvidenceDAO;
+    private final ClinicalEvidenceDAO clinicalEvidenceDAO;
     @NotNull
     private final ClinicalTrialDAO clinicalTrialDAO;
 
@@ -95,16 +89,16 @@ public class DatabaseAccess {
         copyNumberDAO = new CopyNumberDAO(context);
         geneCopyNumberDAO = new GeneCopyNumberDAO(context);
         somaticVariantDAO = new SomaticVariantDAO(context);
+        structuralVariantAnnotationDAO = new StructuralVariantAnnotationDAO(context);
         structuralVariantDAO = new StructuralVariantDAO(context);
         ecrfDAO = new EcrfDAO(context);
         clinicalDAO = new ClinicalDAO(context);
         validationFindingsDAO = new ValidationFindingDAO(context);
         canonicalTranscriptDAO = new CanonicalTranscriptDAO(context);
         metricDAO = new MetricDAO(context);
-        potentiallyActionableItemsDAO = new PotentiallyActionableItemsDAO(context);
         driverCatalogDAO = new DriverCatalogDAO(context);
         chordDAO = new ChordDAO(context);
-        clinicalEvidenceDAO = new ClinialEvidenceDAO(context);
+        clinicalEvidenceDAO = new ClinicalEvidenceDAO(context);
         clinicalTrialDAO = new ClinicalTrialDAO(context);
     }
 
@@ -119,6 +113,10 @@ public class DatabaseAccess {
                 ? new Settings().withRenderMapping(new RenderMapping().withSchemata(new MappedSchema().withInput(DEV_CATALOG)
                 .withOutput(catalog)))
                 : null;
+    }
+
+    public String readTumorLocation(@NotNull String sample) {
+        return clinicalDAO.readTumorLocationPatient(sample);
     }
 
     public void writeCanonicalTranscripts(@NotNull final String assembly, @NotNull final List<CanonicalTranscript> transcripts) {
@@ -140,41 +138,6 @@ public class DatabaseAccess {
 
     public void writeSomaticVariants(@NotNull final String sampleId, @NotNull List<EnrichedSomaticVariant> variants) {
         somaticVariantDAO.write(sampleId, variants);
-    }
-
-    @NotNull
-    public Stream<PotentialActionableVariant> allPotentiallyActionableVariants() {
-        return potentiallyActionableItemsDAO.potentiallyActionableVariants(Strings.EMPTY);
-    }
-
-    @NotNull
-    public Stream<PotentialActionableVariant> potentiallyActionableVariants(@NotNull final String sample) {
-        return potentiallyActionableItemsDAO.potentiallyActionableVariants(sample);
-    }
-
-    @NotNull
-    public Stream<PotentialActionableCNV> allPotentiallyActionableCNVs() {
-        return potentiallyActionableItemsDAO.potentiallyActionableCNVs(Strings.EMPTY);
-    }
-
-    @NotNull
-    public Stream<PotentialActionableCNV> potentiallyActionableCNVs(@NotNull final String sample) {
-        return potentiallyActionableItemsDAO.potentiallyActionableCNVs(sample);
-    }
-
-    @NotNull
-    public Stream<PotentialActionableFusion> allPotentiallyActionableFusions() {
-        return potentiallyActionableItemsDAO.potentiallyActionableFusions(Strings.EMPTY);
-    }
-
-    @NotNull
-    public Stream<PotentialActionableFusion> potentiallyActionableFusions(@NotNull final String sample) {
-        return potentiallyActionableItemsDAO.potentiallyActionableFusions(sample);
-    }
-
-    @NotNull
-    public Stream<Pair<String, String>> sampleAndTumorLocation(@NotNull final String sampleId) {
-        return potentiallyActionableItemsDAO.sampleAndTumorLocation(sampleId);
     }
 
     public void writeStructuralVariants(@NotNull final String sampleId, @NotNull final List<EnrichedStructuralVariant> variants) {
@@ -216,6 +179,11 @@ public class DatabaseAccess {
     @NotNull
     public List<EnrichedSomaticVariant> readSomaticVariants(@NotNull final String sample) {
         return somaticVariantDAO.read(sample);
+    }
+
+    @NotNull
+    public List<StructuralVariantAnalysis> readingStructuralVarianten(@NotNull final String sample) {
+        return structuralVariantAnnotationDAO.readStructuralVariantAnalysis(sample);
     }
 
     @NotNull
@@ -320,13 +288,16 @@ public class DatabaseAccess {
         LOGGER.info("Deleting copy number data for sample: " + sample);
         copyNumberDAO.deleteCopyNumberForSample(sample);
 
-        LOGGER.info("Deleting gene copy number data for sample: " + sample);
+        LOGGER.info("Deleting gene copy numbers for sample: " + sample);
         geneCopyNumberDAO.deleteGeneCopyNumberForSample(sample);
 
-        LOGGER.info("Deleting somatic variant data for sample: " + sample);
+        LOGGER.info("Deleting somatic variants for sample: " + sample);
         somaticVariantDAO.deleteSomaticVariantForSample(sample);
 
-        LOGGER.info("Deleting structural variant data for sample: " + sample);
+        LOGGER.info("Deleting structural variant annotation data for sample: " + sample);
+        structuralVariantAnnotationDAO.deleteAnnotationsForSample(sample);
+
+        LOGGER.info("Deleting structural variants for sample: " + sample);
         structuralVariantDAO.deleteStructuralVariantsForSample(sample);
 
         LOGGER.info("Deleting clinical trials for sample: " + sample);
@@ -335,7 +306,7 @@ public class DatabaseAccess {
         LOGGER.info("Deleting evidence items for sample: " + sample);
         clinicalEvidenceDAO.deleteClinicalEvidenceForSample(sample);
 
-        LOGGER.info("All data for sample: " + sample + " is deleted");
+        LOGGER.info("All data for sample: " + sample + " has been deleted");
     }
 }
 

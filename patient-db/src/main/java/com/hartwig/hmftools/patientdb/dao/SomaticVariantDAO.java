@@ -2,9 +2,9 @@ package com.hartwig.hmftools.patientdb.dao;
 
 import static com.hartwig.hmftools.patientdb.Config.DB_BATCH_INSERT_SIZE;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.SOMATICVARIANT;
+import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.STRUCTURALVARIANT;
 
 import java.sql.Timestamp;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -20,6 +20,7 @@ import com.hartwig.hmftools.common.variant.VariantType;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.jooq.DSLContext;
 import org.jooq.InsertValuesStepN;
 import org.jooq.Record;
@@ -39,8 +40,6 @@ class SomaticVariantDAO {
         List<EnrichedSomaticVariant> variants = Lists.newArrayList();
 
         final Result<Record> result = context.select().from(SOMATICVARIANT).where(SOMATICVARIANT.SAMPLEID.eq(sample)).fetch();
-        List<String> emptyList = new ArrayList<>();
-        emptyList.add("");
 
         for (Record record : result) {
             variants.add(ImmutableEnrichedSomaticVariant.builder()
@@ -52,10 +51,10 @@ class SomaticVariantDAO {
                     .alt(record.getValue(SOMATICVARIANT.ALT))
                     .gene(record.getValue(SOMATICVARIANT.GENE))
                     .genesEffected(record.getValue(SOMATICVARIANT.GENESEFFECTED))
-                    .cosmicIDs(emptyList)
+                    .cosmicIDs(Lists.newArrayList(record.getValue(SOMATICVARIANT.COSMICID)))
                     .dbsnpID(record.getValue(SOMATICVARIANT.DBSNPID))
                     .worstEffect(record.getValue(SOMATICVARIANT.WORSTEFFECT))
-                    .worstCodingEffect(CodingEffect.valueOf(record.getValue(SOMATICVARIANT.WORSTCODINGEFFECT)))
+                    .worstCodingEffect(stringToBoolean(Strings.EMPTY) ? CodingEffect.UNDEFINED : CodingEffect.valueOf(record.getValue(SOMATICVARIANT.WORSTCODINGEFFECT)))
                     .worstEffectTranscript(record.getValue(SOMATICVARIANT.WORSTEFFECTTRANSCRIPT))
                     .canonicalEffect(record.getValue(SOMATICVARIANT.CANONICALEFFECT))
                     .canonicalHgvsCodingImpact(record.getValue(SOMATICVARIANT.CANONICALHGVSCODINGIMPACT))
@@ -64,20 +63,36 @@ class SomaticVariantDAO {
                     .totalReadCount(record.getValue(SOMATICVARIANT.TOTALREADCOUNT))
                     .adjustedCopyNumber(record.getValue(SOMATICVARIANT.ADJUSTEDCOPYNUMBER))
                     .adjustedVAF(record.getValue(SOMATICVARIANT.ADJUSTEDVAF))
-                    .highConfidenceRegion(false)
+                    .highConfidenceRegion(byteToBoolean(record.getValue(SOMATICVARIANT.HIGHCONFIDENCE)))
                     .trinucleotideContext(record.getValue(SOMATICVARIANT.TRINUCLEOTIDECONTEXT))
                     .microhomology(record.getValue(SOMATICVARIANT.MICROHOMOLOGY))
                     .repeatSequence(record.getValue(SOMATICVARIANT.REPEATSEQUENCE))
                     .repeatCount(record.getValue(SOMATICVARIANT.REPEATCOUNT))
                     .clonality(Clonality.valueOf(record.getValue(SOMATICVARIANT.CLONALITY)))
-                    .biallelic(false)
+                    .biallelic(byteToBoolean(record.getValue(SOMATICVARIANT.BIALLELIC)))
                     .hotspot(Hotspot.valueOf(record.getValue(SOMATICVARIANT.HOTSPOT)))
                     .mappability(record.getValue(SOMATICVARIANT.MAPPABILITY))
                     .germlineStatus(GermlineStatus.valueOf(record.getValue(SOMATICVARIANT.GERMLINESTATUS)))
                     .minorAllelePloidy(record.getValue(SOMATICVARIANT.MINORALLELEPLOIDY))
-            .build());
+                    .ploidy(1)
+                    .canonicalCodingEffect(stringToBoolean(Strings.EMPTY) ? CodingEffect.UNDEFINED : CodingEffect.valueOf(record.getValue(SOMATICVARIANT.CANONICALCODINGEFFECT)))
+                    .recovered(byteToBoolean(record.getValue(SOMATICVARIANT.RECOVERED)))
+                    .build());
         }
         return variants;
+    }
+
+    @NotNull
+    private static Boolean stringToBoolean(String s) {
+       return s.equals("") ? true : false;
+    }
+
+    @Nullable
+    private static Boolean byteToBoolean(Byte b) {
+        if (b == null) {
+            return null;
+        }
+        return b != 0;
     }
 
     void write(@NotNull final String sample, @NotNull List<EnrichedSomaticVariant> variants) {

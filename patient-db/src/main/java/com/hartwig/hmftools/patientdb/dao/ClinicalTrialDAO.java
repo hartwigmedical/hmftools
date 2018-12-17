@@ -40,8 +40,14 @@ public class ClinicalTrialDAO {
     }
 
     private static void addValues(@NotNull String sample, @NotNull ClinicalTrial clinicalTrial, @NotNull InsertValuesStep7 inserter) {
-        inserter.values(sample, clinicalTrial.event(), clinicalTrial.scope()
-                .readableString(), clinicalTrial.acronym(), clinicalTrial.cancerType(), true, clinicalTrial.source().sourceName());
+        //noinspection unchecked
+        inserter.values(sample,
+                clinicalTrial.event(),
+                clinicalTrial.scope().readableString(),
+                clinicalTrial.acronym(),
+                clinicalTrial.cancerType(),
+                clinicalTrial.isOnLabel() ? "Tumor Type specific" : "Other tumor types specific",
+                clinicalTrial.source().sourceName());
 
     }
 

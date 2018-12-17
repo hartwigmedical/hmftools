@@ -1,23 +1,23 @@
 package com.hartwig.hmftools.patientdb.dao;
 
+import static com.hartwig.hmftools.patientdb.Config.DB_BATCH_INSERT_SIZE;
+import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.CLINICALEVIDENCE;
+
 import java.util.List;
 
 import com.google.common.collect.Iterables;
 import com.hartwig.hmftools.common.actionability.EvidenceItem;
 
-import static com.hartwig.hmftools.patientdb.Config.DB_BATCH_INSERT_SIZE;
-import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.CLINICALEVIDENCE;
-
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
 import org.jooq.InsertValuesStep10;
 
-public class ClinialEvidenceDAO {
+public class ClinicalEvidenceDAO {
 
     @NotNull
     private final DSLContext context;
 
-    ClinialEvidenceDAO(@NotNull final DSLContext context) {
+    ClinicalEvidenceDAO(@NotNull final DSLContext context) {
         this.context = context;
     }
 
@@ -43,8 +43,17 @@ public class ClinialEvidenceDAO {
     }
 
     private static void addValues(@NotNull String sample, @NotNull EvidenceItem evidenceItem, @NotNull InsertValuesStep10 inserter) {
-        inserter.values(sample, evidenceItem.event(), evidenceItem.scope().readableString(), evidenceItem.drug(), evidenceItem.drugsType(),
-                evidenceItem.response(), evidenceItem.cancerType(), true, evidenceItem.level().readableString(), evidenceItem.source().sourceName());
+        //noinspection unchecked
+        inserter.values(sample,
+                evidenceItem.event(),
+                evidenceItem.scope().readableString(),
+                evidenceItem.drug(),
+                evidenceItem.drugsType(),
+                evidenceItem.response(),
+                evidenceItem.cancerType(),
+                evidenceItem.isOnLabel() ? "Tumor Type specific" : "Other tumor types specific",
+                evidenceItem.level().readableString(),
+                evidenceItem.source().sourceName());
 
     }
 

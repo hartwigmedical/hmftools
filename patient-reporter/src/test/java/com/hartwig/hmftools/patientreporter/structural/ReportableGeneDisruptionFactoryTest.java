@@ -30,7 +30,8 @@ public class ReportableGeneDisruptionFactoryTest {
     public void canConvertPairedDisruption() {
         List<GeneCopyNumber> copyNumbers =
                 Lists.newArrayList(createTestCopyNumberBuilder().gene("ERBB4").minCopyNumber(1).maxCopyNumber(1).build());
-        List<GeneDisruption> pairedDisruptions = createTestDisruptionPair(StructuralVariantType.INV, "2", "q34", "ERBB4", 4, 9, 1D);
+        List<GeneDisruption> pairedDisruptions =
+                createTestDisruptionPair(StructuralVariantType.INV, "2", "q34", "ERBB4", "ERBB4", 4, 9, 1D);
 
         List<ReportableGeneDisruption> reportableDisruptions =
                 ReportableGeneDisruptionFactory.toReportableGeneDisruptions(pairedDisruptions, copyNumbers);
@@ -49,6 +50,20 @@ public class ReportableGeneDisruptionFactoryTest {
     }
 
     @Test
+    public void doesNotPairDisruptionsOnDifferentGenes() {
+        List<GeneCopyNumber> copyNumbers =
+                Lists.newArrayList(createTestCopyNumberBuilder().gene("ERBB4").minCopyNumber(1).maxCopyNumber(1).build(),
+                        createTestCopyNumberBuilder().gene("ERBB2").minCopyNumber(1).maxCopyNumber(1).build());
+        List<GeneDisruption> pairedDisruptions =
+                createTestDisruptionPair(StructuralVariantType.INV, "2", "q34", "ERBB4", "ERBB2", 4, 9, 1D);
+
+        List<ReportableGeneDisruption> reportableDisruptions =
+                ReportableGeneDisruptionFactory.toReportableGeneDisruptions(pairedDisruptions, copyNumbers);
+
+        assertEquals(2, reportableDisruptions.size());
+    }
+
+    @Test
     public void canConvertNormalDisruptionsWithoutCopyNumbers() {
         GeneDisruption disruption1 = createDisruption(StructuralVariantType.BND, "17", "q12", "CDK12", 12, 2.3, false);
         GeneDisruption disruption2 = createDisruption(StructuralVariantType.INS, "21", "q22.12", "RUNX1", 0, 0.8, true);
@@ -63,7 +78,8 @@ public class ReportableGeneDisruptionFactoryTest {
 
     @NotNull
     private static List<GeneDisruption> createTestDisruptionPair(@NotNull StructuralVariantType type, @NotNull String chromosome,
-            @NotNull String chromosomeBand, @NotNull String gene, int startExon, int endExon, double ploidy) {
+            @NotNull String chromosomeBand, @NotNull String upstreamGene, @NotNull String downstreamGene, int startExon, int endExon,
+            double ploidy) {
         EnrichedStructuralVariantLeg start =
                 createEnrichedStructuralVariantLegBuilder().orientation((byte) 1).chromosome(chromosome).build();
         EnrichedStructuralVariantLeg end = createEnrichedStructuralVariantLegBuilder().orientation((byte) 0).chromosome(chromosome).build();
@@ -71,7 +87,7 @@ public class ReportableGeneDisruptionFactoryTest {
                 createEnrichedStructuralVariantBuilder().type(type).start(start).end(end).ploidy(ploidy).build();
 
         GeneAnnotation upstreamGeneAnnotation =
-                new GeneAnnotation(variant, true, gene, "id", 1, Lists.newArrayList(), Lists.newArrayList(), chromosomeBand);
+                new GeneAnnotation(variant, true, upstreamGene, "id", 1, Lists.newArrayList(), Lists.newArrayList(), chromosomeBand);
 
         Transcript upstreamTranscript =
                 new Transcript(upstreamGeneAnnotation, "trans", startExon, -1, startExon + 1, -1, 0, 0, 15, true, 0, 0, null, null);
@@ -79,10 +95,10 @@ public class ReportableGeneDisruptionFactoryTest {
         GeneDisruption upstreamDisruption = ImmutableGeneDisruption.builder().reportable(true).linkedAnnotation(upstreamTranscript).build();
 
         GeneAnnotation downstreamGeneAnnotation =
-                new GeneAnnotation(variant, false, gene, "id", 1, Lists.newArrayList(), Lists.newArrayList(), chromosomeBand);
+                new GeneAnnotation(variant, false, downstreamGene, "id", 1, Lists.newArrayList(), Lists.newArrayList(), chromosomeBand);
 
         Transcript downstreamTranscript =
-                new Transcript(downstreamGeneAnnotation, "trans", endExon, -1, endExon + 1, -1, 0, 0, 15, true,  0, 0, null, null);
+                new Transcript(downstreamGeneAnnotation, "trans", endExon, -1, endExon + 1, -1, 0, 0, 15, true, 0, 0, null, null);
 
         GeneDisruption downstreamDisruption =
                 ImmutableGeneDisruption.builder().reportable(true).linkedAnnotation(downstreamTranscript).build();
@@ -102,7 +118,8 @@ public class ReportableGeneDisruptionFactoryTest {
         GeneAnnotation geneAnnotation =
                 new GeneAnnotation(variant, true, gene, "id", 1, Lists.newArrayList(), Lists.newArrayList(), chromosomeBand);
 
-        Transcript transcript = new Transcript(geneAnnotation, "trans", exonUpstream, -1, exonUpstream + 1, -1, 0, 0, 5, true, 0, 0, null, null);
+        Transcript transcript =
+                new Transcript(geneAnnotation, "trans", exonUpstream, -1, exonUpstream + 1, -1, 0, 0, 5, true, 0, 0, null, null);
 
         return ImmutableGeneDisruption.builder().reportable(true).linkedAnnotation(transcript).build();
     }

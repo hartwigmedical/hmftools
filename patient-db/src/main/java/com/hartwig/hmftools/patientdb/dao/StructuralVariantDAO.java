@@ -2,9 +2,6 @@ package com.hartwig.hmftools.patientdb.dao;
 
 import static com.hartwig.hmftools.patientdb.Config.DB_BATCH_INSERT_SIZE;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.STRUCTURALVARIANT;
-import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.STRUCTURALVARIANTBREAKEND;
-import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.STRUCTURALVARIANTDISRUPTION;
-import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.STRUCTURALVARIANTFUSION;
 
 import java.sql.Timestamp;
 import java.util.Date;
@@ -20,7 +17,9 @@ import com.hartwig.hmftools.common.variant.structural.ImmutableStructuralVariant
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantData;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.jooq.DSLContext;
 import org.jooq.InsertValuesStepN;
 import org.jooq.Record;
@@ -33,22 +32,6 @@ class StructuralVariantDAO {
 
     StructuralVariantDAO(@NotNull final DSLContext context) {
         this.context = context;
-    }
-
-    private Double getValueNotNull(Double value) {
-        return value != null ? value : 0;
-    }
-
-    private Integer getValueNotNull(Integer value) {
-        return value != null ? value : 0;
-    }
-
-    private Byte getValueNotNull(Byte value) {
-        return value != null ? value : 0;
-    }
-
-    private String getValueNotNull(String value) {
-        return value != null ? value : "";
     }
 
     @NotNull
@@ -184,7 +167,7 @@ class StructuralVariantDAO {
                         .build();
             }
 
-            final EnrichedStructuralVariant variant = ImmutableEnrichedStructuralVariant.builder()
+            EnrichedStructuralVariant variant = ImmutableEnrichedStructuralVariant.builder()
                     .primaryKey(record.getValue(STRUCTURALVARIANT.ID))
                     .id(record.getValue(STRUCTURALVARIANT.VCFID))
                     .start(start)
@@ -207,13 +190,6 @@ class StructuralVariantDAO {
             regions.add(variant);
         }
         return regions;
-    }
-
-    private static Boolean byteToBoolean(Byte b) {
-        if (b == null) {
-            return null;
-        }
-        return b != 0;
     }
 
     void write(@NotNull final String sample, @NotNull final List<EnrichedStructuralVariant> variants) {
@@ -274,9 +250,6 @@ class StructuralVariantDAO {
         }
     }
 
-    private static int MAX_HOM_SEQUENCE = 255;
-    private static int MAX_INSERT_SEQUENCE_ALIGN = 512;
-
     private static void addRecord(@NotNull Timestamp timestamp, @NotNull InsertValuesStepN inserter, @NotNull String sample,
             @NotNull EnrichedStructuralVariant variant) {
         //noinspection unchecked
@@ -287,8 +260,11 @@ class StructuralVariantDAO {
                 variant.end() == null ? null : variant.end().position(),
                 variant.start().orientation(),
                 variant.end() == null ? null : variant.end().orientation(),
-                DatabaseUtil.checkStringLength(variant.start().homology(), MAX_HOM_SEQUENCE),
-                variant.end() == null ? null : DatabaseUtil.checkStringLength(variant.end().homology(), MAX_HOM_SEQUENCE),
+                DatabaseUtil.checkStringLength(variant.start().homology(), STRUCTURALVARIANT.STARTHOMOLOGYSEQUENCE.getDataType().length()),
+                variant.end() == null
+                        ? null
+                        : DatabaseUtil.checkStringLength(variant.end().homology(),
+                                STRUCTURALVARIANT.ENDHOMOLOGYSEQUENCE.getDataType().length()),
                 variant.insertSequence(),
                 variant.type(),
                 DatabaseUtil.decimal(variant.start().alleleFrequency()),
@@ -324,14 +300,37 @@ class StructuralVariantDAO {
                 variant.recovered(),
                 variant.start().refGenomeContext(),
                 variant.end() == null ? null : variant.end().refGenomeContext(),
-                DatabaseUtil.checkStringLength(variant.insertSequenceAlignments(), MAX_INSERT_SEQUENCE_ALIGN),
+                DatabaseUtil.checkStringLength(variant.insertSequenceAlignments(),
+                        STRUCTURALVARIANT.INSERTSEQUENCEALIGNMENTS.getDataType().length()),
                 timestamp);
     }
 
     void deleteStructuralVariantsForSample(@NotNull String sample) {
-        context.delete(STRUCTURALVARIANTDISRUPTION).where(STRUCTURALVARIANTDISRUPTION.SAMPLEID.eq(sample)).execute();
-        context.delete(STRUCTURALVARIANTFUSION).where(STRUCTURALVARIANTFUSION.SAMPLEID.eq(sample)).execute();
-        context.delete(STRUCTURALVARIANTBREAKEND).where(STRUCTURALVARIANTBREAKEND.SAMPLEID.eq(sample)).execute();
         context.delete(STRUCTURALVARIANT).where(STRUCTURALVARIANT.SAMPLEID.eq(sample)).execute();
+    }
+
+    private static double getValueNotNull(@Nullable Double value) {
+        return value != null ? value : 0D;
+    }
+
+    private static int getValueNotNull(@Nullable Integer value) {
+        return value != null ? value : 0;
+    }
+
+    private static byte getValueNotNull(@Nullable Byte value) {
+        return value != null ? value : 0;
+    }
+
+    @NotNull
+    private static String getValueNotNull(@Nullable String value) {
+        return value != null ? value : Strings.EMPTY;
+    }
+
+    @Nullable
+    private static Boolean byteToBoolean(Byte b) {
+        if (b == null) {
+            return null;
+        }
+        return b != 0;
     }
 }
