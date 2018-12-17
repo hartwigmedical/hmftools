@@ -2,6 +2,7 @@ package com.hartwig.hmftools.svanalysis.annotators;
 
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DUP;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INV;
+import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_LOW_QUALITY;
 import static com.hartwig.hmftools.svanalysis.types.SvLOH.LOH_NO_SV;
 
 import java.util.List;
@@ -234,10 +235,8 @@ public class DriverGeneAnnotator
     private void annotateBiallelicEvent(final DriverCatalog driverGene, HmfTranscriptRegion region)
     {
         // for biallelic events, find the straddling LOH event
-
-        // first find the min copy number within the gene region
-        // then walk out in both directions to find the SV which caused the loss
-        // and then walk out again until heterozygosity is gained
+        if(mSampleLOHData == null || mSampleLOHData.isEmpty())
+            return;
 
         final List<SvBreakend> breakendList = mChrBreakendMap.get(region.chromosome());
 
@@ -333,31 +332,9 @@ public class DriverGeneAnnotator
         return false;
     }
 
-    private void annotateDelSV(final SvBreakend breakend, DriverCatalog driverGene, HmfTranscriptRegion region, final String desc)
-    {
-        final SvVarData var = breakend.getSV();
-
-        LOGGER.info(String.format("sample(%s) cluster(%d) gene(%s) single SV(%s %s) cn(%.2f) cnChg(%.2f) as %s",
-                mSampleId, var.getCluster().id(), geneToStr(driverGene, region), var.posId(), var.type(),
-                var.copyNumber(breakend.usesStart()), var.copyNumberChange(breakend.usesStart()), desc));
-
-        annotateSV(var, driverGene, breakend.usesStart(), desc);
-    }
-
-    private static final String geneToStr(DriverCatalog driverGene, HmfTranscriptRegion region)
-    {
-        return String.format("%s: %s %s:%d-%d",
-                driverGene.driver(), driverGene.gene(), region.chromosome(), region.start(), region.end());
-    }
-
-    private static void annotateSV(final SvVarData var, DriverCatalog driverGene, boolean isStart, final String desc)
-    {
-        var.setDriveGene(String.format("%s;%s;%s", driverGene.driver(), driverGene.gene(), desc), isStart);
-    }
-
     private void annotateAmplification(final DriverCatalog driverGene, HmfTranscriptRegion region)
     {
-        // find the cause - DUP, foldback, whole-chromatid duplication
+        // find the cause - DUP, foldback, otherwise assume whole-chromatid duplication
 
         final List<SvBreakend> breakendList = mChrBreakendMap.get(region.chromosome());
 
@@ -376,6 +353,9 @@ public class DriverGeneAnnotator
                 break;
 
             final SvVarData varStart = breakend.getSV();
+
+            if(varStart.getCluster().getResolvedType() == RESOLVED_LOW_QUALITY)
+                continue;
 
             if(varStart.type() == DUP || varStart.type() == INV)
             {
@@ -425,6 +405,29 @@ public class DriverGeneAnnotator
                         mSampleId, driverGene.gene(), region.chromosome(), chrCopyNumber));
             }
         }
+    }
+
+
+    private void annotateDelSV(final SvBreakend breakend, DriverCatalog driverGene, HmfTranscriptRegion region, final String desc)
+    {
+        final SvVarData var = breakend.getSV();
+
+        LOGGER.info(String.format("sample(%s) cluster(%d) gene(%s) single SV(%s %s) cn(%.2f) cnChg(%.2f) as %s",
+                mSampleId, var.getCluster().id(), geneToStr(driverGene, region), var.posId(), var.type(),
+                var.copyNumber(breakend.usesStart()), var.copyNumberChange(breakend.usesStart()), desc));
+
+        annotateSV(var, driverGene, breakend.usesStart(), desc);
+    }
+
+    private static final String geneToStr(DriverCatalog driverGene, HmfTranscriptRegion region)
+    {
+        return String.format("%s: %s %s:%d-%d",
+                driverGene.driver(), driverGene.gene(), region.chromosome(), region.start(), region.end());
+    }
+
+    private static void annotateSV(final SvVarData var, DriverCatalog driverGene, boolean isStart, final String desc)
+    {
+        var.setDriveGene(String.format("%s;%s;%s", driverGene.driver(), driverGene.gene(), desc), isStart);
     }
 
 }

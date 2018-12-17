@@ -46,6 +46,7 @@ import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_END;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_START;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.findVariantById;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.haveSameChrArms;
+import static com.hartwig.hmftools.svanalysis.types.SvVarData.isSpecificSV;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.isStart;
 
 import java.util.HashMap;
@@ -917,72 +918,116 @@ public class ClusterAnalyser {
         {
             List<SvBreakend> breakendList = entry.getValue();
 
-            for(int i = 1; i < breakendList.size(); ++i)
+            for(int i = 0; i < breakendList.size() - 1; ++i)
             {
                 final SvBreakend breakend = breakendList.get(i);
-                final SvBreakend prevBreakend = breakendList.get(i - 1);
+                final SvBreakend nextBreakend = breakendList.get(i + 1);
 
-                // pass in surrounding breakends as well to check for conflictinlinks
-                final SvBreakend prePrevBreakend = (i > 1) ? breakendList.get(i - 2) : null;
-                final SvBreakend nextBreakend = (i < breakendList.size() - 1) ? breakendList.get(i + 1) : null;
+                SvBreakend beFront = null; // the lower position for orientation +1 and vice versa
+                SvBreakend beBack = null;
 
-                checkFoldbackBreakends(breakend, prevBreakend, nextBreakend, prePrevBreakend);
+                isSpecificSV(breakend.getSV().id());
+
+                if(breakend.orientation() == nextBreakend.orientation())
+                {
+                    beFront = breakend.orientation() == 1 ? breakend : nextBreakend;
+                    beBack = breakend.orientation() == 1 ? nextBreakend : breakend;
+                }
+                else if(i < breakendList.size() - 2)
+                {
+                    SvBreakend postNextBreakend = breakendList.get(i + 2);
+
+                    // check for a short overlapping deletion bridge on the either breakend
+                    // that would otherwise mask this foldback
+                    if(breakend.orientation() == postNextBreakend.orientation())
+                    {
+                        if(postNextBreakend.orientation() == 1
+                        && postNextBreakend.position() - nextBreakend.position() < MIN_TEMPLATED_INSERTION_LENGTH)
+                        {
+                            beFront = breakend;
+                            beBack = postNextBreakend;
+                        }
+                        else if(postNextBreakend.orientation() == -1
+                        && nextBreakend.position() - breakend.position() < MIN_TEMPLATED_INSERTION_LENGTH)
+                        {
+                            beBack = breakend;
+                            beFront = postNextBreakend;
+                        }
+                    }
+                }
+
+                if(beFront != null && beBack != null)
+                {
+                    // the foldback is invalid if it has a deletion bridge (including < 30b overhang) on the front-facing breakend
+                    final SvLinkedPair dbLink = beFront.getSV().getDBLink(beFront.usesStart());
+                    if(dbLink == null || dbLink.length() >= MIN_TEMPLATED_INSERTION_LENGTH)
+                    {
+                        checkFoldbackBreakends(beFront, beBack);
+                    }
+                    else
+                    {
+                        LOGGER.debug("SV({}) skipped foldback with short DB({}) on front breakend",
+                                beFront.getSV().id(), dbLink.length());
+                    }
+                }
 
                 checkReplicatedBreakendFoldback(breakend);
             }
         }
     }
 
-    private void checkFoldbackBreakends(SvBreakend be1, SvBreakend be2, SvBreakend postBe1, SvBreakend preBe2)
+    private void checkFoldbackBreakends(SvBreakend beStart, SvBreakend beEnd)
     {
-        // consecutive breakends, same orientation, same var or part of a chain
-        if(be1.orientation() != be2.orientation())
-            return;
+        // SVs are marked as being in a foldback if they are consecutive breakends,
+        // have the same orientation, and are either an INV or part of a chain
 
-        final SvVarData var1 = be1.getSV();
-        final SvVarData var2 = be2.getSV();
+        // beStart is the one with the lower position
 
-        if(var1.type() == INS || var2.type() == INS)
+        SvVarData varEnd = beEnd.getSV();
+        SvVarData varStart = beStart.getSV();
+
+        if(varEnd.type() == INS || varStart.type() == INS)
             return;
 
         // skip unclustered DELs & DUPs, reciprocal INV or reciprocal BNDs
-        final SvCluster cluster1 = var1.getCluster();
+        final SvCluster cluster1 = varEnd.getCluster();
 
         if(cluster1.isResolved() && cluster1.getTypeCount(INV) == 0)
             return;
 
         SvCluster cluster2 = null;
 
-        if(var1.equals(var2))
+        if(varEnd.equals(varStart))
         {
             cluster2 = cluster1;
         }
         else
         {
-            cluster2 = var2.getCluster();
+            cluster2 = varStart.getCluster();
 
-            if (cluster2.isResolved())
+            // must be same cluster
+            if(cluster1 != cluster2)
                 return;
         }
 
-        boolean v1Start = be1.usesStart();
-        boolean v2Start = be2.usesStart();
+        boolean v1Start = beEnd.usesStart();
+        boolean v2Start = beStart.usesStart();
 
         String chainInfo = "";
 
-        if(var1.equals(var2))
+        if(varEnd.equals(varStart))
         {
             // constraint is that the ends of this INV don't link to BND taking the path off this chromosome
-            final SvChain chain = cluster1.findChain(var1);
+            final SvChain chain = cluster1.findChain(varEnd);
 
             if(chain != null)
             {
                 int bndLinks = 0;
                 for (final SvLinkedPair pair : chain.getLinkedPairs())
                 {
-                    if (pair.first().equals(var1, true) && pair.second().type() == BND)
+                    if (pair.first().equals(varEnd, true) && pair.second().type() == BND)
                         ++bndLinks;
-                    else if (pair.second().equals(var1, true) && pair.first().type() == BND)
+                    else if (pair.second().equals(varEnd, true) && pair.first().type() == BND)
                         ++bndLinks;
 
                     if (bndLinks == 2)
@@ -996,76 +1041,56 @@ public class ClusterAnalyser {
             if(cluster1 != cluster2)
                 return;
 
-            if(var1.getReplicatedCount() != var2.getReplicatedCount())
+            if(varEnd.getReplicatedCount() != varStart.getReplicatedCount())
                 return;
 
-            final SvChain chain1 = cluster1.findChain(var1);
-            final SvChain chain2 = cluster2.findChain(var2);
+            final SvChain chain1 = cluster1.findChain(varEnd);
+            final SvChain chain2 = cluster2.findChain(varStart);
 
             if(chain1 == null || chain2 == null || chain1 != chain2)
                 return;
 
             // check if a path can be walked between these 2 breakends along the chain
             // without going back through this foldback point
-            int[] chainData = chain1.breakendsAreChained(var1, !v1Start, var2, !v2Start);
+            int[] chainData = chain1.breakendsAreChained(varEnd, !v1Start, varStart, !v2Start);
 
             if(chainData[CHAIN_LINK_COUNT] == 0)
                 return;
 
             chainInfo = String.format("%d;%d;%d",
                     chainData[CHAIN_LINK_COUNT], chainData[CHAIN_ASSEMBLY_LINK_COUNT], chainData[CHAIN_LENGTH]);
-
-            // check for a conflicting deletion bridge on the backmost of the 2 breakends
-            if(be2.orientation() == 1)
-            {
-                if(preBe2 != null && areSectionBreak(be2.getSV(), preBe2.getSV(), be2.usesStart(), preBe2.usesStart()))
-                {
-                    // if the DB length is short, consider this a conflicting link and skip the foldback
-                    if(be2.position() - preBe2.position() <= MIN_TEMPLATED_INSERTION_LENGTH)
-                        return;
-                }
-            }
-            else
-            {
-                if(postBe1 != null && areSectionBreak(be1.getSV(), postBe1.getSV(), be1.usesStart(), postBe1.usesStart()))
-                {
-                    // if the DB length is short, consider this a conflicting link and skip the foldback
-                    if(postBe1.position() - be1.position() <= MIN_TEMPLATED_INSERTION_LENGTH)
-                        return;
-                }
-            }
         }
 
         // check copy numbers match
         double cn1 = 0;
         double cn2 = 0;
-        if((be1.orientation() == 1 && be1.position() < be2.position()) || (be1.orientation() == -1 && be1.position() > be2.position()))
+        if((beEnd.orientation() == 1 && beEnd.position() < beStart.position()) || (beEnd.orientation() == -1 && beEnd.position() > beStart.position()))
         {
             // be1 is facing away from be2, so need to take its copy number on the break side
-            cn1 = var1.copyNumber(v1Start) - var1.copyNumberChange(v1Start);
-            cn2 = var2.copyNumber(v2Start);
+            cn1 = varEnd.copyNumber(v1Start) - varEnd.copyNumberChange(v1Start);
+            cn2 = varStart.copyNumber(v2Start);
         }
         else
         {
-            cn2 = var2.copyNumber(v2Start) - var2.copyNumberChange(v2Start);
-            cn1 = var1.copyNumber(v1Start);
+            cn2 = varStart.copyNumber(v2Start) - varStart.copyNumberChange(v2Start);
+            cn1 = varEnd.copyNumber(v1Start);
         }
 
         if(!copyNumbersEqual(cn1, cn2))
             return;
 
-        int length = (int)abs(be1.position() - be2.position());
+        int length = (int)abs(beEnd.position() - beStart.position());
 
         // if either variant already has foldback info set, favour
         // a) simple inversions then
         // b) shortest length
 
         boolean skipFoldback = false;
-        if(!var1.getFoldbackLink(v1Start).isEmpty() && !var1.equals(var2) && var1.getFoldbackLen(v1Start) < length)
+        if(!varEnd.getFoldbackLink(v1Start).isEmpty() && !varEnd.equals(varStart) && varEnd.getFoldbackLen(v1Start) < length)
         {
             skipFoldback = true;
         }
-        else if(!var2.getFoldbackLink(v2Start).isEmpty() && !var1.equals(var2) && var2.getFoldbackLen(v2Start) < length)
+        else if(!varStart.getFoldbackLink(v2Start).isEmpty() && !varEnd.equals(varStart) && varStart.getFoldbackLen(v2Start) < length)
         {
             skipFoldback = true;
         }
@@ -1073,24 +1098,24 @@ public class ClusterAnalyser {
         if(skipFoldback)
             return;
 
-        if(!var1.getFoldbackLink(v1Start).isEmpty())
-            clearFoldbackInfo(var1.getFoldbackLink(v1Start), var1.id(), cluster1, v1Start);
+        if(!varEnd.getFoldbackLink(v1Start).isEmpty())
+            clearFoldbackInfo(varEnd.getFoldbackLink(v1Start), varEnd.id(), cluster1, v1Start);
 
-        if(!var2.getFoldbackLink(v2Start).isEmpty())
-            clearFoldbackInfo(var2.getFoldbackLink(v2Start), var2.id(), cluster2, v2Start);
+        if(!varStart.getFoldbackLink(v2Start).isEmpty())
+            clearFoldbackInfo(varStart.getFoldbackLink(v2Start), varStart.id(), cluster2, v2Start);
 
-        var1.setFoldbackLink(v1Start, var2.id(), length, chainInfo);
-        var2.setFoldbackLink(v2Start, var1.id(), length, chainInfo);
+        varEnd.setFoldbackLink(v1Start, varStart.id(), length, chainInfo);
+        varStart.setFoldbackLink(v2Start, varEnd.id(), length, chainInfo);
 
-        if(var1.equals(var2))
+        if(varEnd.equals(varStart))
         {
             LOGGER.debug(String.format("cluster(%s) foldback inversion SV(%s) length(%d) copyNumber(%.3f)",
-                    cluster1.id(), var1.posId(), length, cn1));
+                    cluster1.id(), varEnd.posId(), length, cn1));
         }
         else
         {
             LOGGER.debug(String.format("cluster(%s) foldback be1(%s) be2(%s) length(%d) copyNumber(%.3f)",
-                    cluster1.id(), be1.toString(), be2.toString(), length, cn1));
+                    cluster1.id(), beEnd.toString(), beStart.toString(), length, cn1));
         }
     }
 

@@ -13,6 +13,7 @@ import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.removedLinksWit
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.RELATION_TYPE_NEIGHBOUR;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_END;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_START;
+import static com.hartwig.hmftools.svanalysis.types.SvVarData.isSpecificSV;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.isStart;
 import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.findLinkedPair;
 
@@ -152,9 +153,6 @@ public class SvCluster
     public List<SvVarData> getSVs() { return mSVs; }
     public final SvVarData getSV(int index) { return index < mSVs.size() ? mSVs.get(index) : null; }
 
-    // private static String LOG_SPECIFIC_VAR_ID = "83211";
-    private static String LOG_SPECIFIC_VAR_ID = "";
-
     public void addVariant(final SvVarData var)
     {
         if(mSVs.contains(var))
@@ -178,10 +176,7 @@ public class SvCluster
         mSynDelDupTI = 0;
         mSynDelDupLength = 0;
 
-        if(!LOG_SPECIFIC_VAR_ID.isEmpty() && var.id().equals(LOG_SPECIFIC_VAR_ID))
-        {
-            LOGGER.debug("spec var");
-        }
+        // isSpecificSV(var.id())
 
         if(var.isReplicatedSv())
         {

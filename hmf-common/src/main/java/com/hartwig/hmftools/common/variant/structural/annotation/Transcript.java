@@ -217,6 +217,8 @@ public class Transcript {
     public long transcriptStart() { return mTranscriptStart; }
     public long transcriptEnd() { return mTranscriptEnd; }
 
+    public final long length() { return mTranscriptEnd - mTranscriptStart; }
+
     @Nullable
     public Long codingStart() { return mCodingStart; }
 

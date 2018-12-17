@@ -22,9 +22,11 @@ import com.hartwig.hmftools.common.variant.structural.ImmutableStructuralVariant
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantData;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneAnnotation;
+import com.hartwig.hmftools.common.variant.structural.annotation.Transcript;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.ensembl.database.homo_sapiens_core.tables.Gene;
 
 public class SvVarData
 {
@@ -475,6 +477,29 @@ public class SvVarData
             mDriverGeneEnd = geneInfo;
     }
 
+    public final String getGeneInBreakend(boolean useStart)
+    {
+        final List<GeneAnnotation> genesList = getGenesList(useStart);
+
+        if(genesList.isEmpty())
+            return "";
+
+        Transcript longestTrans = null;
+        for(final GeneAnnotation gene : genesList)
+        {
+            for(final Transcript trans : gene.transcripts())
+            {
+                if(trans.nonCoding() || !(trans.isIntronic() || trans.isExonic()))
+                    continue;
+
+                if(longestTrans == null || trans.length() > longestTrans.length())
+                    longestTrans = trans;
+            }
+        }
+
+        return longestTrans != null ? longestTrans.parent().geneName() : "";
+    }
+
     public final String getAssemblyMatchType(boolean useStart) { return useStart ? mStartAssemblyMatchType : mEndAssemblyMatchType; }
     public boolean isAssemblyMatched(boolean useStart) { return getAssemblyMatchType(useStart).equals(ASSEMBLY_MATCH_MATCHED); }
 
@@ -556,6 +581,17 @@ public class SvVarData
         {
             return true;
         }
+
+        return false;
+    }
+
+    // private static String SPECIFIC_VAR_ID = "4426884";
+    private static String SPECIFIC_VAR_ID = "";
+
+    public static boolean isSpecificSV(final String id)
+    {
+        if(id.equals(SPECIFIC_VAR_ID))
+            return true;
 
         return false;
     }

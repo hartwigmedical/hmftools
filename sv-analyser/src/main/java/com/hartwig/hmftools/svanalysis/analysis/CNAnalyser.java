@@ -332,7 +332,7 @@ public class CNAnalyser {
 
     private StructuralVariantData findSvData(final SvCNData cnData, int requiredOrient)
     {
-        if(cnData.segStart().equals(CN_SEG_NONE) || cnData.segStart().equals(CN_SEG_UNKNOWN)
+        if(cnData.segStart().equals(CN_SEG_UNKNOWN)
         || cnData.segStart().equals(CN_SEG_TELOMERE) || cnData.segStart().equals(CN_SEG_CENTROMERE))
             return null;
 
@@ -441,7 +441,7 @@ public class CNAnalyser {
         }
     }
 
-    // private static String SPECIFIC_CHR = "10";
+    // private static String SPECIFIC_CHR = "17";
     private static String SPECIFIC_CHR = "";
 
     private void analyseLOH(final String sampleId, List<SvCNData> cnDataList)
@@ -457,7 +457,7 @@ public class CNAnalyser {
         boolean isLohSection = false;
         double lohMinCN = 0;
         double lastMinCN = 0;
-        double priorCN = 0; // before the LOGH segment
+        double priorCN = 0; // before the LOH segment
         int lohSegments = 0;
         SvCNData lohStartCN = null;
         int lohSectionCount = 0;

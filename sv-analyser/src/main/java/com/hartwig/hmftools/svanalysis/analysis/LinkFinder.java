@@ -12,6 +12,7 @@ import static com.hartwig.hmftools.svanalysis.types.SvCluster.isSpecificCluster;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_END;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_START;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.haveLinkedAssemblies;
+import static com.hartwig.hmftools.svanalysis.types.SvVarData.isSpecificSV;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.isStart;
 import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.ASSEMBLY_MATCH_DIFF;
 import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.ASSEMBLY_MATCH_MATCHED;
@@ -369,28 +370,56 @@ public class LinkFinder
                 if(var1 == var2)
                     continue;
 
+                isSpecificSV(var1.id());
+                isSpecificSV(var2.id());
+
                 if(areSectionBreak(var1, var2, breakend.usesStart(), nextBreakend.usesStart()))
                 {
                     SvLinkedPair dbPair = new SvLinkedPair(var1, var2, LINK_TYPE_DB, breakend.usesStart(), nextBreakend.usesStart());
-                    var1.setDBLink(dbPair, breakend.usesStart());
-                    var2.setDBLink(dbPair, nextBreakend.usesStart());
-
-                    // can then skip the next breakend
-                    ++i;
+                    markDeletionBridge(dbPair);
                 }
                 else if(areLinkedSection(var1, var2, breakend.usesStart(), nextBreakend.usesStart())
-                && nextBreakend.position() - breakend.position() <= MIN_TEMPLATED_INSERTION_LENGTH)
+                && nextBreakend.position() - breakend.position() < MIN_TEMPLATED_INSERTION_LENGTH)
                 {
                     // will be converted into a DB
                     SvLinkedPair dbPair = new SvLinkedPair(var1, var2, LINK_TYPE_TI, breakend.usesStart(), nextBreakend.usesStart());
-                    var1.setDBLink(dbPair, breakend.usesStart());
-                    var2.setDBLink(dbPair, nextBreakend.usesStart());
-
-                    // can then skip the next breakend
-                    ++i;
+                    markDeletionBridge(dbPair);
                 }
             }
         }
+    }
+
+    private static void markDeletionBridge(SvLinkedPair dbPair)
+    {
+        // if either SV has a shorter DB already in existence, then keep it
+        final SvLinkedPair existingDBLink1 = dbPair.first().getDBLink(dbPair.firstLinkOnStart());
+        final SvLinkedPair existingDBLink2 = dbPair.second().getDBLink(dbPair.secondLinkOnStart());
+
+        if((existingDBLink1 != null && existingDBLink1.length() < dbPair.length())
+        || (existingDBLink2 != null && existingDBLink2.length() < dbPair.length()))
+        {
+            return;
+        }
+
+        // remove any conflicting DB link info
+        if(existingDBLink1 != null)
+        {
+            if(existingDBLink1.first() == dbPair.first())
+                existingDBLink1.second().setDBLink(null, existingDBLink1.secondLinkOnStart());
+            else
+                existingDBLink1.first().setDBLink(null, existingDBLink1.firstLinkOnStart());
+        }
+
+        if(existingDBLink2 != null)
+        {
+            if(existingDBLink2.first() == dbPair.first())
+                existingDBLink2.second().setDBLink(null, existingDBLink2.secondLinkOnStart());
+            else
+                existingDBLink2.first().setDBLink(null, existingDBLink2.firstLinkOnStart());
+        }
+
+        dbPair.first().setDBLink(dbPair, dbPair.firstLinkOnStart());
+        dbPair.second().setDBLink(dbPair, dbPair.secondLinkOnStart());
     }
 
     public static boolean inDeletionBridge(final SvVarData var, final SvVarData other, boolean useStart)

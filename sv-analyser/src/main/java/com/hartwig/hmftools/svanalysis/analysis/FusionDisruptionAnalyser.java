@@ -69,13 +69,16 @@ public class FusionDisruptionAnalyser
 
         mGeneFusions = Lists.newArrayList();
         mGeneDisruptions = Lists.newArrayList();
-        mFusionWriter= null;
+        mFusionWriter = null;
         mOutputDir = "";
         mUseCombinedOutput = false;
     }
 
-    public boolean loadFusionReferenceData(final CommandLine cmdLineArgs, final String outputDir, boolean useCombinedOutput)
+    public void loadFusionReferenceData(final CommandLine cmdLineArgs, final String outputDir, boolean useCombinedOutput)
     {
+        if(!cmdLineArgs.hasOption(FUSION_PAIRS_CSV) || !cmdLineArgs.hasOption(PROMISCUOUS_FIVE_CSV) || !cmdLineArgs.hasOption(PROMISCUOUS_THREE_CSV))
+            return;
+
         try
         {
             KnownFusionsModel knownFusionsModel = KnownFusionsModel.fromInputStreams(
@@ -90,7 +93,7 @@ public class FusionDisruptionAnalyser
         catch(IOException e)
         {
             LOGGER.error("failed to load known fusion files");
-            return false;
+            return;
         }
 
         mOutputDir = outputDir;
@@ -98,8 +101,6 @@ public class FusionDisruptionAnalyser
 
         List<HmfTranscriptRegion> transcriptRegions = HmfGenePanelSupplier.allGeneList37();
         mChromosomeTranscriptMap = Multimaps.fromRegions(transcriptRegions);
-
-        return true;
     }
 
     public void loadSvGeneTranscriptData(final String sampleId, final String sampleDataPath)
@@ -138,7 +139,19 @@ public class FusionDisruptionAnalyser
     private static int CHECK_CLUSTER_ID = -1;
     // private static int CHECK_CLUSTER_ID = 94;
 
-    public void findFusions(final List<SvVarData> svList, final List<SvCluster> clusters, final Map<String, List<SvBreakend>> chrBreakendMap)
+    public void setSvGeneData(final List<SvVarData> svList)
+    {
+        for(final SvVarData var : svList)
+        {
+            if (var.isReplicatedSv())
+                continue;
+
+            // cache transcript info against each SV
+            setSvGenesList(var);
+        }
+    }
+
+    public void findFusions(final List<SvVarData> svList, final List<SvCluster> clusters)
     {
         if(mSampleId.isEmpty() || mFusionFinder == null)
             return;
@@ -153,9 +166,6 @@ public class FusionDisruptionAnalyser
         {
             if(var.isReplicatedSv())
                 continue;
-
-            // cache transcript info against each SV
-            setSvGenesList(var);
 
             if(var.isNullBreakend())
                 continue;

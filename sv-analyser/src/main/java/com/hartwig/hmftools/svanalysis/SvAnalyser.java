@@ -154,20 +154,28 @@ public class SvAnalyser {
 
                 sampleAnalyser.analyse();
 
+                if(fusionAnalyser != null)
+                {
+                    fusionAnalyser.loadSvGeneTranscriptData(sample, cmd.getOptionValue(GENE_TRANSCRIPTS_DIR));
+                    fusionAnalyser.setSvGeneData(svVarData);
+                }
+
                 if(checkDrivers)
+                {
                     driverGeneAnnotator.annotateSVs(sample, sampleAnalyser.getClusters(), sampleAnalyser.getChrBreakendMap());
+                }
 
                 sampleAnalyser.writeOutput();
 
                 if(fusionAnalyser != null)
                 {
-                    fusionAnalyser.loadSvGeneTranscriptData(sample, cmd.getOptionValue(GENE_TRANSCRIPTS_DIR));
-                    fusionAnalyser.findFusions(svVarData, sampleAnalyser.getClusters(), sampleAnalyser.getChrBreakendMap());
+                    fusionAnalyser.findFusions(svVarData, sampleAnalyser.getClusters());
                 }
 
                 if(svaConfig.MaxSamples > 0 && count >= svaConfig.MaxSamples)
                 {
                     LOGGER.info("exiting after max sample count {} reached", count);
+                    break;
                 }
             }
 
