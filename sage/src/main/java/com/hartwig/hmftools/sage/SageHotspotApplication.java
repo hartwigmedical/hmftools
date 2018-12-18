@@ -17,6 +17,7 @@ import com.hartwig.hmftools.common.hotspot.HotspotEvidenceVCF;
 import com.hartwig.hmftools.common.hotspot.ImmutableHotspotEvidence;
 import com.hartwig.hmftools.common.hotspot.ImmutableVariantHotspotImpl;
 import com.hartwig.hmftools.common.hotspot.InframeIndelHotspots;
+import com.hartwig.hmftools.common.hotspot.SAMConsumer;
 import com.hartwig.hmftools.common.hotspot.VariantHotspot;
 import com.hartwig.hmftools.common.hotspot.VariantHotspotEvidence;
 import com.hartwig.hmftools.common.hotspot.VariantHotspotEvidenceFactory;
@@ -82,19 +83,20 @@ public class SageHotspotApplication {
         final Set<VariantHotspot> knownHotspots = Sets.newHashSet(VariantHotspotFile.read(hotspotPath).values());
 
         LOGGER.info("Looking for potential inframe indel locations ");
+        final SAMConsumer samConsumer = new SAMConsumer(minMappingQuality, codingRegions);
         final Set<VariantHotspot> allHotspots = Sets.newHashSet();
         allHotspots.addAll(knownHotspots);
-        allHotspots.addAll(new InframeIndelHotspots(minMappingQuality, codingRegions, refSequence).findInframeIndels(tumorReader));
+        allHotspots.addAll(new InframeIndelHotspots(samConsumer, codingRegions, refSequence).findInframeIndels(tumorReader));
 
         LOGGER.info("Looking for evidence of hotspots in tumor bam {}", tumorBam);
-        final VariantHotspotEvidenceFactory tumorEvidenceFactory = new VariantHotspotEvidenceFactory(minMappingQuality, minBaseQuality);
+        final VariantHotspotEvidenceFactory tumorEvidenceFactory = new VariantHotspotEvidenceFactory(minBaseQuality);
         final Map<VariantHotspot, VariantHotspotEvidence> tumorEvidence =
-                asMap(tumorEvidenceFactory.evidence(codingRegions, refSequence, tumorReader, allHotspots));
+                asMap(tumorEvidenceFactory.evidence(samConsumer, refSequence, tumorReader, allHotspots));
 
         LOGGER.info("Looking for evidence of hotspots in reference bam {}", tumorBam);
-        final VariantHotspotEvidenceFactory referenceEvidenceFactory = new VariantHotspotEvidenceFactory(minMappingQuality, minBaseQuality);
+        final VariantHotspotEvidenceFactory referenceEvidenceFactory = new VariantHotspotEvidenceFactory(minBaseQuality);
         final Map<VariantHotspot, VariantHotspotEvidence> referenceEvidence =
-                asMap(referenceEvidenceFactory.evidence(codingRegions, refSequence, referenceReader, allHotspots));
+                asMap(referenceEvidenceFactory.evidence(samConsumer, refSequence, referenceReader, allHotspots));
 
         final List<HotspotEvidence> evidence = Lists.newArrayList();
         for (Map.Entry<VariantHotspot, VariantHotspotEvidence> entry : tumorEvidence.entrySet()) {

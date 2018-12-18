@@ -18,7 +18,7 @@ import htsjdk.samtools.SAMRecord;
 public class VariantHotspotEvidenceFactoryTest {
 
     private static final int MIN_BASE_QUALITY = 13;
-    private VariantHotspotEvidenceFactory victim = new VariantHotspotEvidenceFactory(1, MIN_BASE_QUALITY);
+    private VariantHotspotEvidenceFactory victim = new VariantHotspotEvidenceFactory(MIN_BASE_QUALITY);
 
     private static final String MNV_REF_SEQUENCE = "GATACAA";
     private static final VariantHotspot MNV =

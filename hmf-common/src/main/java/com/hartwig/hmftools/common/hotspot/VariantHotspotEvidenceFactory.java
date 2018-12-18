@@ -19,7 +19,6 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.chromosome.Chromosome;
 import com.hartwig.hmftools.common.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.collect.Multimaps;
-import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.common.sam.SAMRecords;
 
 import org.jetbrains.annotations.NotNull;
@@ -32,21 +31,17 @@ public class VariantHotspotEvidenceFactory {
 
     private static final int SNV_MNV_BUFFER = 2;
 
-    private final int minMappingQuality;
     private final int minBaseQuality;
 
-    public VariantHotspotEvidenceFactory(int minMappingQuality, int minBaseQuality) {
+    public VariantHotspotEvidenceFactory(int minBaseQuality) {
 
-        this.minMappingQuality = minMappingQuality;
         this.minBaseQuality = minBaseQuality;
     }
 
     @NotNull
-    public List<VariantHotspotEvidence> evidence(@NotNull final Collection<GenomeRegion> regions,
+    public List<VariantHotspotEvidence> evidence(@NotNull final SAMConsumer samConsumer,
             @NotNull final IndexedFastaSequenceFile sequenceFile, @NotNull final SamReader samReader,
             @NotNull final Collection<VariantHotspot> hotspots) {
-
-        final SAMSupplier samSupplier = new SAMSupplier(minMappingQuality, regions);
 
         final Map<VariantHotspot, String> refSequenceMap = Maps.newHashMap();
         final Map<VariantHotspot, ModifiableVariantHotspotEvidence> evidenceMap = Maps.newHashMap();
@@ -84,7 +79,7 @@ public class VariantHotspotEvidenceFactory {
             }
         };
 
-        samSupplier.readOnce(samReader, samRecordConsumer);
+        samConsumer.consume(samReader, samRecordConsumer);
         return new ArrayList<>(evidenceMap.values());
     }
 
