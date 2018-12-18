@@ -78,10 +78,10 @@ public class StructuralVariantAnnotationDAO {
 
     private List<GeneDisruption> readingGeneDisruption(@NotNull Record record) {
         List<GeneDisruption> geneDisruptions = Lists.newArrayList();
-        ImmutableGeneDisruption.builder()
+        geneDisruptions.add(ImmutableGeneDisruption.builder()
                 .reportable(byteToBoolean(record.getValue(STRUCTURALVARIANTDISRUPTION.ISREPORTED)))
-               // .linkedAnnotation()
-                .build();
+              //  .linkedAnnotation(record.getValue(STRUCTURALVARIANTDISRUPTION.BREAKENDID))
+                .build());
         return geneDisruptions;
     }
 
