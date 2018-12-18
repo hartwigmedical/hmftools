@@ -13,6 +13,7 @@ import com.hartwig.hmftools.common.actionability.ImmutableEvidenceItem;
 import com.hartwig.hmftools.common.actionability.cancertype.CancerTypeAnalyzer;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -42,7 +43,15 @@ public class CopyNumberEvidenceAnalyzer {
         for (ActionableCopyNumber actionableCopyNumber : actionableCopyNumbers) {
             if (typeMatches(geneCopyNumber, actionableCopyNumber) && actionableCopyNumber.gene().equals(geneCopyNumber.gene())) {
                 ImmutableEvidenceItem.Builder evidenceBuilder = fromActionableCopyNumber(actionableCopyNumber);
-
+                evidenceBuilder.type("CNV");
+                evidenceBuilder.gene(actionableCopyNumber.gene());
+                evidenceBuilder.chromosome(Strings.EMPTY);
+                evidenceBuilder.position(Strings.EMPTY);
+                evidenceBuilder.ref(Strings.EMPTY);
+                evidenceBuilder.alt(Strings.EMPTY);
+                evidenceBuilder.cnvType(actionableCopyNumber.type().toString());
+                evidenceBuilder.fusionFiveGene(Strings.EMPTY);
+                evidenceBuilder.fusionThreeGene(Strings.EMPTY);
                 evidenceBuilder.event(geneCopyNumber.gene() + " " + actionableCopyNumber.type().readableString());
                 evidenceBuilder.isOnLabel(cancerTypeAnalyzer.isCancerTypeMatch(actionableCopyNumber.cancerType(),
                         primaryTumorLocation));

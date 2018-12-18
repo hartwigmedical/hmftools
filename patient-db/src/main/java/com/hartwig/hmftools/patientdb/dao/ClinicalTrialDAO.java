@@ -10,7 +10,8 @@ import com.hartwig.hmftools.common.actionability.ClinicalTrial;
 
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
-import org.jooq.InsertValuesStep7;
+import org.jooq.InsertValuesStep16;
+import org.jooq.InsertValuesStep8;
 
 public class ClinicalTrialDAO {
 
@@ -25,8 +26,17 @@ public class ClinicalTrialDAO {
         deleteClinicalTrialForSample(sample);
 
         for (List<ClinicalTrial> trials : Iterables.partition(clinicalTrial, DB_BATCH_INSERT_SIZE)) {
-            InsertValuesStep7 inserter = context.insertInto(CLINICALTRIALS,
+            InsertValuesStep16 inserter = context.insertInto(CLINICALTRIALS,
                     CLINICALTRIALS.SAMPLEID,
+                    CLINICALTRIALS.TYPEVARIANT,
+                    CLINICALTRIALS.GENE,
+                    CLINICALTRIALS.CHOMOSOME,
+                    CLINICALTRIALS.POSITION,
+                    CLINICALTRIALS.REF,
+                    CLINICALTRIALS.ALT,
+                    CLINICALTRIALS.CNVTYPE,
+                    CLINICALTRIALS.FUSIONFIVEGENE,
+                    CLINICALTRIALS.FUSIONTHREEGENE,
                     CLINICALTRIALS.EVENTTYPE,
                     CLINICALTRIALS.EVENTMATCH,
                     CLINICALTRIALS.TRIAL,
@@ -39,9 +49,18 @@ public class ClinicalTrialDAO {
         }
     }
 
-    private static void addValues(@NotNull String sample, @NotNull ClinicalTrial clinicalTrial, @NotNull InsertValuesStep7 inserter) {
+    private static void addValues(@NotNull String sample, @NotNull ClinicalTrial clinicalTrial, @NotNull InsertValuesStep16 inserter) {
         //noinspection unchecked
         inserter.values(sample,
+                clinicalTrial.type(),
+                clinicalTrial.gene(),
+                clinicalTrial.chromosome(),
+                clinicalTrial.position(),
+                clinicalTrial.ref(),
+                clinicalTrial.alt(),
+                clinicalTrial.cnvType(),
+                clinicalTrial.fusionFiveGene(),
+                clinicalTrial.fusionThreeGene(),
                 clinicalTrial.event(),
                 clinicalTrial.scope().readableString(),
                 clinicalTrial.acronym(),

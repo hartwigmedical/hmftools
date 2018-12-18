@@ -83,9 +83,11 @@ public class LoadEvidenceData {
                 LOGGER.info("Writing evidence items of somatic variants to DB");
                 LOGGER.info("Counts of all evidence items: " + AllEvidenceItemsVariant.size());
                 dbWriter.writeClinicalEvidence(sample, AllEvidenceItemsVariant);
+                LOGGER.info(AllEvidenceItemsVariant);
                 LOGGER.info("Writing clinical trials of somatic variants to DB");
                 LOGGER.info("Counts of all clinical trials: " + allClinicalTrialsVariants.size());
                 dbWriter.writeClinicalTrial(sample, allClinicalTrialsVariants);
+                LOGGER.info(allClinicalTrialsVariants);
 
                 LOGGER.info("Reading gene copy from DB");
                 final List<GeneCopyNumber> geneCopyNumber = dbAccess.readGeneCopynumbers(sample);
@@ -100,9 +102,12 @@ public class LoadEvidenceData {
                 LOGGER.info("Writing evidence items of gene copy numbers to DB");
                 LOGGER.info("Counts of all evidence items: " + AllEvidenceItemsGeneCopyNumber.size());
                 dbWriter.writeClinicalEvidence(sample, AllEvidenceItemsGeneCopyNumber);
+                LOGGER.info(AllEvidenceItemsGeneCopyNumber);
+
                 LOGGER.info("Writing clinical trials of gene copy numbers to DB");
                 LOGGER.info("Counts of all clinical trials: " + allClinicalTrialsGeneCopyNumber.size());
                 dbWriter.writeClinicalTrial(sample, allClinicalTrialsGeneCopyNumber);
+                LOGGER.info(allClinicalTrialsGeneCopyNumber);
 
                 LOGGER.info("Reading gene fusions from DB");
                 final List<StructuralVariantAnalysis> analysesStructuralVarianten = dbAccess.readingStructuralVarianten(sample);
@@ -148,6 +153,15 @@ public class LoadEvidenceData {
                 .isOnLabel(evidenceItem.isOnLabel())
                 .cancerType(evidenceItem.cancerType())
                 .scope(evidenceItem.scope())
+                .type(evidenceItem.type())
+                .gene(evidenceItem.gene())
+                .chromosome(evidenceItem.chromosome())
+                .position(evidenceItem.position())
+                .ref(evidenceItem.ref())
+                .alt(evidenceItem.alt())
+                .cnvType(evidenceItem.cnvType())
+                .fusionFiveGene(evidenceItem.fusionFiveGene())
+                .fusionThreeGene(evidenceItem.fusionThreeGene())
                 .build();
     }
 
