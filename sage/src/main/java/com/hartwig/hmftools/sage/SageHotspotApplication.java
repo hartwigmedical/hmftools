@@ -43,34 +43,31 @@ public class SageHotspotApplication {
 
     private static final Logger LOGGER = LogManager.getLogger(SageHotspotApplication.class);
 
-    private static final String OUT_PATH = "out";
-    private static final String TUMOR = "tumor";
-    private static final String TUMOR_BAM = "tumor_bam";
-    private static final String REFERENCE = "reference";
-    private static final String REFERENCE_BAM = "reference_bam";
-    private static final String REF_GENOME = "ref_genome";
-    private static final String CODING_REGIONS = "coding_regions";
-    private static final String KNOWN_HOTSPOTS = "known_hotspots";
-
-    public static void main(String[] args) throws IOException, ParseException {
-
-        final Options options = createOptions();
-        final CommandLine cmd = createCommandLine(args, options);
-        final String hotspotPath = cmd.getOptionValue(KNOWN_HOTSPOTS);
-        final String tumorBam = cmd.getOptionValue(TUMOR_BAM);
-        final String referenceBam = cmd.getOptionValue(REFERENCE_BAM);
-        final String refGenome = cmd.getOptionValue(REF_GENOME);
-        final String codingRegionBedFile = cmd.getOptionValue(CODING_REGIONS);
-        final String outputVCF = cmd.getOptionValue(OUT_PATH);
-        final String referenceSample = cmd.getOptionValue(REFERENCE);
-        final String tumorSample = cmd.getOptionValue(TUMOR);
-
-        if (hotspotPath == null || tumorBam == null || referenceBam == null || codingRegionBedFile == null || refGenome == null || outputVCF == null
-                || tumorSample == null || referenceSample == null) {
+    public static void main(String[] args) throws IOException {
+        final Options options = SageHotspotApplicationConfig.createOptions();
+        try {
+            new SageHotspotApplication(options, args);
+        } catch (ParseException e) {
+            LOGGER.warn(e);
             final HelpFormatter formatter = new HelpFormatter();
-            formatter.printHelp("SAGE", options);
+            formatter.printHelp("SageHotspotApplication", options);
             System.exit(1);
         }
+    }
+
+    private SageHotspotApplication(final Options options, final String... args) throws IOException, ParseException {
+
+        final CommandLine cmd = createCommandLine(args, options);
+        final SageHotspotApplicationConfig config = SageHotspotApplicationConfig.createConfig(cmd);
+
+        final String hotspotPath = config.knownHotspotPath();
+        final String tumorBam = config.tumorBamPath();
+        final String referenceBam = config.referenceBamPath();
+        final String refGenome = config.refGenomePath();
+        final String codingRegionBedFile = config.codingRegionBedPath();
+        final String outputVCF = config.outputFile();
+        final String referenceSample = config.normal();
+        final String tumorSample = config.tumor();
 
         final IndexedFastaSequenceFile refSequence = new IndexedFastaSequenceFile(new File(refGenome));
         final SamReader tumorReader = SamReaderFactory.makeDefault().open(new File(tumorBam));
@@ -102,7 +99,7 @@ public class SageHotspotApplication {
             final VariantHotspot variant = entry.getKey();
             final VariantHotspotEvidence tumor = entry.getValue();
             final VariantHotspotEvidence normal = referenceEvidence.get(variant);
-                evidence.add(createEvidence(knownHotspots.contains(variant), tumor, normal));
+            evidence.add(createEvidence(knownHotspots.contains(variant), tumor, normal));
         }
 
         LOGGER.info("Writing output to {}", outputVCF);
@@ -110,6 +107,7 @@ public class SageHotspotApplication {
         new HotspotEvidenceVCF(referenceSample, tumorSample).write(outputVCF, evidence);
 
         LOGGER.info("Complete");
+
     }
 
     @NotNull
@@ -139,20 +137,6 @@ public class SageHotspotApplication {
     private static CommandLine createCommandLine(@NotNull String[] args, @NotNull Options options) throws ParseException {
         final CommandLineParser parser = new DefaultParser();
         return parser.parse(options, args);
-    }
-
-    @NotNull
-    private static Options createOptions() {
-        final Options options = new Options();
-        options.addOption(OUT_PATH, true, "Tumor bam file.");
-        options.addOption(TUMOR_BAM, true, "Tumor bam file.");
-        options.addOption(REFERENCE_BAM, true, "Reference bam file.");
-        options.addOption(KNOWN_HOTSPOTS, true, "Tab separated file of known hotspot locations.");
-        options.addOption(CODING_REGIONS, true, "Hotspot input file.");
-        options.addOption(REF_GENOME, true, "Hotspot input file.");
-        options.addOption(TUMOR, true, "Tumor sample name.");
-        options.addOption(REFERENCE, true, "Reference sample name.");
-        return options;
     }
 
 }

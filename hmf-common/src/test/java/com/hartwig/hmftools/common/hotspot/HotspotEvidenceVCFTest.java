@@ -41,6 +41,11 @@ public class HotspotEvidenceVCFTest {
         assertEquals(20, context.getGenotype("TUMOR").getAD()[1]);
     }
 
+    @Test
+    public void testHeterozygousLikelihood() {
+        assertEquals(0.1875, HotspotEvidenceVCF.heterozygousLikelihood(5), 0.0001);
+    }
+
     private static HotspotEvidence create(@NotNull final String ref, @NotNull final String alt, int normalAltCount, int tumorAltCount,
             int qualityScore) {
         return create().ref(ref).alt(alt).qualityScore(qualityScore).tumorAltCount(tumorAltCount).normalAltCount(normalAltCount).build();

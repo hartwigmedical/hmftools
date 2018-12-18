@@ -11,6 +11,7 @@ import com.google.common.collect.Multimaps;
 import com.hartwig.hmftools.common.position.GenomePosition;
 import com.hartwig.hmftools.common.position.GenomePositions;
 
+import org.apache.commons.math3.distribution.BinomialDistribution;
 import org.jetbrains.annotations.NotNull;
 
 import htsjdk.variant.variantcontext.Allele;
@@ -35,9 +36,10 @@ public class HotspotEvidenceVCF {
     private final static int MIN_INFRAME_QUALITY = 150;
 
     private final static String PASS = "PASS";
+    private final static String ALLELIC_FREQUENCY = "AF";
     private final static String HOTSPOT_FLAG = "HOTSPOT";
     private final static String GERMLINE_INDEL = "GERMLINE_INDEL";
-    private final static String GERMLINE_INDEL_DESCRIPTION = "Set if inframe indel has any indels at that site.";
+    private final static String GERMLINE_HET_LIKELIHOOD = "GHBL";
 
     private final static String LOW_CONFIDENCE = "LOW_CONFIDENCE";
     private final static String LOW_CONFIDENCE_DESCRIPTION =
@@ -56,22 +58,32 @@ public class HotspotEvidenceVCF {
         header.addMetaDataLine(new VCFFormatHeaderLine("GT", 1, VCFHeaderLineType.String, "Genotype"));
         header.addMetaDataLine(new VCFFormatHeaderLine("DP", 1, VCFHeaderLineType.Integer, "Read Depth"));
         header.addMetaDataLine(new VCFFormatHeaderLine("AD", VCFHeaderLineCount.R, VCFHeaderLineType.Integer, "Allelic Depth"));
+
+        header.addMetaDataLine(new VCFInfoHeaderLine(ALLELIC_FREQUENCY,
+                VCFHeaderLineCount.A,
+                VCFHeaderLineType.Float,
+                "Allelic Frequency"));
         header.addMetaDataLine(new VCFInfoHeaderLine(HOTSPOT_FLAG, 1, VCFHeaderLineType.String, "Hotspot Type: known, inframe"));
+        header.addMetaDataLine(new VCFInfoHeaderLine(GERMLINE_HET_LIKELIHOOD,
+                1,
+                VCFHeaderLineType.Float,
+                "Binomial estimation of likelihood that single read in the germline is heterozygous"));
+
         header.addMetaDataLine(new VCFFilterHeaderLine(PASS, "All filters passed"));
         header.addMetaDataLine(new VCFFilterHeaderLine(LOW_CONFIDENCE, LOW_CONFIDENCE_DESCRIPTION));
-        header.addMetaDataLine(new VCFFilterHeaderLine(GERMLINE_INDEL, GERMLINE_INDEL_DESCRIPTION));
+        header.addMetaDataLine(new VCFFilterHeaderLine(GERMLINE_INDEL, "Set if inframe indel has any indels at that site."));
     }
 
-    public void write(@NotNull final String filename, @NotNull final List<HotspotEvidence> evidence) {
+    public void write(@NotNull final String filename, @NotNull final List<HotspotEvidence> evidenceList) {
         final VariantContextWriter writer =
                 new VariantContextWriterBuilder().setOutputFile(filename).modifyOption(Options.INDEX_ON_THE_FLY, false).build();
         writer.setHeader(header);
         writer.writeHeader(header);
 
-        final ListMultimap<GenomePosition, HotspotEvidence> evidenceMultimap = Multimaps.index(evidence, GenomePositions::create);
-        for (GenomePosition ref : evidenceMultimap.keySet()) {
-            final List<HotspotEvidence> refEvidence = evidenceMultimap.get(ref);
-            final VariantContext context = create(refEvidence);
+        final ListMultimap<GenomePosition, HotspotEvidence> evidenceMap = Multimaps.index(evidenceList, GenomePositions::create);
+        for (GenomePosition ref : evidenceMap.keySet()) {
+            final List<HotspotEvidence> evidence = evidenceMap.get(ref);
+            final VariantContext context = create(evidence);
             writer.add(context);
         }
 
@@ -81,8 +93,7 @@ public class HotspotEvidenceVCF {
     private static boolean lowConfidence(@NotNull HotspotEvidence hotspotEvidence) {
         return hotspotEvidence.type() == HotspotEvidenceType.INFRAME && hotspotEvidence.qualityScore() < MIN_INFRAME_QUALITY
                 || hotspotEvidence.type() == HotspotEvidenceType.KNOWN && hotspotEvidence.qualityScore() < MIN_KNOWN_QUALITY
-                || hotspotEvidence.normalAltCount() > 0
-                || hotspotEvidence.tumorAltCount() < MIN_TUMOR_EVIDENCE;
+                || hotspotEvidence.normalAltCount() > 0 || hotspotEvidence.tumorAltCount() < MIN_TUMOR_EVIDENCE;
     }
 
     private static boolean germlineIndel(@NotNull HotspotEvidence hotspotEvidence) {
@@ -121,6 +132,14 @@ public class HotspotEvidenceVCF {
                 .genotypes(tumor, normal)
                 .alleles(alleles);
 
+        if (hotspotEvidence.tumorReads() > 0) {
+            builder.attribute(ALLELIC_FREQUENCY, round((double) hotspotEvidence.tumorAltCount() / hotspotEvidence.tumorReads()));
+        }
+
+        if (hotspotEvidence.normalAltCount() == 1) {
+            builder.attribute(GERMLINE_HET_LIKELIHOOD, round(heterozygousLikelihood(hotspotEvidence.normalReads())));
+        }
+
         if (lowConfidence(hotspotEvidence)) {
             builder.filter(LOW_CONFIDENCE);
         } else if (germlineIndel(hotspotEvidence)) {
@@ -138,4 +157,15 @@ public class HotspotEvidenceVCF {
         int normalEvidence = Integer.compare(o1.normalAltCount(), o2.normalAltCount());
         return normalEvidence == 0 ? -Integer.compare(o1.qualityScore(), o2.qualityScore()) : normalEvidence;
     }
+
+    static double heterozygousLikelihood(int readDepth) {
+        return new BinomialDistribution(readDepth, 0.5).cumulativeProbability(1);
+    }
+
+
+    private static double round(double number) {
+        double multiplier = Math.pow(10, 3);
+        return Math.round(number * multiplier) / multiplier;
+    }
+
 }
