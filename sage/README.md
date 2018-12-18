@@ -44,6 +44,6 @@ Any inframe indel (that is not also a hotspot) will be filtered as **LOW_CONFIDE
 Any unfiltered indel (regardless of being a hotspot or not) will be filtered as **GERMLINE_INDEL** if there exists an indels at that site in the germline. 
 
 ## Post Processing
-The HMF pipeline employs some post processing steps to further filter the output. We have generated a PON file from 1077 sage results that captures any variants that have more than one read in the germline of at least 2 samples. These variants are filtered from out output.
+The HMF pipeline employs some post processing steps to further filter the output. We have generated a PON file from 1077 sage results that captures any variants that have more than one read in the germline of at least 2 samples. These variants are filtered from our output.
 
  

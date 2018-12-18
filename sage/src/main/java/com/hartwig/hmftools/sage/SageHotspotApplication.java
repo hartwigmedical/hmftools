@@ -42,14 +42,14 @@ import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 
-public class SageHotspotApplication {
+public class SageHotspotApplication implements AutoCloseable {
 
     private static final Logger LOGGER = LogManager.getLogger(SageHotspotApplication.class);
 
     public static void main(String[] args) throws IOException {
         final Options options = SageHotspotApplicationConfig.createOptions();
-        try {
-            new SageHotspotApplication(options, args);
+        try (final SageHotspotApplication application = new SageHotspotApplication(options, args)) {
+            application.run();
         } catch (ParseException e) {
             LOGGER.warn(e);
             final HelpFormatter formatter = new HelpFormatter();
@@ -58,11 +58,19 @@ public class SageHotspotApplication {
         }
     }
 
-    private SageHotspotApplication(final Options options, final String... args) throws IOException, ParseException {
+    private final SamReader tumorReader;
+    private final SamReader referenceReader;
+    private final SageHotspotApplicationConfig config;
+
+    private SageHotspotApplication(final Options options, final String... args) throws ParseException {
 
         final CommandLine cmd = createCommandLine(args, options);
-        final SageHotspotApplicationConfig config = SageHotspotApplicationConfig.createConfig(cmd);
+        config = SageHotspotApplicationConfig.createConfig(cmd);
+        tumorReader = SamReaderFactory.makeDefault().open(new File(config.tumorBamPath()));
+        referenceReader = SamReaderFactory.makeDefault().open(new File(config.referenceBamPath()));
+    }
 
+    private void run() throws IOException {
         final String hotspotPath = config.knownHotspotPath();
         final String tumorBam = config.tumorBamPath();
         final String referenceBam = config.referenceBamPath();
@@ -75,8 +83,6 @@ public class SageHotspotApplication {
         final int minBaseQuality = config.minBaseQuality();
 
         final IndexedFastaSequenceFile refSequence = new IndexedFastaSequenceFile(new File(refGenome));
-        final SamReader tumorReader = SamReaderFactory.makeDefault().open(new File(tumorBam));
-        final SamReader referenceReader = SamReaderFactory.makeDefault().open(new File(referenceBam));
 
         LOGGER.info("Loading coding regions from {}", codingRegionBedFile);
         final Collection<GenomeRegion> codingRegions = BEDFileLoader.fromBedFile(codingRegionBedFile).values();
@@ -120,7 +126,6 @@ public class SageHotspotApplication {
                 config.minHotspotQuality(),
                 config.minInframeQuality()).write(outputVCF, evidence);
 
-        LOGGER.info("Complete");
     }
 
     @NotNull
@@ -166,4 +171,10 @@ public class SageHotspotApplication {
         return parser.parse(options, args);
     }
 
+    @Override
+    public void close() throws IOException {
+        tumorReader.close();
+        referenceReader.close();
+        LOGGER.info("Complete");
+    }
 }
