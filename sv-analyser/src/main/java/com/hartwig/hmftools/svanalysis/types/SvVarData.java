@@ -489,7 +489,7 @@ public class SvVarData
         {
             for(final Transcript trans : gene.transcripts())
             {
-                if(trans.nonCoding() || !(trans.isIntronic() || trans.isExonic()))
+                if(!trans.isIntronic() && !trans.isExonic())
                     continue;
 
                 if(longestTrans == null || trans.length() > longestTrans.length())

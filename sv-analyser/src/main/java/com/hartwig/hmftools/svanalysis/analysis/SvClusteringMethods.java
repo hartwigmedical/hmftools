@@ -26,16 +26,19 @@ import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.getChromosoma
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.getVariantChrArm;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.isOverlapping;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.makeChrArmStr;
-import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_LOW_QUALITY;
+import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_LOW_QUALITY;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_DEL_EXT_TI;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_DEL_INT_TI;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_DUP_EXT_TI;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_DUP_INT_TI;
+import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_LINE;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_NONE;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_RECIPROCAL_TRANS;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_SGL_PAIR_DEL;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_SGL_PAIR_DUP;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_SGL_PLUS_INCONSISTENT;
+import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_SIMPLE_SV;
+import static com.hartwig.hmftools.svanalysis.types.SvCluster.isSpecificCluster;
 import static com.hartwig.hmftools.svanalysis.types.SvLOH.LOH_NO_SV;
 import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.LINK_TYPE_DB;
 import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.LINK_TYPE_TI;
@@ -144,7 +147,7 @@ public class SvClusteringMethods {
             // exceptions to proximity clustering
             if(isEquivSingleBreakend(currentVar))
             {
-                newCluster.setResolved(true, RESOLVED_LOW_QUALITY);
+                newCluster.setResolved(true, RESOLVED_TYPE_LOW_QUALITY);
                 clusters.add(newCluster);
                 continue;
             }
@@ -252,7 +255,7 @@ public class SvClusteringMethods {
             // check for sub-clonal / low-copy-number supported variants
             if(cluster.getCount() == 1 && isLowQualityVariant(cluster.getSVs().get(0)))
             {
-                cluster.setResolved(true, RESOLVED_LOW_QUALITY);
+                cluster.setResolved(true, RESOLVED_TYPE_LOW_QUALITY);
                 continue;
             }
 
@@ -452,7 +455,7 @@ public class SvClusteringMethods {
             return;
 
         // skip cluster-2s which resolved to a simple type
-        if(cluster.isResolved() && cluster.isSyntheticSimpleType())
+        if(cluster.isSyntheticSimpleType(true))
             return;
 
         for (final SvVarData var : cluster.getSVs())
@@ -469,7 +472,9 @@ public class SvClusteringMethods {
         if(cluster.hasLinkingLineElements())
             return;
 
-        if(cluster.isResolved() && cluster.isSyntheticSimpleType())
+        // isSpecificCluster(cluster);
+
+        if(cluster.isSyntheticSimpleType(false))
         {
             if(cluster.getSynDelDupLength() >= mDelDupCutoffLength)
             {
@@ -1068,7 +1073,7 @@ public class SvClusteringMethods {
 
     private boolean resolveSyntheticDelDupCluster(SvCluster cluster)
     {
-        if(cluster.getLinkedPairs().isEmpty())
+        if(cluster.getLinkedPairs().isEmpty() || cluster.hasReplicatedSVs())
             return false;
 
         final SvVarData var1 = cluster.getSV(0);
@@ -1126,6 +1131,13 @@ public class SvClusteringMethods {
             tiPair = linkedPair1.length() < linkedPair2.length() ? linkedPair1 : linkedPair2;
             otherPair = linkedPair1 == tiPair ? linkedPair2 : linkedPair1;
         }
+
+        // the other breakends cannot be cross arm
+        if(otherPair.first().arm(otherPair.firstLinkOnStart()) != otherPair.second().arm(otherPair.secondLinkOnStart()))
+            return false;
+
+        if(tiTraversesComplexSVs(cluster, tiPair))
+            return false;
 
         long tiPos1 = tiPair.first().position(tiPair.firstLinkOnStart());
         long tiPos2 = tiPair.second().position(tiPair.secondLinkOnStart());
@@ -1259,6 +1271,13 @@ public class SvClusteringMethods {
         if(var1.orientation(v1OpenOnStart) == var2.orientation(v2OpenOnStart))
             return;
 
+        // the other breakends cannot be cross arm
+        if(var1.arm(v1OpenOnStart) != var2.arm(v2OpenOnStart))
+            return;
+
+        if(tiTraversesComplexSVs(cluster, tiLinkedPair))
+            return;
+
         String pairDesc = "";
 
         if(areSectionBreak(var1, var2, v1OpenOnStart, v2OpenOnStart))
@@ -1274,12 +1293,56 @@ public class SvClusteringMethods {
 
         boolean isResolved = syntheticLength < mDelDupCutoffLength;
         cluster.setResolved(isResolved, pairDesc);
-        cluster.setSynDelDupData(syntheticLength, lp1.length());
+        cluster.setSynDelDupData(syntheticLength, tiLinkedPair.length());
     }
 
     public boolean markDelDupPairTypes(SvCluster cluster)
     {
+        if(cluster.getTypeCount(DUP) == 2)
+        {
+            // to prevent misclassification of otherwise randomly clustered DUPs,
+            // require an assembled TI
+            if(cluster.getAssemblyLinkedPairs().size() != 1)
+                return false;
+        }
+
+        // isSpecificCluster(cluster);
+
         return resolveSyntheticDelDupCluster(cluster);
+    }
+
+    private boolean tiTraversesComplexSVs(final SvCluster cluster, final SvLinkedPair pair)
+    {
+        // count any non-trivial cluster's SVs crossed by this pair
+        final SvBreakend firstBreakend = pair.first().getBreakend(pair.firstLinkOnStart());
+        final SvBreakend secondBreakend = pair.second().getBreakend(pair.secondLinkOnStart());
+        int lowerIndex = min(firstBreakend.getChrPosIndex(), secondBreakend.getChrPosIndex());
+        int upperIndex = max(firstBreakend.getChrPosIndex(), secondBreakend.getChrPosIndex());
+
+        if(lowerIndex >= upperIndex - 1)
+            return false;
+
+        final List<SvBreakend> breakendList = mChrBreakendMap.get(firstBreakend.chromosome());
+
+        for (int i = lowerIndex + 1; i <= upperIndex - 1; ++i)
+        {
+            final SvCluster otherCluster = breakendList.get(i).getSV().getCluster();
+
+            if(otherCluster == cluster)
+                continue;
+
+            if (otherCluster.getResolvedType() == RESOLVED_TYPE_SIMPLE_SV
+            || otherCluster.getResolvedType() == RESOLVED_TYPE_LINE
+            || otherCluster.getResolvedType() == RESOLVED_TYPE_RECIPROCAL_TRANS
+            || otherCluster.getResolvedType() == RESOLVED_TYPE_LOW_QUALITY)
+            {
+                continue;
+            }
+
+            return true;
+        }
+
+        return false;
     }
 
     public void setChromosomalArmStats(final List<SvVarData> allVariants)

@@ -163,6 +163,8 @@ public class ClusterAnalyser {
     public void findSimpleCompleteChains()
     {
         // for small clusters, try to find a full chain through all SVs
+        List<SvCluster> simpleClusters = Lists.newArrayList();
+
         for(SvCluster cluster : mClusters)
         {
             if(cluster.getCount() == 1 && cluster.isSimpleSVs())
@@ -190,7 +192,11 @@ public class ClusterAnalyser {
             findChains(cluster);
 
             cluster.cacheLinkedPairs();
+            simpleClusters.add(cluster);
+        }
 
+        for(final SvCluster cluster : simpleClusters)
+        {
             setClusterResolvedState(cluster);
 
             if(cluster.isFullyChained() && cluster.isConsistent())
@@ -290,7 +296,7 @@ public class ClusterAnalyser {
 
         mChainFinder.initialise(mSampleId, cluster);
 
-        isSpecificCluster(cluster);
+        // isSpecificCluster(cluster);
 
         boolean hasFullChain = mChainFinder.formClusterChains();
 
@@ -1186,7 +1192,7 @@ public class ClusterAnalyser {
             if(cluster.getChains().isEmpty() || cluster.hasLinkingLineElements())
                 continue;
 
-            isSpecificCluster(cluster);
+            // isSpecificCluster(cluster);
 
             // gather up start and end arms from each chain
             List<String> startEndArms = Lists.newArrayList();
@@ -1289,7 +1295,7 @@ public class ClusterAnalyser {
 
         int unclusteredTraversedCount = 0;
 
-        for (int i = lowerIndex + 1; i < upperIndex - 1; ++i)
+        for (int i = lowerIndex + 1; i <= upperIndex - 1; ++i)
         {
             final SvCluster otherCluster = breakendList.get(i).getSV().getCluster();
 

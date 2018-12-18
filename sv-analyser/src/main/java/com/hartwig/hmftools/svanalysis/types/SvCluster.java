@@ -82,7 +82,7 @@ public class SvCluster
     public static String RESOLVED_TYPE_RECIPROCAL_TRANS = "RecipTrans";
 
     public static String RESOLVED_TYPE_NONE = "None";
-    public static String RESOLVED_LOW_QUALITY = "LowQual";
+    public static String RESOLVED_TYPE_LOW_QUALITY = "LowQual";
     public static String RESOLVED_TYPE_LINE = "Line";
     public static String RESOLVED_TYPE_DEL_INT_TI = "DEL_Int_TI";
     public static String RESOLVED_TYPE_DEL_EXT_TI = "DEL_Ext_TI";
@@ -283,9 +283,9 @@ public class SvCluster
         mRequiresRecalc = true;
     }
 
-    public boolean isSyntheticSimpleType()
+    public boolean isSyntheticSimpleType(boolean checkResolved)
     {
-        if(!mIsResolved)
+        if(checkResolved && !mIsResolved)
             return false;
 
         if(mResolvedType == RESOLVED_TYPE_DEL_EXT_TI || mResolvedType == RESOLVED_TYPE_DEL_INT_TI
@@ -845,8 +845,8 @@ public class SvCluster
     public int getOriginArms() { return mOriginArms; }
     public int getFragmentArms() { return mFragmentArms; }
 
-    private static int SPECIFIC_CLUSTER_ID = -1;
-    // private static int SPECIFIC_CLUSTER_ID = 58;
+    // private static int SPECIFIC_CLUSTER_ID = -1;
+    private static int SPECIFIC_CLUSTER_ID = 37;
 
     public static boolean isSpecificCluster(final SvCluster cluster)
     {

@@ -10,9 +10,8 @@ import static com.hartwig.hmftools.svanalysis.analysis.LinkFinder.NO_DB_MARKER;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.CHROMOSOME_ARM_P;
 import static com.hartwig.hmftools.common.variant.structural.annotation.SvPONAnnotator.REGION_DISTANCE;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.getChromosomalArm;
-import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_LOW_QUALITY;
+import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_LOW_QUALITY;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_SIMPLE_SV;
-import static com.hartwig.hmftools.svanalysis.types.SvCluster.isSpecificCluster;
 import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.LINK_TYPE_TI;
 
 import com.google.common.collect.Lists;
@@ -523,7 +522,7 @@ public class SvSampleAnalyser {
             {
                 int clusterSvCount = cluster.getUniqueSvCount();
 
-                isSpecificCluster(cluster);
+                // isSpecificCluster(cluster);
 
                 List<SvChain> chains = null;
 
@@ -652,10 +651,10 @@ public class SvSampleAnalyser {
         {
             Map<String, Integer> targetMap;
 
-            if(cluster.getResolvedType() == RESOLVED_LOW_QUALITY)
+            if(cluster.getResolvedType() == RESOLVED_TYPE_LOW_QUALITY)
                 continue;
 
-            if(cluster.getResolvedType() == RESOLVED_TYPE_SIMPLE_SV || cluster.isSyntheticSimpleType())
+            if(cluster.getResolvedType() == RESOLVED_TYPE_SIMPLE_SV || cluster.isSyntheticSimpleType(true))
             {
                 ++simpleClusterCount;
                 targetMap = armSimpleClusterCount;

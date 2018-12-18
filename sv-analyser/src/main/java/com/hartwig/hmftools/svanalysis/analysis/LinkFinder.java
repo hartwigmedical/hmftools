@@ -80,7 +80,7 @@ public class LinkFinder
         if(cluster.getCount() < 2)
             return linkedPairs;
 
-        isSpecificCluster(cluster);
+        // isSpecificCluster(cluster);
 
         for (int i = 0; i < cluster.getCount(); ++i)
         {
@@ -420,14 +420,6 @@ public class LinkFinder
 
         dbPair.first().setDBLink(dbPair, dbPair.firstLinkOnStart());
         dbPair.second().setDBLink(dbPair, dbPair.secondLinkOnStart());
-    }
-
-    public static boolean inDeletionBridge(final SvVarData var, final SvVarData other, boolean useStart)
-    {
-        if(var.getDBLink(useStart) == null)
-            return false;
-
-        return (var.getDBLink(useStart).first() == other || var.getDBLink(useStart).second() == other);
     }
 
     public static boolean arePairedDeletionBridges(final SvVarData var1, final SvVarData var2)

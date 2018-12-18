@@ -2,7 +2,7 @@ package com.hartwig.hmftools.svanalysis.annotators;
 
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DUP;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INV;
-import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_LOW_QUALITY;
+import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_LOW_QUALITY;
 import static com.hartwig.hmftools.svanalysis.types.SvLOH.LOH_NO_SV;
 
 import java.util.List;
@@ -354,7 +354,7 @@ public class DriverGeneAnnotator
 
             final SvVarData varStart = breakend.getSV();
 
-            if(varStart.getCluster().getResolvedType() == RESOLVED_LOW_QUALITY)
+            if(varStart.getCluster().getResolvedType() == RESOLVED_TYPE_LOW_QUALITY)
                 continue;
 
             if(varStart.type() == DUP || varStart.type() == INV)
