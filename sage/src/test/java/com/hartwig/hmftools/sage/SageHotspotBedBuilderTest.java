@@ -5,6 +5,7 @@ import java.util.List;
 import com.hartwig.hmftools.common.hotspot.ImmutableVariantHotspotImpl;
 import com.hartwig.hmftools.common.hotspot.VariantHotspot;
 import com.hartwig.hmftools.common.region.GenomeRegion;
+import com.hartwig.hmftools.common.region.GenomeRegionBuilder;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Assert;
@@ -17,7 +18,7 @@ public class SageHotspotBedBuilderTest {
     @Test
     public void testAddMNV() {
         final VariantHotspot hotspot = ImmutableVariantHotspotImpl.builder().chromosome(CHROM).alt("GAT").ref("TAC").position(10).build();
-        final List<GenomeRegion> regions = SageHotspotBedBuilder.addVariantHotspot(hotspot);
+        final List<GenomeRegion> regions = SageHotspotBedBuilder.addVariantHotspot(new GenomeRegionBuilder(CHROM, 1), hotspot).build();
         Assert.assertEquals(1, regions.size());
         assertRegion(regions.get(0), 10, 12);
     }
@@ -25,7 +26,7 @@ public class SageHotspotBedBuilderTest {
     @Test
     public void testAddIndel() {
         final VariantHotspot hotspot = ImmutableVariantHotspotImpl.builder().chromosome(CHROM).alt("G").ref("TAC").position(10).build();
-        final List<GenomeRegion> regions = SageHotspotBedBuilder.addVariantHotspot(hotspot);
+        final List<GenomeRegion> regions = SageHotspotBedBuilder.addVariantHotspot(new GenomeRegionBuilder(CHROM, 1), hotspot).build();
         Assert.assertEquals(1, regions.size());
         assertRegion(regions.get(0), 10, 10);
     }

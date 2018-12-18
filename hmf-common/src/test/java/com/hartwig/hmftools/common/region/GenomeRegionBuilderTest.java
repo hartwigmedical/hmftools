@@ -15,7 +15,7 @@ public class GenomeRegionBuilderTest {
 
     @Test
     public void testAddPosition() {
-        final GenomeRegionBuilder victim = new GenomeRegionBuilder(CHROM);
+        final GenomeRegionBuilder victim = new GenomeRegionBuilder(CHROM, 1);
         final List<Long> positions = Lists.newArrayList(1L, 1L, 2L, 3L, 5L, 6L, 7L, 9L, 10L, 10L);
         Collections.shuffle(positions);
 
