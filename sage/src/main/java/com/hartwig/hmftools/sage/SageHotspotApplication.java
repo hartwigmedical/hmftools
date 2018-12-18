@@ -10,6 +10,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.hotspot.HotspotEvidence;
 import com.hartwig.hmftools.common.hotspot.HotspotEvidenceType;
@@ -24,6 +25,7 @@ import com.hartwig.hmftools.common.hotspot.VariantHotspotEvidenceFactory;
 import com.hartwig.hmftools.common.hotspot.VariantHotspotFile;
 import com.hartwig.hmftools.common.region.BEDFileLoader;
 import com.hartwig.hmftools.common.region.GenomeRegion;
+import com.hartwig.hmftools.common.region.GenomeRegionBuilder;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -83,20 +85,21 @@ public class SageHotspotApplication {
         final Set<VariantHotspot> knownHotspots = Sets.newHashSet(VariantHotspotFile.read(hotspotPath).values());
 
         LOGGER.info("Looking for potential inframe indel locations ");
-        final SAMConsumer samConsumer = new SAMConsumer(minMappingQuality, codingRegions);
         final Set<VariantHotspot> allHotspots = Sets.newHashSet();
         allHotspots.addAll(knownHotspots);
-        allHotspots.addAll(new InframeIndelHotspots(samConsumer, codingRegions, refSequence).findInframeIndels(tumorReader));
+        allHotspots.addAll(new InframeIndelHotspots(minMappingQuality, codingRegions, refSequence).findInframeIndels(tumorReader));
+        final List<GenomeRegion> allHotspotRegions = asRegions(config.typicalReadDepth(), allHotspots);
+        final SAMConsumer hotspotRegionConsumer = new SAMConsumer(minMappingQuality, allHotspotRegions);
 
         LOGGER.info("Looking for evidence of hotspots in tumor bam {}", tumorBam);
         final VariantHotspotEvidenceFactory tumorEvidenceFactory = new VariantHotspotEvidenceFactory(minBaseQuality);
         final Map<VariantHotspot, VariantHotspotEvidence> tumorEvidence =
-                asMap(tumorEvidenceFactory.evidence(samConsumer, refSequence, tumorReader, allHotspots));
+                asMap(tumorEvidenceFactory.evidence(hotspotRegionConsumer, refSequence, tumorReader, allHotspots));
 
         LOGGER.info("Looking for evidence of hotspots in reference bam {}", tumorBam);
         final VariantHotspotEvidenceFactory referenceEvidenceFactory = new VariantHotspotEvidenceFactory(minBaseQuality);
         final Map<VariantHotspot, VariantHotspotEvidence> referenceEvidence =
-                asMap(referenceEvidenceFactory.evidence(samConsumer, refSequence, referenceReader, allHotspots));
+                asMap(referenceEvidenceFactory.evidence(hotspotRegionConsumer, refSequence, referenceReader, allHotspots));
 
         final List<HotspotEvidence> evidence = Lists.newArrayList();
         for (Map.Entry<VariantHotspot, VariantHotspotEvidence> entry : tumorEvidence.entrySet()) {
@@ -118,6 +121,20 @@ public class SageHotspotApplication {
                 config.minInframeQuality()).write(outputVCF, evidence);
 
         LOGGER.info("Complete");
+    }
+
+    @NotNull
+    private List<GenomeRegion> asRegions(int typicalReadDepth, @NotNull final Set<VariantHotspot> allHotspots) {
+
+        final Map<String, GenomeRegionBuilder> builders = Maps.newHashMap();
+        allHotspots.forEach(x -> builders.computeIfAbsent(x.chromosome(), key -> new GenomeRegionBuilder(key, typicalReadDepth))
+                .addPosition(x.position()));
+
+        final List<GenomeRegion> results = Lists.newArrayList();
+        builders.values().forEach(x -> results.addAll(x.build()));
+
+        Collections.sort(results);
+        return results;
     }
 
     @NotNull

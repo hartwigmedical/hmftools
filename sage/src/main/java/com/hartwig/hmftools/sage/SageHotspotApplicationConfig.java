@@ -40,6 +40,7 @@ public interface SageHotspotApplicationConfig {
     int DEFAULT_MIN_TUMOR_READS = 2;
     int DEFAULT_MIN_BASE_QUALITY = 13;
     int DEFAULT_MIN_MAPPING_QUALITY = 1;
+    int DEFAULT_TYPICAL_READ_DEPTH = 151;
     int DEFAULT_MIN_HOTSPOT_QUALITY = 100;
     int DEFAULT_MIN_INFRAME_QUALITY = 150;
 
@@ -125,6 +126,10 @@ public interface SageHotspotApplicationConfig {
     double minHotspotVAF();
 
     double minInframeVAF();
+
+    default int typicalReadDepth() {
+        return DEFAULT_TYPICAL_READ_DEPTH;
+    }
 
     @NotNull
     static SageHotspotApplicationConfig createConfig(@NotNull final CommandLine cmd) throws ParseException {

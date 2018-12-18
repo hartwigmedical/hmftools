@@ -28,11 +28,11 @@ public class InframeIndelHotspots {
     private final IndexedFastaSequenceFile sequenceFile;
     private final ListMultimap<Chromosome, GenomeRegion> codingRegions;
 
-    public InframeIndelHotspots(@NotNull final SAMConsumer samConsumer, @NotNull final Collection<GenomeRegion> regions,
+    public InframeIndelHotspots(final int minMappingQuality, @NotNull final Collection<GenomeRegion> regions,
             @NotNull final IndexedFastaSequenceFile sequenceFile) {
         this.sequenceFile = sequenceFile;
         this.codingRegions = Multimaps.fromRegions(regions);
-        this.samConsumer = samConsumer;
+        this.samConsumer = new SAMConsumer(minMappingQuality, regions);
     }
 
     @NotNull
