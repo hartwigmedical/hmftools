@@ -96,7 +96,7 @@ public class SageHotspotApplication {
         final Map<VariantHotspot, VariantHotspotEvidence> tumorEvidence =
                 asMap(tumorEvidenceFactory.evidence(hotspotRegionConsumer, refSequence, tumorReader, allHotspots));
 
-        LOGGER.info("Looking for evidence of hotspots in reference bam {}", tumorBam);
+        LOGGER.info("Looking for evidence of hotspots in reference bam {}", referenceBam);
         final VariantHotspotEvidenceFactory referenceEvidenceFactory = new VariantHotspotEvidenceFactory(minBaseQuality);
         final Map<VariantHotspot, VariantHotspotEvidence> referenceEvidence =
                 asMap(referenceEvidenceFactory.evidence(hotspotRegionConsumer, refSequence, referenceReader, allHotspots));
