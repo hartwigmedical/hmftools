@@ -30,22 +30,23 @@ import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 
 public class VariantHotspotEvidenceFactory {
 
-    static final int MIN_BASE_QUALITY = 13;
     private static final int SNV_MNV_BUFFER = 2;
 
-    private final IndexedFastaSequenceFile sequenceFile;
-    private final SamReader samReader;
-    private final SAMSupplier samSupplier;
+    private final int minMappingQuality;
+    private final int minBaseQuality;
 
-    public VariantHotspotEvidenceFactory(@NotNull final Collection<GenomeRegion> regions,
-            @NotNull final IndexedFastaSequenceFile sequenceFile, @NotNull final SamReader samReader) {
-        this.sequenceFile = sequenceFile;
-        this.samReader = samReader;
-        samSupplier = new SAMSupplier(regions);
+    public VariantHotspotEvidenceFactory(int minMappingQuality, int minBaseQuality) {
+
+        this.minMappingQuality = minMappingQuality;
+        this.minBaseQuality = minBaseQuality;
     }
 
     @NotNull
-    public List<VariantHotspotEvidence> evidence(@NotNull final Collection<VariantHotspot> hotspots) {
+    public List<VariantHotspotEvidence> evidence(@NotNull final Collection<GenomeRegion> regions,
+            @NotNull final IndexedFastaSequenceFile sequenceFile, @NotNull final SamReader samReader,
+            @NotNull final Collection<VariantHotspot> hotspots) {
+
+        final SAMSupplier samSupplier = new SAMSupplier(minMappingQuality, regions);
 
         final Map<VariantHotspot, String> refSequenceMap = Maps.newHashMap();
         final Map<VariantHotspot, ModifiableVariantHotspotEvidence> evidenceMap = Maps.newHashMap();
@@ -74,7 +75,7 @@ public class VariantHotspotEvidenceFactory {
                             int bufferEndPosition = Math.min(sequenceLength, hotspotEndPosition + SNV_MNV_BUFFER);
                             if (samRecordOverlapsVariant(bufferStartPosition, bufferEndPosition, record)) {
                                 final String refSequence = refSequenceMap.computeIfAbsent(hotspot,
-                                        x -> refSequence(bufferStartPosition, bufferEndPosition, record.getContig()));
+                                        x -> refSequence(sequenceFile, bufferStartPosition, bufferEndPosition, record.getContig()));
                                 findEvidenceOfMNV(evidence, bufferStartPosition, refSequence, hotspot, record);
                             }
                         }
@@ -88,12 +89,12 @@ public class VariantHotspotEvidenceFactory {
     }
 
     @NotNull
-    private String refSequence(int start, int end, String contig) {
+    private String refSequence(@NotNull final IndexedFastaSequenceFile sequenceFile, int start, int end, String contig) {
         return sequenceFile.getSubsequenceAt(contig, start, end).getBaseString();
     }
 
     @NotNull
-    static ModifiableVariantHotspotEvidence findEvidenceOfInsert(@NotNull final ModifiableVariantHotspotEvidence builder,
+    ModifiableVariantHotspotEvidence findEvidenceOfInsert(@NotNull final ModifiableVariantHotspotEvidence builder,
             @NotNull final VariantHotspot hotspot, @NotNull final SAMRecord record) {
         assert (hotspot.isSimpleInsert());
 
@@ -106,7 +107,7 @@ public class VariantHotspotEvidenceFactory {
         int recordStartQuality = getBaseQuality(record, recordStartPosition);
         if (containsInsert(record, hotspotStartPosition, hotspot.alt())) {
             int quality = getAvgBaseQuality(record, recordStartPosition, hotspot.alt().length());
-            if (quality < MIN_BASE_QUALITY) {
+            if (quality < minBaseQuality) {
                 return builder;
             }
             return builder.setReadDepth(builder.readDepth() + 1)
@@ -115,7 +116,7 @@ public class VariantHotspotEvidenceFactory {
                     .setAltSupport(builder.altSupport() + 1);
         }
 
-        if (recordStartQuality < MIN_BASE_QUALITY) {
+        if (recordStartQuality < minBaseQuality) {
             return builder;
         }
 
@@ -130,7 +131,7 @@ public class VariantHotspotEvidenceFactory {
         return builder.setReadDepth(builder.readDepth() + 1);
     }
 
-    static ModifiableVariantHotspotEvidence findEvidenceOfDelete(@NotNull final ModifiableVariantHotspotEvidence builder,
+    ModifiableVariantHotspotEvidence findEvidenceOfDelete(@NotNull final ModifiableVariantHotspotEvidence builder,
             @NotNull final VariantHotspot hotspot, @NotNull final SAMRecord record) {
         assert (hotspot.isSimpleDelete());
 
@@ -145,7 +146,7 @@ public class VariantHotspotEvidenceFactory {
         if (containsDelete(record, hotspotStartPosition, hotspot.ref())) {
             int quality =
                     record.getReadLength() > recordStartPosition ? getAvgBaseQuality(record, recordStartPosition, 2) : recordStartQuality;
-            if (quality < MIN_BASE_QUALITY) {
+            if (quality < minBaseQuality) {
                 return builder;
             }
             return builder.setReadDepth(builder.readDepth() + 1)
@@ -154,7 +155,7 @@ public class VariantHotspotEvidenceFactory {
                     .setAltSupport(builder.altSupport() + 1);
         }
 
-        if (recordStartQuality < MIN_BASE_QUALITY) {
+        if (recordStartQuality < minBaseQuality) {
             return builder;
         }
 
@@ -170,7 +171,7 @@ public class VariantHotspotEvidenceFactory {
     }
 
     @NotNull
-    static ModifiableVariantHotspotEvidence findEvidenceOfMNV(@NotNull final ModifiableVariantHotspotEvidence builder, int start,
+    ModifiableVariantHotspotEvidence findEvidenceOfMNV(@NotNull final ModifiableVariantHotspotEvidence builder, int start,
             @NotNull final String refSequence, @NotNull final VariantHotspot hotspot, @NotNull final SAMRecord record) {
 
         int hotspotStartPosition = (int) hotspot.position();
@@ -180,7 +181,7 @@ public class VariantHotspotEvidenceFactory {
         int recordStartQuality = SAMRecords.getBaseQuality(record, recordStartPosition);
 
         if (isVariantPartOfLargerMNV(start, refSequence, hotspot, record)) {
-            return recordStartQuality < MIN_BASE_QUALITY ? builder : builder.setReadDepth(builder.readDepth() + 1);
+            return recordStartQuality < minBaseQuality ? builder : builder.setReadDepth(builder.readDepth() + 1);
         }
 
         for (int i = 0; i < hotspotLength; i++) {
@@ -189,7 +190,7 @@ public class VariantHotspotEvidenceFactory {
             boolean isInserted = record.getReferencePositionAtReadPosition(recordStartPosition + i) == 0;
 
             if (isInserted || isDeleted) {
-                if (recordStartQuality < MIN_BASE_QUALITY) {
+                if (recordStartQuality < minBaseQuality) {
                     return builder;
                 }
                 return builder.setReadDepth(builder.readDepth() + 1);
@@ -199,7 +200,7 @@ public class VariantHotspotEvidenceFactory {
         final String samBases = record.getReadString().substring(recordStartPosition - 1, recordStartPosition - 1 + hotspotLength);
         if (samBases.equals(hotspot.alt())) {
             int altQuality = getAvgBaseQuality(record, recordStartPosition, hotspotLength);
-            if (altQuality < MIN_BASE_QUALITY) {
+            if (altQuality < minBaseQuality) {
                 return builder;
             }
 

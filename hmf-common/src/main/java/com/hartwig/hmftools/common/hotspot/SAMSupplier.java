@@ -24,15 +24,9 @@ import htsjdk.samtools.SamReader;
 
 public class SAMSupplier {
 
-    //    private static final int MIN_MAPPING_QUALITY = 1;
-
     private final int minMappingQuality;
     private final Collection<GenomeRegion> regions;
     private final ListMultimap<Chromosome, GenomeRegion> codingRegions;
-
-    public SAMSupplier(@NotNull final Collection<GenomeRegion> regions) {
-        this(1, regions);
-    }
 
     public SAMSupplier(final int minMappingQuality, @NotNull final Collection<GenomeRegion> regions) {
         this.minMappingQuality = minMappingQuality;

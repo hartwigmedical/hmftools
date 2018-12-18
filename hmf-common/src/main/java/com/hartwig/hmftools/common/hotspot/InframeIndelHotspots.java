@@ -22,9 +22,9 @@ public class InframeIndelHotspots {
     private final IndexedFastaSequenceFile sequenceFile;
     private final SAMSupplier samSupplier;
 
-    public InframeIndelHotspots(@NotNull final Collection<GenomeRegion> regions, @NotNull final IndexedFastaSequenceFile sequenceFile) {
+    public InframeIndelHotspots(int minMappingQuality, @NotNull final Collection<GenomeRegion> regions, @NotNull final IndexedFastaSequenceFile sequenceFile) {
         this.sequenceFile = sequenceFile;
-        samSupplier = new SAMSupplier(regions);
+        samSupplier = new SAMSupplier(minMappingQuality, regions);
     }
 
     @NotNull

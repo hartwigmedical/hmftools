@@ -31,7 +31,7 @@ public class HotspotEvidenceVCFTest {
         final List<HotspotEvidence> unsorted = Lists.newArrayList(first, third, second);
         Collections.shuffle(unsorted);
 
-        final VariantContext context = new HotspotEvidenceVCF("NORMAL", "TUMOR").create(unsorted);
+        final VariantContext context = new HotspotEvidenceVCF("NORMAL", "TUMOR", 0.01, 2, 0, 0, 100, 150).create(unsorted);
         assertEquals(NORMAL_READS, context.getGenotype("NORMAL").getDP());
         assertEquals(NORMAL_REF_COUNT, context.getGenotype("NORMAL").getAD()[0]);
         assertEquals(0, context.getGenotype("NORMAL").getAD()[1]);

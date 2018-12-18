@@ -29,16 +29,23 @@ public interface SageHotspotApplicationConfig {
     String KNOWN_HOTSPOTS = "known_hotspots";
 
     String MIN_TUMOR_READS = "min_tumor_reads";
-    String MIN_KNOWN_QUALITY = "min_hotspot_quality";
-    String MIN_INFRAME_QUALITY = "min_inframe_quality";
+    String MIN_HOTSPOT_VAF = "min_hotspot_vaf";
+    String MIN_INFRAME_VAF = "min_inframe_vaf";
+    String MIN_BASE_QUALITY = "min_base_quality";
+    String MIN_HOTSPOT_QUALITY = "min_hotspot_quality";
     String MIN_MAPPING_QUALITY = "min_mapping_quality";
-    String MAX_GERMLINE_HET_BINOMIAL_LIKELIHOOD = "max_germline_het_binomial_likelihood";
+    String MIN_INFRAME_QUALITY = "min_inframe_quality";
+    String MAX_HET_BINOMIAL_LIKELIHOOD = "max_het_binomial_likelihood";
 
     int DEFAULT_MIN_TUMOR_READS = 2;
+    int DEFAULT_MIN_BASE_QUALITY = 13;
     int DEFAULT_MIN_MAPPING_QUALITY = 1;
-    int DEFAULT_MIN_KNOWN_QUALITY = 100;
+    int DEFAULT_MIN_HOTSPOT_QUALITY = 100;
     int DEFAULT_MIN_INFRAME_QUALITY = 150;
-    double DEFAULT_MAX_GERMLINE_HET_BINOMIAL_LIKELIHOOD = 0.01;
+
+    double DEFAULT_MIN_HOTSPOT_VAF = 0.005;
+    double DEFAULT_MIN_INFRAME_VAF = 0.02;
+    double DEFAULT_MAX_HET_BINOMIAL_LIKELIHOOD = 0.01;
 
     @NotNull
     static Options createOptions() {
@@ -50,19 +57,28 @@ public interface SageHotspotApplicationConfig {
         options.addOption(REFERENCE_BAM, true, "Path to reference bam file");
         options.addOption(KNOWN_HOTSPOTS, true, "Tab separated file of known hotspot locations");
         options.addOption(CODING_REGIONS, true, "Hotspot input file.");
+        options.addOption(MIN_BASE_QUALITY, true, "Minimum quality for a base to be considered [" + DEFAULT_MIN_BASE_QUALITY + "]");
         options.addOption(REF_GENOME, true, "Path to the ref genome fasta file");
-        options.addOption(MAX_GERMLINE_HET_BINOMIAL_LIKELIHOOD,
+
+        options.addOption(MAX_HET_BINOMIAL_LIKELIHOOD,
                 true,
                 "Up to 1 read of support for the ALT in the reference is allowed if the binomial likelihood of observing the read (assuming a 50% VAF) is less than this parameter ["
-                        + DEFAULT_MAX_GERMLINE_HET_BINOMIAL_LIKELIHOOD + "]");
+                        + DEFAULT_MAX_HET_BINOMIAL_LIKELIHOOD + "]");
 
         options.addOption(MIN_MAPPING_QUALITY,
                 true,
                 "Minimum mapping quality for an alignment to be used [" + DEFAULT_MIN_MAPPING_QUALITY + "]");
-        options.addOption(MIN_TUMOR_READS, true, "Low confidence filtering minimum tumor evidence [" + DEFAULT_MIN_TUMOR_READS + "]");
-        options.addOption(MIN_KNOWN_QUALITY,
+
+        options.addOption(MIN_TUMOR_READS, true, "Low confidence filtering minimum tumor reads [" + DEFAULT_MIN_TUMOR_READS + "]");
+        options.addOption(MIN_HOTSPOT_VAF,
                 true,
-                "Low confidence filtering minimum known hotspot quality [" + DEFAULT_MIN_KNOWN_QUALITY + "]");
+                "Low confidence filtering minimum VAF of known hotspots [" + DEFAULT_MIN_HOTSPOT_VAF + "]");
+        options.addOption(MIN_INFRAME_VAF,
+                true,
+                "Low confidence filtering minimum VAF of inframe indels [" + DEFAULT_MIN_INFRAME_VAF + "]");
+        options.addOption(MIN_HOTSPOT_QUALITY,
+                true,
+                "Low confidence filtering minimum known hotspot quality [" + DEFAULT_MIN_HOTSPOT_QUALITY + "]");
         options.addOption(MIN_INFRAME_QUALITY,
                 true,
                 "Low confidence filtering minimum inframe indel quality [" + DEFAULT_MIN_INFRAME_QUALITY + "]");
@@ -102,13 +118,16 @@ public interface SageHotspotApplicationConfig {
 
     int minMappingQuality();
 
+    int minBaseQuality();
+
+    double maxHetBinomialLikelihood();
+
+    double minHotspotVAF();
+
+    double minInframeVAF();
+
     @NotNull
     static SageHotspotApplicationConfig createConfig(@NotNull final CommandLine cmd) throws ParseException {
-        final int minHotspotQuality = defaultIntValue(cmd, MIN_KNOWN_QUALITY, DEFAULT_MIN_KNOWN_QUALITY);
-        final int minInframeQuality = defaultIntValue(cmd, MIN_INFRAME_QUALITY, DEFAULT_MIN_INFRAME_QUALITY);
-        final int minMappingQuality = defaultIntValue(cmd, MIN_MAPPING_QUALITY, DEFAULT_MIN_MAPPING_QUALITY);
-        final int minTumorReads = defaultIntValue(cmd, MIN_TUMOR_READS, DEFAULT_MIN_TUMOR_READS);
-
         final StringJoiner missingJoiner = new StringJoiner(", ");
         final String codingRegions = parameter(cmd, CODING_REGIONS, missingJoiner);
         final String tumorBamPath = parameter(cmd, TUMOR_BAM, missingJoiner);
@@ -125,18 +144,22 @@ public interface SageHotspotApplicationConfig {
         }
 
         return ImmutableSageHotspotApplicationConfig.builder()
-                .minMappingQuality(minMappingQuality)
-                .codingRegionBedPath(codingRegions)
-                .tumorBamPath(tumorBamPath)
-                .referenceBamPath(referenceBamPath)
-                .refGenomePath(refGenomePath)
-                .outputFile(outputVCF)
-                .normal(normal)
                 .tumor(tumor)
+                .normal(normal)
+                .outputFile(outputVCF)
+                .tumorBamPath(tumorBamPath)
+                .refGenomePath(refGenomePath)
+                .codingRegionBedPath(codingRegions)
+                .referenceBamPath(referenceBamPath)
                 .knownHotspotPath(knownHotspotPath)
-                .minHotspotQuality(minHotspotQuality)
-                .minInframeQuality(minInframeQuality)
-                .minTumorReads(minTumorReads)
+                .minTumorReads(defaultIntValue(cmd, MIN_TUMOR_READS, DEFAULT_MIN_TUMOR_READS))
+                .minBaseQuality(defaultIntValue(cmd, MIN_BASE_QUALITY, DEFAULT_MIN_BASE_QUALITY))
+                .minHotspotVAF(defaultDoubleValue(cmd, MIN_HOTSPOT_VAF, DEFAULT_MIN_HOTSPOT_VAF))
+                .minInframeVAF(defaultDoubleValue(cmd, MIN_INFRAME_VAF, DEFAULT_MIN_INFRAME_VAF))
+                .minMappingQuality(defaultIntValue(cmd, MIN_MAPPING_QUALITY, DEFAULT_MIN_MAPPING_QUALITY))
+                .minHotspotQuality(defaultIntValue(cmd, MIN_HOTSPOT_QUALITY, DEFAULT_MIN_HOTSPOT_QUALITY))
+                .minInframeQuality(defaultIntValue(cmd, MIN_INFRAME_QUALITY, DEFAULT_MIN_INFRAME_QUALITY))
+                .maxHetBinomialLikelihood(defaultDoubleValue(cmd, MAX_HET_BINOMIAL_LIKELIHOOD, DEFAULT_MAX_HET_BINOMIAL_LIKELIHOOD))
                 .build();
     }
 

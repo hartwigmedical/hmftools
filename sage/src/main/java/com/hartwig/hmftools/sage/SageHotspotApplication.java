@@ -68,6 +68,8 @@ public class SageHotspotApplication {
         final String outputVCF = config.outputFile();
         final String referenceSample = config.normal();
         final String tumorSample = config.tumor();
+        final int minMappingQuality = config.minMappingQuality();
+        final int minBaseQuality = config.minBaseQuality();
 
         final IndexedFastaSequenceFile refSequence = new IndexedFastaSequenceFile(new File(refGenome));
         final SamReader tumorReader = SamReaderFactory.makeDefault().open(new File(tumorBam));
@@ -82,17 +84,17 @@ public class SageHotspotApplication {
         LOGGER.info("Looking for potential inframe indel locations ");
         final Set<VariantHotspot> allHotspots = Sets.newHashSet();
         allHotspots.addAll(knownHotspots);
-        allHotspots.addAll(new InframeIndelHotspots(codingRegions, refSequence).findInframeIndels(tumorReader));
+        allHotspots.addAll(new InframeIndelHotspots(minMappingQuality, codingRegions, refSequence).findInframeIndels(tumorReader));
 
         LOGGER.info("Looking for evidence of hotspots in tumor bam {}", tumorBam);
-        final VariantHotspotEvidenceFactory tumorEvidenceFactory =
-                new VariantHotspotEvidenceFactory(codingRegions, refSequence, tumorReader);
-        final Map<VariantHotspot, VariantHotspotEvidence> tumorEvidence = asMap(tumorEvidenceFactory.evidence(allHotspots));
+        final VariantHotspotEvidenceFactory tumorEvidenceFactory = new VariantHotspotEvidenceFactory(minMappingQuality, minBaseQuality);
+        final Map<VariantHotspot, VariantHotspotEvidence> tumorEvidence =
+                asMap(tumorEvidenceFactory.evidence(codingRegions, refSequence, tumorReader, allHotspots));
 
         LOGGER.info("Looking for evidence of hotspots in reference bam {}", tumorBam);
-        final VariantHotspotEvidenceFactory referenceEvidenceFactory =
-                new VariantHotspotEvidenceFactory(codingRegions, refSequence, referenceReader);
-        final Map<VariantHotspot, VariantHotspotEvidence> referenceEvidence = asMap(referenceEvidenceFactory.evidence(allHotspots));
+        final VariantHotspotEvidenceFactory referenceEvidenceFactory = new VariantHotspotEvidenceFactory(minMappingQuality, minBaseQuality);
+        final Map<VariantHotspot, VariantHotspotEvidence> referenceEvidence =
+                asMap(referenceEvidenceFactory.evidence(codingRegions, refSequence, referenceReader, allHotspots));
 
         final List<HotspotEvidence> evidence = Lists.newArrayList();
         for (Map.Entry<VariantHotspot, VariantHotspotEvidence> entry : tumorEvidence.entrySet()) {
@@ -104,10 +106,16 @@ public class SageHotspotApplication {
 
         LOGGER.info("Writing output to {}", outputVCF);
         Collections.sort(evidence);
-        new HotspotEvidenceVCF(referenceSample, tumorSample).write(outputVCF, evidence);
+        new HotspotEvidenceVCF(referenceSample,
+                tumorSample,
+                config.maxHetBinomialLikelihood(),
+                config.minTumorReads(),
+                config.minHotspotVAF(),
+                config.minInframeVAF(),
+                config.minHotspotQuality(),
+                config.minInframeQuality()).write(outputVCF, evidence);
 
         LOGGER.info("Complete");
-
     }
 
     @NotNull
