@@ -17,12 +17,14 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneAnnotation;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneDisruption;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion;
+import com.hartwig.hmftools.common.variant.structural.annotation.ImmutableGeneDisruption;
 import com.hartwig.hmftools.common.variant.structural.annotation.ImmutableStructuralVariantAnalysis;
 import com.hartwig.hmftools.common.variant.structural.annotation.StructuralVariantAnalysis;
 import com.hartwig.hmftools.common.variant.structural.annotation.StructuralVariantAnnotation;
 import com.hartwig.hmftools.common.variant.structural.annotation.Transcript;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.jooq.DSLContext;
 import org.jooq.InsertValuesStep14;
 import org.jooq.InsertValuesStep4;
@@ -60,16 +62,11 @@ public class StructuralVariantAnnotationDAO {
                 .where(STRUCTURALVARIANTFUSION.SAMPLEID.eq(sample))
                 .fetch();
 
-                for (Record record : result) {
-                    structuralVariantAnalyses.add(ImmutableStructuralVariantAnalysis.builder()
-                            .addAllAnnotations(readingStructuralVariantAnnotator(record))
-                            .addAllDisruptions(readingGeneDisruption(record))
-                            .addAllFusions(readingGeneFusion(record))
-                            .annotations(readingStructuralVariantAnnotator(record))
-                            .disruptions(readingGeneDisruption(record))
-                            .fusions(readingGeneFusion(record))
-                            .build());
-                }
+        for (Record record : result) {
+            structuralVariantAnalyses.add(ImmutableStructuralVariantAnalysis.of(readingStructuralVariantAnnotator(record),
+                    readingGeneFusion(record),
+                    readingGeneDisruption(record)));
+        }
 
         return structuralVariantAnalyses;
     }
@@ -81,14 +78,24 @@ public class StructuralVariantAnnotationDAO {
 
     private List<GeneDisruption> readingGeneDisruption(@NotNull Record record) {
         List<GeneDisruption> geneDisruptions = Lists.newArrayList();
+        ImmutableGeneDisruption.builder()
+                .reportable(byteToBoolean(record.getValue(STRUCTURALVARIANTDISRUPTION.ISREPORTED)))
+               // .linkedAnnotation()
+                .build();
         return geneDisruptions;
     }
 
+    @Nullable
+    private static Boolean byteToBoolean(Byte b) {
+        if (b == null) {
+            return null;
+        }
+        return b != 0;
+    }
     private List<GeneFusion> readingGeneFusion(@NotNull Record record) {
         List<GeneFusion> geneFusions = Lists.newArrayList();
         return geneFusions;
     }
-
 
     @SuppressWarnings("unchecked")
     public void write(@NotNull StructuralVariantAnalysis analysis, @NotNull String sampleId) {
