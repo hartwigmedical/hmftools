@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.patientdb.dao;
 
 import static com.hartwig.hmftools.patientdb.Config.DB_BATCH_INSERT_SIZE;
-import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.STRUCTURALVARIANT;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.STRUCTURALVARIANTBREAKEND;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.STRUCTURALVARIANTDISRUPTION;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.STRUCTURALVARIANTFUSION;
@@ -22,6 +21,7 @@ import com.hartwig.hmftools.common.variant.structural.annotation.SimpleGeneFusio
 import com.hartwig.hmftools.common.variant.structural.annotation.StructuralVariantAnalysis;
 import com.hartwig.hmftools.common.variant.structural.annotation.StructuralVariantAnnotation;
 import com.hartwig.hmftools.common.variant.structural.annotation.Transcript;
+import com.hartwig.hmftools.patientdb.database.hmfpatients.tables.Structuralvariantbreakend;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -31,7 +31,7 @@ import org.jooq.InsertValuesStep14;
 import org.jooq.InsertValuesStep4;
 import org.jooq.InsertValuesStep5;
 import org.jooq.Record;
-import org.jooq.Record1;
+import org.jooq.Record2;
 import org.jooq.Result;
 import org.jooq.types.UInteger;
 
@@ -56,41 +56,46 @@ public class StructuralVariantAnnotationDAO {
     public final List<SimpleGeneFusion> readGeneFusions(@NotNull final String sample) {
         List<SimpleGeneFusion> simpleGeneFusions = Lists.newArrayList();
 
-        final Result<Record1<String>> resultFiveGene = context.select(STRUCTURALVARIANTBREAKEND.GENE)
+        Structuralvariantbreakend five = STRUCTURALVARIANTBREAKEND.as("five");
+        Structuralvariantbreakend three = STRUCTURALVARIANTBREAKEND.as("three");
+        final Result<Record2<String, String>> resultFiveGene = context.select(five.GENE, three.GENE)
                 .from(STRUCTURALVARIANTFUSION)
-                .innerJoin(STRUCTURALVARIANTBREAKEND)
-                .on(STRUCTURALVARIANTBREAKEND.ID.eq(STRUCTURALVARIANTFUSION.FIVEPRIMEBREAKENDID))
-                .join(STRUCTURALVARIANT)
-                .on(STRUCTURALVARIANT.ID.eq(STRUCTURALVARIANTBREAKEND.STRUCTURALVARIANTID))
+                .innerJoin(five)
+                .on(five.ID.eq(STRUCTURALVARIANTFUSION.FIVEPRIMEBREAKENDID))
+                .innerJoin(three)
+                .on(three.ID.eq(STRUCTURALVARIANTFUSION.THREEPRIMEBREAKENDID))
                 .where(STRUCTURALVARIANTFUSION.SAMPLEID.eq(sample))
                 .fetch();
 
-        List<String> FiveGene = Lists.newArrayList();
+//        List<String> FiveGene = Lists.newArrayList();
         for (Record record : resultFiveGene) {
-            FiveGene.add(record.getValue(STRUCTURALVARIANTBREAKEND.GENE));
-        }
-
-        final Result<Record1<String>> resultThreeGene = context.select(STRUCTURALVARIANTBREAKEND.GENE)
-                .from(STRUCTURALVARIANTFUSION)
-                .innerJoin(STRUCTURALVARIANTBREAKEND)
-                .on(STRUCTURALVARIANTBREAKEND.ID.eq(STRUCTURALVARIANTFUSION.THREEPRIMEBREAKENDID))
-                .join(STRUCTURALVARIANT)
-                .on(STRUCTURALVARIANT.ID.eq(STRUCTURALVARIANTBREAKEND.STRUCTURALVARIANTID))
-                .where(STRUCTURALVARIANTFUSION.SAMPLEID.eq(sample))
-                .fetch();
-
-        List<String> ThreeGene = Lists.newArrayList();
-        for (Record record : resultThreeGene) {
-            ThreeGene.add(record.getValue(STRUCTURALVARIANTBREAKEND.GENE));
-        }
-
-        for (int i =0; i < FiveGene.size(); i ++) {
             simpleGeneFusions.add(ImmutableSimpleGeneFusion.builder()
-                    .fiveGene(FiveGene.get(i))
-                    .threeGene(ThreeGene.get(i))
+                    .fiveGene(record.getValue(five.GENE))
+                    .threeGene(record.getValue(three.GENE))
                     .build());
-
         }
+
+//        final Result<Record1<String>> resultThreeGene = context.select(STRUCTURALVARIANTBREAKEND.GENE)
+//                .from(STRUCTURALVARIANTFUSION)
+//                .innerJoin(STRUCTURALVARIANTBREAKEND)
+//                .on(STRUCTURALVARIANTBREAKEND.ID.eq(STRUCTURALVARIANTFUSION.THREEPRIMEBREAKENDID))
+//                .join(STRUCTURALVARIANT)
+//                .on(STRUCTURALVARIANT.ID.eq(STRUCTURALVARIANTBREAKEND.STRUCTURALVARIANTID))
+//                .where(STRUCTURALVARIANTFUSION.SAMPLEID.eq(sample))
+//                .fetch();
+//
+//        List<String> ThreeGene = Lists.newArrayList();
+//        for (Record record : resultThreeGene) {
+//            ThreeGene.add(record.getValue(STRUCTURALVARIANTBREAKEND.GENE));
+//        }
+//
+//        for (int i =0; i < FiveGene.size(); i ++) {
+//            simpleGeneFusions.add(ImmutableSimpleGeneFusion.builder()
+//                    .fiveGene(FiveGene.get(i))
+//                    .threeGene(ThreeGene.get(i))
+//                    .build());
+//
+//        }
         return simpleGeneFusions;
     }
 
