@@ -112,12 +112,12 @@ public class LoadEvidenceData {
                 Map<SimpleGeneFusion, List<EvidenceItem>> evidencePerFusion =
                         actionabilityAnalyzer.evidenceForFusions(analysesGeneFusions, primaryTumorLocation);
 
-                final List<EvidenceItem> AllEvidenceItemsGeneFusions = extractAllEvidenceItems(evidencePerFusion);
-                final List<ClinicalTrial> allClinicalTrialsGeneFusions = extractAllTrials(AllEvidenceItemsGeneFusions);
+                final List<EvidenceItem> allEvidenceItemsGeneFusions = extractAllEvidenceItems(evidencePerFusion);
+                final List<ClinicalTrial> allClinicalTrialsGeneFusions = extractAllTrials(allEvidenceItemsGeneFusions);
 
                 LOGGER.info("Writing evidence items of gene fusions to DB");
-                LOGGER.info("Counts of all evidence items: " + AllEvidenceItemsGeneFusions.size());
-                dbWriter.writeClinicalEvidence(sample, AllEvidenceItemsGeneFusions);
+                LOGGER.info("Counts of all evidence items: " + allEvidenceItemsGeneFusions.size());
+                dbWriter.writeClinicalEvidence(sample, allEvidenceItemsGeneFusions);
 
                 LOGGER.info("Writing clinical trials of gene fusions to DB");
                 LOGGER.info("Counts of all clinical trials: " + allClinicalTrialsGeneFusions.size());
