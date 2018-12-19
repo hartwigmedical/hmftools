@@ -21,9 +21,13 @@ import org.jetbrains.annotations.NotNull;
 @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
 class StructuralVariantImplied {
 
+    private final double ploidy;
+    private final int averageReadDepth;
     private final StructuralVariantLegPloidyFactory<CombinedRegion> structuralVariantPloidyFactory;
 
-    StructuralVariantImplied(final PurityAdjuster purityAdjuster) {
+    StructuralVariantImplied(int averageReadDepth, double ploidy, final PurityAdjuster purityAdjuster) {
+        this.ploidy = ploidy;
+        this.averageReadDepth = averageReadDepth;
         this.structuralVariantPloidyFactory =
                 new StructuralVariantLegPloidyFactory<>(purityAdjuster, x -> x.isProcessed() ? x.tumorCopyNumber() : 0);
     }

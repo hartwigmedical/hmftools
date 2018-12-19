@@ -144,6 +144,8 @@ public class PurityPloidyEstimateApplication {
             final SmoothingConfig smoothingConfig = configSupplier.smoothingConfig();
             final PurpleCopyNumberFactory copyNumberFactory = new PurpleCopyNumberFactory(smoothingConfig.minDiploidTumorRatioCount(),
                     smoothingConfig.minDiploidTumorRatioCountAtCentromere(),
+                    configSupplier.amberData().averageTumorDepth(),
+                    bestFit.fit().ploidy(),
                     purityAdjuster);
 
             LOGGER.info("Calculating copy number");
