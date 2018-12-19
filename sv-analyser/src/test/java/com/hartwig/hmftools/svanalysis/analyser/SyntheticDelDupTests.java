@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.svanalysis.analyser;
 
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.BND;
+import static com.hartwig.hmftools.svanalysis.analyser.SvTestHelper.createBnd;
 import static com.hartwig.hmftools.svanalysis.analyser.SvTestHelper.createDel;
 import static com.hartwig.hmftools.svanalysis.analyser.SvTestHelper.createDup;
 import static com.hartwig.hmftools.svanalysis.analyser.SvTestHelper.createInv;
@@ -137,8 +138,8 @@ public class SyntheticDelDupTests
         // create 2 BNDs with varying positions to check what synthetic DEL or DUP they create
 
         // no overlap but 2 deletion bridges - a reciprocal translation
-        SvVarData var1 = createSv(tester.nextVarId(), "1", "2,", 100, 200, 1, 1, BND);
-        SvVarData var2 = createSv(tester.nextVarId(), "1", "2,", 120, 220, -1, -1, BND);
+        SvVarData var1 = createBnd(tester.nextVarId(), "1", 100, 1, "2", 200, 1);
+        SvVarData var2 = createBnd(tester.nextVarId(), "1", 120, -1, "2", 220, -1);
 
         SvCluster cluster = new SvCluster(0);
         cluster.addVariant(var1);
@@ -153,8 +154,8 @@ public class SyntheticDelDupTests
         assertEquals(cluster.getSynDelDupTILength(), 0);
 
         // similar but with small overlaps
-        var1 = createSv(tester.nextVarId(), "1", "2,", 100, 200, 1, 1, BND);
-        var2 = createSv(tester.nextVarId(), "1", "2,", 90, 190, -1, -1, BND);
+        var1 = createBnd(tester.nextVarId(), "1", 100, 1, "2", 200, 1);
+        var2 = createBnd(tester.nextVarId(), "1", 90, -1, "2", 190, -1);
 
         cluster = new SvCluster(0);
         cluster.addVariant(var1);
@@ -169,8 +170,8 @@ public class SyntheticDelDupTests
         assertEquals(cluster.getSynDelDupTILength(), 0);
 
         // single TI with a DEL
-        var1 = createSv(tester.nextVarId(), "1", "2,", 100, 200, 1, 1, BND);
-        var2 = createSv(tester.nextVarId(), "1", "2,", 200, 150, -1, -1, BND);
+        var1 = createBnd(tester.nextVarId(), "1", 100, 1, "2", 200, 1);
+        var2 = createBnd(tester.nextVarId(), "1", 200, -1, "2", 150, -1);
 
         cluster = new SvCluster(0);
         cluster.addVariant(var1);
@@ -185,8 +186,8 @@ public class SyntheticDelDupTests
         assertEquals(cluster.getSynDelDupTILength(), var1.position(false) - var2.position(false));
 
         // 2 TIs with a DUP
-        var1 = createSv(tester.nextVarId(), "1", "2,", 200, 200, 1, 1, BND);
-        var2 = createSv(tester.nextVarId(), "1", "2,", 100, 150, -1, -1, BND);
+        var1 = createBnd(tester.nextVarId(), "1", 200, 1, "2", 200, 1);
+        var2 = createBnd(tester.nextVarId(), "1", 100, -1, "2", 150, -1);
 
         cluster = new SvCluster(0);
         cluster.addVariant(var1);

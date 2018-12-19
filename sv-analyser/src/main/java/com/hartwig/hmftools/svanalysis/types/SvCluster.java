@@ -7,6 +7,7 @@ import static com.hartwig.hmftools.common.variant.structural.StructuralVariantTy
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DEL;
 import static com.hartwig.hmftools.svanalysis.analysis.ClusterAnalyser.SHORT_TI_LENGTH;
 import static com.hartwig.hmftools.svanalysis.analysis.ClusterAnalyser.SMALL_CLUSTER_SIZE;
+import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.addSvToChrBreakendMap;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.calcConsistency;
 import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.ASSEMBLY_MATCH_INFER_ONLY;
 import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.removedLinksWithSV;
@@ -47,6 +48,7 @@ public class SvCluster
     private List<SvLinkedPair> mAssemblyLinkedPairs; // TIs found during assembly
     private List<SvVarData> mSpanningSVs; // having 2 duplicate (matching) BEs
     private List<SvArmGroup> mArmGroups;
+    private Map<String, List<SvBreakend>> mChrBreakendMap;
     private List<SvVarData> mUnchainedSVs;
     private boolean mIsResolved;
     private String mResolvedType;
@@ -115,6 +117,7 @@ public class SvCluster
         mSynDelDupLength = 0;
         mRequiresRecalc = true;
         mAnnotationList = Lists.newArrayList();
+        mChrBreakendMap = new HashMap();
 
         // chain data
         mLinkedPairs = Lists.newArrayList();
@@ -196,6 +199,8 @@ public class SvCluster
 
             if(var.type() == BND || var.isCrossArm())
                 mRecalcRemoteSVStatus = true;
+
+            addSvToChrBreakendMap(var, mChrBreakendMap);
         }
 
         // keep track of all SVs in their respective chromosomal arms
@@ -304,6 +309,7 @@ public class SvCluster
     }
 
     public List<SvArmGroup> getArmGroups() { return mArmGroups; }
+    public Map<String, List<SvBreakend>> getChrBreakendMap() { return mChrBreakendMap; }
 
     public boolean hasArmGroup(final String chr, final String arm) { return getArmGroup(chr, arm) != null; }
 

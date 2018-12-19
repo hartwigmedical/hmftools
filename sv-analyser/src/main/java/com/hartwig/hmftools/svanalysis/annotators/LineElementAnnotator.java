@@ -20,6 +20,7 @@ import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.common.region.GenomeRegionFactory;
 import com.hartwig.hmftools.svanalysis.types.SvBreakend;
 import com.hartwig.hmftools.svanalysis.types.SvCluster;
+import com.hartwig.hmftools.svanalysis.types.SvLinkedPair;
 import com.hartwig.hmftools.svanalysis.types.SvVarData;
 
 import org.apache.logging.log4j.LogManager;
@@ -38,8 +39,8 @@ public class LineElementAnnotator {
     private List<GenomeRegion> mIdentifiedLineElements;
     private static int PERMITTED_DISTANCE = 5000;
 
-    private static String POLY_A_MOTIF = "AAAAAAAA";
-    private static String POLY_T_MOTIF = "TTTTTTTT";
+    public static String POLY_A_MOTIF = "AAAAAAAA";
+    public static String POLY_T_MOTIF = "TTTTTTTT";
 
     private static final Logger LOGGER = LogManager.getLogger(FragileSiteAnnotator.class);
 
@@ -132,11 +133,155 @@ public class LineElementAnnotator {
         return var.getSvData().insertSequence().contains(POLY_A_MOTIF) || var.getSvData().insertSequence() .contains(POLY_T_MOTIF);
     }
 
+
     public static void markLineCluster(final SvCluster cluster, int proximityLength)
     {
         /* Identify a suspected LINE element if:
-            - has 2+ BND  within 5kb AND at least one SV also within 5kb having poly A/T INS sequence OR
-            - has at least 1 BND with a remote SGL forming a 30 base or at least one SV poly A/T INS sequence
+           - has 2+ BND within 5kb NOT forming a DB of < 30 bases
+                AND at least one SV also within 5kb having poly A/T INS sequence
+           - OR at least 1 BND with a remote SGL forming a 30 base DB (ie on the remote arm)
+                AND EITHER at least one SV also within 5kb OR the remote SGL having poly A/T INS sequence
+
+           Resolve the cluster as type = Line if:
+            -  has a suspected line element
+            -  every variant in the cluster is part of a KNOWN line element
+        */
+        List<SvVarData> knownLineSvs = cluster.getSVs().stream()
+                .filter(SvVarData::inLineElement)
+                .collect(Collectors.toList());
+
+        if(cluster.getUniqueSvCount() == knownLineSvs.size())
+        {
+            LOGGER.debug("cluster({}) marked as line with all known({})", cluster.id(), knownLineSvs.size());
+            cluster.markAsLine();
+            return;
+        }
+
+        boolean hasSuspected = false;
+
+        final Map<String, List<SvBreakend>> chrBreakendMap = cluster.getChrBreakendMap();
+
+        for (Map.Entry<String, List<SvBreakend>> entry : chrBreakendMap.entrySet())
+        {
+            final List<SvBreakend> breakendList = entry.getValue();
+
+            for (int i = 0; i < breakendList.size(); ++i)
+            {
+                final SvBreakend breakend = breakendList.get(i);
+                final SvVarData var = breakend.getSV();
+
+                if (var.getLineElement(breakend.usesStart()).equals(SUSPECTED_LINE_ELEMENT))
+                    continue;
+
+                boolean hasPolyAorT = hasPolyAorTMotif(var);
+                int bndCount = 0;
+                boolean isSuspectGroup = false;
+
+                if (var.type() == BND)
+                {
+                    ++bndCount;
+
+                    // test for a remote SGL in a DB
+                    final SvLinkedPair dbPair = var.getDBLink(!breakend.usesStart());
+
+                    if (dbPair != null && dbPair.length() <= SHORT_DB_LENGTH && dbPair.getOtherSV(var).type() == SGL)
+                    {
+                        ++bndCount;
+
+                        if (hasPolyAorTMotif(dbPair.getOtherSV(var)))
+                        {
+                            hasPolyAorT = true;
+                        }
+                    }
+                }
+
+                if(bndCount == 2 && hasPolyAorT)
+                {
+                    isSuspectGroup = true;
+                }
+                else
+                {
+                    // search for proximate BNDs and/or SVs with poly A/T
+                    for (int j = i + 1; j < breakendList.size(); ++j)
+                    {
+                        final SvBreakend prevBreakend = breakendList.get(j - 1);
+                        final SvBreakend nextBreakend = breakendList.get(j);
+
+                        if (nextBreakend.position() - breakend.position() > proximityLength)
+                            break;
+
+                        if (!hasPolyAorT)
+                        {
+                            hasPolyAorT = hasPolyAorTMotif(nextBreakend.getSV());
+                        }
+
+                        if (bndCount < 2 && nextBreakend.getSV().type() == BND)
+                        {
+                            final SvLinkedPair dbPair = nextBreakend.getSV().getDBLink(nextBreakend.usesStart());
+                            final SvLinkedPair nextDbPair = prevBreakend.getSV().getDBLink(prevBreakend.usesStart());
+
+                            if (dbPair == null || dbPair != nextDbPair || dbPair.length() > SHORT_DB_LENGTH)
+                            {
+                                ++bndCount;
+                            }
+                        }
+
+                        if (bndCount >= 2 && hasPolyAorT)
+                        {
+                            isSuspectGroup = true;
+                            break;
+                        }
+                    }
+                }
+
+                if (!isSuspectGroup)
+                    continue;
+
+                hasSuspected = true;
+
+                // otherwise mark every breakend in this proximity as suspect line
+                var.setLineElement(SUSPECTED_LINE_ELEMENT, breakend.usesStart());
+
+                for (int j = i + 1; j < breakendList.size(); ++j)
+                {
+                    final SvBreakend nextBreakend = breakendList.get(j);
+
+                    if (nextBreakend.position() - breakend.position() > proximityLength)
+                        break;
+
+                    nextBreakend.getSV().setLineElement(SUSPECTED_LINE_ELEMENT, nextBreakend.usesStart());
+                }
+            }
+        }
+
+        if(hasSuspected)
+        {
+            if(LOGGER.isDebugEnabled())
+            {
+                long suspectLine = cluster.getSVs().stream().
+                        filter(x -> (x.getLineElement(true).equals(SUSPECTED_LINE_ELEMENT) || x.getLineElement(true).equals(SUSPECTED_LINE_ELEMENT))).count();
+
+                long polyAorT = cluster.getSVs().stream().filter(x -> hasPolyAorTMotif(x)).count();
+
+                LOGGER.debug("cluster({}) marked as line with suspect line elements", cluster.id(), suspectLine, polyAorT);
+            }
+
+            cluster.markAsLine();
+        }
+
+    }
+
+    public static void markLineCluster_old(final SvCluster cluster, int proximityLength)
+    {
+        /* Identify a suspected LINE element if:
+            - has 2+ BND within 5kb AND at least one SV also within 5kb having poly A/T INS sequence OR
+            - has at least 1 BND with a remote SGL forming a 30 base DB or at least one SV poly A/T INS sequence
+
+           New rules:
+           - has 2+ BND within 5kb NOT forming a DB of < 30 bases
+                AND at least one SV also within 5kb having poly A/T INS sequence
+           - OR at least 1 BND with a remote SGL forming a 30 base DB (ie on the remote arm)
+                AND EITHER at least one SV also within 5kb OR the remote SGL having poly A/T INS sequence
 
            Resolve the cluster as type = Line if:
             -  touch a SUSPECTED or KNOWN line element AND contain at least 1 Poly A/T ins sequence OR

@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.svanalysis.analysis;
 
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.centromeres.Centromeres;
 import com.hartwig.hmftools.common.chromosome.ChromosomeLengths;
 import com.hartwig.hmftools.common.region.GenomeRegion;
@@ -75,6 +76,42 @@ public class SvUtilities {
         long chrLength = CHROMOSOME_LENGTHS.get(chromosome);
 
         return chrLength - region.end();
+    }
+
+    public static void addSvToChrBreakendMap(final SvVarData var, Map<String, List<SvBreakend>> chrBreakendMap)
+    {
+        for(int be = SVI_START; be <= SVI_END; ++be)
+        {
+            if(be == SVI_END && var.isNullBreakend())
+                continue;
+
+            boolean useStart = isStart(be);
+
+            final String chr = var.chromosome(useStart);
+            long position = var.position(useStart);
+
+            if (!chrBreakendMap.containsKey(chr))
+            {
+                List<SvBreakend> breakendList = Lists.newArrayList();
+                breakendList.add(var.getBreakend(useStart));
+                chrBreakendMap.put(chr, breakendList);
+                continue;
+            }
+
+            // otherwise add the variant in order by ascending position
+            List<SvBreakend> breakendList = chrBreakendMap.get(chr);
+
+            int index = 0;
+            for (; index < breakendList.size(); ++index)
+            {
+                final SvBreakend breakend = breakendList.get(index);
+
+                if (position < breakend.position())
+                    break;
+            }
+
+            breakendList.add(index, var.getBreakend(useStart));
+        }
     }
 
     public static boolean areVariantsLinkedByDistance(final SvVarData v1, final SvVarData v2, int permittedDistance)

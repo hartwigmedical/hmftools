@@ -9,6 +9,7 @@ import static com.hartwig.hmftools.common.variant.structural.StructuralVariantTy
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INS;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.svanalysis.annotators.FragileSiteAnnotator.NO_FS;
+import static com.hartwig.hmftools.svanalysis.annotators.LineElementAnnotator.IDENTIFIED_LINE_ELEMENT;
 import static com.hartwig.hmftools.svanalysis.annotators.LineElementAnnotator.NO_LINE_ELEMENT;
 import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.ASSEMBLY_MATCH_MATCHED;
 import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.ASSEMBLY_MATCH_NONE;
@@ -346,12 +347,29 @@ public class SvVarData
     public void setLineElement(String type, boolean isStart)
     {
         if(isStart)
-            mStartLineElement = type;
+        {
+            if(mStartLineElement.equals(IDENTIFIED_LINE_ELEMENT))
+                mStartLineElement = IDENTIFIED_LINE_ELEMENT + ";" + type;
+            else
+                mStartLineElement = type;
+        }
         else
-            mEndLineElement = type;
+        {
+            if(mEndLineElement.equals(IDENTIFIED_LINE_ELEMENT))
+                mEndLineElement = IDENTIFIED_LINE_ELEMENT + ";" + type;
+            else
+                mEndLineElement = type;
+        }
     }
 
-    public boolean isLineElement(boolean useStart) { return useStart ? !mStartLineElement.equals(NO_LINE_ELEMENT) : !mEndLineElement.equals(NO_LINE_ELEMENT); }
+    public boolean isLineElement(boolean useStart)
+    {
+        if(useStart)
+            return !mStartLineElement.equals(NO_LINE_ELEMENT) && !mStartLineElement.equals(IDENTIFIED_LINE_ELEMENT);
+        else
+            return !mEndLineElement.equals(NO_LINE_ELEMENT) && !mEndLineElement.equals(IDENTIFIED_LINE_ELEMENT);
+    }
+
     public boolean inLineElement() { return isLineElement(true) || isLineElement(false); }
     public final String getLineElement(boolean useStart) { return useStart ? mStartLineElement : mEndLineElement; }
 

@@ -39,12 +39,8 @@ public class LinkFinder
 
     public static int MIN_TEMPLATED_INSERTION_LENGTH = 30;
     public static int NO_DB_MARKER = -(MIN_TEMPLATED_INSERTION_LENGTH + 1);
-    private static int MAX_TEMPLATED_INSERTION_LENGTH = 500;
     public static int CLUSTER_SIZE_ANALYSIS_LIMIT = 500;
     public static int SHORT_DB_LENGTH = 30;
-
-    public static String TRANS_TYPE_TRANS = "TRANS";
-    public static String TRANS_TYPE_SPAN = "SPAN";
 
     private static final Logger LOGGER = LogManager.getLogger(LinkFinder.class);
 

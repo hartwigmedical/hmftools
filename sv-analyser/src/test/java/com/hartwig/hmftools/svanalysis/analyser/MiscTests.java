@@ -6,8 +6,10 @@ import static com.hartwig.hmftools.common.variant.structural.StructuralVariantTy
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INS;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INV;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
+import static com.hartwig.hmftools.svanalysis.analyser.SvTestHelper.createBnd;
 import static com.hartwig.hmftools.svanalysis.analyser.SvTestHelper.createDel;
 import static com.hartwig.hmftools.svanalysis.analyser.SvTestHelper.createDup;
+import static com.hartwig.hmftools.svanalysis.analyser.SvTestHelper.createIns;
 import static com.hartwig.hmftools.svanalysis.analyser.SvTestHelper.createInv;
 import static com.hartwig.hmftools.svanalysis.analyser.SvTestHelper.createSgl;
 import static com.hartwig.hmftools.svanalysis.analyser.SvTestHelper.createSv;
@@ -40,7 +42,7 @@ public class MiscTests
         final SvVarData del = createDel("1", "1", 100, 200);
         assertEquals(calcConsistency(del), 0);
 
-        final SvVarData ins = createSv("1", "1", "1", 100, 200, 1, -1, INS);
+        final SvVarData ins = createIns("1", "1", 100, 200);
         assertEquals(calcConsistency(ins), 0);
 
         final SvVarData dup = createDup("1", "1", 100, 200);
@@ -49,7 +51,7 @@ public class MiscTests
         final SvVarData inv = createInv("1", "1", 100, 200, 1);
         assertEquals(calcConsistency(inv), 2);
 
-        final SvVarData bnd = createSv("1", "1", "1", 100, 200, 1, -1, BND);
+        final SvVarData bnd = createBnd("1", "1", 100, 1, "2", 100, -1);
         assertEquals(calcConsistency(bnd), 0);
 
         final SvVarData sgl = createSgl("1", "1", 100, 1, false);

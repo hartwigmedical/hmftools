@@ -17,6 +17,7 @@ import static com.hartwig.hmftools.svanalysis.analysis.LinkFinder.areSectionBrea
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.CHROMOSOME_ARM_P;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.CHROMOSOME_ARM_Q;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.PERMITED_DUP_BE_DISTANCE;
+import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.addSvToChrBreakendMap;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.areVariantsLinkedByDistance;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.calcConsistency;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.copyNumbersEqual;
@@ -45,6 +46,9 @@ import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.LINK_TYPE_TI;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.ASSEMBLY_TYPE_EQV;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.RELATION_TYPE_NEIGHBOUR;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.RELATION_TYPE_OVERLAP;
+import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_END;
+import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_START;
+import static com.hartwig.hmftools.svanalysis.types.SvVarData.isStart;
 
 import java.util.Collections;
 import java.util.Comparator;
@@ -77,7 +81,7 @@ public class SvClusteringMethods {
     private double mMedianChrArmRate;
     private int mNextClusterId;
 
-    private Map<String, List<SvBreakend>> mChrBreakendMap; // every breakend on a chromosome, ordered by asending position
+    private Map<String, List<SvBreakend>> mChrBreakendMap; // every breakend on a chromosome, ordered by ascending position
     private Map<String, List<SvLOH>> mSampleLohData;
     private Map<String, Double> mTelomereCopyNumberMap;
     private Map<String, Double> mChromosomeCopyNumberMap; // max of telomere for convenience
@@ -916,39 +920,7 @@ public class SvClusteringMethods {
         // add each SV's breakends to a map keyed by chromosome, with the breakends in order of position lowest to highest
         for (final SvVarData var : allVariants)
         {
-            // add each breakend in turn
-            for (int i = 0; i < 2; ++i)
-            {
-                boolean useStart = (i == 0);
-
-                if (!useStart && var.isNullBreakend())
-                    continue;
-
-                final String chr = var.chromosome(useStart);
-                long position = var.position(useStart);
-
-                if (!mChrBreakendMap.containsKey(chr))
-                {
-                    List<SvBreakend> breakendList = Lists.newArrayList();
-                    breakendList.add(var.getBreakend(useStart));
-                    mChrBreakendMap.put(chr, breakendList);
-                    continue;
-                }
-
-                // otherwise add the variant in order by ascending position
-                List<SvBreakend> breakendList = mChrBreakendMap.get(chr);
-
-                int index = 0;
-                for (; index < breakendList.size(); ++index)
-                {
-                    final SvBreakend breakend = breakendList.get(index);
-
-                    if (position < breakend.position())
-                        break;
-                }
-
-                breakendList.add(index, var.getBreakend(useStart));
-            }
+            addSvToChrBreakendMap(var, mChrBreakendMap);
         }
 
         // cache indicies for faster look-up
