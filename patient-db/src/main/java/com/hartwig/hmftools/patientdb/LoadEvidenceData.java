@@ -16,6 +16,7 @@ import com.hartwig.hmftools.common.context.RunContext;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion;
+import com.hartwig.hmftools.common.variant.structural.annotation.SimpleGeneFusion;
 import com.hartwig.hmftools.common.variant.structural.annotation.StructuralVariantAnalysis;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
@@ -110,13 +111,11 @@ public class LoadEvidenceData {
                 LOGGER.info(allClinicalTrialsGeneCopyNumber);
 
                 LOGGER.info("Reading gene fusions from DB");
-                final List<StructuralVariantAnalysis> analysesStructuralVarianten = dbAccess.readingStructuralVarianten(sample);
+                final List<SimpleGeneFusion> analysesStructuralVarianten = dbAccess.readingStructuralVarianten(sample);
+                LOGGER.info(analysesStructuralVarianten);
 
-                final List<GeneFusion> geneFusions = analysesStructuralVarianten.iterator().next().fusions();
-                LOGGER.info(geneFusions);
-
-                Map<GeneFusion, List<EvidenceItem>> evidencePerFusion =
-                        actionabilityAnalyzer.evidenceForFusions(geneFusions, primaryTumorLocation);
+                Map<SimpleGeneFusion, List<EvidenceItem>> evidencePerFusion =
+                        actionabilityAnalyzer.evidenceForFusions(analysesStructuralVarianten, primaryTumorLocation);
 
                 final List<EvidenceItem> AllEvidenceItemsGeneFusions = extractAllEvidenceItems(evidencePerFusion);
                 final List<ClinicalTrial> allClinicalTrialsGeneFusions = extractAllTrials(AllEvidenceItemsGeneFusions);
@@ -127,7 +126,6 @@ public class LoadEvidenceData {
                 LOGGER.info("Writing clinical trials of gene fusions to DB");
                 LOGGER.info("Counts of all clinical trials: " + allClinicalTrialsGeneFusions.size());
                 dbWriter.writeClinicalTrial(sample, allClinicalTrialsGeneFusions);
-
             }
         }
     }

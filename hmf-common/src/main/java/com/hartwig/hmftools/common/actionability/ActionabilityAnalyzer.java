@@ -19,7 +19,7 @@ import com.hartwig.hmftools.common.actionability.somaticvariant.SomaticVariantEv
 import com.hartwig.hmftools.common.actionability.somaticvariant.SomaticVariantEvidenceAnalyzerFactory;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
-import com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion;
+import com.hartwig.hmftools.common.variant.structural.annotation.SimpleGeneFusion;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -129,17 +129,17 @@ public class ActionabilityAnalyzer {
     }
 
     @NotNull
-    public Map<GeneFusion, List<EvidenceItem>> evidenceForFusions(@NotNull List<GeneFusion> fusions,
+    public Map<SimpleGeneFusion, List<EvidenceItem>> evidenceForFusions(@NotNull List<SimpleGeneFusion> fusions,
             @Nullable String primaryTumorLocation) {
-        Map<GeneFusion, List<EvidenceItem>> evidencePerFusion = Maps.newHashMap();
+        Map<SimpleGeneFusion, List<EvidenceItem>> evidencePerFusion = Maps.newHashMap();
 
-        List<GeneFusion> fusionsOnActionableGenes = fusions.stream()
-                .filter(fusion -> fusionAnalyzer.actionableGenes().contains(fusion.upstreamTrans().geneName())
-                        || fusionAnalyzer.actionableGenes().contains(fusion.downstreamTrans().geneName()))
+        List<SimpleGeneFusion> fusionsOnActionableGenes = fusions.stream()
+                .filter(fusion -> fusionAnalyzer.actionableGenes().contains(fusion.fiveGene())
+                        || fusionAnalyzer.actionableGenes().contains(fusion.threeGene()))
                 .collect(Collectors.toList());
 
         // TODO (KODU): Should reuse "favor canonical" rules from SV analyser here but have re-implemented for now.
-        for (GeneFusion actionableFusion : uniqueGeneFusions(fusionsOnActionableGenes)) {
+        for (SimpleGeneFusion actionableFusion : uniqueGeneFusions(fusionsOnActionableGenes)) {
             evidencePerFusion.put(actionableFusion,
                     fusionAnalyzer.evidenceForFusion(actionableFusion, primaryTumorLocation, cancerTypeAnalyzer));
         }
@@ -148,13 +148,13 @@ public class ActionabilityAnalyzer {
     }
 
     @NotNull
-    private static List<GeneFusion> uniqueGeneFusions(@NotNull List<GeneFusion> fusions) {
-        List<GeneFusion> allUniqueGeneFusions = Lists.newArrayList();
-        Map<FiveThreePair, List<GeneFusion>> fusionsPerFiveThreePair = Maps.newHashMap();
-        for (GeneFusion fusion : fusions) {
+    private static List<SimpleGeneFusion> uniqueGeneFusions(@NotNull List<SimpleGeneFusion> fusions) {
+        List<SimpleGeneFusion> allUniqueGeneFusions = Lists.newArrayList();
+        Map<FiveThreePair, List<SimpleGeneFusion>> fusionsPerFiveThreePair = Maps.newHashMap();
+        for (SimpleGeneFusion fusion : fusions) {
             FiveThreePair key =
-                    new FiveThreePair(fusion.upstreamTrans().geneName(), fusion.downstreamTrans().geneName());
-            List<GeneFusion> fusionsForKey = fusionsPerFiveThreePair.get(key);
+                    new FiveThreePair(fusion.fiveGene(), fusion.threeGene());
+            List<SimpleGeneFusion> fusionsForKey = fusionsPerFiveThreePair.get(key);
             if (fusionsForKey == null) {
                 fusionsForKey = Lists.newArrayList();
             }
@@ -162,25 +162,23 @@ public class ActionabilityAnalyzer {
             fusionsPerFiveThreePair.put(key, fusionsForKey);
         }
 
-        for (Map.Entry<FiveThreePair, List<GeneFusion>> fusionsPerKey : fusionsPerFiveThreePair.entrySet()) {
-            allUniqueGeneFusions.add(favorCanonical(fusionsPerKey.getValue()));
+        for (Map.Entry<FiveThreePair, List<SimpleGeneFusion>> fusionsPerKey : fusionsPerFiveThreePair.entrySet()) {
+            allUniqueGeneFusions.add(actionSimpleGeneFusion(fusionsPerKey.getValue()));
         }
 
         return allUniqueGeneFusions;
     }
 
     @NotNull
-    private static GeneFusion favorCanonical(@NotNull List<GeneFusion> fusions) {
-        for (GeneFusion fusion : fusions) {
-            if (fusion.upstreamTrans().isCanonical() && fusion.downstreamTrans().isCanonical()) {
-                return fusion;
-            }
+    private static SimpleGeneFusion actionSimpleGeneFusion(@NotNull List<SimpleGeneFusion> fusions) {
+        SimpleGeneFusion fusionGenes = null;
+        for (SimpleGeneFusion fusion : fusions) {
+            fusionGenes = fusion;
         }
 
-        // KODU: If there is no canonical-canonical fusion, return the first one arbitrarily.
-        assert !fusions.isEmpty();
-        return fusions.get(0);
+        return fusionGenes;
     }
+
 
     private static class FiveThreePair {
 

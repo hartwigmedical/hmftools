@@ -17,14 +17,13 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneAnnotation;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneDisruption;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion;
-import com.hartwig.hmftools.common.variant.structural.annotation.ImmutableGeneDisruption;
-import com.hartwig.hmftools.common.variant.structural.annotation.ImmutableStructuralVariantAnalysis;
+import com.hartwig.hmftools.common.variant.structural.annotation.ImmutableSimpleGeneFusion;
+import com.hartwig.hmftools.common.variant.structural.annotation.SimpleGeneFusion;
 import com.hartwig.hmftools.common.variant.structural.annotation.StructuralVariantAnalysis;
 import com.hartwig.hmftools.common.variant.structural.annotation.StructuralVariantAnnotation;
 import com.hartwig.hmftools.common.variant.structural.annotation.Transcript;
 
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.jooq.DSLContext;
 import org.jooq.InsertValuesStep14;
 import org.jooq.InsertValuesStep4;
@@ -49,52 +48,27 @@ public class StructuralVariantAnnotationDAO {
     }
 
     @NotNull
-    public final List<StructuralVariantAnalysis> readStructuralVariantAnalysis(@NotNull final String sample) {
-        List<StructuralVariantAnalysis> structuralVariantAnalyses = Lists.newArrayList();
+    public final List<SimpleGeneFusion> readStructuralVariantAnalysis(@NotNull final String sample) {
+        List<SimpleGeneFusion> simpleGeneFusions = Lists.newArrayList();
 
         final Result<Record> result = context.select()
                 .from(STRUCTURALVARIANTFUSION)
-                .join(STRUCTURALVARIANTBREAKEND)
-                .on(STRUCTURALVARIANTBREAKEND.ID.eq(STRUCTURALVARIANTFUSION.FIVEPRIMEBREAKENDID).
-                        or(STRUCTURALVARIANTBREAKEND.ID.eq(STRUCTURALVARIANTFUSION.THREEPRIMEBREAKENDID)))
+                .innerJoin(STRUCTURALVARIANTBREAKEND)
+                .on(STRUCTURALVARIANTBREAKEND.ID.eq(STRUCTURALVARIANTFUSION.FIVEPRIMEBREAKENDID)
+                        .and(STRUCTURALVARIANTBREAKEND.ID.eq(STRUCTURALVARIANTFUSION.THREEPRIMEBREAKENDID)))
                 .join(STRUCTURALVARIANT)
                 .on(STRUCTURALVARIANT.ID.eq(STRUCTURALVARIANTBREAKEND.STRUCTURALVARIANTID))
                 .where(STRUCTURALVARIANTFUSION.SAMPLEID.eq(sample))
                 .fetch();
 
         for (Record record : result) {
-            structuralVariantAnalyses.add(ImmutableStructuralVariantAnalysis.of(readingStructuralVariantAnnotator(record),
-                    readingGeneFusion(record),
-                    readingGeneDisruption(record)));
+            simpleGeneFusions.add(ImmutableSimpleGeneFusion.builder()
+                    .fiveGene(record.getValue(STRUCTURALVARIANTBREAKEND.GENE))
+                    .threeGene(record.getValue(STRUCTURALVARIANTBREAKEND.GENE))
+                    .build());
         }
 
-        return structuralVariantAnalyses;
-    }
-
-    private List<StructuralVariantAnnotation> readingStructuralVariantAnnotator(@NotNull Record record) {
-        List<StructuralVariantAnnotation> structuralVariantAnnotation = Lists.newArrayList();
-        return structuralVariantAnnotation;
-    }
-
-    private List<GeneDisruption> readingGeneDisruption(@NotNull Record record) {
-        List<GeneDisruption> geneDisruptions = Lists.newArrayList();
-        geneDisruptions.add(ImmutableGeneDisruption.builder()
-                .reportable(byteToBoolean(record.getValue(STRUCTURALVARIANTDISRUPTION.ISREPORTED)))
-              //  .linkedAnnotation(record.getValue(STRUCTURALVARIANTDISRUPTION.BREAKENDID))
-                .build());
-        return geneDisruptions;
-    }
-
-    @Nullable
-    private static Boolean byteToBoolean(Byte b) {
-        if (b == null) {
-            return null;
-        }
-        return b != 0;
-    }
-    private List<GeneFusion> readingGeneFusion(@NotNull Record record) {
-        List<GeneFusion> geneFusions = Lists.newArrayList();
-        return geneFusions;
+        return simpleGeneFusions;
     }
 
     @SuppressWarnings("unchecked")
