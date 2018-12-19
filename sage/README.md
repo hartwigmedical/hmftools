@@ -84,7 +84,7 @@ reference_bam | Path to reference bam file
 tumor | Name of tumor sample
 tumor_bam | Path to tumor bam file
 
-##Example Usage
+## Example Usage
 ```
 java -Xmx8G -Xms4G \
     -cp sage.jar com.hartwig.hmftools.sage.SageHotspotApplication \
