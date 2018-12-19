@@ -28,15 +28,15 @@ When writing to a file, a number of soft filters are applied.
 
 Any variant will be filtered as **LOW_CONFIDENCE** under the following conditions:
 1. Insufficient tumor allelic depth, i.e., tumor allelic depth < min_tumor_reads [2]; or
-2. Excessive germline allelic depth, i.e., germline allelic depth > 2 OR germline allelic depth = 1 AND germline heterozygous binomial likelihood > max_het_binomial_likelihood [0.01]
+2. Evidence of support for the ALT in the germline sample, ie. filter if germline ALT read count >1 OR if germline ALT read count = 1 AND germline heterozygous binomial likelihood > max_het_binomial_likelihood [0.01]
 
-Any hotspot will be filtered as **LOW_CONFIDENCE** if:
-1. Insufficient quality, i.e., quality < min_hotspot_quality [100]; or
-2. Insufficient VAF, i.e., vaf < min_hotspot_vaf [0.005]
+Any snv or mnv will be filtered as **LOW_CONFIDENCE** if:
+1. Insufficient quality, i.e., quality < min_snv_quality [100]; or
+2. Insufficient VAF, i.e., vaf < min_snv_vaf [0.005]
 
-Any inframe indel (that is not also a hotspot) will be filtered as **LOW_CONFIDENCE** if:
-1. Insufficient quality, i.e., quality < min_inframe_quality [150]; or
-2. Insufficient VAF, i.e., vaf < min_inframe_vaf [0.02]
+Any indel will be filtered as **LOW_CONFIDENCE** if:
+1. Insufficient quality, i.e., quality < min_indel_quality [150]; or
+2. Insufficient VAF, i.e., vaf < min_indel_vaf [0.02]
 
 Any unfiltered indel (regardless of being a hotspot or not) will be filtered as **GERMLINE_INDEL** if there exists an indels at that site in the germline. 
 
@@ -47,4 +47,24 @@ Only one variant per site is written to file as ranked by filter then quality.
 ## Post Processing
 The HMF pipeline employs some post processing steps to further filter the output. We have generated a PON file from 1077 sage results that captures any variants that have more than one read in the germline of at least 2 samples. These variants are filtered from our output.
 
+## Usage
+
+Argument | Description 
+---|---
+coding_regions | Coding regions bed file to search for inframe indels
+known_hotspots | Tab separated file of known hotspot locations
+max_het_binomial_likelihood | Up to 1 read of support for the ALT in the reference is allowed if the binomial likelihood of observing the read (assuming a 50% VAF) is less than this parameter [0.01]
+min_base_quality | Minimum quality for a base to be considered [13]
+min_indel_quality | Low confidence filtering minimum indel quality [150]
+min_indel_vaf | Low confidence filtering minimum indel VAF [0.02]
+min_mapping_quality |  Minimum mapping quality for an alignment to be used [1]
+min_snv_quality | Low confidence filtering minimum SNV/MNV quality [100]
+min_snv_vaf | Low confidence filtering minimum SNV/MNV VAF [0.005]
+min_tumor_reads | Low confidence filtering minimum tumor reads [2]
+out | Output VCF file to write. Gz  supported
+ref_genome | Path to the ref genome fasta file
+reference | Name of reference sample
+reference_bam | Path to reference bam file
+tumor | Name of tumor sample
+tumor_bam | Path to tumor bam file
  

@@ -46,22 +46,22 @@ public class HotspotEvidenceVCF {
 
     private final double maxNormalHetLikelihood;
     private final int minTumorReads;
-    private final double minHotspotVAF;
-    private final double minInframeVAF;
-    private final int minHotspotQuality;
-    private final int minInframeQuality;
+    private final double minSnvVAF;
+    private final double minIndelVAF;
+    private final int minSnvQuality;
+    private final int minIndelQuality;
 
     public HotspotEvidenceVCF(@NotNull final String normalSample, @NotNull final String tumorSample, final double maxNormalHetLikelihood,
-            final int minTumorReads, final double minHotspotVAF, final double minInframeVAF, final int minHotspotQuality,
-            final int minInframeQuality) {
+            final int minTumorReads, final double minSnvVAF, final double minIndelVAF, final int minSnvQuality,
+            final int minIndelQuality) {
         this.tumorSample = tumorSample;
         this.normalSample = normalSample;
         this.maxNormalHetLikelihood = maxNormalHetLikelihood;
         this.minTumorReads = minTumorReads;
-        this.minHotspotVAF = minHotspotVAF;
-        this.minInframeVAF = minInframeVAF;
-        this.minHotspotQuality = minHotspotQuality;
-        this.minInframeQuality = minInframeQuality;
+        this.minSnvVAF = minSnvVAF;
+        this.minIndelVAF = minIndelVAF;
+        this.minSnvQuality = minSnvQuality;
+        this.minIndelQuality = minIndelQuality;
 
         this.header = header(normalSample, tumorSample);
     }
@@ -87,15 +87,11 @@ public class HotspotEvidenceVCF {
             return true;
         }
 
-        if (hotspotEvidence.type() == HotspotEvidenceType.INFRAME) {
-            return hotspotEvidence.qualityScore() < minInframeQuality || Doubles.lessThan(hotspotEvidence.vaf(), minInframeVAF);
+        if (hotspotEvidence.isIndel()) {
+            return hotspotEvidence.qualityScore() < minIndelQuality || Doubles.lessThan(hotspotEvidence.vaf(), minIndelVAF);
         }
 
-        if (hotspotEvidence.type() == HotspotEvidenceType.KNOWN) {
-            return hotspotEvidence.qualityScore() < minHotspotQuality || Doubles.lessThan(hotspotEvidence.vaf(), minHotspotVAF);
-        }
-
-        return false;
+        return hotspotEvidence.qualityScore() < minSnvQuality || Doubles.lessThan(hotspotEvidence.vaf(), minSnvVAF);
     }
 
     private static boolean germlineIndel(@NotNull HotspotEvidence hotspotEvidence) {
@@ -192,12 +188,12 @@ public class HotspotEvidenceVCF {
         header.addMetaDataLine(new VCFInfoHeaderLine(GERMLINE_HET_LIKELIHOOD,
                 1,
                 VCFHeaderLineType.Float,
-                "Binomial estimation of likelihood that a single read in the germline is heterozygous"));
+                "Germline Heterozygous Binomial Likelihood. Only applies when germline alt support = 1"));
 
         header.addMetaDataLine(new VCFFilterHeaderLine(PASS, "All filters passed"));
         header.addMetaDataLine(new VCFFilterHeaderLine(LOW_CONFIDENCE,
                 "Set if excessive germline reads or insufficient quality or tumor reads"));
-        header.addMetaDataLine(new VCFFilterHeaderLine(GERMLINE_INDEL, "Set if inframe indel has any germline indels at that site."));
+        header.addMetaDataLine(new VCFFilterHeaderLine(GERMLINE_INDEL, "Set if indel has any germline indels at that site"));
 
         return header;
     }

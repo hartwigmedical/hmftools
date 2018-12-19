@@ -121,10 +121,10 @@ public class SageHotspotApplication implements AutoCloseable {
                 tumorSample,
                 config.maxHetBinomialLikelihood(),
                 config.minTumorReads(),
-                config.minHotspotVAF(),
-                config.minInframeVAF(),
-                config.minHotspotQuality(),
-                config.minInframeQuality()).write(outputVCF, evidence);
+                config.minSnvVAF(),
+                config.minIndelVAF(),
+                config.minSnvQuality(),
+                config.minIndelQuality()).write(outputVCF, evidence);
 
     }
 
