@@ -26,29 +26,54 @@ public class BachelorDataCollection
 
     private String mSampleId;
     private List<BachelorGermlineVariant> mGermlineVariants;
+    private int mMaxReadCount;
+
+    private BufferedReader mFileReader;
 
     public BachelorDataCollection()
     {
         mSampleId = "";
         mGermlineVariants = Lists.newArrayList();
+        mMaxReadCount = 0;
+        mFileReader = null;
     }
 
     public void setSampleId(final String sampleId) {
         mSampleId = sampleId;
     }
+    public void setMaxReadCount(int maxReadCount) { mMaxReadCount = maxReadCount; }
 
     public boolean loadBachelorData(final String filename)
     {
         if (filename.isEmpty())
             return false;
 
-        try {
+        try
+        {
+            mFileReader = new BufferedReader(new FileReader(filename));
 
-            BufferedReader fileReader = new BufferedReader(new FileReader(filename));
+            mFileReader.readLine(); // skip header
+        }
+        catch (IOException exception)
+        {
+            LOGGER.error("Failed to read bachelor input CSV file({})", filename);
+            return false;
+        }
 
-            String line = fileReader.readLine(); // skip header
+        return true;
+    }
 
-            while ((line = fileReader.readLine()) != null)
+    public boolean processBachelorData()
+    {
+        mGermlineVariants.clear();
+
+        try
+        {
+            String line = null;
+            boolean exitNextSample = false;
+            String currentSampleId = "";
+
+            while ((line = mFileReader.readLine()) != null)
             {
                 if(line.isEmpty())
                     break;
@@ -58,21 +83,31 @@ public class BachelorDataCollection
 
                 if (items.length < BACHELOR_CSV_FIELD_COUNT)
                 {
-                    LOGGER.warn("invalid item count({}), recordIndex({}) in file({})", items.length, mGermlineVariants.size(), filename);
+                    LOGGER.warn("invalid item count({}), recordIndex({})", items.length, mGermlineVariants.size());
                     return false;
                 }
 
-                final String patientId = items[0];
+                final String sampleId = items[0];
 
-                if (!mSampleId.equals("*") && !mSampleId.equals("") && !mSampleId.contains(patientId)) {
+                if (!mSampleId.equals("*") && !mSampleId.equals("") && !mSampleId.contains(sampleId))
                     continue;
+
+                if(!sampleId.equals(currentSampleId))
+                {
+                    currentSampleId = sampleId;
+
+                    if(exitNextSample)
+                    {
+                        LOGGER.info("halting read at {} records", mGermlineVariants.size());
+                        return true;
+                    }
                 }
 
                 // extra fields from newer versions
                 final String matchType = items.length > COL_INDEX_MATCH_TYPE ? items[COL_INDEX_MATCH_TYPE] : "";
                 final String codonInfo = items.length > COL_INDEX_CODON_INFO ? items[COL_INDEX_CODON_INFO] : "";
 
-                BachelorGermlineVariant bachRecord = new BachelorGermlineVariant(patientId,
+                BachelorGermlineVariant bachRecord = new BachelorGermlineVariant(sampleId,
                         items[1],
                         items[2],
                         items[3],
@@ -103,25 +138,23 @@ public class BachelorDataCollection
 
                 mGermlineVariants.add(bachRecord);
 
-                // if(mGermlineVariants.size() > 10000)
-                //    break;
+                if(!exitNextSample && mMaxReadCount > 0 && mGermlineVariants.size() >= mMaxReadCount)
+                    exitNextSample = true;
             }
 
             LOGGER.debug("loaded {} bachelor records", mGermlineVariants.size());
 
         }
-        catch (IOException exception)
+        catch (IOException e)
         {
-            LOGGER.error("Failed to read bachelor input CSV file({})", filename);
+            LOGGER.error("Failed to read bachelor input CSV file: {}", e.toString());
             return false;
         }
 
         return true;
     }
 
-    public final List<BachelorGermlineVariant> getBachelorVariants() {
-        return mGermlineVariants;
-    }
+    public final List<BachelorGermlineVariant> getBachelorVariants() { return mGermlineVariants; }
 
     private static int FILTER_CSV_FIELD_COUNT = 26;
 
