@@ -9,10 +9,12 @@ import java.sql.Timestamp;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneAnnotation;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneDisruption;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion;
@@ -54,7 +56,7 @@ public class StructuralVariantAnnotationDAO {
 
     @NotNull
     public final List<SimpleGeneFusion> readGeneFusions(@NotNull final String sample) {
-        List<SimpleGeneFusion> simpleGeneFusions = Lists.newArrayList();
+        Set<SimpleGeneFusion> simpleGeneFusions = Sets.newHashSet();
 
         Structuralvariantbreakend five = STRUCTURALVARIANTBREAKEND.as("five");
         Structuralvariantbreakend three = STRUCTURALVARIANTBREAKEND.as("three");
@@ -67,7 +69,6 @@ public class StructuralVariantAnnotationDAO {
                 .where(STRUCTURALVARIANTFUSION.SAMPLEID.eq(sample))
                 .fetch();
 
-//        List<String> FiveGene = Lists.newArrayList();
         for (Record record : resultFiveGene) {
             simpleGeneFusions.add(ImmutableSimpleGeneFusion.builder()
                     .fiveGene(record.getValue(five.GENE))
@@ -75,28 +76,7 @@ public class StructuralVariantAnnotationDAO {
                     .build());
         }
 
-//        final Result<Record1<String>> resultThreeGene = context.select(STRUCTURALVARIANTBREAKEND.GENE)
-//                .from(STRUCTURALVARIANTFUSION)
-//                .innerJoin(STRUCTURALVARIANTBREAKEND)
-//                .on(STRUCTURALVARIANTBREAKEND.ID.eq(STRUCTURALVARIANTFUSION.THREEPRIMEBREAKENDID))
-//                .join(STRUCTURALVARIANT)
-//                .on(STRUCTURALVARIANT.ID.eq(STRUCTURALVARIANTBREAKEND.STRUCTURALVARIANTID))
-//                .where(STRUCTURALVARIANTFUSION.SAMPLEID.eq(sample))
-//                .fetch();
-//
-//        List<String> ThreeGene = Lists.newArrayList();
-//        for (Record record : resultThreeGene) {
-//            ThreeGene.add(record.getValue(STRUCTURALVARIANTBREAKEND.GENE));
-//        }
-//
-//        for (int i =0; i < FiveGene.size(); i ++) {
-//            simpleGeneFusions.add(ImmutableSimpleGeneFusion.builder()
-//                    .fiveGene(FiveGene.get(i))
-//                    .threeGene(ThreeGene.get(i))
-//                    .build());
-//
-//        }
-        return simpleGeneFusions;
+        return Lists.newArrayList(simpleGeneFusions);
     }
 
     @SuppressWarnings("unchecked")

@@ -10,6 +10,7 @@ import java.util.stream.Collectors;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.actionability.cancertype.CancerTypeAnalyzer;
 import com.hartwig.hmftools.common.actionability.cnv.CopyNumberEvidenceAnalyzer;
 import com.hartwig.hmftools.common.actionability.cnv.CopyNumberEvidenceAnalyzerFactory;
@@ -138,75 +139,11 @@ public class ActionabilityAnalyzer {
                         || fusionAnalyzer.actionableGenes().contains(fusion.threeGene()))
                 .collect(Collectors.toList());
 
-        // TODO (KODU): Should reuse "favor canonical" rules from SV analyser here but have re-implemented for now.
-        for (SimpleGeneFusion actionableFusion : uniqueGeneFusions(fusionsOnActionableGenes)) {
+        for (SimpleGeneFusion actionableFusion : Sets.newHashSet(fusionsOnActionableGenes)) {
             evidencePerFusion.put(actionableFusion,
                     fusionAnalyzer.evidenceForFusion(actionableFusion, primaryTumorLocation, cancerTypeAnalyzer));
         }
 
         return evidencePerFusion;
-    }
-
-    @NotNull
-    private static List<SimpleGeneFusion> uniqueGeneFusions(@NotNull List<SimpleGeneFusion> fusions) {
-        List<SimpleGeneFusion> allUniqueGeneFusions = Lists.newArrayList();
-        Map<FiveThreePair, List<SimpleGeneFusion>> fusionsPerFiveThreePair = Maps.newHashMap();
-        for (SimpleGeneFusion fusion : fusions) {
-            FiveThreePair key =
-                    new FiveThreePair(fusion.fiveGene(), fusion.threeGene());
-            List<SimpleGeneFusion> fusionsForKey = fusionsPerFiveThreePair.get(key);
-            if (fusionsForKey == null) {
-                fusionsForKey = Lists.newArrayList();
-            }
-            fusionsForKey.add(fusion);
-            fusionsPerFiveThreePair.put(key, fusionsForKey);
-        }
-
-        for (Map.Entry<FiveThreePair, List<SimpleGeneFusion>> fusionsPerKey : fusionsPerFiveThreePair.entrySet()) {
-            allUniqueGeneFusions.add(actionSimpleGeneFusion(fusionsPerKey.getValue()));
-        }
-
-        return allUniqueGeneFusions;
-    }
-
-    @NotNull
-    private static SimpleGeneFusion actionSimpleGeneFusion(@NotNull List<SimpleGeneFusion> fusions) {
-        SimpleGeneFusion fusionGenes = null;
-        for (SimpleGeneFusion fusion : fusions) {
-            fusionGenes = fusion;
-        }
-
-        return fusionGenes;
-    }
-
-
-    private static class FiveThreePair {
-
-        @NotNull
-        private final String fiveGene;
-        @NotNull
-        private final String threeGene;
-
-        private FiveThreePair(@NotNull final String fiveGene, @NotNull final String threeGene) {
-            this.fiveGene = fiveGene;
-            this.threeGene = threeGene;
-        }
-
-        @Override
-        public boolean equals(final Object o) {
-            if (this == o) {
-                return true;
-            }
-            if (o == null || getClass() != o.getClass()) {
-                return false;
-            }
-            final FiveThreePair that = (FiveThreePair) o;
-            return Objects.equals(fiveGene, that.fiveGene) && Objects.equals(threeGene, that.threeGene);
-        }
-
-        @Override
-        public int hashCode() {
-            return Objects.hash(fiveGene, threeGene);
-        }
     }
 }
