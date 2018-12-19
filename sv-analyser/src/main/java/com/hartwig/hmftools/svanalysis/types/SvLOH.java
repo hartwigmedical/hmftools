@@ -18,6 +18,7 @@ public class SvLOH
     public final long Length;
     public final String StartSV;
     public final String EndSV;
+    public final boolean Skipped;
 
     public static String LOH_NO_SV = "0";
 
@@ -35,7 +36,8 @@ public class SvLOH
             final int segCount,
             final long length,
             final String startSV,
-            final String endSV)
+            final String endSV,
+            boolean skipped)
     {
         SampleId = sampleId;
         Chromosome = chr;
@@ -53,6 +55,7 @@ public class SvLOH
         Length = length;
         StartSV = startSV;
         EndSV = endSV;
+        Skipped = skipped;
     }
 
 }

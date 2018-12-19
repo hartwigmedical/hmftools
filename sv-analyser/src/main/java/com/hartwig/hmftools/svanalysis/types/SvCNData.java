@@ -20,6 +20,7 @@ public class SvCNData {
     public static String CN_SEG_UNKNOWN = "UNKNOWN";
     public static String CN_SEG_TELOMERE = "TELOMERE";
     public static String CN_SEG_CENTROMERE = "CENTROMERE";
+    public static String CN_SEG_MULTIPLE = "MULTIPLE";
 
     public SvCNData(final int Id, final String Chromosome, long StartPos, long EndPos,
             final String SegStart, final String SegEnd, int bafCount, double observedBaf, double actualBaf,

@@ -22,6 +22,7 @@ import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.addCl
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.calcConsistency;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.makeChrArmStr;
 import static com.hartwig.hmftools.svanalysis.annotators.LineElementAnnotator.markLineCluster;
+import static com.hartwig.hmftools.svanalysis.types.SvCNData.CN_SEG_MULTIPLE;
 import static com.hartwig.hmftools.svanalysis.types.SvChain.CHAIN_ASSEMBLY_LINK_COUNT;
 import static com.hartwig.hmftools.svanalysis.types.SvChain.CHAIN_LENGTH;
 import static com.hartwig.hmftools.svanalysis.types.SvChain.CHAIN_LINK_COUNT;
@@ -29,6 +30,10 @@ import static com.hartwig.hmftools.svanalysis.types.SvChain.getRepeatedSvSequenc
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.CLUSTER_ANNONTATION_CT;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.CLUSTER_ANNONTATION_DM;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_COMPLEX_CHAIN;
+import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_DEL_EXT_TI;
+import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_DEL_INT_TI;
+import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_DUP_EXT_TI;
+import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_DUP_INT_TI;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_LINE;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_NONE;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_SGL_PAIR_DEL;
@@ -39,6 +44,7 @@ import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_SIMP
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.copyNumbersEqual;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.areSpecificClusters;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.isSpecificCluster;
+import static com.hartwig.hmftools.svanalysis.types.SvLOH.LOH_NO_SV;
 import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.ASSEMBLY_MATCH_MATCHED;
 import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.LINK_TYPE_SGL;
 import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.LINK_TYPE_TI;
@@ -59,6 +65,7 @@ import com.hartwig.hmftools.svanalysis.types.SvArmGroup;
 import com.hartwig.hmftools.svanalysis.types.SvBreakend;
 import com.hartwig.hmftools.svanalysis.types.SvChain;
 import com.hartwig.hmftools.svanalysis.types.SvCluster;
+import com.hartwig.hmftools.svanalysis.types.SvLOH;
 import com.hartwig.hmftools.svanalysis.types.SvVarData;
 import com.hartwig.hmftools.svanalysis.types.SvLinkedPair;
 
@@ -139,6 +146,7 @@ public class ClusterAnalyser {
         // analyseOverlappingTIs();
 
         annotateTemplatedInsertions();
+        checkSkippedLOHEvents();
 
         // final clean-up and analysis
         for(SvCluster cluster : mClusters)
@@ -932,7 +940,7 @@ public class ClusterAnalyser {
                 SvBreakend beFront = null; // the lower position for orientation +1 and vice versa
                 SvBreakend beBack = null;
 
-                isSpecificSV(breakend.getSV().id());
+                // isSpecificSV(breakend.getSV().id());
 
                 if(breakend.orientation() == nextBreakend.orientation())
                 {
@@ -1105,10 +1113,10 @@ public class ClusterAnalyser {
             return;
 
         if(!varEnd.getFoldbackLink(v1Start).isEmpty())
-            clearFoldbackInfo(varEnd.getFoldbackLink(v1Start), varEnd.id(), cluster1, v1Start);
+            clearFoldbackInfo(varEnd.getFoldbackLink(v1Start), varEnd.id(), cluster1);
 
         if(!varStart.getFoldbackLink(v2Start).isEmpty())
-            clearFoldbackInfo(varStart.getFoldbackLink(v2Start), varStart.id(), cluster2, v2Start);
+            clearFoldbackInfo(varStart.getFoldbackLink(v2Start), varStart.id(), cluster2);
 
         varEnd.setFoldbackLink(v1Start, varStart.id(), length, chainInfo);
         varStart.setFoldbackLink(v2Start, varEnd.id(), length, chainInfo);
@@ -1164,7 +1172,7 @@ public class ClusterAnalyser {
         }
     }
 
-    private void clearFoldbackInfo(final String varId, final String matchVarId, SvCluster cluster, boolean useStart)
+    private void clearFoldbackInfo(final String varId, final String matchVarId, SvCluster cluster)
     {
         SvVarData var = findVariantById(varId, cluster.getSVs());
 
@@ -1282,6 +1290,131 @@ public class ClusterAnalyser {
         }
     }
 
+    public void checkSkippedLOHEvents()
+    {
+        List<SvLOH> lohList = mClusteringMethods.getSampleLohData().get(mSampleId);
+        List<SvLOH> unmatchedLohList = Lists.newArrayList();
+
+        if(lohList != null)
+            unmatchedLohList.addAll(lohList.stream().filter(x -> x.Skipped).collect(Collectors.toList()));
+
+        int matchedLohCount = 0;
+
+        // check if an LOH was a skipped for being a potential TI or DB
+        int index = 0;
+        while(index < unmatchedLohList.size())
+        {
+            final SvLOH lohEvent = unmatchedLohList.get(index);
+
+            boolean matched = false;
+            long lohLength = lohEvent.PosEnd - lohEvent.PosStart;
+
+            final List<SvBreakend> breakendList = mClusteringMethods.getChrBreakendMap().get(lohEvent.Chromosome);
+
+            for(int i = 0; i < breakendList.size(); ++i)
+            {
+                final SvBreakend breakend = breakendList.get(i);
+                final SvVarData var = breakend.getSV();
+
+                if(!lohEvent.StartSV.equals(var.id()))
+                    continue;
+
+                if(lohEvent.StartSV.equals(var.id()) && lohEvent.EndSV.equals(var.id()))
+                {
+                    LOGGER.debug("var({} {}) matches skipped LOH: chr({}) breaks({} -> {}, len={})",
+                            var.id(), var.type(), lohEvent.Chromosome, lohEvent.PosStart, lohEvent.PosEnd, lohLength);
+
+                    if(var.type() == INV || var.type() == DUP)
+                        matched = true;
+
+                    break;
+                }
+
+                for (int be1 = SVI_START; be1 <= SVI_END; ++be1)
+                {
+                    boolean v1Start = isStart(be1);
+
+                    final SvLinkedPair dbPair = var.getDBLink(v1Start);
+
+                    if (dbPair != null && dbPair.getOtherSV(var).id().equals(lohEvent.EndSV)
+                    && dbPair.getBreakend(true).position() == lohEvent.PosStart
+                    && dbPair.getBreakend(false).position() == lohEvent.PosEnd - 1)
+                    {
+                        LOGGER.debug("deletionBridge({}) matches skipped LOH: chr({}) breaks({} -> {}, len={})",
+                                var.getDBLink(v1Start).toString(), lohEvent.Chromosome,
+                                lohEvent.PosStart, lohEvent.PosEnd, lohLength);
+                        matched = true;
+                        break;
+                    }
+
+                    final SvLinkedPair tiPair = var.getLinkedPair(v1Start);
+
+                    if (tiPair != null && tiPair.getOtherSV(var).id().equals(lohEvent.EndSV)
+                    && tiPair.getBreakend(true).position() == lohEvent.PosStart
+                    && tiPair.getBreakend(false).position() == lohEvent.PosEnd - 1)
+                    {
+                        LOGGER.debug("templatedInsertion({}) matches skipped LOH: chr({}) breaks({} -> {}, len={})",
+                                var.getLinkedPair(v1Start).toString(), lohEvent.Chromosome,
+                                lohEvent.PosStart, lohEvent.PosEnd, lohLength);
+                        matched = true;
+                        break;
+                    }
+                }
+
+                if(!matched)
+                {
+                    // check for line and SGLs which may not have formed TIs
+                    SvVarData varEnd = null;
+
+                    if (i < breakendList.size() - 1 && breakendList.get(i + 1).getSV().id().equals(lohEvent.EndSV))
+                    {
+                        // should be the next SV
+                        varEnd = breakendList.get(i + 1).getSV();
+                    }
+
+                    if (var.inLineElement() || (varEnd != null && varEnd.inLineElement()))
+                    {
+                        LOGGER.debug("line SVs({} and {}) match skipped LOH: chr({}) breaks({} -> {}, len={})",
+                                var.id(), varEnd != null ? varEnd.id() : "null",
+                                lohEvent.Chromosome, lohEvent.PosStart, lohEvent.PosEnd, lohLength);
+                        matched = true;
+                    }
+                    else if (var.type() == SGL || (varEnd != null && varEnd.type() == SGL))
+                    {
+                        matched = true;
+                    }
+                }
+
+                break;
+            }
+
+            if(matched || lohEvent.SegStart.equals(CN_SEG_MULTIPLE) || lohEvent.SegEnd.equals(CN_SEG_MULTIPLE))
+            {
+                unmatchedLohList.remove(index);
+                ++matchedLohCount;
+            }
+            else
+            {
+                ++index;
+            }
+        }
+
+        if(!unmatchedLohList.isEmpty())
+        {
+            LOGGER.info("sample({}) has matched({}) unmatched({}) skipped LOH events",
+                    mSampleId, matchedLohCount, unmatchedLohList.size());
+
+            for(final SvLOH lohEvent : unmatchedLohList)
+            {
+                LOGGER.info("unmatched LOH: chr({}) breaks({} -> {}, len={}) SV start({} {}) end({} {}) {} SV",
+                        lohEvent.Chromosome, lohEvent.PosStart, lohEvent.PosEnd, lohEvent.PosEnd - lohEvent.PosStart,
+                        lohEvent.StartSV, lohEvent.SegStart, lohEvent.EndSV, lohEvent.SegEnd,
+                        lohEvent.StartSV == lohEvent.EndSV ? "same" : "diff");
+            }
+        }
+
+    }
+
     private static int getTraversedSVs(final SvCluster cluster, final List<SvBreakend> breakendList, final SvLinkedPair pair)
     {
         // count any non-trivial cluster's SVs crossed by this pair
@@ -1386,9 +1519,9 @@ public class ClusterAnalyser {
         }
         */
 
-        reportDoubleMinutes(cluster);
+        // reportDoubleMinutes(cluster);
 
-        classifySimpleChainedClusters(cluster);
+        classifyChainedClusters(cluster);
     }
 
     private void analyseOverlappingTIs()
@@ -1476,7 +1609,7 @@ public class ClusterAnalyser {
     private static int CHAIN_TI_SHORT_COUNT = 3;
     private static int CHAIN_TI_ASMB_COUNT = 4;
 
-    private void classifySimpleChainedClusters(final SvCluster cluster)
+    private void classifyChainedClusters(final SvCluster cluster)
     {
         if(cluster.isResolved())
             return;
@@ -1487,6 +1620,8 @@ public class ClusterAnalyser {
         // skip simple chained clusters
         if(cluster.getArmCount() == 1 && cluster.getCount() == 2)
             return;
+
+        // isSpecificCluster(cluster);
 
         /* data to gather for each arm in the chain
             - number of links
@@ -1523,12 +1658,17 @@ public class ClusterAnalyser {
             if(!endChrArm.isEmpty())
                 armDataMap.put(endChrArm, new int[CHAIN_TI_ASMB_COUNT+1]);
 
+            int shortTICount = 0;
+            long chainLinkLength = 0;
+
             for(final SvLinkedPair pair : chain.getLinkedPairs())
             {
                 final SvVarData first = pair.first();
 
                 if(pair.first().type() == SGL || pair.second().type() == SGL)
                     continue;
+
+                chainLinkLength += pair.length();
 
                 final String chrArm = first.getBreakend(pair.firstLinkOnStart()).getChrArm();
 
@@ -1556,10 +1696,36 @@ public class ClusterAnalyser {
                 if(pair.length() <= SHORT_TI_LENGTH)
                 {
                     ++armData[CHAIN_TI_SHORT_COUNT];
+                    ++shortTICount;
 
                     if(pair.isAssembled())
                         ++armData[CHAIN_TI_ASMB_COUNT];
                 }
+            }
+
+            // check for synthetic DELs and DUPs from longer chains
+            if(allChainsConsistent && !isIncomplete && !isComplex
+            && cluster.getChains().size() == 1 && chain.getLinkCount() == shortTICount
+            && firstBreakend.getChrArm().equals(lastBreakend.getChrArm())
+            && firstBreakend.orientation() != lastBreakend.orientation())
+            {
+                long syntheticLength = abs(lastBreakend.position() - firstBreakend.position());
+                long avgLinkLength = round(chainLinkLength/chain.getLinkCount());
+
+                cluster.setSynDelDupData(syntheticLength, avgLinkLength);
+
+                if((firstBreakend.position() < lastBreakend.position() && firstBreakend.orientation() == 1)
+                || (lastBreakend.position() < firstBreakend.position() && lastBreakend.orientation() == 1))
+                {
+                    cluster.setResolved(false, RESOLVED_TYPE_DEL_EXT_TI);
+                }
+                else
+                {
+                    cluster.setResolved(false, RESOLVED_TYPE_DUP_EXT_TI);
+                }
+
+                LOGGER.debug("cluster({}) chainLinks({}) synLen({}) avgTILen({}) marked as {}",
+                        cluster.id(), chain.getLinkCount(), syntheticLength, avgLinkLength, cluster.getResolvedType());
             }
 
             String chainInfo = startChrArm + "-" + endChrArm;

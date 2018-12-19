@@ -53,6 +53,7 @@ import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -77,11 +78,9 @@ public class SvClusteringMethods {
     private int mNextClusterId;
 
     private Map<String, List<SvBreakend>> mChrBreakendMap; // every breakend on a chromosome, ordered by asending position
-    // private Map<String, List<SvCNData>> mChrCNDataMap; // copy number segments recreated from SVs
     private Map<String, List<SvLOH>> mSampleLohData;
     private Map<String, Double> mTelomereCopyNumberMap;
     private Map<String, Double> mChromosomeCopyNumberMap; // max of telomere for convenience
-
 
     private long mDelDupCutoffLength;
     private int mProximityDistance;
@@ -116,9 +115,10 @@ public class SvClusteringMethods {
         mSampleLohData = null;
     }
 
-    public Map<String, List<SvBreakend>> getChrBreakendMap() { return mChrBreakendMap; }
-    public Map<String, Double> getTelomereCopyNumberMap() { return mTelomereCopyNumberMap; }
-    public Map<String, Double> getChrCopyNumberMap() { return mChromosomeCopyNumberMap; }
+    public final Map<String, List<SvBreakend>> getChrBreakendMap() { return mChrBreakendMap; }
+    public final Map<String, Double> getTelomereCopyNumberMap() { return mTelomereCopyNumberMap; }
+    public final Map<String, Double> getChrCopyNumberMap() { return mChromosomeCopyNumberMap; }
+    public final Map<String, List<SvLOH>> getSampleLohData() { return mSampleLohData; }
     public int getNextClusterId() { return mNextClusterId++; }
     public void setSampleLohData(final Map<String, List<SvLOH>> data) { mSampleLohData = data; }
     public long getDelDupCutoffLength() { return mDelDupCutoffLength; }
@@ -246,6 +246,58 @@ public class SvClusteringMethods {
             }
         }
     }
+
+    /*
+    public void clusterByProximity(List<SvCluster> clusters)
+    {
+        // walk through each chrmosome and breakend list
+        SvCluster currentCluster = new SvCluster(getNextClusterId());
+
+        for (final Map.Entry<String, List<SvBreakend>> entry : mChrBreakendMap.entrySet())
+        {
+            final List<SvBreakend> breakendList = entry.getValue();
+
+            for (int i = 0; i < breakendList.size() - 1; ++i)
+            {
+                final SvBreakend breakend = breakendList.get(i);
+                SvVarData var = breakend.getSV();
+
+                if (isEquivSingleBreakend(var))
+                {
+                    SvCluster newCluster = new SvCluster(getNextClusterId());
+                    newCluster.addVariant(var);
+                    newCluster.setResolved(true, RESOLVED_TYPE_LOW_QUALITY);
+                    continue;
+                }
+
+                SvCluster cluster = var.getCluster();
+
+
+                // check proximity with next
+                final SvBreakend nextBreakend = breakendList.get(i + 1);
+                SvVarData nextVar = breakend.getSV();
+
+                if (!isEquivSingleBreakend(nextVar) && nextBreakend.position() < breakend.position())
+                {
+                    SvCluster nextCluster = nextBreakend.getSV().getCluster();
+
+                    if(nextCluster == null && cluster == null)
+                    {
+                        cluster = new SvCluster(getNextClusterId());
+                        cluster.addVariant(var);
+
+                    }
+
+                        if(cluster == null)
+
+                }
+
+                SvVarData varNext = nextBreakend.getSV();
+
+            }
+        }
+    }
+    */
 
     public void mergeClusters(final String sampleId, List<SvCluster> clusters)
     {
@@ -390,10 +442,12 @@ public class SvClusteringMethods {
             return;
 
         // first extract all the SVs from the LOH events
-        final List<SvLOH> lohList = mSampleLohData.get(sampleId);
+        List<SvLOH> lohList = mSampleLohData.get(sampleId);
 
         if(lohList == null)
             return;
+
+        lohList = lohList.stream().filter(x -> !x.Skipped).collect(Collectors.toList());
 
         for(final SvLOH lohEvent : lohList)
         {

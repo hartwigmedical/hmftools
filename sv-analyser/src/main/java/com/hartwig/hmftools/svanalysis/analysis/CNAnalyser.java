@@ -6,6 +6,7 @@ import static java.lang.Math.min;
 import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.common.variant.structural.annotation.SvPONAnnotator.PON_FILTER_PON;
+import static com.hartwig.hmftools.svanalysis.analysis.ClusterAnalyser.SHORT_TI_LENGTH;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.getChromosomalArmLength;
 import static com.hartwig.hmftools.svanalysis.types.SvCNData.CN_SEG_NONE;
 import static com.hartwig.hmftools.svanalysis.types.SvCNData.CN_SEG_UNKNOWN;
@@ -60,7 +61,6 @@ public class CNAnalyser {
     Map<String, List<SvLOH>> mSampleLohData;
 
     private boolean mAnalyseLOH;
-    private boolean mAnalyseFlips;
 
     private static final String COPY_NUMBER_FILE = "cn_file";
 
@@ -83,7 +83,6 @@ public class CNAnalyser {
         mRecordId = 0;
 
         mAnalyseLOH = true;
-        mAnalyseFlips = false;
     }
 
     public static void addCmdLineArgs(Options options)
@@ -100,14 +99,12 @@ public class CNAnalyser {
             loadFromCSV(cmd.getOptionValue(COPY_NUMBER_FILE), mSampleIds.size() == 1 ? mSampleIds.get(0) : "");
         }
 
-        setAnalyseFlips(false);
         setAnalyseLOH(true);
 
         return true;
     }
 
     public void setAnalyseLOH(boolean toggle) { mAnalyseLOH = toggle; }
-    public void setAnalyseFlips(boolean toggle) { mAnalyseFlips = toggle; }
 
     private void loadFromCSV(final String filename, final String specificSample)
     {
@@ -232,9 +229,6 @@ public class CNAnalyser {
     {
         if(mAnalyseLOH)
             analyseLOH(sampleId, sampleData);
-
-        if(mAnalyseFlips)
-            analyseFlips(sampleId, sampleData, "");
     }
 
     private void loadSVData(final String sampleId)
@@ -359,7 +353,7 @@ public class CNAnalyser {
 
     public final Map<String, List<SvLOH>> getSampleLohData() { return mSampleLohData; }
 
-    private static int LOH_COLUMN_COUNT = 16;
+    private static int LOH_COLUMN_COUNT = 17;
 
     public void loadLOHFromCSV(final String filename, final String specificSample)
     {
@@ -381,7 +375,6 @@ public class CNAnalyser {
                 return;
             }
 
-            int cnCount = 0;
             String currentSample = "";
             List<SvLOH> lohDataList = null;
 
@@ -390,9 +383,8 @@ public class CNAnalyser {
                 // parse CSV data
                 String[] items = line.split(",");
 
-                if (items.length != LOH_COLUMN_COUNT) {
+                if (items.length != LOH_COLUMN_COUNT)
                     continue;
-                }
 
                 String sampleId = items[0];
 
@@ -430,19 +422,21 @@ public class CNAnalyser {
                         Integer.parseInt(items[12]),
                         Long.parseLong(items[13]),
                         items[14],
-                        items[15]);
+                        items[15],
+                        Boolean.parseBoolean(items[16]));
 
                 lohDataList.add(lohData);
             }
         }
-        catch (IOException exception)
+        catch (IOException e)
         {
-            LOGGER.error("Failed to read LOH CSV file({})", filename);
+            LOGGER.error("Failed to read LOH CSV file({}): {}", filename, e.toString());
         }
     }
 
-    // private static String SPECIFIC_CHR = "17";
+    // private static String SPECIFIC_CHR = "14";
     private static String SPECIFIC_CHR = "";
+    private static int REMOTE_SV_DISTANCE = 1000000;
 
     private void analyseLOH(final String sampleId, List<SvCNData> cnDataList)
     {
@@ -465,8 +459,10 @@ public class CNAnalyser {
         boolean lohOnStartTelomere = false;
         boolean totalLoss = false;
 
-        for(final SvCNData cnData : cnDataList)
+        for(int index = 0; index < cnDataList.size(); ++index)
         {
+            final SvCNData cnData = cnDataList.get(index);
+
             double minCN = (1 - cnData.actualBaf()) * cnData.copyNumber();
 
             boolean newChromosome = currentChr.isEmpty() || (!currentChr.isEmpty() && !cnData.chromosome().equals(currentChr));
@@ -481,11 +477,28 @@ public class CNAnalyser {
             {
                 if(minCN >= MIN_LOH_CN || reset)
                 {
+                    // check for a short isolated TI and if found continue with the LOH
+                    if(minCN >= MIN_LOH_CN && cnData.endPos() - cnData.startPos() < SHORT_TI_LENGTH && index < cnDataList.size() - 1)
+                    {
+                        final SvCNData nextData = cnDataList.get(index+1);
+                        double nextMinCN = (1 - nextData.actualBaf()) * nextData.copyNumber();
+
+                        if(nextData.endPos() - cnData.startPos() > REMOTE_SV_DISTANCE && nextMinCN < MIN_LOH_CN
+                        && lohStartCN!= null && cnData.startPos() - lohStartCN.startPos() > REMOTE_SV_DISTANCE)
+                        {
+                            LOGGER.debug("chr({}) skipping short isolated TI(id={} {} pos={} length={})",
+                                    currentChr, cnData.id(), cnData.segStart(), cnData.startPos(), cnData.endPos() - cnData.startPos());
+
+                            writeLOHData(sampleId, currentChr, cnData, nextData, priorCN, lohMinCN, 1, false, true);
+                            continue;
+                        }
+                    }
+
                     if(lohOnStartTelomere || totalLoss)
                     {
                         // LOH section invalidated
                         if(lohOnStartTelomere)
-                            writeLOHData(sampleId, currentChr, lohStartCN, cnData, priorCN, lohMinCN, lohSegments, false);
+                            writeLOHData(sampleId, currentChr, lohStartCN, cnData, priorCN, lohMinCN, lohSegments, false, false);
 
                         lohOnStartTelomere = false;
                         totalLoss = false;
@@ -493,7 +506,7 @@ public class CNAnalyser {
                     else
                     {
                         // log all relevant data for this completed section
-                        lohSVsMatchedCount += writeLOHData(sampleId, currentChr, lohStartCN, cnData, priorCN, lohMinCN, lohSegments, false);
+                        lohSVsMatchedCount += writeLOHData(sampleId, currentChr, lohStartCN, cnData, priorCN, lohMinCN, lohSegments, false, false);
                         ++lohSectionCount;
                     }
 
@@ -502,7 +515,7 @@ public class CNAnalyser {
                 else if(cnData.segEnd().equals(CN_SEG_TELOMERE))
                 {
                     // rest of arm was lost so no linking SV for LOH section - but still record the event
-                    writeLOHData(sampleId, currentChr, lohStartCN, cnData, priorCN, lohMinCN, lohSegments, true);
+                    writeLOHData(sampleId, currentChr, lohStartCN, cnData, priorCN, lohMinCN, lohSegments, true, false);
                     reset = true;
                 }
                 else if(cnData.copyNumber() < 0.5)
@@ -564,7 +577,7 @@ public class CNAnalyser {
     }
 
     private int writeLOHData(final String sampleId, final String chr, SvCNData startData, SvCNData endData,
-            double lastMinCN, double lohMinCN, int segCount, boolean incomplete)
+            double lastMinCN, double lohMinCN, int segCount, boolean incomplete, boolean skipped)
     {
         try
         {
@@ -583,11 +596,11 @@ public class CNAnalyser {
 
                 // SV info
                 mFileWriter.write("SampleId,Chromosome,CnIdStart,CnIdEnd,PosStart,PosEnd,SegStart,SegEnd,");
-                mFileWriter.write("PrevCN,StartCN,EndCN,MinCN,SegCount,Length,StartSV,EndSV");
+                mFileWriter.write("PrevCN,StartCN,EndCN,MinCN,SegCount,Length,StartSV,EndSV,Skipped");
                 mFileWriter.newLine();
             }
 
-            StructuralVariantData startSvData = findSvData(startData, 1);
+            StructuralVariantData startSvData = findSvData(startData, !skipped ? 1 : -1);
 
             StructuralVariantData endSvData = null;
             long lohLength = 0;
@@ -601,7 +614,7 @@ public class CNAnalyser {
             else if(endData.chromosome().equals(chr) && !startData.segEnd().equals(CN_SEG_TELOMERE))
             {
                 lohLength = endData.startPos() - startData.startPos();
-                endSvData = findSvData(endData, -1);
+                endSvData = findSvData(endData, !skipped ? -1 : 1);
             }
             else
             {
@@ -639,10 +652,11 @@ public class CNAnalyser {
                     sampleId, chr, startData.id(), endData.id(), startData.startPos(), endData.startPos(),
                     startData.segStart(), incomplete ? endData.segEnd() : endData.segStart()));
 
-            mFileWriter.write(String.format(",%.4f,%.4f,%.4f,%.4f,%d,%d,%s,%s",
+            mFileWriter.write(String.format(",%.4f,%.4f,%.4f,%.4f,%d,%d,%s,%s,%s",
                     lastMinCN, (1 - startData.actualBaf()) * startData.copyNumber(), (1 - endData.actualBaf()) * endData.copyNumber(),
                     lohMinCN, segCount, lohLength,
-                    startSvData != null ? startSvData.id() : "0", endSvData != null ? endSvData.id() : "0"));
+                    startSvData != null ? startSvData.id() : "0", endSvData != null ? endSvData.id() : "0",
+                    skipped));
 
             mFileWriter.newLine();
 
@@ -650,262 +664,8 @@ public class CNAnalyser {
         }
         catch (final IOException e)
         {
-            LOGGER.error("error writing to outputFile");
+            LOGGER.error("error writing to copy number LOH outputFile: {}", e.toString());
             return 0;
-        }
-    }
-
-    private void analyseFlips(final String sampleId, List<SvCNData> cnDataList, final String specificChromosome)
-    {
-        int segCount = 0;
-        double lastCNChange = 0;
-        double startCN = 0;
-        double maxCN = 0;
-        double minCN = 0;
-        int delCount = 0;
-        int dupCount = 0;
-        int invCount = 0;
-        int bndCount = 0;
-        String currentChr = "";
-        String currentArm = SvUtilities.CHROMOSOME_ARM_P;
-        boolean checkCNChange = false;
-        List<Long> dbLengths = Lists.newArrayList();
-        Map<Double, Integer> cnChangeMap = new HashMap();
-
-        if(mDbAccess != null)
-            loadSVData(sampleId);
-
-        SvCNData lastCnData = null;
-
-        for(SvCNData cnData : cnDataList)
-        {
-            if(!specificChromosome.isEmpty() && !specificChromosome.equals(cnData.chromosome()))
-            {
-                if(segCount > 0)
-                    break;
-
-                continue;
-            }
-
-            double copyNumber = cnData.copyNumber();
-
-            if(currentChr.isEmpty()
-            || (!currentChr.isEmpty() && !cnData.chromosome().equals(currentChr))
-            || (!currentArm.isEmpty() && cnData.segStart().equals(CN_SEG_CENTROMERE)))
-            {
-                if(!currentChr.isEmpty())
-                {
-                    writeFlipData(
-                            sampleId, currentChr, currentArm, startCN, minCN, maxCN, segCount, dbLengths, cnChangeMap,
-                            delCount, dupCount, invCount, bndCount);
-                }
-
-                // reset as a new chromosome has been found
-                segCount = 0;
-                lastCNChange = 0;
-                maxCN = copyNumber;
-                minCN = copyNumber;
-                startCN = copyNumber;
-                delCount = 0;
-                dupCount = 0;
-                invCount = 0;
-                bndCount = 0;
-                dbLengths.clear();
-                cnChangeMap.clear();
-
-                if(!currentChr.equals(cnData.chromosome()))
-                {
-                    currentChr = cnData.chromosome();
-                    currentArm = SvUtilities.CHROMOSOME_ARM_P;
-                }
-                else
-                {
-                    currentArm = SvUtilities.CHROMOSOME_ARM_Q;
-                }
-
-                checkCNChange = false;
-            }
-            else
-            {
-                minCN = min(copyNumber, minCN);
-                maxCN = max(copyNumber, maxCN);
-
-                // analyse the change
-                double thisCNChange = copyNumber - lastCnData.copyNumber();
-
-                if(checkCNChange)
-                {
-
-                    if (lastCNChange < 0 && thisCNChange > 0
-                        && abs(thisCNChange) >= CN_CHANGE_MIN && abs(thisCNChange + lastCNChange) <= CN_DIFF_MARGIN)
-                    {
-                        LOGGER.debug("sample({}) cnID({} -> {}) flipped cnChange({} -> {})", sampleId, lastCnData.asString(), cnData.asString(), lastCNChange, thisCNChange);
-                        double cnRounded = roundCopyNumber(lastCNChange);
-
-                        if (!cnChangeMap.containsKey(cnRounded))
-                        {
-                            cnChangeMap.put(cnRounded, 1);
-                        }
-                        else
-                        {
-                            cnChangeMap.replace(cnRounded, cnChangeMap.get(cnRounded) + 1);
-                        }
-
-                        long gapLength = cnData.startPos() - lastCnData.startPos();
-
-                        // a deletion bridge (DB) is a CN drop at the last segment and regain on this segment, resulting from 2 distinct SVs
-                        // so take the length of the last segment
-                        if(!lastCnData.segStart().equals(StructuralVariantType.BND.toString()))
-                        {
-                            StructuralVariantData startSvData = findSvData(lastCnData, 1);
-                            StructuralVariantData endSvData = findSvData(cnData, -1);
-
-                            if (startSvData != null && endSvData != null)
-                            {
-                                if (startSvData.id().equals(endSvData.id()))
-                                {
-                                    LOGGER.debug("sample({}) cnID({} -> {}) matches singleSV({} - {})",
-                                            sampleId, lastCnData.asString(), cnData.asString(), startSvData.id(), startSvData.type());
-                                }
-                                else
-                                {
-
-                                    LOGGER.debug("sample({}) cnID({} -> {}) matches pairSV({} -> {})",
-                                            sampleId, lastCnData.asString(), cnData.asString(), startSvData.id(), endSvData.id());
-
-                                    LOGGER.debug("sample({}) cnID({} -> {}) DB length({})",
-                                            sampleId, lastCnData.asString(), cnData.asString(), gapLength);
-
-                                    dbLengths.add(gapLength);
-
-                                }
-                            }
-                            else
-                            {
-                                LOGGER.debug("sample({}) cnID({} -  -> {}) not fully matched pairSV({} -> {})",
-                                        sampleId, lastCnData.asString(), lastCnData.segStart(), cnData.asString(), cnData.segStart(),
-                                        startSvData != null ? startSvData.id() : "", endSvData != null ? endSvData.id() : "");
-                            }
-                        }
-
-                        checkCNChange = false;
-                    }
-                }
-                else
-                {
-                    checkCNChange = true;
-                }
-
-                lastCNChange = thisCNChange;
-            }
-
-            if(cnData.segStart().equals(StructuralVariantType.DEL.toString()))
-                ++delCount;
-            else if(cnData.segStart().equals(StructuralVariantType.DUP.toString()))
-                ++dupCount;
-            else if(cnData.segStart().equals(StructuralVariantType.INV.toString()))
-                ++invCount;
-            else if(cnData.segStart().equals(StructuralVariantType.BND.toString()))
-                ++bndCount;
-
-            lastCnData = cnData;
-            ++segCount;
-
-        }
-
-        // write final chromosomal data
-        if(!currentChr.isEmpty())
-        {
-            writeFlipData(
-                    sampleId, currentChr, currentArm, startCN, minCN, maxCN, segCount, dbLengths, cnChangeMap,
-                    delCount, dupCount,  invCount, bndCount);
-        }
-    }
-    
-    private void writeFlipData(
-            final String sampleId, final String chr, final String arm, double startCN, double minCN, double maxCN, int segCount,
-            final List<Long> dbLengths, final Map<Double, Integer> cnChangeMap,
-            int delCount, int dupCount, int invCount, int bndCount)
-    {
-        try
-        {
-            if (mFileWriter == null)
-            {
-                String outputFileName = mOutputPath;
-
-                if (!outputFileName.endsWith("/"))
-                    outputFileName += File.separator;
-
-                outputFileName += "CN_ANALYSIS.csv";
-
-                Path outputFile = Paths.get(outputFileName);
-
-                mFileWriter = Files.newBufferedWriter(outputFile); // , StandardOpenOption.CREATE_NEW
-
-                // SV info
-                mFileWriter.write("SampleId,Chromosome,Arm,StartCN,MinCN,MaxCN,SegCount,DelCount,DupCount,InvCount,BndCount,ArmLenRatio,");
-                mFileWriter.write("FlipCount,MaxFlips,FlipValues,DBCount,ShortCount,DelLens");
-                mFileWriter.newLine();
-            }
-
-            double armLengthRatio = 30000000.0 / getChromosomalArmLength(chr, arm);
-
-            mFileWriter.write(String.format("%s,%s,%s,%.2f,%.2f,%.2f,%d,%d,%d,%d,%d,%.2f",
-                    sampleId, chr, arm, startCN, minCN, maxCN, segCount, delCount, dupCount, invCount, bndCount, armLengthRatio));
-
-            int maxFlips = 0;
-            double cnChgMax = 0;
-            int totalFlips = 0;
-            String cnChangesStr = "";
-
-            for(Map.Entry<Double, Integer> entry : cnChangeMap.entrySet())
-            {
-                if(entry.getValue() > maxFlips)
-                {
-                    cnChgMax = entry.getKey();
-                    maxFlips = entry.getValue();
-                }
-
-                totalFlips += entry.getValue();
-
-                if(!cnChangesStr.isEmpty())
-                    cnChangesStr += ";";
-
-                cnChangesStr += String.format("%.1f=%d", entry.getKey(), entry.getValue());
-            }
-
-            // now include any other CN change values within the margin of error of the max value
-            for(Map.Entry<Double, Integer> entry : cnChangeMap.entrySet())
-            {
-                double cnChange = entry.getKey();
-                if (cnChange != cnChgMax && abs(cnChange - cnChgMax) <= CN_DIFF_MARGIN)
-                {
-                    maxFlips += entry.getValue();
-                }
-            }
-
-            int shortDBCount = 0;
-            String delLengthsStr = "";
-
-            for(long delLen : dbLengths)
-            {
-                if(delLen <= DB_MAX_LENGTH)
-                    ++shortDBCount;
-
-                    if(!delLengthsStr.isEmpty())
-                    delLengthsStr += ";";
-
-                delLengthsStr += String.valueOf(delLen);
-
-            }
-
-            mFileWriter.write(String.format(",%d,%d,%s,%d,%d,%s",
-                    totalFlips, maxFlips, cnChangesStr, dbLengths.size(), shortDBCount, delLengthsStr));
-
-            mFileWriter.newLine();
-        }
-        catch (final IOException e) {
-            LOGGER.error("error writing to outputFile");
         }
     }
 

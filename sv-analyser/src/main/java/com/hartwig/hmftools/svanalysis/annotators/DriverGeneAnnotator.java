@@ -7,6 +7,7 @@ import static com.hartwig.hmftools.svanalysis.types.SvLOH.LOH_NO_SV;
 
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -46,7 +47,7 @@ public class DriverGeneAnnotator
     {
         mDbAccess = dbAccess;
         mDriverCatalog = Lists.newArrayList();
-        mSampleLOHData = null;
+        mSampleLOHData = Lists.newArrayList();
         mChromosomeCopyNumberMap = null;
 
         initialiseGeneData();
@@ -94,7 +95,12 @@ public class DriverGeneAnnotator
         mSampleId = sampleId;
         mChrBreakendMap = chrBreakendMap;
         mClusters = clusters;
-        mSampleLOHData = mSampleLohMap.get(sampleId);
+
+        mSampleLOHData.clear();
+        List<SvLOH> sampleLohEvents = mSampleLohMap.get(sampleId);
+
+        if(sampleLohEvents != null)
+            mSampleLOHData.addAll(sampleLohEvents.stream().filter(x -> !x.Skipped).collect(Collectors.toList()));
 
         // Handle each of the 3 applicable types: DEL, BIALLELIC and AMP
         for(final DriverCatalog driverGene : mDriverCatalog)
@@ -235,7 +241,7 @@ public class DriverGeneAnnotator
     private void annotateBiallelicEvent(final DriverCatalog driverGene, HmfTranscriptRegion region)
     {
         // for biallelic events, find the straddling LOH event
-        if(mSampleLOHData == null || mSampleLOHData.isEmpty())
+        if(mSampleLOHData.isEmpty())
             return;
 
         final List<SvBreakend> breakendList = mChrBreakendMap.get(region.chromosome());
@@ -317,9 +323,6 @@ public class DriverGeneAnnotator
 
     private boolean isLOHEvent(final SvBreakend breakend, boolean checkStart)
     {
-        if (mSampleLOHData == null || mSampleLOHData.isEmpty())
-            return false;
-
         for (final SvLOH lohEvent : mSampleLOHData)
         {
             if ((checkStart && lohEvent.StartSV.equals(breakend.getSV().id()))

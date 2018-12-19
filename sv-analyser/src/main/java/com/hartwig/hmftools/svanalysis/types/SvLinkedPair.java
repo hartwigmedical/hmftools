@@ -9,6 +9,7 @@ import java.util.List;
 
 public class SvLinkedPair {
 
+    private int mId;
     private SvVarData mFirst;
     private SvVarData mSecond;
     private boolean mFirstLinkOnStart;
@@ -38,6 +39,7 @@ public class SvLinkedPair {
 
     public SvLinkedPair(SvVarData first, SvVarData second, final String linkType, boolean firstLinkOnStart, boolean secondLinkOnStart)
     {
+        mId = 0;
         mFirst = first;
         mSecond = second;
         mFirstLinkOnStart = firstLinkOnStart;
@@ -76,12 +78,27 @@ public class SvLinkedPair {
         }
     }
 
+    public int id() { return mId; }
+    public void setId(int Id) { mId = 0; }
+
     public final SvVarData first() { return mFirst; }
     public final SvVarData second() { return mSecond; }
     public boolean firstLinkOnStart() { return mFirstLinkOnStart; }
     public boolean secondLinkOnStart() { return mSecondLinkOnStart; }
     public boolean firstUnlinkedOnStart() { return !mFirstLinkOnStart; }
     public boolean secondUnlinkedOnStart() { return !mSecondLinkOnStart; }
+
+    public final SvBreakend getBreakend(boolean isStart)
+    {
+        // finds the earlier breakend of the 2
+        final SvBreakend beFirst = mFirst.getBreakend(firstLinkOnStart());
+        final SvBreakend beSecond = mSecond.getBreakend(secondLinkOnStart());
+
+        if(isStart)
+            return beFirst.position() < beSecond.position() ? beFirst : beSecond;
+        else
+            return beFirst.position() > beSecond.position() ? beFirst : beSecond;
+    }
 
     public boolean getLinkedOnStart(final SvVarData var)
     {

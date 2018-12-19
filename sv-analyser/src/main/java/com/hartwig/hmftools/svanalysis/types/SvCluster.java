@@ -759,8 +759,13 @@ public class SvCluster
 
         for(SvVarData var : mSVs)
         {
-            var.setLinkedPair(null, true);
-            var.setLinkedPair(null, false);
+            for(int be = SVI_START; be <= SVI_END; ++be)
+            {
+                boolean useStart = isStart(be);
+
+                if (var.getLinkedPair(useStart) != null && var.getLinkedPair(useStart).isInferred())
+                    var.setLinkedPair(null, useStart);
+            }
         }
 
         // mark the resultant set of inferred links - the assembly links will have already been marked
@@ -845,8 +850,8 @@ public class SvCluster
     public int getOriginArms() { return mOriginArms; }
     public int getFragmentArms() { return mFragmentArms; }
 
-    // private static int SPECIFIC_CLUSTER_ID = -1;
-    private static int SPECIFIC_CLUSTER_ID = 37;
+    private static int SPECIFIC_CLUSTER_ID = -1;
+    // private static int SPECIFIC_CLUSTER_ID = 1168;
 
     public static boolean isSpecificCluster(final SvCluster cluster)
     {

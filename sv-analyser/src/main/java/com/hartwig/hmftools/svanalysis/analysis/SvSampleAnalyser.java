@@ -439,7 +439,7 @@ public class SvSampleAnalyser {
                 writer.write(",DelCount,DupCount,InsCount,InvCount,BndCount,SglCount");
                 writer.write(",Consistency,ArmCount,OriginArms,FragmentArms,IsLINE,HasReplicated,Foldbacks,DSBs");
                 writer.write(",TotalLinks,AssemblyLinks,LongDelDups,UnlinkedRemotes,ShortTIRemotes,MinCopyNumber,MaxCopyNumber");
-                writer.write(",Annotations,ChainInfo");
+                writer.write(",SynDelDupLen,SynDelDupAvgTILen,Annotations,ChainInfo");
                 writer.newLine();
             }
 
@@ -475,8 +475,8 @@ public class SvSampleAnalyser {
                                 cluster.getMinCopyNumber(), cluster.getMaxCopyNumber()));
 
                 writer.write(
-                        String.format(",%s,%s",
-                                cluster.getAnnotations(), chainInfo));
+                        String.format(",%d,%d,%s,%s",
+                                cluster.getSynDelDupLength(), cluster.getSynDelDupTILength(), cluster.getAnnotations(), chainInfo));
 
                 writer.newLine();
             }
@@ -515,6 +515,7 @@ public class SvSampleAnalyser {
                 writer.write("SampleId,ClusterId,ClusterDesc,ClusterCount,ResolvedType,IsLINE,FullyChained");
                 writer.write(",ChainId,ChainCount,ChainConsistent,Id1,Id2,ChrArm,IsAssembled,TILength,SynDelDupLen");
                 writer.write(",NextSVDistance,NextSVTraversedCount,DBLenStart,DBLenEnd,OnArmOfOrigin,CopyNumberGain,TraversedSVCount");
+                writer.write(",PosStart,PosEnd,GeneStart,GeneEnd");
                 writer.newLine();
             }
 
@@ -558,11 +559,13 @@ public class SvSampleAnalyser {
                                         mSampleId, cluster.id(), cluster.getDesc(), clusterSvCount, cluster.getResolvedType(),
                                         cluster.hasLinkingLineElements(), cluster.isFullyChained()));
 
+                        final SvBreakend beStart = pair.getBreakend(true);
+                        final SvBreakend beEnd= pair.getBreakend(false);
+
                         writer.write(
                                 String.format(",%d,%d,%s,%s,%s,%s",
                                         chain.id(), chainSvCount, chainConsistent,
-                                        pair.first().origId(), pair.second().origId(),
-                                        pair.first().getBreakend(pair.firstLinkOnStart()).getChrArm()));
+                                        beStart.getSV().origId(), beEnd.getSV().origId(), beStart.getChrArm()));
 
                         writer.write(
                                 String.format(",%s,%d,%d,%d,%d,%d,%d,%s,%s,%d",
@@ -570,6 +573,13 @@ public class SvSampleAnalyser {
                                         pair.getNextSVDistance(), pair.getNextSVTraversedCount(),
                                         pair.getDBLenFirst(), pair.getDBLenSecond(), pair.onArmOfOrigin(),
                                         pair.hasCopyNumberGain(), pair.getTraversedSVCount()));
+
+
+                        writer.write(
+                                String.format(",%d,%d,%s,%s",
+                                        beStart.position(), beEnd.position(),
+                                        beStart.getSV().getGeneInBreakend(beStart.usesStart()),
+                                        beEnd.getSV().getGeneInBreakend(beEnd.usesStart())));
 
                         writer.newLine();
                     }

@@ -291,14 +291,12 @@ public class LinkFinder
                         if (!areLinkedSection(var1, var2, v1Start, v2Start))
                             continue;
 
-                            // form a new TI from these 2 BEs
+                        // form a new TI from these 2 BEs
                         SvLinkedPair newPair = new SvLinkedPair(var1, var2, LINK_TYPE_TI, v1Start, v2Start);
 
                         if(newPair.linkType() == LINK_TYPE_DB)
                         {
-                            // was considered too short to be a TI and so converted
-                            var1.setDBLink(newPair, v1Start);
-                            var2.setDBLink(newPair, v2Start);
+                            // was considered too short to be a TI and so converted to a DB
                             continue;
                         }
 
@@ -370,8 +368,8 @@ public class LinkFinder
                 if(var1 == var2)
                     continue;
 
-                isSpecificSV(var1.id());
-                isSpecificSV(var2.id());
+                // isSpecificSV(var1.id());
+                // isSpecificSV(var2.id());
 
                 if(areSectionBreak(var1, var2, breakend.usesStart(), nextBreakend.usesStart()))
                 {
