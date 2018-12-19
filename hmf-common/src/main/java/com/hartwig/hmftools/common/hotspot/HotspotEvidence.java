@@ -36,7 +36,7 @@ public interface HotspotEvidence extends GenomePosition {
     int normalIndelCount();
 
     default double vaf() {
-        return tumorReads() == 0 ? 0 : (double) tumorRefCount() / tumorReads();
+        return tumorReads() == 0 ? 0 : (double) tumorAltCount() / tumorReads();
     }
 
     default boolean isIndel() {

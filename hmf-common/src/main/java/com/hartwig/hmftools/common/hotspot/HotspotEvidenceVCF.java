@@ -3,6 +3,7 @@ package com.hartwig.hmftools.common.hotspot;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ListMultimap;
@@ -106,10 +107,14 @@ public class HotspotEvidenceVCF {
     VariantContext create(@NotNull final Collection<HotspotEvidence> evidence) {
         assert (!evidence.isEmpty());
 
-        List<HotspotEvidence> sortedEvidence = Lists.newArrayList(evidence);
-        sortedEvidence.sort(HotspotEvidenceVCF::compareEvidence);
+        final List<VariantContext> contexts =
+                evidence.stream().map(this::create).sorted(HotspotEvidenceVCF::compareEvidence).collect(Collectors.toList());
 
-        final HotspotEvidence hotspotEvidence = sortedEvidence.get(0);
+        return contexts.get(0);
+    }
+
+    @NotNull
+    VariantContext create(@NotNull final HotspotEvidence hotspotEvidence) {
 
         final Allele ref = Allele.create(hotspotEvidence.ref(), true);
         final Allele alt = Allele.create(hotspotEvidence.alt(), false);
@@ -154,9 +159,13 @@ public class HotspotEvidenceVCF {
         return context;
     }
 
-    private static int compareEvidence(@NotNull final HotspotEvidence o1, @NotNull final HotspotEvidence o2) {
-        int normalEvidence = Integer.compare(o1.normalAltCount(), o2.normalAltCount());
-        return normalEvidence == 0 ? -Integer.compare(o1.qualityScore(), o2.qualityScore()) : normalEvidence;
+    private static boolean isNotFiltered(@NotNull final VariantContext context) {
+        return context.getFilters().contains(PASS);
+    }
+
+    private static int compareEvidence(@NotNull final VariantContext o1, @NotNull final VariantContext o2) {
+        int passCompare = -Boolean.compare(isNotFiltered(o1), isNotFiltered(o2));
+        return passCompare == 0 ? -Double.compare(o1.getPhredScaledQual(), o2.getPhredScaledQual()) : passCompare;
     }
 
     static double heterozygousLikelihood(int readDepth) {

@@ -29,7 +29,7 @@ import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 
 public class VariantHotspotEvidenceFactory {
 
-    private static final int SNV_MNV_BUFFER = 2;
+    private static final int SNV_MNV_BUFFER = 1;
 
     private final int minBaseQuality;
 
