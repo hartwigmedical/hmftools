@@ -183,8 +183,8 @@ public class DatabaseAccess {
     }
 
     @NotNull
-    public List<SimpleGeneFusion> readingStructuralVarianten(@NotNull final String sample) {
-        return structuralVariantAnnotationDAO.readStructuralVariantAnalysis(sample);
+    public List<SimpleGeneFusion> readingGeneFusions(@NotNull final String sample) {
+        return structuralVariantAnnotationDAO.readGeneFusions(sample);
     }
 
     @NotNull

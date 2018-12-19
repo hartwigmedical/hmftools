@@ -111,11 +111,11 @@ public class LoadEvidenceData {
                 LOGGER.info(allClinicalTrialsGeneCopyNumber);
 
                 LOGGER.info("Reading gene fusions from DB");
-                final List<SimpleGeneFusion> analysesStructuralVarianten = dbAccess.readingStructuralVarianten(sample);
-                LOGGER.info(analysesStructuralVarianten);
+                final List<SimpleGeneFusion> analysesGeneFusions = dbAccess.readingGeneFusions(sample);
+                LOGGER.info(analysesGeneFusions);
 
                 Map<SimpleGeneFusion, List<EvidenceItem>> evidencePerFusion =
-                        actionabilityAnalyzer.evidenceForFusions(analysesStructuralVarianten, primaryTumorLocation);
+                        actionabilityAnalyzer.evidenceForFusions(analysesGeneFusions, primaryTumorLocation);
 
                 final List<EvidenceItem> AllEvidenceItemsGeneFusions = extractAllEvidenceItems(evidencePerFusion);
                 final List<ClinicalTrial> allClinicalTrialsGeneFusions = extractAllTrials(AllEvidenceItemsGeneFusions);

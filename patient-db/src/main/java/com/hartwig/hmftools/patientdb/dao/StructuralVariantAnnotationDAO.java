@@ -53,7 +53,7 @@ public class StructuralVariantAnnotationDAO {
     }
 
     @NotNull
-    public final List<SimpleGeneFusion> readStructuralVariantAnalysis(@NotNull final String sample) {
+    public final List<SimpleGeneFusion> readGeneFusions(@NotNull final String sample) {
         List<SimpleGeneFusion> simpleGeneFusions = Lists.newArrayList();
 
         final Result<Record1<String>> resultFiveGene = context.select(STRUCTURALVARIANTBREAKEND.GENE)
