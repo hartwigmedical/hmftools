@@ -40,11 +40,11 @@ public class TsgDriversTest {
                 .indel(indelLikelihood)
                 .build();
 
-        missense = create(VariantType.SNP, CodingEffect.MISSENSE, false, false);
-        nonsense = create(VariantType.SNP, CodingEffect.NONSENSE_OR_FRAMESHIFT, false, false);
-        indel = create(VariantType.INDEL, CodingEffect.NONSENSE_OR_FRAMESHIFT, false, false);
-        hotspot = create(VariantType.INDEL, CodingEffect.MISSENSE, true, false);
-        biallelic = create(VariantType.MNP, CodingEffect.NONSENSE_OR_FRAMESHIFT, false, true);
+        missense = create(VariantType.SNP, CodingEffect.MISSENSE, false, 0.5);
+        nonsense = create(VariantType.SNP, CodingEffect.NONSENSE_OR_FRAMESHIFT, false, 0.5);
+        indel = create(VariantType.INDEL, CodingEffect.NONSENSE_OR_FRAMESHIFT, false, 0.5);
+        hotspot = create(VariantType.INDEL, CodingEffect.MISSENSE, true, 0.5);
+        biallelic = create(VariantType.MNP, CodingEffect.NONSENSE_OR_FRAMESHIFT, false, 0.9);
     }
 
     @Test
@@ -113,13 +113,13 @@ public class TsgDriversTest {
     }
 
     @NotNull
-    private static EnrichedSomaticVariant create(@NotNull final VariantType type, @NotNull final CodingEffect codingEffect, boolean hotspot,
-            boolean biallelic) {
+    private static EnrichedSomaticVariant create(@NotNull final VariantType type, @NotNull final CodingEffect codingEffect, boolean hotspot, double vaf) {
         return SomaticVariantTestBuilderFactory.createEnriched()
                 .type(type)
                 .canonicalCodingEffect(codingEffect)
                 .hotspot(hotspot ? Hotspot.HOTSPOT : Hotspot.NON_HOTSPOT)
-                .biallelic(biallelic)
+                .adjustedCopyNumber(2)
+                .adjustedVAF(vaf)
                 .build();
     }
 }

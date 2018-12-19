@@ -1,13 +1,11 @@
 package com.hartwig.hmftools.common.variant;
 
-import java.util.Collections;
 import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.chromosome.Chromosome;
 import com.hartwig.hmftools.common.collect.Multimaps;
-import com.hartwig.hmftools.common.numeric.Doubles;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;
@@ -47,10 +45,8 @@ public class PurityAdjustedSomaticVariantFactory {
                     .from(variant)
                     .adjustedCopyNumber(0)
                     .adjustedVAF(0)
-                    .ploidy(0)
                     .minorAllelePloidy(0)
-                    .germlineStatus(GermlineStatus.UNKNOWN)
-                    .biallelic(false);
+                    .germlineStatus(GermlineStatus.UNKNOWN);
 
             copyNumberSelector.select(variant).ifPresent(x -> purityAdjustment(x, variant, builder));
             fittedRegionSelector.select(variant).ifPresent(x -> builder.germlineStatus(x.status()));
@@ -67,12 +63,6 @@ public class PurityAdjustedSomaticVariantFactory {
         double adjustedVAF =
                 purityAdjuster.purityAdjustedVAF(copyNumber.chromosome(), Math.max(0.001, adjustedCopyNumber), depth.alleleFrequency());
         builder.adjustedVAF(adjustedVAF);
-
-        double variantPloidy = adjustedCopyNumber * adjustedVAF;
-        builder.ploidy(variantPloidy);
-
-        boolean biallelic = Doubles.lessOrEqual(adjustedCopyNumber, 0) || Doubles.greaterOrEqual(variantPloidy, adjustedCopyNumber - 0.5);
-        builder.biallelic(biallelic);
 
         builder.minorAllelePloidy(copyNumber.minorAllelePloidy());
     }

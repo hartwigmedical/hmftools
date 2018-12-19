@@ -46,9 +46,7 @@ public final class SomaticVariantTestBuilderFactory {
                 .clonality(Clonality.UNKNOWN)
                 .adjustedCopyNumber(0D)
                 .adjustedVAF(0D)
-                .ploidy(0D)
                 .minorAllelePloidy(0D)
-                .biallelic(false)
                 .germlineStatus(GermlineStatus.UNKNOWN);
     }
 }
