@@ -74,7 +74,7 @@ class SomaticVariantDAO {
                     .mappability(record.getValue(SOMATICVARIANT.MAPPABILITY))
                     .germlineStatus(GermlineStatus.valueOf(record.getValue(SOMATICVARIANT.GERMLINESTATUS)))
                     .minorAllelePloidy(record.getValue(SOMATICVARIANT.MINORALLELEPLOIDY))
-                    .ploidy(1)
+                    .ploidy(record.getValue(SOMATICVARIANT.ADJUSTEDCOPYNUMBER) * record.getValue(SOMATICVARIANT.ADJUSTEDVAF))
                     .canonicalCodingEffect(stringToBoolean(Strings.EMPTY) ? CodingEffect.UNDEFINED : CodingEffect.valueOf(record.getValue(SOMATICVARIANT.CANONICALCODINGEFFECT)))
                     .recovered(byteToBoolean(record.getValue(SOMATICVARIANT.RECOVERED)))
                     .build());
