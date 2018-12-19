@@ -84,17 +84,13 @@ public class StructuralVariantAnnotationDAO {
             ThreeGene.add(record.getValue(STRUCTURALVARIANTBREAKEND.GENE));
         }
 
-        LOGGER.info(FiveGene);
-        LOGGER.info(ThreeGene);
         for (int i =0; i < FiveGene.size(); i ++) {
-            LOGGER.info(i);
             simpleGeneFusions.add(ImmutableSimpleGeneFusion.builder()
                     .fiveGene(FiveGene.get(i))
                     .threeGene(ThreeGene.get(i))
                     .build());
 
         }
-
         return simpleGeneFusions;
     }
 
