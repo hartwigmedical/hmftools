@@ -37,7 +37,7 @@ Any indel will be filtered as **LOW_CONFIDENCE** if:
 1. Insufficient quality, i.e., quality < min_indel_quality [150]; or
 2. Insufficient VAF, i.e., vaf < min_indel_vaf [0.02]
 
-Any unfiltered indel (regardless of being a hotspot or not) will be filtered as **GERMLINE_INDEL** if there exists an indels at that site in the germline. 
+Any unfiltered indel will be filtered as **GERMLINE_INDEL** if there exists an indel at that site in the germline. 
 
 ## Output VCF
 Only one variant per site is written to file as ranked by filter then quality.
