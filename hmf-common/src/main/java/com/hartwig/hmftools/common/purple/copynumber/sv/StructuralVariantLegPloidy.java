@@ -16,9 +16,19 @@ public abstract class StructuralVariantLegPloidy implements StructuralVariantLeg
 
     private static final double VAF_TO_USE_READ_DEPTH = 0.75;
 
-    public abstract double vaf();
+    public abstract double observedVaf();
+
+    public abstract double adjustedVaf();
+
+    public abstract double weight();
+
+    public abstract double averageImpliedPloidy();
+
+    public abstract double unweightedImpliedPloidy();
 
     public abstract Optional<Double> leftCopyNumber();
+
+    public abstract Optional<Double> rightCopyNumber();
 
     public double impliedRightCopyNumber(int averageReadDepth, double averageCopyNumber) {
 
@@ -29,16 +39,9 @@ public abstract class StructuralVariantLegPloidy implements StructuralVariantLeg
         return leftCopyNumber().map(x -> x - orientation() * averageImpliedPloidy()).orElse(0D);
     }
 
-    @Deprecated
-    public double impliedRightCopyNumber() {
-        return leftCopyNumber().map(x -> x - orientation() * averageImpliedPloidy()).orElse(0D);
-    }
-
     public double impliedRightCopyNumberWeight() {
         return useReadDepth(-1) || leftCopyNumber().isPresent() ? weight() : 0;
     }
-
-    public abstract Optional<Double> rightCopyNumber();
 
     public double impliedLeftCopyNumber(int averageReadDepth, double averageCopyNumber) {
         if (useReadDepth(1)) {
@@ -48,20 +51,10 @@ public abstract class StructuralVariantLegPloidy implements StructuralVariantLeg
         return rightCopyNumber().map(x -> x + orientation() * averageImpliedPloidy()).orElse(0D);
     }
 
-    @Deprecated
-    public double impliedLeftCopyNumber() {
-        return rightCopyNumber().map(x -> x + orientation() * averageImpliedPloidy()).orElse(0D);
-    }
-
     public double impliedLeftCopyNumberWeight() {
         return useReadDepth(1) || rightCopyNumber().isPresent() ? weight() : 0;
     }
 
-    public abstract double unweightedImpliedPloidy();
-
-    public abstract double averageImpliedPloidy();
-
-    public abstract double weight();
 
     private double copyNumberImpliedFromReadDepth(int averageReadDepth, double averageCopyNumber) {
         Integer tumourVariantFragmentCount = tumourVariantFragmentCount();
@@ -73,7 +66,7 @@ public abstract class StructuralVariantLegPloidy implements StructuralVariantLeg
     }
 
     private boolean useReadDepth(int orientation) {
-        if (Doubles.greaterOrEqual(vaf(), VAF_TO_USE_READ_DEPTH) && orientation() == orientation) {
+        if (Doubles.greaterOrEqual(adjustedVaf(), VAF_TO_USE_READ_DEPTH) && orientation() == orientation) {
 
             Integer tumourVariantFragmentCount = tumourVariantFragmentCount();
             Integer tumourReferenceFragmentCount = tumourReferenceFragmentCount();

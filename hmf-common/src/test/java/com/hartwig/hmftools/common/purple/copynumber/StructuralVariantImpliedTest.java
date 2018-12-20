@@ -69,7 +69,7 @@ public class StructuralVariantImpliedTest {
         final List<StructuralVariant> svs = Lists.newArrayList(firstSV, secondSV);
         final ListMultimap<Chromosome, CombinedRegion> copyNumbers = copyNumbers(firstCN, secondCN, thirdCN, forthCN, fifthCN);
 
-        final StructuralVariantImplied victim = new StructuralVariantImplied(100, 2,PURE);
+        final StructuralVariantImplied victim = new StructuralVariantImplied(100, 2, PURE);
         final List<CombinedRegion> result = victim.svImpliedCopyNumber(svs, copyNumbers).get(CHROMOSOME);
 
         assertEquals(4, result.size());
@@ -81,15 +81,30 @@ public class StructuralVariantImpliedTest {
 
     @Test
     public void testUseReadDepth() {
-        final StructuralVariantLegPloidy left =  PurpleDatamodelTest.svLegPloidy(-1, Optional.empty(), Optional.empty(), PLOIDY).chromosome(CONTIG).vaf(0.75).tumourReferenceFragmentCount(50).tumourVariantFragmentCount(100).build();
-        final StructuralVariantLegPloidy right =  PurpleDatamodelTest.svLegPloidy(1, Optional.empty(), Optional.empty(), PLOIDY).chromosome(CONTIG).vaf(0.75).tumourReferenceFragmentCount(50).tumourVariantFragmentCount(150).build();
-        final double leftKnown = StructuralVariantImplied.inferCopyNumberFromStructuralVariants(100 , 2, Optional.of(left), Optional.empty());
+        final StructuralVariantLegPloidy left = PurpleDatamodelTest.svLegPloidy(-1, Optional.empty(), Optional.empty(), PLOIDY)
+                .chromosome(CONTIG)
+                .observedVaf(0.70)
+                .adjustedVaf(0.75)
+                .tumourReferenceFragmentCount(50)
+                .tumourVariantFragmentCount(100)
+                .build();
+        final StructuralVariantLegPloidy right = PurpleDatamodelTest.svLegPloidy(1, Optional.empty(), Optional.empty(), PLOIDY)
+                .chromosome(CONTIG)
+                .observedVaf(0.70)
+                .adjustedVaf(0.75)
+                .tumourReferenceFragmentCount(50)
+                .tumourVariantFragmentCount(150)
+                .build();
+        final double leftKnown =
+                StructuralVariantImplied.inferCopyNumberFromStructuralVariants(100, 2, Optional.of(left), Optional.empty());
         assertEquals(3, leftKnown, EPSILON);
 
-        final double rightKnown = StructuralVariantImplied.inferCopyNumberFromStructuralVariants(100 , 2, Optional.empty(), Optional.of(right));
+        final double rightKnown =
+                StructuralVariantImplied.inferCopyNumberFromStructuralVariants(100, 2, Optional.empty(), Optional.of(right));
         assertEquals(4, rightKnown, EPSILON);
 
-        final double bothKnown = StructuralVariantImplied.inferCopyNumberFromStructuralVariants(100 , 2, Optional.of(left), Optional.of(right));
+        final double bothKnown =
+                StructuralVariantImplied.inferCopyNumberFromStructuralVariants(100, 2, Optional.of(left), Optional.of(right));
         assertEquals(3.5, bothKnown, EPSILON);
     }
 
@@ -98,13 +113,16 @@ public class StructuralVariantImpliedTest {
         final StructuralVariantLegPloidy left = create(1, Optional.of(4d), Optional.empty());
         final StructuralVariantLegPloidy right = create(-1, Optional.empty(), Optional.of(5d));
 
-        final double bothKnown = StructuralVariantImplied.inferCopyNumberFromStructuralVariants(100, 3, Optional.of(left), Optional.of(right));
+        final double bothKnown =
+                StructuralVariantImplied.inferCopyNumberFromStructuralVariants(100, 3, Optional.of(left), Optional.of(right));
         assertEquals(3.5, bothKnown, EPSILON);
 
-        final double leftKnown = StructuralVariantImplied.inferCopyNumberFromStructuralVariants(100, 3, Optional.of(left), Optional.empty());
+        final double leftKnown =
+                StructuralVariantImplied.inferCopyNumberFromStructuralVariants(100, 3, Optional.of(left), Optional.empty());
         assertEquals(3, leftKnown, EPSILON);
 
-        final double rightKnown = StructuralVariantImplied.inferCopyNumberFromStructuralVariants(100, 3, Optional.empty(), Optional.of(right));
+        final double rightKnown =
+                StructuralVariantImplied.inferCopyNumberFromStructuralVariants(100, 3, Optional.empty(), Optional.of(right));
         assertEquals(4, rightKnown, EPSILON);
     }
 
@@ -113,13 +131,16 @@ public class StructuralVariantImpliedTest {
         final StructuralVariantLegPloidy left = create(1, Optional.of(0.5d), Optional.empty());
         final StructuralVariantLegPloidy right = create(-1, Optional.empty(), Optional.of(0.9d));
 
-        final double bothKnown = StructuralVariantImplied.inferCopyNumberFromStructuralVariants(100, 3, Optional.of(left), Optional.of(right));
+        final double bothKnown =
+                StructuralVariantImplied.inferCopyNumberFromStructuralVariants(100, 3, Optional.of(left), Optional.of(right));
         assertEquals(0, bothKnown, EPSILON);
 
-        final double leftKnown = StructuralVariantImplied.inferCopyNumberFromStructuralVariants(100, 3, Optional.of(left), Optional.empty());
+        final double leftKnown =
+                StructuralVariantImplied.inferCopyNumberFromStructuralVariants(100, 3, Optional.of(left), Optional.empty());
         assertEquals(0, leftKnown, EPSILON);
 
-        final double rightKnown = StructuralVariantImplied.inferCopyNumberFromStructuralVariants(100, 3, Optional.empty(), Optional.of(right));
+        final double rightKnown =
+                StructuralVariantImplied.inferCopyNumberFromStructuralVariants(100, 3, Optional.empty(), Optional.of(right));
         assertEquals(0, rightKnown, EPSILON);
     }
 

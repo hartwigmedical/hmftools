@@ -53,12 +53,12 @@ public class StructuralVariantPloidyTest {
     }
 
     private static void assertLeft(double expectedCopyNumber, double expectedWeight, @NotNull final StructuralVariantLegPloidy ploidy) {
-        assertEquals(expectedCopyNumber, ploidy.impliedLeftCopyNumber(), EPSILON);
+        assertEquals(expectedCopyNumber, ploidy.impliedLeftCopyNumber(100, 2), EPSILON);
         assertEquals(expectedWeight, ploidy.impliedLeftCopyNumberWeight(), EPSILON);
     }
 
     private static void assertRight(double expectedCopyNumber, double expectedWeight, @NotNull final StructuralVariantLegPloidy ploidy) {
-        assertEquals(expectedCopyNumber, ploidy.impliedRightCopyNumber(), EPSILON);
+        assertEquals(expectedCopyNumber, ploidy.impliedRightCopyNumber(100, 2), EPSILON);
         assertEquals(expectedWeight, ploidy.impliedRightCopyNumberWeight(), EPSILON);
     }
 
@@ -69,7 +69,8 @@ public class StructuralVariantPloidyTest {
                 .chromosome(CHROMOSOME)
                 .position(1)
                 .orientation((byte)orientation)
-                .vaf(0.5)
+                .observedVaf(0.5)
+                .adjustedVaf(0.5)
                 .alleleFrequency(0.5)
                 .homology("")
                 .weight(1)
