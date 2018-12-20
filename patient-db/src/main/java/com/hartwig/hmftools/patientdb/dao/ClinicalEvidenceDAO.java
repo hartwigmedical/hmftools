@@ -12,9 +12,9 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
-import org.jooq.InsertValuesStep20;
+import org.jooq.InsertValuesStep19;
 
-public class ClinicalEvidenceDAO {
+class ClinicalEvidenceDAO {
 
     private static final Logger LOGGER = LogManager.getLogger(ClinicalEvidenceDAO.class);
 
@@ -32,7 +32,8 @@ public class ClinicalEvidenceDAO {
         deleteClinicalEvidenceForSample(sample);
 
         for (List<EvidenceItem> items : Iterables.partition(evidenceItem, DB_BATCH_INSERT_SIZE)) {
-            InsertValuesStep20 inserter = context.insertInto(CLINICALEVIDENCEITEM,
+            LOGGER.info("Insert kolom table names");
+            InsertValuesStep19 inserter = context.insertInto(CLINICALEVIDENCEITEM,
                     CLINICALEVIDENCEITEM.SAMPLEID,
                     CLINICALEVIDENCEITEM.TYPEVARIANT,
                     CLINICALEVIDENCEITEM.GENE,
@@ -51,18 +52,19 @@ public class ClinicalEvidenceDAO {
                     CLINICALEVIDENCEITEM.CANCERTYPE,
                     CLINICALEVIDENCEITEM.LABEL,
                     CLINICALEVIDENCEITEM.EVIDENCELEVEL,
-                    CLINICALEVIDENCEITEM.SOURCEID,
                     CLINICALEVIDENCEITEM.EVIDENCESOURCE);
             LOGGER.info("insert values");
             items.forEach(trial -> addValues(sample, trial, inserter));
             LOGGER.info("values inserted");
             inserter.execute();
+            LOGGER.info(inserter.execute());
+            LOGGER.info(inserter);
             LOGGER.info("values executed");
         }
 
     }
 
-    private static void addValues(@NotNull String sample, @NotNull EvidenceItem evidenceItem, @NotNull InsertValuesStep20 inserter) {
+    private static void addValues(@NotNull String sample, @NotNull EvidenceItem evidenceItem, @NotNull InsertValuesStep19 inserter) {
         //noinspection unchecked
         inserter.values(sample,
                 evidenceItem.type(),
@@ -82,8 +84,9 @@ public class ClinicalEvidenceDAO {
                 evidenceItem.cancerType(),
                 evidenceItem.isOnLabel() ? "Tumor Type specific" : "Other tumor types specific",
                 evidenceItem.level().readableString(),
-                evidenceItem.reference(),
                 evidenceItem.source().sourceName());
+        LOGGER.info(evidenceItem.type());
+        LOGGER.info(sample);
         LOGGER.info("addValues");
 
 

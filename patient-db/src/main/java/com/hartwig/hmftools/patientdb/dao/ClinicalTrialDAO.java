@@ -14,7 +14,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
 import org.jooq.InsertValuesStep18;
 
-public class ClinicalTrialDAO {
+class ClinicalTrialDAO {
 
     private static final Logger LOGGER = LogManager.getLogger(ClinicalTrialDAO.class);
 
@@ -32,6 +32,7 @@ public class ClinicalTrialDAO {
         deleteClinicalTrialForSample(sample);
 
         for (List<ClinicalTrial> trials : Iterables.partition(clinicalTrial, DB_BATCH_INSERT_SIZE)) {
+            LOGGER.info("Insert kolom table names");
             InsertValuesStep18 inserter = context.insertInto(CLINICALTRIALITEM,
                     CLINICALTRIALITEM.SAMPLEID,
                     CLINICALTRIALITEM.TYPEVARIANT,
@@ -55,6 +56,8 @@ public class ClinicalTrialDAO {
             trials.forEach(trial -> addValues(sample, trial, inserter));
             LOGGER.info("values inserted");
             inserter.execute();
+            LOGGER.info(inserter.execute());
+            LOGGER.info(inserter);
             LOGGER.info("values executed");
         }
     }
@@ -79,6 +82,8 @@ public class ClinicalTrialDAO {
                 CCMOId(clinicalTrial.reference()),
                 IclusionId(clinicalTrial.reference()),
                 clinicalTrial.source().sourceName());
+        LOGGER.info(clinicalTrial.type());
+        LOGGER.info(sample);
         LOGGER.info("addValues");
     }
 

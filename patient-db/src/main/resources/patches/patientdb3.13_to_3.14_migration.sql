@@ -42,7 +42,6 @@ CREATE TABLE clinicalEvidenceItem
     cancerType varchar(500) NOT NULL,
     label varchar(50) NOT NULL,
     evidenceLevel varchar(50) NOT NULL,
-    sourceId varchar(50) NOT NULL,
     evidenceSource varchar(255) NOT NULL,
     PRIMARY KEY (id),
     INDEX(sampleId)
