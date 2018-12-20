@@ -45,13 +45,13 @@ public class CopyNumberEvidenceAnalyzer {
                 ImmutableEvidenceItem.Builder evidenceBuilder = fromActionableCopyNumber(actionableCopyNumber);
                 evidenceBuilder.type("CNV");
                 evidenceBuilder.gene(actionableCopyNumber.gene());
-                evidenceBuilder.chromosome(Strings.EMPTY);
-                evidenceBuilder.position(Strings.EMPTY);
-                evidenceBuilder.ref(Strings.EMPTY);
-                evidenceBuilder.alt(Strings.EMPTY);
+                evidenceBuilder.chromosome("NA");
+                evidenceBuilder.position("NA");
+                evidenceBuilder.ref("NA");
+                evidenceBuilder.alt("NA");
                 evidenceBuilder.cnvType(actionableCopyNumber.type().toString());
-                evidenceBuilder.fusionFiveGene(Strings.EMPTY);
-                evidenceBuilder.fusionThreeGene(Strings.EMPTY);
+                evidenceBuilder.fusionFiveGene("NA");
+                evidenceBuilder.fusionThreeGene("NA");
                 evidenceBuilder.event(geneCopyNumber.gene() + " " + actionableCopyNumber.type().readableString());
                 evidenceBuilder.isOnLabel(cancerTypeAnalyzer.isCancerTypeMatch(actionableCopyNumber.cancerType(),
                         primaryTumorLocation));

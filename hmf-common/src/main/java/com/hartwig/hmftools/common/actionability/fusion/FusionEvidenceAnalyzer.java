@@ -64,12 +64,12 @@ public class FusionEvidenceAnalyzer {
                     .equals(geneFusion.threeGene())) {
                 ImmutableEvidenceItem.Builder evidenceBuilder = fromActionableFusionPairs(actionableFusion);
                 evidenceBuilder.type("fusion pair");
-                evidenceBuilder.gene(Strings.EMPTY);
-                evidenceBuilder.chromosome(Strings.EMPTY);
-                evidenceBuilder.position(Strings.EMPTY);
-                evidenceBuilder.ref(Strings.EMPTY);
-                evidenceBuilder.alt(Strings.EMPTY);
-                evidenceBuilder.cnvType(Strings.EMPTY);
+                evidenceBuilder.gene("NA");
+                evidenceBuilder.chromosome("NA");
+                evidenceBuilder.position("NA");
+                evidenceBuilder.ref("NA");
+                evidenceBuilder.alt("NA");
+                evidenceBuilder.cnvType("NA");
                 evidenceBuilder.fusionFiveGene(actionableFusion.fiveGene());
                 evidenceBuilder.fusionThreeGene(actionableFusion.threeGene());
                 evidenceBuilder.event(actionableFusion.fiveGene() + " - " + actionableFusion.threeGene() + " fusion");
@@ -82,12 +82,12 @@ public class FusionEvidenceAnalyzer {
             if (actionablePromiscuousFive.gene().equals(geneFusion.fiveGene())) {
                 ImmutableEvidenceItem.Builder evidenceBuilder = fromActionableFusionsPromiscuousFive(actionablePromiscuousFive);
                 evidenceBuilder.type("promiscuous five");
-                evidenceBuilder.gene(Strings.EMPTY);
-                evidenceBuilder.chromosome(Strings.EMPTY);
-                evidenceBuilder.position(Strings.EMPTY);
-                evidenceBuilder.ref(Strings.EMPTY);
-                evidenceBuilder.alt(Strings.EMPTY);
-                evidenceBuilder.cnvType(Strings.EMPTY);
+                evidenceBuilder.gene("NA");
+                evidenceBuilder.chromosome("NA");
+                evidenceBuilder.position("NA");
+                evidenceBuilder.ref("NA");
+                evidenceBuilder.alt("NA");
+                evidenceBuilder.cnvType("NA");
                 evidenceBuilder.fusionFiveGene(actionablePromiscuousFive.gene());
                 evidenceBuilder.fusionThreeGene(geneFusion.threeGene());
                 evidenceBuilder.event(
@@ -103,12 +103,12 @@ public class FusionEvidenceAnalyzer {
             if (actionablePromiscuousThree.gene().equals(geneFusion.threeGene())) {
                 ImmutableEvidenceItem.Builder evidenceBuilder = fromActionableFusionsPromiscuousThree(actionablePromiscuousThree);
                 evidenceBuilder.type("promiscuous three");
-                evidenceBuilder.gene(Strings.EMPTY);
-                evidenceBuilder.chromosome(Strings.EMPTY);
-                evidenceBuilder.position(Strings.EMPTY);
-                evidenceBuilder.ref(Strings.EMPTY);
-                evidenceBuilder.alt(Strings.EMPTY);
-                evidenceBuilder.cnvType(Strings.EMPTY);
+                evidenceBuilder.gene("NA");
+                evidenceBuilder.chromosome("NA");
+                evidenceBuilder.position("NA");
+                evidenceBuilder.ref("NA");
+                evidenceBuilder.alt("NA");
+                evidenceBuilder.cnvType("NA");
                 evidenceBuilder.fusionFiveGene(geneFusion.fiveGene());
                 evidenceBuilder.fusionThreeGene(actionablePromiscuousThree.gene());
                 evidenceBuilder.event(

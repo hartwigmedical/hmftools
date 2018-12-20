@@ -81,10 +81,12 @@ public class LoadEvidenceData {
                 final List<EvidenceItem> AllEvidenceItemsVariant = extractAllEvidenceItems(evidencePerVariant);
                 final List<ClinicalTrial> allClinicalTrialsVariants = extractAllTrials(AllEvidenceItemsVariant);
 
+                LOGGER.info(AllEvidenceItemsVariant);
                 LOGGER.info("Writing evidence items of somatic variants to DB");
                 LOGGER.info("Counts of all evidence items: " + AllEvidenceItemsVariant.size());
                 dbWriter.writeClinicalEvidence(sample, AllEvidenceItemsVariant);
 
+                LOGGER.info(allClinicalTrialsVariants);
                 LOGGER.info("Writing clinical trials of somatic variants to DB");
                 LOGGER.info("Counts of all clinical trials: " + allClinicalTrialsVariants.size());
                 dbWriter.writeClinicalTrial(sample, allClinicalTrialsVariants);
@@ -98,10 +100,12 @@ public class LoadEvidenceData {
                 final List<EvidenceItem> AllEvidenceItemsGeneCopyNumber = extractAllEvidenceItems(evidencePerGeneCopyNumber);
                 final List<ClinicalTrial> allClinicalTrialsGeneCopyNumber = extractAllTrials(AllEvidenceItemsGeneCopyNumber);
 
+                LOGGER.info(AllEvidenceItemsGeneCopyNumber);
                 LOGGER.info("Writing evidence items of gene copy numbers to DB");
                 LOGGER.info("Counts of all evidence items: " + AllEvidenceItemsGeneCopyNumber.size());
                 dbWriter.writeClinicalEvidence(sample, AllEvidenceItemsGeneCopyNumber);
 
+                LOGGER.info(allClinicalTrialsGeneCopyNumber);
                 LOGGER.info("Writing clinical trials of gene copy numbers to DB");
                 LOGGER.info("Counts of all clinical trials: " + allClinicalTrialsGeneCopyNumber.size());
                 dbWriter.writeClinicalTrial(sample, allClinicalTrialsGeneCopyNumber);
@@ -115,10 +119,12 @@ public class LoadEvidenceData {
                 final List<EvidenceItem> allEvidenceItemsGeneFusions = extractAllEvidenceItems(evidencePerFusion);
                 final List<ClinicalTrial> allClinicalTrialsGeneFusions = extractAllTrials(allEvidenceItemsGeneFusions);
 
+                LOGGER.info(allEvidenceItemsGeneFusions);
                 LOGGER.info("Writing evidence items of gene fusions to DB");
                 LOGGER.info("Counts of all evidence items: " + allEvidenceItemsGeneFusions.size());
                 dbWriter.writeClinicalEvidence(sample, allEvidenceItemsGeneFusions);
 
+                LOGGER.info(allClinicalTrialsGeneFusions);
                 LOGGER.info("Writing clinical trials of gene fusions to DB");
                 LOGGER.info("Counts of all clinical trials: " + allClinicalTrialsGeneFusions.size());
                 dbWriter.writeClinicalTrial(sample, allClinicalTrialsGeneFusions);

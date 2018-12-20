@@ -61,9 +61,9 @@ public class SomaticVariantEvidenceAnalyzer {
                 evidenceBuilder.position(Long.toString(actionableVariant.position()));
                 evidenceBuilder.ref(actionableVariant.ref());
                 evidenceBuilder.alt(actionableVariant.alt());
-                evidenceBuilder.cnvType(Strings.EMPTY);
-                evidenceBuilder.fusionFiveGene(Strings.EMPTY);
-                evidenceBuilder.fusionThreeGene(Strings.EMPTY);
+                evidenceBuilder.cnvType("NA");
+                evidenceBuilder.fusionFiveGene("NA");
+                evidenceBuilder.fusionThreeGene("NA");
                 evidenceBuilder.event(eventString(variant));
                 evidenceBuilder.isOnLabel(cancerTypeAnalyzer.isCancerTypeMatch(actionableVariant.cancerType(), primaryTumorLocation));
 
@@ -80,11 +80,11 @@ public class SomaticVariantEvidenceAnalyzer {
                 evidenceBuilder.gene(actionableRange.gene());
                 evidenceBuilder.chromosome(actionableRange.chromosome());
                 evidenceBuilder.position(actionableRange.start() + " - " + actionableRange.end());
-                evidenceBuilder.ref(Strings.EMPTY);
-                evidenceBuilder.alt(Strings.EMPTY);
-                evidenceBuilder.cnvType(Strings.EMPTY);
-                evidenceBuilder.fusionFiveGene(Strings.EMPTY);
-                evidenceBuilder.fusionThreeGene(Strings.EMPTY);
+                evidenceBuilder.ref("NA");
+                evidenceBuilder.alt("NA");
+                evidenceBuilder.cnvType("NA");
+                evidenceBuilder.fusionFiveGene("NA");
+                evidenceBuilder.fusionThreeGene("NA");
                 evidenceBuilder.event(eventString(variant));
                 evidenceBuilder.isOnLabel(cancerTypeAnalyzer.isCancerTypeMatch(actionableRange.cancerType(), primaryTumorLocation));
 
