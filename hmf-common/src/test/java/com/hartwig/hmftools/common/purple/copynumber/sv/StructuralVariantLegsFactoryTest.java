@@ -121,7 +121,7 @@ public class StructuralVariantLegsFactoryTest {
     }
 
     private void assertReduce(@NotNull final StructuralVariantLeg expected, @NotNull final List<StructuralVariantLeg> legs) {
-        final StructuralVariantLeg result = reduce(legs);
+        final StructuralVariantLeg result = reduce(expected, legs);
         assertEquals(expected.alleleFrequency(), result.alleleFrequency(), EPSILON);
         assertEquals(expected.orientation(), result.orientation());
     }
