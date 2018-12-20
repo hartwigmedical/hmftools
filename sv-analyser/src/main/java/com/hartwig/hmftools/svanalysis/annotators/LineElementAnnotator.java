@@ -4,6 +4,7 @@ import static com.hartwig.hmftools.common.variant.structural.StructuralVariantTy
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.svanalysis.analysis.LinkFinder.SHORT_DB_LENGTH;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.areVariantsLinkedByDistance;
+import static com.hartwig.hmftools.svanalysis.types.SvCluster.isSpecificCluster;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_END;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_START;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.isStart;
@@ -11,6 +12,7 @@ import static com.hartwig.hmftools.svanalysis.types.SvVarData.isStart;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -137,8 +139,9 @@ public class LineElementAnnotator {
     public static void markLineCluster(final SvCluster cluster, int proximityLength)
     {
         /* Identify a suspected LINE element if:
-           - has 2+ BND within 5kb NOT forming a DB of < 30 bases
+           - has 2+ BND within 5kb NOT forming a short DB bases on the LINE arm
                 AND at least one SV also within 5kb having poly A/T INS sequence
+                AND either the 2 BNDs going to different chromosomes or forming a short DB on their non-line (remote) arm
            - OR at least 1 BND with a remote SGL forming a 30 base DB (ie on the remote arm)
                 AND EITHER at least one SV also within 5kb OR the remote SGL having poly A/T INS sequence
 
@@ -157,6 +160,8 @@ public class LineElementAnnotator {
             return;
         }
 
+        isSpecificCluster(cluster);
+
         boolean hasSuspected = false;
 
         final Map<String, List<SvBreakend>> chrBreakendMap = cluster.getChrBreakendMap();
@@ -173,29 +178,39 @@ public class LineElementAnnotator {
                 if (var.getLineElement(breakend.usesStart()).equals(SUSPECTED_LINE_ELEMENT))
                     continue;
 
-                boolean hasPolyAorT = hasPolyAorTMotif(var);
-                int bndCount = 0;
+                SvVarData polyATVar = hasPolyAorTMotif(var) ? var : null;
+                List<String> uniqueBndChromosomes = Lists.newArrayList();
+                boolean hasRemoteShortBndDB = false;
+                List<SvVarData> linkingBnds = Lists.newArrayList();
+
                 boolean isSuspectGroup = false;
 
                 if (var.type() == BND)
                 {
-                    ++bndCount;
+                    uniqueBndChromosomes.add(breakend.chromosome());
+                    uniqueBndChromosomes.add(var.chromosome(!breakend.usesStart()));
+
+                    linkingBnds.add(var);
 
                     // test for a remote SGL in a DB
                     final SvLinkedPair dbPair = var.getDBLink(!breakend.usesStart());
 
-                    if (dbPair != null && dbPair.length() <= SHORT_DB_LENGTH && dbPair.getOtherSV(var).type() == SGL)
+                    if (dbPair != null && dbPair.length() <= SHORT_DB_LENGTH && dbPair.getOtherSV(var).type() == SGL
+                    && dbPair.getOtherSV(var).getCluster() == cluster)
                     {
-                        ++bndCount;
+                        hasRemoteShortBndDB = true;
+                        final SvVarData sgl = dbPair.getOtherSV(var);
+                        uniqueBndChromosomes.add(sgl.chromosome(true));
+                        linkingBnds.add(sgl);
 
-                        if (hasPolyAorTMotif(dbPair.getOtherSV(var)))
+                        if (hasPolyAorTMotif(sgl))
                         {
-                            hasPolyAorT = true;
+                            polyATVar = sgl;
                         }
                     }
                 }
 
-                if(bndCount == 2 && hasPolyAorT)
+                if(hasRemoteShortBndDB && polyATVar != null)
                 {
                     isSuspectGroup = true;
                 }
@@ -210,23 +225,41 @@ public class LineElementAnnotator {
                         if (nextBreakend.position() - breakend.position() > proximityLength)
                             break;
 
-                        if (!hasPolyAorT)
+                        if (polyATVar == null && hasPolyAorTMotif(nextBreakend.getSV()))
                         {
-                            hasPolyAorT = hasPolyAorTMotif(nextBreakend.getSV());
+                            polyATVar = nextBreakend.getSV();
                         }
 
-                        if (bndCount < 2 && nextBreakend.getSV().type() == BND)
+                        if (nextBreakend.getSV().type() == BND)
                         {
                             final SvLinkedPair dbPair = nextBreakend.getSV().getDBLink(nextBreakend.usesStart());
                             final SvLinkedPair nextDbPair = prevBreakend.getSV().getDBLink(prevBreakend.usesStart());
 
                             if (dbPair == null || dbPair != nextDbPair || dbPair.length() > SHORT_DB_LENGTH)
                             {
-                                ++bndCount;
+                                // now check the other chromosome for this BND or whether it forms a short DB
+                                final String otherChr = nextBreakend.getSV().chromosome(!nextBreakend.usesStart());
+
+                                if(!uniqueBndChromosomes.contains(otherChr))
+                                {
+                                    linkingBnds.add(nextBreakend.getSV());
+                                    uniqueBndChromosomes.add(otherChr);
+                                }
+                                else
+                                {
+                                    final SvLinkedPair remoteDbPair = nextBreakend.getSV().getDBLink(!nextBreakend.usesStart());
+
+                                    if(remoteDbPair != null && remoteDbPair.length() <= SHORT_DB_LENGTH
+                                    && remoteDbPair.getOtherSV(nextBreakend.getSV()) == prevBreakend.getSV())
+                                    {
+                                        linkingBnds.add(nextBreakend.getSV());
+                                        hasRemoteShortBndDB = true;
+                                    }
+                                }
                             }
                         }
 
-                        if (bndCount >= 2 && hasPolyAorT)
+                        if ((uniqueBndChromosomes.size() >= 3 || hasRemoteShortBndDB) && polyATVar != null)
                         {
                             isSuspectGroup = true;
                             break;
@@ -236,6 +269,11 @@ public class LineElementAnnotator {
 
                 if (!isSuspectGroup)
                     continue;
+
+                final String linkingIdsStr = linkingBnds.stream().map(x -> x.id()).collect(Collectors.toList()).toString();
+
+                LOGGER.debug("cluster({}) lineChr({}) uniqueChr({}) linkingSVs({}) hasRemoteShortDB({}) polyAT SV({})",
+                        cluster.id(), breakend.chromosome(), uniqueBndChromosomes.toString(), linkingIdsStr, hasRemoteShortBndDB, polyATVar.id());
 
                 hasSuspected = true;
 

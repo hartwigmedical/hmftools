@@ -63,11 +63,9 @@ public class LineTests
         int proximity = 5000;
 
         // scenario 1:
-        // 2 BNDs within 5KB and 1 have poly A/T and not forming a DB
-        // if other breakends form a DB, don't mark
-
-        SvVarData bnd1 = createSv(tester.nextVarId(), "1", "2", 100, 100,  -1, 1, BND, POLY_A_MOTIF);
-        SvVarData bnd2 = createSv(tester.nextVarId(), "1", "2", 200, 200,  1, -1, BND, POLY_A_MOTIF);
+        // 2 BNDs within 5KB and 1 have poly A/T and not forming a DB with other breakends forming a short DB
+        SvVarData bnd1 = createSv(tester.nextVarId(), "1", "2", 100, 150,  -1, 1, BND, POLY_A_MOTIF);
+        SvVarData bnd2 = createSv(tester.nextVarId(), "1", "2", 200, 170,  1, -1, BND, "");
 
         SvCluster cluster = new SvCluster(0);
         cluster.addVariant(bnd1);
@@ -81,15 +79,15 @@ public class LineTests
         // in this case because the DB isn't short on the originating arm, both ends are marked as suspect
         assertEquals(bnd1.getLineElement(true), SUSPECTED_LINE_ELEMENT);
         assertEquals(bnd2.getLineElement(true), SUSPECTED_LINE_ELEMENT);
-        assertEquals(bnd1.getLineElement(false), SUSPECTED_LINE_ELEMENT);
-        assertEquals(bnd2.getLineElement(false), SUSPECTED_LINE_ELEMENT);
+        assertEquals(bnd1.getLineElement(false), NO_LINE_ELEMENT);
+        assertEquals(bnd2.getLineElement(false), NO_LINE_ELEMENT);
         assertTrue(cluster.hasLinkingLineElements());
 
-        // mark the DB short to mark only the insert end as line
+        // now with BNDs going to different arms
         tester.clearClustersAndSVs();
 
         bnd1 = createSv(tester.nextVarId(), "1", "2", 100, 100,  -1, 1, BND, POLY_A_MOTIF);
-        bnd2 = createSv(tester.nextVarId(), "1", "2", 200, 110,  1, -1, BND, POLY_A_MOTIF);
+        bnd2 = createSv(tester.nextVarId(), "1", "3", 200, 110,  1, -1, BND, "");
 
         cluster = new SvCluster(0);
         cluster.addVariant(bnd1);
@@ -100,7 +98,6 @@ public class LineTests
 
         leAnnotator.markLineCluster(cluster, proximity);
 
-        // in this case because the DB isn't short on the originating arm, both ends are marked as suspect
         assertTrue(bnd1.getLineElement(true).equals(SUSPECTED_LINE_ELEMENT));
         assertTrue(bnd2.getLineElement(true).equals(SUSPECTED_LINE_ELEMENT));
         assertEquals(bnd1.getLineElement(false), NO_LINE_ELEMENT);
@@ -122,7 +119,6 @@ public class LineTests
 
         leAnnotator.markLineCluster(cluster, proximity);
 
-        // in this case because the DB isn't short on the originating arm, both ends are marked as suspect
         assertTrue(bnd1.getLineElement(true).equals(SUSPECTED_LINE_ELEMENT));
         assertTrue(sgl.getLineElement(true).equals(NO_LINE_ELEMENT));
         assertEquals(bnd1.getLineElement(false), NO_LINE_ELEMENT);
@@ -143,7 +139,27 @@ public class LineTests
 
         leAnnotator.markLineCluster(cluster, proximity);
 
-        // in this case because the DB isn't short on the originating arm, both ends are marked as suspect
+        assertTrue(bnd1.getLineElement(true).equals(NO_LINE_ELEMENT));
+        assertTrue(bnd2.getLineElement(true).equals(NO_LINE_ELEMENT));
+        assertEquals(bnd1.getLineElement(false), NO_LINE_ELEMENT);
+        assertEquals(bnd2.getLineElement(false), NO_LINE_ELEMENT);
+        assertTrue(!cluster.hasLinkingLineElements());
+
+        // now test BNDs in a longer DB on the remote arm which will invalidate the line test
+        tester.clearClustersAndSVs();
+
+        bnd1 = createSv(tester.nextVarId(), "1", "2", 100, 100,  -1, 1, BND, "");
+        bnd2 = createSv(tester.nextVarId(), "1", "2", 200, 200,  1, -1, BND, POLY_A_MOTIF);
+
+        cluster = new SvCluster(0);
+        cluster.addVariant(bnd1);
+        cluster.addVariant(bnd2);
+
+        tester.addClusterAndSVs(cluster);
+        tester.preClusteringInit();
+
+        leAnnotator.markLineCluster(cluster, proximity);
+
         assertTrue(bnd1.getLineElement(true).equals(NO_LINE_ELEMENT));
         assertTrue(bnd2.getLineElement(true).equals(NO_LINE_ELEMENT));
         assertEquals(bnd1.getLineElement(false), NO_LINE_ELEMENT);
@@ -167,7 +183,6 @@ public class LineTests
 
         leAnnotator.markLineCluster(cluster, proximity);
 
-        // in this case because the DB isn't short on the originating arm, both ends are marked as suspect
         assertEquals(bnd1.getLineElement(true), SUSPECTED_LINE_ELEMENT);
         assertEquals(bnd2.getLineElement(true), SUSPECTED_LINE_ELEMENT);
         assertEquals(del.getLineElement(true), SUSPECTED_LINE_ELEMENT);
