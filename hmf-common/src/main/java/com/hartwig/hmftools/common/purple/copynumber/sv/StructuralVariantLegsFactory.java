@@ -86,12 +86,16 @@ final class StructuralVariantLegsFactory {
     static StructuralVariantLeg reduce(@NotNull final List<StructuralVariantLeg> legs) {
         double maxPositive = 0;
         double maxNegative = 0;
+        StructuralVariantLeg positiveTemplate = null;
+        StructuralVariantLeg negativeTemplate = null;
 
         for (StructuralVariantLeg leg : legs) {
             if (leg.orientation() == 1) {
                 maxPositive = Math.max(maxPositive, leg.alleleFrequency());
+                positiveTemplate = leg;
             } else {
                 maxNegative = Math.max(maxNegative, leg.alleleFrequency());
+                negativeTemplate = leg;
             }
         }
 
@@ -112,8 +116,9 @@ final class StructuralVariantLegsFactory {
         }
 
         byte orientation = (byte) (Doubles.greaterThan(maxPositive, maxNegative) ? 1 : -1);
+        StructuralVariantLeg template = Doubles.greaterThan(maxPositive, maxNegative) ? positiveTemplate : negativeTemplate;
         double vaf = Math.abs(maxPositive - maxNegative);
-        return ImmutableStructuralVariantLegImpl.builder().from(legs.get(0)).orientation(orientation).alleleFrequency(vaf).build();
+        return ImmutableStructuralVariantLegImpl.builder().from(template).orientation(orientation).alleleFrequency(vaf).build();
     }
 
     @NotNull
