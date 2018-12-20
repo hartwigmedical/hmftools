@@ -298,7 +298,7 @@ public class BachelorPP
 
             if (sampleRecordsMap.size() > 1)
             {
-                LOGGER.debug("{} unique samples after filtering", sampleRecordsMap.size());
+                LOGGER.info("{} unique samples after filtering", sampleRecordsMap.size());
             }
         }
         else
@@ -310,6 +310,8 @@ public class BachelorPP
         {
             final String specificSample = entry.getKey();
             List<BachelorGermlineVariant> sampleRecords = entry.getValue();
+
+            LOGGER.info("sample({}) processing {} germline reports", specificSample, sampleRecords.size());
 
             // sort by chromosome and position
             Collections.sort(sampleRecords);
