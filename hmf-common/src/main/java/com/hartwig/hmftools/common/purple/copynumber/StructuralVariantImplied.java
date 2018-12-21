@@ -1,7 +1,9 @@
 package com.hartwig.hmftools.common.purple.copynumber;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ArrayListMultimap;
@@ -9,8 +11,7 @@ import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.chromosome.Chromosome;
 import com.hartwig.hmftools.common.chromosome.HumanChromosome;
-import com.hartwig.hmftools.common.position.GenomePositionSelector;
-import com.hartwig.hmftools.common.position.GenomePositionSelectorFactory;
+import com.hartwig.hmftools.common.position.GenomePosition;
 import com.hartwig.hmftools.common.position.GenomePositions;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.copynumber.sv.StructuralVariantLegPloidy;
@@ -24,13 +25,12 @@ class StructuralVariantImplied {
 
     private final double averageCopyNumber;
     private final int averageReadDepth;
-    private final StructuralVariantLegPloidyFactory<CombinedRegion> structuralVariantPloidyFactory;
+    private final StructuralVariantLegPloidyFactory<CombinedRegion> svPloidyFactory;
 
     StructuralVariantImplied(int averageReadDepth, double averageCopyNumber, final PurityAdjuster purityAdjuster) {
         this.averageCopyNumber = averageCopyNumber;
         this.averageReadDepth = averageReadDepth;
-        this.structuralVariantPloidyFactory =
-                new StructuralVariantLegPloidyFactory<>(purityAdjuster, x -> x.isProcessed() ? x.tumorCopyNumber() : 0);
+        this.svPloidyFactory = new StructuralVariantLegPloidyFactory<>(purityAdjuster, x -> x.isProcessed() ? x.tumorCopyNumber() : 0);
     }
 
     @NotNull
@@ -49,8 +49,9 @@ class StructuralVariantImplied {
                         .forEach(x -> processedCopyNumbers.put(chromosome, x));
             }
 
-            final GenomePositionSelector<StructuralVariantLegPloidy> selector =
-                    GenomePositionSelectorFactory.create(createPloidies(structuralVariants, processedCopyNumbers));
+            final List<StructuralVariantLegPloidy> ploidyList = svPloidyFactory.create(structuralVariants, processedCopyNumbers);
+            final Map<GenomePosition, StructuralVariantLegPloidy> ploidyMap =
+                    ploidyList.stream().collect(Collectors.toMap(x -> GenomePositions.create(x.chromosome(), x.cnaPosition()), x -> x));
 
             for (Chromosome chromosome : HumanChromosome.values()) {
                 final List<CombinedRegion> chromosomeCopyNumbers = copyNumbers.get(chromosome);
@@ -58,11 +59,11 @@ class StructuralVariantImplied {
                 for (final CombinedRegion copyNumber : chromosomeCopyNumbers) {
                     if (implyCopyNumberFromSV(copyNumber)) {
                         final Optional<StructuralVariantLegPloidy> optionalStart =
-                                select(copyNumber.chromosome(), copyNumber.start(), selector).filter(x -> x.impliedRightCopyNumberWeight()
-                                        > 0);
+                                Optional.ofNullable(ploidyMap.get(GenomePositions.create(copyNumber.chromosome(), copyNumber.start())))
+                                        .filter(x -> x.impliedRightCopyNumberWeight() > 0);
                         final Optional<StructuralVariantLegPloidy> optionalEnd =
-                                select(copyNumber.chromosome(), copyNumber.end() + 1, selector).filter(x -> x.impliedLeftCopyNumberWeight()
-                                        > 0);
+                                Optional.ofNullable(ploidyMap.get(GenomePositions.create(copyNumber.chromosome(), copyNumber.end() + 1)))
+                                        .filter(x -> x.impliedLeftCopyNumberWeight() > 0);
                         if (optionalStart.isPresent() || optionalEnd.isPresent()) {
                             svInferred = true;
                             inferCopyNumberFromStructuralVariants(copyNumber, optionalStart, optionalEnd);
@@ -83,19 +84,6 @@ class StructuralVariantImplied {
         return copyNumbers;
     }
 
-    @NotNull
-    private Optional<StructuralVariantLegPloidy> select(@NotNull final String chromosome, long position,
-            @NotNull final GenomePositionSelector<StructuralVariantLegPloidy> selector) {
-
-        final Optional<StructuralVariantLegPloidy> posOrientation =
-                selector.select(GenomePositions.create(chromosome, position - 1)).filter(x -> x.orientation() == 1);
-        if (posOrientation.isPresent()) {
-            return posOrientation;
-        }
-
-        return selector.select(GenomePositions.create(chromosome, position)).filter(x -> x.orientation() == -1);
-    }
-
     private void inferCopyNumberFromStructuralVariants(@NotNull final CombinedRegion region,
             final Optional<StructuralVariantLegPloidy> start, final Optional<StructuralVariantLegPloidy> end) {
         region.setTumorCopyNumber(CopyNumberMethod.STRUCTURAL_VARIANT,
@@ -113,12 +101,6 @@ class StructuralVariantImplied {
 
         double unconstrainedResult = (startCopyNumber * startWeight + endCopyNumber * endWeight) / (startWeight + endWeight);
         return Math.max(0, unconstrainedResult);
-    }
-
-    @NotNull
-    private List<StructuralVariantLegPloidy> createPloidies(final List<StructuralVariant> structuralVariants,
-            @NotNull ListMultimap<Chromosome, CombinedRegion> copyNumbers) {
-        return structuralVariantPloidyFactory.create(structuralVariants, copyNumbers);
     }
 
     private long missingCopyNumberCount(Multimap<?, CombinedRegion> copyNumbers) {
