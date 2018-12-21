@@ -9,21 +9,22 @@ All sites examined are written to VCF with some soft filtering applied to the re
 ## Sites
 The supplied set of known hotspots is combined with any inframe indels found within specified regions of the tumor to form the complete set of sites for which to collect evidence. 
 
-To find inframe indel sites, SAGE examines the CIGAR field of all tumor alignments within the supplied coding regions looking for inserts or deletes that are divisible by 3, e.g., 100M3D50M and 60M9I81M.
+To find inframe indel sites, SAGE examines the CIGAR field of all tumor alignments within the supplied coding regions looking for inserts or deletes that are divisible by 3, e.g., 101M3D50M and 60M9I82M.
 
 ## Accumulating Evidence
 In an alignment, evidence of the alt is accumulated only if:
-1. Quality of the read is sufficient; and
+1. Quality of the mapping is sufficient [1]; 
+2. Quality of the base is sufficient [13]; and
 2. The alt matches exactly. 
 
-The quality of an insert, SNV or MNV is calculated as the average quality of all alt bases. The quality of a delete is taken from the base after the delete if available, otherwise from the base prior. The minimum acceptable quality is set with min_base_quality [13].
+The base quality of an insert, SNV or MNV in a single alignment is calculated as the average base quality of the alt bases. The base quality of a delete is taken from the base after the delete if available, otherwise from the base prior. The minimum acceptable quality is set with min_base_quality [13].
 
-SNVs and MNVs cannot be part of a larger MNV, eg, C > T does not match CA > TT. There must be at least one base either side of the variant that match the reference exactly. 
+SNVs and MNVs cannot be part of a larger MNV, eg, CA > TT does not match CAT > TTG. There must be at least one base either side of the variant that match the reference exactly. 
 
-Only simple indels are considered (eg A > AC). Evidence of complex indels (eg, A > CC) will not accumulate. 
+Only simple indels are considered (eg A > ACT). Evidence of complex indels (eg, A > CCT) will not accumulate. 
 
 ## Filtering Evidence
-When writing to a file, a number of soft filters are applied. 
+When writing to a file, a number of soft filters are applied. The quality filters are applied to the sum of the variant base quality scores.
 
 Any variant will be filtered as **LOW_CONFIDENCE** under the following conditions:
 1. Insufficient tumor allelic depth, i.e., tumor allelic depth < min_tumor_reads [2]; or
