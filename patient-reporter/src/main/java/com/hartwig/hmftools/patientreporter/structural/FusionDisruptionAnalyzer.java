@@ -56,8 +56,9 @@ public final class FusionDisruptionAnalyzer {
 
     private static boolean fiveThreeCombinationExists(@NotNull List<GeneFusion> fusions, @NotNull SimpleGeneFusion newFusion) {
         for (GeneFusion fusion : fusions) {
-            if (fusion.upstreamTrans().geneName().equals(newFusion.fiveGene())
-                    && fusion.downstreamTrans().geneName().equals(newFusion.threeGene())) {
+            if (fusion.upstreamTrans().geneName().equals(newFusion.fiveGene()) && fusion.downstreamTrans()
+                    .geneName()
+                    .equals(newFusion.threeGene())) {
                 return true;
             }
         }
@@ -79,11 +80,21 @@ public final class FusionDisruptionAnalyzer {
 
     @NotNull
     private static GeneFusion pickFusionToReport(@NotNull List<GeneFusion> fusions, @NotNull SimpleGeneFusion simpleFusion) {
-        for (GeneFusion fusionReport: fusions) {
-            if (fusionReport.upstreamTrans().isCanonical() && fusionReport.downstreamTrans().isCanonical()) {
-                return fusionReport;
+        List<GeneFusion> fusionsMatchWithSimpleFusion = Lists.newArrayList();
+        for (GeneFusion fusion : fusions) {
+            if (fusion.upstreamTrans().geneName().equals(simpleFusion.fiveGene()) && fusion.downstreamTrans()
+                    .geneName()
+                    .equals(simpleFusion.threeGene())) {
+                fusionsMatchWithSimpleFusion.add(fusion);
             }
         }
+
+        for (GeneFusion fusion : fusionsMatchWithSimpleFusion) {
+            if (fusion.upstreamTrans().isCanonical() && fusion.downstreamTrans().isCanonical()) {
+                return fusion;
+            }
+        }
+
         // KODU: If there is no canonical-canonical fusion, return the first one arbitrarily.
         assert !fusions.isEmpty();
         return fusions.get(0);
