@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.actionability.ActionabilityAnalyzer;
@@ -16,9 +15,7 @@ import com.hartwig.hmftools.common.context.ProductionRunContextFactory;
 import com.hartwig.hmftools.common.context.RunContext;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
-import com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion;
 import com.hartwig.hmftools.common.variant.structural.annotation.SimpleGeneFusion;
-import com.hartwig.hmftools.common.variant.structural.annotation.StructuralVariantAnalysis;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 import org.apache.commons.cli.CommandLine;
@@ -32,7 +29,6 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 public class LoadEvidenceData {
-
 
     private static final Logger LOGGER = LogManager.getLogger(LoadEvidenceData.class);
     private static final String KNOWLEDGEBASE_PATH = "knowledgebase_path";
@@ -50,90 +46,89 @@ public class LoadEvidenceData {
         final String runDirectoryPath = cmd.getOptionValue(RUN_DIR);
         final String knowledgebase_path = cmd.getOptionValue(KNOWLEDGEBASE_PATH);
 
+        if (Utils.anyNull(userName, password, databaseUrl, runDirectoryPath, knowledgebase_path)) {
+            printUsageAndExit(options);
+        }
+
+        final File runDirectory = new File(runDirectoryPath);
+        if (!runDirectory.isDirectory()) {
+            LOGGER.warn(String.format("run_dir %s has to be an actual directory", runDirectory));
+            printUsageAndExit(options);
+        }
+
         final DatabaseAccess dbAccess = databaseAccess(cmd);
 
-        if (Utils.anyNull(userName, password, databaseUrl, runDirectoryPath)) {
-            HelpFormatter formatter = new HelpFormatter();
-            formatter.printHelp("patient-db - load evidence data", options);
-        } else {
-            final File runDirectory = new File(runDirectoryPath);
-            if (runDirectory.isDirectory()) {
-                final String jdbcUrl = "jdbc:" + databaseUrl;
-                final DatabaseAccess dbWriter = new DatabaseAccess(userName, password, jdbcUrl);
+        RunContext runContext = ProductionRunContextFactory.fromRunDirectory(runDirectory.toPath().toString());
+        final String sample = runContext.tumorSample();
+        ActionabilityAnalyzer actionabilityAnalyzer = ActionabilityAnalyzer.fromKnowledgebase(knowledgebase_path);
 
-                RunContext runContext = ProductionRunContextFactory.fromRunDirectory(runDirectory.toPath().toString());
-                final String sample = runContext.tumorSample();
-                ActionabilityAnalyzer actionabilityAnalyzer = ActionabilityAnalyzer.fromKnowledgebase(knowledgebase_path);
+        LOGGER.info("sample: " + sample);
 
-                LOGGER.info("sample: " + sample);
+        LOGGER.info("Reading clinical Data from DB");
+        final String primaryTumorLocation = dbAccess.readTumorLocation(sample);
 
-                LOGGER.info("Reading clinical Data from DB");
-                final String primaryTumorLocation = dbAccess.readTumorLocation(sample);
+        LOGGER.info(primaryTumorLocation);
 
-                LOGGER.info(primaryTumorLocation);
+        LOGGER.info("Reading somatic variants from DB");
+        final List<EnrichedSomaticVariant> variants = dbAccess.readSomaticVariants(sample);
 
-                LOGGER.info("Reading somatic variants from DB");
-                final List<EnrichedSomaticVariant> variants = dbAccess.readSomaticVariants(sample);
+        Map<EnrichedSomaticVariant, List<EvidenceItem>> evidencePerVariant =
+                actionabilityAnalyzer.evidenceForSomaticVariants(variants, primaryTumorLocation);
 
-                Map<EnrichedSomaticVariant, List<EvidenceItem>> evidencePerVariant =
-                        actionabilityAnalyzer.evidenceForSomaticVariants(variants, primaryTumorLocation);
+        final List<EvidenceItem> AllEvidenceItemsVariant = extractAllEvidenceItems(evidencePerVariant);
+        final List<ClinicalTrial> allClinicalTrialsVariants = extractAllTrials(AllEvidenceItemsVariant);
 
-                final List<EvidenceItem> AllEvidenceItemsVariant = extractAllEvidenceItems(evidencePerVariant);
-                final List<ClinicalTrial> allClinicalTrialsVariants = extractAllTrials(AllEvidenceItemsVariant);
+        LOGGER.info(AllEvidenceItemsVariant);
+        LOGGER.info("Writing evidence items of somatic variants to DB");
+        LOGGER.info("Counts of all evidence items: " + AllEvidenceItemsVariant.size());
+        dbAccess.writeClinicalEvidence(sample, AllEvidenceItemsVariant);
 
-                LOGGER.info(AllEvidenceItemsVariant);
-                LOGGER.info("Writing evidence items of somatic variants to DB");
-                LOGGER.info("Counts of all evidence items: " + AllEvidenceItemsVariant.size());
-                dbWriter.writeClinicalEvidence(sample, AllEvidenceItemsVariant);
+        LOGGER.info(allClinicalTrialsVariants);
+        LOGGER.info("Writing clinical trials of somatic variants to DB");
+        LOGGER.info("Counts of all clinical trials: " + allClinicalTrialsVariants.size());
+        dbAccess.writeClinicalTrial(sample, allClinicalTrialsVariants);
 
-                LOGGER.info(allClinicalTrialsVariants);
-                LOGGER.info("Writing clinical trials of somatic variants to DB");
-                LOGGER.info("Counts of all clinical trials: " + allClinicalTrialsVariants.size());
-                dbWriter.writeClinicalTrial(sample, allClinicalTrialsVariants);
+        LOGGER.info("Reading gene copy from DB");
+        final List<GeneCopyNumber> geneCopyNumber = dbAccess.readGeneCopynumbers(sample);
 
-                LOGGER.info("Reading gene copy from DB");
-                final List<GeneCopyNumber> geneCopyNumber = dbAccess.readGeneCopynumbers(sample);
+        Map<GeneCopyNumber, List<EvidenceItem>> evidencePerGeneCopyNumber =
+                actionabilityAnalyzer.evidenceForCopyNumbers(geneCopyNumber, primaryTumorLocation);
 
-                Map<GeneCopyNumber, List<EvidenceItem>> evidencePerGeneCopyNumber =
-                        actionabilityAnalyzer.evidenceForCopyNumbers(geneCopyNumber, primaryTumorLocation);
+        final List<EvidenceItem> AllEvidenceItemsGeneCopyNumber = extractAllEvidenceItems(evidencePerGeneCopyNumber);
+        final List<ClinicalTrial> allClinicalTrialsGeneCopyNumber = extractAllTrials(AllEvidenceItemsGeneCopyNumber);
 
-                final List<EvidenceItem> AllEvidenceItemsGeneCopyNumber = extractAllEvidenceItems(evidencePerGeneCopyNumber);
-                final List<ClinicalTrial> allClinicalTrialsGeneCopyNumber = extractAllTrials(AllEvidenceItemsGeneCopyNumber);
+        LOGGER.info(AllEvidenceItemsGeneCopyNumber);
+        LOGGER.info("Writing evidence items of gene copy numbers to DB");
+        LOGGER.info("Counts of all evidence items: " + AllEvidenceItemsGeneCopyNumber.size());
+        dbAccess.writeClinicalEvidence(sample, AllEvidenceItemsGeneCopyNumber);
 
-                LOGGER.info(AllEvidenceItemsGeneCopyNumber);
-                LOGGER.info("Writing evidence items of gene copy numbers to DB");
-                LOGGER.info("Counts of all evidence items: " + AllEvidenceItemsGeneCopyNumber.size());
-                dbWriter.writeClinicalEvidence(sample, AllEvidenceItemsGeneCopyNumber);
+        LOGGER.info(allClinicalTrialsGeneCopyNumber);
+        LOGGER.info("Writing clinical trials of gene copy numbers to DB");
+        LOGGER.info("Counts of all clinical trials: " + allClinicalTrialsGeneCopyNumber.size());
+        dbAccess.writeClinicalTrial(sample, allClinicalTrialsGeneCopyNumber);
 
-                LOGGER.info(allClinicalTrialsGeneCopyNumber);
-                LOGGER.info("Writing clinical trials of gene copy numbers to DB");
-                LOGGER.info("Counts of all clinical trials: " + allClinicalTrialsGeneCopyNumber.size());
-                dbWriter.writeClinicalTrial(sample, allClinicalTrialsGeneCopyNumber);
+        LOGGER.info("Reading gene fusions from DB");
+        final List<SimpleGeneFusion> analysesGeneFusions = dbAccess.readingGeneFusions(sample);
 
-                LOGGER.info("Reading gene fusions from DB");
-                final List<SimpleGeneFusion> analysesGeneFusions = dbAccess.readingGeneFusions(sample);
+        Map<SimpleGeneFusion, List<EvidenceItem>> evidencePerFusion =
+                actionabilityAnalyzer.evidenceForFusions(analysesGeneFusions, primaryTumorLocation);
 
-                Map<SimpleGeneFusion, List<EvidenceItem>> evidencePerFusion =
-                        actionabilityAnalyzer.evidenceForFusions(analysesGeneFusions, primaryTumorLocation);
+        final List<EvidenceItem> allEvidenceItemsGeneFusions = extractAllEvidenceItems(evidencePerFusion);
+        final List<ClinicalTrial> allClinicalTrialsGeneFusions = extractAllTrials(allEvidenceItemsGeneFusions);
 
-                final List<EvidenceItem> allEvidenceItemsGeneFusions = extractAllEvidenceItems(evidencePerFusion);
-                final List<ClinicalTrial> allClinicalTrialsGeneFusions = extractAllTrials(allEvidenceItemsGeneFusions);
+        LOGGER.info(allEvidenceItemsGeneFusions);
+        LOGGER.info("Writing evidence items of gene fusions to DB");
+        LOGGER.info("Counts of all evidence items: " + allEvidenceItemsGeneFusions.size());
+        dbAccess.writeClinicalEvidence(sample, allEvidenceItemsGeneFusions);
 
-                LOGGER.info(allEvidenceItemsGeneFusions);
-                LOGGER.info("Writing evidence items of gene fusions to DB");
-                LOGGER.info("Counts of all evidence items: " + allEvidenceItemsGeneFusions.size());
-                dbWriter.writeClinicalEvidence(sample, allEvidenceItemsGeneFusions);
-
-                LOGGER.info(allClinicalTrialsGeneFusions);
-                LOGGER.info("Writing clinical trials of gene fusions to DB");
-                LOGGER.info("Counts of all clinical trials: " + allClinicalTrialsGeneFusions.size());
-                dbWriter.writeClinicalTrial(sample, allClinicalTrialsGeneFusions);
-            }
-        }
+        LOGGER.info(allClinicalTrialsGeneFusions);
+        LOGGER.info("Writing clinical trials of gene fusions to DB");
+        LOGGER.info("Counts of all clinical trials: " + allClinicalTrialsGeneFusions.size());
+        dbAccess.writeClinicalTrial(sample, allClinicalTrialsGeneFusions);
     }
 
     @NotNull
-    public static List<ClinicalTrial> extractAllTrials(@NotNull List<EvidenceItem> evidenceItems) {
+    private static List<ClinicalTrial> extractAllTrials(@NotNull List<EvidenceItem> evidenceItems) {
         List<ClinicalTrial> trials = Lists.newArrayList();
         for (EvidenceItem evidence : evidenceItems) {
             if (evidence.source().isTrialSource()) {
@@ -166,7 +161,7 @@ public class LoadEvidenceData {
     }
 
     @NotNull
-    public static List<EvidenceItem> extractAllEvidenceItems(@NotNull Map<?, List<EvidenceItem>> evidenceItemMap) {
+    private static List<EvidenceItem> extractAllEvidenceItems(@NotNull Map<?, List<EvidenceItem>> evidenceItemMap) {
         return toList(evidenceItemMap);
     }
 
@@ -177,6 +172,12 @@ public class LoadEvidenceData {
             evidenceItemList.addAll(items);
         }
         return evidenceItemList;
+    }
+
+    private static void printUsageAndExit(@NotNull final Options options) {
+        HelpFormatter formatter = new HelpFormatter();
+        formatter.printHelp("patient-db - load evidence data", options);
+        System.exit(1);
     }
 
     @NotNull
