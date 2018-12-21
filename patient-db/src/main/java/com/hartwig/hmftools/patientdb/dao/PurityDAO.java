@@ -33,8 +33,7 @@ class PurityDAO {
     }
 
     @Nullable
-    PurityContext readPurityContext(@NotNull final String sample) {
-        @Nullable
+    PurityContext readPurityContext(@NotNull String sample) {
         Record result = context.select().from(PURITY).where(PURITY.SAMPLEID.eq(sample)).fetchOne();
         if (result == null) {
             return null;

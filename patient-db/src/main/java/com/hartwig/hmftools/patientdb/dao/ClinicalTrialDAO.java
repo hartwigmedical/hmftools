@@ -25,14 +25,14 @@ class ClinicalTrialDAO {
         this.context = context;
     }
 
-    void writeClinicalTrial(@NotNull String sample, @NotNull List<ClinicalTrial> clinicalTrial) {
-        LOGGER.info("writeClinicalTrial in ClinicalTrialDAO class");
+    void writeClinicalTrials(@NotNull String sample, @NotNull List<ClinicalTrial> clinicalTrial) {
+        LOGGER.info("writeClinicalTrials in ClinicalTrialDAO class");
         LOGGER.info(sample);
         LOGGER.info(clinicalTrial);
         deleteClinicalTrialForSample(sample);
 
         for (List<ClinicalTrial> trials : Iterables.partition(clinicalTrial, DB_BATCH_INSERT_SIZE)) {
-            LOGGER.info("Insert kolom table names");
+            LOGGER.info("Insert column table names");
             InsertValuesStep18 inserter = context.insertInto(CLINICALTRIALITEM,
                     CLINICALTRIALITEM.SAMPLEID,
                     CLINICALTRIALITEM.TYPEVARIANT,
