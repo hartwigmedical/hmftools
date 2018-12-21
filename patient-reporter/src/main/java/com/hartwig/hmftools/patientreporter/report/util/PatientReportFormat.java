@@ -51,7 +51,13 @@ public final class PatientReportFormat {
 
     @NotNull
     public static String ploidyVafField(double adjustedCopyNumber, double minorAllelePloidy, double adjustedVAF) {
-        return descriptiveBAF(adjustedCopyNumber, minorAllelePloidy) + " (" + PatientReportFormat.formatPercent(Math.min(1, adjustedVAF))
+        double adjustedVAFCorrect;
+        if (adjustedVAF > 0) {
+            adjustedVAFCorrect = adjustedVAF;
+        } else {
+            adjustedVAFCorrect = 0;
+        }
+        return descriptiveBAF(adjustedCopyNumber, minorAllelePloidy) + " (" + PatientReportFormat.formatPercent(Math.min(1, adjustedVAFCorrect))
                 + ")";
     }
 
