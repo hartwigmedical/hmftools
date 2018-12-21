@@ -103,6 +103,7 @@ public class SvAnalyser {
             SvSampleAnalyser sampleAnalyser = new SvSampleAnalyser(svaConfig);
 
             DriverGeneAnnotator driverGeneAnnotator = new DriverGeneAnnotator(dbAccess);
+            driverGeneAnnotator.loadConfig(cmd);
             boolean checkDrivers = cmd.hasOption(DRIVERS_CHECK);
 
             CNAnalyser cnAnalyser = new CNAnalyser(cmd.getOptionValue(DATA_OUTPUT_PATH), dbAccess);
@@ -122,7 +123,6 @@ public class SvAnalyser {
                 fusionAnalyser = new FusionDisruptionAnalyser();
                 fusionAnalyser.loadFusionReferenceData(cmd, cmd.getOptionValue(DATA_OUTPUT_PATH), samplesList.size() > 1);
             }
-
 
             int count = 0;
             for (final String sample : samplesList)
@@ -272,6 +272,7 @@ public class SvAnalyser {
         ResultsChecker.addCmdLineArgs(options);
         CNAnalyser.addCmdLineArgs(options);
         SvFusionAnalyser.addCmdLineArgs(options);
+        DriverGeneAnnotator.addCmdLineArgs(options);
 
         return options;
     }

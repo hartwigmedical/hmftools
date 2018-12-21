@@ -1255,7 +1255,8 @@ public class ClusterAnalyser {
                     int[] nextSVData = getNextClusterSVData(cluster, breakendList, pair);
                     pair.setNextSVData(nextSVData[NEXT_SV_DISTANCE], nextSVData[NEXT_SV_TRAVERSED_COUNT]);
 
-                    pair.setTraversedSVCount(getTraversedSVs(cluster, breakendList, pair));
+                    pair.setTraversedSVCount(getTraversedSVs(cluster, breakendList,
+                            pair.getBreakend(true).getChrPosIndex(), pair.getBreakend(false).getChrPosIndex()));
 
                     SvLinkedPair dbFirst = first.getDBLink(pair.firstLinkOnStart());
                     SvLinkedPair dbSecond = pair.second().getDBLink(pair.secondLinkOnStart());
@@ -1415,14 +1416,8 @@ public class ClusterAnalyser {
 
     }
 
-    private static int getTraversedSVs(final SvCluster cluster, final List<SvBreakend> breakendList, final SvLinkedPair pair)
+    private static int getTraversedSVs(final SvCluster cluster, final List<SvBreakend> breakendList, int lowerIndex, int upperIndex)
     {
-        // count any non-trivial cluster's SVs crossed by this pair
-        final SvBreakend firstBreakend = pair.first().getBreakend(pair.firstLinkOnStart());
-        final SvBreakend secondBreakend = pair.second().getBreakend(pair.secondLinkOnStart());
-        int lowerIndex = min(firstBreakend.getChrPosIndex(), secondBreakend.getChrPosIndex());
-        int upperIndex = max(firstBreakend.getChrPosIndex(), secondBreakend.getChrPosIndex());
-
         if(lowerIndex >= upperIndex - 1)
             return 0;
 
@@ -1522,6 +1517,94 @@ public class ClusterAnalyser {
         // reportDoubleMinutes(cluster);
 
         classifyChainedClusters(cluster);
+
+        // checkLooseFoldbacks(cluster);
+    }
+
+    private void checkLooseFoldbacks(final SvCluster cluster)
+    {
+        if(cluster.isResolved() || cluster.isFullyChained())
+            return;
+
+        final Map<String, List<SvBreakend>> chrBreakendMap = cluster.getChrBreakendMap();
+
+        for (final Map.Entry<String, List<SvBreakend>> entry : chrBreakendMap.entrySet())
+        {
+            List<SvBreakend> breakendList = entry.getValue();
+
+            List<SvBreakend> fullBreakendList = mClusteringMethods.getChrBreakendMap().get(entry.getKey());
+
+            for(int i = 0; i < breakendList.size() - 1; ++i)
+            {
+                final SvBreakend lowerBreakend = breakendList.get(i);
+                final SvBreakend upperBreakend = breakendList.get(i+1);
+
+                if(lowerBreakend.orientation() != upperBreakend.orientation())
+                    continue;
+
+                int traversedSvCount = getTraversedSVs(cluster, fullBreakendList, lowerBreakend.getChrPosIndex(), upperBreakend.getChrPosIndex());
+
+                SvBreakend nextClusteredBreakend = null;
+                SvBreakend nextBreakend = null; // regardless of clustering
+                long frontToNextLength = 0;
+                long frontToNextClusterLength = 0;
+
+                if(lowerBreakend.orientation() == 1)
+                {
+                    if(i > 0)
+                    {
+                        nextClusteredBreakend = breakendList.get(i - 1);
+                        frontToNextClusterLength = lowerBreakend.position() - nextClusteredBreakend.position();
+                    }
+
+                    if(lowerBreakend.getChrPosIndex() > 0)
+                    {
+                        nextBreakend = fullBreakendList.get(lowerBreakend.getChrPosIndex() - 1);
+                        frontToNextLength = lowerBreakend.position() - nextBreakend.position();
+                    }
+                }
+                else if(lowerBreakend.orientation() == -1)
+                {
+                    if(i < breakendList.size() - 2)
+                    {
+                        nextClusteredBreakend = breakendList.get(i + 2);
+                        frontToNextClusterLength = nextClusteredBreakend.position() - upperBreakend.position();
+                    }
+
+                    if(upperBreakend.getChrPosIndex() < fullBreakendList.size() - 1)
+                    {
+                        nextBreakend = fullBreakendList.get(upperBreakend.getChrPosIndex() + 1);
+                        frontToNextLength = nextBreakend.position() - upperBreakend.position();
+                    }
+                }
+
+                // CSV fields: SampleId,ClusterId,Chromosome,Orientation,SvBack,SvFront,PosBack,PosFront,IsFoldback,TraversedSVs,BtoFLength,CNChgBack,CNChgFront
+                // ,SvNext,FtoNextLength,OrientNext,CNChgNext,SvNextCL,FtoNextCLLength,OrientNextCL,CNChgNextCL
+                final SvBreakend frontBE = lowerBreakend.orientation() == 1 ? lowerBreakend : upperBreakend;
+                final SvBreakend backBE = lowerBreakend.orientation() == 1 ? upperBreakend : lowerBreakend;
+
+                boolean isFoldback = !lowerBreakend.getSV().getFoldbackLink(lowerBreakend.usesStart()).isEmpty()
+                        && lowerBreakend.getSV().getFoldbackLink(lowerBreakend.usesStart())
+                        .equals(lowerBreakend.getSV().getFoldbackLink(lowerBreakend.usesStart()));
+
+                // put all this together in an annotation string
+                String consecBreakendData = String.format("%s,%d,%s,%d,%s,%s,%d,%d,%s,%d,%d,%.2f,%.2f",
+                        mSampleId, cluster.id(), frontBE.chromosome(), lowerBreakend.orientation(),
+                        backBE.getSV().id(), frontBE.getSV().id(), backBE.position(), frontBE.position(),
+                        isFoldback, traversedSvCount, upperBreakend.position() - lowerBreakend.position(),
+                        backBE.getSV().copyNumberChange(backBE.usesStart()), frontBE.getSV().copyNumberChange(frontBE.usesStart()));
+
+                consecBreakendData += String.format(",%s,%d,%d,%.2f,%s,%d,%d,%.2f",
+                        nextBreakend != null ? nextBreakend.getSV().id() : "",
+                        frontToNextLength, nextBreakend != null ? nextBreakend.orientation() : 0,
+                        nextBreakend != null ? nextBreakend.getSV().copyNumberChange(nextBreakend.usesStart()) : 0,
+                        nextClusteredBreakend != null ? nextClusteredBreakend.getSV().id() : "",
+                        frontToNextClusterLength, nextClusteredBreakend != null ? nextClusteredBreakend.orientation() : 0,
+                        nextClusteredBreakend != null ? nextClusteredBreakend.getSV().copyNumberChange(nextClusteredBreakend.usesStart()) : 0);
+
+                LOGGER.info("CONSEC_BE_DATA: {}", consecBreakendData);
+            }
+        }
     }
 
     private void analyseOverlappingTIs()

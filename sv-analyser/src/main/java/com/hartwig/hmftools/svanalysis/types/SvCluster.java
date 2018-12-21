@@ -857,7 +857,7 @@ public class SvCluster
     public int getFragmentArms() { return mFragmentArms; }
 
     private static int SPECIFIC_CLUSTER_ID = -1;
-    // private static int SPECIFIC_CLUSTER_ID = 1168;
+    // private static int SPECIFIC_CLUSTER_ID = 95;
 
     public static boolean isSpecificCluster(final SvCluster cluster)
     {

@@ -347,7 +347,7 @@ public class SvGeneTranscriptCollection
         }
         catch (final IOException e)
         {
-            LOGGER.error("error writing gene annotations");
+            LOGGER.error("error writing gene annotations: {}", e.toString());
         }
     }
 

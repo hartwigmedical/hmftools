@@ -160,7 +160,7 @@ public class LineElementAnnotator {
             return;
         }
 
-        isSpecificCluster(cluster);
+        // isSpecificCluster(cluster);
 
         boolean hasSuspected = false;
 

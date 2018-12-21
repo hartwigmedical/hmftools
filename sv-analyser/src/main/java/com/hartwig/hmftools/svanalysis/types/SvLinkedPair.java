@@ -90,9 +90,9 @@ public class SvLinkedPair {
 
     public final SvBreakend getBreakend(boolean isStart)
     {
-        // finds the earlier breakend of the 2
-        final SvBreakend beFirst = mFirst.getBreakend(firstLinkOnStart());
-        final SvBreakend beSecond = mSecond.getBreakend(secondLinkOnStart());
+        // finds the earlier breakend of the 2, ie with the lower position
+        final SvBreakend beFirst = mFirst.type() == SGL ? mFirst.getBreakend(true) : mFirst.getBreakend(firstLinkOnStart());
+        final SvBreakend beSecond = mSecond.type() == SGL ? mSecond.getBreakend(true) : mSecond.getBreakend(secondLinkOnStart());
 
         if(isStart)
             return beFirst.position() < beSecond.position() ? beFirst : beSecond;

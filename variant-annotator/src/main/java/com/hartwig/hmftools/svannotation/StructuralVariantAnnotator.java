@@ -130,7 +130,7 @@ public class StructuralVariantAnnotator
 
         mDataPath = mCmdLineArgs.hasOption(DATA_OUTPUT_DIR) ? mCmdLineArgs.getOptionValue(DATA_OUTPUT_DIR) : "";
         mSvGeneTranscriptCollection.setDataPath(mDataPath);
-        mOverwriteEnsembleFiles = mCmdLineArgs.hasOption(OVERWRITE_ENSEMBL_FILE);
+        mOverwriteEnsembleFiles = mCmdLineArgs.hasOption(OVERWRITE_ENSEMBL_FILE) || !(mSampleId.equals("*") || mSampleId.isEmpty());
 
         return true;
     }

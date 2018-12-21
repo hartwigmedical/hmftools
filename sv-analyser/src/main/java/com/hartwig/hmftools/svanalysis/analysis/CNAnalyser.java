@@ -478,7 +478,7 @@ public class CNAnalyser {
                 if(minCN >= MIN_LOH_CN || reset)
                 {
                     // check for a short isolated TI and if found continue with the LOH
-                    if(minCN >= MIN_LOH_CN && cnData.endPos() - cnData.startPos() < SHORT_TI_LENGTH && index < cnDataList.size() - 1)
+                    if(minCN >= MIN_LOH_CN && cnData.endPos() - cnData.startPos() <= SHORT_TI_LENGTH && index < cnDataList.size() - 1)
                     {
                         final SvCNData nextData = cnDataList.get(index+1);
                         double nextMinCN = (1 - nextData.actualBaf()) * nextData.copyNumber();

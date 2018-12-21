@@ -2,9 +2,12 @@ package com.hartwig.hmftools.svanalysis.annotators;
 
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DUP;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INV;
+import static com.hartwig.hmftools.svanalysis.analysis.ClusterAnalyser.SHORT_TI_LENGTH;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_LOW_QUALITY;
+import static com.hartwig.hmftools.svanalysis.types.SvCluster.isSpecificCluster;
 import static com.hartwig.hmftools.svanalysis.types.SvLOH.LOH_NO_SV;
 
+import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -16,13 +19,17 @@ import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.DriverType;
 import com.hartwig.hmftools.common.genepanel.HmfGenePanelSupplier;
 import com.hartwig.hmftools.common.region.HmfTranscriptRegion;
+import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 import com.hartwig.hmftools.svanalysis.types.SvBreakend;
 import com.hartwig.hmftools.svanalysis.types.SvCluster;
 import com.hartwig.hmftools.svanalysis.types.SvLOH;
 import com.hartwig.hmftools.svanalysis.types.SvLinkedPair;
 import com.hartwig.hmftools.svanalysis.types.SvVarData;
+import com.hartwig.hmftools.svannotation.EnsemblDAO;
 
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.Options;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -34,6 +41,7 @@ public class DriverGeneAnnotator
 
     private Map<String, HmfTranscriptRegion> mAllGenesMap;
     private List<DriverCatalog> mDriverCatalog;
+    EnsemblDAO mEnsemblDAO;
 
     // references only
     private String mSampleId;
@@ -43,14 +51,50 @@ public class DriverGeneAnnotator
     private List<SvLOH> mSampleLOHData;
     private Map<String, Double> mChromosomeCopyNumberMap;
 
+    private static final String ENSEMBL_DB = "ensembl_db";
+    private static final String ENSEMBL_DB_USER = "ensembl_user";
+    private static final String ENSEMBL_DB_PASS = "ensembl_pass";
+
     public DriverGeneAnnotator(DatabaseAccess dbAccess)
     {
         mDbAccess = dbAccess;
         mDriverCatalog = Lists.newArrayList();
         mSampleLOHData = Lists.newArrayList();
         mChromosomeCopyNumberMap = null;
+        mEnsemblDAO = null;
 
         initialiseGeneData();
+    }
+
+    public static void addCmdLineArgs(Options options)
+    {
+        options.addOption(ENSEMBL_DB, true, "Annotate structural variants using this Ensembl DB URI");
+        options.addOption(ENSEMBL_DB_PASS, true, "Ensembl DB password if required");
+        options.addOption(ENSEMBL_DB_USER, true, "Ensembl DB username if required");
+    }
+
+    public boolean loadConfig(final CommandLine cmd)
+    {
+        if(!cmd.hasOption(ENSEMBL_DB))
+            return true;
+
+        try
+        {
+            final String ensembleUrl = "jdbc:" + cmd.getOptionValue(ENSEMBL_DB);
+            final String ensembleUser = cmd.getOptionValue(ENSEMBL_DB_USER, "");
+            final String ensemblePassword = cmd.getOptionValue(ENSEMBL_DB_PASS, "");
+
+            LOGGER.debug("connecting to ensembl DB: {}", ensembleUrl);
+            DatabaseAccess ensembleDBConn = new DatabaseAccess(ensembleUser, ensemblePassword, ensembleUrl);
+            mEnsemblDAO = new EnsemblDAO(ensembleDBConn.context());
+        }
+        catch (SQLException e)
+        {
+            LOGGER.warn("Ensembl DB connection failed: {}", e.toString());
+            return false;
+        }
+
+        return true;
     }
 
     public final List<DriverCatalog> getDriverCatalog() { return mDriverCatalog; }
@@ -87,43 +131,45 @@ public class DriverGeneAnnotator
 
     public void annotateSVs(final String sampleId, final List<SvCluster> clusters, final Map<String, List<SvBreakend>> chrBreakendMap)
     {
-        loadDriverCatalog(sampleId);
-
-        if(mDriverCatalog.isEmpty())
-            return;
-
         mSampleId = sampleId;
         mChrBreakendMap = chrBreakendMap;
         mClusters = clusters;
 
-        mSampleLOHData.clear();
-        List<SvLOH> sampleLohEvents = mSampleLohMap.get(sampleId);
+        annotateTemplatedInsertion();
 
-        if(sampleLohEvents != null)
-            mSampleLOHData.addAll(sampleLohEvents.stream().filter(x -> !x.Skipped).collect(Collectors.toList()));
+        loadDriverCatalog(sampleId);
 
-        // Handle each of the 3 applicable types: DEL, BIALLELIC and AMP
-        for(final DriverCatalog driverGene : mDriverCatalog)
+        if (!mDriverCatalog.isEmpty())
         {
-            HmfTranscriptRegion region = findRegion(driverGene.gene());
+            mSampleLOHData.clear();
+            List<SvLOH> sampleLohEvents = mSampleLohMap.get(sampleId);
 
-            if(region == null)
-            {
-                LOGGER.warn("driver gene({}) not found in all-genes map", driverGene.gene());
-                continue;
-            }
+            if (sampleLohEvents != null)
+                mSampleLOHData.addAll(sampleLohEvents.stream().filter(x -> !x.Skipped).collect(Collectors.toList()));
 
-            if(driverGene.driver() == DriverType.DEL)
+            // Handle each of the 3 applicable types: DEL, BIALLELIC and AMP
+            for (final DriverCatalog driverGene : mDriverCatalog)
             {
-                annotateDeleteEvent(driverGene, region);
-            }
-            else if(driverGene.driver() == DriverType.BIALLELIC)
-            {
-                annotateBiallelicEvent(driverGene, region);
-            }
-            else if(driverGene.driver() == DriverType.AMP)
-            {
-                annotateAmplification(driverGene, region);
+                HmfTranscriptRegion region = findRegion(driverGene.gene());
+
+                if (region == null)
+                {
+                    LOGGER.warn("driver gene({}) not found in all-genes map", driverGene.gene());
+                    continue;
+                }
+
+                if (driverGene.driver() == DriverType.DEL)
+                {
+                    annotateDeleteEvent(driverGene, region);
+                }
+                else if (driverGene.driver() == DriverType.BIALLELIC)
+                {
+                    annotateBiallelicEvent(driverGene, region);
+                }
+                else if (driverGene.driver() == DriverType.AMP)
+                {
+                    annotateAmplification(driverGene, region);
+                }
             }
         }
     }
@@ -433,4 +479,47 @@ public class DriverGeneAnnotator
         var.setDriveGene(String.format("%s;%s;%s", driverGene.driver(), driverGene.gene(), desc), isStart);
     }
 
+    private void annotateTemplatedInsertion()
+    {
+        if(mEnsemblDAO == null)
+            return;
+
+        PerformanceCounter perfCount = new PerformanceCounter("Ensembl Exon Query");
+
+        for(final SvCluster cluster : mClusters)
+        {
+            //if(!isSpecificCluster(cluster))
+            //    continue;
+
+            for(final SvLinkedPair pair : cluster.getLinkedPairs())
+            {
+                if(pair.length() > SHORT_TI_LENGTH * 8)
+                    continue;
+
+                final SvBreakend lower = pair.getBreakend(true);
+                final SvBreakend upper = pair.getBreakend(false);
+
+                if(lower.getSV().getGenesList(lower.usesStart()).isEmpty() || upper.getSV().getGenesList(upper.usesStart()).isEmpty())
+                    continue;
+
+                perfCount.start();
+
+                final String exonData = mEnsemblDAO.getExonDetailsForPosition(lower.chromosome(), lower.position(), upper.position());
+
+                perfCount.stop();
+
+                if(!exonData.isEmpty())
+                {
+                    LOGGER.info("sample({}) cluster({}) pair({}) matches exon({})",
+                            mSampleId, cluster.id(), pair.toString(), exonData);
+                }
+            }
+        }
+
+        if(perfCount.getSampleCount() > 0)
+        {
+            LOGGER.debug("sample({}) perf stats", mSampleId, perfCount.getSampleCount());
+            perfCount.logStats(false);
+        }
+    }
 }
