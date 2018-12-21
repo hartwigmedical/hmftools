@@ -105,10 +105,10 @@ class StructuralVariantImplied {
     @VisibleForTesting
     static double inferCopyNumberFromStructuralVariants(int averageReadDepth, double averageCopyNumber,
             final Optional<StructuralVariantLegPloidy> start, final Optional<StructuralVariantLegPloidy> end) {
-        final double startWeight = start.map(x -> x.impliedRightCopyNumberWeight()).orElse(0d);
+        final double startWeight = start.map(StructuralVariantLegPloidy::impliedRightCopyNumberWeight).orElse(0d);
         final double startCopyNumber = start.map(x -> x.impliedRightCopyNumber(averageReadDepth, averageCopyNumber)).orElse(0d);
 
-        final double endWeight = end.map(x -> x.impliedLeftCopyNumberWeight()).orElse(0d);
+        final double endWeight = end.map(StructuralVariantLegPloidy::impliedLeftCopyNumberWeight).orElse(0d);
         final double endCopyNumber = end.map(x -> x.impliedLeftCopyNumber(averageReadDepth, averageCopyNumber)).orElse(0d);
 
         double unconstrainedResult = (startCopyNumber * startWeight + endCopyNumber * endWeight) / (startWeight + endWeight);

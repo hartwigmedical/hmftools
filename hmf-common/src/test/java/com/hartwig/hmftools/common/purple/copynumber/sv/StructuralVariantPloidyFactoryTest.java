@@ -10,6 +10,7 @@ import static org.apache.commons.math3.util.Precision.EPSILON;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.util.List;
 import java.util.Optional;
@@ -19,6 +20,7 @@ import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.chromosome.Chromosome;
 import com.hartwig.hmftools.common.chromosome.HumanChromosome;
+import com.hartwig.hmftools.common.numeric.Doubles;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.PurpleDatamodelTest;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
@@ -73,14 +75,20 @@ public class StructuralVariantPloidyFactoryTest {
     }
 
     @Test
-    public void testExcludeNegativeAndZeroCopyNumbers() {
-        final StructuralVariantLeg positiveLeg = createLeg(1001, 1, 0.25);
+    public void testIncludeNegativeAndZeroCopyNumbersCappedAtZero() {
+        final StructuralVariantLeg positiveLeg = createLeg(1000, 1, 0.25);
         final StructuralVariantLeg negativeLeg = createLeg(2001, -1, 0.25);
-        final PurpleCopyNumber left = copyNumber(1, 1000, -0.01);
+        final PurpleCopyNumber left = copyNumber(1001, 2000, -0.03);
         final PurpleCopyNumber right = copyNumber(2001, 3000, 0);
 
-        assertFalse(PURE_PLOIDY_FACTORY.create(positiveLeg, GenomeRegionSelectorFactory.create(singleton(left))).isPresent());
-        assertFalse(PURE_PLOIDY_FACTORY.create(negativeLeg, GenomeRegionSelectorFactory.create(singleton(right))).isPresent());
+        ModifiableStructuralVariantLegPloidy leftLegPloidy = PURE_PLOIDY_FACTORY.create(positiveLeg, GenomeRegionSelectorFactory.create(singleton(left))).get();
+        ModifiableStructuralVariantLegPloidy rightLegPloidy = PURE_PLOIDY_FACTORY.create(negativeLeg, GenomeRegionSelectorFactory.create(singleton(right))).get();
+
+        assertFalse(leftLegPloidy.leftCopyNumber().isPresent());
+        assertTrue(leftLegPloidy.rightCopyNumber().filter(Doubles::isZero).isPresent());
+
+        assertFalse(rightLegPloidy.leftCopyNumber().isPresent());
+        assertTrue(leftLegPloidy.rightCopyNumber().filter(Doubles::isZero).isPresent());
     }
 
     @Test
