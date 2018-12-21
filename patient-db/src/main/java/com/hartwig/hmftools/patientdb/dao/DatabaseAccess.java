@@ -24,6 +24,7 @@ import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
 import com.hartwig.hmftools.common.variant.structural.EnrichedStructuralVariant;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantData;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion;
+import com.hartwig.hmftools.common.variant.structural.annotation.SimpleGeneFusion;
 import com.hartwig.hmftools.common.variant.structural.annotation.StructuralVariantAnalysis;
 import com.hartwig.hmftools.patientdb.data.Patient;
 import com.hartwig.hmftools.patientdb.data.SampleData;
@@ -182,8 +183,8 @@ public class DatabaseAccess {
     }
 
     @NotNull
-    public List<StructuralVariantAnalysis> readingStructuralVarianten(@NotNull final String sample) {
-        return structuralVariantAnnotationDAO.readStructuralVariantAnalysis(sample);
+    public List<SimpleGeneFusion> readingGeneFusions(@NotNull final String sample) {
+        return structuralVariantAnnotationDAO.readGeneFusions(sample);
     }
 
     @NotNull
@@ -223,10 +224,12 @@ public class DatabaseAccess {
     }
 
     public void writeClinicalEvidence (@NotNull String sample, @NotNull List<EvidenceItem> items) {
+        LOGGER.info("writeClinicalEvidence");
         clinicalEvidenceDAO.writeClinicalEvidence(sample, items);
     }
 
     public void writeClinicalTrial (@NotNull String sample, @NotNull List<ClinicalTrial> trials) {
+        LOGGER.info("writeClinicalTrial");
         clinicalTrialDAO.writeClinicalTrial(sample, trials);
     }
 

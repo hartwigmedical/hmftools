@@ -9,7 +9,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.chromosome.Chromosome;
-import com.hartwig.hmftools.common.numeric.Doubles;
 import com.hartwig.hmftools.common.position.GenomePosition;
 import com.hartwig.hmftools.common.position.GenomePositions;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
@@ -96,13 +95,14 @@ public class StructuralVariantLegPloidyFactory<T extends GenomeRegion> {
 
     @VisibleForTesting
     @NotNull
-    Optional<ModifiableStructuralVariantLegPloidy> create(@NotNull final StructuralVariantLeg leg, @NotNull final GenomeRegionSelector<T> selector) {
+    Optional<ModifiableStructuralVariantLegPloidy> create(@NotNull final StructuralVariantLeg leg,
+            @NotNull final GenomeRegionSelector<T> selector) {
         final GenomePosition svPositionLeft = GenomePositions.create(leg.chromosome(), leg.cnaPosition() - 1);
-        final GenomePosition svPositionRight = GenomePositions.create(leg.chromosome(), leg.cnaPosition() );
+        final GenomePosition svPositionRight = GenomePositions.create(leg.chromosome(), leg.cnaPosition());
         final Optional<Double> left =
-                selector.select(svPositionLeft).flatMap(x -> Optional.ofNullable(copyNumberExtractor.apply(x))).filter(Doubles::positive);
+                selector.select(svPositionLeft).flatMap(x -> Optional.ofNullable(copyNumberExtractor.apply(x))).map(x -> Math.max(0, x));
         final Optional<Double> right =
-                selector.select(svPositionRight).flatMap(x -> Optional.ofNullable(copyNumberExtractor.apply(x))).filter(Doubles::positive);
+                selector.select(svPositionRight).flatMap(x -> Optional.ofNullable(copyNumberExtractor.apply(x))).map(x -> Math.max(0, x));
 
         final Optional<Double> correct;
         final Optional<Double> alternate;
@@ -118,27 +118,31 @@ public class StructuralVariantLegPloidyFactory<T extends GenomeRegion> {
             return Optional.empty();
         }
 
-        final double vaf = leg.alleleFrequency();
+        final double observedVaf = leg.alleleFrequency();
+        final double adjustedVaf;
         final double ploidy;
         final double weight;
         if (correct.isPresent()) {
             double copyNumber = correct.get();
-            ploidy = purityAdjustedPloidy(leg.chromosome(), vaf, copyNumber);
+            adjustedVaf = purityAdjuster.purityAdjustedVAF(leg.chromosome(), Math.max(0.001, copyNumber), observedVaf);
+            ploidy = adjustedVaf * copyNumber;
             weight = 1;
         } else {
             double copyNumber = alternate.get();
-            double reciprocalVAF = vaf / (1 - vaf);
+            double reciprocalVAF = observedVaf / (1 - observedVaf);
             if (!Double.isFinite(reciprocalVAF)) {
                 return Optional.empty();
             }
 
-            ploidy = purityAdjustedPloidy(leg.chromosome(), reciprocalVAF, copyNumber);
+            adjustedVaf = purityAdjuster.purityAdjustedVAF(leg.chromosome(), Math.max(0.001, copyNumber), reciprocalVAF);
+            ploidy = adjustedVaf * copyNumber;
             weight = 1 / (1 + Math.pow(Math.max(copyNumber, 2) / Math.min(Math.max(copyNumber, 0.01), 2), 2));
         }
 
         return Optional.of(ModifiableStructuralVariantLegPloidy.create()
                 .from(leg)
-                .setVaf(vaf)
+                .setObservedVaf(observedVaf)
+                .setAdjustedVaf(adjustedVaf)
                 .setOrientation(leg.orientation())
                 .setUnweightedImpliedPloidy(ploidy)
                 .setLeftCopyNumber(left)
@@ -146,8 +150,4 @@ public class StructuralVariantLegPloidyFactory<T extends GenomeRegion> {
                 .setWeight(weight));
     }
 
-    private double purityAdjustedPloidy(@NotNull String chromosome, double vaf, double copyNumber) {
-        double adjustedVAF = purityAdjuster.purityAdjustedVAF(chromosome, copyNumber, vaf);
-        return adjustedVAF * copyNumber;
-    }
 }

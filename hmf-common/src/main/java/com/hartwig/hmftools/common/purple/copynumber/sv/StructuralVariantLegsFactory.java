@@ -67,14 +67,15 @@ final class StructuralVariantLegsFactory {
     }
 
     @NotNull
-    private static StructuralVariantLeg reduce(@NotNull final GenomePosition position, @NotNull final Collection<ModifiableStructuralVariantLegs> legs) {
+    private static StructuralVariantLeg reduce(@NotNull final GenomePosition position,
+            @NotNull final Collection<ModifiableStructuralVariantLegs> legs) {
         final List<StructuralVariantLeg> leg = Lists.newArrayList();
         for (ModifiableStructuralVariantLegs modifiableStructuralVariantLegs : legs) {
             modifiableStructuralVariantLegs.start().filter(x -> isDuplicate(position, x)).ifPresent(leg::add);
             modifiableStructuralVariantLegs.end().filter(x -> isDuplicate(position, x)).ifPresent(leg::add);
         }
 
-        return reduce(leg);
+        return reduce(position, leg);
     }
 
     private static boolean isDuplicate(@NotNull final GenomePosition position, @NotNull final StructuralVariantLeg leg) {
@@ -83,7 +84,7 @@ final class StructuralVariantLegsFactory {
 
     @NotNull
     @VisibleForTesting
-    static StructuralVariantLeg reduce(@NotNull final List<StructuralVariantLeg> legs) {
+    static StructuralVariantLeg reduce(@NotNull final GenomePosition cnaPosition, @NotNull final List<StructuralVariantLeg> legs) {
         double maxPositive = 0;
         double maxNegative = 0;
 
@@ -111,13 +112,44 @@ final class StructuralVariantLegsFactory {
             }
         }
 
+        int maxTumorReferenceFragmentCount = 0;
+        int cumulativeTumorVariantFragmentCount = 0;
+        for (StructuralVariantLeg leg : legs) {
+            int orientation = leg.orientation();
+            Integer tumourVariantFragmentCount = leg.tumourVariantFragmentCount();
+            Integer tumorReferenceFragmentCount = leg.tumourReferenceFragmentCount();
+
+            if (tumourVariantFragmentCount != null) {
+                cumulativeTumorVariantFragmentCount += orientation * tumourVariantFragmentCount;
+            }
+
+            if (tumorReferenceFragmentCount != null) {
+                maxTumorReferenceFragmentCount = Math.max(maxTumorReferenceFragmentCount, tumorReferenceFragmentCount);
+            }
+
+        }
+
+        // double cumulativeVaf = 0;
+        // cumulativeVaf += orientation * leg.alleleFrequency() / (1 - leg.alleleFrequency());
+        // double vaf = cumulativeVaf / (cumulativeVaf + 1);
+
         byte orientation = (byte) (Doubles.greaterThan(maxPositive, maxNegative) ? 1 : -1);
         double vaf = Math.abs(maxPositive - maxNegative);
-        return ImmutableStructuralVariantLegImpl.builder().from(legs.get(0)).orientation(orientation).alleleFrequency(vaf).build();
+        return ImmutableStructuralVariantLegImpl.builder()
+                .chromosome(cnaPosition.chromosome())
+                .position(orientation == -1 ? cnaPosition.position() : cnaPosition.position() - 1)
+                .orientation(orientation)
+                .alleleFrequency(Math.abs(vaf))
+                .tumourVariantFragmentCount(cumulativeTumorVariantFragmentCount == 0 ? null : Math.abs(cumulativeTumorVariantFragmentCount))
+                .tumourReferenceFragmentCount(maxTumorReferenceFragmentCount == 0 ? null : Math.abs(maxTumorReferenceFragmentCount))
+                .alleleFrequency(Math.abs(vaf))
+                .homology("")
+                .build();
     }
 
     @NotNull
-    private static Multimap<GenomePosition, ModifiableStructuralVariantLegs> findDuplicates(@NotNull final Collection<ModifiableStructuralVariantLegs> legs) {
+    private static Multimap<GenomePosition, ModifiableStructuralVariantLegs> findDuplicates(
+            @NotNull final Collection<ModifiableStructuralVariantLegs> legs) {
         final ListMultimap<GenomePosition, ModifiableStructuralVariantLegs> result = ArrayListMultimap.create();
         for (ModifiableStructuralVariantLegs leg : legs) {
             leg.start().ifPresent(x -> result.put(cnaPosition(x), leg));

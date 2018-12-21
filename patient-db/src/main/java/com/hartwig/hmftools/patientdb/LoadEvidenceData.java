@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.actionability.ActionabilityAnalyzer;
@@ -16,6 +17,7 @@ import com.hartwig.hmftools.common.context.RunContext;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion;
+import com.hartwig.hmftools.common.variant.structural.annotation.SimpleGeneFusion;
 import com.hartwig.hmftools.common.variant.structural.annotation.StructuralVariantAnalysis;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
@@ -72,7 +74,6 @@ public class LoadEvidenceData {
 
                 LOGGER.info("Reading somatic variants from DB");
                 final List<EnrichedSomaticVariant> variants = dbAccess.readSomaticVariants(sample);
-                LOGGER.info(variants);
 
                 Map<EnrichedSomaticVariant, List<EvidenceItem>> evidencePerVariant =
                         actionabilityAnalyzer.evidenceForSomaticVariants(variants, primaryTumorLocation);
@@ -80,16 +81,18 @@ public class LoadEvidenceData {
                 final List<EvidenceItem> AllEvidenceItemsVariant = extractAllEvidenceItems(evidencePerVariant);
                 final List<ClinicalTrial> allClinicalTrialsVariants = extractAllTrials(AllEvidenceItemsVariant);
 
+                LOGGER.info(AllEvidenceItemsVariant);
                 LOGGER.info("Writing evidence items of somatic variants to DB");
                 LOGGER.info("Counts of all evidence items: " + AllEvidenceItemsVariant.size());
                 dbWriter.writeClinicalEvidence(sample, AllEvidenceItemsVariant);
+
+                LOGGER.info(allClinicalTrialsVariants);
                 LOGGER.info("Writing clinical trials of somatic variants to DB");
                 LOGGER.info("Counts of all clinical trials: " + allClinicalTrialsVariants.size());
                 dbWriter.writeClinicalTrial(sample, allClinicalTrialsVariants);
 
                 LOGGER.info("Reading gene copy from DB");
                 final List<GeneCopyNumber> geneCopyNumber = dbAccess.readGeneCopynumbers(sample);
-                LOGGER.info(geneCopyNumber);
 
                 Map<GeneCopyNumber, List<EvidenceItem>> evidencePerGeneCopyNumber =
                         actionabilityAnalyzer.evidenceForCopyNumbers(geneCopyNumber, primaryTumorLocation);
@@ -97,32 +100,34 @@ public class LoadEvidenceData {
                 final List<EvidenceItem> AllEvidenceItemsGeneCopyNumber = extractAllEvidenceItems(evidencePerGeneCopyNumber);
                 final List<ClinicalTrial> allClinicalTrialsGeneCopyNumber = extractAllTrials(AllEvidenceItemsGeneCopyNumber);
 
+                LOGGER.info(AllEvidenceItemsGeneCopyNumber);
                 LOGGER.info("Writing evidence items of gene copy numbers to DB");
                 LOGGER.info("Counts of all evidence items: " + AllEvidenceItemsGeneCopyNumber.size());
                 dbWriter.writeClinicalEvidence(sample, AllEvidenceItemsGeneCopyNumber);
+
+                LOGGER.info(allClinicalTrialsGeneCopyNumber);
                 LOGGER.info("Writing clinical trials of gene copy numbers to DB");
                 LOGGER.info("Counts of all clinical trials: " + allClinicalTrialsGeneCopyNumber.size());
                 dbWriter.writeClinicalTrial(sample, allClinicalTrialsGeneCopyNumber);
 
                 LOGGER.info("Reading gene fusions from DB");
-                final List<StructuralVariantAnalysis> analysesStructuralVarianten = dbAccess.readingStructuralVarianten(sample);
+                final List<SimpleGeneFusion> analysesGeneFusions = dbAccess.readingGeneFusions(sample);
 
-                final List<GeneFusion> geneFusions = analysesStructuralVarianten.iterator().next().fusions();
-                LOGGER.info(geneFusions);
+                Map<SimpleGeneFusion, List<EvidenceItem>> evidencePerFusion =
+                        actionabilityAnalyzer.evidenceForFusions(analysesGeneFusions, primaryTumorLocation);
 
-                Map<GeneFusion, List<EvidenceItem>> evidencePerFusion =
-                        actionabilityAnalyzer.evidenceForFusions(geneFusions, primaryTumorLocation);
+                final List<EvidenceItem> allEvidenceItemsGeneFusions = extractAllEvidenceItems(evidencePerFusion);
+                final List<ClinicalTrial> allClinicalTrialsGeneFusions = extractAllTrials(allEvidenceItemsGeneFusions);
 
-                final List<EvidenceItem> AllEvidenceItemsGeneFusions = extractAllEvidenceItems(evidencePerFusion);
-                final List<ClinicalTrial> allClinicalTrialsGeneFusions = extractAllTrials(AllEvidenceItemsGeneFusions);
-
+                LOGGER.info(allEvidenceItemsGeneFusions);
                 LOGGER.info("Writing evidence items of gene fusions to DB");
-                LOGGER.info("Counts of all evidence items: " + AllEvidenceItemsGeneFusions.size());
-                dbWriter.writeClinicalEvidence(sample, AllEvidenceItemsGeneFusions);
+                LOGGER.info("Counts of all evidence items: " + allEvidenceItemsGeneFusions.size());
+                dbWriter.writeClinicalEvidence(sample, allEvidenceItemsGeneFusions);
+
+                LOGGER.info(allClinicalTrialsGeneFusions);
                 LOGGER.info("Writing clinical trials of gene fusions to DB");
                 LOGGER.info("Counts of all clinical trials: " + allClinicalTrialsGeneFusions.size());
                 dbWriter.writeClinicalTrial(sample, allClinicalTrialsGeneFusions);
-
             }
         }
     }
@@ -148,6 +153,15 @@ public class LoadEvidenceData {
                 .isOnLabel(evidenceItem.isOnLabel())
                 .cancerType(evidenceItem.cancerType())
                 .scope(evidenceItem.scope())
+                .type(evidenceItem.type())
+                .gene(evidenceItem.gene())
+                .chromosome(evidenceItem.chromosome())
+                .position(evidenceItem.position())
+                .ref(evidenceItem.ref())
+                .alt(evidenceItem.alt())
+                .cnvType(evidenceItem.cnvType())
+                .fusionFiveGene(evidenceItem.fusionFiveGene())
+                .fusionThreeGene(evidenceItem.fusionThreeGene())
                 .build();
     }
 

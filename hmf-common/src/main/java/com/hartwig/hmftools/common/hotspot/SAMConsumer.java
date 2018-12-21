@@ -5,13 +5,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
 
-import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.chromosome.Chromosome;
-import com.hartwig.hmftools.common.chromosome.HumanChromosome;
-import com.hartwig.hmftools.common.collect.Multimaps;
-import com.hartwig.hmftools.common.position.GenomePosition;
 import com.hartwig.hmftools.common.region.GenomeRegion;
 
 import org.jetbrains.annotations.NotNull;
@@ -22,25 +17,17 @@ import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMRecordIterator;
 import htsjdk.samtools.SamReader;
 
-public class SAMSupplier {
-
-    //    private static final int MIN_MAPPING_QUALITY = 1;
+public class SAMConsumer {
 
     private final int minMappingQuality;
     private final Collection<GenomeRegion> regions;
-    private final ListMultimap<Chromosome, GenomeRegion> codingRegions;
 
-    public SAMSupplier(@NotNull final Collection<GenomeRegion> regions) {
-        this(1, regions);
-    }
-
-    public SAMSupplier(final int minMappingQuality, @NotNull final Collection<GenomeRegion> regions) {
+    public SAMConsumer(final int minMappingQuality, @NotNull final Collection<GenomeRegion> regions) {
         this.minMappingQuality = minMappingQuality;
         this.regions = regions;
-        this.codingRegions = Multimaps.fromRegions(regions);
     }
 
-    public void readOnce(@NotNull final SamReader samReader, @NotNull final Consumer<SAMRecord> consumer) {
+    public void consume(@NotNull final SamReader samReader, @NotNull final Consumer<SAMRecord> consumer) {
 
         final Set<String> processed = Sets.newHashSet();
         final QueryInterval[] queryIntervals = createIntervals(regions, samReader.getFileHeader());
@@ -67,10 +54,6 @@ public class SAMSupplier {
             }
         }
         return QueryInterval.optimizeIntervals(queryIntervals.toArray(new QueryInterval[queryIntervals.size()]));
-    }
-
-    public boolean isInCodingRegions(@NotNull final GenomePosition hotspot) {
-        return codingRegions.get(HumanChromosome.fromString(hotspot.chromosome())).stream().anyMatch(x -> x.contains(hotspot));
     }
 
     private boolean samRecordMeetsQualityRequirements(@NotNull SAMRecord record) {

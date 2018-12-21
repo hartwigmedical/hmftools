@@ -68,19 +68,20 @@ public class SageHotspotBedBuilder {
         LOGGER.info("Merging oncogene coding regions with known hotspot locations");
         final List<String> bedResult = Lists.newArrayList();
         for (HumanChromosome chromosome : HumanChromosome.values()) {
-            List<GenomeRegion> result = Lists.newArrayList();
+            final GenomeRegionBuilder builder = new GenomeRegionBuilder(chromosome.toString(), 1);
+
             final List<HmfTranscriptRegion> chromosomeRegions =
                     geneRegions.containsKey(chromosome) ? geneRegions.get(chromosome) : emptyList();
             for (HmfTranscriptRegion gene : chromosomeRegions) {
-                result.addAll(addCodingRegions(gene));
+                addCodingRegions(builder, gene);
             }
 
             final List<VariantHotspot> chromosomeHotspots = hotspots.containsKey(chromosome) ? hotspots.get(chromosome) : emptyList();
             for (VariantHotspot hotspot : chromosomeHotspots) {
-                result.addAll(addVariantHotspot(hotspot));
+                addVariantHotspot(builder, hotspot);
             }
 
-            result.stream().map(SageHotspotBedBuilder::toBedFormat).forEach(bedResult::add);
+            builder.build().stream().map(SageHotspotBedBuilder::toBedFormat).forEach(bedResult::add);
         }
 
         LOGGER.info("Writing {} regions to bed file {}", bedResult.size(), outputFilePath);
@@ -88,8 +89,7 @@ public class SageHotspotBedBuilder {
     }
 
     @NotNull
-    private static List<GenomeRegion> addCodingRegions(@NotNull final HmfTranscriptRegion gene) {
-        final GenomeRegionBuilder builder = new GenomeRegionBuilder(gene.chromosome());
+    private static GenomeRegionBuilder addCodingRegions(@NotNull final GenomeRegionBuilder builder, @NotNull final HmfTranscriptRegion gene) {
         for (HmfExonRegion exon : gene.exome()) {
             for (long position = exon.start(); position <= exon.end(); position++) {
                 if (position >= gene.codingStart() && position <= gene.codingEnd()) {
@@ -98,17 +98,15 @@ public class SageHotspotBedBuilder {
             }
         }
 
-        return builder.build();
+        return builder;
     }
 
     @NotNull
-    static List<GenomeRegion> addVariantHotspot(@NotNull final VariantHotspot hotspot) {
-        final GenomeRegionBuilder builder = new GenomeRegionBuilder(hotspot.chromosome());
+    static GenomeRegionBuilder addVariantHotspot(@NotNull final GenomeRegionBuilder builder, @NotNull final VariantHotspot hotspot) {
         for (int i = 0; i < Math.min(hotspot.ref().length(), hotspot.alt().length()); i++) {
             builder.addPosition(hotspot.position() + i);
         }
-
-        return builder.build();
+        return builder;
     }
 
     @NotNull

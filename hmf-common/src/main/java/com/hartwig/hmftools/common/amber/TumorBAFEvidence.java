@@ -6,7 +6,7 @@ import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.collect.Multimaps;
-import com.hartwig.hmftools.common.hotspot.SAMSupplier;
+import com.hartwig.hmftools.common.hotspot.SAMConsumer;
 import com.hartwig.hmftools.common.position.GenomePositionSelector;
 import com.hartwig.hmftools.common.position.GenomePositionSelectorFactory;
 import com.hartwig.hmftools.common.region.GenomeRegion;
@@ -27,7 +27,7 @@ public class TumorBAFEvidence implements Callable<TumorBAFEvidence> {
     private final List<ModifiableTumorBAF> evidence;
     private final SamReaderFactory samReaderFactory;
     private final GenomePositionSelector<ModifiableTumorBAF> selector;
-    private final SAMSupplier supplier;
+    private final SAMConsumer supplier;
 
     public TumorBAFEvidence(int typicalReadDepth, int minMappingQuality, int minBaseQuality, final String contig, final String bamFile,
             final SamReaderFactory samReaderFactory, final List<NormalBAF> normalBafs) {
@@ -44,7 +44,7 @@ public class TumorBAFEvidence implements Callable<TumorBAFEvidence> {
         final List<GenomeRegion> bafRegions = builder.build();
         this.evidence = normalBafs.stream().map(TumorBAFFactory::create).collect(Collectors.toList());
         this.selector = GenomePositionSelectorFactory.create(Multimaps.fromPositions(evidence));
-        this.supplier = new SAMSupplier(minMappingQuality, bafRegions);
+        this.supplier = new SAMConsumer(minMappingQuality, bafRegions);
     }
 
     @NotNull
@@ -61,7 +61,7 @@ public class TumorBAFEvidence implements Callable<TumorBAFEvidence> {
     public TumorBAFEvidence call() throws Exception {
 
         try (SamReader reader = samReaderFactory.open(new File(bamFile))) {
-            supplier.readOnce(reader, this::record);
+            supplier.consume(reader, this::record);
         }
 
         return this;

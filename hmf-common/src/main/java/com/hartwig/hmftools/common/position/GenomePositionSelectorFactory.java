@@ -26,6 +26,11 @@ public final class GenomePositionSelectorFactory {
     }
 
     @NotNull
+    public static <P extends GenomePosition> GenomePositionSelector<P> create(@NotNull final List<P> positions) {
+        return new GenomePositionSelectorListImpl<>(positions);
+    }
+
+    @NotNull
     public static <P extends GenomePosition> GenomePositionSelector<P> create(@NotNull final ListMultimap<Chromosome, P> positions) {
         final GenomePositionSelector<P> nullSelector = new NullGenomePositionSelector<>();
 

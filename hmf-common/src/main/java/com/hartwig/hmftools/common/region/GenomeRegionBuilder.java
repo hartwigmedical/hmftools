@@ -13,10 +13,6 @@ public class GenomeRegionBuilder {
     @NotNull
     private final List<GenomeRegion> regions;
 
-    public GenomeRegionBuilder(@NotNull final String chromosome) {
-        this(chromosome, 1);
-    }
-
     public GenomeRegionBuilder(@NotNull final String chromosome, final int minGap) {
         this.chromosome = chromosome;
         this.minGap = minGap;

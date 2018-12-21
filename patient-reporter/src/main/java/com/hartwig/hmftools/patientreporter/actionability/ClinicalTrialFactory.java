@@ -36,6 +36,15 @@ public final class ClinicalTrialFactory {
                 .isOnLabel(evidenceItem.isOnLabel())
                 .cancerType(evidenceItem.cancerType())
                 .scope(evidenceItem.scope())
+                .type(evidenceItem.type())
+                .gene(evidenceItem.gene())
+                .chromosome(evidenceItem.chromosome())
+                .position(evidenceItem.position())
+                .ref(evidenceItem.ref())
+                .alt(evidenceItem.alt())
+                .cnvType(evidenceItem.cnvType())
+                .fusionFiveGene(evidenceItem.fusionFiveGene())
+                .fusionThreeGene(evidenceItem.fusionThreeGene())
                 .build();
     }
 }

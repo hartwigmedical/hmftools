@@ -53,13 +53,13 @@ public final class EnrichedStructuralVariantFactory {
                 StructuralVariantLegPloidy start = ploidies.get(0);
                 StructuralVariantLegPloidy end = ploidies.size() <= 1 ? null : ploidies.get(1);
 
-                startBuilder.adjustedAlleleFrequency(round(adjustedVAF(purityAdjuster, start)));
+                startBuilder.adjustedAlleleFrequency(round(start.adjustedVaf()));
                 startBuilder.adjustedCopyNumber(round(adjustedCopyNumber(start)));
                 startBuilder.adjustedCopyNumberChange(round(adjustedCopyNumberChange(start)));
 
                 if (end != null) {
                     assert endBuilder != null;
-                    endBuilder.adjustedAlleleFrequency(round(adjustedVAF(purityAdjuster, end)));
+                    endBuilder.adjustedAlleleFrequency(round(end.adjustedVaf()));
                     endBuilder.adjustedCopyNumber(round(adjustedCopyNumber(end)));
                     endBuilder.adjustedCopyNumberChange(round(adjustedCopyNumberChange(end)));
                 }
@@ -86,10 +86,6 @@ public final class EnrichedStructuralVariantFactory {
         return Math.round(value * 1000d) / 1000d;
     }
 
-    private static double adjustedVAF(@NotNull final PurityAdjuster purityAdjuster, @NotNull final StructuralVariantLegPloidy ploidy) {
-        final Double adjustedCopyNumber = adjustedCopyNumber(ploidy);
-        return purityAdjuster.purityAdjustedVAF(ploidy.chromosome(), Math.max(0.001, adjustedCopyNumber), ploidy.vaf());
-    }
 
     @VisibleForTesting
     static double adjustedCopyNumber(@NotNull final StructuralVariantLegPloidy ploidy) {

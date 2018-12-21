@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.patientdb.dao;
 
 import static com.hartwig.hmftools.patientdb.Config.DB_BATCH_INSERT_SIZE;
-import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.STRUCTURALVARIANT;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.STRUCTURALVARIANTBREAKEND;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.STRUCTURALVARIANTDISRUPTION;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.STRUCTURALVARIANTFUSION;
@@ -10,28 +9,37 @@ import java.sql.Timestamp;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneAnnotation;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneDisruption;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion;
-import com.hartwig.hmftools.common.variant.structural.annotation.ImmutableStructuralVariantAnalysis;
+import com.hartwig.hmftools.common.variant.structural.annotation.ImmutableSimpleGeneFusion;
+import com.hartwig.hmftools.common.variant.structural.annotation.SimpleGeneFusion;
 import com.hartwig.hmftools.common.variant.structural.annotation.StructuralVariantAnalysis;
 import com.hartwig.hmftools.common.variant.structural.annotation.StructuralVariantAnnotation;
 import com.hartwig.hmftools.common.variant.structural.annotation.Transcript;
+import com.hartwig.hmftools.patientdb.database.hmfpatients.tables.Structuralvariantbreakend;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
 import org.jooq.InsertValuesStep14;
 import org.jooq.InsertValuesStep4;
 import org.jooq.InsertValuesStep5;
 import org.jooq.Record;
+import org.jooq.Record2;
 import org.jooq.Result;
 import org.jooq.types.UInteger;
 
 public class StructuralVariantAnnotationDAO {
+
+    private static final Logger LOGGER = LogManager.getLogger(StructuralVariantAnnotationDAO.class);
 
     @NotNull
     private final DSLContext context;
@@ -47,48 +55,29 @@ public class StructuralVariantAnnotationDAO {
     }
 
     @NotNull
-    public final List<StructuralVariantAnalysis> readStructuralVariantAnalysis(@NotNull final String sample) {
-        List<StructuralVariantAnalysis> structuralVariantAnalyses = Lists.newArrayList();
+    public final List<SimpleGeneFusion> readGeneFusions(@NotNull final String sample) {
+        Set<SimpleGeneFusion> simpleGeneFusions = Sets.newHashSet();
 
-        final Result<Record> result = context.select()
+        Structuralvariantbreakend five = STRUCTURALVARIANTBREAKEND.as("five");
+        Structuralvariantbreakend three = STRUCTURALVARIANTBREAKEND.as("three");
+        final Result<Record2<String, String>> resultFiveGene = context.select(five.GENE, three.GENE)
                 .from(STRUCTURALVARIANTFUSION)
-                .join(STRUCTURALVARIANTBREAKEND)
-                .on(STRUCTURALVARIANTBREAKEND.ID.eq(STRUCTURALVARIANTFUSION.FIVEPRIMEBREAKENDID).
-                        or(STRUCTURALVARIANTBREAKEND.ID.eq(STRUCTURALVARIANTFUSION.THREEPRIMEBREAKENDID)))
-                .join(STRUCTURALVARIANT)
-                .on(STRUCTURALVARIANT.ID.eq(STRUCTURALVARIANTBREAKEND.STRUCTURALVARIANTID))
+                .innerJoin(five)
+                .on(five.ID.eq(STRUCTURALVARIANTFUSION.FIVEPRIMEBREAKENDID))
+                .innerJoin(three)
+                .on(three.ID.eq(STRUCTURALVARIANTFUSION.THREEPRIMEBREAKENDID))
                 .where(STRUCTURALVARIANTFUSION.SAMPLEID.eq(sample))
                 .fetch();
 
-                for (Record record : result) {
-                    structuralVariantAnalyses.add(ImmutableStructuralVariantAnalysis.builder()
-                            .addAllAnnotations(readingStructuralVariantAnnotator(record))
-                            .addAllDisruptions(readingGeneDisruption(record))
-                            .addAllFusions(readingGeneFusion(record))
-                            .annotations(readingStructuralVariantAnnotator(record))
-                            .disruptions(readingGeneDisruption(record))
-                            .fusions(readingGeneFusion(record))
-                            .build());
-                }
+        for (Record record : resultFiveGene) {
+            simpleGeneFusions.add(ImmutableSimpleGeneFusion.builder()
+                    .fiveGene(record.getValue(five.GENE))
+                    .threeGene(record.getValue(three.GENE))
+                    .build());
+        }
 
-        return structuralVariantAnalyses;
+        return Lists.newArrayList(simpleGeneFusions);
     }
-
-    private List<StructuralVariantAnnotation> readingStructuralVariantAnnotator(@NotNull Record record) {
-        List<StructuralVariantAnnotation> structuralVariantAnnotation = Lists.newArrayList();
-        return structuralVariantAnnotation;
-    }
-
-    private List<GeneDisruption> readingGeneDisruption(@NotNull Record record) {
-        List<GeneDisruption> geneDisruptions = Lists.newArrayList();
-        return geneDisruptions;
-    }
-
-    private List<GeneFusion> readingGeneFusion(@NotNull Record record) {
-        List<GeneFusion> geneFusions = Lists.newArrayList();
-        return geneFusions;
-    }
-
 
     @SuppressWarnings("unchecked")
     public void write(@NotNull StructuralVariantAnalysis analysis, @NotNull String sampleId) {

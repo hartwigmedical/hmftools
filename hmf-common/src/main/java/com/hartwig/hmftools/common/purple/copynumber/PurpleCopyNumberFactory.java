@@ -25,17 +25,21 @@ public class PurpleCopyNumberFactory {
     private final List<PurpleCopyNumber> somaticCopyNumbers = Lists.newArrayList();
     private final List<PurpleCopyNumber> germlineDeletions = Lists.newArrayList();
 
+    private final double ploidy;
+    private final int averageReadDepth;
     private final Gender gender;
     private final int minTumorRatioCount;
     private final int minTumorRatioCountAtCentromere;
     private final PurityAdjuster purityAdjuster;
 
-    public PurpleCopyNumberFactory(int minTumorRatioCount, int minTumorRatioCountAtCentromere,
+    public PurpleCopyNumberFactory(int minTumorRatioCount, int minTumorRatioCountAtCentromere, int averageReadDepth, double ploidy,
             @NotNull final PurityAdjuster purityAdjuster) {
         this.purityAdjuster = purityAdjuster;
         this.gender = purityAdjuster.gender();
         this.minTumorRatioCount = minTumorRatioCount;
         this.minTumorRatioCountAtCentromere = minTumorRatioCountAtCentromere;
+        this.averageReadDepth = averageReadDepth;
+        this.ploidy = ploidy;
 
     }
 
@@ -55,7 +59,7 @@ public class PurpleCopyNumberFactory {
             diploidExtension.putAll(chromosome, extendDiploid.extendDiploid(chromosomeFittedRegions));
         }
 
-        final StructuralVariantImplied svImpliedFactory = new StructuralVariantImplied(purityAdjuster);
+        final StructuralVariantImplied svImpliedFactory = new StructuralVariantImplied(averageReadDepth, ploidy, purityAdjuster);
         final ListMultimap<Chromosome, CombinedRegion> allSVImplied =
                 svImpliedFactory.svImpliedCopyNumber(structuralVariants, diploidExtension);
 

@@ -5,7 +5,12 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.base.Strings;
+import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.chromosome.Chromosome;
+import com.hartwig.hmftools.common.chromosome.HumanChromosome;
+import com.hartwig.hmftools.common.collect.Multimaps;
+import com.hartwig.hmftools.common.position.GenomePosition;
 import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.common.sam.SAMRecords;
 
@@ -19,22 +24,25 @@ import htsjdk.samtools.reference.ReferenceSequence;
 
 public class InframeIndelHotspots {
 
+    private final SAMConsumer samConsumer;
     private final IndexedFastaSequenceFile sequenceFile;
-    private final SAMSupplier samSupplier;
+    private final ListMultimap<Chromosome, GenomeRegion> codingRegions;
 
-    public InframeIndelHotspots(@NotNull final Collection<GenomeRegion> regions, @NotNull final IndexedFastaSequenceFile sequenceFile) {
+    public InframeIndelHotspots(final int minMappingQuality, @NotNull final Collection<GenomeRegion> regions,
+            @NotNull final IndexedFastaSequenceFile sequenceFile) {
         this.sequenceFile = sequenceFile;
-        samSupplier = new SAMSupplier(regions);
+        this.codingRegions = Multimaps.fromRegions(regions);
+        this.samConsumer = new SAMConsumer(minMappingQuality, regions);
     }
 
     @NotNull
     public Set<VariantHotspot> findInframeIndels(@NotNull final SamReader samReader) {
 
         final Set<VariantHotspot> indelsWithIncorrectRefs = Sets.newHashSet();
-        samSupplier.readOnce(samReader, record -> indelsWithIncorrectRefs.addAll(findInframeIndelsWithIncorrectRefs(record)));
+        samConsumer.consume(samReader, record -> indelsWithIncorrectRefs.addAll(findInframeIndelsWithIncorrectRefs(record)));
 
         return indelsWithIncorrectRefs.stream()
-                .filter(samSupplier::isInCodingRegions)
+                .filter(this::isInCodingRegions)
                 .map(this::correctRef)
                 .filter(x -> x.isSimpleDelete() || x.isSimpleInsert())
                 .collect(Collectors.toSet());
@@ -97,6 +105,10 @@ public class InframeIndelHotspots {
         }
 
         return false;
+    }
+
+    private boolean isInCodingRegions(@NotNull final GenomePosition hotspot) {
+        return codingRegions.get(HumanChromosome.fromString(hotspot.chromosome())).stream().anyMatch(x -> x.contains(hotspot));
     }
 
 }

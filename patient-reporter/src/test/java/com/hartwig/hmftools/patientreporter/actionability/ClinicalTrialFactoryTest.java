@@ -25,6 +25,15 @@ public class ClinicalTrialFactoryTest {
                 .source(ActionabilitySource.ICLUSION)
                 .reference("reference")
                 .isOnLabel(true)
+                .type(Strings.EMPTY)
+                .gene(Strings.EMPTY)
+                .chromosome(Strings.EMPTY)
+                .position(Strings.EMPTY)
+                .ref(Strings.EMPTY)
+                .alt(Strings.EMPTY)
+                .cnvType(Strings.EMPTY)
+                .fusionFiveGene(Strings.EMPTY)
+                .fusionThreeGene(Strings.EMPTY)
                 .build();
 
         List<ClinicalTrial> trial = ClinicalTrialFactory.extractOnLabelTrials(Lists.newArrayList(item));

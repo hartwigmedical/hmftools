@@ -2,7 +2,6 @@ package com.hartwig.hmftools.patientdb.dao;
 
 import static com.hartwig.hmftools.patientdb.Config.DB_BATCH_INSERT_SIZE;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.SOMATICVARIANT;
-import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.STRUCTURALVARIANT;
 
 import java.sql.Timestamp;
 import java.util.Date;
@@ -69,12 +68,10 @@ class SomaticVariantDAO {
                     .repeatSequence(record.getValue(SOMATICVARIANT.REPEATSEQUENCE))
                     .repeatCount(record.getValue(SOMATICVARIANT.REPEATCOUNT))
                     .clonality(Clonality.valueOf(record.getValue(SOMATICVARIANT.CLONALITY)))
-                    .biallelic(byteToBoolean(record.getValue(SOMATICVARIANT.BIALLELIC)))
                     .hotspot(Hotspot.valueOf(record.getValue(SOMATICVARIANT.HOTSPOT)))
                     .mappability(record.getValue(SOMATICVARIANT.MAPPABILITY))
                     .germlineStatus(GermlineStatus.valueOf(record.getValue(SOMATICVARIANT.GERMLINESTATUS)))
                     .minorAllelePloidy(record.getValue(SOMATICVARIANT.MINORALLELEPLOIDY))
-                    .ploidy(1)
                     .canonicalCodingEffect(stringToBoolean(Strings.EMPTY) ? CodingEffect.UNDEFINED : CodingEffect.valueOf(record.getValue(SOMATICVARIANT.CANONICALCODINGEFFECT)))
                     .recovered(byteToBoolean(record.getValue(SOMATICVARIANT.RECOVERED)))
                     .build());

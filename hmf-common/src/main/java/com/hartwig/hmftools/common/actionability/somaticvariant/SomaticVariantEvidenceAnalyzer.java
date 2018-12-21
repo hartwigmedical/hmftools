@@ -14,6 +14,7 @@ import com.hartwig.hmftools.common.actionability.cancertype.CancerTypeAnalyzer;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -54,7 +55,15 @@ public class SomaticVariantEvidenceAnalyzer {
                     && variant.position() == actionableVariant.position() && variant.ref().equals(actionableVariant.ref()) && variant.alt()
                     .equals(actionableVariant.alt())) {
                 ImmutableEvidenceItem.Builder evidenceBuilder = fromActionableVariant(actionableVariant);
-
+                evidenceBuilder.type("variant");
+                evidenceBuilder.gene(actionableVariant.gene());
+                evidenceBuilder.chromosome(actionableVariant.chromosome());
+                evidenceBuilder.position(Long.toString(actionableVariant.position()));
+                evidenceBuilder.ref(actionableVariant.ref());
+                evidenceBuilder.alt(actionableVariant.alt());
+                evidenceBuilder.cnvType("NA");
+                evidenceBuilder.fusionFiveGene("NA");
+                evidenceBuilder.fusionThreeGene("NA");
                 evidenceBuilder.event(eventString(variant));
                 evidenceBuilder.isOnLabel(cancerTypeAnalyzer.isCancerTypeMatch(actionableVariant.cancerType(), primaryTumorLocation));
 
@@ -67,7 +76,15 @@ public class SomaticVariantEvidenceAnalyzer {
                     && variant.chromosome().equals(actionableRange.chromosome()) && variant.position() >= actionableRange.start()
                     && variant.position() <= actionableRange.end()) {
                 ImmutableEvidenceItem.Builder evidenceBuilder = fromActionableRange(actionableRange);
-
+                evidenceBuilder.type("range");
+                evidenceBuilder.gene(actionableRange.gene());
+                evidenceBuilder.chromosome(actionableRange.chromosome());
+                evidenceBuilder.position(actionableRange.start() + " - " + actionableRange.end());
+                evidenceBuilder.ref("NA");
+                evidenceBuilder.alt("NA");
+                evidenceBuilder.cnvType("NA");
+                evidenceBuilder.fusionFiveGene("NA");
+                evidenceBuilder.fusionThreeGene("NA");
                 evidenceBuilder.event(eventString(variant));
                 evidenceBuilder.isOnLabel(cancerTypeAnalyzer.isCancerTypeMatch(actionableRange.cancerType(), primaryTumorLocation));
 
