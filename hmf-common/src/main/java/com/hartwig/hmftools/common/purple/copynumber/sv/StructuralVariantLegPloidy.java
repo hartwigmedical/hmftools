@@ -31,6 +31,10 @@ public abstract class StructuralVariantLegPloidy implements StructuralVariantLeg
 
     public abstract Optional<Double> rightCopyNumber();
 
+    public double impliedRightCopyNumberWeight() {
+        return canInferRight() ? weight() : 0;
+    }
+
     public double impliedRightCopyNumber(int averageReadDepth, double averageCopyNumber) {
 
         if (isDecreasingFromZero(1, leftCopyNumber())) {
@@ -44,9 +48,6 @@ public abstract class StructuralVariantLegPloidy implements StructuralVariantLeg
         return leftCopyNumber().map(x -> x - orientation() * averageImpliedPloidy()).orElse(0D);
     }
 
-    public double impliedRightCopyNumberWeight() {
-        return isIncreasingAndLargeVaf(-1) || leftCopyNumber().isPresent() ? weight() : 0;
-    }
 
     public double impliedLeftCopyNumber(int averageReadDepth, double averageCopyNumber) {
 
@@ -61,12 +62,20 @@ public abstract class StructuralVariantLegPloidy implements StructuralVariantLeg
         return rightCopyNumber().map(x -> x + orientation() * averageImpliedPloidy()).orElse(0D);
     }
 
-    private boolean isDecreasingFromZero(int orientation, @NotNull final Optional<Double> copyNumber) {
-        return orientation() == orientation && copyNumber.filter(Doubles::isZero).isPresent();
+    public double impliedLeftCopyNumberWeight() {
+        return canInferLeft() ? weight() : 0;
     }
 
-    public double impliedLeftCopyNumberWeight() {
-        return isIncreasingAndLargeVaf(1) || rightCopyNumber().isPresent() ? weight() : 0;
+    private boolean canInferRight() {
+        return isDecreasingFromZero(1, leftCopyNumber()) || isIncreasingAndLargeVaf(-1) || leftCopyNumber().isPresent();
+    }
+
+    private boolean canInferLeft() {
+        return isDecreasingFromZero(-1, rightCopyNumber()) || isIncreasingAndLargeVaf(1) || rightCopyNumber().isPresent();
+    }
+
+    private boolean isDecreasingFromZero(int orientation, @NotNull final Optional<Double> copyNumber) {
+        return orientation() == orientation && copyNumber.filter(Doubles::isZero).isPresent();
     }
 
     private double copyNumberImpliedFromReadDepth(int averageReadDepth, double averageCopyNumber) {

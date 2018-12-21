@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Optional;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.chromosome.Chromosome;
@@ -21,12 +22,12 @@ import org.jetbrains.annotations.NotNull;
 @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
 class StructuralVariantImplied {
 
-    private final double ploidy;
+    private final double averageCopyNumber;
     private final int averageReadDepth;
     private final StructuralVariantLegPloidyFactory<CombinedRegion> structuralVariantPloidyFactory;
 
-    StructuralVariantImplied(int averageReadDepth, double ploidy, final PurityAdjuster purityAdjuster) {
-        this.ploidy = ploidy;
+    StructuralVariantImplied(int averageReadDepth, double averageCopyNumber, final PurityAdjuster purityAdjuster) {
+        this.averageCopyNumber = averageCopyNumber;
         this.averageReadDepth = averageReadDepth;
         this.structuralVariantPloidyFactory =
                 new StructuralVariantLegPloidyFactory<>(purityAdjuster, x -> x.isProcessed() ? x.tumorCopyNumber() : 0);
@@ -40,8 +41,16 @@ class StructuralVariantImplied {
         long currentMissingCopyNumbers = missingCopyNumberCount(copyNumbers);
 
         while (currentMissingCopyNumbers < previousMissingCopyNumbers && currentMissingCopyNumbers > 0) {
+            final ListMultimap<Chromosome, CombinedRegion> processedCopyNumbers = ArrayListMultimap.create();
+            for (Chromosome chromosome : copyNumbers.keySet()) {
+                copyNumbers.get(chromosome)
+                        .stream()
+                        .filter(CombinedRegion::isProcessed)
+                        .forEach(x -> processedCopyNumbers.put(chromosome, x));
+            }
+
             final GenomePositionSelector<StructuralVariantLegPloidy> selector =
-                    GenomePositionSelectorFactory.create(createPloidies(structuralVariants, copyNumbers));
+                    GenomePositionSelectorFactory.create(createPloidies(structuralVariants, processedCopyNumbers));
 
             for (Chromosome chromosome : HumanChromosome.values()) {
                 final List<CombinedRegion> chromosomeCopyNumbers = copyNumbers.get(chromosome);
@@ -49,9 +58,11 @@ class StructuralVariantImplied {
                 for (final CombinedRegion copyNumber : chromosomeCopyNumbers) {
                     if (implyCopyNumberFromSV(copyNumber)) {
                         final Optional<StructuralVariantLegPloidy> optionalStart =
-                                select(copyNumber.chromosome(), copyNumber.start(), selector);
+                                select(copyNumber.chromosome(), copyNumber.start(), selector).filter(x -> x.impliedRightCopyNumberWeight()
+                                        > 0);
                         final Optional<StructuralVariantLegPloidy> optionalEnd =
-                                select(copyNumber.chromosome(), copyNumber.end() + 1, selector);
+                                select(copyNumber.chromosome(), copyNumber.end() + 1, selector).filter(x -> x.impliedLeftCopyNumberWeight()
+                                        > 0);
                         if (optionalStart.isPresent() || optionalEnd.isPresent()) {
                             svInferred = true;
                             inferCopyNumberFromStructuralVariants(copyNumber, optionalStart, optionalEnd);
@@ -88,16 +99,16 @@ class StructuralVariantImplied {
     private void inferCopyNumberFromStructuralVariants(@NotNull final CombinedRegion region,
             final Optional<StructuralVariantLegPloidy> start, final Optional<StructuralVariantLegPloidy> end) {
         region.setTumorCopyNumber(CopyNumberMethod.STRUCTURAL_VARIANT,
-                inferCopyNumberFromStructuralVariants(averageReadDepth, ploidy, start, end));
+                inferCopyNumberFromStructuralVariants(averageReadDepth, averageCopyNumber, start, end));
     }
 
     @VisibleForTesting
     static double inferCopyNumberFromStructuralVariants(int averageReadDepth, double averageCopyNumber,
             final Optional<StructuralVariantLegPloidy> start, final Optional<StructuralVariantLegPloidy> end) {
-        final double startWeight = start.map(StructuralVariantLegPloidy::impliedRightCopyNumberWeight).orElse(0d);
+        final double startWeight = start.map(x -> x.impliedRightCopyNumberWeight()).orElse(0d);
         final double startCopyNumber = start.map(x -> x.impliedRightCopyNumber(averageReadDepth, averageCopyNumber)).orElse(0d);
 
-        final double endWeight = end.map(StructuralVariantLegPloidy::impliedLeftCopyNumberWeight).orElse(0d);
+        final double endWeight = end.map(x -> x.impliedLeftCopyNumberWeight()).orElse(0d);
         final double endCopyNumber = end.map(x -> x.impliedLeftCopyNumber(averageReadDepth, averageCopyNumber)).orElse(0d);
 
         double unconstrainedResult = (startCopyNumber * startWeight + endCopyNumber * endWeight) / (startWeight + endWeight);
