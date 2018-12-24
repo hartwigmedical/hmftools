@@ -26,13 +26,9 @@ class ClinicalTrialDAO {
     }
 
     void writeClinicalTrials(@NotNull String sample, @NotNull List<ClinicalTrial> clinicalTrial) {
-        LOGGER.info("writeClinicalTrials in ClinicalTrialDAO class");
-        LOGGER.info(sample);
-        LOGGER.info(clinicalTrial);
         deleteClinicalTrialForSample(sample);
 
         for (List<ClinicalTrial> trials : Iterables.partition(clinicalTrial, DB_BATCH_INSERT_SIZE)) {
-            LOGGER.info("Insert column table names");
             InsertValuesStep18 inserter = context.insertInto(CLINICALTRIALITEM,
                     CLINICALTRIALITEM.SAMPLEID,
                     CLINICALTRIALITEM.TYPEVARIANT,
@@ -52,13 +48,8 @@ class ClinicalTrialDAO {
                     CLINICALTRIALITEM.CCMOID,
                     CLINICALTRIALITEM.ICLUSIONID,
                     CLINICALTRIALITEM.EVIDENCESOURCE);
-            LOGGER.info("insert values");
             trials.forEach(trial -> addValues(sample, trial, inserter));
-            LOGGER.info("values inserted");
             inserter.execute();
-            LOGGER.info(inserter.execute());
-            LOGGER.info(inserter);
-            LOGGER.info("values executed");
         }
     }
 
@@ -82,13 +73,9 @@ class ClinicalTrialDAO {
                 CCMOId(clinicalTrial.reference()),
                 IclusionId(clinicalTrial.reference()),
                 clinicalTrial.source().sourceName());
-        LOGGER.info(clinicalTrial.type());
-        LOGGER.info(sample);
-        LOGGER.info("addValues");
     }
 
     void deleteClinicalTrialForSample(@NotNull String sample) {
-        LOGGER.info("deleteClinicalTrialForSample");
         context.delete(CLINICALTRIALITEM).where(CLINICALTRIALITEM.SAMPLEID.eq(sample)).execute();
     }
 

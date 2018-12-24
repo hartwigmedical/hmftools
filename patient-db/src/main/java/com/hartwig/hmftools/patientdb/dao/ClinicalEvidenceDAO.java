@@ -26,13 +26,9 @@ class ClinicalEvidenceDAO {
     }
 
     void writeClinicalEvidence(@NotNull String sample, @NotNull List<EvidenceItem> evidenceItem) {
-        LOGGER.info("writeClinicalEvidence in ClinicalEvidenceDAO class");
-        LOGGER.info(sample);
-        LOGGER.info(evidenceItem);
         deleteClinicalEvidenceForSample(sample);
 
         for (List<EvidenceItem> items : Iterables.partition(evidenceItem, DB_BATCH_INSERT_SIZE)) {
-            LOGGER.info("Insert kolom table names");
             InsertValuesStep19 inserter = context.insertInto(CLINICALEVIDENCEITEM,
                     CLINICALEVIDENCEITEM.SAMPLEID,
                     CLINICALEVIDENCEITEM.TYPEVARIANT,
@@ -53,15 +49,9 @@ class ClinicalEvidenceDAO {
                     CLINICALEVIDENCEITEM.LABEL,
                     CLINICALEVIDENCEITEM.EVIDENCELEVEL,
                     CLINICALEVIDENCEITEM.EVIDENCESOURCE);
-            LOGGER.info("insert values");
             items.forEach(trial -> addValues(sample, trial, inserter));
-            LOGGER.info("values inserted");
             inserter.execute();
-            LOGGER.info(inserter.execute());
-            LOGGER.info(inserter);
-            LOGGER.info("values executed");
         }
-
     }
 
     private static void addValues(@NotNull String sample, @NotNull EvidenceItem evidenceItem, @NotNull InsertValuesStep19 inserter) {
@@ -85,15 +75,9 @@ class ClinicalEvidenceDAO {
                 evidenceItem.isOnLabel() ? "Tumor Type specific" : "Other tumor types specific",
                 evidenceItem.level().readableString(),
                 evidenceItem.source().sourceName());
-        LOGGER.info(evidenceItem.type());
-        LOGGER.info(sample);
-        LOGGER.info("addValues");
-
-
     }
 
     void deleteClinicalEvidenceForSample(@NotNull String sample) {
-        LOGGER.info("deleteClinicalEvidenceForSample");
         context.delete(CLINICALEVIDENCEITEM).where(CLINICALEVIDENCEITEM.SAMPLEID.eq(sample)).execute();
     }
 }

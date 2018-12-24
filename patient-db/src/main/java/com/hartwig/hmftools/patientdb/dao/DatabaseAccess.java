@@ -222,12 +222,10 @@ public class DatabaseAccess {
     }
 
     public void writeClinicalEvidence (@NotNull String sample, @NotNull List<EvidenceItem> items) {
-        LOGGER.info("writeClinicalEvidence");
         clinicalEvidenceDAO.writeClinicalEvidence(sample, items);
     }
 
     public void writeClinicalTrials(@NotNull String sample, @NotNull List<ClinicalTrial> trials) {
-        LOGGER.info("writeClinicalTrials");
         clinicalTrialDAO.writeClinicalTrials(sample, trials);
     }
 
