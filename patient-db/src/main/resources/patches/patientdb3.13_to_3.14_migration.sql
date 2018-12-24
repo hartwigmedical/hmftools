@@ -1,15 +1,6 @@
 CREATE TABLE clinicalTrialItem
 (   id int NOT NULL AUTO_INCREMENT,
     sampleId varchar(255) NOT NULL,
-    typeVariant varchar(50) NOT NULL,
-    gene varchar(50) NOT NULL,
-    chomosome varchar(50) NOT NULL,
-    position varchar(50) NOT NULL,
-    ref varchar(50) NOT NULL,
-    alt varchar(50) NOT NULL,
-    cnvType varchar(50) NOT NULL,
-    fusionFiveGene varchar(50) NOT NULL,
-    fusionThreeGene varchar(50) NOT NULL,
     eventType varchar(255) NOT NULL,
     eventMatch varchar(255) NOT NULL,
     trial varchar(500) NOT NULL,
@@ -22,18 +13,10 @@ CREATE TABLE clinicalTrialItem
     INDEX(sampleId)
 );
 
+DROP TABLE IF EXISTS clinicalEvidenceItem;
 CREATE TABLE clinicalEvidenceItem
 (   id int NOT NULL AUTO_INCREMENT,
     sampleId varchar(255) NOT NULL,
-    typeVariant varchar(50) NOT NULL,
-    gene varchar(50) NOT NULL,
-    chomosome varchar(50) NOT NULL,
-    position varchar(50) NOT NULL,
-    ref varchar(50) NOT NULL,
-    alt varchar(50) NOT NULL,
-    cnvType varchar(50) NOT NULL,
-    fusionFiveGene varchar(50) NOT NULL,
-    fusionThreeGene varchar(50) NOT NULL,
     eventType varchar(255) NOT NULL,
     eventMatch varchar(255) NOT NULL,
     drug varchar(500) NOT NULL,

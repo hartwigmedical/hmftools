@@ -12,7 +12,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
-import org.jooq.InsertValuesStep19;
+import org.jooq.InsertValuesStep10;
 
 class ClinicalEvidenceDAO {
 
@@ -29,17 +29,8 @@ class ClinicalEvidenceDAO {
         deleteClinicalEvidenceForSample(sample);
 
         for (List<EvidenceItem> items : Iterables.partition(evidenceItem, DB_BATCH_INSERT_SIZE)) {
-            InsertValuesStep19 inserter = context.insertInto(CLINICALEVIDENCEITEM,
+            InsertValuesStep10 inserter = context.insertInto(CLINICALEVIDENCEITEM,
                     CLINICALEVIDENCEITEM.SAMPLEID,
-                    CLINICALEVIDENCEITEM.TYPEVARIANT,
-                    CLINICALEVIDENCEITEM.GENE,
-                    CLINICALEVIDENCEITEM.CHOMOSOME,
-                    CLINICALEVIDENCEITEM.POSITION,
-                    CLINICALEVIDENCEITEM.REF,
-                    CLINICALEVIDENCEITEM.ALT,
-                    CLINICALEVIDENCEITEM.CNVTYPE,
-                    CLINICALEVIDENCEITEM.FUSIONFIVEGENE,
-                    CLINICALEVIDENCEITEM.FUSIONTHREEGENE,
                     CLINICALEVIDENCEITEM.EVENTTYPE,
                     CLINICALEVIDENCEITEM.EVENTMATCH,
                     CLINICALEVIDENCEITEM.DRUG,
@@ -54,18 +45,9 @@ class ClinicalEvidenceDAO {
         }
     }
 
-    private static void addValues(@NotNull String sample, @NotNull EvidenceItem evidenceItem, @NotNull InsertValuesStep19 inserter) {
+    private static void addValues(@NotNull String sample, @NotNull EvidenceItem evidenceItem, @NotNull InsertValuesStep10 inserter) {
         //noinspection unchecked
         inserter.values(sample,
-                evidenceItem.type(),
-                evidenceItem.gene(),
-                evidenceItem.chromosome(),
-                evidenceItem.position(),
-                evidenceItem.ref(),
-                evidenceItem.alt(),
-                evidenceItem.cnvType(),
-                evidenceItem.fusionFiveGene(),
-                evidenceItem.fusionThreeGene(),
                 evidenceItem.event(),
                 evidenceItem.scope().readableString(),
                 evidenceItem.drug(),

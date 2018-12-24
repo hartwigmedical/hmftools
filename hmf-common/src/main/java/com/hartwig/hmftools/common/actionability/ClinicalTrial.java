@@ -31,32 +31,4 @@ public abstract class ClinicalTrial {
 
     @NotNull
     public abstract EvidenceScope scope();
-    
-    @NotNull
-    public abstract String type();
-
-    @NotNull
-    public abstract String gene();
-
-    @NotNull
-    public abstract String chromosome();
-
-    @NotNull
-    public abstract String position();
-
-    @NotNull
-    public abstract String ref();
-
-    @NotNull
-    public abstract String alt();
-
-    @NotNull
-    public abstract String cnvType();
-
-    @NotNull
-    public abstract String fusionFiveGene();
-
-    @NotNull
-    public abstract String fusionThreeGene();
-
 }
