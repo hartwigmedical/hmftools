@@ -9,8 +9,10 @@ import static com.hartwig.hmftools.common.variant.VariantConsequence.STOP_GAINED
 import static com.hartwig.hmftools.common.variant.VariantConsequence.SYNONYMOUS_VARIANT;
 import static com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotationFactory.SNPEFF_IDENTIFIER;
 
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -87,6 +89,7 @@ public class BachelorPP
     // file locations
     private static final String WHITELIST_FILE = "whitelist_file";
     private static final String BLACKLIST_FILE = "blacklist_file";
+    private static final String SAMPLE_LIST_FILE = "sample_list_file";
 
     private static final String DB_USER = "db_user";
     private static final String DB_PASS = "db_pass";
@@ -104,6 +107,7 @@ public class BachelorPP
     private AlleleDepthLoader mAllelDepthLoader;
     private List<BachelorRecordFilter> mWhitelistFilters;
     private List<BachelorRecordFilter> mBlacklistFilters;
+    private List<String> mLimitedSampleList;
 
     private BachelorPP()
     {
@@ -117,7 +121,7 @@ public class BachelorPP
 
         mWhitelistFilters = Lists.newArrayList();
         mBlacklistFilters = Lists.newArrayList();
-
+        mLimitedSampleList = Lists.newArrayList();
     }
 
     private boolean initialise(final CommandLine cmd)
@@ -125,7 +129,8 @@ public class BachelorPP
         try
         {
             mDbAccess = databaseAccess(cmd);
-        } catch (SQLException e)
+        }
+        catch (SQLException e)
         {
             LOGGER.error("DB connection failed: {}", e.toString());
             return false;
@@ -143,7 +148,8 @@ public class BachelorPP
 
                 LOGGER.debug("loading indexed fasta reference file");
                 mIndexedFastaSequenceFile = new IndexedFastaSequenceFile(new File(fastaFileLocation));
-            } catch (IOException e)
+            }
+            catch (IOException e)
             {
                 LOGGER.error("reference file loading failed");
                 return false;
@@ -171,6 +177,9 @@ public class BachelorPP
             LOGGER.info("running in batch mode");
             sampleId = "";
             mIsBatchMode = true;
+
+            if(cmd.hasOption(SAMPLE_LIST_FILE))
+                loadSampleListFile(cmd.getOptionValue(SAMPLE_LIST_FILE));
         }
 
         String sampleDirectory = cmd.getOptionValue(SAMPLE_PATH);
@@ -220,7 +229,7 @@ public class BachelorPP
         }
 
         BachelorDataCollection dataCollection = new BachelorDataCollection();
-        dataCollection.setSampleId(sampleId);
+        dataCollection.setSampleId(sampleId, mLimitedSampleList);
         dataCollection.setMaxReadCount(Integer.parseInt(cmd.getOptionValue(MAX_READ_COUNT, "0")));
 
         if (!dataCollection.loadBachelorData(bachelorInputFile))
@@ -717,6 +726,33 @@ public class BachelorPP
         }
     }
 
+    private void loadSampleListFile(final String filename)
+    {
+        try
+        {
+            BufferedReader fileReader = new BufferedReader(new FileReader(filename));
+
+            String line = fileReader.readLine(); // skip header
+
+            while ((line = fileReader.readLine()) != null)
+            {
+                String[] items = line.split(",");
+
+                final String sampleId = items[0];
+
+                mLimitedSampleList.add(items[0]);
+            }
+
+            LOGGER.info("loaded {} specific sample ids", mLimitedSampleList.size());
+
+        }
+        catch (IOException exception)
+        {
+            LOGGER.error("Failed to read sample list input CSV file({}): {}", filename, exception.toString());
+        }
+    }
+
+
     @NotNull
     private static Options createBasicOptions()
     {
@@ -729,6 +765,7 @@ public class BachelorPP
         options.addOption(HIGH_CONFIDENCE_BED, true, "Path to the high confidence bed file");
         options.addOption(PURPLE_DATA_DIRECTORY, true, "Sub-directory with sample path for purple data");
         options.addOption(MAX_READ_COUNT, true, "Optional - for buffered input file reading");
+        options.addOption(SAMPLE_LIST_FILE, true, "Optional: limiting list of sample IDs to process");
 
         options.addOption(DB_USER, true, "Database user name");
         options.addOption(DB_PASS, true, "Database password");

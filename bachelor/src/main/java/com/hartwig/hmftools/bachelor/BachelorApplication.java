@@ -359,8 +359,11 @@ public class BachelorApplication {
 
                 mMainDataWriter.newLine();
 
-                mBedFileWriter.write(String.format("%s\t%s\t%d\t%d", sampleId, r.chrom(), r.pos() - 1, r.pos()));
-                mBedFileWriter.newLine();
+                if(!mIsBatchRun)
+                {
+                    mBedFileWriter.write(String.format("%s\t%s\t%d\t%d", sampleId, r.chrom(), r.pos() - 1, r.pos()));
+                    mBedFileWriter.newLine();
+                }
             }
         }
         catch (final IOException e)
