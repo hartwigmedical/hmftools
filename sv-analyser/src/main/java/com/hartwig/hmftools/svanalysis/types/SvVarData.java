@@ -10,6 +10,7 @@ import static com.hartwig.hmftools.common.variant.structural.StructuralVariantTy
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.svanalysis.annotators.FragileSiteAnnotator.NO_FS;
 import static com.hartwig.hmftools.svanalysis.annotators.LineElementAnnotator.IDENTIFIED_LINE_ELEMENT;
+import static com.hartwig.hmftools.svanalysis.annotators.LineElementAnnotator.KNOWN_LINE_ELEMENT;
 import static com.hartwig.hmftools.svanalysis.annotators.LineElementAnnotator.NO_LINE_ELEMENT;
 import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.ASSEMBLY_MATCH_MATCHED;
 import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.ASSEMBLY_MATCH_NONE;
@@ -348,15 +349,15 @@ public class SvVarData
     {
         if(isStart)
         {
-            if(mStartLineElement.equals(IDENTIFIED_LINE_ELEMENT))
-                mStartLineElement = IDENTIFIED_LINE_ELEMENT + ";" + type;
+            if(mStartLineElement.equals(IDENTIFIED_LINE_ELEMENT) || mStartLineElement.equals(KNOWN_LINE_ELEMENT))
+                mStartLineElement = mStartLineElement + ";" + type;
             else
                 mStartLineElement = type;
         }
         else
         {
-            if(mEndLineElement.equals(IDENTIFIED_LINE_ELEMENT))
-                mEndLineElement = IDENTIFIED_LINE_ELEMENT + ";" + type;
+            if(mEndLineElement.equals(IDENTIFIED_LINE_ELEMENT) || mEndLineElement.equals(KNOWN_LINE_ELEMENT))
+                mEndLineElement = mEndLineElement + ";" + type;
             else
                 mEndLineElement = type;
         }
@@ -403,7 +404,7 @@ public class SvVarData
             mEndDB = link;
     }
 
-    public String getFoldbackLink(boolean useStart) { return useStart ? mFoldbackLinkStart : mFoldbackLinkEnd; }
+    public final String getFoldbackLink(boolean useStart) { return useStart ? mFoldbackLinkStart : mFoldbackLinkEnd; }
     public int getFoldbackLen(boolean useStart) { return useStart ? mFoldbackLenStart : mFoldbackLenEnd; }
     public final String getFoldbackLinkInfo(boolean useStart) { return useStart ? mFoldbackLinkInfoStart : mFoldbackLinkInfoEnd; }
     public void setFoldbackLink(boolean isStart, String link, int length, String linkInfo)

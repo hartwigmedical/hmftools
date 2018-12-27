@@ -1255,7 +1255,7 @@ public class ClusterAnalyser {
                     int[] nextSVData = getNextClusterSVData(cluster, breakendList, pair);
                     pair.setNextSVData(nextSVData[NEXT_SV_DISTANCE], nextSVData[NEXT_SV_TRAVERSED_COUNT]);
 
-                    pair.setTraversedSVCount(getTraversedSVs(cluster, breakendList,
+                    pair.setTraversedSVCount(getTraversedSvCount(cluster, breakendList,
                             pair.getBreakend(true).getChrPosIndex(), pair.getBreakend(false).getChrPosIndex()));
 
                     SvLinkedPair dbFirst = first.getDBLink(pair.firstLinkOnStart());
@@ -1416,24 +1416,39 @@ public class ClusterAnalyser {
 
     }
 
-    private static int getTraversedSVs(final SvCluster cluster, final List<SvBreakend> breakendList, int lowerIndex, int upperIndex)
+    private static int getTraversedSvCount(final SvCluster cluster, final List<SvBreakend> breakendList, int lowerIndex, int upperIndex)
     {
-        if(lowerIndex >= upperIndex - 1)
+        String traversedInfo = getTraversedSvData(cluster, breakendList, lowerIndex, upperIndex);
+
+        if(traversedInfo.isEmpty())
             return 0;
 
-        int unclusteredTraversedCount = 0;
+        String[] items = traversedInfo.split(";");
+        return items.length;
+    }
+
+    private static String getTraversedSvData(final SvCluster cluster, final List<SvBreakend> breakendList, int lowerIndex, int upperIndex)
+    {
+        if(lowerIndex >= upperIndex - 1)
+            return "";
+
+        String traversedInfo = "";
 
         for (int i = lowerIndex + 1; i <= upperIndex - 1; ++i)
         {
-            final SvCluster otherCluster = breakendList.get(i).getSV().getCluster();
+            final SvBreakend breakend = breakendList.get(i);
+            final SvCluster otherCluster = breakend.getSV().getCluster();
 
             if (otherCluster == cluster || otherCluster.isResolved())
                 continue;
 
-            ++unclusteredTraversedCount;
+            if(!traversedInfo.isEmpty())
+                traversedInfo += ";";
+
+            traversedInfo += String.format("%d %.2f", breakend.orientation(), breakend.getSV().copyNumberChange(breakend.usesStart()));
         }
 
-        return unclusteredTraversedCount;
+        return traversedInfo;
     }
 
     private static int NEXT_SV_DISTANCE = 0;
@@ -1526,6 +1541,8 @@ public class ClusterAnalyser {
         if(cluster.isResolved() || cluster.isFullyChained())
             return;
 
+        // isSpecificCluster(cluster);
+
         final Map<String, List<SvBreakend>> chrBreakendMap = cluster.getChrBreakendMap();
 
         for (final Map.Entry<String, List<SvBreakend>> entry : chrBreakendMap.entrySet())
@@ -1537,12 +1554,38 @@ public class ClusterAnalyser {
             for(int i = 0; i < breakendList.size() - 1; ++i)
             {
                 final SvBreakend lowerBreakend = breakendList.get(i);
-                final SvBreakend upperBreakend = breakendList.get(i+1);
+                SvBreakend upperBreakend = breakendList.get(i+1);
+
+                boolean isFoldback = false;
 
                 if(lowerBreakend.orientation() != upperBreakend.orientation())
-                    continue;
+                {
+                    // allow for short DBs where the breakends remain in a foldback
+                    if(i < breakendList.size() - 2)
+                    {
+                        final SvBreakend nextBreakend = breakendList.get(i+2);
 
-                int traversedSvCount = getTraversedSVs(cluster, fullBreakendList, lowerBreakend.getChrPosIndex(), upperBreakend.getChrPosIndex());
+                        if(!lowerBreakend.getSV().getFoldbackLink(lowerBreakend.usesStart()).isEmpty()
+                                && lowerBreakend.getSV().getFoldbackLink(lowerBreakend.usesStart())
+                                .equals(nextBreakend.getSV().getFoldbackLink(nextBreakend.usesStart())))
+                        {
+                            isFoldback = true;
+                            upperBreakend = nextBreakend;
+                        }
+                    }
+
+                    if(!isFoldback)
+                        continue;
+                }
+
+                if(!isFoldback)
+                {
+                    isFoldback = !lowerBreakend.getSV().getFoldbackLink(lowerBreakend.usesStart()).isEmpty()
+                            && lowerBreakend.getSV().getFoldbackLink(lowerBreakend.usesStart()).equals(upperBreakend.getSV().id());
+                }
+
+                String traverseInfo = getTraversedSvData(cluster, fullBreakendList, lowerBreakend.getChrPosIndex(), upperBreakend.getChrPosIndex());
+                int traversedSvCount = traverseInfo.isEmpty() ? 0 : traverseInfo.split(";").length;
 
                 SvBreakend nextClusteredBreakend = null;
                 SvBreakend nextBreakend = null; // regardless of clustering
@@ -1578,21 +1621,32 @@ public class ClusterAnalyser {
                     }
                 }
 
-                // CSV fields: SampleId,ClusterId,Chromosome,Orientation,SvBack,SvFront,PosBack,PosFront,IsFoldback,TraversedSVs,BtoFLength,CNChgBack,CNChgFront
-                // ,SvNext,FtoNextLength,OrientNext,CNChgNext,SvNextCL,FtoNextCLLength,OrientNextCL,CNChgNextCL
+                // CSV fields: Time,SampleId,ClusterId,ClusterCount,Chromosome,Orientation,SvBack,SvFront,TypeBack,TypeFront,PosBack,PosFront,
+                // IsFoldback,TraversedSvCount,TraversedSvData,BtoFLength,CNChgBack,CNChgFront,CNFront,
+                // SvNext,FtoNextLength,OrientNext,CNChgNext,SvNextCL,FtoNextCLLength,OrientNextCL,CNChgNextCL
                 final SvBreakend frontBE = lowerBreakend.orientation() == 1 ? lowerBreakend : upperBreakend;
                 final SvBreakend backBE = lowerBreakend.orientation() == 1 ? upperBreakend : lowerBreakend;
 
-                boolean isFoldback = !lowerBreakend.getSV().getFoldbackLink(lowerBreakend.usesStart()).isEmpty()
-                        && lowerBreakend.getSV().getFoldbackLink(lowerBreakend.usesStart())
-                        .equals(lowerBreakend.getSV().getFoldbackLink(lowerBreakend.usesStart()));
+                if(frontBE.getSV().getDBLink(frontBE.usesStart()) != null)
+                {
+                    // check for an overlapping short DB which would invalidate these consecutive breakends
+                    if(frontBE.getSV().getDBLink(frontBE.usesStart()).length() < 0)
+                        continue;
+                }
+
+                final SvVarData frontSv = frontBE.getSV();
+                final SvVarData backSv = backBE.getSV();
 
                 // put all this together in an annotation string
-                String consecBreakendData = String.format("%s,%d,%s,%d,%s,%s,%d,%d,%s,%d,%d,%.2f,%.2f",
-                        mSampleId, cluster.id(), frontBE.chromosome(), lowerBreakend.orientation(),
-                        backBE.getSV().id(), frontBE.getSV().id(), backBE.position(), frontBE.position(),
-                        isFoldback, traversedSvCount, upperBreakend.position() - lowerBreakend.position(),
-                        backBE.getSV().copyNumberChange(backBE.usesStart()), frontBE.getSV().copyNumberChange(frontBE.usesStart()));
+                String consecBreakendData = String.format("%s,%d,%d,%s,%d,%s,%s,%s,%s,%d,%d",
+                        mSampleId, cluster.id(), cluster.getUniqueSvCount(),frontBE.chromosome(), lowerBreakend.orientation(),
+                        backSv.id(), frontSv.id(), backSv.type(), frontSv.type(),
+                        backBE.position(), frontBE.position());
+
+                consecBreakendData += String.format(",%s,%d,%s,%d,%.2f,%.2f,%.2f",
+                        isFoldback, traversedSvCount, traverseInfo, upperBreakend.position() - lowerBreakend.position(),
+                        backSv.copyNumberChange(backBE.usesStart()), frontSv.copyNumberChange(frontBE.usesStart()),
+                        frontSv.copyNumber(frontBE.usesStart()));
 
                 consecBreakendData += String.format(",%s,%d,%d,%.2f,%s,%d,%d,%.2f",
                         nextBreakend != null ? nextBreakend.getSV().id() : "",

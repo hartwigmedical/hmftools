@@ -10,8 +10,10 @@ import static com.hartwig.hmftools.common.variant.structural.StructuralVariantTy
 import static com.hartwig.hmftools.svanalysis.analysis.LinkFinder.MIN_TEMPLATED_INSERTION_LENGTH;
 import static com.hartwig.hmftools.svanalysis.analysis.LinkFinder.areLinkedSection;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.getProximity;
+import static com.hartwig.hmftools.svanalysis.types.SvCluster.isSpecificCluster;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_END;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_START;
+import static com.hartwig.hmftools.svanalysis.types.SvVarData.isSpecificSV;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.isStart;
 import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.LINK_TYPE_TI;
 
@@ -321,6 +323,8 @@ public class ChainFinder
         List<SvChain> partialChains = Lists.newArrayList();
         partialChains.addAll(mCluster.getChains());
 
+        isSpecificCluster(mCluster);
+
         if(mAssemblyLinkedPairs.isEmpty() && inferredLinkedPairs.isEmpty() && partialChains.isEmpty())
             return;
 
@@ -556,6 +560,9 @@ public class ChainFinder
         for(final SvVarData otherVar : svList)
         {
             if(otherVar.type() == INS)
+                continue;
+
+            if(var.equals(otherVar, true))
                 continue;
 
             for(int be = SVI_START; be <= SVI_END; ++be)

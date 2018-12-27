@@ -149,20 +149,11 @@ public class LineElementAnnotator {
             -  has a suspected line element
             -  every variant in the cluster is part of a KNOWN line element
         */
-        List<SvVarData> knownLineSvs = cluster.getSVs().stream()
-                .filter(SvVarData::inLineElement)
-                .collect(Collectors.toList());
-
-        if(cluster.getUniqueSvCount() == knownLineSvs.size())
-        {
-            LOGGER.debug("cluster({}) marked as line with all known({})", cluster.id(), knownLineSvs.size());
-            cluster.markAsLine();
-            return;
-        }
 
         // isSpecificCluster(cluster);
 
         boolean hasSuspected = false;
+        long knownCount = cluster.getSVs().stream().filter(SvVarData::inLineElement).count();
 
         final Map<String, List<SvBreakend>> chrBreakendMap = cluster.getChrBreakendMap();
 
@@ -292,7 +283,13 @@ public class LineElementAnnotator {
             }
         }
 
-        if(hasSuspected)
+        if(cluster.getUniqueSvCount() == knownCount)
+        {
+            LOGGER.debug("cluster({}) marked as line with all known({})", cluster.id(), knownCount);
+            cluster.markAsLine();
+            return;
+        }
+        else if(hasSuspected)
         {
             if(LOGGER.isDebugEnabled())
             {
