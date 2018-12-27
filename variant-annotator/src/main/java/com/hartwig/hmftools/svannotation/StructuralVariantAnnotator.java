@@ -81,6 +81,7 @@ public class StructuralVariantAnnotator
     private static final String LOG_DEBUG = "log_debug";
     private static final String SV_PON_FILE = "sv_pon_file";
     private static final String OVERWRITE_ENSEMBL_FILE = "overwrite_ensembl";
+    private static final String REWRITE_ENSEMBL_IDS = "rewrite_ensembl_ids";
 
     private static final String DB_USER = "db_user";
     private static final String DB_PASS = "db_pass";
@@ -96,6 +97,7 @@ public class StructuralVariantAnnotator
     private boolean mSourceSvFromDB;
     private SvGeneTranscriptCollection mSvGeneTranscriptCollection;
     private boolean mOverwriteEnsembleFiles;
+    private boolean mRewriteEnsembleIds;
 
     // Let PON filtered SVs through since GRIDSS PON filtering is performed upstream
     private static final Set<String> ALLOWED_FILTERS = Sets.newHashSet("INFERRED", PON_FILTER_PON, PON_FILTER_PASS);
@@ -131,6 +133,7 @@ public class StructuralVariantAnnotator
         mDataPath = mCmdLineArgs.hasOption(DATA_OUTPUT_DIR) ? mCmdLineArgs.getOptionValue(DATA_OUTPUT_DIR) : "";
         mSvGeneTranscriptCollection.setDataPath(mDataPath);
         mOverwriteEnsembleFiles = mCmdLineArgs.hasOption(OVERWRITE_ENSEMBL_FILE) || !(mSampleId.equals("*") || mSampleId.isEmpty());
+        mRewriteEnsembleIds = mCmdLineArgs.hasOption(REWRITE_ENSEMBL_IDS);
 
         return true;
     }
@@ -259,7 +262,7 @@ public class StructuralVariantAnnotator
         {
             mSvGeneTranscriptCollection.loadSampleGeneTranscripts(sampleId);
 
-            annotations = createAnnotations(enrichedVariants);
+            annotations = createAnnotations(sampleId, enrichedVariants);
 
             LOGGER.debug("loaded {} Ensembl annotations from file", annotations.size());
         }
@@ -427,11 +430,12 @@ public class StructuralVariantAnnotator
         return new EnrichedStructuralVariantFactory(indexedFastaSequenceFile, purityAdjuster, copyNumbers).enrich(variants);
     }
 
-    private List<StructuralVariantAnnotation> createAnnotations(List<EnrichedStructuralVariant> enrichedVariants)
+    private List<StructuralVariantAnnotation> createAnnotations(final String sampleId, List<EnrichedStructuralVariant> enrichedVariants)
     {
         final Map<Integer, List<GeneAnnotation>> svIdGeneTranscriptsMap = mSvGeneTranscriptCollection.getSvIdGeneTranscriptsMap();
 
         List<StructuralVariantAnnotation> annotations = Lists.newArrayList();
+        boolean idsUpdated = false;
 
         for(final EnrichedStructuralVariant var : enrichedVariants)
         {
@@ -439,17 +443,29 @@ public class StructuralVariantAnnotator
 
             List<GeneAnnotation> genesList = svIdGeneTranscriptsMap.get(var.primaryKey());
 
-            if(genesList != null)
+            if(genesList == null && mRewriteEnsembleIds)
             {
-                for(GeneAnnotation geneAnnotation : genesList)
-                {
-                    geneAnnotation.setSvData(var);
-                }
-
-                annotation.annotations().addAll(genesList);
+                // find using positional data and update each gene's var ID
+                genesList = mSvGeneTranscriptCollection.updateAnnotationsByPosition(var);
+                idsUpdated = (genesList != null);
             }
 
+            if(genesList == null)
+                continue;
+
+            for(GeneAnnotation geneAnnotation : genesList)
+            {
+                geneAnnotation.setSvData(var);
+            }
+
+            annotation.annotations().addAll(genesList);
             annotations.add(annotation);
+        }
+
+        if(idsUpdated)
+        {
+            LOGGER.debug("sample({}) rewriting {} annotations with new IDs", sampleId, annotations.size());
+            mSvGeneTranscriptCollection.writeAnnotations(mSampleId, annotations);
         }
 
         return annotations;
@@ -488,6 +504,7 @@ public class StructuralVariantAnnotator
         options.addOption(LOG_DEBUG, false, "Sets log level to Debug, off by default");
         options.addOption(SV_PON_FILE, true, "PON file for SVs");
         options.addOption(OVERWRITE_ENSEMBL_FILE, false, "Whether to overwrite an existing sample ensembl file if exists");
+        options.addOption(REWRITE_ENSEMBL_IDS, false, "Update ensembl files with new DB SV Ids");
         options.addOption(REF_GENOME, true, "Path to the ref genome fasta file.");
         options.addOption(DATA_OUTPUT_DIR, true, "Path to persist annotations to file");
 

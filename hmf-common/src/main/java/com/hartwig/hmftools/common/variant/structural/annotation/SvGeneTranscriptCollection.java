@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.variant.structural.EnrichedStructuralVariant;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantData;
 
@@ -28,7 +29,6 @@ public class SvGeneTranscriptCollection
     private String mDataPath;
 
     private Map<Integer, List<GeneAnnotation>> mSvIdGeneTranscriptsMap;
-    private Map<String, Pair<Long,Long>> mTranscriptPositionsMap; // additional transcript annotations, may be scrapped
 
     public static String SV_GENE_TRANSCRIPTS_FILE_SUFFIX = "sv_ensembl_data.csv";
 
@@ -37,7 +37,6 @@ public class SvGeneTranscriptCollection
     public SvGeneTranscriptCollection()
     {
         mSvIdGeneTranscriptsMap = new HashMap();
-        mTranscriptPositionsMap = null;
     }
 
     public final Map<Integer, List<GeneAnnotation>> getSvIdGeneTranscriptsMap() { return mSvIdGeneTranscriptsMap; }
@@ -134,11 +133,6 @@ public class SvGeneTranscriptCollection
                         mSvIdGeneTranscriptsMap.put(currentVarId, geneAnnotations);
                     }
 
-                    if(varId == 430450)
-                    {
-                        LOGGER.debug("specific var");
-                    }
-
                     currentVarId = varId;
                     currentGene = null;
 
@@ -174,6 +168,11 @@ public class SvGeneTranscriptCollection
                             synonyms,
                             entrezIds,
                             items[GENE_KARYOTYPE_COL_INDEX]);
+
+                    currentGene.setPositionalData(
+                            items[VAR_CHR_COL_INDEX],
+                            Long.parseLong(items[VAR_POS_COL_INDEX]),
+                            Byte.parseByte(items[VAR_ORIENT_COL_INDEX]));
 
                     geneAnnotations.add(currentGene);
                 }
@@ -228,22 +227,6 @@ public class SvGeneTranscriptCollection
         }
 
         return true;
-    }
-
-    public void setSvData(final List<StructuralVariantData> variants)
-    {
-        for(final StructuralVariantData var : variants)
-        {
-            List<GeneAnnotation> geneAnnotations = mSvIdGeneTranscriptsMap.get(Integer.parseInt(var.id()));
-
-            if(geneAnnotations == null)
-                continue;
-
-            for(GeneAnnotation gene : geneAnnotations)
-            {
-                gene.setSvData(var);
-            }
-        }
     }
 
     public void writeAnnotations(final String sampleId, final List<StructuralVariantAnnotation> annotations)
@@ -351,130 +334,39 @@ public class SvGeneTranscriptCollection
         }
     }
 
-    private static String TRANSCRIPTS_FILE = "ensembl_transcripts.csv";
-
-    private void loadTranscriptData()
+    public final List<GeneAnnotation> updateAnnotationsByPosition(final EnrichedStructuralVariant var)
     {
-        String filename = mDataPath;
-
-        if(!filename.endsWith("/"))
-            filename += File.separator;
-
-        filename += TRANSCRIPTS_FILE;
-
-        mTranscriptPositionsMap = new HashMap();
-
-        try
+        for (Map.Entry<Integer, List<GeneAnnotation>> entry : mSvIdGeneTranscriptsMap.entrySet())
         {
-            BufferedReader fileReader = new BufferedReader(new FileReader(filename));
+            // find transcript data by a position match, and then re-insert into the new map with the new ID
+            final List<GeneAnnotation> geneList = entry.getValue();
+            final GeneAnnotation gene = geneList.get(0);
 
-            String line = fileReader.readLine();
+            boolean matched = true;
 
-            if (line == null)
+            if (gene.isStart() && gene.chromosome().equals(var.chromosome(true))
+            && gene.position() == var.position(true) && gene.orientation() == var.orientation(true))
             {
-                return;
+                matched = true;
+            }
+            else if (gene.isEnd() && gene.chromosome().equals(var.chromosome(false))
+            && gene.position() == var.position(false) && gene.orientation() == var.orientation(false))
+            {
+                matched = true;
+            }
+            else
+            {
+                continue;
             }
 
-            line = fileReader.readLine(); // skip header
-
-            while (line != null)
+            for (final GeneAnnotation annotation : geneList)
             {
-                // parse CSV data
-                String[] items = line.split(",");
-
-                final String transcriptId = items[5];
-                long transcriptStart = Long.parseLong(items[2]);
-                long transcriptEnd = Long.parseLong(items[3]);
-
-                mTranscriptPositionsMap.put(transcriptId, new Pair(transcriptStart, transcriptEnd));
-                line = fileReader.readLine();
-
-                if(line == null)
-                {
-                    break;
-                }
+                annotation.setVarId(var.primaryKey());
             }
+
+            return geneList;
         }
-        catch(IOException e)
-        {
-            LOGGER.error("failed to load transcripts file({}): {}", filename, e.toString());
-        }
+
+        return null;
     }
-
-    public void rewriteSampleTranscriptInfo(final String sampleId, final String sourceDir, final String destDir)
-    {
-        loadTranscriptData();
-
-        String inputFilename = getSampleGeneAnnotationsFilename(sourceDir, sampleId);
-        String outputFilename = getSampleGeneAnnotationsFilename(destDir, sampleId);
-
-        int transcriptStartEndColIndex = 20;
-
-        try
-        {
-            BufferedReader fileReader = new BufferedReader(new FileReader(inputFilename));
-            BufferedWriter writer = Files.newBufferedWriter(Paths.get(outputFilename), StandardOpenOption.CREATE);
-
-            // write header
-            writer.write("SvId,Chromosome,Position,Orientation"); // 3
-            writer.write(",IsStart,GeneName, GeneStableId, GeneStrand, Synonyms, EntrezIds, KaryotypeBand"); // 10
-            writer.write(",TranscriptId,ExonUpstream,ExonUpstreamPhase,ExonDownstream,ExonDownstreamPhase,CodingBases,TotalCodingBases"); // 17
-            writer.write(",ExonMax,Canonical,TranscriptStart,TranscriptEnd,CodingStart,CodingEnd,RegionType,CodingType");
-            writer.newLine();
-
-            String line = fileReader.readLine();
-
-            if (line == null)
-            {
-                LOGGER.error("empty ensembl data file({})", inputFilename);
-                return;
-            }
-
-            line = fileReader.readLine(); // skip header
-
-            while (line != null)
-            {
-                // parse CSV data
-                String[] items = line.split(",");
-
-                writer.write(String.format("%s", items[0]));
-
-                for(int i = 1; i < transcriptStartEndColIndex; ++i)
-                {
-                    writer.write(String.format(",%s", items[i]));
-                }
-
-                final String transcriptId = items[TRANSCRIPT_ID_COL_INDEX];
-
-                Pair<Long,Long> transcriptPositions = mTranscriptPositionsMap.get(transcriptId);
-
-                if(transcriptPositions == null)
-                {
-                    LOGGER.error("transcript({}) data not found", transcriptId);
-                    return;
-                }
-
-                long transcriptStart = transcriptPositions.getKey();
-                long transcriptEnd = transcriptPositions.getValue();
-
-                writer.write(String.format(",%d,%d", transcriptStart, transcriptEnd));
-
-                for(int i = transcriptStartEndColIndex; i < items.length; ++i)
-                {
-                    writer.write(String.format(",%s", items[i]));
-                }
-
-                writer.newLine();
-
-                line = fileReader.readLine();
-            }
-
-            writer.close();
-        }
-        catch (IOException e)
-        {
-            LOGGER.error("failed to load and rewrite transcript data: {}", e.toString());
-        }
-    }
-
 }

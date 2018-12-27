@@ -96,6 +96,18 @@ public class GeneAnnotation {
         this.karyotypeBand = karyotypeBand;
     }
 
+    public void setPositionalData(final String chromosome, long position, Byte orientation)
+    {
+        mChromosome = chromosome;
+        mPosition = position;
+        mOrientation = orientation;
+    }
+
+    public void setVarId(final int varId)
+    {
+        mVarId = varId;
+    }
+
     public void setSvData(final StructuralVariantData var)
     {
         mOrientation = mIsStart ? var.startOrientation() : var.endOrientation();
@@ -109,8 +121,12 @@ public class GeneAnnotation {
     public void setSvData(final EnrichedStructuralVariant var)
     {
         mVariant = var;
+
+        if(var.end() == null && !mIsStart)
+            return;
+
         mOrientation = var.orientation(mIsStart);
-        mPloidy = var.ploidy();
+        mPloidy = var.ploidy() != null ? var.ploidy() : 0;
         mPosition = var.position(mIsStart);
         mChromosome = var.chromosome(mIsStart);
         mSvType = var.type();
