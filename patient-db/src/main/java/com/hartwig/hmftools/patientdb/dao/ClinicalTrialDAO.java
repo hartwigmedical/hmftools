@@ -13,6 +13,7 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
 import org.jooq.InsertValuesStep18;
+import org.jooq.InsertValuesStep9;
 
 class ClinicalTrialDAO {
 
@@ -25,25 +26,12 @@ class ClinicalTrialDAO {
         this.context = context;
     }
 
-    void writeClinicalTrial(@NotNull String sample, @NotNull List<ClinicalTrial> clinicalTrial) {
-        LOGGER.info("writeClinicalTrial in ClinicalTrialDAO class");
-        LOGGER.info(sample);
-        LOGGER.info(clinicalTrial);
+    void writeClinicalTrials(@NotNull String sample, @NotNull List<ClinicalTrial> clinicalTrial) {
         deleteClinicalTrialForSample(sample);
 
         for (List<ClinicalTrial> trials : Iterables.partition(clinicalTrial, DB_BATCH_INSERT_SIZE)) {
-            LOGGER.info("Insert kolom table names");
-            InsertValuesStep18 inserter = context.insertInto(CLINICALTRIALITEM,
+            InsertValuesStep9 inserter = context.insertInto(CLINICALTRIALITEM,
                     CLINICALTRIALITEM.SAMPLEID,
-                    CLINICALTRIALITEM.TYPEVARIANT,
-                    CLINICALTRIALITEM.GENE,
-                    CLINICALTRIALITEM.CHOMOSOME,
-                    CLINICALTRIALITEM.POSITION,
-                    CLINICALTRIALITEM.REF,
-                    CLINICALTRIALITEM.ALT,
-                    CLINICALTRIALITEM.CNVTYPE,
-                    CLINICALTRIALITEM.FUSIONFIVEGENE,
-                    CLINICALTRIALITEM.FUSIONTHREEGENE,
                     CLINICALTRIALITEM.EVENTTYPE,
                     CLINICALTRIALITEM.EVENTMATCH,
                     CLINICALTRIALITEM.TRIAL,
@@ -52,28 +40,14 @@ class ClinicalTrialDAO {
                     CLINICALTRIALITEM.CCMOID,
                     CLINICALTRIALITEM.ICLUSIONID,
                     CLINICALTRIALITEM.EVIDENCESOURCE);
-            LOGGER.info("insert values");
             trials.forEach(trial -> addValues(sample, trial, inserter));
-            LOGGER.info("values inserted");
             inserter.execute();
-            LOGGER.info(inserter.execute());
-            LOGGER.info(inserter);
-            LOGGER.info("values executed");
         }
     }
 
-    private static void addValues(@NotNull String sample, @NotNull ClinicalTrial clinicalTrial, @NotNull InsertValuesStep18 inserter) {
+    private static void addValues(@NotNull String sample, @NotNull ClinicalTrial clinicalTrial, @NotNull InsertValuesStep9 inserter) {
         //noinspection unchecked
         inserter.values(sample,
-                clinicalTrial.type(),
-                clinicalTrial.gene(),
-                clinicalTrial.chromosome(),
-                clinicalTrial.position(),
-                clinicalTrial.ref(),
-                clinicalTrial.alt(),
-                clinicalTrial.cnvType(),
-                clinicalTrial.fusionFiveGene(),
-                clinicalTrial.fusionThreeGene(),
                 clinicalTrial.event(),
                 clinicalTrial.scope().readableString(),
                 clinicalTrial.acronym(),
@@ -82,13 +56,9 @@ class ClinicalTrialDAO {
                 CCMOId(clinicalTrial.reference()),
                 IclusionId(clinicalTrial.reference()),
                 clinicalTrial.source().sourceName());
-        LOGGER.info(clinicalTrial.type());
-        LOGGER.info(sample);
-        LOGGER.info("addValues");
     }
 
     void deleteClinicalTrialForSample(@NotNull String sample) {
-        LOGGER.info("deleteClinicalTrialForSample");
         context.delete(CLINICALTRIALITEM).where(CLINICALTRIALITEM.SAMPLEID.eq(sample)).execute();
     }
 

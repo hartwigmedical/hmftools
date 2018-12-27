@@ -4,13 +4,11 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.actionability.cancertype.CancerTypeAnalyzer;
 import com.hartwig.hmftools.common.actionability.cnv.CopyNumberEvidenceAnalyzer;
 import com.hartwig.hmftools.common.actionability.cnv.CopyNumberEvidenceAnalyzerFactory;
@@ -61,10 +59,7 @@ public class ActionabilityAnalyzer {
         CancerTypeAnalyzer cancerTypeAnalyzer =
                 CancerTypeAnalyzer.createFromKnowledgeBase(knowledgebasePath + File.separator + CANCER_TYPE_DOID_MAPPING_FILE);
 
-        return new ActionabilityAnalyzer(variantAnalyzer,
-                cnvAnalyzer,
-                fusionAnalyzer,
-                cancerTypeAnalyzer);
+        return new ActionabilityAnalyzer(variantAnalyzer, cnvAnalyzer, fusionAnalyzer, cancerTypeAnalyzer);
     }
 
     private ActionabilityAnalyzer(@NotNull final SomaticVariantEvidenceAnalyzer variantAnalyzer,
@@ -104,8 +99,7 @@ public class ActionabilityAnalyzer {
                 .collect(Collectors.toList());
 
         for (EnrichedSomaticVariant variant : variantsOnActionableGenes) {
-            evidencePerVariant.put(variant,
-                    variantAnalyzer.evidenceForSomaticVariant(variant, primaryTumorLocation, cancerTypeAnalyzer));
+            evidencePerVariant.put(variant, variantAnalyzer.evidenceForSomaticVariant(variant, primaryTumorLocation, cancerTypeAnalyzer));
         }
 
         return evidencePerVariant;
@@ -134,12 +128,12 @@ public class ActionabilityAnalyzer {
             @Nullable String primaryTumorLocation) {
         Map<SimpleGeneFusion, List<EvidenceItem>> evidencePerFusion = Maps.newHashMap();
 
-        List<SimpleGeneFusion> fusionsOnActionableGenes = fusions.stream()
-                .filter(fusion -> fusionAnalyzer.actionableGenes().contains(fusion.fiveGene())
-                        || fusionAnalyzer.actionableGenes().contains(fusion.threeGene()))
-                .collect(Collectors.toList());
+        Set<SimpleGeneFusion> uniqueFusionsOnActionableGenes = fusions.stream()
+                .filter(fusion -> fusionAnalyzer.actionableGenes().contains(fusion.fiveGene()) || fusionAnalyzer.actionableGenes()
+                        .contains(fusion.threeGene()))
+                .collect(Collectors.toSet());
 
-        for (SimpleGeneFusion actionableFusion : Sets.newHashSet(fusionsOnActionableGenes)) {
+        for (SimpleGeneFusion actionableFusion : uniqueFusionsOnActionableGenes) {
             evidencePerFusion.put(actionableFusion,
                     fusionAnalyzer.evidenceForFusion(actionableFusion, primaryTumorLocation, cancerTypeAnalyzer));
         }

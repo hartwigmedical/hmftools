@@ -75,15 +75,6 @@ public class ReportableEvidenceItemFactoryTest {
                 .response(Strings.EMPTY)
                 .isOnLabel(false)
                 .cancerType(Strings.EMPTY)
-                .scope(EvidenceScope.SPECIFIC)
-                .type(Strings.EMPTY)
-                .gene(Strings.EMPTY)
-                .chromosome(Strings.EMPTY)
-                .position(Strings.EMPTY)
-                .ref(Strings.EMPTY)
-                .alt(Strings.EMPTY)
-                .cnvType(Strings.EMPTY)
-                .fusionFiveGene(Strings.EMPTY)
-                .fusionThreeGene(Strings.EMPTY);
+                .scope(EvidenceScope.SPECIFIC);
     }
 }

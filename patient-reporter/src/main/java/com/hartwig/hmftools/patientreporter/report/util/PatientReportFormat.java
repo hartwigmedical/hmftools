@@ -3,7 +3,6 @@ package com.hartwig.hmftools.patientreporter.report.util;
 import static com.google.common.base.Strings.repeat;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.variant.AllelicDepth;
 import com.hartwig.hmftools.common.variant.structural.annotation.Transcript;
 
@@ -51,8 +50,14 @@ public final class PatientReportFormat {
 
     @NotNull
     public static String ploidyVafField(double adjustedCopyNumber, double minorAllelePloidy, double adjustedVAF) {
-        return descriptiveBAF(adjustedCopyNumber, minorAllelePloidy) + " (" + PatientReportFormat.formatPercent(Math.min(1, adjustedVAF))
-                + ")";
+        double adjustedVAFCorrect;
+        if (adjustedVAF > 0) {
+            adjustedVAFCorrect = adjustedVAF;
+        } else {
+            adjustedVAFCorrect = 0;
+        }
+        return descriptiveBAF(adjustedCopyNumber, minorAllelePloidy) + " (" + PatientReportFormat.formatPercent(Math.min(1,
+                adjustedVAFCorrect)) + ")";
     }
 
     @NotNull

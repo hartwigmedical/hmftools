@@ -23,9 +23,7 @@ import com.hartwig.hmftools.common.region.CanonicalTranscript;
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
 import com.hartwig.hmftools.common.variant.structural.EnrichedStructuralVariant;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantData;
-import com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion;
 import com.hartwig.hmftools.common.variant.structural.annotation.SimpleGeneFusion;
-import com.hartwig.hmftools.common.variant.structural.annotation.StructuralVariantAnalysis;
 import com.hartwig.hmftools.patientdb.data.Patient;
 import com.hartwig.hmftools.patientdb.data.SampleData;
 
@@ -34,7 +32,6 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jooq.DSLContext;
-import org.jooq.Result;
 import org.jooq.SQLDialect;
 import org.jooq.conf.MappedSchema;
 import org.jooq.conf.RenderMapping;
@@ -109,15 +106,16 @@ public class DatabaseAccess {
     }
 
     @Nullable
-    private static Settings settings(final String catalog) {
+    private static Settings settings(@NotNull String catalog) {
         return !catalog.equals(DEV_CATALOG)
                 ? new Settings().withRenderMapping(new RenderMapping().withSchemata(new MappedSchema().withInput(DEV_CATALOG)
                 .withOutput(catalog)))
                 : null;
     }
 
+    @Nullable
     public String readTumorLocation(@NotNull String sample) {
-        return clinicalDAO.readTumorLocationPatient(sample);
+        return clinicalDAO.readTumorLocationForSample(sample);
     }
 
     public void writeCanonicalTranscripts(@NotNull final String assembly, @NotNull final List<CanonicalTranscript> transcripts) {
@@ -183,7 +181,7 @@ public class DatabaseAccess {
     }
 
     @NotNull
-    public List<SimpleGeneFusion> readingGeneFusions(@NotNull final String sample) {
+    public List<SimpleGeneFusion> readGeneFusions(@NotNull final String sample) {
         return structuralVariantAnnotationDAO.readGeneFusions(sample);
     }
 
@@ -224,13 +222,11 @@ public class DatabaseAccess {
     }
 
     public void writeClinicalEvidence (@NotNull String sample, @NotNull List<EvidenceItem> items) {
-        LOGGER.info("writeClinicalEvidence");
         clinicalEvidenceDAO.writeClinicalEvidence(sample, items);
     }
 
-    public void writeClinicalTrial (@NotNull String sample, @NotNull List<ClinicalTrial> trials) {
-        LOGGER.info("writeClinicalTrial");
-        clinicalTrialDAO.writeClinicalTrial(sample, trials);
+    public void writeClinicalTrials(@NotNull String sample, @NotNull List<ClinicalTrial> trials) {
+        clinicalTrialDAO.writeClinicalTrials(sample, trials);
     }
 
     public void clearCpctEcrf() {
