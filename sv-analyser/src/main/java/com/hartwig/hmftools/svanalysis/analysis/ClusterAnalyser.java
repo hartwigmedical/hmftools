@@ -1533,7 +1533,7 @@ public class ClusterAnalyser {
 
         classifyChainedClusters(cluster);
 
-        // checkLooseFoldbacks(cluster);
+        checkLooseFoldbacks(cluster);
     }
 
     private void checkLooseFoldbacks(final SvCluster cluster)
@@ -1558,6 +1558,9 @@ public class ClusterAnalyser {
 
                 boolean isFoldback = false;
 
+                if(lowerBreakend.arm() != upperBreakend.arm())
+                    continue;
+
                 if(lowerBreakend.orientation() != upperBreakend.orientation())
                 {
                     // allow for short DBs where the breakends remain in a foldback
@@ -1578,6 +1581,16 @@ public class ClusterAnalyser {
                         continue;
                 }
 
+                final SvBreakend frontBE = lowerBreakend.orientation() == 1 ? lowerBreakend : upperBreakend;
+                final SvBreakend backBE = lowerBreakend.orientation() == 1 ? upperBreakend : lowerBreakend;
+
+                if(frontBE.getSV().getDBLink(frontBE.usesStart()) != null)
+                {
+                    // check for an overlapping short DB which would invalidate these consecutive breakends
+                    if(frontBE.getSV().getDBLink(frontBE.usesStart()).length() < 0)
+                        continue;
+                }
+
                 if(!isFoldback)
                 {
                     isFoldback = !lowerBreakend.getSV().getFoldbackLink(lowerBreakend.usesStart()).isEmpty()
@@ -1586,6 +1599,9 @@ public class ClusterAnalyser {
 
                 String traverseInfo = getTraversedSvData(cluster, fullBreakendList, lowerBreakend.getChrPosIndex(), upperBreakend.getChrPosIndex());
                 int traversedSvCount = traverseInfo.isEmpty() ? 0 : traverseInfo.split(";").length;
+
+                if(traverseInfo.length() > 100)
+                    traverseInfo = traverseInfo.substring(0, 100);
 
                 SvBreakend nextClusteredBreakend = null;
                 SvBreakend nextBreakend = null; // regardless of clustering
@@ -1600,9 +1616,10 @@ public class ClusterAnalyser {
                         frontToNextClusterLength = lowerBreakend.position() - nextClusteredBreakend.position();
                     }
 
-                    if(lowerBreakend.getChrPosIndex() > 0)
+                    nextBreakend = getNextUnresolvedBreakend(fullBreakendList, lowerBreakend.getChrPosIndex() - 1, false);
+                    if(nextBreakend != null)
                     {
-                        nextBreakend = fullBreakendList.get(lowerBreakend.getChrPosIndex() - 1);
+                        // nextBreakend = fullBreakendList.get(lowerBreakend.getChrPosIndex() - 1);
                         frontToNextLength = lowerBreakend.position() - nextBreakend.position();
                     }
                 }
@@ -1614,9 +1631,10 @@ public class ClusterAnalyser {
                         frontToNextClusterLength = nextClusteredBreakend.position() - upperBreakend.position();
                     }
 
-                    if(upperBreakend.getChrPosIndex() < fullBreakendList.size() - 1)
+                    nextBreakend = getNextUnresolvedBreakend(fullBreakendList, upperBreakend.getChrPosIndex() + 1, true);
+                    if(nextBreakend != null)
                     {
-                        nextBreakend = fullBreakendList.get(upperBreakend.getChrPosIndex() + 1);
+                        // nextBreakend = fullBreakendList.get(upperBreakend.getChrPosIndex() + 1);
                         frontToNextLength = nextBreakend.position() - upperBreakend.position();
                     }
                 }
@@ -1624,15 +1642,6 @@ public class ClusterAnalyser {
                 // CSV fields: Time,SampleId,ClusterId,ClusterCount,Chromosome,Orientation,SvBack,SvFront,TypeBack,TypeFront,PosBack,PosFront,
                 // IsFoldback,TraversedSvCount,TraversedSvData,BtoFLength,CNChgBack,CNChgFront,CNFront,
                 // SvNext,FtoNextLength,OrientNext,CNChgNext,SvNextCL,FtoNextCLLength,OrientNextCL,CNChgNextCL
-                final SvBreakend frontBE = lowerBreakend.orientation() == 1 ? lowerBreakend : upperBreakend;
-                final SvBreakend backBE = lowerBreakend.orientation() == 1 ? upperBreakend : lowerBreakend;
-
-                if(frontBE.getSV().getDBLink(frontBE.usesStart()) != null)
-                {
-                    // check for an overlapping short DB which would invalidate these consecutive breakends
-                    if(frontBE.getSV().getDBLink(frontBE.usesStart()).length() < 0)
-                        continue;
-                }
 
                 final SvVarData frontSv = frontBE.getSV();
                 final SvVarData backSv = backBE.getSV();
@@ -1659,6 +1668,27 @@ public class ClusterAnalyser {
                 LOGGER.info("CONSEC_BE_DATA: {}", consecBreakendData);
             }
         }
+    }
+
+    private final SvBreakend getNextUnresolvedBreakend(final List<SvBreakend> breakendList, int startIndex, boolean traverseUp)
+    {
+        int index = startIndex;
+
+        while(index >= 0 && index < breakendList.size())
+        {
+            final SvBreakend breakend = breakendList.get(index);
+            final SvCluster cluster = breakend.getSV().getCluster();
+
+            if (!cluster.isResolved())
+                return breakend;
+
+            if(traverseUp)
+                ++index;
+            else
+                --index;
+        }
+
+        return null;
     }
 
     private void analyseOverlappingTIs()
