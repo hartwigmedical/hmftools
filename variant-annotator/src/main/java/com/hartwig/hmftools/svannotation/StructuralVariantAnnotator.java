@@ -260,16 +260,17 @@ public class StructuralVariantAnnotator
 
         List<StructuralVariantAnnotation> annotations;
 
-        if(mCmdLineArgs.hasOption(LOAD_ANNOTATIONS_FROM_FILE) && !mDataPath.isEmpty())
+        if(mCmdLineArgs.hasOption(LOAD_ANNOTATIONS_FROM_FILE) && !mDataPath.isEmpty()
+        && mSvGeneTranscriptCollection.loadSampleGeneTranscripts(sampleId))
         {
-            mSvGeneTranscriptCollection.loadSampleGeneTranscripts(sampleId);
-
             annotations = createAnnotations(sampleId, enrichedVariants);
 
             LOGGER.debug("loaded {} Ensembl annotations from file", annotations.size());
         }
         else
         {
+            LOGGER.debug("sample({}) finding Ensembl annotations", sampleId);
+
             annotations = svAnalyser.annotateVariants(enrichedVariants);
 
             LOGGER.debug("sample({}) matched {} annotations from Ensembl database", sampleId, annotations.size());
