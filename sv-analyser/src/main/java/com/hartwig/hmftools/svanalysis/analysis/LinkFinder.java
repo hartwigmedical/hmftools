@@ -165,7 +165,7 @@ public class LinkFinder
     public static boolean areLinkedSection(final SvVarData v1, final SvVarData v2, boolean v1Start, boolean v2Start, boolean checkCopyNumberMatch)
     {
         // templated insertions are allowed to traverse the centromere
-        if(v1.position(v1Start) < 0 || v2.position(v1Start) < 0)
+        if(v1.position(v1Start) < 0 || v2.position(v2Start) < 0)
             return false;
 
         if(!v1.chromosome(v1Start).equals(v2.chromosome(v2Start)))
