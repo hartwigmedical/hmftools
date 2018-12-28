@@ -40,8 +40,6 @@ public class SvVarData
     private String mEndArm;
     private SvBreakend mBreakendStart;
     private SvBreakend mBreakendEnd;
-    private int mPonCount;
-    private int mPonRegionCount; // allowing for a small buffer either side of a PON
     private String mStartFragileSite;
     private String mEndFragileSite;
     private String mStartLineElement;
@@ -117,8 +115,6 @@ public class SvVarData
         mNoneSegment = false;
         mStartArm = "";
         mEndArm = "";
-        mPonCount = 0;
-        mPonRegionCount = 0;
         mStartFragileSite = NO_FS;
         mEndFragileSite = NO_FS;
         mStartLineElement = NO_LINE_ELEMENT;
@@ -196,8 +192,6 @@ public class SvVarData
         mNoneSegment = other.isNoneSegment();
         mStartArm = other.arm(true);
         mEndArm = other.arm(false);
-        mPonCount = other.getPonCount();
-        mPonRegionCount = other.getPonRegionCount();
         mStartFragileSite = other.isFragileSite(true);
         mEndFragileSite = other.isFragileSite(false);
         mStartLineElement = other.getLineElement(true);
@@ -340,12 +334,6 @@ public class SvVarData
     public void setNearestSvDistance(long distance) { mNearestSvDistance = distance; }
     public String getNearestSvRelation() { return mNearestSvRelation; }
     public void setNearestSvRelation(final String rel) { mNearestSvRelation = rel; }
-
-    public void setPonCount(int count) { mPonCount = count; }
-    public int getPonCount() { return mPonCount; }
-
-    public void setPonRegionCount(int count) { mPonRegionCount = count; }
-    public int getPonRegionCount() { return mPonRegionCount; }
 
     public void setFragileSites(String typeStart, String typeEnd) { mStartFragileSite = typeStart; mEndFragileSite = typeEnd; }
     public String isFragileSite(boolean useStart) { return useStart ? mStartFragileSite : mEndFragileSite; }

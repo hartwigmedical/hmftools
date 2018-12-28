@@ -64,7 +64,6 @@ public class SvSampleAnalyser {
     BufferedWriter mSVFileWriter;
     BufferedWriter mClusterFileWriter;
     BufferedWriter mLinksFileWriter;
-    SvPONAnnotator mSvPONAnnotator;
     FragileSiteAnnotator mFragileSiteAnnotator;
     LineElementAnnotator mLineElementAnnotator;
     SvClusteringMethods mClusteringMethods;
@@ -87,9 +86,6 @@ public class SvSampleAnalyser {
         mSVFileWriter = null;
         mLinksFileWriter = null;
         mClusterFileWriter = null;
-
-        mSvPONAnnotator = new SvPONAnnotator();
-        mSvPONAnnotator.loadPonFile(mConfig.SvPONFile);
 
         mFragileSiteAnnotator = new FragileSiteAnnotator();
         mFragileSiteAnnotator.loadFragileSitesFile(mConfig.FragileSiteFile);
@@ -190,18 +186,9 @@ public class SvSampleAnalyser {
         {
             SvVarData var = mAllVariants.get(currentIndex);
 
-            setPonOccurenceCount(var);
             var.setFragileSites(mFragileSiteAnnotator.isFragileSite(var, true), mFragileSiteAnnotator.isFragileSite(var, false));
             var.setLineElement(mLineElementAnnotator.isLineElement(var, true), true);
             var.setLineElement(mLineElementAnnotator.isLineElement(var, false), false);
-
-            // exclude PON
-            if (var.getPonCount() >= 2)
-            {
-                LOGGER.info("filtering sv({}) with PonCount({})", var.id(), var.getPonCount());
-                mAllVariants.remove(currentIndex);
-                continue;
-            }
 
             String startArm = getChromosomalArm(var.chromosome(true), var.position(true));
 
@@ -258,7 +245,7 @@ public class SvSampleAnalyser {
                 writer.write(",ClusterDesc,IsResolved,ResolvedType,Consistency,ArmCount");
 
                 // SV info
-                writer.write(",Homology,InexactHOStart,InexactHOEnd,InsertSeq,Imprecise,PONCount,QualScore,RefContextStart,RefContextEnd");
+                writer.write(",Homology,InexactHOStart,InexactHOEnd,InsertSeq,Imprecise,RefContextStart,RefContextEnd");
 
                 // location attributes
                 writer.write(",FSStart,FSEnd,LEStart,LEEnd,DupBEStart,DupBEEnd,ArmCountStart,ArmExpStart,ArmCountEnd,ArmExpEnd");
@@ -340,10 +327,10 @@ public class SvSampleAnalyser {
                 int dbLenEnd = var.getDBLink(false) != null ? var.getDBLink(false).length() : NO_DB_MARKER;
 
                 writer.write(
-                        String.format(",%s,%d,%d,%s,%s,%d,%.0f,%s,%s",
+                        String.format(",%s,%d,%d,%s,%s,%s,%s",
                                 dbData.insertSequence().isEmpty() && var.type() != INS ? dbData.homology() : "",
                                 dbData.inexactHomologyOffsetStart(), dbData.inexactHomologyOffsetEnd(),
-                                dbData.insertSequence(), dbData.imprecise(), var.getPonCount(), dbData.qualityScore(),
+                                dbData.insertSequence(), dbData.imprecise(),
                                 dbLenStart > NO_DB_MARKER & dbLenStart < 0 ? dbData.startRefContext() : "",
                                 dbLenEnd > NO_DB_MARKER & dbLenEnd < 0 ? dbData.endRefContext() : ""));
 
@@ -607,64 +594,6 @@ public class SvSampleAnalyser {
         {
             LOGGER.error("error writing links to outputFile: {}", e.toString());
         }
-    }
-
-    public void setPonOccurenceCount(SvVarData svData)
-    {
-        if(mSvPONAnnotator == null || !mSvPONAnnotator.hasEntries())
-            return;
-
-        if(mSvPONAnnotator.getPonList().isEmpty())
-            return;
-
-        final List<SvPON> ponList = mSvPONAnnotator.getPonList();
-        final Map<String, Integer> chrIndexMap = mSvPONAnnotator.getChrIndexMap();
-
-        // use CRMS to find start index
-        if(!chrIndexMap.containsKey(svData.chromosome(true)))
-            return;
-
-        int index = chrIndexMap.get(svData.chromosome(true));
-
-        for(; index < ponList.size(); ++index)
-        {
-            final SvPON svPon = ponList.get(index);
-
-            if(!svPon.chrStart().equals(svData.chromosome(true)))
-            {
-                return;
-            }
-
-            if(isMatch(svData, svPon,0))
-            {
-                LOGGER.debug("var({}) found in PON with count({})", svData.posId(), svPon.count());
-                svData.setPonCount(svPon.count());
-                svData.setPonRegionCount(svPon.count()); // set to match
-                return;
-            }
-            else if(svData.getPonRegionCount() == 0 && isMatch(svData, svPon, REGION_DISTANCE))
-            {
-                LOGGER.debug("var({}) found in PON region({}->{}) with count({})",
-                        svData.posId(), svPon.posStart(), svPon.posEnd(), svPon.count());
-
-                svData.setPonRegionCount(svPon.count());
-            }
-        }
-    }
-
-    private static boolean isMatch(final SvVarData svData, final SvPON svPon, final int permittedDiff)
-    {
-        if(!svPon.chrStart().equals(svData.chromosome(true))
-        || !svPon.chrEnd().equals(svData.chromosome(false))
-        || svPon.orientStart() != svData.orientation(true)
-        || svPon.orientEnd() != svData.orientation(false)
-        || !svPon.type().equals(svData.type().toString()))
-        {
-            return false;
-        }
-
-        return Math.abs(svPon.posStart() - svData.position(true)) <= permittedDiff
-                && Math.abs(svPon.posEnd() - svData.position(false)) <= permittedDiff;
     }
 
     private void logSampleClusterInfo()
