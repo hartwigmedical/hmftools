@@ -48,15 +48,12 @@ public class FusionDisruptionAnalyser
 
     private String mSampleId;
     private String mOutputDir;
-    private boolean mUseCombinedOutput;
     private SvGeneTranscriptCollection mSvGeneTranscriptCollection;
 
     private List<GeneFusion> mGeneFusions;
     private List<GeneDisruption> mGeneDisruptions;
 
     ListMultimap<Chromosome, HmfTranscriptRegion> mChromosomeTranscriptMap;
-
-    private BufferedWriter mFusionWriter;
 
     private static final Logger LOGGER = LogManager.getLogger(FusionDisruptionAnalyser.class);
 
@@ -69,9 +66,7 @@ public class FusionDisruptionAnalyser
 
         mGeneFusions = Lists.newArrayList();
         mGeneDisruptions = Lists.newArrayList();
-        mFusionWriter = null;
         mOutputDir = "";
-        mUseCombinedOutput = false;
     }
 
     public void loadFusionReferenceData(final CommandLine cmdLineArgs, final String outputDir, boolean useCombinedOutput)
@@ -97,7 +92,6 @@ public class FusionDisruptionAnalyser
         }
 
         mOutputDir = outputDir;
-        mUseCombinedOutput = useCombinedOutput;
 
         List<HmfTranscriptRegion> transcriptRegions = HmfGenePanelSupplier.allGeneList37();
         mChromosomeTranscriptMap = Multimaps.fromRegions(transcriptRegions);
@@ -362,111 +356,8 @@ public class FusionDisruptionAnalyser
             }
         }
 
-        writeFusions(fusions, cluster);
-    }
+        String clusterInfo = String.format("%d,%d,%s", cluster.id(), cluster.getUniqueSvCount(), cluster.getResolvedType());
 
-    private void writeFusions(final List<GeneFusion> fusions, final SvCluster cluster)
-    {
-        if(fusions.isEmpty())
-            return;
-
-        try
-        {
-            BufferedWriter writer = null;
-
-            if(mFusionWriter == null)
-            {
-                String outputFilename = mOutputDir;
-
-                if (!outputFilename.endsWith("/"))
-                    outputFilename += File.separator;
-
-                if(mUseCombinedOutput)
-                    outputFilename += "FUSIONS.csv";
-                else
-                    outputFilename += mSampleId + "_" + "sv_fusions.csv";
-
-                Path outputFile = Paths.get(outputFilename);
-
-                mFusionWriter = Files.newBufferedWriter(outputFile, StandardOpenOption.CREATE);
-                writer = mFusionWriter;
-
-                writer.write("SampleId,Reportable,PrimarySource,ClusterId,ClusterCount,ResolvedType,PhaseMatched");
-                writer.write(",SvIdUp,ChrUp,PosUp,OrientUp,TypeStart,GeneUp,TranscriptUp,StrandUp,RegionTypeUp,CodingTypeUp");
-                writer.write(",ExonUp,PhaseUp,ExactBaseUp,CodingBasesUp,TotalCodingUp,ExonMaxUp,CodingStartUp,CodingEndUp");
-                writer.write(",SvIdDown,ChrDown,PosDown,OrientDown,TypeDown,GeneDown,TranscriptDown,StrandDown,RegionTypeDown,CodingTypeDown");
-                writer.write(",ExonDown,PhaseDown,ExactBaseDown,CodingBasesDown,TotalCodingDown,ExonMaxDown,CodingStartDown,CodingEndDown");
-                writer.newLine();
-            }
-            else
-            {
-                writer = mFusionWriter;
-            }
-
-            for(final GeneFusion fusion : fusions)
-            {
-                final Transcript startTrans = fusion.upstreamTrans();
-                final Transcript endTrans = fusion.downstreamTrans();
-
-                final GeneAnnotation startVar = startTrans.parent();
-                final GeneAnnotation endVar = endTrans.parent();
-
-                writer.write(String.format("%s,%s,%s,%d,%d,%s,%s",
-                        mSampleId, fusion.reportable(), fusion.primarySource(),
-                        cluster.id(), cluster.getUniqueSvCount(), cluster.getResolvedType(), fusion.isPhaseMatch()));
-
-                // write upstream SV, transcript and exon info
-                writer.write(
-                        String.format(",%d,%s,%d,%d,%s",
-                                startVar.id(), startVar.chromosome(), startVar.position(), startVar.orientation(), startVar.type()));
-
-                writer.write(
-                        String.format(",%s,%s,%d,%s,%s",
-                                startTrans.parent().geneName(), startTrans.transcriptId(),
-                                startTrans.parent().strand(), startTrans.regionType(), startTrans.codingType()));
-
-                writer.write(
-                        String.format(",%d,%d,%d,%d,%d,%d,%d,%d",
-                                startTrans.exonUpstream(), startTrans.exonUpstreamPhase(), startTrans.exactCodingBase(),
-                                startTrans.codingBases(), startTrans.totalCodingBases(), startTrans.exonMax(),
-                                startTrans.codingStart() != null ? startTrans.codingStart() : 0,
-                                startTrans.codingEnd() != null ? startTrans.codingEnd() : 0));
-
-                writer.write(
-                        String.format(",%d,%s,%d,%d,%s",
-                                endVar.id(), endVar.chromosome(), endVar.position(), endVar.orientation(), endVar.type()));
-
-                writer.write(
-                        String.format(",%s,%s,%d,%s,%s",
-                                endTrans.parent().geneName(), endTrans.transcriptId(),
-                                endTrans.parent().strand(), endTrans.regionType(), endTrans.codingType()));
-
-                writer.write(
-                        String.format(",%d,%d,%d,%d,%d,%d,%d,%d",
-                                endTrans.exonDownstream(), endTrans.exonDownstreamPhase(), endTrans.exactCodingBase(),
-                                endTrans.codingBases(), endTrans.totalCodingBases(), endTrans.exonMax(),
-                                endTrans.codingStart() != null ? endTrans.codingStart() : 0,
-                                endTrans.codingEnd() != null ? endTrans.codingEnd() : 0));
-
-                writer.newLine();
-            }
-        }
-        catch (final IOException e)
-        {
-            LOGGER.error("error writing fusions: {}", e.toString());
-        }
-    }
-
-    public void close()
-    {
-        try
-        {
-            if(mFusionWriter != null)
-                mFusionWriter.close();
-        }
-        catch (IOException e)
-        {
-
-        }
+        mFusionFinder.writeFusions(fusions, mOutputDir, mSampleId, clusterInfo);
     }
 }

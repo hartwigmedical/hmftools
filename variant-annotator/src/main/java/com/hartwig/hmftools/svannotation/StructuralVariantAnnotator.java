@@ -42,6 +42,7 @@ import com.hartwig.hmftools.common.variant.structural.ImmutableEnrichedStructura
 import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantFileLoader;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneAnnotation;
+import com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion;
 import com.hartwig.hmftools.common.variant.structural.annotation.StructuralVariantAnalysis;
 import com.hartwig.hmftools.common.variant.structural.annotation.StructuralVariantAnnotation;
 import com.hartwig.hmftools.common.variant.structural.annotation.SvGeneTranscriptCollection;
@@ -79,15 +80,12 @@ public class StructuralVariantAnnotator
     private static final String LOAD_ANNOTATIONS_FROM_FILE = "load_annotations";
     private static final String SKIP_DB_UPLOAD = "skip_db_upload";
     private static final String LOG_DEBUG = "log_debug";
-    private static final String SV_PON_FILE = "sv_pon_file";
     private static final String OVERWRITE_ENSEMBL_FILE = "overwrite_ensembl";
     private static final String REWRITE_ENSEMBL_IDS = "rewrite_ensembl_ids";
 
     private static final String DB_USER = "db_user";
     private static final String DB_PASS = "db_pass";
     private static final String DB_URL = "db_url";
-
-    private static final String TEST_SV_LIMIT = "test_limit_sv_count";
 
     private String mSampleId;
     private String mDataPath;
@@ -98,6 +96,7 @@ public class StructuralVariantAnnotator
     private SvGeneTranscriptCollection mSvGeneTranscriptCollection;
     private boolean mOverwriteEnsembleFiles;
     private boolean mRewriteEnsembleIds;
+    private boolean mUploadAnnotations;
 
     // Let PON filtered SVs through since GRIDSS PON filtering is performed upstream
     private static final Set<String> ALLOWED_FILTERS = Sets.newHashSet("INFERRED", PON_FILTER_PON, PON_FILTER_PASS);
@@ -134,6 +133,7 @@ public class StructuralVariantAnnotator
         mSvGeneTranscriptCollection.setDataPath(mDataPath);
         mOverwriteEnsembleFiles = mCmdLineArgs.hasOption(OVERWRITE_ENSEMBL_FILE) || !(mSampleId.equals("*") || mSampleId.isEmpty());
         mRewriteEnsembleIds = mCmdLineArgs.hasOption(REWRITE_ENSEMBL_IDS);
+        mUploadAnnotations = !mCmdLineArgs.hasOption(SKIP_DB_UPLOAD);
 
         return true;
     }
@@ -210,6 +210,8 @@ public class StructuralVariantAnnotator
             runSample(mSampleId, svAnalyser);
         }
 
+        svAnalyser.getFusionAnalyser().onCompleted();
+
         return true;
     }
 
@@ -224,8 +226,8 @@ public class StructuralVariantAnnotator
 
     private void runSample(final String sampleId, final StructuralVariantAnalyzer svAnalyser)
     {
-        if(!mOverwriteEnsembleFiles && outputFileExists(sampleId))
-            return;
+        //if(!mOverwriteEnsembleFiles && outputFileExists(sampleId))
+        //    return;
 
         LOGGER.info("annotating variants for sample({})", sampleId);
 
@@ -234,8 +236,7 @@ public class StructuralVariantAnnotator
         if(mSourceSvFromDB)
         {
             // optionally load existing SVs from the database rather than from VCF
-            enrichedVariants = mDbAccess.readStructuralVariants(sampleId)
-                    .stream().filter(x -> x.filter().equals("PASS")).collect(toList());
+            enrichedVariants = mDbAccess.readStructuralVariants(sampleId);
 
             if (enrichedVariants.isEmpty())
             {
@@ -258,6 +259,7 @@ public class StructuralVariantAnnotator
         }
 
         List<StructuralVariantAnnotation> annotations;
+
         if(mCmdLineArgs.hasOption(LOAD_ANNOTATIONS_FROM_FILE) && !mDataPath.isEmpty())
         {
             mSvGeneTranscriptCollection.loadSampleGeneTranscripts(sampleId);
@@ -268,17 +270,7 @@ public class StructuralVariantAnnotator
         }
         else
         {
-            int testSvLimit = Integer.parseInt(mCmdLineArgs.getOptionValue(TEST_SV_LIMIT, "0"));
-
-            if(testSvLimit > 0)
-            {
-                List<EnrichedStructuralVariant> subset = Lists.newArrayList(enrichedVariants.subList(0, testSvLimit));
-                annotations = svAnalyser.annotateVariants(subset);
-            }
-            else
-            {
-                annotations = svAnalyser.annotateVariants(enrichedVariants);
-            }
+            annotations = svAnalyser.annotateVariants(enrichedVariants);
 
             LOGGER.debug("sample({}) matched {} annotations from Ensembl database", sampleId, annotations.size());
 
@@ -287,11 +279,17 @@ public class StructuralVariantAnnotator
                 mSvGeneTranscriptCollection.writeAnnotations(sampleId, annotations);
         }
 
-        if(!mCmdLineArgs.hasOption(SKIP_DB_UPLOAD))
-        {
-            LOGGER.debug("sample({}) finding disruptions and fusions", sampleId);
-            final StructuralVariantAnalysis analysis = svAnalyser.runOnAnnotations(annotations);
+        LOGGER.debug("sample({}) finding disruptions and fusions", sampleId);
+        final StructuralVariantAnalysis analysis = svAnalyser.runOnAnnotations(annotations);
 
+        if(!mDataPath.isEmpty())
+        {
+            String clusterInfo = ",,";
+            svAnalyser.getFusionAnalyser().writeFusions(analysis.fusions(), mDataPath, sampleId, clusterInfo);
+        }
+
+        if(mUploadAnnotations)
+        {
             LOGGER.debug("persisting annotations to database");
             final StructuralVariantAnnotationDAO annotationDAO = new StructuralVariantAnnotationDAO(mDbAccess.context());
 
@@ -322,62 +320,7 @@ public class StructuralVariantAnnotator
             return svList;
         }
 
-        if(mCmdLineArgs.hasOption(SV_PON_FILE))
-        {
-            svList = applyPONFilter(mCmdLineArgs.getOptionValue(SV_PON_FILE), svList);
-        }
-
         return svList;
-    }
-
-    private List<EnrichedStructuralVariant> applyPONFilter(final String ponFilename, List<EnrichedStructuralVariant> svList)
-    {
-        SvPONAnnotator svPONAnnotator = new SvPONAnnotator();
-        svPONAnnotator.loadPonFile(ponFilename);
-
-        if (!svPONAnnotator.hasEntries())
-            return svList;
-
-        List<EnrichedStructuralVariant> updatedSVs = Lists.newArrayList();
-
-        for (EnrichedStructuralVariant variant : svList)
-        {
-            boolean ponFiltered = false;
-            if (variant.end() != null)
-            {
-                int ponCount = svPONAnnotator.getPonOccurenceCount(variant.chromosome(true),
-                        variant.chromosome(false),
-                        variant.position(true),
-                        variant.position(false),
-                        variant.orientation(true),
-                        variant.orientation(false),
-                        variant.type().toString());
-                ponFiltered = ponCount > 1;
-            }
-
-            String filterString = variant.filter();
-            assert filterString != null;
-
-            Set<String> filterSet = Stream.of(filterString.split(";"))
-                    .filter(s -> !s.equals("PASS"))
-                    .filter(s -> !s.equals("."))
-                    .filter(s -> !s.equals(""))
-                    .collect(Collectors.toSet());
-
-            if (ponFiltered)
-            {
-                filterSet.add(PON_FILTER_PON);
-            }
-
-            String filter = filterSet.size() == 0 ? "PASS" : filterSet.stream().sorted().collect(Collectors.joining(";"));
-
-            final ImmutableEnrichedStructuralVariant updatedSV =
-                    ImmutableEnrichedStructuralVariant.builder().from(variant).filter(filter).build();
-
-            updatedSVs.add(updatedSV);
-        }
-
-        return updatedSVs;
     }
 
     @NotNull
@@ -502,7 +445,6 @@ public class StructuralVariantAnnotator
         options.addOption(ENSEMBL_DB_PASS, true, "Ensembl DB password if required");
         options.addOption(ENSEMBL_DB_USER, true, "Ensembl DB username if required");
         options.addOption(LOG_DEBUG, false, "Sets log level to Debug, off by default");
-        options.addOption(SV_PON_FILE, true, "PON file for SVs");
         options.addOption(OVERWRITE_ENSEMBL_FILE, false, "Whether to overwrite an existing sample ensembl file if exists");
         options.addOption(REWRITE_ENSEMBL_IDS, false, "Update ensembl files with new DB SV Ids");
         options.addOption(REF_GENOME, true, "Path to the ref genome fasta file.");
@@ -514,7 +456,6 @@ public class StructuralVariantAnnotator
         options.addOption(SOURCE_SVS_FROM_DB, false, "Skip annotations, including Ensemble DB data sync, for testing only)");
         options.addOption(LOAD_ANNOTATIONS_FROM_FILE, false, "Load existing annotations previously written to file");
         options.addOption(SKIP_DB_UPLOAD, false, "Skip uploading fusions and disruptions to database, off by default");
-        options.addOption(TEST_SV_LIMIT, true, "Optional: only analyser X variants to save processing time");
 
         return options;
     }

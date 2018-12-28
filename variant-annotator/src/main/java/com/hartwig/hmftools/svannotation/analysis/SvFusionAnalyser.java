@@ -1,5 +1,12 @@
 package com.hartwig.hmftools.svannotation.analysis;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
@@ -30,12 +37,15 @@ public class SvFusionAnalyser
 
     boolean mIncludePossibles;
 
+    private BufferedWriter mFusionWriter;
+
     private static final Logger LOGGER = LogManager.getLogger(SvFusionAnalyser.class);
 
     public SvFusionAnalyser(final KnownFusionsModel knownFusionsModel)
     {
         mKnownFusionsModel = knownFusionsModel;
         mIncludePossibles = false;
+        mFusionWriter = null;
     }
 
     public static void addCmdLineArgs(Options options)
@@ -339,4 +349,106 @@ public class SvFusionAnalyser
     {
         return gene.strand() * gene.orientation() > 0;
     }
+
+    public void writeFusions(final List<GeneFusion> fusions, final String outputDir, final String sampleId,  final String clusterInfo)
+    {
+        if(fusions.isEmpty())
+            return;
+
+        try
+        {
+            BufferedWriter writer = null;
+
+            if(mFusionWriter == null)
+            {
+                String outputFilename = outputDir;
+
+                if (!outputFilename.endsWith("/"))
+                    outputFilename += File.separator;
+
+                outputFilename += "FUSIONS.csv";
+
+                Path outputFile = Paths.get(outputFilename);
+
+                mFusionWriter = Files.newBufferedWriter(outputFile, StandardOpenOption.CREATE);
+                writer = mFusionWriter;
+
+                writer.write("SampleId,Reportable,PrimarySource,ClusterId,ClusterCount,ResolvedType,PhaseMatched");
+                writer.write(",SvIdUp,ChrUp,PosUp,OrientUp,TypeStart,GeneUp,TranscriptUp,StrandUp,RegionTypeUp,CodingTypeUp");
+                writer.write(",ExonUp,PhaseUp,ExactBaseUp,CodingBasesUp,TotalCodingUp,ExonMaxUp,CodingStartUp,CodingEndUp");
+                writer.write(",SvIdDown,ChrDown,PosDown,OrientDown,TypeDown,GeneDown,TranscriptDown,StrandDown,RegionTypeDown,CodingTypeDown");
+                writer.write(",ExonDown,PhaseDown,ExactBaseDown,CodingBasesDown,TotalCodingDown,ExonMaxDown,CodingStartDown,CodingEndDown");
+                writer.newLine();
+            }
+            else
+            {
+                writer = mFusionWriter;
+            }
+
+            for(final GeneFusion fusion : fusions)
+            {
+                final Transcript startTrans = fusion.upstreamTrans();
+                final Transcript endTrans = fusion.downstreamTrans();
+
+                final GeneAnnotation startVar = startTrans.parent();
+                final GeneAnnotation endVar = endTrans.parent();
+
+                writer.write(String.format("%s,%s,%s,%s,%s",
+                        sampleId, fusion.reportable(), fusion.primarySource(), clusterInfo, fusion.isPhaseMatch()));
+
+                // write upstream SV, transcript and exon info
+                writer.write(
+                        String.format(",%d,%s,%d,%d,%s",
+                                startVar.id(), startVar.chromosome(), startVar.position(), startVar.orientation(), startVar.type()));
+
+                writer.write(
+                        String.format(",%s,%s,%d,%s,%s",
+                                startTrans.parent().geneName(), startTrans.transcriptId(),
+                                startTrans.parent().strand(), startTrans.regionType(), startTrans.codingType()));
+
+                writer.write(
+                        String.format(",%d,%d,%d,%d,%d,%d,%d,%d",
+                                startTrans.exonUpstream(), startTrans.exonUpstreamPhase(), startTrans.exactCodingBase(),
+                                startTrans.codingBases(), startTrans.totalCodingBases(), startTrans.exonMax(),
+                                startTrans.codingStart() != null ? startTrans.codingStart() : 0,
+                                startTrans.codingEnd() != null ? startTrans.codingEnd() : 0));
+
+                writer.write(
+                        String.format(",%d,%s,%d,%d,%s",
+                                endVar.id(), endVar.chromosome(), endVar.position(), endVar.orientation(), endVar.type()));
+
+                writer.write(
+                        String.format(",%s,%s,%d,%s,%s",
+                                endTrans.parent().geneName(), endTrans.transcriptId(),
+                                endTrans.parent().strand(), endTrans.regionType(), endTrans.codingType()));
+
+                writer.write(
+                        String.format(",%d,%d,%d,%d,%d,%d,%d,%d",
+                                endTrans.exonDownstream(), endTrans.exonDownstreamPhase(), endTrans.exactCodingBase(),
+                                endTrans.codingBases(), endTrans.totalCodingBases(), endTrans.exonMax(),
+                                endTrans.codingStart() != null ? endTrans.codingStart() : 0,
+                                endTrans.codingEnd() != null ? endTrans.codingEnd() : 0));
+
+                writer.newLine();
+            }
+        }
+        catch (final IOException e)
+        {
+            LOGGER.error("error writing fusions: {}", e.toString());
+        }
+    }
+
+    public void onCompleted()
+    {
+        try
+        {
+            if(mFusionWriter != null)
+                mFusionWriter.close();
+        }
+        catch (IOException e)
+        {
+
+        }
+    }
+
 }

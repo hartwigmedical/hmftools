@@ -36,6 +36,8 @@ public class StructuralVariantAnalyzer
         mFusionAnalyser = new SvFusionAnalyser(knownFusionsModel);
     }
 
+    public final SvFusionAnalyser getFusionAnalyser() { return mFusionAnalyser; }
+
     @NotNull
     public StructuralVariantAnalysis runOnVariants(@NotNull List<EnrichedStructuralVariant> variants)
     {
