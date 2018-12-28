@@ -22,6 +22,7 @@ import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.addCl
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.calcConsistency;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.makeChrArmStr;
 import static com.hartwig.hmftools.svanalysis.annotators.LineElementAnnotator.markLineCluster;
+import static com.hartwig.hmftools.svanalysis.types.SvArmCluster.mergeArmClusters;
 import static com.hartwig.hmftools.svanalysis.types.SvCNData.CN_SEG_MULTIPLE;
 import static com.hartwig.hmftools.svanalysis.types.SvChain.CHAIN_ASSEMBLY_LINK_COUNT;
 import static com.hartwig.hmftools.svanalysis.types.SvChain.CHAIN_LENGTH;
@@ -159,6 +160,7 @@ public class ClusterAnalyser {
                     cluster.setResolved(true, RESOLVED_TYPE_SIMPLE_CHAIN);
             }
 
+            mergeArmClusters(cluster.getArmClusters());
             reportClusterFeatures(cluster);
         }
 

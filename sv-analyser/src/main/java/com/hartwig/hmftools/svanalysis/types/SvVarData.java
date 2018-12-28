@@ -9,7 +9,6 @@ import static com.hartwig.hmftools.common.variant.structural.StructuralVariantTy
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INS;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.svanalysis.annotators.FragileSiteAnnotator.NO_FS;
-import static com.hartwig.hmftools.svanalysis.annotators.LineElementAnnotator.IDENTIFIED_LINE_ELEMENT;
 import static com.hartwig.hmftools.svanalysis.annotators.LineElementAnnotator.KNOWN_LINE_ELEMENT;
 import static com.hartwig.hmftools.svanalysis.annotators.LineElementAnnotator.NO_LINE_ELEMENT;
 import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.ASSEMBLY_MATCH_MATCHED;
@@ -355,26 +354,30 @@ public class SvVarData
     {
         if(isStart)
         {
-            if(mStartLineElement.equals(IDENTIFIED_LINE_ELEMENT) || mStartLineElement.equals(KNOWN_LINE_ELEMENT))
-                mStartLineElement = mStartLineElement + ";" + type;
-            else
+            if(mStartLineElement.contains(type))
+                return;
+            else if(mStartLineElement.equals(NO_LINE_ELEMENT))
                 mStartLineElement = type;
+            else
+                mStartLineElement = mStartLineElement + ";" + type;
         }
         else
         {
-            if(mEndLineElement.equals(IDENTIFIED_LINE_ELEMENT) || mEndLineElement.equals(KNOWN_LINE_ELEMENT))
-                mEndLineElement = mEndLineElement + ";" + type;
-            else
+            if(mEndLineElement.contains(type))
+                return;
+            else if(mEndLineElement.equals(NO_LINE_ELEMENT))
                 mEndLineElement = type;
+            else
+                mEndLineElement = mEndLineElement + ";" + type;
         }
     }
 
     public boolean isLineElement(boolean useStart)
     {
         if(useStart)
-            return !mStartLineElement.equals(NO_LINE_ELEMENT) && !mStartLineElement.equals(IDENTIFIED_LINE_ELEMENT);
+            return !mStartLineElement.equals(NO_LINE_ELEMENT);
         else
-            return !mEndLineElement.equals(NO_LINE_ELEMENT) && !mEndLineElement.equals(IDENTIFIED_LINE_ELEMENT);
+            return !mEndLineElement.equals(NO_LINE_ELEMENT);
     }
 
     public boolean inLineElement() { return isLineElement(true) || isLineElement(false); }

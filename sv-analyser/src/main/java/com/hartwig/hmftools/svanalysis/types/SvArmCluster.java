@@ -68,8 +68,9 @@ public class SvArmCluster
     public static int ARM_CL_REMOTE_TI = 1;
     public static int ARM_CL_DSB = 2;
     public static int ARM_CL_MULTIPLE_DSBS = 3;
-    public static int ARM_CL_FOLDBACK = 4;
-    public static int ARM_CL_COMPLEX = 5;
+    public static int ARM_CL_SIMPLE_FOLDBACK = 4;
+    public static int ARM_CL_COMPLEX_FOLDBACK = 5;
+    public static int ARM_CL_COMPLEX_OTHER = 6;
 
     public int getType()
     {
@@ -84,7 +85,7 @@ public class SvArmCluster
             final SvVarData var2 = be2.getSV();
 
             if(var1.getFoldbackLink(be1.usesStart()).equals(var2.id()))
-                return ARM_CL_FOLDBACK;
+                return ARM_CL_SIMPLE_FOLDBACK;
 
             if(var1 == var2)
             {
@@ -101,36 +102,47 @@ public class SvArmCluster
             }
         }
 
-        // look for all breakends forming DSBs with each other
-        if((mBreakends.size() % 2) == 0)
+        // otherwise count the number of foldbacks, DSBs and consecutive BEs to determine the type
+        int dsbCount = 0;
+        int foldbackCount = 0;
+        int consecCount = 0;
+
+        for (int i = 0; i < mBreakends.size() - 1; ++i)
         {
-            boolean allDsbs = true;
+            final SvBreakend be1 = mBreakends.get(i);
+            final SvBreakend be2 = mBreakends.get(i+1);
 
-            for (int i = 0; i < mBreakends.size() - 1; i = i+2)
+            final SvLinkedPair dbPair = be1.getSV().getDBLink(be1.usesStart());
+
+            if(dbPair != null && dbPair == be2.getSV().getDBLink(be2.usesStart()))
             {
-                final SvBreakend be1 = mBreakends.get(i);
-                final SvBreakend be2 = mBreakends.get(i+1);
-
-                final SvLinkedPair dbPair = be1.getSV().getDBLink(be1.usesStart());
-
-                if(dbPair == null || dbPair != be2.getSV().getDBLink(be2.usesStart()))
-                {
-                    allDsbs = false;
-                }
+                ++dsbCount;
             }
 
-            if(allDsbs)
-                return mBreakends.size() == 2 ? ARM_CL_DSB : ARM_CL_MULTIPLE_DSBS;
+            if(be1.getSV().getFoldbackLink(be1.usesStart()).equals(be2.getSV().id()))
+            {
+                ++foldbackCount;
+            }
+            else if(be1.getSV().getConsecBEStart(be1.usesStart()).equals(be2.getSV().id()))
+            {
+                ++consecCount;
+            }
         }
 
-        return ARM_CL_COMPLEX;
+        if(foldbackCount == 0 && consecCount == 0 && dsbCount >= mBreakends.size() / 2)
+            return mBreakends.size() == 2 ? ARM_CL_DSB : ARM_CL_MULTIPLE_DSBS;
+
+        if(foldbackCount > 0)
+            return ARM_CL_COMPLEX_FOLDBACK;
+
+        return ARM_CL_COMPLEX_OTHER;
     }
 
     public static int[] getArmClusterData(final SvCluster cluster)
     {
         // isSpecificCluster(cluster);
 
-        int[] results = new int[ARM_CL_COMPLEX+1];
+        int[] results = new int[ARM_CL_COMPLEX_OTHER+1];
 
         for(final SvArmCluster armCluster : cluster.getArmClusters())
         {
@@ -138,5 +150,61 @@ public class SvArmCluster
         }
 
         return results;
+    }
+
+    public static void mergeArmClusters(List<SvArmCluster> armClusters)
+    {
+        // merge if any 2 have SV in a foldback
+        for(int i = 0; i < armClusters.size(); ++i)
+        {
+            SvArmCluster ac1 = armClusters.get(i);
+            List<SvBreakend> bl1 = ac1.getBreakends();
+
+            int j = i+1;
+            while(j < armClusters.size())
+            {
+                SvArmCluster ac2 = armClusters.get(j);
+
+                if(!ac1.chromosome().equals(ac2.chromosome()) || ac1.arm() != ac2.arm())
+                {
+                    ++j;
+                    continue;
+                }
+
+                // check for a matching foldback
+                List<SvBreakend> bl2 = ac2.getBreakends();
+
+                boolean foldbackFound = false;
+
+                for(final SvBreakend be1 : bl1)
+                {
+                    for(final SvBreakend be2 : bl2)
+                    {
+                        if(be1.getSV().getFoldbackLink(be1.usesStart()).equals(be2.getSV().id()))
+                        {
+                            foldbackFound = true;
+                            break;
+                        }
+                    }
+
+                    if(foldbackFound)
+                        break;
+                }
+
+                if(foldbackFound)
+                {
+                    for(final SvBreakend be2 : bl2)
+                    {
+                        ac1.addBreakend(be2);
+                    }
+
+                    armClusters.remove(j);
+                }
+                else
+                {
+                    ++j;
+                }
+            }
+        }
     }
 }

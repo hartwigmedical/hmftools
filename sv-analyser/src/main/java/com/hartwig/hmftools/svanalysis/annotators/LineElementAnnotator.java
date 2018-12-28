@@ -32,14 +32,12 @@ import org.apache.logging.log4j.Logger;
 public class LineElementAnnotator {
 
     public static String KNOWN_LINE_ELEMENT = "Known";
-    public static String IDENTIFIED_LINE_ELEMENT = "Ident";
     public static String NO_LINE_ELEMENT = "None";
     public static String SUSPECTED_LINE_ELEMENT = "Suspect";
 
     private static String CSV_LE_TYPE_IDENTIFIED = "Identified";
 
     private List<GenomeRegion> mKnownLineElements;
-    private List<GenomeRegion> mIdentifiedLineElements;
     private static int PERMITTED_DISTANCE = 5000;
 
     public static String POLY_A_MOTIF = "AAAAAAAAAAA";
@@ -50,7 +48,6 @@ public class LineElementAnnotator {
     public LineElementAnnotator()
     {
         mKnownLineElements = Lists.newArrayList();
-        mIdentifiedLineElements = Lists.newArrayList();
     }
 
     public void loadLineElementsFile(final String filename)
@@ -76,16 +73,13 @@ public class LineElementAnnotator {
 
                 final GenomeRegion genomeRegion = GenomeRegionFactory.create(items[0], Long.parseLong(items[1]), Long.parseLong(items[2]));
 
-                if(items[3].equals(CSV_LE_TYPE_IDENTIFIED))
-                    mIdentifiedLineElements.add(genomeRegion);
-                else
-                    mKnownLineElements.add(genomeRegion);
+                mKnownLineElements.add(genomeRegion);
 
 //                LOGGER.debug("loaded line element: chr({}) pos({}-{})",
 //                        genomeRegion.chromosome(), genomeRegion.start(), genomeRegion.end());
             }
 
-            LOGGER.debug("loaded {} known line elements, {} identified", mKnownLineElements.size(), mIdentifiedLineElements.size());
+            LOGGER.debug("loaded {} known line elements", mKnownLineElements.size());
         }
         catch(IOException exception)
         {
@@ -95,7 +89,7 @@ public class LineElementAnnotator {
 
     public String isLineElement(final SvVarData svData, final boolean useStart)
     {
-        if(mKnownLineElements.isEmpty() && mIdentifiedLineElements.isEmpty())
+        if(mKnownLineElements.isEmpty())
             return NO_LINE_ELEMENT;
 
         for(final GenomeRegion genomeRegion : mKnownLineElements)
@@ -107,24 +101,9 @@ public class LineElementAnnotator {
             if(svData.position(useStart) >= genomeRegion.start() - PERMITTED_DISTANCE
             && svData.position(useStart) <= genomeRegion.end() + PERMITTED_DISTANCE)
             {
-                LOGGER.debug("var({}) found in known line element({}.>{})",
+                LOGGER.debug("var({}) found in known line element({} -> {})",
                         svData.posId(), genomeRegion.chromosome(), genomeRegion.start(), genomeRegion.end());
                 return KNOWN_LINE_ELEMENT;
-            }
-        }
-
-        for(final GenomeRegion genomeRegion : mIdentifiedLineElements)
-        {
-            if(!genomeRegion.chromosome().equals(svData.chromosome(useStart)))
-                continue;
-
-            // test if the SV falls within the LE +/- a buffer
-            if(svData.position(useStart) >= genomeRegion.start() - PERMITTED_DISTANCE
-                    && svData.position(useStart) <= genomeRegion.end() + PERMITTED_DISTANCE)
-            {
-                LOGGER.debug("var({}) found in identified line element({}.>{})",
-                        svData.posId(), genomeRegion.chromosome(), genomeRegion.start(), genomeRegion.end());
-                return IDENTIFIED_LINE_ELEMENT;
             }
         }
 
@@ -168,7 +147,7 @@ public class LineElementAnnotator {
                 final SvBreakend breakend = breakendList.get(i);
                 final SvVarData var = breakend.getSV();
 
-                if (var.getLineElement(breakend.usesStart()).equals(SUSPECTED_LINE_ELEMENT))
+                if (var.getLineElement(breakend.usesStart()).contains(SUSPECTED_LINE_ELEMENT))
                     continue;
 
                 SvVarData polyATVar = hasPolyAorTMotif(var) ? var : null;
@@ -299,7 +278,7 @@ public class LineElementAnnotator {
             if(LOGGER.isDebugEnabled())
             {
                 long suspectLine = cluster.getSVs().stream().
-                        filter(x -> (x.getLineElement(true).equals(SUSPECTED_LINE_ELEMENT) || x.getLineElement(true).equals(SUSPECTED_LINE_ELEMENT))).count();
+                        filter(x -> (x.getLineElement(true).contains(SUSPECTED_LINE_ELEMENT) || x.getLineElement(true).contains(SUSPECTED_LINE_ELEMENT))).count();
 
                 long polyAorT = cluster.getSVs().stream().filter(x -> hasPolyAorTMotif(x)).count();
 

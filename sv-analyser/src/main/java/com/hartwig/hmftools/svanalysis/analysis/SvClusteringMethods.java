@@ -8,6 +8,7 @@ import static java.lang.Math.round;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.BND;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DEL;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DUP;
+import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INS;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INV;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.svanalysis.analysis.LinkFinder.MIN_TEMPLATED_INSERTION_LENGTH;
@@ -422,6 +423,9 @@ public class SvClusteringMethods {
 
     public boolean isLowQualityVariant(final SvVarData var)
     {
+        if(var.type() == INS)
+            return false;
+
         if(var.isNullBreakend())
             return var.copyNumberChange(true) < LOW_QUALITY_CN_CHANGE;
         else
