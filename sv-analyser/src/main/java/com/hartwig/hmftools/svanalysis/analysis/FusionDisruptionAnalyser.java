@@ -360,4 +360,9 @@ public class FusionDisruptionAnalyser
 
         mFusionFinder.writeFusions(fusions, mOutputDir, mSampleId, clusterInfo);
     }
+
+    public void close()
+    {
+        mFusionFinder.onCompleted();
+    }
 }
