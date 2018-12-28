@@ -223,7 +223,8 @@ public class SvGeneTranscriptCollection
         }
         catch(IOException e)
         {
-            LOGGER.error("failed to load sample gene annotations({}): {}", filename, e.toString());
+            LOGGER.warn("failed to load sample gene annotations({}): {}", filename, e.toString());
+            return false;
         }
 
         return true;

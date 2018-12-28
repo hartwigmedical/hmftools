@@ -39,9 +39,6 @@ public class SvAnalyser {
     private static final String RUN_SVA = "run_sv_analysis";
     private static final String DATA_OUTPUT_PATH = "data_output_path";
     private static final String LOG_DEBUG = "log_debug";
-    private static final String WRITE_FILTERED_SVS = "write_pon_filters";
-    private static final String LOG_VCF_INSERTS = "log_vcf_inserts";
-    private static final String LOG_VCF_MANTA_DATA = "log_vcf_manta_data";
     private static final String LINE_ELEMENT_FILE = "line_element_file";
     private static final String DRIVERS_CHECK = "check_drivers";
     private static final String COPY_NUMBER_ANALYSIS = "run_cn_analysis";
@@ -205,21 +202,6 @@ public class SvAnalyser {
             }
         }
 
-        if(cmd.hasOption(WRITE_FILTERED_SVS) || cmd.hasOption(LOG_VCF_INSERTS))
-        {
-            LOGGER.info("reading VCF files including filtered SVs");
-
-            FilteredSVWriter filteredSvWriter = new FilteredSVWriter(cmd.getOptionValue(VCF_FILE), cmd.getOptionValue(DATA_OUTPUT_PATH));
-
-            filteredSvWriter.setLogInsSVs(cmd.hasOption(LOG_VCF_INSERTS));
-            filteredSvWriter.setRunPONFilter(cmd.hasOption(WRITE_FILTERED_SVS));
-            filteredSvWriter.setLogExtraMantaData(cmd.hasOption(LOG_VCF_MANTA_DATA));
-            filteredSvWriter.processVcfFiles();
-
-            LOGGER.info("reads complete");
-            return;
-        }
-
         LOGGER.info("run complete");
     }
 
@@ -259,9 +241,6 @@ public class SvAnalyser {
         options.addOption(RUN_SVA, false, "Whether to run clustering logic");
         options.addOption(DATA_OUTPUT_PATH, true, "CSV output directory");
         options.addOption(LOG_DEBUG, false, "Sets log level to Debug, off by default");
-        options.addOption(WRITE_FILTERED_SVS, false, "Includes filtered SVs and writes all to file for PON creation");
-        options.addOption(LOG_VCF_INSERTS, false, "Read INS from VCF files, write to CSV");
-        options.addOption(LOG_VCF_MANTA_DATA, false, "Read extra manta data from VCF files, write to CSV");
         options.addOption(LINE_ELEMENT_FILE, true, "Line Elements file for SVs");
         options.addOption(DRIVERS_CHECK, false, "Check SVs against drivers catalog");
         options.addOption(COPY_NUMBER_ANALYSIS, false, "Run copy number analysis");

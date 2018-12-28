@@ -30,7 +30,6 @@ public class SvLinkedPair {
 
     public static final String LINK_TYPE_TI = "TI";
     public static final String LINK_TYPE_DB = "DB";
-    public static final String LINK_TYPE_SGL = "SGL";
 
     public static String ASSEMBLY_MATCH_MATCHED = "MATCH";
     public static String ASSEMBLY_MATCH_DIFF = "DIFF";
@@ -59,22 +58,11 @@ public class SvLinkedPair {
         int length = (int) (first.position(firstLinkOnStart) - second.position(secondLinkOnStart));
         mLinkLength = abs(length);
 
-        if(mLinkType == LINK_TYPE_SGL)
+        if (mLinkType == LINK_TYPE_TI && mLinkLength < MIN_TEMPLATED_INSERTION_LENGTH)
         {
-            if (mLinkLength < MIN_TEMPLATED_INSERTION_LENGTH)
-            {
-                mLinkLength = -mLinkLength;
-            }
-        }
-        else
-        {
-
-            if (mLinkType == LINK_TYPE_TI && mLinkLength < MIN_TEMPLATED_INSERTION_LENGTH)
-            {
-                // re-label this as a deletion bridge
-                mLinkType = LINK_TYPE_DB;
-                mLinkLength = -mLinkLength;
-            }
+            // re-label this as a deletion bridge
+            mLinkType = LINK_TYPE_DB;
+            mLinkLength = -mLinkLength;
         }
     }
 

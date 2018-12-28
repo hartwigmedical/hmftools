@@ -59,11 +59,6 @@ public class LinkFinder
 
         List<SvLinkedPair> inferredLinkedPairs = createInferredLinkedPairs(cluster, false);
 
-        // findSpanningSVs(sampleId, cluster, inferredLinkedPairs);
-
-        List<SvLinkedPair> singleBELinkedPairs = createSingleBELinkedPairs(cluster);
-        inferredLinkedPairs.addAll(singleBELinkedPairs);
-
         cluster.setInferredLinkedPairs(inferredLinkedPairs);
     }
 
@@ -430,85 +425,6 @@ public class LinkFinder
             return true;
         else
             return false;
-    }
-
-    public List<SvLinkedPair> createSingleBELinkedPairs(SvCluster cluster)
-    {
-        List<SvLinkedPair> linkedPairs = Lists.newArrayList();
-
-        for (int i = 0; i < cluster.getCount(); ++i)
-        {
-            SvVarData var1 = cluster.getSVs().get(i);
-
-            if(!var1.isNullBreakend() || var1.isNoneSegment())
-                continue;
-
-            for (int j = i+1; j < cluster.getCount(); ++j)
-            {
-                SvVarData var2 = cluster.getSVs().get(j);
-
-                if(var1.equals(var2, true))
-                    continue;
-
-                if(!var2.isNullBreakend() || var2.isNoneSegment())
-                    continue;
-
-                if (!areSectionBreak(var1, var2, true, true) && !areLinkedSection(var1, var2, true, true))
-                {
-                    continue;
-                }
-
-                // allow if the length is within the DB-TI cutoff
-                long length = getProximity(var1, var2, true, true);
-
-                if(length > MIN_TEMPLATED_INSERTION_LENGTH)
-                    continue;
-
-                // form a new from these 2 single breakends
-                SvLinkedPair newPair = new SvLinkedPair(var1, var2, SvLinkedPair.LINK_TYPE_SGL, false, false);
-
-                // insert in order
-                int index = 0;
-                boolean skipNewPair = false;
-                for (; index < linkedPairs.size(); ++index)
-                {
-                    SvLinkedPair pair = linkedPairs.get(index);
-
-                    // check for a matching BE on a pair that is shorter, and if so skip creating this new linked pair
-                    if(pair.hasAnySameVariant(newPair) && newPair.length() > pair.length())
-                    {
-                        skipNewPair = true;
-                        break;
-                    }
-
-                    if (pair.length() > newPair.length())
-                        break;
-                }
-
-                if(skipNewPair)
-                    continue;
-
-                if (index >= linkedPairs.size())
-                    linkedPairs.add(newPair);
-                else
-                    linkedPairs.add(index, newPair);
-
-                if(newPair.length() < DEFAULT_PROXIMITY_DISTANCE)
-                {
-                    // to avoid logging unlikely long TIs
-                    LOGGER.debug("cluster({}) adding inferred single-BE linked {} pair({}) length({}) at index({})",
-                            cluster.id(), newPair.linkType(), newPair.toString(), newPair.length(), index);
-                }
-            }
-        }
-
-        if(!linkedPairs.isEmpty())
-        {
-            LOGGER.debug("cluster({}) has {} inferred single-BE linked pairs",
-                    cluster.id(), linkedPairs.size());
-        }
-
-        return linkedPairs;
     }
 
 }

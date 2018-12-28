@@ -43,16 +43,12 @@ import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_SGL_
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_SIMPLE_SV;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.copyNumbersEqual;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.areSpecificClusters;
-import static com.hartwig.hmftools.svanalysis.types.SvCluster.isSpecificCluster;
-import static com.hartwig.hmftools.svanalysis.types.SvLOH.LOH_NO_SV;
 import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.ASSEMBLY_MATCH_MATCHED;
-import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.LINK_TYPE_SGL;
 import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.LINK_TYPE_TI;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_END;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_START;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.findVariantById;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.haveSameChrArms;
-import static com.hartwig.hmftools.svanalysis.types.SvVarData.isSpecificSV;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.isStart;
 
 import java.util.HashMap;
@@ -477,21 +473,23 @@ public class ClusterAnalyser {
             }
             else if(cluster.getTypeCount(SGL) == 2)
             {
-                if(cluster.getLinkedPairs().size() == 1 && cluster.getLinkedPairs().get(0).linkType() == LINK_TYPE_SGL)
-                {
-                    cluster.setResolved(true, RESOLVED_TYPE_SGL_PAIR_INS);
-                }
-                else
-                {
-                    final SvVarData var1 = cluster.getSVs().get(0);
-                    final SvVarData var2 = cluster.getSVs().get(1);
+                final SvVarData var1 = cluster.getSVs().get(0);
+                final SvVarData var2 = cluster.getSVs().get(1);
 
-                    if(var1.orientation(true) != var2.orientation(true))
+                if(var1.orientation(true) != var2.orientation(true))
+                {
+                    long length = abs(var1.position(true) - var2.position(true));
+
+                    if(length < MIN_TEMPLATED_INSERTION_LENGTH)
                     {
-                        boolean ssFirst = var1.position(true) < var2.position(true);
-                        boolean ssPosOrientation = var1.orientation(true) == 1;
+                        cluster.setResolved(true, RESOLVED_TYPE_SGL_PAIR_INS);
+                    }
+                    else
+                    {
+                        boolean v1First = var1.position(true) < var2.position(true);
+                        boolean v1PosOrientation = var1.orientation(true) == 1;
 
-                        if(ssFirst == ssPosOrientation)
+                        if(v1First == v1PosOrientation)
                             cluster.setResolved(true, RESOLVED_TYPE_SGL_PAIR_DEL);
                         else
                             cluster.setResolved(true, RESOLVED_TYPE_SGL_PAIR_DUP);

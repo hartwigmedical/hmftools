@@ -5,6 +5,7 @@ import static java.lang.Math.abs;
 
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.BND;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DEL;
+import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.typeAsInt;
 import static com.hartwig.hmftools.svanalysis.analysis.ClusterAnalyser.SHORT_TI_LENGTH;
 import static com.hartwig.hmftools.svanalysis.analysis.ClusterAnalyser.SMALL_CLUSTER_SIZE;
 import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.DEFAULT_PROXIMITY_DISTANCE;
@@ -15,7 +16,6 @@ import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.removedLinksWit
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.RELATION_TYPE_NEIGHBOUR;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_END;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_START;
-import static com.hartwig.hmftools.svanalysis.types.SvVarData.isSpecificSV;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.isStart;
 import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.findLinkedPair;
 
@@ -37,7 +37,7 @@ public class SvCluster
     private int mConsistencyCount;
     private boolean mIsConsistent; // follows from telomere to centromere to telomore
     private String mDesc;
-    private Map<String, Integer> mTypeCountMap;
+    private int[] mTypeCounts;
 
     private boolean mRequiresRecalc;
     private List<String> mAnnotationList;
@@ -108,7 +108,7 @@ public class SvCluster
         mSVs = Lists.newArrayList();
         mArmGroups = Lists.newArrayList();
         mArmClusters = Lists.newArrayList();
-        mTypeCountMap = new HashMap();
+        mTypeCounts = new int[StructuralVariantType.values().length];
 
         // annotation info
         mDesc = "";
@@ -190,15 +190,7 @@ public class SvCluster
         }
         else
         {
-            String typeStr = var.typeStr();
-            if(mTypeCountMap.containsKey(typeStr))
-            {
-                mTypeCountMap.replace(typeStr, mTypeCountMap.get(typeStr) + 1);
-            }
-            else
-            {
-                mTypeCountMap.put(typeStr, 1);
-            }
+            ++mTypeCounts[typeAsInt(var.type())];
 
             if(var.type() == BND || var.isCrossArm())
                 mRecalcRemoteSVStatus = true;
@@ -643,15 +635,15 @@ public class SvCluster
         // to a predictable ordering of types: INV, CRS, BND, DEL and DUP
         String clusterTypeStr = "";
 
-        for(Map.Entry<String, Integer> entry : mTypeCountMap.entrySet())
+        for(int i = 0;i < mTypeCounts.length; ++i)
         {
+            if(mTypeCounts[i] == 0)
+                continue;
+
             if(!clusterTypeStr.isEmpty())
-            {
                 clusterTypeStr += "_";
-            }
 
-            clusterTypeStr += entry.getKey() + "=" + entry.getValue();
-
+            clusterTypeStr += StructuralVariantType.values()[i] + "=" + mTypeCounts[i];
         }
 
         return clusterTypeStr;
@@ -659,8 +651,7 @@ public class SvCluster
 
     public int getTypeCount(StructuralVariantType type)
     {
-        Integer typeCount = mTypeCountMap.get(type.toString());
-        return typeCount != null ? typeCount : 0;
+        return mTypeCounts[typeAsInt(type)];
     }
 
     public final List<SvVarData> getLongDelDups() { return mLongDelDups; }

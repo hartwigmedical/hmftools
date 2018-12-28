@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.svanalysis.annotators;
 
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.BND;
+import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INS;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.svanalysis.analysis.LinkFinder.SHORT_DB_LENGTH;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.areVariantsLinkedByDistance;
@@ -41,8 +42,8 @@ public class LineElementAnnotator {
     private List<GenomeRegion> mIdentifiedLineElements;
     private static int PERMITTED_DISTANCE = 5000;
 
-    public static String POLY_A_MOTIF = "AAAAAAAA";
-    public static String POLY_T_MOTIF = "TTTTTTTT";
+    public static String POLY_A_MOTIF = "AAAAAAAAAAA";
+    public static String POLY_T_MOTIF = "TTTTTTTTTTT";
 
     private static final Logger LOGGER = LogManager.getLogger(FragileSiteAnnotator.class);
 
@@ -153,6 +154,7 @@ public class LineElementAnnotator {
         // isSpecificCluster(cluster);
 
         boolean hasSuspected = false;
+        boolean hasPolyAorT = false;
         long knownCount = cluster.getSVs().stream().filter(SvVarData::inLineElement).count();
 
         final Map<String, List<SvBreakend>> chrBreakendMap = cluster.getChrBreakendMap();
@@ -258,6 +260,9 @@ public class LineElementAnnotator {
                     }
                 }
 
+                if(polyATVar != null)
+                    hasPolyAorT = true;
+
                 if (!isSuspectGroup)
                     continue;
 
@@ -283,7 +288,7 @@ public class LineElementAnnotator {
             }
         }
 
-        if(cluster.getUniqueSvCount() == knownCount)
+        if(cluster.getUniqueSvCount() == knownCount && cluster.getTypeCount(BND) >= 1)
         {
             LOGGER.debug("cluster({}) marked as line with all known({})", cluster.id(), knownCount);
             cluster.markAsLine();
@@ -303,7 +308,20 @@ public class LineElementAnnotator {
 
             cluster.markAsLine();
         }
+        else if(hasPolyAorT)
+        {
+            int sglCount = cluster.getTypeCount(SGL);
 
+            if(sglCount >= 1 && sglCount <= 2 && sglCount == cluster.getCount())
+            {
+                LOGGER.debug("cluster({}) marked as line with poly A/T SGL", cluster.id());
+                cluster.markAsLine();
+            }
+            else if(cluster.getTypeCount(INS) == 1 && cluster.getCount() == 1)
+            {
+                cluster.markAsLine();
+            }
+        }
     }
 
     public static void markLineCluster_old(final SvCluster cluster, int proximityLength)
