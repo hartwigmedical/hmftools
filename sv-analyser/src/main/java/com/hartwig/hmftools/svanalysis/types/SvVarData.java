@@ -80,6 +80,9 @@ public class SvVarData
     private SvVarData mReplicatedSv;
     private int mReplicatedCount;
 
+    private String mConsecBEStart;
+    private String mConsecBEEnd;
+
     private List<GeneAnnotation> mGenesStart;
     private List<GeneAnnotation> mGenesEnd;
 
@@ -146,6 +149,9 @@ public class SvVarData
         mFoldbackLenEnd = -1;
         mFoldbackLinkInfoStart = "";
         mFoldbackLinkInfoEnd = "";
+
+        mConsecBEStart = "";
+        mConsecBEEnd = "";
 
         mGenesStart = Lists.newArrayList();
         mGenesEnd = Lists.newArrayList();
@@ -432,6 +438,19 @@ public class SvVarData
             {
                 mCluster.registerFoldback(this);
             }
+        }
+    }
+
+    public String getConsecBEStart(boolean useStart) { return useStart ? mConsecBEStart : mConsecBEEnd; }
+    public void setConsecBEStart(final String info, boolean useStart)
+    {
+        if(useStart)
+        {
+            mConsecBEStart = mConsecBEStart.isEmpty() ? info : mConsecBEStart + ";" + info;
+        }
+        else
+        {
+            mConsecBEEnd = mConsecBEEnd.isEmpty() ? info : mConsecBEEnd + ";" + info;
         }
     }
 

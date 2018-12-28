@@ -10,6 +10,13 @@ import static com.hartwig.hmftools.svanalysis.analysis.LinkFinder.NO_DB_MARKER;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.CHROMOSOME_ARM_P;
 import static com.hartwig.hmftools.common.variant.structural.annotation.SvPONAnnotator.REGION_DISTANCE;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.getChromosomalArm;
+import static com.hartwig.hmftools.svanalysis.types.SvArmCluster.ARM_CL_COMPLEX;
+import static com.hartwig.hmftools.svanalysis.types.SvArmCluster.ARM_CL_DSB;
+import static com.hartwig.hmftools.svanalysis.types.SvArmCluster.ARM_CL_FOLDBACK;
+import static com.hartwig.hmftools.svanalysis.types.SvArmCluster.ARM_CL_MULTIPLE_DSBS;
+import static com.hartwig.hmftools.svanalysis.types.SvArmCluster.ARM_CL_REMOTE_TI;
+import static com.hartwig.hmftools.svanalysis.types.SvArmCluster.ARM_CL_SINGLE;
+import static com.hartwig.hmftools.svanalysis.types.SvArmCluster.getArmClusterData;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_LOW_QUALITY;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_SIMPLE_SV;
 import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.LINK_TYPE_TI;
@@ -440,6 +447,7 @@ public class SvSampleAnalyser {
                 writer.write(",Consistency,ArmCount,OriginArms,FragmentArms,IsLINE,HasReplicated,Foldbacks,DSBs");
                 writer.write(",TotalLinks,AssemblyLinks,LongDelDups,UnlinkedRemotes,ShortTIRemotes,MinCopyNumber,MaxCopyNumber");
                 writer.write(",SynDelDupLen,SynDelDupAvgTILen,Annotations,ChainInfo");
+                writer.write(",ACCount,ACSoloSv,ACRemoteTI,ACDsb,ACMultipleDsb,ACFoldback,ACComplex");
                 writer.newLine();
             }
 
@@ -477,6 +485,15 @@ public class SvSampleAnalyser {
                 writer.write(
                         String.format(",%d,%d,%s,%s",
                                 cluster.getSynDelDupLength(), cluster.getSynDelDupTILength(), cluster.getAnnotations(), chainInfo));
+
+                final int[] armClusterData = getArmClusterData(cluster);
+                writer.write(
+                        String.format(",%d,%d,%d,%d,%d,%d,%d",
+                                cluster.getArmClusters().size(),
+                                armClusterData[ARM_CL_SINGLE], armClusterData[ARM_CL_REMOTE_TI],
+                                armClusterData[ARM_CL_DSB], armClusterData[ARM_CL_MULTIPLE_DSBS],
+                                armClusterData[ARM_CL_FOLDBACK], armClusterData[ARM_CL_COMPLEX]));
+
 
                 writer.newLine();
             }

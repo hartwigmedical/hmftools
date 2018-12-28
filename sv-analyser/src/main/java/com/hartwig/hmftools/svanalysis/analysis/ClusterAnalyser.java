@@ -61,6 +61,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.svanalysis.types.SvArmCluster;
 import com.hartwig.hmftools.svanalysis.types.SvArmGroup;
 import com.hartwig.hmftools.svanalysis.types.SvBreakend;
 import com.hartwig.hmftools.svanalysis.types.SvChain;
@@ -1541,6 +1542,8 @@ public class ClusterAnalyser {
         if(cluster.isResolved() || cluster.isFullyChained())
             return;
 
+        boolean logOutput = false;
+
         // isSpecificCluster(cluster);
 
         final Map<String, List<SvBreakend>> chrBreakendMap = cluster.getChrBreakendMap();
@@ -1645,6 +1648,12 @@ public class ClusterAnalyser {
 
                 final SvVarData frontSv = frontBE.getSV();
                 final SvVarData backSv = backBE.getSV();
+
+                frontSv.setConsecBEStart(backSv.origId(), frontBE.usesStart());
+                backSv.setConsecBEStart(frontSv.origId(), backBE.usesStart());
+
+                if(!logOutput)
+                    continue;
 
                 // put all this together in an annotation string
                 String consecBreakendData = String.format("%s,%d,%d,%s,%d,%s,%s,%s,%s,%d,%d",

@@ -323,7 +323,7 @@ public class ChainFinder
         List<SvChain> partialChains = Lists.newArrayList();
         partialChains.addAll(mCluster.getChains());
 
-        isSpecificCluster(mCluster);
+        // isSpecificCluster(mCluster);
 
         if(mAssemblyLinkedPairs.isEmpty() && inferredLinkedPairs.isEmpty() && partialChains.isEmpty())
             return;

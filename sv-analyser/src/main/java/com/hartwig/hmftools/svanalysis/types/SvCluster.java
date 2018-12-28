@@ -7,6 +7,7 @@ import static com.hartwig.hmftools.common.variant.structural.StructuralVariantTy
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DEL;
 import static com.hartwig.hmftools.svanalysis.analysis.ClusterAnalyser.SHORT_TI_LENGTH;
 import static com.hartwig.hmftools.svanalysis.analysis.ClusterAnalyser.SMALL_CLUSTER_SIZE;
+import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.DEFAULT_PROXIMITY_DISTANCE;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.addSvToChrBreakendMap;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.calcConsistency;
 import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.ASSEMBLY_MATCH_INFER_ONLY;
@@ -48,6 +49,7 @@ public class SvCluster
     private List<SvLinkedPair> mAssemblyLinkedPairs; // TIs found during assembly
     private List<SvVarData> mSpanningSVs; // having 2 duplicate (matching) BEs
     private List<SvArmGroup> mArmGroups;
+    private List<SvArmCluster> mArmClusters;
     private Map<String, List<SvBreakend>> mChrBreakendMap;
     private List<SvVarData> mUnchainedSVs;
     private boolean mIsResolved;
@@ -105,6 +107,7 @@ public class SvCluster
         mId = clusterId;
         mSVs = Lists.newArrayList();
         mArmGroups = Lists.newArrayList();
+        mArmClusters = Lists.newArrayList();
         mTypeCountMap = new HashMap();
 
         // annotation info
@@ -201,6 +204,7 @@ public class SvCluster
                 mRecalcRemoteSVStatus = true;
 
             addSvToChrBreakendMap(var, mChrBreakendMap);
+            addSvToArmCluster(var);
         }
 
         // keep track of all SVs in their respective chromosomal arms
@@ -286,6 +290,42 @@ public class SvCluster
         }
 
         mRequiresRecalc = true;
+    }
+
+    public final List<SvArmCluster> getArmClusters() { return mArmClusters; }
+
+    private void addSvToArmCluster(final SvVarData var)
+    {
+        for(int be = SVI_START; be <= SVI_END; ++be)
+        {
+            if(be == SVI_END && var.isNullBreakend())
+                continue;
+
+            final SvBreakend breakend = var.getBreakend(isStart(be));
+            boolean groupFound = false;
+
+            for(final SvArmCluster armCluster : mArmClusters)
+            {
+                if(!breakend.chromosome().equals(armCluster.chromosome()) && breakend.arm() == armCluster.arm())
+                    continue;
+
+                // test whether position is within range
+                if(breakend.position() >= armCluster.posStart() - DEFAULT_PROXIMITY_DISTANCE
+                && breakend.position() <= armCluster.posEnd() + DEFAULT_PROXIMITY_DISTANCE)
+                {
+                    armCluster.addBreakend(breakend);
+                    groupFound = true;
+                    break;
+                }
+            }
+
+            if(!groupFound)
+            {
+                SvArmCluster armCluster = new SvArmCluster(mArmClusters.size(), this, breakend.chromosome(), breakend.arm());
+                armCluster.addBreakend(breakend);
+                mArmClusters.add(armCluster);
+            }
+        }
     }
 
     public boolean isSyntheticSimpleType(boolean checkResolved)
@@ -857,7 +897,7 @@ public class SvCluster
     public int getFragmentArms() { return mFragmentArms; }
 
     private static int SPECIFIC_CLUSTER_ID = -1;
-    // private static int SPECIFIC_CLUSTER_ID = 231;
+    // private static int SPECIFIC_CLUSTER_ID = 5;
 
     public static boolean isSpecificCluster(final SvCluster cluster)
     {
