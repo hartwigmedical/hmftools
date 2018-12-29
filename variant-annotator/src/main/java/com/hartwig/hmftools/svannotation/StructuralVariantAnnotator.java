@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.svannotation;
 
-import static java.util.stream.Collectors.toList;
-
 import static com.hartwig.hmftools.common.variant.structural.annotation.SvGeneTranscriptCollection.getSampleGeneAnnotationsFilename;
 import static com.hartwig.hmftools.common.variant.structural.annotation.SvPONAnnotator.PON_FILTER_PASS;
 import static com.hartwig.hmftools.common.variant.structural.annotation.SvPONAnnotator.PON_FILTER_PON;
@@ -19,8 +17,6 @@ import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
@@ -38,15 +34,12 @@ import com.hartwig.hmftools.common.purple.purity.PurityContext;
 import com.hartwig.hmftools.common.region.HmfTranscriptRegion;
 import com.hartwig.hmftools.common.variant.structural.EnrichedStructuralVariant;
 import com.hartwig.hmftools.common.variant.structural.EnrichedStructuralVariantFactory;
-import com.hartwig.hmftools.common.variant.structural.ImmutableEnrichedStructuralVariant;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantFileLoader;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneAnnotation;
-import com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion;
 import com.hartwig.hmftools.common.variant.structural.annotation.StructuralVariantAnalysis;
 import com.hartwig.hmftools.common.variant.structural.annotation.StructuralVariantAnnotation;
 import com.hartwig.hmftools.common.variant.structural.annotation.SvGeneTranscriptCollection;
-import com.hartwig.hmftools.common.variant.structural.annotation.SvPONAnnotator;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 import com.hartwig.hmftools.patientdb.dao.StructuralVariantAnnotationDAO;
 import com.hartwig.hmftools.svannotation.analysis.StructuralVariantAnalyzer;
@@ -74,6 +67,7 @@ public class StructuralVariantAnnotator
     private static final String ENSEMBL_DB_USER = "ensembl_user";
     private static final String ENSEMBL_DB_PASS = "ensembl_pass";
     private static final String REF_GENOME = "ref_genome";
+    private static final String ENSEMBL_DATA_DIR = "ensembl_data_dir";
     private static final String DATA_OUTPUT_DIR = "data_output_dir";
 
     private static final String SOURCE_SVS_FROM_DB = "source_svs_from_db";
@@ -88,7 +82,8 @@ public class StructuralVariantAnnotator
     private static final String DB_URL = "db_url";
 
     private String mSampleId;
-    private String mDataPath;
+    private String mOutputDir; // for writing fusion data
+    private String mEnsemblDataDir; // for loading and writing cached Ensembl data
 
     private final CommandLine mCmdLineArgs;
     private DatabaseAccess mDbAccess;
@@ -106,7 +101,8 @@ public class StructuralVariantAnnotator
     private StructuralVariantAnnotator(final CommandLine cmd)
     {
         mSampleId = "";
-        mDataPath = "";
+        mOutputDir = "";
+        mEnsemblDataDir = "";
         mDbAccess = null;
         mSourceSvFromDB = false;
         mCmdLineArgs = cmd;
@@ -129,8 +125,9 @@ public class StructuralVariantAnnotator
 
         mSourceSvFromDB = mCmdLineArgs.hasOption(SOURCE_SVS_FROM_DB);
 
-        mDataPath = mCmdLineArgs.hasOption(DATA_OUTPUT_DIR) ? mCmdLineArgs.getOptionValue(DATA_OUTPUT_DIR) : "";
-        mSvGeneTranscriptCollection.setDataPath(mDataPath);
+        mOutputDir = mCmdLineArgs.getOptionValue(DATA_OUTPUT_DIR, "");
+        mEnsemblDataDir = mCmdLineArgs.getOptionValue(ENSEMBL_DATA_DIR, "");
+        mSvGeneTranscriptCollection.setDataPath(mEnsemblDataDir);
         mOverwriteEnsembleFiles = mCmdLineArgs.hasOption(OVERWRITE_ENSEMBL_FILE) || !(mSampleId.equals("*") || mSampleId.isEmpty());
         mRewriteEnsembleIds = mCmdLineArgs.hasOption(REWRITE_ENSEMBL_IDS);
         mUploadAnnotations = !mCmdLineArgs.hasOption(SKIP_DB_UPLOAD);
@@ -217,7 +214,7 @@ public class StructuralVariantAnnotator
 
     private boolean outputFileExists(final String sampleId)
     {
-        final String outputFilename = getSampleGeneAnnotationsFilename(mDataPath, sampleId);
+        final String outputFilename = getSampleGeneAnnotationsFilename(mEnsemblDataDir, sampleId);
 
         Path outputFile = Paths.get(outputFilename);
 
@@ -260,8 +257,7 @@ public class StructuralVariantAnnotator
 
         List<StructuralVariantAnnotation> annotations;
 
-        if(mCmdLineArgs.hasOption(LOAD_ANNOTATIONS_FROM_FILE) && !mDataPath.isEmpty()
-        && mSvGeneTranscriptCollection.loadSampleGeneTranscripts(sampleId))
+        if(!mEnsemblDataDir.isEmpty() && mSvGeneTranscriptCollection.loadSampleGeneTranscripts(sampleId))
         {
             annotations = createAnnotations(sampleId, enrichedVariants);
 
@@ -276,17 +272,17 @@ public class StructuralVariantAnnotator
             LOGGER.debug("sample({}) matched {} annotations from Ensembl database", sampleId, annotations.size());
 
             // optionally persist to save having to look up this Ensembl data again
-            if(!mDataPath.isEmpty())
+            if(!mEnsemblDataDir.isEmpty())
                 mSvGeneTranscriptCollection.writeAnnotations(sampleId, annotations);
         }
 
         LOGGER.debug("sample({}) finding disruptions and fusions", sampleId);
         final StructuralVariantAnalysis analysis = svAnalyser.runOnAnnotations(annotations);
 
-        if(!mDataPath.isEmpty())
+        if(!mOutputDir.isEmpty())
         {
             String clusterInfo = ",,";
-            svAnalyser.getFusionAnalyser().writeFusions(analysis.fusions(), mDataPath, sampleId, clusterInfo);
+            svAnalyser.getFusionAnalyser().writeFusions(analysis.fusions(), mOutputDir, sampleId, clusterInfo);
         }
 
         if(mUploadAnnotations)
@@ -450,6 +446,7 @@ public class StructuralVariantAnnotator
         options.addOption(REWRITE_ENSEMBL_IDS, false, "Update ensembl files with new DB SV Ids");
         options.addOption(REF_GENOME, true, "Path to the ref genome fasta file.");
         options.addOption(DATA_OUTPUT_DIR, true, "Path to persist annotations to file");
+        options.addOption(ENSEMBL_DATA_DIR, true, "Cached Ensembl data path");
 
         SvFusionAnalyser.addCmdLineArgs(options);
 

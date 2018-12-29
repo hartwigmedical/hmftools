@@ -96,7 +96,7 @@ public class SvGeneTranscriptCollection
 
         final String filename = getSampleGeneAnnotationsFilename(mDataPath, sampleId);
 
-        if (filename.isEmpty())
+        if (filename.isEmpty() || !Files.exists(Paths.get(filename)))
             return false;
 
         try

@@ -73,12 +73,20 @@ public class SvFusionAnalyser
         return fusions;
     }
 
+    private static int SPECIFIC_VAR_ID = -1;
+    // private static int SPECIFIC_VAR_ID = 4959575;
+
     public final List<GeneFusion> findFusions(final List<GeneAnnotation> breakendGenes1, final List<GeneAnnotation> breakendGenes2)
     {
         final List<GeneFusion> potentialFusions = Lists.newArrayList();
 
         for (final GeneAnnotation startGene : breakendGenes1)
         {
+            if(startGene.id() == SPECIFIC_VAR_ID)
+            {
+                LOGGER.debug("specific var({)", startGene.id());
+            }
+
             // left is upstream, right is downstream
             boolean startUpstream = isUpstream(startGene);
 
@@ -96,6 +104,14 @@ public class SvFusionAnalyser
                     {
                         final Transcript upstreamTrans = startUpstream ? startTrans : endTrans;
                         final Transcript downstreamTrans = !startUpstream ? startTrans : endTrans;
+
+                        /*
+                        // DEBUG
+                        if(upstreamTrans.transcriptId().equals("ENST00000328159") && downstreamTrans.transcriptId().equals("ENST00000392403"))
+                        {
+                            LOGGER.debug("trans match");
+                        }
+                         */
 
                         boolean checkExactMatch = false;
 
@@ -145,14 +161,6 @@ public class SvFusionAnalyser
 
                             // phasing match
                         }
-
-                        /*
-                        // DEBUG
-                        if(upstreamTrans.transcriptId().equals("ENST00000312970") && downstreamTrans.transcriptId().equals("ENST00000438429"))
-                        {
-                            LOGGER.debug("trans match");
-                        }
-                        */
 
                         if (!isPotentiallyRelevantFusion(upstreamTrans, downstreamTrans))
                             continue;
