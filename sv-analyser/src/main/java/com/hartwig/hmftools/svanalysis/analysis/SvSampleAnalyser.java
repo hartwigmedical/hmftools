@@ -169,7 +169,7 @@ public class SvSampleAnalyser {
 
             if(mConfig.hasMultipleSamples())
             {
-                writeClusterLinkData();
+                // writeClusterLinkData();
                 writeClusterData();
             }
         }

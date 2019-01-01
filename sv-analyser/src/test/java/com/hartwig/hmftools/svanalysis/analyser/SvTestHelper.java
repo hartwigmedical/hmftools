@@ -23,6 +23,9 @@ import com.hartwig.hmftools.svanalysis.analysis.SvaConfig;
 import com.hartwig.hmftools.svanalysis.types.SvCluster;
 import com.hartwig.hmftools.svanalysis.types.SvVarData;
 
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.core.config.Configurator;
+
 public class SvTestHelper
 {
     public String SampleId;
@@ -44,6 +47,8 @@ public class SvTestHelper
 
         Analyser.setSampleData(SampleId, AllVariants);
         mNextVarId = 0;
+
+        Configurator.setRootLevel(Level.DEBUG);
     }
 
     public final String nextVarId() { return String.format("%d", mNextVarId++); }
@@ -117,7 +122,7 @@ public class SvTestHelper
     public static SvVarData createBnd(final String varId, final String chrStart, long posStart, int orientStart, final String chrEnd, long posEnd, int orientEnd)
     {
         SvVarData var = createTestSv(varId, chrStart, chrEnd, posStart, posEnd, orientStart, orientEnd, BND,
-                1, 0, 1, 0, 1, "");
+                1, 1, 1, 1, 1, "");
 
         return var;
     }

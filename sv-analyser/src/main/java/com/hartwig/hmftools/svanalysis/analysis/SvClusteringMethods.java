@@ -100,6 +100,7 @@ public class SvClusteringMethods {
     public static String CLUSTER_REASON_COMMON_ARMS = "ComArm";
     public static String CLUSTER_REASON_FOLDBACKS = "Foldback";
     public static String CLUSTER_REASON_SOLO_SINGLE = "Single";
+    public static String CLUSTER_REASON_LOOSE_OVERLAP = "LooseOverlap";
     public static String CLUSTER_REASON_INV_OVERLAP = "InvOverlap";
     public static String CLUSTER_REASON_LONG_DEL_DUP = "LongDelDup";
 
