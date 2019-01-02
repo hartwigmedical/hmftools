@@ -18,7 +18,6 @@
         <module>patient-reporter</module>
         <module>health-checker</module>
         <module>fastq-stats</module>
-        <module>break-point-inspector</module>
         <module>amber</module>
         <module>sage</module>
         <module>count-bam-lines</module>
