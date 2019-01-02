@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.patientreporter;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -43,10 +42,10 @@ public final class PatientReporterFileLoader {
     private static final String GRIDSS_DIRECTORY = "structuralVariants" + File.separator + "gridss";
     private static final String CIRCOS_PLOT_DIRECTORY = "plot";
     private static final String CIRCOS_PLOT_EXTENSION = ".circos.png";
-    private static final String PURPLE_GRIDSS_SV = ".purple.sv.vcf.gz";
 
-    private static final String SOMATIC_VCF_EXTENSION_V3 = "_post_processed_v2.2.vcf.gz";
-    private static final String SOMATIC_VCF_EXTENSION_V4 = "_post_processed.vcf.gz";
+    private static final String PURPLE_GRIDSS_SV = ".purple.sv.vcf.gz";
+    private static final String SOMATIC_VCF_EXTENSION = "_post_processed.vcf.gz";
+
     private static final String BACHELOR_DIRECTORY = "bachelor";
 
     private PatientReporterFileLoader() {
@@ -98,13 +97,7 @@ public final class PatientReporterFileLoader {
     @NotNull
     static List<SomaticVariant> loadPassedSomaticVariants(@NotNull String runDirectory, @NotNull String sample,
             @NotNull SomaticEnrichment somaticEnrichment) throws IOException {
-        // TODO (KODU): Clean up once pipeline v3 no longer exists
-        Path vcfPath;
-        try {
-            vcfPath = PathExtensionFinder.build().findPath(runDirectory, SOMATIC_VCF_EXTENSION_V3);
-        } catch (FileNotFoundException exception) {
-            vcfPath = PathExtensionFinder.build().findPath(runDirectory, SOMATIC_VCF_EXTENSION_V4);
-        }
+        Path vcfPath = PathExtensionFinder.build().findPath(runDirectory, SOMATIC_VCF_EXTENSION);
 
         LOGGER.debug(" Using " + vcfPath.toString() + " as source for somatic variants.");
         return SomaticVariantFactory.filteredInstanceWithEnrichment(new PassingVariantFilter(), somaticEnrichment)
