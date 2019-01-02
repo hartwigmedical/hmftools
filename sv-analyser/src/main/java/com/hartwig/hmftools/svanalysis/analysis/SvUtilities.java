@@ -357,7 +357,7 @@ public class SvUtilities {
 
     public static boolean copyNumbersEqual(double cn1, double cn2, double maxDiff, double maxDiffPerc)
     {
-        if(round(cn1) == round(cn1))
+        if(round(cn1) == round(cn2))
             return true;
 
         double copyNumDiff = abs(cn2 - cn1);
@@ -367,19 +367,6 @@ public class SvUtilities {
             return false;
 
         return true;
-    }
-
-    public static int calcTypeCount(final List<SvVarData> svList, StructuralVariantType type)
-    {
-        int count = 0;
-
-        for(final SvVarData var : svList)
-        {
-            if(var.type() == type)
-                ++count;
-        }
-
-        return count;
     }
 
     public static final String getVariantChrArm(final SvVarData var, boolean isStart)

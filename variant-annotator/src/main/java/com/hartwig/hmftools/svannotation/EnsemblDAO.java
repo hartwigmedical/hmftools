@@ -81,64 +81,11 @@ public class EnsemblDAO
                 .value1();
     }
 
-    @NotNull
-    private List<GeneAnnotation> annotateBreakend(@NotNull EnrichedStructuralVariant variant, final boolean isStart, @NotNull String chromosome, final long position)
-    {
-        final List<GeneAnnotation> result = Lists.newArrayList();
-
-        final Result<?> genes = queryGenesOnChromosomeAndPosition(chromosome, position);
-
-        for (final Record gene : genes)
-        {
-            final UInteger geneId = gene.get(GENE.GENE_ID);
-            final String geneName = gene.get(XREF.DISPLAY_LABEL);
-            final String geneStableId = gene.get(GENE.STABLE_ID);
-            final UInteger canonicalTranscriptId = gene.get(GENE.CANONICAL_TRANSCRIPT_ID);
-            final int geneStrand = gene.get(GENE.SEQ_REGION_STRAND);
-
-            final String entrezIdsStr = gene.get(ENTREZ_IDS, String.class);
-
-            final List<Integer> entrezIds = (entrezIdsStr == null || entrezIdsStr.isEmpty())
-                    ? Lists.newArrayList()
-                    : Arrays.stream(entrezIdsStr.split(",")).map(Integer::parseInt).collect(Collectors.toList());
-
-            final String karyotypeBand = gene.get(KARYOTYPE_BAND, String.class);
-
-            final List<String> synonyms = context.select(XREF.DBPRIMARY_ACC)
-                    .from(XREF)
-                    .innerJoin(OBJECT_XREF)
-                    .on(OBJECT_XREF.XREF_ID.eq(XREF.XREF_ID))
-                    .and(OBJECT_XREF.ENSEMBL_ID.eq(geneId))
-                    .and(OBJECT_XREF.ENSEMBL_OBJECT_TYPE.eq(ObjectXrefEnsemblObjectType.Gene))
-                    .fetch()
-                    .stream()
-                    .map(r -> r.get(XREF.DBPRIMARY_ACC))
-                    .collect(Collectors.toList());
-
-            final GeneAnnotation geneAnnotation = new GeneAnnotation(variant, isStart, geneName, geneStableId, geneStrand, synonyms, entrezIds, karyotypeBand);
-
-            final Result<?> transcripts = queryTranscripts(geneId);
-
-            for (final Record transcriptRecord : transcripts)
-            {
-                Transcript transcript = buildTranscript(geneAnnotation, transcriptRecord, position, canonicalTranscriptId, geneStrand > 0);
-                // Transcript transcript = buildTranscript_old(geneAnnotation, transcriptRecord, position, canonicalTranscriptId, geneStrand > 0);
-
-                if (transcript != null)
-                    geneAnnotation.addTranscript(transcript);
-            }
-
-            if (!geneAnnotation.transcripts().isEmpty())
-                result.add(geneAnnotation);
-        }
-
-        return result;
-    }
+    public static int PROMOTOR_DISTANCE = 10000;
 
     @NotNull
     public Result<?> queryGenesOnChromosomeAndPosition(@NotNull String chromosome, long position)
     {
-        final int promoterDistance = 10000;
         final byte zero = 0;
         final Xref ENTREZ_XREF = XREF.as("entrez_xref");
 
@@ -166,11 +113,11 @@ public class EnsemblDAO
                 .on(XREF.XREF_ID.eq(GENE.DISPLAY_XREF_ID))
                 .where((GENE.STATUS.eq(GeneStatus.KNOWN).or(GENE.STATUS.eq(GeneStatus.NOVEL))))
                 .and(decode().when(GENE.SEQ_REGION_STRAND.gt(zero),
-                        decode().when(GENE.SEQ_REGION_START.ge(UInteger.valueOf(promoterDistance)),
-                                GENE.SEQ_REGION_START.sub(promoterDistance)).otherwise(GENE.SEQ_REGION_START))
+                        decode().when(GENE.SEQ_REGION_START.ge(UInteger.valueOf(PROMOTOR_DISTANCE)),
+                                GENE.SEQ_REGION_START.sub(PROMOTOR_DISTANCE)).otherwise(GENE.SEQ_REGION_START))
                         .otherwise(GENE.SEQ_REGION_START)
                         .le(UInteger.valueOf(position)))
-                .and(decode().when(GENE.SEQ_REGION_STRAND.lt(zero), GENE.SEQ_REGION_END.add(promoterDistance))
+                .and(decode().when(GENE.SEQ_REGION_STRAND.lt(zero), GENE.SEQ_REGION_END.add(PROMOTOR_DISTANCE))
                         .otherwise(GENE.SEQ_REGION_END)
                         .ge(UInteger.valueOf(position)))
                 .and(geneStartInKaryotypeBand().or(geneEndInKaryotypeBand()))

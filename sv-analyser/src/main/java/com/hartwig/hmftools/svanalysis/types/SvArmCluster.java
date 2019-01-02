@@ -24,6 +24,7 @@ public class SvArmCluster
 
     public SvArmCluster(int id, final SvCluster cluster, final String chr, final String arm)
     {
+        mId = id;
         mCluster = cluster;
         mArm = arm;
         mChromosome = chr;

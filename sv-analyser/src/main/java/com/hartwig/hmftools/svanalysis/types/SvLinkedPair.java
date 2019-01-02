@@ -66,6 +66,12 @@ public class SvLinkedPair {
         }
     }
 
+    public static SvLinkedPair from(final SvBreakend first, final SvBreakend second, final String linkType)
+    {
+        return new SvLinkedPair(first.getSV(), second.getSV(), linkType, first.usesStart(), second.usesStart());
+    }
+
+
     public int id() { return mId; }
     public void setId(int Id) { mId = 0; }
 

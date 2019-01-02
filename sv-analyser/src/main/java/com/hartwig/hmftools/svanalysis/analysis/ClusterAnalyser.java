@@ -14,11 +14,9 @@ import static com.hartwig.hmftools.common.variant.structural.StructuralVariantTy
 import static com.hartwig.hmftools.svanalysis.analysis.LinkFinder.MIN_TEMPLATED_INSERTION_LENGTH;
 import static com.hartwig.hmftools.svanalysis.analysis.LinkFinder.NO_DB_MARKER;
 import static com.hartwig.hmftools.svanalysis.analysis.LinkFinder.areLinkedSection;
-import static com.hartwig.hmftools.svanalysis.analysis.LinkFinder.areSectionBreak;
 import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.CLUSTER_REASON_COMMON_ARMS;
 import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.CLUSTER_REASON_FOLDBACKS;
 import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.CLUSTER_REASON_LOOSE_OVERLAP;
-import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.CLUSTER_REASON_SOLO_SINGLE;
 import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.addClusterReason;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.calcConsistency;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.makeChrArmStr;
@@ -33,9 +31,7 @@ import static com.hartwig.hmftools.svanalysis.types.SvCluster.CLUSTER_ANNONTATIO
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.CLUSTER_ANNONTATION_DM;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_COMPLEX_CHAIN;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_DEL_EXT_TI;
-import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_DEL_INT_TI;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_DUP_EXT_TI;
-import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_DUP_INT_TI;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_LINE;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_NONE;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_SGL_PAIR_DEL;
@@ -45,6 +41,7 @@ import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_SGL_
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_SIMPLE_SV;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.copyNumbersEqual;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.areSpecificClusters;
+import static com.hartwig.hmftools.svanalysis.types.SvCluster.isSpecificCluster;
 import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.ASSEMBLY_MATCH_MATCHED;
 import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.LINK_TYPE_TI;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_END;
@@ -163,6 +160,7 @@ public class ClusterAnalyser {
 
             mergeArmClusters(cluster.getArmClusters());
             reportClusterFeatures(cluster);
+            annotateClusterArmSegments(cluster);
         }
 
         // validation-only: checkClusterDuplicates(mClusters);
@@ -280,12 +278,6 @@ public class ClusterAnalyser {
                 findChains(cluster);
             }
 
-            /*
-            // any clusters which were merged to resolve a collection of them, but
-            // which did not lead to any longer chains, are now de-merged
-            demergeClusters(mergedClusters);
-            */
-
             for(SvCluster cluster : mergedClusters)
             {
                 cluster.cacheLinkedPairs();
@@ -336,8 +328,8 @@ public class ClusterAnalyser {
         if(!cluster.hasVariedCopyNumber())
             return;
 
-        int minCopyNumber = cluster.getMinCopyNumber();
-        int maxCopyNumber = cluster.getMaxCopyNumber();
+        int minCopyNumber = cluster.getMinCNChange();
+        int maxCopyNumber = cluster.getMaxCNChange();
 
         if(maxCopyNumber > 5 * minCopyNumber)
         {
@@ -360,7 +352,7 @@ public class ClusterAnalyser {
             for(int i = 0; i < clusterCount; ++i)
             {
                 SvVarData var = subCluster.getSVs().get(i);
-                int calcCopyNumber = var.impliedCopyNumber(true);
+                int calcCopyNumber = var.getCopyNumberChange(true);
 
                 if(calcCopyNumber <= minCopyNumber)
                     continue;
@@ -540,9 +532,6 @@ public class ClusterAnalyser {
 
             List<SvCluster> cluster1Overlaps = getTraversedClusters(cluster1);
 
-            boolean hasOpenSingle1 = hasOneOpenSingleVariant(cluster1);
-            boolean isSoloSingle1 = cluster1.getCount() == 1 && cluster1.getSVs().get(0).type() == SGL;
-
             boolean cluster1Merged = false;
             SvCluster newCluster = null;
 
@@ -576,38 +565,6 @@ public class ClusterAnalyser {
                         canMergeClusters = true;
                     }
                 }
-
-                /*
-                if(!canMergeClusters)
-                {
-                    boolean hasOpenSingle2 = hasOneOpenSingleVariant(cluster2);
-                    boolean isSoloSingle2 = cluster2.getCount() == 1 && cluster2.getSVs().get(0).type() == SGL;
-
-                    if(hasOpenSingle1 && isSoloSingle2 && canMergeOpenSingles(cluster1, cluster2))
-                    {
-                        canMergeClusters = true;
-                        addClusterReason(cluster2, CLUSTER_REASON_SOLO_SINGLE, "");
-                    }
-
-                    if(!canMergeClusters && hasOpenSingle2 && isSoloSingle1 && canMergeOpenSingles(cluster2, cluster1))
-                    {
-                        canMergeClusters = true;
-                        addClusterReason(cluster1, CLUSTER_REASON_SOLO_SINGLE, "");
-                    }
-
-                    if(!canMergeClusters && isSoloSingle1 && isSingleClosestTI(cluster2, cluster1))
-                    {
-                        canMergeClusters = true;
-                        addClusterReason(cluster1, CLUSTER_REASON_SOLO_SINGLE, "");
-                    }
-
-                    if(!canMergeClusters && isSoloSingle2 && isSingleClosestTI(cluster1, cluster2))
-                    {
-                        canMergeClusters = true;
-                        addClusterReason(cluster2, CLUSTER_REASON_SOLO_SINGLE, "");
-                    }
-                }
-                */
 
                 if(!canMergeClusters)
                 {
@@ -689,105 +646,6 @@ public class ClusterAnalyser {
         }
 
         return mergedClusters;
-    }
-
-    private boolean hasOneOpenSingleVariant(final SvCluster cluster)
-    {
-        if(cluster.getTypeCount(SGL) != 1)
-            return false;
-
-        if(!cluster.getUnlinkedSVs().isEmpty())
-            return false;
-
-        for(final SvChain chain : cluster.getChains())
-        {
-            if(chain.getFirstSV().type() == SGL || chain.getLastSV().type() == SGL)
-                return true;
-        }
-
-        return false;
-    }
-
-    private boolean canMergeOpenSingles(final SvCluster otherCluster, final SvCluster soloSingleCluster)
-    {
-        // first cluster has the open single in a chain, the second is a solo single
-        // can be merged if the open single is the closest cluster to this cluster
-        final SvVarData soloVar = soloSingleCluster.getSVs().get(0);
-
-        final List<SvBreakend> breakendList = mClusteringMethods.getChrBreakendMap().get(soloVar.chromosome(true));
-
-        for (int i = 1; i < breakendList.size(); ++i)
-        {
-            final SvBreakend breakend = breakendList.get(i);
-
-            if(breakend.getSV().equals(soloVar))
-            {
-                // check if the preceding or next breakend is in the cluster with the open single chain
-                if((i > 0 && otherCluster.getSVs().contains(breakendList.get(i - 1).getSV()))
-                || (i < breakendList.size() - 1 && otherCluster.getSVs().contains(breakendList.get(i + 1).getSV())))
-                {
-                    LOGGER.debug("cluster({}) and cluster({}) have adjacent SVs with solo-single({})",
-                            otherCluster.id(), soloSingleCluster.id(), soloVar.id());
-
-                    return true;
-                }
-
-                break;
-            }
-        }
-
-        return false;
-    }
-
-    private boolean isSingleClosestTI(final SvCluster otherCluster, final SvCluster soloSingleCluster)
-    {
-        // first cluster has the closest VS to the solo single and can form a TI with it
-        final SvVarData soloVar = soloSingleCluster.getSVs().get(0);
-
-        final List<SvBreakend> breakendList = mClusteringMethods.getChrBreakendMap().get(soloVar.chromosome(true));
-
-        for (int i = 1; i < breakendList.size(); ++i)
-        {
-            final SvBreakend breakend = breakendList.get(i);
-
-            if(breakend.getSV().equals(soloVar))
-            {
-                // check if the preceding or next breakend is in the cluster with the open single chain
-                final SvBreakend prevBreakend = (i > 0) ? breakendList.get(i - 1) : null;
-                final SvBreakend nextBreakend = (i < breakendList.size() - 1) ? breakendList.get(i + 1) : null;
-                boolean checkPrev = prevBreakend != null && otherCluster.getSVs().contains(prevBreakend.getSV());
-                boolean checkNext = nextBreakend != null && otherCluster.getSVs().contains(nextBreakend.getSV());
-
-                if((checkPrev && canFormTIWithChainEnd(otherCluster.getChains(), prevBreakend.getSV(), soloVar))
-                || (checkNext && canFormTIWithChainEnd(otherCluster.getChains(), nextBreakend.getSV(), soloVar)))
-                {
-                    LOGGER.debug("cluster({}) can form TI with cluster({}) and soloSingle({})",
-                            otherCluster.id(), soloSingleCluster.id(), soloVar.id());
-                    return true;
-                }
-
-                return false;
-            }
-        }
-
-        return false;
-    }
-
-    private boolean canFormTIWithChainEnd(final List<SvChain> chains, final SvVarData chainVar, final SvVarData soloVar)
-    {
-        for(final SvChain chain : chains)
-        {
-            if (chain.getFirstSV().equals(chainVar) && areLinkedSection(chainVar, soloVar, chain.firstLinkOpenOnStart(), true))
-            {
-                return true;
-            }
-            else if (chain.getLastSV().equals(chainVar) && areLinkedSection(chain.getLastSV(), soloVar, chain.lastLinkOpenOnStart(), true))
-            {
-                return true;
-            }
-        }
-
-        return false;
     }
 
     private static int MAX_FOLDBACK_NEXT_CLUSTER_DISTANCE = 5000000;
@@ -1042,58 +900,6 @@ public class ClusterAnalyser {
         }
 
         return traversedClusters;
-    }
-
-    private void demergeClusters(List<SvCluster> mergedClusters)
-    {
-        // de-merge any clusters which didn't form longer chains
-        int clusterCount = mergedClusters.size();
-
-        int index = 0;
-        while(index < mergedClusters.size())
-        {
-            SvCluster cluster = mergedClusters.get(index);
-
-            if (cluster.isFullyChained())
-            {
-                ++index;
-                continue;
-            }
-
-            int mainChainCount = cluster.getMaxChainCount();
-            int maxSubClusterChainCount = 0;
-
-            for(final SvCluster subCluster : cluster.getSubClusters())
-            {
-                maxSubClusterChainCount = max(maxSubClusterChainCount, subCluster.getMaxChainCount());
-            }
-
-            if(mainChainCount > maxSubClusterChainCount)
-            {
-                ++index;
-                continue;
-            }
-
-            // add the original clusters back in
-            for(final SvCluster subCluster : cluster.getSubClusters())
-            {
-                if(mClusters.contains(subCluster))
-                {
-                    continue;
-                }
-
-                mClusters.add(subCluster);
-            }
-
-            if(mainChainCount > 0)
-            {
-                LOGGER.debug("removed cluster({}) since maxChainCount({}) less than subclusters({}) maxSubClusterChainCount({})",
-                        cluster.id(), mainChainCount, cluster.getSubClusters().size(), maxSubClusterChainCount);
-            }
-
-            mClusters.remove(cluster);
-            mergedClusters.remove(index);
-        }
     }
 
     public void markFoldbacks()
@@ -1353,6 +1159,196 @@ public class ClusterAnalyser {
             var.setFoldbackLink(true, "", -1, "");
         else
             var.setFoldbackLink(false, "", -1, "");
+    }
+
+    private void annotateClusterArmSegments(final SvCluster cluster)
+    {
+        if (cluster.isResolved())
+            return;
+
+        if (cluster.getCount() < 6)
+            return;
+
+        isSpecificCluster(cluster);
+
+        final Map<String, List<SvBreakend>> chrBreakendMap = cluster.getChrBreakendMap();
+
+        for (final Map.Entry<String, List<SvBreakend>> entry : chrBreakendMap.entrySet())
+        {
+            List<SvBreakend> breakendList = entry.getValue();
+
+            if (breakendList.size() < 6)
+                continue;
+
+            // first establish the lowest copy number segments
+            int bndCount = 0;
+            boolean hasConsecutiveOrientations = false;
+            double lowestCopyNumber = -1;
+
+            List<SvArmCluster> localSegments = Lists.newArrayList();
+            SvArmCluster armCuster = null;
+
+            for (int i = 0; i < breakendList.size() - 1; ++i)
+            {
+                final SvBreakend breakend = breakendList.get(i);
+
+                if(!hasConsecutiveOrientations && i < breakendList.size() - 1)
+                {
+                    hasConsecutiveOrientations = (breakend.orientation() != breakendList.get(i+1).orientation());
+                }
+
+                double lowCopyNumber = breakend.getCopyNumber(false);
+
+                if (breakend.orientation() == 1 && (lowestCopyNumber == -1 || lowCopyNumber < lowestCopyNumber))
+                {
+                    // a new lowest segment, which will be the first original DSB
+                    // all previous breakends will be put into the first arm cluster
+                    lowestCopyNumber = lowCopyNumber;
+
+                    localSegments.clear();
+
+                    // add all previous breakends to the first arm cluster
+                    armCuster = new SvArmCluster(localSegments.size(), cluster, breakend.chromosome(), breakend.arm());
+
+                    for (int j = 0; j <= i; ++j)
+                        armCuster.addBreakend(breakendList.get(j));
+
+                    localSegments.add(armCuster);
+                    armCuster = null;
+                }
+                else if (breakend.orientation() == 1 && copyNumbersEqual(lowestCopyNumber, lowCopyNumber))
+                {
+                    // end of a segment since next CN equals the low - add the last breakend
+                    if(armCuster == null)
+                    {
+                        // probably an indication of failed clustering, so work around it
+                        armCuster = new SvArmCluster(localSegments.size(), cluster, breakend.chromosome(), breakend.arm());
+                        localSegments.add(armCuster);
+                    }
+
+                    armCuster.addBreakend(breakend);
+                    armCuster = null;
+                }
+                else
+                {
+                    // either continuation of an existing segment or start of a new one
+                    if (armCuster == null)
+                    {
+                        armCuster = new SvArmCluster(localSegments.size(), cluster, breakend.chromosome(), breakend.arm());
+                        localSegments.add(armCuster);
+                    }
+
+                    armCuster.addBreakend(breakend);
+                }
+
+                if (breakend.getSV().type() == BND)
+                    ++bndCount;
+            }
+
+            if (bndCount > 0 || !hasConsecutiveOrientations)
+                continue;
+
+            for (final SvArmCluster armCluster : localSegments)
+            {
+                List<SvBreakend> acBreakendList = armCluster.getBreakends();
+
+                if(acBreakendList.size() < 4)
+                    continue;
+
+                int backwardCount = (int)acBreakendList.stream().filter(x -> x.orientation() == 1).count();
+                int forwardCount = (int)acBreakendList.stream().filter(x -> x.orientation() == -1).count();
+
+                // form into mutually exclusive pairs based on copy number change match
+                List<SvBreakend> unlinkedBreakends = Lists.newArrayList(acBreakendList);
+                List<SvLinkedPair> pairs = formPossibleLinkedPairsByShortest(unlinkedBreakends);
+
+                LOGGER.info("cluster({}) armCluster({} : {}_{}) count({} fwd={} bak={}) pairs({}) unlinked({})",
+                        cluster.id(), armCluster.id(), armCluster.chromosome(), armCluster.arm(),
+                        acBreakendList.size(), forwardCount, backwardCount, pairs.size(), unlinkedBreakends.size());
+            }
+        }
+    }
+
+    private List<SvLinkedPair> formPossibleLinkedPairsByShortest(List<SvBreakend> unlinkedBreakends)
+    {
+        List<SvLinkedPair> pairs = Lists.newArrayList();
+
+        while(!unlinkedBreakends.isEmpty())
+        {
+            boolean pairFound = false;
+
+            for(int i = 0; i < unlinkedBreakends.size() - 2; ++i)
+            {
+                final SvBreakend be1 = unlinkedBreakends.get(i);
+                final SvBreakend be2 = unlinkedBreakends.get(i+1);
+
+                if(be1.orientation() != -1 || be2.orientation() != 1)
+                    continue;
+
+                // pair off these if the CN matches
+                if (!copyNumbersEqual(be1.copyNumberChange(), be2.copyNumberChange()))
+                    continue;
+
+                SvLinkedPair pair = SvLinkedPair.from(be1, be2, LINK_TYPE_TI);
+                pairs.add(pair);
+
+                pairFound = true;
+                unlinkedBreakends.remove(i+1); // higher index removed first
+                unlinkedBreakends.remove(i);
+                break;
+            }
+
+            if(!pairFound)
+                break;
+        }
+
+        return pairs;
+    }
+
+    private List<SvLinkedPair> formPossibleLinkedPairsConsecutively(List<SvBreakend> unlinkedBreakends)
+    {
+        List<SvLinkedPair> pairs = Lists.newArrayList();
+
+        int j = 0;
+        while(j < unlinkedBreakends.size())
+        {
+            final SvBreakend be1 = unlinkedBreakends.get(j);
+
+            if(be1.orientation() == 1)
+            {
+                ++j;
+                continue;
+            }
+
+            boolean linkFound = false;
+            for(int k = j+1; k < unlinkedBreakends.size(); ++k)
+            {
+                final SvBreakend be2 = unlinkedBreakends.get(k);
+
+                if (be2.orientation() == -1)
+                    continue;
+
+                // pair off these if the CN matches
+                if (!copyNumbersEqual(be1.copyNumberChange(), be2.copyNumberChange()))
+                    continue;
+
+                SvLinkedPair pair = SvLinkedPair.from(be1, be2, LINK_TYPE_TI);
+                pairs.add(pair);
+
+                linkFound = true;
+                unlinkedBreakends.remove(k); // higher index removed first
+                unlinkedBreakends.remove(j);
+                break;
+
+            }
+
+            if(linkFound)
+                continue;
+            else
+                ++j;
+        }
+
+        return pairs;
     }
 
     private void annotateTemplatedInsertions()

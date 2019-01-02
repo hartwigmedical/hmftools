@@ -76,8 +76,8 @@ public class SvCluster
     private List<SvVarData> mShortTIRemoteSVs;
     private List<SvVarData> mUnlinkedRemoteSVs;
 
-    private int mMinCopyNumber;
-    private int mMaxCopyNumber;
+    private int mMinCNChange;
+    private int mMaxCNChange;
 
     private int mOriginArms;
     private int mFragmentArms;
@@ -142,8 +142,8 @@ public class SvCluster
         mChrCNDataMap = null;
         mHasReplicatedSVs = false;
 
-        mMinCopyNumber = 0;
-        mMaxCopyNumber = 0;
+        mMinCNChange = 0;
+        mMaxCNChange = 0;
 
         mOriginArms = 0;
         mFragmentArms = 0;
@@ -558,7 +558,7 @@ public class SvCluster
 
         mDesc = getClusterTypesAsString();
 
-        setMinMaxCopyNumber();
+        setMinMaxCNChange();
 
         mRequiresRecalc = false;
     }
@@ -736,32 +736,32 @@ public class SvCluster
         mRecalcRemoteSVStatus = true;
     }
 
-    private void setMinMaxCopyNumber()
+    private void setMinMaxCNChange()
     {
-        // first establish the lowest copy number change
-        mMinCopyNumber = -1;
-        mMaxCopyNumber = -1;
+        // establish the lowest copy number change
+        mMinCNChange = -1;
+        mMaxCNChange = -1;
 
         for (final SvVarData var : mSVs)
         {
-            int calcCopyNumber = var.impliedCopyNumber(true);
+            int calcCopyNumber = var.getCopyNumberChange(true);
 
-            if (mMinCopyNumber < 0 || calcCopyNumber < mMinCopyNumber)
-                mMinCopyNumber = calcCopyNumber;
+            if (mMinCNChange < 0 || calcCopyNumber < mMinCNChange)
+                mMinCNChange = calcCopyNumber;
 
-            mMaxCopyNumber = max(mMaxCopyNumber, calcCopyNumber);
+            mMaxCNChange = max(mMaxCNChange, calcCopyNumber);
         }
     }
 
-    public int getMaxCopyNumber() { return mMaxCopyNumber; }
-    public int getMinCopyNumber() { return mMinCopyNumber; }
+    public int getMaxCNChange() { return mMaxCNChange; }
+    public int getMinCNChange() { return mMinCNChange; }
 
     public boolean hasVariedCopyNumber()
     {
         if(mRequiresRecalc)
             updateClusterDetails();
 
-        return (mMaxCopyNumber > mMinCopyNumber && mMinCopyNumber > 0);
+        return (mMaxCNChange > mMinCNChange && mMinCNChange > 0);
     }
 
     public void cacheLinkedPairs()
@@ -888,8 +888,8 @@ public class SvCluster
     public int getFragmentArms() { return mFragmentArms; }
 
 
-    private static int SPECIFIC_CLUSTER_ID = -1;
-    // private static int SPECIFIC_CLUSTER_ID = 137;
+    // private static int SPECIFIC_CLUSTER_ID = -1;
+    private static int SPECIFIC_CLUSTER_ID = 888;
 
     public static boolean isSpecificCluster(final SvCluster cluster)
     {

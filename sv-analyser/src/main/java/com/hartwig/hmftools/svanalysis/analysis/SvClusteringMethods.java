@@ -40,16 +40,12 @@ import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_SGL_
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_SGL_PAIR_DUP;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_SGL_PLUS_INCONSISTENT;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_SIMPLE_SV;
-import static com.hartwig.hmftools.svanalysis.types.SvCluster.isSpecificCluster;
 import static com.hartwig.hmftools.svanalysis.types.SvLOH.LOH_NO_SV;
 import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.LINK_TYPE_DB;
 import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.LINK_TYPE_TI;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.ASSEMBLY_TYPE_EQV;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.RELATION_TYPE_NEIGHBOUR;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.RELATION_TYPE_OVERLAP;
-import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_END;
-import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_START;
-import static com.hartwig.hmftools.svanalysis.types.SvVarData.isStart;
 
 import java.util.Collections;
 import java.util.Comparator;
@@ -384,8 +380,8 @@ public class SvClusteringMethods {
             return;
 
         // first establish the lowest copy number change
-        int minCopyNumber = cluster.getMinCopyNumber();
-        int maxCopyNumber = cluster.getMaxCopyNumber();
+        int minCopyNumber = cluster.getMinCNChange();
+        int maxCopyNumber = cluster.getMaxCNChange();
 
         if(maxCopyNumber > 5 * minCopyNumber)
         {
@@ -400,7 +396,7 @@ public class SvClusteringMethods {
         for(int i = 0; i < clusterCount; ++i)
         {
             SvVarData var = cluster.getSVs().get(i);
-            int calcCopyNumber = var.impliedCopyNumber(true);
+            int calcCopyNumber = var.getCopyNumberChange(true);
 
             if(calcCopyNumber <= minCopyNumber)
                 continue;

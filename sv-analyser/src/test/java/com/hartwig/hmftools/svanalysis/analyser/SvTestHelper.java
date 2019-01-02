@@ -73,6 +73,12 @@ public class SvTestHelper
         Analyser.getClusters().clear();
     }
 
+    public void mergeOnProximity()
+    {
+        ClusteringMethods.clusterByBaseDistance(AllVariants, Analyser.getClusters());
+    }
+
+
     public final List<SvCluster> getClusters() { return Analyser.getClusters(); }
 
 
@@ -81,38 +87,38 @@ public class SvTestHelper
             long posStart, long posEnd, int orientStart, int orientEnd, StructuralVariantType type, final String insertSeq)
     {
         return createTestSv(varId, chrStart, chrEnd, posStart, posEnd, orientStart, orientEnd, type,
-                1, 1, 1, 1, 1, insertSeq);
+                2, 2, 1, 1, 1, insertSeq);
     }
 
     // for convenience
     public static SvVarData createDel(final String varId, final String chromosome, long posStart, long posEnd)
     {
         return createTestSv(varId, chromosome, chromosome, posStart, posEnd, 1, -1, DEL,
-                1, 1, 1, 1, 1, "");
+                2, 2, 1, 1, 1, "");
     }
 
     public static SvVarData createIns(final String varId, final String chromosome, long posStart, long posEnd)
     {
         return createTestSv(varId, chromosome, chromosome, posStart, posEnd, 1, -1, INS,
-                1, 1, 1, 1, 1, "");
+                2, 2, 1, 1, 1, "");
     }
 
     public static SvVarData createDup(final String varId, final String chromosome, long posStart, long posEnd)
     {
         return createTestSv(varId, chromosome, chromosome, posStart, posEnd, -1, 1, DUP,
-                1, 1, 1, 1, 1, "");
+                3, 3, 1, 1, 1, "");
     }
 
     public static SvVarData createInv(final String varId, final String chromosome, long posStart, long posEnd, int orientation)
     {
         return createTestSv(varId, chromosome, chromosome, posStart, posEnd, orientation, orientation, INV,
-                1, 1, 1, 1, 1, "");
+                orientation == 1 ? 3 : 2, orientation == 1 ? 2 : 3, 1, 1, 1, "");
     }
 
     public static SvVarData createSgl(final String varId, final String chromosome, long position, int orientation, boolean isNoneSegment)
     {
         SvVarData var = createTestSv(varId, chromosome, "0", position, -1, orientation, -1, SGL,
-                1, 0, 1, 0, 1, "");
+                2, 0, 1, 0, 1, "");
 
         var.setNoneSegment(isNoneSegment);
 

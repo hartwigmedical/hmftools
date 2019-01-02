@@ -319,7 +319,7 @@ public class SvVarData
         return false;
     }
 
-    public int impliedCopyNumber(boolean useStart)
+    public int getCopyNumberChange(boolean useStart)
     {
         return (int)round(copyNumberChange(useStart));
     }

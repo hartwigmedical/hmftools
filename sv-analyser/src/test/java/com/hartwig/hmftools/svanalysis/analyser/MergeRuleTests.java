@@ -59,7 +59,7 @@ public class MergeRuleTests
 
         tester.preClusteringInit();
 
-        mergeOnProximity(tester);
+        tester.mergeOnProximity();
 
         assertEquals(tester.getClusters().size(), 4);
         assertEquals(tester.getClusters().get(0).getCount(), 6);
@@ -82,7 +82,7 @@ public class MergeRuleTests
         SvVarData del4 = createDel(tester.nextVarId(), "2", 6000, 10000);
         tester.AllVariants.add(del4);
 
-        mergeOnProximity(tester);
+        tester.mergeOnProximity();
 
         assertEquals(tester.getClusters().size(), 2);
         assertTrue(tester.getClusters().get(0).getSVs().contains(del1));
@@ -92,11 +92,6 @@ public class MergeRuleTests
 
         // test exclusion of low-quality SVs
         tester.clearClustersAndSVs();
-    }
-
-    private void mergeOnProximity(SvTestHelper tester)
-    {
-        tester.ClusteringMethods.clusterByBaseDistance(tester.AllVariants, tester.Analyser.getClusters());
     }
 
     @Test
@@ -113,7 +108,7 @@ public class MergeRuleTests
 
         tester.preClusteringInit();
 
-        mergeOnProximity(tester);
+        tester.mergeOnProximity();
         assertEquals(tester.getClusters().size(), 2);
 
         tester.Analyser.clusterAndAnalyse();
@@ -129,7 +124,7 @@ public class MergeRuleTests
         tester.AllVariants.add(inv2);
 
         // the DEL is resolved and will be ignored
-        SvVarData del = createDel(tester.nextVarId(), "2", 10000, 10100);
+        SvVarData del = createDel(tester.nextVarId(), "1", 10000, 10100);
         tester.AllVariants.add(del);
 
         SvVarData sgl = createSgl(tester.nextVarId(), "1", 1000, -1, false);
@@ -137,14 +132,14 @@ public class MergeRuleTests
 
         tester.preClusteringInit();
 
-        mergeOnProximity(tester);
+        tester.mergeOnProximity();
         assertEquals(tester.getClusters().size(), 3);
 
         tester.Analyser.clusterAndAnalyse();
 
         assertEquals(tester.getClusters().size(), 2);
-        assertTrue(tester.getClusters().get(0).getSVs().contains(inv1));
         assertTrue(tester.getClusters().get(0).getSVs().contains(inv2));
+        assertTrue(tester.getClusters().get(0).getSVs().contains(sgl));
         assertTrue(tester.getClusters().get(1).getSVs().contains(del));
 
         assertTrue(inv1.getClusterReason().contains(CLUSTER_REASON_FOLDBACKS));
@@ -174,7 +169,7 @@ public class MergeRuleTests
         SvVarData var2 = createBnd(tester.nextVarId(), "1", 10100, -1, "3", 100, -1);
         tester.AllVariants.add(var2);
 
-        SvVarData var3 = createDel(tester.nextVarId(), "2", 60000, 20100);
+        SvVarData var3 = createDel(tester.nextVarId(), "1", 60000, 60100);
         tester.AllVariants.add(var3);
 
         SvVarData var4 = createSgl(tester.nextVarId(), "1", 80000, -1, false);
@@ -190,7 +185,7 @@ public class MergeRuleTests
 
         tester.preClusteringInit();
 
-        mergeOnProximity(tester);
+        tester.mergeOnProximity();
         assertEquals(tester.getClusters().size(), 6);
 
         tester.Analyser.clusterAndAnalyse();

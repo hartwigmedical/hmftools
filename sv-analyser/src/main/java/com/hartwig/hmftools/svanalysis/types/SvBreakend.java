@@ -58,4 +58,9 @@ public class SvBreakend {
         }
     }
 
+    public double copyNumberChange()
+    {
+        return mSV.copyNumberChange(mUsesStart);
+    }
+
 }
