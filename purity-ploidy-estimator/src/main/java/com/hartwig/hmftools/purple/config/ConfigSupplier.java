@@ -2,7 +2,6 @@ package com.hartwig.hmftools.purple.config;
 
 import static com.hartwig.hmftools.purple.CommandLineUtil.defaultIntValue;
 import static com.hartwig.hmftools.purple.CommandLineUtil.defaultValue;
-import static com.hartwig.hmftools.purple.config.CobaltData.COBALT;
 import static com.hartwig.hmftools.purple.config.StructuralVariantConfig.createStructuralVariantConfig;
 
 import java.io.File;
@@ -31,7 +30,6 @@ public class ConfigSupplier {
     private static final String OUTPUT_DIRECTORY_DEFAULT = "purple";
     private static final String GC_PROFILE = "gc_profile";
 
-    private static final String BAF = "baf";
     private static final String CIRCOS = "circos";
 
     private static final String MIN_DIPLOID_TUMOR_RATIO_COUNT = "min_diploid_tumor_ratio_count";
@@ -46,7 +44,6 @@ public class ConfigSupplier {
         options.addOption(RUN_DIRECTORY, true, "The path containing the data for a single run.");
         options.addOption(OUTPUT_DIRECTORY, true, "The output path. Defaults to run_dir/purple/");
 
-        options.addOption(BAF, true, "Baf file location.");
         options.addOption(CIRCOS, true, "Location of circos binary.");
 
         options.addOption(GC_PROFILE, true, "Location of GC Profile.");
