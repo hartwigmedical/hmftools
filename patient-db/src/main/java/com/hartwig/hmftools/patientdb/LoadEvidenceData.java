@@ -104,7 +104,6 @@ public class LoadEvidenceData {
         combinedEvidence.addAll(allEvidenceForGeneFusions);
 
         dbAccess.writeClinicalEvidence(sample, combinedEvidence);
-        dbAccess.writeClinicalTrials(sample, extractAllTrials(combinedEvidence));
     }
 
     @NotNull
