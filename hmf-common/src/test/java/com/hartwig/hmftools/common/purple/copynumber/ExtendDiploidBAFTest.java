@@ -64,6 +64,28 @@ public class ExtendDiploidBAFTest {
     }
 
 
+    @Test
+    public void testSmallRegionWithinLargeLOHRegion() {
+        CombinedRegion cr1 = create(80_000_000, 100_000_000, SegmentSupport.NONE, 1000, 0.66, 3);
+        CombinedRegion cr2 = create(100_000_001, 101_000_000, SegmentSupport.NONE, 1000, 1, 2.0);
+        CombinedRegion cr3 = create(101_000_001, 101_001_000, SegmentSupport.NONE, 0, 0, 3.0);
+        CombinedRegion cr4 = create(101_001_001, 104_000_000, SegmentSupport.NONE, 1000, 1, 2.0);
+
+        List<CombinedRegion> result =  ExtendDiploidBAF.extendBAF(Lists.newArrayList(cr1, cr2, cr3, cr4));
+        assertEquals(0, result.get(2).region().minorAllelePloidy(),  EPSILON);
+    }
+
+    @Test
+    public void testSmallRegionWithinLargeLOHRegionAfter() {
+        CombinedRegion cr1 = create(100_000_001, 101_000_000, SegmentSupport.NONE, 1000, 1, 2.0);
+        CombinedRegion cr2 = create(101_000_001, 101_001_000, SegmentSupport.NONE, 0, 0, 3.0);
+        CombinedRegion cr3 = create(101_001_001, 102_001_000, SegmentSupport.NONE, 1000, 1, 2.0);
+        CombinedRegion cr4 = create(102_001_001, 104_000_000, SegmentSupport.NONE, 1000, 0.66, 3);
+
+        List<CombinedRegion> result =  ExtendDiploidBAF.extendBAF(Lists.newArrayList(cr1, cr2, cr3, cr4));
+        assertEquals(0, result.get(1).region().minorAllelePloidy(),  EPSILON);
+    }
+
     private void assertInferRegion(@NotNull final ExtendDiploidBAF.InferRegion victim, int expectedLeftSource, int expectedLeftTarget,
             int expectedRightTarget, int expectedRightSource) {
         assertEquals(expectedLeftSource, victim.leftSourceIndex);

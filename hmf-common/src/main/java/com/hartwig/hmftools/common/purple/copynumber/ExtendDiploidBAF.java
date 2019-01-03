@@ -13,6 +13,11 @@ import org.jetbrains.annotations.NotNull;
 
 class ExtendDiploidBAF {
 
+    // LOH Parameters
+    private static final double LOH_COPY_NUMBER = 0.5;
+    private static final long LOH_SMALL_REGION_SIZE = 1000;
+    private static final long LOH_MAX_NEAREST_DISTANCE = 1_000_000;
+
     private static final long TINY_REGION_SIZE = 30;
     private static final double MIN_COPY_NUMBER_CHANGE = 0.5;
     private static final InferRegion INVALID_PAIR = new InferRegion(-1, -1, -1, -1);
@@ -96,7 +101,7 @@ class ExtendDiploidBAF {
         }
 
         final Optional<FittedRegion> optionalNearestDifferentSource = nearestDifferentRegion(inferRegion, regions);
-        if (optionalNearestDifferentSource.isPresent()) {
+        if (optionalNearestDifferentSource.filter(x -> !isSingleSmallRegionFlankedByLargeLOH(x, inferRegion, regions)).isPresent()) {
 
             final FittedRegion leftSource = regions.get(inferRegion.leftSourceIndex).region();
             final FittedRegion rightSource = regions.get(inferRegion.rightSourceIndex).region();
@@ -262,9 +267,36 @@ class ExtendDiploidBAF {
 
     private static boolean isSingleTinyRegionWithGreaterCopyNumber(@NotNull final InferRegion inferRegion,
             @NotNull final List<CombinedRegion> regions, @NotNull final FittedRegion source) {
-        return inferRegion.leftTargetIndex == inferRegion.rightTargetIndex
-                && regions.get(inferRegion.leftTargetIndex).bases() <= TINY_REGION_SIZE
-                && Doubles.greaterThan(regions.get(inferRegion.leftTargetIndex).tumorCopyNumber(), source.tumorCopyNumber());
+        return isSingleSmallRegion(TINY_REGION_SIZE, inferRegion, regions) && Doubles.greaterThan(regions.get(inferRegion.leftTargetIndex)
+                .tumorCopyNumber(), source.tumorCopyNumber());
+    }
+
+    private static boolean isSingleSmallRegionFlankedByLargeLOH(@NotNull final FittedRegion nearestSource,
+            @NotNull final InferRegion inferRegion, @NotNull final List<CombinedRegion> regions) {
+
+        long distance = nearestSource.start() > regions.get(inferRegion.leftTargetIndex).end()
+                ? nearestSource.start() - regions.get(inferRegion.leftTargetIndex).end()
+                : regions.get(inferRegion.leftTargetIndex).start() - nearestSource.end();
+
+        return isSingleSmallRegionFlankedByLOH(inferRegion, regions) && distance > LOH_MAX_NEAREST_DISTANCE;
+    }
+
+    private static boolean isSingleSmallRegionFlankedByLOH(@NotNull final InferRegion inferRegion,
+            @NotNull final List<CombinedRegion> regions) {
+        return isSingleSmallRegion(LOH_SMALL_REGION_SIZE, inferRegion, regions) && isFlankedByLOH(inferRegion, regions);
+    }
+
+    private static boolean isFlankedByLOH(@NotNull final InferRegion inferRegion, @NotNull final List<CombinedRegion> regions) {
+        return isLOH(regions.get(inferRegion.leftSourceIndex)) && isLOH(regions.get(inferRegion.rightSourceIndex));
+    }
+
+    private static boolean isLOH(@NotNull final CombinedRegion region) {
+        return Doubles.lessOrEqual(region.region().minorAllelePloidy(), LOH_COPY_NUMBER);
+    }
+
+    private static boolean isSingleSmallRegion(long maxSize, @NotNull final InferRegion inferRegion,
+            @NotNull final List<CombinedRegion> regions) {
+        return inferRegion.leftTargetIndex == inferRegion.rightTargetIndex && regions.get(inferRegion.leftTargetIndex).bases() <= maxSize;
     }
 
     static class InferRegion {

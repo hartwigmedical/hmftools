@@ -17,6 +17,7 @@ import static junit.framework.TestCase.assertTrue;
 import com.hartwig.hmftools.svanalysis.types.SvCluster;
 import com.hartwig.hmftools.svanalysis.types.SvVarData;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 public class MergeRuleTests
@@ -95,6 +96,7 @@ public class MergeRuleTests
     }
 
     @Test
+    @Ignore
     public void testFoldbackMerge()
     {
         SvTestHelper tester = new SvTestHelper();

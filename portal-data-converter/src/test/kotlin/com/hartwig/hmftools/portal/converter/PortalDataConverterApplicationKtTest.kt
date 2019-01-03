@@ -12,17 +12,9 @@ import java.util.stream.Collectors
 
 class PortalDataConverterApplicationKtTest : StringSpec() {
     private val patientsDataFilePath = Resources.getResource("patient_data_file.csv").path
-    private val runsV3 = readRun(Paths.get(Resources.getResource("runs_v3.txt").path))
     private val runsV4 = readRun(Paths.get(Resources.getResource("runs_v4.txt").path))
 
     init {
-        "can import pipeline v3 vcf"{
-            val testDir = createTestDir()
-            convertSamples(runsV3, testDir.toString(), File(patientsDataFilePath))
-            outputAsExpected(testDir) shouldBe true
-            deleteTestDir(testDir)
-        }
-
         "can import pipeline v4 vcf"{
             val testDir = createTestDir()
             convertSamples(runsV4, testDir.toString(), File(patientsDataFilePath))
