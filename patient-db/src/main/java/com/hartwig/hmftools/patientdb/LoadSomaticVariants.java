@@ -82,18 +82,19 @@ public class LoadSomaticVariants {
 
         final CompoundEnrichment compoundEnrichment = new CompoundEnrichment();
         if (cmd.hasOption(HOTSPOT)) {
-            LOGGER.info("Enabling near hotspot enrichment");
-            compoundEnrichment.add(HotspotEnrichment.fromHotspotsFile(cmd.getOptionValue(HOTSPOT)));
+            final String hotspotFile = cmd.getOptionValue(HOTSPOT);
+            LOGGER.info("Reading hotspot file: {}", hotspotFile);
+            compoundEnrichment.add(HotspotEnrichment.fromHotspotsFile(hotspotFile));
         }
 
-        LOGGER.info("Reading somatic VCF File");
+        LOGGER.info("Reading somatic VCF file: {}", vcfFileLocation);
         final List<SomaticVariant> variants =
                 SomaticVariantFactory.filteredInstanceWithEnrichment(filter, compoundEnrichment).fromVCFFile(sample, vcfFileLocation);
 
-        LOGGER.info("Reading high confidence bed file");
+        LOGGER.info("Reading high confidence bed file: {}", highConfidenceBed);
         final Multimap<String, GenomeRegion> highConfidenceRegions = BEDFileLoader.fromBedFile(highConfidenceBed);
 
-        LOGGER.info("Loading indexed fasta reference file");
+        LOGGER.info("Loading indexed fasta reference file: {}", fastaFileLocation);
         IndexedFastaSequenceFile indexedFastaSequenceFile = new IndexedFastaSequenceFile(new File(fastaFileLocation));
 
         LOGGER.info("Querying purple database");
