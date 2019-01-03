@@ -119,17 +119,6 @@ public class LoadEvidenceData {
     }
 
     @NotNull
-    private static List<ClinicalTrial> extractAllTrials(@NotNull List<EvidenceItem> evidenceItems) {
-        List<ClinicalTrial> trials = Lists.newArrayList();
-        for (EvidenceItem evidence : evidenceItems) {
-            if (evidence.source().isTrialSource()) {
-                trials.add(toClinicalTrial(evidence));
-            }
-        }
-        return trials;
-    }
-
-    @NotNull
     private static ClinicalTrial toClinicalTrial(@NotNull EvidenceItem evidenceItem) {
         return ImmutableClinicalTrial.builder()
                 .event(evidenceItem.event())
