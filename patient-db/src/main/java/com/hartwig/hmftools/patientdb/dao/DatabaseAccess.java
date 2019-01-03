@@ -72,8 +72,6 @@ public class DatabaseAccess {
     private final ChordDAO chordDAO;
     @NotNull
     private final ClinicalEvidenceDAO clinicalEvidenceDAO;
-    @NotNull
-    private final ClinicalTrialDAO clinicalTrialDAO;
 
     public DatabaseAccess(@NotNull final String userName, @NotNull final String password, @NotNull final String url) throws SQLException {
         // MIVO: disable annoying jooq self-ad message
@@ -97,7 +95,6 @@ public class DatabaseAccess {
         driverCatalogDAO = new DriverCatalogDAO(context);
         chordDAO = new ChordDAO(context);
         clinicalEvidenceDAO = new ClinicalEvidenceDAO(context);
-        clinicalTrialDAO = new ClinicalTrialDAO(context);
     }
 
     @NotNull
@@ -225,10 +222,6 @@ public class DatabaseAccess {
         clinicalEvidenceDAO.writeClinicalEvidence(sample, items);
     }
 
-    public void writeClinicalTrials(@NotNull String sample, @NotNull List<ClinicalTrial> trials) {
-        clinicalTrialDAO.writeClinicalTrials(sample, trials);
-    }
-
     public void clearCpctEcrf() {
         ecrfDAO.clearCpct();
     }
@@ -299,10 +292,7 @@ public class DatabaseAccess {
         LOGGER.info("Deleting structural variants for sample: " + sample);
         structuralVariantDAO.deleteStructuralVariantsForSample(sample);
 
-        LOGGER.info("Deleting clinical trials for sample: " + sample);
-        clinicalTrialDAO.deleteClinicalTrialForSample(sample);
-
-        LOGGER.info("Deleting evidence items for sample: " + sample);
+        LOGGER.info("Deleting evidence data for sample: " + sample);
         clinicalEvidenceDAO.deleteClinicalEvidenceForSample(sample);
 
         LOGGER.info("All data for sample: " + sample + " has been deleted");

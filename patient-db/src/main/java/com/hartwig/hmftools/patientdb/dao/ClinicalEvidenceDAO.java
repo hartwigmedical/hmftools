@@ -1,22 +1,18 @@
 package com.hartwig.hmftools.patientdb.dao;
 
 import static com.hartwig.hmftools.patientdb.Config.DB_BATCH_INSERT_SIZE;
-import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.CLINICALEVIDENCEITEM;
+import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.CLINICALEVIDENCE;
 
 import java.util.List;
 
 import com.google.common.collect.Iterables;
 import com.hartwig.hmftools.common.actionability.EvidenceItem;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
 import org.jooq.InsertValuesStep10;
 
 class ClinicalEvidenceDAO {
-
-    private static final Logger LOGGER = LogManager.getLogger(ClinicalEvidenceDAO.class);
 
     @NotNull
     private final DSLContext context;
@@ -29,17 +25,17 @@ class ClinicalEvidenceDAO {
         deleteClinicalEvidenceForSample(sample);
 
         for (List<EvidenceItem> items : Iterables.partition(evidenceItem, DB_BATCH_INSERT_SIZE)) {
-            InsertValuesStep10 inserter = context.insertInto(CLINICALEVIDENCEITEM,
-                    CLINICALEVIDENCEITEM.SAMPLEID,
-                    CLINICALEVIDENCEITEM.EVENTTYPE,
-                    CLINICALEVIDENCEITEM.EVENTMATCH,
-                    CLINICALEVIDENCEITEM.DRUG,
-                    CLINICALEVIDENCEITEM.DRUGSTYPE,
-                    CLINICALEVIDENCEITEM.RESPONSE,
-                    CLINICALEVIDENCEITEM.CANCERTYPE,
-                    CLINICALEVIDENCEITEM.LABEL,
-                    CLINICALEVIDENCEITEM.EVIDENCELEVEL,
-                    CLINICALEVIDENCEITEM.EVIDENCESOURCE);
+            InsertValuesStep10 inserter = context.insertInto(CLINICALEVIDENCE,
+                    CLINICALEVIDENCE.SAMPLEID,
+                    CLINICALEVIDENCE.EVENTTYPE,
+                    CLINICALEVIDENCE.EVENTMATCH,
+                    CLINICALEVIDENCE.NAMEEVIDENCE,
+                    CLINICALEVIDENCE.TYPEEVIDENCE,
+                    CLINICALEVIDENCE.RESPONSE,
+                    CLINICALEVIDENCE.LEVELEVIDENCE,
+                    CLINICALEVIDENCE.SOURCEEVIDENCE,
+                    CLINICALEVIDENCE.CANCERTYPE,
+                    CLINICALEVIDENCE.ISONLABEL);
             items.forEach(trial -> addValues(sample, trial, inserter));
             inserter.execute();
         }
@@ -53,13 +49,13 @@ class ClinicalEvidenceDAO {
                 evidenceItem.drug(),
                 evidenceItem.drugsType(),
                 evidenceItem.response(),
-                evidenceItem.cancerType(),
-                evidenceItem.isOnLabel() ? "Tumor Type specific" : "Other tumor types specific",
                 evidenceItem.level().readableString(),
-                evidenceItem.source().sourceName());
+                evidenceItem.source().sourceName(),
+                evidenceItem.cancerType(),
+                evidenceItem.isOnLabel());
     }
 
     void deleteClinicalEvidenceForSample(@NotNull String sample) {
-        context.delete(CLINICALEVIDENCEITEM).where(CLINICALEVIDENCEITEM.SAMPLEID.eq(sample)).execute();
+        context.delete(CLINICALEVIDENCE).where(CLINICALEVIDENCE.SAMPLEID.eq(sample)).execute();
     }
 }
