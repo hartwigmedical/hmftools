@@ -8,12 +8,12 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.actionability.ActionabilityAnalyzer;
-import com.hartwig.hmftools.common.actionability.ClinicalTrial;
 import com.hartwig.hmftools.common.actionability.EvidenceItem;
-import com.hartwig.hmftools.common.actionability.ImmutableClinicalTrial;
 import com.hartwig.hmftools.common.context.ProductionRunContextFactory;
 import com.hartwig.hmftools.common.context.RunContext;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
+import com.hartwig.hmftools.common.purple.purity.FittedPurityFile;
+import com.hartwig.hmftools.common.purple.purity.PurityContext;
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
 import com.hartwig.hmftools.common.variant.structural.annotation.SimpleGeneFusion;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
@@ -36,6 +36,7 @@ public class LoadEvidenceData {
     private static final String DB_PASS = "db_pass";
     private static final String DB_URL = "db_url";
     private static final String RUN_DIR = "run_dir";
+    private static final String PURPLE_DIRECTORY = "purple";
 
     public static void main(@NotNull final String[] args) throws ParseException, IOException, SQLException {
         final Options options = createOptions();
@@ -81,10 +82,15 @@ public class LoadEvidenceData {
         LOGGER.info("Reading gene copy numbers from DB");
         List<GeneCopyNumber> geneCopyNumbers = dbAccess.readGeneCopynumbers(sample);
 
-        List<GeneCopyNumber> significantGeneCopyNumbers = filterOnSignificance(geneCopyNumbers);
+        //TODO load averages ploidy from db
+        final PurityContext purityContext = loadPurity(runContext.runDirectory(), sample);
+        List<GeneCopyNumber> significantGeneCopyNumbers =
+                ActionabilityAnalyzer.significanceGeneCopyNumbers(geneCopyNumbers, purityContext.bestFit().ploidy());
 
-        Map<GeneCopyNumber, List<EvidenceItem>> evidencePerGeneCopyNumber =
-                actionabilityAnalyzer.evidenceForCopyNumbers(significantGeneCopyNumbers, primaryTumorLocation);
+        Map<GeneCopyNumber, List<EvidenceItem>> evidencePerGeneCopyNumber = actionabilityAnalyzer.evidenceForCopyNumbers(
+                significantGeneCopyNumbers,
+                primaryTumorLocation,
+                purityContext.bestFit().ploidy());
 
         List<EvidenceItem> allEvidenceForCopyNumbers = extractAllEvidenceItems(evidencePerGeneCopyNumber);
         LOGGER.info("Found {} evidence items for copy numbers.", allEvidenceForCopyNumbers.size());
@@ -107,15 +113,9 @@ public class LoadEvidenceData {
     }
 
     @NotNull
-    private static List<GeneCopyNumber> filterOnSignificance(@NotNull List<GeneCopyNumber> geneCopyNumbers) {
-        // TODO (KODU): Implement properly in hmf-common package.
-        List<GeneCopyNumber> filteredCopyNumbers = Lists.newArrayList();
-        for (GeneCopyNumber copyNumber : geneCopyNumbers) {
-            if (copyNumber.minCopyNumber() < 0.5 || copyNumber.minCopyNumber() > 8) {
-                filteredCopyNumbers.add(copyNumber);
-            }
-        }
-        return filteredCopyNumbers;
+    static PurityContext loadPurity(@NotNull String runDirectory, @NotNull String sample) throws IOException {
+        final String cnvBasePath = runDirectory + File.separator + PURPLE_DIRECTORY;
+        return FittedPurityFile.read(cnvBasePath, sample);
     }
 
     @NotNull
