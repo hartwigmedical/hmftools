@@ -119,19 +119,6 @@ public class LoadEvidenceData {
     }
 
     @NotNull
-    private static ClinicalTrial toClinicalTrial(@NotNull EvidenceItem evidenceItem) {
-        return ImmutableClinicalTrial.builder()
-                .event(evidenceItem.event())
-                .acronym(evidenceItem.drug())
-                .source(evidenceItem.source())
-                .reference(evidenceItem.reference())
-                .isOnLabel(evidenceItem.isOnLabel())
-                .cancerType(evidenceItem.cancerType())
-                .scope(evidenceItem.scope())
-                .build();
-    }
-
-    @NotNull
     private static List<EvidenceItem> extractAllEvidenceItems(@NotNull Map<?, List<EvidenceItem>> evidenceItemMap) {
         return toList(evidenceItemMap);
     }
