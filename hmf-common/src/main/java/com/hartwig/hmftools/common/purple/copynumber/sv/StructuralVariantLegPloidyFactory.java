@@ -9,6 +9,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.chromosome.Chromosome;
+import com.hartwig.hmftools.common.numeric.Doubles;
 import com.hartwig.hmftools.common.position.GenomePosition;
 import com.hartwig.hmftools.common.position.GenomePositions;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
@@ -22,13 +23,26 @@ import org.jetbrains.annotations.NotNull;
 
 public class StructuralVariantLegPloidyFactory<T extends GenomeRegion> {
 
+    private static final double VAF_TO_USE_READ_DEPTH = 0.75;
+    private static final double RECIPROCAL_VAF_TO_USE_READ_DEPTH = reciprocalVAF(VAF_TO_USE_READ_DEPTH);
+
+    private final double averageCopyNumber;
+    private final int averageReadDepth;
+
     @NotNull
     private final PurityAdjuster purityAdjuster;
     @NotNull
     private final Function<T, Double> copyNumberExtractor;
 
-    public StructuralVariantLegPloidyFactory(@NotNull final PurityAdjuster purityAdjuster,
+
+    public StructuralVariantLegPloidyFactory(@NotNull final PurityAdjuster purityAdjuster, @NotNull final Function<T, Double> copyNumberExtractor) {
+        this(0, 0, purityAdjuster, copyNumberExtractor);
+    }
+
+    public StructuralVariantLegPloidyFactory(int averageReadDepth, double averageCopyNumber, @NotNull final PurityAdjuster purityAdjuster,
             @NotNull final Function<T, Double> copyNumberExtractor) {
+        this.averageCopyNumber = averageCopyNumber;
+        this.averageReadDepth = averageReadDepth;
         this.purityAdjuster = purityAdjuster;
         this.copyNumberExtractor = copyNumberExtractor;
     }
@@ -95,47 +109,61 @@ public class StructuralVariantLegPloidyFactory<T extends GenomeRegion> {
 
     @VisibleForTesting
     @NotNull
-    Optional<ModifiableStructuralVariantLegPloidy> create(@NotNull final StructuralVariantLeg leg,
-            @NotNull final GenomeRegionSelector<T> selector) {
+    Optional<ModifiableStructuralVariantLegPloidy> create(@NotNull final StructuralVariantLeg leg, @NotNull final GenomeRegionSelector<T> selector) {
         final GenomePosition svPositionLeft = GenomePositions.create(leg.chromosome(), leg.cnaPosition() - 1);
         final GenomePosition svPositionRight = GenomePositions.create(leg.chromosome(), leg.cnaPosition());
-        final Optional<Double> left =
-                selector.select(svPositionLeft).flatMap(x -> Optional.ofNullable(copyNumberExtractor.apply(x))).map(x -> Math.max(0, x));
-        final Optional<Double> right =
-                selector.select(svPositionRight).flatMap(x -> Optional.ofNullable(copyNumberExtractor.apply(x))).map(x -> Math.max(0, x));
+        final Optional<Double> left = selector.select(svPositionLeft).flatMap(x -> Optional.ofNullable(copyNumberExtractor.apply(x))).map(x -> Math.max(0, x));
+        final Optional<Double> right = selector.select(svPositionRight).flatMap(x -> Optional.ofNullable(copyNumberExtractor.apply(x))).map(x -> Math.max(0, x));
 
-        final Optional<Double> correct;
-        final Optional<Double> alternate;
+        final Optional<Double> largerCopyNumber;
+        final Optional<Double> smallerCopyNumber;
         if (leg.orientation() == 1) {
-            correct = left;
-            alternate = right;
+            largerCopyNumber = left;
+            smallerCopyNumber = right;
         } else {
-            correct = right;
-            alternate = left;
+            largerCopyNumber = right;
+            smallerCopyNumber = left;
         }
 
-        if (!correct.isPresent() && !alternate.isPresent()) {
+        if (!largerCopyNumber.isPresent() && !smallerCopyNumber.isPresent()) {
             return Optional.empty();
         }
 
-        final double observedVaf = leg.alleleFrequency();
+        final Double observedVaf = leg.alleleFrequency();
+        if (observedVaf == null) {
+            return Optional.empty();
+        }
+
         final double adjustedVaf;
         final double ploidy;
         final double weight;
-        if (correct.isPresent()) {
-            double copyNumber = correct.get();
+
+        if (largerCopyNumber.isPresent()) {
+            double copyNumber = largerCopyNumber.get();
             adjustedVaf = purityAdjuster.purityAdjustedVAF(leg.chromosome(), Math.max(0.001, copyNumber), observedVaf);
             ploidy = adjustedVaf * copyNumber;
             weight = 1;
         } else {
-            double copyNumber = alternate.get();
-            double reciprocalVAF = observedVaf / (1 - observedVaf);
+            double copyNumber = smallerCopyNumber.get();
+            double reciprocalVAF = reciprocalVAF(observedVaf);
             if (!Double.isFinite(reciprocalVAF)) {
                 return Optional.empty();
             }
 
             adjustedVaf = purityAdjuster.purityAdjustedVAF(leg.chromosome(), Math.max(0.001, copyNumber), reciprocalVAF);
-            ploidy = adjustedVaf * copyNumber;
+
+            if (averageReadDepth > 0 && Doubles.greaterThan(adjustedVaf, RECIPROCAL_VAF_TO_USE_READ_DEPTH)) {
+                final Integer tumourVariantFragmentCount = leg.tumourVariantFragmentCount();
+                if (tumourVariantFragmentCount != null && tumourVariantFragmentCount > 0) {
+                    ploidy = readDepthImpliedPloidy(tumourVariantFragmentCount);
+                } else {
+                    return Optional.empty();
+                }
+
+            } else {
+                ploidy = adjustedVaf * copyNumber;
+            }
+
             weight = 1 / (1 + Math.pow(Math.max(copyNumber, 2) / Math.min(Math.max(copyNumber, 0.01), 2), 2));
         }
 
@@ -150,4 +178,11 @@ public class StructuralVariantLegPloidyFactory<T extends GenomeRegion> {
                 .setWeight(weight));
     }
 
+    private static double reciprocalVAF(double vaf) {
+        return vaf / (1 - vaf);
+    }
+
+    private double readDepthImpliedPloidy(int tumourVariantFragmentCount) {
+        return averageCopyNumber * tumourVariantFragmentCount / averageReadDepth;
+    }
 }
