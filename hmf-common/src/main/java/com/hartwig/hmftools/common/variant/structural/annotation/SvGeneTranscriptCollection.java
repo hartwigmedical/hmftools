@@ -12,6 +12,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.SortedSet;
@@ -21,7 +22,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.SortedSetMultimap;
 import com.hartwig.hmftools.common.genepanel.HmfGenePanelSupplier;
 import com.hartwig.hmftools.common.region.HmfTranscriptRegion;
-import com.hartwig.hmftools.common.variant.structural.EnrichedStructuralVariant;
+import com.hartwig.hmftools.common.region.Strand;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
 
 import org.apache.logging.log4j.LogManager;
@@ -37,6 +38,8 @@ public class SvGeneTranscriptCollection
     private Map<String, List<TranscriptExonData>> mGeneTransExonDataMap;
     private Map<String, EnsemblGeneData> mEnsemblGeneDataMap;
 
+    private BufferedWriter mBreakendWriter;
+
     // to get a wider range of candidate genes and filter by promotor distance later on
     public static int PRE_GENE_PROMOTOR_DISTANCE = 100000;
 
@@ -51,6 +54,7 @@ public class SvGeneTranscriptCollection
         mEnsemblGeneDataMap = new HashMap();
         mGenesByChromosomeMap = null;
         mAllGenesMap = null;
+        mBreakendWriter = null;
     }
 
     public final Map<Integer, List<GeneAnnotation>> getSvIdGeneTranscriptsMap() { return mSvIdGeneTranscriptsMap; }
@@ -256,11 +260,23 @@ public class SvGeneTranscriptCollection
                     transcriptExons.add(transExonDataList.get(j));
                 }
 
-                Transcript transcript = extractTranscript(transcriptExons, position, currentGene);
+                Transcript transcript = extractTranscriptExonData(transcriptExons, position, currentGene);
 
                 if(transcript != null)
                 {
                     currentGene.addTranscript(transcript);
+
+                    // annotate with preceding gene info if the up distance isn't set
+                    if(transcript.exonDistanceUp() == -1)
+                    {
+                        HmfTranscriptRegion precedingGene = findPrecedingGene(geneRegion, geneRegions);
+                        if(precedingGene != null)
+                        {
+                            currentGene.setPrecedingGeneId(precedingGene.geneID());
+                            int preDistance = (int)abs(precedingGene.geneEnd() - transcript.transcriptStart());
+                            transcript.setExonDistances(preDistance, transcript.exonDistanceDown());
+                        }
+                    }
                 }
 
                 if(j == transExonDataList.size() - 1)
@@ -275,38 +291,87 @@ public class SvGeneTranscriptCollection
         return geneAnnotations;
     }
 
-    private Transcript extractTranscript(final List<TranscriptExonData> transcriptExons, long position, final GeneAnnotation geneAnnotation)
+    private List<HmfTranscriptRegion> findGeneRegions(long position, byte orientation, SortedSet<HmfTranscriptRegion> geneRegions)
+    {
+        List<HmfTranscriptRegion> matchedGenes = Lists.newArrayList();
+
+        for(final HmfTranscriptRegion region : geneRegions)
+        {
+            if(position >= region.start() - PRE_GENE_PROMOTOR_DISTANCE && position <= region.end() + PRE_GENE_PROMOTOR_DISTANCE)
+            {
+                matchedGenes.add(region);
+            }
+        }
+
+        return matchedGenes;
+    }
+
+    private HmfTranscriptRegion findPrecedingGene(final HmfTranscriptRegion gene, SortedSet<HmfTranscriptRegion> geneRegions)
+    {
+        Iterator<HmfTranscriptRegion> iter = geneRegions.iterator();
+
+        HmfTranscriptRegion prevGene = null;
+        while(iter.hasNext())
+        {
+            HmfTranscriptRegion currentGene = iter.next();
+
+            if(currentGene.geneID().equals(gene.geneID()))
+                break;
+
+            if(currentGene.strand() == gene.strand())
+                prevGene = currentGene;
+        }
+
+        // now search for the closest gene on the same strand
+        if(gene.strand() == Strand.FORWARD)
+            return prevGene;
+
+        while(iter.hasNext())
+        {
+            HmfTranscriptRegion currentGene = iter.next();
+
+            if(currentGene.strand() == gene.strand())
+                return currentGene;
+        }
+
+        return null;
+    }
+
+    private Transcript extractTranscriptExonData(final List<TranscriptExonData> transcriptExons, long position, final GeneAnnotation geneAnnotation)
     {
         int exonMax = transcriptExons.size();
 
         final TranscriptExonData first = transcriptExons.get(0);
 
-        boolean isCoding = first.CodingStart != null && first.CodingEnd != null;
-        long codingStart = first.CodingStart != null ? first.CodingStart : 0;
-        long codingEnd = first.CodingEnd != null ? first.CodingEnd : 0;
         boolean isForwardStrand = geneAnnotation.strand() == 1;
-
-        // for the given position, determine how many coding bases occur prior to the position
-        // in the direction of the transcript
-        // strand direction will be corrected for afterwards
 
         int upExonRank = -1;
         int upExonPhase = -1;
         int downExonRank = -1;
         int downExonPhase = -1;
-        long prevDistance = -1;
-        long nextDistance = -1;
+        long nextUpDistance = -1;
+        long nextDownDistance = -1;
 
         // first check for a position outside the exon boundaries
         final TranscriptExonData firstExon = transcriptExons.get(0);
         final TranscriptExonData lastExon = transcriptExons.get(transcriptExons.size()-1);
 
+        // for forward-strand transcripts the current exon is downstream, the previous is upstream
+        // and the end-phase is taken from the upstream previous exon, the phase from the current downstream exon
+
+        // for reverse-strand transcripts the current exon is upstream, the previous is downstream
+        // and the end-phase is taken from the upstream (current) exon, the phase from the downstream (previous) exon
+
         if(position < firstExon.ExonStart)
         {
             if(isForwardStrand)
             {
-                downExonRank = 1;
-                downExonPhase = firstExon.ExonPhase;
+                // proceed to the next exon assuming its splice acceptor is required
+                final TranscriptExonData firstSpaExon = transcriptExons.size() > 1 ? transcriptExons.get(1) : firstExon;
+                downExonRank = firstSpaExon.ExonRank;
+                downExonPhase = firstSpaExon.ExonPhase;
+                nextDownDistance = firstSpaExon.ExonStart - position;
+
                 upExonRank = 0;
                 upExonPhase = -1;
             }
@@ -318,13 +383,15 @@ public class SvGeneTranscriptCollection
         }
         else if(position > lastExon.ExonEnd)
         {
-            if(isForwardStrand)
+            if(!isForwardStrand)
             {
-                upExonRank = lastExon.ExonRank;
-                upExonPhase = lastExon.ExonPhaseEnd;
-                downExonRank = 0;
-                downExonPhase = -1;
-                prevDistance = position - lastExon.ExonEnd;
+                final TranscriptExonData firstSpaExon = transcriptExons.size() > 1 ? transcriptExons.get(transcriptExons.size()-2) : lastExon;
+                downExonRank = firstSpaExon.ExonRank;
+                downExonPhase = firstSpaExon.ExonPhase;
+                nextDownDistance = position - lastExon.ExonEnd;
+
+                upExonRank = 0;
+                upExonPhase = -1;
             }
             else
             {
@@ -337,42 +404,42 @@ public class SvGeneTranscriptCollection
             for (int index = 0; index < transcriptExons.size(); ++index)
             {
                 final TranscriptExonData exonData = transcriptExons.get(index);
-                long exonStart = exonData.ExonStart;
-                long exonEnd = exonData.ExonEnd;
 
-                if (position >= exonStart && position <= exonEnd)
+                if (position >= exonData.ExonStart && position <= exonData.ExonEnd)
                 {
                     // falls within an exon
                     upExonRank = downExonRank = exonData.ExonRank;
                     upExonPhase = exonData.ExonPhase;
                     downExonPhase = exonData.ExonPhaseEnd;
-                    nextDistance = isForwardStrand ? exonData.ExonEnd - position : position - exonData.ExonStart;
-                    prevDistance = isForwardStrand ? position - exonData.ExonStart : exonData.ExonEnd - position;
+                    nextDownDistance = isForwardStrand ? exonData.ExonEnd - position : position - exonData.ExonStart;
+                    nextUpDistance = isForwardStrand ? position - exonData.ExonStart : exonData.ExonEnd - position;
                     break;
                 }
-                else if(position < exonStart)
+                else if(position < exonData.ExonStart)
                 {
                     // position falls between this exon and the previous one
                     final TranscriptExonData prevExonData = transcriptExons.get(index-1);
 
                     if(isForwardStrand)
                     {
+                        // the current exon is downstream, the prevous one is upstream
                         upExonRank = prevExonData.ExonRank;
-                        downExonRank = exonData.ExonRank;
                         upExonPhase = prevExonData.ExonPhaseEnd;
+                        downExonRank = exonData.ExonRank;
                         downExonPhase = exonData.ExonPhase;
-                        nextDistance = exonData.ExonStart - position;
-                        prevDistance = position - prevExonData.ExonEnd;
+                        nextDownDistance = exonData.ExonStart - position;
+                        nextUpDistance = position - prevExonData.ExonEnd;
 
                     }
                     else
                     {
-                        downExonRank = prevExonData.ExonRank;
+                        // the previous exon in the list has the higher rank and is dowstream
                         upExonRank = exonData.ExonRank;
-                        downExonPhase = prevExonData.ExonPhase;
                         upExonPhase = exonData.ExonPhaseEnd;
-                        prevDistance = exonData.ExonStart - position;
-                        nextDistance = position - prevExonData.ExonEnd;
+                        downExonRank = prevExonData.ExonRank;
+                        downExonPhase = prevExonData.ExonPhase;
+                        nextUpDistance = exonData.ExonStart - position;
+                        nextDownDistance = position - prevExonData.ExonEnd;
                     }
 
                     break;
@@ -381,6 +448,12 @@ public class SvGeneTranscriptCollection
         }
 
         // now calculate coding bases for this transcript
+        // for the given position, determine how many coding bases occur prior to the position
+        // in the direction of the transcript
+
+        boolean isCoding = first.CodingStart != null && first.CodingEnd != null;
+        long codingStart = first.CodingStart != null ? first.CodingStart : 0;
+        long codingEnd = first.CodingEnd != null ? first.CodingEnd : 0;
         boolean inCodingRegion = false;
         boolean codingRegionEnded = false;
 
@@ -460,24 +533,100 @@ public class SvGeneTranscriptCollection
                 first.CodingStart, first.CodingEnd);
 
         transcript.setBioType(first.BioType);
-        transcript.setExonDistances((int)prevDistance, (int)nextDistance);
+        transcript.setExonDistances((int)nextUpDistance, (int)nextDownDistance);
 
         return transcript;
     }
 
-    private List<HmfTranscriptRegion> findGeneRegions(long position, byte orientation, SortedSet<HmfTranscriptRegion> geneRegions)
+    public void writeBreakendData(final String sampleId, final List<StructuralVariantAnnotation> annotations)
     {
-        List<HmfTranscriptRegion> matchedGenes = Lists.newArrayList();
+        if(mDataPath.isEmpty())
+            return;
 
-        for(final HmfTranscriptRegion region : geneRegions)
+        LOGGER.debug("writing {} annotations to file", annotations.size());
+
+        try
         {
-            if(position >= region.start() - PRE_GENE_PROMOTOR_DISTANCE && position <= region.end() + PRE_GENE_PROMOTOR_DISTANCE)
+            BufferedWriter writer = null;
+
+            if(mBreakendWriter == null)
             {
-                matchedGenes.add(region);
+                Path outputFile = Paths.get(mDataPath + "SV_BREAKENDS.csv");
+                mBreakendWriter = Files.newBufferedWriter(outputFile, StandardOpenOption.CREATE);
+
+                writer = mBreakendWriter;
+
+                // write header
+                writer.write("SampleId,SvId,IsStart,Chromosome,Position,Orientation,Type");
+                writer.write(",GeneName,GeneStableId,GeneStrand,TranscriptId,IsCanonical,BioType,TransStart,TransEnd");
+                writer.write(",ExonRankUp,ExonPhaseUp,ExonRankDown,ExonPhaseDown,CodingBases,TotalCodingBases");
+                writer.write(",ExonMax,CodingStart,CodingEnd,RegionType,CodingType,ExonDistanceUp,ExonDistanceDown");
+                writer.newLine();
+            }
+            else
+            {
+                writer = mBreakendWriter;
+            }
+
+            for(final StructuralVariantAnnotation annotation : annotations)
+            {
+                if(annotation.annotations().isEmpty())
+                    continue;
+
+                for(final GeneAnnotation geneAnnotation : annotation.annotations())
+                {
+                    for(final Transcript transcript : geneAnnotation.transcripts())
+                    {
+                        final StructuralVariant var = annotation.variant();
+
+                        boolean isStart = geneAnnotation.isStart();
+
+                        writer.write(String.format("%s,%d,%s,%s,%d,%d,%s",
+                                sampleId, var.primaryKey(), isStart, var.chromosome(isStart), var.position(isStart),
+                                var.orientation(isStart), var.type()));
+
+                        // Gene info: geneName, geneStableId, geneStrand, transcriptId
+                        writer.write(
+                                String.format(",%s,%s,%d,%s,%s,%s,%d,%d",
+                                        geneAnnotation.geneName(), geneAnnotation.stableId(), geneAnnotation.strand(),
+                                        transcript.transcriptId(), transcript.isCanonical(), transcript.bioType(),
+                                        transcript.transcriptStart(), transcript.transcriptEnd()));
+
+                        // Transcript info: exonUpstream, exonUpstreamPhase, exonDownstream, exonDownstreamPhase, exonStart, exonEnd, exonMax, canonical, codingStart, codingEnd
+                        writer.write(
+                                String.format(",%d,%d,%d,%d,%d,%d",
+                                        transcript.exonUpstream(), transcript.exonUpstreamPhase(),
+                                        transcript.exonDownstream(), transcript.exonDownstreamPhase(),
+                                        transcript.codingBases(), transcript.totalCodingBases()));
+
+                        writer.write(
+                                String.format(",%d,%d,%d,%s,%s,%d,%d",
+                                        transcript.exonMax(), transcript.codingStart(), transcript.codingEnd(),
+                                        transcript.regionType(), transcript.codingType(),
+                                        transcript.exonDistanceUp(), transcript.exonDistanceDown()));
+
+                        writer.newLine();
+                    }
+                }
             }
         }
+        catch (final IOException e)
+        {
+            LOGGER.error("error writing breakend data: {}", e.toString());
+        }
+    }
 
-        return matchedGenes;
+    public void close()
+    {
+        try
+        {
+            if(mBreakendWriter != null)
+                mBreakendWriter.close();
+        }
+        catch (IOException e)
+        {
+
+        }
     }
 
     public static final String getSampleGeneAnnotationsFilename(final String path, final String sampleId)

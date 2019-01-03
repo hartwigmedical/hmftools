@@ -39,6 +39,8 @@ public class GeneAnnotation {
     private double mPloidy;
     private String mInsertSequence;
 
+    private String mPrecedingGeneId;
+
     public GeneAnnotation(int varId,
             final boolean isStart, @NotNull final String geneName,
             @NotNull final String stableId, final int strand, @NotNull final List<String> synonyms, @NotNull final List<Integer> entrezIds,
@@ -53,6 +55,7 @@ public class GeneAnnotation {
         mPosition = -1;
         mPloidy = 0;
         mInsertSequence = "";
+        mPrecedingGeneId = "";
 
         this.geneName = geneName;
         this.stableId = stableId;
@@ -76,6 +79,7 @@ public class GeneAnnotation {
         mPloidy = 0;
         mVarId = -1;
         mInsertSequence = "";
+        mPrecedingGeneId = "";
 
         if(variant != null)
         {
@@ -188,4 +192,8 @@ public class GeneAnnotation {
     public String karyotypeBand() {
         return karyotypeBand;
     }
+
+    public final String getmPrecedingGeneId() { return mPrecedingGeneId; }
+    public void setPrecedingGeneId(final String geneId) { mPrecedingGeneId = geneId; }
+
 }

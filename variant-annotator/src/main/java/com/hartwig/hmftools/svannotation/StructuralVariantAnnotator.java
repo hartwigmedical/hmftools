@@ -126,7 +126,6 @@ public class StructuralVariantAnnotator
 
         mOutputDir = mCmdLineArgs.getOptionValue(DATA_OUTPUT_DIR, "");
         mEnsemblDataDir = mCmdLineArgs.getOptionValue(ENSEMBL_DATA_DIR, "");
-        mSvGeneTranscriptCollection.setDataPath(mEnsemblDataDir);
         mUploadAnnotations = !mCmdLineArgs.hasOption(SKIP_DB_UPLOAD);
 
         return true;
@@ -185,6 +184,9 @@ public class StructuralVariantAnnotator
             svAnalyser.getFusionAnalyser().loadSampleRnaData(rnaFile);
         }
 
+        if(!mEnsemblDataDir.isEmpty())
+            mSvGeneTranscriptCollection.setDataPath(mEnsemblDataDir);
+
         if (mCmdLineArgs.hasOption(TRANS_EXON_FILE) && mCmdLineArgs.hasOption(GENE_DATA_FILE))
         {
             final String transExonFile = mCmdLineArgs.getOptionValue(TRANS_EXON_FILE);
@@ -192,6 +194,8 @@ public class StructuralVariantAnnotator
 
             final String geneDataFile = mCmdLineArgs.getOptionValue(GENE_DATA_FILE);
             mSvGeneTranscriptCollection.loadEnsemblGeneData(geneDataFile);
+
+            mSvGeneTranscriptCollection.setDataPath(mOutputDir);
         }
 
         List<String> samplesList = Lists.newArrayList();
@@ -224,6 +228,7 @@ public class StructuralVariantAnnotator
         }
 
         svAnalyser.getFusionAnalyser().onCompleted();
+        mSvGeneTranscriptCollection.close();
 
         return true;
     }
@@ -306,6 +311,7 @@ public class StructuralVariantAnnotator
             String clusterInfo = ",,";
             svAnalyser.getFusionAnalyser().writeFusions(analysis.fusions(), mOutputDir, sampleId, clusterInfo);
             svAnalyser.getFusionAnalyser().writeRnaMatchData(sampleId, mOutputDir, analysis.fusions(), annotations, ensemblDAO);
+            mSvGeneTranscriptCollection.writeBreakendData(sampleId, annotations);
         }
 
         if(mUploadAnnotations)
@@ -430,7 +436,6 @@ public class StructuralVariantAnnotator
         final Map<Integer, List<GeneAnnotation>> svIdGeneTranscriptsMap = mSvGeneTranscriptCollection.getSvIdGeneTranscriptsMap();
 
         List<StructuralVariantAnnotation> annotations = Lists.newArrayList();
-        boolean idsUpdated = false;
 
         for(final EnrichedStructuralVariant var : enrichedVariants)
         {
