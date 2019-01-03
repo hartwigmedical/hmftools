@@ -241,6 +241,7 @@ public class SvGeneTranscriptCollection
             GeneAnnotation currentGene = new GeneAnnotation(svId, isStart, geneRegion.gene(), geneData.GeneId,
                     geneData.Strand, geneData.Synonyms, geneData.EntrezIds, geneData.KaryotypeBand);
 
+            // collect up all the relevant exons for each unique transcript to analyse as a collection
             for(int i = 0; i < transExonDataList.size(); ++i)
             {
                 List<TranscriptExonData> transcriptExons = Lists.newArrayList();
@@ -260,7 +261,6 @@ public class SvGeneTranscriptCollection
                 if(transcript != null)
                 {
                     currentGene.addTranscript(transcript);
-                    // LOGGER.debug("gene({}) transcript({}) added info from exon records({} -> {})", geneData.GeneName, transcript.transcriptId(), i, j);
                 }
 
                 if(j == transExonDataList.size() - 1)
@@ -290,73 +290,108 @@ public class SvGeneTranscriptCollection
         // in the direction of the transcript
         // strand direction will be corrected for afterwards
 
+        int upExonRank = -1;
+        int upExonPhase = -1;
+        int downExonRank = -1;
+        int downExonPhase = -1;
+        long prevDistance = -1;
+        long nextDistance = -1;
+
+        // first check for a position outside the exon boundaries
+        final TranscriptExonData firstExon = transcriptExons.get(0);
+        final TranscriptExonData lastExon = transcriptExons.get(transcriptExons.size()-1);
+
+        if(position < firstExon.ExonStart)
+        {
+            if(isForwardStrand)
+            {
+                downExonRank = 1;
+                downExonPhase = firstExon.ExonPhase;
+                upExonRank = 0;
+                upExonPhase = -1;
+            }
+            else
+            {
+                // falls after the last exon on forward strand or before the first on reverse strand makes this position downstream
+                return null;
+            }
+        }
+        else if(position > lastExon.ExonEnd)
+        {
+            if(isForwardStrand)
+            {
+                upExonRank = lastExon.ExonRank;
+                upExonPhase = lastExon.ExonPhaseEnd;
+                downExonRank = 0;
+                downExonPhase = -1;
+                prevDistance = position - lastExon.ExonEnd;
+            }
+            else
+            {
+                // falls after the last exon on forward strand or before the first on reverse strand makes this position downstream
+                return null;
+            }
+        }
+        else
+        {
+            for (int index = 0; index < transcriptExons.size(); ++index)
+            {
+                final TranscriptExonData exonData = transcriptExons.get(index);
+                long exonStart = exonData.ExonStart;
+                long exonEnd = exonData.ExonEnd;
+
+                if (position >= exonStart && position <= exonEnd)
+                {
+                    // falls within an exon
+                    upExonRank = downExonRank = exonData.ExonRank;
+                    upExonPhase = exonData.ExonPhase;
+                    downExonPhase = exonData.ExonPhaseEnd;
+                    nextDistance = isForwardStrand ? exonData.ExonEnd - position : position - exonData.ExonStart;
+                    prevDistance = isForwardStrand ? position - exonData.ExonStart : exonData.ExonEnd - position;
+                    break;
+                }
+                else if(position < exonStart)
+                {
+                    // position falls between this exon and the previous one
+                    final TranscriptExonData prevExonData = transcriptExons.get(index-1);
+
+                    if(isForwardStrand)
+                    {
+                        upExonRank = prevExonData.ExonRank;
+                        downExonRank = exonData.ExonRank;
+                        upExonPhase = prevExonData.ExonPhaseEnd;
+                        downExonPhase = exonData.ExonPhase;
+                        nextDistance = exonData.ExonStart - position;
+                        prevDistance = position - prevExonData.ExonEnd;
+
+                    }
+                    else
+                    {
+                        downExonRank = prevExonData.ExonRank;
+                        upExonRank = exonData.ExonRank;
+                        downExonPhase = prevExonData.ExonPhase;
+                        upExonPhase = exonData.ExonPhaseEnd;
+                        prevDistance = exonData.ExonStart - position;
+                        nextDistance = position - prevExonData.ExonEnd;
+                    }
+
+                    break;
+                }
+            }
+        }
+
+        // now calculate coding bases for this transcript
         boolean inCodingRegion = false;
         boolean codingRegionEnded = false;
 
         long codingBases = 0;
         long totalCodingBases = 0;
-        long transcriptStart = 0;
-        long transcriptEnd = 0;
-
-        // previous here will be the earlier exon, ordered by increasing position (ie regardless of strand direction)
-        int prevExonRank = -1;
-        int prevExonPhase = 0;
-        int prevExonEndPhase = 0;
-
-        // similarly the next exon will be exon immediately after the position for exons which increase with positino
-        int nextExonRank = -1;
-        int nextExonPhase = 0;
-        int nextExonEndPhase = 0;
 
         for (int index = 0; index < transcriptExons.size(); ++index)
         {
             final TranscriptExonData exonData = transcriptExons.get(index);
             long exonStart = exonData.ExonStart;
             long exonEnd = exonData.ExonEnd;
-
-            if(index == 0)
-                transcriptStart = exonStart;
-
-            if(index == transcriptExons.size() - 1)
-                transcriptEnd = exonEnd;
-
-            if(position >= exonStart && position <= exonEnd)
-            {
-                // falls within an exon
-                prevExonRank = nextExonRank = exonData.ExonRank;
-
-                if(isForwardStrand)
-                {
-                    prevExonEndPhase = exonData.ExonPhase;
-                    nextExonPhase = exonData.ExonPhaseEnd;
-
-                    // won't be used
-                    prevExonPhase = prevExonEndPhase;
-                    nextExonEndPhase = nextExonPhase;
-                }
-                else
-                {
-                    prevExonPhase = exonData.ExonPhaseEnd;
-                    nextExonEndPhase = exonData.ExonPhase;
-
-                    prevExonEndPhase = prevExonPhase;
-                    nextExonPhase = nextExonEndPhase;
-                }
-            }
-            else if(position > exonEnd)
-            {
-                // continue updating this until past the position
-                prevExonRank = exonData.ExonRank;
-                prevExonPhase = exonData.ExonPhase;
-                prevExonEndPhase = exonData.ExonPhaseEnd;
-            }
-            else if(position < exonStart && nextExonRank == -1)
-            {
-                // set at the first exon past this position
-                nextExonRank = exonData.ExonRank;
-                nextExonPhase = exonData.ExonPhase;
-                nextExonEndPhase = exonData.ExonPhaseEnd;
-            }
 
             if(!isCoding)
                 continue;
@@ -417,53 +452,17 @@ public class SvGeneTranscriptCollection
             }
         }
 
-        if(prevExonRank == -1)
-        {
-            if(!isForwardStrand)
-            {
-                // falls after the last exon on forward strand or before the first on reverse strand makes this position downstream
-                //                LOGGER.debug("skipping transcript({}) position({}) after exon rank({} vs max={}) on reverse strand",
-                //                        transcriptStableId, position, nextExonRank, exonMax);
-                return null;
-            }
-            else
-            {
-                prevExonRank = 0;
-                prevExonPhase = -1;
-                prevExonEndPhase = -1;
-            }
-        }
-        else if(nextExonRank == -1)
-        {
-            if(isForwardStrand)
-            {
-                // falls after the last exon on forward strand or before the first on reverse strand makes this position downstream
-                //                LOGGER.debug("skipping transcript({}) position({}) after exon rank({} vs max={}) on forward strand",
-                //                        transcriptStableId, position, prevExonRank, exonMax);
-                return null;
-            }
-            else
-            {
-                nextExonRank = 0;
-                nextExonPhase = -1;
-                nextExonEndPhase = -1;
-            }
-        }
-
-        if(nextExonRank < 0 || prevExonRank < 0 || abs(nextExonRank - prevExonRank) > 1)
-        {
-            LOGGER.warn("transcript({}) invalid exon ranks(prev={} next={}) forwardStrand({}) position({})",
-                    first.TransName, prevExonRank, nextExonRank, isForwardStrand, position);
-            return null;
-        }
-
-        return new Transcript(geneAnnotation,
+        Transcript transcript = new Transcript(geneAnnotation,
                 first.TransName,
-                isForwardStrand ? prevExonRank: nextExonRank, isForwardStrand ? prevExonEndPhase : nextExonEndPhase,
-                isForwardStrand ? nextExonRank : prevExonEndPhase, isForwardStrand ? nextExonPhase : prevExonEndPhase,
+                upExonRank, upExonPhase, downExonRank, downExonPhase,
                 codingBases, totalCodingBases,
-                exonMax, first.IsCanonical, transcriptStart, transcriptEnd,
+                exonMax, first.IsCanonical, first.TransStart, first.TransEnd,
                 first.CodingStart, first.CodingEnd);
+
+        transcript.setBioType(first.BioType);
+        transcript.setExonDistances((int)prevDistance, (int)nextDistance);
+
+        return transcript;
     }
 
     private List<HmfTranscriptRegion> findGeneRegions(long position, byte orientation, SortedSet<HmfTranscriptRegion> geneRegions)
@@ -770,39 +769,4 @@ public class SvGeneTranscriptCollection
         }
     }
 
-    public final List<GeneAnnotation> updateAnnotationsByPosition(final EnrichedStructuralVariant var)
-    {
-        for (Map.Entry<Integer, List<GeneAnnotation>> entry : mSvIdGeneTranscriptsMap.entrySet())
-        {
-            // find transcript data by a position match, and then re-insert into the new map with the new ID
-            final List<GeneAnnotation> geneList = entry.getValue();
-            final GeneAnnotation gene = geneList.get(0);
-
-            boolean matched = true;
-
-            if (gene.isStart() && gene.chromosome().equals(var.chromosome(true))
-            && gene.position() == var.position(true) && gene.orientation() == var.orientation(true))
-            {
-                matched = true;
-            }
-            else if (gene.isEnd() && gene.chromosome().equals(var.chromosome(false))
-            && gene.position() == var.position(false) && gene.orientation() == var.orientation(false))
-            {
-                matched = true;
-            }
-            else
-            {
-                continue;
-            }
-
-            for (final GeneAnnotation annotation : geneList)
-            {
-                annotation.setVarId(var.primaryKey());
-            }
-
-            return geneList;
-        }
-
-        return null;
-    }
 }

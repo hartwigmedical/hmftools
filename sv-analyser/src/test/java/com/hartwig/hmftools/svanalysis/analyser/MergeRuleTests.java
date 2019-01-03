@@ -96,7 +96,6 @@ public class MergeRuleTests
     }
 
     @Test
-    @Ignore
     public void testFoldbackMerge()
     {
         SvTestHelper tester = new SvTestHelper();

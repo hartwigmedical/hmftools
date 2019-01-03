@@ -20,6 +20,7 @@ public class Transcript {
     private final long mTotalCodingBases;
 
     private final boolean mCanonical;
+    private String mBioType;
 
     private final String mCodingType;
     private final String mRegionType;
@@ -32,6 +33,9 @@ public class Transcript {
 
     private final long mTranscriptStart;
     private final long mTranscriptEnd;
+
+    private int mExonDistanceUp;
+    private int mExonDistanceDown;
 
     public static String TRANS_REGION_TYPE_PROMOTOR = "Promotor";
     public static String TRANS_REGION_TYPE_EXONIC = "Exonic";
@@ -61,6 +65,9 @@ public class Transcript {
         mExactCodingBase = -1;
 
         mExonMax = exonMax;
+        mBioType = "";
+        mExonDistanceUp = 0;
+        mExonDistanceDown = 0;
 
         if(totalCodingBases > STOP_CODON_LENGTH)
         {
@@ -190,6 +197,18 @@ public class Transcript {
     }
 
     public boolean isCanonical() { return mCanonical; }
+
+    public void setExonDistances(int up, int down)
+    {
+        mExonDistanceUp = up;
+        mExonDistanceDown = down;
+    }
+
+    public int exonDistanceUp() { return mExonDistanceUp; }
+    public int exonDistanceDown() { return mExonDistanceDown; }
+
+    public void setBioType(final String type) { mBioType = type; }
+    public final String bioType() { return mBioType; }
 
     @NotNull
     public GeneAnnotation parent() { return mGene; }
