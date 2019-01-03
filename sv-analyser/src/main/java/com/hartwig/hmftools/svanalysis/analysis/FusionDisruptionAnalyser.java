@@ -150,11 +150,6 @@ public class FusionDisruptionAnalyser
         if(mSampleId.isEmpty() || mFusionFinder == null)
             return;
 
-        final Map<Integer, List<GeneAnnotation>> svGenesMap = mSvGeneTranscriptCollection.getSvIdGeneTranscriptsMap();
-
-        if(svGenesMap.isEmpty())
-            return;
-
         // always report SVs by themselves
         for(final SvVarData var : svList)
         {

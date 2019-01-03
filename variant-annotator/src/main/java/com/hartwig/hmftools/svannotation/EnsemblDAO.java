@@ -1,6 +1,8 @@
 package com.hartwig.hmftools.svannotation;
 
+import static java.lang.Integer.max;
 import static java.lang.Math.abs;
+import static java.lang.Math.min;
 
 import static org.ensembl.database.homo_sapiens_core.tables.CoordSystem.COORD_SYSTEM;
 import static org.ensembl.database.homo_sapiens_core.tables.Exon.EXON;
@@ -27,6 +29,7 @@ import com.hartwig.hmftools.common.variant.structural.EnrichedStructuralVariantL
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneAnnotation;
 import com.hartwig.hmftools.common.variant.structural.annotation.StructuralVariantAnnotation;
 import com.hartwig.hmftools.common.variant.structural.annotation.Transcript;
+import com.hartwig.hmftools.svannotation.analysis.RnaFusionData;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -81,10 +84,8 @@ public class EnsemblDAO
                 .value1();
     }
 
-    public static int PROMOTOR_DISTANCE = 10000;
-
     @NotNull
-    public Result<?> queryGenesOnChromosomeAndPosition(@NotNull String chromosome, long position)
+    public Result<?> queryGenesOnChromosomeAndPosition(@NotNull String chromosome, long position, int preGeneDistance)
     {
         final byte zero = 0;
         final Xref ENTREZ_XREF = XREF.as("entrez_xref");
@@ -113,11 +114,11 @@ public class EnsemblDAO
                 .on(XREF.XREF_ID.eq(GENE.DISPLAY_XREF_ID))
                 .where((GENE.STATUS.eq(GeneStatus.KNOWN).or(GENE.STATUS.eq(GeneStatus.NOVEL))))
                 .and(decode().when(GENE.SEQ_REGION_STRAND.gt(zero),
-                        decode().when(GENE.SEQ_REGION_START.ge(UInteger.valueOf(PROMOTOR_DISTANCE)),
-                                GENE.SEQ_REGION_START.sub(PROMOTOR_DISTANCE)).otherwise(GENE.SEQ_REGION_START))
+                        decode().when(GENE.SEQ_REGION_START.ge(UInteger.valueOf(preGeneDistance)),
+                                GENE.SEQ_REGION_START.sub(preGeneDistance)).otherwise(GENE.SEQ_REGION_START))
                         .otherwise(GENE.SEQ_REGION_START)
                         .le(UInteger.valueOf(position)))
-                .and(decode().when(GENE.SEQ_REGION_STRAND.lt(zero), GENE.SEQ_REGION_END.add(PROMOTOR_DISTANCE))
+                .and(decode().when(GENE.SEQ_REGION_STRAND.lt(zero), GENE.SEQ_REGION_END.add(preGeneDistance))
                         .otherwise(GENE.SEQ_REGION_END)
                         .ge(UInteger.valueOf(position)))
                 .and(geneStartInKaryotypeBand().or(geneEndInKaryotypeBand()))
@@ -476,6 +477,49 @@ public class EnsemblDAO
         }
 
         return exonDataStr;
+    }
+
+    private static int EXON_RANK_MIN = 0;
+    private static int EXON_RANK_MAX = 1;
+
+    public void setRnaFusionData(final RnaFusionData rnaFusion)
+    {
+        int[] transUpExonData = getExonData(rnaFusion.GeneUp, rnaFusion.PositionUp);
+        rnaFusion.setExonUpRank(transUpExonData[EXON_RANK_MIN], transUpExonData[EXON_RANK_MAX]);
+
+        transUpExonData = getExonData(rnaFusion.GeneDown, rnaFusion.PositionDown);
+        rnaFusion.setExonDownRank(transUpExonData[EXON_RANK_MIN], transUpExonData[EXON_RANK_MAX]);
+    }
+
+    private int[] getExonData(final String geneName, long exonPosition)
+    {
+        Result<?> transcriptDataList = context.select(TRANSCRIPT.TRANSCRIPT_ID, TRANSCRIPT.STABLE_ID, EXON_TRANSCRIPT.RANK)
+                .from(GENE, EXON_TRANSCRIPT, TRANSCRIPT, EXON, XREF)
+                .where(TRANSCRIPT.GENE_ID.eq(GENE.GENE_ID))
+                .and(XREF.XREF_ID.eq(GENE.DISPLAY_XREF_ID))
+                .and(XREF.DISPLAY_LABEL.eq(geneName))
+                .and(EXON_TRANSCRIPT.TRANSCRIPT_ID.eq(TRANSCRIPT.TRANSCRIPT_ID))
+                .and(EXON_TRANSCRIPT.EXON_ID.eq(EXON.EXON_ID))
+                .and((EXON.SEQ_REGION_START.eq(UInteger.valueOf(exonPosition)).or(EXON.SEQ_REGION_END.eq(UInteger.valueOf(exonPosition)))))
+                .fetch();
+
+        int minRank = -1;
+        int maxRank = -1;
+        for(final Record transcriptData : transcriptDataList)
+        {
+            int exonRank = transcriptData.get(EXON_TRANSCRIPT.RANK);
+            // final String transcriptStableId = transcriptData.get(TRANSCRIPT.STABLE_ID);
+            // final UInteger transcriptId = transcriptData.get(TRANSCRIPT.TRANSCRIPT_ID);
+
+            minRank = minRank == -1 ? exonRank : min(exonRank, minRank);
+            maxRank = max(exonRank, maxRank);
+        }
+
+        int[] exonData = new int[EXON_RANK_MAX+1];
+        exonData[EXON_RANK_MIN] = minRank;
+        exonData[EXON_RANK_MAX] = maxRank;
+        return exonData;
+
     }
 
     @NotNull

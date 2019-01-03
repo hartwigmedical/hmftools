@@ -1,14 +1,20 @@
 package com.hartwig.hmftools.svannotation.analysis;
 
+import static java.lang.Math.abs;
+
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -18,6 +24,7 @@ import com.hartwig.hmftools.common.variant.structural.annotation.GeneAnnotation;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion;
 import com.hartwig.hmftools.common.variant.structural.annotation.StructuralVariantAnnotation;
 import com.hartwig.hmftools.common.variant.structural.annotation.Transcript;
+import com.hartwig.hmftools.svannotation.EnsemblDAO;
 
 import org.apache.commons.cli.Options;
 import org.apache.logging.log4j.LogManager;
@@ -35,9 +42,12 @@ public class SvFusionAnalyser
 
     private final KnownFusionsModel mKnownFusionsModel;
 
+    private Map<String, List<RnaFusionData>> mSampleRnaData;
+
     boolean mIncludePossibles;
 
     private BufferedWriter mFusionWriter;
+    private BufferedWriter mRnaWriter;
 
     private static final Logger LOGGER = LogManager.getLogger(SvFusionAnalyser.class);
 
@@ -46,6 +56,8 @@ public class SvFusionAnalyser
         mKnownFusionsModel = knownFusionsModel;
         mIncludePossibles = false;
         mFusionWriter = null;
+        mRnaWriter = null;
+        mSampleRnaData = new HashMap();
     }
 
     public static void addCmdLineArgs(Options options)
@@ -283,18 +295,8 @@ public class SvFusionAnalyser
 
                 if(intragenicOk)
                     fusion.setReportable(true);
-
-                // old rule was checking (downstream: not non-coding and not downstream from coding)
-                // AND (upstream: non-coding or not downstream of coding)
-                // AND NOT (intragenic and upstream phase -1)
-                /*
-                boolean oldReportable = isPostCodingDownstream != null && !isPostCodingDownstream
-                        && (isPostCodingUpstream == null || !isPostCodingUpstream)
-                        && !(intragenic(upstream, downstream) && upstream.exonUpstreamPhase() == -1);
-                */
             }
         }
-
     }
 
     @NotNull
@@ -381,11 +383,11 @@ public class SvFusionAnalyser
                 mFusionWriter = Files.newBufferedWriter(outputFile, StandardOpenOption.CREATE);
                 writer = mFusionWriter;
 
-                writer.write("SampleId,Reportable,PrimarySource,ClusterId,ClusterCount,ResolvedType,PhaseMatched");
+                writer.write("SampleId,Reportable,PrimarySource,ClusterId,ClusterCount,ResolvedType,PhaseMatched,RnaMatch");
                 writer.write(",SvIdUp,ChrUp,PosUp,OrientUp,TypeStart,GeneUp,TranscriptUp,StrandUp,RegionTypeUp,CodingTypeUp");
-                writer.write(",ExonUp,PhaseUp,ExactBaseUp,CodingBasesUp,TotalCodingUp,ExonMaxUp,CodingStartUp,CodingEndUp");
+                writer.write(",ExonUp,PhaseUp,ExactBaseUp,CodingBasesUp,TotalCodingUp,ExonMaxUp,CodingStartUp,CodingEndUp,TransStartUp");
                 writer.write(",SvIdDown,ChrDown,PosDown,OrientDown,TypeDown,GeneDown,TranscriptDown,StrandDown,RegionTypeDown,CodingTypeDown");
-                writer.write(",ExonDown,PhaseDown,ExactBaseDown,CodingBasesDown,TotalCodingDown,ExonMaxDown,CodingStartDown,CodingEndDown");
+                writer.write(",ExonDown,PhaseDown,ExactBaseDown,CodingBasesDown,TotalCodingDown,ExonMaxDown,CodingStartDown,CodingEndDown,TransStartDown");
                 writer.newLine();
             }
             else
@@ -401,8 +403,8 @@ public class SvFusionAnalyser
                 final GeneAnnotation startVar = startTrans.parent();
                 final GeneAnnotation endVar = endTrans.parent();
 
-                writer.write(String.format("%s,%s,%s,%s,%s",
-                        sampleId, fusion.reportable(), fusion.primarySource(), clusterInfo, fusion.isPhaseMatch()));
+                writer.write(String.format("%s,%s,%s,%s,%s,%s",
+                        sampleId, fusion.reportable(), fusion.primarySource(), clusterInfo, fusion.isPhaseMatch(), fusion.getRnaMatchType()));
 
                 // write upstream SV, transcript and exon info
                 writer.write(
@@ -415,11 +417,12 @@ public class SvFusionAnalyser
                                 startTrans.parent().strand(), startTrans.regionType(), startTrans.codingType()));
 
                 writer.write(
-                        String.format(",%d,%d,%d,%d,%d,%d,%d,%d",
+                        String.format(",%d,%d,%d,%d,%d,%d,%d,%d,%d",
                                 startTrans.exonUpstream(), startTrans.exonUpstreamPhase(), startTrans.exactCodingBase(),
                                 startTrans.codingBases(), startTrans.totalCodingBases(), startTrans.exonMax(),
                                 startTrans.codingStart() != null ? startTrans.codingStart() : 0,
-                                startTrans.codingEnd() != null ? startTrans.codingEnd() : 0));
+                                startTrans.codingEnd() != null ? startTrans.codingEnd() : 0,
+                                startTrans.transcriptStart()));
 
                 writer.write(
                         String.format(",%d,%s,%d,%d,%s",
@@ -431,11 +434,12 @@ public class SvFusionAnalyser
                                 endTrans.parent().strand(), endTrans.regionType(), endTrans.codingType()));
 
                 writer.write(
-                        String.format(",%d,%d,%d,%d,%d,%d,%d,%d",
+                        String.format(",%d,%d,%d,%d,%d,%d,%d,%d,%d",
                                 endTrans.exonDownstream(), endTrans.exonDownstreamPhase(), endTrans.exactCodingBase(),
                                 endTrans.codingBases(), endTrans.totalCodingBases(), endTrans.exonMax(),
                                 endTrans.codingStart() != null ? endTrans.codingStart() : 0,
-                                endTrans.codingEnd() != null ? endTrans.codingEnd() : 0));
+                                endTrans.codingEnd() != null ? endTrans.codingEnd() : 0,
+                                endTrans.transcriptStart()));
 
                 writer.newLine();
             }
@@ -452,11 +456,206 @@ public class SvFusionAnalyser
         {
             if(mFusionWriter != null)
                 mFusionWriter.close();
+
+            if(mRnaWriter != null)
+                mRnaWriter.close();
         }
         catch (IOException e)
         {
 
         }
+    }
+
+    public final Map<String, List<RnaFusionData>> getSampleRnaData() { return mSampleRnaData; }
+    public final List<RnaFusionData> getSampleRnaData(final String sampleId) { return mSampleRnaData.get(sampleId); }
+
+    private static int COL_SAMPLEID = 0;
+    private static int COL_NAME = 1;
+    private static int COL_GENE_UP = 5;
+    private static int COL_POS_UP = 8;
+    private static int COL_ORIENT_UP = 9;
+    private static int COL_GENE_DOWN = 10;
+    private static int COL_POS_DOWN = 13;
+    private static int COL_ORIENT_DOWN = 14;
+
+    public boolean loadSampleRnaData(final String filename)
+    {
+        if (filename.isEmpty() || !Files.exists(Paths.get(filename)))
+            return false;
+
+        try
+        {
+            BufferedReader fileReader = new BufferedReader(new FileReader(filename));
+
+            String line = fileReader.readLine();
+
+            if (line == null)
+            {
+                LOGGER.error("empty RNA data file({})", filename);
+                return false;
+            }
+
+            line = fileReader.readLine(); // skip header
+
+            String currentSampleId = "";
+            List<RnaFusionData> rnaDataList = Lists.newArrayList();
+
+            while (line != null)
+            {
+                // parse CSV data
+                String[] items = line.split(",");
+
+                // check if still on the same variant
+                final String sampleId = items[COL_SAMPLEID];
+
+                if(currentSampleId.isEmpty() || !currentSampleId.equals(sampleId))
+                {
+                    currentSampleId = sampleId;
+                    rnaDataList = Lists.newArrayList();
+                    mSampleRnaData.put(currentSampleId, rnaDataList);
+                }
+
+                RnaFusionData rnaData = new RnaFusionData(
+                        items[COL_NAME],
+                        items[COL_GENE_UP], items[COL_GENE_DOWN],
+                        Long.parseLong(items[COL_POS_UP]), Long.parseLong(items[COL_POS_DOWN]),
+                        Byte.parseByte(items[COL_ORIENT_UP]), Byte.parseByte(items[COL_ORIENT_DOWN]));
+
+                rnaDataList.add(rnaData);
+
+                line = fileReader.readLine();
+            }
+
+        }
+        catch(IOException e)
+        {
+            LOGGER.warn("failed to load sample RNA data file({}): {}", filename, e.toString());
+            return false;
+        }
+
+        return true;
+    }
+
+    public void writeRnaMatchData(final String sampleId, final String outputDir, final List<GeneFusion> fusions,
+            final List<StructuralVariantAnnotation> svAnnotations, EnsemblDAO ensemblDAO)
+    {
+        final List<RnaFusionData> rnaFusionList = mSampleRnaData.get(sampleId);
+
+        if(rnaFusionList == null || rnaFusionList.isEmpty())
+            return;
+
+        try
+        {
+            BufferedWriter writer = null;
+
+            if(mRnaWriter == null)
+            {
+                String outputFilename = outputDir;
+
+                if (!outputFilename.endsWith("/"))
+                    outputFilename += File.separator;
+
+                outputFilename += "RNA_MATCH_DATA.csv";
+
+                Path outputFile = Paths.get(outputFilename);
+
+                mRnaWriter = Files.newBufferedWriter(outputFile, StandardOpenOption.CREATE);
+                writer = mRnaWriter;
+
+                writer.write("SampleId,FusionName,GeneUp,GeneDown");
+                writer.write(",SvFusionMatch,Reportable,SvIdUp,SvIdDown,ExonRankUp,ExonRankDown");
+                writer.write(",TransExonMinUp,TransExonMaxUp,TransExonMinDown,TransExonMaxDown");
+                writer.newLine();
+            }
+            else
+            {
+                writer = mRnaWriter;
+            }
+
+
+            for(final RnaFusionData rnaFusion : rnaFusionList)
+            {
+                // first check for a fusion found
+                GeneFusion fusionMatch = null;
+
+                for(final GeneFusion fusion : fusions)
+                {
+                    if(fusion.upstreamTrans().geneName().equals(rnaFusion.GeneUp) && fusion.downstreamTrans().geneName().equals(rnaFusion.GeneDown))
+                    {
+                        fusionMatch = fusion;
+                        break;
+                    }
+                }
+
+                GeneAnnotation upGeneAnnotation = null;
+                GeneAnnotation downGeneAnnotation = null;
+
+                if(fusionMatch != null)
+                {
+                    upGeneAnnotation = fusionMatch.upstreamTrans().parent();
+                    downGeneAnnotation = fusionMatch.downstreamTrans().parent();
+                }
+                else
+                {
+                    // check breakend annotations for any match on the gene
+                    for(final StructuralVariantAnnotation svAnnotation : svAnnotations)
+                    {
+                        List<GeneAnnotation> breakendGenes = Lists.newArrayList(svAnnotation.start());
+                        breakendGenes.addAll(svAnnotation.end());
+
+                        for (final GeneAnnotation breakendGene : breakendGenes)
+                        {
+                            if (isUpstream(breakendGene) && breakendGene.geneName().equals(rnaFusion.GeneUp))
+                            {
+                                upGeneAnnotation = breakendGene;
+                            }
+                            else if (!isUpstream(breakendGene) && breakendGene.geneName().equals(rnaFusion.GeneDown))
+                            {
+                                downGeneAnnotation = breakendGene;
+                            }
+
+                            if(upGeneAnnotation != null && downGeneAnnotation != null)
+                                break;
+                        }
+                    }
+                }
+
+                // get Ensembl min & max exon data
+                if(ensemblDAO != null)
+                {
+                    ensemblDAO.setRnaFusionData(rnaFusion);
+                }
+
+                writer.write(
+                        String.format(",%s,%s,%s,%s",
+                                sampleId, rnaFusion.Name, rnaFusion.GeneUp, rnaFusion.GeneDown));
+
+                if(fusionMatch != null)
+                {
+                    writer.write(String.format(",%s,%s,%d,%d,%d,%d",
+                            "true", fusionMatch.reportable(),
+                            fusionMatch.upstreamTrans().parent().id(), fusionMatch.downstreamTrans().parent().id(),
+                            fusionMatch.upstreamTrans().exonUpstream(), fusionMatch.downstreamTrans().exonDownstream()));
+                }
+                else
+                {
+                    writer.write(String.format(",false,false,%d,%d,-1,-1",
+                            upGeneAnnotation != null ? upGeneAnnotation.id() : -1,
+                            downGeneAnnotation != null ? downGeneAnnotation.id() : -1));
+                }
+
+                writer.write(String.format(",%d,%d,%d,%d",
+                        rnaFusion.exonMinRankUp(), rnaFusion.exonMaxRankUp(), rnaFusion.exonMinRankDown(), rnaFusion.exonMaxRankDown()));
+
+                writer.newLine();
+
+            }
+        }
+        catch (final IOException e)
+        {
+            LOGGER.error("error writing RNA match data: {}", e.toString());
+        }
+
     }
 
 }

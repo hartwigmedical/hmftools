@@ -14,13 +14,16 @@ import java.nio.file.StandardOpenOption;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.SortedSet;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.common.collect.SortedSetMultimap;
+import com.hartwig.hmftools.common.genepanel.HmfGenePanelSupplier;
+import com.hartwig.hmftools.common.region.HmfTranscriptRegion;
 import com.hartwig.hmftools.common.variant.structural.EnrichedStructuralVariant;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
-import com.hartwig.hmftools.common.variant.structural.StructuralVariantData;
 
-import org.apache.commons.math3.util.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -29,6 +32,13 @@ public class SvGeneTranscriptCollection
     private String mDataPath;
 
     private Map<Integer, List<GeneAnnotation>> mSvIdGeneTranscriptsMap;
+    private SortedSetMultimap<String, HmfTranscriptRegion> mGenesByChromosomeMap;
+    private Map<String, HmfTranscriptRegion> mAllGenesMap;
+    private Map<String, List<TranscriptExonData>> mGeneTransExonDataMap;
+    private Map<String, EnsemblGeneData> mEnsemblGeneDataMap;
+
+    // to get a wider range of candidate genes and filter by promotor distance later on
+    public static int PRE_GENE_PROMOTOR_DISTANCE = 100000;
 
     public static String SV_GENE_TRANSCRIPTS_FILE_SUFFIX = "sv_ensembl_data.csv";
 
@@ -37,13 +47,438 @@ public class SvGeneTranscriptCollection
     public SvGeneTranscriptCollection()
     {
         mSvIdGeneTranscriptsMap = new HashMap();
+        mGeneTransExonDataMap = new HashMap();
+        mEnsemblGeneDataMap = new HashMap();
+        mGenesByChromosomeMap = null;
+        mAllGenesMap = null;
     }
 
     public final Map<Integer, List<GeneAnnotation>> getSvIdGeneTranscriptsMap() { return mSvIdGeneTranscriptsMap; }
+    public final Map<String, List<TranscriptExonData>> getGeneExonDataMap() { return mGeneTransExonDataMap; }
 
     public void setDataPath(final String dataPath)
     {
         mDataPath = dataPath;
+    }
+
+    // Gene,CanonicalTranscriptId,Strand,TransId,Trans,TransStart,TransEnd,ExonRank,ExonStart,ExonEnd,
+    // ExonPhase,ExonEndPhase,CodingStart,CodingEnd
+    private static int TE_GENE_ID = 0;
+    private static int TE_CANONICAL = 1;
+    private static int TE_STRAND = 2;
+    private static int TE_TRANS_ID = 3;
+    private static int TE_TRANS_NAME = 4;
+    private static int TE_BIOTYPE = 5;
+    private static int TE_TRANS_START = 6;
+    private static int TE_TRANS_END = 7;
+    private static int TE_EXON_RANK = 8;
+    private static int TE_EXON_START = 9;
+    private static int TE_EXON_END = 10;
+    private static int TE_PHASE = 11;
+    private static int TE_PHASE_END = 12;
+    private static int TE_CODING_START = 13;
+    private static int TE_CODING_END = 14;
+
+    public boolean loadTranscriptExonData(final String filename)
+    {
+        if (filename.isEmpty() || !Files.exists(Paths.get(filename)))
+            return false;
+
+        try
+        {
+            BufferedReader fileReader = new BufferedReader(new FileReader(filename));
+
+            String line = fileReader.readLine();
+
+            if (line == null)
+            {
+                LOGGER.error("empty Ensembl gene-exon data file({})", filename);
+                return false;
+            }
+
+            int exonCount = 0;
+            String currentGene = "";
+            List<TranscriptExonData> transExonDataList = null;
+
+            line = fileReader.readLine(); // skip header
+
+            while (line != null)
+            {
+                // parse CSV data
+                String[] items = line.split(",");
+
+                // check if still on the same variant
+                final String geneId = items[TE_GENE_ID];
+
+                if(!geneId.equals(currentGene))
+                {
+                    currentGene = geneId;
+                    transExonDataList = Lists.newArrayList();
+                    mGeneTransExonDataMap.put(geneId, transExonDataList);
+                }
+
+                // Gene,CanonicalTranscriptId,Strand,TransId,Trans,TransStart,TransEnd,ExonRank,ExonStart,ExonEnd,
+                // ExonPhase,ExonEndPhase,CodingStart,CodingEnd
+
+                Long codingStart = !items[TE_CODING_START].equals("NULL") ? Long.parseLong(items[TE_CODING_START]) : null;
+                Long codingEnd = !items[TE_CODING_END].equals("NULL") ? Long.parseLong(items[TE_CODING_END]) : null;
+
+                TranscriptExonData exonData = new TranscriptExonData(
+                        geneId, items[TE_TRANS_NAME], Integer.parseInt(items[TE_TRANS_ID]),
+                        Boolean.parseBoolean(items[TE_CANONICAL]), Byte.parseByte(items[TE_STRAND]),
+                        Long.parseLong(items[TE_TRANS_START]), Long.parseLong(items[TE_TRANS_END]),
+                        Long.parseLong(items[TE_EXON_START]), Long.parseLong(items[TE_EXON_END]),
+                        Integer.parseInt(items[TE_EXON_RANK]), Integer.parseInt(items[TE_PHASE]), Integer.parseInt(items[TE_PHASE_END]),
+                        codingStart, codingEnd, items[TE_BIOTYPE]);
+
+                transExonDataList.add(exonData);
+                ++exonCount;
+
+                line = fileReader.readLine();
+            }
+
+            LOGGER.debug("loaded {} gene records, {} exon", mGeneTransExonDataMap.size(), exonCount);
+
+            mGenesByChromosomeMap = HmfGenePanelSupplier.allGenesPerChromosomeMap37();
+
+            mAllGenesMap = Maps.newHashMap();
+            for (final HmfTranscriptRegion region : mGenesByChromosomeMap.values())
+            {
+                mAllGenesMap.put(region.gene(), region);
+            }
+
+        }
+        catch(IOException e)
+        {
+            LOGGER.warn("failed to load sample gene annotations({}): {}", filename, e.toString());
+            return false;
+        }
+
+        return true;
+    }
+
+    // GeneId,GeneName,Chromosome,Strand,GeneStart,GeneEnd,EntrezIds,KaryotypeBand,Synonyms
+    private static int GD_ID = 0;
+    private static int GD_NAME = 1;
+    private static int GD_CHR = 2;
+    private static int GD_STRAND = 3;
+    private static int GD_START = 4;
+    private static int GD_END = 5;
+    private static int GD_ENTREZ = 6;
+    private static int GD_BAND = 7;
+    private static int GD_SYN = 8;
+
+    public boolean loadEnsemblGeneData(final String filename)
+    {
+        if (filename.isEmpty() || !Files.exists(Paths.get(filename)))
+            return false;
+
+        try
+        {
+            BufferedReader fileReader = new BufferedReader(new FileReader(filename));
+
+            String line = fileReader.readLine();
+
+            if (line == null)
+            {
+                LOGGER.error("empty Ensembl gene data file({})", filename);
+                return false;
+            }
+
+            line = fileReader.readLine(); // skip header
+
+            while (line != null)
+            {
+                String[] items = line.split(",");
+
+                final String geneId = items[GD_ID];
+
+                EnsemblGeneData geneData = new EnsemblGeneData(
+                        geneId, items[GD_NAME], items[GD_CHR], Byte.parseByte(items[GD_STRAND]),
+                        Long.parseLong(items[GD_START]), Long.parseLong(items[GD_END]),
+                        items[GD_ENTREZ], items[GD_BAND], items[GD_SYN]);
+
+                mEnsemblGeneDataMap.put(geneId, geneData);
+
+                line = fileReader.readLine();
+            }
+
+            LOGGER.debug("loaded {} gene records", mEnsemblGeneDataMap.size());
+        }
+        catch(IOException e)
+        {
+            LOGGER.warn("failed to load Ensembl gene ({}): {}", filename, e.toString());
+            return false;
+        }
+
+        return true;
+    }
+
+    public List<GeneAnnotation> findGeneAnnotationsBySv(int svId, boolean isStart, final String chromosome, long position, byte orientation)
+    {
+        List<GeneAnnotation> geneAnnotations = Lists.newArrayList();
+
+        final SortedSet<HmfTranscriptRegion> geneRegions = mGenesByChromosomeMap.get(chromosome);
+
+        final List<HmfTranscriptRegion> matchedGenes = findGeneRegions(position, orientation, geneRegions);
+
+        // now look up relevant transcript and exon information
+        for(final HmfTranscriptRegion geneRegion : matchedGenes)
+        {
+            final List<TranscriptExonData> transExonDataList = mGeneTransExonDataMap.get(geneRegion.geneID());
+
+            if (transExonDataList == null || transExonDataList.isEmpty())
+                continue;
+
+            final EnsemblGeneData geneData = mEnsemblGeneDataMap.get(geneRegion.geneID());
+
+            if(geneData == null)
+            {
+                LOGGER.warn("gene({}) data not found in Ensembl cache", geneRegion.gene());
+                continue;
+            }
+
+            GeneAnnotation currentGene = new GeneAnnotation(svId, isStart, geneRegion.gene(), geneData.GeneId,
+                    geneData.Strand, geneData.Synonyms, geneData.EntrezIds, geneData.KaryotypeBand);
+
+            for(int i = 0; i < transExonDataList.size(); ++i)
+            {
+                List<TranscriptExonData> transcriptExons = Lists.newArrayList();
+                int transId = transExonDataList.get(i).TransId;
+
+                int j = i;
+                for(; j < transExonDataList.size(); ++j)
+                {
+                    if(transExonDataList.get(j).TransId != transId)
+                        break;
+
+                    transcriptExons.add(transExonDataList.get(j));
+                }
+
+                Transcript transcript = extractTranscript(transcriptExons, position, currentGene);
+
+                if(transcript != null)
+                {
+                    currentGene.addTranscript(transcript);
+                    // LOGGER.debug("gene({}) transcript({}) added info from exon records({} -> {})", geneData.GeneName, transcript.transcriptId(), i, j);
+                }
+
+                if(j == transExonDataList.size() - 1)
+                    break;
+
+                i = j - 1;
+            }
+
+            geneAnnotations.add(currentGene);
+        }
+
+        return geneAnnotations;
+    }
+
+    private Transcript extractTranscript(final List<TranscriptExonData> transcriptExons, long position, final GeneAnnotation geneAnnotation)
+    {
+        int exonMax = transcriptExons.size();
+
+        final TranscriptExonData first = transcriptExons.get(0);
+
+        boolean isCoding = first.CodingStart != null && first.CodingEnd != null;
+        long codingStart = first.CodingStart != null ? first.CodingStart : 0;
+        long codingEnd = first.CodingEnd != null ? first.CodingEnd : 0;
+        boolean isForwardStrand = geneAnnotation.strand() == 1;
+
+        // for the given position, determine how many coding bases occur prior to the position
+        // in the direction of the transcript
+        // strand direction will be corrected for afterwards
+
+        boolean inCodingRegion = false;
+        boolean codingRegionEnded = false;
+
+        long codingBases = 0;
+        long totalCodingBases = 0;
+        long transcriptStart = 0;
+        long transcriptEnd = 0;
+
+        // previous here will be the earlier exon, ordered by increasing position (ie regardless of strand direction)
+        int prevExonRank = -1;
+        int prevExonPhase = 0;
+        int prevExonEndPhase = 0;
+
+        // similarly the next exon will be exon immediately after the position for exons which increase with positino
+        int nextExonRank = -1;
+        int nextExonPhase = 0;
+        int nextExonEndPhase = 0;
+
+        for (int index = 0; index < transcriptExons.size(); ++index)
+        {
+            final TranscriptExonData exonData = transcriptExons.get(index);
+            long exonStart = exonData.ExonStart;
+            long exonEnd = exonData.ExonEnd;
+
+            if(index == 0)
+                transcriptStart = exonStart;
+
+            if(index == transcriptExons.size() - 1)
+                transcriptEnd = exonEnd;
+
+            if(position >= exonStart && position <= exonEnd)
+            {
+                // falls within an exon
+                prevExonRank = nextExonRank = exonData.ExonRank;
+
+                if(isForwardStrand)
+                {
+                    prevExonEndPhase = exonData.ExonPhase;
+                    nextExonPhase = exonData.ExonPhaseEnd;
+
+                    // won't be used
+                    prevExonPhase = prevExonEndPhase;
+                    nextExonEndPhase = nextExonPhase;
+                }
+                else
+                {
+                    prevExonPhase = exonData.ExonPhaseEnd;
+                    nextExonEndPhase = exonData.ExonPhase;
+
+                    prevExonEndPhase = prevExonPhase;
+                    nextExonPhase = nextExonEndPhase;
+                }
+            }
+            else if(position > exonEnd)
+            {
+                // continue updating this until past the position
+                prevExonRank = exonData.ExonRank;
+                prevExonPhase = exonData.ExonPhase;
+                prevExonEndPhase = exonData.ExonPhaseEnd;
+            }
+            else if(position < exonStart && nextExonRank == -1)
+            {
+                // set at the first exon past this position
+                nextExonRank = exonData.ExonRank;
+                nextExonPhase = exonData.ExonPhase;
+                nextExonEndPhase = exonData.ExonPhaseEnd;
+            }
+
+            if(!isCoding)
+                continue;
+
+            if(!inCodingRegion)
+            {
+                if(exonEnd >= codingStart)
+                {
+                    // coding region begins in this exon
+                    inCodingRegion = true;
+
+                    totalCodingBases += exonEnd - codingStart + 1;
+
+                    // check whether the position falls in this exon and if so before or after the coding start
+                    if(position >= codingStart)
+                    {
+                        if(position < exonEnd)
+                            codingBases += position - codingStart + 1;
+                        else
+                            codingBases += exonEnd - codingStart + 1;
+                    }
+                }
+            }
+            else if(!codingRegionEnded)
+            {
+                if(exonStart > codingEnd)
+                {
+                    codingRegionEnded = true;
+                }
+                else if(exonEnd > codingEnd)
+                {
+                    // coding region ends in this exon
+                    codingRegionEnded = true;
+
+                    totalCodingBases += codingEnd - exonStart + 1;
+
+                    if(position >= exonStart)
+                    {
+                        if (position < codingEnd)
+                            codingBases += position - exonStart + 1;
+                        else
+                            codingBases += codingEnd - exonStart + 1;
+                    }
+                }
+                else
+                {
+                    // take all of the exon's bases
+                    totalCodingBases += exonEnd - exonStart + 1;
+
+                    if(position >= exonStart)
+                    {
+                        if (position < exonEnd)
+                            codingBases += position - exonStart + 1;
+                        else
+                            codingBases += exonEnd - exonStart + 1;
+                    }
+                }
+            }
+        }
+
+        if(prevExonRank == -1)
+        {
+            if(!isForwardStrand)
+            {
+                // falls after the last exon on forward strand or before the first on reverse strand makes this position downstream
+                //                LOGGER.debug("skipping transcript({}) position({}) after exon rank({} vs max={}) on reverse strand",
+                //                        transcriptStableId, position, nextExonRank, exonMax);
+                return null;
+            }
+            else
+            {
+                prevExonRank = 0;
+                prevExonPhase = -1;
+                prevExonEndPhase = -1;
+            }
+        }
+        else if(nextExonRank == -1)
+        {
+            if(isForwardStrand)
+            {
+                // falls after the last exon on forward strand or before the first on reverse strand makes this position downstream
+                //                LOGGER.debug("skipping transcript({}) position({}) after exon rank({} vs max={}) on forward strand",
+                //                        transcriptStableId, position, prevExonRank, exonMax);
+                return null;
+            }
+            else
+            {
+                nextExonRank = 0;
+                nextExonPhase = -1;
+                nextExonEndPhase = -1;
+            }
+        }
+
+        if(nextExonRank < 0 || prevExonRank < 0 || abs(nextExonRank - prevExonRank) > 1)
+        {
+            LOGGER.warn("transcript({}) invalid exon ranks(prev={} next={}) forwardStrand({}) position({})",
+                    first.TransName, prevExonRank, nextExonRank, isForwardStrand, position);
+            return null;
+        }
+
+        return new Transcript(geneAnnotation,
+                first.TransName,
+                isForwardStrand ? prevExonRank: nextExonRank, isForwardStrand ? prevExonEndPhase : nextExonEndPhase,
+                isForwardStrand ? nextExonRank : prevExonEndPhase, isForwardStrand ? nextExonPhase : prevExonEndPhase,
+                codingBases, totalCodingBases,
+                exonMax, first.IsCanonical, transcriptStart, transcriptEnd,
+                first.CodingStart, first.CodingEnd);
+    }
+
+    private List<HmfTranscriptRegion> findGeneRegions(long position, byte orientation, SortedSet<HmfTranscriptRegion> geneRegions)
+    {
+        List<HmfTranscriptRegion> matchedGenes = Lists.newArrayList();
+
+        for(final HmfTranscriptRegion region : geneRegions)
+        {
+            if(position >= region.start() - PRE_GENE_PROMOTOR_DISTANCE && position <= region.end() + PRE_GENE_PROMOTOR_DISTANCE)
+            {
+                matchedGenes.add(region);
+            }
+        }
+
+        return matchedGenes;
     }
 
     public static final String getSampleGeneAnnotationsFilename(final String path, final String sampleId)

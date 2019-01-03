@@ -2,6 +2,8 @@ package com.hartwig.hmftools.svannotation;
 
 import static java.lang.Math.abs;
 
+import static com.hartwig.hmftools.common.variant.structural.annotation.SvGeneTranscriptCollection.PRE_GENE_PROMOTOR_DISTANCE;
+
 import static org.ensembl.database.homo_sapiens_core.tables.CoordSystem.COORD_SYSTEM;
 import static org.ensembl.database.homo_sapiens_core.tables.Exon.EXON;
 import static org.ensembl.database.homo_sapiens_core.tables.ExonTranscript.EXON_TRANSCRIPT;
@@ -45,8 +47,6 @@ public class MySQLAnnotator implements VariantAnnotator
 
     private static final String ENTREZ_IDS = "ENTREZ_IDS";
     private static final String KARYOTYPE_BAND = "KARYOTYPE_BAND";
-    private static final String CODING_START = "CODING_START";
-    private static final String CODING_END = "CODING_END";
 
     // @NotNull
     private final DSLContext mDslContext;
@@ -73,6 +73,8 @@ public class MySQLAnnotator implements VariantAnnotator
         mDslContext = context;
         mEnsemblDAO = new EnsemblDAO(context);
     }
+
+    public final EnsemblDAO getEnsemblDAO() { return mEnsemblDAO; }
 
     @Override
     @NotNull
@@ -103,7 +105,7 @@ public class MySQLAnnotator implements VariantAnnotator
     {
         final List<GeneAnnotation> result = Lists.newArrayList();
 
-        final Result<?> genes = mEnsemblDAO.queryGenesOnChromosomeAndPosition(chromosome, position);
+        final Result<?> genes = mEnsemblDAO.queryGenesOnChromosomeAndPosition(chromosome, position, PRE_GENE_PROMOTOR_DISTANCE);
 
         for (final Record gene : genes)
         {
