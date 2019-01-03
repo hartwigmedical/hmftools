@@ -41,7 +41,8 @@ public class StructuralVariantFactory {
     private final static String IMPRECISE = "IMPRECISE";
     private final static String IHOMPOS = "IHOMPOS";
     private final static String CIPOS = "CIPOS";
-    private final static String VARIANT_FRAGMENT_BREAKEND_COVERAGE = "VF";
+    private final static String VARIANT_FRAGMENT_BREAKPOINT_COVERAGE = "VF";
+    private final static String VARIANT_FRAGMENT_BREAKEND_COVERAGE = "BVF";
     private final static String REFERENCE_BREAKEND_READ_COVERAGE = "REF";
     private final static String REFERENCE_BREAKEND_READPAIR_COVERAGE = "REFPAIR";
     private final static String EVENT = "EVENT";
@@ -324,8 +325,8 @@ public class StructuralVariantFactory {
         }
         if (context.getGenotype(NORMAL_GENOTYPE_ORDINAL) != null) {
             Genotype geno = context.getGenotype(NORMAL_GENOTYPE_ORDINAL);
-            if (geno.hasExtendedAttribute(VARIANT_FRAGMENT_BREAKEND_COVERAGE)) {
-                Integer var = asInteger(geno.getExtendedAttribute(VARIANT_FRAGMENT_BREAKEND_COVERAGE));
+            if (geno.hasExtendedAttribute(VARIANT_FRAGMENT_BREAKPOINT_COVERAGE) || geno.hasExtendedAttribute(VARIANT_FRAGMENT_BREAKEND_COVERAGE)) {
+                Integer var = asInteger(geno.getExtendedAttribute(context.hasAttribute(PAR_ID) ? VARIANT_FRAGMENT_BREAKPOINT_COVERAGE :VARIANT_FRAGMENT_BREAKEND_COVERAGE));
                 Integer ref = asInteger(geno.getExtendedAttribute(REFERENCE_BREAKEND_READ_COVERAGE));
                 Integer refpair = asInteger(geno.getExtendedAttribute(REFERENCE_BREAKEND_READPAIR_COVERAGE));
                 builder = builder.normalVariantFragmentCount(var);
@@ -334,8 +335,8 @@ public class StructuralVariantFactory {
         }
         if (context.getGenotype(TUMOUR_GENOTYPE_ORDINAL) != null) {
             Genotype geno = context.getGenotype(TUMOUR_GENOTYPE_ORDINAL);
-            if (geno.hasExtendedAttribute(VARIANT_FRAGMENT_BREAKEND_COVERAGE)) {
-                Integer var = asInteger(geno.getExtendedAttribute(VARIANT_FRAGMENT_BREAKEND_COVERAGE));
+            if (geno.hasExtendedAttribute(VARIANT_FRAGMENT_BREAKPOINT_COVERAGE) || geno.hasExtendedAttribute(VARIANT_FRAGMENT_BREAKEND_COVERAGE)) {
+                Integer var = asInteger(geno.getExtendedAttribute(context.hasAttribute(PAR_ID) ? VARIANT_FRAGMENT_BREAKPOINT_COVERAGE :VARIANT_FRAGMENT_BREAKEND_COVERAGE));
                 Integer ref = asInteger(geno.getExtendedAttribute(REFERENCE_BREAKEND_READ_COVERAGE));
                 Integer refpair = asInteger(geno.getExtendedAttribute(REFERENCE_BREAKEND_READPAIR_COVERAGE));
                 builder = builder.tumourVariantFragmentCount(var);
