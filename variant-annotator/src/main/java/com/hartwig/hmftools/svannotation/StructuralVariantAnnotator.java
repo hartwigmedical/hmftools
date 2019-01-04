@@ -72,6 +72,7 @@ public class StructuralVariantAnnotator
 
     private static final String SOURCE_SVS_FROM_DB = "source_svs_from_db";
     private static final String LOAD_ANNOTATIONS_FROM_FILE = "load_annotations";
+    private static final String WRITE_BREAKENDS = "write_breakends";
     private static final String SKIP_DB_UPLOAD = "skip_db_upload";
     private static final String LOG_DEBUG = "log_debug";
     private static final String SAMPLE_RNA_FILE = "sample_rna_file";
@@ -91,6 +92,7 @@ public class StructuralVariantAnnotator
     private boolean mSourceSvFromDB;
     private SvGeneTranscriptCollection mSvGeneTranscriptCollection;
     private boolean mUploadAnnotations;
+    private boolean mWriteBreakends;
 
     // Let PON filtered SVs through since GRIDSS PON filtering is performed upstream
     private static final Set<String> ALLOWED_FILTERS = Sets.newHashSet("INFERRED", PON_FILTER_PON, PON_FILTER_PASS);
@@ -106,6 +108,7 @@ public class StructuralVariantAnnotator
         mSourceSvFromDB = false;
         mCmdLineArgs = cmd;
         mSvGeneTranscriptCollection = new SvGeneTranscriptCollection();
+        mWriteBreakends = false;
     }
 
     private boolean initialise()
@@ -127,6 +130,7 @@ public class StructuralVariantAnnotator
         mOutputDir = mCmdLineArgs.getOptionValue(DATA_OUTPUT_DIR, "");
         mEnsemblDataDir = mCmdLineArgs.getOptionValue(ENSEMBL_DATA_DIR, "");
         mUploadAnnotations = !mCmdLineArgs.hasOption(SKIP_DB_UPLOAD);
+        mWriteBreakends = mCmdLineArgs.hasOption(WRITE_BREAKENDS);
 
         return true;
     }
@@ -311,7 +315,9 @@ public class StructuralVariantAnnotator
             String clusterInfo = ",,";
             svAnalyser.getFusionAnalyser().writeFusions(analysis.fusions(), mOutputDir, sampleId, clusterInfo);
             svAnalyser.getFusionAnalyser().writeRnaMatchData(sampleId, mOutputDir, analysis.fusions(), annotations, ensemblDAO);
-            mSvGeneTranscriptCollection.writeBreakendData(sampleId, annotations);
+
+            if(mWriteBreakends)
+                mSvGeneTranscriptCollection.writeBreakendData(sampleId, annotations);
         }
 
         if(mUploadAnnotations)
@@ -501,6 +507,7 @@ public class StructuralVariantAnnotator
         // testing options
         options.addOption(SOURCE_SVS_FROM_DB, false, "Skip annotations, including Ensemble DB data sync, for testing only)");
         options.addOption(LOAD_ANNOTATIONS_FROM_FILE, false, "Load existing annotations previously written to file");
+        options.addOption(WRITE_BREAKENDS, false, "Write breakend data to file");
         options.addOption(SKIP_DB_UPLOAD, false, "Skip uploading fusions and disruptions to database, off by default");
 
         return options;

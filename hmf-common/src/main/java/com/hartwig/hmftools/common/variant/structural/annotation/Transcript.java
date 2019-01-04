@@ -42,8 +42,8 @@ public class Transcript {
     public static String TRANS_REGION_TYPE_INTRONIC = "Intronic";
 
     public static String TRANS_CODING_TYPE_CODING = "Coding";
-    public static String TRANS_CODING_TYPE_UPSTREAM = "Upstream";
-    public static String TRANS_CODING_TYPE_DOWNSTREAM = "Downstream";
+    public static String TRANS_CODING_TYPE_UPSTREAM = "5P_UTR";
+    public static String TRANS_CODING_TYPE_DOWNSTREAM = "3P_UTR";
     public static String TRANS_CODING_TYPE_NON_CODING = "NonCoding";
 
     public static int PROMOTOR_REGION_MAX = 20000;
@@ -100,6 +100,8 @@ public class Transcript {
 
         if(preCoding())
         {
+            // force the phasing to -1 if the breakend comes in pre-coding, which will affect any exon which starts coding
+            // since these will have a phase other than -1
             mExonDownstreamPhase = -1;
         }
         else
@@ -120,7 +122,7 @@ public class Transcript {
 
     public boolean isPromoter()
     {
-        return mExonUpstream == 0 && mExonDownstream == 1;
+        return mExonUpstream == 0 && (mExonDownstream == 1 || mExonDownstream == 2);
     }
 
     public boolean isIntronic()

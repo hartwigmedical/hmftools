@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.svanalysis.analysis;
 
+import static com.hartwig.hmftools.common.io.FileWriterUtils.closeBufferedWriter;
+import static com.hartwig.hmftools.common.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.BND;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DEL;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DUP;
@@ -205,14 +207,7 @@ public class SvSampleAnalyser {
     {
         try
         {
-            BufferedWriter writer = null;
-
-            if(mSVFileWriter != null)
-            {
-                // check if can continue appending to an existing file
-                writer = mSVFileWriter;
-            }
-            else
+            if(mSVFileWriter == null)
             {
                 String outputFileName = mConfig.OutputCsvPath;
 
@@ -224,49 +219,48 @@ public class SvSampleAnalyser {
                 else
                     outputFileName += mSampleId + ".csv";
 
-                Path outputFile = Paths.get(outputFileName);
-
-                writer = Files.newBufferedWriter(outputFile, StandardOpenOption.CREATE);
-                mSVFileWriter = writer;
+                mSVFileWriter = createBufferedWriter(outputFileName, false);
 
                 // definitional fields
-                writer.write("SampleId,Id,Type,ChrStart,PosStart,OrientStart,ChrEnd,PosEnd,OrientEnd");
+                mSVFileWriter.write("SampleId,Id,Type,ChrStart,PosStart,OrientStart,ChrEnd,PosEnd,OrientEnd");
 
                 // position and copy number
-                writer.write(",ArmStart,AdjAFStart,AdjCNStart,AdjCNChgStart,ArmEnd,AdjAFEnd,AdjCNEnd,AdjCNChgEnd,Ploidy");
+                mSVFileWriter.write(",ArmStart,AdjAFStart,AdjCNStart,AdjCNChgStart,ArmEnd,AdjAFEnd,AdjCNEnd,AdjCNChgEnd,Ploidy");
 
                 // cluster info
-                writer.write(",ClusterId,SubClusterId,ClusterCount,ClusterReason");
+                mSVFileWriter.write(",ClusterId,SubClusterId,ClusterCount,ClusterReason");
 
                 // cluster-level info
-                writer.write(",ClusterDesc,IsResolved,ResolvedType,Consistency,ArmCount");
+                mSVFileWriter.write(",ClusterDesc,IsResolved,ResolvedType,Consistency,ArmCount");
 
                 // SV info
-                writer.write(",Homology,InexactHOStart,InexactHOEnd,InsertSeq,Imprecise,RefContextStart,RefContextEnd");
+                mSVFileWriter.write(",Homology,InexactHOStart,InexactHOEnd,InsertSeq,Imprecise,RefContextStart,RefContextEnd");
 
                 // location attributes
-                writer.write(",FSStart,FSEnd,LEStart,LEEnd,DupBEStart,DupBEEnd,ArmCountStart,ArmExpStart,ArmCountEnd,ArmExpEnd");
+                mSVFileWriter.write(",FSStart,FSEnd,LEStart,LEEnd,DupBEStart,DupBEEnd,ArmCountStart,ArmExpStart,ArmCountEnd,ArmExpEnd");
 
                 // linked pair info
-                writer.write(",LnkSvStart,LnkLenStart,LnkSvEnd,LnkLenEnd");
+                mSVFileWriter.write(",LnkSvStart,LnkLenStart,LnkSvEnd,LnkLenEnd");
 
                 // GRIDDS caller info
-                writer.write(",AsmbStart,AsmbEnd,AsmbMatchStart,AsmbMatchEnd");
+                mSVFileWriter.write(",AsmbStart,AsmbEnd,AsmbMatchStart,AsmbMatchEnd");
 
                 // chain info
-                writer.write(",ChainId,ChainCount,ChainIndex");
+                mSVFileWriter.write(",ChainId,ChainCount,ChainIndex");
 
                 // proximity info and other link info
-                writer.write(",NearestLen,NearestType,DBLenStart,DBLenEnd,SynDelDupLen,SynDelDupTILen");
+                mSVFileWriter.write(",NearestLen,NearestType,DBLenStart,DBLenEnd,SynDelDupLen,SynDelDupTILen");
 
                 // proximity info and other link info
-                writer.write(",FoldbackLnkStart,FoldbackLenStart,FoldbackLinkInfoStart,FoldbackLnkEnd,FoldbackLenEnd,FoldbackLinkInfoEnd");
+                mSVFileWriter.write(",FoldbackLnkStart,FoldbackLenStart,FoldbackLinkInfoStart,FoldbackLnkEnd,FoldbackLenEnd,FoldbackLinkInfoEnd");
 
                 // gene info
-                writer.write(",DriverStart,DriverEnd,GeneStart,GeneEnd");
+                mSVFileWriter.write(",DriverStart,DriverEnd,GeneStart,GeneEnd");
 
-                writer.newLine();
+                mSVFileWriter.newLine();
             }
+
+            BufferedWriter writer = mSVFileWriter;
 
             int lineCount = 0;
             int svCount = 0;
@@ -406,14 +400,7 @@ public class SvSampleAnalyser {
     {
         try
         {
-            BufferedWriter writer = null;
-
-            if(mClusterFileWriter != null)
-            {
-                // check if can continue appending to an existing file
-                writer = mClusterFileWriter;
-            }
-            else
+            if(mClusterFileWriter == null)
             {
                 String outputFileName = mConfig.OutputCsvPath;
 
@@ -422,19 +409,18 @@ public class SvSampleAnalyser {
 
                 outputFileName += "SVA_CLUSTERS.csv";
 
-                Path outputFile = Paths.get(outputFileName);
+                mClusterFileWriter = createBufferedWriter(outputFileName, false);
 
-                writer = Files.newBufferedWriter(outputFile, StandardOpenOption.CREATE);
-                mClusterFileWriter = writer;
-
-                writer.write("SampleId,ClusterId,ClusterDesc,ClusterCount,ResolvedType,FullyChained,ChainCount");
-                writer.write(",DelCount,DupCount,InsCount,InvCount,BndCount,SglCount");
-                writer.write(",Consistency,ArmCount,OriginArms,FragmentArms,IsLINE,HasReplicated,Foldbacks,DSBs");
-                writer.write(",TotalLinks,AssemblyLinks,LongDelDups,UnlinkedRemotes,ShortTIRemotes,MinCopyNumber,MaxCopyNumber");
-                writer.write(",SynDelDupLen,SynDelDupAvgTILen,Annotations,ChainInfo");
-                writer.write(",ArmClusterCount,AcSoloSv,AcRemoteTI,AcDsb,AcMultipleDsb,AcSimpleFoldback,AcComplexFoldback,AcComplexOther");
-                writer.newLine();
+                mClusterFileWriter.write("SampleId,ClusterId,ClusterDesc,ClusterCount,ResolvedType,FullyChained,ChainCount");
+                mClusterFileWriter.write(",DelCount,DupCount,InsCount,InvCount,BndCount,SglCount");
+                mClusterFileWriter.write(",Consistency,ArmCount,OriginArms,FragmentArms,IsLINE,HasReplicated,Foldbacks,DSBs");
+                mClusterFileWriter.write(",TotalLinks,AssemblyLinks,LongDelDups,UnlinkedRemotes,ShortTIRemotes,MinCopyNumber,MaxCopyNumber");
+                mClusterFileWriter.write(",SynDelDupLen,SynDelDupAvgTILen,Annotations,ChainInfo");
+                mClusterFileWriter.write(",ArmClusterCount,AcSoloSv,AcRemoteTI,AcDsb,AcMultipleDsb,AcSimpleFoldback,AcComplexFoldback,AcComplexOther");
+                mClusterFileWriter.newLine();
             }
+
+            BufferedWriter writer = mClusterFileWriter;
 
             for(final SvCluster cluster : getClusters())
             {
@@ -492,14 +478,7 @@ public class SvSampleAnalyser {
     {
         try
         {
-            BufferedWriter writer = null;
-
-            if(mLinksFileWriter != null)
-            {
-                // check if can continue appending to an existing file
-                writer = mLinksFileWriter;
-            }
-            else
+            if(mLinksFileWriter == null)
             {
                 String outputFileName = mConfig.OutputCsvPath;
 
@@ -508,17 +487,16 @@ public class SvSampleAnalyser {
 
                 outputFileName += "SVA_LINKS.csv";
 
-                Path outputFile = Paths.get(outputFileName);
+                mLinksFileWriter = createBufferedWriter(outputFileName, false);
 
-                writer = Files.newBufferedWriter(outputFile, StandardOpenOption.CREATE);
-                mLinksFileWriter = writer;
-
-                writer.write("SampleId,ClusterId,ClusterDesc,ClusterCount,ResolvedType,IsLINE,FullyChained");
-                writer.write(",ChainId,ChainCount,ChainConsistent,Id1,Id2,ChrArm,IsAssembled,TILength,SynDelDupLen");
-                writer.write(",NextSVDistance,NextSVTraversedCount,DBLenStart,DBLenEnd,OnArmOfOrigin,CopyNumberGain,TraversedSVCount");
-                writer.write(",PosStart,PosEnd,GeneStart,GeneEnd");
-                writer.newLine();
+                mLinksFileWriter.write("SampleId,ClusterId,ClusterDesc,ClusterCount,ResolvedType,IsLINE,FullyChained");
+                mLinksFileWriter.write(",ChainId,ChainCount,ChainConsistent,Id1,Id2,ChrArm,IsAssembled,TILength,SynDelDupLen");
+                mLinksFileWriter.write(",NextSVDistance,NextSVTraversedCount,DBLenStart,DBLenEnd,OnArmOfOrigin,CopyNumberGain,TraversedSVCount");
+                mLinksFileWriter.write(",PosStart,PosEnd,GeneStart,GeneEnd");
+                mLinksFileWriter.newLine();
             }
+
+            BufferedWriter writer = mLinksFileWriter;
 
             for(final SvCluster cluster : getClusters())
             {
@@ -655,20 +633,9 @@ public class SvSampleAnalyser {
 
     public void close()
     {
-        try
-        {
-            if(mSVFileWriter != null)
-                mSVFileWriter.close();
-
-            if(mLinksFileWriter != null)
-                mLinksFileWriter.close();
-
-            if(mClusterFileWriter != null)
-                mClusterFileWriter.close();
-        }
-        catch (final IOException e)
-        {
-        }
+        closeBufferedWriter(mSVFileWriter);
+        closeBufferedWriter(mClusterFileWriter);
+        closeBufferedWriter(mLinksFileWriter);
 
         // log perf stats
         mPerfCounter.stop();

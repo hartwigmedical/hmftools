@@ -2,6 +2,8 @@ package com.hartwig.hmftools.svannotation.analysis;
 
 import static java.lang.Math.abs;
 
+import static com.hartwig.hmftools.common.io.FileWriterUtils.createBufferedWriter;
+
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -134,6 +136,9 @@ public class SvFusionAnalyser
                             continue;
 
                         if(downstreamTrans.isPrePromotor())
+                            continue;
+
+                        if(downstreamTrans.exonMax() == 1)
                             continue;
 
                         if(upstreamTrans.preCoding())
@@ -367,8 +372,6 @@ public class SvFusionAnalyser
 
         try
         {
-            BufferedWriter writer = null;
-
             if(mFusionWriter == null)
             {
                 String outputFilename = outputDir;
@@ -378,22 +381,17 @@ public class SvFusionAnalyser
 
                 outputFilename += "FUSIONS.csv";
 
-                Path outputFile = Paths.get(outputFilename);
+                mFusionWriter = createBufferedWriter(outputFilename, false);
 
-                mFusionWriter = Files.newBufferedWriter(outputFile, StandardOpenOption.CREATE);
-                writer = mFusionWriter;
+                mFusionWriter.write("SampleId,Reportable,PrimarySource,ClusterId,ClusterCount,ResolvedType,PhaseMatched,RnaMatch");
+                mFusionWriter.write(",SvIdUp,ChrUp,PosUp,OrientUp,TypeStart,GeneUp,TranscriptUp,StrandUp,RegionTypeUp,CodingTypeUp");
+                mFusionWriter.write(",ExonUp,PhaseUp,ExactBaseUp,CodingBasesUp,TotalCodingUp,ExonMaxUp,CodingStartUp,CodingEndUp,TransStartUp");
+                mFusionWriter.write(",SvIdDown,ChrDown,PosDown,OrientDown,TypeDown,GeneDown,TranscriptDown,StrandDown,RegionTypeDown,CodingTypeDown");
+                mFusionWriter.write(",ExonDown,PhaseDown,ExactBaseDown,CodingBasesDown,TotalCodingDown,ExonMaxDown,CodingStartDown,CodingEndDown,TransStartDown");
+                mFusionWriter.newLine();
+            }
 
-                writer.write("SampleId,Reportable,PrimarySource,ClusterId,ClusterCount,ResolvedType,PhaseMatched,RnaMatch");
-                writer.write(",SvIdUp,ChrUp,PosUp,OrientUp,TypeStart,GeneUp,TranscriptUp,StrandUp,RegionTypeUp,CodingTypeUp");
-                writer.write(",ExonUp,PhaseUp,ExactBaseUp,CodingBasesUp,TotalCodingUp,ExonMaxUp,CodingStartUp,CodingEndUp,TransStartUp");
-                writer.write(",SvIdDown,ChrDown,PosDown,OrientDown,TypeDown,GeneDown,TranscriptDown,StrandDown,RegionTypeDown,CodingTypeDown");
-                writer.write(",ExonDown,PhaseDown,ExactBaseDown,CodingBasesDown,TotalCodingDown,ExonMaxDown,CodingStartDown,CodingEndDown,TransStartDown");
-                writer.newLine();
-            }
-            else
-            {
-                writer = mFusionWriter;
-            }
+            BufferedWriter writer = mFusionWriter;
 
             for(final GeneFusion fusion : fusions)
             {

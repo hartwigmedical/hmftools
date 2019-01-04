@@ -592,7 +592,7 @@ public class CNAnalyser {
 
                 Path outputFile = Paths.get(outputFileName);
 
-                mFileWriter = Files.newBufferedWriter(outputFile, StandardOpenOption.CREATE);
+                mFileWriter = Files.newBufferedWriter(outputFile, StandardOpenOption.TRUNCATE_EXISTING);
 
                 // SV info
                 mFileWriter.write("SampleId,Chromosome,CnIdStart,CnIdEnd,PosStart,PosEnd,SegStart,SegEnd,");

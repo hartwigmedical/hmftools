@@ -2,6 +2,9 @@ package com.hartwig.hmftools.common.variant.structural.annotation;
 
 import static java.lang.Math.abs;
 
+import static com.hartwig.hmftools.common.io.FileWriterUtils.closeBufferedWriter;
+import static com.hartwig.hmftools.common.io.FileWriterUtils.createBufferedWriter;
+
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -273,7 +276,7 @@ public class SvGeneTranscriptCollection
                         if(precedingGene != null)
                         {
                             currentGene.setPrecedingGeneId(precedingGene.geneID());
-                            int preDistance = (int)abs(precedingGene.geneEnd() - transcript.transcriptStart());
+                            int preDistance = (int)abs(precedingGene.geneEnd() - position);
                             transcript.setExonDistances(preDistance, transcript.exonDistanceDown());
                         }
                     }
@@ -543,30 +546,23 @@ public class SvGeneTranscriptCollection
         if(mDataPath.isEmpty())
             return;
 
-        LOGGER.debug("writing {} annotations to file", annotations.size());
+        LOGGER.debug("writing {} breakend data to file", annotations.size());
 
         try
         {
-            BufferedWriter writer = null;
-
             if(mBreakendWriter == null)
             {
-                Path outputFile = Paths.get(mDataPath + "SV_BREAKENDS.csv");
-                mBreakendWriter = Files.newBufferedWriter(outputFile, StandardOpenOption.CREATE);
-
-                writer = mBreakendWriter;
+                mBreakendWriter = createBufferedWriter(mDataPath + "SV_BREAKENDS.csv", false);
 
                 // write header
-                writer.write("SampleId,SvId,IsStart,Chromosome,Position,Orientation,Type");
-                writer.write(",GeneName,GeneStableId,GeneStrand,TranscriptId,IsCanonical,BioType,TransStart,TransEnd");
-                writer.write(",ExonRankUp,ExonPhaseUp,ExonRankDown,ExonPhaseDown,CodingBases,TotalCodingBases");
-                writer.write(",ExonMax,CodingStart,CodingEnd,RegionType,CodingType,ExonDistanceUp,ExonDistanceDown");
-                writer.newLine();
+                mBreakendWriter.write("SampleId,SvId,IsStart,Chromosome,Position,Orientation,Type");
+                mBreakendWriter.write(",GeneName,GeneStableId,GeneStrand,TranscriptId,IsCanonical,BioType,TransStart,TransEnd");
+                mBreakendWriter.write(",ExonRankUp,ExonPhaseUp,ExonRankDown,ExonPhaseDown,CodingBases,TotalCodingBases");
+                mBreakendWriter.write(",ExonMax,CodingStart,CodingEnd,RegionType,CodingType,ExonDistanceUp,ExonDistanceDown");
+                mBreakendWriter.newLine();
             }
-            else
-            {
-                writer = mBreakendWriter;
-            }
+
+            BufferedWriter writer = mBreakendWriter;
 
             for(final StructuralVariantAnnotation annotation : annotations)
             {
@@ -618,15 +614,7 @@ public class SvGeneTranscriptCollection
 
     public void close()
     {
-        try
-        {
-            if(mBreakendWriter != null)
-                mBreakendWriter.close();
-        }
-        catch (IOException e)
-        {
-
-        }
+        closeBufferedWriter(mBreakendWriter);
     }
 
     public static final String getSampleGeneAnnotationsFilename(final String path, final String sampleId)

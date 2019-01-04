@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.bachelor;
 
+import static com.hartwig.hmftools.common.io.FileWriterUtils.closeBufferedWriter;
+import static com.hartwig.hmftools.common.io.FileWriterUtils.createBufferedWriter;
+
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -48,8 +51,6 @@ public class BachelorApplication {
     private static final String BATCH_DIRECTORY = "batchDirectory";
     private static final String OUTPUT_DIR = "output_dir";
     private static final String VALIDATE = "validate";
-    private static final String GERMLINE = "germline";
-    private static final String SOMATIC = "somatic";
     private static final String SAMPLE = "sample";
     private static final String LOG_DEBUG = "log_debug";
     private static final String BATCH_MAX_DIR = "max_batch_dir"; // only for testing
@@ -99,9 +100,7 @@ public class BachelorApplication {
         options.addOption(BATCH_DIRECTORY, true, "runs directory to batch process");
         options.addOption(BATCH_MAX_DIR, true, "Max batch directories to batch process");
         options.addOption(VALIDATE, false, "only validate the configs");
-        options.addOption(GERMLINE, false, "process the germline file");
         options.addOption(SAMPLE_LIST_FILE, true, "Optional: limiting list of sample IDs to process");
-        options.addOption(SOMATIC, false, "process the somatic file");
         options.addOption(SAMPLE, true, "sample id");
         options.addOption(LOG_DEBUG, false, "Sets log level to Debug, off by default");
         return options;
@@ -200,64 +199,54 @@ public class BachelorApplication {
             LOGGER.info("beginning single sample run: {}", mSampleId);
         }
 
-        try
+        if (mIsBatchRun)
         {
-            if (mIsBatchRun)
+            List<RunDirectory> runDirectories = Lists.newArrayList();
+
+            final Path root = Paths.get(mBatchDirectory);
+
+            try (final Stream<Path> stream = Files.walk(root, 1, FileVisitOption.FOLLOW_LINKS).parallel())
             {
-                List<RunDirectory> runDirectories = Lists.newArrayList();
-
-                final Path root = Paths.get(mBatchDirectory);
-
-                try (final Stream<Path> stream = Files.walk(root, 1, FileVisitOption.FOLLOW_LINKS).parallel())
-                {
-                    runDirectories = stream.filter(p -> p.toFile().isDirectory())
-                            .filter(p -> !p.equals(root))
-                            .map(RunDirectory::new)
-                            .collect(Collectors.toList());
-                }
-                catch (Exception e)
-                {
-                    LOGGER.error("failed walking batch directories: {}", e.toString());
-                }
-
-                LOGGER.info("found {} batch directories", runDirectories.size());
-
-                // add the filtered and passed SV entries for each file
-                for (int i = 0; i < runDirectories.size(); ++i)
-                {
-                    final RunDirectory runDir = runDirectories.get(i);
-
-                    processSampleDirectory(runDir, "");
-
-                    if(mMaxBatchDirectories > 0 && i >= mMaxBatchDirectories)
-                        break;
-                }
+                runDirectories = stream.filter(p -> p.toFile().isDirectory())
+                        .filter(p -> !p.equals(root))
+                        .map(RunDirectory::new)
+                        .collect(Collectors.toList());
             }
-            else if (mIsSingleRun)
+            catch (Exception e)
             {
-                final Path path = Paths.get(mRunDirectoy);
-
-                if (!Files.exists(path))
-                {
-                    LOGGER.error("-runDirectory path does not exist");
-                    return false;
-                }
-
-                processSampleDirectory(new RunDirectory(path), mSampleId);
+                LOGGER.error("failed walking batch directories: {}", e.toString());
             }
 
-            LOGGER.info("run complete");
+            LOGGER.info("found {} batch directories", runDirectories.size());
 
-            if(mMainDataWriter != null)
-                mMainDataWriter.close();
+            // add the filtered and passed SV entries for each file
+            for (int i = 0; i < runDirectories.size(); ++i)
+            {
+                final RunDirectory runDir = runDirectories.get(i);
 
-            if(mBedFileWriter != null)
-                mBedFileWriter.close();
+                processSampleDirectory(runDir, "");
+
+                if(mMaxBatchDirectories > 0 && i >= mMaxBatchDirectories)
+                    break;
+            }
         }
-        catch (IOException e)
+        else if (mIsSingleRun)
         {
-            LOGGER.error("failed writing output: {}", e.toString());
+            final Path path = Paths.get(mRunDirectoy);
+
+            if (!Files.exists(path))
+            {
+                LOGGER.error("-runDirectory path does not exist");
+                return false;
+            }
+
+            processSampleDirectory(new RunDirectory(path), mSampleId);
         }
+
+        LOGGER.info("run complete");
+
+        closeBufferedWriter(mMainDataWriter);
+        closeBufferedWriter(mBedFileWriter);
 
         return true;
     }
@@ -387,7 +376,7 @@ public class BachelorApplication {
 
         try
         {
-            mMainDataWriter = Files.newBufferedWriter(Paths.get(mainFileName), StandardOpenOption.CREATE);
+            mMainDataWriter = createBufferedWriter(mainFileName, false);
 
             mMainDataWriter.write("SAMPLEID,SOURCE,PROGRAM,ID,GENE,TRANSCRIPT_ID,CHROM,POS,REF,ALTS");
             mMainDataWriter.write(",EFFECTS,ANNOTATIONS,HGVS_PROTEIN,IS_HOMOZYGOUS,PHRED_SCORE,HGVS_CODING");
@@ -395,7 +384,7 @@ public class BachelorApplication {
 
             mMainDataWriter.newLine();
 
-            mBedFileWriter = Files.newBufferedWriter(Paths.get(bedFileName), StandardOpenOption.CREATE);
+            mBedFileWriter = createBufferedWriter(bedFileName, false);
         }
         catch(IOException e)
         {

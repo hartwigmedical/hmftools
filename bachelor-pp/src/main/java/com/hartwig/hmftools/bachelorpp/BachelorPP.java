@@ -1,6 +1,8 @@
 package com.hartwig.hmftools.bachelorpp;
 
 import static com.hartwig.hmftools.bachelorpp.BachelorDataCollection.loadBachelorFilters;
+import static com.hartwig.hmftools.common.io.FileWriterUtils.closeBufferedWriter;
+import static com.hartwig.hmftools.common.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.variant.VariantConsequence.FRAMESHIFT_VARIANT;
 import static com.hartwig.hmftools.common.variant.VariantConsequence.MISSENSE_VARIANT;
 import static com.hartwig.hmftools.common.variant.VariantConsequence.SPLICE_ACCEPTOR_VARIANT;
@@ -242,16 +244,7 @@ public class BachelorPP
             processCurrentRecords(cmd, dataCollection.getBachelorVariants(), sampleId, sampleDirectory, bachelorDataDir);
         }
 
-        try
-        {
-            if (mWriter != null)
-            {
-                mWriter.close();
-            }
-        } catch (IOException e)
-        {
-            LOGGER.error("error closing output file: {}", e.toString());
-        }
+        closeBufferedWriter(mWriter);
 
         return true;
     }
@@ -615,8 +608,6 @@ public class BachelorPP
     {
         try
         {
-            BufferedWriter writer;
-
             if (mWriter == null)
             {
                 String outputFileName = outputDir;
@@ -634,31 +625,22 @@ public class BachelorPP
                     outputFileName += "bachelor_germline_variants.csv";
                 }
 
-                Path outputFile = Paths.get(outputFileName);
+                mWriter = createBufferedWriter(outputFileName, false);
 
-                mWriter = Files.newBufferedWriter(outputFile, StandardOpenOption.CREATE);
-
-                writer = mWriter;
-
-                writer.write("SampleId,Program,Source,Chromosome,Position");
-
-                writer.write(",Type,Ref,Alt,Gene,TranscriptId,DbsnpId,CosmicId,Effects,WorstCodingEffect,GermlineAltCount,GermlineReadDepth,TumorAltCount,TumorReadDepth");
-
-                writer.write(",AdjCopyNumber,AdjustedVaf,HighConfidenceRegion,TrinucleotideContext,Microhomology,RepeatSequence,RepeatCount");
-
-                writer.write(",HgvsProtein,HgvsCoding,Biallelic,Hotspot,Mappability,GermlineStatus,MinorAllelePloidy,Filter,CodonInfo");
+                mWriter.write("SampleId,Program,Source,Chromosome,Position");
+                mWriter.write(",Type,Ref,Alt,Gene,TranscriptId,DbsnpId,CosmicId,Effects,WorstCodingEffect,GermlineAltCount,GermlineReadDepth,TumorAltCount,TumorReadDepth");
+                mWriter.write(",AdjCopyNumber,AdjustedVaf,HighConfidenceRegion,TrinucleotideContext,Microhomology,RepeatSequence,RepeatCount");
+                mWriter.write(",HgvsProtein,HgvsCoding,Biallelic,Hotspot,Mappability,GermlineStatus,MinorAllelePloidy,Filter,CodonInfo");
 
                 if (mApplyFilters)
                 {
-                    writer.write(",ClinvarDiagnosis,ClinvarSignificance");
+                    mWriter.write(",ClinvarDiagnosis,ClinvarSignificance");
                 }
 
-                writer.newLine();
+                mWriter.newLine();
             }
-            else
-            {
-                writer = mWriter;
-            }
+
+            BufferedWriter writer = mWriter;
 
             for (final BachelorGermlineVariant bachRecord : bachRecords)
             {
