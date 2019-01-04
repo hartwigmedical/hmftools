@@ -2,19 +2,12 @@ package com.hartwig.hmftools.svannotation;
 
 import static java.lang.Math.abs;
 
-import static com.hartwig.hmftools.common.variant.structural.annotation.SvGeneTranscriptCollection.PRE_GENE_PROMOTOR_DISTANCE;
+import static com.hartwig.hmftools.svannotation.SvGeneTranscriptCollection.PRE_GENE_PROMOTOR_DISTANCE;
 
-import static org.ensembl.database.homo_sapiens_core.tables.CoordSystem.COORD_SYSTEM;
-import static org.ensembl.database.homo_sapiens_core.tables.Exon.EXON;
-import static org.ensembl.database.homo_sapiens_core.tables.ExonTranscript.EXON_TRANSCRIPT;
 import static org.ensembl.database.homo_sapiens_core.tables.Gene.GENE;
-import static org.ensembl.database.homo_sapiens_core.tables.Karyotype.KARYOTYPE;
 import static org.ensembl.database.homo_sapiens_core.tables.ObjectXref.OBJECT_XREF;
-import static org.ensembl.database.homo_sapiens_core.tables.SeqRegion.SEQ_REGION;
-import static org.ensembl.database.homo_sapiens_core.tables.Transcript.TRANSCRIPT;
 import static org.ensembl.database.homo_sapiens_core.tables.Xref.XREF;
 import static org.jooq.impl.DSL.decode;
-import static org.jooq.impl.DSL.groupConcatDistinct;
 
 import java.sql.Connection;
 import java.sql.DriverManager;

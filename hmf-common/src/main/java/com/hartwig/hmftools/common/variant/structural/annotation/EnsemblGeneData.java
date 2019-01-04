@@ -18,6 +18,8 @@ public class EnsemblGeneData
     public final String KaryotypeBand;
     public final List<String> Synonyms;
 
+    private int mListIndex;
+
     public EnsemblGeneData(String geneId, String geneName, String chromosome, byte strand, long geneStart, long geneEnd,
             String entrezIds, String karyotypeBand, String synonyms)
     {
@@ -40,5 +42,11 @@ public class EnsemblGeneData
         {
             EntrezIds = Lists.newArrayList();
         }
+
+        mListIndex= -1;
     }
+
+    public int getListIndex() { return mListIndex; }
+    public void setListIndex(int index) { mListIndex = index; }
+
 }

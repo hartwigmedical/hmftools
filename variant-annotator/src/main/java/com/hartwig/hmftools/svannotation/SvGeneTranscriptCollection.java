@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.variant.structural.annotation;
+package com.hartwig.hmftools.svannotation;
 
 import static java.lang.Math.abs;
 
@@ -15,18 +15,16 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.SortedSet;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.collect.SortedSetMultimap;
-import com.hartwig.hmftools.common.genepanel.HmfGenePanelSupplier;
-import com.hartwig.hmftools.common.region.HmfTranscriptRegion;
-import com.hartwig.hmftools.common.region.Strand;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
+import com.hartwig.hmftools.common.variant.structural.annotation.EnsemblGeneData;
+import com.hartwig.hmftools.common.variant.structural.annotation.GeneAnnotation;
+import com.hartwig.hmftools.common.variant.structural.annotation.StructuralVariantAnnotation;
+import com.hartwig.hmftools.common.variant.structural.annotation.Transcript;
+import com.hartwig.hmftools.common.variant.structural.annotation.TranscriptExonData;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -36,15 +34,13 @@ public class SvGeneTranscriptCollection
     private String mDataPath;
 
     private Map<Integer, List<GeneAnnotation>> mSvIdGeneTranscriptsMap;
-    private SortedSetMultimap<String, HmfTranscriptRegion> mGenesByChromosomeMap;
-    private Map<String, HmfTranscriptRegion> mAllGenesMap;
     private Map<String, List<TranscriptExonData>> mGeneTransExonDataMap;
-    private Map<String, EnsemblGeneData> mEnsemblGeneDataMap;
+    private Map<String, List<EnsemblGeneData>> mEnsemblChrGeneDataMap;
 
     private BufferedWriter mBreakendWriter;
 
     // to get a wider range of candidate genes and filter by promotor distance later on
-    public static int PRE_GENE_PROMOTOR_DISTANCE = 100000;
+    public static int PRE_GENE_PROMOTOR_DISTANCE = 10000;
 
     public static String SV_GENE_TRANSCRIPTS_FILE_SUFFIX = "sv_ensembl_data.csv";
 
@@ -54,9 +50,7 @@ public class SvGeneTranscriptCollection
     {
         mSvIdGeneTranscriptsMap = new HashMap();
         mGeneTransExonDataMap = new HashMap();
-        mEnsemblGeneDataMap = new HashMap();
-        mGenesByChromosomeMap = null;
-        mAllGenesMap = null;
+        mEnsemblChrGeneDataMap = new HashMap();
         mBreakendWriter = null;
     }
 
@@ -145,15 +139,6 @@ public class SvGeneTranscriptCollection
             }
 
             LOGGER.debug("loaded {} gene records, {} exon", mGeneTransExonDataMap.size(), exonCount);
-
-            mGenesByChromosomeMap = HmfGenePanelSupplier.allGenesPerChromosomeMap37();
-
-            mAllGenesMap = Maps.newHashMap();
-            for (final HmfTranscriptRegion region : mGenesByChromosomeMap.values())
-            {
-                mAllGenesMap.put(region.gene(), region);
-            }
-
         }
         catch(IOException e)
         {
@@ -194,23 +179,42 @@ public class SvGeneTranscriptCollection
 
             line = fileReader.readLine(); // skip header
 
+            List<EnsemblGeneData> geneList = null;
+            String currentChr = "";
+            int geneCount = 0;
+
             while (line != null)
             {
                 String[] items = line.split(",");
 
                 final String geneId = items[GD_ID];
+                final String chromosome = items[GD_CHR];
 
                 EnsemblGeneData geneData = new EnsemblGeneData(
-                        geneId, items[GD_NAME], items[GD_CHR], Byte.parseByte(items[GD_STRAND]),
+                        geneId, items[GD_NAME], chromosome, Byte.parseByte(items[GD_STRAND]),
                         Long.parseLong(items[GD_START]), Long.parseLong(items[GD_END]),
                         items[GD_ENTREZ], items[GD_BAND], items[GD_SYN]);
 
-                mEnsemblGeneDataMap.put(geneId, geneData);
+                if(!currentChr.equals(chromosome))
+                {
+                    currentChr = chromosome;
+                    geneList = mEnsemblChrGeneDataMap.get(chromosome);
+
+                    if(geneList == null)
+                    {
+                        geneList = Lists.newArrayList();
+                        mEnsemblChrGeneDataMap.put(chromosome, geneList);
+                    }
+                }
+
+                geneData.setListIndex(geneList.size());
+                geneList.add(geneData);
+                ++geneCount;
 
                 line = fileReader.readLine();
             }
 
-            LOGGER.debug("loaded {} gene records", mEnsemblGeneDataMap.size());
+            LOGGER.debug("loaded {} gene records", geneCount);
         }
         catch(IOException e)
         {
@@ -221,31 +225,31 @@ public class SvGeneTranscriptCollection
         return true;
     }
 
+    // private static int SPECIFIC_VAR_ID = -1;
+    private static int SPECIFIC_VAR_ID = 4977042;
+
     public List<GeneAnnotation> findGeneAnnotationsBySv(int svId, boolean isStart, final String chromosome, long position, byte orientation)
     {
         List<GeneAnnotation> geneAnnotations = Lists.newArrayList();
 
-        final SortedSet<HmfTranscriptRegion> geneRegions = mGenesByChromosomeMap.get(chromosome);
+        if(svId == SPECIFIC_VAR_ID)
+        {
+            LOGGER.debug("specific SV({})", svId);
+        }
 
-        final List<HmfTranscriptRegion> matchedGenes = findGeneRegions(position, orientation, geneRegions);
+        final List<EnsemblGeneData> geneRegions = mEnsemblChrGeneDataMap.get(chromosome);
+
+        final List<EnsemblGeneData> matchedGenes = findGeneRegions(position, geneRegions);
 
         // now look up relevant transcript and exon information
-        for(final HmfTranscriptRegion geneRegion : matchedGenes)
+        for(final EnsemblGeneData geneData : matchedGenes)
         {
-            final List<TranscriptExonData> transExonDataList = mGeneTransExonDataMap.get(geneRegion.geneID());
+            final List<TranscriptExonData> transExonDataList = mGeneTransExonDataMap.get(geneData.GeneId);
 
             if (transExonDataList == null || transExonDataList.isEmpty())
                 continue;
 
-            final EnsemblGeneData geneData = mEnsemblGeneDataMap.get(geneRegion.geneID());
-
-            if(geneData == null)
-            {
-                LOGGER.warn("gene({}) data not found in Ensembl cache", geneRegion.gene());
-                continue;
-            }
-
-            GeneAnnotation currentGene = new GeneAnnotation(svId, isStart, geneRegion.gene(), geneData.GeneId,
+            GeneAnnotation currentGene = new GeneAnnotation(svId, isStart, geneData.GeneName, geneData.GeneId,
                     geneData.Strand, geneData.Synonyms, geneData.EntrezIds, geneData.KaryotypeBand);
 
             // collect up all the relevant exons for each unique transcript to analyse as a collection
@@ -272,11 +276,11 @@ public class SvGeneTranscriptCollection
                     // annotate with preceding gene info if the up distance isn't set
                     if(transcript.exonDistanceUp() == -1)
                     {
-                        HmfTranscriptRegion precedingGene = findPrecedingGene(geneRegion, geneRegions);
+                        EnsemblGeneData precedingGene = findPrecedingGene(geneData, geneRegions);
                         if(precedingGene != null)
                         {
-                            currentGene.setPrecedingGeneId(precedingGene.geneID());
-                            int preDistance = (int)abs(precedingGene.geneEnd() - position);
+                            currentGene.setPrecedingGeneId(precedingGene.GeneId);
+                            int preDistance = (int)abs(precedingGene.GeneEnd - position);
                             transcript.setExonDistances(preDistance, transcript.exonDistanceDown());
                         }
                     }
@@ -294,47 +298,43 @@ public class SvGeneTranscriptCollection
         return geneAnnotations;
     }
 
-    private List<HmfTranscriptRegion> findGeneRegions(long position, byte orientation, SortedSet<HmfTranscriptRegion> geneRegions)
+    private List<EnsemblGeneData> findGeneRegions(long position, List<EnsemblGeneData> geneDataList)
     {
-        List<HmfTranscriptRegion> matchedGenes = Lists.newArrayList();
+        List<EnsemblGeneData> matchedGenes = Lists.newArrayList();
 
-        for(final HmfTranscriptRegion region : geneRegions)
+        for(final EnsemblGeneData geneData : geneDataList)
         {
-            if(position >= region.start() - PRE_GENE_PROMOTOR_DISTANCE && position <= region.end() + PRE_GENE_PROMOTOR_DISTANCE)
+            long geneStartRange = geneData.Strand == 1 ? geneData.GeneStart - PRE_GENE_PROMOTOR_DISTANCE : geneData.GeneStart;
+            long geneEndRange = geneData.Strand == 1 ? geneData.GeneEnd : geneData.GeneEnd + PRE_GENE_PROMOTOR_DISTANCE;
+
+            if(position >= geneStartRange && position <= geneEndRange)
             {
-                matchedGenes.add(region);
+                matchedGenes.add(geneData);
             }
         }
 
         return matchedGenes;
     }
 
-    private HmfTranscriptRegion findPrecedingGene(final HmfTranscriptRegion gene, SortedSet<HmfTranscriptRegion> geneRegions)
+    private EnsemblGeneData findPrecedingGene(final EnsemblGeneData geneData, List<EnsemblGeneData> geneDataList)
     {
-        Iterator<HmfTranscriptRegion> iter = geneRegions.iterator();
-
-        HmfTranscriptRegion prevGene = null;
-        while(iter.hasNext())
+        if(geneData.Strand == 1)
         {
-            HmfTranscriptRegion currentGene = iter.next();
-
-            if(currentGene.geneID().equals(gene.geneID()))
-                break;
-
-            if(currentGene.strand() == gene.strand())
-                prevGene = currentGene;
+            for(int i = geneData.getListIndex() - 1; i >= 0; --i)
+            {
+                final EnsemblGeneData gene = geneDataList.get(i);
+                if(gene.Strand == geneData.Strand)
+                    return gene;
+            }
         }
-
-        // now search for the closest gene on the same strand
-        if(gene.strand() == Strand.FORWARD)
-            return prevGene;
-
-        while(iter.hasNext())
+        else
         {
-            HmfTranscriptRegion currentGene = iter.next();
-
-            if(currentGene.strand() == gene.strand())
-                return currentGene;
+            for(int i = geneData.getListIndex() + 1; i < geneDataList.size(); ++i)
+            {
+                final EnsemblGeneData gene = geneDataList.get(i);
+                if(gene.Strand == geneData.Strand)
+                    return gene;
+            }
         }
 
         return null;
@@ -526,6 +526,11 @@ public class SvGeneTranscriptCollection
                     }
                 }
             }
+        }
+
+        if(!isForwardStrand)
+        {
+            codingBases = totalCodingBases - codingBases;
         }
 
         Transcript transcript = new Transcript(geneAnnotation,

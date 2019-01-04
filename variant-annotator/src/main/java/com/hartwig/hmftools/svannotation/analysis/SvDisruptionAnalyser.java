@@ -1,11 +1,16 @@
 package com.hartwig.hmftools.svannotation.analysis;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
+import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.dnds.DndsDriverGeneLikelihoodSupplier;
+import com.hartwig.hmftools.common.genepanel.HmfGenePanelSupplier;
+import com.hartwig.hmftools.common.region.HmfTranscriptRegion;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneAnnotation;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneDisruption;
@@ -23,9 +28,22 @@ public class SvDisruptionAnalyser
 
     private static final Logger LOGGER = LogManager.getLogger(SvDisruptionAnalyser.class);
 
-    SvDisruptionAnalyser(final Set<String> disruptionGeneIDPanel)
+    public SvDisruptionAnalyser()
     {
-        mDisruptionGeneIDPanel = disruptionGeneIDPanel;
+        mDisruptionGeneIDPanel = tsgDriverGeneIDs();
+    }
+
+    private static Set<String> tsgDriverGeneIDs()
+    {
+        Set<String> tsgDriverGeneIDs = Sets.newHashSet();
+        Map<String, HmfTranscriptRegion> allGenes = HmfGenePanelSupplier.allGenesMap37();
+
+        for (String gene : DndsDriverGeneLikelihoodSupplier.tsgLikelihood().keySet())
+        {
+            tsgDriverGeneIDs.add(allGenes.get(gene).geneID());
+        }
+
+        return tsgDriverGeneIDs;
     }
 
     public final List<GeneDisruption> findDisruptions(final List<StructuralVariantAnnotation> annotations)

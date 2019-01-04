@@ -17,7 +17,7 @@ import com.hartwig.hmftools.common.variant.structural.annotation.GeneAnnotation;
 import com.hartwig.hmftools.common.variant.structural.annotation.StructuralVariantAnnotation;
 import com.hartwig.hmftools.common.variant.structural.annotation.Transcript;
 import com.hartwig.hmftools.svannotation.VariantAnnotator;
-import com.hartwig.hmftools.svannotation.analysis.StructuralVariantAnalyzer;
+import com.hartwig.hmftools.patientreporter.structural.StructuralVariantAnalyzer;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
@@ -30,9 +30,7 @@ public class PatientReporterTest {
     public void canRunOnRunDirectory() throws IOException {
         final BaseReportData baseReportData = testBaseReportData();
         final SequencedReportData reporterData = testSequencedReportData();
-        final StructuralVariantAnalyzer svAnalyzer = new StructuralVariantAnalyzer(new TestAnnotator(),
-                reporterData.panelGeneModel().disruptionGeneIDPanel(),
-                testKnownFusionModel());
+        final StructuralVariantAnalyzer svAnalyzer = new StructuralVariantAnalyzer(new TestAnnotator(), testKnownFusionModel());
         final PatientReporter reporter = ImmutablePatientReporter.of(baseReportData, reporterData, svAnalyzer);
 
         assertNotNull(reporter.run(RUN_DIRECTORY, true, null));

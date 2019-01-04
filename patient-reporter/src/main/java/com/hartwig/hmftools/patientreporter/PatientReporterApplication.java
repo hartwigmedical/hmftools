@@ -20,7 +20,7 @@ import com.hartwig.hmftools.patientreporter.report.PDFWriter;
 import com.hartwig.hmftools.svannotation.MySQLAnnotator;
 import com.hartwig.hmftools.svannotation.NullAnnotator;
 import com.hartwig.hmftools.svannotation.VariantAnnotator;
-import com.hartwig.hmftools.svannotation.analysis.StructuralVariantAnalyzer;
+import com.hartwig.hmftools.patientreporter.structural.StructuralVariantAnalyzer;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -163,9 +163,7 @@ public class PatientReporterApplication {
             annotator = NullAnnotator.make();
         }
 
-        final StructuralVariantAnalyzer svAnalyzer = new StructuralVariantAnalyzer(annotator,
-                sequencedReportData.panelGeneModel().disruptionGeneIDPanel(),
-                sequencedReportData.knownFusionsModel());
+        final StructuralVariantAnalyzer svAnalyzer = new StructuralVariantAnalyzer(annotator, sequencedReportData.knownFusionsModel());
 
         return ImmutablePatientReporter.of(buildBaseReportData(cmd), sequencedReportData, svAnalyzer);
     }

@@ -2,6 +2,7 @@ package com.hartwig.hmftools.svannotation.analysis;
 
 import static java.lang.Math.abs;
 
+import static com.hartwig.hmftools.common.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.io.FileWriterUtils.createBufferedWriter;
 
 import java.io.BufferedReader;
@@ -88,7 +89,7 @@ public class SvFusionAnalyser
     }
 
     private static int SPECIFIC_VAR_ID = -1;
-    // private static int SPECIFIC_VAR_ID = 4959575;
+    // private static int SPECIFIC_VAR_ID = 4740717;
 
     public final List<GeneFusion> findFusions(final List<GeneAnnotation> breakendGenes1, final List<GeneAnnotation> breakendGenes2)
     {
@@ -98,7 +99,7 @@ public class SvFusionAnalyser
         {
             if(startGene.id() == SPECIFIC_VAR_ID)
             {
-                LOGGER.debug("specific var({)", startGene.id());
+                LOGGER.debug("specific var({})", startGene.id());
             }
 
             // left is upstream, right is downstream
@@ -385,9 +386,9 @@ public class SvFusionAnalyser
 
                 mFusionWriter.write("SampleId,Reportable,PrimarySource,ClusterId,ClusterCount,ResolvedType,PhaseMatched,RnaMatch");
                 mFusionWriter.write(",SvIdUp,ChrUp,PosUp,OrientUp,TypeStart,GeneUp,TranscriptUp,StrandUp,RegionTypeUp,CodingTypeUp");
-                mFusionWriter.write(",ExonUp,PhaseUp,ExactBaseUp,CodingBasesUp,TotalCodingUp,ExonMaxUp,CodingStartUp,CodingEndUp,TransStartUp");
+                mFusionWriter.write(",ExonUp,PhaseUp,ExactBaseUp,CodingBasesUp,TotalCodingUp,ExonMaxUp,CodingStartUp,CodingEndUp,TransStartUp,DistancePrevUp,BiotypeUp");
                 mFusionWriter.write(",SvIdDown,ChrDown,PosDown,OrientDown,TypeDown,GeneDown,TranscriptDown,StrandDown,RegionTypeDown,CodingTypeDown");
-                mFusionWriter.write(",ExonDown,PhaseDown,ExactBaseDown,CodingBasesDown,TotalCodingDown,ExonMaxDown,CodingStartDown,CodingEndDown,TransStartDown");
+                mFusionWriter.write(",ExonDown,PhaseDown,ExactBaseDown,CodingBasesDown,TotalCodingDown,ExonMaxDown,CodingStartDown,CodingEndDown,TransStartDown,DistancePrevDown,BiotypeDown");
                 mFusionWriter.newLine();
             }
 
@@ -415,12 +416,12 @@ public class SvFusionAnalyser
                                 startTrans.parent().strand(), startTrans.regionType(), startTrans.codingType()));
 
                 writer.write(
-                        String.format(",%d,%d,%d,%d,%d,%d,%d,%d,%d",
+                        String.format(",%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%s",
                                 startTrans.exonUpstream(), startTrans.exonUpstreamPhase(), startTrans.exactCodingBase(),
                                 startTrans.codingBases(), startTrans.totalCodingBases(), startTrans.exonMax(),
                                 startTrans.codingStart() != null ? startTrans.codingStart() : 0,
                                 startTrans.codingEnd() != null ? startTrans.codingEnd() : 0,
-                                startTrans.transcriptStart()));
+                                startTrans.transcriptStart(), startTrans.exonDistanceUp(), startTrans.bioType()));
 
                 writer.write(
                         String.format(",%d,%s,%d,%d,%s",
@@ -432,12 +433,12 @@ public class SvFusionAnalyser
                                 endTrans.parent().strand(), endTrans.regionType(), endTrans.codingType()));
 
                 writer.write(
-                        String.format(",%d,%d,%d,%d,%d,%d,%d,%d,%d",
+                        String.format(",%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%s",
                                 endTrans.exonDownstream(), endTrans.exonDownstreamPhase(), endTrans.exactCodingBase(),
                                 endTrans.codingBases(), endTrans.totalCodingBases(), endTrans.exonMax(),
                                 endTrans.codingStart() != null ? endTrans.codingStart() : 0,
                                 endTrans.codingEnd() != null ? endTrans.codingEnd() : 0,
-                                endTrans.transcriptStart()));
+                                endTrans.transcriptStart(), endTrans.exonDistanceUp(), endTrans.bioType()));
 
                 writer.newLine();
             }
@@ -450,18 +451,8 @@ public class SvFusionAnalyser
 
     public void onCompleted()
     {
-        try
-        {
-            if(mFusionWriter != null)
-                mFusionWriter.close();
-
-            if(mRnaWriter != null)
-                mRnaWriter.close();
-        }
-        catch (IOException e)
-        {
-
-        }
+        closeBufferedWriter(mFusionWriter);
+        closeBufferedWriter(mRnaWriter);
     }
 
     public final Map<String, List<RnaFusionData>> getSampleRnaData() { return mSampleRnaData; }
@@ -544,8 +535,6 @@ public class SvFusionAnalyser
 
         try
         {
-            BufferedWriter writer = null;
-
             if(mRnaWriter == null)
             {
                 String outputFilename = outputDir;
@@ -555,21 +544,15 @@ public class SvFusionAnalyser
 
                 outputFilename += "RNA_MATCH_DATA.csv";
 
-                Path outputFile = Paths.get(outputFilename);
+                mRnaWriter = createBufferedWriter(outputFilename, false);
 
-                mRnaWriter = Files.newBufferedWriter(outputFile, StandardOpenOption.CREATE);
-                writer = mRnaWriter;
-
-                writer.write("SampleId,FusionName,GeneUp,GeneDown");
-                writer.write(",SvFusionMatch,Reportable,SvIdUp,SvIdDown,ExonRankUp,ExonRankDown");
-                writer.write(",TransExonMinUp,TransExonMaxUp,TransExonMinDown,TransExonMaxDown");
-                writer.newLine();
-            }
-            else
-            {
-                writer = mRnaWriter;
+                mRnaWriter.write("SampleId,FusionName,GeneUp,GeneDown");
+                mRnaWriter.write(",SvFusionMatch,Reportable,SvIdUp,SvIdDown,ExonRankUp,ExonRankDown");
+                mRnaWriter.write(",TransExonMinUp,TransExonMaxUp,TransExonMinDown,TransExonMaxDown");
+                mRnaWriter.newLine();
             }
 
+            BufferedWriter writer = mRnaWriter;
 
             for(final RnaFusionData rnaFusion : rnaFusionList)
             {

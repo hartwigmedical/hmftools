@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.svannotation.analysis;
+package com.hartwig.hmftools.patientreporter.structural;
 
 import java.util.List;
 import java.util.Set;
@@ -8,10 +8,11 @@ import com.hartwig.hmftools.common.variant.structural.EnrichedStructuralVariant;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneDisruption;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion;
 import com.hartwig.hmftools.common.variant.structural.annotation.ImmutableStructuralVariantAnalysis;
-import com.hartwig.hmftools.common.variant.structural.annotation.SimpleGeneFusion;
 import com.hartwig.hmftools.common.variant.structural.annotation.StructuralVariantAnalysis;
 import com.hartwig.hmftools.common.variant.structural.annotation.StructuralVariantAnnotation;
 import com.hartwig.hmftools.svannotation.VariantAnnotator;
+import com.hartwig.hmftools.svannotation.analysis.SvDisruptionAnalyser;
+import com.hartwig.hmftools.svannotation.analysis.SvFusionAnalyser;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -28,15 +29,12 @@ public class StructuralVariantAnalyzer
     @NotNull
     private final SvFusionAnalyser mFusionAnalyser;
 
-    public StructuralVariantAnalyzer(@NotNull final VariantAnnotator geneDataAnnotator, @NotNull Set<String> disruptionGeneIDPanel,
-            @NotNull final KnownFusionsModel knownFusionsModel)
+    public StructuralVariantAnalyzer(@NotNull final VariantAnnotator geneDataAnnotator, @NotNull final KnownFusionsModel knownFusionsModel)
     {
         mGeneDataAnnotator = geneDataAnnotator;
-        mDisruptionAnalyser = new SvDisruptionAnalyser(disruptionGeneIDPanel);
+        mDisruptionAnalyser = new SvDisruptionAnalyser();
         mFusionAnalyser = new SvFusionAnalyser(knownFusionsModel);
     }
-
-    public final SvFusionAnalyser getFusionAnalyser() { return mFusionAnalyser; }
 
     @NotNull
     public StructuralVariantAnalysis runOnVariants(@NotNull List<EnrichedStructuralVariant> variants)
