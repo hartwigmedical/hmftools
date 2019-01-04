@@ -103,6 +103,7 @@ public final class PatientReporterFileLoader {
         try {
             vcfPath = PathExtensionFinder.build().findPath(runDirectory, SOMATIC_VCF_EXTENSION_SAGE);
         } catch (FileNotFoundException exception) {
+            // TODO (KODU): Remove once every run has been rerun on SAGE
             vcfPath = PathExtensionFinder.build().findPath(runDirectory, SOMATIC_VCF_EXTENSION_STRELKA);
         }
 
