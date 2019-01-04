@@ -46,7 +46,7 @@ public final class PatientReporterFileLoader {
 
     private static final String PURPLE_GRIDSS_SV = ".purple.sv.vcf.gz";
     private static final String SOMATIC_VCF_EXTENSION_STRELKA = "_post_processed.vcf.gz";
-    private static final String SOMATIC_VCF_EXTENSION_SAGE = "_sage.vcf.gz";
+    private static final String SOMATIC_VCF_EXTENSION_SAGE = ".sage.vcf.gz";
 
     private static final String BACHELOR_DIRECTORY = "bachelor";
 
