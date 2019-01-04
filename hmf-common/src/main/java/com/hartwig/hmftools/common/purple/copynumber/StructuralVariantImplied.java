@@ -23,14 +23,13 @@ import org.jetbrains.annotations.NotNull;
 @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
 class StructuralVariantImplied {
 
-    private final double averageCopyNumber;
-    private final int averageReadDepth;
     private final StructuralVariantLegPloidyFactory<CombinedRegion> svPloidyFactory;
 
     StructuralVariantImplied(int averageReadDepth, double averageCopyNumber, final PurityAdjuster purityAdjuster) {
-        this.averageCopyNumber = averageCopyNumber;
-        this.averageReadDepth = averageReadDepth;
-        this.svPloidyFactory = new StructuralVariantLegPloidyFactory<>(purityAdjuster, x -> x.isProcessed() ? x.tumorCopyNumber() : 0);
+        this.svPloidyFactory = new StructuralVariantLegPloidyFactory<>(averageReadDepth,
+                averageCopyNumber,
+                purityAdjuster,
+                x -> x.isProcessed() ? x.tumorCopyNumber() : 0);
     }
 
     @NotNull
@@ -86,18 +85,17 @@ class StructuralVariantImplied {
 
     private void inferCopyNumberFromStructuralVariants(@NotNull final CombinedRegion region,
             final Optional<StructuralVariantLegPloidy> start, final Optional<StructuralVariantLegPloidy> end) {
-        region.setTumorCopyNumber(CopyNumberMethod.STRUCTURAL_VARIANT,
-                inferCopyNumberFromStructuralVariants(averageReadDepth, averageCopyNumber, start, end));
+        region.setTumorCopyNumber(CopyNumberMethod.STRUCTURAL_VARIANT, inferCopyNumberFromStructuralVariants(start, end));
     }
 
     @VisibleForTesting
-    static double inferCopyNumberFromStructuralVariants(int averageReadDepth, double averageCopyNumber,
-            final Optional<StructuralVariantLegPloidy> start, final Optional<StructuralVariantLegPloidy> end) {
+    static double inferCopyNumberFromStructuralVariants(final Optional<StructuralVariantLegPloidy> start,
+            final Optional<StructuralVariantLegPloidy> end) {
         final double startWeight = start.map(StructuralVariantLegPloidy::impliedRightCopyNumberWeight).orElse(0d);
-        final double startCopyNumber = start.map(x -> x.impliedRightCopyNumber(averageReadDepth, averageCopyNumber)).orElse(0d);
+        final double startCopyNumber = start.map(StructuralVariantLegPloidy::impliedRightCopyNumber).orElse(0d);
 
         final double endWeight = end.map(StructuralVariantLegPloidy::impliedLeftCopyNumberWeight).orElse(0d);
-        final double endCopyNumber = end.map(x -> x.impliedLeftCopyNumber(averageReadDepth, averageCopyNumber)).orElse(0d);
+        final double endCopyNumber = end.map(StructuralVariantLegPloidy::impliedLeftCopyNumber).orElse(0d);
 
         double unconstrainedResult = (startCopyNumber * startWeight + endCopyNumber * endWeight) / (startWeight + endWeight);
         return Math.max(0, unconstrainedResult);

@@ -53,12 +53,12 @@ public class StructuralVariantPloidyTest {
     }
 
     private static void assertLeft(double expectedCopyNumber, double expectedWeight, @NotNull final StructuralVariantLegPloidy ploidy) {
-        assertEquals(expectedCopyNumber, ploidy.impliedLeftCopyNumber(100, 2), EPSILON);
+        assertEquals(expectedCopyNumber, ploidy.impliedLeftCopyNumber(), EPSILON);
         assertEquals(expectedWeight, ploidy.impliedLeftCopyNumberWeight(), EPSILON);
     }
 
     private static void assertRight(double expectedCopyNumber, double expectedWeight, @NotNull final StructuralVariantLegPloidy ploidy) {
-        assertEquals(expectedCopyNumber, ploidy.impliedRightCopyNumber(100, 2), EPSILON);
+        assertEquals(expectedCopyNumber, ploidy.impliedRightCopyNumber(), EPSILON);
         assertEquals(expectedWeight, ploidy.impliedRightCopyNumberWeight(), EPSILON);
     }
 

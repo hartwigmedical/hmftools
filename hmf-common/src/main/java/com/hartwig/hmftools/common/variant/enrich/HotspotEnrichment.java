@@ -26,7 +26,7 @@ public class HotspotEnrichment implements SomaticEnrichment {
     private final Multimap<Chromosome, VariantHotspot> hotspots;
 
     @NotNull
-    public static HotspotEnrichment fromHotspotsFile(@NotNull String hotspotsFile) throws IOException {
+    public static HotspotEnrichment fromHotspotsFile(@NotNull final String hotspotsFile) throws IOException {
         return new HotspotEnrichment(VariantHotspotFile.read(hotspotsFile));
     }
 
@@ -39,13 +39,6 @@ public class HotspotEnrichment implements SomaticEnrichment {
     @Override
     public ImmutableSomaticVariantImpl.Builder enrich(@NotNull final ImmutableSomaticVariantImpl.Builder builder,
             @NotNull final VariantContext context) {
-        if (context.hasAttribute(HOTSPOT_FLAG)) {
-            return builder.hotspot(Hotspot.HOTSPOT);
-        }
-
-        if (context.hasAttribute(NEAR_HOTSPOT_FLAG)) {
-            return builder.hotspot(Hotspot.NEAR_HOTSPOT);
-        }
 
         if (isOnHotspot(context)) {
             return builder.hotspot(Hotspot.HOTSPOT);

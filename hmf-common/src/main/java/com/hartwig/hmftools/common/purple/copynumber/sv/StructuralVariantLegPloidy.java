@@ -15,8 +15,6 @@ import org.jetbrains.annotations.Nullable;
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
 public abstract class StructuralVariantLegPloidy implements StructuralVariantLeg {
 
-    private static final double VAF_TO_USE_READ_DEPTH = 0.75;
-
     public abstract double observedVaf();
 
     public abstract double adjustedVaf();
@@ -35,28 +33,19 @@ public abstract class StructuralVariantLegPloidy implements StructuralVariantLeg
         return canInferRight() ? weight() : 0;
     }
 
-    public double impliedRightCopyNumber(int averageReadDepth, double averageCopyNumber) {
+    public double impliedRightCopyNumber() {
 
         if (isDecreasingFromZero(1, leftCopyNumber())) {
             return 0;
         }
 
-        if (isIncreasingAndLargeVaf(-1)) {
-            return copyNumberImpliedFromReadDepth(averageReadDepth, averageCopyNumber);
-        }
-
         return leftCopyNumber().map(x -> x - orientation() * averageImpliedPloidy()).orElse(0D);
     }
 
-
-    public double impliedLeftCopyNumber(int averageReadDepth, double averageCopyNumber) {
+    public double impliedLeftCopyNumber() {
 
         if (isDecreasingFromZero(-1, rightCopyNumber())) {
             return 0;
-        }
-
-        if (isIncreasingAndLargeVaf(1)) {
-            return copyNumberImpliedFromReadDepth(averageReadDepth, averageCopyNumber);
         }
 
         return rightCopyNumber().map(x -> x + orientation() * averageImpliedPloidy()).orElse(0D);
@@ -67,39 +56,15 @@ public abstract class StructuralVariantLegPloidy implements StructuralVariantLeg
     }
 
     private boolean canInferRight() {
-        return isDecreasingFromZero(1, leftCopyNumber()) || isIncreasingAndLargeVaf(-1) || leftCopyNumber().isPresent();
+        return isDecreasingFromZero(1, leftCopyNumber()) || leftCopyNumber().isPresent();
     }
 
     private boolean canInferLeft() {
-        return isDecreasingFromZero(-1, rightCopyNumber()) || isIncreasingAndLargeVaf(1) || rightCopyNumber().isPresent();
+        return isDecreasingFromZero(-1, rightCopyNumber()) || rightCopyNumber().isPresent();
     }
 
     private boolean isDecreasingFromZero(int orientation, @NotNull final Optional<Double> copyNumber) {
         return orientation() == orientation && copyNumber.filter(Doubles::isZero).isPresent();
-    }
-
-    private double copyNumberImpliedFromReadDepth(int averageReadDepth, double averageCopyNumber) {
-        Integer tumourVariantFragmentCount = tumourVariantFragmentCount();
-        Integer tumourReferenceFragmentCount = tumourReferenceFragmentCount();
-        int readDepth = (tumourVariantFragmentCount == null ? 0 : tumourVariantFragmentCount) + (tumourReferenceFragmentCount == null
-                ? 0
-                : tumourReferenceFragmentCount);
-        return averageCopyNumber * readDepth / averageReadDepth;
-    }
-
-    private boolean isIncreasingAndLargeVaf(int orientation) {
-        if (Doubles.greaterOrEqual(adjustedVaf(), VAF_TO_USE_READ_DEPTH) && orientation() == orientation) {
-
-            Integer tumourVariantFragmentCount = tumourVariantFragmentCount();
-            Integer tumourReferenceFragmentCount = tumourReferenceFragmentCount();
-            int readDepth = (tumourVariantFragmentCount == null ? 0 : tumourVariantFragmentCount) + (tumourReferenceFragmentCount == null
-                    ? 0
-                    : tumourReferenceFragmentCount);
-
-            return readDepth > 0;
-        }
-
-        return false;
     }
 
 }

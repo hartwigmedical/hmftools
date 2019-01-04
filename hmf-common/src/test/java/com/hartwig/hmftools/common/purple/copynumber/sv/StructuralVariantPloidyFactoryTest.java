@@ -34,8 +34,11 @@ import org.junit.Test;
 @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
 public class StructuralVariantPloidyFactoryTest {
 
+    private static final int AVERAGE_READ_DEPTH = 100;
+    private static final double AVERAGE_COPY_NUMBER = 2;
+
     private static final StructuralVariantLegPloidyFactory<PurpleCopyNumber> PURE_PLOIDY_FACTORY =
-            new StructuralVariantLegPloidyFactory<>(PURE, PurpleCopyNumber::averageTumorCopyNumber);
+            new StructuralVariantLegPloidyFactory<>(AVERAGE_READ_DEPTH, AVERAGE_COPY_NUMBER, PURE, PurpleCopyNumber::averageTumorCopyNumber);
 
     @Test
     public void testSingleValidLeg() {
@@ -97,6 +100,16 @@ public class StructuralVariantPloidyFactoryTest {
         final PurpleCopyNumber left = copyNumber(1, 1000, 3);
 
         assertFalse(PURE_PLOIDY_FACTORY.create(leg, GenomeRegionSelectorFactory.create(singleton(left))).isPresent());
+    }
+
+    @Test
+    public void testInferPloidyFromReadDepth() {
+        int multiplier = 3;
+
+        final StructuralVariantLeg leg = createLeg(1001, -1, 3.5/4, AVERAGE_READ_DEPTH * multiplier);
+        final PurpleCopyNumber left = copyNumber(1, 1000, 3);
+        Optional<ModifiableStructuralVariantLegPloidy> result = PURE_PLOIDY_FACTORY.create(leg, GenomeRegionSelectorFactory.create(singleton(left)));
+        assertEquals(AVERAGE_COPY_NUMBER * multiplier, result.get().unweightedImpliedPloidy(), EPSILON);
     }
 
     @Test
