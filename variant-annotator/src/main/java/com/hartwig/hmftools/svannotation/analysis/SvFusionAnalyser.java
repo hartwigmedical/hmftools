@@ -1,6 +1,8 @@
 package com.hartwig.hmftools.svannotation.analysis;
 
 import static java.lang.Math.abs;
+import static java.lang.Math.max;
+import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.io.FileWriterUtils.createBufferedWriter;
@@ -23,11 +25,14 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.fusions.KnownFusionsModel;
+import com.hartwig.hmftools.common.variant.structural.annotation.EnsemblGeneData;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneAnnotation;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion;
 import com.hartwig.hmftools.common.variant.structural.annotation.StructuralVariantAnnotation;
 import com.hartwig.hmftools.common.variant.structural.annotation.Transcript;
+import com.hartwig.hmftools.common.variant.structural.annotation.TranscriptExonData;
 import com.hartwig.hmftools.svannotation.EnsemblDAO;
+import com.hartwig.hmftools.svannotation.SvGeneTranscriptCollection;
 
 import org.apache.commons.cli.Options;
 import org.apache.logging.log4j.LogManager;
@@ -46,6 +51,7 @@ public class SvFusionAnalyser
     private final KnownFusionsModel mKnownFusionsModel;
 
     private Map<String, List<RnaFusionData>> mSampleRnaData;
+    private SvGeneTranscriptCollection mGeneTranscriptCollection;
 
     boolean mIncludePossibles;
 
@@ -54,13 +60,14 @@ public class SvFusionAnalyser
 
     private static final Logger LOGGER = LogManager.getLogger(SvFusionAnalyser.class);
 
-    public SvFusionAnalyser(final KnownFusionsModel knownFusionsModel)
+    public SvFusionAnalyser(final KnownFusionsModel knownFusionsModel, final SvGeneTranscriptCollection geneTranscriptCollection)
     {
         mKnownFusionsModel = knownFusionsModel;
         mIncludePossibles = false;
         mFusionWriter = null;
         mRnaWriter = null;
         mSampleRnaData = new HashMap();
+        mGeneTranscriptCollection = geneTranscriptCollection;
     }
 
     public static void addCmdLineArgs(Options options)
@@ -384,7 +391,7 @@ public class SvFusionAnalyser
 
                 mFusionWriter = createBufferedWriter(outputFilename, false);
 
-                mFusionWriter.write("SampleId,Reportable,PrimarySource,ClusterId,ClusterCount,ResolvedType,PhaseMatched,RnaMatch");
+                mFusionWriter.write("SampleId,Reportable,PrimarySource,ClusterId,ClusterCount,ResolvedType,PhaseMatched");
                 mFusionWriter.write(",SvIdUp,ChrUp,PosUp,OrientUp,TypeStart,GeneUp,TranscriptUp,StrandUp,RegionTypeUp,CodingTypeUp");
                 mFusionWriter.write(",ExonUp,PhaseUp,ExactBaseUp,CodingBasesUp,TotalCodingUp,ExonMaxUp,CodingStartUp,CodingEndUp,TransStartUp,DistancePrevUp,BiotypeUp");
                 mFusionWriter.write(",SvIdDown,ChrDown,PosDown,OrientDown,TypeDown,GeneDown,TranscriptDown,StrandDown,RegionTypeDown,CodingTypeDown");
@@ -403,7 +410,7 @@ public class SvFusionAnalyser
                 final GeneAnnotation endVar = endTrans.parent();
 
                 writer.write(String.format("%s,%s,%s,%s,%s,%s",
-                        sampleId, fusion.reportable(), fusion.primarySource(), clusterInfo, fusion.isPhaseMatch(), fusion.getRnaMatchType()));
+                        sampleId, fusion.reportable(), fusion.primarySource(), clusterInfo, fusion.isPhaseMatch()));
 
                 // write upstream SV, transcript and exon info
                 writer.write(
@@ -526,7 +533,7 @@ public class SvFusionAnalyser
     }
 
     public void writeRnaMatchData(final String sampleId, final String outputDir, final List<GeneFusion> fusions,
-            final List<StructuralVariantAnnotation> svAnnotations, EnsemblDAO ensemblDAO)
+            final List<StructuralVariantAnnotation> svAnnotations)
     {
         final List<RnaFusionData> rnaFusionList = mSampleRnaData.get(sampleId);
 
@@ -602,10 +609,11 @@ public class SvFusionAnalyser
                 }
 
                 // get Ensembl min & max exon data
-                if(ensemblDAO != null)
-                {
-                    ensemblDAO.setRnaFusionData(rnaFusion);
-                }
+
+                // find the min and max exon rank for every transcript matching the RNA positions
+
+
+                setRnaFusionData(rnaFusion);
 
                 writer.write(
                         String.format(",%s,%s,%s,%s",
@@ -636,6 +644,50 @@ public class SvFusionAnalyser
         {
             LOGGER.error("error writing RNA match data: {}", e.toString());
         }
+
+    }
+
+    private static int EXON_RANK_MIN = 0;
+    private static int EXON_RANK_MAX = 1;
+
+    public void setRnaFusionData(final RnaFusionData rnaFusion)
+    {
+        int[] transUpExonData = getExonData(rnaFusion.GeneUp, rnaFusion.PositionUp);
+        rnaFusion.setExonUpRank(transUpExonData[EXON_RANK_MIN], transUpExonData[EXON_RANK_MAX]);
+
+        transUpExonData = getExonData(rnaFusion.GeneDown, rnaFusion.PositionDown);
+        rnaFusion.setExonDownRank(transUpExonData[EXON_RANK_MIN], transUpExonData[EXON_RANK_MAX]);
+    }
+
+    private int[] getExonData(final String geneName, long exonPosition)
+    {
+        int[] exonData = new int[EXON_RANK_MAX+1];
+
+        final EnsemblGeneData geneData = mGeneTranscriptCollection.getGeneData(geneName);
+
+        if(geneData == null)
+            return exonData;
+
+        final List<TranscriptExonData> transExonDataList = mGeneTranscriptCollection.getTransExonData(geneData.GeneId);
+
+        if(transExonDataList == null)
+            return exonData;
+
+        int minRank = -1;
+        int maxRank = -1;
+        for(final TranscriptExonData transExonData : transExonDataList)
+        {
+            int exonRank = transExonData.ExonRank;
+            // final String transcriptStableId = transcriptData.get(TRANSCRIPT.STABLE_ID);
+            // final UInteger transcriptId = transcriptData.get(TRANSCRIPT.TRANSCRIPT_ID);
+
+            minRank = minRank == -1 ? exonRank : min(exonRank, minRank);
+            maxRank = max(exonRank, maxRank);
+        }
+
+        exonData[EXON_RANK_MIN] = minRank;
+        exonData[EXON_RANK_MAX] = maxRank;
+        return exonData;
 
     }
 

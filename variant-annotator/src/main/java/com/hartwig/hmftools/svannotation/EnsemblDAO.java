@@ -479,49 +479,6 @@ public class EnsemblDAO
         return exonDataStr;
     }
 
-    private static int EXON_RANK_MIN = 0;
-    private static int EXON_RANK_MAX = 1;
-
-    public void setRnaFusionData(final RnaFusionData rnaFusion)
-    {
-        int[] transUpExonData = getExonData(rnaFusion.GeneUp, rnaFusion.PositionUp);
-        rnaFusion.setExonUpRank(transUpExonData[EXON_RANK_MIN], transUpExonData[EXON_RANK_MAX]);
-
-        transUpExonData = getExonData(rnaFusion.GeneDown, rnaFusion.PositionDown);
-        rnaFusion.setExonDownRank(transUpExonData[EXON_RANK_MIN], transUpExonData[EXON_RANK_MAX]);
-    }
-
-    private int[] getExonData(final String geneName, long exonPosition)
-    {
-        Result<?> transcriptDataList = context.select(TRANSCRIPT.TRANSCRIPT_ID, TRANSCRIPT.STABLE_ID, EXON_TRANSCRIPT.RANK)
-                .from(GENE, EXON_TRANSCRIPT, TRANSCRIPT, EXON, XREF)
-                .where(TRANSCRIPT.GENE_ID.eq(GENE.GENE_ID))
-                .and(XREF.XREF_ID.eq(GENE.DISPLAY_XREF_ID))
-                .and(XREF.DISPLAY_LABEL.eq(geneName))
-                .and(EXON_TRANSCRIPT.TRANSCRIPT_ID.eq(TRANSCRIPT.TRANSCRIPT_ID))
-                .and(EXON_TRANSCRIPT.EXON_ID.eq(EXON.EXON_ID))
-                .and((EXON.SEQ_REGION_START.eq(UInteger.valueOf(exonPosition)).or(EXON.SEQ_REGION_END.eq(UInteger.valueOf(exonPosition)))))
-                .fetch();
-
-        int minRank = -1;
-        int maxRank = -1;
-        for(final Record transcriptData : transcriptDataList)
-        {
-            int exonRank = transcriptData.get(EXON_TRANSCRIPT.RANK);
-            // final String transcriptStableId = transcriptData.get(TRANSCRIPT.STABLE_ID);
-            // final UInteger transcriptId = transcriptData.get(TRANSCRIPT.TRANSCRIPT_ID);
-
-            minRank = minRank == -1 ? exonRank : min(exonRank, minRank);
-            maxRank = max(exonRank, maxRank);
-        }
-
-        int[] exonData = new int[EXON_RANK_MAX+1];
-        exonData[EXON_RANK_MIN] = minRank;
-        exonData[EXON_RANK_MAX] = maxRank;
-        return exonData;
-
-    }
-
     @NotNull
     private static Condition geneStartInKaryotypeBand() {
         return GENE.SEQ_REGION_START.ge(KARYOTYPE.SEQ_REGION_START).and(GENE.SEQ_REGION_START.le(KARYOTYPE.SEQ_REGION_END));

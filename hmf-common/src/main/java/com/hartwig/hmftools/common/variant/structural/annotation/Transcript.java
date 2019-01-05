@@ -98,17 +98,7 @@ public class Transcript {
         mCodingType = calcCodingType();
         mRegionType = calcRegionType();
 
-        if(preCoding())
-        {
-            // force the phasing to -1 if the breakend comes in pre-coding, which will affect any exon which starts coding
-            // since these will have a phase other than -1
-            mExonDownstreamPhase = -1;
-        }
-        else
-        {
-            mExonDownstreamPhase = exonDownstreamPhase;
-        }
-
+        mExonDownstreamPhase = exonDownstreamPhase;
         mExonUpstreamPhase = exonUpstreamPhase;
     }
 

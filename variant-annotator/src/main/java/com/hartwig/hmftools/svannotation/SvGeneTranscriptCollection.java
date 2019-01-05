@@ -57,6 +57,25 @@ public class SvGeneTranscriptCollection
     public final Map<Integer, List<GeneAnnotation>> getSvIdGeneTranscriptsMap() { return mSvIdGeneTranscriptsMap; }
     public final Map<String, List<TranscriptExonData>> getGeneExonDataMap() { return mGeneTransExonDataMap; }
 
+    public final EnsemblGeneData getGeneData(final String geneName)
+    {
+        for(Map.Entry<String, List<EnsemblGeneData>> entry : mEnsemblChrGeneDataMap.entrySet())
+        {
+            for(final EnsemblGeneData geneData : entry.getValue())
+            {
+                if(geneData.GeneName.equals(geneName))
+                    return geneData;
+            }
+        }
+
+        return null;
+    }
+
+    public List<TranscriptExonData> getTransExonData(final String geneId)
+    {
+        return mGeneTransExonDataMap.get(geneId);
+    }
+
     public void setDataPath(final String dataPath)
     {
         mDataPath = dataPath;
@@ -225,8 +244,8 @@ public class SvGeneTranscriptCollection
         return true;
     }
 
-    // private static int SPECIFIC_VAR_ID = -1;
-    private static int SPECIFIC_VAR_ID = 4977042;
+    private static int SPECIFIC_VAR_ID = -1;
+    // private static int SPECIFIC_VAR_ID = 5417525;
 
     public List<GeneAnnotation> findGeneAnnotationsBySv(int svId, boolean isStart, final String chromosome, long position, byte orientation)
     {
@@ -375,6 +394,10 @@ public class SvGeneTranscriptCollection
                 downExonPhase = firstSpaExon.ExonPhase;
                 nextDownDistance = firstSpaExon.ExonStart - position;
 
+                // correct the phasing if the next exon starts the coding region
+                if(firstSpaExon.CodingStart != null && firstSpaExon.ExonStart == firstSpaExon.CodingStart)
+                    downExonPhase = -1;
+
                 upExonRank = 0;
                 upExonPhase = -1;
             }
@@ -392,6 +415,9 @@ public class SvGeneTranscriptCollection
                 downExonRank = firstSpaExon.ExonRank;
                 downExonPhase = firstSpaExon.ExonPhase;
                 nextDownDistance = position - lastExon.ExonEnd;
+
+                if(firstSpaExon.CodingEnd != null && firstSpaExon.ExonEnd == firstSpaExon.CodingEnd)
+                    downExonPhase = -1;
 
                 upExonRank = 0;
                 upExonPhase = -1;
@@ -433,6 +459,8 @@ public class SvGeneTranscriptCollection
                         nextDownDistance = exonData.ExonStart - position;
                         nextUpDistance = position - prevExonData.ExonEnd;
 
+                        if(exonData.CodingStart != null && exonData.ExonStart == exonData.CodingStart)
+                            downExonPhase = -1;
                     }
                     else
                     {
@@ -443,6 +471,9 @@ public class SvGeneTranscriptCollection
                         downExonPhase = prevExonData.ExonPhase;
                         nextUpDistance = exonData.ExonStart - position;
                         nextDownDistance = position - prevExonData.ExonEnd;
+
+                        if(exonData.CodingEnd != null && prevExonData.ExonEnd == exonData.CodingEnd)
+                            downExonPhase = -1;
                     }
 
                     break;

@@ -161,7 +161,7 @@ public class StructuralVariantAnnotator
         }
 
         mDisruptionAnalyser = new SvDisruptionAnalyser();
-        mFusionAnalyser = new SvFusionAnalyser(knownFusionsModel);
+        mFusionAnalyser = new SvFusionAnalyser(knownFusionsModel, mSvGeneTranscriptCollection);
 
         return true;
     }
@@ -293,9 +293,7 @@ public class StructuralVariantAnnotator
         {
             String clusterInfo = ",,";
             mFusionAnalyser.writeFusions(fusions, mOutputDir, sampleId, clusterInfo);
-
-            mFusionAnalyser.writeRnaMatchData(sampleId, mOutputDir, fusions, annotations,
-                    mEnsemblAnnotator != null ? mEnsemblAnnotator.getEnsemblDAO() : null);
+            mFusionAnalyser.writeRnaMatchData(sampleId, mOutputDir, fusions, annotations);
 
             if(mWriteBreakends)
                 mSvGeneTranscriptCollection.writeBreakendData(sampleId, annotations);
