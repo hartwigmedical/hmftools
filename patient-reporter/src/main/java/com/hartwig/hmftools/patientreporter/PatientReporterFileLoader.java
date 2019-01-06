@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.patientreporter;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -44,7 +45,8 @@ public final class PatientReporterFileLoader {
     private static final String CIRCOS_PLOT_EXTENSION = ".circos.png";
 
     private static final String PURPLE_GRIDSS_SV = ".purple.sv.vcf.gz";
-    private static final String SOMATIC_VCF_EXTENSION = "_post_processed.vcf.gz";
+    private static final String SOMATIC_VCF_EXTENSION_STRELKA = "_post_processed.vcf.gz";
+    private static final String SOMATIC_VCF_EXTENSION_SAGE = ".sage.vcf.gz";
 
     private static final String BACHELOR_DIRECTORY = "bachelor";
 
@@ -97,7 +99,13 @@ public final class PatientReporterFileLoader {
     @NotNull
     static List<SomaticVariant> loadPassedSomaticVariants(@NotNull String runDirectory, @NotNull String sample,
             @NotNull SomaticEnrichment somaticEnrichment) throws IOException {
-        Path vcfPath = PathExtensionFinder.build().findPath(runDirectory, SOMATIC_VCF_EXTENSION);
+        Path vcfPath;
+        try {
+            vcfPath = PathExtensionFinder.build().findPath(runDirectory, SOMATIC_VCF_EXTENSION_SAGE);
+        } catch (FileNotFoundException exception) {
+            // TODO (KODU): Remove once every run has been rerun on SAGE
+            vcfPath = PathExtensionFinder.build().findPath(runDirectory, SOMATIC_VCF_EXTENSION_STRELKA);
+        }
 
         LOGGER.debug(" Using " + vcfPath.toString() + " as source for somatic variants.");
         return SomaticVariantFactory.filteredInstanceWithEnrichment(new PassingVariantFilter(), somaticEnrichment)
