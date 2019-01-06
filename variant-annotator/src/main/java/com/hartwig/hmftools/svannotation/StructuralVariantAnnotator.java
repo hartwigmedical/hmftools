@@ -282,12 +282,10 @@ public class StructuralVariantAnnotator
                 mSvGeneTranscriptCollection.writeAnnotations(sampleId, annotations);
         }
 
-        LOGGER.debug("sample({}) finding disruptions and fusions", sampleId);// final StructuralVariantAnalysis analysis = svAnalyser.runOnAnnotations(annotations);
-
-        List<GeneFusion> fusions = mFusionAnalyser.findFusions(annotations);
         List<GeneDisruption> disruptions = mDisruptionAnalyser.findDisruptions(annotations);
+        List<GeneFusion> fusions = mFusionAnalyser.findFusions(annotations);
 
-        LOGGER.debug("sample({} )found {} disruptions and {} fusions", sampleId, disruptions.size(), fusions.size());
+        LOGGER.debug("sample({}) found {} disruptions and {} fusions", sampleId, disruptions.size(), fusions.size());
 
         if(!mOutputDir.isEmpty())
         {

@@ -37,6 +37,8 @@ public class Transcript {
     private int mExonDistanceUp;
     private int mExonDistanceDown;
 
+    private boolean mIsDisruptive;
+
     public static String TRANS_REGION_TYPE_PROMOTOR = "Promotor";
     public static String TRANS_REGION_TYPE_EXONIC = "Exonic";
     public static String TRANS_REGION_TYPE_INTRONIC = "Intronic";
@@ -100,6 +102,7 @@ public class Transcript {
 
         mExonDownstreamPhase = exonDownstreamPhase;
         mExonUpstreamPhase = exonUpstreamPhase;
+        mIsDisruptive = true;
     }
 
     @NotNull
@@ -170,7 +173,7 @@ public class Transcript {
 
     private final String calcCodingType()
     {
-        if(mTotalCodingBases == 0)
+        if(mCodingStart == null || mCodingEnd == null || mTotalCodingBases == 0)
         {
             return TRANS_CODING_TYPE_NON_CODING;
         }
@@ -224,17 +227,16 @@ public class Transcript {
     public int exactCodingBase() { return mExactCodingBase; }
     public void setExactCodingBase(int base) { mExactCodingBase = base; }
 
-
     public long transcriptStart() { return mTranscriptStart; }
     public long transcriptEnd() { return mTranscriptEnd; }
 
     public final long length() { return mTranscriptEnd - mTranscriptStart; }
 
-    @Nullable
-    public Long codingStart() { return mCodingStart; }
+    public boolean isDisruptive() { return mIsDisruptive; }
+    public void setIsDisruptive(boolean toggle) { mIsDisruptive = toggle; }
 
-    @Nullable
-    public Long codingEnd() { return mCodingEnd; }
+    public long codingStart() { return mCodingStart != null ? mCodingStart : 0; }
+    public long codingEnd() { return mCodingEnd != null ? mCodingEnd : 0; }
 
     public final String toString()
     {

@@ -392,10 +392,14 @@ public class SvFusionAnalyser
                 mFusionWriter = createBufferedWriter(outputFilename, false);
 
                 mFusionWriter.write("SampleId,Reportable,PrimarySource,ClusterId,ClusterCount,ResolvedType,PhaseMatched");
+
                 mFusionWriter.write(",SvIdUp,ChrUp,PosUp,OrientUp,TypeStart,GeneUp,TranscriptUp,StrandUp,RegionTypeUp,CodingTypeUp");
-                mFusionWriter.write(",ExonUp,PhaseUp,ExactBaseUp,CodingBasesUp,TotalCodingUp,ExonMaxUp,CodingStartUp,CodingEndUp,TransStartUp,DistancePrevUp,BiotypeUp");
+                mFusionWriter.write(",ExonUp,PhaseUp,ExonMaxUp,DisruptiveUp,ExactBaseUp,CodingBasesUp,TotalCodingUp");
+                mFusionWriter.write(",CodingStartUp,CodingEndUp,TransStartUp,DistancePrevUp,BiotypeUp");
+
                 mFusionWriter.write(",SvIdDown,ChrDown,PosDown,OrientDown,TypeDown,GeneDown,TranscriptDown,StrandDown,RegionTypeDown,CodingTypeDown");
-                mFusionWriter.write(",ExonDown,PhaseDown,ExactBaseDown,CodingBasesDown,TotalCodingDown,ExonMaxDown,CodingStartDown,CodingEndDown,TransStartDown,DistancePrevDown,BiotypeDown");
+                mFusionWriter.write(",ExonDown,PhaseDown,ExonMaxDown,DisruptiveDown,ExactBaseDown,CodingBasesDown,TotalCodingDown");
+                mFusionWriter.write(",CodingStartDown,CodingEndDown,TransStartDown,DistancePrevDown,BiotypeDown");
                 mFusionWriter.newLine();
             }
 
@@ -409,7 +413,7 @@ public class SvFusionAnalyser
                 final GeneAnnotation startVar = startTrans.parent();
                 final GeneAnnotation endVar = endTrans.parent();
 
-                writer.write(String.format("%s,%s,%s,%s,%s,%s",
+                writer.write(String.format("%s,%s,%s,%s,%s",
                         sampleId, fusion.reportable(), fusion.primarySource(), clusterInfo, fusion.isPhaseMatch()));
 
                 // write upstream SV, transcript and exon info
@@ -423,11 +427,12 @@ public class SvFusionAnalyser
                                 startTrans.parent().strand(), startTrans.regionType(), startTrans.codingType()));
 
                 writer.write(
-                        String.format(",%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%s",
-                                startTrans.exonUpstream(), startTrans.exonUpstreamPhase(), startTrans.exactCodingBase(),
-                                startTrans.codingBases(), startTrans.totalCodingBases(), startTrans.exonMax(),
-                                startTrans.codingStart() != null ? startTrans.codingStart() : 0,
-                                startTrans.codingEnd() != null ? startTrans.codingEnd() : 0,
+                        String.format(",%d,%d,%d,%s",
+                                startTrans.exonUpstream(), startTrans.exonUpstreamPhase(), startTrans.exonMax(), startTrans.isDisruptive()));
+                writer.write(
+                        String.format(",%d,%d,%d,%d,%d,%d,%d,%s",
+                                startTrans.exactCodingBase(), startTrans.codingBases(), startTrans.totalCodingBases(),
+                                startTrans.codingStart(), startTrans.codingEnd(),
                                 startTrans.transcriptStart(), startTrans.exonDistanceUp(), startTrans.bioType()));
 
                 writer.write(
@@ -440,12 +445,13 @@ public class SvFusionAnalyser
                                 endTrans.parent().strand(), endTrans.regionType(), endTrans.codingType()));
 
                 writer.write(
-                        String.format(",%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%s",
-                                endTrans.exonDownstream(), endTrans.exonDownstreamPhase(), endTrans.exactCodingBase(),
-                                endTrans.codingBases(), endTrans.totalCodingBases(), endTrans.exonMax(),
-                                endTrans.codingStart() != null ? endTrans.codingStart() : 0,
-                                endTrans.codingEnd() != null ? endTrans.codingEnd() : 0,
-                                endTrans.transcriptStart(), endTrans.exonDistanceUp(), endTrans.bioType()));
+                        String.format(",%d,%d,%d,%s",
+                                endTrans.exonDownstream(), endTrans.exonDownstreamPhase(), endTrans.exonMax(), endTrans.isDisruptive()));
+
+                writer.write(
+                        String.format(",%d,%d,%d,%d,%d,%d,%d,%s",
+                                endTrans.exactCodingBase(), endTrans.codingBases(), endTrans.totalCodingBases(),
+                                endTrans.codingStart(), endTrans.codingEnd(), endTrans.transcriptStart(), endTrans.exonDistanceUp(), endTrans.bioType()));
 
                 writer.newLine();
             }
@@ -608,11 +614,7 @@ public class SvFusionAnalyser
                     }
                 }
 
-                // get Ensembl min & max exon data
-
                 // find the min and max exon rank for every transcript matching the RNA positions
-
-
                 setRnaFusionData(rnaFusion);
 
                 writer.write(

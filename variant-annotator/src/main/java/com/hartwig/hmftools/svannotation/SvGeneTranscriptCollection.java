@@ -593,7 +593,7 @@ public class SvGeneTranscriptCollection
                 // write header
                 mBreakendWriter.write("SampleId,SvId,IsStart,Chromosome,Position,Orientation,Type");
                 mBreakendWriter.write(",GeneName,GeneStableId,GeneStrand,TranscriptId,IsCanonical,BioType,TransStart,TransEnd");
-                mBreakendWriter.write(",ExonRankUp,ExonPhaseUp,ExonRankDown,ExonPhaseDown,CodingBases,TotalCodingBases");
+                mBreakendWriter.write(",ExonRankUp,ExonPhaseUp,ExonRankDown,ExonPhaseDown,CodingBases,TotalCodingBases,Disruptive");
                 mBreakendWriter.write(",ExonMax,CodingStart,CodingEnd,RegionType,CodingType,ExonDistanceUp,ExonDistanceDown");
                 mBreakendWriter.newLine();
             }
@@ -626,10 +626,10 @@ public class SvGeneTranscriptCollection
 
                         // Transcript info: exonUpstream, exonUpstreamPhase, exonDownstream, exonDownstreamPhase, exonStart, exonEnd, exonMax, canonical, codingStart, codingEnd
                         writer.write(
-                                String.format(",%d,%d,%d,%d,%d,%d",
+                                String.format(",%d,%d,%d,%d,%d,%d,%s",
                                         transcript.exonUpstream(), transcript.exonUpstreamPhase(),
                                         transcript.exonDownstream(), transcript.exonDownstreamPhase(),
-                                        transcript.codingBases(), transcript.totalCodingBases()));
+                                        transcript.codingBases(), transcript.totalCodingBases(), transcript.isDisruptive()));
 
                         writer.write(
                                 String.format(",%d,%d,%d,%s,%s,%d,%d",

@@ -33,7 +33,7 @@ public class StructuralVariantAnalyzer
     {
         mGeneDataAnnotator = geneDataAnnotator;
         mDisruptionAnalyser = new SvDisruptionAnalyser();
-        mFusionAnalyser = new SvFusionAnalyser(knownFusionsModel);
+        mFusionAnalyser = new SvFusionAnalyser(knownFusionsModel, null);
     }
 
     @NotNull

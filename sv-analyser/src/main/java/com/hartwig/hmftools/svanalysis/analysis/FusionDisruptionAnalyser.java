@@ -75,7 +75,7 @@ public class FusionDisruptionAnalyser
                     new FileInputStream(cmdLineArgs.getOptionValue(PROMISCUOUS_FIVE_CSV)),
                     new FileInputStream(cmdLineArgs.getOptionValue(PROMISCUOUS_THREE_CSV)));
 
-            mFusionFinder = new SvFusionAnalyser(knownFusionsModel);
+            mFusionFinder = new SvFusionAnalyser(knownFusionsModel, mSvGeneTranscriptCollection);
             mFusionFinder.setIncludePossibles(true);
 
         }

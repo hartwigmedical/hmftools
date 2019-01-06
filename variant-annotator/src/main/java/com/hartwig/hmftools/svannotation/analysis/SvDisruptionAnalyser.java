@@ -20,6 +20,7 @@ import com.hartwig.hmftools.common.variant.structural.annotation.Transcript;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.ensembl.database.homo_sapiens_core.tables.TranscriptSupportingFeature;
 import org.jetbrains.annotations.NotNull;
 
 public class SvDisruptionAnalyser
@@ -90,6 +91,8 @@ public class SvDisruptionAnalyser
             }
         }
 
+        setBreakendDisruptive(annotations);
+
         return disruptions;
     }
 
@@ -100,5 +103,55 @@ public class SvDisruptionAnalyser
         boolean sameExonUpstream = t1.exonUpstream() == t2.exonUpstream();
 
         return sameTranscript && bothIntronic && sameExonUpstream;
+    }
+
+    public static void setBreakendDisruptive(final List<StructuralVariantAnnotation> annotations)
+    {
+        // A breakend is not disruptive in a transcript if there exists another breakend where:
+        // transcriptId = transcriptId AND svId = svId  AND
+        //  isStartEnd <> isStartEnd AND ExonRankUpstream = ExonRankUpstream AND
+        // sv.Type in (‘DEL’ ,’INS’, ‘DUP’)
+
+        for(final StructuralVariantAnnotation annotation : annotations)
+        {
+            final List<GeneAnnotation> startGenes = annotation.start();
+            final List<GeneAnnotation> endGenes = annotation.start();
+
+            for(final GeneAnnotation startGene : annotation.start())
+            {
+                for (final Transcript trans1 : startGene.transcripts())
+                {
+                    for (final GeneAnnotation endGene : annotation.end())
+                    {
+                        for (final Transcript trans2 : endGene.transcripts())
+                        {
+                            if(!areDisruptivePair(trans1, trans2))
+                            {
+                                trans1.setIsDisruptive(false);
+                                trans2.setIsDisruptive(false);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    public static boolean areDisruptivePair(final Transcript trans1, final Transcript trans2)
+    {
+        if(trans1.parent().id() != trans2.parent().id())
+            return true;
+
+        if(!trans1.transcriptId().equals(trans2.transcriptId()))
+            return true;
+
+        // only DELs, DUPs and INS
+        if(trans1.parent().orientation() == trans2.parent().orientation())
+            return true;
+
+        if(trans1.exonUpstream() != trans2.exonUpstream())
+            return true;
+
+        return false;
     }
 }
