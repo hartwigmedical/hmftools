@@ -4,6 +4,7 @@ import static java.lang.Math.abs;
 
 import static com.hartwig.hmftools.common.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.io.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.common.variant.structural.annotation.Transcript.TRANS_CODING_TYPE_CODING;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -142,10 +143,11 @@ public class SvGeneTranscriptCollection
 
                 Long codingStart = !items[TE_CODING_START].equals("NULL") ? Long.parseLong(items[TE_CODING_START]) : null;
                 Long codingEnd = !items[TE_CODING_END].equals("NULL") ? Long.parseLong(items[TE_CODING_END]) : null;
+                int transId = Integer.parseInt(items[TE_TRANS_ID]);
+                int canonicalTransId = Integer.parseInt(items[TE_CANONICAL]);
 
                 TranscriptExonData exonData = new TranscriptExonData(
-                        geneId, items[TE_TRANS_NAME], Integer.parseInt(items[TE_TRANS_ID]),
-                        Boolean.parseBoolean(items[TE_CANONICAL]), Byte.parseByte(items[TE_STRAND]),
+                        geneId, items[TE_TRANS_NAME], transId, transId == canonicalTransId, Byte.parseByte(items[TE_STRAND]),
                         Long.parseLong(items[TE_TRANS_START]), Long.parseLong(items[TE_TRANS_END]),
                         Long.parseLong(items[TE_EXON_START]), Long.parseLong(items[TE_EXON_END]),
                         Integer.parseInt(items[TE_EXON_RANK]), Integer.parseInt(items[TE_PHASE]), Integer.parseInt(items[TE_PHASE_END]),
@@ -299,8 +301,9 @@ public class SvGeneTranscriptCollection
                         if(precedingGene != null)
                         {
                             currentGene.setPrecedingGeneId(precedingGene.GeneId);
-                            int preDistance = (int)abs(precedingGene.GeneEnd - position);
-                            transcript.setExonDistances(preDistance, transcript.exonDistanceDown());
+
+                            long preDistance = geneData.Strand == 1 ? position - precedingGene.GeneEnd : precedingGene.GeneEnd - position;
+                            transcript.setExonDistances((int)preDistance, transcript.exonDistanceDown());
                         }
                     }
                 }
@@ -373,6 +376,7 @@ public class SvGeneTranscriptCollection
         int downExonPhase = -1;
         long nextUpDistance = -1;
         long nextDownDistance = -1;
+        boolean isCodingTypeOverride = false;
 
         // first check for a position outside the exon boundaries
         final TranscriptExonData firstExon = transcriptExons.get(0);
@@ -398,6 +402,8 @@ public class SvGeneTranscriptCollection
                 if(firstSpaExon.CodingStart != null && firstSpaExon.ExonStart == firstSpaExon.CodingStart)
                     downExonPhase = -1;
 
+                isCodingTypeOverride = firstSpaExon.CodingStart != null && firstSpaExon.ExonStart > firstSpaExon.CodingStart;
+
                 upExonRank = 0;
                 upExonPhase = -1;
             }
@@ -418,6 +424,8 @@ public class SvGeneTranscriptCollection
 
                 if(firstSpaExon.CodingEnd != null && firstSpaExon.ExonEnd == firstSpaExon.CodingEnd)
                     downExonPhase = -1;
+
+                isCodingTypeOverride = firstSpaExon.CodingEnd != null && firstSpaExon.ExonEnd < firstSpaExon.CodingEnd;
 
                 upExonRank = 0;
                 upExonPhase = -1;
@@ -573,6 +581,9 @@ public class SvGeneTranscriptCollection
 
         transcript.setBioType(first.BioType);
         transcript.setExonDistances((int)nextUpDistance, (int)nextDownDistance);
+
+        if(isCodingTypeOverride)
+            transcript.setCodingType(TRANS_CODING_TYPE_CODING);
 
         return transcript;
     }

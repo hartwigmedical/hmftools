@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.svannotation.analysis;
 
+import com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion;
+import com.hartwig.hmftools.common.variant.structural.annotation.Transcript;
+
 public class RnaFusionData
 {
     public final String Name;
@@ -7,30 +10,38 @@ public class RnaFusionData
     public final String GeneDown;
     public final long PositionUp;
     public final long PositionDown;
-    public final byte OrientUp;
-    public final byte OrientDown;
+    public final byte StrandUp;
+    public final byte StrandDown;
 
     private int mExonMinRankUp;
     private int mExonMaxRankUp;
     private int mExonMinRankDown;
     private int mExonMaxRankDown;
 
+    private GeneFusion mFusionMatch;
+    private Transcript mTransUp;
+    private Transcript mTransDown;
+
+
     public RnaFusionData(final String name, final String geneUp, final String geneDown,
-            long posUp, long posDown, byte orientUp, byte orientDown)
+            long posUp, long posDown, byte strandUp, byte strandDown)
     {
         Name = name;
         GeneUp = geneUp;
         GeneDown = geneDown;
         PositionUp = posUp;
         PositionDown = posDown;
-        OrientUp = orientUp;
-        OrientDown = orientDown;
+        StrandUp = strandUp;
+        StrandDown = strandDown;
 
         mExonMinRankUp = 0;
         mExonMaxRankUp = 0;
         mExonMinRankDown = 0;
         mExonMaxRankDown = 0;
 
+        mFusionMatch = null;
+        mTransUp = null;
+        mTransDown = null;
     }
 
     public void setExonUpRank(int min, int max)
@@ -49,5 +60,22 @@ public class RnaFusionData
     public int exonMaxRankUp() {return mExonMaxRankUp; }
     public int exonMinRankDown() { return mExonMinRankDown; }
     public int exonMaxRankDown() { return mExonMaxRankDown; }
+
+    public final GeneFusion getMatchedFusion() { return mFusionMatch; }
+    public void setMatchedFusion(final GeneFusion fusion)
+    {
+        mFusionMatch = fusion;
+        mTransUp = fusion.upstreamTrans();
+        mTransDown = fusion.downstreamTrans();
+    }
+
+    public void setBreakends(final Transcript up, final Transcript down)
+    {
+        mTransUp = up;
+        mTransDown = down;
+    }
+
+    public final Transcript getTransUp() { return mTransUp; }
+    public final Transcript getTransDown() { return mTransDown; }
 
 }

@@ -3,6 +3,7 @@ package com.hartwig.hmftools.svannotation.analysis;
 import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
+import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.common.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.io.FileWriterUtils.createBufferedWriter;
@@ -13,9 +14,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.StandardOpenOption;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -31,7 +30,6 @@ import com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion;
 import com.hartwig.hmftools.common.variant.structural.annotation.StructuralVariantAnnotation;
 import com.hartwig.hmftools.common.variant.structural.annotation.Transcript;
 import com.hartwig.hmftools.common.variant.structural.annotation.TranscriptExonData;
-import com.hartwig.hmftools.svannotation.EnsemblDAO;
 import com.hartwig.hmftools.svannotation.SvGeneTranscriptCollection;
 
 import org.apache.commons.cli.Options;
@@ -96,7 +94,7 @@ public class SvFusionAnalyser
     }
 
     private static int SPECIFIC_VAR_ID = -1;
-    // private static int SPECIFIC_VAR_ID = 4740717;
+    // private static int SPECIFIC_VAR_ID = 5232794;
 
     public final List<GeneFusion> findFusions(final List<GeneAnnotation> breakendGenes1, final List<GeneAnnotation> breakendGenes2)
     {
@@ -148,6 +146,9 @@ public class SvFusionAnalyser
 
                         if(downstreamTrans.exonMax() == 1)
                             continue;
+
+                        if(!upstreamTrans.isDisruptive())
+                            continue;;
 
                         if(upstreamTrans.preCoding())
                         {
@@ -292,9 +293,9 @@ public class SvFusionAnalyser
 
     private void setReportableGeneFusions(final List<GeneFusion> fusions)
     {
-        Optional<GeneFusion> reportableFusion = determineReportableFusion(fusions);
+        GeneFusion reportableFusion = determineReportableFusion(fusions);
 
-        if(!reportableFusion.isPresent() )
+        if(reportableFusion == null)
             return;
 
         for (final GeneFusion fusion : fusions)
@@ -302,7 +303,7 @@ public class SvFusionAnalyser
             if(!fusion.isPhaseMatch())
                 continue;
 
-            if(reportableFusion.get() == fusion)
+            if(reportableFusion == fusion)
             {
                 boolean intragenicOk = !(intragenic(fusion.upstreamTrans(), fusion.downstreamTrans()) && fusion.upstreamTrans().exonUpstreamPhase() == -1);
 
@@ -312,8 +313,10 @@ public class SvFusionAnalyser
         }
     }
 
-    @NotNull
-    private Optional<GeneFusion> determineReportableFusion(final List<GeneFusion> fusions)
+    public static String TRANSCRIPT_PROTEIN_CODING = "protein_coding";
+    public static String TRANSCRIPT_NONSENSE_MED_DECAY = "nonsense_mediated_decay";
+
+    private GeneFusion determineReportableFusion(final List<GeneFusion> fusions)
     {
         // Select either the canonical -> canonical transcript fusion
         //  then the one with the most exons where one end is canonical
@@ -322,8 +325,70 @@ public class SvFusionAnalyser
         List<GeneFusion> knownFusions = fusions.stream()
                 .filter(GeneFusion::isPhaseMatch)
                 .filter(f -> transcriptsMatchKnownFusion(f.upstreamTrans(), f.downstreamTrans()))
+                .filter(f -> !f.downstreamTrans().bioType().equals(TRANSCRIPT_NONSENSE_MED_DECAY))
                 .collect(Collectors.toList());
 
+        if(knownFusions.isEmpty())
+            return null;
+
+        /* new prioritisation rules:
+        - take both canonical if possible
+        - favour 3' over 5' by canoncial, protein-coding then coding bases (or exon count if not coding)
+        */
+
+        GeneFusion reportableFusion = null;
+
+        // form a score by allocating 0/1 or length value to each power 10 descending
+        long highestScore = 0;
+
+        for(final GeneFusion fusion : knownFusions)
+        {
+            if(fusion.downstreamTrans().isCanonical() && fusion.upstreamTrans().isCanonical())
+                return fusion;
+
+            long transScore = 0;
+            long factor = 10000000;
+
+            if(fusion.downstreamTrans().isCanonical())
+                transScore += factor;
+
+            factor /= 10;
+
+            if(fusion.downstreamTrans().bioType().equals(TRANSCRIPT_PROTEIN_CODING))
+                transScore += factor;
+
+            factor /= 100;
+
+            long length = fusion.downstreamTrans().isCoding() ? fusion.downstreamTrans().codingBases() : fusion.downstreamTrans().exonMax();
+
+            // will be a range between 1-99 * current factor
+            length = min(round(length/10), 99);
+            transScore += length * factor;
+
+            factor /= 10;
+
+            if(fusion.upstreamTrans().isCanonical())
+                transScore += factor;
+
+            factor /= 10;
+
+            if(fusion.upstreamTrans().bioType().equals(TRANSCRIPT_PROTEIN_CODING))
+                transScore += factor;
+
+            factor /= 100;
+
+            length = fusion.upstreamTrans().isCoding() ? fusion.upstreamTrans().codingBases() : fusion.upstreamTrans().exonMax();
+            length = min(round(length/10), 99);
+            transScore += length * factor;
+
+            if(transScore > highestScore)
+            {
+                reportableFusion = fusion;
+                highestScore = transScore;
+            }
+        }
+
+        /*
         Optional<GeneFusion> reportableFusion =
                 knownFusions.stream()
                         .filter(f -> f.upstreamTrans().isCanonical() && f.downstreamTrans().isCanonical()).findFirst();
@@ -342,6 +407,8 @@ public class SvFusionAnalyser
                     .sorted(Comparator.comparingInt(a -> a.upstreamTrans().exonMax() + a.downstreamTrans().exonMax()))
                     .reduce((a, b) -> b);
         }
+        */
+
 
         return reportableFusion;
     }
@@ -475,10 +542,10 @@ public class SvFusionAnalyser
     private static int COL_NAME = 1;
     private static int COL_GENE_UP = 5;
     private static int COL_POS_UP = 8;
-    private static int COL_ORIENT_UP = 9;
+    private static int COL_STRAND_UP = 9;
     private static int COL_GENE_DOWN = 10;
     private static int COL_POS_DOWN = 13;
-    private static int COL_ORIENT_DOWN = 14;
+    private static int COL_STRAND_DOWN = 14;
 
     public boolean loadSampleRnaData(final String filename)
     {
@@ -521,7 +588,7 @@ public class SvFusionAnalyser
                         items[COL_NAME],
                         items[COL_GENE_UP], items[COL_GENE_DOWN],
                         Long.parseLong(items[COL_POS_UP]), Long.parseLong(items[COL_POS_DOWN]),
-                        Byte.parseByte(items[COL_ORIENT_UP]), Byte.parseByte(items[COL_ORIENT_DOWN]));
+                        Byte.parseByte(items[COL_STRAND_UP]), Byte.parseByte(items[COL_STRAND_DOWN]));
 
                 rnaDataList.add(rnaData);
 
@@ -559,84 +626,66 @@ public class SvFusionAnalyser
 
                 mRnaWriter = createBufferedWriter(outputFilename, false);
 
-                mRnaWriter.write("SampleId,FusionName,GeneUp,GeneDown");
-                mRnaWriter.write(",SvFusionMatch,Reportable,SvIdUp,SvIdDown,ExonRankUp,ExonRankDown");
-                mRnaWriter.write(",TransExonMinUp,TransExonMaxUp,TransExonMinDown,TransExonMaxDown");
+                mRnaWriter.write("SampleId,FusionName,GeneUp,GeneDown,SvFusionMatch,Reportable");
+                mRnaWriter.write(",ExonMinRankUp,ExonMaxRankUp,ExonMinRankDown,ExonMaxRankDown");
+
+                mRnaWriter.write(",SvIdUp,ChrUp,PosUp,RnaPosUp,OrientUp,StrandUp,TypeStart,TranscriptUp,RegionTypeUp,CodingTypeUp");
+                mRnaWriter.write(",ExonUp,PhaseUp,DisruptiveUp,TransStartUp,DistancePrevUp");
+
+                mRnaWriter.write(",SvIdDown,ChrDown,PosDown,RnaPosDown,OrientDown,StrandDown,TypeStart,TranscriptDown,RegionTypeDown,CodingTypeDown");
+                mRnaWriter.write(",ExonDown,PhaseDown,DisruptiveDown,TransStartDown,DistancePrevDown");
+
                 mRnaWriter.newLine();
             }
+
 
             BufferedWriter writer = mRnaWriter;
 
             for(final RnaFusionData rnaFusion : rnaFusionList)
             {
-                // first check for a fusion found
-                GeneFusion fusionMatch = null;
+                matchRnaFusion(rnaFusion, fusions, svAnnotations);
 
-                for(final GeneFusion fusion : fusions)
-                {
-                    if(fusion.upstreamTrans().geneName().equals(rnaFusion.GeneUp) && fusion.downstreamTrans().geneName().equals(rnaFusion.GeneDown))
-                    {
-                        fusionMatch = fusion;
-                        break;
-                    }
-                }
-
-                GeneAnnotation upGeneAnnotation = null;
-                GeneAnnotation downGeneAnnotation = null;
-
-                if(fusionMatch != null)
-                {
-                    upGeneAnnotation = fusionMatch.upstreamTrans().parent();
-                    downGeneAnnotation = fusionMatch.downstreamTrans().parent();
-                }
-                else
-                {
-                    // check breakend annotations for any match on the gene
-                    for(final StructuralVariantAnnotation svAnnotation : svAnnotations)
-                    {
-                        List<GeneAnnotation> breakendGenes = Lists.newArrayList(svAnnotation.start());
-                        breakendGenes.addAll(svAnnotation.end());
-
-                        for (final GeneAnnotation breakendGene : breakendGenes)
-                        {
-                            if (isUpstream(breakendGene) && breakendGene.geneName().equals(rnaFusion.GeneUp))
-                            {
-                                upGeneAnnotation = breakendGene;
-                            }
-                            else if (!isUpstream(breakendGene) && breakendGene.geneName().equals(rnaFusion.GeneDown))
-                            {
-                                downGeneAnnotation = breakendGene;
-                            }
-
-                            if(upGeneAnnotation != null && downGeneAnnotation != null)
-                                break;
-                        }
-                    }
-                }
-
-                // find the min and max exon rank for every transcript matching the RNA positions
-                setRnaFusionData(rnaFusion);
+                final GeneFusion fusionMatch = rnaFusion.getMatchedFusion();
 
                 writer.write(
-                        String.format(",%s,%s,%s,%s",
-                                sampleId, rnaFusion.Name, rnaFusion.GeneUp, rnaFusion.GeneDown));
-
-                if(fusionMatch != null)
-                {
-                    writer.write(String.format(",%s,%s,%d,%d,%d,%d",
-                            "true", fusionMatch.reportable(),
-                            fusionMatch.upstreamTrans().parent().id(), fusionMatch.downstreamTrans().parent().id(),
-                            fusionMatch.upstreamTrans().exonUpstream(), fusionMatch.downstreamTrans().exonDownstream()));
-                }
-                else
-                {
-                    writer.write(String.format(",false,false,%d,%d,-1,-1",
-                            upGeneAnnotation != null ? upGeneAnnotation.id() : -1,
-                            downGeneAnnotation != null ? downGeneAnnotation.id() : -1));
-                }
+                        String.format("%s,%s,%s,%s,%s,%s",
+                                sampleId, rnaFusion.Name, rnaFusion.GeneUp, rnaFusion.GeneDown,
+                                fusionMatch != null, fusionMatch != null ? fusionMatch.reportable() : "false"));
 
                 writer.write(String.format(",%d,%d,%d,%d",
                         rnaFusion.exonMinRankUp(), rnaFusion.exonMaxRankUp(), rnaFusion.exonMinRankDown(), rnaFusion.exonMaxRankDown()));
+
+                final Transcript transUp = rnaFusion.getTransUp();
+
+                if(transUp != null)
+                {
+                    writer.write(
+                            String.format(",%d,%s,%d,%d,%d,%d,%s",
+                                    transUp.parent().id(), transUp.parent().chromosome(), transUp.parent().position(), rnaFusion.PositionUp,
+                                    transUp.parent().orientation(), transUp.parent().strand(), transUp.parent().type()));
+
+                    writer.write(
+                            String.format(",%s,%s,%s,%d,%d,%s,%d,%d",
+                                    transUp.transcriptId(), transUp.regionType(), transUp.codingType(),
+                                    transUp.exonUpstream(), transUp.exonUpstreamPhase(), transUp.isDisruptive(),
+                                    transUp.transcriptStart(), transUp.exonDistanceUp()));
+                }
+
+                final Transcript transDown = rnaFusion.getTransDown();
+
+                if(transDown != null)
+                {
+                    writer.write(
+                            String.format(",%d,%s,%d,%d,%d,%d,%s",
+                                    transDown.parent().id(), transDown.parent().chromosome(), transDown.parent().position(), rnaFusion.PositionDown,
+                                    transDown.parent().orientation(), transDown.parent().strand(), transDown.parent().type()));
+
+                    writer.write(
+                            String.format(",%s,%s,%s,%d,%d,%s,%d,%d",
+                                    transDown.transcriptId(), transDown.regionType(), transDown.codingType(),
+                                    transDown.exonDownstream(), transDown.exonDownstreamPhase(), transDown.isDisruptive(),
+                                    transDown.transcriptStart(), transDown.exonDistanceUp()));
+                }
 
                 writer.newLine();
 
@@ -647,6 +696,103 @@ public class SvFusionAnalyser
             LOGGER.error("error writing RNA match data: {}", e.toString());
         }
 
+    }
+
+    private void matchRnaFusion(final RnaFusionData rnaFusion, final List<GeneFusion> fusions, final List<StructuralVariantAnnotation> annotations)
+    {
+        // find the min and max exon rank for every transcript matching the RNA positions
+        setRnaFusionData(rnaFusion);
+
+        // first check for a fusion found
+        for(final GeneFusion fusion : fusions)
+        {
+            final Transcript upTrans = fusion.upstreamTrans();
+            final Transcript downTrans = fusion.downstreamTrans();
+
+            if(!upTrans.geneName().equals(rnaFusion.GeneUp)  || !downTrans.geneName().equals(rnaFusion.GeneDown))
+                continue;
+
+            // breakends must be downstream of the upstream RNA exons, and upstream of the downstream RNA exon
+            if(!withinPositionRange(upTrans, rnaFusion.PositionUp, upTrans.parent().strand() == 1))
+                continue;
+
+            if(!withinPositionRange(downTrans, rnaFusion.PositionDown, downTrans.parent().strand() != 1))
+                continue;
+
+            rnaFusion.setMatchedFusion(fusion);
+            break;
+        }
+
+        if(rnaFusion.getMatchedFusion() == null)
+        {
+            Transcript transUp = null;
+            Transcript transDown = null;
+            boolean singleSvFound = false;
+
+            // check breakend annotations for any match on the gene - favour a single SV which explains up and down genes
+            for(final StructuralVariantAnnotation svAnnotation : annotations)
+            {
+                for (final GeneAnnotation breakendGene : svAnnotation.annotations())
+                {
+                    Transcript svTransUp = null;
+                    Transcript svTransDown = null;
+
+                    for(final Transcript transcript : breakendGene.transcripts())
+                    {
+                        if(isUpstream(breakendGene) && transcript.geneName().equals(rnaFusion.GeneUp)
+                        && withinPositionRange(transcript, rnaFusion.PositionUp, transcript.parent().strand() == 1))
+                        {
+                            transUp = transcript;
+                            svTransUp = transcript;
+                        }
+
+                        if(!isUpstream(breakendGene) && transcript.geneName().equals(rnaFusion.GeneDown)
+                        && withinPositionRange(transcript, rnaFusion.PositionDown, transcript.parent().strand() != 1))
+                        {
+                            transDown= transcript;
+                            svTransDown = transcript;
+                        }
+                    }
+
+                    if(svTransDown != null && svTransUp != null)
+                    {
+                        rnaFusion.setBreakends(svTransUp, svTransDown);
+                        singleSvFound = true;
+                    }
+                }
+
+                if(singleSvFound)
+                    break;
+            }
+
+            if(!singleSvFound)
+            {
+                rnaFusion.setBreakends(transUp, transDown);
+            }
+        }
+    }
+
+    private boolean withinPositionRange(final Transcript trans, final long rnaPosition, boolean requireHigherBreakendPos)
+    {
+        final GeneAnnotation geneAnnotation = trans.parent();
+
+        long position = geneAnnotation.position();
+
+        if(requireHigherBreakendPos)
+        {
+            // factor in any uncertainty around the precise breakend, eg from homology
+            if(geneAnnotation.variant() != null)
+                position += geneAnnotation.isStart() ? geneAnnotation.variant().start().endOffset() : geneAnnotation.variant().end().endOffset();
+
+            return (position >= rnaPosition);
+        }
+        else
+        {
+            if(geneAnnotation.variant() != null)
+                position += geneAnnotation.isStart() ? geneAnnotation.variant().start().startOffset() : geneAnnotation.variant().end().startOffset();
+
+            return (position <= rnaPosition);
+        }
     }
 
     private static int EXON_RANK_MIN = 0;

@@ -22,7 +22,7 @@ public class Transcript {
     private final boolean mCanonical;
     private String mBioType;
 
-    private final String mCodingType;
+    private String mCodingType;
     private final String mRegionType;
 
     @Nullable
@@ -39,7 +39,7 @@ public class Transcript {
 
     private boolean mIsDisruptive;
 
-    public static String TRANS_REGION_TYPE_PROMOTOR = "Promotor";
+    public static String TRANS_REGION_TYPE_PROMOTOR = "Promoter";
     public static String TRANS_REGION_TYPE_EXONIC = "Exonic";
     public static String TRANS_REGION_TYPE_INTRONIC = "Intronic";
 
@@ -189,6 +189,11 @@ public class Transcript {
         {
             return TRANS_CODING_TYPE_CODING;
         }
+    }
+
+    public void setCodingType(final String type)
+    {
+        mCodingType = type;
     }
 
     public boolean isCanonical() { return mCanonical; }
