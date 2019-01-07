@@ -49,6 +49,16 @@ public class StructuralVariantLegsFactoryTest {
     }
 
     @Test
+    public void testDuplicateLeg() {
+        final StructuralVariant first = sv(100, 100, StructuralVariantType.INV, 0.25, 0.25);
+
+        final List<StructuralVariantLegs> legs = StructuralVariantLegsFactory.create(Lists.newArrayList(first));
+        assertEquals(1, legs.size());
+        assertTrue(legs.get(0).start().isPresent());
+        assertFalse(legs.get(0).end().isPresent());
+    }
+
+    @Test
     public void testSameVAF() {
         final StructuralVariant first = sv(100, 200, StructuralVariantType.INV, 0.25, 0.25);
         final StructuralVariant second = sv(200, 300, StructuralVariantType.BND, 0.25, 0.25);
@@ -59,12 +69,11 @@ public class StructuralVariantLegsFactoryTest {
 
         assertTrue(legs.get(0).start().isPresent());
         assertTrue(legs.get(0).end().isPresent());
-        assertTrue(legs.get(1).start().isPresent());
+        assertFalse(legs.get(1).start().isPresent());
         assertTrue(legs.get(1).end().isPresent());
 
         assertLeg(1, 0.25, legs.get(0).start().get());
         assertLeg(1, 0.25, legs.get(0).end().get());
-        assertLeg(1, 0.25, legs.get(1).start().get());
         assertLeg(1, 0.25, legs.get(1).end().get());
     }
 
