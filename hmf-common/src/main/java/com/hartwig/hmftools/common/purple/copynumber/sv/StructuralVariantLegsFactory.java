@@ -1,17 +1,16 @@
 package com.hartwig.hmftools.common.purple.copynumber.sv;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.numeric.Doubles;
 import com.hartwig.hmftools.common.position.GenomePosition;
 import com.hartwig.hmftools.common.position.GenomePositions;
@@ -33,15 +32,17 @@ final class StructuralVariantLegsFactory {
     @NotNull
     static List<StructuralVariantLegs> create(@NotNull final List<StructuralVariant> variants) {
         final List<ModifiableStructuralVariantLegs> result = createLegs(false, variants);
-        final Multimap<GenomePosition, ModifiableStructuralVariantLegs> duplicates = findDuplicates(result);
+        final Set<GenomePosition> duplicatePositions = findDuplicatePositions(result);
+        for (GenomePosition duplicatePosition : duplicatePositions) {
+            final List<ModifiableStructuralVariantLegs> duplicates =
+                    result.stream().filter(x -> matches(duplicatePosition, x)).collect(Collectors.toList());
 
-        for (GenomePosition duplicatePosition : duplicates.keySet()) {
-            final StructuralVariantLeg approvedLeg = reduce(duplicatePosition, duplicates.get(duplicatePosition));
+            final StructuralVariantLeg approvedLeg = reduce(duplicatePosition, duplicates);
             boolean match = false;
-            for (ModifiableStructuralVariantLegs legs : duplicates.get(duplicatePosition)) {
+            for (ModifiableStructuralVariantLegs legs : duplicates) {
                 Optional<StructuralVariantLeg> start = legs.start();
                 if (start.filter(x -> isDuplicate(duplicatePosition, x)).isPresent()) {
-                    if (start.get().equals(approvedLeg)) {
+                    if (!match && start.get().equals(approvedLeg)) {
                         match = true;
                     } else {
                         legs.setStart(Optional.empty());
@@ -50,7 +51,7 @@ final class StructuralVariantLegsFactory {
 
                 Optional<StructuralVariantLeg> end = legs.end();
                 if (end.filter(x -> isDuplicate(duplicatePosition, x)).isPresent()) {
-                    if (end.get().equals(approvedLeg)) {
+                    if (!match && end.get().equals(approvedLeg)) {
                         match = true;
                     } else {
                         legs.setEnd(Optional.empty());
@@ -63,7 +64,13 @@ final class StructuralVariantLegsFactory {
             }
         }
 
-        return new ArrayList<>(result);
+        return result.stream().filter(x -> x.start().isPresent() || x.end().isPresent()).collect(Collectors.toList());
+    }
+
+    private static boolean matches(@NotNull final GenomePosition position, @NotNull final ModifiableStructuralVariantLegs legs) {
+        return legs.start().filter(x -> cnaPosition(x).equals(position)).isPresent() || legs.end()
+                .filter(x -> cnaPosition(x).equals(position))
+                .isPresent();
     }
 
     @NotNull
@@ -148,8 +155,7 @@ final class StructuralVariantLegsFactory {
     }
 
     @NotNull
-    private static Multimap<GenomePosition, ModifiableStructuralVariantLegs> findDuplicates(
-            @NotNull final Collection<ModifiableStructuralVariantLegs> legs) {
+    private static Set<GenomePosition> findDuplicatePositions(@NotNull final Collection<ModifiableStructuralVariantLegs> legs) {
         final ListMultimap<GenomePosition, ModifiableStructuralVariantLegs> result = ArrayListMultimap.create();
         for (ModifiableStructuralVariantLegs leg : legs) {
             leg.start().ifPresent(x -> result.put(cnaPosition(x), leg));
@@ -157,7 +163,7 @@ final class StructuralVariantLegsFactory {
         }
 
         result.keySet().removeIf(key -> result.get(key).size() <= 1);
-        return result;
+        return result.keySet();
     }
 
     @NotNull
