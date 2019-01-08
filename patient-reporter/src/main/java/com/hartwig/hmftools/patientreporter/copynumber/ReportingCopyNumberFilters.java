@@ -27,28 +27,11 @@ final class ReportingCopyNumberFilters {
                 .collect(Collectors.toList());
     }
 
-    @NotNull
-    static List<GeneCopyNumber> filterForSignificance(@NotNull List<GeneCopyNumber> geneCopyNumbers, double averageTumorPloidy) {
-        return geneCopyNumbers.stream()
-                .filter(copyNumber -> isSignificant(averageTumorPloidy, copyNumber.value()))
-                .collect(Collectors.toList());
-    }
-
     @VisibleForTesting
     static boolean includeInReport(double copyNumber, boolean isAmplificationReportable, boolean isDeletionReportable) {
         // KODU: Assume we only have significant events here.
         return (Doubles.greaterThan(copyNumber, ABS_LOSS) && isAmplificationReportable) ||
                 (Doubles.lessOrEqual(copyNumber, ABS_LOSS) && isDeletionReportable);
 
-    }
-
-    @VisibleForTesting
-    static boolean isSignificant(double averageTumorPloidy, double copyNumber) {
-        if (Doubles.lessOrEqual(copyNumber, ABS_LOSS)) {
-            return true;
-        }
-
-        double relativeCopyNumber = copyNumber / averageTumorPloidy;
-        return Doubles.greaterOrEqual(relativeCopyNumber, REL_GAIN);
     }
 }

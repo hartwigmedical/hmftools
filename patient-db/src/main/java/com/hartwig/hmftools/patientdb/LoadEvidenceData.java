@@ -11,6 +11,7 @@ import com.hartwig.hmftools.common.actionability.ActionabilityAnalyzer;
 import com.hartwig.hmftools.common.actionability.EvidenceItem;
 import com.hartwig.hmftools.common.context.ProductionRunContextFactory;
 import com.hartwig.hmftools.common.context.RunContext;
+import com.hartwig.hmftools.common.copynumber.FilterSignificantGeneCopyNumbers;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.purity.FittedPurityFile;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
@@ -36,7 +37,6 @@ public class LoadEvidenceData {
     private static final String DB_PASS = "db_pass";
     private static final String DB_URL = "db_url";
     private static final String RUN_DIR = "run_dir";
-    private static final String PURPLE_DIRECTORY = "purple";
 
     public static void main(@NotNull final String[] args) throws ParseException, IOException, SQLException {
         final Options options = createOptions();
@@ -83,14 +83,13 @@ public class LoadEvidenceData {
         List<GeneCopyNumber> geneCopyNumbers = dbAccess.readGeneCopynumbers(sample);
 
         double ploidy = dbAccess.readPurity(sample);
+        LOGGER.info("ploidy sample: " + ploidy);
 
-        List<GeneCopyNumber> significantGeneCopyNumbers =
-                ActionabilityAnalyzer.significanceGeneCopyNumbers(geneCopyNumbers, ploidy);
+        List<GeneCopyNumber> significantGeneCopyNumbers = FilterSignificantGeneCopyNumbers.filterForSignificance(geneCopyNumbers, ploidy);
 
         Map<GeneCopyNumber, List<EvidenceItem>> evidencePerGeneCopyNumber = actionabilityAnalyzer.evidenceForCopyNumbers(
                 significantGeneCopyNumbers,
-                primaryTumorLocation,
-                ploidy);
+                primaryTumorLocation);
 
         List<EvidenceItem> allEvidenceForCopyNumbers = extractAllEvidenceItems(evidencePerGeneCopyNumber);
         LOGGER.info("Found {} evidence items for copy numbers.", allEvidenceForCopyNumbers.size());

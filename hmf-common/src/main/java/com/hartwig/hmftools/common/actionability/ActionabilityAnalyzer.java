@@ -108,13 +108,8 @@ public class ActionabilityAnalyzer {
     }
 
     @NotNull
-    public static List<GeneCopyNumber> significanceGeneCopyNumbers(@NotNull List<GeneCopyNumber> geneCopyNumbers, double averageTumorPloidy) {
-        return isSignificantGeneCopyNumber(averageTumorPloidy, geneCopyNumbers);
-    }
-
-    @NotNull
     public Map<GeneCopyNumber, List<EvidenceItem>> evidenceForCopyNumbers(@NotNull List<GeneCopyNumber> geneCopyNumbers,
-            @Nullable String primaryTumorLocation, @NotNull double averageTumorPloidy) {
+            @Nullable String primaryTumorLocation) {
 
         Map<GeneCopyNumber, List<EvidenceItem>> evidencePerCopyNumber = Maps.newHashMap();
 
@@ -129,16 +124,6 @@ public class ActionabilityAnalyzer {
         }
 
         return evidencePerCopyNumber;
-    }
-
-    static List<GeneCopyNumber>  isSignificantGeneCopyNumber(double averageTumorPloidy, List<GeneCopyNumber> copyNumber) {
-        List<GeneCopyNumber> filteredCopyNumbers = Lists.newArrayList();
-        for (GeneCopyNumber geneCopyNumber : copyNumber) {
-            if (geneCopyNumber.minCopyNumber() < 0.5 || geneCopyNumber.minCopyNumber() > 8) {
-                filteredCopyNumbers.add(geneCopyNumber);
-            }
-        }
-        return filteredCopyNumbers;
     }
 
     @NotNull
