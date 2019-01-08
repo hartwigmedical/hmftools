@@ -13,7 +13,6 @@ import com.hartwig.hmftools.common.context.ProductionRunContextFactory;
 import com.hartwig.hmftools.common.context.RunContext;
 import com.hartwig.hmftools.common.copynumber.FilterSignificantGeneCopyNumbers;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
-import com.hartwig.hmftools.common.purple.purity.FittedPurityFile;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
 import com.hartwig.hmftools.common.variant.structural.annotation.SimpleGeneFusion;
@@ -77,22 +76,26 @@ public class LoadEvidenceData {
                 actionabilityAnalyzer.evidenceForSomaticVariants(variants, primaryTumorLocation);
 
         List<EvidenceItem> allEvidenceForSomaticVariants = extractAllEvidenceItems(evidencePerVariant);
-        LOGGER.info("Found {} evidence items for somatic variants.", allEvidenceForSomaticVariants.size());
+        LOGGER.info("Found {} evidence items for {} somatic variants.", allEvidenceForSomaticVariants.size(), variants.size());
 
         LOGGER.info("Reading gene copy numbers from DB");
         List<GeneCopyNumber> geneCopyNumbers = dbAccess.readGeneCopynumbers(sample);
 
-        double ploidy = dbAccess.readPurity(sample);
-        LOGGER.info("ploidy sample: " + ploidy);
+        PurityContext purityContext = dbAccess.readPurityContext(sample);
+        assert purityContext != null;
+
+        double ploidy = purityContext.bestFit().ploidy();
+        LOGGER.info("Ploidy sample: " + ploidy);
 
         List<GeneCopyNumber> significantGeneCopyNumbers = FilterSignificantGeneCopyNumbers.filterForSignificance(geneCopyNumbers, ploidy);
 
-        Map<GeneCopyNumber, List<EvidenceItem>> evidencePerGeneCopyNumber = actionabilityAnalyzer.evidenceForCopyNumbers(
-                significantGeneCopyNumbers,
-                primaryTumorLocation);
+        Map<GeneCopyNumber, List<EvidenceItem>> evidencePerGeneCopyNumber =
+                actionabilityAnalyzer.evidenceForCopyNumbers(significantGeneCopyNumbers, primaryTumorLocation);
 
         List<EvidenceItem> allEvidenceForCopyNumbers = extractAllEvidenceItems(evidencePerGeneCopyNumber);
-        LOGGER.info("Found {} evidence items for copy numbers.", allEvidenceForCopyNumbers.size());
+        LOGGER.info("Found {} evidence items for {} copy numbers.",
+                allEvidenceForCopyNumbers.size(),
+                evidencePerGeneCopyNumber.keySet().size());
 
         LOGGER.info("Reading gene fusions from DB");
         List<SimpleGeneFusion> simpleGeneFusions = dbAccess.readGeneFusions(sample);
@@ -101,7 +104,7 @@ public class LoadEvidenceData {
                 actionabilityAnalyzer.evidenceForFusions(simpleGeneFusions, primaryTumorLocation);
 
         List<EvidenceItem> allEvidenceForGeneFusions = extractAllEvidenceItems(evidencePerFusion);
-        LOGGER.info("Found {} evidence items for gene fusions.", allEvidenceForGeneFusions.size());
+        LOGGER.info("Found {} evidence items for {} gene fusions.", allEvidenceForGeneFusions.size(), simpleGeneFusions.size());
 
         List<EvidenceItem> combinedEvidence = Lists.newArrayList();
         combinedEvidence.addAll(allEvidenceForSomaticVariants);

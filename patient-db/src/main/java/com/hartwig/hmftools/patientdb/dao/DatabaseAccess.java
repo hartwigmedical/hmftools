@@ -114,10 +114,6 @@ public class DatabaseAccess {
         return clinicalDAO.readTumorLocationForSample(sample);
     }
 
-    public double readPurity(@NotNull String sample) {
-        return purityDAO.readPurityForSample(sample);
-    }
-
     public void writeCanonicalTranscripts(@NotNull final String assembly, @NotNull final List<CanonicalTranscript> transcripts) {
         canonicalTranscriptDAO.write(assembly, transcripts);
     }

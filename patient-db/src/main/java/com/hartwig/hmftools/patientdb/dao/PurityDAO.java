@@ -22,7 +22,6 @@ import org.jetbrains.annotations.Nullable;
 import org.jooq.DSLContext;
 import org.jooq.InsertValuesStep8;
 import org.jooq.Record;
-import org.jooq.Record1;
 
 class PurityDAO {
 
@@ -31,12 +30,6 @@ class PurityDAO {
 
     PurityDAO(@NotNull final DSLContext context) {
         this.context = context;
-    }
-
-    @NotNull
-    public double readPurityForSample(@NotNull String sample) {
-        final Record1 result = context.select(PURITY.PLOIDY).from(PURITY).where(PURITY.SAMPLEID.eq(sample)).fetchOne();
-        return result.getValue(PURITY.PLOIDY);
     }
 
     @Nullable
