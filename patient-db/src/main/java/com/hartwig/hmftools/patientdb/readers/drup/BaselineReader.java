@@ -23,18 +23,18 @@ class BaselineReader {
     private static final String FORM_REGISTRATION = "FRM.REG"; // KODU: Not sure where CSF stands for, could be "clinical study fields"?
     private static final String FORM_END_OF_TRIAL = "FRM.EOT";
 
-    private static final String ITEMGROUP_BASELINE = "GRP.BAS.BAS";
-    private static final String ITEMGROUP_CSF = "GRP.CSF.CSF"; // KODU: Not sure where CSF stands for, could be "clinical study fields"?
-    private static final String ITEMGROUP_REGISTRATION = "GRP.REG.REG";
-    private static final String ITEMGROUP_END_OF_TRIAL = "GRP.EOT.EOT";
+    private static final String ITEMGROUP_BASELINE = "GRP.BAS";
+    private static final String ITEMGROUP_CSF = "GRP.CSF"; // KODU: Not sure where CSF stands for, could be "clinical study fields"?
+    private static final String ITEMGROUP_REGISTRATION = "GRP.REG";
+    private static final String ITEMGROUP_END_OF_TRIAL = "GRP.EOT";
 
-    private static final String FIELD_INFORMED_CONSENT_DATE = "FLD.BAS.ICDTC";
-    private static final String FIELD_HOSPITAL = "FLD.REG.INST";
-    private static final String FIELD_PRIMARY_TUMOR_LOCATION = "FLD.BAS.BASTTYP";
-    private static final String FIELD_PRIMARY_TUMOR_LOCATION_OTHER = "FLD.BAS.BASTTOSP";
-    private static final String FIELD_GENDER = "FLD.CSF.GEN";
-    private static final String FIELD_BIRTH_YEAR = "FLD.CSF.YOB";
-    private static final String FIELD_DEATH_DATE = "FLD.EOT.DEATHDTC";
+    private static final String FIELD_INFORMED_CONSENT_DATE = "FLD.ICDTC";
+    private static final String FIELD_HOSPITAL = "FLD.INST";
+    private static final String FIELD_PRIMARY_TUMOR_LOCATION = "FLD.BASTTYP";
+    private static final String FIELD_PRIMARY_TUMOR_LOCATION_OTHER = "FLD.BASTTOSP";
+    private static final String FIELD_GENDER = "FLD.GEN";
+    private static final String FIELD_BIRTH_YEAR = "FLD.YOB";
+    private static final String FIELD_DEATH_DATE = "FLD.DEATHDTC";
 
     @NotNull
     private final TumorLocationCurator tumorLocationCurator;
