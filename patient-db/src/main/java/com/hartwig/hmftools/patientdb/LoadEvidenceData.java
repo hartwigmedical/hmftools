@@ -82,15 +82,15 @@ public class LoadEvidenceData {
         LOGGER.info("Reading gene copy numbers from DB");
         List<GeneCopyNumber> geneCopyNumbers = dbAccess.readGeneCopynumbers(sample);
 
-        //TODO load averages ploidy from db
-        final PurityContext purityContext = loadPurity(runContext.runDirectory(), sample);
+        double ploidy = dbAccess.readPurity(sample);
+
         List<GeneCopyNumber> significantGeneCopyNumbers =
-                ActionabilityAnalyzer.significanceGeneCopyNumbers(geneCopyNumbers, purityContext.bestFit().ploidy());
+                ActionabilityAnalyzer.significanceGeneCopyNumbers(geneCopyNumbers, ploidy);
 
         Map<GeneCopyNumber, List<EvidenceItem>> evidencePerGeneCopyNumber = actionabilityAnalyzer.evidenceForCopyNumbers(
                 significantGeneCopyNumbers,
                 primaryTumorLocation,
-                purityContext.bestFit().ploidy());
+                ploidy);
 
         List<EvidenceItem> allEvidenceForCopyNumbers = extractAllEvidenceItems(evidencePerGeneCopyNumber);
         LOGGER.info("Found {} evidence items for copy numbers.", allEvidenceForCopyNumbers.size());
@@ -110,12 +110,6 @@ public class LoadEvidenceData {
         combinedEvidence.addAll(allEvidenceForGeneFusions);
 
         dbAccess.writeClinicalEvidence(sample, combinedEvidence);
-    }
-
-    @NotNull
-    static PurityContext loadPurity(@NotNull String runDirectory, @NotNull String sample) throws IOException {
-        final String cnvBasePath = runDirectory + File.separator + PURPLE_DIRECTORY;
-        return FittedPurityFile.read(cnvBasePath, sample);
     }
 
     @NotNull

@@ -6,7 +6,6 @@ import java.sql.SQLException;
 import java.util.List;
 import java.util.Set;
 
-import com.hartwig.hmftools.common.actionability.ClinicalTrial;
 import com.hartwig.hmftools.common.actionability.EvidenceItem;
 import com.hartwig.hmftools.common.chord.ChordAnalysis;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
@@ -113,6 +112,10 @@ public class DatabaseAccess {
     @Nullable
     public String readTumorLocation(@NotNull String sample) {
         return clinicalDAO.readTumorLocationForSample(sample);
+    }
+
+    public double readPurity(@NotNull String sample) {
+        return purityDAO.readPurityForSample(sample);
     }
 
     public void writeCanonicalTranscripts(@NotNull final String assembly, @NotNull final List<CanonicalTranscript> transcripts) {
