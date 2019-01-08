@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.common.variant.structural.annotation;
 
+import static com.hartwig.hmftools.common.variant.structural.annotation.GeneAnnotation.isDownstream;
+
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -102,7 +104,11 @@ public class Transcript {
 
         mExonDownstreamPhase = exonDownstreamPhase;
         mExonUpstreamPhase = exonUpstreamPhase;
-        mIsDisruptive = true;
+
+        if(isDownstream(mGene) && mRegionType == TRANS_REGION_TYPE_PROMOTOR)
+            mIsDisruptive = false;
+        else
+            mIsDisruptive = true;
     }
 
     @NotNull

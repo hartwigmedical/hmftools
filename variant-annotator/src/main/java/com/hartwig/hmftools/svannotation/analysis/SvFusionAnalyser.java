@@ -7,6 +7,17 @@ import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.common.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.io.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.common.variant.structural.annotation.EnsemblGeneData.GENE_PHASING_REGION_5P_UTR;
+import static com.hartwig.hmftools.common.variant.structural.annotation.EnsemblGeneData.GENE_PHASING_REGION_CODING_0;
+import static com.hartwig.hmftools.common.variant.structural.annotation.EnsemblGeneData.GENE_PHASING_REGION_CODING_1;
+import static com.hartwig.hmftools.common.variant.structural.annotation.EnsemblGeneData.GENE_PHASING_REGION_CODING_2;
+import static com.hartwig.hmftools.common.variant.structural.annotation.EnsemblGeneData.GENE_PHASING_REGION_MAX;
+import static com.hartwig.hmftools.common.variant.structural.annotation.EnsemblGeneData.phaseToRegion;
+import static com.hartwig.hmftools.common.variant.structural.annotation.GeneAnnotation.isDownstream;
+import static com.hartwig.hmftools.common.variant.structural.annotation.GeneAnnotation.isUpstream;
+import static com.hartwig.hmftools.svannotation.SvGeneTranscriptCollection.EXON_RANK_MAX;
+import static com.hartwig.hmftools.svannotation.SvGeneTranscriptCollection.EXON_RANK_MIN;
+import static com.hartwig.hmftools.svannotation.SvGeneTranscriptCollection.nextTranscriptExons;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -326,6 +337,7 @@ public class SvFusionAnalyser
                 .filter(GeneFusion::isPhaseMatch)
                 .filter(f -> transcriptsMatchKnownFusion(f.upstreamTrans(), f.downstreamTrans()))
                 .filter(f -> !f.downstreamTrans().bioType().equals(TRANSCRIPT_NONSENSE_MED_DECAY))
+                .filter(f -> f.downstreamTrans().exonDistanceUp() >= 0)
                 .collect(Collectors.toList());
 
         if(knownFusions.isEmpty())
@@ -388,28 +400,6 @@ public class SvFusionAnalyser
             }
         }
 
-        /*
-        Optional<GeneFusion> reportableFusion =
-                knownFusions.stream()
-                        .filter(f -> f.upstreamTrans().isCanonical() && f.downstreamTrans().isCanonical()).findFirst();
-
-        if (!reportableFusion.isPresent())
-        {
-            reportableFusion = knownFusions.stream()
-                    .filter(f -> f.upstreamTrans().isCanonical() || f.downstreamTrans().isCanonical())
-                    .sorted(Comparator.comparingInt(a -> a.upstreamTrans().exonMax() + a.downstreamTrans().exonMax()))
-                    .reduce((a, b) -> b);
-        }
-
-        if (!reportableFusion.isPresent())
-        {
-            reportableFusion = knownFusions.stream()
-                    .sorted(Comparator.comparingInt(a -> a.upstreamTrans().exonMax() + a.downstreamTrans().exonMax()))
-                    .reduce((a, b) -> b);
-        }
-        */
-
-
         return reportableFusion;
     }
 
@@ -433,11 +423,6 @@ public class SvFusionAnalyser
     private static boolean intragenic(final Transcript upstream, final Transcript downstream)
     {
         return upstream.parent().synonyms().stream().anyMatch(downstream.parent().synonyms()::contains);
-    }
-
-    private static boolean isUpstream(GeneAnnotation gene)
-    {
-        return gene.strand() * gene.orientation() > 0;
     }
 
     public void writeFusions(final List<GeneFusion> fusions, final String outputDir, final String sampleId,  final String clusterInfo)
@@ -529,21 +514,20 @@ public class SvFusionAnalyser
         }
     }
 
-    public void onCompleted()
-    {
-        closeBufferedWriter(mFusionWriter);
-        closeBufferedWriter(mRnaWriter);
-    }
-
     public final Map<String, List<RnaFusionData>> getSampleRnaData() { return mSampleRnaData; }
     public final List<RnaFusionData> getSampleRnaData(final String sampleId) { return mSampleRnaData.get(sampleId); }
 
     private static int COL_SAMPLEID = 0;
     private static int COL_NAME = 1;
+    private static int COL_JUNCT_RC = 2;
+    private static int COL_SPAN_RC = 3;
+    private static int COL_SPLICE = 4;
     private static int COL_GENE_UP = 5;
+    private static int COL_CHR_UP = 7;
     private static int COL_POS_UP = 8;
     private static int COL_STRAND_UP = 9;
     private static int COL_GENE_DOWN = 10;
+    private static int COL_CHR_DOWN = 12;
     private static int COL_POS_DOWN = 13;
     private static int COL_STRAND_DOWN = 14;
 
@@ -586,9 +570,10 @@ public class SvFusionAnalyser
 
                 RnaFusionData rnaData = new RnaFusionData(
                         items[COL_NAME],
-                        items[COL_GENE_UP], items[COL_GENE_DOWN],
+                        items[COL_GENE_UP], items[COL_GENE_DOWN], items[COL_CHR_UP], items[COL_CHR_DOWN],
                         Long.parseLong(items[COL_POS_UP]), Long.parseLong(items[COL_POS_DOWN]),
-                        Byte.parseByte(items[COL_STRAND_UP]), Byte.parseByte(items[COL_STRAND_DOWN]));
+                        Byte.parseByte(items[COL_STRAND_UP]), Byte.parseByte(items[COL_STRAND_DOWN]),
+                        Integer.parseInt(items[COL_JUNCT_RC]),Integer.parseInt(items[COL_SPAN_RC]), items[COL_SPLICE]);
 
                 rnaDataList.add(rnaData);
 
@@ -635,6 +620,8 @@ public class SvFusionAnalyser
                 mRnaWriter.write(",SvIdDown,ChrDown,PosDown,RnaPosDown,OrientDown,StrandDown,TypeStart,TranscriptDown,RegionTypeDown,CodingTypeDown");
                 mRnaWriter.write(",ExonDown,PhaseDown,DisruptiveDown,TransStartDown,DistancePrevDown");
 
+                mRnaWriter.write(",JunctionReadCount,SpanningFragCount,SpliceType");
+
                 mRnaWriter.newLine();
             }
 
@@ -670,6 +657,11 @@ public class SvFusionAnalyser
                                     transUp.exonUpstream(), transUp.exonUpstreamPhase(), transUp.isDisruptive(),
                                     transUp.transcriptStart(), transUp.exonDistanceUp()));
                 }
+                else
+                {
+                    writer.write(String.format(",,%s,,%d,,%d,", rnaFusion.ChrUp, rnaFusion.PositionUp, rnaFusion.StrandUp));
+                    writer.write(",,,,,,,,");
+                }
 
                 final Transcript transDown = rnaFusion.getTransDown();
 
@@ -686,6 +678,13 @@ public class SvFusionAnalyser
                                     transDown.exonDownstream(), transDown.exonDownstreamPhase(), transDown.isDisruptive(),
                                     transDown.transcriptStart(), transDown.exonDistanceUp()));
                 }
+                else
+                {
+                    writer.write(String.format(",,%s,,%d,,%d,", rnaFusion.ChrDown, rnaFusion.PositionDown, rnaFusion.StrandDown));
+                    writer.write(",,,,,,,,");
+                }
+
+                writer.write(String.format(",%d,%d,%s", rnaFusion.JunctionReadCount, rnaFusion.SpanningFragCount, rnaFusion.SpliceType));
 
                 writer.newLine();
 
@@ -746,7 +745,7 @@ public class SvFusionAnalyser
                             svTransUp = transcript;
                         }
 
-                        if(!isUpstream(breakendGene) && transcript.geneName().equals(rnaFusion.GeneDown)
+                        if(isDownstream(breakendGene) && transcript.geneName().equals(rnaFusion.GeneDown)
                         && withinPositionRange(transcript, rnaFusion.PositionDown, transcript.parent().strand() != 1))
                         {
                             transDown= transcript;
@@ -795,48 +794,20 @@ public class SvFusionAnalyser
         }
     }
 
-    private static int EXON_RANK_MIN = 0;
-    private static int EXON_RANK_MAX = 1;
-
     public void setRnaFusionData(final RnaFusionData rnaFusion)
     {
-        int[] transUpExonData = getExonData(rnaFusion.GeneUp, rnaFusion.PositionUp);
+        int[] transUpExonData = mGeneTranscriptCollection.getExonData(rnaFusion.GeneUp, rnaFusion.PositionUp);
         rnaFusion.setExonUpRank(transUpExonData[EXON_RANK_MIN], transUpExonData[EXON_RANK_MAX]);
 
-        transUpExonData = getExonData(rnaFusion.GeneDown, rnaFusion.PositionDown);
+        transUpExonData = mGeneTranscriptCollection.getExonData(rnaFusion.GeneDown, rnaFusion.PositionDown);
         rnaFusion.setExonDownRank(transUpExonData[EXON_RANK_MIN], transUpExonData[EXON_RANK_MAX]);
     }
 
-    private int[] getExonData(final String geneName, long exonPosition)
+    public void onCompleted()
     {
-        int[] exonData = new int[EXON_RANK_MAX+1];
-
-        final EnsemblGeneData geneData = mGeneTranscriptCollection.getGeneData(geneName);
-
-        if(geneData == null)
-            return exonData;
-
-        final List<TranscriptExonData> transExonDataList = mGeneTranscriptCollection.getTransExonData(geneData.GeneId);
-
-        if(transExonDataList == null)
-            return exonData;
-
-        int minRank = -1;
-        int maxRank = -1;
-        for(final TranscriptExonData transExonData : transExonDataList)
-        {
-            int exonRank = transExonData.ExonRank;
-            // final String transcriptStableId = transcriptData.get(TRANSCRIPT.STABLE_ID);
-            // final UInteger transcriptId = transcriptData.get(TRANSCRIPT.TRANSCRIPT_ID);
-
-            minRank = minRank == -1 ? exonRank : min(exonRank, minRank);
-            maxRank = max(exonRank, maxRank);
-        }
-
-        exonData[EXON_RANK_MIN] = minRank;
-        exonData[EXON_RANK_MAX] = maxRank;
-        return exonData;
-
+        closeBufferedWriter(mFusionWriter);
+        closeBufferedWriter(mRnaWriter);
     }
+
 
 }

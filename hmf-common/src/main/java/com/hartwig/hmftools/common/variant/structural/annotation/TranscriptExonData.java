@@ -39,5 +39,25 @@ public class TranscriptExonData
         BioType = bioType;
     }
 
+    public boolean sameExon(final TranscriptExonData other)
+    {
+        // checks if an exon is equal regardless of the transcript id
+        if(!GeneName.equals(other.GeneName) || Strand != other.Strand)
+            return false;
+
+        if(ExonStart != other.ExonStart || ExonEnd != other.ExonEnd)
+            return false;
+
+        if(ExonPhase != other.ExonPhase || ExonPhaseEnd != other.ExonPhaseEnd)
+            return false;
+
+        return true;
+    }
+
+    public boolean overlaps(final TranscriptExonData other)
+    {
+        // assumes not the same exon
+        return !(ExonStart > other.ExonEnd || ExonEnd < other.ExonStart);
+    }
 
 }

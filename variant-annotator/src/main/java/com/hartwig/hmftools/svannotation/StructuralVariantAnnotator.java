@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.svannotation;
 
-import static com.hartwig.hmftools.svannotation.SvGeneTranscriptCollection.getSampleGeneAnnotationsFilename;
 import static com.hartwig.hmftools.common.variant.structural.annotation.SvPONAnnotator.PON_FILTER_PASS;
 import static com.hartwig.hmftools.common.variant.structural.annotation.SvPONAnnotator.PON_FILTER_PON;
 import static com.hartwig.hmftools.svannotation.analysis.SvFusionAnalyser.FUSION_PAIRS_CSV;
@@ -10,12 +9,8 @@ import static com.hartwig.hmftools.svannotation.analysis.SvFusionAnalyser.PROMIS
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.sql.SQLException;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import com.google.common.collect.Lists;
@@ -24,14 +19,11 @@ import com.google.common.collect.Multimaps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.chromosome.Chromosome;
 import com.hartwig.hmftools.common.chromosome.HumanChromosome;
-import com.hartwig.hmftools.common.dnds.DndsDriverGeneLikelihoodSupplier;
 import com.hartwig.hmftools.common.fusions.KnownFusionsModel;
-import com.hartwig.hmftools.common.genepanel.HmfGenePanelSupplier;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.gender.Gender;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
-import com.hartwig.hmftools.common.region.HmfTranscriptRegion;
 import com.hartwig.hmftools.common.variant.structural.EnrichedStructuralVariant;
 import com.hartwig.hmftools.common.variant.structural.EnrichedStructuralVariantFactory;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
@@ -134,6 +126,11 @@ public class StructuralVariantAnnotator
                 {
                     DatabaseAccess ensembleDBConn = new DatabaseAccess(ensembleUser, ensemblePassword, ensembleUrl);
                     mEnsemblAnnotator = new MySQLAnnotator(ensembleDBConn.context());
+
+                    if(mCmdLineArgs.hasOption(CACHE_ENSEMBL_DATA) && !mEnsemblDataDir.isEmpty())
+                    {
+                        mSvGeneTranscriptCollection.cacheAllEnsemblData();
+                    }
                 }
             }
             catch (SQLException e)
@@ -175,17 +172,10 @@ public class StructuralVariantAnnotator
         }
 
         if(!mEnsemblDataDir.isEmpty())
-            mSvGeneTranscriptCollection.setDataPath(mEnsemblDataDir);
-
-        if (mCmdLineArgs.hasOption(TRANS_EXON_FILE) && mCmdLineArgs.hasOption(GENE_DATA_FILE))
         {
-            final String transExonFile = mCmdLineArgs.getOptionValue(TRANS_EXON_FILE);
-            mSvGeneTranscriptCollection.loadTranscriptExonData(transExonFile);
-
-            final String geneDataFile = mCmdLineArgs.getOptionValue(GENE_DATA_FILE);
-            mSvGeneTranscriptCollection.loadEnsemblGeneData(geneDataFile);
-
-            mSvGeneTranscriptCollection.setDataPath(mOutputDir);
+            mSvGeneTranscriptCollection.setDataPath(mEnsemblDataDir);
+            mSvGeneTranscriptCollection.loadTranscriptExonData();
+            mSvGeneTranscriptCollection.loadEnsemblGeneData();
         }
 
         List<String> samplesList = Lists.newArrayList();
@@ -216,6 +206,8 @@ public class StructuralVariantAnnotator
         {
             runSample(sampleId);
         }
+
+        // mFusionAnalyser.writeGeneProbabilityData();
 
         mFusionAnalyser.onCompleted();
         mSvGeneTranscriptCollection.close();
@@ -256,13 +248,7 @@ public class StructuralVariantAnnotator
 
         List<StructuralVariantAnnotation> annotations = Lists.newArrayList();
 
-        if(!mEnsemblDataDir.isEmpty() && mSvGeneTranscriptCollection.loadSampleGeneTranscripts(sampleId))
-        {
-            annotations = createAnnotations(sampleId, enrichedVariants);
-
-            LOGGER.debug("loaded {} Ensembl annotations from file", annotations.size());
-        }
-        else if(!mSvGeneTranscriptCollection.getGeneExonDataMap().isEmpty())
+        if(mSvGeneTranscriptCollection.hasCachedEnsemblData())
         {
             annotations = createAnnotations(enrichedVariants);
 
@@ -273,13 +259,8 @@ public class StructuralVariantAnnotator
             LOGGER.debug("sample({}) finding Ensembl annotations", sampleId);
 
             annotations = mEnsemblAnnotator.annotateVariants(enrichedVariants);
-            // annotations = svAnalyser.annotateVariants(enrichedVariants);
 
             LOGGER.debug("sample({}) matched {} annotations from Ensembl database", sampleId, annotations.size());
-
-            // optionally persist to save having to look up this Ensembl data again
-            if(!mEnsemblDataDir.isEmpty())
-                mSvGeneTranscriptCollection.writeAnnotations(sampleId, annotations);
         }
 
         List<GeneDisruption> disruptions = mDisruptionAnalyser.findDisruptions(annotations);
@@ -402,33 +383,6 @@ public class StructuralVariantAnnotator
         return annotations;
     }
 
-    private List<StructuralVariantAnnotation> createAnnotations(final String sampleId, List<EnrichedStructuralVariant> enrichedVariants)
-    {
-        final Map<Integer, List<GeneAnnotation>> svIdGeneTranscriptsMap = mSvGeneTranscriptCollection.getSvIdGeneTranscriptsMap();
-
-        List<StructuralVariantAnnotation> annotations = Lists.newArrayList();
-
-        for(final EnrichedStructuralVariant var : enrichedVariants)
-        {
-            StructuralVariantAnnotation annotation = new StructuralVariantAnnotation(var);
-
-            List<GeneAnnotation> genesList = svIdGeneTranscriptsMap.get(var.primaryKey());
-
-            if(genesList == null)
-                continue;
-
-            for(GeneAnnotation geneAnnotation : genesList)
-            {
-                geneAnnotation.setSvData(var);
-            }
-
-            annotation.annotations().addAll(genesList);
-            annotations.add(annotation);
-        }
-
-        return annotations;
-    }
-
     public static void main(@NotNull final String[] args) throws ParseException
     {
         final Options options = createBasicOptions();
@@ -447,7 +401,7 @@ public class StructuralVariantAnnotator
         LOGGER.info("run complete");
     }
 
-    // configration
+    // configuration
     private static final String SAMPLE = "sample";
     private static final String VCF_FILE = "vcf_file";
     private static final String ENSEMBL_DB = "ensembl_db";
@@ -463,8 +417,7 @@ public class StructuralVariantAnnotator
     private static final String SKIP_DB_UPLOAD = "skip_db_upload";
     private static final String LOG_DEBUG = "log_debug";
     private static final String SAMPLE_RNA_FILE = "sample_rna_file";
-    private static final String TRANS_EXON_FILE = "trans_exon_file";
-    private static final String GENE_DATA_FILE = "gene_data_file";
+    private static final String CACHE_ENSEMBL_DATA = "cache_ensembl_data";
 
     private static final String DB_USER = "db_user";
     private static final String DB_PASS = "db_pass";
@@ -484,11 +437,10 @@ public class StructuralVariantAnnotator
         options.addOption(ENSEMBL_DB_USER, true, "Ensembl DB username if required");
         options.addOption(LOG_DEBUG, false, "Sets log level to Debug, off by default");
         options.addOption(SAMPLE_RNA_FILE, true, "Sample RNA data to match");
-        options.addOption(TRANS_EXON_FILE, true, "Ensembl transcript exon data");
-        options.addOption(GENE_DATA_FILE, true, "Ensembl gene data");
         options.addOption(REF_GENOME, true, "Path to the ref genome fasta file.");
         options.addOption(DATA_OUTPUT_DIR, true, "Path to persist annotations to file");
         options.addOption(ENSEMBL_DATA_DIR, true, "Cached Ensembl data path");
+        options.addOption(CACHE_ENSEMBL_DATA, false, "Query Ensembl DB for all cached data and write to files");
 
         SvFusionAnalyser.addCmdLineArgs(options);
 

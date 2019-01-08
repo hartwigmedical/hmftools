@@ -1,9 +1,17 @@
 package com.hartwig.hmftools.svannotation;
 
 import static java.lang.Math.abs;
+import static java.lang.Math.max;
+import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.io.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.common.variant.structural.annotation.EnsemblGeneData.GENE_PHASING_REGION_5P_UTR;
+import static com.hartwig.hmftools.common.variant.structural.annotation.EnsemblGeneData.GENE_PHASING_REGION_CODING_0;
+import static com.hartwig.hmftools.common.variant.structural.annotation.EnsemblGeneData.GENE_PHASING_REGION_CODING_1;
+import static com.hartwig.hmftools.common.variant.structural.annotation.EnsemblGeneData.GENE_PHASING_REGION_CODING_2;
+import static com.hartwig.hmftools.common.variant.structural.annotation.EnsemblGeneData.GENE_PHASING_REGION_MAX;
+import static com.hartwig.hmftools.common.variant.structural.annotation.EnsemblGeneData.phaseToRegion;
 import static com.hartwig.hmftools.common.variant.structural.annotation.Transcript.TRANS_CODING_TYPE_CODING;
 
 import java.io.BufferedReader;
@@ -41,9 +49,10 @@ public class SvGeneTranscriptCollection
     private BufferedWriter mBreakendWriter;
 
     // to get a wider range of candidate genes and filter by promotor distance later on
-    public static int PRE_GENE_PROMOTOR_DISTANCE = 10000;
+    public static int PRE_GENE_PROMOTOR_DISTANCE = 100000;
 
-    public static String SV_GENE_TRANSCRIPTS_FILE_SUFFIX = "sv_ensembl_data.csv";
+    public static String ENSEMBL_GENE_DATA_FILE = "ensembl_gene_data.csv";
+    public static String ENSEMBL_TRANS_EXON_DATA_FILE = "ensembl_trans_exon_data.csv";
 
     private static final Logger LOGGER = LogManager.getLogger(SvGeneTranscriptCollection.class);
 
@@ -55,8 +64,19 @@ public class SvGeneTranscriptCollection
         mBreakendWriter = null;
     }
 
+    public void setDataPath(final String dataPath)
+    {
+        mDataPath = dataPath;
+    }
+
+    public boolean hasCachedEnsemblData()
+    {
+        return !mEnsemblChrGeneDataMap.isEmpty() && !mGeneTransExonDataMap.isEmpty();
+    }
+
     public final Map<Integer, List<GeneAnnotation>> getSvIdGeneTranscriptsMap() { return mSvIdGeneTranscriptsMap; }
     public final Map<String, List<TranscriptExonData>> getGeneExonDataMap() { return mGeneTransExonDataMap; }
+    public final Map<String, List<EnsemblGeneData>> getChrGeneDataMap() { return mEnsemblChrGeneDataMap; }
 
     public final EnsemblGeneData getGeneData(final String geneName)
     {
@@ -72,178 +92,44 @@ public class SvGeneTranscriptCollection
         return null;
     }
 
+    public static int EXON_RANK_MIN = 0;
+    public static int EXON_RANK_MAX = 1;
+
+    public int[] getExonData(final String geneName, long exonPosition)
+    {
+        int[] exonData = new int[EXON_RANK_MAX+1];
+
+        final EnsemblGeneData geneData = getGeneData(geneName);
+
+        if(geneData == null)
+            return exonData;
+
+        final List<TranscriptExonData> transExonDataList = getTransExonData(geneData.GeneId);
+
+        if(transExonDataList == null)
+            return exonData;
+
+        int minRank = -1;
+        int maxRank = -1;
+        for(final TranscriptExonData transExonData : transExonDataList)
+        {
+            int exonRank = transExonData.ExonRank;
+            // final String transcriptStableId = transcriptData.get(TRANSCRIPT.STABLE_ID);
+            // final UInteger transcriptId = transcriptData.get(TRANSCRIPT.TRANSCRIPT_ID);
+
+            minRank = minRank == -1 ? exonRank : min(exonRank, minRank);
+            maxRank = max(exonRank, maxRank);
+        }
+
+        exonData[EXON_RANK_MIN] = minRank;
+        exonData[EXON_RANK_MAX] = maxRank;
+        return exonData;
+
+    }
+
     public List<TranscriptExonData> getTransExonData(final String geneId)
     {
         return mGeneTransExonDataMap.get(geneId);
-    }
-
-    public void setDataPath(final String dataPath)
-    {
-        mDataPath = dataPath;
-    }
-
-    // Gene,CanonicalTranscriptId,Strand,TransId,Trans,TransStart,TransEnd,ExonRank,ExonStart,ExonEnd,
-    // ExonPhase,ExonEndPhase,CodingStart,CodingEnd
-    private static int TE_GENE_ID = 0;
-    private static int TE_CANONICAL = 1;
-    private static int TE_STRAND = 2;
-    private static int TE_TRANS_ID = 3;
-    private static int TE_TRANS_NAME = 4;
-    private static int TE_BIOTYPE = 5;
-    private static int TE_TRANS_START = 6;
-    private static int TE_TRANS_END = 7;
-    private static int TE_EXON_RANK = 8;
-    private static int TE_EXON_START = 9;
-    private static int TE_EXON_END = 10;
-    private static int TE_PHASE = 11;
-    private static int TE_PHASE_END = 12;
-    private static int TE_CODING_START = 13;
-    private static int TE_CODING_END = 14;
-
-    public boolean loadTranscriptExonData(final String filename)
-    {
-        if (filename.isEmpty() || !Files.exists(Paths.get(filename)))
-            return false;
-
-        try
-        {
-            BufferedReader fileReader = new BufferedReader(new FileReader(filename));
-
-            String line = fileReader.readLine();
-
-            if (line == null)
-            {
-                LOGGER.error("empty Ensembl gene-exon data file({})", filename);
-                return false;
-            }
-
-            int exonCount = 0;
-            String currentGene = "";
-            List<TranscriptExonData> transExonDataList = null;
-
-            line = fileReader.readLine(); // skip header
-
-            while (line != null)
-            {
-                // parse CSV data
-                String[] items = line.split(",");
-
-                // check if still on the same variant
-                final String geneId = items[TE_GENE_ID];
-
-                if(!geneId.equals(currentGene))
-                {
-                    currentGene = geneId;
-                    transExonDataList = Lists.newArrayList();
-                    mGeneTransExonDataMap.put(geneId, transExonDataList);
-                }
-
-                // Gene,CanonicalTranscriptId,Strand,TransId,Trans,TransStart,TransEnd,ExonRank,ExonStart,ExonEnd,
-                // ExonPhase,ExonEndPhase,CodingStart,CodingEnd
-
-                Long codingStart = !items[TE_CODING_START].equals("NULL") ? Long.parseLong(items[TE_CODING_START]) : null;
-                Long codingEnd = !items[TE_CODING_END].equals("NULL") ? Long.parseLong(items[TE_CODING_END]) : null;
-                int transId = Integer.parseInt(items[TE_TRANS_ID]);
-                int canonicalTransId = Integer.parseInt(items[TE_CANONICAL]);
-
-                TranscriptExonData exonData = new TranscriptExonData(
-                        geneId, items[TE_TRANS_NAME], transId, transId == canonicalTransId, Byte.parseByte(items[TE_STRAND]),
-                        Long.parseLong(items[TE_TRANS_START]), Long.parseLong(items[TE_TRANS_END]),
-                        Long.parseLong(items[TE_EXON_START]), Long.parseLong(items[TE_EXON_END]),
-                        Integer.parseInt(items[TE_EXON_RANK]), Integer.parseInt(items[TE_PHASE]), Integer.parseInt(items[TE_PHASE_END]),
-                        codingStart, codingEnd, items[TE_BIOTYPE]);
-
-                transExonDataList.add(exonData);
-                ++exonCount;
-
-                line = fileReader.readLine();
-            }
-
-            LOGGER.debug("loaded {} gene records, {} exon", mGeneTransExonDataMap.size(), exonCount);
-        }
-        catch(IOException e)
-        {
-            LOGGER.warn("failed to load sample gene annotations({}): {}", filename, e.toString());
-            return false;
-        }
-
-        return true;
-    }
-
-    // GeneId,GeneName,Chromosome,Strand,GeneStart,GeneEnd,EntrezIds,KaryotypeBand,Synonyms
-    private static int GD_ID = 0;
-    private static int GD_NAME = 1;
-    private static int GD_CHR = 2;
-    private static int GD_STRAND = 3;
-    private static int GD_START = 4;
-    private static int GD_END = 5;
-    private static int GD_ENTREZ = 6;
-    private static int GD_BAND = 7;
-    private static int GD_SYN = 8;
-
-    public boolean loadEnsemblGeneData(final String filename)
-    {
-        if (filename.isEmpty() || !Files.exists(Paths.get(filename)))
-            return false;
-
-        try
-        {
-            BufferedReader fileReader = new BufferedReader(new FileReader(filename));
-
-            String line = fileReader.readLine();
-
-            if (line == null)
-            {
-                LOGGER.error("empty Ensembl gene data file({})", filename);
-                return false;
-            }
-
-            line = fileReader.readLine(); // skip header
-
-            List<EnsemblGeneData> geneList = null;
-            String currentChr = "";
-            int geneCount = 0;
-
-            while (line != null)
-            {
-                String[] items = line.split(",");
-
-                final String geneId = items[GD_ID];
-                final String chromosome = items[GD_CHR];
-
-                EnsemblGeneData geneData = new EnsemblGeneData(
-                        geneId, items[GD_NAME], chromosome, Byte.parseByte(items[GD_STRAND]),
-                        Long.parseLong(items[GD_START]), Long.parseLong(items[GD_END]),
-                        items[GD_ENTREZ], items[GD_BAND], items[GD_SYN]);
-
-                if(!currentChr.equals(chromosome))
-                {
-                    currentChr = chromosome;
-                    geneList = mEnsemblChrGeneDataMap.get(chromosome);
-
-                    if(geneList == null)
-                    {
-                        geneList = Lists.newArrayList();
-                        mEnsemblChrGeneDataMap.put(chromosome, geneList);
-                    }
-                }
-
-                geneData.setListIndex(geneList.size());
-                geneList.add(geneData);
-                ++geneCount;
-
-                line = fileReader.readLine();
-            }
-
-            LOGGER.debug("loaded {} gene records", geneCount);
-        }
-        catch(IOException e)
-        {
-            LOGGER.warn("failed to load Ensembl gene ({}): {}", filename, e.toString());
-            return false;
-        }
-
-        return true;
     }
 
     private static int SPECIFIC_VAR_ID = -1;
@@ -274,20 +160,12 @@ public class SvGeneTranscriptCollection
                     geneData.Strand, geneData.Synonyms, geneData.EntrezIds, geneData.KaryotypeBand);
 
             // collect up all the relevant exons for each unique transcript to analyse as a collection
-            for(int i = 0; i < transExonDataList.size(); ++i)
+
+            int teIndex = 0;
+            List<TranscriptExonData> transcriptExons = nextTranscriptExons(transExonDataList, teIndex);
+
+            while(!transcriptExons.isEmpty())
             {
-                List<TranscriptExonData> transcriptExons = Lists.newArrayList();
-                int transId = transExonDataList.get(i).TransId;
-
-                int j = i;
-                for(; j < transExonDataList.size(); ++j)
-                {
-                    if(transExonDataList.get(j).TransId != transId)
-                        break;
-
-                    transcriptExons.add(transExonDataList.get(j));
-                }
-
                 Transcript transcript = extractTranscriptExonData(transcriptExons, position, currentGene);
 
                 if(transcript != null)
@@ -308,16 +186,35 @@ public class SvGeneTranscriptCollection
                     }
                 }
 
-                if(j == transExonDataList.size() - 1)
-                    break;
-
-                i = j - 1;
+                teIndex += transcriptExons.size();
+                transcriptExons = nextTranscriptExons(transExonDataList, teIndex);
             }
 
             geneAnnotations.add(currentGene);
         }
 
         return geneAnnotations;
+    }
+
+    public static List<TranscriptExonData> nextTranscriptExons(final List<TranscriptExonData> transExonDataList, int currentIndex)
+    {
+        List<TranscriptExonData> transcriptExons = Lists.newArrayList();
+
+        if(currentIndex >= transExonDataList.size())
+            return transcriptExons;
+
+        int transId = transExonDataList.get(currentIndex).TransId;
+
+        int j = currentIndex;
+        for(; j < transExonDataList.size(); ++j)
+        {
+            if(transExonDataList.get(j).TransId != transId)
+                break;
+
+            transcriptExons.add(transExonDataList.get(j));
+        }
+
+        return transcriptExons;
     }
 
     private List<EnsemblGeneData> findGeneRegions(long position, List<EnsemblGeneData> geneDataList)
@@ -340,13 +237,20 @@ public class SvGeneTranscriptCollection
 
     private EnsemblGeneData findPrecedingGene(final EnsemblGeneData geneData, List<EnsemblGeneData> geneDataList)
     {
+        // find the first upstream non-overlapping gene
         if(geneData.Strand == 1)
         {
             for(int i = geneData.getListIndex() - 1; i >= 0; --i)
             {
                 final EnsemblGeneData gene = geneDataList.get(i);
-                if(gene.Strand == geneData.Strand)
-                    return gene;
+
+                if(gene.Strand != geneData.Strand)
+                    continue;
+
+                if(gene.GeneEnd > geneData.GeneStart)
+                    continue;
+
+                return gene;
             }
         }
         else
@@ -354,8 +258,14 @@ public class SvGeneTranscriptCollection
             for(int i = geneData.getListIndex() + 1; i < geneDataList.size(); ++i)
             {
                 final EnsemblGeneData gene = geneDataList.get(i);
-                if(gene.Strand == geneData.Strand)
-                    return gene;
+
+                if(gene.Strand != geneData.Strand)
+                    continue;
+
+                if(gene.GeneStart < geneData.GeneEnd)
+                    continue;
+
+                return gene;
             }
         }
 
@@ -588,6 +498,185 @@ public class SvGeneTranscriptCollection
         return transcript;
     }
 
+
+    // Gene,CanonicalTranscriptId,Strand,TransId,Trans,TransStart,TransEnd,ExonRank,ExonStart,ExonEnd,
+    // ExonPhase,ExonEndPhase,CodingStart,CodingEnd
+    private static int TE_GENE_ID = 0;
+    private static int TE_CANONICAL = 1;
+    private static int TE_STRAND = 2;
+    private static int TE_TRANS_ID = 3;
+    private static int TE_TRANS_NAME = 4;
+    private static int TE_BIOTYPE = 5;
+    private static int TE_TRANS_START = 6;
+    private static int TE_TRANS_END = 7;
+    private static int TE_EXON_RANK = 8;
+    private static int TE_EXON_START = 9;
+    private static int TE_EXON_END = 10;
+    private static int TE_PHASE = 11;
+    private static int TE_PHASE_END = 12;
+    private static int TE_CODING_START = 13;
+    private static int TE_CODING_END = 14;
+
+    public boolean loadTranscriptExonData()
+    {
+        String filename = mDataPath;
+
+        if(!filename.endsWith(File.separator))
+            filename += File.separator;
+
+        filename += ENSEMBL_TRANS_EXON_DATA_FILE;
+
+        if (!Files.exists(Paths.get(filename)))
+            return false;
+
+        try
+        {
+            BufferedReader fileReader = new BufferedReader(new FileReader(filename));
+
+            String line = fileReader.readLine();
+
+            if (line == null)
+            {
+                LOGGER.error("empty Ensembl gene-exon data file({})", filename);
+                return false;
+            }
+
+            int exonCount = 0;
+            String currentGene = "";
+            List<TranscriptExonData> transExonDataList = null;
+
+            line = fileReader.readLine(); // skip header
+
+            while (line != null)
+            {
+                // parse CSV data
+                String[] items = line.split(",");
+
+                // check if still on the same variant
+                final String geneId = items[TE_GENE_ID];
+
+                if(!geneId.equals(currentGene))
+                {
+                    currentGene = geneId;
+                    transExonDataList = Lists.newArrayList();
+                    mGeneTransExonDataMap.put(geneId, transExonDataList);
+                }
+
+                // Gene,CanonicalTranscriptId,Strand,TransId,Trans,TransStart,TransEnd,ExonRank,ExonStart,ExonEnd,
+                // ExonPhase,ExonEndPhase,CodingStart,CodingEnd
+
+                Long codingStart = !items[TE_CODING_START].equals("NULL") ? Long.parseLong(items[TE_CODING_START]) : null;
+                Long codingEnd = !items[TE_CODING_END].equals("NULL") ? Long.parseLong(items[TE_CODING_END]) : null;
+                int transId = Integer.parseInt(items[TE_TRANS_ID]);
+                int canonicalTransId = Integer.parseInt(items[TE_CANONICAL]);
+
+                TranscriptExonData exonData = new TranscriptExonData(
+                        geneId, items[TE_TRANS_NAME], transId, transId == canonicalTransId, Byte.parseByte(items[TE_STRAND]),
+                        Long.parseLong(items[TE_TRANS_START]), Long.parseLong(items[TE_TRANS_END]),
+                        Long.parseLong(items[TE_EXON_START]), Long.parseLong(items[TE_EXON_END]),
+                        Integer.parseInt(items[TE_EXON_RANK]), Integer.parseInt(items[TE_PHASE]), Integer.parseInt(items[TE_PHASE_END]),
+                        codingStart, codingEnd, items[TE_BIOTYPE]);
+
+                transExonDataList.add(exonData);
+                ++exonCount;
+
+                line = fileReader.readLine();
+            }
+
+            LOGGER.debug("loaded {} gene records, {} exon", mGeneTransExonDataMap.size(), exonCount);
+        }
+        catch(IOException e)
+        {
+            LOGGER.warn("failed to load sample gene annotations({}): {}", filename, e.toString());
+            return false;
+        }
+
+        return true;
+    }
+
+    // GeneId,GeneName,Chromosome,Strand,GeneStart,GeneEnd,EntrezIds,KaryotypeBand,Synonyms
+    private static int GD_ID = 0;
+    private static int GD_NAME = 1;
+    private static int GD_CHR = 2;
+    private static int GD_STRAND = 3;
+    private static int GD_START = 4;
+    private static int GD_END = 5;
+    private static int GD_ENTREZ = 6;
+    private static int GD_BAND = 7;
+    private static int GD_SYN = 8;
+
+    public boolean loadEnsemblGeneData()
+    {
+        String filename = mDataPath;
+
+        if(!filename.endsWith(File.separator))
+            filename += File.separator;
+
+        filename += ENSEMBL_GENE_DATA_FILE;
+
+        if (!Files.exists(Paths.get(filename)))
+            return false;
+
+        try
+        {
+            BufferedReader fileReader = new BufferedReader(new FileReader(filename));
+
+            String line = fileReader.readLine();
+
+            if (line == null)
+            {
+                LOGGER.error("empty Ensembl gene data file({})", filename);
+                return false;
+            }
+
+            line = fileReader.readLine(); // skip header
+
+            List<EnsemblGeneData> geneList = null;
+            String currentChr = "";
+            int geneCount = 0;
+
+            while (line != null)
+            {
+                String[] items = line.split(",");
+
+                final String geneId = items[GD_ID];
+                final String chromosome = items[GD_CHR];
+
+                EnsemblGeneData geneData = new EnsemblGeneData(
+                        geneId, items[GD_NAME], chromosome, Byte.parseByte(items[GD_STRAND]),
+                        Long.parseLong(items[GD_START]), Long.parseLong(items[GD_END]),
+                        items[GD_ENTREZ], items[GD_BAND], items[GD_SYN]);
+
+                if(!currentChr.equals(chromosome))
+                {
+                    currentChr = chromosome;
+                    geneList = mEnsemblChrGeneDataMap.get(chromosome);
+
+                    if(geneList == null)
+                    {
+                        geneList = Lists.newArrayList();
+                        mEnsemblChrGeneDataMap.put(chromosome, geneList);
+                    }
+                }
+
+                geneData.setListIndex(geneList.size());
+                geneList.add(geneData);
+                ++geneCount;
+
+                line = fileReader.readLine();
+            }
+
+            LOGGER.debug("loaded {} gene records", geneCount);
+        }
+        catch(IOException e)
+        {
+            LOGGER.warn("failed to load Ensembl gene ({}): {}", filename, e.toString());
+            return false;
+        }
+
+        return true;
+    }
+
     public void writeBreakendData(final String sampleId, final List<StructuralVariantAnnotation> annotations)
     {
         if(mDataPath.isEmpty())
@@ -662,294 +751,187 @@ public class SvGeneTranscriptCollection
     public void close()
     {
         closeBufferedWriter(mBreakendWriter);
+
     }
 
-    public static final String getSampleGeneAnnotationsFilename(final String path, final String sampleId)
+    public void cacheAllEnsemblData()
     {
-        String filename = path;
+        writeGeneProbabilityData();
 
-        if(!path.endsWith("/"))
-                filename += File.separator;
+        // writeTranscriptExonData();
 
-        filename += sampleId + "_" + SV_GENE_TRANSCRIPTS_FILE_SUFFIX;
-
-        return filename;
+        // writeGeneData();
     }
 
-    private static int VAR_ID_COL_INDEX = 0;
-    private static int VAR_CHR_COL_INDEX = 1;
-    private static int VAR_POS_COL_INDEX = 2;
-    private static int VAR_ORIENT_COL_INDEX = 3;
-
-    // gene data: isStart, geneName, geneStableId, geneStrand, synonyms, entrezIds, karyotypeBand
-    private static int GENE_IS_START_COL_INDEX = 4;
-    private static int GENE_NAME_COL_INDEX = 5;
-    private static int GENE_STABLE_ID_COL_INDEX = 6;
-    private static int GENE_STRAND_INDEX = 7;
-    private static int GENE_SYNS_COL_INDEX = 8;
-    private static int GENE_EIDS_COL_INDEX = 9;
-    private static int GENE_KARYOTYPE_COL_INDEX = 10;
-
-    // transcript data: transcriptId, exonUpstream, exonUpstreamPhase, exonDownstream, exonDownstreamPhase, codingBase, totalCodingBases, exonMax, canonical, codingStart, codingEnd
-    private static int TRANSCRIPT_ID_COL_INDEX = 11;
-    private static int TRANSCRIPT_EUP_RANK_COL_INDEX = 12;
-    private static int TRANSCRIPT_EUP_PHASE_COL_INDEX = 13;
-    private static int TRANSCRIPT_EDN_RANK_COL_INDEX = 14;
-    private static int TRANSCRIPT_EDN_PHASE_COL_INDEX = 15;
-    private static int TRANSCRIPT_CDB_COL_INDEX = 16;
-    private static int TRANSCRIPT_TCB_COL_INDEX = 17;
-    private static int TRANSCRIPT_EMAX_COL_INDEX = 18;
-    private static int TRANSCRIPT_CAN_COL_INDEX = 19;
-    private static int TRANSCRIPT_TRANS_S_COL_INDEX = 20;
-    private static int TRANSCRIPT_TRANS_E_COL_INDEX = 21;
-    private static int TRANSCRIPT_CODE_S_COL_INDEX = 22;
-    private static int TRANSCRIPT_CODE_E_COL_INDEX = 23;
-
-    public boolean loadSampleGeneTranscripts(final String sampleId)
+    public void writeGeneProbabilityData()
     {
-        mSvIdGeneTranscriptsMap.clear();
-
-        if(sampleId.isEmpty() || mDataPath.isEmpty())
-            return false;
-
-        final String filename = getSampleGeneAnnotationsFilename(mDataPath, sampleId);
-
-        if (filename.isEmpty() || !Files.exists(Paths.get(filename)))
-            return false;
-
-        try
+        for(Map.Entry<String, List<EnsemblGeneData>> entry : mEnsemblChrGeneDataMap.entrySet())
         {
-            BufferedReader fileReader = new BufferedReader(new FileReader(filename));
-
-            String line = fileReader.readLine();
-
-            if (line == null)
+            for(final EnsemblGeneData geneData :entry.getValue())
             {
-                LOGGER.error("empty ensembl data file({})", filename);
-                return false;
+                final List<TranscriptExonData> transExonDataList = getTransExonData(geneData.GeneId);
+
+                setGenePhasingCounts(geneData, transExonDataList);
             }
+        }
+    }
 
-            int currentVarId = -1;
+    public static void setGenePhasingCounts(final EnsemblGeneData geneData, final List<TranscriptExonData> transExonDataList)
+    {
+        long geneStart = geneData.GeneStart;
+        long geneEnd = geneData.GeneEnd;
+        int geneLength = (int) (geneEnd - geneStart + 1);
 
-            GeneAnnotation currentGene = null;
-            List<GeneAnnotation> geneAnnotations = null;
+        boolean[][] geneBases = new boolean[geneLength][GENE_PHASING_REGION_MAX];
 
-            line = fileReader.readLine(); // skip header
+        boolean hasCodingExons = false;
+        int teIndex = 0;
+        List<TranscriptExonData> transcriptExons = nextTranscriptExons(transExonDataList, teIndex);
 
-            while (line != null)
+        while (!transcriptExons.isEmpty())
+        {
+            if (geneData.Strand == 1)
             {
-                // parse CSV data
-                String[] items = line.split(",");
-
-                // check if still on the same variant
-                final int varId = Integer.parseInt(items[VAR_ID_COL_INDEX]);
-
-                if(varId != currentVarId)
+                for (int i = 0; i < transcriptExons.size(); ++i)
                 {
-                    if(currentVarId >= 0)
+                    final TranscriptExonData exonData = transcriptExons.get(i);
+
+                    if (exonData.CodingStart == null)
+                        break;
+
+                    hasCodingExons = true;
+
+                    if (exonData.ExonStart > exonData.CodingEnd) // past end of coding region
+                        break;
+
+                    // first mark the entire pre-coding region as 5' UTR
+                    if (i == 0)
                     {
-                        mSvIdGeneTranscriptsMap.put(currentVarId, geneAnnotations);
+                        for (long j = geneStart; j <= exonData.CodingStart; ++j)
+                        {
+                            int gbPos = (int) (j - geneStart);
+                            geneBases[gbPos][GENE_PHASING_REGION_5P_UTR] = true;
+                        }
                     }
 
-                    currentVarId = varId;
-                    currentGene = null;
+                    if (exonData.ExonEnd < exonData.CodingStart) // already accounted for
+                        continue;
 
-                    // start a new list for the new variant
-                    geneAnnotations = Lists.newArrayList();
-                }
-
-                // isStart, geneName, geneStableId, geneStrand, synonyms, entrezIds, karyotypeBand
-                final String geneName = items[GENE_NAME_COL_INDEX];
-                boolean geneIsStart = Boolean.parseBoolean(items[GENE_IS_START_COL_INDEX]);
-
-                if(currentGene == null || !currentGene.geneName().equals(geneName) || currentGene.isStart() != geneIsStart)
-                {
-                    String[] synonymsStr = items[GENE_SYNS_COL_INDEX].split(";");
-                    final List<String> synonyms = Lists.newArrayList(synonymsStr);
-
-                    String[] entrezIdStr = items[GENE_EIDS_COL_INDEX].split(";");
-
-                    final List<Integer> entrezIds = Lists.newArrayList();
-
-                    for (int i = 0; i < entrezIdStr.length; ++i)
+                    // now handle the exon's phasing
+                    long codingStart = max(exonData.ExonStart, exonData.CodingStart);
+                    for (long j = codingStart; j <= exonData.ExonEnd; ++j)
                     {
-                        if(!entrezIdStr[i].isEmpty())
-                            entrezIds.add(Integer.parseInt(entrezIdStr[i]));
+                        int gbPos = (int) (j - geneStart);
+
+                        if (j > exonData.CodingEnd)
+                            break;
+
+                        long adjustedPhase = exonData.ExonPhase + (j - codingStart);
+                        int calcPhase = (int) (adjustedPhase % 3);
+                        geneBases[gbPos][phaseToRegion(calcPhase)] = true;
                     }
 
-                    currentGene = new GeneAnnotation(
-                            varId,
-                            geneIsStart,
-                            geneName,
-                            items[GENE_STABLE_ID_COL_INDEX],
-                            Integer.parseInt(items[GENE_STRAND_INDEX]),
-                            synonyms,
-                            entrezIds,
-                            items[GENE_KARYOTYPE_COL_INDEX]);
+                    // fill in the intronic phasing between coding exons
+                    if (i < transcriptExons.size() - 1)
+                    {
+                        final TranscriptExonData nextExon = transcriptExons.get(i + 1);
 
-                    currentGene.setPositionalData(
-                            items[VAR_CHR_COL_INDEX],
-                            Long.parseLong(items[VAR_POS_COL_INDEX]),
-                            Byte.parseByte(items[VAR_ORIENT_COL_INDEX]));
+                        if (nextExon.ExonStart <= nextExon.CodingEnd)
+                        {
+                            int regionType = phaseToRegion(exonData.ExonPhaseEnd);
 
-                    geneAnnotations.add(currentGene);
-                }
-
-                final String transcriptId = items[TRANSCRIPT_ID_COL_INDEX];
-
-
-                int exonUpstreamRank = Integer.parseInt(items[TRANSCRIPT_EUP_RANK_COL_INDEX]);
-                int exonUpstreamPhase = Integer.parseInt(items[TRANSCRIPT_EUP_PHASE_COL_INDEX]);
-                int exonDownstreamRank = Integer.parseInt(items[TRANSCRIPT_EDN_RANK_COL_INDEX]);
-                int exonDownstreamPhase = Integer.parseInt(items[TRANSCRIPT_EDN_PHASE_COL_INDEX]);
-
-                // corrections for errors in Ensembl annotations
-
-                if(exonDownstreamRank == -1 || exonUpstreamRank == -1 || abs(exonUpstreamRank - exonDownstreamRank) > 1)
-                {
-                    LOGGER.warn("skipping invalid transcript info: SV({}) trans({}) ranks(up={} down={})",
-                            varId, transcriptId, exonUpstreamRank, exonDownstreamRank);
-                }
-                else
-                {
-                    // transcriptId, exonUpstream, exonUpstreamPhase, exonDownstream, exonDownstreamPhase, exonMax, canonical, codingStart, codingEnd
-                    Transcript transcript = new Transcript(
-                            currentGene, transcriptId,
-                            exonUpstreamRank, exonUpstreamPhase, exonDownstreamRank, exonDownstreamPhase,
-                            Long.parseLong(items[TRANSCRIPT_CDB_COL_INDEX]),
-                            Long.parseLong(items[TRANSCRIPT_TCB_COL_INDEX]),
-                            Integer.parseInt(items[TRANSCRIPT_EMAX_COL_INDEX]),
-                            Boolean.parseBoolean(items[TRANSCRIPT_CAN_COL_INDEX]),
-                            Integer.parseInt(items[TRANSCRIPT_TRANS_S_COL_INDEX]),
-                            Integer.parseInt(items[TRANSCRIPT_TRANS_E_COL_INDEX]),
-                            items[TRANSCRIPT_CODE_S_COL_INDEX].equals("null") ? null : Long.parseLong(items[TRANSCRIPT_CODE_S_COL_INDEX]),
-                            items[TRANSCRIPT_CODE_E_COL_INDEX].equals("null") ? null : Long.parseLong(items[TRANSCRIPT_CODE_E_COL_INDEX]));
-
-                    currentGene.addTranscript(transcript);
-                }
-
-                line = fileReader.readLine();
-
-                if(line == null)
-                {
-                    // add the last variant gene list
-                    mSvIdGeneTranscriptsMap.put(varId, geneAnnotations);
-                    break;
+                            for (long j = exonData.ExonEnd + 1; j < nextExon.ExonStart; ++j)
+                            {
+                                int gbPos = (int) (j - geneStart);
+                                geneBases[gbPos][regionType] = true;
+                            }
+                        }
+                    }
                 }
             }
-
-        }
-        catch(IOException e)
-        {
-            LOGGER.warn("failed to load sample gene annotations({}): {}", filename, e.toString());
-            return false;
-        }
-
-        return true;
-    }
-
-    public void writeAnnotations(final String sampleId, final List<StructuralVariantAnnotation> annotations)
-    {
-        if(mDataPath.isEmpty() || sampleId.isEmpty())
-            return;
-
-        LOGGER.debug("writing {} annotations to file", annotations.size());
-
-        String outputFilename = getSampleGeneAnnotationsFilename(mDataPath, sampleId);
-
-        try
-        {
-            Path outputFile = Paths.get(outputFilename);
-
-            BufferedWriter writer = Files.newBufferedWriter(outputFile, StandardOpenOption.CREATE);
-
-            // write header
-            writer.write("SvId,Chromosome,Position,Orientation");
-            writer.write(",IsStart,GeneName, GeneStableId, GeneStrand, Synonyms, EntrezIds, KaryotypeBand");
-            writer.write(",TranscriptId,ExonUpstream,ExonUpstreamPhase,ExonDownstream,ExonDownstreamPhase,CodingBases,TotalCodingBases");
-            writer.write(",ExonMax,Canonical,TranscriptStart,TranscriptEnd,CodingStart,CodingEnd,RegionType,CodingType");
-            writer.newLine();
-
-            for(final StructuralVariantAnnotation annotation : annotations)
+            else
             {
-                if(annotation.annotations().isEmpty())
+                // navigate through as per the exon rank
+                for (int i = transcriptExons.size() - 1; i >= 0; --i)
                 {
-                    // LOGGER.debug("SV({}) has no annotations", annotation.variant().primaryKey());
-                    continue;
-                }
+                    final TranscriptExonData exonData = transcriptExons.get(i);
 
-                for(final GeneAnnotation geneAnnotation : annotation.annotations())
-                {
-                    String synonymnsStr = "";
-                    for(final String syn : geneAnnotation.synonyms())
+                    if (exonData.CodingStart == null)
+                        break;
+
+                    hasCodingExons = true;
+
+                    if (exonData.ExonEnd < exonData.CodingStart) // past end of coding region
+                        break;
+
+                    // first mark the entire pre-coding region as 5' UTR
+                    if (i == transcriptExons.size() - 1)
                     {
-                        if(!synonymnsStr.isEmpty())
-                            synonymnsStr += ";";
-
-                        synonymnsStr += syn;
+                        for (long j = exonData.CodingEnd; j <= geneEnd; ++j)
+                        {
+                            int gbPos = (int) (geneEnd - j);
+                            geneBases[gbPos][GENE_PHASING_REGION_5P_UTR] = true;
+                        }
                     }
 
-                    String entrezIdsStr = "";
-                    for(final Integer eId : geneAnnotation.entrezIds())
-                    {
-                        if(!entrezIdsStr.isEmpty())
-                            entrezIdsStr += ";";
+                    if (exonData.ExonStart > exonData.CodingEnd) // already accounted for
+                        continue;
 
-                        entrezIdsStr += eId;
+                    // allocate the exon's phasing - working backwwards this time
+                    long codingEnd = min(exonData.ExonEnd, exonData.CodingEnd);
+                    for (long j = codingEnd; j >= exonData.ExonStart; --j)
+                    {
+                        int gbPos = (int) (geneEnd - j);
+
+                        if (j < exonData.CodingStart)
+                            break;
+
+                        long adjustedPhase = exonData.ExonPhase + (codingEnd - j);
+                        int calcPhase = (int) (adjustedPhase % 3);
+                        geneBases[gbPos][phaseToRegion(calcPhase)] = true;
                     }
 
-                    for(final Transcript transcript : geneAnnotation.transcripts())
+                    // fill in the intronic phasing between coding exons
+                    if (i > 0)
                     {
-                        final StructuralVariant var = annotation.variant();
+                        final TranscriptExonData nextExon = transcriptExons.get(i - 1);
 
-                        boolean isStart = geneAnnotation.isStart();
+                        if (nextExon.ExonEnd >= nextExon.CodingStart)
+                        {
+                            int regionType = phaseToRegion(exonData.ExonPhaseEnd);
 
-                        writer.write(String.format("%d,%s,%d,%d",
-                                var.primaryKey(), var.chromosome(isStart), var.position(isStart), var.orientation(isStart)));
-
-                        // Gene info: isStart, geneName, geneStableId, geneStrand, synonyms, entrezIds, karyotypeBand
-                        writer.write(
-                                String.format(",%s,%s,%s,%d,%s,%s,%s",
-                                        geneAnnotation.isStart(),
-                                        geneAnnotation.geneName(),
-                                        geneAnnotation.stableId(),
-                                        geneAnnotation.strand(),
-                                        synonymnsStr,
-                                        entrezIdsStr,
-                                        geneAnnotation.karyotypeBand()));
-
-                        // Transcript info: transcriptId,exonUpstream, exonUpstreamPhase, exonDownstream, exonDownstreamPhase, exonStart, exonEnd, exonMax, canonical, codingStart, codingEnd
-                        writer.write(
-                                String.format(",%s,%d,%d,%d,%d,%d,%d",
-                                        transcript.transcriptId(),
-                                        transcript.exonUpstream(),
-                                        transcript.exonUpstreamPhase(),
-                                        transcript.exonDownstream(),
-                                        transcript.exonDownstreamPhase(),
-                                        transcript.codingBases(),
-                                        transcript.totalCodingBases()));
-
-                        writer.write(
-                                String.format(",%d,%s,%d,%d,%d,%d,%s,%s",
-                                        transcript.exonMax(),
-                                        transcript.isCanonical(),
-                                        transcript.transcriptStart(),
-                                        transcript.transcriptEnd(),
-                                        transcript.codingStart(),
-                                        transcript.codingEnd(),
-                                        transcript.regionType(),
-                                        transcript.codingType()));
-
-                        writer.newLine();
+                            for (long j = nextExon.ExonEnd + 1; j < exonData.ExonStart; ++j)
+                            {
+                                int gbPos = (int) (geneEnd - j);
+                                geneBases[gbPos][regionType] = true;
+                            }
+                        }
                     }
                 }
             }
 
-            writer.close();
+            teIndex += transcriptExons.size();
+            transcriptExons = nextTranscriptExons(transExonDataList, teIndex);
         }
-        catch (final IOException e)
+
+        // now compute the number of bases for each phasing region
+        int[] regionTotals = geneData.getRegionTotals();
+
+        for(int i = 0; i < geneLength; ++i)
         {
-            LOGGER.error("error writing gene annotations: {}", e.toString());
+            for(int j = 0; j < GENE_PHASING_REGION_MAX; ++j)
+            {
+                if(geneBases[i][j])
+                    ++regionTotals[j];
+            }
+        }
+
+        if(hasCodingExons)
+        {
+            LOGGER.debug("gene({}) length({}) region counts: pre-coding({}) phases(0={} 1={} 2={})",
+                    geneData.GeneId, geneData.GeneName, geneLength, regionTotals[GENE_PHASING_REGION_5P_UTR],
+                    regionTotals[GENE_PHASING_REGION_CODING_0], regionTotals[GENE_PHASING_REGION_CODING_1],
+                    regionTotals[GENE_PHASING_REGION_CODING_2]);
         }
     }
 

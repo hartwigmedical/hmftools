@@ -196,4 +196,14 @@ public class GeneAnnotation {
     public final String getmPrecedingGeneId() { return mPrecedingGeneId; }
     public void setPrecedingGeneId(final String geneId) { mPrecedingGeneId = geneId; }
 
+    public static boolean isUpstream(final GeneAnnotation gene)
+    {
+        return gene.strand() * gene.orientation() > 0;
+    }
+
+    public static boolean isDownstream(final GeneAnnotation gene)
+    {
+        return !isUpstream(gene);
+    }
+
 }

@@ -8,10 +8,16 @@ public class RnaFusionData
     public final String Name;
     public final String GeneUp;
     public final String GeneDown;
+    public final String ChrUp;
+    public final String ChrDown;
     public final long PositionUp;
     public final long PositionDown;
     public final byte StrandUp;
     public final byte StrandDown;
+
+    public final int JunctionReadCount;
+    public final int SpanningFragCount;
+    public final String SpliceType;
 
     private int mExonMinRankUp;
     private int mExonMaxRankUp;
@@ -23,16 +29,21 @@ public class RnaFusionData
     private Transcript mTransDown;
 
 
-    public RnaFusionData(final String name, final String geneUp, final String geneDown,
-            long posUp, long posDown, byte strandUp, byte strandDown)
+    public RnaFusionData(final String name, final String geneUp, final String geneDown, final String chrUp, final String chrDown,
+            long posUp, long posDown, byte strandUp, byte strandDown, int junctionReadCount, int spanningFragCount, final String spliceType)
     {
         Name = name;
         GeneUp = geneUp;
         GeneDown = geneDown;
+        ChrUp = chrUp;
+        ChrDown = chrDown;
         PositionUp = posUp;
         PositionDown = posDown;
         StrandUp = strandUp;
         StrandDown = strandDown;
+        JunctionReadCount = junctionReadCount;
+        SpanningFragCount = spanningFragCount;
+        SpliceType = spliceType;
 
         mExonMinRankUp = 0;
         mExonMaxRankUp = 0;

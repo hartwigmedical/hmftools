@@ -114,9 +114,6 @@ public class SvDisruptionAnalyser
 
         for(final StructuralVariantAnnotation annotation : annotations)
         {
-            final List<GeneAnnotation> startGenes = annotation.start();
-            final List<GeneAnnotation> endGenes = annotation.start();
-
             for(final GeneAnnotation startGene : annotation.start())
             {
                 for (final Transcript trans1 : startGene.transcripts())
