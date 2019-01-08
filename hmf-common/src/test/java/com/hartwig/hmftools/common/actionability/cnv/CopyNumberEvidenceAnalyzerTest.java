@@ -64,6 +64,6 @@ public class CopyNumberEvidenceAnalyzerTest {
                 .missenseNonBiallelicCount(0)
                 .build();
 
-           assertFalse(cnvAnalyzer.evidenceForCopyNumber(geneCopyNumber, "Breast", cancerTypeAnalyzer).isEmpty());
+           assertFalse(cnvAnalyzer.evidenceForCopyNumber(geneCopyNumber, 2D, "Breast", cancerTypeAnalyzer).isEmpty());
     }
 }

@@ -13,7 +13,6 @@ import com.hartwig.hmftools.common.purple.purity.FittedPurity;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
 import com.hartwig.hmftools.patientreporter.actionability.ReportableEvidenceItemFactory;
 import com.hartwig.hmftools.patientreporter.genepanel.GeneModel;
-import com.hartwig.hmftools.common.copynumber.FilterSignificantGeneCopyNumbers;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -29,14 +28,12 @@ public final class CopyNumberAnalyzer {
             @NotNull ActionabilityAnalyzer actionabilityAnalyzer, @Nullable PatientTumorLocation patientTumorLocation) {
         FittedPurity bestFit = purityContext.bestFit();
 
-        List<GeneCopyNumber> significantCopyNumbers =
-                FilterSignificantGeneCopyNumbers.filterForSignificance(exomeGeneCopyNumbers, bestFit.ploidy());
-
-        List<GeneCopyNumber> reportableGeneCopyNumbers = ReportingCopyNumberFilters.filterForReporting(significantCopyNumbers, geneModel);
+        List<GeneCopyNumber> reportableGeneCopyNumbers =
+                ReportingCopyNumberFilters.filterForReporting(exomeGeneCopyNumbers, geneModel, purityContext.gender(), bestFit.ploidy());
 
         String primaryTumorLocation = patientTumorLocation != null ? patientTumorLocation.primaryTumorLocation() : null;
         Map<GeneCopyNumber, List<EvidenceItem>> evidencePerGeneCopyNumber =
-                actionabilityAnalyzer.evidenceForCopyNumbers(significantCopyNumbers, primaryTumorLocation);
+                actionabilityAnalyzer.evidenceForCopyNumbers(exomeGeneCopyNumbers, primaryTumorLocation, bestFit.ploidy());
 
         List<EvidenceItem> filteredEvidence = ReportableEvidenceItemFactory.reportableFlatList(evidencePerGeneCopyNumber);
 

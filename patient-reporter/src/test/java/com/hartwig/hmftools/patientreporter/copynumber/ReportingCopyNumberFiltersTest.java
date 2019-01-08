@@ -10,6 +10,7 @@ import static org.junit.Assert.assertTrue;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.purple.gender.Gender;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.patientreporter.genepanel.GeneModel;
 
@@ -26,22 +27,22 @@ public class ReportingCopyNumberFiltersTest {
         assertFalse(geneModel.isDeletionReportable(gene));
         geneCopyNumbers.add(createTestCopyNumberBuilder().gene(gene).minCopyNumber(0).build());
 
-        List<GeneCopyNumber> filtered = ReportingCopyNumberFilters.filterForReporting(geneCopyNumbers, geneModel);
+        List<GeneCopyNumber> filtered = ReportingCopyNumberFilters.filterForReporting(geneCopyNumbers, geneModel, Gender.MALE, 2D);
 
         assertTrue(filtered.isEmpty());
     }
 
     @Test
     public void reportLossesCorrectly() {
-        assertTrue(includeInReport(0, true, true));
-        assertFalse(includeInReport(0, true, false));
-        assertFalse(includeInReport(5, false, true));
+        assertTrue(includeInReport(0, true, true, true));
+        assertFalse(includeInReport(0, true, true, false));
+        assertFalse(includeInReport(5, true, false, true));
     }
 
     @Test
     public void reportGainsCorrectly() {
-        assertTrue(includeInReport(5, true, true));
-        assertFalse(includeInReport(5, false, true));
-        assertFalse(includeInReport(0, true, false));
+        assertTrue(includeInReport(5, true, true, true));
+        assertFalse(includeInReport(5, true, false, true));
+        assertFalse(includeInReport(0, true, true, false));
     }
 }

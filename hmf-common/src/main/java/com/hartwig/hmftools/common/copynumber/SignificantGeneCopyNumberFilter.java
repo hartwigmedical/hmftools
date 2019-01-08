@@ -3,16 +3,18 @@ package com.hartwig.hmftools.common.copynumber;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.numeric.Doubles;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 
 import org.jetbrains.annotations.NotNull;
 
-public class FilterSignificantGeneCopyNumbers {
+public final class SignificantGeneCopyNumberFilter {
 
     private static final double REL_GAIN = 3;
     private static final double ABS_LOSS = 0.5;
+
+    private SignificantGeneCopyNumberFilter() {
+    }
 
     @NotNull
     public static List<GeneCopyNumber> filterForSignificance(@NotNull List<GeneCopyNumber> geneCopyNumbers, double averageTumorPloidy) {
@@ -21,8 +23,7 @@ public class FilterSignificantGeneCopyNumbers {
                 .collect(Collectors.toList());
     }
 
-    @VisibleForTesting
-    static boolean isSignificant(double averageTumorPloidy, double copyNumber) {
+    public static boolean isSignificant(double averageTumorPloidy, double copyNumber) {
         if (Doubles.lessOrEqual(copyNumber, ABS_LOSS)) {
             return true;
         }
