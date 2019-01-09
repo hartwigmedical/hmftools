@@ -45,6 +45,7 @@ public class SvGeneTranscriptCollection
     private Map<Integer, List<GeneAnnotation>> mSvIdGeneTranscriptsMap;
     private Map<String, List<TranscriptExonData>> mGeneTransExonDataMap;
     private Map<String, List<EnsemblGeneData>> mEnsemblChrGeneDataMap;
+    private Map<String, List<EnsemblGeneData>> mEnsemblChrReverseGeneDataMap; // order by gene end not start
 
     private BufferedWriter mBreakendWriter;
 
@@ -61,6 +62,7 @@ public class SvGeneTranscriptCollection
         mSvIdGeneTranscriptsMap = new HashMap();
         mGeneTransExonDataMap = new HashMap();
         mEnsemblChrGeneDataMap = new HashMap();
+        mEnsemblChrReverseGeneDataMap = new HashMap();
         mBreakendWriter = null;
     }
 
@@ -132,8 +134,8 @@ public class SvGeneTranscriptCollection
         return mGeneTransExonDataMap.get(geneId);
     }
 
-    private static int SPECIFIC_VAR_ID = -1;
-    // private static int SPECIFIC_VAR_ID = 5417525;
+    // private static int SPECIFIC_VAR_ID = -1;
+    private static int SPECIFIC_VAR_ID = 4558066;
 
     public List<GeneAnnotation> findGeneAnnotationsBySv(int svId, boolean isStart, final String chromosome, long position, byte orientation)
     {
@@ -145,6 +147,7 @@ public class SvGeneTranscriptCollection
         }
 
         final List<EnsemblGeneData> geneRegions = mEnsemblChrGeneDataMap.get(chromosome);
+        final List<EnsemblGeneData> geneRegionsReversed = mEnsemblChrReverseGeneDataMap.get(chromosome);
 
         final List<EnsemblGeneData> matchedGenes = findGeneRegions(position, geneRegions);
 
@@ -175,12 +178,12 @@ public class SvGeneTranscriptCollection
                     // annotate with preceding gene info if the up distance isn't set
                     if(transcript.exonDistanceUp() == -1)
                     {
-                        EnsemblGeneData precedingGene = findPrecedingGene(geneData, geneRegions);
+                        EnsemblGeneData precedingGene = findPrecedingGene(geneData, geneData.Strand == 1 ? geneRegionsReversed : geneRegions);
                         if(precedingGene != null)
                         {
                             currentGene.setPrecedingGeneId(precedingGene.GeneId);
 
-                            long preDistance = geneData.Strand == 1 ? position - precedingGene.GeneEnd : precedingGene.GeneEnd - position;
+                            long preDistance = geneData.Strand == 1 ? position - precedingGene.GeneEnd : precedingGene.GeneStart - position;
                             transcript.setExonDistances((int)preDistance, transcript.exonDistanceDown());
                         }
                     }
@@ -240,7 +243,7 @@ public class SvGeneTranscriptCollection
         // find the first upstream non-overlapping gene
         if(geneData.Strand == 1)
         {
-            for(int i = geneData.getListIndex() - 1; i >= 0; --i)
+            for(int i = geneData.getReverseListIndex() - 1; i >= 0; --i)
             {
                 final EnsemblGeneData gene = geneDataList.get(i);
 
@@ -632,6 +635,7 @@ public class SvGeneTranscriptCollection
             line = fileReader.readLine(); // skip header
 
             List<EnsemblGeneData> geneList = null;
+            List<EnsemblGeneData> reverseGeneList = null;
             String currentChr = "";
             int geneCount = 0;
 
@@ -655,15 +659,40 @@ public class SvGeneTranscriptCollection
                     if(geneList == null)
                     {
                         geneList = Lists.newArrayList();
+                        reverseGeneList = Lists.newArrayList();
                         mEnsemblChrGeneDataMap.put(chromosome, geneList);
+                        mEnsemblChrReverseGeneDataMap.put(chromosome, reverseGeneList);
                     }
                 }
 
+                // genes are already sorted by GeneStart
                 geneData.setListIndex(geneList.size());
                 geneList.add(geneData);
                 ++geneCount;
 
+                // but also create a list ordered by GeneEnd
+                int index = 0;
+                for(; index < reverseGeneList.size(); ++index)
+                {
+                    final EnsemblGeneData rgd = reverseGeneList.get(index);
+
+                    if(geneData.GeneEnd < rgd.GeneEnd)
+                        break;
+                }
+
+                reverseGeneList.add(index, geneData);
+
                 line = fileReader.readLine();
+            }
+
+            // set indicies for the reverse list
+            for(Map.Entry<String, List<EnsemblGeneData>> entry : mEnsemblChrReverseGeneDataMap.entrySet())
+            {
+                final List<EnsemblGeneData> geneDataList = entry.getValue();
+                for(int index = 0; index < geneDataList.size(); ++index)
+                {
+                    geneDataList.get(index).setReverseListIndex(index);
+                }
             }
 
             LOGGER.debug("loaded {} gene records", geneCount);

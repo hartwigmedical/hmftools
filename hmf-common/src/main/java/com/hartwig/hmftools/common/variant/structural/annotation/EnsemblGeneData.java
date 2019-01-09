@@ -26,6 +26,7 @@ public class EnsemblGeneData
     public static int GENE_PHASING_REGION_MAX = 5;
 
     private int mListIndex; // in the set per chromosome
+    private int mReverseListIndex;
 
     private int[] mRegionTotals;
 
@@ -53,11 +54,15 @@ public class EnsemblGeneData
         }
 
         mListIndex= -1;
+        mReverseListIndex = -1;
         mRegionTotals = new int[GENE_PHASING_REGION_MAX];
     }
 
     public int getListIndex() { return mListIndex; }
     public void setListIndex(int index) { mListIndex = index; }
+
+    public int getReverseListIndex() { return mReverseListIndex; }
+    public void setReverseListIndex(int index) { mReverseListIndex = index; }
 
     public int[] getRegionTotals () { return mRegionTotals; }
 

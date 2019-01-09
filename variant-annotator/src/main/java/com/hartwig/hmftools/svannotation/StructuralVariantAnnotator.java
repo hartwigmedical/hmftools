@@ -165,10 +165,17 @@ public class StructuralVariantAnnotator
 
     public boolean run()
     {
+        List<String> samplesList = Lists.newArrayList();
+
         if(mCmdLineArgs.hasOption(SAMPLE_RNA_FILE))
         {
             final String rnaFile = mCmdLineArgs.getOptionValue(SAMPLE_RNA_FILE);
             mFusionAnalyser.loadSampleRnaData(rnaFile);
+
+            if(!mFusionAnalyser.getSampleRnaData().isEmpty())
+            {
+                samplesList.addAll(mFusionAnalyser.getSampleRnaData().keySet());
+            }
         }
 
         if(!mEnsemblDataDir.isEmpty())
@@ -178,27 +185,28 @@ public class StructuralVariantAnnotator
             mSvGeneTranscriptCollection.loadEnsemblGeneData();
         }
 
-        List<String> samplesList = Lists.newArrayList();
-
-        if(mSampleId.isEmpty() || mSampleId.equals("*"))
+        if(samplesList.isEmpty())
         {
-            samplesList = mDbAccess.structuralVariantSampleList("");
-
-            LOGGER.info("loaded {} samples from database", samplesList.size());
-        }
-        else
-        {
-            if(mSampleId.contains(","))
+            if (mSampleId.isEmpty() || mSampleId.equals("*"))
             {
-                String[] sampleIds = mSampleId.split(",");
-                for (int i = 0; i < sampleIds.length; ++i)
-                {
-                    samplesList.add(sampleIds[i]);
-                }
+                samplesList = mDbAccess.structuralVariantSampleList("");
+
+                LOGGER.info("loaded {} samples from database", samplesList.size());
             }
             else
             {
-                samplesList.add(mSampleId);
+                if (mSampleId.contains(","))
+                {
+                    String[] sampleIds = mSampleId.split(",");
+                    for (int i = 0; i < sampleIds.length; ++i)
+                    {
+                        samplesList.add(sampleIds[i]);
+                    }
+                }
+                else
+                {
+                    samplesList.add(mSampleId);
+                }
             }
         }
 

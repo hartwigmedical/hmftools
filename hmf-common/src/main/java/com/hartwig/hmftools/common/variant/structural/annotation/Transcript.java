@@ -50,8 +50,6 @@ public class Transcript {
     public static String TRANS_CODING_TYPE_DOWNSTREAM = "3P_UTR";
     public static String TRANS_CODING_TYPE_NON_CODING = "NonCoding";
 
-    public static int PROMOTOR_REGION_MAX = 100000;
-
     private static int STOP_CODON_LENGTH = 3;
 
     public Transcript(@NotNull final GeneAnnotation parent, @NotNull final String transcriptId,
@@ -129,17 +127,15 @@ public class Transcript {
         return mExonUpstream > 0 && (mExonDownstream - mExonUpstream) == 1;
     }
 
-    public boolean isPrePromotor()
+    public long getDistanceUpstream()
     {
         if(!isPromoter())
-            return false;
+            return 0;
 
-        if(mGene.strand() == 1 && mTranscriptStart > 0 && svPosition() < mTranscriptStart - PROMOTOR_REGION_MAX)
-            return true;
-        else if(mGene.strand() == -1 && mTranscriptEnd > 0 && svPosition() > mTranscriptEnd + PROMOTOR_REGION_MAX)
-            return true;
+        if(mGene.strand() == 1)
+            return mTranscriptStart - svPosition();
         else
-            return false;
+            return svPosition() - mTranscriptEnd;
     }
 
     public final String codingType() { return mCodingType; }

@@ -105,7 +105,7 @@ public class SvFusionAnalyser
     }
 
     private static int SPECIFIC_VAR_ID = -1;
-    // private static int SPECIFIC_VAR_ID = 5232794;
+    // private static int SPECIFIC_VAR_ID = 4558066;
 
     public final List<GeneFusion> findFusions(final List<GeneAnnotation> breakendGenes1, final List<GeneAnnotation> breakendGenes2)
     {
@@ -150,9 +150,6 @@ public class SvFusionAnalyser
                             continue;
 
                         if(upstreamTrans.isPromoter())
-                            continue;
-
-                        if(downstreamTrans.isPrePromotor())
                             continue;
 
                         if(downstreamTrans.exonMax() == 1)
@@ -318,6 +315,9 @@ public class SvFusionAnalyser
     public static String TRANSCRIPT_PROTEIN_CODING = "protein_coding";
     public static String TRANSCRIPT_NONSENSE_MED_DECAY = "nonsense_mediated_decay";
 
+    private static int MAX_UPSTREAM_DISTANCE_KNOWN = 100000;
+    private static int MAX_UPSTREAM_DISTANCE_UNKNOWN = 10000;
+
     private GeneFusion determineReportableFusion(final List<GeneFusion> fusions)
     {
         // Select either the canonical -> canonical transcript fusion
@@ -332,17 +332,26 @@ public class SvFusionAnalyser
         for(final GeneFusion fusion : fusions)
         {
             // first check whether a fusion is known or not - a key requirement of it being potentially reportable
-            final String knownType = getKnownFusionType(fusion.upstreamTrans(), fusion.downstreamTrans());
+            final Transcript upTrans = fusion.upstreamTrans();
+            final Transcript downTrans = fusion.downstreamTrans();
+
+            final String knownType = getKnownFusionType(upTrans, downTrans);
 
             if(knownType == REPORTABLE_TYPE_NONE)
                 continue;
 
             fusion.setKnownFusionType(knownType);
 
-            if(fusion.downstreamTrans().bioType().equals(TRANSCRIPT_NONSENSE_MED_DECAY))
+            // set limits on how far upstream the breakend can be - adjusted for whether the fusions is known or not
+            int maxUpstreamDistance = knownType == REPORTABLE_TYPE_KNOWN ? MAX_UPSTREAM_DISTANCE_KNOWN : MAX_UPSTREAM_DISTANCE_UNKNOWN;
+
+            if(upTrans.getDistanceUpstream() > maxUpstreamDistance || downTrans.getDistanceUpstream() > maxUpstreamDistance)
                 continue;
 
-            if(fusion.downstreamTrans().exonDistanceUp() < 0)
+            if(downTrans.bioType().equals(TRANSCRIPT_NONSENSE_MED_DECAY))
+                continue;
+
+            if(downTrans.exonDistanceUp() < 0)
                 continue;
 
             /* prioritisation rules:
@@ -350,23 +359,23 @@ public class SvFusionAnalyser
             - favour 3' over 5' by canoncial, protein-coding then coding bases (or exon count if not coding)
             */
 
-            if(fusion.downstreamTrans().isCanonical() && fusion.upstreamTrans().isCanonical())
+            if(downTrans.isCanonical() && upTrans.isCanonical())
                 return fusion;
 
             long transScore = 0;
             long factor = 10000000;
 
-            if(fusion.downstreamTrans().isCanonical())
+            if(downTrans.isCanonical())
                 transScore += factor;
 
             factor /= 10;
 
-            if(fusion.downstreamTrans().bioType().equals(TRANSCRIPT_PROTEIN_CODING))
+            if(downTrans.bioType().equals(TRANSCRIPT_PROTEIN_CODING))
                 transScore += factor;
 
             factor /= 100;
 
-            long length = fusion.downstreamTrans().isCoding() ? fusion.downstreamTrans().codingBases() : fusion.downstreamTrans().exonMax();
+            long length = downTrans.isCoding() ? downTrans.codingBases() : downTrans.exonMax();
 
             // will be a range between 1-99 * current factor
             length = min(round(length/10), 99);
@@ -374,17 +383,17 @@ public class SvFusionAnalyser
 
             factor /= 10;
 
-            if(fusion.upstreamTrans().isCanonical())
+            if(upTrans.isCanonical())
                 transScore += factor;
 
             factor /= 10;
 
-            if(fusion.upstreamTrans().bioType().equals(TRANSCRIPT_PROTEIN_CODING))
+            if(upTrans.bioType().equals(TRANSCRIPT_PROTEIN_CODING))
                 transScore += factor;
 
             factor /= 100;
 
-            length = fusion.upstreamTrans().isCoding() ? fusion.upstreamTrans().codingBases() : fusion.upstreamTrans().exonMax();
+            length = upTrans.isCoding() ? upTrans.codingBases() : upTrans.exonMax();
             length = min(round(length/10), 99);
             transScore += length * factor;
 
@@ -466,7 +475,7 @@ public class SvFusionAnalyser
 
                 mFusionWriter.write("SampleId,Reportable,KnownType,PrimarySource,ClusterId,ClusterCount,ResolvedType");
 
-                mFusionWriter.write(",SvIdUp,ChrUp,PosUp,OrientUp,TypeStart,GeneUp,TranscriptUp,StrandUp,RegionTypeUp,CodingTypeUp");
+                mFusionWriter.write(",SvIdUp,ChrUp,PosUp,OrientUp,TypeUp,GeneUp,TranscriptUp,StrandUp,RegionTypeUp,CodingTypeUp");
                 mFusionWriter.write(",ExonUp,PhaseUp,ExonMaxUp,DisruptiveUp,ExactBaseUp,CodingBasesUp,TotalCodingUp");
                 mFusionWriter.write(",CodingStartUp,CodingEndUp,TransStartUp,TransEndUp,DistancePrevUp,BiotypeUp");
 
