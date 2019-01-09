@@ -81,6 +81,14 @@ public abstract class KnownFusionsModel {
         return fiveGeneNames.stream().anyMatch(fiveGene -> threeGeneNames.stream().anyMatch(threeGene -> exactMatch(fiveGene, threeGene)));
     }
 
+    public boolean fivePrimePromiscuousMatch(@NotNull final Collection<String> geneNames) {
+        return geneNames.stream().anyMatch(promiscuousFive()::containsKey);
+    }
+
+    public boolean threePrimePromiscuousMatch(@NotNull final Collection<String> geneNames) {
+        return geneNames.stream().anyMatch(promiscuousThree()::containsKey);
+    }
+
     public boolean intergenicPromiscuousMatch(@NotNull final Collection<String> fiveGeneNames,
             @NotNull final Collection<String> threeGeneNames) {
         return fiveGeneNames.stream().noneMatch(threeGeneNames::contains) && (

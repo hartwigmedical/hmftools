@@ -15,6 +15,11 @@ import static com.hartwig.hmftools.common.variant.structural.annotation.EnsemblG
 import static com.hartwig.hmftools.common.variant.structural.annotation.EnsemblGeneData.phaseToRegion;
 import static com.hartwig.hmftools.common.variant.structural.annotation.GeneAnnotation.isDownstream;
 import static com.hartwig.hmftools.common.variant.structural.annotation.GeneAnnotation.isUpstream;
+import static com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion.REPORTABLE_TYPE_3P_PROM;
+import static com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion.REPORTABLE_TYPE_5P_PROM;
+import static com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion.REPORTABLE_TYPE_BOTH_PROM;
+import static com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion.REPORTABLE_TYPE_KNOWN;
+import static com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion.REPORTABLE_TYPE_NONE;
 import static com.hartwig.hmftools.svannotation.SvGeneTranscriptCollection.EXON_RANK_MAX;
 import static com.hartwig.hmftools.svannotation.SvGeneTranscriptCollection.EXON_RANK_MIN;
 import static com.hartwig.hmftools.svannotation.SvGeneTranscriptCollection.nextTranscriptExons;
@@ -62,8 +67,6 @@ public class SvFusionAnalyser
     private Map<String, List<RnaFusionData>> mSampleRnaData;
     private SvGeneTranscriptCollection mGeneTranscriptCollection;
 
-    boolean mIncludePossibles;
-
     private BufferedWriter mFusionWriter;
     private BufferedWriter mRnaWriter;
 
@@ -72,7 +75,6 @@ public class SvFusionAnalyser
     public SvFusionAnalyser(final KnownFusionsModel knownFusionsModel, final SvGeneTranscriptCollection geneTranscriptCollection)
     {
         mKnownFusionsModel = knownFusionsModel;
-        mIncludePossibles = false;
         mFusionWriter = null;
         mRnaWriter = null;
         mSampleRnaData = new HashMap();
@@ -85,8 +87,6 @@ public class SvFusionAnalyser
         options.addOption(PROMISCUOUS_FIVE_CSV, true, "Path towards a CSV containing white-listed promiscuous 5' genes.");
         options.addOption(PROMISCUOUS_THREE_CSV, true, "Path towards a CSV containing white-listed promiscuous 3' genes.");
     }
-
-    public void setIncludePossibles(boolean toggle) { mIncludePossibles = toggle; }
 
     public final List<GeneFusion> findFusions(final List<StructuralVariantAnnotation> annotations)
     {
@@ -213,7 +213,7 @@ public class SvFusionAnalyser
                         {
                             if(exonToExonInPhase(upstreamTrans, true, downstreamTrans, false))
                             {
-                                addFusion(potentialFusions, upstreamTrans, downstreamTrans, true);
+                                addFusion(potentialFusions, upstreamTrans, downstreamTrans);
                             }
                         }
                         else
@@ -221,13 +221,8 @@ public class SvFusionAnalyser
                             // just check for a phasing match
                             if (upstreamTrans.exonUpstreamPhase() == downstreamTrans.exonDownstreamPhase())
                             {
-                                addFusion(potentialFusions, upstreamTrans, downstreamTrans, true);
+                                addFusion(potentialFusions, upstreamTrans, downstreamTrans);
                             }
-                        }
-
-                        if(mIncludePossibles && transcriptsMatchKnownFusion(upstreamTrans, downstreamTrans))
-                        {
-                            addFusion(potentialFusions, upstreamTrans, downstreamTrans, false);
                         }
                     }
                 }
@@ -270,7 +265,7 @@ public class SvFusionAnalyser
         return adjustedPhase;
     }
 
-    private void addFusion(List<GeneFusion> fusions, final Transcript upstreamTrans, final Transcript downstreamTrans, boolean phaseMatched)
+    private void addFusion(List<GeneFusion> fusions, final Transcript upstreamTrans, final Transcript downstreamTrans)
     {
         //LOGGER.debug("adding fusion between start SV({}) trans({}) and end SV({}) trans({})",
         //        startTrans.parent().id(), startTrans.toString(), endTrans.parent().id(), endTrans.toString());
@@ -279,8 +274,7 @@ public class SvFusionAnalyser
                 upstreamTrans,
                 downstreamTrans,
                 mKnownFusionsModel.primarySource(upstreamTrans.parent().synonyms(), downstreamTrans.parent().synonyms()),
-                false,
-                phaseMatched));
+                false));
     }
 
     private static boolean isPotentiallyRelevantFusion(final Transcript t1, final Transcript t2)
@@ -311,9 +305,6 @@ public class SvFusionAnalyser
 
         for (final GeneFusion fusion : fusions)
         {
-            if(!fusion.isPhaseMatch())
-                continue;
-
             if(reportableFusion == fusion)
             {
                 boolean intragenicOk = !(intragenic(fusion.upstreamTrans(), fusion.downstreamTrans()) && fusion.upstreamTrans().exonUpstreamPhase() == -1);
@@ -333,28 +324,32 @@ public class SvFusionAnalyser
         //  then the one with the most exons where one end is canonical
         //  then the one with the most exons combined transcript
 
-        List<GeneFusion> knownFusions = fusions.stream()
-                .filter(GeneFusion::isPhaseMatch)
-                .filter(f -> transcriptsMatchKnownFusion(f.upstreamTrans(), f.downstreamTrans()))
-                .filter(f -> !f.downstreamTrans().bioType().equals(TRANSCRIPT_NONSENSE_MED_DECAY))
-                .filter(f -> f.downstreamTrans().exonDistanceUp() >= 0)
-                .collect(Collectors.toList());
-
-        if(knownFusions.isEmpty())
-            return null;
-
-        /* new prioritisation rules:
-        - take both canonical if possible
-        - favour 3' over 5' by canoncial, protein-coding then coding bases (or exon count if not coding)
-        */
-
         GeneFusion reportableFusion = null;
 
         // form a score by allocating 0/1 or length value to each power 10 descending
         long highestScore = 0;
 
-        for(final GeneFusion fusion : knownFusions)
+        for(final GeneFusion fusion : fusions)
         {
+            // first check whether a fusion is known or not - a key requirement of it being potentially reportable
+            final String knownType = getKnownFusionType(fusion.upstreamTrans(), fusion.downstreamTrans());
+
+            if(knownType == REPORTABLE_TYPE_NONE)
+                continue;
+
+            fusion.setKnownFusionType(knownType);
+
+            if(fusion.downstreamTrans().bioType().equals(TRANSCRIPT_NONSENSE_MED_DECAY))
+                continue;
+
+            if(fusion.downstreamTrans().exonDistanceUp() < 0)
+                continue;
+
+            /* prioritisation rules:
+            - take both canonical if possible
+            - favour 3' over 5' by canoncial, protein-coding then coding bases (or exon count if not coding)
+            */
+
             if(fusion.downstreamTrans().isCanonical() && fusion.upstreamTrans().isCanonical())
                 return fusion;
 
@@ -403,21 +398,47 @@ public class SvFusionAnalyser
         return reportableFusion;
     }
 
-    private boolean transcriptsMatchKnownFusion(final Transcript upTrans, final Transcript downTrans)
+
+    private final String getKnownFusionType(final Transcript upTrans, final Transcript downTrans)
     {
         if(mKnownFusionsModel.exactMatch(upTrans.parent().synonyms(), downTrans.parent().synonyms()))
-            return true;
+            return REPORTABLE_TYPE_KNOWN;
 
-        if(mKnownFusionsModel.intergenicPromiscuousMatch(upTrans.parent().synonyms(), downTrans.parent().synonyms()))
-            return true;
+        boolean intergenicPromiscuousMatch = mKnownFusionsModel.intergenicPromiscuousMatch(upTrans.parent().synonyms(), downTrans.parent().synonyms());
 
-        if(mKnownFusionsModel.intragenicPromiscuousMatch(upTrans.parent().synonyms(), downTrans.parent().synonyms())
-        && downTrans.exonDownstream() - upTrans.exonUpstream() > EXON_THRESHOLD)
+        boolean intragenicPromiscuousMatch = (mKnownFusionsModel.intragenicPromiscuousMatch(upTrans.parent().synonyms(), downTrans.parent().synonyms())
+                && downTrans.exonDownstream() - upTrans.exonUpstream() > EXON_THRESHOLD);
+
+        if(intergenicPromiscuousMatch || intragenicPromiscuousMatch)
         {
-            return true;
+            boolean fivePrimeMatch = mKnownFusionsModel.fivePrimePromiscuousMatch(upTrans.parent().synonyms());
+            boolean threePrimeMatch = mKnownFusionsModel.threePrimePromiscuousMatch(downTrans.parent().synonyms());
+
+            if (fivePrimeMatch && threePrimeMatch)
+                return REPORTABLE_TYPE_BOTH_PROM;
+            else if (fivePrimeMatch)
+                return REPORTABLE_TYPE_5P_PROM;
+            else if (threePrimeMatch)
+                return REPORTABLE_TYPE_3P_PROM;
+            else
+                return REPORTABLE_TYPE_NONE;
         }
 
-        return false;
+        /*
+         if(mKnownFusionsModel.exactMatch(upTrans.parent().synonyms(), downTrans.parent().synonyms()))
+             return true;
+
+         if(mKnownFusionsModel.intergenicPromiscuousMatch(upTrans.parent().synonyms(), downTrans.parent().synonyms()))
+              return true;
+
+         if(mKnownFusionsModel.intragenicPromiscuousMatch(upTrans.parent().synonyms(), downTrans.parent().synonyms())
+         && downTrans.exonDownstream() - upTrans.exonUpstream() > EXON_THRESHOLD)
+         {
+             return true;
+         }
+         */
+
+        return REPORTABLE_TYPE_NONE;
     }
 
     private static boolean intragenic(final Transcript upstream, final Transcript downstream)
@@ -443,15 +464,15 @@ public class SvFusionAnalyser
 
                 mFusionWriter = createBufferedWriter(outputFilename, false);
 
-                mFusionWriter.write("SampleId,Reportable,PrimarySource,ClusterId,ClusterCount,ResolvedType,PhaseMatched");
+                mFusionWriter.write("SampleId,Reportable,KnownType,PrimarySource,ClusterId,ClusterCount,ResolvedType");
 
                 mFusionWriter.write(",SvIdUp,ChrUp,PosUp,OrientUp,TypeStart,GeneUp,TranscriptUp,StrandUp,RegionTypeUp,CodingTypeUp");
                 mFusionWriter.write(",ExonUp,PhaseUp,ExonMaxUp,DisruptiveUp,ExactBaseUp,CodingBasesUp,TotalCodingUp");
-                mFusionWriter.write(",CodingStartUp,CodingEndUp,TransStartUp,DistancePrevUp,BiotypeUp");
+                mFusionWriter.write(",CodingStartUp,CodingEndUp,TransStartUp,TransEndUp,DistancePrevUp,BiotypeUp");
 
                 mFusionWriter.write(",SvIdDown,ChrDown,PosDown,OrientDown,TypeDown,GeneDown,TranscriptDown,StrandDown,RegionTypeDown,CodingTypeDown");
                 mFusionWriter.write(",ExonDown,PhaseDown,ExonMaxDown,DisruptiveDown,ExactBaseDown,CodingBasesDown,TotalCodingDown");
-                mFusionWriter.write(",CodingStartDown,CodingEndDown,TransStartDown,DistancePrevDown,BiotypeDown");
+                mFusionWriter.write(",CodingStartDown,CodingEndDown,TransStartDown,TransEndDown,DistancePrevDown,BiotypeDown");
                 mFusionWriter.newLine();
             }
 
@@ -466,7 +487,7 @@ public class SvFusionAnalyser
                 final GeneAnnotation endVar = endTrans.parent();
 
                 writer.write(String.format("%s,%s,%s,%s,%s",
-                        sampleId, fusion.reportable(), fusion.primarySource(), clusterInfo, fusion.isPhaseMatch()));
+                        sampleId, fusion.reportable(), fusion.getKnownFusionType(), fusion.primarySource(), clusterInfo));
 
                 // write upstream SV, transcript and exon info
                 writer.write(
@@ -482,10 +503,10 @@ public class SvFusionAnalyser
                         String.format(",%d,%d,%d,%s",
                                 startTrans.exonUpstream(), startTrans.exonUpstreamPhase(), startTrans.exonMax(), startTrans.isDisruptive()));
                 writer.write(
-                        String.format(",%d,%d,%d,%d,%d,%d,%d,%s",
+                        String.format(",%d,%d,%d,%d,%d,%d,%d,%d,%s",
                                 startTrans.exactCodingBase(), startTrans.codingBases(), startTrans.totalCodingBases(),
-                                startTrans.codingStart(), startTrans.codingEnd(),
-                                startTrans.transcriptStart(), startTrans.exonDistanceUp(), startTrans.bioType()));
+                                startTrans.codingStart(), startTrans.codingEnd(), startTrans.transcriptStart(), startTrans.transcriptEnd(),
+                                startTrans.exonDistanceUp(), startTrans.bioType()));
 
                 writer.write(
                         String.format(",%d,%s,%d,%d,%s",
@@ -501,9 +522,10 @@ public class SvFusionAnalyser
                                 endTrans.exonDownstream(), endTrans.exonDownstreamPhase(), endTrans.exonMax(), endTrans.isDisruptive()));
 
                 writer.write(
-                        String.format(",%d,%d,%d,%d,%d,%d,%d,%s",
+                        String.format(",%d,%d,%d,%d,%d,%d,%d,%d,%s",
                                 endTrans.exactCodingBase(), endTrans.codingBases(), endTrans.totalCodingBases(),
-                                endTrans.codingStart(), endTrans.codingEnd(), endTrans.transcriptStart(), endTrans.exonDistanceUp(), endTrans.bioType()));
+                                endTrans.codingStart(), endTrans.codingEnd(), endTrans.transcriptStart(), endTrans.transcriptEnd(),
+                                endTrans.exonDistanceUp(), endTrans.bioType()));
 
                 writer.newLine();
             }

@@ -76,8 +76,6 @@ public class FusionDisruptionAnalyser
                     new FileInputStream(cmdLineArgs.getOptionValue(PROMISCUOUS_THREE_CSV)));
 
             mFusionFinder = new SvFusionAnalyser(knownFusionsModel, mSvGeneTranscriptCollection);
-            mFusionFinder.setIncludePossibles(true);
-
         }
         catch(IOException e)
         {
@@ -95,7 +93,8 @@ public class FusionDisruptionAnalyser
     {
         mSampleId = sampleId;
         mSvGeneTranscriptCollection.setDataPath(sampleDataPath);
-        mSvGeneTranscriptCollection.loadSampleGeneTranscripts(sampleId);
+        mSvGeneTranscriptCollection.loadEnsemblGeneData();
+        mSvGeneTranscriptCollection.loadTranscriptExonData();
     }
 
     private void setSvGenesList(final SvVarData var)

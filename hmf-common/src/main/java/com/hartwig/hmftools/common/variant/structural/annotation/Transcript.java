@@ -41,7 +41,7 @@ public class Transcript {
 
     private boolean mIsDisruptive;
 
-    public static String TRANS_REGION_TYPE_PROMOTOR = "Promoter";
+    public static String TRANS_REGION_TYPE_UPSTREAM = "Upstream";
     public static String TRANS_REGION_TYPE_EXONIC = "Exonic";
     public static String TRANS_REGION_TYPE_INTRONIC = "Intronic";
 
@@ -50,7 +50,7 @@ public class Transcript {
     public static String TRANS_CODING_TYPE_DOWNSTREAM = "3P_UTR";
     public static String TRANS_CODING_TYPE_NON_CODING = "NonCoding";
 
-    public static int PROMOTOR_REGION_MAX = 20000;
+    public static int PROMOTOR_REGION_MAX = 100000;
 
     private static int STOP_CODON_LENGTH = 3;
 
@@ -105,7 +105,7 @@ public class Transcript {
         mExonDownstreamPhase = exonDownstreamPhase;
         mExonUpstreamPhase = exonUpstreamPhase;
 
-        if(isDownstream(mGene) && mRegionType == TRANS_REGION_TYPE_PROMOTOR)
+        if(isDownstream(mGene) && mRegionType == TRANS_REGION_TYPE_UPSTREAM)
             mIsDisruptive = false;
         else
             mIsDisruptive = true;
@@ -172,7 +172,7 @@ public class Transcript {
             return TRANS_REGION_TYPE_EXONIC;
 
         if(isPromoter())
-            return TRANS_REGION_TYPE_PROMOTOR;
+            return TRANS_REGION_TYPE_UPSTREAM;
 
         return "Unknown";
     }
