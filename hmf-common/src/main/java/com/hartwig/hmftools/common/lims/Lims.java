@@ -3,6 +3,7 @@ package com.hartwig.hmftools.common.lims;
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -11,9 +12,9 @@ import org.jetbrains.annotations.Nullable;
 
 public class Lims {
 
-    public static final String PATHOLOGY_TUMOR_ESTIMATE_NOT_DETERMINED = "ND";
-    public static final String PATHOLOGY_TUMOR_PERCENTAGE_NOT_DETERMINED = "not determined";
-    public static final String PATHOLOGY_TUMOR_NOT_DONE = "N/A";
+    private static final String PATHOLOGY_TUMOR_ESTIMATE_NOT_DETERMINED = "ND";
+    private static final String PATHOLOGY_TUMOR_PERCENTAGE_NOT_DETERMINED = "not determined";
+    private static final String PATHOLOGY_TUMOR_NOT_DONE = "N/A";
 
     private static final Logger LOGGER = LogManager.getLogger(Lims.class);
 
@@ -21,10 +22,14 @@ public class Lims {
     private final Map<String, LimsJsonData> dataPerSample;
     @NotNull
     private final Map<String, LocalDate> preLimsArrivalDates;
+    @NotNull
+    private final Set<String> samplesWithoutSamplingDate;
 
-    Lims(@NotNull final Map<String, LimsJsonData> dataPerSample, @NotNull final Map<String, LocalDate> preLimsArrivalDates) {
+    public Lims(@NotNull final Map<String, LimsJsonData> dataPerSample, @NotNull final Map<String, LocalDate> preLimsArrivalDates,
+            @NotNull final Set<String> samplesWithoutSamplingDate) {
         this.dataPerSample = dataPerSample;
         this.preLimsArrivalDates = preLimsArrivalDates;
+        this.samplesWithoutSamplingDate = samplesWithoutSamplingDate;
     }
 
     public int sampleCount() {
@@ -34,19 +39,16 @@ public class Lims {
     @Nullable
     public LocalDate arrivalDateForSample(@NotNull final String sample) {
         LimsJsonData sampleData = dataPerSample.get(sample);
-        final LocalDate arrivalDate;
-        if (sampleData != null) {
-            arrivalDate = getNullableDate(sampleData.arrivalDateString());
-            if (arrivalDate == null) {
-                LOGGER.warn("LIMS arrival date for " + sample + ": " + sampleData.arrivalDateString() + " is not a valid date.");
-            }
-        } else {
+        LocalDate arrivalDate = sampleData != null ? getNullableDate(sampleData.arrivalDateString()) : null;
+
+        if (arrivalDate == null) {
             arrivalDate = preLimsArrivalDates.get(sample);
         }
 
         if (arrivalDate == null) {
-            LOGGER.warn("Could not find arrival date for sample: " + sample + " in LIMS");
+            LOGGER.warn("Could not find a valid arrival date for sample: " + sample + " in LIMS");
         }
+
         return arrivalDate;
     }
 
@@ -56,7 +58,7 @@ public class Lims {
         if (sampleData != null) {
             final String samplingDateString = sampleData.samplingDateString();
             final LocalDate samplingDate = getNullableDate(samplingDateString);
-            if (samplingDate == null && samplingDateString != null && !samplingDateString.equalsIgnoreCase("na")) {
+            if (samplingDate == null && !samplesWithoutSamplingDate.contains(sample)) {
                 LOGGER.warn("LIMS sampling date for " + sample + ": " + sampleData.samplingDateString() + " is not a valid date.");
             }
             return samplingDate;
@@ -99,6 +101,7 @@ public class Lims {
         return null;
     }
 
+    @NotNull
     public static String formattingTumorPercentage(@Nullable String percentage) {
         String formatTumorPercentage;
         if (percentage != null && percentage.equals(Lims.PATHOLOGY_TUMOR_ESTIMATE_NOT_DETERMINED)) {

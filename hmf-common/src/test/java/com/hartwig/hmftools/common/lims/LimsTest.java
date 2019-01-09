@@ -8,6 +8,7 @@ import java.time.LocalDate;
 import java.util.Map;
 
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
@@ -98,11 +99,11 @@ public class LimsTest {
 
     @NotNull
     private static Lims buildTestLimsWithJsonData(@NotNull final String sample, @NotNull final LimsJsonData data) {
-        final Map<String, LimsJsonData> dataPerSample = Maps.newHashMap();
+        Map<String, LimsJsonData> dataPerSample = Maps.newHashMap();
         dataPerSample.put(sample, data);
-        final Map<String, LocalDate> preLIMSArrivalDates = Maps.newHashMap();
+        Map<String, LocalDate> preLIMSArrivalDates = Maps.newHashMap();
 
-        return new Lims(dataPerSample, preLIMSArrivalDates);
+        return new Lims(dataPerSample, preLIMSArrivalDates, Sets.newHashSet());
     }
 
     @NotNull
@@ -111,6 +112,6 @@ public class LimsTest {
         final Map<String, LocalDate> preLIMSArrivalDates = Maps.newHashMap();
         preLIMSArrivalDates.put(sample, date);
 
-        return new Lims(dataPerSample, preLIMSArrivalDates);
+        return new Lims(dataPerSample, preLIMSArrivalDates, Sets.newHashSet());
     }
 }

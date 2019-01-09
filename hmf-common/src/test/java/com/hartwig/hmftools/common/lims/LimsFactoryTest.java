@@ -1,14 +1,17 @@
 package com.hartwig.hmftools.common.lims;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.util.Map;
+import java.util.Set;
 
 import com.google.common.io.Resources;
 
@@ -56,5 +59,15 @@ public class LimsFactoryTest {
         assertNull(preLIMSArrivalDates.get("SAMP01010005T"));
         assertNull(preLIMSArrivalDates.get("SAMP01010006R"));
         assertNull(preLIMSArrivalDates.get("DoesNotExist"));
+    }
+
+    @Test
+    public void readCorrectlyFromSamplesWithoutSamplingDateFile() throws IOException {
+        Set<String> samplesWithoutSamplingDate =
+                LimsFactory.readSamplesWithoutSamplingDateCsv(LIMS_DIRECTORY + File.separator + "samples_without_sampling_date.csv");
+
+        assertEquals(2, samplesWithoutSamplingDate.size());
+        assertTrue(samplesWithoutSamplingDate.contains("CPCT02990001T"));
+        assertFalse(samplesWithoutSamplingDate.contains("Does not exist"));
     }
 }
