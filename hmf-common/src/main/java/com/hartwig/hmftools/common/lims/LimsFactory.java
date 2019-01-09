@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.common.lims;
 
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
@@ -28,18 +29,18 @@ public final class LimsFactory {
 
     private static final Logger LOGGER = LogManager.getLogger(LimsFactory.class);
 
+    private static final String LIMS_JSON_FILE = "lims.json";
+    private static final String PRE_LIMS_ARRIVAL_DATES_FILE = "pre_lims_arrival_dates.csv";
+
     private LimsFactory() {
     }
 
     @NotNull
-    public static Lims fromLimsJson(@NotNull final String limsJsonPath) throws FileNotFoundException {
-        return new Lims(readLimsJson(limsJsonPath), Maps.newHashMap());
-    }
+    public static Lims fromLimsDirectory(@NotNull final String limsDirectory) throws IOException {
+        Map<String, LimsJsonData> dataPerSample = readLimsJson(limsDirectory + File.separator + LIMS_JSON_FILE);
+        Map<String, LocalDate> preLIMSArrivalDates = readPreLIMSArrivalDateCsv(limsDirectory + File.separator + PRE_LIMS_ARRIVAL_DATES_FILE);
 
-    @NotNull
-    public static Lims fromLimsJsonWithPreLIMSArrivalDates(@NotNull final String limsJsonPath,
-            @NotNull final String preLIMSArrivalDatesCsvPath) throws IOException {
-        return new Lims(readLimsJson(limsJsonPath), readPreLIMSArrivalDateCsv(preLIMSArrivalDatesCsvPath));
+        return new Lims(dataPerSample, preLIMSArrivalDates);
     }
 
     @NotNull

@@ -54,15 +54,13 @@ public final class LoadClinicalData {
     private static final String CPCT_ECRF_FILE = "cpct_ecrf";
     private static final String CPCT_FORM_STATUS_CSV = "cpct_form_status_csv";
     private static final String DRUP_ECRF_FILE = "drup_ecrf";
+    private static final String DO_LOAD_RAW_ECRF = "do_load_raw_ecrf";
 
     private static final String DB_USER = "db_user";
     private static final String DB_PASS = "db_pass";
     private static final String DB_URL = "db_url";
 
-    private static final String LIMS_JSON = "lims_json";
-    private static final String PRE_LIMS_ARRIVAL_DATES_CSV = "pre_lims_arrival_dates_csv";
-
-    private static final String DO_LOAD_RAW_ECRF = "do_load_raw_ecrf";
+    private static final String LIMS_DIRECTORY = "lims";
 
     private static final String CSV_OUT_DIR = "csv_out_dir";
     private static final String TUMOR_LOCATION_SYMLINK = "tumor_location_symlink";
@@ -204,8 +202,7 @@ public final class LoadClinicalData {
                 cmd.getOptionValue(CPCT_ECRF_FILE),
                 cmd.getOptionValue(CPCT_FORM_STATUS_CSV),
                 cmd.getOptionValue(DRUP_ECRF_FILE),
-                cmd.getOptionValue(LIMS_JSON),
-                cmd.getOptionValue(PRE_LIMS_ARRIVAL_DATES_CSV),
+                cmd.getOptionValue(LIMS_DIRECTORY),
                 cmd.getOptionValue(CSV_OUT_DIR));
 
         boolean validRunDirectory = true;
@@ -229,10 +226,10 @@ public final class LoadClinicalData {
         final List<RunContext> runContexts = RunsFolderReader.getRunContexts(new File(runsFolderPath));
         LOGGER.info(String.format("Finished loading %s run contexts.", runContexts.size()));
 
-        final String limsJsonPath = cmd.getOptionValue(LIMS_JSON);
-        final String preLIMSArrivalDatesCsv = cmd.getOptionValue(PRE_LIMS_ARRIVAL_DATES_CSV);
-        LOGGER.info(String.format("Loading samples from LIMS on %s.", limsJsonPath));
-        Lims lims = LimsFactory.fromLimsJsonWithPreLIMSArrivalDates(limsJsonPath, preLIMSArrivalDatesCsv);
+        final String limsDirectory = cmd.getOptionValue(LIMS_DIRECTORY);
+        LOGGER.info(String.format("Loading samples from LIMS on %s.", limsDirectory));
+        Lims lims = LimsFactory.fromLimsDirectory(limsDirectory);
+
         Map<String, List<SampleData>> samplesPerPatient = readSamplesPerPatient(lims, runContexts);
         LOGGER.info(String.format("Loaded samples for %s patients from LIMS", samplesPerPatient.keySet().size()));
 
@@ -307,8 +304,7 @@ public final class LoadClinicalData {
         options.addOption(TUMOR_LOCATION_SYMLINK, true, "Name of cancer type csv symlink.");
         options.addOption(PORTAL_DATA_LINK, true, "Name of portal data csv symlink.");
 
-        options.addOption(LIMS_JSON, true, "Path towards the LIMS json file.");
-        options.addOption(PRE_LIMS_ARRIVAL_DATES_CSV, true, "Path towards the pre-HMF arrival date csv.");
+        options.addOption(LIMS_DIRECTORY, true, "Path towards the LIMS directory.");
         return options;
     }
 

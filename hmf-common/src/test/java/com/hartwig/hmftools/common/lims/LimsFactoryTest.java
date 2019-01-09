@@ -16,24 +16,21 @@ import org.junit.Test;
 
 public class LimsFactoryTest {
 
-    private static final String LIMS_RESOURCES = Resources.getResource("lims").getPath();
-    private static final String LIMS_JSON = LIMS_RESOURCES + File.separator + "lims_test.json";
-    private static final String PRE_LIMS_ARRIVAL_DATES_CSV = LIMS_RESOURCES + File.separator + "pre_lims_arrival_dates.csv";
+    private static final String LIMS_DIRECTORY = Resources.getResource("lims").getPath();
 
     @Test
     public void canBuildLimsFromTestData() throws IOException {
-        assertNotNull(LimsFactory.fromLimsJson(LIMS_JSON));
-        assertNotNull(LimsFactory.fromLimsJsonWithPreLIMSArrivalDates(LIMS_JSON, PRE_LIMS_ARRIVAL_DATES_CSV));
+        assertNotNull(LimsFactory.fromLimsDirectory(LIMS_DIRECTORY));
     }
 
-    @Test(expected = FileNotFoundException.class)
-    public void exceptionWhenJsonFileDoesNotExist() throws FileNotFoundException {
-        LimsFactory.fromLimsJson("Does not exist");
+    @Test(expected = IOException.class)
+    public void exceptionWhenJsonFileDoesNotExist() throws IOException {
+        LimsFactory.fromLimsDirectory("Does not exist");
     }
 
     @Test
     public void readCorrectlyFromJsonFile() throws FileNotFoundException {
-        final Map<String, LimsJsonData> dataPerSample = LimsFactory.readLimsJson(LIMS_JSON);
+        final Map<String, LimsJsonData> dataPerSample = LimsFactory.readLimsJson(LIMS_DIRECTORY + File.separator + "lims.json");
 
         final LimsJsonData refData = dataPerSample.get("SAMP01010003R");
         assertEquals("2016-01-02", refData.samplingDateString());
@@ -50,7 +47,8 @@ public class LimsFactoryTest {
 
     @Test
     public void readCorrectlyFromPreLIMSArrivalDateFile() throws IOException {
-        final Map<String, LocalDate> preLIMSArrivalDates = LimsFactory.readPreLIMSArrivalDateCsv(PRE_LIMS_ARRIVAL_DATES_CSV);
+        final Map<String, LocalDate> preLIMSArrivalDates =
+                LimsFactory.readPreLIMSArrivalDateCsv(LIMS_DIRECTORY + File.separator + "pre_lims_arrival_dates.csv");
 
         assertNull(preLIMSArrivalDates.get("SAMP01010001T"));
         assertEquals(LimsTestUtil.toDate("2017-01-01"), preLIMSArrivalDates.get("SAMP01010003R"));
