@@ -15,7 +15,6 @@ import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.TUMORMA
 import java.util.List;
 
 import com.hartwig.hmftools.common.ecrf.formstatus.FormStatus;
-import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.patientdb.Utils;
 import com.hartwig.hmftools.patientdb.data.BaselineData;
 import com.hartwig.hmftools.patientdb.data.BiopsyData;
@@ -111,7 +110,7 @@ class ClinicalDAO {
                         Utils.toSQLDate(sample.samplingDate()),
                         sample.dnaNanograms(),
                         sample.limsPrimaryTumor(),
-                        Lims.formattingTumorPercentage(sample.tumorPercentage()))
+                        sample.tumorPercentage())
                 .execute();
     }
 

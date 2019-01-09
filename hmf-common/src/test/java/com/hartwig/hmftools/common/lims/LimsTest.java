@@ -50,15 +50,14 @@ public class LimsTest {
         assertEquals(500L, (int) dnaAmount);
 
         String tumorPerc = lims.tumorPercentageForSample(SAMPLE);
-        assertNotNull(tumorPerc);
-        assertEquals(0.4, Double.parseDouble(tumorPerc), 1.0E-10);
+        assertEquals("40%", tumorPerc);
 
         assertEquals(labSopVersions, lims.labProceduresForSample(SAMPLE));
         assertEquals(primaryTumor, lims.primaryTumorForSample(SAMPLE));
 
         assertNull(lims.arrivalDateForSample("DoesNotExist"));
         assertNull(lims.samplingDateForSample("DoesNotExist"));
-        assertNull(lims.tumorPercentageForSample("DoesNotExist"));
+        assertEquals("N/A", lims.tumorPercentageForSample("DoesNotExist"));
         assertEquals("N/A", lims.labProceduresForSample("DoesNotExist"));
         assertEquals("N/A", lims.primaryTumorForSample("DoesNotExist"));
     }
@@ -93,7 +92,7 @@ public class LimsTest {
         assertNull(lims.arrivalDateForSample(SAMPLE));
         assertNull(lims.samplingDateForSample(SAMPLE));
         assertNull(lims.dnaNanogramsForSample(SAMPLE));
-        assertNull(lims.tumorPercentageForSample(SAMPLE));
+        assertEquals("N/A", lims.tumorPercentageForSample(SAMPLE));
         assertEquals("N/A", lims.labProceduresForSample(SAMPLE));
     }
 

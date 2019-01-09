@@ -12,10 +12,6 @@ import org.jetbrains.annotations.Nullable;
 
 public class Lims {
 
-    private static final String PATHOLOGY_TUMOR_ESTIMATE_NOT_DETERMINED = "ND";
-    private static final String PATHOLOGY_TUMOR_PERCENTAGE_NOT_DETERMINED = "not determined";
-    private static final String PATHOLOGY_TUMOR_NOT_DONE = "N/A";
-
     private static final Logger LOGGER = LogManager.getLogger(Lims.class);
 
     @NotNull
@@ -80,38 +76,25 @@ public class Lims {
         return null;
     }
 
-    @Nullable
+    @NotNull
     public String tumorPercentageForSample(@NotNull String sample) {
         LimsJsonData sampleData = dataPerSample.get(sample);
         if (sampleData != null) {
             String tumorPercentageString = sampleData.tumorPercentageString();
             String remarksSample = sampleData.labRemarks();
             if (tumorPercentageString == null) {
-                return null;
+                return "N/A";
             } else if (tumorPercentageString.isEmpty() && remarksSample != null && remarksSample.contains("CPCTWIDE")) {
-                return PATHOLOGY_TUMOR_ESTIMATE_NOT_DETERMINED;
+                return "not determined";
             }
 
             try {
-                return String.valueOf(Double.parseDouble(tumorPercentageString) / 100D);
+                return Long.toString(Math.round(Double.parseDouble(tumorPercentageString))) + "%";
             } catch (final NumberFormatException e) {
-                return null;
+                return "N/A";
             }
         }
-        return null;
-    }
-
-    @NotNull
-    public static String formattingTumorPercentage(@Nullable String percentage) {
-        String formatTumorPercentage;
-        if (percentage != null && percentage.equals(Lims.PATHOLOGY_TUMOR_ESTIMATE_NOT_DETERMINED)) {
-            formatTumorPercentage = Lims.PATHOLOGY_TUMOR_PERCENTAGE_NOT_DETERMINED;
-        } else if (percentage != null && !percentage.equals(Lims.PATHOLOGY_TUMOR_ESTIMATE_NOT_DETERMINED)) {
-            formatTumorPercentage = Long.toString(Math.round(Double.valueOf(percentage) * 100D)) + "%";
-        } else {
-            formatTumorPercentage = Lims.PATHOLOGY_TUMOR_NOT_DONE;
-        }
-        return formatTumorPercentage;
+        return "N/A";
     }
 
     @NotNull
