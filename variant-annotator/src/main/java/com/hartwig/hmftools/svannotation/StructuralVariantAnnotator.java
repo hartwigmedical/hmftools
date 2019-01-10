@@ -217,6 +217,7 @@ public class StructuralVariantAnnotator
         // mFusionAnalyser.writeGeneProbabilityData();
 
         mFusionAnalyser.onCompleted();
+        mDisruptionAnalyser.onCompleted();
         mSvGeneTranscriptCollection.close();
 
         return true;
@@ -279,6 +280,7 @@ public class StructuralVariantAnnotator
         {
             String clusterInfo = ",,";
             mFusionAnalyser.writeFusions(fusions, mOutputDir, sampleId, clusterInfo);
+            mDisruptionAnalyser.writeDisruptions(disruptions, mOutputDir, sampleId);
             mFusionAnalyser.writeRnaMatchData(sampleId, mOutputDir, fusions, annotations);
 
             if(mWriteBreakends)

@@ -111,8 +111,8 @@ public class SvFusionAnalyser
         return fusions;
     }
 
-    private static int SPECIFIC_VAR_ID = -1;
-    // private static int SPECIFIC_VAR_ID = 4752355;
+    // private static int SPECIFIC_VAR_ID = -1;
+    private static int SPECIFIC_VAR_ID = 13699019;
 
     public final List<GeneFusion> findFusions(final List<GeneAnnotation> breakendGenes1, final List<GeneAnnotation> breakendGenes2)
     {
@@ -535,16 +535,13 @@ public class SvFusionAnalyser
 
     public void writeFusions(final List<GeneFusion> fusions, final String outputDir, final String sampleId,  final String clusterInfo)
     {
-        if(fusions.isEmpty())
-            return;
-
         try
         {
             if(mFusionWriter == null)
             {
                 String outputFilename = outputDir;
 
-                if (!outputFilename.endsWith("/"))
+                if (!outputFilename.endsWith(File.separator))
                     outputFilename += File.separator;
 
                 outputFilename += "FUSIONS.csv";

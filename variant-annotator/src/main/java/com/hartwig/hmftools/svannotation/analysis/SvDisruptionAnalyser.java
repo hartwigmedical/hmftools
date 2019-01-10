@@ -1,5 +1,11 @@
 package com.hartwig.hmftools.svannotation.analysis;
 
+import static com.hartwig.hmftools.common.io.FileWriterUtils.closeBufferedWriter;
+import static com.hartwig.hmftools.common.io.FileWriterUtils.createBufferedWriter;
+
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -26,12 +32,14 @@ import org.jetbrains.annotations.NotNull;
 public class SvDisruptionAnalyser
 {
     private final Set<String> mDisruptionGeneIDPanel;
+    private BufferedWriter mWriter;
 
     private static final Logger LOGGER = LogManager.getLogger(SvDisruptionAnalyser.class);
 
     public SvDisruptionAnalyser()
     {
         mDisruptionGeneIDPanel = tsgDriverGeneIDs();
+        mWriter = null;
     }
 
     private static Set<String> tsgDriverGeneIDs()
@@ -151,4 +159,57 @@ public class SvDisruptionAnalyser
 
         return false;
     }
+
+    public void writeDisruptions(final List<GeneDisruption> disruptions, final String outputDir, final String sampleId)
+    {
+        try
+        {
+            if(mWriter == null)
+            {
+                String outputFilename = outputDir;
+
+                if (!outputFilename.endsWith(File.separator))
+                    outputFilename += File.separator;
+
+                outputFilename += "DISRUPTIONS.csv";
+
+                mWriter = createBufferedWriter(outputFilename, false);
+
+                mWriter.write("SampleId,Reportable,SvId,Chromosome,Position,Orientation,Type");
+                mWriter.write(",Gene,Transcript,Strand,RegionType,CodingType,Biotype,Exon,IsDisruptive,");
+                mWriter.newLine();
+            }
+
+            BufferedWriter writer = mWriter;
+
+            for(final GeneDisruption disruption : disruptions)
+            {
+                final Transcript transcript = disruption.linkedAnnotation();
+
+                final GeneAnnotation svBreakend = transcript.parent();
+
+                writer.write(String.format("%s,%s,%d,%s,%d,%d,%s",
+                        sampleId, disruption.reportable(), svBreakend.id(),
+                        svBreakend.chromosome(), svBreakend.position(), svBreakend.orientation(), svBreakend.type()));
+
+                writer.write(
+                        String.format(",%s,%s,%d,%s,%s,%s,%d,%s",
+                                transcript.parent().GeneName, transcript.StableId, transcript.parent().Strand,
+                                transcript.regionType(), transcript.codingType(), transcript.bioType(),
+                                transcript.exonUpstream(), transcript.isDisruptive()));
+
+                writer.newLine();
+            }
+        }
+        catch (final IOException e)
+        {
+            LOGGER.error("error writing disruptions: {}", e.toString());
+        }
+    }
+
+    public void onCompleted()
+    {
+        closeBufferedWriter(mWriter);
+    }
+
 }
