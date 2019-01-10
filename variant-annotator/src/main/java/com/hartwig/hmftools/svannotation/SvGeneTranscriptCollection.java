@@ -281,7 +281,7 @@ public class SvGeneTranscriptCollection
 
         final TranscriptExonData first = transcriptExons.get(0);
 
-        boolean isForwardStrand = geneAnnotation.strand() == 1;
+        boolean isForwardStrand = geneAnnotation.Strand == 1;
 
         int upExonRank = -1;
         int upExonPhase = -1;
@@ -827,8 +827,8 @@ public class SvGeneTranscriptCollection
                         // Gene info: geneName, geneStableId, geneStrand, transcriptId
                         writer.write(
                                 String.format(",%s,%s,%d,%s,%s,%s,%d,%d",
-                                        geneAnnotation.geneName(), geneAnnotation.stableId(), geneAnnotation.strand(),
-                                        transcript.transcriptId(), transcript.isCanonical(), transcript.bioType(),
+                                        geneAnnotation.GeneName, geneAnnotation.StableId, geneAnnotation.Strand,
+                                        transcript.StableId, transcript.isCanonical(), transcript.bioType(),
                                         transcript.transcriptStart(), transcript.transcriptEnd()));
 
                         // Transcript info: exonUpstream, exonUpstreamPhase, exonDownstream, exonDownstreamPhase, exonStart, exonEnd, exonMax, canonical, codingStart, codingEnd

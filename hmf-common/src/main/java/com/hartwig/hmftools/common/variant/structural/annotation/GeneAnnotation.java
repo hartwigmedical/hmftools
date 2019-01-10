@@ -13,24 +13,22 @@ import org.jetbrains.annotations.Nullable;
 
 public class GeneAnnotation {
 
+    public final String GeneName;
+    public final String StableId;
+    public final int Strand;
+
     private int mVarId;
     private final boolean mIsStart;
 
     private EnrichedStructuralVariant mVariant; // CHSH: try to remove this connection
 
-    @NotNull
-    private final String geneName;
-    @NotNull
-    private final String stableId;
-    private final int strand;
-    @NotNull
     private final List<Transcript> transcripts = Lists.newArrayList();
     @NotNull
-    private final List<String> synonyms;
+    private final List<String> mSynonyms;
     @NotNull
-    private final List<Integer> entrezIds;
+    private final List<Integer> mEntrezIds;
     @NotNull
-    private final String karyotypeBand;
+    private final String mKaryotypeBand;
 
     private StructuralVariantType mSvType;
     private String mChromosome;
@@ -41,11 +39,14 @@ public class GeneAnnotation {
 
     private String mPrecedingGeneId;
 
-    public GeneAnnotation(int varId,
-            final boolean isStart, @NotNull final String geneName,
-            @NotNull final String stableId, final int strand, @NotNull final List<String> synonyms, @NotNull final List<Integer> entrezIds,
-            @NotNull final String karyotypeBand)
+    public GeneAnnotation(int varId, final boolean isStart, final String geneName, final String stableId,
+            final int strand, final List<String> synonyms, final List<Integer> entrezIds,
+            final String karyotypeBand)
     {
+        GeneName = geneName;
+        StableId = stableId;
+        Strand = strand;
+
         mVarId = varId;
         mIsStart = isStart;
         mVariant = null;
@@ -57,19 +58,18 @@ public class GeneAnnotation {
         mInsertSequence = "";
         mPrecedingGeneId = "";
 
-        this.geneName = geneName;
-        this.stableId = stableId;
-        this.strand = strand;
-        this.synonyms = synonyms;
-        this.entrezIds = entrezIds;
-        this.karyotypeBand = karyotypeBand;
+        mSynonyms = synonyms;
+        mEntrezIds = entrezIds;
+        mKaryotypeBand = karyotypeBand;
     }
 
-    public GeneAnnotation(@NotNull final EnrichedStructuralVariant variant,
-            final boolean isStart, @NotNull final String geneName,
-            @NotNull final String stableId, final int strand, @NotNull final List<String> synonyms, @NotNull final List<Integer> entrezIds,
-            @NotNull final String karyotypeBand)
+    public GeneAnnotation(@NotNull final EnrichedStructuralVariant variant, final boolean isStart, final String geneName,
+            final String stableId, final int strand, final List<String> synonyms, final List<Integer> entrezIds, final String karyotypeBand)
     {
+        GeneName = geneName;
+        StableId = stableId;
+        Strand = strand;
+
         mVariant = variant;
         mIsStart = isStart;
 
@@ -92,12 +92,9 @@ public class GeneAnnotation {
             mInsertSequence = variant.insertSequence();
         }
 
-        this.geneName = geneName;
-        this.stableId = stableId;
-        this.strand = strand;
-        this.synonyms = synonyms;
-        this.entrezIds = entrezIds;
-        this.karyotypeBand = karyotypeBand;
+        mSynonyms = synonyms;
+        mEntrezIds = entrezIds;
+        mKaryotypeBand = karyotypeBand;
     }
 
     public void setPositionalData(final String chromosome, long position, Byte orientation)
@@ -150,20 +147,6 @@ public class GeneAnnotation {
     public boolean isStart() { return mIsStart; }
     public boolean isEnd() { return !mIsStart; }
 
-    @NotNull
-    public String geneName() {
-        return geneName;
-    }
-
-    @NotNull
-    public String stableId() {
-        return stableId;
-    }
-
-    public int strand() {
-        return strand;
-    }
-
     public void addTranscript(@NotNull Transcript transcript) {
         transcripts.add(transcript);
     }
@@ -180,17 +163,17 @@ public class GeneAnnotation {
 
     @NotNull
     public List<String> synonyms() {
-        return ImmutableList.copyOf(synonyms);
+        return ImmutableList.copyOf(mSynonyms);
     }
 
     @NotNull
     public List<Integer> entrezIds() {
-        return entrezIds;
+        return mEntrezIds;
     }
 
     @NotNull
     public String karyotypeBand() {
-        return karyotypeBand;
+        return mKaryotypeBand;
     }
 
     public final String getmPrecedingGeneId() { return mPrecedingGeneId; }
@@ -198,7 +181,7 @@ public class GeneAnnotation {
 
     public static boolean isUpstream(final GeneAnnotation gene)
     {
-        return gene.strand() * gene.orientation() > 0;
+        return gene.Strand * gene.orientation() > 0;
     }
 
     public static boolean isDownstream(final GeneAnnotation gene)

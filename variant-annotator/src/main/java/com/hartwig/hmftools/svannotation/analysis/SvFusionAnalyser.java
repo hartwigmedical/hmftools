@@ -287,7 +287,7 @@ public class SvFusionAnalyser
             return true;
 
         // skip fusions between different transcripts in the same gene,
-        if (!t1.transcriptId().equals(t2.transcriptId()))
+        if (!t1.StableId.equals(t2.StableId))
             return false;
 
         if(t1.nonCoding())
@@ -310,6 +310,7 @@ public class SvFusionAnalyser
         mProteinsRequiredKept.add("Ankyrin repeat-containing domain");
         mProteinsRequiredKept.add("Basic-leucine zipper domain");
         mProteinsRequiredKept.add("High mobility group box domain");
+        mProteinsRequiredKept.add("Bromodomain");
     }
 
     private void setReportableGeneFusions(final List<GeneFusion> fusions)
@@ -329,7 +330,7 @@ public class SvFusionAnalyser
 
         // check impact on protein regions
         final Transcript downTrans = reportableFusion.downstreamTrans();
-        final List<TranscriptProteinData> transProteinData = mGeneTranscriptCollection.getTranscriptProteinDataMap().get(downTrans.transId());
+        final List<TranscriptProteinData> transProteinData = mGeneTranscriptCollection.getTranscriptProteinDataMap().get(downTrans.TransId);
 
         if(transProteinData == null || transProteinData.isEmpty() || !downTrans.isCoding())
             return;
@@ -358,11 +359,14 @@ public class SvFusionAnalyser
             processedFeatures.add(feature);
         }
 
-        long requiredKeptButLost = mProteinsRequiredKept.stream().filter(f -> downTrans.getProteinFeaturesLost().contains(f)).count();
-        long requiredLostButKept = mProteinsRequiredLost.stream().filter(f -> downTrans.getProteinFeaturesKept().contains(f)).count();
+        if(reportableFusion.getKnownFusionType() != REPORTABLE_TYPE_KNOWN)
+        {
+            long requiredKeptButLost = mProteinsRequiredKept.stream().filter(f -> downTrans.getProteinFeaturesLost().contains(f)).count();
+            long requiredLostButKept = mProteinsRequiredLost.stream().filter(f -> downTrans.getProteinFeaturesKept().contains(f)).count();
 
-        if(requiredKeptButLost > 0 || requiredLostButKept > 0)
-            reportableFusion.setReportable(false);
+            if (requiredKeptButLost > 0 || requiredLostButKept > 0)
+                reportableFusion.setReportable(false);
+        }
     }
 
     private void addProteinFeature(final Transcript transcript, boolean isDownstream, final String feature, int featureStart, int featureEnd)
@@ -579,8 +583,8 @@ public class SvFusionAnalyser
 
                 writer.write(
                         String.format(",%s,%s,%d,%s,%s",
-                                upTrans.parent().geneName(), upTrans.transcriptId(),
-                                upTrans.parent().strand(), upTrans.regionType(), upTrans.codingType()));
+                                upTrans.parent().GeneName, upTrans.StableId,
+                                upTrans.parent().Strand, upTrans.regionType(), upTrans.codingType()));
 
                 writer.write(
                         String.format(",%d,%d,%d,%s",
@@ -597,8 +601,8 @@ public class SvFusionAnalyser
 
                 writer.write(
                         String.format(",%s,%s,%d,%s,%s",
-                                downTrans.parent().geneName(), downTrans.transcriptId(),
-                                downTrans.parent().strand(), downTrans.regionType(), downTrans.codingType()));
+                                downTrans.parent().GeneName, downTrans.StableId,
+                                downTrans.parent().Strand, downTrans.regionType(), downTrans.codingType()));
 
                 writer.write(
                         String.format(",%d,%d,%d,%s",
@@ -754,11 +758,11 @@ public class SvFusionAnalyser
                     writer.write(
                             String.format(",%d,%s,%d,%d,%d,%d,%s",
                                     transUp.parent().id(), transUp.parent().chromosome(), transUp.parent().position(), rnaFusion.PositionUp,
-                                    transUp.parent().orientation(), transUp.parent().strand(), transUp.parent().type()));
+                                    transUp.parent().orientation(), transUp.parent().Strand, transUp.parent().type()));
 
                     writer.write(
                             String.format(",%s,%s,%s,%d,%d,%s,%d,%d",
-                                    transUp.transcriptId(), transUp.regionType(), transUp.codingType(),
+                                    transUp.StableId, transUp.regionType(), transUp.codingType(),
                                     transUp.exonUpstream(), transUp.exonUpstreamPhase(), transUp.isDisruptive(),
                                     transUp.transcriptStart(), transUp.exonDistanceUp()));
                 }
@@ -775,11 +779,11 @@ public class SvFusionAnalyser
                     writer.write(
                             String.format(",%d,%s,%d,%d,%d,%d,%s",
                                     transDown.parent().id(), transDown.parent().chromosome(), transDown.parent().position(), rnaFusion.PositionDown,
-                                    transDown.parent().orientation(), transDown.parent().strand(), transDown.parent().type()));
+                                    transDown.parent().orientation(), transDown.parent().Strand, transDown.parent().type()));
 
                     writer.write(
                             String.format(",%s,%s,%s,%d,%d,%s,%d,%d",
-                                    transDown.transcriptId(), transDown.regionType(), transDown.codingType(),
+                                    transDown.StableId, transDown.regionType(), transDown.codingType(),
                                     transDown.exonDownstream(), transDown.exonDownstreamPhase(), transDown.isDisruptive(),
                                     transDown.transcriptStart(), transDown.exonDistanceUp()));
                 }
@@ -817,10 +821,10 @@ public class SvFusionAnalyser
                 continue;
 
             // breakends must be downstream of the upstream RNA exons, and upstream of the downstream RNA exon
-            if(!withinPositionRange(upTrans, rnaFusion.PositionUp, upTrans.parent().strand() == 1))
+            if(!withinPositionRange(upTrans, rnaFusion.PositionUp, upTrans.parent().Strand == 1))
                 continue;
 
-            if(!withinPositionRange(downTrans, rnaFusion.PositionDown, downTrans.parent().strand() != 1))
+            if(!withinPositionRange(downTrans, rnaFusion.PositionDown, downTrans.parent().Strand != 1))
                 continue;
 
             rnaFusion.setMatchedFusion(fusion);
@@ -844,14 +848,14 @@ public class SvFusionAnalyser
                     for(final Transcript transcript : breakendGene.transcripts())
                     {
                         if(isUpstream(breakendGene) && transcript.geneName().equals(rnaFusion.GeneUp)
-                        && withinPositionRange(transcript, rnaFusion.PositionUp, transcript.parent().strand() == 1))
+                        && withinPositionRange(transcript, rnaFusion.PositionUp, transcript.parent().Strand == 1))
                         {
                             transUp = transcript;
                             svTransUp = transcript;
                         }
 
                         if(isDownstream(breakendGene) && transcript.geneName().equals(rnaFusion.GeneDown)
-                        && withinPositionRange(transcript, rnaFusion.PositionDown, transcript.parent().strand() != 1))
+                        && withinPositionRange(transcript, rnaFusion.PositionDown, transcript.parent().Strand != 1))
                         {
                             transDown= transcript;
                             svTransDown = transcript;

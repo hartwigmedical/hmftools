@@ -25,10 +25,10 @@ public final class ReportableGeneFusionFactory {
             reportableFusions.add(ImmutableReportableGeneFusion.builder()
                     .geneStart(upstream.geneName())
                     .geneContextStart(exonDescription(upstream))
-                    .geneStartTranscript(upstream.transcriptId())
+                    .geneStartTranscript(upstream.StableId)
                     .geneEnd(downstream.geneName())
                     .geneContextEnd(exonDescription(downstream))
-                    .geneEndTranscript(downstream.transcriptId())
+                    .geneEndTranscript(downstream.StableId)
                     .ploidy(fusionPloidy(fusion))
                     .source(fusion.primarySource())
                     .build());

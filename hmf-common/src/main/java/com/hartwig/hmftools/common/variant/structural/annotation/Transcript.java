@@ -7,11 +7,12 @@ import org.jetbrains.annotations.Nullable;
 
 public class Transcript {
 
+    public final int TransId;
+    public final String StableId;
+
     @NotNull
     private final GeneAnnotation mGene;
 
-    private final int mTransId;
-    private final String mStableId;
     private final int mExonUpstream;
     private final int mExonUpstreamPhase;
     private final int mExonDownstream;
@@ -62,9 +63,10 @@ public class Transcript {
             final int exonMax, final boolean canonical, final long transcriptStart, final long transcriptEnd,
             final Long codingStart, final Long codingEnd)
     {
+        TransId = transId;
+        StableId = stableId;
+
         mGene = parent;
-        mTransId = transId;
-        mStableId = stableId;
 
         mExonUpstream = exonUpstream;
         mExonDownstream = exonDownstream;
@@ -117,9 +119,6 @@ public class Transcript {
         mProteinFeaturesLost = "";
     }
 
-    public int transId() { return mTransId; }
-    public final String transcriptId() { return mStableId; }
-
     public boolean isExonic()
     {
         return mExonUpstream > 0 && mExonUpstream == mExonDownstream;
@@ -140,7 +139,7 @@ public class Transcript {
         if(!isPromoter())
             return 0;
 
-        if(mGene.strand() == 1)
+        if(mGene.Strand == 1)
             return mTranscriptStart - svPosition();
         else
             return svPosition() - mTranscriptEnd;
@@ -225,7 +224,7 @@ public class Transcript {
 
     public long svPosition() { return mGene.position(); }
 
-    public String geneName() { return mGene.geneName(); }
+    public String geneName() { return mGene.GeneName; }
 
     public int exonUpstream() { return mExonUpstream; }
     public int exonUpstreamPhase() { return mExonUpstreamPhase; }
@@ -255,7 +254,7 @@ public class Transcript {
 
     public final String toString()
     {
-        return mGene.geneName() + " " + mStableId;
+        return mGene.GeneName + " " + StableId;
     }
 
     public void addProteinFeature(final String feature, boolean isPreserved)

@@ -526,7 +526,7 @@ public class SvVarData
             }
         }
 
-        return longestTrans != null ? longestTrans.parent().geneName() : "";
+        return longestTrans != null ? longestTrans.parent().GeneName : "";
     }
 
     public final String getAssemblyMatchType(boolean useStart) { return useStart ? mStartAssemblyMatchType : mEndAssemblyMatchType; }

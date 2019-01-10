@@ -36,7 +36,7 @@ public final class ReportableGeneDisruptionFactory {
         for (Pair<GeneDisruption, GeneDisruption> pairedDisruption : pairedMap.values()) {
             GeneDisruption primaryDisruption = pairedDisruption.getLeft();
 
-            String gene = gene(primaryDisruption).geneName();
+            String gene = gene(primaryDisruption).GeneName;
             GeneCopyNumber copyNumber = copyNumberPerGene.get(gene);
             Integer geneMinCopies = null;
             Integer geneMaxCopies = null;
@@ -80,7 +80,7 @@ public final class ReportableGeneDisruptionFactory {
         Map<SvAndGeneKey, List<GeneDisruption>> disruptionsPerSvAndGene = Maps.newHashMap();
         for (GeneDisruption disruption : disruptions) {
             StructuralVariant variant = disruption.linkedAnnotation().parent().variant();
-            String gene = disruption.linkedAnnotation().parent().geneName();
+            String gene = disruption.linkedAnnotation().parent().GeneName;
             SvAndGeneKey key = new SvAndGeneKey(variant, gene);
             List<GeneDisruption> currentDisruptions = disruptionsPerSvAndGene.get(key);
             if (currentDisruptions == null) {
@@ -148,7 +148,7 @@ public final class ReportableGeneDisruptionFactory {
 
     private static boolean isUpstream(@NotNull GeneDisruption disruption) {
         GeneAnnotation gene = gene(disruption);
-        return gene.orientation() * gene.strand() < 0;
+        return gene.orientation() * gene.Strand < 0;
     }
 
     private static class SvAndGeneKey {

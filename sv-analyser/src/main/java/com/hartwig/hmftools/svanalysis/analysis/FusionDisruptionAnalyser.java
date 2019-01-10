@@ -275,7 +275,7 @@ public class FusionDisruptionAnalyser
                 traversesGene = true;
 
                 LOGGER.info("cluster({}) chain({}) potential fusion: be1({} {}) & be2({} {}) indices({} -> {}) section({}: {} - {}) traverses {} genes (eg {})",
-                        cluster.id(), chain.id(), beStart.toString(), genesListStart.get(0).geneName(), beEnd.toString(), genesListEnd.get(0).geneName(),
+                        cluster.id(), chain.id(), beStart.toString(), genesListStart.get(0).GeneName, beEnd.toString(), genesListEnd.get(0).GeneName,
                         startIndex, endIndex, chr, startPos, endPos, transcripts.size(), transcripts.get(0).geneID());
 
                 break;
@@ -286,8 +286,8 @@ public class FusionDisruptionAnalyser
                 if (startIndex < endIndex)
                 {
                     LOGGER.info("cluster({}) chain({}) potential fusion: be1({} {}) & be2({} {}) link indices({} -> {}) traversalLen({})",
-                            cluster.id(), chain.id(), beStart.toString(), genesListStart.get(0).geneName(),
-                            beEnd.toString(), genesListEnd.get(0).geneName(), startIndex, endIndex, traversalLength);
+                            cluster.id(), chain.id(), beStart.toString(), genesListStart.get(0).GeneName,
+                            beEnd.toString(), genesListEnd.get(0).GeneName, startIndex, endIndex, traversalLength);
                 }
 
                 checkFusions(genesListStart, genesListEnd, cluster);
@@ -350,10 +350,10 @@ public class FusionDisruptionAnalyser
                     final GeneAnnotation downGene = downstream.parent();
 
                     LOGGER.debug("sample({}) fusion: up({} {} {} {} ph={}) upSV({}: {}:{}:{} start={} strand={}) down({} {} {} {} ph={}) downSV({}: {}:{}:{} start={} strand={})",
-                            mSampleId, upstream.geneName(), upstream.transcriptId(), upstream.regionType(), upstream.codingType(), upstream.exonUpstreamPhase(),
-                            upGene.id(), upGene.chromosome(), upGene.position(), upGene.orientation(), upGene.isStart(), upGene.strand(),
-                            downstream.geneName(), downstream.transcriptId(), downstream.regionType(), downstream.codingType(), downstream.exonDownstreamPhase(),
-                            downGene.id(), downGene.chromosome(), downGene.position(), downGene.orientation(), downGene.isStart(), downGene.strand());
+                            mSampleId, upstream.geneName(), upstream.StableId, upstream.regionType(), upstream.codingType(), upstream.exonUpstreamPhase(),
+                            upGene.id(), upGene.chromosome(), upGene.position(), upGene.orientation(), upGene.isStart(), upGene.Strand,
+                            downstream.geneName(), downstream.StableId, downstream.regionType(), downstream.codingType(), downstream.exonDownstreamPhase(),
+                            downGene.id(), downGene.chromosome(), downGene.position(), downGene.orientation(), downGene.isStart(), downGene.Strand);
                 }
             }
         }

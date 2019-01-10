@@ -70,7 +70,7 @@ public class SvDisruptionAnalyser
         }
 
         final Multimap<String, GeneAnnotation> geneMap = ArrayListMultimap.create();
-        geneAnnotations.forEach(g -> geneMap.put(g.geneName(), g));
+        geneAnnotations.forEach(g -> geneMap.put(g.GeneName, g));
 
         final List<GeneDisruption> disruptions = Lists.newArrayList();
 
@@ -98,7 +98,7 @@ public class SvDisruptionAnalyser
 
     private static boolean intronicDisruptionOnSameTranscript(@NotNull Transcript t1, @NotNull Transcript t2)
     {
-        boolean sameTranscript = t1.transcriptId().equals(t2.transcriptId());
+        boolean sameTranscript = t1.StableId.equals(t2.StableId);
         boolean bothIntronic = t1.isIntronic() && t2.isIntronic();
         boolean sameExonUpstream = t1.exonUpstream() == t2.exonUpstream();
 
@@ -139,7 +139,7 @@ public class SvDisruptionAnalyser
         if(trans1.parent().id() != trans2.parent().id())
             return true;
 
-        if(!trans1.transcriptId().equals(trans2.transcriptId()))
+        if(!trans1.StableId.equals(trans2.StableId))
             return true;
 
         // only DELs, DUPs and INS

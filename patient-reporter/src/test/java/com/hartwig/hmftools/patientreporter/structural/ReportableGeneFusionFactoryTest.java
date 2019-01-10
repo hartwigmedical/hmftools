@@ -46,7 +46,7 @@ public class ReportableGeneFusionFactoryTest {
         Transcript upstreamTranscript = createFusionLeg(true, startGene, startTranscript, startExonUpstream, startExonDownstream, ploidy);
         Transcript downstreamTranscript = createFusionLeg(false, endGene, endTranscript, endExonUpstream, endExonDownstream, ploidy);
 
-        return new GeneFusion(upstreamTranscript, downstreamTranscript, source, true, true);
+        return new GeneFusion(upstreamTranscript, downstreamTranscript, source, true);
     }
 
     @NotNull
@@ -60,7 +60,7 @@ public class ReportableGeneFusionFactoryTest {
                 .build();
         GeneAnnotation upstreamGene =
                 new GeneAnnotation(variant, isUpstream, gene, Strings.EMPTY, 1, Lists.newArrayList(), Lists.newArrayList(), Strings.EMPTY);
-        return new Transcript(upstreamGene, transcript, exonUpstream, -1, exonDownstream, -1, 0, 0, 10, true, 0, 0, null, null);
+        return new Transcript(upstreamGene, 0, transcript, exonUpstream, -1, exonDownstream, -1, 0, 0, 10, true, 0, 0, null, null);
     }
 
     @NotNull

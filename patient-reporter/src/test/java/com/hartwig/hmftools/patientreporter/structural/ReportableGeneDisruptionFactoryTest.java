@@ -90,7 +90,7 @@ public class ReportableGeneDisruptionFactoryTest {
                 new GeneAnnotation(variant, true, upstreamGene, "id", 1, Lists.newArrayList(), Lists.newArrayList(), chromosomeBand);
 
         Transcript upstreamTranscript =
-                new Transcript(upstreamGeneAnnotation, "trans", startExon, -1, startExon + 1, -1, 0, 0, 15, true, 0, 0, null, null);
+                new Transcript(upstreamGeneAnnotation, 0,"trans", startExon, -1, startExon + 1, -1, 0, 0, 15, true, 0, 0, null, null);
 
         GeneDisruption upstreamDisruption = ImmutableGeneDisruption.builder().reportable(true).linkedAnnotation(upstreamTranscript).build();
 
@@ -98,7 +98,7 @@ public class ReportableGeneDisruptionFactoryTest {
                 new GeneAnnotation(variant, false, downstreamGene, "id", 1, Lists.newArrayList(), Lists.newArrayList(), chromosomeBand);
 
         Transcript downstreamTranscript =
-                new Transcript(downstreamGeneAnnotation, "trans", endExon, -1, endExon + 1, -1, 0, 0, 15, true, 0, 0, null, null);
+                new Transcript(downstreamGeneAnnotation, 0,"trans", endExon, -1, endExon + 1, -1, 0, 0, 15, true, 0, 0, null, null);
 
         GeneDisruption downstreamDisruption =
                 ImmutableGeneDisruption.builder().reportable(true).linkedAnnotation(downstreamTranscript).build();
@@ -119,7 +119,7 @@ public class ReportableGeneDisruptionFactoryTest {
                 new GeneAnnotation(variant, true, gene, "id", 1, Lists.newArrayList(), Lists.newArrayList(), chromosomeBand);
 
         Transcript transcript =
-                new Transcript(geneAnnotation, "trans", exonUpstream, -1, exonUpstream + 1, -1, 0, 0, 5, true, 0, 0, null, null);
+                new Transcript(geneAnnotation, 0,"trans", exonUpstream, -1, exonUpstream + 1, -1, 0, 0, 5, true, 0, 0, null, null);
 
         return ImmutableGeneDisruption.builder().reportable(true).linkedAnnotation(transcript).build();
     }
