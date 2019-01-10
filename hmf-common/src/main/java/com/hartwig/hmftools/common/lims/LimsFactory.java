@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.common.lims;
 
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
@@ -14,6 +15,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -28,23 +30,26 @@ public final class LimsFactory {
 
     private static final Logger LOGGER = LogManager.getLogger(LimsFactory.class);
 
+    private static final String LIMS_JSON_FILE = "lims.json";
+    private static final String PRE_LIMS_ARRIVAL_DATES_FILE = "pre_lims_arrival_dates.csv";
+    private static final String SAMPLES_WITHOUT_SAMPLING_DATE_FILE = "samples_without_sampling_date.csv";
+
     private LimsFactory() {
     }
 
     @NotNull
-    public static Lims fromLimsJson(@NotNull final String limsJsonPath) throws FileNotFoundException {
-        return new Lims(readLimsJson(limsJsonPath), Maps.newHashMap());
-    }
-
-    @NotNull
-    public static Lims fromLimsJsonWithPreLIMSArrivalDates(@NotNull final String limsJsonPath,
-            @NotNull final String preLIMSArrivalDatesCsvPath) throws IOException {
-        return new Lims(readLimsJson(limsJsonPath), readPreLIMSArrivalDateCsv(preLIMSArrivalDatesCsvPath));
+    public static Lims fromLimsDirectory(@NotNull final String limsDirectory) throws IOException {
+        Map<String, LimsJsonData> dataPerSample = readLimsJson(limsDirectory + File.separator + LIMS_JSON_FILE);
+        Map<String, LocalDate> preLIMSArrivalDates =
+                readPreLIMSArrivalDateCsv(limsDirectory + File.separator + PRE_LIMS_ARRIVAL_DATES_FILE);
+        Set<String> samplesWithoutSamplingDate =
+                readSamplesWithoutSamplingDateCsv(limsDirectory + File.separator + SAMPLES_WITHOUT_SAMPLING_DATE_FILE);
+        return new Lims(dataPerSample, preLIMSArrivalDates, samplesWithoutSamplingDate);
     }
 
     @NotNull
     public static Lims empty() {
-        return new Lims(Maps.newHashMap(), Maps.newHashMap());
+        return new Lims(Maps.newHashMap(), Maps.newHashMap(), Sets.newHashSet());
     }
 
     @NotNull
@@ -100,5 +105,11 @@ public final class LimsFactory {
             }
         }
         return arrivalDatesPerSample;
+    }
+
+    @NotNull
+    @VisibleForTesting
+    static Set<String> readSamplesWithoutSamplingDateCsv(@NotNull String samplesWithoutSamplingDate) throws IOException {
+        return Files.lines(Paths.get(samplesWithoutSamplingDate)).filter(s -> !s.isEmpty()).collect(Collectors.toSet());
     }
 }

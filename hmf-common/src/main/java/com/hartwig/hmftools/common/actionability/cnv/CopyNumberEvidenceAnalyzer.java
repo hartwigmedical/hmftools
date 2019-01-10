@@ -11,9 +11,9 @@ import com.hartwig.hmftools.common.actionability.EvidenceLevel;
 import com.hartwig.hmftools.common.actionability.EvidenceScope;
 import com.hartwig.hmftools.common.actionability.ImmutableEvidenceItem;
 import com.hartwig.hmftools.common.actionability.cancertype.CancerTypeAnalyzer;
+import com.hartwig.hmftools.common.copynumber.SignificantGeneCopyNumberFilter;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 
-import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -36,18 +36,19 @@ public class CopyNumberEvidenceAnalyzer {
     }
 
     @NotNull
-    public List<EvidenceItem> evidenceForCopyNumber(@NotNull GeneCopyNumber geneCopyNumber, @Nullable String primaryTumorLocation,
-            @NotNull CancerTypeAnalyzer cancerTypeAnalyzer) {
+    public List<EvidenceItem> evidenceForCopyNumber(@NotNull GeneCopyNumber geneCopyNumber, double averageTumorPloidy,
+            @Nullable String primaryTumorLocation, @NotNull CancerTypeAnalyzer cancerTypeAnalyzer) {
         List<EvidenceItem> evidenceItems = Lists.newArrayList();
-        // KODU: Assume the gene copy number has already been determined to be a significant event (LOSS or GAIN)
-        for (ActionableCopyNumber actionableCopyNumber : actionableCopyNumbers) {
-            if (typeMatches(geneCopyNumber, actionableCopyNumber) && actionableCopyNumber.gene().equals(geneCopyNumber.gene())) {
-                ImmutableEvidenceItem.Builder evidenceBuilder = fromActionableCopyNumber(actionableCopyNumber);
-                evidenceBuilder.event(geneCopyNumber.gene() + " " + actionableCopyNumber.type().readableString());
-                evidenceBuilder.isOnLabel(cancerTypeAnalyzer.isCancerTypeMatch(actionableCopyNumber.cancerType(),
-                        primaryTumorLocation));
+        if (SignificantGeneCopyNumberFilter.isSignificant(averageTumorPloidy, geneCopyNumber.value())) {
+            for (ActionableCopyNumber actionableCopyNumber : actionableCopyNumbers) {
+                if (typeMatches(geneCopyNumber, actionableCopyNumber) && actionableCopyNumber.gene().equals(geneCopyNumber.gene())) {
+                    ImmutableEvidenceItem.Builder evidenceBuilder = fromActionableCopyNumber(actionableCopyNumber);
+                    evidenceBuilder.event(geneCopyNumber.gene() + " " + actionableCopyNumber.type().readableString());
+                    evidenceBuilder.isOnLabel(cancerTypeAnalyzer.isCancerTypeMatch(actionableCopyNumber.cancerType(),
+                            primaryTumorLocation));
 
-                evidenceItems.add(evidenceBuilder.build());
+                    evidenceItems.add(evidenceBuilder.build());
+                }
             }
         }
         return evidenceItems;

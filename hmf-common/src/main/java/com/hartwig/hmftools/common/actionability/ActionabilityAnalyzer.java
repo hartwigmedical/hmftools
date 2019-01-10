@@ -8,7 +8,6 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.actionability.cancertype.CancerTypeAnalyzer;
 import com.hartwig.hmftools.common.actionability.cnv.CopyNumberEvidenceAnalyzer;
@@ -17,7 +16,7 @@ import com.hartwig.hmftools.common.actionability.fusion.FusionEvidenceAnalyzer;
 import com.hartwig.hmftools.common.actionability.fusion.FusionEvidenceAnalyzerFactory;
 import com.hartwig.hmftools.common.actionability.somaticvariant.SomaticVariantEvidenceAnalyzer;
 import com.hartwig.hmftools.common.actionability.somaticvariant.SomaticVariantEvidenceAnalyzerFactory;
-import com.hartwig.hmftools.common.numeric.Doubles;
+import com.hartwig.hmftools.common.copynumber.SignificantGeneCopyNumberFilter;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
 import com.hartwig.hmftools.common.variant.structural.annotation.SimpleGeneFusion;
@@ -108,37 +107,24 @@ public class ActionabilityAnalyzer {
     }
 
     @NotNull
-    public static List<GeneCopyNumber> significanceGeneCopyNumbers(@NotNull List<GeneCopyNumber> geneCopyNumbers, double averageTumorPloidy) {
-        return isSignificantGeneCopyNumber(averageTumorPloidy, geneCopyNumbers);
-    }
-
-    @NotNull
     public Map<GeneCopyNumber, List<EvidenceItem>> evidenceForCopyNumbers(@NotNull List<GeneCopyNumber> geneCopyNumbers,
-            @Nullable String primaryTumorLocation, @NotNull double averageTumorPloidy) {
-
+            @Nullable String primaryTumorLocation, double averageTumorPloidy) {
         Map<GeneCopyNumber, List<EvidenceItem>> evidencePerCopyNumber = Maps.newHashMap();
 
-        // TODO (KODU): Should also filter on significant event rather than assume caller has filtered already.
         List<GeneCopyNumber> geneCopyNumbersOnActionableGenes = geneCopyNumbers.stream()
                 .filter(geneCopyNumber -> copyNumberAnalyzer.actionableGenes().contains(geneCopyNumber.gene()))
                 .collect(Collectors.toList());
 
-        for (GeneCopyNumber geneCopyNumber : geneCopyNumbersOnActionableGenes) {
+        // KODU: Filtering on significant events is not necessary but just to avoid unnecessary keys with empty evidence
+        List<GeneCopyNumber> significantGeneCopyNumbersOnActionableGenes =
+                SignificantGeneCopyNumberFilter.filterForSignificance(geneCopyNumbersOnActionableGenes, averageTumorPloidy);
+
+        for (GeneCopyNumber geneCopyNumber : significantGeneCopyNumbersOnActionableGenes) {
             evidencePerCopyNumber.put(geneCopyNumber,
-                    copyNumberAnalyzer.evidenceForCopyNumber(geneCopyNumber, primaryTumorLocation, cancerTypeAnalyzer));
+                    copyNumberAnalyzer.evidenceForCopyNumber(geneCopyNumber, averageTumorPloidy, primaryTumorLocation, cancerTypeAnalyzer));
         }
 
         return evidencePerCopyNumber;
-    }
-
-    static List<GeneCopyNumber>  isSignificantGeneCopyNumber(double averageTumorPloidy, List<GeneCopyNumber> copyNumber) {
-        List<GeneCopyNumber> filteredCopyNumbers = Lists.newArrayList();
-        for (GeneCopyNumber geneCopyNumber : copyNumber) {
-            if (geneCopyNumber.minCopyNumber() < 0.5 || geneCopyNumber.minCopyNumber() > 8) {
-                filteredCopyNumbers.add(geneCopyNumber);
-            }
-        }
-        return filteredCopyNumbers;
     }
 
     @NotNull

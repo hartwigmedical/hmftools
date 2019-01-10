@@ -27,13 +27,13 @@ class ClinicalEvidenceDAO {
         for (List<EvidenceItem> items : Iterables.partition(evidenceItem, DB_BATCH_INSERT_SIZE)) {
             InsertValuesStep10 inserter = context.insertInto(CLINICALEVIDENCE,
                     CLINICALEVIDENCE.SAMPLEID,
-                    CLINICALEVIDENCE.EVENTTYPE,
+                    CLINICALEVIDENCE.EVENT,
                     CLINICALEVIDENCE.EVENTMATCH,
-                    CLINICALEVIDENCE.NAMEEVIDENCE,
-                    CLINICALEVIDENCE.TYPEEVIDENCE,
+                    CLINICALEVIDENCE.NAME,
+                    CLINICALEVIDENCE.TYPE,
                     CLINICALEVIDENCE.RESPONSE,
-                    CLINICALEVIDENCE.LEVELEVIDENCE,
-                    CLINICALEVIDENCE.SOURCEEVIDENCE,
+                    CLINICALEVIDENCE.LEVEL,
+                    CLINICALEVIDENCE.SOURCE,
                     CLINICALEVIDENCE.CANCERTYPE,
                     CLINICALEVIDENCE.ISONLABEL);
             items.forEach(trial -> addValues(sample, trial, inserter));

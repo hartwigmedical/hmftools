@@ -50,14 +50,17 @@ public enum HumanChromosome implements Chromosome {
         return isAllosome;
     }
 
+    @NotNull
     public static Chromosome valueOf(@NotNull final GenomePosition position) {
         return fromString(position.chromosome());
     }
 
-    public static HumanChromosome valueOf(@NotNull final GenomeRegion region) {
+    @NotNull
+    public static Chromosome valueOf(@NotNull final GenomeRegion region) {
         return fromString(region.chromosome());
     }
 
+    @NotNull
     public static HumanChromosome fromString(@NotNull final String chromosome) {
         if (chromosome.toLowerCase().startsWith("chr")) {
             return HumanChromosome.valueOf("_" + chromosome.substring(3));

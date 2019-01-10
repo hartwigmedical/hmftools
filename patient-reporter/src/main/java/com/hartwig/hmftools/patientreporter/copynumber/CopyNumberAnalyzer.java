@@ -28,14 +28,12 @@ public final class CopyNumberAnalyzer {
             @NotNull ActionabilityAnalyzer actionabilityAnalyzer, @Nullable PatientTumorLocation patientTumorLocation) {
         FittedPurity bestFit = purityContext.bestFit();
 
-        List<GeneCopyNumber> significantCopyNumbers =
-                ReportingCopyNumberFilters.filterForSignificance(exomeGeneCopyNumbers, bestFit.ploidy());
-
-        List<GeneCopyNumber> reportableGeneCopyNumbers = ReportingCopyNumberFilters.filterForReporting(significantCopyNumbers, geneModel);
+        List<GeneCopyNumber> reportableGeneCopyNumbers =
+                ReportingCopyNumberFilters.filterForReporting(exomeGeneCopyNumbers, geneModel, purityContext.gender(), bestFit.ploidy());
 
         String primaryTumorLocation = patientTumorLocation != null ? patientTumorLocation.primaryTumorLocation() : null;
         Map<GeneCopyNumber, List<EvidenceItem>> evidencePerGeneCopyNumber =
-                actionabilityAnalyzer.evidenceForCopyNumbers(significantCopyNumbers, primaryTumorLocation, bestFit.ploidy());
+                actionabilityAnalyzer.evidenceForCopyNumbers(exomeGeneCopyNumbers, primaryTumorLocation, bestFit.ploidy());
 
         List<EvidenceItem> filteredEvidence = ReportableEvidenceItemFactory.reportableFlatList(evidencePerGeneCopyNumber);
 

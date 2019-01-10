@@ -4,7 +4,9 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.hartwig.hmftools.common.numeric.Doubles;
+import com.hartwig.hmftools.common.chromosome.HumanChromosome;
+import com.hartwig.hmftools.common.copynumber.SignificantGeneCopyNumberFilter;
+import com.hartwig.hmftools.common.purple.gender.Gender;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.patientreporter.genepanel.GeneModel;
 
@@ -12,43 +14,29 @@ import org.jetbrains.annotations.NotNull;
 
 final class ReportingCopyNumberFilters {
 
-    private static final double REL_GAIN = 3;
-    private static final double ABS_LOSS = 0.5;
-
     private ReportingCopyNumberFilters() {
     }
 
     @NotNull
-    static List<GeneCopyNumber> filterForReporting(@NotNull List<GeneCopyNumber> geneCopyNumbers, @NotNull GeneModel panelGeneModel) {
-        return geneCopyNumbers.stream()
+    static List<GeneCopyNumber> filterForReporting(@NotNull List<GeneCopyNumber> geneCopyNumbers, @NotNull GeneModel panelGeneModel,
+            @NotNull Gender gender, double averageTumorPloidy) {
+        List<GeneCopyNumber> significantGeneCopyNumbers =
+                SignificantGeneCopyNumberFilter.filterForSignificance(geneCopyNumbers, averageTumorPloidy);
+
+        return significantGeneCopyNumbers.stream()
                 .filter(copyNumber -> includeInReport(copyNumber.value(),
+                        HumanChromosome.valueOf(copyNumber).isDiploid(gender),
                         panelGeneModel.isAmplificationReportable(copyNumber.gene()),
                         panelGeneModel.isDeletionReportable(copyNumber.gene())))
                 .collect(Collectors.toList());
     }
 
-    @NotNull
-    static List<GeneCopyNumber> filterForSignificance(@NotNull List<GeneCopyNumber> geneCopyNumbers, double averageTumorPloidy) {
-        return geneCopyNumbers.stream()
-                .filter(copyNumber -> isSignificant(averageTumorPloidy, copyNumber.value()))
-                .collect(Collectors.toList());
-    }
-
     @VisibleForTesting
-    static boolean includeInReport(double copyNumber, boolean isAmplificationReportable, boolean isDeletionReportable) {
+    static boolean includeInReport(double significantCopyNumber, boolean isDiploidChromosome, boolean isAmplificationReportable,
+            boolean isDeletionReportable) {
         // KODU: Assume we only have significant events here.
-        return (Doubles.greaterThan(copyNumber, ABS_LOSS) && isAmplificationReportable) ||
-                (Doubles.lessOrEqual(copyNumber, ABS_LOSS) && isDeletionReportable);
-
-    }
-
-    @VisibleForTesting
-    static boolean isSignificant(double averageTumorPloidy, double copyNumber) {
-        if (Doubles.lessOrEqual(copyNumber, ABS_LOSS)) {
-            return true;
-        }
-
-        double relativeCopyNumber = copyNumber / averageTumorPloidy;
-        return Doubles.greaterOrEqual(relativeCopyNumber, REL_GAIN);
+        double normalPloidy = isDiploidChromosome ? 2D : 1D;
+        return (significantCopyNumber > normalPloidy && isAmplificationReportable) || (significantCopyNumber < normalPloidy
+                && isDeletionReportable);
     }
 }

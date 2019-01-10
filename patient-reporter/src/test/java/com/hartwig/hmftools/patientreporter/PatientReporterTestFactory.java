@@ -18,7 +18,7 @@ public final class PatientReporterTestFactory {
                 .start(1)
                 .end(2)
                 .gene(Strings.EMPTY)
-                .chromosome(Strings.EMPTY)
+                .chromosome("1")
                 .chromosomeBand(Strings.EMPTY)
                 .minRegionStart(0)
                 .minRegionStartSupport(SegmentSupport.NONE)

@@ -8,6 +8,7 @@ import java.time.LocalDate;
 import java.util.Map;
 
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
@@ -49,15 +50,14 @@ public class LimsTest {
         assertEquals(500L, (int) dnaAmount);
 
         String tumorPerc = lims.tumorPercentageForSample(SAMPLE);
-        assertNotNull(tumorPerc);
-        assertEquals(0.4, Double.parseDouble(tumorPerc), 1.0E-10);
+        assertEquals("40%", tumorPerc);
 
         assertEquals(labSopVersions, lims.labProceduresForSample(SAMPLE));
         assertEquals(primaryTumor, lims.primaryTumorForSample(SAMPLE));
 
         assertNull(lims.arrivalDateForSample("DoesNotExist"));
         assertNull(lims.samplingDateForSample("DoesNotExist"));
-        assertNull(lims.tumorPercentageForSample("DoesNotExist"));
+        assertEquals("N/A", lims.tumorPercentageForSample("DoesNotExist"));
         assertEquals("N/A", lims.labProceduresForSample("DoesNotExist"));
         assertEquals("N/A", lims.primaryTumorForSample("DoesNotExist"));
     }
@@ -92,17 +92,17 @@ public class LimsTest {
         assertNull(lims.arrivalDateForSample(SAMPLE));
         assertNull(lims.samplingDateForSample(SAMPLE));
         assertNull(lims.dnaNanogramsForSample(SAMPLE));
-        assertNull(lims.tumorPercentageForSample(SAMPLE));
+        assertEquals("N/A", lims.tumorPercentageForSample(SAMPLE));
         assertEquals("N/A", lims.labProceduresForSample(SAMPLE));
     }
 
     @NotNull
     private static Lims buildTestLimsWithJsonData(@NotNull final String sample, @NotNull final LimsJsonData data) {
-        final Map<String, LimsJsonData> dataPerSample = Maps.newHashMap();
+        Map<String, LimsJsonData> dataPerSample = Maps.newHashMap();
         dataPerSample.put(sample, data);
-        final Map<String, LocalDate> preLIMSArrivalDates = Maps.newHashMap();
+        Map<String, LocalDate> preLIMSArrivalDates = Maps.newHashMap();
 
-        return new Lims(dataPerSample, preLIMSArrivalDates);
+        return new Lims(dataPerSample, preLIMSArrivalDates, Sets.newHashSet());
     }
 
     @NotNull
@@ -111,6 +111,6 @@ public class LimsTest {
         final Map<String, LocalDate> preLIMSArrivalDates = Maps.newHashMap();
         preLIMSArrivalDates.put(sample, date);
 
-        return new Lims(dataPerSample, preLIMSArrivalDates);
+        return new Lims(dataPerSample, preLIMSArrivalDates, Sets.newHashSet());
     }
 }

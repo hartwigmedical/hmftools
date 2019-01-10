@@ -17,10 +17,10 @@ import com.hartwig.hmftools.patientreporter.qcfail.NotAnalysableReason;
 import com.hartwig.hmftools.patientreporter.qcfail.NotAnalysableReporter;
 import com.hartwig.hmftools.patientreporter.qcfail.NotAnalysableStudy;
 import com.hartwig.hmftools.patientreporter.report.PDFWriter;
+import com.hartwig.hmftools.patientreporter.structural.StructuralVariantAnalyzer;
 import com.hartwig.hmftools.svannotation.MySQLAnnotator;
 import com.hartwig.hmftools.svannotation.NullAnnotator;
 import com.hartwig.hmftools.svannotation.VariantAnnotator;
-import com.hartwig.hmftools.patientreporter.structural.StructuralVariantAnalyzer;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -46,7 +46,7 @@ public class PatientReporterApplication {
 //        public static final String VERSION = "5.7";
 
     private static final String TUMOR_LOCATION_CSV = "tumor_location_csv";
-    private static final String LIMS_JSON = "lims_json";
+    private static final String LIMS_DIRECTORY = "lims";
     private static final String REPORT_DIRECTORY = "report_dir";
     private static final String RUN_DIRECTORY = "run_dir";
     private static final String NOT_ANALYSABLE = "not_analysable";
@@ -118,9 +118,9 @@ public class PatientReporterApplication {
         final List<PatientTumorLocation> patientTumorLocations = PatientTumorLocation.readRecords(tumorLocationCsv);
         LOGGER.info(" Loaded data for {} patients.", patientTumorLocations.size());
 
-        String limsJsonPath = cmd.getOptionValue(LIMS_JSON);
-        LOGGER.info("Loading LIMS database from {}.", limsJsonPath);
-        final Lims lims = LimsFactory.fromLimsJson(limsJsonPath);
+        String limsDirectory = cmd.getOptionValue(LIMS_DIRECTORY);
+        LOGGER.info("Loading LIMS database from {}.", limsDirectory);
+        final Lims lims = LimsFactory.fromLimsDirectory(limsDirectory);
         LOGGER.info(" Loaded data for {} samples.", lims.sampleCount());
 
         final CenterModel centerModel = Center.readFromCSV(cmd.getOptionValue(CENTER_CSV));
@@ -233,15 +233,15 @@ public class PatientReporterApplication {
 
     private static boolean validInputForBaseReportData(@NotNull final CommandLine cmd) {
         final String tumorLocationCsv = cmd.getOptionValue(TUMOR_LOCATION_CSV);
-        final String limsJson = cmd.getOptionValue(LIMS_JSON);
+        final String limsDirectory = cmd.getOptionValue(LIMS_DIRECTORY);
         final String centerCsv = cmd.getOptionValue(CENTER_CSV);
         final String signaturePath = cmd.getOptionValue(SIGNATURE);
         final String rvaLogoPath = cmd.getOptionValue(RVA_LOGO);
 
         if (tumorLocationCsv == null || !exists(tumorLocationCsv)) {
             LOGGER.warn(TUMOR_LOCATION_CSV + " has to be an existing file: " + tumorLocationCsv);
-        } else if (limsJson == null || !exists(limsJson)) {
-            LOGGER.warn(LIMS_JSON + " has to be an existing file: " + limsJson);
+        } else if (limsDirectory == null || !exists(limsDirectory) || !isDirectory(limsDirectory)) {
+            LOGGER.warn(LIMS_DIRECTORY + " has to be an existing directory: " + limsDirectory);
         } else if (centerCsv == null || !exists(centerCsv)) {
             LOGGER.warn(CENTER_CSV + " has to be an existing file: " + centerCsv);
         } else if (signaturePath == null || !exists(signaturePath)) {
@@ -266,7 +266,7 @@ public class PatientReporterApplication {
     private static Options createOptions() {
         final Options options = new Options();
         options.addOption(TUMOR_LOCATION_CSV, true, "Complete path towards the (curated) tumor location csv.");
-        options.addOption(LIMS_JSON, true, "Complete path towards a JSON containing the LIMS data dump.");
+        options.addOption(LIMS_DIRECTORY, true, "Complete path a directory holding the LIMS data");
         options.addOption(REPORT_DIRECTORY, true, "Complete path to where the PDF reports have to be saved.");
         options.addOption(RUN_DIRECTORY, true, "Complete path towards a single run dir where patient reporter will run on.");
         options.addOption(NOT_ANALYSABLE, false, "If set, generates a non-analysable report.");

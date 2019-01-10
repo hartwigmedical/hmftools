@@ -20,7 +20,7 @@ public abstract class SampleReport {
     @Nullable
     public abstract PatientTumorLocation patientTumorLocation();
 
-    @Nullable
+    @NotNull
     public abstract String pathologyTumorPercentage();
 
     @NotNull

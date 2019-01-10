@@ -12,7 +12,6 @@ import com.hartwig.hmftools.common.actionability.EvidenceItem;
 import com.hartwig.hmftools.common.context.ProductionRunContextFactory;
 import com.hartwig.hmftools.common.context.RunContext;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
-import com.hartwig.hmftools.common.purple.purity.FittedPurityFile;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
 import com.hartwig.hmftools.common.variant.structural.annotation.SimpleGeneFusion;
@@ -36,7 +35,6 @@ public class LoadEvidenceData {
     private static final String DB_PASS = "db_pass";
     private static final String DB_URL = "db_url";
     private static final String RUN_DIR = "run_dir";
-    private static final String PURPLE_DIRECTORY = "purple";
 
     public static void main(@NotNull final String[] args) throws ParseException, IOException, SQLException {
         final Options options = createOptions();
@@ -45,21 +43,21 @@ public class LoadEvidenceData {
         final String password = cmd.getOptionValue(DB_PASS);
         final String databaseUrl = cmd.getOptionValue(DB_URL);
         final String runDirectoryPath = cmd.getOptionValue(RUN_DIR);
-        final String knowledgebase_path = cmd.getOptionValue(KNOWLEDGEBASE_PATH);
+        final String knowledgebasePath = cmd.getOptionValue(KNOWLEDGEBASE_PATH);
 
-        if (Utils.anyNull(userName, password, databaseUrl, runDirectoryPath, knowledgebase_path)) {
+        if (Utils.anyNull(userName, password, databaseUrl, runDirectoryPath, knowledgebasePath)) {
             printUsageAndExit(options);
         }
 
         final File runDirectory = new File(runDirectoryPath);
         if (!runDirectory.isDirectory()) {
-            LOGGER.warn("run_dir %s has to be an actual directory", runDirectory);
+            LOGGER.warn("run_dir {} has to be an actual directory", runDirectory);
             printUsageAndExit(options);
         }
 
         DatabaseAccess dbAccess = databaseAccess(cmd);
 
-        ActionabilityAnalyzer actionabilityAnalyzer = ActionabilityAnalyzer.fromKnowledgebase(knowledgebase_path);
+        ActionabilityAnalyzer actionabilityAnalyzer = ActionabilityAnalyzer.fromKnowledgebase(knowledgebasePath);
 
         RunContext runContext = ProductionRunContextFactory.fromRunDirectory(runDirectory.toPath().toString());
         String sample = runContext.tumorSample();
@@ -77,23 +75,24 @@ public class LoadEvidenceData {
                 actionabilityAnalyzer.evidenceForSomaticVariants(variants, primaryTumorLocation);
 
         List<EvidenceItem> allEvidenceForSomaticVariants = extractAllEvidenceItems(evidencePerVariant);
-        LOGGER.info("Found {} evidence items for somatic variants.", allEvidenceForSomaticVariants.size());
+        LOGGER.info("Found {} evidence items for {} somatic variants.", allEvidenceForSomaticVariants.size(), variants.size());
 
-        LOGGER.info("Reading gene copy numbers from DB");
+        LOGGER.info("Reading gene copy numbers and sample ploidy from DB");
         List<GeneCopyNumber> geneCopyNumbers = dbAccess.readGeneCopynumbers(sample);
 
-        //TODO load averages ploidy from db
-        final PurityContext purityContext = loadPurity(runContext.runDirectory(), sample);
-        List<GeneCopyNumber> significantGeneCopyNumbers =
-                ActionabilityAnalyzer.significanceGeneCopyNumbers(geneCopyNumbers, purityContext.bestFit().ploidy());
+        PurityContext purityContext = dbAccess.readPurityContext(sample);
+        assert purityContext != null;
 
-        Map<GeneCopyNumber, List<EvidenceItem>> evidencePerGeneCopyNumber = actionabilityAnalyzer.evidenceForCopyNumbers(
-                significantGeneCopyNumbers,
-                primaryTumorLocation,
-                purityContext.bestFit().ploidy());
+        double ploidy = purityContext.bestFit().ploidy();
+        LOGGER.info("Sample ploidy: " + ploidy);
+
+        Map<GeneCopyNumber, List<EvidenceItem>> evidencePerGeneCopyNumber =
+                actionabilityAnalyzer.evidenceForCopyNumbers(geneCopyNumbers, primaryTumorLocation, ploidy);
 
         List<EvidenceItem> allEvidenceForCopyNumbers = extractAllEvidenceItems(evidencePerGeneCopyNumber);
-        LOGGER.info("Found {} evidence items for copy numbers.", allEvidenceForCopyNumbers.size());
+        LOGGER.info("Found {} evidence items for {} copy numbers.",
+                allEvidenceForCopyNumbers.size(),
+                evidencePerGeneCopyNumber.keySet().size());
 
         LOGGER.info("Reading gene fusions from DB");
         List<SimpleGeneFusion> simpleGeneFusions = dbAccess.readGeneFusions(sample);
@@ -102,7 +101,7 @@ public class LoadEvidenceData {
                 actionabilityAnalyzer.evidenceForFusions(simpleGeneFusions, primaryTumorLocation);
 
         List<EvidenceItem> allEvidenceForGeneFusions = extractAllEvidenceItems(evidencePerFusion);
-        LOGGER.info("Found {} evidence items for gene fusions.", allEvidenceForGeneFusions.size());
+        LOGGER.info("Found {} evidence items for {} gene fusions.", allEvidenceForGeneFusions.size(), simpleGeneFusions.size());
 
         List<EvidenceItem> combinedEvidence = Lists.newArrayList();
         combinedEvidence.addAll(allEvidenceForSomaticVariants);
@@ -113,18 +112,7 @@ public class LoadEvidenceData {
     }
 
     @NotNull
-    static PurityContext loadPurity(@NotNull String runDirectory, @NotNull String sample) throws IOException {
-        final String cnvBasePath = runDirectory + File.separator + PURPLE_DIRECTORY;
-        return FittedPurityFile.read(cnvBasePath, sample);
-    }
-
-    @NotNull
     private static List<EvidenceItem> extractAllEvidenceItems(@NotNull Map<?, List<EvidenceItem>> evidenceItemMap) {
-        return toList(evidenceItemMap);
-    }
-
-    @NotNull
-    private static List<EvidenceItem> toList(@NotNull Map<?, List<EvidenceItem>> evidenceItemMap) {
         List<EvidenceItem> evidenceItemList = Lists.newArrayList();
         for (List<EvidenceItem> items : evidenceItemMap.values()) {
             evidenceItemList.addAll(items);

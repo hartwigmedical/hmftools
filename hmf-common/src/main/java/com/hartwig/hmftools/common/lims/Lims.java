@@ -3,6 +3,7 @@ package com.hartwig.hmftools.common.lims;
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -11,20 +12,20 @@ import org.jetbrains.annotations.Nullable;
 
 public class Lims {
 
-    public static final String PATHOLOGY_TUMOR_ESTIMATE_NOT_DETERMINED = "ND";
-    public static final String PATHOLOGY_TUMOR_PERCENTAGE_NOT_DETERMINED = "not determined";
-    public static final String PATHOLOGY_TUMOR_NOT_DONE = "N/A";
-
     private static final Logger LOGGER = LogManager.getLogger(Lims.class);
 
     @NotNull
     private final Map<String, LimsJsonData> dataPerSample;
     @NotNull
     private final Map<String, LocalDate> preLimsArrivalDates;
+    @NotNull
+    private final Set<String> samplesWithoutSamplingDate;
 
-    Lims(@NotNull final Map<String, LimsJsonData> dataPerSample, @NotNull final Map<String, LocalDate> preLimsArrivalDates) {
+    public Lims(@NotNull final Map<String, LimsJsonData> dataPerSample, @NotNull final Map<String, LocalDate> preLimsArrivalDates,
+            @NotNull final Set<String> samplesWithoutSamplingDate) {
         this.dataPerSample = dataPerSample;
         this.preLimsArrivalDates = preLimsArrivalDates;
+        this.samplesWithoutSamplingDate = samplesWithoutSamplingDate;
     }
 
     public int sampleCount() {
@@ -34,19 +35,16 @@ public class Lims {
     @Nullable
     public LocalDate arrivalDateForSample(@NotNull final String sample) {
         LimsJsonData sampleData = dataPerSample.get(sample);
-        final LocalDate arrivalDate;
-        if (sampleData != null) {
-            arrivalDate = getNullableDate(sampleData.arrivalDateString());
-            if (arrivalDate == null) {
-                LOGGER.warn("LIMS arrival date for " + sample + ": " + sampleData.arrivalDateString() + " is not a valid date.");
-            }
-        } else {
+        LocalDate arrivalDate = sampleData != null ? getNullableDate(sampleData.arrivalDateString()) : null;
+
+        if (arrivalDate == null) {
             arrivalDate = preLimsArrivalDates.get(sample);
         }
 
         if (arrivalDate == null) {
-            LOGGER.warn("Could not find arrival date for sample: " + sample + " in LIMS");
+            LOGGER.warn("Could not find a valid arrival date for sample: " + sample + " in LIMS");
         }
+
         return arrivalDate;
     }
 
@@ -56,7 +54,7 @@ public class Lims {
         if (sampleData != null) {
             final String samplingDateString = sampleData.samplingDateString();
             final LocalDate samplingDate = getNullableDate(samplingDateString);
-            if (samplingDate == null && samplingDateString != null && !samplingDateString.equalsIgnoreCase("na")) {
+            if (samplingDate == null && !samplesWithoutSamplingDate.contains(sample)) {
                 LOGGER.warn("LIMS sampling date for " + sample + ": " + sampleData.samplingDateString() + " is not a valid date.");
             }
             return samplingDate;
@@ -78,37 +76,25 @@ public class Lims {
         return null;
     }
 
-    @Nullable
+    @NotNull
     public String tumorPercentageForSample(@NotNull String sample) {
         LimsJsonData sampleData = dataPerSample.get(sample);
         if (sampleData != null) {
             String tumorPercentageString = sampleData.tumorPercentageString();
             String remarksSample = sampleData.labRemarks();
             if (tumorPercentageString == null) {
-                return null;
+                return "N/A";
             } else if (tumorPercentageString.isEmpty() && remarksSample != null && remarksSample.contains("CPCTWIDE")) {
-                return PATHOLOGY_TUMOR_ESTIMATE_NOT_DETERMINED;
+                return "not determined";
             }
 
             try {
-                return String.valueOf(Double.parseDouble(tumorPercentageString) / 100D);
+                return Long.toString(Math.round(Double.parseDouble(tumorPercentageString))) + "%";
             } catch (final NumberFormatException e) {
-                return null;
+                return "N/A";
             }
         }
-        return null;
-    }
-
-    public static String formattingTumorPercentage(@Nullable String percentage) {
-        String formatTumorPercentage;
-        if (percentage != null && percentage.equals(Lims.PATHOLOGY_TUMOR_ESTIMATE_NOT_DETERMINED)) {
-            formatTumorPercentage = Lims.PATHOLOGY_TUMOR_PERCENTAGE_NOT_DETERMINED;
-        } else if (percentage != null && !percentage.equals(Lims.PATHOLOGY_TUMOR_ESTIMATE_NOT_DETERMINED)) {
-            formatTumorPercentage = Long.toString(Math.round(Double.valueOf(percentage) * 100D)) + "%";
-        } else {
-            formatTumorPercentage = Lims.PATHOLOGY_TUMOR_NOT_DONE;
-        }
-        return formatTumorPercentage;
+        return "N/A";
     }
 
     @NotNull
