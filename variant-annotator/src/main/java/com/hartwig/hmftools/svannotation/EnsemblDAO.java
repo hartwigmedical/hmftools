@@ -392,22 +392,20 @@ public class EnsemblDAO
 
         if(isForwardStrand)
         {
-            return new Transcript(parent,
-                    transcriptStableId,
+            return new Transcript(parent, transcriptId.intValue(), transcriptStableId,
                     prevExonRank, prevExonEndPhase,
                     nextExonRank, nextExonPhase,
-                    codingBases, totalCodingBases,
+                    (int)codingBases, (int)totalCodingBases,
                     exonMax, canonical, transcriptStart, transcriptEnd,
                     codingStartVal != null ? codingStart : null,
                     codingEndVal != null ? codingEnd : null);
         }
         else
         {
-            return new Transcript(parent,
-                    transcriptStableId,
+            return new Transcript(parent, transcriptId.intValue(), transcriptStableId,
                     nextExonRank, nextExonEndPhase, // note the switch
                     prevExonRank, prevExonPhase,
-                    totalCodingBases - codingBases, totalCodingBases,
+                    (int)(totalCodingBases - codingBases), (int)totalCodingBases,
                     exonMax, canonical, transcriptStart, transcriptEnd,
                     codingStartVal != null ? codingStart : null,
                     codingEndVal != null ? codingEnd : null);

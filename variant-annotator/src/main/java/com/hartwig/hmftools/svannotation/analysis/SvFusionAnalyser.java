@@ -46,6 +46,7 @@ import com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion;
 import com.hartwig.hmftools.common.variant.structural.annotation.StructuralVariantAnnotation;
 import com.hartwig.hmftools.common.variant.structural.annotation.Transcript;
 import com.hartwig.hmftools.common.variant.structural.annotation.TranscriptExonData;
+import com.hartwig.hmftools.common.variant.structural.annotation.TranscriptProteinData;
 import com.hartwig.hmftools.svannotation.SvGeneTranscriptCollection;
 
 import org.apache.commons.cli.Options;
@@ -66,6 +67,8 @@ public class SvFusionAnalyser
 
     private Map<String, List<RnaFusionData>> mSampleRnaData;
     private SvGeneTranscriptCollection mGeneTranscriptCollection;
+    private List<String> mProteinsRequiredKept;
+    private List<String> mProteinsRequiredLost;
 
     private BufferedWriter mFusionWriter;
     private BufferedWriter mRnaWriter;
@@ -79,6 +82,10 @@ public class SvFusionAnalyser
         mRnaWriter = null;
         mSampleRnaData = new HashMap();
         mGeneTranscriptCollection = geneTranscriptCollection;
+
+        mProteinsRequiredKept = Lists.newArrayList();
+        mProteinsRequiredLost = Lists.newArrayList();
+        setRequiredProteins();
     }
 
     public static void addCmdLineArgs(Options options)
@@ -105,7 +112,7 @@ public class SvFusionAnalyser
     }
 
     private static int SPECIFIC_VAR_ID = -1;
-    // private static int SPECIFIC_VAR_ID = 4558066;
+    // private static int SPECIFIC_VAR_ID = 4752355;
 
     public final List<GeneFusion> findFusions(final List<GeneAnnotation> breakendGenes1, final List<GeneAnnotation> breakendGenes2)
     {
@@ -254,8 +261,8 @@ public class SvFusionAnalyser
     private static int calcPositionPhasing(final Transcript transcript, boolean isUpstream)
     {
         // if upstream then can just use the coding bases
-        // if downstream then coding bases are what's remaing
-        long codingBases = isUpstream ? transcript.codingBases() : transcript.totalCodingBases() - transcript.codingBases();
+        // if downstream then coding bases are what's remaining
+        long codingBases = transcript.calcCodingBases(isUpstream);
 
         int adjustedPhase = (int)(codingBases % 3);
 
@@ -293,6 +300,18 @@ public class SvFusionAnalyser
         return true;
     }
 
+    private void setRequiredProteins()
+    {
+        mProteinsRequiredLost.add("Raf-like Ras-binding");
+
+        mProteinsRequiredKept.add("Ets domain");
+        mProteinsRequiredKept.add("Protein kinase domain");
+        mProteinsRequiredKept.add("Epidermal growth factor-like domain");
+        mProteinsRequiredKept.add("Ankyrin repeat-containing domain");
+        mProteinsRequiredKept.add("Basic-leucine zipper domain");
+        mProteinsRequiredKept.add("High mobility group box domain");
+    }
+
     private void setReportableGeneFusions(final List<GeneFusion> fusions)
     {
         GeneFusion reportableFusion = determineReportableFusion(fusions);
@@ -300,16 +319,71 @@ public class SvFusionAnalyser
         if(reportableFusion == null)
             return;
 
-        for (final GeneFusion fusion : fusions)
+        if(intragenic(reportableFusion.upstreamTrans(), reportableFusion.downstreamTrans())
+        && reportableFusion.upstreamTrans().exonUpstreamPhase() == -1)
         {
-            if(reportableFusion == fusion)
-            {
-                boolean intragenicOk = !(intragenic(fusion.upstreamTrans(), fusion.downstreamTrans()) && fusion.upstreamTrans().exonUpstreamPhase() == -1);
-
-                if(intragenicOk)
-                    fusion.setReportable(true);
-            }
+            return;
         }
+
+        reportableFusion.setReportable(true);
+
+        // check impact on protein regions
+        final Transcript downTrans = reportableFusion.downstreamTrans();
+        final List<TranscriptProteinData> transProteinData = mGeneTranscriptCollection.getTranscriptProteinDataMap().get(downTrans.transId());
+
+        if(transProteinData == null || transProteinData.isEmpty() || !downTrans.isCoding())
+            return;
+
+        List<String> processedFeatures = Lists.newArrayList();
+
+        for(int i = 0; i < transProteinData.size(); ++i)
+        {
+            final TranscriptProteinData pfData = transProteinData.get(i);
+            final String feature = pfData.HitDescription;
+
+            if(processedFeatures.contains(feature))
+                continue;
+
+            // find start and end across all entries matching this feature
+            int featureStart = pfData.SeqStart;
+            int featureEnd = pfData.SeqEnd;
+
+            for(int j = i+1; j < transProteinData.size(); ++j)
+            {
+                if(transProteinData.get(j).HitDescription.equals(feature))
+                    featureEnd = max(transProteinData.get(j).SeqEnd, featureEnd);
+            }
+
+            addProteinFeature(downTrans, true, feature, featureStart, featureEnd);
+            processedFeatures.add(feature);
+        }
+
+        long requiredKeptButLost = mProteinsRequiredKept.stream().filter(f -> downTrans.getProteinFeaturesLost().contains(f)).count();
+        long requiredLostButKept = mProteinsRequiredLost.stream().filter(f -> downTrans.getProteinFeaturesKept().contains(f)).count();
+
+        if(requiredKeptButLost > 0 || requiredLostButKept > 0)
+            reportableFusion.setReportable(false);
+    }
+
+    private void addProteinFeature(final Transcript transcript, boolean isDownstream, final String feature, int featureStart, int featureEnd)
+    {
+        boolean featurePreserved;
+
+        if(isDownstream)
+        {
+            // coding must start before the start of the feature for it to be preserved
+            int codingBaseStart = transcript.totalCodingBases() - transcript.calcCodingBases(!isDownstream);
+            int featureCodingBaseStart = featureStart * 3;
+            featurePreserved = (codingBaseStart <= featureCodingBaseStart);
+        }
+        else
+        {
+            int codingBaseEnd = transcript.calcCodingBases(!isDownstream);
+            int featureCodingBaseEnd = featureEnd * 3;
+            featurePreserved = (featureCodingBaseEnd <= codingBaseEnd);
+        }
+
+        transcript.addProteinFeature(feature, featurePreserved);
     }
 
     public static String TRANSCRIPT_PROTEIN_CODING = "protein_coding";
@@ -375,7 +449,7 @@ public class SvFusionAnalyser
 
             factor /= 100;
 
-            long length = downTrans.isCoding() ? downTrans.codingBases() : downTrans.exonMax();
+            long length = downTrans.isCoding() ? downTrans.calcCodingBases(false) : downTrans.exonMax();
 
             // will be a range between 1-99 * current factor
             length = min(round(length/10), 99);
@@ -393,7 +467,7 @@ public class SvFusionAnalyser
 
             factor /= 100;
 
-            length = upTrans.isCoding() ? upTrans.codingBases() : upTrans.exonMax();
+            length = upTrans.isCoding() ? upTrans.calcCodingBases(true) : upTrans.exonMax();
             length = min(round(length/10), 99);
             transScore += length * factor;
 
@@ -481,7 +555,7 @@ public class SvFusionAnalyser
 
                 mFusionWriter.write(",SvIdDown,ChrDown,PosDown,OrientDown,TypeDown,GeneDown,TranscriptDown,StrandDown,RegionTypeDown,CodingTypeDown");
                 mFusionWriter.write(",ExonDown,PhaseDown,ExonMaxDown,DisruptiveDown,ExactBaseDown,CodingBasesDown,TotalCodingDown");
-                mFusionWriter.write(",CodingStartDown,CodingEndDown,TransStartDown,TransEndDown,DistancePrevDown,BiotypeDown");
+                mFusionWriter.write(",CodingStartDown,CodingEndDown,TransStartDown,TransEndDown,DistancePrevDown,BiotypeDown,ProteinsKept,ProteinsLost");
                 mFusionWriter.newLine();
             }
 
@@ -489,11 +563,11 @@ public class SvFusionAnalyser
 
             for(final GeneFusion fusion : fusions)
             {
-                final Transcript startTrans = fusion.upstreamTrans();
-                final Transcript endTrans = fusion.downstreamTrans();
+                final Transcript upTrans = fusion.upstreamTrans();
+                final Transcript downTrans = fusion.downstreamTrans();
 
-                final GeneAnnotation startVar = startTrans.parent();
-                final GeneAnnotation endVar = endTrans.parent();
+                final GeneAnnotation startVar = upTrans.parent();
+                final GeneAnnotation endVar = downTrans.parent();
 
                 writer.write(String.format("%s,%s,%s,%s,%s",
                         sampleId, fusion.reportable(), fusion.getKnownFusionType(), fusion.primarySource(), clusterInfo));
@@ -505,17 +579,17 @@ public class SvFusionAnalyser
 
                 writer.write(
                         String.format(",%s,%s,%d,%s,%s",
-                                startTrans.parent().geneName(), startTrans.transcriptId(),
-                                startTrans.parent().strand(), startTrans.regionType(), startTrans.codingType()));
+                                upTrans.parent().geneName(), upTrans.transcriptId(),
+                                upTrans.parent().strand(), upTrans.regionType(), upTrans.codingType()));
 
                 writer.write(
                         String.format(",%d,%d,%d,%s",
-                                startTrans.exonUpstream(), startTrans.exonUpstreamPhase(), startTrans.exonMax(), startTrans.isDisruptive()));
+                                upTrans.exonUpstream(), upTrans.exonUpstreamPhase(), upTrans.exonMax(), upTrans.isDisruptive()));
                 writer.write(
                         String.format(",%d,%d,%d,%d,%d,%d,%d,%d,%s",
-                                startTrans.exactCodingBase(), startTrans.codingBases(), startTrans.totalCodingBases(),
-                                startTrans.codingStart(), startTrans.codingEnd(), startTrans.transcriptStart(), startTrans.transcriptEnd(),
-                                startTrans.exonDistanceUp(), startTrans.bioType()));
+                                upTrans.exactCodingBase(), upTrans.calcCodingBases(true), upTrans.totalCodingBases(),
+                                upTrans.codingStart(), upTrans.codingEnd(), upTrans.transcriptStart(), upTrans.transcriptEnd(),
+                                upTrans.exonDistanceUp(), upTrans.bioType()));
 
                 writer.write(
                         String.format(",%d,%s,%d,%d,%s",
@@ -523,18 +597,18 @@ public class SvFusionAnalyser
 
                 writer.write(
                         String.format(",%s,%s,%d,%s,%s",
-                                endTrans.parent().geneName(), endTrans.transcriptId(),
-                                endTrans.parent().strand(), endTrans.regionType(), endTrans.codingType()));
+                                downTrans.parent().geneName(), downTrans.transcriptId(),
+                                downTrans.parent().strand(), downTrans.regionType(), downTrans.codingType()));
 
                 writer.write(
                         String.format(",%d,%d,%d,%s",
-                                endTrans.exonDownstream(), endTrans.exonDownstreamPhase(), endTrans.exonMax(), endTrans.isDisruptive()));
+                                downTrans.exonDownstream(), downTrans.exonDownstreamPhase(), downTrans.exonMax(), downTrans.isDisruptive()));
 
                 writer.write(
-                        String.format(",%d,%d,%d,%d,%d,%d,%d,%d,%s",
-                                endTrans.exactCodingBase(), endTrans.codingBases(), endTrans.totalCodingBases(),
-                                endTrans.codingStart(), endTrans.codingEnd(), endTrans.transcriptStart(), endTrans.transcriptEnd(),
-                                endTrans.exonDistanceUp(), endTrans.bioType()));
+                        String.format(",%d,%d,%d,%d,%d,%d,%d,%d,%s,%s,%s",
+                                downTrans.exactCodingBase(), downTrans.calcCodingBases(false), downTrans.totalCodingBases(),
+                                downTrans.codingStart(), downTrans.codingEnd(), downTrans.transcriptStart(), downTrans.transcriptEnd(),
+                                downTrans.exonDistanceUp(), downTrans.bioType(), downTrans.getProteinFeaturesKept(), downTrans.getProteinFeaturesLost()));
 
                 writer.newLine();
             }

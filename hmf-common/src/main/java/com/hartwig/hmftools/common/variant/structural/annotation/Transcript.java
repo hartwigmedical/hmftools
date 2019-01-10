@@ -10,7 +10,8 @@ public class Transcript {
     @NotNull
     private final GeneAnnotation mGene;
 
-    private final String mTranscriptId;
+    private final int mTransId;
+    private final String mStableId;
     private final int mExonUpstream;
     private final int mExonUpstreamPhase;
     private final int mExonDownstream;
@@ -18,8 +19,8 @@ public class Transcript {
     private final int mExonMax;
     private int mExactCodingBase;
 
-    private final long mCodingBases;
-    private final long mTotalCodingBases;
+    private final int mCodingBases;
+    private final int mTotalCodingBases;
 
     private final boolean mCanonical;
     private String mBioType;
@@ -41,6 +42,9 @@ public class Transcript {
 
     private boolean mIsDisruptive;
 
+    private String mProteinFeaturesKept;
+    private String mProteinFeaturesLost;
+
     public static String TRANS_REGION_TYPE_UPSTREAM = "Upstream";
     public static String TRANS_REGION_TYPE_EXONIC = "Exonic";
     public static String TRANS_REGION_TYPE_INTRONIC = "Intronic";
@@ -52,14 +56,15 @@ public class Transcript {
 
     private static int STOP_CODON_LENGTH = 3;
 
-    public Transcript(@NotNull final GeneAnnotation parent, @NotNull final String transcriptId,
+    public Transcript(@NotNull final GeneAnnotation parent, int transId, final String stableId,
             final int exonUpstream, final int exonUpstreamPhase, final int exonDownstream, final int exonDownstreamPhase,
-            final long codingBases, final long totalCodingBases,
+            final int codingBases, final int totalCodingBases,
             final int exonMax, final boolean canonical, final long transcriptStart, final long transcriptEnd,
-            @Nullable final Long codingStart, @Nullable final Long codingEnd)
+            final Long codingStart, final Long codingEnd)
     {
         mGene = parent;
-        mTranscriptId = transcriptId;
+        mTransId = transId;
+        mStableId = stableId;
 
         mExonUpstream = exonUpstream;
         mExonDownstream = exonDownstream;
@@ -107,10 +112,13 @@ public class Transcript {
             mIsDisruptive = false;
         else
             mIsDisruptive = true;
+
+        mProteinFeaturesKept = "";
+        mProteinFeaturesLost = "";
     }
 
-    @NotNull
-    public String transcriptId() { return mTranscriptId; }
+    public int transId() { return mTransId; }
+    public final String transcriptId() { return mStableId; }
 
     public boolean isExonic()
     {
@@ -217,14 +225,14 @@ public class Transcript {
 
     public long svPosition() { return mGene.position(); }
 
-    @NotNull
     public String geneName() { return mGene.geneName(); }
 
     public int exonUpstream() { return mExonUpstream; }
     public int exonUpstreamPhase() { return mExonUpstreamPhase; }
 
-    public long codingBases() { return mCodingBases; }
-    public long totalCodingBases() { return mTotalCodingBases; }
+    public int codingBases() { return mCodingBases; }
+    public int calcCodingBases(boolean isUpstream) { return isUpstream ? mCodingBases : mTotalCodingBases - mCodingBases; }
+    public int totalCodingBases() { return mTotalCodingBases; }
 
     public int exonDownstream() { return mExonDownstream; }
     public int exonDownstreamPhase() { return mExonDownstreamPhase; }
@@ -247,6 +255,22 @@ public class Transcript {
 
     public final String toString()
     {
-        return mGene.geneName() + " " + mTranscriptId;
+        return mGene.geneName() + " " + mStableId;
     }
+
+    public void addProteinFeature(final String feature, boolean isPreserved)
+    {
+        if(isPreserved)
+        {
+            mProteinFeaturesKept += mProteinFeaturesKept.isEmpty() ? feature : ";" + feature;
+        }
+        else
+        {
+            mProteinFeaturesLost += mProteinFeaturesLost.isEmpty() ? feature : ";" + feature;
+        }
+    }
+
+    public final String getProteinFeaturesKept() { return mProteinFeaturesKept; }
+    public final String getProteinFeaturesLost() { return mProteinFeaturesLost; }
+
 }

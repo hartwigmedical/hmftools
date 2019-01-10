@@ -1,6 +1,9 @@
 package com.hartwig.hmftools.svanalysis.analysis;
 
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
+import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_END;
+import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_START;
+import static com.hartwig.hmftools.svanalysis.types.SvVarData.isStart;
 import static com.hartwig.hmftools.svannotation.analysis.SvFusionAnalyser.FUSION_PAIRS_CSV;
 import static com.hartwig.hmftools.svannotation.analysis.SvFusionAnalyser.PROMISCUOUS_FIVE_CSV;
 import static com.hartwig.hmftools.svannotation.analysis.SvFusionAnalyser.PROMISCUOUS_THREE_CSV;
@@ -63,7 +66,7 @@ public class FusionDisruptionAnalyser
         mOutputDir = "";
     }
 
-    public void loadFusionReferenceData(final CommandLine cmdLineArgs, final String outputDir, boolean useCombinedOutput)
+    public void loadFusionReferenceData(final CommandLine cmdLineArgs, final String outputDir, final String ensemblDataDir)
     {
         if(!cmdLineArgs.hasOption(FUSION_PAIRS_CSV) || !cmdLineArgs.hasOption(PROMISCUOUS_FIVE_CSV) || !cmdLineArgs.hasOption(PROMISCUOUS_THREE_CSV))
             return;
@@ -87,21 +90,30 @@ public class FusionDisruptionAnalyser
 
         List<HmfTranscriptRegion> transcriptRegions = HmfGenePanelSupplier.allGeneList37();
         mChromosomeTranscriptMap = Multimaps.fromRegions(transcriptRegions);
-    }
 
-    public void loadSvGeneTranscriptData(final String sampleId, final String sampleDataPath)
-    {
-        mSampleId = sampleId;
-        mSvGeneTranscriptCollection.setDataPath(sampleDataPath);
-        mSvGeneTranscriptCollection.loadEnsemblGeneData();
-        mSvGeneTranscriptCollection.loadTranscriptExonData();
+        if(!ensemblDataDir.isEmpty())
+        {
+            mSvGeneTranscriptCollection.setDataPath(ensemblDataDir);
+            mSvGeneTranscriptCollection.loadEnsemblData();
+        }
     }
 
     private void setSvGenesList(final SvVarData var)
     {
-        final List<GeneAnnotation> genesList = mSvGeneTranscriptCollection.getSvIdGeneTranscriptsMap().get(var.dbId());
+        List<GeneAnnotation> genesList = Lists.newArrayList();
 
-        if(genesList == null || genesList.isEmpty())
+        for(int be = SVI_START; be <= SVI_END; ++be)
+        {
+            if(be == SVI_END && var.isNullBreakend())
+                continue;
+
+            boolean isStart = isStart(be);
+
+            genesList.addAll(mSvGeneTranscriptCollection.findGeneAnnotationsBySv(
+                    var.dbId(), isStart, var.chromosome(isStart), var.position(isStart), var.orientation(isStart)));
+        }
+
+        if(genesList.isEmpty())
             return;
 
         List<GeneAnnotation> startGenes = Lists.newArrayList();
@@ -126,8 +138,10 @@ public class FusionDisruptionAnalyser
     private static int CHECK_CLUSTER_ID = -1;
     // private static int CHECK_CLUSTER_ID = 94;
 
-    public void setSvGeneData(final List<SvVarData> svList)
+    public void setSvGeneData(final String sampleId, final List<SvVarData> svList)
     {
+        mSampleId = sampleId;
+
         for(final SvVarData var : svList)
         {
             if (var.isReplicatedSv())

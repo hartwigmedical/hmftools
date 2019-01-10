@@ -181,8 +181,7 @@ public class StructuralVariantAnnotator
         if(!mEnsemblDataDir.isEmpty())
         {
             mSvGeneTranscriptCollection.setDataPath(mEnsemblDataDir);
-            mSvGeneTranscriptCollection.loadTranscriptExonData();
-            mSvGeneTranscriptCollection.loadEnsemblGeneData();
+            mSvGeneTranscriptCollection.loadEnsemblData();
         }
 
         if(samplesList.isEmpty())

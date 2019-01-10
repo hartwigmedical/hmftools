@@ -118,7 +118,7 @@ public class SvAnalyser {
             if(cmd.hasOption(GENE_TRANSCRIPTS_DIR))
             {
                 fusionAnalyser = new FusionDisruptionAnalyser();
-                fusionAnalyser.loadFusionReferenceData(cmd, cmd.getOptionValue(DATA_OUTPUT_PATH), samplesList.size() > 1);
+                fusionAnalyser.loadFusionReferenceData(cmd, cmd.getOptionValue(DATA_OUTPUT_PATH), cmd.getOptionValue(GENE_TRANSCRIPTS_DIR,""));
             }
 
             int count = 0;
@@ -153,8 +153,7 @@ public class SvAnalyser {
 
                 if(fusionAnalyser != null)
                 {
-                    fusionAnalyser.loadSvGeneTranscriptData(sample, cmd.getOptionValue(GENE_TRANSCRIPTS_DIR));
-                    fusionAnalyser.setSvGeneData(svVarData);
+                    fusionAnalyser.setSvGeneData(sample, svVarData);
                 }
 
                 if(checkDrivers)

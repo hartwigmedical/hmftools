@@ -20,9 +20,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.StandardOpenOption;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -34,6 +32,7 @@ import com.hartwig.hmftools.common.variant.structural.annotation.GeneAnnotation;
 import com.hartwig.hmftools.common.variant.structural.annotation.StructuralVariantAnnotation;
 import com.hartwig.hmftools.common.variant.structural.annotation.Transcript;
 import com.hartwig.hmftools.common.variant.structural.annotation.TranscriptExonData;
+import com.hartwig.hmftools.common.variant.structural.annotation.TranscriptProteinData;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -42,10 +41,10 @@ public class SvGeneTranscriptCollection
 {
     private String mDataPath;
 
-    private Map<Integer, List<GeneAnnotation>> mSvIdGeneTranscriptsMap;
     private Map<String, List<TranscriptExonData>> mGeneTransExonDataMap;
-    private Map<String, List<EnsemblGeneData>> mEnsemblChrGeneDataMap;
-    private Map<String, List<EnsemblGeneData>> mEnsemblChrReverseGeneDataMap; // order by gene end not start
+    private Map<String, List<EnsemblGeneData>> mChromosomeGeneDataMap;
+    private Map<String, List<EnsemblGeneData>> mChromosomeReverseGeneDataMap; // order by gene end not start
+    private Map<Integer, List<TranscriptProteinData>> mEnsemblProteinDataMap;
 
     private BufferedWriter mBreakendWriter;
 
@@ -54,15 +53,16 @@ public class SvGeneTranscriptCollection
 
     public static String ENSEMBL_GENE_DATA_FILE = "ensembl_gene_data.csv";
     public static String ENSEMBL_TRANS_EXON_DATA_FILE = "ensembl_trans_exon_data.csv";
+    public static String ENSEMBL_PROTEIN_FEATURE_DATA_FILE = "ensembl_protein_features.csv";
 
     private static final Logger LOGGER = LogManager.getLogger(SvGeneTranscriptCollection.class);
 
     public SvGeneTranscriptCollection()
     {
-        mSvIdGeneTranscriptsMap = new HashMap();
         mGeneTransExonDataMap = new HashMap();
-        mEnsemblChrGeneDataMap = new HashMap();
-        mEnsemblChrReverseGeneDataMap = new HashMap();
+        mChromosomeGeneDataMap = new HashMap();
+        mChromosomeReverseGeneDataMap = new HashMap();
+        mEnsemblProteinDataMap = new HashMap();
         mBreakendWriter = null;
     }
 
@@ -73,16 +73,16 @@ public class SvGeneTranscriptCollection
 
     public boolean hasCachedEnsemblData()
     {
-        return !mEnsemblChrGeneDataMap.isEmpty() && !mGeneTransExonDataMap.isEmpty();
+        return !mChromosomeGeneDataMap.isEmpty() && !mGeneTransExonDataMap.isEmpty();
     }
 
-    public final Map<Integer, List<GeneAnnotation>> getSvIdGeneTranscriptsMap() { return mSvIdGeneTranscriptsMap; }
     public final Map<String, List<TranscriptExonData>> getGeneExonDataMap() { return mGeneTransExonDataMap; }
-    public final Map<String, List<EnsemblGeneData>> getChrGeneDataMap() { return mEnsemblChrGeneDataMap; }
+    public final Map<String, List<EnsemblGeneData>> getChrGeneDataMap() { return mChromosomeGeneDataMap; }
+    public Map<Integer, List<TranscriptProteinData>> getTranscriptProteinDataMap() { return mEnsemblProteinDataMap; }
 
     public final EnsemblGeneData getGeneData(final String geneName)
     {
-        for(Map.Entry<String, List<EnsemblGeneData>> entry : mEnsemblChrGeneDataMap.entrySet())
+        for(Map.Entry<String, List<EnsemblGeneData>> entry : mChromosomeGeneDataMap.entrySet())
         {
             for(final EnsemblGeneData geneData : entry.getValue())
             {
@@ -146,8 +146,8 @@ public class SvGeneTranscriptCollection
             LOGGER.debug("specific SV({})", svId);
         }
 
-        final List<EnsemblGeneData> geneRegions = mEnsemblChrGeneDataMap.get(chromosome);
-        final List<EnsemblGeneData> geneRegionsReversed = mEnsemblChrReverseGeneDataMap.get(chromosome);
+        final List<EnsemblGeneData> geneRegions = mChromosomeGeneDataMap.get(chromosome);
+        final List<EnsemblGeneData> geneRegionsReversed = mChromosomeReverseGeneDataMap.get(chromosome);
 
         final List<EnsemblGeneData> matchedGenes = findGeneRegions(position, geneRegions);
 
@@ -415,80 +415,79 @@ public class SvGeneTranscriptCollection
         long codingBases = 0;
         long totalCodingBases = 0;
 
-        for (int index = 0; index < transcriptExons.size(); ++index)
+        if(isCoding)
         {
-            final TranscriptExonData exonData = transcriptExons.get(index);
-            long exonStart = exonData.ExonStart;
-            long exonEnd = exonData.ExonEnd;
-
-            if(!isCoding)
-                continue;
-
-            if(!inCodingRegion)
+            for (int index = 0; index < transcriptExons.size(); ++index)
             {
-                if(exonEnd >= codingStart)
+                final TranscriptExonData exonData = transcriptExons.get(index);
+                long exonStart = exonData.ExonStart;
+                long exonEnd = exonData.ExonEnd;
+
+                if (!inCodingRegion)
                 {
-                    // coding region begins in this exon
-                    inCodingRegion = true;
-
-                    totalCodingBases += exonEnd - codingStart + 1;
-
-                    // check whether the position falls in this exon and if so before or after the coding start
-                    if(position >= codingStart)
+                    if (exonEnd >= codingStart)
                     {
-                        if(position < exonEnd)
-                            codingBases += position - codingStart + 1;
-                        else
-                            codingBases += exonEnd - codingStart + 1;
+                        // coding region begins in this exon
+                        inCodingRegion = true;
+
+                        totalCodingBases += exonEnd - codingStart + 1;
+
+                        // check whether the position falls in this exon and if so before or after the coding start
+                        if (position >= codingStart)
+                        {
+                            if (position < exonEnd)
+                                codingBases += position - codingStart + 1;
+                            else
+                                codingBases += exonEnd - codingStart + 1;
+                        }
+                    }
+                }
+                else if (!codingRegionEnded)
+                {
+                    if (exonStart > codingEnd)
+                    {
+                        codingRegionEnded = true;
+                    }
+                    else if (exonEnd > codingEnd)
+                    {
+                        // coding region ends in this exon
+                        codingRegionEnded = true;
+
+                        totalCodingBases += codingEnd - exonStart + 1;
+
+                        if (position >= exonStart)
+                        {
+                            if (position < codingEnd)
+                                codingBases += position - exonStart + 1;
+                            else
+                                codingBases += codingEnd - exonStart + 1;
+                        }
+                    }
+                    else
+                    {
+                        // take all of the exon's bases
+                        totalCodingBases += exonEnd - exonStart + 1;
+
+                        if (position >= exonStart)
+                        {
+                            if (position < exonEnd)
+                                codingBases += position - exonStart + 1;
+                            else
+                                codingBases += exonEnd - exonStart + 1;
+                        }
                     }
                 }
             }
-            else if(!codingRegionEnded)
+
+            if (!isForwardStrand)
             {
-                if(exonStart > codingEnd)
-                {
-                    codingRegionEnded = true;
-                }
-                else if(exonEnd > codingEnd)
-                {
-                    // coding region ends in this exon
-                    codingRegionEnded = true;
-
-                    totalCodingBases += codingEnd - exonStart + 1;
-
-                    if(position >= exonStart)
-                    {
-                        if (position < codingEnd)
-                            codingBases += position - exonStart + 1;
-                        else
-                            codingBases += codingEnd - exonStart + 1;
-                    }
-                }
-                else
-                {
-                    // take all of the exon's bases
-                    totalCodingBases += exonEnd - exonStart + 1;
-
-                    if(position >= exonStart)
-                    {
-                        if (position < exonEnd)
-                            codingBases += position - exonStart + 1;
-                        else
-                            codingBases += exonEnd - exonStart + 1;
-                    }
-                }
+                codingBases = totalCodingBases - codingBases;
             }
         }
 
-        if(!isForwardStrand)
-        {
-            codingBases = totalCodingBases - codingBases;
-        }
-
-        Transcript transcript = new Transcript(geneAnnotation,
-                first.TransName,
+        Transcript transcript = new Transcript(geneAnnotation, first.TransId, first.TransName,
                 upExonRank, upExonPhase, downExonRank, downExonPhase,
-                codingBases, totalCodingBases,
+                (int)codingBases, (int)totalCodingBases,
                 exonMax, first.IsCanonical, first.TransStart, first.TransEnd,
                 first.CodingStart, first.CodingEnd);
 
@@ -499,6 +498,11 @@ public class SvGeneTranscriptCollection
             transcript.setCodingType(TRANS_CODING_TYPE_CODING);
 
         return transcript;
+    }
+
+    public boolean loadEnsemblData()
+    {
+        return loadTranscriptExonData() &&  loadEnsemblGeneData() &&  loadTranscriptProteinData();
     }
 
 
@@ -520,7 +524,7 @@ public class SvGeneTranscriptCollection
     private static int TE_CODING_START = 13;
     private static int TE_CODING_END = 14;
 
-    public boolean loadTranscriptExonData()
+    private boolean loadTranscriptExonData()
     {
         String filename = mDataPath;
 
@@ -590,7 +594,7 @@ public class SvGeneTranscriptCollection
         }
         catch(IOException e)
         {
-            LOGGER.warn("failed to load sample gene annotations({}): {}", filename, e.toString());
+            LOGGER.warn("failed to load gene transcript exon data({}): {}", filename, e.toString());
             return false;
         }
 
@@ -608,7 +612,7 @@ public class SvGeneTranscriptCollection
     private static int GD_BAND = 7;
     private static int GD_SYN = 8;
 
-    public boolean loadEnsemblGeneData()
+    private boolean loadEnsemblGeneData()
     {
         String filename = mDataPath;
 
@@ -654,14 +658,14 @@ public class SvGeneTranscriptCollection
                 if(!currentChr.equals(chromosome))
                 {
                     currentChr = chromosome;
-                    geneList = mEnsemblChrGeneDataMap.get(chromosome);
+                    geneList = mChromosomeGeneDataMap.get(chromosome);
 
                     if(geneList == null)
                     {
                         geneList = Lists.newArrayList();
                         reverseGeneList = Lists.newArrayList();
-                        mEnsemblChrGeneDataMap.put(chromosome, geneList);
-                        mEnsemblChrReverseGeneDataMap.put(chromosome, reverseGeneList);
+                        mChromosomeGeneDataMap.put(chromosome, geneList);
+                        mChromosomeReverseGeneDataMap.put(chromosome, reverseGeneList);
                     }
                 }
 
@@ -686,7 +690,7 @@ public class SvGeneTranscriptCollection
             }
 
             // set indicies for the reverse list
-            for(Map.Entry<String, List<EnsemblGeneData>> entry : mEnsemblChrReverseGeneDataMap.entrySet())
+            for(Map.Entry<String, List<EnsemblGeneData>> entry : mChromosomeReverseGeneDataMap.entrySet())
             {
                 final List<EnsemblGeneData> geneDataList = entry.getValue();
                 for(int index = 0; index < geneDataList.size(); ++index)
@@ -700,6 +704,80 @@ public class SvGeneTranscriptCollection
         catch(IOException e)
         {
             LOGGER.warn("failed to load Ensembl gene ({}): {}", filename, e.toString());
+            return false;
+        }
+
+        return true;
+    }
+
+    // TranscriptId,TranslationId,ProteinFeatureId,SeqStart,SeqEnd,HitDescription
+    private static int PF_TRANS_ID = 0;
+    private static int PF_TRANL_ID = 1;
+    private static int PF_PF_ID = 2;
+    private static int PF_START = 3;
+    private static int PF_END = 4;
+    private static int PF_DESC = 5;
+
+    private boolean loadTranscriptProteinData()
+    {
+        String filename = mDataPath;
+
+        if(!filename.endsWith(File.separator))
+            filename += File.separator;
+
+        filename += ENSEMBL_PROTEIN_FEATURE_DATA_FILE;
+
+        if (!Files.exists(Paths.get(filename)))
+            return false;
+
+        try
+        {
+            BufferedReader fileReader = new BufferedReader(new FileReader(filename));
+
+            String line = fileReader.readLine();
+
+            if (line == null)
+            {
+                LOGGER.error("empty Ensembl protein feature data file({})", filename);
+                return false;
+            }
+
+            int proteinCount = 0;
+            int currentTransId = -1;
+            List<TranscriptProteinData> transProteinDataList = null;
+
+            line = fileReader.readLine(); // skip header
+
+            while (line != null)
+            {
+                // parse CSV data
+                String[] items = line.split(",");
+
+                // check if still on the same variant
+                int transId = Integer.parseInt(items[PF_TRANS_ID]);
+
+                if(transId != currentTransId)
+                {
+                    currentTransId = transId;
+                    transProteinDataList = Lists.newArrayList();
+                    mEnsemblProteinDataMap.put(transId, transProteinDataList);
+                }
+
+                TranscriptProteinData proteinData = new TranscriptProteinData(
+                        transId, Integer.parseInt(items[PF_TRANL_ID]), Integer.parseInt(items[PF_PF_ID]),
+                        Integer.parseInt(items[PF_START]), Integer.parseInt(items[PF_END]), items[PF_DESC]);
+
+                transProteinDataList.add(proteinData);
+                ++proteinCount;
+
+                line = fileReader.readLine();
+            }
+
+            LOGGER.debug("loaded {} protein trans records with {} locations", mEnsemblProteinDataMap.size(), proteinCount);
+        }
+        catch(IOException e)
+        {
+            LOGGER.warn("failed to load transcript protein features({}): {}", filename, e.toString());
             return false;
         }
 
@@ -794,7 +872,7 @@ public class SvGeneTranscriptCollection
 
     public void writeGeneProbabilityData()
     {
-        for(Map.Entry<String, List<EnsemblGeneData>> entry : mEnsemblChrGeneDataMap.entrySet())
+        for(Map.Entry<String, List<EnsemblGeneData>> entry : mChromosomeGeneDataMap.entrySet())
         {
             for(final EnsemblGeneData geneData :entry.getValue())
             {
