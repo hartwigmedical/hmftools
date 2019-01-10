@@ -27,6 +27,7 @@ import com.hartwig.hmftools.svanalysis.types.SvLOH;
 import com.hartwig.hmftools.svanalysis.types.SvLinkedPair;
 import com.hartwig.hmftools.svanalysis.types.SvVarData;
 import com.hartwig.hmftools.svannotation.EnsemblDAO;
+import com.hartwig.hmftools.svannotation.SvGeneTranscriptCollection;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
@@ -38,10 +39,10 @@ public class DriverGeneAnnotator
     private static final Logger LOGGER = LogManager.getLogger(DriverGeneAnnotator.class);
 
     final DatabaseAccess mDbAccess;
+    SvGeneTranscriptCollection mGeneTranscriptCollection;
 
     private Map<String, HmfTranscriptRegion> mAllGenesMap;
     private List<DriverCatalog> mDriverCatalog;
-    EnsemblDAO mEnsemblDAO;
 
     // references only
     private String mSampleId;
@@ -51,50 +52,16 @@ public class DriverGeneAnnotator
     private List<SvLOH> mSampleLOHData;
     private Map<String, Double> mChromosomeCopyNumberMap;
 
-    private static final String ENSEMBL_DB = "ensembl_db";
-    private static final String ENSEMBL_DB_USER = "ensembl_user";
-    private static final String ENSEMBL_DB_PASS = "ensembl_pass";
-
-    public DriverGeneAnnotator(DatabaseAccess dbAccess)
+    public DriverGeneAnnotator(DatabaseAccess dbAccess, SvGeneTranscriptCollection geneTranscriptCollection)
     {
         mDbAccess = dbAccess;
+        mGeneTranscriptCollection = geneTranscriptCollection;
+
         mDriverCatalog = Lists.newArrayList();
         mSampleLOHData = Lists.newArrayList();
         mChromosomeCopyNumberMap = null;
-        mEnsemblDAO = null;
 
         initialiseGeneData();
-    }
-
-    public static void addCmdLineArgs(Options options)
-    {
-        options.addOption(ENSEMBL_DB, true, "Annotate structural variants using this Ensembl DB URI");
-        options.addOption(ENSEMBL_DB_PASS, true, "Ensembl DB password if required");
-        options.addOption(ENSEMBL_DB_USER, true, "Ensembl DB username if required");
-    }
-
-    public boolean loadConfig(final CommandLine cmd)
-    {
-        if(!cmd.hasOption(ENSEMBL_DB))
-            return true;
-
-        try
-        {
-            final String ensembleUrl = "jdbc:" + cmd.getOptionValue(ENSEMBL_DB);
-            final String ensembleUser = cmd.getOptionValue(ENSEMBL_DB_USER, "");
-            final String ensemblePassword = cmd.getOptionValue(ENSEMBL_DB_PASS, "");
-
-            LOGGER.debug("connecting to ensembl DB: {}", ensembleUrl);
-            DatabaseAccess ensembleDBConn = new DatabaseAccess(ensembleUser, ensemblePassword, ensembleUrl);
-            mEnsemblDAO = new EnsemblDAO(ensembleDBConn.context());
-        }
-        catch (SQLException e)
-        {
-            LOGGER.warn("Ensembl DB connection failed: {}", e.toString());
-            return false;
-        }
-
-        return true;
     }
 
     public final List<DriverCatalog> getDriverCatalog() { return mDriverCatalog; }
@@ -481,9 +448,6 @@ public class DriverGeneAnnotator
 
     private void annotateTemplatedInsertion()
     {
-        if(mEnsemblDAO == null)
-            return;
-
         PerformanceCounter perfCount = new PerformanceCounter("Ensembl Exon Query");
 
         for(final SvCluster cluster : mClusters)
@@ -504,7 +468,7 @@ public class DriverGeneAnnotator
 
                 perfCount.start();
 
-                final String exonData = mEnsemblDAO.getExonDetailsForPosition(lower.chromosome(), lower.position(), upper.position());
+                final String exonData = mGeneTranscriptCollection.getExonDetailsForPosition(lower.chromosome(), lower.position(), upper.position());
 
                 perfCount.stop();
 

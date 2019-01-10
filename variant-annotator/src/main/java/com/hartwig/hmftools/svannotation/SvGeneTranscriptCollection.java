@@ -500,6 +500,61 @@ public class SvGeneTranscriptCollection
         return transcript;
     }
 
+    public String getExonDetailsForPosition(final String chromosome, long posStart, long posEnd)
+    {
+        String exonDataStr = "";
+
+        /*
+        // first just look for matching exons prior to any concern for their transcripts
+        final Result<?> exonDataList = context.select(EXON.EXON_ID, EXON.SEQ_REGION_START, EXON.SEQ_REGION_END)
+                .from(EXON, SEQ_REGION)
+                .where(EXON.SEQ_REGION_ID.eq(SEQ_REGION.SEQ_REGION_ID))
+                .and(EXON.SEQ_REGION_START.greaterOrEqual(UInteger.valueOf(posStart - 1)))
+                .and(EXON.SEQ_REGION_START.lessOrEqual(UInteger.valueOf(posStart + 1)))
+                .and(EXON.SEQ_REGION_END.greaterOrEqual(UInteger.valueOf(posEnd - 1)))
+                .and(EXON.SEQ_REGION_END.lessOrEqual(UInteger.valueOf(posEnd + 1)))
+                .fetch();
+
+        if (exonDataList.isEmpty())
+            return "";
+
+
+        for (final Record exonData : exonDataList)
+        {
+            final UInteger exonId = exonData.get(EXON.EXON_ID);
+            long exonStart = exonData.get(EXON.SEQ_REGION_START).longValue();
+            long exonEnd = exonData.get(EXON.SEQ_REGION_END).longValue();
+
+            // now retrieve transcript info
+            final Result<?> transcriptDataList = context.select(TRANSCRIPT.TRANSCRIPT_ID, TRANSCRIPT.STABLE_ID,
+                    EXON_TRANSCRIPT.RANK, GENE.CANONICAL_TRANSCRIPT_ID)
+                    .from(GENE, EXON_TRANSCRIPT, TRANSCRIPT)
+                    .where(TRANSCRIPT.GENE_ID.eq(GENE.GENE_ID))
+                    .and(EXON_TRANSCRIPT.TRANSCRIPT_ID.eq(TRANSCRIPT.TRANSCRIPT_ID))
+                    .and(EXON_TRANSCRIPT.EXON_ID.eq(exonId))
+                    .fetch();
+
+            for (final Record transcriptData : transcriptDataList)
+            {
+                int exonRank = transcriptData.get(EXON_TRANSCRIPT.RANK);
+                final String transcriptStableId = transcriptData.get(TRANSCRIPT.STABLE_ID);
+                final UInteger transcriptId = transcriptData.get(TRANSCRIPT.TRANSCRIPT_ID);
+                final UInteger canonicalTranscriptId = transcriptData.get(GENE.CANONICAL_TRANSCRIPT_ID);
+
+                if (exonDataStr.isEmpty() || canonicalTranscriptId == transcriptId)
+                {
+                    exonDataStr = String.format("%s;%d;%d", transcriptStableId, exonRank, exonEnd - exonStart);
+
+                    if (canonicalTranscriptId == transcriptId)
+                        break;
+                }
+            }
+        }
+        */
+
+        return exonDataStr;
+    }
+
     public boolean loadEnsemblData()
     {
         return loadTranscriptExonData() &&  loadEnsemblGeneData() &&  loadTranscriptProteinData();
