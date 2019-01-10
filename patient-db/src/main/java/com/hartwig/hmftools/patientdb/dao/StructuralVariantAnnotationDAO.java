@@ -131,14 +131,15 @@ public class StructuralVariantAnnotationDAO {
             }
         }
 
-        final InsertValuesStep5 fusionInserter = context.insertInto(STRUCTURALVARIANTFUSION,
-                STRUCTURALVARIANTFUSION.MODIFIED,
-                STRUCTURALVARIANTFUSION.SAMPLEID,
-                STRUCTURALVARIANTFUSION.ISREPORTED,
-                STRUCTURALVARIANTFUSION.FIVEPRIMEBREAKENDID,
-                STRUCTURALVARIANTFUSION.THREEPRIMEBREAKENDID);
-
         for (List<GeneFusion> batch : Iterables.partition(analysis.fusions(), DB_BATCH_INSERT_SIZE)) {
+
+            final InsertValuesStep5 fusionInserter = context.insertInto(STRUCTURALVARIANTFUSION,
+                    STRUCTURALVARIANTFUSION.MODIFIED,
+                    STRUCTURALVARIANTFUSION.SAMPLEID,
+                    STRUCTURALVARIANTFUSION.ISREPORTED,
+                    STRUCTURALVARIANTFUSION.FIVEPRIMEBREAKENDID,
+                    STRUCTURALVARIANTFUSION.THREEPRIMEBREAKENDID);
+
             batch.forEach(fusion -> fusionInserter.values(timestamp,
                     sampleId,
                     fusion.reportable(),
@@ -147,13 +148,14 @@ public class StructuralVariantAnnotationDAO {
             fusionInserter.execute();
         }
 
-        final InsertValuesStep4 disruptionInserter = context.insertInto(STRUCTURALVARIANTDISRUPTION,
-                STRUCTURALVARIANTFUSION.MODIFIED,
-                STRUCTURALVARIANTFUSION.SAMPLEID,
-                STRUCTURALVARIANTDISRUPTION.ISREPORTED,
-                STRUCTURALVARIANTDISRUPTION.BREAKENDID);
-
         for (List<GeneDisruption> batch : Iterables.partition(analysis.disruptions(), DB_BATCH_INSERT_SIZE)) {
+
+            final InsertValuesStep4 disruptionInserter = context.insertInto(STRUCTURALVARIANTDISRUPTION,
+                    STRUCTURALVARIANTFUSION.MODIFIED,
+                    STRUCTURALVARIANTFUSION.SAMPLEID,
+                    STRUCTURALVARIANTDISRUPTION.ISREPORTED,
+                    STRUCTURALVARIANTDISRUPTION.BREAKENDID);
+
             batch.forEach(disruption -> disruptionInserter.values(timestamp,
                     sampleId,
                     disruption.reportable(),
