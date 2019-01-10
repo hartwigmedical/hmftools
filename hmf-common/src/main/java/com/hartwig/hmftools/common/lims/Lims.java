@@ -86,6 +86,8 @@ public class Lims {
                 return "N/A";
             } else if (tumorPercentageString.isEmpty() && remarksSample != null && remarksSample.contains("CPCTWIDE")) {
                 return "not determined";
+            } else if (tumorPercentageString.isEmpty() && remarksSample != null && remarksSample.contains("ShallowSeq")) {
+                return "not determined";
             }
 
             try {
