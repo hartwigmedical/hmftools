@@ -121,7 +121,7 @@ public class LoadEvidenceData {
     private static List<EnrichedSomaticVariant> extractPassSomaticVariants(@NotNull List<EnrichedSomaticVariant> somaticVariant) {
         List<EnrichedSomaticVariant> passSomaticVariants = Lists.newArrayList();
         for (EnrichedSomaticVariant variant : somaticVariant) {
-            if (variant.filter().equals("PASS")) {
+            if (!variant.isFiltered()) {
                 passSomaticVariants.add(variant);
             }
         }
