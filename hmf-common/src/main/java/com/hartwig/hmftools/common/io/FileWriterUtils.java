@@ -7,44 +7,33 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 
-public class FileWriterUtils
-{
-    public static BufferedWriter createBufferedWriter(final String outputFile, boolean appendIfExists)
-    {
-        try
-        {
-            Path outputPath = Paths.get(outputFile);
+import org.jetbrains.annotations.NotNull;
 
-            if(Files.exists(outputPath))
-            {
-                if(appendIfExists)
-                    return Files.newBufferedWriter(outputPath, StandardOpenOption.APPEND);
-                else
-                    return Files.newBufferedWriter(outputPath, StandardOpenOption.TRUNCATE_EXISTING);
-            }
-            else
-            {
-                return Files.newBufferedWriter(outputPath, StandardOpenOption.CREATE);
-            }
+public final class FileWriterUtils {
 
-        } catch (IOException e)
-        {
-            return null;
+    private FileWriterUtils() {
+    }
+
+    @NotNull
+    public static BufferedWriter createBufferedWriter(final String outputFile, boolean appendIfExists) throws IOException {
+        Path outputPath = Paths.get(outputFile);
+
+        if (Files.exists(outputPath)) {
+            if (appendIfExists) {
+                return Files.newBufferedWriter(outputPath, StandardOpenOption.APPEND);
+            } else {
+                return Files.newBufferedWriter(outputPath, StandardOpenOption.TRUNCATE_EXISTING);
+            }
+        } else {
+            return Files.newBufferedWriter(outputPath, StandardOpenOption.CREATE);
         }
     }
 
-    public static void closeBufferedWriter(final BufferedWriter writer)
-    {
-        if(writer == null)
-            return;
-
-        try
-        {
+    public static void closeBufferedWriter(@NotNull BufferedWriter writer) {
+        try {
             writer.close();
-        }
-        catch (IOException e)
-        {
-
+        } catch (IOException e) {
+            throw new IllegalStateException("Could not close buffered writer: " + writer + ": " + e.getMessage());
         }
     }
 }

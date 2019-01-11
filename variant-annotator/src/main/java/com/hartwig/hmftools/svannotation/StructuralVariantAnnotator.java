@@ -10,6 +10,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
@@ -70,7 +71,7 @@ public class StructuralVariantAnnotator
     private boolean mUploadAnnotations;
     private boolean mWriteBreakends;
 
-    // Let PON filtered SVs through since GRIDSS PON filtering is performed upstream
+    // CHSH: Let PON filtered SVs through since GRIDSS PON filtering is performed upstream
     private static final Set<String> ALLOWED_FILTERS = Sets.newHashSet("INFERRED", PON_FILTER_PON, PON_FILTER_PASS);
 
     private static final Logger LOGGER = LogManager.getLogger(StructuralVariantAnnotator.class);
@@ -101,7 +102,7 @@ public class StructuralVariantAnnotator
         }
         catch (SQLException e)
         {
-            LOGGER.error("database connection failed: {}", e.toString());
+            LOGGER.error("Database connection failed: {}", e.toString());
             return false;
         }
 
@@ -120,7 +121,7 @@ public class StructuralVariantAnnotator
                 final String ensembleUser = mCmdLineArgs.getOptionValue(ENSEMBL_DB_USER, "");
                 final String ensemblePassword = mCmdLineArgs.getOptionValue(ENSEMBL_DB_PASS, "");
 
-                LOGGER.debug("connecting to ensembl DB: {}", ensembleUrl);
+                LOGGER.debug("Connecting to ensembl DB: {}", ensembleUrl);
 
                 if (!ensembleUser.isEmpty() && !ensemblePassword.isEmpty())
                 {
@@ -140,7 +141,7 @@ public class StructuralVariantAnnotator
             }
         }
 
-        LOGGER.debug("loading known fusion data");
+        LOGGER.debug("Loading known fusion data");
         KnownFusionsModel knownFusionsModel;
 
         try
@@ -153,7 +154,7 @@ public class StructuralVariantAnnotator
         }
         catch(IOException e)
         {
-            LOGGER.error("failed to load known fusion files");
+            LOGGER.error("Failed to load known fusion files");
             return false;
         }
 
@@ -190,17 +191,13 @@ public class StructuralVariantAnnotator
             {
                 samplesList = mDbAccess.structuralVariantSampleList("");
 
-                LOGGER.info("loaded {} samples from database", samplesList.size());
+                LOGGER.info("Loaded {} samples from database", samplesList.size());
             }
             else
             {
                 if (mSampleId.contains(","))
                 {
-                    String[] sampleIds = mSampleId.split(",");
-                    for (int i = 0; i < sampleIds.length; ++i)
-                    {
-                        samplesList.add(sampleIds[i]);
-                    }
+                    samplesList.addAll(Arrays.asList(mSampleId.split(",")));
                 }
                 else
                 {
@@ -209,7 +206,7 @@ public class StructuralVariantAnnotator
             }
         }
 
-        for(final String sampleId : samplesList)
+        for (String sampleId : samplesList)
         {
             runSample(sampleId);
         }
@@ -225,32 +222,32 @@ public class StructuralVariantAnnotator
 
     private void runSample(final String sampleId)
     {
-        LOGGER.info("annotating variants for sample({})", sampleId);
+        LOGGER.info("Annotating variants for sample({})", sampleId);
 
         List<EnrichedStructuralVariant> enrichedVariants;
 
         if(mSourceSvFromDB)
         {
-            // optionally load existing SVs from the database rather than from VCF
+            // CHSH: Optionally load existing SVs from the database rather than from VCF
             enrichedVariants = mDbAccess.readStructuralVariants(sampleId);
 
             if (enrichedVariants.isEmpty())
             {
-                LOGGER.debug("sample({}) no SVs loaded from DB", sampleId);
+                LOGGER.debug("Sample({}) no SVs loaded from DB", sampleId);
                 return;
             }
 
-            LOGGER.debug("sample({}) loaded {} SVs from DB", sampleId, enrichedVariants.size());
+            LOGGER.debug("Sample({}) loaded {} SVs from DB", sampleId, enrichedVariants.size());
         }
         else
         {
             List<EnrichedStructuralVariant> svList = loadSVsFromVCF(sampleId);
 
-            LOGGER.info("sample({}) persisting {} SVs to database", sampleId, svList.size());
+            LOGGER.info("Sample({}) persisting {} SVs to database", sampleId, svList.size());
 
             mDbAccess.writeStructuralVariants(sampleId, svList);
 
-            // re-read the data to get primaryId field as a foreign key for disruptions and fusions
+            // CHSH: Re-read the data to get primaryId field as a foreign key for disruptions and fusions
             enrichedVariants = mDbAccess.readStructuralVariants(sampleId);
         }
 
@@ -260,15 +257,15 @@ public class StructuralVariantAnnotator
         {
             annotations = createAnnotations(enrichedVariants);
 
-            LOGGER.debug("loaded {} Ensembl annotations from file", annotations.size());
+            LOGGER.debug("Loaded {} Ensembl annotations from file", annotations.size());
         }
         else if(mEnsemblAnnotator != null)
         {
-            LOGGER.debug("sample({}) finding Ensembl annotations", sampleId);
+            LOGGER.debug("Sample({}) finding Ensembl annotations", sampleId);
 
             annotations = mEnsemblAnnotator.annotateVariants(enrichedVariants);
 
-            LOGGER.debug("sample({}) matched {} annotations from Ensembl database", sampleId, annotations.size());
+            LOGGER.debug("Sample({}) matched {} annotations from Ensembl database", sampleId, annotations.size());
         }
 
         List<GeneDisruption> disruptions = mDisruptionAnalyser.findDisruptions(annotations);
@@ -337,15 +334,14 @@ public class StructuralVariantAnnotator
     }
 
     @NotNull
-    private List<EnrichedStructuralVariant> enrichStructuralVariants(
-            final String sampleId,
+    private List<EnrichedStructuralVariant> enrichStructuralVariants(@NotNull final String sampleId,
             @NotNull final IndexedFastaSequenceFile indexedFastaSequenceFile, @NotNull List<StructuralVariant> variants)
     {
         final PurityContext purityContext = mDbAccess.readPurityContext(sampleId);
 
         if (purityContext == null)
         {
-            LOGGER.warn("sample({} unable to retrieve purple data, enrichment may be incomplete", sampleId);
+            LOGGER.warn("Sample({} unable to retrieve purple data, enrichment may be incomplete", sampleId);
         }
 
         final PurityAdjuster purityAdjuster = purityContext == null
@@ -354,13 +350,14 @@ public class StructuralVariantAnnotator
 
         final List<PurpleCopyNumber> copyNumberList = mDbAccess.readCopynumbers(sampleId);
 
+        // KODU: Not sure what cleanest solution is to prevent potential NPE?
         final Multimap<Chromosome, PurpleCopyNumber> copyNumbers =
                 Multimaps.index(copyNumberList, x -> HumanChromosome.fromString(x.chromosome()));
 
         return new EnrichedStructuralVariantFactory(indexedFastaSequenceFile, purityAdjuster, copyNumbers).enrich(variants);
     }
 
-    private List<StructuralVariantAnnotation> createAnnotations(List<EnrichedStructuralVariant> enrichedVariants)
+    private List<StructuralVariantAnnotation> createAnnotations(@NotNull List<EnrichedStructuralVariant> enrichedVariants)
     {
         List<StructuralVariantAnnotation> annotations = Lists.newArrayList();
 
@@ -368,13 +365,23 @@ public class StructuralVariantAnnotator
         {
             StructuralVariantAnnotation annotation = new StructuralVariantAnnotation(var);
 
+            Integer primaryKey = var.primaryKey();
+            assert primaryKey != null; // KODU: Not sure why this assert is valid here...
+
+            Long startPosition = var.position(true);
+            Byte startOrientation = var.orientation(true);
+            assert startPosition != null && startOrientation != null; // KODU: Start annotation is always present while end is optional.
             List<GeneAnnotation> genesList = mSvGeneTranscriptCollection.findGeneAnnotationsBySv(
-                    var.primaryKey(), true, var.chromosome(true), var.position(true), var.orientation(true));
+                    primaryKey, true, var.chromosome(true), startPosition, startOrientation);
 
             if(var.end() != null)
             {
+                Long endPosition = var.position(false);
+                Byte endOrientation = var.orientation(false);
+                assert endPosition != null && endOrientation != null; // KODU: Position and orientation are non-null when end() is non-null.
+
                 genesList.addAll(mSvGeneTranscriptCollection.findGeneAnnotationsBySv(
-                        var.primaryKey(), false, var.chromosome(false), var.position(false), var.orientation(false)));
+                        primaryKey, false, var.chromosome(false), endPosition, endOrientation));
             }
 
             if(genesList == null)

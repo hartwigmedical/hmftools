@@ -23,7 +23,15 @@ import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_LOW_
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_SIMPLE_SV;
 import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.LINK_TYPE_TI;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.IOException;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantData;
 import com.hartwig.hmftools.svanalysis.annotators.FragileSiteAnnotator;
@@ -33,23 +41,11 @@ import com.hartwig.hmftools.svanalysis.types.SvBreakend;
 import com.hartwig.hmftools.svanalysis.types.SvChain;
 import com.hartwig.hmftools.svanalysis.types.SvCluster;
 import com.hartwig.hmftools.svanalysis.types.SvLOH;
-import com.hartwig.hmftools.svanalysis.types.SvVarData;
 import com.hartwig.hmftools.svanalysis.types.SvLinkedPair;
+import com.hartwig.hmftools.svanalysis.types.SvVarData;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardOpenOption;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 public class SvSampleAnalyser {
 
@@ -191,7 +187,7 @@ public class SvSampleAnalyser {
 
             String startArm = getChromosomalArm(var.chromosome(true), var.position(true));
 
-            String endArm = "";
+            String endArm;
             if(!var.isNullBreakend())
                 endArm = getChromosomalArm(var.chromosome(false), var.position(false));
             else
@@ -444,7 +440,7 @@ public class SvSampleAnalyser {
 
                 final String chainInfo = cluster.getChains().stream()
                         .filter(x -> !x.getDetails().isEmpty())
-                        .map(x -> x.getDetails())
+                        .map(SvChain::getDetails)
                         .collect (Collectors.joining (";"));
 
                 writer.write(
@@ -504,7 +500,7 @@ public class SvSampleAnalyser {
 
                 // isSpecificCluster(cluster);
 
-                List<SvChain> chains = null;
+                List<SvChain> chains;
 
                 if(cluster.hasLinkingLineElements())
                 {
@@ -523,11 +519,11 @@ public class SvSampleAnalyser {
                 for (final SvChain chain : chains)
                 {
                     int chainSvCount = chain.getSvCount();
-                    boolean chainConsistent = !cluster.hasLinkingLineElements() ? chain.isConsistent() : false;
+                    boolean chainConsistent = !cluster.hasLinkingLineElements() && chain.isConsistent();
 
                     for (final SvLinkedPair pair : chain.getLinkedPairs())
                     {
-                        if(pair.linkType() != LINK_TYPE_TI)
+                        if(!pair.linkType().equals(LINK_TYPE_TI))
                             continue;
 
                         if(pair.first().type() == SGL || pair.second().type() == SGL)
@@ -575,17 +571,17 @@ public class SvSampleAnalyser {
     {
         int simpleClusterCount = 0;
         int complexClusterCount = 0;
-        Map<String, Integer> armSimpleClusterCount = new HashMap();
-        Map<String, Integer> armComplexClusterCount = new HashMap();
+        Map<String, Integer> armSimpleClusterCount = Maps.newHashMap();
+        Map<String, Integer> armComplexClusterCount = Maps.newHashMap();
 
         for(final SvCluster cluster : mAnalyser.getClusters())
         {
             Map<String, Integer> targetMap;
 
-            if(cluster.getResolvedType() == RESOLVED_TYPE_LOW_QUALITY)
+            if(cluster.getResolvedType().equals(RESOLVED_TYPE_LOW_QUALITY))
                 continue;
 
-            if(cluster.getResolvedType() == RESOLVED_TYPE_SIMPLE_SV || cluster.isSyntheticSimpleType(true))
+            if(cluster.getResolvedType().equals(RESOLVED_TYPE_SIMPLE_SV) || cluster.isSyntheticSimpleType(true))
             {
                 ++simpleClusterCount;
                 targetMap = armSimpleClusterCount;

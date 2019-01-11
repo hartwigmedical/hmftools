@@ -1,18 +1,11 @@
 package com.hartwig.hmftools.svannotation.analysis;
 
-import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.common.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.io.FileWriterUtils.createBufferedWriter;
-import static com.hartwig.hmftools.common.variant.structural.annotation.EnsemblGeneData.GENE_PHASING_REGION_5P_UTR;
-import static com.hartwig.hmftools.common.variant.structural.annotation.EnsemblGeneData.GENE_PHASING_REGION_CODING_0;
-import static com.hartwig.hmftools.common.variant.structural.annotation.EnsemblGeneData.GENE_PHASING_REGION_CODING_1;
-import static com.hartwig.hmftools.common.variant.structural.annotation.EnsemblGeneData.GENE_PHASING_REGION_CODING_2;
-import static com.hartwig.hmftools.common.variant.structural.annotation.EnsemblGeneData.GENE_PHASING_REGION_MAX;
-import static com.hartwig.hmftools.common.variant.structural.annotation.EnsemblGeneData.phaseToRegion;
 import static com.hartwig.hmftools.common.variant.structural.annotation.GeneAnnotation.isDownstream;
 import static com.hartwig.hmftools.common.variant.structural.annotation.GeneAnnotation.isUpstream;
 import static com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion.REPORTABLE_TYPE_3P_PROM;
@@ -22,7 +15,6 @@ import static com.hartwig.hmftools.common.variant.structural.annotation.GeneFusi
 import static com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion.REPORTABLE_TYPE_NONE;
 import static com.hartwig.hmftools.svannotation.SvGeneTranscriptCollection.EXON_RANK_MAX;
 import static com.hartwig.hmftools.svannotation.SvGeneTranscriptCollection.EXON_RANK_MIN;
-import static com.hartwig.hmftools.svannotation.SvGeneTranscriptCollection.nextTranscriptExons;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -31,28 +23,22 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.Comparator;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.fusions.KnownFusionsModel;
-import com.hartwig.hmftools.common.variant.structural.annotation.EnsemblGeneData;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneAnnotation;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion;
 import com.hartwig.hmftools.common.variant.structural.annotation.StructuralVariantAnnotation;
 import com.hartwig.hmftools.common.variant.structural.annotation.Transcript;
-import com.hartwig.hmftools.common.variant.structural.annotation.TranscriptExonData;
 import com.hartwig.hmftools.common.variant.structural.annotation.TranscriptProteinData;
 import com.hartwig.hmftools.svannotation.SvGeneTranscriptCollection;
 
 import org.apache.commons.cli.Options;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.jetbrains.annotations.NotNull;
 
 public class SvFusionAnalyser
 {
@@ -80,7 +66,7 @@ public class SvFusionAnalyser
         mKnownFusionsModel = knownFusionsModel;
         mFusionWriter = null;
         mRnaWriter = null;
-        mSampleRnaData = new HashMap();
+        mSampleRnaData = Maps.newHashMap();
         mGeneTranscriptCollection = geneTranscriptCollection;
 
         mProteinsRequiredKept = Lists.newArrayList();
@@ -163,7 +149,7 @@ public class SvFusionAnalyser
                             continue;
 
                         if(!upstreamTrans.isDisruptive())
-                            continue;;
+                            continue;
 
                         if(upstreamTrans.preCoding())
                         {
@@ -246,7 +232,7 @@ public class SvFusionAnalyser
         // factor in insert sequence
         if(!startTrans.parent().insertSequence().isEmpty())
         {
-            int insSeqAdjustment = (int)(startTrans.parent().insertSequence().length() % 3);
+            int insSeqAdjustment = (startTrans.parent().insertSequence().length() % 3);
             calcStartPhase += insSeqAdjustment;
         }
 
@@ -359,7 +345,7 @@ public class SvFusionAnalyser
             processedFeatures.add(feature);
         }
 
-        if(reportableFusion.getKnownFusionType() != REPORTABLE_TYPE_KNOWN)
+        if (!reportableFusion.getKnownFusionType().equals(REPORTABLE_TYPE_KNOWN))
         {
             long requiredKeptButLost = mProteinsRequiredKept.stream().filter(f -> downTrans.getProteinFeaturesLost().contains(f)).count();
             long requiredLostButKept = mProteinsRequiredLost.stream().filter(f -> downTrans.getProteinFeaturesKept().contains(f)).count();
@@ -415,13 +401,13 @@ public class SvFusionAnalyser
 
             final String knownType = getKnownFusionType(upTrans, downTrans);
 
-            if(knownType == REPORTABLE_TYPE_NONE)
+            if (knownType.equals(REPORTABLE_TYPE_NONE))
                 continue;
 
             fusion.setKnownFusionType(knownType);
 
             // set limits on how far upstream the breakend can be - adjusted for whether the fusions is known or not
-            int maxUpstreamDistance = knownType == REPORTABLE_TYPE_KNOWN ? MAX_UPSTREAM_DISTANCE_KNOWN : MAX_UPSTREAM_DISTANCE_UNKNOWN;
+            int maxUpstreamDistance = knownType.equals(REPORTABLE_TYPE_KNOWN) ? MAX_UPSTREAM_DISTANCE_KNOWN : MAX_UPSTREAM_DISTANCE_UNKNOWN;
 
             if(upTrans.getDistanceUpstream() > maxUpstreamDistance || downTrans.getDistanceUpstream() > maxUpstreamDistance)
                 continue;
@@ -486,7 +472,7 @@ public class SvFusionAnalyser
     }
 
 
-    private final String getKnownFusionType(final Transcript upTrans, final Transcript downTrans)
+    private String getKnownFusionType(final Transcript upTrans, final Transcript downTrans)
     {
         if(mKnownFusionsModel.exactMatch(upTrans.parent().synonyms(), downTrans.parent().synonyms()))
             return REPORTABLE_TYPE_KNOWN;
@@ -914,6 +900,4 @@ public class SvFusionAnalyser
         closeBufferedWriter(mFusionWriter);
         closeBufferedWriter(mRnaWriter);
     }
-
-
 }

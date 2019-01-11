@@ -12,9 +12,6 @@ import java.nio.file.FileVisitOption;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.StandardOpenOption;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -30,7 +27,6 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.HelpFormatter;
-import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.logging.log4j.Level;
@@ -63,17 +59,16 @@ public class BachelorApplication {
     private BufferedWriter mMainDataWriter;
     private BufferedWriter mBedFileWriter;
 
-    // config
     private String mOutputDir;
     private String mBatchDirectory;
-    private String mRunDirectoy;
+    private String mRunDirectory;
     private boolean mIsBatchRun;
     private boolean mIsSingleRun;
     private String mSampleId;
     private List<String> mLimitedSampleList;
     private int mMaxBatchDirectories;
 
-    public BachelorApplication()
+    private BachelorApplication()
     {
         mProgramMap = null;
         mMainDataWriter = null;
@@ -113,11 +108,10 @@ public class BachelorApplication {
         return parser.parse(options, args);
     }
 
-    public boolean loadConfig(final CommandLine cmd)
+    private boolean loadConfig(final CommandLine cmd)
     {
         try
         {
-            // load configs
             if (cmd.hasOption(CONFIG_DIRECTORY))
             {
                 mProgramMap = BachelorHelper.loadXML(Paths.get(cmd.getOptionValue(CONFIG_DIRECTORY)));
@@ -164,7 +158,7 @@ public class BachelorApplication {
         {
             mSampleId = cmd.getOptionValue(SAMPLE);
             mIsSingleRun = true;
-            mRunDirectoy = cmd.getOptionValue(RUN_DIRECTORY);
+            mRunDirectory = cmd.getOptionValue(RUN_DIRECTORY);
         }
 
         if (!mIsBatchRun && !mIsSingleRun)
@@ -181,7 +175,7 @@ public class BachelorApplication {
         return true;
     }
 
-    public boolean run()
+    private boolean run()
     {
         mProgram = new BachelorProgram();
 
@@ -232,7 +226,7 @@ public class BachelorApplication {
         }
         else if (mIsSingleRun)
         {
-            final Path path = Paths.get(mRunDirectoy);
+            final Path path = Paths.get(mRunDirectory);
 
             if (!Files.exists(path))
             {
@@ -243,7 +237,7 @@ public class BachelorApplication {
             processSampleDirectory(new RunDirectory(path), mSampleId);
         }
 
-        LOGGER.info("run complete");
+        LOGGER.info("Run complete");
 
         closeBufferedWriter(mMainDataWriter);
         closeBufferedWriter(mBedFileWriter);
@@ -268,7 +262,7 @@ public class BachelorApplication {
                 mLimitedSampleList.add(items[0]);
             }
 
-            LOGGER.info("loaded {} specific sample ids", mLimitedSampleList.size());
+            LOGGER.info("Loaded {} specific sample ids", mLimitedSampleList.size());
 
         }
         catch (IOException exception)
@@ -282,7 +276,7 @@ public class BachelorApplication {
         if(vcf == null)
             return Lists.newArrayList();
 
-        LOGGER.debug("processing vcf: {}", vcf.getPath());
+        LOGGER.debug("Processing vcf: {}", vcf.getPath());
 
         try (final VCFFileReader reader = new VCFFileReader(vcf, true))
         {
@@ -290,7 +284,7 @@ public class BachelorApplication {
         }
         catch (final TribbleException e)
         {
-            LOGGER.error("error with VCF file {}: {}", vcf.getPath(), e.getMessage());
+            LOGGER.error("Error with VCF file {}: {}", vcf.getPath(), e.getMessage());
             return Lists.newArrayList();
         }
     }
@@ -304,24 +298,22 @@ public class BachelorApplication {
             try
             {
                 final RunContext runContext = ProductionRunContextFactory.fromRunDirectory(runDir.sampleDir().toString());
-
-                if(runContext != null)
-                    sampleId = runContext.tumorSample();
+                sampleId = runContext.tumorSample();
             }
             catch (Exception e)
             {
-                // skip using meta data
+                // CHSH: Skip using meta data
                 sampleId = patient;
             }
         }
 
         if(!mLimitedSampleList.isEmpty() && !mLimitedSampleList.contains(sampleId))
         {
-            LOGGER.info("skipping sampleId({}) not in specified list", sampleId);
+            LOGGER.info("Skipping sampleId({}) not in specified list", sampleId);
             return;
         }
 
-        LOGGER.info("processing run for patient({}) sampleId({}) directory({})", patient, sampleId, runDir.sampleDir());
+        LOGGER.info("Processing run for patient({}) sampleId({}) directory({})", patient, sampleId, runDir.sampleDir());
 
         final List<EligibilityReport> result = Lists.newArrayList();
 
@@ -414,7 +406,6 @@ public class BachelorApplication {
             if(!bachelorApp.run())
             {
                 System.exit(1);
-                return;
             }
         }
         catch (final ParseException e)
@@ -423,7 +414,6 @@ public class BachelorApplication {
         }
         catch (Exception e)
         {
-
             e.printStackTrace();
         }
     }
@@ -434,5 +424,4 @@ public class BachelorApplication {
         formatter.printHelp("Bachelor", "Determines eligibility", options, "", true);
         System.exit(1);
     }
-
 }

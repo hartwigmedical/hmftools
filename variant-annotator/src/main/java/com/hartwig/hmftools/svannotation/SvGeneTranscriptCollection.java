@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.svannotation;
 
-import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
@@ -21,11 +20,11 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
 import com.hartwig.hmftools.common.variant.structural.annotation.EnsemblGeneData;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneAnnotation;
@@ -59,10 +58,10 @@ public class SvGeneTranscriptCollection
 
     public SvGeneTranscriptCollection()
     {
-        mGeneTransExonDataMap = new HashMap();
-        mChromosomeGeneDataMap = new HashMap();
-        mChromosomeReverseGeneDataMap = new HashMap();
-        mEnsemblProteinDataMap = new HashMap();
+        mGeneTransExonDataMap = Maps.newHashMap();
+        mChromosomeGeneDataMap = Maps.newHashMap();
+        mChromosomeReverseGeneDataMap = Maps.newHashMap();
+        mEnsemblProteinDataMap = Maps.newHashMap();
         mBreakendWriter = null;
     }
 
@@ -417,9 +416,8 @@ public class SvGeneTranscriptCollection
 
         if(isCoding)
         {
-            for (int index = 0; index < transcriptExons.size(); ++index)
+            for (TranscriptExonData exonData : transcriptExons)
             {
-                final TranscriptExonData exonData = transcriptExons.get(index);
                 long exonStart = exonData.ExonStart;
                 long exonEnd = exonData.ExonEnd;
 
@@ -852,7 +850,6 @@ public class SvGeneTranscriptCollection
             {
                 mBreakendWriter = createBufferedWriter(mDataPath + "SV_BREAKENDS.csv", false);
 
-                // write header
                 mBreakendWriter.write("SampleId,SvId,IsStart,Chromosome,Position,Orientation,Type");
                 mBreakendWriter.write(",GeneName,GeneStableId,GeneStrand,TranscriptId,IsCanonical,BioType,TransStart,TransEnd");
                 mBreakendWriter.write(",ExonRankUp,ExonPhaseUp,ExonRankDown,ExonPhaseDown,CodingBases,TotalCodingBases,Disruptive");
