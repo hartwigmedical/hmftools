@@ -60,8 +60,8 @@ public class StructuralVariantAnnotator
     private MySQLAnnotator mEnsemblAnnotator;
 
     private String mSampleId;
-    private String mOutputDir; // for writing fusion data
-    private String mEnsemblDataDir; // for loading and writing cached Ensembl data
+    private String mOutputDir;
+    private String mEnsemblDataDir;
 
     private final CommandLine mCmdLineArgs;
     private DatabaseAccess mDbAccess;
