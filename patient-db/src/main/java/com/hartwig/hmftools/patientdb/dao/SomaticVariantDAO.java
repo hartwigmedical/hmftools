@@ -53,9 +53,14 @@ class SomaticVariantDAO {
                     .cosmicIDs(Lists.newArrayList(record.getValue(SOMATICVARIANT.COSMICID)))
                     .dbsnpID(record.getValue(SOMATICVARIANT.DBSNPID))
                     .worstEffect(record.getValue(SOMATICVARIANT.WORSTEFFECT))
-                    .worstCodingEffect(stringToBoolean(Strings.EMPTY) ? CodingEffect.UNDEFINED : CodingEffect.valueOf(record.getValue(SOMATICVARIANT.WORSTCODINGEFFECT)))
+                    .worstCodingEffect(record.getValue(SOMATICVARIANT.WORSTCODINGEFFECT).isEmpty()
+                            ? CodingEffect.UNDEFINED
+                            : CodingEffect.valueOf(record.getValue(SOMATICVARIANT.WORSTCODINGEFFECT)))
                     .worstEffectTranscript(record.getValue(SOMATICVARIANT.WORSTEFFECTTRANSCRIPT))
                     .canonicalEffect(record.getValue(SOMATICVARIANT.CANONICALEFFECT))
+                    .canonicalCodingEffect(record.getValue(SOMATICVARIANT.CANONICALCODINGEFFECT).isEmpty()
+                            ? CodingEffect.UNDEFINED
+                            : CodingEffect.valueOf(record.getValue(SOMATICVARIANT.CANONICALCODINGEFFECT)))
                     .canonicalHgvsCodingImpact(record.getValue(SOMATICVARIANT.CANONICALHGVSCODINGIMPACT))
                     .canonicalHgvsProteinImpact(record.getValue(SOMATICVARIANT.CANONICALHGVSPROTEINIMPACT))
                     .alleleReadCount(record.getValue(SOMATICVARIANT.ALLELEREADCOUNT))
@@ -72,22 +77,15 @@ class SomaticVariantDAO {
                     .mappability(record.getValue(SOMATICVARIANT.MAPPABILITY))
                     .germlineStatus(GermlineStatus.valueOf(record.getValue(SOMATICVARIANT.GERMLINESTATUS)))
                     .minorAllelePloidy(record.getValue(SOMATICVARIANT.MINORALLELEPLOIDY))
-                    .canonicalCodingEffect(stringToBoolean(Strings.EMPTY) ? CodingEffect.UNDEFINED : CodingEffect.valueOf(record.getValue(SOMATICVARIANT.CANONICALCODINGEFFECT)))
                     .recovered(byteToBoolean(record.getValue(SOMATICVARIANT.RECOVERED)))
                     .build());
         }
         return variants;
     }
 
-    @NotNull
-    private static Boolean stringToBoolean(String s) {
-       return s.equals("") ? true : false;
-    }
-
-    @Nullable
-    private static Boolean byteToBoolean(Byte b) {
+    private static boolean byteToBoolean(@Nullable Byte b) {
         if (b == null) {
-            return null;
+            throw new IllegalStateException("NULL value present in database for non-null field");
         }
         return b != 0;
     }

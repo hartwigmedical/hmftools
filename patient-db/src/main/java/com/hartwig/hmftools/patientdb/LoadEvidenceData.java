@@ -70,15 +70,20 @@ public class LoadEvidenceData {
 
         LOGGER.info("Reading somatic variants from DB");
         List<EnrichedSomaticVariant> variants = dbAccess.readSomaticVariants(sample);
+        List<EnrichedSomaticVariant> passSomaticVariants = extractPassSomaticVariants(variants);
+
+        LOGGER.info("All somatic Variants: " + variants.size());
+        LOGGER.info("PASS somatic Variants: " + passSomaticVariants.size());
 
         Map<EnrichedSomaticVariant, List<EvidenceItem>> evidencePerVariant =
-                actionabilityAnalyzer.evidenceForSomaticVariants(variants, primaryTumorLocation);
+                actionabilityAnalyzer.evidenceForSomaticVariants(passSomaticVariants, primaryTumorLocation);
 
         List<EvidenceItem> allEvidenceForSomaticVariants = extractAllEvidenceItems(evidencePerVariant);
-        LOGGER.info("Found {} evidence items for {} somatic variants.", allEvidenceForSomaticVariants.size(), variants.size());
+        LOGGER.info("Found {} evidence items for {} somatic variants.", allEvidenceForSomaticVariants.size(), passSomaticVariants.size());
 
         LOGGER.info("Reading gene copy numbers and sample ploidy from DB");
         List<GeneCopyNumber> geneCopyNumbers = dbAccess.readGeneCopynumbers(sample);
+        LOGGER.info("All geneCopyNumbers: " + geneCopyNumbers.size());
 
         PurityContext purityContext = dbAccess.readPurityContext(sample);
         assert purityContext != null;
@@ -96,6 +101,7 @@ public class LoadEvidenceData {
 
         LOGGER.info("Reading gene fusions from DB");
         List<SimpleGeneFusion> simpleGeneFusions = dbAccess.readGeneFusions(sample);
+        LOGGER.info("All simpleGeneFusions: " + simpleGeneFusions.size());
 
         Map<SimpleGeneFusion, List<EvidenceItem>> evidencePerFusion =
                 actionabilityAnalyzer.evidenceForFusions(simpleGeneFusions, primaryTumorLocation);
@@ -109,6 +115,17 @@ public class LoadEvidenceData {
         combinedEvidence.addAll(allEvidenceForGeneFusions);
 
         dbAccess.writeClinicalEvidence(sample, combinedEvidence);
+    }
+
+    @NotNull
+    private static List<EnrichedSomaticVariant> extractPassSomaticVariants(@NotNull List<EnrichedSomaticVariant> somaticVariant) {
+        List<EnrichedSomaticVariant> passSomaticVariants = Lists.newArrayList();
+        for (EnrichedSomaticVariant variant : somaticVariant) {
+            if (!variant.isFiltered()) {
+                passSomaticVariants.add(variant);
+            }
+        }
+        return passSomaticVariants;
     }
 
     @NotNull

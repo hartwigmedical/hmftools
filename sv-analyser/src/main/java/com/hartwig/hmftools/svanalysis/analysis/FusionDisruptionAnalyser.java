@@ -45,7 +45,7 @@ public class FusionDisruptionAnalyser
 
     private String mSampleId;
     private String mOutputDir;
-    private SvGeneTranscriptCollection mSvGeneTranscriptCollection;
+    private SvGeneTranscriptCollection mEnsemblDataCache;
 
     private List<GeneFusion> mGeneFusions;
     private List<GeneDisruption> mGeneDisruptions;
@@ -58,13 +58,15 @@ public class FusionDisruptionAnalyser
     {
         mFusionFinder = null;
         mDisruptionFinder = null;
-        mSvGeneTranscriptCollection = new SvGeneTranscriptCollection();
+        mEnsemblDataCache = new SvGeneTranscriptCollection();
         mChromosomeTranscriptMap = null;
 
         mGeneFusions = Lists.newArrayList();
         mGeneDisruptions = Lists.newArrayList();
         mOutputDir = "";
     }
+
+    public final SvGeneTranscriptCollection getGeneTranscriptCollection() { return mEnsemblDataCache; }
 
     public void loadFusionReferenceData(final CommandLine cmdLineArgs, final String outputDir, final String ensemblDataDir)
     {
@@ -78,7 +80,7 @@ public class FusionDisruptionAnalyser
                     new FileInputStream(cmdLineArgs.getOptionValue(PROMISCUOUS_FIVE_CSV)),
                     new FileInputStream(cmdLineArgs.getOptionValue(PROMISCUOUS_THREE_CSV)));
 
-            mFusionFinder = new SvFusionAnalyser(knownFusionsModel, mSvGeneTranscriptCollection);
+            mFusionFinder = new SvFusionAnalyser(knownFusionsModel, mEnsemblDataCache);
         }
         catch(IOException e)
         {
@@ -93,8 +95,8 @@ public class FusionDisruptionAnalyser
 
         if(!ensemblDataDir.isEmpty())
         {
-            mSvGeneTranscriptCollection.setDataPath(ensemblDataDir);
-            mSvGeneTranscriptCollection.loadEnsemblData();
+            mEnsemblDataCache.setDataPath(ensemblDataDir);
+            mEnsemblDataCache.loadEnsemblData();
         }
     }
 
@@ -109,7 +111,7 @@ public class FusionDisruptionAnalyser
 
             boolean isStart = isStart(be);
 
-            genesList.addAll(mSvGeneTranscriptCollection.findGeneAnnotationsBySv(
+            genesList.addAll(mEnsemblDataCache.findGeneAnnotationsBySv(
                     var.dbId(), isStart, var.chromosome(isStart), var.position(isStart), var.orientation(isStart)));
         }
 

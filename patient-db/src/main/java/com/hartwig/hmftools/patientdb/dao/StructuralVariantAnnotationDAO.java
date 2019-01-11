@@ -10,6 +10,8 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collector;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
@@ -79,29 +81,45 @@ public class StructuralVariantAnnotationDAO {
         return Lists.newArrayList(simpleGeneFusions);
     }
 
+    private InsertValuesStep14 createBreakendInserter()
+    {
+        return context.insertInto(STRUCTURALVARIANTBREAKEND,
+            STRUCTURALVARIANTBREAKEND.MODIFIED,
+            STRUCTURALVARIANTBREAKEND.SAMPLEID,
+            STRUCTURALVARIANTBREAKEND.ISSTARTEND,
+            STRUCTURALVARIANTBREAKEND.STRUCTURALVARIANTID,
+            STRUCTURALVARIANTBREAKEND.GENE,
+            STRUCTURALVARIANTBREAKEND.GENEID,
+            STRUCTURALVARIANTBREAKEND.TRANSCRIPTID,
+            STRUCTURALVARIANTBREAKEND.ISCANONICALTRANSCRIPT,
+            STRUCTURALVARIANTBREAKEND.STRAND,
+            STRUCTURALVARIANTBREAKEND.EXONRANKUPSTREAM,
+            STRUCTURALVARIANTBREAKEND.EXONPHASEUPSTREAM,
+            STRUCTURALVARIANTBREAKEND.EXONRANKDOWNSTREAM,
+            STRUCTURALVARIANTBREAKEND.EXONPHASEDOWNSTREAM,
+            STRUCTURALVARIANTBREAKEND.EXONMAX);
+    }
+
     @SuppressWarnings("unchecked")
     public void write(@NotNull StructuralVariantAnalysis analysis, @NotNull String sampleId) {
         final Timestamp timestamp = new Timestamp(new Date().getTime());
 
+        List<Transcript> transcriptList = Lists.newArrayList();
+
         final Map<Transcript, Integer> transcriptToDatabaseIdMap = Maps.newHashMap();
 
-        for (GeneAnnotation geneAnnotation : allAnnotations(analysis))
+        InsertValuesStep14 inserter = createBreakendInserter();
+
+        List<GeneAnnotation> geneAnnotations = Lists.newArrayList();
+
+        for (StructuralVariantAnnotation annotation : analysis.annotations())
         {
-            final InsertValuesStep14 inserter = context.insertInto(STRUCTURALVARIANTBREAKEND,
-                    STRUCTURALVARIANTBREAKEND.MODIFIED,
-                    STRUCTURALVARIANTBREAKEND.SAMPLEID,
-                    STRUCTURALVARIANTBREAKEND.ISSTARTEND,
-                    STRUCTURALVARIANTBREAKEND.STRUCTURALVARIANTID,
-                    STRUCTURALVARIANTBREAKEND.GENE,
-                    STRUCTURALVARIANTBREAKEND.GENEID,
-                    STRUCTURALVARIANTBREAKEND.TRANSCRIPTID,
-                    STRUCTURALVARIANTBREAKEND.ISCANONICALTRANSCRIPT,
-                    STRUCTURALVARIANTBREAKEND.STRAND,
-                    STRUCTURALVARIANTBREAKEND.EXONRANKUPSTREAM,
-                    STRUCTURALVARIANTBREAKEND.EXONPHASEUPSTREAM,
-                    STRUCTURALVARIANTBREAKEND.EXONRANKDOWNSTREAM,
-                    STRUCTURALVARIANTBREAKEND.EXONPHASEDOWNSTREAM,
-                    STRUCTURALVARIANTBREAKEND.EXONMAX);
+            geneAnnotations.addAll(annotation.annotations());
+        }
+
+        for (int i = 0; i < geneAnnotations.size(); ++i)
+        {
+            GeneAnnotation geneAnnotation = geneAnnotations.get(i);
 
             for (final Transcript transcript : geneAnnotation.transcripts())
             {
@@ -119,31 +137,39 @@ public class StructuralVariantAnnotationDAO {
                         transcript.exonDownstream(),
                         transcript.exonDownstreamPhase(),
                         transcript.exonMax());
+
+                transcriptList.add(transcript);
             }
 
-            final List<UInteger> ids = inserter.returning(STRUCTURALVARIANTBREAKEND.ID).fetch().getValues(0, UInteger.class);
-
-            if (ids.size() != geneAnnotation.transcripts().size())
+            if(transcriptList.size() >= DB_BATCH_INSERT_SIZE || i == geneAnnotations.size() - 1)
             {
-                throw new RuntimeException("not all transcripts were inserted successfully");
-            }
+                final List<UInteger> ids = inserter.returning(STRUCTURALVARIANTBREAKEND.ID).fetch().getValues(0, UInteger.class);
 
-            for (int i = 0; i < ids.size(); i++)
-            {
-                transcriptToDatabaseIdMap.put(geneAnnotation.transcripts().get(i), ids.get(i).intValue());
+                if (ids.size() != transcriptList.size())
+                {
+                    throw new RuntimeException("not all transcripts were inserted successfully");
+                }
+
+                for (int j = 0; j < ids.size(); j++)
+                {
+                    transcriptToDatabaseIdMap.put(transcriptList.get(j), ids.get(j).intValue());
+                }
+
+                inserter = createBreakendInserter();
+                transcriptList.clear();
             }
         }
 
-        final InsertValuesStep5 fusionInserter = context.insertInto(STRUCTURALVARIANTFUSION,
-                STRUCTURALVARIANTFUSION.MODIFIED,
-                STRUCTURALVARIANTFUSION.SAMPLEID,
-                STRUCTURALVARIANTFUSION.ISREPORTED,
-                STRUCTURALVARIANTFUSION.FIVEPRIMEBREAKENDID,
-                STRUCTURALVARIANTFUSION.THREEPRIMEBREAKENDID);
+        LOGGER.debug("uploading {} fusions to DB", analysis.fusions().size());
 
         for (List<GeneFusion> batch : Iterables.partition(analysis.fusions(), DB_BATCH_INSERT_SIZE))
         {
-            LOGGER.debug("inserting {} fusions to DB", batch.size());
+            final InsertValuesStep5 fusionInserter = context.insertInto(STRUCTURALVARIANTFUSION,
+                    STRUCTURALVARIANTFUSION.MODIFIED,
+                    STRUCTURALVARIANTFUSION.SAMPLEID,
+                    STRUCTURALVARIANTFUSION.ISREPORTED,
+                    STRUCTURALVARIANTFUSION.FIVEPRIMEBREAKENDID,
+                    STRUCTURALVARIANTFUSION.THREEPRIMEBREAKENDID);
 
             batch.forEach(fusion -> fusionInserter.values(timestamp,
                     sampleId,
@@ -154,13 +180,16 @@ public class StructuralVariantAnnotationDAO {
             fusionInserter.execute();
         }
 
-        final InsertValuesStep4 disruptionInserter = context.insertInto(STRUCTURALVARIANTDISRUPTION,
-                STRUCTURALVARIANTFUSION.MODIFIED,
-                STRUCTURALVARIANTFUSION.SAMPLEID,
-                STRUCTURALVARIANTDISRUPTION.ISREPORTED,
-                STRUCTURALVARIANTDISRUPTION.BREAKENDID);
+        LOGGER.debug("uploading {} disruptions to DB", analysis.disruptions().size());
 
-        for (List<GeneDisruption> batch : Iterables.partition(analysis.disruptions(), DB_BATCH_INSERT_SIZE)) {
+        for (List<GeneDisruption> batch : Iterables.partition(analysis.disruptions(), DB_BATCH_INSERT_SIZE))
+        {
+            final InsertValuesStep4 disruptionInserter = context.insertInto(STRUCTURALVARIANTDISRUPTION,
+                    STRUCTURALVARIANTFUSION.MODIFIED,
+                    STRUCTURALVARIANTFUSION.SAMPLEID,
+                    STRUCTURALVARIANTDISRUPTION.ISREPORTED,
+                    STRUCTURALVARIANTDISRUPTION.BREAKENDID);
+
             batch.forEach(disruption -> disruptionInserter.values(timestamp,
                     sampleId,
                     disruption.reportable(),
@@ -169,13 +198,5 @@ public class StructuralVariantAnnotationDAO {
         }
     }
 
-    @NotNull
-    private static List<GeneAnnotation> allAnnotations(@NotNull StructuralVariantAnalysis analysis) {
-        List<GeneAnnotation> geneAnnotations = Lists.newArrayList();
-        for (StructuralVariantAnnotation annotation : analysis.annotations()) {
-            geneAnnotations.addAll(annotation.annotations());
-        }
-        return geneAnnotations;
-    }
 }
 

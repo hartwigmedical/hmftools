@@ -41,6 +41,7 @@ public class SvAnalyser {
     private static final String LOG_DEBUG = "log_debug";
     private static final String LINE_ELEMENT_FILE = "line_element_file";
     private static final String DRIVERS_CHECK = "check_drivers";
+    private static final String RUN_FUSIONS = "run_fusions";
     private static final String COPY_NUMBER_ANALYSIS = "run_cn_analysis";
     private static final String RUN_RESULTS_CHECKER = "run_results_checker";
     private static final String INCLUDE_NONE_SEGMENTS = "incl_none_segments";
@@ -99,9 +100,22 @@ public class SvAnalyser {
             SvaConfig svaConfig = new SvaConfig(cmd, tumorSample);
             SvSampleAnalyser sampleAnalyser = new SvSampleAnalyser(svaConfig);
 
-            DriverGeneAnnotator driverGeneAnnotator = new DriverGeneAnnotator(dbAccess);
-            driverGeneAnnotator.loadConfig(cmd);
+            DriverGeneAnnotator driverGeneAnnotator = null;
             boolean checkDrivers = cmd.hasOption(DRIVERS_CHECK);
+
+            FusionDisruptionAnalyser fusionAnalyser = null;
+            boolean runFusions = cmd.hasOption(RUN_FUSIONS);
+
+            if((runFusions || checkDrivers) && cmd.hasOption(GENE_TRANSCRIPTS_DIR))
+            {
+                fusionAnalyser = new FusionDisruptionAnalyser();
+                fusionAnalyser.loadFusionReferenceData(cmd, cmd.getOptionValue(DATA_OUTPUT_PATH), cmd.getOptionValue(GENE_TRANSCRIPTS_DIR,""));
+            }
+
+            if(checkDrivers)
+            {
+                driverGeneAnnotator = new DriverGeneAnnotator(dbAccess, fusionAnalyser.getGeneTranscriptCollection());
+            }
 
             CNAnalyser cnAnalyser = new CNAnalyser(cmd.getOptionValue(DATA_OUTPUT_PATH), dbAccess);
             boolean includeNoneSegments = cmd.hasOption(INCLUDE_NONE_SEGMENTS);
@@ -110,15 +124,9 @@ public class SvAnalyser {
             {
                 cnAnalyser.loadLOHFromCSV(svaConfig.LOHDataFile, "");
                 sampleAnalyser.setSampleLohData(cnAnalyser.getSampleLohData());
-                driverGeneAnnotator.setChromosomeData(cnAnalyser.getSampleLohData(), sampleAnalyser.getChrCopyNumberMap());
-            }
 
-            FusionDisruptionAnalyser fusionAnalyser = null;
-
-            if(cmd.hasOption(GENE_TRANSCRIPTS_DIR))
-            {
-                fusionAnalyser = new FusionDisruptionAnalyser();
-                fusionAnalyser.loadFusionReferenceData(cmd, cmd.getOptionValue(DATA_OUTPUT_PATH), cmd.getOptionValue(GENE_TRANSCRIPTS_DIR,""));
+                if(driverGeneAnnotator != null)
+                    driverGeneAnnotator.setChromosomeData(cnAnalyser.getSampleLohData(), sampleAnalyser.getChrCopyNumberMap());
             }
 
             int count = 0;
@@ -151,7 +159,7 @@ public class SvAnalyser {
 
                 sampleAnalyser.analyse();
 
-                if(fusionAnalyser != null)
+                if(runFusions)
                 {
                     fusionAnalyser.setSvGeneData(sample, svVarData);
                 }
@@ -163,7 +171,7 @@ public class SvAnalyser {
 
                 sampleAnalyser.writeOutput();
 
-                if(fusionAnalyser != null)
+                if(runFusions)
                 {
                     fusionAnalyser.findFusions(svVarData, sampleAnalyser.getClusters());
                 }
@@ -242,6 +250,7 @@ public class SvAnalyser {
         options.addOption(LOG_DEBUG, false, "Sets log level to Debug, off by default");
         options.addOption(LINE_ELEMENT_FILE, true, "Line Elements file for SVs");
         options.addOption(DRIVERS_CHECK, false, "Check SVs against drivers catalog");
+        options.addOption(RUN_FUSIONS, false, "Run fusion detection");
         options.addOption(COPY_NUMBER_ANALYSIS, false, "Run copy number analysis");
         options.addOption(RUN_RESULTS_CHECKER, false, "Check results vs validation file");
         options.addOption(INCLUDE_NONE_SEGMENTS, false, "Include copy number NONE segments in SV analysis");
@@ -250,7 +259,6 @@ public class SvAnalyser {
         ResultsChecker.addCmdLineArgs(options);
         CNAnalyser.addCmdLineArgs(options);
         SvFusionAnalyser.addCmdLineArgs(options);
-        DriverGeneAnnotator.addCmdLineArgs(options);
 
         return options;
     }

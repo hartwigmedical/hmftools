@@ -111,8 +111,8 @@ public class SvFusionAnalyser
         return fusions;
     }
 
-    // private static int SPECIFIC_VAR_ID = -1;
-    private static int SPECIFIC_VAR_ID = 13699019;
+    private static int SPECIFIC_VAR_ID = -1;
+    // private static int SPECIFIC_VAR_ID = 13699019;
 
     public final List<GeneFusion> findFusions(final List<GeneAnnotation> breakendGenes1, final List<GeneAnnotation> breakendGenes2)
     {
