@@ -1,5 +1,6 @@
 CREATE TABLE clinicalEvidence
 (   id int NOT NULL AUTO_INCREMENT,
+    modified DATETIME NOT NULL,
     sampleId varchar(255) NOT NULL,
     event varchar(255) NOT NULL,
     eventMatch varchar(255) NOT NULL,

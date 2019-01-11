@@ -3,6 +3,8 @@ package com.hartwig.hmftools.patientdb.dao;
 import static com.hartwig.hmftools.patientdb.Config.DB_BATCH_INSERT_SIZE;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.CLINICALEVIDENCE;
 
+import java.sql.Timestamp;
+import java.util.Date;
 import java.util.List;
 
 import com.google.common.collect.Iterables;
@@ -10,7 +12,7 @@ import com.hartwig.hmftools.common.actionability.EvidenceItem;
 
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
-import org.jooq.InsertValuesStep10;
+import org.jooq.InsertValuesStep11;
 
 class ClinicalEvidenceDAO {
 
@@ -24,9 +26,12 @@ class ClinicalEvidenceDAO {
     void writeClinicalEvidence(@NotNull String sample, @NotNull List<EvidenceItem> evidenceItem) {
         deleteClinicalEvidenceForSample(sample);
 
+        Timestamp timestamp = new Timestamp(new Date().getTime());
+
         for (List<EvidenceItem> items : Iterables.partition(evidenceItem, DB_BATCH_INSERT_SIZE)) {
-            InsertValuesStep10 inserter = context.insertInto(CLINICALEVIDENCE,
+            InsertValuesStep11 inserter = context.insertInto(CLINICALEVIDENCE,
                     CLINICALEVIDENCE.SAMPLEID,
+                    CLINICALEVIDENCE.MODIFIED,
                     CLINICALEVIDENCE.EVENT,
                     CLINICALEVIDENCE.EVENTMATCH,
                     CLINICALEVIDENCE.NAME,
@@ -36,14 +41,16 @@ class ClinicalEvidenceDAO {
                     CLINICALEVIDENCE.SOURCE,
                     CLINICALEVIDENCE.CANCERTYPE,
                     CLINICALEVIDENCE.ISONLABEL);
-            items.forEach(trial -> addValues(sample, trial, inserter));
+            items.forEach(trial -> addValues(sample, trial, inserter, timestamp));
             inserter.execute();
         }
     }
 
-    private static void addValues(@NotNull String sample, @NotNull EvidenceItem evidenceItem, @NotNull InsertValuesStep10 inserter) {
+    private static void addValues(@NotNull String sample, @NotNull EvidenceItem evidenceItem, @NotNull InsertValuesStep11 inserter,
+            @NotNull Timestamp timestamp) {
         //noinspection unchecked
         inserter.values(sample,
+                timestamp,
                 evidenceItem.event(),
                 evidenceItem.scope().readableString(),
                 evidenceItem.drug(),
