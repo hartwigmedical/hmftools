@@ -18,21 +18,34 @@ public final class FileWriterUtils {
     public static BufferedWriter createBufferedWriter(final String outputFile, boolean appendIfExists) throws IOException {
         Path outputPath = Paths.get(outputFile);
 
-        if (Files.exists(outputPath)) {
-            if (appendIfExists) {
+        if (Files.exists(outputPath))
+        {
+            if (appendIfExists)
+            {
                 return Files.newBufferedWriter(outputPath, StandardOpenOption.APPEND);
-            } else {
+            }
+            else
+            {
                 return Files.newBufferedWriter(outputPath, StandardOpenOption.TRUNCATE_EXISTING);
             }
-        } else {
+        }
+        else
+        {
             return Files.newBufferedWriter(outputPath, StandardOpenOption.CREATE);
         }
     }
 
-    public static void closeBufferedWriter(@NotNull BufferedWriter writer) {
-        try {
+    public static void closeBufferedWriter(@NotNull BufferedWriter writer)
+    {
+        if(writer == null)
+            return;
+
+        try
+        {
             writer.close();
-        } catch (IOException e) {
+        }
+        catch (IOException e)
+        {
             throw new IllegalStateException("Could not close buffered writer: " + writer + ": " + e.getMessage());
         }
     }

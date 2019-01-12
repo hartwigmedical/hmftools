@@ -84,6 +84,7 @@ public class EnsemblDAO
                 .value1();
     }
 
+    @Deprecated
     @NotNull
     public Result<?> queryGenesOnChromosomeAndPosition(@NotNull String chromosome, long position, int preGeneDistance)
     {
@@ -127,9 +128,10 @@ public class EnsemblDAO
     }
 
     @NotNull
+    @Deprecated
     public Result<?> queryTranscripts(@NotNull final UInteger geneId)
     {
-        // CHSH: query created manually since the structured version below doens't produce the same result
+        // query created manually since the structured version below doens't produce the same result
         final String queryStr = "select t.transcript_id, t.stable_id,"
                 + " if(t.seq_region_strand = -1, ce.seq_region_end - tl.seq_end + 1, cs.seq_region_start + tl.seq_start - 1) as CODING_START,"
                 + " if(t.seq_region_strand = -1, cs.seq_region_end - tl.seq_start + 1, ce.seq_region_start + tl.seq_end - 1) as CODING_END"
@@ -140,33 +142,9 @@ public class EnsemblDAO
                 + " where t.gene_id = '" + geneId + "'";
 
         return context.fetch(queryStr);
-
-        /*
-        final Exon EXON_START = EXON.as("cs");
-        final Exon EXON_END = EXON.as("ce");
-
-        return context.select(TRANSCRIPT.TRANSCRIPT_ID,
-                TRANSCRIPT.STABLE_ID,
-                when(TRANSCRIPT.SEQ_REGION_STRAND.eq((byte) -1), EXON_END.SEQ_REGION_END.minus(TRANSLATION.SEQ_END).plus(1)).otherwise(
-                        EXON_START.SEQ_REGION_START).plus(TRANSLATION.SEQ_START).minus(1).as(CODING_START),
-                when(TRANSCRIPT.SEQ_REGION_STRAND.eq((byte) -1), EXON_START.SEQ_REGION_END.minus(TRANSLATION.SEQ_START).plus(1)).otherwise(
-                        EXON_END.SEQ_REGION_START).plus(TRANSLATION.SEQ_END).minus(1).as(CODING_END))
-                .from(TRANSCRIPT)
-                .leftJoin(TRANSLATION)
-                .on(TRANSLATION.TRANSCRIPT_ID.eq(TRANSCRIPT.TRANSCRIPT_ID))
-                .leftJoin(EXON_START)
-                .on(EXON_START.EXON_ID.eq(TRANSLATION.START_EXON_ID))
-                .leftJoin(EXON_END)
-                .on(EXON_END.EXON_ID.eq(TRANSLATION.END_EXON_ID))
-                .where(TRANSCRIPT.GENE_ID.eq(geneId))
-                .fetch();
-        */
-
     }
 
-    // private static String SPEC_TRANSCRIPT = "ENST00000453137";
-    private static String SPEC_TRANSCRIPT = "";
-
+    @Deprecated
     public Transcript buildTranscript(
             @NotNull GeneAnnotation parent, @NotNull Record transcript, long position,
             @NotNull UInteger canonicalTranscriptId, boolean isForwardStrand)
@@ -179,13 +157,6 @@ public class EnsemblDAO
         final UInteger transcriptId = transcript.get(TRANSCRIPT.TRANSCRIPT_ID);
         final boolean canonical = transcriptId.equals(canonicalTranscriptId);
         final String transcriptStableId = transcript.get(TRANSCRIPT.STABLE_ID);
-
-        /*
-        if(transcriptStableId.equals(SPEC_TRANSCRIPT))
-        {
-            LOGGER.debug("specific transcript({})", transcriptStableId);
-        }
-        */
 
         final Result<?> allExons = context.select(EXON_TRANSCRIPT.RANK, EXON.PHASE, EXON.END_PHASE, EXON.SEQ_REGION_START, EXON.SEQ_REGION_END)
                 .from(EXON_TRANSCRIPT)
@@ -334,12 +305,6 @@ public class EnsemblDAO
                     }
                 }
             }
-
-            /*
-            LOGGER.debug("transcript({}:{}) exon({}: {} - {}) coding({} - {}) position({}) coding(pos={} total={}) region(coding={} ended={})",
-                    transcriptId, transcriptStableId, exon.get(EXON_TRANSCRIPT.RANK), exonStart, exonEnd,
-                    codingStart, codingEnd, position, codingBases, totalCodingBases, inCodingRegion, codingRegionEnded);
-            */
 
             if(codingBases < 0 || totalCodingBases < 0)
             {

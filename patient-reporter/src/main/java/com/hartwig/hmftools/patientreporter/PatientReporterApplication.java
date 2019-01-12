@@ -18,8 +18,6 @@ import com.hartwig.hmftools.patientreporter.qcfail.NotAnalysableReporter;
 import com.hartwig.hmftools.patientreporter.qcfail.NotAnalysableStudy;
 import com.hartwig.hmftools.patientreporter.report.PDFWriter;
 import com.hartwig.hmftools.patientreporter.structural.StructuralVariantAnalyzer;
-import com.hartwig.hmftools.svannotation.MySQLAnnotator;
-import com.hartwig.hmftools.svannotation.NullAnnotator;
 import com.hartwig.hmftools.svannotation.VariantAnnotator;
 
 import org.apache.commons.cli.CommandLine;

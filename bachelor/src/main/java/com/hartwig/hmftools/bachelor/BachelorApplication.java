@@ -302,7 +302,7 @@ public class BachelorApplication {
             }
             catch (Exception e)
             {
-                // CHSH: Skip using meta data
+                // Skip using meta data
                 sampleId = patient;
             }
         }

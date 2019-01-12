@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.svannotation;
+package com.hartwig.hmftools.patientreporter;
 
 import static java.lang.Math.abs;
 
@@ -22,6 +22,8 @@ import com.hartwig.hmftools.common.variant.structural.EnrichedStructuralVariantL
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneAnnotation;
 import com.hartwig.hmftools.common.variant.structural.annotation.StructuralVariantAnnotation;
 import com.hartwig.hmftools.common.variant.structural.annotation.Transcript;
+import com.hartwig.hmftools.svannotation.EnsemblDAO;
+import com.hartwig.hmftools.svannotation.VariantAnnotator;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

@@ -913,15 +913,6 @@ public class SvGeneTranscriptCollection
 
     }
 
-    public void cacheAllEnsemblData()
-    {
-        writeGeneProbabilityData();
-
-        // writeTranscriptExonData();
-
-        // writeGeneData();
-    }
-
     public void writeGeneProbabilityData()
     {
         for(Map.Entry<String, List<EnsemblGeneData>> entry : mChromosomeGeneDataMap.entrySet())

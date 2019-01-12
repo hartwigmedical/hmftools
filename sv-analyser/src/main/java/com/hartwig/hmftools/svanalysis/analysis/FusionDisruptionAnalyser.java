@@ -362,7 +362,7 @@ public class FusionDisruptionAnalyser
 
         String clusterInfo = String.format("%d,%d,%s", cluster.id(), cluster.getUniqueSvCount(), cluster.getResolvedType());
 
-        mFusionFinder.writeFusions(fusions, mOutputDir, mSampleId, clusterInfo);
+        mFusionFinder.writeFusions(fusions, mOutputDir, mSampleId, clusterInfo, true);
     }
 
     public void close()

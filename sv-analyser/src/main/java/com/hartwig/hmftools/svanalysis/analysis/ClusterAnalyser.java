@@ -423,7 +423,7 @@ public class ClusterAnalyser {
 
     private void setClusterResolvedState(SvCluster cluster)
     {
-        if(!cluster.getResolvedType().equals(RESOLVED_TYPE_NONE))
+        if(cluster.getResolvedType() != RESOLVED_TYPE_NONE)
             return;
 
         if(cluster.hasLinkingLineElements())

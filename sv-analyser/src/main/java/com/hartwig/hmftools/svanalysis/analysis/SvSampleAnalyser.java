@@ -523,7 +523,7 @@ public class SvSampleAnalyser {
 
                     for (final SvLinkedPair pair : chain.getLinkedPairs())
                     {
-                        if(!pair.linkType().equals(LINK_TYPE_TI))
+                        if(pair.linkType() != LINK_TYPE_TI)
                             continue;
 
                         if(pair.first().type() == SGL || pair.second().type() == SGL)
@@ -578,10 +578,10 @@ public class SvSampleAnalyser {
         {
             Map<String, Integer> targetMap;
 
-            if(cluster.getResolvedType().equals(RESOLVED_TYPE_LOW_QUALITY))
+            if(cluster.getResolvedType() == RESOLVED_TYPE_LOW_QUALITY)
                 continue;
 
-            if(cluster.getResolvedType().equals(RESOLVED_TYPE_SIMPLE_SV) || cluster.isSyntheticSimpleType(true))
+            if(cluster.getResolvedType() == RESOLVED_TYPE_SIMPLE_SV || cluster.isSyntheticSimpleType(true))
             {
                 ++simpleClusterCount;
                 targetMap = armSimpleClusterCount;

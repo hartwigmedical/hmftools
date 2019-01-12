@@ -1,14 +1,16 @@
-package com.hartwig.hmftools.svannotation;
+package com.hartwig.hmftools.patientreporter;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.variant.structural.EnrichedStructuralVariant;
 import com.hartwig.hmftools.common.variant.structural.annotation.StructuralVariantAnnotation;
+import com.hartwig.hmftools.svannotation.VariantAnnotator;
 
 import org.jetbrains.annotations.NotNull;
 
-public class NullAnnotator implements VariantAnnotator {
+public class NullAnnotator implements VariantAnnotator
+{
 
     @NotNull
     public static VariantAnnotator make() {

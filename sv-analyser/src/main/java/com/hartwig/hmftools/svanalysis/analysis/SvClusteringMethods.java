@@ -720,7 +720,7 @@ public class SvClusteringMethods {
 
                 final String resolvedType = canResolveWithSoloSingle(otherCluster, cluster);
 
-                if(!resolvedType.equals(RESOLVED_TYPE_NONE))
+                if(resolvedType != RESOLVED_TYPE_NONE)
                 {
                     otherCluster.mergeOtherCluster(cluster);
                     otherCluster.setResolved(true, resolvedType);

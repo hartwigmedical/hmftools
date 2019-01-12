@@ -58,7 +58,6 @@ public class StructuralVariantAnnotator
 {
     private SvDisruptionAnalyser mDisruptionAnalyser;
     private SvFusionAnalyser mFusionAnalyser;
-    private MySQLAnnotator mEnsemblAnnotator;
 
     private String mSampleId;
     private String mOutputDir;
@@ -71,7 +70,7 @@ public class StructuralVariantAnnotator
     private boolean mUploadAnnotations;
     private boolean mWriteBreakends;
 
-    // CHSH: Let PON filtered SVs through since GRIDSS PON filtering is performed upstream
+    // Let PON filtered SVs through since GRIDSS PON filtering is performed upstream
     private static final Set<String> ALLOWED_FILTERS = Sets.newHashSet("INFERRED", PON_FILTER_PON, PON_FILTER_PASS);
 
     private static final Logger LOGGER = LogManager.getLogger(StructuralVariantAnnotator.class);
@@ -80,7 +79,6 @@ public class StructuralVariantAnnotator
     {
         mDisruptionAnalyser = null;
         mFusionAnalyser = null;
-        mEnsemblAnnotator= null;
 
         mSampleId = "";
         mOutputDir = "";
@@ -112,34 +110,6 @@ public class StructuralVariantAnnotator
         mEnsemblDataDir = mCmdLineArgs.getOptionValue(ENSEMBL_DATA_DIR, "");
         mUploadAnnotations = !mCmdLineArgs.hasOption(SKIP_DB_UPLOAD);
         mWriteBreakends = mCmdLineArgs.hasOption(WRITE_BREAKENDS);
-
-        if(mCmdLineArgs.hasOption(ENSEMBL_DB))
-        {
-            try
-            {
-                final String ensembleUrl = "jdbc:" + mCmdLineArgs.getOptionValue(ENSEMBL_DB);
-                final String ensembleUser = mCmdLineArgs.getOptionValue(ENSEMBL_DB_USER, "");
-                final String ensemblePassword = mCmdLineArgs.getOptionValue(ENSEMBL_DB_PASS, "");
-
-                LOGGER.debug("Connecting to ensembl DB: {}", ensembleUrl);
-
-                if (!ensembleUser.isEmpty() && !ensemblePassword.isEmpty())
-                {
-                    DatabaseAccess ensembleDBConn = new DatabaseAccess(ensembleUser, ensemblePassword, ensembleUrl);
-                    mEnsemblAnnotator = new MySQLAnnotator(ensembleDBConn.context());
-
-                    if(mCmdLineArgs.hasOption(CACHE_ENSEMBL_DATA) && !mEnsemblDataDir.isEmpty())
-                    {
-                        mSvGeneTranscriptCollection.cacheAllEnsemblData();
-                    }
-                }
-            }
-            catch (SQLException e)
-            {
-                LOGGER.warn("Ensembl DB connection failed: {}", e.toString());
-                return false;
-            }
-        }
 
         LOGGER.debug("Loading known fusion data");
         KnownFusionsModel knownFusionsModel;
@@ -179,11 +149,14 @@ public class StructuralVariantAnnotator
             }
         }
 
-        if(!mEnsemblDataDir.isEmpty())
+        if(mEnsemblDataDir.isEmpty())
         {
-            mSvGeneTranscriptCollection.setDataPath(mEnsemblDataDir);
-            mSvGeneTranscriptCollection.loadEnsemblData();
+            LOGGER.error("Ensembl data cache directory missing");
+            return false;
         }
+
+        mSvGeneTranscriptCollection.setDataPath(mEnsemblDataDir);
+        mSvGeneTranscriptCollection.loadEnsemblData();
 
         if(samplesList.isEmpty())
         {
@@ -208,7 +181,7 @@ public class StructuralVariantAnnotator
 
         for (String sampleId : samplesList)
         {
-            runSample(sampleId);
+            runSample(sampleId, samplesList.size() > 1);
         }
 
         // mFusionAnalyser.writeGeneProbabilityData();
@@ -220,7 +193,7 @@ public class StructuralVariantAnnotator
         return true;
     }
 
-    private void runSample(final String sampleId)
+    private void runSample(final String sampleId, boolean hasMultipleSamples)
     {
         LOGGER.info("Annotating variants for sample({})", sampleId);
 
@@ -228,7 +201,7 @@ public class StructuralVariantAnnotator
 
         if(mSourceSvFromDB)
         {
-            // CHSH: Optionally load existing SVs from the database rather than from VCF
+            // Optionally load existing SVs from the database rather than from VCF
             enrichedVariants = mDbAccess.readStructuralVariants(sampleId);
 
             if (enrichedVariants.isEmpty())
@@ -247,7 +220,7 @@ public class StructuralVariantAnnotator
 
             mDbAccess.writeStructuralVariants(sampleId, svList);
 
-            // CHSH: Re-read the data to get primaryId field as a foreign key for disruptions and fusions
+            // Re-read the data to get primaryId field as a foreign key for disruptions and fusions
             enrichedVariants = mDbAccess.readStructuralVariants(sampleId);
         }
 
@@ -259,14 +232,6 @@ public class StructuralVariantAnnotator
 
             LOGGER.debug("Loaded {} Ensembl annotations from file", annotations.size());
         }
-        else if(mEnsemblAnnotator != null)
-        {
-            LOGGER.debug("Sample({}) finding Ensembl annotations", sampleId);
-
-            annotations = mEnsemblAnnotator.annotateVariants(enrichedVariants);
-
-            LOGGER.debug("Sample({}) matched {} annotations from Ensembl database", sampleId, annotations.size());
-        }
 
         List<GeneDisruption> disruptions = mDisruptionAnalyser.findDisruptions(annotations);
         List<GeneFusion> fusions = mFusionAnalyser.findFusions(annotations);
@@ -276,8 +241,8 @@ public class StructuralVariantAnnotator
         if(!mOutputDir.isEmpty())
         {
             String clusterInfo = ",,";
-            mFusionAnalyser.writeFusions(fusions, mOutputDir, sampleId, clusterInfo);
-            mDisruptionAnalyser.writeDisruptions(disruptions, mOutputDir, sampleId);
+            mFusionAnalyser.writeFusions(fusions, mOutputDir, sampleId, clusterInfo, hasMultipleSamples);
+            mDisruptionAnalyser.writeDisruptions(disruptions, mOutputDir, sampleId, hasMultipleSamples);
             mFusionAnalyser.writeRnaMatchData(sampleId, mOutputDir, fusions, annotations);
 
             if(mWriteBreakends)
@@ -368,20 +333,13 @@ public class StructuralVariantAnnotator
             Integer primaryKey = var.primaryKey();
             assert primaryKey != null; // KODU: Not sure why this assert is valid here...
 
-            Long startPosition = var.position(true);
-            Byte startOrientation = var.orientation(true);
-            assert startPosition != null && startOrientation != null; // KODU: Start annotation is always present while end is optional.
             List<GeneAnnotation> genesList = mSvGeneTranscriptCollection.findGeneAnnotationsBySv(
-                    primaryKey, true, var.chromosome(true), startPosition, startOrientation);
+                    primaryKey, true, var.chromosome(true), var.position(true), var.orientation(true));
 
             if(var.end() != null)
             {
-                Long endPosition = var.position(false);
-                Byte endOrientation = var.orientation(false);
-                assert endPosition != null && endOrientation != null; // KODU: Position and orientation are non-null when end() is non-null.
-
                 genesList.addAll(mSvGeneTranscriptCollection.findGeneAnnotationsBySv(
-                        primaryKey, false, var.chromosome(false), endPosition, endOrientation));
+                        primaryKey, false, var.chromosome(false), var.position(false), var.orientation(false)));
             }
 
             if(genesList == null)
@@ -420,9 +378,6 @@ public class StructuralVariantAnnotator
     // configuration
     private static final String SAMPLE = "sample";
     private static final String VCF_FILE = "vcf_file";
-    private static final String ENSEMBL_DB = "ensembl_db";
-    private static final String ENSEMBL_DB_USER = "ensembl_user";
-    private static final String ENSEMBL_DB_PASS = "ensembl_pass";
     private static final String REF_GENOME = "ref_genome";
     private static final String ENSEMBL_DATA_DIR = "ensembl_data_dir";
     private static final String DATA_OUTPUT_DIR = "data_output_dir";
@@ -448,9 +403,6 @@ public class StructuralVariantAnnotator
         options.addOption(DB_USER, true, "Database user name.");
         options.addOption(DB_PASS, true, "Database password.");
         options.addOption(DB_URL, true, "Database url.");
-        options.addOption(ENSEMBL_DB, true, "Annotate structural variants using this Ensembl DB URI");
-        options.addOption(ENSEMBL_DB_PASS, true, "Ensembl DB password if required");
-        options.addOption(ENSEMBL_DB_USER, true, "Ensembl DB username if required");
         options.addOption(LOG_DEBUG, false, "Sets log level to Debug, off by default");
         options.addOption(SAMPLE_RNA_FILE, true, "Sample RNA data to match");
         options.addOption(REF_GENOME, true, "Path to the ref genome fasta file.");

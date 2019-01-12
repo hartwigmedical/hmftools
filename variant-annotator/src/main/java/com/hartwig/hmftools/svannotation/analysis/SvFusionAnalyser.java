@@ -345,7 +345,7 @@ public class SvFusionAnalyser
             processedFeatures.add(feature);
         }
 
-        if (!reportableFusion.getKnownFusionType().equals(REPORTABLE_TYPE_KNOWN))
+        if (reportableFusion.getKnownFusionType() != REPORTABLE_TYPE_KNOWN)
         {
             long requiredKeptButLost = mProteinsRequiredKept.stream().filter(f -> downTrans.getProteinFeaturesLost().contains(f)).count();
             long requiredLostButKept = mProteinsRequiredLost.stream().filter(f -> downTrans.getProteinFeaturesKept().contains(f)).count();
@@ -401,13 +401,13 @@ public class SvFusionAnalyser
 
             final String knownType = getKnownFusionType(upTrans, downTrans);
 
-            if (knownType.equals(REPORTABLE_TYPE_NONE))
+            if (knownType == REPORTABLE_TYPE_NONE)
                 continue;
 
             fusion.setKnownFusionType(knownType);
 
             // set limits on how far upstream the breakend can be - adjusted for whether the fusions is known or not
-            int maxUpstreamDistance = knownType.equals(REPORTABLE_TYPE_KNOWN) ? MAX_UPSTREAM_DISTANCE_KNOWN : MAX_UPSTREAM_DISTANCE_UNKNOWN;
+            int maxUpstreamDistance = knownType == REPORTABLE_TYPE_KNOWN ? MAX_UPSTREAM_DISTANCE_KNOWN : MAX_UPSTREAM_DISTANCE_UNKNOWN;
 
             if(upTrans.getDistanceUpstream() > maxUpstreamDistance || downTrans.getDistanceUpstream() > maxUpstreamDistance)
                 continue;
@@ -519,7 +519,7 @@ public class SvFusionAnalyser
         return upstream.parent().synonyms().stream().anyMatch(downstream.parent().synonyms()::contains);
     }
 
-    public void writeFusions(final List<GeneFusion> fusions, final String outputDir, final String sampleId,  final String clusterInfo)
+    public void writeFusions(final List<GeneFusion> fusions, final String outputDir, final String sampleId,  final String clusterInfo, boolean hasMultipleSamples)
     {
         try
         {
@@ -530,7 +530,10 @@ public class SvFusionAnalyser
                 if (!outputFilename.endsWith(File.separator))
                     outputFilename += File.separator;
 
-                outputFilename += "FUSIONS.csv";
+                if(hasMultipleSamples)
+                    outputFilename += "FUSIONS.csv";
+                else
+                    outputFilename += sampleId + "_fusions.csv";
 
                 mFusionWriter = createBufferedWriter(outputFilename, false);
 

@@ -160,7 +160,7 @@ public class SvDisruptionAnalyser
         return false;
     }
 
-    public void writeDisruptions(final List<GeneDisruption> disruptions, final String outputDir, final String sampleId)
+    public void writeDisruptions(final List<GeneDisruption> disruptions, final String outputDir, final String sampleId, boolean hasMultipleSamples)
     {
         try
         {
@@ -171,7 +171,10 @@ public class SvDisruptionAnalyser
                 if (!outputFilename.endsWith(File.separator))
                     outputFilename += File.separator;
 
-                outputFilename += "DISRUPTIONS.csv";
+                if(hasMultipleSamples)
+                    outputFilename += "DISRUPTIONS.csv";
+                else
+                    outputFilename += sampleId + "_disruptions.csv";
 
                 mWriter = createBufferedWriter(outputFilename, false);
 
