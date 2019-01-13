@@ -49,15 +49,15 @@ public abstract class HmfTranscriptRegion implements TranscriptRegion {
 
     @Value.Derived
     @Nullable
-    // TODO (KODU): Convert to using long.
+    // TODO: Convert to using long.
     public List<GenomeRegion> codingRangeByGenomicCoordinates(int genomicStartPosition, int genomicEndPosition) {
         if (genomicStartPosition < 1 || genomicEndPosition < 1) {
-            // KODU: Only allow a range to return if start and end are 1-based.
+            // Only allow a range to return if start and end are 1-based.
             return null;
         }
 
         if (codingStart() == 0 || codingEnd() == 0) {
-            // KODU: Only coding transcripts have coding ranges.
+            // Only coding transcripts have coding ranges.
             return null;
         }
 
@@ -88,12 +88,12 @@ public abstract class HmfTranscriptRegion implements TranscriptRegion {
     @Nullable
     public List<GenomeRegion> codonRangeByIndex(int startCodon, int endCodon) {
         if (startCodon < 1 || endCodon < 1) {
-            // KODU: Enforce 1-based codons.
+            // Enforce 1-based codons.
             return null;
         }
 
         if (codingStart() == 0 || codingEnd() == 0) {
-            // KODU: Only coding transcripts have codons.
+            // Only coding transcripts have codons.
             return null;
         }
 
@@ -110,7 +110,7 @@ public abstract class HmfTranscriptRegion implements TranscriptRegion {
             long exonBaseLength = exonCodingEnd - exonCodingStart + 1;
 
             if (exonBaseLength <= 0) {
-                // KODU: Exon is entirely non-coding so can be skipped.
+                // Exon is entirely non-coding so can be skipped.
                 continue;
             }
 
@@ -149,7 +149,7 @@ public abstract class HmfTranscriptRegion implements TranscriptRegion {
             long exonCodingEnd, boolean hasCodingRegionsDefinedAlready) {
         if (startPosition != null) {
             if (endPosition == null) {
-                // KODU: Check to see if we need to include the entire exon we are considering.
+                // Check to see if we need to include the entire exon we are considering.
                 if (hasCodingRegionsDefinedAlready) {
                     return ImmutableGenomeRegionImpl.builder().chromosome(chromosome()).start(exonCodingStart).end(exonCodingEnd).build();
                 } else {

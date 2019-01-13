@@ -12,7 +12,7 @@ public class RepeatContextFactoryTest {
     public void canDetermineRepeatContext() {
         String refGenome = "GATCGATCGATCGAAAAA";
 
-        // KODU: First is right within the GATC repeats
+        // First is right within the GATC repeats
         Optional<RepeatContext> optRepeatContextGATC = RepeatContextFactory.repeats(5, refGenome);
         assert optRepeatContextGATC.isPresent();
 
@@ -20,7 +20,7 @@ public class RepeatContextFactoryTest {
         assertEquals(3, repeatContextGATC.count());
         assertEquals("GATC", repeatContextGATC.sequence());
 
-        // KODU: Then one right at the final trailing G.
+        // Then one right at the final trailing G.
         Optional<RepeatContext> optRepeatContextATCG = RepeatContextFactory.repeats(12, refGenome);
         assert optRepeatContextATCG.isPresent();
 
@@ -28,7 +28,7 @@ public class RepeatContextFactoryTest {
         assertEquals(3, repeatContextATCG.count());
         assertEquals("ATCG", repeatContextATCG.sequence());
 
-        // KODU: Finally one in the A repeat section at the end.
+        // Finally one in the A repeat section at the end.
         Optional<RepeatContext> optRepeatContextA = RepeatContextFactory.repeats(15, refGenome);
         assert optRepeatContextA.isPresent();
 

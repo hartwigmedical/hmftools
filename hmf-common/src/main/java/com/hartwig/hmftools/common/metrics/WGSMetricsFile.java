@@ -16,8 +16,8 @@ import org.jetbrains.annotations.NotNull;
 
 public final class WGSMetricsFile {
 
-    // KODU: metrics files stores in {run}/QCStats/{sample}_dedup/{sample}_dedup_WGSMetrics.txt
-    // KODU: If run from BAM, then the "_dedup" appendix is not added.
+    // Metrics files stores in {run}/QCStats/{sample}_dedup/{sample}_dedup_WGSMetrics.txt
+    // If run from BAM, then the "_dedup" appendix is not added.
     private static final String METRICS_BASE_DIRECTORY = "QCStats";
     private static final String METRICS_SUB_DIRECTORY_SUFFIX = "_dedup";
     private static final String METRICS_EXTENSION = "_WGSMetrics.txt";
@@ -38,7 +38,7 @@ public final class WGSMetricsFile {
             String path = runDir + File.separator + METRICS_BASE_DIRECTORY + File.separator + sample + METRICS_SUB_DIRECTORY_SUFFIX;
             return PathPrefixSuffixFinder.build().findPath(path, sample, METRICS_EXTENSION).toString();
         } catch (FileNotFoundException exc) {
-            // KODU: If a pipeline is run directly from a bam, the metric file is stored in a directory matching the sample name.
+            // If a pipeline is run directly from a bam, the metric file is stored in a directory matching the sample name.
             String path = runDir + File.separator + METRICS_BASE_DIRECTORY + File.separator + sample;
             return PathPrefixSuffixFinder.build().findPath(path, sample, METRICS_EXTENSION).toString();
         }

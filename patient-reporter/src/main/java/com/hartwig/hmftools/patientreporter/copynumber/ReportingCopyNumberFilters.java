@@ -34,7 +34,7 @@ final class ReportingCopyNumberFilters {
     @VisibleForTesting
     static boolean includeInReport(double significantCopyNumber, boolean isDiploidChromosome, boolean isAmplificationReportable,
             boolean isDeletionReportable) {
-        // KODU: Assume we only have significant events here.
+        // Assume we only have significant events here.
         double normalPloidy = isDiploidChromosome ? 2D : 1D;
         return (significantCopyNumber > normalPloidy && isAmplificationReportable) || (significantCopyNumber < normalPloidy
                 && isDeletionReportable);

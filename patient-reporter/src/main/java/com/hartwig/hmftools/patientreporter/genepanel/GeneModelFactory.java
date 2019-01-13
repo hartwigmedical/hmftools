@@ -38,7 +38,7 @@ public final class GeneModelFactory {
             geneDriverCategoryMap.put(tsgGene, DriverCategory.TSG);
         }
 
-        // KODU: For any gene that is actionable in DRUP and configured to onco/tsg, use this in driver category map,
+        // For any gene that is actionable in DRUP and configured to onco/tsg, use this in driver category map,
         // only if not configured in the driver catalog.
         for (Map.Entry<String, DriverCategory> drupDriverCategoryEntry : drupActionabilityModel.geneDriverCategoryMap().entrySet()) {
             geneDriverCategoryMap.putIfAbsent(drupDriverCategoryEntry.getKey(), drupDriverCategoryEntry.getValue());

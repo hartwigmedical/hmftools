@@ -6,8 +6,8 @@ import com.google.common.collect.Maps;
 
 import org.jetbrains.annotations.NotNull;
 
-// KODU: Class is no longer used in production but like to keep around nonetheless for having the AA table somewhere.
-// KODU: Do note that according to http://www.hgvs.org/mutnomen/standards.html there are also 2 "dubious" mappings (not included below).
+// Class is no longer used in production but like to keep around nonetheless for having the AA table somewhere.
+// Do note that according to http://www.hgvs.org/mutnomen/standards.html there are also 2 "dubious" mappings (not included below).
 final class SnpEffHgvsFormatter {
 
     private static final String HGVS_CODING_PREFIX_TO_REMOVE = "c.";

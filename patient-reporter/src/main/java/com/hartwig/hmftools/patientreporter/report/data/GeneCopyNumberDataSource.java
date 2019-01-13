@@ -65,7 +65,7 @@ public final class GeneCopyNumberDataSource {
 
     @NotNull
     private static String zeroPrefixed(@NotNull String location) {
-        // KODU: First remove q or p arm if present.
+        // First remove q or p arm if present.
         int armStart = location.indexOf("q");
         if (armStart < 0) {
             armStart = location.indexOf("p");
@@ -90,7 +90,7 @@ public final class GeneCopyNumberDataSource {
         if (geneCopyNumber.alteration() == CopyNumberAlteration.GAIN) {
             return "gain";
         } else {
-            // KODU: At this point we only have losses and gains.
+            // At this point we only have losses and gains.
             assert geneCopyNumber.alteration() == CopyNumberAlteration.LOSS;
             if (geneCopyNumber.maxCopyNumber() < 0.5) {
                 return "full loss";

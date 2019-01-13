@@ -22,7 +22,7 @@ public final class CopyNumberEvidenceAnalyzerFactory {
         final List<ActionableCopyNumber> CNVs = Lists.newArrayList();
         final List<String> lineCNVs = Files.readAllLines(new File(fileCNVs).toPath());
 
-        // KODU: Skip header line
+        // Skip header line
         for (String line : lineCNVs.subList(1, lineCNVs.size())) {
             CNVs.add(fromLineCNVs(line));
         }

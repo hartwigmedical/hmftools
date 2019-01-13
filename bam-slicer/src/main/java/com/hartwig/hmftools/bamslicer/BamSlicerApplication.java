@@ -80,7 +80,7 @@ public class BamSlicerApplication {
     public static void main(final String... args) throws ParseException, IOException {
         final CommandLine cmd = createCommandLine(args);
         assert cmd != null;
-        //MIVO: disable default samtools buffering
+        // Disable default samtools buffering
         System.setProperty("samjdk.buffer_size", "0");
         if (cmd.hasOption(INPUT_MODE_FILE)) {
             sliceFromVCF(cmd);

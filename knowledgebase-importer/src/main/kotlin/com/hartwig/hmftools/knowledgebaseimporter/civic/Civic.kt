@@ -20,8 +20,8 @@ class Civic(variantsLocation: String, evidenceLocation: String, diseaseOntology:
 
     private val logger = LogManager.getLogger("Civic")
 
-    // KODU: This is a TP53 B-level evidence item that is dubious, so is filtered out.
-    // KODU: See also https://civicdb.org/events/genes/45/summary/variants/222/summary/evidence/1481/summary#evidence
+    // This is a TP53 B-level evidence item that is dubious, so is filtered out.
+    // See also https://civicdb.org/events/genes/45/summary/variants/222/summary/evidence/1481/summary#evidence
     private val blacklistedEvidenceIds = setOf("1481")
 
     override val source = "civic"

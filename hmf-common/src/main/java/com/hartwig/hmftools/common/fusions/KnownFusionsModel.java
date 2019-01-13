@@ -35,11 +35,11 @@ public abstract class KnownFusionsModel {
     public static final String ONCOKB = "OncoKB";
     private static final CSVFormat CSV_FORMAT = CSVFormat.DEFAULT.withNullString("NA").withFirstRecordAsHeader();
 
-    //MIVO: fusion pair -> set of sources
+    // Fusion pair -> set of sources
     @NotNull
     public abstract Map<Pair<String, String>, Set<String>> fusions();
 
-    //MIVO: promiscuous gene -> set of sources
+    // Promiscuous gene -> set of sources
     @NotNull
     public abstract Map<String, Set<String>> promiscuousFive();
 

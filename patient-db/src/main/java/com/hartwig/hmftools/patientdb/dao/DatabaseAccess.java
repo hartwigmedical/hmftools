@@ -73,7 +73,7 @@ public class DatabaseAccess {
     private final ClinicalEvidenceDAO clinicalEvidenceDAO;
 
     public DatabaseAccess(@NotNull final String userName, @NotNull final String password, @NotNull final String url) throws SQLException {
-        // MIVO: disable annoying jooq self-ad message
+        // Disable annoying jooq self-ad message
         System.setProperty("org.jooq.no-logo", "true");
         final Connection conn = DriverManager.getConnection(url, userName, password);
         final String catalog = conn.getCatalog();

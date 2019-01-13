@@ -43,7 +43,7 @@ public final class ReportableGeneFusionFactory {
         Double downstreamPloidy = fusion.downstreamTrans().parent().variant().ploidy();
 
         if (upstreamPloidy == null || downstreamPloidy == null) {
-            // KODU: Not sure when ploidy would be null...
+            // Not sure when ploidy would be null...
             return Double.NaN;
         }
 

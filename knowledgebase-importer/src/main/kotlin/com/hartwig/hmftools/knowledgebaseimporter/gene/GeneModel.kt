@@ -12,7 +12,7 @@ class GeneModel() {
     }
 
     fun hmfTranscriptForGene(gene: String): String? {
-        // TODO (KODU): Deal with MLL2 (Can maybe map to KMT2B, KMT2A or something else) -> used by CGI
+        // TODO: Deal with MLL2 (Can maybe map to KMT2B, KMT2A or something else) -> used by CGI
         val transcriptRegion = hmfGenePanel[gene]
         if (transcriptRegion == null) {
             logger.warn("Gene $gene not found in HMF gene panel!")
@@ -22,7 +22,7 @@ class GeneModel() {
     }
 
     fun hmfTranscriptRegionForGenericMutation(mutation: GenericMutation): HmfTranscriptRegion? {
-        // TODO (KODU): Deal with MLL2 (Can maybe map to KMT2B, KMT2A or something else) -> used by CGI
+        // TODO: Deal with MLL2 (Can maybe map to KMT2B, KMT2A or something else) -> used by CGI
         val transcriptRegion = hmfGenePanel[mutation.gene]
         if (transcriptRegion == null) {
             logger.warn("Gene ${mutation.gene} not found in HMF gene panel!")

@@ -45,7 +45,7 @@ class BiopsyReader {
             for (final EcrfForm form : studyEvent.nonEmptyFormsPerOID(FORM_BIOPS)) {
                 String biopsyTaken = null;
                 String biopsyEvaluable = null;
-                // KODU: This works as there is generally a 1:N relation between BIOPSY and BIOPSIES item groups.
+                // This works as there is generally a 1:N relation between BIOPSY and BIOPSIES item groups.
                 for (final EcrfItemGroup biopsyGroup : form.nonEmptyItemGroupsPerOID(ITEMGROUP_BIOPSY)) {
                     biopsyTaken = biopsyGroup.readItemString(FIELD_BIOPSY_TAKEN);
                     biopsyEvaluable = biopsyGroup.readItemString(FIELD_BIOPSY_EVALUABLE);
@@ -71,7 +71,7 @@ class BiopsyReader {
                             location,
                             form.status());
 
-                    // KODU: The ecrf contains many duplicate forms that are impossible to remove. This is because in the past a new biopsy
+                    // The ecrf contains many duplicate forms that are impossible to remove. This is because in the past a new biopsy
                     // form needed to be created for every treatment response.
                     if (!isDuplicate(biopsies, biopsy) && !isEmpty(biopsy)) {
                         biopsies.add(biopsy);

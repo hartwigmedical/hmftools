@@ -67,7 +67,7 @@ public class Lims {
         LimsJsonData sampleData = dataPerSample.get(sample);
         if (sampleData != null) {
             try {
-                // KODU: LIMS stores the amount of nanograms per micro liter.
+                // LIMS stores the amount of nanograms per micro liter.
                 return (int) Math.round(Double.parseDouble(sampleData.dnaConcentration()) * LimsConstants.DNA_MICRO_LITERS);
             } catch (final NumberFormatException e) {
                 return null;
@@ -105,7 +105,7 @@ public class Lims {
         if (sampleData != null) {
             return sampleData.primaryTumor();
         }
-        // KODU: No warning raised since initially this information was not tracked so this will be missing for early samples.
+        // No warning raised since initially this information was not tracked so this will be missing for early samples.
         return "N/A";
     }
 

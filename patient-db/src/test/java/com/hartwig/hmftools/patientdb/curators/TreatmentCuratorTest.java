@@ -33,22 +33,22 @@ public class TreatmentCuratorTest {
         final TreatmentCurator curator = TestCuratorFactory.treatmentCurator();
         assertEquals(13, curator.unusedSearchTerms().size());
 
-        // KODU: Match with a canonical
+        // Match with a canonical
         assertEquals(1, curator.search("Zocor").size());
         assertEquals(13, curator.unusedSearchTerms().size());
         assertEquals(1, curator.search("Zocor").size());
 
-        // KODU: Match with "other" name
+        // Match with "other" name
         assertEquals(1, curator.search("amlodipine-besylate").size());
         assertEquals(12, curator.unusedSearchTerms().size());
         assertEquals(1, curator.search("amlodipine-besylate").size());
 
-        // KODU: do an imperfect match but still remove the search term.
+        // Do an imperfect match but still remove the search term.
         assertEquals(1, curator.search("Avastine").size());
         assertEquals(11, curator.unusedSearchTerms().size());
         assertEquals(1, curator.search("Avastine").size());
 
-        // KODU: Bogus example!!
+        // Bogus example!!
         assertEquals(0, curator.search("This does not match at all!").size());
         assertEquals(11, curator.unusedSearchTerms().size());
     }

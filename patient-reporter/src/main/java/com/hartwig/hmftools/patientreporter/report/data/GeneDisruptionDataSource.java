@@ -77,7 +77,7 @@ public final class GeneDisruptionDataSource {
 
     @NotNull
     private static String zeroPrefixed(@NotNull String location) {
-        // KODU: First remove q or p arm if present.
+        // First remove q or p arm if present.
         int armStart = location.indexOf("q");
         if (armStart < 0) {
             armStart = location.indexOf("p");

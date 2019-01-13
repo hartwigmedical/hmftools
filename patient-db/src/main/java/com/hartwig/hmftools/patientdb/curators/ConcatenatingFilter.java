@@ -53,7 +53,7 @@ public class ConcatenatingFilter extends TokenFilter {
         input.end();
         inputEnded = true;
 
-        //MIVO: set attributes for the single output token
+        // Set attributes for the single output token
         offsetAtt.setOffset(0, offsetAtt.endOffset());
         posLenAtt.setPositionLength(1);
         posIncrAtt.setPositionIncrement(1);

@@ -146,7 +146,7 @@ public class TreatmentResponseMatcherTest {
         assertEquals(null, matchedResponses.get(0).treatmentId());
     }
 
-    // KODU:    --start(jan)-response(feb)-response(mar)-end(jul)-responseNE(aug)-response(sep)-start(okt)-response(nov)
+    //    --start(jan)-response(feb)-response(mar)-end(jul)-responseNE(aug)-response(sep)-start(okt)-response(nov)
     @Test
     public void realTimelineWorksAsExpected() {
         final List<BiopsyTreatmentData> treatments = Lists.newArrayList(TREATMENT_JAN2015_JUL2015, TREATMENT_OCT2015_NULL);

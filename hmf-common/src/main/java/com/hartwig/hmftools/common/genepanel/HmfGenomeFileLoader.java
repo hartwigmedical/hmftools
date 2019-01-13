@@ -103,7 +103,7 @@ public final class HmfGenomeFileLoader {
             codingStart = Long.valueOf(values[CODING_START_COLUMN]);
             codingEnd = Long.valueOf(values[CODING_END_COLUMN]);
         }
-        // TODO (KODU): Remove dependency on modifiable transcript region.
+        // TODO: Remove dependency on modifiable transcript region.
         return ModifiableHmfTranscriptRegion.create()
                 .setChromosome(chromosome)
                 .setStart(transcriptStart)

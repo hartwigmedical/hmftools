@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.knowledgebaseimporter
 
-// MIVO: CLI options
+// CLI options
 
 const val REFERENCE = "reference"
 const val TRANSVAR_LOCATION = "transvar_location"

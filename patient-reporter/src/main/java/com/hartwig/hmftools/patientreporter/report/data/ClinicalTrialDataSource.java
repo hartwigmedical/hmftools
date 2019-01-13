@@ -57,7 +57,7 @@ public class ClinicalTrialDataSource {
 
     @NotNull
     private static String CCMOId(@NotNull String reference) {
-        // KODU: Expected format "EXT1 (CCMO)"
+        // Expected format "EXT1 (CCMO)"
         String referenceWithoutParenthesis = reference.replace(")", "");
         String[] splitExtAndCCMO = referenceWithoutParenthesis.split("\\(");
         return splitExtAndCCMO[1];
@@ -94,7 +94,7 @@ public class ClinicalTrialDataSource {
 
     @NotNull
     private static String EXTId(@NotNull String reference) {
-        // KODU: Expected format "EXT1 (CCMO)"
+        // Expected format "EXT1 (CCMO)"
         String[] splitExtAndCCMO = reference.split("\\(");
         String ext = splitExtAndCCMO[0];
         return ext.substring(3).trim();

@@ -16,7 +16,7 @@ import org.jetbrains.annotations.NotNull;
 
 public final class ChordFileReader {
 
-    // LISC: chord files stores in {run}/chord/{sample}_chord_prediction.txt
+    // Chord files stores in {run}/chord/{sample}_chord_prediction.txt
     private static final String CHORD_BASE_DIRECTORY = "chord";
     private static final String CHORD_EXTENSION = "_chord_prediction.txt";
     private static final String VALUE_SEPARATOR = "\t";

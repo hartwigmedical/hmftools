@@ -37,7 +37,7 @@ public final class CopyNumberAnalyzer {
 
         List<EvidenceItem> filteredEvidence = ReportableEvidenceItemFactory.reportableFlatList(evidencePerGeneCopyNumber);
 
-        // KODU: Add gene copy numbers for which filtered evidence has been found but which were not selected yet.
+        // Add gene copy numbers for which filtered evidence has been found but which were not selected yet.
         for (Map.Entry<GeneCopyNumber, List<EvidenceItem>> entry : evidencePerGeneCopyNumber.entrySet()) {
             GeneCopyNumber geneCopyNumber = entry.getKey();
             if (!Collections.disjoint(entry.getValue(), filteredEvidence) && !reportableGeneCopyNumbers.contains(geneCopyNumber)) {

@@ -80,7 +80,7 @@ public final class SomaticVariantDataSource {
             Double variant1DriverLikelihood = variant1.driverLikelihood();
             Double variant2DriverLikelihood = variant2.driverLikelihood();
 
-            // KODU: Force any variant outside of driver catalog to the bottom of table.
+            // Force any variant outside of driver catalog to the bottom of table.
             double driverLikelihood1 = variant1DriverLikelihood != null ? variant1DriverLikelihood : -1;
             double driverLikelihood2 = variant2DriverLikelihood != null ? variant2DriverLikelihood : -1;
             if (Math.abs(driverLikelihood1 - driverLikelihood2) > 0.001) {

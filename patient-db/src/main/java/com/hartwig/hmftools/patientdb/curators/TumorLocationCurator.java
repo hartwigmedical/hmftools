@@ -46,7 +46,7 @@ public class TumorLocationCurator implements CleanableCurator {
             tumorLocationMap.put(searchTerm.toLowerCase(),
                     ImmutableCuratedTumorLocation.of(Utils.capitalize(primaryTumorLocation), Utils.capitalize(subType), searchTerm));
         }
-        // KODU: Need to create a copy of the key set so that we can remove elements from it without affecting the curation.
+        // Need to create a copy of the key set so that we can remove elements from it without affecting the curation.
         unusedSearchTerms = Sets.newHashSet(tumorLocationMap.keySet());
     }
 

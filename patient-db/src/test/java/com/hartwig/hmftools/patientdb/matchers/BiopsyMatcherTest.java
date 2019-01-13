@@ -43,7 +43,7 @@ public class BiopsyMatcherTest {
 
     private final static BiopsyData CLINICAL_BIOPSY_NULL = biopsyBuilder().build();
 
-    // MIVO:    ---biopsy(jul)/sample(jul)---
+    //    ---biopsy(jul)/sample(jul)---
     @Test
     public void biopsyAndSampleSameDateYieldsMatch() {
         final List<SampleData> sequencedBiopsies = Lists.newArrayList(SEQUENCED_BIOPSY_JUL);
@@ -52,7 +52,7 @@ public class BiopsyMatcherTest {
         runMatcherAndVerify(sequencedBiopsies, clinicalBiopsies, SEQUENCED_BIOPSY_JUL.sampleId());
     }
 
-    // MIVO:    ---biopsy(mar)-x-x-x-sample(jul)---
+    //    ---biopsy(mar)-x-x-x-sample(jul)---
     @Test
     public void biopsyBeforeSampleWithinThresholdYieldsMatch() {
         final List<SampleData> sequencedBiopsies = Lists.newArrayList(SEQUENCED_BIOPSY_JUL);
@@ -61,7 +61,7 @@ public class BiopsyMatcherTest {
         runMatcherAndVerify(sequencedBiopsies, clinicalBiopsies, SEQUENCED_BIOPSY_JUL.sampleId());
     }
 
-    // MIVO:    ---biopsy(jan)-x-x-x-x-x-sample(jul)---
+    //    ---biopsy(jan)-x-x-x-x-x-sample(jul)---
     @Test
     public void biopsyBeforeSampleOutsideThresholdYieldsNoMatch() {
         final List<SampleData> sequencedBiopsies = Lists.newArrayList(SEQUENCED_BIOPSY_JUL);
@@ -70,7 +70,7 @@ public class BiopsyMatcherTest {
         runMatcherAndVerify(sequencedBiopsies, clinicalBiopsies, null);
     }
 
-    // MIVO:    ---sample(aug)-biopsy(sep)---
+    //    ---sample(aug)-biopsy(sep)---
     @Test
     public void biopsyTakenAfterSampleArrivedYieldsNoMatch() {
         final List<SampleData> sequencedBiopsies = Lists.newArrayList(SEQUENCED_BIOPSY_AUG);
@@ -79,7 +79,7 @@ public class BiopsyMatcherTest {
         runMatcherAndVerify(sequencedBiopsies, clinicalBiopsies, null);
     }
 
-    // MIVO:    ---biopsy(feb)-biopsy(mar)-x-x-x-sample(jul)---
+    //    ---biopsy(feb)-biopsy(mar)-x-x-x-sample(jul)---
     @Test
     public void twoBiopsiesBeforeSampleWithinThresholdYieldsNoMatch() {
         final List<SampleData> sequencedBiopsies = Lists.newArrayList(SEQUENCED_BIOPSY_JUL);
@@ -88,7 +88,7 @@ public class BiopsyMatcherTest {
         runMatcherAndVerify(sequencedBiopsies, clinicalBiopsies, null, null);
     }
 
-    // MIVO:    ---biopsy(feb)-x-x-null(?)-x-sample(jul)---
+    //    ---biopsy(feb)-x-x-null(?)-x-sample(jul)---
     @Test
     public void twoBiopsiesSecondNullBeforeSampleWithinThresholdYieldsNoMatch() {
         final List<SampleData> sequencedBiopsies = Lists.newArrayList(SEQUENCED_BIOPSY_JUL);
@@ -97,7 +97,7 @@ public class BiopsyMatcherTest {
         runMatcherAndVerify(sequencedBiopsies, clinicalBiopsies, null, null);
     }
 
-    // MIVO:    ---null(?)-biopsy(feb)-x-x-x-x-sample(jul)---
+    //   ---null(?)-biopsy(feb)-x-x-x-x-sample(jul)---
     @Test
     public void twoBiopsiesFirstNullBeforeSampleWithinThresholdYieldsNoMatch() {
         final List<SampleData> sequencedBiopsies = Lists.newArrayList(SEQUENCED_BIOPSY_JUL);
@@ -106,7 +106,7 @@ public class BiopsyMatcherTest {
         runMatcherAndVerify(sequencedBiopsies, clinicalBiopsies, null, null);
     }
 
-    // MIVO:    ---biopsy(jan)-x-biopsy(mar)-x-x-x-sample(jul)---
+    //    ---biopsy(jan)-x-biopsy(mar)-x-x-x-sample(jul)---
     @Test
     public void twoBiopsiesBeforeSampleOneWithinThresholdYieldsMatch() {
         final List<SampleData> sequencedBiopsies = Lists.newArrayList(SEQUENCED_BIOPSY_JUL);
@@ -115,7 +115,7 @@ public class BiopsyMatcherTest {
         runMatcherAndVerify(sequencedBiopsies, clinicalBiopsies, null, SEQUENCED_BIOPSY_JUL.sampleId());
     }
 
-    // MIVO:    ---biopsy(jan)-x-biopsy(mar)-x-x-x-sample(jul)---
+    //    ---biopsy(jan)-x-biopsy(mar)-x-x-x-sample(jul)---
     @Test
     public void twoBiopsiesBeforeSample1WithinThresholdOutOfOrderYieldsMatch() {
         final List<SampleData> sequencedBiopsies = Lists.newArrayList(SEQUENCED_BIOPSY_JUL);
@@ -124,7 +124,7 @@ public class BiopsyMatcherTest {
         runMatcherAndVerify(sequencedBiopsies, clinicalBiopsies, null, SEQUENCED_BIOPSY_JUL.sampleId());
     }
 
-    // MIVO:    ---biopsy(jan)-biopsy(feb)-x-x-x-x-x-x-sample(sep)---
+    //    ---biopsy(jan)-biopsy(feb)-x-x-x-x-x-x-sample(sep)---
     @Test
     public void twoBiopsiesBeforeSampleOutsideThresholdYieldsNoMatch() {
         final List<SampleData> sequencedBiopsies = Lists.newArrayList(SEQUENCED_BIOPSY_SEP);
@@ -133,7 +133,7 @@ public class BiopsyMatcherTest {
         runMatcherAndVerify(sequencedBiopsies, clinicalBiopsies, null, null);
     }
 
-    // MIVO:    ---biopsy(feb)-x-x-x-x-sample(jul)-sample(aug)---
+    //    ---biopsy(feb)-x-x-x-x-sample(jul)-sample(aug)---
     @Test
     public void biopsyBefore2SamplesWithinThresholdYieldsMatch() {
         final List<SampleData> sequencedBiopsies = Lists.newArrayList(SEQUENCED_BIOPSY_JUL, SEQUENCED_BIOPSY_AUG);
@@ -142,7 +142,7 @@ public class BiopsyMatcherTest {
         runMatcherAndVerify(sequencedBiopsies, clinicalBiopsies, SEQUENCED_BIOPSY_JUL.sampleId());
     }
 
-    // MIVO:    ---biopsy(mar)-x-x-x-sample(jul)-x-biopsy(sep)---
+    //    ---biopsy(mar)-x-x-x-sample(jul)-x-biopsy(sep)---
     @Test
     public void oneSampleBetween2BiopsiesWithinThresholdYieldsMatch() {
         final List<SampleData> sequencedBiopsies = Lists.newArrayList(SEQUENCED_BIOPSY_JUL);
@@ -151,7 +151,7 @@ public class BiopsyMatcherTest {
         runMatcherAndVerify(sequencedBiopsies, clinicalBiopsies, SEQUENCED_BIOPSY_JUL.sampleId(), null);
     }
 
-    // MIVO:    ---biopsy(feb)-biopsy(mar)-x-x-x-x-sample(aug)-sample(sep)---
+    //    ---biopsy(feb)-biopsy(mar)-x-x-x-x-sample(aug)-sample(sep)---
     @Test
     public void twoSamplesAfterTwoBiopsiesYieldsNoMatch() {
         final List<SampleData> sequencedBiopsies = Lists.newArrayList(SEQUENCED_BIOPSY_SEP, SEQUENCED_BIOPSY_NOV);
@@ -160,7 +160,7 @@ public class BiopsyMatcherTest {
         runMatcherAndVerify(sequencedBiopsies, clinicalBiopsies, null, null);
     }
 
-    // MIVO:    ---biopsy(mar)-x-x-x-x-sample(aug)-biopsy(sep)-x-sample(nov)---
+    //    ---biopsy(mar)-x-x-x-x-sample(aug)-biopsy(sep)-x-sample(nov)---
     @Test
     public void twoSamplesBetweenTwoBiopsiesWithinThresholdYieldsMatch() {
         final List<SampleData> sequencedBiopsies = Lists.newArrayList(SEQUENCED_BIOPSY_AUG, SEQUENCED_BIOPSY_NOV);
@@ -169,7 +169,7 @@ public class BiopsyMatcherTest {
         runMatcherAndVerify(sequencedBiopsies, clinicalBiopsies, SEQUENCED_BIOPSY_AUG.sampleId(), SEQUENCED_BIOPSY_NOV.sampleId());
     }
 
-    // MIVO:    ---biopsy(jan)-x-x-x-x-x-x-sample(aug)-biopsy(sep)-x-sample(nov)---
+    //    ---biopsy(jan)-x-x-x-x-x-x-sample(aug)-biopsy(sep)-x-sample(nov)---
     @Test
     public void twoSamplesBetweenTwoBiopsiesOneOutsideThresholdYieldsMatch() {
         final List<SampleData> sequencedBiopsies = Lists.newArrayList(SEQUENCED_BIOPSY_AUG, SEQUENCED_BIOPSY_NOV);
@@ -178,7 +178,7 @@ public class BiopsyMatcherTest {
         runMatcherAndVerify(sequencedBiopsies, clinicalBiopsies, null, SEQUENCED_BIOPSY_NOV.sampleId());
     }
 
-    // KODU: --biopsy(mar)-x-x-x-x-sample(nov)--
+    // --biopsy(mar)-x-x-x-x-sample(nov)--
     @Test
     public void biopsyArrivedInNovButSamplingDateKnownYieldsMatch() {
         final List<SampleData> sequencedBiopsies = Lists.newArrayList(SEQUENCED_BIOPSY_ARRIVED_NOV_SAMPLED_MAR);
@@ -187,7 +187,7 @@ public class BiopsyMatcherTest {
         runMatcherAndVerify(sequencedBiopsies, clinicalBiopsies, SEQUENCED_BIOPSY_ARRIVED_NOV_SAMPLED_MAR.sampleId());
     }
 
-    // KODU: --biopsy(jan)-x-sample(mar)-x-x-sample_arrived(nov)--
+    // --biopsy(jan)-x-sample(mar)-x-x-sample_arrived(nov)--
     @Test
     public void biopsyFromJanArrivedInNovButSamplingDateInMarYieldsNoMatch() {
         final List<SampleData> sequencedBiopsies = Lists.newArrayList(SEQUENCED_BIOPSY_ARRIVED_NOV_SAMPLED_MAR);

@@ -42,7 +42,7 @@ class BiopsyReader {
         for (final EcrfStudyEvent studyEvent : patient.studyEventsPerOID(STUDY_BIOPSY)) {
             for (final EcrfForm form : studyEvent.nonEmptyFormsPerOID(FORM_BIOPSY)) {
                 String biopsyTaken = null;
-                // KODU: We assume 1:1 relation between biopsy form and tumor biopsy form
+                // We assume 1:1 relation between biopsy form and tumor biopsy form
                 for (final EcrfItemGroup biopsyGroup : form.nonEmptyItemGroupsPerOID(ITEMGROUP_BIOPSY)) {
                     biopsyTaken = biopsyGroup.readItemString(FIELD_BIOPSY_TAKEN);
                 }

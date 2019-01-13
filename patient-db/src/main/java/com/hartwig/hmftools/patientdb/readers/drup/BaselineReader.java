@@ -19,12 +19,12 @@ class BaselineReader {
     private static final String STUDY_END_OF_TRIAL = "SE.EOT";
 
     private static final String FORM_BASELINE = "FRM.BAS";
-    private static final String FORM_CSF = "FRM.CSF"; // KODU: Not sure where CSF stands for, could be "clinical study fields"?
-    private static final String FORM_REGISTRATION = "FRM.REG"; // KODU: Not sure where CSF stands for, could be "clinical study fields"?
+    private static final String FORM_CSF = "FRM.CSF"; // Not sure where CSF stands for, could be "clinical study fields"?
+    private static final String FORM_REGISTRATION = "FRM.REG";
     private static final String FORM_END_OF_TRIAL = "FRM.EOT";
 
     private static final String ITEMGROUP_BASELINE = "GRP.BAS";
-    private static final String ITEMGROUP_CSF = "GRP.CSF"; // KODU: Not sure where CSF stands for, could be "clinical study fields"?
+    private static final String ITEMGROUP_CSF = "GRP.CSF"; // Not sure where CSF stands for, could be "clinical study fields"?
     private static final String ITEMGROUP_REGISTRATION = "GRP.REG";
     private static final String ITEMGROUP_END_OF_TRIAL = "GRP.EOT";
 
@@ -80,7 +80,7 @@ class BaselineReader {
                     primaryTumorLocation = baselineItemGroup.readItemString(FIELD_PRIMARY_TUMOR_LOCATION_OTHER);
                 }
                 builder.curatedTumorLocation(tumorLocationCurator.search(primaryTumorLocation));
-                // KODU: This is somewhat ugly, the states are too tied with CPCT datamodel.
+                // This is somewhat ugly, the states are too tied with CPCT datamodel.
                 builder.informedConsentStatus(baselineForm.status());
                 builder.primaryTumorStatus(baselineForm.status());
             }
@@ -97,7 +97,7 @@ class BaselineReader {
                 if (birthYear != null) {
                     builder.birthYear(Integer.parseInt(birthYear));
                 }
-                // KODU: This is somewhat ugly, the states are too tied with CPCT datamodel.
+                // This is somewhat ugly, the states are too tied with CPCT datamodel.
                 builder.demographyStatus(csfForm.status());
                 builder.eligibilityStatus(csfForm.status());
             }
@@ -106,7 +106,7 @@ class BaselineReader {
         for (final EcrfForm registrationForm : studyEvent.nonEmptyFormsPerOID(FORM_REGISTRATION)) {
             for (final EcrfItemGroup registrationItemGroup : registrationForm.nonEmptyItemGroupsPerOID(ITEMGROUP_REGISTRATION)) {
                 builder.hospital(registrationItemGroup.readItemString(FIELD_HOSPITAL));
-                // KODU: This is somewhat ugly, the states are too tied with CPCT datamodel.
+                // This is somewhat ugly, the states are too tied with CPCT datamodel.
                 builder.selectionCriteriaStatus(registrationForm.status());
             }
         }

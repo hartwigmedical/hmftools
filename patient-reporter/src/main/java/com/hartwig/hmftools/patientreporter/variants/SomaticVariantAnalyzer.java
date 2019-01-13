@@ -54,7 +54,7 @@ public final class SomaticVariantAnalyzer {
 
         List<EvidenceItem> filteredEvidence = ReportableEvidenceItemFactory.reportableFlatList(evidencePerVariant);
 
-        // KODU: Add all variants with filtered evidence that have not previously been added.
+        // Add all variants with filtered evidence that have not previously been added.
         for (Map.Entry<EnrichedSomaticVariant, List<EvidenceItem>> entry : evidencePerVariant.entrySet()) {
             EnrichedSomaticVariant variant = entry.getKey();
             if (!variantsToReport.contains(variant) && !Collections.disjoint(entry.getValue(), filteredEvidence)) {
@@ -133,7 +133,7 @@ public final class SomaticVariantAnalyzer {
             } else if (driverCategoryPerGeneMap.get(variant.gene()) == DriverCategory.ONCO) {
                 return ONCO_CODING_EFFECTS_TO_REPORT.contains(effect);
             } else {
-                // KODU: If a variant has uncertain driver category we should always report.
+                // If a variant has uncertain driver category we should always report.
                 return TSG_CODING_EFFECTS_TO_REPORT.contains(effect) || ONCO_CODING_EFFECTS_TO_REPORT.contains(effect);
             }
         };

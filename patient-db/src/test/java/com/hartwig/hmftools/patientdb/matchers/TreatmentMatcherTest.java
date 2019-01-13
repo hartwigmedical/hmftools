@@ -43,7 +43,7 @@ public class TreatmentMatcherTest {
     private final static BiopsyData BIOPSY_SEP = biopsyBuilder().date(SEP2015).build();
     private final static BiopsyData BIOPSY_NULL = biopsyBuilder().date(null).build();
 
-    // LISC:    ---biopsy(mar)----no-treatment---
+    //    ---biopsy(mar)----no-treatment---
     @Test
     public void oneBiopsyNoTreatmentMatches() {
         final List<BiopsyData> biopsies = Lists.newArrayList(BIOPSY_MAR);
@@ -99,7 +99,7 @@ public class TreatmentMatcherTest {
         assertEquals(null, matchedTreatments.get(0).biopsyId());
     }
 
-    // LISC:    ---biopsy(jan)-start(feb)--- end (jul) --- biopt(sep) --- no treatment
+    //    ---biopsy(jan)-start(feb)--- end (jul) --- biopt(sep) --- no treatment
     @Test
     public void twoBiopsyMatchToTreatmentAndNoTreatment() {
         final List<BiopsyData> biopsies = Lists.newArrayList(BIOPSY_JAN, BIOPSY_SEP);
@@ -114,7 +114,7 @@ public class TreatmentMatcherTest {
         assertEquals(biopsies.get(1).id(), matchedBiopsyId2.intValue());
     }
 
-    // LISC:    ---biopsy(jan)-no treatment --- start(feb)---end (jul) --- biopsy(sep)
+    //    ---biopsy(jan)-no treatment --- start(feb)---end (jul) --- biopsy(sep)
     @Test
     public void twoBiopsyMatchToNoTreatmentAndTreatment() {
         final List<BiopsyData> biopsies = Lists.newArrayList(BIOPSY_JAN, BIOPSY_SEP);
@@ -141,7 +141,7 @@ public class TreatmentMatcherTest {
         assertEquals(biopsies.get(1).id(), matchedBiopsyId1.intValue());
     }
 
-    // KODU:    --- biopsy (null) - start(mar) ----
+    //    --- biopsy (null) - start(mar) ----
     @Test
     public void doesntMatchBiopsyWithNullDate() {
         final List<BiopsyData> biopsies = Lists.newArrayList(BIOPSY_NULL);

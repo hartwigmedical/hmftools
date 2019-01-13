@@ -31,7 +31,7 @@ class CancerTypeToDOIDMapper {
         final Map<String, Set<String>> cancerTypeMappings = Maps.newHashMap();
         final List<String> cancerTypeMappingLines = Files.readAllLines(new File(knowledgebaseCancerTypesPath).toPath());
 
-        // KODU: Skip header line
+        // Skip header line
         for (String cancerTypeMappingLine : cancerTypeMappingLines.subList(1, cancerTypeMappingLines.size())) {
             CancerTypeToDOIDMappingEntry entry = fromLine(cancerTypeMappingLine);
             cancerTypeMappings.put(entry.cancerType(), entry.doids());
@@ -57,7 +57,7 @@ class CancerTypeToDOIDMapper {
         String[] values = doidValue.split(DOID_DELIMITER);
         Set<String> doids = Sets.newHashSet();
         for (String value : values) {
-            // KODU: Expected format is "Doid(value=NNN)"
+            // Expected format is "Doid(value=NNN)"
             String doid = value.substring(value.indexOf("=") + 1, value.indexOf(")"));
             doids.add(doid.trim());
         }

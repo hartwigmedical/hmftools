@@ -16,7 +16,6 @@ class IdGenerator(private val password: String, private val defaultSeed: Int = 0
         return changePassword(newPassword, input, updatedIds)
     }
 
-    //MIVO: change current password
     fun changePassword(newPassword: String, input: Collection<String>, existingIds: Collection<HashId>): Collection<HashId> {
         checkPasswordMatchesForAllInputs(input, existingIds)
         checkAllPlaintextsExist(input, existingIds)
@@ -46,7 +45,7 @@ class IdGenerator(private val password: String, private val defaultSeed: Int = 0
         return existingIds.filterNot { inputHashes.contains(it.hash) }
     }
 
-    //MIVO: check that the old password is correct for all strings
+    // Check that the old password is correct for all strings
     private fun checkPasswordMatchesForAllInputs(input: Collection<String>, existingIds: Collection<HashId>) {
         val hashes = input.map { hash(it) }.toSet()
         val existingHashes = existingIds.map { it.hash }.toSet()
@@ -55,7 +54,7 @@ class IdGenerator(private val password: String, private val defaultSeed: Int = 0
         }
     }
 
-    //MIVO: check that plaintext collection matches the existing id collection
+    // Check that plaintext collection matches the existing id collection
     private fun checkAllPlaintextsExist(strings: Collection<String>, existingIds: Collection<HashId>) {
         val hashes = strings.map { hash(it) }.toSet()
         if (hashes.any { !existingIds.map { it.hash }.contains(it) }) {
@@ -65,7 +64,7 @@ class IdGenerator(private val password: String, private val defaultSeed: Int = 0
         }
     }
 
-    //MIVO: check that the old password matches for at least some of the strings
+    // Check that the old password matches for at least some of the strings
     private fun checkPasswordMatchesForSomeInputs(input: Collection<String>, existingIds: Collection<HashId>) {
         val hashes = input.map { hash(it) }.toSet()
         val existingHashes = existingIds.map { it.hash }.toSet()

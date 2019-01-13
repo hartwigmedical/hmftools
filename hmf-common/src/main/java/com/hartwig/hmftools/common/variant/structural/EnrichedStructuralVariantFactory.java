@@ -41,13 +41,13 @@ public final class EnrichedStructuralVariantFactory {
         for (final StructuralVariant variant : variants) {
             ImmutableEnrichedStructuralVariant.Builder builder = ImmutableEnrichedStructuralVariant.builder().from(variant);
             ImmutableEnrichedStructuralVariantLeg.Builder startBuilder = createBuilder(variant.start());
-            // KODU: Every SV should have a start, while end is optional.
+            // Every SV should have a start, while end is optional.
             assert startBuilder != null;
             ImmutableEnrichedStructuralVariantLeg.Builder endBuilder = createBuilder(variant.end());
 
             List<StructuralVariantLegPloidy> ploidies = ploidyFactory.create(variant, copyNumbers);
             if (!ploidies.isEmpty()) {
-                // KODU: The implied ploidy should be equal between start and end, so doesn't matter what we pick.
+                // The implied ploidy should be equal between start and end, so doesn't matter what we pick.
                 builder.ploidy(round(ploidies.get(0).averageImpliedPloidy()));
 
                 StructuralVariantLegPloidy start = ploidies.get(0);

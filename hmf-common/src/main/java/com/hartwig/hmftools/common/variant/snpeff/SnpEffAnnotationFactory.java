@@ -45,7 +45,7 @@ public final class SnpEffAnnotationFactory {
     }
 
     @NotNull
-    // TODO (KODU): Doesn't really belong here..
+    // TODO: Doesn't really belong here..
     public static List<String> rawAnnotations(@NotNull final VariantContext context) {
         if (context.hasAttribute(SNPEFF_IDENTIFIER)) {
             return context.getAttributeAsStringList(SNPEFF_IDENTIFIER, "");

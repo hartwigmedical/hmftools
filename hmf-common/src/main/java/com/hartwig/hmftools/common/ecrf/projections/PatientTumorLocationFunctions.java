@@ -24,7 +24,7 @@ public final class PatientTumorLocationFunctions {
                 .filter(patientTumorLocation -> patientTumorLocation.patientIdentifier().equals(patientIdentifier))
                 .collect(Collectors.toList());
 
-        // KODU: We should never have more than one curated tumor location for a single patient.
+        // We should never have more than one curated tumor location for a single patient.
         assert matchingIdTumorLocations.size() < 2;
 
         if (matchingIdTumorLocations.size() == 1) {
@@ -40,7 +40,7 @@ public final class PatientTumorLocationFunctions {
         if (sample.length() >= 12 && (sample.startsWith("CPCT") || sample.startsWith("DRUP"))) {
             return sample.substring(0, 12);
         }
-        // KODU: If we want to generate a report for non-CPCT/non-DRUP we assume patient and sample are identical.
+        // If we want to generate a report for non-CPCT/non-DRUP we assume patient and sample are identical.
         return sample;
     }
 }

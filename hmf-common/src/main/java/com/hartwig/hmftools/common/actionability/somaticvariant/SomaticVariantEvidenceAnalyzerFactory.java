@@ -25,12 +25,12 @@ public final class SomaticVariantEvidenceAnalyzerFactory {
         final List<String> lineVariants = Files.readAllLines(new File(fileVariants).toPath());
         final List<String> lineRanges = Files.readAllLines(new File(fileRanges).toPath());
 
-        // KODU: Skip header line
+        // Skip header line
         for (String lineVariant : lineVariants.subList(1, lineVariants.size())) {
             variants.add(fromLineVariants(lineVariant));
         }
 
-        // KODU: Skip header line
+        // Skip header line
         for (String lineRange : lineRanges.subList(1, lineRanges.size())) {
             ranges.add(fromLineRanges(lineRange));
         }

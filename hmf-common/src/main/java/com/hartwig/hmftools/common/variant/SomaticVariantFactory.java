@@ -19,7 +19,6 @@ import com.hartwig.hmftools.common.variant.enrich.NoSomaticEnrichment;
 import com.hartwig.hmftools.common.variant.enrich.SomaticEnrichment;
 import com.hartwig.hmftools.common.variant.filter.AlwaysPassFilter;
 import com.hartwig.hmftools.common.variant.filter.ChromosomeFilter;
-import com.hartwig.hmftools.common.variant.filter.HotspotFilter;
 import com.hartwig.hmftools.common.variant.filter.NTFilter;
 import com.hartwig.hmftools.common.variant.filter.NearIndelPonFilter;
 import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotation;
@@ -132,7 +131,7 @@ public class SomaticVariantFactory {
     }
 
     @NotNull
-    // TODO (KODU): This function is used by BachelorPP, should probably change.
+    // TODO: This function is used by BachelorPP, should probably change.
     public Optional<SomaticVariant> createVariant(@NotNull final String sample, @NotNull final VariantContext context) {
         final Genotype genotype = context.getGenotype(sample);
 

@@ -79,7 +79,7 @@ public abstract class SnpEffAnnotation implements TranscriptAnnotation {
     @NotNull
     abstract String addition();
 
-    // KODU: When we use the feature ID it is in practice always a transcript,
+    // When we use the feature ID it is in practice always a transcript,
     // but this mapping may not hold for every single snpeff annotation!
     @Override
     @NotNull

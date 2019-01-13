@@ -64,14 +64,14 @@ public class EcrfItemGroup {
 
     @Nullable
     public String readItemString(@NotNull final String itemOID) {
-        // KODU: In theory we could have multiple values for one itemOID in one item group but in practice there is always a 1:1 relation.
+        // In theory we could have multiple values for one itemOID in one item group but in practice there is always a 1:1 relation.
         if (!itemsPerOID(itemOID).isEmpty()) {
             final String ecrfValue = itemsPerOID(itemOID).get(0);
             if (ecrfValue != null) {
                 if (ecrfValue.replaceAll("\\s", "").length() == 0) {
                     return null;
                 } else {
-                    //MIVO: remove whitespace + non-breakable spaces
+                    // Remove whitespace + non-breakable spaces
                     return ecrfValue.trim().replaceAll("\\u00A0", "");
                 }
             }

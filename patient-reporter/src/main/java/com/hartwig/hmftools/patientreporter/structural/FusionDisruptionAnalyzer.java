@@ -39,7 +39,7 @@ public final class FusionDisruptionAnalyzer {
 
         List<EvidenceItem> filteredEvidence = ReportableEvidenceItemFactory.reportableFlatList(evidencePerFusion);
 
-        // KODU: Add all fusions with filtered evidence that have not previously been added.
+        // Add all fusions with filtered evidence that have not previously been added.
         for (Map.Entry<SimpleGeneFusion, List<EvidenceItem>> entry : evidencePerFusion.entrySet()) {
             SimpleGeneFusion fusion = entry.getKey();
             if (!fiveThreeCombinationExists(reportableFusions, fusion) && !Collections.disjoint(entry.getValue(), filteredEvidence)) {
@@ -95,7 +95,7 @@ public final class FusionDisruptionAnalyzer {
             }
         }
 
-        // KODU: If there is no canonical-canonical fusion, return the first one arbitrarily.
+        // If there is no canonical-canonical fusion, return the first one arbitrarily.
         assert !fusions.isEmpty();
         return fusions.get(0);
     }

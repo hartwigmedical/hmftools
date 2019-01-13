@@ -199,7 +199,7 @@ public class TreatmentCurator implements CleanableCurator {
 
             return Optional.empty();
         } catch (IOException | NullPointerException exception) {
-            // LISC: NullPointerException raised when query is null
+            // NullPointerException raised when query is null
             // (happens when search term contains only separator characters like whitespace, commas, punctuation, etc)
             LOGGER.error("Caught {} in treatment curation for search term {}. Error message: {} ",
                     exception.getClass().getName(),

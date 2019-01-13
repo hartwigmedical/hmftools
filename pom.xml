@@ -418,7 +418,7 @@
                 <version>${rtree.version}</version>
             </dependency>
 
-            <!-- KODU: Test dependencies -->
+            <!-- Test dependencies -->
             <dependency>
                 <groupId>com.hartwig</groupId>
                 <artifactId>hmf-common</artifactId>

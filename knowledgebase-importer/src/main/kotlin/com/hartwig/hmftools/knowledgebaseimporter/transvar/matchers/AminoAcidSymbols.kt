@@ -22,10 +22,10 @@ object AminoAcidSymbols {
                                    "N" to "Asn",
                                    "D" to "Asp",
                                    "T" to "Thr",
-            // KODU: The ambiguous symbols are explained here: http://www.hgvs.org/mutnomen/standards.html
+            // The ambiguous symbols are explained here: http://www.hgvs.org/mutnomen/standards.html
                                    "Z" to "Glx",
                                    "B" to "Asx",
-            // MIVO: stop codon:
+            // stop codon:
                                    "*" to "Ter")
 
     private val threeToOne = oneToThree.map { (letter, letters) -> Pair(letters, letter) }.toMap()

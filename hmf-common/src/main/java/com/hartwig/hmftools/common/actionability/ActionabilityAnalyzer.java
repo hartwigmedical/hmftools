@@ -115,7 +115,7 @@ public class ActionabilityAnalyzer {
                 .filter(geneCopyNumber -> copyNumberAnalyzer.actionableGenes().contains(geneCopyNumber.gene()))
                 .collect(Collectors.toList());
 
-        // KODU: Filtering on significant events is not necessary but just to avoid unnecessary keys with empty evidence
+        // Filtering on significant events is not necessary but just to avoid unnecessary keys with empty evidence
         List<GeneCopyNumber> significantGeneCopyNumbersOnActionableGenes =
                 SignificantGeneCopyNumberFilter.filterForSignificance(geneCopyNumbersOnActionableGenes, averageTumorPloidy);
 

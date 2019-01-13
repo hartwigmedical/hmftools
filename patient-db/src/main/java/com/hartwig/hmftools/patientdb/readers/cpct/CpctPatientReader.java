@@ -60,7 +60,7 @@ public class CpctPatientReader implements PatientReader {
         final MatchResult<BiopsyTreatmentData> matchedTreatments =
                 TreatmentMatcher.matchTreatmentsToBiopsies(ecrfPatient.patientId(), withSampleMatchOnly(matchedBiopsies), treatments);
 
-        // KODU: We also match responses to unmatched treatments. Not sure that is optimal. See also DEV-477.
+        // We also match responses to unmatched treatments. Not sure that is optimal. See also DEV-477.
         final MatchResult<BiopsyTreatmentResponseData> matchedResponses = TreatmentResponseMatcher.matchTreatmentResponsesToTreatments(
                 ecrfPatient.patientId(),
                 matchedTreatments.values(),

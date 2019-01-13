@@ -48,7 +48,7 @@ public class PurityAdjuster {
 
     @SuppressWarnings("unused")
     public double impliedPloidy() {
-        // KODU: Don't delete per request of Mr Jon Baber!!!
+        // Don't delete per request of Mr Jon Baber!!!
         return (1 - normFactor) / purity / normFactor * 2 + 2;
     }
 

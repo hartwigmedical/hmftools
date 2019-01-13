@@ -33,7 +33,7 @@ final class BiopsyTreatmentResponseReader {
         final List<BiopsyTreatmentResponseData> treatmentResponses = Lists.newArrayList();
         for (final EcrfStudyEvent studyEvent : patient.studyEventsPerOID(STUDY_TREATMENT)) {
             for (final EcrfForm form : studyEvent.nonEmptyFormsPerOID(FORM_TUMOR_MEASUREMENT)) {
-                // KODU: There are generally multiple assessment dates per tumor measurement (one per target lesion)
+                // There are generally multiple assessment dates per tumor measurement (one per target lesion)
                 LocalDate assessmentDate = null;
                 for (final EcrfItemGroup itemGroup : form.nonEmptyItemGroupsPerOID(ITEMGROUP_MEASUREMENT)) {
                     final LocalDate date = itemGroup.readItemDate(FIELD_ASSESSMENT_DATE);

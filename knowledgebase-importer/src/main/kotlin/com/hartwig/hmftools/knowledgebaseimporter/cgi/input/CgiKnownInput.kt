@@ -10,7 +10,7 @@ data class CgiKnownInput(override val gene: String, override val transcript: Str
     override fun correct(): CgiKnownInput? {
         return when {
             context != "somatic"        -> null
-            // KODU: Not confirmed yet. Variants on BCL10 seem to be annotated with a completely wrong transcript.
+            // Not confirmed yet. Variants on BCL10 seem to be annotated with a completely wrong transcript.
             //  transcript == "ENST00000271015"       -> copy(transcript = "ENST00000370580")
             else                        -> this
         }

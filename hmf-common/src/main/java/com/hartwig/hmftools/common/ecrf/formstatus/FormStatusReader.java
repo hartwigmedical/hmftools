@@ -48,7 +48,7 @@ public final class FormStatusReader {
     public static FormStatusModel buildModelFromCsv(@NotNull final String pathToCsv) throws IOException {
         final Map<FormStatusKey, FormStatus> formStatuses = Maps.newHashMap();
         final List<String> lines = FileReader.build().readLines(new File(pathToCsv).toPath());
-        // KODU: No need to read the header line
+        // No need to read the header line
         lines.remove(0);
         for (final String line : lines) {
             final String[] parts = splitCsvLine(line, FIELD_SEPARATOR, FIELD_COUNT);
@@ -66,7 +66,7 @@ public final class FormStatusReader {
         return new ImmutableFormStatusModel(formStatuses);
     }
 
-    //MIVO: split a line in a csv/tsv file by the separator, ignoring occurrences of separator in quoted groups
+    // Split a line in a csv/tsv file by the separator, ignoring occurrences of separator in quoted groups
     @SuppressWarnings("SameParameterValue")
     @NotNull
     private static String[] splitCsvLine(@NotNull final String line, @NotNull final String separator, final int limit) {

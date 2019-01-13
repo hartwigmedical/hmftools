@@ -46,7 +46,7 @@ public final class BachelorFile {
     @NotNull
     private static List<GermlineVariant> fromLines(@NotNull List<String> lines) {
         List<GermlineVariant> germlineVariants = Lists.newArrayList();
-        // KODU: Skip header line
+        // Skip header line
         for (String line : lines.subList(1, lines.size())) {
             germlineVariants.add(fromString(line));
         }

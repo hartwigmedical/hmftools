@@ -54,7 +54,7 @@ public final class ReportableGeneDisruptionFactory {
                     .gene(gene)
                     .type(gene(primaryDisruption).variant().type())
                     .range(rangeField(pairedDisruption))
-                    // KODU: Not sure when ploidy ever would be null
+                    // Not sure when ploidy ever would be null
                     .ploidy(ploidy != null ? ploidy : Double.NaN)
                     .geneMinCopies(geneMinCopies)
                     .geneMaxCopies(geneMaxCopies)

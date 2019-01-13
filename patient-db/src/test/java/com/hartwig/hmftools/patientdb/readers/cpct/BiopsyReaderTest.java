@@ -53,7 +53,7 @@ public class BiopsyReaderTest {
         biopsy.addItem(BiopsyReader.FIELD_BIOPSY_TAKEN, "Yes");
         biopsy.addItem(BiopsyReader.FIELD_BIOPSY_EVALUABLE, "Yes");
 
-        // KODU: Create initial biopsy.
+        // Create initial biopsy.
         EcrfItemGroup biopsies1 = new EcrfItemGroup();
         biopsies1.addItem(BiopsyReader.FIELD_BIOPSY_DATE, "2017-11-10");
         biopsies1.addItem(BiopsyReader.FIELD_SITE, "other");
@@ -64,13 +64,13 @@ public class BiopsyReaderTest {
         form1.addItemGroup(BiopsyReader.ITEMGROUP_BIOPSY, biopsy);
         form1.addItemGroup(BiopsyReader.ITEMGROUP_BIOPSIES, biopsies1);
 
-        // KODU: Create empty 2nd biopsy
+        // Create empty 2nd biopsy
         EcrfItemGroup biopsies2 = new EcrfItemGroup();
         EcrfForm form2 = new EcrfForm(FormStatus.undefined());
         form2.addItemGroup(BiopsyReader.ITEMGROUP_BIOPSY, biopsy);
         form2.addItemGroup(BiopsyReader.ITEMGROUP_BIOPSIES, biopsies2);
 
-        // KODU: Create duplicate 3rd biopsy
+        // Create duplicate 3rd biopsy
         EcrfItemGroup biopsies3 = new EcrfItemGroup();
         biopsies3.addItem(BiopsyReader.FIELD_BIOPSY_DATE, "2017-11-10");
         biopsies3.addItem(BiopsyReader.FIELD_SITE, "other");

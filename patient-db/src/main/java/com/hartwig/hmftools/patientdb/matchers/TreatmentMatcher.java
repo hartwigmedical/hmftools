@@ -36,7 +36,7 @@ public final class TreatmentMatcher {
         List<BiopsyTreatmentData> yesTreatments = getYesTreatments(treatments);
         List<BiopsyTreatmentData> notYesTreatments = getNotYesTreatments(treatments);
 
-        // KODU: First match yes-treatments
+        // First match yes-treatments
         for (final BiopsyTreatmentData treatment : yesTreatments) {
             LocalDate startDate = treatment.startDate();
             if (startDate == null) {
@@ -58,7 +58,7 @@ public final class TreatmentMatcher {
             }
         }
 
-        // KODU: Then distribute not-yes treatments over remaining biopsies.
+        // Then distribute not-yes treatments over remaining biopsies.
         for (final BiopsyTreatmentData treatment : notYesTreatments) {
             final String treatmentGiven = treatment.treatmentGiven();
 

@@ -23,7 +23,7 @@ class MetricDAO {
         Double tumor30xCoveragePercentage = metrics.tumor30xCoveragePercentage();
         Double tumor60xCoveragePercentage = metrics.tumor60xCoveragePercentage();
 
-        // KODU: We only write metrics for somatic runs.
+        // We only write metrics for somatic runs.
         assert tumorMeanCoverage != null;
         assert tumor30xCoveragePercentage != null;
         assert tumor60xCoveragePercentage != null;

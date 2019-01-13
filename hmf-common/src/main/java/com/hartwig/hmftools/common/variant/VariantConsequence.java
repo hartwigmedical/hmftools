@@ -8,7 +8,7 @@ import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 public enum VariantConsequence {
-    // KODU: See also http://sequenceontology.org
+    // See also http://sequenceontology.org
     TRANSCRIPT("transcript"),
     NON_CODING_TRANSCRIPT_VARIANT("non_coding_transcript_variant", "non_coding_transcript_exon_variant"),
     INTRON_VARIANT("intron_variant"),

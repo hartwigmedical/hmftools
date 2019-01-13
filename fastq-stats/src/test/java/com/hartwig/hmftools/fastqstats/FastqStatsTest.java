@@ -17,7 +17,7 @@ import com.google.common.io.Resources;
 import org.junit.Test;
 
 public class FastqStatsTest {
-    // MIVO: 100% of baseCalls have a quality score >30
+    // 100% of baseCalls have a quality score >30
     @Test
     public void computesCorrectStatsFor100PercentDir() throws IOException, InterruptedException {
         final URL path = Resources.getResource("DeterminedBaseCalls-100");
@@ -31,7 +31,7 @@ public class FastqStatsTest {
         assertEquals(100.0, tracker.lane("L001").q30Percentage(), 0.00001);
     }
 
-    // MIVO: Sample Z has 50% Q30, others 100%
+    // Sample Z has 50% Q30, others 100%
     @Test
     public void computesCorrectStatsForIndividualSamples() throws IOException, InterruptedException {
         final URL path = Resources.getResource("DeterminedBaseCalls-100&50");
@@ -50,7 +50,7 @@ public class FastqStatsTest {
         assertEquals(50, tracker.samples().get("TESTZ").get("L001").q30());
     }
 
-    // MIVO: 1 Sample (X), 3 Lanes; Lane 3 has 50% Q30, others 100%
+    // 1 Sample (X), 3 Lanes; Lane 3 has 50% Q30, others 100%
     @Test
     public void computesCorrectStatsForIndividualLanes() throws IOException, InterruptedException {
         final URL path = Resources.getResource("DeterminedBaseCallsMultiLane-100&50");
@@ -71,7 +71,7 @@ public class FastqStatsTest {
         assertEquals(50, tracker.lane("L003").q30Percentage(), 0.01);
     }
 
-    // MIVO: 50% of baseCalls belong to undetermined sample
+    // 50% of baseCalls belong to undetermined sample
     @Test
     public void computesCorrectPercentageOfUndetermined50() throws IOException, InterruptedException {
         final URL path = Resources.getResource("50UndeterminedBaseCalls");
@@ -88,7 +88,7 @@ public class FastqStatsTest {
         assertEquals(300, tracker.samples().get("Undetermined").get("L001").q30());
     }
 
-    // MIVO: 100% of baseCalls belong to undetermined sample
+    // 100% of baseCalls belong to undetermined sample
     @Test
     public void computesCorrectPercentageOfUndetermined100() throws IOException, InterruptedException {
         final URL path = Resources.getResource("100UndeterminedBaseCalls");
@@ -105,7 +105,7 @@ public class FastqStatsTest {
         assertEquals(300, tracker.samples().get("Undetermined").get("L002").q30());
     }
 
-    // MIVO: 50% of baseCalls are undetermined and all undetermined have Q30 of 0
+    // 50% of baseCalls are undetermined and all undetermined have Q30 of 0
     @Test
     public void computesCorrectStatsOfUndeterminedLane() throws IOException, InterruptedException {
         final URL path = Resources.getResource("UndeterminedBaseCalls0Q30");
@@ -123,7 +123,7 @@ public class FastqStatsTest {
         assertEquals(0, tracker.samples().get("Undetermined").get("L002").q30());
     }
 
-    // MIVO: 100% of baseCalls have a quality score >30, but sample X is corrupt (has .fastq.gz extension, but is plain text).
+    // 100% of baseCalls have a quality score >30, but sample X is corrupt (has .fastq.gz extension, but is plain text).
     @Test
     public void skipsFailedSampleFile() throws IOException, InterruptedException {
         final URL path = Resources.getResource("CorruptSampleXFile");
@@ -138,7 +138,7 @@ public class FastqStatsTest {
         assertEquals(100.0, laneQ30Percentage, 0.00001);
     }
 
-    // MIVO: 100% of baseCalls belong to undetermined sample, but 1 file is corrupt (has .fastq.gz extension, but is plain text).
+    // 100% of baseCalls belong to undetermined sample, but 1 file is corrupt (has .fastq.gz extension, but is plain text).
     @Test
     public void skipsFailedUndeterminedSampleFile() throws IOException, InterruptedException {
         final URL path = Resources.getResource("CorruptUndeterminedSampleFile");

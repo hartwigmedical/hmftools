@@ -315,7 +315,7 @@ public class StructuralVariantAnnotator
 
         final List<PurpleCopyNumber> copyNumberList = mDbAccess.readCopynumbers(sampleId);
 
-        // KODU: Not sure what cleanest solution is to prevent potential NPE?
+        // Not sure what cleanest solution is to prevent potential NPE?
         final Multimap<Chromosome, PurpleCopyNumber> copyNumbers =
                 Multimaps.index(copyNumberList, x -> HumanChromosome.fromString(x.chromosome()));
 
@@ -331,7 +331,7 @@ public class StructuralVariantAnnotator
             StructuralVariantAnnotation annotation = new StructuralVariantAnnotation(var);
 
             Integer primaryKey = var.primaryKey();
-            assert primaryKey != null; // KODU: Not sure why this assert is valid here...
+            assert primaryKey != null; // Not sure why this assert is valid here...
 
             List<GeneAnnotation> genesList = mSvGeneTranscriptCollection.findGeneAnnotationsBySv(
                     primaryKey, true, var.chromosome(true), var.position(true), var.orientation(true));
