@@ -1,2 +1,2 @@
 ALTER TABLE somaticVariant
-    ADD recovered BOOLEAN NOT NULL AFTER minorAllelePloidy;
+    ADD recovered BOOLEAN NOT NULL DEFAULT 0 AFTER minorAllelePloidy;
