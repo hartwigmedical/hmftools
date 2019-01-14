@@ -55,7 +55,7 @@ public class TreatmentMatcherTest {
         assertEquals(biopsies.get(0).id(), matchedBiopsyId.intValue());
     }
 
-    // MIVO:    ---start(feb)-biopsy(mar)----end(jul)---
+    //    ---start(feb)-biopsy(mar)----end(jul)---
     @Test
     public void treatmentStartBeforeBiopsyFails() {
         final List<BiopsyData> biopsies = Lists.newArrayList(BIOPSY_MAR);
@@ -65,7 +65,7 @@ public class TreatmentMatcherTest {
         assertNull(matchedTreatments.get(0).biopsyId());
     }
 
-    // MIVO:    ---start/biopsy(feb)-----end(jul)---
+    //    ---start/biopsy(feb)-----end(jul)---
     @Test
     public void treatmentStartSameDateBiopsySucceeds() {
         final List<BiopsyData> biopsies = Lists.newArrayList(BIOPSY_FEB);
@@ -77,7 +77,7 @@ public class TreatmentMatcherTest {
         assertEquals(biopsies.get(0).id(), matchedBiopsyId.intValue());
     }
 
-    // MIVO:    ---biopsy(jan)-start(feb)-----end(jul)---
+    //    ---biopsy(jan)-start(feb)-----end(jul)---
     @Test
     public void treatmentStartAfterBiopsySucceeds() {
         final List<BiopsyData> biopsies = Lists.newArrayList(BIOPSY_JAN);
@@ -89,7 +89,7 @@ public class TreatmentMatcherTest {
         assertEquals(biopsies.get(0).id(), matchedBiopsyId.intValue());
     }
 
-    // MIVO:    ---biopsy(jan)----start(may)----end(sep)---
+    //    ---biopsy(jan)----start(may)----end(sep)---
     @Test
     public void testTreatmentStart4MonthsAfterBiopsyFails() {
         final List<BiopsyData> biopsies = Lists.newArrayList(BIOPSY_JAN);
@@ -129,7 +129,7 @@ public class TreatmentMatcherTest {
         assertEquals(biopsies.get(0).id(), matchedBiopsyId2.intValue());
     }
 
-    // MIVO:    ---biopsy(jan)-biopsy(feb)-start(mar)-------end(null)
+    //    ---biopsy(jan)-biopsy(feb)-start(mar)-------end(null)
     @Test
     public void matchesToMostRecentBiopsy() {
         final List<BiopsyData> biopsies = Lists.newArrayList(BIOPSY_JAN, BIOPSY_FEB);

@@ -16,8 +16,8 @@ data class SimpleSomaticMutation(private val fields: Map<SimpleSomaticMutationHe
     companion object Factory {
         private val logger = LogManager.getLogger(SimpleSomaticMutation::class)
         val header: KClass<SimpleSomaticMutationHeader> = SimpleSomaticMutationHeader::class
-        private val CHROMOSOME_STRAND = "1"                             //MIVO: 1 = forward
-        private val VERIFICATION_STATUS = "2"                           //MIVO: 2 = not tested
+        private val CHROMOSOME_STRAND = "1"                             // 1 = forward
+        private val VERIFICATION_STATUS = "2"                           // 2 = not tested
         private operator fun invoke(analysisId: String, sampleId: String, mutationType: String, chromosome: String, start: Int, end: Int,
                                     ref: String, alt: String): SimpleSomaticMutation {
             val controlGenotype = "$ref/$ref"

@@ -96,7 +96,7 @@ class GenerateCircosData {
         }
 
         for (final Future<Object> future : futures) {
-            // JOBA: This (intentionally) has side effect of alerting users to any exceptions
+            // This (intentionally) has side effect of alerting users to any exceptions
             future.get();
         }
     }

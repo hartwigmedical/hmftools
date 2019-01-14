@@ -103,28 +103,28 @@ public class PurityPloidyEstimateApplication {
         final int threads = cmd.hasOption(THREADS) ? Integer.valueOf(cmd.getOptionValue(THREADS)) : THREADS_DEFAULT;
         final ExecutorService executorService = Executors.newFixedThreadPool(threads);
         try {
-            // JOBA: Get common config
+            // Get common config
             final ConfigSupplier configSupplier = new ConfigSupplier(cmd, options);
             final CommonConfig config = configSupplier.commonConfig();
             final String outputDirectory = config.outputDirectory();
             final String tumorSample = config.tumorSample();
 
-            // JOBA: Load Amber Data
+            // Load Amber Data
             final Gender amberGender = configSupplier.amberData().gender();
             final Multimap<Chromosome, AmberBAF> bafs = configSupplier.amberData().bafs();
             int averageTumorDepth = configSupplier.amberData().averageTumorDepth();
 
-            // JOBA: Load Cobalt Data
+            // Load Cobalt Data
             final Gender cobaltGender = configSupplier.cobaltData().gender();
 
-            // JOBA: Gender
+            // Gender
             if (cobaltGender.equals(amberGender)) {
                 LOGGER.info("Sample gender is {}", cobaltGender.toString().toLowerCase());
             } else {
                 LOGGER.warn("COBALT gender {} does not match AMBER gender {}", cobaltGender, amberGender);
             }
 
-            // JOBA: Load structural and somatic variants
+            // Load structural and somatic variants
             final PurpleStructuralVariantSupplier structuralVariants = structuralVariants(configSupplier);
             final List<SomaticVariant> allSomatics = somaticVariants(configSupplier);
             final List<SomaticVariant> snpSomatics = allSomatics.stream().filter(SomaticVariant::isSnp).collect(Collectors.toList());
@@ -245,6 +245,7 @@ public class PurityPloidyEstimateApplication {
         LOGGER.info("Complete");
     }
 
+    @NotNull
     private BestFit fitPurity(final ExecutorService executorService, final ConfigSupplier configSupplier, final Gender cobaltGender,
             final List<SomaticVariant> snpSomatics, final List<ObservedRegion> observedRegions,
             final FittedRegionFactory fittedRegionFactory) throws ExecutionException, InterruptedException {

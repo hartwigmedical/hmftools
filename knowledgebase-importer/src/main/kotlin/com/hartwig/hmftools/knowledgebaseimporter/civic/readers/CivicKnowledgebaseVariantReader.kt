@@ -5,7 +5,7 @@ import com.hartwig.hmftools.knowledgebaseimporter.knowledgebases.KnowledgebaseVa
 import com.hartwig.hmftools.knowledgebaseimporter.knowledgebases.readers.SomaticEventReader
 
 object CivicKnowledgebaseVariantReader : SomaticEventReader<CivicVariantInput, KnowledgebaseVariant> {
-    // MIVO: allow ref or alt to be empty since civic annotates insertions as ['' -> 'GATC'] and deletions as ['GATC' -> '']
+    // Allow ref or alt to be empty since civic annotates insertions as ['' -> 'GATC'] and deletions as ['GATC' -> '']
     private fun match(event: CivicVariantInput) = event.hasPosition && event.hasRefOrAlt
 
     override fun read(event: CivicVariantInput): List<KnowledgebaseVariant> {

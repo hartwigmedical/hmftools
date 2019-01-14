@@ -45,7 +45,7 @@ public class TreatmentResponseMatcherTest {
     private final static BiopsyTreatmentResponseData RESPONSE_NOV2015 = responseOnDate(NOV2015);
     private final static BiopsyTreatmentResponseData RESPONSE_NULL = responseOnDate(null);
 
-    // MIVO:    ---response(jan)-start(feb)-----end(jul)--
+    //    ---response(jan)-start(feb)-----end(jul)--
     @Test
     public void responseBeforeStartFails() {
         final List<BiopsyTreatmentData> treatments = Lists.newArrayList(TREATMENT_FEB2015_JUL2015);
@@ -56,7 +56,7 @@ public class TreatmentResponseMatcherTest {
         assertEquals(null, matchedResponses.get(0).treatmentId());
     }
 
-    // MIVO:    ---start/response(feb)-----end(jul)--
+    //    ---start/response(feb)-----end(jul)--
     @Test
     public void responseSameDateAsStartFails() {
         final List<BiopsyTreatmentData> treatments = Lists.newArrayList(TREATMENT_FEB2015_JUL2015);
@@ -67,7 +67,7 @@ public class TreatmentResponseMatcherTest {
         assertEquals(null, matchedResponses.get(0).treatmentId());
     }
 
-    // MIVO:    ---start(feb)-response(mar)----end(jul)--
+    //    ---start(feb)-response(mar)----end(jul)--
     @Test
     public void responseAfterStartBeforeEndSucceeds() {
         final List<BiopsyTreatmentData> treatments = Lists.newArrayList(TREATMENT_FEB2015_JUL2015);
@@ -78,7 +78,7 @@ public class TreatmentResponseMatcherTest {
         assertMatch(treatments.get(0).id(), matchedResponses.get(0).treatmentId());
     }
 
-    // MIVO:    ---start(feb)-----end/response(jul)--
+    //    ---start(feb)-----end/response(jul)--
     @Test
     public void responseAfterStartSameDateAsEndSucceeds() {
         final List<BiopsyTreatmentData> treatments = Lists.newArrayList(TREATMENT_FEB2015_JUL2015);
@@ -89,7 +89,7 @@ public class TreatmentResponseMatcherTest {
         assertMatch(treatments.get(0).id(), matchedResponses.get(0).treatmentId());
     }
 
-    // MIVO:    ---start(feb)-----end(jul)-response(aug)--
+    //    ---start(feb)-----end(jul)-response(aug)--
     @Test
     public void responseAfterEndSucceeds() {
         final List<BiopsyTreatmentData> treatments = Lists.newArrayList(TREATMENT_FEB2015_JUL2015);
@@ -100,7 +100,7 @@ public class TreatmentResponseMatcherTest {
         assertMatch(treatments.get(0).id(), matchedResponses.get(0).treatmentId());
     }
 
-    // MIVO:    ---start(feb)-response(mar)------end(null)
+    //    ---start(feb)-response(mar)------end(null)
     @Test
     public void responseAfterStartBeforeNullSucceeds() {
         final List<BiopsyTreatmentData> treatments = Lists.newArrayList(TREATMENT_FEB2015_NULL);
@@ -111,7 +111,7 @@ public class TreatmentResponseMatcherTest {
         assertMatch(treatments.get(0).id(), matchedResponses.get(0).treatmentId());
     }
 
-    // MIVO:    ---start(feb)-------end/response(null)
+    //    ---start(feb)-------end/response(null)
     @Test
     public void responseNullFails() {
         final List<BiopsyTreatmentData> treatments = Lists.newArrayList(TREATMENT_FEB2015_NULL);
@@ -122,7 +122,7 @@ public class TreatmentResponseMatcherTest {
         assertEquals(null, matchedResponses.get(0).treatmentId());
     }
 
-    // MIVO:    ---start(feb)-response(mar)----response(jul)--end(null)
+    //    ---start(feb)-response(mar)----response(jul)--end(null)
     @Test
     public void multipleResponsesMatchTreatment() {
         final List<BiopsyTreatmentData> treatments = Lists.newArrayList(TREATMENT_FEB2015_NULL);
@@ -135,7 +135,7 @@ public class TreatmentResponseMatcherTest {
         assertMatch(treatments.get(0).id(), matchedResponses.get(1).treatmentId());
     }
 
-    // MIVO:    ---start1/start2(feb)-response(mar)----end1(jul)--end2(null)
+    //    ---start1/start2(feb)-response(mar)----end1(jul)--end2(null)
     @Test
     public void overlappingTreatmentsCannotBeUsedForMatching() {
         final List<BiopsyTreatmentData> treatments = Lists.newArrayList(TREATMENT_FEB2015_JUL2015, TREATMENT_FEB2015_NULL);

@@ -22,7 +22,7 @@ public final class NearIndelPonFilter {
             return false;
         }
 
-        // JOBA: Look backwards
+        // Look backwards
         for (int i = index - 1; i >= 0; i--) {
             final VariantContext query = contexts.get(i);
             int queryEnd = query.getStart() + query.getReference().length() - 1 + DISTANCE;
@@ -35,7 +35,7 @@ public final class NearIndelPonFilter {
             }
         }
 
-        // JOBA: Look forwards
+        // Look forwards
         int subjectEnd = subject.getStart() + subject.getReference().length() - 1 + DISTANCE;
         for (int i = index + 1; i < contexts.size(); i++) {
             final VariantContext query = contexts.get(i);

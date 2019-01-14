@@ -48,7 +48,7 @@ object CsvWriter {
         write(records, location, DEFAULT_TSV_FORMAT.withNullString(nullString))
     }
 
-    // MIVO: generate CsvData header record based on primary constructor parameter list
+    // Generate CsvData header record based on primary constructor parameter list
     fun <T : CsvData> KClass<T>.columns(prefixes: List<String> = listOf()): List<String> {
         if (!this.isData) {
             throw IllegalArgumentException("Cannot write value of type ${this.qualifiedName} to CSV. Must be a data class.")
@@ -56,7 +56,7 @@ object CsvWriter {
         return this.primaryConstructor!!.parameters.flatMap { parameterNames(this.qualifiedName, prefixes, it) }
     }
 
-    // MIVO: extract CsvData values for primary constructor params
+    // Extract CsvData values for primary constructor params
     fun <T : CsvData> KClass<T>.values(csvRecord: T): List<String?> {
         val columnCount = this.columns().size
         return this.declaredFunctions.filter { it.isOperator && it.name.matches(Regex("component[0-9]+")) }

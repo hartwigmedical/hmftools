@@ -11,7 +11,6 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Streams;
 import com.google.common.io.Resources;
 import com.hartwig.hmftools.strelka.mnv.TestUtils;
-import com.hartwig.hmftools.strelka.mnv.scores.ImmutableVariantScore;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
@@ -100,21 +99,21 @@ public class ScoringDeletionsTest {
 
     @Test
     public void computesScoreForDELinRef() {
-        //MIVO: ref with qualities 25, 15, 35 --> average = 25
+        // Ref with qualities 25, 15, 35 --> average = 25
         final SAMRecord ref = TestUtils.buildSamRecord(3, "3M", "TCC", ":0D", false);
         assertEquals(ImmutableVariantScore.of(ReadType.REF, 25), SamRecordScoring.getVariantScore(ref, DELETION));
     }
 
     @Test
     public void computesScoreForDELinTumor() {
-        //MIVO: take quality of first base after deletion if available
+        // Take quality of first base after deletion if available
         final SAMRecord alt = TestUtils.buildSamRecord(3, "1M2D1M", "TT", "PA", false);
         assertEquals(ImmutableVariantScore.of(ReadType.ALT, 32), SamRecordScoring.getVariantScore(alt, DELETION));
     }
 
     @Test
     public void computesScoreForDELinTumorWithDelAtEnd() {
-        //MIVO: take quality of base before deletion if base after deletion not present
+        // Take quality of base before deletion if base after deletion not present
         final SAMRecord shortAlt = TestUtils.buildSamRecord(3, "1M2D", "T", "P", false);
         assertEquals(ImmutableVariantScore.of(ReadType.ALT, 47), SamRecordScoring.getVariantScore(shortAlt, DELETION));
     }
@@ -133,8 +132,8 @@ public class ScoringDeletionsTest {
 
     @Test
     public void computesScoreForDELinReadWithPartialDeletion() {
-        //MIVO: read with partial deletion TC -> T instead of TCC -> T
-        //MIVO: ref with qualities 32, 40 --> average = 36
+        // Read with partial deletion TC -> T instead of TCC -> T
+        // Ref with qualities 32, 40 --> average = 36
         final SAMRecord otherDeletion = TestUtils.buildSamRecord(3, "1M1D1M", "TC", "AI", false);
         assertEquals(ImmutableVariantScore.of(ReadType.REF, 36), SamRecordScoring.getVariantScore(otherDeletion, DELETION));
     }

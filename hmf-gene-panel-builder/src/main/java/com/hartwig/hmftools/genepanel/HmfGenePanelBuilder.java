@@ -85,7 +85,7 @@ public class HmfGenePanelBuilder {
 
     @NotNull
     private static Result<Record> queryEnsembldb(@NotNull final String database) throws SQLException, IOException {
-        // MIVO: disable annoying jooq self-ad message
+        // Disable annoying jooq self-ad message
         System.setProperty("org.jooq.no-logo", "true");
         final Connection conn = DriverManager.getConnection(database, DB_USER, "");
         final DSLContext context = DSL.using(conn, SQLDialect.MYSQL);
@@ -95,7 +95,7 @@ public class HmfGenePanelBuilder {
 
     private static void writeFile(@NotNull final CommandLine cmd, @NotNull final Result<Record> records) throws IOException {
         final BufferedWriter writer = new BufferedWriter(new FileWriter(cmd.getOptionValue(OUT_PATH), false));
-        // MIVO: format as tsv without header containing column names
+        // Format as tsv without header containing column names
         final CSVFormat format = new CSVFormat().header(false).delimiter('\t').nullString("").quoteString("");
         writer.write(records.formatCSV(format));
         writer.close();

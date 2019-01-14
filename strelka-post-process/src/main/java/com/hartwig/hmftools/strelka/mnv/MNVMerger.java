@@ -47,8 +47,8 @@ public abstract class MNVMerger {
         return mergeVariants(mnv.variants(), gapsForMnv);
     }
 
-    // MIVO: assumes variant list is sorted by start position and variants have only one sample (tumor)
-    // MIVO: gaps will *ALWAYS* be added to the output variant (no checking is done here to make sure they are needed)
+    // Assumes variant list is sorted by start position and variants have only one sample (tumor)
+    // Gaps will *ALWAYS* be added to the output variant (no checking is done here to make sure they are needed)
     @NotNull
     @VisibleForTesting
     VariantContext mergeVariants(@NotNull final List<VariantContext> variants, @NotNull final Map<Integer, Character> gapReads) {

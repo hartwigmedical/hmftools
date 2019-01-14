@@ -164,7 +164,7 @@ class ExtendDiploid {
         for (int i = direction.moveIndex(targetIndex); i >= 0 && i < regions.size(); i = direction.moveIndex(i)) {
             final FittedRegion neighbour = regions.get(i).region();
 
-            // JOBA: Coming from left to right, EXCLUDE neighbour from decision on break.
+            // Coming from left to right, EXCLUDE neighbour from decision on break.
             if (neighbour.start() > target.start()) {
                 if (neighbour.support() == SegmentSupport.CENTROMERE) {
                     return dubiousCount < minTumorCount;
@@ -185,7 +185,7 @@ class ExtendDiploid {
                 return inTolerance(target.region(), neighbour);
             }
 
-            // JOBA: Coming from right to left, INCLUDE neighbour from decision on break.
+            // Coming from right to left, INCLUDE neighbour from decision on break.
             if (neighbour.start() < target.start()) {
                 if (neighbour.support() == SegmentSupport.CENTROMERE) {
                     return dubiousCount < minTumorCount;

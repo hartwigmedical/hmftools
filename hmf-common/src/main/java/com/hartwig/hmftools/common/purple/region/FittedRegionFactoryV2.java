@@ -102,22 +102,22 @@ public class FittedRegionFactoryV2 implements FittedRegionFactory {
         final double minBAF = Math.max(0, Math.min(1, purityAdjuster.purityAdjustedBAFSimple(chromosome, impliedCopyNumber, 0.5)));
         final double maxBAF = Math.max(0, Math.min(1, purityAdjuster.purityAdjustedBAFSimple(chromosome, impliedCopyNumber, ambiguousBaf)));
 
-        // JOBA: Major Ploidy
+        // Major Ploidy
         final double minBAFMajorAllelePloidy = minBAF * impliedCopyNumber;
         final double maxBAFMajorAllelePloidy = maxBAF * impliedCopyNumber;
 
-        // JOBA: Major Ploidy crosses whole number?
+        // Major Ploidy crosses whole number?
         final double minBAFMajorAllelePloidyCeil = Math.ceil(minBAFMajorAllelePloidy);
         if (!Doubles.equal(Math.signum(minBAFMajorAllelePloidyCeil - minBAFMajorAllelePloidy),
                 Math.signum(minBAFMajorAllelePloidyCeil - maxBAFMajorAllelePloidy))) {
             return minBAFMajorAllelePloidyCeil / impliedCopyNumber;
         }
 
-        // JOBA: Minor Ploidy
+        // Minor Ploidy
         final double minBAFMinorAllelePloidy = impliedCopyNumber - minBAFMajorAllelePloidy;
         final double maxBAFMinorAllelePloidy = impliedCopyNumber - maxBAFMajorAllelePloidy;
 
-        // JOBA: Minor Ploidy crosses whole number?
+        // Minor Ploidy crosses whole number?
         final double maxBAFMinorAllelePloidyCeil = Math.ceil(maxBAFMinorAllelePloidy);
         if (!Doubles.equal(Math.signum(maxBAFMinorAllelePloidyCeil - minBAFMinorAllelePloidy),
                 Math.signum(maxBAFMinorAllelePloidyCeil - maxBAFMinorAllelePloidy))) {
@@ -127,7 +127,7 @@ public class FittedRegionFactoryV2 implements FittedRegionFactory {
         double purity = purityAdjuster.purity();
         double normFactor = purityAdjuster.normFactor();
 
-        // JOBA: Minimise
+        // Minimise
         final double minBAFTotalDeviation =
                 ploidyDeviation.majorAlleleDeviation(purity, normFactor, minBAFMajorAllelePloidy) + ploidyDeviation.minorAlleleDeviation(
                         purity,

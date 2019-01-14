@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.knowledgebaseimporter.transvar.matchers
 
 object AminoAcidSymbols {
-    // MIVO: based on https://github.com/zwdzwd/transvar/blob/41df7ceab8e0ad1881d703674a54b2d540cb3c40/transvar/utils.py#L101
+    // Based on https://github.com/zwdzwd/transvar/blob/41df7ceab8e0ad1881d703674a54b2d540cb3c40/transvar/utils.py#L101
     private val oneToThree = mapOf("G" to "Gly",
                                    "A" to "Ala",
                                    "L" to "Leu",

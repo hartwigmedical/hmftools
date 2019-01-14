@@ -27,7 +27,7 @@ public class CenterTest {
         assertEquals("Someone", CenterModel.getPI("CPCT02010001", center));
         assertEquals("Someone Else", CenterModel.getPI("DRUP01010001", center));
 
-        // MIVO: center with '*' for drup pi & recipients
+        // Center with '*' for drup pi & recipients
         final CenterData center2 = centerModel.centerPerId("02");
         assertNotNull(center2);
         assertEquals("Someone 2", CenterModel.getPI("CPCT02010001", center2));
@@ -38,7 +38,7 @@ public class CenterTest {
     public void canReadDRUPRecipients() throws IOException {
         final CenterModel centerModel = Center.readFromCSV(CENTER_RESOURCE);
         assertEquals("my3@email.com", centerModel.getDrupRecipients("01"));
-        // MIVO: drup recipient field with '*'
+        // Drup recipient field with '*'
         assertEquals("my@email.com; my2@email.com", centerModel.getDrupRecipients("02"));
     }
 

@@ -32,7 +32,7 @@ public class MNVValidatorTest {
     private static final MNVMerger MNV_MERGER = ImmutableMNVMerger.of(VCF_OUTPUT_HEADER);
     private static final List<VariantContext> VARIANTS = Streams.stream(VCF_FILE_READER).collect(Collectors.toList());
 
-    // MIVO: variants at positions: 1  3(alts: A,T)  =>  possible mnvs: (1,3A) (1,3T) => actual mnv: (1,3A) => non-mnv variant: 3T
+    // Variants at positions: 1  3(alts: A,T)  =>  possible mnvs: (1,3A) (1,3T) => actual mnv: (1,3A) => non-mnv variant: 3T
     @Test
     public void correctlyDetectsNonMnvVariant() {
         final PotentialMNVRegion region =
@@ -45,7 +45,7 @@ public class MNVValidatorTest {
         assertEquals("T", nonMnvs.get(0).getAlternateAllele(0).getBaseString());
     }
 
-    // MIVO: variants at positions: 1  3(alts: A,T)  =>  possible mnvs: (1,3A) (1,3T) => actual mnv: none => non-mnv variants: 1  3(alts: A,T)
+    // Variants at positions: 1  3(alts: A,T)  =>  possible mnvs: (1,3A) (1,3T) => actual mnv: none => non-mnv variants: 1  3(alts: A,T)
     @Test
     public void correctlyDetectsMultiAltNonMnvVariant() {
         final PotentialMNVRegion region =
@@ -62,8 +62,8 @@ public class MNVValidatorTest {
         assertEquals("T", nonMnvs.get(1).getAlternateAllele(1).getBaseString());
     }
 
-    // MIVO: variants: 170756001 (C->T),  170756002 (G->T)
-    // MIVO:    2 records contain both;
+    // Variants: 170756001 (C->T),  170756002 (G->T)
+    //     2 records contain both;
     @Test
     public void correctOutputForMnvOf2InRegionOf2() {
         final PotentialMNVRegion region = PotentialMNVRegion.addVariants(PotentialMNVRegion.empty(),
@@ -80,8 +80,8 @@ public class MNVValidatorTest {
         assertEquals("TT", outputVariants.get(0).getAlternateAllele(0).getBaseString());
     }
 
-    // MIVO: variants: 170756001 (C->T),  170756002 (G->T)
-    // MIVO:    1 record contains first; 1 record contains second, 1 record contains both
+    // Variants: 170756001 (C->T),  170756002 (G->T)
+    //     1 record contains first; 1 record contains second, 1 record contains both
     @Test
     public void correctOutputForNoMnvOfInRegionOf2() {
         final PotentialMNVRegion region = PotentialMNVRegion.addVariants(PotentialMNVRegion.empty(),
@@ -99,8 +99,8 @@ public class MNVValidatorTest {
         assertEquals(VARIANTS.get(12), outputVariants.get(1));
     }
 
-    // MIVO: variants: 170756001 (C->T),  170756002 (G->T),  170756003 (A->T)
-    // MIVO:    2 records contain all 3
+    // Variants: 170756001 (C->T),  170756002 (G->T),  170756003 (A->T)
+    //     2 records contain all 3
     @Test
     public void correctOutputForMnvOf3InRegionOf3() {
         final PotentialMNVRegion region = PotentialMNVRegion.addVariants(PotentialMNVRegion.empty(),
@@ -116,8 +116,8 @@ public class MNVValidatorTest {
         assertEquals("TTT", outputVariants.get(0).getAlternateAllele(0).getBaseString());
     }
 
-    // MIVO: variants: 170756001 (C->T),  170756002 (G->T),  170756003 (A->T)
-    // MIVO:    1st record contains all 3; 2nd record contains 1 and 2
+    // Variants: 170756001 (C->T),  170756002 (G->T),  170756003 (A->T)
+    //     1st record contains all 3; 2nd record contains 1 and 2
     @Test
     public void correctOutputForMnvOf2InRegionOf3() {
         final PotentialMNVRegion region = PotentialMNVRegion.addVariants(PotentialMNVRegion.empty(),
@@ -135,8 +135,8 @@ public class MNVValidatorTest {
         assertEquals(VARIANTS.get(13), outputVariants.get(1));
     }
 
-    // MIVO: variants: 15 (C->T),  15 (CA->C),  17 (G->A)
-    // MIVO:    5 records contain 1 and 3; 1 record contains 2 and 3
+    // Variants: 15 (C->T),  15 (CA->C),  17 (G->A)
+    //     5 records contain 1 and 3; 1 record contains 2 and 3
     @Test
     public void correctOutputForMnvOf2InRegionOf3With2AtSamePos() {
         final PotentialMNVRegion region = PotentialMNVRegion.addVariants(PotentialMNVRegion.empty(),
@@ -155,8 +155,8 @@ public class MNVValidatorTest {
         assertEquals("TCA", outputVariants.get(1).getAlternateAllele(0).getBaseString());
     }
 
-    // MIVO: variants: 170755901 (C->T),  170755903 (G->A,T)
-    // MIVO:    5 records contain 1 and (G->A); 1 record contains 1 and (G->T)
+    // Variants: 170755901 (C->T),  170755903 (G->A,T)
+    //    5 records contain 1 and (G->A); 1 record contains 1 and (G->T)
     @Test
     public void correctOutputForMnvOf2With2Alts() {
         final PotentialMNVRegion region =
@@ -176,9 +176,9 @@ public class MNVValidatorTest {
         assertEquals("T", outputVariants.get(1).getAlternateAllele(0).getBaseString());
     }
 
-    // MIVO: variants: 170756001 (C->T),  170756002 (G->T),  170756003 (A->T)
-    // MIVO:    4 records contain all 3; 1 record contains 1 and 2; 1 record contains 2 and 3;
-    // MIVO:    technically both (1,2) and (2,3) are mnvs, but (1,2,3) is not frequent enough. merge first mnv and output 3rd variant
+    // Variants: 170756001 (C->T),  170756002 (G->T),  170756003 (A->T)
+    //     4 records contain all 3; 1 record contains 1 and 2; 1 record contains 2 and 3;
+    //     technically both (1,2) and (2,3) are mnvs, but (1,2,3) is not frequent enough. merge first mnv and output 3rd variant
     @Test
     public void correctOutputFor2PotentialMnvInRegionOf3() {
         final PotentialMNVRegion region = PotentialMNVRegion.addVariants(PotentialMNVRegion.empty(),
@@ -203,8 +203,8 @@ public class MNVValidatorTest {
         assertEquals(VARIANTS.get(13), outputVariants.get(1));
     }
 
-    // MIVO: variants: 170756001 (C->T),  170756002 (G->T),  170756003 (A->T),  170756004 (T->C)
-    // MIVO:    2 records contain all;
+    // Variants: 170756001 (C->T),  170756002 (G->T),  170756003 (A->T),  170756004 (T->C)
+    //    2 records contain all;
     @Test
     public void correctOutputForMnvOf4InRegionOf4() {
         final PotentialMNVRegion region = PotentialMNVRegion.addVariants(PotentialMNVRegion.empty(),
@@ -220,8 +220,8 @@ public class MNVValidatorTest {
         assertEquals("TTTC", outputVariants.get(0).getAlternateAllele(0).getBaseString());
     }
 
-    // MIVO: variants: 170756001 (C->T),  170756002 (G->T),  170756003 (A->T),  170756004 (T->C)
-    // MIVO:    1st record contains 1, 2 and 3 ; 2nd record contains 2, 3 and 4; 4 records contain all
+    // Variants: 170756001 (C->T),  170756002 (G->T),  170756003 (A->T),  170756004 (T->C)
+    //     1st record contains 1, 2 and 3 ; 2nd record contains 2, 3 and 4; 4 records contain all
     @Test
     public void correctOutputFor2MnvOf3InRegionOf4() {
         final PotentialMNVRegion region = PotentialMNVRegion.addVariants(PotentialMNVRegion.empty(),
@@ -245,8 +245,8 @@ public class MNVValidatorTest {
         assertEquals(VARIANTS.get(14), outputVariants.get(1));
     }
 
-    // MIVO: variants: 170756001 (C->T),  170756002 (G->T),  170756003 (A->T),  170756004 (T->C)
-    // MIVO:    1st record contains 1 and 2; 2nd record contains 3 and 4; 3rd record contains all
+    // Variants: 170756001 (C->T),  170756002 (G->T),  170756003 (A->T),  170756004 (T->C)
+    //     1st record contains 1 and 2; 2nd record contains 3 and 4; 3rd record contains all
     @Test
     public void correctOutputFor2MnvOf2InRegionOf4() {
         final PotentialMNVRegion region = PotentialMNVRegion.addVariants(PotentialMNVRegion.empty(),

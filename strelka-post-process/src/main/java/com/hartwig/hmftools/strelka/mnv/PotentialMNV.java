@@ -20,7 +20,7 @@ public abstract class PotentialMNV {
 
     abstract int start();
 
-    //MIVO: end position, non-inclusive
+    // End position, non-inclusive
     abstract int end();
 
     @NotNull

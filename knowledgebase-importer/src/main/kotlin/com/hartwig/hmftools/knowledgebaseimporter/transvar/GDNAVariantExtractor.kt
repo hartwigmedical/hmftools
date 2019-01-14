@@ -109,7 +109,7 @@ private fun extractPositions(variant: String): Pair<Long, Long?> {
     return Pair(matcher.group(1).toLong(), matcher.group(2)?.toLongOrNull())
 }
 
-// MIVO: extract SNV from gDna variant of the form: 133738357T>C
+// Extract SNV from gDna variant of the form: 133738357T>C
 private fun extractSnv(gene: String, chromosome: String, variantGDna: String): SomaticVariantEvent {
     val (start, _) = extractPositions(variantGDna)
     val ref = variantGDna.substringBefore(">").last().toString()
@@ -117,7 +117,7 @@ private fun extractSnv(gene: String, chromosome: String, variantGDna: String): S
     return SomaticVariantEvent(gene, chromosome, start.toString(), ref, alt)
 }
 
-// MIVO: extract MNV from gDna variant of the form: 105239404_105239405delinsGC or 133748289_133748290delTCinsGT
+// Extract MNV from gDna variant of the form: 105239404_105239405delinsGC or 133748289_133748290delTCinsGT
 private fun extractMnv(gene: String, chromosome: String, variantGDna: String, reference: IndexedFastaSequenceFile): SomaticVariantEvent {
     val (start, end) = extractPositions(variantGDna)
     return if (variantGDna.contains("delins")) {
@@ -132,7 +132,7 @@ private fun extractMnv(gene: String, chromosome: String, variantGDna: String, re
     }
 }
 
-// MIVO: extract Insert from gDna variant of the form: 41201160dupA
+// Extract Insert from gDna variant of the form: 41201160dupA
 private fun extractDup(gene: String, chromosome: String, variantGDna: String, reference: IndexedFastaSequenceFile): SomaticVariantEvent {
     val (start, _) = extractPositions(variantGDna)
     val position = start - 1
@@ -142,7 +142,7 @@ private fun extractDup(gene: String, chromosome: String, variantGDna: String, re
     return correct(SomaticVariantEvent(gene, chromosome, position.toString(), ref, alt))
 }
 
-// MIVO: extract Insert from gDna variant of the form: 32930598_32930599insC
+// Extract Insert from gDna variant of the form: 32930598_32930599insC
 private fun extractInsert(gene: String, chromosome: String, variantGDna: String,
                           reference: IndexedFastaSequenceFile): SomaticVariantEvent? {
     val (start, _) = extractPositions(variantGDna)
@@ -156,7 +156,7 @@ private fun extractInsert(gene: String, chromosome: String, variantGDna: String,
     }
 }
 
-// MIVO: extract Delete from gDna variant of the form: 55152094_55152105delCATCATGCATGA or 55152095_55152106del12
+// Extract Delete from gDna variant of the form: 55152094_55152105delCATCATGCATGA or 55152095_55152106del12
 private fun extractDelete(gene: String, chromosome: String, variantGDna: String,
                           reference: IndexedFastaSequenceFile): SomaticVariantEvent? {
     val (start, _) = extractPositions(variantGDna)
@@ -184,7 +184,7 @@ private fun extractRange(gene: String, transcript: String, chromosome: String, v
     return GenomicRangeEvent(gene, transcript, chromosome, start.toString(), end.toString(), transcript)
 }
 
-// MIVO: correct position, ref and alt of variants for which ref and alt have a common prefix.
+// Correct position, ref and alt of variants for which ref and alt have a common prefix.
 // e.g. chr3:g.178927980_178927991delinsTGG will produce: 3 178927980: TGTCCATTGGCA -> TGG, with both ref and alt sharing TG as prefix
 //      this function will drop the first T and correct the variant to: 3 178927981: GTCCATTGGCA -> GG
 private fun correct(variant: SomaticVariantEvent): SomaticVariantEvent {

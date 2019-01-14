@@ -31,7 +31,7 @@ class CopyNumberCharts {
 
     private static final int MAX_COPY_NUMBER_SERIES = 6;
 
-    // JOBA: http://colorbrewer2.org/
+    // http://colorbrewer2.org/
     private static final Color COPY_NUMBER_1 = new Color(255, 26, 28);
     private static final Color COPY_NUMBER_2 = new Color(77, 175, 74);
     private static final Color COPY_NUMBER_3 = new Color(55, 126, 184);

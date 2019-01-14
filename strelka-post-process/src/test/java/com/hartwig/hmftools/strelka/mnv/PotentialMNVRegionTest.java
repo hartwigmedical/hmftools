@@ -29,7 +29,7 @@ public class PotentialMNVRegionTest {
     private static final VariantContext CONSECUTIVE_SNP3 = VARIANTS.get(13);
     private static final VariantContext CONSECUTIVE_SNP4 = VARIANTS.get(14);
 
-    // MIVO: variants at positions: 1  2  3  =>  possible mnvs: (1,2) (1,3) (2,3) (1,2,3)
+    // Variants at positions: 1  2  3  =>  possible mnvs: (1,2) (1,3) (2,3) (1,2,3)
     @Test
     public void correctlyMakesCombinationsOfConsecutiveVariants() {
         final PotentialMNVRegion oneVariantRegion = PotentialMNVRegion.fromVariant(CONSECUTIVE_SNP1);
@@ -42,7 +42,7 @@ public class PotentialMNVRegionTest {
         assertEquals(Lists.newArrayList(CONSECUTIVE_SNP1, CONSECUTIVE_SNP2, CONSECUTIVE_SNP3), threeVariantRegion.variants());
     }
 
-    // MIVO: variants at positions: 1  2  4  =>  possible mnvs: (1,2) (2,4) (1,2,4)
+    // Variants at positions: 1  2  4  =>  possible mnvs: (1,2) (2,4) (1,2,4)
     @Test
     public void correctlyMakesCombinationsOfVariants() {
         final PotentialMNVRegion oneVariantRegion = PotentialMNVRegion.fromVariant(CONSECUTIVE_SNP1);
@@ -55,7 +55,7 @@ public class PotentialMNVRegionTest {
         assertEquals(Lists.newArrayList(CONSECUTIVE_SNP1, CONSECUTIVE_SNP2, CONSECUTIVE_SNP4), threeVariantRegion.variants());
     }
 
-    // MIVO: variants at positions: 1  3(alts: A,T)  =>  possible mnvs: (1,3A) (1,3T)
+    // Variants at positions: 1  3(alts: A,T)  =>  possible mnvs: (1,3A) (1,3T)
     @Test
     public void correctlyMakesCombinationsWithMultipleAlts() {
         final PotentialMNVRegion oneVariantRegion = PotentialMNVRegion.fromVariant(SNP);
@@ -65,7 +65,7 @@ public class PotentialMNVRegionTest {
         assertEquals(Lists.newArrayList(SNP, MULTI_ALT), twoVariantRegion.variants());
     }
 
-    // MIVO: variants at positions: 1  1(del of 1)  4  =>  possible mnvs: (1del,4)
+    // Variants at positions: 1  1(del of 1)  4  =>  possible mnvs: (1del,4)
     @Test
     public void correctlyMakesCombinationsWithSNPAfterDEL() {
         final PotentialMNVRegion oneVariantRegion = PotentialMNVRegion.fromVariant(SNP);
@@ -78,7 +78,7 @@ public class PotentialMNVRegionTest {
         assertEquals(Lists.newArrayList(SNP, DEL, SNP_AFTER_DEL), threeVariantRegion.variants());
     }
 
-    // MIVO: variants at positions: 1  1(del of 1)  3(alts: A,T)  4  =>
+    // Variants at positions: 1  1(del of 1)  3(alts: A,T)  4  =>
     //      possible mnvs: (1,3A) (1,3T) (1,3A,4) (1,3T,4) (1del,3A) (1del,3T) (1del,4) (1del,3A,4) (1del,3T,4) (3A,4) (3T,4)
     @Test
     public void correctlyMakesCombinationsWithSNPAfterDELAndMultiAlt() {

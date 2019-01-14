@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.knowledgebaseimporter.transvar.matchers
 
-//MIVO: Source: https://github.com/zwdzwd/transvar/blob/v2.4.0.20180701/transvar/mutation.py
+// Source: https://github.com/zwdzwd/transvar/blob/v2.4.0.20180701/transvar/mutation.py
 object CodonMatcher : Matcher {
     private val AA = "(${AminoAcidSymbols.pattern})"
     private val PATTERN = "$AA(\\d+)\$"

@@ -69,7 +69,7 @@ public class PDFWriter {
     @VisibleForTesting
     @NotNull
     static JasperReportBuilder generateNotAnalysableReport(@NotNull NotAnalysedPatientReport report) {
-        // MIVO: hack to get page footers working; the footer band and noData bands are exclusive, see additional comment below for details
+        // Hack to get page footers working; the footer band and noData bands are exclusive, see additional comment below for details
         final DRDataSource singleItemDataSource = new DRDataSource("item");
         singleItemDataSource.add(new Object());
 
@@ -96,7 +96,7 @@ public class PDFWriter {
                 .newPage()
                 .add(SampleDetailsPage.of(report).reportComponent());
 
-        // MIVO: hack to get page footers working; the footer band and noData bands are exclusive:
+        // Hack to get page footers working; the footer band and noData bands are exclusive:
         //  - footerBand, detailBand, etc are shown when data source is not empty
         //  - noData band is shown when data source is empty; intended to be used when there is no data to show in the report
         //  (e.g. would be appropriate to be used for notAnalysableReport)

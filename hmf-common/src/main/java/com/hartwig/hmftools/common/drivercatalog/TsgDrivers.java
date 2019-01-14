@@ -103,7 +103,7 @@ public final class TsgDrivers {
                     .build();
         }
 
-        // JOBA: MultiHit
+        // MultiHit
         final DndsDriverImpactLikelihood secondImpactLikelihood = impactLikelihood(likelihood, codingVariants.get(1));
         final long secondVariantTypeCount = codingVariants.get(1).type() == VariantType.INDEL ? sampleIndelCount : sampleSNVCount;
 

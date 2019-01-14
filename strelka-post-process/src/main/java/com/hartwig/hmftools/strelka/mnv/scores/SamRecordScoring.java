@@ -25,7 +25,7 @@ public final class SamRecordScoring {
         final Allele ref = variant.getReference();
         final int recordIdxOfVariantStart = record.getReadPositionAtReferencePosition(variant.getStart());
         if (recordIdxOfVariantStart == 0) {
-            //MIVO: variant position was deleted
+            // Variant position was deleted
             return ReadType.MISSING;
 
         }
@@ -45,7 +45,7 @@ public final class SamRecordScoring {
         return ReadType.OTHER;
     }
 
-    // MIVO: assumes single alt allele
+    // Assumes single alt allele
     @NotNull
     @VisibleForTesting
     static VariantScore getVariantScore(@NotNull final SAMRecord record, @NotNull final VariantContext variant) {
@@ -71,7 +71,7 @@ public final class SamRecordScoring {
                             record.getBaseQualityString()
                                     .substring(recordIdxOfVariantStart - 1, recordIdxOfVariantStart - 1 + alt.length()));
                 } else if (variant.isSimpleDeletion()) {
-                    //MIVO: read score of next base after deletion if present, otherwise read score of base before deletion
+                    // Read score of next base after deletion if present, otherwise read score of base before deletion
                     if (record.getReadLength() > recordIdxOfVariantStart) {
                         return VariantScore.of(readType, record.getBaseQualityString().charAt(recordIdxOfVariantStart));
                     } else {

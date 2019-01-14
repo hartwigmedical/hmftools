@@ -11,7 +11,6 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Streams;
 import com.google.common.io.Resources;
 import com.hartwig.hmftools.strelka.mnv.TestUtils;
-import com.hartwig.hmftools.strelka.mnv.scores.ImmutableVariantScore;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
@@ -122,7 +121,7 @@ public class ScoringInsertionsTest {
 
     @Test
     public void computesScoreForINSinTumor() {
-        //MIVO: insertion with qualities 30, 20, 40 --> average = 30
+        // Insertion with qualities 30, 20, 40 --> average = 30
         final SAMRecord alt = TestUtils.buildSamRecord(2, "1M2I", "ATC", "?5I", false);
         assertEquals(ImmutableVariantScore.of(ReadType.ALT, 30), SamRecordScoring.getVariantScore(alt, INSERTION));
     }

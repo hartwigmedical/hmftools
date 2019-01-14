@@ -9,14 +9,14 @@ public class ReferenceRatioStatisticsTest {
 
     @Test
     public void testChromosomeCount() {
-        // JOBA: Klinefelter Syndrome
+        // Klinefelter Syndrome
         assertChromosomes(true, true, 0.98, 0.48, 9842);
 
-        // JOBA: Female
+        // Female
         assertChromosomes(true, false, 0.6872, 0.0049, 1304);
         assertChromosomes(true, false, 0.74, 0.01, 947);
 
-        // JOBA: Male
+        // Male
         assertChromosomes(false, true, 0.50, 0.08, 9837);
         assertChromosomes(false, true, 0.51, 0.47, 9842);
         assertChromosomes(false, true, 0.51, 1.02, 9842);

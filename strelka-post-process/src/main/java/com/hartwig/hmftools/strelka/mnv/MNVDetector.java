@@ -16,7 +16,7 @@ public class MNVDetector {
     private MNVDetector() {
     }
 
-    // MIVO: check if variant fits current mnv region. output new region and previous region.
+    // Check if variant fits current mnv region. output new region and previous region.
     //  if true, add mnv to current region => return pair of: updated region, empty
     //  if false, we moved past the current region => return pair of: new mnv region starting at variant, previous region (region passed as param)
     @NotNull

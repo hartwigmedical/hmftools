@@ -2,7 +2,7 @@ package com.hartwig.hmftools.knowledgebaseimporter.transvar.matchers
 
 import com.hartwig.hmftools.knowledgebaseimporter.knowledgebases.events.HgvsVariantType
 
-//MIVO: rules based on:
+// Rules based on:
 // - https://github.com/zwdzwd/transvar/blob/v2.4.0.20180701/transvar/mutation.py
 // - http://varnomen.hgvs.org/recommendations/protein/
 object TransvarProteinMatcher : Matcher {

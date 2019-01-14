@@ -15,7 +15,7 @@ fun VariantContext.reformatAlleles(): VariantContext {
             .alleles(alleles).make()
 }
 
-//MIVO: transforms variants like TAAAATAA -> TCGGAGGTCGCCGAAAATAA to regular format: T -> TCGGAGGTCGCCG
+// Transforms variants like TAAAATAA -> TCGGAGGTCGCCGAAAATAA to regular format: T -> TCGGAGGTCGCCG
 private fun reformatAlleles(ref: Allele, alt: Allele): List<Allele> {
     return when {
         isInsertionWithTrailingBases(ref.baseString, alt.baseString) -> reformatInsertionAlleles(ref, alt)
@@ -38,8 +38,8 @@ fun VariantContext.mutationType(): String {
     }
 }
 
-//MIVO: detects variants like TAAAATAA -> TCGGAGGTCGCCGAAAATAA which occur in cases when there is both an insertion and deletion at same
-//      base location
+// Detects variants like TAAAATAA -> TCGGAGGTCGCCGAAAATAA which occur in cases
+// when there is both an insertion and deletion at same base location
 private fun isInsertionWithTrailingBases(ref: String, alt: String): Boolean {
     val refSubstring = ref.substring(1)
     val altSubstring = alt.substring(1)

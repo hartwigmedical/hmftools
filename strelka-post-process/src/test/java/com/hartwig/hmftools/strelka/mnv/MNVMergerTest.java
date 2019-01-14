@@ -28,7 +28,7 @@ public class MNVMergerTest {
     private static final MNVMerger MNV_MERGER = ImmutableMNVMerger.of(VCF_OUTPUT_HEADER);
     private static final List<VariantContext> VARIANTS = Streams.stream(VCF_FILE_READER).collect(Collectors.toList());
 
-    // MIVO: 170756001: (C->T),  170756002: (G->T)
+    // 170756001: (C->T),  170756002: (G->T)
     @Test
     public void correctlyMerges2Variants() {
         final VariantContext mergedVariant =
@@ -38,7 +38,7 @@ public class MNVMergerTest {
         assertEquals("TT", mergedVariant.getAlternateAllele(0).getBaseString());
     }
 
-    // MIVO: 170756001: (C->T),  170756003: (A->T)    gap: 170756002 (G)
+    // 170756001: (C->T),  170756003: (A->T)    gap: 170756002 (G)
     @Test
     public void correctlyMerges2VariantsWithGap() {
         final Map<Integer, Character> gaps = Maps.newHashMap();
@@ -49,7 +49,7 @@ public class MNVMergerTest {
         assertEquals("TGT", mergedVariant.getAlternateAllele(0).getBaseString());
     }
 
-    // MIVO: 170756001: (C->T),  170756002: (G->T),  170756003: (A->T)
+    // 170756001: (C->T),  170756002: (G->T),  170756003: (A->T)
     @Test
     public void correctlyMerges3Variants() {
         final VariantContext mergedVariant =
@@ -59,7 +59,7 @@ public class MNVMergerTest {
         assertEquals("TTT", mergedVariant.getAlternateAllele(0).getBaseString());
     }
 
-    // MIVO: 170756001: (C->T),  170756002: (G->T),  170756004: (T->C)
+    // 170756001: (C->T),  170756002: (G->T),  170756004: (T->C)
     @Test
     public void correctlyMerges3VariantsWithGap() {
         final Map<Integer, Character> gaps = Maps.newHashMap();
@@ -71,7 +71,7 @@ public class MNVMergerTest {
         assertEquals("TTAC", mergedVariant.getAlternateAllele(0).getBaseString());
     }
 
-    // MIVO: 170756001: (C->T),  170756002: (G->T)
+    // 170756001: (C->T),  170756002: (G->T)
     @Test
     public void correctlyMerges2VariantsWithPonCounts() {
         final VariantContext mergedVariant =
@@ -84,7 +84,7 @@ public class MNVMergerTest {
         assertEquals(7, mergedVariant.getAttribute("SOMATIC_PON_COUNT"));
     }
 
-    // MIVO: 170756002: (G->T),  170756004: (T->C)
+    // 170756002: (G->T),  170756004: (T->C)
     @Test
     public void correctlyMerges2VariantsWithPonCountsAndGap() {
         final Map<Integer, Character> gaps = Maps.newHashMap();
@@ -98,7 +98,7 @@ public class MNVMergerTest {
         assertEquals(15, mergedVariant.getAttribute("SOMATIC_PON_COUNT"));
     }
 
-    // MIVO: 170756004: (T->C),  170756006: (G->T)
+    // 170756004: (T->C),  170756006: (G->T)
     @Test
     public void correctlyMerges2VariantsSecondWithoutPonCountsAndGap() {
         final Map<Integer, Character> gaps = Maps.newHashMap();
@@ -112,7 +112,7 @@ public class MNVMergerTest {
         assertNull(mergedVariant.getAttribute("SOMATIC_PON_COUNT"));
     }
 
-    // MIVO: 170756001: (C->T),  170756002: (G->T)
+    // 170756001: (C->T),  170756002: (G->T)
     @Test
     public void correctlyMerges2VariantsFirstWithoutAnyPonCount() {
         final VariantContext mergedVariant =
@@ -125,7 +125,7 @@ public class MNVMergerTest {
         assertNull(mergedVariant.getAttribute("SOMATIC_PON_COUNT"));
     }
 
-    // MIVO: 170756001: (C->T),  170756002: (G->T)
+    // 170756001: (C->T),  170756002: (G->T)
     @Test
     public void correctlyMerges2VariantsSecondWithoutGermlinePonCount() {
         final VariantContext mergedVariant =
@@ -138,7 +138,7 @@ public class MNVMergerTest {
         assertEquals(5, mergedVariant.getAttribute("SOMATIC_PON_COUNT"));
     }
 
-    // MIVO: 170756001: (C->T),  170756002: (G->T),  170756004: (T->C)
+    // 170756001: (C->T),  170756002: (G->T),  170756004: (T->C)
     @Test
     public void correctlyMerges3VariantsWithGapPon() {
         final Map<Integer, Character> gaps = Maps.newHashMap();

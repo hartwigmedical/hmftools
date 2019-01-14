@@ -87,7 +87,7 @@ public final class PurpleSegmentFactory {
 
                 final List<PCFPosition> pcfPositions = cluster.pcfPositions();
 
-                // JOBA: DO FIRST
+                // DO FIRST
                 final GenomePosition firstRatioBreak = pcfPositions.get(0);
                 result.add(setEnd(centromere, segment, firstRatioBreak.position() - 1));
                 segment = create(firstRatioBreak.chromosome(), firstRatioBreak.position(), pcfPositions);

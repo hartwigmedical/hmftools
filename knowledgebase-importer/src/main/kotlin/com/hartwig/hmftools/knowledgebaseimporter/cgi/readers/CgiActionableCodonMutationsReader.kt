@@ -9,7 +9,7 @@ import kotlin.math.max
 object CgiActionableCodonMutationsReader : SomaticEventReader<CgiActionableInput, CodonMutations> {
     private val ANY_CODON_PATTERN = "\\.[0-9]+\\.".toRegex()
 
-    //MIVO: cgi codon mutations have the form: 'V600.'
+    // CGI codon mutations have the form: 'V600.'
     private fun matches(event: CgiActionableInput): Boolean {
         return event.`Alteration type` == "MUT" && (CodonMatcher.matches(codon(event)) || ANY_CODON_PATTERN.matches(event.variant))
     }

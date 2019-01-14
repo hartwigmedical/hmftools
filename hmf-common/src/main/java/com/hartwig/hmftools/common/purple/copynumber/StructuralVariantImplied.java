@@ -70,7 +70,7 @@ class StructuralVariantImplied {
                     }
                 }
 
-                // JOBA: Extend structural variant segments
+                // Extend structural variant segments
                 if (svInferred) {
                     ExtendStructuralVariant.extendStructuralVariants(chromosomeCopyNumbers);
                 }

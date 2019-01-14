@@ -23,7 +23,7 @@ public abstract class PotentialMNVRegion {
 
     public abstract int start();
 
-    //MIVO: end position, non-inclusive
+    // End position, non-inclusive
     public abstract int end();
 
     public abstract List<VariantContext> variants();

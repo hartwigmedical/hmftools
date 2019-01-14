@@ -142,7 +142,7 @@ class ExtendDiploidBAF {
     private static void inferBetween(@NotNull InferRegion inferRegion, @NotNull final List<CombinedRegion> regions) {
         assert (inferRegion.isValid());
 
-        // JOBA: Exactly one source available (XOR)
+        // Exactly one source available (XOR)
         final double targetPloidy = inferRegion.isLeftValid() ^ inferRegion.isRightValid()
                 ? singleSourceTargetPloidy(inferRegion, regions)
                 : multiSourceTargetPloidy(inferRegion, regions);

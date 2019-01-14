@@ -48,7 +48,7 @@ class SampleAnonymizer(val password: String) {
         return generator.update(newPassword, patientSamples.map { it.id }, previouslyAnonymizedSamples.map { it.hashId })
     }
 
-    //MIVO: find all sampleIds from input that are relevant for this patient
+    // Find all sampleIds from input that are relevant for this patient
     // - all sampleIds from input, accounting for renames
     // - all previously anonymized samples that match this patientId (can be different from above when entries are deleted from the patientMapping
     private fun relevantPatientSamples(patient: CanonicalPatientId, samplesInput: SamplesInput,
