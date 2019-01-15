@@ -260,12 +260,11 @@ class StructuralVariantDAO {
                 variant.end() == null ? null : variant.end().position(),
                 variant.start().orientation(),
                 variant.end() == null ? null : variant.end().orientation(),
-                DatabaseUtil.checkStringLength(variant.start().homology(), STRUCTURALVARIANT.STARTHOMOLOGYSEQUENCE.getDataType().length()),
+                DatabaseUtil.checkStringLength(variant.start().homology(), STRUCTURALVARIANT.STARTHOMOLOGYSEQUENCE),
                 variant.end() == null
                         ? null
-                        : DatabaseUtil.checkStringLength(variant.end().homology(),
-                                STRUCTURALVARIANT.ENDHOMOLOGYSEQUENCE.getDataType().length()),
-                variant.insertSequence(),
+                        : DatabaseUtil.checkStringLength(variant.end().homology(), STRUCTURALVARIANT.ENDHOMOLOGYSEQUENCE),
+                DatabaseUtil.checkStringLength(variant.insertSequence(), STRUCTURALVARIANT.INSERTSEQUENCE),
                 variant.type(),
                 DatabaseUtil.decimal(variant.start().alleleFrequency()),
                 DatabaseUtil.decimal(variant.start().adjustedAlleleFrequency()),
@@ -300,8 +299,7 @@ class StructuralVariantDAO {
                 variant.recovered(),
                 variant.start().refGenomeContext(),
                 variant.end() == null ? null : variant.end().refGenomeContext(),
-                DatabaseUtil.checkStringLength(variant.insertSequenceAlignments(),
-                        STRUCTURALVARIANT.INSERTSEQUENCEALIGNMENTS.getDataType().length()),
+                DatabaseUtil.checkStringLength(variant.insertSequenceAlignments(), STRUCTURALVARIANT.INSERTSEQUENCEALIGNMENTS),
                 timestamp);
     }
 
@@ -326,11 +324,7 @@ class StructuralVariantDAO {
         return value != null ? value : Strings.EMPTY;
     }
 
-    @Nullable
-    private static Boolean byteToBoolean(Byte b) {
-        if (b == null) {
-            return null;
-        }
+    private static boolean byteToBoolean(@NotNull Byte b) {
         return b != 0;
     }
 }

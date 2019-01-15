@@ -1,6 +1,8 @@
 package com.hartwig.hmftools.patientdb.dao;
 
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.jooq.TableField;
 
 final public class DatabaseUtil {
 
@@ -18,8 +20,9 @@ final public class DatabaseUtil {
         return Math.round(number * multiplier) / multiplier;
     }
 
-    public static final String checkStringLength(final String str, int maxLength)
-    {
+    @NotNull
+    public static String checkStringLength(@NotNull String str, @NotNull TableField<?, String> field) {
+        int maxLength = field.getDataType().length();
         return str.length() > maxLength ? str.substring(0, maxLength) : str;
     }
 }
