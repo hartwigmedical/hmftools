@@ -66,17 +66,6 @@ public final class Commons {
     }
 
     @NotNull
-    public static StyleBuilder mainPageHeaderStyle() {
-        return fontStyle().bold()
-                .setHorizontalTextAlignment(HorizontalTextAlignment.CENTER)
-                .setVerticalTextAlignment(VerticalTextAlignment.MIDDLE)
-                .setFontSize(10)
-                .setBorder(stl.pen1Point())
-                .setBackgroundColor(BORKIE_COLOR)
-                .setPadding(2);
-    }
-
-    @NotNull
     public static StyleBuilder tableHeaderStyle() {
         return fontStyle().bold()
                 .setHorizontalTextAlignment(HorizontalTextAlignment.CENTER)
