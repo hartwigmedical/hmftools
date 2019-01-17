@@ -38,6 +38,9 @@ import com.hartwig.hmftools.patientreporter.actionability.ReportableEvidenceItem
 import com.hartwig.hmftools.patientreporter.copynumber.CopyNumberAnalysis;
 import com.hartwig.hmftools.patientreporter.copynumber.CopyNumberAnalyzer;
 import com.hartwig.hmftools.patientreporter.germline.GermlineVariant;
+import com.hartwig.hmftools.patientreporter.loadStructuralVariants.DisruptionReaderFile;
+import com.hartwig.hmftools.patientreporter.loadStructuralVariants.FusionReaderFile;
+import com.hartwig.hmftools.patientreporter.loadStructuralVariants.SvAnalyzerModel;
 import com.hartwig.hmftools.patientreporter.structural.FusionDisruptionAnalysis;
 import com.hartwig.hmftools.patientreporter.structural.FusionDisruptionAnalyzer;
 import com.hartwig.hmftools.patientreporter.variants.SomaticVariantAnalysis;
@@ -78,7 +81,9 @@ abstract class PatientReporter {
 
         final CopyNumberAnalysis copyNumberAnalysis = analyzeCopyNumbers(run, patientTumorLocation);
         final SomaticVariantAnalysis somaticVariantAnalysis = analyzeSomaticVariants(run, copyNumberAnalysis, patientTumorLocation);
-        final FusionDisruptionAnalysis fusionDisruptionAnalysis = analyzeStructuralVariants(run, copyNumberAnalysis, patientTumorLocation);
+
+        final FusionDisruptionAnalysis fusionDisruptionAnalysis =
+                analyzeStructuralVariants(run, copyNumberAnalysis, patientTumorLocation, sequencedReportData().svAnalyzerModel());
         final List<GermlineVariant> germlineVariants = doReportGermline ? analyzeGermlineVariants(run) : null;
         final ChordAnalysis chordAnalysis = analyzeChord(run);
 
@@ -207,8 +212,12 @@ abstract class PatientReporter {
 
     @NotNull
     private FusionDisruptionAnalysis analyzeStructuralVariants(@NotNull RunContext run, @NotNull CopyNumberAnalysis copyNumberAnalysis,
-            @Nullable PatientTumorLocation patientTumorLocation) throws IOException {
+            @Nullable PatientTumorLocation patientTumorLocation, @NotNull SvAnalyzerModel svAnalyzerModel) throws IOException {
         LOGGER.info("Loading structural variants...");
+
+        List<FusionReaderFile> raportableFusions = svAnalyzerModel.filterFusions();
+        List<DisruptionReaderFile> raportableDisruptions = svAnalyzerModel.filterDisruptions();
+
         final List<StructuralVariant> structuralVariants = PatientReporterFileLoader.loadPassedStructuralVariants(run.runDirectory());
         LOGGER.info(" " + structuralVariants.size() + " PASS structural variants loaded");
 
