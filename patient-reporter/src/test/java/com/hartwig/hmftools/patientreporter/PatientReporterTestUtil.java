@@ -4,7 +4,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.List;
-import java.util.logging.Logger;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.TreeMultimap;
@@ -67,7 +66,7 @@ public final class PatientReporterTestUtil {
                     testKnownFusionModel(),
                     new IndexedFastaSequenceFile(new File(REF_GENOME_PATH)),
                     TreeMultimap.create(),
-                    SvAnalyzerModel.fromKnowledgebase(FUSION_FILE, DISRUPTION_FILE));
+                    SvAnalyzerModel.readFiles(FUSION_FILE, DISRUPTION_FILE));
         } catch (IOException exception) {
             throw new IllegalStateException("Could not generate test sequenced report data: " + exception.getMessage());
         }
