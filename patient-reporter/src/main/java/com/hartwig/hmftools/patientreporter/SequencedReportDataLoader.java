@@ -33,7 +33,7 @@ final class SequencedReportDataLoader {
 
         final DrupActionabilityModel drupActionabilityModel = DrupActionabilityModelFactory.buildFromCsv(drupGeneCsv);
         final GeneModel panelGeneModel = GeneModelFactory.create(drupActionabilityModel);
-        final SvAnalyzerModel svAnalyzerModel = SvAnalyzerModel.fromKnowledgebase(fusionFile, disruptionFile);
+        final SvAnalyzerModel svAnalyzerModel = SvAnalyzerModel.readFiles(fusionFile, disruptionFile);
 
         final KnownFusionsModel knownFusionsModel = KnownFusionsModel.fromInputStreams(new FileInputStream(fusionPairsLocation),
                 new FileInputStream(promiscuousFiveLocation),
