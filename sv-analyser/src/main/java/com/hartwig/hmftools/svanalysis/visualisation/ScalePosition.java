@@ -2,28 +2,40 @@ package com.hartwig.hmftools.svanalysis.visualisation;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.region.GenomeRegion;
+import com.hartwig.hmftools.common.region.GenomeRegionFactory;
 
 import org.jetbrains.annotations.NotNull;
 
 public class ScalePosition {
 
-    private static final int BUFFER = 1;
+    @NotNull
+    public static List<GenomeRegion> scale(int start, @NotNull final List<GenomeRegion> regions) {
 
-    private long minPosition;
+        final Map<String, Map<Long, Integer>> chromosomePositionMap = Maps.newHashMap();
+        final Set<String> contigs = regions.stream().map(GenomeRegion::chromosome).collect(Collectors.toSet());
+        for (final String contig : contigs) {
+            final List<Long> contigPositions = Lists.newArrayList();
+            regions.stream().filter(x -> x.chromosome().equals(contig)).forEach(x -> {
+                contigPositions.add(x.start());
+                contigPositions.add(x.end());
+            });
 
-    public ScalePosition(long minPosition) {
-        this.minPosition = minPosition;
+            chromosomePositionMap.put(contig, positionMap(start, contigPositions));
+        }
+
+        return regions.stream().map(x -> scale(x, chromosomePositionMap.get(x.chromosome()))).collect(Collectors.toList());
     }
 
     @NotNull
-    public List<GenomeRegion> scale(@NotNull final List<GenomeRegion> regions) {
-        return regions;
+    private static GenomeRegion scale(@NotNull final GenomeRegion victim, @NotNull final Map<Long, Integer> positionMap) {
+        return GenomeRegionFactory.create(victim.chromosome(), positionMap.get(victim.start()), positionMap.get(victim.end()));
     }
 
     @VisibleForTesting
