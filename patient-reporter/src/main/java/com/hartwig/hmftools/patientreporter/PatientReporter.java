@@ -218,6 +218,10 @@ abstract class PatientReporter {
         List<FusionReaderFile> raportableFusions = svAnalyzerModel.filterFusions();
         List<DisruptionReaderFile> raportableDisruptions = svAnalyzerModel.filterDisruptions();
 
+        LOGGER.info("raportbaleFusions" + raportableFusions);
+        LOGGER.info("raportableDisruptions" + raportableDisruptions);
+
+
         final List<StructuralVariant> structuralVariants = PatientReporterFileLoader.loadPassedStructuralVariants(run.runDirectory());
         LOGGER.info(" " + structuralVariants.size() + " PASS structural variants loaded");
 
