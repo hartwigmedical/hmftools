@@ -14,6 +14,8 @@ import com.hartwig.hmftools.patientreporter.genepanel.GeneModel;
 import com.hartwig.hmftools.patientreporter.genepanel.GeneModelFactory;
 import com.hartwig.hmftools.patientreporter.loadStructuralVariants.SvAnalyzerModel;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
@@ -34,8 +36,6 @@ final class SequencedReportDataLoader {
         final DrupActionabilityModel drupActionabilityModel = DrupActionabilityModelFactory.buildFromCsv(drupGeneCsv);
         final GeneModel panelGeneModel = GeneModelFactory.create(drupActionabilityModel);
         final SvAnalyzerModel svAnalyzerModel = SvAnalyzerModel.fromKnowledgebase(fusionFile, disruptionFile);
-
-
 
         final KnownFusionsModel knownFusionsModel = KnownFusionsModel.fromInputStreams(new FileInputStream(fusionPairsLocation),
                 new FileInputStream(promiscuousFiveLocation),

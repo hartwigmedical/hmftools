@@ -1,0 +1,2 @@
+SampleId,Reportable,SvId,Chromosome,Position,Orientation,Type,Gene,Transcript,Strand,RegionType,CodingType,Biotype,Exon,IsDisruptive,
+CPCT11111111T,false,7557792,3,125593804,-1,INV,ROPN1B,ENST00000514116,1,Upstream,5P_UTR,protein_coding,0,false

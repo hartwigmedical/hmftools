@@ -3,6 +3,7 @@ package com.hartwig.hmftools.patientreporter.loadStructuralVariants;
 import java.io.IOException;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public class SvAnalyzerModel {
 
