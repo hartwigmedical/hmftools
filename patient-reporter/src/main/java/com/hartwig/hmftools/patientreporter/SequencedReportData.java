@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.patientreporter;
 
+import java.util.List;
+
 import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.actionability.ActionabilityAnalyzer;
 import com.hartwig.hmftools.common.fusions.KnownFusionsModel;
@@ -35,5 +37,6 @@ public abstract class SequencedReportData {
 
     @NotNull
     public abstract Multimap<String, GenomeRegion> highConfidenceRegions();
+
 
 }

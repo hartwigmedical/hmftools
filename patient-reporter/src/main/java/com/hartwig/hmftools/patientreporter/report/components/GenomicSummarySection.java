@@ -65,7 +65,7 @@ public final class GenomicSummarySection {
         ComponentBuilder<?, ?> tumorCharacteristicsPart = cmp.verticalList(cmp.horizontalList(cmp.text("Tumor Characteristics")
                         .setHorizontalTextAlignment(HorizontalTextAlignment.CENTER)),
                 cmp.horizontalList(cmp.text(
-                        "Whole genome sequencing based tumor characteristics. Details can be found down further the report.")
+                        "Whole genome sequencing based tumor characteristics. Details can be found further down the report.")
                         .setHorizontalTextAlignment(HorizontalTextAlignment.CENTER)
                         .setStyle(fontStyle().setFontSize(8))),
                 cmp.verticalGap(10),

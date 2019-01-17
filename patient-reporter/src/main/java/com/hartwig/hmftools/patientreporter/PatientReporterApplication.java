@@ -41,7 +41,7 @@ public class PatientReporterApplication {
     public static final String VERSION = PatientReporterApplication.class.getPackage().getImplementationVersion();
 
     // Uncomment this line when generating an example report using PDFWriterTest
-//        public static final String VERSION = "5.7";
+    //        public static final String VERSION = "5.7";
 
     private static final String TUMOR_LOCATION_CSV = "tumor_location_csv";
     private static final String LIMS_DIRECTORY = "lims";
@@ -55,6 +55,8 @@ public class PatientReporterApplication {
     private static final String PROMISCUOUS_FIVE_CSV = "promiscuous_five_csv";
     private static final String PROMISCUOUS_THREE_CSV = "promiscuous_three_csv";
     private static final String DO_REPORT_GERMLINE = "do_report_germline";
+    private static final String VARIANT_ANNOTATOR_FUSION = "variant_annotator_fusion";
+    private static final String VARIANT_ANNOTATOR_DISRUPTION = "variant_annotator_disruption";
 
     private static final String KNOWLEDGEBASE_PATH = "knowledgebase_path";
     private static final String DRUP_GENES_CSV = "drup_genes_csv";
@@ -138,7 +140,9 @@ public class PatientReporterApplication {
                 cmd.getOptionValue(DRUP_GENES_CSV),
                 cmd.getOptionValue(HOTSPOT_TSV),
                 cmd.getOptionValue(FASTA_FILE_LOCATION),
-                cmd.getOptionValue(HIGH_CONFIDENCE_BED));
+                cmd.getOptionValue(HIGH_CONFIDENCE_BED),
+                cmd.getOptionValue(VARIANT_ANNOTATOR_FUSION),
+                cmd.getOptionValue(VARIANT_ANNOTATOR_DISRUPTION));
     }
 
     @NotNull
@@ -174,6 +178,8 @@ public class PatientReporterApplication {
         final String fusionPairsCsv = cmd.getOptionValue(FUSION_PAIRS_CSV);
         final String promiscuousFiveCsv = cmd.getOptionValue(PROMISCUOUS_FIVE_CSV);
         final String promiscuousThreeCsv = cmd.getOptionValue(PROMISCUOUS_THREE_CSV);
+        final String variantAnnotatorFusion = cmd.getOptionValue(VARIANT_ANNOTATOR_FUSION);
+        final String variantAnnotatorDisruption = cmd.getOptionValue(VARIANT_ANNOTATOR_DISRUPTION);
 
         final String fastaFileLocation = cmd.getOptionValue(FASTA_FILE_LOCATION);
         final String highConfidenceBed = cmd.getOptionValue(HIGH_CONFIDENCE_BED);
@@ -194,6 +200,10 @@ public class PatientReporterApplication {
             LOGGER.warn(PROMISCUOUS_THREE_CSV + " has to be an existing file: " + promiscuousThreeCsv);
         } else if (fastaFileLocation == null || !exists(fastaFileLocation)) {
             LOGGER.warn(FASTA_FILE_LOCATION + " has to be an existing file: " + fastaFileLocation);
+        } else if (variantAnnotatorFusion == null || !exists(variantAnnotatorFusion)) {
+            LOGGER.warn(VARIANT_ANNOTATOR_FUSION + " has to be an existing file: " + variantAnnotatorFusion);
+        } else if (variantAnnotatorDisruption == null || !exists(variantAnnotatorDisruption)) {
+            LOGGER.warn(VARIANT_ANNOTATOR_DISRUPTION + " has to be an existing file: " + variantAnnotatorDisruption);
         } else if (highConfidenceBed == null || !exists(highConfidenceBed)) {
             LOGGER.warn(HIGH_CONFIDENCE_BED + " has to be an existing file: " + highConfidenceBed);
         } else {
@@ -288,6 +298,8 @@ public class PatientReporterApplication {
         options.addOption(SIGNATURE, true, "Path towards a image file containing the signature to be appended at the end of the report.");
         options.addOption(RVA_LOGO, true, "Path towards a image file containing the logo.");
         options.addOption(COMMENTS, true, "Additional comments to be added to the report, if any.");
+        options.addOption(VARIANT_ANNOTATOR_FUSION, true, "Path towards a CSV of fusions of sample.");
+        options.addOption(VARIANT_ANNOTATOR_DISRUPTION, true, "Path towards a CSV of disruption of sample.");
         return options;
     }
 
