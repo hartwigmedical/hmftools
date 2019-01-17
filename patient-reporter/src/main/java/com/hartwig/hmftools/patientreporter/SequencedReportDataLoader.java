@@ -12,6 +12,7 @@ import com.hartwig.hmftools.patientreporter.actionability.DrupActionabilityModel
 import com.hartwig.hmftools.patientreporter.actionability.DrupActionabilityModelFactory;
 import com.hartwig.hmftools.patientreporter.genepanel.GeneModel;
 import com.hartwig.hmftools.patientreporter.genepanel.GeneModelFactory;
+import com.hartwig.hmftools.patientreporter.loadStructuralVariants.SvAnalyzerModel;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -32,6 +33,8 @@ final class SequencedReportDataLoader {
 
         final DrupActionabilityModel drupActionabilityModel = DrupActionabilityModelFactory.buildFromCsv(drupGeneCsv);
         final GeneModel panelGeneModel = GeneModelFactory.create(drupActionabilityModel);
+        final SvAnalyzerModel svAnalyzerModel = SvAnalyzerModel.fromKnowledgebase(fusionFile, disruptionFile);
+
 
 
         final KnownFusionsModel knownFusionsModel = KnownFusionsModel.fromInputStreams(new FileInputStream(fusionPairsLocation),
@@ -43,6 +46,6 @@ final class SequencedReportDataLoader {
                 HotspotEnrichment.fromHotspotsFile(hotspotTsv),
                 knownFusionsModel,
                 new IndexedFastaSequenceFile(new File(fastaFileLocation)),
-                BEDFileLoader.fromBedFile(highConfidenceBed));
+                BEDFileLoader.fromBedFile(highConfidenceBed), svAnalyzerModel);
     }
 }
