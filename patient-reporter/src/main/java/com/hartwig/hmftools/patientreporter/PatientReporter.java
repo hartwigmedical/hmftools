@@ -215,12 +215,11 @@ abstract class PatientReporter {
             @Nullable PatientTumorLocation patientTumorLocation, @NotNull SvAnalyzerModel svAnalyzerModel) throws IOException {
         LOGGER.info("Loading structural variants...");
 
-        List<FusionReaderFile> raportableFusions = svAnalyzerModel.filterFusions();
-        List<DisruptionReaderFile> raportableDisruptions = svAnalyzerModel.filterDisruptions();
+        List<FusionReaderFile> reportableFusions = svAnalyzerModel.filterFusions();
+        List<DisruptionReaderFile> reportableDisruptions = svAnalyzerModel.filterDisruptions();
 
-        LOGGER.info("raportbaleFusions" + raportableFusions);
-        LOGGER.info("raportableDisruptions" + raportableDisruptions);
-
+        LOGGER.info("reportableFusions" + reportableFusions); // add to report
+        LOGGER.info("reportableDisruptions" + reportableDisruptions); // add to report plus filter on evidence items
 
         final List<StructuralVariant> structuralVariants = PatientReporterFileLoader.loadPassedStructuralVariants(run.runDirectory());
         LOGGER.info(" " + structuralVariants.size() + " PASS structural variants loaded");

@@ -14,40 +14,44 @@ public class DisruptionFactory {
     }
 
     private static final String DELIMITER = ",";
-
+    private static final String SVANALYSIS_DIRECTORY = "svAnalysis";
 
     @NotNull
-    public static DisruptionAnalyzer readingDisruption(@NotNull String disruptionFile) throws IOException {
+    public static DisruptionAnalyzer readingDisruption(@NotNull String disruptionFileExtension, @NotNull String sample,
+            @NotNull String runDirectory) throws IOException {
+        final String dirPath = runDirectory + File.separator + SVANALYSIS_DIRECTORY;
+        final String disruptionFilePath = dirPath + File.separator + sample + disruptionFileExtension;
+
         final List<DisruptionReaderFile> disruptions = new ArrayList<>();
 
-        final List<String> lineDisruptions = Files.readAllLines(new File(disruptionFile).toPath());
+        final List<String> lineDisruptions = Files.readAllLines(new File(disruptionFilePath).toPath());
 
         // Skip header line
         for (String lineDisruption : lineDisruptions.subList(1, lineDisruptions.size())) {
             disruptions.add(fromLineVariants(lineDisruption));
         }
-        return new DisruptionAnalyzer (disruptions);
+        return new DisruptionAnalyzer(disruptions);
     }
 
     @NotNull
     private static DisruptionReaderFile fromLineVariants(@NotNull String line) {
         final String[] values = line.split(DELIMITER);
-       return ImmutableDisruptionReaderFile.builder()
-               .reportable(Boolean.valueOf(values[1]))
-               .svId(values[2])
-               .chromosome(values[3])
-               .position(values[4])
-               .orientation(values[5])
-               .type(values[6])
-               .gene(values[7])
-               .transcript(values[8])
-               .strand(values[9])
-               .regionType(values[10])
-               .codingType(values[11])
-               .biotype(values[12])
-               .exon(values[13])
-               .isDisruptive(Boolean.valueOf(values[14]))
-               .build();
+        return ImmutableDisruptionReaderFile.builder()
+                .reportable(Boolean.valueOf(values[1]))
+                .svId(values[2])
+                .chromosome(values[3])
+                .position(values[4])
+                .orientation(values[5])
+                .type(values[6])
+                .gene(values[7])
+                .transcript(values[8])
+                .strand(values[9])
+                .regionType(values[10])
+                .codingType(values[11])
+                .biotype(values[12])
+                .exon(values[13])
+                .isDisruptive(Boolean.valueOf(values[14]))
+                .build();
     }
 
 }

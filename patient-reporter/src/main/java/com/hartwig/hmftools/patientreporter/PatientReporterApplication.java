@@ -8,6 +8,8 @@ import java.util.List;
 
 import com.hartwig.hmftools.common.center.Center;
 import com.hartwig.hmftools.common.center.CenterModel;
+import com.hartwig.hmftools.common.context.ProductionRunContextFactory;
+import com.hartwig.hmftools.common.context.RunContext;
 import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocation;
 import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.lims.LimsFactory;
@@ -142,7 +144,8 @@ public class PatientReporterApplication {
                 cmd.getOptionValue(FASTA_FILE_LOCATION),
                 cmd.getOptionValue(HIGH_CONFIDENCE_BED),
                 cmd.getOptionValue(VARIANT_ANNOTATOR_FUSION),
-                cmd.getOptionValue(VARIANT_ANNOTATOR_DISRUPTION));
+                cmd.getOptionValue(VARIANT_ANNOTATOR_DISRUPTION),
+                cmd.getOptionValue(RUN_DIRECTORY));
     }
 
     @NotNull
@@ -170,7 +173,7 @@ public class PatientReporterApplication {
         return ImmutablePatientReporter.of(buildBaseReportData(cmd), sequencedReportData, svAnalyzer);
     }
 
-    private static boolean validInputForPatientReporter(@NotNull final CommandLine cmd) {
+    private static boolean validInputForPatientReporter(@NotNull final CommandLine cmd) throws IOException {
         final String runDirectory = cmd.getOptionValue(RUN_DIRECTORY);
         final String knowledgebasePath = cmd.getOptionValue(KNOWLEDGEBASE_PATH);
         final String drupGenesCsv = cmd.getOptionValue(DRUP_GENES_CSV);
@@ -178,11 +181,16 @@ public class PatientReporterApplication {
         final String fusionPairsCsv = cmd.getOptionValue(FUSION_PAIRS_CSV);
         final String promiscuousFiveCsv = cmd.getOptionValue(PROMISCUOUS_FIVE_CSV);
         final String promiscuousThreeCsv = cmd.getOptionValue(PROMISCUOUS_THREE_CSV);
-        final String variantAnnotatorFusion = cmd.getOptionValue(VARIANT_ANNOTATOR_FUSION);
-        final String variantAnnotatorDisruption = cmd.getOptionValue(VARIANT_ANNOTATOR_DISRUPTION);
+        final String variantAnnotatorFusionExtension = cmd.getOptionValue(VARIANT_ANNOTATOR_FUSION);
+        final String variantAnnotatorDisruptionExtension = cmd.getOptionValue(VARIANT_ANNOTATOR_DISRUPTION);
 
         final String fastaFileLocation = cmd.getOptionValue(FASTA_FILE_LOCATION);
         final String highConfidenceBed = cmd.getOptionValue(HIGH_CONFIDENCE_BED);
+        final RunContext run = ProductionRunContextFactory.fromRunDirectory(runDirectory);
+        final String variantAnnotatorFusionFile =
+                run.runDirectory() + "/" + "svAnalysis" + "/" + run.tumorSample() + variantAnnotatorFusionExtension;
+        final String variantAnnotatorDisruptionFile =
+                run.runDirectory() + "/" + "svAnalysis" + "/" + run.tumorSample() + variantAnnotatorDisruptionExtension;
 
         if (runDirectory == null || !exists(runDirectory) || !isDirectory(runDirectory)) {
             LOGGER.warn(RUN_DIRECTORY + " has to be an existing directory: " + runDirectory);
@@ -200,10 +208,10 @@ public class PatientReporterApplication {
             LOGGER.warn(PROMISCUOUS_THREE_CSV + " has to be an existing file: " + promiscuousThreeCsv);
         } else if (fastaFileLocation == null || !exists(fastaFileLocation)) {
             LOGGER.warn(FASTA_FILE_LOCATION + " has to be an existing file: " + fastaFileLocation);
-        } else if (variantAnnotatorFusion == null || !exists(variantAnnotatorFusion)) {
-            LOGGER.warn(VARIANT_ANNOTATOR_FUSION + " has to be an existing file: " + variantAnnotatorFusion);
-        } else if (variantAnnotatorDisruption == null || !exists(variantAnnotatorDisruption)) {
-            LOGGER.warn(VARIANT_ANNOTATOR_DISRUPTION + " has to be an existing file: " + variantAnnotatorDisruption);
+        } else if (variantAnnotatorFusionFile == null || !exists(variantAnnotatorFusionFile)) {
+            LOGGER.warn(VARIANT_ANNOTATOR_FUSION + " has to be an existing file: " + variantAnnotatorFusionFile);
+        } else if (variantAnnotatorDisruptionFile == null || !exists(variantAnnotatorDisruptionFile)) {
+            LOGGER.warn(VARIANT_ANNOTATOR_DISRUPTION + " has to be an existing file: " + variantAnnotatorDisruptionFile);
         } else if (highConfidenceBed == null || !exists(highConfidenceBed)) {
             LOGGER.warn(HIGH_CONFIDENCE_BED + " has to be an existing file: " + highConfidenceBed);
         } else {
@@ -298,8 +306,8 @@ public class PatientReporterApplication {
         options.addOption(SIGNATURE, true, "Path towards a image file containing the signature to be appended at the end of the report.");
         options.addOption(RVA_LOGO, true, "Path towards a image file containing the logo.");
         options.addOption(COMMENTS, true, "Additional comments to be added to the report, if any.");
-        options.addOption(VARIANT_ANNOTATOR_FUSION, true, "Path towards a CSV of fusions of sample.");
-        options.addOption(VARIANT_ANNOTATOR_DISRUPTION, true, "Path towards a CSV of disruption of sample.");
+        options.addOption(VARIANT_ANNOTATOR_FUSION, true, "Extension of fusion file of sample.");
+        options.addOption(VARIANT_ANNOTATOR_DISRUPTION, true, "Extension of disruption file of sample.");
         return options;
     }
 
