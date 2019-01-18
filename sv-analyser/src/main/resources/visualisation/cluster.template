@@ -1,0 +1,88 @@
+<<include etc/colors_fonts_patterns.conf>>
+<<include ideogram.conf>>
+<<include ticks.conf>>
+
+<image>
+	<<include etc/image.conf>>
+</image>
+
+karyotype = $SAMPLE.karyotype.circos
+
+chromosomes_units           = 1000000
+chromosomes_display_default = yes
+#chromosomes       = -hs1;-hs2;hs3:24-28;-hs4;-hs5;hs6:25-27;-hs7;-hs8;-hs9;-hs10;-hs11;hs12:72.66-72.67;-hs13;-hs14;-hs15;-hs16;-hs17;-hs18;-hs19;-hs20;-hs21;-hs22;-hsX;-hsY
+#chromosomes                 = -hs1,-hs2,-hs4,-hs5,-hs6,-hsZ
+chromosomes = hs3[a];hs6[b];hs10[c];hs12[d]
+#chromosome_breaks = -hs10:26-59
+#chromosomes_scale = a:10000;b:10000;c:100;d:10000
+
+# Default is to clip the data to proximity min/max.
+<plots>
+
+	# -----------------------------------------------------------
+	# Backgound
+	<plot>
+		r0   = 0.30r
+		r1   = 0.90r
+
+		<backgrounds>
+			<background>
+				#color = vlgreen_a5
+				color = vvlgreen
+			</background>
+		</backgrounds>
+
+	</plot>
+
+
+	# -----------------------------------------------------------
+	# Text
+	<plot>
+		type             = text
+		color            = black
+		file             = $SAMPLE.text.circos
+
+		r0   = 0.9r
+		r1   = 1r
+
+		show_links     = no
+		link_dims      = 4p,4p,260p,20p,0p
+		link_thickness = 2p
+		link_color     = black
+
+		label_size   = 20p
+		label_font   = condensed
+		label_snuggle=yes
+
+		padding  = 0p
+		rpadding = 0p
+	</plot>
+
+	# -----------------------------------------------------------
+	# Connectors
+    <plot>
+
+        type = connector
+        file = $SAMPLE.connector.circos
+
+        r0	=	0.30r
+        #r1   = 0.999r
+
+        connector_dims = 0,0.3,0.5,0.3,0
+
+        thickness = 4
+        color     = red
+    </plot>
+
+</plots>
+
+<links>
+    <link>
+        file          = $SAMPLE.link.circos
+        color         = red
+        radius        = 0.3r
+        thickness     = 4
+    </link>
+</links>
+
+<<include etc/housekeeping.conf>>

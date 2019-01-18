@@ -1,0 +1,19 @@
+	# Histogram Track
+	<plot>
+		type = histogram
+		file = $SAMPLE.histogram.circos
+		r0   = 0.30r
+		r1   = 0.90r
+		min  = 1
+		max = $MAX
+		thickness   = 4
+		color = black
+		extend_bin  = no
+
+		<rules>
+			<rule>
+				condition = var(value) != $CONDITION
+				show = no
+			</rule>
+		</rules>
+	</plot>

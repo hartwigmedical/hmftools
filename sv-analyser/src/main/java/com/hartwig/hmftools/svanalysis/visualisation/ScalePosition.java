@@ -15,10 +15,9 @@ import org.jetbrains.annotations.NotNull;
 
 public class ScalePosition {
 
-    @NotNull
-    public static List<GenomeRegion> scale(int start, @NotNull final List<GenomeRegion> regions) {
+    private final Map<String, Map<Long, Integer>> chromosomePositionMap = Maps.newHashMap();
 
-        final Map<String, Map<Long, Integer>> chromosomePositionMap = Maps.newHashMap();
+    public ScalePosition(final int start, @NotNull final List<GenomeRegion> regions) {
         final Set<String> contigs = regions.stream().map(GenomeRegion::chromosome).collect(Collectors.toSet());
         for (final String contig : contigs) {
             final List<Long> contigPositions = Lists.newArrayList();
@@ -29,13 +28,32 @@ public class ScalePosition {
 
             chromosomePositionMap.put(contig, positionMap(start, contigPositions));
         }
+    }
 
+    @NotNull
+    public List<GenomeRegion> scaleRegions(@NotNull final List<GenomeRegion> regions) {
         return regions.stream().map(x -> scale(x, chromosomePositionMap.get(x.chromosome()))).collect(Collectors.toList());
+    }
+
+    @NotNull
+    public List<SvLink> scaleLinks(@NotNull final List<SvLink> links) {
+        return links.stream()
+                .map(x -> scale(x, chromosomePositionMap.get(x.startChromosome()), chromosomePositionMap.get(x.endChromosome())))
+                .collect(Collectors.toList());
     }
 
     @NotNull
     private static GenomeRegion scale(@NotNull final GenomeRegion victim, @NotNull final Map<Long, Integer> positionMap) {
         return GenomeRegionFactory.create(victim.chromosome(), positionMap.get(victim.start()), positionMap.get(victim.end()));
+    }
+
+    @NotNull
+    private static SvLink scale(@NotNull final SvLink victim, @NotNull final Map<Long, Integer> startPositionMap,
+            @NotNull final Map<Long, Integer> endPositionMap) {
+        return new SvLink(victim.startChromosome(),
+                startPositionMap.get(victim.startPosition()),
+                victim.endChromosome(),
+                endPositionMap.get(victim.endPosition()));
     }
 
     @VisibleForTesting

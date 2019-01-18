@@ -1,37 +1,39 @@
 package com.hartwig.hmftools.svanalysis.visualisation;
 
-import com.hartwig.hmftools.common.region.GenomeRegion;
+public class SvLink {
 
-import org.jetbrains.annotations.NotNull;
 
-class SvLink implements GenomeRegion {
+    private final String startChromosome;
+    private final long startPosition;
+    private final String endChromosome;
+    private final long endPosition;
 
-    private final GenomeRegion region;
-    private final int value;
-
-    SvLink(final GenomeRegion region, final int value) {
-        this.region = region;
-        this.value = value;
+    public SvLink(final String startChromosome, final long startPosition, final String endChromosome, final long endPosition) {
+        this.startChromosome = startChromosome;
+        this.startPosition = startPosition;
+        this.endChromosome = endChromosome;
+        this.endPosition = endPosition;
     }
 
-    @NotNull
+    public String startChromosome() {
+        return startChromosome;
+    }
+
+    public long startPosition() {
+        return startPosition;
+    }
+
+    public String endChromosome() {
+        return endChromosome;
+    }
+
+    public long endPosition() {
+        return endPosition;
+    }
+
     @Override
-    public String chromosome() {
-        return region.chromosome();
+    public String toString() {
+        return "SvLink{" + "startChromosome='" + startChromosome + '\'' + ", startPosition=" + startPosition + ", endChromosome='"
+                + endChromosome + '\'' + ", endPosition=" + endPosition + '}';
     }
-
-    @Override
-    public long start() {
-        return region.start();
-    }
-
-    @Override
-    public long end() {
-        return region.end();
-    }
-
-    public int value() {
-        return value;
-    }
-
 }
