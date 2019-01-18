@@ -59,10 +59,6 @@ public class PatientReporterApplication {
     private static final String KNOWLEDGEBASE_PATH = "knowledgebase_path";
     private static final String DRUP_GENES_CSV = "drup_genes_csv";
     private static final String HOTSPOT_TSV = "hotspot_tsv";
-    private static final String ENSEMBL_DB = "ensembl_db";
-    private static final String ENSEMBL_DB_LOCAL = "local_ensembl";
-    private static final String DB_USER = "db_user";
-    private static final String DB_PASS = "db_pass";
     private static final String LOG_DEBUG = "log_debug";
 
     private static final String FASTA_FILE_LOCATION = "fasta_file_location";
@@ -271,10 +267,6 @@ public class PatientReporterApplication {
         options.addOption(KNOWLEDGEBASE_PATH, true, "Path towards a directory holding knowledgebase output files.");
         options.addOption(DRUP_GENES_CSV, true, "Path towards a CSV containing genes that could potentially indicate inclusion in DRUP.");
         options.addOption(HOTSPOT_TSV, true, "Path towards a TSV containing known hotspot variants.");
-        options.addOption(ENSEMBL_DB, true, "Annotate structural somaticVariants using this Ensembl DB URI");
-        options.addOption(ENSEMBL_DB_LOCAL, false, "Flag indicating to connect to local Ensembl DB");
-        options.addOption(DB_USER, true, "Database user name to connect to local mysql instance.");
-        options.addOption(DB_PASS, true, "Database password to connect to local mysql instance.");
         options.addOption(LOG_DEBUG, false, "If provided, set the log level to debug rather than default.");
         options.addOption(FASTA_FILE_LOCATION, true, "Path towards the FASTA file containing the ref genome.");
         options.addOption(HIGH_CONFIDENCE_BED, true, "Path towards the high confidence BED file.");
