@@ -19,6 +19,7 @@ import com.hartwig.hmftools.patientreporter.actionability.DrupActionabilityModel
 import com.hartwig.hmftools.patientreporter.actionability.DrupActionabilityModelFactory;
 import com.hartwig.hmftools.patientreporter.genepanel.GeneModel;
 import com.hartwig.hmftools.patientreporter.genepanel.GeneModelFactory;
+import com.hartwig.hmftools.patientreporter.loadStructuralVariants.SvAnalyzerModel;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -37,12 +38,32 @@ public final class PatientReporterTestUtil {
     private static final String DRUP_GENES_CSV = Resources.getResource("csv/drup_genes.csv").getPath();
     private static final String HOTSPOT_TSV = Resources.getResource("csv/hotspots.tsv").getPath();
 
+    private static final String FUSION_FILE = Resources.getResource("test_run/svAnalysis/CPCT11111111T_fusions.csv").getPath();
+    private static final String DISRUPTION_FILE = Resources.getResource("test_run/svAnalysis/CPCT11111111T_disruptions.csv").getPath();
+
     private PatientReporterTestUtil() {
     }
 
     @NotNull
     public static DrupActionabilityModel testDrupActionabilityModel() throws IOException {
         return DrupActionabilityModelFactory.buildFromCsv(DRUP_GENES_CSV);
+    }
+
+    @NotNull
+    static SvAnalyzerModel testSvAnalyzerModel() throws IOException {
+        return SvAnalyzerModel.fromFiles(FUSION_FILE, DISRUPTION_FILE);
+    }
+
+    @NotNull
+    public static BaseReportData testBaseReportData() {
+        try {
+            final List<PatientTumorLocation> patientTumorLocations = Lists.newArrayList();
+            final Lims lims = LimsFactory.empty();
+            final CenterModel centerModel = Center.readFromCSV(CENTER_CSV);
+            return ImmutableBaseReportData.of(patientTumorLocations, lims, centerModel, SIGNATURE_PATH, RVA_LOGO_PATH);
+        } catch (IOException exception) {
+            throw new IllegalStateException("Could not generate test base reporter data: " + exception.getMessage());
+        }
     }
 
     @NotNull
@@ -59,18 +80,6 @@ public final class PatientReporterTestUtil {
                     TreeMultimap.create());
         } catch (IOException exception) {
             throw new IllegalStateException("Could not generate test sequenced report data: " + exception.getMessage());
-        }
-    }
-
-    @NotNull
-    public static BaseReportData testBaseReportData() {
-        try {
-            final List<PatientTumorLocation> patientTumorLocations = Lists.newArrayList();
-            final Lims lims = LimsFactory.empty();
-            final CenterModel centerModel = Center.readFromCSV(CENTER_CSV);
-            return ImmutableBaseReportData.of(patientTumorLocations, lims, centerModel, SIGNATURE_PATH, RVA_LOGO_PATH);
-        } catch (IOException exception) {
-            throw new IllegalStateException("Could not generate test base reporter data: " + exception.getMessage());
         }
     }
 }
