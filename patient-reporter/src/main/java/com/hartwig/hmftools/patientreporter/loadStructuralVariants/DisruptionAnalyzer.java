@@ -18,9 +18,9 @@ public class DisruptionAnalyzer {
     @NotNull
     public List<DisruptionReaderFile> filteringDisruptions() {
         List<DisruptionReaderFile> raportableDisruptions = Lists.newArrayList();
-        for (int i = 1; i < disruptionReaderFiles.size(); i ++) {
-            if (disruptionReaderFiles.get(i).reportable().equals(true)) {
-                raportableDisruptions.add(disruptionReaderFiles.get(i));
+        for (DisruptionReaderFile disruption: disruptionReaderFiles) {
+            if (disruption.reportable().equals(true)) {
+                raportableDisruptions.add(disruption);
             }
         }
         return raportableDisruptions;

@@ -18,9 +18,9 @@ public class FusionAnalyzer {
     @NotNull
     public List<FusionReaderFile> filteringFusions() {
         List<FusionReaderFile> raportableFusions = Lists.newArrayList();
-        for (int i = 1; i < fusionReaderFile.size(); i ++) {
-            if (fusionReaderFile.get(i).reportable().equals(true)){
-                raportableFusions.add(fusionReaderFile.get(i));
+        for (FusionReaderFile fusion: fusionReaderFile){
+            if (fusion.reportable().equals(true)) {
+                raportableFusions.add(fusion);
             }
         }
         return raportableFusions;
