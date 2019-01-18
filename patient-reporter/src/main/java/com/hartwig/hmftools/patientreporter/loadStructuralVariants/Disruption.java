@@ -9,7 +9,6 @@ import org.jetbrains.annotations.Nullable;
              passAnnotations = { NotNull.class, Nullable.class })
 public abstract class Disruption {
 
-    @NotNull
     public abstract boolean reportable();
 
     @NotNull
@@ -48,6 +47,5 @@ public abstract class Disruption {
     @NotNull
     public abstract String exon();
 
-    @NotNull
     public abstract boolean isDisruptive();
 }

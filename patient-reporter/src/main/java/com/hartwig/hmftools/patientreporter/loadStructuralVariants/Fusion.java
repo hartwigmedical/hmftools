@@ -10,7 +10,6 @@ import org.jetbrains.annotations.Nullable;
 
 public abstract class Fusion {
 
-    @NotNull
     public abstract boolean reportable();
 
     @NotNull
