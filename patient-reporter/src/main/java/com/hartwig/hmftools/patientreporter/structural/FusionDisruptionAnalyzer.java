@@ -24,7 +24,7 @@ public final class FusionDisruptionAnalyzer {
     }
 
     @NotNull
-    public static FusionDisruptionAnalysis run(@NotNull StructuralVariantAnalysis structuralVariantAnalysis,
+    public static FusionDisruptionAnalysis run(@NotNull StructuralVariantAnalysis structuralVariantAnalysis, List<ReportableGeneFusion> geneFusionsToReport,
             @NotNull List<GeneCopyNumber> exomeGeneCopyNumbers, @NotNull ActionabilityAnalyzer actionabilityAnalyzer,
             @Nullable PatientTumorLocation patientTumorLocation) {
         List<ReportableGeneDisruption> reportableDisruptions = ReportableGeneDisruptionFactory.toReportableGeneDisruptions(
@@ -48,7 +48,7 @@ public final class FusionDisruptionAnalyzer {
         }
 
         return ImmutableFusionDisruptionAnalysis.builder()
-                .reportableFusions(ReportableGeneFusionFactory.toReportableGeneFusions(reportableFusions))
+                .reportableFusions(geneFusionsToReport)
                 .reportableDisruptions(reportableDisruptions)
                 .evidenceItems(filteredEvidence)
                 .build();

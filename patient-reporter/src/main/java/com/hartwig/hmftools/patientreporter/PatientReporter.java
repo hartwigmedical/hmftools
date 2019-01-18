@@ -43,6 +43,8 @@ import com.hartwig.hmftools.patientreporter.loadStructuralVariants.Fusion;
 import com.hartwig.hmftools.patientreporter.loadStructuralVariants.SvAnalyzerModel;
 import com.hartwig.hmftools.patientreporter.structural.FusionDisruptionAnalysis;
 import com.hartwig.hmftools.patientreporter.structural.FusionDisruptionAnalyzer;
+import com.hartwig.hmftools.patientreporter.structural.ReportableGeneFusion;
+import com.hartwig.hmftools.patientreporter.structural.ReportableGeneFusionFactory;
 import com.hartwig.hmftools.patientreporter.structural.StructuralVariantAnalyzer;
 import com.hartwig.hmftools.patientreporter.variants.SomaticVariantAnalysis;
 import com.hartwig.hmftools.patientreporter.variants.SomaticVariantAnalyzer;
@@ -218,11 +220,10 @@ abstract class PatientReporter {
             @Nullable PatientTumorLocation patientTumorLocation, @NotNull SvAnalyzerModel svAnalyzerModel) throws IOException {
         LOGGER.info("Loading structural variants...");
 
-        List<Fusion> reportableFusions = svAnalyzerModel.filterFusions();
+        List<Fusion> fusions = svAnalyzerModel.filterFusions();
         List<Disruption> reportableDisruptions = svAnalyzerModel.filterDisruptions();
 
-        LOGGER.info("reportableFusions" + reportableFusions); // add to report
-        LOGGER.info("reportableDisruptions" + reportableDisruptions); // add to report plus filter on evidence items
+        List<ReportableGeneFusion> geneFusionsToReport = ReportableGeneFusionFactory.fusionConvertToReportable(fusions);
 
 
 
@@ -240,7 +241,7 @@ abstract class PatientReporter {
         LOGGER.info("Analyzing structural variants...");
         final StructuralVariantAnalysis structuralVariantAnalysis = structuralVariantAnalyzer().runOnVariants(enrichedStructuralVariants);
 
-        return FusionDisruptionAnalyzer.run(structuralVariantAnalysis,
+        return FusionDisruptionAnalyzer.run(structuralVariantAnalysis, geneFusionsToReport,
                 copyNumberAnalysis.exomeGeneCopyNumbers(),
                 sequencedReportData().actionabilityAnalyzer(),
                 patientTumorLocation);
