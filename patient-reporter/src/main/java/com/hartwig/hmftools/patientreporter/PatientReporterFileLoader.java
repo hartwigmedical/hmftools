@@ -3,11 +3,8 @@ package com.hartwig.hmftools.patientreporter;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
@@ -23,8 +20,6 @@ import com.hartwig.hmftools.common.purple.purity.PurityContext;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariantFactory;
 import com.hartwig.hmftools.common.variant.enrich.SomaticEnrichment;
-import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
-import com.hartwig.hmftools.common.variant.structural.StructuralVariantFileLoader;
 import com.hartwig.hmftools.patientreporter.germline.BachelorFile;
 import com.hartwig.hmftools.patientreporter.germline.GermlineVariant;
 
@@ -40,11 +35,9 @@ public final class PatientReporterFileLoader {
     private static final Logger LOGGER = LogManager.getLogger(PatientReporterFileLoader.class);
 
     private static final String PURPLE_DIRECTORY = "purple";
-    private static final String GRIDSS_DIRECTORY = "structuralVariants" + File.separator + "gridss";
     private static final String CIRCOS_PLOT_DIRECTORY = "plot";
     private static final String CIRCOS_PLOT_EXTENSION = ".circos.png";
 
-    private static final String PURPLE_GRIDSS_SV = ".purple.sv.vcf.gz";
     private static final String SOMATIC_VCF_EXTENSION_STRELKA = "_post_processed.vcf.gz";
     private static final String SOMATIC_VCF_EXTENSION_SAGE = ".sage.vcf.gz";
 
@@ -76,24 +69,6 @@ public final class PatientReporterFileLoader {
     static String findCircosPlotPath(@NotNull String runDirectory, @NotNull String sample) {
         return runDirectory + File.separator + PURPLE_DIRECTORY + File.separator + CIRCOS_PLOT_DIRECTORY + File.separator + sample
                 + CIRCOS_PLOT_EXTENSION;
-    }
-
-    @NotNull
-    static List<StructuralVariant> loadPassedStructuralVariants(@NotNull String runDirectory) throws IOException {
-        Path gridssPath = Paths.get(runDirectory + File.separator + GRIDSS_DIRECTORY);
-
-        if (Files.exists(gridssPath) && Files.isDirectory(gridssPath)) {
-            String purpleDirectory = runDirectory + File.separator + PURPLE_DIRECTORY;
-            Optional<Path> path = Files.walk(Paths.get(purpleDirectory)).filter(p -> p.toString().endsWith(PURPLE_GRIDSS_SV)).findFirst();
-
-            assert path.isPresent();
-
-            LOGGER.debug(" Using " + path.get().toString() + " as source for structural variants.");
-            return StructuralVariantFileLoader.fromFile(path.get().toString(), new PassingVariantFilter());
-        } else {
-            LOGGER.warn(" Cannot load structural variants. No GRIDSS directory present in " + runDirectory + "!");
-            return Lists.newArrayList();
-        }
     }
 
     @NotNull
