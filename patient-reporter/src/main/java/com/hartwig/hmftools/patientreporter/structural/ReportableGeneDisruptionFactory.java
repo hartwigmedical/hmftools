@@ -12,11 +12,13 @@ import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneAnnotation;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneDisruption;
+import com.hartwig.hmftools.patientreporter.loadStructuralVariants.Disruption;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public final class ReportableGeneDisruptionFactory {
 
@@ -25,45 +27,70 @@ public final class ReportableGeneDisruptionFactory {
     private ReportableGeneDisruptionFactory() {
     }
 
+
     @NotNull
-    public static List<ReportableGeneDisruption> toReportableGeneDisruptions(@NotNull List<GeneDisruption> disruptions,
+    public static List<ReportableGeneDisruption> disruptionConvertGeneDisruption(@Nullable  List<Disruption> disruptions,
             @NotNull List<GeneCopyNumber> geneCopyNumbers) {
-        LOGGER.debug("Generating reportable disruptions based on {} disruptions", disruptions.size());
-        Map<String, GeneCopyNumber> copyNumberPerGene = toGeneMap(geneCopyNumbers);
-        Map<SvAndGeneKey, Pair<GeneDisruption, GeneDisruption>> pairedMap = mapDisruptionsPerStructuralVariant(disruptions);
-
         List<ReportableGeneDisruption> reportableDisruptions = Lists.newArrayList();
-        for (Pair<GeneDisruption, GeneDisruption> pairedDisruption : pairedMap.values()) {
-            GeneDisruption primaryDisruption = pairedDisruption.getLeft();
-
-            String gene = gene(primaryDisruption).GeneName;
-            GeneCopyNumber copyNumber = copyNumberPerGene.get(gene);
-            Integer geneMinCopies = null;
-            Integer geneMaxCopies = null;
-            if (copyNumber != null) {
-                geneMinCopies = (int) Math.max(0, Math.round(copyNumber.minCopyNumber()));
-                geneMaxCopies = (int) Math.max(0, Math.round(copyNumber.maxCopyNumber()));
-            } else {
-                LOGGER.warn("Could not find copy number for disruption annotation for gene  " + gene);
-            }
-
-            Double ploidy = gene(primaryDisruption).variant().ploidy();
-
-            reportableDisruptions.add(ImmutableReportableGeneDisruption.builder()
-                    .location(locationField(primaryDisruption))
-                    .gene(gene)
-                    .type(gene(primaryDisruption).variant().type())
-                    .range(rangeField(pairedDisruption))
-                    // Not sure when ploidy ever would be null
-                    .ploidy(ploidy != null ? ploidy : Double.NaN)
-                    .geneMinCopies(geneMinCopies)
-                    .geneMaxCopies(geneMaxCopies)
-                    .firstAffectedExon(primaryDisruption.linkedAnnotation().exonUpstream())
-                    .build());
+        Map<String, GeneCopyNumber> copyNumberPerGene = toGeneMap(geneCopyNumbers);
+        if (disruptions != null) {
+            for (Disruption disruption: disruptions) {
+                GeneCopyNumber copyNumber = copyNumberPerGene.get(disruption.gene());
+                reportableDisruptions.add(ImmutableReportableGeneDisruption.builder()
+                        .location(disruption.chromosome()) // add band
+                        .gene(disruption.gene())
+                        .type(disruption.type())
+                        .range(disruption.regionType())
+                        .ploidy(0)
+                        .geneMinCopies((int) Math.max(0, Math.round(copyNumber.minCopyNumber())))
+                        .geneMaxCopies((int) Math.max(0, Math.round(copyNumber.maxCopyNumber())))
+                        .firstAffectedExon(Integer.parseInt(disruption.exon()))
+                        .build());
         }
 
+        }
         return reportableDisruptions;
     }
+
+//    @NotNull
+//    public static List<ReportableGeneDisruption> toReportableGeneDisruptions(@NotNull List<GeneDisruption> disruptions,
+//            @NotNull List<GeneCopyNumber> geneCopyNumbers) {
+//        LOGGER.debug("Generating reportable disruptions based on {} disruptions", disruptions.size());
+//        Map<String, GeneCopyNumber> copyNumberPerGene = toGeneMap(geneCopyNumbers);
+//        Map<SvAndGeneKey, Pair<GeneDisruption, GeneDisruption>> pairedMap = mapDisruptionsPerStructuralVariant(disruptions);
+//
+//        List<ReportableGeneDisruption> reportableDisruptions = Lists.newArrayList();
+//        for (Pair<GeneDisruption, GeneDisruption> pairedDisruption : pairedMap.values()) {
+//            GeneDisruption primaryDisruption = pairedDisruption.getLeft();
+//
+//            String gene = gene(primaryDisruption).GeneName;
+//            GeneCopyNumber copyNumber = copyNumberPerGene.get(gene);
+//            Integer geneMinCopies = null;
+//            Integer geneMaxCopies = null;
+//            if (copyNumber != null) {
+//                geneMinCopies = (int) Math.max(0, Math.round(copyNumber.minCopyNumber()));
+//                geneMaxCopies = (int) Math.max(0, Math.round(copyNumber.maxCopyNumber()));
+//            } else {
+//                LOGGER.warn("Could not find copy number for disruption annotation for gene  " + gene);
+//            }
+//
+//            Double ploidy = gene(primaryDisruption).variant().ploidy();
+//
+//            reportableDisruptions.add(ImmutableReportableGeneDisruption.builder()
+//                    .location(locationField(primaryDisruption))
+//                    .gene(gene)
+//                    .type(gene(primaryDisruption).variant().type())
+//                    .range(rangeField(pairedDisruption))
+//                    // Not sure when ploidy ever would be null
+//                    .ploidy(ploidy != null ? ploidy : Double.NaN)
+//                    .geneMinCopies(geneMinCopies)
+//                    .geneMaxCopies(geneMaxCopies)
+//                    .firstAffectedExon(primaryDisruption.linkedAnnotation().exonUpstream())
+//                    .build());
+//        }
+//
+//        return reportableDisruptions;
+//    }
 
     @NotNull
     private static Map<String, GeneCopyNumber> toGeneMap(@NotNull List<GeneCopyNumber> geneCopyNumbers) {

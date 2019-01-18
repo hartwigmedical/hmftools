@@ -52,7 +52,7 @@ public final class GeneDisruptionDataSource {
             dataSource.add(disruption.location(),
                     disruption.gene(),
                     disruption.range(),
-                    disruption.type().name(),
+                    disruption.type(),
                     PatientReportFormat.correctValueForFitReliability(ploidyToCopiesString(disruption.ploidy()), hasReliablePurityFit),
                     PatientReportFormat.correctValueForFitReliability(geneMinCopies, hasReliablePurityFit),
                     PatientReportFormat.correctValueForFitReliability(geneMaxCopies, hasReliablePurityFit));

@@ -585,7 +585,7 @@ final class ExampleAnalysisTestFactory {
         ReportableGeneDisruption disruption1 = createDisruptionBuilder().location("10q23.31")
                 .gene("PTEN")
                 .range("Intron 5 -> Intron 6")
-                .type(StructuralVariantType.DEL)
+                .type("DEL")
                 .ploidy(1.8)
                 .geneMinCopies(0)
                 .geneMaxCopies(2)

@@ -21,7 +21,7 @@ public abstract class ReportableGeneDisruption {
     public abstract String range();
 
     @NotNull
-    public abstract StructuralVariantType type();
+    public abstract String type();
 
     public abstract double ploidy();
 

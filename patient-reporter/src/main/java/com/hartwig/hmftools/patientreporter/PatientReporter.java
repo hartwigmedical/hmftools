@@ -38,6 +38,7 @@ import com.hartwig.hmftools.patientreporter.loadStructuralVariants.SvAnalyzerMod
 import com.hartwig.hmftools.patientreporter.structural.FusionDisruptionAnalysis;
 import com.hartwig.hmftools.patientreporter.structural.FusionDisruptionAnalyzer;
 import com.hartwig.hmftools.patientreporter.structural.ReportableGeneDisruption;
+import com.hartwig.hmftools.patientreporter.structural.ReportableGeneDisruptionFactory;
 import com.hartwig.hmftools.patientreporter.structural.ReportableGeneFusion;
 import com.hartwig.hmftools.patientreporter.structural.ReportableGeneFusionFactory;
 import com.hartwig.hmftools.patientreporter.variants.SomaticVariantAnalysis;
@@ -210,10 +211,11 @@ abstract class PatientReporter {
     private FusionDisruptionAnalysis analyzeStructuralVariants(@NotNull RunContext run, @NotNull CopyNumberAnalysis copyNumberAnalysis,
             @Nullable PatientTumorLocation patientTumorLocation, @NotNull SvAnalyzerModel svAnalyzerModel) {
         List<Fusion> fusions = svAnalyzerModel.filterFusions();
-        List<Disruption> reportableDisruptions = svAnalyzerModel.filterDisruptions(sequencedReportData().panelGeneModel());
+        List<Disruption> disruption = svAnalyzerModel.filterDisruptions(sequencedReportData().panelGeneModel());
 
         List<ReportableGeneFusion> geneFusionsToReport = ReportableGeneFusionFactory.fusionConvertToReportable(fusions);
-        List<ReportableGeneDisruption> geneDisruptionsToReport = Lists.newArrayList();
+        List<ReportableGeneDisruption> geneDisruptionsToReport =
+                ReportableGeneDisruptionFactory.disruptionConvertGeneDisruption(disruption, copyNumberAnalysis.exomeGeneCopyNumbers());
 
         return FusionDisruptionAnalyzer.run(geneFusionsToReport,
                 geneDisruptionsToReport,
