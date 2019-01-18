@@ -17,12 +17,12 @@ public class FusionAnalyzer {
 
     @NotNull
     public List<Fusion> filteringFusions() {
-        List<Fusion> raportableFusions = Lists.newArrayList();
+        List<Fusion> reportableFusions = Lists.newArrayList();
         for (Fusion fusion: fusion){
             if (fusion.reportable()) {
-                raportableFusions.add(fusion);
+                reportableFusions.add(fusion);
             }
         }
-        return raportableFusions;
+        return reportableFusions;
     }
 }

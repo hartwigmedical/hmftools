@@ -17,12 +17,12 @@ public class DisruptionAnalyzer {
 
     @NotNull
     public List<Disruption> filteringDisruptions() {
-        List<Disruption> raportableDisruptions = Lists.newArrayList();
+        List<Disruption> reportableDisruptions = Lists.newArrayList();
         for (Disruption disruptionItem: disruption) {
             if (disruptionItem.reportable()) {
-                raportableDisruptions.add(disruptionItem);
+                reportableDisruptions.add(disruptionItem);
             }
         }
-        return raportableDisruptions;
+        return reportableDisruptions;
     }
 }
