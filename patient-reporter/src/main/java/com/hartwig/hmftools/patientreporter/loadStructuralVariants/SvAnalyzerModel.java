@@ -17,8 +17,8 @@ public class SvAnalyzerModel {
 
     @NotNull
     public static SvAnalyzerModel readFiles(@NotNull String fusionFile, @NotNull String disruptionFile) throws IOException {
-        DisruptionAnalyzer disruptionAnalyzer = DisruptionFactory.readingDisruption(disruptionFile);
-        FusionAnalyzer fusionAnalyzer = FusionFactory.readingFusion(fusionFile);
+        DisruptionAnalyzer disruptionAnalyzer = DisruptionFactory.fromDisruptionFile(disruptionFile);
+        FusionAnalyzer fusionAnalyzer = FusionFactory.fromFusionFile(fusionFile);
         return new SvAnalyzerModel(fusionAnalyzer, disruptionAnalyzer);
     }
 
@@ -29,7 +29,7 @@ public class SvAnalyzerModel {
 
     @Nullable
     public List<Fusion> filterFusions() {
-        return fusionAnalyzer.filteringFusions();
+        return fusionAnalyzer.reportableFusions();
 
     }
 

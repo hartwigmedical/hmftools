@@ -3,8 +3,9 @@ package com.hartwig.hmftools.patientreporter.loadStructuralVariants;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.util.ArrayList;
 import java.util.List;
+
+import com.google.common.collect.Lists;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
@@ -17,22 +18,20 @@ public class FusionFactory {
     private static final String DELIMITER = ",";
 
     @NotNull
-    public static FusionAnalyzer readingFusion(@NotNull String fusionFile)
-            throws IOException {
-
-        final List<Fusion> fusions = new ArrayList<>();
+    public static FusionAnalyzer fromFusionFile(@NotNull String fusionFile) throws IOException {
+        final List<Fusion> fusions = Lists.newArrayList();
 
         final List<String> lineFusions = Files.readAllLines(new File(fusionFile).toPath());
 
         // Skip header line
         for (String line : lineFusions.subList(1, lineFusions.size())) {
-            fusions.add(fromLineVariants(line));
+            fusions.add(fromFusionLine(line));
         }
         return new FusionAnalyzer(fusions);
     }
 
     @NotNull
-    private static Fusion fromLineVariants(@NotNull String line) {
+    private static Fusion fromFusionLine(@NotNull String line) {
         final String[] values = line.split(DELIMITER);
         // ProteinsKept and ProteinsLost are not mandatory
         return ImmutableFusion.builder()
@@ -88,7 +87,7 @@ public class FusionFactory {
                 .transEndDown(values[50])
                 .distancePrevDown(values[51])
                 .biotypeDown(values[52])
-                .proteinsKept(values.length > 53 ? values[53] : Strings.EMPTY )
+                .proteinsKept(values.length > 53 ? values[53] : Strings.EMPTY)
                 .proteinsLost(values.length > 54 ? values[54] : Strings.EMPTY)
                 .build();
     }
