@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.patientreporter;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.List;
 
@@ -12,7 +11,6 @@ import com.hartwig.hmftools.common.actionability.ActionabilityAnalyzer;
 import com.hartwig.hmftools.common.center.Center;
 import com.hartwig.hmftools.common.center.CenterModel;
 import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocation;
-import com.hartwig.hmftools.common.fusions.KnownFusionsModel;
 import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.lims.LimsFactory;
 import com.hartwig.hmftools.common.variant.enrich.CompoundEnrichment;
@@ -38,9 +36,6 @@ public final class PatientReporterTestUtil {
     private static final String CENTER_CSV = Resources.getResource("csv/centers.csv").getPath();
     private static final String DRUP_GENES_CSV = Resources.getResource("csv/drup_genes.csv").getPath();
     private static final String HOTSPOT_TSV = Resources.getResource("csv/hotspots.tsv").getPath();
-    private static final String FUSION_PAIRS_CSV = Resources.getResource("csv/fusion_pairs.csv").getPath();
-    private static final String PROMISCUOUS_FIVE_CSV = Resources.getResource("csv/promiscuous_five.csv").getPath();
-    private static final String PROMISCUOUS_THREE_CSV = Resources.getResource("csv/promiscuous_three.csv").getPath();
 
     private PatientReporterTestUtil() {
     }
@@ -60,7 +55,6 @@ public final class PatientReporterTestUtil {
             return ImmutableSequencedReportData.of(geneModel,
                     ActionabilityAnalyzer.fromKnowledgebase(KNOWLEDGEBASE_PATH),
                     compoundEnrichment,
-                    testKnownFusionModel(),
                     new IndexedFastaSequenceFile(new File(REF_GENOME_PATH)),
                     TreeMultimap.create());
         } catch (IOException exception) {
@@ -77,17 +71,6 @@ public final class PatientReporterTestUtil {
             return ImmutableBaseReportData.of(patientTumorLocations, lims, centerModel, SIGNATURE_PATH, RVA_LOGO_PATH);
         } catch (IOException exception) {
             throw new IllegalStateException("Could not generate test base reporter data: " + exception.getMessage());
-        }
-    }
-
-    @NotNull
-    static KnownFusionsModel testKnownFusionModel() {
-        try {
-            return KnownFusionsModel.fromInputStreams(new FileInputStream(FUSION_PAIRS_CSV),
-                    new FileInputStream(PROMISCUOUS_FIVE_CSV),
-                    new FileInputStream(PROMISCUOUS_THREE_CSV));
-        } catch (IOException exception) {
-            throw new IllegalStateException("Could not generate test known fusion model: " + exception.getMessage());
         }
     }
 }

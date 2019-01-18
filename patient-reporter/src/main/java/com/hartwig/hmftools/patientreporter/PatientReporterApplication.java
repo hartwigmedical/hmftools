@@ -48,9 +48,6 @@ public class PatientReporterApplication {
     private static final String NOT_ANALYSABLE_REASON = "not_analysable_reason";
     private static final String NOT_ANALYSED_SAMPLE = "not_analysable_sample";
 
-    private static final String FUSION_PAIRS_CSV = "fusion_pairs_csv";
-    private static final String PROMISCUOUS_FIVE_CSV = "promiscuous_five_csv";
-    private static final String PROMISCUOUS_THREE_CSV = "promiscuous_three_csv";
     private static final String DO_REPORT_GERMLINE = "do_report_germline";
     private static final String FUSION_CSV = "fusion_csv";
     private static final String DISRUPTION_CSV = "disruption_csv";
@@ -127,9 +124,6 @@ public class PatientReporterApplication {
     @NotNull
     private static SequencedReportData buildReporterData(@NotNull final CommandLine cmd) throws IOException {
         return SequencedReportDataLoader.buildFromFiles(cmd.getOptionValue(KNOWLEDGEBASE_PATH),
-                cmd.getOptionValue(FUSION_PAIRS_CSV),
-                cmd.getOptionValue(PROMISCUOUS_FIVE_CSV),
-                cmd.getOptionValue(PROMISCUOUS_THREE_CSV),
                 cmd.getOptionValue(DRUP_GENES_CSV),
                 cmd.getOptionValue(HOTSPOT_TSV),
                 cmd.getOptionValue(FASTA_FILE_LOCATION),
@@ -150,9 +144,6 @@ public class PatientReporterApplication {
         final String knowledgebasePath = cmd.getOptionValue(KNOWLEDGEBASE_PATH);
         final String drupGenesCsv = cmd.getOptionValue(DRUP_GENES_CSV);
         final String hotspotTsv = cmd.getOptionValue(HOTSPOT_TSV);
-        final String fusionPairsCsv = cmd.getOptionValue(FUSION_PAIRS_CSV);
-        final String promiscuousFiveCsv = cmd.getOptionValue(PROMISCUOUS_FIVE_CSV);
-        final String promiscuousThreeCsv = cmd.getOptionValue(PROMISCUOUS_THREE_CSV);
         final String fusionsCsv = cmd.getOptionValue(FUSION_CSV);
         final String disruptionsCsv = cmd.getOptionValue(DISRUPTION_CSV);
 
@@ -167,12 +158,6 @@ public class PatientReporterApplication {
             LOGGER.warn(DRUP_GENES_CSV + " has to be an existing file: " + drupGenesCsv);
         } else if (hotspotTsv == null || !exists(hotspotTsv)) {
             LOGGER.warn(HOTSPOT_TSV + " has to be an existing file: " + hotspotTsv);
-        } else if (fusionPairsCsv == null || !exists(fusionPairsCsv)) {
-            LOGGER.warn(FUSION_PAIRS_CSV + " has to be an existing file: " + fusionPairsCsv);
-        } else if (promiscuousFiveCsv == null || !exists(promiscuousFiveCsv)) {
-            LOGGER.warn(PROMISCUOUS_FIVE_CSV + " has to be an existing file: " + promiscuousFiveCsv);
-        } else if (promiscuousThreeCsv == null || !exists(promiscuousThreeCsv)) {
-            LOGGER.warn(PROMISCUOUS_THREE_CSV + " has to be an existing file: " + promiscuousThreeCsv);
         } else if (fastaFileLocation == null || !exists(fastaFileLocation)) {
             LOGGER.warn(FASTA_FILE_LOCATION + " has to be an existing file: " + fastaFileLocation);
         } else if (fusionsCsv == null || !exists(fusionsCsv)) {
@@ -255,9 +240,6 @@ public class PatientReporterApplication {
         options.addOption(NOT_ANALYSABLE, false, "If set, generates a non-analysable report.");
         options.addOption(NOT_ANALYSABLE_REASON, true, "Either 'low_tumor_percentage', 'low_dna_yield' or 'post_analysis_fail'");
         options.addOption(NOT_ANALYSED_SAMPLE, true, "In case of non-sequenceable reports, the name of the sample used.");
-        options.addOption(FUSION_PAIRS_CSV, true, "Path towards a CSV containing white-listed gene fusion pairs.");
-        options.addOption(PROMISCUOUS_FIVE_CSV, true, "Path towards a CSV containing white-listed promiscuous 5' genes.");
-        options.addOption(PROMISCUOUS_THREE_CSV, true, "Path towards a CSV containing white-listed promiscuous 3' genes.");
         options.addOption(DO_REPORT_GERMLINE, false, "If provided, report germline. Otherwise do not report germline.");
         options.addOption(KNOWLEDGEBASE_PATH, true, "Path towards a directory holding knowledgebase output files.");
         options.addOption(DRUP_GENES_CSV, true, "Path towards a CSV containing genes that could potentially indicate inclusion in DRUP.");
