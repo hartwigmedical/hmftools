@@ -11,7 +11,7 @@ import org.jetbrains.annotations.Nullable;
 public abstract class Fusion {
 
     @NotNull
-    public abstract Boolean reportable();
+    public abstract boolean reportable();
 
     @NotNull
     public abstract String knownType();

@@ -10,7 +10,7 @@ import org.jetbrains.annotations.Nullable;
 public abstract class Disruption {
 
     @NotNull
-    public abstract Boolean reportable();
+    public abstract boolean reportable();
 
     @NotNull
     public abstract String svId();
@@ -49,5 +49,5 @@ public abstract class Disruption {
     public abstract String exon();
 
     @NotNull
-    public abstract Boolean isDisruptive();
+    public abstract boolean isDisruptive();
 }
