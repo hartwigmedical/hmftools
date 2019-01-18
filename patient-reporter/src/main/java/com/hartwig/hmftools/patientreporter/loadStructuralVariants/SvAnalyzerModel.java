@@ -11,14 +11,14 @@ import org.jetbrains.annotations.Nullable;
 public class SvAnalyzerModel {
 
     @NotNull
-    private final DisruptionAnalyzer disruptionAnalyzer;
-    @NotNull
     private final FusionAnalyzer fusionAnalyzer;
+    @NotNull
+    private final DisruptionAnalyzer disruptionAnalyzer;
 
     @NotNull
     public static SvAnalyzerModel fromFiles(@NotNull String fusionFile, @NotNull String disruptionFile) throws IOException {
-        DisruptionAnalyzer disruptionAnalyzer = DisruptionFactory.fromDisruptionFile(disruptionFile);
         FusionAnalyzer fusionAnalyzer = FusionFactory.fromFusionFile(fusionFile);
+        DisruptionAnalyzer disruptionAnalyzer = DisruptionFactory.fromDisruptionFile(disruptionFile);
         return new SvAnalyzerModel(fusionAnalyzer, disruptionAnalyzer);
     }
 
@@ -30,7 +30,6 @@ public class SvAnalyzerModel {
     @Nullable
     public List<Fusion> filterFusions() {
         return fusionAnalyzer.reportableFusions();
-
     }
 
     @Nullable

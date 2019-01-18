@@ -22,13 +22,15 @@ public final class ReportableGeneFusionFactory {
         List<ReportableGeneFusion> reportableFusions = Lists.newArrayList();
         if (fusions != null) {
             for (Fusion fusion: fusions) {
+                // TODO: Populate context start / end (promoter or exonic or intronic)
+                // TODO: Populate ploidy
                 reportableFusions.add(ImmutableReportableGeneFusion.builder()
                         .geneStart(fusion.geneUp())
-                        .geneContextStart(fusion.biotypeUp())
-                        .geneStartTranscript(fusion.transStartUp())
+                        .geneContextStart("")
+                        .geneStartTranscript(fusion.transcriptUp())
                         .geneEnd(fusion.geneDown())
-                        .geneContextEnd(fusion.biotypeUp())
-                        .geneStartTranscript(fusion.transEndDown())
+                        .geneContextEnd("")
+                        .geneStartTranscript(fusion.transcriptDown())
                         .ploidy(0)
                         .source(fusion.primarySource())
                         .build());
