@@ -15,13 +15,12 @@ public class FusionFactory {
     }
 
     private static final String DELIMITER = ",";
-    private static final String SVANALYSIS_DIRECTORY = "svAnalysis";
 
     @NotNull
     public static FusionAnalyzer readingFusion(@NotNull String fusionFile)
             throws IOException {
 
-        final List<FusionReaderFile> fusions = new ArrayList<>();
+        final List<Fusion> fusions = new ArrayList<>();
 
         final List<String> lineFusions = Files.readAllLines(new File(fusionFile).toPath());
 
@@ -33,7 +32,7 @@ public class FusionFactory {
     }
 
     @NotNull
-    private static FusionReaderFile fromLineVariants(@NotNull String line) {
+    private static Fusion fromLineVariants(@NotNull String line) {
         final String[] values = line.split(DELIMITER);
         // ProteinsKept and ProteinsLost are not mandatory
         return ImmutableFusionReaderFile.builder()

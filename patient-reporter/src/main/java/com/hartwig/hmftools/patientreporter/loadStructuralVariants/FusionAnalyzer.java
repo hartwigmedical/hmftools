@@ -9,17 +9,17 @@ import org.jetbrains.annotations.NotNull;
 public class FusionAnalyzer {
 
     @NotNull
-    private final List<FusionReaderFile> fusionReaderFile;
+    private final List<Fusion> fusion;
 
-    FusionAnalyzer(@NotNull final List<FusionReaderFile> fusionReaderFile) {
-        this.fusionReaderFile = fusionReaderFile;
+    FusionAnalyzer(@NotNull final List<Fusion> fusion) {
+        this.fusion = fusion;
     }
 
     @NotNull
-    public List<FusionReaderFile> filteringFusions() {
-        List<FusionReaderFile> raportableFusions = Lists.newArrayList();
-        for (FusionReaderFile fusion: fusionReaderFile){
-            if (fusion.reportable().equals(true)) {
+    public List<Fusion> filteringFusions() {
+        List<Fusion> raportableFusions = Lists.newArrayList();
+        for (Fusion fusion: fusion){
+            if (fusion.reportable()) {
                 raportableFusions.add(fusion);
             }
         }

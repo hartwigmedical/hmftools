@@ -9,18 +9,18 @@ import org.jetbrains.annotations.NotNull;
 public class DisruptionAnalyzer {
 
     @NotNull
-    private final List<DisruptionReaderFile> disruptionReaderFiles;
+    private final List<Disruption> disruption;
 
-    DisruptionAnalyzer(@NotNull final List<DisruptionReaderFile> disruptionReaderFiles) {
-        this.disruptionReaderFiles = disruptionReaderFiles;
+    DisruptionAnalyzer(@NotNull final List<Disruption> disruption) {
+        this.disruption = disruption;
     }
 
     @NotNull
-    public List<DisruptionReaderFile> filteringDisruptions() {
-        List<DisruptionReaderFile> raportableDisruptions = Lists.newArrayList();
-        for (DisruptionReaderFile disruption: disruptionReaderFiles) {
-            if (disruption.reportable().equals(true)) {
-                raportableDisruptions.add(disruption);
+    public List<Disruption> filteringDisruptions() {
+        List<Disruption> raportableDisruptions = Lists.newArrayList();
+        for (Disruption disruptionItem: disruption) {
+            if (disruptionItem.reportable()) {
+                raportableDisruptions.add(disruptionItem);
             }
         }
         return raportableDisruptions;

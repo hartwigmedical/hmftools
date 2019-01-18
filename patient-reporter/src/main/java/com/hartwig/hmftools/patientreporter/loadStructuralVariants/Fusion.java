@@ -8,7 +8,7 @@ import org.jetbrains.annotations.Nullable;
 @Value.Style(allParameters = true,
              passAnnotations = { NotNull.class, Nullable.class })
 
-public abstract class FusionReaderFile {
+public abstract class Fusion {
 
     @NotNull
     public abstract Boolean reportable();

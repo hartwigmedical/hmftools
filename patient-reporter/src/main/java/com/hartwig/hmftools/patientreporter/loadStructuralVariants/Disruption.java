@@ -7,7 +7,7 @@ import org.jetbrains.annotations.Nullable;
 @Value.Immutable
 @Value.Style(allParameters = true,
              passAnnotations = { NotNull.class, Nullable.class })
-public abstract class DisruptionReaderFile {
+public abstract class Disruption {
 
     @NotNull
     public abstract Boolean reportable();

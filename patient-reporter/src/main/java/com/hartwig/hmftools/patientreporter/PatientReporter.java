@@ -38,8 +38,8 @@ import com.hartwig.hmftools.patientreporter.actionability.ReportableEvidenceItem
 import com.hartwig.hmftools.patientreporter.copynumber.CopyNumberAnalysis;
 import com.hartwig.hmftools.patientreporter.copynumber.CopyNumberAnalyzer;
 import com.hartwig.hmftools.patientreporter.germline.GermlineVariant;
-import com.hartwig.hmftools.patientreporter.loadStructuralVariants.DisruptionReaderFile;
-import com.hartwig.hmftools.patientreporter.loadStructuralVariants.FusionReaderFile;
+import com.hartwig.hmftools.patientreporter.loadStructuralVariants.Disruption;
+import com.hartwig.hmftools.patientreporter.loadStructuralVariants.Fusion;
 import com.hartwig.hmftools.patientreporter.loadStructuralVariants.SvAnalyzerModel;
 import com.hartwig.hmftools.patientreporter.structural.FusionDisruptionAnalysis;
 import com.hartwig.hmftools.patientreporter.structural.FusionDisruptionAnalyzer;
@@ -215,8 +215,8 @@ abstract class PatientReporter {
             @Nullable PatientTumorLocation patientTumorLocation, @NotNull SvAnalyzerModel svAnalyzerModel) throws IOException {
         LOGGER.info("Loading structural variants...");
 
-        List<FusionReaderFile> reportableFusions = svAnalyzerModel.filterFusions();
-        List<DisruptionReaderFile> reportableDisruptions = svAnalyzerModel.filterDisruptions();
+        List<Fusion> reportableFusions = svAnalyzerModel.filterFusions();
+        List<Disruption> reportableDisruptions = svAnalyzerModel.filterDisruptions();
 
         LOGGER.info("reportableFusions" + reportableFusions); // add to report
         LOGGER.info("reportableDisruptions" + reportableDisruptions); // add to report plus filter on evidence items

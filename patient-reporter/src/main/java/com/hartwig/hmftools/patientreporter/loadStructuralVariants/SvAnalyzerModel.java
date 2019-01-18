@@ -27,13 +27,13 @@ public class SvAnalyzerModel {
     }
 
     @Nullable
-    public List<FusionReaderFile> filterFusions() {
+    public List<Fusion> filterFusions() {
         return fusionAnalyzer.filteringFusions();
 
     }
 
     @Nullable
-    public List<DisruptionReaderFile> filterDisruptions() {
+    public List<Disruption> filterDisruptions() {
         return disruptionAnalyzer.filteringDisruptions();
     }
 }

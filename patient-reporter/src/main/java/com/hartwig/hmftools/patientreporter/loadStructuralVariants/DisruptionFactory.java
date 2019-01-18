@@ -14,12 +14,11 @@ public class DisruptionFactory {
     }
 
     private static final String DELIMITER = ",";
-    private static final String SVANALYSIS_DIRECTORY = "svAnalysis";
 
     @NotNull
     public static DisruptionAnalyzer readingDisruption(@NotNull String disruptionFile) throws IOException {
 
-        final List<DisruptionReaderFile> disruptions = new ArrayList<>();
+        final List<Disruption> disruptions = new ArrayList<>();
 
         final List<String> lineDisruptions = Files.readAllLines(new File(disruptionFile).toPath());
 
@@ -31,7 +30,7 @@ public class DisruptionFactory {
     }
 
     @NotNull
-    private static DisruptionReaderFile fromLineVariants(@NotNull String line) {
+    private static Disruption fromLineVariants(@NotNull String line) {
         final String[] values = line.split(DELIMITER);
         return ImmutableDisruptionReaderFile.builder()
                 .reportable(Boolean.valueOf(values[1]))
