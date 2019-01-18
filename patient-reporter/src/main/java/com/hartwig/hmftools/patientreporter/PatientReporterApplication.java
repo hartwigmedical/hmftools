@@ -16,7 +16,6 @@ import com.hartwig.hmftools.patientreporter.qcfail.NotAnalysableReason;
 import com.hartwig.hmftools.patientreporter.qcfail.NotAnalysableReporter;
 import com.hartwig.hmftools.patientreporter.qcfail.NotAnalysableStudy;
 import com.hartwig.hmftools.patientreporter.report.PDFWriter;
-import com.hartwig.hmftools.patientreporter.structural.StructuralVariantAnalyzer;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -140,14 +139,10 @@ public class PatientReporterApplication {
     @NotNull
     private static PatientReporter buildReporter(@NotNull final CommandLine cmd, @NotNull final SequencedReportData sequencedReportData)
             throws IOException {
-
-        // TODO: Remove svAnalyzer
-        final StructuralVariantAnalyzer svAnalyzer = new StructuralVariantAnalyzer(NullAnnotator.make(), sequencedReportData.knownFusionsModel());
-
         final SvAnalyzerModel svAnalyzerModel =
-                SvAnalyzerModel.readFiles(cmd.getOptionValue(FUSION_CSV), cmd.getOptionValue(DISRUPTION_CSV));
+                SvAnalyzerModel.fromFiles(cmd.getOptionValue(FUSION_CSV), cmd.getOptionValue(DISRUPTION_CSV));
 
-        return ImmutablePatientReporter.of(buildBaseReportData(cmd), sequencedReportData, svAnalyzerModel, svAnalyzer);
+        return ImmutablePatientReporter.of(buildBaseReportData(cmd), sequencedReportData, svAnalyzerModel);
     }
 
     private static boolean validInputForPatientReporter(@NotNull final CommandLine cmd) {

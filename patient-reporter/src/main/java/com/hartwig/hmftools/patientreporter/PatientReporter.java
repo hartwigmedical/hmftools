@@ -40,7 +40,6 @@ import com.hartwig.hmftools.patientreporter.structural.FusionDisruptionAnalyzer;
 import com.hartwig.hmftools.patientreporter.structural.ReportableGeneDisruption;
 import com.hartwig.hmftools.patientreporter.structural.ReportableGeneFusion;
 import com.hartwig.hmftools.patientreporter.structural.ReportableGeneFusionFactory;
-import com.hartwig.hmftools.patientreporter.structural.StructuralVariantAnalyzer;
 import com.hartwig.hmftools.patientreporter.variants.SomaticVariantAnalysis;
 import com.hartwig.hmftools.patientreporter.variants.SomaticVariantAnalyzer;
 
@@ -66,9 +65,6 @@ abstract class PatientReporter {
 
     @NotNull
     public abstract SvAnalyzerModel svAnalyzerModel();
-
-    @NotNull
-    public abstract StructuralVariantAnalyzer structuralVariantAnalyzer();
 
     @NotNull
     public AnalysedPatientReport run(@NotNull String runDirectory, boolean doReportGermline, @Nullable String comments) throws IOException {
