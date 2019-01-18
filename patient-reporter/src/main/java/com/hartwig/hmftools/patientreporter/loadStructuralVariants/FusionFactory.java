@@ -18,14 +18,12 @@ public class FusionFactory {
     private static final String SVANALYSIS_DIRECTORY = "svAnalysis";
 
     @NotNull
-    public static FusionAnalyzer readingFusion(@NotNull String fusionFileExtension, @NotNull String sample, @NotNull String runDirectory)
+    public static FusionAnalyzer readingFusion(@NotNull String fusionFile)
             throws IOException {
-        final String dirPath = runDirectory + File.separator + SVANALYSIS_DIRECTORY;
-        final String fusionFilePath = dirPath + File.separator + sample + fusionFileExtension;
 
         final List<FusionReaderFile> fusions = new ArrayList<>();
 
-        final List<String> lineFusions = Files.readAllLines(new File(fusionFilePath).toPath());
+        final List<String> lineFusions = Files.readAllLines(new File(fusionFile).toPath());
 
         // Skip header line
         for (String line : lineFusions.subList(1, lineFusions.size())) {

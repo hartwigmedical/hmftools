@@ -17,14 +17,11 @@ public class DisruptionFactory {
     private static final String SVANALYSIS_DIRECTORY = "svAnalysis";
 
     @NotNull
-    public static DisruptionAnalyzer readingDisruption(@NotNull String disruptionFileExtension, @NotNull String sample,
-            @NotNull String runDirectory) throws IOException {
-        final String dirPath = runDirectory + File.separator + SVANALYSIS_DIRECTORY;
-        final String disruptionFilePath = dirPath + File.separator + sample + disruptionFileExtension;
+    public static DisruptionAnalyzer readingDisruption(@NotNull String disruptionFile) throws IOException {
 
         final List<DisruptionReaderFile> disruptions = new ArrayList<>();
 
-        final List<String> lineDisruptions = Files.readAllLines(new File(disruptionFilePath).toPath());
+        final List<String> lineDisruptions = Files.readAllLines(new File(disruptionFile).toPath());
 
         // Skip header line
         for (String lineDisruption : lineDisruptions.subList(1, lineDisruptions.size())) {

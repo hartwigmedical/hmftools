@@ -42,9 +42,10 @@ public final class PatientReporterTestUtil {
     private static final String FUSION_PAIRS_CSV = Resources.getResource("csv/fusion_pairs.csv").getPath();
     private static final String PROMISCUOUS_FIVE_CSV = Resources.getResource("csv/promiscuous_five.csv").getPath();
     private static final String PROMISCUOUS_THREE_CSV = Resources.getResource("csv/promiscuous_three.csv").getPath();
-    private static final String FUSION_FILE = "_fusions.csv";
-    private static final String DISRUPTION_FILE = "_disruptions.csv";
-    private static final String PATH_SVANALYSIS = Resources.getResource("loadStructuralVariants").getPath();
+    private static final String FUSION_FILE =
+            Resources.getResource("loadStructuralVariants/svAnalysis/CPCT11111111T_fusions.csv").getPath();
+    private static final String DISRUPTION_FILE =
+            Resources.getResource("loadStructuralVariants/svAnalysis/CPCT11111111T_disruptions.csv").getPath();
 
     private PatientReporterTestUtil() {
     }
@@ -67,7 +68,7 @@ public final class PatientReporterTestUtil {
                     testKnownFusionModel(),
                     new IndexedFastaSequenceFile(new File(REF_GENOME_PATH)),
                     TreeMultimap.create(),
-                    SvAnalyzerModel.readFiles(FUSION_FILE, DISRUPTION_FILE, "CPCT11111111T", PATH_SVANALYSIS));
+                    SvAnalyzerModel.readFiles(FUSION_FILE, DISRUPTION_FILE));
         } catch (IOException exception) {
             throw new IllegalStateException("Could not generate test sequenced report data: " + exception.getMessage());
         }

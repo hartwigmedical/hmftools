@@ -15,10 +15,9 @@ public class SvAnalyzerModel {
     private final FusionAnalyzer fusionAnalyzer;
 
     @NotNull
-    public static SvAnalyzerModel readFiles(@NotNull String fusionFile, @NotNull String disruptionFile, @NotNull String sample,
-            @NotNull String runDirectory) throws IOException {
-        DisruptionAnalyzer disruptionAnalyzer = DisruptionFactory.readingDisruption(disruptionFile, sample, runDirectory);
-        FusionAnalyzer fusionAnalyzer = FusionFactory.readingFusion(fusionFile, sample, runDirectory);
+    public static SvAnalyzerModel readFiles(@NotNull String fusionFile, @NotNull String disruptionFile) throws IOException {
+        DisruptionAnalyzer disruptionAnalyzer = DisruptionFactory.readingDisruption(disruptionFile);
+        FusionAnalyzer fusionAnalyzer = FusionFactory.readingFusion(fusionFile);
         return new SvAnalyzerModel(fusionAnalyzer, disruptionAnalyzer);
     }
 

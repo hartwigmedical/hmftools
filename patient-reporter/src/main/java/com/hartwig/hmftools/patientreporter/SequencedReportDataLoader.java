@@ -29,15 +29,14 @@ final class SequencedReportDataLoader {
     static SequencedReportData buildFromFiles(@NotNull String knowledgebasePath, @NotNull String fusionPairsLocation,
             @NotNull String promiscuousFiveLocation, @NotNull String promiscuousThreeLocation, @NotNull String drupGeneCsv,
             @NotNull String hotspotTsv, @NotNull String fastaFileLocation, @NotNull String highConfidenceBed, @NotNull String fusionFile,
-            @NotNull String disruptionFile, @NotNull String runDirectory) throws IOException {
+            @NotNull String disruptionFile) throws IOException {
 
-        final RunContext run = ProductionRunContextFactory.fromRunDirectory(runDirectory);
         final ActionabilityAnalyzer actionabilityAnalyzer = ActionabilityAnalyzer.fromKnowledgebase(knowledgebasePath);
 
         final DrupActionabilityModel drupActionabilityModel = DrupActionabilityModelFactory.buildFromCsv(drupGeneCsv);
         final GeneModel panelGeneModel = GeneModelFactory.create(drupActionabilityModel);
         final SvAnalyzerModel svAnalyzerModel =
-                SvAnalyzerModel.readFiles(fusionFile, disruptionFile, run.tumorSample(), run.runDirectory());
+                SvAnalyzerModel.readFiles(fusionFile, disruptionFile);
 
         final KnownFusionsModel knownFusionsModel = KnownFusionsModel.fromInputStreams(new FileInputStream(fusionPairsLocation),
                 new FileInputStream(promiscuousFiveLocation),
