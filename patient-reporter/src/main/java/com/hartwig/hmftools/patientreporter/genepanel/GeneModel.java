@@ -3,6 +3,7 @@ package com.hartwig.hmftools.patientreporter.genepanel;
 import java.util.Map;
 import java.util.Set;
 
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.region.HmfTranscriptRegion;
@@ -54,25 +55,25 @@ public abstract class GeneModel {
 
     @Value.Derived
     @NotNull
-    public Set<String> disruptionGeneIDPanel() {
+    public Map<String, String> disruptionGeneCanonicalTranscriptMap() {
         // Structural variant analyser requires a set of ensembl IDs rather than a set of gene names.
-        Set<String> disruptionGeneIDPanel = Sets.newHashSet();
+        Map<String, String> disruptionGeneCanonicalTranscriptMap = Maps.newHashMap();
         for (Map.Entry<String, HmfTranscriptRegion> driverGene : somaticVariantDriverGenePanel().entrySet()) {
             if (geneDriverCategoryMap().get(driverGene.getKey()) != DriverCategory.ONCO) {
-                disruptionGeneIDPanel.add(driverGene.getValue().geneID());
+                disruptionGeneCanonicalTranscriptMap.put(driverGene.getKey(), driverGene.getValue().transcriptID());
             }
         }
 
         for (Map.Entry<String, HmfTranscriptRegion> drupActionableGene : drupActionableGenes().entrySet()) {
             if (geneDriverCategoryMap().get(drupActionableGene.getKey()) != DriverCategory.ONCO) {
-                disruptionGeneIDPanel.add(drupActionableGene.getValue().geneID());
+                disruptionGeneCanonicalTranscriptMap.put(drupActionableGene.getKey(), drupActionableGene.getValue().transcriptID());
             }
         }
 
         for (Map.Entry<String, HmfTranscriptRegion> disruptionGene : disruptionGeneWhiteList().entrySet()) {
-            disruptionGeneIDPanel.add(disruptionGene.getValue().geneID());
+            disruptionGeneCanonicalTranscriptMap.put(disruptionGene.getKey(), disruptionGene.getValue().transcriptID());
         }
 
-        return disruptionGeneIDPanel;
+        return disruptionGeneCanonicalTranscriptMap;
     }
 }

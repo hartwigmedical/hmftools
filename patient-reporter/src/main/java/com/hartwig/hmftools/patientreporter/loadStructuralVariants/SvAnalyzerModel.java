@@ -3,6 +3,7 @@ package com.hartwig.hmftools.patientreporter.loadStructuralVariants;
 import java.io.IOException;
 import java.util.List;
 
+import com.hartwig.hmftools.patientreporter.genepanel.GeneModel;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -33,7 +34,7 @@ public class SvAnalyzerModel {
     }
 
     @Nullable
-    public List<Disruption> filterDisruptions() {
-        return disruptionAnalyzer.filteringDisruptions();
+    public List<Disruption> filterDisruptions(@NotNull GeneModel geneModel) {
+        return disruptionAnalyzer.reportableDisruptions(geneModel);
     }
 }

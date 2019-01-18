@@ -10,8 +10,6 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.actionability.EvidenceItem;
 import com.hartwig.hmftools.common.chord.ChordAnalysis;
-import com.hartwig.hmftools.common.chromosome.Chromosome;
-import com.hartwig.hmftools.common.collect.Multimaps;
 import com.hartwig.hmftools.common.context.ProductionRunContextFactory;
 import com.hartwig.hmftools.common.context.RunContext;
 import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocation;
@@ -29,10 +27,6 @@ import com.hartwig.hmftools.common.variant.EnrichedSomaticVariantFactory;
 import com.hartwig.hmftools.common.variant.PurityAdjustedSomaticVariant;
 import com.hartwig.hmftools.common.variant.PurityAdjustedSomaticVariantFactory;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
-import com.hartwig.hmftools.common.variant.structural.EnrichedStructuralVariant;
-import com.hartwig.hmftools.common.variant.structural.EnrichedStructuralVariantFactory;
-import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
-import com.hartwig.hmftools.common.variant.structural.annotation.StructuralVariantAnalysis;
 import com.hartwig.hmftools.patientreporter.actionability.ClinicalTrialFactory;
 import com.hartwig.hmftools.patientreporter.actionability.ReportableEvidenceItemFactory;
 import com.hartwig.hmftools.patientreporter.copynumber.CopyNumberAnalysis;
@@ -43,6 +37,7 @@ import com.hartwig.hmftools.patientreporter.loadStructuralVariants.Fusion;
 import com.hartwig.hmftools.patientreporter.loadStructuralVariants.SvAnalyzerModel;
 import com.hartwig.hmftools.patientreporter.structural.FusionDisruptionAnalysis;
 import com.hartwig.hmftools.patientreporter.structural.FusionDisruptionAnalyzer;
+import com.hartwig.hmftools.patientreporter.structural.ReportableGeneDisruption;
 import com.hartwig.hmftools.patientreporter.structural.ReportableGeneFusion;
 import com.hartwig.hmftools.patientreporter.structural.ReportableGeneFusionFactory;
 import com.hartwig.hmftools.patientreporter.structural.StructuralVariantAnalyzer;
@@ -217,32 +212,15 @@ abstract class PatientReporter {
 
     @NotNull
     private FusionDisruptionAnalysis analyzeStructuralVariants(@NotNull RunContext run, @NotNull CopyNumberAnalysis copyNumberAnalysis,
-            @Nullable PatientTumorLocation patientTumorLocation, @NotNull SvAnalyzerModel svAnalyzerModel) throws IOException {
-        LOGGER.info("Loading structural variants...");
-
+            @Nullable PatientTumorLocation patientTumorLocation, @NotNull SvAnalyzerModel svAnalyzerModel) {
         List<Fusion> fusions = svAnalyzerModel.filterFusions();
-        List<Disruption> reportableDisruptions = svAnalyzerModel.filterDisruptions();
+        List<Disruption> reportableDisruptions = svAnalyzerModel.filterDisruptions(sequencedReportData().panelGeneModel());
 
         List<ReportableGeneFusion> geneFusionsToReport = ReportableGeneFusionFactory.fusionConvertToReportable(fusions);
+        List<ReportableGeneDisruption> geneDisruptionsToReport = Lists.newArrayList();
 
-
-
-        final List<StructuralVariant> structuralVariants = PatientReporterFileLoader.loadPassedStructuralVariants(run.runDirectory());
-        LOGGER.info(" " + structuralVariants.size() + " PASS structural variants loaded");
-
-        LOGGER.info("Enriching structural variants with purple data");
-        final PurityAdjuster purityAdjuster = new PurityAdjuster(copyNumberAnalysis.gender(), copyNumberAnalysis.fittedPurity());
-        final Multimap<Chromosome, PurpleCopyNumber> copyNumberMap = Multimaps.fromRegions(copyNumberAnalysis.copyNumbers());
-
-        final List<EnrichedStructuralVariant> enrichedStructuralVariants =
-                new EnrichedStructuralVariantFactory(sequencedReportData().refGenomeFastaFile(), purityAdjuster, copyNumberMap).enrich(
-                        structuralVariants);
-
-        LOGGER.info("Analyzing structural variants...");
-        final StructuralVariantAnalysis structuralVariantAnalysis = structuralVariantAnalyzer().runOnVariants(enrichedStructuralVariants);
-
-        return FusionDisruptionAnalyzer.run(structuralVariantAnalysis, geneFusionsToReport,
-                copyNumberAnalysis.exomeGeneCopyNumbers(),
+        return FusionDisruptionAnalyzer.run(geneFusionsToReport,
+                geneDisruptionsToReport,
                 sequencedReportData().actionabilityAnalyzer(),
                 patientTumorLocation);
     }
