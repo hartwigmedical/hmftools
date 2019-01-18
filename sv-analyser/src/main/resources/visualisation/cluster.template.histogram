@@ -1,18 +1,18 @@
 	# Histogram Track
 	<plot>
 		type = histogram
-		file = $SAMPLE.histogram.circos
+		file = SUBSTITUTE_SAMPLE.histogram.circos
 		r0   = 0.30r
 		r1   = 0.90r
 		min  = 1
-		max = $MAX
+		max = SUBSTITUTE_MAX
 		thickness   = 4
 		color = black
 		extend_bin  = no
 
 		<rules>
 			<rule>
-				condition = var(value) != $CONDITION
+				condition = var(value) != SUBSTITUTE_CONDITION
 				show = no
 			</rule>
 		</rules>

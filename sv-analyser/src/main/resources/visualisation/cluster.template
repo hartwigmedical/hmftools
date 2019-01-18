@@ -6,15 +6,10 @@
 	<<include etc/image.conf>>
 </image>
 
-karyotype = $SAMPLE.karyotype.circos
+karyotype = SUBSTITUTE_SAMPLE.karyotype.circos
 
 chromosomes_units           = 1000000
 chromosomes_display_default = yes
-#chromosomes       = -hs1;-hs2;hs3:24-28;-hs4;-hs5;hs6:25-27;-hs7;-hs8;-hs9;-hs10;-hs11;hs12:72.66-72.67;-hs13;-hs14;-hs15;-hs16;-hs17;-hs18;-hs19;-hs20;-hs21;-hs22;-hsX;-hsY
-#chromosomes                 = -hs1,-hs2,-hs4,-hs5,-hs6,-hsZ
-chromosomes = hs3[a];hs6[b];hs10[c];hs12[d]
-#chromosome_breaks = -hs10:26-59
-#chromosomes_scale = a:10000;b:10000;c:100;d:10000
 
 # Default is to clip the data to proximity min/max.
 <plots>
@@ -27,20 +22,21 @@ chromosomes = hs3[a];hs6[b];hs10[c];hs12[d]
 
 		<backgrounds>
 			<background>
-				#color = vlgreen_a5
-				color = vvlgreen
+				color = vlgreen_a5
 			</background>
 		</backgrounds>
 
 	</plot>
 
 
+    SUBSTITUTE_HISTOGRAM
+
 	# -----------------------------------------------------------
 	# Text
 	<plot>
 		type             = text
 		color            = black
-		file             = $SAMPLE.text.circos
+		file             = SUBSTITUTE_SAMPLE.text.circos
 
 		r0   = 0.9r
 		r1   = 1r
@@ -63,12 +59,12 @@ chromosomes = hs3[a];hs6[b];hs10[c];hs12[d]
     <plot>
 
         type = connector
-        file = $SAMPLE.connector.circos
+        file = SUBSTITUTE_SAMPLE.connector.circos
 
         r0	=	0.30r
         #r1   = 0.999r
 
-        connector_dims = 0,0.3,0.5,0.3,0
+        connector_dims = 0,0.3,0.53,0.3,0
 
         thickness = 4
         color     = red
@@ -78,7 +74,7 @@ chromosomes = hs3[a];hs6[b];hs10[c];hs12[d]
 
 <links>
     <link>
-        file          = $SAMPLE.link.circos
+        file          = SUBSTITUTE_SAMPLE.link.circos
         color         = red
         radius        = 0.3r
         thickness     = 4
