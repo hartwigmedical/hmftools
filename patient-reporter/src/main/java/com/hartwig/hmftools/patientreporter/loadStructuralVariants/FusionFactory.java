@@ -6,6 +6,7 @@ import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 public class FusionFactory {
@@ -27,8 +28,8 @@ public class FusionFactory {
         final List<String> lineFusions = Files.readAllLines(new File(fusionFilePath).toPath());
 
         // Skip header line
-        for (String linefusion : lineFusions.subList(1, lineFusions.size())) {
-            fusions.add(fromLineVariants(linefusion));
+        for (String line : lineFusions.subList(1, lineFusions.size())) {
+            fusions.add(fromLineVariants(line));
         }
         return new FusionAnalyzer(fusions);
     }
@@ -36,6 +37,7 @@ public class FusionFactory {
     @NotNull
     private static FusionReaderFile fromLineVariants(@NotNull String line) {
         final String[] values = line.split(DELIMITER);
+        // ProteinsKept and ProteinsLost are not mandatory
         return ImmutableFusionReaderFile.builder()
                 .reportable(Boolean.valueOf(values[1]))
                 .knownType(values[2])
@@ -89,8 +91,8 @@ public class FusionFactory {
                 .transEndDown(values[50])
                 .distancePrevDown(values[51])
                 .biotypeDown(values[52])
-                .proteinsKept("")
-                .proteinsLost("")
+                .proteinsKept(values.length > 53 ? values[53] : Strings.EMPTY )
+                .proteinsLost(values.length > 54 ? values[54] : Strings.EMPTY)
                 .build();
     }
 }
