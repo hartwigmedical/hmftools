@@ -209,9 +209,9 @@ public class PatientReporterApplication {
         } else if (fastaFileLocation == null || !exists(fastaFileLocation)) {
             LOGGER.warn(FASTA_FILE_LOCATION + " has to be an existing file: " + fastaFileLocation);
         } else if (variantAnnotatorFusionFile == null || !exists(variantAnnotatorFusionFile)) {
-            LOGGER.warn(VARIANT_ANNOTATOR_FUSION + " has to be an existing file: " + variantAnnotatorFusionFile);
+            LOGGER.warn(VARIANT_ANNOTATOR_FUSION + " has to be an existing file extension: " + variantAnnotatorFusionExtension);
         } else if (variantAnnotatorDisruptionFile == null || !exists(variantAnnotatorDisruptionFile)) {
-            LOGGER.warn(VARIANT_ANNOTATOR_DISRUPTION + " has to be an existing file: " + variantAnnotatorDisruptionFile);
+            LOGGER.warn(VARIANT_ANNOTATOR_DISRUPTION + " has to be an existing file extension: " + variantAnnotatorDisruptionExtension);
         } else if (highConfidenceBed == null || !exists(highConfidenceBed)) {
             LOGGER.warn(HIGH_CONFIDENCE_BED + " has to be an existing file: " + highConfidenceBed);
         } else {
