@@ -1,14 +1,11 @@
 package com.hartwig.hmftools.patientreporter;
 
-import java.util.List;
-
 import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.actionability.ActionabilityAnalyzer;
 import com.hartwig.hmftools.common.fusions.KnownFusionsModel;
 import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.common.variant.enrich.SomaticEnrichment;
 import com.hartwig.hmftools.patientreporter.genepanel.GeneModel;
-import com.hartwig.hmftools.patientreporter.loadStructuralVariants.SvAnalyzerModel;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -38,8 +35,5 @@ public abstract class SequencedReportData {
 
     @NotNull
     public abstract Multimap<String, GenomeRegion> highConfidenceRegions();
-
-    @NotNull
-    public abstract SvAnalyzerModel svAnalyzerModel();
 
 }

@@ -5,8 +5,6 @@ import java.io.FileInputStream;
 import java.io.IOException;
 
 import com.hartwig.hmftools.common.actionability.ActionabilityAnalyzer;
-import com.hartwig.hmftools.common.context.ProductionRunContextFactory;
-import com.hartwig.hmftools.common.context.RunContext;
 import com.hartwig.hmftools.common.fusions.KnownFusionsModel;
 import com.hartwig.hmftools.common.region.BEDFileLoader;
 import com.hartwig.hmftools.common.variant.enrich.HotspotEnrichment;
@@ -14,7 +12,6 @@ import com.hartwig.hmftools.patientreporter.actionability.DrupActionabilityModel
 import com.hartwig.hmftools.patientreporter.actionability.DrupActionabilityModelFactory;
 import com.hartwig.hmftools.patientreporter.genepanel.GeneModel;
 import com.hartwig.hmftools.patientreporter.genepanel.GeneModelFactory;
-import com.hartwig.hmftools.patientreporter.loadStructuralVariants.SvAnalyzerModel;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -28,15 +25,11 @@ final class SequencedReportDataLoader {
     @NotNull
     static SequencedReportData buildFromFiles(@NotNull String knowledgebasePath, @NotNull String fusionPairsLocation,
             @NotNull String promiscuousFiveLocation, @NotNull String promiscuousThreeLocation, @NotNull String drupGeneCsv,
-            @NotNull String hotspotTsv, @NotNull String fastaFileLocation, @NotNull String highConfidenceBed, @NotNull String fusionFile,
-            @NotNull String disruptionFile) throws IOException {
-
+            @NotNull String hotspotTsv, @NotNull String fastaFileLocation, @NotNull String highConfidenceBed) throws IOException {
         final ActionabilityAnalyzer actionabilityAnalyzer = ActionabilityAnalyzer.fromKnowledgebase(knowledgebasePath);
 
         final DrupActionabilityModel drupActionabilityModel = DrupActionabilityModelFactory.buildFromCsv(drupGeneCsv);
         final GeneModel panelGeneModel = GeneModelFactory.create(drupActionabilityModel);
-        final SvAnalyzerModel svAnalyzerModel =
-                SvAnalyzerModel.readFiles(fusionFile, disruptionFile);
 
         final KnownFusionsModel knownFusionsModel = KnownFusionsModel.fromInputStreams(new FileInputStream(fusionPairsLocation),
                 new FileInputStream(promiscuousFiveLocation),
@@ -47,7 +40,6 @@ final class SequencedReportDataLoader {
                 HotspotEnrichment.fromHotspotsFile(hotspotTsv),
                 knownFusionsModel,
                 new IndexedFastaSequenceFile(new File(fastaFileLocation)),
-                BEDFileLoader.fromBedFile(highConfidenceBed),
-                svAnalyzerModel);
+                BEDFileLoader.fromBedFile(highConfidenceBed));
     }
 }

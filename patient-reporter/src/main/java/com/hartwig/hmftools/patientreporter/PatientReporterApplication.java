@@ -3,24 +3,20 @@ package com.hartwig.hmftools.patientreporter;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.sql.SQLException;
 import java.util.List;
 
 import com.hartwig.hmftools.common.center.Center;
 import com.hartwig.hmftools.common.center.CenterModel;
-import com.hartwig.hmftools.common.context.ProductionRunContextFactory;
-import com.hartwig.hmftools.common.context.RunContext;
 import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocation;
 import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.lims.LimsFactory;
-import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
+import com.hartwig.hmftools.patientreporter.loadStructuralVariants.SvAnalyzerModel;
 import com.hartwig.hmftools.patientreporter.qcfail.ImmutableNotAnalysableReporter;
 import com.hartwig.hmftools.patientreporter.qcfail.NotAnalysableReason;
 import com.hartwig.hmftools.patientreporter.qcfail.NotAnalysableReporter;
 import com.hartwig.hmftools.patientreporter.qcfail.NotAnalysableStudy;
 import com.hartwig.hmftools.patientreporter.report.PDFWriter;
 import com.hartwig.hmftools.patientreporter.structural.StructuralVariantAnalyzer;
-import com.hartwig.hmftools.svannotation.VariantAnnotator;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -77,7 +73,7 @@ public class PatientReporterApplication {
     private static final String SIGNATURE = "signature";
     private static final String COMMENTS = "comments";
 
-    public static void main(final String... args) throws ParseException, IOException, DRException, SQLException {
+    public static void main(final String... args) throws ParseException, IOException, DRException {
         final Options options = createOptions();
         final CommandLine cmd = createCommandLine(options, args);
 
@@ -142,34 +138,20 @@ public class PatientReporterApplication {
                 cmd.getOptionValue(DRUP_GENES_CSV),
                 cmd.getOptionValue(HOTSPOT_TSV),
                 cmd.getOptionValue(FASTA_FILE_LOCATION),
-                cmd.getOptionValue(HIGH_CONFIDENCE_BED),
-                cmd.getOptionValue(FUSION_CSV),
-                cmd.getOptionValue(DISRUPTION_CSV));
+                cmd.getOptionValue(HIGH_CONFIDENCE_BED));
     }
 
     @NotNull
     private static PatientReporter buildReporter(@NotNull final CommandLine cmd, @NotNull final SequencedReportData sequencedReportData)
-            throws IOException, SQLException {
-        final VariantAnnotator annotator;
-        if (cmd.hasOption(ENSEMBL_DB)) {
-            if (cmd.hasOption(ENSEMBL_DB_LOCAL)) {
-                final String ensembleJdbcUrl = "jdbc:" + cmd.getOptionValue(ENSEMBL_DB);
-                final String ensembleUser = cmd.getOptionValue(DB_USER);
-                final String ensemblePassword = cmd.getOptionValue(DB_PASS);
+            throws IOException {
 
-                DatabaseAccess ensembleDBConn = new DatabaseAccess(ensembleUser, ensemblePassword, ensembleJdbcUrl);
+        // TODO: Remove svAnalyzer
+        final StructuralVariantAnalyzer svAnalyzer = new StructuralVariantAnalyzer(NullAnnotator.make(), sequencedReportData.knownFusionsModel());
 
-                annotator = new MySQLAnnotator(ensembleDBConn.context());
-            } else {
-                annotator = MySQLAnnotator.make("jdbc:" + cmd.getOptionValue(ENSEMBL_DB));
-            }
-        } else {
-            annotator = NullAnnotator.make();
-        }
+        final SvAnalyzerModel svAnalyzerModel =
+                SvAnalyzerModel.readFiles(cmd.getOptionValue(FUSION_CSV), cmd.getOptionValue(DISRUPTION_CSV));
 
-        final StructuralVariantAnalyzer svAnalyzer = new StructuralVariantAnalyzer(annotator, sequencedReportData.knownFusionsModel());
-
-        return ImmutablePatientReporter.of(buildBaseReportData(cmd), sequencedReportData, svAnalyzer);
+        return ImmutablePatientReporter.of(buildBaseReportData(cmd), sequencedReportData, svAnalyzerModel, svAnalyzer);
     }
 
     private static boolean validInputForPatientReporter(@NotNull final CommandLine cmd) {
@@ -180,8 +162,8 @@ public class PatientReporterApplication {
         final String fusionPairsCsv = cmd.getOptionValue(FUSION_PAIRS_CSV);
         final String promiscuousFiveCsv = cmd.getOptionValue(PROMISCUOUS_FIVE_CSV);
         final String promiscuousThreeCsv = cmd.getOptionValue(PROMISCUOUS_THREE_CSV);
-        final String variantAnnotatorFusionFile = cmd.getOptionValue(FUSION_CSV);
-        final String variantAnnotatorDisruptionFile = cmd.getOptionValue(DISRUPTION_CSV);
+        final String fusionsCsv = cmd.getOptionValue(FUSION_CSV);
+        final String disruptionsCsv = cmd.getOptionValue(DISRUPTION_CSV);
 
         final String fastaFileLocation = cmd.getOptionValue(FASTA_FILE_LOCATION);
         final String highConfidenceBed = cmd.getOptionValue(HIGH_CONFIDENCE_BED);
@@ -202,10 +184,10 @@ public class PatientReporterApplication {
             LOGGER.warn(PROMISCUOUS_THREE_CSV + " has to be an existing file: " + promiscuousThreeCsv);
         } else if (fastaFileLocation == null || !exists(fastaFileLocation)) {
             LOGGER.warn(FASTA_FILE_LOCATION + " has to be an existing file: " + fastaFileLocation);
-        } else if (variantAnnotatorFusionFile == null || !exists(variantAnnotatorFusionFile)) {
-            LOGGER.warn(FUSION_CSV + " has to be an existing file: " + variantAnnotatorFusionFile);
-        } else if (variantAnnotatorDisruptionFile == null || !exists(variantAnnotatorDisruptionFile)) {
-            LOGGER.warn(DISRUPTION_CSV + " has to be an existing file: " + variantAnnotatorDisruptionFile);
+        } else if (fusionsCsv == null || !exists(fusionsCsv)) {
+            LOGGER.warn(FUSION_CSV + " has to be an existing file: " + fusionsCsv);
+        } else if (disruptionsCsv == null || !exists(disruptionsCsv)) {
+            LOGGER.warn(DISRUPTION_CSV + " has to be an existing file: " + disruptionsCsv);
         } else if (highConfidenceBed == null || !exists(highConfidenceBed)) {
             LOGGER.warn(HIGH_CONFIDENCE_BED + " has to be an existing file: " + highConfidenceBed);
         } else {

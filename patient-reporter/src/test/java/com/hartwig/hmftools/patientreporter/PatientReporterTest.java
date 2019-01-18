@@ -16,8 +16,9 @@ import com.hartwig.hmftools.common.variant.structural.EnrichedStructuralVariant;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneAnnotation;
 import com.hartwig.hmftools.common.variant.structural.annotation.StructuralVariantAnnotation;
 import com.hartwig.hmftools.common.variant.structural.annotation.Transcript;
-import com.hartwig.hmftools.svannotation.VariantAnnotator;
+import com.hartwig.hmftools.patientreporter.loadStructuralVariants.SvAnalyzerModel;
 import com.hartwig.hmftools.patientreporter.structural.StructuralVariantAnalyzer;
+import com.hartwig.hmftools.svannotation.VariantAnnotator;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
@@ -26,12 +27,18 @@ public class PatientReporterTest {
 
     private static final String RUN_DIRECTORY = Resources.getResource("test_run").getPath();
 
+    private static final String FUSION_FILE =
+            Resources.getResource("loadStructuralVariants/svAnalysis/CPCT11111111T_fusions.csv").getPath();
+    private static final String DISRUPTION_FILE =
+            Resources.getResource("loadStructuralVariants/svAnalysis/CPCT11111111T_disruptions.csv").getPath();
+
     @Test
     public void canRunOnRunDirectory() throws IOException {
         final BaseReportData baseReportData = testBaseReportData();
         final SequencedReportData reporterData = testSequencedReportData();
         final StructuralVariantAnalyzer svAnalyzer = new StructuralVariantAnalyzer(new TestAnnotator(), testKnownFusionModel());
-        final PatientReporter reporter = ImmutablePatientReporter.of(baseReportData, reporterData, svAnalyzer);
+        final SvAnalyzerModel svAnalyzerModel = SvAnalyzerModel.readFiles(FUSION_FILE, DISRUPTION_FILE);
+        final PatientReporter reporter = ImmutablePatientReporter.of(baseReportData, reporterData, svAnalyzerModel, svAnalyzer);
 
         assertNotNull(reporter.run(RUN_DIRECTORY, true, null));
     }

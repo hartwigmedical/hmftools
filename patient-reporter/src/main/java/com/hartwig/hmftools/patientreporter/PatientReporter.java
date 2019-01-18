@@ -43,9 +43,9 @@ import com.hartwig.hmftools.patientreporter.loadStructuralVariants.Fusion;
 import com.hartwig.hmftools.patientreporter.loadStructuralVariants.SvAnalyzerModel;
 import com.hartwig.hmftools.patientreporter.structural.FusionDisruptionAnalysis;
 import com.hartwig.hmftools.patientreporter.structural.FusionDisruptionAnalyzer;
+import com.hartwig.hmftools.patientreporter.structural.StructuralVariantAnalyzer;
 import com.hartwig.hmftools.patientreporter.variants.SomaticVariantAnalysis;
 import com.hartwig.hmftools.patientreporter.variants.SomaticVariantAnalyzer;
-import com.hartwig.hmftools.patientreporter.structural.StructuralVariantAnalyzer;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -68,6 +68,9 @@ abstract class PatientReporter {
     public abstract SequencedReportData sequencedReportData();
 
     @NotNull
+    public abstract SvAnalyzerModel svAnalyzerModel();
+
+    @NotNull
     public abstract StructuralVariantAnalyzer structuralVariantAnalyzer();
 
     @NotNull
@@ -83,7 +86,7 @@ abstract class PatientReporter {
         final SomaticVariantAnalysis somaticVariantAnalysis = analyzeSomaticVariants(run, copyNumberAnalysis, patientTumorLocation);
 
         final FusionDisruptionAnalysis fusionDisruptionAnalysis =
-                analyzeStructuralVariants(run, copyNumberAnalysis, patientTumorLocation, sequencedReportData().svAnalyzerModel());
+                analyzeStructuralVariants(run, copyNumberAnalysis, patientTumorLocation, svAnalyzerModel());
         final List<GermlineVariant> germlineVariants = doReportGermline ? analyzeGermlineVariants(run) : null;
         final ChordAnalysis chordAnalysis = analyzeChord(run);
 
@@ -220,6 +223,8 @@ abstract class PatientReporter {
 
         LOGGER.info("reportableFusions" + reportableFusions); // add to report
         LOGGER.info("reportableDisruptions" + reportableDisruptions); // add to report plus filter on evidence items
+
+
 
         final List<StructuralVariant> structuralVariants = PatientReporterFileLoader.loadPassedStructuralVariants(run.runDirectory());
         LOGGER.info(" " + structuralVariants.size() + " PASS structural variants loaded");
