@@ -32,7 +32,7 @@ public class DisruptionFactory {
     @NotNull
     private static Disruption fromLineVariants(@NotNull String line) {
         final String[] values = line.split(DELIMITER);
-        return ImmutableDisruptionReaderFile.builder()
+        return ImmutableDisruption.builder()
                 .reportable(Boolean.valueOf(values[1]))
                 .svId(values[2])
                 .chromosome(values[3])

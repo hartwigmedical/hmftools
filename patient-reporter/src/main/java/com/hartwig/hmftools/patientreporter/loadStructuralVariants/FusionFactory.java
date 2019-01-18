@@ -35,7 +35,7 @@ public class FusionFactory {
     private static Fusion fromLineVariants(@NotNull String line) {
         final String[] values = line.split(DELIMITER);
         // ProteinsKept and ProteinsLost are not mandatory
-        return ImmutableFusionReaderFile.builder()
+        return ImmutableFusion.builder()
                 .reportable(Boolean.valueOf(values[1]))
                 .knownType(values[2])
                 .primarySource(values[3])
