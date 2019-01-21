@@ -17,6 +17,8 @@ import com.hartwig.hmftools.common.variant.structural.annotation.GeneAnnotation;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneDisruption;
 import com.hartwig.hmftools.common.variant.structural.annotation.ImmutableGeneDisruption;
 import com.hartwig.hmftools.common.variant.structural.annotation.Transcript;
+import com.hartwig.hmftools.patientreporter.loadStructuralVariants.Disruption;
+import com.hartwig.hmftools.patientreporter.loadStructuralVariants.ImmutableDisruption;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
@@ -26,12 +28,30 @@ public class ReportableGeneDisruptionFactoryTest {
 
     private static final double EPSILON = 1.0e-10;
 
+    public Disruption disruptionTestData() {
+        return ImmutableDisruption.builder()
+                .reportable(true)
+                .svId("755779")
+                .chromosome("3")
+                .position("125593804")
+                .orientation("-1")
+                .type("INV")
+                .gene("ROPN1B,")
+                .transcript("ENST00000514116")
+                .strand("1")
+                .regionType("Upstream")
+                .codingType("5P_UTR")
+                .biotype("protein_coding")
+                .exon("0")
+                .isDisruptive(false)
+                .build();
+    }
+
     @Test
     public void canConvertPairedDisruption() {
         List<GeneCopyNumber> copyNumbers =
                 Lists.newArrayList(createTestCopyNumberBuilder().gene("ERBB4").minCopyNumber(1).maxCopyNumber(1).build());
-//        List<GeneDisruption> pairedDisruptions =
-//                createTestDisruptionPair("2", 1000, "q34", "ERBB4", "ERBB4", 4, 9, 1D);
+        List<Disruption> pairedDisruptions = Lists.newArrayList(disruptionTestData());
 //
 //        List<ReportableGeneDisruption> reportableDisruptions =
 //                ReportableGeneDisruptionFactory.disruptionConvertGeneDisruption(pairedDisruptions, copyNumbers);
@@ -54,8 +74,7 @@ public class ReportableGeneDisruptionFactoryTest {
         List<GeneCopyNumber> copyNumbers =
                 Lists.newArrayList(createTestCopyNumberBuilder().gene("ERBB4").minCopyNumber(1).maxCopyNumber(1).build(),
                         createTestCopyNumberBuilder().gene("ERBB2").minCopyNumber(1).maxCopyNumber(1).build());
-//        List<GeneDisruption> pairedDisruptions =
-//                createTestDisruptionPair("INV", "2", "q34", "ERBB4", "ERBB2", 4, 9, 1D);
+        List<Disruption> pairedDisruptions = Lists.newArrayList(disruptionTestData());
 //
 //        List<ReportableGeneDisruption> reportableDisruptions =
 //                ReportableGeneDisruptionFactory.disruptionConvertGeneDisruption(pairedDisruptions, copyNumbers);
@@ -65,9 +84,9 @@ public class ReportableGeneDisruptionFactoryTest {
 
     @Test
     public void canConvertNormalDisruptionsWithoutCopyNumbers() {
-//        GeneDisruption disruption1 = createDisruption("BND", "17", "q12", "CDK12", 12, 2.3, false);
-//        GeneDisruption disruption2 = createDisruption("INS", "21", "q22.12", "RUNX1", 0, 0.8, true);
-//        GeneDisruption disruption3 = createDisruption("DUP", "1", "p13.1", "CD58", 2, 0.2, true);
+        List<Disruption> disruption1 = Lists.newArrayList(disruptionTestData());
+        List<Disruption> disruption2 = Lists.newArrayList(disruptionTestData());
+        List<Disruption> disruption3 = Lists.newArrayList(disruptionTestData());
 //
 //        List<GeneDisruption> disruptions = Lists.newArrayList(disruption1, disruption2, disruption3);
 //
