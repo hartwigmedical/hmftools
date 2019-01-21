@@ -60,6 +60,8 @@ public class ScalePosition {
                 .startPosition(startPositionMap.get(victim.startPosition()))
                 .endChromosome(victim.endChromosome())
                 .endPosition(endPositionMap.get(victim.endPosition()))
+                .startFoldback(victim.startFoldback())
+                .endFoldback(victim.endFoldback())
                 .build();
 
     }

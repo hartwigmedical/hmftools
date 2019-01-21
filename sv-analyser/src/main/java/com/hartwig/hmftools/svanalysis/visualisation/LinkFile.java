@@ -39,6 +39,8 @@ public class LinkFile {
                 .startPosition(Long.valueOf(values[1]))
                 .endChromosome(values[2])
                 .endPosition(Long.valueOf(values[3]))
+                .startFoldback(Boolean.valueOf(values[4]))
+                .endFoldback(Boolean.valueOf(values[5]))
                 .build();
     }
 

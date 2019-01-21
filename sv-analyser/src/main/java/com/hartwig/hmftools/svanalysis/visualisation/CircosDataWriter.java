@@ -56,28 +56,41 @@ public class CircosDataWriter {
         Files.write(new File(linkPath).toPath(), createLinks(links));
 
         final String scatterPath = filePrefix + ".scatter.circos";
-        Files.write(new File(scatterPath).toPath(), createScatter(tracks));
+        Files.write(new File(scatterPath).toPath(), createScatter(tracks, links));
 
     }
 
     @NotNull
-    private List<String> createScatter(@NotNull final List<Track> tracks) {
+    private List<String> createScatter(@NotNull final List<Track> tracks, @NotNull final List<Link> links) {
         final List<String> result = Lists.newArrayList();
         for (Track track : tracks) {
 
-            final String start = new StringJoiner(DELIMITER).add(circosContig(track.chromosome()))
-                    .add(String.valueOf(track.start()))
-                    .add(String.valueOf(track.start()))
-                    .add(String.valueOf(track.track()))
-                    .toString();
-            result.add(start);
+            final GenomePosition startPosition = GenomePositions.create(track.chromosome(), track.start());
+            final boolean isStartFoldback =
+                    startLink(startPosition, links).filter(Link::startFoldback).isPresent() || endLink(startPosition,
+                            links).filter(Link::endFoldback).isPresent();
 
-            final String end = new StringJoiner(DELIMITER).add(circosContig(track.chromosome()))
+            final StringJoiner start = new StringJoiner(DELIMITER).add(circosContig(track.chromosome()))
+                    .add(String.valueOf(track.start()))
+                    .add(String.valueOf(track.start()))
+                    .add(String.valueOf(track.track()));
+            if (isStartFoldback) {
+                start.add("glyph=triangle");
+            }
+
+            result.add(start.toString());
+
+            final GenomePosition endPosition = GenomePositions.create(track.chromosome(), track.end());
+            final boolean isEndFoldback = startLink(endPosition, links).filter(Link::startFoldback).isPresent() || endLink(endPosition,
+                    links).filter(Link::endFoldback).isPresent();
+            final StringJoiner end = new StringJoiner(DELIMITER).add(circosContig(track.chromosome()))
                     .add(String.valueOf(track.end()))
                     .add(String.valueOf(track.end()))
-                    .add(String.valueOf(track.track()))
-                    .toString();
-            result.add(end);
+                    .add(String.valueOf(track.track()));
+            if (isEndFoldback) {
+                start.add("glyph=triangle");
+            }
+            result.add(end.toString());
 
         }
 
@@ -110,7 +123,7 @@ public class CircosDataWriter {
             double r1 = r0 + (track.track() - 1) * radiusChange;
 
             final GenomePosition startPosition = GenomePositions.create(track.chromosome(), track.start());
-            if (connectedLink(startPosition, link).isPresent()) {
+            if (startLink(startPosition, link).isPresent() || endLink(startPosition, link).isPresent()) {
                 final String start = new StringJoiner(DELIMITER).add(circosContig(track.chromosome()))
                         .add(String.valueOf(track.start()))
                         .add(String.valueOf(track.start()))
@@ -120,7 +133,7 @@ public class CircosDataWriter {
             }
 
             final GenomePosition endPosition = GenomePositions.create(track.chromosome(), track.end());
-            if (connectedLink(endPosition, link).isPresent()) {
+            if (startLink(endPosition, link).isPresent() || endLink(endPosition, link).isPresent()) {
                 final String end = new StringJoiner(DELIMITER).add(circosContig(track.chromosome()))
                         .add(String.valueOf(track.end()))
                         .add(String.valueOf(track.end()))
@@ -234,10 +247,15 @@ public class CircosDataWriter {
         return "hs" + HumanChromosome.fromString(chromosome);
     }
 
-    static Optional<Link> connectedLink(@NotNull final GenomePosition position, @NotNull List<Link> links) {
+    static Optional<Link> endLink(@NotNull final GenomePosition position, @NotNull List<Link> links) {
         return links.stream()
-                .filter(x -> (x.startChromosome().equals(position.chromosome()) && x.startPosition() == position.position()) || (
-                        x.endChromosome().equals(position.chromosome()) && x.endPosition() == position.position()))
+                .filter(x -> x.endChromosome().equals(position.chromosome()) && x.endPosition() == position.position())
+                .findFirst();
+    }
+
+    static Optional<Link> startLink(@NotNull final GenomePosition position, @NotNull List<Link> links) {
+        return links.stream()
+                .filter(x -> x.startChromosome().equals(position.chromosome()) && x.startPosition() == position.position())
                 .findFirst();
     }
 

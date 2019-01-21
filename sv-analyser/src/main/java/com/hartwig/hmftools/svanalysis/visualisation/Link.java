@@ -15,4 +15,9 @@ public abstract class Link {
     public abstract String endChromosome();
 
     public abstract long endPosition();
+
+    public abstract boolean startFoldback();
+
+    public abstract boolean endFoldback();
+
 }
