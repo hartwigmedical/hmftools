@@ -66,8 +66,8 @@ chromosomes_display_default = yes
         glyph            = circle
         glyph_size       = 20
         color            = red
-        stroke_color     = red
-        stroke_thickness = 0
+        stroke_color     = dred
+        stroke_thickness = 2
         orientation      = out
 
         min  = 1
@@ -82,10 +82,10 @@ chromosomes_display_default = yes
         type = connector
         file = SUBSTITUTE_SAMPLE.connector.circos
 
-        r0	=	0.30r
-        #r1   = 0.999r
+        r0	=	0.3r
+        #r1   = 0.90r
 
-        connector_dims = 0,0.3,0.53,0.3,0
+        connector_dims = 0.0,0.3,0.4,0.3,0
 
         thickness = 4
         color     = red

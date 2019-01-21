@@ -50,7 +50,7 @@ public class CircosDataWriter {
         Files.write(new File(karyotypePath).toPath(), createKaryotypes(tracks));
 
         final String connectorPath = filePrefix + ".connector.circos";
-        Files.write(new File(connectorPath).toPath(), createConnectors(0.3, 0.6 / (maxTracks), tracks, links));
+        Files.write(new File(connectorPath).toPath(), createConnectors(0.3, 0.6 / (maxTracks - 1), tracks, links));
 
         final String linkPath = filePrefix + ".link.circos";
         Files.write(new File(linkPath).toPath(), createLinks(links));
@@ -73,10 +73,11 @@ public class CircosDataWriter {
             final StringJoiner start = new StringJoiner(DELIMITER).add(circosContig(track.chromosome()))
                     .add(String.valueOf(track.start()))
                     .add(String.valueOf(track.start()))
-                    .add(String.valueOf(track.track()));
-            if (isStartFoldback) {
-                start.add("glyph=triangle");
-            }
+                    .add(String.valueOf(track.track()))
+                    .add(ChainColor.color(track.chainId()));
+//            if (isStartFoldback) {
+//                start.add("glyph=triangle");
+//            }
 
             result.add(start.toString());
 
@@ -86,10 +87,11 @@ public class CircosDataWriter {
             final StringJoiner end = new StringJoiner(DELIMITER).add(circosContig(track.chromosome()))
                     .add(String.valueOf(track.end()))
                     .add(String.valueOf(track.end()))
-                    .add(String.valueOf(track.track()));
-            if (isEndFoldback) {
-                start.add("glyph=triangle");
-            }
+                    .add(String.valueOf(track.track()))
+                    .add(ChainColor.color(track.chainId()));
+//            if (isEndFoldback) {
+//                start.add("glyph=triangle");
+//            }
             result.add(end.toString());
 
         }
@@ -100,15 +102,16 @@ public class CircosDataWriter {
     @NotNull
     private List<String> createLinks(@NotNull final List<Link> links) {
         final List<String> result = Lists.newArrayList();
-        for (Link svLink : links) {
-            final String link = new StringJoiner(DELIMITER).add(circosContig(svLink.startChromosome()))
-                    .add(String.valueOf(svLink.startPosition()))
-                    .add(String.valueOf(svLink.startPosition()))
-                    .add(circosContig(svLink.endChromosome()))
-                    .add(String.valueOf(svLink.endPosition()))
-                    .add(String.valueOf(svLink.endPosition()))
+        for (Link link : links) {
+            final String linkString = new StringJoiner(DELIMITER).add(circosContig(link.startChromosome()))
+                    .add(String.valueOf(link.startPosition()))
+                    .add(String.valueOf(link.startPosition()))
+                    .add(circosContig(link.endChromosome()))
+                    .add(String.valueOf(link.endPosition()))
+                    .add(String.valueOf(link.endPosition()))
+                    .add(ChainColor.color(link.chainId()))
                     .toString();
-            result.add(link);
+            result.add(linkString);
         }
 
         return result;
@@ -127,7 +130,7 @@ public class CircosDataWriter {
                 final String start = new StringJoiner(DELIMITER).add(circosContig(track.chromosome()))
                         .add(String.valueOf(track.start()))
                         .add(String.valueOf(track.start()))
-                        .add("r1=" + r1 + "r")
+                        .add("r1=" + r1 + "r," + ChainColor.color(track.chainId()))
                         .toString();
                 result.add(start);
             }
@@ -137,7 +140,7 @@ public class CircosDataWriter {
                 final String end = new StringJoiner(DELIMITER).add(circosContig(track.chromosome()))
                         .add(String.valueOf(track.end()))
                         .add(String.valueOf(track.end()))
-                        .add("r1=" + r1 + "r")
+                        .add("r1=" + r1 + "r," + ChainColor.color(track.chainId()))
                         .toString();
                 result.add(end);
             }
@@ -187,6 +190,7 @@ public class CircosDataWriter {
                     .add(String.valueOf(scaled.start()))
                     .add(String.valueOf(scaled.end()))
                     .add(String.valueOf(scaled.track()))
+                    .add(ChainColor.color(scaled.chainId()))
                     .toString();
             result.add(entry);
 

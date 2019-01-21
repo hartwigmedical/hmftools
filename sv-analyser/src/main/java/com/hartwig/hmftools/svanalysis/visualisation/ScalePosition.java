@@ -44,6 +44,7 @@ public class ScalePosition {
     @NotNull
     private static Track scale(@NotNull final Track victim, @NotNull final Map<Long, Integer> positionMap) {
         return ImmutableTrack.builder()
+                .chainId(victim.chainId())
                 .chromosome(victim.chromosome())
                 .start(positionMap.get(victim.start()))
                 .end(positionMap.get(victim.end()))
@@ -56,6 +57,7 @@ public class ScalePosition {
             @NotNull final Map<Long, Integer> endPositionMap) {
 
         return ImmutableLink.builder()
+                .chainId(victim.chainId())
                 .startChromosome(victim.startChromosome())
                 .startPosition(startPositionMap.get(victim.startPosition()))
                 .endChromosome(victim.endChromosome())

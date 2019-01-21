@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 
@@ -28,19 +29,20 @@ public class LinkFile {
             }
         }
 
-        return results;
+        return results.stream().filter(x -> x.startPosition() != -1 && x.endPosition() != -1).collect(Collectors.toList());
     }
 
     @NotNull
     private static Link fromString(@NotNull final String line) {
         String[] values = line.split(DELIMITER);
         return ImmutableLink.builder()
-                .startChromosome(values[0])
-                .startPosition(Long.valueOf(values[1]))
-                .endChromosome(values[2])
-                .endPosition(Long.valueOf(values[3]))
-                .startFoldback(Boolean.valueOf(values[4]))
-                .endFoldback(Boolean.valueOf(values[5]))
+                .chainId(Integer.valueOf(values[0]))
+                .startChromosome(values[1])
+                .startPosition(Long.valueOf(values[2]))
+                .endChromosome(values[3])
+                .endPosition(Long.valueOf(values[4]))
+                .startFoldback(Boolean.valueOf(values[5]))
+                .endFoldback(Boolean.valueOf(values[6]))
                 .build();
     }
 

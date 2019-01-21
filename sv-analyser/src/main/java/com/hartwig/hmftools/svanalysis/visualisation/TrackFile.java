@@ -33,9 +33,10 @@ public class TrackFile {
 
             if (!line.startsWith(COMMENT)) {
                 String[] values = line.split(DELIMITER);
-                final String chromosome = values[0];
-                final long start = Long.valueOf(values[1]);
-                final long end = Long.valueOf(values[2]);
+                final int chainId = Integer.valueOf(values[0]);
+                final String chromosome = values[1];
+                final long start = Long.valueOf(values[2]);
+                final long end = Long.valueOf(values[3]);
 
                 if (!trackMap.containsKey(chromosome)) {
                     trackMap.put(chromosome, currentTrack);
@@ -44,7 +45,13 @@ public class TrackFile {
                     trackMap.put(chromosome, currentTrack);
                 }
 
-                result.add(ImmutableTrack.builder().chromosome(chromosome).start(start).end(end).track(currentTrack).build());
+                result.add(ImmutableTrack.builder()
+                        .chainId(chainId)
+                        .chromosome(chromosome)
+                        .start(start)
+                        .end(end)
+                        .track(currentTrack)
+                        .build());
 
             }
 
@@ -64,11 +71,18 @@ public class TrackFile {
 
             if (!line.startsWith(COMMENT)) {
                 String[] values = line.split(DELIMITER);
-                final String chromosome = values[0];
-                final long start = Long.valueOf(values[1]);
-                final long end = Long.valueOf(values[2]);
+                final int chainId = Integer.valueOf(values[0]);
+                final String chromosome = values[1];
+                final long start = Long.valueOf(values[2]);
+                final long end = Long.valueOf(values[3]);
 
-                result.add(ImmutableTrack.builder().chromosome(chromosome).start(start).end(end).track(currentTrack++).build());
+                result.add(ImmutableTrack.builder()
+                        .chainId(chainId)
+                        .chromosome(chromosome)
+                        .start(start)
+                        .end(end)
+                        .track(currentTrack++)
+                        .build());
 
             }
         }
