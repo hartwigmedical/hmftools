@@ -43,13 +43,7 @@ public class ScalePosition {
 
     @NotNull
     private static Track scale(@NotNull final Track victim, @NotNull final Map<Long, Integer> positionMap) {
-        return ImmutableTrack.builder()
-                .chainId(victim.chainId())
-                .chromosome(victim.chromosome())
-                .start(positionMap.get(victim.start()))
-                .end(positionMap.get(victim.end()))
-                .track(victim.track())
-                .build();
+        return ImmutableTrack.builder().from(victim).start(positionMap.get(victim.start())).end(positionMap.get(victim.end())).build();
     }
 
     @NotNull
@@ -57,13 +51,9 @@ public class ScalePosition {
             @NotNull final Map<Long, Integer> endPositionMap) {
 
         return ImmutableLink.builder()
-                .chainId(victim.chainId())
-                .startChromosome(victim.startChromosome())
+                .from(victim)
                 .startPosition(startPositionMap.get(victim.startPosition()))
-                .endChromosome(victim.endChromosome())
                 .endPosition(endPositionMap.get(victim.endPosition()))
-                .startFoldback(victim.startFoldback())
-                .endFoldback(victim.endFoldback())
                 .build();
 
     }

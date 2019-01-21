@@ -14,11 +14,15 @@ public abstract class Link {
 
     public abstract long startPosition();
 
+    public abstract int startOrientation();
+
+    public abstract boolean startFoldback();
+
     public abstract String endChromosome();
 
     public abstract long endPosition();
 
-    public abstract boolean startFoldback();
+    public abstract int endOrientation();
 
     public abstract boolean endFoldback();
 

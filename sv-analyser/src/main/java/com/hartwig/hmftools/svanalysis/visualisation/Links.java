@@ -4,13 +4,12 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 
 import org.jetbrains.annotations.NotNull;
 
-public class LinkFile {
+public class Links {
 
     private static final String COMMENT = "#";
     private static final String DELIMITER = "\t";
@@ -29,7 +28,7 @@ public class LinkFile {
             }
         }
 
-        return results.stream().filter(x -> x.startPosition() != -1 && x.endPosition() != -1).collect(Collectors.toList());
+        return results;
     }
 
     @NotNull
@@ -39,10 +38,12 @@ public class LinkFile {
                 .chainId(Integer.valueOf(values[0]))
                 .startChromosome(values[1])
                 .startPosition(Long.valueOf(values[2]))
-                .endChromosome(values[3])
-                .endPosition(Long.valueOf(values[4]))
-                .startFoldback(Boolean.valueOf(values[5]))
-                .endFoldback(Boolean.valueOf(values[6]))
+                .startOrientation(Integer.valueOf(values[3]))
+                .startFoldback(Boolean.valueOf(values[4]))
+                .endChromosome(values[5])
+                .endPosition(Long.valueOf(values[6]))
+                .endOrientation(Integer.valueOf(values[7]))
+                .endFoldback(Boolean.valueOf(values[8]))
                 .build();
     }
 

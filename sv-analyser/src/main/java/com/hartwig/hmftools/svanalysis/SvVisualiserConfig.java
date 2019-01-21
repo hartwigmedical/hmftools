@@ -5,9 +5,9 @@ import java.util.List;
 import java.util.StringJoiner;
 
 import com.hartwig.hmftools.svanalysis.visualisation.Link;
-import com.hartwig.hmftools.svanalysis.visualisation.LinkFile;
+import com.hartwig.hmftools.svanalysis.visualisation.Links;
 import com.hartwig.hmftools.svanalysis.visualisation.Track;
-import com.hartwig.hmftools.svanalysis.visualisation.TrackFactory;
+import com.hartwig.hmftools.svanalysis.visualisation.Tracks;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
@@ -48,11 +48,6 @@ public interface SvVisualiserConfig {
     @NotNull
     String circosBin();
 
-
-    default int maxTracks() {
-        return tracks().stream().mapToInt(Track::track).max().orElse(0) + 1;
-    }
-
     @NotNull
     static Options createOptions() {
         final Options options = new Options();
@@ -79,8 +74,8 @@ public interface SvVisualiserConfig {
             throw new ParseException("Missing the following parameters: " + missing);
         }
 
-        final List<Track> tracks = TrackFactory.readTracks(trackPath);
-        final List<Link> links = LinkFile.readLinks(linkPath);
+        final List<Track> tracks = Tracks.readTracksFromFile(trackPath);
+        final List<Link> links = Links.readLinks(linkPath);
 
         return ImmutableSvVisualiserConfig.builder()
                 .outputConfPath(outputDir)

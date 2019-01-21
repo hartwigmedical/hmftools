@@ -1,10 +1,15 @@
 package com.hartwig.hmftools.svanalysis;
 
 import java.io.IOException;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.circos.CircosExecution;
 import com.hartwig.hmftools.svanalysis.visualisation.CircosConfigWriter;
 import com.hartwig.hmftools.svanalysis.visualisation.CircosDataWriter;
+import com.hartwig.hmftools.svanalysis.visualisation.Link;
+import com.hartwig.hmftools.svanalysis.visualisation.Track;
+import com.hartwig.hmftools.svanalysis.visualisation.Tracks;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -42,11 +47,17 @@ public class SvVisualiser {
 
     private void run() throws IOException, InterruptedException {
 
-        LOGGER.info("Generating CIRCOS config");
-        new CircosDataWriter(config.sample(), config.outputConfPath(), config.maxTracks()).write(config.tracks(), config.links());
+        LOGGER.info("Extrapolating terminal tracks");
+        final List<Track> tracks = Tracks.addLinkTerminals(1000, config.tracks(), config.links());
+        final List<Link> links =
+                config.links().stream().filter(x -> x.startPosition() != -1 && x.endPosition() != -1).collect(Collectors.toList());
 
-        final CircosConfigWriter confWrite = new CircosConfigWriter(config.sample(), config.outputConfPath(), config.maxTracks());
+        int maxTracks = tracks.stream().mapToInt(Track::track).max().orElse(0) + 1;
+
+        LOGGER.info("Generating CIRCOS config");
+        final CircosConfigWriter confWrite = new CircosConfigWriter(config.sample(), config.outputConfPath(), maxTracks);
         confWrite.writeConfig();
+        new CircosDataWriter(config.sample(), config.outputConfPath(), maxTracks).write(tracks, links);
 
         final String outputPlotName = config.sample() + ".cluster.png";
         new CircosExecution(config.circosBin()).generateCircos(confWrite.configPath(), config.outputPlotPath(), outputPlotName);
