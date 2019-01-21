@@ -7,7 +7,7 @@ import java.util.StringJoiner;
 import com.hartwig.hmftools.svanalysis.visualisation.Link;
 import com.hartwig.hmftools.svanalysis.visualisation.LinkFile;
 import com.hartwig.hmftools.svanalysis.visualisation.Track;
-import com.hartwig.hmftools.svanalysis.visualisation.TrackFile;
+import com.hartwig.hmftools.svanalysis.visualisation.TrackFactory;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
@@ -79,7 +79,7 @@ public interface SvVisualiserConfig {
             throw new ParseException("Missing the following parameters: " + missing);
         }
 
-        final List<Track> tracks = TrackFile.readTracks(trackPath);
+        final List<Track> tracks = TrackFactory.readTracks(trackPath);
         final List<Link> links = LinkFile.readLinks(linkPath);
 
         return ImmutableSvVisualiserConfig.builder()
