@@ -1,3 +1,4 @@
+#StartChromosome	StartPosition   EndChromosome	EndPosition	StartFoldback	EndFoldback
 3	26663922	3	26664498	TRUE	TRUE
 3	25400602	12	72666892	TRUE	FALSE
 10	60477422	12	72667075	FALSE	FALSE
