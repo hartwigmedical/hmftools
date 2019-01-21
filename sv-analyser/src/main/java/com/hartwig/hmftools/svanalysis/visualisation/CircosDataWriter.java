@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.StringJoiner;
 import java.util.stream.Collectors;
@@ -13,6 +14,8 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.chromosome.HumanChromosome;
+import com.hartwig.hmftools.common.position.GenomePosition;
+import com.hartwig.hmftools.common.position.GenomePositions;
 import com.hartwig.hmftools.common.region.GenomeRegion;
 
 import org.jetbrains.annotations.NotNull;
@@ -47,11 +50,38 @@ public class CircosDataWriter {
         Files.write(new File(karyotypePath).toPath(), createKaryotypes(tracks));
 
         final String connectorPath = filePrefix + ".connector.circos";
-        Files.write(new File(connectorPath).toPath(), createConnectors(0.3, 0.6 / (maxTracks), tracks));
+        Files.write(new File(connectorPath).toPath(), createConnectors(0.3, 0.6 / (maxTracks), tracks, links));
 
         final String linkPath = filePrefix + ".link.circos";
         Files.write(new File(linkPath).toPath(), createLinks(links));
 
+        final String scatterPath = filePrefix + ".scatter.circos";
+        Files.write(new File(scatterPath).toPath(), createScatter(tracks));
+
+    }
+
+    @NotNull
+    private List<String> createScatter(@NotNull final List<Track> tracks) {
+        final List<String> result = Lists.newArrayList();
+        for (Track track : tracks) {
+
+            final String start = new StringJoiner(DELIMITER).add(circosContig(track.chromosome()))
+                    .add(String.valueOf(track.start()))
+                    .add(String.valueOf(track.start()))
+                    .add(String.valueOf(track.track()))
+                    .toString();
+            result.add(start);
+
+            final String end = new StringJoiner(DELIMITER).add(circosContig(track.chromosome()))
+                    .add(String.valueOf(track.end()))
+                    .add(String.valueOf(track.end()))
+                    .add(String.valueOf(track.track()))
+                    .toString();
+            result.add(end);
+
+        }
+
+        return result;
     }
 
     @NotNull
@@ -72,25 +102,32 @@ public class CircosDataWriter {
     }
 
     @NotNull
-    private List<String> createConnectors(double r0, double radiusChange, @NotNull final List<Track> scaledLinks) {
+    private List<String> createConnectors(double r0, double radiusChange, @NotNull final List<Track> tracks,
+            @NotNull final List<Link> link) {
         final List<String> result = Lists.newArrayList();
-        for (Track scaled : scaledLinks) {
+        for (Track track : tracks) {
 
-            double r1 = r0 + (scaled.track() - 1) * radiusChange;
+            double r1 = r0 + (track.track() - 1) * radiusChange;
 
-            final String start = new StringJoiner(DELIMITER).add(circosContig(scaled.chromosome()))
-                    .add(String.valueOf(scaled.start()))
-                    .add(String.valueOf(scaled.start()))
-                    .add("r1=" + r1 + "r")
-                    .toString();
-            result.add(start);
+            final GenomePosition startPosition = GenomePositions.create(track.chromosome(), track.start());
+            if (connectedLink(startPosition, link).isPresent()) {
+                final String start = new StringJoiner(DELIMITER).add(circosContig(track.chromosome()))
+                        .add(String.valueOf(track.start()))
+                        .add(String.valueOf(track.start()))
+                        .add("r1=" + r1 + "r")
+                        .toString();
+                result.add(start);
+            }
 
-            final String end = new StringJoiner(DELIMITER).add(circosContig(scaled.chromosome()))
-                    .add(String.valueOf(scaled.end()))
-                    .add(String.valueOf(scaled.end()))
-                    .add("r1=" + r1 + "r")
-                    .toString();
-            result.add(end);
+            final GenomePosition endPosition = GenomePositions.create(track.chromosome(), track.end());
+            if (connectedLink(endPosition, link).isPresent()) {
+                final String end = new StringJoiner(DELIMITER).add(circosContig(track.chromosome()))
+                        .add(String.valueOf(track.end()))
+                        .add(String.valueOf(track.end()))
+                        .add("r1=" + r1 + "r")
+                        .toString();
+                result.add(end);
+            }
 
         }
 
@@ -98,8 +135,8 @@ public class CircosDataWriter {
     }
 
     @NotNull
-    private List<String> createKaryotypes(@NotNull final List<Track> scaledLinks) {
-        final Map<String, Integer> contigLengths = contigLengths(scaledLinks);
+    private List<String> createKaryotypes(@NotNull final List<Track> tracks) {
+        final Map<String, Integer> contigLengths = contigLengths(tracks);
         final List<String> result = Lists.newArrayList();
         for (String contig : contigLengths.keySet()) {
 
@@ -117,11 +154,11 @@ public class CircosDataWriter {
     }
 
     @NotNull
-    private List<String> createHistogramTrack(@NotNull final List<Track> scaledLinks) {
-        final Map<String, Integer> contigLengths = contigLengths(scaledLinks);
+    private List<String> createHistogramTrack(@NotNull final List<Track> tracks) {
+        final Map<String, Integer> contigLengths = contigLengths(tracks);
 
         final List<String> result = Lists.newArrayList();
-        for (Track scaled : scaledLinks) {
+        for (Track scaled : tracks) {
 
             final int contigLength = contigLengths.get(scaled.chromosome());
 
@@ -154,9 +191,9 @@ public class CircosDataWriter {
     }
 
     @NotNull
-    private Map<String, Integer> contigLengths(@NotNull final List<Track> scaledLinks) {
+    private Map<String, Integer> contigLengths(@NotNull final List<Track> tracks) {
         final Map<String, Integer> results = Maps.newHashMap();
-        for (Track scaledLink : scaledLinks) {
+        for (Track scaledLink : tracks) {
             int end = (int) scaledLink.end() + POSITION_BUFFER;
             results.merge(scaledLink.chromosome(), end, Math::max);
         }
@@ -196,4 +233,12 @@ public class CircosDataWriter {
     static String circosContig(@NotNull final String chromosome) {
         return "hs" + HumanChromosome.fromString(chromosome);
     }
+
+    static Optional<Link> connectedLink(@NotNull final GenomePosition position, @NotNull List<Link> links) {
+        return links.stream()
+                .filter(x -> (x.startChromosome().equals(position.chromosome()) && x.startPosition() == position.position()) || (
+                        x.endChromosome().equals(position.chromosome()) && x.endPosition() == position.position()))
+                .findFirst();
+    }
+
 }

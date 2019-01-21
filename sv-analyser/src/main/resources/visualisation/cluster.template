@@ -38,6 +38,7 @@ chromosomes_display_default = yes
 		color            = black
 		file             = SUBSTITUTE_SAMPLE.text.circos
 
+
 		r0   = 0.9r
 		r1   = 1r
 
@@ -52,6 +53,26 @@ chromosomes_display_default = yes
 
 		padding  = 0p
 		rpadding = 0p
+	</plot>
+
+	# -----------------------------------------------------------
+	# Scatter
+	<plot>
+		type             = scatter
+		file             = SUBSTITUTE_SAMPLE.scatter.circos
+
+		r0   = 0.3r
+		r1   = 0.9r
+        glyph            = circle
+        glyph_size       = 12
+        color            = red
+        stroke_color     = red
+        stroke_thickness = 0
+        orientation      = out
+
+        min  = 1
+        max = SUBSTITUTE_MAX
+
 	</plot>
 
 	# -----------------------------------------------------------
