@@ -9,7 +9,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.region.GenomeRegion;
-import com.hartwig.hmftools.common.region.GenomeRegionFactory;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -17,7 +16,7 @@ public class ScalePosition {
 
     private final Map<String, Map<Long, Integer>> chromosomePositionMap = Maps.newHashMap();
 
-    public ScalePosition(final int start, @NotNull final List<GenomeRegion> regions) {
+    public ScalePosition(final int start, @NotNull final List<? extends GenomeRegion> regions) {
         final Set<String> contigs = regions.stream().map(GenomeRegion::chromosome).collect(Collectors.toSet());
         for (final String contig : contigs) {
             final List<Long> contigPositions = Lists.newArrayList();
@@ -31,29 +30,38 @@ public class ScalePosition {
     }
 
     @NotNull
-    public List<GenomeRegion> scaleRegions(@NotNull final List<GenomeRegion> regions) {
-        return regions.stream().map(x -> scale(x, chromosomePositionMap.get(x.chromosome()))).collect(Collectors.toList());
+    public List<Track> scaleTracks(@NotNull final List<Track> tracks) {
+        return tracks.stream().map(x -> scale(x, chromosomePositionMap.get(x.chromosome()))).collect(Collectors.toList());
     }
 
     @NotNull
-    public List<SvLink> scaleLinks(@NotNull final List<SvLink> links) {
+    public List<Link> scaleLinks(@NotNull final List<Link> links) {
         return links.stream()
                 .map(x -> scale(x, chromosomePositionMap.get(x.startChromosome()), chromosomePositionMap.get(x.endChromosome())))
                 .collect(Collectors.toList());
     }
 
     @NotNull
-    private static GenomeRegion scale(@NotNull final GenomeRegion victim, @NotNull final Map<Long, Integer> positionMap) {
-        return GenomeRegionFactory.create(victim.chromosome(), positionMap.get(victim.start()), positionMap.get(victim.end()));
+    private static Track scale(@NotNull final Track victim, @NotNull final Map<Long, Integer> positionMap) {
+        return ImmutableTrack.builder()
+                .chromosome(victim.chromosome())
+                .start(positionMap.get(victim.start()))
+                .end(positionMap.get(victim.end()))
+                .track(victim.track())
+                .build();
     }
 
     @NotNull
-    private static SvLink scale(@NotNull final SvLink victim, @NotNull final Map<Long, Integer> startPositionMap,
+    private static Link scale(@NotNull final Link victim, @NotNull final Map<Long, Integer> startPositionMap,
             @NotNull final Map<Long, Integer> endPositionMap) {
-        return new SvLink(victim.startChromosome(),
-                startPositionMap.get(victim.startPosition()),
-                victim.endChromosome(),
-                endPositionMap.get(victim.endPosition()));
+
+        return ImmutableLink.builder()
+                .startChromosome(victim.startChromosome())
+                .startPosition(startPositionMap.get(victim.startPosition()))
+                .endChromosome(victim.endChromosome())
+                .endPosition(endPositionMap.get(victim.endPosition()))
+                .build();
+
     }
 
     @VisibleForTesting

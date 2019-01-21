@@ -375,6 +375,12 @@ public class StructuralVariantAnnotator
         LOGGER.info("run complete");
     }
 
+    private static final String SOURCE_SVS_FROM_DB = "source_svs_from_db";
+    private static final String LOAD_ANNOTATIONS_FROM_FILE = "load_annotations";
+    private static final String WRITE_BREAKENDS = "write_breakends";
+
+    private static final String SKIP_DB_UPLOAD = "skip_db_upload";
+
     // configuration
     private static final String SAMPLE = "sample";
     private static final String VCF_FILE = "vcf_file";
@@ -382,10 +388,6 @@ public class StructuralVariantAnnotator
     private static final String ENSEMBL_DATA_DIR = "ensembl_data_dir";
     private static final String DATA_OUTPUT_DIR = "data_output_dir";
 
-    private static final String SOURCE_SVS_FROM_DB = "source_svs_from_db";
-    private static final String LOAD_ANNOTATIONS_FROM_FILE = "load_annotations";
-    private static final String WRITE_BREAKENDS = "write_breakends";
-    private static final String SKIP_DB_UPLOAD = "skip_db_upload";
     private static final String LOG_DEBUG = "log_debug";
     private static final String SAMPLE_RNA_FILE = "sample_rna_file";
     private static final String CACHE_ENSEMBL_DATA = "cache_ensembl_data";

@@ -29,15 +29,16 @@ public class SvCircosWriter {
         this.outputPrefix = outputPrefix;
     }
 
-    public void writeLinks(@NotNull final List<GenomeRegion> rawRegions, @NotNull final List<SvLink> rawLinks) throws IOException {
+    public void writeLinks(@NotNull final List<Track> unadjustedTracks, @NotNull final List<Link> unadjustedLinks) throws IOException {
 
-        final ScalePosition scaler = new ScalePosition(1 + POSITION_BUFFER, rawRegions);
+        final ScalePosition scaler = new ScalePosition(1 + POSITION_BUFFER, unadjustedTracks);
 
-        final List<SvRegion> scaledRegions = scaledLinks(scaler.scaleRegions(rawRegions));
-        final List<SvLink> scaledLinks = scaler.scaleLinks(rawLinks);
+        final List<Link> scaledLinks = scaler.scaleLinks(unadjustedLinks);
+        final List<Track> scaledRegions = scaler.scaleTracks(unadjustedTracks);
+        int maxTracks = scaledRegions.stream().mapToInt(Track::track).max().orElse(0) + 1;
 
         final String textPath = outputPrefix + ".text.circos";
-        Files.write(new File(textPath).toPath(), createPositionText(rawRegions, scaledRegions));
+        Files.write(new File(textPath).toPath(), createPositionText(unadjustedTracks, scaledRegions));
 
         final String histogramPath = outputPrefix + ".histogram.circos";
         Files.write(new File(histogramPath).toPath(), createHistogramTrack(scaledRegions));
@@ -46,19 +47,20 @@ public class SvCircosWriter {
         Files.write(new File(karyotypePath).toPath(), createKaryotypes(scaledRegions));
 
         final String connectorPath = outputPrefix + ".connector.circos";
-        Files.write(new File(connectorPath).toPath(), createConnectors(0.3, 0.6/10, scaledRegions));
+        Files.write(new File(connectorPath).toPath(), createConnectors(0.3, 0.6 / (maxTracks), scaledRegions));
 
         final String linkPath = outputPrefix + ".link.circos";
         Files.write(new File(linkPath).toPath(), createLinks(scaledLinks));
 
+        new SvConfigWriter("SvWriter", "/Users/jon/hmf/analysis/sv/").writeConfig(maxTracks);
+
     }
 
     @NotNull
-    private List<String> createLinks(@NotNull final List<SvLink> svLinks) {
+    private List<String> createLinks(@NotNull final List<Link> links) {
         final List<String> result = Lists.newArrayList();
-        for (SvLink svLink : svLinks) {
-            final String link = new StringJoiner(DELIMITER)
-                    .add(circosContig(svLink.startChromosome()))
+        for (Link svLink : links) {
+            final String link = new StringJoiner(DELIMITER).add(circosContig(svLink.startChromosome()))
                     .add(String.valueOf(svLink.startPosition()))
                     .add(String.valueOf(svLink.startPosition()))
                     .add(circosContig(svLink.endChromosome()))
@@ -72,11 +74,11 @@ public class SvCircosWriter {
     }
 
     @NotNull
-    private List<String> createConnectors(double r0, double radiusChange, @NotNull final List<SvRegion> scaledLinks) {
+    private List<String> createConnectors(double r0, double radiusChange, @NotNull final List<Track> scaledLinks) {
         final List<String> result = Lists.newArrayList();
-        for (SvRegion scaled : scaledLinks) {
+        for (Track scaled : scaledLinks) {
 
-            double r1 = r0 + (scaled.value() - 1) * radiusChange;
+            double r1 = r0 + (scaled.track() - 1) * radiusChange;
 
             final String start = new StringJoiner(DELIMITER).add(circosContig(scaled.chromosome()))
                     .add(String.valueOf(scaled.start()))
@@ -98,7 +100,7 @@ public class SvCircosWriter {
     }
 
     @NotNull
-    private List<String> createKaryotypes(@NotNull final List<SvRegion> scaledLinks) {
+    private List<String> createKaryotypes(@NotNull final List<Track> scaledLinks) {
         final Map<String, Integer> contigLengths = contigLengths(scaledLinks);
         final List<String> result = Lists.newArrayList();
         for (String contig : contigLengths.keySet()) {
@@ -117,18 +119,18 @@ public class SvCircosWriter {
     }
 
     @NotNull
-    private List<String> createHistogramTrack(@NotNull final List<SvRegion> scaledLinks) {
+    private List<String> createHistogramTrack(@NotNull final List<Track> scaledLinks) {
         final Map<String, Integer> contigLengths = contigLengths(scaledLinks);
 
         final List<String> result = Lists.newArrayList();
-        for (SvRegion scaled : scaledLinks) {
+        for (Track scaled : scaledLinks) {
 
             final int contigLength = contigLengths.get(scaled.chromosome());
 
             final String start = new StringJoiner(DELIMITER).add(circosContig(scaled.chromosome()))
                     .add(String.valueOf(1))
                     .add(String.valueOf(scaled.start()))
-                    .add(String.valueOf(scaled.value()))
+                    .add(String.valueOf(scaled.track()))
                     .add("color=" + BACKGROUND_COLOUR)
                     .toString();
             result.add(start);
@@ -136,14 +138,14 @@ public class SvCircosWriter {
             final String entry = new StringJoiner(DELIMITER).add(circosContig(scaled.chromosome()))
                     .add(String.valueOf(scaled.start()))
                     .add(String.valueOf(scaled.end()))
-                    .add(String.valueOf(scaled.value()))
+                    .add(String.valueOf(scaled.track()))
                     .toString();
             result.add(entry);
 
             final String end = new StringJoiner(DELIMITER).add(circosContig(scaled.chromosome()))
                     .add(String.valueOf(scaled.end()))
                     .add(String.valueOf(contigLength))
-                    .add(String.valueOf(scaled.value()))
+                    .add(String.valueOf(scaled.track()))
                     .add("color=" + BACKGROUND_COLOUR)
                     .toString();
             result.add(end);
@@ -154,9 +156,9 @@ public class SvCircosWriter {
     }
 
     @NotNull
-    private Map<String, Integer> contigLengths(@NotNull final List<SvRegion> scaledLinks) {
+    private Map<String, Integer> contigLengths(@NotNull final List<Track> scaledLinks) {
         final Map<String, Integer> results = Maps.newHashMap();
-        for (SvRegion scaledLink : scaledLinks) {
+        for (Track scaledLink : scaledLinks) {
             int end = (int) scaledLink.end() + POSITION_BUFFER;
             results.merge(scaledLink.chromosome(), end, Math::max);
         }
@@ -164,7 +166,7 @@ public class SvCircosWriter {
     }
 
     @NotNull
-    private List<String> createPositionText(@NotNull final List<GenomeRegion> originalLinks, @NotNull final List<SvRegion> scaledLinks) {
+    private List<String> createPositionText(@NotNull final List<Track> originalLinks, @NotNull final List<Track> scaledLinks) {
 
         Set<String> result = Sets.newHashSet();
 
@@ -196,28 +198,4 @@ public class SvCircosWriter {
     static String circosContig(@NotNull final String chromosome) {
         return "hs" + HumanChromosome.fromString(chromosome);
     }
-
-    @NotNull
-    private List<SvRegion> scaledLinks(@NotNull final List<GenomeRegion> scaledLinks) {
-
-        final Map<String, Integer> valueMap = Maps.newHashMap();
-        final List<SvRegion> result = Lists.newArrayList();
-
-        int currentValue = 1;
-        for (GenomeRegion scaledLink : scaledLinks) {
-
-            if (!valueMap.containsKey(scaledLink.chromosome())) {
-                valueMap.put(scaledLink.chromosome(), currentValue);
-            } else {
-                currentValue = Math.max(currentValue, valueMap.get(scaledLink.chromosome()) + 1);
-                valueMap.put(scaledLink.chromosome(), currentValue);
-            }
-
-            result.add(new SvRegion(scaledLink, currentValue));
-        }
-
-        return result;
-
-    }
-
 }

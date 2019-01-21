@@ -21,7 +21,7 @@ public class ScalePositionTest {
 
 //    @Test
 //    public void testScaleRegions() throws IOException {
-//        final List<GenomeRegion> links = SvRegionFile.readLinks(LINKS_PATH);
+//        final List<GenomeRegion> links = TrackFile.readLinks(LINKS_PATH);
 //        final List<GenomeRegion> scaledLinks = ScalePosition.scale(1, links);
 //        assertEquals(11, scaledLinks.get(0).start());
 //        assertEquals(121, scaledLinks.get(0).end());
