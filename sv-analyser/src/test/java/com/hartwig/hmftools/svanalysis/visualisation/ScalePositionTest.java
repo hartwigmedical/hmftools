@@ -5,27 +5,14 @@ import static org.junit.Assert.assertEquals;
 import java.util.Map;
 import java.util.Random;
 
-import com.google.common.io.Resources;
-
 import org.junit.Test;
 
 public class ScalePositionTest {
 
-    private static final String LINKS_PATH = Resources.getResource("visualisation/ClusterTracks.tsv").getPath();
-
-
     private static final int SCALE_1 = 1;
     private static final int SCALE_10 = 2;
-    private static final int SCALE_100 = 5;
-    private static final int SCALE_1000 = 10;
-
-//    @Test
-//    public void testScaleRegions() throws IOException {
-//        final List<GenomeRegion> links = TrackFile.readLinks(LINKS_PATH);
-//        final List<GenomeRegion> scaledLinks = ScalePosition.scale(1, links);
-//        assertEquals(11, scaledLinks.get(0).start());
-//        assertEquals(121, scaledLinks.get(0).end());
-//    }
+    private static final int SCALE_100 = 9;
+    private static final int SCALE_1000 = 28;
 
     @Test
     public void testFirstPositionIsAtStart() {
