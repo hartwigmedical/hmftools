@@ -11,7 +11,7 @@ import org.junit.Test;
 
 public class ScalePositionTest {
 
-    private static final String LINKS_PATH = Resources.getResource("visualisation/ClusterLinks.tsv").getPath();
+    private static final String LINKS_PATH = Resources.getResource("visualisation/ClusterTracks.tsv").getPath();
 
 
     private static final int SCALE_1 = 1;

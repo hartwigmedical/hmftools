@@ -1,0 +1,49 @@
+package com.hartwig.hmftools.common.circos;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.Arrays;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
+import htsjdk.samtools.util.CollectionUtil;
+
+public class CircosExecution {
+    private static final Logger LOGGER = LogManager.getLogger(CircosExecution.class);
+
+    final String executable;
+
+    public CircosExecution(@NotNull final String executable) {
+        this.executable = executable;
+    }
+
+    @Nullable
+    public Object generateCircos(@NotNull final String inputConfig, @NotNull final String outputPath, @NotNull final String outputFile)
+            throws IOException, InterruptedException {
+        final File redirectErrorFile = new File(outputPath + File.separator + outputFile + ".error");
+        final File redirectOutputFile = new File(outputPath + File.separator + outputFile + ".out");
+
+        final String[] command = new String[8];
+        command[0] = executable;
+        command[1] = "-nosvg";
+        command[2] = "-conf";
+        command[3] = new File(inputConfig).getAbsolutePath();
+        command[4] = "-outputdir";
+        command[5] = new File(outputPath).getAbsolutePath();
+        command[6] = "-outputfile";
+        command[7] = outputFile;
+
+        LOGGER.info(String.format("Generating " + outputFile + " via command: %s", CollectionUtil.join(Arrays.asList(command), " ")));
+        int result = new ProcessBuilder(command).redirectError(redirectErrorFile).redirectOutput(redirectOutputFile).start().waitFor();
+        if (result != 0) {
+            LOGGER.fatal("Fatal error creating circos plot. Examine error file " + redirectErrorFile.toString() + " for details.");
+            System.exit(1);
+        }
+
+        return null;
+    }
+
+}

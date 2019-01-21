@@ -12,13 +12,13 @@ import com.google.common.collect.Maps;
 
 import org.jetbrains.annotations.NotNull;
 
-class TrackFile {
+public class TrackFile {
 
     private static final String COMMENT = "#";
     private static final String DELIMITER = "\t";
 
     @NotNull
-    public static List<Track> readLinks(@NotNull final String fileName) throws IOException {
+    public static List<Track> readTracks(@NotNull final String fileName) throws IOException {
         return maintainTrackBetweenChromosomes(Files.readAllLines(new File(fileName).toPath()));
     }
 

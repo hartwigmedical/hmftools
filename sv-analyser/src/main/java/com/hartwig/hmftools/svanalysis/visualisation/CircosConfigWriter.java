@@ -12,33 +12,38 @@ import java.nio.file.Files;
 import org.apache.logging.log4j.core.util.IOUtils;
 import org.jetbrains.annotations.NotNull;
 
-public class SvConfigWriter {
+public class CircosConfigWriter {
 
     private final String sample;
-    private final String outputDir;
+    private final int maxTracks;
+    private final String configPath;
 
-    public SvConfigWriter(final String sample, final String outputDir) {
+    public CircosConfigWriter(@NotNull final String sample, @NotNull final String outputDir, int maxTracks) {
         this.sample = sample;
-        this.outputDir = outputDir;
+        this.configPath = outputDir + File.separator + sample + ".circos.conf";
+        this.maxTracks = maxTracks;
     }
 
-    public void writeConfig(int levels) throws IOException {
+    public String configPath() {
+        return configPath;
+    }
+
+    public void writeConfig() throws IOException {
         final Charset charset = StandardCharsets.UTF_8;
-        final String template = readResource("/visualisation/cluster.template")
-                .replaceAll("SUBSTITUTE_HISTOGRAM", histogramPlots(levels))
-                .replaceAll("SUBSTITUTE_MAX", String.valueOf(levels))
-                .replaceAll("SUBSTITUTE_SAMPLE", sample);
+        final String template =
+                readResource("/visualisation/cluster.template").replaceAll("SUBSTITUTE_HISTOGRAM", histogramPlots(maxTracks))
+                        .replaceAll("SUBSTITUTE_MAX", String.valueOf(maxTracks))
+                        .replaceAll("SUBSTITUTE_SAMPLE", sample);
 
-        Files.write(new File("/Users/jon/hmf/analysis/sv/SvWriter.circos.conf").toPath(), template.getBytes(charset));
-
+        Files.write(new File(configPath).toPath(), template.getBytes(charset));
     }
 
     @NotNull
-    private String histogramPlots(int levels) throws IOException {
+    private String histogramPlots(int maxTracks) throws IOException {
         final StringBuilder builder = new StringBuilder();
 
         final String histogramTemplate = readResource("/visualisation/cluster.template.histogram");
-        for (int i = 1; i <= levels; i++) {
+        for (int i = 1; i <= maxTracks; i++) {
             final String level = histogramTemplate.replaceAll("SUBSTITUTE_CONDITION", String.valueOf(i));
             builder.append(level);
         }

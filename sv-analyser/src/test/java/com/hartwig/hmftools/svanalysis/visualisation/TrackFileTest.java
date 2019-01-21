@@ -2,31 +2,29 @@ package com.hartwig.hmftools.svanalysis.visualisation;
 
 import static org.junit.Assert.assertEquals;
 
-import java.io.IOException;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.google.common.io.Resources;
 
 import org.junit.Test;
 
 public class TrackFileTest {
 
-    private static final String REGIONS_PATH = Resources.getResource("visualisation/ClusterLinks.tsv").getPath();
-    private static final String LINKS_PATH = Resources.getResource("visualisation/ClusterSV.tsv").getPath();
+//    private static final String REGIONS_PATH = Resources.getResource("visualisation/ClusterTracks.tsv").getPath();
+//    private static final String LINKS_PATH = Resources.getResource("visualisation/ClusterSV.tsv").getPath();
 
 
-    @Test
-    public void testCOLO829() throws IOException {
-        final String prefix = "/Users/jon/hmf/analysis/sv/SvWriter";
-
-        final List<Track> regions = TrackFile.readLinks(REGIONS_PATH);
-        final List<Link> links = LinkFile.readLinks(LINKS_PATH);
-
-
-        SvCircosWriter writer = new SvCircosWriter(prefix);
-        writer.writeLinks(regions, links);
-    }
+//    @Test
+//    public void testCOLO829() throws IOException {
+//        final String outputPath = "/Users/jon/hmf/analysis/sv/";
+//
+//        final List<Track> regions = TrackFile.readTracks(REGIONS_PATH);
+//        final List<Link> links = LinkFile.readLinks(LINKS_PATH);
+//
+//
+//        CircosDataWriter writer = new CircosDataWriter(outputPath, "JONJON");
+//        writer.write(regions, links);
+//    }
 
     @Test
     public void testTrackStrategies() {

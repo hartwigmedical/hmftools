@@ -17,42 +17,40 @@ import com.hartwig.hmftools.common.region.GenomeRegion;
 
 import org.jetbrains.annotations.NotNull;
 
-public class SvCircosWriter {
+public class CircosDataWriter {
 
     private static final String BACKGROUND_COLOUR = "246,251,244";
     private static final String DELIMITER = "\t";
     private static final int POSITION_BUFFER = 2;
 
-    private final String outputPrefix;
+    private final String filePrefix;
+    private final int maxTracks;
 
-    public SvCircosWriter(@NotNull final String outputPrefix) {
-        this.outputPrefix = outputPrefix;
+    public CircosDataWriter(@NotNull final String sample, @NotNull final String outputDir, final int maxTracks) {
+        this.filePrefix = outputDir + File.separator + sample;
+        this.maxTracks = maxTracks;
     }
 
-    public void writeLinks(@NotNull final List<Track> unadjustedTracks, @NotNull final List<Link> unadjustedLinks) throws IOException {
+    public void write(@NotNull final List<Track> unadjustedTracks, @NotNull final List<Link> unadjustedLinks) throws IOException {
 
-        final ScalePosition scaler = new ScalePosition(1 + POSITION_BUFFER, unadjustedTracks);
+        final ScalePosition scalePosition = new ScalePosition(POSITION_BUFFER, unadjustedTracks);
+        final List<Track> tracks = scalePosition.scaleTracks(unadjustedTracks);
+        final List<Link> links = scalePosition.scaleLinks(unadjustedLinks);
 
-        final List<Link> scaledLinks = scaler.scaleLinks(unadjustedLinks);
-        final List<Track> scaledRegions = scaler.scaleTracks(unadjustedTracks);
-        int maxTracks = scaledRegions.stream().mapToInt(Track::track).max().orElse(0) + 1;
+        final String textPath = filePrefix + ".text.circos";
+        Files.write(new File(textPath).toPath(), createPositionText(unadjustedTracks, tracks));
 
-        final String textPath = outputPrefix + ".text.circos";
-        Files.write(new File(textPath).toPath(), createPositionText(unadjustedTracks, scaledRegions));
+        final String histogramPath = filePrefix + ".histogram.circos";
+        Files.write(new File(histogramPath).toPath(), createHistogramTrack(tracks));
 
-        final String histogramPath = outputPrefix + ".histogram.circos";
-        Files.write(new File(histogramPath).toPath(), createHistogramTrack(scaledRegions));
+        final String karyotypePath = filePrefix + ".karyotype.circos";
+        Files.write(new File(karyotypePath).toPath(), createKaryotypes(tracks));
 
-        final String karyotypePath = outputPrefix + ".karyotype.circos";
-        Files.write(new File(karyotypePath).toPath(), createKaryotypes(scaledRegions));
+        final String connectorPath = filePrefix + ".connector.circos";
+        Files.write(new File(connectorPath).toPath(), createConnectors(0.3, 0.6 / (maxTracks), tracks));
 
-        final String connectorPath = outputPrefix + ".connector.circos";
-        Files.write(new File(connectorPath).toPath(), createConnectors(0.3, 0.6 / (maxTracks), scaledRegions));
-
-        final String linkPath = outputPrefix + ".link.circos";
-        Files.write(new File(linkPath).toPath(), createLinks(scaledLinks));
-
-        new SvConfigWriter("SvWriter", "/Users/jon/hmf/analysis/sv/").writeConfig(maxTracks);
+        final String linkPath = filePrefix + ".link.circos";
+        Files.write(new File(linkPath).toPath(), createLinks(links));
 
     }
 
