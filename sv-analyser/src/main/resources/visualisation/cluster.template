@@ -62,10 +62,10 @@ chromosomes_display_default = yes
 	<plot>
 		type = histogram
 		file = SUBSTITUTE_SAMPLE.cna.circos
-		r0   = 0.25r
-		r1   = 0.375r
+		r0   = SUBSTITUTE_CNA_MIDDLE_RADIUSr
+		r1   = SUBSTITUTE_CNA_OUTER_RADIUSr
 		min  = 0
-		max  = SUBSTITUTE_MAX_CNA
+		max  = SUBSTITUTE_CNA_GAIN_MAX
 		glyph = circle
 		glyph_size = 8
 		color = green
@@ -75,7 +75,7 @@ chromosomes_display_default = yes
 			<axis>
 				color     = lgreen
 				thickness = 1
-				spacing   = SUBSTITUTE_MAX_CNA_INVr
+				spacing   = SUBSTITUTE_CNA_GAIN_SPACINGr
 			</axis>
 		</axes>
 
@@ -87,8 +87,8 @@ chromosomes_display_default = yes
 
 		<rules>
 			<rule>
-				condition = var(value) < 0.03
-				#show = no
+				condition = var(value) < 0.1
+				show = no
 			</rule>
 		</rules>
 
@@ -100,8 +100,8 @@ chromosomes_display_default = yes
 	<plot>
 		type = histogram
 		file = SUBSTITUTE_SAMPLE.cna.circos
-		r0   = 0.2r
-		r1   = 0.25r
+		r0   = SUBSTITUTE_CNA_INNER_RADIUSr
+		r1   = SUBSTITUTE_CNA_MIDDLE_RADIUSr
 		min  = -2
 		max  = 0
 		color = red
@@ -125,8 +125,8 @@ chromosomes_display_default = yes
 
 		<rules>
 			<rule>
-				condition = var(value) > 0.001
-				#show = no
+				condition = var(value) > -0.1
+				show = no
 			</rule>
 		</rules>
 	</plot>

@@ -14,26 +14,36 @@ import org.jetbrains.annotations.NotNull;
 
 public class CircosConfigWriter {
 
+    private static final double CNA_INNER_RADIUS = 0.2;
+    private static final double CNA_OUTER_RADIUS = 0.375;
+
     private final String sample;
-    private final int maxTracks;
     private final String configPath;
 
-    public CircosConfigWriter(@NotNull final String sample, @NotNull final String outputDir, int maxTracks) {
+    public CircosConfigWriter(@NotNull final String sample, @NotNull final String outputDir) {
         this.sample = sample;
         this.configPath = outputDir + File.separator + sample + ".circos.conf";
-        this.maxTracks = maxTracks;
     }
 
     public String configPath() {
         return configPath;
     }
 
-    public void writeConfig(int maxTracks, int maxCNATracks) throws IOException {
+    public void writeConfig(int maxTracks, final double maxCopyNumber) throws IOException {
+
+        int cnaMaxTracks = Math.max(2, (int) Math.round(Math.ceil(maxCopyNumber - 2)));
+        double cnaMiddleRadius = CNA_INNER_RADIUS + 2 * (CNA_OUTER_RADIUS - CNA_INNER_RADIUS) / (cnaMaxTracks + 2);
+
         final Charset charset = StandardCharsets.UTF_8;
         final String template =
                 readResource("/visualisation/cluster.template").replaceAll("SUBSTITUTE_HISTOGRAM", histogramPlots(maxTracks))
-                        .replaceAll("SUBSTITUTE_MAX_CNA_INV", String.valueOf(1d / maxCNATracks))
-                        .replaceAll("SUBSTITUTE_MAX_CNA", String.valueOf(maxCNATracks))
+
+                        .replaceAll("SUBSTITUTE_CNA_INNER_RADIUS", String.valueOf(CNA_INNER_RADIUS))
+                        .replaceAll("SUBSTITUTE_CNA_OUTER_RADIUS", String.valueOf(CNA_OUTER_RADIUS))
+                        .replaceAll("SUBSTITUTE_CNA_MIDDLE_RADIUS", String.valueOf(cnaMiddleRadius))
+                        .replaceAll("SUBSTITUTE_CNA_GAIN_MAX", String.valueOf(cnaMaxTracks))
+                        .replaceAll("SUBSTITUTE_CNA_GAIN_SPACING", String.valueOf(1d / cnaMaxTracks))
+
                         .replaceAll("SUBSTITUTE_MAX_INV", String.valueOf(1d / maxTracks))
                         .replaceAll("SUBSTITUTE_MAX", String.valueOf(maxTracks))
                         .replaceAll("SUBSTITUTE_SAMPLE", sample);
