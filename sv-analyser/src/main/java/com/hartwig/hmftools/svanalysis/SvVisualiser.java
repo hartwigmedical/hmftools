@@ -55,10 +55,11 @@ public class SvVisualiser {
         final List<CopyNumberAlteration> alterations = CopyNumberAlterations.copyNumberInTracks(config.copyNumberAlterations(), tracks);
 
         int maxTracks = tracks.stream().mapToInt(Track::track).max().orElse(0) + 1;
+        int maxCnaTracks = alterations.stream().mapToInt(x -> (int) Math.round(Math.ceil(x.copyNumber() - 2))).max().orElse(0);
 
         LOGGER.info("Generating CIRCOS config");
         final CircosConfigWriter confWrite = new CircosConfigWriter(config.sample(), config.outputConfPath(), maxTracks);
-        confWrite.writeConfig();
+        confWrite.writeConfig(maxTracks, maxCnaTracks);
         new CircosDataWriter(config.sample(), config.outputConfPath(), maxTracks).write(tracks, links, alterations);
 
         final String outputPlotName = config.sample() + ".cluster.png";

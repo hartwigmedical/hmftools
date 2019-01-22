@@ -26,7 +26,7 @@ public class CopyNumberAlterations {
             final List<Track> chromosomeTracks = tracks.stream().filter(x -> x.chromosome().equals(contig)).collect(Collectors.toList());
             if (!chromosomeTracks.isEmpty()) {
                 long minPosition = chromosomeTracks.stream().mapToLong(GenomeRegion::start).min().orElse(0);
-                long maxPosition = chromosomeTracks.stream().mapToLong(GenomeRegion::end).min().orElse(0);
+                long maxPosition = chromosomeTracks.stream().mapToLong(GenomeRegion::end).max().orElse(0);
                 if (copyNumberAlteration.end() >= minPosition && copyNumberAlteration.start() <= maxPosition) {
                     result.add(ImmutableCopyNumberAlteration.builder()
                             .from(copyNumberAlteration)

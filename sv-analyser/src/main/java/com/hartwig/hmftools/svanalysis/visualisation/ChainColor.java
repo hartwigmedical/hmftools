@@ -6,9 +6,9 @@ enum ChainColor {
     static String color(int chainId) {
         switch (chainId) {
             case 1:
-                return "color=black";
-            case 2:
                 return "color=blue";
+            case 2:
+                return "color=black";
             default:
                 return "color=red";
         }

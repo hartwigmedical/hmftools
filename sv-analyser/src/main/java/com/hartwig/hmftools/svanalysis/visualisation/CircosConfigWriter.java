@@ -28,10 +28,13 @@ public class CircosConfigWriter {
         return configPath;
     }
 
-    public void writeConfig() throws IOException {
+    public void writeConfig(int maxTracks, int maxCNATracks) throws IOException {
         final Charset charset = StandardCharsets.UTF_8;
         final String template =
                 readResource("/visualisation/cluster.template").replaceAll("SUBSTITUTE_HISTOGRAM", histogramPlots(maxTracks))
+                        .replaceAll("SUBSTITUTE_MAX_CNA_INV", String.valueOf(1d / maxCNATracks))
+                        .replaceAll("SUBSTITUTE_MAX_CNA", String.valueOf(maxCNATracks))
+                        .replaceAll("SUBSTITUTE_MAX_INV", String.valueOf(1d / maxTracks))
                         .replaceAll("SUBSTITUTE_MAX", String.valueOf(maxTracks))
                         .replaceAll("SUBSTITUTE_SAMPLE", sample);
 

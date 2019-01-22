@@ -37,8 +37,47 @@ chromosomes_display_default = yes
 	# -----------------------------------------------------------
 	# Backgound
 	<plot>
-		r0   = 0.30r
+		r0   = 0.40r
 		r1   = 1r
+
+		<backgrounds>
+			<background>
+				color = vlpurple_a5
+			</background>
+		</backgrounds>
+
+		<axes>
+			<axis>
+				color     = lpurple
+				thickness = 1
+				spacing   = SUBSTITUTE_MAX_INVr
+			</axis>
+		</axes>
+
+	</plot>
+
+
+	# -----------------------------------------------------------
+	# CopyNumber Gain (Green)
+	<plot>
+		type = histogram
+		file = SUBSTITUTE_SAMPLE.cna.circos
+		r0   = 0.25r
+		r1   = 0.375r
+		min  = 0
+		max  = SUBSTITUTE_MAX_CNA
+		glyph = circle
+		glyph_size = 8
+		color = green
+		fill_color = green
+
+		<axes>
+			<axis>
+				color     = lgreen
+				thickness = 1
+				spacing   = SUBSTITUTE_MAX_CNA_INVr
+			</axis>
+		</axes>
 
 		<backgrounds>
 			<background>
@@ -46,6 +85,50 @@ chromosomes_display_default = yes
 			</background>
 		</backgrounds>
 
+		<rules>
+			<rule>
+				condition = var(value) < 0.03
+				#show = no
+			</rule>
+		</rules>
+
+	</plot>
+
+
+	# -----------------------------------------------------------
+	# CopyNumber Loss (Red)
+	<plot>
+		type = histogram
+		file = SUBSTITUTE_SAMPLE.cna.circos
+		r0   = 0.2r
+		r1   = 0.25r
+		min  = -2
+		max  = 0
+		color = red
+		glyph = circle
+		glyph_size = 8
+		fill_color = red
+
+		<axes>
+			<axis>
+				color     = lred
+				thickness = 1
+				spacing   = 0.5r
+			</axis>
+		</axes>
+
+		<backgrounds>
+			<background>
+				color = vlred_a5
+			</background>
+		</backgrounds>
+
+		<rules>
+			<rule>
+				condition = var(value) > 0.001
+				#show = no
+			</rule>
+		</rules>
 	</plot>
 
 
@@ -80,7 +163,7 @@ chromosomes_display_default = yes
 		type             = scatter
 		file             = SUBSTITUTE_SAMPLE.scatter.circos
 
-		r0   = 0.3r
+		r0   = 0.4r
 		r1   = 1r
         glyph            = circle
         glyph_size       = 20
@@ -101,7 +184,7 @@ chromosomes_display_default = yes
         type = connector
         file = SUBSTITUTE_SAMPLE.connector.circos
 
-        r0	=	0.3r
+        r0	=	0.2r
         connector_dims = 0.0,0.3,0.4,0.3,0
 
         thickness = 4
@@ -114,7 +197,7 @@ chromosomes_display_default = yes
     <link>
         file          = SUBSTITUTE_SAMPLE.link.circos
         color         = red
-        radius        = 0.3r
+        radius        = 0.2r
         thickness     = 4
     </link>
 </links>

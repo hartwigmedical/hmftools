@@ -22,7 +22,8 @@ import org.jetbrains.annotations.NotNull;
 
 public class CircosDataWriter {
 
-    private static final String BACKGROUND_COLOUR = "246,251,244";
+    private static final String BACKGROUND_COLOUR = "188,189,217";
+//    private static final String BACKGROUND_COLOUR = "246,251,244";
     private static final String DELIMITER = "\t";
     private static final int POSITION_BUFFER = 2;
 
@@ -56,7 +57,7 @@ public class CircosDataWriter {
         Files.write(new File(karyotypePath).toPath(), createKaryotypes(tracks));
 
         final String connectorPath = filePrefix + ".connector.circos";
-        Files.write(new File(connectorPath).toPath(), createConnectors(390, (1350d - 390d) / maxTracks, tracks, links));
+        Files.write(new File(connectorPath).toPath(), createConnectors(520, (1350d - 520d) / maxTracks, tracks, links));
 
         final String linkPath = filePrefix + ".link.circos";
         Files.write(new File(linkPath).toPath(), createLinks(links));
@@ -75,7 +76,7 @@ public class CircosDataWriter {
             final String cna = new StringJoiner(DELIMITER).add(circosContig(alteration.chromosome()))
                     .add(String.valueOf(alteration.start()))
                     .add(String.valueOf(alteration.end()))
-                    .add(String.valueOf(alteration.copyNumber()))
+                    .add(String.valueOf(alteration.copyNumber() - 2))
                     .toString();
             result.add(cna);
         }
@@ -205,7 +206,7 @@ public class CircosDataWriter {
                     .add(String.valueOf(1))
                     .add(String.valueOf(scaled.start()))
                     .add(String.valueOf(scaled.track()))
-                    .add("color=" + BACKGROUND_COLOUR)
+                    .add("thickness=0")
                     .toString();
             result.add(start);
 
@@ -221,7 +222,7 @@ public class CircosDataWriter {
                     .add(String.valueOf(scaled.end()))
                     .add(String.valueOf(contigLength))
                     .add(String.valueOf(scaled.track()))
-                    .add("color=" + BACKGROUND_COLOUR)
+                    .add("thickness=0")
                     .toString();
             result.add(end);
 
