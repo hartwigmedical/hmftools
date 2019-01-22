@@ -1,6 +1,26 @@
 <<include etc/colors_fonts_patterns.conf>>
-<<include ideogram.conf>>
+
 <<include ticks.conf>>
+
+<ideogram>
+    <spacing>
+        default = 0.005r
+    </spacing>
+
+    # Ideogram position, fill and outline
+    radius           = 0.9r
+    thickness        = 50p
+    fill             = yes
+    stroke_color     = dgrey
+    stroke_thickness = 2p
+
+    show_label       = yes
+    label_font       = default
+    label_radius     = (dims(ideogram,radius_inner)+dims(ideogram,radius_outer))/2-15
+    label_size       = 30
+    label_parallel   = yes
+
+</ideogram>
 
 <image>
 	<<include etc/image.conf>>
@@ -38,9 +58,8 @@ chromosomes_display_default = yes
 		color            = black
 		file             = SUBSTITUTE_SAMPLE.text.circos
 
-
-		r0   = 0.9r
-		r1   = 1r
+		r0   = 1.01r
+		r1   = 1.11r
 
 		show_links     = no
 		link_dims      = 4p,4p,260p,20p,0p
