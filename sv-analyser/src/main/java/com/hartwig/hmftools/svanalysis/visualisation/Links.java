@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 
@@ -13,6 +14,11 @@ public class Links {
 
     private static final String COMMENT = "#";
     private static final String DELIMITER = "\t";
+
+    @NotNull
+    public static List<Link> clean(@NotNull final List<Link> links) {
+        return links.stream().filter(x -> x.startPosition() != -1 && x.endPosition() != -1).collect(Collectors.toList());
+    }
 
     @NotNull
     public static List<Link> readLinks(@NotNull final String fileName) throws IOException {

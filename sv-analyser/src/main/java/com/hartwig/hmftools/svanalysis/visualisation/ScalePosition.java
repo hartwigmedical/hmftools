@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.svanalysis.visualisation;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -8,6 +9,8 @@ import java.util.stream.Collectors;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.position.GenomePosition;
+import com.hartwig.hmftools.common.position.GenomePositions;
 import com.hartwig.hmftools.common.region.GenomeRegion;
 
 import org.jetbrains.annotations.NotNull;
@@ -30,6 +33,34 @@ public class ScalePosition {
     }
 
     @NotNull
+    public List<GenomePosition> original() {
+        final List<GenomePosition> result = Lists.newArrayList();
+
+        for (String contig : chromosomePositionMap.keySet()) {
+            for (Long position : chromosomePositionMap.get(contig).keySet()) {
+                result.add(GenomePositions.create(contig, position));
+            }
+        }
+
+        Collections.sort(result);
+        return result;
+    }
+
+    @NotNull
+    public List<GenomePosition> scaled() {
+        final List<GenomePosition> result = Lists.newArrayList();
+
+        for (String contig : chromosomePositionMap.keySet()) {
+            for (Integer position : chromosomePositionMap.get(contig).values()) {
+                result.add(GenomePositions.create(contig, position));
+            }
+        }
+
+        Collections.sort(result);
+        return result;
+    }
+
+    @NotNull
     public List<Track> scaleTracks(@NotNull final List<Track> tracks) {
         return tracks.stream().map(x -> scale(x, chromosomePositionMap.get(x.chromosome()))).collect(Collectors.toList());
     }
@@ -39,6 +70,20 @@ public class ScalePosition {
         return links.stream()
                 .map(x -> scale(x, chromosomePositionMap.get(x.startChromosome()), chromosomePositionMap.get(x.endChromosome())))
                 .collect(Collectors.toList());
+    }
+
+    @NotNull
+    public List<CopyNumberAlteration> scaleAlterations(@NotNull final List<CopyNumberAlteration> links) {
+        return links.stream().map(x -> scale(x, chromosomePositionMap.get(x.chromosome()))).collect(Collectors.toList());
+    }
+
+    @NotNull
+    private static CopyNumberAlteration scale(@NotNull final CopyNumberAlteration victim, @NotNull final Map<Long, Integer> positionMap) {
+        return ImmutableCopyNumberAlteration.builder()
+                .from(victim)
+                .start(positionMap.get(victim.start()))
+                .end(positionMap.get(victim.end()))
+                .build();
     }
 
     @NotNull

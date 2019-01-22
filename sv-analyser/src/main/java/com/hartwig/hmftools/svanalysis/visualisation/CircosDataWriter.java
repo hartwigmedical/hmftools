@@ -34,14 +34,20 @@ public class CircosDataWriter {
         this.maxTracks = maxTracks;
     }
 
-    public void write(@NotNull final List<Track> unadjustedTracks, @NotNull final List<Link> unadjustedLinks) throws IOException {
+    public void write(@NotNull final List<Track> unadjustedTracks, @NotNull final List<Link> unadjustedLinks,
+            @NotNull final List<CopyNumberAlteration> unadjustedAlterations) throws IOException {
 
-        final ScalePosition scalePosition = new ScalePosition(POSITION_BUFFER, unadjustedTracks);
+        final List<GenomeRegion> unadjustedRegions = Lists.newArrayList();
+        unadjustedRegions.addAll(unadjustedTracks);
+        unadjustedRegions.addAll(unadjustedAlterations);
+
+        final ScalePosition scalePosition = new ScalePosition(POSITION_BUFFER, unadjustedRegions);
         final List<Track> tracks = scalePosition.scaleTracks(unadjustedTracks);
         final List<Link> links = scalePosition.scaleLinks(unadjustedLinks);
+        final List<CopyNumberAlteration> alterations = scalePosition.scaleAlterations(unadjustedAlterations);
 
         final String textPath = filePrefix + ".text.circos";
-        Files.write(new File(textPath).toPath(), createPositionText(unadjustedTracks, tracks));
+        Files.write(new File(textPath).toPath(), createPositionText(scalePosition.original(), scalePosition.scaled()));
 
         final String histogramPath = filePrefix + ".histogram.circos";
         Files.write(new File(histogramPath).toPath(), createHistogramTrack(tracks));
@@ -50,7 +56,7 @@ public class CircosDataWriter {
         Files.write(new File(karyotypePath).toPath(), createKaryotypes(tracks));
 
         final String connectorPath = filePrefix + ".connector.circos";
-        Files.write(new File(connectorPath).toPath(), createConnectors(390, (1350d-390d) / maxTracks, tracks, links));
+        Files.write(new File(connectorPath).toPath(), createConnectors(390, (1350d - 390d) / maxTracks, tracks, links));
 
         final String linkPath = filePrefix + ".link.circos";
         Files.write(new File(linkPath).toPath(), createLinks(links));
@@ -58,6 +64,23 @@ public class CircosDataWriter {
         final String scatterPath = filePrefix + ".scatter.circos";
         Files.write(new File(scatterPath).toPath(), createScatter(tracks, links));
 
+        final String cnaPath = filePrefix + ".cna.circos";
+        Files.write(new File(cnaPath).toPath(), createCNA(alterations));
+    }
+
+    @NotNull
+    private List<String> createCNA(@NotNull final List<CopyNumberAlteration> alterations) {
+        final List<String> result = Lists.newArrayList();
+        for (CopyNumberAlteration alteration : alterations) {
+            final String cna = new StringJoiner(DELIMITER).add(circosContig(alteration.chromosome()))
+                    .add(String.valueOf(alteration.start()))
+                    .add(String.valueOf(alteration.end()))
+                    .add(String.valueOf(alteration.copyNumber()))
+                    .toString();
+            result.add(cna);
+        }
+
+        return result;
     }
 
     @NotNull
@@ -75,9 +98,9 @@ public class CircosDataWriter {
                     .add(String.valueOf(track.start()))
                     .add(String.valueOf(track.track()))
                     .add(ChainColor.color(track.chainId()));
-//            if (isStartFoldback) {
-//                start.add("glyph=triangle");
-//            }
+            //            if (isStartFoldback) {
+            //                start.add("glyph=triangle");
+            //            }
 
             result.add(start.toString());
 
@@ -89,9 +112,9 @@ public class CircosDataWriter {
                     .add(String.valueOf(track.end()))
                     .add(String.valueOf(track.track()))
                     .add(ChainColor.color(track.chainId()));
-//            if (isEndFoldback) {
-//                start.add("glyph=triangle");
-//            }
+            //            if (isEndFoldback) {
+            //                start.add("glyph=triangle");
+            //            }
             result.add(end.toString());
 
         }
@@ -218,36 +241,29 @@ public class CircosDataWriter {
     }
 
     @NotNull
-    private List<String> createPositionText(@NotNull final List<Track> originalLinks, @NotNull final List<Track> scaledLinks) {
+    private List<String> createPositionText(@NotNull final List<GenomePosition> originalLinks,
+            @NotNull final List<GenomePosition> scaledLinks) {
 
         Set<String> result = Sets.newHashSet();
 
         for (int i = 0; i < originalLinks.size(); i++) {
-            final GenomeRegion original = originalLinks.get(i);
-            final GenomeRegion scaled = scaledLinks.get(i);
+            final GenomePosition original = originalLinks.get(i);
+            final GenomePosition scaled = scaledLinks.get(i);
 
             final String start = new StringJoiner(DELIMITER).add(circosContig(scaled.chromosome()))
-                    .add(String.valueOf(scaled.start()))
-                    .add(String.valueOf(scaled.start()))
-                    .add(String.format("%,d", original.start()))
-                    .toString();
-
-            final String end = new StringJoiner(DELIMITER).add(circosContig(scaled.chromosome()))
-                    .add(String.valueOf(scaled.end()))
-                    .add(String.valueOf(scaled.end()))
-                    .add(String.format("%,d", original.end()))
+                    .add(String.valueOf(scaled.position()))
+                    .add(String.valueOf(scaled.position()))
+                    .add(String.format("%,d", original.position()))
                     .toString();
 
             result.add(start);
-            result.add(end);
-
         }
 
         return result.stream().sorted().distinct().collect(Collectors.toList());
     }
 
     @NotNull
-    static String circosContig(@NotNull final String chromosome) {
+    private static String circosContig(@NotNull final String chromosome) {
         return "hs" + HumanChromosome.fromString(chromosome);
     }
 
