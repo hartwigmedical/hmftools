@@ -57,7 +57,7 @@ public class CircosDataWriter {
         Files.write(new File(karyotypePath).toPath(), createKaryotypes(contigLengths));
 
         final String connectorPath = filePrefix + ".connector.circos";
-        Files.write(new File(connectorPath).toPath(), createConnectors(520, (1350d - 520d) / maxTracks, tracks, links));
+        Files.write(new File(connectorPath).toPath(), createConnectors(maxTracks, tracks, links));
 
         final String linkPath = filePrefix + ".link.circos";
         Files.write(new File(linkPath).toPath(), createLinks(links));
@@ -142,12 +142,11 @@ public class CircosDataWriter {
     }
 
     @NotNull
-    private List<String> createConnectors(double r0, double radiusChange, @NotNull final List<Track> tracks,
-            @NotNull final List<Link> link) {
+    private List<String> createConnectors(int maxTracks, @NotNull final List<Track> tracks, @NotNull final List<Link> link) {
         final List<String> result = Lists.newArrayList();
         for (Track track : tracks) {
 
-            double r1 = r0 + track.track() * radiusChange;
+            double r1 = CircosConfigWriter.svTrackPixels(maxTracks, track.track());
 
             final GenomePosition startPosition = GenomePositions.create(track.chromosome(), track.start());
             if (startLink(startPosition, link).isPresent() || endLink(startPosition, link).isPresent()) {

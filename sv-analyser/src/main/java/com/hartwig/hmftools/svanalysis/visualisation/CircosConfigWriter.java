@@ -14,6 +14,11 @@ import org.jetbrains.annotations.NotNull;
 
 public class CircosConfigWriter {
 
+    private static final double RADIUS_PIXELS = (0.9 * 1500 - 50);
+
+    private static final double SV_INNER_RADIUS = 0.4;
+    private static final double SV_OUTER_RADIUS = 0.975;
+
     private static final double CNA_INNER_RADIUS = 0.2;
     private static final double CNA_OUTER_RADIUS = 0.375;
 
@@ -29,6 +34,16 @@ public class CircosConfigWriter {
         return configPath;
     }
 
+    public static double svTrackPixels(int maxTracks, int track) {
+        double start = SV_INNER_RADIUS * RADIUS_PIXELS;
+        double end = SV_OUTER_RADIUS * RADIUS_PIXELS;
+
+        double difference = end - start;
+        double singleTrack = difference / maxTracks;
+
+        return start + track * singleTrack;
+    }
+
     public void writeConfig(int maxTracks, final double maxCopyNumber) throws IOException {
 
         int cnaMaxTracks = Math.max(2, (int) Math.round(Math.ceil(maxCopyNumber - 2)));
@@ -38,14 +53,18 @@ public class CircosConfigWriter {
         final String template =
                 readResource("/visualisation/cluster.template").replaceAll("SUBSTITUTE_HISTOGRAM", histogramPlots(maxTracks))
 
+                        .replaceAll("SUBSTITUTE_SV_INNER_RADIUS", String.valueOf(SV_INNER_RADIUS))
+                        .replaceAll("SUBSTITUTE_SV_OUTER_RADIUS", String.valueOf(SV_OUTER_RADIUS))
+
                         .replaceAll("SUBSTITUTE_CNA_INNER_RADIUS", String.valueOf(CNA_INNER_RADIUS))
                         .replaceAll("SUBSTITUTE_CNA_OUTER_RADIUS", String.valueOf(CNA_OUTER_RADIUS))
                         .replaceAll("SUBSTITUTE_CNA_MIDDLE_RADIUS", String.valueOf(cnaMiddleRadius))
                         .replaceAll("SUBSTITUTE_CNA_GAIN_MAX", String.valueOf(cnaMaxTracks))
                         .replaceAll("SUBSTITUTE_CNA_GAIN_SPACING", String.valueOf(1d / cnaMaxTracks))
 
-                        .replaceAll("SUBSTITUTE_MAX_INV", String.valueOf(1d / maxTracks))
-                        .replaceAll("SUBSTITUTE_MAX", String.valueOf(maxTracks))
+                        .replaceAll("SUBSTITUTE_SV_SPACING", String.valueOf(1d / maxTracks))
+                        .replaceAll("SUBSTITUTE_SV_MAX", String.valueOf(maxTracks))
+
                         .replaceAll("SUBSTITUTE_SAMPLE", sample);
 
         Files.write(new File(configPath).toPath(), template.getBytes(charset));
