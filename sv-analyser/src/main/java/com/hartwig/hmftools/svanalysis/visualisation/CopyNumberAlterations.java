@@ -18,15 +18,15 @@ public class CopyNumberAlterations {
 
 
     @NotNull
-    public static List<CopyNumberAlteration> copyNumberInTracks(@NotNull final List<CopyNumberAlteration> raw, @NotNull final List<Track> tracks) {
+    public static List<CopyNumberAlteration> copyNumberInTracks(long additionalDistance, @NotNull final List<CopyNumberAlteration> raw, @NotNull final List<Track> tracks) {
         final List<CopyNumberAlteration> result = Lists.newArrayList();
 
         for (CopyNumberAlteration copyNumberAlteration : raw) {
             final String contig = copyNumberAlteration.chromosome();
             final List<Track> chromosomeTracks = tracks.stream().filter(x -> x.chromosome().equals(contig)).collect(Collectors.toList());
             if (!chromosomeTracks.isEmpty()) {
-                long minPosition = chromosomeTracks.stream().mapToLong(GenomeRegion::start).min().orElse(0);
-                long maxPosition = chromosomeTracks.stream().mapToLong(GenomeRegion::end).max().orElse(0);
+                long minPosition = chromosomeTracks.stream().mapToLong(GenomeRegion::start).min().orElse(0) - additionalDistance;
+                long maxPosition = chromosomeTracks.stream().mapToLong(GenomeRegion::end).max().orElse(0) + additionalDistance;
                 if (copyNumberAlteration.end() >= minPosition && copyNumberAlteration.start() <= maxPosition) {
                     result.add(ImmutableCopyNumberAlteration.builder()
                             .from(copyNumberAlteration)

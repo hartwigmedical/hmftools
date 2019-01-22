@@ -22,10 +22,7 @@ import org.jetbrains.annotations.NotNull;
 
 public class CircosDataWriter {
 
-    private static final String BACKGROUND_COLOUR = "188,189,217";
-//    private static final String BACKGROUND_COLOUR = "246,251,244";
     private static final String DELIMITER = "\t";
-    private static final int POSITION_BUFFER = 2;
 
     private final String filePrefix;
     private final int maxTracks;
@@ -42,19 +39,22 @@ public class CircosDataWriter {
         unadjustedRegions.addAll(unadjustedTracks);
         unadjustedRegions.addAll(unadjustedAlterations);
 
-        final ScalePosition scalePosition = new ScalePosition(POSITION_BUFFER, unadjustedRegions);
+        final ScalePosition scalePosition = new ScalePosition(unadjustedRegions);
+        final List<GenomePosition> scaledPositions = scalePosition.scaled();
+        final Map<String, Integer> contigLengths = contigLengths(scaledPositions);
+
         final List<Track> tracks = scalePosition.scaleTracks(unadjustedTracks);
         final List<Link> links = scalePosition.scaleLinks(unadjustedLinks);
         final List<CopyNumberAlteration> alterations = scalePosition.scaleAlterations(unadjustedAlterations);
 
         final String textPath = filePrefix + ".text.circos";
-        Files.write(new File(textPath).toPath(), createPositionText(scalePosition.original(), scalePosition.scaled()));
+        Files.write(new File(textPath).toPath(), createPositionText(scalePosition.original(), scaledPositions));
 
         final String histogramPath = filePrefix + ".histogram.circos";
-        Files.write(new File(histogramPath).toPath(), createHistogramTrack(tracks));
+        Files.write(new File(histogramPath).toPath(), createHistogramTrack(contigLengths, tracks));
 
         final String karyotypePath = filePrefix + ".karyotype.circos";
-        Files.write(new File(karyotypePath).toPath(), createKaryotypes(tracks));
+        Files.write(new File(karyotypePath).toPath(), createKaryotypes(contigLengths));
 
         final String connectorPath = filePrefix + ".connector.circos";
         Files.write(new File(connectorPath).toPath(), createConnectors(520, (1350d - 520d) / maxTracks, tracks, links));
@@ -175,8 +175,7 @@ public class CircosDataWriter {
     }
 
     @NotNull
-    private List<String> createKaryotypes(@NotNull final List<Track> tracks) {
-        final Map<String, Integer> contigLengths = contigLengths(tracks);
+    private List<String> createKaryotypes(@NotNull final Map<String, Integer> contigLengths) {
         final List<String> result = Lists.newArrayList();
         for (String contig : contigLengths.keySet()) {
 
@@ -194,8 +193,7 @@ public class CircosDataWriter {
     }
 
     @NotNull
-    private List<String> createHistogramTrack(@NotNull final List<Track> tracks) {
-        final Map<String, Integer> contigLengths = contigLengths(tracks);
+    private List<String> createHistogramTrack(@NotNull final Map<String, Integer> contigLengths, @NotNull final List<Track> tracks) {
 
         final List<String> result = Lists.newArrayList();
         for (Track scaled : tracks) {
@@ -232,11 +230,11 @@ public class CircosDataWriter {
     }
 
     @NotNull
-    private Map<String, Integer> contigLengths(@NotNull final List<Track> tracks) {
+    private Map<String, Integer> contigLengths(@NotNull final List<GenomePosition> positions) {
         final Map<String, Integer> results = Maps.newHashMap();
-        for (Track scaledLink : tracks) {
-            int end = (int) scaledLink.end() + POSITION_BUFFER;
-            results.merge(scaledLink.chromosome(), end, Math::max);
+        for (GenomePosition position : positions) {
+            int end = (int) position.position();
+            results.merge(position.chromosome(), end, Math::max);
         }
         return results;
     }

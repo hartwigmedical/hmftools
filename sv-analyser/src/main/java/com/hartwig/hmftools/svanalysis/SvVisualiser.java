@@ -52,7 +52,8 @@ public class SvVisualiser {
         LOGGER.info("Loading data");
         final List<Track> tracks = Tracks.addLinkTerminals(1000, config.tracks(), config.links());
         final List<Link> links = Links.clean(config.links());
-        final List<CopyNumberAlteration> alterations = CopyNumberAlterations.copyNumberInTracks(config.copyNumberAlterations(), tracks);
+        final List<CopyNumberAlteration> alterations =
+                CopyNumberAlterations.copyNumberInTracks(100, config.copyNumberAlterations(), tracks);
 
         int maxTracks = tracks.stream().mapToInt(Track::track).max().orElse(0) + 1;
         double maxCopyNumber = alterations.stream().mapToDouble(CopyNumberAlteration::copyNumber).max().orElse(0);

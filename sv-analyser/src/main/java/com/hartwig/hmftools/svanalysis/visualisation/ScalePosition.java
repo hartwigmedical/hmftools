@@ -19,6 +19,10 @@ public class ScalePosition {
 
     private final Map<String, Map<Long, Integer>> chromosomePositionMap = Maps.newHashMap();
 
+    public ScalePosition(@NotNull final List<? extends GenomeRegion> regions) {
+        this(1, regions);
+    }
+
     public ScalePosition(final int start, @NotNull final List<? extends GenomeRegion> regions) {
         final Set<String> contigs = regions.stream().map(GenomeRegion::chromosome).collect(Collectors.toSet());
         for (final String contig : contigs) {
