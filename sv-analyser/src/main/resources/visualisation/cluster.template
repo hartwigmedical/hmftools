@@ -38,7 +38,7 @@ chromosomes_display_default = yes
 	# Backgound
 	<plot>
 		r0   = 0.30r
-		r1   = 0.90r
+		r1   = 1r
 
 		<backgrounds>
 			<background>
@@ -81,7 +81,7 @@ chromosomes_display_default = yes
 		file             = SUBSTITUTE_SAMPLE.scatter.circos
 
 		r0   = 0.3r
-		r1   = 0.9r
+		r1   = 1r
         glyph            = circle
         glyph_size       = 20
         color            = red
@@ -89,7 +89,7 @@ chromosomes_display_default = yes
         stroke_thickness = 2
         orientation      = out
 
-        min  = 1
+        min  = 0
         max = SUBSTITUTE_MAX
 
 	</plot>
@@ -102,8 +102,6 @@ chromosomes_display_default = yes
         file = SUBSTITUTE_SAMPLE.connector.circos
 
         r0	=	0.3r
-        #r1   = 0.90r
-
         connector_dims = 0.0,0.3,0.4,0.3,0
 
         thickness = 4

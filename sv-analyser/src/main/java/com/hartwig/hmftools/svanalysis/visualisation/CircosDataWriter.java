@@ -50,7 +50,7 @@ public class CircosDataWriter {
         Files.write(new File(karyotypePath).toPath(), createKaryotypes(tracks));
 
         final String connectorPath = filePrefix + ".connector.circos";
-        Files.write(new File(connectorPath).toPath(), createConnectors(0.3, 0.6 / (maxTracks - 1), tracks, links));
+        Files.write(new File(connectorPath).toPath(), createConnectors(390, (1350d-390d) / maxTracks, tracks, links));
 
         final String linkPath = filePrefix + ".link.circos";
         Files.write(new File(linkPath).toPath(), createLinks(links));
@@ -123,14 +123,14 @@ public class CircosDataWriter {
         final List<String> result = Lists.newArrayList();
         for (Track track : tracks) {
 
-            double r1 = r0 + (track.track() - 1) * radiusChange;
+            double r1 = r0 + track.track() * radiusChange;
 
             final GenomePosition startPosition = GenomePositions.create(track.chromosome(), track.start());
             if (startLink(startPosition, link).isPresent() || endLink(startPosition, link).isPresent()) {
                 final String start = new StringJoiner(DELIMITER).add(circosContig(track.chromosome()))
                         .add(String.valueOf(track.start()))
                         .add(String.valueOf(track.start()))
-                        .add("r1=" + r1 + "r," + ChainColor.color(track.chainId()))
+                        .add("r1=" + r1 + "p," + ChainColor.color(track.chainId()))
                         .toString();
                 result.add(start);
             }
@@ -140,7 +140,7 @@ public class CircosDataWriter {
                 final String end = new StringJoiner(DELIMITER).add(circosContig(track.chromosome()))
                         .add(String.valueOf(track.end()))
                         .add(String.valueOf(track.end()))
-                        .add("r1=" + r1 + "r," + ChainColor.color(track.chainId()))
+                        .add("r1=" + r1 + "p," + ChainColor.color(track.chainId()))
                         .toString();
                 result.add(end);
             }

@@ -3,8 +3,8 @@
 		type = histogram
 		file = SUBSTITUTE_SAMPLE.histogram.circos
 		r0   = 0.30r
-		r1   = 0.90r
-		min  = 1
+		r1   = 1r
+		min  = 0
 		max = SUBSTITUTE_MAX
 		thickness   = 4
 		color = black
