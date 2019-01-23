@@ -24,6 +24,7 @@ import org.apache.commons.cli.ParseException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public class SvVisualiser {
 
@@ -55,27 +56,30 @@ public class SvVisualiser {
 
         final List<Integer> clusterIds = config.links().stream().map(Link::clusterId).distinct().sorted().collect(toList());
         for (Integer clusterId : clusterIds) {
-            final String sample = config.sample() + "." + clusterId;
-            LOGGER.info("Generating CIRCOS config for cluster {}", sample);
-
-            final List<Link> clusterLinks = config.links().stream().filter(x -> x.clusterId() == clusterId).collect(toList());
-            final List<Segment> clusterSegments = config.tracks().stream().filter(x -> x.clusterId() == clusterId).collect(toList());
-            final List<Segment> segments = Segments.addMissingTracks(1000, clusterSegments, clusterLinks);
-            final List<CopyNumberAlteration> alterations = copyNumberInTracks(100, config.copyNumberAlterations(), segments);
-
-            int maxTracks = segments.stream().mapToInt(Segment::track).max().orElse(0) + 1;
-            double maxCopyNumber = alterations.stream().mapToDouble(CopyNumberAlteration::copyNumber).max().orElse(0);
-
-
-
-            final CircosConfigWriter confWrite = new CircosConfigWriter(sample, config.outputConfPath());
-            confWrite.writeConfig(maxTracks, maxCopyNumber);
-            new CircosDataWriter(sample, config.outputConfPath(), maxTracks).write(segments, clusterLinks, alterations);
-
-            final String outputPlotName = sample + ".cluster.png";
-            new CircosExecution(config.circosBin()).generateCircos(confWrite.configPath(), config.outputPlotPath(), outputPlotName);
+            LOGGER.info("Generating CIRCOS config for cluster {}", clusterId);
+            run(clusterId);
         }
 
+    }
+
+    @Nullable
+    private Object run(int clusterId) throws IOException, InterruptedException {
+        final String sample = config.sample() + "." + clusterId;
+
+        final List<Link> clusterLinks = config.links().stream().filter(x -> x.clusterId() == clusterId).collect(toList());
+        final List<Segment> clusterSegments = config.tracks().stream().filter(x -> x.clusterId() == clusterId).collect(toList());
+        final List<Segment> segments = Segments.addMissingTracks(1000, clusterSegments, clusterLinks);
+        final List<CopyNumberAlteration> alterations = copyNumberInTracks(100, config.copyNumberAlterations(), segments);
+
+        int maxTracks = segments.stream().mapToInt(Segment::track).max().orElse(0) + 1;
+        double maxCopyNumber = alterations.stream().mapToDouble(CopyNumberAlteration::copyNumber).max().orElse(0);
+
+        final CircosConfigWriter confWrite = new CircosConfigWriter(sample, config.outputConfPath());
+        confWrite.writeConfig(maxTracks, maxCopyNumber);
+        new CircosDataWriter(sample, config.outputConfPath(), maxTracks).write(segments, clusterLinks, alterations);
+
+        final String outputPlotName = sample + ".cluster.png";
+        return new CircosExecution(config.circosBin()).generateCircos(confWrite.configPath(), config.outputPlotPath(), outputPlotName);
     }
 
     @NotNull

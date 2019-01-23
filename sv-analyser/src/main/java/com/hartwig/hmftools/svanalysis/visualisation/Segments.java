@@ -16,6 +16,7 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.position.GenomePosition;
 import com.hartwig.hmftools.common.position.GenomePositions;
+import com.hartwig.hmftools.common.region.GenomeRegion;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -68,7 +69,12 @@ public class Segments {
         for (Integer chainId : chainIds) {
             final List<Link> chainLinks = links.stream().filter(x -> x.chainId() == chainId).collect(Collectors.toList());
             final List<Segment> chainSegments = segments.stream().filter(x -> x.chainId() == chainId).collect(Collectors.toList());
-            result.addAll(addMissingTracks(chainId, distance, chainSegments, chainLinks, minPositionPerChromosome, maxPositionPerChromosome));
+            result.addAll(addMissingTracks(chainId,
+                    distance,
+                    chainSegments,
+                    chainLinks,
+                    minPositionPerChromosome,
+                    maxPositionPerChromosome));
         }
 
         return TRACK_INCREMENTER.apply(result);
@@ -217,10 +223,10 @@ public class Segments {
     }
 
     @NotNull
-    public static List<GenomePosition> allPositions(@NotNull final List<Segment> segments) {
+    public static List<GenomePosition> allPositions(@NotNull final List<? extends GenomeRegion> segments) {
         final List<GenomePosition> results = Lists.newArrayList();
 
-        for (final Segment segment : segments) {
+        for (final GenomeRegion segment : segments) {
             if (HumanChromosome.contains(segment.chromosome())) {
                 results.add(GenomePositions.create(segment.chromosome(), segment.start()));
                 results.add(GenomePositions.create(segment.chromosome(), segment.end()));

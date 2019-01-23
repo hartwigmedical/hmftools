@@ -12,31 +12,28 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.position.GenomePosition;
 import com.hartwig.hmftools.common.position.GenomePositions;
-import com.hartwig.hmftools.common.region.GenomeRegion;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-public class ScalePosition {
+class ScalePosition {
 
     private static final Logger LOGGER = LogManager.getLogger(ScalePosition.class);
 
     private final Map<String, Map<Long, Integer>> chromosomePositionMap = Maps.newHashMap();
 
-    public ScalePosition(@NotNull final List<? extends GenomeRegion> regions) {
+    ScalePosition(@NotNull final List<? extends GenomePosition> regions) {
         this(1, regions);
     }
 
-    public ScalePosition(final int start, @NotNull final List<? extends GenomeRegion> regions) {
-        final Set<String> contigs = regions.stream().map(GenomeRegion::chromosome).collect(Collectors.toSet());
+    private ScalePosition(final int start, @NotNull final List<? extends GenomePosition> positions) {
+        final Set<String> contigs = positions.stream().map(GenomePosition::chromosome).collect(Collectors.toSet());
         for (final String contig : contigs) {
-            final List<Long> contigPositions = Lists.newArrayList();
-            regions.stream().filter(x -> x.chromosome().equals(contig)).forEach(x -> {
-                contigPositions.add(x.start());
-                contigPositions.add(x.end());
-            });
-
+            final List<Long> contigPositions = positions.stream()
+                    .filter(x -> x.chromosome().equals(contig))
+                    .map(GenomePosition::position)
+                    .collect(Collectors.toList());
             chromosomePositionMap.put(contig, positionMap(start, contigPositions));
         }
     }

@@ -15,7 +15,6 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.position.GenomePosition;
 import com.hartwig.hmftools.common.position.GenomePositions;
-import com.hartwig.hmftools.common.region.GenomeRegion;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -34,11 +33,11 @@ public class CircosDataWriter {
     public void write(@NotNull final List<Segment> unadjustedSegments, @NotNull final List<Link> unadjustedLinks,
             @NotNull final List<CopyNumberAlteration> unadjustedAlterations) throws IOException {
 
-        final List<GenomeRegion> unadjustedRegions = Lists.newArrayList();
-        unadjustedRegions.addAll(unadjustedSegments);
-        unadjustedRegions.addAll(unadjustedAlterations);
+        final List<GenomePosition> unadjustedPositions = Lists.newArrayList();
+        unadjustedPositions.addAll(Segments.allPositions(unadjustedSegments));
+        unadjustedPositions.addAll(Segments.allPositions(unadjustedAlterations));
 
-        final ScalePosition scalePosition = new ScalePosition(unadjustedRegions);
+        final ScalePosition scalePosition = new ScalePosition(unadjustedPositions);
         final List<GenomePosition> scaledPositions = scalePosition.scaled();
         final Map<String, Integer> contigLengths = contigLengths(scaledPositions);
 
