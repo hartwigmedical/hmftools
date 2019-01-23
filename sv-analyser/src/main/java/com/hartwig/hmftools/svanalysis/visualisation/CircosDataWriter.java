@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.StringJoiner;
 import java.util.stream.Collectors;
@@ -89,33 +88,28 @@ public class CircosDataWriter {
         final List<String> result = Lists.newArrayList();
         for (Track track : tracks) {
 
+            final String colorOption = ChainColor.color(track.chainId());
+
             final GenomePosition startPosition = GenomePositions.create(track.chromosome(), track.start());
-            final boolean isStartFoldback =
-                    startLink(startPosition, links).filter(Link::startFoldback).isPresent() || endLink(startPosition,
-                            links).filter(Link::endFoldback).isPresent();
+            final boolean isStartFoldback = Links.findLink(startPosition, links).filter(Link::startFoldback).isPresent();
+            final String startGlyph = isStartFoldback ? "glyph=square,glyph_size=20" : "glyph=circle";
 
             final StringJoiner start = new StringJoiner(DELIMITER).add(circosContig(track.chromosome()))
                     .add(String.valueOf(track.start()))
                     .add(String.valueOf(track.start()))
                     .add(String.valueOf(track.track()))
-                    .add(ChainColor.color(track.chainId()));
-            //            if (isStartFoldback) {
-            //                start.add("glyph=triangle");
-            //            }
-
+                    .add(colorOption + "," + startGlyph);
             result.add(start.toString());
 
             final GenomePosition endPosition = GenomePositions.create(track.chromosome(), track.end());
-            final boolean isEndFoldback = startLink(endPosition, links).filter(Link::startFoldback).isPresent() || endLink(endPosition,
-                    links).filter(Link::endFoldback).isPresent();
+            final boolean isEndFoldback = Links.findLink(endPosition, links).filter(Link::startFoldback).isPresent();
+            final String endGlyph = isEndFoldback ? "glyph=square,glyph_size=20" : "glyph=circle";
+
             final StringJoiner end = new StringJoiner(DELIMITER).add(circosContig(track.chromosome()))
                     .add(String.valueOf(track.end()))
                     .add(String.valueOf(track.end()))
                     .add(String.valueOf(track.track()))
-                    .add(ChainColor.color(track.chainId()));
-            //            if (isEndFoldback) {
-            //                start.add("glyph=triangle");
-            //            }
+                    .add(colorOption + "," + endGlyph);
             result.add(end.toString());
 
         }
@@ -128,7 +122,10 @@ public class CircosDataWriter {
         final List<String> result = Lists.newArrayList();
         for (final Link link : Links.clean(links)) {
 
-            long linkUsage = tracks.stream().filter(x -> x.chromosome().equals(link.startChromosome()) && (x.start() == link.startPosition() || x.end() == link.startPosition())).count();
+            long linkUsage = tracks.stream()
+                    .filter(x -> x.chromosome().equals(link.startChromosome()) && (x.start() == link.startPosition()
+                            || x.end() == link.startPosition()))
+                    .count();
 
             final String linkString = new StringJoiner(DELIMITER).add(circosContig(link.startChromosome()))
                     .add(String.valueOf(link.startPosition()))
@@ -136,7 +133,7 @@ public class CircosDataWriter {
                     .add(circosContig(link.endChromosome()))
                     .add(String.valueOf(link.endPosition()))
                     .add(String.valueOf(link.endPosition()))
-                    .add(ChainColor.color(link.chainId()) + thickness(linkUsage))
+                    .add(ChainColor.color(link.chainId()) + "," + thickness(linkUsage))
                     .toString();
             result.add(linkString);
         }
@@ -152,24 +149,28 @@ public class CircosDataWriter {
             double r1 = CircosConfigWriter.svTrackPixels(maxTracks, track.track());
 
             final GenomePosition startPosition = GenomePositions.create(track.chromosome(), track.start());
-            if (startLink(startPosition, link).isPresent() || endLink(startPosition, link).isPresent()) {
-                long connectorUsage = tracks.stream().filter(x -> x.chromosome().equals(track.chromosome()) && x.start() == track.start() && x.track() >= track.track()).count();
+            if (Links.findStartLink(startPosition, link).isPresent() || Links.findEndLink(startPosition, link).isPresent()) {
+                long connectorUsage = tracks.stream()
+                        .filter(x -> x.chromosome().equals(track.chromosome()) && x.start() == track.start() && x.track() >= track.track())
+                        .count();
 
                 final String start = new StringJoiner(DELIMITER).add(circosContig(track.chromosome()))
                         .add(String.valueOf(track.start()))
                         .add(String.valueOf(track.start()))
-                        .add("r1=" + r1 + "p," + ChainColor.color(track.chainId()) + (thickness(connectorUsage)))
+                        .add("r1=" + r1 + "p," + ChainColor.color(track.chainId()) + "," + thickness(connectorUsage))
                         .toString();
                 result.add(start);
             }
 
             final GenomePosition endPosition = GenomePositions.create(track.chromosome(), track.end());
-            if (startLink(endPosition, link).isPresent() || endLink(endPosition, link).isPresent()) {
-                long connectorUsage = tracks.stream().filter(x -> x.chromosome().equals(track.chromosome()) && x.end() == track.end() && x.track() >= track.track()).count();
+            if (Links.findStartLink(endPosition, link).isPresent() || Links.findEndLink(endPosition, link).isPresent()) {
+                long connectorUsage = tracks.stream()
+                        .filter(x -> x.chromosome().equals(track.chromosome()) && x.end() == track.end() && x.track() >= track.track())
+                        .count();
                 final String end = new StringJoiner(DELIMITER).add(circosContig(track.chromosome()))
                         .add(String.valueOf(track.end()))
                         .add(String.valueOf(track.end()))
-                        .add("r1=" + r1 + "p," + ChainColor.color(track.chainId()) + (thickness(connectorUsage)))
+                        .add("r1=" + r1 + "p," + ChainColor.color(track.chainId()) + "," + thickness(connectorUsage))
                         .toString();
                 result.add(end);
             }
@@ -271,21 +272,9 @@ public class CircosDataWriter {
         return "hs" + HumanChromosome.fromString(chromosome);
     }
 
-    static Optional<Link> endLink(@NotNull final GenomePosition position, @NotNull List<Link> links) {
-        return links.stream()
-                .filter(x -> x.endChromosome().equals(position.chromosome()) && x.endPosition() == position.position())
-                .findFirst();
-    }
-
-    static Optional<Link> startLink(@NotNull final GenomePosition position, @NotNull List<Link> links) {
-        return links.stream()
-                .filter(x -> x.startChromosome().equals(position.chromosome()) && x.startPosition() == position.position())
-                .findFirst();
-    }
-
     @NotNull
     private static String thickness(long usage) {
-        return ",thickness=" + (4 + (usage - 1) * 4) ;
+        return "thickness=" + (4 + (usage - 1) * 4);
     }
 
 }
