@@ -170,7 +170,7 @@ chromosomes_display_default = yes
         glyph_size       = 20
         color            = red
         stroke_color     = dred
-        stroke_thickness = 2
+        stroke_thickness = 0
         orientation      = out
 
         min  = 0
@@ -199,7 +199,7 @@ chromosomes_display_default = yes
         file          = SUBSTITUTE_SAMPLE.link.circos
         color         = red
         radius        = 0.2r
-        thickness     = 4
+        thickness     = 2
     </link>
 </links>
 

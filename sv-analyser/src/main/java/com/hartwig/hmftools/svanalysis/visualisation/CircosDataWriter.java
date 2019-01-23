@@ -60,7 +60,7 @@ public class CircosDataWriter {
         Files.write(new File(connectorPath).toPath(), createConnectors(maxTracks, tracks, links));
 
         final String linkPath = filePrefix + ".link.circos";
-        Files.write(new File(linkPath).toPath(), createLinks(links));
+        Files.write(new File(linkPath).toPath(), createLinks(tracks, links));
 
         final String scatterPath = filePrefix + ".scatter.circos";
         Files.write(new File(scatterPath).toPath(), createScatter(tracks, links));
@@ -124,16 +124,19 @@ public class CircosDataWriter {
     }
 
     @NotNull
-    private List<String> createLinks(@NotNull final List<Link> links) {
+    private List<String> createLinks(@NotNull final List<Track> tracks, @NotNull final List<Link> links) {
         final List<String> result = Lists.newArrayList();
-        for (Link link : links) {
+        for (final Link link : links) {
+
+            long linkUsage = tracks.stream().filter(x -> x.chromosome().equals(link.startChromosome()) && (x.start() == link.startPosition() || x.end() == link.startPosition())).count();
+
             final String linkString = new StringJoiner(DELIMITER).add(circosContig(link.startChromosome()))
                     .add(String.valueOf(link.startPosition()))
                     .add(String.valueOf(link.startPosition()))
                     .add(circosContig(link.endChromosome()))
                     .add(String.valueOf(link.endPosition()))
                     .add(String.valueOf(link.endPosition()))
-                    .add(ChainColor.color(link.chainId()))
+                    .add(ChainColor.color(link.chainId()) + thickness(linkUsage))
                     .toString();
             result.add(linkString);
         }
@@ -150,20 +153,23 @@ public class CircosDataWriter {
 
             final GenomePosition startPosition = GenomePositions.create(track.chromosome(), track.start());
             if (startLink(startPosition, link).isPresent() || endLink(startPosition, link).isPresent()) {
+                long connectorUsage = tracks.stream().filter(x -> x.chromosome().equals(track.chromosome()) && x.start() == track.start() && x.track() >= track.track()).count();
+
                 final String start = new StringJoiner(DELIMITER).add(circosContig(track.chromosome()))
                         .add(String.valueOf(track.start()))
                         .add(String.valueOf(track.start()))
-                        .add("r1=" + r1 + "p," + ChainColor.color(track.chainId()))
+                        .add("r1=" + r1 + "p," + ChainColor.color(track.chainId()) + (thickness(connectorUsage)))
                         .toString();
                 result.add(start);
             }
 
             final GenomePosition endPosition = GenomePositions.create(track.chromosome(), track.end());
             if (startLink(endPosition, link).isPresent() || endLink(endPosition, link).isPresent()) {
+                long connectorUsage = tracks.stream().filter(x -> x.chromosome().equals(track.chromosome()) && x.end() == track.end() && x.track() >= track.track()).count();
                 final String end = new StringJoiner(DELIMITER).add(circosContig(track.chromosome()))
                         .add(String.valueOf(track.end()))
                         .add(String.valueOf(track.end()))
-                        .add("r1=" + r1 + "p," + ChainColor.color(track.chainId()))
+                        .add("r1=" + r1 + "p," + ChainColor.color(track.chainId()) + (thickness(connectorUsage)))
                         .toString();
                 result.add(end);
             }
@@ -275,6 +281,11 @@ public class CircosDataWriter {
         return links.stream()
                 .filter(x -> x.startChromosome().equals(position.chromosome()) && x.startPosition() == position.position())
                 .findFirst();
+    }
+
+    @NotNull
+    private static String thickness(long usage) {
+        return ",thickness=" + (4 + (usage - 1) * 4) ;
     }
 
 }
