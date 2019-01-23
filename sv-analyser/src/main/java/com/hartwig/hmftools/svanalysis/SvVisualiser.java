@@ -49,7 +49,7 @@ public class SvVisualiser {
     private void run() throws IOException, InterruptedException {
 
         LOGGER.info("Loading data");
-        final List<Track> tracks = Tracks.addLinkTerminals(1000, config.tracks(), config.links());
+        final List<Track> tracks = Tracks.addMissingTracks(1000, config.tracks(), config.links());
         final List<Link> links = config.links();
         final List<CopyNumberAlteration> alterations =
                 CopyNumberAlterations.copyNumberInTracks(100, config.copyNumberAlterations(), tracks);

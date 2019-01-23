@@ -15,6 +15,7 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.position.GenomePosition;
 import com.hartwig.hmftools.common.position.GenomePositions;
+import com.hartwig.hmftools.common.region.GenomeRegion;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -45,45 +46,65 @@ public class Tracks {
         return result.isPresent() ? result : findTrackEnd(position, tracks);
     }
 
-    public static List<Track> addLinkTerminals(long distance, @NotNull final List<Track> tracks, @NotNull final List<Link> links) {
+    public static long tracksConnectedTo(int minTrackValue, @NotNull final GenomePosition position, @NotNull final List<Track> tracks) {
+        return tracks.stream()
+                .filter(x -> x.chromosome().equals(position.chromosome()) && (x.start() == position.position()
+                        || x.end() == position.position()) && x.track() >= minTrackValue)
+                .count();
+    }
+
+    public static List<Track> addMissingTracks(long distance, @NotNull final List<Track> tracks, @NotNull final List<Link> links) {
         final List<Track> result = Lists.newArrayList();
 
         final List<Integer> chainIds = links.stream().map(Link::chainId).distinct().collect(Collectors.toList());
         for (Integer chainId : chainIds) {
             final List<Link> chainLinks = links.stream().filter(x -> x.chainId() == chainId).collect(Collectors.toList());
             final List<Track> chainTracks = tracks.stream().filter(x -> x.chainId() == chainId).collect(Collectors.toList());
-            result.addAll(addLinkTerminals(chainId, distance, chainTracks, chainLinks));
+            result.addAll(addMissingTracks(chainId, distance, chainTracks, chainLinks));
         }
 
         return TRACK_INCREMENTER.apply(result);
     }
 
     @NotNull
-    private static List<Track> addLinkTerminals(int chainId, long distance, @NotNull final List<Track> tracks,
+    private static List<Track> addMissingTracks(int chainId, long distance, @NotNull final List<Track> tracks,
             @NotNull final List<Link> links) {
         final List<Track> result = Lists.newArrayList(tracks);
 
-        if (!links.isEmpty()) {
-            final Link firstLink = links.get(0);
-            if (HumanChromosome.contains(firstLink.startChromosome()) && firstLink.startPosition() != -1) {
-                final String contig = firstLink.startChromosome();
-                final Optional<Track> matchingTrack = findTrack(GenomePositions.create(contig, firstLink.startPosition()), tracks);
-                if (!matchingTrack.isPresent()) {
-                    long start = firstLink.startPosition() - firstLink.startOrientation() * distance;
-                    result.add(0, create(chainId, contig, start, firstLink.startPosition()));
+        int i = 0;
 
+        for (final Link link : links) {
+            final String startContig = link.startChromosome();
+            final String endContig = link.endChromosome();
+            if (HumanChromosome.contains(startContig) && HumanChromosome.contains(endContig)) {
+                final GenomePosition linkStart = GenomePositions.create(startContig, link.startPosition());
+                final GenomePosition linkEnd = GenomePositions.create(endContig, link.endPosition());
+                long tracksConnectedToStart = tracksConnectedTo(0, linkStart, tracks);
+                long tracksConnectedToEnd = tracksConnectedTo(0, linkEnd, tracks);
+                long minChromosomePosition = tracks.stream()
+                        .filter(x -> x.chromosome().equals(startContig))
+                        .mapToLong(GenomeRegion::start)
+                        .min()
+                        .orElse(link.startPosition());
+                long maxChromosomePosition = tracks.stream()
+                        .filter(x -> x.chromosome().equals(startContig))
+                        .mapToLong(GenomeRegion::end)
+                        .max()
+                        .orElse(link.endPosition());
+
+                if (tracksConnectedToStart == 0 || tracksConnectedToEnd > tracksConnectedToStart) {
+
+                    long start = link.startOrientation() > 0 ? minChromosomePosition - distance : maxChromosomePosition + distance;
+                    final Track additionalTrack = create(chainId, startContig, start, link.startPosition());
+                    result.add(i++, additionalTrack);
                 }
-            }
 
-            final Link finalLink = links.get(links.size() - 1);
-            if (HumanChromosome.contains(finalLink.endChromosome()) && finalLink.endPosition() != -1) {
-                final String contig = finalLink.endChromosome();
-                final Optional<Track> matchingTrack = findTrack(GenomePositions.create(contig, finalLink.endPosition()), tracks);
-                if (!matchingTrack.isPresent()) {
-                    long end = finalLink.endPosition() - finalLink.endOrientation() * distance;
-                    result.add(create(chainId, contig, finalLink.endPosition(), end));
-
+                if (tracksConnectedToEnd == 0 || tracksConnectedToStart > tracksConnectedToEnd) {
+                    long end = link.endOrientation() > 0 ? minChromosomePosition - distance : maxChromosomePosition + distance;
+                    final Track additionalTrack = create(chainId, endContig, link.endPosition(), end);
+                    result.add(additionalTrack);
                 }
+
             }
 
         }

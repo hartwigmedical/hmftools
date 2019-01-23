@@ -274,7 +274,7 @@ public class CircosDataWriter {
 
     @NotNull
     private static String thickness(long usage) {
-        return "thickness=" + (4 + (usage - 1) * 4);
+        return "thickness=" + Math.max(1, (4 + (usage - 1) * 4));
     }
 
 }
