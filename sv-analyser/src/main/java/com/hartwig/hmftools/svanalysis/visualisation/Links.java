@@ -3,12 +3,15 @@ package com.hartwig.hmftools.svanalysis.visualisation;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.position.GenomePosition;
+import com.hartwig.hmftools.common.position.GenomePositions;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -16,7 +19,6 @@ public class Links {
 
     private static final String COMMENT = "#";
     private static final String DELIMITER = "\t";
-
 
     @NotNull
     static Optional<Link> findStartLink(@NotNull final GenomePosition position, @NotNull List<Link> links) {
@@ -75,6 +77,25 @@ public class Links {
                 .endOrientation(Integer.valueOf(values[8]))
                 .endFoldback(Boolean.valueOf(values[9]))
                 .build();
+    }
+
+    @NotNull
+    public static List<GenomePosition> allPositions(@NotNull final List<Link> links) {
+        final List<GenomePosition> results = Lists.newArrayList();
+
+        for (final Link link : links) {
+            if (HumanChromosome.contains(link.startChromosome()) && link.startPosition() != -1) {
+                results.add(GenomePositions.create(link.startChromosome(), link.startPosition()));
+            }
+
+            if (HumanChromosome.contains(link.endChromosome()) && link.endPosition() != -1) {
+                results.add(GenomePositions.create(link.endChromosome(), link.endPosition()));
+            }
+        }
+
+        Collections.sort(results);
+
+        return results;
     }
 
 }

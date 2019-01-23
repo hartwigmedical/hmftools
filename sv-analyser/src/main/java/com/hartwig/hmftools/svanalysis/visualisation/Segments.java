@@ -3,6 +3,7 @@ package com.hartwig.hmftools.svanalysis.visualisation;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -15,7 +16,6 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.position.GenomePosition;
 import com.hartwig.hmftools.common.position.GenomePositions;
-import com.hartwig.hmftools.common.region.GenomeRegion;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -53,23 +53,32 @@ public class Segments {
                 .count();
     }
 
-    public static List<Track> addMissingTracks(long distance, @NotNull final List<Track> tracks, @NotNull final List<Link> links) {
+    public static List<Track> addMissingTracks(long distance, @NotNull final List<Track> segments, @NotNull final List<Link> links) {
+
+        final List<GenomePosition> allPositions = Lists.newArrayList();
+        allPositions.addAll(Segments.allPositions(segments));
+        allPositions.addAll(Links.allPositions(links));
+
+        final Map<String, Long> minPositionPerChromosome = minPositionPerChromosome(allPositions);
+        final Map<String, Long> maxPositionPerChromosome = maxPositionPerChromosome(allPositions);
+
         final List<Track> result = Lists.newArrayList();
 
         final List<Integer> chainIds = links.stream().map(Link::chainId).distinct().collect(Collectors.toList());
         for (Integer chainId : chainIds) {
             final List<Link> chainLinks = links.stream().filter(x -> x.chainId() == chainId).collect(Collectors.toList());
-            final List<Track> chainTracks = tracks.stream().filter(x -> x.chainId() == chainId).collect(Collectors.toList());
-            result.addAll(addMissingTracks(chainId, distance, chainTracks, chainLinks));
+            final List<Track> chainTracks = segments.stream().filter(x -> x.chainId() == chainId).collect(Collectors.toList());
+            result.addAll(addMissingTracks(chainId, distance, chainTracks, chainLinks, minPositionPerChromosome, maxPositionPerChromosome));
         }
 
         return TRACK_INCREMENTER.apply(result);
     }
 
     @NotNull
-    private static List<Track> addMissingTracks(int chainId, long distance, @NotNull final List<Track> tracks,
-            @NotNull final List<Link> links) {
-        final List<Track> result = Lists.newArrayList(tracks);
+    private static List<Track> addMissingTracks(int chainId, long distance, @NotNull final List<Track> segments,
+            @NotNull final List<Link> links, @NotNull final Map<String, Long> minPositionPerChromosome,
+            @NotNull final Map<String, Long> maxPositionPerChromosome) {
+        final List<Track> result = Lists.newArrayList(segments);
 
         int i = 0;
 
@@ -83,13 +92,13 @@ public class Segments {
             final GenomePosition linkStart = GenomePositions.create(startContig, link.startPosition());
             final GenomePosition linkEnd = GenomePositions.create(endContig, link.endPosition());
 
-            long tracksConnectedToStart = tracksConnectedTo(0, linkStart, tracks);
-            long tracksConnectedToEnd = tracksConnectedTo(0, linkEnd, tracks);
+            long tracksConnectedToStart = tracksConnectedTo(0, linkStart, segments);
+            long tracksConnectedToEnd = tracksConnectedTo(0, linkEnd, segments);
 
             if (isStartValid && (tracksConnectedToStart == 0 || tracksConnectedToEnd > tracksConnectedToStart)) {
 
-                long minChromosomePosition = minPosition(linkStart, tracks);
-                long maxChromosomePosition = maxPosition(linkStart, tracks);
+                long minChromosomePosition = Optional.ofNullable(minPositionPerChromosome.get(startContig)).orElse(link.startPosition());
+                long maxChromosomePosition = Optional.ofNullable(maxPositionPerChromosome.get(startContig)).orElse(link.startPosition());
 
                 long start = link.startOrientation() > 0 ? minChromosomePosition - distance : maxChromosomePosition + distance;
                 final Track additionalTrack = create(link.clusterId(),
@@ -104,8 +113,8 @@ public class Segments {
 
             if (isEndValid && (tracksConnectedToEnd == 0 || tracksConnectedToStart > tracksConnectedToEnd)) {
 
-                long minChromosomePosition = minPosition(linkEnd, tracks);
-                long maxChromosomePosition = maxPosition(linkEnd, tracks);
+                long minChromosomePosition = Optional.ofNullable(minPositionPerChromosome.get(endContig)).orElse(link.endPosition());
+                long maxChromosomePosition = Optional.ofNullable(maxPositionPerChromosome.get(endContig)).orElse(link.endPosition());
 
                 long end = link.endOrientation() > 0 ? minChromosomePosition - distance : maxChromosomePosition + distance;
                 final Track additionalTrack = create(link.clusterId(),
@@ -121,22 +130,6 @@ public class Segments {
         }
 
         return result;
-    }
-
-    private static long minPosition(@NotNull final GenomePosition position, @NotNull final List<Track> tracks) {
-        return tracks.stream()
-                .filter(x -> x.chromosome().equals(position.chromosome()))
-                .mapToLong(GenomeRegion::start)
-                .min()
-                .orElse(position.position());
-    }
-
-    private static long maxPosition(@NotNull final GenomePosition position, @NotNull final List<Track> tracks) {
-        return tracks.stream()
-                .filter(x -> x.chromosome().equals(position.chromosome()))
-                .mapToLong(GenomeRegion::end)
-                .min()
-                .orElse(position.position());
     }
 
     @VisibleForTesting
@@ -211,6 +204,33 @@ public class Segments {
                 .openStart(openStart)
                 .openEnd(openEnd)
                 .build();
+    }
+
+    @NotNull
+    private static Map<String, Long> maxPositionPerChromosome(@NotNull final List<GenomePosition> tracks) {
+        return tracks.stream().collect(Collectors.toMap(GenomePosition::chromosome, GenomePosition::position, Math::max));
+    }
+
+    @NotNull
+    private static Map<String, Long> minPositionPerChromosome(@NotNull final List<GenomePosition> tracks) {
+        return tracks.stream().collect(Collectors.toMap(GenomePosition::chromosome, GenomePosition::position, Math::min));
+    }
+
+    @NotNull
+    public static List<GenomePosition> allPositions(@NotNull final List<Track> segments) {
+        final List<GenomePosition> results = Lists.newArrayList();
+
+        for (final Track segment : segments) {
+            if (HumanChromosome.contains(segment.chromosome())) {
+                results.add(GenomePositions.create(segment.chromosome(), segment.start()));
+                results.add(GenomePositions.create(segment.chromosome(), segment.end()));
+            }
+
+        }
+
+        Collections.sort(results);
+
+        return results;
     }
 
 }
