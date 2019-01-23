@@ -9,6 +9,9 @@ import org.jetbrains.annotations.Nullable;
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
 public abstract class Track implements GenomeRegion {
+
+    public abstract int clusterId();
+
     public abstract int chainId();
 
     public abstract int track();

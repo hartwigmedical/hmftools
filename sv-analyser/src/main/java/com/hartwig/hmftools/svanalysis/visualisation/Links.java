@@ -64,15 +64,16 @@ public class Links {
     private static Link fromString(@NotNull final String line) {
         String[] values = line.split(DELIMITER);
         return ImmutableLink.builder()
-                .chainId(Integer.valueOf(values[0]))
-                .startChromosome(values[1])
-                .startPosition(Long.valueOf(values[2]))
-                .startOrientation(Integer.valueOf(values[3]))
-                .startFoldback(Boolean.valueOf(values[4]))
-                .endChromosome(values[5])
-                .endPosition(Long.valueOf(values[6]))
-                .endOrientation(Integer.valueOf(values[7]))
-                .endFoldback(Boolean.valueOf(values[8]))
+                .clusterId(Integer.valueOf(values[0]))
+                .chainId(Integer.valueOf(values[1]))
+                .startChromosome(values[2])
+                .startPosition(Long.valueOf(values[3]))
+                .startOrientation(Integer.valueOf(values[4]))
+                .startFoldback(Boolean.valueOf(values[5]))
+                .endChromosome(values[6])
+                .endPosition(Long.valueOf(values[7]))
+                .endOrientation(Integer.valueOf(values[8]))
+                .endFoldback(Boolean.valueOf(values[9]))
                 .build();
     }
 

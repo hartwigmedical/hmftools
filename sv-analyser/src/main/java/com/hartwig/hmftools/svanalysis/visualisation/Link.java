@@ -8,6 +8,8 @@ import org.jetbrains.annotations.Nullable;
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
 public abstract class Link {
 
+    public abstract int clusterId();
+
     public abstract int chainId();
 
     public abstract String startChromosome();

@@ -53,7 +53,7 @@ public class Tracks {
                 .count();
     }
 
-    public static List<Track> addMissingTracks(long distance, @NotNull final List<Track> tracks, @NotNull final List<Link> links) {
+    public static List<Track> addMissingTracks(long distance, @NotNull final List<Track> tracks,  @NotNull final List<Link> links) {
         final List<Track> result = Lists.newArrayList();
 
         final List<Integer> chainIds = links.stream().map(Link::chainId).distinct().collect(Collectors.toList());
@@ -88,7 +88,8 @@ public class Tracks {
                     long maxChromosomePosition = maxPosition(linkStart, tracks);
 
                     long start = link.startOrientation() > 0 ? minChromosomePosition - distance : maxChromosomePosition + distance;
-                    final Track additionalTrack = create(chainId,
+                    final Track additionalTrack = create(link.clusterId(),
+                            chainId,
                             startContig,
                             start,
                             link.startPosition(),
@@ -103,8 +104,13 @@ public class Tracks {
                     long maxChromosomePosition = maxPosition(linkEnd, tracks);
 
                     long end = link.endOrientation() > 0 ? minChromosomePosition - distance : maxChromosomePosition + distance;
-                    final Track additionalTrack =
-                            create(chainId, endContig, link.endPosition(), end, link.endOrientation() > 0, link.endOrientation() < 0);
+                    final Track additionalTrack = create(link.clusterId(),
+                            chainId,
+                            endContig,
+                            link.endPosition(),
+                            end,
+                            link.endOrientation() > 0,
+                            link.endOrientation() < 0);
                     result.add(additionalTrack);
                 }
 
@@ -140,12 +146,13 @@ public class Tracks {
 
             if (!line.startsWith(COMMENT)) {
                 String[] values = line.split(DELIMITER);
-                final int chainId = Integer.valueOf(values[0]);
-                final String chromosome = values[1];
-                final long start = Long.valueOf(values[2]);
-                final long end = Long.valueOf(values[3]);
+                final int clusterId = Integer.valueOf(values[0]);
+                final int chainId = Integer.valueOf(values[1]);
+                final String chromosome = values[2];
+                final long start = Long.valueOf(values[3]);
+                final long end = Long.valueOf(values[4]);
 
-                result.add(create(chainId, chromosome, start, end, false, false));
+                result.add(create(clusterId, chainId, chromosome, start, end, false, false));
 
             }
         }
@@ -191,8 +198,9 @@ public class Tracks {
     }
 
     @NotNull
-    private static Track create(int chainId, String contig, long start, long end, boolean openStart, boolean openEnd) {
+    private static Track create(int clusterId, int chainId, String contig, long start, long end, boolean openStart, boolean openEnd) {
         return ImmutableTrack.builder()
+                .clusterId(clusterId)
                 .chainId(chainId)
                 .chromosome(contig)
                 .start(Math.min(start, end))
