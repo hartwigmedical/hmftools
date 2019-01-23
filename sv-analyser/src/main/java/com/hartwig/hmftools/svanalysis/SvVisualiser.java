@@ -9,7 +9,6 @@ import com.hartwig.hmftools.svanalysis.visualisation.CircosDataWriter;
 import com.hartwig.hmftools.svanalysis.visualisation.CopyNumberAlteration;
 import com.hartwig.hmftools.svanalysis.visualisation.CopyNumberAlterations;
 import com.hartwig.hmftools.svanalysis.visualisation.Link;
-import com.hartwig.hmftools.svanalysis.visualisation.Links;
 import com.hartwig.hmftools.svanalysis.visualisation.Track;
 import com.hartwig.hmftools.svanalysis.visualisation.Tracks;
 
@@ -51,7 +50,7 @@ public class SvVisualiser {
 
         LOGGER.info("Loading data");
         final List<Track> tracks = Tracks.addLinkTerminals(1000, config.tracks(), config.links());
-        final List<Link> links = Links.clean(config.links());
+        final List<Link> links = config.links();
         final List<CopyNumberAlteration> alterations =
                 CopyNumberAlterations.copyNumberInTracks(100, config.copyNumberAlterations(), tracks);
 

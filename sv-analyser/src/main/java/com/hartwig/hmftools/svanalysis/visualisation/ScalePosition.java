@@ -9,6 +9,7 @@ import java.util.stream.Collectors;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.position.GenomePosition;
 import com.hartwig.hmftools.common.position.GenomePositions;
 import com.hartwig.hmftools.common.region.GenomeRegion;
@@ -71,9 +72,22 @@ public class ScalePosition {
 
     @NotNull
     public List<Link> scaleLinks(@NotNull final List<Link> links) {
-        return links.stream()
-                .map(x -> scale(x, chromosomePositionMap.get(x.startChromosome()), chromosomePositionMap.get(x.endChromosome())))
-                .collect(Collectors.toList());
+        final List<Link> results = Lists.newArrayList();
+
+        for (final Link link : links) {
+            final ImmutableLink.Builder builder = ImmutableLink.builder().from(link);
+            if (HumanChromosome.contains(link.startChromosome())) {
+                builder.startPosition(chromosomePositionMap.get(link.startChromosome()).get(link.startPosition()));
+            }
+
+            if (HumanChromosome.contains(link.endChromosome())) {
+                builder.endPosition(chromosomePositionMap.get(link.endChromosome()).get(link.endPosition()));
+            }
+
+            results.add(builder.build());
+        }
+
+        return results;
     }
 
     @NotNull
@@ -93,18 +107,6 @@ public class ScalePosition {
     @NotNull
     private static Track scale(@NotNull final Track victim, @NotNull final Map<Long, Integer> positionMap) {
         return ImmutableTrack.builder().from(victim).start(positionMap.get(victim.start())).end(positionMap.get(victim.end())).build();
-    }
-
-    @NotNull
-    private static Link scale(@NotNull final Link victim, @NotNull final Map<Long, Integer> startPositionMap,
-            @NotNull final Map<Long, Integer> endPositionMap) {
-
-        return ImmutableLink.builder()
-                .from(victim)
-                .startPosition(startPositionMap.get(victim.startPosition()))
-                .endPosition(endPositionMap.get(victim.endPosition()))
-                .build();
-
     }
 
     @VisibleForTesting

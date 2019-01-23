@@ -126,7 +126,7 @@ public class CircosDataWriter {
     @NotNull
     private List<String> createLinks(@NotNull final List<Track> tracks, @NotNull final List<Link> links) {
         final List<String> result = Lists.newArrayList();
-        for (final Link link : links) {
+        for (final Link link : Links.clean(links)) {
 
             long linkUsage = tracks.stream().filter(x -> x.chromosome().equals(link.startChromosome()) && (x.start() == link.startPosition() || x.end() == link.startPosition())).count();
 
