@@ -14,9 +14,13 @@ import com.hartwig.hmftools.common.position.GenomePosition;
 import com.hartwig.hmftools.common.position.GenomePositions;
 import com.hartwig.hmftools.common.region.GenomeRegion;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 public class ScalePosition {
+
+    private static final Logger LOGGER = LogManager.getLogger(ScalePosition.class);
 
     private final Map<String, Map<Long, Integer>> chromosomePositionMap = Maps.newHashMap();
 
@@ -75,16 +79,22 @@ public class ScalePosition {
         final List<Link> results = Lists.newArrayList();
 
         for (final Link link : links) {
-            final ImmutableLink.Builder builder = ImmutableLink.builder().from(link);
-            if (HumanChromosome.contains(link.startChromosome())) {
-                builder.startPosition(chromosomePositionMap.get(link.startChromosome()).get(link.startPosition()));
-            }
 
-            if (HumanChromosome.contains(link.endChromosome())) {
-                builder.endPosition(chromosomePositionMap.get(link.endChromosome()).get(link.endPosition()));
-            }
+            try {
+                final ImmutableLink.Builder builder = ImmutableLink.builder().from(link);
+                if (HumanChromosome.contains(link.startChromosome())) {
+                    builder.startPosition(chromosomePositionMap.get(link.startChromosome()).get(link.startPosition()));
+                }
 
-            results.add(builder.build());
+                if (HumanChromosome.contains(link.endChromosome())) {
+                    builder.endPosition(chromosomePositionMap.get(link.endChromosome()).get(link.endPosition()));
+                }
+
+                results.add(builder.build());
+            } catch (Exception e) {
+                LOGGER.error("Unable to scale link {}", link);
+                throw e;
+            }
         }
 
         return results;
