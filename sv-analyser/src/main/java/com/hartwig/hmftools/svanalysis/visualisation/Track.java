@@ -12,4 +12,8 @@ public abstract class Track implements GenomeRegion {
     public abstract int chainId();
 
     public abstract int track();
+
+    public abstract boolean openStart();
+
+    public abstract boolean openEnd();
 }

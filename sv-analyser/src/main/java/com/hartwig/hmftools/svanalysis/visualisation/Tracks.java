@@ -81,27 +81,30 @@ public class Tracks {
                 final GenomePosition linkEnd = GenomePositions.create(endContig, link.endPosition());
                 long tracksConnectedToStart = tracksConnectedTo(0, linkStart, tracks);
                 long tracksConnectedToEnd = tracksConnectedTo(0, linkEnd, tracks);
-                long minChromosomePosition = tracks.stream()
-                        .filter(x -> x.chromosome().equals(startContig))
-                        .mapToLong(GenomeRegion::start)
-                        .min()
-                        .orElse(link.startPosition());
-                long maxChromosomePosition = tracks.stream()
-                        .filter(x -> x.chromosome().equals(startContig))
-                        .mapToLong(GenomeRegion::end)
-                        .max()
-                        .orElse(link.endPosition());
 
                 if (tracksConnectedToStart == 0 || tracksConnectedToEnd > tracksConnectedToStart) {
 
+                    long minChromosomePosition = minPosition(linkStart, tracks);
+                    long maxChromosomePosition = maxPosition(linkStart, tracks);
+
                     long start = link.startOrientation() > 0 ? minChromosomePosition - distance : maxChromosomePosition + distance;
-                    final Track additionalTrack = create(chainId, startContig, start, link.startPosition());
+                    final Track additionalTrack = create(chainId,
+                            startContig,
+                            start,
+                            link.startPosition(),
+                            link.startOrientation() > 0,
+                            link.startOrientation() < 0);
                     result.add(i++, additionalTrack);
                 }
 
                 if (tracksConnectedToEnd == 0 || tracksConnectedToStart > tracksConnectedToEnd) {
+
+                    long minChromosomePosition = minPosition(linkEnd, tracks);
+                    long maxChromosomePosition = maxPosition(linkEnd, tracks);
+
                     long end = link.endOrientation() > 0 ? minChromosomePosition - distance : maxChromosomePosition + distance;
-                    final Track additionalTrack = create(chainId, endContig, link.endPosition(), end);
+                    final Track additionalTrack =
+                            create(chainId, endContig, link.endPosition(), end, link.endOrientation() > 0, link.endOrientation() < 0);
                     result.add(additionalTrack);
                 }
 
@@ -112,15 +115,20 @@ public class Tracks {
         return result;
     }
 
-    @NotNull
-    private static Track create(int chainId, String contig, long start, long end) {
-        return ImmutableTrack.builder()
-                .chainId(chainId)
-                .chromosome(contig)
-                .start(Math.min(start, end))
-                .end(Math.max(start, end))
-                .track(0)
-                .build();
+    private static long minPosition(@NotNull final GenomePosition position, @NotNull final List<Track> tracks) {
+        return tracks.stream()
+                .filter(x -> x.chromosome().equals(position.chromosome()))
+                .mapToLong(GenomeRegion::start)
+                .min()
+                .orElse(position.position());
+    }
+
+    private static long maxPosition(@NotNull final GenomePosition position, @NotNull final List<Track> tracks) {
+        return tracks.stream()
+                .filter(x -> x.chromosome().equals(position.chromosome()))
+                .mapToLong(GenomeRegion::end)
+                .min()
+                .orElse(position.position());
     }
 
     @VisibleForTesting
@@ -137,7 +145,7 @@ public class Tracks {
                 final long start = Long.valueOf(values[2]);
                 final long end = Long.valueOf(values[3]);
 
-                result.add(create(chainId, chromosome, start, end));
+                result.add(create(chainId, chromosome, start, end, false, false));
 
             }
         }
@@ -180,6 +188,19 @@ public class Tracks {
         }
 
         return result;
+    }
+
+    @NotNull
+    private static Track create(int chainId, String contig, long start, long end, boolean openStart, boolean openEnd) {
+        return ImmutableTrack.builder()
+                .chainId(chainId)
+                .chromosome(contig)
+                .start(Math.min(start, end))
+                .end(Math.max(start, end))
+                .track(0)
+                .openStart(openStart)
+                .openEnd(openEnd)
+                .build();
     }
 
 }

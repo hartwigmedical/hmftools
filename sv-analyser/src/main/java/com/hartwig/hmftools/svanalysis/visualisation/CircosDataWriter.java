@@ -92,7 +92,10 @@ public class CircosDataWriter {
 
             final GenomePosition startPosition = GenomePositions.create(track.chromosome(), track.start());
             final boolean isStartFoldback = Links.findLink(startPosition, links).filter(Link::startFoldback).isPresent();
-            final String startGlyph = isStartFoldback ? "glyph=square,glyph_size=20" : "glyph=circle";
+            String startGlyph = isStartFoldback ? "glyph=triangle,glyph_size=20" : "glyph=circle";
+            if (track.openStart()) {
+                startGlyph = "glyph=square";
+            }
 
             final StringJoiner start = new StringJoiner(DELIMITER).add(circosContig(track.chromosome()))
                     .add(String.valueOf(track.start()))
@@ -103,7 +106,10 @@ public class CircosDataWriter {
 
             final GenomePosition endPosition = GenomePositions.create(track.chromosome(), track.end());
             final boolean isEndFoldback = Links.findLink(endPosition, links).filter(Link::startFoldback).isPresent();
-            final String endGlyph = isEndFoldback ? "glyph=square,glyph_size=20" : "glyph=circle";
+            String endGlyph = isEndFoldback ? "glyph=triangle,glyph_size=20" : "glyph=circle";
+            if (track.openEnd()) {
+                endGlyph = "glyph=square";
+            }
 
             final StringJoiner end = new StringJoiner(DELIMITER).add(circosContig(track.chromosome()))
                     .add(String.valueOf(track.end()))
