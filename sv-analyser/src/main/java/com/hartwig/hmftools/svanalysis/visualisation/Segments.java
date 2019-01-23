@@ -19,11 +19,11 @@ import com.hartwig.hmftools.common.region.GenomeRegion;
 
 import org.jetbrains.annotations.NotNull;
 
-public class Tracks {
+public class Segments {
 
     private static final String COMMENT = "#";
     private static final String DELIMITER = "\t";
-    private static final Function<List<Track>, List<Track>> TRACK_INCREMENTER = Tracks::incrementOnChromosome;
+    private static final Function<List<Track>, List<Track>> TRACK_INCREMENTER = Segments::incrementOnChromosome;
 
     @NotNull
     public static List<Track> readTracksFromFile(@NotNull final String fileName) throws IOException {
@@ -53,7 +53,7 @@ public class Tracks {
                 .count();
     }
 
-    public static List<Track> addMissingTracks(long distance, @NotNull final List<Track> tracks,  @NotNull final List<Link> links) {
+    public static List<Track> addMissingTracks(long distance, @NotNull final List<Track> tracks, @NotNull final List<Link> links) {
         final List<Track> result = Lists.newArrayList();
 
         final List<Integer> chainIds = links.stream().map(Link::chainId).distinct().collect(Collectors.toList());
@@ -76,44 +76,46 @@ public class Tracks {
         for (final Link link : links) {
             final String startContig = link.startChromosome();
             final String endContig = link.endChromosome();
-            if (HumanChromosome.contains(startContig) && HumanChromosome.contains(endContig)) {
-                final GenomePosition linkStart = GenomePositions.create(startContig, link.startPosition());
-                final GenomePosition linkEnd = GenomePositions.create(endContig, link.endPosition());
-                long tracksConnectedToStart = tracksConnectedTo(0, linkStart, tracks);
-                long tracksConnectedToEnd = tracksConnectedTo(0, linkEnd, tracks);
 
-                if (tracksConnectedToStart == 0 || tracksConnectedToEnd > tracksConnectedToStart) {
+            boolean isStartValid = HumanChromosome.contains(startContig);
+            boolean isEndValid = HumanChromosome.contains(endContig);
 
-                    long minChromosomePosition = minPosition(linkStart, tracks);
-                    long maxChromosomePosition = maxPosition(linkStart, tracks);
+            final GenomePosition linkStart = GenomePositions.create(startContig, link.startPosition());
+            final GenomePosition linkEnd = GenomePositions.create(endContig, link.endPosition());
 
-                    long start = link.startOrientation() > 0 ? minChromosomePosition - distance : maxChromosomePosition + distance;
-                    final Track additionalTrack = create(link.clusterId(),
-                            chainId,
-                            startContig,
-                            start,
-                            link.startPosition(),
-                            link.startOrientation() > 0,
-                            link.startOrientation() < 0);
-                    result.add(i++, additionalTrack);
-                }
+            long tracksConnectedToStart = tracksConnectedTo(0, linkStart, tracks);
+            long tracksConnectedToEnd = tracksConnectedTo(0, linkEnd, tracks);
 
-                if (tracksConnectedToEnd == 0 || tracksConnectedToStart > tracksConnectedToEnd) {
+            if (isStartValid && (tracksConnectedToStart == 0 || tracksConnectedToEnd > tracksConnectedToStart)) {
 
-                    long minChromosomePosition = minPosition(linkEnd, tracks);
-                    long maxChromosomePosition = maxPosition(linkEnd, tracks);
+                long minChromosomePosition = minPosition(linkStart, tracks);
+                long maxChromosomePosition = maxPosition(linkStart, tracks);
 
-                    long end = link.endOrientation() > 0 ? minChromosomePosition - distance : maxChromosomePosition + distance;
-                    final Track additionalTrack = create(link.clusterId(),
-                            chainId,
-                            endContig,
-                            link.endPosition(),
-                            end,
-                            link.endOrientation() > 0,
-                            link.endOrientation() < 0);
-                    result.add(additionalTrack);
-                }
+                long start = link.startOrientation() > 0 ? minChromosomePosition - distance : maxChromosomePosition + distance;
+                final Track additionalTrack = create(link.clusterId(),
+                        chainId,
+                        startContig,
+                        start,
+                        link.startPosition(),
+                        link.startOrientation() > 0,
+                        link.startOrientation() < 0);
+                result.add(i++, additionalTrack);
+            }
 
+            if (isEndValid && (tracksConnectedToEnd == 0 || tracksConnectedToStart > tracksConnectedToEnd)) {
+
+                long minChromosomePosition = minPosition(linkEnd, tracks);
+                long maxChromosomePosition = maxPosition(linkEnd, tracks);
+
+                long end = link.endOrientation() > 0 ? minChromosomePosition - distance : maxChromosomePosition + distance;
+                final Track additionalTrack = create(link.clusterId(),
+                        chainId,
+                        endContig,
+                        link.endPosition(),
+                        end,
+                        link.endOrientation() > 0,
+                        link.endOrientation() < 0);
+                result.add(additionalTrack);
             }
 
         }

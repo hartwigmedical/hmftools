@@ -12,8 +12,8 @@ import com.hartwig.hmftools.svanalysis.visualisation.CircosConfigWriter;
 import com.hartwig.hmftools.svanalysis.visualisation.CircosDataWriter;
 import com.hartwig.hmftools.svanalysis.visualisation.CopyNumberAlteration;
 import com.hartwig.hmftools.svanalysis.visualisation.Link;
+import com.hartwig.hmftools.svanalysis.visualisation.Segments;
 import com.hartwig.hmftools.svanalysis.visualisation.Track;
-import com.hartwig.hmftools.svanalysis.visualisation.Tracks;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -55,18 +55,18 @@ public class SvVisualiser {
 
         final List<Integer> clusterIds = config.links().stream().map(Link::clusterId).distinct().sorted().collect(toList());
         for (Integer clusterId : clusterIds) {
-            LOGGER.info("Processing cluster {}", clusterId);
+            final String sample = config.sample() + "." + clusterId;
+            LOGGER.info("Generating CIRCOS config for cluster {}", sample);
 
             final List<Link> clusterLinks = config.links().stream().filter(x -> x.clusterId() == clusterId).collect(toList());
             final List<Track> clusterTracks = config.tracks().stream().filter(x -> x.clusterId() == clusterId).collect(toList());
-            final List<Track> tracks = Tracks.addMissingTracks(1000, clusterTracks, clusterLinks);
+            final List<Track> tracks = Segments.addMissingTracks(1000, clusterTracks, clusterLinks);
             final List<CopyNumberAlteration> alterations = copyNumberInTracks(100, config.copyNumberAlterations(), tracks);
 
             int maxTracks = tracks.stream().mapToInt(Track::track).max().orElse(0) + 1;
             double maxCopyNumber = alterations.stream().mapToDouble(CopyNumberAlteration::copyNumber).max().orElse(0);
 
-            LOGGER.info("Generating CIRCOS config");
-            final String sample = config.sample() + "." + clusterId;
+
 
             final CircosConfigWriter confWrite = new CircosConfigWriter(sample, config.outputConfPath());
             confWrite.writeConfig(maxTracks, maxCopyNumber);
