@@ -70,8 +70,8 @@ public class ScalePosition {
     }
 
     @NotNull
-    public List<Track> scaleTracks(@NotNull final List<Track> tracks) {
-        return tracks.stream().map(x -> scale(x, chromosomePositionMap.get(x.chromosome()))).collect(Collectors.toList());
+    public List<Segment> scaleTracks(@NotNull final List<Segment> segments) {
+        return segments.stream().map(x -> scale(x, chromosomePositionMap.get(x.chromosome()))).collect(Collectors.toList());
     }
 
     @NotNull
@@ -115,8 +115,8 @@ public class ScalePosition {
     }
 
     @NotNull
-    private static Track scale(@NotNull final Track victim, @NotNull final Map<Long, Integer> positionMap) {
-        return ImmutableTrack.builder().from(victim).start(positionMap.get(victim.start())).end(positionMap.get(victim.end())).build();
+    private static Segment scale(@NotNull final Segment victim, @NotNull final Map<Long, Integer> positionMap) {
+        return ImmutableSegment.builder().from(victim).start(positionMap.get(victim.start())).end(positionMap.get(victim.end())).build();
     }
 
     @VisibleForTesting

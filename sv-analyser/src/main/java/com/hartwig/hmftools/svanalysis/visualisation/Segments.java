@@ -23,37 +23,37 @@ public class Segments {
 
     private static final String COMMENT = "#";
     private static final String DELIMITER = "\t";
-    private static final Function<List<Track>, List<Track>> TRACK_INCREMENTER = Segments::incrementOnChromosome;
+    private static final Function<List<Segment>, List<Segment>> TRACK_INCREMENTER = Segments::incrementOnChromosome;
 
     @NotNull
-    public static List<Track> readTracksFromFile(@NotNull final String fileName) throws IOException {
+    public static List<Segment> readTracksFromFile(@NotNull final String fileName) throws IOException {
         return incrementOnChromosome(fromString(Files.readAllLines(new File(fileName).toPath())));
     }
 
     @NotNull
-    public static Optional<Track> findTrackStart(@NotNull final GenomePosition position, @NotNull final List<Track> tracks) {
-        return tracks.stream().filter(x -> x.chromosome().equals(position.chromosome()) && x.start() == position.position()).findFirst();
+    public static Optional<Segment> findTrackStart(@NotNull final GenomePosition position, @NotNull final List<Segment> segments) {
+        return segments.stream().filter(x -> x.chromosome().equals(position.chromosome()) && x.start() == position.position()).findFirst();
     }
 
     @NotNull
-    public static Optional<Track> findTrackEnd(@NotNull final GenomePosition position, @NotNull final List<Track> tracks) {
-        return tracks.stream().filter(x -> x.chromosome().equals(position.chromosome()) && x.end() == position.position()).findFirst();
+    public static Optional<Segment> findTrackEnd(@NotNull final GenomePosition position, @NotNull final List<Segment> segments) {
+        return segments.stream().filter(x -> x.chromosome().equals(position.chromosome()) && x.end() == position.position()).findFirst();
     }
 
     @NotNull
-    public static Optional<Track> findTrack(@NotNull final GenomePosition position, @NotNull final List<Track> tracks) {
-        final Optional<Track> result = findTrackStart(position, tracks);
-        return result.isPresent() ? result : findTrackEnd(position, tracks);
+    public static Optional<Segment> findTrack(@NotNull final GenomePosition position, @NotNull final List<Segment> segments) {
+        final Optional<Segment> result = findTrackStart(position, segments);
+        return result.isPresent() ? result : findTrackEnd(position, segments);
     }
 
-    public static long tracksConnectedTo(int minTrackValue, @NotNull final GenomePosition position, @NotNull final List<Track> tracks) {
-        return tracks.stream()
+    public static long tracksConnectedTo(int minTrackValue, @NotNull final GenomePosition position, @NotNull final List<Segment> segments) {
+        return segments.stream()
                 .filter(x -> x.chromosome().equals(position.chromosome()) && (x.start() == position.position()
                         || x.end() == position.position()) && x.track() >= minTrackValue)
                 .count();
     }
 
-    public static List<Track> addMissingTracks(long distance, @NotNull final List<Track> segments, @NotNull final List<Link> links) {
+    public static List<Segment> addMissingTracks(long distance, @NotNull final List<Segment> segments, @NotNull final List<Link> links) {
 
         final List<GenomePosition> allPositions = Lists.newArrayList();
         allPositions.addAll(Segments.allPositions(segments));
@@ -62,23 +62,23 @@ public class Segments {
         final Map<String, Long> minPositionPerChromosome = minPositionPerChromosome(allPositions);
         final Map<String, Long> maxPositionPerChromosome = maxPositionPerChromosome(allPositions);
 
-        final List<Track> result = Lists.newArrayList();
+        final List<Segment> result = Lists.newArrayList();
 
         final List<Integer> chainIds = links.stream().map(Link::chainId).distinct().collect(Collectors.toList());
         for (Integer chainId : chainIds) {
             final List<Link> chainLinks = links.stream().filter(x -> x.chainId() == chainId).collect(Collectors.toList());
-            final List<Track> chainTracks = segments.stream().filter(x -> x.chainId() == chainId).collect(Collectors.toList());
-            result.addAll(addMissingTracks(chainId, distance, chainTracks, chainLinks, minPositionPerChromosome, maxPositionPerChromosome));
+            final List<Segment> chainSegments = segments.stream().filter(x -> x.chainId() == chainId).collect(Collectors.toList());
+            result.addAll(addMissingTracks(chainId, distance, chainSegments, chainLinks, minPositionPerChromosome, maxPositionPerChromosome));
         }
 
         return TRACK_INCREMENTER.apply(result);
     }
 
     @NotNull
-    private static List<Track> addMissingTracks(int chainId, long distance, @NotNull final List<Track> segments,
+    private static List<Segment> addMissingTracks(int chainId, long distance, @NotNull final List<Segment> segments,
             @NotNull final List<Link> links, @NotNull final Map<String, Long> minPositionPerChromosome,
             @NotNull final Map<String, Long> maxPositionPerChromosome) {
-        final List<Track> result = Lists.newArrayList(segments);
+        final List<Segment> result = Lists.newArrayList(segments);
 
         int i = 0;
 
@@ -101,14 +101,14 @@ public class Segments {
                 long maxChromosomePosition = Optional.ofNullable(maxPositionPerChromosome.get(startContig)).orElse(link.startPosition());
 
                 long start = link.startOrientation() > 0 ? minChromosomePosition - distance : maxChromosomePosition + distance;
-                final Track additionalTrack = create(link.clusterId(),
+                final Segment additionalSegment = create(link.clusterId(),
                         chainId,
                         startContig,
                         start,
                         link.startPosition(),
                         link.startOrientation() > 0,
                         link.startOrientation() < 0);
-                result.add(i++, additionalTrack);
+                result.add(i++, additionalSegment);
             }
 
             if (isEndValid && (tracksConnectedToEnd == 0 || tracksConnectedToStart > tracksConnectedToEnd)) {
@@ -117,14 +117,14 @@ public class Segments {
                 long maxChromosomePosition = Optional.ofNullable(maxPositionPerChromosome.get(endContig)).orElse(link.endPosition());
 
                 long end = link.endOrientation() > 0 ? minChromosomePosition - distance : maxChromosomePosition + distance;
-                final Track additionalTrack = create(link.clusterId(),
+                final Segment additionalSegment = create(link.clusterId(),
                         chainId,
                         endContig,
                         link.endPosition(),
                         end,
                         link.endOrientation() > 0,
                         link.endOrientation() < 0);
-                result.add(additionalTrack);
+                result.add(additionalSegment);
             }
 
         }
@@ -134,8 +134,8 @@ public class Segments {
 
     @VisibleForTesting
     @NotNull
-    static List<Track> fromString(@NotNull final List<String> lines) {
-        final List<Track> result = Lists.newArrayList();
+    static List<Segment> fromString(@NotNull final List<String> lines) {
+        final List<Segment> result = Lists.newArrayList();
 
         for (final String line : lines) {
 
@@ -157,13 +157,13 @@ public class Segments {
 
     @VisibleForTesting
     @NotNull
-    static List<Track> incrementOnChromosome(@NotNull final List<Track> tracks) {
+    static List<Segment> incrementOnChromosome(@NotNull final List<Segment> segments) {
         final Map<String, Integer> trackMap = Maps.newHashMap();
-        final List<Track> result = Lists.newArrayList();
+        final List<Segment> result = Lists.newArrayList();
 
         int currentTrack = 1;
-        for (final Track track : tracks) {
-            final String chromosome = track.chromosome();
+        for (final Segment segment : segments) {
+            final String chromosome = segment.chromosome();
             if (!trackMap.containsKey(chromosome)) {
                 trackMap.put(chromosome, currentTrack);
             } else {
@@ -171,7 +171,7 @@ public class Segments {
                 trackMap.put(chromosome, currentTrack);
             }
 
-            result.add(ImmutableTrack.builder().from(track).track(currentTrack).build());
+            result.add(ImmutableSegment.builder().from(segment).track(currentTrack).build());
 
         }
 
@@ -181,20 +181,20 @@ public class Segments {
 
     @VisibleForTesting
     @NotNull
-    static List<Track> alwaysIncrement(@NotNull final List<Track> tracks) {
-        final List<Track> result = Lists.newArrayList();
+    static List<Segment> alwaysIncrement(@NotNull final List<Segment> segments) {
+        final List<Segment> result = Lists.newArrayList();
 
         int currentTrack = 1;
-        for (final Track track : tracks) {
-            result.add(ImmutableTrack.builder().from(track).track(currentTrack++).build());
+        for (final Segment segment : segments) {
+            result.add(ImmutableSegment.builder().from(segment).track(currentTrack++).build());
         }
 
         return result;
     }
 
     @NotNull
-    private static Track create(int clusterId, int chainId, String contig, long start, long end, boolean openStart, boolean openEnd) {
-        return ImmutableTrack.builder()
+    private static Segment create(int clusterId, int chainId, String contig, long start, long end, boolean openStart, boolean openEnd) {
+        return ImmutableSegment.builder()
                 .clusterId(clusterId)
                 .chainId(chainId)
                 .chromosome(contig)
@@ -217,10 +217,10 @@ public class Segments {
     }
 
     @NotNull
-    public static List<GenomePosition> allPositions(@NotNull final List<Track> segments) {
+    public static List<GenomePosition> allPositions(@NotNull final List<Segment> segments) {
         final List<GenomePosition> results = Lists.newArrayList();
 
-        for (final Track segment : segments) {
+        for (final Segment segment : segments) {
             if (HumanChromosome.contains(segment.chromosome())) {
                 results.add(GenomePositions.create(segment.chromosome(), segment.start()));
                 results.add(GenomePositions.create(segment.chromosome(), segment.end()));

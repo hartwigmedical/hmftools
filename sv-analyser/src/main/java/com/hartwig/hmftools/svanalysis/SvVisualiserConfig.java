@@ -8,8 +8,8 @@ import com.hartwig.hmftools.svanalysis.visualisation.CopyNumberAlteration;
 import com.hartwig.hmftools.svanalysis.visualisation.CopyNumberAlterations;
 import com.hartwig.hmftools.svanalysis.visualisation.Link;
 import com.hartwig.hmftools.svanalysis.visualisation.Links;
+import com.hartwig.hmftools.svanalysis.visualisation.Segment;
 import com.hartwig.hmftools.svanalysis.visualisation.Segments;
-import com.hartwig.hmftools.svanalysis.visualisation.Track;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
@@ -37,7 +37,7 @@ public interface SvVisualiserConfig {
     String sample();
 
     @NotNull
-    List<Track> tracks();
+    List<Segment> tracks();
 
     @NotNull
     List<Link> links();
@@ -82,14 +82,14 @@ public interface SvVisualiserConfig {
             throw new ParseException("Missing the following parameters: " + missing);
         }
 
-        final List<Track> tracks = Segments.readTracksFromFile(trackPath);
+        final List<Segment> segments = Segments.readTracksFromFile(trackPath);
         final List<Link> links = Links.readLinks(linkPath);
         final List<CopyNumberAlteration> cna = CopyNumberAlterations.read(cnaPath);
 
         return ImmutableSvVisualiserConfig.builder()
                 .outputConfPath(outputDir)
                 .outputPlotPath(outputDir)
-                .tracks(tracks)
+                .tracks(segments)
                 .links(links)
                 .sample(sample)
                 .copyNumberAlterations(cna)
