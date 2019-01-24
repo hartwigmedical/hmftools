@@ -78,6 +78,7 @@ public class CopyNumberAlterations {
                 .start(Long.valueOf(values[1]))
                 .end(Long.valueOf(values[2]))
                 .copyNumber(Double.valueOf(values[3]))
+                .baf(Double.valueOf(values[4]))
                 .build();
     }
 

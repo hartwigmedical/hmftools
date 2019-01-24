@@ -16,11 +16,11 @@ public class CircosConfigWriter {
 
     private static final double RADIUS_PIXELS = (0.9 * 1500 - 50);
 
-    private static final double SV_INNER_RADIUS = 0.4;
-    private static final double SV_OUTER_RADIUS = 0.975;
+    private static final double SEGMENT_INNER_RADIUS = 0.5;
+    private static final double SEGMENT_OUTER_RADIUS = 0.975;
 
-    private static final double CNA_INNER_RADIUS = 0.2;
-    private static final double CNA_OUTER_RADIUS = 0.375;
+    private static final double CNA_INNER_RADIUS = 0.3;
+    private static final double CNA_OUTER_RADIUS = 0.475;
 
     private final String sample;
     private final String configPath;
@@ -35,8 +35,8 @@ public class CircosConfigWriter {
     }
 
     public static double svTrackPixels(int maxTracks, int track) {
-        double start = SV_INNER_RADIUS * RADIUS_PIXELS;
-        double end = SV_OUTER_RADIUS * RADIUS_PIXELS;
+        double start = SEGMENT_INNER_RADIUS * RADIUS_PIXELS;
+        double end = SEGMENT_OUTER_RADIUS * RADIUS_PIXELS;
 
         double difference = end - start;
         double singleTrack = difference / maxTracks;
@@ -53,8 +53,8 @@ public class CircosConfigWriter {
         final String template =
                 readResource("/visualisation/cluster.template").replaceAll("SUBSTITUTE_HISTOGRAM", histogramPlots(maxTracks))
 
-                        .replaceAll("SUBSTITUTE_SV_INNER_RADIUS", String.valueOf(SV_INNER_RADIUS))
-                        .replaceAll("SUBSTITUTE_SV_OUTER_RADIUS", String.valueOf(SV_OUTER_RADIUS))
+                        .replaceAll("SUBSTITUTE_SV_INNER_RADIUS", String.valueOf(SEGMENT_INNER_RADIUS))
+                        .replaceAll("SUBSTITUTE_SV_OUTER_RADIUS", String.valueOf(SEGMENT_OUTER_RADIUS))
 
                         .replaceAll("SUBSTITUTE_CNA_INNER_RADIUS", String.valueOf(CNA_INNER_RADIUS))
                         .replaceAll("SUBSTITUTE_CNA_OUTER_RADIUS", String.valueOf(CNA_OUTER_RADIUS))

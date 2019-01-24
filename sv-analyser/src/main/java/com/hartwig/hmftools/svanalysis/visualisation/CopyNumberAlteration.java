@@ -11,4 +11,10 @@ import org.jetbrains.annotations.Nullable;
 public abstract class CopyNumberAlteration implements GenomeRegion {
 
     public abstract double copyNumber();
+
+    public abstract double baf();
+
+    public double minorAllelePloidy() {
+        return Math.max(0, (1 - baf()) * copyNumber());
+    }
 }

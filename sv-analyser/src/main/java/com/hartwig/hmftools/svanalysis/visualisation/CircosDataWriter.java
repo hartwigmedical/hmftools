@@ -65,6 +65,9 @@ public class CircosDataWriter {
 
         final String cnaPath = filePrefix + ".cna.circos";
         Files.write(new File(cnaPath).toPath(), createCNA(alterations));
+
+        final String mapPath = filePrefix + ".map.circos";
+        Files.write(new File(mapPath).toPath(), createMinorAllelePloidy(alterations));
     }
 
     @NotNull
@@ -75,6 +78,21 @@ public class CircosDataWriter {
                     .add(String.valueOf(alteration.start()))
                     .add(String.valueOf(alteration.end()))
                     .add(String.valueOf(alteration.copyNumber() - 2))
+                    .toString();
+            result.add(cna);
+        }
+
+        return result;
+    }
+
+    @NotNull
+    private List<String> createMinorAllelePloidy(@NotNull final List<CopyNumberAlteration> alterations) {
+        final List<String> result = Lists.newArrayList();
+        for (CopyNumberAlteration alteration : alterations) {
+            final String cna = new StringJoiner(DELIMITER).add(circosContig(alteration.chromosome()))
+                    .add(String.valueOf(alteration.start()))
+                    .add(String.valueOf(alteration.end()))
+                    .add(String.valueOf(alteration.minorAllelePloidy() - 1))
                     .toString();
             result.add(cna);
         }
@@ -156,7 +174,8 @@ public class CircosDataWriter {
             final GenomePosition startPosition = GenomePositions.create(segment.chromosome(), segment.start());
             if (Links.findStartLink(startPosition, link).isPresent() || Links.findEndLink(startPosition, link).isPresent()) {
                 long connectorUsage = segments.stream()
-                        .filter(x -> x.chromosome().equals(segment.chromosome()) && x.start() == segment.start() && x.track() >= segment.track())
+                        .filter(x -> x.chromosome().equals(segment.chromosome()) && x.start() == segment.start()
+                                && x.track() >= segment.track())
                         .count();
 
                 final String start = new StringJoiner(DELIMITER).add(circosContig(segment.chromosome()))
@@ -170,7 +189,8 @@ public class CircosDataWriter {
             final GenomePosition endPosition = GenomePositions.create(segment.chromosome(), segment.end());
             if (Links.findStartLink(endPosition, link).isPresent() || Links.findEndLink(endPosition, link).isPresent()) {
                 long connectorUsage = segments.stream()
-                        .filter(x -> x.chromosome().equals(segment.chromosome()) && x.end() == segment.end() && x.track() >= segment.track())
+                        .filter(x -> x.chromosome().equals(segment.chromosome()) && x.end() == segment.end()
+                                && x.track() >= segment.track())
                         .count();
                 final String end = new StringJoiner(DELIMITER).add(circosContig(segment.chromosome()))
                         .add(String.valueOf(segment.end()))
