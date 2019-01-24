@@ -57,7 +57,9 @@ public class CircosConfigWriter {
 
         final Charset charset = StandardCharsets.UTF_8;
         final String template =
-                readResource("/visualisation/cluster.template").replaceAll("SUBSTITUTE_HISTOGRAM", histogramPlots(maxTracks))
+                readResource("/visualisation/cluster.template")
+                        .replaceAll("SUBSTITUTE_HISTOGRAM", histogramPlots(maxTracks))
+                        .replaceAll("SUBSTITUTE_TERMINAL", terminalTexts(maxTracks))
 
                         .replaceAll("SUBSTITUTE_SV_INNER_RADIUS", String.valueOf(SEGMENT_INNER_RADIUS))
                         .replaceAll("SUBSTITUTE_SV_OUTER_RADIUS", String.valueOf(SEGMENT_OUTER_RADIUS))
@@ -89,6 +91,20 @@ public class CircosConfigWriter {
         final String histogramTemplate = readResource("/visualisation/cluster.template.histogram");
         for (int i = 1; i <= maxTracks; i++) {
             final String level = histogramTemplate.replaceAll("SUBSTITUTE_CONDITION", String.valueOf(i));
+            builder.append(level);
+        }
+
+        return builder.toString();
+    }
+
+    @NotNull
+    private String terminalTexts(int maxTracks) throws IOException {
+        final StringBuilder builder = new StringBuilder();
+
+        final String template = readResource("/visualisation/cluster.template.terminal");
+        for (int i = 1; i <= maxTracks; i++) {
+            final String level = template.replaceAll("SUBSTITUTE_TERMINAL_CONDITION", String.valueOf(i))
+                    .replaceAll("SUBSTITUTE_TERMINAL_RADIUS", String.valueOf(svTrackPixels(maxTracks, i) - 24));
             builder.append(level);
         }
 

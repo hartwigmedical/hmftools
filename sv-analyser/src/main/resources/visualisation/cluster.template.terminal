@@ -1,0 +1,27 @@
+	# -----------------------------------------------------------
+	# Terminal Text
+	<plot>
+		type             = text
+		color            = black
+		file             = SUBSTITUTE_SAMPLE.terminals.circos
+
+		r0   = SUBSTITUTE_TERMINAL_RADIUSp
+		r1   = 1r
+
+		label_size   = 50p
+		label_font   = glyph
+
+        <rules>
+            <rule>
+                condition  = var(value) != SUBSTITUTE_TERMINAL_CONDITION
+                show       = no
+                flow       = continue
+            </rule>
+            <rule>
+                condition  = var(value) == SUBSTITUTE_TERMINAL_CONDITION
+                value      = F
+            </rule>
+
+        </rules>
+
+	</plot>
