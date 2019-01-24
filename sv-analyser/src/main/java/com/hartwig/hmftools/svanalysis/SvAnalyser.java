@@ -112,6 +112,8 @@ public class SvAnalyser {
             {
                 fusionAnalyser = new FusionDisruptionAnalyser();
                 fusionAnalyser.loadFusionReferenceData(cmd, dataOutputDir, cmd.getOptionValue(GENE_TRANSCRIPTS_DIR,""));
+
+                // fusionAnalyser.writeGeneProbabilityData();
             }
 
             if(checkDrivers)

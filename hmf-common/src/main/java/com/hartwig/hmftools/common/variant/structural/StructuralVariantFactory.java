@@ -39,6 +39,7 @@ public class StructuralVariantFactory {
     private final static String BPI_END = "BPI_END";
     private final static String BPI_AF = "BPI_AF";
     private final static String IMPRECISE = "IMPRECISE";
+    private final static String SOMATIC_SCORE = "SOMATICSCORE"; // only applicable for Manta and will be removed when fully on GRIDSS
     private final static String IHOMPOS = "IHOMPOS";
     private final static String CIPOS = "CIPOS";
     private final static String VARIANT_FRAGMENT_BREAKPOINT_COVERAGE = "VF";
@@ -279,8 +280,16 @@ public class StructuralVariantFactory {
 
     @NotNull
     private static ImmutableStructuralVariantImpl.Builder setCommon(@NotNull ImmutableStructuralVariantImpl.Builder builder,
-            @NotNull VariantContext context) {
-        return builder.id(context.getID())
+            @NotNull VariantContext context)
+    {
+        // backwards compatibility for Manta until fully over to GRIDSS
+        int somaticScore = context.getAttributeAsInt(SOMATIC_SCORE, 0);
+        double qualityScore = context.getPhredScaledQual();
+
+        if(somaticScore > 0)
+            qualityScore = somaticScore;
+
+            return builder.id(context.getID())
                 .recovered(context.hasAttribute(RECOVERED))
                 .event(context.getAttributeAsString(EVENT, null))
                 .startLinkedBy(context.getAttributeAsStringList(LOCAL_LINKED_BY, "")
@@ -292,7 +301,7 @@ public class StructuralVariantFactory {
                         .filter(s -> !Strings.isNullOrEmpty(s))
                         .collect(Collectors.joining(",")))
                 .imprecise(imprecise(context))
-                .qualityScore(context.getPhredScaledQual())
+                .qualityScore(qualityScore)
                 .insertSequenceAlignments(context.getAttributeAsStringList(UNTEMPLATED_SEQUENCE_ALIGNMENTS, "")
                         .stream()
                         .filter(s -> !Strings.isNullOrEmpty(s))

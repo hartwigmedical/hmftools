@@ -185,8 +185,6 @@ public class StructuralVariantAnnotator
             runSample(sampleId, samplesList.size() > 1);
         }
 
-        // mFusionAnalyser.writeGeneProbabilityData();
-
         mFusionAnalyser.onCompleted();
         mDisruptionAnalyser.onCompleted();
         mSvGeneTranscriptCollection.close();
