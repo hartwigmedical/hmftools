@@ -85,13 +85,6 @@ chromosomes_display_default = yes
 			</background>
 		</backgrounds>
 
-		<rules>
-			<rule>
-				condition = var(value) < 0.1
-				show = no
-			</rule>
-		</rules>
-
 	</plot>
 
 
@@ -123,12 +116,6 @@ chromosomes_display_default = yes
 			</background>
 		</backgrounds>
 
-		<rules>
-			<rule>
-				condition = var(value) > -0.1
-				show = no
-			</rule>
-		</rules>
 	</plot>
 
 
