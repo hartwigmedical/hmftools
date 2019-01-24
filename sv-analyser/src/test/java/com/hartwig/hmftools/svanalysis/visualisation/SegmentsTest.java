@@ -12,9 +12,9 @@ public class SegmentsTest {
 
     @Test
     public void testTrackStrategies() {
-        final String first = "1\t1\t1\t1000";
-        final String second = "1\t2\t1\t1000";
-        final String third = "1\t1\t1\t1000";
+        final String first = "sample,1,1,1,1,1000,1";
+        final String second = "sample,1,1,2,1,1000,1";
+        final String third = "sample,1,1,1,1,1000,1";
 
         final List<Segment> segments = Segments.fromString(Lists.newArrayList(first, second, third));
 
