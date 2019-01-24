@@ -82,7 +82,7 @@ public class CircosDataWriter {
                 final String cna = new StringJoiner(DELIMITER).add(circosContig(segment.chromosome()))
                         .add(String.valueOf(segment.start()))
                         .add(String.valueOf(segment.start()))
-                        .add(String.valueOf(segment.track()))
+                        .add(String.valueOf(segment.track() + (segment.startTerminal() == SegmentTerminal.TELOMERE ? "T" : "C")))
                         .add(ChainColor.color(segment.chainId()))
                         .toString();
                 result.add(cna);
@@ -92,7 +92,7 @@ public class CircosDataWriter {
                 final String cna = new StringJoiner(DELIMITER).add(circosContig(segment.chromosome()))
                         .add(String.valueOf(segment.end()))
                         .add(String.valueOf(segment.end()))
-                        .add(String.valueOf(segment.track()))
+                        .add(String.valueOf(segment.track() + (segment.endTerminal() == SegmentTerminal.TELOMERE ? "T" : "C")))
                         .add(ChainColor.color(segment.chainId()))
                         .toString();
                 result.add(cna);
@@ -144,7 +144,7 @@ public class CircosDataWriter {
                     Links.findLink(startPosition, links).filter(x -> x.startType() == Link.Type.FOLDBACK).isPresent();
             String startGlyph = isStartFoldback ? "glyph=triangle,glyph_size=20" : "glyph=circle";
             if (segment.startTerminal() != SegmentTerminal.NONE) {
-                startGlyph = "glyph=square";
+                startGlyph = "glyph=square,glyph_size=1";
             }
 
             final StringJoiner start = new StringJoiner(DELIMITER).add(circosContig(segment.chromosome()))
@@ -158,7 +158,7 @@ public class CircosDataWriter {
             final boolean isEndFoldback = Links.findLink(endPosition, links).filter(x -> x.endType() == Link.Type.FOLDBACK).isPresent();
             String endGlyph = isEndFoldback ? "glyph=triangle,glyph_size=20" : "glyph=circle";
             if (segment.endTerminal() != SegmentTerminal.NONE) {
-                endGlyph = "glyph=square";
+                endGlyph = "glyph=square,glyph_size=1";
             }
 
             final StringJoiner end = new StringJoiner(DELIMITER).add(circosContig(segment.chromosome()))

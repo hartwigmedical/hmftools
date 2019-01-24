@@ -13,15 +13,18 @@
 
         <rules>
             <rule>
-                condition  = var(value) != SUBSTITUTE_TERMINAL_CONDITION
+                condition  = var(value) ne "SUBSTITUTE_TERMINAL_CONDITIONC" && var(value) ne "SUBSTITUTE_TERMINAL_CONDITIONT"
                 show       = no
                 flow       = continue
             </rule>
             <rule>
-                condition  = var(value) == SUBSTITUTE_TERMINAL_CONDITION
+                condition  = var(value) eq "SUBSTITUTE_TERMINAL_CONDITIONC"
+                value      = f
+            </rule>
+            <rule>
+                condition  = var(value) eq "SUBSTITUTE_TERMINAL_CONDITIONT"
                 value      = F
             </rule>
-
         </rules>
 
 	</plot>
