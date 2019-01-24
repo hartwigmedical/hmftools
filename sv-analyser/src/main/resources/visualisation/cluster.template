@@ -4,7 +4,7 @@
 
 <ideogram>
     <spacing>
-        default = 0.005r
+        default = 1u
     </spacing>
 
     # Ideogram position, fill and outline
@@ -23,12 +23,12 @@
 </ideogram>
 
 <image>
-	<<include etc/image.conf>>
+ <<include etc/image.conf>>
 </image>
 
 karyotype = SUBSTITUTE_SAMPLE.karyotype.circos
 
-chromosomes_units           = 1000000
+chromosomes_units           = 1
 chromosomes_display_default = yes
 
 # Default is to clip the data to proximity min/max.

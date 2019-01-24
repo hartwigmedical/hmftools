@@ -274,19 +274,23 @@ public class CircosDataWriter {
     private List<String> createPositionText(@NotNull final List<GenomePosition> originalLinks,
             @NotNull final List<GenomePosition> scaledLinks) {
 
-        Set<String> result = Sets.newHashSet();
+        final Map<String, Integer> contigLengths = contigLengths(scaledLinks);
+        final Set<String> result = Sets.newHashSet();
 
         for (int i = 0; i < originalLinks.size(); i++) {
+
             final GenomePosition original = originalLinks.get(i);
             final GenomePosition scaled = scaledLinks.get(i);
+            if (scaled.position() != 1 && scaled.position() != contigLengths.get(scaled.chromosome())) {
 
-            final String start = new StringJoiner(DELIMITER).add(circosContig(scaled.chromosome()))
-                    .add(String.valueOf(scaled.position()))
-                    .add(String.valueOf(scaled.position()))
-                    .add(String.format("%,d", original.position()))
-                    .toString();
+                final String start = new StringJoiner(DELIMITER).add(circosContig(scaled.chromosome()))
+                        .add(String.valueOf(scaled.position()))
+                        .add(String.valueOf(scaled.position()))
+                        .add(String.format("%,d", original.position()))
+                        .toString();
 
-            result.add(start);
+                result.add(start);
+            }
         }
 
         return result.stream().sorted().distinct().collect(Collectors.toList());
