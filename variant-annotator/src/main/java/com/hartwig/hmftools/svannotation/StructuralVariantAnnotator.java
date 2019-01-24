@@ -389,7 +389,6 @@ public class StructuralVariantAnnotator
 
     private static final String LOG_DEBUG = "log_debug";
     private static final String SAMPLE_RNA_FILE = "sample_rna_file";
-    private static final String CACHE_ENSEMBL_DATA = "cache_ensembl_data";
 
     private static final String DB_USER = "db_user";
     private static final String DB_PASS = "db_pass";
@@ -409,7 +408,6 @@ public class StructuralVariantAnnotator
         options.addOption(REF_GENOME, true, "Path to the ref genome fasta file.");
         options.addOption(DATA_OUTPUT_DIR, true, "Path to persist annotations to file");
         options.addOption(ENSEMBL_DATA_DIR, true, "Cached Ensembl data path");
-        options.addOption(CACHE_ENSEMBL_DATA, false, "Query Ensembl DB for all cached data and write to files");
 
         SvFusionAnalyser.addCmdLineArgs(options);
 

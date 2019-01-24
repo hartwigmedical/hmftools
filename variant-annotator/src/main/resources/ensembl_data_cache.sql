@@ -5,6 +5,8 @@
 # Extract gene information
 # save to ensembl_gene_data.csv
 
+use homo_sapiens_core_89_37;
+
 select gene.stable_id as GeneId,  display_xref.display_label as GeneName, seq_region.name as Chromosome,
 	gene.seq_region_strand as Strand, gene.seq_region_start as GeneStart, gene.seq_region_end as GeneEnd,
 	GROUP_CONCAT(DISTINCT entrez_xref.dbprimary_acc ORDER BY entrez_xref.dbprimary_acc SEPARATOR ';') as EntrezIds,
@@ -50,7 +52,7 @@ order by GeneId, TransId, ExonStart;
 # extract transcript protein coding information
 # save to ensembl_protein_features.csv
 
-select t.stable_id, tl.transcript_id, tl.translation_id, protein_feature_id, pf.seq_start, pf.seq_end, hit_description
+select tl.transcript_id, tl.translation_id, protein_feature_id, pf.seq_start, pf.seq_end, hit_description
 from protein_feature pf, analysis_description ad, translation tl, transcript t
 where pf.analysis_id = ad.analysis_id and pf.translation_id = tl.translation_id and t.transcript_id = tl.transcript_id
 and display_label = 'PROSITE profiles'
