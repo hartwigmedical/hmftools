@@ -137,9 +137,10 @@ public class ChainFinder
 
     private List<SvVarData> collectRelevantSVs()
     {
-        List<SvVarData> svList = Lists.newArrayList();
+        List<SvVarData> svList = Lists.newArrayList(mCluster.getSVs());
 
-            // remove any non-applicable or suspect SVs
+        /*
+        // remove any non-applicable or suspect SVs
         for(final SvVarData var : mCluster.getSVs())
         {
             if(var.type() == INS)
@@ -151,6 +152,7 @@ public class ChainFinder
 
             svList.add(var);
         }
+        */
 
         return svList;
     }
@@ -559,9 +561,6 @@ public class ChainFinder
 
         for(final SvVarData otherVar : svList)
         {
-            if(otherVar.type() == INS)
-                continue;
-
             if(var.equals(otherVar, true))
                 continue;
 

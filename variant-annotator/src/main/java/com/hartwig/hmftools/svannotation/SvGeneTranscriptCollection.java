@@ -148,6 +148,9 @@ public class SvGeneTranscriptCollection
         final List<EnsemblGeneData> geneRegions = mChromosomeGeneDataMap.get(chromosome);
         final List<EnsemblGeneData> geneRegionsReversed = mChromosomeReverseGeneDataMap.get(chromosome);
 
+        if(geneRegions == null)
+            return geneAnnotations;
+
         final List<EnsemblGeneData> matchedGenes = findGeneRegions(position, geneRegions);
 
         // now look up relevant transcript and exon information

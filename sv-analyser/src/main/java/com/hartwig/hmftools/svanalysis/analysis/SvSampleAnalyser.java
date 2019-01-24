@@ -21,6 +21,7 @@ import static com.hartwig.hmftools.svanalysis.types.SvArmCluster.ARM_CL_SINGLE;
 import static com.hartwig.hmftools.svanalysis.types.SvArmCluster.getArmClusterData;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_LOW_QUALITY;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_SIMPLE_SV;
+import static com.hartwig.hmftools.svanalysis.types.SvCluster.isSpecificCluster;
 import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.LINK_TYPE_TI;
 
 import java.io.BufferedWriter;
@@ -56,7 +57,7 @@ public class SvSampleAnalyser {
     private String mSampleId;
     private List<SvVarData> mAllVariants; // the original list to analyse
 
-    BufferedWriter mSVFileWriter;
+    BufferedWriter mSvFileWriter;
     BufferedWriter mClusterFileWriter;
     BufferedWriter mLinksFileWriter;
     FragileSiteAnnotator mFragileSiteAnnotator;
@@ -78,7 +79,7 @@ public class SvSampleAnalyser {
         mClusteringMethods = new SvClusteringMethods(mConfig.ProximityDistance);
         mAnalyser = new ClusterAnalyser(config, mClusteringMethods);
 
-        mSVFileWriter = null;
+        mSvFileWriter = null;
         mLinksFileWriter = null;
         mClusterFileWriter = null;
 
@@ -161,10 +162,10 @@ public class SvSampleAnalyser {
         if(!mConfig.OutputCsvPath.isEmpty())
         {
             writeClusterSVOutput();
+            writeClusterLinkData();
 
             if(mConfig.hasMultipleSamples())
             {
-                // writeClusterLinkData();
                 writeClusterData();
             }
         }
@@ -203,7 +204,7 @@ public class SvSampleAnalyser {
     {
         try
         {
-            if(mSVFileWriter == null)
+            if(mSvFileWriter == null)
             {
                 String outputFileName = mConfig.OutputCsvPath;
 
@@ -211,52 +212,49 @@ public class SvSampleAnalyser {
                     outputFileName += File.separator;
 
                 if(mConfig.hasMultipleSamples())
-                    outputFileName += "CLUSTER.csv";
+                    outputFileName += "SVA_SVS.csv";
                 else
                     outputFileName += mSampleId + ".csv";
 
-                mSVFileWriter = createBufferedWriter(outputFileName, false);
+                mSvFileWriter = createBufferedWriter(outputFileName, false);
 
                 // definitional fields
-                mSVFileWriter.write("SampleId,Id,Type,ChrStart,PosStart,OrientStart,ChrEnd,PosEnd,OrientEnd");
+                mSvFileWriter.write("SampleId,Id,Type,ChrStart,PosStart,OrientStart,ChrEnd,PosEnd,OrientEnd");
 
                 // position and copy number
-                mSVFileWriter.write(",ArmStart,AdjAFStart,AdjCNStart,AdjCNChgStart,ArmEnd,AdjAFEnd,AdjCNEnd,AdjCNChgEnd,Ploidy");
+                mSvFileWriter.write(",ArmStart,AdjAFStart,AdjCNStart,AdjCNChgStart,ArmEnd,AdjAFEnd,AdjCNEnd,AdjCNChgEnd,Ploidy");
 
                 // cluster info
-                mSVFileWriter.write(",ClusterId,SubClusterId,ClusterCount,ClusterReason");
-
-                // cluster-level info
-                mSVFileWriter.write(",ClusterDesc,IsResolved,ResolvedType,Consistency,ArmCount");
+                mSvFileWriter.write(",ClusterId,SubClusterId,ClusterCount,ClusterReason");
+                mSvFileWriter.write(",ClusterDesc,IsResolved,ResolvedType,Consistency,ArmCount");
 
                 // SV info
-                mSVFileWriter.write(",Homology,InexactHOStart,InexactHOEnd,InsertSeq,Imprecise,RefContextStart,RefContextEnd");
+                mSvFileWriter.write(",Homology,InexactHOStart,InexactHOEnd,InsertSeq,Imprecise,QualScore,RefContextStart,RefContextEnd");
 
-                // location attributes
-                mSVFileWriter.write(",FSStart,FSEnd,LEStart,LEEnd,DupBEStart,DupBEEnd,ArmCountStart,ArmExpStart,ArmCountEnd,ArmExpEnd");
+                mSvFileWriter.write(",FSStart,FSEnd,LEStart,LEEnd,DupBEStart,DupBEEnd,ArmCountStart,ArmExpStart,ArmCountEnd,ArmExpEnd");
 
                 // linked pair info
-                mSVFileWriter.write(",LnkSvStart,LnkLenStart,LnkSvEnd,LnkLenEnd");
+                mSvFileWriter.write(",LnkSvStart,LnkLenStart,LnkSvEnd,LnkLenEnd");
 
                 // GRIDDS caller info
-                mSVFileWriter.write(",AsmbStart,AsmbEnd,AsmbMatchStart,AsmbMatchEnd");
+                mSvFileWriter.write(",AsmbStart,AsmbEnd,AsmbMatchStart,AsmbMatchEnd");
 
                 // chain info
-                mSVFileWriter.write(",ChainId,ChainCount,ChainIndex");
+                mSvFileWriter.write(",ChainId,ChainCount,ChainIndex");
 
                 // proximity info and other link info
-                mSVFileWriter.write(",NearestLen,NearestType,DBLenStart,DBLenEnd,SynDelDupLen,SynDelDupTILen");
+                mSvFileWriter.write(",NearestLen,NearestType,DBLenStart,DBLenEnd,SynDelDupLen,SynDelDupTILen");
 
                 // proximity info and other link info
-                mSVFileWriter.write(",FoldbackLnkStart,FoldbackLenStart,FoldbackLinkInfoStart,FoldbackLnkEnd,FoldbackLenEnd,FoldbackLinkInfoEnd");
+                mSvFileWriter.write(",FoldbackLnkStart,FoldbackLenStart,FoldbackLinkInfoStart,FoldbackLnkEnd,FoldbackLenEnd,FoldbackLinkInfoEnd");
 
                 // gene info
-                mSVFileWriter.write(",DriverStart,DriverEnd,GeneStart,GeneEnd");
+                mSvFileWriter.write(",GeneStart,GeneEnd");
 
-                mSVFileWriter.newLine();
+                mSvFileWriter.newLine();
             }
 
-            BufferedWriter writer = mSVFileWriter;
+            BufferedWriter writer = mSvFileWriter;
 
             int lineCount = 0;
             int svCount = 0;
@@ -314,12 +312,11 @@ public class SvSampleAnalyser {
                 int dbLenEnd = var.getDBLink(false) != null ? var.getDBLink(false).length() : NO_DB_MARKER;
 
                 writer.write(
-                        String.format(",%s,%d,%d,%s,%s,%s,%s",
+                        String.format(",%s,%d,%d,%s,%s,%.0f,%s,%s",
                                 dbData.insertSequence().isEmpty() && var.type() != INS ? dbData.homology() : "",
                                 dbData.inexactHomologyOffsetStart(), dbData.inexactHomologyOffsetEnd(),
-                                dbData.insertSequence(), dbData.imprecise(),
-                                dbLenStart > NO_DB_MARKER & dbLenStart < 0 ? dbData.startRefContext() : "",
-                                dbLenEnd > NO_DB_MARKER & dbLenEnd < 0 ? dbData.endRefContext() : ""));
+                                dbData.insertSequence(), dbData.imprecise(), dbData.qualityScore(),
+                                dbData.startRefContext(), dbData.endRefContext()));
 
                 writer.write(
                         String.format(",%s,%s,%s,%s,%s,%s,%s",
@@ -355,11 +352,15 @@ public class SvSampleAnalyser {
 
                 // chain info
                 final SvChain chain = cluster.findChain(var);
-                String chainStr = ",0,0,";
+                String chainStr = "";
 
                 if(chain != null)
                 {
                     chainStr = String.format(",%d,%d,%s", chain.id(), chain.getUniqueSvCount(), chain.getSvIndices(var));
+                }
+                else
+                {
+                    chainStr = String.format(",%d,0,", cluster.getChainId(var));
                 }
 
                 writer.write(chainStr);
@@ -372,8 +373,7 @@ public class SvSampleAnalyser {
                         var.getFoldbackLink(true), var.getFoldbackLen(true), var.getFoldbackLinkInfo(true),
                         var.getFoldbackLink(false), var.getFoldbackLen(false), var.getFoldbackLinkInfo(false)));
 
-                writer.write(String.format(",%s,%s,%s,%s",
-                        var.getDriverGene(true), var.getDriverGene(false),
+                writer.write(String.format(",%s,%s",
                         var.getGeneInBreakend(true), var.getGeneInBreakend(false)));
 
                 ++lineCount;
@@ -498,7 +498,7 @@ public class SvSampleAnalyser {
             {
                 int clusterSvCount = cluster.getUniqueSvCount();
 
-                // isSpecificCluster(cluster);
+                isSpecificCluster(cluster);
 
                 List<SvChain> chains;
 
@@ -524,9 +524,6 @@ public class SvSampleAnalyser {
                     for (final SvLinkedPair pair : chain.getLinkedPairs())
                     {
                         if(pair.linkType() != LINK_TYPE_TI)
-                            continue;
-
-                        if(pair.first().type() == SGL || pair.second().type() == SGL)
                             continue;
 
                         writer.write(
@@ -629,7 +626,7 @@ public class SvSampleAnalyser {
 
     public void close()
     {
-        closeBufferedWriter(mSVFileWriter);
+        closeBufferedWriter(mSvFileWriter);
         closeBufferedWriter(mClusterFileWriter);
         closeBufferedWriter(mLinksFileWriter);
 

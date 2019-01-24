@@ -666,14 +666,11 @@ public class ClusterAnalyser {
                 {
                     boolean v1Start = isStart(be1);
 
-                    if (be1 == SVI_END)
-                    {
-                        if (var1.type() != BND)
+                    if (be1 == SVI_END && var1.type() != BND)
                             continue;
 
-                        if (var1.getFoldbackLink(false).isEmpty())
-                            continue;
-                    }
+                    if (var1.getFoldbackLink(v1Start).isEmpty())
+                        continue;
 
                     for (final SvVarData var2 : cluster2Foldbacks)
                     {
@@ -681,14 +678,11 @@ public class ClusterAnalyser {
                         {
                             boolean v2Start = isStart(be2);
 
-                            if (be2 == SVI_END)
-                            {
-                                if (var2.type() != BND)
+                            if (be2 == SVI_END && var2.type() != BND)
                                     continue;
 
-                                if (var2.getFoldbackLink(false).isEmpty())
-                                    continue;
-                            }
+                            if (var2.getFoldbackLink(v2Start).isEmpty())
+                                continue;
 
                             if (!var1.chromosome(v1Start).equals(var2.chromosome(v2Start)) || !var1.arm(v1Start).equals(var2.arm(v2Start)))
                                 continue;
@@ -966,6 +960,8 @@ public class ClusterAnalyser {
         }
     }
 
+    public static int MAX_FOLDBACK_CHAIN_LENGTH = 5000;
+
     private void checkFoldbackBreakends(SvBreakend beStart, SvBreakend beEnd)
     {
         // SVs are marked as being in a foldback if they are consecutive breakends,
@@ -1047,8 +1043,13 @@ public class ClusterAnalyser {
             if(chainData[CHAIN_LINK_COUNT] == 0)
                 return;
 
+            int chainLength = chainData[CHAIN_LENGTH];
+
+            if(chainLength > MAX_FOLDBACK_CHAIN_LENGTH)
+                return;
+
             chainInfo = String.format("%d;%d;%d",
-                    chainData[CHAIN_LINK_COUNT], chainData[CHAIN_ASSEMBLY_LINK_COUNT], chainData[CHAIN_LENGTH]);
+                    chainData[CHAIN_LINK_COUNT], chainData[CHAIN_ASSEMBLY_LINK_COUNT], chainLength);
         }
 
         // check copy numbers match
@@ -1139,11 +1140,12 @@ public class ClusterAnalyser {
                 final String chainInfo = String.format("%d;%d;%d",
                         chain.getLinkCount(), chain.getAssemblyLinkCount(), chain.getLength());
 
-                var.setFoldbackLink(true, var.id(), 0, chainInfo);
-                var.setFoldbackLink(false, var.id(), 0, chainInfo);
+                boolean foldbackIsStart = chain.firstLinkOpenOnStart();
 
-                LOGGER.debug(String.format("cluster(%s) foldback translocation SV(%s) with self",
-                        cluster.id(), var.posId()));
+                var.setFoldbackLink(foldbackIsStart, var.id(), 0, chainInfo);
+
+                LOGGER.debug("cluster({}) foldback translocation SV({}) with self on {}",
+                        cluster.id(), var.posId(), foldbackIsStart ? "start" : "end");
             }
         }
     }
@@ -1169,7 +1171,7 @@ public class ClusterAnalyser {
         if (cluster.getCount() < 6)
             return;
 
-        isSpecificCluster(cluster);
+        // isSpecificCluster(cluster);
 
         final Map<String, List<SvBreakend>> chrBreakendMap = cluster.getChrBreakendMap();
 

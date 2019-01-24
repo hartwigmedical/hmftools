@@ -35,7 +35,7 @@ public final class FileWriterUtils {
         }
     }
 
-    public static void closeBufferedWriter(@NotNull BufferedWriter writer)
+    public static void closeBufferedWriter(BufferedWriter writer)
     {
         if(writer == null)
             return;

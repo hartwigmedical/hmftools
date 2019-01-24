@@ -70,22 +70,22 @@ public class FusionDisruptionAnalyser
 
     public void loadFusionReferenceData(final CommandLine cmdLineArgs, final String outputDir, final String ensemblDataDir)
     {
-        if(!cmdLineArgs.hasOption(FUSION_PAIRS_CSV) || !cmdLineArgs.hasOption(PROMISCUOUS_FIVE_CSV) || !cmdLineArgs.hasOption(PROMISCUOUS_THREE_CSV))
-            return;
-
-        try
+        if(cmdLineArgs.hasOption(FUSION_PAIRS_CSV) && cmdLineArgs.hasOption(PROMISCUOUS_FIVE_CSV) && cmdLineArgs.hasOption(PROMISCUOUS_THREE_CSV))
         {
-            KnownFusionsModel knownFusionsModel = KnownFusionsModel.fromInputStreams(
-                    new FileInputStream(cmdLineArgs.getOptionValue(FUSION_PAIRS_CSV)),
-                    new FileInputStream(cmdLineArgs.getOptionValue(PROMISCUOUS_FIVE_CSV)),
-                    new FileInputStream(cmdLineArgs.getOptionValue(PROMISCUOUS_THREE_CSV)));
+            try
+            {
+                KnownFusionsModel knownFusionsModel = KnownFusionsModel.fromInputStreams(
+                        new FileInputStream(cmdLineArgs.getOptionValue(FUSION_PAIRS_CSV)),
+                        new FileInputStream(cmdLineArgs.getOptionValue(PROMISCUOUS_FIVE_CSV)),
+                        new FileInputStream(cmdLineArgs.getOptionValue(PROMISCUOUS_THREE_CSV)));
 
-            mFusionFinder = new SvFusionAnalyser(knownFusionsModel, mEnsemblDataCache);
-        }
-        catch(IOException e)
-        {
-            LOGGER.error("failed to load known fusion files");
-            return;
+                mFusionFinder = new SvFusionAnalyser(knownFusionsModel, mEnsemblDataCache);
+            }
+            catch (IOException e)
+            {
+                LOGGER.error("failed to load known fusion files");
+                return;
+            }
         }
 
         mOutputDir = outputDir;
@@ -367,6 +367,7 @@ public class FusionDisruptionAnalyser
 
     public void close()
     {
-        mFusionFinder.onCompleted();
+        if(mFusionFinder != null)
+            mFusionFinder.onCompleted();
     }
 }

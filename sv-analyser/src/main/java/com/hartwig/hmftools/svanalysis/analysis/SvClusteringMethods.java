@@ -40,6 +40,7 @@ import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_SGL_
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_SGL_PAIR_DUP;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_SGL_PLUS_INCONSISTENT;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_SIMPLE_SV;
+import static com.hartwig.hmftools.svanalysis.types.SvCluster.isSpecificCluster;
 import static com.hartwig.hmftools.svanalysis.types.SvLOH.LOH_NO_SV;
 import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.LINK_TYPE_DB;
 import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.LINK_TYPE_TI;
@@ -1065,6 +1066,8 @@ public class SvClusteringMethods {
 
         final SvVarData var1 = cluster.getSV(0);
         final SvVarData var2 = cluster.getSV(1);
+
+        // isSpecificCluster(cluster);
 
         if(cluster.getLinkedPairs().isEmpty())
         {

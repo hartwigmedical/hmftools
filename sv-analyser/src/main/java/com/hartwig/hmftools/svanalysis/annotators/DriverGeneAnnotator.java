@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.svanalysis.annotators;
 
+import static com.hartwig.hmftools.common.io.FileWriterUtils.closeBufferedWriter;
+import static com.hartwig.hmftools.common.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DUP;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INV;
 import static com.hartwig.hmftools.svanalysis.analysis.ClusterAnalyser.SHORT_TI_LENGTH;
@@ -7,6 +9,9 @@ import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_LOW_
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.isSpecificCluster;
 import static com.hartwig.hmftools.svanalysis.types.SvLOH.LOH_NO_SV;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.IOException;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
@@ -43,6 +48,8 @@ public class DriverGeneAnnotator
 
     private Map<String, HmfTranscriptRegion> mAllGenesMap;
     private List<DriverCatalog> mDriverCatalog;
+    private BufferedWriter mFileWriter;
+    private String mOutputDir;
 
     // references only
     private String mSampleId;
@@ -52,7 +59,7 @@ public class DriverGeneAnnotator
     private List<SvLOH> mSampleLOHData;
     private Map<String, Double> mChromosomeCopyNumberMap;
 
-    public DriverGeneAnnotator(DatabaseAccess dbAccess, SvGeneTranscriptCollection geneTranscriptCollection)
+    public DriverGeneAnnotator(DatabaseAccess dbAccess, SvGeneTranscriptCollection geneTranscriptCollection, final String outputDir)
     {
         mDbAccess = dbAccess;
         mGeneTranscriptCollection = geneTranscriptCollection;
@@ -60,6 +67,8 @@ public class DriverGeneAnnotator
         mDriverCatalog = Lists.newArrayList();
         mSampleLOHData = Lists.newArrayList();
         mChromosomeCopyNumberMap = null;
+        mFileWriter = null;
+        mOutputDir = outputDir;
 
         initialiseGeneData();
     }
@@ -265,6 +274,9 @@ public class DriverGeneAnnotator
         // find any LOH which cross over all or a part of this gene region
         for (final SvLOH lohEvent : mSampleLOHData)
         {
+            if(!lohEvent.Chromosome.equals(region.chromosome()))
+                continue;
+
             if(lohEvent.PosStart > region.end() || lohEvent.PosEnd < region.start())
                 continue;
 
@@ -359,7 +371,9 @@ public class DriverGeneAnnotator
 
         // trying to find the breakends which amplify this gene
         // take any INV, DUP or TI which straddles the gene
-        int candidateCount = 0;
+        double maxCopyNumber = 0;
+        SvVarData maxSvStart = null;
+        SvVarData maxSvEnd = null;
 
         for (int i = 0; i < breakendList.size(); ++i)
         {
@@ -383,7 +397,14 @@ public class DriverGeneAnnotator
 
                     annotateSV(varStart, driverGene, true, "SV");
                     annotateSV(varStart, driverGene, false, "SV");
-                    ++candidateCount;
+
+                    if(varStart.copyNumberChange(true) > maxCopyNumber)
+                    {
+                        maxCopyNumber = varStart.copyNumberChange(true);
+                        maxSvStart = varStart;
+                        maxSvEnd = varStart;
+                    }
+
                     continue;
                 }
             }
@@ -407,10 +428,16 @@ public class DriverGeneAnnotator
 
             annotateSV(varStart, driverGene, v1Start, "TI");
             annotateSV(varEnd, driverGene, v2Start, "TI");
-            ++candidateCount;
+
+            if(varStart.copyNumberChange(true) > maxCopyNumber)
+            {
+                maxCopyNumber = varStart.copyNumberChange(true);
+                maxSvStart = varStart;
+                maxSvEnd = varEnd;
+            }
         }
 
-        if(candidateCount == 0)
+        if(maxSvStart == null && maxSvEnd == null)
         {
             // other likely cause is whole-chromatid amplification
             Double chrCopyNumber = mChromosomeCopyNumberMap.get(region.chromosome());
@@ -441,9 +468,50 @@ public class DriverGeneAnnotator
                 driverGene.driver(), driverGene.gene(), region.chromosome(), region.start(), region.end());
     }
 
-    private static void annotateSV(final SvVarData var, DriverCatalog driverGene, boolean isStart, final String desc)
+    private void annotateSV(final SvVarData var, DriverCatalog driverGene, boolean isStart, final String desc)
     {
         var.setDriveGene(String.format("%s;%s;%s", driverGene.driver(), driverGene.gene(), desc), isStart);
+        writeDriverData(driverGene, var, isStart, desc);
+    }
+
+    private void writeDriverData(DriverCatalog driverGene, final SvVarData var, boolean isStart, final String matchInfo)
+    {
+        try
+        {
+            if(mFileWriter == null)
+            {
+                String outputFileName = mOutputDir;
+
+                if(!outputFileName.endsWith("/"))
+                    outputFileName += File.separator;
+
+                outputFileName += "SVA_DRIVERS.csv";
+
+                mFileWriter = createBufferedWriter(outputFileName, false);
+
+                mFileWriter.write("SampleId,Gene,GeneType,DriverType,ClusterId,SvId,IsStart,MatchInfo");
+                mFileWriter.newLine();
+            }
+
+            BufferedWriter writer = mFileWriter;
+
+            writer.write(String.format("%s,%s,%s,%s",
+                    mSampleId, driverGene.gene(), driverGene.category(), driverGene.driver()));
+
+            writer.write(String.format(",%d,%s,%s,%s",
+                    var.getCluster().id(), var.origId(), isStart, matchInfo));
+
+            writer.newLine();
+        }
+        catch (final IOException e)
+        {
+            LOGGER.error("error writing cluster-data to outputFile: {}", e.toString());
+        }
+    }
+
+    public void close()
+    {
+        closeBufferedWriter(mFileWriter);
     }
 
     private void annotateTemplatedInsertion()

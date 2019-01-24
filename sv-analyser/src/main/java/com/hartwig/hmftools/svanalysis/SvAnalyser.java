@@ -83,9 +83,11 @@ public class SvAnalyser {
             samplesList.add(tumorSample);
         }
 
+        final String dataOutputDir = cmd.getOptionValue(DATA_OUTPUT_PATH, "");
+
         if(cmd.hasOption(COPY_NUMBER_ANALYSIS))
         {
-            CNAnalyser cnAnalyser = new CNAnalyser(cmd.getOptionValue(DATA_OUTPUT_PATH), dbAccess);
+            CNAnalyser cnAnalyser = new CNAnalyser(dataOutputDir, dbAccess);
 
             cnAnalyser.loadConfig(cmd, samplesList);
             cnAnalyser.analyseData();
@@ -109,15 +111,15 @@ public class SvAnalyser {
             if((runFusions || checkDrivers) && cmd.hasOption(GENE_TRANSCRIPTS_DIR))
             {
                 fusionAnalyser = new FusionDisruptionAnalyser();
-                fusionAnalyser.loadFusionReferenceData(cmd, cmd.getOptionValue(DATA_OUTPUT_PATH), cmd.getOptionValue(GENE_TRANSCRIPTS_DIR,""));
+                fusionAnalyser.loadFusionReferenceData(cmd, dataOutputDir, cmd.getOptionValue(GENE_TRANSCRIPTS_DIR,""));
             }
 
             if(checkDrivers)
             {
-                driverGeneAnnotator = new DriverGeneAnnotator(dbAccess, fusionAnalyser.getGeneTranscriptCollection());
+                driverGeneAnnotator = new DriverGeneAnnotator(dbAccess, fusionAnalyser.getGeneTranscriptCollection(), dataOutputDir);
             }
 
-            CNAnalyser cnAnalyser = new CNAnalyser(cmd.getOptionValue(DATA_OUTPUT_PATH), dbAccess);
+            CNAnalyser cnAnalyser = new CNAnalyser(dataOutputDir, dbAccess);
             boolean includeNoneSegments = cmd.hasOption(INCLUDE_NONE_SEGMENTS);
 
             if(!svaConfig.LOHDataFile.isEmpty())
@@ -136,14 +138,16 @@ public class SvAnalyser {
                 List<SvVarData> svVarData = queryStructuralVariantData(dbAccess, sample);
 
                 if(svVarData.isEmpty())
+                {
+                    LOGGER.debug("sample({}) has no SVs, totalProcessed({})", sample, count);
                     continue;
+                }
 
                 LOGGER.info("sample({}) processing {} SVs, totalProcessed({})", sample, svVarData.size(), count);
 
                 if (includeNoneSegments)
                 {
-                    int varCount = svVarData.size();
-                    List<StructuralVariantData> noneSegmentSVs = cnAnalyser.loadNoneSegments(sample, varCount + 1);
+                    List<StructuralVariantData> noneSegmentSVs = cnAnalyser.loadNoneSegments(sample);
 
                     LOGGER.debug("sample({}) including {} none copy number segments", sample, noneSegmentSVs.size());
 
@@ -159,7 +163,7 @@ public class SvAnalyser {
 
                 sampleAnalyser.analyse();
 
-                if(runFusions)
+                if(runFusions || checkDrivers)
                 {
                     fusionAnalyser.setSvGeneData(sample, svVarData);
                 }
@@ -187,6 +191,11 @@ public class SvAnalyser {
 
             if(fusionAnalyser != null)
                 fusionAnalyser.close();
+
+            if(driverGeneAnnotator != null)
+                driverGeneAnnotator.close();
+
+            LOGGER.info("SV analysis complete");
         }
 
         if(cmd.hasOption(RUN_RESULTS_CHECKER))
@@ -223,7 +232,7 @@ public class SvAnalyser {
             if(svRecord.filter().equals(PON_FILTER_PON))
                 continue;
 
-            if(!svRecord.filter().equals("PASS"))
+            if(!(svRecord.filter().equals("PASS") || svRecord.filter().isEmpty()))
                 continue;
 
             svVarDataItems.add(new SvVarData(svRecord));

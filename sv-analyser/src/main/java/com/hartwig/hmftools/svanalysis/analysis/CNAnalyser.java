@@ -5,6 +5,7 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.Math.round;
 
+import static com.hartwig.hmftools.common.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.variant.structural.annotation.SvPONAnnotator.PON_FILTER_PON;
 import static com.hartwig.hmftools.svanalysis.analysis.ClusterAnalyser.SHORT_TI_LENGTH;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.getChromosomalArmLength;
@@ -53,6 +54,7 @@ public class CNAnalyser {
 
     private List<String> mSampleIds;
     private int mRecordId;
+    private int mNoneSvId;
 
     BufferedWriter mFileWriter;
     DatabaseAccess mDbAccess;
@@ -65,10 +67,6 @@ public class CNAnalyser {
     private static final String COPY_NUMBER_FILE = "cn_file";
 
     private static double CN_ROUNDING= 0.2;
-    private static double CN_DIFF_MARGIN = 0.25;
-    private static double CN_CHANGE_MIN = 0.8;
-    private static int DB_MAX_LENGTH = 1000;
-
     public static double MIN_LOH_CN = 0.5;
 
     public CNAnalyser(final String outputPath, DatabaseAccess dbAccess)
@@ -81,6 +79,7 @@ public class CNAnalyser {
         mSvDataList = Lists.newArrayList();
         mSampleLohData = null;
         mRecordId = 0;
+        mNoneSvId = 0;
 
         mAnalyseLOH = true;
     }
@@ -244,7 +243,7 @@ public class CNAnalyser {
         }
     }
 
-    public final List<StructuralVariantData> loadNoneSegments(final String sampleId, int startId)
+    public final List<StructuralVariantData> loadNoneSegments(final String sampleId)
     {
         List<StructuralVariantData> svList = Lists.newArrayList();
 
@@ -270,7 +269,7 @@ public class CNAnalyser {
 
             long position = orientation == -1 ? noneCnRecord.start() : noneCnRecord.start() - 1;
 
-            int varId = startId++;
+            int varId = mNoneSvId++;
 
             svList.add(
                     ImmutableStructuralVariantData.builder()
@@ -590,9 +589,7 @@ public class CNAnalyser {
 
                 outputFileName += "CN_LOH_ANALYSIS.csv";
 
-                Path outputFile = Paths.get(outputFileName);
-
-                mFileWriter = Files.newBufferedWriter(outputFile, StandardOpenOption.TRUNCATE_EXISTING);
+                mFileWriter = createBufferedWriter(outputFileName, false);
 
                 // SV info
                 mFileWriter.write("SampleId,Chromosome,CnIdStart,CnIdEnd,PosStart,PosEnd,SegStart,SegEnd,");

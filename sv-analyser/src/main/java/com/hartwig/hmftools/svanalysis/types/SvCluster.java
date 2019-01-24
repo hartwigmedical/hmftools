@@ -837,15 +837,23 @@ public class SvCluster
         return null;
     }
 
-    public final SvChain findChain(final SvLinkedPair pair)
+    public int getChainId(final SvVarData var)
     {
-        for(final SvChain chain : mChains)
+        final SvChain chain = findChain(var);
+
+        if(chain != null)
+            return chain.id();
+
+        // otherwise set an id based on index in the unchained variants list
+        for(int i = 0; i < mUnchainedSVs.size(); ++i)
         {
-            if(chain.hasLinkedPair(pair))
-                return chain;
+            final SvVarData unchainedSv = mUnchainedSVs.get(i);
+
+            if(unchainedSv.equals(var, true))
+                return mChains.size() + i + 1;
         }
 
-        return null;
+        return var.dbId();
     }
 
     public int getClusterDBCount()
@@ -888,8 +896,8 @@ public class SvCluster
     public int getFragmentArms() { return mFragmentArms; }
 
 
-    // private static int SPECIFIC_CLUSTER_ID = -1;
-    private static int SPECIFIC_CLUSTER_ID = 888;
+    private static int SPECIFIC_CLUSTER_ID = -1;
+    // private static int SPECIFIC_CLUSTER_ID = 66;
 
     public static boolean isSpecificCluster(final SvCluster cluster)
     {
