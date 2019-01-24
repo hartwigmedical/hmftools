@@ -32,6 +32,7 @@ public interface SvVisualiserConfig {
     String LINK = "link";
     String CNA = "cna";
     String CIRCOS = "circos";
+    String THREADS = "threads";
 
     @NotNull
     String sample();
@@ -54,6 +55,8 @@ public interface SvVisualiserConfig {
     @NotNull
     String circosBin();
 
+    int threads();
+
     @NotNull
     static Options createOptions() {
         final Options options = new Options();
@@ -63,6 +66,7 @@ public interface SvVisualiserConfig {
         options.addOption(LINK, true, "Path to link file");
         options.addOption(CIRCOS, true, "Path to circos binary");
         options.addOption(CNA, true, "Path to cna file");
+        options.addOption(THREADS, true, "Number of threads to use");
 
         return options;
     }
@@ -70,6 +74,7 @@ public interface SvVisualiserConfig {
     @NotNull
     static SvVisualiserConfig createConfig(@NotNull final CommandLine cmd) throws ParseException, IOException {
         final StringJoiner missingJoiner = new StringJoiner(", ");
+        final int threads = Integer.valueOf(cmd.getOptionValue(THREADS, "1"));
         final String linkPath = parameter(cmd, LINK, missingJoiner);
         final String trackPath = parameter(cmd, TRACK, missingJoiner);
         final String sample = parameter(cmd, SAMPLE, missingJoiner);
@@ -94,6 +99,7 @@ public interface SvVisualiserConfig {
                 .sample(sample)
                 .copyNumberAlterations(cna)
                 .circosBin(circos)
+                .threads(threads)
                 .build();
     }
 

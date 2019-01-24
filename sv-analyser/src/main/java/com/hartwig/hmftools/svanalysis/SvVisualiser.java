@@ -6,7 +6,12 @@ import static com.hartwig.hmftools.svanalysis.visualisation.CopyNumberAlteration
 
 import java.io.IOException;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.circos.CircosExecution;
 import com.hartwig.hmftools.svanalysis.visualisation.CircosConfigWriter;
 import com.hartwig.hmftools.svanalysis.visualisation.CircosDataWriter;
@@ -26,14 +31,13 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class SvVisualiser {
+public class SvVisualiser implements AutoCloseable {
 
     private static final Logger LOGGER = LogManager.getLogger(SvVisualiser.class);
 
-    public static void main(String[] args) throws IOException, InterruptedException {
+    public static void main(String[] args) throws IOException, InterruptedException, ExecutionException {
         final Options options = SvVisualiserConfig.createOptions();
-        try {
-            final SvVisualiser application = new SvVisualiser(options, args);
+        try (final SvVisualiser application = new SvVisualiser(options, args)) {
             application.run();
         } catch (ParseException e) {
             LOGGER.warn(e);
@@ -44,22 +48,27 @@ public class SvVisualiser {
     }
 
     private final SvVisualiserConfig config;
+    private final ExecutorService executorService;
 
     private SvVisualiser(final Options options, final String... args) throws ParseException, IOException {
         final CommandLine cmd = createCommandLine(args, options);
         config = SvVisualiserConfig.createConfig(cmd);
+        executorService = Executors.newFixedThreadPool(config.threads());
     }
 
-    private void run() throws IOException, InterruptedException {
+    private void run() throws InterruptedException, ExecutionException {
 
         LOGGER.info("Loading data");
 
+        final List<Future<Object>> futures = Lists.newArrayList();
         final List<Integer> clusterIds = config.links().stream().map(Link::clusterId).distinct().sorted().collect(toList());
         for (Integer clusterId : clusterIds) {
-            LOGGER.info("Generating CIRCOS config for cluster {}", clusterId);
-            run(clusterId);
+            futures.add(executorService.submit(() -> run(clusterId)));
         }
 
+        for (Future<Object> future : futures) {
+            future.get();
+        }
     }
 
     @Nullable
@@ -86,5 +95,11 @@ public class SvVisualiser {
     private static CommandLine createCommandLine(@NotNull String[] args, @NotNull Options options) throws ParseException {
         final CommandLineParser parser = new DefaultParser();
         return parser.parse(options, args);
+    }
+
+    @Override
+    public void close() {
+        executorService.shutdown();
+        LOGGER.info("Complete");
     }
 }
