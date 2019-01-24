@@ -23,7 +23,7 @@ import org.jetbrains.annotations.NotNull;
 public class Segments {
 
     private static final String COMMENT = "#";
-    private static final String DELIMITER = "\t";
+    private static final String DELIMITER = ",";
     private static final Function<List<Segment>, List<Segment>> TRACK_INCREMENTER = Segments::incrementOnChromosome;
 
     @NotNull
@@ -54,7 +54,8 @@ public class Segments {
                 .count();
     }
 
-    public static List<Segment> addMissingTracks(long distance, @NotNull final List<Segment> segments, @NotNull final List<Link> links) {
+    public static List<Segment> extendTerminals(long additionalDistance, @NotNull final List<Segment> segments,
+            @NotNull final List<Link> links) {
 
         final List<GenomePosition> allPositions = Lists.newArrayList();
         allPositions.addAll(Segments.allPositions(segments));
@@ -64,78 +65,26 @@ public class Segments {
         final Map<String, Long> maxPositionPerChromosome = maxPositionPerChromosome(allPositions);
 
         final List<Segment> result = Lists.newArrayList();
+        for (Segment segment : segments) {
 
-        final List<Integer> chainIds = links.stream().map(Link::chainId).distinct().collect(Collectors.toList());
-        for (Integer chainId : chainIds) {
-            final List<Link> chainLinks = links.stream().filter(x -> x.chainId() == chainId).collect(Collectors.toList());
-            final List<Segment> chainSegments = segments.stream().filter(x -> x.chainId() == chainId).collect(Collectors.toList());
-            result.addAll(addMissingTracks(chainId,
-                    distance,
-                    chainSegments,
-                    chainLinks,
-                    minPositionPerChromosome,
-                    maxPositionPerChromosome));
+            if (segment.startTerminal() != SegmentTerminal.NONE) {
+                segment = ImmutableSegment.builder()
+                        .from(segment)
+                        .start(minPositionPerChromosome.get(segment.chromosome()) - additionalDistance)
+                        .build();
+            }
+
+            if (segment.endTerminal() != SegmentTerminal.NONE) {
+                segment = ImmutableSegment.builder()
+                        .from(segment)
+                        .end(maxPositionPerChromosome.get(segment.chromosome()) + additionalDistance)
+                        .build();
+            }
+
+            result.add(segment);
         }
 
         return TRACK_INCREMENTER.apply(result);
-    }
-
-    @NotNull
-    private static List<Segment> addMissingTracks(int chainId, long distance, @NotNull final List<Segment> segments,
-            @NotNull final List<Link> links, @NotNull final Map<String, Long> minPositionPerChromosome,
-            @NotNull final Map<String, Long> maxPositionPerChromosome) {
-        final List<Segment> result = Lists.newArrayList(segments);
-
-        int i = 0;
-
-        for (final Link link : links) {
-            final String startContig = link.startChromosome();
-            final String endContig = link.endChromosome();
-
-            boolean isStartValid = HumanChromosome.contains(startContig);
-            boolean isEndValid = HumanChromosome.contains(endContig);
-
-            final GenomePosition linkStart = GenomePositions.create(startContig, link.startPosition());
-            final GenomePosition linkEnd = GenomePositions.create(endContig, link.endPosition());
-
-            long tracksConnectedToStart = tracksConnectedTo(0, linkStart, segments);
-            long tracksConnectedToEnd = tracksConnectedTo(0, linkEnd, segments);
-
-            if (isStartValid && (tracksConnectedToStart == 0 || tracksConnectedToEnd > tracksConnectedToStart)) {
-
-                long minChromosomePosition = Optional.ofNullable(minPositionPerChromosome.get(startContig)).orElse(link.startPosition());
-                long maxChromosomePosition = Optional.ofNullable(maxPositionPerChromosome.get(startContig)).orElse(link.startPosition());
-
-                long start = link.startOrientation() > 0 ? minChromosomePosition - distance : maxChromosomePosition + distance;
-                final Segment additionalSegment = create(link.clusterId(),
-                        chainId,
-                        startContig,
-                        start,
-                        link.startPosition(),
-                        link.startOrientation() > 0,
-                        link.startOrientation() < 0);
-                result.add(i++, additionalSegment);
-            }
-
-            if (isEndValid && (tracksConnectedToEnd == 0 || tracksConnectedToStart > tracksConnectedToEnd)) {
-
-                long minChromosomePosition = Optional.ofNullable(minPositionPerChromosome.get(endContig)).orElse(link.endPosition());
-                long maxChromosomePosition = Optional.ofNullable(maxPositionPerChromosome.get(endContig)).orElse(link.endPosition());
-
-                long end = link.endOrientation() > 0 ? minChromosomePosition - distance : maxChromosomePosition + distance;
-                final Segment additionalSegment = create(link.clusterId(),
-                        chainId,
-                        endContig,
-                        link.endPosition(),
-                        end,
-                        link.endOrientation() > 0,
-                        link.endOrientation() < 0);
-                result.add(additionalSegment);
-            }
-
-        }
-
-        return result;
     }
 
     @VisibleForTesting
@@ -147,13 +96,26 @@ public class Segments {
 
             if (!line.startsWith(COMMENT)) {
                 String[] values = line.split(DELIMITER);
-                final int clusterId = Integer.valueOf(values[0]);
-                final int chainId = Integer.valueOf(values[1]);
-                final String chromosome = values[2];
-                final long start = Long.valueOf(values[3]);
-                final long end = Long.valueOf(values[4]);
+                final int clusterId = Integer.valueOf(values[1]);
+                final int chainId = Integer.valueOf(values[2]);
+                final String chromosome = values[3];
+                final String start = values[4];
+                final String end = values[5];
+                final int traverseCount = Integer.valueOf(values[6]);
 
-                result.add(create(clusterId, chainId, chromosome, start, end, false, false));
+                Segment newSegment = ImmutableSegment.builder()
+                        .clusterId(clusterId)
+                        .chainId(chainId)
+                        .chromosome(chromosome)
+                        .start(SegmentTerminal.fromString(start) == SegmentTerminal.NONE ? Long.valueOf(start) : Long.valueOf(end))
+                        .end(SegmentTerminal.fromString(end) == SegmentTerminal.NONE ? Long.valueOf(end) : Long.valueOf(start))
+                        .track(0)
+                        .startTerminal(SegmentTerminal.fromString(start))
+                        .endTerminal(SegmentTerminal.fromString(end))
+                        .traverseCount(traverseCount)
+                        .build();
+
+                result.add(newSegment);
 
             }
         }
@@ -198,19 +160,6 @@ public class Segments {
         return result;
     }
 
-    @NotNull
-    private static Segment create(int clusterId, int chainId, String contig, long start, long end, boolean openStart, boolean openEnd) {
-        return ImmutableSegment.builder()
-                .clusterId(clusterId)
-                .chainId(chainId)
-                .chromosome(contig)
-                .start(Math.min(start, end))
-                .end(Math.max(start, end))
-                .track(0)
-                .openStart(openStart)
-                .openEnd(openEnd)
-                .build();
-    }
 
     @NotNull
     private static Map<String, Long> maxPositionPerChromosome(@NotNull final List<GenomePosition> tracks) {
@@ -231,11 +180,9 @@ public class Segments {
                 results.add(GenomePositions.create(segment.chromosome(), segment.start()));
                 results.add(GenomePositions.create(segment.chromosome(), segment.end()));
             }
-
         }
 
         Collections.sort(results);
-
         return results;
     }
 

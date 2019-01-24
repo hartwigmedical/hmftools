@@ -62,15 +62,16 @@ public class SvVisualiser implements AutoCloseable {
 
         final List<Future<Object>> futures = Lists.newArrayList();
         final List<Integer> clusterIds = config.links().stream().map(Link::clusterId).distinct().sorted().collect(toList());
-//        for (Integer clusterId : clusterIds) {
-//            futures.add(executorService.submit(() -> run(clusterId)));
-//        }
-//
-//        for (Future<Object> future : futures) {
-//            future.get();
-//        }
-        run(0);
-        run(66);
+        for (Integer clusterId : clusterIds) {
+            futures.add(executorService.submit(() -> run(clusterId)));
+        }
+
+        for (Future<Object> future : futures) {
+            future.get();
+        }
+//        run(0);
+//        run(66);
+//        run(67);
     }
 
     @Nullable
@@ -79,7 +80,7 @@ public class SvVisualiser implements AutoCloseable {
 
         final List<Link> clusterLinks = config.links().stream().filter(x -> x.clusterId() == clusterId).collect(toList());
         final List<Segment> clusterSegments = config.tracks().stream().filter(x -> x.clusterId() == clusterId).collect(toList());
-        final List<Segment> segments = Segments.addMissingTracks(1000, clusterSegments, clusterLinks);
+        final List<Segment> segments = Segments.extendTerminals(1000, clusterSegments, clusterLinks);
         final List<CopyNumberAlteration> alterations = copyNumberInTracks(100, config.copyNumberAlterations(), segments);
 
         int maxTracks = segments.stream().mapToInt(Segment::track).max().orElse(0) + 1;

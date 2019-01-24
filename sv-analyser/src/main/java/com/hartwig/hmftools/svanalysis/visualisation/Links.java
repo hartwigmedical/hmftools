@@ -18,7 +18,7 @@ import org.jetbrains.annotations.NotNull;
 public class Links {
 
     private static final String COMMENT = "#";
-    private static final String DELIMITER = "\t";
+    private static final String DELIMITER = ",";
 
     @NotNull
     static Optional<Link> findStartLink(@NotNull final GenomePosition position, @NotNull List<Link> links) {
@@ -40,9 +40,15 @@ public class Links {
         return result.isPresent() ? result : findEndLink(position, links);
     }
 
+    public static int linkTraverseCount(@NotNull final GenomePosition position, @NotNull final List<Link> links) {
+       return  Links.findStartLink(position, links).map(Link::traverseCount).orElse(0) + Links.findEndLink(position, links)
+                .map(Link::traverseCount)
+                .orElse(0);
+    }
+
     @NotNull
     public static List<Link> clean(@NotNull final List<Link> links) {
-        return links.stream().filter(x -> x.startPosition() != -1 && x.endPosition() != -1).collect(Collectors.toList());
+        return links.stream().filter(x -> HumanChromosome.contains(x.startChromosome()) && HumanChromosome.contains(x.endChromosome())).collect(Collectors.toList());
     }
 
     @NotNull
@@ -66,16 +72,17 @@ public class Links {
     private static Link fromString(@NotNull final String line) {
         String[] values = line.split(DELIMITER);
         return ImmutableLink.builder()
-                .clusterId(Integer.valueOf(values[0]))
-                .chainId(Integer.valueOf(values[1]))
-                .startChromosome(values[2])
-                .startPosition(Long.valueOf(values[3]))
-                .startOrientation(Integer.valueOf(values[4]))
-                .startFoldback(Boolean.valueOf(values[5]))
-                .endChromosome(values[6])
-                .endPosition(Long.valueOf(values[7]))
-                .endOrientation(Integer.valueOf(values[8]))
-                .endFoldback(Boolean.valueOf(values[9]))
+                .clusterId(Integer.valueOf(values[1]))
+                .chainId(Integer.valueOf(values[2]))
+                .startChromosome(values[4])
+                .startPosition(Long.valueOf(values[5]))
+                .startOrientation(Integer.valueOf(values[6]))
+                .startType(Link.Type.valueOf(values[7]))
+                .endChromosome(values[8])
+                .endPosition(Long.valueOf(values[9]))
+                .endOrientation(Integer.valueOf(values[10]))
+                .endType(Link.Type.valueOf(values[11]))
+                .traverseCount(Integer.valueOf(values[12]))
                 .build();
     }
 
