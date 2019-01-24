@@ -83,9 +83,10 @@ public class SvVisualiser implements AutoCloseable {
 
         int maxTracks = segments.stream().mapToInt(Segment::track).max().orElse(0) + 1;
         double maxCopyNumber = alterations.stream().mapToDouble(CopyNumberAlteration::copyNumber).max().orElse(0);
+        double maxMinorAllelePloidy = alterations.stream().mapToDouble(CopyNumberAlteration::minorAllelePloidy).max().orElse(0);
 
         final CircosConfigWriter confWrite = new CircosConfigWriter(sample, config.outputConfPath());
-        confWrite.writeConfig(maxTracks, maxCopyNumber);
+        confWrite.writeConfig(maxTracks, maxCopyNumber, maxMinorAllelePloidy);
         new CircosDataWriter(sample, config.outputConfPath(), maxTracks).write(segments, clusterLinks, alterations);
 
         final String outputPlotName = sample + ".cluster.png";

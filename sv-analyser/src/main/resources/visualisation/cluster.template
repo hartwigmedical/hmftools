@@ -132,6 +132,81 @@ chromosomes_display_default = yes
 	</plot>
 
 
+	# -----------------------------------------------------------
+	# Minor Allele Gain (Green)
+	<plot>
+		type = histogram
+		file = SUBSTITUTE_SAMPLE.map.circos
+		r0   = SUBSTITUTE_MAP_MIDDLE_RADIUSr
+		r1   = SUBSTITUTE_MAP_OUTER_RADIUSr
+		min  = 0
+		max  = SUBSTITUTE_MAP_GAIN_MAX
+		glyph = circle
+		glyph_size = 8
+		color = blue
+		fill_color = blue
+
+		<axes>
+			<axis>
+				color     = lblue
+				thickness = 1
+				spacing   = SUBSTITUTE_MAP_GAIN_SPACINGr
+			</axis>
+		</axes>
+
+		<backgrounds>
+			<background>
+				color = vlblue_a5
+			</background>
+		</backgrounds>
+
+		<rules>
+			<rule>
+				condition = var(value) < 0.001
+				#show = no
+			</rule>
+		</rules>
+
+	</plot>
+
+
+	# -----------------------------------------------------------
+	# Minor Allele Loss (Red)
+	<plot>
+		type = histogram
+		file = SUBSTITUTE_SAMPLE.map.circos
+		r0   = SUBSTITUTE_MAP_INNER_RADIUSr
+		r1   = SUBSTITUTE_MAP_MIDDLE_RADIUSr
+		min  = -1
+		max  = 0
+		glyph = circle
+		glyph_size = 8
+		color = orange
+		fill_color = orange
+
+		<axes>
+			<axis>
+				color     = lorange
+				thickness = 1
+				spacing   = 1r
+			</axis>
+		</axes>
+
+		<backgrounds>
+			<background>
+				color = vlorange_a5
+			</background>
+		</backgrounds>
+
+		<rules>
+			<rule>
+				condition = var(value) > 0.001
+				#show = no
+			</rule>
+		</rules>
+	</plot>
+
+
     SUBSTITUTE_HISTOGRAM
 
 	# -----------------------------------------------------------
@@ -185,7 +260,7 @@ chromosomes_display_default = yes
         type = connector
         file = SUBSTITUTE_SAMPLE.connector.circos
 
-        r0	=	0.2r
+        r0	=	SUBSTITUTE_MAP_INNER_RADIUSr
         connector_dims = 0.0,0.3,0.4,0.3,0
 
         thickness = 4
@@ -198,7 +273,7 @@ chromosomes_display_default = yes
     <link>
         file          = SUBSTITUTE_SAMPLE.link.circos
         color         = red
-        radius        = 0.2r
+        radius        = 0.175r
         thickness     = 2
     </link>
 </links>

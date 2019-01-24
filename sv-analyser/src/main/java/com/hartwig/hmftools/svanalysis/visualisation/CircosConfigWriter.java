@@ -19,6 +19,9 @@ public class CircosConfigWriter {
     private static final double SEGMENT_INNER_RADIUS = 0.5;
     private static final double SEGMENT_OUTER_RADIUS = 0.975;
 
+    private static final double MAP_INNER_RADIUS = 0.175;
+    private static final double MAP_OUTER_RADIUS = 0.275;
+
     private static final double CNA_INNER_RADIUS = 0.3;
     private static final double CNA_OUTER_RADIUS = 0.475;
 
@@ -44,10 +47,13 @@ public class CircosConfigWriter {
         return start + track * singleTrack;
     }
 
-    public void writeConfig(int maxTracks, final double maxCopyNumber) throws IOException {
+    public void writeConfig(int maxTracks, final double maxCopyNumber, final double maxMinorAllelePloidy) throws IOException {
 
         int cnaMaxTracks = Math.max(2, (int) Math.round(Math.ceil(maxCopyNumber - 2)));
         double cnaMiddleRadius = CNA_INNER_RADIUS + 2 * (CNA_OUTER_RADIUS - CNA_INNER_RADIUS) / (cnaMaxTracks + 2);
+
+        int mapMaxTracks = Math.max(1, (int) Math.round(Math.ceil(maxMinorAllelePloidy - 1)));
+        double mapMiddleRadius = MAP_INNER_RADIUS + (MAP_OUTER_RADIUS - MAP_INNER_RADIUS) / (mapMaxTracks + 1);
 
         final Charset charset = StandardCharsets.UTF_8;
         final String template =
@@ -55,6 +61,12 @@ public class CircosConfigWriter {
 
                         .replaceAll("SUBSTITUTE_SV_INNER_RADIUS", String.valueOf(SEGMENT_INNER_RADIUS))
                         .replaceAll("SUBSTITUTE_SV_OUTER_RADIUS", String.valueOf(SEGMENT_OUTER_RADIUS))
+
+                        .replaceAll("SUBSTITUTE_MAP_INNER_RADIUS", String.valueOf(MAP_INNER_RADIUS))
+                        .replaceAll("SUBSTITUTE_MAP_OUTER_RADIUS", String.valueOf(MAP_OUTER_RADIUS))
+                        .replaceAll("SUBSTITUTE_MAP_MIDDLE_RADIUS", String.valueOf(mapMiddleRadius))
+                        .replaceAll("SUBSTITUTE_MAP_GAIN_MAX", String.valueOf(mapMaxTracks))
+                        .replaceAll("SUBSTITUTE_MAP_GAIN_SPACING", String.valueOf(1d / mapMaxTracks))
 
                         .replaceAll("SUBSTITUTE_CNA_INNER_RADIUS", String.valueOf(CNA_INNER_RADIUS))
                         .replaceAll("SUBSTITUTE_CNA_OUTER_RADIUS", String.valueOf(CNA_OUTER_RADIUS))
