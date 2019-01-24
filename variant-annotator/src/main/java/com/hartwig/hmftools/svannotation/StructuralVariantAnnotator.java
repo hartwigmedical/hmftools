@@ -2,6 +2,7 @@ package com.hartwig.hmftools.svannotation;
 
 import static com.hartwig.hmftools.common.variant.structural.annotation.SvPONAnnotator.PON_FILTER_PASS;
 import static com.hartwig.hmftools.common.variant.structural.annotation.SvPONAnnotator.PON_FILTER_PON;
+import static com.hartwig.hmftools.svannotation.SvGeneTranscriptCollection.PRE_GENE_PROMOTOR_DISTANCE;
 import static com.hartwig.hmftools.svannotation.analysis.SvFusionAnalyser.FUSION_PAIRS_CSV;
 import static com.hartwig.hmftools.svannotation.analysis.SvFusionAnalyser.PROMISCUOUS_FIVE_CSV;
 import static com.hartwig.hmftools.svannotation.analysis.SvFusionAnalyser.PROMISCUOUS_THREE_CSV;
@@ -334,12 +335,12 @@ public class StructuralVariantAnnotator
             assert primaryKey != null; // Not sure why this assert is valid here...
 
             List<GeneAnnotation> genesList = mSvGeneTranscriptCollection.findGeneAnnotationsBySv(
-                    primaryKey, true, var.chromosome(true), var.position(true), var.orientation(true));
+                    primaryKey, true, var.chromosome(true), var.position(true), PRE_GENE_PROMOTOR_DISTANCE);
 
             if(var.end() != null)
             {
                 genesList.addAll(mSvGeneTranscriptCollection.findGeneAnnotationsBySv(
-                        primaryKey, false, var.chromosome(false), var.position(false), var.orientation(false)));
+                        primaryKey, false, var.chromosome(false), var.position(false), PRE_GENE_PROMOTOR_DISTANCE));
             }
 
             if(genesList == null)

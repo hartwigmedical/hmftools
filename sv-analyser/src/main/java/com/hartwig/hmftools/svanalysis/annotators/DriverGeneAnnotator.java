@@ -391,7 +391,7 @@ public class DriverGeneAnnotator
             {
                 if(varStart.position(true) <= region.start() && varStart.position(false) >= region.end())
                 {
-                    LOGGER.info(String.format("sample(%s) cluster(%s) gene(%s) single SV(%s %s) cn(%.2f) cnChg(%.2f)",
+                    LOGGER.debug(String.format("sample(%s) cluster(%s) gene(%s) single SV(%s %s) cn(%.2f) cnChg(%.2f)",
                             mSampleId, varStart.getCluster().id(), geneToStr(driverGene, region), varStart.posId(), varStart.type(),
                             varStart.copyNumber(true), varStart.copyNumberChange(true)));
 
@@ -421,7 +421,7 @@ public class DriverGeneAnnotator
             boolean v1Start = varStart == tiPair.first() ? tiPair.firstLinkOnStart() : tiPair.secondLinkOnStart();
             boolean v2Start = varEnd == tiPair.first() ? tiPair.firstLinkOnStart() : tiPair.secondLinkOnStart();
 
-            LOGGER.info(String.format("sample(%s) cluster(%d fb=%s) gene(%s) SVs start(%s cn=%.2f cnChg=%.2f) end(%s cn=%.2f cnChg=%.2f) in linked pair",
+            LOGGER.debug(String.format("sample(%s) cluster(%d fb=%s) gene(%s) SVs start(%s cn=%.2f cnChg=%.2f) end(%s cn=%.2f cnChg=%.2f) in linked pair",
                     mSampleId, varStart.getCluster().id(), varStart.getCluster().getFoldbacks().size(), geneToStr(driverGene, region),
                     varStart.posId(), varStart.copyNumber(v1Start), varStart.copyNumberChange(v1Start),
                     varEnd.posId(), varEnd.copyNumber(v2Start), varEnd.copyNumberChange(v2Start)));
@@ -444,7 +444,7 @@ public class DriverGeneAnnotator
 
             if (chrCopyNumber != null)
             {
-                LOGGER.info(String.format("sample(%s) gene(AMP: %s) chr(%s) copy-number(%.2f)",
+                LOGGER.debug(String.format("sample(%s) gene(AMP: %s) chr(%s) copy-number(%.2f)",
                         mSampleId, driverGene.gene(), region.chromosome(), chrCopyNumber));
             }
         }
@@ -455,7 +455,7 @@ public class DriverGeneAnnotator
     {
         final SvVarData var = breakend.getSV();
 
-        LOGGER.info(String.format("sample(%s) cluster(%d) gene(%s) single SV(%s %s) cn(%.2f) cnChg(%.2f) as %s",
+        LOGGER.debug(String.format("sample(%s) cluster(%d) gene(%s) single SV(%s %s) cn(%.2f) cnChg(%.2f) as %s",
                 mSampleId, var.getCluster().id(), geneToStr(driverGene, region), var.posId(), var.type(),
                 var.copyNumber(breakend.usesStart()), var.copyNumberChange(breakend.usesStart()), desc));
 

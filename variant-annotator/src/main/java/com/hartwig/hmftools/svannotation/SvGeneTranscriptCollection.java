@@ -133,10 +133,11 @@ public class SvGeneTranscriptCollection
         return mGeneTransExonDataMap.get(geneId);
     }
 
-    // private static int SPECIFIC_VAR_ID = -1;
-    private static int SPECIFIC_VAR_ID = 4558066;
+    private static int SPECIFIC_VAR_ID = -1;
+    // private static int SPECIFIC_VAR_ID = 4558066;
 
-    public List<GeneAnnotation> findGeneAnnotationsBySv(int svId, boolean isStart, final String chromosome, long position, byte orientation)
+    public List<GeneAnnotation> findGeneAnnotationsBySv(int svId, boolean isStart, final String chromosome, long position,
+            int upstreamDistance)
     {
         List<GeneAnnotation> geneAnnotations = Lists.newArrayList();
 
@@ -151,7 +152,7 @@ public class SvGeneTranscriptCollection
         if(geneRegions == null)
             return geneAnnotations;
 
-        final List<EnsemblGeneData> matchedGenes = findGeneRegions(position, geneRegions);
+        final List<EnsemblGeneData> matchedGenes = findGeneRegions(position, geneRegions, upstreamDistance);
 
         // now look up relevant transcript and exon information
         for(final EnsemblGeneData geneData : matchedGenes)
@@ -222,14 +223,14 @@ public class SvGeneTranscriptCollection
         return transcriptExons;
     }
 
-    private List<EnsemblGeneData> findGeneRegions(long position, List<EnsemblGeneData> geneDataList)
+    private List<EnsemblGeneData> findGeneRegions(long position, List<EnsemblGeneData> geneDataList, int upstreamDistance)
     {
         List<EnsemblGeneData> matchedGenes = Lists.newArrayList();
 
         for(final EnsemblGeneData geneData : geneDataList)
         {
-            long geneStartRange = geneData.Strand == 1 ? geneData.GeneStart - PRE_GENE_PROMOTOR_DISTANCE : geneData.GeneStart;
-            long geneEndRange = geneData.Strand == 1 ? geneData.GeneEnd : geneData.GeneEnd + PRE_GENE_PROMOTOR_DISTANCE;
+            long geneStartRange = geneData.Strand == 1 ? geneData.GeneStart - upstreamDistance : geneData.GeneStart;
+            long geneEndRange = geneData.Strand == 1 ? geneData.GeneEnd : geneData.GeneEnd + upstreamDistance;
 
             if(position >= geneStartRange && position <= geneEndRange)
             {

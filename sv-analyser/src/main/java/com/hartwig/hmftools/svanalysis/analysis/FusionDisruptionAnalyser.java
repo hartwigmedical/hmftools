@@ -4,6 +4,7 @@ import static com.hartwig.hmftools.common.variant.structural.StructuralVariantTy
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_END;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_START;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.isStart;
+import static com.hartwig.hmftools.svannotation.SvGeneTranscriptCollection.PRE_GENE_PROMOTOR_DISTANCE;
 import static com.hartwig.hmftools.svannotation.analysis.SvFusionAnalyser.FUSION_PAIRS_CSV;
 import static com.hartwig.hmftools.svannotation.analysis.SvFusionAnalyser.PROMISCUOUS_FIVE_CSV;
 import static com.hartwig.hmftools.svannotation.analysis.SvFusionAnalyser.PROMISCUOUS_THREE_CSV;
@@ -100,9 +101,11 @@ public class FusionDisruptionAnalyser
         }
     }
 
-    private void setSvGenesList(final SvVarData var)
+    private void setSvGenesList(final SvVarData var, boolean applyPromotorDistance)
     {
         List<GeneAnnotation> genesList = Lists.newArrayList();
+
+        int upstreamDistance = applyPromotorDistance ? PRE_GENE_PROMOTOR_DISTANCE : 0;
 
         for(int be = SVI_START; be <= SVI_END; ++be)
         {
@@ -112,7 +115,7 @@ public class FusionDisruptionAnalyser
             boolean isStart = isStart(be);
 
             genesList.addAll(mEnsemblDataCache.findGeneAnnotationsBySv(
-                    var.dbId(), isStart, var.chromosome(isStart), var.position(isStart), var.orientation(isStart)));
+                    var.dbId(), isStart, var.chromosome(isStart), var.position(isStart), upstreamDistance));
         }
 
         if(genesList.isEmpty())
@@ -140,7 +143,7 @@ public class FusionDisruptionAnalyser
     private static int CHECK_CLUSTER_ID = -1;
     // private static int CHECK_CLUSTER_ID = 94;
 
-    public void setSvGeneData(final String sampleId, final List<SvVarData> svList)
+    public void setSvGeneData(final String sampleId, final List<SvVarData> svList, boolean applyPromotorDistance)
     {
         mSampleId = sampleId;
 
@@ -150,7 +153,7 @@ public class FusionDisruptionAnalyser
                 continue;
 
             // cache transcript info against each SV
-            setSvGenesList(var);
+            setSvGenesList(var, applyPromotorDistance);
         }
     }
 

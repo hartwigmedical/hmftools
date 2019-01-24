@@ -1264,7 +1264,7 @@ public class ClusterAnalyser {
                 List<SvBreakend> unlinkedBreakends = Lists.newArrayList(acBreakendList);
                 List<SvLinkedPair> pairs = formPossibleLinkedPairsByShortest(unlinkedBreakends);
 
-                LOGGER.info("cluster({}) armCluster({} : {}_{}) count({} fwd={} bak={}) pairs({}) unlinked({})",
+                LOGGER.debug("cluster({}) armCluster({} : {}_{}) count({} fwd={} bak={}) pairs({}) unlinked({})",
                         cluster.id(), armCluster.id(), armCluster.chromosome(), armCluster.arm(),
                         acBreakendList.size(), forwardCount, backwardCount, pairs.size(), unlinkedBreakends.size());
             }

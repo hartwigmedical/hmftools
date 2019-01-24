@@ -165,7 +165,7 @@ public class SvAnalyser {
 
                 if(runFusions || checkDrivers)
                 {
-                    fusionAnalyser.setSvGeneData(sample, svVarData);
+                    fusionAnalyser.setSvGeneData(sample, svVarData, runFusions);
                 }
 
                 if(checkDrivers)
@@ -263,7 +263,7 @@ public class SvAnalyser {
         options.addOption(COPY_NUMBER_ANALYSIS, false, "Run copy number analysis");
         options.addOption(RUN_RESULTS_CHECKER, false, "Check results vs validation file");
         options.addOption(INCLUDE_NONE_SEGMENTS, false, "Include copy number NONE segments in SV analysis");
-        options.addOption(GENE_TRANSCRIPTS_DIR, true, "Optinonal: file with sample gene transcript data");
+        options.addOption(GENE_TRANSCRIPTS_DIR, true, "Optional: file with sample gene transcript data");
         SvaConfig.addCmdLineArgs(options);
         ResultsChecker.addCmdLineArgs(options);
         CNAnalyser.addCmdLineArgs(options);
