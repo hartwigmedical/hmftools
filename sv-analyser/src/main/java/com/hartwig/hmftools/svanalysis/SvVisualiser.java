@@ -62,13 +62,15 @@ public class SvVisualiser implements AutoCloseable {
 
         final List<Future<Object>> futures = Lists.newArrayList();
         final List<Integer> clusterIds = config.links().stream().map(Link::clusterId).distinct().sorted().collect(toList());
-        for (Integer clusterId : clusterIds) {
-            futures.add(executorService.submit(() -> run(clusterId)));
-        }
-
-        for (Future<Object> future : futures) {
-            future.get();
-        }
+//        for (Integer clusterId : clusterIds) {
+//            futures.add(executorService.submit(() -> run(clusterId)));
+//        }
+//
+//        for (Future<Object> future : futures) {
+//            future.get();
+//        }
+        run(0);
+        run(66);
     }
 
     @Nullable

@@ -241,6 +241,30 @@ chromosomes_display_default = yes
 	</plot>
 
 	# -----------------------------------------------------------
+	# Terminal Text
+	<plot>
+		type             = text
+		color            = black
+		file             = SUBSTITUTE_SAMPLE.terminals.circos
+
+		r0   = 0.5r
+		r1   = 1r
+
+		label_size   = 50p
+		label_font   = condensed
+		show  = no
+
+        <rules>
+            <rule>
+                condition  = var(value) != 1
+#                show = no
+                value = T
+            </rule>
+        </rules>
+
+	</plot>
+
+	# -----------------------------------------------------------
 	# Connectors
     <plot>
 

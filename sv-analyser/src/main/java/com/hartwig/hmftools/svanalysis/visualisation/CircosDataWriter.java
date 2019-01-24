@@ -68,6 +68,38 @@ public class CircosDataWriter {
 
         final String mapPath = filePrefix + ".map.circos";
         Files.write(new File(mapPath).toPath(), createMinorAllelePloidy(alterations));
+
+        final String terminals = filePrefix + ".terminals.circos";
+        Files.write(new File(terminals).toPath(), createTerminals(segments));
+
+    }
+
+    @NotNull
+    private List<String> createTerminals(@NotNull final List<Segment> segments) {
+        final List<String> result = Lists.newArrayList();
+        for (final Segment segment : segments) {
+            if (segment.openStart()) {
+                final String cna = new StringJoiner(DELIMITER).add(circosContig(segment.chromosome()))
+                        .add(String.valueOf(segment.start()))
+                        .add(String.valueOf(segment.start()))
+                        .add(String.valueOf(segment.track()))
+                        .add(ChainColor.color(segment.chainId()))
+                        .toString();
+                result.add(cna);
+            }
+
+            if (segment.openEnd()) {
+                final String cna = new StringJoiner(DELIMITER).add(circosContig(segment.chromosome()))
+                        .add(String.valueOf(segment.end()))
+                        .add(String.valueOf(segment.end()))
+                        .add(String.valueOf(segment.track()))
+                        .add(ChainColor.color(segment.chainId()))
+                        .toString();
+                result.add(cna);
+            }
+        }
+
+        return result;
     }
 
     @NotNull
