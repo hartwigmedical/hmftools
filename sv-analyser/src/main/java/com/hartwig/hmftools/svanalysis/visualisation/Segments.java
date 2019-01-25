@@ -13,9 +13,11 @@ import java.util.stream.Collectors;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.chromosome.Chromosome;
 import com.hartwig.hmftools.common.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.position.GenomePosition;
 import com.hartwig.hmftools.common.position.GenomePositions;
+import com.hartwig.hmftools.common.refgenome.RefGenome;
 import com.hartwig.hmftools.common.region.GenomeRegion;
 
 import org.jetbrains.annotations.NotNull;
@@ -26,6 +28,7 @@ public class Segments {
     private static final String COMMENT = "#";
     private static final String DELIMITER = ",";
     private static final Function<List<Segment>, List<Segment>> TRACK_INCREMENTER = Segments::incrementOnChromosome;
+    private static final RefGenome REF_GENOME = RefGenome.HG19;
 
     @NotNull
     public static List<Segment> readTracksFromFile(@NotNull final String fileName) throws IOException {
@@ -55,8 +58,9 @@ public class Segments {
                 .count();
     }
 
-    public static List<Segment> extendTerminals(long additionalDistance, @NotNull final List<Segment> segments,
-            @NotNull final List<Link> links) {
+    @NotNull
+    public static List<Segment> extendTerminals(long additionalDistance, @NotNull final List<Segment> segments, @NotNull final List<Link> links) {
+        final Map<Chromosome, Long> centromeres = REF_GENOME.centromeres();
 
         final List<GenomePosition> allPositions = Lists.newArrayList();
         allPositions.addAll(Segments.allPositions(segments));
@@ -67,18 +71,29 @@ public class Segments {
 
         final List<Segment> result = Lists.newArrayList();
         for (Segment segment : segments) {
+            final long centromere = centromeres.get(HumanChromosome.fromString(segment.chromosome()));
 
             if (segment.startTerminal() != SegmentTerminal.NONE) {
+                final long minPositionOnChromosome = minPositionPerChromosome.get(segment.chromosome());
+                final long startPosition = segment.startTerminal() == SegmentTerminal.CENTROMERE && minPositionOnChromosome < centromere
+                        ? centromere
+                        : minPositionOnChromosome - additionalDistance;
+
                 segment = ImmutableSegment.builder()
                         .from(segment)
-                        .start(minPositionPerChromosome.get(segment.chromosome()) - additionalDistance)
+                        .start(startPosition)
                         .build();
             }
 
             if (segment.endTerminal() != SegmentTerminal.NONE) {
+                final long maxPositionOnChromosome = maxPositionPerChromosome.get(segment.chromosome());
+                final long endPosition = segment.endTerminal() == SegmentTerminal.CENTROMERE && maxPositionOnChromosome > centromere
+                        ? centromere
+                        : maxPositionOnChromosome + additionalDistance;
+
                 segment = ImmutableSegment.builder()
                         .from(segment)
-                        .end(maxPositionPerChromosome.get(segment.chromosome()) + additionalDistance)
+                        .end(endPosition)
                         .build();
             }
 
