@@ -27,7 +27,8 @@ public class CircosDataWriter {
     private final String filePrefix;
     private final int maxTracks;
 
-    public CircosDataWriter(final ColorPicker colorPicker, @NotNull final String sample, @NotNull final String outputDir, final int maxTracks) {
+    public CircosDataWriter(final ColorPicker colorPicker, @NotNull final String sample, @NotNull final String outputDir,
+            final int maxTracks) {
         this.colorPicker = colorPicker;
         this.filePrefix = outputDir + File.separator + sample;
         this.maxTracks = maxTracks;
@@ -169,7 +170,8 @@ public class CircosDataWriter {
 
             final GenomePosition startPosition = GenomePositions.create(segment.chromosome(), segment.start());
             final boolean isStartFoldback =
-                    Links.findLink(startPosition, links).filter(x -> x.startType() == Link.Type.FOLDBACK).isPresent();
+                    Links.findStartLink(startPosition, links).filter(x -> x.startType() == Link.Type.FOLDBACK).isPresent()
+                            || Links.findEndLink(startPosition, links).filter(x -> x.endType() == Link.Type.FOLDBACK).isPresent();
             String startGlyph = isStartFoldback ? "glyph=triangle,glyph_size=20" : "glyph=circle";
             if (segment.startTerminal() != SegmentTerminal.NONE) {
                 startGlyph = "glyph=square,glyph_size=1";
@@ -183,7 +185,10 @@ public class CircosDataWriter {
             result.add(start.toString());
 
             final GenomePosition endPosition = GenomePositions.create(segment.chromosome(), segment.end());
-            final boolean isEndFoldback = Links.findLink(endPosition, links).filter(x -> x.endType() == Link.Type.FOLDBACK).isPresent();
+            final boolean isEndFoldback =
+                    Links.findStartLink(endPosition, links).filter(x -> x.startType() == Link.Type.FOLDBACK).isPresent()
+                            || Links.findEndLink(endPosition, links).filter(x -> x.endType() == Link.Type.FOLDBACK).isPresent();
+
             String endGlyph = isEndFoldback ? "glyph=triangle,glyph_size=20" : "glyph=circle";
             if (segment.endTerminal() != SegmentTerminal.NONE) {
                 endGlyph = "glyph=square,glyph_size=1";

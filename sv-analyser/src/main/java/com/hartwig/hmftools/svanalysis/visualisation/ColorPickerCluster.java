@@ -2,6 +2,7 @@ package com.hartwig.hmftools.svanalysis.visualisation;
 
 import static java.util.stream.Collectors.toMap;
 
+import java.awt.Color;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -13,11 +14,8 @@ import org.jetbrains.annotations.NotNull;
 
 public class ColorPickerCluster implements ColorPicker {
 
-    private static final String[] COLOURS = new String[] {
-            //"166,206,227",
-            //"31,120,180",
-            "51,160,44", "227,26,28", "255,127,0", "202,178,214", "106,61,154", "178,223,138", "251,154,153", "253,191,111",
-            "255,255,153" };
+
+    private static final Color[] COLOURS = new Color[] {COLOR2, COLOR3, COLOR4, COLOR5, COLOR6, COLOR7, COLOR8, COLOR9, COLOR10, COLOR11 };
 
     private final Map<Integer, String> clusterIdMap = Maps.newHashMap();
 
@@ -35,14 +33,18 @@ public class ColorPickerCluster implements ColorPicker {
         for (int i = 0; i < clusterSizeList.size(); i++) {
             final ClusterSize clusterSize = clusterSizeList.get(i);
 
-            String color = i < COLOURS.length ? COLOURS[i] : "black";
+            String color = i < COLOURS.length ? toString(COLOURS[i]) : "black";
             if (clusterSize.count == 1) {
-                color = "31,120,180";
+                color = toString(COLOR1);
             }
 
             clusterIdMap.put(clusterSizeList.get(i).clusterId, color);
         }
 
+    }
+
+    public static String toString(Color color) {
+        return color.getRed() + "," + color.getGreen() + "," + color.getBlue();
     }
 
     @NotNull
