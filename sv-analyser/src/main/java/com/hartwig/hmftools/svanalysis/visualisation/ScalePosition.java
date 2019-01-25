@@ -9,29 +9,31 @@ import java.util.stream.Collectors;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.position.GenomePosition;
 import com.hartwig.hmftools.common.position.GenomePositions;
-import com.hartwig.hmftools.common.region.GenomeRegion;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-public class ScalePosition {
+class ScalePosition {
+
+    private static final Logger LOGGER = LogManager.getLogger(ScalePosition.class);
 
     private final Map<String, Map<Long, Integer>> chromosomePositionMap = Maps.newHashMap();
 
-    public ScalePosition(@NotNull final List<? extends GenomeRegion> regions) {
+    ScalePosition(@NotNull final List<? extends GenomePosition> regions) {
         this(1, regions);
     }
 
-    public ScalePosition(final int start, @NotNull final List<? extends GenomeRegion> regions) {
-        final Set<String> contigs = regions.stream().map(GenomeRegion::chromosome).collect(Collectors.toSet());
+    private ScalePosition(final int start, @NotNull final List<? extends GenomePosition> positions) {
+        final Set<String> contigs = positions.stream().map(GenomePosition::chromosome).collect(Collectors.toSet());
         for (final String contig : contigs) {
-            final List<Long> contigPositions = Lists.newArrayList();
-            regions.stream().filter(x -> x.chromosome().equals(contig)).forEach(x -> {
-                contigPositions.add(x.start());
-                contigPositions.add(x.end());
-            });
-
+            final List<Long> contigPositions = positions.stream()
+                    .filter(x -> x.chromosome().equals(contig))
+                    .map(GenomePosition::position)
+                    .collect(Collectors.toList());
             chromosomePositionMap.put(contig, positionMap(start, contigPositions));
         }
     }
@@ -65,15 +67,34 @@ public class ScalePosition {
     }
 
     @NotNull
-    public List<Track> scaleTracks(@NotNull final List<Track> tracks) {
-        return tracks.stream().map(x -> scale(x, chromosomePositionMap.get(x.chromosome()))).collect(Collectors.toList());
+    public List<Segment> scaleTracks(@NotNull final List<Segment> segments) {
+        return segments.stream().map(x -> scale(x, chromosomePositionMap.get(x.chromosome()))).collect(Collectors.toList());
     }
 
     @NotNull
     public List<Link> scaleLinks(@NotNull final List<Link> links) {
-        return links.stream()
-                .map(x -> scale(x, chromosomePositionMap.get(x.startChromosome()), chromosomePositionMap.get(x.endChromosome())))
-                .collect(Collectors.toList());
+        final List<Link> results = Lists.newArrayList();
+
+        for (final Link link : links) {
+
+            try {
+                final ImmutableLink.Builder builder = ImmutableLink.builder().from(link);
+                if (HumanChromosome.contains(link.startChromosome())) {
+                    builder.startPosition(chromosomePositionMap.get(link.startChromosome()).get(link.startPosition()));
+                }
+
+                if (HumanChromosome.contains(link.endChromosome())) {
+                    builder.endPosition(chromosomePositionMap.get(link.endChromosome()).get(link.endPosition()));
+                }
+
+                results.add(builder.build());
+            } catch (Exception e) {
+                LOGGER.error("Unable to scale link {}", link);
+                throw e;
+            }
+        }
+
+        return results;
     }
 
     @NotNull
@@ -91,20 +112,8 @@ public class ScalePosition {
     }
 
     @NotNull
-    private static Track scale(@NotNull final Track victim, @NotNull final Map<Long, Integer> positionMap) {
-        return ImmutableTrack.builder().from(victim).start(positionMap.get(victim.start())).end(positionMap.get(victim.end())).build();
-    }
-
-    @NotNull
-    private static Link scale(@NotNull final Link victim, @NotNull final Map<Long, Integer> startPositionMap,
-            @NotNull final Map<Long, Integer> endPositionMap) {
-
-        return ImmutableLink.builder()
-                .from(victim)
-                .startPosition(startPositionMap.get(victim.startPosition()))
-                .endPosition(endPositionMap.get(victim.endPosition()))
-                .build();
-
+    private static Segment scale(@NotNull final Segment victim, @NotNull final Map<Long, Integer> positionMap) {
+        return ImmutableSegment.builder().from(victim).start(positionMap.get(victim.start())).end(positionMap.get(victim.end())).build();
     }
 
     @VisibleForTesting

@@ -18,16 +18,16 @@ public class CopyNumberAlterations {
     private static final String DELIMITER = "\t";
 
     @NotNull
-    public static List<CopyNumberAlteration> copyNumberInTracks(long additionalDistance, @NotNull final List<CopyNumberAlteration> alterations, @NotNull final List<Track> tracks) {
+    public static List<CopyNumberAlteration> copyNumberInTracks(long additionalDistance, @NotNull final List<CopyNumberAlteration> alterations, @NotNull final List<Segment> segments) {
         final List<CopyNumberAlteration> result = Lists.newArrayList();
 
         for (int i = 0; i < alterations.size(); i++) {
             CopyNumberAlteration alteration = alterations.get(i);
             final String contig = alteration.chromosome();
-            final List<Track> chromosomeTracks = tracks.stream().filter(x -> x.chromosome().equals(contig)).collect(Collectors.toList());
-            if (!chromosomeTracks.isEmpty()) {
-                long minTrackPosition = chromosomeTracks.stream().mapToLong(GenomeRegion::start).min().orElse(0) - additionalDistance;
-                long maxTrackPosition = chromosomeTracks.stream().mapToLong(GenomeRegion::end).max().orElse(0) + additionalDistance;
+            final List<Segment> chromosomeSegments = segments.stream().filter(x -> x.chromosome().equals(contig)).collect(Collectors.toList());
+            if (!chromosomeSegments.isEmpty()) {
+                long minTrackPosition = chromosomeSegments.stream().mapToLong(GenomeRegion::start).min().orElse(0) - additionalDistance;
+                long maxTrackPosition = chromosomeSegments.stream().mapToLong(GenomeRegion::end).max().orElse(0) + additionalDistance;
                 if (alteration.end() >= minTrackPosition && alteration.start() <= maxTrackPosition) {
 
                     boolean isStartDecreasing = i > 0 && lessThan(alteration, alterations.get(i - 1));
@@ -78,6 +78,7 @@ public class CopyNumberAlterations {
                 .start(Long.valueOf(values[1]))
                 .end(Long.valueOf(values[2]))
                 .copyNumber(Double.valueOf(values[3]))
+                .baf(Double.valueOf(values[4]))
                 .build();
     }
 

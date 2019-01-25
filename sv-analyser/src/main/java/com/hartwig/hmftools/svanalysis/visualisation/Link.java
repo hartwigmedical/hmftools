@@ -8,6 +8,10 @@ import org.jetbrains.annotations.Nullable;
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
 public abstract class Link {
 
+    enum Type {NORMAL, FOLDBACK, NULL}
+
+    public abstract int clusterId();
+
     public abstract int chainId();
 
     public abstract String startChromosome();
@@ -16,7 +20,7 @@ public abstract class Link {
 
     public abstract int startOrientation();
 
-    public abstract boolean startFoldback();
+    public abstract Type startType();
 
     public abstract String endChromosome();
 
@@ -24,6 +28,8 @@ public abstract class Link {
 
     public abstract int endOrientation();
 
-    public abstract boolean endFoldback();
+    public abstract Type endType();
+
+    public abstract int traverseCount();
 
 }

@@ -16,11 +16,14 @@ public class CircosConfigWriter {
 
     private static final double RADIUS_PIXELS = (0.9 * 1500 - 50);
 
-    private static final double SV_INNER_RADIUS = 0.4;
-    private static final double SV_OUTER_RADIUS = 0.975;
+    private static final double SEGMENT_INNER_RADIUS = 0.5;
+    private static final double SEGMENT_OUTER_RADIUS = 0.975;
 
-    private static final double CNA_INNER_RADIUS = 0.2;
-    private static final double CNA_OUTER_RADIUS = 0.375;
+    private static final double MAP_INNER_RADIUS = 0.175;
+    private static final double MAP_OUTER_RADIUS = 0.275;
+
+    private static final double CNA_INNER_RADIUS = 0.3;
+    private static final double CNA_OUTER_RADIUS = 0.475;
 
     private final String sample;
     private final String configPath;
@@ -35,8 +38,8 @@ public class CircosConfigWriter {
     }
 
     public static double svTrackPixels(int maxTracks, int track) {
-        double start = SV_INNER_RADIUS * RADIUS_PIXELS;
-        double end = SV_OUTER_RADIUS * RADIUS_PIXELS;
+        double start = SEGMENT_INNER_RADIUS * RADIUS_PIXELS;
+        double end = SEGMENT_OUTER_RADIUS * RADIUS_PIXELS;
 
         double difference = end - start;
         double singleTrack = difference / maxTracks;
@@ -44,17 +47,28 @@ public class CircosConfigWriter {
         return start + track * singleTrack;
     }
 
-    public void writeConfig(int maxTracks, final double maxCopyNumber) throws IOException {
+    public void writeConfig(int maxTracks, final double maxCopyNumber, final double maxMinorAllelePloidy) throws IOException {
 
         int cnaMaxTracks = Math.max(2, (int) Math.round(Math.ceil(maxCopyNumber - 2)));
         double cnaMiddleRadius = CNA_INNER_RADIUS + 2 * (CNA_OUTER_RADIUS - CNA_INNER_RADIUS) / (cnaMaxTracks + 2);
 
+        int mapMaxTracks = Math.max(1, (int) Math.round(Math.ceil(maxMinorAllelePloidy - 1)));
+        double mapMiddleRadius = MAP_INNER_RADIUS + (MAP_OUTER_RADIUS - MAP_INNER_RADIUS) / (mapMaxTracks + 1);
+
         final Charset charset = StandardCharsets.UTF_8;
         final String template =
-                readResource("/visualisation/cluster.template").replaceAll("SUBSTITUTE_HISTOGRAM", histogramPlots(maxTracks))
+                readResource("/visualisation/cluster.template")
+                        .replaceAll("SUBSTITUTE_HISTOGRAM", histogramPlots(maxTracks))
+                        .replaceAll("SUBSTITUTE_TERMINAL", terminalTexts(maxTracks))
 
-                        .replaceAll("SUBSTITUTE_SV_INNER_RADIUS", String.valueOf(SV_INNER_RADIUS))
-                        .replaceAll("SUBSTITUTE_SV_OUTER_RADIUS", String.valueOf(SV_OUTER_RADIUS))
+                        .replaceAll("SUBSTITUTE_SV_INNER_RADIUS", String.valueOf(SEGMENT_INNER_RADIUS))
+                        .replaceAll("SUBSTITUTE_SV_OUTER_RADIUS", String.valueOf(SEGMENT_OUTER_RADIUS))
+
+                        .replaceAll("SUBSTITUTE_MAP_INNER_RADIUS", String.valueOf(MAP_INNER_RADIUS))
+                        .replaceAll("SUBSTITUTE_MAP_OUTER_RADIUS", String.valueOf(MAP_OUTER_RADIUS))
+                        .replaceAll("SUBSTITUTE_MAP_MIDDLE_RADIUS", String.valueOf(mapMiddleRadius))
+                        .replaceAll("SUBSTITUTE_MAP_GAIN_MAX", String.valueOf(mapMaxTracks))
+                        .replaceAll("SUBSTITUTE_MAP_GAIN_SPACING", String.valueOf(1d / mapMaxTracks))
 
                         .replaceAll("SUBSTITUTE_CNA_INNER_RADIUS", String.valueOf(CNA_INNER_RADIUS))
                         .replaceAll("SUBSTITUTE_CNA_OUTER_RADIUS", String.valueOf(CNA_OUTER_RADIUS))
@@ -77,6 +91,20 @@ public class CircosConfigWriter {
         final String histogramTemplate = readResource("/visualisation/cluster.template.histogram");
         for (int i = 1; i <= maxTracks; i++) {
             final String level = histogramTemplate.replaceAll("SUBSTITUTE_CONDITION", String.valueOf(i));
+            builder.append(level);
+        }
+
+        return builder.toString();
+    }
+
+    @NotNull
+    private String terminalTexts(int maxTracks) throws IOException {
+        final StringBuilder builder = new StringBuilder();
+
+        final String template = readResource("/visualisation/cluster.template.terminal");
+        for (int i = 1; i <= maxTracks; i++) {
+            final String level = template.replaceAll("SUBSTITUTE_TERMINAL_CONDITION", String.valueOf(i))
+                    .replaceAll("SUBSTITUTE_TERMINAL_RADIUS", String.valueOf(svTrackPixels(maxTracks, i) - 24));
             builder.append(level);
         }
 
