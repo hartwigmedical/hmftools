@@ -359,7 +359,7 @@ public class CircosDataWriter {
             result.add(start);
 
             String endText = original.endTerminal() == SegmentTerminal.CENTROMERE ? "Centromere" : "Telomere";
-            endText = original.endTerminal() == SegmentTerminal.NONE ? String.format("%,d", original.start()) : endText;
+            endText = original.endTerminal() == SegmentTerminal.NONE ? String.format("%,d", original.end()) : endText;
 
             final String end = new StringJoiner(DELIMITER).add(circosContig(scaled.chromosome()))
                     .add(String.valueOf(scaled.end()))
