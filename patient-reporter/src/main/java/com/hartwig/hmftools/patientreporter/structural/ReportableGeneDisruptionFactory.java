@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.patientreporter.structural;
 
-import static com.hartwig.hmftools.patientreporter.report.util.PatientReportFormat.exonDescription;
-
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -34,17 +32,19 @@ public final class ReportableGeneDisruptionFactory {
         Map<String, GeneCopyNumber> copyNumberPerGene = toGeneMap(geneCopyNumbers);
         Map<SvAndGeneKey, Pair<Disruption, Disruption>> pairedMap = mapDisruptionsPerStructuralVariant(disruptions);
 
-        for (Disruption disruption : disruptions) {
-            GeneCopyNumber copyNumber = copyNumberPerGene.get(disruption.gene());
+        for (Pair<Disruption, Disruption> pairedDisruption : pairedMap.values()) {
+            Disruption primaryDisruption = pairedDisruption.getLeft();
+
+            GeneCopyNumber copyNumber = copyNumberPerGene.get(primaryDisruption.gene());
             reportableDisruptions.add(ImmutableReportableGeneDisruption.builder()
-                    .location(disruption.chromosome() + disruption.chrBand())
-                    .gene(disruption.gene())
-                    .type(disruption.type())
-                    .range(disruption.regionType())
-                    .ploidy(disruption.ploidy())
+                    .location(primaryDisruption.chromosome() + primaryDisruption.chrBand())
+                    .gene(primaryDisruption.gene())
+                    .type(primaryDisruption.type())
+                    .range(primaryDisruption.regionType())
+                    .ploidy(primaryDisruption.ploidy())
                     .geneMinCopies((int) Math.max(0, Math.round(copyNumber.minCopyNumber())))
                     .geneMaxCopies((int) Math.max(0, Math.round(copyNumber.maxCopyNumber())))
-                    .firstAffectedExon(disruption.exonUp())
+                    .firstAffectedExon(primaryDisruption.exonUp())
                     .build());
         }
 
@@ -103,7 +103,6 @@ public final class ReportableGeneDisruptionFactory {
             @NotNull List<Disruption> disruptions) {
         Map<SvAndGeneKey, List<Disruption>> disruptionsPerSvAndGene = Maps.newHashMap();
         for (Disruption disruption : disruptions) {
-            String gene = disruption.gene();
             SvAndGeneKey key = new SvAndGeneKey(disruption.svId(), disruption.gene());
             List<Disruption> currentDisruptions = disruptionsPerSvAndGene.get(key);
             if (currentDisruptions == null) {
@@ -147,20 +146,15 @@ public final class ReportableGeneDisruptionFactory {
     }
 
     @NotNull
-    private static String locationField(@NotNull GeneDisruption disruption) {
-        GeneAnnotation gene = gene(disruption);
-        return gene.chromosome() + gene.karyotypeBand();
-    }
-
-    @NotNull
-    private static String rangeField(@NotNull Pair<GeneDisruption, GeneDisruption> pairedDisruption) {
-        GeneDisruption primary = pairedDisruption.getLeft();
-        GeneDisruption secondary = pairedDisruption.getRight();
-        if (secondary == null) {
-            return exonDescription(primary.linkedAnnotation()) + (isUpstream(primary) ? " Upstream" : " Downstream");
-        } else {
-            return exonDescription(primary.linkedAnnotation()) + " -> " + exonDescription(secondary.linkedAnnotation());
-        }
+    private static String rangeField(@NotNull Pair<Disruption, Disruption> pairedDisruption) {
+        Disruption primary = pairedDisruption.getLeft();
+        Disruption secondary = pairedDisruption.getRight();
+        return "";
+//        if (secondary == null) {
+//            return exonDescription(primary.linkedAnnotation()) + (isUpstream(primary) ? " Upstream" : " Downstream");
+//        } else {
+//            return exonDescription(primary.linkedAnnotation()) + " -> " + exonDescription(secondary.linkedAnnotation());
+//        }
     }
 
     @NotNull
@@ -168,9 +162,9 @@ public final class ReportableGeneDisruptionFactory {
         return disruption.linkedAnnotation().parent();
     }
 
-    private static boolean isUpstream(@NotNull GeneDisruption disruption) {
-        GeneAnnotation gene = gene(disruption);
-        return gene.orientation() * gene.Strand < 0;
+    private static boolean isUpstream(@NotNull Disruption disruption) {
+        // TODO: Correct for strand of gene.
+        return disruption.orientation() < 0;
     }
 
     private static class SvAndGeneKey {

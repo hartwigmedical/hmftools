@@ -20,8 +20,7 @@ public abstract class Disruption {
     @NotNull
     public abstract String position();
 
-    @NotNull
-    public abstract String orientation();
+    public abstract int orientation();
 
     @NotNull
     public abstract String type();
