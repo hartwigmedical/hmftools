@@ -37,9 +37,13 @@ public class CircosDataWriter {
     public void write(@NotNull final List<Segment> unadjustedSegments, @NotNull final List<Link> unadjustedLinks,
             @NotNull final List<CopyNumberAlteration> unadjustedAlterations) throws IOException {
 
+        final List<GenomeRegion> unadjustedFragileSites =
+                Highlights.limitHighlightsToSegments(Highlights.fragileSites(), unadjustedSegments);
+
         final List<GenomePosition> unadjustedPositions = Lists.newArrayList();
         unadjustedPositions.addAll(Segments.allPositions(unadjustedSegments));
         unadjustedPositions.addAll(Segments.allPositions(unadjustedAlterations));
+        unadjustedPositions.addAll(Segments.allPositions(unadjustedFragileSites));
 
         final ScalePosition scalePosition = new ScalePosition(unadjustedPositions);
         final List<GenomePosition> scaledPositions = scalePosition.scaled();
@@ -48,6 +52,7 @@ public class CircosDataWriter {
         final List<Segment> segments = scalePosition.scaleTracks(unadjustedSegments);
         final List<Link> links = scalePosition.scaleLinks(unadjustedLinks);
         final List<CopyNumberAlteration> alterations = scalePosition.scaleAlterations(unadjustedAlterations);
+        final List<GenomeRegion> fragileSites = scalePosition.scaleRegions(unadjustedFragileSites);
 
         final String textPath = filePrefix + ".text.circos";
         Files.write(new File(textPath).toPath(), createPositionText(unadjustedSegments, segments));
@@ -78,6 +83,19 @@ public class CircosDataWriter {
 
         final String distances = filePrefix + ".distance.circos";
         Files.write(new File(distances).toPath(), createDistances(unadjustedAlterations, alterations));
+
+        final String fragile = filePrefix + ".fragile.circos";
+        Files.write(new File(fragile).toPath(), fragileSites(fragileSites));
+    }
+
+    @NotNull
+    private List<String> fragileSites(@NotNull final List<GenomeRegion> regions) {
+        return regions.stream()
+                .map(x -> new StringJoiner(DELIMITER).add(circosContig(x.chromosome()))
+                        .add(String.valueOf(x.start()))
+                        .add(String.valueOf(x.end()))
+                        .toString())
+                .collect(Collectors.toList());
     }
 
     @NotNull

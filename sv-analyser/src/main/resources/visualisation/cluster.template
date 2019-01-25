@@ -22,6 +22,18 @@
 
 </ideogram>
 
+<highlights>
+
+	<highlight>
+		file       = SUBSTITUTE_SAMPLE.fragile.circos
+		r0         = SUBSTITUTE_CNA_INNER_RADIUSr
+		r1         = SUBSTITUTE_CNA_MIDDLE_RADIUSr
+		fill_color = black_a5
+		z = 5
+	</highlight>
+
+</highlights>
+
 <image>
  <<include etc/image.conf>>
 </image>
