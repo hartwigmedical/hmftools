@@ -10,6 +10,8 @@ public abstract class Link {
 
     enum Type {NORMAL, FOLDBACK, NULL}
 
+    public abstract String sampleId();
+
     public abstract int clusterId();
 
     public abstract int chainId();

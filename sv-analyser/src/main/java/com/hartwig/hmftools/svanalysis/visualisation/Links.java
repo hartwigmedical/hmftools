@@ -73,6 +73,7 @@ public class Links {
     private static Link fromString(@NotNull final String line) {
         String[] values = line.split(DELIMITER);
         return ImmutableLink.builder()
+                .sampleId(values[0])
                 .clusterId(Integer.valueOf(values[1]))
                 .chainId(Integer.valueOf(values[2]))
                 .startChromosome(values[4])

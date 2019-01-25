@@ -83,7 +83,7 @@ public class SvVisualiser implements AutoCloseable {
             future.get();
         }
 //        runCluster(0);
-        runCluster(66);
+//        runCluster(66);
 //        runCluster(67);
 //        runChromsome("7");
     }

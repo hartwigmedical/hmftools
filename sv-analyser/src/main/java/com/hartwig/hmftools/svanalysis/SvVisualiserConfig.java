@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.svanalysis;
 
+import static java.util.stream.Collectors.toList;
+
 import java.io.IOException;
 import java.util.List;
 import java.util.StringJoiner;
@@ -87,8 +89,9 @@ public interface SvVisualiserConfig {
             throw new ParseException("Missing the following parameters: " + missing);
         }
 
-        final List<Segment> segments = Segments.readTracksFromFile(trackPath);
-        final List<Link> links = Links.readLinks(linkPath);
+        final List<Segment> segments =
+                Segments.readTracksFromFile(trackPath).stream().filter(x -> x.sampleId().equals(sample)).collect(toList());
+        final List<Link> links = Links.readLinks(linkPath).stream().filter(x -> x.sampleId().equals(sample)).collect(toList());
         final List<CopyNumberAlteration> cna = CopyNumberAlterations.read(cnaPath);
 
         return ImmutableSvVisualiserConfig.builder()

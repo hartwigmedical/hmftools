@@ -59,7 +59,8 @@ public class Segments {
     }
 
     @NotNull
-    public static List<Segment> extendTerminals(long additionalDistance, @NotNull final List<Segment> segments, @NotNull final List<Link> links) {
+    public static List<Segment> extendTerminals(long additionalDistance, @NotNull final List<Segment> segments,
+            @NotNull final List<Link> links) {
         final Map<Chromosome, Long> centromeres = REF_GENOME.centromeres();
 
         final List<GenomePosition> allPositions = Lists.newArrayList();
@@ -79,10 +80,7 @@ public class Segments {
                         ? centromere
                         : minPositionOnChromosome - additionalDistance;
 
-                segment = ImmutableSegment.builder()
-                        .from(segment)
-                        .start(startPosition)
-                        .build();
+                segment = ImmutableSegment.builder().from(segment).start(startPosition).build();
             }
 
             if (segment.endTerminal() != SegmentTerminal.NONE) {
@@ -91,10 +89,7 @@ public class Segments {
                         ? centromere
                         : maxPositionOnChromosome + additionalDistance;
 
-                segment = ImmutableSegment.builder()
-                        .from(segment)
-                        .end(endPosition)
-                        .build();
+                segment = ImmutableSegment.builder().from(segment).end(endPosition).build();
             }
 
             result.add(segment);
@@ -112,23 +107,20 @@ public class Segments {
 
             if (!line.startsWith(COMMENT) && !line.startsWith(HEADER)) {
                 String[] values = line.split(DELIMITER);
-                final int clusterId = Integer.valueOf(values[1]);
-                final int chainId = Integer.valueOf(values[2]);
-                final String chromosome = values[3];
                 final String start = values[4];
                 final String end = values[5];
-                final int traverseCount = Integer.valueOf(values[6]);
 
                 Segment newSegment = ImmutableSegment.builder()
-                        .clusterId(clusterId)
-                        .chainId(chainId)
-                        .chromosome(chromosome)
+                        .sampleId(values[0])
+                        .clusterId(Integer.valueOf(values[1]))
+                        .chainId(Integer.valueOf(values[2]))
+                        .chromosome(values[3])
                         .start(SegmentTerminal.fromString(start) == SegmentTerminal.NONE ? Long.valueOf(start) : Long.valueOf(end))
                         .end(SegmentTerminal.fromString(end) == SegmentTerminal.NONE ? Long.valueOf(end) : Long.valueOf(start))
                         .track(0)
                         .startTerminal(SegmentTerminal.fromString(start))
                         .endTerminal(SegmentTerminal.fromString(end))
-                        .traverseCount(traverseCount)
+                        .traverseCount(Integer.valueOf(values[6]))
                         .build();
 
                 result.add(newSegment);
@@ -175,7 +167,6 @@ public class Segments {
 
         return result;
     }
-
 
     @NotNull
     private static Map<String, Long> maxPositionPerChromosome(@NotNull final List<GenomePosition> tracks) {
