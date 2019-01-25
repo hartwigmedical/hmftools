@@ -35,8 +35,6 @@ public class LineElementAnnotator {
     public static String NO_LINE_ELEMENT = "None";
     public static String SUSPECTED_LINE_ELEMENT = "Suspect";
 
-    private static String CSV_LE_TYPE_IDENTIFIED = "Identified";
-
     private List<GenomeRegion> mKnownLineElements;
     private static int PERMITTED_DISTANCE = 5000;
 

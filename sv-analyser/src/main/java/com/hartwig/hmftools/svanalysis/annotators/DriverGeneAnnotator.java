@@ -545,8 +545,10 @@ public class DriverGeneAnnotator
 
                         if(!exonData.isEmpty())
                         {
-                            LOGGER.info("sample({}) cluster({}) pair({}) matches gene({}) exon({})",
-                                    mSampleId, cluster.id(), pair.toString(), gene1.GeneName, exonData);
+                            //LOGGER.info("sample({}) cluster({}) pair({}) matches gene({}) exon({})",
+                            //        mSampleId, cluster.id(), pair.toString(), gene1.GeneName, exonData);
+
+                            pair.setExonMatchData(exonData);
                         }
                     }
                 }

@@ -177,7 +177,7 @@ public class SvSampleAnalyser {
 
             if(mConfig.hasMultipleSamples())
             {
-                // writeClusterLinkData();
+                writeClusterLinkData();
                 writeClusterData();
             }
 
@@ -506,7 +506,7 @@ public class SvSampleAnalyser {
                 mLinksFileWriter.write("SampleId,ClusterId,ClusterDesc,ClusterCount,ResolvedType,IsLINE,FullyChained");
                 mLinksFileWriter.write(",ChainId,ChainCount,ChainConsistent,Id1,Id2,ChrArm,IsAssembled,TILength,SynDelDupLen");
                 mLinksFileWriter.write(",NextSVDistance,NextSVTraversedCount,DBLenStart,DBLenEnd,OnArmOfOrigin,CopyNumberGain,TraversedSVCount");
-                mLinksFileWriter.write(",PosStart,PosEnd,GeneStart,GeneEnd");
+                mLinksFileWriter.write(",PosStart,PosEnd,GeneStart,GeneEnd,ExonMatch");
                 mLinksFileWriter.newLine();
             }
 
@@ -566,10 +566,10 @@ public class SvSampleAnalyser {
 
 
                         writer.write(
-                                String.format(",%d,%d,%s,%s",
+                                String.format(",%d,%d,%s,%s,%s",
                                         beStart.position(), beEnd.position(),
                                         beStart.getSV().getGeneInBreakend(beStart.usesStart()),
-                                        beEnd.getSV().getGeneInBreakend(beEnd.usesStart())));
+                                        beEnd.getSV().getGeneInBreakend(beEnd.usesStart()), pair.getExonMatchData()));
 
                         writer.newLine();
                     }

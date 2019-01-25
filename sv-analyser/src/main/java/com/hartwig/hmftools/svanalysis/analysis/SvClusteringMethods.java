@@ -148,7 +148,7 @@ public class SvClusteringMethods {
             unassignedVariants.remove(currentIndex); // index will remain the same and so point to the next item
 
             // exceptions to proximity clustering
-            if(isEquivSingleBreakend(currentVar))
+            if(isEquivSingleBreakend(currentVar) || isLowVafSingleBreakend(currentVar))
             {
                 newCluster.setResolved(true, RESOLVED_TYPE_LOW_QUALITY);
                 clusters.add(newCluster);
@@ -203,7 +203,7 @@ public class SvClusteringMethods {
         {
             SvVarData currentVar = unassignedVariants.get(currentIndex);
 
-            if(isEquivSingleBreakend(currentVar))
+            if(isEquivSingleBreakend(currentVar) || isLowVafSingleBreakend(currentVar))
             {
                 ++currentIndex;
                 continue;
@@ -428,6 +428,24 @@ public class SvClusteringMethods {
             return var.copyNumberChange(true) < LOW_QUALITY_CN_CHANGE;
         else
             return var.copyNumberChange(true) < LOW_QUALITY_CN_CHANGE && var.copyNumberChange(false) < LOW_QUALITY_CN_CHANGE;
+    }
+
+    private static String POLY_C_MOTIF = "CCCCCCCCCC";
+    private static String POLY_G_MOTIF = "GGGGGGGGGG";
+    private static double SGL_LOW_VAF = 0.15;
+
+    public boolean isLowVafSingleBreakend(final SvVarData var)
+    {
+        if(var.type() != SGL)
+            return false;
+
+        if(var.getSvData().adjustedStartAF() < SGL_LOW_VAF)
+            return true;
+
+        if(var.getSvData().insertSequence().contains(POLY_C_MOTIF) || var.getSvData().insertSequence().contains(POLY_G_MOTIF))
+            return true;
+
+        return false    ;
     }
 
     public boolean isEquivSingleBreakend(final SvVarData var)

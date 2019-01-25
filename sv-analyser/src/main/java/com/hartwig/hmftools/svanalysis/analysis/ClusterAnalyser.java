@@ -141,7 +141,7 @@ public class ClusterAnalyser {
 
         // analyseOverlappingTIs();
 
-        // annotateTemplatedInsertions();
+        annotateTemplatedInsertions();
         // checkSkippedLOHEvents();
 
         // final clean-up and analysis

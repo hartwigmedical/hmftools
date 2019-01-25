@@ -28,6 +28,8 @@ public class SvLinkedPair {
     private boolean mCopyNumberGain; // for TIs, is this from an additional fragment, not impacting the actual or derivative chromosomes
     private boolean mOnArmOfOrigin;
 
+    private String mExonMatchData;
+
     public static final String LINK_TYPE_TI = "TI";
     public static final String LINK_TYPE_DB = "DB";
 
@@ -54,6 +56,7 @@ public class SvLinkedPair {
         mNextSVTraversedCount = 0;
         mCopyNumberGain = false;
         mOnArmOfOrigin = false;
+        mExonMatchData = "";
 
         int length = (int) (first.position(firstLinkOnStart) - second.position(secondLinkOnStart));
         mLinkLength = abs(length);
@@ -135,6 +138,9 @@ public class SvLinkedPair {
 
     public void setTraversedSVCount(int count) { mTraversedSVCount = count; }
     public int getTraversedSVCount() { return mTraversedSVCount; }
+
+    public void setExonMatchData(final String data) { mExonMatchData = data; }
+    public final String getExonMatchData() { return mExonMatchData; }
 
     public boolean hasBreakend(final SvVarData var, boolean useStart)
     {

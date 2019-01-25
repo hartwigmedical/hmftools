@@ -587,7 +587,7 @@ public class CNAnalyser {
                 if (!outputFileName.endsWith("/"))
                     outputFileName += File.separator;
 
-                outputFileName += "CN_LOH_ANALYSIS.csv";
+                outputFileName += "CN_LOH_EVENTS.csv";
 
                 mFileWriter = createBufferedWriter(outputFileName, false);
 
