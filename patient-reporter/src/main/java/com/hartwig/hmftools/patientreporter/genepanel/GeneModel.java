@@ -68,9 +68,7 @@ public abstract class GeneModel {
             }
         }
 
-        for (Map.Entry<String, HmfTranscriptRegion> disruptionGene : disruptionGeneWhiteList().entrySet()) {
-            disruptionGenePanel.add(disruptionGene.getKey());
-        }
+        disruptionGenePanel.addAll(disruptionGeneWhiteList().keySet());
 
         return disruptionGenePanel;
     }
