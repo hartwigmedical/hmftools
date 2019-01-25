@@ -5,7 +5,6 @@ import static org.junit.Assert.assertEquals;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.fusions.KnownFusionsModel;
 import com.hartwig.hmftools.common.variant.structural.EnrichedStructuralVariant;
 import com.hartwig.hmftools.common.variant.structural.ImmutableEnrichedStructuralVariant;
 import com.hartwig.hmftools.common.variant.structural.ImmutableEnrichedStructuralVariantLeg;
@@ -13,7 +12,6 @@ import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneAnnotation;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion;
 import com.hartwig.hmftools.common.variant.structural.annotation.Transcript;
-import com.hartwig.hmftools.patientreporter.loadStructuralVariants.Disruption;
 import com.hartwig.hmftools.patientreporter.loadStructuralVariants.Fusion;
 import com.hartwig.hmftools.patientreporter.loadStructuralVariants.ImmutableFusion;
 
@@ -25,7 +23,8 @@ public class ReportableGeneFusionFactoryTest {
 
     private static final double EPSILON = 1.0e-10;
 
-    public Fusion fusionTestData() {
+    @NotNull
+    private static Fusion fusionTestData() {
         return ImmutableFusion.builder()
                 .reportable(true)
                 .knownType("3P-Prom")
@@ -45,7 +44,7 @@ public class ReportableGeneFusionFactoryTest {
                 .strandUp("1")
                 .regionTypeUp("Intronic")
                 .codingTypeUp("Coding")
-                .exonUp("1")
+                .exonUp(1)
                 .phaseUp("1")
                 .exonMaxUp("11")
                 .disruptiveUp("true")
@@ -71,7 +70,7 @@ public class ReportableGeneFusionFactoryTest {
                 .strandDown("1")
                 .regionTypeDown("Intronic")
                 .codingTypeDown("Coding")
-                .exonDown("14")
+                .exonDown(14)
                 .phaseDown("1")
                 .exonMaxDown("21")
                 .disruptiveDown("true")

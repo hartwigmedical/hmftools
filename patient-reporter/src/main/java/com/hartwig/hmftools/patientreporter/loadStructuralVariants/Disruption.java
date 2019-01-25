@@ -36,8 +36,7 @@ public abstract class Disruption {
     @NotNull
     public abstract String transcript();
 
-    @NotNull
-    public abstract String strand();
+    public abstract int strand();
 
     @NotNull
     public abstract String regionType();
@@ -45,8 +44,7 @@ public abstract class Disruption {
     @NotNull
     public abstract String codingType();
 
-    @NotNull
-    public abstract String canonical();
+    public abstract boolean canonical();
 
     @NotNull
     public abstract String biotype();

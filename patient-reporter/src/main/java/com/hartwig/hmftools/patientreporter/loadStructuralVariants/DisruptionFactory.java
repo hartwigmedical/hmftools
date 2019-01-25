@@ -7,9 +7,13 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-public class DisruptionFactory {
+public final class DisruptionFactory {
+
+    private static final Logger LOGGER = LogManager.getLogger(DisruptionFactory.class);
 
     private DisruptionFactory() {
     }
@@ -18,6 +22,7 @@ public class DisruptionFactory {
 
     @NotNull
     public static DisruptionAnalyzer fromDisruptionFile(@NotNull String disruptionFile) throws IOException {
+        LOGGER.debug(" Using " + disruptionFile + " as source for disruptions.");
         final List<Disruption> disruptions = Lists.newArrayList();
 
         final List<String> lineDisruptions = Files.readAllLines(new File(disruptionFile).toPath());
@@ -43,10 +48,10 @@ public class DisruptionFactory {
                 .gene(values[8])
                 .chrBand(values[9])
                 .transcript(values[10])
-                .strand(values[11])
+                .strand(Integer.valueOf(values[11]))
                 .regionType(values[12])
                 .codingType(values[13])
-                .canonical(values[14])
+                .canonical(Boolean.valueOf(values[14]))
                 .biotype(values[15])
                 .exonUp(Integer.valueOf(values[16]))
                 .exonDown(Integer.valueOf(values[17]))

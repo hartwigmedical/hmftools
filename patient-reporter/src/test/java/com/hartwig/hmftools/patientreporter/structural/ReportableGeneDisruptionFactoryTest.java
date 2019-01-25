@@ -26,19 +26,23 @@ public class ReportableGeneDisruptionFactoryTest {
 
     private static final double EPSILON = 1.0e-10;
 
-    public Disruption disruptionTestData() {
+    @NotNull
+    private static Disruption disruptionTestData() {
         return ImmutableDisruption.builder()
                 .reportable(true)
                 .svId("755779")
                 .chromosome("3")
                 .position("125593804")
-                .orientation("-1")
+                .orientation(-1)
                 .type("INV")
-                .gene("ROPN1B,")
+                .ploidy(1.2)
+                .gene("ROPN1B")
+                .chrBand("p12")
                 .transcript("ENST00000514116")
-                .strand("1")
+                .strand(1)
                 .regionType("Upstream")
                 .codingType("5P_UTR")
+                .canonical(true)
                 .biotype("protein_coding")
                 .exonUp(0)
                 .exonDown(1)

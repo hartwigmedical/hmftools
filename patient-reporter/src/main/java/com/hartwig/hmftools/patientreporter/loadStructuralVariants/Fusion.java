@@ -62,8 +62,7 @@ public abstract class Fusion {
     @NotNull
     public abstract String codingTypeUp();
 
-    @NotNull
-    public abstract String exonUp();
+    public abstract int exonUp();
 
     @NotNull
     public abstract String phaseUp();
@@ -139,8 +138,7 @@ public abstract class Fusion {
     @NotNull
     public abstract String codingTypeDown();
 
-    @NotNull
-    public abstract String exonDown();
+    public abstract int exonDown();
 
     @NotNull
     public abstract String phaseDown();

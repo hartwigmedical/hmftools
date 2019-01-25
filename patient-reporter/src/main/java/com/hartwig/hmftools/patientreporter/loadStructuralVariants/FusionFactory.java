@@ -7,10 +7,14 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
-public class FusionFactory {
+public final class FusionFactory {
+
+    private static final Logger LOGGER = LogManager.getLogger(FusionFactory.class);
 
     private FusionFactory() {
     }
@@ -19,6 +23,7 @@ public class FusionFactory {
 
     @NotNull
     public static FusionAnalyzer fromFusionFile(@NotNull String fusionFile) throws IOException {
+        LOGGER.debug(" Using " + fusionFile + " as source for fusions.");
         final List<Fusion> fusions = Lists.newArrayList();
 
         final List<String> lineFusions = Files.readAllLines(new File(fusionFile).toPath());
@@ -47,55 +52,54 @@ public class FusionFactory {
                 .orientUp(values[10])
                 .typeUp(values[11])
                 .ploidyUp(Double.parseDouble(values[12]))
-                .proteinsLost(values[13])
-                .geneUp(values[14])
-                .chrBandUp(values[15])
-                .transcriptUp(values[16])
-                .strandUp(values[17])
-                .regionTypeUp(values[18])
-                .codingTypeUp(values[19])
-                .exonUp(values[20])
-                .phaseUp(values[21])
-                .exonMaxUp(values[22])
-                .disruptiveUp(values[23])
-                .exactBaseUp(values[24])
-                .codingBasesUp(values[25])
-                .totalCodingUp(values[26])
-                .codingStartUp(values[27])
-                .codingEndUp(values[28])
-                .transStartUp(values[29])
-                .transEndUp(values[30])
-                .distancePrevUp(values[31])
-                .canonicalUp(values[32])
-                .biotypeUp(values[33])
-                .svIdDown(values[34])
-                .chrDown(values[35])
-                .posDown(values[36])
-                .orientDown(values[37])
-                .typeDown(values[38])
-                .ploidyDown(Double.parseDouble(values[39]))
-                .geneDown(values[40])
-                .chrBandDown(values[41])
-                .transcriptDown(values[42])
-                .strandDown(values[43])
-                .regionTypeDown(values[44])
-                .codingTypeDown(values[45])
-                .exonDown(values[46])
-                .phaseDown(values[47])
-                .exonMaxDown(values[48])
-                .disruptiveDown(values[49])
-                .exactBaseDown(values[50])
-                .codingBasesDown(values[51])
-                .totalCodingDown(values[52])
-                .codingStartDown(values[53])
-                .codingEndDown(values[54])
-                .transStartDown(values[55])
-                .transEndDown(values[56])
-                .distancePrevDown(values[57])
-                .canonicalDown(values[58])
-                .biotypeDown(values[59])
-                .proteinsKept(values.length > 60 ? values[60] : Strings.EMPTY)
-                .proteinsLost(values.length > 61 ? values[61] : Strings.EMPTY)
+                .geneUp(values[13])
+                .chrBandUp(values[14])
+                .transcriptUp(values[15])
+                .strandUp(values[16])
+                .regionTypeUp(values[17])
+                .codingTypeUp(values[18])
+                .exonUp(Integer.valueOf(values[19]))
+                .phaseUp(values[20])
+                .exonMaxUp(values[21])
+                .disruptiveUp(values[22])
+                .exactBaseUp(values[23])
+                .codingBasesUp(values[24])
+                .totalCodingUp(values[25])
+                .codingStartUp(values[26])
+                .codingEndUp(values[27])
+                .transStartUp(values[28])
+                .transEndUp(values[29])
+                .distancePrevUp(values[30])
+                .canonicalUp(values[31])
+                .biotypeUp(values[32])
+                .svIdDown(values[33])
+                .chrDown(values[34])
+                .posDown(values[35])
+                .orientDown(values[36])
+                .typeDown(values[37])
+                .ploidyDown(Double.parseDouble(values[38]))
+                .geneDown(values[39])
+                .chrBandDown(values[40])
+                .transcriptDown(values[41])
+                .strandDown(values[42])
+                .regionTypeDown(values[43])
+                .codingTypeDown(values[44])
+                .exonDown(Integer.valueOf(values[45]))
+                .phaseDown(values[46])
+                .exonMaxDown(values[47])
+                .disruptiveDown(values[48])
+                .exactBaseDown(values[49])
+                .codingBasesDown(values[50])
+                .totalCodingDown(values[51])
+                .codingStartDown(values[52])
+                .codingEndDown(values[53])
+                .transStartDown(values[54])
+                .transEndDown(values[55])
+                .distancePrevDown(values[56])
+                .canonicalDown(values[57])
+                .biotypeDown(values[58])
+                .proteinsKept(values.length > 59 ? values[59] : Strings.EMPTY)
+                .proteinsLost(values.length > 60 ? values[60] : Strings.EMPTY)
                 .build();
     }
 }
