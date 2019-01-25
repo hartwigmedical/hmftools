@@ -37,14 +37,14 @@ public final class ReportableGeneDisruptionFactory {
             for (Disruption disruption: disruptions) {
                 GeneCopyNumber copyNumber = copyNumberPerGene.get(disruption.gene());
                 reportableDisruptions.add(ImmutableReportableGeneDisruption.builder()
-                        .location(disruption.chromosome()) // add band
+                        .location(disruption.chromosome() + disruption.chrBand())
                         .gene(disruption.gene())
                         .type(disruption.type())
                         .range(disruption.regionType())
-                        .ploidy(0)
+                        .ploidy(disruption.ploidy())
                         .geneMinCopies((int) Math.max(0, Math.round(copyNumber.minCopyNumber())))
                         .geneMaxCopies((int) Math.max(0, Math.round(copyNumber.maxCopyNumber())))
-                     //   .firstAffectedExon(Integer.parseInt(disruption.exon()))
+                        .firstAffectedExon(Integer.parseInt(disruption.exonUp()))
                         .build());
         }
 
