@@ -23,10 +23,12 @@ public class CircosDataWriter {
 
     private static final String DELIMITER = "\t";
 
+    private final ColorPicker colorPicker;
     private final String filePrefix;
     private final int maxTracks;
 
-    public CircosDataWriter(@NotNull final String sample, @NotNull final String outputDir, final int maxTracks) {
+    public CircosDataWriter(final ColorPicker colorPicker, @NotNull final String sample, @NotNull final String outputDir, final int maxTracks) {
+        this.colorPicker = colorPicker;
         this.filePrefix = outputDir + File.separator + sample;
         this.maxTracks = maxTracks;
     }
@@ -109,7 +111,7 @@ public class CircosDataWriter {
                         .add(String.valueOf(segment.start()))
                         .add(String.valueOf(segment.start()))
                         .add(String.valueOf(segment.track() + (segment.startTerminal() == SegmentTerminal.TELOMERE ? "T" : "C")))
-                        .add(ChainColor.color(segment.chainId()))
+                        .add(colorPicker.color(segment.clusterId(), segment.chainId()))
                         .toString();
                 result.add(cna);
             }
@@ -119,7 +121,7 @@ public class CircosDataWriter {
                         .add(String.valueOf(segment.end()))
                         .add(String.valueOf(segment.end()))
                         .add(String.valueOf(segment.track() + (segment.endTerminal() == SegmentTerminal.TELOMERE ? "T" : "C")))
-                        .add(ChainColor.color(segment.chainId()))
+                        .add(colorPicker.color(segment.clusterId(), segment.chainId()))
                         .toString();
                 result.add(cna);
             }
@@ -163,7 +165,7 @@ public class CircosDataWriter {
         final List<String> result = Lists.newArrayList();
         for (Segment segment : segments) {
 
-            final String colorOption = ChainColor.color(segment.chainId());
+            final String colorOption = colorPicker.color(segment.clusterId(), segment.chainId());
 
             final GenomePosition startPosition = GenomePositions.create(segment.chromosome(), segment.start());
             final boolean isStartFoldback =
@@ -210,7 +212,7 @@ public class CircosDataWriter {
                     .add(circosContig(link.endChromosome()))
                     .add(String.valueOf(link.endPosition()))
                     .add(String.valueOf(link.endPosition()))
-                    .add(ChainColor.color(link.chainId()) + "," + thickness(link.traverseCount()))
+                    .add(colorPicker.color(link.clusterId(), link.chainId()) + "," + thickness(link.traverseCount()))
                     .toString();
             result.add(linkString);
         }
@@ -237,7 +239,8 @@ public class CircosDataWriter {
                 final String start = new StringJoiner(DELIMITER).add(circosContig(segment.chromosome()))
                         .add(String.valueOf(segment.start()))
                         .add(String.valueOf(segment.start()))
-                        .add("r1=" + r1 + "p," + ChainColor.color(segment.chainId()) + "," + thickness(startLinkUsage - segmentsBelow))
+                        .add("r1=" + r1 + "p," + colorPicker.color(segment.clusterId(), segment.chainId()) + "," + thickness(
+                                startLinkUsage - segmentsBelow))
                         .toString();
                 result.add(start);
             }
@@ -252,7 +255,8 @@ public class CircosDataWriter {
                 final String end = new StringJoiner(DELIMITER).add(circosContig(segment.chromosome()))
                         .add(String.valueOf(segment.end()))
                         .add(String.valueOf(segment.end()))
-                        .add("r1=" + r1 + "p," + ChainColor.color(segment.chainId()) + "," + thickness(endLinkUsage - segmentsBelow))
+                        .add("r1=" + r1 + "p," + colorPicker.color(segment.clusterId(), segment.chainId()) + "," + thickness(
+                                endLinkUsage - segmentsBelow))
                         .toString();
                 result.add(end);
             }
@@ -284,30 +288,30 @@ public class CircosDataWriter {
     private List<String> createHistogramTrack(@NotNull final Map<String, Integer> contigLengths, @NotNull final List<Segment> segments) {
 
         final List<String> result = Lists.newArrayList();
-        for (Segment scaled : segments) {
+        for (Segment segment : segments) {
 
-            final int contigLength = contigLengths.get(scaled.chromosome());
+            final int contigLength = contigLengths.get(segment.chromosome());
 
-            final String start = new StringJoiner(DELIMITER).add(circosContig(scaled.chromosome()))
+            final String start = new StringJoiner(DELIMITER).add(circosContig(segment.chromosome()))
                     .add(String.valueOf(1))
-                    .add(String.valueOf(scaled.start()))
-                    .add(String.valueOf(scaled.track()))
+                    .add(String.valueOf(segment.start()))
+                    .add(String.valueOf(segment.track()))
                     .add("thickness=0")
                     .toString();
             result.add(start);
 
-            final String entry = new StringJoiner(DELIMITER).add(circosContig(scaled.chromosome()))
-                    .add(String.valueOf(scaled.start()))
-                    .add(String.valueOf(scaled.end()))
-                    .add(String.valueOf(scaled.track()))
-                    .add(ChainColor.color(scaled.chainId()) + "," + thickness(scaled.traverseCount()))
+            final String entry = new StringJoiner(DELIMITER).add(circosContig(segment.chromosome()))
+                    .add(String.valueOf(segment.start()))
+                    .add(String.valueOf(segment.end()))
+                    .add(String.valueOf(segment.track()))
+                    .add(colorPicker.color(segment.clusterId(), segment.chainId()) + "," + thickness(segment.traverseCount()))
                     .toString();
             result.add(entry);
 
-            final String end = new StringJoiner(DELIMITER).add(circosContig(scaled.chromosome()))
-                    .add(String.valueOf(scaled.end()))
+            final String end = new StringJoiner(DELIMITER).add(circosContig(segment.chromosome()))
+                    .add(String.valueOf(segment.end()))
                     .add(String.valueOf(contigLength))
-                    .add(String.valueOf(scaled.track()))
+                    .add(String.valueOf(segment.track()))
                     .add("thickness=0")
                     .toString();
             result.add(end);
