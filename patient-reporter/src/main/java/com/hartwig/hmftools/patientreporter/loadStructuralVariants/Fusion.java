@@ -43,7 +43,13 @@ public abstract class Fusion {
     public abstract String typeUp();
 
     @NotNull
+    public abstract String ploidyUp();
+
+    @NotNull
     public abstract String geneUp();
+
+    @NotNull
+    public abstract String chrBandUp();
 
     @NotNull
     public abstract String transcriptUp();
@@ -94,6 +100,9 @@ public abstract class Fusion {
     public abstract String distancePrevUp();
 
     @NotNull
+    public abstract String canonicalUp();
+
+    @NotNull
     public abstract String biotypeUp();
 
     @NotNull
@@ -112,7 +121,13 @@ public abstract class Fusion {
     public abstract String typeDown();
 
     @NotNull
+    public abstract String ploidyDown();
+
+    @NotNull
     public abstract String geneDown();
+
+    @NotNull
+    public abstract String chrBandDown();
 
     @NotNull
     public abstract String transcriptDown();
@@ -161,6 +176,9 @@ public abstract class Fusion {
 
     @NotNull
     public abstract String distancePrevDown();
+
+    @NotNull
+    public abstract String canonicalDown();
 
     @NotNull
     public abstract String biotypeDown();
