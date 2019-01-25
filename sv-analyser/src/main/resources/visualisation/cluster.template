@@ -1,6 +1,7 @@
 <<include etc/colors_fonts_patterns.conf>>
 
-<<include ticks.conf>>
+show_ticks          = no
+show_tick_labels    = no
 
 <ideogram>
     <spacing>

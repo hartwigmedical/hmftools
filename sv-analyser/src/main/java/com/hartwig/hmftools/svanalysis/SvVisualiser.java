@@ -58,13 +58,12 @@ public class SvVisualiser implements AutoCloseable {
 
     private SvVisualiser(final Options options, final String... args) throws ParseException, IOException {
         final CommandLine cmd = createCommandLine(args, options);
+        LOGGER.info("Loading data");
         config = SvVisualiserConfig.createConfig(cmd);
         executorService = Executors.newFixedThreadPool(config.threads());
     }
 
     private void run() throws InterruptedException, ExecutionException, IOException {
-
-        LOGGER.info("Loading data");
 
         final List<Future<Object>> futures = Lists.newArrayList();
         final List<Integer> clusterIds = config.links().stream().map(Link::clusterId).distinct().sorted().collect(toList());
@@ -115,7 +114,7 @@ public class SvVisualiser implements AutoCloseable {
 
     @Nullable
     private Object runCluster(int clusterId) throws IOException, InterruptedException {
-        final String sample = config.sample() + ".cluster" + clusterId;
+        final String sample = config.sample() + ".cluster" + String.format("%03d", clusterId);
 
         final List<Link> clusterLinks = config.links().stream().filter(x -> x.clusterId() == clusterId).collect(toList());
         final List<Segment> clusterSegments = config.tracks().stream().filter(x -> x.clusterId() == clusterId).collect(toList());
