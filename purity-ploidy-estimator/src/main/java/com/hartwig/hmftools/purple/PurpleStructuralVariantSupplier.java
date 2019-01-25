@@ -46,6 +46,7 @@ class PurpleStructuralVariantSupplier {
     private final String outputVCF;
     private final Optional<VCFHeader> header;
     private final TreeSet<VariantContext> variantContexts;
+    private final TreeSet<VariantContext> filteredVariantContexts;
     private final List<StructuralVariant> variants = Lists.newArrayList();
     private boolean modified = true;
 
@@ -54,6 +55,7 @@ class PurpleStructuralVariantSupplier {
     PurpleStructuralVariantSupplier() {
         header = Optional.empty();
         variantContexts = new TreeSet<>();
+        filteredVariantContexts = new TreeSet<>();
         outputVCF = Strings.EMPTY;
     }
 
@@ -62,9 +64,12 @@ class PurpleStructuralVariantSupplier {
         this.outputVCF = outputVCF;
         header = Optional.of(generateOutputHeader(vcfReader.getFileHeader()));
         variantContexts = new TreeSet<>(new VCComparator(header.get().getSequenceDictionary()));
+        filteredVariantContexts = new TreeSet<>(new VCComparator(header.get().getSequenceDictionary()));
         for (VariantContext context : vcfReader) {
             if (context.isNotFiltered()) {
                 variantContexts.add(context);
+            } else {
+                filteredVariantContexts.add(context);
             }
         }
 
@@ -116,7 +121,12 @@ class PurpleStructuralVariantSupplier {
                 .make();
     }
 
-    public void write() {
+    public void write(boolean includeFiltered) {
+        TreeSet<VariantContext> outputVariantContexts = new TreeSet<>(new VCComparator(header.get().getSequenceDictionary()));
+        outputVariantContexts.addAll(variantContexts);
+        if (includeFiltered) {
+            outputVariantContexts.addAll(filteredVariantContexts);
+        }
         if (header.isPresent()) {
             VariantContextWriter writer = new VariantContextWriterBuilder().setOutputFile(outputVCF)
                     .setReferenceDictionary(header.get().getSequenceDictionary())
@@ -126,7 +136,7 @@ class PurpleStructuralVariantSupplier {
                     .build();
 
             writer.writeHeader(header.get());
-            variantContexts.forEach(writer::add);
+            outputVariantContexts.forEach(writer::add);
             writer.close();
         }
     }

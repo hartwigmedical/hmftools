@@ -83,6 +83,7 @@ public class PurityPloidyEstimateApplication {
     private static final String THREADS = "threads";
     private static final String VERSION = "version";
     private static final String EXPERIMENTAL = "experimental";
+    private static final String OUTPUT_FILTERED = "output_filtered";
 
     public static void main(final String... args)
             throws ParseException, IOException, SQLException, ExecutionException, InterruptedException {
@@ -223,7 +224,7 @@ public class PurityPloidyEstimateApplication {
             PurpleCopyNumberFile.write(PurpleCopyNumberFile.generateGermlineFilename(outputDirectory, tumorSample), germlineDeletions);
             FittedRegionFile.write(FittedRegionFile.generateFilename(outputDirectory, tumorSample), enrichedFittedRegions);
             GeneCopyNumberFile.write(GeneCopyNumberFile.generateFilename(outputDirectory, tumorSample), geneCopyNumbers);
-            structuralVariants.write();
+            structuralVariants.write(cmd.hasOption(OUTPUT_FILTERED));
 
             final CircosConfig circosConfig = configSupplier.circosConfig();
             LOGGER.info("Writing plots to: {}", circosConfig.plotDirectory());
@@ -329,6 +330,7 @@ public class PurityPloidyEstimateApplication {
         options.addOption(THREADS, true, "Number of threads (default 2)");
         options.addOption(EXPERIMENTAL, false, "Anything goes!");
         options.addOption(VERSION, false, "Exit after displaying version info.");
+        options.addOption(OUTPUT_FILTERED, false, "Pass through filtered events to VCF output.");
 
         return options;
     }
