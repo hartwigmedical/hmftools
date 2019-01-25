@@ -52,11 +52,9 @@ public abstract class Disruption {
     @NotNull
     public abstract String biotype();
 
-    @NotNull
-    public abstract String exonUp();
+    public abstract int exonUp();
 
-    @NotNull
-    public abstract String exonDown();
+    public abstract int exonDown();
 
     public abstract boolean isDisruptive();
 }

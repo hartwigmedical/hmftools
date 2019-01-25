@@ -40,8 +40,8 @@ public class ReportableGeneDisruptionFactoryTest {
                 .regionType("Upstream")
                 .codingType("5P_UTR")
                 .biotype("protein_coding")
-                .exonUp("0")
-                .exonDown("1")
+                .exonUp(0)
+                .exonDown(1)
                 .isDisruptive(false)
                 .build();
     }

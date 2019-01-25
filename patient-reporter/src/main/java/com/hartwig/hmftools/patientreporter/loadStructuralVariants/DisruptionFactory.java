@@ -48,8 +48,8 @@ public class DisruptionFactory {
                 .codingType(values[13])
                 .canonical(values[14])
                 .biotype(values[15])
-                .exonUp(values[16])
-                .exonDown(values[17])
+                .exonUp(Integer.valueOf(values[16]))
+                .exonDown(Integer.valueOf(values[17]))
                 .isDisruptive(Boolean.valueOf(values[18]))
                 .build();
     }

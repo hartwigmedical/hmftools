@@ -42,7 +42,6 @@ public abstract class Fusion {
     @NotNull
     public abstract String typeUp();
 
-    @NotNull
     public abstract double ploidyUp();
 
     @NotNull
@@ -120,7 +119,6 @@ public abstract class Fusion {
     @NotNull
     public abstract String typeDown();
 
-    @NotNull
     public abstract double ploidyDown();
 
     @NotNull
