@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.patientreporter.loadStructuralVariants;
 
 import java.util.List;
-import java.util.Map;
+import java.util.Set;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.patientreporter.genepanel.GeneModel;
@@ -20,15 +20,14 @@ public class DisruptionAnalyzer {
     @NotNull
     public List<Disruption> reportableDisruptions(@NotNull GeneModel geneModel) {
         List<Disruption> reportableDisruptions = Lists.newArrayList();
-        Map<String, String> reportableGenesCanonicalTranscriptMap = geneModel.disruptionGeneCanonicalTranscriptMap();
+        Set<String> reportableGenes = geneModel.disruptionGenePanel();
 
-        for (Disruption disruption: disruptions) {
-            if (reportableGenesCanonicalTranscriptMap.keySet().contains(disruption.gene())) {
-                if (reportableGenesCanonicalTranscriptMap.get(disruption.gene()).equals(disruption.transcript())) {
-                    reportableDisruptions.add(disruption);
-                }
+        for (Disruption disruption : disruptions) {
+            if (reportableGenes.contains(disruption.gene()) && disruption.canonical()) {
+                reportableDisruptions.add(disruption);
             }
         }
+
         return reportableDisruptions;
     }
 }

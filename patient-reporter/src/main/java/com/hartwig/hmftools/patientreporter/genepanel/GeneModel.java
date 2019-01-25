@@ -3,7 +3,6 @@ package com.hartwig.hmftools.patientreporter.genepanel;
 import java.util.Map;
 import java.util.Set;
 
-import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.region.HmfTranscriptRegion;
@@ -55,25 +54,24 @@ public abstract class GeneModel {
 
     @Value.Derived
     @NotNull
-    public Map<String, String> disruptionGeneCanonicalTranscriptMap() {
-        // Structural variant analyser requires a set of ensembl IDs rather than a set of gene names.
-        Map<String, String> disruptionGeneCanonicalTranscriptMap = Maps.newHashMap();
-        for (Map.Entry<String, HmfTranscriptRegion> driverGene : somaticVariantDriverGenePanel().entrySet()) {
-            if (geneDriverCategoryMap().get(driverGene.getKey()) != DriverCategory.ONCO) {
-                disruptionGeneCanonicalTranscriptMap.put(driverGene.getKey(), driverGene.getValue().transcriptID());
+    public Set<String> disruptionGenePanel() {
+        Set<String> disruptionGenePanel = Sets.newHashSet();
+        for (String driverGene : somaticVariantDriverGenePanel().keySet()) {
+            if (geneDriverCategoryMap().get(driverGene) != DriverCategory.ONCO) {
+                disruptionGenePanel.add(driverGene);
             }
         }
 
-        for (Map.Entry<String, HmfTranscriptRegion> drupActionableGene : drupActionableGenes().entrySet()) {
-            if (geneDriverCategoryMap().get(drupActionableGene.getKey()) != DriverCategory.ONCO) {
-                disruptionGeneCanonicalTranscriptMap.put(drupActionableGene.getKey(), drupActionableGene.getValue().transcriptID());
+        for (String drupActionableGene : drupActionableGenes().keySet()) {
+            if (geneDriverCategoryMap().get(drupActionableGene) != DriverCategory.ONCO) {
+                disruptionGenePanel.add(drupActionableGene);
             }
         }
 
         for (Map.Entry<String, HmfTranscriptRegion> disruptionGene : disruptionGeneWhiteList().entrySet()) {
-            disruptionGeneCanonicalTranscriptMap.put(disruptionGene.getKey(), disruptionGene.getValue().transcriptID());
+            disruptionGenePanel.add(disruptionGene.getKey());
         }
 
-        return disruptionGeneCanonicalTranscriptMap;
+        return disruptionGenePanel;
     }
 }
