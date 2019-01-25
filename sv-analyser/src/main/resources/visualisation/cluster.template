@@ -210,7 +210,7 @@ chromosomes_display_default = yes
 
 		show_links     = no
 
-		label_size   = 20p
+		label_size   = 30p
 		label_font   = condensed
 		label_snuggle=yes
 
