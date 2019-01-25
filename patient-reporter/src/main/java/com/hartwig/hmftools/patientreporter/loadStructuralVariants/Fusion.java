@@ -43,7 +43,7 @@ public abstract class Fusion {
     public abstract String typeUp();
 
     @NotNull
-    public abstract String ploidyUp();
+    public abstract double ploidyUp();
 
     @NotNull
     public abstract String geneUp();
@@ -121,7 +121,7 @@ public abstract class Fusion {
     public abstract String typeDown();
 
     @NotNull
-    public abstract String ploidyDown();
+    public abstract double ploidyDown();
 
     @NotNull
     public abstract String geneDown();

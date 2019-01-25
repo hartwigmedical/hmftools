@@ -23,7 +23,6 @@ public final class ReportableGeneFusionFactory {
         if (fusions != null) {
             for (Fusion fusion: fusions) {
                 // TODO: Populate context start / end (promoter or exonic or intronic)
-                // TODO: Populate ploidy
                 reportableFusions.add(ImmutableReportableGeneFusion.builder()
                         .geneStart(fusion.geneUp())
                         .geneContextStart("")
@@ -31,7 +30,7 @@ public final class ReportableGeneFusionFactory {
                         .geneEnd(fusion.geneDown())
                         .geneContextEnd("")
                         .geneStartTranscript(fusion.transcriptDown())
-                        .ploidy(0)
+                        .ploidy(fusionPloidy(fusion.ploidyDown(), fusion.ploidyUp()))
                         .source(fusion.primarySource())
                         .build());
             }
@@ -39,32 +38,30 @@ public final class ReportableGeneFusionFactory {
         return reportableFusions;
     }
 
+//    @NotNull
+//    public static List<ReportableGeneFusion> toReportableGeneFusions(@NotNull List<GeneFusion> fusions) {
+//        List<ReportableGeneFusion> reportableFusions = Lists.newArrayList();
+//        for (GeneFusion fusion : fusions) {
+//            final Transcript upstream = fusion.upstreamTrans();
+//            final Transcript downstream = fusion.downstreamTrans();
+//
+//            reportableFusions.add(ImmutableReportableGeneFusion.builder()
+//                    .geneStart(upstream.geneName())
+//                    .geneContextStart(exonDescription(upstream))
+//                    .geneStartTranscript(upstream.StableId)
+//                    .geneEnd(downstream.geneName())
+//                    .geneContextEnd(exonDescription(downstream))
+//                    .geneEndTranscript(downstream.StableId)
+//                    .ploidy(fusionPloidy(fusion))
+//                    .source(fusion.primarySource())
+//                    .build());
+//        }
+//
+//        return reportableFusions;
+//    }
+
     @NotNull
-    public static List<ReportableGeneFusion> toReportableGeneFusions(@NotNull List<GeneFusion> fusions) {
-        List<ReportableGeneFusion> reportableFusions = Lists.newArrayList();
-        for (GeneFusion fusion : fusions) {
-            final Transcript upstream = fusion.upstreamTrans();
-            final Transcript downstream = fusion.downstreamTrans();
-
-            reportableFusions.add(ImmutableReportableGeneFusion.builder()
-                    .geneStart(upstream.geneName())
-                    .geneContextStart(exonDescription(upstream))
-                    .geneStartTranscript(upstream.StableId)
-                    .geneEnd(downstream.geneName())
-                    .geneContextEnd(exonDescription(downstream))
-                    .geneEndTranscript(downstream.StableId)
-                    .ploidy(fusionPloidy(fusion))
-                    .source(fusion.primarySource())
-                    .build());
-        }
-
-        return reportableFusions;
-    }
-
-    @NotNull
-    private static Double fusionPloidy(@NotNull GeneFusion fusion) {
-        Double upstreamPloidy = fusion.upstreamTrans().parent().variant().ploidy();
-        Double downstreamPloidy = fusion.downstreamTrans().parent().variant().ploidy();
+    private static Double fusionPloidy(Double downstreamPloidy, Double upstreamPloidy) {
 
         if (upstreamPloidy == null || downstreamPloidy == null) {
             // Not sure when ploidy would be null...
