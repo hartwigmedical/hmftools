@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.patientreporter.structural;
 
 import static com.hartwig.hmftools.patientreporter.report.util.PatientReportFormat.exonDescription;
+import static com.hartwig.hmftools.patientreporter.report.util.PatientReportFormat.exonDescriptionFusion;
 
 import java.util.List;
 
@@ -25,10 +26,10 @@ public final class ReportableGeneFusionFactory {
                 // TODO: Populate context start / end (promoter or exonic or intronic)
                 reportableFusions.add(ImmutableReportableGeneFusion.builder()
                         .geneStart(fusion.geneUp())
-                        .geneContextStart("")
+                        .geneContextStart(exonDescriptionFusion(fusion))
                         .geneStartTranscript(fusion.transcriptUp())
                         .geneEnd(fusion.geneDown())
-                        .geneContextEnd("")
+                        .geneContextEnd(exonDescriptionFusion(fusion))
                         .geneStartTranscript(fusion.transcriptDown())
                         .ploidy(fusionPloidy(fusion.ploidyDown(), fusion.ploidyUp()))
                         .source(fusion.primarySource())
