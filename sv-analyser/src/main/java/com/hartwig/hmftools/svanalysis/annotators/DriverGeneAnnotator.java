@@ -25,6 +25,7 @@ import com.hartwig.hmftools.common.drivercatalog.DriverType;
 import com.hartwig.hmftools.common.genepanel.HmfGenePanelSupplier;
 import com.hartwig.hmftools.common.region.HmfTranscriptRegion;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
+import com.hartwig.hmftools.common.variant.structural.annotation.GeneAnnotation;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 import com.hartwig.hmftools.svanalysis.types.SvBreakend;
 import com.hartwig.hmftools.svanalysis.types.SvCluster;
@@ -111,7 +112,7 @@ public class DriverGeneAnnotator
         mChrBreakendMap = chrBreakendMap;
         mClusters = clusters;
 
-        annotateTemplatedInsertion();
+        checkPseudoGeneAnnotations();
 
         loadDriverCatalog(sampleId);
 
@@ -138,13 +139,14 @@ public class DriverGeneAnnotator
                 {
                     annotateDeleteEvent(driverGene, region);
                 }
-                else if (driverGene.driver() == DriverType.BIALLELIC)
-                {
-                    annotateBiallelicEvent(driverGene, region);
-                }
                 else if (driverGene.driver() == DriverType.AMP)
                 {
                     annotateAmplification(driverGene, region);
+                }
+                else
+                {
+                    // treat DNDS and HOTSPOT as potentially biallelic events
+                    annotateBiallelicEvent(driverGene, region);
                 }
             }
         }
@@ -226,7 +228,7 @@ public class DriverGeneAnnotator
 
         if(minBreakend == null)
         {
-            LOGGER.warn("sample({}) gene({}) not allocated to SVs", mSampleId, geneToStr(driverGene, region));
+            LOGGER.debug("sample({}) gene({}) not allocated to SVs", mSampleId, geneToStr(driverGene, region));
             return;
         }
 
@@ -303,7 +305,7 @@ public class DriverGeneAnnotator
 
             if(startBreakend == null && endBreakend == null)
             {
-                LOGGER.warn("sample({}) gene({}) not allocated to SVs",
+                LOGGER.debug("sample({}) gene({}) not allocated to SVs",
                         mSampleId, geneToStr(driverGene, region));
                 return;
             }
@@ -514,14 +516,11 @@ public class DriverGeneAnnotator
         closeBufferedWriter(mFileWriter);
     }
 
-    private void annotateTemplatedInsertion()
+    private void checkPseudoGeneAnnotations()
     {
-        PerformanceCounter perfCount = new PerformanceCounter("Ensembl Exon Query");
-
         for(final SvCluster cluster : mClusters)
         {
-            //if(!isSpecificCluster(cluster))
-            //    continue;
+            isSpecificCluster(cluster);
 
             for(final SvLinkedPair pair : cluster.getLinkedPairs())
             {
@@ -531,27 +530,27 @@ public class DriverGeneAnnotator
                 final SvBreakend lower = pair.getBreakend(true);
                 final SvBreakend upper = pair.getBreakend(false);
 
+                // for any TI falling within the same gene, check for an exon boundary match
                 if(lower.getSV().getGenesList(lower.usesStart()).isEmpty() || upper.getSV().getGenesList(upper.usesStart()).isEmpty())
                     continue;
 
-                perfCount.start();
-
-                final String exonData = mGeneTranscriptCollection.getExonDetailsForPosition(lower.chromosome(), lower.position(), upper.position());
-
-                perfCount.stop();
-
-                if(!exonData.isEmpty())
+                for(final GeneAnnotation gene1 : lower.getSV().getGenesList(lower.usesStart()))
                 {
-                    LOGGER.info("sample({}) cluster({}) pair({}) matches exon({})",
-                            mSampleId, cluster.id(), pair.toString(), exonData);
+                    for(final GeneAnnotation gene2 : upper.getSV().getGenesList(upper.usesStart()))
+                    {
+                        if(!gene1.GeneName.equals(gene2.GeneName))
+                            continue;
+
+                        final String exonData = mGeneTranscriptCollection.getExonDetailsForPosition(gene1, lower.position(), upper.position());
+
+                        if(!exonData.isEmpty())
+                        {
+                            LOGGER.info("sample({}) cluster({}) pair({}) matches gene({}) exon({})",
+                                    mSampleId, cluster.id(), pair.toString(), gene1.GeneName, exonData);
+                        }
+                    }
                 }
             }
-        }
-
-        if(perfCount.getSampleCount() > 0)
-        {
-            LOGGER.debug("sample({}) perf stats", mSampleId, perfCount.getSampleCount());
-            perfCount.logStats(false);
         }
     }
 }

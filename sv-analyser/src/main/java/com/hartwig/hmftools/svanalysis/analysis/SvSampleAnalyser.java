@@ -174,10 +174,10 @@ public class SvSampleAnalyser {
         if(!mConfig.OutputCsvPath.isEmpty())
         {
             writeClusterSVOutput();
-            writeClusterLinkData();
 
             if(mConfig.hasMultipleSamples())
             {
+                // writeClusterLinkData();
                 writeClusterData();
             }
 
@@ -608,9 +608,12 @@ public class SvSampleAnalyser {
 
             for(final SvVarData var : mAllVariants)
             {
+                final SvChain chain = var.getCluster().findChain(var);
+                int chainId = chain != null ? chain.id() : var.getCluster().getChainId(var);
+
                 writer.write(
                         String.format("%s,%d,%d,%s",
-                                mSampleId, var.getCluster().id(), var.getCluster().getChainId(var), var.id()));
+                                mSampleId, var.getCluster().id(), chainId, var.id()));
 
                 for(int be = SVI_START; be <= SVI_END; ++be)
                 {
@@ -630,7 +633,8 @@ public class SvSampleAnalyser {
                                     breakend.getSV().getFoldbackLink(isStart).isEmpty() ? "NORMAL" : "FOLDBACK"));
                 }
 
-                writer.write(String.format(",%d", max(var.getReplicatedCount(), 1)));
+                int repeatCount = chain != null ? max(var.getReplicatedCount(), 1) : 1;
+                writer.write(String.format(",%d", repeatCount));
 
                 writer.newLine();
             }
@@ -666,6 +670,19 @@ public class SvSampleAnalyser {
                 for (final SvChain chain : cluster.getChains())
                 {
                     List<SvLinkedPair> uniquePairs = Lists.newArrayList();
+
+                    // log the start of the chain
+                    SvBreakend breakend = chain.getFirstSV().getBreakend(chain.firstLinkOpenOnStart());
+                    boolean startsOnEnd = chain.getFirstSV().equals(chain.getLastSV(), true);
+
+                    if(breakend != null)
+                    {
+                        writer.write(String.format("%s,%d,%d,%s,%s,%s,%d",
+                                mSampleId, cluster.id(), chain.id(), breakend.chromosome(), getPositionValue(breakend, true),
+                                getPositionValue(breakend, false), startsOnEnd ? 2 : 1));
+
+                        writer.newLine();
+                    }
 
                     for (final SvLinkedPair pair : chain.getLinkedPairs())
                     {
@@ -705,22 +722,14 @@ public class SvSampleAnalyser {
                         writer.newLine();
                     }
 
-                    // write segments for the chain start and end
-                    for(int be = SVI_START; be <= SVI_END; ++be)
+                    // log the end of the chain out to centromere or telomere
+                    // log the start of the chain
+                    breakend = chain.getLastSV().getBreakend(chain.lastLinkOpenOnStart());
+
+                    if(breakend != null && !startsOnEnd)
                     {
-                        SvVarData var = be == SVI_START ? chain.getFirstSV() : chain.getLastSV();
-                        boolean isStart = be == SVI_START ? chain.firstLinkOpenOnStart() : chain.lastLinkOpenOnStart();
-
-                        if(be == SVI_END && var.isNullBreakend())
-                            continue;
-
-                        writer.write(String.format("%s,%d,%d",
-                                mSampleId, cluster.id(), chain.id()));
-
-                        final SvBreakend breakend = var.getBreakend(isStart);
-
-                        writer.write(String.format(",%s,%s,%s,%d",
-                                breakend.chromosome(), getPositionValue(breakend, true),
+                        writer.write(String.format("%s,%d,%d,%s,%s,%s,%d",
+                                mSampleId, cluster.id(), chain.id(), breakend.chromosome(), getPositionValue(breakend, true),
                                 getPositionValue(breakend, false), 1));
 
                         writer.newLine();
