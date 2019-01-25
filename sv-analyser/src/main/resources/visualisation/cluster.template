@@ -29,7 +29,15 @@
 		r0         = SUBSTITUTE_CNA_INNER_RADIUSr
 		r1         = SUBSTITUTE_CNA_MIDDLE_RADIUSr
 		fill_color = black_a5
-		z = 5
+		z = 20
+	</highlight>
+
+	<highlight>
+		file       = SUBSTITUTE_SAMPLE.line_element.circos
+		r0         = SUBSTITUTE_CNA_MIDDLE_RADIUSr
+		r1         = SUBSTITUTE_CNA_OUTER_RADIUSr
+		fill_color = black_a5
+		z = 20
 	</highlight>
 
 </highlights>

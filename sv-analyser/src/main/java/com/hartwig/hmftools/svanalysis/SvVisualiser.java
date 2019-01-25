@@ -69,7 +69,7 @@ public class SvVisualiser implements AutoCloseable {
         final List<Future<Object>> futures = Lists.newArrayList();
         final List<Integer> clusterIds = config.links().stream().map(Link::clusterId).distinct().sorted().collect(toList());
         for (Integer clusterId : clusterIds) {
-//            futures.add(executorService.submit(() -> runCluster(clusterId)));
+            futures.add(executorService.submit(() -> runCluster(clusterId)));
         }
 
         final Set<String> chromosomes = Sets.newHashSet();
@@ -82,10 +82,6 @@ public class SvVisualiser implements AutoCloseable {
         for (Future<Object> future : futures) {
             future.get();
         }
-//        runCluster(0);
-//        runCluster(66);
-//        runCluster(67);
-//        runChromsome("7");
     }
 
     @Nullable

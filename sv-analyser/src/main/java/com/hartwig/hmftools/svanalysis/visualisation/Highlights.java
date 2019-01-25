@@ -50,6 +50,11 @@ public class Highlights {
     }
 
     @NotNull
+    public static List<GenomeRegion> lineElements() {
+        return fromResource("line_elements.csv");
+    }
+
+    @NotNull
     private static List<GenomeRegion> fromResource(@NotNull final String resource) {
         final InputStream inputStream = Highlights.class.getResourceAsStream("/visualisation/" + resource);
         return fromString(new BufferedReader(new InputStreamReader(inputStream)).lines().collect(Collectors.toList()));
