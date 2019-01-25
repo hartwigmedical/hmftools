@@ -178,8 +178,8 @@ public class SvDisruptionAnalyser
 
                 mWriter = createBufferedWriter(outputFilename, false);
 
-                mWriter.write("SampleId,Reportable,SvId,Chromosome,Position,Orientation,Type");
-                mWriter.write(",Gene,Transcript,Strand,RegionType,CodingType,Biotype,Exon,IsDisruptive,");
+                mWriter.write("SampleId,Reportable,SvId,Chromosome,Position,Orientation,Type,Ploidy");
+                mWriter.write(",Gene,ChrBand,Transcript,Strand,RegionType,CodingType,Canonical,Biotype,ExonUp,ExonDown,IsDisruptive");
                 mWriter.newLine();
             }
 
@@ -191,15 +191,16 @@ public class SvDisruptionAnalyser
 
                 final GeneAnnotation svBreakend = transcript.parent();
 
-                writer.write(String.format("%s,%s,%d,%s,%d,%d,%s",
+                writer.write(String.format("%s,%s,%d,%s,%d,%d,%s,%.2f",
                         sampleId, disruption.reportable(), svBreakend.id(),
-                        svBreakend.chromosome(), svBreakend.position(), svBreakend.orientation(), svBreakend.type()));
+                        svBreakend.chromosome(), svBreakend.position(), svBreakend.orientation(),
+                        svBreakend.type(), svBreakend.ploidy()));
 
                 writer.write(
-                        String.format(",%s,%s,%d,%s,%s,%s,%d,%s",
-                                transcript.parent().GeneName, transcript.StableId, transcript.parent().Strand,
-                                transcript.regionType(), transcript.codingType(), transcript.bioType(),
-                                transcript.exonUpstream(), transcript.isDisruptive()));
+                        String.format(",%s,%s,%s,%d,%s,%s,%s,%s,%d,%d,%s",
+                                svBreakend.GeneName, svBreakend.karyotypeBand(), transcript.StableId, svBreakend.Strand,
+                                transcript.regionType(), transcript.codingType(), transcript.isCanonical(), transcript.bioType(),
+                                transcript.exonUpstream(), transcript.exonDownstream(), transcript.isDisruptive()));
 
                 writer.newLine();
             }

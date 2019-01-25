@@ -104,11 +104,6 @@ public class GeneAnnotation {
         mOrientation = orientation;
     }
 
-    public void setVarId(final int varId)
-    {
-        mVarId = varId;
-    }
-
     public void setSvData(final StructuralVariantData var)
     {
         mOrientation = mIsStart ? var.startOrientation() : var.endOrientation();

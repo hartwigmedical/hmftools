@@ -539,13 +539,15 @@ public class SvFusionAnalyser
 
                 mFusionWriter.write("SampleId,Reportable,KnownType,PrimarySource,ClusterId,ClusterCount,ResolvedType");
 
-                mFusionWriter.write(",SvIdUp,ChrUp,PosUp,OrientUp,TypeUp,GeneUp,TranscriptUp,StrandUp,RegionTypeUp,CodingTypeUp");
+                mFusionWriter.write(",SvIdUp,ChrUp,PosUp,OrientUp,TypeUp,PloidyUp,GeneUp,ChrBandUp,TranscriptUp,StrandUp,RegionTypeUp,CodingTypeUp");
                 mFusionWriter.write(",ExonUp,PhaseUp,ExonMaxUp,DisruptiveUp,ExactBaseUp,CodingBasesUp,TotalCodingUp");
-                mFusionWriter.write(",CodingStartUp,CodingEndUp,TransStartUp,TransEndUp,DistancePrevUp,BiotypeUp");
+                mFusionWriter.write(",CodingStartUp,CodingEndUp,TransStartUp,TransEndUp,DistancePrevUp,CanonicalUp,BiotypeUp");
 
-                mFusionWriter.write(",SvIdDown,ChrDown,PosDown,OrientDown,TypeDown,GeneDown,TranscriptDown,StrandDown,RegionTypeDown,CodingTypeDown");
+                mFusionWriter.write(",SvIdDown,ChrDown,PosDown,OrientDown,TypeDown,PloidyDown,GeneDown,ChrBandDown,TranscriptDown,StrandDown,RegionTypeDown,CodingTypeDown");
                 mFusionWriter.write(",ExonDown,PhaseDown,ExonMaxDown,DisruptiveDown,ExactBaseDown,CodingBasesDown,TotalCodingDown");
-                mFusionWriter.write(",CodingStartDown,CodingEndDown,TransStartDown,TransEndDown,DistancePrevDown,BiotypeDown,ProteinsKept,ProteinsLost");
+                mFusionWriter.write(",CodingStartDown,CodingEndDown,TransStartDown,TransEndDown,DistancePrevDown,CanonicalDown,BiotypeDown");
+
+                mFusionWriter.write(",ProteinsKept,ProteinsLost");
                 mFusionWriter.newLine();
             }
 
@@ -564,41 +566,44 @@ public class SvFusionAnalyser
 
                 // write upstream SV, transcript and exon info
                 writer.write(
-                        String.format(",%d,%s,%d,%d,%s",
-                                startVar.id(), startVar.chromosome(), startVar.position(), startVar.orientation(), startVar.type()));
+                        String.format(",%d,%s,%d,%d,%s,%.2f",
+                                startVar.id(), startVar.chromosome(), startVar.position(), startVar.orientation(),
+                                startVar.type(), startVar.ploidy()));
 
                 writer.write(
-                        String.format(",%s,%s,%d,%s,%s",
-                                upTrans.parent().GeneName, upTrans.StableId,
-                                upTrans.parent().Strand, upTrans.regionType(), upTrans.codingType()));
+                        String.format(",%s,%s,%s,%d,%s,%s",
+                                startVar.GeneName, startVar.karyotypeBand(), upTrans.StableId,
+                                startVar.Strand, upTrans.regionType(), upTrans.codingType()));
 
                 writer.write(
                         String.format(",%d,%d,%d,%s",
                                 upTrans.exonUpstream(), upTrans.exonUpstreamPhase(), upTrans.exonMax(), upTrans.isDisruptive()));
                 writer.write(
-                        String.format(",%d,%d,%d,%d,%d,%d,%d,%d,%s",
+                        String.format(",%d,%d,%d,%d,%d,%d,%d,%d,%s,%s",
                                 upTrans.exactCodingBase(), upTrans.calcCodingBases(true), upTrans.totalCodingBases(),
                                 upTrans.codingStart(), upTrans.codingEnd(), upTrans.transcriptStart(), upTrans.transcriptEnd(),
-                                upTrans.exonDistanceUp(), upTrans.bioType()));
+                                upTrans.exonDistanceUp(), upTrans.isCanonical(), upTrans.bioType()));
 
                 writer.write(
-                        String.format(",%d,%s,%d,%d,%s",
-                                endVar.id(), endVar.chromosome(), endVar.position(), endVar.orientation(), endVar.type()));
+                        String.format(",%d,%s,%d,%d,%s,%.2f",
+                                endVar.id(), endVar.chromosome(), endVar.position(), endVar.orientation(),
+                                endVar.type(), endVar.ploidy()));
 
                 writer.write(
-                        String.format(",%s,%s,%d,%s,%s",
-                                downTrans.parent().GeneName, downTrans.StableId,
-                                downTrans.parent().Strand, downTrans.regionType(), downTrans.codingType()));
+                        String.format(",%s,%s,%s,%d,%s,%s",
+                                endVar.GeneName, endVar.karyotypeBand(), downTrans.StableId,
+                                endVar.Strand, downTrans.regionType(), downTrans.codingType()));
 
                 writer.write(
                         String.format(",%d,%d,%d,%s",
                                 downTrans.exonDownstream(), downTrans.exonDownstreamPhase(), downTrans.exonMax(), downTrans.isDisruptive()));
 
                 writer.write(
-                        String.format(",%d,%d,%d,%d,%d,%d,%d,%d,%s,%s,%s",
+                        String.format(",%d,%d,%d,%d,%d,%d,%d,%d,%s,%s,%s,%s",
                                 downTrans.exactCodingBase(), downTrans.calcCodingBases(false), downTrans.totalCodingBases(),
                                 downTrans.codingStart(), downTrans.codingEnd(), downTrans.transcriptStart(), downTrans.transcriptEnd(),
-                                downTrans.exonDistanceUp(), downTrans.bioType(), downTrans.getProteinFeaturesKept(), downTrans.getProteinFeaturesLost()));
+                                downTrans.exonDistanceUp(), downTrans.isCanonical(), downTrans.bioType(),
+                                downTrans.getProteinFeaturesKept(), downTrans.getProteinFeaturesLost()));
 
                 writer.newLine();
             }
