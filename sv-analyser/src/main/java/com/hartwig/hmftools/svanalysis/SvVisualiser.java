@@ -6,13 +6,17 @@ import static com.hartwig.hmftools.svanalysis.visualisation.CopyNumberAlteration
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.circos.CircosExecution;
+import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.svanalysis.visualisation.CircosConfigWriter;
 import com.hartwig.hmftools.svanalysis.visualisation.CircosDataWriter;
 import com.hartwig.hmftools.svanalysis.visualisation.CopyNumberAlteration;
@@ -63,35 +67,76 @@ public class SvVisualiser implements AutoCloseable {
         final List<Future<Object>> futures = Lists.newArrayList();
         final List<Integer> clusterIds = config.links().stream().map(Link::clusterId).distinct().sorted().collect(toList());
         for (Integer clusterId : clusterIds) {
-            futures.add(executorService.submit(() -> run(clusterId)));
+            futures.add(executorService.submit(() -> runCluster(clusterId)));
+        }
+
+        final Set<String> chromosomes = Sets.newHashSet();
+        config.links().stream().map(Link::startChromosome).filter(HumanChromosome::contains).forEach(chromosomes::add);
+        config.links().stream().map(Link::endChromosome).filter(HumanChromosome::contains).forEach(chromosomes::add);
+        for (final String chromosome : chromosomes) {
+            futures.add(executorService.submit(() -> runChromsome(chromosome)));
         }
 
         for (Future<Object> future : futures) {
             future.get();
         }
-//        run(0);
-//        run(66);
-//        run(67);
+//                runCluster(0);
+//                runCluster(66);
+//                runCluster(67);
+
+//        runChromsome("7");
     }
 
     @Nullable
-    private Object run(int clusterId) throws IOException, InterruptedException {
-        final String sample = config.sample() + "." + clusterId;
+    private Object runChromsome(final String chromosome) throws IOException, InterruptedException {
+        final String sample = config.sample() + ".chr" + chromosome;
+
+
+        final List<Integer> clusterIds = config.links()
+                .stream()
+                .filter(x -> x.startChromosome().equals(chromosome) || x.endChromosome().equals(chromosome))
+                .map(Link::clusterId)
+                .collect(toList());
+
+        final List<Link> links = config.links().stream().filter(x -> clusterIds.contains(x.clusterId())).collect(toList());
+        final List<Segment> clusterSegments = config.tracks().stream().filter(x -> clusterIds.contains(x.clusterId())).collect(toList());
+        final List<Segment> segments = Segments.extendTerminals(1000, clusterSegments, links);
+        final List<CopyNumberAlteration> alterations = copyNumberInTracks(100, config.copyNumberAlterations(), segments);
+
+
+
+        final int chromosomeCount = (int) segments.stream().map(GenomeRegion::chromosome).distinct().count();
+        final int maxTracks = segments.stream().mapToInt(Segment::track).max().orElse(0) + 1;
+        final double maxCopyNumber = alterations.stream().mapToDouble(CopyNumberAlteration::copyNumber).max().orElse(0);
+        final double maxMinorAllelePloidy = alterations.stream().mapToDouble(CopyNumberAlteration::minorAllelePloidy).max().orElse(0);
+
+        final CircosConfigWriter confWrite = new CircosConfigWriter(sample, config.outputConfPath());
+        confWrite.writeConfig(chromosomeCount, maxTracks, maxCopyNumber, maxMinorAllelePloidy);
+        new CircosDataWriter(sample, config.outputConfPath(), maxTracks).write(segments, links, alterations);
+
+        final String outputPlotName = sample + ".png";
+        return new CircosExecution(config.circosBin()).generateCircos(confWrite.configPath(), config.outputPlotPath(), outputPlotName);
+    }
+
+    @Nullable
+    private Object runCluster(int clusterId) throws IOException, InterruptedException {
+        final String sample = config.sample() + ".cluster" + clusterId;
 
         final List<Link> clusterLinks = config.links().stream().filter(x -> x.clusterId() == clusterId).collect(toList());
         final List<Segment> clusterSegments = config.tracks().stream().filter(x -> x.clusterId() == clusterId).collect(toList());
         final List<Segment> segments = Segments.extendTerminals(1000, clusterSegments, clusterLinks);
         final List<CopyNumberAlteration> alterations = copyNumberInTracks(100, config.copyNumberAlterations(), segments);
 
+        final int chromosomeCount = (int) segments.stream().map(GenomeRegion::chromosome).distinct().count();
         int maxTracks = segments.stream().mapToInt(Segment::track).max().orElse(0) + 1;
         double maxCopyNumber = alterations.stream().mapToDouble(CopyNumberAlteration::copyNumber).max().orElse(0);
         double maxMinorAllelePloidy = alterations.stream().mapToDouble(CopyNumberAlteration::minorAllelePloidy).max().orElse(0);
 
         final CircosConfigWriter confWrite = new CircosConfigWriter(sample, config.outputConfPath());
-        confWrite.writeConfig(maxTracks, maxCopyNumber, maxMinorAllelePloidy);
+        confWrite.writeConfig(chromosomeCount, maxTracks, maxCopyNumber, maxMinorAllelePloidy);
         new CircosDataWriter(sample, config.outputConfPath(), maxTracks).write(segments, clusterLinks, alterations);
 
-        final String outputPlotName = sample + ".cluster.png";
+        final String outputPlotName = sample + ".png";
         return new CircosExecution(config.circosBin()).generateCircos(confWrite.configPath(), config.outputPlotPath(), outputPlotName);
     }
 

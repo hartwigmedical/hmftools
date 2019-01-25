@@ -4,7 +4,7 @@
 
 <ideogram>
     <spacing>
-        default = 1u
+        default = SUBSTITUTE_IDEOGRAM_SPACING
     </spacing>
 
     # Ideogram position, fill and outline

@@ -47,7 +47,7 @@ public class CircosConfigWriter {
         return start + track * singleTrack;
     }
 
-    public void writeConfig(int maxTracks, final double maxCopyNumber, final double maxMinorAllelePloidy) throws IOException {
+    public void writeConfig(int chromosomeCount, int maxTracks, final double maxCopyNumber, final double maxMinorAllelePloidy) throws IOException {
 
         int cnaMaxTracks = Math.max(2, (int) Math.round(Math.ceil(maxCopyNumber - 2)));
         double cnaMiddleRadius = CNA_INNER_RADIUS + 2 * (CNA_OUTER_RADIUS - CNA_INNER_RADIUS) / (cnaMaxTracks + 2);
@@ -58,6 +58,8 @@ public class CircosConfigWriter {
         final Charset charset = StandardCharsets.UTF_8;
         final String template =
                 readResource("/visualisation/cluster.template")
+                        .replaceAll("SUBSTITUTE_IDEOGRAM_SPACING", chromosomeCount > 1 ? "0.005r" : "1u")
+
                         .replaceAll("SUBSTITUTE_HISTOGRAM", histogramPlots(maxTracks))
                         .replaceAll("SUBSTITUTE_TERMINAL", terminalTexts(maxTracks))
 
