@@ -2,8 +2,6 @@ package com.hartwig.hmftools.patientreporter.structural;
 
 import static com.hartwig.hmftools.patientreporter.PatientReporterTestFactory.createTestCopyNumberBuilder;
 
-import static org.junit.Assert.assertEquals;
-
 import java.util.List;
 
 import com.google.common.collect.Lists;
@@ -42,7 +40,8 @@ public class ReportableGeneDisruptionFactoryTest {
                 .regionType("Upstream")
                 .codingType("5P_UTR")
                 .biotype("protein_coding")
-                .exon("0")
+                .exonUp("0")
+                .exonDown("1")
                 .isDisruptive(false)
                 .build();
     }

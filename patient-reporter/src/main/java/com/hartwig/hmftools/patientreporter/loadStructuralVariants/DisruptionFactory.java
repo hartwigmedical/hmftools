@@ -39,7 +39,7 @@ public class DisruptionFactory {
                 .position(values[4])
                 .orientation(values[5])
                 .type(values[6])
-                .ploidy(values[7])
+                .ploidy(Double.valueOf(values[7]))
                 .gene(values[8])
                 .chrBand(values[9])
                 .transcript(values[10])
