@@ -31,6 +31,7 @@ public final class ReportableGeneFusionFactory {
                         .geneEnd(fusion.geneDown())
                         .geneContextEnd(exonDescriptionFusion(fusion))
                         .geneStartTranscript(fusion.transcriptDown())
+                        .geneEndTranscript("")
                         .ploidy(fusionPloidy(fusion.ploidyDown(), fusion.ploidyUp()))
                         .source(fusion.primarySource())
                         .build());
