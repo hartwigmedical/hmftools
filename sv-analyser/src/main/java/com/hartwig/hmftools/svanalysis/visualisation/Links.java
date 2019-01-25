@@ -17,6 +17,7 @@ import org.jetbrains.annotations.NotNull;
 
 public class Links {
 
+    private static final String HEADER = "SampleId";
     private static final String COMMENT = "#";
     private static final String DELIMITER = ",";
 
@@ -60,7 +61,7 @@ public class Links {
     private static List<Link> fromLines(@NotNull List<String> lines) {
         final List<Link> results = Lists.newArrayList();
         for (final String line : lines) {
-            if (!line.startsWith(COMMENT)) {
+            if (!line.startsWith(COMMENT) && !line.startsWith(HEADER) ) {
                 results.add(fromString(line));
             }
         }

@@ -199,7 +199,27 @@ chromosomes_display_default = yes
     SUBSTITUTE_TERMINAL
 
 	# -----------------------------------------------------------
-	# Text
+	# Distances Text
+	<plot>
+		type             = text
+		color            = black
+		file             = SUBSTITUTE_SAMPLE.distance.circos
+
+		r0   = SUBSTITUTE_CNA_MIDDLE_RADIUSr
+		r1   = 1r
+
+		show_links     = no
+
+		label_size   = 20p
+		label_font   = condensed
+		label_snuggle=yes
+
+		padding  = 0p
+		rpadding = 15p
+	</plot>
+
+	# -----------------------------------------------------------
+	# Locations Text
 	<plot>
 		type             = text
 		color            = black

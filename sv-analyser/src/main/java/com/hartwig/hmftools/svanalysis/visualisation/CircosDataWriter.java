@@ -15,6 +15,7 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.position.GenomePosition;
 import com.hartwig.hmftools.common.position.GenomePositions;
+import com.hartwig.hmftools.common.region.GenomeRegion;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -72,6 +73,31 @@ public class CircosDataWriter {
         final String terminals = filePrefix + ".terminals.circos";
         Files.write(new File(terminals).toPath(), createTerminals(segments));
 
+        final String distances = filePrefix + ".distance.circos";
+        Files.write(new File(distances).toPath(), createDistances(unadjustedAlterations, alterations));
+    }
+
+    @NotNull
+    private List<String> createDistances(@NotNull final List<CopyNumberAlteration> unadjustedSegment,
+            @NotNull final List<CopyNumberAlteration> segments) {
+
+        final Map<String, Integer> contigLengths = contigLengthsFromRegions(segments);
+
+        final List<String> result = Lists.newArrayList();
+        for (int i = 0; i < unadjustedSegment.size(); i++) {
+            final CopyNumberAlteration adjusted = segments.get(i);
+            final CopyNumberAlteration unadjusted = unadjustedSegment.get(i);
+
+            if (adjusted.start() != 1 && adjusted.end() != contigLengths.get(adjusted.chromosome())) {
+                final String distance = new StringJoiner(DELIMITER).add(circosContig(adjusted.chromosome()))
+                        .add(String.valueOf(adjusted.start()))
+                        .add(String.valueOf(adjusted.end()))
+                        .add(shorthand(unadjusted.end() - unadjusted.start()))
+                        .toString();
+                result.add(distance);
+            }
+        }
+        return result;
     }
 
     @NotNull
@@ -302,6 +328,16 @@ public class CircosDataWriter {
     }
 
     @NotNull
+    private Map<String, Integer> contigLengthsFromRegions(@NotNull final List<? extends GenomeRegion> positions) {
+        final Map<String, Integer> results = Maps.newHashMap();
+        for (GenomeRegion region : positions) {
+            int end = (int) region.end();
+            results.merge(region.chromosome(), end, Math::max);
+        }
+        return results;
+    }
+
+    @NotNull
     private List<String> createPositionText(@NotNull final List<Segment> originalLinks, @NotNull final List<Segment> scaledLinks) {
 
         final Set<String> result = Sets.newHashSet();
@@ -337,7 +373,6 @@ public class CircosDataWriter {
         return result.stream().sorted().distinct().collect(Collectors.toList());
     }
 
-
     @NotNull
     private static String circosContig(@NotNull final String chromosome) {
         return "hs" + HumanChromosome.fromString(chromosome);
@@ -346,6 +381,19 @@ public class CircosDataWriter {
     @NotNull
     private static String thickness(long usage) {
         return "thickness=" + Math.max(1, (4 + (usage - 1) * 4));
+    }
+
+    @NotNull
+    static String shorthand(long value) {
+        if (value < 100) {
+            return String.valueOf(value);
+        }
+
+        if (value < 99_950) {
+            return String.format("%.1fk", value / 1_000d);
+        }
+
+        return String.format("%.1fm", value / 1_000_000d);
     }
 
 }

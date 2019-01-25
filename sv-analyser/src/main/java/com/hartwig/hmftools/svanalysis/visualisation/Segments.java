@@ -22,6 +22,7 @@ import org.jetbrains.annotations.NotNull;
 
 public class Segments {
 
+    private static final String HEADER = "SampleId";
     private static final String COMMENT = "#";
     private static final String DELIMITER = ",";
     private static final Function<List<Segment>, List<Segment>> TRACK_INCREMENTER = Segments::incrementOnChromosome;
@@ -94,7 +95,7 @@ public class Segments {
 
         for (final String line : lines) {
 
-            if (!line.startsWith(COMMENT)) {
+            if (!line.startsWith(COMMENT) && !line.startsWith(HEADER)) {
                 String[] values = line.split(DELIMITER);
                 final int clusterId = Integer.valueOf(values[1]);
                 final int chainId = Integer.valueOf(values[2]);
