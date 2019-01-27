@@ -23,7 +23,7 @@ public class DisruptionAnalyzer {
         Set<String> reportableGenes = geneModel.disruptionGenePanel();
 
         for (Disruption disruption : disruptions) {
-            if (reportableGenes.contains(disruption.gene()) && disruption.canonical()) {
+            if (reportableGenes.contains(disruption.gene()) && disruption.canonical() && disruption.isDisruptive()) {
                 reportableDisruptions.add(disruption);
             }
         }
