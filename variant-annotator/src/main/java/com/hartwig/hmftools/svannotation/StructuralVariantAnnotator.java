@@ -356,6 +356,12 @@ public class StructuralVariantAnnotator
         return annotations;
     }
 
+    public static void writeEnsemblDataFiles(final CommandLine cmd)
+    {
+        EnsemblDAO ensemblData = new EnsemblDAO(cmd);
+        ensemblData.writeDataCacheFiles(cmd.getOptionValue(DATA_OUTPUT_DIR));
+    }
+
     public static void main(@NotNull final String[] args) throws ParseException
     {
         final Options options = createBasicOptions();
@@ -363,6 +369,12 @@ public class StructuralVariantAnnotator
 
         if (cmd.hasOption(LOG_DEBUG))
             Configurator.setRootLevel(Level.DEBUG);
+
+        if(cmd.hasOption(WRITE_ENSEMBL_CACHE))
+        {
+            writeEnsemblDataFiles(cmd);
+            return;
+        }
 
         StructuralVariantAnnotator svAnnotator = new StructuralVariantAnnotator(cmd);
 
@@ -389,6 +401,7 @@ public class StructuralVariantAnnotator
 
     private static final String LOG_DEBUG = "log_debug";
     private static final String SAMPLE_RNA_FILE = "sample_rna_file";
+    private static final String WRITE_ENSEMBL_CACHE = "write_ensembl_cache";
 
     private static final String DB_USER = "db_user";
     private static final String DB_PASS = "db_pass";
@@ -408,8 +421,10 @@ public class StructuralVariantAnnotator
         options.addOption(REF_GENOME, true, "Path to the ref genome fasta file.");
         options.addOption(DATA_OUTPUT_DIR, true, "Path to persist annotations to file");
         options.addOption(ENSEMBL_DATA_DIR, true, "Cached Ensembl data path");
+        options.addOption(WRITE_ENSEMBL_CACHE, false, "Write Ensembl cached data files and exit");
 
         SvFusionAnalyser.addCmdLineArgs(options);
+        EnsemblDAO.addCmdLineArgs(options);
 
         // testing options
         options.addOption(SOURCE_SVS_FROM_DB, false, "Skip annotations, including Ensemble DB data sync, for testing only)");

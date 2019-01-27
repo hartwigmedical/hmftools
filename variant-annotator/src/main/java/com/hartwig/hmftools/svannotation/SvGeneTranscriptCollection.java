@@ -14,6 +14,8 @@ import static com.hartwig.hmftools.common.variant.structural.annotation.EnsemblG
 import static com.hartwig.hmftools.common.variant.structural.annotation.EnsemblGeneData.phaseToRegion;
 import static com.hartwig.hmftools.common.variant.structural.annotation.Transcript.TRANS_CODING_TYPE_CODING;
 
+import static org.ensembl.database.homo_sapiens_core.tables.Exon.EXON;
+
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -36,6 +38,7 @@ import com.hartwig.hmftools.common.variant.structural.annotation.TranscriptProte
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jooq.Record;
 
 public class SvGeneTranscriptCollection
 {
@@ -51,10 +54,6 @@ public class SvGeneTranscriptCollection
     // to get a wider range of candidate genes and filter by promotor distance later on
     public static int PRE_GENE_PROMOTOR_DISTANCE = 100000;
 
-    public static String ENSEMBL_GENE_DATA_FILE = "ensembl_gene_data.csv";
-    public static String ENSEMBL_TRANS_EXON_DATA_FILE = "ensembl_trans_exon_data.csv";
-    public static String ENSEMBL_PROTEIN_FEATURE_DATA_FILE = "ensembl_protein_features.csv";
-
     private static final Logger LOGGER = LogManager.getLogger(SvGeneTranscriptCollection.class);
 
     public SvGeneTranscriptCollection()
@@ -69,6 +68,9 @@ public class SvGeneTranscriptCollection
     public void setDataPath(final String dataPath)
     {
         mDataPath = dataPath;
+
+        if(!mDataPath.endsWith(File.separator))
+            mDataPath += File.separator;
     }
 
     public boolean hasCachedEnsemblData()
@@ -540,284 +542,14 @@ public class SvGeneTranscriptCollection
 
     public boolean loadEnsemblData()
     {
-        return loadTranscriptExonData() &&  loadEnsemblGeneData() &&  loadTranscriptProteinData();
-    }
-
-
-    // Gene,CanonicalTranscriptId,Strand,TransId,Trans,TransStart,TransEnd,ExonRank,ExonStart,ExonEnd,
-    // ExonPhase,ExonEndPhase,CodingStart,CodingEnd
-    private static int TE_GENE_ID = 0;
-    private static int TE_CANONICAL = 1;
-    private static int TE_STRAND = 2;
-    private static int TE_TRANS_ID = 3;
-    private static int TE_TRANS_NAME = 4;
-    private static int TE_BIOTYPE = 5;
-    private static int TE_TRANS_START = 6;
-    private static int TE_TRANS_END = 7;
-    private static int TE_EXON_RANK = 8;
-    private static int TE_EXON_START = 9;
-    private static int TE_EXON_END = 10;
-    private static int TE_PHASE = 11;
-    private static int TE_PHASE_END = 12;
-    private static int TE_CODING_START = 13;
-    private static int TE_CODING_END = 14;
-
-    private boolean loadTranscriptExonData()
-    {
-        String filename = mDataPath;
-
-        if(!filename.endsWith(File.separator))
-            filename += File.separator;
-
-        filename += ENSEMBL_TRANS_EXON_DATA_FILE;
-
-        if (!Files.exists(Paths.get(filename)))
+        if(!EnsemblDAO.loadTranscriptExonData(mDataPath, mGeneTransExonDataMap))
             return false;
 
-        try
-        {
-            BufferedReader fileReader = new BufferedReader(new FileReader(filename));
-
-            String line = fileReader.readLine();
-
-            if (line == null)
-            {
-                LOGGER.error("empty Ensembl gene-exon data file({})", filename);
-                return false;
-            }
-
-            int exonCount = 0;
-            String currentGene = "";
-            List<TranscriptExonData> transExonDataList = null;
-
-            line = fileReader.readLine(); // skip header
-
-            while (line != null)
-            {
-                // parse CSV data
-                String[] items = line.split(",");
-
-                // check if still on the same variant
-                final String geneId = items[TE_GENE_ID];
-
-                if(!geneId.equals(currentGene))
-                {
-                    currentGene = geneId;
-                    transExonDataList = Lists.newArrayList();
-                    mGeneTransExonDataMap.put(geneId, transExonDataList);
-                }
-
-                // Gene,CanonicalTranscriptId,Strand,TransId,Trans,TransStart,TransEnd,ExonRank,ExonStart,ExonEnd,
-                // ExonPhase,ExonEndPhase,CodingStart,CodingEnd
-
-                Long codingStart = !items[TE_CODING_START].equals("NULL") ? Long.parseLong(items[TE_CODING_START]) : null;
-                Long codingEnd = !items[TE_CODING_END].equals("NULL") ? Long.parseLong(items[TE_CODING_END]) : null;
-                int transId = Integer.parseInt(items[TE_TRANS_ID]);
-                int canonicalTransId = Integer.parseInt(items[TE_CANONICAL]);
-
-                TranscriptExonData exonData = new TranscriptExonData(
-                        geneId, items[TE_TRANS_NAME], transId, transId == canonicalTransId, Byte.parseByte(items[TE_STRAND]),
-                        Long.parseLong(items[TE_TRANS_START]), Long.parseLong(items[TE_TRANS_END]),
-                        Long.parseLong(items[TE_EXON_START]), Long.parseLong(items[TE_EXON_END]),
-                        Integer.parseInt(items[TE_EXON_RANK]), Integer.parseInt(items[TE_PHASE]), Integer.parseInt(items[TE_PHASE_END]),
-                        codingStart, codingEnd, items[TE_BIOTYPE]);
-
-                transExonDataList.add(exonData);
-                ++exonCount;
-
-                line = fileReader.readLine();
-            }
-
-            LOGGER.debug("loaded {} gene records, {} exon", mGeneTransExonDataMap.size(), exonCount);
-        }
-        catch(IOException e)
-        {
-            LOGGER.warn("failed to load gene transcript exon data({}): {}", filename, e.toString());
-            return false;
-        }
-
-        return true;
-    }
-
-    // GeneId,GeneName,Chromosome,Strand,GeneStart,GeneEnd,EntrezIds,KaryotypeBand,Synonyms
-    private static int GD_ID = 0;
-    private static int GD_NAME = 1;
-    private static int GD_CHR = 2;
-    private static int GD_STRAND = 3;
-    private static int GD_START = 4;
-    private static int GD_END = 5;
-    private static int GD_ENTREZ = 6;
-    private static int GD_BAND = 7;
-    private static int GD_SYN = 8;
-
-    private boolean loadEnsemblGeneData()
-    {
-        String filename = mDataPath;
-
-        if(!filename.endsWith(File.separator))
-            filename += File.separator;
-
-        filename += ENSEMBL_GENE_DATA_FILE;
-
-        if (!Files.exists(Paths.get(filename)))
+        if(EnsemblDAO.loadEnsemblGeneData(mDataPath, mChromosomeGeneDataMap, mChromosomeReverseGeneDataMap))
             return false;
 
-        try
-        {
-            BufferedReader fileReader = new BufferedReader(new FileReader(filename));
-
-            String line = fileReader.readLine();
-
-            if (line == null)
-            {
-                LOGGER.error("empty Ensembl gene data file({})", filename);
-                return false;
-            }
-
-            line = fileReader.readLine(); // skip header
-
-            List<EnsemblGeneData> geneList = null;
-            List<EnsemblGeneData> reverseGeneList = null;
-            String currentChr = "";
-            int geneCount = 0;
-
-            while (line != null)
-            {
-                String[] items = line.split(",");
-
-                final String geneId = items[GD_ID];
-                final String chromosome = items[GD_CHR];
-
-                EnsemblGeneData geneData = new EnsemblGeneData(
-                        geneId, items[GD_NAME], chromosome, Byte.parseByte(items[GD_STRAND]),
-                        Long.parseLong(items[GD_START]), Long.parseLong(items[GD_END]),
-                        items[GD_ENTREZ], items[GD_BAND], items[GD_SYN]);
-
-                if(!currentChr.equals(chromosome))
-                {
-                    currentChr = chromosome;
-                    geneList = mChromosomeGeneDataMap.get(chromosome);
-
-                    if(geneList == null)
-                    {
-                        geneList = Lists.newArrayList();
-                        reverseGeneList = Lists.newArrayList();
-                        mChromosomeGeneDataMap.put(chromosome, geneList);
-                        mChromosomeReverseGeneDataMap.put(chromosome, reverseGeneList);
-                    }
-                }
-
-                // genes are already sorted by GeneStart
-                geneData.setListIndex(geneList.size());
-                geneList.add(geneData);
-                ++geneCount;
-
-                // but also create a list ordered by GeneEnd
-                int index = 0;
-                for(; index < reverseGeneList.size(); ++index)
-                {
-                    final EnsemblGeneData rgd = reverseGeneList.get(index);
-
-                    if(geneData.GeneEnd < rgd.GeneEnd)
-                        break;
-                }
-
-                reverseGeneList.add(index, geneData);
-
-                line = fileReader.readLine();
-            }
-
-            // set indicies for the reverse list
-            for(Map.Entry<String, List<EnsemblGeneData>> entry : mChromosomeReverseGeneDataMap.entrySet())
-            {
-                final List<EnsemblGeneData> geneDataList = entry.getValue();
-                for(int index = 0; index < geneDataList.size(); ++index)
-                {
-                    geneDataList.get(index).setReverseListIndex(index);
-                }
-            }
-
-            LOGGER.debug("loaded {} gene records", geneCount);
-        }
-        catch(IOException e)
-        {
-            LOGGER.warn("failed to load Ensembl gene ({}): {}", filename, e.toString());
+        if(!EnsemblDAO.loadTranscriptProteinData(mDataPath, mEnsemblProteinDataMap))
             return false;
-        }
-
-        return true;
-    }
-
-    // TranscriptId,TranslationId,ProteinFeatureId,SeqStart,SeqEnd,HitDescription
-    private static int PF_TRANS_ID = 0;
-    private static int PF_TRANL_ID = 1;
-    private static int PF_PF_ID = 2;
-    private static int PF_START = 3;
-    private static int PF_END = 4;
-    private static int PF_DESC = 5;
-
-    private boolean loadTranscriptProteinData()
-    {
-        String filename = mDataPath;
-
-        if(!filename.endsWith(File.separator))
-            filename += File.separator;
-
-        filename += ENSEMBL_PROTEIN_FEATURE_DATA_FILE;
-
-        if (!Files.exists(Paths.get(filename)))
-            return false;
-
-        try
-        {
-            BufferedReader fileReader = new BufferedReader(new FileReader(filename));
-
-            String line = fileReader.readLine();
-
-            if (line == null)
-            {
-                LOGGER.error("empty Ensembl protein feature data file({})", filename);
-                return false;
-            }
-
-            int proteinCount = 0;
-            int currentTransId = -1;
-            List<TranscriptProteinData> transProteinDataList = null;
-
-            line = fileReader.readLine(); // skip header
-
-            while (line != null)
-            {
-                // parse CSV data
-                String[] items = line.split(",");
-
-                // check if still on the same variant
-                int transId = Integer.parseInt(items[PF_TRANS_ID]);
-
-                if(transId != currentTransId)
-                {
-                    currentTransId = transId;
-                    transProteinDataList = Lists.newArrayList();
-                    mEnsemblProteinDataMap.put(transId, transProteinDataList);
-                }
-
-                TranscriptProteinData proteinData = new TranscriptProteinData(
-                        transId, Integer.parseInt(items[PF_TRANL_ID]), Integer.parseInt(items[PF_PF_ID]),
-                        Integer.parseInt(items[PF_START]), Integer.parseInt(items[PF_END]), items[PF_DESC]);
-
-                transProteinDataList.add(proteinData);
-                ++proteinCount;
-
-                line = fileReader.readLine();
-            }
-
-            LOGGER.debug("loaded {} protein trans records with {} locations", mEnsemblProteinDataMap.size(), proteinCount);
-        }
-        catch(IOException e)
-        {
-            LOGGER.warn("failed to load transcript protein features({}): {}", filename, e.toString());
-            return false;
-        }
 
         return true;
     }
@@ -895,7 +627,6 @@ public class SvGeneTranscriptCollection
     public void close()
     {
         closeBufferedWriter(mBreakendWriter);
-
     }
 
     public void writeGeneProbabilityData()

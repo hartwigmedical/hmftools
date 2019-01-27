@@ -11,7 +11,7 @@ select gene.stable_id as GeneId,  display_xref.display_label as GeneName, seq_re
 	gene.seq_region_strand as Strand, gene.seq_region_start as GeneStart, gene.seq_region_end as GeneEnd,
 	GROUP_CONCAT(DISTINCT entrez_xref.dbprimary_acc ORDER BY entrez_xref.dbprimary_acc SEPARATOR ';') as EntrezIds,
     GROUP_CONCAT(DISTINCT karyotype.band ORDER BY karyotype.band SEPARATOR '-') as KaryotypeBand,
-	GROUP_CONCAT(DISTINCT syn_xref.dbprimary_acc ORDER BY syn_xref.dbprimary_acc SEPARATOR ';') as Synomyns
+	GROUP_CONCAT(DISTINCT syn_xref.dbprimary_acc ORDER BY syn_xref.dbprimary_acc SEPARATOR ';') as Synonyms
 from gene
 	inner join object_xref as ox on gene.gene_id = ox.ensembl_id and ox.ensembl_object_type = 'GENE'
     inner join xref as display_xref on display_xref.xref_id = gene.display_xref_id
@@ -52,7 +52,7 @@ order by GeneId, TransId, ExonStart;
 # extract transcript protein coding information
 # save to ensembl_protein_features.csv
 
-select tl.transcript_id, tl.translation_id, protein_feature_id, pf.seq_start, pf.seq_end, hit_description
+select tl.transcript_id as TranscriptId, tl.translation_id as TranslationId, protein_feature_id as ProteinFeatureId, pf.seq_start as SeqStart, pf.seq_end as SeqEnd, hit_description as HitDescription
 from protein_feature pf, analysis_description ad, translation tl, transcript t
 where pf.analysis_id = ad.analysis_id and pf.translation_id = tl.translation_id and t.transcript_id = tl.transcript_id
 and display_label = 'PROSITE profiles'
