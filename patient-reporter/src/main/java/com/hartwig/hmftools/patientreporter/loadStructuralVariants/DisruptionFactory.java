@@ -7,9 +7,13 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-public class DisruptionFactory {
+public final class DisruptionFactory {
+
+    private static final Logger LOGGER = LogManager.getLogger(DisruptionFactory.class);
 
     private DisruptionFactory() {
     }
@@ -18,6 +22,7 @@ public class DisruptionFactory {
 
     @NotNull
     public static DisruptionAnalyzer fromDisruptionFile(@NotNull String disruptionFile) throws IOException {
+        LOGGER.debug(" Using " + disruptionFile + " as source for disruptions.");
         final List<Disruption> disruptions = Lists.newArrayList();
 
         final List<String> lineDisruptions = Files.readAllLines(new File(disruptionFile).toPath());
@@ -37,16 +42,20 @@ public class DisruptionFactory {
                 .svId(values[2])
                 .chromosome(values[3])
                 .position(values[4])
-                .orientation(values[5])
+                .orientation(Integer.valueOf(values[5]))
                 .type(values[6])
-                .gene(values[7])
-                .transcript(values[8])
-                .strand(values[9])
-                .regionType(values[10])
-                .codingType(values[11])
-                .biotype(values[12])
-                .exon(values[13])
-                .isDisruptive(Boolean.valueOf(values[14]))
+                .ploidy(Double.valueOf(values[7]))
+                .gene(values[8])
+                .chrBand(values[9])
+                .transcript(values[10])
+                .strand(Integer.valueOf(values[11]))
+                .regionType(values[12])
+                .codingType(values[13])
+                .canonical(Boolean.valueOf(values[14]))
+                .biotype(values[15])
+                .exonUp(Integer.valueOf(values[16]))
+                .exonDown(Integer.valueOf(values[17]))
+                .isDisruptive(Boolean.valueOf(values[18]))
                 .build();
     }
 }

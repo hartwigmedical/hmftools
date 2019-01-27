@@ -20,20 +20,23 @@ public abstract class Disruption {
     @NotNull
     public abstract String position();
 
-    @NotNull
-    public abstract String orientation();
+    public abstract int orientation();
 
     @NotNull
     public abstract String type();
+
+    public abstract double ploidy();
 
     @NotNull
     public abstract String gene();
 
     @NotNull
-    public abstract String transcript();
+    public abstract String chrBand();
 
     @NotNull
-    public abstract String strand();
+    public abstract String transcript();
+
+    public abstract int strand();
 
     @NotNull
     public abstract String regionType();
@@ -41,11 +44,14 @@ public abstract class Disruption {
     @NotNull
     public abstract String codingType();
 
+    public abstract boolean canonical();
+
     @NotNull
     public abstract String biotype();
 
-    @NotNull
-    public abstract String exon();
+    public abstract int exonUp();
+
+    public abstract int exonDown();
 
     public abstract boolean isDisruptive();
 }

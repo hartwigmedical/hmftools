@@ -1,16 +1,11 @@
 package com.hartwig.hmftools.patientreporter.structural;
 
-import static com.hartwig.hmftools.patientreporter.report.util.PatientReportFormat.exonDescription;
-
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion;
-import com.hartwig.hmftools.common.variant.structural.annotation.Transcript;
 import com.hartwig.hmftools.patientreporter.loadStructuralVariants.Fusion;
 
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 public final class ReportableGeneFusionFactory {
 
@@ -18,60 +13,39 @@ public final class ReportableGeneFusionFactory {
     }
 
     @NotNull
-    public static List<ReportableGeneFusion> fusionConvertToReportable(@Nullable List<Fusion> fusions) {
+    public static List<ReportableGeneFusion> fusionConvertToReportable(@NotNull List<Fusion> fusions) {
         List<ReportableGeneFusion> reportableFusions = Lists.newArrayList();
-        if (fusions != null) {
-            for (Fusion fusion: fusions) {
-                // TODO: Populate context start / end (promoter or exonic or intronic)
-                // TODO: Populate ploidy
-                reportableFusions.add(ImmutableReportableGeneFusion.builder()
-                        .geneStart(fusion.geneUp())
-                        .geneContextStart("")
-                        .geneStartTranscript(fusion.transcriptUp())
-                        .geneEnd(fusion.geneDown())
-                        .geneContextEnd("")
-                        .geneStartTranscript(fusion.transcriptDown())
-                        .ploidy(0)
-                        .source(fusion.primarySource())
-                        .build());
-            }
-        }
-        return reportableFusions;
-    }
-
-    @NotNull
-    public static List<ReportableGeneFusion> toReportableGeneFusions(@NotNull List<GeneFusion> fusions) {
-        List<ReportableGeneFusion> reportableFusions = Lists.newArrayList();
-        for (GeneFusion fusion : fusions) {
-            final Transcript upstream = fusion.upstreamTrans();
-            final Transcript downstream = fusion.downstreamTrans();
-
+        for (Fusion fusion : fusions) {
             reportableFusions.add(ImmutableReportableGeneFusion.builder()
-                    .geneStart(upstream.geneName())
-                    .geneContextStart(exonDescription(upstream))
-                    .geneStartTranscript(upstream.StableId)
-                    .geneEnd(downstream.geneName())
-                    .geneContextEnd(exonDescription(downstream))
-                    .geneEndTranscript(downstream.StableId)
-                    .ploidy(fusionPloidy(fusion))
+                    .geneStart(fusion.geneUp())
+                    .geneContextStart(context(fusion.regionTypeUp(), fusion.exonUp(), false))
+                    .geneStartTranscript(fusion.transcriptUp())
+                    .geneEnd(fusion.geneDown())
+                    .geneContextEnd(context(fusion.regionTypeDown(), fusion.exonDown(), true))
+                    .geneEndTranscript(fusion.transcriptDown())
+                    .ploidy(fusionPloidy(fusion.ploidyDown(), fusion.ploidyUp()))
                     .source(fusion.primarySource())
                     .build());
         }
-
         return reportableFusions;
     }
 
     @NotNull
-    private static Double fusionPloidy(@NotNull GeneFusion fusion) {
-        Double upstreamPloidy = fusion.upstreamTrans().parent().variant().ploidy();
-        Double downstreamPloidy = fusion.downstreamTrans().parent().variant().ploidy();
-
-        if (upstreamPloidy == null || downstreamPloidy == null) {
-            // Not sure when ploidy would be null...
-            return Double.NaN;
+    private static String context(@NotNull String regionType, int exon, boolean isEnd) {
+        switch (regionType) {
+            case "Upstream":
+                return "Promoter Region";
+            case "Exonic":
+                return String.format("Exon %d", exon);
+            case "Intronic":
+                return String.format("Intron %d", isEnd ? exon - 1 : exon);
         }
 
-        assert upstreamPloidy.equals(downstreamPloidy);
+        return String.format("ERROR: %s", regionType);
+    }
+
+    private static double fusionPloidy(double downstreamPloidy, double upstreamPloidy) {
+        assert Math.abs(upstreamPloidy - downstreamPloidy) < 1E-10;
 
         return upstreamPloidy;
     }

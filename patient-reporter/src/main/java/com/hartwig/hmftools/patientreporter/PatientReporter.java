@@ -80,7 +80,7 @@ abstract class PatientReporter {
         final SomaticVariantAnalysis somaticVariantAnalysis = analyzeSomaticVariants(run, copyNumberAnalysis, patientTumorLocation);
 
         final FusionDisruptionAnalysis fusionDisruptionAnalysis =
-                analyzeStructuralVariants(run, copyNumberAnalysis, patientTumorLocation, svAnalyzerModel());
+                analyzeStructuralVariants(copyNumberAnalysis, patientTumorLocation, svAnalyzerModel());
         final List<GermlineVariant> germlineVariants = doReportGermline ? analyzeGermlineVariants(run) : null;
         final ChordAnalysis chordAnalysis = analyzeChord(run);
 
@@ -208,14 +208,14 @@ abstract class PatientReporter {
     }
 
     @NotNull
-    private FusionDisruptionAnalysis analyzeStructuralVariants(@NotNull RunContext run, @NotNull CopyNumberAnalysis copyNumberAnalysis,
+    private FusionDisruptionAnalysis analyzeStructuralVariants(@NotNull CopyNumberAnalysis copyNumberAnalysis,
             @Nullable PatientTumorLocation patientTumorLocation, @NotNull SvAnalyzerModel svAnalyzerModel) {
         List<Fusion> fusions = svAnalyzerModel.filterFusions();
-        List<Disruption> disruption = svAnalyzerModel.filterDisruptions(sequencedReportData().panelGeneModel());
+        List<Disruption> disruptions = svAnalyzerModel.filterDisruptions(sequencedReportData().panelGeneModel());
 
         List<ReportableGeneFusion> geneFusionsToReport = ReportableGeneFusionFactory.fusionConvertToReportable(fusions);
         List<ReportableGeneDisruption> geneDisruptionsToReport =
-                ReportableGeneDisruptionFactory.disruptionConvertGeneDisruption(disruption, copyNumberAnalysis.exomeGeneCopyNumbers());
+                ReportableGeneDisruptionFactory.disruptionConvertGeneDisruption(disruptions, copyNumberAnalysis.exomeGeneCopyNumbers());
 
         return FusionDisruptionAnalyzer.run(geneFusionsToReport,
                 geneDisruptionsToReport,

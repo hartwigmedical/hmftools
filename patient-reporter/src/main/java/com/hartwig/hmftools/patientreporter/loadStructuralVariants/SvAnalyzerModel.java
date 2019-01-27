@@ -6,7 +6,6 @@ import java.util.List;
 import com.hartwig.hmftools.patientreporter.genepanel.GeneModel;
 
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 public class SvAnalyzerModel {
 
@@ -27,12 +26,12 @@ public class SvAnalyzerModel {
         this.disruptionAnalyzer = disruptionAnalyzer;
     }
 
-    @Nullable
+    @NotNull
     public List<Fusion> filterFusions() {
         return fusionAnalyzer.reportableFusions();
     }
 
-    @Nullable
+    @NotNull
     public List<Disruption> filterDisruptions(@NotNull GeneModel geneModel) {
         return disruptionAnalyzer.reportableDisruptions(geneModel);
     }
