@@ -20,8 +20,14 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.svanalysis.types.SvChain;
 import com.hartwig.hmftools.svanalysis.types.SvCluster;
+import com.hartwig.hmftools.svanalysis.types.SvLOH;
 import com.hartwig.hmftools.svanalysis.types.SvLinkedPair;
 import com.hartwig.hmftools.svanalysis.types.SvVarData;
 
@@ -181,6 +187,7 @@ public class ChainingTests
         var6.setAssemblyData(false, "asmb3");
         var7.setAssemblyData(true, "asmb3");
 
+        /*
         SvCluster cluster = new SvCluster(150);
         cluster.addVariant(var1);
         tester.addClusterAndSVs(cluster);
@@ -213,6 +220,35 @@ public class ChainingTests
         tester.Analyser.findSimpleCompleteChains();
         tester.Analyser.findLinksAndChains();
         tester.Analyser.markFoldbacks();
+        */
+
+        tester.AllVariants.add(var1);
+        tester.AllVariants.add(var2);
+        tester.AllVariants.add(var3);
+        tester.AllVariants.add(var4);
+        tester.AllVariants.add(var5);
+        tester.AllVariants.add(var6);
+        tester.AllVariants.add(var7);
+        tester.AllVariants.add(var8);
+        tester.AllVariants.add(var9);
+        tester.AllVariants.add(var10);
+        tester.AllVariants.add(var11);
+        tester.AllVariants.add(var12);
+
+        Map<String, List<SvLOH>> lohDataMap = new HashMap();
+        List<SvLOH> lohData = Lists.newArrayList();
+
+        lohData.add(new SvLOH(tester.SampleId, "1", 1, 2, 100499653, 113342526,
+                "BND", "INV", 1, 1, 1, 0, 1, 1,
+                "720", "462", false));
+
+        lohDataMap.put(tester.SampleId, lohData);
+
+        tester.ClusteringMethods.setSampleLohData(lohDataMap);
+
+        tester.preClusteringInit();
+
+        tester.Analyser.clusterAndAnalyse();
 
         // first check foldbacks are in place
         assertEquals(var1.getFoldbackLink(true), var1.id());
@@ -223,8 +259,10 @@ public class ChainingTests
         assertEquals(var12.getFoldbackLink(true), var12.id());
 
         // now check final chain-finding across all sub-clusters
+        assertEquals(tester.Analyser.getClusters().size(), 1);
+        final SvCluster cluster = tester.Analyser.getClusters().get(0);
 
-        tester.Analyser.mergeClusters();
+        assertEquals(cluster.getChains().size(), 4);
 
     }
 

@@ -183,20 +183,12 @@ public class ClusterAnalyser {
                 continue;
             }
 
-            if(cluster.hasLinkingLineElements())
-            {
-                // find assembly links but nothing else
-                mLinkFinder.findLinkedPairs(mSampleId, cluster);
-                cluster.cacheLinkedPairs();
-                continue;
-            }
-
             // skip more complicated clusters for now
             if(cluster.getCount() > SMALL_CLUSTER_SIZE || !cluster.isConsistent() || cluster.hasVariedCopyNumber())
                 continue;
 
-            // first establish links between SVs (eg TIs and DBs)
-            mLinkFinder.findLinkedPairs(mSampleId, cluster);
+            // inferred links are used to classify simple resolved types involving 2-3 SVs
+            mLinkFinder.findLinkedPairs(cluster, true);
 
             // then look for fully-linked clusters, ie chains involving all SVs
             findChains(cluster);
@@ -231,7 +223,7 @@ public class ClusterAnalyser {
             cluster.dissolveLinksAndChains();
 
             // first establish links between SVs (eg TIs and DBs)
-            mLinkFinder.findLinkedPairs(mSampleId, cluster);
+            mLinkFinder.findLinkedPairs(cluster, false);
 
             // then look for fully-linked clusters, ie chains involving all SVs
             findChains(cluster);
@@ -289,7 +281,7 @@ public class ClusterAnalyser {
                 if(cluster.hasVariedCopyNumber())
                     applyCopyNumberReplication(cluster);
 
-                mLinkFinder.findLinkedPairs(mSampleId, cluster);
+                mLinkFinder.findLinkedPairs(cluster, false);
 
                 findChains(cluster);
             }
@@ -307,9 +299,6 @@ public class ClusterAnalyser {
 
     private void findChains(SvCluster cluster)
     {
-        if(cluster.hasLinkingLineElements()) // skipped for now
-            return;
-
         mChainFinder.initialise(mSampleId, cluster);
 
         isSpecificCluster(cluster);
@@ -967,11 +956,6 @@ public class ClusterAnalyser {
                     if(dbLink == null || dbLink.length() >= MIN_TEMPLATED_INSERTION_LENGTH)
                     {
                         checkFoldbackBreakends(beFront, beBack);
-                    }
-                    else
-                    {
-                        LOGGER.debug("SV({}) skipped foldback with short DB({}) on front breakend",
-                                beFront.getSV().id(), dbLink.length());
                     }
                 }
 

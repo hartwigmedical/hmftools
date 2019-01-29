@@ -8,12 +8,13 @@ The output of this analysis will then be written to file, and loaded into new DB
 
 ## Resources
 
-None|---|---|---|---|
+None
 
 ## Dependencies
 
-* A MySQL (or possibly MariaDB) which has the HMF patient-db schema loaded (see patient-db project)
-* Some other CSV files containing external information for SV analysis.
+* The HMF patient-db schema loaded (see patient-db project)
+* Optional: set of recognised LINE element locations
+* Optional: set of recognised fragile site locations
 
 ## Usage
 

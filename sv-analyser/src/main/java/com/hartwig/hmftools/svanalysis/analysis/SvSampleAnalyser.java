@@ -518,26 +518,12 @@ public class SvSampleAnalyser {
 
                 isSpecificCluster(cluster);
 
-                List<SvChain> chains;
-
-                if(cluster.hasLinkingLineElements())
-                {
-                    // line elements currently aren't chained, so manufacture one for the looping below
-                    SvChain tempChain = new SvChain(0);
-                    tempChain.getLinkedPairs().addAll(cluster.getAssemblyLinkedPairs());
-
-                    chains = Lists.newArrayList();
-                    chains.add(tempChain);
-                }
-                else
-                {
-                    chains = cluster.getChains();
-                }
+                List<SvChain> chains = cluster.getChains();
 
                 for (final SvChain chain : chains)
                 {
                     int chainSvCount = chain.getSvCount();
-                    boolean chainConsistent = !cluster.hasLinkingLineElements() && chain.isConsistent();
+                    boolean chainConsistent = chain.isConsistent();
 
                     for (final SvLinkedPair pair : chain.getLinkedPairs())
                     {

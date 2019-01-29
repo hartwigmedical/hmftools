@@ -12,6 +12,7 @@ import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.DEFAU
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.addSvToChrBreakendMap;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.calcConsistency;
 import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.ASSEMBLY_MATCH_INFER_ONLY;
+import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.ASSEMBLY_MATCH_NONE;
 import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.removedLinksWithSV;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.RELATION_TYPE_NEIGHBOUR;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_END;
@@ -47,7 +48,6 @@ public class SvCluster
     private List<SvLinkedPair> mLinkedPairs; // final set after chaining and linking
     private List<SvLinkedPair> mInferredLinkedPairs; // forming a TI or DB
     private List<SvLinkedPair> mAssemblyLinkedPairs; // TIs found during assembly
-    private List<SvVarData> mSpanningSVs; // having 2 duplicate (matching) BEs
     private List<SvArmGroup> mArmGroups;
     private List<SvArmCluster> mArmClusters;
     private Map<String, List<SvBreakend>> mChrBreakendMap;
@@ -125,7 +125,6 @@ public class SvCluster
         mLinkedPairs = Lists.newArrayList();
         mAssemblyLinkedPairs= Lists.newArrayList();
         mInferredLinkedPairs = Lists.newArrayList();
-        mSpanningSVs = Lists.newArrayList();
         mChains = Lists.newArrayList();
         mUnchainedSVs = Lists.newArrayList();
 
@@ -424,8 +423,14 @@ public class SvCluster
         mUnchainedSVs.addAll(mSVs);
         mChains.clear();
         mLinkedPairs.clear();
-        mAssemblyLinkedPairs.clear();
         mInferredLinkedPairs.clear();
+
+        mAssemblyLinkedPairs.clear();
+        for(final SvVarData var : mSVs)
+        {
+            var.setAssemblyMatchType(ASSEMBLY_MATCH_NONE, true);
+            var.setAssemblyMatchType(ASSEMBLY_MATCH_NONE, false);
+        }
     }
 
     public List<SvVarData> getUnlinkedSVs() { return mUnchainedSVs; }
@@ -832,11 +837,6 @@ public class SvCluster
         mLinkedPairs = linkedPairs;
     }
 
-    public final SvLinkedPair getLinkedPair(final SvVarData var, boolean useStart)
-    {
-        return findLinkedPair(mLinkedPairs, var, useStart);
-    }
-
     public final SvChain findChain(final SvVarData var)
     {
         for(final SvChain chain : mChains)
@@ -907,8 +907,8 @@ public class SvCluster
     public int getFragmentArms() { return mFragmentArms; }
 
 
-    private static int SPECIFIC_CLUSTER_ID = -1;
-    // private static int SPECIFIC_CLUSTER_ID = 431;
+    // private static int SPECIFIC_CLUSTER_ID = -1;
+    private static int SPECIFIC_CLUSTER_ID = 124;
 
     public static boolean isSpecificCluster(final SvCluster cluster)
     {

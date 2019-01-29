@@ -45,17 +45,16 @@ public class LinkFinder
         mLogVerbose = toggle;
     }
 
-    public void findLinkedPairs(final String sampleId, SvCluster cluster)
+    public void findLinkedPairs(SvCluster cluster, boolean findInferred)
     {
         List<SvLinkedPair> assemblyLinkedPairs = createAssemblyLinkedPairs(cluster);
         cluster.setAssemblyLinkedPairs(assemblyLinkedPairs);
 
-        if(cluster.hasLinkingLineElements())
-            return;
-
-        List<SvLinkedPair> inferredLinkedPairs = createInferredLinkedPairs(cluster, cluster.getSVs(),false);
-
-        cluster.setInferredLinkedPairs(inferredLinkedPairs);
+        if(findInferred)
+        {
+            List<SvLinkedPair> inferredLinkedPairs = createInferredLinkedPairs(cluster, cluster.getSVs(), false);
+            cluster.setInferredLinkedPairs(inferredLinkedPairs);
+        }
     }
 
     public List<SvLinkedPair> createAssemblyLinkedPairs(SvCluster cluster)
@@ -107,7 +106,7 @@ public class LinkFinder
                         if (!haveLinkedAssemblies(var1, var2, v1Start, v2Start))
                             continue;
 
-                        // check wasn't already created
+                        // check a link for these SVs wasn't already created
                         boolean v1Linked = var1.isAssemblyMatched(v1Start);
                         boolean v2Linked = var2.isAssemblyMatched(v2Start);
                         if(v1Linked || v2Linked)
@@ -230,15 +229,8 @@ public class LinkFinder
     {
         List<SvLinkedPair> linkedPairs = Lists.newArrayList();
 
-        return linkedPairs;
-
-        /*
-
         // exclude large clusters for now due to processing times until the algo is better refined
         if(svList.size() >= CLUSTER_SIZE_ANALYSIS_LIMIT)
-            return linkedPairs;
-
-        if(cluster.hasLinkingLineElements())
             return linkedPairs;
 
         isSpecificCluster(cluster);
@@ -287,7 +279,7 @@ public class LinkFinder
                         if(var2.isAssemblyMatched(v2Start))
                             continue;
 
-                        if (!areLinkedSection(var1, var2, v1Start, v2Start))
+                        if (!areLinkedSection(var1, var2, v1Start, v2Start, !cluster.hasReplicatedSVs()))
                             continue;
 
                         // form a new TI from these 2 BEs
@@ -302,7 +294,6 @@ public class LinkFinder
                         // insert in order of increasing length
                         int index = 0;
                         boolean skipNewPair = false;
-                        int linkClashCount = 0;
 
                         for (; index < linkedPairs.size(); ++index)
                         {
@@ -349,7 +340,6 @@ public class LinkFinder
         LOGGER.debug("cluster({}) has {} inferred linked pairs", cluster.id(), linkedPairs.size());
 
         return linkedPairs;
-        */
     }
 
     public static void findDeletionBridges(final Map<String, List<SvBreakend>> chrBreakendMap)
