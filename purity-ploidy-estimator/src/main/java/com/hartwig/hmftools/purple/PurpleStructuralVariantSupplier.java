@@ -81,17 +81,21 @@ class PurpleStructuralVariantSupplier {
     }
 
     public void recoverVariant(@NotNull final VariantContext variantContext) {
-        modified = true;
-        final VariantContext unfiltered = new VariantContextBuilder(variantContext).unfiltered().attribute(RECOVERED_FLAG, true).make();
-        variantContexts.add(unfiltered);
+        if (enabled()) {
+            modified = true;
+            final VariantContext unfiltered = new VariantContextBuilder(variantContext).unfiltered().attribute(RECOVERED_FLAG, true).make();
+            variantContexts.add(unfiltered);
+        }
     }
 
     public void inferMissingVariant(@NotNull final List<PurpleCopyNumber> copyNumbers) {
-        for (int i = 1; i < copyNumbers.size(); i++) {
-            PurpleCopyNumber copyNumber = copyNumbers.get(i);
-            if (copyNumber.segmentStartSupport() == SegmentSupport.NONE) {
-                final PurpleCopyNumber prev = copyNumbers.get(i - 1);
-                variantContexts.add(infer(copyNumber, prev));
+        if (enabled()) {
+            for (int i = 1; i < copyNumbers.size(); i++) {
+                PurpleCopyNumber copyNumber = copyNumbers.get(i);
+                if (copyNumber.segmentStartSupport() == SegmentSupport.NONE) {
+                    final PurpleCopyNumber prev = copyNumbers.get(i - 1);
+                    variantContexts.add(infer(copyNumber, prev));
+                }
             }
         }
     }
@@ -215,6 +219,10 @@ class PurpleStructuralVariantSupplier {
 
             return positionResult == 0 ? firstVariantContext.getID().compareTo(secondVariantContext.getID()) : positionResult;
         }
+    }
+
+    private boolean enabled() {
+        return header.isPresent();
     }
 
 }
