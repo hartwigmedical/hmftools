@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.patientdb.dao;
 
+import static com.hartwig.hmftools.common.purple.purity.FittedPurityStatus.NO_TUMOR;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.PURITY;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.PURITYRANGE;
 
@@ -7,6 +8,7 @@ import java.sql.Timestamp;
 import java.util.Date;
 import java.util.List;
 
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.purple.gender.Gender;
 import com.hartwig.hmftools.common.purple.purity.FittedPurity;
 import com.hartwig.hmftools.common.purple.purity.FittedPurityScore;
@@ -22,6 +24,8 @@ import org.jetbrains.annotations.Nullable;
 import org.jooq.DSLContext;
 import org.jooq.InsertValuesStep8;
 import org.jooq.Record;
+import org.jooq.Record1;
+import org.jooq.Result;
 
 class PurityDAO {
 
@@ -65,6 +69,25 @@ class PurityDAO {
                 .polyClonalProportion(result.getValue(PURITY.POLYCLONALPROPORTION))
                 .status(FittedPurityStatus.valueOf(result.getValue(PURITY.STATUS)))
                 .build();
+    }
+
+    @NotNull
+    public final List<String> getSamplesPassingQC(double minPurity)
+    {
+        List<String> sampleIds = Lists.newArrayList();
+
+        final Result<Record> result = context.select().from(PURITY)
+                .where(PURITY.PURITY_.ge(minPurity))
+                .and(PURITY.STATUS.ne(NO_TUMOR.toString()))
+                .and(PURITY.QCSTATUS.eq("PASS"))
+                .fetch();
+
+        for (Record record : result)
+        {
+            sampleIds.add(record.getValue(PURITY.SAMPLEID));
+        }
+
+        return sampleIds;
     }
 
     void write(@NotNull final String sample, @NotNull final PurityContext purity, @NotNull final PurpleQC checks) {

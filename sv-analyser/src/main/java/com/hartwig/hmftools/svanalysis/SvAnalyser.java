@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.svanalysis;
 
 import static com.hartwig.hmftools.common.variant.structural.annotation.SvPONAnnotator.PON_FILTER_PON;
+import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.MIN_SAMPLE_PURITY;
 
 import java.sql.SQLException;
 import java.util.Arrays;
@@ -245,6 +246,11 @@ public class SvAnalyser {
 
     private static List<String> getStructuralVariantSamplesList(@NotNull DatabaseAccess dbAccess)
     {
+        final List<String> sampleIds = dbAccess.getSamplesPassingQC(MIN_SAMPLE_PURITY);
+
+        if(!sampleIds.isEmpty())
+            return sampleIds;
+
         return dbAccess.structuralVariantSampleList("");
     }
 

@@ -584,8 +584,8 @@ public class SvSampleAnalyser {
                 mVisSvsFileWriter = createBufferedWriter(outputFileName, false);
 
                 // definitional fields
-                mVisSvsFileWriter.write("SampleId,ClusterId,ChainId,SvId,");
-                mVisSvsFileWriter.write(",ChrStart,PosStart,OrientStart,TypeStart,ChrEnd,PosEnd,OrientEnd,TypeEnd,TraverseCount");
+                mVisSvsFileWriter.write("SampleId,ClusterId,ChainId,SvId,Type,ResolvedType");
+                mVisSvsFileWriter.write(",ChrStart,PosStart,OrientStart,InfoStart,ChrEnd,PosEnd,OrientEnd,InfoEnd,TraverseCount");
 
                 mVisSvsFileWriter.newLine();
             }
@@ -598,8 +598,9 @@ public class SvSampleAnalyser {
                 int chainId = chain != null ? chain.id() : var.getCluster().getChainId(var);
 
                 writer.write(
-                        String.format("%s,%d,%d,%s",
-                                mSampleId, var.getCluster().id(), chainId, var.id()));
+                        String.format("%s,%d,%d,%s,%s,%s",
+                                mSampleId, var.getCluster().id(), chainId, var.id(),
+                                var.type(), var.getCluster().getResolvedType()));
 
                 for(int be = SVI_START; be <= SVI_END; ++be)
                 {
@@ -653,6 +654,12 @@ public class SvSampleAnalyser {
 
             for(final SvCluster cluster : getClusters())
             {
+                if(cluster.isResolved()
+                && (cluster.getResolvedType() == RESOLVED_TYPE_SIMPLE_SV || cluster.getResolvedType() == RESOLVED_TYPE_LOW_QUALITY))
+                {
+                    continue;
+                }
+
                 for (final SvChain chain : cluster.getChains())
                 {
                     List<SvLinkedPair> uniquePairs = Lists.newArrayList();

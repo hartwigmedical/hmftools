@@ -126,6 +126,13 @@ public class DatabaseAccess {
         purityDAO.write(sampleId, bestFitPerPurity);
     }
 
+    public static double MIN_SAMPLE_PURITY = 0.195;
+
+    public final List<String> getSamplesPassingQC(double minPurity)
+    {
+        return purityDAO.getSamplesPassingQC(minPurity);
+    }
+
     @Nullable
     public PurityContext readPurityContext(@NotNull final String sampleId) {
         return purityDAO.readPurityContext(sampleId);
