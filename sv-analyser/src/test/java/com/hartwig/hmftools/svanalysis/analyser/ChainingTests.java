@@ -1,9 +1,18 @@
 package com.hartwig.hmftools.svanalysis.analyser;
 
+import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.BND;
+import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DEL;
+import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DUP;
+import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INV;
+import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
+import static com.hartwig.hmftools.svanalysis.analyser.SvTestHelper.createBnd;
 import static com.hartwig.hmftools.svanalysis.analyser.SvTestHelper.createDel;
 import static com.hartwig.hmftools.svanalysis.analyser.SvTestHelper.createDup;
+import static com.hartwig.hmftools.svanalysis.analyser.SvTestHelper.createInv;
+import static com.hartwig.hmftools.svanalysis.analyser.SvTestHelper.createTestSv;
 import static com.hartwig.hmftools.svanalysis.types.SvChain.CHAIN_ASSEMBLY_LINK_COUNT;
 import static com.hartwig.hmftools.svanalysis.types.SvChain.CHAIN_LINK_COUNT;
+import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.ASSEMBLY_MATCH_MATCHED;
 import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.LINK_TYPE_DB;
 import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.LINK_TYPE_TI;
 
@@ -12,6 +21,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.hartwig.hmftools.svanalysis.types.SvChain;
+import com.hartwig.hmftools.svanalysis.types.SvCluster;
 import com.hartwig.hmftools.svanalysis.types.SvLinkedPair;
 import com.hartwig.hmftools.svanalysis.types.SvVarData;
 
@@ -141,5 +151,169 @@ public class ChainingTests
         assertEquals(chainData[CHAIN_LINK_COUNT], 0);
     }
 
+    @Test
+    public void testComplexChainMerging()
+    {
+        SvTestHelper tester = new SvTestHelper();
+        tester.logVerbose(true);
+
+        // merge 5 clusters with varying levels of copy number change (ie replication) from 4 foldbacks
+        final SvVarData var1 = createTestSv("717", "11", "11", 100, 200, -1, -1, INV, 10.4, 18, 7.51, 7.51, 6, "");
+        final SvVarData var2 = createTestSv("719", "11", "11", 300, 600, -1, 1, DUP, 20.7, 19.7, 2.75, 1.54, 2, "");
+        final SvVarData var3 = createTestSv("731", "11", "11", 400, 1600, 1, -1, DEL, 19.7, 21.0, 1.6, 2.05, 1.9, "");
+        final SvVarData var4 = createTestSv("728", "11", "11", 500, 1400, -1, -1, INV, 19.7, 15.3, 1.67, 1.66, 1.54, "");
+        final SvVarData var5 = createTestSv("723", "11", "11", 800, 900, 1, 1, INV, 18.7, 15.6, 3.04, 3.96, 3.33, "");
+        final SvVarData var6 = createTestSv("726", "11", "11", 1000, 1100, -1, -1, INV, 9.8, 13.8, 4.13, 3.94, 4.2, "");
+        final SvVarData var7 = createTestSv("727", "11", "11", 1200, 1300, 1, -1, DEL, 13.8,13.7, 3.98, 3.88, 4.36, "");
+        final SvVarData var8 = createTestSv("732", "11", "11", 1500, 1700, 1, 1, INV, 20.8, 21, 1.85, 1.85, 1.82, "");
+        final SvVarData var9 = createTestSv("733", "11", "11", 1800, 1900, 1, -1, DEL, 19.2, 19.4, 0.67, 0.86, 0.94, "");
+        final SvVarData var10 = createTestSv("734", "11", "11", 1910, 2100, 1, 1, INV, 19.4, 18.3, 1.07, 0.71, 0.78, "");
+        final SvVarData var11 = createTestSv("729", "1", "11", 10100, 700, 1, -1, BND, 2.05, 19.6, 1, 1.4, 1.2, "");
+        final SvVarData var12 = createTestSv("462", "1", "1", 10200, 10300, -1, -1, INV, 3, 3.9, 0.93, 0.93, 1.11, "");
+
+        // mark assembled links
+        var3.getTempInsertionAssemblies(false).add("asmb1");
+        var8.getTempInsertionAssemblies(false).add("asmb1");
+
+        var9.getTempInsertionAssemblies(false).add("asmb2");
+        var10.getTempInsertionAssemblies(false).add("asmb2");
+
+        var6.getTempInsertionAssemblies(false).add("asmb3");
+        var7.getTempInsertionAssemblies(true).add("asmb3");
+
+        SvCluster cluster = new SvCluster(150);
+        cluster.addVariant(var1);
+        tester.addClusterAndSVs(cluster);
+
+        cluster = new SvCluster(152);
+        cluster.addVariant(var2);
+        cluster.addVariant(var4);
+        cluster.addVariant(var5);
+        cluster.addVariant(var6);
+        cluster.addVariant(var7);
+        tester.addClusterAndSVs(cluster);
+
+        cluster = new SvCluster(162);
+        cluster.addVariant(var3);
+        cluster.addVariant(var8);
+        tester.addClusterAndSVs(cluster);
+
+        cluster = new SvCluster(163);
+        cluster.addVariant(var9);
+        cluster.addVariant(var10);
+        tester.addClusterAndSVs(cluster);
+
+        cluster = new SvCluster(153);
+        cluster.addVariant(var11);
+        cluster.addVariant(var12);
+        tester.addClusterAndSVs(cluster);
+
+        tester.preClusteringInit();
+
+        tester.Analyser.findSimpleCompleteChains();
+        tester.Analyser.findLinksAndChains();
+        tester.Analyser.markFoldbacks();
+
+        // first check foldbacks are in place
+        assertEquals(var1.getFoldbackLink(true), var1.id());
+        assertEquals(var5.getFoldbackLink(true), var5.id());
+        assertEquals(var6.getFoldbackLink(true), var6.id());
+        assertEquals(var9.getFoldbackLink(true), var10.id());
+        assertEquals(var10.getFoldbackLink(true), var9.id());
+        assertEquals(var12.getFoldbackLink(true), var12.id());
+
+        // now check final chain-finding across all sub-clusters
+
+        tester.Analyser.mergeClusters();
+
+    }
+
+    @Test
+    public void testComplexChaining1()
+    {
+        // based on COLO829T chromosomes 3 + 6,10,12 and 1
+
+        SvTestHelper tester = new SvTestHelper();
+        tester.logVerbose(true);
+
+            /*
+            Id	Type	Ploidy	ChrStart	PosStart	OS	AS	CNStart	CNChgS	ChrEnd	PosEnd	    OE	AE	CNEnd	CNChgEnd
+            77	INV	    3.96	3	        24565108	-1	P	6.07	4.07	3	    24566180	-1	P	10.14	4.07
+            78	SGL	    2.62	3	        25331584	-1	P	12.17	2.03	0	    -1	        0	P	0	    0
+            79	INV	    5.26	3	        26663922	1	P	11.92	3.94	3	    26664498	1	P	7.98	3.94
+            88	BND	    3.27	3	        26431918	-1	P	11.92	3.83	6	    26194040	-1	P	7.31	3.41
+            89	INV	    1.5	    6	        26194117	1	P	7.31	2.04	6	    26194406	1	P	5.27	1.43
+            113	BND	    1.77	3	        25401059	1	P	9.94	1.86	10	    60477224	-1	Q	4.06	2.06
+            119	BND	    2.19	3	        25400602	1	P	12.17	2.22	12	    72666892	-1	Q	5.22	2.19
+            120	BND	    2.26	10	        60477422	1	Q	4.06	2.04	12	    72667075	1	Q	5.22	2.22
+             */
+
+        // merge 5 clusters with varying levels of copy number change (ie replication) from 4 foldbacks
+        final SvVarData var1 = createTestSv("77", "3", "3", 24565108, 24566180, -1, -1, INV, 6.1, 10.1, 4.07, 4.07, 3.96, "");
+        final SvVarData var2 = createTestSv("78", "3", "0", 25331584, -1, -1, 1, SGL, 12.2, 0, 2.06, 0, 2.62, "");
+        final SvVarData var3 = createTestSv("79", "3", "3", 26663922, 26664498, 1, 1, INV, 11.9, 8.0, 3.94, 3.94, 5.26, "");
+        final SvVarData var4 = createTestSv("88", "3", "6", 26431918, 26194040, -1, -1, BND, 11.9, 7.3, 3.85, 3.35, 3.27, "");
+        final SvVarData var5 = createTestSv("89", "6", "6", 26194117, 26194406, 1, 1, INV, 7.3, 5.3, 2.06, 1.43, 1.5, "");
+        final SvVarData var6 = createTestSv("113", "3", "10", 25401059, 60477224, 1, -1, BND, 9.9, 4.1, 1.92, 2.02, 1.77, "");
+        final SvVarData var7 = createTestSv("119", "3", "12", 25400602, 72666892, 1, -1, BND, 12.2, 5.2, 2.22, 2.18, 2.19, "");
+        final SvVarData var8 = createTestSv("120", "10", "12", 60477422, 72667075, 1, 1, BND, 4.1, 5.2, 2.01, 2.16, 2.26, "");
+
+        // mark assembled links
+        var4.setAssemblyData(false, "asmb1a;asmb1b");
+        var5.setAssemblyData(true, "asmb1a");
+        var5.setAssemblyData(false, "asmb1b");
+
+        var7.setAssemblyData(false, "asmb2");
+        var8.setAssemblyData(false, "asmb2");
+
+        var6.setAssemblyData(false, "asmb3");
+        var8.setAssemblyData(true, "asmb3");
+
+        // cluster
+        tester.AllVariants.add(var1);
+        tester.AllVariants.add(var2);
+        tester.AllVariants.add(var3);
+        tester.AllVariants.add(var4);
+        tester.AllVariants.add(var5);
+        tester.AllVariants.add(var6);
+        tester.AllVariants.add(var7);
+        tester.AllVariants.add(var8);
+
+        tester.preClusteringInit();
+
+        tester.Analyser.clusterAndAnalyse();
+
+        // check clustering
+        assertEquals(tester.Analyser.getClusters().size(), 1);
+
+        final SvCluster cluster = tester.Analyser.getClusters().get(0);
+        assertEquals(cluster.getUniqueSvCount(), 8);
+        assertEquals(cluster.getSubClusters().size(), 5);
+
+        // check links
+        assertEquals(var4.getAssemblyMatchType(false), ASSEMBLY_MATCH_MATCHED);
+        assertEquals(var5.getAssemblyMatchType(true), ASSEMBLY_MATCH_MATCHED);
+        // assertEquals(var5.getAssemblyMatchType(false), ASSEMBLY_MATCH_MATCHED);
+
+        assertEquals(var7.getLinkedPair(false), var8.getLinkedPair(false));
+        assertEquals(var7.getAssemblyMatchType(false), ASSEMBLY_MATCH_MATCHED);
+        assertEquals(var8.getAssemblyMatchType(false), ASSEMBLY_MATCH_MATCHED);
+
+        assertEquals(var6.getLinkedPair(false), var8.getLinkedPair(true));
+        assertEquals(var6.getAssemblyMatchType(false), ASSEMBLY_MATCH_MATCHED);
+        assertEquals(var8.getAssemblyMatchType(true), ASSEMBLY_MATCH_MATCHED);
+
+        // check foldbacks
+        assertEquals(var1.getFoldbackLink(true), var1.id());
+        assertEquals(var3.getFoldbackLink(true), var3.id());
+        assertEquals(var6.getFoldbackLink(true), var7.id());
+        assertEquals(var7.getFoldbackLink(true), var6.id());
+
+        // check chains
+        assertEquals(cluster.getChains().size(), 1);
+        final SvChain chain = cluster.getChains().get(0);
+        assertEquals(chain.getLinkCount(), 10);
+
+    }
 
 }

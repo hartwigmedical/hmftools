@@ -62,7 +62,6 @@ public class SvCluster
     private long mSynDelDupLength;
 
     private List<SvCluster> mSubClusters;
-    private Map<String, List<SvCNData>> mChrCNDataMap;
     private boolean mHasReplicatedSVs;
 
     // cached lists of identified special cases
@@ -139,7 +138,6 @@ public class SvCluster
         mRecalcRemoteSVStatus = false;
 
         mSubClusters = Lists.newArrayList();
-        mChrCNDataMap = null;
         mHasReplicatedSVs = false;
 
         mMinCNChange = 0;
@@ -226,6 +224,27 @@ public class SvCluster
                 SvArmGroup armGroup = new SvArmGroup(this, var.chromosome(useStart), var.arm(useStart));
                 armGroup.addVariant(var);
                 mArmGroups.add(armGroup);
+            }
+        }
+    }
+
+    public void removeReplicatedSvs()
+    {
+        if(!mHasReplicatedSVs)
+            return;
+
+        int i = 0;
+        while(i < mSVs.size())
+        {
+            SvVarData var = mSVs.get(i);
+
+            if(var.isReplicatedSv())
+            {
+                removeReplicatedSv(var);
+            }
+            else
+            {
+                ++i;
             }
         }
     }
@@ -343,8 +362,6 @@ public class SvCluster
     public List<SvArmGroup> getArmGroups() { return mArmGroups; }
     public Map<String, List<SvBreakend>> getChrBreakendMap() { return mChrBreakendMap; }
 
-    public boolean hasArmGroup(final String chr, final String arm) { return getArmGroup(chr, arm) != null; }
-
     public SvArmGroup getArmGroup(final String chr, final String arm)
     {
         for(SvArmGroup armGroup : mArmGroups)
@@ -355,9 +372,6 @@ public class SvCluster
 
         return null;
     }
-
-    public void setChrCNData(Map<String, List<SvCNData>> map) { mChrCNDataMap = map; }
-    public final Map<String, List<SvCNData>> getChrCNData() { return mChrCNDataMap; }
 
     public int getUniqueSvCount()
     {
@@ -404,6 +418,16 @@ public class SvCluster
         return true;
     }
 
+    public void dissolveLinksAndChains()
+    {
+        mUnchainedSVs.clear();
+        mUnchainedSVs.addAll(mSVs);
+        mChains.clear();
+        mLinkedPairs.clear();
+        mAssemblyLinkedPairs.clear();
+        mInferredLinkedPairs.clear();
+    }
+
     public List<SvVarData> getUnlinkedSVs() { return mUnchainedSVs; }
 
     public boolean isSimpleSingleSV() { return isSimpleSVs(); }
@@ -425,10 +449,8 @@ public class SvCluster
     public final List<SvLinkedPair> getLinkedPairs() { return mLinkedPairs; }
     public final List<SvLinkedPair> getInferredLinkedPairs() { return mInferredLinkedPairs; }
     public final List<SvLinkedPair> getAssemblyLinkedPairs() { return mAssemblyLinkedPairs; }
-    public final List<SvVarData> getSpanningSVs() { return mSpanningSVs; }
     public void setInferredLinkedPairs(final List<SvLinkedPair> pairs) { mInferredLinkedPairs = pairs; }
     public void setAssemblyLinkedPairs(final List<SvLinkedPair> pairs) { mAssemblyLinkedPairs = pairs; }
-    public void setSpanningSVs(final List<SvVarData> svList) { mSpanningSVs = svList; }
 
     public void mergeOtherCluster(final SvCluster other)
     {
@@ -498,17 +520,6 @@ public class SvCluster
         mInversions.addAll(other.getInversions());
         mFoldbacks.addAll(other.getFoldbacks());
         mLongDelDups.addAll(other.getLongDelDups());
-    }
-
-    public int getMaxChainCount()
-    {
-        int maxCount = 0;
-        for(final SvChain chain : mChains)
-        {
-            maxCount = max(maxCount, chain.getSvCount());
-        }
-
-        return maxCount;
     }
 
     public List<SvCluster> getSubClusters() { return mSubClusters; }
@@ -896,8 +907,8 @@ public class SvCluster
     public int getFragmentArms() { return mFragmentArms; }
 
 
-    private static int SPECIFIC_CLUSTER_ID = -1;
-    // private static int SPECIFIC_CLUSTER_ID = 167;
+    // private static int SPECIFIC_CLUSTER_ID = -1;
+    private static int SPECIFIC_CLUSTER_ID = 64;
 
     public static boolean isSpecificCluster(final SvCluster cluster)
     {

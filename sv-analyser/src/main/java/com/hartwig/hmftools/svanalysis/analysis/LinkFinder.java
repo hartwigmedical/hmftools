@@ -1,18 +1,9 @@
 package com.hartwig.hmftools.svanalysis.analysis;
 
-import static java.lang.Math.abs;
-import static java.lang.Math.max;
-
-import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.DEFAULT_PROXIMITY_DISTANCE;
-import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.PERMITED_DUP_BE_DISTANCE;
-import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.breakendsMatch;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.copyNumbersEqual;
-import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.getProximity;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.isSpecificCluster;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_END;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_START;
-import static com.hartwig.hmftools.svanalysis.types.SvVarData.haveLinkedAssemblies;
-import static com.hartwig.hmftools.svanalysis.types.SvVarData.isSpecificSV;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.isStart;
 import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.ASSEMBLY_MATCH_DIFF;
 import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.ASSEMBLY_MATCH_MATCHED;
@@ -47,6 +38,11 @@ public class LinkFinder
     public LinkFinder()
     {
         mLogVerbose = false;
+    }
+
+    public void setLogVerbose(boolean toggle)
+    {
+        mLogVerbose = toggle;
     }
 
     public void findLinkedPairs(final String sampleId, SvCluster cluster)
@@ -152,6 +148,18 @@ public class LinkFinder
 
         return linkedPairs;
     }
+
+    public static boolean haveLinkedAssemblies(final SvVarData var1, final SvVarData var2, boolean v1Start, boolean v2Start)
+    {
+        for(String assemb1 : var1.getTempInsertionAssemblies(v1Start))
+        {
+            if(var2.getTempInsertionAssemblies(v2Start).contains(assemb1))
+                return true;
+        }
+
+        return false;
+    }
+
     public static boolean areLinkedSection(final SvVarData v1, final SvVarData v2, boolean v1Start, boolean v2Start)
     {
         return areLinkedSection(v1, v2, v1Start, v2Start, false);
@@ -234,6 +242,8 @@ public class LinkFinder
 
         if(cluster.hasLinkingLineElements())
             return linkedPairs;
+
+        isSpecificCluster(cluster);
 
         for (int i = 0; i < svList.size(); ++i)
         {
@@ -321,7 +331,7 @@ public class LinkFinder
                             linkedPairs.add(index, newPair);
 
                         // if(newPair.length() < mUtils.getBaseDistance())
-                        if(mLogVerbose && !var1.isReplicatedSv() && !var2.isReplicatedSv())
+                        if(mLogVerbose) //  && !var1.isReplicatedSv() && !var2.isReplicatedSv()
                         {
                             // to avoid logging unlikely long TIs
                             LOGGER.debug("cluster({}) adding inferred linked {} pair({}) length({}) at index({})",

@@ -370,7 +370,9 @@ public class SvClusteringMethods {
         }
     }
 
-    private static void applyCopyNumberReplication(SvCluster cluster)
+    public static int MAX_SV_REPLICATION_MULTIPLE = 10;
+
+    public static void applyCopyNumberReplication(SvCluster cluster)
     {
         // use the relative copy number change to replicate some SVs within a cluster
         if(!cluster.hasVariedCopyNumber())
@@ -384,7 +386,7 @@ public class SvClusteringMethods {
         int minCopyNumber = cluster.getMinCNChange();
         int maxCopyNumber = cluster.getMaxCNChange();
 
-        if(maxCopyNumber > 5 * minCopyNumber)
+        if(maxCopyNumber > MAX_SV_REPLICATION_MULTIPLE * minCopyNumber)
         {
             LOGGER.debug("cluster({}) skipping replication for large CN variation(min={} max={})",
                     cluster.id(), minCopyNumber, maxCopyNumber);
@@ -430,9 +432,9 @@ public class SvClusteringMethods {
             return var.copyNumberChange(true) < LOW_QUALITY_CN_CHANGE && var.copyNumberChange(false) < LOW_QUALITY_CN_CHANGE;
     }
 
-    private static String POLY_C_MOTIF = "CCCCCCCCCC";
-    private static String POLY_G_MOTIF = "GGGGGGGGGG";
-    private static double SGL_LOW_VAF = 0.15;
+    private static String POLY_C_MOTIF = "CCCCCCCCCCCCCCCC";
+    private static String POLY_G_MOTIF = "GGGGGGGGGGGGGGGG";
+    private static double SGL_LOW_VAF = 0.1;
 
     public boolean isLowVafSingleBreakend(final SvVarData var)
     {

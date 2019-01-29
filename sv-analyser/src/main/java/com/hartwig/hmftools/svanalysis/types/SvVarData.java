@@ -107,7 +107,7 @@ public class SvVarData
 
         init();
 
-        setAssemblyData();
+        setAssemblyData(false);
     }
 
     private void init()
@@ -198,7 +198,11 @@ public class SvVarData
         mEndLineElement = other.getLineElement(false);
         mNearestSvDistance = other.getNearestSvDistance();
         mNearestSvRelation = other.getNearestSvRelation();
-        setAssemblyData();
+
+        mAssemblyStartData = other.getAssemblyData(true);
+        mAssemblyEndData = other.getAssemblyData(false);
+        setAssemblyData(true);
+
         mStartAssemblyMatchType = other.getAssemblyMatchType(true);
         mEndAssemblyMatchType = other.getAssemblyMatchType(false);
         mDupBEStart = other.isDupBreakend(true);
@@ -474,15 +478,19 @@ public class SvVarData
     public static boolean isStart(int svIter) { return svIter == SVI_START; }
 
     public String getAssemblyData(boolean useStart) { return useStart ? mAssemblyStartData : mAssemblyEndData; }
+
+    // unit testing only
     public void setAssemblyData(boolean useStart, final String data)
     {
         if (useStart)
             mAssemblyStartData = data;
         else
             mAssemblyEndData = data;
+
+        setAssemblyData(true);
     }
 
-    public List<String> getTempInsertionAssemblies(boolean useStart) { return useStart ? mStartTempInsertionAssemblies : mEndTempInsertionAssemblies; }
+    public final List<String> getTempInsertionAssemblies(boolean useStart) { return useStart ? mStartTempInsertionAssemblies : mEndTempInsertionAssemblies; }
 
     public final List<GeneAnnotation> getGenesList(boolean useStart) { return useStart ? mGenesStart : mGenesEnd; }
     public void setGenesList(final List<GeneAnnotation> genesList, boolean isStart)
@@ -540,19 +548,32 @@ public class SvVarData
             mEndAssemblyMatchType = type;
     }
 
-    private void setAssemblyData()
+    private void setAssemblyData(boolean useExisting)
     {
         mStartTempInsertionAssemblies = Lists.newArrayList();
         mEndTempInsertionAssemblies = Lists.newArrayList();
-        mAssemblyStartData = "";
-        mAssemblyEndData = "";
+
         mStartAssemblyMatchType = ASSEMBLY_MATCH_NONE;
         mEndAssemblyMatchType = ASSEMBLY_MATCH_NONE;
 
-        if(!mSVData.startLinkedBy().isEmpty() && !mSVData.startLinkedBy().equals("."))
+        if(!useExisting)
         {
-            mAssemblyStartData = mSVData.startLinkedBy().replaceAll(",", ";");
+            mAssemblyStartData = "";
+            mAssemblyEndData = "";
 
+            if(!mSVData.startLinkedBy().isEmpty() && !mSVData.startLinkedBy().equals("."))
+            {
+                mAssemblyStartData = mSVData.startLinkedBy().replaceAll(",", ";");
+            }
+
+            if(!mSVData.endLinkedBy().isEmpty() && !mSVData.endLinkedBy().equals("."))
+            {
+                mAssemblyEndData = mSVData.endLinkedBy().replaceAll(",", ";");
+            }
+        }
+
+        if(!mAssemblyStartData.isEmpty())
+        {
             String[] assemblyList = mAssemblyStartData.split(";");
 
             for(int i = 0; i < assemblyList.length; ++i)
@@ -562,10 +583,8 @@ public class SvVarData
             }
         }
 
-        if(!mSVData.endLinkedBy().isEmpty() && !mSVData.endLinkedBy().equals("."))
+        if(!mAssemblyEndData.isEmpty())
         {
-            mAssemblyEndData = mSVData.endLinkedBy().replaceAll(",", ";");
-
             String[] assemblyList = mAssemblyEndData.split(";");
             for(int i = 0; i < assemblyList.length; ++i)
             {
@@ -573,17 +592,6 @@ public class SvVarData
                     mEndTempInsertionAssemblies.add(assemblyList[i]);
             }
         }
-    }
-
-    public static boolean haveLinkedAssemblies(final SvVarData var1, final SvVarData var2, boolean v1Start, boolean v2Start)
-    {
-        for(String assemb1 : var1.getTempInsertionAssemblies(v1Start))
-        {
-            if(var2.getTempInsertionAssemblies(v2Start).contains(assemb1))
-                return true;
-        }
-
-        return false;
     }
 
     public static SvVarData findVariantById(final String id, List<SvVarData> svList)

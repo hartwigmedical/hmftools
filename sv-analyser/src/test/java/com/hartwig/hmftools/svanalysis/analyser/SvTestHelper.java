@@ -52,6 +52,12 @@ public class SvTestHelper
     }
 
     public final String nextVarId() { return String.format("%d", mNextVarId++); }
+    public void logVerbose(boolean toggle)
+    {
+        Config.LogVerbose = toggle;
+        Analyser.getChainFinder().setLogVerbose(toggle);
+        Analyser.getLinkFinder().setLogVerbose(toggle);
+    }
 
     public void preClusteringInit()
     {

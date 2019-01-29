@@ -17,7 +17,9 @@ import static com.hartwig.hmftools.svanalysis.analysis.LinkFinder.areLinkedSecti
 import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.CLUSTER_REASON_COMMON_ARMS;
 import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.CLUSTER_REASON_FOLDBACKS;
 import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.CLUSTER_REASON_LOOSE_OVERLAP;
+import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.MAX_SV_REPLICATION_MULTIPLE;
 import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.addClusterReason;
+import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.applyCopyNumberReplication;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.calcConsistency;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.makeChrArmStr;
 import static com.hartwig.hmftools.svanalysis.annotators.LineElementAnnotator.markLineCluster;
@@ -94,11 +96,13 @@ public class ClusterAnalyser {
         mLinkFinder = new LinkFinder();
         mChainFinder = new ChainFinder();
         mChainFinder.setLogVerbose(mConfig.LogVerbose);
+        mLinkFinder.setLogVerbose(mConfig.LogVerbose);
     }
 
     // access for unit testing
-    public final SvaConfig getConfig() { return mConfig; }
     public final SvClusteringMethods getClusterer() { return mClusteringMethods; }
+    public final ChainFinder getChainFinder() { return mChainFinder; }
+    public final LinkFinder getLinkFinder() { return mLinkFinder; }
 
     public void setSampleData(final String sampleId, List<SvVarData> allVariants)
     {
@@ -237,7 +241,7 @@ public class ClusterAnalyser {
         }
     }
 
-    private void mergeClusters()
+    public void mergeClusters()
     {
         // now look at merging unresolved & inconsistent clusters where they share the same chromosomal arms
         List<SvCluster> mergedClusters = Lists.newArrayList();
@@ -263,17 +267,25 @@ public class ClusterAnalyser {
             {
                 cluster.setDesc(cluster.getClusterTypesAsString());
 
+                // OLD LOGIC:
                 // need to be careful replicating already replicated SVs..
                 // especially those already in linked chains
                 // may be only replicate stand-alone SVs at this point which have now been clustered
+
                 replicateMergedClusterSVs(cluster);
 
                 // repeat the search for inferred links now that additional SVs have been merged in but only on unlinked SVs
                 List<SvLinkedPair> newLinkedPairs = mLinkFinder.createInferredLinkedPairs(cluster, cluster.getUnlinkedSVs(), true);
-
                 cluster.getInferredLinkedPairs().addAll(newLinkedPairs);
 
-                // createCopyNumberSegments(sampleId, cluster);
+                // NEW LOGIC:
+                //cluster.dissolveLinksAndChains();
+                //cluster.removeReplicatedSvs();
+
+                //if(cluster.hasVariedCopyNumber())
+                //    applyCopyNumberReplication(cluster);
+
+                //mLinkFinder.findLinkedPairs(mSampleId, cluster);
 
                 findChains(cluster);
             }
@@ -296,7 +308,7 @@ public class ClusterAnalyser {
 
         mChainFinder.initialise(mSampleId, cluster);
 
-        // isSpecificCluster(cluster);
+        isSpecificCluster(cluster);
 
         boolean hasFullChain = mChainFinder.formClusterChains();
 
@@ -331,12 +343,14 @@ public class ClusterAnalyser {
         int minCopyNumber = cluster.getMinCNChange();
         int maxCopyNumber = cluster.getMaxCNChange();
 
-        if(maxCopyNumber > 5 * minCopyNumber)
+        if(maxCopyNumber > MAX_SV_REPLICATION_MULTIPLE * minCopyNumber)
         {
             LOGGER.debug("cluster({}) skipping replication for large CN variation(min={} max={})",
                     cluster.id(), minCopyNumber, maxCopyNumber);
             return;
         }
+
+        // isSpecificCluster(cluster);
 
         for(SvCluster subCluster : cluster.getSubClusters())
         {
