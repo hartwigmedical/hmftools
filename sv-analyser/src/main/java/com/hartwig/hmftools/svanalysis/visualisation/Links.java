@@ -42,14 +42,16 @@ public class Links {
     }
 
     public static int linkTraverseCount(@NotNull final GenomePosition position, @NotNull final List<Link> links) {
-       return  Links.findStartLink(position, links).map(Link::traverseCount).orElse(0) + Links.findEndLink(position, links)
+        return Links.findStartLink(position, links).map(Link::traverseCount).orElse(0) + Links.findEndLink(position, links)
                 .map(Link::traverseCount)
                 .orElse(0);
     }
 
     @NotNull
     public static List<Link> clean(@NotNull final List<Link> links) {
-        return links.stream().filter(x -> HumanChromosome.contains(x.startChromosome()) && HumanChromosome.contains(x.endChromosome())).collect(Collectors.toList());
+        return links.stream()
+                .filter(x -> HumanChromosome.contains(x.startChromosome()) && HumanChromosome.contains(x.endChromosome()))
+                .collect(Collectors.toList());
     }
 
     @NotNull
@@ -61,7 +63,7 @@ public class Links {
     private static List<Link> fromLines(@NotNull List<String> lines) {
         final List<Link> results = Lists.newArrayList();
         for (final String line : lines) {
-            if (!line.startsWith(COMMENT) && !line.startsWith(HEADER) ) {
+            if (!line.startsWith(COMMENT) && !line.startsWith(HEADER)) {
                 results.add(fromString(line));
             }
         }
@@ -76,6 +78,7 @@ public class Links {
                 .sampleId(values[0])
                 .clusterId(Integer.valueOf(values[1]))
                 .chainId(Integer.valueOf(values[2]))
+                .svId(Integer.valueOf(values[3]))
                 .startChromosome(values[4])
                 .startPosition(Long.valueOf(values[5]))
                 .startOrientation(Integer.valueOf(values[6]))

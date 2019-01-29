@@ -16,6 +16,8 @@ public abstract class Link {
 
     public abstract int chainId();
 
+    public abstract int svId();
+
     public abstract String startChromosome();
 
     public abstract long startPosition();

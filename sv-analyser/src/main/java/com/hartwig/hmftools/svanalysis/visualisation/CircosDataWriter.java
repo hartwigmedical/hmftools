@@ -26,9 +26,11 @@ public class CircosDataWriter {
     private final ColorPicker colorPicker;
     private final String filePrefix;
     private final int maxTracks;
+    private boolean debug;
 
-    public CircosDataWriter(final ColorPicker colorPicker, @NotNull final String sample, @NotNull final String outputDir,
-            final int maxTracks) {
+    public CircosDataWriter(final boolean debug, final ColorPicker colorPicker, @NotNull final String sample,
+            @NotNull final String outputDir, final int maxTracks) {
+        this.debug = debug;
         this.colorPicker = colorPicker;
         this.filePrefix = outputDir + File.separator + sample;
         this.maxTracks = maxTracks;
@@ -42,7 +44,6 @@ public class CircosDataWriter {
 
         final List<GenomeRegion> unadjustedLineElements =
                 Highlights.limitHighlightsToSegments(Highlights.lineElements(), unadjustedSegments);
-
 
         final List<GenomePosition> unadjustedPositions = Lists.newArrayList();
         unadjustedPositions.addAll(Segments.allPositions(unadjustedSegments));
@@ -61,7 +62,11 @@ public class CircosDataWriter {
         final List<GenomeRegion> lineElements = scalePosition.scaleRegions(unadjustedLineElements);
 
         final String textPath = filePrefix + ".text.circos";
-        Files.write(new File(textPath).toPath(), createPositionText(unadjustedSegments, segments));
+        if (debug) {
+            Files.write(new File(textPath).toPath(), createSVIdText(links));
+        } else {
+            Files.write(new File(textPath).toPath(), createPositionText(unadjustedSegments, segments));
+        }
 
         final String histogramPath = filePrefix + ".histogram.circos";
         Files.write(new File(histogramPath).toPath(), createHistogramTrack(contigLengths, segments));
@@ -404,6 +409,38 @@ public class CircosDataWriter {
                     .toString();
 
             result.add(end);
+        }
+
+        return result.stream().sorted().distinct().collect(Collectors.toList());
+    }
+
+    @NotNull
+    private List<String> createSVIdText(@NotNull final List<Link> scaledLinks) {
+
+        final Set<String> result = Sets.newHashSet();
+
+        for (final Link scaled : scaledLinks) {
+
+            if (HumanChromosome.contains(scaled.startChromosome())) {
+                final String start = new StringJoiner(DELIMITER).add(circosContig(scaled.startChromosome()))
+                        .add(String.valueOf(scaled.startPosition()))
+                        .add(String.valueOf(scaled.startPosition()))
+                        .add(String.valueOf(scaled.svId()))
+                        .toString();
+
+                result.add(start);
+
+            }
+
+            if (HumanChromosome.contains(scaled.endChromosome())) {
+                final String end = new StringJoiner(DELIMITER).add(circosContig(scaled.endChromosome()))
+                        .add(String.valueOf(scaled.endPosition()))
+                        .add(String.valueOf(scaled.endPosition()))
+                        .add(String.valueOf(scaled.svId()))
+                        .toString();
+
+                result.add(end);
+            }
         }
 
         return result.stream().sorted().distinct().collect(Collectors.toList());

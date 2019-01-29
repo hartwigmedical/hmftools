@@ -5,6 +5,7 @@ import static java.util.stream.Collectors.toList;
 import static com.hartwig.hmftools.svanalysis.visualisation.CopyNumberAlterations.copyNumberInTracks;
 
 import java.io.IOException;
+import java.sql.SQLException;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
@@ -41,7 +42,7 @@ public class SvVisualiser implements AutoCloseable {
 
     private static final Logger LOGGER = LogManager.getLogger(SvVisualiser.class);
 
-    public static void main(String[] args) throws IOException, InterruptedException, ExecutionException {
+    public static void main(String[] args) throws IOException, InterruptedException, ExecutionException, SQLException {
         final Options options = SvVisualiserConfig.createOptions();
         try (final SvVisualiser application = new SvVisualiser(options, args)) {
             application.run();
@@ -56,7 +57,7 @@ public class SvVisualiser implements AutoCloseable {
     private final SvVisualiserConfig config;
     private final ExecutorService executorService;
 
-    private SvVisualiser(final Options options, final String... args) throws ParseException, IOException {
+    private SvVisualiser(final Options options, final String... args) throws ParseException, IOException, SQLException {
         final CommandLine cmd = createCommandLine(args, options);
         LOGGER.info("Loading data");
         config = SvVisualiserConfig.createConfig(cmd);
@@ -85,7 +86,7 @@ public class SvVisualiser implements AutoCloseable {
 
     @Nullable
     private Object runChromsome(final String chromosome) throws IOException, InterruptedException {
-        final String sample = config.sample() + ".chr" + chromosome;
+        final String sample = config.sample() + ".chr" + chromosome + (config.debug() ? ".debug" : "");
 
         final List<Integer> clusterIds = config.links()
                 .stream()
@@ -94,7 +95,7 @@ public class SvVisualiser implements AutoCloseable {
                 .collect(toList());
 
         final List<Link> links = config.links().stream().filter(x -> clusterIds.contains(x.clusterId())).collect(toList());
-        final List<Segment> clusterSegments = config.tracks().stream().filter(x -> clusterIds.contains(x.clusterId())).collect(toList());
+        final List<Segment> clusterSegments = config.segments().stream().filter(x -> clusterIds.contains(x.clusterId())).collect(toList());
         final List<Segment> segments = Segments.extendTerminals(1000, clusterSegments, links);
         final List<CopyNumberAlteration> alterations = copyNumberInTracks(100, config.copyNumberAlterations(), segments);
         final ColorPicker color = new ColorPickerCluster(links);
@@ -106,7 +107,7 @@ public class SvVisualiser implements AutoCloseable {
 
         final CircosConfigWriter confWrite = new CircosConfigWriter(sample, config.outputConfPath());
         confWrite.writeConfig(chromosomeCount, maxTracks, maxCopyNumber, maxMinorAllelePloidy);
-        new CircosDataWriter(color, sample, config.outputConfPath(), maxTracks).write(segments, links, alterations);
+        new CircosDataWriter(config.debug(), color, sample, config.outputConfPath(), maxTracks).write(segments, links, alterations);
 
         final String outputPlotName = sample + ".png";
         return new CircosExecution(config.circosBin()).generateCircos(confWrite.configPath(), config.outputPlotPath(), outputPlotName);
@@ -114,10 +115,10 @@ public class SvVisualiser implements AutoCloseable {
 
     @Nullable
     private Object runCluster(int clusterId) throws IOException, InterruptedException {
-        final String sample = config.sample() + ".cluster" + String.format("%03d", clusterId);
+        final String sample = config.sample() + ".cluster" + String.format("%03d", clusterId) + (config.debug() ? ".debug" : "");
 
         final List<Link> clusterLinks = config.links().stream().filter(x -> x.clusterId() == clusterId).collect(toList());
-        final List<Segment> clusterSegments = config.tracks().stream().filter(x -> x.clusterId() == clusterId).collect(toList());
+        final List<Segment> clusterSegments = config.segments().stream().filter(x -> x.clusterId() == clusterId).collect(toList());
         final List<Segment> segments = Segments.extendTerminals(1000, clusterSegments, clusterLinks);
         final List<CopyNumberAlteration> alterations = copyNumberInTracks(100, config.copyNumberAlterations(), segments);
         final ColorPicker color = new ColorPicker() {
@@ -130,7 +131,7 @@ public class SvVisualiser implements AutoCloseable {
 
         final CircosConfigWriter confWrite = new CircosConfigWriter(sample, config.outputConfPath());
         confWrite.writeConfig(chromosomeCount, maxTracks, maxCopyNumber, maxMinorAllelePloidy);
-        new CircosDataWriter(color, sample, config.outputConfPath(), maxTracks).write(segments, clusterLinks, alterations);
+        new CircosDataWriter(config.debug(), color, sample, config.outputConfPath(), maxTracks).write(segments, clusterLinks, alterations);
 
         final String outputPlotName = sample + ".png";
         return new CircosExecution(config.circosBin()).generateCircos(confWrite.configPath(), config.outputPlotPath(), outputPlotName);
