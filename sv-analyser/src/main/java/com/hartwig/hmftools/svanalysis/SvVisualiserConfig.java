@@ -30,7 +30,8 @@ public interface SvVisualiserConfig {
 
     Logger LOGGER = LogManager.getLogger(SvVisualiserConfig.class);
 
-    String OUT_PATH = "out";
+    String PLOT_OUT = "plot_out";
+    String DATA_OUT = "data_out";
     String SAMPLE = "sample";
     String SEGMENT = "segment";
     String LINK = "link";
@@ -77,7 +78,8 @@ public interface SvVisualiserConfig {
     @NotNull
     static Options createOptions() {
         final Options options = new Options();
-        options.addOption(OUT_PATH, true, "Output directory");
+        options.addOption(PLOT_OUT, true, "Plot output directory");
+        options.addOption(DATA_OUT, true, "Data output directory");
         options.addOption(SAMPLE, true, "Sample name");
         options.addOption(SEGMENT, true, "Path to track file");
         options.addOption(LINK, true, "Path to link file");
@@ -99,7 +101,8 @@ public interface SvVisualiserConfig {
         final String linkPath = parameter(cmd, LINK, missingJoiner);
         final String trackPath = parameter(cmd, SEGMENT, missingJoiner);
         final String sample = parameter(cmd, SAMPLE, missingJoiner);
-        final String outputDir = parameter(cmd, OUT_PATH, missingJoiner);
+        final String plotOutputDir = parameter(cmd, PLOT_OUT, missingJoiner);
+        final String dataOutputDir = parameter(cmd, DATA_OUT, missingJoiner);
         final String circos = parameter(cmd, CIRCOS, missingJoiner);
         final String dbUser = parameter(cmd, DB_USER, missingJoiner);
         final String dbPassword = parameter(cmd, DB_PASS, missingJoiner);
@@ -125,8 +128,8 @@ public interface SvVisualiserConfig {
         }
 
         return ImmutableSvVisualiserConfig.builder()
-                .outputConfPath(outputDir)
-                .outputPlotPath(outputDir)
+                .outputConfPath(dataOutputDir)
+                .outputPlotPath(plotOutputDir)
                 .segments(segments)
                 .links(links)
                 .sample(sample)

@@ -122,7 +122,7 @@ public class SvVisualiser implements AutoCloseable {
         new CircosDataWriter(config.debug(), color, sample, config.outputConfPath(), maxTracks).write(segments, links, alterations);
 
         final String outputPlotName = sample + ".png";
-        return new CircosExecution(config.circosBin()).generateCircos(confWrite.configPath(), config.outputPlotPath(), outputPlotName);
+        return new CircosExecution(config.circosBin()).generateCircos(confWrite.configPath(), config.outputPlotPath(), outputPlotName, config.outputConfPath());
     }
 
     @Nullable
@@ -146,7 +146,7 @@ public class SvVisualiser implements AutoCloseable {
         new CircosDataWriter(config.debug(), color, sample, config.outputConfPath(), maxTracks).write(segments, clusterLinks, alterations);
 
         final String outputPlotName = sample + ".png";
-        return new CircosExecution(config.circosBin()).generateCircos(confWrite.configPath(), config.outputPlotPath(), outputPlotName);
+        return new CircosExecution(config.circosBin()).generateCircos(confWrite.configPath(), config.outputPlotPath(), outputPlotName, config.outputConfPath());
     }
 
     @NotNull

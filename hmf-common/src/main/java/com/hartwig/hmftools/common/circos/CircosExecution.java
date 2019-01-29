@@ -21,10 +21,10 @@ public class CircosExecution {
     }
 
     @Nullable
-    public Object generateCircos(@NotNull final String inputConfig, @NotNull final String outputPath, @NotNull final String outputFile)
+    public Object generateCircos(@NotNull final String inputConfig, @NotNull final String outputPath, @NotNull final String outputFile, @NotNull final String errorPath)
             throws IOException, InterruptedException {
-        final File redirectErrorFile = new File(outputPath + File.separator + outputFile + ".error");
-        final File redirectOutputFile = new File(outputPath + File.separator + outputFile + ".out");
+        final File redirectErrorFile = new File(errorPath + File.separator + outputFile + ".error");
+        final File redirectOutputFile = new File(errorPath + File.separator + outputFile + ".out");
 
         final String[] command = new String[8];
         command[0] = executable;
