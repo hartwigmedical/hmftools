@@ -228,6 +228,8 @@ public class ClusterAnalyser {
                 continue;
             }
 
+            cluster.dissolveLinksAndChains();
+
             // first establish links between SVs (eg TIs and DBs)
             mLinkFinder.findLinkedPairs(mSampleId, cluster);
 
@@ -267,6 +269,7 @@ public class ClusterAnalyser {
             {
                 cluster.setDesc(cluster.getClusterTypesAsString());
 
+                /*
                 // OLD LOGIC:
                 // need to be careful replicating already replicated SVs..
                 // especially those already in linked chains
@@ -277,15 +280,16 @@ public class ClusterAnalyser {
                 // repeat the search for inferred links now that additional SVs have been merged in but only on unlinked SVs
                 List<SvLinkedPair> newLinkedPairs = mLinkFinder.createInferredLinkedPairs(cluster, cluster.getUnlinkedSVs(), true);
                 cluster.getInferredLinkedPairs().addAll(newLinkedPairs);
+                */
 
                 // NEW LOGIC:
-                //cluster.dissolveLinksAndChains();
-                //cluster.removeReplicatedSvs();
+                cluster.dissolveLinksAndChains();
+                cluster.removeReplicatedSvs();
 
-                //if(cluster.hasVariedCopyNumber())
-                //    applyCopyNumberReplication(cluster);
+                if(cluster.hasVariedCopyNumber())
+                    applyCopyNumberReplication(cluster);
 
-                //mLinkFinder.findLinkedPairs(mSampleId, cluster);
+                mLinkFinder.findLinkedPairs(mSampleId, cluster);
 
                 findChains(cluster);
             }
@@ -830,6 +834,8 @@ public class ClusterAnalyser {
 
     private List<SvCluster> getTraversedClusters(final SvCluster cluster)
     {
+        // find all clusters which are overlapped by consecutive same-orientation SVs in this cluster
+        // and where the overlapped clusters contain opposing orientation BNDs or SGLs
         List<SvCluster> traversedClusters = Lists.newArrayList();
 
         if(cluster.isResolved() || cluster.isFullyChained())

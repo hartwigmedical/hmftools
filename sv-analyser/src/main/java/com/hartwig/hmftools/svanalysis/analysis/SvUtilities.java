@@ -200,34 +200,6 @@ public class SvUtilities {
         return true;
     }
 
-    public static boolean isLocalOverlap(final SvVarData v1, final SvVarData v2)
-    {
-        // tests if the inner variant is wholy contained within the outer variant
-        if(!v1.isLocal() || !v2.isLocal())
-            return false;
-
-        if(!v1.chromosome(true).equals(v2.chromosome(true)))
-            return false;
-
-        // v1's right end overlaps with v2's left
-        if(v1.position(true) < v2.position(true)
-        && v1.position(false) < v2.position(false)
-        && v1.position(false) >= v2.position(true))
-        {
-            return true;
-        }
-
-        // v1's left end overlaps with v2's right
-        if(v1.position(false) > v2.position(false)
-        && v1.position(true) > v2.position(true)
-        && v1.position(true) <= v2.position(false))
-        {
-            return true;
-        }
-
-        return false;
-    }
-
     public static boolean isOverlapping(final SvVarData v1, final SvVarData v2)
     {
         // tests if either variant has an end within the other variant
@@ -283,35 +255,10 @@ public class SvUtilities {
 //        if(!v1.chromosome(v1Start).equals(v2.chromosome(v2Start)))
 //            return -1;
 
-        if(v1.position(v1Start) < 0 || v2.position(v1Start) < 0)
+        if(v1.position(v1Start) < 0 || v2.position(v2Start) < 0)
             return 0;
 
         return Math.abs((int)v1.position(v1Start) - (int)v2.position(v2Start));
-    }
-
-    public static boolean sameChrArm(final SvVarData v1, final SvVarData v2, boolean v1Start, boolean v2Start)
-    {
-        if(v1.position(v1Start) < 0 || v2.position(v1Start) < 0)
-            return false;
-
-        return v1.chromosome(v1Start).equals(v2.chromosome(v2Start)) && v1.arm(v1Start) == v2.arm(v2Start);
-    }
-
-    public static boolean variantMatchesBreakend(final SvVarData var, final SvBreakend breakend, boolean useStart, int permittedDist)
-    {
-        return breakend.chromosome().equals(var.chromosome(useStart))
-                && abs(breakend.position() - var.position(useStart)) <= permittedDist
-                && breakend.orientation() == var.orientation(useStart);
-    }
-
-    public static boolean breakendsMatch(final SvVarData var1, final SvVarData var2, boolean v1Start, boolean v2Start, int permittedDist)
-    {
-        if(var1.position(v1Start) < 0 || var2.position(v2Start)< 0)
-            return false;
-
-        return var1.chromosome(v1Start).equals(var2.chromosome(v2Start))
-                && abs(var1.position(v1Start) - var2.position(v2Start)) <= permittedDist
-                && var1.orientation(v1Start) == var2.orientation(v2Start);
     }
 
     public static int calcConsistency(final List<SvVarData> svList)

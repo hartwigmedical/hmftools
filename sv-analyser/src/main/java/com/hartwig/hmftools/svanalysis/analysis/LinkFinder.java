@@ -53,7 +53,7 @@ public class LinkFinder
         if(cluster.hasLinkingLineElements())
             return;
 
-        List<SvLinkedPair> inferredLinkedPairs = createInferredLinkedPairs(cluster, false);
+        List<SvLinkedPair> inferredLinkedPairs = createInferredLinkedPairs(cluster, cluster.getSVs(),false);
 
         cluster.setInferredLinkedPairs(inferredLinkedPairs);
     }
@@ -226,15 +226,13 @@ public class LinkFinder
         return false;
     }
 
-
-    public List<SvLinkedPair> createInferredLinkedPairs(SvCluster cluster, boolean allowSingleBEs)
-    {
-        return createInferredLinkedPairs(cluster, cluster.getSVs(), allowSingleBEs);
-    }
-
     public List<SvLinkedPair> createInferredLinkedPairs(SvCluster cluster, List<SvVarData> svList, boolean allowSingleBEs)
     {
         List<SvLinkedPair> linkedPairs = Lists.newArrayList();
+
+        return linkedPairs;
+
+        /*
 
         // exclude large clusters for now due to processing times until the algo is better refined
         if(svList.size() >= CLUSTER_SIZE_ANALYSIS_LIMIT)
@@ -311,7 +309,7 @@ public class LinkFinder
                             final SvLinkedPair pair = linkedPairs.get(index);
 
                             // check for matching BEs on a pair that is much shorter, and if so skip creating this new linked pair
-                            if(newPair.length() > pair.length() && newPair.hasLinkClash(pair))
+                            if(newPair.length() >= pair.length() && newPair.hasLinkClash(pair))
                             {
                                 // allow a TI if only a DB has been found
                                 skipNewPair = true;
@@ -351,6 +349,7 @@ public class LinkFinder
         LOGGER.debug("cluster({}) has {} inferred linked pairs", cluster.id(), linkedPairs.size());
 
         return linkedPairs;
+        */
     }
 
     public static void findDeletionBridges(final Map<String, List<SvBreakend>> chrBreakendMap)

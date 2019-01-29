@@ -18,9 +18,11 @@ import static com.hartwig.hmftools.svanalysis.types.SvVarData.isStart;
 import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.LINK_TYPE_TI;
 
 import java.util.List;
+import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
+import com.hartwig.hmftools.svanalysis.types.SvBreakend;
 import com.hartwig.hmftools.svanalysis.types.SvChain;
 import com.hartwig.hmftools.svanalysis.types.SvCluster;
 import com.hartwig.hmftools.svanalysis.types.SvVarData;
@@ -62,8 +64,10 @@ public class ChainFinder
         mCluster = cluster;
         mReqChainCount = 0;
 
-        mAssemblyLinkedPairs = Lists.newArrayList();
+        mAssemblyLinkedPairs = Lists.newArrayList(cluster.getAssemblyLinkedPairs());
 
+        /*
+        mAssemblyLinkedPairs = Lists.newArrayList();
         for(SvLinkedPair pair : cluster.getAssemblyLinkedPairs())
         {
             boolean alreadyLinked = false;
@@ -79,6 +83,7 @@ public class ChainFinder
             if(!alreadyLinked)
                 mAssemblyLinkedPairs.add(pair);
         }
+        */
 
         mInferredLinkedPairs = Lists.newArrayList();
 
@@ -125,7 +130,19 @@ public class ChainFinder
                     svList.size(), mCluster.getCount(), mCluster.getChains().size());
         }
 
-        boolean fullyChained = formChains(svList, inferredTIs);
+        // find all the combinations of linked pairs where every breakend end except at most 2 are covered by a linked pair
+        mContinuousFinderPc.start();
+        findContinuousChains(svList, inferredTIs);
+        mContinuousFinderPc.stop();
+
+        // first check for any complete chains, and if found, add the shortest one
+        boolean fullyChained = cacheCompleteChain();
+
+        if(!fullyChained)
+        {
+            // otherwise add the longest mutually exclusive chains
+            cacheIncompleteChains();
+        }
 
         return fullyChained;
     }
@@ -155,23 +172,6 @@ public class ChainFinder
         */
 
         return svList;
-    }
-
-    private boolean formChains(List<SvVarData> svList, List<SvLinkedPair> inferredLinkedPairs)
-    {
-        // find all the combinations of linked pairs where every breakend end except at most 2 are covered by a linked pair
-        mContinuousFinderPc.start();
-        findContinuousChains(svList, inferredLinkedPairs);
-        mContinuousFinderPc.stop();
-
-        // first check for any complete chains, and if found, add the shortest one
-        if(cacheCompleteChain())
-            return true;
-
-        // otherwise add the longest mutually exclusive chains
-        cacheIncompleteChains();
-
-        return false;
     }
 
     private boolean cacheCompleteChain()
@@ -263,7 +263,7 @@ public class ChainFinder
 
             maxLengthChain.setId(mCluster.getChains().size());
 
-            if(maxLengthChain.getLinkCount() >= 3)
+            if(maxLengthChain.getLinkCount() >= 3 || mLogVerbose)
             {
                 LOGGER.debug("sample({}) cluster({}) adding incomplete chain({}) length({}) with {} linked pairs",
                         mSampleId, mCluster.id(), maxLengthChain.id(), maxLengthChain.getLength(), maxLengthChain.getLinkCount());
@@ -327,13 +327,13 @@ public class ChainFinder
 
         // isSpecificCluster(mCluster);
 
-        if(mAssemblyLinkedPairs.isEmpty() && inferredLinkedPairs.isEmpty() && partialChains.isEmpty())
-            return;
+        // if(mAssemblyLinkedPairs.isEmpty() && inferredLinkedPairs.isEmpty() && partialChains.isEmpty())
+        //    return;
 
         List<SvLinkedPair> chainedPairs = Lists.newArrayList();
         List<SvLinkedPair> remainingStartLinks = Lists.newArrayList();
         remainingStartLinks.addAll(mAssemblyLinkedPairs);
-        remainingStartLinks.addAll(inferredLinkedPairs);
+        // remainingStartLinks.addAll(inferredLinkedPairs);
 
         final List<SvVarData> unlinkedSvList = Lists.newArrayList();
 
@@ -388,10 +388,24 @@ public class ChainFinder
                     }
 
                 }
-                else if(!remainingStartLinks.isEmpty())
+                else
                 {
-                    SvLinkedPair linkedPair = remainingStartLinks.get(0);
-                    remainingStartLinks.remove(0);
+                    // take either the next known pair or look for a new candidate
+                    SvLinkedPair linkedPair = null;
+
+                    if(!remainingStartLinks.isEmpty())
+                    {
+                        linkedPair = remainingStartLinks.get(0);
+                        remainingStartLinks.remove(0);
+                    }
+                    else
+                    {
+                        linkedPair = findNewLinkedPair(chainedPairs, unlinkedSvList);
+
+                        // nothing left to start a chain with
+                        if(linkedPair == null)
+                            break;
+                    }
 
                     currentChain = new SvChain(chainsList.size());
 
@@ -404,11 +418,6 @@ public class ChainFinder
                     currentChain.addLink(linkedPair, true);
                     chainedPairs.add(linkedPair);
                     reduceRemainingLists(linkedPair, unlinkedSvList, remainingStartLinks);
-                }
-                else
-                {
-                    // nothing left to start a chain with
-                    break;
                 }
             }
 
@@ -551,12 +560,36 @@ public class ChainFinder
         }
     }
 
+    private SvLinkedPair findNewLinkedPair(final List<SvLinkedPair> chainedPairs, final List<SvVarData> unlinkedSVs)
+    {
+        // try to find an inferred linked pair from which to begin a new chain
+        SvLinkedPair shortestPair = null;
+
+        for(final SvVarData var : unlinkedSVs)
+        {
+            for (int be = SVI_START; be <= SVI_END; ++be)
+            {
+                boolean useStart = isStart(be);
+
+                SvLinkedPair pair = findNextLinkedPair(chainedPairs, unlinkedSVs, var, useStart);
+
+                if(pair == null)
+                    continue;
+
+                if(shortestPair == null || pair.length() < shortestPair.length())
+                    shortestPair = pair;
+            }
+        }
+
+        return shortestPair;
+    }
+
     private SvLinkedPair findNextLinkedPair(final List<SvLinkedPair> chainedPairs, final List<SvVarData> svList, final SvVarData var, boolean useStart)
     {
+        // find the shortest templated insertion which links to this variant
         if(var.isAssemblyMatched(useStart)) // this breakend will be added when the assembly link is added
             return null;
 
-        // find the shortest templated insertion which links to this variant
         SvLinkedPair newPair = null;
 
         for(final SvVarData otherVar : svList)

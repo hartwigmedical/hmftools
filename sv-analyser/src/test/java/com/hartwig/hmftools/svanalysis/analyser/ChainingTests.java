@@ -158,28 +158,28 @@ public class ChainingTests
         tester.logVerbose(true);
 
         // merge 5 clusters with varying levels of copy number change (ie replication) from 4 foldbacks
-        final SvVarData var1 = createTestSv("717", "11", "11", 100, 200, -1, -1, INV, 10.4, 18, 7.51, 7.51, 6, "");
-        final SvVarData var2 = createTestSv("719", "11", "11", 300, 600, -1, 1, DUP, 20.7, 19.7, 2.75, 1.54, 2, "");
-        final SvVarData var3 = createTestSv("731", "11", "11", 400, 1600, 1, -1, DEL, 19.7, 21.0, 1.6, 2.05, 1.9, "");
-        final SvVarData var4 = createTestSv("728", "11", "11", 500, 1400, -1, -1, INV, 19.7, 15.3, 1.67, 1.66, 1.54, "");
-        final SvVarData var5 = createTestSv("723", "11", "11", 800, 900, 1, 1, INV, 18.7, 15.6, 3.04, 3.96, 3.33, "");
-        final SvVarData var6 = createTestSv("726", "11", "11", 1000, 1100, -1, -1, INV, 9.8, 13.8, 4.13, 3.94, 4.2, "");
-        final SvVarData var7 = createTestSv("727", "11", "11", 1200, 1300, 1, -1, DEL, 13.8,13.7, 3.98, 3.88, 4.36, "");
-        final SvVarData var8 = createTestSv("732", "11", "11", 1500, 1700, 1, 1, INV, 20.8, 21, 1.85, 1.85, 1.82, "");
-        final SvVarData var9 = createTestSv("733", "11", "11", 1800, 1900, 1, -1, DEL, 19.2, 19.4, 0.67, 0.86, 0.94, "");
-        final SvVarData var10 = createTestSv("734", "11", "11", 1910, 2100, 1, 1, INV, 19.4, 18.3, 1.07, 0.71, 0.78, "");
-        final SvVarData var11 = createTestSv("729", "1", "11", 10100, 700, 1, -1, BND, 2.05, 19.6, 1, 1.4, 1.2, "");
-        final SvVarData var12 = createTestSv("462", "1", "1", 10200, 10300, -1, -1, INV, 3, 3.9, 0.93, 0.93, 1.11, "");
+        final SvVarData var1 = createTestSv("717", "11", "11", 67149357,67150121, -1, -1, INV, 10.4, 18, 7.51, 7.51, 6, "");
+        final SvVarData var2 = createTestSv("719", "11", "11", 67465724,68587766, -1, 1, DUP, 20.7, 19.7, 2.75, 1.54, 2, "");
+        final SvVarData var3 = createTestSv("731", "11", "11", 68574864,70107010, 1, -1, DEL, 19.7, 21.0, 1.6, 2.05, 1.9, "");
+        final SvVarData var4 = createTestSv("728", "11", "11", 68587010,69911892, -1, -1, INV, 19.7, 15.3, 1.67, 1.66, 1.54, "");
+        final SvVarData var5 = createTestSv("723", "11", "11", 68797542,68897549, 1, 1, INV, 18.7, 15.6, 3.04, 3.96, 3.33, "");
+        final SvVarData var6 = createTestSv("726", "11", "11", 69720626,69722514, -1, -1, INV, 9.8, 13.8, 4.13, 3.94, 4.2, "");
+        final SvVarData var7 = createTestSv("727", "11", "11", 69722658,69724290, 1, -1, DEL, 13.8,13.7, 3.98, 3.88, 4.36, "");
+        final SvVarData var8 = createTestSv("732", "11", "11", 70106999,70107331, 1, 1, INV, 20.8, 21, 1.85, 1.85, 1.82, "");
+        final SvVarData var9 = createTestSv("733", "11", "11", 70170579,70173624, 1, -1, DEL, 19.2, 19.4, 0.67, 0.86, 0.94, "");
+        final SvVarData var10 = createTestSv("734", "11", "11", 70173632,70174021, 1, 1, INV, 19.4, 18.3, 1.07, 0.71, 0.78, "");
+        final SvVarData var11 = createTestSv("720", "1", "11", 100499653,68672544, 1, -1, BND, 2.05, 19.6, 1, 1.4, 1.2, "");
+        final SvVarData var12 = createTestSv("462", "1", "1", 113342526,113343275, -1, -1, INV, 3, 3.9, 0.93, 0.93, 1.11, "");
 
         // mark assembled links
-        var3.getTempInsertionAssemblies(false).add("asmb1");
-        var8.getTempInsertionAssemblies(false).add("asmb1");
+        var3.setAssemblyData(false, "asmb1");
+        var8.setAssemblyData(false, "asmb1");
 
-        var9.getTempInsertionAssemblies(false).add("asmb2");
-        var10.getTempInsertionAssemblies(false).add("asmb2");
+        var9.setAssemblyData(false, "asmb2");
+        var10.setAssemblyData(false, "asmb2");
 
-        var6.getTempInsertionAssemblies(false).add("asmb3");
-        var7.getTempInsertionAssemblies(true).add("asmb3");
+        var6.setAssemblyData(false, "asmb3");
+        var7.setAssemblyData(true, "asmb3");
 
         SvCluster cluster = new SvCluster(150);
         cluster.addVariant(var1);
@@ -293,7 +293,7 @@ public class ChainingTests
         // check links
         assertEquals(var4.getAssemblyMatchType(false), ASSEMBLY_MATCH_MATCHED);
         assertEquals(var5.getAssemblyMatchType(true), ASSEMBLY_MATCH_MATCHED);
-        // assertEquals(var5.getAssemblyMatchType(false), ASSEMBLY_MATCH_MATCHED);
+        assertEquals(var5.getAssemblyMatchType(false), ASSEMBLY_MATCH_MATCHED);
 
         assertEquals(var7.getLinkedPair(false), var8.getLinkedPair(false));
         assertEquals(var7.getAssemblyMatchType(false), ASSEMBLY_MATCH_MATCHED);
