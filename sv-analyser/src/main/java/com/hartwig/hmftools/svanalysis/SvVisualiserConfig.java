@@ -87,6 +87,8 @@ public interface SvVisualiserConfig {
         options.addOption(DB_USER, true, "Database user name.");
         options.addOption(DB_PASS, true, "Database password.");
         options.addOption(DB_URL, true, "Database url in form: mysql://host:port/database");
+        options.addOption(SINGLE_CLUSTER, true, "Only generate image for single cluster");
+        options.addOption(SINGLE_CHROMOSOME, true, "Only generate image for singe chromosome");
 
         return options;
     }
@@ -112,8 +114,15 @@ public interface SvVisualiserConfig {
                 Segments.readTracksFromFile(trackPath).stream().filter(x -> x.sampleId().equals(sample)).collect(toList());
         final List<Link> links = Links.readLinks(linkPath).stream().filter(x -> x.sampleId().equals(sample)).collect(toList());
 
+        if (segments.isEmpty() && links.isEmpty()) {
+            LOGGER.warn("No structural variants found for sample {}", sample);
+        }
+
         LOGGER.info("Loading copy numbers from database");
         final List<CopyNumberAlteration> cna = sampleCopyNumberAlterations(sample, dbUser, dbPassword, "jdbc:" + dbUrl);
+        if (cna.isEmpty()) {
+            LOGGER.warn("No copy number alterations found for sample {}", sample);
+        }
 
         return ImmutableSvVisualiserConfig.builder()
                 .outputConfPath(outputDir)
@@ -125,6 +134,8 @@ public interface SvVisualiserConfig {
                 .circosBin(circos)
                 .threads(Integer.valueOf(cmd.getOptionValue(THREADS, "1")))
                 .debug(cmd.hasOption(DEBUG))
+                .singleCluster(cmd.hasOption(SINGLE_CLUSTER) ? Integer.valueOf(cmd.getOptionValue(SINGLE_CLUSTER)) : null)
+                .singleChromosome(cmd.hasOption(SINGLE_CHROMOSOME) ? cmd.getOptionValue(SINGLE_CHROMOSOME) : null)
                 .build();
     }
 

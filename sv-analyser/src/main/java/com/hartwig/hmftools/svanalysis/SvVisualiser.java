@@ -64,19 +64,31 @@ public class SvVisualiser implements AutoCloseable {
         executorService = Executors.newFixedThreadPool(config.threads());
     }
 
-    private void run() throws InterruptedException, ExecutionException, IOException {
+    private void run() throws InterruptedException, ExecutionException {
 
         final List<Future<Object>> futures = Lists.newArrayList();
-        final List<Integer> clusterIds = config.links().stream().map(Link::clusterId).distinct().sorted().collect(toList());
-        for (Integer clusterId : clusterIds) {
-            futures.add(executorService.submit(() -> runCluster(clusterId)));
-        }
+        if (config.singleCluster() != null || config.singleChromosome() != null) {
 
-        final Set<String> chromosomes = Sets.newHashSet();
-        config.links().stream().map(Link::startChromosome).filter(HumanChromosome::contains).forEach(chromosomes::add);
-        config.links().stream().map(Link::endChromosome).filter(HumanChromosome::contains).forEach(chromosomes::add);
-        for (final String chromosome : chromosomes) {
-            futures.add(executorService.submit(() -> runChromsome(chromosome)));
+            if (config.singleCluster() != null) {
+                futures.add(executorService.submit(() -> runCluster(config.singleCluster())));
+            }
+
+            if (config.singleChromosome() != null) {
+                futures.add(executorService.submit(() -> runChromosome(config.singleChromosome())));
+            }
+
+        } else {
+            final List<Integer> clusterIds = config.links().stream().map(Link::clusterId).distinct().sorted().collect(toList());
+            for (Integer clusterId : clusterIds) {
+                futures.add(executorService.submit(() -> runCluster(clusterId)));
+            }
+
+            final Set<String> chromosomes = Sets.newHashSet();
+            config.links().stream().map(Link::startChromosome).filter(HumanChromosome::contains).forEach(chromosomes::add);
+            config.links().stream().map(Link::endChromosome).filter(HumanChromosome::contains).forEach(chromosomes::add);
+            for (final String chromosome : chromosomes) {
+                futures.add(executorService.submit(() -> runChromosome(chromosome)));
+            }
         }
 
         for (Future<Object> future : futures) {
@@ -85,7 +97,7 @@ public class SvVisualiser implements AutoCloseable {
     }
 
     @Nullable
-    private Object runChromsome(final String chromosome) throws IOException, InterruptedException {
+    private Object runChromosome(@NotNull final String chromosome) throws IOException, InterruptedException {
         final String sample = config.sample() + ".chr" + chromosome + (config.debug() ? ".debug" : "");
 
         final List<Integer> clusterIds = config.links()
