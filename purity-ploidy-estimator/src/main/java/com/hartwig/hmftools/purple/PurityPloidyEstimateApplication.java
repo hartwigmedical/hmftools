@@ -83,7 +83,6 @@ public class PurityPloidyEstimateApplication {
     private static final String THREADS = "threads";
     private static final String VERSION = "version";
     private static final String EXPERIMENTAL = "experimental";
-    private static final String OUTPUT_FILTERED = "output_filtered";
 
     public static void main(final String... args)
             throws ParseException, IOException, SQLException, ExecutionException, InterruptedException {
@@ -154,25 +153,20 @@ public class PurityPloidyEstimateApplication {
                     fittedRegionFactory.fitRegion(fittedPurity.purity(), fittedPurity.normFactor(), observedRegions);
             copyNumberFactory.invoke(fittedRegions, structuralVariants.variants());
 
-            StructuralVariantConfig svConfig = configSupplier.structuralVariantConfig();
-            if (svConfig.recoveryFile().isPresent()) {
-                final String vcfRecoveryFile = svConfig.recoveryFile().get().toString();
-                try (final RecoverStructuralVariants recovery = new RecoverStructuralVariants(purityAdjuster,
-                        vcfRecoveryFile,
-                        copyNumberFactory.copyNumbers())) {
-                    final Collection<VariantContext> recoveredVariants = recovery.recoverVariants(structuralVariants.variants());
-                    if (!recoveredVariants.isEmpty()) {
-                        recoveredVariants.forEach(structuralVariants::recoverVariant);
+            final int recoveredSVCount = recoverStructuralVariants(configSupplier.structuralVariantConfig(),
+                    structuralVariants,
+                    purityAdjuster,
+                    copyNumberFactory.copyNumbers());
+            final int filteredSVCount = structuralVariants.hardFilterLowVAFSingles(purityAdjuster, copyNumberFactory.copyNumbers());
+            if (recoveredSVCount > 0 || filteredSVCount > 0) {
+                LOGGER.info("Reapplying segmentation with {} recovered structural variants and after removing {} filtered variants",
+                        recoveredSVCount,
+                        filteredSVCount);
+                final List<ObservedRegion> recoveredObservedRegions = segmentation.createSegments(structuralVariants.variants());
 
-                        LOGGER.info("Recalculating segmentation with {} recovered structural variants", recoveredVariants.size());
-                        final List<ObservedRegion> recoveredObservedRegions = segmentation.createSegments(structuralVariants.variants());
-
-                        LOGGER.info("Recalculating copy number");
-                        fittedRegions =
-                                fittedRegionFactory.fitRegion(fittedPurity.purity(), fittedPurity.normFactor(), recoveredObservedRegions);
-                        copyNumberFactory.invoke(fittedRegions, structuralVariants.variants());
-                    }
-                }
+                LOGGER.info("Recalculating copy number");
+                fittedRegions = fittedRegionFactory.fitRegion(fittedPurity.purity(), fittedPurity.normFactor(), recoveredObservedRegions);
+                copyNumberFactory.invoke(fittedRegions, structuralVariants.variants());
             }
 
             final List<PurpleCopyNumber> copyNumbers = copyNumberFactory.copyNumbers();
@@ -224,7 +218,7 @@ public class PurityPloidyEstimateApplication {
             PurpleCopyNumberFile.write(PurpleCopyNumberFile.generateGermlineFilename(outputDirectory, tumorSample), germlineDeletions);
             FittedRegionFile.write(FittedRegionFile.generateFilename(outputDirectory, tumorSample), enrichedFittedRegions);
             GeneCopyNumberFile.write(GeneCopyNumberFile.generateFilename(outputDirectory, tumorSample), geneCopyNumbers);
-            structuralVariants.write(cmd.hasOption(OUTPUT_FILTERED));
+            structuralVariants.write();
 
             final CircosConfig circosConfig = configSupplier.circosConfig();
             LOGGER.info("Writing plots to: {}", circosConfig.plotDirectory());
@@ -244,6 +238,23 @@ public class PurityPloidyEstimateApplication {
             executorService.shutdown();
         }
         LOGGER.info("Complete");
+    }
+
+    private int recoverStructuralVariants(@NotNull final StructuralVariantConfig svConfig,
+            @NotNull final PurpleStructuralVariantSupplier structuralVariants, @NotNull final PurityAdjuster purityAdjuster,
+            @NotNull final List<PurpleCopyNumber> copyNumbers) throws IOException {
+        if (!svConfig.recoveryFile().isPresent()) {
+            return 0;
+        }
+
+        final String vcfRecoveryFile = svConfig.recoveryFile().get().toString();
+        try (final RecoverStructuralVariants recovery = new RecoverStructuralVariants(purityAdjuster, vcfRecoveryFile, copyNumbers)) {
+            final Collection<VariantContext> recoveredVariants = recovery.recoverVariants(structuralVariants.variants());
+            if (!recoveredVariants.isEmpty()) {
+                recoveredVariants.forEach(structuralVariants::recoverVariant);
+            }
+            return recoveredVariants.size();
+        }
     }
 
     @NotNull
@@ -330,7 +341,6 @@ public class PurityPloidyEstimateApplication {
         options.addOption(THREADS, true, "Number of threads (default 2)");
         options.addOption(EXPERIMENTAL, false, "Anything goes!");
         options.addOption(VERSION, false, "Exit after displaying version info.");
-        options.addOption(OUTPUT_FILTERED, false, "Pass through filtered events to VCF output.");
 
         return options;
     }
