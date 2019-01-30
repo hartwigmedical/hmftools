@@ -22,6 +22,7 @@ import org.jetbrains.annotations.NotNull;
 
 public class CircosDataWriter {
 
+    private static final int MIN_KAROTYPE_LENGTH = 10;
     private static final String DELIMITER = "\t";
 
     private final ColorPicker colorPicker;
@@ -302,8 +303,7 @@ public class CircosDataWriter {
         double rTrack1 = CircosConfigWriter.svTrackPixels(maxTracks, 0);
         for (Link link : links) {
             if (link.isSimpleSV()) {
-
-                if (HumanChromosome.contains(link.startChromosome())) {
+                if (link.isValidStart()) {
                     final String start = new StringJoiner(DELIMITER).add(circosContig(link.startChromosome()))
                             .add(String.valueOf(link.startPosition()))
                             .add(String.valueOf(link.startPosition()))
@@ -312,7 +312,7 @@ public class CircosDataWriter {
                     result.add(start);
                 }
 
-                if (HumanChromosome.contains(link.endChromosome())) {
+                if (link.isValidEnd()) {
                     final String end = new StringJoiner(DELIMITER).add(circosContig(link.endChromosome()))
                             .add(String.valueOf(link.endPosition()))
                             .add(String.valueOf(link.endPosition()))
@@ -337,7 +337,7 @@ public class CircosDataWriter {
                     .add(circosContig(contig))
                     .add(HumanChromosome.fromString(contig).toString())
                     .add(String.valueOf(1))
-                    .add(String.valueOf(contigLengths.get(contig)))
+                    .add(String.valueOf(Math.max(MIN_KAROTYPE_LENGTH, contigLengths.get(contig))))
                     .add("chr" + HumanChromosome.fromString(contig).toString())
                     .toString();
             result.add(start);
