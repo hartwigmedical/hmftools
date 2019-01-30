@@ -1108,7 +1108,7 @@ public class SvClusteringMethods {
             }
             else
             {
-                LOGGER.warn("cluster({}) inversion-pair no DBs or TIs", cluster.id());
+                LOGGER.debug("cluster({}) inversion-pair no DBs or TIs", cluster.id());
                 return;
             }
 

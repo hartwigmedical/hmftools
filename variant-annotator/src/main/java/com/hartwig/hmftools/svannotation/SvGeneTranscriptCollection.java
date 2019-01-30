@@ -513,10 +513,11 @@ public class SvGeneTranscriptCollection
 
         int teIndex = 0;
         List<TranscriptExonData> transcriptExons = nextTranscriptExons(transExonDataList, teIndex);
+        int exonCount = transcriptExons.size();
 
-        while (!transcriptExons.isEmpty())
+        while (exonCount > 0)
         {
-            for (int i = 0; i < transcriptExons.size(); ++i)
+            for (int i = 0; i < exonCount; ++i)
             {
                 final TranscriptExonData exonData = transcriptExons.get(i);
 
@@ -526,7 +527,8 @@ public class SvGeneTranscriptCollection
                 // found a match
                 if (exonDataStr.isEmpty() || exonData.IsCanonical)
                 {
-                    exonDataStr = String.format("%s;%d;%d", exonData.TransName, exonData.ExonRank, exonData.ExonEnd - exonData.ExonStart);
+                    exonDataStr = String.format("%s;%d;%d;%d",
+                            exonData.TransName, exonData.ExonRank, exonCount, exonData.ExonEnd - exonData.ExonStart);
 
                     if (exonData.IsCanonical)
                         break;

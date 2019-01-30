@@ -33,8 +33,6 @@ import com.hartwig.hmftools.svanalysis.types.SvLinkedPair;
 import com.hartwig.hmftools.svanalysis.types.SvVarData;
 import com.hartwig.hmftools.svannotation.SvGeneTranscriptCollection;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.Options;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -71,8 +69,6 @@ public class DriverGeneAnnotator
 
         initialiseGeneData();
     }
-
-    public final List<DriverCatalog> getDriverCatalog() { return mDriverCatalog; }
 
     public void setChromosomeData(final Map<String, List<SvLOH>> lohData, Map<String, Double> chrCopyNumberMap)
     {

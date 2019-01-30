@@ -525,15 +525,33 @@ public class SvSampleAnalyser {
                     int chainSvCount = chain.getSvCount();
                     boolean chainConsistent = chain.isConsistent();
 
+                    List<SvLinkedPair> uniquePairs = Lists.newArrayList();
+
                     for (final SvLinkedPair pair : chain.getLinkedPairs())
                     {
                         if(pair.linkType() != LINK_TYPE_TI)
                             continue;
 
+                        boolean isRepeat = false;
+
+                        for (final SvLinkedPair existingPair : uniquePairs)
+                        {
+                            if(pair.matches(existingPair, true))
+                            {
+                                isRepeat = true;
+                                break;
+                            }
+                        }
+
+                        if(isRepeat)
+                            continue;
+
+                        uniquePairs.add(pair);
+
                         writer.write(
-                                String.format("%s,%d,%s,%d,%s,%s,%s",
-                                        mSampleId, cluster.id(), cluster.getDesc(), clusterSvCount, cluster.getResolvedType(),
-                                        cluster.hasLinkingLineElements(), cluster.isFullyChained()));
+                            String.format("%s,%d,%s,%d,%s,%s,%s",
+                                    mSampleId, cluster.id(), cluster.getDesc(), clusterSvCount, cluster.getResolvedType(),
+                                    cluster.hasLinkingLineElements(), cluster.isFullyChained()));
 
                         final SvBreakend beStart = pair.getBreakend(true);
                         final SvBreakend beEnd= pair.getBreakend(false);

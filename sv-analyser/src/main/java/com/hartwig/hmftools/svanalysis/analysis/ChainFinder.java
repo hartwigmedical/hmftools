@@ -89,10 +89,32 @@ public class ChainFinder
                     mSampleId, mCluster.id(), mAssemblyLinkedPairs.size(), svList.size(), mCluster.getCount(), mCluster.getChains().size());
         }
 
-        // find all the combinations of linked pairs where every breakend end except at most 2 are covered by a linked pair
+        List<SvChain> chains = Lists.newArrayList();
+
         mContinuousFinderPc.start();
-        findContinuousChains(svList);
+        findSvChainsIncrementally(svList, chains);
         mContinuousFinderPc.stop();
+
+        if(chains.size() == 1 && chains.get(0).getSvCount() == mReqChainCount)
+        {
+            SvChain completeChain = chains.get(0);
+            mCompleteChains.add(completeChain);
+        }
+        else
+        {
+            for (SvChain chain : chains)
+            {
+                if (chain.getSvCount() < 2)
+                    continue;
+
+                mIncompleteChains.add(chain);
+
+                if (mLogVerbose)
+                {
+                    LOGGER.debug("cluster({}) found incomplete chain({} svs={})", mCluster.id(), chain.id(), chain.getSvCount());
+                }
+            }
+        }
 
         // first check for any complete chains, and if found, add the shortest one
         boolean fullyChained = cacheCompleteChain();
@@ -154,16 +176,6 @@ public class ChainFinder
             return false;
 
         shortestFullChain.setId(mCluster.getChains().size());
-
-        /*
-        if(shortestFullChain.getLinkCount() >= 3)
-        {
-            LOGGER.info("sample({}) cluster({}) adding complete chain({}) length({}) with {} linked pairs",
-                    mSampleId, mCluster.id(), shortestFullChain.id(), shortestFullChain.getLength(), shortestFullChain.getLinkCount());
-
-            shortestFullChain.logLinks();
-        }
-        */
 
         mCluster.getChains().clear();
         mCluster.addChain(shortestFullChain);
@@ -231,39 +243,15 @@ public class ChainFinder
         }
     }
 
-    private void findContinuousChains(final List<SvVarData> svList)
-    {
-        List<SvChain> chains = Lists.newArrayList();
-
-        findSvChainsIncrementally(svList, chains);
-
-        if(chains.size() == 1 && chains.get(0).getSvCount() == mReqChainCount)
-        {
-            SvChain completeChain = chains.get(0);
-            mCompleteChains.add(completeChain);
-            return;
-        }
-
-        for(SvChain chain : chains)
-        {
-            if (chain.getSvCount() < 2)
-                continue;
-
-            mIncompleteChains.add(chain);
-
-            if(mLogVerbose)
-            {
-                LOGGER.debug("cluster({}) found incomplete chain({} svs={})", mCluster.id(), chain.id(), chain.getSvCount());
-            }
-        }
-    }
-
     private void findSvChainsIncrementally(final List<SvVarData> svList, List<SvChain> chainsList)
     {
         // routine flow:
-        // start with any existing partial chains and unconnected assembly links - these are always used
-        // first to either start a new chain or link to existing chains
-        // then take the open ends of the current chain and find the shortest templated insertion from amongst the remaining unconnected SVs
+        // start with any existing assembly links - these are always given priority when starting or extending chains
+        // then take the open ends of the current chain and find the shortest TI from amongst the remaining unconnected SVs
+
+        // restrictions:
+        // - SVs cannot be in more than 1 chain
+        // - for replicated SVs, there cannot be conflicting sets of breakend pairs (eg A-B and A-C)
 
         // isSpecificCluster(mCluster);
         List<SvLinkedPair> chainedPairs = Lists.newArrayList();
@@ -430,6 +418,33 @@ public class ChainFinder
                     currentChain.logLinks();
                 }
 
+                // remove SVs (and their replicated instances) used in this chain from the unlinked list to prevent them being used in any other
+                for(final SvVarData var : currentChain.getSvList())
+                {
+                    int i = 0;
+                    while(i < unlinkedSvList.size())
+                    {
+                        SvVarData unlinkedSV = unlinkedSvList.get(i);
+                        if(unlinkedSV.equals(var, true))
+                            unlinkedSvList.remove(i);
+                        else
+                            ++i;
+                    }
+                }
+
+                for(SvLinkedPair pair : currentChain.getLinkedPairs())
+                {
+                    int i = 0;
+                    while(i < remainingStartLinks.size())
+                    {
+                        final SvLinkedPair other = remainingStartLinks.get(i);
+                        if(pair.matches(other, true))
+                            remainingStartLinks.remove(i);
+                        else
+                            ++i;
+                    }
+                }
+
                 currentChain = null;
 
                 if(chainComplete)
@@ -521,8 +536,6 @@ public class ChainFinder
                     // the breakends used in the link match each other
                     for(final SvLinkedPair pair : chainedPairs)
                     {
-                        // check that if this link has the same SVs as another link due to replicated SVs, that
-                        // the breakends used in the link match each other
                         if(testPair.sameVariants(pair) && !testPair.matches(pair, true))
                         {
                             isValid = false;

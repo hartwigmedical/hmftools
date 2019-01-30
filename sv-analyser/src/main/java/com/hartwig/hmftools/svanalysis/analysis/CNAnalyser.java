@@ -176,7 +176,7 @@ public class CNAnalyser {
         {
             LOGGER.error("Failed to read copy number CSV file({})", filename);
         }
-    }
+        }
 
     public void analyseData()
     {

@@ -158,7 +158,7 @@ public class ChainingTests
     }
 
     @Test
-    public void testComplexChainMerging()
+    public void testComplexChaining1()
     {
         SvTestHelper tester = new SvTestHelper();
         tester.logVerbose(true);
@@ -186,41 +186,6 @@ public class ChainingTests
 
         var6.setAssemblyData(false, "asmb3");
         var7.setAssemblyData(true, "asmb3");
-
-        /*
-        SvCluster cluster = new SvCluster(150);
-        cluster.addVariant(var1);
-        tester.addClusterAndSVs(cluster);
-
-        cluster = new SvCluster(152);
-        cluster.addVariant(var2);
-        cluster.addVariant(var4);
-        cluster.addVariant(var5);
-        cluster.addVariant(var6);
-        cluster.addVariant(var7);
-        tester.addClusterAndSVs(cluster);
-
-        cluster = new SvCluster(162);
-        cluster.addVariant(var3);
-        cluster.addVariant(var8);
-        tester.addClusterAndSVs(cluster);
-
-        cluster = new SvCluster(163);
-        cluster.addVariant(var9);
-        cluster.addVariant(var10);
-        tester.addClusterAndSVs(cluster);
-
-        cluster = new SvCluster(153);
-        cluster.addVariant(var11);
-        cluster.addVariant(var12);
-        tester.addClusterAndSVs(cluster);
-
-        tester.preClusteringInit();
-
-        tester.Analyser.findSimpleCompleteChains();
-        tester.Analyser.findLinksAndChains();
-        tester.Analyser.markFoldbacks();
-        */
 
         tester.AllVariants.add(var1);
         tester.AllVariants.add(var2);
@@ -262,12 +227,14 @@ public class ChainingTests
         assertEquals(tester.Analyser.getClusters().size(), 1);
         final SvCluster cluster = tester.Analyser.getClusters().get(0);
 
-        assertEquals(cluster.getChains().size(), 4);
+        assertEquals(cluster.getChains().size(), 2);
 
+        assertEquals(cluster.getChains().get(0).getLinkCount(), 14);
+        assertEquals(cluster.getChains().get(1).getLinkCount(), 2);
     }
 
     @Test
-    public void testComplexChaining1()
+    public void testComplexChaining2()
     {
         // based on COLO829T chromosomes 3 + 6,10,12 and 1
 

@@ -13,6 +13,7 @@ import com.hartwig.hmftools.common.variant.structural.StructuralVariantData;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 import com.hartwig.hmftools.svanalysis.analysis.CNAnalyser;
 import com.hartwig.hmftools.svanalysis.analysis.FusionDisruptionAnalyser;
+import com.hartwig.hmftools.svanalysis.analysis.StatisticRoutines;
 import com.hartwig.hmftools.svanalysis.analysis.SvaConfig;
 import com.hartwig.hmftools.svanalysis.analysis.SvSampleAnalyser;
 import com.hartwig.hmftools.svanalysis.annotators.DriverGeneAnnotator;
@@ -47,6 +48,7 @@ public class SvAnalyser {
     private static final String RUN_RESULTS_CHECKER = "run_results_checker";
     private static final String INCLUDE_NONE_SEGMENTS = "incl_none_segments";
     private static final String GENE_TRANSCRIPTS_DIR = "gene_transcripts_dir";
+    private static final String STATS_ROUTINES = "stats_routines";
 
     private static final String DB_USER = "db_user";
     private static final String DB_PASS = "db_pass";
@@ -59,6 +61,14 @@ public class SvAnalyser {
 
         if (cmd.hasOption(LOG_DEBUG)) {
             Configurator.setRootLevel(Level.DEBUG);
+        }
+
+        if(cmd.hasOption(STATS_ROUTINES))
+        {
+            StatisticRoutines statsRoutines = new StatisticRoutines();
+            statsRoutines.loadConfig(cmd);
+            statsRoutines.runStatistics();
+            return;
         }
 
         final DatabaseAccess dbAccess = cmd.hasOption(DB_URL) ? databaseAccess(cmd) : null;
@@ -272,10 +282,12 @@ public class SvAnalyser {
         options.addOption(RUN_RESULTS_CHECKER, false, "Check results vs validation file");
         options.addOption(INCLUDE_NONE_SEGMENTS, false, "Include copy number NONE segments in SV analysis");
         options.addOption(GENE_TRANSCRIPTS_DIR, true, "Optional: file with sample gene transcript data");
+        options.addOption(STATS_ROUTINES, false, "Optional: calc stats routines");
         SvaConfig.addCmdLineArgs(options);
         ResultsChecker.addCmdLineArgs(options);
         CNAnalyser.addCmdLineArgs(options);
         SvFusionAnalyser.addCmdLineArgs(options);
+        StatisticRoutines.addCmdLineArgs(options);
 
         return options;
     }

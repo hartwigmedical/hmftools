@@ -100,6 +100,11 @@ public class SvFusionAnalyser
     private static int SPECIFIC_VAR_ID = -1;
     // private static int SPECIFIC_VAR_ID = 13699019;
 
+    // private static String SPEC_GENE_1 = "ZMYND12";
+    // private static String SPEC_GENE_2 = "ABL1";
+    private static String SPEC_GENE_1 = "";
+    private static String SPEC_GENE_2 = "";
+
     public final List<GeneFusion> findFusions(final List<GeneAnnotation> breakendGenes1, final List<GeneAnnotation> breakendGenes2)
     {
         final List<GeneFusion> potentialFusions = Lists.newArrayList();
@@ -120,6 +125,12 @@ public class SvFusionAnalyser
 
                 if (startUpstream == endUpstream)
                     continue;
+
+                if((startGene.GeneName.equals(SPEC_GENE_1) && endGene.GeneName.equals(SPEC_GENE_2))
+                || (startGene.GeneName.equals(SPEC_GENE_2) && endGene.GeneName.equals(SPEC_GENE_1)))
+                {
+                    LOGGER.debug("gene match: {} and {}", startGene.GeneName, endGene.GeneName);
+                }
 
                 // see FV Fusions document for permitted combinations
                 for (final Transcript startTrans : startGene.transcripts())
