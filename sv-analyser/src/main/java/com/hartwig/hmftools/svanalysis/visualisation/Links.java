@@ -98,11 +98,11 @@ public class Links {
         final List<GenomePosition> results = Lists.newArrayList();
 
         for (final Link link : links) {
-            if (HumanChromosome.contains(link.startChromosome()) && link.startPosition() != -1) {
+            if (link.isValidStart() && link.startPosition() != -1) {
                 results.add(GenomePositions.create(link.startChromosome(), link.startPosition()));
             }
 
-            if (HumanChromosome.contains(link.endChromosome()) && link.endPosition() != -1) {
+            if (link.isValidEnd() && link.endPosition() != -1) {
                 results.add(GenomePositions.create(link.endChromosome(), link.endPosition()));
             }
         }

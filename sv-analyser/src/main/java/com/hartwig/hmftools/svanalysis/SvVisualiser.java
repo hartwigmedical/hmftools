@@ -2,7 +2,7 @@ package com.hartwig.hmftools.svanalysis;
 
 import static java.util.stream.Collectors.toList;
 
-import static com.hartwig.hmftools.svanalysis.visualisation.CopyNumberAlterations.copyNumberInTracks;
+import static com.hartwig.hmftools.svanalysis.visualisation.CopyNumberAlterations.copyNumbers;
 
 import java.io.IOException;
 import java.sql.SQLException;
@@ -26,6 +26,7 @@ import com.hartwig.hmftools.svanalysis.visualisation.CopyNumberAlteration;
 import com.hartwig.hmftools.svanalysis.visualisation.Link;
 import com.hartwig.hmftools.svanalysis.visualisation.Segment;
 import com.hartwig.hmftools.svanalysis.visualisation.Segments;
+import com.hartwig.hmftools.svanalysis.visualisation.Span;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -37,6 +38,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+
+// scp -C jon@hmf-datastore:/data/experiments/sv/*VIS*.csv .
 
 public class SvVisualiser implements AutoCloseable {
 
@@ -106,23 +109,10 @@ public class SvVisualiser implements AutoCloseable {
                 .map(Link::clusterId)
                 .collect(toList());
 
-        final List<Link> links = config.links().stream().filter(x -> clusterIds.contains(x.clusterId())).collect(toList());
-        final List<Segment> clusterSegments = config.segments().stream().filter(x -> clusterIds.contains(x.clusterId())).collect(toList());
-        final List<Segment> segments = Segments.extendTerminals(1000, clusterSegments, links);
-        final List<CopyNumberAlteration> alterations = copyNumberInTracks(100, config.copyNumberAlterations(), segments);
-        final ColorPicker color = new ColorPickerCluster(links);
-
-        final int chromosomeCount = (int) segments.stream().map(GenomeRegion::chromosome).distinct().count();
-        final int maxTracks = segments.stream().mapToInt(Segment::track).max().orElse(0) + 1;
-        final double maxCopyNumber = alterations.stream().mapToDouble(CopyNumberAlteration::copyNumber).max().orElse(0);
-        final double maxMinorAllelePloidy = alterations.stream().mapToDouble(CopyNumberAlteration::minorAllelePloidy).max().orElse(0);
-
-        final CircosConfigWriter confWrite = new CircosConfigWriter(sample, config.outputConfPath());
-        confWrite.writeConfig(chromosomeCount, maxTracks, maxCopyNumber, maxMinorAllelePloidy);
-        new CircosDataWriter(config.debug(), color, sample, config.outputConfPath(), maxTracks).write(segments, links, alterations);
-
-        final String outputPlotName = sample + ".png";
-        return new CircosExecution(config.circosBin()).generateCircos(confWrite.configPath(), config.outputPlotPath(), outputPlotName, config.outputConfPath());
+        final List<Link> chromosomeLinks = config.links().stream().filter(x -> clusterIds.contains(x.clusterId())).collect(toList());
+        final List<Segment> chromosomeSegments =
+                config.segments().stream().filter(x -> clusterIds.contains(x.clusterId())).collect(toList());
+        return runFiltered(sample, chromosomeLinks, chromosomeSegments);
     }
 
     @Nullable
@@ -131,10 +121,17 @@ public class SvVisualiser implements AutoCloseable {
 
         final List<Link> clusterLinks = config.links().stream().filter(x -> x.clusterId() == clusterId).collect(toList());
         final List<Segment> clusterSegments = config.segments().stream().filter(x -> x.clusterId() == clusterId).collect(toList());
-        final List<Segment> segments = Segments.extendTerminals(1000, clusterSegments, clusterLinks);
-        final List<CopyNumberAlteration> alterations = copyNumberInTracks(100, config.copyNumberAlterations(), segments);
-        final ColorPicker color = new ColorPicker() {
-        };
+        return runFiltered(sample, clusterLinks, clusterSegments);
+    }
+
+    private Object runFiltered(@NotNull final String sample, @NotNull final List<Link> links, @NotNull final List<Segment> filteredSegments)
+            throws IOException, InterruptedException {
+
+        final List<Segment> segments = Segments.extendTerminals(1000, filteredSegments, links);
+        final List<GenomeRegion> span = Span.span(segments, links);
+        final List<CopyNumberAlteration> alterations = copyNumbers(100, config.copyNumberAlterations(), span);
+
+        final ColorPicker color = new ColorPickerCluster(links);
 
         final int chromosomeCount = (int) segments.stream().map(GenomeRegion::chromosome).distinct().count();
         int maxTracks = segments.stream().mapToInt(Segment::track).max().orElse(0) + 1;
@@ -143,10 +140,13 @@ public class SvVisualiser implements AutoCloseable {
 
         final CircosConfigWriter confWrite = new CircosConfigWriter(sample, config.outputConfPath());
         confWrite.writeConfig(chromosomeCount, maxTracks, maxCopyNumber, maxMinorAllelePloidy);
-        new CircosDataWriter(config.debug(), color, sample, config.outputConfPath(), maxTracks).write(segments, clusterLinks, alterations);
+        new CircosDataWriter(config.debug(), color, sample, config.outputConfPath(), maxTracks).write(segments, links, alterations);
 
         final String outputPlotName = sample + ".png";
-        return new CircosExecution(config.circosBin()).generateCircos(confWrite.configPath(), config.outputPlotPath(), outputPlotName, config.outputConfPath());
+        return new CircosExecution(config.circosBin()).generateCircos(confWrite.configPath(),
+                config.outputPlotPath(),
+                outputPlotName,
+                config.outputConfPath());
     }
 
     @NotNull

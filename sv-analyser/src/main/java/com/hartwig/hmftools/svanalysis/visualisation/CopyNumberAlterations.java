@@ -18,13 +18,16 @@ public class CopyNumberAlterations {
     private static final String DELIMITER = "\t";
 
     @NotNull
-    public static List<CopyNumberAlteration> copyNumberInTracks(long additionalDistance, @NotNull final List<CopyNumberAlteration> alterations, @NotNull final List<Segment> segments) {
+    public static List<CopyNumberAlteration> copyNumbers(long additionalDistance,
+            @NotNull final List<CopyNumberAlteration> alterations, @NotNull final List<GenomeRegion> span) {
         final List<CopyNumberAlteration> result = Lists.newArrayList();
+
 
         for (int i = 0; i < alterations.size(); i++) {
             CopyNumberAlteration alteration = alterations.get(i);
             final String contig = alteration.chromosome();
-            final List<Segment> chromosomeSegments = segments.stream().filter(x -> x.chromosome().equals(contig)).collect(Collectors.toList());
+            final List<GenomeRegion> chromosomeSegments =
+                    span.stream().filter(x -> x.chromosome().equals(contig)).collect(Collectors.toList());
             if (!chromosomeSegments.isEmpty()) {
                 long minTrackPosition = chromosomeSegments.stream().mapToLong(GenomeRegion::start).min().orElse(0) - additionalDistance;
                 long maxTrackPosition = chromosomeSegments.stream().mapToLong(GenomeRegion::end).max().orElse(0) + additionalDistance;
