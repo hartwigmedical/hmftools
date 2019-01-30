@@ -447,7 +447,7 @@ public class CircosDataWriter {
             }
 
             if (segment.endTerminal() != SegmentTerminal.NONE) {
-                final String endText = segment.startTerminal() == SegmentTerminal.CENTROMERE ? "Centromere" : "Telomere";
+                final String endText = segment.endTerminal() == SegmentTerminal.CENTROMERE ? "Centromere" : "Telomere";
                 final String start = new StringJoiner(DELIMITER).add(circosContig(segment.chromosome()))
                         .add(String.valueOf(segment.end()))
                         .add(String.valueOf(segment.end()))

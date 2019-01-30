@@ -9,7 +9,6 @@ import java.util.stream.Collectors;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.position.GenomePosition;
 import com.hartwig.hmftools.common.position.GenomePositions;
 import com.hartwig.hmftools.common.region.GenomeRegion;
@@ -38,20 +37,6 @@ class ScalePosition {
                     .collect(Collectors.toList());
             chromosomePositionMap.put(contig, positionMap(start, contigPositions));
         }
-    }
-
-    @NotNull
-    public List<GenomePosition> original() {
-        final List<GenomePosition> result = Lists.newArrayList();
-
-        for (String contig : chromosomePositionMap.keySet()) {
-            for (Long position : chromosomePositionMap.get(contig).keySet()) {
-                result.add(GenomePositions.create(contig, position));
-            }
-        }
-
-        Collections.sort(result);
-        return result;
     }
 
     @NotNull
@@ -85,11 +70,11 @@ class ScalePosition {
 
             try {
                 final ImmutableLink.Builder builder = ImmutableLink.builder().from(link);
-                if (HumanChromosome.contains(link.startChromosome())) {
+                if (link.isValidStart()) {
                     builder.startPosition(chromosomePositionMap.get(link.startChromosome()).get(link.startPosition()));
                 }
 
-                if (HumanChromosome.contains(link.endChromosome())) {
+                if (link.isValidEnd()) {
                     builder.endPosition(chromosomePositionMap.get(link.endChromosome()).get(link.endPosition()));
                 }
 
