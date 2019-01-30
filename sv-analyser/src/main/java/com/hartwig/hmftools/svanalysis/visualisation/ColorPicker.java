@@ -21,15 +21,27 @@ public interface ColorPicker {
     Color COLOR10 = new Color(202, 178, 214);
     Color COLOR11 = new Color(255, 255, 153);
 
-    Color[] COLOURS = new Color[] { COLOR1, COLOR2, COLOR3, COLOR4, COLOR5, COLOR6, COLOR7, COLOR8, COLOR9, COLOR10, COLOR11 };
+    Color[] COLOURS = new Color[] { COLOR1, COLOR3, COLOR5, COLOR6, COLOR7, COLOR8, COLOR9, COLOR10, COLOR11 };
 
     @NotNull
     default String color(final int clusterId, final int chainId) {
-        return chainId < COLOURS.length ? "color=" + toString(COLOURS[chainId]) : "color=black";
+        return chainId < COLOURS.length ?  toString(COLOURS[chainId]) : "color=black";
     }
 
-    static String toString(Color color) {
-        return color.getRed() + "," + color.getGreen() + "," + color.getBlue();
+    @NotNull
+    static String toString(@NotNull final  Color color) {
+        return "color=(" + color.getRed() + "," + color.getGreen() + "," + color.getBlue() + ")";
     }
+
+    @NotNull
+    static String simpleSvColor(@NotNull final String type) {
+        switch (type) {
+            case "DEL" : return toString(COLOR2);
+            case "DUP" : return toString(COLOR4);
+        }
+
+        return toString(COLOR4);
+    }
+
 
 }

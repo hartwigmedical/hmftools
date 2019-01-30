@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.svanalysis.visualisation;
 
+import static java.util.stream.Collectors.toList;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -7,7 +9,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.StringJoiner;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -46,6 +47,7 @@ public class CircosDataWriter {
                 Highlights.limitHighlightsToSegments(Highlights.lineElements(), unadjustedSegments);
 
         final List<GenomePosition> unadjustedPositions = Lists.newArrayList();
+        unadjustedPositions.addAll(Links.allPositions(unadjustedLinks));
         unadjustedPositions.addAll(Segments.allPositions(unadjustedSegments));
         unadjustedPositions.addAll(Segments.allPositions(unadjustedAlterations));
         unadjustedPositions.addAll(Segments.allPositions(unadjustedFragileSites));
@@ -62,11 +64,7 @@ public class CircosDataWriter {
         final List<GenomeRegion> lineElements = scalePosition.scaleRegions(unadjustedLineElements);
 
         final String textPath = filePrefix + ".text.circos";
-        if (debug) {
-            Files.write(new File(textPath).toPath(), createSVIdText(links));
-        } else {
-            Files.write(new File(textPath).toPath(), createPositionText(unadjustedSegments, segments));
-        }
+        Files.write(new File(textPath).toPath(), createPositionText(debug, unadjustedLinks, links, segments));
 
         final String histogramPath = filePrefix + ".histogram.circos";
         Files.write(new File(histogramPath).toPath(), createHistogramTrack(contigLengths, segments));
@@ -109,7 +107,7 @@ public class CircosDataWriter {
                         .add(String.valueOf(x.start()))
                         .add(String.valueOf(x.end()))
                         .toString())
-                .collect(Collectors.toList());
+                .collect(toList());
     }
 
     @NotNull
@@ -218,8 +216,9 @@ public class CircosDataWriter {
 
             final GenomePosition endPosition = GenomePositions.create(segment.chromosome(), segment.end());
             final boolean isEndFoldback =
-                    Links.findStartLink(endPosition, links).filter(x -> x.startInfo().equals("FOLDBACK")).isPresent()
-                            || Links.findEndLink(endPosition, links).filter(x -> x.endInfo().equals("FOLDBACK")).isPresent();
+                    Links.findStartLink(endPosition, links).filter(x -> x.startInfo().equals("FOLDBACK")).isPresent() || Links.findEndLink(
+                            endPosition,
+                            links).filter(x -> x.endInfo().equals("FOLDBACK")).isPresent();
 
             String endGlyph = isEndFoldback ? "glyph=triangle,glyph_size=20" : "glyph=circle";
             if (segment.endTerminal() != SegmentTerminal.NONE) {
@@ -262,7 +261,7 @@ public class CircosDataWriter {
         final List<String> result = Lists.newArrayList();
         for (Segment segment : segments) {
 
-            double r1 = CircosConfigWriter.svTrackPixels(maxTracks, segment.track());
+            final double r1 = CircosConfigWriter.svTrackPixels(maxTracks, segment.track());
 
             final GenomePosition startPosition = GenomePositions.create(segment.chromosome(), segment.start());
             int startLinkUsage = Links.linkTraverseCount(startPosition, links);
@@ -300,7 +299,33 @@ public class CircosDataWriter {
 
         }
 
-        return result;
+        double rTrack1 = CircosConfigWriter.svTrackPixels(maxTracks, 0);
+        for (Link link : links) {
+            if (link.isSimpleSV()) {
+
+                if (HumanChromosome.contains(link.startChromosome())) {
+                    final String start = new StringJoiner(DELIMITER).add(circosContig(link.startChromosome()))
+                            .add(String.valueOf(link.startPosition()))
+                            .add(String.valueOf(link.startPosition()))
+                            .add("r1=" + rTrack1 + "p," + ColorPicker.simpleSvColor(link.type()) + "," + thickness(link.traverseCount()))
+                            .toString();
+                    result.add(start);
+                }
+
+                if (HumanChromosome.contains(link.endChromosome())) {
+                    final String end = new StringJoiner(DELIMITER).add(circosContig(link.endChromosome()))
+                            .add(String.valueOf(link.endPosition()))
+                            .add(String.valueOf(link.endPosition()))
+                            .add("r1=" + rTrack1 + "p," + ColorPicker.simpleSvColor(link.type()) + "," + thickness(link.traverseCount()))
+                            .toString();
+                    result.add(end);
+                }
+
+            }
+
+        }
+
+        return result.stream().sorted().collect(toList());
     }
 
     @NotNull
@@ -379,71 +404,61 @@ public class CircosDataWriter {
     }
 
     @NotNull
-    private List<String> createPositionText(@NotNull final List<Segment> originalLinks, @NotNull final List<Segment> scaledLinks) {
+    private List<String> createPositionText(boolean debug, @NotNull final List<Link> originalLinks, @NotNull final List<Link> scaledLinks,
+            @NotNull final List<Segment> segments) {
 
         final Set<String> result = Sets.newHashSet();
 
         for (int i = 0; i < originalLinks.size(); i++) {
 
-            final Segment original = originalLinks.get(i);
-            final Segment scaled = scaledLinks.get(i);
+            final Link original = originalLinks.get(i);
+            final Link scaled = scaledLinks.get(i);
 
-            String startText = original.startTerminal() == SegmentTerminal.CENTROMERE ? "Centromere" : "Telomere";
-            startText = original.startTerminal() == SegmentTerminal.NONE ? String.format("%,d", original.start()) : startText;
-
-            final String start = new StringJoiner(DELIMITER).add(circosContig(scaled.chromosome()))
-                    .add(String.valueOf(scaled.start()))
-                    .add(String.valueOf(scaled.start()))
-                    .add(startText)
-                    .toString();
-
-            result.add(start);
-
-            String endText = original.endTerminal() == SegmentTerminal.CENTROMERE ? "Centromere" : "Telomere";
-            endText = original.endTerminal() == SegmentTerminal.NONE ? String.format("%,d", original.end()) : endText;
-
-            final String end = new StringJoiner(DELIMITER).add(circosContig(scaled.chromosome()))
-                    .add(String.valueOf(scaled.end()))
-                    .add(String.valueOf(scaled.end()))
-                    .add(endText)
-                    .toString();
-
-            result.add(end);
-        }
-
-        return result.stream().sorted().distinct().collect(Collectors.toList());
-    }
-
-    @NotNull
-    private List<String> createSVIdText(@NotNull final List<Link> scaledLinks) {
-
-        final Set<String> result = Sets.newHashSet();
-
-        for (final Link scaled : scaledLinks) {
-
-            if (HumanChromosome.contains(scaled.startChromosome())) {
+            if (scaled.isValidStart()) {
                 final String start = new StringJoiner(DELIMITER).add(circosContig(scaled.startChromosome()))
                         .add(String.valueOf(scaled.startPosition()))
                         .add(String.valueOf(scaled.startPosition()))
-                        .add(String.valueOf(scaled.svId()))
+                        .add(String.valueOf(debug ? original.svId() : original.startPosition()))
                         .toString();
 
                 result.add(start);
-
             }
 
-            if (HumanChromosome.contains(scaled.endChromosome())) {
-                final String end = new StringJoiner(DELIMITER).add(circosContig(scaled.endChromosome()))
+            if (scaled.isValidEnd()) {
+                final String start = new StringJoiner(DELIMITER).add(circosContig(scaled.endChromosome()))
                         .add(String.valueOf(scaled.endPosition()))
                         .add(String.valueOf(scaled.endPosition()))
-                        .add(String.valueOf(scaled.svId()))
+                        .add(String.valueOf(debug ? original.svId() : original.endPosition()))
                         .toString();
 
-                result.add(end);
+                result.add(start);
             }
         }
 
-        return result.stream().sorted().distinct().collect(Collectors.toList());
+        for (final Segment segment : segments) {
+            if (segment.startTerminal() != SegmentTerminal.NONE) {
+                final String startText = segment.startTerminal() == SegmentTerminal.CENTROMERE ? "Centromere" : "Telomere";
+                final String start = new StringJoiner(DELIMITER).add(circosContig(segment.chromosome()))
+                        .add(String.valueOf(segment.start()))
+                        .add(String.valueOf(segment.start()))
+                        .add(startText)
+                        .toString();
+                result.add(start);
+            }
+
+            if (segment.endTerminal() != SegmentTerminal.NONE) {
+                final String endText = segment.startTerminal() == SegmentTerminal.CENTROMERE ? "Centromere" : "Telomere";
+                final String start = new StringJoiner(DELIMITER).add(circosContig(segment.chromosome()))
+                        .add(String.valueOf(segment.end()))
+                        .add(String.valueOf(segment.end()))
+                        .add(endText)
+                        .toString();
+                result.add(start);
+            }
+
+        }
+
+        return result.stream().sorted().distinct().collect(toList());
     }
 
     @NotNull

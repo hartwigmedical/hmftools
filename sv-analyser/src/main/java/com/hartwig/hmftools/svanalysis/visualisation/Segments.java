@@ -6,7 +6,7 @@ import java.nio.file.Files;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -33,29 +33,6 @@ public class Segments {
     @NotNull
     public static List<Segment> readTracksFromFile(@NotNull final String fileName) throws IOException {
         return incrementOnChromosome(fromString(Files.readAllLines(new File(fileName).toPath())));
-    }
-
-    @NotNull
-    public static Optional<Segment> findTrackStart(@NotNull final GenomePosition position, @NotNull final List<Segment> segments) {
-        return segments.stream().filter(x -> x.chromosome().equals(position.chromosome()) && x.start() == position.position()).findFirst();
-    }
-
-    @NotNull
-    public static Optional<Segment> findTrackEnd(@NotNull final GenomePosition position, @NotNull final List<Segment> segments) {
-        return segments.stream().filter(x -> x.chromosome().equals(position.chromosome()) && x.end() == position.position()).findFirst();
-    }
-
-    @NotNull
-    public static Optional<Segment> findTrack(@NotNull final GenomePosition position, @NotNull final List<Segment> segments) {
-        final Optional<Segment> result = findTrackStart(position, segments);
-        return result.isPresent() ? result : findTrackEnd(position, segments);
-    }
-
-    public static long tracksConnectedTo(int minTrackValue, @NotNull final GenomePosition position, @NotNull final List<Segment> segments) {
-        return segments.stream()
-                .filter(x -> x.chromosome().equals(position.chromosome()) && (x.start() == position.position()
-                        || x.end() == position.position()) && x.track() >= minTrackValue)
-                .count();
     }
 
     @NotNull
@@ -95,7 +72,7 @@ public class Segments {
             result.add(segment);
         }
 
-        return TRACK_INCREMENTER.apply(result);
+        return incrementOnChromosome(result, links);
     }
 
     @VisibleForTesting
@@ -149,6 +126,38 @@ public class Segments {
 
             result.add(ImmutableSegment.builder().from(segment).track(currentTrack).build());
 
+        }
+
+        return result;
+
+    }
+
+    @VisibleForTesting
+    @NotNull
+    static List<Segment> incrementOnChromosome(@NotNull final List<Segment> segments, @NotNull final List<Link> links) {
+
+        final Set<Integer> simpleClusters =
+                links.stream().filter(Link::isSimpleSV).map(Link::clusterId).collect(Collectors.toSet());
+
+        final Map<String, Integer> trackMap = Maps.newHashMap();
+        final List<Segment> result = Lists.newArrayList();
+
+        int currentTrack = 1;
+        for (final Segment segment : segments) {
+            if (simpleClusters.contains(segment.clusterId())) {
+                result.add(ImmutableSegment.builder().from(segment).track(0).build());
+            } else {
+
+                final String chromosome = segment.chromosome();
+                if (!trackMap.containsKey(chromosome)) {
+                    trackMap.put(chromosome, currentTrack);
+                } else {
+                    currentTrack = Math.max(currentTrack, trackMap.get(chromosome) + 1);
+                    trackMap.put(chromosome, currentTrack);
+                }
+
+                result.add(ImmutableSegment.builder().from(segment).track(currentTrack).build());
+            }
         }
 
         return result;

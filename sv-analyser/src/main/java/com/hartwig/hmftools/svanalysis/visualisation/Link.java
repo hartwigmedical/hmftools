@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.svanalysis.visualisation;
 
+import com.hartwig.hmftools.common.chromosome.HumanChromosome;
+
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -37,5 +39,17 @@ public abstract class Link {
     public abstract String endInfo();
 
     public abstract int traverseCount();
+
+    public boolean isSimpleSV() {
+        return resolvedType().equals("SimpleSV");
+    }
+
+    public boolean isValidStart() {
+        return HumanChromosome.contains(startChromosome());
+    }
+
+    public boolean isValidEnd() {
+        return HumanChromosome.contains(endChromosome());
+    }
 
 }

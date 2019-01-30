@@ -15,7 +15,7 @@ import org.jetbrains.annotations.NotNull;
 public class ColorPickerCluster implements ColorPicker {
 
 
-    private static final Color[] COLOURS = new Color[] {COLOR2, COLOR3, COLOR4, COLOR5, COLOR6, COLOR7, COLOR8, COLOR9, COLOR10, COLOR11 };
+    private static final Color[] COLOURS = new Color[] {COLOR1, COLOR3, COLOR5, COLOR6, COLOR7, COLOR8, COLOR9, COLOR10, COLOR11 };
 
     private final Map<Integer, String> clusterIdMap = Maps.newHashMap();
 
@@ -31,26 +31,22 @@ public class ColorPickerCluster implements ColorPicker {
         clusterSizeList.sort(longComparator);
 
         for (int i = 0; i < clusterSizeList.size(); i++) {
-            final ClusterSize clusterSize = clusterSizeList.get(i);
-
-            String color = i < COLOURS.length ? toString(COLOURS[i]) : "black";
-            if (clusterSize.count == 1) {
-                color = toString(COLOR1);
-            }
-
+            String color = i < COLOURS.length ? ColorPicker.toString(COLOURS[i]) : "color=black";
             clusterIdMap.put(clusterSizeList.get(i).clusterId, color);
         }
 
-    }
+        for (Link link : links) {
+            if (link.isSimpleSV()) {
+                clusterIdMap.put(link.clusterId(), ColorPicker.simpleSvColor(link.type()));
+            }
+        }
 
-    public static String toString(Color color) {
-        return color.getRed() + "," + color.getGreen() + "," + color.getBlue();
     }
 
     @NotNull
     @Override
     public String color(final int clusterId, final int chainId) {
-        return "color=" + clusterIdMap.get(clusterId);
+        return clusterIdMap.get(clusterId);
     }
 
     private class ClusterSize {
