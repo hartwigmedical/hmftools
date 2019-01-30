@@ -202,8 +202,8 @@ public class CircosDataWriter {
 
             final GenomePosition startPosition = GenomePositions.create(segment.chromosome(), segment.start());
             final boolean isStartFoldback =
-                    Links.findStartLink(startPosition, links).filter(x -> x.startType() == Link.Type.FOLDBACK).isPresent()
-                            || Links.findEndLink(startPosition, links).filter(x -> x.endType() == Link.Type.FOLDBACK).isPresent();
+                    Links.findStartLink(startPosition, links).filter(x -> x.startInfo().equals("FOLDBACK")).isPresent()
+                            || Links.findEndLink(startPosition, links).filter(x -> x.endInfo().equals("FOLDBACK")).isPresent();
             String startGlyph = isStartFoldback ? "glyph=triangle,glyph_size=20" : "glyph=circle";
             if (segment.startTerminal() != SegmentTerminal.NONE) {
                 startGlyph = "glyph=square,glyph_size=1";
@@ -218,8 +218,8 @@ public class CircosDataWriter {
 
             final GenomePosition endPosition = GenomePositions.create(segment.chromosome(), segment.end());
             final boolean isEndFoldback =
-                    Links.findStartLink(endPosition, links).filter(x -> x.startType() == Link.Type.FOLDBACK).isPresent()
-                            || Links.findEndLink(endPosition, links).filter(x -> x.endType() == Link.Type.FOLDBACK).isPresent();
+                    Links.findStartLink(endPosition, links).filter(x -> x.startInfo().equals("FOLDBACK")).isPresent()
+                            || Links.findEndLink(endPosition, links).filter(x -> x.endInfo().equals("FOLDBACK")).isPresent();
 
             String endGlyph = isEndFoldback ? "glyph=triangle,glyph_size=20" : "glyph=circle";
             if (segment.endTerminal() != SegmentTerminal.NONE) {
