@@ -6,6 +6,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
 import java.util.TreeSet;
+import java.util.function.Predicate;
 
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
@@ -23,7 +24,6 @@ import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import htsjdk.samtools.SAMSequenceDictionary;
 import htsjdk.tribble.index.tabix.TabixFormat;
@@ -116,14 +116,10 @@ class PurpleStructuralVariantSupplier {
             if (!variants.isEmpty()) {
                 final StructuralVariant variant = variants.get(0);
                 if (variant.type() == StructuralVariantType.SGL && !isLinked(variant)) {
-                    final List<StructuralVariantLegPloidy> legList = ploidyFactory.create(variant, copyNumberMap);
-                    if (!legList.isEmpty()) {
-                        StructuralVariantLegPloidy leg = legList.get(0);
-                        if (Doubles.lessThan(leg.adjustedVaf(), MIN_UNLINKED_SGL_VAF)) {
-                            iterator.remove();
-                            removed++;
-                            modified = true;
-                        }
+                    if (filter(ploidyFactory.create(variant, copyNumberMap))) {
+                        iterator.remove();
+                        removed++;
+                        modified = true;
                     }
                 }
             }
@@ -199,12 +195,20 @@ class PurpleStructuralVariantSupplier {
         return outputVCFHeader;
     }
 
-    private boolean isLinked(@NotNull final StructuralVariant variantContext) {
-        return isLinked(variantContext.startLinkedBy()) || isLinked(variantContext.endLinkedBy());
+    private boolean filter(@NotNull final List<StructuralVariantLegPloidy> legs) {
+        if (!legs.isEmpty()) {
+            final StructuralVariantLegPloidy leg = legs.get(0);
+            if (!Doubles.isZero(leg.adjustedCopyNumber())) {
+                return Doubles.lessThan(leg.adjustedCopyNumberChange() / leg.adjustedCopyNumber(), MIN_UNLINKED_SGL_VAF);
+            }
+        }
+
+        return false;
     }
 
-    private boolean isLinked(@Nullable final String linkedBy) {
-        return linkedBy != null && !linkedBy.isEmpty() && !linkedBy.equals(".");
+    private boolean isLinked(@NotNull final StructuralVariant variantContext) {
+        final Predicate<String> isLinkedString = linkedBy -> linkedBy != null && !linkedBy.isEmpty() && !linkedBy.equals(".");
+        return isLinkedString.test(variantContext.startLinkedBy()) || isLinkedString.test(variantContext.endLinkedBy());
     }
 
     private class VCComparator extends VariantContextComparator {
