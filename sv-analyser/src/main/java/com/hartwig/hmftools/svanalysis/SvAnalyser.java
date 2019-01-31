@@ -2,6 +2,7 @@ package com.hartwig.hmftools.svanalysis;
 
 import static com.hartwig.hmftools.common.variant.structural.annotation.SvPONAnnotator.PON_FILTER_PON;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.MIN_SAMPLE_PURITY;
+import static com.hartwig.hmftools.svanalysis.types.SvVarData.NONE_SEGMENT_INFERRED;
 
 import java.sql.SQLException;
 import java.util.Arrays;
@@ -137,7 +138,7 @@ public class SvAnalyser {
             }
 
             CNAnalyser cnAnalyser = new CNAnalyser(dataOutputDir, dbAccess);
-            boolean includeNoneSegments = cmd.hasOption(INCLUDE_NONE_SEGMENTS);
+            boolean createNoneSvsFromCNData = cmd.hasOption(INCLUDE_NONE_SEGMENTS);
 
             if(!svaConfig.LOHDataFile.isEmpty())
             {
@@ -152,7 +153,7 @@ public class SvAnalyser {
             for (final String sample : samplesList)
             {
                 ++count;
-                List<SvVarData> svVarData = queryStructuralVariantData(dbAccess, sample);
+                List<SvVarData> svVarData = queryStructuralVariantData(dbAccess, sample, !createNoneSvsFromCNData);
 
                 if(svVarData.isEmpty())
                 {
@@ -167,14 +168,14 @@ public class SvAnalyser {
                 cnSegmentTypes.add(SegmentSupport.CENTROMERE);
                 cnSegmentTypes.add(SegmentSupport.TELOMERE);
 
-                if (includeNoneSegments)
+                if (createNoneSvsFromCNData)
                     cnSegmentTypes.add(SegmentSupport.NONE);
 
                 final List<PurpleCopyNumber> cnRecords = dbAccess.readCopyNumberSegmentsByType(sample, cnSegmentTypes);
 
                 final Map<String, double[]> chrCopyNumberMap = cnAnalyser.createChrCopyNumberMap(cnRecords);
 
-                if (includeNoneSegments)
+                if (createNoneSvsFromCNData)
                 {
                     List<StructuralVariantData> noneSegmentSVs = cnAnalyser.createNoneSegments(cnRecords);
 
@@ -182,9 +183,7 @@ public class SvAnalyser {
 
                     for (final StructuralVariantData svData : noneSegmentSVs)
                     {
-                        SvVarData var = new SvVarData(svData);
-                        var.setNoneSegment(true);
-                        svVarData.add(var);
+                        svVarData.add(new SvVarData(svData));
                     }
                 }
 
@@ -258,7 +257,8 @@ public class SvAnalyser {
         LOGGER.info("run complete");
     }
 
-    private static List<SvVarData> queryStructuralVariantData(@NotNull DatabaseAccess dbAccess, @NotNull String sampleId)
+    private static List<SvVarData> queryStructuralVariantData(final DatabaseAccess dbAccess,
+            final String sampleId, final boolean includeNoneSegments)
     {
         List<SvVarData> svVarDataItems = Lists.newArrayList();
 
@@ -268,10 +268,10 @@ public class SvAnalyser {
 
             if(svRecord.filter().equals(PON_FILTER_PON))
                 continue;
-
-            if(!(svRecord.filter().equals("PASS") || svRecord.filter().isEmpty()))
+            else if(svRecord.filter().equals(NONE_SEGMENT_INFERRED) && !includeNoneSegments)
                 continue;
 
+            // all others (currently PASS or blank) are accepted
             svVarDataItems.add(new SvVarData(svRecord));
         }
 

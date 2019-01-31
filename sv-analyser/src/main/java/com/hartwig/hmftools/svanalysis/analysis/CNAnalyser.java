@@ -13,6 +13,7 @@ import static com.hartwig.hmftools.svanalysis.types.SvCNData.CN_SEG_NONE;
 import static com.hartwig.hmftools.svanalysis.types.SvCNData.CN_SEG_UNKNOWN;
 import static com.hartwig.hmftools.svanalysis.types.SvCNData.CN_SEG_TELOMERE;
 import static com.hartwig.hmftools.svanalysis.types.SvCNData.CN_SEG_CENTROMERE;
+import static com.hartwig.hmftools.svanalysis.types.SvVarData.NONE_SEGMENT_INFERRED;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -548,7 +549,7 @@ public class CNAnalyser {
                             .insertSequence("")
                             .imprecise(false)
                             .qualityScore(0.0)
-                            .filter(AmberQCStatus.PASS.toString())
+                            .filter(NONE_SEGMENT_INFERRED)
                             .endPosition(-1)
                             .endChromosome("0")
                             .endOrientation((byte)1)

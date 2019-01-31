@@ -233,7 +233,7 @@ public class SvSampleAnalyser {
                 if(mConfig.hasMultipleSamples())
                     outputFileName += "SVA_SVS.csv";
                 else
-                    outputFileName += mSampleId + ".csv";
+                    outputFileName += mSampleId + "_SVA.csv";
 
                 mSvFileWriter = createBufferedWriter(outputFileName, false);
 

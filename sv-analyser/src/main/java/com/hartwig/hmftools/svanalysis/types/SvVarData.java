@@ -32,7 +32,6 @@ public class SvVarData
 
     // full set of DB fields
     private final StructuralVariantData mSVData;
-    private boolean mNoneSegment; // created from a NONE copy number segment
     private String mStartArm;
     private String mEndArm;
     private SvBreakend mBreakendStart;
@@ -83,6 +82,8 @@ public class SvVarData
     private String mDriverGeneStart;
     private String mDriverGeneEnd;
 
+    public static final String NONE_SEGMENT_INFERRED = "INFERRED";
+
     public static String ASSEMBLY_TYPE_DSB = "dsb";
     public static String ASSEMBLY_TYPE_TI = "asm";
     public static String ASSEMBLY_TYPE_EQV = "eqv";
@@ -109,7 +110,6 @@ public class SvVarData
 
     private void init()
     {
-        mNoneSegment = false;
         mStartArm = "";
         mEndArm = "";
         mStartFragileSite = NO_FS;
@@ -186,7 +186,6 @@ public class SvVarData
         mSVData = other.getSvData();
         mBreakendStart = other.getBreakend(true);
         mBreakendEnd = other.getBreakend(false);
-        mNoneSegment = other.isNoneSegment();
         mStartArm = other.arm(true);
         mEndArm = other.arm(false);
         mStartFragileSite = other.isFragileSite(true);
@@ -218,8 +217,7 @@ public class SvVarData
     }
 
     public final StructuralVariantData getSvData() { return mSVData; }
-    public void setNoneSegment(boolean toggle) { mNoneSegment = toggle; }
-    public boolean isNoneSegment() { return mNoneSegment; }
+    public boolean isNoneSegment() { return mSVData.filter().equals(NONE_SEGMENT_INFERRED); }
 
     // for convenience
     public final String chromosome(boolean isStart) { return isStart ? mSVData.startChromosome() : mSVData.endChromosome(); }

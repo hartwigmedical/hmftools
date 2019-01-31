@@ -126,8 +126,6 @@ public class SvTestHelper
         SvVarData var = createTestSv(varId, chromosome, "0", position, -1, orientation, -1, SGL,
                 2, 0, 1, 0, 1, "");
 
-        var.setNoneSegment(isNoneSegment);
-
         return var;
     }
 
