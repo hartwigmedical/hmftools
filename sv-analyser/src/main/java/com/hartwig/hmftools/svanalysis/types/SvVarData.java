@@ -9,7 +9,6 @@ import static com.hartwig.hmftools.common.variant.structural.StructuralVariantTy
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INS;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.svanalysis.annotators.FragileSiteAnnotator.NO_FS;
-import static com.hartwig.hmftools.svanalysis.annotators.LineElementAnnotator.KNOWN_LINE_ELEMENT;
 import static com.hartwig.hmftools.svanalysis.annotators.LineElementAnnotator.NO_LINE_ELEMENT;
 import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.ASSEMBLY_MATCH_MATCHED;
 import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.ASSEMBLY_MATCH_NONE;
@@ -17,7 +16,6 @@ import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.ASSEMBLY_MATCH_
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.variant.structural.EnrichedStructuralVariant;
 import com.hartwig.hmftools.common.variant.structural.ImmutableStructuralVariantData;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantData;
@@ -27,7 +25,6 @@ import com.hartwig.hmftools.common.variant.structural.annotation.Transcript;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.ensembl.database.homo_sapiens_core.tables.Gene;
 
 public class SvVarData
 {
@@ -64,11 +61,11 @@ public class SvVarData
     private long mNearestSvDistance;
     private String mNearestSvRelation;
 
-    private SvLinkedPair mStartLink; // templated insertion formed from this breakend to another
-    private SvLinkedPair mEndLink;
+    private SvLinkedPair mLinkStart; // templated insertion formed from this breakend to another
+    private SvLinkedPair mLinkEnd;
 
-    private SvLinkedPair mStartDB; // deletion bridge formed from this breakend to another
-    private SvLinkedPair mEndDB;
+    private SvLinkedPair mDBStart; // deletion bridge formed from this breakend to another
+    private SvLinkedPair mDBEnd;
     private List<String> mStartTempInsertionAssemblies;
     private List<String> mEndTempInsertionAssemblies;
     private String mStartAssemblyMatchType;
@@ -133,10 +130,10 @@ public class SvVarData
         mClusterReason = "";
         mCluster = null;
 
-        mStartLink = null;
-        mEndLink = null;
-        mStartDB = null;
-        mEndDB = null;
+        mLinkStart = null;
+        mLinkEnd = null;
+        mDBStart = null;
+        mDBEnd = null;
 
         mFoldbackLinkStart = "";
         mFoldbackLinkEnd = "";
@@ -229,8 +226,26 @@ public class SvVarData
     public final long position(boolean isStart) { return isStart ? mSVData.startPosition() : mSVData.endPosition(); }
     public final byte orientation(boolean isStart){ return isStart ? mSVData.startOrientation() : mSVData.endOrientation(); }
     public final double copyNumber(boolean isStart){ return isStart ? mSVData.adjustedStartCopyNumber() : mSVData.adjustedEndCopyNumber(); }
-    public final double copyNumberChange(boolean isStart){ return isStart ? mSVData.adjustedStartCopyNumberChange() : mSVData.adjustedEndCopyNumberChange(); }
     public final StructuralVariantType type() { return mSVData.type(); }
+
+    public final double copyNumberChange(boolean isStart)
+    {
+        // TEMP: precise DBs cause incorrect copy number change, so in this case use ploidy
+        if(isStart)
+        {
+            if(mDBStart != null && mDBStart.length() == 0)
+                return mSVData.ploidy();
+            else
+                return mSVData.adjustedStartCopyNumberChange();
+        }
+        else
+        {
+            if(mDBEnd != null && mDBEnd.length() == 0)
+                return mSVData.ploidy();
+            else
+                return mSVData.adjustedEndCopyNumberChange();
+        }
+    }
 
     public SvBreakend getBreakend(boolean isStart) { return isStart ? mBreakendStart : mBreakendEnd; }
 
@@ -385,24 +400,24 @@ public class SvVarData
             mDupBEEnd = toggle;
     }
 
-    public final SvLinkedPair getLinkedPair(boolean isStart) { return isStart ? mStartLink : mEndLink; }
+    public final SvLinkedPair getLinkedPair(boolean isStart) { return isStart ? mLinkStart : mLinkEnd; }
 
     public void setLinkedPair(final SvLinkedPair link, boolean isStart)
     {
         if(isStart)
-            mStartLink = link;
+            mLinkStart = link;
         else
-            mEndLink = link;
+            mLinkEnd = link;
     }
 
-    public final SvLinkedPair getDBLink(boolean isStart) { return isStart ? mStartDB : mEndDB; }
+    public final SvLinkedPair getDBLink(boolean isStart) { return isStart ? mDBStart : mDBEnd; }
 
     public void setDBLink(final SvLinkedPair link, boolean isStart)
     {
         if(isStart)
-            mStartDB = link;
+            mDBStart = link;
         else
-            mEndDB = link;
+            mDBEnd = link;
     }
 
     public final String getFoldbackLink(boolean useStart) { return useStart ? mFoldbackLinkStart : mFoldbackLinkEnd; }

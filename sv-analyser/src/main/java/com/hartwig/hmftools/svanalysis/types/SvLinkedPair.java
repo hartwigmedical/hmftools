@@ -67,6 +67,10 @@ public class SvLinkedPair {
             mLinkType = LINK_TYPE_DB;
             mLinkLength = -mLinkLength;
         }
+
+        // adjust the length of DBs to reflect the position convention for opposite breakend orientations
+        if(mLinkType == LINK_TYPE_DB && mLinkLength > 0)
+            --mLinkLength;
     }
 
     public static SvLinkedPair from(final SvBreakend first, final SvBreakend second, final String linkType)

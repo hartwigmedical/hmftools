@@ -46,13 +46,13 @@ public class Transcript {
     private String mProteinFeaturesKept;
     private String mProteinFeaturesLost;
 
-    public static String TRANS_REGION_TYPE_UPSTREAM = "Upstream";
+    public static String TRANS_REGION_TYPE_UPSTREAM = "Upstream"; // promotor and earlier
     public static String TRANS_REGION_TYPE_EXONIC = "Exonic";
     public static String TRANS_REGION_TYPE_INTRONIC = "Intronic";
 
     public static String TRANS_CODING_TYPE_CODING = "Coding";
-    public static String TRANS_CODING_TYPE_UPSTREAM = "5P_UTR";
-    public static String TRANS_CODING_TYPE_DOWNSTREAM = "3P_UTR";
+    public static String TRANS_CODING_TYPE_5P_UTR = "5P_UTR";
+    public static String TRANS_CODING_TYPE_3P_UTR = "3P_UTR";
     public static String TRANS_CODING_TYPE_NON_CODING = "NonCoding";
 
     private static int STOP_CODON_LENGTH = 3;
@@ -153,12 +153,12 @@ public class Transcript {
 
     public boolean preCoding()
     {
-        return mCodingType.equals(TRANS_CODING_TYPE_UPSTREAM);
+        return mCodingType.equals(TRANS_CODING_TYPE_5P_UTR);
     }
 
     public boolean postCoding()
     {
-        return mCodingType.equals(TRANS_CODING_TYPE_DOWNSTREAM);
+        return mCodingType.equals(TRANS_CODING_TYPE_3P_UTR);
     }
 
     public boolean nonCoding()
@@ -188,11 +188,11 @@ public class Transcript {
         }
         else if(mCodingBases == 0)
         {
-            return TRANS_CODING_TYPE_UPSTREAM;
+            return TRANS_CODING_TYPE_5P_UTR;
         }
         else if(mCodingBases == mTotalCodingBases)
         {
-            return TRANS_CODING_TYPE_DOWNSTREAM;
+            return TRANS_CODING_TYPE_3P_UTR;
         }
         else
         {

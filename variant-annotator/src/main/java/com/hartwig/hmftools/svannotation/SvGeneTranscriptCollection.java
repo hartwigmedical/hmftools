@@ -513,10 +513,10 @@ public class SvGeneTranscriptCollection
 
         int teIndex = 0;
         List<TranscriptExonData> transcriptExons = nextTranscriptExons(transExonDataList, teIndex);
-        int exonCount = transcriptExons.size();
 
-        while (exonCount > 0)
+        while (!transcriptExons.isEmpty())
         {
+            int exonCount = transcriptExons.size();
             for (int i = 0; i < exonCount; ++i)
             {
                 final TranscriptExonData exonData = transcriptExons.get(i);

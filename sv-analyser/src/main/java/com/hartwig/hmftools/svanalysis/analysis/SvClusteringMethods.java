@@ -1243,7 +1243,11 @@ public class SvClusteringMethods {
 
         boolean isResolved = otherPair.length() < mDelDupCutoffLength;
         cluster.setResolved(isResolved, resolvedType);
-        cluster.setSynDelDupData(otherPair.length(), tiPair.length());
+
+        // correct for DB subtracting 1
+        int delDupLength = otherPair.linkType() == LINK_TYPE_DB ? otherPair.length() + 1 : otherPair.length();
+
+        cluster.setSynDelDupData(delDupLength, tiPair.length());
 
         return true;
     }

@@ -129,24 +129,33 @@ public class DriverGeneAnnotator
                     continue;
                 }
 
+                final List<SvBreakend> breakendList = mChrBreakendMap.get(region.chromosome());
+
+                if (breakendList == null || breakendList.isEmpty())
+                {
+                    writeDriverData(driverGene, null, true, "");
+                    writeDriverData(driverGene, null, false, "");
+                    continue;
+                }
+
                 if (driverGene.driver() == DriverType.DEL)
                 {
-                    annotateDeleteEvent(driverGene, region);
+                    annotateDeleteEvent(driverGene, region, breakendList);
                 }
                 else if (driverGene.driver() == DriverType.AMP)
                 {
-                    annotateAmplification(driverGene, region);
+                    annotateAmplification(driverGene, region, breakendList);
                 }
                 else
                 {
                     // treat DNDS and HOTSPOT as potentially biallelic events
-                    annotateBiallelicEvent(driverGene, region);
+                    annotateBiallelicEvent(driverGene, region, breakendList);
                 }
             }
         }
     }
 
-    private void annotateDeleteEvent(final DriverCatalog driverGene, HmfTranscriptRegion region)
+    private void annotateDeleteEvent(final DriverCatalog driverGene, HmfTranscriptRegion region, final List<SvBreakend> breakendList)
     {
         /* DEL identification:
             - 1 or 2 SVs which caused this, start from DEL region (ie gene) and work out
@@ -159,11 +168,6 @@ public class DriverGeneAnnotator
         // first find the min copy number within the gene region
         // then walk out in both directions to find the SV which caused the loss
         // and then walk out again until heterozygosity is gained
-
-        final List<SvBreakend> breakendList = mChrBreakendMap.get(region.chromosome());
-
-        if (breakendList == null || breakendList.isEmpty())
-            return;
 
         SvBreakend minBreakend = null; // breakend with lowest copy number covering any part of the gene region
         boolean isStartBreakend = true;
@@ -223,6 +227,7 @@ public class DriverGeneAnnotator
         if(minBreakend == null)
         {
             LOGGER.debug("sample({}) gene({}) not allocated to SVs", mSampleId, geneToStr(driverGene, region));
+            writeDriverData(driverGene, null, true, "");
             return;
         }
 
@@ -256,18 +261,9 @@ public class DriverGeneAnnotator
             annotateDelSV(postEndBreakend, driverGene, region, "LOH");
     }
 
-    private void annotateBiallelicEvent(final DriverCatalog driverGene, HmfTranscriptRegion region)
+    private void annotateBiallelicEvent(final DriverCatalog driverGene, HmfTranscriptRegion region, final List<SvBreakend> breakendList)
     {
         // for biallelic events, find the straddling LOH event
-        if(mSampleLOHData.isEmpty())
-            return;
-
-        final List<SvBreakend> breakendList = mChrBreakendMap.get(region.chromosome());
-
-        if (breakendList == null || breakendList.isEmpty())
-            return;
-
-        // find any LOH which cross over all or a part of this gene region
         for (final SvLOH lohEvent : mSampleLOHData)
         {
             if(!lohEvent.Chromosome.equals(region.chromosome()))
@@ -301,7 +297,7 @@ public class DriverGeneAnnotator
             {
                 LOGGER.debug("sample({}) gene({}) not allocated to SVs",
                         mSampleId, geneToStr(driverGene, region));
-                return;
+                break;
             }
 
             if(startBreakend != null)
@@ -310,8 +306,10 @@ public class DriverGeneAnnotator
             if(endBreakend != null)
                 annotateDelSV(endBreakend, driverGene, region, "LOH");
 
-            break;
+            return;
         }
+
+        writeDriverData(driverGene, null, true, "");
     }
 
     private SvBreakend findDeletionBreakend(final List<SvBreakend> breakendList, int startIndex, boolean walkForwards, boolean requireGOH)
@@ -356,14 +354,9 @@ public class DriverGeneAnnotator
         return false;
     }
 
-    private void annotateAmplification(final DriverCatalog driverGene, HmfTranscriptRegion region)
+    private void annotateAmplification(final DriverCatalog driverGene, HmfTranscriptRegion region, final List<SvBreakend> breakendList)
     {
         // find the cause - DUP, foldback, otherwise assume whole-chromatid duplication
-
-        final List<SvBreakend> breakendList = mChrBreakendMap.get(region.chromosome());
-
-        if (breakendList == null || breakendList.isEmpty())
-            return;
 
         // trying to find the breakends which amplify this gene
         // take any INV, DUP or TI which straddles the gene
@@ -443,6 +436,8 @@ public class DriverGeneAnnotator
                 LOGGER.debug(String.format("sample(%s) gene(AMP: %s) chr(%s) copy-number(%.2f)",
                         mSampleId, driverGene.gene(), region.chromosome(), chrCopyNumber));
             }
+
+            writeDriverData(driverGene, null, true, "");
         }
     }
 
@@ -491,11 +486,16 @@ public class DriverGeneAnnotator
 
             BufferedWriter writer = mFileWriter;
 
-            writer.write(String.format("%s,%s,%s,%s",
-                    mSampleId, driverGene.gene(), driverGene.category(), driverGene.driver()));
+            writer.write(String.format("%s,%s,%s,%s", mSampleId, driverGene.gene(), driverGene.category(), driverGene.driver()));
 
-            writer.write(String.format(",%d,%s,%s,%s",
-                    var.getCluster().id(), var.origId(), isStart, matchInfo));
+            if(var != null)
+            {
+                writer.write(String.format(",%d,%s,%s,%s", var.getCluster().id(), var.origId(), isStart, matchInfo));
+            }
+            else
+            {
+                writer.write(String.format(",-1,,,"));
+            }
 
             writer.newLine();
         }
