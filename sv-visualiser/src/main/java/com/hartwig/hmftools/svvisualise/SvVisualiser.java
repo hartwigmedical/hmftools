@@ -113,9 +113,13 @@ public class SvVisualiser implements AutoCloseable {
 
     @Nullable
     private Object runCluster(int clusterId) throws IOException, InterruptedException {
-        final String sample = config.sample() + ".cluster" + String.format("%03d", clusterId) + (config.debug() ? ".debug" : "");
-
         final List<Link> clusterLinks = config.links().stream().filter(x -> x.clusterId() == clusterId).collect(toList());
+        final String resolvedType = clusterLinks.stream().findFirst().map(Link::resolvedType).orElse("Unknown");
+
+        final String sample =
+                config.sample() + ".cluster" + String.format("%03d", clusterId) + "." + resolvedType + ".sv" + clusterLinks.size() + (config
+                        .debug() ? ".debug" : "");
+
         final List<Segment> clusterSegments = config.segments().stream().filter(x -> x.clusterId() == clusterId).collect(toList());
         return runFiltered(sample, clusterLinks, clusterSegments);
     }
