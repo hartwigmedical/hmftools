@@ -21,7 +21,6 @@ import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.svanalysis.visualisation.CircosConfigWriter;
 import com.hartwig.hmftools.svanalysis.visualisation.CircosDataWriter;
 import com.hartwig.hmftools.svanalysis.visualisation.ColorPicker;
-import com.hartwig.hmftools.svanalysis.visualisation.ColorPickerCluster;
 import com.hartwig.hmftools.svanalysis.visualisation.CopyNumberAlteration;
 import com.hartwig.hmftools.svanalysis.visualisation.Link;
 import com.hartwig.hmftools.svanalysis.visualisation.Segment;
@@ -131,7 +130,7 @@ public class SvVisualiser implements AutoCloseable {
         final List<GenomeRegion> span = Span.span(segments, links);
         final List<CopyNumberAlteration> alterations = copyNumbers(100, config.copyNumberAlterations(), span);
 
-        final ColorPicker color = new ColorPickerCluster(links);
+        final ColorPicker color = new ColorPicker(links);
 
         final int chromosomeCount = (int) segments.stream().map(GenomeRegion::chromosome).distinct().count();
         int maxTracks = segments.stream().mapToInt(Segment::track).max().orElse(0) + 1;
