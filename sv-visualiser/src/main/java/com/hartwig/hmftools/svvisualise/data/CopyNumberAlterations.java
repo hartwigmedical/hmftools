@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.svanalysis.visualisation;
+package com.hartwig.hmftools.svvisualise.data;
 
 import java.io.File;
 import java.io.IOException;

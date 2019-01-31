@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.svanalysis;
+package com.hartwig.hmftools.svvisualise;
 
 import static java.util.stream.Collectors.toList;
 
@@ -8,13 +8,13 @@ import java.util.List;
 import java.util.StringJoiner;
 
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
-import com.hartwig.hmftools.svanalysis.visualisation.CopyNumberAlteration;
-import com.hartwig.hmftools.svanalysis.visualisation.CopyNumberAlterations;
-import com.hartwig.hmftools.svanalysis.visualisation.ImmutableCopyNumberAlteration;
-import com.hartwig.hmftools.svanalysis.visualisation.Link;
-import com.hartwig.hmftools.svanalysis.visualisation.Links;
-import com.hartwig.hmftools.svanalysis.visualisation.Segment;
-import com.hartwig.hmftools.svanalysis.visualisation.Segments;
+import com.hartwig.hmftools.svvisualise.data.CopyNumberAlteration;
+import com.hartwig.hmftools.svvisualise.data.CopyNumberAlterations;
+import com.hartwig.hmftools.svvisualise.data.ImmutableCopyNumberAlteration;
+import com.hartwig.hmftools.svvisualise.data.Link;
+import com.hartwig.hmftools.svvisualise.data.Links;
+import com.hartwig.hmftools.svvisualise.data.Segment;
+import com.hartwig.hmftools.svvisualise.data.Segments;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;

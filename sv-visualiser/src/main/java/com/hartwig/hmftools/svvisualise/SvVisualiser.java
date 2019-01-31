@@ -1,8 +1,6 @@
-package com.hartwig.hmftools.svanalysis;
+package com.hartwig.hmftools.svvisualise;
 
 import static java.util.stream.Collectors.toList;
-
-import static com.hartwig.hmftools.svanalysis.visualisation.CopyNumberAlterations.copyNumbers;
 
 import java.io.IOException;
 import java.sql.SQLException;
@@ -18,14 +16,15 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.circos.CircosExecution;
 import com.hartwig.hmftools.common.region.GenomeRegion;
-import com.hartwig.hmftools.svanalysis.visualisation.CircosConfigWriter;
-import com.hartwig.hmftools.svanalysis.visualisation.CircosDataWriter;
-import com.hartwig.hmftools.svanalysis.visualisation.ColorPicker;
-import com.hartwig.hmftools.svanalysis.visualisation.CopyNumberAlteration;
-import com.hartwig.hmftools.svanalysis.visualisation.Link;
-import com.hartwig.hmftools.svanalysis.visualisation.Segment;
-import com.hartwig.hmftools.svanalysis.visualisation.Segments;
-import com.hartwig.hmftools.svanalysis.visualisation.Span;
+import com.hartwig.hmftools.svvisualise.circos.CircosConfigWriter;
+import com.hartwig.hmftools.svvisualise.circos.CircosDataWriter;
+import com.hartwig.hmftools.svvisualise.circos.ColorPicker;
+import com.hartwig.hmftools.svvisualise.circos.Span;
+import com.hartwig.hmftools.svvisualise.data.CopyNumberAlteration;
+import com.hartwig.hmftools.svvisualise.data.CopyNumberAlterations;
+import com.hartwig.hmftools.svvisualise.data.Link;
+import com.hartwig.hmftools.svvisualise.data.Segment;
+import com.hartwig.hmftools.svvisualise.data.Segments;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -37,8 +36,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
-// scp -C jon@hmf-datastore:/data/experiments/sv/*VIS*.csv .
 
 public class SvVisualiser implements AutoCloseable {
 
@@ -128,7 +125,7 @@ public class SvVisualiser implements AutoCloseable {
 
         final List<Segment> segments = Segments.extendTerminals(1000, filteredSegments, links);
         final List<GenomeRegion> span = Span.span(segments, links);
-        final List<CopyNumberAlteration> alterations = copyNumbers(100, config.copyNumberAlterations(), span);
+        final List<CopyNumberAlteration> alterations = CopyNumberAlterations.copyNumbers(100, config.copyNumberAlterations(), span);
 
         final ColorPicker color = new ColorPicker(links);
 

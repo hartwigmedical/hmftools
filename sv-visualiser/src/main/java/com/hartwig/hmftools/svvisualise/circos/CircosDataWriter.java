@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.svanalysis.visualisation;
+package com.hartwig.hmftools.svvisualise.circos;
 
 import static java.util.stream.Collectors.toList;
 
@@ -17,6 +17,11 @@ import com.hartwig.hmftools.common.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.position.GenomePosition;
 import com.hartwig.hmftools.common.position.GenomePositions;
 import com.hartwig.hmftools.common.region.GenomeRegion;
+import com.hartwig.hmftools.svvisualise.data.CopyNumberAlteration;
+import com.hartwig.hmftools.svvisualise.data.Link;
+import com.hartwig.hmftools.svvisualise.data.Links;
+import com.hartwig.hmftools.svvisualise.data.Segment;
+import com.hartwig.hmftools.svvisualise.data.Segments;
 
 import org.jetbrains.annotations.NotNull;
 

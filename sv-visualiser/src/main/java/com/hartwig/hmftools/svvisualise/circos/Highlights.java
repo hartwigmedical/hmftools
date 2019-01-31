@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.svanalysis.visualisation;
+package com.hartwig.hmftools.svvisualise.circos;
 
 import java.io.BufferedReader;
 import java.io.InputStream;
@@ -9,6 +9,7 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.common.region.GenomeRegionFactory;
+import com.hartwig.hmftools.svvisualise.data.Segment;
 
 import org.jetbrains.annotations.NotNull;
 

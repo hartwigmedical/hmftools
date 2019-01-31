@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.svanalysis.visualisation;
+package com.hartwig.hmftools.svvisualise.data;
 
 import java.io.File;
 import java.io.IOException;
@@ -22,14 +22,14 @@ public class Links {
     private static final String DELIMITER = ",";
 
     @NotNull
-    static Optional<Link> findStartLink(@NotNull final GenomePosition position, @NotNull List<Link> links) {
+    public static Optional<Link> findStartLink(@NotNull final GenomePosition position, @NotNull List<Link> links) {
         return links.stream()
                 .filter(x -> x.startChromosome().equals(position.chromosome()) && x.startPosition() == position.position())
                 .findFirst();
     }
 
     @NotNull
-    static Optional<Link> findEndLink(@NotNull final GenomePosition position, @NotNull List<Link> links) {
+    public static Optional<Link> findEndLink(@NotNull final GenomePosition position, @NotNull List<Link> links) {
         return links.stream()
                 .filter(x -> x.endChromosome().equals(position.chromosome()) && x.endPosition() == position.position())
                 .findFirst();

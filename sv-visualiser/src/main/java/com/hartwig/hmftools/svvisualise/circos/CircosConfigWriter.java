@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.svanalysis.visualisation;
+package com.hartwig.hmftools.svvisualise.circos;
 
 import java.io.BufferedReader;
 import java.io.File;

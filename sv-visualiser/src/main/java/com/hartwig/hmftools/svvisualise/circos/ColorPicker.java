@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.svanalysis.visualisation;
+package com.hartwig.hmftools.svvisualise.circos;
 
 import static java.util.stream.Collectors.toMap;
 
@@ -10,6 +10,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.svvisualise.data.Link;
 
 import org.jetbrains.annotations.NotNull;
 

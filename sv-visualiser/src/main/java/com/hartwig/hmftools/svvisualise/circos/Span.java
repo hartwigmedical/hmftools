@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.svanalysis.visualisation;
+package com.hartwig.hmftools.svvisualise.circos;
 
 import java.util.Collections;
 import java.util.List;
@@ -8,6 +8,10 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.position.GenomePosition;
 import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.common.region.GenomeRegionFactory;
+import com.hartwig.hmftools.svvisualise.data.Link;
+import com.hartwig.hmftools.svvisualise.data.Links;
+import com.hartwig.hmftools.svvisualise.data.Segment;
+import com.hartwig.hmftools.svvisualise.data.Segments;
 
 import org.jetbrains.annotations.NotNull;
 
