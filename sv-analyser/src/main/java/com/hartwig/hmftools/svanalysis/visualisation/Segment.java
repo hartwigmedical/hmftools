@@ -10,6 +10,8 @@ import org.jetbrains.annotations.Nullable;
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
 public abstract class Segment implements GenomeRegion {
 
+    public abstract String sampleId();
+
     public abstract int clusterId();
 
     public abstract int chainId();

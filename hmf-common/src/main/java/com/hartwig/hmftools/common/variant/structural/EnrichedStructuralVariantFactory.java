@@ -2,7 +2,6 @@ package com.hartwig.hmftools.common.variant.structural;
 
 import java.util.List;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.chromosome.Chromosome;
@@ -54,14 +53,14 @@ public final class EnrichedStructuralVariantFactory {
                 StructuralVariantLegPloidy end = ploidies.size() <= 1 ? null : ploidies.get(1);
 
                 startBuilder.adjustedAlleleFrequency(round(start.adjustedVaf()));
-                startBuilder.adjustedCopyNumber(round(adjustedCopyNumber(start)));
-                startBuilder.adjustedCopyNumberChange(round(adjustedCopyNumberChange(start)));
+                startBuilder.adjustedCopyNumber(round(start.adjustedCopyNumber()));
+                startBuilder.adjustedCopyNumberChange(round(start.adjustedCopyNumberChange()));
 
                 if (end != null) {
                     assert endBuilder != null;
                     endBuilder.adjustedAlleleFrequency(round(end.adjustedVaf()));
-                    endBuilder.adjustedCopyNumber(round(adjustedCopyNumber(end)));
-                    endBuilder.adjustedCopyNumberChange(round(adjustedCopyNumberChange(end)));
+                    endBuilder.adjustedCopyNumber(round(end.adjustedCopyNumber()));
+                    endBuilder.adjustedCopyNumberChange(round(end.adjustedCopyNumberChange()));
                 }
             }
 
@@ -84,24 +83,6 @@ public final class EnrichedStructuralVariantFactory {
 
     private static double round(double value) {
         return Math.round(value * 1000d) / 1000d;
-    }
-
-
-    @VisibleForTesting
-    static double adjustedCopyNumber(@NotNull final StructuralVariantLegPloidy ploidy) {
-        if (ploidy.orientation() == 1) {
-            return ploidy.leftCopyNumber().orElse(0D);
-        } else {
-            return ploidy.rightCopyNumber().orElse(0D);
-        }
-    }
-
-    @VisibleForTesting
-    static double adjustedCopyNumberChange(@NotNull final StructuralVariantLegPloidy ploidy) {
-        double leftCopyNumber = ploidy.leftCopyNumber().orElse(0D);
-        double rightCopyNumber = ploidy.rightCopyNumber().orElse(0D);
-
-        return ploidy.orientation() == 1 ? leftCopyNumber - rightCopyNumber : rightCopyNumber - leftCopyNumber;
     }
 
     @NotNull

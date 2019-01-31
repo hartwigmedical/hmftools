@@ -12,6 +12,8 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.position.GenomePosition;
 import com.hartwig.hmftools.common.position.GenomePositions;
+import com.hartwig.hmftools.common.region.GenomeRegion;
+import com.hartwig.hmftools.common.region.GenomeRegionFactory;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -71,6 +73,10 @@ class ScalePosition {
         return segments.stream().map(x -> scale(x, chromosomePositionMap.get(x.chromosome()))).collect(Collectors.toList());
     }
 
+    public List<GenomeRegion> scaleRegions(@NotNull final List<GenomeRegion> regions) {
+        return regions.stream().map(x -> scale(x, chromosomePositionMap.get(x.chromosome()))).collect(Collectors.toList());
+    }
+
     @NotNull
     public List<Link> scaleLinks(@NotNull final List<Link> links) {
         final List<Link> results = Lists.newArrayList();
@@ -114,6 +120,11 @@ class ScalePosition {
     @NotNull
     private static Segment scale(@NotNull final Segment victim, @NotNull final Map<Long, Integer> positionMap) {
         return ImmutableSegment.builder().from(victim).start(positionMap.get(victim.start())).end(positionMap.get(victim.end())).build();
+    }
+
+    @NotNull
+    private static GenomeRegion scale(@NotNull final GenomeRegion region, @NotNull final Map<Long, Integer> positionMap) {
+        return GenomeRegionFactory.create(region.chromosome(), positionMap.get(region.start()), positionMap.get(region.end()));
     }
 
     @VisibleForTesting

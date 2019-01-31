@@ -42,14 +42,16 @@ public class Links {
     }
 
     public static int linkTraverseCount(@NotNull final GenomePosition position, @NotNull final List<Link> links) {
-       return  Links.findStartLink(position, links).map(Link::traverseCount).orElse(0) + Links.findEndLink(position, links)
+        return Links.findStartLink(position, links).map(Link::traverseCount).orElse(0) + Links.findEndLink(position, links)
                 .map(Link::traverseCount)
                 .orElse(0);
     }
 
     @NotNull
     public static List<Link> clean(@NotNull final List<Link> links) {
-        return links.stream().filter(x -> HumanChromosome.contains(x.startChromosome()) && HumanChromosome.contains(x.endChromosome())).collect(Collectors.toList());
+        return links.stream()
+                .filter(x -> HumanChromosome.contains(x.startChromosome()) && HumanChromosome.contains(x.endChromosome()))
+                .collect(Collectors.toList());
     }
 
     @NotNull
@@ -61,7 +63,7 @@ public class Links {
     private static List<Link> fromLines(@NotNull List<String> lines) {
         final List<Link> results = Lists.newArrayList();
         for (final String line : lines) {
-            if (!line.startsWith(COMMENT) && !line.startsWith(HEADER) ) {
+            if (!line.startsWith(COMMENT) && !line.startsWith(HEADER)) {
                 results.add(fromString(line));
             }
         }
@@ -73,17 +75,21 @@ public class Links {
     private static Link fromString(@NotNull final String line) {
         String[] values = line.split(DELIMITER);
         return ImmutableLink.builder()
+                .sampleId(values[0])
                 .clusterId(Integer.valueOf(values[1]))
                 .chainId(Integer.valueOf(values[2]))
-                .startChromosome(values[4])
-                .startPosition(Long.valueOf(values[5]))
-                .startOrientation(Integer.valueOf(values[6]))
-                .startType(Link.Type.valueOf(values[7]))
-                .endChromosome(values[8])
-                .endPosition(Long.valueOf(values[9]))
-                .endOrientation(Integer.valueOf(values[10]))
-                .endType(Link.Type.valueOf(values[11]))
-                .traverseCount(Integer.valueOf(values[12]))
+                .svId(Integer.valueOf(values[3]))
+                .type(values[4])
+                .resolvedType(values[5])
+                .startChromosome(values[6])
+                .startPosition(Long.valueOf(values[7]))
+                .startOrientation(Integer.valueOf(values[8]))
+                .startInfo(values[9])
+                .endChromosome(values[10])
+                .endPosition(Long.valueOf(values[11]))
+                .endOrientation(Integer.valueOf(values[12]))
+                .endInfo(values[13])
+                .traverseCount(Integer.valueOf(values[14]))
                 .build();
     }
 

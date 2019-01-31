@@ -1,10 +1,11 @@
 <<include etc/colors_fonts_patterns.conf>>
 
-<<include ticks.conf>>
+show_ticks          = no
+show_tick_labels    = no
 
 <ideogram>
     <spacing>
-        default = 1u
+        default = SUBSTITUTE_IDEOGRAM_SPACING
     </spacing>
 
     # Ideogram position, fill and outline
@@ -21,6 +22,26 @@
     label_parallel   = yes
 
 </ideogram>
+
+<highlights>
+
+	<highlight>
+		file       = SUBSTITUTE_SAMPLE.fragile.circos
+		r0         = SUBSTITUTE_CNA_INNER_RADIUSr
+		r1         = SUBSTITUTE_CNA_MIDDLE_RADIUSr
+		fill_color = black_a5
+		z = 20
+	</highlight>
+
+	<highlight>
+		file       = SUBSTITUTE_SAMPLE.line_element.circos
+		r0         = SUBSTITUTE_CNA_MIDDLE_RADIUSr
+		r1         = SUBSTITUTE_CNA_OUTER_RADIUSr
+		fill_color = black_a5
+		z = 20
+	</highlight>
+
+</highlights>
 
 <image>
  <<include etc/image.conf>>
@@ -210,7 +231,7 @@ chromosomes_display_default = yes
 
 		show_links     = no
 
-		label_size   = 20p
+		label_size   = 30p
 		label_font   = condensed
 		label_snuggle=yes
 

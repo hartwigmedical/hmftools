@@ -67,4 +67,19 @@ public abstract class StructuralVariantLegPloidy implements StructuralVariantLeg
         return orientation() == orientation && copyNumber.filter(Doubles::isZero).isPresent();
     }
 
+    public double adjustedCopyNumber() {
+        if (orientation() == 1) {
+            return leftCopyNumber().orElse(0D);
+        } else {
+            return rightCopyNumber().orElse(0D);
+        }
+    }
+
+    public double adjustedCopyNumberChange() {
+        double leftCopyNumber = leftCopyNumber().orElse(0D);
+        double rightCopyNumber = rightCopyNumber().orElse(0D);
+
+        return orientation() == 1 ? leftCopyNumber - rightCopyNumber : rightCopyNumber - leftCopyNumber;
+    }
+
 }
