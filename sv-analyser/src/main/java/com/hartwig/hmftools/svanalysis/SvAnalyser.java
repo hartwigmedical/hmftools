@@ -6,9 +6,13 @@ import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.MIN_SAMPLE_PURIT
 import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
+import com.hartwig.hmftools.common.purple.purity.PurityContext;
+import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantData;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 import com.hartwig.hmftools.svanalysis.analysis.CNAnalyser;
@@ -73,25 +77,25 @@ public class SvAnalyser {
 
         final DatabaseAccess dbAccess = cmd.hasOption(DB_URL) ? databaseAccess(cmd) : null;
 
-        String tumorSample = cmd.getOptionValue(SAMPLE);
+        String sampleId = cmd.getOptionValue(SAMPLE);
 
-        if(tumorSample == null || tumorSample.equals("*"))
-            tumorSample = "";
+        if(sampleId == null || sampleId.equals("*"))
+            sampleId = "";
 
         List<String> samplesList = Lists.newArrayList();
 
-        if (tumorSample.isEmpty())
+        if (sampleId.isEmpty())
         {
             samplesList = getStructuralVariantSamplesList(dbAccess);
         }
-        else if (tumorSample.contains(","))
+        else if (sampleId.contains(","))
         {
-            String[] tumorList = tumorSample.split(",");
+            String[] tumorList = sampleId.split(",");
             samplesList = Arrays.stream(tumorList).collect(Collectors.toList());
         }
         else
         {
-            samplesList.add(tumorSample);
+            samplesList.add(sampleId);
         }
 
         final String dataOutputDir = cmd.getOptionValue(DATA_OUTPUT_PATH, "");
@@ -101,7 +105,7 @@ public class SvAnalyser {
             CNAnalyser cnAnalyser = new CNAnalyser(dataOutputDir, dbAccess);
 
             cnAnalyser.loadConfig(cmd, samplesList);
-            cnAnalyser.analyseData();
+            cnAnalyser.findLOHEvents();
             cnAnalyser.close();
 
             LOGGER.info("CN analysis complete");
@@ -110,7 +114,7 @@ public class SvAnalyser {
 
         if(cmd.hasOption(RUN_SVA))
         {
-            SvaConfig svaConfig = new SvaConfig(cmd, tumorSample);
+            SvaConfig svaConfig = new SvaConfig(cmd, sampleId);
             SvSampleAnalyser sampleAnalyser = new SvSampleAnalyser(svaConfig);
 
             DriverGeneAnnotator driverGeneAnnotator = null;
@@ -141,7 +145,7 @@ public class SvAnalyser {
                 sampleAnalyser.setSampleLohData(cnAnalyser.getSampleLohData());
 
                 if(driverGeneAnnotator != null)
-                    driverGeneAnnotator.setChromosomeData(cnAnalyser.getSampleLohData(), sampleAnalyser.getChrCopyNumberMap());
+                    driverGeneAnnotator.setLohData(cnAnalyser.getSampleLohData());
             }
 
             int count = 0;
@@ -158,9 +162,21 @@ public class SvAnalyser {
 
                 LOGGER.info("sample({}) processing {} SVs, totalProcessed({})", sample, svVarData.size(), count);
 
+                List<SegmentSupport> cnSegmentTypes = Lists.newArrayList();
+
+                cnSegmentTypes.add(SegmentSupport.CENTROMERE);
+                cnSegmentTypes.add(SegmentSupport.TELOMERE);
+
+                if (includeNoneSegments)
+                    cnSegmentTypes.add(SegmentSupport.NONE);
+
+                final List<PurpleCopyNumber> cnRecords = dbAccess.readCopyNumberSegmentsByType(sample, cnSegmentTypes);
+
+                final Map<String, double[]> chrCopyNumberMap = cnAnalyser.createChrCopyNumberMap(cnRecords);
+
                 if (includeNoneSegments)
                 {
-                    List<StructuralVariantData> noneSegmentSVs = cnAnalyser.loadNoneSegments(sample);
+                    List<StructuralVariantData> noneSegmentSVs = cnAnalyser.createNoneSegments(cnRecords);
 
                     LOGGER.debug("sample({}) including {} none copy number segments", sample, noneSegmentSVs.size());
 
@@ -174,6 +190,8 @@ public class SvAnalyser {
 
                 sampleAnalyser.loadFromDatabase(sample, svVarData);
 
+                sampleAnalyser.setChrCopyNumberMap(chrCopyNumberMap);
+
                 sampleAnalyser.analyse();
 
                 if(runFusions || checkDrivers)
@@ -183,6 +201,12 @@ public class SvAnalyser {
 
                 if(checkDrivers)
                 {
+                    final PurityContext purityContext = dbAccess.readPurityContext(sample);
+
+                    if(purityContext != null)
+                        driverGeneAnnotator.setSamplePloidy(purityContext.bestFit().ploidy());
+
+                    driverGeneAnnotator.setChrCopyNumberMap(chrCopyNumberMap);
                     driverGeneAnnotator.annotateSVs(sample, sampleAnalyser.getClusters(), sampleAnalyser.getChrBreakendMap());
                 }
 

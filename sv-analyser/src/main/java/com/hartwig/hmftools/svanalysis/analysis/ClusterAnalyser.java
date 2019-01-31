@@ -1989,10 +1989,95 @@ public class ClusterAnalyser {
         }
     }
 
-    private static double DOUBLE_MINUTE_COPY_NUMBER_THRESHOLD = 8;
+    private static double DOUBLE_MINUTE_PLOIDY_THRESHOLD = 8;
+    private static double DOUBLE_MINUTE_PLOIDY_GAP_RATIO = 3;
 
     private void reportDoubleMinutes(final SvCluster cluster)
     {
+        // order SVs in descending ploidy order
+        List<Double> ploidyList = Lists.newArrayList();
+        List<SvVarData> indexSvList = Lists.newArrayList();
+        boolean hasHighPloidy = false;
+
+        for(final SvVarData var : cluster.getSVs())
+        {
+            if(var.isReplicatedSv())
+                continue;
+
+            double ploidy = var.getSvData().ploidy();
+            int i = 0;
+            for(; i < ploidyList.size(); ++i)
+            {
+                Double otherPloidy = ploidyList.get(i);
+                if(ploidy > otherPloidy)
+                    break;
+            }
+
+            ploidyList.add(i, ploidy);
+            indexSvList.add(i, var);
+
+            if(ploidy >= DOUBLE_MINUTE_PLOIDY_THRESHOLD)
+                hasHighPloidy = true;
+        }
+
+        if(!hasHighPloidy)
+            return;
+
+        boolean isPotentialDM = false;
+        List<String> highPloidyChromosomes = Lists.newArrayList();
+
+        int svsAboveThreshold = 0;
+        for(int i = 0; i < ploidyList.size(); ++i)
+        {
+            Double ploidy = ploidyList.get(i);
+
+            if(ploidy < DOUBLE_MINUTE_PLOIDY_THRESHOLD)
+                break;
+
+            ++svsAboveThreshold;
+
+            final SvVarData var = indexSvList.get(i);
+
+            for(int be = SVI_START; be <= SVI_END; ++be)
+            {
+                boolean useStart = isStart(be);
+
+                if(!highPloidyChromosomes.contains(var.chromosome(useStart)))
+                    highPloidyChromosomes.add(var.chromosome(useStart));
+            }
+
+            // check vs next
+            if(i == ploidyList.size() - 1)
+            {
+                LOGGER.info(String.format("cluster(%s count=%d) DM highPloidyCount(%d) currentSV(%s) ploidy(%.2f) with no others",
+                        cluster.id(), cluster.getUniqueSvCount(), svsAboveThreshold, var.posId(), ploidy));
+                isPotentialDM = true;
+                break;
+            }
+            else
+            {
+                double nextPloidy = ploidyList.get(i+1);
+
+                if(nextPloidy * DOUBLE_MINUTE_PLOIDY_GAP_RATIO < ploidy)
+                {
+                    LOGGER.info(String.format("cluster(%s count=%d) DM highPloidyCount(%d) currentSV(%s) ploidy(%.2f) vs next(%.3f)",
+                            cluster.id(), cluster.getUniqueSvCount(), svsAboveThreshold, indexSvList.get(i).posId(), ploidy, nextPloidy));
+                    isPotentialDM = true;
+                    break;
+                }
+            }
+        }
+
+        if(isPotentialDM)
+        {
+            // check for high ploidy in other variants on the relevant chromosomes
+
+
+
+            cluster.addAnnotation(CLUSTER_ANNONTATION_DM);
+        }
+
+        /*
         if(cluster.isResolved() || !cluster.isFullyChained() || cluster.getChains().get(0).getLinkCount() <= 2)
             return;
 
@@ -2028,6 +2113,7 @@ public class ClusterAnalyser {
 
             cluster.addAnnotation(CLUSTER_ANNONTATION_DM);
         }
+        */
     }
 
     private void findChainRepeatedSegments(final SvCluster cluster, final SvChain chain)

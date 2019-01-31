@@ -18,6 +18,7 @@ import com.hartwig.hmftools.common.purple.purity.FittedPurity;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
 import com.hartwig.hmftools.common.purple.qc.PurpleQC;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;
+import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 import com.hartwig.hmftools.common.region.CanonicalTranscript;
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
 import com.hartwig.hmftools.common.variant.structural.EnrichedStructuralVariant;
@@ -212,8 +213,8 @@ public class DatabaseAccess {
     }
 
     @NotNull
-    public List<PurpleCopyNumber> readCopyNumberNoneSegments(@NotNull final String sample) {
-        return copyNumberDAO.readNoneSegments(sample);
+    public List<PurpleCopyNumber> readCopyNumberSegmentsByType(@NotNull final String sample, @NotNull final List<SegmentSupport> segmentTypes) {
+        return copyNumberDAO.readSegmentsByType(sample, segmentTypes);
     }
 
     public void writeMetrics(@NotNull String sample, @NotNull WGSMetrics metrics) {

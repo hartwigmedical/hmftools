@@ -27,6 +27,8 @@ public class StatisticRoutines
 
     private Map<String, List<String>> mCancerSamples;
 
+    private int[][][] mSampleCountsMatrix;
+
     private static final Logger LOGGER = LogManager.getLogger(StatisticRoutines.class);
 
     public StatisticRoutines()
@@ -38,6 +40,7 @@ public class StatisticRoutines
         mGenes = Lists.newArrayList();
         mCategories = Lists.newArrayList();
         mCancerSamples = new HashMap();
+        mSampleCountsMatrix = null;
     }
 
     private static String DRIVER_GENES_FILE = "driver_genes_file";
@@ -61,8 +64,21 @@ public class StatisticRoutines
     private static String VALUE_FALSE = "FALSE";
     private static String VALUE_UNCLEAR = "UNCLEAR";
 
+    private static int ENR_CAT_NO_GENE = 0;
+    private static int UNC_CAT_NO_GENE = 1;
+    private static int ENR_CAT_WITH_GENE = 2;
+    private static int UNC_CAT_WITH_GENE = 3;
+    private static int ENR_CAT_UNC_GENE = 4;
+    private static int UNC_CAT_UNC_GENE = 5;
+    private static int INDEX_COUNT = 6;
+
     public void runStatistics()
     {
+        /*
+        int categoryCount = mCategories.size();
+        int geneCount = mGenes.size();
+        mSampleCountsMatrix = new int[geneCount][categoryCount][INDEX_COUNT];
+
         for(final String cancerType : mCancerTypes)
         {
             List<String> samples = mCancerSamples.get(cancerType);
@@ -70,7 +86,39 @@ public class StatisticRoutines
             int sampleCount = samples.size();
             LOGGER.debug("processing cancerType({}) with {} samples", cancerType, sampleCount);
 
-            for(final String category : mCategories)
+            // find
+            for(final SampleCountsData countsData : mSampleCountsData)
+            {
+                if (!countsData.CancerType.equals(cancerType) || !countsData.Category.equals(category))
+                    continue;
+
+                for (final DriveGeneData dgData : mDriveGeneData)
+                {
+                    if (!dgData.CancerType.equals(cancerType) || !dgData.Gene.equals(gene))
+                        continue;
+
+                    if (!countsData.SampleId.equals(dgData.SampleId))
+                        continue;
+
+                    if (countsData.Enriched.equals(VALUE_TRUE))
+                    {
+                        if (dgData.DriverStatus.equals(VALUE_TRUE))
+                            ++scCatEnrichedGeneDriver;
+                        else if (dgData.DriverStatus.equals(VALUE_UNCLEAR))
+                            ++scCatEnrichedGeneUnclear;
+                    }
+                    else if (countsData.Enriched.equals(VALUE_UNCLEAR))
+                    {
+                        if (dgData.DriverStatus.equals(VALUE_TRUE))
+                            ++scCatUnclearGeneDriver;
+                        else if (dgData.DriverStatus.equals(VALUE_UNCLEAR))
+                            ++scCatUnclearGeneUnclear;
+                    }
+                }
+            }
+
+
+                    for(final String category : mCategories)
             {
                 // count up samples with this category
                 int scCatEnriched = 0;
@@ -154,6 +202,7 @@ public class StatisticRoutines
 
 
         }
+        */
     }
 
     private void addCancerSample(final String cancerType, final String sampleId)

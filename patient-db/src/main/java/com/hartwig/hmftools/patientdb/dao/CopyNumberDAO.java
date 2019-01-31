@@ -260,14 +260,16 @@ class CopyNumberDAO {
     }
 
     @NotNull
-    public List<PurpleCopyNumber> readNoneSegments(@NotNull final String sample) {
+    public List<PurpleCopyNumber> readSegmentsByType(@NotNull final String sample, final List<SegmentSupport> segmentTypes)
+    {
         List<PurpleCopyNumber> copyNumbers = Lists.newArrayList();
+
+        if(segmentTypes.isEmpty())
+            return copyNumbers;
 
         Result<Record> result = context.select().from(COPYNUMBER)
                 .where(COPYNUMBER.SAMPLEID.eq(sample))
-                .and(COPYNUMBER.SEGMENTSTARTSUPPORT.eq(SegmentSupport.NONE.toString())
-                    .or(COPYNUMBER.SEGMENTENDSUPPORT.eq(SegmentSupport.NONE.toString()))
-                )
+                .and(COPYNUMBER.SEGMENTSTARTSUPPORT.in(segmentTypes).or(COPYNUMBER.SEGMENTENDSUPPORT.in(segmentTypes)))
                 .fetch();
 
         for (Record record : result) {

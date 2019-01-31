@@ -116,8 +116,9 @@ public class SvSampleAnalyser {
 
     public final List<SvCluster> getClusters() { return mAnalyser.getClusters(); }
     public final Map<String, List<SvBreakend>> getChrBreakendMap() { return mClusteringMethods.getChrBreakendMap(); }
-    public final Map<String, Double> getChrCopyNumberMap() { return mClusteringMethods.getChrCopyNumberMap(); }
+    public final Map<String, double[]> getChrCopyNumberMap() { return mClusteringMethods.getChrCopyNumberMap(); }
     public void setSampleLohData(final Map<String, List<SvLOH>> data) { mClusteringMethods.setSampleLohData(data); }
+    public void setChrCopyNumberMap(final Map<String, double[]> data) { mClusteringMethods.setChrCopyNumberMap(data); }
 
     private void clearState()
     {

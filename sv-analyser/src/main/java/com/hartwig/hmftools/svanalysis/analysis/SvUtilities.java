@@ -295,7 +295,7 @@ public class SvUtilities {
     }
 
     public static double DEFAULT_MAX_COPY_NUM_DIFF = 0.25;
-    public static double DEFAULT_MAX_COPY_NUM_DIFF_PERC = 0.1;
+    public static double DEFAULT_MAX_COPY_NUM_DIFF_PERC = 0.15;
 
     public static boolean copyNumbersEqual(double cn1, double cn2)
     {

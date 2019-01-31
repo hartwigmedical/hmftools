@@ -50,7 +50,6 @@ public class CNAnalyser {
     private static final Logger LOGGER = LogManager.getLogger(CNAnalyser.class);
 
     private final String mOutputPath;
-    private Map<String, List<SvCNData>> mSampleCNData;
 
     private List<String> mSampleIds;
     private int mRecordId;
@@ -62,8 +61,6 @@ public class CNAnalyser {
 
     Map<String, List<SvLOH>> mSampleLohData;
 
-    private boolean mAnalyseLOH;
-
     private static final String COPY_NUMBER_FILE = "cn_file";
 
     private static double CN_ROUNDING= 0.2;
@@ -71,7 +68,6 @@ public class CNAnalyser {
 
     public CNAnalyser(final String outputPath, DatabaseAccess dbAccess)
     {
-        mSampleCNData = new HashMap();
         mOutputPath = outputPath;
         mSampleIds = Lists.newArrayList();
         mFileWriter = null;
@@ -80,8 +76,6 @@ public class CNAnalyser {
         mSampleLohData = null;
         mRecordId = 0;
         mNoneSvId = 0;
-
-        mAnalyseLOH = true;
     }
 
     public static void addCmdLineArgs(Options options)
@@ -92,126 +86,29 @@ public class CNAnalyser {
     public boolean loadConfig(final CommandLine cmd, final List<String> sampleIds)
     {
         mSampleIds.addAll(sampleIds);
-
-        if(cmd.hasOption(COPY_NUMBER_FILE))
-        {
-            loadFromCSV(cmd.getOptionValue(COPY_NUMBER_FILE), mSampleIds.size() == 1 ? mSampleIds.get(0) : "");
-        }
-
-        setAnalyseLOH(true);
-
         return true;
     }
 
-    public void setAnalyseLOH(boolean toggle) { mAnalyseLOH = toggle; }
-
-    private void loadFromCSV(final String filename, final String specificSample)
+    public void findLOHEvents()
     {
-        if (filename.isEmpty())
+        if(mDbAccess == null)
             return;
 
-        try
-        {
-            BufferedReader fileReader = new BufferedReader(new FileReader(filename));
-
-            // skip field names
-            String line = fileReader.readLine();
-
-            if (line == null)
-            {
-                LOGGER.error("Empty copy number CSV file({})", filename);
-                return;
-            }
-
-            int cnCount = 0;
-            while ((line = fileReader.readLine()) != null)
-            {
-                // parse CSV data
-                String[] items = line.split(",");
-
-                if (items.length != 12) {
-                    continue;
-                }
-
-                String sampleId = items[1];
-
-                if(!specificSample.isEmpty() && !specificSample.equals(sampleId))
-                {
-                    continue;
-                }
-
-                if (!mSampleCNData.containsKey(sampleId))
-                {
-                    List<SvCNData> newList = Lists.newArrayList();
-                    mSampleCNData.put(sampleId, newList);
-                }
-
-                List<SvCNData> sampleData = mSampleCNData.get(sampleId);
-
-                // CSV fields
-                // Id,SampleId,Chr,PosStart,PosEnd,SegStart,SegEnd,BafCount,ObservedBaf,ActualBaf,CopyNumber,CNMethod
-                // 0  1        2   3        4      5        6      7        8           9         10         11
-
-                SvCNData cnData = new SvCNData(
-                        Integer.parseInt(items[0]),
-                        items[2],
-                        Long.parseLong(items[3]),
-                        Long.parseLong(items[4]),
-                        items[5],
-                        items[6],
-                        Integer.parseInt(items[7]),
-                        Double.parseDouble(items[8]),
-                        Double.parseDouble(items[9]),
-                        Double.parseDouble(items[10]),
-                        items[10]);
-
-                sampleData.add(cnData);
-                ++cnCount;
-            }
-
-            LOGGER.info("loaded  samples({}) copy number data count({})", mSampleCNData.size(), cnCount);
-
-        }
-        catch (IOException exception)
-        {
-            LOGGER.error("Failed to read copy number CSV file({})", filename);
-        }
-        }
-
-    public void analyseData()
-    {
         int sampleCount = 0;
 
-        if(!mSampleCNData.isEmpty())
+        for(final String sampleId : mSampleIds)
         {
-            for (Map.Entry<String, List<SvCNData>> entry : mSampleCNData.entrySet())
-            {
-                if(mSampleCNData.size() > 1)
-                {
-                    ++sampleCount;
-                    LOGGER.info("analysing sample({}) with {} CN entries, totalProcessed({})",
-                            entry.getKey(), entry.getValue().size(), sampleCount);
-                }
+            List<SvCNData> sampleData = loadCopyNumberData(sampleId);
 
-                analyseData(entry.getKey(), entry.getValue());
-            }
-        }
-        else if(mDbAccess != null)
-        {
-            for(final String sampleId : mSampleIds)
-            {
-                List<SvCNData> sampleData = loadFromDatabase(sampleId);
+            ++sampleCount;
+            LOGGER.info("analysing sample({}) with {} CN entries, totalProcessed({})", sampleId, sampleData.size(), sampleCount);
 
-                ++sampleCount;
-                LOGGER.info("analysing sample({}) with {} CN entries, totalProcessed({})",
-                        sampleId, sampleData.size(), sampleCount);
-
-                analyseData(sampleId, sampleData);
-            }
+            loadSVData(sampleId);
+            findLohEvents(sampleId, sampleData);
         }
     }
 
-    private List<SvCNData> loadFromDatabase(final String sampleId)
+    private List<SvCNData> loadCopyNumberData(final String sampleId)
     {
         List<SvCNData> cnDataList = Lists.newArrayList();
         List<PurpleCopyNumber> cnRecords = mDbAccess.readCopynumbers(sampleId);
@@ -222,12 +119,6 @@ public class CNAnalyser {
         }
 
         return cnDataList;
-    }
-
-    private void analyseData(final String sampleId, final List<SvCNData> sampleData)
-    {
-        if(mAnalyseLOH)
-            analyseLOH(sampleId, sampleData);
     }
 
     private void loadSVData(final String sampleId)
@@ -241,86 +132,6 @@ public class CNAnalyser {
         {
             LOGGER.warn("sample({}) no SV records found", sampleId);
         }
-    }
-
-    public final List<StructuralVariantData> loadNoneSegments(final String sampleId)
-    {
-        List<StructuralVariantData> svList = Lists.newArrayList();
-
-        List<PurpleCopyNumber> cnRecords = mDbAccess.readCopyNumberNoneSegments(sampleId);
-
-        for(int i = 0; i < cnRecords.size(); ++i)
-        {
-            if(i + 1 >= cnRecords.size())
-                break;
-
-            final PurpleCopyNumber prevCnRecord = cnRecords.get(i);
-            final PurpleCopyNumber noneCnRecord = cnRecords.get(i+1);
-
-            if(prevCnRecord.segmentEndSupport() != SegmentSupport.NONE || noneCnRecord.segmentStartSupport() != SegmentSupport.NONE)
-                continue;
-
-            double copyNumber = noneCnRecord.averageTumorCopyNumber();
-            double copyNumberDiff = copyNumber - prevCnRecord.averageTumorCopyNumber();
-            double copyNumberChange = abs(copyNumberDiff);
-
-            // negative CN change means sequence has come in from left (a lower position) and dropped at the breakend
-            byte orientation = copyNumberDiff > 0 ? (byte)-1 : 1;
-
-            long position = orientation == -1 ? noneCnRecord.start() : noneCnRecord.start() - 1;
-
-            int varId = mNoneSvId++;
-
-            svList.add(
-                    ImmutableStructuralVariantData.builder()
-                            .id(Integer.toString(varId))
-                            .vcfId("")
-                            .type(StructuralVariantType.SGL)
-                            .ploidy(copyNumberChange)
-                            .startPosition(position)
-                            .startChromosome(noneCnRecord.chromosome())
-                            .startOrientation(orientation)
-                            .startAF(0.0)
-                            .adjustedStartAF(0.0)
-                            .adjustedStartCopyNumber(copyNumber)
-                            .adjustedStartCopyNumberChange(copyNumberChange)
-                            .homology("")
-                            .inexactHomologyOffsetStart(0)
-                            .insertSequence("")
-                            .imprecise(false)
-                            .qualityScore(0.0)
-                            .filter(AmberQCStatus.PASS.toString())
-                            .endPosition(-1)
-                            .endChromosome("0")
-                            .endOrientation((byte)1)
-                            .endAF(0.0)
-                            .adjustedEndAF(0.0)
-                            .adjustedEndCopyNumber(0.0)
-                            .adjustedEndCopyNumberChange(0.0)
-                            .event("")
-                            .startTumourVariantFragmentCount(0)
-                            .startTumourReferenceFragmentCount(0)
-                            .startNormalVariantFragmentCount(0)
-                            .startNormalReferenceFragmentCount(0)
-                            .endTumourVariantFragmentCount(0)
-                            .endTumourReferenceFragmentCount(0)
-                            .endNormalVariantFragmentCount(0)
-                            .endNormalReferenceFragmentCount(0)
-                            .startIntervalOffsetStart(0)
-                            .startIntervalOffsetEnd(0)
-                            .endIntervalOffsetStart(0)
-                            .endIntervalOffsetEnd(0)
-                            .inexactHomologyOffsetStart(0)
-                            .inexactHomologyOffsetEnd(0)
-                            .startLinkedBy("")
-                            .endLinkedBy("")
-                            .startRefContext("")
-                            .endRefContext("")
-                            .insertSequenceAlignments("")
-                            .build());
-        }
-
-        return svList;
     }
 
     private StructuralVariantData findSvData(final SvCNData cnData, int requiredOrient)
@@ -437,16 +248,12 @@ public class CNAnalyser {
     private static String SPECIFIC_CHR = "";
     private static int REMOTE_SV_DISTANCE = 1000000;
 
-    private void analyseLOH(final String sampleId, List<SvCNData> cnDataList)
+    private void findLohEvents(final String sampleId, List<SvCNData> cnDataList)
     {
         String currentChr = "";
 
-        if(mDbAccess != null)
-            loadSVData(sampleId);
-
-        // walk through the CN records looking for any loss of hetrozygosity,
-        // defined here as a change in the actual baf to zero
-        // when CN rise back above zero, consider the section ended
+        // walk through the CN records looking for any loss of hetrozygosity, defined as a change in the actual baf to zero
+        // and when CN rises back above this level, consider the section ended
         boolean isLohSection = false;
         double lohMinCN = 0;
         double lastMinCN = 0;
@@ -666,6 +473,115 @@ public class CNAnalyser {
         }
     }
 
+    public static int P_ARM_TELOMERE_CN = 0;
+    public static int CENTROMERE_CN = 1;
+    public static int Q_ARM_TELOMERE_CN = 2;
+
+    public final Map<String, double[]> createChrCopyNumberMap(final List<PurpleCopyNumber> cnRecords)
+    {
+        final Map<String, double[]> chrMap = new HashMap();
+
+        double[] currentChrData = null;
+
+        for(final PurpleCopyNumber cnRecord : cnRecords)
+        {
+            if(cnRecord.segmentStartSupport().equals(SegmentSupport.TELOMERE))
+            {
+                currentChrData = new double[Q_ARM_TELOMERE_CN+1];
+                chrMap.put(cnRecord.chromosome(), currentChrData);
+                currentChrData[P_ARM_TELOMERE_CN] = cnRecord.averageTumorCopyNumber();
+            }
+            else if(cnRecord.segmentStartSupport().equals(SegmentSupport.CENTROMERE))
+            {
+                currentChrData[CENTROMERE_CN] = cnRecord.averageTumorCopyNumber();
+            }
+            else if(cnRecord.segmentEndSupport().equals(SegmentSupport.TELOMERE))
+            {
+                currentChrData[Q_ARM_TELOMERE_CN] = cnRecord.averageTumorCopyNumber();
+            }
+        }
+
+        return chrMap;
+    }
+
+    public final List<StructuralVariantData> createNoneSegments(final List<PurpleCopyNumber> cnRecords)
+    {
+        List<StructuralVariantData> svList = Lists.newArrayList();
+
+        for(int i = 0; i < cnRecords.size(); ++i)
+        {
+            if(i + 1 >= cnRecords.size())
+                break;
+
+            final PurpleCopyNumber prevCnRecord = cnRecords.get(i);
+            final PurpleCopyNumber noneCnRecord = cnRecords.get(i+1);
+
+            if(prevCnRecord.segmentEndSupport() != SegmentSupport.NONE || noneCnRecord.segmentStartSupport() != SegmentSupport.NONE)
+                continue;
+
+            double copyNumber = noneCnRecord.averageTumorCopyNumber();
+            double copyNumberDiff = copyNumber - prevCnRecord.averageTumorCopyNumber();
+            double copyNumberChange = abs(copyNumberDiff);
+
+            // negative CN change means sequence has come in from left (a lower position) and dropped at the breakend
+            byte orientation = copyNumberDiff > 0 ? (byte)-1 : 1;
+
+            long position = orientation == -1 ? noneCnRecord.start() : noneCnRecord.start() - 1;
+
+            int varId = mNoneSvId++;
+
+            svList.add(
+                    ImmutableStructuralVariantData.builder()
+                            .id(Integer.toString(varId))
+                            .vcfId("")
+                            .type(StructuralVariantType.SGL)
+                            .ploidy(copyNumberChange)
+                            .startPosition(position)
+                            .startChromosome(noneCnRecord.chromosome())
+                            .startOrientation(orientation)
+                            .startAF(0.0)
+                            .adjustedStartAF(0.0)
+                            .adjustedStartCopyNumber(copyNumber)
+                            .adjustedStartCopyNumberChange(copyNumberChange)
+                            .homology("")
+                            .inexactHomologyOffsetStart(0)
+                            .insertSequence("")
+                            .imprecise(false)
+                            .qualityScore(0.0)
+                            .filter(AmberQCStatus.PASS.toString())
+                            .endPosition(-1)
+                            .endChromosome("0")
+                            .endOrientation((byte)1)
+                            .endAF(0.0)
+                            .adjustedEndAF(0.0)
+                            .adjustedEndCopyNumber(0.0)
+                            .adjustedEndCopyNumberChange(0.0)
+                            .event("")
+                            .startTumourVariantFragmentCount(0)
+                            .startTumourReferenceFragmentCount(0)
+                            .startNormalVariantFragmentCount(0)
+                            .startNormalReferenceFragmentCount(0)
+                            .endTumourVariantFragmentCount(0)
+                            .endTumourReferenceFragmentCount(0)
+                            .endNormalVariantFragmentCount(0)
+                            .endNormalReferenceFragmentCount(0)
+                            .startIntervalOffsetStart(0)
+                            .startIntervalOffsetEnd(0)
+                            .endIntervalOffsetStart(0)
+                            .endIntervalOffsetEnd(0)
+                            .inexactHomologyOffsetStart(0)
+                            .inexactHomologyOffsetEnd(0)
+                            .startLinkedBy("")
+                            .endLinkedBy("")
+                            .startRefContext("")
+                            .endRefContext("")
+                            .insertSequenceAlignments("")
+                            .build());
+        }
+
+        return svList;
+    }
+
     public void close()
     {
         if (mFileWriter == null)
@@ -678,11 +594,6 @@ public class CNAnalyser {
         catch (final IOException e)
         {
         }
-    }
-
-    private double roundCopyNumber(double copyNumber)
-    {
-        return abs(round(copyNumber / CN_ROUNDING) * CN_ROUNDING);
     }
 
 }
