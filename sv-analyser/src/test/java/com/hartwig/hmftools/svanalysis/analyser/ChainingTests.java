@@ -61,7 +61,7 @@ public class ChainingTests
         final SvVarData var4 = createDel("4", "1", 210, 400);
         SvLinkedPair lp2 = new SvLinkedPair(var3, var4, LINK_TYPE_TI, false, true);
         assertEquals(lp2.linkType(), LINK_TYPE_DB);
-        assertEquals(lp2.length(), -10);
+        assertEquals(lp2.length(), -11);
 
         final SvVarData var5 = createDel("4", "1", 250, 400);
 
