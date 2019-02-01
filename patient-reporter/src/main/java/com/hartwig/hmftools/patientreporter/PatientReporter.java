@@ -114,7 +114,13 @@ abstract class PatientReporter {
                         ? ""
                         : baseReportData().centerModel().getAddresseeStringForSample(tumorSample),
                 baseReportData().limsModel().labelSample(tumorSample),
-                baseReportData().limsModel().projectNameDVO(tumorSample));
+                baseReportData().limsModel().projectNameDVO(tumorSample),
+                baseReportData().limsModel().labelSample(tumorSample).equalsIgnoreCase("core")
+                        ? baseReportData().limsModel().contactEmail(baseReportData().limsModel().submissionFromSample(tumorSample))
+                        : "",
+                baseReportData().limsModel().labelSample(tumorSample).equalsIgnoreCase("core")
+                        ? baseReportData().limsModel().contactName(baseReportData().limsModel().submissionFromSample(tumorSample))
+                        : "");
 
         final List<EvidenceItem> nonTrials = ReportableEvidenceItemFactory.extractNonTrials(allEvidenceItems);
 

@@ -44,9 +44,11 @@ public abstract class NotAnalysableReporter {
                 lims.arrivalDateForSample(sample),
                 null,
                 lims.labProceduresForSample(sample),
-                lims.labelSample(sample).contains("CORE") ? "" : baseReportData().centerModel().getAddresseeStringForSample(sample),
+                lims.labelSample(sample).equalsIgnoreCase("core") ? "" : baseReportData().centerModel().getAddresseeStringForSample(sample),
                 lims.labelSample(sample),
-                lims.projectNameDVO(sample));
+                lims.projectNameDVO(sample),
+                lims.labelSample(sample).equalsIgnoreCase("core") ? lims.contactEmail(lims.submissionFromSample(sample)) : "",
+                lims.labelSample(sample).equalsIgnoreCase("core") ? lims.contactName(lims.submissionFromSample(sample)) : "");
 
         return ImmutableNotAnalysedPatientReport.of(sampleReport,
                 reason,

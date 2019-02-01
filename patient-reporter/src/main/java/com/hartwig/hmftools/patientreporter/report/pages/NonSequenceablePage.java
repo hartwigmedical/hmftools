@@ -111,7 +111,10 @@ public abstract class NonSequenceablePage {
                 cmp.text("The biopsies evaluated for this sample have arrived on " + formattedDate(sampleReport().tumorArrivalDate())
                         + " at " + Commons.HARTWIG_ADDRESS).setStyle(fontStyle()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
-                cmp.text("This report is generated and verified by: " + user() + " and is addressed at " + sampleReport().recipient())
+                cmp.text(sampleReport().label().equalsIgnoreCase("core")
+                        ? "This report is generated and verified by: " + user() + " and is addressed at " + sampleReport().contactName() + ","
+                        + sampleReport().contactEmail()
+                        : "This report is generated and verified by: " + user() + " and is addressed at " + sampleReport().recipient())
                         .setStyle(fontStyle()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
                 cmp.text("The results on this report are based on tests that are performed under ISO/ICE-17025:2005 accreditation.")

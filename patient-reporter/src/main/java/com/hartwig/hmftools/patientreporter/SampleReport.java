@@ -55,4 +55,11 @@ public abstract class SampleReport {
     @Nullable
     public abstract String projectNameDVO();
 
+    @Nullable
+    public abstract String contactName();
+
+    @Nullable
+    public abstract String contactEmail();
+
+
 }
