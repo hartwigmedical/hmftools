@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.svanalysis;
+package com.hartwig.hmftools.svvisualise;
 
 import static java.util.stream.Collectors.toList;
 
@@ -8,12 +8,13 @@ import java.util.List;
 import java.util.StringJoiner;
 
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
-import com.hartwig.hmftools.svanalysis.visualisation.CopyNumberAlteration;
-import com.hartwig.hmftools.svanalysis.visualisation.ImmutableCopyNumberAlteration;
-import com.hartwig.hmftools.svanalysis.visualisation.Link;
-import com.hartwig.hmftools.svanalysis.visualisation.Links;
-import com.hartwig.hmftools.svanalysis.visualisation.Segment;
-import com.hartwig.hmftools.svanalysis.visualisation.Segments;
+import com.hartwig.hmftools.svvisualise.data.CopyNumberAlteration;
+import com.hartwig.hmftools.svvisualise.data.CopyNumberAlterations;
+import com.hartwig.hmftools.svvisualise.data.ImmutableCopyNumberAlteration;
+import com.hartwig.hmftools.svvisualise.data.Link;
+import com.hartwig.hmftools.svvisualise.data.Links;
+import com.hartwig.hmftools.svvisualise.data.Segment;
+import com.hartwig.hmftools.svvisualise.data.Segments;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
@@ -43,6 +44,7 @@ public interface SvVisualiserConfig {
     String DB_USER = "db_user";
     String DB_PASS = "db_pass";
     String DB_URL = "db_url";
+    String CNA = "cna";
 
     @NotNull
     String sample();
@@ -91,6 +93,7 @@ public interface SvVisualiserConfig {
         options.addOption(DB_URL, true, "Database url in form: mysql://host:port/database");
         options.addOption(SINGLE_CLUSTER, true, "Only generate image for single cluster");
         options.addOption(SINGLE_CHROMOSOME, true, "Only generate image for singe chromosome");
+        options.addOption(CNA, true, "Location of copy number alterations (optional alternative to db)");
 
         return options;
     }
@@ -104,9 +107,19 @@ public interface SvVisualiserConfig {
         final String plotOutputDir = parameter(cmd, PLOT_OUT, missingJoiner);
         final String dataOutputDir = parameter(cmd, DATA_OUT, missingJoiner);
         final String circos = parameter(cmd, CIRCOS, missingJoiner);
-        final String dbUser = parameter(cmd, DB_USER, missingJoiner);
-        final String dbPassword = parameter(cmd, DB_PASS, missingJoiner);
-        final String dbUrl = parameter(cmd, DB_URL, missingJoiner);
+        final String dbUser;
+        final String dbPassword;
+        final String dbUrl;
+        if (!cmd.hasOption(CNA)) {
+            dbUser = parameter(cmd, DB_USER, missingJoiner);
+            dbPassword = parameter(cmd, DB_PASS, missingJoiner);
+            dbUrl = parameter(cmd, DB_URL, missingJoiner);
+        } else {
+            dbUser = "";
+            dbPassword = "";
+            dbUrl = "";
+        }
+
         final String missing = missingJoiner.toString();
 
         if (!missing.isEmpty()) {
@@ -121,8 +134,15 @@ public interface SvVisualiserConfig {
             LOGGER.warn("No structural variants found for sample {}", sample);
         }
 
-        LOGGER.info("Loading copy numbers from database");
-        final List<CopyNumberAlteration> cna = sampleCopyNumberAlterations(sample, dbUser, dbPassword, "jdbc:" + dbUrl);
+        final List<CopyNumberAlteration> cna;
+        if (cmd.hasOption(CNA)) {
+            LOGGER.info("Reading copy numbers from {}", cmd.getOptionValue(CNA));
+            cna = CopyNumberAlterations.read(cmd.getOptionValue(CNA));
+        } else {
+            LOGGER.info("Loading copy numbers from database");
+            cna = sampleCopyNumberAlterations(sample, dbUser, dbPassword, "jdbc:" + dbUrl);
+        }
+
         if (cna.isEmpty()) {
             LOGGER.warn("No copy number alterations found for sample {}", sample);
         }

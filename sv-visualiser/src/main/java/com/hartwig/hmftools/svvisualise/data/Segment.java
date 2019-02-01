@@ -1,6 +1,7 @@
-package com.hartwig.hmftools.svanalysis.visualisation;
+package com.hartwig.hmftools.svvisualise.data;
 
 import com.hartwig.hmftools.common.region.GenomeRegion;
+import com.hartwig.hmftools.svvisualise.circos.SegmentTerminal;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;

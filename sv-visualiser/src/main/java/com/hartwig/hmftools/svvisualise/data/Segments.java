@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.svanalysis.visualisation;
+package com.hartwig.hmftools.svvisualise.data;
 
 import java.io.File;
 import java.io.IOException;
@@ -19,6 +19,7 @@ import com.hartwig.hmftools.common.position.GenomePosition;
 import com.hartwig.hmftools.common.position.GenomePositions;
 import com.hartwig.hmftools.common.refgenome.RefGenome;
 import com.hartwig.hmftools.common.region.GenomeRegion;
+import com.hartwig.hmftools.svvisualise.circos.SegmentTerminal;
 
 import org.jetbrains.annotations.NotNull;
 

@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.svanalysis.visualisation;
+package com.hartwig.hmftools.svvisualise.circos;
 
 import static java.util.stream.Collectors.toList;
 
@@ -17,11 +17,17 @@ import com.hartwig.hmftools.common.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.position.GenomePosition;
 import com.hartwig.hmftools.common.position.GenomePositions;
 import com.hartwig.hmftools.common.region.GenomeRegion;
+import com.hartwig.hmftools.svvisualise.data.CopyNumberAlteration;
+import com.hartwig.hmftools.svvisualise.data.Link;
+import com.hartwig.hmftools.svvisualise.data.Links;
+import com.hartwig.hmftools.svvisualise.data.Segment;
+import com.hartwig.hmftools.svvisualise.data.Segments;
 
 import org.jetbrains.annotations.NotNull;
 
 public class CircosDataWriter {
 
+    private static final int MIN_KAROTYPE_LENGTH = 10;
     private static final String DELIMITER = "\t";
 
     private final ColorPicker colorPicker;
@@ -302,8 +308,7 @@ public class CircosDataWriter {
         double rTrack1 = CircosConfigWriter.svTrackPixels(maxTracks, 0);
         for (Link link : links) {
             if (link.isSimpleSV()) {
-
-                if (HumanChromosome.contains(link.startChromosome())) {
+                if (link.isValidStart()) {
                     final String start = new StringJoiner(DELIMITER).add(circosContig(link.startChromosome()))
                             .add(String.valueOf(link.startPosition()))
                             .add(String.valueOf(link.startPosition()))
@@ -312,7 +317,7 @@ public class CircosDataWriter {
                     result.add(start);
                 }
 
-                if (HumanChromosome.contains(link.endChromosome())) {
+                if (link.isValidEnd()) {
                     final String end = new StringJoiner(DELIMITER).add(circosContig(link.endChromosome()))
                             .add(String.valueOf(link.endPosition()))
                             .add(String.valueOf(link.endPosition()))
@@ -337,7 +342,7 @@ public class CircosDataWriter {
                     .add(circosContig(contig))
                     .add(HumanChromosome.fromString(contig).toString())
                     .add(String.valueOf(1))
-                    .add(String.valueOf(contigLengths.get(contig)))
+                    .add(String.valueOf(Math.max(MIN_KAROTYPE_LENGTH, contigLengths.get(contig))))
                     .add("chr" + HumanChromosome.fromString(contig).toString())
                     .toString();
             result.add(start);
@@ -447,7 +452,7 @@ public class CircosDataWriter {
             }
 
             if (segment.endTerminal() != SegmentTerminal.NONE) {
-                final String endText = segment.startTerminal() == SegmentTerminal.CENTROMERE ? "Centromere" : "Telomere";
+                final String endText = segment.endTerminal() == SegmentTerminal.CENTROMERE ? "Centromere" : "Telomere";
                 final String start = new StringJoiner(DELIMITER).add(circosContig(segment.chromosome()))
                         .add(String.valueOf(segment.end()))
                         .add(String.valueOf(segment.end()))

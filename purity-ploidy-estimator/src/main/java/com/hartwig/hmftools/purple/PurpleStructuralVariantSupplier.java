@@ -110,16 +110,19 @@ class PurpleStructuralVariantSupplier {
         final Iterator<VariantContext> iterator = variantContexts.iterator();
         while (iterator.hasNext()) {
             final VariantContext variantContext = iterator.next();
-            final StructuralVariantFactory factory = new StructuralVariantFactory(new PassingVariantFilter());
-            factory.addVariantContext(variantContext);
-            final List<StructuralVariant> variants = factory.results();
-            if (!variants.isEmpty()) {
-                final StructuralVariant variant = variants.get(0);
-                if (variant.type() == StructuralVariantType.SGL && !isLinked(variant)) {
-                    if (filter(ploidyFactory.create(variant, copyNumberMap))) {
-                        iterator.remove();
-                        removed++;
-                        modified = true;
+            if (!variantContext.hasAttribute(RECOVERED_FLAG)) {
+
+                final StructuralVariantFactory factory = new StructuralVariantFactory(new PassingVariantFilter());
+                factory.addVariantContext(variantContext);
+                final List<StructuralVariant> variants = factory.results();
+                if (!variants.isEmpty()) {
+                    final StructuralVariant variant = variants.get(0);
+                    if (variant.type() == StructuralVariantType.SGL && !isLinked(variant)) {
+                        if (filter(ploidyFactory.create(variant, copyNumberMap))) {
+                            iterator.remove();
+                            removed++;
+                            modified = true;
+                        }
                     }
                 }
             }

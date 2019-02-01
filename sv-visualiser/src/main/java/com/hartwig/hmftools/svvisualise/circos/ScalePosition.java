@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.svanalysis.visualisation;
+package com.hartwig.hmftools.svvisualise.circos;
 
 import java.util.Collections;
 import java.util.List;
@@ -9,11 +9,16 @@ import java.util.stream.Collectors;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.position.GenomePosition;
 import com.hartwig.hmftools.common.position.GenomePositions;
 import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.common.region.GenomeRegionFactory;
+import com.hartwig.hmftools.svvisualise.data.CopyNumberAlteration;
+import com.hartwig.hmftools.svvisualise.data.ImmutableCopyNumberAlteration;
+import com.hartwig.hmftools.svvisualise.data.ImmutableLink;
+import com.hartwig.hmftools.svvisualise.data.ImmutableSegment;
+import com.hartwig.hmftools.svvisualise.data.Link;
+import com.hartwig.hmftools.svvisualise.data.Segment;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -38,20 +43,6 @@ class ScalePosition {
                     .collect(Collectors.toList());
             chromosomePositionMap.put(contig, positionMap(start, contigPositions));
         }
-    }
-
-    @NotNull
-    public List<GenomePosition> original() {
-        final List<GenomePosition> result = Lists.newArrayList();
-
-        for (String contig : chromosomePositionMap.keySet()) {
-            for (Long position : chromosomePositionMap.get(contig).keySet()) {
-                result.add(GenomePositions.create(contig, position));
-            }
-        }
-
-        Collections.sort(result);
-        return result;
     }
 
     @NotNull
@@ -85,11 +76,11 @@ class ScalePosition {
 
             try {
                 final ImmutableLink.Builder builder = ImmutableLink.builder().from(link);
-                if (HumanChromosome.contains(link.startChromosome())) {
+                if (link.isValidStart()) {
                     builder.startPosition(chromosomePositionMap.get(link.startChromosome()).get(link.startPosition()));
                 }
 
-                if (HumanChromosome.contains(link.endChromosome())) {
+                if (link.isValidEnd()) {
                     builder.endPosition(chromosomePositionMap.get(link.endChromosome()).get(link.endPosition()));
                 }
 
