@@ -69,7 +69,7 @@ public class SvLinkedPair {
         }
 
         // adjust the length of DBs to reflect the position convention for opposite breakend orientations
-        if(mLinkType == LINK_TYPE_DB && mLinkLength > 0)
+        if(mLinkType == LINK_TYPE_DB)
             --mLinkLength;
     }
 

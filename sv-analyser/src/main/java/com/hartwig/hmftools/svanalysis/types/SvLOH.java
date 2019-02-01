@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.svanalysis.types;
 
+import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
+
 public class SvLOH
 {
     public final String SampleId;
@@ -19,6 +21,10 @@ public class SvLOH
     public final String StartSV;
     public final String EndSV;
     public final boolean Skipped;
+    public final boolean IsValid;
+
+    private SvBreakend mBreakendStart;
+    private SvBreakend mBreakendEnd;
 
     public static String LOH_NO_SV = "0";
 
@@ -37,7 +43,8 @@ public class SvLOH
             final long length,
             final String startSV,
             final String endSV,
-            boolean skipped)
+            boolean skipped,
+            boolean isValid)
     {
         SampleId = sampleId;
         Chromosome = chr;
@@ -56,6 +63,27 @@ public class SvLOH
         StartSV = startSV;
         EndSV = endSV;
         Skipped = skipped;
+        IsValid = isValid;
+
+        mBreakendStart = null;
+        mBreakendEnd = null;
+    }
+
+    public void setBreakend(final SvBreakend breakend, boolean isStart)
+    {
+        if(isStart)
+            mBreakendStart = breakend;
+        else
+            mBreakendEnd = breakend;
+    }
+
+    public final SvBreakend getBreakend(boolean isStart) { return isStart ? mBreakendStart : mBreakendEnd; }
+
+    public boolean matchedBothSVs() { return mBreakendStart != null && mBreakendEnd != null; }
+
+    public boolean matchesSegment(SegmentSupport segment, boolean isStart)
+    {
+        return isStart ? SegStart.equals(segment.toString()) : SegEnd.equals(segment.toString());
     }
 
 }

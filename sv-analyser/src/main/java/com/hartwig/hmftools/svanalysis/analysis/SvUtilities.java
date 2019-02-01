@@ -294,7 +294,7 @@ public class SvUtilities {
         return (var.arm(useStart) == CHROMOSOME_ARM_P ? 1 : -1) * var.orientation(useStart) * 1;
     }
 
-    public static double DEFAULT_MAX_COPY_NUM_DIFF = 0.25;
+    public static double DEFAULT_MAX_COPY_NUM_DIFF = 0.5;
     public static double DEFAULT_MAX_COPY_NUM_DIFF_PERC = 0.15;
 
     public static boolean copyNumbersEqual(double cn1, double cn2)

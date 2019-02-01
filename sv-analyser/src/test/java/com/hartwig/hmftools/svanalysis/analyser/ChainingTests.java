@@ -205,7 +205,7 @@ public class ChainingTests
 
         lohData.add(new SvLOH(tester.SampleId, "1", 1, 2, 100499653, 113342526,
                 "BND", "INV", 1, 1, 1, 0, 1, 1,
-                "720", "462", false));
+                "720", "462", false, true));
 
         lohDataMap.put(tester.SampleId, lohData);
 

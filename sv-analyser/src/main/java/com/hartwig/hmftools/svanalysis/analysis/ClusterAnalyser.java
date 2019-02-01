@@ -5,6 +5,7 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.Math.round;
 
+import static com.hartwig.hmftools.common.purple.segment.SegmentSupport.MULTIPLE;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.BND;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DEL;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DUP;
@@ -20,11 +21,8 @@ import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.CLUST
 import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.MAX_SV_REPLICATION_MULTIPLE;
 import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.addClusterReason;
 import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.applyCopyNumberReplication;
-import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.calcConsistency;
-import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.makeChrArmStr;
 import static com.hartwig.hmftools.svanalysis.annotators.LineElementAnnotator.markLineCluster;
 import static com.hartwig.hmftools.svanalysis.types.SvArmCluster.mergeArmClusters;
-import static com.hartwig.hmftools.svanalysis.types.SvCNData.CN_SEG_MULTIPLE;
 import static com.hartwig.hmftools.svanalysis.types.SvChain.CHAIN_ASSEMBLY_LINK_COUNT;
 import static com.hartwig.hmftools.svanalysis.types.SvChain.CHAIN_LENGTH;
 import static com.hartwig.hmftools.svanalysis.types.SvChain.CHAIN_LINK_COUNT;
@@ -1561,7 +1559,7 @@ public class ClusterAnalyser {
                 break;
             }
 
-            if(matched || lohEvent.SegStart.equals(CN_SEG_MULTIPLE) || lohEvent.SegEnd.equals(CN_SEG_MULTIPLE))
+            if(matched || lohEvent.matchesSegment(MULTIPLE, true) || lohEvent.matchesSegment(MULTIPLE, false))
             {
                 unmatchedLohList.remove(index);
                 ++matchedLohCount;
@@ -2086,9 +2084,12 @@ public class ClusterAnalyser {
             return;
 
         boolean isPotentialDM = false;
+
+        // keep track of any chromosome with high ploidy as an indication of false DMs and/or under-clustering
         List<String> highPloidyChromosomes = Lists.newArrayList();
 
         int svsAboveThreshold = 0;
+        double minPloidyAboveThreshold = 0;
         for(int i = 0; i < ploidyList.size(); ++i)
         {
             Double ploidy = ploidyList.get(i);
@@ -2097,12 +2098,16 @@ public class ClusterAnalyser {
                 break;
 
             ++svsAboveThreshold;
+            minPloidyAboveThreshold = ploidy;
 
             final SvVarData var = indexSvList.get(i);
 
             for(int be = SVI_START; be <= SVI_END; ++be)
             {
                 boolean useStart = isStart(be);
+
+                if(var.isNullBreakend() && !useStart)
+                    continue;
 
                 if(!highPloidyChromosomes.contains(var.chromosome(useStart)))
                     highPloidyChromosomes.add(var.chromosome(useStart));
@@ -2111,8 +2116,8 @@ public class ClusterAnalyser {
             // check vs next
             if(i == ploidyList.size() - 1)
             {
-                LOGGER.info(String.format("cluster(%s count=%d) DM highPloidyCount(%d) currentSV(%s) ploidy(%.2f) with no others",
-                        cluster.id(), cluster.getUniqueSvCount(), svsAboveThreshold, var.posId(), ploidy));
+                LOGGER.debug(String.format("cluster(%s count=%d) DM highPloidyCount(%d chr=%d) currentSV(%s) ploidy(%.2f) with no others",
+                        cluster.id(), cluster.getUniqueSvCount(), svsAboveThreshold, highPloidyChromosomes.size(), var.posId(), ploidy));
                 isPotentialDM = true;
                 break;
             }
@@ -2122,8 +2127,9 @@ public class ClusterAnalyser {
 
                 if(nextPloidy * DOUBLE_MINUTE_PLOIDY_GAP_RATIO < ploidy)
                 {
-                    LOGGER.info(String.format("cluster(%s count=%d) DM highPloidyCount(%d) currentSV(%s) ploidy(%.2f) vs next(%.3f)",
-                            cluster.id(), cluster.getUniqueSvCount(), svsAboveThreshold, indexSvList.get(i).posId(), ploidy, nextPloidy));
+                    LOGGER.debug(String.format("cluster(%s count=%d) DM highPloidyCount(%d chr=%d) currentSV(%s) ploidy(%.2f) vs next(%.3f)",
+                            cluster.id(), cluster.getUniqueSvCount(), svsAboveThreshold, highPloidyChromosomes.size(),
+                            indexSvList.get(i).posId(), ploidy, nextPloidy));
                     isPotentialDM = true;
                     break;
                 }
@@ -2133,10 +2139,33 @@ public class ClusterAnalyser {
         if(isPotentialDM)
         {
             // check for high ploidy in other variants on the relevant chromosomes
+            boolean otherClustersHaveHighPloidy = false;
 
+            for(final String chromsome : highPloidyChromosomes)
+            {
+                final List<SvBreakend> breakendList = mClusteringMethods.getChrBreakendMap().get(chromsome);
 
+                if(breakendList == null)
+                    continue;
 
-            cluster.addAnnotation(CLUSTER_ANNONTATION_DM);
+                for(final SvBreakend breakend : breakendList)
+                {
+                    if(breakend.getSV().getCluster() == cluster)
+                        continue;
+
+                    if(breakend.getSV().getSvData().ploidy() * DOUBLE_MINUTE_PLOIDY_GAP_RATIO >= minPloidyAboveThreshold)
+                    {
+                        otherClustersHaveHighPloidy = true;
+                        break;
+                    }
+                }
+
+                if(otherClustersHaveHighPloidy)
+                    break;
+            }
+
+            final String dmAnnotation = otherClustersHaveHighPloidy ? CLUSTER_ANNONTATION_DM + "_Unclear" : CLUSTER_ANNONTATION_DM;
+            cluster.addAnnotation(dmAnnotation);
         }
 
         /*

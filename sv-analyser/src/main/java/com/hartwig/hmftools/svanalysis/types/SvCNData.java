@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.svanalysis.types;
 
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
+import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 
 public class SvCNData {
 
@@ -15,12 +16,6 @@ public class SvCNData {
     final private int mBafCount;
     final private double mObservedBaf;
     final private double mActualBaf;
-
-    public static String CN_SEG_NONE = "NONE";
-    public static String CN_SEG_UNKNOWN = "UNKNOWN";
-    public static String CN_SEG_TELOMERE = "TELOMERE";
-    public static String CN_SEG_CENTROMERE = "CENTROMERE";
-    public static String CN_SEG_MULTIPLE = "MULTIPLE";
 
     public SvCNData(final int Id, final String Chromosome, long StartPos, long EndPos,
             final String SegStart, final String SegEnd, int bafCount, double observedBaf, double actualBaf,
@@ -66,6 +61,11 @@ public class SvCNData {
     public int bafCount() { return mBafCount; }
     public double observedBaf() { return mObservedBaf; }
     public double actualBaf() { return mActualBaf; }
+
+    public boolean matchesSegment(SegmentSupport segment, boolean isStart)
+    {
+        return isStart ? mSegStart.equals(segment.toString()) : mSegEnd.equals(segment.toString());
+    }
 
     public final String asString() { return String.format("id=%s pos=%s:%d", mId, mChromosome, mStartPos); }
 

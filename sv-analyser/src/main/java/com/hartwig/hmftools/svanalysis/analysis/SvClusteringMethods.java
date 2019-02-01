@@ -116,7 +116,7 @@ public class SvClusteringMethods {
         mProximityDistance = proximityLength;
 
         mChrBreakendMap = new HashMap();
-        mChromosomeCopyNumberMap = null;
+        mChromosomeCopyNumberMap = new HashMap();
         mSampleLohData = null;
     }
 
@@ -478,9 +478,13 @@ public class SvClusteringMethods {
 
         lohList = lohList.stream().filter(x -> !x.Skipped).collect(Collectors.toList());
 
+        String currentChromosome = "";
+        List<SvBreakend> breakendList = null;
+
         for(final SvLOH lohEvent : lohList)
         {
-            if(lohEvent.StartSV.isEmpty() || lohEvent.EndSV.isEmpty() || lohEvent.StartSV.equals(LOH_NO_SV) || lohEvent.EndSV.equals(LOH_NO_SV))
+            if((lohEvent.StartSV.isEmpty() && lohEvent.EndSV.isEmpty())
+            || (lohEvent.StartSV.equals(LOH_NO_SV) && lohEvent.EndSV.equals(LOH_NO_SV)))
                 continue;
 
             SvCluster lohClusterStart = null;
@@ -488,28 +492,35 @@ public class SvClusteringMethods {
             SvCluster lohClusterEnd = null;
             SvVarData lohSvEnd = null;
 
-            for(SvCluster cluster : clusters)
+            // use the breakend table to find matching SVs
+            if(breakendList == null || !currentChromosome.equals(lohEvent.Chromosome))
             {
-                if(cluster.hasLinkingLineElements())
-                    continue;
-
-                for(final SvVarData var : cluster.getSVs())
-                {
-                    if(var.id().equals(lohEvent.StartSV))
-                    {
-                        lohClusterStart = cluster;
-                        lohSvStart = var;
-                    }
-                    if(var.id().equals(lohEvent.EndSV))
-                    {
-                        lohClusterEnd = cluster;
-                        lohSvEnd = var;
-                    }
-
-                    if(lohSvStart != null && lohSvEnd != null)
-                        break;
-                }
+                breakendList = mChrBreakendMap.get(lohEvent.Chromosome);
+                currentChromosome = lohEvent.Chromosome;
             }
+
+            for(final SvBreakend breakend : breakendList)
+            {
+                if(breakend.getSV().id().equals(lohEvent.StartSV))
+                {
+                    lohClusterStart = breakend.getSV().getCluster();
+                    lohSvStart = breakend.getSV();
+                    lohEvent.setBreakend(breakend, true);
+                }
+
+                if(breakend.getSV().id().equals(lohEvent.EndSV))
+                {
+                    lohClusterEnd = breakend.getSV().getCluster();
+                    lohSvEnd = breakend.getSV();
+                    lohEvent.setBreakend(breakend, false);
+                }
+
+                if(lohEvent.matchedBothSVs())
+                    break;
+            }
+
+            if(!lohEvent.IsValid)
+                continue; // cannot be used for clustering
 
             if(lohClusterEnd == null || lohClusterStart == null)
             {
@@ -519,6 +530,10 @@ public class SvClusteringMethods {
 
             if(lohClusterStart == lohClusterEnd)
                 continue;
+
+            if(lohClusterStart.hasLinkingLineElements() || lohClusterEnd.hasLinkingLineElements())
+                continue;
+
 
             LOGGER.debug("cluster({} svs={}) merges in other cluster({} svs={}) on LOH event(sv1={} sv2={} len={})",
                     lohClusterStart.id(), lohClusterStart.getUniqueSvCount(), lohClusterEnd.id(), lohClusterEnd.getUniqueSvCount(),

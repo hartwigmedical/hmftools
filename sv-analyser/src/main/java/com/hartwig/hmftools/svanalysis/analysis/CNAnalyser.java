@@ -6,13 +6,11 @@ import static java.lang.Math.min;
 import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.common.io.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.common.purple.segment.SegmentSupport.CENTROMERE;
+import static com.hartwig.hmftools.common.purple.segment.SegmentSupport.TELOMERE;
+import static com.hartwig.hmftools.common.purple.segment.SegmentSupport.UNKNOWN;
 import static com.hartwig.hmftools.common.variant.structural.annotation.SvPONAnnotator.PON_FILTER_PON;
 import static com.hartwig.hmftools.svanalysis.analysis.ClusterAnalyser.SHORT_TI_LENGTH;
-import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.getChromosomalArmLength;
-import static com.hartwig.hmftools.svanalysis.types.SvCNData.CN_SEG_NONE;
-import static com.hartwig.hmftools.svanalysis.types.SvCNData.CN_SEG_UNKNOWN;
-import static com.hartwig.hmftools.svanalysis.types.SvCNData.CN_SEG_TELOMERE;
-import static com.hartwig.hmftools.svanalysis.types.SvCNData.CN_SEG_CENTROMERE;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.NONE_SEGMENT_INFERRED;
 
 import java.io.BufferedReader;
@@ -20,18 +18,13 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 
-import com.hartwig.hmftools.common.amber.qc.AmberQCStatus;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 import com.hartwig.hmftools.common.variant.structural.ImmutableStructuralVariantData;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantData;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 
-import java.nio.file.StandardOpenOption;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -64,8 +57,8 @@ public class CNAnalyser {
 
     private static final String COPY_NUMBER_FILE = "cn_file";
 
-    private static double CN_ROUNDING= 0.2;
     public static double MIN_LOH_CN = 0.5;
+    public static double TOTAL_CN_LOSS = 0.5;
 
     public CNAnalyser(final String outputPath, DatabaseAccess dbAccess)
     {
@@ -137,9 +130,12 @@ public class CNAnalyser {
 
     private StructuralVariantData findSvData(final SvCNData cnData, int requiredOrient)
     {
-        if(cnData.segStart().equals(CN_SEG_UNKNOWN)
-        || cnData.segStart().equals(CN_SEG_TELOMERE) || cnData.segStart().equals(CN_SEG_CENTROMERE))
+        if(cnData.matchesSegment(UNKNOWN, true)
+        || cnData.matchesSegment(TELOMERE, true)
+        || cnData.matchesSegment(CENTROMERE, true))
+        {
             return null;
+        }
 
         long svPosition = requiredOrient == -1 ? cnData.startPos() : cnData.startPos() - 1;
 
@@ -162,9 +158,270 @@ public class CNAnalyser {
         return null;
     }
 
+    private boolean isSingleVariant(final SvCNData cnData)
+    {
+        for(final StructuralVariantData var : mSvDataList)
+        {
+            if(var.filter().equals(PON_FILTER_PON))
+                continue;
+
+            long svPosStart = var.startOrientation() == -1 ? cnData.startPos() : cnData.startPos() - 1;
+            long svPosEnd = cnData.endPos() + 1;
+
+            if(var.startChromosome().equals(cnData.chromosome()) && var.startPosition() == svPosStart && var.endPosition() == svPosEnd)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     public final Map<String, List<SvLOH>> getSampleLohData() { return mSampleLohData; }
 
-    private static int LOH_COLUMN_COUNT = 17;
+    // private static String SPECIFIC_CHR = "17";
+    private static String SPECIFIC_CHR = "";
+    private static int REMOTE_SV_DISTANCE = 1000000;
+
+    private void findLohEvents(final String sampleId, List<SvCNData> cnDataList)
+    {
+        String currentChr = "";
+
+        // walk through the CN records looking for any loss of hetrozygosity, defined as a change in the actual baf to zero
+        // and when CN rises back above this level, consider the section ended
+        boolean isLohSection = false;
+        double lohMinCN = 0;
+        double lastMinCN = 0;
+        double priorCN = 0; // before the LOH segment
+        int lohSegments = 0;
+        SvCNData lohStartCN = null;
+        int lohSectionCount = 0;
+        int lohSVsMatchedCount = 0;
+        boolean lohOnStartTelomere = false;
+        boolean totalLoss = false;StructuralVariantData totalLossSv = null;
+
+        for(int index = 0; index < cnDataList.size(); ++index)
+        {
+            final SvCNData cnData = cnDataList.get(index);
+
+            double minCN = (1 - cnData.actualBaf()) * cnData.copyNumber();
+
+            boolean newChromosome = currentChr.isEmpty() || (!currentChr.isEmpty() && !cnData.chromosome().equals(currentChr));
+            boolean reset = newChromosome;
+
+            if(newChromosome && cnData.chromosome().equals(SPECIFIC_CHR))
+            {
+                LOGGER.debug("spec chr({})", SPECIFIC_CHR);
+            }
+
+            if(isLohSection || lohOnStartTelomere)
+            {
+                if(minCN >= MIN_LOH_CN || reset)
+                {
+                    // check for a short isolated TI and if found continue with the LOH
+                    if(minCN >= MIN_LOH_CN && cnData.endPos() - cnData.startPos() <= SHORT_TI_LENGTH && index < cnDataList.size() - 1)
+                    {
+                        final SvCNData nextData = cnDataList.get(index+1);
+                        double nextMinCN = (1 - nextData.actualBaf()) * nextData.copyNumber();
+
+                        if(nextData.endPos() - cnData.startPos() > REMOTE_SV_DISTANCE && nextMinCN < MIN_LOH_CN
+                        && lohStartCN!= null && cnData.startPos() - lohStartCN.startPos() > REMOTE_SV_DISTANCE)
+                        {
+                            LOGGER.debug("chr({}) skipping short isolated TI(id={} {} pos={} length={})",
+                                    currentChr, cnData.id(), cnData.segStart(), cnData.startPos(), cnData.endPos() - cnData.startPos());
+
+                            writeLOHData(sampleId, currentChr, cnData, nextData, priorCN, lohMinCN,
+                                    1, false, true, false);
+                            continue;
+                        }
+                    }
+
+                    if(lohOnStartTelomere || totalLoss)
+                    {
+                        // LOH section invalidated
+                        writeLOHData(sampleId, currentChr, lohStartCN, cnData, priorCN, lohMinCN,
+                                lohSegments, false, false, !totalLoss);
+
+                        lohOnStartTelomere = false;
+                        totalLoss = false;
+                    }
+                    else
+                    {
+                        // log all relevant data for this completed section
+                        lohSVsMatchedCount += writeLOHData(sampleId, currentChr, lohStartCN, cnData, priorCN, lohMinCN,
+                                lohSegments, false, false, true);
+                        ++lohSectionCount;
+                    }
+
+                    reset = true;
+                }
+                else if(cnData.segEnd().equals(TELOMERE))
+                {
+                    // rest of arm was lost so no linking SV for LOH section - but still record the event
+                    writeLOHData(sampleId, currentChr, lohStartCN, cnData, priorCN, lohMinCN,
+                            lohSegments, true, false, true);
+                    reset = true;
+                }
+                else if(cnData.copyNumber() < TOTAL_CN_LOSS)
+                {
+                    // other chromatid loss has occurred - this will cancel a valid LOH due to uncertainty unless due to a simple SV
+                    if(cnData.matchesSegment(SegmentSupport.DEL, true)
+                    && cnData.matchesSegment(SegmentSupport.DEL, false)
+                    && isSingleVariant(cnData))
+                    {
+                        LOGGER.debug("total CN loss matches single SV({} : {} -> {})",
+                                currentChr, cnData.startPos(), cnData.endPos());
+                    }
+                    else
+                    {
+                        totalLoss = true;
+                    }
+                }
+                else
+                {
+                    ++lohSegments;
+                    lohMinCN = min(lohMinCN, minCN);
+                }
+            }
+            else if(!reset)
+            {
+                if (minCN < MIN_LOH_CN)
+                {
+                    // new LOH section identified
+                    isLohSection = true;
+                    lohSegments = 1;
+                    lohStartCN = cnData;
+                    lohMinCN = minCN;
+                    priorCN = lastMinCN;
+
+                    if(lohOnStartTelomere)
+                    {
+                        LOGGER.debug("chr({}) LOH at telemore", currentChr);
+                    }
+                    else
+                    {
+                        LOGGER.debug(String.format("chr(%s) starting LOH at pos(%d) minCN(%.3f cn=%.3f baf=%.3f) priorCN(%.3f)",
+                                currentChr, cnData.startPos(), cnData.copyNumber(), cnData.actualBaf(), lohMinCN, priorCN));
+                    }
+                }
+            }
+
+            if(reset)
+            {
+                isLohSection = false;
+                lohOnStartTelomere = false;
+                lohSegments = 0;
+                lohStartCN = null;
+                totalLoss = false;
+
+                if(newChromosome && (minCN < MIN_LOH_CN))
+                {
+                    lohOnStartTelomere = true;
+                    lohStartCN = cnData;
+                }
+
+                currentChr = cnData.chromosome();
+            }
+
+            lastMinCN = minCN;
+        }
+
+        LOGGER.info("sample({}) LOH sections({}) fullMatched({})",
+                sampleId, lohSectionCount, lohSVsMatchedCount);
+    }
+
+    private int writeLOHData(final String sampleId, final String chr, SvCNData startData, SvCNData endData,
+            double lastMinCN, double lohMinCN, int segCount, boolean incomplete, boolean skipped, boolean isValid)
+    {
+        try
+        {
+            if (mFileWriter == null)
+            {
+                String outputFileName = mOutputPath;
+
+                if (!outputFileName.endsWith("/"))
+                    outputFileName += File.separator;
+
+                outputFileName += "CN_LOH_EVENTS.csv";
+
+                mFileWriter = createBufferedWriter(outputFileName, false);
+
+                // SV info
+                mFileWriter.write("SampleId,Chromosome,CnIdStart,CnIdEnd,PosStart,PosEnd,SegStart,SegEnd,");
+                mFileWriter.write("PrevCN,StartCN,EndCN,MinCN,SegCount,Length,StartSV,EndSV,Skipped,IsValid");
+                mFileWriter.newLine();
+            }
+
+            StructuralVariantData startSvData = findSvData(startData, !skipped ? 1 : -1);
+
+            StructuralVariantData endSvData = null;
+            long lohLength = 0;
+
+            if(incomplete)
+            {
+                // ended at the telomere
+                lohLength = endData.endPos() - startData.startPos();
+                endSvData = null;
+            }
+            else if(endData.chromosome().equals(chr) && !startData.matchesSegment(TELOMERE, false))
+            {
+                lohLength = endData.startPos() - startData.startPos();
+                endSvData = findSvData(endData, !skipped ? -1 : 1);
+            }
+            else
+            {
+                // segment has either started and finished on the last (telomere) segment or finished the next chromosome
+                endData = startData;
+                lohLength = startData.endPos() - startData.startPos() + 1;
+            }
+
+            if(lohLength <= 0)
+            {
+                LOGGER.warn("negative length({})", lohLength);
+            }
+
+            if (startSvData != null && endSvData != null)
+            {
+                if (startSvData.id().equals(endSvData.id()))
+                {
+                    LOGGER.debug("sample({}) cnID({} -> {}) matches singleSV({} - {})",
+                            sampleId, startData.asString(), endData.asString(), startSvData.id(), startSvData.type());
+                }
+                else
+                {
+                    LOGGER.debug("sample({}) cnID({} -> {}) matches pairSV({} -> {})",
+                            sampleId, startData.asString(), endData.asString(), startSvData.id(), endSvData.id());
+                }
+            }
+            else
+            {
+                LOGGER.debug("sample({}) cnID({} -  -> {}) not fully matched pairSV({} -> {})",
+                        sampleId, startData.asString(), startData.segStart(), endData.asString(), endData.segStart(),
+                        startSvData != null ? startSvData.id() : "", endSvData != null ? endSvData.id() : "");
+            }
+
+            mFileWriter.write(String.format("%s,%s,%d,%d,%d,%d,%s,%s",
+                    sampleId, chr, startData.id(), endData.id(), startData.startPos(), endData.startPos(),
+                    startData.segStart(), incomplete ? endData.segEnd() : endData.segStart()));
+
+            mFileWriter.write(String.format(",%.4f,%.4f,%.4f,%.4f,%d,%d,%s,%s,%s,%s",
+                    lastMinCN, (1 - startData.actualBaf()) * startData.copyNumber(), (1 - endData.actualBaf()) * endData.copyNumber(),
+                    lohMinCN, segCount, lohLength,
+                    startSvData != null ? startSvData.id() : "0", endSvData != null ? endSvData.id() : "0",
+                    skipped, isValid));
+
+            mFileWriter.newLine();
+
+            return (startSvData != null && endSvData != null) ? 1 : 0;
+        }
+        catch (final IOException e)
+        {
+            LOGGER.error("error writing to copy number LOH outputFile: {}", e.toString());
+            return 0;
+        }
+    }
+
+    private static int LOH_COLUMN_COUNT = 18;
 
     public void loadLOHFromCSV(final String filename, final String specificSample)
     {
@@ -234,7 +491,8 @@ public class CNAnalyser {
                         Long.parseLong(items[13]),
                         items[14],
                         items[15],
-                        Boolean.parseBoolean(items[16]));
+                        Boolean.parseBoolean(items[16]),
+                        Boolean.parseBoolean(items[17]));
 
                 lohDataList.add(lohData);
             }
@@ -242,235 +500,6 @@ public class CNAnalyser {
         catch (IOException e)
         {
             LOGGER.error("Failed to read LOH CSV file({}): {}", filename, e.toString());
-        }
-    }
-
-    // private static String SPECIFIC_CHR = "14";
-    private static String SPECIFIC_CHR = "";
-    private static int REMOTE_SV_DISTANCE = 1000000;
-
-    private void findLohEvents(final String sampleId, List<SvCNData> cnDataList)
-    {
-        String currentChr = "";
-
-        // walk through the CN records looking for any loss of hetrozygosity, defined as a change in the actual baf to zero
-        // and when CN rises back above this level, consider the section ended
-        boolean isLohSection = false;
-        double lohMinCN = 0;
-        double lastMinCN = 0;
-        double priorCN = 0; // before the LOH segment
-        int lohSegments = 0;
-        SvCNData lohStartCN = null;
-        int lohSectionCount = 0;
-        int lohSVsMatchedCount = 0;
-        boolean lohOnStartTelomere = false;
-        boolean totalLoss = false;
-
-        for(int index = 0; index < cnDataList.size(); ++index)
-        {
-            final SvCNData cnData = cnDataList.get(index);
-
-            double minCN = (1 - cnData.actualBaf()) * cnData.copyNumber();
-
-            boolean newChromosome = currentChr.isEmpty() || (!currentChr.isEmpty() && !cnData.chromosome().equals(currentChr));
-            boolean reset = newChromosome;
-
-            if(newChromosome && cnData.chromosome().equals(SPECIFIC_CHR))
-            {
-                LOGGER.debug("spec chr({})", SPECIFIC_CHR);
-            }
-
-            if(isLohSection || lohOnStartTelomere)
-            {
-                if(minCN >= MIN_LOH_CN || reset)
-                {
-                    // check for a short isolated TI and if found continue with the LOH
-                    if(minCN >= MIN_LOH_CN && cnData.endPos() - cnData.startPos() <= SHORT_TI_LENGTH && index < cnDataList.size() - 1)
-                    {
-                        final SvCNData nextData = cnDataList.get(index+1);
-                        double nextMinCN = (1 - nextData.actualBaf()) * nextData.copyNumber();
-
-                        if(nextData.endPos() - cnData.startPos() > REMOTE_SV_DISTANCE && nextMinCN < MIN_LOH_CN
-                        && lohStartCN!= null && cnData.startPos() - lohStartCN.startPos() > REMOTE_SV_DISTANCE)
-                        {
-                            LOGGER.debug("chr({}) skipping short isolated TI(id={} {} pos={} length={})",
-                                    currentChr, cnData.id(), cnData.segStart(), cnData.startPos(), cnData.endPos() - cnData.startPos());
-
-                            writeLOHData(sampleId, currentChr, cnData, nextData, priorCN, lohMinCN, 1, false, true);
-                            continue;
-                        }
-                    }
-
-                    if(lohOnStartTelomere || totalLoss)
-                    {
-                        // LOH section invalidated
-                        if(lohOnStartTelomere)
-                            writeLOHData(sampleId, currentChr, lohStartCN, cnData, priorCN, lohMinCN, lohSegments, false, false);
-
-                        lohOnStartTelomere = false;
-                        totalLoss = false;
-                    }
-                    else
-                    {
-                        // log all relevant data for this completed section
-                        lohSVsMatchedCount += writeLOHData(sampleId, currentChr, lohStartCN, cnData, priorCN, lohMinCN, lohSegments, false, false);
-                        ++lohSectionCount;
-                    }
-
-                    reset = true;
-                }
-                else if(cnData.segEnd().equals(CN_SEG_TELOMERE))
-                {
-                    // rest of arm was lost so no linking SV for LOH section - but still record the event
-                    writeLOHData(sampleId, currentChr, lohStartCN, cnData, priorCN, lohMinCN, lohSegments, true, false);
-                    reset = true;
-                }
-                else if(cnData.copyNumber() < 0.5)
-                {
-                    // other chromatid loss has occurred
-                    totalLoss = true;
-                }
-                else
-                {
-                    ++lohSegments;
-                    lohMinCN = min(lohMinCN, minCN);
-                }
-            }
-            else if(!reset)
-            {
-                if (minCN < MIN_LOH_CN)
-                {
-                    // new LOH section identified
-                    isLohSection = true;
-                    lohSegments = 1;
-                    lohStartCN = cnData;
-                    lohMinCN = minCN;
-                    priorCN = lastMinCN;
-
-                    if(lohOnStartTelomere)
-                    {
-                        LOGGER.debug("chr({}) LOH at telemore", currentChr);
-                    }
-                    else
-                    {
-                        LOGGER.debug(String.format("chr(%s) starting LOH at pos(%d) minCN(%.3f cn=%.3f baf=%.3f) priorCN(%.3f)",
-                                currentChr, cnData.startPos(), cnData.copyNumber(), cnData.actualBaf(), lohMinCN, priorCN));
-                    }
-                }
-            }
-
-            if(reset)
-            {
-                isLohSection = false;
-                lohOnStartTelomere = false;
-                lohSegments = 0;
-                lohStartCN = null;
-                totalLoss = false;
-
-                if(newChromosome && (minCN < MIN_LOH_CN))
-                {
-                    lohOnStartTelomere = true;
-                    lohStartCN = cnData;
-                }
-
-                currentChr = cnData.chromosome();
-            }
-
-            lastMinCN = minCN;
-        }
-
-        LOGGER.info("sample({}) LOH sections({}) fullMatched({})",
-                sampleId, lohSectionCount, lohSVsMatchedCount);
-    }
-
-    private int writeLOHData(final String sampleId, final String chr, SvCNData startData, SvCNData endData,
-            double lastMinCN, double lohMinCN, int segCount, boolean incomplete, boolean skipped)
-    {
-        try
-        {
-            if (mFileWriter == null)
-            {
-                String outputFileName = mOutputPath;
-
-                if (!outputFileName.endsWith("/"))
-                    outputFileName += File.separator;
-
-                outputFileName += "CN_LOH_EVENTS.csv";
-
-                mFileWriter = createBufferedWriter(outputFileName, false);
-
-                // SV info
-                mFileWriter.write("SampleId,Chromosome,CnIdStart,CnIdEnd,PosStart,PosEnd,SegStart,SegEnd,");
-                mFileWriter.write("PrevCN,StartCN,EndCN,MinCN,SegCount,Length,StartSV,EndSV,Skipped");
-                mFileWriter.newLine();
-            }
-
-            StructuralVariantData startSvData = findSvData(startData, !skipped ? 1 : -1);
-
-            StructuralVariantData endSvData = null;
-            long lohLength = 0;
-
-            if(incomplete)
-            {
-                // ended at the telomere
-                lohLength = endData.endPos() - startData.startPos();
-                endSvData = null;
-            }
-            else if(endData.chromosome().equals(chr) && !startData.segEnd().equals(CN_SEG_TELOMERE))
-            {
-                lohLength = endData.startPos() - startData.startPos();
-                endSvData = findSvData(endData, !skipped ? -1 : 1);
-            }
-            else
-            {
-                // segment has either started and finished on the last (telomere) segment or finished the next chromosome
-                endData = startData;
-                lohLength = startData.endPos() - startData.startPos() + 1;
-            }
-
-            if(lohLength <= 0)
-            {
-                LOGGER.warn("negative length({})", lohLength);
-            }
-
-            if (startSvData != null && endSvData != null)
-            {
-                if (startSvData.id().equals(endSvData.id()))
-                {
-                    LOGGER.debug("sample({}) cnID({} -> {}) matches singleSV({} - {})",
-                            sampleId, startData.asString(), endData.asString(), startSvData.id(), startSvData.type());
-                }
-                else
-                {
-                    LOGGER.debug("sample({}) cnID({} -> {}) matches pairSV({} -> {})",
-                            sampleId, startData.asString(), endData.asString(), startSvData.id(), endSvData.id());
-                }
-            }
-            else
-            {
-                LOGGER.debug("sample({}) cnID({} -  -> {}) not fully matched pairSV({} -> {})",
-                        sampleId, startData.asString(), startData.segStart(), endData.asString(), endData.segStart(),
-                        startSvData != null ? startSvData.id() : "", endSvData != null ? endSvData.id() : "");
-            }
-
-            mFileWriter.write(String.format("%s,%s,%d,%d,%d,%d,%s,%s",
-                    sampleId, chr, startData.id(), endData.id(), startData.startPos(), endData.startPos(),
-                    startData.segStart(), incomplete ? endData.segEnd() : endData.segStart()));
-
-            mFileWriter.write(String.format(",%.4f,%.4f,%.4f,%.4f,%d,%d,%s,%s,%s",
-                    lastMinCN, (1 - startData.actualBaf()) * startData.copyNumber(), (1 - endData.actualBaf()) * endData.copyNumber(),
-                    lohMinCN, segCount, lohLength,
-                    startSvData != null ? startSvData.id() : "0", endSvData != null ? endSvData.id() : "0",
-                    skipped));
-
-            mFileWriter.newLine();
-
-            return (startSvData != null && endSvData != null) ? 1 : 0;
-        }
-        catch (final IOException e)
-        {
-            LOGGER.error("error writing to copy number LOH outputFile: {}", e.toString());
-            return 0;
         }
     }
 
@@ -486,17 +515,17 @@ public class CNAnalyser {
 
         for(final PurpleCopyNumber cnRecord : cnRecords)
         {
-            if(cnRecord.segmentStartSupport().equals(SegmentSupport.TELOMERE))
+            if(cnRecord.segmentStartSupport().equals(TELOMERE))
             {
                 currentChrData = new double[Q_ARM_TELOMERE_CN+1];
                 chrMap.put(cnRecord.chromosome(), currentChrData);
                 currentChrData[P_ARM_TELOMERE_CN] = cnRecord.averageTumorCopyNumber();
             }
-            else if(cnRecord.segmentStartSupport().equals(SegmentSupport.CENTROMERE))
+            else if(cnRecord.segmentStartSupport().equals(CENTROMERE))
             {
                 currentChrData[CENTROMERE_CN] = cnRecord.averageTumorCopyNumber();
             }
-            else if(cnRecord.segmentEndSupport().equals(SegmentSupport.TELOMERE))
+            else if(cnRecord.segmentEndSupport().equals(TELOMERE))
             {
                 currentChrData[Q_ARM_TELOMERE_CN] = cnRecord.averageTumorCopyNumber();
             }
@@ -520,9 +549,10 @@ public class CNAnalyser {
             if(prevCnRecord.segmentEndSupport() != SegmentSupport.NONE || noneCnRecord.segmentStartSupport() != SegmentSupport.NONE)
                 continue;
 
-            double copyNumber = noneCnRecord.averageTumorCopyNumber();
-            double copyNumberDiff = copyNumber - prevCnRecord.averageTumorCopyNumber();
+            double segmentCopyNumber = noneCnRecord.averageTumorCopyNumber();
+            double copyNumberDiff = segmentCopyNumber - prevCnRecord.averageTumorCopyNumber();
             double copyNumberChange = abs(copyNumberDiff);
+            double copyNumber = prevCnRecord.averageTumorCopyNumber();
 
             // negative CN change means sequence has come in from left (a lower position) and dropped at the breakend
             byte orientation = copyNumberDiff > 0 ? (byte)-1 : 1;
