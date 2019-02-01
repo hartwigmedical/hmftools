@@ -281,6 +281,7 @@ public class DriverGeneAnnotator
         SvBreakend preStartBreakend = null;
         SvBreakend postEndBreakend = null;
 
+        SvLOH matchedLohEvent = null;
         if(startBreakend != null && endBreakend != null)
         {
             for (final SvLOH lohEvent : mSampleLOHData)
@@ -288,6 +289,7 @@ public class DriverGeneAnnotator
                 if(lohEvent.Chromosome.equals(startBreakend.chromosome())
                 && lohEvent.PosStart <= startBreakend.position() && lohEvent.PosEnd >= endBreakend.position())
                 {
+                    matchedLohEvent = lohEvent;
                     preStartBreakend = lohEvent.getBreakend(true);
                     postEndBreakend = lohEvent.getBreakend(false);
                     break;
@@ -304,13 +306,18 @@ public class DriverGeneAnnotator
             // search for a whole arm or chromatid LOH event
             writeDriverData(driverGene, region);
         }
+        else if(preStartBreakend != null && postEndBreakend != null)
+        {
+            annotateDelSV(preStartBreakend, driverGene, region, "LOH");
+            annotateDelSV(postEndBreakend, driverGene, region, "LOH");
+        }
+        else if(preStartBreakend != null)
+        {
+            annotateDelSV(preStartBreakend, driverGene, region, "LOH_" + matchedLohEvent.SegEnd);
+        }
         else
         {
-            if (preStartBreakend != null)
-                annotateDelSV(preStartBreakend, driverGene, region, "LOH");
-
-            if (postEndBreakend != null)
-                annotateDelSV(postEndBreakend, driverGene, region, "LOH");
+           annotateDelSV(postEndBreakend, driverGene, region, "LOH_" + matchedLohEvent.SegStart);
         }
     }
 
@@ -378,11 +385,20 @@ public class DriverGeneAnnotator
                 break;
             }
 
-            if(startBreakend != null)
-                annotateDelSV(startBreakend, driverGene, region, "LOH");
 
-            if(endBreakend != null)
+            if(startBreakend != null && endBreakend != null)
+            {
+                annotateDelSV(startBreakend, driverGene, region, "LOH");
                 annotateDelSV(endBreakend, driverGene, region, "LOH");
+            }
+            else if(startBreakend != null)
+            {
+                annotateDelSV(startBreakend, driverGene, region, "LOH_" + lohEvent.SegEnd);
+            }
+            else
+            {
+                annotateDelSV(endBreakend, driverGene, region, "LOH_" + lohEvent.SegStart);
+            }
 
             return;
         }
