@@ -25,6 +25,7 @@ import com.google.gson.JsonSyntaxException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public final class LimsFactory {
 
@@ -40,16 +41,43 @@ public final class LimsFactory {
     @NotNull
     public static Lims fromLimsDirectory(@NotNull final String limsDirectory) throws IOException {
         Map<String, LimsJsonData> dataPerSample = readLimsJson(limsDirectory + File.separator + LIMS_JSON_FILE);
+        Map<String, LimsJsonDataSubmission> dataPerSubmission = readLimsJsonSubmission(limsDirectory + File.separator + LIMS_JSON_FILE);
         Map<String, LocalDate> preLIMSArrivalDates =
                 readPreLIMSArrivalDateCsv(limsDirectory + File.separator + PRE_LIMS_ARRIVAL_DATES_FILE);
         Set<String> samplesWithoutSamplingDate =
                 readSamplesWithoutSamplingDateCsv(limsDirectory + File.separator + SAMPLES_WITHOUT_SAMPLING_DATE_FILE);
-        return new Lims(dataPerSample, preLIMSArrivalDates, samplesWithoutSamplingDate);
+        return new Lims(dataPerSample, dataPerSubmission, preLIMSArrivalDates, samplesWithoutSamplingDate);
     }
 
     @NotNull
     public static Lims empty() {
-        return new Lims(Maps.newHashMap(), Maps.newHashMap(), Sets.newHashSet());
+        return new Lims(Maps.newHashMap(), Maps.newHashMap(), Maps.newHashMap(), Sets.newHashSet());
+    }
+
+    @NotNull
+    @VisibleForTesting
+    private static Map<String, LimsJsonDataSubmission> readLimsJsonSubmission(@NotNull final String limsJsonPath) throws FileNotFoundException {
+        final Gson gson = LimsSubmissionGsonAdapter.buildGsonSubmission();
+        final JsonObject jsonObject = new JsonParser().parse(new FileReader(limsJsonPath)).getAsJsonObject();
+        final Set<Map.Entry<String, JsonElement>> jsonSubmissions = jsonObject.getAsJsonObject("submissions").entrySet();
+        final Map<String, LimsJsonDataSubmission> limsDataPerSubmission = Maps.newHashMap();
+
+        jsonSubmissions.forEach(jsonSubmission -> {
+
+            final JsonObject jsonSampleObject = jsonSubmission.getValue().getAsJsonObject();
+            final String projectType = jsonSampleObject.get("project_type").getAsString();
+            if (projectType.contains("core")) {
+                try {
+                    final LimsJsonDataSubmission limsJsonDataSubmission = gson.fromJson(jsonSubmission.getValue(), LimsJsonDataSubmission.class);
+                    limsDataPerSubmission.put(limsJsonDataSubmission.submission(), limsJsonDataSubmission);
+                } catch (JsonSyntaxException e) {
+                    LOGGER.warn(
+                            "Could not convert json element to LimsJsonDataSubmission: " + jsonSubmission.getValue() + " - message:" + e.getMessage());
+                }
+            }
+        });
+
+        return limsDataPerSubmission;
     }
 
     @NotNull

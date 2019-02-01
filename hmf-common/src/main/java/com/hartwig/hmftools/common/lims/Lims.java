@@ -17,19 +17,41 @@ public class Lims {
     @NotNull
     private final Map<String, LimsJsonData> dataPerSample;
     @NotNull
+    private final Map<String, LimsJsonDataSubmission> dataPerSubmission;
+    @NotNull
     private final Map<String, LocalDate> preLimsArrivalDates;
     @NotNull
     private final Set<String> samplesWithoutSamplingDate;
 
-    public Lims(@NotNull final Map<String, LimsJsonData> dataPerSample, @NotNull final Map<String, LocalDate> preLimsArrivalDates,
+    public Lims(@NotNull final Map<String, LimsJsonData> dataPerSample, @NotNull final Map<String, LimsJsonDataSubmission> dataPerSubmission,
+            @NotNull final Map<String, LocalDate> preLimsArrivalDates,
             @NotNull final Set<String> samplesWithoutSamplingDate) {
         this.dataPerSample = dataPerSample;
+        this.dataPerSubmission = dataPerSubmission;
         this.preLimsArrivalDates = preLimsArrivalDates;
         this.samplesWithoutSamplingDate = samplesWithoutSamplingDate;
     }
 
     public int sampleCount() {
         return dataPerSample.size();
+    }
+
+    @Nullable
+    public String contactEmail(@NotNull final String submission) {
+        LimsJsonDataSubmission submissionData = dataPerSubmission.get(submission);
+        return submissionData != null ? submissionData.contactEmail() : "N/A";
+    }
+
+    @Nullable
+    public String contactName(@NotNull final String submission) {
+        LimsJsonDataSubmission submissionData = dataPerSubmission.get(submission);
+        return submissionData != null ? submissionData.contactName() : "N/A";
+    }
+
+    @Nullable
+    public String submission(@NotNull final String submission) {
+        LimsJsonDataSubmission submissionData = dataPerSubmission.get(submission);
+        return submissionData != null ? submissionData.submission() : "N/A";
     }
 
     @NotNull
@@ -45,7 +67,7 @@ public class Lims {
     }
 
     @NotNull
-    public String submission(@NotNull final String sample) {
+    public String submissionFromSample(@NotNull final String sample) {
         LimsJsonData sampleData = dataPerSample.get(sample);
         return sampleData != null ? sampleData.submission() : "N/A";
     }
