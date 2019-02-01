@@ -51,7 +51,6 @@ public class RecoverStructuralVariants implements Closeable {
     private static final double UNBALANCED_MIN_DEPTH_WINDOW_COUNT = 5;
     private static final int MIN_MATE_UNCERTAINTY = 150;
     private static final String AF_FILTERED = "af";
-    private static final String PON_FILTERED = "PON";
 
     private static final Comparator<RecoveredVariant> QUALITY_COMPARATOR = comparingDouble(x -> x.context().getPhredScaledQual());
 
@@ -250,7 +249,7 @@ public class RecoverStructuralVariants implements Closeable {
     @VisibleForTesting
     static boolean isAppropriatelyFiltered(@NotNull VariantContext variantContext) {
         final Set<String> filters = variantContext.getFilters();
-        return !filters.isEmpty() && !filters.contains(PON_FILTERED) && !filters.contains(AF_FILTERED);
+        return !filters.isEmpty() && !filters.contains(AF_FILTERED);
     }
 
     @NotNull

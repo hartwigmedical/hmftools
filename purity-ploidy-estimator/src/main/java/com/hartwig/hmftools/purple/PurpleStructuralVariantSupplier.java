@@ -84,7 +84,10 @@ class PurpleStructuralVariantSupplier {
         if (enabled()) {
             modified = true;
             final VariantContext unfiltered = new VariantContextBuilder(variantContext).unfiltered().attribute(RECOVERED_FLAG, true).make();
-            variantContexts.add(unfiltered);
+            if (variantContext.contains(unfiltered)) {
+                variantContexts.remove(unfiltered);
+                variantContexts.add(unfiltered);
+            }
         }
     }
 

@@ -10,8 +10,6 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.common.region.GenomeRegionFactory;
-import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
-import com.hartwig.hmftools.common.variant.structural.StructuralVariantFactory;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Before;
@@ -69,7 +67,7 @@ public class RecoverStructuralVariantsTest {
 
         assertTrue(RecoverStructuralVariants.isAppropriatelyFiltered(codec.decode(eligible)));
         assertFalse(RecoverStructuralVariants.isAppropriatelyFiltered(codec.decode(passing)));
-        assertFalse(RecoverStructuralVariants.isAppropriatelyFiltered(codec.decode(ponFiltered)));
+        assertTrue(RecoverStructuralVariants.isAppropriatelyFiltered(codec.decode(ponFiltered)));
         assertFalse(RecoverStructuralVariants.isAppropriatelyFiltered(codec.decode(afFiltered)));
     }
 
