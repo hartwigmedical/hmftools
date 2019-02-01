@@ -577,7 +577,7 @@ public class SvFusionAnalyser
 
                 // write upstream SV, transcript and exon info
                 writer.write(
-                        String.format(",%d,%s,%d,%d,%s,%.2f",
+                        String.format(",%d,%s,%d,%d,%s,%.6f",
                                 startVar.id(), startVar.chromosome(), startVar.position(), startVar.orientation(),
                                 startVar.type(), startVar.ploidy()));
 
@@ -596,7 +596,7 @@ public class SvFusionAnalyser
                                 upTrans.exonDistanceUp(), upTrans.isCanonical(), upTrans.bioType()));
 
                 writer.write(
-                        String.format(",%d,%s,%d,%d,%s,%.2f",
+                        String.format(",%d,%s,%d,%d,%s,%.6f",
                                 endVar.id(), endVar.chromosome(), endVar.position(), endVar.orientation(),
                                 endVar.type(), endVar.ploidy()));
 
