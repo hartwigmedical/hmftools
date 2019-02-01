@@ -32,6 +32,18 @@ public class Lims {
         return dataPerSample.size();
     }
 
+    @NotNull
+    public String labelSample(@NotNull final String sample) {
+        LimsJsonData sampleData = dataPerSample.get(sample);
+        return sampleData != null ? sampleData.labelSample() : "N/A";
+    }
+
+    @NotNull
+    public String projectNameDVO(@NotNull final String sample) {
+        LimsJsonData sampleData = dataPerSample.get(sample);
+        return sampleData != null ? sampleData.projectName() : "N/A";
+    }
+
     @Nullable
     public LocalDate arrivalDateForSample(@NotNull final String sample) {
         LimsJsonData sampleData = dataPerSample.get(sample);
@@ -82,11 +94,14 @@ public class Lims {
         if (sampleData != null) {
             String tumorPercentageString = sampleData.tumorPercentageString();
             String remarksSample = sampleData.labRemarks();
+            String labelSample = sampleData.labelSample();
             if (tumorPercentageString == null) {
                 return "N/A";
             } else if (tumorPercentageString.isEmpty() && remarksSample != null && remarksSample.contains("CPCTWIDE")) {
                 return "not determined";
             } else if (tumorPercentageString.isEmpty() && remarksSample != null && remarksSample.contains("ShallowSeq")) {
+                return "not determined";
+            } else if (tumorPercentageString.isEmpty()  && labelSample.equals("CORE")) {
                 return "not determined";
             }
 

@@ -25,12 +25,13 @@ public abstract class NotAnalysableReporter {
 
     public NotAnalysedPatientReport run(@NotNull final String sample, @NotNull final NotAnalysableReason reason,
             @Nullable final String comments) {
+        final Lims lims = baseReportData().limsModel();
+
         final NotAnalysableStudy study = NotAnalysableStudy.fromSample(sample);
         assert study != null;
 
         final PatientTumorLocation patientTumorLocation =
                 PatientTumorLocationFunctions.findPatientTumorLocationForSample(baseReportData().patientTumorLocations(), sample);
-        final Lims lims = baseReportData().limsModel();
 
         final SampleReport sampleReport = ImmutableSampleReport.of(sample,
                 patientTumorLocation,
@@ -38,12 +39,15 @@ public abstract class NotAnalysableReporter {
                 lims.arrivalDateForSample(sample),
                 null,
                 lims.labProceduresForSample(sample),
-                baseReportData().centerModel().getAddresseeStringForSample(sample));
+                lims.labelSample(sample).contains("CORE") ? "" : baseReportData().centerModel().getAddresseeStringForSample(sample),
+                lims.labelSample(sample),
+                lims.projectNameDVO(sample));
 
         return ImmutableNotAnalysedPatientReport.of(sampleReport,
                 reason,
                 study,
                 Optional.ofNullable(comments),
-                baseReportData().signaturePath(), baseReportData().logoRVAPath());
+                baseReportData().signaturePath(),
+                baseReportData().logoRVAPath());
     }
 }

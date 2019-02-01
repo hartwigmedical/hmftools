@@ -48,4 +48,11 @@ public abstract class SampleReport {
 
     @Nullable
     public abstract String recipient();
+
+    @NotNull
+    public abstract String label();
+
+    @Nullable
+    public abstract String projectNameDVO();
+
 }

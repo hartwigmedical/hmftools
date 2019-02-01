@@ -45,6 +45,8 @@ public class LimsJsonDataTest {
                 .primaryTumor("")
                 .labSopVersions(labSopVersions)
                 .labRemarks("")
+                .labelSample("")
+                .projectName("")
                 .build();
     }
 }

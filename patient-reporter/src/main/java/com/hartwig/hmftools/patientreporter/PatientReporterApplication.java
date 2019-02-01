@@ -175,12 +175,12 @@ public class PatientReporterApplication {
     private static boolean validInputForNonAnalysableReport(@NotNull final CommandLine cmd) {
         final NotAnalysableReason notAnalysableReason = NotAnalysableReason.fromIdentifier(cmd.getOptionValue(NOT_ANALYSABLE_REASON));
         final String notAnalysedSample = cmd.getOptionValue(NOT_ANALYSED_SAMPLE);
-
+        LOGGER.info("core: " + notAnalysedSample);
         if (notAnalysableReason == NotAnalysableReason.UNDEFINED) {
             LOGGER.warn(NOT_ANALYSABLE_REASON + " has to be low_tumor_percentage, low_dna_yield or post_analysis_fail.");
         } else if (notAnalysedSample == null) {
             LOGGER.warn(NOT_ANALYSED_SAMPLE + " has to be provided.");
-        } else if (NotAnalysableStudy.fromSample(notAnalysedSample) == null) {
+        } else if (NotAnalysableStudy.fromSample(notAnalysedSample) == null &&  !notAnalysedSample.contains("CORE")) {
             LOGGER.warn("Could not determine study for sample " + notAnalysedSample);
         } else {
             return true;

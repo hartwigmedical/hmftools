@@ -36,6 +36,8 @@ public class LimsTest {
                 .primaryTumor(primaryTumor)
                 .labSopVersions(labSopVersions)
                 .labRemarks(labRemarks)
+                .labelSample("")
+                .projectName("")
                 .build();
 
         final Lims lims = buildTestLimsWithJsonData(SAMPLE, data);
@@ -83,6 +85,8 @@ public class LimsTest {
                 .primaryTumor("anything")
                 .labSopVersions("anything")
                 .labRemarks("anything")
+                .labelSample("")
+                .projectName("")
                 .build();
 
         final Lims lims = buildTestLimsWithJsonData(SAMPLE, data);
