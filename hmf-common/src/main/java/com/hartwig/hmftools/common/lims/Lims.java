@@ -44,6 +44,12 @@ public class Lims {
         return sampleData != null ? sampleData.projectName() : "N/A";
     }
 
+    @NotNull
+    public String submission(@NotNull final String sample) {
+        LimsJsonData sampleData = dataPerSample.get(sample);
+        return sampleData != null ? sampleData.submission() : "N/A";
+    }
+
     @Nullable
     public LocalDate arrivalDateForSample(@NotNull final String sample) {
         LimsJsonData sampleData = dataPerSample.get(sample);

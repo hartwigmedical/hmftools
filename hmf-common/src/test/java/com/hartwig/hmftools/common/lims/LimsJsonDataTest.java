@@ -47,6 +47,7 @@ public class LimsJsonDataTest {
                 .labRemarks("")
                 .labelSample("")
                 .projectName("")
+                .submission("")
                 .build();
     }
 }

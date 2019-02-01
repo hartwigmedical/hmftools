@@ -38,6 +38,7 @@ public class LimsTest {
                 .labRemarks(labRemarks)
                 .labelSample("")
                 .projectName("")
+                .submission("")
                 .build();
 
         final Lims lims = buildTestLimsWithJsonData(SAMPLE, data);
@@ -87,6 +88,7 @@ public class LimsTest {
                 .labRemarks("anything")
                 .labelSample("")
                 .projectName("")
+                .submission("")
                 .build();
 
         final Lims lims = buildTestLimsWithJsonData(SAMPLE, data);
