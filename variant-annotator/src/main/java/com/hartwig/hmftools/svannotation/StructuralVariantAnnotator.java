@@ -239,8 +239,9 @@ public class StructuralVariantAnnotator {
             final String fastaFileLocation = mCmdLineArgs.getOptionValue(REF_GENOME);
             final IndexedFastaSequenceFile indexedFastaSequenceFile = new IndexedFastaSequenceFile(new File(fastaFileLocation));
 
-            LOGGER.debug("reading VCF File");
-            final List<StructuralVariant> variants = readFromVcf(mCmdLineArgs.getOptionValue(VCF_FILE));
+            final String vcfFile = mCmdLineArgs.getOptionValue(VCF_FILE);
+            LOGGER.info("Reading VCF File: {}", vcfFile);
+            final List<StructuralVariant> variants = readFromVcf(vcfFile);
 
             LOGGER.debug("enriching structural variants based on purple data");
             svList = enrichStructuralVariants(sampleId, indexedFastaSequenceFile, variants);
