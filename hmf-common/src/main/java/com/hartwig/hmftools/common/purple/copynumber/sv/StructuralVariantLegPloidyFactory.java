@@ -10,8 +10,6 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.chromosome.Chromosome;
 import com.hartwig.hmftools.common.numeric.Doubles;
-import com.hartwig.hmftools.common.position.GenomePosition;
-import com.hartwig.hmftools.common.position.GenomePositions;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.common.region.GenomeRegionSelector;
@@ -32,10 +30,10 @@ public class StructuralVariantLegPloidyFactory<T extends GenomeRegion> {
     @NotNull
     private final PurityAdjuster purityAdjuster;
     @NotNull
-    private final Function<T, Double> copyNumberExtractor;
+    private final StructuralVariantLegCopyNumberFactory<T> copyNumberFactory;
 
-
-    public StructuralVariantLegPloidyFactory(@NotNull final PurityAdjuster purityAdjuster, @NotNull final Function<T, Double> copyNumberExtractor) {
+    public StructuralVariantLegPloidyFactory(@NotNull final PurityAdjuster purityAdjuster,
+            @NotNull final Function<T, Double> copyNumberExtractor) {
         this(0, 0, purityAdjuster, copyNumberExtractor);
     }
 
@@ -44,7 +42,7 @@ public class StructuralVariantLegPloidyFactory<T extends GenomeRegion> {
         this.averageCopyNumber = averageCopyNumber;
         this.averageReadDepth = averageReadDepth;
         this.purityAdjuster = purityAdjuster;
-        this.copyNumberExtractor = copyNumberExtractor;
+        this.copyNumberFactory = new StructuralVariantLegCopyNumberFactory<>(copyNumberExtractor);
     }
 
     @NotNull
@@ -109,20 +107,19 @@ public class StructuralVariantLegPloidyFactory<T extends GenomeRegion> {
 
     @VisibleForTesting
     @NotNull
-    Optional<ModifiableStructuralVariantLegPloidy> create(@NotNull final StructuralVariantLeg leg, @NotNull final GenomeRegionSelector<T> selector) {
-        final GenomePosition svPositionLeft = GenomePositions.create(leg.chromosome(), leg.cnaPosition() - 1);
-        final GenomePosition svPositionRight = GenomePositions.create(leg.chromosome(), leg.cnaPosition());
-        final Optional<Double> left = selector.select(svPositionLeft).flatMap(x -> Optional.ofNullable(copyNumberExtractor.apply(x))).map(x -> Math.max(0, x));
-        final Optional<Double> right = selector.select(svPositionRight).flatMap(x -> Optional.ofNullable(copyNumberExtractor.apply(x))).map(x -> Math.max(0, x));
+    Optional<ModifiableStructuralVariantLegPloidy> create(@NotNull final StructuralVariantLeg leg,
+            @NotNull final GenomeRegionSelector<T> selector) {
+
+        final StructuralVariantLegCopyNumber legCopyNumber = copyNumberFactory.create(leg, selector);
 
         final Optional<Double> largerCopyNumber;
         final Optional<Double> smallerCopyNumber;
         if (leg.orientation() == 1) {
-            largerCopyNumber = left;
-            smallerCopyNumber = right;
+            largerCopyNumber = legCopyNumber.leftCopyNumber();
+            smallerCopyNumber = legCopyNumber.rightCopyNumber();
         } else {
-            largerCopyNumber = right;
-            smallerCopyNumber = left;
+            largerCopyNumber = legCopyNumber.rightCopyNumber();
+            smallerCopyNumber = legCopyNumber.leftCopyNumber();
         }
 
         if (!largerCopyNumber.isPresent() && !smallerCopyNumber.isPresent()) {
@@ -168,13 +165,12 @@ public class StructuralVariantLegPloidyFactory<T extends GenomeRegion> {
         }
 
         return Optional.of(ModifiableStructuralVariantLegPloidy.create()
+                .from(legCopyNumber)
                 .from(leg)
                 .setObservedVaf(observedVaf)
                 .setAdjustedVaf(adjustedVaf)
                 .setOrientation(leg.orientation())
                 .setUnweightedImpliedPloidy(ploidy)
-                .setLeftCopyNumber(left)
-                .setRightCopyNumber(right)
                 .setWeight(weight));
     }
 
