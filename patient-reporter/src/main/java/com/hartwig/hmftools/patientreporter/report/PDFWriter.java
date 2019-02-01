@@ -23,6 +23,7 @@ import com.hartwig.hmftools.patientreporter.report.pages.SampleDetailsPage;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import net.sf.dynamicreports.jasper.builder.JasperReportBuilder;
 import net.sf.dynamicreports.report.builder.component.ComponentBuilder;
@@ -43,12 +44,14 @@ public class PDFWriter {
 
     public void writeSequenceReport(@NotNull AnalysedPatientReport report) throws IOException, DRException {
         final JasperReportBuilder reportBuilder = generatePatientReport(report);
-        writeReport(fileName(report.sampleReport().sampleId()), reportBuilder);
+        writeReport(fileName(report.sampleReport().sampleId(), report.sampleReport().projectNameDVO(), report.sampleReport().label()),
+                reportBuilder);
     }
 
     public void writeNonSequenceableReport(@NotNull NotAnalysedPatientReport report) throws IOException, DRException {
         final JasperReportBuilder reportBuilder = generateNotAnalysableReport(report);
-        writeReport(fileName(report.sampleReport().sampleId()), reportBuilder);
+        writeReport(fileName(report.sampleReport().sampleId(), report.sampleReport().projectNameDVO(), report.sampleReport().label()),
+                reportBuilder);
     }
 
     private static void writeReport(@NotNull String fileName, @NotNull JasperReportBuilder report)
@@ -62,8 +65,10 @@ public class PDFWriter {
     }
 
     @NotNull
-    private String fileName(@NotNull String sample) {
-        return reportDirectory + File.separator + sample + "_hmf_report.pdf";
+    private String fileName(@NotNull String sample, @Nullable String DVO, @NotNull String label) {
+        return label.contains("CORE")
+                ? reportDirectory + File.separator + sample + "_" + DVO + "_hmf_report.pdf"
+                : reportDirectory + File.separator + sample + "_hmf_report.pdf";
     }
 
     @VisibleForTesting
