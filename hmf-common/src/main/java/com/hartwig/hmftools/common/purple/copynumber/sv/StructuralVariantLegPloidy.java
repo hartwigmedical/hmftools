@@ -13,7 +13,7 @@ import org.jetbrains.annotations.Nullable;
 @Value.Immutable
 @Value.Modifiable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public abstract class StructuralVariantLegPloidy implements StructuralVariantLeg {
+public abstract class StructuralVariantLegPloidy implements StructuralVariantLeg, StructuralVariantLegCopyNumber {
 
     public abstract double observedVaf();
 
@@ -24,10 +24,6 @@ public abstract class StructuralVariantLegPloidy implements StructuralVariantLeg
     public abstract double averageImpliedPloidy();
 
     public abstract double unweightedImpliedPloidy();
-
-    public abstract Optional<Double> leftCopyNumber();
-
-    public abstract Optional<Double> rightCopyNumber();
 
     public double impliedRightCopyNumberWeight() {
         return canInferRight() ? weight() : 0;
@@ -65,21 +61,6 @@ public abstract class StructuralVariantLegPloidy implements StructuralVariantLeg
 
     private boolean isDecreasingFromZero(int orientation, @NotNull final Optional<Double> copyNumber) {
         return orientation() == orientation && copyNumber.filter(Doubles::isZero).isPresent();
-    }
-
-    public double adjustedCopyNumber() {
-        if (orientation() == 1) {
-            return leftCopyNumber().orElse(0D);
-        } else {
-            return rightCopyNumber().orElse(0D);
-        }
-    }
-
-    public double adjustedCopyNumberChange() {
-        double leftCopyNumber = leftCopyNumber().orElse(0D);
-        double rightCopyNumber = rightCopyNumber().orElse(0D);
-
-        return orientation() == 1 ? leftCopyNumber - rightCopyNumber : rightCopyNumber - leftCopyNumber;
     }
 
 }
