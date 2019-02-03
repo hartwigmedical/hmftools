@@ -12,6 +12,7 @@ import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.makeChrArmStr
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import com.hartwig.hmftools.svanalysis.stats.FisherExactTest;
 import com.hartwig.hmftools.svanalysis.types.SvVarData;
 
 import org.junit.Test;
@@ -52,6 +53,24 @@ public class MiscTests
     public void testMiscMethods()
     {
         assertTrue(makeChrArmStr("1", "P").equals("1_P"));
+    }
+
+
+    @Test
+    public void testStatsRoutines()
+    {
+        FisherExactTest fetCalc = new FisherExactTest();
+        fetCalc.initialise(1000);
+
+        int withAwithB = 11;
+        int withANoB = 27;
+        int noAWithB = 2;
+        int noAnoB = 170;
+        double expectedCount = 5;
+
+        double fisherProb = fetCalc.getLeftTailedP(withAwithB, noAWithB, withANoB, noAnoB);
+        fisherProb = fetCalc.getRightTailedP(withAwithB, noAWithB, withANoB, noAnoB);
+
     }
 
 }

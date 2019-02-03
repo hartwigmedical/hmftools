@@ -18,7 +18,7 @@ import com.hartwig.hmftools.common.variant.structural.StructuralVariantData;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 import com.hartwig.hmftools.svanalysis.analysis.CNAnalyser;
 import com.hartwig.hmftools.svanalysis.analysis.FusionDisruptionAnalyser;
-import com.hartwig.hmftools.svanalysis.analysis.StatisticRoutines;
+import com.hartwig.hmftools.svanalysis.stats.StatisticRoutines;
 import com.hartwig.hmftools.svanalysis.analysis.SvaConfig;
 import com.hartwig.hmftools.svanalysis.analysis.SvSampleAnalyser;
 import com.hartwig.hmftools.svanalysis.annotators.DriverGeneAnnotator;

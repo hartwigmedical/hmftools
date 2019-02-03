@@ -499,6 +499,9 @@ public class SvClusteringMethods {
                 currentChromosome = lohEvent.Chromosome;
             }
 
+            if(breakendList == null)
+                continue;
+
             for(final SvBreakend breakend : breakendList)
             {
                 if(breakend.getSV().id().equals(lohEvent.StartSV))
