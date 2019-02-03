@@ -4,6 +4,7 @@ import static com.hartwig.hmftools.common.variant.structural.annotation.SvPONAnn
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.MIN_SAMPLE_PURITY;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.NONE_SEGMENT_INFERRED;
 
+import java.io.File;
 import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.List;
@@ -99,7 +100,10 @@ public class SvAnalyser {
             samplesList.add(sampleId);
         }
 
-        final String dataOutputDir = cmd.getOptionValue(DATA_OUTPUT_PATH, "");
+        String dataOutputDir = cmd.getOptionValue(DATA_OUTPUT_PATH, "");
+
+        if(!dataOutputDir.endsWith(File.separator))
+            dataOutputDir += File.separator;
 
         if(cmd.hasOption(COPY_NUMBER_ANALYSIS))
         {
@@ -135,6 +139,7 @@ public class SvAnalyser {
             if(checkDrivers)
             {
                 driverGeneAnnotator = new DriverGeneAnnotator(dbAccess, fusionAnalyser.getGeneTranscriptCollection(), dataOutputDir);
+                driverGeneAnnotator.loadConfig(cmd);
             }
 
             CNAnalyser cnAnalyser = new CNAnalyser(dataOutputDir, dbAccess);
@@ -312,6 +317,7 @@ public class SvAnalyser {
         CNAnalyser.addCmdLineArgs(options);
         SvFusionAnalyser.addCmdLineArgs(options);
         StatisticRoutines.addCmdLineArgs(options);
+        DriverGeneAnnotator.addCmdLineArgs(options);
 
         return options;
     }

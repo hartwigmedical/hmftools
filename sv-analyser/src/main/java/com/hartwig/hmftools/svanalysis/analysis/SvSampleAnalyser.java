@@ -227,9 +227,6 @@ public class SvSampleAnalyser {
             {
                 String outputFileName = mConfig.OutputCsvPath;
 
-                if(!outputFileName.endsWith("/"))
-                    outputFileName += File.separator;
-
                 if(mConfig.hasMultipleSamples())
                     outputFileName += "SVA_SVS.csv";
                 else
@@ -419,9 +416,6 @@ public class SvSampleAnalyser {
             {
                 String outputFileName = mConfig.OutputCsvPath;
 
-                if(!outputFileName.endsWith("/"))
-                    outputFileName += File.separator;
-
                 outputFileName += "SVA_CLUSTERS.csv";
 
                 mClusterFileWriter = createBufferedWriter(outputFileName, false);
@@ -496,9 +490,6 @@ public class SvSampleAnalyser {
             if(mLinksFileWriter == null)
             {
                 String outputFileName = mConfig.OutputCsvPath;
-
-                if(!outputFileName.endsWith("/"))
-                    outputFileName += File.separator;
 
                 outputFileName += "SVA_LINKS.csv";
 
@@ -595,9 +586,6 @@ public class SvSampleAnalyser {
             {
                 String outputFileName = mConfig.OutputCsvPath;
 
-                if (!outputFileName.endsWith("/"))
-                    outputFileName += File.separator;
-
                 outputFileName += "SVA_VIS_SVS.csv";
 
                 mVisSvsFileWriter = createBufferedWriter(outputFileName, false);
@@ -658,9 +646,6 @@ public class SvSampleAnalyser {
             if (mVisSegmentsFileWriter == null)
             {
                 String outputFileName = mConfig.OutputCsvPath;
-
-                if (!outputFileName.endsWith("/"))
-                    outputFileName += File.separator;
 
                 outputFileName += "SVA_VIS_SEGMENTS.csv";
 

@@ -29,7 +29,7 @@ public class LinkFinder
     private boolean mLogVerbose;
 
     public static int MIN_TEMPLATED_INSERTION_LENGTH = 30;
-    public static int NO_DB_MARKER = -(MIN_TEMPLATED_INSERTION_LENGTH + 1);
+    public static int NO_DB_MARKER = -(MIN_TEMPLATED_INSERTION_LENGTH + 2);
     public static int CLUSTER_SIZE_ANALYSIS_LIMIT = 1000;
     public static int SHORT_DB_LENGTH = 30;
 

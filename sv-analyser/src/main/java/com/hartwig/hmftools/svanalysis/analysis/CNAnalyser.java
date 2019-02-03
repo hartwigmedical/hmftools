@@ -179,7 +179,7 @@ public class CNAnalyser {
 
     public final Map<String, List<SvLOH>> getSampleLohData() { return mSampleLohData; }
 
-    // private static String SPECIFIC_CHR = "17";
+    // private static String SPECIFIC_CHR = "13";
     private static String SPECIFIC_CHR = "";
     private static int REMOTE_SV_DISTANCE = 1000000;
 
@@ -255,7 +255,7 @@ public class CNAnalyser {
 
                     reset = true;
                 }
-                else if(cnData.segEnd().equals(TELOMERE))
+                else if(cnData.matchesSegment(TELOMERE, false))
                 {
                     // rest of arm was lost so no linking SV for LOH section - but still record the event
                     writeLOHData(sampleId, currentChr, lohStartCN, cnData, priorCN, lohMinCN,
@@ -339,9 +339,6 @@ public class CNAnalyser {
             {
                 String outputFileName = mOutputPath;
 
-                if (!outputFileName.endsWith("/"))
-                    outputFileName += File.separator;
-
                 outputFileName += "CN_LOH_EVENTS.csv";
 
                 mFileWriter = createBufferedWriter(outputFileName, false);
@@ -370,7 +367,7 @@ public class CNAnalyser {
             }
             else
             {
-                // segment has either started and finished on the last (telomere) segment or finished the next chromosome
+                // segment has either started and/or finished on the telomere segment
                 endData = startData;
                 lohLength = startData.endPos() - startData.startPos() + 1;
             }
@@ -401,7 +398,8 @@ public class CNAnalyser {
             }
 
             mFileWriter.write(String.format("%s,%s,%d,%d,%d,%d,%s,%s",
-                    sampleId, chr, startData.id(), endData.id(), startData.startPos(), endData.startPos(),
+                    sampleId, chr, startData.id(), endData.id(),
+                    startData.startPos(), incomplete ? endData.endPos() : endData.startPos(),
                     startData.segStart(), incomplete ? endData.segEnd() : endData.segStart()));
 
             mFileWriter.write(String.format(",%.4f,%.4f,%.4f,%.4f,%d,%d,%s,%s,%s,%s",

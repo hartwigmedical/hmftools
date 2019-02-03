@@ -15,9 +15,16 @@ import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_LOW_
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.isSpecificCluster;
 import static com.hartwig.hmftools.svanalysis.types.SvLOH.LOH_NO_SV;
 
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.sql.Timestamp;
+import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -28,7 +35,10 @@ import com.google.common.collect.SortedSetMultimap;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.DriverType;
 import com.hartwig.hmftools.common.genepanel.HmfGenePanelSupplier;
+import com.hartwig.hmftools.common.purple.copynumber.CopyNumberMethod;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
+import com.hartwig.hmftools.common.purple.gene.ImmutableGeneCopyNumber;
+import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 import com.hartwig.hmftools.common.region.HmfTranscriptRegion;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneAnnotation;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
@@ -39,6 +49,8 @@ import com.hartwig.hmftools.svanalysis.types.SvLinkedPair;
 import com.hartwig.hmftools.svanalysis.types.SvVarData;
 import com.hartwig.hmftools.svannotation.SvGeneTranscriptCollection;
 
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.Options;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -63,6 +75,11 @@ public class DriverGeneAnnotator
     private Map<String, List<SvLOH>> mSampleLohMap;
     private List<SvLOH> mSampleLOHData;
     private Map<String, double[]> mChrCopyNumberMap;
+    private Map<String, List<GeneCopyNumber>> mSampleGeneCopyNumberMap;
+
+    // temp
+    private boolean mWriteMatchedGeneCopyNumber;
+    private BufferedWriter mGCNFileWriter;
 
     public DriverGeneAnnotator(DatabaseAccess dbAccess, SvGeneTranscriptCollection geneTranscriptCollection, final String outputDir)
     {
@@ -77,17 +94,36 @@ public class DriverGeneAnnotator
         mOutputDir = outputDir;
         mSamplePloidy = 0;
 
-        initialiseGeneData();
+        mWriteMatchedGeneCopyNumber = false;
+        mGCNFileWriter = null;
     }
 
-    public void setLohData(final Map<String, List<SvLOH>> lohData) { mSampleLohMap = lohData; }
+    private static final String WRITE_GCN_DATA = "write_gcn_data";
+    private static final String GCN_DATA_FILE = "gcn_data_file";
+
+    public static void addCmdLineArgs(Options options)
+    {
+        options.addOption(WRITE_GCN_DATA, true, "Write a cache of driver-matched gene copy number data");
+        options.addOption(GCN_DATA_FILE, true, "Cache of driver-matched gene copy number data");
+    }
+
+    public boolean loadConfig(final CommandLine cmd)
+    {
+        mWriteMatchedGeneCopyNumber = cmd.hasOption(WRITE_GCN_DATA);
+
+        initialiseGeneData(cmd.getOptionValue(GCN_DATA_FILE,""));
+
+        return true;
+    }
+
+    public void setLohData(final Map<String, List<SvLOH>> lohData) { mSampleLohMap = lohData; }public void writeMatchedGeneCopyNumber() { mWriteMatchedGeneCopyNumber = true; }
     public void setChrCopyNumberMap(Map<String, double[]> chrCopyNumberMap) { mChrCopyNumberMap = chrCopyNumberMap; }
     public void setSamplePloidy(double ploidy)
     {
         mSamplePloidy = ploidy;
     }
 
-    private void initialiseGeneData()
+    private void initialiseGeneData(final String geneCopyNumberFile)
     {
         SortedSetMultimap<String, HmfTranscriptRegion> genesByChromosomeMap = HmfGenePanelSupplier.allGenesPerChromosomeMap37();
 
@@ -96,6 +132,8 @@ public class DriverGeneAnnotator
         {
             mAllGenesMap.put(region.gene(), region);
         }
+
+        loadGeneCopyNumberDataFile(geneCopyNumberFile);
     }
 
     private final HmfTranscriptRegion findRegion(final String geneName)
@@ -114,7 +152,38 @@ public class DriverGeneAnnotator
     private void loadGeneCopyNumberData(final String sampleId)
     {
         mGeneCopyNumberData.clear();
-        mGeneCopyNumberData = mDbAccess.readGeneCopynumbers(sampleId);
+
+        if(!mSampleGeneCopyNumberMap.isEmpty())
+        {
+            mGeneCopyNumberData.addAll(mSampleGeneCopyNumberMap.get(sampleId));
+            return;
+        }
+
+        if(!mWriteMatchedGeneCopyNumber)
+        {
+            mGeneCopyNumberData = mDbAccess.readGeneCopynumbers(sampleId);
+            return;
+        }
+
+        LOGGER.info("sample({}) writing gene copy number data", mSampleId);
+
+        List<GeneCopyNumber> gcnDataList = mDbAccess.readGeneCopynumbers(sampleId);
+
+        for(final DriverCatalog driverData : mDriverCatalog)
+        {
+            for(final GeneCopyNumber gcnData : gcnDataList)
+            {
+                if(gcnData.gene().equals(driverData.gene()))
+                {
+                    writeGeneCopyNumberData(gcnData);
+                    mGeneCopyNumberData.add(gcnData);
+                    break;
+                }
+            }
+        }
+
+        LOGGER.info("sample({}) drivers matched({}/{}) from {} gene copy number data",
+                mSampleId, mGeneCopyNumberData.size(), mDriverCatalog.size(), gcnDataList.size());
     }
 
     public void annotateSVs(final String sampleId, final List<SvCluster> clusters, final Map<String, List<SvBreakend>> chrBreakendMap)
@@ -130,7 +199,7 @@ public class DriverGeneAnnotator
         if (mDriverCatalog.isEmpty())
             return;
 
-        // loadGeneCopyNumberData(sampleId);
+        loadGeneCopyNumberData(sampleId);
 
         mSampleLOHData.clear();
         List<SvLOH> sampleLohEvents = mSampleLohMap.get(sampleId);
@@ -565,21 +634,19 @@ public class DriverGeneAnnotator
             {
                 String outputFileName = mOutputDir;
 
-                if(!outputFileName.endsWith("/"))
-                    outputFileName += File.separator;
-
                 outputFileName += "SVA_DRIVERS.csv";
 
                 mFileWriter = createBufferedWriter(outputFileName, false);
 
-                mFileWriter.write("SampleId,Gene,GeneType,DriverType,ClusterId,SvId,IsStart,MatchInfo");
+                mFileWriter.write("SampleId,Gene,GeneType,DriverType,DriverLikelihood,ClusterId,SvId,IsStart,MatchInfo");
                 mFileWriter.write(",SamplePloidy,Chromosome,Arm,MinCN,CentromereCN,TelomereCN");
                 mFileWriter.newLine();
             }
 
             BufferedWriter writer = mFileWriter;
 
-            writer.write(String.format("%s,%s,%s,%s", mSampleId, driverGene.gene(), driverGene.category(), driverGene.driver()));
+            writer.write(String.format("%s,%s,%s,%s,%.4f",
+                    mSampleId, driverGene.gene(), driverGene.category(), driverGene.driver(), driverGene.driverLikelihood()));
 
             if(var != null)
             {
@@ -597,7 +664,7 @@ public class DriverGeneAnnotator
 
             double[] cnData = mChrCopyNumberMap.get(region.chromosome());
 
-            GeneCopyNumber geneCN = findGeneCopyNumber(driverGene);
+            final GeneCopyNumber geneCN = findGeneCopyNumber(driverGene);
 
             final String arm = var != null ? var.arm(isStart) : getChromosomalArm(region.chromosome(), region.geneStart());
 
@@ -617,6 +684,7 @@ public class DriverGeneAnnotator
     public void close()
     {
         closeBufferedWriter(mFileWriter);
+        closeBufferedWriter(mGCNFileWriter);
     }
 
     private void checkPseudoGeneAnnotations()
@@ -656,6 +724,149 @@ public class DriverGeneAnnotator
                     }
                 }
             }
+        }
+    }
+
+    private static String GENE_CN_DATA_FILE = "SVA_GENE_COPY_NUMBER.csv";
+    private static int GENE_CN_DATA_FILE_ITEM_COUNT = 30;
+
+    private void loadGeneCopyNumberDataFile(final String gcnFileName)
+    {
+        if(gcnFileName.isEmpty() || !Files.exists(Paths.get(gcnFileName)))
+            return;
+
+        mSampleGeneCopyNumberMap = new HashMap();
+
+        try
+        {
+            BufferedReader fileReader = new BufferedReader(new FileReader(gcnFileName));
+
+            // skip field names
+            String line = fileReader.readLine();
+
+            if (line == null)
+            {
+                LOGGER.error("Empty gene copy number CSV file({})", gcnFileName);
+                return;
+            }
+
+            String currentSample = "";
+            List<GeneCopyNumber> gcnDataList = null;
+
+            while ((line = fileReader.readLine()) != null)
+            {
+                String[] items = line.split(",");
+
+                if (items.length != GENE_CN_DATA_FILE_ITEM_COUNT)
+                    continue;
+
+                String sampleId = items[1];
+
+                if(currentSample.isEmpty() || !currentSample.equals(sampleId))
+                {
+                    gcnDataList = Lists.newArrayList();
+                    currentSample = sampleId;
+                    mSampleGeneCopyNumberMap.put(currentSample, gcnDataList);
+
+                }
+
+                //                          0       1       2           3   4   5      6              7           8
+//                mGCNFileWriter.write("modified,sampleId,chromosome,start,end,gene,chromosomeBand,transcriptId,transcriptVersion");
+                //                       10             11           12             13                  14                 15        16              17             18                  19                      20
+//                mGCNFileWriter.write(",minCopyNumber,maxCopyNumber,somaticRegions,germlineHomRegions,germlineHetRegions,minRegions,minRegionStart,minRegionEnd,minRegionStartSupport,minRegionEndSupport,minRegionMethod");
+                //                          21
+//                mGCNFileWriter.write(",nonsenseBiallelicVariants,nonsenseNonBiallelicVariants,nonsenseNonBiallelicPloidy,spliceBiallelicVariants,spliceNonBiallelicVariants,spliceNonBiallelicPloidy");
+//                mGCNFileWriter.write(",missenseBiallelicVariants,missenseNonBiallelicVariants,missenseNonBiallelicPloidy,minMinorAllelePloidy");
+
+                int index = 2;
+
+                GeneCopyNumber gcnData = ImmutableGeneCopyNumber.builder()
+                        .chromosome(items[index++])
+                        .start(Integer.parseInt(items[index++]))
+                        .end(Integer.parseInt(items[index++]))
+                        .gene(items[index++])
+                        .chromosomeBand(items[index++])
+                        .transcriptID(items[index++])
+                        .transcriptVersion(Integer.parseInt(items[index++]))
+                        .minCopyNumber(Double.parseDouble(items[index++]))
+                        .maxCopyNumber(Double.parseDouble(items[index++]))
+                        .somaticRegions(Integer.parseInt(items[index++]))
+                        .germlineHomRegions(Integer.parseInt(items[index++]))
+                        .germlineHet2HomRegions(Integer.parseInt(items[index++]))
+                        .minRegions(Integer.parseInt(items[index++]))
+                        .minRegionStart(Integer.parseInt(items[index++]))
+                        .minRegionEnd(Integer.parseInt(items[index++]))
+                        .minRegionStartSupport(SegmentSupport.valueOf(items[index++]))
+                        .minRegionEndSupport(SegmentSupport.valueOf(items[index++]))
+                        .minRegionMethod(CopyNumberMethod.valueOf(items[index++]))
+                        .nonsenseBiallelicCount(Integer.parseInt(items[index++]))
+                        .nonsenseNonBiallelicCount(Integer.parseInt(items[index++]))
+                        .nonsenseNonBiallelicPloidy(Double.parseDouble(items[index++]))
+                        .spliceBiallelicCount(Integer.parseInt(items[index++]))
+                        .spliceNonBiallelicCount(Integer.parseInt(items[index++]))
+                        .spliceNonBiallelicPloidy(Double.parseDouble(items[index++]))
+                        .missenseBiallelicCount(Integer.parseInt(items[index++]))
+                        .missenseNonBiallelicCount(Integer.parseInt(items[index++]))
+                        .missenseNonBiallelicPloidy(Double.parseDouble(items[index++]))
+                        .minMinorAllelePloidy(Double.parseDouble(items[index++]))
+                        .build();
+
+
+                gcnDataList.add(gcnData);
+            }
+        }
+        catch (IOException e)
+        {
+            LOGGER.error("Failed to read gene copy number CSV file({}): {}", gcnFileName, e.toString());
+        }
+    }
+
+    private void writeGeneCopyNumberData(final GeneCopyNumber gcnData)
+    {
+        try
+        {
+            if(mGCNFileWriter == null)
+            {
+                String outputFileName = mOutputDir;
+
+                outputFileName += GENE_CN_DATA_FILE;
+
+                mGCNFileWriter = createBufferedWriter(outputFileName, false);
+
+                mGCNFileWriter.write("modified,sampleId,chromosome,start,end,gene,chromosomeBand,transcriptId,transcriptVersion");
+                mGCNFileWriter.write(",minCopyNumber,maxCopyNumber,somaticRegions,germlineHomRegions,germlineHetRegions,minRegions,minRegionStart,minRegionEnd,minRegionStartSupport,minRegionEndSupport,minRegionMethod");
+                mGCNFileWriter.write(",nonsenseBiallelicVariants,nonsenseNonBiallelicVariants,nonsenseNonBiallelicPloidy,spliceBiallelicVariants,spliceNonBiallelicVariants,spliceNonBiallelicPloidy");
+                mGCNFileWriter.write(",missenseBiallelicVariants,missenseNonBiallelicVariants,missenseNonBiallelicPloidy,minMinorAllelePloidy");
+                mGCNFileWriter.newLine();
+            }
+
+            BufferedWriter writer = mGCNFileWriter;
+
+            final Timestamp timestamp = new Timestamp(new Date().getTime());
+
+            writer.write(String.format("%s,%s,%s,%d,%d,%s,%s,%s,%d",
+                    timestamp, mSampleId, gcnData.chromosome(), gcnData.start(), gcnData.end(),
+                    gcnData.gene(), gcnData.chromosomeBand(), gcnData.transcriptID(), gcnData.transcriptVersion()));
+
+            writer.write(String.format(",%.4f,%.4f,%d,%d,%d,%d,%d,%d,%s,%s,%s",
+                    gcnData.minCopyNumber(), gcnData.maxCopyNumber(), gcnData.somaticRegions(),
+                    gcnData.germlineHomRegions(), gcnData.germlineHet2HomRegions(),
+                    gcnData.minRegions(), gcnData.minRegionStart(), gcnData.minRegionEnd(),
+                    gcnData.minRegionStartSupport(), gcnData.minRegionEndSupport(), gcnData.minRegionMethod().toString()));
+
+
+            writer.write(String.format(",%d,%d,%.4f,%d,%d,%.4f,%d,%d,%.4f,%.4f,",
+                    gcnData.nonsenseBiallelicCount(), gcnData.nonsenseNonBiallelicCount(), gcnData.nonsenseNonBiallelicPloidy(),
+                    gcnData.spliceBiallelicCount(), gcnData.spliceNonBiallelicCount(), gcnData.spliceNonBiallelicPloidy(),
+                    gcnData.missenseBiallelicCount(), gcnData.missenseNonBiallelicCount(), gcnData.missenseNonBiallelicPloidy(),
+                    gcnData.minMinorAllelePloidy()));
+
+            writer.newLine();
+
+        }
+        catch (final IOException e)
+        {
+            LOGGER.error("error writing gene copy number to outputFile: {}", e.toString());
         }
     }
 }

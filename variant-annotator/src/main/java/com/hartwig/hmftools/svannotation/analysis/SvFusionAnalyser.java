@@ -715,9 +715,6 @@ public class SvFusionAnalyser
             {
                 String outputFilename = outputDir;
 
-                if (!outputFilename.endsWith("/"))
-                    outputFilename += File.separator;
-
                 outputFilename += "RNA_MATCH_DATA.csv";
 
                 mRnaWriter = createBufferedWriter(outputFilename, false);
