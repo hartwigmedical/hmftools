@@ -106,6 +106,11 @@ public class SvVisualiser implements AutoCloseable {
                 .collect(toList());
 
         final List<Link> chromosomeLinks = config.links().stream().filter(x -> clusterIds.contains(x.clusterId())).collect(toList());
+        if (chromosomeLinks.isEmpty()) {
+            LOGGER.warn("Chromosome {} not present in file", chromosome);
+            return null;
+        }
+
         final List<Segment> chromosomeSegments =
                 config.segments().stream().filter(x -> clusterIds.contains(x.clusterId())).collect(toList());
         return runFiltered(sample, chromosomeLinks, chromosomeSegments);
@@ -114,6 +119,11 @@ public class SvVisualiser implements AutoCloseable {
     @Nullable
     private Object runCluster(int clusterId) throws IOException, InterruptedException {
         final List<Link> clusterLinks = config.links().stream().filter(x -> x.clusterId() == clusterId).collect(toList());
+        if (clusterLinks.isEmpty()) {
+            LOGGER.warn("Cluster {} not present in file", clusterId);
+            return null;
+        }
+
         final String resolvedType = clusterLinks.stream().findFirst().map(Link::resolvedType).orElse("Unknown");
 
         final String sample =
