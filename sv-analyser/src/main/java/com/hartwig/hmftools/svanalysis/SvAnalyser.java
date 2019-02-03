@@ -51,7 +51,6 @@ public class SvAnalyser {
     private static final String DRIVERS_CHECK = "check_drivers";
     private static final String RUN_FUSIONS = "run_fusions";
     private static final String COPY_NUMBER_ANALYSIS = "run_cn_analysis";
-    private static final String RUN_RESULTS_CHECKER = "run_results_checker";
     private static final String INCLUDE_NONE_SEGMENTS = "incl_none_segments";
     private static final String GENE_TRANSCRIPTS_DIR = "gene_transcripts_dir";
     private static final String STATS_ROUTINES = "stats_routines";
@@ -239,26 +238,6 @@ public class SvAnalyser {
             LOGGER.info("SV analysis complete");
         }
 
-        if(cmd.hasOption(RUN_RESULTS_CHECKER))
-        {
-            ResultsChecker resultsChecker = new ResultsChecker();
-            resultsChecker.setLogMismatches(cmd.hasOption(LOG_DEBUG));
-
-            if(resultsChecker.loadConfig(cmd, samplesList, cmd.getOptionValue(DATA_OUTPUT_PATH)))
-            {
-                resultsChecker.setIdColumns(true);
-                resultsChecker.addDefaultColumnsToCheck();
-
-                if(resultsChecker.loadData())
-                {
-                    if (resultsChecker.runChecks())
-                        LOGGER.info("results validation passed");
-                    else
-                        LOGGER.warn("results validation failed");
-                }
-            }
-        }
-
         LOGGER.info("run complete");
     }
 
@@ -308,12 +287,10 @@ public class SvAnalyser {
         options.addOption(DRIVERS_CHECK, false, "Check SVs against drivers catalog");
         options.addOption(RUN_FUSIONS, false, "Run fusion detection");
         options.addOption(COPY_NUMBER_ANALYSIS, false, "Run copy number analysis");
-        options.addOption(RUN_RESULTS_CHECKER, false, "Check results vs validation file");
         options.addOption(INCLUDE_NONE_SEGMENTS, false, "Include copy number NONE segments in SV analysis");
         options.addOption(GENE_TRANSCRIPTS_DIR, true, "Optional: file with sample gene transcript data");
         options.addOption(STATS_ROUTINES, false, "Optional: calc stats routines");
         SvaConfig.addCmdLineArgs(options);
-        ResultsChecker.addCmdLineArgs(options);
         CNAnalyser.addCmdLineArgs(options);
         SvFusionAnalyser.addCmdLineArgs(options);
         StatisticRoutines.addCmdLineArgs(options);
