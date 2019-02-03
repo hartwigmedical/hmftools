@@ -61,6 +61,8 @@ public final class EnrichedStructuralVariantFactory {
                 StructuralVariantLegPloidy endPloidy = ploidies.size() <= 1 ? null : ploidies.get(1);
 
                 startBuilder.adjustedAlleleFrequency(round(startPloidy.adjustedVaf()));
+                startBuilder.adjustedCopyNumber(round(startPloidy.adjustedCopyNumber()));
+                startBuilder.adjustedCopyNumberChange(round(startPloidy.adjustedCopyNumberChange()));
 
                 if (endPloidy != null) {
                     assert endBuilder != null;
