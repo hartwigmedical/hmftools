@@ -42,12 +42,16 @@ public final class MainPageTopSection {
                         cmp.verticalList(cmp.text("Cancer Subtype").setStyle(tableHeaderStyle().setPadding(2)),
                                 cmp.text(cancerSubType).setStyle(dataTableStyle().setPadding(2))));
 
-        return cmp.verticalList(cmp.horizontalList(cmp.image(REPORT_LOGO_PATH).setWidth(42).setHeight(65),
-                label.contains("CORE")
-                        ? cmp.text(title + " - " + sample + "(" + DVO + ")")
-                        : cmp.text(title + " - " + sample)
-                                .setStyle(fontStyle().bold().setFontSize(14).setVerticalTextAlignment(VerticalTextAlignment.MIDDLE))
-                                .setHorizontalTextAlignment(HorizontalTextAlignment.CENTER),
-                cmp.horizontalGap(40)), cmp.verticalGap(3), mainDiagnosisInfo);
+        return cmp.verticalList(cmp.image(REPORT_LOGO_PATH).setWidth(42).setHeight(65),
+                cmp.text(title + " - " + sample)
+                        .setStyle(fontStyle().bold().setFontSize(14).setVerticalTextAlignment(VerticalTextAlignment.MIDDLE))
+                        .setHorizontalTextAlignment(HorizontalTextAlignment.CENTER),
+                cmp.horizontalGap(10),
+                cmp.text(label.contains("CORE") ? DVO : "")
+                        .setStyle(fontStyle().bold().setFontSize(14).setVerticalTextAlignment(VerticalTextAlignment.MIDDLE))
+                        .setHorizontalTextAlignment(HorizontalTextAlignment.CENTER),
+                cmp.horizontalGap(40),
+                cmp.verticalGap(3),
+                mainDiagnosisInfo);
     }
 }
