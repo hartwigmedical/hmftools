@@ -26,7 +26,6 @@ import com.hartwig.hmftools.common.variant.structural.annotation.Transcript;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.ensembl.database.homo_sapiens_core.tables.TranscriptSupportingFeature;
 import org.jetbrains.annotations.NotNull;
 
 public class SvDisruptionAnalyser
@@ -191,7 +190,7 @@ public class SvDisruptionAnalyser
 
                 final GeneAnnotation svBreakend = transcript.parent();
 
-                writer.write(String.format("%s,%s,%d,%s,%d,%d,%s,%.2f",
+                writer.write(String.format("%s,%s,%d,%s,%d,%d,%s,%.6f",
                         sampleId, disruption.reportable(), svBreakend.id(),
                         svBreakend.chromosome(), svBreakend.position(), svBreakend.orientation(),
                         svBreakend.type(), svBreakend.ploidy()));
