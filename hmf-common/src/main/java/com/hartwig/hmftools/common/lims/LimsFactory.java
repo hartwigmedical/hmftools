@@ -25,7 +25,6 @@ import com.google.gson.JsonSyntaxException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 public final class LimsFactory {
 
@@ -55,8 +54,8 @@ public final class LimsFactory {
     }
 
     @NotNull
-    @VisibleForTesting
-    private static Map<String, LimsJsonDataSubmission> readLimsJsonSubmission(@NotNull final String limsJsonPath) throws FileNotFoundException {
+    private static Map<String, LimsJsonDataSubmission> readLimsJsonSubmission(@NotNull final String limsJsonPath)
+            throws FileNotFoundException {
         final Gson gson = LimsSubmissionGsonAdapter.buildGsonSubmission();
         final JsonObject jsonObject = new JsonParser().parse(new FileReader(limsJsonPath)).getAsJsonObject();
         final Set<Map.Entry<String, JsonElement>> jsonSubmissions = jsonObject.getAsJsonObject("submissions").entrySet();
@@ -68,11 +67,12 @@ public final class LimsFactory {
             final String projectType = jsonSampleObject.get("project_type").getAsString();
             if (projectType.contains("CORE")) {
                 try {
-                    final LimsJsonDataSubmission limsJsonDataSubmission = gson.fromJson(jsonSubmission.getValue(), LimsJsonDataSubmission.class);
+                    final LimsJsonDataSubmission limsJsonDataSubmission =
+                            gson.fromJson(jsonSubmission.getValue(), LimsJsonDataSubmission.class);
                     limsDataPerSubmission.put(limsJsonDataSubmission.submission(), limsJsonDataSubmission);
                 } catch (JsonSyntaxException e) {
-                    LOGGER.warn(
-                            "Could not convert json element to LimsJsonDataSubmission: " + jsonSubmission.getValue() + " - message:" + e.getMessage());
+                    LOGGER.warn("Could not convert json element to LimsJsonDataSubmission: " + jsonSubmission.getValue() + " - message:" + e
+                            .getMessage());
                 }
             }
         });
