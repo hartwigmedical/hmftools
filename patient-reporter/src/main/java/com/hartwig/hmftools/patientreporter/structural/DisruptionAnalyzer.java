@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.patientreporter.loadStructuralVariants;
+package com.hartwig.hmftools.patientreporter.structural;
 
 import java.util.List;
 import java.util.Set;

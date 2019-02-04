@@ -9,7 +9,7 @@ import static org.junit.Assert.assertNotNull;
 import java.io.IOException;
 
 import com.google.common.io.Resources;
-import com.hartwig.hmftools.patientreporter.loadStructuralVariants.SvAnalyzerModel;
+import com.hartwig.hmftools.patientreporter.structural.SvAnalyzerModel;
 
 import org.junit.Test;
 

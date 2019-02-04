@@ -32,9 +32,9 @@ import com.hartwig.hmftools.patientreporter.actionability.ReportableEvidenceItem
 import com.hartwig.hmftools.patientreporter.copynumber.CopyNumberAnalysis;
 import com.hartwig.hmftools.patientreporter.copynumber.CopyNumberAnalyzer;
 import com.hartwig.hmftools.patientreporter.germline.GermlineVariant;
-import com.hartwig.hmftools.patientreporter.loadStructuralVariants.Disruption;
-import com.hartwig.hmftools.patientreporter.loadStructuralVariants.Fusion;
-import com.hartwig.hmftools.patientreporter.loadStructuralVariants.SvAnalyzerModel;
+import com.hartwig.hmftools.patientreporter.structural.Disruption;
+import com.hartwig.hmftools.patientreporter.structural.Fusion;
+import com.hartwig.hmftools.patientreporter.structural.SvAnalyzerModel;
 import com.hartwig.hmftools.patientreporter.structural.FusionDisruptionAnalysis;
 import com.hartwig.hmftools.patientreporter.structural.FusionDisruptionAnalyzer;
 import com.hartwig.hmftools.patientreporter.structural.ReportableGeneDisruption;

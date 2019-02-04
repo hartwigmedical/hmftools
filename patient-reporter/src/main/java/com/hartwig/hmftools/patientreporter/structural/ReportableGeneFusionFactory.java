@@ -3,7 +3,6 @@ package com.hartwig.hmftools.patientreporter.structural;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.patientreporter.loadStructuralVariants.Fusion;
 
 import org.jetbrains.annotations.NotNull;
 

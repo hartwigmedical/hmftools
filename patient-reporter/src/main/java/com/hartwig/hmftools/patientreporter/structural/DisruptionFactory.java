@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.patientreporter.loadStructuralVariants;
+package com.hartwig.hmftools.patientreporter.structural;
 
 import java.io.File;
 import java.io.IOException;
@@ -6,6 +6,7 @@ import java.nio.file.Files;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.patientreporter.loadStructuralVariants.ImmutableDisruption;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

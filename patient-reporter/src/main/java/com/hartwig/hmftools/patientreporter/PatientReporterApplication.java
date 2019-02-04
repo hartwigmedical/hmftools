@@ -10,7 +10,7 @@ import com.hartwig.hmftools.common.center.CenterModel;
 import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocation;
 import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.lims.LimsFactory;
-import com.hartwig.hmftools.patientreporter.loadStructuralVariants.SvAnalyzerModel;
+import com.hartwig.hmftools.patientreporter.structural.SvAnalyzerModel;
 import com.hartwig.hmftools.patientreporter.qcfail.ImmutableNotAnalysableReporter;
 import com.hartwig.hmftools.patientreporter.qcfail.NotAnalysableReason;
 import com.hartwig.hmftools.patientreporter.qcfail.NotAnalysableReporter;

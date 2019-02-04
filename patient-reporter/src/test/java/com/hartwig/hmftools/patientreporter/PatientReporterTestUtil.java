@@ -19,7 +19,7 @@ import com.hartwig.hmftools.patientreporter.actionability.DrupActionabilityModel
 import com.hartwig.hmftools.patientreporter.actionability.DrupActionabilityModelFactory;
 import com.hartwig.hmftools.patientreporter.genepanel.GeneModel;
 import com.hartwig.hmftools.patientreporter.genepanel.GeneModelFactory;
-import com.hartwig.hmftools.patientreporter.loadStructuralVariants.SvAnalyzerModel;
+import com.hartwig.hmftools.patientreporter.structural.SvAnalyzerModel;
 
 import org.jetbrains.annotations.NotNull;
 
