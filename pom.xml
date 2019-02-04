@@ -53,6 +53,7 @@
         <hmf-api-clients.version>local-SNAPSHOT</hmf-api-clients.version>
         <hmf-extensions.version>local-SNAPSHOT</hmf-extensions.version>
         <hmf-patient-db.version>3.15</hmf-patient-db.version>
+        <hmf-variant-annotation.version>2.10</hmf-variant-annotation.version>
         <hmf-sv-analyser.version>1.0</hmf-sv-analyser.version>
         <hmf-sv-graphs.version>1.0</hmf-sv-graphs.version>
 
@@ -158,6 +159,11 @@
                 <groupId>com.hartwig</groupId>
                 <artifactId>hmf-common</artifactId>
                 <version>${hmf-common.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.hartwig</groupId>
+                <artifactId>variant-annotator</artifactId>
+                <version>${hmf-variant-annotation.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.hartwig</groupId>
