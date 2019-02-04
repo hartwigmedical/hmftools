@@ -12,7 +12,7 @@ final class ReportableGeneFusionFactory {
     }
 
     @NotNull
-    public static List<ReportableGeneFusion> fusionConvertToReportable(@NotNull List<Fusion> fusions) {
+    public static List<ReportableGeneFusion> convert(@NotNull List<Fusion> fusions) {
         List<ReportableGeneFusion> reportableFusions = Lists.newArrayList();
         for (Fusion fusion : fusions) {
             reportableFusions.add(ImmutableReportableGeneFusion.builder()

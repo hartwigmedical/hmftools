@@ -23,7 +23,7 @@ final class ReportableGeneDisruptionFactory {
     }
 
     @NotNull
-    public static List<ReportableGeneDisruption> disruptionConvertGeneDisruption(@NotNull List<Disruption> disruptions,
+    public static List<ReportableGeneDisruption> convert(@NotNull List<Disruption> disruptions,
             @NotNull List<GeneCopyNumber> geneCopyNumbers) {
         LOGGER.debug("Generating reportable disruptions based on {} disruptions", disruptions.size());
 

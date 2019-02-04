@@ -82,7 +82,7 @@ public class ReportableGeneFusionFactoryTest {
     @Test
     public void canConvertGeneFusions() {
         List<ReportableGeneFusion> reportableFusions =
-                ReportableGeneFusionFactory.fusionConvertToReportable(Lists.newArrayList(fusionTestData()));
+                ReportableGeneFusionFactory.convert(Lists.newArrayList(fusionTestData()));
 
         assertEquals(1, reportableFusions.size());
 

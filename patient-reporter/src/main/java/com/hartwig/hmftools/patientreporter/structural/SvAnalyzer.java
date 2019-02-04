@@ -27,8 +27,8 @@ public class SvAnalyzer {
 
     @NotNull
     public static SvAnalyzer fromFiles(@NotNull String fusionFile, @NotNull String disruptionFile) throws IOException {
-        List<Fusion> fusions = FusionFactory.fromFusionFile(fusionFile);
-        List<Disruption> disruptions = DisruptionFactory.fromDisruptionFile(disruptionFile);
+        List<Fusion> fusions = FusionFileReader.fromFusionFile(fusionFile);
+        List<Disruption> disruptions = DisruptionFileReader.fromDisruptionFile(disruptionFile);
         return new SvAnalyzer(fusions, disruptions);
     }
 
@@ -40,9 +40,9 @@ public class SvAnalyzer {
     @NotNull
     public SvAnalysis run(@NotNull GeneModel geneModel, @NotNull List<GeneCopyNumber> geneCopyNumbers,
             @NotNull ActionabilityAnalyzer actionabilityAnalyzer, @Nullable PatientTumorLocation patientTumorLocation) {
-        List<ReportableGeneFusion> reportableFusions = ReportableGeneFusionFactory.fusionConvertToReportable(reportableFusions());
+        List<ReportableGeneFusion> reportableFusions = ReportableGeneFusionFactory.convert(reportableFusions());
         List<ReportableGeneDisruption> reportableGeneDisruptions =
-                ReportableGeneDisruptionFactory.disruptionConvertGeneDisruption(reportableDisruptions(geneModel), geneCopyNumbers);
+                ReportableGeneDisruptionFactory.convert(reportableDisruptions(geneModel), geneCopyNumbers);
 
         String primaryTumorLocation = patientTumorLocation != null ? patientTumorLocation.primaryTumorLocation() : null;
         Map<SimpleGeneFusion, List<EvidenceItem>> evidencePerFusion =

@@ -12,11 +12,11 @@ import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
-final class FusionFactory {
+final class FusionFileReader {
 
-    private static final Logger LOGGER = LogManager.getLogger(FusionFactory.class);
+    private static final Logger LOGGER = LogManager.getLogger(FusionFileReader.class);
 
-    private FusionFactory() {
+    private FusionFileReader() {
     }
 
     private static final String DELIMITER = ",";

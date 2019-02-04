@@ -95,7 +95,7 @@ public class ReportableGeneDisruptionFactoryTest {
         List<Disruption> pairedDisruptions = Lists.newArrayList(disruptionTestData1());
 
         List<ReportableGeneDisruption> reportableDisruptions =
-                ReportableGeneDisruptionFactory.disruptionConvertGeneDisruption(pairedDisruptions, copyNumbers);
+                ReportableGeneDisruptionFactory.convert(pairedDisruptions, copyNumbers);
 
         assertEquals(1, reportableDisruptions.size());
 
@@ -118,7 +118,7 @@ public class ReportableGeneDisruptionFactoryTest {
         List<Disruption> pairedDisruptions = Lists.newArrayList(disruptionTestData1(), disruptionTestData2());
 
         List<ReportableGeneDisruption> reportableDisruptions =
-                ReportableGeneDisruptionFactory.disruptionConvertGeneDisruption(pairedDisruptions, copyNumbers);
+                ReportableGeneDisruptionFactory.convert(pairedDisruptions, copyNumbers);
 
         assertEquals(2, reportableDisruptions.size());
     }
@@ -132,7 +132,7 @@ public class ReportableGeneDisruptionFactoryTest {
         List<Disruption> disruptions = Lists.newArrayList(disruption1, disruption2, disruption3);
 
         List<ReportableGeneDisruption> reportableDisruptions =
-                ReportableGeneDisruptionFactory.disruptionConvertGeneDisruption(disruptions, Lists.newArrayList());
+                ReportableGeneDisruptionFactory.convert(disruptions, Lists.newArrayList());
         assertEquals(0, reportableDisruptions.size());
     }
 }

@@ -11,11 +11,11 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-final class DisruptionFactory {
+final class DisruptionFileReader {
 
-    private static final Logger LOGGER = LogManager.getLogger(DisruptionFactory.class);
+    private static final Logger LOGGER = LogManager.getLogger(DisruptionFileReader.class);
 
-    private DisruptionFactory() {
+    private DisruptionFileReader() {
     }
 
     private static final String DELIMITER = ",";
