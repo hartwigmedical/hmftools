@@ -44,7 +44,9 @@ public abstract class NotAnalysableReporter {
                 lims.arrivalDateForSample(sample),
                 null,
                 lims.labProceduresForSample(sample),
-                lims.labelSample(sample).equalsIgnoreCase("core") ? "" : baseReportData().centerModel().getAddresseeStringForSample(sample),
+                lims.labelSample(sample).equalsIgnoreCase("core")
+                        ? baseReportData().centerModel().getCoreRecipients(lims.projectNameDVO(sample))
+                        : baseReportData().centerModel().getAddresseeStringForSample(sample),
                 lims.labelSample(sample),
                 lims.projectNameDVO(sample),
                 lims.labelSample(sample).equalsIgnoreCase("core") ? lims.contactEmail(lims.submissionFromSample(sample)) : "",

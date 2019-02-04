@@ -112,12 +112,12 @@ public abstract class NonSequenceablePage {
                         + " at " + Commons.HARTWIG_ADDRESS).setStyle(fontStyle()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
                 cmp.text(sampleReport().label().equalsIgnoreCase("core")
-                        ? "This report is generated and verified by: " + user() + " and is addressed at " + ""
+                        ? "This report is generated and verified by: " + user() + " and is addressed at " + sampleReport().recipient()
                         : "This report is generated and verified by: " + user() + " and is addressed at " + sampleReport().recipient())
                         .setStyle(fontStyle()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
                 cmp.text(sampleReport().label().equalsIgnoreCase("core") ? "The project name are : " + sampleReport().projectNameDVO()
-                        + ". The client names are: " + sampleReport().contactName() + ". The client eamils are: "
+                        + ". The client names are: " + sampleReport().contactName() + ". The client emails are: "
                         + sampleReport().contactEmail() + "." : "").setStyle(fontStyle()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
                 cmp.text("The results on this report are based on tests that are performed under ISO/ICE-17025:2005 accreditation.")
