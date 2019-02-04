@@ -89,6 +89,7 @@ public class DriverGeneAnnotator
         mDriverCatalog = Lists.newArrayList();
         mGeneCopyNumberData = Lists.newArrayList();
         mSampleLOHData = Lists.newArrayList();
+        mSampleGeneCopyNumberMap = new HashMap();
         mChrCopyNumberMap = null;
         mFileWriter = null;
         mOutputDir = outputDir;
@@ -155,7 +156,11 @@ public class DriverGeneAnnotator
 
         if(!mSampleGeneCopyNumberMap.isEmpty())
         {
-            mGeneCopyNumberData.addAll(mSampleGeneCopyNumberMap.get(sampleId));
+            final List<GeneCopyNumber> gcnDataList = mSampleGeneCopyNumberMap.get(sampleId);
+
+            if(gcnDataList != null)
+                mGeneCopyNumberData.addAll(gcnDataList);
+
             return;
         }
 
@@ -734,8 +739,6 @@ public class DriverGeneAnnotator
     {
         if(gcnFileName.isEmpty() || !Files.exists(Paths.get(gcnFileName)))
             return;
-
-        mSampleGeneCopyNumberMap = new HashMap();
 
         try
         {

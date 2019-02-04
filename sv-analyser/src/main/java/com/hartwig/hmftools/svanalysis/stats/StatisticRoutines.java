@@ -111,7 +111,7 @@ public class StatisticRoutines
             analyseCancerType(cancerType, sampleDataList);
 
         }
-        
+
         // repeat for all cancers combined
         analyseCancerType("All", allSampleDataList);
 

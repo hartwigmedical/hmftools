@@ -327,12 +327,14 @@ public class SvSampleAnalyser {
                 int dbLenStart = var.getDBLink(true) != null ? var.getDBLink(true).length() : NO_DB_MARKER;
                 int dbLenEnd = var.getDBLink(false) != null ? var.getDBLink(false).length() : NO_DB_MARKER;
 
+                final String insSeqAlignments = dbData.insertSequenceAlignments().replaceAll(",", ";");
+
                 writer.write(
                         String.format(",%s,%d,%d,%s,%s,%.0f,%s,%s,%s",
                                 dbData.insertSequence().isEmpty() && var.type() != INS ? dbData.homology() : "",
                                 dbData.inexactHomologyOffsetStart(), dbData.inexactHomologyOffsetEnd(),
                                 dbData.insertSequence(), dbData.imprecise(), dbData.qualityScore(),
-                                dbData.startRefContext(), dbData.endRefContext(), dbData.insertSequenceAlignments()));
+                                dbData.startRefContext(), dbData.endRefContext(), insSeqAlignments));
 
                 writer.write(
                         String.format(",%s,%s,%s,%s,%s,%s,%s",
