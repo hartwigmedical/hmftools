@@ -113,8 +113,8 @@ public interface StructuralVariant {
     }
 
     default boolean isFoldBackInversion() {
-        // TODO (DACA): should we add a max bounds check in here?
-        // TODO (DACA): restrict to same arm?
+        // TODO: should we add a max bounds check in here?
+        // TODO: restrict to same arm?
         StructuralVariantLeg endLeg = end();
         return endLeg != null && start().chromosome().equals(endLeg.chromosome()) && start().orientation() == endLeg.orientation();
     }

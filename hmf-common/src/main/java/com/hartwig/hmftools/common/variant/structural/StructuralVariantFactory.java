@@ -201,11 +201,11 @@ public class StructuralVariantFactory {
             throw new IllegalArgumentException(String.format("ALT %s is not in breakend notation", alt));
         }
 
-        // DACA: local orientation determined by the positioning of the anchoring bases
+        // Local orientation determined by the positioning of the anchoring bases
         final byte startOrientation = (byte) (match.group(1).length() > 0 ? 1 : -1);
-        // DACA: other orientation determined by the direction of the brackets
+        // Other orientation determined by the direction of the brackets
         final byte endOrientation = (byte) (match.group(2).equals("]") ? 1 : -1);
-        // DACA: grab the inserted sequence by removing 1 base from the reference anchoring bases
+        // Grab the inserted sequence by removing 1 base from the reference anchoring bases
         String insertedSequence =
                 match.group(1).length() > 0 ? match.group(1).substring(1) : match.group(4).substring(0, match.group(4).length() - 1);
         if (Strings.isNullOrEmpty(insertedSequence)) {
@@ -377,7 +377,7 @@ public class StructuralVariantFactory {
             filters.addAll(pairedContext.getFilters());
         }
         if (filters.size() > 1) {
-            // DACA: Doesn't pass if a filter is applied to either of the two records
+            // Doesn't pass if a filter is applied to either of the two records
             filters.remove("PASS");
         }
         // TODO Collectors string concatenation

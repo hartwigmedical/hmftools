@@ -84,7 +84,7 @@ public class BreakpointGraphTest {
 
     @Test
     @Ignore
-    // TODO (DACA): Test fails. Don't understand what has changed.
+    // TODO: Test fails. Don't understand what has changed.
     public void simplifyAssemblyLinks() {
         List<PurpleCopyNumber> cns = ImmutableList.of(cn("chr1", 1, 10, 2),
                 cn("chr1", 11, 20, 1),
