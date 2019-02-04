@@ -73,7 +73,7 @@ public class SvAnalyzer {
     @NotNull
     private List<Disruption> reportableDisruptions(@NotNull GeneModel geneModel) {
         List<Disruption> reportableDisruptions = Lists.newArrayList();
-        Set<String> reportableGenes = geneModel.disruptionGenePanel();
+        Set<String> reportableGenes = geneModel.disruptionGenes();
 
         for (Disruption disruption : disruptions) {
             if (reportableGenes.contains(disruption.gene()) && disruption.canonical() && disruption.isDisruptive()) {

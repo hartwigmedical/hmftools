@@ -82,7 +82,7 @@ public class PatientReporterApplication {
 
         if (cmd.hasOption(NOT_ANALYSABLE) && validInputForNonAnalysableReport(cmd)) {
             final String sample = cmd.getOptionValue(NOT_ANALYSED_SAMPLE);
-            LOGGER.info("Generating non-sequenceable report for {}", sample);
+            LOGGER.info("Generating non-analysable report for {}", sample);
             final NotAnalysableReason reason = NotAnalysableReason.fromIdentifier(cmd.getOptionValue(NOT_ANALYSABLE_REASON));
             final NotAnalysableReporter reporter = ImmutableNotAnalysableReporter.of(buildBaseReportData(cmd));
 

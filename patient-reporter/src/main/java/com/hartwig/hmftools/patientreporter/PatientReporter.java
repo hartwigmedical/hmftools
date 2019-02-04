@@ -182,9 +182,9 @@ abstract class PatientReporter {
 
         LOGGER.info("Analyzing somatic variants");
         return SomaticVariantAnalyzer.run(enrichedSomaticVariants,
-                sequencedReportData().panelGeneModel().somaticVariantGenePanel(),
+                sequencedReportData().panelGeneModel().somaticVariantGenes(),
                 sequencedReportData().panelGeneModel().geneDriverCategoryMap(),
-                sequencedReportData().panelGeneModel().drupActionableGenes().keySet(),
+                sequencedReportData().panelGeneModel().drupActionableGenes(),
                 sequencedReportData().actionabilityAnalyzer(),
                 patientTumorLocation);
     }

@@ -5,7 +5,6 @@ import java.util.Set;
 
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
-import com.hartwig.hmftools.common.region.HmfTranscriptRegion;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -17,58 +16,58 @@ import org.jetbrains.annotations.Nullable;
 public abstract class GeneModel {
 
     @NotNull
-    public abstract Map<String, HmfTranscriptRegion> somaticVariantDriverGenePanel();
+    public abstract Set<String> somaticVariantDriverGenes();
 
     @NotNull
-    public abstract Map<String, HmfTranscriptRegion> significantlyAmplifiedGenes();
+    public abstract Set<String> significantlyAmplifiedGenes();
 
     @NotNull
-    public abstract Map<String, HmfTranscriptRegion> significantlyDeletedGenes();
+    public abstract Set<String> significantlyDeletedGenes();
 
     @NotNull
-    public abstract Map<String, HmfTranscriptRegion> drupActionableGenes();
+    public abstract Set<String> drupActionableGenes();
 
     @NotNull
-    public abstract Map<String, HmfTranscriptRegion> disruptionGeneWhiteList();
+    public abstract Set<String> disruptionGeneWhiteList();
 
     @NotNull
     public abstract Map<String, DriverCategory> geneDriverCategoryMap();
 
     @Value.Derived
-    public Set<String> somaticVariantGenePanel() {
+    public Set<String> somaticVariantGenes() {
         Set<String> somaticVariantGenePanel = Sets.newHashSet();
-        somaticVariantGenePanel.addAll(somaticVariantDriverGenePanel().keySet());
-        somaticVariantGenePanel.addAll(drupActionableGenes().keySet());
+        somaticVariantGenePanel.addAll(somaticVariantDriverGenes());
+        somaticVariantGenePanel.addAll(drupActionableGenes());
         return somaticVariantGenePanel;
     }
 
     @Value.Derived
     public boolean isDeletionReportable(@NotNull String gene) {
-        return significantlyDeletedGenes().keySet().contains(gene) || geneDriverCategoryMap().get(gene) == DriverCategory.TSG;
+        return significantlyDeletedGenes().contains(gene) || geneDriverCategoryMap().get(gene) == DriverCategory.TSG;
     }
 
     @Value.Derived
     public boolean isAmplificationReportable(@NotNull String gene) {
-        return significantlyAmplifiedGenes().keySet().contains(gene) || geneDriverCategoryMap().get(gene) == DriverCategory.ONCO;
+        return significantlyAmplifiedGenes().contains(gene) || geneDriverCategoryMap().get(gene) == DriverCategory.ONCO;
     }
 
     @Value.Derived
     @NotNull
-    public Set<String> disruptionGenePanel() {
+    public Set<String> disruptionGenes() {
         Set<String> disruptionGenePanel = Sets.newHashSet();
-        for (String driverGene : somaticVariantDriverGenePanel().keySet()) {
+        for (String driverGene : somaticVariantDriverGenes()) {
             if (geneDriverCategoryMap().get(driverGene) != DriverCategory.ONCO) {
                 disruptionGenePanel.add(driverGene);
             }
         }
 
-        for (String drupActionableGene : drupActionableGenes().keySet()) {
+        for (String drupActionableGene : drupActionableGenes()) {
             if (geneDriverCategoryMap().get(drupActionableGene) != DriverCategory.ONCO) {
                 disruptionGenePanel.add(drupActionableGene);
             }
         }
 
-        disruptionGenePanel.addAll(disruptionGeneWhiteList().keySet());
+        disruptionGenePanel.addAll(disruptionGeneWhiteList());
 
         return disruptionGenePanel;
     }
