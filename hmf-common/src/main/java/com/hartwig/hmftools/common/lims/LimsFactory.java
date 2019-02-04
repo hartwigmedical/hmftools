@@ -66,7 +66,7 @@ public final class LimsFactory {
 
             final JsonObject jsonSampleObject = jsonSubmission.getValue().getAsJsonObject();
             final String projectType = jsonSampleObject.get("project_type").getAsString();
-            if (projectType.contains("core")) {
+            if (projectType.contains("CORE")) {
                 try {
                     final LimsJsonDataSubmission limsJsonDataSubmission = gson.fromJson(jsonSubmission.getValue(), LimsJsonDataSubmission.class);
                     limsDataPerSubmission.put(limsJsonDataSubmission.submission(), limsJsonDataSubmission);
