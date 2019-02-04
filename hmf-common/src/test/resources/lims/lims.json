@@ -60,5 +60,26 @@
       "sample_id": "FR00000001",
       "label": "CPCT"
     }
+  },
+  "submissions" : {
+    "ABCDEF123": {
+      "COLUMNS_NOT_IN_USE_COLLAPSED": "NA",
+      "NA": "NA",
+      "Requested product ": "WGS",
+      "analysis_type": "NA",
+      "arrival_date": "2014-10-11",
+      "bfx_analyis": "No",
+      "contact_email": "NA",
+      "contact_name": "NA",
+      "has_arrived": "Yes",
+      "has_lab_finished": 1,
+      "lab_storage_status": "NA",
+      "project_name": "NA",
+      "project_type": "",
+      "remarks": "NA",
+      "sample_count": 19,
+      "submission": "ABCDEF123",
+      "turn_around_time": 367
+    }
   }
 }

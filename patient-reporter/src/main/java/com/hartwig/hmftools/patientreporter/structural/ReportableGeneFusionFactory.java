@@ -3,17 +3,16 @@ package com.hartwig.hmftools.patientreporter.structural;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.patientreporter.loadStructuralVariants.Fusion;
 
 import org.jetbrains.annotations.NotNull;
 
-public final class ReportableGeneFusionFactory {
+final class ReportableGeneFusionFactory {
 
     private ReportableGeneFusionFactory() {
     }
 
     @NotNull
-    public static List<ReportableGeneFusion> fusionConvertToReportable(@NotNull List<Fusion> fusions) {
+    public static List<ReportableGeneFusion> convert(@NotNull List<Fusion> fusions) {
         List<ReportableGeneFusion> reportableFusions = Lists.newArrayList();
         for (Fusion fusion : fusions) {
             reportableFusions.add(ImmutableReportableGeneFusion.builder()

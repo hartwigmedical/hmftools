@@ -22,6 +22,9 @@ public abstract class CenterModel {
     @NotNull
     protected abstract Map<String, CenterData> centerPerId();
 
+    @NotNull
+    protected abstract Map<String, CenterData> hospital();
+
     @Nullable
     String getCpctRecipients(@Nullable final String centerId) {
         if (centerId == null) {
@@ -33,6 +36,17 @@ public abstract class CenterModel {
             return null;
         }
         return center.cpctRecipients();
+    }
+
+    @Nullable
+    public String getCoreRecipients(@Nullable final String DVOname) {
+        String DVOnameSplit = DVOname.split("-")[0];
+        final CenterData center = hospital().get(DVOnameSplit);
+        if (center == null){
+            LOGGER.error("Center model does not contain hospital name " + center);
+            return null;
+        }
+        return DVOname.contains(DVOnameSplit) ? center.addressName() + ", " + center.addressZip() + " " + center.addressCity() : "NA";
     }
 
     @Nullable

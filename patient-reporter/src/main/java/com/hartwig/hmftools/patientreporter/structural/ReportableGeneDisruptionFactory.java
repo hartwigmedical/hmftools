@@ -9,14 +9,13 @@ import java.util.Objects;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
-import com.hartwig.hmftools.patientreporter.loadStructuralVariants.Disruption;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-public final class ReportableGeneDisruptionFactory {
+final class ReportableGeneDisruptionFactory {
 
     private static final Logger LOGGER = LogManager.getLogger(ReportableGeneDisruptionFactory.class);
 
@@ -24,7 +23,7 @@ public final class ReportableGeneDisruptionFactory {
     }
 
     @NotNull
-    public static List<ReportableGeneDisruption> disruptionConvertGeneDisruption(@NotNull List<Disruption> disruptions,
+    public static List<ReportableGeneDisruption> convert(@NotNull List<Disruption> disruptions,
             @NotNull List<GeneCopyNumber> geneCopyNumbers) {
         LOGGER.debug("Generating reportable disruptions based on {} disruptions", disruptions.size());
 

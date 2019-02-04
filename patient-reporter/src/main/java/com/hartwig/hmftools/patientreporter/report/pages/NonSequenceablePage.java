@@ -17,6 +17,7 @@ import com.hartwig.hmftools.patientreporter.report.components.MainPageTopSection
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import net.sf.dynamicreports.report.builder.component.ComponentBuilder;
 
@@ -68,7 +69,9 @@ public abstract class NonSequenceablePage {
             }
             case LOW_TUMOR_PERCENTAGE: {
                 title = "Notification of inadequate tumor sample";
-                subTitle = "Not enough tumor cells detected by Pathology UMC Utrecht.";
+                subTitle = sampleReport().label().equalsIgnoreCase("core")
+                        ? "Not enough tumor DNA detected by molecular T % estimate."
+                        : "Not enough tumor cells detected by Pathology UMC Utrecht.";
                 message = "For sequencing we require a minimum of 30% tumor cells.";
                 break;
             }
@@ -94,18 +97,28 @@ public abstract class NonSequenceablePage {
                         + "result. Therefore whole genome sequencing cannot be performed, "
                         + "unless additional fresh tumor material can be provided for a new assessment.").setStyle(fontStyle()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
-                cmp.text("When possible, please resubmit using the same " + study().studyName() + "-number. "
-                        + "In case additional tumor material cannot be provided, please be notified that the patient will not be "
-                        + "evaluable for the " + study().studyCode() + " study.").setStyle(fontStyle()),
+                cmp.text(sampleReport().label().contains("CORE")
+                        ? "When possible, please resubmit using the same " + study().studyName()
+                        : "When possible, please resubmit using the same " + study().studyName() + "-number. "
+                                + "In case additional tumor material cannot be provided, please be notified that the patient will not be "
+                                + "evaluable for the " + study().studyCode() + " study.").setStyle(fontStyle()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
-                cmp.text("The tumor percentage estimated by Pathology UMC Utrecht is: " + sampleReport().pathologyTumorPercentage())
+                cmp.text(sampleReport().label().equalsIgnoreCase("core")
+                        ? "The tumor percentage estimated by molecular tumor percentage is:"
+                        : "The tumor percentage estimated by Pathology UMC Utrecht is: " + sampleReport().pathologyTumorPercentage())
                         .setStyle(fontStyle()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
                 cmp.text("The biopsies evaluated for this sample have arrived on " + formattedDate(sampleReport().tumorArrivalDate())
                         + " at " + Commons.HARTWIG_ADDRESS).setStyle(fontStyle()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
-                cmp.text("This report is generated and verified by: " + user() + " and is addressed at " + sampleReport().recipient())
+                cmp.text(sampleReport().label().equalsIgnoreCase("core")
+                        ? "This report is generated and verified by: " + user() + " and is addressed at " + sampleReport().recipient()
+                        : "This report is generated and verified by: " + user() + " and is addressed at " + sampleReport().recipient())
                         .setStyle(fontStyle()),
+                cmp.verticalGap(SECTION_VERTICAL_GAP),
+                cmp.text(sampleReport().label().equalsIgnoreCase("core") ? "The project name are : " + sampleReport().projectNameDVO()
+                        + ". The client names are: " + sampleReport().contactName() + ". The client emails are: "
+                        + sampleReport().contactEmail() + "." : "").setStyle(fontStyle()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
                 cmp.text("The results on this report are based on tests that are performed under ISO/ICE-17025:2005 accreditation.")
                         .setStyle(fontStyle()),

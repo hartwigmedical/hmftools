@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.patientreporter.loadStructuralVariants;
+package com.hartwig.hmftools.patientreporter.structural;
 
 import java.io.File;
 import java.io.IOException;
@@ -12,17 +12,17 @@ import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
-public final class FusionFactory {
+final class FusionFileReader {
 
-    private static final Logger LOGGER = LogManager.getLogger(FusionFactory.class);
+    private static final Logger LOGGER = LogManager.getLogger(FusionFileReader.class);
 
-    private FusionFactory() {
+    private FusionFileReader() {
     }
 
     private static final String DELIMITER = ",";
 
     @NotNull
-    public static FusionAnalyzer fromFusionFile(@NotNull String fusionFile) throws IOException {
+    public static List<Fusion> fromFusionFile(@NotNull String fusionFile) throws IOException {
         LOGGER.debug(" Using " + fusionFile + " as source for fusions.");
         final List<Fusion> fusions = Lists.newArrayList();
 
@@ -32,7 +32,7 @@ public final class FusionFactory {
         for (String line : lineFusions.subList(1, lineFusions.size())) {
             fusions.add(fromFusionLine(line));
         }
-        return new FusionAnalyzer(fusions);
+        return fusions;
     }
 
     @NotNull

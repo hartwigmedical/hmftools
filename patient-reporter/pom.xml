@@ -18,10 +18,6 @@
             <groupId>com.hartwig</groupId>
             <artifactId>hmf-common</artifactId>
         </dependency>
-        <dependency>
-            <groupId>com.hartwig</groupId>
-            <artifactId>variant-annotator</artifactId>
-        </dependency>
 
         <dependency>
             <groupId>commons-cli</groupId>

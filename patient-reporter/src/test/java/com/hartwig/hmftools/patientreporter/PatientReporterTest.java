@@ -9,7 +9,7 @@ import static org.junit.Assert.assertNotNull;
 import java.io.IOException;
 
 import com.google.common.io.Resources;
-import com.hartwig.hmftools.patientreporter.loadStructuralVariants.SvAnalyzerModel;
+import com.hartwig.hmftools.patientreporter.structural.SvAnalyzer;
 
 import org.junit.Test;
 
@@ -21,8 +21,8 @@ public class PatientReporterTest {
     public void canRunOnRunDirectory() throws IOException {
         final BaseReportData baseReportData = testBaseReportData();
         final SequencedReportData reporterData = testSequencedReportData();
-        final SvAnalyzerModel svAnalyzerModel = testSvAnalyzerModel();
-        final PatientReporter reporter = ImmutablePatientReporter.of(baseReportData, reporterData, svAnalyzerModel);
+        final SvAnalyzer svAnalyzer = testSvAnalyzerModel();
+        final PatientReporter reporter = ImmutablePatientReporter.of(baseReportData, reporterData, svAnalyzer);
 
         assertNotNull(reporter.run(RUN_DIRECTORY, true, null));
     }

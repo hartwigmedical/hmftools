@@ -19,7 +19,7 @@ import com.hartwig.hmftools.patientreporter.actionability.DrupActionabilityModel
 import com.hartwig.hmftools.patientreporter.actionability.DrupActionabilityModelFactory;
 import com.hartwig.hmftools.patientreporter.genepanel.GeneModel;
 import com.hartwig.hmftools.patientreporter.genepanel.GeneModelFactory;
-import com.hartwig.hmftools.patientreporter.loadStructuralVariants.SvAnalyzerModel;
+import com.hartwig.hmftools.patientreporter.structural.SvAnalyzer;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -50,8 +50,13 @@ public final class PatientReporterTestUtil {
     }
 
     @NotNull
-    static SvAnalyzerModel testSvAnalyzerModel() throws IOException {
-        return SvAnalyzerModel.fromFiles(FUSION_FILE, DISRUPTION_FILE);
+    public static ActionabilityAnalyzer testActionabilityAnalyzer() throws IOException {
+        return ActionabilityAnalyzer.fromKnowledgebase(KNOWLEDGEBASE_PATH);
+    }
+
+    @NotNull
+    static SvAnalyzer testSvAnalyzerModel() throws IOException {
+        return SvAnalyzer.fromFiles(FUSION_FILE, DISRUPTION_FILE);
     }
 
     @NotNull
@@ -74,7 +79,7 @@ public final class PatientReporterTestUtil {
             CompoundEnrichment compoundEnrichment = new CompoundEnrichment(HotspotEnrichment.fromHotspotsFile(HOTSPOT_TSV));
 
             return ImmutableSequencedReportData.of(geneModel,
-                    ActionabilityAnalyzer.fromKnowledgebase(KNOWLEDGEBASE_PATH),
+                    testActionabilityAnalyzer(),
                     compoundEnrichment,
                     new IndexedFastaSequenceFile(new File(REF_GENOME_PATH)),
                     TreeMultimap.create());

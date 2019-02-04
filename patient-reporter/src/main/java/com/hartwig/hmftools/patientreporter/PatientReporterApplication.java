@@ -10,12 +10,12 @@ import com.hartwig.hmftools.common.center.CenterModel;
 import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocation;
 import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.lims.LimsFactory;
-import com.hartwig.hmftools.patientreporter.loadStructuralVariants.SvAnalyzerModel;
 import com.hartwig.hmftools.patientreporter.qcfail.ImmutableNotAnalysableReporter;
 import com.hartwig.hmftools.patientreporter.qcfail.NotAnalysableReason;
 import com.hartwig.hmftools.patientreporter.qcfail.NotAnalysableReporter;
 import com.hartwig.hmftools.patientreporter.qcfail.NotAnalysableStudy;
 import com.hartwig.hmftools.patientreporter.report.PDFWriter;
+import com.hartwig.hmftools.patientreporter.structural.SvAnalyzer;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -82,7 +82,7 @@ public class PatientReporterApplication {
 
         if (cmd.hasOption(NOT_ANALYSABLE) && validInputForNonAnalysableReport(cmd)) {
             final String sample = cmd.getOptionValue(NOT_ANALYSED_SAMPLE);
-            LOGGER.info("Generating non-sequenceable report for {}", sample);
+            LOGGER.info("Generating non-analysable report for {}", sample);
             final NotAnalysableReason reason = NotAnalysableReason.fromIdentifier(cmd.getOptionValue(NOT_ANALYSABLE_REASON));
             final NotAnalysableReporter reporter = ImmutableNotAnalysableReporter.of(buildBaseReportData(cmd));
 
@@ -133,10 +133,10 @@ public class PatientReporterApplication {
     @NotNull
     private static PatientReporter buildReporter(@NotNull final CommandLine cmd, @NotNull final SequencedReportData sequencedReportData)
             throws IOException {
-        final SvAnalyzerModel svAnalyzerModel =
-                SvAnalyzerModel.fromFiles(cmd.getOptionValue(FUSION_CSV), cmd.getOptionValue(DISRUPTION_CSV));
+        final SvAnalyzer svAnalyzer =
+                SvAnalyzer.fromFiles(cmd.getOptionValue(FUSION_CSV), cmd.getOptionValue(DISRUPTION_CSV));
 
-        return ImmutablePatientReporter.of(buildBaseReportData(cmd), sequencedReportData, svAnalyzerModel);
+        return ImmutablePatientReporter.of(buildBaseReportData(cmd), sequencedReportData, svAnalyzer);
     }
 
     private static boolean validInputForPatientReporter(@NotNull final CommandLine cmd) {
@@ -175,12 +175,12 @@ public class PatientReporterApplication {
     private static boolean validInputForNonAnalysableReport(@NotNull final CommandLine cmd) {
         final NotAnalysableReason notAnalysableReason = NotAnalysableReason.fromIdentifier(cmd.getOptionValue(NOT_ANALYSABLE_REASON));
         final String notAnalysedSample = cmd.getOptionValue(NOT_ANALYSED_SAMPLE);
-
+        LOGGER.info("core: " + notAnalysedSample);
         if (notAnalysableReason == NotAnalysableReason.UNDEFINED) {
             LOGGER.warn(NOT_ANALYSABLE_REASON + " has to be low_tumor_percentage, low_dna_yield or post_analysis_fail.");
         } else if (notAnalysedSample == null) {
             LOGGER.warn(NOT_ANALYSED_SAMPLE + " has to be provided.");
-        } else if (NotAnalysableStudy.fromSample(notAnalysedSample) == null) {
+        } else if (NotAnalysableStudy.fromSample(notAnalysedSample) == null &&  !notAnalysedSample.contains("CORE")) {
             LOGGER.warn("Could not determine study for sample " + notAnalysedSample);
         } else {
             return true;

@@ -51,6 +51,18 @@ abstract class LimsJsonData {
     public abstract String labRemarks();
 
     @NotNull
+    @SerializedName("label")
+    public abstract String labelSample();
+
+    @NotNull
+    @SerializedName("project_name")
+    public abstract String projectName();
+
+    @NotNull
+    @SerializedName("submission")
+    public abstract String submission();
+
+    @NotNull
     @Value.Derived
     public String labProcedures() {
         final Pattern pattern = Pattern.compile("PREP(\\d+)V(\\d+)-QC(\\d+)V(\\d+)-SEQ(\\d+)V(\\d+)");

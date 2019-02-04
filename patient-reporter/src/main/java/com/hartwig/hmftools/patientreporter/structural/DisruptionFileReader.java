@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.patientreporter.loadStructuralVariants;
+package com.hartwig.hmftools.patientreporter.structural;
 
 import java.io.File;
 import java.io.IOException;
@@ -11,17 +11,17 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-public final class DisruptionFactory {
+final class DisruptionFileReader {
 
-    private static final Logger LOGGER = LogManager.getLogger(DisruptionFactory.class);
+    private static final Logger LOGGER = LogManager.getLogger(DisruptionFileReader.class);
 
-    private DisruptionFactory() {
+    private DisruptionFileReader() {
     }
 
     private static final String DELIMITER = ",";
 
     @NotNull
-    public static DisruptionAnalyzer fromDisruptionFile(@NotNull String disruptionFile) throws IOException {
+    public static List<Disruption> fromDisruptionFile(@NotNull String disruptionFile) throws IOException {
         LOGGER.debug(" Using " + disruptionFile + " as source for disruptions.");
         final List<Disruption> disruptions = Lists.newArrayList();
 
@@ -31,7 +31,7 @@ public final class DisruptionFactory {
         for (String line : lineDisruptions.subList(1, lineDisruptions.size())) {
             disruptions.add(fromDisruptionLine(line));
         }
-        return new DisruptionAnalyzer(disruptions);
+        return disruptions;
     }
 
     @NotNull

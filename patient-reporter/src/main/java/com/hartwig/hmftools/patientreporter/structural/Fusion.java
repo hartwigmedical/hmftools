@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.patientreporter.loadStructuralVariants;
+package com.hartwig.hmftools.patientreporter.structural;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -8,7 +8,7 @@ import org.jetbrains.annotations.Nullable;
 @Value.Style(allParameters = true,
              passAnnotations = { NotNull.class, Nullable.class })
 
-public abstract class Fusion {
+abstract class Fusion {
 
     public abstract boolean reportable();
 
