@@ -8,7 +8,6 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
-import com.hartwig.hmftools.patientreporter.loadStructuralVariants.ImmutableDisruption;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;

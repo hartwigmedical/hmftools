@@ -6,7 +6,6 @@ import java.nio.file.Files;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.patientreporter.loadStructuralVariants.ImmutableDisruption;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

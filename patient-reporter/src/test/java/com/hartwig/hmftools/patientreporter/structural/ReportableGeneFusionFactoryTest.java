@@ -5,7 +5,6 @@ import static org.junit.Assert.assertEquals;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.patientreporter.loadStructuralVariants.ImmutableFusion;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;

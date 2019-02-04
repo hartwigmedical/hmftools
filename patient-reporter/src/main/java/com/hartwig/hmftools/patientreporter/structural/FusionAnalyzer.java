@@ -2,6 +2,7 @@ package com.hartwig.hmftools.patientreporter.structural;
 
 import java.util.List;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 
 import org.jetbrains.annotations.NotNull;
@@ -13,6 +14,12 @@ public class FusionAnalyzer {
 
     FusionAnalyzer(@NotNull final List<Fusion> fusions) {
         this.fusions = fusions;
+    }
+
+    @NotNull
+    @VisibleForTesting
+    List<Fusion> fusions() {
+        return fusions;
     }
 
     @NotNull
