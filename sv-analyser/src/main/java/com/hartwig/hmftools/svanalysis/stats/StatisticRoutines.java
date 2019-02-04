@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.svanalysis.stats;
 
+import static com.hartwig.hmftools.common.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.io.FileWriterUtils.createBufferedWriter;
 
 import java.io.BufferedReader;
@@ -87,197 +88,211 @@ public class StatisticRoutines
     private static int INDEX_COUNT = 6;
 
     private static String SPEC_CANCER = "";
-    // private static String SPEC_CANCER = "Breast";
+    // private static String SPEC_CANCER = "Eye";
     private static String SPEC_GENE = "";
-    // private static String SPEC_GENE = "BRCA1";
+    // private static String SPEC_GENE = "OR11H1";
     private static String SPEC_CATEGORY = "";
     // private static String SPEC_CATEGORY = "DUP_LT_100";
 
     public void runStatistics()
     {
-        int categoryCount = mCategories.size();
-        int geneCount = mGenes.size();
 
+
+        List<SampleData> allSampleDataList = Lists.newArrayList();
+
+        for (final String cancerType : mCancerTypes)
+        {
+            if (!SPEC_CANCER.isEmpty() && !cancerType.equals(SPEC_CANCER))
+                continue;
+
+            List<SampleData> sampleDataList = mCancerSampleData.get(cancerType);
+            allSampleDataList.addAll(sampleDataList);
+
+            analyseCancerType(cancerType, sampleDataList);
+
+        }
+        
+        // repeat for all cancers combined
+        analyseCancerType("All", allSampleDataList);
+
+        closeBufferedWriter(mWriter);
+
+        LOGGER.info("analysis complete");
+    }
+
+    private void analyseCancerType(final String cancerType, final List<SampleData> sampleDataList)
+    {
         /* calc method (for each cancer type):
         - each sample data has enriched categories and driver genes
         - from this it can contribute to each non-false cell
         - also tally up across all samples the counts per category and gene
          */
+        int categoryCount = mCategories.size();
+        int geneCount = mGenes.size();
 
-        for(final String cancerType : mCancerTypes)
+        int sampleCount = sampleDataList.size();
+        LOGGER.info("processing cancerType({}) with {} samples", cancerType, sampleCount);
+
+        // populate the matrix with counts
+        mSampleCountsMatrix = new int[geneCount][categoryCount][INDEX_COUNT];
+
+        mFisherET.initialise(sampleCount);
+
+        Map<String, Integer> withCategoryTotals = new HashMap();
+        Map<String, Integer> unclearCategoryTotals = new HashMap();
+        Map<String, Integer> withGeneTotals = new HashMap();
+        Map<String, Integer> unclearGeneTotals = new HashMap();
+
+        for(final SampleData sampleData : sampleDataList)
         {
-            if(!SPEC_CANCER.isEmpty() && !cancerType.equals(SPEC_CANCER))
-                continue;
-
-            List<SampleData> sampleDataList = mCancerSampleData.get(cancerType);
-
-            int sampleCount = sampleDataList.size();
-            LOGGER.info("processing cancerType({}) with {} samples", cancerType, sampleCount);
-
-            // populate the matrix with counts
-            mSampleCountsMatrix = new int[geneCount][categoryCount][INDEX_COUNT];
-
-            mFisherET.initialise(sampleCount);
-
-            Map<String, Integer> withCategoryTotals = new HashMap();
-            Map<String, Integer> unclearCategoryTotals = new HashMap();
-            Map<String, Integer> withGeneTotals = new HashMap();
-            Map<String, Integer> unclearGeneTotals = new HashMap();
-
-            for(final SampleData sampleData : sampleDataList)
+            // calc category totals
+            for(int i = 0; i <= 1; ++i)
             {
-                // calc category totals
-                for(int i = 0; i <= 1; ++i)
+                final List<String> categories = (i == 0) ? sampleData.CategoryKnown : sampleData.CategoryUnclear;
+                Map<String, Integer> totalsMap = (i == 0) ? withCategoryTotals : unclearCategoryTotals;
+
+                for (final String category : categories)
                 {
-                    final List<String> categories = (i == 0) ? sampleData.CategoryKnown : sampleData.CategoryUnclear;
-                    Map<String, Integer> totalsMap = (i == 0) ? withCategoryTotals : unclearCategoryTotals;
+                    Integer total = totalsMap.get(category);
 
-                    for (final String category : categories)
-                    {
-                        Integer total = totalsMap.get(category);
-
-                        if(total == null)
-                            totalsMap.put(category, 1);
-                        else
-                            totalsMap.put(category, total+1);
-                    }
+                    if(total == null)
+                        totalsMap.put(category, 1);
+                    else
+                        totalsMap.put(category, total+1);
                 }
+            }
 
-                // and then gene totals
-                for(int i = 0; i <= 1; ++i)
+            // and then gene totals
+            for(int i = 0; i <= 1; ++i)
+            {
+                final List<String> genes = (i == 0) ? sampleData.GeneKnown : sampleData.GeneUnclear;
+                Map<String, Integer> totalsMap = (i == 0) ? withGeneTotals : unclearGeneTotals;
+
+                for (final String gene : genes)
                 {
-                    final List<String> genes = (i == 0) ? sampleData.GeneKnown : sampleData.GeneUnclear;
-                    Map<String, Integer> totalsMap = (i == 0) ? withGeneTotals : unclearGeneTotals;
+                    Integer total = totalsMap.get(gene);
 
-                    for (final String gene : genes)
-                    {
-                        Integer total = totalsMap.get(gene);
-
-                        if(total == null)
-                            totalsMap.put(gene, 1);
-                        else
-                            totalsMap.put(gene, total+1);
-                    }
+                    if(total == null)
+                        totalsMap.put(gene, 1);
+                    else
+                        totalsMap.put(gene, total+1);
                 }
+            }
 
-                for(int i = 0; i <= 1; ++i)
+            for(int i = 0; i <= 1; ++i)
+            {
+                final List<String> categories = (i == 0) ? sampleData.CategoryKnown : sampleData.CategoryUnclear;
+
+                for (int j = 0; j <= 1; ++j)
                 {
-                    final List<String> categories = (i == 0) ? sampleData.CategoryKnown : sampleData.CategoryUnclear;
+                    final List<String> genes = (j == 0) ? sampleData.GeneKnown : sampleData.GeneUnclear;
 
-                    for (int j = 0; j <= 1; ++j)
+                    int countsIndex;
+                    if(i == 0 && j == 0)
+                        countsIndex = ENR_CAT_WITH_GENE;
+                    else if(i == 0 && j == 1)
+                        countsIndex = ENR_CAT_UNC_GENE;
+                    else if(i == 1 && j == 0)
+                        countsIndex = UNC_CAT_WITH_GENE;
+                    else
+                        countsIndex = UNC_CAT_UNC_GENE;
+
+                    for(final String category : categories)
                     {
-                        final List<String> genes = (j == 0) ? sampleData.GeneKnown : sampleData.GeneUnclear;
-
-                        int countsIndex;
-                        if(i == 0 && j == 0)
-                            countsIndex = ENR_CAT_WITH_GENE;
-                        else if(i == 0 && j == 1)
-                            countsIndex = ENR_CAT_UNC_GENE;
-                        else if(i == 1 && j == 0)
-                            countsIndex = UNC_CAT_WITH_GENE;
-                        else
-                            countsIndex = UNC_CAT_UNC_GENE;
-
-                        for(final String category : categories)
+                        for(final String gene : genes)
                         {
-                            for(final String gene : genes)
-                            {
-                                int categoryIndex = mCategoryIndexMap.get(category);
-                                int geneIndex = mGeneIndexMap.get(gene);
+                            int categoryIndex = mCategoryIndexMap.get(category);
+                            int geneIndex = mGeneIndexMap.get(gene);
 
-                                ++mSampleCountsMatrix[geneIndex][categoryIndex][countsIndex];
-                            }
+                            ++mSampleCountsMatrix[geneIndex][categoryIndex][countsIndex];
                         }
                     }
                 }
             }
-
-
-            LOGGER.info("cancerType({}) input counts populated", cancerType);
-
-            for(final String category : mCategories)
-            {
-                if(!SPEC_CATEGORY.isEmpty() && !cancerType.equals(SPEC_CATEGORY))
-                    continue;
-
-                int withCatTotal = withCategoryTotals.containsKey(category) ? withCategoryTotals.get(category) : 0;
-                int uncCatTotal = unclearCategoryTotals.containsKey(category) ? unclearCategoryTotals.get(category) : 0;
-                int noCatTotal = sampleCount - withCatTotal - uncCatTotal;
-
-                int categoryIndex = mCategoryIndexMap.get(category);
-
-                for(final String gene : mGenes)
-                {
-                    if(!SPEC_GENE.isEmpty() && !cancerType.equals(SPEC_GENE))
-                        continue;
-
-                    int withGeneTotal = withGeneTotals.containsKey(gene) ? withGeneTotals.get(gene) : 0;
-                    int uncGeneTotal = unclearGeneTotals.containsKey(gene) ? unclearGeneTotals.get(gene) : 0;
-                    int noGeneTotal = sampleCount - withGeneTotal - uncGeneTotal;
-
-                    int geneIndex = mGeneIndexMap.get(gene);
-
-                    int withCatWithGene = mSampleCountsMatrix[geneIndex][categoryIndex][ENR_CAT_WITH_GENE];
-                    int withCatUncGene = mSampleCountsMatrix[geneIndex][categoryIndex][ENR_CAT_UNC_GENE];
-                    int uncCatWithGene = mSampleCountsMatrix[geneIndex][categoryIndex][UNC_CAT_WITH_GENE];
-                    int uncCatUncGene = mSampleCountsMatrix[geneIndex][categoryIndex][UNC_CAT_UNC_GENE];
-
-                    // infer the others
-                    int noCatWithGene = withGeneTotal - withCatWithGene - uncCatWithGene;
-                    int noCatUncGene = uncGeneTotal - withCatUncGene - uncCatUncGene;
-                    int withCatNoGene = withCatTotal - withCatWithGene - withCatUncGene;
-                    int uncCatNoGene = uncCatTotal - uncCatWithGene - uncCatUncGene;
-                    int noCatNoGene = noGeneTotal - withCatNoGene - uncCatNoGene;
-
-                    if(withCatWithGene < 0 || noCatWithGene < 0 || withCatNoGene < 0 || noCatNoGene < 0)
-                    {
-                        LOGGER.warn("INVALID COUNTS: cancer({}) samples({}) gene({}) counts(w={} u={} n={}) cat({}) counts(w={}) u={} n={})",
-                                cancerType, sampleCount, gene, withGeneTotal, uncGeneTotal, noGeneTotal,
-                                category, withCatTotal, uncCatTotal, noCatTotal);
-
-                        LOGGER.warn("with cat: total({}) withGene({}) uncGene({}) noGene({})",
-                                withCatTotal, withCatWithGene, withCatUncGene, withCatNoGene);
-
-                        LOGGER.warn("unclear cat: total({}) withGene({}) uncGene({}) noGene({})",
-                                uncCatTotal, uncCatWithGene, uncCatUncGene, uncCatNoGene);
-
-                        LOGGER.warn("no cat: total({}) withGene({}) uncGene({}) noGene({})",
-                                noCatTotal, noCatWithGene, noCatUncGene, noCatNoGene);
-
-                        return;
-                    }
-
-                    /*
-                    if(gene.contains("BRCA"))
-                    {
-                        LOGGER.debug("gene({}) counts(w={} u={} n={}) cat({}) counts(w={}) u={} n={})",
-                                gene, withGeneTotal, uncGeneTotal, noGeneTotal,
-                                category, withCatTotal, uncCatTotal, noCatTotal);
-
-                        LOGGER.debug("with cat: total({}) withGene({}) uncGene({}) noGene({})",
-                                withCatTotal, withCatWithGene, withCatUncGene, withCatNoGene);
-
-                        LOGGER.debug("unclear cat: total({}) withGene({}) uncGene({}) noGene({})",
-                                uncCatTotal, uncCatWithGene, uncCatUncGene, uncCatNoGene);
-
-                        LOGGER.debug("no cat: total({}) withGene({}) uncGene({}) noGene({})",
-                                noCatTotal, noCatWithGene, noCatUncGene, noCatNoGene);
-                    }
-                    */
-
-                    double geneSamplesPerc = withGeneTotal/(double)sampleCount;
-                    double expectedVal  = withCatTotal * geneSamplesPerc;
-                    double fisherProb = calcFisherExact(withCatWithGene, noCatWithGene, withCatNoGene, noCatNoGene, expectedVal);
-
-                    writeResultsData(cancerType, gene, category, sampleCount, withGeneTotal, withCatTotal, fisherProb,
-                            expectedVal, withCatWithGene, noCatWithGene, withCatNoGene, noCatNoGene);
-                }
-            }
-
-            LOGGER.info("cancerType({}) results written to file", cancerType);
         }
 
-        LOGGER.info("analysis complete");
+        LOGGER.info("cancerType({}) input counts populated", cancerType);
+
+        for(final String category : mCategories)
+        {
+            if(!SPEC_CATEGORY.isEmpty() && !cancerType.equals(SPEC_CATEGORY))
+                continue;
+
+            int withCatTotal = withCategoryTotals.containsKey(category) ? withCategoryTotals.get(category) : 0;
+            int uncCatTotal = unclearCategoryTotals.containsKey(category) ? unclearCategoryTotals.get(category) : 0;
+            int noCatTotal = sampleCount - withCatTotal - uncCatTotal;
+
+            int categoryIndex = mCategoryIndexMap.get(category);
+
+            for(final String gene : mGenes)
+            {
+                if(!SPEC_GENE.isEmpty() && !cancerType.equals(SPEC_GENE))
+                    continue;
+
+                int withGeneTotal = withGeneTotals.containsKey(gene) ? withGeneTotals.get(gene) : 0;
+                int uncGeneTotal = unclearGeneTotals.containsKey(gene) ? unclearGeneTotals.get(gene) : 0;
+                int noGeneTotal = sampleCount - withGeneTotal - uncGeneTotal;
+
+                int geneIndex = mGeneIndexMap.get(gene);
+
+                int withCatWithGene = mSampleCountsMatrix[geneIndex][categoryIndex][ENR_CAT_WITH_GENE];
+                int withCatUncGene = mSampleCountsMatrix[geneIndex][categoryIndex][ENR_CAT_UNC_GENE];
+                int uncCatWithGene = mSampleCountsMatrix[geneIndex][categoryIndex][UNC_CAT_WITH_GENE];
+                int uncCatUncGene = mSampleCountsMatrix[geneIndex][categoryIndex][UNC_CAT_UNC_GENE];
+
+                // infer the others
+                int noCatWithGene = withGeneTotal - withCatWithGene - uncCatWithGene;
+                int noCatUncGene = uncGeneTotal - withCatUncGene - uncCatUncGene;
+                int withCatNoGene = withCatTotal - withCatWithGene - withCatUncGene;
+                int uncCatNoGene = uncCatTotal - uncCatWithGene - uncCatUncGene;
+                int noCatNoGene = noGeneTotal - withCatNoGene - uncCatNoGene;
+
+                if(withCatWithGene < 0 || noCatWithGene < 0 || withCatNoGene < 0 || noCatNoGene < 0)
+                {
+                    LOGGER.warn("INVALID COUNTS: cancer({}) samples({}) gene({}) counts(w={} u={} n={}) cat({}) counts(w={}) u={} n={})",
+                            cancerType, sampleCount, gene, withGeneTotal, uncGeneTotal, noGeneTotal,
+                            category, withCatTotal, uncCatTotal, noCatTotal);
+
+                    LOGGER.warn("with cat: total({}) withGene({}) uncGene({}) noGene({})",
+                            withCatTotal, withCatWithGene, withCatUncGene, withCatNoGene);
+
+                    LOGGER.warn("unclear cat: total({}) withGene({}) uncGene({}) noGene({})",
+                            uncCatTotal, uncCatWithGene, uncCatUncGene, uncCatNoGene);
+
+                    LOGGER.warn("no cat: total({}) withGene({}) uncGene({}) noGene({})",
+                            noCatTotal, noCatWithGene, noCatUncGene, noCatNoGene);
+
+                    return;
+                }
+
+                /*
+                if(gene.contains("BRCA"))
+                {
+                    LOGGER.debug("gene({}) counts(w={} u={} n={}) cat({}) counts(w={}) u={} n={})",
+                            gene, withGeneTotal, uncGeneTotal, noGeneTotal,
+                            category, withCatTotal, uncCatTotal, noCatTotal);
+
+                    LOGGER.debug("with cat: total({}) withGene({}) uncGene({}) noGene({})",
+                            withCatTotal, withCatWithGene, withCatUncGene, withCatNoGene);
+
+                    LOGGER.debug("unclear cat: total({}) withGene({}) uncGene({}) noGene({})",
+                            uncCatTotal, uncCatWithGene, uncCatUncGene, uncCatNoGene);
+
+                    LOGGER.debug("no cat: total({}) withGene({}) uncGene({}) noGene({})",
+                            noCatTotal, noCatWithGene, noCatUncGene, noCatNoGene);
+                }
+                */
+
+                double geneSamplesPerc = withGeneTotal/(double)sampleCount;
+                double expectedVal  = withCatTotal * geneSamplesPerc;
+                double fisherProb = calcFisherExact(withCatWithGene, noCatWithGene, withCatNoGene, noCatNoGene, expectedVal);
+
+                writeResultsData(cancerType, gene, category, sampleCount, withGeneTotal, withCatTotal, fisherProb,
+                        expectedVal, withCatWithGene, noCatWithGene, withCatNoGene, noCatNoGene);
+            }
+        }
+
+        LOGGER.info("cancerType({}) results written to file", cancerType);
     }
 
     private boolean initialiseOutput(final String outputFileName)
