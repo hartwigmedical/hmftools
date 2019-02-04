@@ -6,7 +6,7 @@ import com.google.common.collect.Lists;
 
 import org.jetbrains.annotations.NotNull;
 
-public final class ReportableGeneFusionFactory {
+final class ReportableGeneFusionFactory {
 
     private ReportableGeneFusionFactory() {
     }

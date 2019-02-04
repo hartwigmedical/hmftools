@@ -11,7 +11,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-public final class DisruptionFactory {
+final class DisruptionFactory {
 
     private static final Logger LOGGER = LogManager.getLogger(DisruptionFactory.class);
 

@@ -12,7 +12,7 @@ import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
-public final class FusionFactory {
+final class FusionFactory {
 
     private static final Logger LOGGER = LogManager.getLogger(FusionFactory.class);
 

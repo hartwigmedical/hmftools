@@ -32,14 +32,7 @@ import com.hartwig.hmftools.patientreporter.actionability.ReportableEvidenceItem
 import com.hartwig.hmftools.patientreporter.copynumber.CopyNumberAnalysis;
 import com.hartwig.hmftools.patientreporter.copynumber.CopyNumberAnalyzer;
 import com.hartwig.hmftools.patientreporter.germline.GermlineVariant;
-import com.hartwig.hmftools.patientreporter.structural.Disruption;
-import com.hartwig.hmftools.patientreporter.structural.Fusion;
-import com.hartwig.hmftools.patientreporter.structural.FusionDisruptionAnalysis;
-import com.hartwig.hmftools.patientreporter.structural.FusionDisruptionAnalyzer;
-import com.hartwig.hmftools.patientreporter.structural.ReportableGeneDisruption;
-import com.hartwig.hmftools.patientreporter.structural.ReportableGeneDisruptionFactory;
-import com.hartwig.hmftools.patientreporter.structural.ReportableGeneFusion;
-import com.hartwig.hmftools.patientreporter.structural.ReportableGeneFusionFactory;
+import com.hartwig.hmftools.patientreporter.structural.SvAnalysis;
 import com.hartwig.hmftools.patientreporter.structural.SvAnalyzer;
 import com.hartwig.hmftools.patientreporter.variants.SomaticVariantAnalysis;
 import com.hartwig.hmftools.patientreporter.variants.SomaticVariantAnalyzer;
@@ -79,8 +72,7 @@ abstract class PatientReporter {
         final CopyNumberAnalysis copyNumberAnalysis = analyzeCopyNumbers(run, patientTumorLocation);
         final SomaticVariantAnalysis somaticVariantAnalysis = analyzeSomaticVariants(run, copyNumberAnalysis, patientTumorLocation);
 
-        final FusionDisruptionAnalysis fusionDisruptionAnalysis =
-                analyzeStructuralVariants(copyNumberAnalysis, patientTumorLocation, svAnalyzerModel());
+        final SvAnalysis svAnalysis = analyzeStructuralVariants(copyNumberAnalysis, patientTumorLocation, svAnalyzerModel());
         final List<GermlineVariant> germlineVariants = doReportGermline ? analyzeGermlineVariants(run) : null;
         final ChordAnalysis chordAnalysis = analyzeChord(run);
 
@@ -92,17 +84,17 @@ abstract class PatientReporter {
         LOGGER.info(" CHORD analysis HRD prediction: " + chordAnalysis.hrdValue());
         LOGGER.info(" Germline variants to report : " + Integer.toString(germlineVariants != null ? germlineVariants.size() : 0));
         LOGGER.info(" Copy number events to report: " + copyNumberAnalysis.reportableGeneCopyNumbers().size());
-        LOGGER.info(" Gene fusions to report : " + fusionDisruptionAnalysis.reportableFusions().size());
-        LOGGER.info(" Gene disruptions to report : " + fusionDisruptionAnalysis.reportableDisruptions().size());
+        LOGGER.info(" Gene fusions to report : " + svAnalysis.reportableFusions().size());
+        LOGGER.info(" Gene disruptions to report : " + svAnalysis.reportableDisruptions().size());
         LOGGER.info("Printing actionability results:");
         LOGGER.info(" Evidence items found based on variants: " + somaticVariantAnalysis.evidenceItems().size());
         LOGGER.info(" Evidence items found based on copy numbers: " + copyNumberAnalysis.evidenceItems().size());
-        LOGGER.info(" Evidence items found based on fusions: " + fusionDisruptionAnalysis.evidenceItems().size());
+        LOGGER.info(" Evidence items found based on fusions: " + svAnalysis.evidenceItems().size());
 
         final List<EvidenceItem> allEvidenceItems = Lists.newArrayList();
         allEvidenceItems.addAll(somaticVariantAnalysis.evidenceItems());
         allEvidenceItems.addAll(copyNumberAnalysis.evidenceItems());
-        allEvidenceItems.addAll(fusionDisruptionAnalysis.evidenceItems());
+        allEvidenceItems.addAll(svAnalysis.evidenceItems());
 
         final SampleReport sampleReport = ImmutableSampleReport.of(tumorSample,
                 patientTumorLocation,
@@ -115,12 +107,10 @@ abstract class PatientReporter {
                         : baseReportData().centerModel().getAddresseeStringForSample(tumorSample),
                 baseReportData().limsModel().labelSample(tumorSample),
                 baseReportData().limsModel().projectNameDVO(tumorSample),
-                baseReportData().limsModel().labelSample(tumorSample).equalsIgnoreCase("core")
-                        ? baseReportData().limsModel().contactEmail(baseReportData().limsModel().submissionFromSample(tumorSample))
-                        : "",
-                baseReportData().limsModel().labelSample(tumorSample).equalsIgnoreCase("core")
-                        ? baseReportData().limsModel().contactName(baseReportData().limsModel().submissionFromSample(tumorSample))
-                        : "");
+                baseReportData().limsModel().labelSample(tumorSample).equalsIgnoreCase("core") ? baseReportData().limsModel()
+                        .contactEmail(baseReportData().limsModel().submissionFromSample(tumorSample)) : "",
+                baseReportData().limsModel().labelSample(tumorSample).equalsIgnoreCase("core") ? baseReportData().limsModel()
+                        .contactName(baseReportData().limsModel().submissionFromSample(tumorSample)) : "");
 
         final List<EvidenceItem> nonTrials = ReportableEvidenceItemFactory.extractNonTrials(allEvidenceItems);
 
@@ -139,8 +129,8 @@ abstract class PatientReporter {
                 germlineVariants != null,
                 germlineVariants != null ? germlineVariants : Lists.newArrayList(),
                 copyNumberAnalysis.reportableGeneCopyNumbers(),
-                fusionDisruptionAnalysis.reportableFusions(),
-                fusionDisruptionAnalysis.reportableDisruptions(),
+                svAnalysis.reportableFusions(),
+                svAnalysis.reportableDisruptions(),
                 PatientReporterFileLoader.findCircosPlotPath(runDirectory, tumorSample),
                 Optional.ofNullable(comments),
                 baseReportData().signaturePath(),
@@ -218,17 +208,10 @@ abstract class PatientReporter {
     }
 
     @NotNull
-    private FusionDisruptionAnalysis analyzeStructuralVariants(@NotNull CopyNumberAnalysis copyNumberAnalysis,
+    private SvAnalysis analyzeStructuralVariants(@NotNull CopyNumberAnalysis copyNumberAnalysis,
             @Nullable PatientTumorLocation patientTumorLocation, @NotNull SvAnalyzer svAnalyzer) {
-        List<Fusion> fusions = svAnalyzer.reportableFusions();
-        List<Disruption> disruptions = svAnalyzer.reportableDisruptions(sequencedReportData().panelGeneModel());
-
-        List<ReportableGeneFusion> geneFusionsToReport = ReportableGeneFusionFactory.fusionConvertToReportable(fusions);
-        List<ReportableGeneDisruption> geneDisruptionsToReport =
-                ReportableGeneDisruptionFactory.disruptionConvertGeneDisruption(disruptions, copyNumberAnalysis.exomeGeneCopyNumbers());
-
-        return FusionDisruptionAnalyzer.run(geneFusionsToReport,
-                geneDisruptionsToReport,
+        return svAnalyzer.run(sequencedReportData().panelGeneModel(),
+                copyNumberAnalysis.exomeGeneCopyNumbers(),
                 sequencedReportData().actionabilityAnalyzer(),
                 patientTumorLocation);
     }
