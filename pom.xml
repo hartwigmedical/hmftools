@@ -161,11 +161,6 @@
             </dependency>
             <dependency>
                 <groupId>com.hartwig</groupId>
-                <artifactId>variant-annotator</artifactId>
-                <version>${hmf-variant-annotation.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.hartwig</groupId>
                 <artifactId>sv-analyser</artifactId>
                 <version>${hmf-sv-analyser.version}</version>
             </dependency>
