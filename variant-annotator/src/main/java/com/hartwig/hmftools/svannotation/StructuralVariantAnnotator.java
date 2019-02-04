@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.svannotation;
 
-import static com.hartwig.hmftools.common.variant.structural.annotation.SvPONAnnotator.PON_FILTER_PASS;
-import static com.hartwig.hmftools.common.variant.structural.annotation.SvPONAnnotator.PON_FILTER_PON;
+import static com.hartwig.hmftools.common.variant.structural.StructuralVariantFactory.PON_FILTER_PON;
 import static com.hartwig.hmftools.svannotation.SvGeneTranscriptCollection.PRE_GENE_PROMOTOR_DISTANCE;
 import static com.hartwig.hmftools.svannotation.analysis.SvFusionAnalyser.FUSION_PAIRS_CSV;
 import static com.hartwig.hmftools.svannotation.analysis.SvFusionAnalyser.PROMISCUOUS_FIVE_CSV;
@@ -55,7 +54,8 @@ import org.jetbrains.annotations.NotNull;
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 import htsjdk.variant.variantcontext.filter.VariantContextFilter;
 
-public class StructuralVariantAnnotator {
+public class StructuralVariantAnnotator
+{
     private SvDisruptionAnalyser mDisruptionAnalyser;
     private SvFusionAnalyser mFusionAnalyser;
 
@@ -70,12 +70,10 @@ public class StructuralVariantAnnotator {
     private boolean mUploadAnnotations;
     private boolean mWriteBreakends;
 
-    // Let PON filtered SVs through since GRIDSS PON filtering is performed upstream
-    private static final Set<String> ALLOWED_FILTERS = Sets.newHashSet("INFERRED", PON_FILTER_PON, PON_FILTER_PASS);
-
     private static final Logger LOGGER = LogManager.getLogger(StructuralVariantAnnotator.class);
 
-    private StructuralVariantAnnotator(final CommandLine cmd) {
+    private StructuralVariantAnnotator(final CommandLine cmd)
+    {
         mDisruptionAnalyser = null;
         mFusionAnalyser = null;
 
@@ -89,12 +87,16 @@ public class StructuralVariantAnnotator {
         mWriteBreakends = false;
     }
 
-    private boolean initialise() {
+    private boolean initialise()
+    {
         mSampleId = mCmdLineArgs.getOptionValue(SAMPLE);
 
-        try {
+        try
+        {
             mDbAccess = databaseAccess(mCmdLineArgs);
-        } catch (SQLException e) {
+        }
+        catch (SQLException e)
+        {
             LOGGER.error("Database connection failed: {}", e.toString());
             return false;
         }
@@ -109,12 +111,15 @@ public class StructuralVariantAnnotator {
         LOGGER.debug("Loading known fusion data");
         KnownFusionsModel knownFusionsModel;
 
-        try {
+        try
+        {
             knownFusionsModel = KnownFusionsModel.fromInputStreams(new FileInputStream(mCmdLineArgs.getOptionValue(FUSION_PAIRS_CSV)),
                     new FileInputStream(mCmdLineArgs.getOptionValue(PROMISCUOUS_FIVE_CSV)),
                     new FileInputStream(mCmdLineArgs.getOptionValue(PROMISCUOUS_THREE_CSV)));
 
-        } catch (IOException e) {
+        }
+        catch (IOException e)
+        {
             LOGGER.error("Failed to load known fusion files");
             return false;
         }
@@ -125,19 +130,23 @@ public class StructuralVariantAnnotator {
         return true;
     }
 
-    public boolean run() {
+    public boolean run()
+    {
         List<String> samplesList = Lists.newArrayList();
 
-        if (mCmdLineArgs.hasOption(SAMPLE_RNA_FILE)) {
+        if (mCmdLineArgs.hasOption(SAMPLE_RNA_FILE))
+        {
             final String rnaFile = mCmdLineArgs.getOptionValue(SAMPLE_RNA_FILE);
             mFusionAnalyser.loadSampleRnaData(rnaFile);
 
-            if (!mFusionAnalyser.getSampleRnaData().isEmpty()) {
+            if (!mFusionAnalyser.getSampleRnaData().isEmpty())
+            {
                 samplesList.addAll(mFusionAnalyser.getSampleRnaData().keySet());
             }
         }
 
-        if (mEnsemblDataDir.isEmpty()) {
+        if (mEnsemblDataDir.isEmpty())
+        {
             LOGGER.error("Ensembl data cache directory missing");
             return false;
         }
@@ -145,21 +154,29 @@ public class StructuralVariantAnnotator {
         mSvGeneTranscriptCollection.setDataPath(mEnsemblDataDir);
         mSvGeneTranscriptCollection.loadEnsemblData();
 
-        if (samplesList.isEmpty()) {
-            if (mSampleId.isEmpty() || mSampleId.equals("*")) {
+        if (samplesList.isEmpty())
+        {
+            if (mSampleId.isEmpty() || mSampleId.equals("*"))
+            {
                 samplesList = mDbAccess.structuralVariantSampleList("");
 
                 LOGGER.info("Loaded {} samples from database", samplesList.size());
-            } else {
-                if (mSampleId.contains(",")) {
+            }
+            else
+            {
+                if (mSampleId.contains(","))
+                {
                     samplesList.addAll(Arrays.asList(mSampleId.split(",")));
-                } else {
+                }
+                else
+                {
                     samplesList.add(mSampleId);
                 }
             }
         }
 
-        for (String sampleId : samplesList) {
+        for (String sampleId : samplesList)
+        {
             runSample(sampleId, samplesList.size() > 1);
         }
 
@@ -170,22 +187,27 @@ public class StructuralVariantAnnotator {
         return true;
     }
 
-    private void runSample(final String sampleId, boolean hasMultipleSamples) {
+    private void runSample(final String sampleId, boolean hasMultipleSamples)
+    {
         LOGGER.info("Annotating variants for sample({})", sampleId);
 
         List<EnrichedStructuralVariant> enrichedVariants;
 
-        if (mSourceSvFromDB) {
+        if (mSourceSvFromDB)
+        {
             // Optionally load existing SVs from the database rather than from VCF
             enrichedVariants = mDbAccess.readStructuralVariants(sampleId);
 
-            if (enrichedVariants.isEmpty()) {
+            if (enrichedVariants.isEmpty())
+            {
                 LOGGER.debug("Sample({}) no SVs loaded from DB", sampleId);
                 return;
             }
 
             LOGGER.debug("Sample({}) loaded {} SVs from DB", sampleId, enrichedVariants.size());
-        } else {
+        }
+        else
+        {
             List<EnrichedStructuralVariant> svList = loadSVsFromVCF(sampleId);
 
             LOGGER.info("Sample({}) persisting {} SVs to database", sampleId, svList.size());
@@ -198,7 +220,8 @@ public class StructuralVariantAnnotator {
 
         List<StructuralVariantAnnotation> annotations = Lists.newArrayList();
 
-        if (mSvGeneTranscriptCollection.hasCachedEnsemblData()) {
+        if (mSvGeneTranscriptCollection.hasCachedEnsemblData())
+        {
             annotations = createAnnotations(enrichedVariants);
 
             LOGGER.debug("Loaded {} Ensembl annotations from file", annotations.size());
@@ -209,18 +232,21 @@ public class StructuralVariantAnnotator {
 
         LOGGER.debug("sample({}) found {} disruptions and {} fusions", sampleId, disruptions.size(), fusions.size());
 
-        if (!mOutputDir.isEmpty()) {
+        if (!mOutputDir.isEmpty())
+        {
             String clusterInfo = ",,";
             mFusionAnalyser.writeFusions(fusions, mOutputDir, sampleId, clusterInfo, hasMultipleSamples);
             mDisruptionAnalyser.writeDisruptions(disruptions, mOutputDir, sampleId, hasMultipleSamples);
             mFusionAnalyser.writeRnaMatchData(sampleId, mOutputDir, fusions, annotations);
 
-            if (mWriteBreakends) {
+            if (mWriteBreakends)
+            {
                 mSvGeneTranscriptCollection.writeBreakendData(sampleId, annotations);
             }
         }
 
-        if (mUploadAnnotations) {
+        if (mUploadAnnotations)
+        {
             LOGGER.debug("persisting annotations to database");
             final StructuralVariantAnnotationDAO annotationDAO = new StructuralVariantAnnotationDAO(mDbAccess.context());
 
@@ -231,10 +257,12 @@ public class StructuralVariantAnnotator {
         }
     }
 
-    private List<EnrichedStructuralVariant> loadSVsFromVCF(final String sampleId) {
+    private List<EnrichedStructuralVariant> loadSVsFromVCF(final String sampleId)
+    {
         List<EnrichedStructuralVariant> svList = Lists.newArrayList();
 
-        try {
+        try
+        {
             LOGGER.debug("loading indexed fasta reference file");
             final String fastaFileLocation = mCmdLineArgs.getOptionValue(REF_GENOME);
             final IndexedFastaSequenceFile indexedFastaSequenceFile = new IndexedFastaSequenceFile(new File(fastaFileLocation));
@@ -245,7 +273,9 @@ public class StructuralVariantAnnotator {
 
             LOGGER.debug("enriching structural variants based on purple data");
             svList = enrichStructuralVariants(sampleId, indexedFastaSequenceFile, variants);
-        } catch (IOException e) {
+        }
+        catch (IOException e)
+        {
             LOGGER.error("failed to read ref genome file");
             return svList;
         }
@@ -253,11 +283,17 @@ public class StructuralVariantAnnotator {
         return svList;
     }
 
+    // Let PON filtered SVs through since GRIDSS PON filtering is performed upstream
+    private static final Set<String> ALLOWED_FILTERS = Sets.newHashSet("INFERRED", PON_FILTER_PON, "PASS");
+
     @NotNull
-    private static List<StructuralVariant> readFromVcf(@NotNull String vcfFileLocation) throws IOException {
-        VariantContextFilter filter = variantContext -> {
+    private static List<StructuralVariant> readFromVcf(@NotNull String vcfFileLocation) throws IOException
+    {
+        VariantContextFilter filter = variantContext ->
+        {
             final Set<String> filters = Sets.newHashSet(variantContext.getFilters());
             filters.removeAll(ALLOWED_FILTERS);
+
             return variantContext.isNotFiltered() || filters.isEmpty();
         };
 
@@ -265,11 +301,13 @@ public class StructuralVariantAnnotator {
     }
 
     @NotNull
-    private List<EnrichedStructuralVariant> enrichStructuralVariants(@NotNull final String sampleId,
-            @NotNull final IndexedFastaSequenceFile indexedFastaSequenceFile, @NotNull List<StructuralVariant> variants) {
+    private List<EnrichedStructuralVariant> enrichStructuralVariants(final String sampleId,
+            @NotNull final IndexedFastaSequenceFile indexedFastaSequenceFile, List<StructuralVariant> variants)
+    {
         final PurityContext purityContext = mDbAccess.readPurityContext(sampleId);
 
-        if (purityContext == null) {
+        if (purityContext == null)
+        {
             LOGGER.warn("Sample({} unable to retrieve purple data, enrichment may be incomplete", sampleId);
         }
 
@@ -286,10 +324,12 @@ public class StructuralVariantAnnotator {
         return new EnrichedStructuralVariantFactory(indexedFastaSequenceFile, purityAdjuster, copyNumbers).enrich(variants);
     }
 
-    private List<StructuralVariantAnnotation> createAnnotations(@NotNull List<EnrichedStructuralVariant> enrichedVariants) {
+    private List<StructuralVariantAnnotation> createAnnotations(List<EnrichedStructuralVariant> enrichedVariants)
+    {
         List<StructuralVariantAnnotation> annotations = Lists.newArrayList();
 
-        for (final EnrichedStructuralVariant var : enrichedVariants) {
+        for (final EnrichedStructuralVariant var : enrichedVariants)
+        {
             StructuralVariantAnnotation annotation = new StructuralVariantAnnotation(var);
 
             Integer primaryKey = var.primaryKey();
@@ -301,7 +341,8 @@ public class StructuralVariantAnnotator {
                     var.position(true),
                     PRE_GENE_PROMOTOR_DISTANCE);
 
-            if (var.end() != null) {
+            if (var.end() != null)
+            {
                 genesList.addAll(mSvGeneTranscriptCollection.findGeneAnnotationsBySv(primaryKey,
                         false,
                         var.chromosome(false),
@@ -309,11 +350,13 @@ public class StructuralVariantAnnotator {
                         PRE_GENE_PROMOTOR_DISTANCE));
             }
 
-            if (genesList == null) {
+            if (genesList == null)
+            {
                 continue;
             }
 
-            for (GeneAnnotation geneAnnotation : genesList) {
+            for (GeneAnnotation geneAnnotation : genesList)
+            {
                 geneAnnotation.setSvData(var);
             }
 
@@ -324,27 +367,32 @@ public class StructuralVariantAnnotator {
         return annotations;
     }
 
-    public static void writeEnsemblDataFiles(final CommandLine cmd) {
+    public static void writeEnsemblDataFiles(final CommandLine cmd)
+    {
         EnsemblDAO ensemblData = new EnsemblDAO(cmd);
         ensemblData.writeDataCacheFiles(cmd.getOptionValue(DATA_OUTPUT_DIR));
     }
 
-    public static void main(@NotNull final String[] args) throws ParseException {
+    public static void main(@NotNull final String[] args) throws ParseException
+    {
         final Options options = createBasicOptions();
         final CommandLine cmd = createCommandLine(args, options);
 
-        if (cmd.hasOption(LOG_DEBUG)) {
+        if (cmd.hasOption(LOG_DEBUG))
+        {
             Configurator.setRootLevel(Level.DEBUG);
         }
 
-        if (cmd.hasOption(WRITE_ENSEMBL_CACHE)) {
+        if (cmd.hasOption(WRITE_ENSEMBL_CACHE))
+        {
             writeEnsemblDataFiles(cmd);
             return;
         }
 
         StructuralVariantAnnotator svAnnotator = new StructuralVariantAnnotator(cmd);
 
-        if (!svAnnotator.initialise()) {
+        if (!svAnnotator.initialise())
+        {
             return;
         }
 
@@ -375,7 +423,8 @@ public class StructuralVariantAnnotator {
     private static final String DB_URL = "db_url";
 
     @NotNull
-    private static Options createBasicOptions() {
+    private static Options createBasicOptions()
+    {
         final Options options = new Options();
         options.addOption(VCF_FILE, true, "Path to the vcf file.");
         options.addOption(SAMPLE, true, "Tumor sample.");
@@ -402,13 +451,15 @@ public class StructuralVariantAnnotator {
     }
 
     @NotNull
-    private static CommandLine createCommandLine(@NotNull final String[] args, @NotNull final Options options) throws ParseException {
+    private static CommandLine createCommandLine(@NotNull final String[] args, @NotNull final Options options) throws ParseException
+    {
         final CommandLineParser parser = new DefaultParser();
         return parser.parse(options, args);
     }
 
     @NotNull
-    private static DatabaseAccess databaseAccess(@NotNull final CommandLine cmd) throws SQLException {
+    private static DatabaseAccess databaseAccess(@NotNull final CommandLine cmd) throws SQLException
+    {
         final String userName = cmd.getOptionValue(DB_USER);
         final String password = cmd.getOptionValue(DB_PASS);
         final String databaseUrl = cmd.getOptionValue(DB_URL);

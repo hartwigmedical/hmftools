@@ -50,6 +50,9 @@ public class StructuralVariantFactory {
     private final static String LOCAL_LINKED_BY = "LOCAL_LINKED_BY";
     private final static String REMOTE_LINKED_BY = "REMOTE_LINKED_BY";
     private final static String UNTEMPLATED_SEQUENCE_ALIGNMENTS = "BEALN";
+
+    public static final String PON_FILTER_PON = "PON";
+
     /**
      * Must match the small deldup threshold in scripts/gridss/gridss.config.R
      */
