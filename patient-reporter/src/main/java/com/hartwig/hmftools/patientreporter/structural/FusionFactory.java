@@ -22,7 +22,7 @@ public final class FusionFactory {
     private static final String DELIMITER = ",";
 
     @NotNull
-    public static FusionAnalyzer fromFusionFile(@NotNull String fusionFile) throws IOException {
+    public static List<Fusion> fromFusionFile(@NotNull String fusionFile) throws IOException {
         LOGGER.debug(" Using " + fusionFile + " as source for fusions.");
         final List<Fusion> fusions = Lists.newArrayList();
 
@@ -32,7 +32,7 @@ public final class FusionFactory {
         for (String line : lineFusions.subList(1, lineFusions.size())) {
             fusions.add(fromFusionLine(line));
         }
-        return new FusionAnalyzer(fusions);
+        return fusions;
     }
 
     @NotNull

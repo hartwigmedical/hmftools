@@ -21,7 +21,7 @@ public final class DisruptionFactory {
     private static final String DELIMITER = ",";
 
     @NotNull
-    public static DisruptionAnalyzer fromDisruptionFile(@NotNull String disruptionFile) throws IOException {
+    public static List<Disruption> fromDisruptionFile(@NotNull String disruptionFile) throws IOException {
         LOGGER.debug(" Using " + disruptionFile + " as source for disruptions.");
         final List<Disruption> disruptions = Lists.newArrayList();
 
@@ -31,7 +31,7 @@ public final class DisruptionFactory {
         for (String line : lineDisruptions.subList(1, lineDisruptions.size())) {
             disruptions.add(fromDisruptionLine(line));
         }
-        return new DisruptionAnalyzer(disruptions);
+        return disruptions;
     }
 
     @NotNull

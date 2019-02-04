@@ -14,7 +14,6 @@ public class FusionFactoryTest {
 
     @Test
     public void canReadFromFile() throws IOException {
-       FusionAnalyzer analyzer = FusionFactory.fromFusionFile(FUSION_FILE);
-       assertEquals(1, analyzer.fusions().size());
+       assertEquals(1, FusionFactory.fromFusionFile(FUSION_FILE).size());
     }
 }

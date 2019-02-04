@@ -34,13 +34,13 @@ import com.hartwig.hmftools.patientreporter.copynumber.CopyNumberAnalyzer;
 import com.hartwig.hmftools.patientreporter.germline.GermlineVariant;
 import com.hartwig.hmftools.patientreporter.structural.Disruption;
 import com.hartwig.hmftools.patientreporter.structural.Fusion;
-import com.hartwig.hmftools.patientreporter.structural.SvAnalyzerModel;
 import com.hartwig.hmftools.patientreporter.structural.FusionDisruptionAnalysis;
 import com.hartwig.hmftools.patientreporter.structural.FusionDisruptionAnalyzer;
 import com.hartwig.hmftools.patientreporter.structural.ReportableGeneDisruption;
 import com.hartwig.hmftools.patientreporter.structural.ReportableGeneDisruptionFactory;
 import com.hartwig.hmftools.patientreporter.structural.ReportableGeneFusion;
 import com.hartwig.hmftools.patientreporter.structural.ReportableGeneFusionFactory;
+import com.hartwig.hmftools.patientreporter.structural.SvAnalyzer;
 import com.hartwig.hmftools.patientreporter.variants.SomaticVariantAnalysis;
 import com.hartwig.hmftools.patientreporter.variants.SomaticVariantAnalyzer;
 
@@ -65,7 +65,7 @@ abstract class PatientReporter {
     public abstract SequencedReportData sequencedReportData();
 
     @NotNull
-    public abstract SvAnalyzerModel svAnalyzerModel();
+    public abstract SvAnalyzer svAnalyzerModel();
 
     @NotNull
     public AnalysedPatientReport run(@NotNull String runDirectory, boolean doReportGermline, @Nullable String comments) throws IOException {
@@ -219,9 +219,9 @@ abstract class PatientReporter {
 
     @NotNull
     private FusionDisruptionAnalysis analyzeStructuralVariants(@NotNull CopyNumberAnalysis copyNumberAnalysis,
-            @Nullable PatientTumorLocation patientTumorLocation, @NotNull SvAnalyzerModel svAnalyzerModel) {
-        List<Fusion> fusions = svAnalyzerModel.filterFusions();
-        List<Disruption> disruptions = svAnalyzerModel.filterDisruptions(sequencedReportData().panelGeneModel());
+            @Nullable PatientTumorLocation patientTumorLocation, @NotNull SvAnalyzer svAnalyzer) {
+        List<Fusion> fusions = svAnalyzer.reportableFusions();
+        List<Disruption> disruptions = svAnalyzer.reportableDisruptions(sequencedReportData().panelGeneModel());
 
         List<ReportableGeneFusion> geneFusionsToReport = ReportableGeneFusionFactory.fusionConvertToReportable(fusions);
         List<ReportableGeneDisruption> geneDisruptionsToReport =

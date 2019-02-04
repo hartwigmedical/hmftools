@@ -10,12 +10,12 @@ import com.hartwig.hmftools.common.center.CenterModel;
 import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocation;
 import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.lims.LimsFactory;
-import com.hartwig.hmftools.patientreporter.structural.SvAnalyzerModel;
 import com.hartwig.hmftools.patientreporter.qcfail.ImmutableNotAnalysableReporter;
 import com.hartwig.hmftools.patientreporter.qcfail.NotAnalysableReason;
 import com.hartwig.hmftools.patientreporter.qcfail.NotAnalysableReporter;
 import com.hartwig.hmftools.patientreporter.qcfail.NotAnalysableStudy;
 import com.hartwig.hmftools.patientreporter.report.PDFWriter;
+import com.hartwig.hmftools.patientreporter.structural.SvAnalyzer;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -133,10 +133,10 @@ public class PatientReporterApplication {
     @NotNull
     private static PatientReporter buildReporter(@NotNull final CommandLine cmd, @NotNull final SequencedReportData sequencedReportData)
             throws IOException {
-        final SvAnalyzerModel svAnalyzerModel =
-                SvAnalyzerModel.fromFiles(cmd.getOptionValue(FUSION_CSV), cmd.getOptionValue(DISRUPTION_CSV));
+        final SvAnalyzer svAnalyzer =
+                SvAnalyzer.fromFiles(cmd.getOptionValue(FUSION_CSV), cmd.getOptionValue(DISRUPTION_CSV));
 
-        return ImmutablePatientReporter.of(buildBaseReportData(cmd), sequencedReportData, svAnalyzerModel);
+        return ImmutablePatientReporter.of(buildBaseReportData(cmd), sequencedReportData, svAnalyzer);
     }
 
     private static boolean validInputForPatientReporter(@NotNull final CommandLine cmd) {
