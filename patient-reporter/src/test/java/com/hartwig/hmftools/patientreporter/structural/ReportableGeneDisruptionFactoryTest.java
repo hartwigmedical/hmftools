@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.patientreporter.structural;
 
 import static com.hartwig.hmftools.patientreporter.PatientReporterTestFactory.createTestCopyNumberBuilder;
-import static com.hartwig.hmftools.patientreporter.structural.SvAnalysisDatamodelTestFactory.disruptionBuilder;
+import static com.hartwig.hmftools.patientreporter.structural.SvAnalysisDatamodelTestFactory.createTestDisruptionBuilder;
 
 import static org.junit.Assert.assertEquals;
 
@@ -19,7 +19,7 @@ public class ReportableGeneDisruptionFactoryTest {
     @Test
     public void canConvertPairedDisruption() {
         ImmutableDisruption.Builder pairedDisruptionBuilder =
-                disruptionBuilder().svId("1").gene("ROPN1B").chromosome("3").chrBand("p12").type("INV").ploidy(1.12);
+                createTestDisruptionBuilder().svId("1").gene("ROPN1B").chromosome("3").chrBand("p12").type("INV").ploidy(1.12);
 
         List<GeneCopyNumber> copyNumbers =
                 Lists.newArrayList(createTestCopyNumberBuilder().gene("ROPN1B").minCopyNumber(1).maxCopyNumber(2).build());
@@ -43,7 +43,7 @@ public class ReportableGeneDisruptionFactoryTest {
 
     @Test
     public void doesNotPairDisruptionsOnDifferentGenes() {
-        ImmutableDisruption.Builder pairedDisruptionBuilder = disruptionBuilder().svId("1");
+        ImmutableDisruption.Builder pairedDisruptionBuilder = createTestDisruptionBuilder().svId("1");
 
         List<GeneCopyNumber> copyNumbers =
                 Lists.newArrayList(createTestCopyNumberBuilder().gene("ROPN1B").minCopyNumber(1).maxCopyNumber(1).build(),

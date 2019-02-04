@@ -9,7 +9,7 @@ final class SvAnalysisDatamodelTestFactory {
     }
 
     @NotNull
-    static ImmutableDisruption.Builder disruptionBuilder() {
+    static ImmutableDisruption.Builder createTestDisruptionBuilder() {
         return ImmutableDisruption.builder()
                 .reportable(false)
                 .svId(Strings.EMPTY)
@@ -32,7 +32,7 @@ final class SvAnalysisDatamodelTestFactory {
     }
 
     @NotNull
-    static ImmutableFusion.Builder fusionBuilder() {
+    static ImmutableFusion.Builder createTestFusionBuilder() {
         return ImmutableFusion.builder()
                 .reportable(true)
                 .knownType(Strings.EMPTY)

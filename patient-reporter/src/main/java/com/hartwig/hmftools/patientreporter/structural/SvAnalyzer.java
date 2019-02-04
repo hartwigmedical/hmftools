@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.actionability.ActionabilityAnalyzer;
 import com.hartwig.hmftools.common.actionability.EvidenceItem;
@@ -32,7 +33,8 @@ public class SvAnalyzer {
         return new SvAnalyzer(fusions, disruptions);
     }
 
-    private SvAnalyzer(@NotNull final List<Fusion> fusions, @NotNull final List<Disruption> disruptions) {
+    @VisibleForTesting
+    SvAnalyzer(@NotNull final List<Fusion> fusions, @NotNull final List<Disruption> disruptions) {
         this.fusions = fusions;
         this.disruptions = disruptions;
     }

@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.patientreporter.structural;
 
-import static com.hartwig.hmftools.patientreporter.structural.SvAnalysisDatamodelTestFactory.fusionBuilder;
+import static com.hartwig.hmftools.patientreporter.structural.SvAnalysisDatamodelTestFactory.createTestFusionBuilder;
 
 import static org.junit.Assert.assertEquals;
 
@@ -16,7 +16,7 @@ public class ReportableGeneFusionFactoryTest {
 
     @Test
     public void canConvertGeneFusions() {
-        Fusion fusion = fusionBuilder().geneUp("PRKAR2B").geneDown("MET").ploidyUp(1.65).ploidyDown(1.65).build();
+        Fusion fusion = createTestFusionBuilder().geneUp("PRKAR2B").geneDown("MET").ploidyUp(1.65).ploidyDown(1.65).build();
         List<ReportableGeneFusion> reportableFusions =
                 ReportableGeneFusionFactory.convert(Lists.newArrayList(fusion));
 

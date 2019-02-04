@@ -50,6 +50,11 @@ public final class PatientReporterTestUtil {
     }
 
     @NotNull
+    public static ActionabilityAnalyzer testActionabilityAnalyzer() throws IOException {
+        return ActionabilityAnalyzer.fromKnowledgebase(KNOWLEDGEBASE_PATH);
+    }
+
+    @NotNull
     static SvAnalyzer testSvAnalyzerModel() throws IOException {
         return SvAnalyzer.fromFiles(FUSION_FILE, DISRUPTION_FILE);
     }
@@ -74,7 +79,7 @@ public final class PatientReporterTestUtil {
             CompoundEnrichment compoundEnrichment = new CompoundEnrichment(HotspotEnrichment.fromHotspotsFile(HOTSPOT_TSV));
 
             return ImmutableSequencedReportData.of(geneModel,
-                    ActionabilityAnalyzer.fromKnowledgebase(KNOWLEDGEBASE_PATH),
+                    testActionabilityAnalyzer(),
                     compoundEnrichment,
                     new IndexedFastaSequenceFile(new File(REF_GENOME_PATH)),
                     TreeMultimap.create());
