@@ -91,8 +91,9 @@ public class EnrichedSomaticVariantFactory {
             @NotNull final IndexedFastaSequenceFile reference) {
         final int chromosomeLength = reference.getSequenceDictionary().getSequence(variant.chromosome()).getSequenceLength();
         long positionBeforeEvent = variant.position();
+
         long start = Math.max(positionBeforeEvent - 100, 1);
-        long end = Math.min(positionBeforeEvent + 100, chromosomeLength - 1);
+        long end = Math.min(positionBeforeEvent + variant.ref().length() + 100 - 1, chromosomeLength - 1);
         int relativePosition = (int) (positionBeforeEvent - start);
         final String sequence;
         if (start < chromosomeLength && end < chromosomeLength) {
