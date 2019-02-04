@@ -70,7 +70,6 @@ public class DriverGeneAnnotator
 
     // references only
     private String mSampleId;
-    private List<SvCluster> mClusters;
     private Map<String, List<SvBreakend>> mChrBreakendMap;
     private Map<String, List<SvLOH>> mSampleLohMap;
     private List<SvLOH> mSampleLOHData;
@@ -195,9 +194,8 @@ public class DriverGeneAnnotator
     {
         mSampleId = sampleId;
         mChrBreakendMap = chrBreakendMap;
-        mClusters = clusters;
 
-        checkPseudoGeneAnnotations();
+        checkPseudoGeneAnnotations(clusters);
 
         loadDriverCatalog(sampleId);
 
@@ -692,9 +690,9 @@ public class DriverGeneAnnotator
         closeBufferedWriter(mGCNFileWriter);
     }
 
-    private void checkPseudoGeneAnnotations()
+    private void checkPseudoGeneAnnotations(final List<SvCluster> clusters)
     {
-        for(final SvCluster cluster : mClusters)
+        for(final SvCluster cluster : clusters)
         {
             isSpecificCluster(cluster);
 

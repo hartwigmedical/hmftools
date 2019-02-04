@@ -76,10 +76,6 @@ public class SvClusteringMethods {
 
     private static final Logger LOGGER = LogManager.getLogger(SvClusteringMethods.class);
 
-    private Map<String, Integer> mChrArmSvCount;
-    private Map<String, Double> mChrArmSvExpected;
-    private Map<String, Double> mChrArmSvRate;
-    private double mMedianChrArmRate;
     private int mNextClusterId;
 
     private Map<String, List<SvBreakend>> mChrBreakendMap; // every breakend on a chromosome, ordered by ascending position
@@ -106,10 +102,6 @@ public class SvClusteringMethods {
 
     public SvClusteringMethods(int proximityLength)
     {
-        mChrArmSvCount = Maps.newHashMap();
-        mChrArmSvExpected = Maps.newHashMap();
-        mChrArmSvRate = Maps.newHashMap();
-        mMedianChrArmRate = 0;
         mNextClusterId = 0;
 
         mDelDupCutoffLength = 0;
@@ -121,7 +113,6 @@ public class SvClusteringMethods {
     }
 
     public final Map<String, List<SvBreakend>> getChrBreakendMap() { return mChrBreakendMap; }
-    public final Map<String, double[]> getChrCopyNumberMap() { return mChromosomeCopyNumberMap; }
     public final Map<String, List<SvLOH>> getSampleLohData() { return mSampleLohData; }
     public int getNextClusterId() { return mNextClusterId++; }
     public void setSampleLohData(final Map<String, List<SvLOH>> data) { mSampleLohData = data; }
@@ -465,6 +456,25 @@ public class SvClusteringMethods {
                 || var.getAssemblyData(false).contains(ASSEMBLY_TYPE_EQV));
     }
 
+    public void clearLOHBreakendData(final String sampleId)
+    {
+        if(mSampleLohData == null || sampleId.isEmpty())
+            return;
+
+        List<SvLOH> lohList = mSampleLohData.get(sampleId);
+
+        if(lohList == null)
+            return;
+
+        lohList = lohList.stream().filter(x -> !x.Skipped).collect(Collectors.toList());
+
+        for(final SvLOH lohEvent : lohList)
+        {
+            lohEvent.setBreakend(null, true);
+            lohEvent.setBreakend(null, false);
+        }
+    }
+
     private void mergeOnLOHEvents(final String sampleId, List<SvCluster> clusters)
     {
         if(mSampleLohData == null)
@@ -475,6 +485,8 @@ public class SvClusteringMethods {
 
         if(lohList == null)
             return;
+
+        // note that LOH-breakend links are established here and then must be
 
         lohList = lohList.stream().filter(x -> !x.Skipped).collect(Collectors.toList());
 
@@ -1389,130 +1401,6 @@ public class SvClusteringMethods {
         }
 
         return false;
-    }
-
-    public void setChromosomalArmStats(final List<SvVarData> allVariants)
-    {
-        mChrArmSvCount.clear();
-        mChrArmSvExpected.clear();
-        mChrArmSvRate.clear();
-        mMedianChrArmRate = 0;
-
-        // form a map of unique arm to SV count
-        for(final SvVarData var : allVariants)
-        {
-            String chrArmStart = getVariantChrArm(var,true);
-            String chrArmEnd = getVariantChrArm(var,false);
-
-            // ensure an entry exists
-            if (!mChrArmSvCount.containsKey(chrArmStart))
-            {
-                mChrArmSvCount.put(chrArmStart, 0);
-            }
-
-            // exclude LINE elements from back-ground rates
-            mChrArmSvCount.replace(chrArmStart, mChrArmSvCount.get(chrArmStart) + 1);
-
-            if(!var.isNullBreakend())
-            {
-                if (!chrArmStart.equals(chrArmEnd) && !mChrArmSvCount.containsKey(chrArmEnd))
-                {
-                    mChrArmSvCount.put(chrArmEnd, 0);
-                }
-
-                mChrArmSvCount.replace(chrArmEnd, mChrArmSvCount.get(chrArmEnd) + 1);
-            }
-        }
-
-        // now determine the background rate by taking the median value from amongst the arms
-        // factoring in the arms which have no Q (14-16, 21-22) and excluding the X & Ys
-        for(Map.Entry<String, Integer> entry : mChrArmSvCount.entrySet())
-        {
-            final String chrArm = entry.getKey();
-            final String chromosome = getChrFromChrArm(chrArm);
-            final String arm = getArmFromChrArm(chrArm);
-
-            long chrArmLength = getChromosomalArmLength(chromosome, arm);
-            int svCount = entry.getValue();
-            double ratePerLength = svCount / (chrArmLength / REF_BASE_LENGTH); // the factor isn't important
-
-            mChrArmSvRate.put(chrArm, ratePerLength);
-            // LOGGER.debug("chrArm({}) ratePerMill({}) from count({}) length({})", chrArm, ratePerLength, svCount, chrArmLength);
-        }
-
-        mChrArmSvRate = sortByValue(mChrArmSvRate, false);
-
-        mMedianChrArmRate = 0;
-        int chrArmIndex = 0;
-        for(Map.Entry<String, Double> entry : mChrArmSvRate.entrySet())
-        {
-            // LOGGER.debug("chrArm({}: {}) svRate({})", chrArmIndex, entry.getKey(), entry.getValue());
-
-            if(chrArmIndex == 20)
-                mMedianChrArmRate = entry.getValue();
-
-           ++chrArmIndex;
-        }
-
-        LOGGER.debug(String.format("median SV rate(%.2f)", mMedianChrArmRate));
-
-        // now create another map of expected SV count per arm using the median rate
-        for(Map.Entry<String, Double> entry : mChrArmSvRate.entrySet())
-        {
-            final String chrArm = entry.getKey();
-            final String chromosome = getChrFromChrArm(chrArm);
-            final String arm = getArmFromChrArm(chrArm);
-
-            long chrArmLength = getChromosomalArmLength(chromosome, arm);
-            double expectedSvCount = (int) round((chrArmLength / REF_BASE_LENGTH) * mMedianChrArmRate);
-            LOGGER.debug("chrArm({}) expectedSvCount({}) vs actual({})", chrArm, expectedSvCount, mChrArmSvCount.get(chrArm));
-
-            mChrArmSvExpected.put(chrArm, expectedSvCount);
-        }
-    }
-
-    public String getChrArmData(final SvVarData var)
-    {
-        String chrArmStart = getVariantChrArm(var,true);
-
-        boolean hasEnd = !var.isNullBreakend();
-        String chrArmEnd = hasEnd ? getVariantChrArm(var,false) : "";
-
-        // report Start SV count : Expected SV Count : End SV Count : Expected SV Count
-        return String.format("%d,%.2f,%d,%.2f",
-                mChrArmSvCount.get(chrArmStart), mChrArmSvExpected.get(chrArmStart),
-                hasEnd ? mChrArmSvCount.get(chrArmEnd) : 0, hasEnd ? mChrArmSvExpected.get(chrArmEnd) : 0.0);
-    }
-
-    private static Map<String, Double> sortByValue(Map<String, Double> unsortMap, final boolean order)
-    {
-        List<Map.Entry<String, Double>> list = new LinkedList<Map.Entry<String, Double>>(unsortMap.entrySet());
-
-        Collections.sort(list, new Comparator<Map.Entry<String, Double>>()
-        {
-            public int compare(Map.Entry<String, Double> o1,
-                    Map.Entry<String, Double> o2)
-            {
-                if (order)
-                {
-                    return o1.getValue().compareTo(o2.getValue());
-                }
-                else
-                {
-                    return o2.getValue().compareTo(o1.getValue());
-
-                }
-            }
-        });
-
-        // Maintaining insertion order with the help of LinkedList
-        Map<String, Double> sortedMap = new LinkedHashMap<String, Double>();
-        for (Map.Entry<String, Double> entry : list)
-        {
-            sortedMap.put(entry.getKey(), entry.getValue());
-        }
-
-        return sortedMap;
     }
 
 }

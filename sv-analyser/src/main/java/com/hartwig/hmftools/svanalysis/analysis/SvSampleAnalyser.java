@@ -116,12 +116,12 @@ public class SvSampleAnalyser {
 
     public final List<SvCluster> getClusters() { return mAnalyser.getClusters(); }
     public final Map<String, List<SvBreakend>> getChrBreakendMap() { return mClusteringMethods.getChrBreakendMap(); }
-    public final Map<String, double[]> getChrCopyNumberMap() { return mClusteringMethods.getChrCopyNumberMap(); }
     public void setSampleLohData(final Map<String, List<SvLOH>> data) { mClusteringMethods.setSampleLohData(data); }
     public void setChrCopyNumberMap(final Map<String, double[]> data) { mClusteringMethods.setChrCopyNumberMap(data); }
 
     private void clearState()
     {
+        mClusteringMethods.clearLOHBreakendData(mSampleId);
         mSampleId = "";
         mAllVariants = Lists.newArrayList();
     }
@@ -151,7 +151,6 @@ public class SvSampleAnalyser {
         LOGGER.debug("sample({}) clustering {} variants", mSampleId, mAllVariants.size());
 
         mPc2.start();
-        mClusteringMethods.setChromosomalArmStats(mAllVariants);
         mClusteringMethods.populateChromosomeBreakendMap(mAllVariants);
         mClusteringMethods.annotateNearestSvData();
         LinkFinder.findDeletionBridges(mClusteringMethods.getChrBreakendMap());
@@ -247,7 +246,7 @@ public class SvSampleAnalyser {
                 // SV info
                 mSvFileWriter.write(",Homology,InexactHOStart,InexactHOEnd,InsertSeq,Imprecise,QualScore,RefContextStart,RefContextEnd,InsSeqAlignments");
 
-                mSvFileWriter.write(",FSStart,FSEnd,LEStart,LEEnd,DupBEStart,DupBEEnd,ArmCountStart,ArmExpStart,ArmCountEnd,ArmExpEnd");
+                mSvFileWriter.write(",FSStart,FSEnd,LEStart,LEEnd,DupBEStart,DupBEEnd");
 
                 // linked pair info
                 mSvFileWriter.write(",LnkSvStart,LnkLenStart,LnkSvEnd,LnkLenEnd");
@@ -337,11 +336,10 @@ public class SvSampleAnalyser {
                                 dbData.startRefContext(), dbData.endRefContext(), insSeqAlignments));
 
                 writer.write(
-                        String.format(",%s,%s,%s,%s,%s,%s,%s",
+                        String.format(",%s,%s,%s,%s,%s,%s",
                                 var.isFragileSite(true), var.isFragileSite(false),
                                 var.getLineElement(true), var.getLineElement(false),
-                                var.isDupBreakend(true), var.isDupBreakend(false),
-                                mClusteringMethods.getChrArmData(var)));
+                                var.isDupBreakend(true), var.isDupBreakend(false)));
 
                 // linked pair info
                 final SvLinkedPair startLP = var.getLinkedPair(true);
