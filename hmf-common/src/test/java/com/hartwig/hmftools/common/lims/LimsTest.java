@@ -101,7 +101,6 @@ public class LimsTest {
         final Lims lims = buildTestLimsWithPreLIMSArrivalDateForSample(SAMPLE, date);
 
         assertEquals(date, lims.arrivalDateForSample(SAMPLE));
-        assertNull(lims.samplingDateForSample(SAMPLE));
     }
 
     @Test
