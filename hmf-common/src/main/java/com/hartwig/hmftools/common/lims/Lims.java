@@ -24,8 +24,7 @@ public class Lims {
     private final Set<String> samplesWithoutSamplingDate;
 
     Lims(@NotNull final Map<String, LimsJsonSampleData> dataPerSample, @NotNull final Map<String, LimsJsonSubmissionData> dataPerSubmission,
-            @NotNull final Map<String, LocalDate> preLimsArrivalDates,
-            @NotNull final Set<String> samplesWithoutSamplingDate) {
+            @NotNull final Map<String, LocalDate> preLimsArrivalDates, @NotNull final Set<String> samplesWithoutSamplingDate) {
         this.dataPerSample = dataPerSample;
         this.dataPerSubmission = dataPerSubmission;
         this.preLimsArrivalDates = preLimsArrivalDates;
@@ -53,7 +52,7 @@ public class Lims {
     @Nullable
     public String patientNumber(@NotNull final String sample) {
         LimsJsonSampleData sampleData = dataPerSample.get(sample);
-        return sampleData != null ? sampleData.patientNumber() : "N/A";
+        return sampleData != null ? sampleData.patientNumber() : null;
     }
 
     @NotNull
@@ -119,14 +118,14 @@ public class Lims {
             String tumorPercentageString = sampleData.tumorPercentageString();
             String remarksSample = sampleData.labRemarks();
             String labelSample = sampleData.labelSample();
-            if (tumorPercentageString == null) {
+            boolean noTumorPercDetermined =
+                    labelSample.equals("CORE") || (remarksSample != null && (remarksSample.contains("CPCTWIDE") || remarksSample.contains(
+                            "ShallowSeq")));
+
+            if (noTumorPercDetermined) {
+                return "not determined";
+            } else if (tumorPercentageString == null) {
                 return "N/A";
-            } else if (tumorPercentageString.isEmpty() && remarksSample != null && remarksSample.contains("CPCTWIDE")) {
-                return "not determined";
-            } else if (tumorPercentageString.isEmpty() && remarksSample != null && remarksSample.contains("ShallowSeq")) {
-                return "not determined";
-            } else if (tumorPercentageString.isEmpty()  && labelSample.equals("CORE")) {
-                return "not determined";
             }
 
             try {
@@ -134,8 +133,7 @@ public class Lims {
             } catch (final NumberFormatException e) {
                 return "N/A";
             }
-        }
-        return "N/A";
+        } return "N/A";
     }
 
     @NotNull
