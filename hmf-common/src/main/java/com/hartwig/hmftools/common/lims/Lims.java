@@ -49,6 +49,12 @@ public class Lims {
     }
 
     @Nullable
+    public String patientNumber(@NotNull final String sample) {
+        LimsJsonData sampleData = dataPerSample.get(sample);
+        return sampleData != null ? sampleData.patientNumber() : "N/A";
+    }
+
+    @Nullable
     public String submission(@NotNull final String submission) {
         LimsJsonDataSubmission submissionData = dataPerSubmission.get(submission);
         return submissionData != null ? submissionData.submission() : "N/A";

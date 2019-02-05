@@ -61,5 +61,8 @@ public abstract class SampleReport {
     @Nullable
     public abstract String contactEmail();
 
+    @Nullable
+    public abstract String patientNumber();
+
 
 }

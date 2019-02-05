@@ -40,6 +40,7 @@ public class LimsTest {
                 .labelSample("")
                 .projectName("")
                 .submission("")
+                .patientNumber("")
                 .build();
 
         final LimsJsonDataSubmission dataSubmission =
@@ -93,6 +94,7 @@ public class LimsTest {
                 .labelSample("")
                 .projectName("")
                 .submission("")
+                .patientNumber("")
                 .build();
 
         final LimsJsonDataSubmission dataSubmission =

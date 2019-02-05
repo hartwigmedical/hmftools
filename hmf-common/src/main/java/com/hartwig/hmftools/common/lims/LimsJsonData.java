@@ -19,6 +19,10 @@ abstract class LimsJsonData {
     @SerializedName("sample_name")
     public abstract String sampleId();
 
+    @Nullable
+    @SerializedName("patient_number")
+    public abstract String patientNumber();
+
     @NotNull
     @SerializedName("arrival_date")
     public abstract String arrivalDateString();
