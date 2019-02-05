@@ -23,7 +23,7 @@ public class Lims {
     @NotNull
     private final Set<String> samplesWithoutSamplingDate;
 
-    public Lims(@NotNull final Map<String, LimsJsonSampleData> dataPerSample, @NotNull final Map<String, LimsJsonSubmissionData> dataPerSubmission,
+    Lims(@NotNull final Map<String, LimsJsonSampleData> dataPerSample, @NotNull final Map<String, LimsJsonSubmissionData> dataPerSubmission,
             @NotNull final Map<String, LocalDate> preLimsArrivalDates,
             @NotNull final Set<String> samplesWithoutSamplingDate) {
         this.dataPerSample = dataPerSample;
@@ -36,16 +36,16 @@ public class Lims {
         return dataPerSample.size();
     }
 
-    @Nullable
+    @NotNull
     public String contactEmail(@NotNull final String sample) {
-        String submission = submissionFromSample(sample);
+        String submission = submissionForSample(sample);
         LimsJsonSubmissionData submissionData = dataPerSubmission.get(submission);
         return submissionData != null ? submissionData.contactEmail() : "N/A";
     }
 
-    @Nullable
+    @NotNull
     public String contactName(@NotNull final String sample) {
-        String submission = submissionFromSample(sample);
+        String submission = submissionForSample(sample);
         LimsJsonSubmissionData submissionData = dataPerSubmission.get(submission);
         return submissionData != null ? submissionData.contactName() : "N/A";
     }
@@ -54,13 +54,6 @@ public class Lims {
     public String patientNumber(@NotNull final String sample) {
         LimsJsonSampleData sampleData = dataPerSample.get(sample);
         return sampleData != null ? sampleData.patientNumber() : "N/A";
-    }
-
-    @Nullable
-    public String submission(@NotNull final String sample) {
-        String submission = submissionFromSample(sample);
-        LimsJsonSubmissionData submissionData = dataPerSubmission.get(submission);
-        return submissionData != null ? submissionData.submission() : "N/A";
     }
 
     @NotNull
@@ -73,12 +66,6 @@ public class Lims {
     public String projectNameDVO(@NotNull final String sample) {
         LimsJsonSampleData sampleData = dataPerSample.get(sample);
         return sampleData != null ? sampleData.projectName() : "N/A";
-    }
-
-    @NotNull
-    private String submissionFromSample(@NotNull final String sample) {
-        LimsJsonSampleData sampleData = dataPerSample.get(sample);
-        return sampleData != null ? sampleData.submission() : "N/A";
     }
 
     @Nullable
@@ -169,6 +156,12 @@ public class Lims {
         }
         LOGGER.warn("Could not find lab SOP versions for sample: " + sample + " in LIMS");
         return "N/A";
+    }
+
+    @Nullable
+    private String submissionForSample(@NotNull final String sample) {
+        LimsJsonSampleData sampleData = dataPerSample.get(sample);
+        return sampleData != null ? sampleData.submission() : null;
     }
 
     @Nullable

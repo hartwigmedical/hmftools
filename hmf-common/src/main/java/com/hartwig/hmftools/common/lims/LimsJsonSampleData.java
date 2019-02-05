@@ -19,6 +19,7 @@ abstract class LimsJsonSampleData {
     @SerializedName("sample_name")
     public abstract String sampleId();
 
+    // Patient number is only used for CORE project
     @Nullable
     @SerializedName("patient_number")
     public abstract String patientNumber();
@@ -49,6 +50,7 @@ abstract class LimsJsonSampleData {
     @SerializedName("lab_sop_versions")
     abstract String labSopVersions();
 
+    // Lab remarks is an optional field in LIMS
     @Nullable
     @SerializedName("lab_remarks")
     public abstract String labRemarks();

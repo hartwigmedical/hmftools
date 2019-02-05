@@ -39,8 +39,10 @@ public final class LimsFactory {
 
     @NotNull
     public static Lims fromLimsDirectory(@NotNull final String limsDirectory) throws IOException {
-        Map<String, LimsJsonSampleData> dataPerSample = readLimsJson(limsDirectory + File.separator + LIMS_JSON_FILE);
-        Map<String, LimsJsonSubmissionData> dataPerSubmission = readLimsJsonSubmission(limsDirectory + File.separator + LIMS_JSON_FILE);
+        final String limsJsonPath = limsDirectory + File.separator + LIMS_JSON_FILE;
+        Map<String, LimsJsonSampleData> dataPerSample = readLimsJsonSamples(limsJsonPath);
+        Map<String, LimsJsonSubmissionData> dataPerSubmission = readLimsJsonSubmissions(limsJsonPath);
+
         Map<String, LocalDate> preLIMSArrivalDates =
                 readPreLIMSArrivalDateCsv(limsDirectory + File.separator + PRE_LIMS_ARRIVAL_DATES_FILE);
         Set<String> samplesWithoutSamplingDate =
@@ -54,7 +56,8 @@ public final class LimsFactory {
     }
 
     @NotNull
-    private static Map<String, LimsJsonSubmissionData> readLimsJsonSubmission(@NotNull final String limsJsonPath)
+    @VisibleForTesting
+    static Map<String, LimsJsonSubmissionData> readLimsJsonSubmissions(@NotNull final String limsJsonPath)
             throws FileNotFoundException {
         final Gson gson = LimsGsonAdapter.buildSubmissionGson();
         final JsonObject jsonObject = new JsonParser().parse(new FileReader(limsJsonPath)).getAsJsonObject();
@@ -62,7 +65,6 @@ public final class LimsFactory {
         final Map<String, LimsJsonSubmissionData> limsDataPerSubmission = Maps.newHashMap();
 
         jsonSubmissions.forEach(jsonSubmission -> {
-
             final JsonObject jsonSampleObject = jsonSubmission.getValue().getAsJsonObject();
             final String projectType = jsonSampleObject.get("project_type").getAsString();
             if (projectType.contains("CORE")) {
@@ -82,7 +84,7 @@ public final class LimsFactory {
 
     @NotNull
     @VisibleForTesting
-    static Map<String, LimsJsonSampleData> readLimsJson(@NotNull final String limsJsonPath) throws FileNotFoundException {
+    static Map<String, LimsJsonSampleData> readLimsJsonSamples(@NotNull final String limsJsonPath) throws FileNotFoundException {
         final Gson gson = LimsGsonAdapter.buildSampleGson();
         final JsonObject jsonObject = new JsonParser().parse(new FileReader(limsJsonPath)).getAsJsonObject();
         final Set<Map.Entry<String, JsonElement>> jsonSamples = jsonObject.getAsJsonObject("samples").entrySet();
@@ -94,14 +96,14 @@ public final class LimsFactory {
             final String label = jsonSampleObject.get("label").getAsString();
 
             // Filter on somatic to get rid of RNA samples, see also DEV-252
-            // We are only interested in CPCT/DRUP samples, don't care about research labeled samples.
+            // We are not interested in research labeled samples.
             if (analysisType != null && analysisType.toLowerCase().contains("somatic") && !label.equalsIgnoreCase("research")) {
                 try {
                     final LimsJsonSampleData limsJsonSampleData = gson.fromJson(jsonSample.getValue(), LimsJsonSampleData.class);
                     limsDataPerSample.put(limsJsonSampleData.sampleId(), limsJsonSampleData);
                 } catch (JsonSyntaxException e) {
-                    LOGGER.warn(
-                            "Could not convert json element to LimsJsonSampleData: " + jsonSample.getValue() + " - message:" + e.getMessage());
+                    LOGGER.warn("Could not convert json element to LimsJsonSampleData: " + jsonSample.getValue() + " - message:"
+                            + e.getMessage());
                 }
             }
         });

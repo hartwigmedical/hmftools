@@ -32,20 +32,55 @@ public class LimsFactoryTest {
     }
 
     @Test
-    public void readCorrectlyFromJsonFile() throws FileNotFoundException {
-        final Map<String, LimsJsonSampleData> dataPerSample = LimsFactory.readLimsJson(LIMS_DIRECTORY + File.separator + "lims.json");
+    public void readSamplesCorrectlyFromJsonFile() throws FileNotFoundException {
+        final Map<String, LimsJsonSampleData> dataPerSample =
+                LimsFactory.readLimsJsonSamples(LIMS_DIRECTORY + File.separator + "lims.json");
 
-        final LimsJsonSampleData refData = dataPerSample.get("SAMP01010003R");
-        assertEquals("2016-01-02", refData.samplingDateString());
+        assertEquals(2, dataPerSample.size());
+
+        final String refSampleId = "SAMP01010003R";
+        final LimsJsonSampleData refData = dataPerSample.get(refSampleId);
+        assertEquals(refSampleId, refData.sampleId());
+        assertNull(refData.patientNumber());
         assertEquals("2016-01-03", refData.arrivalDateString());
+        assertEquals("143", refData.dnaConcentration());
+        assertEquals("2016-01-02", refData.samplingDateString());
         assertEquals("NA", refData.tumorPercentageString());
+        assertEquals("NA", refData.primaryTumor());
         assertEquals("PREP013V23-QC037V20-SEQ008V25", refData.labProcedures());
+        assertNull(refData.labRemarks());
+        assertEquals("CPCT", refData.labelSample());
+        assertEquals("HMFregCPCT", refData.projectName());
+        assertEquals("HMFregCPCT", refData.submission());
 
-        final LimsJsonSampleData tumorData = dataPerSample.get("SAMP01010003T");
-        assertEquals("2016-01-04", tumorData.samplingDateString());
+        final String tumorSampleId = "SAMP01010003T";
+        final LimsJsonSampleData tumorData = dataPerSample.get(tumorSampleId);
+        assertEquals(tumorSampleId, tumorData.sampleId());
+        assertEquals("something", tumorData.patientNumber());
         assertEquals("2016-02-05", tumorData.arrivalDateString());
+        assertEquals("143", tumorData.dnaConcentration());
+        assertEquals("2016-01-04", tumorData.samplingDateString());
         assertEquals("30", tumorData.tumorPercentageString());
+        assertEquals("NA", refData.primaryTumor());
         assertEquals("N/A", tumorData.labProcedures());
+        assertEquals("this is a test", tumorData.labRemarks());
+        assertEquals("CPCT", tumorData.labelSample());
+        assertEquals("HMFregCPCT", tumorData.projectName());
+        assertEquals("HMFregCPCT", tumorData.submission());
+    }
+
+    @Test
+    public void readSubmissionsCorrectlyFromJsonFile() throws FileNotFoundException {
+        final Map<String, LimsJsonSubmissionData> dataPerSubmission =
+                LimsFactory.readLimsJsonSubmissions(LIMS_DIRECTORY + File.separator + "lims.json");
+
+        assertEquals(1, dataPerSubmission.size());
+
+        final String submission = "ABCDEF123";
+        final LimsJsonSubmissionData submissionData = dataPerSubmission.get(submission);
+        assertEquals(submission, submissionData.submission());
+        assertEquals("name", submissionData.contactName());
+        assertEquals("email", submissionData.contactEmail());
     }
 
     @Test

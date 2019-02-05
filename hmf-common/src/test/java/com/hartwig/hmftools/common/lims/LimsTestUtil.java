@@ -13,4 +13,18 @@ final class LimsTestUtil {
     static LocalDate toDate(@NotNull final String date) {
         return LocalDate.parse(date, LimsConstants.DATE_FORMATTER);
     }
+
+    @NotNull
+    static ImmutableLimsJsonSampleData.Builder createLimsSampleDataBuilder() {
+        return ImmutableLimsJsonSampleData.builder()
+                .sampleId("")
+                .dnaConcentration("")
+                .arrivalDateString("")
+                .samplingDateString("")
+                .tumorPercentageString("")
+                .primaryTumor("")
+                .labelSample("")
+                .projectName("")
+                .submission("");
+    }
 }
