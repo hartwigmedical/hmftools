@@ -39,8 +39,8 @@ public final class LimsFactory {
 
     @NotNull
     public static Lims fromLimsDirectory(@NotNull final String limsDirectory) throws IOException {
-        Map<String, LimsJsonData> dataPerSample = readLimsJson(limsDirectory + File.separator + LIMS_JSON_FILE);
-        Map<String, LimsJsonDataSubmission> dataPerSubmission = readLimsJsonSubmission(limsDirectory + File.separator + LIMS_JSON_FILE);
+        Map<String, LimsJsonSampleData> dataPerSample = readLimsJson(limsDirectory + File.separator + LIMS_JSON_FILE);
+        Map<String, LimsJsonSubmissionData> dataPerSubmission = readLimsJsonSubmission(limsDirectory + File.separator + LIMS_JSON_FILE);
         Map<String, LocalDate> preLIMSArrivalDates =
                 readPreLIMSArrivalDateCsv(limsDirectory + File.separator + PRE_LIMS_ARRIVAL_DATES_FILE);
         Set<String> samplesWithoutSamplingDate =
@@ -54,12 +54,12 @@ public final class LimsFactory {
     }
 
     @NotNull
-    private static Map<String, LimsJsonDataSubmission> readLimsJsonSubmission(@NotNull final String limsJsonPath)
+    private static Map<String, LimsJsonSubmissionData> readLimsJsonSubmission(@NotNull final String limsJsonPath)
             throws FileNotFoundException {
-        final Gson gson = LimsSubmissionGsonAdapter.buildGsonSubmission();
+        final Gson gson = LimsGsonAdapter.buildSubmissionGson();
         final JsonObject jsonObject = new JsonParser().parse(new FileReader(limsJsonPath)).getAsJsonObject();
         final Set<Map.Entry<String, JsonElement>> jsonSubmissions = jsonObject.getAsJsonObject("submissions").entrySet();
-        final Map<String, LimsJsonDataSubmission> limsDataPerSubmission = Maps.newHashMap();
+        final Map<String, LimsJsonSubmissionData> limsDataPerSubmission = Maps.newHashMap();
 
         jsonSubmissions.forEach(jsonSubmission -> {
 
@@ -67,11 +67,11 @@ public final class LimsFactory {
             final String projectType = jsonSampleObject.get("project_type").getAsString();
             if (projectType.contains("CORE")) {
                 try {
-                    final LimsJsonDataSubmission limsJsonDataSubmission =
-                            gson.fromJson(jsonSubmission.getValue(), LimsJsonDataSubmission.class);
-                    limsDataPerSubmission.put(limsJsonDataSubmission.submission(), limsJsonDataSubmission);
+                    final LimsJsonSubmissionData limsJsonSubmissionData =
+                            gson.fromJson(jsonSubmission.getValue(), LimsJsonSubmissionData.class);
+                    limsDataPerSubmission.put(limsJsonSubmissionData.submission(), limsJsonSubmissionData);
                 } catch (JsonSyntaxException e) {
-                    LOGGER.warn("Could not convert json element to LimsJsonDataSubmission: " + jsonSubmission.getValue() + " - message:" + e
+                    LOGGER.warn("Could not convert json element to LimsJsonSubmissionData: " + jsonSubmission.getValue() + " - message:" + e
                             .getMessage());
                 }
             }
@@ -82,11 +82,11 @@ public final class LimsFactory {
 
     @NotNull
     @VisibleForTesting
-    static Map<String, LimsJsonData> readLimsJson(@NotNull final String limsJsonPath) throws FileNotFoundException {
-        final Gson gson = LimsGsonAdapter.buildGson();
+    static Map<String, LimsJsonSampleData> readLimsJson(@NotNull final String limsJsonPath) throws FileNotFoundException {
+        final Gson gson = LimsGsonAdapter.buildSampleGson();
         final JsonObject jsonObject = new JsonParser().parse(new FileReader(limsJsonPath)).getAsJsonObject();
         final Set<Map.Entry<String, JsonElement>> jsonSamples = jsonObject.getAsJsonObject("samples").entrySet();
-        final Map<String, LimsJsonData> limsDataPerSample = Maps.newHashMap();
+        final Map<String, LimsJsonSampleData> limsDataPerSample = Maps.newHashMap();
 
         jsonSamples.forEach(jsonSample -> {
             final JsonObject jsonSampleObject = jsonSample.getValue().getAsJsonObject();
@@ -97,11 +97,11 @@ public final class LimsFactory {
             // We are only interested in CPCT/DRUP samples, don't care about research labeled samples.
             if (analysisType != null && analysisType.toLowerCase().contains("somatic") && !label.equalsIgnoreCase("research")) {
                 try {
-                    final LimsJsonData limsJsonData = gson.fromJson(jsonSample.getValue(), LimsJsonData.class);
-                    limsDataPerSample.put(limsJsonData.sampleId(), limsJsonData);
+                    final LimsJsonSampleData limsJsonSampleData = gson.fromJson(jsonSample.getValue(), LimsJsonSampleData.class);
+                    limsDataPerSample.put(limsJsonSampleData.sampleId(), limsJsonSampleData);
                 } catch (JsonSyntaxException e) {
                     LOGGER.warn(
-                            "Could not convert json element to LimsJsonData: " + jsonSample.getValue() + " - message:" + e.getMessage());
+                            "Could not convert json element to LimsJsonSampleData: " + jsonSample.getValue() + " - message:" + e.getMessage());
                 }
             }
         });

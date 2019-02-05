@@ -33,15 +33,15 @@ public class LimsFactoryTest {
 
     @Test
     public void readCorrectlyFromJsonFile() throws FileNotFoundException {
-        final Map<String, LimsJsonData> dataPerSample = LimsFactory.readLimsJson(LIMS_DIRECTORY + File.separator + "lims.json");
+        final Map<String, LimsJsonSampleData> dataPerSample = LimsFactory.readLimsJson(LIMS_DIRECTORY + File.separator + "lims.json");
 
-        final LimsJsonData refData = dataPerSample.get("SAMP01010003R");
+        final LimsJsonSampleData refData = dataPerSample.get("SAMP01010003R");
         assertEquals("2016-01-02", refData.samplingDateString());
         assertEquals("2016-01-03", refData.arrivalDateString());
         assertEquals("NA", refData.tumorPercentageString());
         assertEquals("PREP013V23-QC037V20-SEQ008V25", refData.labProcedures());
 
-        final LimsJsonData tumorData = dataPerSample.get("SAMP01010003T");
+        final LimsJsonSampleData tumorData = dataPerSample.get("SAMP01010003T");
         assertEquals("2016-01-04", tumorData.samplingDateString());
         assertEquals("2016-02-05", tumorData.arrivalDateString());
         assertEquals("30", tumorData.tumorPercentageString());

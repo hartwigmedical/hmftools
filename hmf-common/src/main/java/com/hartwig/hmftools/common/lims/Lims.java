@@ -15,15 +15,15 @@ public class Lims {
     private static final Logger LOGGER = LogManager.getLogger(Lims.class);
 
     @NotNull
-    private final Map<String, LimsJsonData> dataPerSample;
+    private final Map<String, LimsJsonSampleData> dataPerSample;
     @NotNull
-    private final Map<String, LimsJsonDataSubmission> dataPerSubmission;
+    private final Map<String, LimsJsonSubmissionData> dataPerSubmission;
     @NotNull
     private final Map<String, LocalDate> preLimsArrivalDates;
     @NotNull
     private final Set<String> samplesWithoutSamplingDate;
 
-    public Lims(@NotNull final Map<String, LimsJsonData> dataPerSample, @NotNull final Map<String, LimsJsonDataSubmission> dataPerSubmission,
+    public Lims(@NotNull final Map<String, LimsJsonSampleData> dataPerSample, @NotNull final Map<String, LimsJsonSubmissionData> dataPerSubmission,
             @NotNull final Map<String, LocalDate> preLimsArrivalDates,
             @NotNull final Set<String> samplesWithoutSamplingDate) {
         this.dataPerSample = dataPerSample;
@@ -39,51 +39,51 @@ public class Lims {
     @Nullable
     public String contactEmail(@NotNull final String sample) {
         String submission = submissionFromSample(sample);
-        LimsJsonDataSubmission submissionData = dataPerSubmission.get(submission);
+        LimsJsonSubmissionData submissionData = dataPerSubmission.get(submission);
         return submissionData != null ? submissionData.contactEmail() : "N/A";
     }
 
     @Nullable
     public String contactName(@NotNull final String sample) {
         String submission = submissionFromSample(sample);
-        LimsJsonDataSubmission submissionData = dataPerSubmission.get(submission);
+        LimsJsonSubmissionData submissionData = dataPerSubmission.get(submission);
         return submissionData != null ? submissionData.contactName() : "N/A";
     }
 
     @Nullable
     public String patientNumber(@NotNull final String sample) {
-        LimsJsonData sampleData = dataPerSample.get(sample);
+        LimsJsonSampleData sampleData = dataPerSample.get(sample);
         return sampleData != null ? sampleData.patientNumber() : "N/A";
     }
 
     @Nullable
     public String submission(@NotNull final String sample) {
         String submission = submissionFromSample(sample);
-        LimsJsonDataSubmission submissionData = dataPerSubmission.get(submission);
+        LimsJsonSubmissionData submissionData = dataPerSubmission.get(submission);
         return submissionData != null ? submissionData.submission() : "N/A";
     }
 
     @NotNull
     public String labelSample(@NotNull final String sample) {
-        LimsJsonData sampleData = dataPerSample.get(sample);
+        LimsJsonSampleData sampleData = dataPerSample.get(sample);
         return sampleData != null ? sampleData.labelSample() : "N/A";
     }
 
     @NotNull
     public String projectNameDVO(@NotNull final String sample) {
-        LimsJsonData sampleData = dataPerSample.get(sample);
+        LimsJsonSampleData sampleData = dataPerSample.get(sample);
         return sampleData != null ? sampleData.projectName() : "N/A";
     }
 
     @NotNull
-    public String submissionFromSample(@NotNull final String sample) {
-        LimsJsonData sampleData = dataPerSample.get(sample);
+    private String submissionFromSample(@NotNull final String sample) {
+        LimsJsonSampleData sampleData = dataPerSample.get(sample);
         return sampleData != null ? sampleData.submission() : "N/A";
     }
 
     @Nullable
     public LocalDate arrivalDateForSample(@NotNull final String sample) {
-        LimsJsonData sampleData = dataPerSample.get(sample);
+        LimsJsonSampleData sampleData = dataPerSample.get(sample);
         LocalDate arrivalDate = sampleData != null ? getNullableDate(sampleData.arrivalDateString()) : null;
 
         if (arrivalDate == null) {
@@ -99,7 +99,7 @@ public class Lims {
 
     @Nullable
     public LocalDate samplingDateForSample(@NotNull final String sample) {
-        LimsJsonData sampleData = dataPerSample.get(sample);
+        LimsJsonSampleData sampleData = dataPerSample.get(sample);
         if (sampleData != null) {
             final String samplingDateString = sampleData.samplingDateString();
             final LocalDate samplingDate = getNullableDate(samplingDateString);
@@ -113,7 +113,7 @@ public class Lims {
 
     @Nullable
     public Integer dnaNanogramsForSample(@NotNull String sample) {
-        LimsJsonData sampleData = dataPerSample.get(sample);
+        LimsJsonSampleData sampleData = dataPerSample.get(sample);
         if (sampleData != null) {
             try {
                 // LIMS stores the amount of nanograms per micro liter.
@@ -127,7 +127,7 @@ public class Lims {
 
     @NotNull
     public String tumorPercentageForSample(@NotNull String sample) {
-        LimsJsonData sampleData = dataPerSample.get(sample);
+        LimsJsonSampleData sampleData = dataPerSample.get(sample);
         if (sampleData != null) {
             String tumorPercentageString = sampleData.tumorPercentageString();
             String remarksSample = sampleData.labRemarks();
@@ -153,7 +153,7 @@ public class Lims {
 
     @NotNull
     public String primaryTumorForSample(@NotNull final String sample) {
-        LimsJsonData sampleData = dataPerSample.get(sample);
+        LimsJsonSampleData sampleData = dataPerSample.get(sample);
         if (sampleData != null) {
             return sampleData.primaryTumor();
         }
@@ -163,7 +163,7 @@ public class Lims {
 
     @NotNull
     public String labProceduresForSample(@NotNull final String sample) {
-        LimsJsonData sampleData = dataPerSample.get(sample);
+        LimsJsonSampleData sampleData = dataPerSample.get(sample);
         if (sampleData != null) {
             return sampleData.labProcedures();
         }

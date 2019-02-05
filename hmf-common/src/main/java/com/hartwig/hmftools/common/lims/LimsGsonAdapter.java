@@ -11,7 +11,12 @@ final class LimsGsonAdapter {
     }
 
     @NotNull
-    static Gson buildGson() {
-        return new GsonBuilder().registerTypeAdapterFactory(new GsonAdaptersLimsJsonData()).create();
+    static Gson buildSampleGson() {
+        return new GsonBuilder().registerTypeAdapterFactory(new GsonAdaptersLimsJsonSampleData()).create();
+    }
+
+    @NotNull
+    static Gson buildSubmissionGson() {
+        return new GsonBuilder().registerTypeAdapterFactory(new GsonAdaptersLimsJsonSubmissionData()).create();
     }
 }

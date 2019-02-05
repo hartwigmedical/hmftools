@@ -28,7 +28,7 @@ public class LimsTest {
         final String labSopVersions = "PREP1V2-QC1V2-SEQ1V2";
         final String labRemarks = "CPCT WIDE project ";
 
-        final LimsJsonData data = ImmutableLimsJsonData.builder()
+        final LimsJsonSampleData data = ImmutableLimsJsonSampleData.builder()
                 .sampleId(SAMPLE)
                 .samplingDateString(samplingDate)
                 .arrivalDateString(arrivalDate)
@@ -43,8 +43,8 @@ public class LimsTest {
                 .patientNumber("")
                 .build();
 
-        final LimsJsonDataSubmission dataSubmission =
-                ImmutableLimsJsonDataSubmission.builder().submission(SUBMISSION).contactEmail("").contactName("").build();
+        final LimsJsonSubmissionData dataSubmission =
+                ImmutableLimsJsonSubmissionData.builder().submission(SUBMISSION).contactEmail("").contactName("").build();
 
         final Lims lims = buildTestLimsWithJsonData(SAMPLE, data, SUBMISSION, dataSubmission);
 
@@ -82,7 +82,7 @@ public class LimsTest {
 
     @Test
     public void invalidDataYieldsNull() {
-        final LimsJsonData data = ImmutableLimsJsonData.builder()
+        final LimsJsonSampleData data = ImmutableLimsJsonSampleData.builder()
                 .sampleId(SAMPLE)
                 .samplingDateString("IsNotADate")
                 .arrivalDateString("IsNotADate")
@@ -97,8 +97,8 @@ public class LimsTest {
                 .patientNumber("")
                 .build();
 
-        final LimsJsonDataSubmission dataSubmission =
-                ImmutableLimsJsonDataSubmission.builder().submission(SUBMISSION).contactEmail("").contactName("").build();
+        final LimsJsonSubmissionData dataSubmission =
+                ImmutableLimsJsonSubmissionData.builder().submission(SUBMISSION).contactEmail("").contactName("").build();
 
         final Lims lims = buildTestLimsWithJsonData(SAMPLE, data, SUBMISSION, dataSubmission);
 
@@ -112,11 +112,11 @@ public class LimsTest {
     }
 
     @NotNull
-    private static Lims buildTestLimsWithJsonData(@NotNull final String sample, @NotNull final LimsJsonData data,
-            @NotNull final String submission, @NotNull final LimsJsonDataSubmission dataSubmission) {
-        Map<String, LimsJsonData> dataPerSample = Maps.newHashMap();
+    private static Lims buildTestLimsWithJsonData(@NotNull final String sample, @NotNull final LimsJsonSampleData data,
+            @NotNull final String submission, @NotNull final LimsJsonSubmissionData dataSubmission) {
+        Map<String, LimsJsonSampleData> dataPerSample = Maps.newHashMap();
         dataPerSample.put(sample, data);
-        Map<String, LimsJsonDataSubmission> dataPerSubmission = Maps.newHashMap();
+        Map<String, LimsJsonSubmissionData> dataPerSubmission = Maps.newHashMap();
         dataPerSubmission.put(submission, dataSubmission);
         Map<String, LocalDate> preLIMSArrivalDates = Maps.newHashMap();
 
@@ -125,8 +125,8 @@ public class LimsTest {
 
     @NotNull
     private static Lims buildTestLimsWithPreLIMSArrivalDateForSample(@NotNull final String sample, @NotNull final LocalDate date) {
-        final Map<String, LimsJsonData> dataPerSample = Maps.newHashMap();
-        final Map<String, LimsJsonDataSubmission> dataPerSubmission = Maps.newHashMap();
+        final Map<String, LimsJsonSampleData> dataPerSample = Maps.newHashMap();
+        final Map<String, LimsJsonSubmissionData> dataPerSubmission = Maps.newHashMap();
         final Map<String, LocalDate> preLIMSArrivalDates = Maps.newHashMap();
         preLIMSArrivalDates.put(sample, date);
 

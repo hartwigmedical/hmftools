@@ -13,7 +13,7 @@ import org.jetbrains.annotations.Nullable;
 @Value.Immutable
 @Gson.TypeAdapters
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-abstract class LimsJsonData {
+abstract class LimsJsonSampleData {
 
     @NotNull
     @SerializedName("sample_name")
@@ -37,7 +37,6 @@ abstract class LimsJsonData {
     public abstract String samplingDateString();
 
     // Tumor biopsies analyzed in research context do not have a proper tumor percentage filled in.
-    // Tumor biopsies could be NA as tumor percentage
     @Nullable
     @SerializedName("tumor_perc")
     public abstract String tumorPercentageString();
