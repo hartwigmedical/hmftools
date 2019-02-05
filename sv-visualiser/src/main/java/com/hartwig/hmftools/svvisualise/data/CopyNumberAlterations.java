@@ -77,11 +77,12 @@ public class CopyNumberAlterations {
     private static CopyNumberAlteration fromString(@NotNull final String line) {
         String[] values = line.split(DELIMITER);
         return ImmutableCopyNumberAlteration.builder()
-                .chromosome(values[0])
-                .start(Long.valueOf(values[1]))
-                .end(Long.valueOf(values[2]))
-                .copyNumber(Double.valueOf(values[3]))
-                .baf(Double.valueOf(values[4]))
+                .sampleId(values[0])
+                .chromosome(values[1])
+                .start(Long.valueOf(values[2]))
+                .end(Long.valueOf(values[3]))
+                .copyNumber(Double.valueOf(values[4]))
+                .baf(Double.valueOf(values[5]))
                 .build();
     }
 
