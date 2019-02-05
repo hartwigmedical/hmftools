@@ -4,7 +4,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Optional;
 
-import com.hartwig.hmftools.common.context.ProductionRunContextFactory;
 import com.hartwig.hmftools.common.context.RunContext;
 import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocation;
 import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocationFunctions;
@@ -40,29 +39,29 @@ public abstract class NotAnalysableReporter {
 
         final NotAnalysableStudy study = NotAnalysableStudy.fromSample(sample);
 
-       // final RunContext run = ProductionRunContextFactory.fromRunDirectory(runDir);
-       // final double shallowPurity = doShallowPurity ? extractPurity(run) : null;
+        // final RunContext run = ProductionRunContextFactory.fromRunDirectory(runDir);
+        // final double shallowPurity = doShallowPurity ? extractPurity(run) : null;
 
         assert study != null;
 
         final PatientTumorLocation patientTumorLocation =
                 PatientTumorLocationFunctions.findPatientTumorLocationForSample(baseReportData().patientTumorLocations(), sample);
 
+        boolean isCoreSample = baseReportData().limsModel().isCoreSample(sample);
         final SampleReport sampleReport = ImmutableSampleReport.of(sample,
                 patientTumorLocation,
-               // lims.labelSample(sample).equalsIgnoreCase("core") ? Double.toString(shallowPurity) : lims.tumorPercentageForSample(sample),
+                // lims.labelSample(sample).equalsIgnoreCase("core") ? Double.toString(shallowPurity) : lims.tumorPercentageForSample(sample),
                 lims.tumorPercentageForSample(sample),
                 lims.arrivalDateForSample(sample),
                 null,
                 lims.labProceduresForSample(sample),
-                lims.labelSample(sample).equalsIgnoreCase("core")
-                        ? baseReportData().centerModel()
-                        .getCoreRecipients(lims.projectNameDVO(sample))
+                isCoreSample
+                        ? baseReportData().centerModel().getCoreRecipients(lims.projectNameDVO(sample))
                         : baseReportData().centerModel().getAddresseeStringForSample(sample),
                 lims.labelSample(sample),
                 lims.projectNameDVO(sample),
-                lims.labelSample(sample).equalsIgnoreCase("core") ? lims.contactEmail(sample) : "",
-                lims.labelSample(sample).equalsIgnoreCase("core") ? lims.contactName(sample) : "",
+                isCoreSample ? lims.contactEmail(sample) : "",
+                isCoreSample ? lims.contactName(sample) : "",
                 lims.patientNumber(sample));
 
         return ImmutableNotAnalysedPatientReport.of(sampleReport,

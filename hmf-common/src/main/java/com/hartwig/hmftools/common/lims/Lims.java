@@ -61,6 +61,11 @@ public class Lims {
         return sampleData != null ? sampleData.labelSample() : "N/A";
     }
 
+    public boolean isCoreSample(@NotNull final String sample) {
+        String label = labelSample(sample);
+        return label.equalsIgnoreCase("core");
+    }
+
     @NotNull
     public String projectNameDVO(@NotNull final String sample) {
         LimsJsonSampleData sampleData = dataPerSample.get(sample);
