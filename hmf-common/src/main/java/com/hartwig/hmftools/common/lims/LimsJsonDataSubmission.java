@@ -12,15 +12,15 @@ import org.jetbrains.annotations.Nullable;
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
 abstract class LimsJsonDataSubmission {
 
-    @Nullable
+    @NotNull
     @SerializedName("submission")
     public abstract String submission();
 
-    @Nullable
+    @NotNull
     @SerializedName("contact_email")
     public abstract String contactEmail();
 
-    @Nullable
+    @NotNull
     @SerializedName("contact_name")
     public abstract String contactName();
 

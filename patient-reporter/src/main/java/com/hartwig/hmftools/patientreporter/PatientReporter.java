@@ -108,9 +108,9 @@ abstract class PatientReporter {
                 baseReportData().limsModel().labelSample(tumorSample),
                 baseReportData().limsModel().projectNameDVO(tumorSample),
                 baseReportData().limsModel().labelSample(tumorSample).equalsIgnoreCase("core") ? baseReportData().limsModel()
-                        .contactEmail(baseReportData().limsModel().submissionFromSample(tumorSample)) : "",
+                        .contactEmail(tumorSample) : "",
                 baseReportData().limsModel().labelSample(tumorSample).equalsIgnoreCase("core") ? baseReportData().limsModel()
-                        .contactName(baseReportData().limsModel().submissionFromSample(tumorSample)) : "",
+                        .contactName(tumorSample) : "",
                 baseReportData().limsModel().patientNumber(tumorSample));
 
         final List<EvidenceItem> nonTrials = ReportableEvidenceItemFactory.extractNonTrials(allEvidenceItems);

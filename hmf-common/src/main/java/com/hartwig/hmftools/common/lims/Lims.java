@@ -37,13 +37,15 @@ public class Lims {
     }
 
     @Nullable
-    public String contactEmail(@NotNull final String submission) {
+    public String contactEmail(@NotNull final String sample) {
+        String submission = submissionFromSample(sample);
         LimsJsonDataSubmission submissionData = dataPerSubmission.get(submission);
         return submissionData != null ? submissionData.contactEmail() : "N/A";
     }
 
     @Nullable
-    public String contactName(@NotNull final String submission) {
+    public String contactName(@NotNull final String sample) {
+        String submission = submissionFromSample(sample);
         LimsJsonDataSubmission submissionData = dataPerSubmission.get(submission);
         return submissionData != null ? submissionData.contactName() : "N/A";
     }
@@ -55,7 +57,8 @@ public class Lims {
     }
 
     @Nullable
-    public String submission(@NotNull final String submission) {
+    public String submission(@NotNull final String sample) {
+        String submission = submissionFromSample(sample);
         LimsJsonDataSubmission submissionData = dataPerSubmission.get(submission);
         return submissionData != null ? submissionData.submission() : "N/A";
     }
