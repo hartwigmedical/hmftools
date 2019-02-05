@@ -67,6 +67,18 @@ public class SvCNData {
         return isStart ? mSegStart.equals(segment.toString()) : mSegEnd.equals(segment.toString());
     }
 
+    public static boolean isSvSegment(final SegmentSupport segment)
+    {
+        return (segment == SegmentSupport.BND || segment == SegmentSupport.INV || segment == SegmentSupport.INS
+                || segment == SegmentSupport.DEL || segment == SegmentSupport.DUP || segment == SegmentSupport.SGL
+                || segment == SegmentSupport.MULTIPLE);
+     }
+
+    public boolean matchesSV(boolean isStart)
+    {
+        return isStart ? isSvSegment(SegmentSupport.valueOf(mSegStart)) : isSvSegment(SegmentSupport.valueOf(mSegEnd));
+    }
+
     public final String asString() { return String.format("id=%s pos=%s:%d", mId, mChromosome, mStartPos); }
 
 }
