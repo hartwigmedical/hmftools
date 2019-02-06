@@ -10,17 +10,17 @@ import org.jetbrains.annotations.Nullable;
 @Value.Immutable
 @Gson.TypeAdapters
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-abstract class LimsJsonDataSubmission {
+abstract class LimsJsonSubmissionData {
 
-    @Nullable
+    @NotNull
     @SerializedName("submission")
     public abstract String submission();
 
-    @Nullable
+    @NotNull
     @SerializedName("contact_email")
     public abstract String contactEmail();
 
-    @Nullable
+    @NotNull
     @SerializedName("contact_name")
     public abstract String contactName();
 

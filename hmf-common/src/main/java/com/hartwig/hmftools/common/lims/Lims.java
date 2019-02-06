@@ -15,17 +15,16 @@ public class Lims {
     private static final Logger LOGGER = LogManager.getLogger(Lims.class);
 
     @NotNull
-    private final Map<String, LimsJsonData> dataPerSample;
+    private final Map<String, LimsJsonSampleData> dataPerSample;
     @NotNull
-    private final Map<String, LimsJsonDataSubmission> dataPerSubmission;
+    private final Map<String, LimsJsonSubmissionData> dataPerSubmission;
     @NotNull
     private final Map<String, LocalDate> preLimsArrivalDates;
     @NotNull
     private final Set<String> samplesWithoutSamplingDate;
 
-    public Lims(@NotNull final Map<String, LimsJsonData> dataPerSample, @NotNull final Map<String, LimsJsonDataSubmission> dataPerSubmission,
-            @NotNull final Map<String, LocalDate> preLimsArrivalDates,
-            @NotNull final Set<String> samplesWithoutSamplingDate) {
+    Lims(@NotNull final Map<String, LimsJsonSampleData> dataPerSample, @NotNull final Map<String, LimsJsonSubmissionData> dataPerSubmission,
+            @NotNull final Map<String, LocalDate> preLimsArrivalDates, @NotNull final Set<String> samplesWithoutSamplingDate) {
         this.dataPerSample = dataPerSample;
         this.dataPerSubmission = dataPerSubmission;
         this.preLimsArrivalDates = preLimsArrivalDates;
@@ -36,45 +35,46 @@ public class Lims {
         return dataPerSample.size();
     }
 
-    @Nullable
-    public String contactEmail(@NotNull final String submission) {
-        LimsJsonDataSubmission submissionData = dataPerSubmission.get(submission);
+    @NotNull
+    public String contactEmail(@NotNull final String sample) {
+        String submission = submissionForSample(sample);
+        LimsJsonSubmissionData submissionData = dataPerSubmission.get(submission);
         return submissionData != null ? submissionData.contactEmail() : "N/A";
     }
 
-    @Nullable
-    public String contactName(@NotNull final String submission) {
-        LimsJsonDataSubmission submissionData = dataPerSubmission.get(submission);
+    @NotNull
+    public String contactName(@NotNull final String sample) {
+        String submission = submissionForSample(sample);
+        LimsJsonSubmissionData submissionData = dataPerSubmission.get(submission);
         return submissionData != null ? submissionData.contactName() : "N/A";
     }
 
     @Nullable
-    public String submission(@NotNull final String submission) {
-        LimsJsonDataSubmission submissionData = dataPerSubmission.get(submission);
-        return submissionData != null ? submissionData.submission() : "N/A";
+    public String patientNumber(@NotNull final String sample) {
+        LimsJsonSampleData sampleData = dataPerSample.get(sample);
+        return sampleData != null ? sampleData.patientNumber() : null;
     }
 
     @NotNull
     public String labelSample(@NotNull final String sample) {
-        LimsJsonData sampleData = dataPerSample.get(sample);
+        LimsJsonSampleData sampleData = dataPerSample.get(sample);
         return sampleData != null ? sampleData.labelSample() : "N/A";
+    }
+
+    public boolean isCoreSample(@NotNull final String sample) {
+        String label = labelSample(sample);
+        return label.equalsIgnoreCase("core");
     }
 
     @NotNull
     public String projectNameDVO(@NotNull final String sample) {
-        LimsJsonData sampleData = dataPerSample.get(sample);
+        LimsJsonSampleData sampleData = dataPerSample.get(sample);
         return sampleData != null ? sampleData.projectName() : "N/A";
-    }
-
-    @NotNull
-    public String submissionFromSample(@NotNull final String sample) {
-        LimsJsonData sampleData = dataPerSample.get(sample);
-        return sampleData != null ? sampleData.submission() : "N/A";
     }
 
     @Nullable
     public LocalDate arrivalDateForSample(@NotNull final String sample) {
-        LimsJsonData sampleData = dataPerSample.get(sample);
+        LimsJsonSampleData sampleData = dataPerSample.get(sample);
         LocalDate arrivalDate = sampleData != null ? getNullableDate(sampleData.arrivalDateString()) : null;
 
         if (arrivalDate == null) {
@@ -90,7 +90,7 @@ public class Lims {
 
     @Nullable
     public LocalDate samplingDateForSample(@NotNull final String sample) {
-        LimsJsonData sampleData = dataPerSample.get(sample);
+        LimsJsonSampleData sampleData = dataPerSample.get(sample);
         if (sampleData != null) {
             final String samplingDateString = sampleData.samplingDateString();
             final LocalDate samplingDate = getNullableDate(samplingDateString);
@@ -104,7 +104,7 @@ public class Lims {
 
     @Nullable
     public Integer dnaNanogramsForSample(@NotNull String sample) {
-        LimsJsonData sampleData = dataPerSample.get(sample);
+        LimsJsonSampleData sampleData = dataPerSample.get(sample);
         if (sampleData != null) {
             try {
                 // LIMS stores the amount of nanograms per micro liter.
@@ -118,19 +118,19 @@ public class Lims {
 
     @NotNull
     public String tumorPercentageForSample(@NotNull String sample) {
-        LimsJsonData sampleData = dataPerSample.get(sample);
+        LimsJsonSampleData sampleData = dataPerSample.get(sample);
         if (sampleData != null) {
             String tumorPercentageString = sampleData.tumorPercentageString();
             String remarksSample = sampleData.labRemarks();
             String labelSample = sampleData.labelSample();
-            if (tumorPercentageString == null) {
+            boolean noTumorPercDetermined =
+                    labelSample.equals("CORE") || (remarksSample != null && (remarksSample.contains("CPCTWIDE") || remarksSample.contains(
+                            "ShallowSeq")));
+
+            if (noTumorPercDetermined) {
+                return "not determined";
+            } else if (tumorPercentageString == null) {
                 return "N/A";
-            } else if (tumorPercentageString.isEmpty() && remarksSample != null && remarksSample.contains("CPCTWIDE")) {
-                return "not determined";
-            } else if (tumorPercentageString.isEmpty() && remarksSample != null && remarksSample.contains("ShallowSeq")) {
-                return "not determined";
-            } else if (tumorPercentageString.isEmpty()  && labelSample.equals("CORE")) {
-                return "not determined";
             }
 
             try {
@@ -138,13 +138,12 @@ public class Lims {
             } catch (final NumberFormatException e) {
                 return "N/A";
             }
-        }
-        return "N/A";
+        } return "N/A";
     }
 
     @NotNull
     public String primaryTumorForSample(@NotNull final String sample) {
-        LimsJsonData sampleData = dataPerSample.get(sample);
+        LimsJsonSampleData sampleData = dataPerSample.get(sample);
         if (sampleData != null) {
             return sampleData.primaryTumor();
         }
@@ -154,12 +153,18 @@ public class Lims {
 
     @NotNull
     public String labProceduresForSample(@NotNull final String sample) {
-        LimsJsonData sampleData = dataPerSample.get(sample);
+        LimsJsonSampleData sampleData = dataPerSample.get(sample);
         if (sampleData != null) {
             return sampleData.labProcedures();
         }
         LOGGER.warn("Could not find lab SOP versions for sample: " + sample + " in LIMS");
         return "N/A";
+    }
+
+    @Nullable
+    private String submissionForSample(@NotNull final String sample) {
+        LimsJsonSampleData sampleData = dataPerSample.get(sample);
+        return sampleData != null ? sampleData.submission() : null;
     }
 
     @Nullable

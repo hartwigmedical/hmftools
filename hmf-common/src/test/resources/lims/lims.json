@@ -1,85 +1,55 @@
 {
   "samples": {
     "FR00000000": {
-      "qiasymphony_id": "I00-1111",
-      "dna_sample_id": "FR00000000",
-      "Biobank": "DNA-BL-PL",
-      "COLUMNS_NOT_IN_USE_COLLAPSED": "NA",
-      "status": "finished ",
-      "sample_source": "Blood",
-      "yield": "100",
       "tumor_perc": "NA",
-      "entity": "CPCT_AVL",
-      "rna_conc": "",
-      "plasma_or_rna_sample_id": "FB00000000",
-      "patient": "SAMP01010003",
       "submission": "HMFregCPCT",
-      "sample_barcode": "CSB000000",
       "sample_name": "SAMP01010003R",
-      "remarks": "NA",
       "project_name": "HMFregCPCT",
-      "NA": "NA",
       "sampling_date": "2016-01-02",
-      "snp_experiment_id": "SNP00-0000",
       "arrival_date": "2016-01-03",
       "analysis_type": "Somatic_R",
       "lab_sop_versions": "PREP013V23-QC037V20-SEQ008V25",
       "dna_conc": 143,
       "ptum": "NA",
-      "patho_plate": "NA",
-      "sample_id": "FR00000001",
-      "label": "CPCT"
+      "label": "CPCT",
+      "unused": "hello world"
     },
     "FR00000001": {
-      "qiasymphony_id": "I00-2222",
-      "dna_sample_id": "FR00000000",
-      "Biobank": "DNA-BL-PL",
-      "COLUMNS_NOT_IN_USE_COLLAPSED": "NA",
-      "status": "finished ",
-      "sample_source": "Biopt",
-      "yield": "300",
       "tumor_perc": 30,
-      "entity": "CPCT_AVL",
-      "rna_conc": "",
-      "plasma_or_rna_sample_id": "FB00000001",
-      "patient": "SAMP01010003",
       "submission": "HMFregCPCT",
-      "sample_barcode": "FC0000001",
       "sample_name": "SAMP01010003T",
-      "remarks": "NA",
       "project_name": "HMFregCPCT",
-      "NA": "NA",
       "sampling_date": "2016-01-04",
-      "snp_experiment_id": "SNP00-0001",
-      "lab_sop_versions": "PREPV-QC037V20-SEQ008V25",
       "arrival_date": "2016-02-05",
-      "analysis_type": "Somatic_R",
+      "analysis_type": "Somatic_T",
+      "lab_sop_versions": "PREPV-QC037V20-SEQ008V25",
       "dna_conc": 143,
       "ptum": "NA",
-      "patho_plate": "NA",
-      "sample_id": "FR00000001",
-      "label": "CPCT"
+      "label": "CPCT",
+      "patient_number": "something",
+      "lab_remarks": "this is a test"
+    },
+    "FR00000002": {
+      "analysis_type": "do not analyze me",
+      "label": "Nothing"
+    },
+    "FR00000003": {
+      "analysis_type": "Somatic_T",
+      "label": "Research"
     }
   },
   "submissions" : {
     "ABCDEF123": {
-      "COLUMNS_NOT_IN_USE_COLLAPSED": "NA",
-      "NA": "NA",
-      "Requested product ": "WGS",
-      "analysis_type": "NA",
-      "arrival_date": "2014-10-11",
-      "bfx_analyis": "No",
-      "contact_email": "NA",
-      "contact_name": "NA",
-      "has_arrived": "Yes",
-      "has_lab_finished": 1,
-      "lab_storage_status": "NA",
-      "project_name": "NA",
-      "project_type": "",
-      "remarks": "NA",
-      "sample_count": 19,
+      "contact_email": "email",
+      "contact_name": "name",
       "submission": "ABCDEF123",
-      "turn_around_time": 367
+      "project_type": "CORE"
+    },
+    "ABCDEF124": {
+      "contact_email": "email2",
+      "contact_name": "name2",
+      "submission": "ABCDEF1234",
+      "project_type": "RESEARCH"
     }
   }
 }

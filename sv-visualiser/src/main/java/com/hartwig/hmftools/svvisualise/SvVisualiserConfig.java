@@ -137,7 +137,7 @@ public interface SvVisualiserConfig {
         final List<CopyNumberAlteration> cna;
         if (cmd.hasOption(CNA)) {
             LOGGER.info("Reading copy numbers from {}", cmd.getOptionValue(CNA));
-            cna = CopyNumberAlterations.read(cmd.getOptionValue(CNA));
+            cna = CopyNumberAlterations.read(cmd.getOptionValue(CNA)).stream().filter(x-> x.sampleId().equals(sample)).collect(toList());
         } else {
             LOGGER.info("Loading copy numbers from database");
             cna = sampleCopyNumberAlterations(sample, dbUser, dbPassword, "jdbc:" + dbUrl);
@@ -180,6 +180,7 @@ public interface SvVisualiserConfig {
                 .stream()
                 .map(x -> ImmutableCopyNumberAlteration.builder()
                         .from(x)
+                        .sampleId(sample)
                         .baf(x.averageActualBAF())
                         .copyNumber(x.averageTumorCopyNumber())
                         .build())

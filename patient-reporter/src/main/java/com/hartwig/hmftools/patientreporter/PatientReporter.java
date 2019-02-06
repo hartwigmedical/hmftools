@@ -96,21 +96,19 @@ abstract class PatientReporter {
         allEvidenceItems.addAll(copyNumberAnalysis.evidenceItems());
         allEvidenceItems.addAll(svAnalysis.evidenceItems());
 
+        boolean isCoreSample = baseReportData().limsModel().isCoreSample(tumorSample);
         final SampleReport sampleReport = ImmutableSampleReport.of(tumorSample,
                 patientTumorLocation,
                 baseReportData().limsModel().tumorPercentageForSample(tumorSample),
                 baseReportData().limsModel().arrivalDateForSample(tumorSample),
                 baseReportData().limsModel().arrivalDateForSample(run.refSample()),
                 baseReportData().limsModel().labProceduresForSample(tumorSample),
-                baseReportData().limsModel().labelSample(tumorSample).equalsIgnoreCase("core")
-                        ? ""
-                        : baseReportData().centerModel().getAddresseeStringForSample(tumorSample),
+                isCoreSample ? "" : baseReportData().centerModel().getAddresseeStringForSample(tumorSample),
                 baseReportData().limsModel().labelSample(tumorSample),
                 baseReportData().limsModel().projectNameDVO(tumorSample),
-                baseReportData().limsModel().labelSample(tumorSample).equalsIgnoreCase("core") ? baseReportData().limsModel()
-                        .contactEmail(baseReportData().limsModel().submissionFromSample(tumorSample)) : "",
-                baseReportData().limsModel().labelSample(tumorSample).equalsIgnoreCase("core") ? baseReportData().limsModel()
-                        .contactName(baseReportData().limsModel().submissionFromSample(tumorSample)) : "");
+                isCoreSample ? baseReportData().limsModel().contactEmail(tumorSample) : "",
+                isCoreSample ? baseReportData().limsModel().contactName(tumorSample) : "",
+                baseReportData().limsModel().patientNumber(tumorSample));
 
         final List<EvidenceItem> nonTrials = ReportableEvidenceItemFactory.extractNonTrials(allEvidenceItems);
 
