@@ -69,7 +69,7 @@ public class SvVisualiser implements AutoCloseable {
         if (config.singleCluster() != null || config.singleChromosome() != null) {
 
             if (config.singleCluster() != null) {
-                futures.add(executorService.submit(() -> runCluster(config.singleCluster())));
+                futures.add(executorService.submit(() -> runCluster(config.singleCluster(), false)));
             }
 
             if (config.singleChromosome() != null) {
@@ -79,7 +79,7 @@ public class SvVisualiser implements AutoCloseable {
         } else {
             final List<Integer> clusterIds = config.links().stream().map(Link::clusterId).distinct().sorted().collect(toList());
             for (Integer clusterId : clusterIds) {
-                futures.add(executorService.submit(() -> runCluster(clusterId)));
+                futures.add(executorService.submit(() -> runCluster(clusterId, true)));
             }
 
             final Set<String> chromosomes = Sets.newHashSet();
@@ -117,10 +117,15 @@ public class SvVisualiser implements AutoCloseable {
     }
 
     @Nullable
-    private Object runCluster(int clusterId) throws IOException, InterruptedException {
+    private Object runCluster(int clusterId, boolean skipSingles) throws IOException, InterruptedException {
         final List<Link> clusterLinks = config.links().stream().filter(x -> x.clusterId() == clusterId).collect(toList());
         if (clusterLinks.isEmpty()) {
             LOGGER.warn("Cluster {} not present in file", clusterId);
+            return null;
+        }
+
+        if (clusterLinks.size() == 1 && skipSingles) {
+            LOGGER.info("Skipping simple cluster {}", clusterId);
             return null;
         }
 
