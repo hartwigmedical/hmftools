@@ -66,9 +66,7 @@ public class PDFWriter {
 
     @NotNull
     private String fileName(@NotNull String sample, @Nullable String DVO, @NotNull String label) {
-        return label.contains("CORE")
-                ? reportDirectory + File.separator + sample + "_" + DVO + "_hmf_report.pdf"
-                : reportDirectory + File.separator + sample + "_hmf_report.pdf";
+        return reportDirectory + File.separator + sample + "_hmf_report.pdf";
     }
 
     @VisibleForTesting
