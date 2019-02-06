@@ -61,7 +61,8 @@ public final class LimsFactory {
     }
 
     @NotNull
-    private static Map<String, LimsShallowSeqData> readLimsShallowSeq(@NotNull final String shallowSeqCsv) throws IOException {
+    @VisibleForTesting
+    static Map<String, LimsShallowSeqData> readLimsShallowSeq(@NotNull final String shallowSeqCsv) throws IOException {
         final Map<String, LimsShallowSeqData> shallowSeqPerSample = Maps.newHashMap();
         final List<String> lines = com.hartwig.hmftools.common.io.reader.FileReader.build().readLines(new File(shallowSeqCsv).toPath());
         for (final String line : lines) {

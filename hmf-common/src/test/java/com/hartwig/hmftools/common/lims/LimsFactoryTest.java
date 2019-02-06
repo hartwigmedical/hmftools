@@ -105,4 +105,15 @@ public class LimsFactoryTest {
         assertTrue(samplesWithoutSamplingDate.contains("CPCT02990001T"));
         assertFalse(samplesWithoutSamplingDate.contains("Does not exist"));
     }
+
+    @Test
+    public void readCorrectlyShallowSeqPurity() throws IOException {
+        Map<String, LimsShallowSeqData> shallowSeqPuritySample = LimsFactory.readLimsShallowSeq(LIMS_DIRECTORY + File.separator + "shallowSeqPurity.csv");
+        final String sample = "CPCT02990001T";
+        final LimsShallowSeqData limsShallowSeqData = shallowSeqPuritySample.get(sample);
+
+        assertEquals(2, shallowSeqPuritySample.size());
+        assertEquals("CPCT02990001T", limsShallowSeqData.sampleId());
+        assertEquals("0.19", limsShallowSeqData.purityShallowSeq());
+    }
 }
