@@ -14,6 +14,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
 import org.jetbrains.annotations.NotNull;
+import org.junit.Ignore;
 import org.junit.Test;
 
 public class LimsTest {
@@ -149,6 +150,40 @@ public class LimsTest {
 
         Lims lims = buildTestLimsWithSample(sampleData);
         assertEquals("not determined", lims.tumorPercentageForSample(SAMPLE));
+    }
+
+    //TODO: tests for shallow seq purity
+    @Ignore
+    public void ShallowSeqPurityError() {
+        final LimsJsonSampleData sampleData = createLimsSampleDataBuilder()
+                .sampleId(SAMPLE)
+                .labRemarks("ShallowSeq")
+                .build();
+
+        Lims lims = buildTestLimsWithSample(sampleData);
+        assertEquals("N/A", lims.purityShallowSeq(SAMPLE));
+    }
+
+    @Ignore
+    public void ShallowSeqPurity() {
+        final LimsJsonSampleData sampleData = createLimsSampleDataBuilder()
+                .sampleId("CPCT02990001T")
+                .labRemarks("ShallowSeq")
+                .build();
+
+        Lims lims = buildTestLimsWithSample(sampleData);
+        assertEquals("N/A", lims.purityShallowSeq("CPCT02990001T"));
+    }
+
+    @Ignore
+    public void ShallowSeqPathology() {
+        final LimsJsonSampleData sampleData = createLimsSampleDataBuilder()
+                .sampleId(SAMPLE)
+                .labRemarks("ShallowSeq")
+                .build();
+
+        Lims lims = buildTestLimsWithSample(sampleData);
+        assertEquals("N/A", lims.purityShallowSeq(SAMPLE));
     }
 
     @NotNull
