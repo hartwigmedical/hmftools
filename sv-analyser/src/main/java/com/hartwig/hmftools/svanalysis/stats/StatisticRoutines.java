@@ -114,10 +114,15 @@ public class StatisticRoutines
             runGenericThreeVariableStatisitics();
     }
 
+    private static String SPEC_GROUP_VAL = "";
+    // private static String SPEC_GROUP_VAL = "SETD2";
+
     private void runGenericThreeVariableStatisitics()
     {
         // for each of the group fields, calculate co-occurrence for each of the 2 categories
         mFisherET.initialise(mSamples.size());
+
+        int hypothesesCount = mGroupingValues.size() * mCat1Values.size() * mCat2Values.size();
 
         for(final String groupingValue : mGroupingValues)
         {
@@ -129,6 +134,11 @@ public class StatisticRoutines
             int sampleCount = sampleDataList.size();
 
             LOGGER.info("processing group({}) with {} samples", groupingValue, sampleCount);
+
+            if(groupingValue.equals(SPEC_GROUP_VAL))
+            {
+                LOGGER.debug("spec group value: {}", groupingValue);
+            }
 
             for(final String cat1 : mCat1Values)
             {
@@ -151,11 +161,9 @@ public class StatisticRoutines
 
                         for (final String[] catList : catDataList)
                         {
-
                             if (catList[SAMPLE_CAT_1_INDEX].equals(cat1) && catList[SAMPLE_CAT_2_INDEX].equals(cat2))
                             {
                                 hasBoth = true;
-                                ++withCat1WithCat2;
                                 break;
                             }
 
@@ -187,9 +195,8 @@ public class StatisticRoutines
                     double fisherProb = calcFisherExact(withCat1WithCat2, noCat1WithCat2, withCat1NoCat2, noCat1NoCat2, expectedVal);
 
                     writeThreeVariableResultsData(groupingValue, cat1, cat2, sampleCount, withCat1, withCat2, fisherProb,
-                            expectedVal, withCat1WithCat2, noCat1WithCat2, withCat1NoCat2, noCat1NoCat2);
+                            expectedVal, hypothesesCount, withCat1WithCat2, noCat1WithCat2, withCat1NoCat2, noCat1NoCat2);
                 }
-
             }
         }
     }
@@ -308,9 +315,9 @@ public class StatisticRoutines
         {
             mWriter = createBufferedWriter(outputFileName, false);
 
-            mWriter.write(String.format("%s,%s,%s,SampleCount", mGroupingField, mCategory1, mCategory2));
+            mWriter.write(String.format("%s,%s,%s,With%sCount", mGroupingField, mCategory1, mCategory2, mGroupingField));
 
-            mWriter.write(String.format(",With%sCount,With%sCount,ExpectedCount,FETProb",
+            mWriter.write(String.format(",With%sCount,With%sCount,ExpectedCount,FETProb,TestCount,CountGtExp",
                     mCategory1, mCategory2));
 
             mWriter.write(String.format(",With%sWith%s,No%sWith%s,With%sNo%s,No%sNo%s",
@@ -328,7 +335,7 @@ public class StatisticRoutines
     }
 
     private void writeThreeVariableResultsData(final String groupingValue, final String cat1, final String cat2, int sampleCount,
-            int withCat1, int withCat2, double fetProbability, double expectedVal,
+            int withCat1, int withCat2, double fetProbability, double expectedVal, int testCount,
             int withCat1WithCat2, int noCat1WithCat2, int withCat1NoCat2, int noCat1NoCat2)
     {
         if (mWriter == null)
@@ -341,8 +348,9 @@ public class StatisticRoutines
                             groupingValue, cat1, cat2, sampleCount));
 
             mWriter.write(
-                    String.format(",%d,%d,%.2f,%4.3e,%d,%d,%d,%d",
+                    String.format(",%d,%d,%.2f,%4.3e,%d,%s,%d,%d,%d,%d",
                             withCat1, withCat2, expectedVal, fetProbability,
+                            testCount, withCat1WithCat2 > expectedVal,
                             withCat1WithCat2, noCat1WithCat2, withCat1NoCat2, noCat1NoCat2));
 
             mWriter.newLine();
