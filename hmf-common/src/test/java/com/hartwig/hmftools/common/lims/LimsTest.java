@@ -160,8 +160,9 @@ public class LimsTest {
         dataPerSubmission.put(submissionData.submission(), submissionData);
         Map<String, LocalDate> preLIMSArrivalDates = Maps.newHashMap();
         Set<String> samplesWithSamplingDates = Sets.newHashSet();
+        Map<String, LimsShallowSeqData> shallowSeqDataPerSample = Maps.newHashMap();
 
-        return new Lims(dataPerSample, dataPerSubmission, preLIMSArrivalDates, samplesWithSamplingDates);
+        return new Lims(dataPerSample, dataPerSubmission, preLIMSArrivalDates, samplesWithSamplingDates, shallowSeqDataPerSample);
     }
 
     @NotNull
@@ -171,8 +172,9 @@ public class LimsTest {
         Map<String, LimsJsonSubmissionData> dataPerSubmission = Maps.newHashMap();
         Map<String, LocalDate> preLIMSArrivalDates = Maps.newHashMap();
         Set<String> samplesWithSamplingDates = Sets.newHashSet();
+        Map<String, LimsShallowSeqData> shallowSeqDataPerSample = Maps.newHashMap();
 
-        return new Lims(dataPerSample, dataPerSubmission, preLIMSArrivalDates, samplesWithSamplingDates);
+        return new Lims(dataPerSample, dataPerSubmission, preLIMSArrivalDates, samplesWithSamplingDates, shallowSeqDataPerSample);
     }
 
     @NotNull
@@ -183,7 +185,8 @@ public class LimsTest {
         preLIMSArrivalDates.put(sample, date);
 
         Set<String> samplesWithSamplingDates = Sets.newHashSet();
+        Map<String, LimsShallowSeqData> shallowSeqDataPerSample = Maps.newHashMap();
 
-        return new Lims(dataPerSample, dataPerSubmission, preLIMSArrivalDates, samplesWithSamplingDates);
+        return new Lims(dataPerSample, dataPerSubmission, preLIMSArrivalDates, samplesWithSamplingDates, shallowSeqDataPerSample);
     }
 }

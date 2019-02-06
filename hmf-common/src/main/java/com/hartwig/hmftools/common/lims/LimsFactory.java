@@ -26,6 +26,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
+
 public final class LimsFactory {
 
     private static final Logger LOGGER = LogManager.getLogger(LimsFactory.class);
@@ -33,6 +34,9 @@ public final class LimsFactory {
     private static final String LIMS_JSON_FILE = "lims.json";
     private static final String PRE_LIMS_ARRIVAL_DATES_FILE = "pre_lims_arrival_dates.csv";
     private static final String SAMPLES_WITHOUT_SAMPLING_DATE_FILE = "samples_without_sampling_date.csv";
+    private static final String LIMS_SHALLOW_SEQ = "shallowSeqPurity.csv";
+    private static final String FIELD_SEPARATOR = ",";
+
 
     private LimsFactory() {
     }
@@ -47,12 +51,29 @@ public final class LimsFactory {
                 readPreLIMSArrivalDateCsv(limsDirectory + File.separator + PRE_LIMS_ARRIVAL_DATES_FILE);
         Set<String> samplesWithoutSamplingDate =
                 readSamplesWithoutSamplingDateCsv(limsDirectory + File.separator + SAMPLES_WITHOUT_SAMPLING_DATE_FILE);
-        return new Lims(dataPerSample, dataPerSubmission, preLIMSArrivalDates, samplesWithoutSamplingDate);
+        Map<String, LimsShallowSeqData> shallowSeqSample = readLimsShallowSeq(limsDirectory + File.separator + LIMS_SHALLOW_SEQ);
+        return new Lims(dataPerSample, dataPerSubmission, preLIMSArrivalDates, samplesWithoutSamplingDate, shallowSeqSample);
     }
 
     @NotNull
     public static Lims empty() {
-        return new Lims(Maps.newHashMap(), Maps.newHashMap(), Maps.newHashMap(), Sets.newHashSet());
+        return new Lims(Maps.newHashMap(), Maps.newHashMap(), Maps.newHashMap(), Sets.newHashSet(), Maps.newHashMap());
+    }
+
+    @NotNull
+    private static Map<String, LimsShallowSeqData> readLimsShallowSeq(@NotNull final String shallowSeqCsv) throws IOException {
+        final Map<String, LimsShallowSeqData> shallowSeqPerSample = Maps.newHashMap();
+        final List<String> lines = com.hartwig.hmftools.common.io.reader.FileReader.build().readLines(new File(shallowSeqCsv).toPath());
+        for (final String line : lines) {
+            final String[] parts = line.split(FIELD_SEPARATOR, 2);
+            if (parts.length == 2) {
+                shallowSeqPerSample.put(parts[0],
+                        ImmutableLimsShallowSeqData.of(parts[0], parts[1]));
+            } else if (parts.length > 0) {
+                LOGGER.warn("Could not properly parse line in shallow seq csv: " + line);
+            }
+        }
+            return shallowSeqPerSample;
     }
 
     @NotNull
