@@ -12,7 +12,7 @@ final class Microhomology {
     }
 
     @NotNull
-    static String microhomology(int position, @NotNull final String sequence, @NotNull final String ref) {
+    static String microhomologyAtDelete(int position, @NotNull final String sequence, @NotNull final String ref) {
         if (sequence.length() < position + ref.length()) {
             LOGGER.warn("Attempt to determine microhomology outside of sequence length");
             return Strings.EMPTY;
@@ -34,17 +34,62 @@ final class Microhomology {
     }
 
     @NotNull
-    private static String commonPrefix(String normal, String tumor, int maxLength) {
-        int minLength = Math.min(maxLength, Math.min(tumor.length(), normal.length()));
+    static String microhomologyAtInsert(int position, @NotNull final String sequence, @NotNull final String alt) {
+        if (sequence.length() < position) {
+            LOGGER.warn("Attempt to determine microhomology outside of sequence length");
+            return Strings.EMPTY;
+        }
+
+        if (alt.contains(",")) {
+            return Strings.EMPTY;
+        }
+
+        assert (sequence.charAt(position) == alt.charAt(0));
+        final char ref = sequence.charAt(position);
+        final String insert = alt.substring(1);
+        final String preInsert = sequence.substring(0, position);
+        final String postInsert = sequence.substring(position + 1);
+
+        final String commonPrefix = commonPrefix(insert, postInsert);
+        final String commonSuffixWithRef = commonSuffix(preInsert + ref, insert);
+
+        return commonPrefix.length() > commonSuffixWithRef.length() ? commonPrefix : commonSuffixWithRef;
+    }
+
+    @NotNull
+    static String commonSuffix(@NotNull final String first, @NotNull final String second) {
+        int minLength = Math.min(second.length(), first.length());
         if (minLength == 0) {
             return Strings.EMPTY;
         }
 
         for (int i = 0; i < minLength; i++) {
-            if (normal.charAt(i) != tumor.charAt(i)) {
-                return i == 0 ? Strings.EMPTY : normal.substring(0, i);
+            if (first.charAt(first.length() - 1 - i) != second.charAt(second.length() - 1 - i)) {
+                return i == 0 ? Strings.EMPTY : first.substring(first.length() - i);
             }
         }
-        return normal.substring(0, minLength);
+
+        return first.substring(first.length() - minLength);
     }
+
+    @NotNull
+    static String commonPrefix(@NotNull final String first, @NotNull final String second) {
+        return commonPrefix(first, second, first.length());
+    }
+
+    @NotNull
+    static String commonPrefix(@NotNull final String first, @NotNull final String second, int maxLength) {
+        int minLength = Math.min(maxLength, Math.min(second.length(), first.length()));
+        if (minLength == 0) {
+            return Strings.EMPTY;
+        }
+
+        for (int i = 0; i < minLength; i++) {
+            if (first.charAt(i) != second.charAt(i)) {
+                return i == 0 ? Strings.EMPTY : first.substring(0, i);
+            }
+        }
+        return first.substring(0, minLength);
+    }
+
 }
