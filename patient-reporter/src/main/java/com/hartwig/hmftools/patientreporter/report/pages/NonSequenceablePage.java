@@ -104,8 +104,8 @@ public abstract class NonSequenceablePage {
                                 + "evaluable for the " + study().studyCode() + " study.").setStyle(fontStyle()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
                 cmp.text(sampleReport().label().equalsIgnoreCase("core")
-                        ? "The tumor percentage estimated by molecular tumor percentage is:"
-                        : "The tumor percentage estimated by Pathology UMC Utrecht is: " + sampleReport().pathologyTumorPercentage())
+                        ? "The tumor percentage estimated by molecular tumor percentage is: " + sampleReport().purityOrPathologyTumorPercentage()
+                        : "The tumor percentage estimated by Pathology UMC Utrecht is: " + sampleReport().purityOrPathologyTumorPercentage())
                         .setStyle(fontStyle()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
                 cmp.text("The biopsies evaluated for this sample have arrived on " + formattedDate(sampleReport().tumorArrivalDate())
