@@ -43,19 +43,13 @@ public class ChainFinder
     private int mReqChainCount;
     private boolean mLogVerbose;
 
-    PerformanceCounter mContinuousFinderPc;
-
     public ChainFinder()
     {
         mCompleteChains = Lists.newArrayList();
         mIncompleteChains = Lists.newArrayList();
         mLogVerbose = false;
         mReqChainCount = 0;
-
-        mContinuousFinderPc = new PerformanceCounter("Continuous");
     }
-
-    public final PerformanceCounter getContinuousFinderPc() { return mContinuousFinderPc; }
 
     public void initialise(final String sampleId, SvCluster cluster)
     {
@@ -91,9 +85,7 @@ public class ChainFinder
 
         List<SvChain> chains = Lists.newArrayList();
 
-        mContinuousFinderPc.start();
         findSvChainsIncrementally(svList, chains);
-        mContinuousFinderPc.stop();
 
         if(chains.size() == 1 && chains.get(0).getSvCount() == mReqChainCount)
         {
@@ -253,7 +245,7 @@ public class ChainFinder
         // - SVs cannot be in more than 1 chain
         // - for replicated SVs, there cannot be conflicting sets of breakend pairs (eg A-B and A-C)
 
-        // isSpecificCluster(mCluster);
+        isSpecificCluster(mCluster);
         List<SvLinkedPair> chainedPairs = Lists.newArrayList();
         List<SvLinkedPair> remainingStartLinks = Lists.newArrayList();
         remainingStartLinks.addAll(mAssemblyLinkedPairs);
@@ -357,8 +349,8 @@ public class ChainFinder
             requiredLinks.addAll(chainedPairs);
             requiredLinks.addAll(mAssemblyLinkedPairs); // these will restrict potential inferred TIs even if not part of a chain yet
 
-            SvLinkedPair closestStartPair = findNextLinkedPair(requiredLinks, unlinkedSvList, chainFirstSV, chainFirstUnlinkedOnStart);
-            SvLinkedPair closestLastPair = findNextLinkedPair(requiredLinks, unlinkedSvList, chainLastSV, chainLastUnlinkedOnStart);
+            SvLinkedPair closestStartPair = findNextLinkedPair(requiredLinks, unlinkedSvList, chainFirstSV, chainFirstUnlinkedOnStart, 0);
+            SvLinkedPair closestLastPair = findNextLinkedPair(requiredLinks, unlinkedSvList, chainLastSV, chainLastUnlinkedOnStart, 0);
 
             if(closestStartPair != null || closestLastPair != null)
             {
@@ -463,13 +455,15 @@ public class ChainFinder
         // try to find an inferred linked pair from which to begin a new chain
         SvLinkedPair shortestPair = null;
 
-        for(final SvVarData var : unlinkedSVs)
+        for(int i = 0; i < unlinkedSVs.size(); ++i)
         {
+            final SvVarData var = unlinkedSVs.get(i);
+
             for (int be = SVI_START; be <= SVI_END; ++be)
             {
                 boolean useStart = isStart(be);
 
-                SvLinkedPair pair = findNextLinkedPair(chainedPairs, unlinkedSVs, var, useStart);
+                SvLinkedPair pair = findNextLinkedPair(chainedPairs, unlinkedSVs, var, useStart, i+1);
 
                 if(pair == null)
                     continue;
@@ -482,7 +476,8 @@ public class ChainFinder
         return shortestPair;
     }
 
-    private SvLinkedPair findNextLinkedPair(final List<SvLinkedPair> chainedPairs, final List<SvVarData> svList, final SvVarData var, boolean useStart)
+    private SvLinkedPair findNextLinkedPair(final List<SvLinkedPair> chainedPairs, final List<SvVarData> svList,
+            final SvVarData var, boolean useStart, int startSvIndex)
     {
         // find the shortest templated insertion which links to this variant
         if(var.isAssemblyMatched(useStart)) // this breakend will be added when the assembly link is added
@@ -490,8 +485,10 @@ public class ChainFinder
 
         SvLinkedPair newPair = null;
 
-        for(final SvVarData otherVar : svList)
+        for(int i = startSvIndex; i < svList.size(); ++i)
         {
+            final SvVarData otherVar = svList.get(i);
+
             if(var.equals(otherVar, true))
                 continue;
 

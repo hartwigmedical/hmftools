@@ -457,7 +457,7 @@ public class SvSampleAnalyser {
                         .collect (Collectors.joining (";"));
 
                 writer.write(
-                        String.format(",%d,%d,%d,%d,%d,%d,%d",
+                        String.format(",%d,%d,%d,%d,%d,%.2f,%.2f",
                                 cluster.getLinkedPairs().size(), cluster.getAssemblyLinkedPairs().size(), cluster.getLongDelDups().size(),
                                 cluster.getUnlinkedRemoteSVs().size(), cluster.getShortTIRemoteSVs().size(),
                                 cluster.getMinCNChange(), cluster.getMaxCNChange()));

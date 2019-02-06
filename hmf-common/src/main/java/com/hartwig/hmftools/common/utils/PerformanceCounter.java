@@ -16,8 +16,10 @@ public class PerformanceCounter {
     private double mTotalTime;
     private double mMaxTime;
     private boolean mIsRunning;
+    private boolean mIsPaused;
 
     private long mStartTime;
+    private long mPausedTime; // interval times when timer is paused
     private List<Double> mTimes;
     private List<String> mTimeNames;
 
@@ -28,6 +30,7 @@ public class PerformanceCounter {
         mName = name;
         mIsRunning = false;
         mStartTime = 0;
+        mPausedTime = 0;
         mTotalTime = 0;
         mMaxTime = 0;
         mTimes = Lists.newArrayList();
@@ -41,14 +44,33 @@ public class PerformanceCounter {
     public void start()
     {
         mIsRunning = true;
+        mIsPaused = false;
+        mPausedTime = 0;
         mStartTime = System.nanoTime();
     }
 
     public void start(final String intervalName)
     {
         mIsRunning = true;
+        mIsPaused = false;
         mStartTime = System.nanoTime();
         mTimeNames.add(intervalName);
+    }
+
+    public void pause()
+    {
+        if(!mIsRunning)
+            return;
+
+        mPausedTime += System.nanoTime() - mStartTime;
+    }
+
+    public void resume()
+    {
+        if(!mIsPaused)
+            return;
+
+        mStartTime = System.nanoTime();
     }
 
     public void stop()
@@ -59,6 +81,7 @@ public class PerformanceCounter {
         mIsRunning = false;
 
         long sampleTime = System.nanoTime() - mStartTime;
+        sampleTime += mPausedTime;
         double sampleTimeSeconds = sampleTime / NANOS_IN_SECOND;
 
         mMaxTime = Math.max(sampleTimeSeconds, mMaxTime);

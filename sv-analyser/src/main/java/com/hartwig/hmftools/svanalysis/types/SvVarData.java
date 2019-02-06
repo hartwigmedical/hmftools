@@ -336,9 +336,21 @@ public class SvVarData
         return false;
     }
 
-    public int getCopyNumberChange(boolean useStart)
+    private static double CN_ROUND_SIZE = 0.25;
+
+    public double getCopyNumberChange(boolean useStart)
     {
-        return (int)round(copyNumberChange(useStart));
+        double cnChange = copyNumberChange(useStart);
+
+        if(!isNullBreakend())
+        {
+            cnChange = (cnChange + copyNumberChange(false)) * 0.5;
+        }
+
+        if(cnChange >= 0.6)
+            return round(cnChange);
+        else
+            return round(cnChange/CN_ROUND_SIZE) * CN_ROUND_SIZE;
     }
 
     public boolean hasInconsistentCopyNumberChange(boolean useStart)

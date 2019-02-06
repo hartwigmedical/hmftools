@@ -75,8 +75,8 @@ public class SvCluster
     private List<SvVarData> mShortTIRemoteSVs;
     private List<SvVarData> mUnlinkedRemoteSVs;
 
-    private int mMinCNChange;
-    private int mMaxCNChange;
+    private double mMinCNChange;
+    private double mMaxCNChange;
 
     private int mOriginArms;
     private int mFragmentArms;
@@ -760,7 +760,7 @@ public class SvCluster
 
         for (final SvVarData var : mSVs)
         {
-            int calcCopyNumber = var.getCopyNumberChange(true);
+            double calcCopyNumber = var.getCopyNumberChange(true);
 
             if (mMinCNChange < 0 || calcCopyNumber < mMinCNChange)
                 mMinCNChange = calcCopyNumber;
@@ -769,15 +769,15 @@ public class SvCluster
         }
     }
 
-    public int getMaxCNChange() { return mMaxCNChange; }
-    public int getMinCNChange() { return mMinCNChange; }
+    public double getMaxCNChange() { return mMaxCNChange; }
+    public double getMinCNChange() { return mMinCNChange; }
 
     public boolean hasVariedCopyNumber()
     {
         if(mRequiresRecalc)
             updateClusterDetails();
 
-        return (mMaxCNChange > mMinCNChange && mMinCNChange > 0);
+        return (mMaxCNChange > mMinCNChange && mMinCNChange >= 0);
     }
 
     public void cacheLinkedPairs()
@@ -907,8 +907,8 @@ public class SvCluster
     public int getFragmentArms() { return mFragmentArms; }
 
 
-    // private static int SPECIFIC_CLUSTER_ID = -1;
-    private static int SPECIFIC_CLUSTER_ID = 124;
+    private static int SPECIFIC_CLUSTER_ID = -1;
+    // private static int SPECIFIC_CLUSTER_ID = 1011;
 
     public static boolean isSpecificCluster(final SvCluster cluster)
     {
