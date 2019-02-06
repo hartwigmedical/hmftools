@@ -73,6 +73,7 @@ public class SvAnalyser {
             StatisticRoutines statsRoutines = new StatisticRoutines();
             statsRoutines.loadConfig(cmd);
             statsRoutines.runStatistics();
+            LOGGER.info("run complete");
             return;
         }
 

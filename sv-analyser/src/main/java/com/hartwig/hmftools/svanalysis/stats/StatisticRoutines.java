@@ -97,8 +97,7 @@ public class StatisticRoutines
             loadSampleCountsData(cmd.getOptionValue(SAMPLE_COUNTS_FILE));
             valid = initialiseTwoVariableOutput(cmd.getOptionValue(OUTPUT_FILE));
         }
-
-        if(cmd.hasOption(SAMPLE_GENERIC_FILE))
+        else if(cmd.hasOption(SAMPLE_GENERIC_FILE))
         {
             loadSampleGenericData(cmd.getOptionValue(SAMPLE_GENERIC_FILE));
             valid = initialiseGenericThreeVariableOutput(cmd.getOptionValue(OUTPUT_FILE));
@@ -107,9 +106,19 @@ public class StatisticRoutines
         return valid;
     }
 
-    public void runGenericThreeVariableStatisitics()
+    public void runStatistics()
+    {
+        if(!mCancerSampleData.isEmpty())
+            runTwoVariableStatistics();
+        else if(!mGroupingSampleGenericData.isEmpty())
+            runGenericThreeVariableStatisitics();
+    }
+
+    private void runGenericThreeVariableStatisitics()
     {
         // for each of the group fields, calculate co-occurrence for each of the 2 categories
+        mFisherET.initialise(mSamples.size());
+
         for(final String groupingValue : mGroupingValues)
         {
             final List<GenericSampleData> sampleDataList = mGroupingSampleGenericData.get(groupingValue);
@@ -118,6 +127,8 @@ public class StatisticRoutines
                 continue;
 
             int sampleCount = sampleDataList.size();
+
+            LOGGER.info("processing group({}) with {} samples", groupingValue, sampleCount);
 
             for(final String cat1 : mCat1Values)
             {
@@ -175,76 +186,13 @@ public class StatisticRoutines
 
                     double fisherProb = calcFisherExact(withCat1WithCat2, noCat1WithCat2, withCat1NoCat2, noCat1NoCat2, expectedVal);
 
-                    //writeResultsData(cancerType, gene, category, sampleCount, withGeneTotal, withCatTotal, fisherProb,
-                    //        expectedVal, withCatWithGene, noCatWithGene, withCatNoGene, noCatNoGene);
-
+                    writeThreeVariableResultsData(groupingValue, cat1, cat2, sampleCount, withCat1, withCat2, fisherProb,
+                            expectedVal, withCat1WithCat2, noCat1WithCat2, withCat1NoCat2, noCat1NoCat2);
                 }
 
             }
-
-            /*
-              categoryList = unique(tsgData$LohType)
-  categoryCount = length(categoryList)
-
-  totalSampleCount = unique(tsgSampleData$SampleId)
-
-  for(geneName in geneList)
-  {
-    subResults = data.frame(matrix(ncol = 9, nrow = 0))
-    colnames(subResults) = c("CatType", "CancerType", "SampleCount", "CatSC", "CancerSC", "WithCatWithCancerSC", "NoCatNoCancerSC", "ExpectedSC", "FisherET")
-
-    geneData = tsgSampleData %>% filter(Gene==geneName)
-    sampleCount = n_distinct(geneData$SampleId)
-
-    print(paste("gene=", geneName, ", sampleCount=", sampleCount, sep=''))
-
-    for(catName in categoryList)
-    {
-      # pan-cancer rates for each category (within this gene)
-      scWithCat = nrow(geneData %>% filter(LohType==catName) %>% group_by(SampleId) %>% count())
-
-      for(cancerType in cancerTypesList)
-      {
-        cancerData = tsgSampleData %>% filter(CancerType==cancerType&Gene==geneName)
-
-        # scCancerType = nrow(tsgData %>% group_by(SampleId) %>% count())
-
-        catCancerSummary = geneData %>% group_by(SampleId) %>% summarise(WithCat=sum(LohType==catName), WithCancer=sum(CancerType==cancerType))
-
-        scNoCatNoCancer = nrow(catCancerSummary %>% filter(WithCat==0&WithCancer==0))
-        scWithCatWithCancer = nrow(catCancerSummary %>% filter(WithCat>0&WithCancer>0))
-        scWithCatNoCancer = nrow(catCancerSummary %>% filter(WithCat>0&WithCancer==0))
-        scNoCatWithCancer = nrow(catCancerSummary %>% filter(WithCat==0&WithCancer>0))
-
-        scWithCancer = nrow(catCancerSummary %>% filter(WithCancer>0))
-        # scWithCat = nrow(catCancerSummary %>% filter(WithCat>0))
-
-        expectedCount = round(scWithCat/sampleCount*scWithCancer,4)
-
-        if(scWithCatWithCancer < 0 | scNoCatWithCancer < 0 | scWithCatNoCancer < 0 | scNoCatNoCancer < 0)
-        {
-          print(paste("INVALID catName=", catName, " cancer=", cancerType, " cancerSC=", scWithCancer, " catSC=", scWithCat, sep=''))
-
-          print(paste("withCancer=", scWithCancer, " noCatWithCancer=", scNoCatWithCancer, " withCatWithCancer=", scWithCatWithCancer, sep=''))
-          print(paste("noCancer=", scNoCancer, " noCatNoCancer=", scNoCatNoCancer, " withCatNoCancer=", scWithCatNoCancer, sep=''))
-          return (allResults)
         }
-
-        fishMatrix = rbind(c(scWithCatWithCancer,scNoCatWithCancer), c(scWithCatNoCancer,scNoCatNoCancer))
-
-
-
-
-             */
-
-
-
-
-
-        }
-
     }
-
 
     private static int GENERIC_DATA_CSV_COUNT = 4;
     private static int SAMPLE_INDEX = 0;
@@ -326,12 +274,6 @@ public class StatisticRoutines
                 if(!mCat2Values.contains(cat2Value))
                     mCat2Values.add(cat2Value);
 
-                String[] values = new String[GENERIC_DATA_CSV_COUNT];
-                values[0] = sampleId;
-                values[1] = groupingValue;
-                values[2] = cat1Value;
-                values[3] = cat2Value;
-
                 boolean found = false;
                 for(final GenericSampleData sampleData : sampleDataList)
                 {
@@ -385,6 +327,33 @@ public class StatisticRoutines
         return true;
     }
 
+    private void writeThreeVariableResultsData(final String groupingValue, final String cat1, final String cat2, int sampleCount,
+            int withCat1, int withCat2, double fetProbability, double expectedVal,
+            int withCat1WithCat2, int noCat1WithCat2, int withCat1NoCat2, int noCat1NoCat2)
+    {
+        if (mWriter == null)
+            return;
+
+        try
+        {
+            mWriter.write(
+                    String.format("%s,%s,%s,%d",
+                            groupingValue, cat1, cat2, sampleCount));
+
+            mWriter.write(
+                    String.format(",%d,%d,%.2f,%4.3e,%d,%d,%d,%d",
+                            withCat1, withCat2, expectedVal, fetProbability,
+                            withCat1WithCat2, noCat1WithCat2, withCat1NoCat2, noCat1NoCat2));
+
+            mWriter.newLine();
+        }
+        catch (final IOException e)
+        {
+            LOGGER.error("error writing to stats output file: {}", e.toString());
+        }
+    }
+
+
 
     // non-generic 2-variable test, using 2 distinct data sets
 
@@ -407,10 +376,8 @@ public class StatisticRoutines
     private static String SPEC_CATEGORY = "";
     // private static String SPEC_CATEGORY = "DUP_LT_100";
 
-    public void runTwoVariableStatistics()
+    private void runTwoVariableStatistics()
     {
-
-
         List<SampleData> allSampleDataList = Lists.newArrayList();
 
         for (final String cancerType : mCancerTypes)
@@ -600,7 +567,7 @@ public class StatisticRoutines
                 double expectedVal  = withCatTotal * geneSamplesPerc;
                 double fisherProb = calcFisherExact(withCatWithGene, noCatWithGene, withCatNoGene, noCatNoGene, expectedVal);
 
-                writeResultsData(cancerType, gene, category, sampleCount, withGeneTotal, withCatTotal, fisherProb,
+                writeTwoVariableResultsData(cancerType, gene, category, sampleCount, withGeneTotal, withCatTotal, fisherProb,
                         expectedVal, withCatWithGene, noCatWithGene, withCatNoGene, noCatNoGene);
             }
         }
@@ -629,7 +596,7 @@ public class StatisticRoutines
         return true;
     }
 
-    private void writeResultsData(final String cancerType, final String gene, final String category, int sampleCount,
+    private void writeTwoVariableResultsData(final String cancerType, final String gene, final String category, int sampleCount,
             int withGeneTotal, int withCatTotal, double fetProbability, double expectedVal,
             int withCatWithGene, int noCatWithGene, int withCatNoGene, int noCatNoGene)
     {
@@ -845,11 +812,6 @@ class GenericSampleData
     public final String SampleId;
 
     private List<String[]> mCategoryData;
-
-    List<String> GeneKnown;
-    List<String> GeneUnclear;
-    List<String> CategoryKnown;
-    List<String> CategoryUnclear;
 
     public GenericSampleData(final String sampleId)
     {
