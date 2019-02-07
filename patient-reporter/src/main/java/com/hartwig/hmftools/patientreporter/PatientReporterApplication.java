@@ -133,8 +133,7 @@ public class PatientReporterApplication {
     @NotNull
     private static PatientReporter buildReporter(@NotNull final CommandLine cmd, @NotNull final SequencedReportData sequencedReportData)
             throws IOException {
-        final SvAnalyzer svAnalyzer =
-                SvAnalyzer.fromFiles(cmd.getOptionValue(FUSION_CSV), cmd.getOptionValue(DISRUPTION_CSV));
+        final SvAnalyzer svAnalyzer = SvAnalyzer.fromFiles(cmd.getOptionValue(FUSION_CSV), cmd.getOptionValue(DISRUPTION_CSV));
 
         return ImmutablePatientReporter.of(buildBaseReportData(cmd), sequencedReportData, svAnalyzer);
     }
@@ -177,10 +176,10 @@ public class PatientReporterApplication {
         final String notAnalysedSample = cmd.getOptionValue(NOT_ANALYSED_SAMPLE);
         LOGGER.info("core: " + notAnalysedSample);
         if (notAnalysableReason == NotAnalysableReason.UNDEFINED) {
-            LOGGER.warn(NOT_ANALYSABLE_REASON + " has to be low_tumor_percentage, low_dna_yield or post_analysis_fail.");
+            LOGGER.warn(NOT_ANALYSABLE_REASON + " has to be low_tumor_percentage, low_dna_yield, post_analysis_fail or shallow_seq.");
         } else if (notAnalysedSample == null) {
             LOGGER.warn(NOT_ANALYSED_SAMPLE + " has to be provided.");
-        } else if (NotAnalysableStudy.fromSample(notAnalysedSample) == null &&  !notAnalysedSample.contains("CORE")) {
+        } else if (NotAnalysableStudy.fromSample(notAnalysedSample) == null && !notAnalysedSample.contains("CORE")) {
             LOGGER.warn("Could not determine study for sample " + notAnalysedSample);
         } else {
             return true;
@@ -238,7 +237,8 @@ public class PatientReporterApplication {
         options.addOption(REPORT_DIRECTORY, true, "Complete path to where the PDF reports have to be saved.");
         options.addOption(RUN_DIRECTORY, true, "Complete path towards a single run dir where patient reporter will run on.");
         options.addOption(NOT_ANALYSABLE, false, "If set, generates a non-analysable report.");
-        options.addOption(NOT_ANALYSABLE_REASON, true, "Either 'low_tumor_percentage', 'low_dna_yield' or 'post_analysis_fail'");
+        options.addOption(NOT_ANALYSABLE_REASON, true,
+                "Either 'low_tumor_percentage', 'low_dna_yield', 'post_analysis_fail' or 'shallow_seq'");
         options.addOption(NOT_ANALYSED_SAMPLE, true, "In case of non-sequenceable reports, the name of the sample used.");
         options.addOption(DO_REPORT_GERMLINE, false, "If provided, report germline. Otherwise do not report germline.");
         options.addOption(KNOWLEDGEBASE_PATH, true, "Path towards a directory holding knowledgebase output files.");
