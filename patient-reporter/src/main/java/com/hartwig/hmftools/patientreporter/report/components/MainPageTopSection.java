@@ -43,10 +43,21 @@ public final class MainPageTopSection {
                         cmp.verticalList(cmp.text("Cancer Subtype").setStyle(tableHeaderStyle().setPadding(2)),
                                 cmp.text(cancerSubType).setStyle(dataTableStyle().setPadding(2))));
 
-        return cmp.verticalList(cmp.horizontalList(cmp.image(REPORT_LOGO_PATH).setWidth(42).setHeight(65),
+        return label.contains("CORE")
+                ? cmp.verticalList(cmp.horizontalList(cmp.image(REPORT_LOGO_PATH).setWidth(42).setHeight(65),
                 cmp.text(title + " - " + sample)
                         .setStyle(fontStyle().bold().setFontSize(14).setVerticalTextAlignment(VerticalTextAlignment.MIDDLE))
                         .setHorizontalTextAlignment(HorizontalTextAlignment.CENTER),
-                cmp.horizontalGap(40)), cmp.verticalGap(3), mainDiagnosisInfo);
+                cmp.horizontalGap(40)),
+                cmp.verticalGap(3),
+                cmp.horizontalList(cmp.text(DVO)
+                        .setStyle(fontStyle().bold().setFontSize(14).setVerticalTextAlignment(VerticalTextAlignment.MIDDLE))
+                        .setHorizontalTextAlignment(HorizontalTextAlignment.CENTER), cmp.horizontalGap(40)),
+                cmp.verticalGap(3), mainDiagnosisInfo)
+                : cmp.verticalList(cmp.horizontalList(cmp.image(REPORT_LOGO_PATH).setWidth(42).setHeight(65),
+                        cmp.text(title + " - " + sample)
+                                .setStyle(fontStyle().bold().setFontSize(14).setVerticalTextAlignment(VerticalTextAlignment.MIDDLE))
+                                .setHorizontalTextAlignment(HorizontalTextAlignment.CENTER),
+                        cmp.horizontalGap(40)), cmp.verticalGap(3), mainDiagnosisInfo);
     }
 }
