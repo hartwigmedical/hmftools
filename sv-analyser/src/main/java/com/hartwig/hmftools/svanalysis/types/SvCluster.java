@@ -459,16 +459,24 @@ public class SvCluster
 
     public void mergeOtherCluster(final SvCluster other)
     {
+        mergeOtherCluster(other, true);
+    }
+
+    public void mergeOtherCluster(final SvCluster other, boolean logDetails)
+    {
         // just add the other cluster's variants - no preservation of links or chains
         if(other.getCount() > getCount())
         {
-            LOGGER.debug("cluster({} svs={}) merges in other cluster({} svs={})",
-                    other.id(), other.getCount(), id(), getCount());
+            if(logDetails)
+            {
+                LOGGER.debug("cluster({} svs={}) merges in other cluster({} svs={})",
+                        other.id(), other.getCount(), id(), getCount());
+            }
 
             // maintain the id of the larger group
             mId = other.id();
         }
-        else
+        else if(logDetails)
         {
             LOGGER.debug("cluster({} svs={}) merges in other cluster({} svs={})",
                     id(), getCount(), other.id(), other.getCount());
@@ -908,7 +916,7 @@ public class SvCluster
 
 
     private static int SPECIFIC_CLUSTER_ID = -1;
-    // private static int SPECIFIC_CLUSTER_ID = 1011;
+    // private static int SPECIFIC_CLUSTER_ID = 321;
 
     public static boolean isSpecificCluster(final SvCluster cluster)
     {

@@ -35,7 +35,6 @@ public class ChainFinder
 {
     private static final Logger LOGGER = LogManager.getLogger(ChainFinder.class);
 
-    private String mSampleId;
     private SvCluster mCluster;
     private List<SvLinkedPair> mAssemblyLinkedPairs;
     private List<SvChain> mCompleteChains;
@@ -51,9 +50,8 @@ public class ChainFinder
         mReqChainCount = 0;
     }
 
-    public void initialise(final String sampleId, SvCluster cluster)
+    public void initialise(SvCluster cluster)
     {
-        mSampleId = sampleId;
         mCluster = cluster;
         mReqChainCount = 0;
 
@@ -79,8 +77,8 @@ public class ChainFinder
 
         if (mCluster.getCount() >= 4)
         {
-            LOGGER.debug("sample({}) cluster({}) assemblyLinks({}) svCount({} all={}) existingChains({})",
-                    mSampleId, mCluster.id(), mAssemblyLinkedPairs.size(), svList.size(), mCluster.getCount(), mCluster.getChains().size());
+            LOGGER.debug("cluster({}) assemblyLinks({}) svCount({} all={}) existingChains({})",
+                    mCluster.id(), mAssemblyLinkedPairs.size(), svList.size(), mCluster.getCount(), mCluster.getChains().size());
         }
 
         List<SvChain> chains = Lists.newArrayList();
@@ -223,8 +221,8 @@ public class ChainFinder
 
             if(maxLengthChain.getLinkCount() >= 3 || mLogVerbose)
             {
-                LOGGER.debug("sample({}) cluster({}) adding incomplete chain({}) length({}) with {} linked pairs",
-                        mSampleId, mCluster.id(), maxLengthChain.id(), maxLengthChain.getLength(), maxLengthChain.getLinkCount());
+                LOGGER.debug("cluster({}) adding incomplete chain({}) length({}) with {} linked pairs",
+                        mCluster.id(), maxLengthChain.id(), maxLengthChain.getLength(), maxLengthChain.getLinkCount());
 
                 maxLengthChain.logLinks();
             }
@@ -293,8 +291,8 @@ public class ChainFinder
 
                 if (mLogVerbose)
                 {
-                    LOGGER.debug("sample({}) cluster({}) starting chain({}) with linked pair({})",
-                            mSampleId, mCluster.id(), currentChain.id(), linkedPair.toString());
+                    LOGGER.debug("cluster({}) starting chain({}) with linked pair({})",
+                            mCluster.id(), currentChain.id(), linkedPair.toString());
                 }
 
                 currentChain.addLink(linkedPair, true);
@@ -405,8 +403,8 @@ public class ChainFinder
 
                 if(mLogVerbose)
                 {
-                    LOGGER.debug("sample({}) cluster({}) adding {} chain({}) with {} linked pairs:",
-                            mSampleId, mCluster.id(), chainComplete ? "complete" : "partial", currentChain.id(), currentChain.getLinkCount());
+                    LOGGER.debug("cluster({}) adding {} chain({}) with {} linked pairs:",
+                            mCluster.id(), chainComplete ? "complete" : "partial", currentChain.id(), currentChain.getLinkCount());
                     currentChain.logLinks();
                 }
 

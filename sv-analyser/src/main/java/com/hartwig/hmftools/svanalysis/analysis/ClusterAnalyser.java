@@ -126,7 +126,7 @@ public class ClusterAnalyser {
 
         mPcClustering.start();
 
-        mClusteringMethods.clusterByBaseDistance(mAllVariants, mClusters);
+        mClusteringMethods.clusterByProximity(mAllVariants, mClusters);
 
         // mark line clusters since these are exluded from most subsequent logic
         for(SvCluster cluster : mClusters)
@@ -323,7 +323,7 @@ public class ClusterAnalyser {
 
     private void findChains(SvCluster cluster)
     {
-        mChainFinder.initialise(mSampleId, cluster);
+        mChainFinder.initialise(cluster);
 
         // isSpecificCluster(cluster);
 

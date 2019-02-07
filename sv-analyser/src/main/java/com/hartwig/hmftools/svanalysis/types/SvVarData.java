@@ -283,7 +283,11 @@ public class SvVarData
     }
 
     public final SvCluster getCluster() { return mCluster; }
-    public void setCluster(final SvCluster cluster) { mCluster = cluster; }
+    public void setCluster(final SvCluster cluster)
+    {
+        // isSpecificSV(this);
+        mCluster = cluster;
+    }
 
     public final long length()
     {
@@ -647,12 +651,12 @@ public class SvVarData
         return false;
     }
 
-    // private static String SPECIFIC_VAR_ID = "4504083";
+    // private static String SPECIFIC_VAR_ID = "37";
     private static String SPECIFIC_VAR_ID = "";
 
-    public static boolean isSpecificSV(final String id)
+    public static boolean isSpecificSV(final SvVarData var)
     {
-        if(id.equals(SPECIFIC_VAR_ID))
+        if(var.id().equals(SPECIFIC_VAR_ID))
             return true;
 
         return false;

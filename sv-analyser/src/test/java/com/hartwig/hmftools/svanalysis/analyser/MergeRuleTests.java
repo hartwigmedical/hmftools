@@ -44,7 +44,7 @@ public class MergeRuleTests
         SvVarData var5 = createSgl(tester.nextVarId(), "1", 5000, -1, false);
         tester.AllVariants.add(var5);
 
-        SvVarData var6 = createBnd(tester.nextVarId(), "1", 6000, -1, "2", 1000, 1);
+        SvVarData var6 = createBnd(tester.nextVarId(), "1", 6000, -1, "5", 1000, 1);
         tester.AllVariants.add(var6);
 
         // equivalent breakends are kept separate
@@ -58,12 +58,25 @@ public class MergeRuleTests
         var9.setAssemblyData(true, ASSEMBLY_TYPE_EQV);
         tester.AllVariants.add(var9);
 
+        // and some variants on the BND's other chromosome, and other linking BNDs
+        SvVarData var10 = createIns(tester.nextVarId(), "5", 2000, 20000);
+        tester.AllVariants.add(var10);
+
+        SvVarData var11 = createBnd(tester.nextVarId(), "2", 6000, -1, "5", 21000, 1);
+        tester.AllVariants.add(var11);
+
+        SvVarData var12 = createIns(tester.nextVarId(), "2", 7000, 8000);
+        tester.AllVariants.add(var12);
+
+        SvVarData var13 = createBnd(tester.nextVarId(), "3", 6000, -1, "5", 22000, 1);
+        tester.AllVariants.add(var13);
+
         tester.preClusteringInit();
 
         tester.mergeOnProximity();
 
         assertEquals(tester.getClusters().size(), 4);
-        assertEquals(tester.getClusters().get(0).getCount(), 6);
+        assertEquals(tester.getClusters().get(0).getCount(), 10);
         assertTrue(tester.getClusters().get(1).getSVs().contains(var7));
         assertTrue(tester.getClusters().get(2).getSVs().contains(var8));
         assertTrue(tester.getClusters().get(3).getSVs().contains(var9));
@@ -83,16 +96,15 @@ public class MergeRuleTests
         SvVarData del4 = createDel(tester.nextVarId(), "2", 6000, 10000);
         tester.AllVariants.add(del4);
 
+        tester.preClusteringInit();
+
         tester.mergeOnProximity();
 
         assertEquals(tester.getClusters().size(), 2);
         assertTrue(tester.getClusters().get(0).getSVs().contains(del1));
         assertTrue(tester.getClusters().get(0).getSVs().contains(del3));
-        assertTrue(tester.getClusters().get(0).getSVs().contains(del4));
         assertTrue(tester.getClusters().get(1).getSVs().contains(del2));
-
-        // test exclusion of low-quality SVs
-        tester.clearClustersAndSVs();
+        assertTrue(tester.getClusters().get(1).getSVs().contains(del4));
     }
 
     @Test

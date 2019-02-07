@@ -76,12 +76,13 @@ public class SvTestHelper
     public void clearClustersAndSVs()
     {
         AllVariants.clear();
+        ClusteringMethods.clearLOHBreakendData(SampleId);
         Analyser.getClusters().clear();
     }
 
     public void mergeOnProximity()
     {
-        ClusteringMethods.clusterByBaseDistance(AllVariants, Analyser.getClusters());
+        ClusteringMethods.clusterByProximity(AllVariants, Analyser.getClusters());
     }
 
 

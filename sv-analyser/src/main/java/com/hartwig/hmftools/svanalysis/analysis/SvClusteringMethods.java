@@ -50,6 +50,7 @@ import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.LINK_TYPE_TI;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.ASSEMBLY_TYPE_EQV;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.RELATION_TYPE_NEIGHBOUR;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.RELATION_TYPE_OVERLAP;
+import static com.hartwig.hmftools.svanalysis.types.SvVarData.isSpecificSV;
 
 import java.util.Collections;
 import java.util.Comparator;
@@ -64,6 +65,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 import com.hartwig.hmftools.svanalysis.types.SvBreakend;
+import com.hartwig.hmftools.svanalysis.types.SvCNData;
 import com.hartwig.hmftools.svanalysis.types.SvCluster;
 import com.hartwig.hmftools.svanalysis.types.SvLinkedPair;
 import com.hartwig.hmftools.svanalysis.types.SvVarData;
@@ -86,7 +88,6 @@ public class SvClusteringMethods {
     private long mDelDupCutoffLength;
     private int mProximityDistance;
 
-    private static double REF_BASE_LENGTH = 10000000D;
     public static int MAX_SIMPLE_DUP_DEL_CUTOFF = 5000000;
     public static int MIN_SIMPLE_DUP_DEL_CUTOFF = 100000;
     public static int DEFAULT_PROXIMITY_DISTANCE = 5000;
@@ -120,7 +121,92 @@ public class SvClusteringMethods {
     public long getDelDupCutoffLength() { return mDelDupCutoffLength; }
     public int getProximityDistance() { return mProximityDistance; }
 
-    public void clusterByBaseDistance(List<SvVarData> allVariants, List<SvCluster> clusters)
+    public void clusterByProximity(List<SvVarData> allVariants, List<SvCluster> clusters)
+    {
+        /*
+        List<SvCluster> prevClusters = Lists.newArrayList();
+        clusterByBaseDistance(allVariants, prevClusters);
+
+        validateClustering(prevClusters);
+
+        // now reset the cluster allocation
+        for(SvVarData var : allVariants)
+        {
+            var.setCluster(null);
+        }
+
+        // done second so that the each SV gets the actual cluster from the new method
+        */
+
+        clusterByProximity(clusters);
+
+        validateClustering(clusters);
+
+        /*
+        List<SvCluster> newClusters = Lists.newArrayList(clusters);
+
+        if(newClusters.size() != prevClusters.size())
+        {
+            LOGGER.debug("differing cluster counts: newMethod({}) vs old({})",
+                    newClusters.size(), prevClusters.size());
+        }
+
+        // perform a comparison
+        int index1 = 0;
+        while(index1 < newClusters.size())
+        {
+            SvCluster cluster1 = newClusters.get(index1);
+
+            boolean matched = false;
+
+            for(int index2 = 0; index2 < prevClusters.size(); ++index2)
+            {
+                SvCluster cluster2 = prevClusters.get(index2);
+
+                // check have the same SVs
+                boolean hasAllSVs = true;
+                for(SvVarData var1 : cluster1.getSVs())
+                {
+                    boolean hasSV = false;
+                    for(SvVarData var2 : cluster2.getSVs())
+                    {
+                        if(var1 == var2)
+                        {
+                            isSpecificSV(var2);
+                            hasSV = true;
+                            break;
+                        }
+                    }
+
+                    if(!hasSV)
+                    {
+                        hasAllSVs = false;
+                        break;
+                    }
+                }
+
+                if(hasAllSVs)
+                {
+                    // matched
+                    matched = true;
+                    newClusters.remove(index1);
+                    prevClusters.remove(index2);
+                    break;
+                }
+            }
+
+            if(!matched)
+                ++index1;
+        }
+
+        if(!prevClusters.isEmpty() || !newClusters.isEmpty())
+        {
+            LOGGER.info("different clusters by proximity method");
+        }
+        */
+    }
+
+    private void clusterByBaseDistance(List<SvVarData> allVariants, List<SvCluster> clusters)
     {
         mNextClusterId = 0;
 
@@ -141,7 +227,7 @@ public class SvClusteringMethods {
             unassignedVariants.remove(currentIndex); // index will remain the same and so point to the next item
 
             // exceptions to proximity clustering
-            if(isEquivSingleBreakend(currentVar) || isLowVafSingleBreakend(currentVar))
+            if(skipClusteringSingleBreakend(currentVar))
             {
                 newCluster.setResolved(true, RESOLVED_TYPE_LOW_QUALITY);
                 clusters.add(newCluster);
@@ -196,7 +282,7 @@ public class SvClusteringMethods {
         {
             SvVarData currentVar = unassignedVariants.get(currentIndex);
 
-            if(isEquivSingleBreakend(currentVar) || isLowVafSingleBreakend(currentVar))
+            if(skipClusteringSingleBreakend(currentVar))
             {
                 ++currentIndex;
                 continue;
@@ -243,57 +329,264 @@ public class SvClusteringMethods {
         }
     }
 
-    /*
     public void clusterByProximity(List<SvCluster> clusters)
     {
-        // walk through each chrmosome and breakend list
-        SvCluster currentCluster = new SvCluster(getNextClusterId());
+        mNextClusterId = 0;
 
+        // walk through each chromosome and breakend list
         for (final Map.Entry<String, List<SvBreakend>> entry : mChrBreakendMap.entrySet())
         {
             final List<SvBreakend> breakendList = entry.getValue();
 
-            for (int i = 0; i < breakendList.size() - 1; ++i)
+            int currentIndex = 0;
+            while (currentIndex < breakendList.size())
             {
-                final SvBreakend breakend = breakendList.get(i);
+                final SvBreakend breakend = breakendList.get(currentIndex);
                 SvVarData var = breakend.getSV();
 
-                if (isEquivSingleBreakend(var))
+                // isSpecificSV(var);
+
+                if (skipClusteringSingleBreakend(var))
                 {
-                    SvCluster newCluster = new SvCluster(getNextClusterId());
-                    newCluster.addVariant(var);
-                    newCluster.setResolved(true, RESOLVED_TYPE_LOW_QUALITY);
+                    if(var.getCluster() == null)
+                    {
+                        SvCluster newCluster = new SvCluster(getNextClusterId());
+                        newCluster.addVariant(var);
+                        newCluster.setResolved(true, RESOLVED_TYPE_LOW_QUALITY);
+                        clusters.add(newCluster);
+                    }
+                    ++currentIndex;
                     continue;
                 }
 
-                SvCluster cluster = var.getCluster();
+                SvBreakend nextBreakend = null;
+                int nextIndex = currentIndex + 1;
 
-
-                // check proximity with next
-                final SvBreakend nextBreakend = breakendList.get(i + 1);
-                SvVarData nextVar = breakend.getSV();
-
-                if (!isEquivSingleBreakend(nextVar) && nextBreakend.position() < breakend.position())
+                for (; nextIndex < breakendList.size(); ++nextIndex)
                 {
-                    SvCluster nextCluster = nextBreakend.getSV().getCluster();
+                    final SvBreakend nextBe = breakendList.get(nextIndex);
+                    final SvVarData nextVar = nextBe.getSV();
 
-                    if(nextCluster == null && cluster == null)
+                    // isSpecificSV(nextVar);
+
+                    if (skipClusteringSingleBreakend(nextVar))
+                    {
+                        if(nextVar.getCluster() == null)
+                        {
+                            SvCluster newCluster = new SvCluster(getNextClusterId());
+                            newCluster.addVariant(nextVar);
+                            newCluster.setResolved(true, RESOLVED_TYPE_LOW_QUALITY);
+                            clusters.add(newCluster);
+                        }
+                        continue;
+                    }
+
+                    nextBreakend = nextBe;
+                    break;
+                }
+
+                if (nextBreakend == null)
+                {
+                    // no more breakends on this chromosome
+                    if (var.getCluster() == null)
+                    {
+                        SvCluster cluster = new SvCluster(getNextClusterId());
+                        cluster.addVariant(var);
+                        clusters.add(cluster);
+                    }
+
+                    break;
+                }
+
+                SvCluster cluster = var.getCluster();
+                SvVarData nextVar = nextBreakend.getSV();
+                SvCluster nextCluster = nextVar.getCluster();
+
+                if (cluster != null && cluster == nextCluster)
+                {
+                    // already clustered
+                }
+                else if (abs(nextBreakend.position() - breakend.position()) > mProximityDistance)
+                {
+                    // too far between the breakends
+                    if (cluster == null)
                     {
                         cluster = new SvCluster(getNextClusterId());
                         cluster.addVariant(var);
-
+                        clusters.add(cluster);
                     }
+                    else
+                    {
+                        // nothing more to do for this variant - already clustered
+                    }
+                }
+                else
+                {
+                    // 2 breakends are close enough to cluster
+                    if (var == nextVar)
+                    {
+                        if (cluster == null)
+                        {
+                            cluster = new SvCluster(getNextClusterId());
+                            cluster.addVariant(var);
+                            clusters.add(cluster);
+                        }
+                    }
+                    else
+                    {
+                        // one or both SVs could already be a part of clusters, or neither may be
+                        if (cluster == null && nextCluster == null)
+                        {
+                            cluster = new SvCluster(getNextClusterId());
+                            cluster.addVariant(var);
+                            cluster.addVariant(nextVar);
+                            clusters.add(cluster);
+                        }
+                        else if (cluster != null && nextCluster != null)
+                        {
+                            // keep one and remove the other
+                            cluster.mergeOtherCluster(nextCluster, false);
+                            clusters.remove(nextCluster);
+                        }
+                        else
+                        {
+                            if (cluster == null)
+                            {
+                                nextCluster.addVariant(var);
+                            }
+                            else
+                            {
+                                cluster.addVariant(nextVar);
+                            }
+                        }
 
-                        if(cluster == null)
+                        if (var.getClusterReason().isEmpty())
+                            var.addClusterReason(CLUSTER_REASON_PROXIMITY, nextVar.id());
+
+                        if (nextVar.getClusterReason().isEmpty())
+                            nextVar.addClusterReason(CLUSTER_REASON_PROXIMITY, var.id());
+                    }
 
                 }
 
-                SvVarData varNext = nextBreakend.getSV();
+                // move the index to the SV which was just proximity cluster so the next comparison is with the closest candidate
+                currentIndex = nextIndex;
+            }
+        }
+
+        splitDelClusters(clusters);
+    }
+
+    private void splitDelClusters(List<SvCluster> clusters)
+    {
+        List<SvCluster> clustersToRemove = Lists.newArrayList();
+
+        int clusterCount = clusters.size();
+        for(int i = 0; i < clusterCount; ++i)
+        {
+            SvCluster cluster = clusters.get(i);
+
+            if(cluster.getCount() == 1 || cluster.getCount() != cluster.getTypeCount(DEL))
+                continue;
+
+            List<SvVarData> delSVs = Lists.newArrayList(cluster.getSVs());
+            List<SvCluster> newClusters = Lists.newArrayList();
+
+            for(SvVarData var : delSVs)
+            {
+                boolean addedToCluster = false;
+                for(final SvCluster newCluster : newClusters)
+                {
+                    boolean hasOverlap = false;
+
+                    for(final SvVarData existingVar : newCluster.getSVs())
+                    {
+                        if(var.position(true) >= existingVar.position(false)
+                        || var.position(false) <= existingVar.position(true))
+                        {
+                            continue;
+                        }
+
+                        // has an overlap
+                        hasOverlap = true;
+                        break;
+                    }
+
+                    if(!hasOverlap)
+                    {
+                        newCluster.addVariant(var);
+                        addedToCluster = true;
+                        break;
+                    }
+                }
+
+                if(!addedToCluster)
+                {
+                    SvCluster newCluster = new SvCluster(getNextClusterId());
+                    newClusters.add(newCluster);
+                    newCluster.addVariant(var);
+                }
+            }
+
+            clustersToRemove.add(cluster);
+            clusters.addAll(newClusters);
+        }
+
+        for(SvCluster cluster : clustersToRemove)
+        {
+            clusters.remove(cluster);
+        }
+    }
+
+    private void validateClustering(final List<SvCluster> clusters)
+    {
+        // validation that every SV was put into a cluster
+        for (final Map.Entry<String, List<SvBreakend>> entry : mChrBreakendMap.entrySet())
+        {
+            final List<SvBreakend> breakendList = entry.getValue();
+
+            for (int i = 0; i < breakendList.size(); ++i)
+            {
+                final SvBreakend breakend = breakendList.get(i);
+                SvVarData var = breakend.getSV();
+                if(var.getCluster() == null)
+                {
+                    LOGGER.error("var({}) not clustered", var.posId());
+                }
 
             }
         }
+
+        // check that no 2 clusters contain the same SV
+        for(int i = 0; i < clusters.size(); ++i)
+        {
+            SvCluster cluster1 = clusters.get(i);
+            isSpecificCluster(cluster1);
+
+            // check all SVs in this cluster reference it
+            for(SvVarData var : cluster1.getSVs())
+            {
+                if(var.getCluster() != cluster1)
+                {
+                    LOGGER.error("var({}) in cluster({}) has incorrect ref", var.posId(), cluster1.id());
+                }
+            }
+
+            for(int j = i+1; j < clusters.size(); ++j)
+            {
+                SvCluster cluster2 = clusters.get(j);
+
+                for(SvVarData var : cluster1.getSVs())
+                {
+                    if(cluster2.getSVs().contains(var))
+                    {
+                        LOGGER.error("var({}) in 2 clusters({} and {})", var.posId(), cluster1.id(), cluster2.id());
+                    }
+                }
+            }
+        }
+
     }
-    */
 
     public void mergeClusters(final String sampleId, List<SvCluster> clusters)
     {
@@ -425,11 +718,16 @@ public class SvClusteringMethods {
             return var.copyNumberChange(true) < LOW_QUALITY_CN_CHANGE && var.copyNumberChange(false) < LOW_QUALITY_CN_CHANGE;
     }
 
+    private boolean skipClusteringSingleBreakend(final SvVarData var)
+    {
+        return isEquivSingleBreakend(var) || isLowVafSingleBreakend(var);
+    }
+
     private static String POLY_C_MOTIF = "CCCCCCCCCCCCCCCC";
     private static String POLY_G_MOTIF = "GGGGGGGGGGGGGGGG";
     private static double SGL_LOW_VAF = 0.1;
 
-    public boolean isLowVafSingleBreakend(final SvVarData var)
+    private boolean isLowVafSingleBreakend(final SvVarData var)
     {
         if(var.type() != SGL)
             return false;
@@ -444,7 +742,7 @@ public class SvClusteringMethods {
         return false    ;
     }
 
-    public boolean isEquivSingleBreakend(final SvVarData var)
+    private boolean isEquivSingleBreakend(final SvVarData var)
     {
         if(!var.isNullBreakend())
             return false;
@@ -707,7 +1005,6 @@ public class SvClusteringMethods {
 
         for (final Map.Entry<String, List<SvBreakend>> entry : mChrBreakendMap.entrySet())
         {
-            // final String chromosome = entry.getKey();
             final List<SvBreakend> breakendList = entry.getValue();
             int breakendCount = breakendList.size();
 
@@ -716,6 +1013,11 @@ public class SvClusteringMethods {
                 final SvBreakend breakend = breakendList.get(i);
                 SvVarData var = breakend.getSV();
                 final SvCluster cluster = var.getCluster();
+
+                if(cluster == null || cluster.getSVs().get(0) == null)
+                {
+                    LOGGER.warn("null");
+                }
 
                 // take the point of view of the cluster with the solo single
                 if(cluster.getCount() != 1 || cluster.getSVs().get(0).type() != SGL || cluster.isResolved())
