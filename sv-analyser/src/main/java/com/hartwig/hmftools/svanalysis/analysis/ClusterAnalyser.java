@@ -283,19 +283,6 @@ public class ClusterAnalyser {
             {
                 cluster.setDesc(cluster.getClusterTypesAsString());
 
-                /*
-                // OLD LOGIC:
-                // need to be careful replicating already replicated SVs..
-                // especially those already in linked chains
-                // may be only replicate stand-alone SVs at this point which have now been clustered
-
-                replicateMergedClusterSVs(cluster);
-
-                // repeat the search for inferred links now that additional SVs have been merged in but only on unlinked SVs
-                List<SvLinkedPair> newLinkedPairs = mLinkFinder.createInferredLinkedPairs(cluster, cluster.getUnlinkedSVs(), true);
-                cluster.getInferredLinkedPairs().addAll(newLinkedPairs);
-                */
-
                 // NEW LOGIC:
                 cluster.dissolveLinksAndChains();
                 cluster.removeReplicatedSvs();

@@ -103,8 +103,8 @@ public class SvSampleAnalyser {
 
         mPerfCounter = new PerformanceCounter("Total");
 
-        mPc1 = new PerformanceCounter("Annotate&Filter");
-        mPc2 = new PerformanceCounter("ArmsStats");
+        // mPc1 = new PerformanceCounter("Annotate&Filter");
+        mPc2 = new PerformanceCounter("Preparation");
         mPc3 = new PerformanceCounter("ClusterAndAnalyse");
         // mPc4 = new PerformanceCounter("Analyse");
         mPc5 = new PerformanceCounter("WriteCSV");
@@ -144,13 +144,10 @@ public class SvSampleAnalyser {
         if(mAllVariants.isEmpty())
             return;
 
-        mPc1.start();
-        annotateAndFilterVariants();
-        mPc1.stop();
-
         LOGGER.debug("sample({}) clustering {} variants", mSampleId, mAllVariants.size());
 
         mPc2.start();
+        annotateAndFilterVariants();
         mClusteringMethods.populateChromosomeBreakendMap(mAllVariants);
         mClusteringMethods.annotateNearestSvData();
         LinkFinder.findDeletionBridges(mClusteringMethods.getChrBreakendMap());
@@ -857,7 +854,7 @@ public class SvSampleAnalyser {
         // log perf stats
         mPerfCounter.stop();
         mPerfCounter.logStats(false);
-        mPc1.logStats(false);
+        // mPc1.logStats(false);
         mPc2.logStats(false);
         mPc3.logStats(false);
         // mPc4.logStats(false);

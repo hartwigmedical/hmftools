@@ -19,7 +19,7 @@ public class PerformanceCounter {
     private boolean mIsPaused;
 
     private long mStartTime;
-    private long mPausedTime; // interval times when timer is paused
+    private long mPausedTime; // accumulates interval times when timer is paused
     private List<Double> mTimes;
     private List<String> mTimeNames;
 
