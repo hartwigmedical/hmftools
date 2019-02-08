@@ -5,6 +5,7 @@ import static java.util.stream.Collectors.toList;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -96,14 +97,19 @@ public class CircosDataWriter {
         final String terminals = filePrefix + ".terminals.circos";
         Files.write(new File(terminals).toPath(), createTerminals(segments));
 
-        final String distances = filePrefix + ".distance.circos";
-        Files.write(new File(distances).toPath(), createDistances(unadjustedAlterations, alterations));
-
         final String fragile = filePrefix + ".fragile.circos";
         Files.write(new File(fragile).toPath(), highlights(fragileSites));
 
         final String line = filePrefix + ".line_element.circos";
         Files.write(new File(line).toPath(), highlights(lineElements));
+
+        final String distances = filePrefix + ".distance.circos";
+        if (unadjustedAlterations.size() < 200) {
+            Files.write(new File(distances).toPath(), createDistances(unadjustedAlterations, alterations));
+        } else {
+            Files.write(new File(distances).toPath(), Collections.emptySet());
+        }
+
     }
 
     @NotNull
@@ -281,7 +287,7 @@ public class CircosDataWriter {
                 final String start = new StringJoiner(DELIMITER).add(circosContig(segment.chromosome()))
                         .add(String.valueOf(segment.start()))
                         .add(String.valueOf(segment.start()))
-                        .add("r1=" + r1 + "p," + colorPicker.color(segment.clusterId(), segment.chainId()) + "," + thickness(
+                        .add("r1=" + r1 + "p," + colorPicker.connectorColor(segment.clusterId(), segment.chainId()) + "," + thickness(
                                 startLinkUsage - segmentsBelow))
                         .toString();
                 result.add(start);
@@ -297,7 +303,7 @@ public class CircosDataWriter {
                 final String end = new StringJoiner(DELIMITER).add(circosContig(segment.chromosome()))
                         .add(String.valueOf(segment.end()))
                         .add(String.valueOf(segment.end()))
-                        .add("r1=" + r1 + "p," + colorPicker.color(segment.clusterId(), segment.chainId()) + "," + thickness(
+                        .add("r1=" + r1 + "p," + colorPicker.connectorColor(segment.clusterId(), segment.chainId()) + "," + thickness(
                                 endLinkUsage - segmentsBelow))
                         .toString();
                 result.add(end);
@@ -312,7 +318,7 @@ public class CircosDataWriter {
                     final String start = new StringJoiner(DELIMITER).add(circosContig(link.startChromosome()))
                             .add(String.valueOf(link.startPosition()))
                             .add(String.valueOf(link.startPosition()))
-                            .add("r1=" + rTrack1 + "p," + ColorPicker.simpleSvColor(link.type()) + "," + thickness(link.traverseCount()))
+                            .add("r1=" + rTrack1 + "p," + colorPicker.connectorColor(link.clusterId(), link.chainId()) + "," + thickness(link.traverseCount()))
                             .toString();
                     result.add(start);
                 }
@@ -321,7 +327,7 @@ public class CircosDataWriter {
                     final String end = new StringJoiner(DELIMITER).add(circosContig(link.endChromosome()))
                             .add(String.valueOf(link.endPosition()))
                             .add(String.valueOf(link.endPosition()))
-                            .add("r1=" + rTrack1 + "p," + ColorPicker.simpleSvColor(link.type()) + "," + thickness(link.traverseCount()))
+                            .add("r1=" + rTrack1 + "p," + colorPicker.connectorColor(link.clusterId(), link.chainId()) + "," + thickness(link.traverseCount()))
                             .toString();
                     result.add(end);
                 }
