@@ -75,12 +75,15 @@ public abstract class SampleDetailsPage {
         final List<String> lines = Lists.newArrayList("The samples have been sequenced at " + Commons.HARTWIG_ADDRESS,
                 "The samples have been analyzed by Next Generation Sequencing",
                 "This experiment is performed on the tumor sample which arrived on " + formattedDate(sampleReport().tumorArrivalDate()),
-                "The pathology tumor percentage for this sample is "
-                        + sampleReport().purityOrPathologyTumorPercentage(),
+                sampleReport().label().contains("CORE")
+                        ? "The tumor percentage estimated by moleculare tumor percentage is "
+                        : "The pathology tumor percentage for this sample is " + sampleReport().purityOrPathologyTumorPercentage(),
                 "This experiment is performed on the blood sample which arrived on " + formattedDate(sampleReport().bloodArrivalDate()),
                 "This experiment is performed according to lab procedures: " + sampleReport().labProcedures(),
                 "This report is generated and verified by: " + user(),
-                "This report is addressed at: " + recipient);
+                "This report is addressed at: " + recipient,
+                sampleReport().label().contains("CORE") ?
+                "The contact details are: " + sampleReport().contactName() + sampleReport().contactEmail() : "");
 
         comments().ifPresent(comments -> lines.add("Comments: " + comments));
 
