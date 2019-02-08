@@ -19,6 +19,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import net.sf.dynamicreports.report.builder.component.ComponentBuilder;
 
@@ -75,18 +76,24 @@ public abstract class SampleDetailsPage {
         final List<String> lines = Lists.newArrayList("The samples have been sequenced at " + Commons.HARTWIG_ADDRESS,
                 "The samples have been analyzed by Next Generation Sequencing",
                 "This experiment is performed on the tumor sample which arrived on " + formattedDate(sampleReport().tumorArrivalDate()),
-                sampleReport().label().contains("CORE")
-                        ? "The tumor percentage estimated by moleculare tumor percentage is "
-                        : "The pathology tumor percentage for this sample is " + sampleReport().purityOrPathologyTumorPercentage(),
+                "The pathology tumor percentage for this sample is " + sampleReport().purityOrPathologyTumorPercentage(),
                 "This experiment is performed on the blood sample which arrived on " + formattedDate(sampleReport().bloodArrivalDate()),
                 "This experiment is performed according to lab procedures: " + sampleReport().labProcedures(),
                 "This report is generated and verified by: " + user(),
                 "This report is addressed at: " + recipient,
-                sampleReport().label().contains("CORE") ?
-                "The contact details are: " + sampleReport().contactName() + sampleReport().contactEmail() : "");
+                COREContact());
 
         comments().ifPresent(comments -> lines.add("Comments: " + comments));
 
         return toList("Sample details", lines);
+    }
+
+    @NotNull
+    private String COREContact() {
+        String contact = "";
+        if (sampleReport().label().contains("CORE")) {
+            contact = "The contact details are: " + sampleReport().contactName() + sampleReport().contactEmail();
+        }
+        return contact;
     }
 }
