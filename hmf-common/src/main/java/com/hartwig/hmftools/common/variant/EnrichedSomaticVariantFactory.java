@@ -81,7 +81,11 @@ public class EnrichedSomaticVariantFactory {
         final Integer relativePosition = relativePositionAndRef.getFirst();
         final String sequence = relativePositionAndRef.getSecond();
         if (variant.type().equals(VariantType.INDEL)) {
-            builder.microhomology(Microhomology.microhomology(relativePosition, sequence, variant.ref()));
+            if (variant.ref().length() > variant.alt().length()) {
+                builder.microhomology(Microhomology.microhomologyAtDelete(relativePosition, sequence, variant.ref()));
+            } else if (variant.ref().length() == 1) {
+                builder.microhomology(Microhomology.microhomologyAtInsert(relativePosition, sequence, variant.alt()));
+            }
         }
         getRepeatContext(variant, relativePosition, sequence).ifPresent(x -> builder.repeatSequence(x.sequence()).repeatCount(x.count()));
     }
@@ -112,9 +116,9 @@ public class EnrichedSomaticVariantFactory {
             return RepeatContextFactory.repeats(relativePosition + 1, sequence);
         } else if (variant.type().equals(VariantType.SNP) || variant.type().equals(VariantType.MNP)) {
             Optional<RepeatContext> priorRepeat = RepeatContextFactory.repeats(relativePosition - 1, sequence);
-            Optional<RepeatContext> postRepeat = RepeatContextFactory.repeats(relativePosition + variant.alt().length() , sequence);
+            Optional<RepeatContext> postRepeat = RepeatContextFactory.repeats(relativePosition + variant.alt().length(), sequence);
             return max(priorRepeat, postRepeat);
-        }  else {
+        } else {
             return Optional.empty();
         }
     }

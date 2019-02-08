@@ -14,6 +14,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
 import org.jetbrains.annotations.NotNull;
+import org.junit.Ignore;
 import org.junit.Test;
 
 public class LimsTest {
@@ -151,6 +152,40 @@ public class LimsTest {
         assertEquals("not determined", lims.tumorPercentageForSample(SAMPLE));
     }
 
+    //TODO: tests for shallow seq purity
+    @Ignore
+    public void ShallowSeqPurityError() {
+        final LimsJsonSampleData sampleData = createLimsSampleDataBuilder()
+                .sampleId(SAMPLE)
+                .labRemarks("ShallowSeq")
+                .build();
+
+        Lims lims = buildTestLimsWithSample(sampleData);
+        assertEquals("N/A", lims.purityShallowSeq(SAMPLE));
+    }
+
+    @Ignore
+    public void ShallowSeqPurity() {
+        final LimsJsonSampleData sampleData = createLimsSampleDataBuilder()
+                .sampleId("CPCT02990001T")
+                .labRemarks("ShallowSeq")
+                .build();
+
+        Lims lims = buildTestLimsWithSample(sampleData);
+        assertEquals("N/A", lims.purityShallowSeq("CPCT02990001T"));
+    }
+
+    @Ignore
+    public void ShallowSeqPathology() {
+        final LimsJsonSampleData sampleData = createLimsSampleDataBuilder()
+                .sampleId(SAMPLE)
+                .labRemarks("ShallowSeq")
+                .build();
+
+        Lims lims = buildTestLimsWithSample(sampleData);
+        assertEquals("N/A", lims.purityShallowSeq(SAMPLE));
+    }
+
     @NotNull
     private static Lims buildTestLimsWithSampleAndSubmission(@NotNull final LimsJsonSampleData sampleData,
             @NotNull final LimsJsonSubmissionData submissionData) {
@@ -160,8 +195,9 @@ public class LimsTest {
         dataPerSubmission.put(submissionData.submission(), submissionData);
         Map<String, LocalDate> preLIMSArrivalDates = Maps.newHashMap();
         Set<String> samplesWithSamplingDates = Sets.newHashSet();
+        Map<String, LimsShallowSeqData> shallowSeqDataPerSample = Maps.newHashMap();
 
-        return new Lims(dataPerSample, dataPerSubmission, preLIMSArrivalDates, samplesWithSamplingDates);
+        return new Lims(dataPerSample, dataPerSubmission, preLIMSArrivalDates, samplesWithSamplingDates, shallowSeqDataPerSample);
     }
 
     @NotNull
@@ -171,8 +207,9 @@ public class LimsTest {
         Map<String, LimsJsonSubmissionData> dataPerSubmission = Maps.newHashMap();
         Map<String, LocalDate> preLIMSArrivalDates = Maps.newHashMap();
         Set<String> samplesWithSamplingDates = Sets.newHashSet();
+        Map<String, LimsShallowSeqData> shallowSeqDataPerSample = Maps.newHashMap();
 
-        return new Lims(dataPerSample, dataPerSubmission, preLIMSArrivalDates, samplesWithSamplingDates);
+        return new Lims(dataPerSample, dataPerSubmission, preLIMSArrivalDates, samplesWithSamplingDates, shallowSeqDataPerSample);
     }
 
     @NotNull
@@ -183,7 +220,8 @@ public class LimsTest {
         preLIMSArrivalDates.put(sample, date);
 
         Set<String> samplesWithSamplingDates = Sets.newHashSet();
+        Map<String, LimsShallowSeqData> shallowSeqDataPerSample = Maps.newHashMap();
 
-        return new Lims(dataPerSample, dataPerSubmission, preLIMSArrivalDates, samplesWithSamplingDates);
+        return new Lims(dataPerSample, dataPerSubmission, preLIMSArrivalDates, samplesWithSamplingDates, shallowSeqDataPerSample);
     }
 }

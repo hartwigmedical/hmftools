@@ -69,9 +69,7 @@ public abstract class NonSequenceablePage {
             }
             case LOW_TUMOR_PERCENTAGE: {
                 title = "Notification of inadequate tumor sample";
-                subTitle = sampleReport().label().equalsIgnoreCase("core")
-                        ? "Not enough tumor DNA detected by molecular T % estimate."
-                        : "Not enough tumor cells detected by Pathology UMC Utrecht.";
+                subTitle = "Not enough tumor cells detected by Pathology UMC Utrecht.";
                 message = "For sequencing we require a minimum of 30% tumor cells.";
                 break;
             }
@@ -79,6 +77,12 @@ public abstract class NonSequenceablePage {
                 title = "Notification of inadequate tumor sample";
                 subTitle = "Analysis has failed post DNA isolation";
                 message = "This sample could not be processed to completion successfully.";
+                break;
+            }
+            case SHALLOW_SEQ: {
+                title = "Notification of inadequate tumor sample";
+                subTitle = "Not enough tumor DNA detected by molecular T % estimate." ;
+                message = "For sequencing we require a minimum of 30% tumor cells.";
                 break;
             }
             default: {
@@ -104,8 +108,8 @@ public abstract class NonSequenceablePage {
                                 + "evaluable for the " + study().studyCode() + " study.").setStyle(fontStyle()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
                 cmp.text(sampleReport().label().equalsIgnoreCase("core")
-                        ? "The tumor percentage estimated by molecular tumor percentage is:"
-                        : "The tumor percentage estimated by Pathology UMC Utrecht is: " + sampleReport().pathologyTumorPercentage())
+                        ? "The tumor percentage estimated by molecular tumor percentage is: " + sampleReport().purityOrPathologyTumorPercentage()
+                        : "The tumor percentage estimated by Pathology UMC Utrecht is: " + sampleReport().purityOrPathologyTumorPercentage())
                         .setStyle(fontStyle()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
                 cmp.text("The biopsies evaluated for this sample have arrived on " + formattedDate(sampleReport().tumorArrivalDate())

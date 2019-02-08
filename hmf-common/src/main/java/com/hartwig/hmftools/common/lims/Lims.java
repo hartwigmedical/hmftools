@@ -22,13 +22,17 @@ public class Lims {
     private final Map<String, LocalDate> preLimsArrivalDates;
     @NotNull
     private final Set<String> samplesWithoutSamplingDate;
+    @NotNull
+    private final Map<String, LimsShallowSeqData> dataShallowSeq;
 
     Lims(@NotNull final Map<String, LimsJsonSampleData> dataPerSample, @NotNull final Map<String, LimsJsonSubmissionData> dataPerSubmission,
-            @NotNull final Map<String, LocalDate> preLimsArrivalDates, @NotNull final Set<String> samplesWithoutSamplingDate) {
+            @NotNull final Map<String, LocalDate> preLimsArrivalDates, @NotNull final Set<String> samplesWithoutSamplingDate,
+            @NotNull final Map<String, LimsShallowSeqData> dataShallowSeq) {
         this.dataPerSample = dataPerSample;
         this.dataPerSubmission = dataPerSubmission;
         this.preLimsArrivalDates = preLimsArrivalDates;
         this.samplesWithoutSamplingDate = samplesWithoutSamplingDate;
+        this.dataShallowSeq = dataShallowSeq;
     }
 
     public int sampleCount() {
@@ -116,6 +120,37 @@ public class Lims {
         return null;
     }
 
+    @Nullable
+    public String purityShallowSeq(@NotNull String sample) {
+        LimsJsonSampleData sampleData = dataPerSample.get(sample);
+        LimsShallowSeqData shallowSeq = dataShallowSeq.get(sample);
+
+        if (sampleData != null) {
+            String labelSample = sampleData.labelSample();
+            String remarksSample = sampleData.labRemarks();
+            boolean purityShallowExecuted =
+                    labelSample.equals("CORE") || (remarksSample != null && (remarksSample.contains("CPCTWIDE") || remarksSample.contains(
+                            "ShallowSeq")));
+            if (purityShallowExecuted && shallowSeq == null) {
+                LOGGER.error("BFX lims and lab lims are not equal. Cannot generated patient report!");
+            } else if (purityShallowExecuted && shallowSeq.sampleId().equals(sample)) {
+                LOGGER.info(shallowSeq.purityShallowSeq());
+                LOGGER.info("Used purity from shallow seq for report from sample.");
+                try {
+                    return Long.toString(Math.round(Double.parseDouble(shallowSeq.purityShallowSeq()))) + "%";
+                } catch (final NumberFormatException e) {
+                    return "N/A";
+                }
+            } else if (!purityShallowExecuted) {
+                 LOGGER.info("Used pathology tumor percentage for report from sample.");
+                return tumorPercentageForSample(sample);
+            } else {
+                return "N/A";
+            }
+        }
+        return "N/A";
+    }
+
     @NotNull
     public String tumorPercentageForSample(@NotNull String sample) {
         LimsJsonSampleData sampleData = dataPerSample.get(sample);
@@ -138,7 +173,8 @@ public class Lims {
             } catch (final NumberFormatException e) {
                 return "N/A";
             }
-        } return "N/A";
+        }
+        return "N/A";
     }
 
     @NotNull

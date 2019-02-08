@@ -88,6 +88,16 @@ public class PDFWriterTest {
         }
     }
 
+    @Test
+    public void canGenerateLowMolecularTumorPercentage() throws DRException, IOException {
+        JasperReportBuilder report = generateNotAnalysableCPCTReport(0.15, NotAnalysableReason.SHALLOW_SEQ);
+        assertNotNull(report);
+
+        if (WRITE_TO_PDF) {
+            report.toPdf(new FileOutputStream(REPORT_BASE_DIR + File.separator + "hmf_low_molecular_tumor_percentage_report.pdf"));
+        }
+    }
+
     @NotNull
     private static JasperReportBuilder generateNotAnalysableCPCTReport(double pathologyTumorEstimate, @NotNull NotAnalysableReason reason) {
         SampleReport sampleReport = ImmutableSampleReport.of("CPCT02991111T",
