@@ -42,6 +42,8 @@ public class SvTestHelper
         ClusteringMethods = new SvClusteringMethods(Config.ProximityDistance);
         Analyser = new ClusterAnalyser(Config, ClusteringMethods);
 
+        Analyser.setRunValidationChecks(true);
+
         SampleId = "TEST";
         AllVariants = Lists.newArrayList();
 
@@ -75,6 +77,12 @@ public class SvTestHelper
 
     public void clearClustersAndSVs()
     {
+        // in case SVs are to be used again and re-clustered
+        for(SvVarData var : AllVariants)
+        {
+            var.setCluster(null);
+        }
+
         AllVariants.clear();
         ClusteringMethods.clearLOHBreakendData(SampleId);
         Analyser.getClusters().clear();

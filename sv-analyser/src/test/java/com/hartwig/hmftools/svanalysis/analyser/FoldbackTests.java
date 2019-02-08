@@ -27,10 +27,10 @@ public class FoldbackTests
 
         SvVarData var1 = createInv(tester.nextVarId(), "1", 100, 200, 1);
 
-        SvCluster cluster = new SvCluster(0);
-        cluster.addVariant(var1);
+        SvCluster cluster1 = new SvCluster(0);
+        cluster1.addVariant(var1);
 
-        tester.addClusterAndSVs(cluster);
+        tester.addClusterAndSVs(cluster1);
         tester.preClusteringInit();
         tester.Analyser.markFoldbacks();
 
@@ -39,13 +39,15 @@ public class FoldbackTests
         assertEquals(var1.getFoldbackLen(true), 100);
 
         // now test with a deletion bridge obscuring the backmost breakend
-
         tester.clearClustersAndSVs();
 
-        SvVarData dup = createDup(tester.nextVarId(), "1", 190, 400);
-        cluster.addVariant(dup);
+        SvCluster cluster2 = new SvCluster(0);
+        cluster2.addVariant(var1);
 
-        tester.addClusterAndSVs(cluster);
+        SvVarData dup = createDup(tester.nextVarId(), "1", 190, 400);
+        cluster2.addVariant(dup);
+
+        tester.addClusterAndSVs(cluster2);
         tester.preClusteringInit();
         tester.Analyser.markFoldbacks();
 
@@ -58,13 +60,13 @@ public class FoldbackTests
 
         SvVarData var2 = createInv(tester.nextVarId(), "1", 100, 200, -1);
 
-        SvCluster cluster2 = new SvCluster(1);
-        cluster2.addVariant(var2);
+        SvCluster cluster3 = new SvCluster(1);
+        cluster3.addVariant(var2);
 
         SvVarData del = createDel(tester.nextVarId(), "1", 190, 400);
-        cluster2.addVariant(del);
+        cluster3.addVariant(del);
 
-        tester.addClusterAndSVs(cluster2);
+        tester.addClusterAndSVs(cluster3);
         tester.preClusteringInit();
 
         SvLinkedPair dbPair = var2.getDBLink(false);
@@ -82,16 +84,16 @@ public class FoldbackTests
 
         SvVarData var3 = createInv(tester.nextVarId(), "1", 100, 200, 1);
 
-        SvCluster cluster3 = new SvCluster(2);
-        cluster3.addVariant(var3);
+        SvCluster cluster4 = new SvCluster(2);
+        cluster4.addVariant(var3);
 
         SvVarData sgl = createSgl(tester.nextVarId(), "1", 90, -1, false);
-        cluster3.addVariant(sgl);
+        cluster4.addVariant(sgl);
 
         SvVarData sgl2 = createSgl(tester.nextVarId(), "1", 190, -1, false);
-        cluster3.addVariant(sgl2);
+        cluster4.addVariant(sgl2);
 
-        tester.addClusterAndSVs(cluster3);
+        tester.addClusterAndSVs(cluster4);
         tester.preClusteringInit();
 
         dbPair = var3.getDBLink(true);

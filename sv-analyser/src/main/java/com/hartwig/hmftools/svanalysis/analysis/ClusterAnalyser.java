@@ -22,6 +22,7 @@ import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.MAX_S
 import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.addClusterReason;
 import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.applyCopyNumberReplication;
 import static com.hartwig.hmftools.svanalysis.annotators.LineElementAnnotator.markLineCluster;
+import static com.hartwig.hmftools.svanalysis.types.SvArmCluster.logArmClusterData;
 import static com.hartwig.hmftools.svanalysis.types.SvArmCluster.mergeArmClusters;
 import static com.hartwig.hmftools.svanalysis.types.SvChain.CHAIN_ASSEMBLY_LINK_COUNT;
 import static com.hartwig.hmftools.svanalysis.types.SvChain.CHAIN_LENGTH;
@@ -80,6 +81,8 @@ public class ClusterAnalyser {
     private ChainFinder mChainFinder;
     private LinkFinder mLinkFinder;
 
+    private boolean mRunValidationChecks;
+
     PerformanceCounter mPcClustering;
     PerformanceCounter mPcChaining;
     PerformanceCounter mPcAnnotation;
@@ -100,6 +103,7 @@ public class ClusterAnalyser {
         mChainFinder = new ChainFinder();
         mChainFinder.setLogVerbose(mConfig.LogVerbose);
         mLinkFinder.setLogVerbose(mConfig.LogVerbose);
+        mRunValidationChecks = false;
 
         mPcClustering = new PerformanceCounter("Clustering");
         mPcChaining = new PerformanceCounter("Chaining");
@@ -110,6 +114,8 @@ public class ClusterAnalyser {
     public final SvClusteringMethods getClusterer() { return mClusteringMethods; }
     public final ChainFinder getChainFinder() { return mChainFinder; }
     public final LinkFinder getLinkFinder() { return mLinkFinder; }
+
+    public void setRunValidationChecks(boolean toggle) { mRunValidationChecks = toggle; }
 
     public void setSampleData(final String sampleId, List<SvVarData> allVariants)
     {
@@ -134,6 +140,15 @@ public class ClusterAnalyser {
             markLineCluster(cluster, mClusteringMethods.getProximityDistance());
         }
 
+        if(mRunValidationChecks)
+        {
+            if(!mClusteringMethods.validateClustering(mClusters))
+            {
+                LOGGER.info("exiting with cluster-validation errors");
+                return;
+            }
+        }
+
         findSimpleCompleteChains();
 
         mClusteringMethods.mergeClusters(mSampleId, mClusters);
@@ -156,6 +171,15 @@ public class ClusterAnalyser {
 
         mergeClusters();
 
+        if(mRunValidationChecks)
+        {
+            if(!mClusteringMethods.validateClustering(mClusters) || !mClusteringMethods.checkClusterDuplicates(mClusters))
+            {
+                LOGGER.info("exiting with cluster-validation errors");
+                return;
+            }
+        }
+
         mPcAnnotation.start();
         // analyseOverlappingTIs();
 
@@ -177,6 +201,10 @@ public class ClusterAnalyser {
             }
 
             mergeArmClusters(cluster.getArmClusters());
+
+            // if(LOGGER.isDebugEnabled())
+            //     logArmClusterData(cluster);
+
             reportClusterFeatures(cluster);
             annotateClusterArmSegments(cluster);
         }
@@ -473,8 +501,15 @@ public class ClusterAnalyser {
 
     private List<SvCluster> mergeInconsistentClusters(List<SvCluster> existingMergedClusters)
     {
-        // it's possible that to resolve arms and more complex arrangements, clusters not merged
-        // by proximity of overlaps must be put together to solve inconsistencies (ie loose ends)
+        // second round of cluster merging on more complex criteria and inconsistencies:
+        // merge on foldbacks on the same arm
+        // merge on links between common arms
+        // merge if one cluster has footprints which overlap unresolved complex SVs
+
+        // any merges result in a new cluster with the original clusters made into sub-clusters
+        // subsequent merging keeps the 'super' clusters and adds more sub-clusters
+        // the purpose of sub-clusters was to a) allow de-merging and b) preserve chains and links
+        // but this could be revisited
         List<SvCluster> mergedClusters = Lists.newArrayList();
 
         long longDelDupCutoffLength = mClusteringMethods.getDelDupCutoffLength();
@@ -721,7 +756,7 @@ public class ClusterAnalyser {
         cluster1.setArmLinks();
         cluster2.setArmLinks();
 
-        // frist find arm groups which are inconsistent in both clusters
+        // first find arm groups which are inconsistent in both clusters
         // BNDs only touching an arm in a short TI are ignored from the common arm check
         List<SvArmGroup> inconsistentArms1 = cluster1.getArmGroups().stream()
                 .filter(x -> x.canLink(armWidthCutoff))

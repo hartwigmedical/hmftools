@@ -525,7 +525,7 @@ public class SvSampleAnalyser {
 
                         for (final SvLinkedPair existingPair : uniquePairs)
                         {
-                            if(pair.matches(existingPair, true))
+                            if(pair.matches(existingPair))
                             {
                                 isRepeat = true;
                                 break;
@@ -684,7 +684,7 @@ public class SvSampleAnalyser {
 
                         for (final SvLinkedPair existingPair : uniquePairs)
                         {
-                            if(pair.matches(existingPair, true))
+                            if(pair.matches(existingPair))
                             {
                                 isRepeat = true;
                                 break;
@@ -703,7 +703,7 @@ public class SvSampleAnalyser {
 
                         for (final SvLinkedPair existingPair : chain.getLinkedPairs())
                         {
-                            if(pair.matches(existingPair, true))
+                            if(pair.matches(existingPair))
                                 ++pairRepeatCount;
                         }
 

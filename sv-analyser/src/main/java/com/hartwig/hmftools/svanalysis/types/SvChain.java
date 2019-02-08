@@ -249,7 +249,7 @@ public class SvChain {
             for(int i = 0; i < otherLinkedPairs.size(); ++i)
             {
                 final SvLinkedPair otherPair = otherLinkedPairs.get(i);
-                if(pair.matches(otherPair, true))
+                if(pair.matches(otherPair))
                 {
                     otherLinkedPairs.remove(i); // reduce each time to make subsequent matches faster
                     matched = true;

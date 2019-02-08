@@ -14,6 +14,9 @@ import static org.junit.Assert.assertEquals;
 
 import static junit.framework.TestCase.assertTrue;
 
+import java.util.List;
+
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.svanalysis.types.SvCluster;
 import com.hartwig.hmftools.svanalysis.types.SvVarData;
 
@@ -121,9 +124,6 @@ public class MergeRuleTests
 
         tester.preClusteringInit();
 
-        tester.mergeOnProximity();
-        assertEquals(tester.getClusters().size(), 2);
-
         tester.Analyser.clusterAndAnalyse();
 
         assertEquals(tester.getClusters().size(), 1);
@@ -145,9 +145,6 @@ public class MergeRuleTests
 
         tester.preClusteringInit();
 
-        tester.mergeOnProximity();
-        assertEquals(tester.getClusters().size(), 3);
-
         tester.Analyser.clusterAndAnalyse();
 
         assertEquals(tester.getClusters().size(), 2);
@@ -165,47 +162,61 @@ public class MergeRuleTests
     {
         SvTestHelper tester = new SvTestHelper();
 
+        List<SvVarData> allVariants = Lists.newArrayList();
+
         // a cluster has 3 consecutive breakends which span other unresolved SV breakends, which are then merged in
         SvVarData consec1 = createBnd(tester.nextVarId(), "1", 100000, 1, "2", 100, -1);
-        tester.AllVariants.add(consec1);
+        allVariants.add(consec1);
 
         SvVarData consec2 = createBnd(tester.nextVarId(), "1", 1000, 1, "2", 200, 1);
-        tester.AllVariants.add(consec2);
+        allVariants.add(consec2);
 
         SvVarData consec3 = createInv(tester.nextVarId(), "1", 30000, 101000, 1);
-        tester.AllVariants.add(consec3);
+        allVariants.add(consec3);
 
         // create some SV in resolved clusters which will be ignored - a DEL with external TI , a simple DEL and a low-qual
         SvVarData var1 = createBnd(tester.nextVarId(), "1", 10000, 1, "3", 200, 1);
-        tester.AllVariants.add(var1);
+        allVariants.add(var1);
 
         SvVarData var2 = createBnd(tester.nextVarId(), "1", 10100, -1, "3", 100, -1);
-        tester.AllVariants.add(var2);
+        allVariants.add(var2);
 
         SvVarData var3 = createDel(tester.nextVarId(), "1", 60000, 60100);
-        tester.AllVariants.add(var3);
+        allVariants.add(var3);
 
         SvVarData var4 = createSgl(tester.nextVarId(), "1", 80000, -1, false);
         var4.setAssemblyData(true, ASSEMBLY_TYPE_EQV);
-        tester.AllVariants.add(var4);
+        allVariants.add(var4);
 
         // now some SV which will be overlapped by the consecutive breakends
         SvVarData overlap1 = createBnd(tester.nextVarId(), "1", 20000, -1, "4", 200, 1);
-        tester.AllVariants.add(overlap1);
+        allVariants.add(overlap1);
 
         SvVarData overlap2 = createSgl(tester.nextVarId(), "1", 40000, -1, false);
-        tester.AllVariants.add(overlap2);
+        allVariants.add(overlap2);
 
+        allVariants.addAll(allVariants);
+
+        tester.AllVariants.addAll(allVariants);
         tester.preClusteringInit();
-
-        tester.mergeOnProximity();
-        assertEquals(tester.getClusters().size(), 6);
 
         tester.Analyser.clusterAndAnalyse();
 
-        assertEquals(tester.getClusters().size(), 4);
-        final SvCluster mainCluster = tester.getClusters().get(0);
-        assertEquals(mainCluster.getCount(), 5);
+        assertEquals(4, tester.getClusters().size());
+
+        SvCluster mainCluster = null;
+        for(final SvCluster cluster : tester.getClusters())
+        {
+            if(cluster.getCount() == 5)
+            {
+                mainCluster = cluster;
+                break;
+            }
+        }
+
+        if(mainCluster == null)
+            assertTrue(false);
+
         assertTrue(consec1.getClusterReason().contains(CLUSTER_REASON_LOOSE_OVERLAP));
         assertTrue(overlap1.getClusterReason().contains(CLUSTER_REASON_LOOSE_OVERLAP));
         assertTrue(overlap2.getClusterReason().contains(CLUSTER_REASON_LOOSE_OVERLAP));

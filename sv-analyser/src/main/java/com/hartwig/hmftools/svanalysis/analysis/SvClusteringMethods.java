@@ -124,8 +124,6 @@ public class SvClusteringMethods {
     public void clusterByProximity(List<SvVarData> allVariants, List<SvCluster> clusters)
     {
         clusterByProximity(clusters);
-
-        validateClustering(clusters);
     }
 
     private void clusterByProximity(List<SvCluster> clusters)
@@ -337,7 +335,7 @@ public class SvClusteringMethods {
         }
     }
 
-    private void validateClustering(final List<SvCluster> clusters)
+    public boolean validateClustering(final List<SvCluster> clusters)
     {
         // validation that every SV was put into a cluster
         for (final Map.Entry<String, List<SvBreakend>> entry : mChrBreakendMap.entrySet())
@@ -351,8 +349,8 @@ public class SvClusteringMethods {
                 if(var.getCluster() == null)
                 {
                     LOGGER.error("var({}) not clustered", var.posId());
+                    return false;
                 }
-
             }
         }
 
@@ -368,6 +366,7 @@ public class SvClusteringMethods {
                 if(var.getCluster() != cluster1)
                 {
                     LOGGER.error("var({}) in cluster({}) has incorrect ref", var.posId(), cluster1.id());
+                    return false;
                 }
             }
 
@@ -380,11 +379,13 @@ public class SvClusteringMethods {
                     if(cluster2.getSVs().contains(var))
                     {
                         LOGGER.error("var({}) in 2 clusters({} and {})", var.posId(), cluster1.id(), cluster2.id());
+                        return false;
                     }
                 }
             }
         }
 
+        return true;
     }
 
     public void mergeClusters(final String sampleId, List<SvCluster> clusters)
@@ -429,15 +430,13 @@ public class SvClusteringMethods {
 
         mergeOnLOHEvents(sampleId, clusters);
 
-        // checkClusterDuplicates(clusters);
-
         if(clusters.size() < initClusterCount)
         {
             LOGGER.debug("reduced cluster count({} -> {}) iterations({})", initClusterCount, clusters.size(), iterations);
         }
     }
 
-    public static void checkClusterDuplicates(List<SvCluster> clusters)
+    public static boolean checkClusterDuplicates(List<SvCluster> clusters)
     {
         for(int i = 0; i < clusters.size(); ++i)
         {
@@ -449,10 +448,12 @@ public class SvClusteringMethods {
                 if(cluster1 == cluster2 || cluster1.id() == cluster2.id())
                 {
                     LOGGER.error("cluster({}) exists twice in list", cluster1.id());
-                    return;
+                    return false;
                 }
             }
         }
+
+        return true;
     }
 
     public static int MAX_SV_REPLICATION_MULTIPLE = 40;

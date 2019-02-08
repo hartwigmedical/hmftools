@@ -18,6 +18,7 @@ import java.util.List;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+// contains all the SVs for an arm within a cluster
 public class SvArmGroup {
 
     private final String mId;
@@ -27,8 +28,9 @@ public class SvArmGroup {
     private final String mChromosome;
     private final String mArm;
 
-    // width of SVs on the arm taking into account any excluded SVs
     private boolean mRequiresRecalc;
+
+    // width of SVs on the arm taking into account any excluded SVs
     private long mStartPos;
     private long mEndPos;
     private int mConsistency;
@@ -51,10 +53,6 @@ public class SvArmGroup {
     }
 
     public final String id() { return mId; }
-    public final String posId()
-    {
-        return String.format("cl %d: %s_%s %d:%d", mCluster.id(), mChromosome, mArm, mStartPos, mEndPos);
-    }
 
     public final String chromosome() { return mChromosome; }
     public final String arm() { return mArm; }
@@ -100,7 +98,7 @@ public class SvArmGroup {
 
                 boolean useStart = isStart(be);
 
-                if(!var.chromosome(useStart).equals(mChromosome))
+                if(!var.chromosome(useStart).equals(mChromosome) || !var.arm(useStart).equals(mArm))
                     continue;
 
                 mConsistency += calcConsistency(var, useStart);

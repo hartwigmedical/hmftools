@@ -213,23 +213,38 @@ public class SvLinkedPair {
 
     public boolean matches(final SvLinkedPair other)
     {
-        return this.matches(other, false);
-    }
-
-    public boolean matches(final SvLinkedPair other, boolean allowReplicated)
-    {
         if(this == other)
             return true;
 
         // first and second can be in either order
-        if(mFirst.equals(other.first(), allowReplicated) && mFirstLinkOnStart == other.firstLinkOnStart()
-        && mSecond.equals(other.second(), allowReplicated) && mSecondLinkOnStart == other.secondLinkOnStart())
+        if(mFirst.equals(other.first(), true) && mFirstLinkOnStart == other.firstLinkOnStart()
+        && mSecond.equals(other.second(), true) && mSecondLinkOnStart == other.secondLinkOnStart())
         {
             return true;
         }
 
-        if(mFirst.equals(other.second(), allowReplicated) && mFirstLinkOnStart == other.secondLinkOnStart()
-        && mSecond.equals(other.first(), allowReplicated) && mSecondLinkOnStart == other.firstLinkOnStart())
+        if(mFirst.equals(other.second(), true) && mFirstLinkOnStart == other.secondLinkOnStart()
+        && mSecond.equals(other.first(), true) && mSecondLinkOnStart == other.firstLinkOnStart())
+        {
+            return true;
+        }
+
+        return false;
+    }
+
+    public boolean oppositeMatch(final SvLinkedPair other)
+    {
+        if(this == other)
+            return true;
+
+        if(mFirst.equals(other.first(), true) && mFirstLinkOnStart != other.firstLinkOnStart()
+        && mSecond.equals(other.second(), true) && mSecondLinkOnStart != other.secondLinkOnStart())
+        {
+            return true;
+        }
+
+        if(mFirst.equals(other.second(), true) && mFirstLinkOnStart != other.secondLinkOnStart()
+        && mSecond.equals(other.first(), true) && mSecondLinkOnStart != other.firstLinkOnStart())
         {
             return true;
         }

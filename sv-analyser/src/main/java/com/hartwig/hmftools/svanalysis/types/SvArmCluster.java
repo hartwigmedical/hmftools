@@ -8,7 +8,9 @@ import com.google.common.collect.Lists;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.core.config.LoggerConfig;
 
+// clusters of proximate SVs on an arm
 public class SvArmCluster
 {
     private int mId;
@@ -20,7 +22,7 @@ public class SvArmCluster
     private long mStartPos;
     private long mEndPos;
 
-    private static final Logger LOGGER = LogManager.getLogger(SvArmGroup.class);
+    private static final Logger LOGGER = LogManager.getLogger(SvArmCluster.class);
 
     public SvArmCluster(int id, final SvCluster cluster, final String chr, final String arm)
     {
@@ -65,13 +67,29 @@ public class SvArmCluster
         mEndPos = mBreakends.get(mBreakends.size()-1).position();
     }
 
-    public static int ARM_CL_SINGLE = 0;
-    public static int ARM_CL_REMOTE_TI = 1;
-    public static int ARM_CL_DSB = 2;
-    public static int ARM_CL_MULTIPLE_DSBS = 3;
-    public static int ARM_CL_SIMPLE_FOLDBACK = 4;
-    public static int ARM_CL_COMPLEX_FOLDBACK = 5;
-    public static int ARM_CL_COMPLEX_OTHER = 6;
+    public static final int ARM_CL_SINGLE = 0;
+    public static final int ARM_CL_REMOTE_TI = 1;
+    public static final int ARM_CL_DSB = 2;
+    public static final int ARM_CL_MULTIPLE_DSBS = 3;
+    public static final int ARM_CL_SIMPLE_FOLDBACK = 4;
+    public static final int ARM_CL_COMPLEX_FOLDBACK = 5;
+    public static final int ARM_CL_COMPLEX_OTHER = 6;
+
+    public static final String typeToString(int type)
+    {
+        switch(type)
+        {
+            case ARM_CL_SINGLE : return "SINGLE";
+            case ARM_CL_REMOTE_TI : return "REMOTE_TI";
+            case ARM_CL_DSB : return "DSB";
+            case ARM_CL_MULTIPLE_DSBS : return "MULTIPLE_DSB";
+            case ARM_CL_SIMPLE_FOLDBACK : return "SIMPLE_FOLDBACK";
+            case ARM_CL_COMPLEX_FOLDBACK : return "COMPLEX_FOLDBACK";
+            case ARM_CL_COMPLEX_OTHER : return "COMPLEX_OTHER";
+        }
+
+        return "Unknown";
+    }
 
     public int getType()
     {
@@ -141,8 +159,6 @@ public class SvArmCluster
 
     public static int[] getArmClusterData(final SvCluster cluster)
     {
-        // isSpecificCluster(cluster);
-
         int[] results = new int[ARM_CL_COMPLEX_OTHER+1];
 
         for(final SvArmCluster armCluster : cluster.getArmClusters())
@@ -153,9 +169,18 @@ public class SvArmCluster
         return results;
     }
 
+    public static void logArmClusterData(final SvCluster cluster)
+    {
+        for(final SvArmCluster armCluster : cluster.getArmClusters())
+        {
+            LOGGER.debug("cluster({}) armCluster({}) breakends({}) type({})",
+                    cluster.id(), armCluster.toString(), armCluster.getBreakends().size(), typeToString(armCluster.getType()));
+        }
+    }
+
     public static void mergeArmClusters(List<SvArmCluster> armClusters)
     {
-        // merge if any 2 have SV in a foldback
+        // merge if any 2 are linked by the same foldback
         for(int i = 0; i < armClusters.size(); ++i)
         {
             SvArmCluster ac1 = armClusters.get(i);

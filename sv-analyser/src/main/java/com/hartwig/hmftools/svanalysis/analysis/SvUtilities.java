@@ -4,8 +4,6 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.centromeres.Centromeres;
 import com.hartwig.hmftools.common.chromosome.ChromosomeLengths;
 import com.hartwig.hmftools.common.region.GenomeRegion;
-import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
-import com.hartwig.hmftools.svanalysis.types.SvArmCluster;
 import com.hartwig.hmftools.svanalysis.types.SvBreakend;
 import com.hartwig.hmftools.svanalysis.types.SvVarData;
 

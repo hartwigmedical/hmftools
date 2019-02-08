@@ -98,11 +98,6 @@ public class ChainFinder
                     continue;
 
                 mIncompleteChains.add(chain);
-
-                if (mLogVerbose)
-                {
-                    LOGGER.debug("cluster({}) found incomplete chain({} svs={})", mCluster.id(), chain.id(), chain.getSvCount());
-                }
             }
         }
 
@@ -428,7 +423,7 @@ public class ChainFinder
                     while(i < remainingStartLinks.size())
                     {
                         final SvLinkedPair other = remainingStartLinks.get(i);
-                        if(pair.matches(other, true))
+                        if(pair.matches(other))
                             remainingStartLinks.remove(i);
                         else
                             ++i;
@@ -446,6 +441,12 @@ public class ChainFinder
         {
             tryUnlinkedSingle(chainsList, unlinkedSvList.get(0));
         }
+
+        if (mLogVerbose)
+        {
+            LOGGER.debug("cluster({}) chaining finished: chains({}) unlinkedSVs({})", mCluster.id(), chainsList.size(), unlinkedSvList.size());
+        }
+
     }
 
     private SvLinkedPair findNewLinkedPair(final List<SvLinkedPair> chainedPairs, final List<SvVarData> unlinkedSVs)
@@ -528,10 +529,14 @@ public class ChainFinder
                 if(mCluster.hasReplicatedSVs())
                 {
                     // check that if this link has the same SVs as another link due to replicated SVs, that
-                    // the breakends used in the link match each other
+                    // the breakends used in the link don't match on opposite breakends eg start-end & end-start are not allowed
                     for(final SvLinkedPair pair : chainedPairs)
                     {
-                        if(testPair.sameVariants(pair) && !testPair.matches(pair, true))
+                        if(!testPair.sameVariants(pair))
+                            continue;
+
+                        // if(!testPair.matches(pair) && !testPair.oppositeMatch(pair)) // previous logic was incorrect
+                        if(testPair.oppositeMatch(pair))
                         {
                             isValid = false;
                             break;
