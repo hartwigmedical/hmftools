@@ -13,7 +13,6 @@ public class DriverGeneData
     public final HmfTranscriptRegion Region;
     public final GeneCopyNumber GeneCN;
 
-    private String mMatchInfo;
     private List<SvBreakend> mSvBreakends;
     private List<String> mSvInfo;
     private boolean mMissedLohSVs;
@@ -23,18 +22,10 @@ public class DriverGeneData
         DriverGene = driverGene;
         Region = region;
         GeneCN = geneCN;
-        mMatchInfo = "";
         mMissedLohSVs = false;
 
         mSvBreakends = Lists.newArrayList();
         mSvInfo = Lists.newArrayList();
-    }
-
-    public final String getMatchInfo() { return mMatchInfo; }
-
-    public void setMatchInfo(final String info)
-    {
-        mMatchInfo = info;
     }
 
     public void setMissedLohSVs(boolean toggle) { mMissedLohSVs = toggle; }

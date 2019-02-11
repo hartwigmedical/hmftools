@@ -8,16 +8,18 @@ import static com.hartwig.hmftools.svanalysis.analysis.CNAnalyser.CENTROMERE_CN;
 import static com.hartwig.hmftools.svanalysis.analysis.CNAnalyser.P_ARM_TELOMERE_CN;
 import static com.hartwig.hmftools.svanalysis.analysis.CNAnalyser.Q_ARM_TELOMERE_CN;
 import static com.hartwig.hmftools.svanalysis.analysis.ClusterAnalyser.SHORT_TI_LENGTH;
+import static com.hartwig.hmftools.svanalysis.analysis.SvSampleAnalyser.writeGeneExonData;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.CHROMOSOME_ARM_P;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.copyNumbersEqual;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.getChromosomalArm;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_LOW_QUALITY;
-import static com.hartwig.hmftools.svanalysis.types.SvCluster.isSpecificCluster;
-import static com.hartwig.hmftools.svanalysis.types.SvLOH.LOH_NO_SV;
+import static com.hartwig.hmftools.svannotation.SvGeneTranscriptCollection.PSEUDO_GENE_DATA_EXON_LENGTH;
+import static com.hartwig.hmftools.svannotation.SvGeneTranscriptCollection.PSEUDO_GENE_DATA_EXON_MAX;
+import static com.hartwig.hmftools.svannotation.SvGeneTranscriptCollection.PSEUDO_GENE_DATA_EXON_RANK;
+import static com.hartwig.hmftools.svannotation.SvGeneTranscriptCollection.PSEUDO_GENE_DATA_TRANS_ID;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
-import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -77,6 +79,7 @@ public class DriverGeneAnnotator
     private List<SvLOH> mSampleLOHData;
     private Map<String, double[]> mChrCopyNumberMap;
     private Map<String, List<GeneCopyNumber>> mSampleGeneCopyNumberMap;
+    private BufferedWriter mVisGenesFileWriter;
 
     // temp
     private boolean mWriteMatchedGeneCopyNumber;
@@ -99,6 +102,7 @@ public class DriverGeneAnnotator
 
         mWriteMatchedGeneCopyNumber = false;
         mGCNFileWriter = null;
+        mVisGenesFileWriter = null;
     }
 
     private static final String WRITE_GCN_DATA = "write_gcn_data";
@@ -125,6 +129,9 @@ public class DriverGeneAnnotator
     {
         mSamplePloidy = ploidy;
     }
+
+    public void setVisGenesFileWriter(BufferedWriter writer) { mVisGenesFileWriter = writer; }
+    public final List<DriverGeneData> getDriverGeneDataList() { return mDriverGeneDataList; }
 
     private void initialiseGeneData(final String geneCopyNumberFile)
     {
@@ -658,6 +665,7 @@ public class DriverGeneAnnotator
             double[] cnData = mChrCopyNumberMap.get(region.chromosome());
             final String arm = getChromosomalArm(region.chromosome(), region.geneStart());
             final GeneCopyNumber geneCN = driverGeneData.GeneCN;
+            int refClusterId = -1;
 
             final List<SvBreakend> svBreakends = driverGeneData.getSvBreakends();
 
@@ -698,6 +706,7 @@ public class DriverGeneAnnotator
                         break;
 
                     final SvVarData var = breakend.getSV();
+                    refClusterId = var.getCluster().id();
 
                     // cache info against the SV
                     var.setDriveGene(String.format("%s;%s;%s",
@@ -713,6 +722,10 @@ public class DriverGeneAnnotator
 
                 writer.newLine();
             }
+
+            writeGeneExonData(mVisGenesFileWriter, mGeneTranscriptCollection, mSampleId, refClusterId,
+                    region.geneID(), region.gene(), "", region.chromosome(), "DRIVER");
+
         }
         catch (final IOException e)
         {
@@ -730,7 +743,10 @@ public class DriverGeneAnnotator
     {
         for(final SvCluster cluster : clusters)
         {
-            isSpecificCluster(cluster);
+            // isSpecificCluster(cluster);
+
+            GeneAnnotation pseudoGene = null;
+            String transcriptId = "";
 
             for(final SvLinkedPair pair : cluster.getLinkedPairs())
             {
@@ -751,18 +767,30 @@ public class DriverGeneAnnotator
                         if(!gene1.GeneName.equals(gene2.GeneName))
                             continue;
 
-                        final String exonData = mGeneTranscriptCollection.getExonDetailsForPosition(gene1, lower.position(), upper.position());
+                        final String exonData[] = mGeneTranscriptCollection.getExonDetailsForPosition(gene1, lower.position(), upper.position());
 
-                        if(!exonData.isEmpty())
+                        if(exonData[PSEUDO_GENE_DATA_TRANS_ID] != null)
                         {
-                            //LOGGER.info("sample({}) cluster({}) pair({}) matches gene({}) exon({})",
-                            //        mSampleId, cluster.id(), pair.toString(), gene1.GeneName, exonData);
+                            pseudoGene = gene1;
+                            transcriptId = exonData[PSEUDO_GENE_DATA_TRANS_ID];
 
-                            pair.setExonMatchData(exonData);
+                            String exonMatchData = String.format("%s;%s;%s;%s",
+                                    transcriptId, exonData[PSEUDO_GENE_DATA_EXON_RANK],
+                                    exonData[PSEUDO_GENE_DATA_EXON_MAX], exonData[PSEUDO_GENE_DATA_EXON_LENGTH]);
+
+
+                            pair.setExonMatchData(exonMatchData);
                         }
                     }
                 }
             }
+
+            if(pseudoGene != null)
+            {
+                writeGeneExonData(mVisGenesFileWriter, mGeneTranscriptCollection, mSampleId, cluster.id(),
+                        pseudoGene.StableId, pseudoGene.GeneName, transcriptId, pseudoGene.chromosome(), "PSEUDO");
+            }
+
         }
     }
 

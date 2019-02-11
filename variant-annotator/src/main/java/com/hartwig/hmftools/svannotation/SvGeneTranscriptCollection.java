@@ -14,15 +14,9 @@ import static com.hartwig.hmftools.common.variant.structural.annotation.EnsemblG
 import static com.hartwig.hmftools.common.variant.structural.annotation.EnsemblGeneData.phaseToRegion;
 import static com.hartwig.hmftools.common.variant.structural.annotation.Transcript.TRANS_CODING_TYPE_CODING;
 
-import static org.ensembl.database.homo_sapiens_core.tables.Exon.EXON;
-
-import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 
@@ -38,7 +32,6 @@ import com.hartwig.hmftools.common.variant.structural.annotation.TranscriptProte
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.jooq.Record;
 
 public class SvGeneTranscriptCollection
 {
@@ -48,6 +41,7 @@ public class SvGeneTranscriptCollection
     private Map<String, List<EnsemblGeneData>> mChromosomeGeneDataMap;
     private Map<String, List<EnsemblGeneData>> mChromosomeReverseGeneDataMap; // order by gene end not start
     private Map<Integer, List<TranscriptProteinData>> mEnsemblProteinDataMap;
+    private Map<String,String> mGeneNameToId;
 
     private BufferedWriter mBreakendWriter;
 
@@ -62,6 +56,7 @@ public class SvGeneTranscriptCollection
         mChromosomeGeneDataMap = Maps.newHashMap();
         mChromosomeReverseGeneDataMap = Maps.newHashMap();
         mEnsemblProteinDataMap = Maps.newHashMap();
+        mGeneNameToId = Maps.newHashMap();
         mBreakendWriter = null;
     }
 
@@ -224,6 +219,34 @@ public class SvGeneTranscriptCollection
         }
 
         return transcriptExons;
+    }
+
+    public final List<TranscriptExonData> getTranscriptExons(final String geneName, final String transcriptId)
+    {
+        List<TranscriptExonData> exonDataList = Lists.newArrayList();
+
+        final List<TranscriptExonData> transExonDataList = mGeneTransExonDataMap.get(geneName);
+
+        if (transExonDataList == null || transExonDataList.isEmpty())
+            return exonDataList;
+
+        int teIndex = 0;
+        List<TranscriptExonData> transcriptExons = nextTranscriptExons(transExonDataList, teIndex);
+
+        while(!transcriptExons.isEmpty())
+        {
+            final TranscriptExonData firstExon = transcriptExons.get(0);
+
+            if(transcriptId.isEmpty() && firstExon.IsCanonical)
+                return transcriptExons;
+            else if(firstExon.TransName.equals(transcriptId))
+                return transcriptExons;
+
+            teIndex += transcriptExons.size();
+            transcriptExons = nextTranscriptExons(transExonDataList, teIndex);
+        }
+
+        return exonDataList;
     }
 
     private List<EnsemblGeneData> findGeneRegions(long position, List<EnsemblGeneData> geneDataList, int upstreamDistance)
@@ -505,9 +528,15 @@ public class SvGeneTranscriptCollection
         return transcript;
     }
 
-    public String getExonDetailsForPosition(final GeneAnnotation gene, long posStart, long posEnd)
+    public static int PSEUDO_GENE_DATA_TRANS_ID = 0;
+    public static int PSEUDO_GENE_DATA_EXON_RANK = 1;
+    public static int PSEUDO_GENE_DATA_EXON_MAX = 2;
+    public static int PSEUDO_GENE_DATA_EXON_LENGTH = 3;
+
+    public String[] getExonDetailsForPosition(final GeneAnnotation gene, long posStart, long posEnd)
     {
-        String exonDataStr = "";
+        String[] exonMatchData = new String[PSEUDO_GENE_DATA_EXON_LENGTH +1];
+        exonMatchData[PSEUDO_GENE_DATA_TRANS_ID] = null;
 
         List<TranscriptExonData> transExonDataList = getTransExonData(gene.StableId);
 
@@ -525,10 +554,12 @@ public class SvGeneTranscriptCollection
                     continue;
 
                 // found a match
-                if (exonDataStr.isEmpty() || exonData.IsCanonical)
+                if (exonMatchData[PSEUDO_GENE_DATA_TRANS_ID] == null || exonData.IsCanonical)
                 {
-                    exonDataStr = String.format("%s;%d;%d;%d",
-                            exonData.TransName, exonData.ExonRank, exonCount, exonData.ExonEnd - exonData.ExonStart);
+                    exonMatchData[PSEUDO_GENE_DATA_TRANS_ID] = exonData.TransName;
+                    exonMatchData[PSEUDO_GENE_DATA_EXON_RANK] = Integer.toString(exonData.ExonRank);
+                    exonMatchData[PSEUDO_GENE_DATA_EXON_MAX] = Integer.toString(exonCount);
+                    exonMatchData[PSEUDO_GENE_DATA_EXON_LENGTH] = Long.toString(exonData.ExonEnd - exonData.ExonStart);
 
                     if (exonData.IsCanonical)
                         break;
@@ -539,7 +570,7 @@ public class SvGeneTranscriptCollection
             transcriptExons = nextTranscriptExons(transExonDataList, teIndex);
         }
 
-        return exonDataStr;
+        return exonMatchData;
     }
 
     public boolean loadEnsemblData()

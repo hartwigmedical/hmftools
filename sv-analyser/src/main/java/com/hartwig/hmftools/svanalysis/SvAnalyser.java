@@ -132,6 +132,7 @@ public class SvAnalyser {
             {
                 fusionAnalyser = new FusionDisruptionAnalyser();
                 fusionAnalyser.loadFusionReferenceData(cmd, dataOutputDir, cmd.getOptionValue(GENE_TRANSCRIPTS_DIR,""));
+                fusionAnalyser.setVisGenesFileWriter(sampleAnalyser.getVisGenesFileWriter());
 
                 if(!fusionAnalyser.getRnaSampleIds().isEmpty())
                 {
@@ -148,6 +149,7 @@ public class SvAnalyser {
             {
                 driverGeneAnnotator = new DriverGeneAnnotator(dbAccess, fusionAnalyser.getGeneTranscriptCollection(), dataOutputDir);
                 driverGeneAnnotator.loadConfig(cmd);
+                driverGeneAnnotator.setVisGenesFileWriter(sampleAnalyser.getVisGenesFileWriter());
             }
 
             CNAnalyser cnAnalyser = new CNAnalyser(dataOutputDir, dbAccess);

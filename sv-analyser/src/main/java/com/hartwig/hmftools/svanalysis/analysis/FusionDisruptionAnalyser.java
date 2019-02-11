@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.svanalysis.analysis;
 
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
+import static com.hartwig.hmftools.svanalysis.analysis.SvSampleAnalyser.writeGeneExonData;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_END;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_START;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.isStart;
@@ -9,6 +10,7 @@ import static com.hartwig.hmftools.svannotation.analysis.SvFusionAnalyser.FUSION
 import static com.hartwig.hmftools.svannotation.analysis.SvFusionAnalyser.PROMISCUOUS_FIVE_CSV;
 import static com.hartwig.hmftools.svannotation.analysis.SvFusionAnalyser.PROMISCUOUS_THREE_CSV;
 
+import java.io.BufferedWriter;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.List;
@@ -49,10 +51,11 @@ public class FusionDisruptionAnalyser
     private String mOutputDir;
     private SvGeneTranscriptCollection mEnsemblDataCache;
 
-    private List<GeneFusion> mGeneFusions;
-    private List<GeneDisruption> mGeneDisruptions;
+    private List<GeneFusion> mFusions;
 
     ListMultimap<Chromosome, HmfTranscriptRegion> mChromosomeTranscriptMap;
+
+    private BufferedWriter mVisGenesFileWriter;
 
     private static final Logger LOGGER = LogManager.getLogger(FusionDisruptionAnalyser.class);
 
@@ -62,10 +65,9 @@ public class FusionDisruptionAnalyser
         mDisruptionFinder = null;
         mEnsemblDataCache = new SvGeneTranscriptCollection();
         mChromosomeTranscriptMap = null;
-
-        mGeneFusions = Lists.newArrayList();
-        mGeneDisruptions = Lists.newArrayList();
         mOutputDir = "";
+        mFusions = Lists.newArrayList();
+        mVisGenesFileWriter = null;
     }
 
     public final SvGeneTranscriptCollection getGeneTranscriptCollection() { return mEnsemblDataCache; }
@@ -87,6 +89,8 @@ public class FusionDisruptionAnalyser
     }
 
     public final Set<String> getRnaSampleIds() { return mFusionFinder.getSampleRnaData().keySet(); }
+    public final List<GeneFusion> getFusions() { return mFusions; }
+    public void setVisGenesFileWriter(BufferedWriter writer) { mVisGenesFileWriter = writer; }
 
     private void setSvGenesList(final SvVarData var, boolean applyPromotorDistance)
     {
@@ -148,6 +152,8 @@ public class FusionDisruptionAnalyser
     {
         if(mSampleId.isEmpty() || mFusionFinder == null)
             return;
+
+        mFusions.clear();
 
         // always report SVs by themselves
         for(final SvVarData var : svList)
@@ -326,7 +332,7 @@ public class FusionDisruptionAnalyser
         if (fusions.isEmpty())
             return;
 
-        // fusions = fusions.stream().filter(GeneFusion::reportable).collect(Collectors.toList()); // restrict to reportable fusions
+        mFusions.addAll(fusions);
 
         if(LOGGER.isDebugEnabled())
         {
@@ -351,6 +357,17 @@ public class FusionDisruptionAnalyser
         String clusterInfo = String.format("%d,%d,%s", cluster.id(), cluster.getUniqueSvCount(), cluster.getResolvedType());
 
         mFusionFinder.writeFusions(fusions, mOutputDir, mSampleId, clusterInfo, true);
+
+        for (final GeneFusion fusion : fusions)
+        {
+            writeGeneExonData(mVisGenesFileWriter, mEnsemblDataCache, mSampleId, cluster.id(),
+                    fusion.upstreamTrans().parent().StableId, fusion.upstreamTrans().parent().GeneName, fusion.upstreamTrans().StableId,
+                    fusion.upstreamTrans().parent().chromosome(), "FUSION");
+
+            writeGeneExonData(mVisGenesFileWriter, mEnsemblDataCache, mSampleId, cluster.id(),
+                    fusion.downstreamTrans().parent().StableId, fusion.downstreamTrans().parent().GeneName, fusion.downstreamTrans().StableId,
+                    fusion.downstreamTrans().parent().chromosome(), "FUSION");
+        }
     }
 
     public void close()

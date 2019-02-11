@@ -41,9 +41,12 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantData;
+import com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion;
+import com.hartwig.hmftools.common.variant.structural.annotation.TranscriptExonData;
 import com.hartwig.hmftools.svanalysis.annotators.FragileSiteAnnotator;
 import com.hartwig.hmftools.svanalysis.annotators.LineElementAnnotator;
 import com.hartwig.hmftools.svanalysis.annotators.ReplicationOriginAnnotator;
+import com.hartwig.hmftools.svanalysis.types.DriverGeneData;
 import com.hartwig.hmftools.svanalysis.types.SvArmGroup;
 import com.hartwig.hmftools.svanalysis.types.SvBreakend;
 import com.hartwig.hmftools.svanalysis.types.SvChain;
@@ -51,6 +54,7 @@ import com.hartwig.hmftools.svanalysis.types.SvCluster;
 import com.hartwig.hmftools.svanalysis.types.SvLOH;
 import com.hartwig.hmftools.svanalysis.types.SvLinkedPair;
 import com.hartwig.hmftools.svanalysis.types.SvVarData;
+import com.hartwig.hmftools.svannotation.SvGeneTranscriptCollection;
 
 import org.apache.commons.math3.optim.SimpleVectorValueChecker;
 import org.apache.logging.log4j.LogManager;
@@ -70,6 +74,7 @@ public class SvSampleAnalyser {
     private BufferedWriter mLinksFileWriter;
     private BufferedWriter mVisSvsFileWriter;
     private BufferedWriter mVisSegmentsFileWriter;
+    private BufferedWriter mVisGenesFileWriter;
 
     private FragileSiteAnnotator mFragileSiteAnnotator;
     private LineElementAnnotator mLineElementAnnotator;
@@ -97,6 +102,9 @@ public class SvSampleAnalyser {
         mVisSvsFileWriter = null;
         mVisSegmentsFileWriter = null;
 
+        mVisGenesFileWriter = null;
+        initialiseVisGeneWriter();
+
         mFragileSiteAnnotator = new FragileSiteAnnotator();
         mFragileSiteAnnotator.loadFragileSitesFile(mConfig.FragileSiteFile);
 
@@ -123,6 +131,7 @@ public class SvSampleAnalyser {
     public final Map<String, List<SvBreakend>> getChrBreakendMap() { return mClusteringMethods.getChrBreakendMap(); }
     public void setSampleLohData(final Map<String, List<SvLOH>> data) { mClusteringMethods.setSampleLohData(data); }
     public void setChrCopyNumberMap(final Map<String, double[]> data) { mClusteringMethods.setChrCopyNumberMap(data); }
+    public final BufferedWriter getVisGenesFileWriter() { return mVisGenesFileWriter; }
 
     private void clearState()
     {
@@ -787,13 +796,67 @@ public class SvSampleAnalyser {
         }
     }
 
+    private void initialiseVisGeneWriter()
+    {
+        if(mVisGenesFileWriter != null || !mConfig.WriteVisualisationData)
+            return;
+
+        try
+        {
+            if (mVisGenesFileWriter == null)
+            {
+                String outputFileName = mConfig.OutputCsvPath;
+
+                outputFileName += "SVA_VIS_GENE_EXONS.csv";
+
+                mVisGenesFileWriter = createBufferedWriter(outputFileName, false);
+                mVisGenesFileWriter.write("SampleId,ClusterId,Gene,Transcript,Chromosome,AnnotationType,ExonRank,ExonStart,ExonEnd");
+                mVisGenesFileWriter.newLine();
+
+            }
+        }
+        catch( final IOException e)
+        {
+            LOGGER.error("error writing to visual segments file: {}", e.toString());
+        }
+    }
+
+    public static void writeGeneExonData(final BufferedWriter writer, final SvGeneTranscriptCollection geneTranscriptCollection,
+            final String sampleId, int clusterId, final String geneId, final String geneName, final String transcriptId,
+            final String chromosome, final String annotationType)
+    {
+        if(writer == null)
+            return;
+
+        try
+        {
+            // log relevant exons
+            final List<TranscriptExonData> exonDataLst = geneTranscriptCollection.getTranscriptExons(geneId, transcriptId);
+
+            for(final TranscriptExonData exonData : exonDataLst)
+            {
+                writer.write(String.format("%s,%d,%s,%s,%s,%s",
+                        sampleId, clusterId, geneName, transcriptId, chromosome, annotationType));
+
+                writer.write(String.format(",%d,%d,%d", exonData.ExonRank, exonData.ExonStart, exonData.ExonEnd));
+
+                writer.newLine();
+            }
+        }
+        catch (final IOException e)
+        {
+            LOGGER.error("error writing to visual gene-exons file: {}", e.toString());
+        }
+    }
+
     public void close()
     {
         closeBufferedWriter(mSvFileWriter);
         closeBufferedWriter(mClusterFileWriter);
         closeBufferedWriter(mLinksFileWriter);
-        closeBufferedWriter(mVisSegmentsFileWriter);
         closeBufferedWriter(mVisSvsFileWriter);
+        closeBufferedWriter(mVisSegmentsFileWriter);
+        closeBufferedWriter(mVisGenesFileWriter);
 
         // log perf stats
         mPerfCounter.stop();
