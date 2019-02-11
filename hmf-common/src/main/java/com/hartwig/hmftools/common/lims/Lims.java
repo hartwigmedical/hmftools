@@ -131,19 +131,19 @@ public class Lims {
             boolean purityShallowExecuted =
                     labelSample.equals("CORE") || (remarksSample != null && (remarksSample.contains("CPCTWIDE") || remarksSample.contains(
                             "ShallowSeq")));
-            if (purityShallowExecuted && shallowSeq == null) {
+            if (!purityShallowExecuted) {
+                LOGGER.info("Used pathology tumor percentage for report from sample.");
+                return tumorPercentageForSample(sample);
+            } else if (purityShallowExecuted && shallowSeq == null) {
                 LOGGER.error("BFX lims and lab lims are not equal. Cannot generated patient report!");
             } else if (purityShallowExecuted && shallowSeq.sampleId().equals(sample)) {
-                LOGGER.info(shallowSeq.purityShallowSeq());
+                LOGGER.info(Math.round(Double.parseDouble(shallowSeq.purityShallowSeq()) * 100) + "%");
                 LOGGER.info("Used purity from shallow seq for report from sample.");
                 try {
-                    return Long.toString(Math.round(Double.parseDouble(shallowSeq.purityShallowSeq()))) + "%";
+                    return Math.round(Double.parseDouble(shallowSeq.purityShallowSeq()) * 100) + "%";
                 } catch (final NumberFormatException e) {
                     return "N/A";
                 }
-            } else if (!purityShallowExecuted) {
-                 LOGGER.info("Used pathology tumor percentage for report from sample.");
-                return tumorPercentageForSample(sample);
             } else {
                 return "N/A";
             }

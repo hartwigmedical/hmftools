@@ -102,7 +102,7 @@ public abstract class NonSequenceablePage {
                         + "unless additional fresh tumor material can be provided for a new assessment.").setStyle(fontStyle()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
                 cmp.text(sampleReport().label().contains("CORE")
-                        ? "When possible, please resubmit using the same " + study().studyName()
+                        ? "When possible, please resubmit using the same DVO."
                         : "When possible, please resubmit using the same " + study().studyName() + "-number. "
                                 + "In case additional tumor material cannot be provided, please be notified that the patient will not be "
                                 + "evaluable for the " + study().studyCode() + " study.").setStyle(fontStyle()),

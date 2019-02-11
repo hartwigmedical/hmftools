@@ -33,6 +33,7 @@ public class ColorPicker {
 
     private final boolean clusterMode;
     private final Map<Integer, String> colorMap;
+    private final double connectorTransparency;
 
     public ColorPicker(@NotNull final List<Link> links) {
         long clusterCount = links.stream().mapToLong(Link::clusterId).distinct().count();
@@ -44,6 +45,13 @@ public class ColorPicker {
             colorMap = chainMap(links);
         }
 
+        connectorTransparency = connectorTransparency(links.size());
+    }
+
+    @NotNull
+    public String connectorColor(final int clusterId, final int chainId) {
+        String opaqueColor = color(clusterId, chainId);
+        return opaqueColor.replace(")", "," + connectorTransparency + ")");
     }
 
     @NotNull
@@ -57,7 +65,7 @@ public class ColorPicker {
     }
 
     @NotNull
-    public static String simpleSvColor(@NotNull final String type) {
+    private static String simpleSvColor(@NotNull final String type) {
         switch (type) {
             case "DEL":
                 return toString(DEL);
@@ -128,6 +136,27 @@ public class ColorPicker {
         }
 
         return result;
+    }
+
+
+    private static double connectorTransparency(int links) {
+        if (links < 10) {
+            return 1;
+        }
+
+        if (links < 50) {
+            return 0.8;
+        }
+
+        if (links < 100) {
+            return 0.5;
+        }
+
+        if (links < 400) {
+            return 0.3;
+        }
+
+        return 0.1;
     }
 
 }
