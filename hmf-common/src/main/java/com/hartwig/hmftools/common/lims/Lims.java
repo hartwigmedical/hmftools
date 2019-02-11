@@ -120,8 +120,8 @@ public class Lims {
         return null;
     }
 
-    @Nullable
-    public String purityShallowSeq(@NotNull String sample) {
+    @NotNull
+    public String purityShallowSeq(@NotNull String sample, boolean isSequenced) {
         LimsJsonSampleData sampleData = dataPerSample.get(sample);
         LimsShallowSeqData shallowSeq = dataShallowSeq.get(sample);
 
@@ -131,21 +131,29 @@ public class Lims {
             boolean purityShallowExecuted =
                     labelSample.equals("CORE") || (remarksSample != null && (remarksSample.contains("CPCTWIDE") || remarksSample.contains(
                             "ShallowSeq")));
-            if (!purityShallowExecuted) {
-                LOGGER.info("Used pathology tumor percentage for report from sample.");
-                return tumorPercentageForSample(sample);
-            } else if (purityShallowExecuted && shallowSeq == null) {
-                LOGGER.error("BFX lims and lab lims are not equal. Cannot generated patient report!");
-            } else if (purityShallowExecuted && shallowSeq.sampleId().equals(sample)) {
-                LOGGER.info(Math.round(Double.parseDouble(shallowSeq.purityShallowSeq()) * 100) + "%");
-                LOGGER.info("Used purity from shallow seq for report from sample.");
-                try {
-                    return Math.round(Double.parseDouble(shallowSeq.purityShallowSeq()) * 100) + "%";
-                } catch (final NumberFormatException e) {
-                    return "N/A";
+            if (!isSequenced) {
+                if (purityShallowExecuted && shallowSeq == null) {
+                    LOGGER.error("BFX lims and lab lims are not equal. Cannot generated patient report!");
+                } else if (purityShallowExecuted && shallowSeq.sampleId().equals(sample)) {
+                    LOGGER.info("Used purity from shallow seq for report from sample.");
+                    try {
+                        return Math.round(Double.parseDouble(shallowSeq.purityShallowSeq()) * 100) + "%";
+                    } catch (final NumberFormatException e) {
+                        return "N/A";
+                    }
+                } else if (!purityShallowExecuted) {
+                    LOGGER.info("Used pathology tumor percentage for report from sample.");
+                    return tumorPercentageForSample(sample);
                 }
-            } else {
-                return "N/A";
+            }
+
+            if (isSequenced) {
+                if (purityShallowExecuted && shallowSeq == null) {
+                    LOGGER.error("BFX lims and lab lims are not equal. Cannot generated patient report!");
+                } else {
+                    LOGGER.info("Used pathology tumor percentage for report from sample.");
+                    return tumorPercentageForSample(sample);
+                }
             }
         }
         return "N/A";

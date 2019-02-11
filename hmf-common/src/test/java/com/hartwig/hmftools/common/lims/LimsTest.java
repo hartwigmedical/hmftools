@@ -161,7 +161,7 @@ public class LimsTest {
                 .build();
 
         Lims lims = buildTestLimsWithSample(sampleData);
-        assertEquals("N/A", lims.purityShallowSeq(SAMPLE));
+        assertEquals("N/A", lims.purityShallowSeq(SAMPLE, false));
     }
 
     @Ignore
@@ -172,7 +172,7 @@ public class LimsTest {
                 .build();
 
         Lims lims = buildTestLimsWithSample(sampleData);
-        assertEquals("N/A", lims.purityShallowSeq("CPCT02990001T"));
+        assertEquals("N/A", lims.purityShallowSeq("CPCT02990001T", true));
     }
 
     @Ignore
@@ -183,7 +183,7 @@ public class LimsTest {
                 .build();
 
         Lims lims = buildTestLimsWithSample(sampleData);
-        assertEquals("N/A", lims.purityShallowSeq(SAMPLE));
+        assertEquals("N/A", lims.purityShallowSeq(SAMPLE, false));
     }
 
     @NotNull
