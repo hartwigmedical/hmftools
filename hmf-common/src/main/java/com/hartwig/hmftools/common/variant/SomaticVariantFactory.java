@@ -108,11 +108,7 @@ public class SomaticVariantFactory {
                 throw new IllegalArgumentException("Allelic depths is a required format field in vcf file " + vcfFile);
             }
 
-            for (VariantContext variant : reader.iterator()) {
-                if (filter.test(variant)) {
-                    variants.add(variant);
-                }
-            }
+            variants.addAll(reader.iterator().toList());
         }
 
         return process(sample, variants);
