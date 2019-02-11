@@ -17,9 +17,9 @@ import com.hartwig.hmftools.patientreporter.report.components.MainPageTopSection
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import net.sf.dynamicreports.report.builder.component.ComponentBuilder;
+import net.sf.dynamicreports.report.builder.component.TextFieldBuilder;
 
 @Value.Immutable
 @Value.Style(passAnnotations = NotNull.class,
@@ -81,7 +81,7 @@ public abstract class NonSequenceablePage {
             }
             case SHALLOW_SEQ: {
                 title = "Notification of inadequate tumor sample";
-                subTitle = "Not enough tumor DNA detected by molecular T % estimate." ;
+                subTitle = "Not enough tumor DNA detected by molecular T % estimate.";
                 message = "For sequencing we require a minimum of 30% tumor cells.";
                 break;
             }
@@ -92,10 +92,11 @@ public abstract class NonSequenceablePage {
             }
         }
 
-        return sampleReport().label().contains("CORE") ? CORElayout(title, subTitle, message) : CPCTDRUPLayout(title, subTitle, message);
+        return sampleReport().label().contains("CORE") ? CORELayout(title, subTitle, message) : CPCTDRUPLayout(title, subTitle, message);
     }
 
-    private ComponentBuilder <?,?> CORElayout(@NotNull String title, @NotNull String subTitle, @NotNull String message) {
+    @NotNull
+    private ComponentBuilder<?, ?> CORELayout(@NotNull String title, @NotNull String subTitle, @NotNull String message) {
         return cmp.verticalList(cmp.text(title).setStyle(tableHeaderStyle().setFontSize(12)).setHeight(20),
                 cmp.text(subTitle).setStyle(dataTableStyle().setFontSize(12)).setHeight(20),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
@@ -107,22 +108,25 @@ public abstract class NonSequenceablePage {
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
                 cmp.text("When possible, please resubmit using the same DVO.").setStyle(fontStyle()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
-                cmp.text("The tumor percentage estimated by molecular tumor percentage is: " + sampleReport().purityOrPathologyTumorPercentage()).setStyle(fontStyle()),
+                cmp.text("The tumor percentage estimated by molecular tumor percentage is: "
+                        + sampleReport().purityOrPathologyTumorPercentage()).setStyle(fontStyle()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
                 cmp.text("The biopsies evaluated for this sample have arrived on " + formattedDate(sampleReport().tumorArrivalDate())
                         + " at " + Commons.HARTWIG_ADDRESS).setStyle(fontStyle()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
-                cmp.text("This report is generated and verified by: " + user() + " and is addressed at " + sampleReport().recipient()).setStyle(fontStyle()),
+                cmp.text("This report is generated and verified by: " + user() + " and is addressed at " + sampleReport().recipient())
+                        .setStyle(fontStyle()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
-                cmp.text("The project name are : " + sampleReport().projectNameDVO()).setStyle(fontStyle()),
+                cmp.text("The project name is : " + sampleReport().projectNameDVO()).setStyle(fontStyle()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
                 cmp.text("The results on this report are based on tests that are performed under ISO/ICE-17025:2005 accreditation.")
                         .setStyle(fontStyle()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
-                cmp.text("For questions, please contact us via info@hartwigmedicalfoundation.nl").setStyle(fontStyle()));
+                questionsText());
     }
 
-    private ComponentBuilder <?,?> CPCTDRUPLayout(@NotNull String title, @NotNull String subTitle, @NotNull String message) {
+    @NotNull
+    private ComponentBuilder<?, ?> CPCTDRUPLayout(@NotNull String title, @NotNull String subTitle, @NotNull String message) {
         return cmp.verticalList(cmp.text(title).setStyle(tableHeaderStyle().setFontSize(12)).setHeight(20),
                 cmp.text(subTitle).setStyle(dataTableStyle().setFontSize(12)).setHeight(20),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
@@ -133,8 +137,8 @@ public abstract class NonSequenceablePage {
                         + "unless additional fresh tumor material can be provided for a new assessment.").setStyle(fontStyle()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
                 cmp.text("When possible, please resubmit using the same " + study().studyName() + "-number. "
-                                + "In case additional tumor material cannot be provided, please be notified that the patient will not be "
-                                + "evaluable for the " + study().studyCode() + " study.").setStyle(fontStyle()),
+                        + "In case additional tumor material cannot be provided, please be notified that the patient will not be "
+                        + "evaluable for the " + study().studyCode() + " study.").setStyle(fontStyle()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
                 cmp.text("The tumor percentage estimated by Pathology UMC Utrecht is: " + sampleReport().purityOrPathologyTumorPercentage())
                         .setStyle(fontStyle()),
@@ -148,6 +152,11 @@ public abstract class NonSequenceablePage {
                 cmp.text("The results on this report are based on tests that are performed under ISO/ICE-17025:2005 accreditation.")
                         .setStyle(fontStyle()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
-                cmp.text("For questions, please contact us via info@hartwigmedicalfoundation.nl").setStyle(fontStyle()));
+                questionsText());
+    }
+
+    @NotNull
+    private static TextFieldBuilder<String> questionsText() {
+        return cmp.text("For questions, please contact us via info@hartwigmedicalfoundation.nl").setStyle(fontStyle());
     }
 }
