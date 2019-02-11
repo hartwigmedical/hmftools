@@ -48,7 +48,8 @@ public abstract class NotAnalysableReporter {
                 lims.projectNameDVO(sample),
                 isCoreSample ? lims.contactEmail(sample) : "",
                 isCoreSample ? lims.contactName(sample) : "",
-                lims.patientNumber(sample));
+                lims.patientNumber(sample),
+                lims.isCoreSample(sample));
 
         return ImmutableNotAnalysedPatientReport.of(sampleReport,
                 reason,

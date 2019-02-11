@@ -92,7 +92,7 @@ public abstract class NonSequenceablePage {
             }
         }
 
-        return sampleReport().label().contains("CORE") ? CORELayout(title, subTitle, message) : CPCTDRUPLayout(title, subTitle, message);
+        return sampleReport().isCoreSample() ? CORELayout(title, subTitle, message) : CPCTDRUPLayout(title, subTitle, message);
     }
 
     @NotNull

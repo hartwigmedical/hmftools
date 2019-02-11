@@ -108,7 +108,8 @@ abstract class PatientReporter {
                 baseReportData().limsModel().projectNameDVO(tumorSample),
                 isCoreSample ? baseReportData().limsModel().contactEmail(tumorSample) : "",
                 isCoreSample ? baseReportData().limsModel().contactName(tumorSample) : "",
-                baseReportData().limsModel().patientNumber(tumorSample));
+                baseReportData().limsModel().patientNumber(tumorSample),
+                baseReportData().limsModel().isCoreSample(tumorSample));
 
         final List<EvidenceItem> nonTrials = ReportableEvidenceItemFactory.extractNonTrials(allEvidenceItems);
 

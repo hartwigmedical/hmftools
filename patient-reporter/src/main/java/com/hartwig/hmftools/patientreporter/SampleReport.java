@@ -64,5 +64,8 @@ public abstract class SampleReport {
     @Nullable
     public abstract String patientNumber();
 
+    @NotNull
+    public abstract Boolean isCoreSample();
+
 
 }

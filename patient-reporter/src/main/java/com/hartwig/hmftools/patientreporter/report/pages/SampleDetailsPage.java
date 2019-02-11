@@ -73,7 +73,7 @@ public abstract class SampleDetailsPage {
 
         recipient = recipient != null ? recipient : "?";
 
-        final List<String> lines = sampleReport().label().contains("CORE") ?
+        final List<String> lines = sampleReport().isCoreSample() ?
             Lists.newArrayList("The samples have been sequenced at " + Commons.HARTWIG_ADDRESS,
                     "The samples have been analyzed by Next Generation Sequencing",
                     "This experiment is performed on the tumor sample which arrived on " + formattedDate(sampleReport().tumorArrivalDate()),
