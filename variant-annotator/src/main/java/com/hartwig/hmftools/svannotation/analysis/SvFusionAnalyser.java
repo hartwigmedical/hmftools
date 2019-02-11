@@ -19,6 +19,7 @@ import static com.hartwig.hmftools.svannotation.SvGeneTranscriptCollection.EXON_
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -36,6 +37,7 @@ import com.hartwig.hmftools.common.variant.structural.annotation.Transcript;
 import com.hartwig.hmftools.common.variant.structural.annotation.TranscriptProteinData;
 import com.hartwig.hmftools.svannotation.SvGeneTranscriptCollection;
 
+import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -47,9 +49,11 @@ public class SvFusionAnalyser
     public static final String PROMISCUOUS_FIVE_CSV = "promiscuous_five_csv";
     public static final String PROMISCUOUS_THREE_CSV = "promiscuous_three_csv";
 
+    public static final String SAMPLE_RNA_FILE = "sample_rna_file";
+
     private static final int EXON_THRESHOLD = 1;
 
-    private final KnownFusionsModel mKnownFusionsModel;
+    private KnownFusionsModel mKnownFusionsModel;
 
     private Map<String, List<RnaFusionData>> mSampleRnaData;
     private SvGeneTranscriptCollection mGeneTranscriptCollection;
@@ -61,13 +65,34 @@ public class SvFusionAnalyser
 
     private static final Logger LOGGER = LogManager.getLogger(SvFusionAnalyser.class);
 
-    public SvFusionAnalyser(final KnownFusionsModel knownFusionsModel, final SvGeneTranscriptCollection geneTranscriptCollection)
+    public SvFusionAnalyser(final CommandLine cmd, final SvGeneTranscriptCollection geneTranscriptCollection)
     {
-        mKnownFusionsModel = knownFusionsModel;
+        mGeneTranscriptCollection = geneTranscriptCollection;
+
+        mKnownFusionsModel = null;
+
+        try
+        {
+            mKnownFusionsModel = KnownFusionsModel.fromInputStreams(new FileInputStream(cmd.getOptionValue(FUSION_PAIRS_CSV)),
+                    new FileInputStream(cmd.getOptionValue(PROMISCUOUS_FIVE_CSV)),
+                    new FileInputStream(cmd.getOptionValue(PROMISCUOUS_THREE_CSV)));
+
+
+            LOGGER.debug("loaded known fusion data");
+        }
+        catch (IOException e)
+        {
+            LOGGER.warn("no known fusion files loaded");
+        }
+
         mFusionWriter = null;
         mRnaWriter = null;
         mSampleRnaData = Maps.newHashMap();
-        mGeneTranscriptCollection = geneTranscriptCollection;
+
+        if (cmd.hasOption(SAMPLE_RNA_FILE))
+        {
+            loadSampleRnaData(cmd.getOptionValue(SAMPLE_RNA_FILE));
+        }
 
         mProteinsRequiredKept = Lists.newArrayList();
         mProteinsRequiredLost = Lists.newArrayList();
@@ -79,6 +104,7 @@ public class SvFusionAnalyser
         options.addOption(FUSION_PAIRS_CSV, true, "Path towards a CSV containing white-listed gene fusion pairs.");
         options.addOption(PROMISCUOUS_FIVE_CSV, true, "Path towards a CSV containing white-listed promiscuous 5' genes.");
         options.addOption(PROMISCUOUS_THREE_CSV, true, "Path towards a CSV containing white-listed promiscuous 3' genes.");
+        options.addOption(SAMPLE_RNA_FILE, true, "Sample RNA data to match");
     }
 
     public final List<GeneFusion> findFusions(final List<StructuralVariantAnnotation> annotations)
@@ -507,20 +533,6 @@ public class SvFusionAnalyser
             else
                 return REPORTABLE_TYPE_NONE;
         }
-
-        /*
-         if(mKnownFusionsModel.exactMatch(upTrans.parent().synonyms(), downTrans.parent().synonyms()))
-             return true;
-
-         if(mKnownFusionsModel.intergenicPromiscuousMatch(upTrans.parent().synonyms(), downTrans.parent().synonyms()))
-              return true;
-
-         if(mKnownFusionsModel.intragenicPromiscuousMatch(upTrans.parent().synonyms(), downTrans.parent().synonyms())
-         && downTrans.exonDownstream() - upTrans.exonUpstream() > EXON_THRESHOLD)
-         {
-             return true;
-         }
-         */
 
         return REPORTABLE_TYPE_NONE;
     }

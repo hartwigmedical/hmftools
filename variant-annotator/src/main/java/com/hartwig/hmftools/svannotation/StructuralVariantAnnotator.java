@@ -5,6 +5,7 @@ import static com.hartwig.hmftools.svannotation.SvGeneTranscriptCollection.PRE_G
 import static com.hartwig.hmftools.svannotation.analysis.SvFusionAnalyser.FUSION_PAIRS_CSV;
 import static com.hartwig.hmftools.svannotation.analysis.SvFusionAnalyser.PROMISCUOUS_FIVE_CSV;
 import static com.hartwig.hmftools.svannotation.analysis.SvFusionAnalyser.PROMISCUOUS_THREE_CSV;
+import static com.hartwig.hmftools.svannotation.analysis.SvFusionAnalyser.SAMPLE_RNA_FILE;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -108,24 +109,8 @@ public class StructuralVariantAnnotator
         mUploadAnnotations = !mCmdLineArgs.hasOption(SKIP_DB_UPLOAD);
         mWriteBreakends = mCmdLineArgs.hasOption(WRITE_BREAKENDS);
 
-        LOGGER.debug("Loading known fusion data");
-        KnownFusionsModel knownFusionsModel;
-
-        try
-        {
-            knownFusionsModel = KnownFusionsModel.fromInputStreams(new FileInputStream(mCmdLineArgs.getOptionValue(FUSION_PAIRS_CSV)),
-                    new FileInputStream(mCmdLineArgs.getOptionValue(PROMISCUOUS_FIVE_CSV)),
-                    new FileInputStream(mCmdLineArgs.getOptionValue(PROMISCUOUS_THREE_CSV)));
-
-        }
-        catch (IOException e)
-        {
-            LOGGER.error("Failed to load known fusion files");
-            return false;
-        }
-
         mDisruptionAnalyser = new SvDisruptionAnalyser();
-        mFusionAnalyser = new SvFusionAnalyser(knownFusionsModel, mSvGeneTranscriptCollection);
+        mFusionAnalyser = new SvFusionAnalyser(mCmdLineArgs, mSvGeneTranscriptCollection);
 
         return true;
     }
@@ -134,15 +119,10 @@ public class StructuralVariantAnnotator
     {
         List<String> samplesList = Lists.newArrayList();
 
-        if (mCmdLineArgs.hasOption(SAMPLE_RNA_FILE))
+        if (!mFusionAnalyser.getSampleRnaData().isEmpty())
         {
-            final String rnaFile = mCmdLineArgs.getOptionValue(SAMPLE_RNA_FILE);
-            mFusionAnalyser.loadSampleRnaData(rnaFile);
-
-            if (!mFusionAnalyser.getSampleRnaData().isEmpty())
-            {
-                samplesList.addAll(mFusionAnalyser.getSampleRnaData().keySet());
-            }
+            // take the samples list from the RNA file, assuming only those files are of interest
+            samplesList.addAll(mFusionAnalyser.getSampleRnaData().keySet());
         }
 
         if (mEnsemblDataDir.isEmpty())
@@ -415,7 +395,6 @@ public class StructuralVariantAnnotator
     private static final String DATA_OUTPUT_DIR = "data_output_dir";
 
     private static final String LOG_DEBUG = "log_debug";
-    private static final String SAMPLE_RNA_FILE = "sample_rna_file";
     private static final String WRITE_ENSEMBL_CACHE = "write_ensembl_cache";
 
     private static final String DB_USER = "db_user";
@@ -432,7 +411,6 @@ public class StructuralVariantAnnotator
         options.addOption(DB_PASS, true, "Database password.");
         options.addOption(DB_URL, true, "Database url.");
         options.addOption(LOG_DEBUG, false, "Sets log level to Debug, off by default");
-        options.addOption(SAMPLE_RNA_FILE, true, "Sample RNA data to match");
         options.addOption(REF_GENOME, true, "Path to the ref genome fasta file.");
         options.addOption(DATA_OUTPUT_DIR, true, "Path to persist annotations to file");
         options.addOption(ENSEMBL_DATA_DIR, true, "Cached Ensembl data path");

@@ -133,6 +133,14 @@ public class SvAnalyser {
                 fusionAnalyser = new FusionDisruptionAnalyser();
                 fusionAnalyser.loadFusionReferenceData(cmd, dataOutputDir, cmd.getOptionValue(GENE_TRANSCRIPTS_DIR,""));
 
+                if(!fusionAnalyser.getRnaSampleIds().isEmpty())
+                {
+                    samplesList.clear();
+                    samplesList.addAll(fusionAnalyser.getRnaSampleIds());
+
+                    LOGGER.info("running {} sample based on RNA fusion input", samplesList.size());
+                }
+
                 // fusionAnalyser.writeGeneProbabilityData();
             }
 

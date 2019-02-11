@@ -13,6 +13,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
@@ -71,23 +72,7 @@ public class FusionDisruptionAnalyser
 
     public void loadFusionReferenceData(final CommandLine cmdLineArgs, final String outputDir, final String ensemblDataDir)
     {
-        if(cmdLineArgs.hasOption(FUSION_PAIRS_CSV) && cmdLineArgs.hasOption(PROMISCUOUS_FIVE_CSV) && cmdLineArgs.hasOption(PROMISCUOUS_THREE_CSV))
-        {
-            try
-            {
-                KnownFusionsModel knownFusionsModel = KnownFusionsModel.fromInputStreams(
-                        new FileInputStream(cmdLineArgs.getOptionValue(FUSION_PAIRS_CSV)),
-                        new FileInputStream(cmdLineArgs.getOptionValue(PROMISCUOUS_FIVE_CSV)),
-                        new FileInputStream(cmdLineArgs.getOptionValue(PROMISCUOUS_THREE_CSV)));
-
-                mFusionFinder = new SvFusionAnalyser(knownFusionsModel, mEnsemblDataCache);
-            }
-            catch (IOException e)
-            {
-                LOGGER.error("failed to load known fusion files");
-                return;
-            }
-        }
+        mFusionFinder = new SvFusionAnalyser(cmdLineArgs, mEnsemblDataCache);
 
         mOutputDir = outputDir;
 
@@ -100,6 +85,8 @@ public class FusionDisruptionAnalyser
             mEnsemblDataCache.loadEnsemblData();
         }
     }
+
+    public final Set<String> getRnaSampleIds() { return mFusionFinder.getSampleRnaData().keySet(); }
 
     private void setSvGenesList(final SvVarData var, boolean applyPromotorDistance)
     {
@@ -180,14 +167,14 @@ public class FusionDisruptionAnalyser
         }
 
         boolean checkClusters = true;
-        int maxClusterSize = 20;
+        int maxClusterSize = 50;
 
         if(checkClusters)
         {
             // for now only consider simple SVs and resolved small clusters
             for (final SvCluster cluster : clusters)
             {
-                if(cluster.id() == CHECK_CLUSTER_ID)
+                if (cluster.id() == CHECK_CLUSTER_ID)
                 {
                     LOGGER.debug("specific cluster");
                 }
@@ -195,13 +182,16 @@ public class FusionDisruptionAnalyser
                 if (cluster.getCount() == 1) // simple clusters already checked
                     continue;
 
-                if(cluster.hasReplicatedSVs() || !cluster.isFullyChained() || cluster.getTypeCount(SGL) > 0)
+                // if(cluster.hasReplicatedSVs() || !cluster.isFullyChained() || cluster.getTypeCount(SGL) > 0)
+                //    continue;
+
+                if (cluster.getUniqueSvCount() > maxClusterSize)
                     continue;
 
-                if(cluster.getUniqueSvCount() > maxClusterSize)
-                    continue;
-
-                findChainedFusion(cluster, cluster.getChains().get(0));
+                for (final SvChain chain : cluster.getChains())
+                {
+                    findChainedFusion(cluster, chain);
+                }
             }
         }
     }
