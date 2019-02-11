@@ -82,6 +82,9 @@ public class SvVarData
     private String mDriverGeneStart;
     private String mDriverGeneEnd;
 
+    private double mReplicationOriginStart;
+    private double mReplicationOriginEnd;
+
     public static final String NONE_SEGMENT_INFERRED = "INFERRED";
 
     public static String ASSEMBLY_TYPE_DSB = "dsb";
@@ -150,6 +153,9 @@ public class SvVarData
 
         mDriverGeneStart = "";
         mDriverGeneEnd = "";
+
+        mReplicationOriginStart = 0;
+        mReplicationOriginEnd = 0;
     }
 
     public static SvVarData from(final EnrichedStructuralVariant enrichedSV)
@@ -621,6 +627,15 @@ public class SvVarData
                     mEndTempInsertionAssemblies.add(assemblyList[i]);
             }
         }
+    }
+
+    public double getReplicationOrigin(boolean isStart) { return isStart ? mReplicationOriginStart : mReplicationOriginEnd; }
+    public void setReplicationOrigin(boolean isStart, double value)
+    {
+        if(isStart)
+            mReplicationOriginStart = value;
+        else
+            mReplicationOriginEnd = value;
     }
 
     public static SvVarData findVariantById(final String id, List<SvVarData> svList)

@@ -326,11 +326,6 @@ public class FusionDisruptionAnalyser
         return coveredTranscripts;
     }
 
-    private boolean isFusionDisrupted(final GeneFusion fusion, final Map<String, List<SvBreakend>> chrBreakendMap)
-    {
-        return false;
-    }
-
     private void checkFusions(List<GeneAnnotation> breakendGenes1, List<GeneAnnotation> breakendGenes2, final SvCluster cluster)
     {
         if (breakendGenes1.isEmpty() || breakendGenes2.isEmpty())

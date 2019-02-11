@@ -31,6 +31,7 @@ import com.hartwig.hmftools.svanalysis.types.SvLOH;
 import com.hartwig.hmftools.svanalysis.types.SvLinkedPair;
 import com.hartwig.hmftools.svanalysis.types.SvVarData;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 public class ChainingTests
@@ -128,7 +129,6 @@ public class ChainingTests
         SvTestHelper tester = new SvTestHelper();
         tester.logVerbose(true);
 
-        // merge 5 clusters with varying levels of copy number change (ie replication) from 4 foldbacks
         final SvVarData var1 = createTestSv("717", "11", "11", 67149357,67150121, -1, -1, INV, 10.4, 18, 7.51, 7.51, 6, "");
         final SvVarData var2 = createTestSv("719", "11", "11", 67465724,68587766, -1, 1, DUP, 20.7, 19.7, 2.75, 1.54, 2, "");
         final SvVarData var3 = createTestSv("731", "11", "11", 68574864,70107010, 1, -1, DEL, 19.7, 21.0, 1.6, 2.05, 1.9, "");
@@ -284,6 +284,74 @@ public class ChainingTests
         final SvChain chain = cluster.getChains().get(0);
         assertEquals(chain.getLinkCount(), 10);
 
+    }
+
+    @Test
+    @Ignore
+    public void testComplexChaining3()
+    {
+        SvTestHelper tester = new SvTestHelper();
+        tester.logVerbose(true);
+
+        final SvVarData var1 = createTestSv("8349725","1","1",9861138,9861324,1,1,INV,6.06,5.74,1.59,1.59,1.58, "");
+        final SvVarData var2 = createTestSv("8349723","1","1",9004324,9005765,1,1,INV,7.96,6.06,1.9,1.9,1.53, "");
+        final SvVarData var3 = createTestSv("8349854","1","4",24653435,1801105,1,1,BND,36.28,9.6,4.92,4.51,4.61, "");
+        final SvVarData var4 = createTestSv("8349921","1","5",9861144,165461529,-1,1,BND,5.74,4.98,1.27,2.23,1.75, "");
+        final SvVarData var5 = createTestSv("8349732","1","1",25580398,25580626,1,1,INV,31.36,28.25,3.11,3.11,1.42, "");
+        final SvVarData var6 = createTestSv("8349735","1","1",26014233,26017546,1,1,INV,22.14,16.21,5.93,5.41,5.99, "");
+        final SvVarData var7 = createTestSv("8349736","1","1",26064778,26066088,1,1,INV,10.81,8.36,2.44,3.34,2.85, "");
+        final SvVarData var8 = createTestSv("8350322","1","15",23973179,95331774,-1,-1,BND,16.79,12.22,14.7,8.24,9.27, "");
+        final SvVarData var9 = createTestSv("8350323","1","15",23974263,95331935,-1,1,BND,30.7,12.22,13.91,8.16,8.73, "");
+        final SvVarData var10 = createTestSv("8350409","1","19",23966804,12257497,1,1,BND,4.17,6.08,2.08,1.99,2.01, "");
+        final SvVarData var11 = createTestSv("8350412","1","19",8718959,34828900,-1,-1,BND,8.29,8.07,2.7,1.89,2.02,"");
+
+        // mark assembled links
+        var1.setAssemblyData(false, "asmb1");
+        var4.setAssemblyData(true, "asmb1");
+
+        tester.AllVariants.add(var1);
+        tester.AllVariants.add(var2);
+        tester.AllVariants.add(var3);
+        tester.AllVariants.add(var4);
+        tester.AllVariants.add(var5);
+        tester.AllVariants.add(var6);
+        tester.AllVariants.add(var7);
+        tester.AllVariants.add(var8);
+        tester.AllVariants.add(var9);
+        tester.AllVariants.add(var10);
+        tester.AllVariants.add(var11);
+
+        Map<String, List<SvLOH>> lohDataMap = new HashMap();
+        List<SvLOH> lohData = Lists.newArrayList();
+
+        lohData.add(new SvLOH(tester.SampleId, "1", 1, 2, 23973179, 23966804,
+                "BND", "BND", 1, 1, 1, 0, 1, 1,
+                var8.id(), var10.id(), false, true));
+
+        lohDataMap.put(tester.SampleId, lohData);
+
+        tester.ClusteringMethods.setSampleLohData(lohDataMap);
+
+        tester.preClusteringInit();
+
+        tester.Analyser.clusterAndAnalyse();
+
+        // first check foldbacks are in place
+        assertEquals(var2.getFoldbackLink(true), var2.id());
+        assertEquals(var5.getFoldbackLink(true), var5.id());
+        assertEquals(var6.getFoldbackLink(true), var6.id());
+        assertEquals(var5.getFoldbackLink(true), var7.id());
+        assertEquals(var8.getFoldbackLink(true), var9.id());
+        assertEquals(var9.getFoldbackLink(true), var8.id());
+
+        // now check final chain-finding across all sub-clusters
+        assertEquals(tester.Analyser.getClusters().size(), 1);
+        final SvCluster cluster = tester.Analyser.getClusters().get(0);
+
+        assertEquals(cluster.getChains().size(), 2);
+
+        assertEquals(14, cluster.getChains().get(0).getLinkCount());
+        assertEquals(3, cluster.getChains().get(1).getLinkCount());
     }
 
 }

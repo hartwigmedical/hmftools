@@ -43,6 +43,7 @@ import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantData;
 import com.hartwig.hmftools.svanalysis.annotators.FragileSiteAnnotator;
 import com.hartwig.hmftools.svanalysis.annotators.LineElementAnnotator;
+import com.hartwig.hmftools.svanalysis.annotators.ReplicationOriginAnnotator;
 import com.hartwig.hmftools.svanalysis.types.SvArmGroup;
 import com.hartwig.hmftools.svanalysis.types.SvBreakend;
 import com.hartwig.hmftools.svanalysis.types.SvChain;
@@ -72,6 +73,7 @@ public class SvSampleAnalyser {
 
     private FragileSiteAnnotator mFragileSiteAnnotator;
     private LineElementAnnotator mLineElementAnnotator;
+    private ReplicationOriginAnnotator mReplicationOriginAnnotator;
     private SvClusteringMethods mClusteringMethods;
 
     private PerformanceCounter mPerfCounter;
@@ -100,6 +102,9 @@ public class SvSampleAnalyser {
 
         mLineElementAnnotator = new LineElementAnnotator();
         mLineElementAnnotator.loadLineElementsFile(mConfig.LineElementFile);
+
+        mReplicationOriginAnnotator = new ReplicationOriginAnnotator();
+        mReplicationOriginAnnotator.loadReplicationOrigins(mConfig.ReplicationOriginsFile);
 
         mPerfCounter = new PerformanceCounter("Total");
 
@@ -152,6 +157,7 @@ public class SvSampleAnalyser {
         mClusteringMethods.annotateNearestSvData();
         LinkFinder.findDeletionBridges(mClusteringMethods.getChrBreakendMap());
         mClusteringMethods.setSimpleVariantLengths(mSampleId);
+        mReplicationOriginAnnotator.setReplicationOrigins(mClusteringMethods.getChrBreakendMap());
         mPc2.stop();
 
         mPc3.start();
@@ -160,8 +166,6 @@ public class SvSampleAnalyser {
         mAnalyser.clusterAndAnalyse();
 
         mPc3.stop();
-
-        // logSampleClusterInfo();
     }
 
     public void writeOutput()
@@ -243,7 +247,7 @@ public class SvSampleAnalyser {
                 // SV info
                 mSvFileWriter.write(",Homology,InexactHOStart,InexactHOEnd,InsertSeq,Imprecise,QualScore,RefContextStart,RefContextEnd,InsSeqAlignments");
 
-                mSvFileWriter.write(",FSStart,FSEnd,LEStart,LEEnd,DupBEStart,DupBEEnd");
+                mSvFileWriter.write(",FSStart,FSEnd,LEStart,LEEnd"); // ,DupBEStart,DupBEEnd
 
                 // linked pair info
                 mSvFileWriter.write(",LnkSvStart,LnkLenStart,LnkSvEnd,LnkLenEnd");
@@ -260,8 +264,8 @@ public class SvSampleAnalyser {
                 // proximity info and other link info
                 mSvFileWriter.write(",FoldbackLnkStart,FoldbackLenStart,FoldbackLinkInfoStart,FoldbackLnkEnd,FoldbackLenEnd,FoldbackLinkInfoEnd");
 
-                // gene info
-                mSvFileWriter.write(",GeneStart,GeneEnd");
+                // gene & replication info
+                mSvFileWriter.write(",GeneStart,GeneEnd,RepOriginStart,RepOriginEnd");
 
                 mSvFileWriter.newLine();
             }
@@ -333,10 +337,9 @@ public class SvSampleAnalyser {
                                 dbData.startRefContext(), dbData.endRefContext(), insSeqAlignments));
 
                 writer.write(
-                        String.format(",%s,%s,%s,%s,%s,%s",
+                        String.format(",%s,%s,%s,%s",
                                 var.isFragileSite(true), var.isFragileSite(false),
-                                var.getLineElement(true), var.getLineElement(false),
-                                var.isDupBreakend(true), var.isDupBreakend(false)));
+                                var.getLineElement(true), var.getLineElement(false)));
 
                 // linked pair info
                 final SvLinkedPair startLP = var.getLinkedPair(true);
@@ -386,8 +389,9 @@ public class SvSampleAnalyser {
                         var.getFoldbackLink(true), var.getFoldbackLen(true), var.getFoldbackLinkInfo(true),
                         var.getFoldbackLink(false), var.getFoldbackLen(false), var.getFoldbackLinkInfo(false)));
 
-                writer.write(String.format(",%s,%s",
-                        var.getGeneInBreakend(true), var.getGeneInBreakend(false)));
+                writer.write(String.format(",%s,%s,%.4f,%.4f",
+                        var.getGeneInBreakend(true), var.getGeneInBreakend(false),
+                        var.getReplicationOrigin(true), var.getReplicationOrigin(false)));
 
                 ++lineCount;
                 writer.newLine();
@@ -780,66 +784,6 @@ public class SvSampleAnalyser {
         else
         {
             return isStart ? "C" : breakend.position().toString();
-        }
-    }
-
-    private void logSampleClusterInfo()
-    {
-        int simpleClusterCount = 0;
-        int complexClusterCount = 0;
-        Map<String, Integer> armSimpleClusterCount = Maps.newHashMap();
-        Map<String, Integer> armComplexClusterCount = Maps.newHashMap();
-
-        for(final SvCluster cluster : mAnalyser.getClusters())
-        {
-            Map<String, Integer> targetMap;
-
-            if(cluster.getResolvedType() == RESOLVED_TYPE_LOW_QUALITY)
-                continue;
-
-            if(cluster.getResolvedType() == RESOLVED_TYPE_SIMPLE_SV || cluster.isSyntheticSimpleType(true))
-            {
-                ++simpleClusterCount;
-                targetMap = armSimpleClusterCount;
-            }
-            else
-            {
-                ++complexClusterCount;
-                targetMap = armComplexClusterCount;
-            }
-
-            for(final SvArmGroup armGroup : cluster.getArmGroups())
-            {
-                if(targetMap.containsKey(armGroup))
-                {
-                    targetMap.put(armGroup.id(), targetMap.get(armGroup.id()) + 1);
-                }
-                else
-                {
-                    targetMap.put(armGroup.id(), 1);
-                }
-            }
-        }
-
-        int armsWithExcessComplexClusters = 0;
-
-        for(final Map.Entry<String, Integer> entry : armComplexClusterCount.entrySet())
-        {
-            final String chrArm = entry.getKey();
-            int complexCount = entry.getValue();
-            Integer simpleCount = armSimpleClusterCount.containsKey(chrArm) ? armSimpleClusterCount.get(chrArm) : 0;
-
-            if(simpleCount > 0 && complexCount > simpleCount)
-            {
-                LOGGER.debug("chrArm({}) clusters simple({}) vs complex({})", chrArm, simpleCount, complexCount);
-                ++armsWithExcessComplexClusters;
-            }
-        }
-
-        if(complexClusterCount > simpleClusterCount || armsWithExcessComplexClusters >= 2)
-        {
-            LOGGER.info("sample({}) clusters total({}) simple({}) complex({}) excessComplexArms({})",
-                    mSampleId, mAnalyser.getClusters().size(), simpleClusterCount, complexClusterCount, armsWithExcessComplexClusters);
         }
     }
 

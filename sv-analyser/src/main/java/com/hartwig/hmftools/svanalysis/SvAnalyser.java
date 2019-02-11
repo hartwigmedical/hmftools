@@ -284,7 +284,6 @@ public class SvAnalyser {
         options.addOption(RUN_SVA, false, "Whether to run clustering logic");
         options.addOption(DATA_OUTPUT_PATH, true, "CSV output directory");
         options.addOption(LOG_DEBUG, false, "Sets log level to Debug, off by default");
-        options.addOption(LINE_ELEMENT_FILE, true, "Line Elements file for SVs");
         options.addOption(DRIVERS_CHECK, false, "Check SVs against drivers catalog");
         options.addOption(RUN_FUSIONS, false, "Run fusion detection");
         options.addOption(COPY_NUMBER_ANALYSIS, false, "Run copy number analysis");
