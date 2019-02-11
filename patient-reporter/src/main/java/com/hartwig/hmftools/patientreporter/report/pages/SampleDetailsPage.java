@@ -73,15 +73,23 @@ public abstract class SampleDetailsPage {
 
         recipient = recipient != null ? recipient : "?";
 
-        final List<String> lines = Lists.newArrayList("The samples have been sequenced at " + Commons.HARTWIG_ADDRESS,
-                "The samples have been analyzed by Next Generation Sequencing",
-                "This experiment is performed on the tumor sample which arrived on " + formattedDate(sampleReport().tumorArrivalDate()),
-                "The pathology tumor percentage for this sample is " + sampleReport().purityOrPathologyTumorPercentage(),
-                "This experiment is performed on the blood sample which arrived on " + formattedDate(sampleReport().bloodArrivalDate()),
-                "This experiment is performed according to lab procedures: " + sampleReport().labProcedures(),
-                "This report is generated and verified by: " + user(),
-                "This report is addressed at: " + recipient,
-                COREContact());
+        final List<String> lines = sampleReport().label().contains("CORE") ?
+            Lists.newArrayList("The samples have been sequenced at " + Commons.HARTWIG_ADDRESS,
+                    "The samples have been analyzed by Next Generation Sequencing",
+                    "This experiment is performed on the tumor sample which arrived on " + formattedDate(sampleReport().tumorArrivalDate()),
+                    "The pathology tumor percentage for this sample is " + sampleReport().purityOrPathologyTumorPercentage(),
+                    "This experiment is performed on the blood sample which arrived on " + formattedDate(sampleReport().bloodArrivalDate()),
+                    "This experiment is performed according to lab procedures: " + sampleReport().labProcedures(),
+                    "This report is generated and verified by: " + user(),
+                    "This report is addressed at: " + recipient,
+                    COREContact()) : Lists.newArrayList("The samples have been sequenced at " + Commons.HARTWIG_ADDRESS,
+                    "The samples have been analyzed by Next Generation Sequencing",
+                    "This experiment is performed on the tumor sample which arrived on " + formattedDate(sampleReport().tumorArrivalDate()),
+                    "The pathology tumor percentage for this sample is " + sampleReport().purityOrPathologyTumorPercentage(),
+                    "This experiment is performed on the blood sample which arrived on " + formattedDate(sampleReport().bloodArrivalDate()),
+                    "This experiment is performed according to lab procedures: " + sampleReport().labProcedures(),
+                    "This report is generated and verified by: " + user(),
+                    "This report is addressed at: " + recipient);
 
         comments().ifPresent(comments -> lines.add("Comments: " + comments));
 
@@ -90,10 +98,6 @@ public abstract class SampleDetailsPage {
 
     @NotNull
     private String COREContact() {
-        String contact = "";
-        if (sampleReport().label().contains("CORE")) {
-            contact = "The contact details are: " + sampleReport().contactName() + sampleReport().contactEmail();
-        }
-        return contact;
+        return "The contact details are: " + sampleReport().contactName() + sampleReport().contactEmail();
     }
 }
