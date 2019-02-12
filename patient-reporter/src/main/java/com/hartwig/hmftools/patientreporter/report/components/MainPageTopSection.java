@@ -34,7 +34,7 @@ public final class MainPageTopSection {
 
     @NotNull
     private static ComponentBuilder<?, ?> build(@NotNull String title, @NotNull String sample, @NotNull String primaryTumorLocation,
-            @NotNull String cancerSubType, @Nullable String DVO, @NotNull String label, @Nullable String patientNumber) {
+            @NotNull String cancerSubType, @Nullable String projectName, @NotNull String label, @Nullable String patientNumber) {
         final ComponentBuilder<?, ?> mainDiagnosisInfo =
                 cmp.horizontalList(cmp.verticalList(cmp.text("Report Date").setStyle(tableHeaderStyle().setPadding(2)),
                         cmp.currentDate().setPattern(DATE_TIME_FORMAT).setStyle(dataTableStyle().setPadding(2))),
@@ -44,16 +44,16 @@ public final class MainPageTopSection {
                                 cmp.text(cancerSubType).setStyle(dataTableStyle().setPadding(2))));
 
         return cmp.verticalList(cmp.horizontalList(cmp.image(REPORT_LOGO_PATH).setWidth(42).setHeight(65),
-                cmp.text(titlePage(title, sample, DVO, label, patientNumber))
+                cmp.text(titlePage(title, sample, projectName, label, patientNumber))
                         .setStyle(fontStyle().bold().setFontSize(14).setVerticalTextAlignment(VerticalTextAlignment.MIDDLE))
                         .setHorizontalTextAlignment(HorizontalTextAlignment.CENTER),
                 cmp.horizontalGap(40)), cmp.verticalGap(3), mainDiagnosisInfo);
     }
 
     @NotNull
-    private static String titlePage(@NotNull String title, @NotNull String sample, @Nullable String DVO, @NotNull String label,
+    private static String titlePage(@NotNull String title, @NotNull String sample, @Nullable String projectName, @NotNull String label,
             @Nullable String patientNumber) {
-        return label.contains("CORE") ? title + " - " + patientNumber + " (" + DVO + ")" : title + " - " + sample;
+        return label.contains("CORE") ? title + " - " + patientNumber + " (" + projectName + ")" : title + " - " + sample;
 
     }
 }

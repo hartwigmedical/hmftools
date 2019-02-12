@@ -67,9 +67,9 @@ public class PDFWriter {
     }
 
     @NotNull
-    private String fileName(@NotNull String sample, @Nullable String DVO, boolean isCoreSample) {
+    private String fileName(@NotNull String sample, @Nullable String projectName, boolean isCoreSample) {
         return isCoreSample
-                ? reportDirectory + File.separator + DVO + "_hmf_report.pdf"
+                ? reportDirectory + File.separator + projectName + "_hmf_report.pdf"
                 : reportDirectory + File.separator + sample + "_hmf_report.pdf";
     }
 
