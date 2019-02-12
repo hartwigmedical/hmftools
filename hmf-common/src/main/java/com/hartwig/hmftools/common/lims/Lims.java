@@ -120,7 +120,7 @@ public class Lims {
         return null;
     }
 
-    private boolean shallowSeqExecuted(@NotNull String labelSample, @Nullable String remarksSample) {
+    private static boolean shallowSeqExecuted(@NotNull String labelSample, @Nullable String remarksSample) {
         return labelSample.equals("CORE") || (remarksSample != null && (remarksSample.contains("CPCTWIDE") || remarksSample.contains(
                 "ShallowSeq")));
     }
@@ -136,21 +136,17 @@ public class Lims {
             boolean purityShallowExecuted = shallowSeqExecuted(labelSample, remarksSample);
 
             if (purityShallowExecuted && shallowSeq == null) {
-                LOGGER.warn("BFX lims and lab lims are not equal!");
+                LOGGER.warn("BFX lims and lab status do not match for sample " + sample + "!");
             } else if (!isSequenced) {
                 if (purityShallowExecuted) {
-                    LOGGER.info("Used purity from shallow seq for report from sample.");
-                    try {
-                        return Math.round(shallowSeq.purityShallowSeq() * 100) + "%";
-                    } catch (final NumberFormatException e) {
-                        return "N/A";
-                    }
+                    LOGGER.info("Retrieved purity from shallow seq.");
+                    return Math.round(shallowSeq.purityShallowSeq() * 100) + "%";
                 } else {
-                    LOGGER.info("Used pathology tumor percentage for report from sample.");
+                    LOGGER.info("Pathology tumor percentage retrieved for sample as proxy for shallow seq purity.");
                     return tumorPercentageForSample(sample);
                 }
             } else {
-                LOGGER.info("Purity or pathology tumor percentage used for report from sample.");
+                LOGGER.info("Pathology tumor percentage retrieved for sample as proxy for shallow seq purity.");
                 return tumorPercentageForSample(sample);
 
             }
