@@ -42,12 +42,16 @@ public final class Center {
         for (final String line : lines) {
             final String[] parts = line.split(FIELD_SEPARATOR, FIELD_COUNT);
             if (parts.length == FIELD_COUNT) {
-                centerPerId.put(parts[ID_COLUMN],
-                        ImmutableCenterData.of(parts[CPCT_RECIPIENTS_COLUMN], parts[DRUP_RECIPIENTS_COLUMN], parts[ADDRESS_NAME_COLUMN],
-                                parts[ADDRESS_ZIP_COLUMN], parts[ADDRESS_CITY_COLUMN], parts[CPCT_PI_COLUMN], parts[DRUP_PI_COLUMN]));
-                centerPerHospital.put(parts[HOSPITAL_COLUMN],
-                        ImmutableCenterData.of(parts[CPCT_RECIPIENTS_COLUMN], parts[DRUP_RECIPIENTS_COLUMN], parts[ADDRESS_NAME_COLUMN],
-                                parts[ADDRESS_ZIP_COLUMN], parts[ADDRESS_CITY_COLUMN], parts[CPCT_PI_COLUMN], parts[DRUP_PI_COLUMN]));
+                CenterData center = ImmutableCenterData.of(parts[CPCT_RECIPIENTS_COLUMN],
+                        parts[DRUP_RECIPIENTS_COLUMN],
+                        parts[ADDRESS_NAME_COLUMN],
+                        parts[ADDRESS_ZIP_COLUMN],
+                        parts[ADDRESS_CITY_COLUMN],
+                        parts[CPCT_PI_COLUMN],
+                        parts[DRUP_PI_COLUMN]);
+
+                centerPerId.put(parts[ID_COLUMN], center);
+                centerPerHospital.put(parts[HOSPITAL_COLUMN], center);
             } else if (parts.length > 0) {
                 LOGGER.warn("Could not properly parse line in center csv: " + line);
             }
