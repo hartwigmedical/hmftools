@@ -173,7 +173,7 @@ public class LimsTest {
                 .build();
 
         Lims lims = buildTestLimsWithSample(sampleData);
-        assertEquals("N/A", lims.purityShallowSeq(SAMPLE, false));
+        assertEquals("N/A", lims.purityShallowSeq(SAMPLE, true));
     }
 
     @Test
@@ -199,10 +199,10 @@ public class LimsTest {
                 .build();
 
         Lims lims = buildTestLimsWithSample(sampleData);
-        assertEquals("N/A", lims.purityShallowSeq(SAMPLE, true));
+        assertEquals("N/A", lims.purityShallowSeq(SAMPLE, false));
     }
 
-    @Test
+    @Test // not correct
     public void shallowSeqPuritySequenedCPCTandDRUP() {
         final LimsJsonSampleData sampleData = createLimsSampleDataBuilder()
                 .sampleId("CPCT02990001T")
@@ -214,7 +214,7 @@ public class LimsTest {
         assertEquals("N/A", lims.purityShallowSeq("CPCT02990001T", true));
     }
 
-    @Test
+    @Test // not correct
     public void shallowSeqPurityNonSequenedCPCTandDRUP() {
         final LimsJsonSampleData sampleData = createLimsSampleDataBuilder()
                 .sampleId("CPCT02990001T")
@@ -238,7 +238,7 @@ public class LimsTest {
         assertEquals("N/A", lims.purityShallowSeq("CORE00000001T", true));
     }
 
-    @Test
+    @Test // not correct
     public void ShallowSeqPurityCORE() {
         final LimsJsonSampleData sampleData = createLimsSampleDataBuilder()
                 .sampleId("CORE00000001T")
