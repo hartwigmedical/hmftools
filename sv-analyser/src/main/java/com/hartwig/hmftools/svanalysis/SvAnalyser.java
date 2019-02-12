@@ -19,6 +19,7 @@ import com.hartwig.hmftools.common.variant.structural.StructuralVariantData;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 import com.hartwig.hmftools.svanalysis.analysis.CNAnalyser;
 import com.hartwig.hmftools.svanalysis.analysis.FusionDisruptionAnalyser;
+import com.hartwig.hmftools.svanalysis.annotators.VisualiserWriter;
 import com.hartwig.hmftools.svanalysis.stats.StatisticRoutines;
 import com.hartwig.hmftools.svanalysis.analysis.SvaConfig;
 import com.hartwig.hmftools.svanalysis.analysis.SvSampleAnalyser;
@@ -100,14 +101,11 @@ public class SvAnalyser {
             samplesList.add(sampleId);
         }
 
-        String dataOutputDir = cmd.getOptionValue(DATA_OUTPUT_PATH, "");
-
-        if(!dataOutputDir.endsWith(File.separator))
-            dataOutputDir += File.separator;
+        SvaConfig svaConfig = new SvaConfig(cmd, sampleId);
 
         if(cmd.hasOption(COPY_NUMBER_ANALYSIS))
         {
-            CNAnalyser cnAnalyser = new CNAnalyser(dataOutputDir, dbAccess);
+            CNAnalyser cnAnalyser = new CNAnalyser(svaConfig.OutputCsvPath, dbAccess);
 
             cnAnalyser.loadConfig(cmd, samplesList);
             cnAnalyser.findLOHEvents();
@@ -119,7 +117,6 @@ public class SvAnalyser {
 
         if(cmd.hasOption(RUN_SVA))
         {
-            SvaConfig svaConfig = new SvaConfig(cmd, sampleId);
             SvSampleAnalyser sampleAnalyser = new SvSampleAnalyser(svaConfig);
 
             DriverGeneAnnotator driverGeneAnnotator = null;
@@ -131,8 +128,10 @@ public class SvAnalyser {
             if((runFusions || checkDrivers) && cmd.hasOption(GENE_TRANSCRIPTS_DIR))
             {
                 fusionAnalyser = new FusionDisruptionAnalyser();
-                fusionAnalyser.loadFusionReferenceData(cmd, dataOutputDir, cmd.getOptionValue(GENE_TRANSCRIPTS_DIR,""));
-                fusionAnalyser.setVisGenesFileWriter(sampleAnalyser.getVisGenesFileWriter());
+                fusionAnalyser.loadFusionReferenceData(cmd, svaConfig.OutputCsvPath, cmd.getOptionValue(GENE_TRANSCRIPTS_DIR,""));
+                fusionAnalyser.setVisWriter(sampleAnalyser.getVisWriter());
+
+                sampleAnalyser.getVisWriter().setGeneDataCollection(fusionAnalyser.getGeneTranscriptCollection());
 
                 if(!fusionAnalyser.getRnaSampleIds().isEmpty())
                 {
@@ -147,12 +146,12 @@ public class SvAnalyser {
 
             if(checkDrivers)
             {
-                driverGeneAnnotator = new DriverGeneAnnotator(dbAccess, fusionAnalyser.getGeneTranscriptCollection(), dataOutputDir);
+                driverGeneAnnotator = new DriverGeneAnnotator(dbAccess, fusionAnalyser.getGeneTranscriptCollection(), svaConfig.OutputCsvPath);
                 driverGeneAnnotator.loadConfig(cmd);
-                driverGeneAnnotator.setVisGenesFileWriter(sampleAnalyser.getVisGenesFileWriter());
+                driverGeneAnnotator.setVisWriter(sampleAnalyser.getVisWriter());
             }
 
-            CNAnalyser cnAnalyser = new CNAnalyser(dataOutputDir, dbAccess);
+            CNAnalyser cnAnalyser = new CNAnalyser(svaConfig.OutputCsvPath, dbAccess);
             boolean createNoneSvsFromCNData = cmd.hasOption(INCLUDE_NONE_SEGMENTS);
 
             if(!svaConfig.LOHDataFile.isEmpty())
@@ -224,12 +223,12 @@ public class SvAnalyser {
                     driverGeneAnnotator.annotateSVs(sample, sampleAnalyser.getClusters(), sampleAnalyser.getChrBreakendMap());
                 }
 
-                sampleAnalyser.writeOutput();
-
                 if(runFusions)
                 {
                     fusionAnalyser.findFusions(svVarData, sampleAnalyser.getClusters());
                 }
+
+                sampleAnalyser.writeOutput();
 
                 if(svaConfig.MaxSamples > 0 && count >= svaConfig.MaxSamples)
                 {

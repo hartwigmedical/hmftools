@@ -1995,7 +1995,70 @@ public class ClusterAnalyser {
         }
     }
 
-    private static double DOUBLE_MINUTE_PLOIDY_THRESHOLD = 8;
+    private void reportClusterNeoChromosomes(final SvCluster cluster)
+    {
+        // count up number of arms from the breakends, excluding those in a TI
+        int unlinkedSvCount = cluster.getUnlinkedSVs().size();
+        int inconsistentChains = 0;
+        int neoChromosomes = 0;
+
+        for (final SvChain chain : cluster.getChains())
+        {
+            if (!chain.isConsistent())
+            {
+                ++inconsistentChains;
+                continue;
+            }
+
+            ++neoChromosomes;
+        }
+
+        int armGroupCount = cluster.getArmGroups().size();
+
+        // skip simple chained clusters
+        if (cluster.getArmCount() == 1 && cluster.getCount() == 2)
+            return;
+
+        // isSpecificCluster(cluster);
+
+        /* data to gather for each arm in the chain
+            - number of links
+            - number of short TIs without proximate deletion bridges
+            - links with copy number gain
+            - start and end locations
+         */
+
+        long proximityCutoff = mClusteringMethods.getProximityDistance();
+
+        boolean allChainsConsistent = true;
+        List<String> originArms = Lists.newArrayList();
+        List<String> fragmentArms = Lists.newArrayList();
+
+        for (final SvChain chain : cluster.getChains())
+        {
+            if (!chain.isConsistent())
+            {
+                allChainsConsistent = false;
+                continue;
+            }
+
+            Map<String, int[]> armDataMap = new HashMap();
+
+            final SvBreakend firstBreakend = chain.getFirstSV().getBreakend(chain.firstLinkOpenOnStart());
+            final SvBreakend lastBreakend = chain.getLastSV().getBreakend(chain.lastLinkOpenOnStart());
+
+            final String startChrArm = firstBreakend != null ? firstBreakend.getChrArm() : "";
+            final String endChrArm = lastBreakend != null ? lastBreakend.getChrArm() : "";
+
+            if (!startChrArm.isEmpty())
+                armDataMap.put(startChrArm, new int[CHAIN_TI_ASMB_COUNT + 1]);
+
+            if (!endChrArm.isEmpty())
+                armDataMap.put(endChrArm, new int[CHAIN_TI_ASMB_COUNT + 1]);
+        }
+    }
+
+            private static double DOUBLE_MINUTE_PLOIDY_THRESHOLD = 8;
     private static double DOUBLE_MINUTE_PLOIDY_GAP_RATIO = 3;
 
     private void reportDoubleMinutes(final SvCluster cluster)

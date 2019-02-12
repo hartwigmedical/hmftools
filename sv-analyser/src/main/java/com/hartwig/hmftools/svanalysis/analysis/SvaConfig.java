@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.svanalysis.analysis;
 
+import java.io.File;
+
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
 
@@ -31,7 +33,12 @@ public class SvaConfig
 
     public SvaConfig(final CommandLine cmd, final String sampleId)
     {
-        OutputCsvPath = cmd.getOptionValue(DATA_OUTPUT_PATH);
+        String dataOutputDir = cmd.getOptionValue(DATA_OUTPUT_PATH);
+        if(!dataOutputDir.endsWith(File.separator))
+            dataOutputDir += File.separator;
+
+        OutputCsvPath = dataOutputDir;
+
         ProximityDistance = Integer.parseInt(cmd.getOptionValue(CLUSTER_BASE_DISTANCE, "0"));
         SampleId = sampleId;
         FragileSiteFile = cmd.getOptionValue(FRAGILE_SITE_FILE, "");

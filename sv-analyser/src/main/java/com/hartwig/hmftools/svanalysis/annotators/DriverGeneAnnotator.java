@@ -8,9 +8,7 @@ import static com.hartwig.hmftools.svanalysis.analysis.CNAnalyser.CENTROMERE_CN;
 import static com.hartwig.hmftools.svanalysis.analysis.CNAnalyser.P_ARM_TELOMERE_CN;
 import static com.hartwig.hmftools.svanalysis.analysis.CNAnalyser.Q_ARM_TELOMERE_CN;
 import static com.hartwig.hmftools.svanalysis.analysis.ClusterAnalyser.SHORT_TI_LENGTH;
-import static com.hartwig.hmftools.svanalysis.analysis.SvSampleAnalyser.writeGeneExonData;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.CHROMOSOME_ARM_P;
-import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.copyNumbersEqual;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.getChromosomalArm;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_LOW_QUALITY;
 import static com.hartwig.hmftools.svannotation.SvGeneTranscriptCollection.PSEUDO_GENE_DATA_EXON_LENGTH;
@@ -79,7 +77,7 @@ public class DriverGeneAnnotator
     private List<SvLOH> mSampleLOHData;
     private Map<String, double[]> mChrCopyNumberMap;
     private Map<String, List<GeneCopyNumber>> mSampleGeneCopyNumberMap;
-    private BufferedWriter mVisGenesFileWriter;
+    private VisualiserWriter mVisWriter;
 
     // temp
     private boolean mWriteMatchedGeneCopyNumber;
@@ -102,7 +100,7 @@ public class DriverGeneAnnotator
 
         mWriteMatchedGeneCopyNumber = false;
         mGCNFileWriter = null;
-        mVisGenesFileWriter = null;
+        mVisWriter = null;
     }
 
     private static final String WRITE_GCN_DATA = "write_gcn_data";
@@ -130,7 +128,7 @@ public class DriverGeneAnnotator
         mSamplePloidy = ploidy;
     }
 
-    public void setVisGenesFileWriter(BufferedWriter writer) { mVisGenesFileWriter = writer; }
+    public void setVisWriter(VisualiserWriter writer) { mVisWriter = writer; }
     public final List<DriverGeneData> getDriverGeneDataList() { return mDriverGeneDataList; }
 
     private void initialiseGeneData(final String geneCopyNumberFile)
@@ -723,8 +721,8 @@ public class DriverGeneAnnotator
                 writer.newLine();
             }
 
-            writeGeneExonData(mVisGenesFileWriter, mGeneTranscriptCollection, mSampleId, refClusterId,
-                    region.geneID(), region.gene(), "", region.chromosome(), "DRIVER");
+            mVisWriter.addGeneExonData(refClusterId, region.geneID(), region.gene(),
+                    "", region.chromosome(), "DRIVER");
 
         }
         catch (final IOException e)
@@ -787,10 +785,9 @@ public class DriverGeneAnnotator
 
             if(pseudoGene != null)
             {
-                writeGeneExonData(mVisGenesFileWriter, mGeneTranscriptCollection, mSampleId, cluster.id(),
-                        pseudoGene.StableId, pseudoGene.GeneName, transcriptId, pseudoGene.chromosome(), "PSEUDO");
+                mVisWriter.addGeneExonData(cluster.id(), pseudoGene.StableId, pseudoGene.GeneName,
+                        transcriptId, pseudoGene.chromosome(), "PSEUDO");
             }
-
         }
     }
 

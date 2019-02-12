@@ -177,6 +177,7 @@ public class SvChain {
 
     public boolean isConsistent()
     {
+        // treat the start and end breakends like those of a single SV
         int consistency = calcConsistency(getFirstSV(), firstLinkOpenOnStart());
         consistency += calcConsistency(getLastSV(), lastLinkOpenOnStart());
         return consistency == 0;
@@ -231,46 +232,6 @@ public class SvChain {
     public boolean linkWouldCloseChain(final SvLinkedPair pair)
     {
         return canAddLinkedPairToStart(pair) && canAddLinkedPairToEnd(pair);
-    }
-
-    public boolean isIdentical(final SvChain other)
-    {
-        // true if both closed loops and containing the same linked pairs
-        // or if not closed, having the same end points
-        if(mLinkedPairs.size() != other.getLinkedPairs().size())
-            return false;
-
-        List<SvLinkedPair> otherLinkedPairs = Lists.newArrayList();
-        otherLinkedPairs.addAll(other.getLinkedPairs());
-
-        for(final SvLinkedPair pair : mLinkedPairs)
-        {
-            boolean matched = false;
-            for(int i = 0; i < otherLinkedPairs.size(); ++i)
-            {
-                final SvLinkedPair otherPair = otherLinkedPairs.get(i);
-                if(pair.matches(otherPair))
-                {
-                    otherLinkedPairs.remove(i); // reduce each time to make subsequent matches faster
-                    matched = true;
-                    break;
-                }
-            }
-
-            if(!matched)
-                return false;
-        }
-
-        if(isClosedLoop() && other.isClosedLoop())
-            return true;
-
-        if(!getFirstSV().equals(other.getFirstSV(), true) || firstLinkOpenOnStart() != other.firstLinkOpenOnStart())
-            return false;
-
-        if(!getLastSV().equals(other.getLastSV(), true) || lastLinkOpenOnStart() != other.lastLinkOpenOnStart())
-            return false;
-
-        return true;
     }
 
     public void setIsValid()
@@ -386,22 +347,6 @@ public class SvChain {
         }
 
         return varIndices;
-    }
-
-    public int getSvIndex(final SvVarData var, boolean matchStart)
-    {
-        for(int index = 0; index < mLinkedPairs.size(); ++index)
-        {
-            final SvLinkedPair pair = mLinkedPairs.get(index);
-
-            if((pair.first().equals(var) && pair.firstLinkOnStart() != matchStart)
-            || (pair.second().equals(var) && pair.secondLinkOnStart() != matchStart))
-            {
-                return index;
-            }
-        }
-
-        return -1;
     }
 
     public int getAssemblyLinkCount()
@@ -533,17 +478,11 @@ public class SvChain {
         }
     }
 
-    public boolean hasLinkedPair(final SvLinkedPair pair)
-    {
-        return mLinkedPairs.contains(pair);
-    }
-
     public boolean identicalChain(final SvChain other)
     {
         // same SVs forming same links in the same order
         if(mLinkedPairs.size() != other.getLinkCount())
             return false;
-
 
         for(int i = 0; i < mLinkedPairs.size(); ++i)
         {
@@ -556,6 +495,46 @@ public class SvChain {
             if(!pair.second().equals(otherPair.second(), true))
                 return false;
         }
+
+        return true;
+    }
+
+    public boolean isIdentical(final SvChain other)
+    {
+        // true if both closed loops and containing the same linked pairs
+        // or if not closed, having the same end points
+        if(mLinkedPairs.size() != other.getLinkedPairs().size())
+            return false;
+
+        List<SvLinkedPair> otherLinkedPairs = Lists.newArrayList();
+        otherLinkedPairs.addAll(other.getLinkedPairs());
+
+        for(final SvLinkedPair pair : mLinkedPairs)
+        {
+            boolean matched = false;
+            for(int i = 0; i < otherLinkedPairs.size(); ++i)
+            {
+                final SvLinkedPair otherPair = otherLinkedPairs.get(i);
+                if(pair.matches(otherPair))
+                {
+                    otherLinkedPairs.remove(i); // reduce each time to make subsequent matches faster
+                    matched = true;
+                    break;
+                }
+            }
+
+            if(!matched)
+                return false;
+        }
+
+        if(isClosedLoop() && other.isClosedLoop())
+            return true;
+
+        if(!getFirstSV().equals(other.getFirstSV(), true) || firstLinkOpenOnStart() != other.firstLinkOpenOnStart())
+            return false;
+
+        if(!getLastSV().equals(other.getLastSV(), true) || lastLinkOpenOnStart() != other.lastLinkOpenOnStart())
+            return false;
 
         return true;
     }

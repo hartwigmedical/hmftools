@@ -41,7 +41,6 @@ public class SvGeneTranscriptCollection
     private Map<String, List<EnsemblGeneData>> mChromosomeGeneDataMap;
     private Map<String, List<EnsemblGeneData>> mChromosomeReverseGeneDataMap; // order by gene end not start
     private Map<Integer, List<TranscriptProteinData>> mEnsemblProteinDataMap;
-    private Map<String,String> mGeneNameToId;
 
     private BufferedWriter mBreakendWriter;
 
@@ -56,7 +55,6 @@ public class SvGeneTranscriptCollection
         mChromosomeGeneDataMap = Maps.newHashMap();
         mChromosomeReverseGeneDataMap = Maps.newHashMap();
         mEnsemblProteinDataMap = Maps.newHashMap();
-        mGeneNameToId = Maps.newHashMap();
         mBreakendWriter = null;
     }
 

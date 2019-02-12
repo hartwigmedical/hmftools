@@ -71,18 +71,20 @@ public class SvFusionAnalyser
 
         mKnownFusionsModel = null;
 
-        try
+        if(cmd.hasOption(FUSION_PAIRS_CSV) && cmd.hasOption(PROMISCUOUS_FIVE_CSV) && cmd.hasOption(PROMISCUOUS_THREE_CSV))
         {
-            mKnownFusionsModel = KnownFusionsModel.fromInputStreams(new FileInputStream(cmd.getOptionValue(FUSION_PAIRS_CSV)),
-                    new FileInputStream(cmd.getOptionValue(PROMISCUOUS_FIVE_CSV)),
-                    new FileInputStream(cmd.getOptionValue(PROMISCUOUS_THREE_CSV)));
+            try
+            {
+                mKnownFusionsModel = KnownFusionsModel.fromInputStreams(new FileInputStream(cmd.getOptionValue(FUSION_PAIRS_CSV)),
+                        new FileInputStream(cmd.getOptionValue(PROMISCUOUS_FIVE_CSV)),
+                        new FileInputStream(cmd.getOptionValue(PROMISCUOUS_THREE_CSV)));
 
-
-            LOGGER.debug("loaded known fusion data");
-        }
-        catch (IOException e)
-        {
-            LOGGER.warn("no known fusion files loaded");
+                LOGGER.debug("loaded known fusion data");
+            }
+            catch (IOException e)
+            {
+                LOGGER.warn("no known fusion files loaded");
+            }
         }
 
         mFusionWriter = null;

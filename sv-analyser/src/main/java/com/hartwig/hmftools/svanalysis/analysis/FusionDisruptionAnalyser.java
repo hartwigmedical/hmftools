@@ -1,20 +1,12 @@
 package com.hartwig.hmftools.svanalysis.analysis;
 
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
-import static com.hartwig.hmftools.svanalysis.analysis.SvSampleAnalyser.writeGeneExonData;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_END;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_START;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.isStart;
 import static com.hartwig.hmftools.svannotation.SvGeneTranscriptCollection.PRE_GENE_PROMOTOR_DISTANCE;
-import static com.hartwig.hmftools.svannotation.analysis.SvFusionAnalyser.FUSION_PAIRS_CSV;
-import static com.hartwig.hmftools.svannotation.analysis.SvFusionAnalyser.PROMISCUOUS_FIVE_CSV;
-import static com.hartwig.hmftools.svannotation.analysis.SvFusionAnalyser.PROMISCUOUS_THREE_CSV;
 
-import java.io.BufferedWriter;
-import java.io.FileInputStream;
-import java.io.IOException;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import com.google.common.collect.ListMultimap;
@@ -22,12 +14,11 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.chromosome.Chromosome;
 import com.hartwig.hmftools.common.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.collect.Multimaps;
-import com.hartwig.hmftools.common.fusions.KnownFusionsModel;
 import com.hartwig.hmftools.common.genepanel.HmfGenePanelSupplier;
 import com.hartwig.hmftools.common.region.HmfTranscriptRegion;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneAnnotation;
-import com.hartwig.hmftools.common.variant.structural.annotation.GeneDisruption;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion;
+import com.hartwig.hmftools.svanalysis.annotators.VisualiserWriter;
 import com.hartwig.hmftools.svannotation.SvGeneTranscriptCollection;
 import com.hartwig.hmftools.common.variant.structural.annotation.Transcript;
 import com.hartwig.hmftools.svanalysis.types.SvBreakend;
@@ -55,7 +46,7 @@ public class FusionDisruptionAnalyser
 
     ListMultimap<Chromosome, HmfTranscriptRegion> mChromosomeTranscriptMap;
 
-    private BufferedWriter mVisGenesFileWriter;
+    private VisualiserWriter mVisWriter;
 
     private static final Logger LOGGER = LogManager.getLogger(FusionDisruptionAnalyser.class);
 
@@ -67,7 +58,7 @@ public class FusionDisruptionAnalyser
         mChromosomeTranscriptMap = null;
         mOutputDir = "";
         mFusions = Lists.newArrayList();
-        mVisGenesFileWriter = null;
+        mVisWriter = null;
     }
 
     public final SvGeneTranscriptCollection getGeneTranscriptCollection() { return mEnsemblDataCache; }
@@ -90,7 +81,7 @@ public class FusionDisruptionAnalyser
 
     public final Set<String> getRnaSampleIds() { return mFusionFinder.getSampleRnaData().keySet(); }
     public final List<GeneFusion> getFusions() { return mFusions; }
-    public void setVisGenesFileWriter(BufferedWriter writer) { mVisGenesFileWriter = writer; }
+    public void setVisWriter(VisualiserWriter writer) { mVisWriter = writer; }
 
     private void setSvGenesList(final SvVarData var, boolean applyPromotorDistance)
     {
@@ -358,15 +349,19 @@ public class FusionDisruptionAnalyser
 
         mFusionFinder.writeFusions(fusions, mOutputDir, mSampleId, clusterInfo, true);
 
-        for (final GeneFusion fusion : fusions)
+        if(mVisWriter != null)
         {
-            writeGeneExonData(mVisGenesFileWriter, mEnsemblDataCache, mSampleId, cluster.id(),
-                    fusion.upstreamTrans().parent().StableId, fusion.upstreamTrans().parent().GeneName, fusion.upstreamTrans().StableId,
-                    fusion.upstreamTrans().parent().chromosome(), "FUSION");
+            for (final GeneFusion fusion : fusions)
+            {
+                mVisWriter.addGeneExonData(cluster.id(),
+                        fusion.upstreamTrans().parent().StableId, fusion.upstreamTrans().parent().GeneName, fusion.upstreamTrans().StableId,
+                        fusion.upstreamTrans().parent().chromosome(), "FUSION");
 
-            writeGeneExonData(mVisGenesFileWriter, mEnsemblDataCache, mSampleId, cluster.id(),
-                    fusion.downstreamTrans().parent().StableId, fusion.downstreamTrans().parent().GeneName, fusion.downstreamTrans().StableId,
-                    fusion.downstreamTrans().parent().chromosome(), "FUSION");
+                mVisWriter.addGeneExonData(cluster.id(),
+                        fusion.downstreamTrans().parent().StableId, fusion.downstreamTrans()
+                                .parent().GeneName, fusion.downstreamTrans().StableId,
+                        fusion.downstreamTrans().parent().chromosome(), "FUSION");
+            }
         }
     }
 
