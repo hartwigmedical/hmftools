@@ -43,8 +43,8 @@ public abstract class NotAnalysableReporter {
                 null,
                 lims.labProcedures(sample),
                 isCoreSample
-                        ? baseReportData().centerModel().getCoreRecipients(lims.projectName(sample))
-                        : baseReportData().centerModel().getAddresseeStringForSample(sample),
+                        ? baseReportData().centerModel().addresseeStringForProject(lims.projectName(sample))
+                        : baseReportData().centerModel().addresseeStringForSample(sample),
                 lims.label(sample),
                 lims.projectName(sample),
                 isCoreSample ? lims.contactEmail(sample) : "",

@@ -32,14 +32,14 @@ public final class CpctUtil {
         if (hospitalItem1 != null) {
             hospitals.putAll(codeLists.get(hospitalItem1.codeListOID()).values());
         } else {
-            LOGGER.warn("Could not find hospital item in datamodel: " + FIELD_HOSPITAL1);
+            LOGGER.warn("Could not find centerPerHospital item in datamodel: " + FIELD_HOSPITAL1);
         }
 
         final Item hospitalItem2 = model.datamodel().items().get(FIELD_HOSPITAL2);
         if (hospitalItem2 != null) {
             hospitals.putAll(codeLists.get(hospitalItem2.codeListOID()).values());
         } else {
-            LOGGER.warn("Could not find hospital item in datamodel: " + FIELD_HOSPITAL2);
+            LOGGER.warn("Could not find centerPerHospital item in datamodel: " + FIELD_HOSPITAL2);
         }
 
         return ImmutableMap.copyOf(hospitals);

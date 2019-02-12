@@ -23,50 +23,37 @@ public abstract class CenterModel {
     protected abstract Map<String, CenterData> centerPerId();
 
     @NotNull
-    protected abstract Map<String, CenterData> hospital();
+    protected abstract Map<String, CenterData> centerPerHospital();
 
     @Nullable
-    String getCpctRecipients(@Nullable final String centerId) {
+    public String addresseeStringForSample(@NotNull final String sample) {
+        final String centerId = getCenterIdFromSample(sample);
         if (centerId == null) {
             return null;
         }
-        final CenterData center = centerPerId().get(centerId);
+        final CenterData center = centerPerId(centerId);
         if (center == null) {
             LOGGER.error("Center model does not contain id " + centerId);
             return null;
         }
-        return center.cpctRecipients();
+        checkAddresseeFields(sample, center);
+        return getPI(sample, center) + ", " + center.addressName() + ", " + center.addressZip() + " " + center.addressCity();
     }
 
     @Nullable
-    public String getCoreRecipients(@Nullable final String DVOname) {
-        String DVOnameSplit = DVOname.split("-")[0];
-        final CenterData center = hospital().get(DVOnameSplit);
-        if (center == null){
-            LOGGER.error("Center model does not contain hospital name " + center);
-            return null;
-        }
-        return DVOname.contains(DVOnameSplit) ? center.addressName() + ", " + center.addressZip() + " " + center.addressCity() : "NA";
-    }
-
-    @Nullable
-    String getDrupRecipients(@Nullable final String centerId) {
-        if (centerId == null) {
-            return null;
-        }
-        final CenterData center = centerPerId().get(centerId);
+    public String addresseeStringForProject(@NotNull final String projectName) {
+        // Assume project name for CORE is HOSPITAL-X-Y
+        String hospitalFromProjectName = projectName.split("-")[0];
+        final CenterData center = centerPerHospital().get(hospitalFromProjectName);
         if (center == null) {
-            LOGGER.error("Center model does not contain id " + centerId);
+            LOGGER.error("Center model cannot find center details for project " + projectName);
             return null;
         }
-        final String drupRecipients = center.drupRecipients();
-        if (drupRecipients.trim().equals("*")) {
-            return center.cpctRecipients();
-        }
-        return drupRecipients;
+        return center.addressName() + ", " + center.addressZip() + " " + center.addressCity();
     }
 
     @Nullable
+    @VisibleForTesting
     CenterData centerPerId(@Nullable final String centerId) {
         return centerPerId().get(centerId);
     }
@@ -80,21 +67,6 @@ public abstract class CenterModel {
 
         LOGGER.warn("Sample parameter: " + sample + " is not in CPCT/DRUP format");
         return null;
-    }
-
-    @Nullable
-    public String getAddresseeStringForSample(@NotNull final String sample) {
-        final String centerId = getCenterIdFromSample(sample);
-        if (centerId == null) {
-            return null;
-        }
-        final CenterData center = centerPerId(centerId);
-        if (center == null) {
-            LOGGER.error("Center model does not contain id " + centerId);
-            return null;
-        }
-        checkAddresseeFields(sample, center);
-        return getPI(sample, center) + ", " + center.addressName() + ", " + center.addressZip() + " " + center.addressCity();
     }
 
     private static void checkAddresseeFields(@NotNull final String sample, @NotNull final CenterData center) {
@@ -128,6 +100,6 @@ public abstract class CenterModel {
             }
             return center.drupPI();
         }
-        return "";
+        return Strings.EMPTY;
     }
 }
