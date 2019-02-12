@@ -79,7 +79,7 @@ public abstract class NonSequenceablePage {
                 message = "This sample could not be processed to completion successfully.";
                 break;
             }
-            case SHALLOW_SEQ: {
+            case SHALLOW_SEQ_LOW_PURITY: {
                 title = "Notification of inadequate tumor sample";
                 subTitle = "Not enough tumor DNA detected by molecular T % estimate.";
                 message = "For sequencing we require a minimum of 30% tumor cells.";
@@ -106,18 +106,17 @@ public abstract class NonSequenceablePage {
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
                 cmp.text("When possible, please resubmit using the same DVO.").setStyle(fontStyle()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
-                cmp.text("The tumor percentage estimated by molecular tumor percentage is: "
-                        + sampleReport().purityShallowSeq()).setStyle(fontStyle()),
+                shallowSeqText(),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
                 sampleArrivalDateText(),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
-                repicientText(),
+                recipientText(),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
                 cmp.text("The project name is : " + sampleReport().projectName()).setStyle(fontStyle()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
-                cmp.text("The client names are : " + sampleReport().contactName()).setStyle(fontStyle()),
+                cmp.text("The client names are : " + sampleReport().contactNames()).setStyle(fontStyle()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
-                cmp.text("The client emails are: " + sampleReport().contactEmail()).setStyle(fontStyle()),
+                cmp.text("The client emails are: " + sampleReport().contactEmails()).setStyle(fontStyle()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
                 accreditationText(),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
@@ -137,12 +136,14 @@ public abstract class NonSequenceablePage {
                         + "In case additional tumor material cannot be provided, please be notified that the patient will not be "
                         + "evaluable for the " + study().studyCode() + " study.").setStyle(fontStyle()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
-                cmp.text("The tumor percentage estimated by Pathology UMC Utrecht is: " + sampleReport().purityShallowSeq())
+                cmp.text("The tumor percentage estimated by Pathology UMC Utrecht is: " + sampleReport().pathologyTumorPercentage())
                         .setStyle(fontStyle()),
+                cmp.verticalGap(SECTION_VERTICAL_GAP),
+                shallowSeqText(),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
                 sampleArrivalDateText(),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
-                repicientText(),
+                recipientText(),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
                 accreditationText(),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
@@ -155,20 +156,27 @@ public abstract class NonSequenceablePage {
     }
 
     @NotNull
-    private TextFieldBuilder<String> sampleArrivalDateText() {
-        return cmp.text("The biopsies evaluated for this sample have arrived on " + formattedDate(sampleReport().tumorArrivalDate())
-                + " at " + Commons.HARTWIG_ADDRESS).setStyle(fontStyle());
+    private TextFieldBuilder<String> shallowSeqText() {
+        return cmp.text("The tumor percentage estimated by molecular tumor percentage is: " + sampleReport().purityShallowSeq())
+                .setStyle(fontStyle());
     }
 
     @NotNull
-    private static TextFieldBuilder<String> notSequencedText () {
+    private TextFieldBuilder<String> sampleArrivalDateText() {
+        return cmp.text(
+                "The biopsies evaluated for this sample have arrived on " + formattedDate(sampleReport().tumorArrivalDate()) + " at "
+                        + Commons.HARTWIG_ADDRESS).setStyle(fontStyle());
+    }
+
+    @NotNull
+    private static TextFieldBuilder<String> notSequencedText() {
         return cmp.text("The received biopsies for the tumor sample for this patient were inadequate to obtain a reliable sequencing "
                 + "result. Therefore whole genome sequencing cannot be performed, "
                 + "unless additional fresh tumor material can be provided for a new assessment.").setStyle(fontStyle());
     }
 
     @NotNull
-    private TextFieldBuilder<String> repicientText() {
+    private TextFieldBuilder<String> recipientText() {
         return cmp.text("This report is generated and verified by: " + user() + " and is addressed at " + sampleReport().recipient())
                 .setStyle(fontStyle());
     }
@@ -178,5 +186,4 @@ public abstract class NonSequenceablePage {
         return cmp.text("The results on this report are based on tests that are performed under ISO/ICE-17025:2005 accreditation.")
                 .setStyle(fontStyle());
     }
-
 }

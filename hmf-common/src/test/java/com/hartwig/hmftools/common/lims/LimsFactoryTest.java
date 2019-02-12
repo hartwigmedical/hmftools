@@ -79,8 +79,8 @@ public class LimsFactoryTest {
         final String submission = "ABCDEF123";
         final LimsJsonSubmissionData submissionData = dataPerSubmission.get(submission);
         assertEquals(submission, submissionData.submission());
-        assertEquals("name", submissionData.contactName());
-        assertEquals("email", submissionData.contactEmail());
+        assertEquals("name", submissionData.contactNames());
+        assertEquals("email", submissionData.contactEmails());
     }
 
     @Test

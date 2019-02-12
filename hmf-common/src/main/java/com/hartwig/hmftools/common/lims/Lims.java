@@ -40,17 +40,17 @@ public class Lims {
     }
 
     @NotNull
-    public String contactEmail(@NotNull final String sample) {
+    public String contactEmails(@NotNull final String sample) {
         String submission = submission(sample);
         LimsJsonSubmissionData submissionData = dataPerSubmission.get(submission);
-        return submissionData != null ? submissionData.contactEmail() : "N/A";
+        return submissionData != null ? submissionData.contactEmails() : "N/A";
     }
 
     @NotNull
-    public String contactName(@NotNull final String sample) {
+    public String contactNames(@NotNull final String sample) {
         String submission = submission(sample);
         LimsJsonSubmissionData submissionData = dataPerSubmission.get(submission);
-        return submissionData != null ? submissionData.contactName() : "N/A";
+        return submissionData != null ? submissionData.contactNames() : "N/A";
     }
 
     @Nullable

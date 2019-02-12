@@ -50,16 +50,16 @@ public class LimsTest {
 
         final LimsJsonSubmissionData submissionData = ImmutableLimsJsonSubmissionData.builder()
                 .submission(SUBMISSION)
-                .contactEmail(contactEmail)
-                .contactName(contactName)
+                .contactEmails(contactEmail)
+                .contactNames(contactName)
                 .build();
 
         final Lims lims = buildTestLimsWithSampleAndSubmission(sampleData, submissionData);
 
         assertEquals(1, lims.sampleCount());
 
-        assertEquals(contactEmail, lims.contactEmail(SAMPLE));
-        assertEquals(contactName, lims.contactName(SAMPLE));
+        assertEquals(contactEmail, lims.contactEmails(SAMPLE));
+        assertEquals(contactName, lims.contactNames(SAMPLE));
         assertNull(lims.patientNumber(SAMPLE));
         assertEquals(label, lims.label(SAMPLE));
         assertEquals(projectName, lims.projectName(SAMPLE));
@@ -79,8 +79,8 @@ public class LimsTest {
     public void worksForNonExistingSamplesAndSubmissions() {
         Lims lims = LimsFactory.empty();
 
-        assertEquals("N/A", lims.contactName("DoesNotExist"));
-        assertEquals("N/A", lims.contactEmail("DoesNotExist"));
+        assertEquals("N/A", lims.contactNames("DoesNotExist"));
+        assertEquals("N/A", lims.contactEmails("DoesNotExist"));
         assertNull(lims.patientNumber("DoesNotExist"));
         assertEquals("N/A", lims.label("DoesNotExist"));
         assertEquals("N/A", lims.projectName("DoesNotExist"));
@@ -118,8 +118,8 @@ public class LimsTest {
 
         assertEquals(1, lims.sampleCount());
 
-        assertEquals("N/A", lims.contactEmail(SAMPLE));
-        assertEquals("N/A", lims.contactName(SAMPLE));
+        assertEquals("N/A", lims.contactEmails(SAMPLE));
+        assertEquals("N/A", lims.contactNames(SAMPLE));
         assertNull(lims.arrivalDate(SAMPLE));
         assertNull(lims.samplingDate(SAMPLE));
         assertNull(lims.dnaNanograms(SAMPLE));

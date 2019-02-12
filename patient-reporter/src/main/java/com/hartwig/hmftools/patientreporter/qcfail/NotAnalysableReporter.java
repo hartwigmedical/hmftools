@@ -45,12 +45,11 @@ public abstract class NotAnalysableReporter {
                 isCoreSample
                         ? baseReportData().centerModel().addresseeStringForProject(lims.projectName(sample))
                         : baseReportData().centerModel().addresseeStringForSample(sample),
-                lims.label(sample),
                 lims.projectName(sample),
-                isCoreSample ? lims.contactEmail(sample) : "",
-                isCoreSample ? lims.contactName(sample) : "",
+                lims.contactNames(sample),
+                lims.contactEmails(sample),
                 lims.patientNumber(sample),
-                lims.isCoreSample(sample));
+                isCoreSample);
 
         return ImmutableNotAnalysedPatientReport.of(sampleReport,
                 reason,

@@ -6,10 +6,11 @@ import org.jetbrains.annotations.Nullable;
 public enum NotAnalysableStudy {
     CPCT("CPCT", "CPCT-02"),
     DRUP("DRUP", "DRUP-01"),
-    CORE("CORE", "CORE-00");
+    CORE("CORE", "CORE");
 
     private static final String CPCT_IDENTIFIER = "CPCT";
     private static final String DRUP_IDENTIFIER = "DRUP";
+    private static final String CORE_IDENTIFIER = "CORE";
 
     @NotNull
     private final String studyName;
@@ -27,7 +28,7 @@ public enum NotAnalysableStudy {
             return CPCT;
         } else if (sample.contains(DRUP_IDENTIFIER)) {
             return DRUP;
-        } else if (sample.contains("CORE")) {
+        } else if (sample.contains(CORE_IDENTIFIER)) {
             return CORE;
         }
         return null;

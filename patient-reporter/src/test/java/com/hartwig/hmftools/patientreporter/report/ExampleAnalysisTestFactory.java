@@ -163,7 +163,6 @@ final class ExampleAnalysisTestFactory {
                 Strings.EMPTY,
                 Strings.EMPTY,
                 Strings.EMPTY,
-                Strings.EMPTY,
                 false);
     }
 

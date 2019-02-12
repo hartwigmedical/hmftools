@@ -91,7 +91,7 @@ public class PDFWriterTest {
 
     @Test
     public void canGenerateLowMolecularTumorPercentage() throws DRException, IOException {
-        JasperReportBuilder report = generateNotAnalysableCPCTReport(0.15, NotAnalysableReason.SHALLOW_SEQ);
+        JasperReportBuilder report = generateNotAnalysableCPCTReport(0.15, NotAnalysableReason.SHALLOW_SEQ_LOW_PURITY);
         assertNotNull(report);
 
         if (WRITE_TO_PDF) {
@@ -110,7 +110,6 @@ public class PDFWriterTest {
                 "PREP013V23-QC037V20-SEQ008V25",
                 "HMF Testing Center",
                 "COLO",
-                Strings.EMPTY,
                 Strings.EMPTY,
                 Strings.EMPTY,
                 Strings.EMPTY,

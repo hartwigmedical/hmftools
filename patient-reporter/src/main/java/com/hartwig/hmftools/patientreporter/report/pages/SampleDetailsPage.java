@@ -72,68 +72,22 @@ public abstract class SampleDetailsPage {
 
         recipient = recipient != null ? recipient : "?";
 
-        final List<String> lines = sampleReport().isCoreSample()
-                ? Lists.newArrayList(sequencedText(),
-                analyzedText(),
-                performedText(),
-                pathologyTumorPercentageText(),
-                bloodArrivalDateText(),
-                labProcesduresText(),
-                rapportGeneratedByText(),
-                rapportAddressText(recipient),
-                "The contact names are: " + sampleReport().contactName(),
-                "The contact emails are: " + sampleReport().contactEmail())
-                : Lists.newArrayList(sequencedText(),
-                        analyzedText(),
-                        performedText(),
-                        pathologyTumorPercentageText(),
-                        bloodArrivalDateText(),
-                        labProcesduresText(),
-                        rapportGeneratedByText(),
-                        rapportAddressText(recipient));
+        final List<String> lines = Lists.newArrayList("The samples have been sequenced at " + Commons.HARTWIG_ADDRESS,
+                "The samples have been analyzed by Next Generation Sequencing",
+                "This experiment is performed on the tumor sample which arrived on " + formattedDate(sampleReport().tumorArrivalDate()),
+                "The pathology tumor percentage for this sample is " + sampleReport().pathologyTumorPercentage(),
+                "This experiment is performed on the blood sample which arrived on " + formattedDate(sampleReport().bloodArrivalDate()),
+                "This experiment is performed according to lab procedures: " + sampleReport().labProcedures(),
+                "This report is generated and verified by: " + user(),
+                "This report is addressed at: " + recipient);
+
+        if (sampleReport().isCoreSample()) {
+            lines.add("The contact names are: " + sampleReport().contactNames());
+            lines.add("The contact emails are: " + sampleReport().contactEmails());
+        }
 
         comments().ifPresent(comments -> lines.add("Comments: " + comments));
 
         return toList("Sample details", lines);
-    }
-
-    @NotNull
-    private static String sequencedText() {
-        return "The samples have been sequenced at " + Commons.HARTWIG_ADDRESS;
-    }
-
-    @NotNull
-    private static String analyzedText() {
-        return "The samples have been analyzed by Next Generation Sequencing";
-    }
-
-    @NotNull
-    private String performedText() {
-        return "This experiment is performed on the tumor sample which arrived on " + formattedDate(sampleReport().tumorArrivalDate());
-    }
-
-    @NotNull
-    private String pathologyTumorPercentageText() {
-        return "The pathology tumor percentage for this sample is " + sampleReport().purityShallowSeq();
-    }
-
-    @NotNull
-    private String bloodArrivalDateText() {
-        return "This experiment is performed on the blood sample which arrived on " + formattedDate(sampleReport().bloodArrivalDate());
-    }
-
-    @NotNull
-    private String labProcesduresText() {
-        return "This experiment is performed according to lab procedures: " + sampleReport().labProcedures();
-    }
-
-    @NotNull
-    private String rapportGeneratedByText() {
-        return "This report is generated and verified by: " + user();
-    }
-
-    @NotNull
-    private static String rapportAddressText(@NotNull String recipient) {
-        return "This report is addressed at: " + recipient;
     }
 }
