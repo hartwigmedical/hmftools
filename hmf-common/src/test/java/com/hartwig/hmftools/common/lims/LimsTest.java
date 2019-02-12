@@ -14,7 +14,6 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
 import org.jetbrains.annotations.NotNull;
-import org.junit.Ignore;
 import org.junit.Test;
 
 public class LimsTest {
@@ -106,8 +105,7 @@ public class LimsTest {
 
     @Test
     public void invalidDataYieldsNullOrNA() {
-        final LimsJsonSampleData sampleData = createLimsSampleDataBuilder()
-                .sampleId(SAMPLE)
+        final LimsJsonSampleData sampleData = createLimsSampleDataBuilder().sampleId(SAMPLE)
                 .samplingDateString("IsNotADate")
                 .arrivalDateString("IsNotADate")
                 .dnaConcentration("IsNotADNAConcentration")
@@ -132,10 +130,7 @@ public class LimsTest {
 
     @Test
     public void noTumorPercentageForCORE() {
-        final LimsJsonSampleData sampleData = createLimsSampleDataBuilder()
-                .sampleId(SAMPLE)
-                .labelSample("CORE")
-                .build();
+        final LimsJsonSampleData sampleData = createLimsSampleDataBuilder().sampleId(SAMPLE).labelSample("CORE").build();
 
         Lims lims = buildTestLimsWithSample(sampleData);
         assertEquals("not determined", lims.tumorPercentageForSample(SAMPLE));
@@ -143,10 +138,7 @@ public class LimsTest {
 
     @Test
     public void noTumorPercentageForShallowSeq() {
-        final LimsJsonSampleData sampleData = createLimsSampleDataBuilder()
-                .sampleId(SAMPLE)
-                .labRemarks("ShallowSeq")
-                .build();
+        final LimsJsonSampleData sampleData = createLimsSampleDataBuilder().sampleId(SAMPLE).labRemarks("ShallowSeq").build();
 
         Lims lims = buildTestLimsWithSample(sampleData);
         assertEquals("not determined", lims.tumorPercentageForSample(SAMPLE));
@@ -154,11 +146,8 @@ public class LimsTest {
 
     @Test
     public void shallowSeqPurityErrorNonSequencedSample() {
-        final LimsJsonSampleData sampleData = createLimsSampleDataBuilder()
-                .sampleId(SAMPLE)
-                .labelSample("")
-                .labRemarks("ShallowSeq")
-                .build();
+        final LimsJsonSampleData sampleData =
+                createLimsSampleDataBuilder().sampleId(SAMPLE).labelSample("").labRemarks("ShallowSeq").build();
 
         Lims lims = buildTestLimsWithSample(sampleData);
         assertEquals("N/A", lims.purityShallowSeq(SAMPLE, false));
@@ -166,11 +155,8 @@ public class LimsTest {
 
     @Test
     public void shallowSeqPurityErrorSequencedSample() {
-        final LimsJsonSampleData sampleData = createLimsSampleDataBuilder()
-                .sampleId(SAMPLE)
-                .labelSample("")
-                .labRemarks("ShallowSeq")
-                .build();
+        final LimsJsonSampleData sampleData =
+                createLimsSampleDataBuilder().sampleId(SAMPLE).labelSample("").labRemarks("ShallowSeq").build();
 
         Lims lims = buildTestLimsWithSample(sampleData);
         assertEquals("N/A", lims.purityShallowSeq(SAMPLE, true));
@@ -178,12 +164,8 @@ public class LimsTest {
 
     @Test
     public void pathologySequencedSampleCPCTandDRUPSequenced() {
-        final LimsJsonSampleData sampleData = createLimsSampleDataBuilder()
-                .sampleId(SAMPLE)
-                .labRemarks("")
-                .labelSample("")
-                .tumorPercentageString("70%")
-                .build();
+        final LimsJsonSampleData sampleData =
+                createLimsSampleDataBuilder().sampleId(SAMPLE).labRemarks("").labelSample("").tumorPercentageString("70%").build();
 
         Lims lims = buildTestLimsWithSample(sampleData);
         assertEquals("N/A", lims.purityShallowSeq(SAMPLE, true));
@@ -191,12 +173,8 @@ public class LimsTest {
 
     @Test
     public void pathologySequencedSampleCPCTandDRUPNonSequenced() {
-        final LimsJsonSampleData sampleData = createLimsSampleDataBuilder()
-                .sampleId(SAMPLE)
-                .labRemarks("")
-                .labelSample("")
-                .tumorPercentageString("70%")
-                .build();
+        final LimsJsonSampleData sampleData =
+                createLimsSampleDataBuilder().sampleId(SAMPLE).labRemarks("").labelSample("").tumorPercentageString("70%").build();
 
         Lims lims = buildTestLimsWithSample(sampleData);
         assertEquals("N/A", lims.purityShallowSeq(SAMPLE, false));
@@ -204,11 +182,8 @@ public class LimsTest {
 
     @Test // not correct
     public void shallowSeqPuritySequenedCPCTandDRUP() {
-        final LimsJsonSampleData sampleData = createLimsSampleDataBuilder()
-                .sampleId("CPCT02990001T")
-                .labelSample("")
-                .labRemarks("ShallowSeq")
-                .build();
+        final LimsJsonSampleData sampleData =
+                createLimsSampleDataBuilder().sampleId("CPCT02990001T").labelSample("").labRemarks("ShallowSeq").build();
 
         Lims lims = buildTestLimsWithSample(sampleData);
         assertEquals("N/A", lims.purityShallowSeq("CPCT02990001T", true));
@@ -216,35 +191,27 @@ public class LimsTest {
 
     @Test // not correct
     public void shallowSeqPurityNonSequenedCPCTandDRUP() {
-        final LimsJsonSampleData sampleData = createLimsSampleDataBuilder()
-                .sampleId("CPCT02990001T")
-                .labelSample("")
-                .labRemarks("ShallowSeq")
-                .build();
+        final LimsJsonSampleData sampleData =
+                createLimsSampleDataBuilder().sampleId("CPCT02990001T").labelSample("").labRemarks("ShallowSeq").build();
 
         Lims lims = buildTestLimsWithSample(sampleData);
         assertEquals("N/A", lims.purityShallowSeq("CPCT02990001T", false));
     }
 
-    @Test // not correct
-    public void pathologySequencedSampleCORE() {
-        final LimsJsonSampleData sampleData = createLimsSampleDataBuilder()
-                .sampleId("CORE00000001T")
-                .labRemarks("ShallowSeq")
-                .labelSample("CORE")
-                .build();
+    @Test
+    public void canRetrieveShallowSeqPurityForCORESample() {
+        final LimsJsonSampleData sampleData =
+                createLimsSampleDataBuilder().sampleId("CORE00000001T").labRemarks("ShallowSeq").labelSample("CORE").build();
 
-        Lims lims = buildTestLimsWithSample(sampleData);
-        assertEquals("N/A", lims.purityShallowSeq("CORE00000001T", true));
+        Lims lims = buildTestLimsWithSampleAndShallowSeq(sampleData, 0.3);
+        assertEquals("not determined", lims.purityShallowSeq("CORE00000001T", true));
+        assertEquals("30%", lims.purityShallowSeq("CORE00000001T", false));
     }
 
     @Test // not correct
     public void ShallowSeqPurityCORE() {
-        final LimsJsonSampleData sampleData = createLimsSampleDataBuilder()
-                .sampleId("CORE00000001T")
-                .labRemarks("ShallowSeq")
-                .labelSample("CORE")
-                .build();
+        final LimsJsonSampleData sampleData =
+                createLimsSampleDataBuilder().sampleId("CORE00000001T").labRemarks("ShallowSeq").labelSample("CORE").build();
 
         Lims lims = buildTestLimsWithSample(sampleData);
         assertEquals("N/A", lims.purityShallowSeq("CORE00000001T", false));
@@ -272,6 +239,20 @@ public class LimsTest {
         Map<String, LocalDate> preLIMSArrivalDates = Maps.newHashMap();
         Set<String> samplesWithSamplingDates = Sets.newHashSet();
         Map<String, LimsShallowSeqData> shallowSeqDataPerSample = Maps.newHashMap();
+
+        return new Lims(dataPerSample, dataPerSubmission, preLIMSArrivalDates, samplesWithSamplingDates, shallowSeqDataPerSample);
+    }
+
+    @NotNull
+    private static Lims buildTestLimsWithSampleAndShallowSeq(@NotNull final LimsJsonSampleData sampleData, double shallowSeqPurity) {
+        Map<String, LimsJsonSampleData> dataPerSample = Maps.newHashMap();
+        dataPerSample.put(sampleData.sampleId(), sampleData);
+        Map<String, LimsJsonSubmissionData> dataPerSubmission = Maps.newHashMap();
+        Map<String, LocalDate> preLIMSArrivalDates = Maps.newHashMap();
+        Set<String> samplesWithSamplingDates = Sets.newHashSet();
+        Map<String, LimsShallowSeqData> shallowSeqDataPerSample = Maps.newHashMap();
+
+        shallowSeqDataPerSample.put(sampleData.sampleId(), ImmutableLimsShallowSeqData.of(sampleData.sampleId(), shallowSeqPurity));
 
         return new Lims(dataPerSample, dataPerSubmission, preLIMSArrivalDates, samplesWithSamplingDates, shallowSeqDataPerSample);
     }

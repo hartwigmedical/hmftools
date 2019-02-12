@@ -45,14 +45,14 @@ public class PDFWriter {
     public void writeSequenceReport(@NotNull AnalysedPatientReport report) throws IOException, DRException {
         final JasperReportBuilder reportBuilder = generatePatientReport(report);
         writeReport(fileName(report.sampleReport().sampleId(),
-                report.sampleReport().projectNameDVO(),
+                report.sampleReport().projectName(),
                 report.sampleReport().isCoreSample()), reportBuilder);
     }
 
     public void writeNonSequenceableReport(@NotNull NotAnalysedPatientReport report) throws IOException, DRException {
         final JasperReportBuilder reportBuilder = generateNotAnalysableReport(report);
         writeReport(fileName(report.sampleReport().sampleId(),
-                report.sampleReport().projectNameDVO(),
+                report.sampleReport().projectName(),
                 report.sampleReport().isCoreSample()), reportBuilder);
     }
 

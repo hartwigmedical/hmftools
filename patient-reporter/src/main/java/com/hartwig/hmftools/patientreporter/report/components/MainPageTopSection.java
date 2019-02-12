@@ -27,7 +27,7 @@ public final class MainPageTopSection {
                 report.sampleId(),
                 report.primaryTumorLocationString(),
                 report.cancerSubTypeString(),
-                report.projectNameDVO(),
+                report.projectName(),
                 report.label(),
                 report.patientNumber());
     }

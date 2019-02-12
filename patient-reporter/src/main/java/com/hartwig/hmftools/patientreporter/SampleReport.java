@@ -53,7 +53,7 @@ public abstract class SampleReport {
     public abstract String label();
 
     @Nullable
-    public abstract String projectNameDVO();
+    public abstract String projectName();
 
     @Nullable
     public abstract String contactName();
@@ -64,8 +64,6 @@ public abstract class SampleReport {
     @Nullable
     public abstract String patientNumber();
 
-    @NotNull
-    public abstract Boolean isCoreSample();
-
+    public abstract boolean isCoreSample();
 
 }
