@@ -7,7 +7,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -28,11 +27,10 @@ public class Segments {
     private static final String HEADER = "SampleId";
     private static final String COMMENT = "#";
     private static final String DELIMITER = ",";
-    private static final Function<List<Segment>, List<Segment>> TRACK_INCREMENTER = Segments::incrementOnChromosome;
     private static final RefGenome REF_GENOME = RefGenome.HG19;
 
     @NotNull
-    public static List<Segment> readTracksFromFile(@NotNull final String fileName) throws IOException {
+    public static List<Segment> readTracks(@NotNull final String fileName) throws IOException {
         return incrementOnChromosome(fromString(Files.readAllLines(new File(fileName).toPath())));
     }
 
