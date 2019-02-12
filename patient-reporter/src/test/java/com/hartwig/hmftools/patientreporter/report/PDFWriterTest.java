@@ -22,7 +22,6 @@ import com.hartwig.hmftools.patientreporter.qcfail.NotAnalysableReason;
 import com.hartwig.hmftools.patientreporter.qcfail.NotAnalysableStudy;
 import com.hartwig.hmftools.patientreporter.report.util.PatientReportFormat;
 
-import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.junit.Test;
@@ -112,10 +111,10 @@ public class PDFWriterTest {
                 LocalDate.parse("01-Jan-2018", DATE_FORMATTER),
                 "PREP013V23-QC037V20-SEQ008V25",
                 "HMF Testing Center",
-                "COLO",
-                Strings.EMPTY,
-                Strings.EMPTY,
-                Strings.EMPTY,
+                "COLO-001-002",
+                "ContactMe",
+                "contact@me.com",
+                "123456",
                 false);
 
         NotAnalysedPatientReport patientReport = ImmutableNotAnalysedPatientReport.of(sampleReport,

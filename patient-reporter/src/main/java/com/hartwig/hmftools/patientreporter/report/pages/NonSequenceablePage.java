@@ -97,6 +97,7 @@ public abstract class NonSequenceablePage {
 
     @NotNull
     private ComponentBuilder<?, ?> CORELayout(@NotNull String title, @NotNull String subTitle, @NotNull String message) {
+        String contactDetails = sampleReport().contactNames() + " (" + sampleReport().contactEmails() + ")";
         return cmp.verticalList(cmp.text(title).setStyle(tableHeaderStyle().setFontSize(12)).setHeight(20),
                 cmp.text(subTitle).setStyle(dataTableStyle().setFontSize(12)).setHeight(20),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
@@ -104,7 +105,8 @@ public abstract class NonSequenceablePage {
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
                 notSequencedText(),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
-                cmp.text("When possible, please resubmit using the same DVO.").setStyle(fontStyle()),
+                cmp.text("When possible, please resubmit using the same DVO with project name " + sampleReport().projectName() + ".")
+                        .setStyle(fontStyle()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
                 shallowSeqText(),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
@@ -112,11 +114,7 @@ public abstract class NonSequenceablePage {
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
                 recipientText(),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
-                cmp.text("The project name is : " + sampleReport().projectName()).setStyle(fontStyle()),
-                cmp.verticalGap(SECTION_VERTICAL_GAP),
-                cmp.text("The client names are : " + sampleReport().contactNames()).setStyle(fontStyle()),
-                cmp.verticalGap(SECTION_VERTICAL_GAP),
-                cmp.text("The client emails are: " + sampleReport().contactEmails()).setStyle(fontStyle()),
+                cmp.text("The contact details are : " + contactDetails).setStyle(fontStyle()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
                 accreditationText(),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
