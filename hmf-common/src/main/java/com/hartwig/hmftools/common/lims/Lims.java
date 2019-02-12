@@ -120,6 +120,11 @@ public class Lims {
         return null;
     }
 
+    private boolean shallowSeqExecuted(@NotNull String labelSample, @Nullable String remarksSample) {
+        return labelSample.equals("CORE") || (remarksSample != null && (remarksSample.contains("CPCTWIDE") || remarksSample.contains(
+                "ShallowSeq")));
+    }
+
     @NotNull
     public String purityShallowSeq(@NotNull String sample, boolean isSequenced) {
         LimsJsonSampleData sampleData = dataPerSample.get(sample);
@@ -128,26 +133,26 @@ public class Lims {
         if (sampleData != null) {
             String labelSample = sampleData.labelSample();
             String remarksSample = sampleData.labRemarks();
-            boolean purityShallowExecuted =
-                    labelSample.equals("CORE") || (remarksSample != null && (remarksSample.contains("CPCTWIDE") || remarksSample.contains(
-                            "ShallowSeq")));
-            if (!isSequenced) {
-                if (purityShallowExecuted && shallowSeq == null) {
-                    LOGGER.error("BFX lims and lab lims are not equal!");
-                } else if (purityShallowExecuted && shallowSeq.sampleId().equals(sample)) {
-                    LOGGER.info("Using purity from shallow seq for report from sample.");
-                    return Math.round(shallowSeq.purityShallowSeq() * 100) + "%";
-                } else if (!purityShallowExecuted) {
-                    LOGGER.info("Using pathology tumor percentage for report from sample.");
-                    return tumorPercentageForSample(sample);
-                }
-            } else if (isSequenced) {
-                if (purityShallowExecuted && shallowSeq == null) {
-                    LOGGER.error("BFX lims and lab lims are not equal!");
+            boolean purityShallowExecuted = shallowSeqExecuted(labelSample, remarksSample);
+
+            if (purityShallowExecuted && shallowSeq == null) {
+                LOGGER.warn("BFX lims and lab lims are not equal!");
+            } else if (!isSequenced) {
+                if (purityShallowExecuted) {
+                    LOGGER.info("Used purity from shallow seq for report from sample.");
+                    try {
+                        return Math.round(shallowSeq.purityShallowSeq() * 100) + "%";
+                    } catch (final NumberFormatException e) {
+                        return "N/A";
+                    }
                 } else {
-                    LOGGER.info("Purity of pathology tumor percentage used for report from sample.");
+                    LOGGER.info("Used pathology tumor percentage for report from sample.");
                     return tumorPercentageForSample(sample);
                 }
+            } else {
+                LOGGER.info("Purity or pathology tumor percentage used for report from sample.");
+                return tumorPercentageForSample(sample);
+
             }
         }
         return "N/A";
@@ -160,9 +165,7 @@ public class Lims {
             String tumorPercentageString = sampleData.tumorPercentageString();
             String remarksSample = sampleData.labRemarks();
             String labelSample = sampleData.labelSample();
-            boolean noTumorPercDetermined =
-                    labelSample.equals("CORE") || (remarksSample != null && (remarksSample.contains("CPCTWIDE") || remarksSample.contains(
-                            "ShallowSeq")));
+            boolean noTumorPercDetermined = shallowSeqExecuted(labelSample, remarksSample);
 
             if (noTumorPercDetermined) {
                 return "not determined";
