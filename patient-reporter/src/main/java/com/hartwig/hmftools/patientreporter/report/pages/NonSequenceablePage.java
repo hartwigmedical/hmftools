@@ -107,7 +107,7 @@ public abstract class NonSequenceablePage {
                 cmp.text("When possible, please resubmit using the same DVO.").setStyle(fontStyle()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
                 cmp.text("The tumor percentage estimated by molecular tumor percentage is: "
-                        + sampleReport().purityOrPathologyTumorPercentage()).setStyle(fontStyle()),
+                        + sampleReport().purityShallowSeq()).setStyle(fontStyle()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
                 sampleArrivalDateText(),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
@@ -137,7 +137,7 @@ public abstract class NonSequenceablePage {
                         + "In case additional tumor material cannot be provided, please be notified that the patient will not be "
                         + "evaluable for the " + study().studyCode() + " study.").setStyle(fontStyle()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
-                cmp.text("The tumor percentage estimated by Pathology UMC Utrecht is: " + sampleReport().purityOrPathologyTumorPercentage())
+                cmp.text("The tumor percentage estimated by Pathology UMC Utrecht is: " + sampleReport().purityShallowSeq())
                         .setStyle(fontStyle()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
                 sampleArrivalDateText(),

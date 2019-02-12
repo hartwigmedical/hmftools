@@ -21,7 +21,10 @@ public abstract class SampleReport {
     public abstract PatientTumorLocation patientTumorLocation();
 
     @NotNull
-    public abstract String purityOrPathologyTumorPercentage();
+    public abstract String purityShallowSeq();
+
+    @NotNull
+    public abstract String pathologyTumorPercentage();
 
     @NotNull
     @Value.Derived

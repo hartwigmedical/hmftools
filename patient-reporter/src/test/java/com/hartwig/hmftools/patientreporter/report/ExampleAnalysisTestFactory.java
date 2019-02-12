@@ -30,7 +30,6 @@ import com.hartwig.hmftools.common.purple.purity.FittedPurity;
 import com.hartwig.hmftools.common.purple.purity.ImmutableFittedPurity;
 import com.hartwig.hmftools.common.variant.Clonality;
 import com.hartwig.hmftools.common.variant.Hotspot;
-import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 import com.hartwig.hmftools.patientreporter.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.BaseReportData;
 import com.hartwig.hmftools.patientreporter.ImmutableAnalysedPatientReport;
@@ -154,11 +153,18 @@ final class ExampleAnalysisTestFactory {
         final String sample = "COLO829T";
         return ImmutableSampleReport.of(sample,
                 ImmutablePatientTumorLocation.of("COLO829", "Skin", "Melanoma"),
+                Strings.EMPTY,
                 String.valueOf(0.8),
                 LocalDate.parse("05-Jan-2018", DATE_FORMATTER),
                 LocalDate.parse("01-Jan-2018", DATE_FORMATTER),
                 "PREP013V23-QC037V20-SEQ008V25",
-                "HMF Testing Center", "COLO", "", "", "", "", true);
+                "HMF Testing Center",
+                "COLO",
+                Strings.EMPTY,
+                Strings.EMPTY,
+                Strings.EMPTY,
+                Strings.EMPTY,
+                false);
     }
 
     @NotNull

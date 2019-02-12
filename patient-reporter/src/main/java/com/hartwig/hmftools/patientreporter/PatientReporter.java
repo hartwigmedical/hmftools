@@ -99,7 +99,8 @@ abstract class PatientReporter {
         boolean isCoreSample = baseReportData().limsModel().isCoreSample(tumorSample);
         final SampleReport sampleReport = ImmutableSampleReport.of(tumorSample,
                 patientTumorLocation,
-                baseReportData().limsModel().purityShallowSeq(tumorSample, true),
+                baseReportData().limsModel().purityShallowSeq(tumorSample),
+                baseReportData().limsModel().pathologyTumorPercentage(tumorSample),
                 baseReportData().limsModel().arrivalDate(tumorSample),
                 baseReportData().limsModel().arrivalDate(run.refSample()),
                 baseReportData().limsModel().labProcedures(tumorSample),

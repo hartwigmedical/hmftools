@@ -21,6 +21,7 @@ import com.hartwig.hmftools.patientreporter.SampleReport;
 import com.hartwig.hmftools.patientreporter.qcfail.NotAnalysableReason;
 import com.hartwig.hmftools.patientreporter.qcfail.NotAnalysableStudy;
 
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
@@ -102,11 +103,18 @@ public class PDFWriterTest {
     private static JasperReportBuilder generateNotAnalysableCPCTReport(double pathologyTumorEstimate, @NotNull NotAnalysableReason reason) {
         SampleReport sampleReport = ImmutableSampleReport.of("CPCT02991111T",
                 ImmutablePatientTumorLocation.of("CPCT02991111", "Skin", "Melanoma"),
+                Strings.EMPTY,
                 String.valueOf(pathologyTumorEstimate),
                 LocalDate.parse("05-Jan-2018", DATE_FORMATTER),
                 LocalDate.parse("01-Jan-2018", DATE_FORMATTER),
                 "PREP013V23-QC037V20-SEQ008V25",
-                "HMF Testing Center", "COLO", "", "", "", "", false);
+                "HMF Testing Center",
+                "COLO",
+                Strings.EMPTY,
+                Strings.EMPTY,
+                Strings.EMPTY,
+                Strings.EMPTY,
+                false);
 
         NotAnalysedPatientReport patientReport = ImmutableNotAnalysedPatientReport.of(sampleReport,
                 reason,

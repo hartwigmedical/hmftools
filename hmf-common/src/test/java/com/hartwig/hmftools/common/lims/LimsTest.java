@@ -88,7 +88,7 @@ public class LimsTest {
         assertNull(lims.samplingDate("DoesNotExist"));
         assertNull(lims.dnaNanograms("DoesNotExist"));
         assertEquals("N/A", lims.pathologyTumorPercentage("DoesNotExist"));
-        assertEquals("N/A", lims.purityShallowSeq("DoesNotExist", true));
+        assertEquals("not determined", lims.purityShallowSeq("DoesNotExist"));
         assertEquals("N/A", lims.primaryTumor("DoesNotExist"));
         assertEquals("N/A", lims.labProcedures("DoesNotExist"));
     }
@@ -124,7 +124,7 @@ public class LimsTest {
         assertNull(lims.samplingDate(SAMPLE));
         assertNull(lims.dnaNanograms(SAMPLE));
         assertEquals("N/A", lims.pathologyTumorPercentage(SAMPLE));
-        assertEquals("N/A", lims.purityShallowSeq(SAMPLE, true));
+        assertEquals("not determined", lims.purityShallowSeq(SAMPLE));
         assertEquals("N/A", lims.labProcedures(SAMPLE));
     }
 
@@ -150,8 +150,7 @@ public class LimsTest {
                 createLimsSampleDataBuilder().sampleId(SAMPLE).labelSample("").labRemarks("ShallowSeq").build();
 
         Lims lims = buildTestLimsWithSample(sampleData);
-        assertEquals("N/A", lims.purityShallowSeq(SAMPLE, false));
-        assertEquals("N/A", lims.purityShallowSeq(SAMPLE, true));
+        assertEquals("N/A", lims.purityShallowSeq(SAMPLE));
     }
 
     @Test
@@ -160,8 +159,8 @@ public class LimsTest {
                 createLimsSampleDataBuilder().sampleId(SAMPLE).labRemarks("").labelSample("").tumorPercentageString("70%").build();
 
         Lims lims = buildTestLimsWithSample(sampleData);
-        assertEquals("N/A", lims.purityShallowSeq(SAMPLE, true));
-        assertEquals("N/A", lims.purityShallowSeq(SAMPLE, false));
+        assertEquals("not determined", lims.purityShallowSeq(SAMPLE));
+        assertEquals("70%", lims.pathologyTumorPercentage(SAMPLE));
     }
 
     @Test
@@ -170,8 +169,7 @@ public class LimsTest {
                 createLimsSampleDataBuilder().sampleId("CPCT02990001T").labelSample("").labRemarks("ShallowSeq").build();
 
         Lims lims = buildTestLimsWithSampleAndShallowSeq(sampleData, 0.2);
-        assertEquals("not determined", lims.purityShallowSeq("CPCT02990001T", true));
-        assertEquals("20%", lims.purityShallowSeq("CPCT02990001T", false));
+        assertEquals("20%", lims.purityShallowSeq("CPCT02990001T"));
     }
 
     @Test
@@ -180,8 +178,7 @@ public class LimsTest {
                 createLimsSampleDataBuilder().sampleId("CORE00000001T").labRemarks("ShallowSeq").labelSample("CORE").build();
 
         Lims lims = buildTestLimsWithSampleAndShallowSeq(sampleData, 0.3);
-        assertEquals("not determined", lims.purityShallowSeq("CORE00000001T", true));
-        assertEquals("30%", lims.purityShallowSeq("CORE00000001T", false));
+        assertEquals("30%", lims.purityShallowSeq("CORE00000001T"));
     }
 
     @NotNull

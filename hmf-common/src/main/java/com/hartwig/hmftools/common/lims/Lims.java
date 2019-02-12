@@ -121,7 +121,7 @@ public class Lims {
     }
 
     @NotNull
-    public String purityShallowSeq(@NotNull String sample, boolean isSequenced) {
+    public String purityShallowSeq(@NotNull String sample) {
         LimsJsonSampleData sampleData = dataPerSample.get(sample);
         LimsShallowSeqData shallowSeq = dataShallowSeq.get(sample);
 
@@ -130,18 +130,13 @@ public class Lims {
 
             if (purityShallowExecuted && shallowSeq == null) {
                 LOGGER.warn("BFX lims and lab status do not match for sample " + sample + "!");
-            } else if (!isSequenced) {
+            } else {
                 if (purityShallowExecuted) {
                     LOGGER.info("Retrieved purity from shallow seq.");
                     return Math.round(shallowSeq.purityShallowSeq() * 100) + "%";
                 } else {
-                    LOGGER.info("Pathology tumor percentage retrieved for sample as proxy for shallow seq purity.");
-                    return pathologyTumorPercentage(sample);
+                    return "not determined";
                 }
-            } else {
-                LOGGER.info("Pathology tumor percentage retrieved for sample as proxy for shallow seq purity.");
-                return pathologyTumorPercentage(sample);
-
             }
         }
         return "N/A";

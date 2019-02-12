@@ -37,7 +37,8 @@ public abstract class NotAnalysableReporter {
         boolean isCoreSample = baseReportData().limsModel().isCoreSample(sample);
         final SampleReport sampleReport = ImmutableSampleReport.of(sample,
                 patientTumorLocation,
-                lims.purityShallowSeq(sample, false),
+                lims.purityShallowSeq(sample),
+                lims.pathologyTumorPercentage(sample),
                 lims.arrivalDate(sample),
                 null,
                 lims.labProcedures(sample),
