@@ -9,6 +9,7 @@ import java.util.Optional;
 import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.variant.cosmic.CosmicAnnotation;
@@ -134,8 +135,8 @@ public class SomaticVariantFactory {
     }
 
     @NotNull
-    // TODO: This function is used by BachelorPP, should probably change.
-    public Optional<SomaticVariant> createVariant(@NotNull final String sample, @NotNull final VariantContext context) {
+    @VisibleForTesting
+    Optional<SomaticVariant> createVariant(@NotNull final String sample, @NotNull final VariantContext context) {
         final Genotype genotype = context.getGenotype(sample);
 
         if (filter.test(context) && genotype.hasAD() && genotype.getAD().length > 1) {
@@ -150,19 +151,18 @@ public class SomaticVariantFactory {
     }
 
     @NotNull
-    public SomaticVariant createSomaticVariant(@NotNull final String sample, @NotNull final VariantContext context)
-    {
+    public SomaticVariant createSomaticVariant(@NotNull final String sample, @NotNull final VariantContext context) {
         final AllelicDepth allelicDepth = determineAlleleFrequencies(context.getGenotype(sample));
 
         return Optional.of(createVariantBuilder(allelicDepth, context, canonicalAnnotationFactory))
                 .map(x -> enrichment.enrich(x, context))
-                .map(ImmutableSomaticVariantImpl.Builder::build).get();
+                .map(ImmutableSomaticVariantImpl.Builder::build)
+                .get();
     }
 
     @NotNull
     private static ImmutableSomaticVariantImpl.Builder createVariantBuilder(@NotNull final AllelicDepth allelicDepth,
             @NotNull final VariantContext context, @NotNull CanonicalAnnotation canonicalAnnotationFactory) {
-
         ImmutableSomaticVariantImpl.Builder builder = ImmutableSomaticVariantImpl.builder()
                 .chromosome(context.getContig())
                 .position(context.getStart())
