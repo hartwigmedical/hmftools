@@ -133,7 +133,7 @@ public class Lims {
                             "ShallowSeq")));
             if (!isSequenced) {
                 if (purityShallowExecuted && shallowSeq == null) {
-                    LOGGER.error("BFX lims and lab lims are not equal. Cannot generated patient report!");
+                    LOGGER.error("BFX lims and lab lims are not equal!");
                 } else if (purityShallowExecuted && shallowSeq.sampleId().equals(sample)) {
                     LOGGER.info("Used purity from shallow seq for report from sample.");
                     try {
@@ -145,13 +145,11 @@ public class Lims {
                     LOGGER.info("Used pathology tumor percentage for report from sample.");
                     return tumorPercentageForSample(sample);
                 }
-            }
-
-            if (isSequenced) {
+            } else if (isSequenced) {
                 if (purityShallowExecuted && shallowSeq == null) {
-                    LOGGER.error("BFX lims and lab lims are not equal. Cannot generated patient report!");
+                    LOGGER.error("BFX lims and lab lims are not equal!");
                 } else {
-                    LOGGER.info("Used pathology tumor percentage for report from sample.");
+                    LOGGER.info("Purity or pathology tumor percentage used for report from sample.");
                     return tumorPercentageForSample(sample);
                 }
             }
