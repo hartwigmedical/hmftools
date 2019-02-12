@@ -145,57 +145,34 @@ public class LimsTest {
     }
 
     @Test
-    public void shallowSeqPurityErrorNonSequencedSample() {
+    public void shallowSeqPurityErrorForSample() {
         final LimsJsonSampleData sampleData =
                 createLimsSampleDataBuilder().sampleId(SAMPLE).labelSample("").labRemarks("ShallowSeq").build();
 
         Lims lims = buildTestLimsWithSample(sampleData);
         assertEquals("N/A", lims.purityShallowSeq(SAMPLE, false));
-    }
-
-    @Test
-    public void shallowSeqPurityErrorSequencedSample() {
-        final LimsJsonSampleData sampleData =
-                createLimsSampleDataBuilder().sampleId(SAMPLE).labelSample("").labRemarks("ShallowSeq").build();
-
-        Lims lims = buildTestLimsWithSample(sampleData);
         assertEquals("N/A", lims.purityShallowSeq(SAMPLE, true));
+
     }
 
     @Test
-    public void pathologySequencedSampleCPCTandDRUPSequenced() {
+    public void canRetrievePathologyPercentageForSample() {
         final LimsJsonSampleData sampleData =
                 createLimsSampleDataBuilder().sampleId(SAMPLE).labRemarks("").labelSample("").tumorPercentageString("70%").build();
 
         Lims lims = buildTestLimsWithSample(sampleData);
         assertEquals("N/A", lims.purityShallowSeq(SAMPLE, true));
-    }
-
-    @Test
-    public void pathologySequencedSampleCPCTandDRUPNonSequenced() {
-        final LimsJsonSampleData sampleData =
-                createLimsSampleDataBuilder().sampleId(SAMPLE).labRemarks("").labelSample("").tumorPercentageString("70%").build();
-
-        Lims lims = buildTestLimsWithSample(sampleData);
         assertEquals("N/A", lims.purityShallowSeq(SAMPLE, false));
     }
 
-    @Test // not correct
-    public void shallowSeqPuritySequenedCPCTandDRUP() {
+    @Test
+    public void canRetrieveShallowSeqPurityForCPCTandDRUPSample() {
         final LimsJsonSampleData sampleData =
                 createLimsSampleDataBuilder().sampleId("CPCT02990001T").labelSample("").labRemarks("ShallowSeq").build();
 
-        Lims lims = buildTestLimsWithSample(sampleData);
-        assertEquals("N/A", lims.purityShallowSeq("CPCT02990001T", true));
-    }
-
-    @Test // not correct
-    public void shallowSeqPurityNonSequenedCPCTandDRUP() {
-        final LimsJsonSampleData sampleData =
-                createLimsSampleDataBuilder().sampleId("CPCT02990001T").labelSample("").labRemarks("ShallowSeq").build();
-
-        Lims lims = buildTestLimsWithSample(sampleData);
-        assertEquals("N/A", lims.purityShallowSeq("CPCT02990001T", false));
+        Lims lims = buildTestLimsWithSampleAndShallowSeq(sampleData, 0.2);
+        assertEquals("not determined", lims.purityShallowSeq("CPCT02990001T", true));
+        assertEquals("20%", lims.purityShallowSeq("CPCT02990001T", false));
     }
 
     @Test
@@ -206,15 +183,6 @@ public class LimsTest {
         Lims lims = buildTestLimsWithSampleAndShallowSeq(sampleData, 0.3);
         assertEquals("not determined", lims.purityShallowSeq("CORE00000001T", true));
         assertEquals("30%", lims.purityShallowSeq("CORE00000001T", false));
-    }
-
-    @Test // not correct
-    public void ShallowSeqPurityCORE() {
-        final LimsJsonSampleData sampleData =
-                createLimsSampleDataBuilder().sampleId("CORE00000001T").labRemarks("ShallowSeq").labelSample("CORE").build();
-
-        Lims lims = buildTestLimsWithSample(sampleData);
-        assertEquals("N/A", lims.purityShallowSeq("CORE00000001T", false));
     }
 
     @NotNull
