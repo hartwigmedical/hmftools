@@ -5,27 +5,15 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.position.GenomePosition;
+import com.hartwig.hmftools.common.position.GenomePositions;
 import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.common.region.GenomeRegionFactory;
-import com.hartwig.hmftools.svvisualise.data.Link;
-import com.hartwig.hmftools.svvisualise.data.Links;
-import com.hartwig.hmftools.svvisualise.data.Segment;
-import com.hartwig.hmftools.svvisualise.data.Segments;
 
 import org.jetbrains.annotations.NotNull;
 
 public class Span {
-
-    @NotNull
-    public static List<GenomeRegion> span(@NotNull final List<Segment> segments, @NotNull final List<Link> links) {
-
-        final List<GenomePosition> positions = Lists.newArrayList();
-        positions.addAll(Segments.allPositions(segments));
-        positions.addAll(Links.allPositions(links));
-
-        return span(positions);
-    }
 
     @NotNull
     public static List<GenomeRegion> span(@NotNull final List<GenomePosition> positions) {
@@ -43,6 +31,21 @@ public class Span {
 
         Collections.sort(result);
         return result;
+    }
+
+    @NotNull
+    public static List<GenomePosition> allPositions(@NotNull final List<? extends GenomeRegion> segments) {
+        final List<GenomePosition> results = Lists.newArrayList();
+
+        for (final GenomeRegion segment : segments) {
+            if (HumanChromosome.contains(segment.chromosome())) {
+                results.add(GenomePositions.create(segment.chromosome(), segment.start()));
+                results.add(GenomePositions.create(segment.chromosome(), segment.end()));
+            }
+        }
+
+        Collections.sort(results);
+        return results;
     }
 
 }

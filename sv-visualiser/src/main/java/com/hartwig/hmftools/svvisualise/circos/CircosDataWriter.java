@@ -19,10 +19,10 @@ import com.hartwig.hmftools.common.position.GenomePosition;
 import com.hartwig.hmftools.common.position.GenomePositions;
 import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.svvisualise.data.CopyNumberAlteration;
+import com.hartwig.hmftools.svvisualise.data.Exon;
 import com.hartwig.hmftools.svvisualise.data.Link;
 import com.hartwig.hmftools.svvisualise.data.Links;
 import com.hartwig.hmftools.svvisualise.data.Segment;
-import com.hartwig.hmftools.svvisualise.data.Segments;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -45,7 +45,7 @@ public class CircosDataWriter {
     }
 
     public void write(@NotNull final List<Segment> unadjustedSegments, @NotNull final List<Link> unadjustedLinks,
-            @NotNull final List<CopyNumberAlteration> unadjustedAlterations) throws IOException {
+            @NotNull final List<CopyNumberAlteration> unadjustedAlterations, @NotNull final List<Exon> unadjustedExons) throws IOException {
 
         final List<GenomeRegion> unadjustedFragileSites =
                 Highlights.limitHighlightsToSegments(Highlights.fragileSites(), unadjustedSegments);
@@ -55,20 +55,22 @@ public class CircosDataWriter {
 
         final List<GenomePosition> unadjustedPositions = Lists.newArrayList();
         unadjustedPositions.addAll(Links.allPositions(unadjustedLinks));
-        unadjustedPositions.addAll(Segments.allPositions(unadjustedSegments));
-        unadjustedPositions.addAll(Segments.allPositions(unadjustedAlterations));
-        unadjustedPositions.addAll(Segments.allPositions(unadjustedFragileSites));
-        unadjustedPositions.addAll(Segments.allPositions(unadjustedLineElements));
+        unadjustedPositions.addAll(Span.allPositions(unadjustedSegments));
+        unadjustedPositions.addAll(Span.allPositions(unadjustedExons));
+        unadjustedPositions.addAll(Span.allPositions(unadjustedAlterations));
+        unadjustedPositions.addAll(Span.allPositions(unadjustedFragileSites));
+        unadjustedPositions.addAll(Span.allPositions(unadjustedLineElements));
 
         final ScalePosition scalePosition = new ScalePosition(unadjustedPositions);
         final List<GenomePosition> scaledPositions = scalePosition.scaled();
         final Map<String, Integer> contigLengths = contigLengths(scaledPositions);
 
-        final List<Segment> segments = scalePosition.scaleTracks(unadjustedSegments);
+        final List<Segment> segments = scalePosition.scaleSegments(unadjustedSegments);
         final List<Link> links = scalePosition.scaleLinks(unadjustedLinks);
         final List<CopyNumberAlteration> alterations = scalePosition.scaleAlterations(unadjustedAlterations);
         final List<GenomeRegion> fragileSites = scalePosition.scaleRegions(unadjustedFragileSites);
         final List<GenomeRegion> lineElements = scalePosition.scaleRegions(unadjustedLineElements);
+        final List<Exon> exons = scalePosition.scaleExons(unadjustedExons);
 
         final String textPath = filePrefix + ".text.circos";
         Files.write(new File(textPath).toPath(), createPositionText(debug, unadjustedLinks, links, segments));

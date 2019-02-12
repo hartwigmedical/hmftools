@@ -14,7 +14,9 @@ import com.hartwig.hmftools.common.position.GenomePositions;
 import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.common.region.GenomeRegionFactory;
 import com.hartwig.hmftools.svvisualise.data.CopyNumberAlteration;
+import com.hartwig.hmftools.svvisualise.data.Exon;
 import com.hartwig.hmftools.svvisualise.data.ImmutableCopyNumberAlteration;
+import com.hartwig.hmftools.svvisualise.data.ImmutableExon;
 import com.hartwig.hmftools.svvisualise.data.ImmutableLink;
 import com.hartwig.hmftools.svvisualise.data.ImmutableSegment;
 import com.hartwig.hmftools.svvisualise.data.Link;
@@ -60,9 +62,15 @@ class ScalePosition {
     }
 
     @NotNull
-    public List<Segment> scaleTracks(@NotNull final List<Segment> segments) {
+    public List<Segment> scaleSegments(@NotNull final List<Segment> segments) {
         return segments.stream().map(x -> scale(x, chromosomePositionMap.get(x.chromosome()))).collect(Collectors.toList());
     }
+
+    @NotNull
+    public List<Exon> scaleExons(@NotNull final List<Exon> exons) {
+        return exons.stream().map(x -> scale(x, chromosomePositionMap.get(x.chromosome()))).collect(Collectors.toList());
+    }
+
 
     public List<GenomeRegion> scaleRegions(@NotNull final List<GenomeRegion> regions) {
         return regions.stream().map(x -> scale(x, chromosomePositionMap.get(x.chromosome()))).collect(Collectors.toList());
@@ -116,6 +124,11 @@ class ScalePosition {
     @NotNull
     private static GenomeRegion scale(@NotNull final GenomeRegion region, @NotNull final Map<Long, Integer> positionMap) {
         return GenomeRegionFactory.create(region.chromosome(), positionMap.get(region.start()), positionMap.get(region.end()));
+    }
+
+    @NotNull
+    private static Exon scale(@NotNull final Exon victim, @NotNull final Map<Long, Integer> positionMap) {
+        return ImmutableExon.builder().from(victim).start(positionMap.get(victim.start())).end(positionMap.get(victim.end())).build();
     }
 
     @VisibleForTesting
