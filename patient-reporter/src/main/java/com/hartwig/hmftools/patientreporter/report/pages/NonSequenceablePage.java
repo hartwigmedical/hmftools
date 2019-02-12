@@ -115,6 +115,10 @@ public abstract class NonSequenceablePage {
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
                 cmp.text("The project name is : " + sampleReport().projectNameDVO()).setStyle(fontStyle()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
+                cmp.text("The client names are : " + sampleReport().contactName()).setStyle(fontStyle()),
+                cmp.verticalGap(SECTION_VERTICAL_GAP),
+                cmp.text("The client emails are: " + sampleReport().contactEmail()).setStyle(fontStyle()),
+                cmp.verticalGap(SECTION_VERTICAL_GAP),
                 accreditationText(),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
                 questionsText());
