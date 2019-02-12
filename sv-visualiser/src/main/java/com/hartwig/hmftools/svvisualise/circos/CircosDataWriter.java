@@ -318,7 +318,8 @@ public class CircosDataWriter {
                     final String start = new StringJoiner(DELIMITER).add(circosContig(link.startChromosome()))
                             .add(String.valueOf(link.startPosition()))
                             .add(String.valueOf(link.startPosition()))
-                            .add("r1=" + rTrack1 + "p," + colorPicker.connectorColor(link.clusterId(), link.chainId()) + "," + thickness(link.traverseCount()))
+                            .add("r1=" + rTrack1 + "p," + colorPicker.connectorColor(link.clusterId(), link.chainId()) + "," + thickness(
+                                    link.traverseCount()))
                             .toString();
                     result.add(start);
                 }
@@ -327,7 +328,8 @@ public class CircosDataWriter {
                     final String end = new StringJoiner(DELIMITER).add(circosContig(link.endChromosome()))
                             .add(String.valueOf(link.endPosition()))
                             .add(String.valueOf(link.endPosition()))
-                            .add("r1=" + rTrack1 + "p," + colorPicker.connectorColor(link.clusterId(), link.chainId()) + "," + thickness(link.traverseCount()))
+                            .add("r1=" + rTrack1 + "p," + colorPicker.connectorColor(link.clusterId(), link.chainId()) + "," + thickness(
+                                    link.traverseCount()))
                             .toString();
                     result.add(end);
                 }
@@ -479,7 +481,7 @@ public class CircosDataWriter {
 
     @NotNull
     private static String thickness(long usage) {
-        return "thickness=" + Math.max(1, (4 + (usage - 1) * 4));
+        return "thickness=" + Math.max(1, Math.min(10, usage) * 4);
     }
 
     @NotNull
