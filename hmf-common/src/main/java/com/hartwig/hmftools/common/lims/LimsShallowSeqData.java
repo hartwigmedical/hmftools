@@ -8,11 +8,9 @@ import org.jetbrains.annotations.Nullable;
 @Value.Style(allParameters = true,
              passAnnotations = { NotNull.class, Nullable.class })
 abstract class LimsShallowSeqData {
-    // only known if shallow seq is done
 
-    @Nullable
+    @NotNull
     abstract String sampleId();
 
-    @Nullable
-    abstract String purityShallowSeq();
+    abstract double purityShallowSeq();
 }

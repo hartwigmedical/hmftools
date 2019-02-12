@@ -71,7 +71,7 @@ public class Lims {
     }
 
     @NotNull
-    public String projectNameDVO(@NotNull final String sample) {
+    public String projectName(@NotNull final String sample) {
         LimsJsonSampleData sampleData = dataPerSample.get(sample);
         return sampleData != null ? sampleData.projectName() : "N/A";
     }
@@ -135,21 +135,17 @@ public class Lims {
                 if (purityShallowExecuted && shallowSeq == null) {
                     LOGGER.error("BFX lims and lab lims are not equal!");
                 } else if (purityShallowExecuted && shallowSeq.sampleId().equals(sample)) {
-                    LOGGER.info("Used purity from shallow seq for report from sample.");
-                    try {
-                        return Math.round(Double.parseDouble(shallowSeq.purityShallowSeq()) * 100) + "%";
-                    } catch (final NumberFormatException e) {
-                        return "N/A";
-                    }
+                    LOGGER.info("Using purity from shallow seq for report from sample.");
+                    return Math.round(shallowSeq.purityShallowSeq() * 100) + "%";
                 } else if (!purityShallowExecuted) {
-                    LOGGER.info("Used pathology tumor percentage for report from sample.");
+                    LOGGER.info("Using pathology tumor percentage for report from sample.");
                     return tumorPercentageForSample(sample);
                 }
             } else if (isSequenced) {
                 if (purityShallowExecuted && shallowSeq == null) {
                     LOGGER.error("BFX lims and lab lims are not equal!");
                 } else {
-                    LOGGER.info("Purity or pathology tumor percentage used for report from sample.");
+                    LOGGER.info("Purity of pathology tumor percentage used for report from sample.");
                     return tumorPercentageForSample(sample);
                 }
             }

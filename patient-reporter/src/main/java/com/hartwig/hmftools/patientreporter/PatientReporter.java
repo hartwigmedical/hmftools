@@ -105,7 +105,7 @@ abstract class PatientReporter {
                 baseReportData().limsModel().labProceduresForSample(tumorSample),
                 isCoreSample ? "" : baseReportData().centerModel().getAddresseeStringForSample(tumorSample),
                 baseReportData().limsModel().labelSample(tumorSample),
-                baseReportData().limsModel().projectNameDVO(tumorSample),
+                baseReportData().limsModel().projectName(tumorSample),
                 isCoreSample ? baseReportData().limsModel().contactEmail(tumorSample) : "",
                 isCoreSample ? baseReportData().limsModel().contactName(tumorSample) : "",
                 baseReportData().limsModel().patientNumber(tumorSample),
