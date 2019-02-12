@@ -44,14 +44,16 @@ public class PDFWriter {
 
     public void writeSequenceReport(@NotNull AnalysedPatientReport report) throws IOException, DRException {
         final JasperReportBuilder reportBuilder = generatePatientReport(report);
-        writeReport(fileName(report.sampleReport().sampleId(), report.sampleReport().projectNameDVO(), report.sampleReport().label()),
-                reportBuilder);
+        writeReport(fileName(report.sampleReport().sampleId(),
+                report.sampleReport().projectNameDVO(),
+                report.sampleReport().isCoreSample()), reportBuilder);
     }
 
     public void writeNonSequenceableReport(@NotNull NotAnalysedPatientReport report) throws IOException, DRException {
         final JasperReportBuilder reportBuilder = generateNotAnalysableReport(report);
-        writeReport(fileName(report.sampleReport().sampleId(), report.sampleReport().projectNameDVO(), report.sampleReport().label()),
-                reportBuilder);
+        writeReport(fileName(report.sampleReport().sampleId(),
+                report.sampleReport().projectNameDVO(),
+                report.sampleReport().isCoreSample()), reportBuilder);
     }
 
     private static void writeReport(@NotNull String fileName, @NotNull JasperReportBuilder report)
@@ -65,8 +67,10 @@ public class PDFWriter {
     }
 
     @NotNull
-    private String fileName(@NotNull String sample, @Nullable String DVO, @NotNull String label) {
-        return reportDirectory + File.separator + sample + "_hmf_report.pdf";
+    private String fileName(@NotNull String sample, @Nullable String DVO, boolean isCoreSample) {
+        return isCoreSample
+                ? reportDirectory + File.separator + DVO + "_hmf_report.pdf"
+                : reportDirectory + File.separator + sample + "_hmf_report.pdf";
     }
 
     @VisibleForTesting
