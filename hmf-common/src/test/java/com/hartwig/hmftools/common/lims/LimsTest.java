@@ -153,7 +153,7 @@ public class LimsTest {
     }
 
     //TODO: tests for shallow seq purity
-    @Ignore
+    @Test
     public void ShallowSeqPurityError() {
         final LimsJsonSampleData sampleData = createLimsSampleDataBuilder()
                 .sampleId(SAMPLE)
@@ -172,14 +172,25 @@ public class LimsTest {
                 .build();
 
         Lims lims = buildTestLimsWithSample(sampleData);
-        assertEquals("N/A", lims.purityShallowSeq("CPCT02990001T", true));
+        assertEquals("0.19", lims.purityShallowSeq("CPCT02990001T", false));
     }
 
     @Ignore
+    public void ShallowSeqSequencedSample() {
+        final LimsJsonSampleData sampleData = createLimsSampleDataBuilder()
+                .sampleId("CPCT02990001T")
+                .labRemarks("ShallowSeq")
+                .build();
+
+        Lims lims = buildTestLimsWithSample(sampleData);
+        assertEquals("0.19", lims.purityShallowSeq("CPCT02990001T", true));
+    }
+
+    @Test
     public void ShallowSeqPathology() {
         final LimsJsonSampleData sampleData = createLimsSampleDataBuilder()
                 .sampleId(SAMPLE)
-                .labRemarks("ShallowSeq")
+                .labRemarks("")
                 .build();
 
         Lims lims = buildTestLimsWithSample(sampleData);
