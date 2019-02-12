@@ -449,6 +449,9 @@ public class ChainFinder
 
     }
 
+    // private static int MIN_INFERRED_CHAIN_TI_LENGTH = 100;
+    private static int MIN_INFERRED_CHAIN_TI_LENGTH = MIN_TEMPLATED_INSERTION_LENGTH;
+
     private SvLinkedPair findNewLinkedPair(final List<SvLinkedPair> chainedPairs, final List<SvVarData> unlinkedSVs)
     {
         // try to find an inferred linked pair from which to begin a new chain
@@ -506,7 +509,7 @@ public class ChainFinder
 
                 int tiLength = getProximity(var, otherVar, useStart, otherVarStart);
 
-                if (tiLength <= MIN_TEMPLATED_INSERTION_LENGTH || (newPair != null && tiLength >= newPair.length()))
+                if (tiLength <= MIN_INFERRED_CHAIN_TI_LENGTH || (newPair != null && tiLength >= newPair.length()))
                     continue;
 
                 // check if already in a linked pair

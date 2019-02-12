@@ -27,6 +27,7 @@ import static com.hartwig.hmftools.svanalysis.types.SvArmCluster.mergeArmCluster
 import static com.hartwig.hmftools.svanalysis.types.SvChain.CHAIN_ASSEMBLY_LINK_COUNT;
 import static com.hartwig.hmftools.svanalysis.types.SvChain.CHAIN_LENGTH;
 import static com.hartwig.hmftools.svanalysis.types.SvChain.CHAIN_LINK_COUNT;
+import static com.hartwig.hmftools.svanalysis.types.SvChain.checkChainReplication;
 import static com.hartwig.hmftools.svanalysis.types.SvChain.getRepeatedSvSequence;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.CLUSTER_ANNONTATION_CT;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.CLUSTER_ANNONTATION_DM;
@@ -258,11 +259,12 @@ public class ClusterAnalyser {
         {
             // isSpecificCluster(cluster);
 
-            if (cluster.isResolved() || cluster.isSimpleSingleSV() || cluster.isFullyChained() || cluster.getUniqueSvCount() < 2)
-            {
-                // no need to chain these ones
+            if (cluster.isResolved() && cluster.getResolvedType() != RESOLVED_TYPE_LINE)
                 continue;
-            }
+
+            // these are either already chained or no need to chain
+            if (cluster.isSimpleSingleSV() || cluster.isFullyChained() || cluster.getUniqueSvCount() < 2)
+                continue;
 
             cluster.dissolveLinksAndChains();
 
@@ -360,52 +362,6 @@ public class ClusterAnalyser {
         {
             if(pair.isInferred())
                 inferredLinkedPairs.add(pair);
-        }
-    }
-
-    private void checkChainReplication(SvCluster cluster)
-    {
-        if(!cluster.hasReplicatedSVs())
-            return;
-
-        // check whether any chains are identical to others using replicated SVs
-        // in which case remove the replicated SVs and chains
-        List<SvChain> chains = cluster.getChains();
-
-        int index1 = 0;
-        while(index1 < chains.size())
-        {
-            final SvChain chain1 = chains.get(index1);
-
-            for(int index2 = index1+1; index2 < chains.size(); ++index2)
-            {
-                final SvChain chain2 = chains.get(index2);
-
-                if(chain1.identicalChain(chain2))
-                {
-                    boolean allReplicatedSVs = chain2.getUniqueSvCount() == 0;
-
-                    LOGGER.debug("cluster({}) removing duplicate chain({}) vs origChain({}) all replicated({})",
-                            cluster.id(), chain2.id(), chain1.id(), allReplicatedSVs);
-
-                    // remove these replicated SVs as well as the replicated chain
-                    if(allReplicatedSVs)
-                    {
-                        for (final SvVarData var : chain2.getSvList())
-                        {
-                            cluster.removeReplicatedSv(var);
-                        }
-                    }
-
-                    chains.remove(index2);
-                    continue;
-
-                }
-
-                ++index2;
-            }
-
-            ++index1;
         }
     }
 
@@ -1357,7 +1313,7 @@ public class ClusterAnalyser {
 
         for(final SvCluster cluster : mClusters)
         {
-            if(cluster.getChains().isEmpty() || cluster.hasLinkingLineElements())
+            if(cluster.getChains().isEmpty())
                 continue;
 
             // isSpecificCluster(cluster);

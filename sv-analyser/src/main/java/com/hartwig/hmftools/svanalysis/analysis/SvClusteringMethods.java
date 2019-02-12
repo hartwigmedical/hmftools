@@ -276,6 +276,7 @@ public class SvClusteringMethods {
 
     private void splitDelClusters(List<SvCluster> clusters)
     {
+        // no 2 DELs can overlap, so if the cluster is entirely comprised of DELs, split out any overlapping SVs
         List<SvCluster> clustersToRemove = Lists.newArrayList();
 
         int clusterCount = clusters.size();
@@ -388,6 +389,26 @@ public class SvClusteringMethods {
         return true;
     }
 
+    public static boolean checkClusterDuplicates(List<SvCluster> clusters)
+    {
+        for(int i = 0; i < clusters.size(); ++i)
+        {
+            final SvCluster cluster1 = clusters.get(i);
+            for(int j = i + 1; j < clusters.size(); ++j)
+            {
+                final SvCluster cluster2 = clusters.get(j);
+
+                if(cluster1 == cluster2 || cluster1.id() == cluster2.id())
+                {
+                    LOGGER.error("cluster({}) exists twice in list", cluster1.id());
+                    return false;
+                }
+            }
+        }
+
+        return true;
+    }
+
     public void mergeClusters(final String sampleId, List<SvCluster> clusters)
     {
         // first apply replication rules since this can affect consistency
@@ -434,26 +455,6 @@ public class SvClusteringMethods {
         {
             LOGGER.debug("reduced cluster count({} -> {}) iterations({})", initClusterCount, clusters.size(), iterations);
         }
-    }
-
-    public static boolean checkClusterDuplicates(List<SvCluster> clusters)
-    {
-        for(int i = 0; i < clusters.size(); ++i)
-        {
-            final SvCluster cluster1 = clusters.get(i);
-            for(int j = i + 1; j < clusters.size(); ++j)
-            {
-                final SvCluster cluster2 = clusters.get(j);
-
-                if(cluster1 == cluster2 || cluster1.id() == cluster2.id())
-                {
-                    LOGGER.error("cluster({}) exists twice in list", cluster1.id());
-                    return false;
-                }
-            }
-        }
-
-        return true;
     }
 
     public static int MAX_SV_REPLICATION_MULTIPLE = 40;

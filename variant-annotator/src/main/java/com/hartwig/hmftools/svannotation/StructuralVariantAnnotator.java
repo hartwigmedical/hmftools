@@ -119,7 +119,7 @@ public class StructuralVariantAnnotator
     {
         List<String> samplesList = Lists.newArrayList();
 
-        if (!mFusionAnalyser.getSampleRnaData().isEmpty())
+        if (mSampleId.equals("*") && !mFusionAnalyser.getSampleRnaData().isEmpty())
         {
             // take the samples list from the RNA file, assuming only those files are of interest
             samplesList.addAll(mFusionAnalyser.getSampleRnaData().keySet());
@@ -169,7 +169,7 @@ public class StructuralVariantAnnotator
 
     private void runSample(final String sampleId, boolean hasMultipleSamples)
     {
-        LOGGER.info("Annotating variants for sample({})", sampleId);
+        LOGGER.info("annotating variants for sample({})", sampleId);
 
         List<EnrichedStructuralVariant> enrichedVariants;
 

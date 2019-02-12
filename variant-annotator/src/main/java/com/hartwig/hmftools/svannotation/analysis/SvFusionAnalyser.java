@@ -814,13 +814,20 @@ public class SvFusionAnalyser
         {
             LOGGER.error("error writing RNA match data: {}", e.toString());
         }
-
     }
+
+    private static String SPECIFIC_FUSION = "";
+    // private static String SPECIFIC_FUSION = "TRPM7--RP11-184D12.1";
 
     private void matchRnaFusion(final RnaFusionData rnaFusion, final List<GeneFusion> fusions, final List<StructuralVariantAnnotation> annotations)
     {
         // find the min and max exon rank for every transcript matching the RNA positions
         setRnaFusionData(rnaFusion);
+
+        if(rnaFusion.Name.equals(SPECIFIC_FUSION))
+        {
+            LOGGER.debug("specific RNA fusion: {}", rnaFusion.Name);
+        }
 
         // first check for a fusion found
         for(final GeneFusion fusion : fusions)
@@ -851,11 +858,11 @@ public class SvFusionAnalyser
             // check breakend annotations for any match on the gene - favour a single SV which explains up and down genes
             for(final StructuralVariantAnnotation svAnnotation : annotations)
             {
+                Transcript svTransUp = null;
+                Transcript svTransDown = null;
+
                 for (final GeneAnnotation breakendGene : svAnnotation.annotations())
                 {
-                    Transcript svTransUp = null;
-                    Transcript svTransDown = null;
-
                     for(final Transcript transcript : breakendGene.transcripts())
                     {
                         if(isUpstream(breakendGene) && transcript.geneName().equals(rnaFusion.GeneUp)
@@ -871,6 +878,9 @@ public class SvFusionAnalyser
                             transDown= transcript;
                             svTransDown = transcript;
                         }
+
+                        if(svTransDown != null && svTransUp != null)
+                            break;
                     }
 
                     if(svTransDown != null && svTransUp != null)
