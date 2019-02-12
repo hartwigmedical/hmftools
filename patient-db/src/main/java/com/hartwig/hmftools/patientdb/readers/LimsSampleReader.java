@@ -24,14 +24,14 @@ public class LimsSampleReader {
         final List<SampleData> limsBiopsies = Lists.newArrayList();
 
         sampleIds.forEach(sampleId -> {
-            final LocalDate arrivalDate = lims.arrivalDateForSample(sampleId);
+            final LocalDate arrivalDate = lims.arrivalDate(sampleId);
             if (arrivalDate != null) {
                 limsBiopsies.add(ImmutableSampleData.of(sampleId,
                         arrivalDate,
-                        lims.samplingDateForSample(sampleId),
-                        lims.dnaNanogramsForSample(sampleId),
-                        lims.primaryTumorForSample(sampleId),
-                        lims.tumorPercentageForSample(sampleId)));
+                        lims.samplingDate(sampleId),
+                        lims.dnaNanograms(sampleId),
+                        lims.primaryTumor(sampleId),
+                        lims.pathologyTumorPercentage(sampleId)));
             }
         });
         return limsBiopsies;

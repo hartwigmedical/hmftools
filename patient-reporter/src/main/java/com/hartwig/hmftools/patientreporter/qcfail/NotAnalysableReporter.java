@@ -38,13 +38,13 @@ public abstract class NotAnalysableReporter {
         final SampleReport sampleReport = ImmutableSampleReport.of(sample,
                 patientTumorLocation,
                 lims.purityShallowSeq(sample, false),
-                lims.arrivalDateForSample(sample),
+                lims.arrivalDate(sample),
                 null,
-                lims.labProceduresForSample(sample),
+                lims.labProcedures(sample),
                 isCoreSample
                         ? baseReportData().centerModel().getCoreRecipients(lims.projectName(sample))
                         : baseReportData().centerModel().getAddresseeStringForSample(sample),
-                lims.labelSample(sample),
+                lims.label(sample),
                 lims.projectName(sample),
                 isCoreSample ? lims.contactEmail(sample) : "",
                 isCoreSample ? lims.contactName(sample) : "",
