@@ -9,7 +9,6 @@ import java.util.Optional;
 import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.variant.cosmic.CosmicAnnotation;
@@ -118,8 +117,8 @@ public class SomaticVariantFactory {
         return process(sample, variants);
     }
 
-    @VisibleForTesting
-    List<SomaticVariant> process(@NotNull final String sample, @NotNull final List<VariantContext> allVariantContexts) {
+    @NotNull
+    private List<SomaticVariant> process(@NotNull final String sample, @NotNull final List<VariantContext> allVariantContexts) {
         final List<SomaticVariant> variants = Lists.newArrayList();
 
         for (int i = 0; i < allVariantContexts.size(); i++) {
