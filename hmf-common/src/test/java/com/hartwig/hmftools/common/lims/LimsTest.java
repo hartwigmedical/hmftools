@@ -183,7 +183,18 @@ public class LimsTest {
                 .build();
 
         Lims lims = buildTestLimsWithSample(sampleData);
-        assertEquals("0.19", lims.purityShallowSeq("CPCT02990001T", true));
+        assertEquals("N/A", lims.purityShallowSeq("CPCT02990001T", true));
+    }
+
+    @Test
+    public void PathologySequencedSample() {
+        final LimsJsonSampleData sampleData = createLimsSampleDataBuilder()
+                .sampleId(SAMPLE)
+                .labRemarks("")
+                .build();
+
+        Lims lims = buildTestLimsWithSample(sampleData);
+        assertEquals("N/A", lims.purityShallowSeq(SAMPLE, true));
     }
 
     @Test
