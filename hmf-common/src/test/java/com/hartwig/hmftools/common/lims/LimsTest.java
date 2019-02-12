@@ -88,7 +88,7 @@ public class LimsTest {
         assertNull(lims.samplingDate("DoesNotExist"));
         assertNull(lims.dnaNanograms("DoesNotExist"));
         assertEquals("N/A", lims.pathologyTumorPercentage("DoesNotExist"));
-        assertEquals("not determined", lims.purityShallowSeq("DoesNotExist"));
+        assertEquals("N/A", lims.purityShallowSeq("DoesNotExist"));
         assertEquals("N/A", lims.primaryTumor("DoesNotExist"));
         assertEquals("N/A", lims.labProcedures("DoesNotExist"));
     }
@@ -156,7 +156,7 @@ public class LimsTest {
     @Test
     public void canRetrievePathologyPercentageForSample() {
         final LimsJsonSampleData sampleData =
-                createLimsSampleDataBuilder().sampleId(SAMPLE).labRemarks("").labelSample("").tumorPercentageString("70%").build();
+                createLimsSampleDataBuilder().sampleId(SAMPLE).labRemarks("").labelSample("").tumorPercentageString("70").build();
 
         Lims lims = buildTestLimsWithSample(sampleData);
         assertEquals("not determined", lims.purityShallowSeq(SAMPLE));
