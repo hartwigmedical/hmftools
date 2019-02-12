@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.variant.filter;
+package com.hartwig.hmftools.common.variant;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -6,14 +6,13 @@ import static org.junit.Assert.assertTrue;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.variant.VariantContextFromString;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
 import htsjdk.variant.variantcontext.VariantContext;
 
-public class NearIndelPonFilterTest {
+public class NearPonFilteredIndelTest {
 
     @Test
     public void testFindPonForwards() {
@@ -23,11 +22,11 @@ public class NearIndelPonFilterTest {
                 create(100, "TAG", "A"),
                 createPonFiltered(100, "TAG", "A"));
 
-        assertFalse(NearIndelPonFilter.isIndelNearPon(0, victims));
-        assertTrue(NearIndelPonFilter.isIndelNearPon(1, victims));
-        assertTrue(NearIndelPonFilter.isIndelNearPon(2, victims));
-        assertTrue(NearIndelPonFilter.isIndelNearPon(3, victims));
-        assertFalse(NearIndelPonFilter.isIndelNearPon(4, victims));
+        assertFalse(NearPonFilteredIndel.isNearPonFilteredIndel(0, victims));
+        assertTrue(NearPonFilteredIndel.isNearPonFilteredIndel(1, victims));
+        assertTrue(NearPonFilteredIndel.isNearPonFilteredIndel(2, victims));
+        assertTrue(NearPonFilteredIndel.isNearPonFilteredIndel(3, victims));
+        assertFalse(NearPonFilteredIndel.isNearPonFilteredIndel(4, victims));
     }
 
     @Test
@@ -38,11 +37,11 @@ public class NearIndelPonFilterTest {
                 create(113, "TAG", "A"),
                 create(113, "TAGGG", "A"));
 
-        assertFalse(NearIndelPonFilter.isIndelNearPon(0, victims));
-        assertTrue(NearIndelPonFilter.isIndelNearPon(1, victims));
-        assertTrue(NearIndelPonFilter.isIndelNearPon(2, victims));
-        assertFalse(NearIndelPonFilter.isIndelNearPon(3, victims));
-        assertFalse(NearIndelPonFilter.isIndelNearPon(4, victims));
+        assertFalse(NearPonFilteredIndel.isNearPonFilteredIndel(0, victims));
+        assertTrue(NearPonFilteredIndel.isNearPonFilteredIndel(1, victims));
+        assertTrue(NearPonFilteredIndel.isNearPonFilteredIndel(2, victims));
+        assertFalse(NearPonFilteredIndel.isNearPonFilteredIndel(3, victims));
+        assertFalse(NearPonFilteredIndel.isNearPonFilteredIndel(4, victims));
     }
 
     @Test
@@ -50,16 +49,16 @@ public class NearIndelPonFilterTest {
         final List<VariantContext> victims =
                 Lists.newArrayList(create(99, "TT", "A"), create(100, "T", "A"), createPonFiltered(100, "TAG", "A"));
 
-        assertTrue(NearIndelPonFilter.isIndelNearPon(0, victims));
-        assertFalse(NearIndelPonFilter.isIndelNearPon(1, victims));
+        assertTrue(NearPonFilteredIndel.isNearPonFilteredIndel(0, victims));
+        assertFalse(NearPonFilteredIndel.isNearPonFilteredIndel(1, victims));
     }
 
     @Test
     public void testNoPon() {
         final List<VariantContext> victims = Lists.newArrayList(create(99, "TT", "A"), create(100, "TAG", "A"));
 
-        assertFalse(NearIndelPonFilter.isIndelNearPon(0, victims));
-        assertFalse(NearIndelPonFilter.isIndelNearPon(1, victims));
+        assertFalse(NearPonFilteredIndel.isNearPonFilteredIndel(0, victims));
+        assertFalse(NearPonFilteredIndel.isNearPonFilteredIndel(1, victims));
     }
 
     @NotNull

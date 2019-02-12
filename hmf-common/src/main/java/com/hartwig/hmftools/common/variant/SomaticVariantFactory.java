@@ -20,7 +20,6 @@ import com.hartwig.hmftools.common.variant.enrich.SomaticEnrichment;
 import com.hartwig.hmftools.common.variant.filter.AlwaysPassFilter;
 import com.hartwig.hmftools.common.variant.filter.ChromosomeFilter;
 import com.hartwig.hmftools.common.variant.filter.NTFilter;
-import com.hartwig.hmftools.common.variant.filter.NearIndelPonFilter;
 import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotation;
 import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotationFactory;
 
@@ -108,7 +107,12 @@ public class SomaticVariantFactory {
                 throw new IllegalArgumentException("Allelic depths is a required format field in vcf file " + vcfFile);
             }
 
-            variants.addAll(reader.iterator().toList());
+            for (VariantContext variant : reader.iterator()) {
+                // Note we need pon filtered indels for near indel pon logic to work correctly
+                if (filter.test(variant) || NearPonFilteredIndel.isPonFilteredIndel(variant)) {
+                    variants.add(variant);
+                }
+            }
         }
 
         return process(sample, variants);
@@ -120,7 +124,7 @@ public class SomaticVariantFactory {
 
         for (int i = 0; i < allVariantContexts.size(); i++) {
             final VariantContext context = allVariantContexts.get(i);
-            if (NearIndelPonFilter.isIndelNearPon(i, allVariantContexts)) {
+            if (NearPonFilteredIndel.isNearPonFilteredIndel(i, allVariantContexts)) {
                 context.getCommonInfo().addFilter(NEAR_INDEL_PON_FILTER);
             }
 

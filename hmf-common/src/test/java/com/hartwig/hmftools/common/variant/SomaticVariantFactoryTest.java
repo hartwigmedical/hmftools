@@ -8,7 +8,6 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 
-import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.common.io.Resources;
 
@@ -16,7 +15,6 @@ import org.jetbrains.annotations.NotNull;
 import org.junit.Before;
 import org.junit.Test;
 
-import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.vcf.VCFCodec;
 import htsjdk.variant.vcf.VCFHeader;
 import htsjdk.variant.vcf.VCFHeaderVersion;
@@ -25,6 +23,7 @@ public class SomaticVariantFactoryTest {
 
     private static final String SAMPLE = "sample";
     private static final String SOMATIC_VARIANT_FILE = Resources.getResource("variant/somatics.vcf").getPath();
+    private static final String NEAR_PON_FILTERED_INDEL_FILE = Resources.getResource("variant/nearPonFilteredIndel.vcf").getPath();
 
     private static final double EPSILON = 1.0e-10;
 
@@ -165,20 +164,16 @@ public class SomaticVariantFactoryTest {
     }
 
     @Test
-    public void testFiltersAreReappliedAfterModifyingVariantContext() {
-        victim = SomaticVariantFactory.unfilteredInstance();
-        assertEquals(2, victim.process(SAMPLE, ponFilteredAndNearPonFiltered()).size());
+    public void testNearPonLogicAppliedEvenWhenFiltersApplied() throws IOException {
 
-        victim = SomaticVariantFactory.passOnlyInstance();
-        assertEquals(0, victim.process(SAMPLE, ponFilteredAndNearPonFiltered()).size());
-    }
+        final List<SomaticVariant> unfiltered =
+                SomaticVariantFactory.unfilteredInstance().fromVCFFile("sample", NEAR_PON_FILTERED_INDEL_FILE);
+        assertEquals(2, unfiltered.size());
+        assertEquals("NEAR_INDEL_PON", unfiltered.get(0).filter());
+        assertEquals("GERMLINE_PON", unfiltered.get(1).filter());
 
-    @NotNull
-    private List<VariantContext> ponFilteredAndNearPonFiltered() {
-        final VariantContext ponFiltered =
-                codec.decode("15\t12345678\trs1;UCSC\tCAT\tA,G\t2\tGERMLINE_PON\tinfo;\tGT:AD:DP\t0/1:60,60:121");
-        final VariantContext nearPonFiltered = codec.decode("15\t12345677\trs1;UCSC\tCAT\tA,G\t2\tPASS\tinfo;\tGT:AD:DP\t0/1:60,60:121");
-        return Lists.newArrayList(nearPonFiltered, ponFiltered);
+        final List<SomaticVariant> filtered = SomaticVariantFactory.passOnlyInstance().fromVCFFile("sample", NEAR_PON_FILTERED_INDEL_FILE);
+        assertEquals(0, filtered.size());
     }
 
     @NotNull
