@@ -59,8 +59,8 @@ final class ExampleAnalysisTestFactory {
         final double impliedTumorPurity = 1D;
         final double averageTumorPloidy = 3.1;
         final int tumorMutationalLoad = 182;
-        final double tumorMutationalBurden = 13.6;
-        final double microsatelliteIndelsPerMb = 0.1089;
+        final double tumorMutationalBurden = 13.6324;
+        final double microsatelliteIndelsPerMb = 0.1179;
 
         final BaseReportData baseReportData = testBaseReportData();
         final FittedPurity fittedPurity = createFittedPurity(impliedTumorPurity, averageTumorPloidy);
@@ -154,7 +154,7 @@ final class ExampleAnalysisTestFactory {
         return ImmutableSampleReport.of(sample,
                 ImmutablePatientTumorLocation.of("COLO829", "Skin", "Melanoma"),
                 Strings.EMPTY,
-                String.valueOf(0.8),
+                "80%",
                 LocalDate.parse("05-Jan-2018", DATE_FORMATTER),
                 LocalDate.parse("01-Jan-2018", DATE_FORMATTER),
                 "PREP013V23-QC037V20-SEQ008V25",
@@ -591,7 +591,7 @@ final class ExampleAnalysisTestFactory {
                 .gene("PTEN")
                 .range("Intron 5 -> Intron 6")
                 .type("DEL")
-                .ploidy(1.8)
+                .ploidy(2)
                 .geneMinCopies(0)
                 .geneMaxCopies(2)
                 .build();
