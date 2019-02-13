@@ -674,6 +674,7 @@ public class CNAnalyser {
                             .startRefContext("")
                             .endRefContext("")
                             .insertSequenceAlignments("")
+                            .recovered(false)
                             .build());
         }
 

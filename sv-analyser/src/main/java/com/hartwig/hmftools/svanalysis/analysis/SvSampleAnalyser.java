@@ -236,7 +236,8 @@ public class SvSampleAnalyser {
                 mSvFileWriter.write(",ClusterDesc,IsResolved,ResolvedType,Consistency,ArmCount");
 
                 // SV info
-                mSvFileWriter.write(",Homology,InexactHOStart,InexactHOEnd,InsertSeq,Imprecise,QualScore,RefContextStart,RefContextEnd,InsSeqAlignments");
+                mSvFileWriter.write(",Homology,InexactHOStart,InexactHOEnd,InsertSeq,Imprecise,QualScore,");
+                mSvFileWriter.write(",RefContextStart,RefContextEnd,InsSeqAlignments,Recovered");
 
                 mSvFileWriter.write(",FSStart,FSEnd,LEStart,LEEnd"); // ,DupBEStart,DupBEEnd
 
@@ -321,11 +322,12 @@ public class SvSampleAnalyser {
                 final String insSeqAlignments = dbData.insertSequenceAlignments().replaceAll(",", ";");
 
                 writer.write(
-                        String.format(",%s,%d,%d,%s,%s,%.0f,%s,%s,%s",
+                        String.format(",%s,%d,%d,%s,%s,%.0f,%s,%s,%s,%s",
                                 dbData.insertSequence().isEmpty() && var.type() != INS ? dbData.homology() : "",
                                 dbData.inexactHomologyOffsetStart(), dbData.inexactHomologyOffsetEnd(),
                                 dbData.insertSequence(), dbData.imprecise(), dbData.qualityScore(),
-                                dbData.startRefContext(), dbData.endRefContext(), insSeqAlignments));
+                                dbData.startRefContext(), dbData.endRefContext(), insSeqAlignments,
+                                dbData.recovered()));
 
                 writer.write(
                         String.format(",%s,%s,%s,%s",

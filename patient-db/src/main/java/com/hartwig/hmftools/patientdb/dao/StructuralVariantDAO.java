@@ -92,6 +92,7 @@ class StructuralVariantDAO {
                     .startRefContext(getValueNotNull(record.getValue(STRUCTURALVARIANT.STARTREFCONTEXT)))
                     .endRefContext(getValueNotNull(record.getValue(STRUCTURALVARIANT.ENDREFCONTEXT)))
                     .insertSequenceAlignments(getValueNotNull(record.getValue(STRUCTURALVARIANT.INSERTSEQUENCEALIGNMENTS)))
+                    .recovered(byteToBoolean(record.getValue(STRUCTURALVARIANT.RECOVERED)))
                     .build());
         }
         return structuralVariants;

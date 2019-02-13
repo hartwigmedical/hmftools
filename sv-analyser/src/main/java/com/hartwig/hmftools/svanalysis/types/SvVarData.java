@@ -232,25 +232,6 @@ public class SvVarData
     public final double copyNumber(boolean isStart){ return isStart ? mSVData.adjustedStartCopyNumber() : mSVData.adjustedEndCopyNumber(); }
     public final StructuralVariantType type() { return mSVData.type(); }
 
-    public final double copyNumberChange(boolean isStart)
-    {
-        // TEMP: precise DBs cause incorrect copy number change, so in this case use ploidy
-        if(isStart)
-        {
-            if(mDBStart != null && mDBStart.length() == 0)
-                return mSVData.ploidy();
-            else
-                return mSVData.adjustedStartCopyNumberChange();
-        }
-        else
-        {
-            if(mDBEnd != null && mDBEnd.length() == 0)
-                return mSVData.ploidy();
-            else
-                return mSVData.adjustedEndCopyNumberChange();
-        }
-    }
-
     public SvBreakend getBreakend(boolean isStart) { return isStart ? mBreakendStart : mBreakendEnd; }
 
     public boolean isNullBreakend() { return type() == SGL; }
@@ -346,15 +327,48 @@ public class SvVarData
         return false;
     }
 
-    private static double CN_ROUND_SIZE = 0.25;
-
-    public double getCopyNumberChange(boolean useStart)
+    public final double copyNumberChange(boolean isStart)
     {
-        double cnChange = copyNumberChange(useStart);
+        // TEMP: precise DBs cause incorrect copy number change, so in this case use ploidy
+        if(isStart)
+        {
+            if(mDBStart != null && mDBStart.length() == 0)
+                return mSVData.ploidy();
+            else
+                return mSVData.adjustedStartCopyNumberChange();
+        }
+        else
+        {
+            if(mDBEnd != null && mDBEnd.length() == 0)
+                return mSVData.ploidy();
+            else
+                return mSVData.adjustedEndCopyNumberChange();
+        }
+    }
+
+    public static double SUSPECT_CN_CHANGE = 0.2;
+    private static double CN_ROUND_SIZE = 0.5;
+
+    public double getRoundedCNChange()
+    {
+        double cnChgStart = copyNumberChange(true);
+        double cnChange;
 
         if(!isNullBreakend())
         {
-            cnChange = (cnChange + copyNumberChange(false)) * 0.5;
+            // TEMP: before more rebust CN Change correction logic introduced
+            double cnChgEnd = copyNumberChange(false);
+
+            if(cnChgStart > SUSPECT_CN_CHANGE * 2 && cnChgEnd < SUSPECT_CN_CHANGE)
+                cnChange = cnChgStart;
+            else if(cnChgEnd > SUSPECT_CN_CHANGE * 2 && cnChgStart < SUSPECT_CN_CHANGE)
+                cnChange = cnChgEnd;
+            else
+                cnChange = (cnChgStart + cnChgEnd) * 0.5;
+        }
+        else
+        {
+            cnChange = cnChgStart;
         }
 
         if(cnChange >= 0.6)

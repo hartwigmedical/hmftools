@@ -195,6 +195,7 @@ public class SvTestHelper
                         .endLinkedBy("")
                         .startRefContext("")
                         .endRefContext("")
+                        .recovered(false)
                         .build();
 
         SvVarData var = new SvVarData(svData);

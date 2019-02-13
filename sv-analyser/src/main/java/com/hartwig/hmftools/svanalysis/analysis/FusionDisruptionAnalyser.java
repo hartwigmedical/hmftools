@@ -153,7 +153,7 @@ public class FusionDisruptionAnalyser
 
     public void run(final List<SvVarData> svList, final List<SvCluster> clusters)
     {
-        // findFusions(svList, clusters); // skipped until chained fusion logic extended
+        findFusions(svList, clusters); // skipped until chained fusion logic extended
 
         assessRnaFusions();
     }
@@ -373,14 +373,18 @@ public class FusionDisruptionAnalyser
         {
             for (final GeneFusion fusion : fusions)
             {
-                mVisWriter.addGeneExonData(cluster.id(),
-                        fusion.upstreamTrans().parent().StableId, fusion.upstreamTrans().parent().GeneName, fusion.upstreamTrans().StableId,
-                        fusion.upstreamTrans().parent().chromosome(), "FUSION");
+                if(fusion.reportable())
+                {
+                    mVisWriter.addGeneExonData(cluster.id(),
+                            fusion.upstreamTrans().parent().StableId, fusion.upstreamTrans()
+                                    .parent().GeneName, fusion.upstreamTrans().StableId,
+                            fusion.upstreamTrans().parent().chromosome(), "FUSION");
 
-                mVisWriter.addGeneExonData(cluster.id(),
-                        fusion.downstreamTrans().parent().StableId, fusion.downstreamTrans()
-                                .parent().GeneName, fusion.downstreamTrans().StableId,
-                        fusion.downstreamTrans().parent().chromosome(), "FUSION");
+                    mVisWriter.addGeneExonData(cluster.id(),
+                            fusion.downstreamTrans().parent().StableId, fusion.downstreamTrans()
+                                    .parent().GeneName, fusion.downstreamTrans().StableId,
+                            fusion.downstreamTrans().parent().chromosome(), "FUSION");
+                }
             }
         }
     }
