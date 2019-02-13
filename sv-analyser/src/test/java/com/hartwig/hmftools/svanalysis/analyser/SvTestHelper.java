@@ -19,7 +19,7 @@ import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 import com.hartwig.hmftools.svanalysis.analysis.ClusterAnalyser;
 import com.hartwig.hmftools.svanalysis.analysis.LinkFinder;
 import com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods;
-import com.hartwig.hmftools.svanalysis.analysis.SvaConfig;
+import com.hartwig.hmftools.svanalysis.types.SvaConfig;
 import com.hartwig.hmftools.svanalysis.types.SvCluster;
 import com.hartwig.hmftools.svanalysis.types.SvVarData;
 

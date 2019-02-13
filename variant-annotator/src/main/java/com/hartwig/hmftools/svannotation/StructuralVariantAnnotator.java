@@ -105,12 +105,16 @@ public class StructuralVariantAnnotator
         mSourceSvFromDB = mCmdLineArgs.hasOption(SOURCE_SVS_FROM_DB);
 
         mOutputDir = mCmdLineArgs.getOptionValue(DATA_OUTPUT_DIR, "");
+
+        if (!mOutputDir.endsWith(File.separator))
+            mOutputDir += File.separator;
+
         mEnsemblDataDir = mCmdLineArgs.getOptionValue(ENSEMBL_DATA_DIR, "");
         mUploadAnnotations = !mCmdLineArgs.hasOption(SKIP_DB_UPLOAD);
         mWriteBreakends = mCmdLineArgs.hasOption(WRITE_BREAKENDS);
 
-        mDisruptionAnalyser = new SvDisruptionAnalyser();
-        mFusionAnalyser = new SvFusionAnalyser(mCmdLineArgs, mSvGeneTranscriptCollection);
+        mDisruptionAnalyser = new SvDisruptionAnalyser(mOutputDir);
+        mFusionAnalyser = new SvFusionAnalyser(mCmdLineArgs, mSvGeneTranscriptCollection, mOutputDir);
 
         return true;
     }
@@ -215,9 +219,9 @@ public class StructuralVariantAnnotator
         if (!mOutputDir.isEmpty())
         {
             String clusterInfo = ",,";
-            mFusionAnalyser.writeFusions(fusions, mOutputDir, sampleId, clusterInfo, hasMultipleSamples);
-            mDisruptionAnalyser.writeDisruptions(disruptions, mOutputDir, sampleId, hasMultipleSamples);
-            mFusionAnalyser.writeRnaMatchData(sampleId, mOutputDir, fusions, annotations);
+            mFusionAnalyser.writeFusions(fusions, sampleId, clusterInfo, hasMultipleSamples);
+            mDisruptionAnalyser.writeDisruptions(disruptions, sampleId, hasMultipleSamples);
+            mFusionAnalyser.matchRnaFusions(sampleId, fusions, annotations);
 
             if (mWriteBreakends)
             {

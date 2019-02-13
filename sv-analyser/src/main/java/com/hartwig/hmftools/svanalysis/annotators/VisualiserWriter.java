@@ -274,19 +274,19 @@ public class VisualiserWriter
     {
         if(breakend.orientation() == 1 && breakend.arm().equals(CHROMOSOME_ARM_P))
         {
-            return isStart ? "T" : breakend.position().toString();
+            return isStart ? "T" : Long.toString(breakend.position());
         }
         else if(breakend.orientation() == -1 && breakend.arm().equals(CHROMOSOME_ARM_P))
         {
-            return isStart ? breakend.position().toString() : "C";
+            return isStart ? Long.toString(breakend.position()) : "C";
         }
         else if(breakend.orientation() == -1 && breakend.arm().equals(CHROMOSOME_ARM_Q))
         {
-            return isStart ? breakend.position().toString() : "T";
+            return isStart ? Long.toString(breakend.position()) : "T";
         }
         else
         {
-            return isStart ? "C" : breakend.position().toString();
+            return isStart ? "C" : Long.toString(breakend.position());
         }
     }
 

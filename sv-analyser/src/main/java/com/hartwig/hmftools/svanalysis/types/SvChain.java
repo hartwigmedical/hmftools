@@ -157,6 +157,11 @@ public class SvChain {
     public boolean lastLinkOpenOnStart() { return !mLinkedPairs.isEmpty() ? !mLinkedPairs.get(mLinkedPairs.size()-1).secondLinkOnStart() : false; }
     public boolean chainEndOpenOnStart(boolean isFirst) { return isFirst ? firstLinkOpenOnStart() : lastLinkOpenOnStart(); }
 
+    public final SvBreakend getOpenBreakend(boolean isStart)
+    {
+        return isStart ? getFirstSV().getBreakend(firstLinkOpenOnStart()) : getLastSV().getBreakend(lastLinkOpenOnStart());
+    }
+
     public boolean isClosedLoop() { return mIsClosedLoop; }
 
     public boolean hasReplicatedSVs()

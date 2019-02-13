@@ -60,14 +60,16 @@ public class SvFusionAnalyser
     private List<String> mProteinsRequiredKept;
     private List<String> mProteinsRequiredLost;
 
+    private final String mOutputDir;
     private BufferedWriter mFusionWriter;
     private BufferedWriter mRnaWriter;
 
     private static final Logger LOGGER = LogManager.getLogger(SvFusionAnalyser.class);
 
-    public SvFusionAnalyser(final CommandLine cmd, final SvGeneTranscriptCollection geneTranscriptCollection)
+    public SvFusionAnalyser(final CommandLine cmd, final SvGeneTranscriptCollection geneTranscriptCollection, final String outputDir)
     {
         mGeneTranscriptCollection = geneTranscriptCollection;
+        mOutputDir = outputDir;
 
         mKnownFusionsModel = null;
 
@@ -135,6 +137,12 @@ public class SvFusionAnalyser
 
     public final List<GeneFusion> findFusions(final List<GeneAnnotation> breakendGenes1, final List<GeneAnnotation> breakendGenes2)
     {
+        return findFusions(breakendGenes1, breakendGenes2, true);
+    }
+
+    public final List<GeneFusion> findFusions(
+            final List<GeneAnnotation> breakendGenes1, final List<GeneAnnotation> breakendGenes2, boolean requirePhaseMatch)
+    {
         final List<GeneFusion> potentialFusions = Lists.newArrayList();
 
         for (final GeneAnnotation startGene : breakendGenes1)
@@ -167,14 +175,6 @@ public class SvFusionAnalyser
                     {
                         final Transcript upstreamTrans = startUpstream ? startTrans : endTrans;
                         final Transcript downstreamTrans = !startUpstream ? startTrans : endTrans;
-
-                        /*
-                        // DEBUG
-                        if(upstreamTrans.transcriptId().equals("ENST00000328159") && downstreamTrans.transcriptId().equals("ENST00000392403"))
-                        {
-                            LOGGER.debug("trans match");
-                        }
-                         */
 
                         boolean checkExactMatch = false;
 
@@ -231,26 +231,32 @@ public class SvFusionAnalyser
                         if (!isPotentiallyRelevantFusion(upstreamTrans, downstreamTrans))
                             continue;
 
+                        boolean phaseMatched = false;
+
                         if(!checkExactMatch)
                         {
                             // all fusions to downstream exons may be excluded, but for now definitely exclude those which end in the last exon
-                            if(downstreamTrans.isExonic() && downstreamTrans.exonDownstream() == downstreamTrans.exonMax() && ! downstreamTrans.preCoding())
+                            if(downstreamTrans.isExonic() && downstreamTrans.exonDownstream() == downstreamTrans.exonMax() && !downstreamTrans.preCoding())
                                 continue;
                         }
 
                         if(checkExactMatch)
                         {
-                            if(exonToExonInPhase(upstreamTrans, true, downstreamTrans, false))
+                            phaseMatched = exonToExonInPhase(upstreamTrans, true, downstreamTrans, false);
+
+                            if(phaseMatched || !requirePhaseMatch)
                             {
-                                addFusion(potentialFusions, upstreamTrans, downstreamTrans);
+                                addFusion(potentialFusions, upstreamTrans, downstreamTrans, phaseMatched);
                             }
                         }
                         else
                         {
                             // just check for a phasing match
-                            if (upstreamTrans.exonUpstreamPhase() == downstreamTrans.exonDownstreamPhase())
+                            phaseMatched = upstreamTrans.exonUpstreamPhase() == downstreamTrans.exonDownstreamPhase();
+
+                            if(phaseMatched || !requirePhaseMatch)
                             {
-                                addFusion(potentialFusions, upstreamTrans, downstreamTrans);
+                                addFusion(potentialFusions, upstreamTrans, downstreamTrans, phaseMatched);
                             }
                         }
                     }
@@ -294,7 +300,7 @@ public class SvFusionAnalyser
         return adjustedPhase;
     }
 
-    private void addFusion(List<GeneFusion> fusions, final Transcript upstreamTrans, final Transcript downstreamTrans)
+    private void addFusion(List<GeneFusion> fusions, final Transcript upstreamTrans, final Transcript downstreamTrans, boolean phaseMatched)
     {
         //LOGGER.debug("adding fusion between start SV({}) trans({}) and end SV({}) trans({})",
         //        startTrans.parent().id(), startTrans.toString(), endTrans.parent().id(), endTrans.toString());
@@ -303,7 +309,8 @@ public class SvFusionAnalyser
                 upstreamTrans,
                 downstreamTrans,
                 mKnownFusionsModel.primarySource(upstreamTrans.parent().synonyms(), downstreamTrans.parent().synonyms()),
-                false));
+                false,
+                phaseMatched));
     }
 
     private static boolean isPotentiallyRelevantFusion(final Transcript t1, final Transcript t2)
@@ -544,13 +551,13 @@ public class SvFusionAnalyser
         return upstream.parent().synonyms().stream().anyMatch(downstream.parent().synonyms()::contains);
     }
 
-    public void writeFusions(final List<GeneFusion> fusions, final String outputDir, final String sampleId,  final String clusterInfo, boolean hasMultipleSamples)
+    public void writeFusions(final List<GeneFusion> fusions, final String sampleId,  final String clusterInfo, boolean hasMultipleSamples)
     {
         try
         {
             if(mFusionWriter == null)
             {
-                String outputFilename = outputDir;
+                String outputFilename = mOutputDir;
 
                 if (!outputFilename.endsWith(File.separator))
                     outputFilename += File.separator;
@@ -656,7 +663,7 @@ public class SvFusionAnalyser
     private static int COL_POS_DOWN = 13;
     private static int COL_STRAND_DOWN = 14;
 
-    public boolean loadSampleRnaData(final String filename)
+    private boolean loadSampleRnaData(final String filename)
     {
         if (filename.isEmpty() || !Files.exists(Paths.get(filename)))
             return false;
@@ -715,7 +722,7 @@ public class SvFusionAnalyser
         return true;
     }
 
-    public void writeRnaMatchData(final String sampleId, final String outputDir, final List<GeneFusion> fusions,
+    public void matchRnaFusions(final String sampleId, final List<GeneFusion> fusions,
             final List<StructuralVariantAnnotation> svAnnotations)
     {
         final List<RnaFusionData> rnaFusionList = mSampleRnaData.get(sampleId);
@@ -723,17 +730,26 @@ public class SvFusionAnalyser
         if(rnaFusionList == null || rnaFusionList.isEmpty())
             return;
 
+        for (final RnaFusionData rnaFusion : rnaFusionList)
+        {
+            matchRnaFusion(rnaFusion, fusions, svAnnotations);
+            writeRnaMatchData(sampleId, rnaFusion);
+        }
+    }
+
+    public void writeRnaMatchData(final String sampleId, final RnaFusionData rnaFusion)
+    {
         try
         {
             if(mRnaWriter == null)
             {
-                String outputFilename = outputDir;
+                String outputFilename = mOutputDir;
 
                 outputFilename += "RNA_MATCH_DATA.csv";
 
                 mRnaWriter = createBufferedWriter(outputFilename, false);
 
-                mRnaWriter.write("SampleId,FusionName,GeneUp,GeneDown,SvFusionMatch,Reportable");
+                mRnaWriter.write("SampleId,FusionName,GeneUp,GeneDown,SvFusionMatch,Reportable,PhaseMatched");
                 mRnaWriter.write(",ExonMinRankUp,ExonMaxRankUp,ExonMinRankDown,ExonMaxRankDown");
 
                 mRnaWriter.write(",SvIdUp,ChrUp,PosUp,RnaPosUp,OrientUp,StrandUp,TypeStart,TranscriptUp,RegionTypeUp,CodingTypeUp");
@@ -750,67 +766,65 @@ public class SvFusionAnalyser
 
             BufferedWriter writer = mRnaWriter;
 
-            for(final RnaFusionData rnaFusion : rnaFusionList)
-            {
-                matchRnaFusion(rnaFusion, fusions, svAnnotations);
+            final GeneFusion fusionMatch = rnaFusion.getMatchedFusion();
 
-                final GeneFusion fusionMatch = rnaFusion.getMatchedFusion();
+            writer.write(String.format("%s,%s,%s,%s", sampleId, rnaFusion.Name, rnaFusion.GeneUp, rnaFusion.GeneDown));
+
+            if(fusionMatch != null)
+            {
+                writer.write(String.format(",%s,%s,%s", "true", fusionMatch.reportable(), fusionMatch.phaseMatched()));
+            }
+            else
+            {
+                writer.write(",false,,");
+            }
+
+            writer.write(String.format(",%d,%d,%d,%d",
+                    rnaFusion.exonMinRankUp(), rnaFusion.exonMaxRankUp(), rnaFusion.exonMinRankDown(), rnaFusion.exonMaxRankDown()));
+
+            final Transcript transUp = rnaFusion.getTransUp();
+
+            if(transUp != null)
+            {
+                writer.write(String.format(",%d,%s,%d,%d,%d,%d,%s",
+                        transUp.parent().id(), transUp.parent().chromosome(), transUp.parent().position(), rnaFusion.PositionUp,
+                        transUp.parent().orientation(), transUp.parent().Strand, transUp.parent().type()));
+
+                writer.write(String.format(",%s,%s,%s,%d,%d,%s,%d,%d",
+                        transUp.StableId, transUp.regionType(), transUp.codingType(),
+                        transUp.exonUpstream(), transUp.exonUpstreamPhase(), transUp.isDisruptive(),
+                        transUp.transcriptStart(), transUp.exonDistanceUp()));
+            }
+            else
+            {
+                writer.write(String.format(",,%s,,%d,,%d,", rnaFusion.ChrUp, rnaFusion.PositionUp, rnaFusion.StrandUp));
+                writer.write(",,,,,,,,");
+            }
+
+            final Transcript transDown = rnaFusion.getTransDown();
+
+            if(transDown != null)
+            {
+                writer.write(
+                        String.format(",%d,%s,%d,%d,%d,%d,%s",
+                                transDown.parent().id(), transDown.parent().chromosome(), transDown.parent().position(), rnaFusion.PositionDown,
+                                transDown.parent().orientation(), transDown.parent().Strand, transDown.parent().type()));
 
                 writer.write(
-                        String.format("%s,%s,%s,%s,%s,%s",
-                                sampleId, rnaFusion.Name, rnaFusion.GeneUp, rnaFusion.GeneDown,
-                                fusionMatch != null, fusionMatch != null ? fusionMatch.reportable() : "false"));
-
-                writer.write(String.format(",%d,%d,%d,%d",
-                        rnaFusion.exonMinRankUp(), rnaFusion.exonMaxRankUp(), rnaFusion.exonMinRankDown(), rnaFusion.exonMaxRankDown()));
-
-                final Transcript transUp = rnaFusion.getTransUp();
-
-                if(transUp != null)
-                {
-                    writer.write(
-                            String.format(",%d,%s,%d,%d,%d,%d,%s",
-                                    transUp.parent().id(), transUp.parent().chromosome(), transUp.parent().position(), rnaFusion.PositionUp,
-                                    transUp.parent().orientation(), transUp.parent().Strand, transUp.parent().type()));
-
-                    writer.write(
-                            String.format(",%s,%s,%s,%d,%d,%s,%d,%d",
-                                    transUp.StableId, transUp.regionType(), transUp.codingType(),
-                                    transUp.exonUpstream(), transUp.exonUpstreamPhase(), transUp.isDisruptive(),
-                                    transUp.transcriptStart(), transUp.exonDistanceUp()));
-                }
-                else
-                {
-                    writer.write(String.format(",,%s,,%d,,%d,", rnaFusion.ChrUp, rnaFusion.PositionUp, rnaFusion.StrandUp));
-                    writer.write(",,,,,,,,");
-                }
-
-                final Transcript transDown = rnaFusion.getTransDown();
-
-                if(transDown != null)
-                {
-                    writer.write(
-                            String.format(",%d,%s,%d,%d,%d,%d,%s",
-                                    transDown.parent().id(), transDown.parent().chromosome(), transDown.parent().position(), rnaFusion.PositionDown,
-                                    transDown.parent().orientation(), transDown.parent().Strand, transDown.parent().type()));
-
-                    writer.write(
-                            String.format(",%s,%s,%s,%d,%d,%s,%d,%d",
-                                    transDown.StableId, transDown.regionType(), transDown.codingType(),
-                                    transDown.exonDownstream(), transDown.exonDownstreamPhase(), transDown.isDisruptive(),
-                                    transDown.transcriptStart(), transDown.exonDistanceUp()));
-                }
-                else
-                {
-                    writer.write(String.format(",,%s,,%d,,%d,", rnaFusion.ChrDown, rnaFusion.PositionDown, rnaFusion.StrandDown));
-                    writer.write(",,,,,,,,");
-                }
-
-                writer.write(String.format(",%d,%d,%s", rnaFusion.JunctionReadCount, rnaFusion.SpanningFragCount, rnaFusion.SpliceType));
-
-                writer.newLine();
-
+                        String.format(",%s,%s,%s,%d,%d,%s,%d,%d",
+                                transDown.StableId, transDown.regionType(), transDown.codingType(),
+                                transDown.exonDownstream(), transDown.exonDownstreamPhase(), transDown.isDisruptive(),
+                                transDown.transcriptStart(), transDown.exonDistanceUp()));
             }
+            else
+            {
+                writer.write(String.format(",,%s,,%d,,%d,", rnaFusion.ChrDown, rnaFusion.PositionDown, rnaFusion.StrandDown));
+                writer.write(",,,,,,,,");
+            }
+
+            writer.write(String.format(",%d,%d,%s", rnaFusion.JunctionReadCount, rnaFusion.SpanningFragCount, rnaFusion.SpliceType));
+
+            writer.newLine();
         }
         catch (final IOException e)
         {

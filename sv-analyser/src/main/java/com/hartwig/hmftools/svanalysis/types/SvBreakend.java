@@ -10,8 +10,8 @@ public class SvBreakend {
     private final String mChromosome;
     private final String mArm ;
     private final String mChrArm;
-    private final Long mPosition;
-    private final Byte mOrientation;
+    private final long mPosition;
+    private final byte mOrientation;
     private boolean mUsesStart;
 
     public SvBreakend(final SvVarData var, boolean useStart)
@@ -31,8 +31,8 @@ public class SvBreakend {
     public final String arm() { return mArm; }
     public final String getChrArm() { return mChrArm; }
 
-    public final Long position() { return mPosition; }
-    public final Byte orientation() { return mOrientation; }
+    public final long position() { return mPosition; }
+    public final byte orientation() { return mOrientation; }
     public boolean usesStart() { return mUsesStart; }
 
     public void setChrPosIndex(int index) { mChrPosIndex = index; }

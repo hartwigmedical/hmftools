@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.svanalysis.analysis;
+package com.hartwig.hmftools.svanalysis.types;
 
 import java.io.File;
 

@@ -9,6 +9,7 @@ public class GeneFusion
     private final String mPrimarySource;
 
     private boolean mIsReportable;
+    private boolean mPhaseMatched;
     private String mKnownFusionType;
 
     public static String REPORTABLE_TYPE_NONE = "";
@@ -17,13 +18,15 @@ public class GeneFusion
     public static String REPORTABLE_TYPE_5P_PROM = "5P-Prom";
     public static String REPORTABLE_TYPE_3P_PROM = "3P-Prom";
 
-    public GeneFusion(final Transcript upstreamTrans, final Transcript downstream, final String primarySource, boolean isReportable)
+    public GeneFusion(final Transcript upstreamTrans, final Transcript downstream, final String primarySource,
+            boolean isReportable, boolean phaseMatched)
     {
         mUpstreamTrans = upstreamTrans;
         mDownstream = downstream;
         mPrimarySource = primarySource;
         mIsReportable = isReportable;
         mKnownFusionType = REPORTABLE_TYPE_NONE;
+        mPhaseMatched = phaseMatched;
     }
 
     public boolean reportable(){ return mIsReportable; }
@@ -37,4 +40,6 @@ public class GeneFusion
     public Transcript downstreamTrans() { return mDownstream; }
 
     public String primarySource() { return mPrimarySource; }
+
+    public boolean phaseMatched(){ return mPhaseMatched; }
 }

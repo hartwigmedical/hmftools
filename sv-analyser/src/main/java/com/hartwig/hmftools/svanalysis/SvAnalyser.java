@@ -4,7 +4,6 @@ import static com.hartwig.hmftools.common.variant.structural.StructuralVariantFa
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.MIN_SAMPLE_PURITY;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.NONE_SEGMENT_INFERRED;
 
-import java.io.File;
 import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.List;
@@ -19,9 +18,8 @@ import com.hartwig.hmftools.common.variant.structural.StructuralVariantData;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 import com.hartwig.hmftools.svanalysis.analysis.CNAnalyser;
 import com.hartwig.hmftools.svanalysis.analysis.FusionDisruptionAnalyser;
-import com.hartwig.hmftools.svanalysis.annotators.VisualiserWriter;
 import com.hartwig.hmftools.svanalysis.stats.StatisticRoutines;
-import com.hartwig.hmftools.svanalysis.analysis.SvaConfig;
+import com.hartwig.hmftools.svanalysis.types.SvaConfig;
 import com.hartwig.hmftools.svanalysis.analysis.SvSampleAnalyser;
 import com.hartwig.hmftools.svanalysis.annotators.DriverGeneAnnotator;
 import com.hartwig.hmftools.svanalysis.types.SvVarData;
@@ -133,7 +131,7 @@ public class SvAnalyser {
 
                 sampleAnalyser.getVisWriter().setGeneDataCollection(fusionAnalyser.getGeneTranscriptCollection());
 
-                if(!fusionAnalyser.getRnaSampleIds().isEmpty())
+                if(!fusionAnalyser.getRnaSampleIds().isEmpty() && samplesList.size() > 1)
                 {
                     samplesList.clear();
                     samplesList.addAll(fusionAnalyser.getRnaSampleIds());
@@ -209,7 +207,7 @@ public class SvAnalyser {
 
                 if(runFusions || checkDrivers)
                 {
-                    fusionAnalyser.setSvGeneData(sample, svVarData, runFusions);
+                    fusionAnalyser.setSvGeneData(sample, svVarData, runFusions, sampleAnalyser.getChrBreakendMap());
                 }
 
                 if(checkDrivers)
@@ -223,10 +221,7 @@ public class SvAnalyser {
                     driverGeneAnnotator.annotateSVs(sample, sampleAnalyser.getClusters(), sampleAnalyser.getChrBreakendMap());
                 }
 
-                if(runFusions)
-                {
-                    fusionAnalyser.findFusions(svVarData, sampleAnalyser.getClusters());
-                }
+                fusionAnalyser.run(svVarData, sampleAnalyser.getClusters());
 
                 sampleAnalyser.writeOutput();
 

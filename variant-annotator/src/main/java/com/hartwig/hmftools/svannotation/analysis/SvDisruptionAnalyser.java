@@ -32,12 +32,14 @@ public class SvDisruptionAnalyser
 {
     private final Set<String> mDisruptionGeneIDPanel;
     private BufferedWriter mWriter;
+    private final String mOutputDir;
 
     private static final Logger LOGGER = LogManager.getLogger(SvDisruptionAnalyser.class);
 
-    public SvDisruptionAnalyser()
+    public SvDisruptionAnalyser(final String outputDir)
     {
         mDisruptionGeneIDPanel = tsgDriverGeneIDs();
+        mOutputDir = outputDir;
         mWriter = null;
     }
 
@@ -159,16 +161,13 @@ public class SvDisruptionAnalyser
         return false;
     }
 
-    public void writeDisruptions(final List<GeneDisruption> disruptions, final String outputDir, final String sampleId, boolean hasMultipleSamples)
+    public void writeDisruptions(final List<GeneDisruption> disruptions, final String sampleId, boolean hasMultipleSamples)
     {
         try
         {
             if(mWriter == null)
             {
-                String outputFilename = outputDir;
-
-                if (!outputFilename.endsWith(File.separator))
-                    outputFilename += File.separator;
+                String outputFilename = mOutputDir;
 
                 if(hasMultipleSamples)
                     outputFilename += "DISRUPTIONS.csv";

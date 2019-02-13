@@ -238,7 +238,7 @@ public class ChainFinder
         // - SVs cannot be in more than 1 chain
         // - for replicated SVs, there cannot be conflicting sets of breakend pairs (eg A-B and A-C)
 
-        isSpecificCluster(mCluster);
+        // isSpecificCluster(mCluster);
         List<SvLinkedPair> chainedPairs = Lists.newArrayList();
         List<SvLinkedPair> remainingStartLinks = Lists.newArrayList();
         remainingStartLinks.addAll(mAssemblyLinkedPairs);

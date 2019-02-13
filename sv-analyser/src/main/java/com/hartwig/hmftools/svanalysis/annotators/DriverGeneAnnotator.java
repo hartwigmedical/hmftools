@@ -108,7 +108,7 @@ public class DriverGeneAnnotator
 
     public static void addCmdLineArgs(Options options)
     {
-        options.addOption(WRITE_GCN_DATA, true, "Write a cache of driver-matched gene copy number data");
+        options.addOption(WRITE_GCN_DATA, false, "Write a cache of driver-matched gene copy number data");
         options.addOption(GCN_DATA_FILE, true, "Cache of driver-matched gene copy number data");
     }
 

@@ -18,11 +18,9 @@ import static com.hartwig.hmftools.svanalysis.analysis.LinkFinder.areLinkedSecti
 import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.CLUSTER_REASON_COMMON_ARMS;
 import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.CLUSTER_REASON_FOLDBACKS;
 import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.CLUSTER_REASON_LOOSE_OVERLAP;
-import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.MAX_SV_REPLICATION_MULTIPLE;
 import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.addClusterReason;
 import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.applyCopyNumberReplication;
 import static com.hartwig.hmftools.svanalysis.annotators.LineElementAnnotator.markLineCluster;
-import static com.hartwig.hmftools.svanalysis.types.SvArmCluster.logArmClusterData;
 import static com.hartwig.hmftools.svanalysis.types.SvArmCluster.mergeArmClusters;
 import static com.hartwig.hmftools.svanalysis.types.SvChain.CHAIN_ASSEMBLY_LINK_COUNT;
 import static com.hartwig.hmftools.svanalysis.types.SvChain.CHAIN_LENGTH;
@@ -67,6 +65,7 @@ import com.hartwig.hmftools.svanalysis.types.SvCluster;
 import com.hartwig.hmftools.svanalysis.types.SvLOH;
 import com.hartwig.hmftools.svanalysis.types.SvVarData;
 import com.hartwig.hmftools.svanalysis.types.SvLinkedPair;
+import com.hartwig.hmftools.svanalysis.types.SvaConfig;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -1650,6 +1649,8 @@ public class ClusterAnalyser {
         checkLooseFoldbacks(cluster);
 
         classifyChainedClusters(cluster);
+
+        reportClusterNeoChromosomes(cluster);
     }
 
     private final SvBreakend getNextUnresolvedBreakend(final List<SvBreakend> breakendList, int startIndex, boolean traverseUp)
@@ -1997,10 +1998,16 @@ public class ClusterAnalyser {
 
     private void reportClusterNeoChromosomes(final SvCluster cluster)
     {
-        // count up number of arms from the breakends, excluding those in a TI
+        if(cluster.getChains().isEmpty())
+            return;
+
         int unlinkedSvCount = cluster.getUnlinkedSVs().size();
         int inconsistentChains = 0;
-        int neoChromosomes = 0;
+        int repeatedChainEndArms = 0;
+
+        isSpecificCluster(cluster);
+
+        List<String> chainEndArms = Lists.newArrayList();
 
         for (final SvChain chain : cluster.getChains())
         {
@@ -2010,52 +2017,56 @@ public class ClusterAnalyser {
                 continue;
             }
 
-            ++neoChromosomes;
-        }
-
-        int armGroupCount = cluster.getArmGroups().size();
-
-        // skip simple chained clusters
-        if (cluster.getArmCount() == 1 && cluster.getCount() == 2)
-            return;
-
-        // isSpecificCluster(cluster);
-
-        /* data to gather for each arm in the chain
-            - number of links
-            - number of short TIs without proximate deletion bridges
-            - links with copy number gain
-            - start and end locations
-         */
-
-        long proximityCutoff = mClusteringMethods.getProximityDistance();
-
-        boolean allChainsConsistent = true;
-        List<String> originArms = Lists.newArrayList();
-        List<String> fragmentArms = Lists.newArrayList();
-
-        for (final SvChain chain : cluster.getChains())
-        {
-            if (!chain.isConsistent())
-            {
-                allChainsConsistent = false;
-                continue;
-            }
-
-            Map<String, int[]> armDataMap = new HashMap();
-
-            final SvBreakend firstBreakend = chain.getFirstSV().getBreakend(chain.firstLinkOpenOnStart());
-            final SvBreakend lastBreakend = chain.getLastSV().getBreakend(chain.lastLinkOpenOnStart());
+            final SvBreakend firstBreakend = chain.getOpenBreakend(true);
+            final SvBreakend lastBreakend = chain.getOpenBreakend(false);
 
             final String startChrArm = firstBreakend != null ? firstBreakend.getChrArm() : "";
             final String endChrArm = lastBreakend != null ? lastBreakend.getChrArm() : "";
 
-            if (!startChrArm.isEmpty())
-                armDataMap.put(startChrArm, new int[CHAIN_TI_ASMB_COUNT + 1]);
+            if(!startChrArm.isEmpty() && !chainEndArms.contains(startChrArm))
+                chainEndArms.add(startChrArm);
+            else
+                ++repeatedChainEndArms;
 
-            if (!endChrArm.isEmpty())
-                armDataMap.put(endChrArm, new int[CHAIN_TI_ASMB_COUNT + 1]);
+            if(!startChrArm.equals(endChrArm))
+            {
+                if (!endChrArm.isEmpty() && !chainEndArms.contains(endChrArm))
+                    chainEndArms.add(startChrArm);
+                else
+                    ++repeatedChainEndArms;
+            }
         }
+
+        int armGroupCount = cluster.getArmGroups().size();
+
+        final List<SvVarData> unlinkedRemoteSVs = cluster.getUnlinkedRemoteSVs();
+
+        int inconsistentArmCount = 0;
+
+        for(final SvArmGroup armGroup : cluster.getArmGroups())
+        {
+            if(!armGroup.isConsistent())
+            {
+                ++inconsistentArmCount;
+                continue;
+            }
+
+            for (final SvVarData var : unlinkedRemoteSVs)
+            {
+                if (armGroup.getSVs().contains(var))
+                {
+                    ++inconsistentArmCount;
+                    continue;
+                }
+            }
+        }
+
+        boolean isComplete = (inconsistentChains == 0) && (repeatedChainEndArms == 0) && (unlinkedSvCount == 0);
+
+        LOGGER.debug("cluster({}) {} chains({} incons={}) chainEnds(arms={} repeats={}) unlinkedSVs({} armCount({} incons={}))",
+                cluster.id(), isComplete ? "COMPLETE" : "incomplete",
+                cluster.getChains().size(), inconsistentChains, chainEndArms.size(), repeatedChainEndArms,
+                unlinkedSvCount, armGroupCount, inconsistentArmCount);
     }
 
             private static double DOUBLE_MINUTE_PLOIDY_THRESHOLD = 8;
