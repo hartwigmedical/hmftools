@@ -151,14 +151,14 @@ public class SvVisualiser implements AutoCloseable {
     private Object runFiltered(@NotNull final String sample, @NotNull final List<Link> links, @NotNull final List<Segment> filteredSegments,
             @NotNull final List<Exon> exons) throws IOException, InterruptedException {
 
-        final List<GenomePosition> positions = Lists.newArrayList();
-        positions.addAll(Links.allPositions(links));
-        positions.addAll(allPositions(exons));
+        final List<GenomePosition> positionsToCover = Lists.newArrayList();
+        positionsToCover.addAll(Links.allPositions(links));
+        positionsToCover.addAll(allPositions(exons));
 
         final List<Segment> segments = Segments.ensureCoverage(1000, filteredSegments, links, exons);
-        positions.addAll(allPositions(segments));
+        positionsToCover.addAll(allPositions(segments));
 
-        final List<CopyNumberAlteration> alterations = CopyNumberAlterations.copyNumbers(100, config.copyNumberAlterations(), Span.span(positions));
+        final List<CopyNumberAlteration> alterations = CopyNumberAlterations.copyNumbers(100, config.copyNumberAlterations(), Span.span(positionsToCover));
 
         final ColorPicker color = new ColorPicker(links);
 

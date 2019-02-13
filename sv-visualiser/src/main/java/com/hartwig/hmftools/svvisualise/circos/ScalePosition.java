@@ -67,10 +67,46 @@ class ScalePosition {
     }
 
     @NotNull
-    public List<Exon> scaleExons(@NotNull final List<Exon> exons) {
-        return exons.stream().map(x -> scale(x, chromosomePositionMap.get(x.chromosome()))).collect(Collectors.toList());
+    public List<Exon> interpolateExons(@NotNull final List<Exon> exons) {
+        return exons.stream().map(this::interpolate).collect(Collectors.toList());
     }
 
+    @NotNull
+    private Exon interpolate(@NotNull final Exon exon) {
+        final Map<Long, Integer> positionMap = chromosomePositionMap.get(exon.chromosome());
+        assert (positionMap != null && !positionMap.isEmpty());
+
+        return ImmutableExon.builder()
+                .from(exon)
+                .start(interpolate(exon.start(), positionMap))
+                .end(interpolate(exon.end(), positionMap))
+                .build();
+    }
+
+    static int interpolate(long value, Map<Long, Integer> positionMap) {
+
+        final Set<Long> keySet = positionMap.keySet();
+
+        if (positionMap.containsKey(value)) {
+            return positionMap.get(value);
+        }
+
+        long minValue = keySet.stream().mapToLong(x -> x).min().orElse(0);
+        long maxValue = keySet.stream().mapToLong(x -> x).max().orElse(0);
+
+        long closestToStart = keySet.stream().filter(x -> x < value).mapToLong(x -> x).max().orElse(minValue);
+        long closestToEnd = keySet.stream().filter(x -> x > value).mapToLong(x -> x).min().orElse(maxValue);
+        if (closestToStart == closestToEnd) {
+            return positionMap.get(closestToStart);
+        }
+
+        double longDistanceProportion = Math.abs(value - closestToStart) / ((double) Math.abs(closestToEnd - closestToStart));
+
+        int clostestIntToStart = positionMap.get(closestToStart);
+        int clostestIntToEnd = positionMap.get(closestToEnd);
+
+        return clostestIntToStart + (int) Math.floor(longDistanceProportion * Math.abs(clostestIntToEnd - clostestIntToStart));
+    }
 
     public List<GenomeRegion> scaleRegions(@NotNull final List<GenomeRegion> regions) {
         return regions.stream().map(x -> scale(x, chromosomePositionMap.get(x.chromosome()))).collect(Collectors.toList());
@@ -124,11 +160,6 @@ class ScalePosition {
     @NotNull
     private static GenomeRegion scale(@NotNull final GenomeRegion region, @NotNull final Map<Long, Integer> positionMap) {
         return GenomeRegionFactory.create(region.chromosome(), positionMap.get(region.start()), positionMap.get(region.end()));
-    }
-
-    @NotNull
-    private static Exon scale(@NotNull final Exon victim, @NotNull final Map<Long, Integer> positionMap) {
-        return ImmutableExon.builder().from(victim).start(positionMap.get(victim.start())).end(positionMap.get(victim.end())).build();
     }
 
     @VisibleForTesting

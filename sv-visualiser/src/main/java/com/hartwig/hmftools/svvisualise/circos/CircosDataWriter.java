@@ -55,10 +55,10 @@ public class CircosDataWriter {
         final List<GenomeRegion> unadjustedLineElements =
                 Highlights.limitHighlightsToSegments(Highlights.lineElements(), unadjustedSegments);
 
+        // Note we do not add exons here because we want them interpolated.
         final List<GenomePosition> unadjustedPositions = Lists.newArrayList();
         unadjustedPositions.addAll(Links.allPositions(unadjustedLinks));
         unadjustedPositions.addAll(Span.allPositions(unadjustedSegments));
-        unadjustedPositions.addAll(Span.allPositions(unadjustedExons));
         unadjustedPositions.addAll(Span.allPositions(unadjustedAlterations));
         unadjustedPositions.addAll(Span.allPositions(unadjustedFragileSites));
         unadjustedPositions.addAll(Span.allPositions(unadjustedLineElements));
@@ -72,7 +72,7 @@ public class CircosDataWriter {
         final List<CopyNumberAlteration> alterations = scalePosition.scaleAlterations(unadjustedAlterations);
         final List<GenomeRegion> fragileSites = scalePosition.scaleRegions(unadjustedFragileSites);
         final List<GenomeRegion> lineElements = scalePosition.scaleRegions(unadjustedLineElements);
-        final List<Exon> exons = scalePosition.scaleExons(unadjustedExons);
+        final List<Exon> exons = scalePosition.interpolateExons(unadjustedExons);
 
         final String exonPath = filePrefix + ".exon.circos";
         Files.write(new File(exonPath).toPath(), exons(exons));

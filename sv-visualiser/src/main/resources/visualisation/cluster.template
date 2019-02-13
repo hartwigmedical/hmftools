@@ -45,7 +45,7 @@ show_tick_labels    = no
 		file       = SUBSTITUTE_SAMPLE.exon.circos
 		r0         = SUBSTITUTE_EXON_INNER_RADIUSr
 		r1         = SUBSTITUTE_EXON_OUTER_RADIUSr
-		fill_color = blue_a1
+		fill_color = blue
 		z = 20
 	</highlight>
 
@@ -53,7 +53,7 @@ show_tick_labels    = no
         file       = SUBSTITUTE_SAMPLE.gene.circos
         r0         = SUBSTITUTE_GENE_INNER_RADIUSr
         r1         = SUBSTITUTE_GENE_OUTER_RADIUSr
-        fill_color = blue_a5
+        fill_color = blue_a2
         z = 20
     </highlight>
 
