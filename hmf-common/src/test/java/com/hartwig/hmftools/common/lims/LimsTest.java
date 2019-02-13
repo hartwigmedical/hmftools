@@ -168,7 +168,7 @@ public class LimsTest {
         final LimsJsonSampleData sampleData =
                 createLimsSampleDataBuilder().sampleId("CPCT02990001T").labelSample("").labRemarks("ShallowSeq").build();
 
-        Lims lims = buildTestLimsWithSampleAndShallowSeq(sampleData, 0.2);
+        Lims lims = buildTestLimsWithSampleAndShallowSeq(sampleData, "0.2");
         assertEquals("20%", lims.purityShallowSeq("CPCT02990001T"));
     }
 
@@ -177,7 +177,7 @@ public class LimsTest {
         final LimsJsonSampleData sampleData =
                 createLimsSampleDataBuilder().sampleId("CORE00000001T").labRemarks("ShallowSeq").labelSample("CORE").build();
 
-        Lims lims = buildTestLimsWithSampleAndShallowSeq(sampleData, 0.3);
+        Lims lims = buildTestLimsWithSampleAndShallowSeq(sampleData, "0.3");
         assertEquals("30%", lims.purityShallowSeq("CORE00000001T"));
     }
 
@@ -208,7 +208,7 @@ public class LimsTest {
     }
 
     @NotNull
-    private static Lims buildTestLimsWithSampleAndShallowSeq(@NotNull final LimsJsonSampleData sampleData, double shallowSeqPurity) {
+    private static Lims buildTestLimsWithSampleAndShallowSeq(@NotNull final LimsJsonSampleData sampleData, String shallowSeqPurity) {
         Map<String, LimsJsonSampleData> dataPerSample = Maps.newHashMap();
         dataPerSample.put(sampleData.sampleId(), sampleData);
         Map<String, LimsJsonSubmissionData> dataPerSubmission = Maps.newHashMap();

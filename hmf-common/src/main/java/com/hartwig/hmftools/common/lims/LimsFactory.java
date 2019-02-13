@@ -67,7 +67,7 @@ public final class LimsFactory {
         for (final String line : lines) {
             final String[] parts = line.split(FIELD_SEPARATOR, 2);
             if (parts.length == 2) {
-                shallowSeqPerSample.put(parts[0], ImmutableLimsShallowSeqData.of(parts[0], Double.valueOf(parts[1])));
+                shallowSeqPerSample.put(parts[0], ImmutableLimsShallowSeqData.of(parts[0], parts[1]));
             } else if (parts.length > 0) {
                 LOGGER.warn("Could not properly parse line in shallow seq csv: " + line);
             }

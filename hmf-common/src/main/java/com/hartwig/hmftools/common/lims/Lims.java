@@ -133,7 +133,15 @@ public class Lims {
             } else {
                 if (purityShallowExecuted) {
                     LOGGER.info("Retrieved purity from shallow seq.");
-                    return Math.round(shallowSeq.purityShallowSeq() * 100) + "%";
+                    if (shallowSeq.purityShallowSeq().equals("below detection limit")){
+                        return "below detection limit";
+                    } else {
+                        try {
+                            return Math.round(Double.parseDouble(shallowSeq.purityShallowSeq()) * 100) + "%";
+                        } catch (final NumberFormatException e) {
+                            return "N/A";
+                        }
+                    }
                 } else {
                     return "not determined";
                 }

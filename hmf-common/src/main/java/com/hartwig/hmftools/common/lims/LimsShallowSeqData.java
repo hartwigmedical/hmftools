@@ -12,5 +12,5 @@ abstract class LimsShallowSeqData {
     @NotNull
     abstract String sampleId();
 
-    abstract double purityShallowSeq();
+    abstract String purityShallowSeq();
 }
