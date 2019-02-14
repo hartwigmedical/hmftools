@@ -186,8 +186,8 @@ public class LimsTest {
         final LimsJsonSampleData sampleData =
                 createLimsSampleDataBuilder().sampleId("CPCT02990003T").labelSample("").labRemarks("ShallowSeq").build();
 
-        Lims lims = buildTestLimsWithSampleAndShallowSeq(sampleData, "below detection limit");
-        assertEquals("below detection limit", lims.purityShallowSeq("CPCT02990003T"));
+        Lims lims = buildTestLimsWithSampleAndShallowSeq(sampleData, "below detection threshold");
+        assertEquals("below detection threshold", lims.purityShallowSeq("CPCT02990003T"));
     }
 
     @Test
@@ -195,8 +195,8 @@ public class LimsTest {
         final LimsJsonSampleData sampleData =
                 createLimsSampleDataBuilder().sampleId("CPCT02990003T").labelSample("").labRemarks("ShallowSeq").build();
 
-        Lims lims = buildTestLimsWithSampleAndShallowSeq(sampleData, "below detection limit");
-        assertEquals("below detection limit", lims.purityShallowSeq("CPCT02990003T"));
+        Lims lims = buildTestLimsWithSampleAndShallowSeq(sampleData, "below detection threshold");
+        assertEquals("below detection threshold", lims.purityShallowSeq("CPCT02990003T"));
     }
 
     @NotNull

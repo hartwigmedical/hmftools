@@ -133,8 +133,8 @@ public class Lims {
             } else {
                 if (purityShallowExecuted) {
                     LOGGER.info("Retrieved purity from shallow seq.");
-                    if (shallowSeq.purityShallowSeq().equals("below detection limit")){
-                        return "below detection limit";
+                    if (shallowSeq.purityShallowSeq().equals("below detection threshold")){
+                        return "below detection threshold";
                     } else {
                         try {
                             return Math.round(Double.parseDouble(shallowSeq.purityShallowSeq()) * 100) + "%";
