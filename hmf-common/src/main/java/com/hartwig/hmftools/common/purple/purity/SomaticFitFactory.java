@@ -32,7 +32,7 @@ class SomaticFitFactory {
             SomaticPeak peak = peaks.get(i);
             double impliedPurity = peak.alleleFrequency() * 2;
             if (Doubles.greaterOrEqual(impliedPurity, minPurity) && Doubles.lessOrEqual(impliedPurity, maxPurity)
-                    && peak.count() > minPeak) {
+                    && peak.count() >= minPeak) {
                 LOGGER.info("Somatic implied purity: {}", impliedPurity);
                 return Optional.of(closest(impliedPurity, candidates));
             }
