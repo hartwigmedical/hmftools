@@ -485,7 +485,7 @@ public class SvClusteringMethods {
         for(int i = 0; i < clusterCount; ++i)
         {
             SvVarData var = cluster.getSVs().get(i);
-            double calcCopyNumber = var.getRoundedCNChange(true);
+            double calcCopyNumber = var.getRoundedCNChange();
 
             int svMultiple = (int)round(calcCopyNumber / minCopyNumber);
 

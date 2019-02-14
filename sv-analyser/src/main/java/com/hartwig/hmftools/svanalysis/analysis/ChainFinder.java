@@ -5,23 +5,20 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.Math.round;
 
-import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INS;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.svanalysis.analysis.LinkFinder.MIN_TEMPLATED_INSERTION_LENGTH;
 import static com.hartwig.hmftools.svanalysis.analysis.LinkFinder.areLinkedSection;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.getProximity;
-import static com.hartwig.hmftools.svanalysis.types.SvCluster.isSpecificCluster;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_END;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_START;
-import static com.hartwig.hmftools.svanalysis.types.SvVarData.isSpecificSV;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.isStart;
 import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.LINK_TYPE_TI;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.svanalysis.types.SvBreakend;
 import com.hartwig.hmftools.svanalysis.types.SvChain;
 import com.hartwig.hmftools.svanalysis.types.SvCluster;
@@ -36,9 +33,22 @@ public class ChainFinder
     private static final Logger LOGGER = LogManager.getLogger(ChainFinder.class);
 
     private SvCluster mCluster;
+
+    // chaining state
     private List<SvLinkedPair> mAssemblyLinkedPairs;
     private List<SvChain> mCompleteChains;
     private List<SvChain> mIncompleteChains;
+
+    private List<SvChain> mPartialChains;
+    private List<SvVarData> mFullyLinkedSVs;
+    private List<SvVarData> mUnlinkedSVs;
+    private List<SvBreakend> mUnlinkedBreakends;
+    private List<SvLinkedPair> mChainedPairs;
+    private Map<SvVarData,Integer> mSvReplicationMap;
+
+    private Map<SvVarData,List<SvLinkedPair>> mSvPossibleLinks;
+
+    private boolean mUseNewMethod;
     private int mReqChainCount;
     private boolean mLogVerbose;
 
@@ -46,8 +56,17 @@ public class ChainFinder
     {
         mCompleteChains = Lists.newArrayList();
         mIncompleteChains = Lists.newArrayList();
+        mPartialChains = Lists.newArrayList();
+        mUnlinkedSVs = Lists.newArrayList();
+        mUnlinkedBreakends = Lists.newArrayList();
+        mFullyLinkedSVs = Lists.newArrayList();
+        mChainedPairs = Lists.newArrayList();
+        mSvReplicationMap = new HashMap();
+        mSvPossibleLinks = new HashMap();
+
         mLogVerbose = false;
         mReqChainCount = 0;
+        mUseNewMethod = false;
     }
 
     public void initialise(SvCluster cluster)
@@ -59,19 +78,25 @@ public class ChainFinder
 
         mCompleteChains.clear();
         mIncompleteChains.clear();
+        mPartialChains.clear();
+        mChainedPairs.clear();
+        mFullyLinkedSVs.clear();
+        mUnlinkedSVs.clear();
+        mUnlinkedBreakends.clear();
     }
 
     public void setLogVerbose(boolean toggle) { mLogVerbose = toggle; }
+    public void setUseNewMethod(boolean toggle) { mUseNewMethod = toggle; }
 
-    public boolean formClusterChains()
+    public void formClusterChains()
     {
         // take the assembly links as a given and then try out the inferred links to see if a single chain can be formed from all the breakends
 
         // only factor in templated insertions to form chains, even if they also exhibit DBs
-        List<SvVarData> svList = collectRelevantSVs();
+        List<SvVarData> svList = Lists.newArrayList(mCluster.getSVs());
 
         if(svList.size() < 2)
-            return false;
+            return;
 
         mReqChainCount = svList.size();
 
@@ -81,8 +106,19 @@ public class ChainFinder
                     mCluster.id(), mAssemblyLinkedPairs.size(), svList.size(), mCluster.getCount(), mCluster.getChains().size());
         }
 
-        List<SvChain> chains = Lists.newArrayList();
+        if(mUseNewMethod)
+        {
+            buildSvChains();
 
+            for(final SvChain chain : mPartialChains)
+            {
+                mCluster.addChain(chain);
+            }
+
+            return;
+        }
+
+        List<SvChain> chains = Lists.newArrayList();
         findSvChainsIncrementally(svList, chains);
 
         if(chains.size() == 1 && chains.get(0).getSvCount() == mReqChainCount)
@@ -109,30 +145,6 @@ public class ChainFinder
             // otherwise add the longest mutually exclusive chains
             cacheIncompleteChains();
         }
-
-        return fullyChained;
-    }
-
-    private List<SvVarData> collectRelevantSVs()
-    {
-        List<SvVarData> svList = Lists.newArrayList(mCluster.getSVs());
-
-        /*
-        // remove any non-applicable or suspect SVs
-        for(final SvVarData var : mCluster.getSVs())
-        {
-            if(var.type() == INS)
-                continue;
-
-            // skip simple DELs, DUPs and INS even if in assembly links
-            // if(var.isSimpleType() && var.getNearestSvRelation() == RELATION_TYPE_NEIGHBOUR)
-            //    continue;
-
-            svList.add(var);
-        }
-        */
-
-        return svList;
     }
 
     private boolean cacheCompleteChain()
@@ -228,6 +240,600 @@ public class ChainFinder
         }
     }
 
+    private void buildSvChains()
+    {
+        setUnlinkedBreakends();
+
+        // first make chains out of any assembly links
+        addAssemblyLinksToChains();
+
+        determinePossibleLinks();
+
+        setSvReplicationCounts();
+
+        // now find the best next candidate link giving priority to replication count, following by min link resolution
+        // and lastly shortest distance
+
+        // after each new link, attempt to link any partial chains together
+        boolean isFinished = false;
+        while(!isFinished)
+        {
+            List<SvLinkedPair> possiblePairs = null;
+
+            if (!mSvReplicationMap.isEmpty())
+            {
+                // find highest replication count if there is one
+                List<SvVarData> maxRepSVs = getMaxReplicationSvIds();
+
+                if (!maxRepSVs.isEmpty())
+                {
+                    possiblePairs = findRestrictedPairs(maxRepSVs, true);
+                }
+            }
+
+            if (possiblePairs == null)
+            {
+                possiblePairs = findRestrictedPairs(mUnlinkedSVs, false);
+            }
+
+            if (possiblePairs.isEmpty())
+            {
+                isFinished = true;
+                break;
+            }
+
+            // add the shortest of these - or all which are mutually exclusive??
+            while (!possiblePairs.isEmpty())
+            {
+                SvLinkedPair shortestPair = null;
+                for (SvLinkedPair pair : possiblePairs)
+                {
+                    if (shortestPair == null || pair.length() < shortestPair.length())
+                    {
+                        shortestPair = pair;
+                    }
+                }
+
+                if (shortestPair == null)
+                {
+                    isFinished = true;
+                    break;
+                }
+
+                possiblePairs.remove(shortestPair);
+
+                // remove any other conflicting pairs
+                int index = 0;
+                while (index < possiblePairs.size())
+                {
+                    SvLinkedPair pair = possiblePairs.get(index);
+                    if (pair.hasLinkClash(shortestPair))
+                    {
+                        possiblePairs.remove(index);
+                    }
+                    else
+                    {
+                        ++index;
+                    }
+                }
+
+                // the actual pair being added by be drawn from unlinked breakends, not the real ones
+                addPairToChain(shortestPair, false);
+            }
+        }
+
+        if(mLogVerbose)
+        {
+            LOGGER.debug("cluster({}) chaining finished: chains({}) unlinked(SVs={} breakends={})",
+                    mCluster.id(), mPartialChains.size(), mUnlinkedSVs.size(), mUnlinkedBreakends.size());
+
+            for(final SvChain chain : mPartialChains)
+            {
+                LOGGER.debug("cluster({}) adding chain({}) with {} linked pairs:",
+                        mCluster.id(), chain.id(), chain.getLinkCount());
+                chain.logLinks();
+            }
+        }
+    }
+
+    private List<SvLinkedPair> findRestrictedPairs(List<SvVarData> svList, boolean isRestricted)
+    {
+        // of these pairs, do some have less alternatives links which could be made than others
+        // eg if high-rep SVs are A and B, and possible links have been found A-C, A-D and B-E,
+        // then count how many links could be made between C, D and E to other SVs, and then select the least restrictive
+        // say A-C is the only link C can make and B-D is the only link that D can make, then would want to make them both
+        int minPairCount = 0;
+        List<SvLinkedPair> minLinkPairs = Lists.newArrayList();
+
+        for(SvVarData var : svList)
+        {
+            List<SvLinkedPair> possiblePairs = mSvPossibleLinks.get(var);
+
+            if (possiblePairs == null || possiblePairs.isEmpty())
+                continue;
+
+            if (minPairCount == 0 || possiblePairs.size() < minPairCount)
+            {
+                minLinkPairs.clear();
+                minPairCount = possiblePairs.size();
+            }
+
+            if (possiblePairs.size() == minPairCount)
+            {
+                for(SvLinkedPair pair : possiblePairs)
+                {
+                    if (!minLinkPairs.contains(pair))
+                        minLinkPairs.add(pair);
+                }
+            }
+
+            if (isRestricted)
+            {
+                // also check this max-rep SV's pairings to see they they are restricted
+                for (SvLinkedPair pair : possiblePairs)
+                {
+                    SvVarData otherVar = pair.getOtherSV(var);
+
+                    List<SvLinkedPair> otherPossiblePairs = mSvPossibleLinks.get(otherVar);
+
+                    if (otherPossiblePairs == null || otherPossiblePairs.isEmpty())
+                        continue; // logical assert
+
+                    if (minPairCount == 0 || otherPossiblePairs.size() < minPairCount)
+                    {
+                        minLinkPairs.clear();
+                        minPairCount = otherPossiblePairs.size();
+                    }
+
+                    if (otherPossiblePairs.size() == minPairCount)
+                    {
+                        for(SvLinkedPair otherPair : otherPossiblePairs)
+                        {
+                            if (!minLinkPairs.contains(otherPair))
+                                minLinkPairs.add(otherPair);
+                        }
+                    }
+                }
+            }
+        }
+
+        return minLinkPairs;
+    }
+
+    private void addPairToChain(final SvLinkedPair pair, boolean isExact)
+    {
+        // attempt to add to existing chain
+        boolean addedToChain = false;
+        boolean[] pairToChain = new boolean[2];
+
+        SvBreakend unlinkedBeFirst = null;
+        SvBreakend unlinkedBeSecond = null;
+        final SvLinkedPair newPair;
+
+        if(isExact)
+        {
+            newPair = pair;
+        }
+        else
+        {
+            // this pair was created from the set of possibles, but needs to make use of unlinked breakends
+            unlinkedBeFirst = findUnlinkingMatchingBreakend(pair.getBreakend(true));
+            unlinkedBeSecond = findUnlinkingMatchingBreakend(pair.getBreakend(false));
+
+            if(unlinkedBeFirst == null || unlinkedBeSecond == null)
+            {
+                LOGGER.error("new pair breakendStart({} valid={})  and breakendEnd({} valid={}) no unlinked match found",
+                        pair.getBreakend(true).toString(), unlinkedBeFirst != null,
+                        pair.getBreakend(true).toString(), unlinkedBeSecond != null);
+                return;
+            }
+
+            newPair = new SvLinkedPair(unlinkedBeFirst.getSV(), unlinkedBeSecond.getSV(), LINK_TYPE_TI,
+                    unlinkedBeFirst.usesStart(), unlinkedBeSecond.usesStart());
+        }
+
+        for(SvChain chain : mPartialChains)
+        {
+            for(int be = SVI_START; be <= SVI_END; ++be)
+            {
+                boolean isStart = isStart(be);
+                final SvVarData chainSV = chain.getChainEndSV(isStart);
+
+                if (chain.canAddLinkedPair(newPair, isStart, true))
+                {
+                    if (chainSV.equals(newPair.first(), true))
+                    {
+                        pairToChain[SVI_START] = true;
+                        pairToChain[SVI_END] = false;
+
+                        if (chainSV != newPair.first())
+                        {
+                            // if the chain has a specific SV, ensure it is matched by this new pair
+                            newPair.replaceFirst(chainSV);
+                        }
+                    }
+                    else
+                    {
+                        pairToChain[SVI_START] = false;
+                        pairToChain[SVI_END] = true;
+
+                        if (chainSV != newPair.second())
+                        {
+                            newPair.replaceSecond(chainSV);
+                        }
+                    }
+
+                    chain.addLink(newPair, isStart);
+                    addedToChain = true;
+
+                    LOGGER.debug("adding linked pair({} {}) to existing chain({}) {}",
+                            newPair.toString(), newPair.assemblyInferredStr(), chain.id(), isStart ? "start" : "end");
+                    break;
+                }
+            }
+
+            if(addedToChain)
+                break;
+        }
+
+        if(!addedToChain)
+        {
+            SvChain chain = new SvChain(mPartialChains.size());
+            mPartialChains.add(chain);
+            chain.addLink(newPair, true);
+            pairToChain[SVI_START] = true;
+            pairToChain[SVI_END] = true;
+
+            LOGGER.debug("adding linked pair({} {}) to new chain({})",
+                    newPair.toString(), newPair.assemblyInferredStr(), chain.id());
+        }
+
+        registerNewLink(newPair, pairToChain);
+
+        if(addedToChain)
+        {
+            // now see if any partial chains can be linked
+            reconcileChains();
+        }
+    }
+
+    private SvBreakend findUnlinkingMatchingBreakend(final SvBreakend breakend)
+    {
+        for(SvBreakend other : mUnlinkedBreakends)
+        {
+            if(breakend.getOrigSV() == other.getOrigSV() && breakend.usesStart() == other.usesStart())
+                return other;
+        }
+
+        return null;
+    }
+
+    private void addAssemblyLinksToChains()
+    {
+        if(mAssemblyLinkedPairs.isEmpty())
+            return;
+
+        for(SvLinkedPair pair : mAssemblyLinkedPairs)
+        {
+            addPairToChain(pair, true);
+        }
+
+        if(!mPartialChains.isEmpty())
+        {
+            LOGGER.debug("created {} partial chains from {} assembly links", mPartialChains.size(), mAssemblyLinkedPairs.size());
+        }
+    }
+
+    private void registerNewLink(final SvLinkedPair newPair, boolean[] pairToChain)
+    {
+        mChainedPairs.add(newPair);
+
+        for (int be = SVI_START; be <= SVI_END; ++be)
+        {
+            boolean isStart = isStart(be);
+
+            final SvBreakend breakend = newPair.getBreakend(isStart);
+
+            mUnlinkedSVs.remove(breakend.getSV());
+
+            mUnlinkedBreakends.remove(breakend);
+
+            // inefficient but need to then update the possible links by checking if any breakends for this SV
+            // are still unlinked, allowing a possible link to be used
+            boolean hasUnlinkedBreakend = false;
+
+            if(mCluster.hasReplicatedSVs())
+            {
+                for (final SvBreakend otherBe : mUnlinkedBreakends)
+                {
+                    if (otherBe.getOrigSV() == breakend.getOrigSV() && otherBe.usesStart() == breakend.usesStart())
+                    {
+                        hasUnlinkedBreakend = true;
+                        break;
+                    }
+                }
+            }
+
+            List<SvLinkedPair> possibleLinks = !mSvPossibleLinks.isEmpty() ? mSvPossibleLinks.get(breakend.getOrigSV()) : null;
+
+            if(possibleLinks != null)
+            {
+                if (!hasUnlinkedBreakend)
+                {
+                    removePossibleLinks(possibleLinks, breakend);
+                }
+
+                // check for an opposite pairing between these 2 SVs
+                for(SvLinkedPair pair : possibleLinks)
+                {
+                    if(pair.oppositeMatch(newPair))
+                    {
+                        possibleLinks.remove(pair);
+                        break;
+                    }
+                }
+            }
+
+            if(mCluster.hasReplicatedSVs())
+            {
+                // reduce replication counts for breakends which are added to a chain
+                if (pairToChain[be])
+                {
+                    Integer replicationCount = mSvReplicationMap.get(breakend.getOrigSV());
+
+                    if (replicationCount != null)
+                    {
+                        if (replicationCount <= 1)
+                            mSvReplicationMap.remove(breakend.getOrigSV());
+                        else
+                            mSvReplicationMap.put(breakend.getOrigSV(), replicationCount - 1);
+                    }
+                }
+            }
+        }
+    }
+
+    private void removePossibleLinks(List<SvLinkedPair> possibleLinks, SvBreakend fullyLinkedBreakend)
+    {
+        if(possibleLinks == null || possibleLinks.isEmpty())
+            return;
+
+        final SvVarData linkedSV = fullyLinkedBreakend.getOrigSV();
+
+        int index = 0;
+        while (index < possibleLinks.size())
+        {
+            SvLinkedPair possibleLink = possibleLinks.get(index);
+            if (possibleLink.hasBreakend(linkedSV, fullyLinkedBreakend.usesStart()))
+            {
+                // remove this from consideration
+                possibleLinks.remove(index);
+
+                // and remove from the other SV's list as well
+                SvVarData otherSV = possibleLink.getOtherSV(linkedSV);
+                List<SvLinkedPair> otherPossibles = mSvPossibleLinks.get(otherSV);
+
+                if(otherPossibles != null)
+                {
+                    for (SvLinkedPair otherPair : otherPossibles)
+                    {
+                        if (otherPair == possibleLink)
+                        {
+                            otherPossibles.remove(otherPair);
+
+                            if (otherPossibles.isEmpty())
+                            {
+                                mSvPossibleLinks.remove(otherSV);
+                            }
+
+                            break;
+                        }
+                    }
+                }
+            }
+            else
+            {
+                ++index;
+            }
+        }
+
+        if(possibleLinks.isEmpty())
+        {
+            mSvPossibleLinks.remove(linkedSV);
+        }
+    }
+
+    private void determinePossibleLinks()
+    {
+        mSvPossibleLinks.clear();
+
+        final Map<String,List<SvBreakend>> chrBreakendMap = mCluster.getChrBreakendMap();
+
+        for (final Map.Entry<String, List<SvBreakend>> entry : chrBreakendMap.entrySet())
+        {
+            final List<SvBreakend> breakendList = entry.getValue();
+
+            for (int i = 0; i < breakendList.size() -1; ++i)
+            {
+                final SvBreakend lowerBreakend = breakendList.get(i);
+
+                if(lowerBreakend.orientation() != -1)
+                    continue;
+
+                if(!isUnlinkedBreakend(lowerBreakend))
+                    continue;
+
+                for (int j = i+1; j < breakendList.size(); ++j)
+                {
+                    final SvBreakend upperBreakend = breakendList.get(j);
+
+                    if(upperBreakend.orientation() != 1)
+                        continue;
+
+                    if(!isUnlinkedBreakend(upperBreakend))
+                        continue;
+
+                    if(abs(upperBreakend.position() - lowerBreakend.position()) < MIN_TEMPLATED_INSERTION_LENGTH)
+                        continue;
+
+                    // record the possible link
+                    final SvVarData lowerSV = lowerBreakend.getOrigSV();
+                    final SvVarData upperSV = upperBreakend.getOrigSV();
+
+                    SvLinkedPair newPair = new SvLinkedPair(lowerSV, upperSV, LINK_TYPE_TI,
+                            lowerBreakend.usesStart(), upperBreakend.usesStart());
+
+                    List<SvLinkedPair> lowerPairs = mSvPossibleLinks.get(lowerSV);
+
+                    if(lowerPairs == null)
+                    {
+                        lowerPairs = Lists.newArrayList();
+                        mSvPossibleLinks.put(lowerSV, lowerPairs);
+                    }
+
+                    lowerPairs.add(newPair);
+
+                    List<SvLinkedPair> upperPairs = mSvPossibleLinks.get(upperSV);
+
+                    if(upperPairs == null)
+                    {
+                        upperPairs = Lists.newArrayList();
+                        mSvPossibleLinks.put(upperSV, upperPairs);
+                    }
+
+                    upperPairs.add(newPair);
+                }
+            }
+        }
+    }
+
+    private boolean isUnlinkedBreakend(final SvBreakend breakend)
+    {
+        return mUnlinkedBreakends.contains(breakend);
+    }
+
+    private void setSvReplicationCounts()
+    {
+        mSvReplicationMap.clear();
+
+        if(!mCluster.hasReplicatedSVs())
+            return;
+
+        for(final SvVarData var : mCluster.getSVs())
+        {
+            if(var.isReplicatedSv())
+                continue;
+
+            if(var.getReplicatedCount() > 0)
+            {
+                mSvReplicationMap.put(var, var.getReplicatedCount());
+            }
+        }
+    }
+
+    private void setUnlinkedBreakends()
+    {
+        // make a cache of all unchained breakends in those of replicated SVs
+        for(SvVarData var : mCluster.getSVs())
+        {
+            for (int be = SVI_START; be <= SVI_END; ++be)
+            {
+                boolean isStart = isStart(be);
+
+                if (var.isNullBreakend() && !isStart)
+                    continue;
+
+                mUnlinkedBreakends.add(var.getBreakend(isStart));
+            }
+        }
+
+        mUnlinkedSVs.addAll(mCluster.getSVs());
+    }
+
+    private List<SvVarData> getMaxReplicationSvIds()
+    {
+        List<SvVarData> maxRepIds = Lists.newArrayList();
+        int maxRepCount = 1;
+
+        for(Map.Entry<SvVarData,Integer> entry : mSvReplicationMap.entrySet())
+        {
+            int repCount = entry.getValue();
+
+            if(repCount <= 1)
+                continue;
+
+            if(repCount > maxRepCount)
+            {
+                maxRepCount = repCount;
+                maxRepIds.clear();
+                maxRepIds.add(entry.getKey());
+            }
+            else if(repCount == maxRepCount)
+            {
+                if(!maxRepIds.contains(entry.getKey()))
+                    maxRepIds.add(entry.getKey());
+            }
+        }
+
+        return maxRepIds;
+    }
+
+    private void reconcileChains()
+    {
+        int index1 = 0;
+        while(index1 < mPartialChains.size())
+        {
+            SvChain chain1 = mPartialChains.get(index1);
+
+            boolean chainsMerged = false;
+
+            for (int index2 = index1 + 1; index2 < mPartialChains.size(); ++index2)
+            {
+                SvChain chain2 = mPartialChains.get(index2);
+
+                for (int be1 = SVI_START; be1 <= SVI_END; ++be1)
+                {
+                    boolean c1Start = isStart(be1);
+
+                    for (int be2 = SVI_START; be2 <= SVI_END; ++be2)
+                    {
+                        boolean c2Start = isStart(be2);
+
+                        if (chain1.canAddLinkedPair(chain2.getLinkedPair(c2Start), c1Start, false))
+                        {
+                            LOGGER.debug("merging chain({} links={}) with chain({} links={})",
+                                    chain1.id(), chain1.getLinkCount(), chain2.id(), chain2.getLinkCount());
+
+                            // merge chains and remove the latter
+                            for (SvLinkedPair linkedPair : chain2.getLinkedPairs())
+                            {
+                                chain1.addLink(linkedPair, c1Start);
+                            }
+
+                            mPartialChains.remove(index2);
+
+                            chainsMerged = true;
+                            break;
+                        }
+
+                    }
+
+                    if (chainsMerged)
+                        break;
+                }
+
+                if (chainsMerged)
+                    break;
+            }
+
+            if (!chainsMerged)
+            {
+                ++index1;
+            }
+        }
+    }
+
+    // OLD CHAINING METHODS
     private void findSvChainsIncrementally(final List<SvVarData> svList, List<SvChain> chainsList)
     {
         // routine flow:

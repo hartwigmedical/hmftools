@@ -19,7 +19,6 @@ public class SvLinkedPair {
     private boolean mIsInferred;
 
     // other annotations
-    private int mAssembledChainCount;
     private int mDBLenFirst;
     private int mDBLenSecond;
     private int mTraversedSVCount;
@@ -48,7 +47,6 @@ public class SvLinkedPair {
         mLinkType = linkType;
         mIsInferred = true;
 
-        mAssembledChainCount = 0;
         mDBLenFirst = 0;
         mDBLenSecond = 0;
         mTraversedSVCount = 0;
@@ -84,6 +82,10 @@ public class SvLinkedPair {
 
     public final SvVarData first() { return mFirst; }
     public final SvVarData second() { return mSecond; }
+
+    public void replaceFirst(final SvVarData var) { mFirst = var; }
+    public void replaceSecond(final SvVarData var) { mSecond = var; }
+
     public boolean firstLinkOnStart() { return mFirstLinkOnStart; }
     public boolean secondLinkOnStart() { return mSecondLinkOnStart; }
     public boolean firstUnlinkedOnStart() { return !mFirstLinkOnStart; }
@@ -101,23 +103,13 @@ public class SvLinkedPair {
             return beFirst.position() > beSecond.position() ? beFirst : beSecond;
     }
 
-    public boolean getLinkedOnStart(final SvVarData var)
-    {
-        if(var.equals(mFirst))
-            return mFirstLinkOnStart;
-        else
-            return mSecondLinkOnStart;
-    }
-
     public final String linkType() { return mLinkType; }
     public final int length() { return mLinkLength; }
 
     public void setIsInferred(boolean toggle) { mIsInferred = toggle; }
     public boolean isInferred() { return mIsInferred; }
     public boolean isAssembled() { return !mIsInferred; }
-
-    public void setAssembledChainCount(int count) { mAssembledChainCount = count; }
-    public int getAssembledChainCount() { return mAssembledChainCount; }
+    public String assemblyInferredStr() { return mIsInferred ? "inferred" : "assembly"; }
 
     public void setDBLenFirst(int length) { mDBLenFirst = length; }
     public int getDBLenFirst() { return mDBLenFirst; }

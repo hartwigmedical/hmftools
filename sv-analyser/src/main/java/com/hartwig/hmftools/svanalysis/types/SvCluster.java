@@ -768,7 +768,7 @@ public class SvCluster
 
         for (final SvVarData var : mSVs)
         {
-            double calcCopyNumber = var.getRoundedCNChange(true);
+            double calcCopyNumber = var.getRoundedCNChange();
 
             if (mMinCNChange < 0 || calcCopyNumber < mMinCNChange)
                 mMinCNChange = calcCopyNumber;

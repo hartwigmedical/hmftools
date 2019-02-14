@@ -124,6 +124,86 @@ public class ChainingTests
     }
 
     @Test
+    public void testFullyAssembledChain()
+    {
+        SvTestHelper tester = new SvTestHelper();
+        tester.logVerbose(true);
+
+        tester.Analyser.getChainFinder().setUseNewMethod(true);
+
+        final SvVarData var1 = createDel("0", "1", 100,200);
+        final SvVarData var2 = createDel("1", "1", 300,400);
+        final SvVarData var3 = createDel("2", "1", 500,600);
+        final SvVarData var4 = createDel("3", "1", 700,800);
+
+        var1.setAssemblyData(false, "asmb12");
+        var2.setAssemblyData(true, "asmb12");
+        var2.setAssemblyData(false, "asmb23");
+        var3.setAssemblyData(true, "asmb23");
+        var3.setAssemblyData(false, "asmb34");
+        var4.setAssemblyData(true, "asmb34");
+
+        // add them out of order which will require partial chain reconciliation
+        tester.AllVariants.add(var1);
+        tester.AllVariants.add(var2);
+        tester.AllVariants.add(var3);
+        tester.AllVariants.add(var4);
+
+        tester.preClusteringInit();
+        tester.Analyser.clusterAndAnalyse();
+
+        assertEquals(1, tester.Analyser.getClusters().size());
+        final SvCluster cluster = tester.Analyser.getClusters().get(0);
+
+        assertEquals(1, cluster.getChains().size());
+
+        final SvChain chain = cluster.getChains().get(0);
+
+        assertEquals(3, chain.getLinkCount());
+    }
+
+    @Test
+    public void testPartiallyAssembledChain()
+    {
+        SvTestHelper tester = new SvTestHelper();
+        tester.logVerbose(true);
+
+        tester.Analyser.getChainFinder().setUseNewMethod(true);
+
+        final SvVarData var0 = createDel("0", "1", 100,200);
+        final SvVarData var1 = createDel("1", "1", 300,400);
+        final SvVarData var2 = createDel("2", "1", 500,600);
+        final SvVarData var3 = createDel("3", "1", 700,800);
+
+        //var1.setAssemblyData(false, "asmb12");
+        //var2.setAssemblyData(true, "asmb12");
+        var1.setAssemblyData(false, "asmb23");
+        var2.setAssemblyData(true, "asmb23");
+        //var3.setAssemblyData(false, "asmb34");
+        //var4.setAssemblyData(true, "asmb34");
+
+        // add them out of order which will require partial chain reconciliation
+        tester.AllVariants.add(var0);
+        tester.AllVariants.add(var1);
+        tester.AllVariants.add(var2);
+        tester.AllVariants.add(var3);
+
+        tester.preClusteringInit();
+        tester.Analyser.clusterAndAnalyse();
+
+        assertEquals(1, tester.Analyser.getClusters().size());
+        final SvCluster cluster = tester.Analyser.getClusters().get(0);
+
+        assertEquals(1, cluster.getChains().size());
+
+        final SvChain chain = cluster.getChains().get(0);
+
+        assertEquals(3, chain.getLinkCount());
+
+
+    }
+
+    @Test
     public void testComplexChaining1()
     {
         SvTestHelper tester = new SvTestHelper();
@@ -205,6 +285,7 @@ public class ChainingTests
 
         SvTestHelper tester = new SvTestHelper();
         tester.logVerbose(true);
+        tester.Analyser.getChainFinder().setUseNewMethod(true);
 
             /*
             Id	Type	Ploidy	ChrStart	PosStart	OS	AS	CNStart	CNChgS	ChrEnd	PosEnd	    OE	AE	CNEnd	CNChgEnd
@@ -216,6 +297,20 @@ public class ChainingTests
             113	BND	    1.77	3	        25401059	1	P	9.94	1.86	10	    60477224	-1	Q	4.06	2.06
             119	BND	    2.19	3	        25400602	1	P	12.17	2.22	12	    72666892	-1	Q	5.22	2.19
             120	BND	    2.26	10	        60477422	1	Q	4.06	2.04	12	    72667075	1	Q	5.22	2.22
+
+            SOLUTION:
+
+            21:30:03.844 [main] [DEBUG] cluster(5) adding complete chain(0) with 10 linked pairs:
+            21:30:03.844 [main] [DEBUG] chain(0) 0: pair(78 3:25331584 SGL-on-known & 119 3:25400602:start) TI inferred len=69018
+            21:30:03.844 [main] [DEBUG] chain(0) 1: pair(119 12:72666892:end & 120 12:72667075:end) TI assembly len=183
+            21:30:03.844 [main] [DEBUG] chain(0) 2: pair(120 10:60477422:start & 113 10:60477224:end) TI assembly len=198
+            21:30:03.844 [main] [DEBUG] chain(0) 3: pair(113 3:25401059:start & 77 3:24566180:end) TI inferred len=834879
+            21:30:03.845 [main] [DEBUG] chain(0) 4: pair(77 3:24565108:start & 79 3:26663922:start) TI inferred len=2098814
+            21:30:03.845 [main] [DEBUG] chain(0) 5: pair(79 3:26664498:end & 88 3:26431918:start) TI inferred len=232580
+            21:30:03.845 [main] [DEBUG] chain(0) 6: pair(88 6:26194040:end & 89 6:26194117:start) TI assembly len=77
+            21:30:03.845 [main] [DEBUG] chain(0) 7: pair(89 6:26194406:end & 88r 6:26194040:end) TI assembly len=366
+            21:30:03.845 [main] [DEBUG] chain(0) 8: pair(88r 3:26431918:start & 79r 3:26663922:start) TI inferred len=232004
+            21:30:03.846 [main] [DEBUG] chain(0) 9: pair(79r 3:26664498:end & 77r 3:24565108:start) TI inferred len=2099390
              */
 
         // merge 5 clusters with varying levels of copy number change (ie replication) from 4 foldbacks

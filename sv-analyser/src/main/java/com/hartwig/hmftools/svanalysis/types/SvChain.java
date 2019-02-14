@@ -147,6 +147,7 @@ public class SvChain {
     public SvVarData getLastSV() { return mSvList.isEmpty() ? null : mSvList.get(mSvList.size()-1); }
     public SvVarData getChainEndSV(boolean isFirst) { return isFirst ? getFirstSV() : getLastSV(); }
 
+    public SvLinkedPair getLinkedPair(boolean isStart) { return isStart ? getFirstLinkedPair() : getLastLinkedPair(); }
     public SvLinkedPair getFirstLinkedPair() { return mLinkedPairs.isEmpty() ? null : mLinkedPairs.get(0); }
     public SvLinkedPair getLastLinkedPair() { return mLinkedPairs.isEmpty() ? null : mLinkedPairs.get(mLinkedPairs.size()-1); }
 
@@ -193,6 +194,16 @@ public class SvChain {
 
     public boolean canAddLinkedPairToStart(final SvLinkedPair pair)
     {
+        return canAddLinkedPair(pair, true, false);
+    }
+
+    public boolean canAddLinkedPairToEnd(final SvLinkedPair pair)
+    {
+        return canAddLinkedPair(pair, false, false);
+    }
+
+    public boolean canAddLinkedPair(final SvLinkedPair pair, boolean toStart, boolean allowReplicated)
+    {
         if(mLinkedPairs.isEmpty())
             return true;
 
@@ -200,38 +211,15 @@ public class SvChain {
             return false;
 
         // check for the same SV exposed in opposite ends in the 2 linked pairs
-        if(pair.first() == getFirstSV() && pair.firstUnlinkedOnStart() != firstLinkOpenOnStart())
-            return true;
-        else if(pair.second() == getFirstSV() && pair.secondUnlinkedOnStart() != firstLinkOpenOnStart())
-            return true;
-        else
-            return false;
-    }
+        final SvVarData chainSv = toStart ? getFirstSV() : getLastSV();
+        boolean chainOpenSide = toStart ? firstLinkOpenOnStart() : lastLinkOpenOnStart();
 
-    public boolean canAddLinkedPairToEnd(final SvLinkedPair pair)
-    {
-        if(mLinkedPairs.isEmpty())
-            return false;
-
-        if(mLinkedPairs.contains(pair))
-            return false;
-
-        if(pair.first() == getLastSV() && pair.firstUnlinkedOnStart() != lastLinkOpenOnStart())
+        if(pair.first().equals(chainSv, allowReplicated) && pair.firstUnlinkedOnStart() != chainOpenSide)
             return true;
-        else if(pair.second() == getLastSV() && pair.secondUnlinkedOnStart() != lastLinkOpenOnStart())
+        else if(pair.second().equals(chainSv, allowReplicated) && pair.secondUnlinkedOnStart() != chainOpenSide)
             return true;
         else
             return false;
-    }
-
-    public boolean couldFormLoop()
-    {
-        if(areLinkedSection(getFirstSV(), getLastSV(), firstLinkOpenOnStart(), lastLinkOpenOnStart()))
-        {
-            return true;
-        }
-
-        return false;
     }
 
     public boolean linkWouldCloseChain(final SvLinkedPair pair)

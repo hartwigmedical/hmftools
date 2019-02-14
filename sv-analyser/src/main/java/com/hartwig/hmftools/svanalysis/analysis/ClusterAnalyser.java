@@ -343,13 +343,15 @@ public class ClusterAnalyser {
 
         // isSpecificCluster(cluster);
 
-        boolean hasFullChain = mChainFinder.formClusterChains();
+        mChainFinder.formClusterChains();
 
-        if(!hasFullChain)
+        if(cluster.getChains().size() > 1)
         {
             checkChainReplication(cluster);
             return;
         }
+
+        /* no longer relevant since inferred links aren't determined before chaining
 
         // remove any inferred link which isn't in the full chain
         final SvChain fullChain = cluster.getChains().get(0);
@@ -362,6 +364,7 @@ public class ClusterAnalyser {
             if(pair.isInferred())
                 inferredLinkedPairs.add(pair);
         }
+        */
     }
 
     private void setClusterResolvedState(SvCluster cluster)
@@ -1337,8 +1340,6 @@ public class ClusterAnalyser {
 
             for(final SvChain chain : cluster.getChains())
             {
-                List<SvLinkedPair> assembledLinks = Lists.newArrayList();
-
                 for(final SvLinkedPair pair : chain.getLinkedPairs())
                 {
                     if(pair.linkType() != LINK_TYPE_TI)
@@ -1346,20 +1347,6 @@ public class ClusterAnalyser {
 
                     if(pair.first().type() == SGL || pair.second().type() == SGL)
                         continue;
-
-                    if(pair.isAssembled())
-                    {
-                        assembledLinks.add(pair);
-                    }
-                    else if(!assembledLinks.isEmpty())
-                    {
-                        for(final SvLinkedPair assembledPair : assembledLinks)
-                        {
-                            assembledPair.setAssembledChainCount(assembledLinks.size());
-                        }
-
-                        assembledLinks.clear();
-                    }
 
                     // find closest SV in this cluster
                     final SvVarData first = pair.first();
