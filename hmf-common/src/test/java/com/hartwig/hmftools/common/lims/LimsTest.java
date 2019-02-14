@@ -181,6 +181,24 @@ public class LimsTest {
         assertEquals("30%", lims.purityShallowSeq("CORE00000001T"));
     }
 
+    @Test
+    public void canRetrieveShallowSeqBelowDetectionLimitForCPCTSample() {
+        final LimsJsonSampleData sampleData =
+                createLimsSampleDataBuilder().sampleId("CPCT02990003T").labelSample("").labRemarks("ShallowSeq").build();
+
+        Lims lims = buildTestLimsWithSampleAndShallowSeq(sampleData, "below detection limit");
+        assertEquals("below detection limit", lims.purityShallowSeq("CPCT02990003T"));
+    }
+
+    @Test
+    public void canRetrieveShallowSeqBelowDetectionLimitForCORESample() {
+        final LimsJsonSampleData sampleData =
+                createLimsSampleDataBuilder().sampleId("CPCT02990003T").labelSample("").labRemarks("ShallowSeq").build();
+
+        Lims lims = buildTestLimsWithSampleAndShallowSeq(sampleData, "below detection limit");
+        assertEquals("below detection limit", lims.purityShallowSeq("CPCT02990003T"));
+    }
+
     @NotNull
     private static Lims buildTestLimsWithSampleAndSubmission(@NotNull final LimsJsonSampleData sampleData,
             @NotNull final LimsJsonSubmissionData submissionData) {
