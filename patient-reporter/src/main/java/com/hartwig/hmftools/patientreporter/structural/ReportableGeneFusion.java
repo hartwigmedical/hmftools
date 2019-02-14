@@ -27,7 +27,8 @@ public abstract class ReportableGeneFusion {
     @NotNull
     public abstract String geneEndTranscript();
 
-    public abstract double ploidy();
+    @Nullable
+    public abstract Double ploidy();
 
     @NotNull
     public abstract String source();

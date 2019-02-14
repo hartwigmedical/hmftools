@@ -591,7 +591,7 @@ final class ExampleAnalysisTestFactory {
                 .gene("PTEN")
                 .range("Intron 5 -> Intron 6")
                 .type("DEL")
-                .ploidy(2)
+                .ploidy(2D)
                 .geneMinCopies(0)
                 .geneMaxCopies(2)
                 .build();

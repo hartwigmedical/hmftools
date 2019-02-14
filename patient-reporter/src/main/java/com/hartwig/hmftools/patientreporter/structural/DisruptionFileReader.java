@@ -10,6 +10,7 @@ import com.google.common.collect.Lists;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 final class DisruptionFileReader {
 
@@ -44,7 +45,7 @@ final class DisruptionFileReader {
                 .position(values[4])
                 .orientation(Integer.valueOf(values[5]))
                 .type(values[6])
-                .ploidy(Double.valueOf(values[7]))
+                .ploidy(toPloidy(values[7]))
                 .gene(values[8])
                 .chrBand(values[9])
                 .transcript(values[10])
@@ -57,5 +58,15 @@ final class DisruptionFileReader {
                 .exonDown(Integer.valueOf(values[17]))
                 .isDisruptive(Boolean.valueOf(values[18]))
                 .build();
+    }
+
+    @Nullable
+    private static Double toPloidy(@NotNull String ploidyString) {
+        if (ploidyString.isEmpty()) {
+            return null;
+        }
+
+        double ploidy = Double.valueOf(ploidyString);
+        return (ploidy > 1E-4) ? ploidy : null;
     }
 }

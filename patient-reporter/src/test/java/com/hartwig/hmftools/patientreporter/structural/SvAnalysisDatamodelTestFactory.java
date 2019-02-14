@@ -17,7 +17,7 @@ final class SvAnalysisDatamodelTestFactory {
                 .position(Strings.EMPTY)
                 .orientation(1)
                 .type(Strings.EMPTY)
-                .ploidy(1)
+                .ploidy(1D)
                 .gene(Strings.EMPTY)
                 .chrBand(Strings.EMPTY)
                 .transcript(Strings.EMPTY)
