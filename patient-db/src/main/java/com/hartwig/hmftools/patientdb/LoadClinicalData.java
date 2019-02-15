@@ -3,10 +3,13 @@ package com.hartwig.hmftools.patientdb;
 import java.io.File;
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.xml.stream.XMLStreamException;
 
@@ -50,7 +53,8 @@ public final class LoadClinicalData {
     private static final Logger LOGGER = LogManager.getLogger(LoadClinicalData.class);
     private static final String VERSION = LoadClinicalData.class.getPackage().getImplementationVersion();
 
-    private static final String RUNS_DIR = "runs_dir";
+    private static final String RUNS_DIR_CPCT_DRUP = "runs_dir_cpct_drup";
+    private static final String RUNS_DIR_CORE = "runs_dir_core";
     private static final String CPCT_ECRF_FILE = "cpct_ecrf";
     private static final String CPCT_FORM_STATUS_CSV = "cpct_form_status_csv";
     private static final String DRUP_ECRF_FILE = "drup_ecrf";
@@ -115,18 +119,19 @@ public final class LoadClinicalData {
         int missingSamples = 0;
         LOGGER.info(String.format("Writing clinical data for %s sequenced patients.", sequencedPatientIdentifiers.size()));
         for (final String patientIdentifier : sequencedPatientIdentifiers) {
-            Patient patient = patients.get(patientIdentifier);
-            if (patient == null) {
-                missingPatients++;
-                missingSamples += samplesPerPatient.get(patientIdentifier).size();
-                dbAccess.writeSampleClinicalData(patientIdentifier, samplesPerPatient.get(patientIdentifier));
-            } else {
-                dbAccess.writeFullClinicalData(patient);
-                List<ValidationFinding> findings = PatientValidator.validatePatient(patient);
+            if (patientIdentifier.contains("CPCT") || patientIdentifier.contains("DRUP")) {
+                Patient patient = patients.get(patientIdentifier);
+                if (patient == null) {
+                    missingPatients++;
+                    missingSamples += samplesPerPatient.get(patientIdentifier).size();
+                    dbAccess.writeSampleClinicalData(patientIdentifier, samplesPerPatient.get(patientIdentifier));
+                } else {
+                    dbAccess.writeFullClinicalData(patient);
+                    List<ValidationFinding> findings = PatientValidator.validatePatient(patient);
 
-                dbAccess.writeValidationFindings(findings);
-                dbAccess.writeValidationFindings(patient.matchFindings());
-
+                    dbAccess.writeValidationFindings(findings);
+                    dbAccess.writeValidationFindings(patient.matchFindings());
+                }
             }
         }
         if (missingPatients > 0) {
@@ -193,9 +198,11 @@ public final class LoadClinicalData {
     }
 
     private static boolean checkInputs(@NotNull CommandLine cmd) {
-        final String runsFolderPath = cmd.getOptionValue(RUNS_DIR);
+        final String runsFolderPathCPCTandDRUP = cmd.getOptionValue(RUNS_DIR_CPCT_DRUP);
+        final String runsFolderPathCore = cmd.getOptionValue(RUNS_DIR_CORE);
 
-        boolean allParamsPresent = !Utils.anyNull(runsFolderPath,
+        boolean allParamsPresent = !Utils.anyNull(runsFolderPathCPCTandDRUP,
+                runsFolderPathCore,
                 cmd.getOptionValue(DB_USER),
                 cmd.getOptionValue(DB_PASS),
                 cmd.getOptionValue(DB_URL),
@@ -207,11 +214,15 @@ public final class LoadClinicalData {
 
         boolean validRunDirectory = true;
         if (allParamsPresent) {
-            final File runDirectory = new File(runsFolderPath);
-            if (!runDirectory.isDirectory()) {
+            final File runDirectoryCPCTandDRUP = new File(runsFolderPathCPCTandDRUP);
+            final File runDirectoryCORE = new File(runsFolderPathCore);
+
+            if (!runDirectoryCPCTandDRUP.isDirectory()) {
                 validRunDirectory = false;
-                if (!runDirectory.exists()) {
-                    LOGGER.warn("dir " + runDirectory + " does not exist.");
+                if (!runDirectoryCPCTandDRUP.exists()) {
+                    LOGGER.warn("dir " + runDirectoryCPCTandDRUP + " does not exist.");
+                } else if (!runDirectoryCORE.isDirectory()){
+                    LOGGER.warn("dir " + runDirectoryCORE + " does not exist.");
                 }
             }
         }
@@ -221,16 +232,23 @@ public final class LoadClinicalData {
 
     @NotNull
     private static Map<String, List<SampleData>> loadSamplesPerPatient(@NotNull CommandLine cmd) throws IOException {
-        final String runsFolderPath = cmd.getOptionValue(RUNS_DIR);
-        LOGGER.info(String.format("Loading run contexts from %s.", runsFolderPath));
-        final List<RunContext> runContexts = RunsFolderReader.getRunContexts(new File(runsFolderPath));
-        LOGGER.info(String.format("Finished loading %s run contexts.", runContexts.size()));
+        final String runsFolderPathCPCTandDRUP = cmd.getOptionValue(RUNS_DIR_CPCT_DRUP);
+        final String runsFolderPathCORE = cmd.getOptionValue(RUNS_DIR_CORE);
+        List<RunContext> runContextsAll = new ArrayList<>();
+
+        LOGGER.info(String.format("Loading run contexts from %s.", runsFolderPathCPCTandDRUP));
+        final List<RunContext> runContextsCPCTandDRUP = RunsFolderReader.getRunContexts(new File(runsFolderPathCPCTandDRUP));
+        final List<RunContext> runContextsCORE = RunsFolderReader.getRunContexts(new File(runsFolderPathCORE));
+        runContextsAll.addAll(runContextsCPCTandDRUP);
+        runContextsAll.addAll(runContextsCORE);
+
+        LOGGER.info(String.format("Finished loading %s run contexts.", runContextsAll.size()));
 
         final String limsDirectory = cmd.getOptionValue(LIMS_DIRECTORY);
         LOGGER.info(String.format("Loading samples from LIMS on %s.", limsDirectory));
         Lims lims = LimsFactory.fromLimsDirectory(limsDirectory);
 
-        Map<String, List<SampleData>> samplesPerPatient = readSamplesPerPatient(lims, runContexts);
+        Map<String, List<SampleData>> samplesPerPatient = readSamplesPerPatient(lims, runContextsAll);
         LOGGER.info(String.format("Loaded samples for %s patients from LIMS", samplesPerPatient.keySet().size()));
 
         return samplesPerPatient;
@@ -290,7 +308,9 @@ public final class LoadClinicalData {
     @NotNull
     private static Options createOptions() {
         final Options options = new Options();
-        options.addOption(RUNS_DIR, true, "Path towards the folder containing patient runs.");
+        options.addOption(RUNS_DIR_CPCT_DRUP, true, "Path towards the folder containing cpct and drup patient runs.");
+        options.addOption(RUNS_DIR_CORE, true, "Path towards the folder containing core patient runs.");
+
         options.addOption(DB_USER, true, "Database user name.");
         options.addOption(DB_PASS, true, "Database password.");
         options.addOption(DB_URL, true, "Database url.");
