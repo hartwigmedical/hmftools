@@ -106,7 +106,7 @@ public class SvAnalyser {
             CNAnalyser cnAnalyser = new CNAnalyser(svaConfig.OutputCsvPath, dbAccess);
 
             cnAnalyser.loadConfig(cmd, samplesList);
-            cnAnalyser.findLOHEvents();
+            cnAnalyser.run();
             cnAnalyser.close();
 
             LOGGER.info("CN analysis complete");

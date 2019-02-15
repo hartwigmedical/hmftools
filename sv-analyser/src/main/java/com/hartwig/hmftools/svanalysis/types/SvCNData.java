@@ -2,69 +2,94 @@ package com.hartwig.hmftools.svanalysis.types;
 
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
+import com.hartwig.hmftools.common.variant.structural.StructuralVariantData;
 
 public class SvCNData {
 
     final private int mId;
-    final private String mChromosome;
-    final private long mStartPos;
-    final private long mEndPos;
-    final private double mCopyNumber;
-    final private String mSegStart;
-    final private String mSegEnd;
-    final private String mMethod;
-    final private int mBafCount;
-    final private double mObservedBaf;
-    final private double mActualBaf;
+    final public String Chromosome;
+    final public long StartPos;
+    final public long EndPos;
+    final public double CopyNumber;
+    final public String SegStart;
+    final public String SegEnd;
+    final public String Method;
+    final public int BafCount;
+    final public double ObservedBaf;
+    final public double ActualBaf;
+    final public int DepthWindowCount;
+
+    private int mIndex; // in the source table
+
+    private StructuralVariantData mSvData; // linked if known
+    private boolean mSvLinkOnStart;
 
     public SvCNData(final int Id, final String Chromosome, long StartPos, long EndPos,
             final String SegStart, final String SegEnd, int bafCount, double observedBaf, double actualBaf,
             double copyNumber, final String method)
     {
         mId = Id;
-        mChromosome = Chromosome;
-        mStartPos = StartPos;
-        mEndPos = EndPos;
-        mCopyNumber = copyNumber;
-        mSegStart = SegStart;
-        mSegEnd = SegEnd;
-        mMethod = method;
-        mBafCount = bafCount;
-        mObservedBaf = observedBaf;
-        mActualBaf = actualBaf;
+        this.Chromosome = Chromosome;
+        this.StartPos = StartPos;
+        this.EndPos = EndPos;
+        CopyNumber = copyNumber;
+        this.SegStart = SegStart;
+        this.SegEnd = SegEnd;
+        Method = method;
+        BafCount = bafCount;
+        ObservedBaf = observedBaf;
+        ActualBaf = actualBaf;
+        mSvData = null;
+        mSvLinkOnStart = false;
+        DepthWindowCount = 0;
+        mIndex = 0;
     }
 
     public SvCNData(final PurpleCopyNumber record, int id)
     {
         mId = id;
-        mChromosome = record.chromosome();
-        mStartPos = record.start();
-        mEndPos = record.end();
-        mCopyNumber = record.averageTumorCopyNumber();
-        mSegStart = record.segmentStartSupport().toString();
-        mSegEnd = record.segmentEndSupport().toString();
-        mMethod = record.method().toString();
-        mBafCount = record.bafCount();
-        mObservedBaf = record.averageObservedBAF();
-        mActualBaf = record.averageActualBAF();
+        Chromosome = record.chromosome();
+        StartPos = record.start();
+        EndPos = record.end();
+        CopyNumber = record.averageTumorCopyNumber();
+        SegStart = record.segmentStartSupport().toString();
+        SegEnd = record.segmentEndSupport().toString();
+        Method = record.method().toString();
+        BafCount = record.bafCount();
+        ObservedBaf = record.averageObservedBAF();
+        ActualBaf = record.averageActualBAF();
+        DepthWindowCount = record.depthWindowCount();
+        mIndex = 0;
     }
 
     public int id() { return mId; }
-    public final String chromosome() { return mChromosome; }
-    public long startPos() { return mStartPos; }
-    public long endPos() { return mEndPos; }
-    public long position(boolean useStart) { return useStart ? mStartPos : mEndPos; }
-    public double copyNumber() { return mCopyNumber; }
-    public final String segStart() { return mSegStart; }
-    public final String segEnd() { return mSegEnd; }
-    public final String method() { return mMethod; }
-    public int bafCount() { return mBafCount; }
-    public double observedBaf() { return mObservedBaf; }
-    public double actualBaf() { return mActualBaf; }
+    public final String chromosome() { return Chromosome; }
+    public long startPos() { return StartPos; }
+    public long endPos() { return EndPos; }
+    public long position(boolean useStart) { return useStart ? StartPos : EndPos; }
+    public double copyNumber() { return CopyNumber; }
+    public final String segStart() { return SegStart; }
+    public final String segEnd() { return SegEnd; }
+    public final String method() { return Method; }
+    public int bafCount() { return BafCount; }
+    public double observedBaf() { return ObservedBaf; }
+    public double actualBaf() { return ActualBaf; }
+
+    public int getIndex() { return mIndex; }
+    public void setIndex(int index) { mIndex = index; }
+
+    public void setStructuralVariantData(final StructuralVariantData svData, boolean linkOnStart)
+    {
+        mSvData = svData;
+        mSvLinkOnStart = linkOnStart;
+    }
+
+    public final StructuralVariantData getStructuralVariantData() { return mSvData; }
+    public boolean svLinkOnStart() { return mSvLinkOnStart; }
 
     public boolean matchesSegment(SegmentSupport segment, boolean isStart)
     {
-        return isStart ? mSegStart.equals(segment.toString()) : mSegEnd.equals(segment.toString());
+        return isStart ? SegStart.equals(segment.toString()) : SegEnd.equals(segment.toString());
     }
 
     public static boolean isSvSegment(final SegmentSupport segment)
@@ -76,9 +101,9 @@ public class SvCNData {
 
     public boolean matchesSV(boolean isStart)
     {
-        return isStart ? isSvSegment(SegmentSupport.valueOf(mSegStart)) : isSvSegment(SegmentSupport.valueOf(mSegEnd));
+        return isStart ? isSvSegment(SegmentSupport.valueOf(SegStart)) : isSvSegment(SegmentSupport.valueOf(SegEnd));
     }
 
-    public final String asString() { return String.format("id=%s pos=%s:%d", mId, mChromosome, mStartPos); }
+    public final String asString() { return String.format("id=%s pos=%s:%d", mId, Chromosome, StartPos); }
 
 }

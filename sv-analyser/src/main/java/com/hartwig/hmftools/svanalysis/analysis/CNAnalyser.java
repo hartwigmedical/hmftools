@@ -1,17 +1,27 @@
 package com.hartwig.hmftools.svanalysis.analysis;
 
 import static java.lang.Math.abs;
+import static java.lang.Math.exp;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
+import static java.lang.Math.pow;
 import static java.lang.Math.round;
+import static java.lang.Math.sqrt;
 
+import static com.hartwig.hmftools.common.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.purple.segment.SegmentSupport.CENTROMERE;
+import static com.hartwig.hmftools.common.purple.segment.SegmentSupport.MULTIPLE;
+import static com.hartwig.hmftools.common.purple.segment.SegmentSupport.NONE;
 import static com.hartwig.hmftools.common.purple.segment.SegmentSupport.TELOMERE;
 import static com.hartwig.hmftools.common.purple.segment.SegmentSupport.UNKNOWN;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantFactory.PON_FILTER_PON;
+import static com.hartwig.hmftools.common.variant.structural.StructuralVariantFactory.mateId;
+import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.svanalysis.analysis.ClusterAnalyser.SHORT_TI_LENGTH;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.NONE_SEGMENT_INFERRED;
+import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_END;
+import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_START;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -22,12 +32,15 @@ import java.io.IOException;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 import com.hartwig.hmftools.common.variant.structural.ImmutableStructuralVariantData;
+import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantData;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collector;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
@@ -36,6 +49,7 @@ import com.hartwig.hmftools.svanalysis.types.SvLOH;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
+import org.apache.commons.math3.distribution.PoissonDistribution;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -49,13 +63,19 @@ public class CNAnalyser {
     private int mRecordId;
     private int mNoneSvId;
 
+    private boolean mRecalcAdjustedPloidy;
+
     BufferedWriter mFileWriter;
+    BufferedWriter mRecalcPloidyFileWriter;
     DatabaseAccess mDbAccess;
     List<StructuralVariantData> mSvDataList;
+    List<SvCNData> mCnDataList;
+    Map<String,SvCNData[]> mSvCnDataMap;
 
     Map<String, List<SvLOH>> mSampleLohData;
 
     private static final String COPY_NUMBER_FILE = "cn_file";
+    private static final String CALC_ADJ_PLOIDY = "calc_adj_ploidy";
 
     public static double MIN_LOH_CN = 0.5;
     public static double TOTAL_CN_LOSS = 0.5;
@@ -65,8 +85,11 @@ public class CNAnalyser {
         mOutputPath = outputPath;
         mSampleIds = Lists.newArrayList();
         mFileWriter = null;
+        mRecalcPloidyFileWriter = null;
         mDbAccess = dbAccess;
+        mCnDataList = Lists.newArrayList();
         mSvDataList = Lists.newArrayList();
+        mSvCnDataMap = new HashMap();
         mSampleLohData = null;
         mRecordId = 0;
         mNoneSvId = 0;
@@ -75,15 +98,17 @@ public class CNAnalyser {
     public static void addCmdLineArgs(Options options)
     {
         options.addOption(COPY_NUMBER_FILE, true, "Copy number CSV file");
+        options.addOption(CALC_ADJ_PLOIDY, false, "TEMP: recalculate CN change and ploidy using depth info");
     }
 
     public boolean loadConfig(final CommandLine cmd, final List<String> sampleIds)
     {
         mSampleIds.addAll(sampleIds);
+        mRecalcAdjustedPloidy = cmd.hasOption(CALC_ADJ_PLOIDY);
         return true;
     }
 
-    public void findLOHEvents()
+    public void run()
     {
         if(mDbAccess == null)
             return;
@@ -92,27 +117,32 @@ public class CNAnalyser {
 
         for(final String sampleId : mSampleIds)
         {
-            List<SvCNData> sampleData = loadCopyNumberData(sampleId);
+            loadCopyNumberData(sampleId);
 
             ++sampleCount;
-            LOGGER.info("analysing sample({}) with {} CN entries, totalProcessed({})", sampleId, sampleData.size(), sampleCount);
+            LOGGER.info("analysing sample({}) with {} CN entries, totalProcessed({})", sampleId, mCnDataList.size(), sampleCount);
 
             loadSVData(sampleId);
-            findLohEvents(sampleId, sampleData);
+            linkCopyNumberAndSvData(sampleId);
+
+            findLohEvents(sampleId);
+
+            if(mRecalcAdjustedPloidy)
+                reaclcAdjustedPloidy(sampleId);
         }
     }
 
-    private List<SvCNData> loadCopyNumberData(final String sampleId)
+    private void loadCopyNumberData(final String sampleId)
     {
-        List<SvCNData> cnDataList = Lists.newArrayList();
+        mCnDataList.clear();
         List<PurpleCopyNumber> cnRecords = mDbAccess.readCopynumbers(sampleId);
 
         for(final PurpleCopyNumber cnRecord : cnRecords)
         {
-            cnDataList.add(new SvCNData(cnRecord, ++mRecordId));
+            SvCNData cnData = new SvCNData(cnRecord, ++mRecordId);
+            cnData.setIndex(mCnDataList.size());
+            mCnDataList.add(cnData);
         }
-
-        return cnDataList;
     }
 
     private void loadSVData(final String sampleId)
@@ -128,8 +158,97 @@ public class CNAnalyser {
         }
     }
 
+    private void linkCopyNumberAndSvData(final String sampleId)
+    {
+        mSvCnDataMap.clear();
+
+        int unmatchedSVs = 0;
+        for(SvCNData cnData : mCnDataList)
+        {
+            if (!cnData.matchesSV(true) && !cnData.matchesSegment(NONE, true))
+                continue;
+
+            // ignore orientation during matching since CN change is not a reliable determinant of SV orientation
+            long cnPosition = cnData.startPos();
+
+            for (final StructuralVariantData svData : mSvDataList)
+            {
+                if (svData.filter().equals(PON_FILTER_PON))
+                    continue;
+
+                if(!svData.type().toString().equals(cnData.segStart()))
+                {
+                    if(svData.type() == SGL && svData.filter().equals(NONE_SEGMENT_INFERRED) && cnData.matchesSegment(NONE, true))
+                    {
+                        // SGL inferred == NONE in CN table
+                    }
+                    else if(cnData.matchesSegment(MULTIPLE, true))
+                    {
+                        // also valid
+                    }
+                    else
+                    {
+                        continue;
+                    }
+                }
+
+                long svPosStart = svData.startOrientation() == -1 ? cnPosition : cnPosition - 1;
+                long svPosEnd = svData.endOrientation() == -1 ? cnPosition : cnPosition - 1;
+                boolean matchOnStart = false;
+
+                if (svData.startChromosome().equals(cnData.chromosome()) && svData.startPosition() == svPosStart)
+                {
+                    matchOnStart = true;
+                }
+                /*
+                else if (cnData.matchesSegment(NONE, true) && svData.startChromosome().equals(cnData.chromosome())
+                && abs(svData.startPosition() - svPosStart) <= 1)
+                {
+                    matchOnStart = true;
+                }
+                */
+                else if (svData.endChromosome().equals(cnData.chromosome()) && svData.endPosition() == svPosEnd)
+                {
+                    matchOnStart = false;
+                }
+                else
+                {
+                    continue;
+                }
+
+                cnData.setStructuralVariantData(svData, matchOnStart);
+
+                SvCNData[] cnDataItems = mSvCnDataMap.get(svData.id());
+
+                if(cnDataItems == null)
+                {
+                    cnDataItems = new SvCNData[2];
+                    mSvCnDataMap.put(svData.id(), cnDataItems);
+                }
+
+                cnDataItems[matchOnStart ? SVI_START : SVI_END] = cnData;
+            }
+        }
+
+        if(unmatchedSVs > 0)
+        {
+            LOGGER.warn("sample({}) has {} unmatched CN-SV segments", sampleId, unmatchedSVs);
+        }
+    }
+
     private boolean isSingleVariant(final SvCNData cnData)
     {
+        final StructuralVariantData svData = cnData.getStructuralVariantData();
+
+        if(svData == null)
+            return false;
+
+        long svPosStart = svData.startOrientation() == -1 ? cnData.startPos() : cnData.startPos() - 1;
+        long svPosEnd = cnData.endPos() + 1;
+
+        return (svData.startPosition() == svPosStart && svData.endPosition() == svPosEnd);
+
+        /*
         for(final StructuralVariantData var : mSvDataList)
         {
             if(var.filter().equals(PON_FILTER_PON))
@@ -145,6 +264,7 @@ public class CNAnalyser {
         }
 
         return false;
+        */
     }
 
     public final Map<String, List<SvLOH>> getSampleLohData() { return mSampleLohData; }
@@ -153,7 +273,7 @@ public class CNAnalyser {
     private static String SPECIFIC_CHR = "";
     private static int REMOTE_SV_DISTANCE = 1000000;
 
-    private void findLohEvents(final String sampleId, List<SvCNData> cnDataList)
+    private void findLohEvents(final String sampleId)
     {
         String currentChr = "";
 
@@ -170,9 +290,9 @@ public class CNAnalyser {
         boolean lohOnStartTelomere = false;
         boolean totalLoss = false;StructuralVariantData totalLossSv = null;
 
-        for(int index = 0; index < cnDataList.size(); ++index)
+        for(int index = 0; index < mCnDataList.size(); ++index)
         {
-            final SvCNData cnData = cnDataList.get(index);
+            final SvCNData cnData = mCnDataList.get(index);
 
             double minCN = (1 - cnData.actualBaf()) * cnData.copyNumber();
 
@@ -201,9 +321,9 @@ public class CNAnalyser {
                 if(lohRegained || reset)
                 {
                     // check for a short isolated TI and if found continue with the LOH
-                    if(lohRegained && cnData.endPos() - cnData.startPos() <= SHORT_TI_LENGTH && index < cnDataList.size() - 1)
+                    if(lohRegained && cnData.endPos() - cnData.startPos() <= SHORT_TI_LENGTH && index < mCnDataList.size() - 1)
                     {
-                        final SvCNData nextData = cnDataList.get(index+1);
+                        final SvCNData nextData = mCnDataList.get(index+1);
                         double nextMinCN = (1 - nextData.actualBaf()) * nextData.copyNumber();
 
                         if(nextData.endPos() - cnData.startPos() > REMOTE_SV_DISTANCE && nextMinCN < MIN_LOH_CN
@@ -329,9 +449,56 @@ public class CNAnalyser {
 
     private StructuralVariantData findSvData(final SvCNData cnData, int requiredOrient)
     {
-        if(cnData.matchesSegment(UNKNOWN, true)
+        if (cnData.matchesSegment(UNKNOWN, true)
         || cnData.matchesSegment(TELOMERE, true)
         || cnData.matchesSegment(CENTROMERE, true))
+        {
+            return null;
+        }
+
+        long svPosition = requiredOrient == -1 ? cnData.startPos() : cnData.startPos() - 1;
+
+        final StructuralVariantData svData = cnData.getStructuralVariantData();
+
+        if (svData == null)
+            return null;
+
+        /*
+        // TEMP
+        {
+            StructuralVariantData newSvData = null;
+            if (cnData.svLinkOnStart() && svData.startOrientation() == requiredOrient && svData.startPosition() == svPosition)
+            {
+                newSvData = svData;
+            }
+            else if (!cnData.svLinkOnStart() && svData.endOrientation() == requiredOrient && svData.endPosition() == svPosition)
+            {
+                newSvData = svData;
+            }
+
+            final StructuralVariantData otherSvData = findSvData_old(cnData, requiredOrient);
+
+            if (otherSvData != newSvData)
+            {
+                LOGGER.error("sv look-up mismatch: svIDs({} & {}) segs({}-{})",
+                        svData.id(), otherSvData.id(), cnData.segStart(), cnData.segEnd());
+            }
+        }
+        */
+
+        if (cnData.svLinkOnStart() && svData.startOrientation() == requiredOrient && svData.startPosition() == svPosition)
+            return svData;
+        else if (!cnData.svLinkOnStart() && svData.endOrientation() == requiredOrient && svData.endPosition() == svPosition)
+            return svData;
+        else
+            return null;
+    }
+
+    private StructuralVariantData findSvData_old(final SvCNData cnData, int requiredOrient)
+    {
+        if (cnData.matchesSegment(UNKNOWN, true)
+                || cnData.matchesSegment(TELOMERE, true)
+                || cnData.matchesSegment(CENTROMERE, true))
         {
             return null;
         }
@@ -357,26 +524,8 @@ public class CNAnalyser {
         return null;
     }
 
-    private boolean hasIncorrectOrientation(final SvCNData cnData)
-    {
-        for(final StructuralVariantData var : mSvDataList)
-        {
-            if(var.filter().equals(PON_FILTER_PON))
-                continue;
-
-            if(var.startChromosome().equals(cnData.chromosome()) && abs(var.startPosition() - cnData.startPos()) <= 1)
-            {
-                return true;
-            }
-
-            if(var.endChromosome().equals(cnData.chromosome()) && abs(var.endPosition() - cnData.startPos()) <= 1)
-            {
-                return true;
-            }
-        }
-
-        return false;
-    }
+    // private static int SPEC_CN_ID = -1;
+    private static int SPEC_CN_ID = 2317876;
 
     private int writeLOHData(final String sampleId, final String chr, SvCNData startData, SvCNData endData,
             double lastMinCN, double lohMinCN, int segCount, boolean incomplete, boolean skipped, boolean isValid)
@@ -444,7 +593,7 @@ public class CNAnalyser {
                 {
                     if (startSvData == null && startData.matchesSV(true))
                     {
-                        boolean incorrectOrientation = hasIncorrectOrientation(startData);
+                        boolean incorrectOrientation = (startData.getStructuralVariantData() != null);
 
                         LOGGER.debug(String.format("sample(%s) LOH start segment(%s) no SV match: orient(%s) type(%s) baf(actual=%.4f observed=%.4f count=%d) copyNumber(%.4f)",
                                 sampleId, startData.asString(), incorrectOrientation ? "wrong" : "ok", startData.segStart(),
@@ -453,7 +602,7 @@ public class CNAnalyser {
 
                     if (!incomplete && endSvData == null && endData.matchesSV(true))
                     {
-                        boolean incorrectOrientation = hasIncorrectOrientation(endData);
+                        boolean incorrectOrientation = (endData.getStructuralVariantData() != null);
 
                         LOGGER.debug(String.format("sample(%s) LOH end segment(%s) no SV match: orient(%s), type(%s) baf(actual=%.4f observed=%.4f count=%d) copyNumber(%.4f)",
                                 sampleId, endData.asString(), incorrectOrientation ? "wrong" : "ok", endData.segStart(),
@@ -613,7 +762,7 @@ public class CNAnalyser {
             final PurpleCopyNumber prevCnRecord = cnRecords.get(i);
             final PurpleCopyNumber noneCnRecord = cnRecords.get(i+1);
 
-            if(prevCnRecord.segmentEndSupport() != SegmentSupport.NONE || noneCnRecord.segmentStartSupport() != SegmentSupport.NONE)
+            if(prevCnRecord.segmentEndSupport() != NONE || noneCnRecord.segmentStartSupport() != NONE)
                 continue;
 
             double segmentCopyNumber = noneCnRecord.averageTumorCopyNumber();
@@ -632,7 +781,7 @@ public class CNAnalyser {
                     ImmutableStructuralVariantData.builder()
                             .id(Integer.toString(varId))
                             .vcfId("")
-                            .type(StructuralVariantType.SGL)
+                            .type(SGL)
                             .ploidy(copyNumberChange)
                             .startPosition(position)
                             .startChromosome(noneCnRecord.chromosome())
@@ -681,18 +830,304 @@ public class CNAnalyser {
         return svList;
     }
 
-    public void close()
+    private void reaclcAdjustedPloidy(final String sampleId)
     {
-        if (mFileWriter == null)
-            return;
-
         try
         {
-            mFileWriter.close();
+            if (mRecalcPloidyFileWriter == null)
+            {
+                String outputFileName = mOutputPath;
+
+                outputFileName += "CN_PLOIDY_CALC_DATA.csv";
+
+                mRecalcPloidyFileWriter = createBufferedWriter(outputFileName, false);
+
+                // SV info
+                mRecalcPloidyFileWriter.write("SampleId,SvId,Type,Ploidy,TumorReadCount");
+                mRecalcPloidyFileWriter.write(",ChrStart,PosStart,OrientStart,CNStart,CNChgStart,DWCountStart,PrevDWCountStart,NextDWCountStart");
+                mRecalcPloidyFileWriter.write(",ChrEnd,PosEnd,OrientEnd,CNEnd,CNChgEnd,DWCountEnd,PrevDWCountEnd,NextDWCountEnd");
+                mRecalcPloidyFileWriter.write(",CnPrediction,CnUncertainty,PoisRcLow,PoisRcHigh,PloidyLow,PloidyHigh,PloidyUncertainty");
+                mRecalcPloidyFileWriter.write(",EstPloidy,EstUncertainty,MinPloidy,MaxPloidy");
+                mRecalcPloidyFileWriter.newLine();
+            }
+
+            BufferedWriter writer = mRecalcPloidyFileWriter;
+
+            for(Map.Entry<String,SvCNData[]> entry : mSvCnDataMap.entrySet())
+            {
+                final SvCNData[] cnDataPair = entry.getValue();
+
+                final SvCNData cnStartData = cnDataPair[SVI_START];
+
+                if(cnStartData == null)
+                    continue;
+
+                final SvCNData cnEndData = cnDataPair[SVI_END]; // may be null
+
+                final StructuralVariantData svData = cnStartData.getStructuralVariantData();
+
+                double ploidy = svData.ploidy();
+                int tumorReadCount = svData.startTumourVariantFragmentCount();
+
+                writer.write(String.format("%s,%s,%s,%.4f,%d",
+                        sampleId, svData.id(), svData.type(), svData.ploidy(), tumorReadCount));
+
+                final int[] startDepthData = extractDepthWindowData(cnStartData);
+
+                double cnStart = svData.adjustedStartCopyNumber();
+                double cnChgStart = svData.adjustedStartCopyNumberChange();
+
+                writer.write(String.format(",%s,%d,%d,%.4f,%.4f,%d,%d,%d",
+                        svData.startChromosome(), svData.startPosition(), svData.startOrientation(),
+                        cnStart, cnChgStart, cnStartData.DepthWindowCount, startDepthData[0], startDepthData[1]));
+
+                int[] endDepthData = null;
+                double cnEnd = 0;
+                double cnChgEnd = 0;
+
+                if(cnEndData != null)
+                {
+                    endDepthData = extractDepthWindowData(cnEndData);
+                    cnEnd = svData.adjustedEndCopyNumber();
+                    cnChgEnd = svData.adjustedEndCopyNumberChange();
+
+                    writer.write(String.format(",%s,%d,%d,%.4f,%.4f,%d,%d,%d",
+                            svData.endChromosome(), svData.endPosition(), svData.endOrientation(),
+                            cnEnd, cnChgEnd, cnEndData.DepthWindowCount, endDepthData[0], endDepthData[1]));
+                }
+                else
+                {
+                    writer.write(",0,-1,0,0,0,0,0,0");
+                }
+
+                final double calcResults[] = calcAdjustedPloidyValues(cnStart, cnChgStart, cnEnd, cnChgEnd,
+                        ploidy, tumorReadCount, startDepthData, endDepthData);
+
+                writer.write(String.format(",%.2f,%.2f", calcResults[APC_CN_PREDICTION], calcResults[APC_CN_UNCERTAINTY]));
+
+                writer.write(String.format(",%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f",
+                        calcResults[APC_RC_POIS_LOW], calcResults[APC_RC_POIS_HIGH],
+                        calcResults[APC_PLOIDY_LOW], calcResults[APC_PLOIDY_HIGH],
+                        calcResults[APC_PLOIDY_UNCERTAINTY],
+                        calcResults[APC_EST_PLOIDY], calcResults[APC_EST_UNCERTAINTY],
+                        calcResults[APC_EST_PLOIDY] - calcResults[APC_EST_UNCERTAINTY],
+                        calcResults[APC_EST_PLOIDY] + calcResults[APC_EST_UNCERTAINTY]));
+
+                writer.newLine();
+            }
         }
         catch (final IOException e)
         {
+            LOGGER.error("error writing to ploidy recalc outputFile: {}", e.toString());
         }
+    }
+
+    public static int APC_CN_PREDICTION = 0;
+    public static int APC_CN_UNCERTAINTY = 1;
+    public static int APC_RC_POIS_LOW = 2;
+    public static int APC_RC_POIS_HIGH = 3;
+    public static int APC_PLOIDY_HIGH = 4;
+    public static int APC_PLOIDY_LOW = 5;
+    public static int APC_PLOIDY_UNCERTAINTY = 6;
+    public static int APC_EST_PLOIDY = 7;
+    public static int APC_EST_UNCERTAINTY = 8;
+    public static int APC_RESULTS_MAX = 8;
+
+    private static double POIS_PROB_LOW = 0.01;
+    private static double POIS_PROB_HIGH = 0.99;
+
+    public static double[] calcAdjustedPloidyValues(double cnStart, double cnChgStart, double cnEnd, double cnChgEnd,
+            double ploidy, int tumorReadCount, final int[] startDepthData, final int[] endDepthData)
+    {
+        double cnUncertaintyStart = calcCopyNumberSideUncertainty(cnStart, startDepthData);
+        double cnUncertainty = 0;
+        double cnPrediction = 0;
+
+        if(endDepthData != null)
+        {
+            double cnUncertaintyEnd = calcCopyNumberSideUncertainty(cnEnd, endDepthData);
+
+            cnPrediction = calcCopyNumberPrediction(cnChgStart, cnUncertaintyStart, cnChgEnd, cnUncertaintyEnd);
+
+            cnUncertainty = calcCopyNumberUncertainty(cnChgStart, cnUncertaintyStart, cnChgEnd, cnUncertaintyEnd, cnPrediction);
+        }
+        else
+        {
+            // not defined yet
+            // cnPrediction = ;
+            // cnUncertainty = cnUncertaintyStart;
+        }
+
+        double poissonRCLow = calcPoisonReadCount(tumorReadCount, POIS_PROB_LOW);
+        double poissonRCHigh = calcPoisonReadCount(tumorReadCount, POIS_PROB_HIGH);
+
+        double ploidyLow = poissonRCLow / tumorReadCount * ploidy;
+        double ploidyHigh = poissonRCHigh / tumorReadCount * ploidy;
+
+        double ploidyUncertainty = (ploidyHigh - ploidyLow) * 0.5;
+
+        double cnUncSqrd = pow(cnUncertainty,2);
+        double ploidyUncSqrd = pow(ploidyUncertainty,2);
+
+        double estPloidy = (ploidy * cnUncSqrd + cnPrediction * ploidyUncSqrd) / (ploidyUncSqrd + cnUncSqrd);
+
+        double estUncertainty = (max(ploidyUncertainty, abs(estPloidy - ploidy)) * cnUncSqrd + max(cnUncertainty, abs(estPloidy - cnPrediction)) * ploidyUncSqrd)
+                / (cnUncSqrd + ploidyUncSqrd);
+
+        // populate a results object
+        double[] results = new double[APC_RESULTS_MAX+1];
+
+        results[APC_PLOIDY_LOW] = ploidyLow;
+        results[APC_PLOIDY_HIGH] = ploidyHigh;
+        results[APC_CN_PREDICTION] = cnPrediction;
+        results[APC_CN_UNCERTAINTY] = cnUncertainty;
+        results[APC_RC_POIS_LOW] = poissonRCLow;
+        results[APC_RC_POIS_HIGH] = poissonRCHigh;
+        results[APC_PLOIDY_UNCERTAINTY] = ploidyUncertainty;
+        results[APC_EST_UNCERTAINTY] = estUncertainty;
+        results[APC_EST_PLOIDY] = estPloidy;
+        return results;
+    }
+
+    private static double ABS_UNCERTAINTY = 0.15;
+    private static double RELATIVE_UNCERTAINTY = 0.1;
+    private static double ADDITIONAL_ABS_UNCERTAINTY = 0.4;
+    private static double ADDITIONAL_REL_UNCERTAINTY = 0.15;
+
+    private static double calcCopyNumberSideUncertainty(double copyNumber, final int[] depthData)
+    {
+        int minDepthCount = min(depthData[0], depthData[1]);
+
+        double uncertainty = max(copyNumber*RELATIVE_UNCERTAINTY, ABS_UNCERTAINTY);
+        uncertainty += max(ADDITIONAL_ABS_UNCERTAINTY, ADDITIONAL_REL_UNCERTAINTY * copyNumber) / sqrt(max(minDepthCount,0.1));
+
+        return uncertainty;
+    }
+
+    private static double calcCopyNumberPrediction(double cnChgStart, double uncertaintyStart, double cnChgEnd, double uncertaintyEnd)
+    {
+        return (cnChgStart * pow(uncertaintyEnd,2) + cnChgEnd * pow(uncertaintyStart,2)) / (pow(uncertaintyStart,2) + pow(uncertaintyEnd,2));
+    }
+
+    private static double calcCopyNumberUncertainty(double cnChgStart, double uncertaintyStart, double cnChgEnd, double uncertaintyEnd, double prediction)
+    {
+        return (max(uncertaintyStart, abs(prediction-cnChgStart)) * pow(uncertaintyEnd,2) + max(uncertaintyEnd, abs(prediction-cnChgEnd)) * pow(uncertaintyStart,2))
+                / (pow(uncertaintyEnd,2) + pow(uncertaintyStart,2));
+    }
+
+    private static double calcPoisonReadCount(int readCount, double requiredProb)
+    {
+        return calcPoissonObservedGivenProb(readCount, requiredProb);
+    }
+
+    private static int calcPoissonObservedGivenProb(int expectedVal, double requiredProb)
+    {
+        if(expectedVal <= 0)
+             return 0;
+
+        PoissonDistribution poisson = new PoissonDistribution(expectedVal);
+
+        int maxIterations = 20;
+        int iterations = 0;
+
+        /*
+        double initRange = 3.7 / sqrt(expectedVal); // works for requiredProb = 1e-4
+        int testValue = (int) Double.max(round(expectedVal * (1 - initRange)), 0);
+        int testValueUpper = (int) Double.max(round(expectedVal * (1 - initRange*0.5)), 0);
+        int testValueLower = (int) Double.max(round(expectedVal * (1 - initRange*2)), 0);
+        */
+
+        double refCount = 25;
+        double refRangePerc = 0.44;
+        double rangePerc = refRangePerc / sqrt(expectedVal/refCount);
+        double range = rangePerc * expectedVal;
+
+        int testValueUpper;
+        int testValueLower;
+
+        if(requiredProb > 0.5)
+        {
+            testValueUpper = (int) round(expectedVal + range * 1.5);
+            testValueLower = (int) round(max(expectedVal + range * 0.2, 0));
+        }
+        else
+        {
+            testValueUpper = (int) round(expectedVal - range * 0.2);
+            testValueLower = (int) round(max(expectedVal - range * 1.2, 0));
+        }
+
+        int testValue = (int)((testValueLower + testValueUpper) * 0.5);
+
+        double currentProb = poisson.cumulativeProbability(testValue);
+        double probDiff = 0;
+
+        while(iterations < maxIterations)
+        {
+            probDiff = abs(requiredProb - currentProb) / requiredProb;
+
+            if(probDiff < 0.001)
+                break;
+
+            // if prob is too high, need to lower the test value
+            if(currentProb > requiredProb)
+            {
+                if(testValue <= testValueLower + 1)
+                    break;
+
+                testValueUpper = testValue;
+                testValue = (int)round((testValue + testValueLower) * 0.5);
+            }
+            else
+            {
+                if(testValue >= testValueUpper - 1)
+                    break;
+
+                testValueLower = testValue;
+                testValue = (int)round((testValue + testValueUpper) * 0.5);
+            }
+
+            currentProb = poisson.cumulativeProbability(testValue);
+            ++iterations;
+        }
+
+        if(iterations >= maxIterations)
+        {
+            LOGGER.warn(String.format("max iterations reached: value(%d) test(%d) prob(%.4f diff=%.4f)",
+                    expectedVal, testValue, currentProb, probDiff));
+        }
+
+        return testValue;
+    }
+
+
+    private int[] extractDepthWindowData(final SvCNData cnData)
+    {
+        // get depth window count before, at and after this segment
+        int[] deptWindowData = new int[2];
+
+        if(cnData.getIndex() > 0)
+        {
+            final SvCNData prevCnData = mCnDataList.get(cnData.getIndex()-1);
+
+            if(prevCnData.Chromosome.equals(cnData.Chromosome))
+                deptWindowData[0] = prevCnData.DepthWindowCount;
+        }
+
+        if(cnData.getIndex() < mCnDataList.size() - 1)
+        {
+            final SvCNData nextCnData = mCnDataList.get(cnData.getIndex() + 1);
+
+            if(nextCnData.Chromosome.equals(cnData.Chromosome))
+                deptWindowData[1] = nextCnData.DepthWindowCount;
+        }
+
+        return deptWindowData;
+    }
+
+    public void close()
+    {
+        closeBufferedWriter(mFileWriter);
+        closeBufferedWriter(mRecalcPloidyFileWriter);
     }
 
 }
