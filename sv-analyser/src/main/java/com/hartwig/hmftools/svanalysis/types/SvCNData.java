@@ -24,27 +24,6 @@ public class SvCNData {
     private StructuralVariantData mSvData; // linked if known
     private boolean mSvLinkOnStart;
 
-    public SvCNData(final int Id, final String Chromosome, long StartPos, long EndPos,
-            final String SegStart, final String SegEnd, int bafCount, double observedBaf, double actualBaf,
-            double copyNumber, final String method)
-    {
-        mId = Id;
-        this.Chromosome = Chromosome;
-        this.StartPos = StartPos;
-        this.EndPos = EndPos;
-        CopyNumber = copyNumber;
-        this.SegStart = SegStart;
-        this.SegEnd = SegEnd;
-        Method = method;
-        BafCount = bafCount;
-        ObservedBaf = observedBaf;
-        ActualBaf = actualBaf;
-        mSvData = null;
-        mSvLinkOnStart = false;
-        DepthWindowCount = 0;
-        mIndex = 0;
-    }
-
     public SvCNData(final PurpleCopyNumber record, int id)
     {
         mId = id;
@@ -63,17 +42,7 @@ public class SvCNData {
     }
 
     public int id() { return mId; }
-    public final String chromosome() { return Chromosome; }
-    public long startPos() { return StartPos; }
-    public long endPos() { return EndPos; }
     public long position(boolean useStart) { return useStart ? StartPos : EndPos; }
-    public double copyNumber() { return CopyNumber; }
-    public final String segStart() { return SegStart; }
-    public final String segEnd() { return SegEnd; }
-    public final String method() { return Method; }
-    public int bafCount() { return BafCount; }
-    public double observedBaf() { return ObservedBaf; }
-    public double actualBaf() { return ActualBaf; }
 
     public int getIndex() { return mIndex; }
     public void setIndex(int index) { mIndex = index; }

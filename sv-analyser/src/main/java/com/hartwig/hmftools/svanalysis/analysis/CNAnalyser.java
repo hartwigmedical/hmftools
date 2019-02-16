@@ -64,6 +64,7 @@ public class CNAnalyser {
     private int mNoneSvId;
 
     private boolean mRecalcAdjustedPloidy;
+    private boolean mWriteSlimAdjustedPloidy;
 
     BufferedWriter mFileWriter;
     BufferedWriter mRecalcPloidyFileWriter;
@@ -73,9 +74,11 @@ public class CNAnalyser {
     Map<String,SvCNData[]> mSvCnDataMap;
 
     Map<String, List<SvLOH>> mSampleLohData;
+    private Map<String,Map<String,double[]>> mSampleSvPloidyCalcMap;
 
     private static final String COPY_NUMBER_FILE = "cn_file";
     private static final String CALC_ADJ_PLOIDY = "calc_adj_ploidy";
+    private static final String WRITE_SLIM_ADJ_PLOIDY = "write_slim_adj_ploidy";
 
     public static double MIN_LOH_CN = 0.5;
     public static double TOTAL_CN_LOSS = 0.5;
@@ -86,25 +89,33 @@ public class CNAnalyser {
         mSampleIds = Lists.newArrayList();
         mFileWriter = null;
         mRecalcPloidyFileWriter = null;
+        mRecalcAdjustedPloidy = false;
+        mWriteSlimAdjustedPloidy = false;
         mDbAccess = dbAccess;
         mCnDataList = Lists.newArrayList();
         mSvDataList = Lists.newArrayList();
         mSvCnDataMap = new HashMap();
+        mSampleSvPloidyCalcMap = new HashMap();
         mSampleLohData = null;
         mRecordId = 0;
         mNoneSvId = 0;
     }
 
+    public final Map<String,Map<String,double[]>> getSampleSvPloidyCalcMap() { return mSampleSvPloidyCalcMap; }
+    public final Map<String, List<SvLOH>> getSampleLohData() { return mSampleLohData; }
+
     public static void addCmdLineArgs(Options options)
     {
         options.addOption(COPY_NUMBER_FILE, true, "Copy number CSV file");
         options.addOption(CALC_ADJ_PLOIDY, false, "TEMP: recalculate CN change and ploidy using depth info");
+        options.addOption(WRITE_SLIM_ADJ_PLOIDY, false, "Only write min for use in SVA");
     }
 
     public boolean loadConfig(final CommandLine cmd, final List<String> sampleIds)
     {
         mSampleIds.addAll(sampleIds);
         mRecalcAdjustedPloidy = cmd.hasOption(CALC_ADJ_PLOIDY);
+        mWriteSlimAdjustedPloidy = cmd.hasOption(WRITE_SLIM_ADJ_PLOIDY);
         return true;
     }
 
@@ -169,14 +180,14 @@ public class CNAnalyser {
                 continue;
 
             // ignore orientation during matching since CN change is not a reliable determinant of SV orientation
-            long cnPosition = cnData.startPos();
+            long cnPosition = cnData.StartPos;
 
             for (final StructuralVariantData svData : mSvDataList)
             {
                 if (svData.filter().equals(PON_FILTER_PON))
                     continue;
 
-                if(!svData.type().toString().equals(cnData.segStart()))
+                if(!svData.type().toString().equals(cnData.SegStart))
                 {
                     if(svData.type() == SGL && svData.filter().equals(NONE_SEGMENT_INFERRED) && cnData.matchesSegment(NONE, true))
                     {
@@ -196,18 +207,11 @@ public class CNAnalyser {
                 long svPosEnd = svData.endOrientation() == -1 ? cnPosition : cnPosition - 1;
                 boolean matchOnStart = false;
 
-                if (svData.startChromosome().equals(cnData.chromosome()) && svData.startPosition() == svPosStart)
+                if (svData.startChromosome().equals(cnData.Chromosome) && svData.startPosition() == svPosStart)
                 {
                     matchOnStart = true;
                 }
-                /*
-                else if (cnData.matchesSegment(NONE, true) && svData.startChromosome().equals(cnData.chromosome())
-                && abs(svData.startPosition() - svPosStart) <= 1)
-                {
-                    matchOnStart = true;
-                }
-                */
-                else if (svData.endChromosome().equals(cnData.chromosome()) && svData.endPosition() == svPosEnd)
+                else if (svData.endChromosome().equals(cnData.Chromosome) && svData.endPosition() == svPosEnd)
                 {
                     matchOnStart = false;
                 }
@@ -243,31 +247,11 @@ public class CNAnalyser {
         if(svData == null)
             return false;
 
-        long svPosStart = svData.startOrientation() == -1 ? cnData.startPos() : cnData.startPos() - 1;
-        long svPosEnd = cnData.endPos() + 1;
+        long svPosStart = svData.startOrientation() == -1 ? cnData.StartPos : cnData.StartPos - 1;
+        long svPosEnd = cnData.EndPos + 1;
 
         return (svData.startPosition() == svPosStart && svData.endPosition() == svPosEnd);
-
-        /*
-        for(final StructuralVariantData var : mSvDataList)
-        {
-            if(var.filter().equals(PON_FILTER_PON))
-                continue;
-
-            long svPosStart = var.startOrientation() == -1 ? cnData.startPos() : cnData.startPos() - 1;
-            long svPosEnd = cnData.endPos() + 1;
-
-            if(var.startChromosome().equals(cnData.chromosome()) && var.startPosition() == svPosStart && var.endPosition() == svPosEnd)
-            {
-                return true;
-            }
-        }
-
-        return false;
-        */
     }
-
-    public final Map<String, List<SvLOH>> getSampleLohData() { return mSampleLohData; }
 
     // private static String SPECIFIC_CHR = "12";
     private static String SPECIFIC_CHR = "";
@@ -294,12 +278,12 @@ public class CNAnalyser {
         {
             final SvCNData cnData = mCnDataList.get(index);
 
-            double minCN = (1 - cnData.actualBaf()) * cnData.copyNumber();
+            double minCN = (1 - cnData.ActualBaf) * cnData.CopyNumber;
 
-            boolean newChromosome = currentChr.isEmpty() || (!currentChr.isEmpty() && !cnData.chromosome().equals(currentChr));
+            boolean newChromosome = currentChr.isEmpty() || (!currentChr.isEmpty() && !cnData.Chromosome.equals(currentChr));
             boolean reset = newChromosome;
 
-            if(newChromosome && cnData.chromosome().equals(SPECIFIC_CHR))
+            if(newChromosome && cnData.Chromosome.equals(SPECIFIC_CHR))
             {
                 LOGGER.debug("spec chr({})", SPECIFIC_CHR);
             }
@@ -314,23 +298,23 @@ public class CNAnalyser {
                     lohRegained = false;
 
                     LOGGER.debug(String.format("skipping LOH end segment(%s) with no SV match: type(%s) baf(actual=%.4f observed=%.4f count=%d) copyNumber(%.4f)",
-                            cnData.asString(), cnData.segStart(),
-                            cnData.actualBaf(), cnData.observedBaf(), cnData.bafCount(), cnData.copyNumber()));
+                            cnData.asString(), cnData.SegStart,
+                            cnData.ActualBaf, cnData.ObservedBaf, cnData.BafCount, cnData.CopyNumber));
                 }
 
                 if(lohRegained || reset)
                 {
                     // check for a short isolated TI and if found continue with the LOH
-                    if(lohRegained && cnData.endPos() - cnData.startPos() <= SHORT_TI_LENGTH && index < mCnDataList.size() - 1)
+                    if(lohRegained && cnData.EndPos - cnData.StartPos <= SHORT_TI_LENGTH && index < mCnDataList.size() - 1)
                     {
                         final SvCNData nextData = mCnDataList.get(index+1);
-                        double nextMinCN = (1 - nextData.actualBaf()) * nextData.copyNumber();
+                        double nextMinCN = (1 - nextData.ActualBaf) * nextData.CopyNumber;
 
-                        if(nextData.endPos() - cnData.startPos() > REMOTE_SV_DISTANCE && nextMinCN < MIN_LOH_CN
-                        && lohStartCnData!= null && cnData.startPos() - lohStartCnData.startPos() > REMOTE_SV_DISTANCE)
+                        if(nextData.EndPos - cnData.StartPos > REMOTE_SV_DISTANCE && nextMinCN < MIN_LOH_CN
+                        && lohStartCnData!= null && cnData.StartPos - lohStartCnData.StartPos > REMOTE_SV_DISTANCE)
                         {
                             LOGGER.debug("chr({}) skipping short isolated TI(id={} {} pos={} length={})",
-                                    currentChr, cnData.id(), cnData.segStart(), cnData.startPos(), cnData.endPos() - cnData.startPos());
+                                    currentChr, cnData.id(), cnData.SegStart, cnData.StartPos, cnData.EndPos - cnData.StartPos);
 
                             writeLOHData(sampleId, currentChr, cnData, nextData, priorCN, lohMinCN,
                                     1, false, true, false);
@@ -364,14 +348,14 @@ public class CNAnalyser {
                             lohSegments, true, false, true);
                     reset = true;
                 }
-                else if(cnData.copyNumber() < TOTAL_CN_LOSS)
+                else if(cnData.CopyNumber < TOTAL_CN_LOSS)
                 {
                     // other chromatid loss has occurred - this will cancel a valid LOH due to uncertainty unless due to a simple SV
                     if(cnData.matchesSegment(SegmentSupport.DEL, true) && cnData.matchesSegment(SegmentSupport.DEL, false)
                     && isSingleVariant(cnData))
                     {
                         LOGGER.debug("total CN loss matches single SV({} : {} -> {})",
-                                currentChr, cnData.startPos(), cnData.endPos());
+                                currentChr, cnData.StartPos, cnData.EndPos);
                     }
                     else
                     {
@@ -410,7 +394,7 @@ public class CNAnalyser {
                     else
                     {
                         LOGGER.debug(String.format("chr(%s) starting LOH at pos(%d) minCN(%.3f cn=%.3f baf=%.3f) priorCN(%.3f)",
-                                currentChr, cnData.startPos(), cnData.copyNumber(), cnData.actualBaf(), lohMinCN, priorCN));
+                                currentChr, cnData.StartPos, cnData.CopyNumber, cnData.ActualBaf, lohMinCN, priorCN));
 
                         // check for segments ending on telomere
                         if(cnData.matchesSegment(TELOMERE, false))
@@ -437,7 +421,7 @@ public class CNAnalyser {
                     lohStartCnData = cnData;
                 }
 
-                currentChr = cnData.chromosome();
+                currentChr = cnData.Chromosome;
             }
 
             lastMinCN = minCN;
@@ -456,35 +440,12 @@ public class CNAnalyser {
             return null;
         }
 
-        long svPosition = requiredOrient == -1 ? cnData.startPos() : cnData.startPos() - 1;
+        long svPosition = requiredOrient == -1 ? cnData.StartPos : cnData.StartPos - 1;
 
         final StructuralVariantData svData = cnData.getStructuralVariantData();
 
         if (svData == null)
             return null;
-
-        /*
-        // TEMP
-        {
-            StructuralVariantData newSvData = null;
-            if (cnData.svLinkOnStart() && svData.startOrientation() == requiredOrient && svData.startPosition() == svPosition)
-            {
-                newSvData = svData;
-            }
-            else if (!cnData.svLinkOnStart() && svData.endOrientation() == requiredOrient && svData.endPosition() == svPosition)
-            {
-                newSvData = svData;
-            }
-
-            final StructuralVariantData otherSvData = findSvData_old(cnData, requiredOrient);
-
-            if (otherSvData != newSvData)
-            {
-                LOGGER.error("sv look-up mismatch: svIDs({} & {}) segs({}-{})",
-                        svData.id(), otherSvData.id(), cnData.segStart(), cnData.segEnd());
-            }
-        }
-        */
 
         if (cnData.svLinkOnStart() && svData.startOrientation() == requiredOrient && svData.startPosition() == svPosition)
             return svData;
@@ -503,19 +464,19 @@ public class CNAnalyser {
             return null;
         }
 
-        long svPosition = requiredOrient == -1 ? cnData.startPos() : cnData.startPos() - 1;
+        long svPosition = requiredOrient == -1 ? cnData.StartPos : cnData.StartPos - 1;
 
         for(final StructuralVariantData var : mSvDataList)
         {
             if(var.filter().equals(PON_FILTER_PON))
                 continue;
 
-            if(var.startChromosome().equals(cnData.chromosome()) && var.startOrientation() == requiredOrient && var.startPosition() == svPosition)
+            if(var.startChromosome().equals(cnData.Chromosome) && var.startOrientation() == requiredOrient && var.startPosition() == svPosition)
             {
                 return var;
             }
 
-            if(var.endChromosome().equals(cnData.chromosome()) && var.endOrientation() == requiredOrient && var.endPosition() == svPosition)
+            if(var.endChromosome().equals(cnData.Chromosome) && var.endOrientation() == requiredOrient && var.endPosition() == svPosition)
             {
                 return var;
             }
@@ -554,19 +515,19 @@ public class CNAnalyser {
             if(incomplete)
             {
                 // ended at the telomere
-                lohLength = endData.endPos() - startData.startPos();
+                lohLength = endData.EndPos - startData.StartPos;
                 endSvData = null;
             }
-            else if(endData.chromosome().equals(chr) && !startData.matchesSegment(TELOMERE, false))
+            else if(endData.Chromosome.equals(chr) && !startData.matchesSegment(TELOMERE, false))
             {
-                lohLength = endData.startPos() - startData.startPos();
+                lohLength = endData.StartPos - startData.StartPos;
                 endSvData = findSvData(endData, !skipped ? -1 : 1);
             }
             else
             {
                 // segment has either started and/or finished on the telomere segment
                 endData = startData;
-                lohLength = startData.endPos() - startData.startPos() + 1;
+                lohLength = startData.EndPos - startData.StartPos + 1;
             }
 
             if(lohLength <= 0)
@@ -596,8 +557,8 @@ public class CNAnalyser {
                         boolean incorrectOrientation = (startData.getStructuralVariantData() != null);
 
                         LOGGER.debug(String.format("sample(%s) LOH start segment(%s) no SV match: orient(%s) type(%s) baf(actual=%.4f observed=%.4f count=%d) copyNumber(%.4f)",
-                                sampleId, startData.asString(), incorrectOrientation ? "wrong" : "ok", startData.segStart(),
-                                startData.actualBaf(), startData.observedBaf(), startData.bafCount(), startData.copyNumber()));
+                                sampleId, startData.asString(), incorrectOrientation ? "wrong" : "ok", startData.SegStart,
+                                startData.ActualBaf, startData.ObservedBaf, startData.BafCount, startData.CopyNumber));
                     }
 
                     if (!incomplete && endSvData == null && endData.matchesSV(true))
@@ -605,23 +566,23 @@ public class CNAnalyser {
                         boolean incorrectOrientation = (endData.getStructuralVariantData() != null);
 
                         LOGGER.debug(String.format("sample(%s) LOH end segment(%s) no SV match: orient(%s), type(%s) baf(actual=%.4f observed=%.4f count=%d) copyNumber(%.4f)",
-                                sampleId, endData.asString(), incorrectOrientation ? "wrong" : "ok", endData.segStart(),
-                                endData.actualBaf(), endData.observedBaf(), endData.bafCount(), endData.copyNumber()));
+                                sampleId, endData.asString(), incorrectOrientation ? "wrong" : "ok", endData.SegStart,
+                                endData.ActualBaf, endData.ObservedBaf, endData.BafCount, endData.CopyNumber));
                     }
                 }
 
                 LOGGER.debug("sample({}) cnID({} -  -> {}) not fully matched pairSV({} -> {})",
-                        sampleId, startData.asString(), startData.segStart(), endData.asString(), endData.segStart(),
+                        sampleId, startData.asString(), startData.SegStart, endData.asString(), endData.SegStart,
                         startSvData != null ? startSvData.id() : "", endSvData != null ? endSvData.id() : "");
             }
 
             mFileWriter.write(String.format("%s,%s,%d,%d,%d,%d,%s,%s",
                     sampleId, chr, startData.id(), endData.id(),
-                    startData.startPos(), incomplete ? endData.endPos() : endData.startPos(),
-                    startData.segStart(), incomplete ? endData.segEnd() : endData.segStart()));
+                    startData.StartPos, incomplete ? endData.EndPos : endData.StartPos,
+                    startData.SegStart, incomplete ? endData.SegEnd : endData.SegStart));
 
             mFileWriter.write(String.format(",%.4f,%.4f,%.4f,%.4f,%d,%d,%s,%s,%s,%s",
-                    lastMinCN, (1 - startData.actualBaf()) * startData.copyNumber(), (1 - endData.actualBaf()) * endData.copyNumber(),
+                    lastMinCN, (1 - startData.ActualBaf) * startData.CopyNumber, (1 - endData.ActualBaf) * endData.CopyNumber,
                     lohMinCN, segCount, lohLength,
                     startSvData != null ? startSvData.id() : "0", endSvData != null ? endSvData.id() : "0",
                     skipped, isValid));
@@ -842,12 +803,20 @@ public class CNAnalyser {
 
                 mRecalcPloidyFileWriter = createBufferedWriter(outputFileName, false);
 
-                // SV info
-                mRecalcPloidyFileWriter.write("SampleId,SvId,Type,Ploidy,TumorReadCount");
-                mRecalcPloidyFileWriter.write(",ChrStart,PosStart,OrientStart,CNStart,CNChgStart,DWCountStart,PrevDWCountStart,NextDWCountStart");
-                mRecalcPloidyFileWriter.write(",ChrEnd,PosEnd,OrientEnd,CNEnd,CNChgEnd,DWCountEnd,PrevDWCountEnd,NextDWCountEnd");
-                mRecalcPloidyFileWriter.write(",CnPrediction,CnUncertainty,PoisRcLow,PoisRcHigh,PloidyLow,PloidyHigh,PloidyUncertainty");
-                mRecalcPloidyFileWriter.write(",EstPloidy,EstUncertainty,MinPloidy,MaxPloidy");
+                if(mWriteSlimAdjustedPloidy)
+                {
+                    // SV info
+                    mRecalcPloidyFileWriter.write("SampleId,SvId,EstPloidy,EstUncertainty");
+                }
+                else
+                {
+                    mRecalcPloidyFileWriter.write("SampleId,SvId,Type,Ploidy,TumorReadCount");
+                    mRecalcPloidyFileWriter.write(",ChrStart,PosStart,OrientStart,CNStart,CNChgStart,DWCountStart,PrevDWCountStart,NextDWCountStart");
+                    mRecalcPloidyFileWriter.write(",ChrEnd,PosEnd,OrientEnd,CNEnd,CNChgEnd,DWCountEnd,PrevDWCountEnd,NextDWCountEnd");
+                    mRecalcPloidyFileWriter.write(",CnPrediction,CnUncertainty,PoisRcLow,PoisRcHigh,PloidyLow,PloidyHigh,PloidyUncertainty");
+                    mRecalcPloidyFileWriter.write(",EstPloidy,EstUncertainty,MinPloidy,MaxPloidy");
+                }
+
                 mRecalcPloidyFileWriter.newLine();
             }
 
@@ -869,17 +838,9 @@ public class CNAnalyser {
                 double ploidy = svData.ploidy();
                 int tumorReadCount = svData.startTumourVariantFragmentCount();
 
-                writer.write(String.format("%s,%s,%s,%.4f,%d",
-                        sampleId, svData.id(), svData.type(), svData.ploidy(), tumorReadCount));
-
                 final int[] startDepthData = extractDepthWindowData(cnStartData);
-
                 double cnStart = svData.adjustedStartCopyNumber();
                 double cnChgStart = svData.adjustedStartCopyNumberChange();
-
-                writer.write(String.format(",%s,%d,%d,%.4f,%.4f,%d,%d,%d",
-                        svData.startChromosome(), svData.startPosition(), svData.startOrientation(),
-                        cnStart, cnChgStart, cnStartData.DepthWindowCount, startDepthData[0], startDepthData[1]));
 
                 int[] endDepthData = null;
                 double cnEnd = 0;
@@ -890,28 +851,44 @@ public class CNAnalyser {
                     endDepthData = extractDepthWindowData(cnEndData);
                     cnEnd = svData.adjustedEndCopyNumber();
                     cnChgEnd = svData.adjustedEndCopyNumberChange();
+                }
+                else
+                {
+                    endDepthData = new int[2];
+                }
+
+                final double calcResults[] = calcAdjustedPloidyValues(cnStart, cnChgStart, cnEnd, cnChgEnd,
+                        ploidy, tumorReadCount, startDepthData, cnEndData != null ? endDepthData : null);
+
+                if(mWriteSlimAdjustedPloidy)
+                {
+                    writer.write(String.format("%s,%s,%.4f,%.4f",
+                            sampleId, svData.id(),
+                            calcResults[APC_EST_PLOIDY], calcResults[APC_EST_UNCERTAINTY]));
+                }
+                else
+                {
+                    writer.write(String.format("%s,%s,%s,%.4f,%d",
+                            sampleId, svData.id(), svData.type(), svData.ploidy(), tumorReadCount));
+
+                    writer.write(String.format(",%s,%d,%d,%.4f,%.4f,%d,%d,%d",
+                            svData.startChromosome(), svData.startPosition(), svData.startOrientation(),
+                            cnStart, cnChgStart, cnStartData.DepthWindowCount, startDepthData[0], startDepthData[1]));
 
                     writer.write(String.format(",%s,%d,%d,%.4f,%.4f,%d,%d,%d",
                             svData.endChromosome(), svData.endPosition(), svData.endOrientation(),
                             cnEnd, cnChgEnd, cnEndData.DepthWindowCount, endDepthData[0], endDepthData[1]));
+
+                    writer.write(String.format(",%.2f,%.2f", calcResults[APC_CN_PREDICTION], calcResults[APC_CN_UNCERTAINTY]));
+
+                    writer.write(String.format(",%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f",
+                            calcResults[APC_RC_POIS_LOW], calcResults[APC_RC_POIS_HIGH],
+                            calcResults[APC_PLOIDY_LOW], calcResults[APC_PLOIDY_HIGH],
+                            calcResults[APC_PLOIDY_UNCERTAINTY],
+                            calcResults[APC_EST_PLOIDY], calcResults[APC_EST_UNCERTAINTY],
+                            calcResults[APC_EST_PLOIDY] - calcResults[APC_EST_UNCERTAINTY],
+                            calcResults[APC_EST_PLOIDY] + calcResults[APC_EST_UNCERTAINTY]));
                 }
-                else
-                {
-                    writer.write(",0,-1,0,0,0,0,0,0");
-                }
-
-                final double calcResults[] = calcAdjustedPloidyValues(cnStart, cnChgStart, cnEnd, cnChgEnd,
-                        ploidy, tumorReadCount, startDepthData, endDepthData);
-
-                writer.write(String.format(",%.2f,%.2f", calcResults[APC_CN_PREDICTION], calcResults[APC_CN_UNCERTAINTY]));
-
-                writer.write(String.format(",%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f",
-                        calcResults[APC_RC_POIS_LOW], calcResults[APC_RC_POIS_HIGH],
-                        calcResults[APC_PLOIDY_LOW], calcResults[APC_PLOIDY_HIGH],
-                        calcResults[APC_PLOIDY_UNCERTAINTY],
-                        calcResults[APC_EST_PLOIDY], calcResults[APC_EST_UNCERTAINTY],
-                        calcResults[APC_EST_PLOIDY] - calcResults[APC_EST_UNCERTAINTY],
-                        calcResults[APC_EST_PLOIDY] + calcResults[APC_EST_UNCERTAINTY]));
 
                 writer.newLine();
             }
@@ -1123,6 +1100,58 @@ public class CNAnalyser {
 
         return deptWindowData;
     }
+
+    private static int PLOIDY_CALC_COLUMN_COUNT = 4;
+
+    public void loadPloidyCalcData(final String filename)
+    {
+        if (filename.isEmpty())
+            return;
+
+        try
+        {
+            BufferedReader fileReader = new BufferedReader(new FileReader(filename));
+
+            // skip field names
+            String line = fileReader.readLine();
+
+            if (line == null)
+            {
+                LOGGER.error("Empty LOH CSV file({})", filename);
+                return;
+            }
+
+            String currentSample = "";
+            Map<String,double[]> svDataMap = null;
+
+            while ((line = fileReader.readLine()) != null)
+            {
+                String[] items = line.split(",");
+
+                if (items.length != PLOIDY_CALC_COLUMN_COUNT)
+                    continue;
+
+                String sampleId = items[0];
+
+                if(currentSample.isEmpty() || !currentSample.equals(sampleId))
+                {
+                    currentSample = sampleId;
+                    svDataMap = new HashMap();
+                    mSampleSvPloidyCalcMap.put(currentSample, svDataMap);
+                }
+
+                final String svId = items[1];
+                double[] ploidyCalcs = {Double.parseDouble(items[2]), Double.parseDouble(items[3])};
+
+                svDataMap.put(svId, ploidyCalcs);
+            }
+        }
+        catch (IOException e)
+        {
+            LOGGER.error("Failed to read SV ploidy calcs file({}): {}", filename, e.toString());
+        }
+    }
+
 
     public void close()
     {
