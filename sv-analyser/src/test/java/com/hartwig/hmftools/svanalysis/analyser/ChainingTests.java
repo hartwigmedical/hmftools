@@ -383,6 +383,53 @@ public class ChainingTests
 
     @Test
     @Ignore
+    public void testSimpleChaining1()
+    {
+        SvTestHelper tester = new SvTestHelper();
+        tester.logVerbose(true);
+
+        final SvVarData var1 = createTestSv("7821420","18","X",23601785,48007145,-1,1,BND,1.92,1.96,0.98,0.95,1.03, "");
+        final SvVarData var2 = createTestSv("7821421","X","X",48004021,48123140,-1,-1,INV,0.92,0.99,0.92,0.99,0.96, "");
+        final SvVarData var3 = createTestSv("7821422","X","X",48082005,66755692,1,1,INV,1.01,1,1.01,1,0.86, "");
+        final SvVarData var4 = createTestSv("7821423","18","X",23577410,66767221,1,-1,BND,1.95,0.97,1.02,0.97,1.01, "");
+        final SvVarData var5 = createTestSv("7821424","X","X",47973211,67907761,1,1,INV,1,0.97,1,0.97,0.99, "");
+        final SvVarData var6 = createTestSv("7821425","X","X",48007069,67910047,-1,-1,INV,1.96,1,1.04,1,0.99, "");
+
+        tester.AllVariants.add(var1);
+        tester.AllVariants.add(var2);
+        tester.AllVariants.add(var3);
+        tester.AllVariants.add(var4);
+        tester.AllVariants.add(var5);
+        tester.AllVariants.add(var6);
+
+        Map<String, List<SvLOH>> lohDataMap = new HashMap();
+        List<SvLOH> lohData = Lists.newArrayList();
+
+        lohData.add(new SvLOH(tester.SampleId, "18", 1, 2, 23601785, 23577410,
+                "BND", "BND", 1, 1, 1, 0, 1, 1,
+                var1.id(), var4.id(), false, true));
+
+        lohDataMap.put(tester.SampleId, lohData);
+
+        tester.ClusteringMethods.setSampleLohData(lohDataMap);
+
+        tester.preClusteringInit();
+
+        tester.Analyser.clusterAndAnalyse();
+
+        // now check final chain-finding across all sub-clusters
+        assertEquals(tester.Analyser.getClusters().size(), 1);
+        final SvCluster cluster = tester.Analyser.getClusters().get(0);
+
+        assertEquals(2, cluster.getChains().size());
+
+        // assertEquals(14, cluster.getChains().get(0).getLinkCount());
+        // assertEquals(3, cluster.getChains().get(1).getLinkCount());
+
+    }
+
+    @Test
+    @Ignore
     public void testComplexChaining3()
     {
         SvTestHelper tester = new SvTestHelper();

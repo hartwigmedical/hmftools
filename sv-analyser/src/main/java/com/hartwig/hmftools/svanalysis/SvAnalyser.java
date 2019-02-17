@@ -2,6 +2,7 @@ package com.hartwig.hmftools.svanalysis;
 
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantFactory.PON_FILTER_PON;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.MIN_SAMPLE_PURITY;
+import static com.hartwig.hmftools.svanalysis.analysis.CNAnalyser.SV_PLOIDY_CALC_FILE;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.NONE_SEGMENT_INFERRED;
 
 import java.sql.SQLException;
@@ -161,6 +162,12 @@ public class SvAnalyser {
                     driverGeneAnnotator.setLohData(cnAnalyser.getSampleLohData());
             }
 
+            if(cmd.hasOption(SV_PLOIDY_CALC_FILE))
+            {
+                cnAnalyser.loadPloidyCalcData(cmd.getOptionValue(SV_PLOIDY_CALC_FILE));
+                sampleAnalyser.setSamplePloidyCalcData(cnAnalyser.getSampleSvPloidyCalcMap());
+            }
+
             int count = 0;
             for (final String sample : samplesList)
             {
@@ -221,7 +228,10 @@ public class SvAnalyser {
                     driverGeneAnnotator.annotateSVs(sample, sampleAnalyser.getClusters(), sampleAnalyser.getChrBreakendMap());
                 }
 
-                fusionAnalyser.run(svVarData, sampleAnalyser.getClusters());
+                if(runFusions)
+                {
+                    fusionAnalyser.run(svVarData, sampleAnalyser.getClusters());
+                }
 
                 sampleAnalyser.writeOutput();
 

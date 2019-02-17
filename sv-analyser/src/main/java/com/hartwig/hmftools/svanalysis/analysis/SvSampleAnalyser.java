@@ -66,6 +66,7 @@ public class SvSampleAnalyser {
     private LineElementAnnotator mLineElementAnnotator;
     private ReplicationOriginAnnotator mReplicationOriginAnnotator;
     private SvClusteringMethods mClusteringMethods;
+    private Map<String,Map<String,double[]>> mSampleSvPloidyCalcMap;
 
     private PerformanceCounter mPerfCounter;
     private PerformanceCounter mPc1;
@@ -115,6 +116,7 @@ public class SvSampleAnalyser {
     public final List<SvCluster> getClusters() { return mAnalyser.getClusters(); }
     public final Map<String, List<SvBreakend>> getChrBreakendMap() { return mClusteringMethods.getChrBreakendMap(); }
     public void setSampleLohData(final Map<String, List<SvLOH>> data) { mClusteringMethods.setSampleLohData(data); }
+    public void setSamplePloidyCalcData(final Map<String,Map<String,double[]>> data) { mSampleSvPloidyCalcMap = data; }
     public void setChrCopyNumberMap(final Map<String, double[]> data) { mClusteringMethods.setChrCopyNumberMap(data); }
     public final VisualiserWriter getVisWriter() { return mVisWriter; }
 
@@ -135,6 +137,22 @@ public class SvSampleAnalyser {
         mSampleId = sampleId;
         mAllVariants = Lists.newArrayList(variants);
         mVisWriter.setSampleId(sampleId);
+
+        if(!mSampleSvPloidyCalcMap.isEmpty())
+        {
+            Map<String, double[]> svPloidyData = mSampleSvPloidyCalcMap.get(mSampleId);
+
+            for(final SvVarData var : mAllVariants)
+            {
+                final double[] ploidyData = svPloidyData.get(var.id());
+                if(ploidyData != null)
+                {
+                    double estPloidy = ploidyData[0];
+                    double estUncertainty = ploidyData[1];
+                    var.setPloidyRecalcData(estPloidy, estUncertainty);
+                }
+            }
+        }
 
         LOGGER.debug("loaded {} SVs", mAllVariants.size());
     }
@@ -229,14 +247,14 @@ public class SvSampleAnalyser {
                 mSvFileWriter.write("SampleId,Id,Type,ChrStart,PosStart,OrientStart,ChrEnd,PosEnd,OrientEnd");
 
                 // position and copy number
-                mSvFileWriter.write(",ArmStart,AdjAFStart,AdjCNStart,AdjCNChgStart,ArmEnd,AdjAFEnd,AdjCNEnd,AdjCNChgEnd,Ploidy");
+                mSvFileWriter.write(",ArmStart,AFStart,CNStart,CNChgStart,ArmEnd,AFEnd,CNEnd,CNChgEnd,Ploidy,PloidyMin,PloidyMax");
 
                 // cluster info
                 mSvFileWriter.write(",ClusterId,SubClusterId,ClusterCount,ClusterReason");
                 mSvFileWriter.write(",ClusterDesc,IsResolved,ResolvedType,Consistency,ArmCount");
 
                 // SV info
-                mSvFileWriter.write(",Homology,InexactHOStart,InexactHOEnd,InsertSeq,Imprecise,QualScore,");
+                mSvFileWriter.write(",Homology,InexactHOStart,InexactHOEnd,InsertSeq,Imprecise,QualScore");
                 mSvFileWriter.write(",RefContextStart,RefContextEnd,InsSeqAlignments,Recovered");
 
                 mSvFileWriter.write(",FSStart,FSEnd,LEStart,LEEnd"); // ,DupBEStart,DupBEEnd
@@ -303,9 +321,10 @@ public class SvSampleAnalyser {
                                 var.chromosome(false), var.position(false), var.orientation(false)));
 
                 writer.write(
-                        String.format(",%s,%.2f,%.2f,%.2f,%s,%.2f,%.2f,%.2f,%.2f",
+                        String.format(",%s,%.2f,%.2f,%.2f,%s,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f",
                                 var.arm(true), dbData.adjustedStartAF(), dbData.adjustedStartCopyNumber(), dbData.adjustedStartCopyNumberChange(),
-                                var.arm(false), dbData.adjustedEndAF(), dbData.adjustedEndCopyNumber(), dbData.adjustedEndCopyNumberChange(), dbData.ploidy()));
+                                var.arm(false), dbData.adjustedEndAF(), dbData.adjustedEndCopyNumber(), dbData.adjustedEndCopyNumberChange(),
+                                dbData.ploidy(), var.ploidyMin(), var.ploidyMax()));
 
                 writer.write(
                         String.format(",%d,%d,%d,%s",

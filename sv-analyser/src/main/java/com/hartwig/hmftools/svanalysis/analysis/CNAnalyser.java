@@ -76,7 +76,7 @@ public class CNAnalyser {
     Map<String, List<SvLOH>> mSampleLohData;
     private Map<String,Map<String,double[]>> mSampleSvPloidyCalcMap;
 
-    private static final String COPY_NUMBER_FILE = "cn_file";
+    public static final String SV_PLOIDY_CALC_FILE = "sv_ploidy_file";
     private static final String CALC_ADJ_PLOIDY = "calc_adj_ploidy";
     private static final String WRITE_SLIM_ADJ_PLOIDY = "write_slim_adj_ploidy";
 
@@ -106,7 +106,7 @@ public class CNAnalyser {
 
     public static void addCmdLineArgs(Options options)
     {
-        options.addOption(COPY_NUMBER_FILE, true, "Copy number CSV file");
+        options.addOption(SV_PLOIDY_CALC_FILE, true, "SV_PLOIDY_CALC_FILE");
         options.addOption(CALC_ADJ_PLOIDY, false, "TEMP: recalculate CN change and ploidy using depth info");
         options.addOption(WRITE_SLIM_ADJ_PLOIDY, false, "Only write min for use in SVA");
     }

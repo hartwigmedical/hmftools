@@ -88,7 +88,7 @@ public class ChainFinder
     public void setLogVerbose(boolean toggle) { mLogVerbose = toggle; }
     public void setUseNewMethod(boolean toggle) { mUseNewMethod = toggle; }
 
-    public void formClusterChains()
+    public boolean formClusterChains()
     {
         // take the assembly links as a given and then try out the inferred links to see if a single chain can be formed from all the breakends
 
@@ -96,7 +96,7 @@ public class ChainFinder
         List<SvVarData> svList = Lists.newArrayList(mCluster.getSVs());
 
         if(svList.size() < 2)
-            return;
+            return false;
 
         mReqChainCount = svList.size();
 
@@ -115,7 +115,6 @@ public class ChainFinder
                 mCluster.addChain(chain);
             }
 
-            return;
         }
 
         List<SvChain> chains = Lists.newArrayList();
@@ -145,6 +144,8 @@ public class ChainFinder
             // otherwise add the longest mutually exclusive chains
             cacheIncompleteChains();
         }
+
+        return fullyChained;
     }
 
     private boolean cacheCompleteChain()
@@ -307,7 +308,7 @@ public class ChainFinder
                 while (index < possiblePairs.size())
                 {
                     SvLinkedPair pair = possiblePairs.get(index);
-                    if (pair.hasLinkClash(shortestPair))
+                    if (pair.hasLinkClash(shortestPair) || shortestPair.oppositeMatch(pair))
                     {
                         possiblePairs.remove(index);
                     }

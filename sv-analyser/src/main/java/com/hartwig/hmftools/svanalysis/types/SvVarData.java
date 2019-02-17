@@ -85,6 +85,9 @@ public class SvVarData
     private double mReplicationOriginStart;
     private double mReplicationOriginEnd;
 
+    private double mPloidyMin;
+    private double mPloidyMax;
+
     public static final String NONE_SEGMENT_INFERRED = "INFERRED";
 
     public static String ASSEMBLY_TYPE_DSB = "dsb";
@@ -156,6 +159,9 @@ public class SvVarData
 
         mReplicationOriginStart = 0;
         mReplicationOriginEnd = 0;
+
+        mPloidyMin = 0;
+        mPloidyMax = 0;
     }
 
     public static SvVarData from(final EnrichedStructuralVariant enrichedSV)
@@ -658,6 +664,15 @@ public class SvVarData
         else
             mReplicationOriginEnd = value;
     }
+
+    public void setPloidyRecalcData(double minPloidy, double maxPloidy)
+    {
+        mPloidyMin = minPloidy;
+        mPloidyMax = maxPloidy;
+    }
+
+    public double ploidyMax() { return mPloidyMax; }
+    public double ploidyMin() { return mPloidyMin; }
 
     public static SvVarData findVariantById(final String id, List<SvVarData> svList)
     {
