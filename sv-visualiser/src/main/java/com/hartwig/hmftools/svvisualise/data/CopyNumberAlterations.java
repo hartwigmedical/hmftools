@@ -14,14 +14,15 @@ import org.jetbrains.annotations.NotNull;
 
 public class CopyNumberAlterations {
 
+
+
     private static final String COMMENT = "#";
     private static final String DELIMITER = "\t";
 
     @NotNull
-    public static List<CopyNumberAlteration> copyNumbers(long additionalDistance,
-            @NotNull final List<CopyNumberAlteration> alterations, @NotNull final List<GenomeRegion> span) {
+    public static List<CopyNumberAlteration> copyNumbers(long copyNumberDistance, @NotNull final List<CopyNumberAlteration> alterations,
+            @NotNull final List<GenomeRegion> span) {
         final List<CopyNumberAlteration> result = Lists.newArrayList();
-
 
         for (int i = 0; i < alterations.size(); i++) {
             CopyNumberAlteration alteration = alterations.get(i);
@@ -29,8 +30,8 @@ public class CopyNumberAlterations {
             final List<GenomeRegion> chromosomeSegments =
                     span.stream().filter(x -> x.chromosome().equals(contig)).collect(Collectors.toList());
             if (!chromosomeSegments.isEmpty()) {
-                long minTrackPosition = chromosomeSegments.stream().mapToLong(GenomeRegion::start).min().orElse(0) - additionalDistance;
-                long maxTrackPosition = chromosomeSegments.stream().mapToLong(GenomeRegion::end).max().orElse(0) + additionalDistance;
+                long minTrackPosition = chromosomeSegments.stream().mapToLong(GenomeRegion::start).min().orElse(0) - copyNumberDistance;
+                long maxTrackPosition = chromosomeSegments.stream().mapToLong(GenomeRegion::end).max().orElse(0) + copyNumberDistance;
                 if (alteration.end() >= minTrackPosition && alteration.start() <= maxTrackPosition) {
 
                     boolean isStartDecreasing = i > 0 && lessThan(alteration, alterations.get(i - 1));

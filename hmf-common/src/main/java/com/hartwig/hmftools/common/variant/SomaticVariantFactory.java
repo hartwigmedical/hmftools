@@ -20,7 +20,6 @@ import com.hartwig.hmftools.common.variant.enrich.SomaticEnrichment;
 import com.hartwig.hmftools.common.variant.filter.AlwaysPassFilter;
 import com.hartwig.hmftools.common.variant.filter.ChromosomeFilter;
 import com.hartwig.hmftools.common.variant.filter.NTFilter;
-import com.hartwig.hmftools.common.variant.filter.NearIndelPonFilter;
 import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotation;
 import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotationFactory;
 
@@ -109,7 +108,8 @@ public class SomaticVariantFactory {
             }
 
             for (VariantContext variant : reader.iterator()) {
-                if (filter.test(variant)) {
+                // Note we need pon filtered indels for near indel pon logic to work correctly
+                if (filter.test(variant) || NearPonFilteredIndel.isPonFilteredIndel(variant)) {
                     variants.add(variant);
                 }
             }
@@ -118,13 +118,13 @@ public class SomaticVariantFactory {
         return process(sample, variants);
     }
 
-    @VisibleForTesting
-    List<SomaticVariant> process(@NotNull final String sample, @NotNull final List<VariantContext> allVariantContexts) {
+    @NotNull
+    private List<SomaticVariant> process(@NotNull final String sample, @NotNull final List<VariantContext> allVariantContexts) {
         final List<SomaticVariant> variants = Lists.newArrayList();
 
         for (int i = 0; i < allVariantContexts.size(); i++) {
             final VariantContext context = allVariantContexts.get(i);
-            if (NearIndelPonFilter.isIndelNearPon(i, allVariantContexts)) {
+            if (NearPonFilteredIndel.isNearPonFilteredIndel(i, allVariantContexts)) {
                 context.getCommonInfo().addFilter(NEAR_INDEL_PON_FILTER);
             }
 
@@ -135,8 +135,8 @@ public class SomaticVariantFactory {
     }
 
     @NotNull
-    // TODO: This function is used by BachelorPP, should probably change.
-    public Optional<SomaticVariant> createVariant(@NotNull final String sample, @NotNull final VariantContext context) {
+    @VisibleForTesting
+    Optional<SomaticVariant> createVariant(@NotNull final String sample, @NotNull final VariantContext context) {
         final Genotype genotype = context.getGenotype(sample);
 
         if (filter.test(context) && genotype.hasAD() && genotype.getAD().length > 1) {
@@ -151,19 +151,18 @@ public class SomaticVariantFactory {
     }
 
     @NotNull
-    public SomaticVariant createSomaticVariant(@NotNull final String sample, @NotNull final VariantContext context)
-    {
+    public SomaticVariant createSomaticVariant(@NotNull final String sample, @NotNull final VariantContext context) {
         final AllelicDepth allelicDepth = determineAlleleFrequencies(context.getGenotype(sample));
 
         return Optional.of(createVariantBuilder(allelicDepth, context, canonicalAnnotationFactory))
                 .map(x -> enrichment.enrich(x, context))
-                .map(ImmutableSomaticVariantImpl.Builder::build).get();
+                .map(ImmutableSomaticVariantImpl.Builder::build)
+                .get();
     }
 
     @NotNull
     private static ImmutableSomaticVariantImpl.Builder createVariantBuilder(@NotNull final AllelicDepth allelicDepth,
             @NotNull final VariantContext context, @NotNull CanonicalAnnotation canonicalAnnotationFactory) {
-
         ImmutableSomaticVariantImpl.Builder builder = ImmutableSomaticVariantImpl.builder()
                 .chromosome(context.getContig())
                 .position(context.getStart())

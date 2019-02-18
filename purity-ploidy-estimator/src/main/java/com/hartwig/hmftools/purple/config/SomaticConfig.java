@@ -29,12 +29,13 @@ public interface SomaticConfig {
     String SOMATIC_DEVIATION_WEIGHT = "somatic_deviation_weight";
     String HIGHLY_DIPLOID_PERCENTAGE = "highly_diploid_percentage";
 
-    double SOMATIC_MIN_PURITY_DEFAULT = 0.16;
+    double SOMATIC_MIN_PURITY_DEFAULT = 0.17;
     double SOMATIC_MIN_PURITY_SPREAD_DEFAULT = 0.15;
     int SOMATIC_MIN_PEAK_DEFAULT = 50;
     int SOMATIC_MIN_TOTAL_DEFAULT = 300;
     double SOMATIC_DEVIATION_WEIGHT_DEFAULT = 1;
     double HIGHLY_DIPLOID_PERCENTAGE_DEFAULT = 0.95;
+    double MIN_SOMATIC_UNADJUSTED_VAF = 0.1;
 
     static void addOptions(@NotNull Options options) {
         options.addOption(SOMATIC_MIN_PEAK, true, "Minimum number of somatic variants to consider a peak. Default 50.");
@@ -59,6 +60,10 @@ public interface SomaticConfig {
     double somaticDeviationWeight();
 
     double highlyDiploidPercentage();
+
+    default double minSomaticUnadjustedVaf() {
+        return MIN_SOMATIC_UNADJUSTED_VAF;
+    }
 
     @NotNull
     static SomaticConfig createSomaticConfig(@NotNull CommandLine cmd) throws ParseException {

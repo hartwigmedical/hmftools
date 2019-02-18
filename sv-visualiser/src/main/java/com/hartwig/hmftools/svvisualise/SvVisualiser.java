@@ -2,6 +2,8 @@ package com.hartwig.hmftools.svvisualise;
 
 import static java.util.stream.Collectors.toList;
 
+import static com.hartwig.hmftools.svvisualise.circos.Span.allPositions;
+
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.List;
@@ -15,6 +17,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.circos.CircosExecution;
+import com.hartwig.hmftools.common.position.GenomePosition;
 import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.svvisualise.circos.CircosConfigWriter;
 import com.hartwig.hmftools.svvisualise.circos.CircosDataWriter;
@@ -22,7 +25,9 @@ import com.hartwig.hmftools.svvisualise.circos.ColorPicker;
 import com.hartwig.hmftools.svvisualise.circos.Span;
 import com.hartwig.hmftools.svvisualise.data.CopyNumberAlteration;
 import com.hartwig.hmftools.svvisualise.data.CopyNumberAlterations;
+import com.hartwig.hmftools.svvisualise.data.Exon;
 import com.hartwig.hmftools.svvisualise.data.Link;
+import com.hartwig.hmftools.svvisualise.data.Links;
 import com.hartwig.hmftools.svvisualise.data.Segment;
 import com.hartwig.hmftools.svvisualise.data.Segments;
 
@@ -113,7 +118,10 @@ public class SvVisualiser implements AutoCloseable {
 
         final List<Segment> chromosomeSegments =
                 config.segments().stream().filter(x -> clusterIds.contains(x.clusterId())).collect(toList());
-        return runFiltered(sample, chromosomeLinks, chromosomeSegments);
+
+        final List<Exon> chromosomeExons = config.exons().stream().filter(x -> clusterIds.contains(x.clusterId())).collect(toList());
+
+        return runFiltered(sample, chromosomeLinks, chromosomeSegments, chromosomeExons);
     }
 
     @Nullable
@@ -136,15 +144,21 @@ public class SvVisualiser implements AutoCloseable {
                         .debug() ? ".debug" : "");
 
         final List<Segment> clusterSegments = config.segments().stream().filter(x -> x.clusterId() == clusterId).collect(toList());
-        return runFiltered(sample, clusterLinks, clusterSegments);
+        final List<Exon> clusterExons = config.exons().stream().filter(x -> x.clusterId() == clusterId).collect(toList());
+        return runFiltered(sample, clusterLinks, clusterSegments, clusterExons);
     }
 
-    private Object runFiltered(@NotNull final String sample, @NotNull final List<Link> links, @NotNull final List<Segment> filteredSegments)
-            throws IOException, InterruptedException {
+    private Object runFiltered(@NotNull final String sample, @NotNull final List<Link> links, @NotNull final List<Segment> filteredSegments,
+            @NotNull final List<Exon> exons) throws IOException, InterruptedException {
 
-        final List<Segment> segments = Segments.extendTerminals(1000, filteredSegments, links);
-        final List<GenomeRegion> span = Span.span(segments, links);
-        final List<CopyNumberAlteration> alterations = CopyNumberAlterations.copyNumbers(100, config.copyNumberAlterations(), span);
+        final List<GenomePosition> positionsToCover = Lists.newArrayList();
+        positionsToCover.addAll(Links.allPositions(links));
+        positionsToCover.addAll(allPositions(exons));
+
+        final List<Segment> segments = Segments.ensureCoverage(1000, filteredSegments, links, exons);
+        positionsToCover.addAll(allPositions(segments));
+
+        final List<CopyNumberAlteration> alterations = CopyNumberAlterations.copyNumbers(100, config.copyNumberAlterations(), Span.span(positionsToCover));
 
         final ColorPicker color = new ColorPicker(links);
 
@@ -155,7 +169,7 @@ public class SvVisualiser implements AutoCloseable {
 
         final CircosConfigWriter confWrite = new CircosConfigWriter(sample, config.outputConfPath());
         confWrite.writeConfig(chromosomeCount, maxTracks, maxCopyNumber, maxMinorAllelePloidy);
-        new CircosDataWriter(config.debug(), color, sample, config.outputConfPath(), maxTracks).write(segments, links, alterations);
+        new CircosDataWriter(config.debug(), color, sample, config.outputConfPath(), maxTracks).write(segments, links, alterations, exons);
 
         final String outputPlotName = sample + ".png";
         return new CircosExecution(config.circosBin()).generateCircos(confWrite.configPath(),

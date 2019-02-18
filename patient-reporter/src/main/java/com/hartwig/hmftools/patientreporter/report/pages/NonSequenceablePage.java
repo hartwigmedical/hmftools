@@ -17,9 +17,9 @@ import com.hartwig.hmftools.patientreporter.report.components.MainPageTopSection
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import net.sf.dynamicreports.report.builder.component.ComponentBuilder;
+import net.sf.dynamicreports.report.builder.component.TextFieldBuilder;
 
 @Value.Immutable
 @Value.Style(passAnnotations = NotNull.class,
@@ -79,9 +79,9 @@ public abstract class NonSequenceablePage {
                 message = "This sample could not be processed to completion successfully.";
                 break;
             }
-            case SHALLOW_SEQ: {
+            case SHALLOW_SEQ_LOW_PURITY: {
                 title = "Notification of inadequate tumor sample";
-                subTitle = "Not enough tumor DNA detected by molecular T % estimate." ;
+                subTitle = "Not enough tumor DNA detected by molecular T % estimate.";
                 message = "For sequencing we require a minimum of 30% tumor cells.";
                 break;
             }
@@ -92,41 +92,96 @@ public abstract class NonSequenceablePage {
             }
         }
 
+        return sampleReport().isCoreSample() ? CORELayout(title, subTitle, message) : CPCTDRUPLayout(title, subTitle, message);
+    }
+
+    @NotNull
+    private ComponentBuilder<?, ?> CORELayout(@NotNull String title, @NotNull String subTitle, @NotNull String message) {
+        String contactDetails = sampleReport().contactNames() + " (" + sampleReport().contactEmails() + ")";
         return cmp.verticalList(cmp.text(title).setStyle(tableHeaderStyle().setFontSize(12)).setHeight(20),
                 cmp.text(subTitle).setStyle(dataTableStyle().setFontSize(12)).setHeight(20),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
                 cmp.text(message).setStyle(fontStyle()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
-                cmp.text("The received biopsies for the tumor sample for this patient were inadequate to obtain a reliable sequencing "
-                        + "result. Therefore whole genome sequencing cannot be performed, "
-                        + "unless additional fresh tumor material can be provided for a new assessment.").setStyle(fontStyle()),
+                notSequencedText(),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
-                cmp.text(sampleReport().label().contains("CORE")
-                        ? "When possible, please resubmit using the same DVO."
-                        : "When possible, please resubmit using the same " + study().studyName() + "-number. "
-                                + "In case additional tumor material cannot be provided, please be notified that the patient will not be "
-                                + "evaluable for the " + study().studyCode() + " study.").setStyle(fontStyle()),
-                cmp.verticalGap(SECTION_VERTICAL_GAP),
-                cmp.text(sampleReport().label().equalsIgnoreCase("core")
-                        ? "The tumor percentage estimated by molecular tumor percentage is: " + sampleReport().purityOrPathologyTumorPercentage()
-                        : "The tumor percentage estimated by Pathology UMC Utrecht is: " + sampleReport().purityOrPathologyTumorPercentage())
+                cmp.text("When possible, please resubmit using the same DVO with project name " + sampleReport().projectName() + ".")
                         .setStyle(fontStyle()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
-                cmp.text("The biopsies evaluated for this sample have arrived on " + formattedDate(sampleReport().tumorArrivalDate())
-                        + " at " + Commons.HARTWIG_ADDRESS).setStyle(fontStyle()),
+                shallowSeqText(),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
-                cmp.text(sampleReport().label().equalsIgnoreCase("core")
-                        ? "This report is generated and verified by: " + user() + " and is addressed at " + sampleReport().recipient()
-                        : "This report is generated and verified by: " + user() + " and is addressed at " + sampleReport().recipient())
+                sampleArrivalDateText(),
+                cmp.verticalGap(SECTION_VERTICAL_GAP),
+                recipientText(),
+                cmp.verticalGap(SECTION_VERTICAL_GAP),
+                cmp.text("The contact details are : " + contactDetails).setStyle(fontStyle()),
+                cmp.verticalGap(SECTION_VERTICAL_GAP),
+                accreditationText(),
+                cmp.verticalGap(SECTION_VERTICAL_GAP),
+                questionsText());
+    }
+
+    @NotNull
+    private ComponentBuilder<?, ?> CPCTDRUPLayout(@NotNull String title, @NotNull String subTitle, @NotNull String message) {
+        return cmp.verticalList(cmp.text(title).setStyle(tableHeaderStyle().setFontSize(12)).setHeight(20),
+                cmp.text(subTitle).setStyle(dataTableStyle().setFontSize(12)).setHeight(20),
+                cmp.verticalGap(SECTION_VERTICAL_GAP),
+                cmp.text(message).setStyle(fontStyle()),
+                cmp.verticalGap(SECTION_VERTICAL_GAP),
+                notSequencedText(),
+                cmp.verticalGap(SECTION_VERTICAL_GAP),
+                cmp.text("When possible, please resubmit using the same " + study().studyName() + "-number. "
+                        + "In case additional tumor material cannot be provided, please be notified that the patient will not be "
+                        + "evaluable for the " + study().studyCode() + " study.").setStyle(fontStyle()),
+                cmp.verticalGap(SECTION_VERTICAL_GAP),
+                cmp.text("The tumor percentage estimated by Pathology UMC Utrecht is: " + sampleReport().pathologyTumorPercentage())
                         .setStyle(fontStyle()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
-                cmp.text(sampleReport().label().equalsIgnoreCase("core") ? "The project name are : " + sampleReport().projectNameDVO()
-                        + ". The client names are: " + sampleReport().contactName() + ". The client emails are: "
-                        + sampleReport().contactEmail() + "." : "").setStyle(fontStyle()),
+                shallowSeqText(),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
-                cmp.text("The results on this report are based on tests that are performed under ISO/ICE-17025:2005 accreditation.")
-                        .setStyle(fontStyle()),
+                sampleArrivalDateText(),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
-                cmp.text("For questions, please contact us via info@hartwigmedicalfoundation.nl").setStyle(fontStyle()));
+                recipientText(),
+                cmp.verticalGap(SECTION_VERTICAL_GAP),
+                accreditationText(),
+                cmp.verticalGap(SECTION_VERTICAL_GAP),
+                questionsText());
+    }
+
+    @NotNull
+    private static TextFieldBuilder<String> questionsText() {
+        return cmp.text("For questions, please contact us via info@hartwigmedicalfoundation.nl").setStyle(fontStyle());
+    }
+
+    @NotNull
+    private TextFieldBuilder<String> shallowSeqText() {
+        return cmp.text("The tumor percentage estimated by molecular tumor percentage is: " + sampleReport().purityShallowSeq())
+                .setStyle(fontStyle());
+    }
+
+    @NotNull
+    private TextFieldBuilder<String> sampleArrivalDateText() {
+        return cmp.text(
+                "The biopsies evaluated for this sample have arrived on " + formattedDate(sampleReport().tumorArrivalDate()) + " at "
+                        + Commons.HARTWIG_ADDRESS).setStyle(fontStyle());
+    }
+
+    @NotNull
+    private static TextFieldBuilder<String> notSequencedText() {
+        return cmp.text("The received biopsies for the tumor sample for this patient were inadequate to obtain a reliable sequencing "
+                + "result. Therefore whole genome sequencing cannot be performed, "
+                + "unless additional fresh tumor material can be provided for a new assessment.").setStyle(fontStyle());
+    }
+
+    @NotNull
+    private TextFieldBuilder<String> recipientText() {
+        return cmp.text("This report is generated and verified by: " + user() + " and is addressed at " + sampleReport().recipient())
+                .setStyle(fontStyle());
+    }
+
+    @NotNull
+    private TextFieldBuilder<String> accreditationText() {
+        return cmp.text("The results on this report are based on tests that are performed under ISO/ICE-17025:2005 accreditation.")
+                .setStyle(fontStyle());
     }
 }

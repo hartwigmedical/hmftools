@@ -26,7 +26,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-
 public final class LimsFactory {
 
     private static final Logger LOGGER = LogManager.getLogger(LimsFactory.class);
@@ -34,9 +33,9 @@ public final class LimsFactory {
     private static final String LIMS_JSON_FILE = "lims.json";
     private static final String PRE_LIMS_ARRIVAL_DATES_FILE = "pre_lims_arrival_dates.csv";
     private static final String SAMPLES_WITHOUT_SAMPLING_DATE_FILE = "samples_without_sampling_date.csv";
-    private static final String LIMS_SHALLOW_SEQ = "shallowSeqPurity.csv";
-    private static final String FIELD_SEPARATOR = ",";
+    private static final String LIMS_SHALLOW_SEQ = "shallow_seq_purity.csv";
 
+    private static final String FIELD_SEPARATOR = ",";
 
     private LimsFactory() {
     }
@@ -68,19 +67,17 @@ public final class LimsFactory {
         for (final String line : lines) {
             final String[] parts = line.split(FIELD_SEPARATOR, 2);
             if (parts.length == 2) {
-                shallowSeqPerSample.put(parts[0],
-                        ImmutableLimsShallowSeqData.of(parts[0], parts[1]));
+                shallowSeqPerSample.put(parts[0], ImmutableLimsShallowSeqData.of(parts[0], parts[1]));
             } else if (parts.length > 0) {
                 LOGGER.warn("Could not properly parse line in shallow seq csv: " + line);
             }
         }
-            return shallowSeqPerSample;
+        return shallowSeqPerSample;
     }
 
     @NotNull
     @VisibleForTesting
-    static Map<String, LimsJsonSubmissionData> readLimsJsonSubmissions(@NotNull final String limsJsonPath)
-            throws FileNotFoundException {
+    static Map<String, LimsJsonSubmissionData> readLimsJsonSubmissions(@NotNull final String limsJsonPath) throws FileNotFoundException {
         final Gson gson = LimsGsonAdapter.buildSubmissionGson();
         final JsonObject jsonObject = new JsonParser().parse(new FileReader(limsJsonPath)).getAsJsonObject();
         final Set<Map.Entry<String, JsonElement>> jsonSubmissions = jsonObject.getAsJsonObject("submissions").entrySet();
@@ -89,6 +86,7 @@ public final class LimsFactory {
         jsonSubmissions.forEach(jsonSubmission -> {
             final JsonObject jsonSampleObject = jsonSubmission.getValue().getAsJsonObject();
             final String projectType = jsonSampleObject.get("project_type").getAsString();
+            // We only need submission data for CORE projects for now
             if (projectType.contains("CORE")) {
                 try {
                     final LimsJsonSubmissionData limsJsonSubmissionData =
@@ -118,7 +116,7 @@ public final class LimsFactory {
             final String label = jsonSampleObject.get("label").getAsString();
 
             // Filter on somatic to get rid of RNA samples, see also DEV-252
-            // We are not interested in research labeled samples.
+            // We are not interested in research-labeled samples.
             if (analysisType != null && analysisType.toLowerCase().contains("somatic") && !label.equalsIgnoreCase("research")) {
                 try {
                     final LimsJsonSampleData limsJsonSampleData = gson.fromJson(jsonSample.getValue(), LimsJsonSampleData.class);

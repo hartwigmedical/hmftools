@@ -38,7 +38,7 @@ public class PatientReporterApplication {
     public static final String VERSION = PatientReporterApplication.class.getPackage().getImplementationVersion();
 
     // Uncomment this line when generating an example report using PDFWriterTest
-    //        public static final String VERSION = "5.7";
+    //        public static final String VERSION = "5.8";
 
     private static final String TUMOR_LOCATION_CSV = "tumor_location_csv";
     private static final String LIMS_DIRECTORY = "lims";
@@ -247,7 +247,7 @@ public class PatientReporterApplication {
         options.addOption(LOG_DEBUG, false, "If provided, set the log level to debug rather than default.");
         options.addOption(FASTA_FILE_LOCATION, true, "Path towards the FASTA file containing the ref genome.");
         options.addOption(HIGH_CONFIDENCE_BED, true, "Path towards the high confidence BED file.");
-        options.addOption(CENTER_CSV, true, "Path towards a CSV containing center (hospital) data.");
+        options.addOption(CENTER_CSV, true, "Path towards a CSV containing center (centerPerHospital) data.");
         options.addOption(SIGNATURE, true, "Path towards a image file containing the signature to be appended at the end of the report.");
         options.addOption(RVA_LOGO, true, "Path towards a image file containing the logo.");
         options.addOption(COMMENTS, true, "Additional comments to be added to the report, if any.");

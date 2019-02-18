@@ -14,7 +14,9 @@ import com.hartwig.hmftools.common.position.GenomePositions;
 import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.common.region.GenomeRegionFactory;
 import com.hartwig.hmftools.svvisualise.data.CopyNumberAlteration;
+import com.hartwig.hmftools.svvisualise.data.Exon;
 import com.hartwig.hmftools.svvisualise.data.ImmutableCopyNumberAlteration;
+import com.hartwig.hmftools.svvisualise.data.ImmutableExon;
 import com.hartwig.hmftools.svvisualise.data.ImmutableLink;
 import com.hartwig.hmftools.svvisualise.data.ImmutableSegment;
 import com.hartwig.hmftools.svvisualise.data.Link;
@@ -60,8 +62,50 @@ class ScalePosition {
     }
 
     @NotNull
-    public List<Segment> scaleTracks(@NotNull final List<Segment> segments) {
+    public List<Segment> scaleSegments(@NotNull final List<Segment> segments) {
         return segments.stream().map(x -> scale(x, chromosomePositionMap.get(x.chromosome()))).collect(Collectors.toList());
+    }
+
+    @NotNull
+    public List<Exon> interpolateExons(@NotNull final List<Exon> exons) {
+        return exons.stream().map(this::interpolate).collect(Collectors.toList());
+    }
+
+    @NotNull
+    private Exon interpolate(@NotNull final Exon exon) {
+        final Map<Long, Integer> positionMap = chromosomePositionMap.get(exon.chromosome());
+        assert (positionMap != null && !positionMap.isEmpty());
+
+        return ImmutableExon.builder()
+                .from(exon)
+                .start(interpolate(exon.start(), positionMap))
+                .end(interpolate(exon.end(), positionMap))
+                .build();
+    }
+
+    static int interpolate(long value, Map<Long, Integer> positionMap) {
+
+        final Set<Long> keySet = positionMap.keySet();
+
+        if (positionMap.containsKey(value)) {
+            return positionMap.get(value);
+        }
+
+        long minValue = keySet.stream().mapToLong(x -> x).min().orElse(0);
+        long maxValue = keySet.stream().mapToLong(x -> x).max().orElse(0);
+
+        long closestToStart = keySet.stream().filter(x -> x < value).mapToLong(x -> x).max().orElse(minValue);
+        long closestToEnd = keySet.stream().filter(x -> x > value).mapToLong(x -> x).min().orElse(maxValue);
+        if (closestToStart == closestToEnd) {
+            return positionMap.get(closestToStart);
+        }
+
+        double longDistanceProportion = Math.abs(value - closestToStart) / ((double) Math.abs(closestToEnd - closestToStart));
+
+        int clostestIntToStart = positionMap.get(closestToStart);
+        int clostestIntToEnd = positionMap.get(closestToEnd);
+
+        return clostestIntToStart + (int) Math.floor(longDistanceProportion * Math.abs(clostestIntToEnd - clostestIntToStart));
     }
 
     public List<GenomeRegion> scaleRegions(@NotNull final List<GenomeRegion> regions) {

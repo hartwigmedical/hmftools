@@ -14,10 +14,18 @@ import org.jetbrains.annotations.NotNull;
 
 public class CircosConfigWriter {
 
-    private static final double RADIUS_PIXELS = (0.9 * 1500 - 50);
+    static final double PIXELS = 1500;
+
+    private static final double RADIUS_PIXELS = (0.9 * PIXELS - 50);
+
+    static final double EXON_INNER_RADIUS = 0.9;
+    static final double EXON_OUTER_RADIUS = 0.975;
+
+    private static final double GENE_INNER_RADIUS = 0.93;
+    private static final double GENE_OUTER_RADIUS = 0.945;
 
     private static final double SEGMENT_INNER_RADIUS = 0.5;
-    private static final double SEGMENT_OUTER_RADIUS = 0.975;
+    private static final double SEGMENT_OUTER_RADIUS = 0.875;
 
     private static final double MAP_INNER_RADIUS = 0.175;
     private static final double MAP_OUTER_RADIUS = 0.275;
@@ -62,6 +70,12 @@ public class CircosConfigWriter {
 
                         .replaceAll("SUBSTITUTE_HISTOGRAM", histogramPlots(maxTracks))
                         .replaceAll("SUBSTITUTE_TERMINAL", terminalTexts(maxTracks))
+
+                        .replaceAll("SUBSTITUTE_EXON_INNER_RADIUS", String.valueOf(EXON_INNER_RADIUS))
+                        .replaceAll("SUBSTITUTE_EXON_OUTER_RADIUS", String.valueOf(EXON_OUTER_RADIUS))
+                        .replaceAll("SUBSTITUTE_GENE_INNER_RADIUS", String.valueOf(GENE_INNER_RADIUS))
+                        .replaceAll("SUBSTITUTE_GENE_OUTER_RADIUS", String.valueOf(GENE_OUTER_RADIUS))
+
 
                         .replaceAll("SUBSTITUTE_SV_INNER_RADIUS", String.valueOf(SEGMENT_INNER_RADIUS))
                         .replaceAll("SUBSTITUTE_SV_OUTER_RADIUS", String.valueOf(SEGMENT_OUTER_RADIUS))

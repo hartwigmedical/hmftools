@@ -5,6 +5,7 @@ import static com.google.common.base.Strings.repeat;
 import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.variant.AllelicDepth;
 
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -20,7 +21,7 @@ public final class PatientReportFormat {
 
     @NotNull
     public static String ploidyToCopiesString(@Nullable Double ploidy) {
-        return ploidy != null ? String.format("%.1f", ploidy) : "-";
+        return ploidy != null ? String.format("%.1f", ploidy) : Strings.EMPTY;
     }
 
     @NotNull

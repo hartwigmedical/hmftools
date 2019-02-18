@@ -5,6 +5,8 @@ import static org.junit.Assert.assertEquals;
 import java.util.Map;
 import java.util.Random;
 
+import com.google.common.collect.Maps;
+
 import org.junit.Test;
 
 public class ScalePositionTest {
@@ -41,6 +43,30 @@ public class ScalePositionTest {
         assertEquals(SCALE_10, ScalePosition.logDistance(10));
         assertEquals(SCALE_100, ScalePosition.logDistance(100));
         assertEquals(SCALE_1000, ScalePosition.logDistance(1000));
+    }
+
+    @Test
+    public void testInterpolate() {
+        final Map<Long, Integer> map = Maps.newHashMap();
+        map.put(1000L, 10);
+
+        assertEquals(10, ScalePosition.interpolate(900L, map));
+        assertEquals(10, ScalePosition.interpolate(1000L, map));
+        assertEquals(10, ScalePosition.interpolate(1100L, map));
+
+        map.put(2000L, 20);
+        assertEquals(10, ScalePosition.interpolate(900L, map));
+        assertEquals(10, ScalePosition.interpolate(1000L, map));
+        assertEquals(11, ScalePosition.interpolate(1100L, map));
+        assertEquals(15, ScalePosition.interpolate(1500L, map));
+        assertEquals(20, ScalePosition.interpolate(2000L, map));
+        assertEquals(20, ScalePosition.interpolate(2100L, map));
+
+        map.put(3000L, 40);
+        assertEquals(20, ScalePosition.interpolate(2000L, map));
+        assertEquals(22, ScalePosition.interpolate(2100L, map));
+        assertEquals(30, ScalePosition.interpolate(2500L, map));
+        assertEquals(40, ScalePosition.interpolate(3000L, map));
     }
 
 }

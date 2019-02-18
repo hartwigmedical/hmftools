@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.StringJoiner;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -18,11 +19,12 @@ import com.hartwig.hmftools.common.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.position.GenomePosition;
 import com.hartwig.hmftools.common.position.GenomePositions;
 import com.hartwig.hmftools.common.region.GenomeRegion;
+import com.hartwig.hmftools.common.region.GenomeRegionFactory;
 import com.hartwig.hmftools.svvisualise.data.CopyNumberAlteration;
+import com.hartwig.hmftools.svvisualise.data.Exon;
 import com.hartwig.hmftools.svvisualise.data.Link;
 import com.hartwig.hmftools.svvisualise.data.Links;
 import com.hartwig.hmftools.svvisualise.data.Segment;
-import com.hartwig.hmftools.svvisualise.data.Segments;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -45,7 +47,7 @@ public class CircosDataWriter {
     }
 
     public void write(@NotNull final List<Segment> unadjustedSegments, @NotNull final List<Link> unadjustedLinks,
-            @NotNull final List<CopyNumberAlteration> unadjustedAlterations) throws IOException {
+            @NotNull final List<CopyNumberAlteration> unadjustedAlterations, @NotNull final List<Exon> unadjustedExons) throws IOException {
 
         final List<GenomeRegion> unadjustedFragileSites =
                 Highlights.limitHighlightsToSegments(Highlights.fragileSites(), unadjustedSegments);
@@ -53,22 +55,33 @@ public class CircosDataWriter {
         final List<GenomeRegion> unadjustedLineElements =
                 Highlights.limitHighlightsToSegments(Highlights.lineElements(), unadjustedSegments);
 
+        // Note we do not add exons here because we want them interpolated.
         final List<GenomePosition> unadjustedPositions = Lists.newArrayList();
         unadjustedPositions.addAll(Links.allPositions(unadjustedLinks));
-        unadjustedPositions.addAll(Segments.allPositions(unadjustedSegments));
-        unadjustedPositions.addAll(Segments.allPositions(unadjustedAlterations));
-        unadjustedPositions.addAll(Segments.allPositions(unadjustedFragileSites));
-        unadjustedPositions.addAll(Segments.allPositions(unadjustedLineElements));
+        unadjustedPositions.addAll(Span.allPositions(unadjustedSegments));
+        unadjustedPositions.addAll(Span.allPositions(unadjustedAlterations));
+        unadjustedPositions.addAll(Span.allPositions(unadjustedFragileSites));
+        unadjustedPositions.addAll(Span.allPositions(unadjustedLineElements));
 
         final ScalePosition scalePosition = new ScalePosition(unadjustedPositions);
         final List<GenomePosition> scaledPositions = scalePosition.scaled();
         final Map<String, Integer> contigLengths = contigLengths(scaledPositions);
 
-        final List<Segment> segments = scalePosition.scaleTracks(unadjustedSegments);
+        final List<Segment> segments = scalePosition.scaleSegments(unadjustedSegments);
         final List<Link> links = scalePosition.scaleLinks(unadjustedLinks);
         final List<CopyNumberAlteration> alterations = scalePosition.scaleAlterations(unadjustedAlterations);
         final List<GenomeRegion> fragileSites = scalePosition.scaleRegions(unadjustedFragileSites);
         final List<GenomeRegion> lineElements = scalePosition.scaleRegions(unadjustedLineElements);
+        final List<Exon> exons = scalePosition.interpolateExons(unadjustedExons);
+
+        final String exonPath = filePrefix + ".exon.circos";
+        Files.write(new File(exonPath).toPath(), exons(exons));
+
+        final String genePath = filePrefix + ".gene.circos";
+        Files.write(new File(genePath).toPath(), genes(exons));
+
+        final String geneNamePath = filePrefix + ".gene.name.circos";
+        Files.write(new File(geneNamePath).toPath(), geneName(exons));
 
         final String textPath = filePrefix + ".text.circos";
         Files.write(new File(textPath).toPath(), createPositionText(debug, unadjustedLinks, links, segments));
@@ -110,6 +123,93 @@ public class CircosDataWriter {
             Files.write(new File(distances).toPath(), Collections.emptySet());
         }
 
+    }
+
+    @NotNull
+    private List<String> genes(@NotNull final List<Exon> exons) {
+        final List<String> result = Lists.newArrayList();
+        final Set<String> genes = exons.stream().map(Exon::gene).collect(Collectors.toSet());
+        for (final String gene : genes) {
+            final List<Exon> geneExons = exons.stream().filter(x -> x.gene().equals(gene)).collect(toList());
+            long min = geneExons.stream().mapToLong(GenomeRegion::start).min().orElse(0);
+            long max = geneExons.stream().mapToLong(GenomeRegion::end).max().orElse(0);
+
+            final String exonString = new StringJoiner(DELIMITER).add(circosContig(geneExons.get(0).chromosome()))
+                    .add(String.valueOf(min))
+                    .add(String.valueOf(max))
+                    .add(String.valueOf(1))
+                    .toString();
+            result.add(exonString);
+
+        }
+
+        return result;
+    }
+
+    @NotNull
+    private List<String> geneName(@NotNull final List<Exon> exons) {
+        final List<String> result = Lists.newArrayList();
+        final Set<String> genes = exons.stream().map(Exon::gene).collect(Collectors.toSet());
+        for (final String gene : genes) {
+            final List<Exon> geneExons = exons.stream().filter(x -> x.gene().equals(gene)).collect(toList());
+            long min = geneExons.stream().mapToLong(GenomeRegion::start).min().orElse(0);
+
+            final String geneName = geneExons.get(0).gene();
+            final double labelSize = geneNameLabelSize(geneName);
+
+            final String exonString = new StringJoiner(DELIMITER).add(circosContig(geneExons.get(0).chromosome()))
+                    .add(String.valueOf(min))
+                    .add(String.valueOf(min))
+                    .add(geneName)
+                    .add("label_size=" +labelSize + "p,rpadding=0.1r")
+                    .toString();
+            result.add(exonString);
+        }
+
+        return result;
+    }
+
+    private static double geneNameLabelSize(@NotNull final String gene) {
+        double availablePixels = CircosConfigWriter.PIXELS * (CircosConfigWriter.EXON_OUTER_RADIUS - CircosConfigWriter.EXON_INNER_RADIUS);
+        return Math.min(18, Math.floor(availablePixels / gene.length()));
+    }
+
+    @NotNull
+    private List<String> exons(@NotNull final List<Exon> exons) {
+        final List<String> result = Lists.newArrayList();
+        final Set<String> chromosome = exons.stream().map(GenomeRegion::chromosome).collect(Collectors.toSet());
+        for (String contig : chromosome) {
+
+            final List<GenomeRegion> contigRegions = exons.stream()
+                    .filter(x -> x.chromosome().equals(contig))
+                    .map(x -> GenomeRegionFactory.create(x.chromosome(), x.start(), x.end()))
+                    .sorted()
+                    .distinct()
+                    .collect(Collectors.toList());
+
+            for (int i = 0; i < contigRegions.size(); i++) {
+                final GenomeRegion region = contigRegions.get(i);
+                final String exonString = new StringJoiner(DELIMITER).add(circosContig(region.chromosome()))
+                        .add(String.valueOf(region.start()))
+                        .add(String.valueOf(region.end()))
+                        .add(String.valueOf(1))
+                        .toString();
+                result.add(exonString);
+
+                if (i < contigRegions.size() - 1) {
+                    final GenomeRegion next = contigRegions.get(i + 1);
+
+                    final String betweenString = new StringJoiner(DELIMITER).add(circosContig(region.chromosome()))
+                            .add(String.valueOf(region.end()))
+                            .add(String.valueOf(next.start()))
+                            .add(String.valueOf(0))
+                            .toString();
+                    //                    result.add(betweenString);
+                }
+            }
+        }
+
+        return result;
     }
 
     @NotNull
@@ -318,7 +418,8 @@ public class CircosDataWriter {
                     final String start = new StringJoiner(DELIMITER).add(circosContig(link.startChromosome()))
                             .add(String.valueOf(link.startPosition()))
                             .add(String.valueOf(link.startPosition()))
-                            .add("r1=" + rTrack1 + "p," + colorPicker.connectorColor(link.clusterId(), link.chainId()) + "," + thickness(link.traverseCount()))
+                            .add("r1=" + rTrack1 + "p," + colorPicker.connectorColor(link.clusterId(), link.chainId()) + "," + thickness(
+                                    link.traverseCount()))
                             .toString();
                     result.add(start);
                 }
@@ -327,7 +428,8 @@ public class CircosDataWriter {
                     final String end = new StringJoiner(DELIMITER).add(circosContig(link.endChromosome()))
                             .add(String.valueOf(link.endPosition()))
                             .add(String.valueOf(link.endPosition()))
-                            .add("r1=" + rTrack1 + "p," + colorPicker.connectorColor(link.clusterId(), link.chainId()) + "," + thickness(link.traverseCount()))
+                            .add("r1=" + rTrack1 + "p," + colorPicker.connectorColor(link.clusterId(), link.chainId()) + "," + thickness(
+                                    link.traverseCount()))
                             .toString();
                     result.add(end);
                 }
@@ -479,7 +581,7 @@ public class CircosDataWriter {
 
     @NotNull
     private static String thickness(long usage) {
-        return "thickness=" + Math.max(1, (4 + (usage - 1) * 4));
+        return "thickness=" + Math.max(1, Math.min(10, usage) * 4);
     }
 
     @NotNull

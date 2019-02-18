@@ -10,7 +10,6 @@ import static net.sf.dynamicreports.report.builder.DynamicReports.cmp;
 import com.hartwig.hmftools.patientreporter.SampleReport;
 
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import net.sf.dynamicreports.report.builder.component.ComponentBuilder;
 import net.sf.dynamicreports.report.constant.HorizontalTextAlignment;
@@ -23,18 +22,12 @@ public final class MainPageTopSection {
 
     @NotNull
     public static ComponentBuilder<?, ?> build(@NotNull String title, @NotNull SampleReport report) {
-        return build(title,
-                report.sampleId(),
-                report.primaryTumorLocationString(),
-                report.cancerSubTypeString(),
-                report.projectNameDVO(),
-                report.label(),
-                report.patientNumber());
+        return build(report.buildReportTitle(title), report.primaryTumorLocationString(), report.cancerSubTypeString());
     }
 
     @NotNull
-    private static ComponentBuilder<?, ?> build(@NotNull String title, @NotNull String sample, @NotNull String primaryTumorLocation,
-            @NotNull String cancerSubType, @Nullable String DVO, @NotNull String label, @Nullable String patientNumber) {
+    private static ComponentBuilder<?, ?> build(@NotNull String title, @NotNull String primaryTumorLocation,
+            @NotNull String cancerSubType) {
         final ComponentBuilder<?, ?> mainDiagnosisInfo =
                 cmp.horizontalList(cmp.verticalList(cmp.text("Report Date").setStyle(tableHeaderStyle().setPadding(2)),
                         cmp.currentDate().setPattern(DATE_TIME_FORMAT).setStyle(dataTableStyle().setPadding(2))),
@@ -44,16 +37,9 @@ public final class MainPageTopSection {
                                 cmp.text(cancerSubType).setStyle(dataTableStyle().setPadding(2))));
 
         return cmp.verticalList(cmp.horizontalList(cmp.image(REPORT_LOGO_PATH).setWidth(42).setHeight(65),
-                cmp.text(titlePage(title, sample, DVO, label, patientNumber))
+                cmp.text(title)
                         .setStyle(fontStyle().bold().setFontSize(14).setVerticalTextAlignment(VerticalTextAlignment.MIDDLE))
                         .setHorizontalTextAlignment(HorizontalTextAlignment.CENTER),
                 cmp.horizontalGap(40)), cmp.verticalGap(3), mainDiagnosisInfo);
-    }
-
-    @NotNull
-    private static String titlePage(@NotNull String title, @NotNull String sample, @Nullable String DVO, @NotNull String label,
-            @Nullable String patientNumber) {
-        return label.contains("CORE") ? title + " - " + patientNumber + " (" + DVO + ")" : title + " - " + sample;
-
     }
 }

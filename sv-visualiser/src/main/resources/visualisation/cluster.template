@@ -41,6 +41,22 @@ show_tick_labels    = no
 		z = 20
 	</highlight>
 
+	<highlight>
+		file       = SUBSTITUTE_SAMPLE.exon.circos
+		r0         = SUBSTITUTE_EXON_INNER_RADIUSr
+		r1         = SUBSTITUTE_EXON_OUTER_RADIUSr
+		fill_color = blue
+		z = 20
+	</highlight>
+
+    <highlight>
+        file       = SUBSTITUTE_SAMPLE.gene.circos
+        r0         = SUBSTITUTE_GENE_INNER_RADIUSr
+        r1         = SUBSTITUTE_GENE_OUTER_RADIUSr
+        fill_color = blue_a2
+        z = 20
+    </highlight>
+
 </highlights>
 
 <image>
@@ -54,6 +70,28 @@ chromosomes_display_default = yes
 
 # Default is to clip the data to proximity min/max.
 <plots>
+
+	# -----------------------------------------------------------
+	# GENES Text
+	<plot>
+		type             = text
+		color            = black
+		file             = SUBSTITUTE_SAMPLE.gene.name.circos
+
+		r0 = SUBSTITUTE_EXON_INNER_RADIUSr
+		r1 = SUBSTITUTE_EXON_OUTER_RADIUSr
+
+		show_links   = no
+		label_size   = 10p
+		label_font   = mono
+		label_snuggle= yes
+
+		padding  = 0p
+		rpadding = 0p
+	</plot>
+
+
+
 
 	# -----------------------------------------------------------
 	# Backgound

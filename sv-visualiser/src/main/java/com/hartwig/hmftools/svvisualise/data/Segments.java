@@ -3,11 +3,9 @@ package com.hartwig.hmftools.svvisualise.data;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -16,10 +14,9 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.chromosome.Chromosome;
 import com.hartwig.hmftools.common.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.position.GenomePosition;
-import com.hartwig.hmftools.common.position.GenomePositions;
 import com.hartwig.hmftools.common.refgenome.RefGenome;
-import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.svvisualise.circos.SegmentTerminal;
+import com.hartwig.hmftools.svvisualise.circos.Span;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -28,22 +25,22 @@ public class Segments {
     private static final String HEADER = "SampleId";
     private static final String COMMENT = "#";
     private static final String DELIMITER = ",";
-    private static final Function<List<Segment>, List<Segment>> TRACK_INCREMENTER = Segments::incrementOnChromosome;
     private static final RefGenome REF_GENOME = RefGenome.HG19;
 
     @NotNull
-    public static List<Segment> readTracksFromFile(@NotNull final String fileName) throws IOException {
+    public static List<Segment> readTracks(@NotNull final String fileName) throws IOException {
         return incrementOnChromosome(fromString(Files.readAllLines(new File(fileName).toPath())));
     }
 
     @NotNull
-    public static List<Segment> extendTerminals(long additionalDistance, @NotNull final List<Segment> segments,
-            @NotNull final List<Link> links) {
+    public static List<Segment> ensureCoverage(long terminalDistance, @NotNull final List<Segment> segments,
+            @NotNull final List<Link> links, @NotNull final List<Exon> exons) {
         final Map<Chromosome, Long> centromeres = REF_GENOME.centromeres();
 
         final List<GenomePosition> allPositions = Lists.newArrayList();
-        allPositions.addAll(Segments.allPositions(segments));
+        allPositions.addAll(Span.allPositions(segments));
         allPositions.addAll(Links.allPositions(links));
+        allPositions.addAll(Span.allPositions(exons));
 
         final Map<String, Long> minPositionPerChromosome = minPositionPerChromosome(allPositions);
         final Map<String, Long> maxPositionPerChromosome = maxPositionPerChromosome(allPositions);
@@ -56,7 +53,7 @@ public class Segments {
                 final long minPositionOnChromosome = minPositionPerChromosome.get(segment.chromosome());
                 final long startPosition = segment.startTerminal() == SegmentTerminal.CENTROMERE && minPositionOnChromosome < centromere
                         ? centromere
-                        : minPositionOnChromosome - additionalDistance;
+                        : minPositionOnChromosome - terminalDistance;
 
                 segment = ImmutableSegment.builder().from(segment).start(startPosition).build();
             }
@@ -65,7 +62,7 @@ public class Segments {
                 final long maxPositionOnChromosome = maxPositionPerChromosome.get(segment.chromosome());
                 final long endPosition = segment.endTerminal() == SegmentTerminal.CENTROMERE && maxPositionOnChromosome > centromere
                         ? centromere
-                        : maxPositionOnChromosome + additionalDistance;
+                        : maxPositionOnChromosome + terminalDistance;
 
                 segment = ImmutableSegment.builder().from(segment).end(endPosition).build();
             }
@@ -137,8 +134,7 @@ public class Segments {
     @NotNull
     static List<Segment> incrementOnChromosome(@NotNull final List<Segment> segments, @NotNull final List<Link> links) {
 
-        final Set<Integer> simpleClusters =
-                links.stream().filter(Link::isSimpleSV).map(Link::clusterId).collect(Collectors.toSet());
+        final Set<Integer> simpleClusters = links.stream().filter(Link::isSimpleSV).map(Link::clusterId).collect(Collectors.toSet());
 
         final Map<String, Integer> trackMap = Maps.newHashMap();
         final List<Segment> result = Lists.newArrayList();
@@ -187,20 +183,4 @@ public class Segments {
     private static Map<String, Long> minPositionPerChromosome(@NotNull final List<GenomePosition> tracks) {
         return tracks.stream().collect(Collectors.toMap(GenomePosition::chromosome, GenomePosition::position, Math::min));
     }
-
-    @NotNull
-    public static List<GenomePosition> allPositions(@NotNull final List<? extends GenomeRegion> segments) {
-        final List<GenomePosition> results = Lists.newArrayList();
-
-        for (final GenomeRegion segment : segments) {
-            if (HumanChromosome.contains(segment.chromosome())) {
-                results.add(GenomePositions.create(segment.chromosome(), segment.start()));
-                results.add(GenomePositions.create(segment.chromosome(), segment.end()));
-            }
-        }
-
-        Collections.sort(results);
-        return results;
-    }
-
 }

@@ -4,6 +4,7 @@ import static com.hartwig.hmftools.patientreporter.PatientReporterTestFactory.cr
 import static com.hartwig.hmftools.patientreporter.structural.SvAnalysisDatamodelTestFactory.createTestDisruptionBuilder;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 import java.util.List;
 
@@ -38,7 +39,10 @@ public class ReportableGeneDisruptionFactoryTest {
         assertEquals(Integer.valueOf(1), disruption.geneMinCopies());
         assertEquals(Integer.valueOf(2), disruption.geneMaxCopies());
         assertEquals(3, disruption.firstAffectedExon());
-        assertEquals(1.12, disruption.ploidy(), EPSILON);
+
+        Double ploidy = disruption.ploidy();
+        assertNotNull(ploidy);
+        assertEquals(1.12, ploidy, EPSILON);
     }
 
     @Test

@@ -25,7 +25,8 @@ abstract class Disruption {
     @NotNull
     public abstract String type();
 
-    public abstract double ploidy();
+    @Nullable
+    public abstract Double ploidy();
 
     @NotNull
     public abstract String gene();

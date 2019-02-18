@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.variant.filter;
+package com.hartwig.hmftools.common.variant;
 
 import java.util.List;
 import java.util.Set;
@@ -7,16 +7,21 @@ import org.jetbrains.annotations.NotNull;
 
 import htsjdk.variant.variantcontext.VariantContext;
 
-public final class NearIndelPonFilter {
+final class NearPonFilteredIndel {
 
     private static final int DISTANCE = 10;
     private static final String SOMATIC_FLAG = "SOMATIC_PON";
     private static final String GERMLINE_FLAG = "GERMLINE_PON";
 
-    private NearIndelPonFilter() {
+    private NearPonFilteredIndel() {
     }
 
-    public static boolean isIndelNearPon(final int index, @NotNull final List<VariantContext> contexts) {
+    public static boolean isPonFilteredIndel(@NotNull final VariantContext variant) {
+        final Set<String> filters = variant.getFilters();
+        return variant.isIndel() && (filters.contains(SOMATIC_FLAG) || filters.contains(GERMLINE_FLAG));
+    }
+
+    public static boolean isNearPonFilteredIndel(final int index, @NotNull final List<VariantContext> contexts) {
         final VariantContext subject = contexts.get(index);
         if (!subject.isIndel() || subject.isFiltered()) {
             return false;
@@ -30,7 +35,7 @@ public final class NearIndelPonFilter {
                 break;
             }
 
-            if (isIndelPonFiltered(query)) {
+            if (isPonFilteredIndel(query)) {
                 return true;
             }
         }
@@ -43,7 +48,7 @@ public final class NearIndelPonFilter {
                 break;
             }
 
-            if (isIndelPonFiltered(query)) {
+            if (isPonFilteredIndel(query)) {
                 return true;
             }
         }
@@ -51,8 +56,4 @@ public final class NearIndelPonFilter {
         return false;
     }
 
-    private static boolean isIndelPonFiltered(@NotNull final VariantContext pon) {
-        final Set<String> filters = pon.getFilters();
-        return pon.isIndel() && (filters.contains(SOMATIC_FLAG) || filters.contains(GERMLINE_FLAG));
-    }
 }

@@ -21,7 +21,36 @@ public abstract class SampleReport {
     public abstract PatientTumorLocation patientTumorLocation();
 
     @NotNull
-    public abstract String purityOrPathologyTumorPercentage();
+    public abstract String purityShallowSeq();
+
+    @NotNull
+    public abstract String pathologyTumorPercentage();
+
+    @Nullable
+    public abstract LocalDate tumorArrivalDate();
+
+    @Nullable
+    public abstract LocalDate bloodArrivalDate();
+
+    @NotNull
+    public abstract String labProcedures();
+
+    @Nullable
+    public abstract String recipient();
+
+    @NotNull
+    public abstract String projectName();
+
+    @NotNull
+    public abstract String contactNames();
+
+    @NotNull
+    public abstract String contactEmails();
+
+    @Nullable
+    public abstract String patientNumber();
+
+    public abstract boolean isCoreSample();
 
     @NotNull
     @Value.Derived
@@ -37,32 +66,15 @@ public abstract class SampleReport {
         return type != null ? type.cancerSubtype() : Strings.EMPTY;
     }
 
-    @Nullable
-    public abstract LocalDate tumorArrivalDate();
-
-    @Nullable
-    public abstract LocalDate bloodArrivalDate();
-
     @NotNull
-    public abstract String labProcedures();
+    @Value.Derived
+    public String buildReportTitle(@NotNull String title) {
+        boolean isCoreSample = isCoreSample();
+        String patientNumber = patientNumber();
+        if (isCoreSample && patientNumber == null) {
+            throw new IllegalStateException("CORE sample present without patient number: " + sampleId());
+        }
 
-    @Nullable
-    public abstract String recipient();
-
-    @NotNull
-    public abstract String label();
-
-    @Nullable
-    public abstract String projectNameDVO();
-
-    @Nullable
-    public abstract String contactName();
-
-    @Nullable
-    public abstract String contactEmail();
-
-    @Nullable
-    public abstract String patientNumber();
-
-
+        return isCoreSample ? title + " - " + patientNumber + " (" + projectName() + ")" : title + " - " + sampleId();
+    }
 }

@@ -13,9 +13,10 @@ To find inframe indel sites, SAGE examines the CIGAR field of all tumor alignmen
 
 ## Accumulating Evidence
 In an alignment, evidence of the alt is accumulated only if:
-1. Quality of the mapping is sufficient [1]; 
-2. Quality of the base is sufficient [13]; and
-2. The alt matches exactly. 
+1. The unmapped, duplicated, secondary and supplementary flags are not set. 
+2. The quality of the mapping is sufficient [1]; 
+3. Quality of the base is sufficient [13]; and
+4. The alt matches exactly. 
 
 The base quality of an insert, SNV or MNV in a single alignment is calculated as the average base quality of the alt bases. The base quality of a delete is taken from the base after the delete if available, otherwise from the base prior. The minimum acceptable quality is set with min_base_quality [13].
 

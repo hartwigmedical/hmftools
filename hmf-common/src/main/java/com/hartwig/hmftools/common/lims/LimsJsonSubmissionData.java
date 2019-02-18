@@ -18,10 +18,10 @@ abstract class LimsJsonSubmissionData {
 
     @NotNull
     @SerializedName("contact_email")
-    public abstract String contactEmail();
+    public abstract String contactEmails();
 
     @NotNull
     @SerializedName("contact_name")
-    public abstract String contactName();
+    public abstract String contactNames();
 
 }

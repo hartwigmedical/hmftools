@@ -10,6 +10,8 @@ import java.util.StringJoiner;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 import com.hartwig.hmftools.svvisualise.data.CopyNumberAlteration;
 import com.hartwig.hmftools.svvisualise.data.CopyNumberAlterations;
+import com.hartwig.hmftools.svvisualise.data.Exon;
+import com.hartwig.hmftools.svvisualise.data.Exons;
 import com.hartwig.hmftools.svvisualise.data.ImmutableCopyNumberAlteration;
 import com.hartwig.hmftools.svvisualise.data.Link;
 import com.hartwig.hmftools.svvisualise.data.Links;
@@ -45,6 +47,7 @@ public interface SvVisualiserConfig {
     String DB_PASS = "db_pass";
     String DB_URL = "db_url";
     String CNA = "cna";
+    String EXON = "exon";
 
     @NotNull
     String sample();
@@ -57,6 +60,9 @@ public interface SvVisualiserConfig {
 
     @NotNull
     List<CopyNumberAlteration> copyNumberAlterations();
+
+    @NotNull
+    List<Exon> exons();
 
     @NotNull
     String outputConfPath();
@@ -94,6 +100,7 @@ public interface SvVisualiserConfig {
         options.addOption(SINGLE_CLUSTER, true, "Only generate image for single cluster");
         options.addOption(SINGLE_CHROMOSOME, true, "Only generate image for singe chromosome");
         options.addOption(CNA, true, "Location of copy number alterations (optional alternative to db)");
+        options.addOption(EXON, true, "Location of exons");
 
         return options;
     }
@@ -107,6 +114,7 @@ public interface SvVisualiserConfig {
         final String plotOutputDir = parameter(cmd, PLOT_OUT, missingJoiner);
         final String dataOutputDir = parameter(cmd, DATA_OUT, missingJoiner);
         final String circos = parameter(cmd, CIRCOS, missingJoiner);
+        final String exonPath = parameter(cmd, EXON, missingJoiner);
         final String dbUser;
         final String dbPassword;
         final String dbUrl;
@@ -126,9 +134,9 @@ public interface SvVisualiserConfig {
             throw new ParseException("Missing the following parameters: " + missing);
         }
 
-        final List<Segment> segments =
-                Segments.readTracksFromFile(trackPath).stream().filter(x -> x.sampleId().equals(sample)).collect(toList());
         final List<Link> links = Links.readLinks(linkPath).stream().filter(x -> x.sampleId().equals(sample)).collect(toList());
+        final List<Exon> exons = Exons.readExons(exonPath).stream().filter(x -> x.sampleId().equals(sample)).collect(toList());
+        final List<Segment> segments = Segments.readTracks(trackPath).stream().filter(x -> x.sampleId().equals(sample)).collect(toList());
 
         if (segments.isEmpty() && links.isEmpty()) {
             LOGGER.warn("No structural variants found for sample {}", sample);
@@ -137,7 +145,7 @@ public interface SvVisualiserConfig {
         final List<CopyNumberAlteration> cna;
         if (cmd.hasOption(CNA)) {
             LOGGER.info("Reading copy numbers from {}", cmd.getOptionValue(CNA));
-            cna = CopyNumberAlterations.read(cmd.getOptionValue(CNA)).stream().filter(x-> x.sampleId().equals(sample)).collect(toList());
+            cna = CopyNumberAlterations.read(cmd.getOptionValue(CNA)).stream().filter(x -> x.sampleId().equals(sample)).collect(toList());
         } else {
             LOGGER.info("Loading copy numbers from database");
             cna = sampleCopyNumberAlterations(sample, dbUser, dbPassword, "jdbc:" + dbUrl);
@@ -153,6 +161,7 @@ public interface SvVisualiserConfig {
                 .segments(segments)
                 .links(links)
                 .sample(sample)
+                .exons(exons)
                 .copyNumberAlterations(cna)
                 .circosBin(circos)
                 .threads(Integer.valueOf(cmd.getOptionValue(THREADS, "1")))

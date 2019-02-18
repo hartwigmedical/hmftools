@@ -56,7 +56,7 @@ public class SAMConsumer {
         return QueryInterval.optimizeIntervals(queryIntervals.toArray(new QueryInterval[queryIntervals.size()]));
     }
 
-    private boolean samRecordMeetsQualityRequirements(@NotNull SAMRecord record) {
+    private boolean samRecordMeetsQualityRequirements(@NotNull final SAMRecord record) {
         return record.getMappingQuality() >= minMappingQuality && !record.getReadUnmappedFlag() && !record.getDuplicateReadFlag() && !record
                 .isSecondaryOrSupplementary();
     }

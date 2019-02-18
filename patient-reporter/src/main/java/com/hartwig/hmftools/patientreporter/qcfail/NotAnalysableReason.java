@@ -10,7 +10,8 @@ public enum NotAnalysableReason {
     LOW_TUMOR_PERCENTAGE("low_tumor_percentage", "HMF Low Tumor Percentage Report v" + PatientReporterApplication.VERSION),
     LOW_DNA_YIELD("low_dna_yield", "HMF Low DNA Yield Report v" + PatientReporterApplication.VERSION),
     POST_ANALYSIS_FAIL("post_analysis_fail", "HMF Failed Post DNA Isolation Report v" + PatientReporterApplication.VERSION),
-    SHALLOW_SEQ("shallow_seq", "HMF Low Molecular Tumor Percentage Report v" + "" + PatientReporterApplication.VERSION),
+    SHALLOW_SEQ_LOW_PURITY("shallow_seq_low_purity",
+            "HMF Low Molecular Tumor Percentage Report v" + "" + PatientReporterApplication.VERSION),
     UNDEFINED(Strings.EMPTY, Strings.EMPTY);
 
     @NotNull

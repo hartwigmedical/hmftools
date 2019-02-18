@@ -79,8 +79,8 @@ public class LimsFactoryTest {
         final String submission = "ABCDEF123";
         final LimsJsonSubmissionData submissionData = dataPerSubmission.get(submission);
         assertEquals(submission, submissionData.submission());
-        assertEquals("name", submissionData.contactName());
-        assertEquals("email", submissionData.contactEmail());
+        assertEquals("name", submissionData.contactNames());
+        assertEquals("email", submissionData.contactEmails());
     }
 
     @Test
@@ -108,12 +108,14 @@ public class LimsFactoryTest {
 
     @Test
     public void readCorrectlyShallowSeqPurity() throws IOException {
-        Map<String, LimsShallowSeqData> shallowSeqPuritySample = LimsFactory.readLimsShallowSeq(LIMS_DIRECTORY + File.separator + "shallowSeqPurity.csv");
+        Map<String, LimsShallowSeqData> shallowSeqPuritySample =
+                LimsFactory.readLimsShallowSeq(LIMS_DIRECTORY + File.separator + "shallow_seq_purity.csv");
+        assertEquals(3, shallowSeqPuritySample.size());
+
         final String sample = "CPCT02990001T";
         final LimsShallowSeqData limsShallowSeqData = shallowSeqPuritySample.get(sample);
 
-        assertEquals(2, shallowSeqPuritySample.size());
-        assertEquals("CPCT02990001T", limsShallowSeqData.sampleId());
+        assertEquals(sample, limsShallowSeqData.sampleId());
         assertEquals("0.19", limsShallowSeqData.purityShallowSeq());
     }
 }

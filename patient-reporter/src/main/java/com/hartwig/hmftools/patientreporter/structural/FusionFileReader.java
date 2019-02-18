@@ -11,6 +11,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 final class FusionFileReader {
 
@@ -51,7 +52,7 @@ final class FusionFileReader {
                 .posUp(values[9])
                 .orientUp(values[10])
                 .typeUp(values[11])
-                .ploidyUp(Double.parseDouble(values[12]))
+                .ploidyUp(toPloidy(values[12]))
                 .geneUp(values[13])
                 .chrBandUp(values[14])
                 .transcriptUp(values[15])
@@ -77,7 +78,7 @@ final class FusionFileReader {
                 .posDown(values[35])
                 .orientDown(values[36])
                 .typeDown(values[37])
-                .ploidyDown(Double.parseDouble(values[38]))
+                .ploidyDown(toPloidy(values[38]))
                 .geneDown(values[39])
                 .chrBandDown(values[40])
                 .transcriptDown(values[41])
@@ -101,5 +102,15 @@ final class FusionFileReader {
                 .proteinsKept(values.length > 59 ? values[59] : Strings.EMPTY)
                 .proteinsLost(values.length > 60 ? values[60] : Strings.EMPTY)
                 .build();
+    }
+
+    @Nullable
+    private static Double toPloidy(@NotNull String ploidyString) {
+        if (ploidyString.isEmpty()) {
+            return null;
+        }
+
+        double ploidy = Double.valueOf(ploidyString);
+        return (ploidy > 1E-4) ? ploidy : null;
     }
 }

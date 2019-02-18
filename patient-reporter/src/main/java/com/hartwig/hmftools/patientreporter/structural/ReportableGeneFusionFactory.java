@@ -5,6 +5,7 @@ import java.util.List;
 import com.google.common.collect.Lists;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 final class ReportableGeneFusionFactory {
 
@@ -43,7 +44,13 @@ final class ReportableGeneFusionFactory {
         return String.format("ERROR: %s", regionType);
     }
 
-    private static double fusionPloidy(double downstreamPloidy, double upstreamPloidy) {
+    @Nullable
+    private static Double fusionPloidy(@Nullable Double downstreamPloidy, @Nullable Double upstreamPloidy) {
+        if (downstreamPloidy == null && upstreamPloidy == null) {
+            return null;
+        }
+
+        assert downstreamPloidy != null && upstreamPloidy != null;
         assert Math.abs(upstreamPloidy - downstreamPloidy) < 1E-10;
 
         return upstreamPloidy;

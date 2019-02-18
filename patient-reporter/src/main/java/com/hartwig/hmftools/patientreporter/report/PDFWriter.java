@@ -13,6 +13,7 @@ import java.nio.file.Files;
 import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.patientreporter.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.NotAnalysedPatientReport;
+import com.hartwig.hmftools.patientreporter.SampleReport;
 import com.hartwig.hmftools.patientreporter.report.pages.ImmutableCircosPage;
 import com.hartwig.hmftools.patientreporter.report.pages.ImmutableEvidenceSummaryPage;
 import com.hartwig.hmftools.patientreporter.report.pages.ImmutableExplanationPage;
@@ -23,7 +24,6 @@ import com.hartwig.hmftools.patientreporter.report.pages.SampleDetailsPage;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import net.sf.dynamicreports.jasper.builder.JasperReportBuilder;
 import net.sf.dynamicreports.report.builder.component.ComponentBuilder;
@@ -44,14 +44,12 @@ public class PDFWriter {
 
     public void writeSequenceReport(@NotNull AnalysedPatientReport report) throws IOException, DRException {
         final JasperReportBuilder reportBuilder = generatePatientReport(report);
-        writeReport(fileName(report.sampleReport().sampleId(), report.sampleReport().projectNameDVO(), report.sampleReport().label()),
-                reportBuilder);
+        writeReport(fileName(report.sampleReport()), reportBuilder);
     }
 
     public void writeNonSequenceableReport(@NotNull NotAnalysedPatientReport report) throws IOException, DRException {
         final JasperReportBuilder reportBuilder = generateNotAnalysableReport(report);
-        writeReport(fileName(report.sampleReport().sampleId(), report.sampleReport().projectNameDVO(), report.sampleReport().label()),
-                reportBuilder);
+        writeReport(fileName(report.sampleReport()), reportBuilder);
     }
 
     private static void writeReport(@NotNull String fileName, @NotNull JasperReportBuilder report)
@@ -65,8 +63,9 @@ public class PDFWriter {
     }
 
     @NotNull
-    private String fileName(@NotNull String sample, @Nullable String DVO, @NotNull String label) {
-        return reportDirectory + File.separator + sample + "_hmf_report.pdf";
+    private String fileName(@NotNull SampleReport sampleReport) {
+        String filePrefix = sampleReport.isCoreSample() ? sampleReport.projectName() : sampleReport.sampleId();
+        return reportDirectory + File.separator + filePrefix + "_hmf_report.pdf";
     }
 
     @VisibleForTesting

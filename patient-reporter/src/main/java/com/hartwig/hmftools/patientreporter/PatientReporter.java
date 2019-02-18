@@ -14,6 +14,7 @@ import com.hartwig.hmftools.common.context.ProductionRunContextFactory;
 import com.hartwig.hmftools.common.context.RunContext;
 import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocation;
 import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocationFunctions;
+import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
@@ -97,18 +98,22 @@ abstract class PatientReporter {
         allEvidenceItems.addAll(svAnalysis.evidenceItems());
 
         boolean isCoreSample = baseReportData().limsModel().isCoreSample(tumorSample);
+        Lims lims = baseReportData().limsModel();
         final SampleReport sampleReport = ImmutableSampleReport.of(tumorSample,
                 patientTumorLocation,
-                baseReportData().limsModel().purityShallowSeq(tumorSample),
-                baseReportData().limsModel().arrivalDateForSample(tumorSample),
-                baseReportData().limsModel().arrivalDateForSample(run.refSample()),
-                baseReportData().limsModel().labProceduresForSample(tumorSample),
-                isCoreSample ? "" : baseReportData().centerModel().getAddresseeStringForSample(tumorSample),
-                baseReportData().limsModel().labelSample(tumorSample),
-                baseReportData().limsModel().projectNameDVO(tumorSample),
-                isCoreSample ? baseReportData().limsModel().contactEmail(tumorSample) : "",
-                isCoreSample ? baseReportData().limsModel().contactName(tumorSample) : "",
-                baseReportData().limsModel().patientNumber(tumorSample));
+                lims.purityShallowSeq(tumorSample),
+                lims.pathologyTumorPercentage(tumorSample),
+                lims.arrivalDate(tumorSample),
+                lims.arrivalDate(run.refSample()),
+                lims.labProcedures(tumorSample),
+                isCoreSample
+                        ? baseReportData().centerModel().addresseeStringForProject(lims.projectName(tumorSample))
+                        : baseReportData().centerModel().addresseeStringForSample(tumorSample),
+                lims.projectName(tumorSample),
+                lims.contactNames(tumorSample),
+                lims.contactEmails(tumorSample),
+                lims.patientNumber(tumorSample),
+                isCoreSample);
 
         final List<EvidenceItem> nonTrials = ReportableEvidenceItemFactory.extractNonTrials(allEvidenceItems);
 

@@ -38,17 +38,18 @@ public abstract class NotAnalysableReporter {
         final SampleReport sampleReport = ImmutableSampleReport.of(sample,
                 patientTumorLocation,
                 lims.purityShallowSeq(sample),
-                lims.arrivalDateForSample(sample),
+                lims.pathologyTumorPercentage(sample),
+                lims.arrivalDate(sample),
                 null,
-                lims.labProceduresForSample(sample),
+                lims.labProcedures(sample),
                 isCoreSample
-                        ? baseReportData().centerModel().getCoreRecipients(lims.projectNameDVO(sample))
-                        : baseReportData().centerModel().getAddresseeStringForSample(sample),
-                lims.labelSample(sample),
-                lims.projectNameDVO(sample),
-                isCoreSample ? lims.contactEmail(sample) : "",
-                isCoreSample ? lims.contactName(sample) : "",
-                lims.patientNumber(sample));
+                        ? baseReportData().centerModel().addresseeStringForProject(lims.projectName(sample))
+                        : baseReportData().centerModel().addresseeStringForSample(sample),
+                lims.projectName(sample),
+                lims.contactNames(sample),
+                lims.contactEmails(sample),
+                lims.patientNumber(sample),
+                isCoreSample);
 
         return ImmutableNotAnalysedPatientReport.of(sampleReport,
                 reason,

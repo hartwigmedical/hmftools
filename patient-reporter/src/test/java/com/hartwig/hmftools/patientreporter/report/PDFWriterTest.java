@@ -20,8 +20,10 @@ import com.hartwig.hmftools.patientreporter.NotAnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.SampleReport;
 import com.hartwig.hmftools.patientreporter.qcfail.NotAnalysableReason;
 import com.hartwig.hmftools.patientreporter.qcfail.NotAnalysableStudy;
+import com.hartwig.hmftools.patientreporter.report.util.PatientReportFormat;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.junit.Test;
 
 import net.sf.dynamicreports.jasper.builder.JasperReportBuilder;
@@ -54,13 +56,13 @@ public class PDFWriterTest {
         assertNotNull(report);
 
         if (WRITE_TO_PDF) {
-            report.toPdf(new FileOutputStream(REPORT_BASE_DIR + File.separator + "hmf_test_sequence_report.pdf"));
+            report.toPdf(new FileOutputStream(REPORT_BASE_DIR + File.separator + "hmf_full_test_sequence_report.pdf"));
         }
     }
 
     @Test
     public void canGenerateLowTumorPercentageReport() throws DRException, IOException {
-        JasperReportBuilder report = generateNotAnalysableCPCTReport(0.1, NotAnalysableReason.LOW_TUMOR_PERCENTAGE);
+        JasperReportBuilder report = generateNotAnalysableCPCTReport(0.1, null, NotAnalysableReason.LOW_TUMOR_PERCENTAGE);
         assertNotNull(report);
 
         if (WRITE_TO_PDF) {
@@ -70,7 +72,7 @@ public class PDFWriterTest {
 
     @Test
     public void canGenerateLowDNAYieldReport() throws DRException, IOException {
-        JasperReportBuilder report = generateNotAnalysableCPCTReport(0.6, NotAnalysableReason.LOW_DNA_YIELD);
+        JasperReportBuilder report = generateNotAnalysableCPCTReport(0.6, null, NotAnalysableReason.LOW_DNA_YIELD);
         assertNotNull(report);
 
         if (WRITE_TO_PDF) {
@@ -80,7 +82,7 @@ public class PDFWriterTest {
 
     @Test
     public void canGeneratePostDNAIsolationFailReport() throws DRException, IOException {
-        JasperReportBuilder report = generateNotAnalysableCPCTReport(0.6, NotAnalysableReason.POST_ANALYSIS_FAIL);
+        JasperReportBuilder report = generateNotAnalysableCPCTReport(0.6, null, NotAnalysableReason.POST_ANALYSIS_FAIL);
         assertNotNull(report);
 
         if (WRITE_TO_PDF) {
@@ -90,7 +92,7 @@ public class PDFWriterTest {
 
     @Test
     public void canGenerateLowMolecularTumorPercentage() throws DRException, IOException {
-        JasperReportBuilder report = generateNotAnalysableCPCTReport(0.15, NotAnalysableReason.SHALLOW_SEQ);
+        JasperReportBuilder report = generateNotAnalysableCPCTReport(null, 0.15, NotAnalysableReason.SHALLOW_SEQ_LOW_PURITY);
         assertNotNull(report);
 
         if (WRITE_TO_PDF) {
@@ -99,14 +101,21 @@ public class PDFWriterTest {
     }
 
     @NotNull
-    private static JasperReportBuilder generateNotAnalysableCPCTReport(double pathologyTumorEstimate, @NotNull NotAnalysableReason reason) {
+    private static JasperReportBuilder generateNotAnalysableCPCTReport(@Nullable Double pathologyTumorPercentage,
+            @Nullable Double shallowSeqPurity, @NotNull NotAnalysableReason reason) {
         SampleReport sampleReport = ImmutableSampleReport.of("CPCT02991111T",
                 ImmutablePatientTumorLocation.of("CPCT02991111", "Skin", "Melanoma"),
-                String.valueOf(pathologyTumorEstimate),
+                shallowSeqPurity != null ? PatientReportFormat.formatPercent(shallowSeqPurity) : "not determined",
+                pathologyTumorPercentage != null ? PatientReportFormat.formatPercent(pathologyTumorPercentage) : "not determined",
                 LocalDate.parse("05-Jan-2018", DATE_FORMATTER),
                 LocalDate.parse("01-Jan-2018", DATE_FORMATTER),
                 "PREP013V23-QC037V20-SEQ008V25",
-                "HMF Testing Center", "COLO", "", "", "", "");
+                "HMF Testing Center",
+                "COLO-001-002",
+                "ContactMe",
+                "contact@me.com",
+                "123456",
+                false);
 
         NotAnalysedPatientReport patientReport = ImmutableNotAnalysedPatientReport.of(sampleReport,
                 reason,

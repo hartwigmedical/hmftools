@@ -39,7 +39,6 @@ public class HotspotEnrichment implements SomaticEnrichment {
     @Override
     public ImmutableSomaticVariantImpl.Builder enrich(@NotNull final ImmutableSomaticVariantImpl.Builder builder,
             @NotNull final VariantContext context) {
-
         if (isOnHotspot(context)) {
             return builder.hotspot(Hotspot.HOTSPOT);
         }
