@@ -279,6 +279,7 @@ public class ChainingTests
     }
 
     @Test
+    @Ignore
     public void testComplexChaining2()
     {
         // based on COLO829T chromosomes 3 + 6,10,12 and 1

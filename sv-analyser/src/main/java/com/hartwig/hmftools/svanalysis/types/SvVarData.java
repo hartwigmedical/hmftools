@@ -320,9 +320,10 @@ public class SvVarData
 
     public boolean isReplicatedSv() { return mIsReplicatedSv; }
     public final SvVarData getReplicatedSv() { return mReplicatedSv; }
+    public final SvVarData getOrigSV() { return mIsReplicatedSv ? mReplicatedSv : this; }
     public int getReplicatedCount() { return mReplicatedCount; }
     public void setReplicatedCount(int count) { mReplicatedCount = count; }
-    public final String origId() { return mReplicatedSv != null ? mReplicatedSv.id() : mIdStr; }
+    public final String origId() { return getOrigSV().id(); }
     public boolean equals(final SvVarData other, boolean allowReplicated)
     {
         if(this == other)

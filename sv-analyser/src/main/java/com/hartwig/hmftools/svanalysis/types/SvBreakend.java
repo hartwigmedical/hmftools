@@ -27,7 +27,7 @@ public class SvBreakend {
     }
 
     public final SvVarData getSV() { return mSV; }
-    public final SvVarData getOrigSV() { return mSV.isReplicatedSv() ? mSV.getReplicatedSv() : mSV; }
+    public final SvVarData getOrigSV() { return mSV.getOrigSV(); }
     public final String chromosome() { return mChromosome; }
     public final String arm() { return mArm; }
     public final String getChrArm() { return mChrArm; }

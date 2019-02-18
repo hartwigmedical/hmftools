@@ -261,6 +261,12 @@ public class SvLinkedPair {
         return mFirst.equals(var, true) ? mSecond : mFirst;
     }
 
+    public final SvBreakend getOtherBreakend(final SvBreakend breakend)
+    {
+        final SvBreakend lower = getBreakend(true);
+        return breakend == lower ? getBreakend(false) : lower;
+    }
+
     public boolean hasAnySameVariant(final SvLinkedPair other)
     {
         return (mFirst.equals(other.first(), true) || mSecond.equals(other.second(), true)
