@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.svanalysis.analysis;
 
 import static java.lang.Math.abs;
-import static java.lang.Math.exp;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.Math.pow;
@@ -16,7 +15,6 @@ import static com.hartwig.hmftools.common.purple.segment.SegmentSupport.NONE;
 import static com.hartwig.hmftools.common.purple.segment.SegmentSupport.TELOMERE;
 import static com.hartwig.hmftools.common.purple.segment.SegmentSupport.UNKNOWN;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantFactory.PON_FILTER_PON;
-import static com.hartwig.hmftools.common.variant.structural.StructuralVariantFactory.mateId;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.svanalysis.analysis.ClusterAnalyser.SHORT_TI_LENGTH;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.NONE_SEGMENT_INFERRED;
@@ -25,22 +23,17 @@ import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_START;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
-import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 import com.hartwig.hmftools.common.variant.structural.ImmutableStructuralVariantData;
-import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantData;
-import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collector;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
@@ -64,7 +57,7 @@ public class CNAnalyser {
     private int mNoneSvId;
 
     private boolean mRecalcAdjustedPloidy;
-    private boolean mWriteSlimAdjustedPloidy;
+    private boolean mWriteVerbosePloidyData;
 
     BufferedWriter mFileWriter;
     BufferedWriter mRecalcPloidyFileWriter;
@@ -78,7 +71,7 @@ public class CNAnalyser {
 
     public static final String SV_PLOIDY_CALC_FILE = "sv_ploidy_file";
     private static final String CALC_ADJ_PLOIDY = "calc_adj_ploidy";
-    private static final String WRITE_SLIM_ADJ_PLOIDY = "write_slim_adj_ploidy";
+    private static final String WRITE_VERBOSE_PLOIDY_DATA = "write_ploidy_data";
 
     public static double MIN_LOH_CN = 0.5;
     public static double TOTAL_CN_LOSS = 0.5;
@@ -90,7 +83,7 @@ public class CNAnalyser {
         mFileWriter = null;
         mRecalcPloidyFileWriter = null;
         mRecalcAdjustedPloidy = false;
-        mWriteSlimAdjustedPloidy = false;
+        mWriteVerbosePloidyData = false;
         mDbAccess = dbAccess;
         mCnDataList = Lists.newArrayList();
         mSvDataList = Lists.newArrayList();
@@ -108,14 +101,14 @@ public class CNAnalyser {
     {
         options.addOption(SV_PLOIDY_CALC_FILE, true, "SV_PLOIDY_CALC_FILE");
         options.addOption(CALC_ADJ_PLOIDY, false, "TEMP: recalculate CN change and ploidy using depth info");
-        options.addOption(WRITE_SLIM_ADJ_PLOIDY, false, "Only write min for use in SVA");
+        options.addOption(WRITE_VERBOSE_PLOIDY_DATA, false, "Write all ploidy calc working data");
     }
 
     public boolean loadConfig(final CommandLine cmd, final List<String> sampleIds)
     {
         mSampleIds.addAll(sampleIds);
         mRecalcAdjustedPloidy = cmd.hasOption(CALC_ADJ_PLOIDY);
-        mWriteSlimAdjustedPloidy = cmd.hasOption(WRITE_SLIM_ADJ_PLOIDY);
+        mWriteVerbosePloidyData = cmd.hasOption(WRITE_VERBOSE_PLOIDY_DATA);
         return true;
     }
 
@@ -729,7 +722,21 @@ public class CNAnalyser {
             double segmentCopyNumber = noneCnRecord.averageTumorCopyNumber();
             double copyNumberDiff = segmentCopyNumber - prevCnRecord.averageTumorCopyNumber();
             double copyNumberChange = abs(copyNumberDiff);
-            double copyNumber = prevCnRecord.averageTumorCopyNumber();
+
+            double copyNumber = 0;
+
+            if(copyNumberDiff > 0)
+            {
+                if(i < cnRecords.size() - 1)
+                {
+                    final PurpleCopyNumber nextCnRecord = cnRecords.get(i+1);
+                    copyNumber = nextCnRecord.averageTumorCopyNumber();
+                }
+            }
+            else
+            {
+                copyNumber = prevCnRecord.averageTumorCopyNumber();
+            }
 
             // negative CN change means sequence has come in from left (a lower position) and dropped at the breakend
             byte orientation = copyNumberDiff > 0 ? (byte)-1 : 1;
@@ -803,7 +810,7 @@ public class CNAnalyser {
 
                 mRecalcPloidyFileWriter = createBufferedWriter(outputFileName, false);
 
-                if(mWriteSlimAdjustedPloidy)
+                if(!mWriteVerbosePloidyData)
                 {
                     // SV info
                     mRecalcPloidyFileWriter.write("SampleId,SvId,EstPloidy,EstUncertainty");
@@ -813,8 +820,7 @@ public class CNAnalyser {
                     mRecalcPloidyFileWriter.write("SampleId,SvId,Type,Ploidy,TumorReadCount");
                     mRecalcPloidyFileWriter.write(",ChrStart,PosStart,OrientStart,CNStart,CNChgStart,DWCountStart,PrevDWCountStart,NextDWCountStart");
                     mRecalcPloidyFileWriter.write(",ChrEnd,PosEnd,OrientEnd,CNEnd,CNChgEnd,DWCountEnd,PrevDWCountEnd,NextDWCountEnd");
-                    mRecalcPloidyFileWriter.write(",CnPrediction,CnUncertainty,PoisRcLow,PoisRcHigh,PloidyLow,PloidyHigh,PloidyUncertainty");
-                    mRecalcPloidyFileWriter.write(",EstPloidy,EstUncertainty,MinPloidy,MaxPloidy");
+                    mRecalcPloidyFileWriter.write(",PoisRcLow,PoisRcHigh,PloidyUncertainty,EstPloidy,EstUncertainty,MinPloidy,MaxPloidy");
                 }
 
                 mRecalcPloidyFileWriter.newLine();
@@ -860,7 +866,7 @@ public class CNAnalyser {
                 final double calcResults[] = calcAdjustedPloidyValues(cnStart, cnChgStart, cnEnd, cnChgEnd,
                         ploidy, tumorReadCount, startDepthData, cnEndData != null ? endDepthData : null);
 
-                if(mWriteSlimAdjustedPloidy)
+                if(!mWriteVerbosePloidyData)
                 {
                     writer.write(String.format("%s,%s,%.4f,%.4f",
                             sampleId, svData.id(),
@@ -877,13 +883,11 @@ public class CNAnalyser {
 
                     writer.write(String.format(",%s,%d,%d,%.4f,%.4f,%d,%d,%d",
                             svData.endChromosome(), svData.endPosition(), svData.endOrientation(),
-                            cnEnd, cnChgEnd, cnEndData.DepthWindowCount, endDepthData[0], endDepthData[1]));
-
-                    writer.write(String.format(",%.2f,%.2f", calcResults[APC_CN_PREDICTION], calcResults[APC_CN_UNCERTAINTY]));
+                            cnEnd, cnChgEnd, cnEndData != null ? cnEndData.DepthWindowCount : 0,
+                            endDepthData != null ? endDepthData[0] : 0, endDepthData != null ? endDepthData[1] : 0));
 
                     writer.write(String.format(",%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f",
                             calcResults[APC_RC_POIS_LOW], calcResults[APC_RC_POIS_HIGH],
-                            calcResults[APC_PLOIDY_LOW], calcResults[APC_PLOIDY_HIGH],
                             calcResults[APC_PLOIDY_UNCERTAINTY],
                             calcResults[APC_EST_PLOIDY], calcResults[APC_EST_UNCERTAINTY],
                             calcResults[APC_EST_PLOIDY] - calcResults[APC_EST_UNCERTAINTY],
@@ -899,16 +903,12 @@ public class CNAnalyser {
         }
     }
 
-    public static int APC_CN_PREDICTION = 0;
-    public static int APC_CN_UNCERTAINTY = 1;
-    public static int APC_RC_POIS_LOW = 2;
-    public static int APC_RC_POIS_HIGH = 3;
-    public static int APC_PLOIDY_HIGH = 4;
-    public static int APC_PLOIDY_LOW = 5;
-    public static int APC_PLOIDY_UNCERTAINTY = 6;
-    public static int APC_EST_PLOIDY = 7;
-    public static int APC_EST_UNCERTAINTY = 8;
-    public static int APC_RESULTS_MAX = 8;
+    public static int APC_RC_POIS_LOW = 0;
+    public static int APC_RC_POIS_HIGH = 1;
+    public static int APC_PLOIDY_UNCERTAINTY = 2;
+    public static int APC_EST_PLOIDY = 3;
+    public static int APC_EST_UNCERTAINTY = 4;
+    public static int APC_RESULTS_MAX = 5;
 
     private static double POIS_PROB_LOW = 0.01;
     private static double POIS_PROB_HIGH = 0.99;
@@ -917,52 +917,78 @@ public class CNAnalyser {
             double ploidy, int tumorReadCount, final int[] startDepthData, final int[] endDepthData)
     {
         double cnUncertaintyStart = calcCopyNumberSideUncertainty(cnStart, startDepthData);
-        double cnUncertainty = 0;
-        double cnPrediction = 0;
-
-        if(endDepthData != null)
-        {
-            double cnUncertaintyEnd = calcCopyNumberSideUncertainty(cnEnd, endDepthData);
-
-            cnPrediction = calcCopyNumberPrediction(cnChgStart, cnUncertaintyStart, cnChgEnd, cnUncertaintyEnd);
-
-            cnUncertainty = calcCopyNumberUncertainty(cnChgStart, cnUncertaintyStart, cnChgEnd, cnUncertaintyEnd, cnPrediction);
-        }
-        else
-        {
-            // not defined yet
-            // cnPrediction = ;
-            // cnUncertainty = cnUncertaintyStart;
-        }
+        double cnUncertaintyEnd = endDepthData != null ? calcCopyNumberSideUncertainty(cnEnd, endDepthData) : 0;
 
         double poissonRCLow = calcPoisonReadCount(tumorReadCount, POIS_PROB_LOW);
         double poissonRCHigh = calcPoisonReadCount(tumorReadCount, POIS_PROB_HIGH);
 
-        double ploidyLow = poissonRCLow / tumorReadCount * ploidy;
-        double ploidyHigh = poissonRCHigh / tumorReadCount * ploidy;
+        double ploidyUncertainty = ploidy * (poissonRCHigh - poissonRCLow) * 0.5 / tumorReadCount;
 
-        double ploidyUncertainty = (ploidyHigh - ploidyLow) * 0.5;
+        List<Double> observations = Lists.newArrayList();
+        List<Double> uncertainties = Lists.newArrayList();
 
-        double cnUncSqrd = pow(cnUncertainty,2);
-        double ploidyUncSqrd = pow(ploidyUncertainty,2);
+        if(cnUncertaintyStart > 0)
+        {
+            observations.add(cnChgStart);
+            uncertainties.add(cnUncertaintyStart);
+        }
 
-        double estPloidy = (ploidy * cnUncSqrd + cnPrediction * ploidyUncSqrd) / (ploidyUncSqrd + cnUncSqrd);
+        if(cnUncertaintyEnd > 0)
+        {
+            observations.add(cnChgEnd);
+            uncertainties.add(cnUncertaintyEnd);
+        }
 
-        double estUncertainty = (max(ploidyUncertainty, abs(estPloidy - ploidy)) * cnUncSqrd + max(cnUncertainty, abs(estPloidy - cnPrediction)) * ploidyUncSqrd)
-                / (cnUncSqrd + ploidyUncSqrd);
+        observations.add(ploidy);
+        uncertainties.add(ploidyUncertainty);
+
+        double estPloidy;
+        double estUncertainty;
+
+        if(observations.size() == 1)
+        {
+            estPloidy = ploidy;
+            estUncertainty = ploidyUncertainty;
+        }
+        else
+        {
+            double sumUncertainty = 0;
+            double sumObservedUncertainty = 0;
+
+            for(int i = 0; i < observations.size(); ++i)
+            {
+                double uncertInvSqrd = 1 / pow(uncertainties.get(i), 2);
+                sumUncertainty += uncertInvSqrd;
+                sumObservedUncertainty += observations.get(i) * uncertInvSqrd;
+            }
+
+            // consloidatedPloidy =  SUM[Observation(i)*(1/Uncertainty(i)^2)] / Sum[1/Uncertainty(i)^2]
+            estPloidy = sumObservedUncertainty / sumUncertainty;
+
+            double adjUncertainty = 0;
+
+            for(int i = 0; i < observations.size(); ++i)
+            {
+                double uncertInvSqrd = 1 / pow(uncertainties.get(i), 2);
+                double relativeUncertainty = uncertInvSqrd * pow(max(observations.get(i) - estPloidy, uncertainties.get(i)/2),2);
+                adjUncertainty += relativeUncertainty;
+            }
+
+            // consolidatedUncertainty = SQRT(countObservations/(countObervations-1) * SUM[(1/Uncertainty(i)^2*(MAX(Observation(i)-consolidatedPloidy,Uncertainty(i)/2))^2]
+            // / Sum[1/Uncertainty(i)^2] )
+
+            estUncertainty = sqrt(observations.size() / (observations.size() - 1) * adjUncertainty / sumUncertainty);
+        }
 
         // populate a results object
         double[] results = new double[APC_RESULTS_MAX+1];
 
-        results[APC_PLOIDY_LOW] = ploidyLow;
-        results[APC_PLOIDY_HIGH] = ploidyHigh;
-        results[APC_CN_PREDICTION] = cnPrediction;
-        results[APC_CN_UNCERTAINTY] = cnUncertainty;
         results[APC_RC_POIS_LOW] = poissonRCLow;
         results[APC_RC_POIS_HIGH] = poissonRCHigh;
         results[APC_PLOIDY_UNCERTAINTY] = ploidyUncertainty;
         results[APC_EST_UNCERTAINTY] = estUncertainty;
         results[APC_EST_PLOIDY] = estPloidy;
+
         return results;
     }
 
@@ -975,21 +1001,13 @@ public class CNAnalyser {
     {
         int minDepthCount = min(depthData[0], depthData[1]);
 
+        if(minDepthCount <= 0)
+            return 0;
+
         double uncertainty = max(copyNumber*RELATIVE_UNCERTAINTY, ABS_UNCERTAINTY);
-        uncertainty += max(ADDITIONAL_ABS_UNCERTAINTY, ADDITIONAL_REL_UNCERTAINTY * copyNumber) / sqrt(max(minDepthCount,0.1));
+        uncertainty += max(ADDITIONAL_ABS_UNCERTAINTY, ADDITIONAL_REL_UNCERTAINTY * copyNumber) / sqrt(minDepthCount);
 
         return uncertainty;
-    }
-
-    private static double calcCopyNumberPrediction(double cnChgStart, double uncertaintyStart, double cnChgEnd, double uncertaintyEnd)
-    {
-        return (cnChgStart * pow(uncertaintyEnd,2) + cnChgEnd * pow(uncertaintyStart,2)) / (pow(uncertaintyStart,2) + pow(uncertaintyEnd,2));
-    }
-
-    private static double calcCopyNumberUncertainty(double cnChgStart, double uncertaintyStart, double cnChgEnd, double uncertaintyEnd, double prediction)
-    {
-        return (max(uncertaintyStart, abs(prediction-cnChgStart)) * pow(uncertaintyEnd,2) + max(uncertaintyEnd, abs(prediction-cnChgEnd)) * pow(uncertaintyStart,2))
-                / (pow(uncertaintyEnd,2) + pow(uncertaintyStart,2));
     }
 
     private static double calcPoisonReadCount(int readCount, double requiredProb)

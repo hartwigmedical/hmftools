@@ -1259,7 +1259,7 @@ public class SvClusteringMethods {
         }
         else
         {
-            LOGGER.error("cluster({}) ids({} & {}) neither TI nor DB", cluster.id(), var1.id(), var2.id());
+            LOGGER.debug("cluster({}) ids({} & {}) neither TI nor DB", cluster.id(), var1.id(), var2.id());
             return false;
         }
 

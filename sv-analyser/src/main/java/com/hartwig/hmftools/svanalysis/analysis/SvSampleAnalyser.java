@@ -85,6 +85,7 @@ public class SvSampleAnalyser {
         mVisWriter = new VisualiserWriter(config.OutputCsvPath, config.WriteVisualisationData);
 
         mAllVariants = Lists.newArrayList();
+        mSampleSvPloidyCalcMap = null;
 
         mSvFileWriter = null;
         mLinksFileWriter = null;
@@ -138,7 +139,7 @@ public class SvSampleAnalyser {
         mAllVariants = Lists.newArrayList(variants);
         mVisWriter.setSampleId(sampleId);
 
-        if(!mSampleSvPloidyCalcMap.isEmpty())
+        if(mSampleSvPloidyCalcMap != null && !mSampleSvPloidyCalcMap.isEmpty())
         {
             Map<String, double[]> svPloidyData = mSampleSvPloidyCalcMap.get(mSampleId);
 
@@ -149,7 +150,7 @@ public class SvSampleAnalyser {
                 {
                     double estPloidy = ploidyData[0];
                     double estUncertainty = ploidyData[1];
-                    var.setPloidyRecalcData(estPloidy, estUncertainty);
+                    var.setPloidyRecalcData(estPloidy - estUncertainty, estPloidy + estUncertainty);
                 }
             }
         }

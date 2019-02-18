@@ -175,12 +175,8 @@ public class ChainingTests
         final SvVarData var2 = createDel("2", "1", 500,600);
         final SvVarData var3 = createDel("3", "1", 700,800);
 
-        //var1.setAssemblyData(false, "asmb12");
-        //var2.setAssemblyData(true, "asmb12");
         var1.setAssemblyData(false, "asmb23");
         var2.setAssemblyData(true, "asmb23");
-        //var3.setAssemblyData(false, "asmb34");
-        //var4.setAssemblyData(true, "asmb34");
 
         // add them out of order which will require partial chain reconciliation
         tester.AllVariants.add(var0);
@@ -279,7 +275,6 @@ public class ChainingTests
     }
 
     @Test
-    @Ignore
     public void testComplexChaining2()
     {
         // based on COLO829T chromosomes 3 + 6,10,12 and 1
@@ -383,9 +378,9 @@ public class ChainingTests
     }
 
     @Test
-    @Ignore
     public void testSimpleChaining1()
     {
+        // based on CPCT02010325T clusterId 37, where the shortest TI of 76 bases is actually ignored so as to make 2 chains
         SvTestHelper tester = new SvTestHelper();
         tester.logVerbose(true);
 

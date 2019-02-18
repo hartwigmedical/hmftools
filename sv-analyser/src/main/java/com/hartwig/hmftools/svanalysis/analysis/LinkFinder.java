@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.svanalysis.analysis;
 
+import static com.hartwig.hmftools.svanalysis.analysis.ClusterAnalyser.CLUSTER_SIZE_ANALYSIS_LIMIT;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.copyNumbersEqual;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.isSpecificCluster;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_END;
@@ -30,7 +31,6 @@ public class LinkFinder
 
     public static int MIN_TEMPLATED_INSERTION_LENGTH = 30;
     public static int NO_DB_MARKER = -(MIN_TEMPLATED_INSERTION_LENGTH + 2);
-    public static int CLUSTER_SIZE_ANALYSIS_LIMIT = 1000;
     public static int SHORT_DB_LENGTH = 30;
 
     private static final Logger LOGGER = LogManager.getLogger(LinkFinder.class);

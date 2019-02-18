@@ -361,31 +361,12 @@ public class SvCluster
     public List<SvArmGroup> getArmGroups() { return mArmGroups; }
     public Map<String, List<SvBreakend>> getChrBreakendMap() { return mChrBreakendMap; }
 
-    public SvArmGroup getArmGroup(final String chr, final String arm)
-    {
-        for(SvArmGroup armGroup : mArmGroups)
-        {
-            if (armGroup.chromosome().equals(chr) && armGroup.arm().equals(arm))
-                return armGroup;
-        }
-
-        return null;
-    }
-
     public int getUniqueSvCount()
     {
         if(!mHasReplicatedSVs)
             return mSVs.size();
 
-        int count = 0;
-
-        for(final SvVarData var : mSVs)
-        {
-            if(!var.isReplicatedSv())
-                ++count;
-        }
-
-        return count;
+        return (int)mSVs.stream().filter(x -> !x.isReplicatedSv()).count();
     }
 
     public boolean hasReplicatedSVs() { return mHasReplicatedSVs; }

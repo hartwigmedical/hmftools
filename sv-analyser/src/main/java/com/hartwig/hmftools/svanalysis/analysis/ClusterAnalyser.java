@@ -89,6 +89,7 @@ public class ClusterAnalyser {
 
     public static int SMALL_CLUSTER_SIZE = 3;
     public static int SHORT_TI_LENGTH = 1000;
+    public static int CLUSTER_SIZE_ANALYSIS_LIMIT = 200;
 
     private static final Logger LOGGER = LogManager.getLogger(ClusterAnalyser.class);
 
@@ -104,6 +105,8 @@ public class ClusterAnalyser {
         mChainFinder.setLogVerbose(mConfig.LogVerbose);
         mLinkFinder.setLogVerbose(mConfig.LogVerbose);
         mRunValidationChecks = false;
+
+        mChainFinder.setUseNewMethod(mConfig.NewChainMethod);
 
         mPcClustering = new PerformanceCounter("Clustering");
         mPcChaining = new PerformanceCounter("Chaining");
