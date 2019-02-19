@@ -48,7 +48,7 @@ public class FusionDisruptionAnalyser
     private SvGeneTranscriptCollection mEnsemblDataCache;
     private Map<String, List<SvBreakend>> mChrBreakendMap;
 
-
+    private boolean mRunFusions;
     private List<GeneFusion> mFusions;
     private List<SvFusion> mSvFusionList;
 
@@ -66,11 +66,13 @@ public class FusionDisruptionAnalyser
         mChromosomeTranscriptMap = null;
         mOutputDir = "";
         mFusions = Lists.newArrayList();
+        mRunFusions = true;
         mSvFusionList = Lists.newArrayList();
         mVisWriter = null;
         mChrBreakendMap = null;
     }
 
+    public void setRunFusions(boolean toggle) { mRunFusions = toggle; }
     public final SvGeneTranscriptCollection getGeneTranscriptCollection() { return mEnsemblDataCache; }
 
     public void loadFusionReferenceData(final CommandLine cmdLineArgs, final String outputDir, final String ensemblDataDir)
@@ -153,7 +155,8 @@ public class FusionDisruptionAnalyser
 
     public void run(final List<SvVarData> svList, final List<SvCluster> clusters)
     {
-        findFusions(svList, clusters); // skipped until chained fusion logic extended
+        if(mRunFusions)
+            findFusions(svList, clusters);
 
         assessRnaFusions();
     }
@@ -400,6 +403,11 @@ public class FusionDisruptionAnalyser
         {
             mFusionFinder.setRnaFusionData(rnaFusion);
 
+            if(rnaFusion.Name.equals("FOXP2--CFTR"))
+            {
+                LOGGER.debug("spec rNA FUSION");
+            }
+
             // find all SVs with breakends in either gene, take all possible pairings
             // must be correctly positioned before/after rna exon position
 
@@ -449,6 +457,9 @@ public class FusionDisruptionAnalyser
 
                 for (final SvBreakend upBreakend : upstreamBreakends)
                 {
+                    if(upBreakend.getSV().isNullBreakend())
+                        continue;
+
                     List<GeneAnnotation> upGenesList = upBreakend.getSV().getGenesList(upBreakend.usesStart())
                             .stream()
                             .filter(x -> x.GeneName.equals(rnaFusion.GeneUp))
@@ -456,6 +467,9 @@ public class FusionDisruptionAnalyser
 
                     for (final SvBreakend downBreakend : downstreamBreakends)
                     {
+                        if(downBreakend.getSV().isNullBreakend())
+                            continue;
+
                         List<GeneAnnotation> downGenesList = downBreakend.getSV().getGenesList(downBreakend.usesStart())
                                 .stream()
                                 .filter(x -> x.GeneName.equals(rnaFusion.GeneDown))
@@ -467,7 +481,7 @@ public class FusionDisruptionAnalyser
                             continue;
 
                         // find a reportable fusion if possible
-                        GeneFusion possibleFusion = selectPossibleFusion(possibleFusions);
+                        GeneFusion possibleFusion = selectPossibleFusion(possibleFusions, rnaFusion);
 
                         if (possibleFusion == null)
                             continue;
@@ -495,7 +509,6 @@ public class FusionDisruptionAnalyser
                 {
                     final List<GeneAnnotation> genes = upstreamBreakends.get(0).getSV().getGenesList(upstreamBreakends.get(0).usesStart());
                     upTrans = !genes.get(0).transcripts().isEmpty() ? genes.get(0).transcripts().get(0) : null;
-
                 }
 
                 if(!downstreamBreakends.isEmpty())
@@ -546,12 +559,19 @@ public class FusionDisruptionAnalyser
         return candidatePosDiff < currentPosDiff;
     }
 
-    private GeneFusion selectPossibleFusion(final List<GeneFusion> possibleFusions)
+    private GeneFusion selectPossibleFusion(final List<GeneFusion> possibleFusions, final RnaFusionData rnaFusionData)
     {
         // find a reportable fusion if possible
         GeneFusion possibleFusion = null;
         for(final GeneFusion fusion : possibleFusions)
         {
+            // check that the fusion wasn't found in the reverse direction
+            if(!fusion.upstreamTrans().parent().GeneName.equals(rnaFusionData.GeneUp)
+            || !fusion.downstreamTrans().parent().GeneName.equals(rnaFusionData.GeneDown))
+            {
+                continue;
+            }
+
             if(fusion.reportable() && fusion.phaseMatched())
             {
                 return fusion;

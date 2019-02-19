@@ -124,6 +124,14 @@ public class SvSampleAnalyser {
     private void clearState()
     {
         mClusteringMethods.clearLOHBreakendData(mSampleId);
+
+        // reduce maps with already processed sample data for the larger data sources
+        if(mSampleSvPloidyCalcMap != null)
+            mSampleSvPloidyCalcMap.remove(mSampleId); // shrink the data source to make future look-ups faster
+
+        if(mClusteringMethods.getSampleLohData() != null)
+            mClusteringMethods.getSampleLohData().remove(mSampleId);
+
         mSampleId = "";
         mAllVariants.clear();
     }

@@ -85,6 +85,7 @@ public class SvVarData
     private double mReplicationOriginStart;
     private double mReplicationOriginEnd;
 
+    private boolean mHasCalcPloidy;
     private double mPloidyMin;
     private double mPloidyMax;
 
@@ -160,6 +161,7 @@ public class SvVarData
         mReplicationOriginStart = 0;
         mReplicationOriginEnd = 0;
 
+        mHasCalcPloidy = false;
         mPloidyMin = 0;
         mPloidyMax = 0;
     }
@@ -670,8 +672,10 @@ public class SvVarData
     {
         mPloidyMin = minPloidy;
         mPloidyMax = maxPloidy;
+        mHasCalcPloidy = true;
     }
 
+    public boolean hasCalculatedPloidy() { return mHasCalcPloidy; }
     public double ploidyMax() { return mPloidyMax; }
     public double ploidyMin() { return mPloidyMin; }
 
@@ -703,7 +707,7 @@ public class SvVarData
         return false;
     }
 
-    // private static String SPECIFIC_VAR_ID = "37";
+    // private static String SPECIFIC_VAR_ID = "7841490";
     private static String SPECIFIC_VAR_ID = "";
 
     public static boolean isSpecificSV(final SvVarData var)

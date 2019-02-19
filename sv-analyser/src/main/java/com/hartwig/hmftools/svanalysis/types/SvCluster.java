@@ -1,7 +1,10 @@
 package com.hartwig.hmftools.svanalysis.types;
 
+import static java.lang.Math.ceil;
+import static java.lang.Math.floor;
 import static java.lang.Math.max;
 import static java.lang.Math.abs;
+import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.BND;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DEL;
@@ -743,18 +746,74 @@ public class SvCluster
 
     private void setMinMaxCNChange()
     {
-        // establish the lowest copy number change
+        if(mSVs.size() == 1)
+        {
+            mMinCNChange = mMaxCNChange = mSVs.get(0).getRoundedCNChange();
+            return;
+        }
+
+        // establish the lowest copy number change, using calculated ploidy if present
         mMinCNChange = -1;
-        mMaxCNChange = -1;
+        mMaxCNChange = 0;
+
+        int svCalcPloidyCount = 0;
+        Map<Integer,Integer> ploidyFrequency = new HashMap();
+
+        // isSpecificCluster(this);
 
         for (final SvVarData var : mSVs)
         {
+            if(var.isReplicatedSv())
+                continue;
+
             double calcCopyNumber = var.getRoundedCNChange();
 
             if (mMinCNChange < 0 || calcCopyNumber < mMinCNChange)
                 mMinCNChange = calcCopyNumber;
 
             mMaxCNChange = max(mMaxCNChange, calcCopyNumber);
+
+            if(var.hasCalculatedPloidy())
+            {
+                ++svCalcPloidyCount;
+
+                int minPloidyInt = (int)ceil(var.ploidyMin());
+                int maxPloidyInt = (int)floor(var.ploidyMax());
+
+                for(int i = minPloidyInt; i <= maxPloidyInt; ++i)
+                {
+                    Integer svCount = ploidyFrequency.get(i);
+                    if(svCount == null)
+                        ploidyFrequency.put(i, 1);
+                    else
+                        ploidyFrequency.put(i, svCount+1);
+                }
+            }
+        }
+
+        if(svCalcPloidyCount > 0)
+        {
+            mMinCNChange = -1;
+            mMaxCNChange = 0;
+
+            for(Map.Entry<Integer,Integer> entry : ploidyFrequency.entrySet())
+            {
+                int ploidy = entry.getKey();
+                int svCount = entry.getValue();
+
+                if(svCount == svCalcPloidyCount)
+                {
+                    // all SVs can settle on the same ploidy value, so take this
+                    mMaxCNChange = ploidy;
+                    mMinCNChange = ploidy;
+                    break;
+                }
+
+                if (mMinCNChange < 0 || ploidy < mMinCNChange)
+                    mMinCNChange = ploidy;
+
+                mMaxCNChange = max(mMaxCNChange, ploidy);
+            }
         }
     }
 
@@ -765,6 +824,9 @@ public class SvCluster
     {
         if(mRequiresRecalc)
             updateClusterDetails();
+
+        if(mSVs.size() == 1)
+            return false;
 
         return (mMaxCNChange > mMinCNChange && mMinCNChange >= 0);
     }
@@ -897,7 +959,7 @@ public class SvCluster
 
 
     // private static int SPECIFIC_CLUSTER_ID = -1;
-    private static int SPECIFIC_CLUSTER_ID = 120;
+    private static int SPECIFIC_CLUSTER_ID = 329;
 
     public static boolean isSpecificCluster(final SvCluster cluster)
     {

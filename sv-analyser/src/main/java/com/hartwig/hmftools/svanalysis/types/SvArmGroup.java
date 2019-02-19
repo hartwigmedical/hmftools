@@ -110,8 +110,8 @@ public class SvArmGroup {
             }
         }
 
-        LOGGER.debug("cluster({}) arm({}) SVs({}) range({} -> {}) consistency({})",
-                mCluster.id(), mId, mSVs.size(), mStartPos, mEndPos, mConsistency);
+        //LOGGER.debug("cluster({}) arm({}) SVs({}) range({} -> {}) consistency({})",
+        //        mCluster.id(), mId, mSVs.size(), mStartPos, mEndPos, mConsistency);
 
         mRequiresRecalc = false;
     }

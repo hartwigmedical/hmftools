@@ -10,8 +10,10 @@ import static com.hartwig.hmftools.svanalysis.analysis.ClusterAnalyser.CLUSTER_S
 import static com.hartwig.hmftools.svanalysis.analysis.LinkFinder.MIN_TEMPLATED_INSERTION_LENGTH;
 import static com.hartwig.hmftools.svanalysis.analysis.LinkFinder.areLinkedSection;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.getProximity;
+import static com.hartwig.hmftools.svanalysis.types.SvCluster.isSpecificCluster;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_END;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_START;
+import static com.hartwig.hmftools.svanalysis.types.SvVarData.isSpecificSV;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.isStart;
 import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.LINK_TYPE_TI;
 
@@ -110,12 +112,15 @@ public class ChainFinder
 
         if (mCluster.getCount() >= 4)
         {
-            LOGGER.debug("cluster({}) assemblyLinks({}) svCount({} all={}) existingChains({})",
-                    mCluster.id(), mAssemblyLinkedPairs.size(), svList.size(), mCluster.getCount(), mCluster.getChains().size());
+            LOGGER.debug("cluster({}) assemblyLinks({}) svCount({} rep={}) existingChains({})",
+                    mCluster.id(), mAssemblyLinkedPairs.size(), mCluster.getUniqueSvCount(),
+                    mCluster.getCount(), mCluster.getChains().size());
         }
 
         if(mUseNewMethod)
         {
+            isSpecificCluster(mCluster);
+
             buildSvChains();
 
             if(!mIsValid)
@@ -261,9 +266,9 @@ public class ChainFinder
         // first make chains out of any assembly links
         addAssemblyLinksToChains();
 
-        determinePossibleLinks();
-
         setSvReplicationCounts();
+
+        determinePossibleLinks();
 
         // now find the best next candidate link giving priority to replication count, following by min link resolution
         // and lastly shortest distance
@@ -681,6 +686,9 @@ public class ChainFinder
 
     private void determinePossibleLinks()
     {
+        // form a map of each breakend to its set of all other breakends which can form a valid TI
+        // need to exclude breakends which are already assigned to an assembled TI
+        // unless replication permits additional instances of it
         mSvBreakendPossibleLinks.clear();
 
         final Map<String,List<SvBreakend>> chrBreakendMap = mCluster.getChrBreakendMap();
@@ -748,10 +756,37 @@ public class ChainFinder
 
     private boolean alreadyLinkedBreakend(final SvBreakend breakend)
     {
+        Integer beRepCount = null;
+        int beRepCountRemainder = 0;
+
         for(SvLinkedPair pair : mAssemblyLinkedPairs)
         {
-            if(pair.hasBreakend(breakend))
-                return true;
+            if(pair.hasBreakend(breakend, true))
+            {
+                // check whether replication would still allow this breakend to be used again
+                if(beRepCount == null)
+                {
+                    beRepCount = mSvReplicationMap.get(breakend.getOrigSV());
+
+                    if (beRepCount == null)
+                        return true;
+
+                    beRepCountRemainder = beRepCount;
+                }
+
+                // each time this breakend is connected to another breakend via assembly,
+                // it subtracts from it potential usage for inferred links
+                final SvBreakend otherBreakend = pair.getOtherBreakend(breakend);
+                Integer otherBeRepCount = mSvReplicationMap.get(otherBreakend.getOrigSV());
+
+                if(otherBeRepCount == null)
+                    --beRepCountRemainder;
+                else
+                    beRepCountRemainder -= otherBeRepCount;
+
+                if(beRepCountRemainder <= 0)
+                    return true;
+            }
         }
 
         return false;
@@ -860,10 +895,22 @@ public class ChainFinder
                             LOGGER.debug("merging chain({} links={}) with chain({} links={})",
                                     chain1.id(), chain1.getLinkCount(), chain2.id(), chain2.getLinkCount());
 
-                            // merge chains and remove the latter
-                            for (SvLinkedPair linkedPair : chain2.getLinkedPairs())
+                            if(c2Start)
                             {
-                                chain1.addLink(linkedPair, c1Start);
+                                // merge chains and remove the latter
+                                for (SvLinkedPair linkedPair : chain2.getLinkedPairs())
+                                {
+                                    chain1.addLink(linkedPair, c1Start);
+                                }
+                            }
+                            else
+                            {
+                                // add in reverse
+                                for (int index = chain2.getLinkedPairs().size() - 1; index >= 0; --index)
+                                {
+                                    SvLinkedPair linkedPair = chain2.getLinkedPairs().get(index);
+                                    chain1.addLink(linkedPair, c1Start);
+                                }
                             }
 
                             mPartialChains.remove(index2);

@@ -71,7 +71,7 @@ public class CNAnalyser {
 
     public static final String SV_PLOIDY_CALC_FILE = "sv_ploidy_file";
     private static final String CALC_ADJ_PLOIDY = "calc_adj_ploidy";
-    private static final String WRITE_VERBOSE_PLOIDY_DATA = "write_ploidy_data";
+    private static final String WRITE_VERBOSE_PLOIDY_DATA = "verbose_ploidy_data";
 
     public static double MIN_LOH_CN = 0.5;
     public static double TOTAL_CN_LOSS = 0.5;
@@ -886,7 +886,7 @@ public class CNAnalyser {
                             cnEnd, cnChgEnd, cnEndData != null ? cnEndData.DepthWindowCount : 0,
                             endDepthData != null ? endDepthData[0] : 0, endDepthData != null ? endDepthData[1] : 0));
 
-                    writer.write(String.format(",%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f",
+                    writer.write(String.format(",%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f",
                             calcResults[APC_RC_POIS_LOW], calcResults[APC_RC_POIS_HIGH],
                             calcResults[APC_PLOIDY_UNCERTAINTY],
                             calcResults[APC_EST_PLOIDY], calcResults[APC_EST_UNCERTAINTY],
@@ -910,8 +910,8 @@ public class CNAnalyser {
     public static int APC_EST_UNCERTAINTY = 4;
     public static int APC_RESULTS_MAX = 5;
 
-    private static double POIS_PROB_LOW = 0.01;
-    private static double POIS_PROB_HIGH = 0.99;
+    private static double POIS_PROB_LOW = 0.005;
+    private static double POIS_PROB_HIGH = 0.995;
 
     public static double[] calcAdjustedPloidyValues(double cnStart, double cnChgStart, double cnEnd, double cnChgEnd,
             double ploidy, int tumorReadCount, final int[] startDepthData, final int[] endDepthData)
@@ -1121,7 +1121,7 @@ public class CNAnalyser {
 
     private static int PLOIDY_CALC_COLUMN_COUNT = 4;
 
-    public void loadPloidyCalcData(final String filename)
+    public void loadPloidyCalcData(final String filename, final String specificSample)
     {
         if (filename.isEmpty())
             return;
@@ -1150,6 +1150,14 @@ public class CNAnalyser {
                     continue;
 
                 String sampleId = items[0];
+
+                if(!specificSample.isEmpty() && !specificSample.equals(sampleId))
+                {
+                    if(mSampleSvPloidyCalcMap.size() == 1)
+                        break;
+
+                    continue;
+                }
 
                 if(currentSample.isEmpty() || !currentSample.equals(sampleId))
                 {

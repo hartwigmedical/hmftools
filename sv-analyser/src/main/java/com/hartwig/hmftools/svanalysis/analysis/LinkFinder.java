@@ -233,7 +233,7 @@ public class LinkFinder
         if(svList.size() >= CLUSTER_SIZE_ANALYSIS_LIMIT)
             return linkedPairs;
 
-        isSpecificCluster(cluster);
+        // isSpecificCluster(cluster);
 
         for (int i = 0; i < svList.size(); ++i)
         {

@@ -156,6 +156,11 @@ public class ClusterAnalyser {
 
         mClusteringMethods.mergeClusters(mSampleId, mClusters);
 
+        for(SvCluster cluster : mClusters)
+        {
+            applyCopyNumberReplication(cluster);
+        }
+
         mPcClustering.pause();
 
         // log basic clustering details
@@ -319,8 +324,7 @@ public class ClusterAnalyser {
                 cluster.dissolveLinksAndChains();
                 cluster.removeReplicatedSvs();
 
-                if(cluster.hasVariedCopyNumber())
-                    applyCopyNumberReplication(cluster);
+                applyCopyNumberReplication(cluster);
 
                 mLinkFinder.findLinkedPairs(cluster, false);
 
@@ -843,8 +847,8 @@ public class ClusterAnalyser {
 
                     if(!traversedClusters.contains(otherCluster))
                     {
-                        LOGGER.debug("cluster({}) breakends({} & {}) overlap cluster({}) breakend({})",
-                                cluster.id(), lowerBreakend.toString(), upperBreakend.toString(), otherCluster.id(), breakend.toString());
+                        //LOGGER.debug("cluster({}) breakends({} & {}) overlap cluster({}) breakend({})",
+                        //        cluster.id(), lowerBreakend.toString(), upperBreakend.toString(), otherCluster.id(), breakend.toString());
                         traversedClusters.add(otherCluster);
                     }
                 }
@@ -1995,7 +1999,7 @@ public class ClusterAnalyser {
         int inconsistentChains = 0;
         int repeatedChainEndArms = 0;
 
-        isSpecificCluster(cluster);
+        // isSpecificCluster(cluster);
 
         List<String> chainEndArms = Lists.newArrayList();
 

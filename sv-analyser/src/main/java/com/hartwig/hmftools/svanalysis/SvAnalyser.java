@@ -47,9 +47,9 @@ public class SvAnalyser {
     private static final String RUN_SVA = "run_sv_analysis";
     private static final String DATA_OUTPUT_PATH = "data_output_path";
     private static final String LOG_DEBUG = "log_debug";
-    private static final String LINE_ELEMENT_FILE = "line_element_file";
     private static final String DRIVERS_CHECK = "check_drivers";
     private static final String RUN_FUSIONS = "run_fusions";
+    private static final String SKIP_FUSION_OUTPUT = "skip_fusion_output";
     private static final String COPY_NUMBER_ANALYSIS = "run_cn_analysis";
     private static final String INCLUDE_NONE_SEGMENTS = "incl_none_segments";
     private static final String GENE_TRANSCRIPTS_DIR = "gene_transcripts_dir";
@@ -130,6 +130,9 @@ public class SvAnalyser {
                 fusionAnalyser.loadFusionReferenceData(cmd, svaConfig.OutputCsvPath, cmd.getOptionValue(GENE_TRANSCRIPTS_DIR,""));
                 fusionAnalyser.setVisWriter(sampleAnalyser.getVisWriter());
 
+                if(cmd.hasOption(SKIP_FUSION_OUTPUT))
+                    fusionAnalyser.setRunFusions(false);
+
                 sampleAnalyser.getVisWriter().setGeneDataCollection(fusionAnalyser.getGeneTranscriptCollection());
 
                 if(!fusionAnalyser.getRnaSampleIds().isEmpty() && samplesList.size() > 1)
@@ -164,7 +167,8 @@ public class SvAnalyser {
 
             if(cmd.hasOption(SV_PLOIDY_CALC_FILE))
             {
-                cnAnalyser.loadPloidyCalcData(cmd.getOptionValue(SV_PLOIDY_CALC_FILE));
+                final String specificSampleId = samplesList.size() == 1 ? samplesList.get(0) : "";
+                cnAnalyser.loadPloidyCalcData(cmd.getOptionValue(SV_PLOIDY_CALC_FILE), specificSampleId);
                 sampleAnalyser.setSamplePloidyCalcData(cnAnalyser.getSampleSvPloidyCalcMap());
             }
 
@@ -300,6 +304,7 @@ public class SvAnalyser {
         options.addOption(LOG_DEBUG, false, "Sets log level to Debug, off by default");
         options.addOption(DRIVERS_CHECK, false, "Check SVs against drivers catalog");
         options.addOption(RUN_FUSIONS, false, "Run fusion detection");
+        options.addOption(SKIP_FUSION_OUTPUT, false, "Skip writing fusion data");
         options.addOption(COPY_NUMBER_ANALYSIS, false, "Run copy number analysis");
         options.addOption(INCLUDE_NONE_SEGMENTS, false, "Include copy number NONE segments in SV analysis");
         options.addOption(GENE_TRANSCRIPTS_DIR, true, "Optional: file with sample gene transcript data");

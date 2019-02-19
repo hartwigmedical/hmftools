@@ -424,7 +424,7 @@ public class SvClusteringMethods {
             if(cluster.hasLinkingLineElements())
                 continue;
 
-            applyCopyNumberReplication(cluster);
+            // applyCopyNumberReplication(cluster);
 
             markClusterLongDelDups(cluster);
             markClusterInversions(cluster);
@@ -461,6 +461,8 @@ public class SvClusteringMethods {
 
     public static void applyCopyNumberReplication(SvCluster cluster)
     {
+        // isSpecificCluster(cluster);
+
         // use the relative copy number change to replicate some SVs within a cluster
         if(!cluster.hasVariedCopyNumber())
             return;

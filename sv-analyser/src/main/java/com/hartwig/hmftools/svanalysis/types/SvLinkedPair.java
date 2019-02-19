@@ -138,14 +138,26 @@ public class SvLinkedPair {
     public void setExonMatchData(final String data) { mExonMatchData = data; }
     public final String getExonMatchData() { return mExonMatchData; }
 
+
+    public boolean hasBreakend(final SvVarData var, boolean useStart, boolean allowReplicated)
+    {
+        return (var.equals(mFirst, allowReplicated) && mFirstLinkOnStart == useStart
+                || var.equals(mSecond, allowReplicated) && mSecondLinkOnStart == useStart);
+    }
+
     public boolean hasBreakend(final SvVarData var, boolean useStart)
     {
-        return (var.equals(mFirst) && mFirstLinkOnStart == useStart || var.equals(mSecond) && mSecondLinkOnStart == useStart);
+        return hasBreakend(var, useStart, false);
+    }
+
+    public boolean hasBreakend(final SvBreakend breakend, boolean allowReplicated)
+    {
+        return hasBreakend(breakend.getSV(), breakend.usesStart(), allowReplicated);
     }
 
     public boolean hasBreakend(final SvBreakend breakend)
     {
-        return hasBreakend(breakend.getSV(),breakend.usesStart());
+        return hasBreakend(breakend.getSV(), breakend.usesStart());
     }
 
     public boolean hasLinkClash(final SvLinkedPair otherPair)

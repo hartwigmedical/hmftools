@@ -7,6 +7,7 @@ import com.hartwig.hmftools.common.variant.structural.annotation.EnsemblGeneData
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneAnnotation;
 import com.hartwig.hmftools.common.variant.structural.annotation.Transcript;
 import com.hartwig.hmftools.common.variant.structural.annotation.TranscriptExonData;
+import com.hartwig.hmftools.svannotation.SvGeneTranscriptCollection;
 
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.core.config.Configurator;
@@ -50,6 +51,16 @@ public class SvAnnotatorTestUtils
         return new EnsemblGeneData(geneId, geneName, chromosome, (byte)strand, geneStart, geneEnd, "", "", "");
     }
 
+    // testing access
+    public static void addTransExonData(SvGeneTranscriptCollection geneTransCache, final String geneId, List<TranscriptExonData> transExonList)
+    {
+        geneTransCache.getGeneExonDataMap().put(geneId, transExonList);
+    }
+
+    public static void addGeneData(SvGeneTranscriptCollection geneTransCache, final String chromosome, List<EnsemblGeneData> geneDataList)
+    {
+        geneTransCache.getChrGeneDataMap().put(chromosome, geneDataList);
+    }
 
 
 
