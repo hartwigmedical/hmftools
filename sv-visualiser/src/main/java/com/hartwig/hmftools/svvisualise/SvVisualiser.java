@@ -12,6 +12,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
@@ -127,6 +128,8 @@ public class SvVisualiser implements AutoCloseable {
     @Nullable
     private Object runCluster(int clusterId, boolean skipSingles) throws IOException, InterruptedException {
         final List<Link> clusterLinks = config.links().stream().filter(x -> x.clusterId() == clusterId).collect(toList());
+        final List<Segment> clusterSegments = config.segments().stream().filter(x -> x.clusterId() == clusterId).collect(toList());
+
         if (clusterLinks.isEmpty()) {
             LOGGER.warn("Cluster {} not present in file", clusterId);
             return null;
@@ -137,13 +140,20 @@ public class SvVisualiser implements AutoCloseable {
             return null;
         }
 
+        final Set<Integer> linkChainIds = clusterLinks.stream().map(Link::chainId).collect(Collectors.toSet());
+        final Set<Integer> segmentChainIds = clusterSegments.stream().map(Segment::chainId).collect(Collectors.toSet());
+        segmentChainIds.removeAll(linkChainIds);
+        if (!segmentChainIds.isEmpty()) {
+            LOGGER.warn("Cluster {} contains chain ids {} in segments but not in the links", clusterId, segmentChainIds);
+            return null;
+        }
+
         final String resolvedType = clusterLinks.stream().findFirst().map(Link::resolvedType).orElse("Unknown");
 
         final String sample =
                 config.sample() + ".cluster" + String.format("%03d", clusterId) + "." + resolvedType + ".sv" + clusterLinks.size() + (config
                         .debug() ? ".debug" : "");
 
-        final List<Segment> clusterSegments = config.segments().stream().filter(x -> x.clusterId() == clusterId).collect(toList());
         final List<Exon> clusterExons = config.exons().stream().filter(x -> x.clusterId() == clusterId).collect(toList());
         return runFiltered(sample, clusterLinks, clusterSegments, clusterExons);
     }
