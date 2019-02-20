@@ -96,7 +96,7 @@ public class ExtendDiploidBAFTest {
 
     @NotNull
     private static CombinedRegion create(long start, long end, SegmentSupport support, int bafCount) {
-        return new BafWeightedRegion(PurpleDatamodelTest.createDefaultFittedRegion("1", start, end)
+        return new CombinedRegionImpl(PurpleDatamodelTest.createDefaultFittedRegion("1", start, end)
                 .support(support)
                 .bafCount(bafCount)
                 .build());
@@ -104,7 +104,7 @@ public class ExtendDiploidBAFTest {
 
     @NotNull
     private static CombinedRegion create(long start, long end, SegmentSupport support, int bafCount, double baf, double copyNumber) {
-        return new BafWeightedRegion(PurpleDatamodelTest.createDefaultFittedRegion("1", start, end)
+        return new CombinedRegionImpl(PurpleDatamodelTest.createDefaultFittedRegion("1", start, end)
                 .support(support)
                 .bafCount(bafCount)
                 .tumorBAF(baf)

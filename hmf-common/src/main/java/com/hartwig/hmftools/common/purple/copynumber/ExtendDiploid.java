@@ -54,7 +54,7 @@ class ExtendDiploid {
         final List<CombinedRegion> regions = Lists.newLinkedList();
 
         for (FittedRegion fittedRegion : fittedRegions) {
-            regions.add(new BafWeightedRegion(bafWeighted, fittedRegion));
+            regions.add(new CombinedRegionImpl(bafWeighted, fittedRegion));
         }
 
         int highestConfidenceIndex = nextIndex(regions);
@@ -112,7 +112,7 @@ class ExtendDiploid {
         final boolean isNeighbourDubious = isDubious(minTumorCount, neighbour);
         if (isNeighbourDubious) {
             if (inTolerance(target.region(), neighbour)) {
-                target.extendWithBAFWeightedAverage(neighbour);
+                target.extendWithWeightedAverage(neighbour);
                 return true;
             } else if (pushThroughDubiousRegion(minTumorCount, regions, direction, targetIndex)) {
                 target.extend(neighbour);
@@ -127,7 +127,7 @@ class ExtendDiploid {
             target.extend(neighbour);
             return true;
         } else if (inTolerance(target.region(), neighbour)) {
-            target.extendWithBAFWeightedAverage(neighbour);
+            target.extendWithWeightedAverage(neighbour);
             return true;
         }
 

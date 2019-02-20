@@ -41,26 +41,30 @@ public interface CombinedRegion extends GenomeRegion {
 
     boolean isInferredBAF();
 
+    @NotNull
     List<FittedRegion> regions();
 
+    @NotNull
     CopyNumberMethod copyNumberMethod();
 
     boolean isProcessed();
 
-    void setCopyNumberMethod(CopyNumberMethod copyNumberMethod);
+    void setCopyNumberMethod(@NotNull final CopyNumberMethod copyNumberMethod);
 
+    @NotNull
     FittedRegion region();
 
-    void extend(final FittedRegion region);
+    void extend(@NotNull final FittedRegion region);
 
-    void extendWithUnweightedAverage(final FittedRegion region);
+    void extendWithUnweightedAverage(@NotNull final FittedRegion region);
 
-    void extendWithBAFWeightedAverage(final FittedRegion region);
+    void extendWithWeightedAverage(@NotNull final FittedRegion region);
 
     void setTumorCopyNumber(@NotNull final CopyNumberMethod method, double copyNumber);
 
     void setInferredTumorBAF(double baf);
 
+    @NotNull
     default SegmentSupport support() {
         return region().support();
     }
