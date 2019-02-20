@@ -147,12 +147,6 @@ public class SvFusionAnalyser
 
     public final List<GeneFusion> findFusions(final List<GeneAnnotation> breakendGenes1, final List<GeneAnnotation> breakendGenes2)
     {
-        return findFusions(breakendGenes1, breakendGenes2, true);
-    }
-
-    public final List<GeneFusion> findFusions(
-            final List<GeneAnnotation> breakendGenes1, final List<GeneAnnotation> breakendGenes2, boolean requirePhaseMatch)
-    {
         final List<GeneFusion> potentialFusions = Lists.newArrayList();
 
         for (final GeneAnnotation startGene : breakendGenes1)
@@ -185,7 +179,7 @@ public class SvFusionAnalyser
                         final Transcript upstreamTrans = startUpstream ? startTrans : endTrans;
                         final Transcript downstreamTrans = !startUpstream ? startTrans : endTrans;
 
-                        GeneFusion geneFusion = checkFusionLogic(upstreamTrans, downstreamTrans, requirePhaseMatch);
+                        GeneFusion geneFusion = checkFusionLogic(upstreamTrans, downstreamTrans, true);
 
                         if(geneFusion == null)
                             continue;
@@ -194,93 +188,6 @@ public class SvFusionAnalyser
                                 mKnownFusionsModel.primarySource(upstreamTrans.parent().synonyms(), downstreamTrans.parent().synonyms()));
 
                         potentialFusions.add(geneFusion);
-
-                        /*
-                        boolean checkExactMatch = false;
-
-                        if(upstreamTrans.postCoding() || downstreamTrans.postCoding() || downstreamTrans.nonCoding())
-                            continue;
-
-                        if(upstreamTrans.isPromoter())
-                            continue;
-
-                        if(downstreamTrans.exonMax() == 1)
-                            continue;
-
-                        if(!upstreamTrans.isDisruptive())
-                            continue;
-
-                        if(upstreamTrans.preCoding())
-                        {
-                            if(upstreamTrans.isExonic() && !downstreamTrans.isExonic())
-                                continue;
-                            else if(downstreamTrans.isCoding())
-                                continue;
-
-                            // phasing match
-                        }
-                        else if(upstreamTrans.isCoding())
-                        {
-                            if(!downstreamTrans.isCoding())
-                                continue;
-
-                            if(upstreamTrans.isExonic())
-                            {
-                                if(!downstreamTrans.isExonic())
-                                    continue;
-
-                                // skip chained fusions from exon-to-exon?
-                                if(upstreamTrans.parent().id() != downstreamTrans.parent().id())
-                                    continue;
-
-                                checkExactMatch = true;
-                            }
-
-                            // phasing match
-                        }
-                        else if(upstreamTrans.nonCoding())
-                        {
-                            if(upstreamTrans.isExonic() && !downstreamTrans.isExonic())
-                                continue;
-                            else if(downstreamTrans.isCoding())
-                                continue;
-
-                            // phasing match
-                        }
-
-                        if (!isPotentiallyRelevantFusion(upstreamTrans, downstreamTrans))
-                            continue;
-
-                        boolean phaseMatched = false;
-
-                        if(!checkExactMatch)
-                        {
-                            // all fusions to downstream exons may be excluded, but for now definitely exclude those which end in the last exon
-                            if(downstreamTrans.isExonic() && downstreamTrans.exonDownstream() == downstreamTrans.exonMax() && !downstreamTrans.preCoding())
-                                continue;
-                        }
-
-                        if(checkExactMatch)
-                        {
-                            phaseMatched = exonToExonInPhase(upstreamTrans, true, downstreamTrans, false);
-
-                            if(phaseMatched || !requirePhaseMatch)
-                            {
-                                addFusion(potentialFusions, upstreamTrans, downstreamTrans, phaseMatched);
-                            }
-                        }
-                        else
-                        {
-                            // just check for a phasing match
-                            phaseMatched = upstreamTrans.exonUpstreamPhase() == downstreamTrans.exonDownstreamPhase();
-
-                            if(phaseMatched || !requirePhaseMatch)
-                            {
-                                addFusion(potentialFusions, upstreamTrans, downstreamTrans, phaseMatched);
-                            }
-                        }
-                        */
-
                     }
                 }
             }
@@ -863,7 +770,7 @@ public class SvFusionAnalyser
             else
             {
                 writer.write(String.format(",,%s,,%d,,%d,,-1,-1", rnaFusion.ChrUp, rnaFusion.PositionUp, rnaFusion.StrandUp));
-                writer.write(String.format("%s,,,,,,,", rnaFusion.getTransValid(true)));
+                writer.write(String.format(",%s,,,,,,", rnaFusion.getTransValid(true)));
             }
 
             final Transcript transDown = rnaFusion.getTrans(false);
@@ -878,13 +785,13 @@ public class SvFusionAnalyser
 
                 writer.write(
                         String.format(",%s,%s,%s,%s,%d,%s,%d",
-                                rnaFusion.getTransValid(true), transDown.StableId, transDown.regionType(), transDown.codingType(),
+                                rnaFusion.getTransValid(false), transDown.StableId, transDown.regionType(), transDown.codingType(),
                                 transDown.exonDownstream(), transDown.isDisruptive(), transDown.exonDistanceUp()));
             }
             else
             {
                 writer.write(String.format(",,%s,,%d,,%d,,-1,-1", rnaFusion.ChrDown, rnaFusion.PositionDown, rnaFusion.StrandDown));
-                writer.write(String.format("%s,,,,,,,", rnaFusion.getTransValid(false)));
+                writer.write(String.format(",%s,,,,,,", rnaFusion.getTransValid(false)));
             }
 
             writer.write(String.format(",%d,%d,%s", rnaFusion.JunctionReadCount, rnaFusion.SpanningFragCount, rnaFusion.SpliceType));

@@ -407,11 +407,6 @@ public class FusionDisruptionAnalyser
         {
             mFusionFinder.setRnaFusionData(rnaFusion);
 
-            if (rnaFusion.Name.equals("FOXP2--CFTR"))
-            {
-                LOGGER.debug("spec rNA FUSION");
-            }
-
             annotateRnaFusions(rnaFusion);
 
             mFusionFinder.writeRnaMatchData(mSampleId, rnaFusion);
@@ -441,13 +436,13 @@ public class FusionDisruptionAnalyser
         */
 
 
-        // find all SVs with breakends in either gene, take all possible pairings
-        // must be correctly positioned before/after rna exon position
-
+        // viable breakends and their matching transcript
         List<SvBreakend> upstreamBreakends = Lists.newArrayList();
         List<Transcript> upstreamTranscripts = Lists.newArrayList();
         List<SvBreakend> downstreamBreakends = Lists.newArrayList();
         List<Transcript> downstreamTranscripts = Lists.newArrayList();
+
+        // non-viable transcripts to be used if non viable ones are found
         List<Transcript> nearDownstreamTranscripts = Lists.newArrayList();
         List<Transcript> nearUpstreamTranscripts = Lists.newArrayList();
 
@@ -582,14 +577,14 @@ public class FusionDisruptionAnalyser
                 }
                 else
                 {
-                    if(!upstreamTranscripts.isEmpty())
+                    if(!downstreamTranscripts.isEmpty())
                     {
                         isViable = true;
-                        transcriptList = upstreamTranscripts;
+                        transcriptList = downstreamTranscripts;
                     }
                     else
                     {
-                        transcriptList = nearUpstreamTranscripts;
+                        transcriptList = nearDownstreamTranscripts;
                     }
                 }
 

@@ -32,26 +32,12 @@ public class SvAnnotatorTestUtils
         return gene;
     }
 
-    /*
-    public static Transcript createTranscript(final GeneAnnotation parent, @NotNull final String transcriptId,
-            final int exonUpstream, final int exonUpstreamPhase, final int exonDownstream, final int exonDownstreamPhase,
-            final long codingBases, final long totalCodingBases,
-            final int exonMax, final boolean canonical, final long transcriptStart, final long transcriptEnd,
-            @Nullable final Long codingStart, @Nullable final Long codingEnd)
-    {
-        Transcript transcript = new Transcript()
-        return transcript;
-    }
-    */
-
-
     // Ensembl data types
     public static EnsemblGeneData createEnsemblGeneData(String geneId, String geneName, String chromosome, int strand, long geneStart, long geneEnd)
     {
         return new EnsemblGeneData(geneId, geneName, chromosome, (byte)strand, geneStart, geneEnd, "", "", "");
     }
 
-    // testing access
     public static void addTransExonData(SvGeneTranscriptCollection geneTransCache, final String geneId, List<TranscriptExonData> transExonList)
     {
         geneTransCache.getGeneExonDataMap().put(geneId, transExonList);
