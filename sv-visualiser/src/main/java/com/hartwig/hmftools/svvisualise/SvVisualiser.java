@@ -144,7 +144,7 @@ public class SvVisualiser implements AutoCloseable {
         final Set<Integer> segmentChainIds = clusterSegments.stream().map(Segment::chainId).collect(Collectors.toSet());
         segmentChainIds.removeAll(linkChainIds);
         if (!segmentChainIds.isEmpty()) {
-            LOGGER.warn("Cluster {} contains chain ids {} in segments but not in the links", clusterId, segmentChainIds);
+            LOGGER.warn("Cluster {} contains chain ids {} not found in the links", clusterId, segmentChainIds);
             return null;
         }
 
