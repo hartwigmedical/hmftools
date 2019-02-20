@@ -89,72 +89,6 @@ public class SvGeneTranscriptCollection
         return null;
     }
 
-    public static int EXON_RANK_MIN = 0;
-    public static int EXON_RANK_MAX = 1;
-
-    public int[] getExonData(final String geneName, long position)
-    {
-        int[] exonData = new int[EXON_RANK_MAX+1];
-
-        final EnsemblGeneData geneData = getGeneData(geneName);
-
-        if(geneData == null)
-            return exonData;
-
-        final List<TranscriptExonData> exonDataList = getTranscriptExons(geneData.GeneId, "");
-
-        if(exonDataList == null || exonDataList.isEmpty())
-            return exonData;
-
-        // first test a position outside the range of the exons
-        final TranscriptExonData firstExon = exonDataList.get(0);
-        final TranscriptExonData lastExon = exonDataList.get(exonDataList.size() - 1);
-
-        if((position < firstExon.ExonStart && firstExon.Strand == 1) || (position > lastExon.ExonEnd && lastExon.Strand == -1))
-        {
-            exonData[EXON_RANK_MIN] = 0;
-            exonData[EXON_RANK_MAX] = 1;
-        }
-        else if((position < firstExon.ExonStart && firstExon.Strand == -1) || (position > lastExon.ExonEnd && lastExon.Strand == 1))
-        {
-            exonData[EXON_RANK_MIN] = exonDataList.size();
-            exonData[EXON_RANK_MAX] = -1;
-        }
-        else
-        {
-            for(int i = 0; i < exonDataList.size() - 1; ++i)
-            {
-                final TranscriptExonData transExonData = exonDataList.get(i);
-                final TranscriptExonData nextTransExonData = exonDataList.get(i+1);
-
-                if(position >= transExonData.ExonStart && position <= transExonData.ExonEnd)
-                {
-                    exonData[EXON_RANK_MIN] = transExonData.ExonRank;
-                    exonData[EXON_RANK_MAX] = transExonData.ExonRank;
-                    break;
-                }
-
-                if(position > transExonData.ExonEnd && position < nextTransExonData.ExonStart)
-                {
-                    if(transExonData.Strand == 1)
-                    {
-                        exonData[EXON_RANK_MIN] = transExonData.ExonRank;
-                        exonData[EXON_RANK_MAX] = nextTransExonData.ExonRank;
-                    }
-                    else
-                    {
-                        exonData[EXON_RANK_MIN] = nextTransExonData.ExonRank;
-                        exonData[EXON_RANK_MAX] = transExonData.ExonRank;
-                    }
-
-                    break;
-                }
-            }
-        }
-
-        return exonData;
-    }
-
     public List<TranscriptExonData> getTransExonData(final String geneId)
     {
         return mGeneTransExonDataMap.get(geneId);
@@ -333,7 +267,7 @@ public class SvGeneTranscriptCollection
         return null;
     }
 
-    private Transcript extractTranscriptExonData(final List<TranscriptExonData> transcriptExons, long position, final GeneAnnotation geneAnnotation)
+    public static Transcript extractTranscriptExonData(final List<TranscriptExonData> transcriptExons, long position, final GeneAnnotation geneAnnotation)
     {
         int exonMax = transcriptExons.size();
 
@@ -555,6 +489,72 @@ public class SvGeneTranscriptCollection
             transcript.setCodingType(TRANS_CODING_TYPE_CODING);
 
         return transcript;
+    }
+
+    public static int EXON_RANK_MIN = 0;
+    public static int EXON_RANK_MAX = 1;
+
+    public int[] getExonRankings(final String geneName, long position)
+    {
+        int[] exonData = new int[EXON_RANK_MAX+1];
+
+        final EnsemblGeneData geneData = getGeneData(geneName);
+
+        if(geneData == null)
+            return exonData;
+
+        final List<TranscriptExonData> exonDataList = getTranscriptExons(geneData.GeneId, "");
+
+        if(exonDataList == null || exonDataList.isEmpty())
+            return exonData;
+
+        // first test a position outside the range of the exons
+        final TranscriptExonData firstExon = exonDataList.get(0);
+        final TranscriptExonData lastExon = exonDataList.get(exonDataList.size() - 1);
+
+        if((position < firstExon.ExonStart && firstExon.Strand == 1) || (position > lastExon.ExonEnd && lastExon.Strand == -1))
+        {
+            exonData[EXON_RANK_MIN] = 0;
+            exonData[EXON_RANK_MAX] = 1;
+        }
+        else if((position < firstExon.ExonStart && firstExon.Strand == -1) || (position > lastExon.ExonEnd && lastExon.Strand == 1))
+        {
+            exonData[EXON_RANK_MIN] = exonDataList.size();
+            exonData[EXON_RANK_MAX] = -1;
+        }
+        else
+        {
+            for(int i = 0; i < exonDataList.size() - 1; ++i)
+            {
+                final TranscriptExonData transExonData = exonDataList.get(i);
+                final TranscriptExonData nextTransExonData = exonDataList.get(i+1);
+
+                if(position >= transExonData.ExonStart && position <= transExonData.ExonEnd)
+                {
+                    exonData[EXON_RANK_MIN] = transExonData.ExonRank;
+                    exonData[EXON_RANK_MAX] = transExonData.ExonRank;
+                    break;
+                }
+
+                if(position > transExonData.ExonEnd && position < nextTransExonData.ExonStart)
+                {
+                    if(transExonData.Strand == 1)
+                    {
+                        exonData[EXON_RANK_MIN] = transExonData.ExonRank;
+                        exonData[EXON_RANK_MAX] = nextTransExonData.ExonRank;
+                    }
+                    else
+                    {
+                        exonData[EXON_RANK_MIN] = nextTransExonData.ExonRank;
+                        exonData[EXON_RANK_MAX] = transExonData.ExonRank;
+                    }
+
+                    break;
+                }
+            }
+        }
+
+        return exonData;
     }
 
     public static int PSEUDO_GENE_DATA_TRANS_ID = 0;

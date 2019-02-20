@@ -221,7 +221,6 @@ public class StructuralVariantAnnotator
             String clusterInfo = ",,";
             mFusionAnalyser.writeFusions(fusions, sampleId, clusterInfo, hasMultipleSamples);
             mDisruptionAnalyser.writeDisruptions(disruptions, sampleId, hasMultipleSamples);
-            mFusionAnalyser.matchRnaFusions(sampleId, fusions, annotations);
 
             if (mWriteBreakends)
             {

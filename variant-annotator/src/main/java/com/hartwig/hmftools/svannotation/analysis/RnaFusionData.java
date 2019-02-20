@@ -5,6 +5,7 @@ import com.hartwig.hmftools.common.variant.structural.annotation.Transcript;
 
 public class RnaFusionData
 {
+    // data from Star Fusion predictions output:
     public final String Name;
     public final String GeneUp;
     public final String GeneDown;
@@ -19,15 +20,28 @@ public class RnaFusionData
     public final int SpanningFragCount;
     public final String SpliceType;
 
+    public static String RNA_SPLICE_TYPE_ONLY_REF = "ONLY_REF_SPLICE";
+
+    // annotations and matching results
+
+    private Transcript mTransUp;
+    private Transcript mTransDown;
+
+    // canonical exon positions
     private int mExonMinRankUp;
     private int mExonMaxRankUp;
     private int mExonMinRankDown;
     private int mExonMaxRankDown;
 
-    private GeneFusion mFusionMatch;
-    private Transcript mTransUp;
-    private Transcript mTransDown;
+    private boolean mViableFusion; // the pair of transcripts satisfied standard fusion rules
+    private boolean mTransValidUp; // the transcript fell in the correct location relative to the RNA position
+    private boolean mTransValidDown;
 
+    // SVA match data
+    private int mClusterIdUp;
+    private int mClusterIdDown;
+    private int mChainIdUp;
+    private int mChainIdDown;
 
     public RnaFusionData(final String name, final String geneUp, final String geneDown, final String chrUp, final String chrDown,
             long posUp, long posDown, byte strandUp, byte strandDown, int junctionReadCount, int spanningFragCount, final String spliceType)
@@ -50,9 +64,16 @@ public class RnaFusionData
         mExonMinRankDown = 0;
         mExonMaxRankDown = 0;
 
-        mFusionMatch = null;
         mTransUp = null;
         mTransDown = null;
+
+        mViableFusion = false;
+        mTransValidUp = false;
+        mTransValidDown = false;
+        mClusterIdUp = -1;
+        mClusterIdDown = -1;
+        mChainIdUp = -1;
+        mChainIdDown = -1;
     }
 
     public void setExonUpRank(int min, int max)
@@ -72,21 +93,44 @@ public class RnaFusionData
     public int exonMinRankDown() { return mExonMinRankDown; }
     public int exonMaxRankDown() { return mExonMaxRankDown; }
 
-    public final GeneFusion getMatchedFusion() { return mFusionMatch; }
-    public void setMatchedFusion(final GeneFusion fusion)
+    public void setViableFusion(boolean toggle) { mViableFusion = toggle; }
+
+    public void setTranscriptData(final Transcript trans, boolean isUpstream, boolean matchedRnaBoundary)
     {
-        mFusionMatch = fusion;
-        mTransUp = fusion.upstreamTrans();
-        mTransDown = fusion.downstreamTrans();
+        if(isUpstream)
+        {
+            mTransUp = trans;
+            mTransValidUp = matchedRnaBoundary;
+        }
+        else
+        {
+            mTransDown = trans;
+            mTransValidDown = matchedRnaBoundary;
+        }
     }
 
-    public void setBreakends(final Transcript up, final Transcript down)
+    public final Transcript getTrans(boolean isUpstream) { return isUpstream ? mTransUp : mTransDown; }
+    public final boolean getTransValid(boolean isUpstream) { return isUpstream ? mTransValidUp : mTransValidDown; }
+
+    public void setChainInfo(int clusterId, int chainId, boolean isUpstream)
     {
-        mTransUp = up;
-        mTransDown = down;
+        if(isUpstream)
+        {
+            mChainIdUp = chainId;
+            mClusterIdUp = clusterId;
+        }
+        else
+        {
+            mChainIdDown = chainId;
+            mClusterIdDown = clusterId;
+        }
     }
 
-    public final Transcript getTransUp() { return mTransUp; }
-    public final Transcript getTransDown() { return mTransDown; }
+    public boolean isViableFusion() { return mViableFusion; }
+
+    // SVA match data
+
+    public int getClusterId(boolean isUpstream) { return isUpstream ? mClusterIdUp : mClusterIdDown; }
+    public int getChainId(boolean isUpstream) { return isUpstream ? mChainIdUp : mChainIdDown; }
 
 }

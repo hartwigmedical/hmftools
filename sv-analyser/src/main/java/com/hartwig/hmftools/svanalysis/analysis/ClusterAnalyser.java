@@ -89,7 +89,6 @@ public class ClusterAnalyser {
 
     public static int SMALL_CLUSTER_SIZE = 3;
     public static int SHORT_TI_LENGTH = 1000;
-    public static int CLUSTER_SIZE_ANALYSIS_LIMIT = 200;
 
     private static final Logger LOGGER = LogManager.getLogger(ClusterAnalyser.class);
 
@@ -320,7 +319,6 @@ public class ClusterAnalyser {
             {
                 cluster.setDesc(cluster.getClusterTypesAsString());
 
-                // NEW LOGIC:
                 cluster.dissolveLinksAndChains();
                 cluster.removeReplicatedSvs();
 
@@ -350,6 +348,13 @@ public class ClusterAnalyser {
 
         // isSpecificCluster(cluster);
 
+        if(mConfig.MaxClusterSize > 0 && (cluster.getUniqueSvCount() > mConfig.MaxClusterSize || cluster.getCount() > mConfig.MaxClusterSize * 5))
+        {
+            LOGGER.debug("cluster({}) skipping large cluster: unique({}) replicated({})",
+                    cluster.id(), cluster.getUniqueSvCount(), cluster.getCount());
+            return;
+        }
+
         mChainFinder.formClusterChains();
 
         if(cluster.getChains().size() > 1)
@@ -357,21 +362,6 @@ public class ClusterAnalyser {
             checkChainReplication(cluster);
             return;
         }
-
-        /* no longer relevant since inferred links aren't determined before chaining
-
-        // remove any inferred link which isn't in the full chain
-        final SvChain fullChain = cluster.getChains().get(0);
-
-        List<SvLinkedPair> inferredLinkedPairs = cluster.getInferredLinkedPairs();
-        inferredLinkedPairs.clear();
-
-        for(SvLinkedPair pair : fullChain.getLinkedPairs())
-        {
-            if(pair.isInferred())
-                inferredLinkedPairs.add(pair);
-        }
-        */
     }
 
     private void setClusterResolvedState(SvCluster cluster)

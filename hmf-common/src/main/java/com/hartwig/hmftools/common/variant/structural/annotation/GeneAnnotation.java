@@ -97,7 +97,7 @@ public class GeneAnnotation {
         mKaryotypeBand = karyotypeBand;
     }
 
-    public void setPositionalData(final String chromosome, long position, Byte orientation)
+    public void setPositionalData(final String chromosome, long position, byte orientation)
     {
         mChromosome = chromosome;
         mPosition = position;

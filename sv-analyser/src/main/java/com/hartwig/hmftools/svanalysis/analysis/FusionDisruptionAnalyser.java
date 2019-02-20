@@ -6,6 +6,9 @@ import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_END;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_START;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.isStart;
 import static com.hartwig.hmftools.svannotation.SvGeneTranscriptCollection.PRE_GENE_PROMOTOR_DISTANCE;
+import static com.hartwig.hmftools.svannotation.SvGeneTranscriptCollection.nextTranscriptExons;
+import static com.hartwig.hmftools.svannotation.analysis.RnaFusionData.RNA_SPLICE_TYPE_ONLY_REF;
+import static com.hartwig.hmftools.svannotation.analysis.SvFusionAnalyser.checkFusionLogic;
 
 import java.util.List;
 import java.util.Map;
@@ -22,6 +25,7 @@ import com.hartwig.hmftools.common.region.HmfTranscriptRegion;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneAnnotation;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion;
 import com.hartwig.hmftools.svanalysis.annotators.VisualiserWriter;
+import com.hartwig.hmftools.svanalysis.types.SvCNData;
 import com.hartwig.hmftools.svanalysis.types.SvFusion;
 import com.hartwig.hmftools.svannotation.SvGeneTranscriptCollection;
 import com.hartwig.hmftools.common.variant.structural.annotation.Transcript;
@@ -399,135 +403,248 @@ public class FusionDisruptionAnalyser
         if (rnaFusionList == null || rnaFusionList.isEmpty())
             return;
 
-        for(final RnaFusionData rnaFusion : rnaFusionList)
+        for (final RnaFusionData rnaFusion : rnaFusionList)
         {
             mFusionFinder.setRnaFusionData(rnaFusion);
 
-            if(rnaFusion.Name.equals("FOXP2--CFTR"))
+            if (rnaFusion.Name.equals("FOXP2--CFTR"))
             {
                 LOGGER.debug("spec rNA FUSION");
             }
 
-            // find all SVs with breakends in either gene, take all possible pairings
-            // must be correctly positioned before/after rna exon position
+            annotateRnaFusions(rnaFusion);
 
-            List<SvBreakend> upstreamBreakends = Lists.newArrayList();
-            List<SvBreakend> downstreamBreakends = Lists.newArrayList();
+            mFusionFinder.writeRnaMatchData(mSampleId, rnaFusion);
+        }
+    }
 
+    public void annotateRnaFusions(final RnaFusionData rnaFusion)
+    {
+
+        /* Matching and annotation logic:
+            - find all breakends in the RNA up and down gene
+            - for them, find the any transcripts which a) have the exon boundary in the RNA position AND
+            - b) are in the correct relative position:
+                - upstream: at or after the RNA boundary down to the start of the next exon
+                - downstream: at or before the RNA bounday up to the start of the preceding exon
+                - If a transcript on the downstream gene starts on the 2nd exon, the fusion is allowed to match up to the nearer
+                of a splice acceptor site with same orientation on a previous gene OR 100k bases upstream of the transcript.
+                (is the distance up available for these??)
+                - if multiple transcripts exist for the same breakend, take the canonical or longest (but it should make no difference)
+            - if multiple breakends meet these criteria at either end, prioritise in the following order
+                - both breakends are either end of the same structural variant
+                - both breakends are in the same chain
+                - both breakends are in the same cluster
+                - otherwise take the nearest breakend to the RNA position
+            - if no breakend is found on either upstream or downstream gene meeting the above criteria then record the nearest ID,
+            distance and min number of skipped splice sites.
+        */
+
+
+        // find all SVs with breakends in either gene, take all possible pairings
+        // must be correctly positioned before/after rna exon position
+
+        List<SvBreakend> upstreamBreakends = Lists.newArrayList();
+        List<Transcript> upstreamTranscripts = Lists.newArrayList();
+        List<SvBreakend> downstreamBreakends = Lists.newArrayList();
+        List<Transcript> downstreamTranscripts = Lists.newArrayList();
+        List<Transcript> nearDownstreamTranscripts = Lists.newArrayList();
+        List<Transcript> nearUpstreamTranscripts = Lists.newArrayList();
+
+        boolean isExactRnaExon = rnaFusion.SpliceType.equals(RNA_SPLICE_TYPE_ONLY_REF);
+
+        for(int i = 0; i <= 1 ; ++i)
+        {
+            boolean isUpstream = (i == 0);
+            String chromosome = isUpstream ? rnaFusion.ChrUp : rnaFusion.ChrDown;
+            long rnaPosition = isUpstream ? rnaFusion.PositionUp : rnaFusion.PositionDown;
+            byte geneStrand = isUpstream ? rnaFusion.StrandUp : rnaFusion.StrandDown;
+            List<SvBreakend> viableBreakends = isUpstream ? upstreamBreakends : downstreamBreakends;
+            List<Transcript> viableTranscripts = isUpstream ? upstreamTranscripts : downstreamTranscripts;
+            List<Transcript> nearTranscripts = isUpstream ? nearUpstreamTranscripts : nearDownstreamTranscripts;
+            String geneName = isUpstream ? rnaFusion.GeneUp : rnaFusion.GeneDown;
+
+            final List<SvBreakend> breakendList = mChrBreakendMap.get(chromosome);
+
+            if(breakendList == null)
+                continue;
+
+            for(final SvBreakend breakend : breakendList)
+            {
+                final SvVarData var = breakend.getSV();
+
+                if(var.isNoneSegment())
+                    continue;
+
+                // check breakend falls in genic region
+                List<GeneAnnotation> genesList = var.getGenesList(breakend.usesStart())
+                        .stream()
+                        .filter(x -> x.GeneName.equals(geneName))
+                        .collect(Collectors.toList());
+
+                if(genesList.isEmpty())
+                    continue;
+
+                // check that breakend has correct orientation and position relative to RNA breakend
+                if(!isViableBreakend(breakend, rnaPosition, geneStrand, isUpstream))
+                    continue;
+
+                // check whether any of the breakend's transcripts falls within the nearest exon of the RNA fusion breakpoint
+                for(final Transcript trans : genesList.get(0).transcripts())
+                {
+                    if(trans.isCanonical())
+                        nearTranscripts.add(trans);
+
+                    if(mFusionFinder.isTranscriptBreakendViableForRnaBoundary(
+                            trans, isUpstream,  breakend.position(), rnaPosition, isExactRnaExon))
+                    {
+                        viableBreakends.add(breakend);
+                        viableTranscripts.add(trans);
+                        break;
+                    }
+                }
+            }
+        }
+
+        // run them through fusion logic (ie a pair of breakend lists), but don't require phase matching
+        if(!upstreamBreakends.isEmpty() && !downstreamBreakends.isEmpty())
+        {
+            GeneFusion topCandidateFusion = null;
+            SvBreakend topUpBreakend = null;
+            SvBreakend topDownBreakend = null;
+
+            for (int i = 0; i < upstreamBreakends.size(); ++i)
+            {
+                final SvBreakend upBreakend = upstreamBreakends.get(i);
+                final Transcript upTrans = upstreamTranscripts.get(i);
+
+                if(upBreakend.getSV().isNullBreakend())
+                    continue;
+
+                for (int j = 0; j < downstreamBreakends.size(); ++j)
+                {
+                    final SvBreakend downBreakend = downstreamBreakends.get(j);
+                    final Transcript downTrans = downstreamTranscripts.get(j);
+
+                    if(downBreakend.getSV().isNullBreakend())
+                        continue;
+
+                    GeneFusion possibleFusion = checkFusionLogic(upTrans, downTrans, false);
+
+                    // form one any way but mark it as not meeting standard fusion rules
+                    if(possibleFusion == null)
+                        possibleFusion = new GeneFusion(upTrans, downTrans, false, false);
+
+                    if (topCandidateFusion == null
+                    || isCandidateBetter(topCandidateFusion, topUpBreakend, topDownBreakend, possibleFusion, upBreakend, downBreakend, rnaFusion))
+                    {
+                        topCandidateFusion = possibleFusion;
+                        topUpBreakend = upBreakend;
+                        topDownBreakend = downBreakend;
+                    }
+                }
+            }
+
+            if(topCandidateFusion != null)
+            {
+                rnaFusion.setTranscriptData(topCandidateFusion.upstreamTrans(), true, true);
+                rnaFusion.setTranscriptData(topCandidateFusion.downstreamTrans(), false, true);
+                rnaFusion.setViableFusion(topCandidateFusion.viable() && topCandidateFusion.phaseMatched());
+
+                // add cluster and chain info
+                setFusionChainInfo(rnaFusion, topUpBreakend, true);
+                setFusionChainInfo(rnaFusion, topDownBreakend, false);
+            }
+        }
+        else
+        {
+            // select the closest breakend's transcript
             for(int i = 0; i <= 1 ; ++i)
             {
                 boolean isUpstream = (i == 0);
-                String chromosome = isUpstream ? rnaFusion.ChrUp : rnaFusion.ChrDown;
                 long rnaPosition = isUpstream ? rnaFusion.PositionUp : rnaFusion.PositionDown;
-                byte geneStrand = isUpstream ? rnaFusion.StrandUp : rnaFusion.StrandDown;
-                List<SvBreakend> viableBreakends = isUpstream ? upstreamBreakends : downstreamBreakends;
-                String geneName = isUpstream ? rnaFusion.GeneUp : rnaFusion.GeneDown;
 
-                final List<SvBreakend> breakendList = mChrBreakendMap.get(chromosome);
+                List<Transcript> transcriptList;
+                boolean isViable = false;
 
-                if(breakendList == null)
-                    continue;
-
-                for(final SvBreakend breakend : breakendList)
+                // use the viable transcripts if present, otherwise the nearest
+                if(isUpstream)
                 {
-                    if(breakend.getSV().isNoneSegment())
-                        continue;
-
-                    // check breakend falls in genic region
-                    boolean inGene = breakend.getSV().getGenesList(breakend.usesStart()).stream()
-                            .filter(x -> x.GeneName.equals(geneName))
-                            .count() > 0;
-
-                    if(!inGene)
-                        continue;
-
-                    if(isViableBreakend(breakend, rnaPosition, geneStrand, isUpstream))
+                    if(!upstreamTranscripts.isEmpty())
                     {
-                        viableBreakends.add(breakend);
+                        isViable = true;
+                        transcriptList = upstreamTranscripts;
+                    }
+                    else
+                    {
+                        transcriptList = nearUpstreamTranscripts;
                     }
                 }
-            }
-
-            // run them through fusion logic (ie a pair of breakend lists), but don't require phase matching
-            if(!upstreamBreakends.isEmpty() && !downstreamBreakends.isEmpty())
-            {
-                GeneFusion topCandidateFusion = null;
-                SvBreakend topUpBreakend = null;
-                SvBreakend topDownBreakend = null;
-
-                for (final SvBreakend upBreakend : upstreamBreakends)
+                else
                 {
-                    if(upBreakend.getSV().isNullBreakend())
-                        continue;
-
-                    List<GeneAnnotation> upGenesList = upBreakend.getSV().getGenesList(upBreakend.usesStart())
-                            .stream()
-                            .filter(x -> x.GeneName.equals(rnaFusion.GeneUp))
-                            .collect(Collectors.toList());
-
-                    for (final SvBreakend downBreakend : downstreamBreakends)
+                    if(!upstreamTranscripts.isEmpty())
                     {
-                        if(downBreakend.getSV().isNullBreakend())
-                            continue;
-
-                        List<GeneAnnotation> downGenesList = downBreakend.getSV().getGenesList(downBreakend.usesStart())
-                                .stream()
-                                .filter(x -> x.GeneName.equals(rnaFusion.GeneDown))
-                                .collect(Collectors.toList());
-
-                        List<GeneFusion> possibleFusions = mFusionFinder.findFusions(upGenesList, downGenesList, false);
-
-                        if (possibleFusions.isEmpty())
-                            continue;
-
-                        // find a reportable fusion if possible
-                        GeneFusion possibleFusion = selectPossibleFusion(possibleFusions, rnaFusion);
-
-                        if (possibleFusion == null)
-                            continue;
-
-                        if (topCandidateFusion == null
-                        || isCandidateBetter(topCandidateFusion, topUpBreakend, topDownBreakend, possibleFusion, upBreakend, downBreakend, rnaFusion))
-                        {
-                            topCandidateFusion = possibleFusion;
-                            topUpBreakend = upBreakend;
-                            topDownBreakend = downBreakend;
-                        }
+                        isViable = true;
+                        transcriptList = upstreamTranscripts;
+                    }
+                    else
+                    {
+                        transcriptList = nearUpstreamTranscripts;
                     }
                 }
 
-                if(topCandidateFusion != null)
-                    rnaFusion.setMatchedFusion(topCandidateFusion);
-            }
-            else
-            {
-                // set whatever breakend in can be found
-                Transcript upTrans = null;
-                Transcript downTrans = null;
+                Transcript closestTrans = null;
+                long closestDistance = 0;
 
-                if(!upstreamBreakends.isEmpty())
+                for (final Transcript trans : transcriptList)
                 {
-                    final List<GeneAnnotation> genes = upstreamBreakends.get(0).getSV().getGenesList(upstreamBreakends.get(0).usesStart());
-                    upTrans = !genes.get(0).transcripts().isEmpty() ? genes.get(0).transcripts().get(0) : null;
+                    long distance = abs(rnaPosition - trans.svPosition());
+                    if(closestTrans == null || distance < closestDistance)
+                    {
+                        closestDistance = distance;
+                        closestTrans = trans;
+                    }
                 }
 
-                if(!downstreamBreakends.isEmpty())
+                if(closestTrans != null)
                 {
-                    final List<GeneAnnotation> genes = downstreamBreakends.get(0).getSV().getGenesList(downstreamBreakends.get(0).usesStart());
-                    downTrans = !genes.get(0).transcripts().isEmpty() ? genes.get(0).transcripts().get(0) : null;
+                    rnaFusion.setTranscriptData(closestTrans, isUpstream, isViable);
                 }
-
-                rnaFusion.setBreakends(upTrans, downTrans);
             }
-
-            mFusionFinder.writeRnaMatchData(mSampleId, rnaFusion);
-            // SvFusion svFusion = new SvFusion();
         }
+    }
+
+    private void setFusionChainInfo(final RnaFusionData rnaFusionData, final SvBreakend breakend, boolean isUpstream)
+    {
+        SvCluster cluster = breakend.getSV().getCluster();
+        SvChain chain = cluster.findChain(breakend.getSV());
+        rnaFusionData.setChainInfo(cluster.id(), chain != null ? chain.id() : -1, isUpstream);
     }
 
     private boolean isCandidateBetter(final GeneFusion currentFusion, final SvBreakend beCurrentStart, final SvBreakend beCurrentEnd,
             final GeneFusion candidateFusion, final SvBreakend beCandidateStart, final SvBreakend beCandidateEnd, final RnaFusionData rnaFusion)
     {
+        /*
+            if(fusion.reportable() && fusion.phaseMatched())
+            {
+                return fusion;
+            }
+            else if(fusion.phaseMatched())
+            {
+                if(possibleFusion == null || !possibleFusion.phaseMatched())
+                    possibleFusion = fusion;
+            }
+            else if(fusion.reportable())
+            {
+                if(possibleFusion == null || !possibleFusion.reportable())
+                    possibleFusion = fusion;
+            }
+            else if(possibleFusion == null)
+            {
+                possibleFusion = fusion;
+            }
+         */
+
         // give priority to same SV
         boolean currentSameSV = beCurrentStart.getSV() == beCurrentEnd.getSV();
         boolean candidateSameSV = beCandidateStart.getSV() == beCandidateEnd.getSV();
@@ -557,42 +674,6 @@ public class FusionDisruptionAnalyser
         double candidatePosDiff = (abs(rnaFusion.PositionUp - beCandidateStart.position()) + abs(rnaFusion.PositionDown - beCandidateEnd.position())) * 0.5;
 
         return candidatePosDiff < currentPosDiff;
-    }
-
-    private GeneFusion selectPossibleFusion(final List<GeneFusion> possibleFusions, final RnaFusionData rnaFusionData)
-    {
-        // find a reportable fusion if possible
-        GeneFusion possibleFusion = null;
-        for(final GeneFusion fusion : possibleFusions)
-        {
-            // check that the fusion wasn't found in the reverse direction
-            if(!fusion.upstreamTrans().parent().GeneName.equals(rnaFusionData.GeneUp)
-            || !fusion.downstreamTrans().parent().GeneName.equals(rnaFusionData.GeneDown))
-            {
-                continue;
-            }
-
-            if(fusion.reportable() && fusion.phaseMatched())
-            {
-                return fusion;
-            }
-            else if(fusion.phaseMatched())
-            {
-                if(possibleFusion == null || !possibleFusion.phaseMatched())
-                    possibleFusion = fusion;
-            }
-            else if(fusion.reportable())
-            {
-                if(possibleFusion == null || !possibleFusion.reportable())
-                    possibleFusion = fusion;
-            }
-            else if(possibleFusion == null)
-            {
-                possibleFusion = fusion;
-            }
-        }
-
-        return possibleFusion;
     }
 
     private boolean isViableBreakend(final SvBreakend breakend, long rnaPosition, byte geneStrand, boolean isUpstream)

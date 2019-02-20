@@ -195,8 +195,6 @@ public class ChainingTests
         final SvChain chain = cluster.getChains().get(0);
 
         assertEquals(3, chain.getLinkCount());
-
-
     }
 
     @Test

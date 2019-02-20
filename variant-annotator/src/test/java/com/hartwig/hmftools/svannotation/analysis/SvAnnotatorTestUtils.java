@@ -20,14 +20,14 @@ public class SvAnnotatorTestUtils
     }
 
     public static GeneAnnotation createGeneAnnotation(int svId, boolean isStart, final String geneName, String stableId, int strand,
-            final String chromosome, long position, Byte orientation)
+            final String chromosome, long position, int orientation)
     {
         List<String> synonyms = Lists.newArrayList();
         List<Integer> entrezIds = Lists.newArrayList();
         String karyotypeBand = "";
 
         GeneAnnotation gene = new GeneAnnotation(svId, isStart, geneName, stableId, strand, synonyms, entrezIds, karyotypeBand);
-        gene.setPositionalData(chromosome, position, orientation);
+        gene.setPositionalData(chromosome, position, (byte)orientation);
 
         return gene;
     }

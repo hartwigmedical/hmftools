@@ -6,10 +6,11 @@ public class GeneFusion
 
     private final Transcript mDownstream;
 
-    private final String mPrimarySource;
+    private String mPrimarySource;
 
     private boolean mIsReportable;
     private boolean mPhaseMatched;
+    private boolean mViable; // passes fusion rules
     private String mKnownFusionType;
 
     public static String REPORTABLE_TYPE_NONE = "";
@@ -18,16 +19,19 @@ public class GeneFusion
     public static String REPORTABLE_TYPE_5P_PROM = "5P-Prom";
     public static String REPORTABLE_TYPE_3P_PROM = "3P-Prom";
 
-    public GeneFusion(final Transcript upstreamTrans, final Transcript downstream, final String primarySource,
-            boolean isReportable, boolean phaseMatched)
+    public GeneFusion(final Transcript upstreamTrans, final Transcript downstream, boolean phaseMatched, boolean viable)
     {
         mUpstreamTrans = upstreamTrans;
         mDownstream = downstream;
-        mPrimarySource = primarySource;
-        mIsReportable = isReportable;
+        mPrimarySource = "";
+        mIsReportable = false;
         mKnownFusionType = REPORTABLE_TYPE_NONE;
         mPhaseMatched = phaseMatched;
+        mViable = viable;
     }
+
+    public Transcript upstreamTrans() { return mUpstreamTrans; }
+    public Transcript downstreamTrans() { return mDownstream; }
 
     public boolean reportable(){ return mIsReportable; }
     public void setReportable(boolean toggle) { mIsReportable = toggle; }
@@ -35,11 +39,9 @@ public class GeneFusion
     public final String getKnownFusionType(){ return mKnownFusionType; }
     public void setKnownFusionType(final String type) { mKnownFusionType = type; }
 
-    public Transcript upstreamTrans() { return mUpstreamTrans; }
-
-    public Transcript downstreamTrans() { return mDownstream; }
-
     public String primarySource() { return mPrimarySource; }
+    public void setPrimarySource(final String source) { mPrimarySource = source; }
 
     public boolean phaseMatched(){ return mPhaseMatched; }
+    public boolean viable(){ return mViable; }
 }

@@ -1,8 +1,6 @@
 package com.hartwig.hmftools.svanalysis.analysis;
 
-import static com.hartwig.hmftools.svanalysis.analysis.ClusterAnalyser.CLUSTER_SIZE_ANALYSIS_LIMIT;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.copyNumbersEqual;
-import static com.hartwig.hmftools.svanalysis.types.SvCluster.isSpecificCluster;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_END;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_START;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.isStart;
@@ -228,10 +226,6 @@ public class LinkFinder
     public List<SvLinkedPair> createInferredLinkedPairs(SvCluster cluster, List<SvVarData> svList, boolean allowSingleBEs)
     {
         List<SvLinkedPair> linkedPairs = Lists.newArrayList();
-
-        // exclude large clusters for now due to processing times until the algo is better refined
-        if(svList.size() >= CLUSTER_SIZE_ANALYSIS_LIMIT)
-            return linkedPairs;
 
         // isSpecificCluster(cluster);
 
