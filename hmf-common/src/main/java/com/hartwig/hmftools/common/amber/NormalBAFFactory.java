@@ -19,6 +19,17 @@ class NormalBAFFactory {
     }
 
     @NotNull
+    public static ModifiableNormalBAF create(@NotNull final NormalBAF pos) {
+        return ModifiableNormalBAF.create()
+                .setChromosome(pos.chromosome())
+                .setPosition(pos.position())
+                .setRef(pos.ref())
+                .setBaseMap(new EnumMap<>(NormalBAF.Base.class))
+                .setIndelCount(0)
+                .setReadDepth(0);
+    }
+
+    @NotNull
     public static ModifiableNormalBAF create(@NotNull final GenomeRegion pos) {
         return ModifiableNormalBAF.create()
                 .setChromosome(pos.chromosome())

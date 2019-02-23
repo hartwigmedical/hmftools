@@ -36,13 +36,13 @@ public enum AmberBAFFile {
         return fromLines(Files.readAllLines(new File(fileName).toPath()));
     }
 
-    public static void write(@NotNull final String filename, @NotNull Multimap<String, AmberBAF> bafs) throws IOException {
+    public static void write(@NotNull final String filename, @NotNull final Multimap<String, AmberBAF> bafs) throws IOException {
         List<AmberBAF> sortedBafs = Lists.newArrayList(bafs.values());
         Collections.sort(sortedBafs);
         write(filename, sortedBafs);
     }
 
-    public static void write(@NotNull final String filename, @NotNull List<AmberBAF> bafs) throws IOException {
+    public static void write(@NotNull final String filename, @NotNull final List<AmberBAF> bafs) throws IOException {
         Files.write(new File(filename).toPath(), toLines(bafs));
     }
 

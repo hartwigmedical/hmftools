@@ -5,7 +5,6 @@ import java.util.Collections;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.amber.TumorBAF;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -55,6 +54,20 @@ public class AmberVCF {
         writer.close();
     }
 
+
+    public void writeContamination(@NotNull final String filename, @NotNull final Collection<TumorContamination> evidence) {
+        final List<TumorContamination> list = Lists.newArrayList(evidence);
+        Collections.sort(list);
+
+        final VariantContextWriter writer =
+                new VariantContextWriterBuilder().setOutputFile(filename).modifyOption(Options.INDEX_ON_THE_FLY, true).build();
+        writer.setHeader(header);
+        writer.writeHeader(header);
+
+        list.forEach(x -> writer.add(create(x)));
+        writer.close();
+    }
+
     @NotNull
     private VariantContext create(@NotNull final TumorBAF tumorBaf) {
 
@@ -81,5 +94,33 @@ public class AmberVCF {
         final VariantContext context = builder.make();
         context.getCommonInfo().setLog10PError(tumorBaf.tumorAltQuality() / -10d);
         return context;
+    }
+
+    @NotNull
+    private VariantContext create(@NotNull final TumorContamination contamination) {
+        assert(contamination.normal().altSupport() == 0);
+
+        final Allele ref = Allele.create(contamination.tumor().ref().toString(), true);
+        final Allele alt = Allele.create(contamination.tumor().alt().toString(), false);
+
+        final List<Allele> alleles = Lists.newArrayList(ref, alt);
+
+        final Genotype tumor = new GenotypeBuilder(tumorSample).DP(contamination.tumor().readDepth())
+                .AD(new int[] { contamination.tumor().refSupport(), contamination.tumor().altSupport() })
+                .alleles(alleles)
+                .make();
+
+        final Genotype normal = new GenotypeBuilder(normalSample).DP(contamination.normal().readDepth())
+                .AD(new int[] { contamination.normal().refSupport(), contamination.normal().altSupport()})
+                .alleles(alleles)
+                .make();
+
+        final VariantContextBuilder builder = new VariantContextBuilder().chr(contamination.chromosome())
+                .start(contamination.position())
+                .computeEndFromAlleles(alleles, (int) contamination.position())
+                .genotypes(tumor, normal)
+                .alleles(alleles);
+
+        return builder.make();
     }
 }

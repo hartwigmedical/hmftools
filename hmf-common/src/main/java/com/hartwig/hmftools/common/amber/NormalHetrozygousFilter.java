@@ -2,8 +2,6 @@ package com.hartwig.hmftools.common.amber;
 
 import java.util.function.Predicate;
 
-import com.hartwig.hmftools.common.amber.NormalBAF;
-
 public class NormalHetrozygousFilter implements Predicate<NormalBAF> {
 
     private final double minHetAFPercentage;
@@ -16,7 +14,7 @@ public class NormalHetrozygousFilter implements Predicate<NormalBAF> {
 
     @Override
     public boolean test(final NormalBAF bafEvidence) {
-        return bafEvidence.isValid()
+        return bafEvidence.isValid(2)
                 && isHeterozygousRef(bafEvidence.refSupport(), bafEvidence.readDepth())
                 && isHeterozygousAlt(bafEvidence.altSupport(), bafEvidence.readDepth());
     }
