@@ -10,37 +10,37 @@ import org.jetbrains.annotations.NotNull;
 
 import htsjdk.samtools.SAMRecord;
 
-class NormalBAFFactory {
+class BaseDepthFactory {
 
     private final int minBaseQuality;
 
-    NormalBAFFactory(final int minBaseQuality) {
+    BaseDepthFactory(final int minBaseQuality) {
         this.minBaseQuality = minBaseQuality;
     }
 
     @NotNull
-    public static ModifiableNormalBAF create(@NotNull final NormalBAF pos) {
-        return ModifiableNormalBAF.create()
+    public static ModifiableBaseDepth create(@NotNull final BaseDepth pos) {
+        return ModifiableBaseDepth.create()
                 .setChromosome(pos.chromosome())
                 .setPosition(pos.position())
                 .setRef(pos.ref())
-                .setBaseMap(new EnumMap<>(NormalBAF.Base.class))
+                .setBaseMap(new EnumMap<>(BaseDepth.Base.class))
                 .setIndelCount(0)
                 .setReadDepth(0);
     }
 
     @NotNull
-    public static ModifiableNormalBAF create(@NotNull final GenomeRegion pos) {
-        return ModifiableNormalBAF.create()
+    public static ModifiableBaseDepth create(@NotNull final GenomeRegion pos) {
+        return ModifiableBaseDepth.create()
                 .setChromosome(pos.chromosome())
                 .setPosition(pos.start())
-                .setBaseMap(new EnumMap<>(NormalBAF.Base.class))
+                .setBaseMap(new EnumMap<>(BaseDepth.Base.class))
                 .setIndelCount(0)
                 .setReadDepth(0);
     }
 
     @NotNull
-    public ModifiableNormalBAF addEvidence(@NotNull final ModifiableNormalBAF evidence, @NotNull final SAMRecord samRecord) {
+    public ModifiableBaseDepth addEvidence(@NotNull final ModifiableBaseDepth evidence, @NotNull final SAMRecord samRecord) {
         int quality = getBaseQuality(evidence, samRecord);
         if (quality >= minBaseQuality) {
             evidence.setReadDepth(evidence.readDepth() + 1);
@@ -50,7 +50,7 @@ class NormalBAFFactory {
             if (readPosition != 0) {
                 if (!indel(bafPosition, readPosition, samRecord)) {
                     final char baseChar = samRecord.getReadString().charAt(readPosition - 1);
-                    final NormalBAF.Base base = NormalBAF.Base.valueOf(String.valueOf(baseChar).toUpperCase());
+                    final BaseDepth.Base base = BaseDepth.Base.valueOf(String.valueOf(baseChar).toUpperCase());
                     evidence.baseMap().merge(base, 1, (integer, integer2) -> integer + integer2);
                 } else {
                     evidence.setIndelCount(evidence.indelCount() + 1);

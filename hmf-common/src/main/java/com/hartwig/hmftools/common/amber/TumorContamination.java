@@ -11,8 +11,8 @@ import org.jetbrains.annotations.Nullable;
 public interface TumorContamination extends GenomePosition {
 
     @NotNull
-    NormalBAF normal();
+    BaseDepth normal();
 
     @NotNull
-    NormalBAF tumor();
+    BaseDepth tumor();
 }

@@ -11,7 +11,7 @@ import org.jetbrains.annotations.Nullable;
 
 @Value.Modifiable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public interface NormalBAF extends GenomePosition {
+public interface BaseDepth extends GenomePosition {
 
     enum Base {
         G,

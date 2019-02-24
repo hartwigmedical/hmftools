@@ -30,19 +30,19 @@ public class TumorBAFEvidence implements Callable<TumorBAFEvidence> {
     private final SAMConsumer supplier;
 
     public TumorBAFEvidence(int typicalReadDepth, int minMappingQuality, int minBaseQuality, final String contig, final String bamFile,
-            final SamReaderFactory samReaderFactory, final List<NormalBAF> normalBafs) {
+            final SamReaderFactory samReaderFactory, final List<BaseDepth> baseDepths) {
         this.bafFactory = new TumorBAFFactory(minBaseQuality);
         this.contig = contig;
         this.bamFile = bamFile;
         this.samReaderFactory = samReaderFactory;
 
         final GenomeRegionBuilder builder = new GenomeRegionBuilder(contig, typicalReadDepth);
-        for (NormalBAF bafRegion : normalBafs) {
+        for (BaseDepth bafRegion : baseDepths) {
             builder.addPosition(bafRegion.position());
         }
 
         final List<GenomeRegion> bafRegions = builder.build();
-        this.evidence = normalBafs.stream().map(TumorBAFFactory::create).collect(Collectors.toList());
+        this.evidence = baseDepths.stream().map(TumorBAFFactory::create).collect(Collectors.toList());
         this.selector = GenomePositionSelectorFactory.create(Multimaps.fromPositions(evidence));
         this.supplier = new SAMConsumer(minMappingQuality, bafRegions);
     }

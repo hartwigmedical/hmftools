@@ -61,7 +61,7 @@ public enum AmberBAFFile {
                 .add("TumorBAF")
                 .add("TumorModifiedBAF")
                 .add("TumorDepth")
-                .add("NormalBAF")
+                .add("BaseDepth")
                 .add("NormalModifiedBAF")
                 .add("NormalDepth")
                 .toString();

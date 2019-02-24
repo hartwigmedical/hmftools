@@ -21,11 +21,11 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.hartwig.hmftools.common.amber.AmberBAF;
 import com.hartwig.hmftools.common.amber.AmberBAFFile;
 import com.hartwig.hmftools.common.amber.AmberVCF;
+import com.hartwig.hmftools.common.amber.BaseDepth;
+import com.hartwig.hmftools.common.amber.BaseDepthEvidence;
+import com.hartwig.hmftools.common.amber.BaseDepthFilter;
 import com.hartwig.hmftools.common.amber.ImmutableAmberBAF;
-import com.hartwig.hmftools.common.amber.ModifiableNormalBAF;
-import com.hartwig.hmftools.common.amber.NormalBAF;
-import com.hartwig.hmftools.common.amber.NormalBAFEvidence;
-import com.hartwig.hmftools.common.amber.NormalDepthFilter;
+import com.hartwig.hmftools.common.amber.ModifiableBaseDepth;
 import com.hartwig.hmftools.common.amber.NormalHetrozygousFilter;
 import com.hartwig.hmftools.common.amber.NormalHomozygousFilter;
 import com.hartwig.hmftools.common.amber.TumorBAF;
@@ -60,8 +60,8 @@ public class AmberApplication implements AutoCloseable {
 
     private final AmberConfig config;
     private final ExecutorService executorService;
-    private final Predicate<NormalBAF> homozygousFilter;
-    private final Predicate<NormalBAF> heterozygousFilter;
+    private final Predicate<BaseDepth> homozygousFilter;
+    private final Predicate<BaseDepth> heterozygousFilter;
 
     public static void main(final String... args) throws IOException, InterruptedException, ExecutionException {
         final Options options = AmberConfig.createOptions();
@@ -75,8 +75,7 @@ public class AmberApplication implements AutoCloseable {
         }
     }
 
-    private AmberApplication(final Options options, final String... args)
-            throws IOException, ParseException  {
+    private AmberApplication(final Options options, final String... args) throws IOException, ParseException {
 
         final CommandLine cmd = createCommandLine(args, options);
         config = AmberConfig.createConfig(cmd);
@@ -92,13 +91,12 @@ public class AmberApplication implements AutoCloseable {
         executorService = Executors.newFixedThreadPool(config.threadCount(), namedThreadFactory);
     }
 
-
     private void run() throws InterruptedException, ExecutionException, IOException {
         final SamReaderFactory readerFactory = SamReaderFactory.make();
 
-        final ListMultimap<Chromosome, NormalBAF> allNormal = normal(readerFactory);
-        final ListMultimap<Chromosome, NormalBAF> homNormal = Multimaps.filterEntries(allNormal, homozygousFilter);
-        final ListMultimap<Chromosome, NormalBAF> hetNormal = Multimaps.filterEntries(allNormal, heterozygousFilter);
+        final ListMultimap<Chromosome, BaseDepth> allNormal = normal(readerFactory);
+        final ListMultimap<Chromosome, BaseDepth> homNormal = Multimaps.filterEntries(allNormal, homozygousFilter);
+        final ListMultimap<Chromosome, BaseDepth> hetNormal = Multimaps.filterEntries(allNormal, heterozygousFilter);
 
         final ListMultimap<Chromosome, TumorBAF> tumorBAFMap = tumor(readerFactory, hetNormal);
         persistBAF(Lists.newArrayList(tumorBAFMap.values()));
@@ -107,11 +105,9 @@ public class AmberApplication implements AutoCloseable {
         persistContamination(Lists.newArrayList(tumorContamination.values()));
     }
 
-
-
     @NotNull
     private ListMultimap<Chromosome, TumorBAF> tumor(@NotNull final SamReaderFactory readerFactory,
-            @NotNull final ListMultimap<Chromosome, NormalBAF> normalHetSites) throws ExecutionException, InterruptedException {
+            @NotNull final ListMultimap<Chromosome, BaseDepth> normalHetSites) throws ExecutionException, InterruptedException {
         final int partitionSize = Math.max(config.minPartition(), normalHetSites.values().size() / config.threadCount());
 
         LOGGER.info("Processing {} heterozygous sites in tumor bam {}", normalHetSites.values().size(), config.tumorBamPath());
@@ -119,7 +115,7 @@ public class AmberApplication implements AutoCloseable {
 
         final List<Future<TumorBAFEvidence>> futures = Lists.newArrayList();
         for (final Chromosome chromosome : normalHetSites.keySet()) {
-            for (final List<NormalBAF> chromosomeBafPoints : Lists.partition(normalHetSites.get(chromosome), partitionSize)) {
+            for (final List<BaseDepth> chromosomeBafPoints : Lists.partition(normalHetSites.get(chromosome), partitionSize)) {
                 if (!chromosomeBafPoints.isEmpty()) {
                     final String contig = chromosomeBafPoints.get(0).chromosome();
                     final TumorBAFEvidence evidence = new TumorBAFEvidence(config.typicalReadDepth(),
@@ -142,7 +138,7 @@ public class AmberApplication implements AutoCloseable {
 
     @NotNull
     private ListMultimap<Chromosome, TumorContamination> contamination(@NotNull final SamReaderFactory readerFactory,
-            @NotNull final ListMultimap<Chromosome, NormalBAF> normalHomSites) throws ExecutionException, InterruptedException {
+            @NotNull final ListMultimap<Chromosome, BaseDepth> normalHomSites) throws ExecutionException, InterruptedException {
         final int partitionSize = Math.max(config.minPartition(), normalHomSites.values().size() / config.threadCount());
 
         LOGGER.info("Processing {} homozygous sites in tumor bam {} for contamination", normalHomSites.size(), config.tumorBamPath());
@@ -150,7 +146,7 @@ public class AmberApplication implements AutoCloseable {
 
         final List<Future<TumorContaminationEvidence>> futures = Lists.newArrayList();
         for (final Chromosome chromosome : normalHomSites.keySet()) {
-            for (final List<NormalBAF> chromosomeBafPoints : Lists.partition(normalHomSites.get(chromosome), partitionSize)) {
+            for (final List<BaseDepth> chromosomeBafPoints : Lists.partition(normalHomSites.get(chromosome), partitionSize)) {
                 if (!chromosomeBafPoints.isEmpty()) {
                     final String contig = chromosomeBafPoints.get(0).chromosome();
                     final TumorContaminationEvidence evidence = new TumorContaminationEvidence(config.typicalReadDepth(),
@@ -172,7 +168,7 @@ public class AmberApplication implements AutoCloseable {
     }
 
     @NotNull
-    private ListMultimap<Chromosome, NormalBAF> normal(final SamReaderFactory readerFactory)
+    private ListMultimap<Chromosome, BaseDepth> normal(final SamReaderFactory readerFactory)
             throws IOException, InterruptedException, ExecutionException {
         LOGGER.info("Loading bed file {}", config.bedFilePath());
         final SortedSetMultimap<String, GenomeRegion> bedRegionsSortedSet = BEDFileLoader.fromBedFile(config.bedFilePath());
@@ -181,10 +177,10 @@ public class AmberApplication implements AutoCloseable {
         LOGGER.info("Processing {} potential sites in reference bam {}", bedRegionsSortedSet.values().size(), config.referenceBamPath());
         final AmberTaskCompletion completion = new AmberTaskCompletion();
 
-        final List<Future<NormalBAFEvidence>> futures = Lists.newArrayList();
+        final List<Future<BaseDepthEvidence>> futures = Lists.newArrayList();
         for (final String contig : bedRegionsSortedSet.keySet()) {
             for (final List<GenomeRegion> inner : Lists.partition(Lists.newArrayList(bedRegionsSortedSet.get(contig)), partitionSize)) {
-                final NormalBAFEvidence evidence = new NormalBAFEvidence(config.typicalReadDepth(),
+                final BaseDepthEvidence evidence = new BaseDepthEvidence(config.typicalReadDepth(),
                         config.minMappingQuality(),
                         config.minBaseQuality(),
                         contig,
@@ -195,28 +191,27 @@ public class AmberApplication implements AutoCloseable {
             }
         }
 
-        final ListMultimap<Chromosome, ModifiableNormalBAF> normalEvidence = ArrayListMultimap.create();
+        final ListMultimap<Chromosome, ModifiableBaseDepth> normalEvidence = ArrayListMultimap.create();
         getFuture(futures).forEach(x -> normalEvidence.putAll(HumanChromosome.fromString(x.contig()), x.evidence()));
 
-        final ListMultimap<Chromosome, NormalBAF> normalBafs = ArrayListMultimap.create();
-        final Predicate<NormalBAF> depthFilter = new NormalDepthFilter(config.minDepthPercent(), config.maxDepthPercent(), normalEvidence);
-        final RefEnricher refEnricher = new RefEnricher(config.refGenomePath());
+        final ListMultimap<Chromosome, BaseDepth> normalBafs = ArrayListMultimap.create();
+        final Predicate<BaseDepth> depthFilter = new BaseDepthFilter(config.minDepthPercent(), config.maxDepthPercent(), normalEvidence);
+        try (final RefEnricher refEnricher = new RefEnricher(config.refGenomePath())) {
+            for (final Chromosome chromosome : normalEvidence.keySet()) {
+                final List<BaseDepth> normalHetLocations = normalEvidence.get(chromosome)
+                        .stream()
+                        .filter(x -> x.indelCount() == 0)
+                        .filter(depthFilter)
+                        .map(refEnricher::enrich)
+                        .filter(x -> heterozygousFilter.test(x) || homozygousFilter.test(x))
+                        .collect(Collectors.toList());
 
-        for (final Chromosome chromosome : normalEvidence.keySet()) {
-            final List<NormalBAF> normalHetLocations = normalEvidence.get(chromosome)
-                    .stream()
-                    .filter(x -> x.indelCount() == 0)
-                    .filter(depthFilter)
-                    .map(refEnricher::enrich)
-                    .filter(x -> heterozygousFilter.test(x) || homozygousFilter.test(x))
-                    .collect(Collectors.toList());
-
-            normalBafs.putAll(chromosome, normalHetLocations);
+                normalBafs.putAll(chromosome, normalHetLocations);
+            }
         }
 
         return normalBafs;
     }
-
 
     private void persistBAF(@NotNull final List<TumorBAF> tumorBAFList) throws IOException, InterruptedException {
         Collections.sort(tumorBAFList);

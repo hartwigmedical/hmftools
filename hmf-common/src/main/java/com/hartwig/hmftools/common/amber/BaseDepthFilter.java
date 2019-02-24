@@ -11,15 +11,15 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-public class NormalDepthFilter implements Predicate<NormalBAF> {
+public class BaseDepthFilter implements Predicate<BaseDepth> {
 
-    private static final Logger LOGGER = LogManager.getLogger(NormalDepthFilter.class);
+    private static final Logger LOGGER = LogManager.getLogger(BaseDepthFilter.class);
 
     private final int minDepth;
     private final int maxDepth;
 
-    public NormalDepthFilter(final double minDepthPercentage, final double maxDepthPercentage,
-            @NotNull final Multimap<Chromosome, ModifiableNormalBAF> evidence) {
+    public BaseDepthFilter(final double minDepthPercentage, final double maxDepthPercentage,
+            @NotNull final Multimap<Chromosome, ModifiableBaseDepth> evidence) {
         int medianDepth = medianDepth(evidence);
         minDepth = (int) Math.round(medianDepth * minDepthPercentage);
         maxDepth = (int) Math.round(medianDepth * maxDepthPercentage);
@@ -27,13 +27,13 @@ public class NormalDepthFilter implements Predicate<NormalBAF> {
     }
 
     @Override
-    public boolean test(final NormalBAF bafEvidence) {
+    public boolean test(final BaseDepth bafEvidence) {
         return bafEvidence.readDepth() > 0 && bafEvidence.readDepth() >= minDepth && bafEvidence.readDepth() <= maxDepth;
     }
 
-    private int medianDepth(@NotNull final Multimap<Chromosome, ModifiableNormalBAF> evidence) {
+    private int medianDepth(@NotNull final Multimap<Chromosome, ModifiableBaseDepth> evidence) {
         final List<Integer> reads =
-                evidence.values().stream().map(ModifiableNormalBAF::readDepth).filter(x -> x > 0).sorted().collect(Collectors.toList());
+                evidence.values().stream().map(ModifiableBaseDepth::readDepth).filter(x -> x > 0).sorted().collect(Collectors.toList());
         int count = reads.size();
         return count % 2 == 0 ? (reads.get(count / 2) + reads.get(count / 2 - 1)) / 2 : reads.get(count / 2);
     }

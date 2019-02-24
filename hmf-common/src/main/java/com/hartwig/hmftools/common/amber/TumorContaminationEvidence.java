@@ -25,21 +25,21 @@ public class TumorContaminationEvidence implements Callable<TumorContaminationEv
     private final String contig;
     private final String bamFile;
     private final SamReaderFactory samReaderFactory;
-    private final Map<NormalBAF, ModifiableNormalBAF> evidenceMap;
-    private final GenomePositionSelector<ModifiableNormalBAF> selector;
-    private final NormalBAFFactory bafFactory;
+    private final Map<BaseDepth, ModifiableBaseDepth> evidenceMap;
+    private final GenomePositionSelector<ModifiableBaseDepth> selector;
+    private final BaseDepthFactory bafFactory;
     private final SAMConsumer supplier;
 
     public TumorContaminationEvidence(int typicalReadDepth, int minMappingQuality, int minBaseQuality, final String contig,
-            final String bamFile, final SamReaderFactory samReaderFactory, final List<NormalBAF> normalBAFs) {
-        this.bafFactory = new NormalBAFFactory(minBaseQuality);
+            final String bamFile, final SamReaderFactory samReaderFactory, final List<BaseDepth> baseDepths) {
+        this.bafFactory = new BaseDepthFactory(minBaseQuality);
         this.contig = contig;
         this.bamFile = bamFile;
         this.samReaderFactory = samReaderFactory;
         final GenomeRegionBuilder builder = new GenomeRegionBuilder(contig, typicalReadDepth);
-        normalBAFs.forEach(x -> builder.addPosition(x.position()));
+        baseDepths.forEach(x -> builder.addPosition(x.position()));
         final List<GenomeRegion> bafRegions1 = builder.build();
-        final List<ModifiableNormalBAF> tumorRecords = normalBAFs.stream().map(NormalBAFFactory::create).collect(Collectors.toList());
+        final List<ModifiableBaseDepth> tumorRecords = baseDepths.stream().map(BaseDepthFactory::create).collect(Collectors.toList());
 
         this.evidenceMap = tumorRecords.stream().collect(Collectors.toMap(x -> x, x -> x));
         this.selector = GenomePositionSelectorFactory.create(tumorRecords);
@@ -54,9 +54,9 @@ public class TumorContaminationEvidence implements Callable<TumorContaminationEv
     @NotNull
     public List<TumorContamination> evidence() {
         final List<TumorContamination> result = Lists.newArrayList();
-        for (final Map.Entry<NormalBAF, ModifiableNormalBAF> entry : evidenceMap.entrySet()) {
-            final NormalBAF normal = entry.getKey();
-            final NormalBAF tumor = entry.getValue();
+        for (final Map.Entry<BaseDepth, ModifiableBaseDepth> entry : evidenceMap.entrySet()) {
+            final BaseDepth normal = entry.getKey();
+            final BaseDepth tumor = entry.getValue();
             if (tumor.altSupport() != 0) {
                 result.add(ImmutableTumorContamination.builder().from(normal).normal(normal).tumor(tumor).build());
             }
