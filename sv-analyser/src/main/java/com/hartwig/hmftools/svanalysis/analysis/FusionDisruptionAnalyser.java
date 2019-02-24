@@ -2,11 +2,13 @@ package com.hartwig.hmftools.svanalysis.analysis;
 
 import static java.lang.Math.abs;
 
+import static com.hartwig.hmftools.svanalysis.types.SvChain.CHAIN_LENGTH;
+import static com.hartwig.hmftools.svanalysis.types.SvChain.CHAIN_LINK_COUNT;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_END;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_START;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.isStart;
+import static com.hartwig.hmftools.svannotation.SvGeneTranscriptCollection.EXON_RANK_MIN;
 import static com.hartwig.hmftools.svannotation.SvGeneTranscriptCollection.PRE_GENE_PROMOTOR_DISTANCE;
-import static com.hartwig.hmftools.svannotation.SvGeneTranscriptCollection.nextTranscriptExons;
 import static com.hartwig.hmftools.svannotation.analysis.RnaFusionData.RNA_SPLICE_TYPE_ONLY_REF;
 import static com.hartwig.hmftools.svannotation.analysis.SvFusionAnalyser.checkFusionLogic;
 
@@ -25,7 +27,6 @@ import com.hartwig.hmftools.common.region.HmfTranscriptRegion;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneAnnotation;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion;
 import com.hartwig.hmftools.svanalysis.annotators.VisualiserWriter;
-import com.hartwig.hmftools.svanalysis.types.SvCNData;
 import com.hartwig.hmftools.svanalysis.types.SvFusion;
 import com.hartwig.hmftools.svannotation.SvGeneTranscriptCollection;
 import com.hartwig.hmftools.common.variant.structural.annotation.Transcript;
@@ -52,7 +53,7 @@ public class FusionDisruptionAnalyser
     private SvGeneTranscriptCollection mEnsemblDataCache;
     private Map<String, List<SvBreakend>> mChrBreakendMap;
 
-    private boolean mRunFusions;
+    private boolean mSkipFusionOutput;
     private List<GeneFusion> mFusions;
     private List<SvFusion> mSvFusionList;
 
@@ -70,13 +71,13 @@ public class FusionDisruptionAnalyser
         mChromosomeTranscriptMap = null;
         mOutputDir = "";
         mFusions = Lists.newArrayList();
-        mRunFusions = true;
+        mSkipFusionOutput = false;
         mSvFusionList = Lists.newArrayList();
         mVisWriter = null;
         mChrBreakendMap = null;
     }
 
-    public void setRunFusions(boolean toggle) { mRunFusions = toggle; }
+    public void skipFusionOutput(boolean toggle) { mSkipFusionOutput = toggle; }
     public final SvGeneTranscriptCollection getGeneTranscriptCollection() { return mEnsemblDataCache; }
 
     public void loadFusionReferenceData(final CommandLine cmdLineArgs, final String outputDir, final String ensemblDataDir)
@@ -136,11 +137,6 @@ public class FusionDisruptionAnalyser
         var.setGenesList(endGenes, false);
     }
 
-    private static String CHECK_VAR_ID = "";
-    // private static String CHECK_VAR_ID = "4718976";
-    private static int CHECK_CLUSTER_ID = -1;
-    // private static int CHECK_CLUSTER_ID = 94;
-
     public void setSvGeneData(final String sampleId, final List<SvVarData> svList, boolean applyPromotorDistance,
             Map<String, List<SvBreakend>> chrBreakendMap)
     {
@@ -159,8 +155,7 @@ public class FusionDisruptionAnalyser
 
     public void run(final List<SvVarData> svList, final List<SvCluster> clusters)
     {
-        if(mRunFusions)
-            findFusions(svList, clusters);
+        findFusions(svList, clusters);
 
         assessRnaFusions();
     }
@@ -181,11 +176,6 @@ public class FusionDisruptionAnalyser
             if(var.isNullBreakend())
                 continue;
 
-            if(var.id().equals(CHECK_VAR_ID))
-            {
-                LOGGER.debug("specific var({})", var.posId());
-            }
-
             checkFusions(var.getGenesList(true), var.getGenesList(false), var.getCluster());
         }
 
@@ -198,11 +188,6 @@ public class FusionDisruptionAnalyser
             // for now only consider simple SVs and resolved small clusters
             for (final SvCluster cluster : clusters)
             {
-                if (cluster.id() == CHECK_CLUSTER_ID)
-                {
-                    LOGGER.debug("specific cluster");
-                }
-
                 if (cluster.getCount() == 1) // simple clusters already checked
                     continue;
 
@@ -350,7 +335,7 @@ public class FusionDisruptionAnalyser
         if (fusions.isEmpty())
             return;
 
-        mFusions.addAll(fusions);
+        // mFusions.addAll(fusions);
 
         if(LOGGER.isDebugEnabled())
         {
@@ -374,7 +359,10 @@ public class FusionDisruptionAnalyser
 
         String clusterInfo = String.format("%d,%d,%s", cluster.id(), cluster.getUniqueSvCount(), cluster.getResolvedType());
 
-        mFusionFinder.writeFusions(fusions, mSampleId, clusterInfo, true);
+        if(!mSkipFusionOutput)
+        {
+            mFusionFinder.writeFusions(fusions, mSampleId, clusterInfo, true);
+        }
 
         if(mVisWriter != null)
         {
@@ -438,13 +426,15 @@ public class FusionDisruptionAnalyser
 
         // viable breakends and their matching transcript
         List<SvBreakend> upstreamBreakends = Lists.newArrayList();
-        List<Transcript> upstreamTranscripts = Lists.newArrayList();
         List<SvBreakend> downstreamBreakends = Lists.newArrayList();
+        List<Transcript> upstreamTranscripts = Lists.newArrayList();
         List<Transcript> downstreamTranscripts = Lists.newArrayList();
 
         // non-viable transcripts to be used if non viable ones are found
-        List<Transcript> nearDownstreamTranscripts = Lists.newArrayList();
         List<Transcript> nearUpstreamTranscripts = Lists.newArrayList();
+        List<Transcript> nearDownstreamTranscripts = Lists.newArrayList();
+        List<SvBreakend> nearUpstreamBreakends = Lists.newArrayList();
+        List<SvBreakend> nearDownstreamBreakends = Lists.newArrayList();
 
         boolean isExactRnaExon = rnaFusion.SpliceType.equals(RNA_SPLICE_TYPE_ONLY_REF);
 
@@ -455,6 +445,7 @@ public class FusionDisruptionAnalyser
             long rnaPosition = isUpstream ? rnaFusion.PositionUp : rnaFusion.PositionDown;
             byte geneStrand = isUpstream ? rnaFusion.StrandUp : rnaFusion.StrandDown;
             List<SvBreakend> viableBreakends = isUpstream ? upstreamBreakends : downstreamBreakends;
+            List<SvBreakend> nearBreakends = isUpstream ? nearUpstreamBreakends : nearDownstreamBreakends;
             List<Transcript> viableTranscripts = isUpstream ? upstreamTranscripts : downstreamTranscripts;
             List<Transcript> nearTranscripts = isUpstream ? nearUpstreamTranscripts : nearDownstreamTranscripts;
             String geneName = isUpstream ? rnaFusion.GeneUp : rnaFusion.GeneDown;
@@ -488,7 +479,10 @@ public class FusionDisruptionAnalyser
                 for(final Transcript trans : genesList.get(0).transcripts())
                 {
                     if(trans.isCanonical())
+                    {
+                        nearBreakends.add(breakend);
                         nearTranscripts.add(trans);
+                    }
 
                     if(mFusionFinder.isTranscriptBreakendViableForRnaBoundary(
                             trans, isUpstream,  breakend.position(), rnaPosition, isExactRnaExon))
@@ -542,13 +536,12 @@ public class FusionDisruptionAnalyser
 
             if(topCandidateFusion != null)
             {
-                rnaFusion.setTranscriptData(topCandidateFusion.upstreamTrans(), true, true);
-                rnaFusion.setTranscriptData(topCandidateFusion.downstreamTrans(), false, true);
+                rnaFusion.setTranscriptData(topCandidateFusion.upstreamTrans(), true, true, 0);
+                rnaFusion.setTranscriptData(topCandidateFusion.downstreamTrans(), false, true, 0);
                 rnaFusion.setViableFusion(topCandidateFusion.viable() && topCandidateFusion.phaseMatched());
 
                 // add cluster and chain info
-                setFusionChainInfo(rnaFusion, topUpBreakend, true);
-                setFusionChainInfo(rnaFusion, topDownBreakend, false);
+                setFusionClusterChainInfo(rnaFusion, topUpBreakend, topDownBreakend);
             }
         }
         else
@@ -560,6 +553,7 @@ public class FusionDisruptionAnalyser
                 long rnaPosition = isUpstream ? rnaFusion.PositionUp : rnaFusion.PositionDown;
 
                 List<Transcript> transcriptList;
+                List<SvBreakend> breakendList;
                 boolean isViable = false;
 
                 // use the viable transcripts if present, otherwise the nearest
@@ -569,10 +563,12 @@ public class FusionDisruptionAnalyser
                     {
                         isViable = true;
                         transcriptList = upstreamTranscripts;
+                        breakendList = upstreamBreakends;
                     }
                     else
                     {
                         transcriptList = nearUpstreamTranscripts;
+                        breakendList = nearUpstreamBreakends;
                     }
                 }
                 else
@@ -581,39 +577,91 @@ public class FusionDisruptionAnalyser
                     {
                         isViable = true;
                         transcriptList = downstreamTranscripts;
+                        breakendList = downstreamBreakends;
                     }
                     else
                     {
                         transcriptList = nearDownstreamTranscripts;
+                        breakendList = nearDownstreamBreakends;
                     }
                 }
 
                 Transcript closestTrans = null;
+                SvBreakend closestBreakend = null;
                 long closestDistance = 0;
 
-                for (final Transcript trans : transcriptList)
+                for (int j = 0; j < transcriptList.size(); ++j)
                 {
+                    final Transcript trans = transcriptList.get(j);
+                    final SvBreakend breakend = breakendList.get(j);
+
                     long distance = abs(rnaPosition - trans.svPosition());
                     if(closestTrans == null || distance < closestDistance)
                     {
                         closestDistance = distance;
                         closestTrans = trans;
+                        closestBreakend = breakend;
                     }
                 }
 
                 if(closestTrans != null)
                 {
-                    rnaFusion.setTranscriptData(closestTrans, isUpstream, isViable);
+                    if(isViable)
+                    {
+                        rnaFusion.setTranscriptData(closestTrans, isUpstream, isViable, 0);
+                    }
+                    else
+                    {
+                        // for non-viable breakends, provide the exons skipped count
+                        final String geneId = isUpstream ? rnaFusion.GeneUp : rnaFusion.GeneDown;
+                        final int rnaExonData[] = mEnsemblDataCache.getExonRankings(geneId, rnaPosition);
+                        final int svPosExonData[] = mEnsemblDataCache.getExonRankings(geneId, closestBreakend.position());
+
+                        int exonsSkipped = abs(rnaExonData[EXON_RANK_MIN] - svPosExonData[EXON_RANK_MIN]);
+                        rnaFusion.setTranscriptData(closestTrans, isUpstream, isViable, exonsSkipped);
+                    }
+
+                    setFusionClusterInfo(rnaFusion, closestBreakend, isUpstream);
                 }
             }
         }
     }
 
-    private void setFusionChainInfo(final RnaFusionData rnaFusionData, final SvBreakend breakend, boolean isUpstream)
+    private void setFusionClusterChainInfo(final RnaFusionData rnaFusionData, final SvBreakend breakendUp, final SvBreakend breakendDown)
     {
+        setFusionClusterInfo(rnaFusionData, breakendUp, true);
+        setFusionClusterInfo(rnaFusionData, breakendDown, false);
+
+        if(breakendUp.getSV().equals(breakendDown.getSV(), true))
+            return;
+
+        SvCluster clusterUp = breakendUp.getSV().getCluster();
+        SvChain chainUp = clusterUp.findChain(breakendUp.getSV());
+
+        SvCluster clusterDown = breakendDown.getSV().getCluster();
+        SvChain chainDown = clusterDown.findChain(breakendDown.getSV());
+
+        if(chainUp != null && chainUp == chainDown)
+        {
+            final int chainData[] = chainUp.breakendsAreChained(breakendUp.getSV(), breakendUp.usesStart(), breakendDown.getSV(), breakendUp.usesStart());
+            final String chainInfo = String.format("%d;%d", chainData[CHAIN_LINK_COUNT], chainData[CHAIN_LENGTH]);
+
+            // data: ChainLinks;ChainLength
+            rnaFusionData.setChainInfo(chainInfo);
+        }
+    }
+
+    private void setFusionClusterInfo(final RnaFusionData rnaFusionData, final SvBreakend breakend, boolean isUpstream)
+    {
+        // data: ClusterId;ClusterCount;ChainId;ChainCount
         SvCluster cluster = breakend.getSV().getCluster();
         SvChain chain = cluster.findChain(breakend.getSV());
-        rnaFusionData.setChainInfo(cluster.id(), chain != null ? chain.id() : -1, isUpstream);
+
+        final String clusterInfo = String.format("%d;%d;%d;%d",
+                cluster.id(), cluster.getUniqueSvCount(),
+                chain != null ? chain.id() : cluster.getChainId(breakend.getSV()), chain != null ? chain.getSvCount() : 1);
+
+        rnaFusionData.setClusterInfo(clusterInfo, isUpstream);
     }
 
     private boolean isCandidateBetter(final GeneFusion currentFusion, final SvBreakend beCurrentStart, final SvBreakend beCurrentEnd,

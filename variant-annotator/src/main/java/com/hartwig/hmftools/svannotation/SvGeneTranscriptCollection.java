@@ -496,6 +496,7 @@ public class SvGeneTranscriptCollection
 
     public int[] getExonRankings(final String geneName, long position)
     {
+        // finds the exon before and after this position, setting to -1 if before the first or beyond the last exon
         int[] exonData = new int[EXON_RANK_MAX+1];
 
         final EnsemblGeneData geneData = getGeneData(geneName);
@@ -524,10 +525,10 @@ public class SvGeneTranscriptCollection
         }
         else
         {
-            for(int i = 0; i < exonDataList.size() - 1; ++i)
+            for(int i = 0; i < exonDataList.size(); ++i)
             {
                 final TranscriptExonData transExonData = exonDataList.get(i);
-                final TranscriptExonData nextTransExonData = exonDataList.get(i+1);
+                final TranscriptExonData nextTransExonData = i < exonDataList.size() - 1 ? exonDataList.get(i+1) : null;
 
                 if(position >= transExonData.ExonStart && position <= transExonData.ExonEnd)
                 {
@@ -536,7 +537,7 @@ public class SvGeneTranscriptCollection
                     break;
                 }
 
-                if(position > transExonData.ExonEnd && position < nextTransExonData.ExonStart)
+                if(nextTransExonData != null && position > transExonData.ExonEnd && position < nextTransExonData.ExonStart)
                 {
                     if(transExonData.Strand == 1)
                     {

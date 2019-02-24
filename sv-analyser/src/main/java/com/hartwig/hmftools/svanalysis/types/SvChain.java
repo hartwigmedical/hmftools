@@ -288,15 +288,7 @@ public class SvChain {
 
     public int getUniqueSvCount()
     {
-        int count = 0;
-
-        for(final SvVarData var : mSvList)
-        {
-            if(!var.isReplicatedSv())
-                ++count;
-        }
-
-        return count;
+        return (int)mSvList.stream().filter(x -> !x.isReplicatedSv()).count();
     }
 
     public int getSvIndex(final SvVarData var)

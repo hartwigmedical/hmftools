@@ -736,13 +736,13 @@ public class SvFusionAnalyser
 
                 mRnaWriter.write("SampleId,FusionName,GeneUp,GeneDown,ViableFusion");
 
-                mRnaWriter.write(",SvIdUp,ChrUp,PosUp,RnaPosUp,OrientUp,StrandUp,TypeUp,ClusterIdUp,ChainIdUp");
-                mRnaWriter.write(",TransValidUp,TransIdUp,RegionTypeUp,CodingTypeUp,ExonUp,DisruptiveUp,DistancePrevUp");
+                mRnaWriter.write(",SvIdUp,ChrUp,PosUp,RnaPosUp,OrientUp,StrandUp,TypeUp,ClusterInfoUp");
+                mRnaWriter.write(",TransValidUp,TransIdUp,ExonsSkippedUp,RegionTypeUp,CodingTypeUp,ExonUp,DisruptiveUp,DistancePrevUp");
 
-                mRnaWriter.write(",SvIdDown,ChrDown,PosDown,RnaPosDown,OrientDown,StrandDown,TypeDown,ClusterIdDown,ChainIdDown");
-                mRnaWriter.write(",TransValidDown,TransIdDown,RegionTypeDown,CodingTypeDown,ExonDown,DisruptiveDown,DistancePrevDown");
+                mRnaWriter.write(",SvIdDown,ChrDown,PosDown,RnaPosDown,OrientDown,StrandDown,TypeDown,ClusterInfoDown");
+                mRnaWriter.write(",TransValidDown,TransIdDown,ExonsSkippedDown,RegionTypeDown,CodingTypeDown,ExonDown,DisruptiveDown,DistancePrevDown");
 
-                mRnaWriter.write(",JunctionReadCount,SpanningFragCount,SpliceType");
+                mRnaWriter.write(",ChainInfo,JunctionReadCount,SpanningFragCount,SpliceType");
                 mRnaWriter.write(",ExonMinRankUp,ExonMaxRankUp,ExonMinRankDown,ExonMaxRankDown");
 
                 mRnaWriter.newLine();
@@ -758,19 +758,23 @@ public class SvFusionAnalyser
 
             if(transUp != null)
             {
-                writer.write(String.format(",%d,%s,%d,%d,%d,%d,%s,%d,%d",
+                writer.write(String.format(",%d,%s,%d,%d,%d,%d,%s,%s",
                         transUp.parent().id(), transUp.parent().chromosome(), transUp.parent().position(), rnaFusion.PositionUp,
                         transUp.parent().orientation(), transUp.parent().Strand, transUp.parent().type(),
-                        rnaFusion.getClusterId(true), rnaFusion.getChainId(true)));
+                        rnaFusion.getClusterInfo(true)));
 
-                writer.write(String.format(",%s,%s,%s,%s,%d,%s,%d",
-                        rnaFusion.getTransValid(true), transUp.StableId, transUp.regionType(), transUp.codingType(),
+                writer.write(String.format(",%s,%s,%d,%s,%s,%d,%s,%d",
+                        rnaFusion.getTransValid(true), transUp.StableId, rnaFusion.getExonsSkipped(true),
+                        transUp.regionType(), transUp.codingType(),
                         transUp.exonUpstream(), transUp.isDisruptive(), transUp.exonDistanceUp()));
             }
             else
             {
-                writer.write(String.format(",,%s,,%d,,%d,,-1,-1", rnaFusion.ChrUp, rnaFusion.PositionUp, rnaFusion.StrandUp));
-                writer.write(String.format(",%s,,,,,,", rnaFusion.getTransValid(true)));
+                writer.write(String.format(",%s,%s,%d,%d,%d,%d,%s,%s",
+                        "", rnaFusion.ChrUp, 0, rnaFusion.PositionUp,
+                        0, rnaFusion.StrandUp, "", ""));
+
+                writer.write(String.format(",%s,,,,,,,", rnaFusion.getTransValid(true)));
             }
 
             final Transcript transDown = rnaFusion.getTrans(false);
@@ -778,23 +782,29 @@ public class SvFusionAnalyser
             if(transDown != null)
             {
                 writer.write(
-                        String.format(",%d,%s,%d,%d,%d,%d,%s,%d,%d",
+                        String.format(",%d,%s,%d,%d,%d,%d,%s,%s",
                                 transDown.parent().id(), transDown.parent().chromosome(), transDown.parent().position(), rnaFusion.PositionDown,
                                 transDown.parent().orientation(), transDown.parent().Strand, transDown.parent().type(),
-                                rnaFusion.getClusterId(false), rnaFusion.getChainId(false)));
+                                rnaFusion.getClusterInfo(false)));
 
                 writer.write(
-                        String.format(",%s,%s,%s,%s,%d,%s,%d",
-                                rnaFusion.getTransValid(false), transDown.StableId, transDown.regionType(), transDown.codingType(),
+                        String.format(",%s,%s,%d,%s,%s,%d,%s,%d",
+                                rnaFusion.getTransValid(false), transDown.StableId, rnaFusion.getExonsSkipped(false),
+                                transDown.regionType(), transDown.codingType(),
                                 transDown.exonDownstream(), transDown.isDisruptive(), transDown.exonDistanceUp()));
             }
             else
             {
-                writer.write(String.format(",,%s,,%d,,%d,,-1,-1", rnaFusion.ChrDown, rnaFusion.PositionDown, rnaFusion.StrandDown));
-                writer.write(String.format(",%s,,,,,,", rnaFusion.getTransValid(false)));
+                writer.write(String.format(",%s,%s,%d,%d,%d,%d,%s,%s",
+                        "", rnaFusion.ChrDown, 0, rnaFusion.PositionDown,
+                        0, rnaFusion.StrandDown, "", ""));
+
+                writer.write(String.format(",%s,,,,,,,", rnaFusion.getTransValid(false)));
             }
 
-            writer.write(String.format(",%d,%d,%s", rnaFusion.JunctionReadCount, rnaFusion.SpanningFragCount, rnaFusion.SpliceType));
+            writer.write(String.format(",%s,%d,%d,%s",
+                    !rnaFusion.getChainInfo().isEmpty() ? rnaFusion.getChainInfo() : "0;0",
+                    rnaFusion.JunctionReadCount, rnaFusion.SpanningFragCount, rnaFusion.SpliceType));
 
             writer.write(String.format(",%d,%d,%d,%d",
                     rnaFusion.exonMinRankUp(), rnaFusion.exonMaxRankUp(), rnaFusion.exonMinRankDown(), rnaFusion.exonMaxRankDown()));

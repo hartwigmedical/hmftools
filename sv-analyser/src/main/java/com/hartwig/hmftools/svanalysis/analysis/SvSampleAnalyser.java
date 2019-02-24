@@ -393,7 +393,7 @@ public class SvSampleAnalyser {
 
                 if(chain != null)
                 {
-                    chainStr = String.format(",%d,%d,%s", chain.id(), chain.getUniqueSvCount(), chain.getSvIndices(var));
+                    chainStr = String.format(",%d,%d,%s", chain.id(), chain.getSvCount(), chain.getSvIndices(var));
                 }
                 else
                 {

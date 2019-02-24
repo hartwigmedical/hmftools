@@ -350,18 +350,12 @@ public class ClusterAnalyser {
 
         if(mConfig.MaxClusterSize > 0 && (cluster.getUniqueSvCount() > mConfig.MaxClusterSize || cluster.getCount() > mConfig.MaxClusterSize * 5))
         {
-            LOGGER.debug("cluster({}) skipping large cluster: unique({}) replicated({})",
+            LOGGER.info("cluster({}) skipping large cluster: unique({}) replicated({})",
                     cluster.id(), cluster.getUniqueSvCount(), cluster.getCount());
             return;
         }
 
         mChainFinder.formClusterChains();
-
-        if(cluster.getChains().size() > 1)
-        {
-            checkChainReplication(cluster);
-            return;
-        }
     }
 
     private void setClusterResolvedState(SvCluster cluster)

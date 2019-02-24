@@ -131,7 +131,7 @@ public class SvAnalyser {
                 fusionAnalyser.setVisWriter(sampleAnalyser.getVisWriter());
 
                 if(cmd.hasOption(SKIP_FUSION_OUTPUT))
-                    fusionAnalyser.setRunFusions(false);
+                    fusionAnalyser.skipFusionOutput(true);
 
                 sampleAnalyser.getVisWriter().setGeneDataCollection(fusionAnalyser.getGeneTranscriptCollection());
 

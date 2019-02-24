@@ -163,6 +163,39 @@ public class ChainingTests
     }
 
     @Test
+    public void testChainNotClosed()
+    {
+        // 2 SVs which could link on both ends
+        SvTestHelper tester = new SvTestHelper();
+        tester.logVerbose(true);
+
+        tester.Analyser.getChainFinder().setUseNewMethod(true);
+
+        final SvVarData var1 = createInv("0", "1", 100,200, -1);
+        final SvVarData var2 = createDel("1", "1", 300,400);
+        final SvVarData var3 = createDel("2", "1", 500,600);
+        final SvVarData var4 = createInv("3", "1", 700,800, 1);
+
+        // add them out of order which will require partial chain reconciliation
+        tester.AllVariants.add(var1);
+        tester.AllVariants.add(var2);
+        tester.AllVariants.add(var3);
+        tester.AllVariants.add(var4);
+
+        tester.preClusteringInit();
+        tester.Analyser.clusterAndAnalyse();
+
+        assertEquals(1, tester.Analyser.getClusters().size());
+        final SvCluster cluster = tester.Analyser.getClusters().get(0);
+
+        assertEquals(1, cluster.getChains().size());
+
+        final SvChain chain = cluster.getChains().get(0);
+
+        assertEquals(3, chain.getLinkCount());
+    }
+
+    @Test
     public void testPartiallyAssembledChain()
     {
         SvTestHelper tester = new SvTestHelper();
