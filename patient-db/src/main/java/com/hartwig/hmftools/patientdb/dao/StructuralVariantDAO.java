@@ -3,6 +3,7 @@ package com.hartwig.hmftools.patientdb.dao;
 import static com.hartwig.hmftools.patientdb.Config.DB_BATCH_INSERT_SIZE;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.STRUCTURALVARIANT;
 
+import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.Date;
 import java.util.List;
@@ -16,6 +17,7 @@ import com.hartwig.hmftools.common.variant.structural.ImmutableEnrichedStructura
 import com.hartwig.hmftools.common.variant.structural.ImmutableStructuralVariantData;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantData;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
+import com.hartwig.hmftools.patientdb.database.hmfpatients.tables.records.StructuralvariantRecord;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
@@ -25,6 +27,9 @@ import org.jooq.InsertValuesStepN;
 import org.jooq.Record;
 import org.jooq.Record1;
 import org.jooq.Result;
+import org.jooq.UpdatableRecord;
+import org.jooq.UpdateQuery;
+import org.jooq.UpdateSetFirstStep;
 
 class StructuralVariantDAO {
     @NotNull
@@ -64,6 +69,8 @@ class StructuralVariantDAO {
                     .adjustedEndCopyNumber(getValueNotNull(record.getValue(STRUCTURALVARIANT.ADJUSTEDENDCOPYNUMBER)))
                     .adjustedEndCopyNumberChange(getValueNotNull(record.getValue(STRUCTURALVARIANT.ADJUSTEDENDCOPYNUMBERCHANGE)))
                     .ploidy(getValueNotNull(record.getValue(STRUCTURALVARIANT.PLOIDY)))
+                    .ploidyMin(getValueNotNull(record.getValue(STRUCTURALVARIANT.PLOIDYMIN)))
+                    .ploidyMax(getValueNotNull(record.getValue(STRUCTURALVARIANT.PLOIDYMAX)))
                     .type(isSingleBreakend
                             ? StructuralVariantType.SGL
                             : StructuralVariantType.fromAttribute(record.getValue(STRUCTURALVARIANT.TYPE)))
@@ -304,7 +311,33 @@ class StructuralVariantDAO {
                 timestamp);
     }
 
-    void deleteStructuralVariantsForSample(@NotNull String sample) {
+    public void updateCalculatedPloidy(final List<StructuralVariantData> svDataList)
+    {
+        Timestamp timestamp = new Timestamp(new Date().getTime());
+
+        List<StructuralvariantRecord> updates = Lists.newArrayList();
+
+        try
+        {
+            for (final StructuralVariantData svData : svDataList)
+            {
+                StructuralvariantRecord update = new StructuralvariantRecord();
+                update.setId(Integer.parseInt(svData.id()));
+                update.setModified(timestamp);
+                update.setPloidymin(DatabaseUtil.decimal(svData.ploidyMin()));
+                update.setPloidymax(DatabaseUtil.decimal(svData.ploidyMax()));
+
+                updates.add(update);
+            }
+
+            context.batchUpdate(updates).execute();
+        }
+        catch(Exception e)
+        {
+        }
+    }
+
+    public void deleteStructuralVariantsForSample(@NotNull String sample) {
         context.delete(STRUCTURALVARIANT).where(STRUCTURALVARIANT.SAMPLEID.eq(sample)).execute();
     }
 

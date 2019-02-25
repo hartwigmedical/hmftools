@@ -505,6 +505,8 @@ CREATE TABLE structuralVariant
     startRefContext varchar(255),
     endRefContext varchar(255),
     insertSequenceAlignments varchar(512),
+    ploidyMin DOUBLE PRECISION,
+    ploidyMax DOUBLE PRECISION,
     PRIMARY KEY (id),
     INDEX(sampleId)
 );

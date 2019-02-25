@@ -56,7 +56,8 @@ public class CNAnalyser {
     private int mRecordId;
     private int mNoneSvId;
 
-    private boolean mRecalcAdjustedPloidy;
+    private boolean mWriteAdjustedPloidyToFile;
+    private boolean mUpdateAdjustedPloidyToDB;
     private boolean mWriteVerbosePloidyData;
 
     BufferedWriter mFileWriter;
@@ -70,7 +71,8 @@ public class CNAnalyser {
     private Map<String,Map<String,double[]>> mSampleSvPloidyCalcMap;
 
     public static final String SV_PLOIDY_CALC_FILE = "sv_ploidy_file";
-    private static final String CALC_ADJ_PLOIDY = "calc_adj_ploidy";
+    private static final String WRITE_PLOIDY_TO_FILE = "write_ploidy_to_file";
+    private static final String UPDATE_PLOIDY_TO_DB = "update_ploidy_to_db";
     private static final String WRITE_VERBOSE_PLOIDY_DATA = "verbose_ploidy_data";
 
     public static double MIN_LOH_CN = 0.5;
@@ -82,7 +84,7 @@ public class CNAnalyser {
         mSampleIds = Lists.newArrayList();
         mFileWriter = null;
         mRecalcPloidyFileWriter = null;
-        mRecalcAdjustedPloidy = false;
+        mWriteAdjustedPloidyToFile = false;
         mWriteVerbosePloidyData = false;
         mDbAccess = dbAccess;
         mCnDataList = Lists.newArrayList();
@@ -90,6 +92,7 @@ public class CNAnalyser {
         mSvCnDataMap = new HashMap();
         mSampleSvPloidyCalcMap = new HashMap();
         mSampleLohData = null;
+        mUpdateAdjustedPloidyToDB = false;
         mRecordId = 0;
         mNoneSvId = 0;
     }
@@ -100,15 +103,17 @@ public class CNAnalyser {
     public static void addCmdLineArgs(Options options)
     {
         options.addOption(SV_PLOIDY_CALC_FILE, true, "SV_PLOIDY_CALC_FILE");
-        options.addOption(CALC_ADJ_PLOIDY, false, "TEMP: recalculate CN change and ploidy using depth info");
+        options.addOption(WRITE_PLOIDY_TO_FILE, false, "Write adjusted ploidy to CSV");
         options.addOption(WRITE_VERBOSE_PLOIDY_DATA, false, "Write all ploidy calc working data");
+        options.addOption(UPDATE_PLOIDY_TO_DB, false, "Update SV table with ploidy calcs");
     }
 
     public boolean loadConfig(final CommandLine cmd, final List<String> sampleIds)
     {
         mSampleIds.addAll(sampleIds);
-        mRecalcAdjustedPloidy = cmd.hasOption(CALC_ADJ_PLOIDY);
+        mWriteAdjustedPloidyToFile = cmd.hasOption(WRITE_PLOIDY_TO_FILE);
         mWriteVerbosePloidyData = cmd.hasOption(WRITE_VERBOSE_PLOIDY_DATA);
+        mUpdateAdjustedPloidyToDB = cmd.hasOption(UPDATE_PLOIDY_TO_DB);
         return true;
     }
 
@@ -131,7 +136,7 @@ public class CNAnalyser {
 
             findLohEvents(sampleId);
 
-            if(mRecalcAdjustedPloidy)
+            if(mWriteAdjustedPloidyToFile || mUpdateAdjustedPloidyToDB)
                 reaclcAdjustedPloidy(sampleId);
         }
     }
@@ -751,6 +756,8 @@ public class CNAnalyser {
                             .vcfId("")
                             .type(SGL)
                             .ploidy(copyNumberChange)
+                            .ploidyMin(copyNumberChange)
+                            .ploidyMax(copyNumberChange)
                             .startPosition(position)
                             .startChromosome(noneCnRecord.chromosome())
                             .startOrientation(orientation)
@@ -798,7 +805,7 @@ public class CNAnalyser {
         return svList;
     }
 
-    private void reaclcAdjustedPloidy(final String sampleId)
+    private void initialisePloidyWriter()
     {
         try
         {
@@ -826,15 +833,33 @@ public class CNAnalyser {
                 mRecalcPloidyFileWriter.newLine();
             }
 
+        }
+        catch (final IOException e)
+        {
+            LOGGER.error("error writing to ploidy recalc outputFile: {}", e.toString());
+        }
+    }
+
+    private void reaclcAdjustedPloidy(final String sampleId)
+    {
+        if (mWriteAdjustedPloidyToFile)
+        {
+            initialisePloidyWriter();
+        }
+
+        List<StructuralVariantData> updatedSvDataList = Lists.newArrayList();
+
+        try
+        {
             BufferedWriter writer = mRecalcPloidyFileWriter;
 
-            for(Map.Entry<String,SvCNData[]> entry : mSvCnDataMap.entrySet())
+            for (Map.Entry<String, SvCNData[]> entry : mSvCnDataMap.entrySet())
             {
                 final SvCNData[] cnDataPair = entry.getValue();
 
                 final SvCNData cnStartData = cnDataPair[SVI_START];
 
-                if(cnStartData == null)
+                if (cnStartData == null)
                     continue;
 
                 final SvCNData cnEndData = cnDataPair[SVI_END]; // may be null
@@ -852,7 +877,7 @@ public class CNAnalyser {
                 double cnEnd = 0;
                 double cnChgEnd = 0;
 
-                if(cnEndData != null)
+                if (cnEndData != null)
                 {
                     endDepthData = extractDepthWindowData(cnEndData);
                     cnEnd = svData.adjustedEndCopyNumber();
@@ -866,40 +891,70 @@ public class CNAnalyser {
                 final double calcResults[] = calcAdjustedPloidyValues(cnStart, cnChgStart, cnEnd, cnChgEnd,
                         ploidy, tumorReadCount, startDepthData, cnEndData != null ? endDepthData : null);
 
-                if(!mWriteVerbosePloidyData)
+                double ploidyEstimate = calcResults[APC_EST_PLOIDY];
+                double ploidyUncertainty = calcResults[APC_EST_UNCERTAINTY];
+
+                // NONE segment SVs will usually fail on the ploidy recalc
+                if(!svData.filter().equals(NONE_SEGMENT_INFERRED) && (Double.isNaN(ploidyEstimate) || Double.isNaN(ploidyUncertainty)))
                 {
-                    writer.write(String.format("%s,%s,%.4f,%.4f",
-                            sampleId, svData.id(),
-                            calcResults[APC_EST_PLOIDY], calcResults[APC_EST_UNCERTAINTY]));
-                }
-                else
-                {
-                    writer.write(String.format("%s,%s,%s,%.4f,%d",
-                            sampleId, svData.id(), svData.type(), svData.ploidy(), tumorReadCount));
-
-                    writer.write(String.format(",%s,%d,%d,%.4f,%.4f,%d,%d,%d",
-                            svData.startChromosome(), svData.startPosition(), svData.startOrientation(),
-                            cnStart, cnChgStart, cnStartData.DepthWindowCount, startDepthData[0], startDepthData[1]));
-
-                    writer.write(String.format(",%s,%d,%d,%.4f,%.4f,%d,%d,%d",
-                            svData.endChromosome(), svData.endPosition(), svData.endOrientation(),
-                            cnEnd, cnChgEnd, cnEndData != null ? cnEndData.DepthWindowCount : 0,
-                            endDepthData != null ? endDepthData[0] : 0, endDepthData != null ? endDepthData[1] : 0));
-
-                    writer.write(String.format(",%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f",
-                            calcResults[APC_RC_POIS_LOW], calcResults[APC_RC_POIS_HIGH],
-                            calcResults[APC_PLOIDY_UNCERTAINTY],
-                            calcResults[APC_EST_PLOIDY], calcResults[APC_EST_UNCERTAINTY],
-                            calcResults[APC_EST_PLOIDY] - calcResults[APC_EST_UNCERTAINTY],
-                            calcResults[APC_EST_PLOIDY] + calcResults[APC_EST_UNCERTAINTY]));
+                    LOGGER.debug("sample({}) svID({} type={}) ploidy(est={} unc={}",
+                            sampleId, svData.id(), svData.type(), ploidyEstimate, ploidyUncertainty);
                 }
 
-                writer.newLine();
+                if(Double.isNaN(ploidyEstimate))
+                    ploidyEstimate = 0;
+
+                if(Double.isNaN(ploidyUncertainty))
+                    ploidyUncertainty = 0;
+
+                updatedSvDataList.add(ImmutableStructuralVariantData.builder()
+                        .from(svData)
+                        .ploidyMin(ploidyEstimate - ploidyUncertainty)
+                        .ploidyMax(ploidyEstimate + ploidyUncertainty)
+                        .build());
+
+                if (writer != null)
+                {
+                    if (!mWriteVerbosePloidyData)
+                    {
+                        writer.write(String.format("%s,%s,%.4f,%.4f",
+                                sampleId, svData.id(),
+                                ploidyEstimate, ploidyUncertainty));
+                    }
+                    else
+                    {
+                        writer.write(String.format("%s,%s,%s,%.4f,%d",
+                                sampleId, svData.id(), svData.type(), svData.ploidy(), tumorReadCount));
+
+                        writer.write(String.format(",%s,%d,%d,%.4f,%.4f,%d,%d,%d",
+                                svData.startChromosome(), svData.startPosition(), svData.startOrientation(),
+                                cnStart, cnChgStart, cnStartData.DepthWindowCount, startDepthData[0], startDepthData[1]));
+
+                        writer.write(String.format(",%s,%d,%d,%.4f,%.4f,%d,%d,%d",
+                                svData.endChromosome(), svData.endPosition(), svData.endOrientation(),
+                                cnEnd, cnChgEnd, cnEndData != null ? cnEndData.DepthWindowCount : 0,
+                                endDepthData != null ? endDepthData[0] : 0, endDepthData != null ? endDepthData[1] : 0));
+
+                        writer.write(String.format(",%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f",
+                                calcResults[APC_RC_POIS_LOW], calcResults[APC_RC_POIS_HIGH],
+                                calcResults[APC_PLOIDY_UNCERTAINTY],
+                                ploidyEstimate, ploidyUncertainty,
+                                ploidyEstimate - ploidyUncertainty,
+                                ploidyEstimate + ploidyUncertainty));
+                    }
+
+                    writer.newLine();
+                }
             }
         }
         catch (final IOException e)
         {
             LOGGER.error("error writing to ploidy recalc outputFile: {}", e.toString());
+        }
+
+        if (mUpdateAdjustedPloidyToDB)
+        {
+            mDbAccess.updateCalculatedPloidy(updatedSvDataList);
         }
     }
 

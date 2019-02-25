@@ -166,6 +166,11 @@ public class DatabaseAccess {
         return structuralVariantDAO.getSamplesList(sampleSearch);
     }
 
+    public void updateCalculatedPloidy(List<StructuralVariantData> svDataList)
+    {
+        structuralVariantDAO.updateCalculatedPloidy(svDataList);
+    }
+
     public void writeGermlineCopynumbers(@NotNull final String sample, @NotNull List<PurpleCopyNumber> copyNumbers) {
         copyNumberDAO.writeGermlineCopyNumber(sample, copyNumbers);
     }

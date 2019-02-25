@@ -1,2 +1,2 @@
 ALTER TABLE structuralVariant
-    ADD insertSequenceAlignments varchar(512);
+ADD insertSequenceAlignments varchar(512);
