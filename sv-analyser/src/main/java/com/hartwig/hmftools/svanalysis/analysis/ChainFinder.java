@@ -46,7 +46,6 @@ public class ChainFinder
     private Map<SvVarData,Integer> mSvReplicationMap;
 
     private Map<SvBreakend,List<SvLinkedPair>> mSvBreakendPossibleLinks;
-    private Map<SvBreakend,Integer> mBreakendCountMap;
 
     private boolean mUseNewMethod;
     private int mReqChainCount;
@@ -64,7 +63,6 @@ public class ChainFinder
         mFullyLinkedSVs = Lists.newArrayList();
         mSvReplicationMap = new HashMap();
         mSvBreakendPossibleLinks = new HashMap();
-        mBreakendCountMap = new HashMap();
 
         mLogVerbose = false;
         mLogWorking = false;
@@ -87,7 +85,6 @@ public class ChainFinder
         mFullyLinkedSVs.clear();
         mUnlinkedSVs.clear();
         mUnlinkedBreakendMap.clear();
-        mBreakendCountMap.clear();
     }
 
     public void setLogVerbose(boolean toggle) { mLogVerbose = toggle; }
@@ -274,6 +271,7 @@ public class ChainFinder
             }
 
             processPossiblePairs(possiblePairs, isMaxReplicated);
+            checkProgress();
         }
 
         if(mLogVerbose)
@@ -338,12 +336,12 @@ public class ChainFinder
 
             if(isMaxReplicated)
             {
-                Integer repCountStart = mBreakendCountMap.get(shortestPair.getBreakend(true));
-                Integer repCountEnd = mBreakendCountMap.get(shortestPair.getBreakend(false));
+                List<SvBreakend> beListStart = mUnlinkedBreakendMap.get(shortestPair.getBreakend(true));
+                List<SvBreakend> beListEnd = mUnlinkedBreakendMap.get(shortestPair.getBreakend(false));
 
-                if(repCountStart != null && repCountStart > 1 && repCountEnd != null && repCountStart == repCountEnd)
+                if(beListStart != null && beListStart.size() > 1 && beListEnd != null && beListStart.size() == beListEnd.size())
                 {
-                    pairRepeatCount = repCountStart;
+                    pairRepeatCount = beListStart.size();
 
                     LOGGER.debug("cluster({}) repeating pair({}) {} times",
                             mCluster.id(), shortestPair.toString(), pairRepeatCount);
@@ -964,6 +962,19 @@ public class ChainFinder
             {
                 ++index1;
             }
+        }
+    }
+
+    private void checkProgress()
+    {
+        if(mCluster.getCount() < 100)
+            return;
+
+        if((mPartialChains.size() % 100) == 0 || (mUnlinkedBreakendMap.size() % 100) == 0)
+        {
+            LOGGER.debug("cluster({}) progress: SVs({}) partialChains({}) unlinked(SVs={} breakends={}) replicatedSVs({})",
+                    mCluster.id(), mCluster.getCount(), mPartialChains.size(), mUnlinkedSVs.size(),
+                    mUnlinkedBreakendMap.size(), mSvReplicationMap.size());
         }
     }
 
