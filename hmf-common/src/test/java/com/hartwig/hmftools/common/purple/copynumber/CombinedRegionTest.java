@@ -19,13 +19,13 @@ public class CombinedRegionTest {
         final CombinedRegion region = createCombinedFittedRegion(1, 100_000_000, 3);
         assertAverages(region, 0, 3);
 
-        region.extendWithBAFWeightedAverage(create(100_000_001, 200_000_000, 4));
+        region.extendWithWeightedAverage(create(100_000_001, 200_000_000, 4));
         assertAverages(region, 0, 3.5);
 
-        region.extendWithBAFWeightedAverage(create(200_000_001, 200_000_010, 1, 0.5, 3));
+        region.extendWithWeightedAverage(create(200_000_001, 200_000_010, 1, 0.5, 3));
         assertAverages(region, 0.5, 3);
 
-        region.extendWithBAFWeightedAverage(create(200_000_011, 300_000_000, 3, 1, 4d));
+        region.extendWithWeightedAverage(create(200_000_011, 300_000_000, 3, 1, 4d));
         assertAverages(region, 0.875, 3.75);
     }
 
@@ -35,7 +35,7 @@ public class CombinedRegionTest {
                 .depthWindowCount(2)
                 .status(GermlineStatus.DIPLOID)
                 .build();
-        final CombinedRegion region = new BafWeightedRegion(somaticRegion);
+        final CombinedRegion region = new CombinedRegionImpl(somaticRegion);
         assertEquals(2, region.region().depthWindowCount());
 
         final FittedRegion amplificationRegion = PurpleDatamodelTest.createDefaultFittedRegion("1", 1, 1000)
@@ -59,17 +59,17 @@ public class CombinedRegionTest {
         CombinedRegion builder = createCombinedFittedRegion(1, 100, 3);
         assertAverages(builder, 0, 3);
 
-        builder.extendWithBAFWeightedAverage(create(101, 200, 0));
+        builder.extendWithWeightedAverage(create(101, 200, 0));
         assertAverages(builder, 0, 3);
     }
 
     @Test
     public void doNotIncludeZeroCopyNumber() {
         final FittedRegion startRegion = create(1, 100, 200, 0.5, 0);
-        CombinedRegion builder = new BafWeightedRegion(startRegion);
+        CombinedRegion builder = new CombinedRegionImpl(startRegion);
         assertAverages(builder, 0.5, 0);
 
-        builder.extendWithBAFWeightedAverage(create(201, 300, 200, 1, 2));
+        builder.extendWithWeightedAverage(create(201, 300, 200, 1, 2));
         assertAverages(builder, 0.75, 2);
     }
 
@@ -84,7 +84,7 @@ public class CombinedRegionTest {
 
     @NotNull
     private static CombinedRegion createCombinedFittedRegion(long start, long end, double copyNumber) {
-        return new BafWeightedRegion(create(start, end, copyNumber));
+        return new CombinedRegionImpl(create(start, end, copyNumber));
     }
 
     @NotNull

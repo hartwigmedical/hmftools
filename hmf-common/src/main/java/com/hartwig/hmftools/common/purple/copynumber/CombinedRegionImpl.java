@@ -10,7 +10,7 @@ import com.hartwig.hmftools.common.purple.region.ModifiableFittedRegion;
 
 import org.jetbrains.annotations.NotNull;
 
-public class BafWeightedRegion implements CombinedRegion {
+class CombinedRegionImpl implements CombinedRegion {
 
     private final ModifiableFittedRegion combined;
 
@@ -20,11 +20,11 @@ public class BafWeightedRegion implements CombinedRegion {
     private int unweightedCount = 1;
     private final boolean isBafWeighted;
 
-    public BafWeightedRegion(final FittedRegion region) {
+    CombinedRegionImpl(@NotNull final FittedRegion region) {
         this(true, region);
     }
 
-    public BafWeightedRegion(boolean isBafWeighed, final FittedRegion region) {
+    CombinedRegionImpl(boolean isBafWeighed, @NotNull final FittedRegion region) {
         this.combined = ModifiableFittedRegion.create().from(region);
         this.isBafWeighted = isBafWeighed;
 
@@ -54,6 +54,7 @@ public class BafWeightedRegion implements CombinedRegion {
         return inferredBAF;
     }
 
+    @NotNull
     public List<FittedRegion> regions() {
         return regions;
     }
@@ -70,6 +71,7 @@ public class BafWeightedRegion implements CombinedRegion {
         return region().bafCount();
     }
 
+    @NotNull
     public CopyNumberMethod copyNumberMethod() {
         return copyNumberMethod;
     }
@@ -78,15 +80,16 @@ public class BafWeightedRegion implements CombinedRegion {
         return copyNumberMethod != CopyNumberMethod.UNKNOWN;
     }
 
-    public void setCopyNumberMethod(CopyNumberMethod copyNumberMethod) {
+    public void setCopyNumberMethod(@NotNull CopyNumberMethod copyNumberMethod) {
         this.copyNumberMethod = copyNumberMethod;
     }
 
+    @NotNull
     public FittedRegion region() {
         return combined;
     }
 
-    public void extend(final FittedRegion region) {
+    public void extend(@NotNull final FittedRegion region) {
         combined.setStart(Math.min(combined.start(), region.start()));
         combined.setEnd(Math.max(combined.end(), region.end()));
         combined.setMinStart(Math.min(region.minStart(), region().minStart()));
@@ -102,15 +105,15 @@ public class BafWeightedRegion implements CombinedRegion {
         }
     }
 
-    public void extendWithUnweightedAverage(final FittedRegion region) {
+    public void extendWithUnweightedAverage(@NotNull final FittedRegion region) {
         extend(region);
         applyDepthWindowCountWeights(region, unweightedCount, 1);
         applyBafCountWeights(region, unweightedCount, 1);
         unweightedCount++;
     }
 
-    public void extendWithBAFWeightedAverage(final FittedRegion region) {
-        combined.setStatus(GermlineStatus.DIPLOID); //TODO Remove this
+    public void extendWithWeightedAverage(@NotNull final FittedRegion region) {
+        combined.setStatus(GermlineStatus.DIPLOID);
 
         int currentWeight = region().depthWindowCount();
         int newWeight = region.depthWindowCount();
@@ -126,7 +129,7 @@ public class BafWeightedRegion implements CombinedRegion {
         extend(region);
     }
 
-    void applyBafCountWeights(final FittedRegion region, long currentWeight, long newWeight) {
+    private void applyBafCountWeights(final FittedRegion region, long currentWeight, long newWeight) {
         if (!Doubles.isZero(region.observedBAF())) {
             combined.setObservedBAF(weightedAverage(currentWeight, combined.observedBAF(), newWeight, region.observedBAF()));
         }
@@ -138,7 +141,7 @@ public class BafWeightedRegion implements CombinedRegion {
         combined.setBafCount(combined.bafCount() + region.bafCount());
     }
 
-    void applyDepthWindowCountWeights(final FittedRegion region, long currentWeight, long newWeight) {
+    private void applyDepthWindowCountWeights(final FittedRegion region, long currentWeight, long newWeight) {
 
         if (!Doubles.isZero(region.tumorCopyNumber())) {
             combined.setTumorCopyNumber(weightedAverage(currentWeight, combined.tumorCopyNumber(), newWeight, region.tumorCopyNumber()));

@@ -117,6 +117,6 @@ public class ExtendLongArmTest {
                 .support(support)
                 .build();
 
-        return new BafWeightedRegion(region);
+        return new CombinedRegionImpl(region);
     }
 }
