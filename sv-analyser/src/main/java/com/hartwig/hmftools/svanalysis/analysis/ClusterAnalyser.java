@@ -48,6 +48,7 @@ import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_END;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_START;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.findVariantById;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.haveSameChrArms;
+import static com.hartwig.hmftools.svanalysis.types.SvVarData.isSpecificSV;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.isStart;
 
 import java.util.HashMap;
@@ -330,6 +331,9 @@ public class ClusterAnalyser {
             }
 
             mPcChaining.stop();
+
+            // reassess for chained foldbacks
+            markFoldbacks(mergedClusters);
 
             for(SvCluster cluster : mergedClusters)
             {
@@ -844,6 +848,11 @@ public class ClusterAnalyser {
 
     public void markFoldbacks()
     {
+        markFoldbacks(Lists.newArrayList());
+    }
+
+    private void markFoldbacks(List<SvCluster> specificClusters)
+    {
         for(final Map.Entry<String, List<SvBreakend>> entry : mClusteringMethods.getChrBreakendMap().entrySet())
         {
             List<SvBreakend> breakendList = entry.getValue();
@@ -856,7 +865,8 @@ public class ClusterAnalyser {
                 SvBreakend beFront = null; // the lower position for orientation +1 and vice versa
                 SvBreakend beBack = null;
 
-                // isSpecificSV(breakend.getSV().id());
+                if(!specificClusters.isEmpty() && !specificClusters.contains(breakend.getSV().getCluster()))
+                    continue;
 
                 if(breakend.orientation() == nextBreakend.orientation())
                 {
@@ -892,6 +902,16 @@ public class ClusterAnalyser {
                     final SvLinkedPair dbLink = beFront.getSV().getDBLink(beFront.usesStart());
                     if(dbLink == null || dbLink.length() >= MIN_TEMPLATED_INSERTION_LENGTH)
                     {
+                        // only interested in checking newly chained SVs
+                        if(!specificClusters.isEmpty())
+                        {
+                            if(beFront.getSV() == beBack.getSV())
+                                continue;
+
+                            if(beFront.getSV().getFoldbackLink(beFront.usesStart()).equals(beBack.getSV().id()))
+                                continue; // already in a foldback
+                        }
+
                         checkFoldbackBreakends(beFront, beBack);
                     }
                 }
@@ -915,6 +935,8 @@ public class ClusterAnalyser {
 
         if(varEnd.type() == INS || varStart.type() == INS)
             return;
+
+        isSpecificSV(varStart);
 
         // skip unclustered DELs & DUPs, reciprocal INV or reciprocal BNDs
         final SvCluster cluster1 = varEnd.getCluster();
@@ -2045,9 +2067,14 @@ public class ClusterAnalyser {
                 cluster.id(), isComplete ? "COMPLETE" : "incomplete",
                 cluster.getChains().size(), inconsistentChains, chainEndArms.size(), repeatedChainEndArms,
                 unlinkedSvCount, armGroupCount, inconsistentArmCount);
+
+        if(isComplete)
+        {
+            cluster.addAnnotation(String.format("COMPLETE"));
+        }
     }
 
-            private static double DOUBLE_MINUTE_PLOIDY_THRESHOLD = 8;
+    private static double DOUBLE_MINUTE_PLOIDY_THRESHOLD = 8;
     private static double DOUBLE_MINUTE_PLOIDY_GAP_RATIO = 3;
 
     private void reportDoubleMinutes(final SvCluster cluster)

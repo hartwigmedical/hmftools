@@ -899,6 +899,11 @@ public class SvCluster
         return null;
     }
 
+    public final List<SvChain> findChains(final SvVarData var)
+    {
+        return mChains.stream().filter(x -> x.hasSV(var, true)).collect(Collectors.toList());
+    }
+
     public int getChainId(final SvVarData var)
     {
         final SvChain chain = findChain(var);

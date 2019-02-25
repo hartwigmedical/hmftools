@@ -105,36 +105,44 @@ public class VisualiserWriter
 
             for(final SvVarData var : variants)
             {
-                final SvChain chain = var.getCluster().findChain(var);
-                int chainId = chain != null ? chain.id() : var.getCluster().getChainId(var);
+                final List<SvChain> chains = var.getCluster().findChains(var);
 
-                writer.write(
-                        String.format("%s,%d,%d,%s,%s,%s",
-                                mSampleId, var.getCluster().id(), chainId, var.id(),
-                                var.type(), var.getCluster().getResolvedType()));
+                // repeat an SV for every time it appears in a chain
+                int chainCount = chains.isEmpty() ? 1 : chains.size();
+                int unchainedChainId = chains.isEmpty() ? var.getCluster().getChainId(var) : -1;
 
-                for(int be = SVI_START; be <= SVI_END; ++be)
+                for(int i = 0; i < chainCount; ++i)
                 {
-                    boolean isStart = isStart(be);
-
-                    if(!isStart && var.isNullBreakend())
-                    {
-                        writer.write(",-1,0,0,NULL");
-                        continue;
-                    }
-
-                    final SvBreakend breakend = var.getBreakend(isStart);
+                    int chainId = chains.isEmpty() ? unchainedChainId : chains.get(i).id();
 
                     writer.write(
-                            String.format(",%s,%d,%d,%s",
-                                    breakend.chromosome(), breakend.position(), breakend.orientation(),
-                                    breakend.getSV().getFoldbackLink(isStart).isEmpty() ? "NORMAL" : "FOLDBACK"));
+                            String.format("%s,%d,%d,%s,%s,%s",
+                                    mSampleId, var.getCluster().id(), chainId, var.id(),
+                                    var.type(), var.getCluster().getResolvedType()));
+
+                    for (int be = SVI_START; be <= SVI_END; ++be)
+                    {
+                        boolean isStart = isStart(be);
+
+                        if (!isStart && var.isNullBreakend())
+                        {
+                            writer.write(",-1,0,0,NULL");
+                            continue;
+                        }
+
+                        final SvBreakend breakend = var.getBreakend(isStart);
+
+                        writer.write(
+                                String.format(",%s,%d,%d,%s",
+                                        breakend.chromosome(), breakend.position(), breakend.orientation(),
+                                        breakend.getSV().getFoldbackLink(isStart).isEmpty() ? "NORMAL" : "FOLDBACK"));
+                    }
+
+                    int repeatCount = !chains.isEmpty() ? max(var.getReplicatedCount(), 1) : 1;
+                    writer.write(String.format(",%d", repeatCount));
+
+                    writer.newLine();
                 }
-
-                int repeatCount = chain != null ? max(var.getReplicatedCount(), 1) : 1;
-                writer.write(String.format(",%d", repeatCount));
-
-                writer.newLine();
             }
         }
         catch (final IOException e)

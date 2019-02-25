@@ -475,6 +475,13 @@ public class SvClusteringMethods {
         double minCopyNumber = cluster.getMinCNChange();
         double maxCopyNumber = cluster.getMaxCNChange();
 
+        if(minCopyNumber <= 0)
+        {
+            LOGGER.debug("cluster({}) warning: invalid CN variation(min={} max={})",
+                    cluster.id(), minCopyNumber, maxCopyNumber);
+            return;
+        }
+
         if(maxCopyNumber > MAX_SV_REPLICATION_MULTIPLE * minCopyNumber)
         {
             LOGGER.debug("cluster({}) warning: large CN variation(min={} max={})",

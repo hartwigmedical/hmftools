@@ -296,13 +296,6 @@ public class ChainFinder
 
     private void processPossiblePairs(List<SvLinkedPair> possiblePairs, boolean isMaxReplicated)
     {
-        if(possiblePairs.size() == 1)
-        {
-            // the actual pair being added by be drawn from unlinked breakends, not the real ones
-            addPairToChain(possiblePairs.get(0), false);
-            return;
-        }
-
         while (!possiblePairs.isEmpty())
         {
             SvLinkedPair shortestPair = null;
@@ -341,8 +334,27 @@ public class ChainFinder
                 LOGGER.debug("shortest possible pair: {} length({})", shortestPair.toString(), shortestPair.length());
             }
 
-            // the actual pair being added by be drawn from unlinked breakends, not the real ones
-            addPairToChain(shortestPair, false);
+            int pairRepeatCount = 1;
+
+            if(isMaxReplicated)
+            {
+                Integer repCountStart = mBreakendCountMap.get(shortestPair.getBreakend(true));
+                Integer repCountEnd = mBreakendCountMap.get(shortestPair.getBreakend(false));
+
+                if(repCountStart != null && repCountStart > 1 && repCountEnd != null && repCountStart == repCountEnd)
+                {
+                    pairRepeatCount = repCountStart;
+
+                    LOGGER.debug("cluster({}) repeating pair({}) {} times",
+                            mCluster.id(), shortestPair.toString(), pairRepeatCount);
+                }
+            }
+
+            for(int i = 0; i < pairRepeatCount; ++i)
+            {
+                // the actual pair being added by be drawn from unlinked breakends, not the real ones
+                addPairToChain(shortestPair, false);
+            }
 
             if(!mIsValid)
                 return;
@@ -438,7 +450,7 @@ public class ChainFinder
                 mIsValid = false;
                 LOGGER.error("new pair breakendStart({} valid={}) and breakendEnd({} valid={}) no unlinked match found",
                         pair.getBreakend(true).toString(), unlinkedBeFirst != null,
-                        pair.getBreakend(true).toString(), unlinkedBeSecond != null);
+                        pair.getBreakend(false).toString(), unlinkedBeSecond != null);
                 return;
             }
 
@@ -462,21 +474,10 @@ public class ChainFinder
                     if (chainSV.equals(newPair.first(), true))
                     {
                         pairToChain[SVI_START] = true;
-
-                        if (chainSV != newPair.first())
-                        {
-                            // if the chain has a specific SV, ensure it is matched by this new pair
-                            newPair.replaceFirst(chainSV);
-                        }
                     }
                     else
                     {
                         pairToChain[SVI_END] = true;
-
-                        if (chainSV != newPair.second())
-                        {
-                            newPair.replaceSecond(chainSV);
-                        }
                     }
                 }
             }
@@ -492,6 +493,18 @@ public class ChainFinder
             }
             else
             {
+                final SvVarData chainSV = addToStart ? chain.getFirstSV() : chain.getLastSV();
+
+                if (pairToChain[SVI_START] && chainSV != newPair.first())
+                {
+                    // if the chain has a specific SV, ensure it is matched by this new pair
+                    newPair.replaceFirst(chainSV);
+                }
+                else if (pairToChain[SVI_END] && chainSV != newPair.second())
+                {
+                    newPair.replaceSecond(chainSV);
+                }
+
                 chain.addLink(newPair, addToStart);
                 addedToChain = true;
 

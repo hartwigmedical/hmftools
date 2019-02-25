@@ -40,26 +40,8 @@ public class SvChain {
         mDetails = "";
     }
 
-    public SvChain(final SvChain other)
-    {
-        mId = other.id();
-        mSvList = Lists.newArrayList();
-        mLinkedPairs = Lists.newArrayList();
-        mLength = 0;
-        mIsClosedLoop = false;
-        mIsValid = true;
-        mDetails = "";
-
-        for(final SvLinkedPair pair : other.getLinkedPairs())
-        {
-            addLink(pair, canAddLinkedPairToStart(pair));
-        }
-    }
-
     public int id() { return mId; }
     public void setId(int id) { mId = id; }
-
-    public boolean isValid() { return mIsValid; }
 
     public int getSvCount() { return mSvList.size(); }
     public List<SvVarData> getSvList() { return mSvList; }
@@ -291,6 +273,17 @@ public class SvChain {
         return (int)mSvList.stream().filter(x -> !x.isReplicatedSv()).count();
     }
 
+    public boolean hasSV(final SvVarData var, boolean allowReplicated)
+    {
+        for(final SvVarData chainSv : mSvList)
+        {
+            if (chainSv.equals(var, allowReplicated))
+                return true;
+        }
+
+        return false;
+    }
+
     public int getSvIndex(final SvVarData var)
     {
         for(int index = 0; index < mSvList.size(); ++index)
@@ -480,46 +473,6 @@ public class SvChain {
             if(!pair.second().equals(otherPair.second(), true))
                 return false;
         }
-
-        return true;
-    }
-
-    public boolean isIdentical(final SvChain other)
-    {
-        // true if both closed loops and containing the same linked pairs
-        // or if not closed, having the same end points
-        if(mLinkedPairs.size() != other.getLinkedPairs().size())
-            return false;
-
-        List<SvLinkedPair> otherLinkedPairs = Lists.newArrayList();
-        otherLinkedPairs.addAll(other.getLinkedPairs());
-
-        for(final SvLinkedPair pair : mLinkedPairs)
-        {
-            boolean matched = false;
-            for(int i = 0; i < otherLinkedPairs.size(); ++i)
-            {
-                final SvLinkedPair otherPair = otherLinkedPairs.get(i);
-                if(pair.matches(otherPair))
-                {
-                    otherLinkedPairs.remove(i); // reduce each time to make subsequent matches faster
-                    matched = true;
-                    break;
-                }
-            }
-
-            if(!matched)
-                return false;
-        }
-
-        if(isClosedLoop() && other.isClosedLoop())
-            return true;
-
-        if(!getFirstSV().equals(other.getFirstSV(), true) || firstLinkOpenOnStart() != other.firstLinkOpenOnStart())
-            return false;
-
-        if(!getLastSV().equals(other.getLastSV(), true) || lastLinkOpenOnStart() != other.lastLinkOpenOnStart())
-            return false;
 
         return true;
     }

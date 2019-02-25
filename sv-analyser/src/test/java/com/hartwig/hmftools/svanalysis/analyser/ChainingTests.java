@@ -327,17 +327,16 @@ public class ChainingTests
 
             SOLUTION:
 
-            21:30:03.844 [main] [DEBUG] cluster(5) adding complete chain(0) with 10 linked pairs:
-            21:30:03.844 [main] [DEBUG] chain(0) 0: pair(78 3:25331584 SGL-on-known & 119 3:25400602:start) TI inferred len=69018
-            21:30:03.844 [main] [DEBUG] chain(0) 1: pair(119 12:72666892:end & 120 12:72667075:end) TI assembly len=183
-            21:30:03.844 [main] [DEBUG] chain(0) 2: pair(120 10:60477422:start & 113 10:60477224:end) TI assembly len=198
-            21:30:03.844 [main] [DEBUG] chain(0) 3: pair(113 3:25401059:start & 77 3:24566180:end) TI inferred len=834879
-            21:30:03.845 [main] [DEBUG] chain(0) 4: pair(77 3:24565108:start & 79 3:26663922:start) TI inferred len=2098814
-            21:30:03.845 [main] [DEBUG] chain(0) 5: pair(79 3:26664498:end & 88 3:26431918:start) TI inferred len=232580
-            21:30:03.845 [main] [DEBUG] chain(0) 6: pair(88 6:26194040:end & 89 6:26194117:start) TI assembly len=77
-            21:30:03.845 [main] [DEBUG] chain(0) 7: pair(89 6:26194406:end & 88r 6:26194040:end) TI assembly len=366
-            21:30:03.845 [main] [DEBUG] chain(0) 8: pair(88r 3:26431918:start & 79r 3:26663922:start) TI inferred len=232004
-            21:30:03.846 [main] [DEBUG] chain(0) 9: pair(79r 3:26664498:end & 77r 3:24565108:start) TI inferred len=2099390
+            09:16:20.469 [main] [DEBUG] chain(0) 0: pair(78 3:25331584 SGL-on-known & 119 3:25400602:start) TI inferred len=69018
+            09:16:20.469 [main] [DEBUG] chain(0) 1: pair(119 12:72666892:end & 120 12:72667075:end) TI assembly len=183
+            09:16:20.470 [main] [DEBUG] chain(0) 2: pair(120 10:60477422:start & 113 10:60477224:end) TI assembly len=198
+            09:16:20.470 [main] [DEBUG] chain(0) 3: pair(113 3:25401059:start & 77 3:24566180:end) TI inferred len=834879
+            09:16:20.470 [main] [DEBUG] chain(0) 4: pair(77 3:24565108:start & 79 3:26664498:end) TI inferred len=2099390
+            09:16:20.470 [main] [DEBUG] chain(0) 5: pair(79 3:26663922:start & 88r 3:26431918:start) TI inferred len=232004
+            09:16:20.470 [main] [DEBUG] chain(0) 6: pair(88r 6:26194040:end & 89 6:26194406:end) TI assembly len=366
+            09:16:20.470 [main] [DEBUG] chain(0) 7: pair(89 6:26194117:start & 88 6:26194040:end) TI assembly len=77
+            09:16:20.470 [main] [DEBUG] chain(0) 8: pair(88 3:26431918:start & 79r 3:26663922:start) TI inferred len=232004
+            09:16:20.470 [main] [DEBUG] chain(0) 9: pair(79r 3:26664498:end & 77r 3:24565108:start) TI inferred len=2099390
              */
 
         // merge 5 clusters with varying levels of copy number change (ie replication) from 4 foldbacks
