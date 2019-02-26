@@ -403,22 +403,11 @@ public class SyntheticDelDupTests
         tester.addClusterAndSVs(cluster);
         tester.addClusterAndSVs(cluster2);
         tester.preClusteringInit();
-        tester.Analyser.findSimpleCompleteChains();
+        tester.Analyser.findLimitedChains();
 
         tester.ClusteringMethods.markInversionPairTypes(cluster);
 
         assertTrue(cluster.getResolvedType() == RESOLVED_TYPE_NONE);
-
-//        cluster = new SvCluster(0);
-//        cluster.addVariant(var1);
-//        cluster.addVariant(var2);
-//
-//        addAndPrepareCluster(tester, cluster);
-//        tester.ClusteringMethods.markDelDupPairTypes(cluster);
-//
-//        assertTrue(cluster.isResolved());
-//        assertTrue(cluster.getResolvedType() == RESOLVED_TYPE_NONE);
-
     }
 
     private void addAndPrepareCluster(SvTestHelper tester, SvCluster cluster)
@@ -426,7 +415,7 @@ public class SyntheticDelDupTests
         tester.clearClustersAndSVs();
         tester.addClusterAndSVs(cluster);
         tester.preClusteringInit();
-        tester.Analyser.findSimpleCompleteChains();
+        tester.Analyser.findLimitedChains();
     }
 
 }

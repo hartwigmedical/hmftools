@@ -129,8 +129,6 @@ public class ChainingTests
         SvTestHelper tester = new SvTestHelper();
         tester.logVerbose(true);
 
-        tester.Analyser.getChainFinder().setUseNewMethod(true);
-
         final SvVarData var1 = createDel("0", "1", 100,200);
         final SvVarData var2 = createDel("1", "1", 300,400);
         final SvVarData var3 = createDel("2", "1", 500,600);
@@ -169,8 +167,6 @@ public class ChainingTests
         SvTestHelper tester = new SvTestHelper();
         tester.logVerbose(true);
 
-        tester.Analyser.getChainFinder().setUseNewMethod(true);
-
         final SvVarData var1 = createInv("0", "1", 100,200, -1);
         final SvVarData var2 = createDel("1", "1", 300,400);
         final SvVarData var3 = createDel("2", "1", 500,600);
@@ -201,8 +197,6 @@ public class ChainingTests
         SvTestHelper tester = new SvTestHelper();
         tester.logVerbose(true);
 
-        tester.Analyser.getChainFinder().setUseNewMethod(true);
-
         final SvVarData var0 = createDel("0", "1", 100,200);
         final SvVarData var1 = createDel("1", "1", 300,400);
         final SvVarData var2 = createDel("2", "1", 500,600);
@@ -230,9 +224,11 @@ public class ChainingTests
         assertEquals(3, chain.getLinkCount());
     }
 
+    @Ignore
     @Test
     public void testComplexChaining1()
     {
+        // from sampleId CPCT02020258T but not sure if has clustered all SVs correctly
         SvTestHelper tester = new SvTestHelper();
         tester.logVerbose(true);
 
@@ -299,7 +295,7 @@ public class ChainingTests
         assertEquals(tester.Analyser.getClusters().size(), 1);
         final SvCluster cluster = tester.Analyser.getClusters().get(0);
 
-        assertEquals(cluster.getChains().size(), 2);
+        assertEquals(2, cluster.getChains().size());
 
         assertEquals(14, cluster.getChains().get(0).getLinkCount());
         assertEquals(3, cluster.getChains().get(1).getLinkCount());
@@ -312,7 +308,6 @@ public class ChainingTests
 
         SvTestHelper tester = new SvTestHelper();
         tester.logVerbose(true);
-        tester.Analyser.getChainFinder().setUseNewMethod(true);
 
             /*
             Id	Type	Ploidy	ChrStart	PosStart	OS	AS	CNStart	CNChgS	ChrEnd	PosEnd	    OE	AE	CNEnd	CNChgEnd

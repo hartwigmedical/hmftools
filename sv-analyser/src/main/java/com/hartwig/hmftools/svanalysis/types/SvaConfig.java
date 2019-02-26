@@ -17,7 +17,6 @@ public class SvaConfig
     final public String SampleId;
     final public int MaxSamples;
     final public boolean WriteVisualisationData;
-    final public boolean NewChainMethod;
     final public int MaxClusterSize; // for analysis and chaining
 
     public boolean LogVerbose;
@@ -32,7 +31,6 @@ public class SvaConfig
     private static final String LOG_VERBOSE = "log_verbose";
     private static final String MAX_SAMPLES = "max_samples"; // for testing only
     private static final String WRITE_VISUALISATION_DATA = "write_vis_data";
-    private static final String NEW_CHAIN_METHOD = "new_chaining";
     private static final String MAX_CLUSTER_SIZE = "max_cluster_size";
 
     private static int DEFAULT_MAX_CLUSTER_SIZE = 1000;
@@ -54,7 +52,6 @@ public class SvaConfig
         MaxSamples = Integer.parseInt(cmd.getOptionValue(MAX_SAMPLES, "0"));
         LogVerbose = cmd.hasOption(LOG_VERBOSE);
         WriteVisualisationData = cmd.hasOption(WRITE_VISUALISATION_DATA);
-        NewChainMethod = cmd.hasOption(NEW_CHAIN_METHOD);
         MaxClusterSize = cmd.hasOption(MAX_CLUSTER_SIZE) ? Integer.parseInt(cmd.getOptionValue(MAX_CLUSTER_SIZE)) : DEFAULT_MAX_CLUSTER_SIZE;
     }
 
@@ -70,7 +67,6 @@ public class SvaConfig
         MaxSamples = 0;
         LogVerbose = false;
         WriteVisualisationData = false;
-        NewChainMethod = false;
         MaxClusterSize = DEFAULT_MAX_CLUSTER_SIZE;
     }
 
@@ -86,7 +82,6 @@ public class SvaConfig
         options.addOption(MAX_SAMPLES, true, "Limit to X samples for testing");
         options.addOption(LOG_VERBOSE, false, "Log extra detail");
         options.addOption(WRITE_VISUALISATION_DATA, false, "Optional: write files for Circos");
-        options.addOption(NEW_CHAIN_METHOD, false, "Use new chaining method");
         options.addOption(MAX_CLUSTER_SIZE, true, "Optional: max cluster size for chaining");
     }
 }

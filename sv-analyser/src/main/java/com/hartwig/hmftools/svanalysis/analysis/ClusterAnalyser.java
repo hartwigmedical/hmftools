@@ -107,8 +107,6 @@ public class ClusterAnalyser {
         mLinkFinder.setLogVerbose(mConfig.LogVerbose);
         mRunValidationChecks = false;
 
-        mChainFinder.setUseNewMethod(mConfig.NewChainMethod);
-
         mPcClustering = new PerformanceCounter("Clustering");
         mPcChaining = new PerformanceCounter("Chaining");
         mPcAnnotation = new PerformanceCounter("Annotation");
@@ -155,7 +153,6 @@ public class ClusterAnalyser {
 
         mPcChaining.start();
         findLimitedChains();
-        // findSimpleCompleteChains();
         mPcChaining.pause();
 
         mPcClustering.resume();
@@ -168,10 +165,6 @@ public class ClusterAnalyser {
             if(cluster.getCount() > 1)
                 cluster.logDetails();
         }
-
-        // mPcChaining.resume();
-        // findLinksAndChains();
-        // mPcChaining.pause();
 
         // INVs and other SV-pairs which make foldbacks are now used in the inconsistent clustering logic
         markFoldbacks();
@@ -225,44 +218,6 @@ public class ClusterAnalyser {
         mPcAnnotation.stop();
 
         // validation-only: checkClusterDuplicates(mClusters);
-    }
-
-    public void findSimpleCompleteChains()
-    {
-        // for small clusters, try to find a full chain through all SVs
-        List<SvCluster> simpleClusters = Lists.newArrayList();
-
-        for(SvCluster cluster : mClusters)
-        {
-            if(cluster.getCount() == 1 && cluster.isSimpleSVs())
-            {
-                setClusterResolvedState(cluster);
-                continue;
-            }
-
-            // skip more complicated clusters for now
-            if(cluster.getCount() > SMALL_CLUSTER_SIZE || !cluster.isConsistent() || cluster.hasVariedCopyNumber())
-                continue;
-
-            // inferred links are used to classify simple resolved types involving 2-3 SVs
-            mLinkFinder.findLinkedPairs(cluster, true);
-
-            // then look for fully-linked clusters, ie chains involving all SVs
-            findChains(cluster, false);
-
-            cluster.cacheLinkedPairs();
-            simpleClusters.add(cluster);
-        }
-
-        for(final SvCluster cluster : simpleClusters)
-        {
-            setClusterResolvedState(cluster);
-
-            if(cluster.isFullyChained() && cluster.isConsistent())
-            {
-                LOGGER.debug("sample({}) cluster({}) simple and consistent with {} SVs", mSampleId, cluster.id(), cluster.getCount());
-            }
-        }
     }
 
     public void findLimitedChains()
@@ -334,8 +289,6 @@ public class ClusterAnalyser {
         // now look at merging unresolved & inconsistent clusters where they share the same chromosomal arms
         List<SvCluster> mergedClusters = Lists.newArrayList();
 
-        // mPcClustering.resume();
-
         mergedClusters = mergeInconsistentClusters(mergedClusters);
         boolean foundMerges = !mergedClusters.isEmpty();
 
@@ -350,40 +303,6 @@ public class ClusterAnalyser {
                     mergedClusters.add(cluster);
             }
         }
-
-        // mPcClustering.stop();
-
-        /*
-        if(!mergedClusters.isEmpty())
-        {
-            mPcChaining.resume();
-
-            for(SvCluster cluster : mergedClusters)
-            {
-                cluster.setDesc(cluster.getClusterTypesAsString());
-
-                cluster.dissolveLinksAndChains();
-                cluster.removeReplicatedSvs();
-
-                applyCopyNumberReplication(cluster);
-
-                mLinkFinder.findLinkedPairs(cluster, false);
-
-                findChains(cluster, false);
-            }
-
-            mPcChaining.stop();
-
-            for(SvCluster cluster : mergedClusters)
-            {
-                cluster.cacheLinkedPairs();
-
-                setClusterResolvedState(cluster);
-
-                cluster.logDetails();
-            }
-        }
-        */
     }
 
     private void findChains(SvCluster cluster, boolean assembledLinksOnly)
