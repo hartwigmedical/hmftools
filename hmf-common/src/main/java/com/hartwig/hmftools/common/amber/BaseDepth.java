@@ -32,7 +32,8 @@ public interface BaseDepth extends GenomePosition {
     int indelCount();
 
     default boolean isValid(int minAlleles) {
-        return indelCount() == 0 && !ref().equals(Base.N) && baseMap().keySet().stream().filter(x -> !x.equals(Base.N)).count() >= minAlleles;
+        return indelCount() == 0 && !ref().equals(Base.N)
+                && baseMap().keySet().stream().filter(x -> !x.equals(Base.N)).count() >= minAlleles;
     }
 
     @NotNull
