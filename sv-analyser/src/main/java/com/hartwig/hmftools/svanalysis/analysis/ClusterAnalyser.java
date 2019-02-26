@@ -20,6 +20,7 @@ import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.CLUST
 import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.CLUSTER_REASON_LOOSE_OVERLAP;
 import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.addClusterReason;
 import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.applyCopyNumberReplication;
+import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.CHROMOSOME_ARM_P;
 import static com.hartwig.hmftools.svanalysis.annotators.LineElementAnnotator.markLineCluster;
 import static com.hartwig.hmftools.svanalysis.types.SvArmCluster.mergeArmClusters;
 import static com.hartwig.hmftools.svanalysis.types.SvChain.CHAIN_ASSEMBLY_LINK_COUNT;
@@ -331,9 +332,6 @@ public class ClusterAnalyser {
             }
 
             mPcChaining.stop();
-
-            // reassess for chained foldbacks
-            markFoldbacks(mergedClusters);
 
             for(SvCluster cluster : mergedClusters)
             {
@@ -848,11 +846,6 @@ public class ClusterAnalyser {
 
     public void markFoldbacks()
     {
-        markFoldbacks(Lists.newArrayList());
-    }
-
-    private void markFoldbacks(List<SvCluster> specificClusters)
-    {
         for(final Map.Entry<String, List<SvBreakend>> entry : mClusteringMethods.getChrBreakendMap().entrySet())
         {
             List<SvBreakend> breakendList = entry.getValue();
@@ -864,9 +857,6 @@ public class ClusterAnalyser {
 
                 SvBreakend beFront = null; // the lower position for orientation +1 and vice versa
                 SvBreakend beBack = null;
-
-                if(!specificClusters.isEmpty() && !specificClusters.contains(breakend.getSV().getCluster()))
-                    continue;
 
                 if(breakend.orientation() == nextBreakend.orientation())
                 {
@@ -902,21 +892,74 @@ public class ClusterAnalyser {
                     final SvLinkedPair dbLink = beFront.getSV().getDBLink(beFront.usesStart());
                     if(dbLink == null || dbLink.length() >= MIN_TEMPLATED_INSERTION_LENGTH)
                     {
-                        // only interested in checking newly chained SVs
-                        if(!specificClusters.isEmpty())
-                        {
-                            if(beFront.getSV() == beBack.getSV())
-                                continue;
-
-                            if(beFront.getSV().getFoldbackLink(beFront.usesStart()).equals(beBack.getSV().id()))
-                                continue; // already in a foldback
-                        }
-
                         checkFoldbackBreakends(beFront, beBack);
                     }
                 }
 
                 checkReplicatedBreakendFoldback(breakend);
+            }
+        }
+
+        // now foldbacks are known, add other annotations about them
+        for(final SvCluster cluster : mClusters)
+        {
+            final Map<String, List<SvBreakend>> chrBreakendMap = cluster.getChrBreakendMap();
+
+            for (final Map.Entry<String, List<SvBreakend>> entry : chrBreakendMap.entrySet())
+            {
+                int foldbackRank = 0;
+
+                for(final SvBreakend breakend : entry.getValue())
+                {
+                    isSpecificSV(breakend.getSV());
+
+                    if(breakend.getSV().getFoldbackLink(breakend.usesStart()).isEmpty())
+                        continue;
+
+                    if(!breakend.getSV().getFoldbackLink(true).isEmpty()
+                    && !breakend.getSV().getFoldbackLink(false).isEmpty() && !breakend.usesStart())
+                    {
+                        // only process each SV's foldback once where both breakends are part of it
+                        continue;
+                    }
+
+                    final String existingInfo = breakend.getSV().getFoldbackLinkInfo(breakend.usesStart());
+
+                    long armLength = SvUtilities.getChromosomalArmLength(breakend.chromosome(), breakend.arm());
+                    double positionPercent = 0;
+
+                    if(breakend.arm() == CHROMOSOME_ARM_P)
+                    {
+                        positionPercent = breakend.position() / (double)armLength;
+                    }
+                    else
+                    {
+                        long chromosomeLength = SvUtilities.CHROMOSOME_LENGTHS.get(breakend.chromosome());
+                        long centromere = chromosomeLength - armLength;
+                        positionPercent = 1 - (breakend.position() - centromere) / (double)armLength;
+                    }
+
+                    String facesTorC = (breakend.orientation() == 1) == (breakend.arm() == CHROMOSOME_ARM_P) ? "T" : "C";
+
+                    String foldbackInfo = String.format("%s;%s;%d;%.2f",
+                            existingInfo, facesTorC, foldbackRank, positionPercent);
+
+                    for(int be = SVI_START; be <= SVI_END; ++be)
+                    {
+                        boolean isStart = isStart(be);
+
+                        if(breakend.getSV().getFoldbackLink(isStart).isEmpty())
+                            continue;
+
+                        breakend.getSV().setFoldbackLink(
+                                isStart,
+                                breakend.getSV().getFoldbackLink(isStart),
+                                breakend.getSV().getFoldbackLen(isStart),
+                                foldbackInfo);
+                    }
+
+                    ++foldbackRank;
+                }
             }
         }
     }
@@ -962,7 +1005,7 @@ public class ClusterAnalyser {
         boolean v1Start = beEnd.usesStart();
         boolean v2Start = beStart.usesStart();
 
-        String chainInfo = "";
+        String chainInfo = "0;0;0";
 
         if(varEnd.equals(varStart))
         {

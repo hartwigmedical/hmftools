@@ -161,9 +161,18 @@ public class SvVarData
         mReplicationOriginStart = 0;
         mReplicationOriginEnd = 0;
 
-        mHasCalcPloidy = false;
-        mPloidyMin = 0;
-        mPloidyMax = 0;
+        if(mSVData.ploidyMin() != null && mSVData.ploidyMin() > 0 && mSVData.ploidyMax() != null && mSVData.ploidyMax() > 0)
+        {
+            mHasCalcPloidy = true;
+            mPloidyMin = mSVData.ploidyMin();
+            mPloidyMax = mSVData.ploidyMax();
+        }
+        else
+        {
+            mHasCalcPloidy = false;
+            mPloidyMin = 0;
+            mPloidyMax = 0;
+        }
     }
 
     public static SvVarData from(final EnrichedStructuralVariant enrichedSV)
@@ -194,10 +203,11 @@ public class SvVarData
 
     public SvVarData(final SvVarData other)
     {
+        mSVData = other.getSvData();
+
         init();
 
         mIdStr = other.getSvData().id() + "r";
-        mSVData = other.getSvData();
         mBreakendStart = new SvBreakend(this, true);
         mBreakendStart.setChrPosIndex(other.getBreakend(true).getChrPosIndex());
 
@@ -707,7 +717,7 @@ public class SvVarData
         return false;
     }
 
-    // private static String SPECIFIC_VAR_ID = "8751964";
+    // private static String SPECIFIC_VAR_ID = "8722500";
     private static String SPECIFIC_VAR_ID = "";
 
     public static boolean isSpecificSV(final SvVarData var)
