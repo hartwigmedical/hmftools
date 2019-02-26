@@ -62,6 +62,7 @@ public class PerformanceCounter {
         if(!mIsRunning)
             return;
 
+        mIsPaused = true;
         mPausedTime += System.nanoTime() - mStartTime;
     }
 
@@ -70,6 +71,7 @@ public class PerformanceCounter {
         if(!mIsPaused)
             return;
 
+        mIsPaused = false;
         mStartTime = System.nanoTime();
     }
 
