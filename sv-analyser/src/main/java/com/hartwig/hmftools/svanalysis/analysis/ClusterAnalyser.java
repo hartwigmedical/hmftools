@@ -162,11 +162,6 @@ public class ClusterAnalyser {
         mClusteringMethods.mergeClusters(mSampleId, mClusters);
         mPcClustering.pause();
 
-        for(SvCluster cluster : mClusters)
-        {
-            applyCopyNumberReplication(cluster);
-        }
-
         // log basic clustering details
         for(SvCluster cluster : mClusters)
         {
@@ -318,8 +313,8 @@ public class ClusterAnalyser {
                 continue;
 
             cluster.dissolveLinksAndChains();
-            cluster.removeReplicatedSvs();
 
+            cluster.removeReplicatedSvs();
             applyCopyNumberReplication(cluster);
 
             // first establish links between SVs (eg TIs and DBs)

@@ -102,9 +102,8 @@ public class ChainFinder
 
         if (mCluster.getCount() >= 4)
         {
-            LOGGER.debug("cluster({}) assemblyLinks({}) svCount({} rep={}) existingChains({})",
-                    mCluster.id(), mAssemblyLinkedPairs.size(), mCluster.getUniqueSvCount(),
-                    mCluster.getCount(), mCluster.getChains().size());
+            LOGGER.debug("cluster({}) assemblyLinks({}) svCount({} rep={})",
+                    mCluster.id(), mAssemblyLinkedPairs.size(), mCluster.getUniqueSvCount(), mCluster.getCount());
         }
 
         if(mUseNewMethod)

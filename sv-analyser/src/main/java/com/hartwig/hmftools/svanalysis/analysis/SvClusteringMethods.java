@@ -458,6 +458,7 @@ public class SvClusteringMethods {
     }
 
     public static int MAX_SV_REPLICATION_MULTIPLE = 32;
+    public static int MAX_CLUSTER_COUNT_REPLICATION = 500;
 
     public static void applyCopyNumberReplication(SvCluster cluster)
     {
@@ -471,6 +472,8 @@ public class SvClusteringMethods {
         if(cluster.getCount() == 2 && cluster.getTypeCount(BND) == 2)
             return;
 
+        int maxReplication = cluster.getCount() > MAX_CLUSTER_COUNT_REPLICATION ? 8 : MAX_SV_REPLICATION_MULTIPLE;
+
         // first establish the lowest copy number change
         double minCopyNumber = cluster.getMinCNChange();
         double maxCopyNumber = cluster.getMaxCNChange();
@@ -482,10 +485,14 @@ public class SvClusteringMethods {
             return;
         }
 
+        double replicationFactor = 1;
         if(maxCopyNumber > MAX_SV_REPLICATION_MULTIPLE * minCopyNumber)
         {
             LOGGER.debug("cluster({}) warning: large CN variation(min={} max={})",
                     cluster.id(), minCopyNumber, maxCopyNumber);
+
+            // scale the replication down
+            replicationFactor = maxReplication / (double)(maxCopyNumber / minCopyNumber);
         }
 
         // replicate the SVs which have a higher copy number than their peers
@@ -498,10 +505,11 @@ public class SvClusteringMethods {
 
             int svMultiple = (int)round(calcCopyNumber / minCopyNumber);
 
+            svMultiple = max((int)round(svMultiple * replicationFactor), 1);
+            // svMultiple = min(svMultiple, MAX_SV_REPLICATION_MULTIPLE);
+
             if(svMultiple <= 1)
                 continue;
-
-            svMultiple = min(svMultiple, MAX_SV_REPLICATION_MULTIPLE);
 
             LOGGER.debug("cluster({}) replicating SV({}) {} times, copyNumChg({} vs min={})",
                     cluster.id(), var.posId(), svMultiple, calcCopyNumber, minCopyNumber);
