@@ -401,9 +401,9 @@ public class ChainingTests
         assertEquals(var7.getFoldbackLink(true), var6.id());
 
         // check chains
-        assertEquals(cluster.getChains().size(), 1);
+        assertEquals(1, cluster.getChains().size());
         final SvChain chain = cluster.getChains().get(0);
-        assertEquals(chain.getLinkCount(), 10);
+        assertEquals(10, chain.getLinkCount());
 
     }
 

@@ -91,7 +91,7 @@ public class ChainFinder
     public void setLogWorking(boolean toggle) { mLogWorking = toggle; }
     public void setUseNewMethod(boolean toggle) { mUseNewMethod = toggle; }
 
-    public void formClusterChains()
+    public void formClusterChains(boolean assembledLinksOnly)
     {
         List<SvVarData> svList = Lists.newArrayList(mCluster.getSVs());
 
@@ -112,7 +112,7 @@ public class ChainFinder
             isSpecificCluster(mCluster);
             // mLogWorking = isSpecificCluster(mCluster);
 
-            buildSvChains();
+            buildSvChains(assembledLinksOnly);
 
             if(!mIsValid)
             {
@@ -205,73 +205,74 @@ public class ChainFinder
         mCluster.addChain(newChain);
     }
 
-    private void buildSvChains()
+    private void buildSvChains(boolean assembledLinksOnly)
     {
         setUnlinkedBreakends();
 
         // first make chains out of any assembly links
         addAssemblyLinksToChains();
 
-        setSvReplicationCounts();
-
-        determinePossibleLinks();
-
-        // now find the best next candidate link giving priority to replication count, following by min link resolution
-        // and lastly shortest distance
-
-        boolean considerSGLs = false;
-
-        while(true)
+        if(!assembledLinksOnly)
         {
-            // first check if there are SVs with a higher replication count, and if so favour these first
-            List<SvVarData> maxRepSVs = !mSvReplicationMap.isEmpty() ? getMaxReplicationSvIds(): null;
+            setSvReplicationCounts();
 
-            List<SvBreakend> breakendList = Lists.newArrayList();
+            determinePossibleLinks();
 
-            for(final SvBreakend breakend : mUnlinkedBreakendMap.keySet())
+            // now find the best next candidate link giving priority to replication count, following by min link resolution
+            // and lastly shortest distance
+
+            while (true)
             {
-                if(maxRepSVs != null && !maxRepSVs.contains(breakend.getSV()))
-                    continue;
+                // first check if there are SVs with a higher replication count, and if so favour these first
+                List<SvVarData> maxRepSVs = !mSvReplicationMap.isEmpty() ? getMaxReplicationSvIds() : null;
 
-                breakendList.add(breakend);
-            }
+                List<SvBreakend> breakendList = Lists.newArrayList();
 
-            boolean isMaxReplicated = maxRepSVs != null && !maxRepSVs.isEmpty();
-
-            if(mLogWorking && isMaxReplicated)
-            {
-                for(SvVarData var : maxRepSVs)
+                for (final SvBreakend breakend : mUnlinkedBreakendMap.keySet())
                 {
-                    LOGGER.debug("restricted to rep SV: {} repCount({})", var.id(), mSvReplicationMap.get(var));
+                    if (maxRepSVs != null && !maxRepSVs.contains(breakend.getSV()))
+                        continue;
+
+                    breakendList.add(breakend);
                 }
-            }
 
-            // next take the pairings with the least alternatives
-            List<SvLinkedPair> possiblePairs = findRestrictedPairs(breakendList, isMaxReplicated);
+                boolean isMaxReplicated = maxRepSVs != null && !maxRepSVs.isEmpty();
 
-            if (possiblePairs.isEmpty())
-            {
-                if(isMaxReplicated)
+                if (mLogWorking && isMaxReplicated)
                 {
-                    // these high-replication SVs yielded no possible links so remove them from consideration
-                    for (final SvVarData var : maxRepSVs)
+                    for (SvVarData var : maxRepSVs)
                     {
-                        if(mLogVerbose)
+                        LOGGER.debug("restricted to rep SV: {} repCount({})", var.id(), mSvReplicationMap.get(var));
+                    }
+                }
+
+                // next take the pairings with the least alternatives
+                List<SvLinkedPair> possiblePairs = findRestrictedPairs(breakendList, isMaxReplicated);
+
+                if (possiblePairs.isEmpty())
+                {
+                    if (isMaxReplicated)
+                    {
+                        // these high-replication SVs yielded no possible links so remove them from consideration
+                        for (final SvVarData var : maxRepSVs)
                         {
-                            LOGGER.debug("cluster({}) removing high-replicated SV({} {})",  mCluster.id(), var.posId(), var.type());
+                            if (mLogVerbose)
+                            {
+                                LOGGER.debug("cluster({}) removing high-replicated SV({} {})", mCluster.id(), var.posId(), var.type());
+                            }
+
+                            mSvReplicationMap.remove(var);
                         }
 
-                        mSvReplicationMap.remove(var);
+                        continue;
                     }
 
-                    continue;
+                    break;
                 }
 
-                break;
+                processPossiblePairs(possiblePairs, isMaxReplicated);
+                checkProgress();
             }
-
-            processPossiblePairs(possiblePairs, isMaxReplicated);
-            checkProgress();
         }
 
         if(mLogVerbose)

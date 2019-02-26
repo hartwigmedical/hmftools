@@ -135,8 +135,8 @@ public class ClusterAnalyser {
         mClusters.clear();
 
         mPcClustering.start();
-
         mClusteringMethods.clusterByProximity(mAllVariants, mClusters);
+        mPcClustering.pause();
 
         // mark line clusters since these are exluded from most subsequent logic
         for(SvCluster cluster : mClusters)
@@ -153,16 +153,19 @@ public class ClusterAnalyser {
             }
         }
 
-        findSimpleCompleteChains();
+        mPcChaining.start();
+        findLimitedChains();
+        // findSimpleCompleteChains();
+        mPcChaining.pause();
 
+        mPcClustering.resume();
         mClusteringMethods.mergeClusters(mSampleId, mClusters);
+        mPcClustering.pause();
 
         for(SvCluster cluster : mClusters)
         {
             applyCopyNumberReplication(cluster);
         }
-
-        mPcClustering.pause();
 
         // log basic clustering details
         for(SvCluster cluster : mClusters)
@@ -171,14 +174,20 @@ public class ClusterAnalyser {
                 cluster.logDetails();
         }
 
-        mPcChaining.start();
-        findLinksAndChains();
-        mPcChaining.pause();
+        // mPcChaining.resume();
+        // findLinksAndChains();
+        // mPcChaining.pause();
 
         // INVs and other SV-pairs which make foldbacks are now used in the inconsistent clustering logic
         markFoldbacks();
 
+        mPcClustering.resume();
         mergeClusters();
+        mPcClustering.stop();
+
+        mPcChaining.resume();
+        findLinksAndChains();
+        mPcChaining.stop();
 
         if(mRunValidationChecks)
         {
@@ -244,7 +253,7 @@ public class ClusterAnalyser {
             mLinkFinder.findLinkedPairs(cluster, true);
 
             // then look for fully-linked clusters, ie chains involving all SVs
-            findChains(cluster);
+            findChains(cluster, false);
 
             cluster.cacheLinkedPairs();
             simpleClusters.add(cluster);
@@ -257,6 +266,40 @@ public class ClusterAnalyser {
             if(cluster.isFullyChained() && cluster.isConsistent())
             {
                 LOGGER.debug("sample({}) cluster({}) simple and consistent with {} SVs", mSampleId, cluster.id(), cluster.getCount());
+            }
+        }
+    }
+
+    public void findLimitedChains()
+    {
+        // chain small clusters and only assembled links in larger ones
+        for(SvCluster cluster : mClusters)
+        {
+            if(cluster.getCount() == 1 && cluster.isSimpleSVs())
+            {
+                setClusterResolvedState(cluster);
+                continue;
+            }
+
+            // more complicated clusters for now
+            boolean isSimple =  cluster.getCount() <= SMALL_CLUSTER_SIZE && cluster.isConsistent() && !cluster.hasVariedCopyNumber();
+
+            // inferred links are used to classify simple resolved types involving 2-3 SVs
+            mLinkFinder.findLinkedPairs(cluster, isSimple);
+
+            // then look for fully-linked clusters, ie chains involving all SVs
+            findChains(cluster, !isSimple);
+
+            cluster.cacheLinkedPairs();
+
+            if(isSimple)
+            {
+                setClusterResolvedState(cluster);
+
+                if(cluster.isFullyChained() && cluster.isConsistent())
+                {
+                    LOGGER.debug("sample({}) cluster({}) simple and consistent with {} SVs", mSampleId, cluster.id(), cluster.getCount());
+                }
             }
         }
     }
@@ -275,15 +318,17 @@ public class ClusterAnalyser {
                 continue;
 
             cluster.dissolveLinksAndChains();
+            cluster.removeReplicatedSvs();
+
+            applyCopyNumberReplication(cluster);
 
             // first establish links between SVs (eg TIs and DBs)
             mLinkFinder.findLinkedPairs(cluster, false);
 
             // then look for fully-linked clusters, ie chains involving all SVs
-            findChains(cluster);
+            findChains(cluster, false);
 
             cluster.cacheLinkedPairs();
-
             setClusterResolvedState(cluster);
             cluster.logDetails();
         }
@@ -294,7 +339,7 @@ public class ClusterAnalyser {
         // now look at merging unresolved & inconsistent clusters where they share the same chromosomal arms
         List<SvCluster> mergedClusters = Lists.newArrayList();
 
-        mPcClustering.resume();
+        // mPcClustering.resume();
 
         mergedClusters = mergeInconsistentClusters(mergedClusters);
         boolean foundMerges = !mergedClusters.isEmpty();
@@ -311,8 +356,9 @@ public class ClusterAnalyser {
             }
         }
 
-        mPcClustering.stop();
+        // mPcClustering.stop();
 
+        /*
         if(!mergedClusters.isEmpty())
         {
             mPcChaining.resume();
@@ -328,7 +374,7 @@ public class ClusterAnalyser {
 
                 mLinkFinder.findLinkedPairs(cluster, false);
 
-                findChains(cluster);
+                findChains(cluster, false);
             }
 
             mPcChaining.stop();
@@ -342,9 +388,10 @@ public class ClusterAnalyser {
                 cluster.logDetails();
             }
         }
+        */
     }
 
-    private void findChains(SvCluster cluster)
+    private void findChains(SvCluster cluster, boolean assembledLinksOnly)
     {
         mChainFinder.initialise(cluster);
 
@@ -357,7 +404,7 @@ public class ClusterAnalyser {
             return;
         }
 
-        mChainFinder.formClusterChains();
+        mChainFinder.formClusterChains(assembledLinksOnly);
     }
 
     private void setClusterResolvedState(SvCluster cluster)
@@ -907,11 +954,27 @@ public class ClusterAnalyser {
 
             for (final Map.Entry<String, List<SvBreakend>> entry : chrBreakendMap.entrySet())
             {
-                int foldbackRank = 0;
+                int chromosomeFoldbackCount = 0;
 
                 for(final SvBreakend breakend : entry.getValue())
                 {
-                    isSpecificSV(breakend.getSV());
+                    if (breakend.getSV().getFoldbackLink(breakend.usesStart()).isEmpty())
+                        continue;
+
+                    if (!breakend.getSV().getFoldbackLink(true).isEmpty()
+                        && !breakend.getSV().getFoldbackLink(false).isEmpty() && !breakend.usesStart())
+                    {
+                        continue;
+                    }
+
+                    ++chromosomeFoldbackCount;
+                }
+
+                int foldbackIndex = 0;
+
+                for(final SvBreakend breakend : entry.getValue())
+                {
+                    // isSpecificSV(breakend.getSV());
 
                     if(breakend.getSV().getFoldbackLink(breakend.usesStart()).isEmpty())
                         continue;
@@ -926,22 +989,27 @@ public class ClusterAnalyser {
                     final String existingInfo = breakend.getSV().getFoldbackLinkInfo(breakend.usesStart());
 
                     long armLength = SvUtilities.getChromosomalArmLength(breakend.chromosome(), breakend.arm());
-                    double positionPercent = 0;
+                    double positionPercent;
+                    int foldbackRank;
 
                     if(breakend.arm() == CHROMOSOME_ARM_P)
                     {
+                        foldbackRank = foldbackIndex;
                         positionPercent = breakend.position() / (double)armLength;
                     }
                     else
                     {
+                        foldbackRank = chromosomeFoldbackCount - foldbackIndex - 1;
                         long chromosomeLength = SvUtilities.CHROMOSOME_LENGTHS.get(breakend.chromosome());
                         long centromere = chromosomeLength - armLength;
                         positionPercent = 1 - (breakend.position() - centromere) / (double)armLength;
                     }
 
+                    ++foldbackIndex;
+
                     String facesTorC = (breakend.orientation() == 1) == (breakend.arm() == CHROMOSOME_ARM_P) ? "T" : "C";
 
-                    String foldbackInfo = String.format("%s;%s;%d;%.2f",
+                    String foldbackInfo = String.format("%s;%s;%d;%.4f",
                             existingInfo, facesTorC, foldbackRank, positionPercent);
 
                     for(int be = SVI_START; be <= SVI_END; ++be)
@@ -957,8 +1025,6 @@ public class ClusterAnalyser {
                                 breakend.getSV().getFoldbackLen(isStart),
                                 foldbackInfo);
                     }
-
-                    ++foldbackRank;
                 }
             }
         }
