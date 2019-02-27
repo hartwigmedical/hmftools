@@ -75,13 +75,19 @@ public abstract class SampleDetailsPage {
         final List<String> lines = Lists.newArrayList("The samples have been sequenced at " + Commons.HARTWIG_ADDRESS,
                 "The samples have been analyzed by Next Generation Sequencing",
                 "This experiment is performed on the tumor sample which arrived on " + formattedDate(sampleReport().tumorArrivalDate()),
+                "The sample name of this sample is: " + sampleReport().sampleId(),
                 "The pathology tumor percentage for this sample is " + sampleReport().pathologyTumorPercentage(),
+                "The tumor barcode of sample is: " + sampleReport().barcodeTumor(),
                 "This experiment is performed on the blood sample which arrived on " + formattedDate(sampleReport().bloodArrivalDate()),
+                "The reference barcode of sample is: " + sampleReport().barcodeReference(),
                 "This experiment is performed according to lab procedures: " + sampleReport().labProcedures(),
                 "This report is generated and verified by: " + user(),
                 "This report is addressed at: " + recipient);
 
         if (sampleReport().isCoreSample()) {
+            lines.add("The hospital patient number is: " + sampleReport().patientNumber());
+            lines.add("The project name of sample is: " + sampleReport().projectName());
+            lines.add("The submission of sample is: " + sampleReport().submission());
             lines.add("The contact names are: " + sampleReport().contactNames());
             lines.add("The contact emails are: " + sampleReport().contactEmails());
         }

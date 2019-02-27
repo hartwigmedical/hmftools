@@ -103,7 +103,7 @@ public class PDFWriterTest {
     @NotNull
     private static JasperReportBuilder generateNotAnalysableCPCTReport(@Nullable Double pathologyTumorPercentage,
             @Nullable Double shallowSeqPurity, @NotNull NotAnalysableReason reason) {
-        SampleReport sampleReport = ImmutableSampleReport.of("CPCT02991111T",
+        SampleReport sampleReport = ImmutableSampleReport.of("CPCT02991111T", "A1", "A2",
                 ImmutablePatientTumorLocation.of("CPCT02991111", "Skin", "Melanoma"),
                 shallowSeqPurity != null ? PatientReportFormat.formatPercent(shallowSeqPurity) : "not determined",
                 pathologyTumorPercentage != null ? PatientReportFormat.formatPercent(pathologyTumorPercentage) : "not determined",
@@ -114,6 +114,7 @@ public class PDFWriterTest {
                 "COLO-001-002",
                 "ContactMe",
                 "contact@me.com",
+                "ABC",
                 "123456",
                 false);
 

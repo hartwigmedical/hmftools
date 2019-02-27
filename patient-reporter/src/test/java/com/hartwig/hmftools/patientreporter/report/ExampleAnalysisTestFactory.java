@@ -151,7 +151,7 @@ final class ExampleAnalysisTestFactory {
     @NotNull
     private static SampleReport createCOLO829SampleReport() {
         final String sample = "COLO829T";
-        return ImmutableSampleReport.of(sample,
+        return ImmutableSampleReport.of(sample, "A1", "A2",
                 ImmutablePatientTumorLocation.of("COLO829", "Skin", "Melanoma"),
                 Strings.EMPTY,
                 "80%",
@@ -160,6 +160,7 @@ final class ExampleAnalysisTestFactory {
                 "PREP013V23-QC037V20-SEQ008V25",
                 "HMF Testing Center",
                 "COLO",
+                Strings.EMPTY,
                 Strings.EMPTY,
                 Strings.EMPTY,
                 Strings.EMPTY,

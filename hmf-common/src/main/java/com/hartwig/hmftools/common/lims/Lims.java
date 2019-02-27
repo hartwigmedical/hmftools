@@ -53,6 +53,13 @@ public class Lims {
         return submissionData != null ? submissionData.contactNames() : "N/A";
     }
 
+    @NotNull
+    public String submissionID(@NotNull final String sample) {
+        String submission = submission(sample);
+        LimsJsonSubmissionData submissionData = dataPerSubmission.get(submission);
+        return submissionData != null ? submissionData.submission() : "N/A";
+    }
+
     @Nullable
     public String patientNumber(@NotNull final String sample) {
         LimsJsonSampleData sampleData = dataPerSample.get(sample);
@@ -74,6 +81,18 @@ public class Lims {
     public String projectName(@NotNull final String sample) {
         LimsJsonSampleData sampleData = dataPerSample.get(sample);
         return sampleData != null ? sampleData.projectName() : "N/A";
+    }
+
+    @Nullable
+    public String barcodeTumorOfSample(@NotNull final String sample) {
+        LimsJsonSampleData sampleData = dataPerSample.get(sample);
+        return sampleData != null ? sampleData.tumorSampleId() : "N/A";
+    }
+
+    @Nullable
+    public String barcodeReferenceOfSample(@NotNull final String sample) {
+        LimsJsonSampleData sampleData = dataPerSample.get(sample);
+        return sampleData != null ? sampleData.refSampleId() : "N/A";
     }
 
     @Nullable
