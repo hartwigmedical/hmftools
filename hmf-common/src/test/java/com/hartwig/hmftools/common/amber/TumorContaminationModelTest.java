@@ -39,8 +39,8 @@ public class TumorContaminationModelTest {
         assertEquals(73058, TumorContaminationModel.reads(2, contaminationMap));
         assertEquals(31170, TumorContaminationModel.reads(3, contaminationMap));
 
-        final double contamination = model.contamination(107, contaminationMap);
-        assertEquals(0.018, contamination, EPSILON);
+        final double contamination = model.contamination(99, contaminationMap);
+        assertEquals(0.02, contamination, EPSILON);
     }
 
     @Test
