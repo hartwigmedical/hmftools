@@ -22,7 +22,6 @@ import com.hartwig.hmftools.common.ecrf.formstatus.FormStatusModel;
 import com.hartwig.hmftools.common.ecrf.formstatus.FormStatusReader;
 import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.lims.LimsFactory;
-import com.hartwig.hmftools.common.lims.LimsPatient;
 import com.hartwig.hmftools.patientdb.curators.BiopsySiteCurator;
 import com.hartwig.hmftools.patientdb.curators.TreatmentCurator;
 import com.hartwig.hmftools.patientdb.curators.TumorLocationCurator;
@@ -49,7 +48,6 @@ import org.apache.commons.cli.ParseException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
-import org.jooq.tools.StringUtils;
 
 public final class LoadClinicalData {
     private static final Logger LOGGER = LogManager.getLogger(LoadClinicalData.class);
@@ -111,7 +109,7 @@ public final class LoadClinicalData {
         return lims;
     }
 
-    public static Map<String, List<TumorTypeLims>> loadAndInterpretCorePatients(@NotNull Map<String, List<SampleData>> samplesPerPatient,
+    private static Map<String, List<TumorTypeLims>> loadAndInterpretCorePatients(@NotNull Map<String, List<SampleData>> samplesPerPatient,
             @NotNull TumorLocationCurator tumorLocationCurator, @NotNull Lims lims) {
         List<String> corePatients = Lists.newArrayList();
         for (Map.Entry<String, List<SampleData>> sampleData : samplesPerPatient.entrySet()) {
@@ -124,9 +122,10 @@ public final class LoadClinicalData {
 
         TumorLocationCurationLims tumorLocationCurationLims = new TumorLocationCurationLims(lims, tumorLocationCurator);
 
-        Map<String, List<TumorTypeLims>> corePatientsData = readLimsPatients(tumorLocationCurationLims, corePatients, samplesPerPatient, lims);
+        Map<String, List<TumorTypeLims>> corePatientsData =
+                readLimsPatients(tumorLocationCurationLims, corePatients, samplesPerPatient, lims);
 
-        LOGGER.info(String.format("Finished curation of %s CORE patients.", corePatients.size()));
+        LOGGER.info(String.format("Finished curation of %s CORE patients.", corePatientsData.size()));
         return corePatientsData;
     }
 
@@ -136,13 +135,13 @@ public final class LoadClinicalData {
         final Map<String, List<TumorTypeLims>> patientMap = Maps.newHashMap();
         for (int i = 0; i < patientIds.size(); i++) {
             List<SampleData> samples = samplesPerPatient.get(patientIds.get(i));
+
+            //create sampleID
             String samplesString = samples.toString().split(" ")[1];
             samplesString = samplesString.replace("{", "");
             samplesString = samplesString.replace("}", "");
             samplesString = samplesString.replace("]", "");
             patientMap.put(samplesString, tumorLocationCurationLims.read(Lists.newArrayList(samplesString)));
-            LOGGER.info(tumorLocationCurationLims.read(Lists.newArrayList(samplesString)));
-            LOGGER.info(samplesString);
         }
         return patientMap;
     }
@@ -157,11 +156,14 @@ public final class LoadClinicalData {
         Map<String, Patient> patients =
                 loadAndInterpretAllPatients(samplesPerPatient, ecrfModels, tumorLocationCurator, treatmentCurator, biopsySiteCurator);
 
-        Map<String, List<TumorTypeLims>> patientsCore =
-                loadAndInterpretCorePatients(samplesPerPatient, tumorLocationCurator, lims);
+        Map<String, List<TumorTypeLims>> patientsCore = loadAndInterpretCorePatients(samplesPerPatient, tumorLocationCurator, lims);
 
-        LOGGER.info(patientsCore);
-        DumpClinicalData.writeClinicalDumps(csvOutputDir, patients.values(), tumorLocationSymlink, portalDataLink);
+        DumpClinicalData.writeClinicalDumps(csvOutputDir,
+                patients.values(),
+                tumorLocationSymlink,
+                portalDataLink,
+                patientsCore.values(),
+                patientsCore.keySet());
 
         LOGGER.info("Clearing interpreted clinical tables in database.");
         dbAccess.clearClinicalTables();
