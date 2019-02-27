@@ -139,7 +139,10 @@ public final class LoadClinicalData {
             String samplesString = samples.toString().split(" ")[1];
             samplesString = samplesString.replace("{", "");
             samplesString = samplesString.replace("}", "");
+            samplesString = samplesString.replace("]", "");
             patientMap.put(samplesString, tumorLocationCurationLims.read(Lists.newArrayList(samplesString)));
+            LOGGER.info(tumorLocationCurationLims.read(Lists.newArrayList(samplesString)));
+            LOGGER.info(samplesString);
         }
         return patientMap;
     }
