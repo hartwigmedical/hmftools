@@ -81,7 +81,9 @@ public final class LoadClinicalData {
 
             final DatabaseAccess dbWriter = createDbWriter(cmd);
 
-            final Map<String, List<SampleData>> samplesPerPatient = loadSamplesPerPatient(cmd);
+            Lims limsData = readingLims(cmd);
+
+            final Map<String, List<SampleData>> samplesPerPatient = loadSamplesPerPatient(cmd, limsData);
             final EcrfModels ecrfModels = loadEcrfModels(cmd);
 
             if (cmd.hasOption(DO_LOAD_RAW_ECRF)) {
@@ -93,22 +95,30 @@ public final class LoadClinicalData {
                     ecrfModels,
                     cmd.getOptionValue(CSV_OUT_DIR),
                     Optional.ofNullable(cmd.getOptionValue(TUMOR_LOCATION_SYMLINK)),
-                    Optional.ofNullable(cmd.getOptionValue(PORTAL_DATA_LINK)));
+                    Optional.ofNullable(cmd.getOptionValue(PORTAL_DATA_LINK)),
+                    limsData);
         } else {
             final HelpFormatter formatter = new HelpFormatter();
             formatter.printHelp("patient-db", options);
         }
     }
 
+    private static Lims readingLims(@NotNull CommandLine cmd) throws IOException {
+        final String limsDirectory = cmd.getOptionValue(LIMS_DIRECTORY);
+        LOGGER.info(String.format("Loading samples from LIMS on %s.", limsDirectory));
+        Lims lims = LimsFactory.fromLimsDirectory(limsDirectory);
+        return lims;
+    }
+
     private static void writeClinicalData(@NotNull final DatabaseAccess dbAccess, @NotNull Map<String, List<SampleData>> samplesPerPatient,
             @NotNull EcrfModels ecrfModels, @NotNull String csvOutputDir, @NotNull Optional<String> tumorLocationSymlink,
-            @NotNull Optional<String> portalDataLink) throws IOException {
+            @NotNull Optional<String> portalDataLink, @NotNull Lims lims) throws IOException {
         TumorLocationCurator tumorLocationCurator = TumorLocationCurator.fromProductionResource();
         BiopsySiteCurator biopsySiteCurator = BiopsySiteCurator.fromProductionResource();
         TreatmentCurator treatmentCurator = TreatmentCurator.fromProductionResource();
 
         Map<String, Patient> patients =
-                loadAndInterpretAllPatients(samplesPerPatient, ecrfModels, tumorLocationCurator, treatmentCurator, biopsySiteCurator);
+                loadAndInterpretAllPatients(samplesPerPatient, ecrfModels, tumorLocationCurator, treatmentCurator, biopsySiteCurator, lims);
 
         DumpClinicalData.writeClinicalDumps(csvOutputDir, patients.values(), tumorLocationSymlink, portalDataLink);
 
@@ -147,7 +157,7 @@ public final class LoadClinicalData {
     @NotNull
     private static Map<String, Patient> loadAndInterpretAllPatients(@NotNull Map<String, List<SampleData>> samplesPerPatient,
             @NotNull EcrfModels ecrfModels, @NotNull TumorLocationCurator tumorLocationCurator, @NotNull TreatmentCurator treatmentCurator,
-            @NotNull BiopsySiteCurator biopsySiteCurator) {
+            @NotNull BiopsySiteCurator biopsySiteCurator, @NotNull Lims lims) {
         final EcrfModel cpctEcrfModel = ecrfModels.cpctModel();
         LOGGER.info(String.format("Interpreting and curating data for %s CPCT patients.", cpctEcrfModel.patientCount()));
         PatientReader cpctPatientReader = new CpctPatientReader(tumorLocationCurator,
@@ -166,15 +176,31 @@ public final class LoadClinicalData {
         LOGGER.info(String.format("Finished curation of %s DRUP patients.", drupPatients.size()));
 
         LOGGER.info("Interpreting and curating data for %s CORE patients.");
-        Set<String> sampleIds = samplesPerPatient.keySet();
+        Set<String> sampleIdsCORE = samplesPerPatient.keySet();
+        LOGGER.info(sampleIdsCORE);
 
-       // TumorLocationCurationLims tumorLocationCurationLims = new TumorLocationCurationLims(lims, tumorLocationCurator);
+        TumorLocationCurationLims tumorLocationCurationLims = new TumorLocationCurationLims(lims, tumorLocationCurator);
+        Map<String, Patient> corePatients = readLimsPatients(tumorLocationCurationLims, sampleIdsCORE, samplesPerPatient);
+
         LOGGER.info("Finished curation of %s CORE patients.");
 
         Map<String, Patient> mergedPatients = Maps.newHashMap();
         mergedPatients.putAll(cpctPatients);
         mergedPatients.putAll(drupPatients);
+     //   mergedPatients.put(corePatients);
         return mergedPatients;
+    }
+
+    @NotNull
+    private static Map<String, Patient> readLimsPatients(@NotNull final TumorLocationCurationLims tumorLocationCurationLims,
+            @NotNull Set<String> patientId, @NotNull final Map<String, List<SampleData>> samplesPerPatient) {
+        final Map<String, Patient> patientMap = Maps.newHashMap();
+        for (int i = 1; i <= patientId.size(); i++) {
+            List<SampleData> samples = samplesPerPatient.get(patientId);
+            LOGGER.info(samples);
+          //  Patient patient = reader
+        }
+        return patientMap;
     }
 
     @NotNull
@@ -228,7 +254,7 @@ public final class LoadClinicalData {
                 validRunDirectory = false;
                 if (!runDirectoryCPCTandDRUP.exists()) {
                     LOGGER.warn("dir " + runDirectoryCPCTandDRUP + " does not exist.");
-                } else if (!runDirectoryCORE.isDirectory()){
+                } else if (!runDirectoryCORE.isDirectory()) {
                     LOGGER.warn("dir " + runDirectoryCORE + " does not exist.");
                 }
             }
@@ -238,7 +264,7 @@ public final class LoadClinicalData {
     }
 
     @NotNull
-    private static Map<String, List<SampleData>> loadSamplesPerPatient(@NotNull CommandLine cmd) throws IOException {
+    private static Map<String, List<SampleData>> loadSamplesPerPatient(@NotNull CommandLine cmd, @NotNull Lims lims) throws IOException {
         final String runsFolderPathCPCTandDRUP = cmd.getOptionValue(RUNS_DIR_CPCT_DRUP);
         final String runsFolderPathCORE = cmd.getOptionValue(RUNS_DIR_CORE);
         List<RunContext> runContextsAll = new ArrayList<>();
@@ -250,10 +276,6 @@ public final class LoadClinicalData {
         runContextsAll.addAll(runContextsCORE);
 
         LOGGER.info(String.format("Finished loading %s run contexts.", runContextsAll.size()));
-
-        final String limsDirectory = cmd.getOptionValue(LIMS_DIRECTORY);
-        LOGGER.info(String.format("Loading samples from LIMS on %s.", limsDirectory));
-        Lims lims = LimsFactory.fromLimsDirectory(limsDirectory);
 
         Map<String, List<SampleData>> samplesPerPatient = readSamplesPerPatient(lims, runContextsAll);
         LOGGER.info(String.format("Loaded samples for %s patients from LIMS", samplesPerPatient.keySet().size()));
