@@ -7,7 +7,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.AbstractList;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -53,7 +52,7 @@ final class DumpClinicalData {
                 .collect(Collectors.toList());
 
         final List<PatientTumorLocation> tumorLocationsCore = corePatients.stream()
-                .map(corepatient -> ImmutablePatientTumorLocation.of(sampleId.toString().substring(1, sampleId.toString().length()-1),
+                .map(corepatient -> ImmutablePatientTumorLocation.of(sampleId.toString().substring(1, sampleId.toString().length() - 1),
                         Strings.nullToEmpty(corepatient.iterator().next().curatedTumorLocation().primaryTumorLocation()),
                         Strings.nullToEmpty(corepatient.iterator().next().curatedTumorLocation().subType())))
                 .collect(Collectors.toList());
