@@ -1,19 +1,21 @@
 package com.hartwig.hmftools.common.lims;
 
+import java.util.List;
+
 import org.jetbrains.annotations.NotNull;
 
 public class LimsPatient {
 
     @NotNull
-    private final String patientId;
+    private final List<String> patients;
 
-    public LimsPatient(@NotNull final String patientId) {
-        this.patientId = patientId;
+    public LimsPatient(@NotNull final List<String> patients) {
+        this.patients = patients;
     }
 
     @NotNull
-    public String patientId() {
-        return patientId;
+    public List<String> patients() {
+        return patients;
     }
 
 }
