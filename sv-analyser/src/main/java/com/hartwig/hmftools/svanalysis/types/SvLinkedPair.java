@@ -24,7 +24,6 @@ public class SvLinkedPair {
     private int mTraversedSVCount;
     private int mNextSVDistance;
     private int mNextSVTraversedCount;
-    private boolean mCopyNumberGain; // for TIs, is this from an additional fragment, not impacting the actual or derivative chromosomes
     private boolean mOnArmOfOrigin;
 
     private String mExonMatchData;
@@ -52,7 +51,6 @@ public class SvLinkedPair {
         mTraversedSVCount = 0;
         mNextSVDistance = 0;
         mNextSVTraversedCount = 0;
-        mCopyNumberGain = false;
         mOnArmOfOrigin = false;
         mExonMatchData = "";
 
@@ -125,9 +123,6 @@ public class SvLinkedPair {
 
     public long getNextSVDistance() { return mNextSVDistance; }
     public long getNextSVTraversedCount() { return mNextSVTraversedCount; }
-
-    public void setCopyNumberGain(boolean isGain) { mCopyNumberGain = isGain; }
-    public boolean hasCopyNumberGain() { return mCopyNumberGain; }
 
     public void setOnArmOfOrigin(boolean toggle) { mOnArmOfOrigin = toggle; }
     public boolean onArmOfOrigin() { return mOnArmOfOrigin; }
