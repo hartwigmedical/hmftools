@@ -7,8 +7,8 @@ import com.google.common.io.Resources;
 import com.hartwig.hmftools.common.context.RunContext;
 import com.hartwig.hmftools.common.context.TestRunContextFactory;
 import com.hartwig.hmftools.healthchecker.result.BaseResult;
+import com.hartwig.hmftools.healthchecker.result.MultiValueResult;
 import com.hartwig.hmftools.healthchecker.result.NoResult;
-import com.hartwig.hmftools.healthchecker.result.SingleValueResult;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
@@ -26,8 +26,24 @@ public class AmberCheckerTest {
         final BaseResult result = checker.run(runContext);
 
         assertEquals(CheckType.AMBER, result.checkType());
-        final HealthCheck check = ((SingleValueResult) result).check();
-        assertCheck(check, "0.4951");
+        final HealthCheck bafCheck = ((MultiValueResult) result).checks().get(0);
+        assertCheck(bafCheck, "0.4951", AmberCheck.MEAN_BAF.toString());
+
+        final HealthCheck contaminationCheck = ((MultiValueResult) result).checks().get(1);
+        assertCheck(contaminationCheck, "0.001", AmberCheck.CONTAMINATION.toString());
+    }
+
+    @Test
+    public void extractDataFromOldAmberWorksForSomatic() {
+        final RunContext runContext = TestRunContextFactory.forSomaticTest(BASE_DIRECTORY, REF_SAMPLE, "old");
+        final BaseResult result = checker.run(runContext);
+
+        assertEquals(CheckType.AMBER, result.checkType());
+        final HealthCheck bafCheck = ((MultiValueResult) result).checks().get(0);
+        assertCheck(bafCheck, "0.4951", AmberCheck.MEAN_BAF.toString());
+
+        final HealthCheck contaminationCheck = ((MultiValueResult) result).checks().get(1);
+        assertCheck(contaminationCheck, "0.0", AmberCheck.CONTAMINATION.toString());
     }
 
     @Test
@@ -42,8 +58,8 @@ public class AmberCheckerTest {
         assertTrue(checker.run(runContext) instanceof NoResult);
     }
 
-    private static void assertCheck(@NotNull final HealthCheck check, final String expectedValue) {
+    private static void assertCheck(@NotNull final HealthCheck check, final String expectedValue, final String expectedCheckName) {
         assertEquals(expectedValue, check.getValue());
-        assertEquals(AmberCheck.MEAN_BAF.toString(), check.getCheckName());
+        assertEquals(expectedCheckName, check.getCheckName());
     }
 }

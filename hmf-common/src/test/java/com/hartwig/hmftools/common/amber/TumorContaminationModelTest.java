@@ -24,33 +24,33 @@ public class TumorContaminationModelTest {
     @Test
     public void testHighContamination() throws IOException {
         final Map<Integer, Long> contaminationMap = fromFile(CONTAMINATION_HIGH);
-        final TumorContaminationModel model = new TumorContaminationModel(107);
+        final TumorContaminationModel model = new TumorContaminationModel();
         assertEquals(249329, TumorContaminationModel.reads(2, contaminationMap));
         assertEquals(248936, TumorContaminationModel.reads(3, contaminationMap));
 
-        final double contamination = model.contamination(contaminationMap);
+        final double contamination = model.contamination(107, contaminationMap);
         assertEquals(1, contamination, EPSILON);
     }
 
     @Test
     public void testLowContamination() throws IOException {
         final Map<Integer, Long> contaminationMap = fromFile(CONTAMINATION_LOW);
-        final TumorContaminationModel model = new TumorContaminationModel(107);
+        final TumorContaminationModel model = new TumorContaminationModel();
         assertEquals(73058, TumorContaminationModel.reads(2, contaminationMap));
         assertEquals(31170, TumorContaminationModel.reads(3, contaminationMap));
 
-        final double contamination = model.contamination(contaminationMap);
+        final double contamination = model.contamination(107, contaminationMap);
         assertEquals(0.018, contamination, EPSILON);
     }
 
     @Test
     public void testNoContamination() throws IOException {
         final Map<Integer, Long> contaminationMap = fromFile(CONTAMINATION_NONE);
-        final TumorContaminationModel model = new TumorContaminationModel(107);
+        final TumorContaminationModel model = new TumorContaminationModel();
         assertEquals(2860, TumorContaminationModel.reads(2, contaminationMap));
         assertEquals(374, TumorContaminationModel.reads(3, contaminationMap));
 
-        final double contamination = model.contamination( contaminationMap);
+        final double contamination = model.contamination( 107, contaminationMap);
         assertEquals(0, contamination, EPSILON);
     }
 

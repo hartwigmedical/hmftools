@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.common.amber;
 
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -20,23 +19,14 @@ public class TumorContaminationModel {
     private static final double INCREMENT = 0.001;
     private static final long MIN_THREE_PLUS_READS = 2000;
 
-    private final long medianTumorReadDepth;
-
-    public TumorContaminationModel(@NotNull final List<TumorContamination> baf) {
-        this.medianTumorReadDepth = medianDepth(baf);
+    public double contamination(@NotNull final List<TumorContamination> samples) {
+        long medianTumorReadDepth = medianDepth(samples);
         LOGGER.info("Median tumor depth at homozygous sites is {} reads", medianTumorReadDepth);
-    }
-
-    TumorContaminationModel(final long medianTumorReadDepth) {
-        this.medianTumorReadDepth = medianTumorReadDepth;
-    }
-
-    public double contamination(@NotNull final Collection<TumorContamination> samples) {
         final Map<Integer, Long> map = samples.stream().collect(Collectors.groupingBy(x -> x.tumor().altSupport(), Collectors.counting()));
-        return contamination(map);
+        return contamination(medianTumorReadDepth, map);
     }
 
-    double contamination(@NotNull final Map<Integer, Long> altSupportMap) {
+    double contamination(final long medianTumorReadDepth, @NotNull final Map<Integer, Long> altSupportMap) {
         long three_plus_reads = reads(3, altSupportMap);
         if (three_plus_reads >= MIN_THREE_PLUS_READS) {
 
@@ -45,7 +35,7 @@ public class TumorContaminationModel {
             long two_plus_reads = reads(2, altSupportMap);
 
             for (double i = INCREMENT; Doubles.lessOrEqual(i, 1); i = i + INCREMENT) {
-                double score = contaminationScore(i, two_plus_reads, altSupportMap);
+                double score = contaminationScore(i, two_plus_reads, medianTumorReadDepth, altSupportMap);
                 if (Doubles.lessThan(score, lowestScore)) {
                     lowestScore = score;
                     contamination = i;
@@ -60,7 +50,8 @@ public class TumorContaminationModel {
         return 0;
     }
 
-    private double contaminationScore(double contamination, long two_plus_reads, @NotNull final Map<Integer, Long> altSupportMap) {
+    private double contaminationScore(final double contamination, final long two_plus_reads, final long medianTumorReadDepth,
+            @NotNull final Map<Integer, Long> altSupportMap) {
 
         final PoissonDistribution hetDistribution = new PoissonDistribution(0.5 * contamination * medianTumorReadDepth);
         final PoissonDistribution homAltDistribution = new PoissonDistribution(contamination * medianTumorReadDepth);

@@ -52,10 +52,8 @@ class AmberPersistence {
     }
 
     void persisQC(@NotNull final List<AmberBAF> result, @NotNull final List<TumorContamination> contaminationRecords) throws IOException {
-
-        final TumorContaminationModel contaminationModel = new TumorContaminationModel(contaminationRecords);
-        final double contaminaton = contaminationModel.contamination(contaminationRecords);
-        final AmberQC qcStats = AmberQCFactory.create(contaminaton, result);
+        final double contamination = new TumorContaminationModel().contamination(contaminationRecords);
+        final AmberQC qcStats = AmberQCFactory.create(contamination, result);
         final String qcFilename = AmberQCFile.generateFilename(config.outputDirectory(), config.tumor());
         AmberQCFile.write(qcFilename, qcStats);
     }

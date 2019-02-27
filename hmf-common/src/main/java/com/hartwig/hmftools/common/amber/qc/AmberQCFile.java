@@ -36,6 +36,7 @@ public class AmberQCFile {
         try {
             return ImmutableAmberQC.builder()
                     .meanBAF(Double.valueOf(getValue(lines.get(1))))
+                    .contamination(lines.size() > 2 ? Double.valueOf(getValue(lines.get(2))) : 0 )
                     .build();
         } catch (Exception e) {
             throw new MalformedFileException("Unable to parse amber qc file.");
