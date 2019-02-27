@@ -57,7 +57,7 @@
         <hmf-sv-analyser.version>1.0</hmf-sv-analyser.version>
         <hmf-sv-graphs.version>1.0</hmf-sv-graphs.version>
 
-        <amber.version>2.0</amber.version>
+        <amber.version>2.1</amber.version>
         <cobalt.version>1.5</cobalt.version>
         <purple.version>2.19</purple.version>
 
