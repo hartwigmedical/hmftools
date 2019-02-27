@@ -7,8 +7,12 @@ import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.BND;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
+import static com.hartwig.hmftools.svanalysis.analysis.CNAnalyser.CENTROMERE_CN;
+import static com.hartwig.hmftools.svanalysis.analysis.CNAnalyser.P_ARM_TELOMERE_CN;
+import static com.hartwig.hmftools.svanalysis.analysis.CNAnalyser.Q_ARM_TELOMERE_CN;
 import static com.hartwig.hmftools.svanalysis.analysis.ClusterAnalyser.SHORT_TI_LENGTH;
 import static com.hartwig.hmftools.svanalysis.analysis.LinkFinder.NO_DB_MARKER;
+import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.CHROMOSOME_ARM_P;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.copyNumbersEqual;
 import static com.hartwig.hmftools.svanalysis.types.SvChain.getRepeatedSvSequence;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.CLUSTER_ANNONTATION_CT;
@@ -654,6 +658,140 @@ public class ClusterAnnotations
         if(allChainsConsistent && !isIncomplete && !isComplex)
         {
             cluster.addAnnotation(String.format("%s", CLUSTER_ANNONTATION_CT));
+        }
+    }
+
+    public static void findIncompleteFoldbackCandidates(final String sampleId, final SvCluster cluster,
+            final Map<String, List<SvBreakend>> chrBreakendMap, final Map<String, double[]> chrCopyNumberMap)
+    {
+        // for each cluster with incomplete foldbacks, search for candidate clusters which could resolve it
+
+        // for now just focus on single foldback clusters
+        if(cluster.getCount() > 1 || cluster.getFoldbacks().size() != 1)
+            return;
+
+        if(cluster.isResolved()) // eg LowQual
+            return;
+
+        final SvVarData var = cluster.getSV(0);
+        final SvBreakend breakendLower = var.getBreakend(true);
+        final SvBreakend breakendUpper = var.getBreakend(false);
+
+        final String chromosome = breakendLower.chromosome();
+
+        boolean facesCentromere = (breakendLower.orientation() == -1) == (breakendLower.arm() == CHROMOSOME_ARM_P);
+
+        // walk away from this breakend and make note of candidate resolving clusters
+        final SvBreakend innerBreakend = breakendLower.orientation() == 1 ? breakendLower : breakendUpper;
+        final SvBreakend outerBreakend = breakendLower.orientation() == 1 ? breakendUpper : breakendLower;
+
+        final double[] cnData = chrCopyNumberMap.get(chromosome);
+
+        double centromereCN = 0;
+        double telomereCN = 0;
+        if(cnData != null)
+        {
+            centromereCN = cnData[CENTROMERE_CN];
+            telomereCN = breakendLower.arm() == CHROMOSOME_ARM_P ? cnData[P_ARM_TELOMERE_CN] : cnData[Q_ARM_TELOMERE_CN];
+        }
+
+        double lowSideCN = outerBreakend.getCopyNumber(outerBreakend.orientation() == -1);
+
+        final List<SvBreakend> breakendList = chrBreakendMap.get(chromosome);
+
+        int index = innerBreakend.getChrPosIndex();
+
+        final List<SvCluster> processedClusters = Lists.newArrayList();
+        boolean candidateLogged = false;
+
+        while(true)
+        {
+            if(innerBreakend.orientation() == 1) // walk in the direction the foldback faces
+                --index;
+            else
+                ++index;
+
+            if(index < 0 || index >= breakendList.size())
+                break;
+
+            final SvBreakend nextBreakend = breakendList.get(index);
+            if(nextBreakend.arm() != innerBreakend.arm())
+                break;
+
+            if(nextBreakend.orientation() == innerBreakend.orientation())
+                continue;
+
+            final SvCluster nextCluster = nextBreakend.getSV().getCluster();
+
+            if(processedClusters.contains(nextCluster))
+                continue;
+
+            processedClusters.add(nextCluster);
+
+            if(nextCluster.isResolved() || nextCluster.isConsistent())
+                continue;
+
+            // report this next cluster if it's not simple and if it has unmatched breakends facing the opposite direction
+
+            // fields: SampleId,ClusterId,Chromosome,Arm,Orientation,Ploidy,CNChg
+            // FacesCentromere,CentromereCN,TelomereCN,LowSideCN
+            //
+            String infoStr = String.format("%s,%d,%s,%s,%d,%.2f,%.2f,%s,%.2f,%.2f,%.2f",
+                    sampleId, cluster.id(), chromosome, innerBreakend.arm(), innerBreakend.orientation(),
+                    innerBreakend.getSV().getSvData().ploidy(), innerBreakend.copyNumberChange(),
+                    facesCentromere, centromereCN, telomereCN, lowSideCN);
+
+            // report other cluster's features
+            double cnBeforeSame = 0;
+            double cnBeforeDiff = 0;
+            double cnAfterSame = 0;
+            double cnAfterDiff = 0;
+
+            final List<SvBreakend> nextClusterBreakends = nextCluster.getChrBreakendMap().get(chromosome);
+
+            for(final SvBreakend otherBreakend : nextClusterBreakends)
+            {
+                if(otherBreakend.arm() != innerBreakend.arm())
+                    continue;
+
+                boolean isBefore = (otherBreakend.position() < innerBreakend.position()) == (innerBreakend.orientation() == -1);
+                boolean sameOrientation = otherBreakend.orientation() == innerBreakend.orientation();
+
+                if(isBefore)
+                {
+                    if(sameOrientation)
+                        cnBeforeSame += otherBreakend.copyNumberChange();
+                    else
+                        cnBeforeDiff += otherBreakend.copyNumberChange();
+                }
+                else
+                {
+                    if(sameOrientation)
+                        cnAfterSame += otherBreakend.copyNumberChange();
+                    else
+                        cnAfterDiff += otherBreakend.copyNumberChange();
+                }
+            }
+
+            // OtherClusterId,OtherClusterCount,OtherClusterDesc,OtherResolvedType,CNBeforeSame,CNBeforeOpp,CNAfterSame,CNAfterOpp
+            infoStr += String.format(",%d,%d,%s,%s,%.2f,%.2f,%.2f,%.2f",
+                    nextCluster.id(), nextCluster.getUniqueSvCount(), nextCluster.getDesc(), nextCluster.getResolvedType(),
+                    cnBeforeSame, cnBeforeDiff, cnAfterSame, cnAfterDiff);
+
+            LOGGER.info("INCONSIST_FBS: {}", infoStr);
+            candidateLogged = true;
+        }
+
+        if(!candidateLogged)
+        {
+            String infoStr = String.format("%s,%d,%s,%s,%d,%.2f,%.2f,%s,%.2f,%.2f,%.2f",
+                    sampleId, cluster.id(), chromosome, innerBreakend.arm(), innerBreakend.orientation(),
+                    innerBreakend.getSV().getSvData().ploidy(), innerBreakend.copyNumberChange(),
+                    facesCentromere, centromereCN, telomereCN, lowSideCN);
+
+            infoStr += String.format(",%d,%d,%s,%s,%.2f,%.2f,%.2f,%.2f", -1, 0, "", "", 0, 0, 0, 0);
+
+            LOGGER.info("INCONSIST_FBS: {}", infoStr);
         }
     }
 

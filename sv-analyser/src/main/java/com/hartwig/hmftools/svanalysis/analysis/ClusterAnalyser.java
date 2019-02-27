@@ -15,6 +15,7 @@ import static com.hartwig.hmftools.common.variant.structural.StructuralVariantTy
 import static com.hartwig.hmftools.svanalysis.analysis.ClusterAnnotations.annotateClusterArmSegments;
 import static com.hartwig.hmftools.svanalysis.analysis.ClusterAnnotations.annotateTemplatedInsertions;
 import static com.hartwig.hmftools.svanalysis.analysis.ClusterAnnotations.classifyChainedClusters;
+import static com.hartwig.hmftools.svanalysis.analysis.ClusterAnnotations.findIncompleteFoldbackCandidates;
 import static com.hartwig.hmftools.svanalysis.analysis.ClusterAnnotations.reportClusterNeoChromosomes;
 import static com.hartwig.hmftools.svanalysis.analysis.ClusterAnnotations.reportDoubleMinutes;
 import static com.hartwig.hmftools.svanalysis.analysis.LinkFinder.MIN_TEMPLATED_INSERTION_LENGTH;
@@ -1281,16 +1282,6 @@ public class ClusterAnalyser {
 
     public void reportClusterFeatures(final SvCluster cluster)
     {
-        /*
-        for (final SvChain chain : cluster.getChains())
-        {
-            if(chain.getLinkedPairs().size() < 4)
-                continue;
-
-            findChainRepeatedSegments(cluster, chain);
-        }
-        */
-
         reportDoubleMinutes(cluster, mClusteringMethods.getChrBreakendMap());
 
         checkLooseFoldbacks(cluster);
@@ -1298,6 +1289,8 @@ public class ClusterAnalyser {
         classifyChainedClusters(cluster, mClusteringMethods.getProximityDistance());
 
         reportClusterNeoChromosomes(cluster);
+
+        findIncompleteFoldbackCandidates(mSampleId, cluster, mClusteringMethods.getChrBreakendMap(), mClusteringMethods.getChrCopyNumberMap());
     }
 
     private final SvBreakend getNextUnresolvedBreakend(final List<SvBreakend> breakendList, int startIndex, boolean traverseUp)

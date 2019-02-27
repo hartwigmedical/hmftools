@@ -118,6 +118,7 @@ public class SvClusteringMethods {
     public int getNextClusterId() { return mNextClusterId++; }
     public void setSampleLohData(final Map<String, List<SvLOH>> data) { mSampleLohData = data; }
     public void setChrCopyNumberMap(final Map<String, double[]> data) { mChromosomeCopyNumberMap = data; }
+    public final Map<String, double[]> getChrCopyNumberMap() { return mChromosomeCopyNumberMap; }
     public long getDelDupCutoffLength() { return mDelDupCutoffLength; }
     public int getProximityDistance() { return mProximityDistance; }
 
