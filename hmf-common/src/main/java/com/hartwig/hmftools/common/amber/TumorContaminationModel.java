@@ -21,7 +21,7 @@ public class TumorContaminationModel {
 
     public double contamination(@NotNull final List<TumorContamination> samples) {
         long medianTumorReadDepth = medianDepth(samples);
-        LOGGER.info("Median tumor depth at homozygous sites is {} reads", medianTumorReadDepth);
+        LOGGER.info("Median tumor depth at potential contamination sites is {} reads", medianTumorReadDepth);
         final Map<Integer, Long> map = samples.stream().collect(Collectors.groupingBy(x -> x.tumor().altSupport(), Collectors.counting()));
         return contamination(medianTumorReadDepth, map);
     }
