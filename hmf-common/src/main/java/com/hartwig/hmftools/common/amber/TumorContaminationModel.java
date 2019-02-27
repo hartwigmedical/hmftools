@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.common.amber;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -8,20 +9,29 @@ import java.util.stream.Collectors;
 import com.hartwig.hmftools.common.numeric.Doubles;
 
 import org.apache.commons.math3.distribution.PoissonDistribution;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 public class TumorContaminationModel {
+
+    private static final Logger LOGGER = LogManager.getLogger(TumorContaminationModel.class);
 
     private static final double INCREMENT = 0.001;
     private static final long MIN_THREE_PLUS_READS = 2000;
 
     private final long medianTumorReadDepth;
 
-    public TumorContaminationModel(final long medianTumorReadDepth) {
+    public TumorContaminationModel(@NotNull final List<TumorContamination> baf) {
+        this.medianTumorReadDepth = medianDepth(baf);
+        LOGGER.info("Median tumor depth at homozygous sites is {} reads", medianTumorReadDepth);
+    }
+
+    TumorContaminationModel(final long medianTumorReadDepth) {
         this.medianTumorReadDepth = medianTumorReadDepth;
     }
 
-    public double contamination(@NotNull final List<TumorContamination> samples) {
+    public double contamination(@NotNull final Collection<TumorContamination> samples) {
         final Map<Integer, Long> map = samples.stream().collect(Collectors.groupingBy(x -> x.tumor().altSupport(), Collectors.counting()));
         return contamination(map);
     }
@@ -42,9 +52,11 @@ public class TumorContaminationModel {
                 }
             }
 
+            LOGGER.warn("Found evidence of {}% contamination ", Math.floor(contamination * 1000) / 10);
             return contamination;
         }
 
+        LOGGER.info("No evidence of contamination.");
         return 0;
     }
 
@@ -87,6 +99,12 @@ public class TumorContaminationModel {
 
     static long reads(int minAltSupport, @NotNull final Map<Integer, Long> altSupportMap) {
         return altSupportMap.entrySet().stream().filter(x -> x.getKey() >= minAltSupport).mapToLong(Map.Entry::getValue).sum();
+    }
+
+    private static int medianDepth(@NotNull final List<TumorContamination> baf) {
+        final List<Integer> reads = baf.stream().map(x -> x.tumor().readDepth()).filter(x -> x > 0).sorted().collect(Collectors.toList());
+        int count = reads.size();
+        return count % 2 == 0 ? (reads.get(count / 2) + reads.get(count / 2 - 1)) / 2 : reads.get(count / 2);
     }
 
 }

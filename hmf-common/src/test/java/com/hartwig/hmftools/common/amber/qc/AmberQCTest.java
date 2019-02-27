@@ -12,21 +12,34 @@ import org.junit.Test;
 public class AmberQCTest {
 
     @Test
-    public void testStatus() {
-        assertEquals(FAIL, create(0.511).status());
-        assertEquals(WARN, create(0.510).status());
-        assertEquals(WARN, create(0.501).status());
-        assertEquals(PASS, create(0.500).status());
-        assertEquals(PASS, create(0.487).status());
-        assertEquals(WARN, create(0.486).status());
-        assertEquals(WARN, create(0.480).status());
-        assertEquals(FAIL, create(0.479).status());
+    public void testMeanStatus() {
+        assertEquals(FAIL, createWithMean(0.511).status());
+        assertEquals(WARN, createWithMean(0.510).status());
+        assertEquals(WARN, createWithMean(0.501).status());
+        assertEquals(PASS, createWithMean(0.500).status());
+        assertEquals(PASS, createWithMean(0.487).status());
+        assertEquals(WARN, createWithMean(0.486).status());
+        assertEquals(WARN, createWithMean(0.480).status());
+        assertEquals(FAIL, createWithMean(0.479).status());
     }
 
+    @Test
+    public void testContaminationStatus() {
+        assertEquals(PASS, createWithContamination(0).status());
+        assertEquals(WARN, createWithContamination(0.001).status());
+        assertEquals(WARN, createWithContamination(0.10).status());
+        assertEquals(FAIL, createWithContamination(0.101).status());
+        assertEquals(FAIL, createWithContamination(1).status());
+    }
 
     @NotNull
-    private static AmberQC create(double meanBAF) {
-        return ImmutableAmberQC.builder().meanBAF(meanBAF).build();
+    private static AmberQC createWithMean(double meanBAF) {
+        return ImmutableAmberQC.builder().meanBAF(meanBAF).contamination(0).build();
+    }
+
+    @NotNull
+    private static AmberQC createWithContamination(double contaimination) {
+        return ImmutableAmberQC.builder().meanBAF(0.5).contamination(contaimination).build();
     }
 
 }

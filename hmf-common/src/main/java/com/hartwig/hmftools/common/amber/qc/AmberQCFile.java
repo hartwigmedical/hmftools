@@ -53,6 +53,7 @@ public class AmberQCFile {
 
         result.add("QCStatus" + DELIMITER + check.status());
         result.add("MeanBAF" + DELIMITER + FORMAT.format(check.meanBAF()));
+        result.add("Contamination" + DELIMITER + FORMAT.format(check.contamination()));
 
         return result;
     }

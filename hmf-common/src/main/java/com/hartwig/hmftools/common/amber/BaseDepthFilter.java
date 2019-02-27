@@ -23,7 +23,7 @@ public class BaseDepthFilter implements Predicate<BaseDepth> {
         int medianDepth = medianDepth(evidence);
         minDepth = (int) Math.round(medianDepth * minDepthPercentage);
         maxDepth = (int) Math.round(medianDepth * maxDepthPercentage);
-        LOGGER.info("Median normal depth is {} reads. Filtering reads outside of {} and {}", medianDepth, minDepth, maxDepth);
+        LOGGER.info("Median normal depth is {} reads: filtering reads outside of {} and {}", medianDepth, minDepth, maxDepth);
     }
 
     @Override
