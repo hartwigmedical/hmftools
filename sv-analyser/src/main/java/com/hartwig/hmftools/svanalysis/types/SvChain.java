@@ -165,6 +165,9 @@ public class SvChain {
 
     public boolean isConsistent()
     {
+        if(getFirstSV().isNullBreakend() || getLastSV().isNullBreakend())
+            return false;
+
         // treat the start and end breakends like those of a single SV
         int consistency = calcConsistency(getFirstSV(), firstLinkOpenOnStart());
         consistency += calcConsistency(getLastSV(), lastLinkOpenOnStart());

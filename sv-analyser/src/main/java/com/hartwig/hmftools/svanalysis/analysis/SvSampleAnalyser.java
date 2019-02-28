@@ -530,7 +530,7 @@ public class SvSampleAnalyser {
             {
                 int clusterSvCount = cluster.getUniqueSvCount();
 
-                isSpecificCluster(cluster);
+                // isSpecificCluster(cluster);
 
                 List<SvChain> chains = cluster.getChains();
 

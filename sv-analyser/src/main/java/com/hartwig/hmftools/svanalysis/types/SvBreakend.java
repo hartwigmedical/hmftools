@@ -64,5 +64,9 @@ public class SvBreakend {
     {
         return mSV.copyNumberChange(mUsesStart);
     }
+    public double copyNumber()
+    {
+        return mSV.copyNumber(mUsesStart);
+    }
 
 }

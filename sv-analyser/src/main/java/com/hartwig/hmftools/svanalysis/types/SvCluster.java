@@ -761,6 +761,9 @@ public class SvCluster
 
         // isSpecificCluster(this);
 
+        double tightestMinPloidy = 0;
+        double tightestMaxPloidy = -1;
+
         for (final SvVarData var : mSVs)
         {
             if(var.isReplicatedSv())
@@ -780,6 +783,11 @@ public class SvCluster
                 int minPloidyInt = (int)ceil(var.ploidyMin());
                 int maxPloidyInt = (int)floor(var.ploidyMax());
 
+                if(tightestMaxPloidy == -1 || var.ploidyMax() < tightestMaxPloidy)
+                    tightestMaxPloidy = var.ploidyMax();
+
+                tightestMinPloidy = max(var.ploidyMin(), tightestMinPloidy);
+
                 for(int i = minPloidyInt; i <= maxPloidyInt; ++i)
                 {
                     Integer svCount = ploidyFrequency.get(i);
@@ -796,12 +804,12 @@ public class SvCluster
             mMinCNChange = -1;
             mMaxCNChange = 0;
 
-            for(Map.Entry<Integer,Integer> entry : ploidyFrequency.entrySet())
+            for (Map.Entry<Integer, Integer> entry : ploidyFrequency.entrySet())
             {
                 int ploidy = entry.getKey();
                 int svCount = entry.getValue();
 
-                if(svCount == svCalcPloidyCount)
+                if (svCount == svCalcPloidyCount)
                 {
                     // all SVs can settle on the same ploidy value, so take this
                     mMaxCNChange = ploidy;
@@ -813,6 +821,13 @@ public class SvCluster
                     mMinCNChange = ploidy;
 
                 mMaxCNChange = max(mMaxCNChange, ploidy);
+            }
+
+            if(mMinCNChange < mMaxCNChange && tightestMaxPloidy > tightestMinPloidy && tightestMaxPloidy - tightestMinPloidy < 1)
+            {
+                // if all SVs cover the same value but it's not an integer, still consider them uniform
+                mMinCNChange = 1;
+                mMaxCNChange = 1;
             }
         }
     }
@@ -964,7 +979,7 @@ public class SvCluster
 
 
     private static int SPECIFIC_CLUSTER_ID = -1;
-    // private static int SPECIFIC_CLUSTER_ID = 1398;
+    // private static int SPECIFIC_CLUSTER_ID = 0;
 
     public static boolean isSpecificCluster(final SvCluster cluster)
     {
@@ -974,8 +989,8 @@ public class SvCluster
         return false;
     }
 
-    // private static int SPECIFIC_CLUSTER_ID_2 = 29;
-    private static int SPECIFIC_CLUSTER_ID_2 = -1;
+    private static int SPECIFIC_CLUSTER_ID_2 = 29;
+    // private static int SPECIFIC_CLUSTER_ID_2 = -1;
 
     public static boolean areSpecificClusters(final SvCluster cluster1, final SvCluster cluster2)
     {

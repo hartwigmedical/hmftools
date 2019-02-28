@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.svanalysis.types;
 
 import static java.lang.Math.abs;
+import static java.lang.Math.max;
 import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.BND;
@@ -161,10 +162,10 @@ public class SvVarData
         mReplicationOriginStart = 0;
         mReplicationOriginEnd = 0;
 
-        if(mSVData.ploidyMin() != null && mSVData.ploidyMin() > 0 && mSVData.ploidyMax() != null && mSVData.ploidyMax() > 0)
+        if(mSVData.ploidyMin() != null && mSVData.ploidyMax() != null && mSVData.ploidyMax() > 0)
         {
             mHasCalcPloidy = true;
-            mPloidyMin = mSVData.ploidyMin();
+            mPloidyMin = max(mSVData.ploidyMin(), 0);
             mPloidyMax = mSVData.ploidyMax();
         }
         else
@@ -406,7 +407,6 @@ public class SvVarData
     public boolean hasInconsistentCopyNumberChange(boolean useStart)
     {
         return mSVData.ploidy() - copyNumberChange(useStart) > 0.8;
-        // return round(copyNumberChange(true)) != round(copyNumberChange(false));
     }
 
     public long getNearestSvDistance() { return mNearestSvDistance; }

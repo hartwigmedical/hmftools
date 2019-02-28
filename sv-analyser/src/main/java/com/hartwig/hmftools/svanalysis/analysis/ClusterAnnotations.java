@@ -19,6 +19,7 @@ import static com.hartwig.hmftools.svanalysis.types.SvCluster.CLUSTER_ANNONTATIO
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.CLUSTER_ANNONTATION_DM;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_DEL_EXT_TI;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_DUP_EXT_TI;
+import static com.hartwig.hmftools.svanalysis.types.SvCluster.isSpecificCluster;
 import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.LINK_TYPE_TI;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_END;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_START;
@@ -504,7 +505,7 @@ public class ClusterAnnotations
         if(cluster.getArmCount() == 1 && cluster.getCount() == 2)
             return;
 
-        // isSpecificCluster(cluster);
+        isSpecificCluster(cluster);
 
         /* data to gather for each arm in the chain
             - number of links
@@ -513,25 +514,52 @@ public class ClusterAnnotations
             - start and end locations
          */
 
-        boolean allChainsConsistent = true;
         List<String> originArms = Lists.newArrayList();
         List<String> fragmentArms = Lists.newArrayList();
 
+        int chainCount = cluster.getChains().size();
+        int unlinkedSvCount = cluster.getUnlinkedSVs().size();
+        int inconsistentChains = 0;
+        int repeatedChainEndArms = 0;
+        int chainsWithCNLoss = 0;
+        int chainsWithCNGain = 0;
+
+        // isSpecificCluster(cluster);
+
+        List<String> chainEndArms = Lists.newArrayList();
+
         for (final SvChain chain : cluster.getChains())
         {
-            if(!chain.isConsistent())
+            if (!chain.isConsistent())
             {
-                allChainsConsistent = false;
+                ++inconsistentChains;
                 continue;
             }
 
-            Map<String, int[]> armDataMap = new HashMap();
+            final SvBreakend firstBreakend = chain.getOpenBreakend(true);
+            final SvBreakend lastBreakend = chain.getOpenBreakend(false);
 
-            final SvBreakend firstBreakend = chain.getFirstSV().getBreakend(chain.firstLinkOpenOnStart());
-            final SvBreakend lastBreakend = chain.getLastSV().getBreakend(chain.lastLinkOpenOnStart());
+            double firstCN = firstBreakend.copyNumber();
+            double lastCN = lastBreakend.copyNumber();
+            double linkCNTotal = 0; // to track CN along TIs
 
             final String startChrArm = firstBreakend != null ? firstBreakend.getChrArm() : "";
             final String endChrArm = lastBreakend != null ? lastBreakend.getChrArm() : "";
+
+            if(!startChrArm.isEmpty() && !chainEndArms.contains(startChrArm))
+                chainEndArms.add(startChrArm);
+            else
+                ++repeatedChainEndArms;
+
+            if(!startChrArm.equals(endChrArm))
+            {
+                if (!endChrArm.isEmpty() && !chainEndArms.contains(endChrArm))
+                    chainEndArms.add(startChrArm);
+                else
+                    ++repeatedChainEndArms;
+            }
+
+            Map<String, int[]> armDataMap = new HashMap();
 
             if(!startChrArm.isEmpty())
                 armDataMap.put(startChrArm, new int[CHAIN_TI_ASMB_COUNT+1]);
@@ -550,6 +578,7 @@ public class ClusterAnnotations
                     continue;
 
                 chainLinkLength += pair.length();
+                linkCNTotal += (pair.getBreakend(true).copyNumber() + pair.getBreakend(false).copyNumber()) * 0.5;
 
                 final String chrArm = first.getBreakend(pair.firstLinkOnStart()).getChrArm();
 
@@ -580,10 +609,10 @@ public class ClusterAnnotations
             }
 
             // check for synthetic DELs and DUPs from longer chains
-            if(allChainsConsistent && !isIncomplete && !isComplex
-                    && cluster.getChains().size() == 1 && chain.getLinkCount() == shortTICount
-                    && firstBreakend.getChrArm().equals(lastBreakend.getChrArm())
-                    && firstBreakend.orientation() != lastBreakend.orientation())
+            if(inconsistentChains == 0 && !isIncomplete && !isComplex
+            && chainCount == 1 && chain.getLinkCount() == shortTICount
+            && firstBreakend.getChrArm().equals(lastBreakend.getChrArm())
+            && firstBreakend.orientation() != lastBreakend.orientation())
             {
                 long syntheticLength = abs(lastBreakend.position() - firstBreakend.position());
                 long avgLinkLength = round(chainLinkLength/chain.getLinkCount());
@@ -629,11 +658,6 @@ public class ClusterAnnotations
                 if(isOrigin)
                 {
                     // if this arm exists twice already, then more than 2 chains end up on the same arm which is invalid
-                    long chrArmCount = originArms.stream().filter(x -> x.equals(chrArm)).count();
-
-                    if(chrArmCount >= 2)
-                        allChainsConsistent = false;
-
                     originArms.add(chrArm);
 
                     if(fragmentArms.contains(chrArm))
@@ -650,14 +674,94 @@ public class ClusterAnnotations
 
             chain.setDetails(chainInfo);
 
+            double lossCNTotal = 0; // to track CN loss across SVs
+
+            for (final SvVarData var : chain.getSvList())
+            {
+                if(!var.isNullBreakend())
+                {
+                    lossCNTotal += (var.copyNumber(true) - var.copyNumberChange(true)
+                            + var.copyNumber(false) - var.copyNumberChange(false)) * 0.5;
+                }
+                else
+                {
+                    lossCNTotal += var.copyNumber(false) - var.copyNumberChange(false);
+                }
+           }
+
             // LOGGER.debug("cluster({}) chain({}) {}", cluster.id(), chain.id(), chainInfo);
+
+            double avgDelCN = lossCNTotal / chain.getSvCount();
+            double avgLinkCN = linkCNTotal / chain.getLinkCount();
+
+            // summarise chain CN profile
+            if(copyNumbersEqual(firstCN, lastCN))
+            {
+                double avgChainEndCN = (firstCN + lastCN) * 0.5;
+                if(avgDelCN < avgChainEndCN && copyNumbersEqual(avgLinkCN, avgChainEndCN))
+                {
+                    ++chainsWithCNLoss;
+                }
+                else if(avgLinkCN > avgChainEndCN && copyNumbersEqual(avgDelCN, avgChainEndCN))
+                {
+                    ++chainsWithCNGain;
+                }
+            }
         }
 
         cluster.setArmData(originArms.size(), fragmentArms.size());
 
-        if(allChainsConsistent && !isIncomplete && !isComplex)
+        int armGroupCount = cluster.getArmGroups().size();
+
+        final List<SvVarData> unlinkedRemoteSVs = cluster.getUnlinkedRemoteSVs();
+
+        int inconsistentArmCount = 0;
+
+        for(final SvArmGroup armGroup : cluster.getArmGroups())
         {
-            cluster.addAnnotation(String.format("%s", CLUSTER_ANNONTATION_CT));
+            if(!armGroup.isConsistent())
+            {
+                ++inconsistentArmCount;
+                continue;
+            }
+
+            for (final SvVarData var : unlinkedRemoteSVs)
+            {
+                if (armGroup.getSVs().contains(var))
+                {
+                    ++inconsistentArmCount;
+                    continue;
+                }
+            }
+        }
+
+        boolean isComplete = (inconsistentChains == 0) && (repeatedChainEndArms == 0) && (unlinkedSvCount == 0);
+
+        LOGGER.debug("cluster({}) {} chains({} incons={}) chainEnds(arms={} repeats={}) unlinkedSVs({} armCount({} incons={}))",
+                cluster.id(), isComplete ? "COMPLETE" : "incomplete",
+                chainCount, inconsistentChains, chainEndArms.size(), repeatedChainEndArms,
+                unlinkedSvCount, armGroupCount, inconsistentArmCount);
+
+        if(isComplete)
+        {
+            cluster.addAnnotation("COMPLETE");
+
+            // TEMP: chromothripsis is currently defined as fully chained simple cluster
+            // but needs to take into account the copy number gain / loss compared with the surrounding chromatid
+            if(!isComplex)
+            {
+                cluster.addAnnotation(CLUSTER_ANNONTATION_CT);
+            }
+
+            // for each chain, check the CN relative to the start and end
+            if(chainsWithCNGain == chainCount)
+            {
+                cluster.addAnnotation("CN_GAIN");
+            }
+            else if(chainsWithCNLoss == chainCount)
+            {
+                cluster.addAnnotation("CN_LOSS");
+            }
         }
     }
 
@@ -789,87 +893,9 @@ public class ClusterAnnotations
                     innerBreakend.getSV().getSvData().ploidy(), innerBreakend.copyNumberChange(),
                     facesCentromere, centromereCN, telomereCN, lowSideCN);
 
-            infoStr += String.format(",%d,%d,%s,%s,%.2f,%.2f,%.2f,%.2f", -1, 0, "", "", 0, 0, 0, 0);
+            infoStr += ",-1,0,,,0,0,0,0";
 
             LOGGER.info("INCONSIST_FBS: {}", infoStr);
-        }
-    }
-
-    public static void reportClusterNeoChromosomes(final SvCluster cluster)
-    {
-        if(cluster.getChains().isEmpty())
-            return;
-
-        int unlinkedSvCount = cluster.getUnlinkedSVs().size();
-        int inconsistentChains = 0;
-        int repeatedChainEndArms = 0;
-
-        // isSpecificCluster(cluster);
-
-        List<String> chainEndArms = Lists.newArrayList();
-
-        for (final SvChain chain : cluster.getChains())
-        {
-            if (!chain.isConsistent())
-            {
-                ++inconsistentChains;
-                continue;
-            }
-
-            final SvBreakend firstBreakend = chain.getOpenBreakend(true);
-            final SvBreakend lastBreakend = chain.getOpenBreakend(false);
-
-            final String startChrArm = firstBreakend != null ? firstBreakend.getChrArm() : "";
-            final String endChrArm = lastBreakend != null ? lastBreakend.getChrArm() : "";
-
-            if(!startChrArm.isEmpty() && !chainEndArms.contains(startChrArm))
-                chainEndArms.add(startChrArm);
-            else
-                ++repeatedChainEndArms;
-
-            if(!startChrArm.equals(endChrArm))
-            {
-                if (!endChrArm.isEmpty() && !chainEndArms.contains(endChrArm))
-                    chainEndArms.add(startChrArm);
-                else
-                    ++repeatedChainEndArms;
-            }
-        }
-
-        int armGroupCount = cluster.getArmGroups().size();
-
-        final List<SvVarData> unlinkedRemoteSVs = cluster.getUnlinkedRemoteSVs();
-
-        int inconsistentArmCount = 0;
-
-        for(final SvArmGroup armGroup : cluster.getArmGroups())
-        {
-            if(!armGroup.isConsistent())
-            {
-                ++inconsistentArmCount;
-                continue;
-            }
-
-            for (final SvVarData var : unlinkedRemoteSVs)
-            {
-                if (armGroup.getSVs().contains(var))
-                {
-                    ++inconsistentArmCount;
-                    continue;
-                }
-            }
-        }
-
-        boolean isComplete = (inconsistentChains == 0) && (repeatedChainEndArms == 0) && (unlinkedSvCount == 0);
-
-        LOGGER.debug("cluster({}) {} chains({} incons={}) chainEnds(arms={} repeats={}) unlinkedSVs({} armCount({} incons={}))",
-                cluster.id(), isComplete ? "COMPLETE" : "incomplete",
-                cluster.getChains().size(), inconsistentChains, chainEndArms.size(), repeatedChainEndArms,
-                unlinkedSvCount, armGroupCount, inconsistentArmCount);
-
-        if(isComplete)
-        {
-            cluster.addAnnotation(String.format("COMPLETE"));
         }
     }
 

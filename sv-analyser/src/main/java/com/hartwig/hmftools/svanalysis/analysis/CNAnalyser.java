@@ -1019,7 +1019,7 @@ public class CNAnalyser {
 
                 updatedSvDataList.add(ImmutableStructuralVariantData.builder()
                         .from(svData)
-                        .ploidyMin(ploidyEstimate - ploidyUncertainty)
+                        .ploidyMin(max(ploidyEstimate - ploidyUncertainty, 0))
                         .ploidyMax(ploidyEstimate + ploidyUncertainty)
                         .build());
 

@@ -92,7 +92,7 @@ public class ChainFinder
                     mCluster.id(), mAssemblyLinkedPairs.size(), mCluster.getUniqueSvCount(), mCluster.getCount());
         }
 
-        isSpecificCluster(mCluster);
+        // isSpecificCluster(mCluster);
         // mLogWorking = isSpecificCluster(mCluster);
 
         buildSvChains(assembledLinksOnly);

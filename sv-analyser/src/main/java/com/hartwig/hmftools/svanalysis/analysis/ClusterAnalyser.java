@@ -16,11 +16,8 @@ import static com.hartwig.hmftools.svanalysis.analysis.ClusterAnnotations.annota
 import static com.hartwig.hmftools.svanalysis.analysis.ClusterAnnotations.annotateTemplatedInsertions;
 import static com.hartwig.hmftools.svanalysis.analysis.ClusterAnnotations.classifyChainedClusters;
 import static com.hartwig.hmftools.svanalysis.analysis.ClusterAnnotations.findIncompleteFoldbackCandidates;
-import static com.hartwig.hmftools.svanalysis.analysis.ClusterAnnotations.reportClusterNeoChromosomes;
 import static com.hartwig.hmftools.svanalysis.analysis.ClusterAnnotations.reportDoubleMinutes;
 import static com.hartwig.hmftools.svanalysis.analysis.LinkFinder.MIN_TEMPLATED_INSERTION_LENGTH;
-import static com.hartwig.hmftools.svanalysis.analysis.LinkFinder.NO_DB_MARKER;
-import static com.hartwig.hmftools.svanalysis.analysis.LinkFinder.areLinkedSection;
 import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.CLUSTER_REASON_COMMON_ARMS;
 import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.CLUSTER_REASON_FOLDBACKS;
 import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.CLUSTER_REASON_LOOSE_OVERLAP;
@@ -32,13 +29,7 @@ import static com.hartwig.hmftools.svanalysis.types.SvArmCluster.mergeArmCluster
 import static com.hartwig.hmftools.svanalysis.types.SvChain.CHAIN_ASSEMBLY_LINK_COUNT;
 import static com.hartwig.hmftools.svanalysis.types.SvChain.CHAIN_LENGTH;
 import static com.hartwig.hmftools.svanalysis.types.SvChain.CHAIN_LINK_COUNT;
-import static com.hartwig.hmftools.svanalysis.types.SvChain.checkChainReplication;
-import static com.hartwig.hmftools.svanalysis.types.SvChain.getRepeatedSvSequence;
-import static com.hartwig.hmftools.svanalysis.types.SvCluster.CLUSTER_ANNONTATION_CT;
-import static com.hartwig.hmftools.svanalysis.types.SvCluster.CLUSTER_ANNONTATION_DM;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_COMPLEX_CHAIN;
-import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_DEL_EXT_TI;
-import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_DUP_EXT_TI;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_LINE;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_NONE;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_SGL_PAIR_DEL;
@@ -1287,8 +1278,6 @@ public class ClusterAnalyser {
         checkLooseFoldbacks(cluster);
 
         classifyChainedClusters(cluster, mClusteringMethods.getProximityDistance());
-
-        reportClusterNeoChromosomes(cluster);
 
         findIncompleteFoldbackCandidates(mSampleId, cluster, mClusteringMethods.getChrBreakendMap(), mClusteringMethods.getChrCopyNumberMap());
     }
