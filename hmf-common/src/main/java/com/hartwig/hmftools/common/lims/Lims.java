@@ -43,14 +43,14 @@ public class Lims {
     public String contactEmails(@NotNull final String sample) {
         String submission = submission(sample);
         LimsJsonSubmissionData submissionData = dataPerSubmission.get(submission);
-        return submissionData != null ? submissionData.contactEmails() : "not determined";
+        return submissionData != null ? submissionData.contactEmails() : "N/A";
     }
 
     @NotNull
     public String contactNames(@NotNull final String sample) {
         String submission = submission(sample);
         LimsJsonSubmissionData submissionData = dataPerSubmission.get(submission);
-        return submissionData != null ? submissionData.contactNames() : "not determined";
+        return submissionData != null ? submissionData.contactNames() : "N/A";
     }
 
     @NotNull

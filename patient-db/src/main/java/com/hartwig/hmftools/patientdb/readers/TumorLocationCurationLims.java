@@ -36,4 +36,14 @@ public class TumorLocationCurationLims {
         });
         return limsTumorCurations;
     }
+
+    @NotNull
+    public List<TumorTypeLims> readFixedValue(@NotNull final List<String> sampleIds) {
+        final List<TumorTypeLims> limsTumorCurations = Lists.newArrayList();
+
+        sampleIds.forEach(sampleId -> {
+            limsTumorCurations.add(ImmutableTumorTypeLims.of(tumorLocationCurator.search("Melanoma")));
+        });
+        return limsTumorCurations;
+    }
 }

@@ -15,6 +15,8 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.base.Strings;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.ecrf.projections.ImmutablePatientTumorLocation;
 import com.hartwig.hmftools.common.ecrf.projections.ImmutablePortalClinicalData;
 import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocation;
@@ -35,13 +37,25 @@ final class DumpClinicalData {
 
     static void writeClinicalDumps(@NotNull final String csvOutputDir, @NotNull final Collection<Patient> patients,
             @NotNull final Optional<String> tumorLocationLink, @NotNull final Optional<String> portalDataLink,
-            @NotNull final Collection<List<TumorTypeLims>> corePatients, @NotNull final Set<String> sampleId) throws IOException {
-        writeCuratedTumorLocationsToCSV(csvOutputDir, tumorLocationLink, patients, corePatients, sampleId);
+            @NotNull final Collection<List<TumorTypeLims>> corePatients, @NotNull final Set<String> sampleIdcore,
+            @NotNull final Collection<List<TumorTypeLims>> widePatients, @NotNull final Set<String> sampleIdwide,
+            @NotNull final Collection<List<TumorTypeLims>> coloPatients, @NotNull final Set<String> sampleIdcolo) throws IOException {
+        Collection<List<TumorTypeLims>> tumorTypeCurationsFromLims = Lists.newArrayList();
+        tumorTypeCurationsFromLims.addAll(corePatients);
+        tumorTypeCurationsFromLims.addAll(widePatients);
+        tumorTypeCurationsFromLims.addAll(coloPatients);
+
+        Set<String> sampleIdsFromLims = Sets.newHashSet();
+        sampleIdsFromLims.addAll(sampleIdcore);
+        sampleIdsFromLims.addAll(sampleIdwide);
+        sampleIdsFromLims.addAll(sampleIdcolo);
+
+        writeCuratedTumorLocationsToCSV(csvOutputDir, tumorLocationLink, patients, tumorTypeCurationsFromLims, sampleIdsFromLims);
         writePortalClinicalData(csvOutputDir, portalDataLink, patients);
     }
 
     private static void writeCuratedTumorLocationsToCSV(@NotNull final String csvOutputDir, @NotNull final Optional<String> linkName,
-            @NotNull final Collection<Patient> patients, @NotNull final Collection<List<TumorTypeLims>> corePatients,
+            @NotNull final Collection<Patient> patients, @NotNull final Collection<List<TumorTypeLims>> patientsTumorType,
             @NotNull final Set<String> sampleId) throws IOException {
         final String outputFile = fileLocation(csvOutputDir, "_curatedTumorLocations.csv");
         LOGGER.info("Writing curated tumor locations to csv in {}.", csvOutputDir);
@@ -51,7 +65,7 @@ final class DumpClinicalData {
                         Strings.nullToEmpty(patient.baselineData().curatedTumorLocation().subType())))
                 .collect(Collectors.toList());
 
-        final List<PatientTumorLocation> tumorLocationsCore = corePatients.stream()
+        final List<PatientTumorLocation> tumorLocationsCore = patientsTumorType.stream()
                 .map(corepatient -> ImmutablePatientTumorLocation.of(sampleId.toString().substring(1, sampleId.toString().length() - 1),
                         Strings.nullToEmpty(corepatient.iterator().next().curatedTumorLocation().primaryTumorLocation()),
                         Strings.nullToEmpty(corepatient.iterator().next().curatedTumorLocation().subType())))
