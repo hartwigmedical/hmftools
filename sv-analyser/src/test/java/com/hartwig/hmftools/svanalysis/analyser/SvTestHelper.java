@@ -198,6 +198,10 @@ public class SvTestHelper
                         .startRefContext("")
                         .endRefContext("")
                         .recovered(false)
+                        .insertSequenceRepeatClass("")
+                        .insertSequenceRepeatType("")
+                        .insertSequenceRepeatOrientation((byte)0)
+                        .insertSequenceRepeatCoverage(0.0)
                         .build();
 
         SvVarData var = new SvVarData(svData);
