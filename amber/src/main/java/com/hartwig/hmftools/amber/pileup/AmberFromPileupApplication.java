@@ -76,7 +76,7 @@ public class AmberFromPileupApplication {
         final List<AmberBAF> result = factory.create(normal, tumor);
 
         LOGGER.info("Generating QC Stats");
-        final AmberQC qcStats = AmberQCFactory.create(result);
+        final AmberQC qcStats = AmberQCFactory.create(-1, result);
         final String qcFilename = AmberQCFile.generateFilename(outputDirectory, cmd.getOptionValue(SAMPLE));
 
         final String filename = AmberBAFFile.generateAmberFilename(outputDirectory, cmd.getOptionValue(SAMPLE));

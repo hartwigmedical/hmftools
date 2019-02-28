@@ -99,6 +99,10 @@ class StructuralVariantDAO {
                     .startRefContext(getValueNotNull(record.getValue(STRUCTURALVARIANT.STARTREFCONTEXT)))
                     .endRefContext(getValueNotNull(record.getValue(STRUCTURALVARIANT.ENDREFCONTEXT)))
                     .insertSequenceAlignments(getValueNotNull(record.getValue(STRUCTURALVARIANT.INSERTSEQUENCEALIGNMENTS)))
+                    .insertSequenceRepeatClass(record.getValue(STRUCTURALVARIANT.INSERTSEQUENCEREPEATCLASS))
+                    .insertSequenceRepeatType(record.getValue(STRUCTURALVARIANT.INSERTSEQUENCEREPEATTYPE))
+                    .insertSequenceRepeatOrientation(record.getValue(STRUCTURALVARIANT.INSERTSEQUENCEREPEATORIENTATION))
+                    .insertSequenceRepeatCoverage(record.getValue(STRUCTURALVARIANT.INSERTSEQUENCEREPEATCOVERAGE))
                     .recovered(byteToBoolean(record.getValue(STRUCTURALVARIANT.RECOVERED)))
                     .build());
         }
@@ -193,6 +197,10 @@ class StructuralVariantDAO {
                     .startLinkedBy(record.getValue(STRUCTURALVARIANT.STARTLINKEDBY))
                     .endLinkedBy(record.getValue(STRUCTURALVARIANT.ENDLINKEDBY))
                     .insertSequenceAlignments(record.getValue(STRUCTURALVARIANT.INSERTSEQUENCEALIGNMENTS))
+                    .insertSequenceRepeatClass(record.getValue(STRUCTURALVARIANT.INSERTSEQUENCEREPEATCLASS))
+                    .insertSequenceRepeatType(record.getValue(STRUCTURALVARIANT.INSERTSEQUENCEREPEATTYPE))
+                    .insertSequenceRepeatOrientation(record.getValue(STRUCTURALVARIANT.INSERTSEQUENCEREPEATORIENTATION))
+                    .insertSequenceRepeatCoverage(record.getValue(STRUCTURALVARIANT.INSERTSEQUENCEREPEATCOVERAGE))
                     .build();
 
             regions.add(variant);
@@ -252,6 +260,10 @@ class StructuralVariantDAO {
                     STRUCTURALVARIANT.STARTREFCONTEXT,
                     STRUCTURALVARIANT.ENDREFCONTEXT,
                     STRUCTURALVARIANT.INSERTSEQUENCEALIGNMENTS,
+                    STRUCTURALVARIANT.INSERTSEQUENCEREPEATCLASS,
+                    STRUCTURALVARIANT.INSERTSEQUENCEREPEATTYPE,
+                    STRUCTURALVARIANT.INSERTSEQUENCEREPEATORIENTATION,
+                    STRUCTURALVARIANT.INSERTSEQUENCEREPEATCOVERAGE,
                     STRUCTURALVARIANT.MODIFIED);
             batch.forEach(entry -> addRecord(timestamp, inserter, sample, entry));
             inserter.execute();
@@ -308,6 +320,10 @@ class StructuralVariantDAO {
                 variant.start().refGenomeContext(),
                 variant.end() == null ? null : variant.end().refGenomeContext(),
                 DatabaseUtil.checkStringLength(variant.insertSequenceAlignments(), STRUCTURALVARIANT.INSERTSEQUENCEALIGNMENTS),
+                variant.insertSequenceRepeatClass(),
+                variant.insertSequenceRepeatType(),
+                variant.insertSequenceRepeatOrientation(),
+                variant.insertSequenceRepeatCoverage(),
                 timestamp);
     }
 

@@ -25,4 +25,20 @@ public interface AmberBAF extends GenomePosition {
     }
 
     int normalDepth();
+
+    @NotNull
+    static AmberBAF create(@NotNull final TumorBAF tumor) {
+        int tumorAltCount = tumor.tumorAltSupport();
+        double tumorBaf = tumorAltCount / (double) (tumorAltCount + tumor.tumorRefSupport());
+        int normalAltCount = tumor.normalAltSupport();
+        double normalBaf = normalAltCount / (double) (normalAltCount + tumor.normalRefSupport());
+        return ImmutableAmberBAF.builder()
+                .from(tumor)
+                .normalDepth(tumor.normalReadDepth())
+                .tumorDepth(tumor.tumorReadDepth())
+                .normalBAF(normalBaf)
+                .tumorBAF(tumorBaf)
+                .build();
+    }
+
 }

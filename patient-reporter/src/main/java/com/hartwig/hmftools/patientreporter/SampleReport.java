@@ -2,6 +2,7 @@ package com.hartwig.hmftools.patientreporter;
 
 import java.time.LocalDate;
 
+import com.google.gson.annotations.SerializedName;
 import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocation;
 
 import org.apache.logging.log4j.util.Strings;
@@ -16,6 +17,12 @@ public abstract class SampleReport {
 
     @NotNull
     public abstract String sampleId();
+
+    @Nullable
+    public abstract String barcodeTumor();
+
+    @Nullable
+    public abstract String barcodeReference();
 
     @Nullable
     public abstract PatientTumorLocation patientTumorLocation();
@@ -46,6 +53,9 @@ public abstract class SampleReport {
 
     @NotNull
     public abstract String contactEmails();
+
+    @NotNull
+    public abstract String submission();
 
     @Nullable
     public abstract String patientNumber();

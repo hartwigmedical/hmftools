@@ -19,6 +19,14 @@ abstract class LimsJsonSampleData {
     @SerializedName("sample_name")
     public abstract String sampleId();
 
+    @Nullable
+    @SerializedName("ref_sample_id")
+    public abstract String refSampleId();
+
+    @Nullable
+    @SerializedName("sample_id")
+    public abstract String tumorSampleId();
+
     // Patient number is only used for CORE project
     @Nullable
     @SerializedName("patient_number")

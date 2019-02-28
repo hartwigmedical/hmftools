@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.common.amber;
 
-import static com.hartwig.hmftools.common.amber.NormalBAFFactory.getBaseQuality;
-import static com.hartwig.hmftools.common.amber.NormalBAFFactory.indel;
+import static com.hartwig.hmftools.common.amber.BaseDepthFactory.getBaseQuality;
+import static com.hartwig.hmftools.common.amber.BaseDepthFactory.indel;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -16,7 +16,7 @@ class TumorBAFFactory {
     }
 
     @NotNull
-    public static ModifiableTumorBAF create(@NotNull final NormalBAF normal) {
+    public static ModifiableTumorBAF create(@NotNull final BaseDepth normal) {
         return ModifiableTumorBAF.create()
                 .from(normal)
                 .setRef(normal.ref().toString())

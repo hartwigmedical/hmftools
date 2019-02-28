@@ -19,19 +19,19 @@ import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 
-public class NormalBAFEvidence implements Callable<NormalBAFEvidence> {
+public class BaseDepthEvidence implements Callable<BaseDepthEvidence> {
 
     private final String contig;
     private final String bamFile;
     private final SamReaderFactory samReaderFactory;
-    private final List<ModifiableNormalBAF> evidence;
-    private final GenomePositionSelector<ModifiableNormalBAF> selector;
-    private final NormalBAFFactory bafFactory;
+    private final List<ModifiableBaseDepth> evidence;
+    private final GenomePositionSelector<ModifiableBaseDepth> selector;
+    private final BaseDepthFactory bafFactory;
     private final SAMConsumer supplier;
 
-    public NormalBAFEvidence(int typicalReadDepth, int minMappingQuality, int minBaseQuality, final String contig, final String bamFile,
+    public BaseDepthEvidence(int typicalReadDepth, int minMappingQuality, int minBaseQuality, final String contig, final String bamFile,
             final SamReaderFactory samReaderFactory, final List<GenomeRegion> bafRegions) {
-        this.bafFactory = new NormalBAFFactory(minBaseQuality);
+        this.bafFactory = new BaseDepthFactory(minBaseQuality);
         this.contig = contig;
         this.bamFile = bamFile;
         this.samReaderFactory = samReaderFactory;
@@ -39,7 +39,7 @@ public class NormalBAFEvidence implements Callable<NormalBAFEvidence> {
         bafRegions.forEach(x -> builder.addPosition(x.start()));
         final List<GenomeRegion> bafRegions1 = builder.build();
 
-        this.evidence = bafRegions.stream().map(NormalBAFFactory::create).collect(Collectors.toList());
+        this.evidence = bafRegions.stream().map(BaseDepthFactory::create).collect(Collectors.toList());
         this.selector = GenomePositionSelectorFactory.create(Multimaps.fromPositions(evidence));
         this.supplier = new SAMConsumer(minMappingQuality, bafRegions1);
     }
@@ -50,12 +50,12 @@ public class NormalBAFEvidence implements Callable<NormalBAFEvidence> {
     }
 
     @NotNull
-    public List<ModifiableNormalBAF> evidence() {
+    public List<ModifiableBaseDepth> evidence() {
         return evidence.stream().filter(x -> x.readDepth() > 0).collect(Collectors.toList());
     }
 
     @Override
-    public NormalBAFEvidence call() throws Exception {
+    public BaseDepthEvidence call() throws Exception {
 
         try (SamReader reader = samReaderFactory.open(new File(bamFile))) {
             supplier.consume(reader, this::record);

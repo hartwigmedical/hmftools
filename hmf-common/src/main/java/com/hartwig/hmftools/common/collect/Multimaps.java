@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.common.collect;
 
 import java.util.Collection;
+import java.util.function.Predicate;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
@@ -36,4 +37,18 @@ public class Multimaps {
 
         return result;
     }
+
+    @NotNull
+    public static <T,U> ListMultimap<T, U> filterEntries(@NotNull final ListMultimap<T, U> map, @NotNull final Predicate<U> predicate) {
+        final ListMultimap<T, U> result = ArrayListMultimap.create();
+        for (T key : map.keySet()) {
+            for (U value : map.get(key)) {
+                if (predicate.test(value)) {
+                    result.put(key, value);
+                }
+            }
+        }
+        return result;
+    }
+
 }

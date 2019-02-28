@@ -108,9 +108,21 @@ public abstract class NonSequenceablePage {
                 cmp.text("When possible, please resubmit using the same DVO with project name " + sampleReport().projectName() + ".")
                         .setStyle(fontStyle()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
+                cmp.text("The sample name of this sample is: " + sampleReport().sampleId()),
+                cmp.verticalGap(SECTION_VERTICAL_GAP),
+                hospitalPatientText(),
+                cmp.verticalGap(SECTION_VERTICAL_GAP),
                 shallowSeqText(),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
+                cmp.text("The tumor barcode of sample is " + sampleReport().barcodeTumor()),
+                cmp.verticalGap(SECTION_VERTICAL_GAP),
+                cmp.text("The reference barcode of sample is" + sampleReport().barcodeReference()),
+                cmp.verticalGap(SECTION_VERTICAL_GAP),
                 sampleArrivalDateText(),
+                cmp.verticalGap(SECTION_VERTICAL_GAP),
+                projectNameText(),
+                cmp.verticalGap(SECTION_VERTICAL_GAP),
+                submissionIdText(),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
                 recipientText(),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
@@ -134,10 +146,16 @@ public abstract class NonSequenceablePage {
                         + "In case additional tumor material cannot be provided, please be notified that the patient will not be "
                         + "evaluable for the " + study().studyCode() + " study.").setStyle(fontStyle()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
+                cmp.text("The sample name of this sample is: " + sampleReport().sampleId()),
+                cmp.verticalGap(SECTION_VERTICAL_GAP),
                 cmp.text("The tumor percentage estimated by Pathology UMC Utrecht is: " + sampleReport().pathologyTumorPercentage())
                         .setStyle(fontStyle()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
                 shallowSeqText(),
+                cmp.verticalGap(SECTION_VERTICAL_GAP),
+                cmp.text("The tumor barcode of sample is " + sampleReport().barcodeTumor()),
+                cmp.verticalGap(SECTION_VERTICAL_GAP),
+                cmp.text("The reference barcode of sample is" + sampleReport().barcodeReference()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
                 sampleArrivalDateText(),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
@@ -182,6 +200,24 @@ public abstract class NonSequenceablePage {
     @NotNull
     private TextFieldBuilder<String> accreditationText() {
         return cmp.text("The results on this report are based on tests that are performed under ISO/ICE-17025:2005 accreditation.")
+                .setStyle(fontStyle());
+    }
+
+    @NotNull
+    private TextFieldBuilder<String> hospitalPatientText() {
+        return cmp.text("The hospital patient number is: " + sampleReport().patientNumber())
+                .setStyle(fontStyle());
+    }
+
+    @NotNull
+    private TextFieldBuilder<String> projectNameText() {
+        return cmp.text("The project name of sample is: " + sampleReport().projectName())
+                .setStyle(fontStyle());
+    }
+
+    @NotNull
+    private TextFieldBuilder<String> submissionIdText() {
+        return cmp.text("The submission of sample is: " + sampleReport().submission())
                 .setStyle(fontStyle());
     }
 }

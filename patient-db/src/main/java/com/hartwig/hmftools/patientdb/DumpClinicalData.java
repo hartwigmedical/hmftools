@@ -7,9 +7,11 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.base.Strings;
@@ -18,6 +20,7 @@ import com.hartwig.hmftools.common.ecrf.projections.ImmutablePortalClinicalData;
 import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocation;
 import com.hartwig.hmftools.common.ecrf.projections.PortalClinicalData;
 import com.hartwig.hmftools.patientdb.data.Patient;
+import com.hartwig.hmftools.patientdb.data.TumorTypeLims;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -31,13 +34,15 @@ final class DumpClinicalData {
     }
 
     static void writeClinicalDumps(@NotNull final String csvOutputDir, @NotNull final Collection<Patient> patients,
-            @NotNull final Optional<String> tumorLocationLink, @NotNull final Optional<String> portalDataLink) throws IOException {
-        writeCuratedTumorLocationsToCSV(csvOutputDir, tumorLocationLink, patients);
+            @NotNull final Optional<String> tumorLocationLink, @NotNull final Optional<String> portalDataLink,
+            @NotNull final Collection<List<TumorTypeLims>> corePatients, @NotNull final Set<String> sampleId) throws IOException {
+        writeCuratedTumorLocationsToCSV(csvOutputDir, tumorLocationLink, patients, corePatients, sampleId);
         writePortalClinicalData(csvOutputDir, portalDataLink, patients);
     }
 
     private static void writeCuratedTumorLocationsToCSV(@NotNull final String csvOutputDir, @NotNull final Optional<String> linkName,
-            @NotNull final Collection<Patient> patients) throws IOException {
+            @NotNull final Collection<Patient> patients, @NotNull final Collection<List<TumorTypeLims>> corePatients,
+            @NotNull final Set<String> sampleId) throws IOException {
         final String outputFile = fileLocation(csvOutputDir, "_curatedTumorLocations.csv");
         LOGGER.info("Writing curated tumor locations to csv in {}.", csvOutputDir);
         final List<PatientTumorLocation> tumorLocations = patients.stream()
@@ -45,7 +50,18 @@ final class DumpClinicalData {
                         Strings.nullToEmpty(patient.baselineData().curatedTumorLocation().primaryTumorLocation()),
                         Strings.nullToEmpty(patient.baselineData().curatedTumorLocation().subType())))
                 .collect(Collectors.toList());
-        PatientTumorLocation.writeRecords(outputFile, tumorLocations);
+
+        final List<PatientTumorLocation> tumorLocationsCore = corePatients.stream()
+                .map(corepatient -> ImmutablePatientTumorLocation.of(sampleId.toString().substring(1, sampleId.toString().length() - 1),
+                        Strings.nullToEmpty(corepatient.iterator().next().curatedTumorLocation().primaryTumorLocation()),
+                        Strings.nullToEmpty(corepatient.iterator().next().curatedTumorLocation().subType())))
+                .collect(Collectors.toList());
+
+        final List<PatientTumorLocation> tumorLocationsAll = new ArrayList<>();
+        tumorLocationsAll.addAll(tumorLocations);
+        tumorLocationsAll.addAll(tumorLocationsCore);
+
+        PatientTumorLocation.writeRecords(outputFile, tumorLocationsAll);
         linkName.ifPresent(link -> updateSymlink(csvOutputDir + File.separator + link, outputFile));
         LOGGER.info("Written {} records to {}.", tumorLocations.size(), outputFile);
     }

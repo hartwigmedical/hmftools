@@ -27,7 +27,7 @@ public class TumorLocationCurationLims {
     }
 
     @NotNull
-    public List<TumorTypeLims> read(@NotNull final Set<String> sampleIds) {
+    public List<TumorTypeLims> read(@NotNull final List<String> sampleIds) {
         final List<TumorTypeLims> limsTumorCurations = Lists.newArrayList();
 
         sampleIds.forEach(sampleId -> {

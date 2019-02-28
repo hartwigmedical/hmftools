@@ -29,11 +29,11 @@ public class TumorBAFFactoryTest {
     }
 
     private ModifiableTumorBAF createDefault(@NotNull final String chromosome, final long position) {
-        final ModifiableNormalBAF normal =
-                NormalBAFFactory.create(GenomeRegionFactory.create(chromosome, position, position)).setRef(NormalBAF.Base.A);
+        final ModifiableBaseDepth normal =
+                BaseDepthFactory.create(GenomeRegionFactory.create(chromosome, position, position)).setRef(BaseDepth.Base.A);
 
-        normal.baseMap().put(NormalBAF.Base.A, 3);
-        normal.baseMap().put(NormalBAF.Base.T, 3);
+        normal.baseMap().put(BaseDepth.Base.A, 3);
+        normal.baseMap().put(BaseDepth.Base.T, 3);
         return TumorBAFFactory.create(normal);
     }
 

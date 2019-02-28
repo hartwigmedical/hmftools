@@ -64,7 +64,7 @@ public class PDFWriter {
 
     @NotNull
     private String fileName(@NotNull SampleReport sampleReport) {
-        String filePrefix = sampleReport.isCoreSample() ? sampleReport.projectName() : sampleReport.sampleId();
+        String filePrefix = sampleReport.isCoreSample() ? sampleReport.sampleId() + "_" + sampleReport.patientNumber(): sampleReport.sampleId();
         return reportDirectory + File.separator + filePrefix + "_hmf_report.pdf";
     }
 

@@ -2,7 +2,6 @@ package com.hartwig.hmftools.amber;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -15,29 +14,25 @@ import java.util.stream.Collectors;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Multimap;
 import com.google.common.collect.SortedSetMultimap;
 import com.google.common.primitives.Doubles;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.hartwig.hmftools.common.amber.AmberBAF;
-import com.hartwig.hmftools.common.amber.AmberBAFFile;
-import com.hartwig.hmftools.common.amber.AmberVCF;
-import com.hartwig.hmftools.common.amber.ImmutableAmberBAF;
-import com.hartwig.hmftools.common.amber.ModifiableNormalBAF;
-import com.hartwig.hmftools.common.amber.NormalBAF;
-import com.hartwig.hmftools.common.amber.NormalBAFEvidence;
-import com.hartwig.hmftools.common.amber.NormalDepthFilter;
+import com.hartwig.hmftools.common.amber.BaseDepth;
+import com.hartwig.hmftools.common.amber.BaseDepthEvidence;
+import com.hartwig.hmftools.common.amber.BaseDepthFilter;
+import com.hartwig.hmftools.common.amber.ModifiableBaseDepth;
 import com.hartwig.hmftools.common.amber.NormalHetrozygousFilter;
+import com.hartwig.hmftools.common.amber.NormalHomozygousFilter;
 import com.hartwig.hmftools.common.amber.TumorBAF;
 import com.hartwig.hmftools.common.amber.TumorBAFEvidence;
-import com.hartwig.hmftools.common.amber.qc.AmberQC;
-import com.hartwig.hmftools.common.amber.qc.AmberQCFactory;
-import com.hartwig.hmftools.common.amber.qc.AmberQCFile;
+import com.hartwig.hmftools.common.amber.TumorContamination;
+import com.hartwig.hmftools.common.amber.TumorContaminationEvidence;
 import com.hartwig.hmftools.common.chromosome.Chromosome;
 import com.hartwig.hmftools.common.chromosome.HumanChromosome;
+import com.hartwig.hmftools.common.collect.Multimaps;
 import com.hartwig.hmftools.common.region.BEDFileLoader;
 import com.hartwig.hmftools.common.region.GenomeRegion;
-import com.hartwig.hmftools.common.version.VersionInfo;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -56,12 +51,14 @@ public class AmberApplication implements AutoCloseable {
 
     private final AmberConfig config;
     private final ExecutorService executorService;
+    private final Predicate<BaseDepth> homozygousFilter;
+    private final Predicate<BaseDepth> heterozygousFilter;
+    private final AmberPersistence persistence;
 
     public static void main(final String... args) throws IOException, InterruptedException, ExecutionException {
         final Options options = AmberConfig.createOptions();
         try (final AmberApplication application = new AmberApplication(options, args)) {
-            final List<TumorBAF> bafs = application.createBAFs();
-            application.persist(bafs);
+            application.run();
         } catch (ParseException e) {
             LOGGER.warn(e);
             final HelpFormatter formatter = new HelpFormatter();
@@ -74,61 +71,114 @@ public class AmberApplication implements AutoCloseable {
 
         final CommandLine cmd = createCommandLine(args, options);
         config = AmberConfig.createConfig(cmd);
+        homozygousFilter = new NormalHomozygousFilter();
+        heterozygousFilter = new NormalHetrozygousFilter(config.minHetAfPercent(), config.maxHetAfPercent());
+        persistence = new AmberPersistence(config);
 
         final File outputDir = new File(config.outputDirectory());
         if (!outputDir.exists() && !outputDir.mkdirs()) {
             throw new IOException("Unable to write directory " + config.outputDirectory());
         }
 
+        if (!new File(config.bedFilePath()).exists()) {
+            throw new IOException("Unable to locate bed file " + config.bedFilePath());
+        }
+
+        if (!new File(config.tumorBamPath()).exists()) {
+            throw new IOException("Unable to locate tumor bam file " + config.tumorBamPath());
+        }
+
+        if (!new File(config.referenceBamPath()).exists()) {
+            throw new IOException("Unable to locate reference bam file " + config.referenceBamPath());
+        }
+
         final ThreadFactory namedThreadFactory = new ThreadFactoryBuilder().setNameFormat("-%d").build();
         executorService = Executors.newFixedThreadPool(config.threadCount(), namedThreadFactory);
     }
 
-    @NotNull
-    private List<TumorBAF> createBAFs() throws InterruptedException, ExecutionException, IOException {
+    private void run() throws InterruptedException, ExecutionException, IOException {
         final SamReaderFactory readerFactory = SamReaderFactory.make();
-        final ListMultimap<Chromosome, NormalBAF> normalBAFMap = normal(readerFactory);
-        final Multimap<Chromosome, TumorBAF> tumorBAFMap = tumor(readerFactory, normalBAFMap);
 
-        final List<TumorBAF> result = Lists.newArrayList(tumorBAFMap.values());
-        Collections.sort(result);
+        final ListMultimap<Chromosome, BaseDepth> allNormal = normalDepth(readerFactory);
+        final ListMultimap<Chromosome, BaseDepth> homNormal = Multimaps.filterEntries(allNormal, homozygousFilter);
+        final ListMultimap<Chromosome, BaseDepth> hetNormal = Multimaps.filterEntries(allNormal, heterozygousFilter);
+        final ListMultimap<Chromosome, TumorBAF> tumorBAFMap = tumorBAF(readerFactory, hetNormal);
 
-        return result;
-    }
+        final List<TumorBAF> tumorBAFList =  tumorBAFMap.values().stream().sorted().collect(Collectors.toList());
+        final List<AmberBAF> amberBAFList = tumorBAFList
+                .stream()
+                .map(AmberBAF::create)
+                .filter(AmberApplication::isValid)
+                .collect(Collectors.toList());
 
-    private void persist(@NotNull final List<TumorBAF> tumorBAFList) throws IOException, InterruptedException {
-        LOGGER.info("Writing output to {}", config.outputDirectory());
-        final String outputVcf = config.outputDirectory() + File.separator + config.tumor() + ".amber.vcf.gz";
-        new AmberVCF(config.normal(), config.tumor()).write(outputVcf, tumorBAFList);
+        final ListMultimap<Chromosome, TumorContamination> tumorContamination = contamination(readerFactory, homNormal);
+        final List<TumorContamination> contaminationList = Lists.newArrayList(tumorContamination.values());
 
-        final List<AmberBAF> result =
-                tumorBAFList.stream().map(AmberApplication::create).filter(AmberApplication::isValid).collect(Collectors.toList());
-
-        final AmberQC qcStats = AmberQCFactory.create(result);
-        final String qcFilename = AmberQCFile.generateFilename(config.outputDirectory(), config.tumor());
-
-        final String filename = AmberBAFFile.generateAmberFilename(config.outputDirectory(), config.tumor());
-        AmberBAFFile.write(filename, result);
-        AmberQCFile.write(qcFilename, qcStats);
-
-        final VersionInfo versionInfo = new VersionInfo("amber.version");
-        versionInfo.write(config.outputDirectory());
-
-        LOGGER.info("Applying pcf segmentation");
-        new BAFSegmentation(config.outputDirectory()).applySegmentation(config.tumor());
+        persistence.persisQC(amberBAFList, contaminationList);
+        persistence.persistVersionInfo();
+        persistence.persistContamination(contaminationList);
+        persistence.persistTumorBAF(tumorBAFList);
+        persistence.persistAmberBAF(amberBAFList);
     }
 
     @NotNull
-    private ListMultimap<Chromosome, TumorBAF> tumor(@NotNull final SamReaderFactory readerFactory,
-            @NotNull final ListMultimap<Chromosome, NormalBAF> normalBafs) throws ExecutionException, InterruptedException {
-        final int partitionSize = Math.max(config.minPartition(), normalBafs.values().size() / config.threadCount());
+    private ListMultimap<Chromosome, BaseDepth> normalDepth(final SamReaderFactory readerFactory)
+            throws IOException, InterruptedException, ExecutionException {
+        LOGGER.info("Loading bed file {}", config.bedFilePath());
+        final SortedSetMultimap<String, GenomeRegion> bedRegionsSortedSet = BEDFileLoader.fromBedFile(config.bedFilePath());
+        final int partitionSize = Math.max(config.minPartition(), bedRegionsSortedSet.size() / config.threadCount());
 
-        LOGGER.info("Processing tumor bam {}", config.tumorBamPath());
+        LOGGER.info("Processing {} potential sites in reference bam {}", bedRegionsSortedSet.values().size(), config.referenceBamPath());
+        final AmberTaskCompletion completion = new AmberTaskCompletion();
+
+        final List<Future<BaseDepthEvidence>> futures = Lists.newArrayList();
+        for (final String contig : bedRegionsSortedSet.keySet()) {
+            for (final List<GenomeRegion> inner : Lists.partition(Lists.newArrayList(bedRegionsSortedSet.get(contig)), partitionSize)) {
+                final BaseDepthEvidence evidence = new BaseDepthEvidence(config.typicalReadDepth(),
+                        config.minMappingQuality(),
+                        config.minBaseQuality(),
+                        contig,
+                        config.referenceBamPath(),
+                        readerFactory,
+                        inner);
+                futures.add(executorService.submit(completion.task(evidence)));
+            }
+        }
+
+        final ListMultimap<Chromosome, ModifiableBaseDepth> normalEvidence = ArrayListMultimap.create();
+        getFuture(futures).forEach(x -> normalEvidence.putAll(HumanChromosome.fromString(x.contig()), x.evidence()));
+
+        final ListMultimap<Chromosome, BaseDepth> normalBafs = ArrayListMultimap.create();
+        final Predicate<BaseDepth> depthFilter = new BaseDepthFilter(config.minDepthPercent(), config.maxDepthPercent(), normalEvidence);
+        try (final RefEnricher refEnricher = new RefEnricher(config.refGenomePath())) {
+            for (final Chromosome chromosome : normalEvidence.keySet()) {
+                final List<BaseDepth> normalHetLocations = normalEvidence.get(chromosome)
+                        .stream()
+                        .filter(x -> x.indelCount() == 0)
+                        .filter(depthFilter)
+                        .map(refEnricher::enrich)
+                        .filter(x -> heterozygousFilter.test(x) || homozygousFilter.test(x))
+                        .collect(Collectors.toList());
+
+                normalBafs.putAll(chromosome, normalHetLocations);
+            }
+        }
+
+        return normalBafs;
+    }
+
+
+    @NotNull
+    private ListMultimap<Chromosome, TumorBAF> tumorBAF(@NotNull final SamReaderFactory readerFactory,
+            @NotNull final ListMultimap<Chromosome, BaseDepth> normalHetSites) throws ExecutionException, InterruptedException {
+        final int partitionSize = Math.max(config.minPartition(), normalHetSites.values().size() / config.threadCount());
+
+        LOGGER.info("Processing {} heterozygous sites in tumor bam {}", normalHetSites.values().size(), config.tumorBamPath());
         final AmberTaskCompletion completion = new AmberTaskCompletion();
 
         final List<Future<TumorBAFEvidence>> futures = Lists.newArrayList();
-        for (final Chromosome chromosome : normalBafs.keySet()) {
-            for (final List<NormalBAF> chromosomeBafPoints : Lists.partition(normalBafs.get(chromosome), partitionSize)) {
+        for (final Chromosome chromosome : normalHetSites.keySet()) {
+            for (final List<BaseDepth> chromosomeBafPoints : Lists.partition(normalHetSites.get(chromosome), partitionSize)) {
                 if (!chromosomeBafPoints.isEmpty()) {
                     final String contig = chromosomeBafPoints.get(0).chromosome();
                     final TumorBAFEvidence evidence = new TumorBAFEvidence(config.typicalReadDepth(),
@@ -150,50 +200,34 @@ public class AmberApplication implements AutoCloseable {
     }
 
     @NotNull
-    private ListMultimap<Chromosome, NormalBAF> normal(final SamReaderFactory readerFactory)
-            throws IOException, InterruptedException, ExecutionException {
-        LOGGER.info("Loading bed file {}", config.bedFilePath());
-        final SortedSetMultimap<String, GenomeRegion> bedRegionsSortedSet = BEDFileLoader.fromBedFile(config.bedFilePath());
-        final int partitionSize = Math.max(config.minPartition(), bedRegionsSortedSet.size() / config.threadCount());
+    private ListMultimap<Chromosome, TumorContamination> contamination(@NotNull final SamReaderFactory readerFactory,
+            @NotNull final ListMultimap<Chromosome, BaseDepth> normalHomSites) throws ExecutionException, InterruptedException {
+        final int partitionSize = Math.max(config.minPartition(), normalHomSites.values().size() / config.threadCount());
 
-        LOGGER.info("Processing reference bam {}", config.referenceBamPath(), partitionSize);
+        LOGGER.info("Processing {} homozygous sites in tumor bam {} for contamination", normalHomSites.size(), config.tumorBamPath());
         final AmberTaskCompletion completion = new AmberTaskCompletion();
 
-        final List<Future<NormalBAFEvidence>> futures = Lists.newArrayList();
-        for (final String contig : bedRegionsSortedSet.keySet()) {
-            for (final List<GenomeRegion> inner : Lists.partition(Lists.newArrayList(bedRegionsSortedSet.get(contig)), partitionSize)) {
-                final NormalBAFEvidence evidence = new NormalBAFEvidence(config.typicalReadDepth(),
-                        config.minMappingQuality(),
-                        config.minBaseQuality(),
-                        contig,
-                        config.referenceBamPath(),
-                        readerFactory,
-                        inner);
-                futures.add(executorService.submit(completion.task(evidence)));
+        final List<Future<TumorContaminationEvidence>> futures = Lists.newArrayList();
+        for (final Chromosome chromosome : normalHomSites.keySet()) {
+            for (final List<BaseDepth> chromosomeBafPoints : Lists.partition(normalHomSites.get(chromosome), partitionSize)) {
+                if (!chromosomeBafPoints.isEmpty()) {
+                    final String contig = chromosomeBafPoints.get(0).chromosome();
+                    final TumorContaminationEvidence evidence = new TumorContaminationEvidence(config.typicalReadDepth(),
+                            config.minMappingQuality(),
+                            config.minBaseQuality(),
+                            contig,
+                            config.tumorBamPath(),
+                            readerFactory,
+                            chromosomeBafPoints);
+                    futures.add(executorService.submit(completion.task(evidence)));
+                }
             }
         }
 
-        final ListMultimap<Chromosome, ModifiableNormalBAF> normalEvidence = ArrayListMultimap.create();
-        getFuture(futures).forEach(x -> normalEvidence.putAll(HumanChromosome.fromString(x.contig()), x.evidence()));
+        final ListMultimap<Chromosome, TumorContamination> result = ArrayListMultimap.create();
+        getFuture(futures).forEach(x -> result.putAll(HumanChromosome.fromString(x.contig()), x.evidence()));
 
-        final ListMultimap<Chromosome, NormalBAF> normalBafs = ArrayListMultimap.create();
-        final Predicate<NormalBAF> depthFilter = new NormalDepthFilter(config.minDepthPercent(), config.maxDepthPercent(), normalEvidence);
-        final RefEnricher refEnricher = new RefEnricher(config.refGenomePath());
-        final Predicate<NormalBAF> hetFilter = new NormalHetrozygousFilter(config.minHetAfPercent(), config.maxHetAfPercent());
-        for (final Chromosome chromosome : normalEvidence.keySet()) {
-            final List<NormalBAF> normalHetLocations = normalEvidence.get(chromosome)
-                    .stream()
-                    .filter(x -> x.indelCount() == 0)
-                    .filter(depthFilter)
-                    .map(refEnricher::enrich)
-                    .filter(hetFilter)
-                    .collect(Collectors.toList());
-
-            normalBafs.putAll(chromosome, normalHetLocations);
-        }
-
-        LOGGER.info("Identified {} heterozygous sites", normalBafs.values().size());
-        return normalBafs;
+        return result;
     }
 
     @NotNull
@@ -202,20 +236,6 @@ public class AmberApplication implements AutoCloseable {
         return parser.parse(options, args);
     }
 
-    @NotNull
-    private static AmberBAF create(@NotNull final TumorBAF tumor) {
-        int tumorAltCount = tumor.tumorAltSupport();
-        double tumorBaf = tumorAltCount / (double) (tumorAltCount + tumor.tumorRefSupport());
-        int normalAltCount = tumor.normalAltSupport();
-        double normalBaf = normalAltCount / (double) (normalAltCount + tumor.normalRefSupport());
-        return ImmutableAmberBAF.builder()
-                .from(tumor)
-                .normalDepth(tumor.normalReadDepth())
-                .tumorDepth(tumor.tumorReadDepth())
-                .normalBAF(normalBaf)
-                .tumorBAF(tumorBaf)
-                .build();
-    }
 
     private static boolean isValid(@NotNull final AmberBAF baf) {
         return Doubles.isFinite(baf.tumorBAF()) & Doubles.isFinite(baf.normalBAF());

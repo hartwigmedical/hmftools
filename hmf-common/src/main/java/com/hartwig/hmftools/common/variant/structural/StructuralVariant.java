@@ -62,6 +62,18 @@ public interface StructuralVariant {
     @Nullable
     String insertSequenceAlignments();
 
+    @Nullable
+    String insertSequenceRepeatClass();
+
+    @Nullable
+    String insertSequenceRepeatType();
+
+    @Nullable
+    Byte insertSequenceRepeatOrientation();
+
+    @Nullable
+    Double insertSequenceRepeatCoverage();
+
     @NotNull
     StructuralVariantType type();
 

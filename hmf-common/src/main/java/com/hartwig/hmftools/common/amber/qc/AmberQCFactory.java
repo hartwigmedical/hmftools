@@ -10,7 +10,7 @@ import org.jetbrains.annotations.NotNull;
 public class AmberQCFactory {
 
     @NotNull
-    public static AmberQC create(@NotNull final List<AmberBAF> baf) {
+    public static AmberQC create(double contamination, @NotNull final List<AmberBAF> baf) {
 
         final double meanBaf = baf.stream()
                 .filter(x -> HumanChromosome.contains(x.chromosome()))
@@ -20,6 +20,6 @@ public class AmberQCFactory {
                 .average()
                 .orElse(0);
 
-        return ImmutableAmberQC.builder().meanBAF(meanBaf).build();
+        return ImmutableAmberQC.builder().meanBAF(meanBaf).contamination(contamination).build();
     }
 }
