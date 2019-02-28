@@ -110,7 +110,7 @@ public final class LoadClinicalData {
         return lims;
     }
 
-    private static Map<String, List<TumorTypeLims>> loadAndInterpretPatientsFromLims(@NotNull Map<String, List<SampleData>> samplesPerPatient,
+    private static Map<String, TumorTypeLims> loadAndInterpretPatientsFromLims(@NotNull Map<String, List<SampleData>> samplesPerPatient,
             @NotNull TumorLocationCurator tumorLocationCurator, @NotNull Lims lims) {
         List<String> corePatients = Lists.newArrayList();
         List<String> widePatients = Lists.newArrayList();
@@ -129,18 +129,18 @@ public final class LoadClinicalData {
             }
         }
         LOGGER.info(String.format("Interpreting and curating data for %s CORE patients.", corePatients.size()));
-        Map<String, List<TumorTypeLims>> corePatientsData = readLimsPatients(tumorLocationCurationLims, corePatients, samplesPerPatient);
+        Map<String, TumorTypeLims> corePatientsData = readLimsPatients(tumorLocationCurationLims, corePatients, samplesPerPatient);
         LOGGER.info(String.format("Finished curation of %s CORE patients.", corePatientsData.size()));
 
         LOGGER.info(String.format("Interpreting and curating data for %s WIDE patients.", widePatients.size()));
-        Map<String, List<TumorTypeLims>> WIDEPatientsData = readLimsPatients(tumorLocationCurationLims, widePatients, samplesPerPatient);
+        Map<String, TumorTypeLims> WIDEPatientsData = readLimsPatients(tumorLocationCurationLims, widePatients, samplesPerPatient);
         LOGGER.info(String.format("Finished curation of %s WIDE patients.", WIDEPatientsData.size()));
 
         LOGGER.info(String.format("Interpreting and curating data for %s COLO patients.", coloPatients.size()));
-        Map<String, List<TumorTypeLims>> COLOPatientsData = readLimsPatients(tumorLocationCurationLims, coloPatients, samplesPerPatient);
+        Map<String, TumorTypeLims> COLOPatientsData = readLimsPatients(tumorLocationCurationLims, coloPatients, samplesPerPatient);
         LOGGER.info(String.format("Finished curation of %s COLO patients.", COLOPatientsData.size()));
 
-        Map<String, List<TumorTypeLims>> mergedPatients = Maps.newHashMap();
+        Map<String, TumorTypeLims> mergedPatients = Maps.newHashMap();
         mergedPatients.putAll(corePatientsData);
         mergedPatients.putAll(WIDEPatientsData);
         mergedPatients.putAll(COLOPatientsData);
@@ -149,9 +149,9 @@ public final class LoadClinicalData {
     }
 
     @NotNull
-    private static Map<String, List<TumorTypeLims>> readLimsPatients(@NotNull final TumorLocationCurationLims tumorLocationCurationLims,
+    private static Map<String, TumorTypeLims> readLimsPatients(@NotNull final TumorLocationCurationLims tumorLocationCurationLims,
             @NotNull List<String> patientIds, @NotNull final Map<String, List<SampleData>> samplesPerPatient) {
-        final Map<String, List<TumorTypeLims>> patientMap = Maps.newHashMap();
+        final Map<String, TumorTypeLims> patientMap = Maps.newHashMap();
         for (int i = 0; i < patientIds.size(); i++) {
             if (!patientIds.get(i).contains("COLO")){
                 List<SampleData> samples = samplesPerPatient.get(patientIds.get(i));
@@ -161,13 +161,25 @@ public final class LoadClinicalData {
                 samplesString = samplesString.replace("{", "");
                 samplesString = samplesString.replace("}", "");
                 samplesString = samplesString.replace("]", "");
-                patientMap.put(samplesString, tumorLocationCurationLims.read(Lists.newArrayList(samplesString)));
+                patientMap.put(samplesString, tumorLocationCurationLims.read(samplesString));
             } else if (patientIds.get(i).contains("COLO")) {
                 String samplesString = patientIds.toString();
                 samplesString = samplesString.replace("[", "");
                 samplesString = samplesString.replace("]", "");
-                patientMap.put(samplesString, tumorLocationCurationLims.readFixedValue(Lists.newArrayList(samplesString)));
+                patientMap.put(samplesString, tumorLocationCurationLims.readFixedValue());
             }
+        }
+        return patientMap;
+    }
+
+    @NotNull
+    private static Map<String, Patient> readEcrfPatients(@NotNull final PatientReader reader, @NotNull final Iterable<EcrfPatient> patients,
+            @NotNull final Map<String, List<SampleData>> samplesPerPatient) {
+        final Map<String, Patient> patientMap = Maps.newHashMap();
+        for (final EcrfPatient ecrfPatient : patients) {
+            List<SampleData> samples = samplesPerPatient.get(ecrfPatient.patientId());
+            Patient patient = reader.read(ecrfPatient, samples != null ? samples : Lists.newArrayList());
+            patientMap.put(patient.patientIdentifier(), patient);
         }
         return patientMap;
     }
@@ -182,7 +194,7 @@ public final class LoadClinicalData {
         Map<String, Patient> patients =
                 loadAndInterpretAllPatients(samplesPerPatient, ecrfModels, tumorLocationCurator, treatmentCurator, biopsySiteCurator);
 
-        Map<String, List<TumorTypeLims>> patientsMergedLims = loadAndInterpretPatientsFromLims(samplesPerPatient, tumorLocationCurator, lims);
+        Map<String, TumorTypeLims> patientsMergedLims = loadAndInterpretPatientsFromLims(samplesPerPatient, tumorLocationCurator, lims);
 
 
         DumpClinicalData.writeClinicalDumps(csvOutputDir,
@@ -250,17 +262,6 @@ public final class LoadClinicalData {
         return mergedPatients;
     }
 
-    @NotNull
-    private static Map<String, Patient> readEcrfPatients(@NotNull final PatientReader reader, @NotNull final Iterable<EcrfPatient> patients,
-            @NotNull final Map<String, List<SampleData>> samplesPerPatient) {
-        final Map<String, Patient> patientMap = Maps.newHashMap();
-        for (final EcrfPatient ecrfPatient : patients) {
-            List<SampleData> samples = samplesPerPatient.get(ecrfPatient.patientId());
-            Patient patient = reader.read(ecrfPatient, samples != null ? samples : Lists.newArrayList());
-            patientMap.put(patient.patientIdentifier(), patient);
-        }
-        return patientMap;
-    }
 
     private static void writeRawEcrf(@NotNull DatabaseAccess dbWriter, @NotNull Set<String> sequencedPatients,
             @NotNull EcrfModels ecrfModels) {

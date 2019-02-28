@@ -1,8 +1,5 @@
 package com.hartwig.hmftools.patientdb.readers;
 
-import java.util.List;
-
-import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.patientdb.curators.TumorLocationCurator;
 import com.hartwig.hmftools.patientdb.data.ImmutableTumorTypeLims;
@@ -23,23 +20,19 @@ public class TumorLocationCurationLims {
     }
 
     @NotNull
-    public List<TumorTypeLims> read(@NotNull final List<String> sampleIds) {
-        final List<TumorTypeLims> limsTumorCurations = Lists.newArrayList();
+    public TumorTypeLims read(@NotNull final String sampleId) {
+        final TumorTypeLims limsTumorCurations;
 
-        sampleIds.forEach(sampleId -> {
-            limsTumorCurations.add(ImmutableTumorTypeLims.of(tumorLocationCurator.search(lims.primaryTumor(sampleId))));
+        limsTumorCurations = ImmutableTumorTypeLims.of(tumorLocationCurator.search(lims.primaryTumor(sampleId)));
 
-        });
         return limsTumorCurations;
     }
 
     @NotNull
-    public List<TumorTypeLims> readFixedValue(@NotNull final List<String> sampleIds) {
-        final List<TumorTypeLims> limsTumorCurations = Lists.newArrayList();
+    public TumorTypeLims readFixedValue() {
+        final TumorTypeLims limsTumorCurations;
 
-        sampleIds.forEach(sampleId -> {
-            limsTumorCurations.add(ImmutableTumorTypeLims.of(tumorLocationCurator.search("Melanoma")));
-        });
+        limsTumorCurations = ImmutableTumorTypeLims.of(tumorLocationCurator.search("Melanoma"));
         return limsTumorCurations;
     }
 }
