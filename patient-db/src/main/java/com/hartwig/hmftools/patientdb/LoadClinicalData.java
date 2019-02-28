@@ -189,8 +189,7 @@ public final class LoadClinicalData {
                 patients.values(),
                 tumorLocationSymlink,
                 portalDataLink,
-                patientsMergedLims.values(),
-                patientsMergedLims.keySet());
+                patientsMergedLims);
 
         LOGGER.info("Clearing interpreted clinical tables in database.");
         dbAccess.clearClinicalTables();
