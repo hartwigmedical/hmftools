@@ -15,8 +15,6 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.base.Strings;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.ecrf.projections.ImmutablePatientTumorLocation;
 import com.hartwig.hmftools.common.ecrf.projections.ImmutablePortalClinicalData;
 import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocation;
@@ -37,20 +35,9 @@ final class DumpClinicalData {
 
     static void writeClinicalDumps(@NotNull final String csvOutputDir, @NotNull final Collection<Patient> patients,
             @NotNull final Optional<String> tumorLocationLink, @NotNull final Optional<String> portalDataLink,
-            @NotNull final Collection<List<TumorTypeLims>> corePatients, @NotNull final Set<String> sampleIdcore,
-            @NotNull final Collection<List<TumorTypeLims>> widePatients, @NotNull final Set<String> sampleIdwide,
-            @NotNull final Collection<List<TumorTypeLims>> coloPatients, @NotNull final Set<String> sampleIdcolo) throws IOException {
-        Collection<List<TumorTypeLims>> tumorTypeCurationsFromLims = Lists.newArrayList();
-        tumorTypeCurationsFromLims.addAll(corePatients);
-        tumorTypeCurationsFromLims.addAll(widePatients);
-        tumorTypeCurationsFromLims.addAll(coloPatients);
+            @NotNull final Collection<List<TumorTypeLims>> limsMergedPatients, @NotNull final Set<String> sampleIdmergedLims) throws IOException {
 
-        Set<String> sampleIdsFromLims = Sets.newHashSet();
-        sampleIdsFromLims.addAll(sampleIdcore);
-        sampleIdsFromLims.addAll(sampleIdwide);
-        sampleIdsFromLims.addAll(sampleIdcolo);
-
-        writeCuratedTumorLocationsToCSV(csvOutputDir, tumorLocationLink, patients, tumorTypeCurationsFromLims, sampleIdsFromLims);
+        writeCuratedTumorLocationsToCSV(csvOutputDir, tumorLocationLink, patients, limsMergedPatients, sampleIdmergedLims);
         writePortalClinicalData(csvOutputDir, portalDataLink, patients);
     }
 
@@ -65,15 +52,15 @@ final class DumpClinicalData {
                         Strings.nullToEmpty(patient.baselineData().curatedTumorLocation().subType())))
                 .collect(Collectors.toList());
 
-        final List<PatientTumorLocation> tumorLocationsCore = patientsTumorType.stream()
-                .map(corepatient -> ImmutablePatientTumorLocation.of(sampleId.toString().substring(1, sampleId.toString().length() - 1),
-                        Strings.nullToEmpty(corepatient.iterator().next().curatedTumorLocation().primaryTumorLocation()),
-                        Strings.nullToEmpty(corepatient.iterator().next().curatedTumorLocation().subType())))
+        final List<PatientTumorLocation> tumorLocationsFromLims = patientsTumorType.stream()
+                .map(patientLims -> ImmutablePatientTumorLocation.of(sampleId.toString().substring(1, sampleId.toString().length() - 1),
+                        Strings.nullToEmpty(patientLims.iterator().next().curatedTumorLocation().primaryTumorLocation()),
+                        Strings.nullToEmpty(patientLims.iterator().next().curatedTumorLocation().subType())))
                 .collect(Collectors.toList());
 
         final List<PatientTumorLocation> tumorLocationsAll = new ArrayList<>();
         tumorLocationsAll.addAll(tumorLocations);
-        tumorLocationsAll.addAll(tumorLocationsCore);
+        tumorLocationsAll.addAll(tumorLocationsFromLims);
 
         PatientTumorLocation.writeRecords(outputFile, tumorLocationsAll);
         linkName.ifPresent(link -> updateSymlink(csvOutputDir + File.separator + link, outputFile));
