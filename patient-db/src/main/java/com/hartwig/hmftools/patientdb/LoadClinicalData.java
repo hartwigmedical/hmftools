@@ -157,6 +157,7 @@ public final class LoadClinicalData {
                 coloPatients.add(patient);
             }
         }
+        LOGGER.info(coloPatients);
         LOGGER.info(String.format("Interpreting and curating data for %s COLO patients.", coloPatients.size()));
 
         TumorLocationCurationLims tumorLocationCurationLims = new TumorLocationCurationLims(lims, tumorLocationCurator);
@@ -171,14 +172,13 @@ public final class LoadClinicalData {
     private static Map<String, List<TumorTypeLims>> readFixedTumorLocation(@NotNull final TumorLocationCurationLims tumorLocationCurationLims,
             @NotNull List<String> patientIds, @NotNull final Map<String, List<SampleData>> samplesPerPatient) {
         final Map<String, List<TumorTypeLims>> patientMap = Maps.newHashMap();
+        LOGGER.info(patientIds);
         for (int i = 0; i < patientIds.size(); i++) {
-            List<SampleData> samples = samplesPerPatient.get(patientIds.get(i));
-            LOGGER.info(samples);
             //create sampleID
-            String samplesString = samples.toString().split(" ")[1];
-            samplesString = samplesString.replace("{", "");
-            samplesString = samplesString.replace("}", "");
+            String samplesString = patientIds.toString();
+            samplesString = samplesString.replace("[", "");
             samplesString = samplesString.replace("]", "");
+            LOGGER.info(samplesString);
             patientMap.put(samplesString, tumorLocationCurationLims.readFixedValue(Lists.newArrayList(samplesString)));
         }
         return patientMap;
@@ -213,8 +213,7 @@ public final class LoadClinicalData {
 
         Map<String, List<TumorTypeLims>> patientsCore = loadAndInterpretCorePatients(samplesPerPatient, tumorLocationCurator, lims);
         Map<String, List<TumorTypeLims>> patientsWIDE = loadAndInterpretWIDEPatients(samplesPerPatient, tumorLocationCurator, lims);
-       // Map<String, List<TumorTypeLims>> patientsCOLO = loadAndInterpretCOLOPatient(samplesPerPatient, tumorLocationCurator, lims);
-        Map<String, List<TumorTypeLims>> patientsCOLO = Maps.newHashMap();
+        Map<String, List<TumorTypeLims>> patientsCOLO = loadAndInterpretCOLOPatient(samplesPerPatient, tumorLocationCurator, lims);
 
         DumpClinicalData.writeClinicalDumps(csvOutputDir,
                 patients.values(),
