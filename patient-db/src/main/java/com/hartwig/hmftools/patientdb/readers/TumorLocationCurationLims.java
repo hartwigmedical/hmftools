@@ -23,16 +23,16 @@ public class TumorLocationCurationLims {
     public TumorTypeLims read(@NotNull final String sampleId) {
         final TumorTypeLims limsTumorCurations;
 
-        limsTumorCurations = ImmutableTumorTypeLims.of(tumorLocationCurator.search(lims.primaryTumor(sampleId)));
+        limsTumorCurations = ImmutableTumorTypeLims.of(sampleId, tumorLocationCurator.search(lims.primaryTumor(sampleId)));
 
         return limsTumorCurations;
     }
 
     @NotNull
-    public TumorTypeLims readFixedValue() {
+    public TumorTypeLims readFixedValue(@NotNull final String sampleId) {
         final TumorTypeLims limsTumorCurations;
 
-        limsTumorCurations = ImmutableTumorTypeLims.of(tumorLocationCurator.search("Melanoma"));
+        limsTumorCurations = ImmutableTumorTypeLims.of(sampleId, tumorLocationCurator.search("Melanoma"));
         return limsTumorCurations;
     }
 }

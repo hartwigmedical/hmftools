@@ -12,7 +12,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.base.Strings;
@@ -52,12 +51,9 @@ final class DumpClinicalData {
                         Strings.nullToEmpty(patient.baselineData().curatedTumorLocation().subType())))
                 .collect(Collectors.toList());
 
-        String patientId =
-                patientsMergedLims.values().toString().substring(1, patientsMergedLims.values().toString().length() - 1).substring(1, 12);
-
         final List<PatientTumorLocation> tumorLocationsFromLims = patientsMergedLims.values()
                 .stream()
-                .map(patientLims -> ImmutablePatientTumorLocation.of(patientId,
+                .map(patientLims -> ImmutablePatientTumorLocation.of(patientLims.patientId(),
                         Strings.nullToEmpty(patientLims.curatedTumorLocation().primaryTumorLocation()),
                         Strings.nullToEmpty(patientLims.curatedTumorLocation().subType())))
                 .collect(Collectors.toList());
