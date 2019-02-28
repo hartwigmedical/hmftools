@@ -2,6 +2,7 @@ package com.hartwig.hmftools.svanalysis;
 
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantFactory.PON_FILTER_PON;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.MIN_SAMPLE_PURITY;
+import static com.hartwig.hmftools.svanalysis.analysis.CNAnalyser.CN_ANALYSIS_ONLY;
 import static com.hartwig.hmftools.svanalysis.analysis.CNAnalyser.SV_PLOIDY_CALC_FILE;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.NONE_SEGMENT_INFERRED;
 
@@ -50,7 +51,6 @@ public class SvAnalyser {
     private static final String DRIVERS_CHECK = "check_drivers";
     private static final String RUN_FUSIONS = "run_fusions";
     private static final String SKIP_FUSION_OUTPUT = "skip_fusion_output";
-    private static final String COPY_NUMBER_ANALYSIS = "run_cn_analysis";
     private static final String INCLUDE_NONE_SEGMENTS = "incl_none_segments";
     private static final String GENE_TRANSCRIPTS_DIR = "gene_transcripts_dir";
     private static final String STATS_ROUTINES = "stats_routines";
@@ -79,35 +79,36 @@ public class SvAnalyser {
 
         final DatabaseAccess dbAccess = cmd.hasOption(DB_URL) ? databaseAccess(cmd) : null;
 
-        String sampleId = cmd.getOptionValue(SAMPLE);
+        String configSampleStr = cmd.getOptionValue(SAMPLE);
 
-        if(sampleId == null || sampleId.equals("*"))
-            sampleId = "";
+        if(configSampleStr == null || configSampleStr.equals("*"))
+            configSampleStr = "";
 
         List<String> samplesList = Lists.newArrayList();
 
-        if (sampleId.isEmpty())
+        if (configSampleStr.isEmpty())
         {
             samplesList = getStructuralVariantSamplesList(dbAccess);
         }
-        else if (sampleId.contains(","))
+        else if (configSampleStr.contains(","))
         {
-            String[] tumorList = sampleId.split(",");
+            String[] tumorList = configSampleStr.split(",");
             samplesList = Arrays.stream(tumorList).collect(Collectors.toList());
         }
         else
         {
-            samplesList.add(sampleId);
+            samplesList.add(configSampleStr);
         }
 
-        SvaConfig svaConfig = new SvaConfig(cmd, sampleId);
+        SvaConfig svaConfig = new SvaConfig(cmd, configSampleStr);
 
-        if(cmd.hasOption(COPY_NUMBER_ANALYSIS))
+        CNAnalyser cnAnalyser = new CNAnalyser(svaConfig.OutputCsvPath, dbAccess);
+        cnAnalyser.loadConfig(cmd, samplesList);
+
+        if(cmd.hasOption(CN_ANALYSIS_ONLY))
         {
-            CNAnalyser cnAnalyser = new CNAnalyser(svaConfig.OutputCsvPath, dbAccess);
-
-            cnAnalyser.loadConfig(cmd, samplesList);
-            cnAnalyser.run();
+            // run CN analysis, which will write a bunch of cohort-wide sample data, then exit
+            cnAnalyser.runSamplesList();
             cnAnalyser.close();
 
             LOGGER.info("CN analysis complete");
@@ -153,56 +154,41 @@ public class SvAnalyser {
                 driverGeneAnnotator.setVisWriter(sampleAnalyser.getVisWriter());
             }
 
-            CNAnalyser cnAnalyser = new CNAnalyser(svaConfig.OutputCsvPath, dbAccess);
             boolean createNoneSvsFromCNData = cmd.hasOption(INCLUDE_NONE_SEGMENTS);
 
-            if(!svaConfig.LOHDataFile.isEmpty())
-            {
-                cnAnalyser.loadLOHFromCSV(svaConfig.LOHDataFile, "");
-                sampleAnalyser.setSampleLohData(cnAnalyser.getSampleLohData());
+            sampleAnalyser.setChrCopyNumberMap(cnAnalyser.getChrCopyNumberMap());
+            sampleAnalyser.setSampleLohData(cnAnalyser.getSampleLohData());
+            sampleAnalyser.setSamplePloidyCalcData(cnAnalyser.getSampleSvPloidyCalcMap());
 
-                if(driverGeneAnnotator != null)
-                    driverGeneAnnotator.setLohData(cnAnalyser.getSampleLohData());
-            }
-
-            if(cmd.hasOption(SV_PLOIDY_CALC_FILE))
+            if(driverGeneAnnotator != null)
             {
-                final String specificSampleId = samplesList.size() == 1 ? samplesList.get(0) : "";
-                cnAnalyser.loadPloidyCalcData(cmd.getOptionValue(SV_PLOIDY_CALC_FILE), specificSampleId);
-                sampleAnalyser.setSamplePloidyCalcData(cnAnalyser.getSampleSvPloidyCalcMap());
+                driverGeneAnnotator.setLohData(cnAnalyser.getSampleLohData());
+                driverGeneAnnotator.setChrCopyNumberMap(cnAnalyser.getChrCopyNumberMap());
             }
 
             int count = 0;
-            for (final String sample : samplesList)
+            for (final String sampleId : samplesList)
             {
                 ++count;
-                List<SvVarData> svVarData = queryStructuralVariantData(dbAccess, sample, !createNoneSvsFromCNData);
+                List<StructuralVariantData> svRecords = dbAccess.readStructuralVariantData(sampleId);
+
+                List<SvVarData> svVarData = createSvData(svRecords, !createNoneSvsFromCNData);
 
                 if(svVarData.isEmpty())
                 {
-                    LOGGER.debug("sample({}) has no SVs, totalProcessed({})", sample, count);
+                    LOGGER.debug("sample({}) has no SVs, totalProcessed({})", sampleId, count);
                     continue;
                 }
 
-                LOGGER.info("sample({}) processing {} SVs, totalProcessed({})", sample, svVarData.size(), count);
+                LOGGER.info("sample({}) processing {} SVs, totalProcessed({})", sampleId, svVarData.size(), count);
 
-                List<SegmentSupport> cnSegmentTypes = Lists.newArrayList();
-
-                cnSegmentTypes.add(SegmentSupport.CENTROMERE);
-                cnSegmentTypes.add(SegmentSupport.TELOMERE);
-
-                if (createNoneSvsFromCNData)
-                    cnSegmentTypes.add(SegmentSupport.NONE);
-
-                final List<PurpleCopyNumber> cnRecords = dbAccess.readCopyNumberSegmentsByType(sample, cnSegmentTypes);
-
-                final Map<String, double[]> chrCopyNumberMap = cnAnalyser.createChrCopyNumberMap(cnRecords);
+                cnAnalyser.loadSampleData(sampleId, svRecords, createNoneSvsFromCNData);
 
                 if (createNoneSvsFromCNData)
                 {
-                    List<StructuralVariantData> noneSegmentSVs = cnAnalyser.createNoneSegments(cnRecords);
+                    List<StructuralVariantData> noneSegmentSVs = cnAnalyser.createNoneSegments();
 
-                    LOGGER.debug("sample({}) including {} none copy number segments", sample, noneSegmentSVs.size());
+                    LOGGER.debug("sample({}) including {} none copy number segments", sampleId, noneSegmentSVs.size());
 
                     for (final StructuralVariantData svData : noneSegmentSVs)
                     {
@@ -210,26 +196,23 @@ public class SvAnalyser {
                     }
                 }
 
-                sampleAnalyser.loadFromDatabase(sample, svVarData);
-
-                sampleAnalyser.setChrCopyNumberMap(chrCopyNumberMap);
+                sampleAnalyser.loadFromDatabase(sampleId, svVarData);
 
                 sampleAnalyser.analyse();
 
                 if(runFusions || checkDrivers)
                 {
-                    fusionAnalyser.setSvGeneData(sample, svVarData, runFusions, sampleAnalyser.getChrBreakendMap());
+                    fusionAnalyser.setSvGeneData(sampleId, svVarData, runFusions, sampleAnalyser.getChrBreakendMap());
                 }
 
                 if(checkDrivers)
                 {
-                    final PurityContext purityContext = dbAccess.readPurityContext(sample);
+                    final PurityContext purityContext = dbAccess.readPurityContext(sampleId);
 
                     if(purityContext != null)
                         driverGeneAnnotator.setSamplePloidy(purityContext.bestFit().ploidy());
 
-                    driverGeneAnnotator.setChrCopyNumberMap(chrCopyNumberMap);
-                    driverGeneAnnotator.annotateSVs(sample, sampleAnalyser.getClusters(), sampleAnalyser.getChrBreakendMap());
+                    driverGeneAnnotator.annotateSVs(sampleId, sampleAnalyser.getClusters(), sampleAnalyser.getChrBreakendMap());
                 }
 
                 if(runFusions)
@@ -260,12 +243,9 @@ public class SvAnalyser {
         LOGGER.info("run complete");
     }
 
-    private static List<SvVarData> queryStructuralVariantData(final DatabaseAccess dbAccess,
-            final String sampleId, final boolean includeNoneSegments)
+    private static List<SvVarData> createSvData(List<StructuralVariantData> svRecords, boolean includeNoneSegments)
     {
         List<SvVarData> svVarDataItems = Lists.newArrayList();
-
-        List<StructuralVariantData> svRecords = dbAccess.readStructuralVariantData(sampleId);
 
         for (final StructuralVariantData svRecord : svRecords) {
 
@@ -280,6 +260,7 @@ public class SvAnalyser {
 
         return svVarDataItems;
     }
+
 
     private static List<String> getStructuralVariantSamplesList(@NotNull DatabaseAccess dbAccess)
     {
@@ -305,7 +286,6 @@ public class SvAnalyser {
         options.addOption(DRIVERS_CHECK, false, "Check SVs against drivers catalog");
         options.addOption(RUN_FUSIONS, false, "Run fusion detection");
         options.addOption(SKIP_FUSION_OUTPUT, false, "Skip writing fusion data");
-        options.addOption(COPY_NUMBER_ANALYSIS, false, "Run copy number analysis");
         options.addOption(INCLUDE_NONE_SEGMENTS, false, "Include copy number NONE segments in SV analysis");
         options.addOption(GENE_TRANSCRIPTS_DIR, true, "Optional: file with sample gene transcript data");
         options.addOption(STATS_ROUTINES, false, "Optional: calc stats routines");

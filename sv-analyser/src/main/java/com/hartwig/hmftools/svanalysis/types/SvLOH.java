@@ -29,7 +29,9 @@ public class SvLOH
     public static String LOH_NO_SV = "0";
 
     public SvLOH(
-            final String sampleId, final String chr, int cnIdStart,
+            final String sampleId,
+            final String chr,
+            int cnIdStart,
             final int cnIdEnd,
             final long posStart,
             final long posEnd,
