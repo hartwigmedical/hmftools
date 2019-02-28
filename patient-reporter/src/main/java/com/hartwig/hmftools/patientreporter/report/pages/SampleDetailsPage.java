@@ -74,12 +74,12 @@ public abstract class SampleDetailsPage {
 
         final List<String> lines = Lists.newArrayList("The samples have been sequenced at " + Commons.HARTWIG_ADDRESS,
                 "The samples have been analyzed by Next Generation Sequencing",
-                "This experiment is performed on the tumor sample which arrived on " + formattedDate(sampleReport().tumorArrivalDate()),
                 "The sample name of this sample is: " + sampleReport().sampleId(),
-                "The pathology tumor percentage for this sample is " + sampleReport().pathologyTumorPercentage(),
                 "The tumor barcode of sample is: " + sampleReport().barcodeTumor(),
-                "This experiment is performed on the blood sample which arrived on " + formattedDate(sampleReport().bloodArrivalDate()),
                 "The reference barcode of sample is: " + sampleReport().barcodeReference(),
+                "The pathology tumor percentage for this sample is " + sampleReport().pathologyTumorPercentage(),
+                "This experiment is performed on the tumor sample which arrived on " + formattedDate(sampleReport().tumorArrivalDate()),
+                "This experiment is performed on the blood sample which arrived on " + formattedDate(sampleReport().bloodArrivalDate()),
                 "This experiment is performed according to lab procedures: " + sampleReport().labProcedures(),
                 "This report is generated and verified by: " + user(),
                 "This report is addressed at: " + recipient);
