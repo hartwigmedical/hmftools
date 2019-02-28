@@ -20,6 +20,8 @@ import com.hartwig.hmftools.common.variant.structural.StructuralVariantData;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 import com.hartwig.hmftools.svanalysis.analysis.CNAnalyser;
 import com.hartwig.hmftools.svanalysis.analysis.FusionDisruptionAnalyser;
+import com.hartwig.hmftools.svanalysis.simulation.SvSimShattering;
+import com.hartwig.hmftools.svanalysis.simulation.SvSimulator;
 import com.hartwig.hmftools.svanalysis.stats.StatisticRoutines;
 import com.hartwig.hmftools.svanalysis.types.SvaConfig;
 import com.hartwig.hmftools.svanalysis.analysis.SvSampleAnalyser;
@@ -46,7 +48,7 @@ public class SvAnalyser {
     public static final String SAMPLE = "sample";
     private static final String VCF_FILE = "vcf_file";
     private static final String RUN_SVA = "run_sv_analysis";
-    private static final String DATA_OUTPUT_PATH = "data_output_path";
+    public static final String DATA_OUTPUT_PATH = "data_output_path";
     private static final String LOG_DEBUG = "log_debug";
     private static final String DRIVERS_CHECK = "check_drivers";
     private static final String RUN_FUSIONS = "run_fusions";
@@ -54,6 +56,7 @@ public class SvAnalyser {
     private static final String INCLUDE_NONE_SEGMENTS = "incl_none_segments";
     private static final String GENE_TRANSCRIPTS_DIR = "gene_transcripts_dir";
     private static final String STATS_ROUTINES = "stats_routines";
+    private static final String SIM_ROUTINES = "sim_routines";
 
     private static final String DB_USER = "db_user";
     private static final String DB_PASS = "db_pass";
@@ -74,6 +77,14 @@ public class SvAnalyser {
             statsRoutines.loadConfig(cmd);
             statsRoutines.runStatistics();
             LOGGER.info("run complete");
+            return;
+        }
+
+        if(cmd.hasOption(SIM_ROUTINES))
+        {
+            SvSimulator simulator = new SvSimulator();
+            simulator.loadConfig(cmd);
+            simulator.run();
             return;
         }
 
@@ -289,6 +300,8 @@ public class SvAnalyser {
         options.addOption(INCLUDE_NONE_SEGMENTS, false, "Include copy number NONE segments in SV analysis");
         options.addOption(GENE_TRANSCRIPTS_DIR, true, "Optional: file with sample gene transcript data");
         options.addOption(STATS_ROUTINES, false, "Optional: calc stats routines");
+        options.addOption(SIM_ROUTINES, false, "Optional: simulation routines");
+        SvSimulator.addCmdLineArgs(options);
         SvaConfig.addCmdLineArgs(options);
         CNAnalyser.addCmdLineArgs(options);
         SvFusionAnalyser.addCmdLineArgs(options);
