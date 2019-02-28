@@ -144,7 +144,7 @@ public final class LoadClinicalData {
 
         Map<String, List<TumorTypeLims>> WIDEPatientsData = readLimsPatients(tumorLocationCurationLims, widePatients, samplesPerPatient);
 
-        LOGGER.info(String.format("Finished curation of %s CORE patients.", WIDEPatientsData.size()));
+        LOGGER.info(String.format("Finished curation of %s WIDE patients.", WIDEPatientsData.size()));
         return WIDEPatientsData;
     }
 
