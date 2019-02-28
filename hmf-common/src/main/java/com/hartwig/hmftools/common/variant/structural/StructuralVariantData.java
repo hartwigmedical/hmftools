@@ -56,6 +56,11 @@ public abstract class StructuralVariantData {
     public abstract String startRefContext();
     public abstract String endRefContext();
     public abstract String insertSequenceAlignments();
+    public abstract String insertSequenceRepeatClass();
+    public abstract String insertSequenceRepeatType();
+    public abstract Byte insertSequenceRepeatOrientation();
+    public abstract Double insertSequenceRepeatCoverage();
+
     public abstract boolean recovered();
 
 }

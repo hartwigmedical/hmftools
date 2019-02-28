@@ -50,6 +50,10 @@ public class StructuralVariantFactory {
     private final static String LOCAL_LINKED_BY = "LOCAL_LINKED_BY";
     private final static String REMOTE_LINKED_BY = "REMOTE_LINKED_BY";
     private final static String UNTEMPLATED_SEQUENCE_ALIGNMENTS = "BEALN";
+    private final static String UNTEMPLATED_SEQUENCE_REPEAT_CLASS = "INSRMRC";
+    private final static String UNTEMPLATED_SEQUENCE_REPEAT_TYPE = "INSRMRT";
+    private final static String UNTEMPLATED_SEQUENCE_REPEAT_ORIENTATION = "INSRMRO";
+    private final static String UNTEMPLATED_SEQUENCE_REPEAT_COVERAGE = "INSRMP";
 
     public static final String PON_FILTER_PON = "PON";
 
@@ -289,26 +293,35 @@ public class StructuralVariantFactory {
         int somaticScore = context.getAttributeAsInt(SOMATIC_SCORE, 0);
         double qualityScore = context.getPhredScaledQual();
 
-        if(somaticScore > 0)
+        if(somaticScore > 0) {
             qualityScore = somaticScore;
+        }
 
-            return builder.id(context.getID())
-                .recovered(context.hasAttribute(RECOVERED))
-                .event(context.getAttributeAsString(EVENT, null))
-                .startLinkedBy(context.getAttributeAsStringList(LOCAL_LINKED_BY, "")
-                        .stream()
-                        .filter(s -> !Strings.isNullOrEmpty(s))
-                        .collect(Collectors.joining(",")))
-                .endLinkedBy(context.getAttributeAsStringList(REMOTE_LINKED_BY, "")
-                        .stream()
-                        .filter(s -> !Strings.isNullOrEmpty(s))
-                        .collect(Collectors.joining(",")))
-                .imprecise(imprecise(context))
-                .qualityScore(qualityScore)
-                .insertSequenceAlignments(context.getAttributeAsStringList(UNTEMPLATED_SEQUENCE_ALIGNMENTS, "")
-                        .stream()
-                        .filter(s -> !Strings.isNullOrEmpty(s))
-                        .collect(Collectors.joining(",")));
+        builder = builder.id(context.getID())
+            .recovered(context.hasAttribute(RECOVERED))
+            .event(context.getAttributeAsString(EVENT, null))
+            .startLinkedBy(context.getAttributeAsStringList(LOCAL_LINKED_BY, "")
+                    .stream()
+                    .filter(s -> !Strings.isNullOrEmpty(s))
+                    .collect(Collectors.joining(",")))
+            .endLinkedBy(context.getAttributeAsStringList(REMOTE_LINKED_BY, "")
+                    .stream()
+                    .filter(s -> !Strings.isNullOrEmpty(s))
+                    .collect(Collectors.joining(",")))
+            .imprecise(imprecise(context))
+            .qualityScore(qualityScore)
+            .insertSequenceAlignments(context.getAttributeAsStringList(UNTEMPLATED_SEQUENCE_ALIGNMENTS, "")
+                    .stream()
+                    .filter(s -> !Strings.isNullOrEmpty(s))
+                    .collect(Collectors.joining(",")));
+        if (context.hasAttribute(UNTEMPLATED_SEQUENCE_REPEAT_CLASS)) {
+            builder = builder
+                    .insertSequenceRepeatClass(context.getAttributeAsString(UNTEMPLATED_SEQUENCE_REPEAT_CLASS, ""))
+                    .insertSequenceRepeatType(context.getAttributeAsString(UNTEMPLATED_SEQUENCE_REPEAT_TYPE, ""))
+                    .insertSequenceRepeatOrientation(context.getAttributeAsString(UNTEMPLATED_SEQUENCE_REPEAT_ORIENTATION, "+").equals("+") ? (byte)1 : (byte)-1 )
+                    .insertSequenceRepeatCoverage(context.getAttributeAsDouble(UNTEMPLATED_SEQUENCE_REPEAT_COVERAGE, 0));
+        }
+        return builder;
     }
 
     @NotNull
@@ -383,7 +396,9 @@ public class StructuralVariantFactory {
             // Doesn't pass if a filter is applied to either of the two records
             filters.remove("PASS");
         }
-        // TODO Collectors string concatenation
+        if (filters.size() == 0) {
+            filters.add("PASS");
+        }
         return filters.stream().sorted().collect(Collectors.joining(";"));
     }
 
