@@ -166,7 +166,6 @@ public final class LoadClinicalData {
                 String samplesString = patientIds.toString();
                 samplesString = samplesString.replace("[", "");
                 samplesString = samplesString.replace("]", "");
-                LOGGER.info(samplesString);
                 patientMap.put(samplesString, tumorLocationCurationLims.readFixedValue(Lists.newArrayList(samplesString)));
             }
         }
