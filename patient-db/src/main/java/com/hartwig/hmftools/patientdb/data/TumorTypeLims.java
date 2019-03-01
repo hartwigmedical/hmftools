@@ -8,7 +8,10 @@ import org.jetbrains.annotations.Nullable;
 @Value.Style(allParameters = true,
              passAnnotations = { NotNull.class, Nullable.class })
 public abstract class TumorTypeLims {
-    
+
+    @NotNull
+    public abstract String patientId();
+
     @NotNull
     public abstract CuratedTumorLocation curatedTumorLocation();
 }

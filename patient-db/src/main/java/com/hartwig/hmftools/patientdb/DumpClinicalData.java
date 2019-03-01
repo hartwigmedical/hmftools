@@ -10,8 +10,8 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.base.Strings;
@@ -35,14 +35,14 @@ final class DumpClinicalData {
 
     static void writeClinicalDumps(@NotNull final String csvOutputDir, @NotNull final Collection<Patient> patients,
             @NotNull final Optional<String> tumorLocationLink, @NotNull final Optional<String> portalDataLink,
-            @NotNull final Collection<List<TumorTypeLims>> corePatients, @NotNull final Set<String> sampleId) throws IOException {
-        writeCuratedTumorLocationsToCSV(csvOutputDir, tumorLocationLink, patients, corePatients, sampleId);
+            Map<String, TumorTypeLims> patientsMergedLims) throws IOException {
+
+        writeCuratedTumorLocationsToCSV(csvOutputDir, tumorLocationLink, patients, patientsMergedLims);
         writePortalClinicalData(csvOutputDir, portalDataLink, patients);
     }
 
     private static void writeCuratedTumorLocationsToCSV(@NotNull final String csvOutputDir, @NotNull final Optional<String> linkName,
-            @NotNull final Collection<Patient> patients, @NotNull final Collection<List<TumorTypeLims>> corePatients,
-            @NotNull final Set<String> sampleId) throws IOException {
+            @NotNull final Collection<Patient> patients, Map<String, TumorTypeLims> patientsMergedLims) throws IOException {
         final String outputFile = fileLocation(csvOutputDir, "_curatedTumorLocations.csv");
         LOGGER.info("Writing curated tumor locations to csv in {}.", csvOutputDir);
         final List<PatientTumorLocation> tumorLocations = patients.stream()
@@ -51,15 +51,16 @@ final class DumpClinicalData {
                         Strings.nullToEmpty(patient.baselineData().curatedTumorLocation().subType())))
                 .collect(Collectors.toList());
 
-        final List<PatientTumorLocation> tumorLocationsCore = corePatients.stream()
-                .map(corepatient -> ImmutablePatientTumorLocation.of(sampleId.toString().substring(1, sampleId.toString().length() - 1),
-                        Strings.nullToEmpty(corepatient.iterator().next().curatedTumorLocation().primaryTumorLocation()),
-                        Strings.nullToEmpty(corepatient.iterator().next().curatedTumorLocation().subType())))
+        final List<PatientTumorLocation> tumorLocationsFromLims = patientsMergedLims.values()
+                .stream()
+                .map(patientLims -> ImmutablePatientTumorLocation.of(patientLims.patientId(),
+                        Strings.nullToEmpty(patientLims.curatedTumorLocation().primaryTumorLocation()),
+                        Strings.nullToEmpty(patientLims.curatedTumorLocation().subType())))
                 .collect(Collectors.toList());
 
         final List<PatientTumorLocation> tumorLocationsAll = new ArrayList<>();
         tumorLocationsAll.addAll(tumorLocations);
-        tumorLocationsAll.addAll(tumorLocationsCore);
+        tumorLocationsAll.addAll(tumorLocationsFromLims);
 
         PatientTumorLocation.writeRecords(outputFile, tumorLocationsAll);
         linkName.ifPresent(link -> updateSymlink(csvOutputDir + File.separator + link, outputFile));
