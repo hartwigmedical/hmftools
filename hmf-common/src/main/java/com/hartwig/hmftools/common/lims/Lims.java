@@ -163,7 +163,7 @@ public class Lims {
             } else {
                 if (purityShallowExecuted) {
                     LOGGER.info("Retrieved purity from shallow seq.");
-                    if (shallowSeq.purityShallowSeq().equals("below detection threshold")){
+                    if (shallowSeq.purityShallowSeq().equals("below detection threshold")) {
                         return "below detection threshold";
                     } else {
                         try {
@@ -234,7 +234,8 @@ public class Lims {
 
         String labRemarks = sampleData.labRemarks();
 
-        return isCoreSample(sample) || (labRemarks != null && (labRemarks.contains("CPCTWIDE") || labRemarks.contains("ShallowSeq")));
+        return isCoreSample(sample) || (labRemarks != null && (labRemarks.toLowerCase().contains("cpctwide") || labRemarks.toLowerCase()
+                .contains("shallowseq")));
     }
 
     @Nullable
