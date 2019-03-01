@@ -14,11 +14,17 @@ import static com.hartwig.hmftools.svanalysis.analysis.LinkFinder.NO_DB_MARKER;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.CHROMOSOME_ARM_P;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.getChromosomalArm;
 import static com.hartwig.hmftools.svanalysis.types.SvArmCluster.ARM_CL_COMPLEX_FOLDBACK;
+import static com.hartwig.hmftools.svanalysis.types.SvArmCluster.ARM_CL_COMPLEX_LINE;
 import static com.hartwig.hmftools.svanalysis.types.SvArmCluster.ARM_CL_COMPLEX_OTHER;
 import static com.hartwig.hmftools.svanalysis.types.SvArmCluster.ARM_CL_DSB;
+import static com.hartwig.hmftools.svanalysis.types.SvArmCluster.ARM_CL_FOLDBACK;
+import static com.hartwig.hmftools.svanalysis.types.SvArmCluster.ARM_CL_FOLDBACK_DSB;
+import static com.hartwig.hmftools.svanalysis.types.SvArmCluster.ARM_CL_FOLDBACK_PAIR_FACING;
+import static com.hartwig.hmftools.svanalysis.types.SvArmCluster.ARM_CL_FOLDBACK_PAIR_OPPOSING;
+import static com.hartwig.hmftools.svanalysis.types.SvArmCluster.ARM_CL_FOLDBACK_PAIR_SAME;
+import static com.hartwig.hmftools.svanalysis.types.SvArmCluster.ARM_CL_FOLDBACK_TI;
 import static com.hartwig.hmftools.svanalysis.types.SvArmCluster.ARM_CL_MULTIPLE_DSBS;
 import static com.hartwig.hmftools.svanalysis.types.SvArmCluster.ARM_CL_REMOTE_TI;
-import static com.hartwig.hmftools.svanalysis.types.SvArmCluster.ARM_CL_SIMPLE_FOLDBACK;
 import static com.hartwig.hmftools.svanalysis.types.SvArmCluster.ARM_CL_SINGLE;
 import static com.hartwig.hmftools.svanalysis.types.SvArmCluster.getArmClusterData;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.isSpecificCluster;
@@ -447,7 +453,8 @@ public class SvSampleAnalyser {
                 mClusterFileWriter.write(",Consistency,ArmCount,OriginArms,FragmentArms,IsLINE,HasReplicated,Foldbacks,DSBs");
                 mClusterFileWriter.write(",TotalLinks,AssemblyLinks,LongDelDups,UnlinkedRemotes,ShortTIRemotes,MinCopyNumber,MaxCopyNumber");
                 mClusterFileWriter.write(",SynDelDupLen,SynDelDupAvgTILen,Annotations,ChainInfo");
-                mClusterFileWriter.write(",ArmClusterCount,AcSoloSv,AcRemoteTI,AcDsb,AcMultipleDsb,AcSimpleFoldback,AcComplexFoldback,AcComplexOther");
+                mClusterFileWriter.write(",ArmClusterCount,AcSoloSv,AcRemoteTI,AcDsb,AcMultipleDsb,AcSingleFb,AcFbTI,AcFbDSB");
+                mClusterFileWriter.write(",ArmFbPairSame,ArmFbPairOpp,ArmFbPairFacing,AcComplexFb,AcComplexLine,AcComplexOther");
                 mClusterFileWriter.newLine();
             }
 
@@ -488,13 +495,22 @@ public class SvSampleAnalyser {
                         String.format(",%d,%d,%s,%s",
                                 cluster.getSynDelDupLength(), cluster.getSynDelDupTILength(), cluster.getAnnotations(), chainInfo));
 
+                // ArmClusterCount,AcSoloSv,AcRemoteTI,AcDsb,AcMultipleDsb,AcSingleFb,AcFbTI,AcFbDSB
+                // ArmFbPairSame,ArmFbPairOpp,ArmFbPairFacing,AcComplexFb,AcComplexLine,AcComplexOther
+
                 final int[] armClusterData = getArmClusterData(cluster);
+
                 writer.write(
                         String.format(",%d,%d,%d,%d,%d,%d,%d,%d",
                                 cluster.getArmClusters().size(), armClusterData[ARM_CL_SINGLE], armClusterData[ARM_CL_REMOTE_TI],
-                                armClusterData[ARM_CL_DSB], armClusterData[ARM_CL_MULTIPLE_DSBS], armClusterData[ARM_CL_SIMPLE_FOLDBACK],
-                                armClusterData[ARM_CL_COMPLEX_FOLDBACK], armClusterData[ARM_CL_COMPLEX_OTHER]));
+                                armClusterData[ARM_CL_DSB], armClusterData[ARM_CL_MULTIPLE_DSBS],
+                                armClusterData[ARM_CL_FOLDBACK], armClusterData[ARM_CL_FOLDBACK_TI], armClusterData[ARM_CL_FOLDBACK_DSB]));
 
+                writer.write(
+                        String.format(",%d,%d,%d,%d,%d,%d",
+                                armClusterData[ARM_CL_FOLDBACK_PAIR_SAME], armClusterData[ARM_CL_FOLDBACK_PAIR_OPPOSING],
+                                armClusterData[ARM_CL_FOLDBACK_PAIR_FACING], armClusterData[ARM_CL_COMPLEX_FOLDBACK],
+                                armClusterData[ARM_CL_COMPLEX_LINE], armClusterData[ARM_CL_COMPLEX_OTHER]));
 
                 writer.newLine();
             }

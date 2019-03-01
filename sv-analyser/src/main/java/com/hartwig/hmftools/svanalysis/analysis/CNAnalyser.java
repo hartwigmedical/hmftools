@@ -972,6 +972,10 @@ public class CNAnalyser {
                             .startRefContext("")
                             .endRefContext("")
                             .insertSequenceAlignments("")
+                            .insertSequenceRepeatClass("")
+                            .insertSequenceRepeatCoverage(0.0)
+                            .insertSequenceRepeatOrientation((byte)0)
+                            .insertSequenceRepeatType("")
                             .recovered(false)
                             .build());
         }

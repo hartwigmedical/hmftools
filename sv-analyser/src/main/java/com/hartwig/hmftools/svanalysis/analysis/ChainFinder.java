@@ -38,6 +38,7 @@ public class ChainFinder
     private List<SvLinkedPair> mAssemblyLinkedPairs;
 
     private List<SvChain> mPartialChains;
+    private int mNextChainId;
     private List<SvVarData> mFullyLinkedSVs;
     private List<SvVarData> mUnlinkedSVs;
     private Map<SvBreakend,List<SvBreakend>> mUnlinkedBreakendMap;
@@ -51,6 +52,7 @@ public class ChainFinder
 
     public ChainFinder()
     {
+        mNextChainId = 0;
         mPartialChains = Lists.newArrayList();
         mUnlinkedSVs = Lists.newArrayList();
         mUnlinkedBreakendMap = new HashMap();
@@ -65,6 +67,7 @@ public class ChainFinder
 
     public void initialise(SvCluster cluster)
     {
+        mNextChainId = 0;
         mCluster = cluster;
         mIsValid = true;
 
@@ -92,7 +95,7 @@ public class ChainFinder
                     mCluster.id(), mAssemblyLinkedPairs.size(), mCluster.getUniqueSvCount(), mCluster.getCount());
         }
 
-        // isSpecificCluster(mCluster);
+        isSpecificCluster(mCluster);
         // mLogWorking = isSpecificCluster(mCluster);
 
         buildSvChains(assembledLinksOnly);
@@ -109,11 +112,13 @@ public class ChainFinder
         // which can happen for clusters with replicated SVs
         mPartialChains.stream().forEach(chain -> checkAddNewChain(chain));
 
-        for(final SvChain chain : mCluster.getChains())
+        for(int i = 0; i < mCluster.getChains().size(); ++i)
         {
+            final SvChain chain = mCluster.getChains().get(i);
             LOGGER.debug("cluster({}) added chain({}) with {} linked pairs:",
                     mCluster.id(), chain.id(), chain.getLinkCount());
             chain.logLinks();
+            chain.setId(i); // set after logging so can compare with logging during building
         }
     }
 
@@ -121,7 +126,7 @@ public class ChainFinder
     {
         if(!mCluster.hasReplicatedSVs() || mCluster.getChains().isEmpty())
         {
-            mCluster.addChain(newChain);
+            mCluster.addChain(newChain, false);
             return;
         }
 
@@ -148,7 +153,7 @@ public class ChainFinder
             }
         }
 
-        mCluster.addChain(newChain);
+        mCluster.addChain(newChain, false);
     }
 
     private void buildSvChains(boolean assembledLinksOnly)
@@ -463,7 +468,7 @@ public class ChainFinder
 
         if(!addedToChain)
         {
-            SvChain chain = new SvChain(mPartialChains.size());
+            SvChain chain = new SvChain(mNextChainId++);
             mPartialChains.add(chain);
             chain.addLink(newPair, true);
             pairToChain[SVI_START] = true;

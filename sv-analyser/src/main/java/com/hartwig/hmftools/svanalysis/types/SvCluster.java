@@ -376,9 +376,11 @@ public class SvCluster
 
     public List<SvChain> getChains() { return mChains; }
 
-    public void addChain(SvChain chain)
+    public void addChain(SvChain chain, boolean resetId)
     {
-        chain.setId(mChains.size());
+        if(resetId)
+            chain.setId(mChains.size());
+
         mChains.add(chain);
 
         for(SvVarData var : chain.getSvList())
@@ -472,7 +474,7 @@ public class SvCluster
         {
             for (SvChain chain : other.getChains())
             {
-                addChain(chain);
+                addChain(chain, true);
             }
         }
 
@@ -501,7 +503,7 @@ public class SvCluster
 
         for(SvChain chain : cluster.getChains())
         {
-            addChain(chain);
+            addChain(chain, true);
         }
     }
 
@@ -979,7 +981,7 @@ public class SvCluster
 
 
     private static int SPECIFIC_CLUSTER_ID = -1;
-    // private static int SPECIFIC_CLUSTER_ID = 0;
+    // private static int SPECIFIC_CLUSTER_ID = 382;
 
     public static boolean isSpecificCluster(final SvCluster cluster)
     {
