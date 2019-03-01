@@ -35,14 +35,14 @@ final class DumpClinicalData {
 
     static void writeClinicalDumps(@NotNull final String csvOutputDir, @NotNull final Collection<Patient> patients,
             @NotNull final Optional<String> tumorLocationLink, @NotNull final Optional<String> portalDataLink,
-            Map<String, TumorTypeLims> patientsMergedLims) throws IOException {
+            @NotNull final Collection<TumorTypeLims> patientsMergedLims) throws IOException {
 
         writeCuratedTumorLocationsToCSV(csvOutputDir, tumorLocationLink, patients, patientsMergedLims);
         writePortalClinicalData(csvOutputDir, portalDataLink, patients);
     }
 
     private static void writeCuratedTumorLocationsToCSV(@NotNull final String csvOutputDir, @NotNull final Optional<String> linkName,
-            @NotNull final Collection<Patient> patients, Map<String, TumorTypeLims> patientsMergedLims) throws IOException {
+            @NotNull final Collection<Patient> patients, @NotNull final Collection<TumorTypeLims> patientsMergedLims) throws IOException {
         final String outputFile = fileLocation(csvOutputDir, "_curatedTumorLocations.csv");
         LOGGER.info("Writing curated tumor locations to csv in {}.", csvOutputDir);
         final List<PatientTumorLocation> tumorLocations = patients.stream()
@@ -51,7 +51,7 @@ final class DumpClinicalData {
                         Strings.nullToEmpty(patient.baselineData().curatedTumorLocation().subType())))
                 .collect(Collectors.toList());
 
-        final List<PatientTumorLocation> tumorLocationsFromLims = patientsMergedLims.values()
+        final List<PatientTumorLocation> tumorLocationsFromLims = patientsMergedLims
                 .stream()
                 .map(patientLims -> ImmutablePatientTumorLocation.of(patientLims.patientId(),
                         Strings.nullToEmpty(patientLims.curatedTumorLocation().primaryTumorLocation()),

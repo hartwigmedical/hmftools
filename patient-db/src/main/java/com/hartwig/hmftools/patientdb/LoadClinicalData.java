@@ -106,8 +106,7 @@ public final class LoadClinicalData {
     private static Lims readingLims(@NotNull CommandLine cmd) throws IOException {
         final String limsDirectory = cmd.getOptionValue(LIMS_DIRECTORY);
         LOGGER.info(String.format("Loading samples from LIMS on %s.", limsDirectory));
-        Lims lims = LimsFactory.fromLimsDirectory(limsDirectory);
-        return lims;
+        return LimsFactory.fromLimsDirectory(limsDirectory);
     }
 
     private static Map<String, TumorTypeLims> loadAndInterpretPatientsFromLims(@NotNull Map<String, List<SampleData>> samplesPerPatient,
@@ -150,23 +149,18 @@ public final class LoadClinicalData {
 
     @NotNull
     private static Map<String, TumorTypeLims> readLimsPatients(@NotNull final TumorLocationCurationLims tumorLocationCurationLims,
-            @NotNull List<String> patientIds, @NotNull final Map<String, List<SampleData>> samplesPerPatient) {
+            @NotNull List<String> sampleIdsFromPatients, @NotNull final Map<String, List<SampleData>> samplesPerPatient) {
         final Map<String, TumorTypeLims> patientMap = Maps.newHashMap();
-        for (int i = 0; i < patientIds.size(); i++) {
-            if (!patientIds.get(i).contains("COLO")){
-                List<SampleData> samples = samplesPerPatient.get(patientIds.get(i));
+        for (int i = 0; i < sampleIdsFromPatients.size(); i++) {
+            if (!sampleIdsFromPatients.get(i).contains("COLO")){
+                List<SampleData> samples = samplesPerPatient.get(sampleIdsFromPatients.get(i));
 
                 //create sampleID
-                String samplesString = samples.toString().split(" ")[1];
-                samplesString = samplesString.replace("{", "");
-                samplesString = samplesString.replace("}", "");
-                samplesString = samplesString.replace("]", "");
-                patientMap.put(samplesString, tumorLocationCurationLims.read(samplesString));
-            } else if (patientIds.get(i).contains("COLO")) {
-                String samplesString = patientIds.toString();
-                samplesString = samplesString.replace("[", "");
-                samplesString = samplesString.replace("]", "");
-                patientMap.put(samplesString, tumorLocationCurationLims.readFixedValue(samplesString));
+                String sampleId = samples.toString().split(" ")[1].substring(1,14);
+                patientMap.put(sampleId, tumorLocationCurationLims.read(sampleId));
+            } else if (sampleIdsFromPatients.get(i).contains("COLO")) {
+                String sampleId = sampleIdsFromPatients.toString().substring(1,9);
+                patientMap.put(sampleId, tumorLocationCurationLims.readFixedValue(sampleId));
             }
         }
         return patientMap;
@@ -201,7 +195,7 @@ public final class LoadClinicalData {
                 patients.values(),
                 tumorLocationSymlink,
                 portalDataLink,
-                patientsMergedLims);
+                patientsMergedLims.values());
 
         LOGGER.info("Clearing interpreted clinical tables in database.");
         dbAccess.clearClinicalTables();

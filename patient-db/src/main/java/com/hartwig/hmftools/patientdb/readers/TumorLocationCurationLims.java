@@ -5,9 +5,13 @@ import com.hartwig.hmftools.patientdb.curators.TumorLocationCurator;
 import com.hartwig.hmftools.patientdb.data.ImmutableTumorTypeLims;
 import com.hartwig.hmftools.patientdb.data.TumorTypeLims;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 public class TumorLocationCurationLims {
+
+    private static final Logger LOGGER = LogManager.getLogger(TumorLocationCurationLims.class);
 
     @NotNull
     private final Lims lims;
@@ -22,8 +26,9 @@ public class TumorLocationCurationLims {
     @NotNull
     public TumorTypeLims read(@NotNull final String sampleId) {
         final TumorTypeLims limsTumorCurations;
-
-        limsTumorCurations = ImmutableTumorTypeLims.of(sampleId, tumorLocationCurator.search(lims.primaryTumor(sampleId)));
+        String patientId = sampleId.substring(0,12);
+        LOGGER.info(patientId);
+        limsTumorCurations = ImmutableTumorTypeLims.of(patientId, tumorLocationCurator.search(lims.primaryTumor(sampleId)));
 
         return limsTumorCurations;
     }
@@ -31,8 +36,9 @@ public class TumorLocationCurationLims {
     @NotNull
     public TumorTypeLims readFixedValue(@NotNull final String sampleId) {
         final TumorTypeLims limsTumorCurations;
-
-        limsTumorCurations = ImmutableTumorTypeLims.of(sampleId, tumorLocationCurator.search("Melanoma"));
+        String patientId = sampleId.substring(0,7);
+        LOGGER.info(patientId);
+        limsTumorCurations = ImmutableTumorTypeLims.of(patientId, tumorLocationCurator.search("Melanoma"));
         return limsTumorCurations;
     }
 }
