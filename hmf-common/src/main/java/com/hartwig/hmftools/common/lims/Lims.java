@@ -84,26 +84,33 @@ public class Lims {
         return sampleData != null ? sampleData.projectName() : "N/A";
     }
 
-    @Nullable
+    @NotNull
     public String barcodeTumorOfSample(@NotNull final String sample) {
+
         LimsJsonSampleData sampleData = dataPerSample.get(sample);
-        LOGGER.info(sampleData);
         if (sampleData != null) {
-            return sampleData.tumorSampleId();
-        } else {
-            return "not determinded";
+            String tumorBarcode = sampleData.tumorSampleId();
+            if (tumorBarcode.isEmpty()) {
+                return "not determined";
+            } else {
+               return tumorBarcode;
+            }
         }
+        return "N/A";
     }
 
-    @Nullable
+    @NotNull
     public String barcodeReferenceOfSample(@NotNull final String sample) {
         LimsJsonSampleData sampleData = dataPerSample.get(sample);
-        LOGGER.info(sampleData);
         if (sampleData != null) {
-            return sampleData.refSampleId();
-        } else {
-            return "not determinded";
+            String refBarcode = sampleData.refSampleId();
+            if (refBarcode.isEmpty()) {
+                return "not determined";
+            } else {
+                return refBarcode;
+            }
         }
+        return "N/A";
     }
 
     @Nullable
