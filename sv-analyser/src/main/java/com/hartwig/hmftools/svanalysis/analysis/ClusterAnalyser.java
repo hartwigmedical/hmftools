@@ -1279,7 +1279,7 @@ public class ClusterAnalyser {
 
         classifyChainedClusters(cluster, mClusteringMethods.getProximityDistance());
 
-        findIncompleteFoldbackCandidates(mSampleId, cluster, mClusteringMethods.getChrBreakendMap(), mClusteringMethods.getChrCopyNumberMap());
+        // findIncompleteFoldbackCandidates(mSampleId, cluster, mClusteringMethods.getChrBreakendMap(), mClusteringMethods.getChrCopyNumberMap());
     }
 
     private final SvBreakend getNextUnresolvedBreakend(final List<SvBreakend> breakendList, int startIndex, boolean traverseUp)
