@@ -99,10 +99,10 @@ class StructuralVariantDAO {
                     .startRefContext(getValueNotNull(record.getValue(STRUCTURALVARIANT.STARTREFCONTEXT)))
                     .endRefContext(getValueNotNull(record.getValue(STRUCTURALVARIANT.ENDREFCONTEXT)))
                     .insertSequenceAlignments(getValueNotNull(record.getValue(STRUCTURALVARIANT.INSERTSEQUENCEALIGNMENTS)))
-                    .insertSequenceRepeatClass(record.getValue(STRUCTURALVARIANT.INSERTSEQUENCEREPEATCLASS))
-                    .insertSequenceRepeatType(record.getValue(STRUCTURALVARIANT.INSERTSEQUENCEREPEATTYPE))
-                    .insertSequenceRepeatOrientation(record.getValue(STRUCTURALVARIANT.INSERTSEQUENCEREPEATORIENTATION))
-                    .insertSequenceRepeatCoverage(record.getValue(STRUCTURALVARIANT.INSERTSEQUENCEREPEATCOVERAGE))
+                    .insertSequenceRepeatClass(getValueNotNull(record.getValue(STRUCTURALVARIANT.INSERTSEQUENCEREPEATCLASS)))
+                    .insertSequenceRepeatType(getValueNotNull(record.getValue(STRUCTURALVARIANT.INSERTSEQUENCEREPEATTYPE)))
+                    .insertSequenceRepeatOrientation(getValueNotNull(record.getValue(STRUCTURALVARIANT.INSERTSEQUENCEREPEATORIENTATION)))
+                    .insertSequenceRepeatCoverage(getValueNotNull(record.getValue(STRUCTURALVARIANT.INSERTSEQUENCEREPEATCOVERAGE)))
                     .recovered(byteToBoolean(record.getValue(STRUCTURALVARIANT.RECOVERED)))
                     .build());
         }
