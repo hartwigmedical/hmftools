@@ -34,6 +34,8 @@ public class LimsTest {
         final String projectName = "projectX";
         final String contactEmail = "henk@hmf.nl";
         final String contactName = "henk";
+        final String refBarcode = "A123";
+        final String tumorBarcode = "not determinded";
 
         final LimsJsonSampleData sampleData = createLimsSampleDataBuilder().sampleId(SAMPLE)
                 .samplingDateString(samplingDate)
@@ -46,6 +48,8 @@ public class LimsTest {
                 .labelSample(label)
                 .projectName(projectName)
                 .submission(SUBMISSION)
+                .refSampleId(refBarcode)
+                .tumorSampleId(tumorBarcode)
                 .build();
 
         final LimsJsonSubmissionData submissionData = ImmutableLimsJsonSubmissionData.builder()
@@ -65,6 +69,8 @@ public class LimsTest {
         assertEquals(projectName, lims.projectName(SAMPLE));
         assertEquals(LimsTestUtil.toDate(arrivalDate), lims.arrivalDate(SAMPLE));
         assertEquals(LimsTestUtil.toDate(samplingDate), lims.samplingDate(SAMPLE));
+        assertEquals(refBarcode, lims.barcodeReferenceOfSample(SAMPLE));
+        assertEquals(tumorBarcode, lims.barcodeTumorOfSample(SAMPLE));
 
         Integer dnaAmount = lims.dnaNanograms(SAMPLE);
         assertNotNull(dnaAmount);

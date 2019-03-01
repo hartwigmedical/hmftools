@@ -7,6 +7,7 @@ import java.util.Set;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -86,13 +87,23 @@ public class Lims {
     @Nullable
     public String barcodeTumorOfSample(@NotNull final String sample) {
         LimsJsonSampleData sampleData = dataPerSample.get(sample);
-        return sampleData != null ? sampleData.tumorSampleId() : "N/A";
+        LOGGER.info(sampleData);
+        if (sampleData != null) {
+            return sampleData.tumorSampleId();
+        } else {
+            return "not determinded";
+        }
     }
 
     @Nullable
     public String barcodeReferenceOfSample(@NotNull final String sample) {
         LimsJsonSampleData sampleData = dataPerSample.get(sample);
-        return sampleData != null ? sampleData.refSampleId() : "N/A";
+        LOGGER.info(sampleData);
+        if (sampleData != null) {
+            return sampleData.refSampleId();
+        } else {
+            return "not determinded";
+        }
     }
 
     @Nullable
@@ -104,7 +115,7 @@ public class Lims {
             arrivalDate = preLimsArrivalDates.get(sample);
         }
 
-        if (arrivalDate == null) {
+        if (arrivalDate == null && !sample.contains("COLO")) {
             LOGGER.warn("Could not find a valid arrival date for sample: " + sample + " in LIMS");
         }
 
