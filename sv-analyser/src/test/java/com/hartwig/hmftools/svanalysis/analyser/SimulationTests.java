@@ -84,7 +84,6 @@ public class SimulationTests
         // test only 2 segs added
         linkOrder.clear();
 
-        // 0 ->
         linkOrder.add(0);
         linkOrder.add(3);
         linkOrder.add(3);
@@ -99,11 +98,34 @@ public class SimulationTests
 
         results = shatteringSim.getLatestResults();
 
-        // assertEquals(0, results[SS_RESULTS_TEST_RUN]);
         assertEquals(4, results[SS_RESULTS_SEGMENTS]);
         assertEquals(2, results[SS_RESULTS_SEGS_LINKED]);
         assertEquals(0, results[SS_RESULTS_EXACT_MATCHES]);
         assertEquals(1, results[SS_RESULTS_ADJACENT_SEGS]);
+
+        // leave a single fully open link
+        linkOrder.clear();
+
+        linkOrder.add(9);
+        linkOrder.add(8);
+        linkOrder.add(7);
+        linkOrder.add(6);
+        linkOrder.add(0);
+        linkOrder.add(1);
+        linkOrder.add(0);
+        linkOrder.add(3);
+
+        shatteringSim.setSpecifiedOrder(linkOrder);
+
+        shatteringSim.run();
+        assertTrue(shatteringSim.validRun());
+
+        results = shatteringSim.getLatestResults();
+
+        // assertEquals(0, results[SS_RESULTS_TEST_RUN]);
+        assertEquals(3, results[SS_RESULTS_SEGS_LINKED]);
+        assertEquals(3, results[SS_RESULTS_EXACT_MATCHES]);
+        assertEquals(3, results[SS_RESULTS_ADJACENT_SEGS]);
 
 
     }

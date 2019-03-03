@@ -27,6 +27,8 @@ import static com.hartwig.hmftools.svanalysis.types.SvArmCluster.ARM_CL_MULTIPLE
 import static com.hartwig.hmftools.svanalysis.types.SvArmCluster.ARM_CL_REMOTE_TI;
 import static com.hartwig.hmftools.svanalysis.types.SvArmCluster.ARM_CL_SINGLE;
 import static com.hartwig.hmftools.svanalysis.types.SvArmCluster.getArmClusterData;
+import static com.hartwig.hmftools.svanalysis.types.SvCluster.INT_DB_COUNT;
+import static com.hartwig.hmftools.svanalysis.types.SvCluster.INT_SHORT_DB_COUNT;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.isSpecificCluster;
 import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.LINK_TYPE_TI;
 
@@ -450,7 +452,7 @@ public class SvSampleAnalyser {
 
                 mClusterFileWriter.write("SampleId,ClusterId,ClusterDesc,ClusterCount,ResolvedType,FullyChained,ChainCount");
                 mClusterFileWriter.write(",DelCount,DupCount,InsCount,InvCount,BndCount,SglCount");
-                mClusterFileWriter.write(",Consistency,ArmCount,OriginArms,FragmentArms,IsLINE,HasReplicated,Foldbacks,DSBs");
+                mClusterFileWriter.write(",Consistency,ArmCount,OriginArms,FragmentArms,IsLINE,HasReplicated,Foldbacks,DSBs,ShortDSBs");
                 mClusterFileWriter.write(",TotalLinks,AssemblyLinks,LongDelDups,UnlinkedRemotes,ShortTIRemotes,MinCopyNumber,MaxCopyNumber");
                 mClusterFileWriter.write(",SynDelDupLen,SynDelDupAvgTILen,Annotations,ChainInfo");
                 mClusterFileWriter.write(",ArmClusterCount,AcSoloSv,AcRemoteTI,AcDsb,AcMultipleDsb,AcSingleFb,AcFbTI,AcFbDSB");
@@ -474,11 +476,13 @@ public class SvSampleAnalyser {
                                 cluster.getTypeCount(DEL), cluster.getTypeCount(DUP), cluster.getTypeCount(INS),
                                 cluster.getTypeCount(INV), cluster.getTypeCount(BND), cluster.getTypeCount(SGL)));
 
+                final int[] delCounts = cluster.getInternalDeletionCounts();
+
                 writer.write(
-                        String.format(",%d,%d,%d,%d,%s,%s,%d,%d",
+                        String.format(",%d,%d,%d,%d,%s,%s,%d,%d,%d",
                                 cluster.getConsistencyCount(), cluster.getArmCount(), cluster.getOriginArms(), cluster.getFragmentArms(),
                                 cluster.hasLinkingLineElements(), cluster.hasReplicatedSVs(),
-                                cluster.getFoldbacks().size(), cluster.getClusterDBCount()));
+                                cluster.getFoldbacks().size(), delCounts[INT_DB_COUNT], delCounts[INT_SHORT_DB_COUNT]));
 
                 final String chainInfo = cluster.getChains().stream()
                         .filter(x -> !x.getDetails().isEmpty())

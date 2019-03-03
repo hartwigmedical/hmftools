@@ -851,31 +851,12 @@ public class SvCluster
     public void cacheLinkedPairs()
     {
         // moves assembly and inferred linked pairs which are used in chains to a set of 'final' linked pairs
-        // other potential inferred linked pairs are skipped
-        List<SvLinkedPair> linkedPairs;
+        mLinkedPairs.clear();
 
-        if(isFullyChained())
+        // add all chained links
+        for (final SvChain chain : mChains)
         {
-            linkedPairs = mChains.get(0).getLinkedPairs();
-        }
-        else
-        {
-            linkedPairs = Lists.newArrayList();
-
-            // add all chained links
-            for (final SvChain chain : mChains)
-            {
-                linkedPairs.addAll(chain.getLinkedPairs());
-            }
-
-            // any any unchained assembly links
-            for (final SvLinkedPair pair : mAssemblyLinkedPairs)
-            {
-                if (!linkedPairs.contains(pair))
-                {
-                    linkedPairs.add(pair);
-                }
-            }
+            mLinkedPairs.addAll(chain.getLinkedPairs());
         }
 
         for(SvVarData var : mSVs)
@@ -890,7 +871,7 @@ public class SvCluster
         }
 
         // mark the resultant set of inferred links - the assembly links will have already been marked
-        for (SvLinkedPair pair : linkedPairs)
+        for (SvLinkedPair pair : mLinkedPairs)
         {
             if(pair.isInferred())
             {
@@ -901,8 +882,6 @@ public class SvCluster
             pair.first().setLinkedPair(pair, pair.firstLinkOnStart());
             pair.second().setLinkedPair(pair, pair.secondLinkOnStart());
         }
-
-        mLinkedPairs = linkedPairs;
     }
 
     public final SvChain findChain(final SvVarData var)
@@ -973,6 +952,56 @@ public class SvCluster
         }
 
         return dbCount / 2;
+    }
+
+    public static int INT_DB_COUNT = 0;
+    public static int INT_SHORT_DB_COUNT = 1;
+
+    public final int[] getInternalDeletionCounts()
+    {
+        int[] delCounts = {0, 0}; // all and short (< 100 bases)
+
+        // any deleted section within the breakends of the chain
+        if(!isFullyChained() || mChains.size() > 1)
+            return delCounts;
+
+        final SvChain chain = mChains.get(0);
+
+        final SvBreakend chainStart = chain.getOpenBreakend(true);
+        final SvBreakend chainEnd = chain.getOpenBreakend(false);
+        final SvBreakend lowerBreakend = chainStart.position() < chainEnd.position() ? chainStart : chainEnd;
+        final SvBreakend upperBreakend = chainStart == lowerBreakend ? chainEnd : chainStart;
+
+        if(!chainEnd.getChrArm().equals(chainStart.getChrArm()))
+            return delCounts;
+
+        // measure the DB lengths for all chained SV
+        List<SvBreakend> breakendList = mChrBreakendMap.get(chainStart.chromosome());
+
+        for(int i = 0; i < breakendList.size() - 1; ++i)
+        {
+            final SvBreakend breakend = breakendList.get(i);
+
+            if(breakend.position() < lowerBreakend.position())
+                continue;
+
+            if(breakend.position() >= upperBreakend.position())
+                break;
+
+            final SvBreakend nextBreakend = breakendList.get(i + 1);
+
+            if(nextBreakend.position() <= upperBreakend.position() && breakend.orientation() == 1 && nextBreakend.orientation() == -1)
+            {
+                ++delCounts[INT_DB_COUNT];
+
+                long dbLength = nextBreakend.position() - breakend.position();
+
+                if(dbLength <= 100)
+                    ++delCounts[INT_SHORT_DB_COUNT];
+            }
+        }
+
+        return delCounts;
     }
 
     public void setArmData(int origins, int fragments) { mOriginArms = origins; mFragmentArms = fragments; }
