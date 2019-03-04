@@ -190,6 +190,7 @@ public class StructuralVariantFactory {
                 .insertSequence(insertedSequence)
                 .type(type)
                 .filter(filters(context, null))
+                .startContext(context)
                 .build();
     }
 
@@ -254,6 +255,8 @@ public class StructuralVariantFactory {
                 .insertSequence(insertedSequence)
                 .type(inferredType)
                 .filter(filters(first, second))
+                .startContext(first)
+                .endContext(second)
                 .build();
     }
 
@@ -281,6 +284,7 @@ public class StructuralVariantFactory {
                 .insertSequence(insertedSequence)
                 .type(StructuralVariantType.SGL)
                 .filter(filters(context, null))
+                .startContext(context)
                 .build();
 
     }

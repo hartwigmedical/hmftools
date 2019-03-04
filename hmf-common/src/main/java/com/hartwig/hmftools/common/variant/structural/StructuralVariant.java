@@ -9,6 +9,8 @@ import com.google.common.collect.Lists;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import htsjdk.variant.variantcontext.VariantContext;
+
 public interface StructuralVariant {
 
     @Nullable
@@ -25,6 +27,12 @@ public interface StructuralVariant {
 
     @Nullable
     StructuralVariantLeg end();
+
+    @NotNull
+    VariantContext startContext();
+
+    @Nullable
+    VariantContext endContext();
 
     @Nullable
     default String chromosome(boolean isStart) {

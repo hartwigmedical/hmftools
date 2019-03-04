@@ -4,10 +4,12 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.stream.Stream;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.purple.copynumber.CopyNumberMethod;
 import com.hartwig.hmftools.common.purple.copynumber.ImmutablePurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
@@ -25,6 +27,10 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Ignore;
 import org.junit.Test;
+
+import htsjdk.variant.variantcontext.Allele;
+import htsjdk.variant.variantcontext.VariantContext;
+import htsjdk.variant.variantcontext.VariantContextBuilder;
 
 public class BreakpointGraphTest {
 
@@ -495,6 +501,7 @@ public class BreakpointGraphTest {
                 .filter("")
                 .imprecise(false)
                 .insertSequence("")
+                .startContext(dummyContext())
                 .build();
     }
 
@@ -520,6 +527,16 @@ public class BreakpointGraphTest {
                 .imprecise(false)
                 .insertSequence("GATTACA")
                 .insertSequenceAlignments("")
+                .startContext(dummyContext())
                 .build();
     }
+
+
+    private static VariantContext dummyContext() {
+        final Collection<Allele> alleles = Lists.newArrayList(Allele.create("N", true));
+        return new VariantContextBuilder("purple", "2", 1, 1, alleles)
+                .noGenotypes()
+                .make();
+    }
+
 }

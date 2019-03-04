@@ -2,8 +2,10 @@ package com.hartwig.hmftools.common.purple;
 
 import static org.junit.Assert.assertNotNull;
 
+import java.util.Collection;
 import java.util.Optional;
 
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.cobalt.ImmutableCobaltRatio;
 import com.hartwig.hmftools.common.purple.copynumber.CopyNumberMethod;
 import com.hartwig.hmftools.common.purple.copynumber.ImmutablePurpleCopyNumber;
@@ -20,6 +22,10 @@ import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
+
+import htsjdk.variant.variantcontext.Allele;
+import htsjdk.variant.variantcontext.VariantContext;
+import htsjdk.variant.variantcontext.VariantContextBuilder;
 
 public class PurpleDatamodelTest {
 
@@ -156,6 +162,7 @@ public class PurpleDatamodelTest {
                 .qualityScore(0)
                 .start(createStartLeg(startChromosome, startPosition, type).alleleFrequency(startVaf).build())
                 .end(createEndLeg(endChromosome, endPosition, type).alleleFrequency(endVaf).build())
+                .startContext(dummyContext())
                 .imprecise(true);
     }
 
@@ -172,6 +179,7 @@ public class PurpleDatamodelTest {
                 .recovered(false)
                 .start(createStartLeg(startChromosome, startPosition, type).build())
                 .end(createEndLeg(endChromosome, endPosition, type).build())
+                .startContext(dummyContext() )
                 .imprecise(true);
     }
     @NotNull
@@ -185,6 +193,7 @@ public class PurpleDatamodelTest {
                 .recovered(false)
                 .type(StructuralVariantType.BND)
                 .start(createStartLeg(startChromosome, startPosition, StructuralVariantType.BND).alleleFrequency(startVaf).build())
+                .startContext(dummyContext())
                 .imprecise(false);
     }
 
@@ -216,5 +225,14 @@ public class PurpleDatamodelTest {
                 .unweightedImpliedPloidy(ploidy)
                 .leftCopyNumber(leftCopyNumber)
                 .rightCopyNumber(rightCopyNumber);
+    }
+
+    public static VariantContext dummyContext() {
+
+        final Collection<Allele> alleles = Lists.newArrayList(Allele.create("N", true));
+
+        return new VariantContextBuilder("purple", "2", 1, 1, alleles)
+                .noGenotypes()
+                .make();
     }
 }
