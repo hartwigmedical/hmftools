@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.svannotation;
 
+import static com.hartwig.hmftools.common.variant.structural.StructuralVariantFactory.INFERRED;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantFactory.PON_FILTER_PON;
 import static com.hartwig.hmftools.svannotation.SvGeneTranscriptCollection.PRE_GENE_PROMOTOR_DISTANCE;
 
@@ -253,7 +254,7 @@ public class StructuralVariantAnnotator
     }
 
     // Let PON filtered SVs through since GRIDSS PON filtering is performed upstream
-    private static final Set<String> ALLOWED_FILTERS = Sets.newHashSet("INFERRED", PON_FILTER_PON, "PASS");
+    private static final Set<String> ALLOWED_FILTERS = Sets.newHashSet(INFERRED, PON_FILTER_PON, "PASS");
 
     @NotNull
     private static List<StructuralVariant> readFromVcf(@NotNull String vcfFileLocation) throws IOException

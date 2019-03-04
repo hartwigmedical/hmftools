@@ -54,9 +54,7 @@ class PurpleStructuralVariantSupplier {
 
     private static final double MIN_UNLINKED_SGL_VAF = 0.1;
 
-    private static final String RECOVERED_FLAG = "RECOVERED";
     private static final String RECOVERED_DESC = "Entry has been recovered";
-    private static final String INFERRED_FLAG = "INFERRED";
     private static final String INFERRED_DESC = "Breakend inferred from copy number transition";
     private static final String IMPRECISE_INFO = "IMPRECISE";
     private static final String IMPRECISE_DESC = "Imprecise structural variation";
@@ -68,9 +66,7 @@ class PurpleStructuralVariantSupplier {
     private static final String PURPLE_CN_DESC = "Purity adjusted copy number at each breakend";
     private static final String PURPLE_CN_CHANGE_INFO = "PURPLE_CN_CHANGE";
     private static final String PURPLE_CN_CHANGE_DESC = "Purity adjusted change in copy number at each breakend";
-    private static final String CIPOS_INFO = "CIPOS";
     private static final String CIPOS_DESC = "Confidence interval around POS for imprecise variants";
-    private static final String SVTYPE_INFO = "SVTYPE";
     private static final String SVTYPE_DESC = "Type of structural variant";
     private static final String GT_FORMAT = "GT";
     private static final String GT_DESC = "Genotype";
@@ -108,7 +104,7 @@ class PurpleStructuralVariantSupplier {
     public void recoverVariant(@NotNull final VariantContext variantContext) {
         if (enabled()) {
             modified = true;
-            final VariantContext unfiltered = new VariantContextBuilder(variantContext).unfiltered().attribute(RECOVERED_FLAG, true).make();
+            final VariantContext unfiltered = new VariantContextBuilder(variantContext).unfiltered().attribute(StructuralVariantFactory.RECOVERED, true).make();
             if (variantContext.contains(unfiltered)) {
                 variantContexts.remove(unfiltered);
                 variantContexts.add(unfiltered);
@@ -138,8 +134,7 @@ class PurpleStructuralVariantSupplier {
         final Iterator<VariantContext> iterator = variantContexts.iterator();
         while (iterator.hasNext()) {
             final VariantContext variantContext = iterator.next();
-            if (!variantContext.hasAttribute(RECOVERED_FLAG)) {
-
+            if (!variantContext.hasAttribute(StructuralVariantFactory.RECOVERED)) {
                 final StructuralVariantFactory factory = new StructuralVariantFactory(new PassingVariantFilter());
                 factory.addVariantContext(variantContext);
                 final List<StructuralVariant> variants = factory.results();
@@ -177,11 +172,11 @@ class PurpleStructuralVariantSupplier {
         long lowerRange = Math.min(-500, copyNumber.minStart() - copyNumber.start());
         long upperRange = Math.max(500, copyNumber.maxStart() - copyNumber.start());
 
-        return new VariantContextBuilder("purple", copyNumber.chromosome(), position, copyNumber.start(), alleles).filter(INFERRED_FLAG)
-                .attribute(INFERRED_FLAG, true)
+        return new VariantContextBuilder("purple", copyNumber.chromosome(), position, copyNumber.start(), alleles).filter(StructuralVariantFactory.INFERRED)
+                .attribute(StructuralVariantFactory.INFERRED, true)
                 .id("purple_" + counter++)
-                .attribute(CIPOS_INFO, Lists.newArrayList(lowerRange, upperRange))
-                .attribute(SVTYPE_INFO, "BND")
+                .attribute(StructuralVariantFactory.CIPOS, Lists.newArrayList(lowerRange, upperRange))
+                .attribute(StructuralVariantFactory.SVTYPE, "BND")
                 .noGenotypes()
                 .make();
     }
@@ -189,25 +184,7 @@ class PurpleStructuralVariantSupplier {
     public void write(@NotNull final PurityAdjuster purityAdjuster, @NotNull final List<PurpleCopyNumber> copyNumbers) {
         if (header.isPresent()) {
 
-            final StructuralVariantFactory svFactory = new StructuralVariantFactory(x -> true);
-            variantContexts.forEach(svFactory::addVariantContext);
-
-            final CopyNumberEnrichedStructuralVariantFactory svEnricher =
-                    new CopyNumberEnrichedStructuralVariantFactory(purityAdjuster, Multimaps.fromRegions(copyNumbers));
-
-            final TreeSet<VariantContext> enrichedContexts = new TreeSet<>(new VCComparator(header.get().getSequenceDictionary()));
-            for (EnrichedStructuralVariant enrichedSV : svEnricher.enrich(svFactory.results())) {
-                enrichedContexts.add(enrich(enrichedSV, enrichedSV.startContext(), false));
-
-                final VariantContext endContext = enrichedSV.endContext();
-                if (endContext != null) {
-                    enrichedContexts.add(enrich(enrichedSV, endContext, true));
-                }
-            }
-
-            enrichedContexts.addAll(svFactory.unmatched());
-
-            VariantContextWriter writer = new VariantContextWriterBuilder().setOutputFile(outputVCF)
+            final VariantContextWriter writer = new VariantContextWriterBuilder().setOutputFile(outputVCF)
                     .setReferenceDictionary(header.get().getSequenceDictionary())
                     .setIndexCreator(new TabixIndexCreator(header.get().getSequenceDictionary(), new TabixFormat()))
                     .setOutputFileType(VariantContextWriterBuilder.OutputType.BLOCK_COMPRESSED_VCF)
@@ -215,9 +192,32 @@ class PurpleStructuralVariantSupplier {
                     .build();
 
             writer.writeHeader(header.get());
-            enrichedContexts.forEach(writer::add);
+            enriched(purityAdjuster, copyNumbers).forEach(writer::add);
             writer.close();
         }
+    }
+
+    private TreeSet<VariantContext> enriched(@NotNull final PurityAdjuster purityAdjuster, @NotNull final List<PurpleCopyNumber> copyNumbers) {
+        assert (header.isPresent());
+
+        final StructuralVariantFactory svFactory = new StructuralVariantFactory(x -> true);
+        variantContexts.forEach(svFactory::addVariantContext);
+
+        final CopyNumberEnrichedStructuralVariantFactory svEnricher =
+                new CopyNumberEnrichedStructuralVariantFactory(purityAdjuster, Multimaps.fromRegions(copyNumbers));
+
+        final TreeSet<VariantContext> enrichedContexts = new TreeSet<>(new VCComparator(header.get().getSequenceDictionary()));
+        for (EnrichedStructuralVariant enrichedSV : svEnricher.enrich(svFactory.results())) {
+            enrichedContexts.add(enrich(enrichedSV, enrichedSV.startContext(), false));
+
+            final VariantContext endContext = enrichedSV.endContext();
+            if (endContext != null) {
+                enrichedContexts.add(enrich(enrichedSV, endContext, true));
+            }
+        }
+
+        enrichedContexts.addAll(svFactory.unmatched());
+        return enrichedContexts;
     }
 
     @NotNull
@@ -286,14 +286,14 @@ class PurpleStructuralVariantSupplier {
     @NotNull
     private static VCFHeader generateOutputHeader(@NotNull final VCFHeader template) {
         final VCFHeader outputVCFHeader = new VCFHeader(template.getMetaDataInInputOrder(), template.getSampleNamesInOrder());
-        outputVCFHeader.addMetaDataLine(new VCFInfoHeaderLine(RECOVERED_FLAG, 0, VCFHeaderLineType.Flag, RECOVERED_DESC));
-        outputVCFHeader.addMetaDataLine(new VCFFilterHeaderLine(INFERRED_FLAG, INFERRED_DESC));
+        outputVCFHeader.addMetaDataLine(new VCFInfoHeaderLine(StructuralVariantFactory.RECOVERED, 0, VCFHeaderLineType.Flag, RECOVERED_DESC));
+        outputVCFHeader.addMetaDataLine(new VCFFilterHeaderLine(StructuralVariantFactory.INFERRED, INFERRED_DESC));
 
         outputVCFHeader.addMetaDataLine(new VCFFormatHeaderLine(GT_FORMAT, 1, VCFHeaderLineType.String, GT_DESC));
 
         outputVCFHeader.addMetaDataLine(new VCFInfoHeaderLine(IMPRECISE_INFO, 0, VCFHeaderLineType.Flag, IMPRECISE_DESC));
-        outputVCFHeader.addMetaDataLine(new VCFInfoHeaderLine(CIPOS_INFO, 2, VCFHeaderLineType.Integer, CIPOS_DESC));
-        outputVCFHeader.addMetaDataLine(new VCFInfoHeaderLine(SVTYPE_INFO, 1, VCFHeaderLineType.String, SVTYPE_DESC));
+        outputVCFHeader.addMetaDataLine(new VCFInfoHeaderLine(StructuralVariantFactory.CIPOS, 2, VCFHeaderLineType.Integer, CIPOS_DESC));
+        outputVCFHeader.addMetaDataLine(new VCFInfoHeaderLine(StructuralVariantFactory.SVTYPE, 1, VCFHeaderLineType.String, SVTYPE_DESC));
         outputVCFHeader.addMetaDataLine(new VCFInfoHeaderLine(PURPLE_AF_INFO, UNBOUNDED, VCFHeaderLineType.Float, PURPLE_AF_DESC));
         outputVCFHeader.addMetaDataLine(new VCFInfoHeaderLine(PURPLE_CN_INFO, UNBOUNDED, VCFHeaderLineType.Float, PURPLE_CN_DESC));
         outputVCFHeader.addMetaDataLine(new VCFInfoHeaderLine(PURPLE_PLOIDY_INFO, 1, VCFHeaderLineType.Float, PURPLE_PLOIDY_DESC));

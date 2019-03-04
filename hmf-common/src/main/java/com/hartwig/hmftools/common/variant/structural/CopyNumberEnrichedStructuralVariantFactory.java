@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.common.variant.structural;
 
 import java.util.List;
+import java.util.Optional;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
@@ -36,7 +37,6 @@ public final class CopyNumberEnrichedStructuralVariantFactory {
         final List<EnrichedStructuralVariant> result = Lists.newArrayList();
         for (final StructuralVariant variant : variants) {
 
-
             ImmutableEnrichedStructuralVariant.Builder builder = ImmutableEnrichedStructuralVariant.builder().from(variant);
             ImmutableEnrichedStructuralVariantLeg.Builder startBuilder = createBuilder(variant.start());
             // Every SV should have a start, while end is optional.
@@ -69,6 +69,12 @@ public final class CopyNumberEnrichedStructuralVariantFactory {
                 startBuilder.adjustedCopyNumber(round(startCopyNumber.adjustedCopyNumber()));
                 startBuilder.adjustedCopyNumberChange(round(startCopyNumber.adjustedCopyNumberChange()));
 
+                // Lacking anything else, inferred singles can use copy number change as ploidy
+                if (Optional.ofNullable(variant.filter()).filter(x -> x.equals(StructuralVariantFactory.INFERRED)).isPresent()
+                        && variant.type() == StructuralVariantType.SGL) {
+                    builder.ploidy(round(startCopyNumber.adjustedCopyNumberChange()));
+                }
+
                 if (endLeg != null) {
                     assert endBuilder != null;
                     final StructuralVariantLegCopyNumber endCopyNumber = copyNumberFactory.create(endLeg, copyNumbers);
@@ -76,7 +82,6 @@ public final class CopyNumberEnrichedStructuralVariantFactory {
                     endBuilder.adjustedCopyNumberChange(round(endCopyNumber.adjustedCopyNumberChange()));
                 }
             }
-
 
             result.add(builder.start(startBuilder.build()).end(endBuilder == null ? null : endBuilder.build()).build());
         }
