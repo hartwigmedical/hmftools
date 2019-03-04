@@ -125,7 +125,7 @@ public class PurityPloidyEstimateApplication {
             }
 
             // Load structural and somatic variants
-            final PurpleStructuralVariantSupplier structuralVariants = structuralVariants(configSupplier);
+            final PurpleStructuralVariantSupplier structuralVariants = structuralVariants(version, configSupplier);
             final List<SomaticVariant> allSomatics = somaticVariants(configSupplier);
             final List<SomaticVariant> snpSomatics = allSomatics.stream().filter(SomaticVariant::isSnp).collect(Collectors.toList());
 
@@ -304,7 +304,7 @@ public class PurityPloidyEstimateApplication {
     }
 
     @NotNull
-    private static PurpleStructuralVariantSupplier structuralVariants(@NotNull final ConfigSupplier configSupplier) {
+    private static PurpleStructuralVariantSupplier structuralVariants(@NotNull final VersionInfo version, @NotNull final ConfigSupplier configSupplier) {
         final CommonConfig commonConfig = configSupplier.commonConfig();
         final StructuralVariantConfig svConfig = configSupplier.structuralVariantConfig();
         if (svConfig.file().isPresent()) {
@@ -312,7 +312,7 @@ public class PurityPloidyEstimateApplication {
             final String outputPath = commonConfig.outputDirectory() + File.separator + commonConfig.tumorSample() + ".purple.sv.vcf.gz";
 
             LOGGER.info("Loading structural variants from {}", filePath);
-            return new PurpleStructuralVariantSupplier(filePath, outputPath);
+            return new PurpleStructuralVariantSupplier(version.version(), filePath, outputPath);
         } else {
             return new PurpleStructuralVariantSupplier();
         }

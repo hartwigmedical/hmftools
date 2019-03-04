@@ -44,10 +44,11 @@ import htsjdk.variant.variantcontext.writer.VariantContextWriter;
 import htsjdk.variant.variantcontext.writer.VariantContextWriterBuilder;
 import htsjdk.variant.vcf.VCFFileReader;
 import htsjdk.variant.vcf.VCFFilterHeaderLine;
-import htsjdk.variant.vcf.VCFFormatHeaderLine;
 import htsjdk.variant.vcf.VCFHeader;
+import htsjdk.variant.vcf.VCFHeaderLine;
 import htsjdk.variant.vcf.VCFHeaderLineType;
 import htsjdk.variant.vcf.VCFInfoHeaderLine;
+import htsjdk.variant.vcf.VCFStandardHeaderLines;
 
 @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
 class PurpleStructuralVariantSupplier {
@@ -75,6 +76,7 @@ class PurpleStructuralVariantSupplier {
     private static final Allele INCREASING_ALLELE = Allele.create(".N", false);
     private static final Allele DECREASING_ALLELE = Allele.create("N.", false);
 
+    private final String purpleVersion;
     private final String outputVCF;
     private final Optional<VCFHeader> header;
     private final TreeSet<VariantContext> variantContexts;
@@ -87,11 +89,13 @@ class PurpleStructuralVariantSupplier {
         header = Optional.empty();
         variantContexts = new TreeSet<>();
         outputVCF = Strings.EMPTY;
+        purpleVersion = "0";
     }
 
-    PurpleStructuralVariantSupplier(@NotNull final String templateVCF, @NotNull final String outputVCF) {
+    PurpleStructuralVariantSupplier(@NotNull final String version, @NotNull final String templateVCF, @NotNull final String outputVCF) {
         final VCFFileReader vcfReader = new VCFFileReader(new File(templateVCF), false);
         this.outputVCF = outputVCF;
+        purpleVersion = version;
         header = Optional.of(generateOutputHeader(vcfReader.getFileHeader()));
         variantContexts = new TreeSet<>(new VCComparator(header.get().getSequenceDictionary()));
         for (VariantContext context : vcfReader) {
@@ -284,13 +288,13 @@ class PurpleStructuralVariantSupplier {
     }
 
     @NotNull
-    private static VCFHeader generateOutputHeader(@NotNull final VCFHeader template) {
+    private VCFHeader generateOutputHeader(@NotNull final VCFHeader template) {
         final VCFHeader outputVCFHeader = new VCFHeader(template.getMetaDataInInputOrder(), template.getSampleNamesInOrder());
+        outputVCFHeader.addMetaDataLine(new VCFHeaderLine("purpleVersion", purpleVersion));
+
+        outputVCFHeader.addMetaDataLine(VCFStandardHeaderLines.getFormatLine("GT"));
         outputVCFHeader.addMetaDataLine(new VCFInfoHeaderLine(StructuralVariantFactory.RECOVERED, 0, VCFHeaderLineType.Flag, RECOVERED_DESC));
         outputVCFHeader.addMetaDataLine(new VCFFilterHeaderLine(StructuralVariantFactory.INFERRED, INFERRED_DESC));
-
-        outputVCFHeader.addMetaDataLine(new VCFFormatHeaderLine(GT_FORMAT, 1, VCFHeaderLineType.String, GT_DESC));
-
         outputVCFHeader.addMetaDataLine(new VCFInfoHeaderLine(IMPRECISE_INFO, 0, VCFHeaderLineType.Flag, IMPRECISE_DESC));
         outputVCFHeader.addMetaDataLine(new VCFInfoHeaderLine(StructuralVariantFactory.CIPOS, 2, VCFHeaderLineType.Integer, CIPOS_DESC));
         outputVCFHeader.addMetaDataLine(new VCFInfoHeaderLine(StructuralVariantFactory.SVTYPE, 1, VCFHeaderLineType.String, SVTYPE_DESC));
