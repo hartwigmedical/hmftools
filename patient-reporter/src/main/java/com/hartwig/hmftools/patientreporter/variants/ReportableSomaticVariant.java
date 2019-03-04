@@ -17,6 +17,8 @@ public abstract class ReportableSomaticVariant implements AllelicDepth {
     @NotNull
     public abstract String gene();
 
+    public abstract long position();
+
     public abstract boolean isDrupActionable();
 
     @NotNull
