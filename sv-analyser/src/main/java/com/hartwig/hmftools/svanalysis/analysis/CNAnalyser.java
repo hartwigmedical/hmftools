@@ -65,14 +65,14 @@ public class CNAnalyser {
     private boolean mWriteVerbosePloidyData;
     private boolean mWriteLohData;
 
-    BufferedWriter mFileWriter;
-    BufferedWriter mRecalcPloidyFileWriter;
-    DatabaseAccess mDbAccess;
-    List<StructuralVariantData> mSvDataList;
-    List<PurpleCopyNumber> mCnRecords;
-    Map<String,List<SvCNData>> mChrCnDataMap; // map of chromosome to CN data items
-    Map<String,SvCNData[]> mSvIdCnDataMap; // map of SV Ids to corresponding CN data pair
-    PurityContext mPurityContext;
+    private BufferedWriter mFileWriter;
+    private BufferedWriter mRecalcPloidyFileWriter;
+    private DatabaseAccess mDbAccess;
+    private List<StructuralVariantData> mSvDataList;
+    private List<PurpleCopyNumber> mCnRecords;
+    private Map<String,List<SvCNData>> mChrCnDataMap; // map of chromosome to CN data items
+    private Map<String,SvCNData[]> mSvIdCnDataMap; // map of SV Ids to corresponding CN data pair
+    private PurityContext mPurityContext;
 
     private Map<String, List<SvLOH>> mSampleLohData;
     private Map<String,Map<String,double[]>> mSampleSvPloidyCalcMap;
@@ -117,6 +117,9 @@ public class CNAnalyser {
     public final Map<String,Map<String,double[]>> getSampleSvPloidyCalcMap() { return mSampleSvPloidyCalcMap; }
     public final Map<String, List<SvLOH>> getSampleLohData() { return mSampleLohData; }
     public final Map<String, double[]> getChrCopyNumberMap() { return mChrEndsCNMap; }
+    public final Map<String,List<SvCNData>> getChrCnDataMap() { return mChrCnDataMap; }
+    public final Map<String,SvCNData[]> getSvIdCnDataMap() { return mSvIdCnDataMap; }
+    public final PurityContext getPurityContext() { return mPurityContext; }
 
     public static void addCmdLineArgs(Options options)
     {
@@ -249,8 +252,8 @@ public class CNAnalyser {
                 mChrCnDataMap.put(cnData.Chromosome, cnDataList);
             }
 
-            cnDataList.add(cnData);
             cnData.setIndex(cnDataList.size());
+            cnDataList.add(cnData);
         }
     }
 
@@ -343,68 +346,6 @@ public class CNAnalyser {
             }
         }
 
-        /*
-        for(SvCNData cnData : mChrCnDataMap)
-        {
-            if (!cnData.matchesSV(true) && !cnData.matchesSegment(NONE, true))
-                continue;
-
-            // ignore orientation during matching since CN change is not a reliable determinant of SV orientation
-            long cnPosition = cnData.StartPos;
-
-            for (final StructuralVariantData svData : mSvDataList)
-            {
-                if (svData.filter().equals(PON_FILTER_PON))
-                    continue;
-
-                if(!svData.type().toString().equals(cnData.SegStart))
-                {
-                    if(svData.type() == SGL && svData.filter().equals(NONE_SEGMENT_INFERRED) && cnData.matchesSegment(NONE, true))
-                    {
-                        // SGL inferred == NONE in CN table
-                    }
-                    else if(cnData.matchesSegment(MULTIPLE, true))
-                    {
-                        // also valid
-                    }
-                    else
-                    {
-                        continue;
-                    }
-                }
-
-                long svPosStart = svData.startOrientation() == -1 ? cnPosition : cnPosition - 1;
-                long svPosEnd = svData.endOrientation() == -1 ? cnPosition : cnPosition - 1;
-                boolean matchOnStart = false;
-
-                if (svData.startChromosome().equals(cnData.Chromosome) && svData.startPosition() == svPosStart)
-                {
-                    matchOnStart = true;
-                }
-                else if (svData.endChromosome().equals(cnData.Chromosome) && svData.endPosition() == svPosEnd)
-                {
-                    matchOnStart = false;
-                }
-                else
-                {
-                    continue;
-                }
-
-                cnData.setStructuralVariantData(svData, matchOnStart);
-
-                SvCNData[] cnDataItems = mSvIdCnDataMap.get(svData.id());
-
-                if(cnDataItems == null)
-                {
-                    cnDataItems = new SvCNData[2];
-                    mSvIdCnDataMap.put(svData.id(), cnDataItems);
-                }
-
-                cnDataItems[matchOnStart ? SVI_START : SVI_END] = cnData;
-            }
-        }
-        */
-
         if(unmatchedSVs > 0)
         {
             LOGGER.warn("sample({}) has {} unmatched CN-SV segments", sampleId, unmatchedSVs);
@@ -428,7 +369,7 @@ public class CNAnalyser {
     {
         if(chromosome.equals("X") || chromosome.equals("Y"))
         {
-            if (mPurityContext != null && mPurityContext.gender() == Gender.MALE)
+            if (mPurityContext != null && mPurityContext.gender().toString().startsWith("MALE"))
             {
                 return true;
             }
@@ -473,7 +414,7 @@ public class CNAnalyser {
             {
                 final SvCNData cnData = cnDataList.get(index);
 
-                double minCN = (1 - cnData.ActualBaf) * cnData.CopyNumber;
+                double minCN = cnData.minorAllelePloidy();
 
                 boolean newChromosome = (index == 0);
                 boolean reset = newChromosome;
@@ -503,7 +444,7 @@ public class CNAnalyser {
                         if (lohRegained && cnData.EndPos - cnData.StartPos <= SHORT_TI_LENGTH && index < cnDataList.size() - 1)
                         {
                             final SvCNData nextData = cnDataList.get(index + 1);
-                            double nextMinCN = (1 - nextData.ActualBaf) * nextData.CopyNumber;
+                            double nextMinCN = nextData.minorAllelePloidy();
 
                             if (nextData.EndPos - cnData.StartPos > REMOTE_SV_DISTANCE && nextMinCN < MIN_LOH_CN
                                     && lohStartCnData != null && cnData.StartPos - lohStartCnData.StartPos > REMOTE_SV_DISTANCE)
@@ -747,9 +688,7 @@ public class CNAnalyser {
                     sampleId, chr, startData.id(), endData.id(),
                     startData.StartPos, incomplete ? endData.EndPos : endData.StartPos,
                     startData.SegStart, incomplete ? endData.SegEnd : endData.SegStart,
-                    lastMinCN,
-                    (1 - startData.ActualBaf) * startData.CopyNumber,
-                    (1 - endData.ActualBaf) * endData.CopyNumber,
+                    lastMinCN, startData.minorAllelePloidy(), endData.minorAllelePloidy(),
                     lohMinCN, segCount, lohLength,
                     startSvData != null ? startSvData.id() : "0",
                     endSvData != null ? endSvData.id() : "0",
@@ -1003,8 +942,8 @@ public class CNAnalyser {
                 else
                 {
                     mRecalcPloidyFileWriter.write("SampleId,SvId,Type,Ploidy,TumorReadCount");
-                    mRecalcPloidyFileWriter.write(",ChrStart,PosStart,OrientStart,CNStart,CNChgStart,DWCountStart,PrevDWCountStart,NextDWCountStart");
-                    mRecalcPloidyFileWriter.write(",ChrEnd,PosEnd,OrientEnd,CNEnd,CNChgEnd,DWCountEnd,PrevDWCountEnd,NextDWCountEnd");
+                    mRecalcPloidyFileWriter.write(",ChrStart,PosStart,OrientStart,CNStart,CNChgStart,PrevDWCountStart,NextDWCountStart");
+                    mRecalcPloidyFileWriter.write(",ChrEnd,PosEnd,OrientEnd,CNEnd,CNChgEnd,PrevDWCountEnd,NextDWCountEnd");
                     mRecalcPloidyFileWriter.write(",PoisRcLow,PoisRcHigh,PloidyUncertainty,EstPloidy,EstUncertainty,MinPloidy,MaxPloidy");
                 }
 
@@ -1115,14 +1054,14 @@ public class CNAnalyser {
                         writer.write(String.format("%s,%s,%s,%.4f,%d",
                                 sampleId, svData.id(), svData.type(), svData.ploidy(), tumorReadCount));
 
-                        writer.write(String.format(",%s,%d,%d,%.4f,%.4f,%d,%d,%d",
+                        writer.write(String.format(",%s,%d,%d,%.4f,%.4f,%d,%d",
                                 svData.startChromosome(), svData.startPosition(), svData.startOrientation(),
-                                cnStart, cnChgStart, cnStartData.DepthWindowCount, startDepthData[0], startDepthData[1]));
+                                cnStart, cnChgStart, startDepthData[DWC_PREV_INDEX], startDepthData[DWC_NEXT_INDEX]));
 
-                        writer.write(String.format(",%s,%d,%d,%.4f,%.4f,%d,%d,%d",
-                                svData.endChromosome(), svData.endPosition(), svData.endOrientation(),
-                                cnEnd, cnChgEnd, cnEndData != null ? cnEndData.DepthWindowCount : 0,
-                                endDepthData != null ? endDepthData[0] : 0, endDepthData != null ? endDepthData[1] : 0));
+                        writer.write(String.format(",%s,%d,%d,%.4f,%.4f,%d,%d",
+                                svData.endChromosome(), svData.endPosition(), svData.endOrientation(), cnEnd, cnChgEnd,
+                                endDepthData != null ? endDepthData[DWC_PREV_INDEX] : 0,
+                                endDepthData != null ? endDepthData[DWC_NEXT_INDEX] : 0));
 
                         writer.write(String.format(",%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f",
                                 calcResults[APC_RC_POIS_LOW], calcResults[APC_RC_POIS_HIGH],
@@ -1243,7 +1182,7 @@ public class CNAnalyser {
 
     private static double calcCopyNumberSideUncertainty(double copyNumber, final int[] depthData)
     {
-        int minDepthCount = min(depthData[0], depthData[1]);
+        int minDepthCount = min(depthData[DWC_PREV_INDEX], depthData[DWC_NEXT_INDEX]);
 
         if(minDepthCount <= 0)
             return 0;
@@ -1338,31 +1277,41 @@ public class CNAnalyser {
         return testValue;
     }
 
-
-    private int[] extractDepthWindowData(final SvCNData cnData)
+    public final SvCNData getCNSegment(final String chromosome, int index)
     {
-        // get depth window count before, at and after this segment
-        int[] deptWindowData = new int[2];
+        final List<SvCNData> cnDataList = mChrCnDataMap.get(chromosome);
+
+        if(cnDataList == null || cnDataList.isEmpty())
+            return null;
+
+        if(index < 0 || index >= cnDataList.size())
+            return null;
+
+        return cnDataList.get(index);
+    }
+
+
+    public static int DWC_PREV_INDEX = 0;
+    public static int DWC_NEXT_INDEX = 1;
+
+    private final int[] extractDepthWindowData(final SvCNData cnData)
+    {
+        // get depth window count at and before this segment - ie straddling the breakend
+        int[] depthWindowData = new int[DWC_NEXT_INDEX+1];
 
         final List<SvCNData> cnDataList = mChrCnDataMap.get(cnData.Chromosome);
+
+        depthWindowData[DWC_NEXT_INDEX] = cnData.DepthWindowCount;
 
         if(cnData.getIndex() > 0)
         {
             final SvCNData prevCnData = cnDataList.get(cnData.getIndex()-1);
 
             if(prevCnData.Chromosome.equals(cnData.Chromosome))
-                deptWindowData[0] = prevCnData.DepthWindowCount;
+                depthWindowData[DWC_PREV_INDEX] = prevCnData.DepthWindowCount;
         }
 
-        if(cnData.getIndex() < cnDataList.size() - 1)
-        {
-            final SvCNData nextCnData = cnDataList.get(cnData.getIndex() + 1);
-
-            if(nextCnData.Chromosome.equals(cnData.Chromosome))
-                deptWindowData[1] = nextCnData.DepthWindowCount;
-        }
-
-        return deptWindowData;
+        return depthWindowData;
     }
 
     private static int PLOIDY_CALC_COLUMN_COUNT = 4;

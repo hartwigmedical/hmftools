@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.svanalysis.types;
 
+import com.hartwig.hmftools.common.purple.copynumber.CopyNumberMethod;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantData;
@@ -24,6 +25,25 @@ public class SvCNData {
     private StructuralVariantData mSvData; // linked if known
     private boolean mSvLinkOnStart;
 
+    public SvCNData(int id, final String chromosome, final long startPos, final long endPos,
+            final double copyNumber, final String segStart,  final String segEnd,  final int bafCount,
+            final double actualBaf,  final int depthWindowCount)
+    {
+        mId = id;
+        Chromosome = chromosome;
+        StartPos = startPos;
+        EndPos = endPos;
+        CopyNumber = copyNumber;
+        SegStart = segStart;
+        SegEnd = segEnd;
+        Method = CopyNumberMethod.STRUCTURAL_VARIANT.toString();
+        BafCount = bafCount;
+        ObservedBaf = 0;
+        ActualBaf = actualBaf;
+        DepthWindowCount = depthWindowCount;
+        mIndex = 0;
+    }
+
     public SvCNData(final PurpleCopyNumber record, int id)
     {
         mId = id;
@@ -46,6 +66,9 @@ public class SvCNData {
 
     public int getIndex() { return mIndex; }
     public void setIndex(int index) { mIndex = index; }
+
+    public double majorAllelePloidy() { return ActualBaf * CopyNumber; }
+    public double minorAllelePloidy() { return (1 - ActualBaf) * CopyNumber; }
 
     public void setStructuralVariantData(final StructuralVariantData svData, boolean linkOnStart)
     {

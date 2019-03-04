@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.svanalysis.analyser;
 
+import static com.hartwig.hmftools.common.purple.segment.SegmentSupport.CENTROMERE;
+import static com.hartwig.hmftools.common.purple.segment.SegmentSupport.TELOMERE;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.BND;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DEL;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DUP;
@@ -8,17 +10,30 @@ import static com.hartwig.hmftools.common.variant.structural.StructuralVariantTy
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.DEFAULT_PROXIMITY_DISTANCE;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.CHROMOSOME_ARM_P;
+import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.CHROMOSOME_ARM_Q;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.getChromosomalArm;
+import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_END;
+import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_START;
+import static com.hartwig.hmftools.svanalysis.types.SvVarData.isStart;
 
 import java.util.List;
+import java.util.Map;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.purple.copynumber.ImmutablePurpleCopyNumber;
+import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
+import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumberFactory;
+import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 import com.hartwig.hmftools.common.variant.structural.ImmutableStructuralVariantData;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantData;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
+import com.hartwig.hmftools.svanalysis.analysis.CNAnalyser;
 import com.hartwig.hmftools.svanalysis.analysis.ClusterAnalyser;
 import com.hartwig.hmftools.svanalysis.analysis.LinkFinder;
 import com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods;
+import com.hartwig.hmftools.svanalysis.analysis.SvUtilities;
+import com.hartwig.hmftools.svanalysis.types.SvBreakend;
+import com.hartwig.hmftools.svanalysis.types.SvCNData;
 import com.hartwig.hmftools.svanalysis.types.SvaConfig;
 import com.hartwig.hmftools.svanalysis.types.SvCluster;
 import com.hartwig.hmftools.svanalysis.types.SvVarData;
@@ -33,6 +48,7 @@ public class SvTestHelper
     public SvaConfig Config;
     public SvClusteringMethods ClusteringMethods;
     public ClusterAnalyser Analyser;
+    public CNAnalyser CopyNumberAnalyser;
 
     private int mNextVarId;
 
@@ -41,6 +57,8 @@ public class SvTestHelper
         Config = new SvaConfig(DEFAULT_PROXIMITY_DISTANCE);
         ClusteringMethods = new SvClusteringMethods(Config.ProximityDistance);
         Analyser = new ClusterAnalyser(Config, ClusteringMethods);
+        CopyNumberAnalyser = new CNAnalyser("", null);
+        Analyser.setCopyNumberAnalyser(CopyNumberAnalyser);
 
         Analyser.setRunValidationChecks(true);
 
@@ -219,5 +237,140 @@ public class SvTestHelper
         return var;
     }
 
+    public void addCopyNumberData()
+    {
+        Map<String, List<SvCNData>> chrCnDataMap = CopyNumberAnalyser.getChrCnDataMap();
+        final Map<String, List<SvBreakend>> chrBreakendMap = ClusteringMethods.getChrBreakendMap();
+        Map<String,SvCNData[]> svIdCnDataMap = CopyNumberAnalyser.getSvIdCnDataMap();
+
+        int cnId = 0;
+        for (final Map.Entry<String, List<SvBreakend>> entry : chrBreakendMap.entrySet())
+        {
+            final String chromosome = entry.getKey();
+            List<SvBreakend> breakendList = entry.getValue();
+            List<SvCNData> cnDataList = Lists.newArrayList();
+            chrCnDataMap.put(chromosome, cnDataList);
+
+            long centromerePosition = SvUtilities.getChromosomalArmLength(chromosome, CHROMOSOME_ARM_P);
+            long chromosomeLength = SvUtilities.CHROMOSOME_LENGTHS.get(chromosome);
+
+            for (int i = 0; i < breakendList.size(); ++i)
+            {
+                final SvBreakend breakend = breakendList.get(i);
+                final SvVarData var = breakend.getSV();
+
+                SvCNData cnData = null;
+
+                if (i == 0)
+                {
+                    // add telomere segment at start, and centromere as soon as the breakend crosses the centromere
+                    if(breakend.arm() == CHROMOSOME_ARM_Q)
+                    {
+                        SvCNData extraCnData = new SvCNData(cnId++, chromosome, 0, centromerePosition,
+                                breakend.getCopyNumber(true),
+                                TELOMERE.toString(), CENTROMERE.toString(),
+                                1, 0.5, 100);
+
+                        extraCnData.setIndex(cnDataList.size());
+                        cnDataList.add(extraCnData);
+
+                        extraCnData = new SvCNData(cnId++, chromosome, centromerePosition, breakend.position() - 1,
+                                breakend.getCopyNumber(true),
+                                CENTROMERE.toString(), var.type().toString(),
+                                1, 0.5, 100);
+
+                        extraCnData.setIndex(cnDataList.size());
+                        cnDataList.add(extraCnData);
+                    }
+                    else
+                    {
+                        SvCNData extraCnData = new SvCNData(cnId++, chromosome, 0, breakend.position() - 1,
+                                breakend.getCopyNumber(true),
+                                TELOMERE.toString(), var.type().toString(),
+                                1, 0.5, 100);
+
+                        extraCnData.setIndex(cnDataList.size());
+                        cnDataList.add(extraCnData);
+                    }
+                }
+
+                if (i < breakendList.size() - 1)
+                {
+                    final SvBreakend nextBreakend = breakendList.get(i + 1);
+
+                    if(breakend.arm() == CHROMOSOME_ARM_P && nextBreakend.arm() == CHROMOSOME_ARM_Q)
+                    {
+                        cnData = new SvCNData(cnId++, chromosome, breakend.position(), centromerePosition-1,
+                                breakend.getCopyNumber(false),
+                                var.type().toString(), CENTROMERE.toString(),
+                                1, 0.5, 100);
+
+                        cnData.setIndex(cnDataList.size());
+                        cnDataList.add(cnData);
+
+                        SvCNData extraCnData = new SvCNData(cnId++, chromosome, centromerePosition, nextBreakend.position() - 1,
+                                breakend.getCopyNumber(false),
+                                CENTROMERE.toString(), nextBreakend.getSV().type().toString(),
+                                1, 0.5, 100);
+
+                        extraCnData.setIndex(cnDataList.size());
+                        cnDataList.add(extraCnData);
+                    }
+                    else
+                    {
+                        cnData = new SvCNData(cnId++, chromosome, breakend.position(), nextBreakend.position() - 1,
+                                breakend.getCopyNumber(false),
+                                var.type().toString(), nextBreakend.getSV().type().toString(),
+                                1, 0.5, 100);
+
+                        cnData.setIndex(cnDataList.size());
+                        cnDataList.add(cnData);
+                    }
+                }
+                else
+                {
+                    // last breakend runs out to the telomere
+                    if(breakend.arm() == CHROMOSOME_ARM_P)
+                    {
+                        cnData = new SvCNData(cnId++, chromosome, breakend.position(), centromerePosition - 1,
+                                breakend.getCopyNumber(false),
+                                var.type().toString(), CENTROMERE.toString(),
+                                1, 0.5, 100);
+
+                        cnData.setIndex(cnDataList.size());
+                        cnDataList.add(cnData);
+
+                        SvCNData extraCnData = new SvCNData(cnId++, chromosome, centromerePosition, chromosomeLength,
+                                breakend.getCopyNumber(false),
+                                CENTROMERE.toString(), TELOMERE.toString(),
+                                1, 0.5, 100);
+
+                        extraCnData.setIndex(cnDataList.size());
+                        cnDataList.add(extraCnData);
+                    }
+                    else
+                    {
+                        cnData = new SvCNData(cnId++, chromosome, breakend.position(), chromosomeLength,
+                                breakend.getCopyNumber(false),
+                                var.type().toString(), TELOMERE.toString(),
+                                1, 0.5, 100);
+
+                        cnData.setIndex(cnDataList.size());
+                        cnDataList.add(cnData);
+                    }
+                }
+
+                SvCNData[] cnDataPair = svIdCnDataMap.get(var.id());
+
+                if(cnDataPair == null)
+                {
+                    cnDataPair = new SvCNData[2];
+                    svIdCnDataMap.put(var.id(), cnDataPair);
+                }
+
+                cnDataPair[breakend.usesStart() ? SVI_START : SVI_END] = cnData;
+            }
+        }
+    }
 
 }

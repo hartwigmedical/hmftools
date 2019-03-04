@@ -128,6 +128,7 @@ public class SvSampleAnalyser {
     public void setSamplePloidyCalcData(final Map<String,Map<String,double[]>> data) { mSampleSvPloidyCalcMap = data; }
     public void setChrCopyNumberMap(final Map<String, double[]> data) { mClusteringMethods.setChrCopyNumberMap(data); }
     public final VisualiserWriter getVisWriter() { return mVisWriter; }
+    public void setCopyNumberAnalyser(CNAnalyser cnAnalyser) { mAnalyser.setCopyNumberAnalyser(cnAnalyser); }
 
     private void clearState()
     {

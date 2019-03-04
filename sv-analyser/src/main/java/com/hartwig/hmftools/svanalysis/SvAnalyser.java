@@ -130,6 +130,8 @@ public class SvAnalyser {
         {
             SvSampleAnalyser sampleAnalyser = new SvSampleAnalyser(svaConfig);
 
+            sampleAnalyser.setCopyNumberAnalyser(cnAnalyser);
+
             DriverGeneAnnotator driverGeneAnnotator = null;
             boolean checkDrivers = cmd.hasOption(DRIVERS_CHECK);
 

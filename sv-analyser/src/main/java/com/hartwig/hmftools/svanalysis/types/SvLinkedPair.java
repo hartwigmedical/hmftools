@@ -25,6 +25,8 @@ public class SvLinkedPair {
     private int mNextSVDistance;
     private int mNextSVTraversedCount;
     private boolean mOnArmOfOrigin;
+    private boolean mWithinChainStartAndEnd;
+    private boolean mHasCopyNumberGain;
 
     private String mExonMatchData;
 
@@ -52,6 +54,8 @@ public class SvLinkedPair {
         mNextSVDistance = 0;
         mNextSVTraversedCount = 0;
         mOnArmOfOrigin = false;
+        mWithinChainStartAndEnd = false;
+        mHasCopyNumberGain = false;
         mExonMatchData = "";
 
         int length = (int) (first.position(firstLinkOnStart) - second.position(secondLinkOnStart));
@@ -126,6 +130,12 @@ public class SvLinkedPair {
 
     public void setOnArmOfOrigin(boolean toggle) { mOnArmOfOrigin = toggle; }
     public boolean onArmOfOrigin() { return mOnArmOfOrigin; }
+
+    public void setWithinChainStartAndEnd(boolean toggle) { mWithinChainStartAndEnd = toggle; }
+    public boolean withinChainStartAndEnd() { return mWithinChainStartAndEnd; }
+
+    public void setHasCopyNumberGain(boolean toggle) { mHasCopyNumberGain = toggle; }
+    public boolean hasCopyNumberGain() { return mHasCopyNumberGain; }
 
     public void setTraversedSVCount(int count) { mTraversedSVCount = count; }
     public int getTraversedSVCount() { return mTraversedSVCount; }

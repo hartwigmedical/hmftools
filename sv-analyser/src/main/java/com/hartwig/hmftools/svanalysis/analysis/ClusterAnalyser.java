@@ -16,7 +16,9 @@ import static com.hartwig.hmftools.svanalysis.analysis.ClusterAnnotations.annota
 import static com.hartwig.hmftools.svanalysis.analysis.ClusterAnnotations.annotateTemplatedInsertions;
 import static com.hartwig.hmftools.svanalysis.analysis.ClusterAnnotations.classifyChainedClusters;
 import static com.hartwig.hmftools.svanalysis.analysis.ClusterAnnotations.findIncompleteFoldbackCandidates;
+import static com.hartwig.hmftools.svanalysis.analysis.ClusterAnnotations.findPotentialDoubleMinuteClusters;
 import static com.hartwig.hmftools.svanalysis.analysis.ClusterAnnotations.reportDoubleMinutes;
+import static com.hartwig.hmftools.svanalysis.analysis.ClusterAnnotations.reportDuplicationCopyNumberData;
 import static com.hartwig.hmftools.svanalysis.analysis.LinkFinder.MIN_TEMPLATED_INSERTION_LENGTH;
 import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.CLUSTER_REASON_COMMON_ARMS;
 import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.CLUSTER_REASON_FOLDBACKS;
@@ -73,6 +75,7 @@ public class ClusterAnalyser {
 
     final SvaConfig mConfig;
     SvClusteringMethods mClusteringMethods;
+    CNAnalyser mCopyNumberAnalyser;
 
     String mSampleId;
     private List<SvVarData> mAllVariants;
@@ -95,6 +98,7 @@ public class ClusterAnalyser {
     {
         mConfig = config;
         mClusteringMethods = clusteringMethods;
+        mCopyNumberAnalyser = null;
         mClusters = Lists.newArrayList();
         mAllVariants = Lists.newArrayList();
         mSampleId = "";
@@ -107,6 +111,11 @@ public class ClusterAnalyser {
         mPcClustering = new PerformanceCounter("Clustering");
         mPcChaining = new PerformanceCounter("Chaining");
         mPcAnnotation = new PerformanceCounter("Annotation");
+    }
+
+    public void setCopyNumberAnalyser(CNAnalyser cnAnalyser)
+    {
+        mCopyNumberAnalyser = cnAnalyser;
     }
 
     // access for unit testing
@@ -184,10 +193,6 @@ public class ClusterAnalyser {
         }
 
         mPcAnnotation.start();
-        // analyseOverlappingTIs();
-
-        annotateTemplatedInsertions(mClusters, mClusteringMethods.getChrBreakendMap());
-        // checkSkippedLOHEvents();
 
         // final clean-up and analysis
         for(SvCluster cluster : mClusters)
@@ -211,6 +216,8 @@ public class ClusterAnalyser {
             reportClusterFeatures(cluster);
             annotateClusterArmSegments(cluster);
         }
+
+        reportOtherFeatures();
 
         mPcAnnotation.stop();
 
@@ -956,7 +963,7 @@ public class ClusterAnalyser {
         if(varEnd.type() == INS || varStart.type() == INS)
             return;
 
-        isSpecificSV(varStart);
+        // isSpecificSV(varStart);
 
         // skip unclustered DELs & DUPs, reciprocal INV or reciprocal BNDs
         final SvCluster cluster1 = varEnd.getCluster();
@@ -1271,13 +1278,25 @@ public class ClusterAnalyser {
 
     }
 
-    public void reportClusterFeatures(final SvCluster cluster)
+    private void reportOtherFeatures()
     {
-        reportDoubleMinutes(cluster, mClusteringMethods.getChrBreakendMap());
+        // analyseOverlappingTIs();
+
+        annotateTemplatedInsertions(mClusters, mClusteringMethods.getChrBreakendMap());
+        // checkSkippedLOHEvents();
+
+        findPotentialDoubleMinuteClusters(mSampleId, mClusteringMethods.getChrBreakendMap(), mCopyNumberAnalyser);
+    }
+
+    private void reportClusterFeatures(final SvCluster cluster)
+    {
+        // reportDoubleMinutes(cluster, mClusteringMethods.getChrBreakendMap());
 
         checkLooseFoldbacks(cluster);
 
         classifyChainedClusters(cluster, mClusteringMethods.getProximityDistance());
+
+        // reportDuplicationCopyNumberData(mSampleId, cluster, mClusteringMethods.getChrBreakendMap(), mCopyNumberAnalyser);
 
         // findIncompleteFoldbackCandidates(mSampleId, cluster, mClusteringMethods.getChrBreakendMap(), mClusteringMethods.getChrCopyNumberMap());
     }
