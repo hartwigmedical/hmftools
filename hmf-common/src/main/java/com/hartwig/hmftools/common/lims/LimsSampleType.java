@@ -24,16 +24,13 @@ public enum LimsSampleType {
 
     @NotNull
     public static LimsSampleType fromSample(@NotNull final String label) {
-        if (label.equals("CORE")) {
-            return CORE;
-        } else if (label.equals("WIDE")) {
-            return WIDE;
-        } else if (label.equals("CPCT")) {
-            return CPCT;
-        } else if (label.equals("DRUP")) {
-            return DRUP;
-        } else {
-            return UNDEFINED;
+
+        switch (label) {
+            case "CORE": return CORE;
+            case "WIDE": return WIDE;
+            case "CPCT": return CPCT;
+            case "DRUP": return DRUP;
+            default: return UNDEFINED;
         }
     }
 }
