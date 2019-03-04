@@ -865,6 +865,9 @@ public class SvCluster
             {
                 boolean useStart = isStart(be);
 
+                if(var.isNullBreakend() && !useStart)
+                    continue;
+
                 if (var.getLinkedPair(useStart) != null && var.getLinkedPair(useStart).isInferred())
                     var.setLinkedPair(null, useStart);
             }
