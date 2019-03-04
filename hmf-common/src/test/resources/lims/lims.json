@@ -6,6 +6,7 @@
       "sample_name": "SAMP01010003R",
       "ref_sample_id": "123",
       "sample_id": "245",
+      "patient": "SAMP01010003",
       "project_name": "HMFregCPCT",
       "sampling_date": "2016-01-02",
       "arrival_date": "2016-01-03",
@@ -22,6 +23,7 @@
       "sample_name": "SAMP01010003T",
       "ref_sample_id": "123",
       "sample_id": "245",
+      "patient": "SAMP01010003",
       "project_name": "HMFregCPCT",
       "sampling_date": "2016-01-04",
       "arrival_date": "2016-02-05",
@@ -30,7 +32,7 @@
       "dna_conc": 143,
       "ptum": "NA",
       "label": "CPCT",
-      "patient_number": "something",
+      "hospital_patient_id": "something",
       "lab_remarks": "this is a test"
     },
     "FR00000002": {

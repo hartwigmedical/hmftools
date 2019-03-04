@@ -41,7 +41,7 @@ public class LimsFactoryTest {
         final String refSampleId = "SAMP01010003R";
         final LimsJsonSampleData refData = dataPerSample.get(refSampleId);
         assertEquals(refSampleId, refData.sampleId());
-        assertNull(refData.patientNumber());
+        assertNull(refData.hospitalPatientId());
         assertEquals("2016-01-03", refData.arrivalDateString());
         assertEquals("143", refData.dnaConcentration());
         assertEquals("2016-01-02", refData.samplingDateString());
@@ -56,7 +56,7 @@ public class LimsFactoryTest {
         final String tumorSampleId = "SAMP01010003T";
         final LimsJsonSampleData tumorData = dataPerSample.get(tumorSampleId);
         assertEquals(tumorSampleId, tumorData.sampleId());
-        assertEquals("something", tumorData.patientNumber());
+        assertEquals("something", tumorData.hospitalPatientId());
         assertEquals("2016-02-05", tumorData.arrivalDateString());
         assertEquals("143", tumorData.dnaConcentration());
         assertEquals("2016-01-04", tumorData.samplingDateString());

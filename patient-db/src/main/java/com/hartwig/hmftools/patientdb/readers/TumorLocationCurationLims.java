@@ -21,9 +21,8 @@ public class TumorLocationCurationLims {
     }
 
     @NotNull
-    public TumorTypeLims read(@NotNull final String sampleId) {
+    public TumorTypeLims read(@NotNull final String sampleId, @NotNull final String patientId) {
         final TumorTypeLims limsTumorCurations;
-        String patientId = sampleId.substring(0,12);
         limsTumorCurations = ImmutableTumorTypeLims.of(patientId, tumorLocationCurator.search(lims.primaryTumor(sampleId)));
 
         return limsTumorCurations;

@@ -40,6 +40,18 @@ public class Lims {
     }
 
     @NotNull
+    public String patientId(@NotNull final String sample) {
+        LimsJsonSampleData sampleData = dataPerSample.get(sample);
+        return sampleData != null ? sampleData.patientId() : "N/A";
+    }
+
+    @NotNull
+    public String sampleId(@NotNull final String sample) {
+        LimsJsonSampleData sampleData = dataPerSample.get(sample);
+        return sampleData != null ? sampleData.sampleId() : "N/A";
+    }
+
+    @NotNull
     public String contactEmails(@NotNull final String sample) {
         String submission = submission(sample);
         LimsJsonSubmissionData submissionData = dataPerSubmission.get(submission);
@@ -61,9 +73,9 @@ public class Lims {
     }
 
     @Nullable
-    public String patientNumber(@NotNull final String sample) {
+    public String hospitalPatientId(@NotNull final String sample) {
         LimsJsonSampleData sampleData = dataPerSample.get(sample);
-        return sampleData != null ? sampleData.patientNumber() : null;
+        return sampleData != null ? sampleData.hospitalPatientId() : null;
     }
 
     public boolean isCoreSample(@NotNull final String sample) {
@@ -81,7 +93,7 @@ public class Lims {
     public String barcodeTumorOfSample(@NotNull final String sample) {
         LimsJsonSampleData sampleData = dataPerSample.get(sample);
         if (sampleData != null) {
-            String tumorBarcode = sampleData.tumorSampleId();
+            String tumorBarcode = sampleData.tumorBarcodeId();
             if (tumorBarcode.isEmpty()) {
                 return "not determined";
             } else {
@@ -95,7 +107,7 @@ public class Lims {
     public String barcodeReferenceOfSample(@NotNull final String sample) {
         LimsJsonSampleData sampleData = dataPerSample.get(sample);
         if (sampleData != null) {
-            String refBarcode = sampleData.refSampleId();
+            String refBarcode = sampleData.refBarcodeId();
             if (refBarcode.isEmpty()) {
                 return "not determined";
             } else {

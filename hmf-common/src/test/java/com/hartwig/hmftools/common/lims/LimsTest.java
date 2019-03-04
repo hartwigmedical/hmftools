@@ -36,6 +36,8 @@ public class LimsTest {
         final String contactName = "henk";
         final String refBarcode = "A123";
         final String tumorBarcode = "not determinded";
+        final String patientId = "CPCT02991111";
+
 
         final LimsJsonSampleData sampleData = createLimsSampleDataBuilder().sampleId(SAMPLE)
                 .samplingDateString(samplingDate)
@@ -48,8 +50,9 @@ public class LimsTest {
                 .labelSample(label)
                 .projectName(projectName)
                 .submission(SUBMISSION)
-                .refSampleId(refBarcode)
-                .tumorSampleId(tumorBarcode)
+                .refBarcodeId(refBarcode)
+                .tumorBarcodeId(tumorBarcode)
+                .patientId(patientId)
                 .build();
 
         final LimsJsonSubmissionData submissionData = ImmutableLimsJsonSubmissionData.builder()
@@ -64,7 +67,7 @@ public class LimsTest {
 
         assertEquals(contactEmail, lims.contactEmails(SAMPLE));
         assertEquals(contactName, lims.contactNames(SAMPLE));
-        assertNull(lims.patientNumber(SAMPLE));
+        assertNull(lims.hospitalPatientId(SAMPLE));
         assertEquals(projectName, lims.projectName(SAMPLE));
         assertEquals(LimsTestUtil.toDate(arrivalDate), lims.arrivalDate(SAMPLE));
         assertEquals(LimsTestUtil.toDate(samplingDate), lims.samplingDate(SAMPLE));
@@ -86,7 +89,7 @@ public class LimsTest {
 
         assertEquals("N/A", lims.contactNames("DoesNotExist"));
         assertEquals("N/A", lims.contactEmails("DoesNotExist"));
-        assertNull(lims.patientNumber("DoesNotExist"));
+        assertNull(lims.hospitalPatientId("DoesNotExist"));
         assertEquals("N/A", lims.projectName("DoesNotExist"));
         assertNull(lims.arrivalDate("DoesNotExist"));
         assertNull(lims.samplingDate("DoesNotExist"));
