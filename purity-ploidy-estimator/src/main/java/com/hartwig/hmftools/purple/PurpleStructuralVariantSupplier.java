@@ -39,6 +39,7 @@ import htsjdk.variant.variantcontext.writer.VariantContextWriterBuilder;
 import htsjdk.variant.vcf.VCFFileReader;
 import htsjdk.variant.vcf.VCFFilterHeaderLine;
 import htsjdk.variant.vcf.VCFHeader;
+import htsjdk.variant.vcf.VCFHeaderLineCount;
 import htsjdk.variant.vcf.VCFHeaderLineType;
 import htsjdk.variant.vcf.VCFInfoHeaderLine;
 
@@ -49,6 +50,7 @@ class PurpleStructuralVariantSupplier {
 
     private static final String RECOVERED_FLAG = "RECOVERED";
     private static final String INFERRED_FLAG = "INFERRED";
+    private static final String PURPLE_AF_INFO = "PURPLE_AF";
 
     private static final Allele REF_ALLELE = Allele.create("N", true);
     private static final Allele INCREASING_ALLELE = Allele.create(".N", false);
@@ -196,6 +198,7 @@ class PurpleStructuralVariantSupplier {
     private static VCFHeader generateOutputHeader(@NotNull final VCFHeader template) {
         final VCFHeader outputVCFHeader = new VCFHeader(template.getMetaDataInInputOrder(), template.getSampleNamesInOrder());
         outputVCFHeader.addMetaDataLine(new VCFInfoHeaderLine(RECOVERED_FLAG, 0, VCFHeaderLineType.Flag, "Entry has been recovered"));
+        outputVCFHeader.addMetaDataLine(new VCFInfoHeaderLine(PURPLE_AF_INFO, VCFHeaderLineCount.UNBOUNDED,  VCFHeaderLineType.Float, "Purity adjusted allele fraction at each breakend"));
         outputVCFHeader.addMetaDataLine(new VCFFilterHeaderLine(INFERRED_FLAG, "Breakend inferred from copy number transition"));
 
         return outputVCFHeader;
