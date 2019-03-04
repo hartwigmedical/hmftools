@@ -65,7 +65,6 @@ public class LimsTest {
         assertEquals(contactEmail, lims.contactEmails(SAMPLE));
         assertEquals(contactName, lims.contactNames(SAMPLE));
         assertNull(lims.patientNumber(SAMPLE));
-        assertEquals(label, lims.label(SAMPLE));
         assertEquals(projectName, lims.projectName(SAMPLE));
         assertEquals(LimsTestUtil.toDate(arrivalDate), lims.arrivalDate(SAMPLE));
         assertEquals(LimsTestUtil.toDate(samplingDate), lims.samplingDate(SAMPLE));
@@ -88,7 +87,6 @@ public class LimsTest {
         assertEquals("N/A", lims.contactNames("DoesNotExist"));
         assertEquals("N/A", lims.contactEmails("DoesNotExist"));
         assertNull(lims.patientNumber("DoesNotExist"));
-        assertEquals("N/A", lims.label("DoesNotExist"));
         assertEquals("N/A", lims.projectName("DoesNotExist"));
         assertNull(lims.arrivalDate("DoesNotExist"));
         assertNull(lims.samplingDate("DoesNotExist"));

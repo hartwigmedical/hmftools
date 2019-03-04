@@ -7,7 +7,6 @@ import java.util.Set;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -67,12 +66,6 @@ public class Lims {
         return sampleData != null ? sampleData.patientNumber() : null;
     }
 
-    @NotNull
-    public String label(@NotNull final String sample) {
-        LimsJsonSampleData sampleData = dataPerSample.get(sample);
-        return sampleData != null ? sampleData.labelSample() : "N/A";
-    }
-
     public boolean isCoreSample(@NotNull final String sample) {
         String label = label(sample);
         return label.equalsIgnoreCase("core");
@@ -86,7 +79,6 @@ public class Lims {
 
     @NotNull
     public String barcodeTumorOfSample(@NotNull final String sample) {
-
         LimsJsonSampleData sampleData = dataPerSample.get(sample);
         if (sampleData != null) {
             String tumorBarcode = sampleData.tumorSampleId();
@@ -227,6 +219,12 @@ public class Lims {
         }
         LOGGER.warn("Could not find lab SOP versions for sample: " + sample + " in LIMS");
         return "N/A";
+    }
+
+    @NotNull
+    private String label(@NotNull final String sample) {
+        LimsJsonSampleData sampleData = dataPerSample.get(sample);
+        return sampleData != null ? sampleData.labelSample() : "N/A";
     }
 
     @Nullable
