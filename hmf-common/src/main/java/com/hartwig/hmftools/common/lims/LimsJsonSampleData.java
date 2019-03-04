@@ -19,18 +19,23 @@ abstract class LimsJsonSampleData {
     @SerializedName("sample_name")
     public abstract String sampleId();
 
+    @NotNull
+    @SerializedName("patient")
+    public abstract String patientId();
+
+    // ref sample id could be null in lims if it is a reference sample
     @Nullable
     @SerializedName("ref_sample_id")
-    public abstract String refSampleId();
+    public abstract String refBarcodeId();
 
-    @Nullable
+    @NotNull
     @SerializedName("sample_id")
-    public abstract String tumorSampleId();
+    public abstract String tumorBarcodeId();
 
     // Patient number is only used for CORE project
     @Nullable
-    @SerializedName("patient_number")
-    public abstract String patientNumber();
+    @SerializedName("hospital_patient_id")
+    public abstract String hospitalPatientId();
 
     @NotNull
     @SerializedName("arrival_date")
@@ -40,7 +45,7 @@ abstract class LimsJsonSampleData {
     @SerializedName("dna_conc")
     public abstract String dnaConcentration();
 
-    // Sampling date is only known for CPCT/DRUP tumor biopsies.
+    // Sampling date is only known for CPCT/DRUP/WIDE/CORE tumor biopsies.
     @Nullable
     @SerializedName("sampling_date")
     public abstract String samplingDateString();

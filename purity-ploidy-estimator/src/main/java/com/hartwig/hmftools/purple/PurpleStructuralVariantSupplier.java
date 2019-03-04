@@ -1,7 +1,10 @@
 package com.hartwig.hmftools.purple;
 
+import static htsjdk.variant.vcf.VCFHeaderLineCount.UNBOUNDED;
+
 import java.io.File;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
@@ -18,6 +21,9 @@ import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.copynumber.sv.StructuralVariantLegPloidy;
 import com.hartwig.hmftools.common.purple.copynumber.sv.StructuralVariantLegPloidyFactory;
 import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
+import com.hartwig.hmftools.common.variant.structural.CopyNumberEnrichedStructuralVariantFactory;
+import com.hartwig.hmftools.common.variant.structural.EnrichedStructuralVariant;
+import com.hartwig.hmftools.common.variant.structural.EnrichedStructuralVariantLeg;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantFactory;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
@@ -38,6 +44,7 @@ import htsjdk.variant.variantcontext.writer.VariantContextWriter;
 import htsjdk.variant.variantcontext.writer.VariantContextWriterBuilder;
 import htsjdk.variant.vcf.VCFFileReader;
 import htsjdk.variant.vcf.VCFFilterHeaderLine;
+import htsjdk.variant.vcf.VCFFormatHeaderLine;
 import htsjdk.variant.vcf.VCFHeader;
 import htsjdk.variant.vcf.VCFHeaderLineType;
 import htsjdk.variant.vcf.VCFInfoHeaderLine;
@@ -47,8 +54,22 @@ class PurpleStructuralVariantSupplier {
 
     private static final double MIN_UNLINKED_SGL_VAF = 0.1;
 
-    private static final String RECOVERED_FLAG = "RECOVERED";
-    private static final String INFERRED_FLAG = "INFERRED";
+    private static final String RECOVERED_DESC = "Entry has been recovered";
+    private static final String INFERRED_DESC = "Breakend inferred from copy number transition";
+    private static final String IMPRECISE_INFO = "IMPRECISE";
+    private static final String IMPRECISE_DESC = "Imprecise structural variation";
+    private static final String PURPLE_PLOIDY_INFO = "PURPLE_PLOIDY";
+    private static final String PURPLE_PLOIDY_DESC = "Purity adjusted ploidy of variant";
+    private static final String PURPLE_AF_INFO = "PURPLE_AF";
+    private static final String PURPLE_AF_DESC = "Purity adjusted allele frequency at each breakend";
+    private static final String PURPLE_CN_INFO = "PURPLE_CN";
+    private static final String PURPLE_CN_DESC = "Purity adjusted copy number at each breakend";
+    private static final String PURPLE_CN_CHANGE_INFO = "PURPLE_CN_CHANGE";
+    private static final String PURPLE_CN_CHANGE_DESC = "Purity adjusted change in copy number at each breakend";
+    private static final String CIPOS_DESC = "Confidence interval around POS for imprecise variants";
+    private static final String SVTYPE_DESC = "Type of structural variant";
+    private static final String GT_FORMAT = "GT";
+    private static final String GT_DESC = "Genotype";
 
     private static final Allele REF_ALLELE = Allele.create("N", true);
     private static final Allele INCREASING_ALLELE = Allele.create(".N", false);
@@ -83,7 +104,7 @@ class PurpleStructuralVariantSupplier {
     public void recoverVariant(@NotNull final VariantContext variantContext) {
         if (enabled()) {
             modified = true;
-            final VariantContext unfiltered = new VariantContextBuilder(variantContext).unfiltered().attribute(RECOVERED_FLAG, true).make();
+            final VariantContext unfiltered = new VariantContextBuilder(variantContext).unfiltered().attribute(StructuralVariantFactory.RECOVERED, true).make();
             if (variantContext.contains(unfiltered)) {
                 variantContexts.remove(unfiltered);
                 variantContexts.add(unfiltered);
@@ -113,8 +134,7 @@ class PurpleStructuralVariantSupplier {
         final Iterator<VariantContext> iterator = variantContexts.iterator();
         while (iterator.hasNext()) {
             final VariantContext variantContext = iterator.next();
-            if (!variantContext.hasAttribute(RECOVERED_FLAG)) {
-
+            if (!variantContext.hasAttribute(StructuralVariantFactory.RECOVERED)) {
                 final StructuralVariantFactory factory = new StructuralVariantFactory(new PassingVariantFilter());
                 factory.addVariantContext(variantContext);
                 final List<StructuralVariant> variants = factory.results();
@@ -152,20 +172,19 @@ class PurpleStructuralVariantSupplier {
         long lowerRange = Math.min(-500, copyNumber.minStart() - copyNumber.start());
         long upperRange = Math.max(500, copyNumber.maxStart() - copyNumber.start());
 
-        String cipos = lowerRange + "," + upperRange;
-
-        return new VariantContextBuilder("purple", copyNumber.chromosome(), position, copyNumber.start(), alleles).filter(INFERRED_FLAG)
-                .attribute("IMPRECISE", true)
+        return new VariantContextBuilder("purple", copyNumber.chromosome(), position, copyNumber.start(), alleles).filter(StructuralVariantFactory.INFERRED)
+                .attribute(StructuralVariantFactory.INFERRED, true)
                 .id("purple_" + counter++)
-                .attribute("CIPOS", cipos)
-                .attribute("SVTYPE", "BND")
+                .attribute(StructuralVariantFactory.CIPOS, Lists.newArrayList(lowerRange, upperRange))
+                .attribute(StructuralVariantFactory.SVTYPE, "BND")
                 .noGenotypes()
                 .make();
     }
 
-    public void write() {
+    public void write(@NotNull final PurityAdjuster purityAdjuster, @NotNull final List<PurpleCopyNumber> copyNumbers) {
         if (header.isPresent()) {
-            VariantContextWriter writer = new VariantContextWriterBuilder().setOutputFile(outputVCF)
+
+            final VariantContextWriter writer = new VariantContextWriterBuilder().setOutputFile(outputVCF)
                     .setReferenceDictionary(header.get().getSequenceDictionary())
                     .setIndexCreator(new TabixIndexCreator(header.get().getSequenceDictionary(), new TabixFormat()))
                     .setOutputFileType(VariantContextWriterBuilder.OutputType.BLOCK_COMPRESSED_VCF)
@@ -173,9 +192,81 @@ class PurpleStructuralVariantSupplier {
                     .build();
 
             writer.writeHeader(header.get());
-            variantContexts.forEach(writer::add);
+            enriched(purityAdjuster, copyNumbers).forEach(writer::add);
             writer.close();
         }
+    }
+
+    private TreeSet<VariantContext> enriched(@NotNull final PurityAdjuster purityAdjuster, @NotNull final List<PurpleCopyNumber> copyNumbers) {
+        assert (header.isPresent());
+
+        final StructuralVariantFactory svFactory = new StructuralVariantFactory(x -> true);
+        variantContexts.forEach(svFactory::addVariantContext);
+
+        final CopyNumberEnrichedStructuralVariantFactory svEnricher =
+                new CopyNumberEnrichedStructuralVariantFactory(purityAdjuster, Multimaps.fromRegions(copyNumbers));
+
+        final TreeSet<VariantContext> enrichedContexts = new TreeSet<>(new VCComparator(header.get().getSequenceDictionary()));
+        for (EnrichedStructuralVariant enrichedSV : svEnricher.enrich(svFactory.results())) {
+            enrichedContexts.add(enrich(enrichedSV, enrichedSV.startContext(), false));
+
+            final VariantContext endContext = enrichedSV.endContext();
+            if (endContext != null) {
+                enrichedContexts.add(enrich(enrichedSV, endContext, true));
+            }
+        }
+
+        enrichedContexts.addAll(svFactory.unmatched());
+        return enrichedContexts;
+    }
+
+    @NotNull
+    private VariantContext enrich(@NotNull final EnrichedStructuralVariant variant, @NotNull final VariantContext template,
+            boolean reverse) {
+
+        final List<Double> purpleAF = Lists.newArrayList();
+        Optional.ofNullable(variant.start().adjustedAlleleFrequency()).map(this::round).ifPresent(purpleAF::add);
+        Optional.ofNullable(variant.end())
+                .map(EnrichedStructuralVariantLeg::adjustedAlleleFrequency)
+                .map(this::round)
+                .ifPresent(purpleAF::add);
+
+        final List<Double> purpleCN = Lists.newArrayList();
+        Optional.ofNullable(variant.start().adjustedCopyNumber()).map(this::round).ifPresent(purpleCN::add);
+        Optional.ofNullable(variant.end()).map(EnrichedStructuralVariantLeg::adjustedCopyNumber).map(this::round).ifPresent(purpleCN::add);
+
+        final List<Double> purpleCNChange = Lists.newArrayList();
+        Optional.ofNullable(variant.start().adjustedCopyNumberChange()).map(this::round).ifPresent(purpleCNChange::add);
+        Optional.ofNullable(variant.end())
+                .map(EnrichedStructuralVariantLeg::adjustedCopyNumberChange)
+                .map(this::round)
+                .ifPresent(purpleCNChange::add);
+
+        if (reverse) {
+            Collections.reverse(purpleAF);
+            Collections.reverse(purpleCN);
+            Collections.reverse(purpleCNChange);
+        }
+
+        VariantContextBuilder builder = new VariantContextBuilder(template);
+        if (!purpleAF.isEmpty()) {
+            builder.attribute(PURPLE_AF_INFO, purpleAF);
+        }
+
+        if (!purpleCN.isEmpty()) {
+            builder.attribute(PURPLE_CN_INFO, purpleCN);
+        }
+
+        if (!purpleCNChange.isEmpty()) {
+            builder.attribute(PURPLE_CN_CHANGE_INFO, purpleCNChange);
+        }
+
+        Double ploidy = variant.ploidy();
+        if (ploidy != null) {
+            builder.attribute(PURPLE_PLOIDY_INFO, round(ploidy));
+        }
+
+        return builder.make();
     }
 
     @NotNull
@@ -195,9 +286,21 @@ class PurpleStructuralVariantSupplier {
     @NotNull
     private static VCFHeader generateOutputHeader(@NotNull final VCFHeader template) {
         final VCFHeader outputVCFHeader = new VCFHeader(template.getMetaDataInInputOrder(), template.getSampleNamesInOrder());
-        outputVCFHeader.addMetaDataLine(new VCFInfoHeaderLine(RECOVERED_FLAG, 0, VCFHeaderLineType.Flag, "Entry has been recovered"));
-        outputVCFHeader.addMetaDataLine(new VCFFilterHeaderLine(INFERRED_FLAG, "Breakend inferred from copy number transition"));
+        outputVCFHeader.addMetaDataLine(new VCFInfoHeaderLine(StructuralVariantFactory.RECOVERED, 0, VCFHeaderLineType.Flag, RECOVERED_DESC));
+        outputVCFHeader.addMetaDataLine(new VCFFilterHeaderLine(StructuralVariantFactory.INFERRED, INFERRED_DESC));
 
+        outputVCFHeader.addMetaDataLine(new VCFFormatHeaderLine(GT_FORMAT, 1, VCFHeaderLineType.String, GT_DESC));
+
+        outputVCFHeader.addMetaDataLine(new VCFInfoHeaderLine(IMPRECISE_INFO, 0, VCFHeaderLineType.Flag, IMPRECISE_DESC));
+        outputVCFHeader.addMetaDataLine(new VCFInfoHeaderLine(StructuralVariantFactory.CIPOS, 2, VCFHeaderLineType.Integer, CIPOS_DESC));
+        outputVCFHeader.addMetaDataLine(new VCFInfoHeaderLine(StructuralVariantFactory.SVTYPE, 1, VCFHeaderLineType.String, SVTYPE_DESC));
+        outputVCFHeader.addMetaDataLine(new VCFInfoHeaderLine(PURPLE_AF_INFO, UNBOUNDED, VCFHeaderLineType.Float, PURPLE_AF_DESC));
+        outputVCFHeader.addMetaDataLine(new VCFInfoHeaderLine(PURPLE_CN_INFO, UNBOUNDED, VCFHeaderLineType.Float, PURPLE_CN_DESC));
+        outputVCFHeader.addMetaDataLine(new VCFInfoHeaderLine(PURPLE_PLOIDY_INFO, 1, VCFHeaderLineType.Float, PURPLE_PLOIDY_DESC));
+        outputVCFHeader.addMetaDataLine(new VCFInfoHeaderLine(PURPLE_CN_CHANGE_INFO,
+                UNBOUNDED,
+                VCFHeaderLineType.Float,
+                PURPLE_CN_CHANGE_DESC));
         return outputVCFHeader;
     }
 
@@ -233,6 +336,10 @@ class PurpleStructuralVariantSupplier {
 
     private boolean enabled() {
         return header.isPresent();
+    }
+
+    private double round(double value) {
+        return Math.round(value * 1000d) / 1000d;
     }
 
 }

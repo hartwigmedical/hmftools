@@ -27,8 +27,12 @@ import htsjdk.variant.variantcontext.filter.VariantContextFilter;
 
 public class StructuralVariantFactory {
 
-    private final static String RECOVERED = "RECOVERED";
-    private final static String TYPE = "SVTYPE";
+    public final static String RECOVERED = "RECOVERED";
+    public static final String INFERRED = "INFERRED";
+    public final static String CIPOS = "CIPOS";
+    public final static String SVTYPE = "SVTYPE";
+    public static final String PON_FILTER_PON = "PON";
+
     private final static String MATE_ID = "MATEID";
     private final static String PAR_ID = "PARID";
     private final static String INS_SEQ = "SVINSSEQ";
@@ -41,7 +45,6 @@ public class StructuralVariantFactory {
     private final static String IMPRECISE = "IMPRECISE";
     private final static String SOMATIC_SCORE = "SOMATICSCORE"; // only applicable for Manta and will be removed when fully on GRIDSS
     private final static String IHOMPOS = "IHOMPOS";
-    private final static String CIPOS = "CIPOS";
     private final static String VARIANT_FRAGMENT_BREAKPOINT_COVERAGE = "VF";
     private final static String VARIANT_FRAGMENT_BREAKEND_COVERAGE = "BVF";
     private final static String REFERENCE_BREAKEND_READ_COVERAGE = "REF";
@@ -55,7 +58,6 @@ public class StructuralVariantFactory {
     private final static String UNTEMPLATED_SEQUENCE_REPEAT_ORIENTATION = "INSRMRO";
     private final static String UNTEMPLATED_SEQUENCE_REPEAT_COVERAGE = "INSRMP";
 
-    public static final String PON_FILTER_PON = "PON";
 
     /**
      * Must match the small deldup threshold in scripts/gridss/gridss.config.R
@@ -73,14 +75,14 @@ public class StructuralVariantFactory {
     @NotNull
     private final CompoundFilter filter;
 
-    public StructuralVariantFactory(@NotNull VariantContextFilter filter) {
+    public StructuralVariantFactory(final @NotNull VariantContextFilter filter) {
         this.filter = new CompoundFilter(true);
         this.filter.add(new ChromosomeFilter());
         this.filter.add(new ExcludeCNVFilter());
         this.filter.add(filter);
     }
 
-    public void addVariantContext(@NotNull VariantContext context) {
+    public void addVariantContext(final @NotNull VariantContext context) {
         if (filter.test(context)) {
             final StructuralVariantType type = type(context);
             if (type.equals(StructuralVariantType.BND)) {
@@ -114,6 +116,11 @@ public class StructuralVariantFactory {
     @NotNull
     public List<StructuralVariant> results() {
         return results;
+    }
+
+    @NotNull
+    public List<VariantContext> unmatched() {
+        return Lists.newArrayList(unmatched.values());
     }
 
     @NotNull
@@ -190,6 +197,7 @@ public class StructuralVariantFactory {
                 .insertSequence(insertedSequence)
                 .type(type)
                 .filter(filters(context, null))
+                .startContext(context)
                 .build();
     }
 
@@ -254,6 +262,8 @@ public class StructuralVariantFactory {
                 .insertSequence(insertedSequence)
                 .type(inferredType)
                 .filter(filters(first, second))
+                .startContext(first)
+                .endContext(second)
                 .build();
     }
 
@@ -281,6 +291,7 @@ public class StructuralVariantFactory {
                 .insertSequence(insertedSequence)
                 .type(StructuralVariantType.SGL)
                 .filter(filters(context, null))
+                .startContext(context)
                 .build();
 
     }
@@ -410,6 +421,6 @@ public class StructuralVariantFactory {
 
     @NotNull
     private static StructuralVariantType type(@NotNull VariantContext context) {
-        return StructuralVariantType.fromAttribute((String) context.getAttribute(TYPE));
+        return StructuralVariantType.fromAttribute((String) context.getAttribute(SVTYPE));
     }
 }

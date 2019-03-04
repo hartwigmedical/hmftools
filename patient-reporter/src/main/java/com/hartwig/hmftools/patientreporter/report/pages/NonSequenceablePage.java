@@ -108,18 +108,13 @@ public abstract class NonSequenceablePage {
                 cmp.text("When possible, please resubmit using the same DVO with project name " + sampleReport().projectName() + ".")
                         .setStyle(fontStyle()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
-                cmp.text("The sample name of this sample is: " + sampleReport().sampleId()).setStyle(fontStyle()),
+                cmp.text("The name of the sample is " + sampleReport().sampleId() + " and the hospital patient number is "
+                        + sampleReport().patientNumber()).setStyle(fontStyle()),
+                cmp.text("The tumor barcode of sample is " + sampleReport().barcodeTumor() + " and the reference barcode of sample is "
+                        + sampleReport().barcodeReference()).setStyle(fontStyle()),
+                cmp.text("The project name of sample is " + sampleReport().projectName() + " with submission " + sampleReport().submission())
+                        .setStyle(fontStyle()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
-                cmp.text("The tumor barcode of sample is " + sampleReport().barcodeTumor()).setStyle(fontStyle()),
-                cmp.verticalGap(SECTION_VERTICAL_GAP),
-                cmp.text("The reference barcode of sample is" + sampleReport().barcodeReference()).setStyle(fontStyle()),
-                cmp.verticalGap(SECTION_VERTICAL_GAP),
-                hospitalPatientText(),
-                cmp.verticalGap(SECTION_VERTICAL_GAP),
-                cmp.verticalGap(SECTION_VERTICAL_GAP),
-                projectNameText(),
-                cmp.verticalGap(SECTION_VERTICAL_GAP),
-                submissionIdText(),
                 shallowSeqText(),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
                 sampleArrivalDateText(),
@@ -146,13 +141,11 @@ public abstract class NonSequenceablePage {
                         + "In case additional tumor material cannot be provided, please be notified that the patient will not be "
                         + "evaluable for the " + study().studyCode() + " study.").setStyle(fontStyle()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
-                cmp.text("The sample name of this sample is: " + sampleReport().sampleId()).setStyle(fontStyle()),
+                cmp.text("The name of the sample is " + sampleReport().sampleId()).setStyle(fontStyle()),
+                cmp.text("The tumor barcode of sample is " + sampleReport().barcodeTumor() + " and the reference barcode of sample is "
+                        + sampleReport().barcodeReference()).setStyle(fontStyle()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
-                cmp.text("The tumor barcode of sample is " + sampleReport().barcodeTumor()).setStyle(fontStyle()),
-                cmp.verticalGap(SECTION_VERTICAL_GAP),
-                cmp.text("The reference barcode of sample is" + sampleReport().barcodeReference()).setStyle(fontStyle()),
-                cmp.verticalGap(SECTION_VERTICAL_GAP),
-                cmp.text("The tumor percentage estimated by Pathology UMC Utrecht is: " + sampleReport().pathologyTumorPercentage())
+                cmp.text("The tumor percentage estimated by Pathology UMC Utrecht is " + sampleReport().pathologyTumorPercentage())
                         .setStyle(fontStyle()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
                 shallowSeqText(),
@@ -173,7 +166,7 @@ public abstract class NonSequenceablePage {
 
     @NotNull
     private TextFieldBuilder<String> shallowSeqText() {
-        return cmp.text("The tumor percentage estimated by molecular tumor percentage is: " + sampleReport().purityShallowSeq())
+        return cmp.text("The tumor percentage estimated by molecular tumor percentage is  " + sampleReport().purityShallowSeq())
                 .setStyle(fontStyle());
     }
 
@@ -203,21 +196,4 @@ public abstract class NonSequenceablePage {
                 .setStyle(fontStyle());
     }
 
-    @NotNull
-    private TextFieldBuilder<String> hospitalPatientText() {
-        return cmp.text("The hospital patient number is: " + sampleReport().patientNumber())
-                .setStyle(fontStyle());
-    }
-
-    @NotNull
-    private TextFieldBuilder<String> projectNameText() {
-        return cmp.text("The project name of sample is: " + sampleReport().projectName())
-                .setStyle(fontStyle());
-    }
-
-    @NotNull
-    private TextFieldBuilder<String> submissionIdText() {
-        return cmp.text("The submission of sample is: " + sampleReport().submission())
-                .setStyle(fontStyle());
-    }
 }

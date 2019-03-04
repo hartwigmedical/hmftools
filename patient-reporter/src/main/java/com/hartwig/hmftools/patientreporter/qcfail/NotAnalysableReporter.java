@@ -50,7 +50,7 @@ public abstract class NotAnalysableReporter {
                 lims.contactNames(sample),
                 lims.contactEmails(sample),
                 lims.submissionID(sample),
-                lims.patientNumber(sample),
+                lims.hospitalPatientId(sample),
                 isCoreSample);
 
         return ImmutableNotAnalysedPatientReport.of(sampleReport,

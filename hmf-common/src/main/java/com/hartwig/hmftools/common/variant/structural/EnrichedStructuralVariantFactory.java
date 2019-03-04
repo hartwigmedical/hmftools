@@ -1,109 +1,77 @@
 package com.hartwig.hmftools.common.variant.structural;
 
+import java.util.Collections;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Multimap;
-import com.hartwig.hmftools.common.chromosome.Chromosome;
-import com.hartwig.hmftools.common.purple.PurityAdjuster;
-import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
-import com.hartwig.hmftools.common.purple.copynumber.sv.StructuralVariantLegCopyNumber;
-import com.hartwig.hmftools.common.purple.copynumber.sv.StructuralVariantLegCopyNumberFactory;
-import com.hartwig.hmftools.common.purple.copynumber.sv.StructuralVariantLegPloidy;
-import com.hartwig.hmftools.common.purple.copynumber.sv.StructuralVariantLegPloidyFactory;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 import htsjdk.samtools.reference.ReferenceSequence;
+import htsjdk.variant.variantcontext.VariantContext;
 
 public final class EnrichedStructuralVariantFactory {
 
     private static final int DISTANCE = 10;
+    private final static String PURPLE_AF = "PURPLE_AF";
+    private final static String PURPLE_CN = "PURPLE_CN";
+    private final static String PURPLE_CN_CHANGE = "PURPLE_CN_CHANGE";
+    private final static String PURPLE_PLOIDY = "PURPLE_PLOIDY";
 
-    private final PurityAdjuster purityAdjuster;
     private final IndexedFastaSequenceFile reference;
-    private final Multimap<Chromosome, PurpleCopyNumber> copyNumbers;
 
-    public EnrichedStructuralVariantFactory(@NotNull final IndexedFastaSequenceFile reference, @NotNull final PurityAdjuster purityAdjuster,
-            @NotNull final Multimap<Chromosome, PurpleCopyNumber> copyNumbers) {
+    public EnrichedStructuralVariantFactory(@NotNull final IndexedFastaSequenceFile reference) {
         this.reference = reference;
-        this.purityAdjuster = purityAdjuster;
-        this.copyNumbers = copyNumbers;
     }
 
     @NotNull
     public List<EnrichedStructuralVariant> enrich(@NotNull final List<StructuralVariant> variants) {
-        final StructuralVariantLegPloidyFactory<PurpleCopyNumber> ploidyFactory =
-                new StructuralVariantLegPloidyFactory<>(purityAdjuster, PurpleCopyNumber::averageTumorCopyNumber);
-        final StructuralVariantLegCopyNumberFactory<PurpleCopyNumber> copyNumberFactory =
-                new StructuralVariantLegCopyNumberFactory<>(PurpleCopyNumber::averageTumorCopyNumber);
 
         final List<EnrichedStructuralVariant> result = Lists.newArrayList();
-        for (final StructuralVariant variant : variants) {
 
+        for (StructuralVariant variant : variants) {
+            final VariantContext context = variant.startContext();
+            final Double purplePloidy = context.hasAttribute(PURPLE_PLOIDY) ? context.getAttributeAsDouble(PURPLE_PLOIDY, 0) : null;
 
-            ImmutableEnrichedStructuralVariant.Builder builder = ImmutableEnrichedStructuralVariant.builder().from(variant);
-            ImmutableEnrichedStructuralVariantLeg.Builder startBuilder = createBuilder(variant.start());
-            // Every SV should have a start, while end is optional.
-            assert startBuilder != null;
+            final ImmutableEnrichedStructuralVariant.Builder builder = ImmutableEnrichedStructuralVariant.builder()
+                    .from(variant)
+                    .ploidy(purplePloidy)
+                    .start(createBuilder(context, 0, variant.start()));
 
-            @Nullable final StructuralVariantLeg endLeg = variant.end();
-            ImmutableEnrichedStructuralVariantLeg.Builder endBuilder = createBuilder(endLeg);
-
-            List<StructuralVariantLegPloidy> ploidies = ploidyFactory.create(variant, copyNumbers);
-            if (!ploidies.isEmpty()) {
-                // The implied ploidy should be equal between start and end, so doesn't matter what we pick.
-                builder.ploidy(round(ploidies.get(0).averageImpliedPloidy()));
-
-                StructuralVariantLegPloidy startPloidy = ploidies.get(0);
-                StructuralVariantLegPloidy endPloidy = ploidies.size() <= 1 ? null : ploidies.get(1);
-
-                startBuilder.adjustedAlleleFrequency(round(startPloidy.adjustedVaf()));
-                startBuilder.adjustedCopyNumber(round(startPloidy.adjustedCopyNumber()));
-                startBuilder.adjustedCopyNumberChange(round(startPloidy.adjustedCopyNumberChange()));
-
-                if (endPloidy != null) {
-                    assert endBuilder != null;
-                    endBuilder.adjustedAlleleFrequency(round(endPloidy.adjustedVaf()));
-                    endBuilder.adjustedCopyNumber(round(endPloidy.adjustedCopyNumber()));
-                    endBuilder.adjustedCopyNumberChange(round(endPloidy.adjustedCopyNumberChange()));
-                }
-            } else {
-                // Can't always get plodies (if no vaf for example) but we can still get copy number info
-                final StructuralVariantLegCopyNumber startCopyNumber = copyNumberFactory.create(variant.start(), copyNumbers);
-                startBuilder.adjustedCopyNumber(round(startCopyNumber.adjustedCopyNumber()));
-                startBuilder.adjustedCopyNumberChange(round(startCopyNumber.adjustedCopyNumberChange()));
-
-                if (endLeg != null) {
-                    assert endBuilder != null;
-                    final StructuralVariantLegCopyNumber endCopyNumber = copyNumberFactory.create(endLeg, copyNumbers);
-                    endBuilder.adjustedCopyNumber(round(endCopyNumber.adjustedCopyNumber()));
-                    endBuilder.adjustedCopyNumberChange(round(endCopyNumber.adjustedCopyNumberChange()));
-                }
+            @Nullable
+            final StructuralVariantLeg endLeg = variant.end();
+            if (endLeg != null) {
+                builder.end(createBuilder(context, 1, endLeg));
             }
 
-
-            result.add(builder.start(startBuilder.build()).end(endBuilder == null ? null : endBuilder.build()).build());
+            result.add(builder.build());
         }
 
         return result;
     }
 
-    @Nullable
-    private ImmutableEnrichedStructuralVariantLeg.Builder createBuilder(@Nullable StructuralVariantLeg leg) {
-        if (leg == null) {
-            return null;
-        }
+    @NotNull
+    private ImmutableEnrichedStructuralVariantLeg createBuilder(@NotNull final VariantContext context, int index,
+            @NotNull final StructuralVariantLeg leg) {
 
-        final ImmutableEnrichedStructuralVariantLeg.Builder builder = ImmutableEnrichedStructuralVariantLeg.builder().from(leg);
-        builder.refGenomeContext(context(leg.chromosome(), leg.position()));
-        return builder;
-    }
+        final List<Double> purpleAF =
+                context.hasAttribute(PURPLE_AF) ? context.getAttributeAsDoubleList(PURPLE_AF, 0.0) : Collections.emptyList();
 
-    private static double round(double value) {
-        return Math.round(value * 1000d) / 1000d;
+        final List<Double> purpleCN =
+                context.hasAttribute(PURPLE_CN) ? context.getAttributeAsDoubleList(PURPLE_CN, 0.0) : Collections.emptyList();
+
+        final List<Double> purpleCNChange =
+                context.hasAttribute(PURPLE_CN_CHANGE) ? context.getAttributeAsDoubleList(PURPLE_CN_CHANGE, 0.0) : Collections.emptyList();
+
+        final ImmutableEnrichedStructuralVariantLeg.Builder builder = ImmutableEnrichedStructuralVariantLeg.builder()
+                .from(leg)
+                .refGenomeContext(context(leg.chromosome(), leg.position()))
+                .adjustedAlleleFrequency(purpleAF.size() == 2 ? purpleAF.get(index) : null)
+                .adjustedCopyNumber(purpleCN.size() == 2 ? purpleCN.get(index) : null)
+                .adjustedCopyNumberChange(purpleCNChange.size() == 2 ? purpleCNChange.get(index) : null);
+        return builder.build();
     }
 
     @NotNull

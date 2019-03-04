@@ -19,12 +19,15 @@ final class LimsTestUtil {
     static ImmutableLimsJsonSampleData.Builder createLimsSampleDataBuilder() {
         return ImmutableLimsJsonSampleData.builder()
                 .sampleId(Strings.EMPTY)
+                .tumorBarcodeId(Strings.EMPTY)
+                .refBarcodeId(Strings.EMPTY)
                 .arrivalDateString(Strings.EMPTY)
                 .dnaConcentration(Strings.EMPTY)
                 .primaryTumor(Strings.EMPTY)
                 .labSopVersions(Strings.EMPTY)
                 .labelSample(Strings.EMPTY)
                 .projectName(Strings.EMPTY)
-                .submission(Strings.EMPTY);
+                .submission(Strings.EMPTY)
+                .patientId(Strings.EMPTY);
     }
 }

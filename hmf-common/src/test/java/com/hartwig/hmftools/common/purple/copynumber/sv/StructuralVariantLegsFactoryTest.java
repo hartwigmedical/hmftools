@@ -111,7 +111,6 @@ public class StructuralVariantLegsFactoryTest {
         assertTrue(legs.get(2).start().isPresent());
         assertLeg(-1, 0.15, legs.get(2).start().get());
         assertFalse(legs.get(2).end().isPresent());
-
     }
 
     @Test

@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.common.variant.structural;
 
-import com.hartwig.hmftools.common.purple.copynumber.CopyNumberMethod;
-
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -18,9 +16,6 @@ public interface EnrichedStructuralVariantLeg extends StructuralVariantLeg {
 
     @Nullable
     Double adjustedCopyNumberChange();
-
-    @Nullable
-    CopyNumberMethod method();
 
     @Nullable
     String refGenomeContext();

@@ -34,6 +34,10 @@ public class LimsTest {
         final String projectName = "projectX";
         final String contactEmail = "henk@hmf.nl";
         final String contactName = "henk";
+        final String refBarcode = "A123";
+        final String tumorBarcode = "not determinded";
+        final String patientId = "CPCT02991111";
+
 
         final LimsJsonSampleData sampleData = createLimsSampleDataBuilder().sampleId(SAMPLE)
                 .samplingDateString(samplingDate)
@@ -46,6 +50,9 @@ public class LimsTest {
                 .labelSample(label)
                 .projectName(projectName)
                 .submission(SUBMISSION)
+                .refBarcodeId(refBarcode)
+                .tumorBarcodeId(tumorBarcode)
+                .patientId(patientId)
                 .build();
 
         final LimsJsonSubmissionData submissionData = ImmutableLimsJsonSubmissionData.builder()
@@ -60,11 +67,12 @@ public class LimsTest {
 
         assertEquals(contactEmail, lims.contactEmails(SAMPLE));
         assertEquals(contactName, lims.contactNames(SAMPLE));
-        assertNull(lims.patientNumber(SAMPLE));
-        assertEquals(label, lims.label(SAMPLE));
+        assertNull(lims.hospitalPatientId(SAMPLE));
         assertEquals(projectName, lims.projectName(SAMPLE));
         assertEquals(LimsTestUtil.toDate(arrivalDate), lims.arrivalDate(SAMPLE));
         assertEquals(LimsTestUtil.toDate(samplingDate), lims.samplingDate(SAMPLE));
+        assertEquals(refBarcode, lims.barcodeReferenceOfSample(SAMPLE));
+        assertEquals(tumorBarcode, lims.barcodeTumorOfSample(SAMPLE));
 
         Integer dnaAmount = lims.dnaNanograms(SAMPLE);
         assertNotNull(dnaAmount);
@@ -81,8 +89,7 @@ public class LimsTest {
 
         assertEquals("N/A", lims.contactNames("DoesNotExist"));
         assertEquals("N/A", lims.contactEmails("DoesNotExist"));
-        assertNull(lims.patientNumber("DoesNotExist"));
-        assertEquals("N/A", lims.label("DoesNotExist"));
+        assertNull(lims.hospitalPatientId("DoesNotExist"));
         assertEquals("N/A", lims.projectName("DoesNotExist"));
         assertNull(lims.arrivalDate("DoesNotExist"));
         assertNull(lims.samplingDate("DoesNotExist"));

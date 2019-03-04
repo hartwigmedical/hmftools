@@ -9,6 +9,7 @@ import org.jetbrains.annotations.NotNull;
 
 public class TumorLocationCurationLims {
 
+
     @NotNull
     private final Lims lims;
     @NotNull
@@ -20,10 +21,9 @@ public class TumorLocationCurationLims {
     }
 
     @NotNull
-    public TumorTypeLims read(@NotNull final String sampleId) {
+    public TumorTypeLims read(@NotNull final String sampleId, @NotNull final String patientId) {
         final TumorTypeLims limsTumorCurations;
-
-        limsTumorCurations = ImmutableTumorTypeLims.of(sampleId, tumorLocationCurator.search(lims.primaryTumor(sampleId)));
+        limsTumorCurations = ImmutableTumorTypeLims.of(patientId, tumorLocationCurator.search(lims.primaryTumor(sampleId)));
 
         return limsTumorCurations;
     }
@@ -31,8 +31,8 @@ public class TumorLocationCurationLims {
     @NotNull
     public TumorTypeLims readFixedValue(@NotNull final String sampleId) {
         final TumorTypeLims limsTumorCurations;
-
-        limsTumorCurations = ImmutableTumorTypeLims.of(sampleId, tumorLocationCurator.search("Melanoma"));
+        String patientId = sampleId.substring(0,7);
+        limsTumorCurations = ImmutableTumorTypeLims.of(patientId, tumorLocationCurator.search("Melanoma"));
         return limsTumorCurations;
     }
 }
