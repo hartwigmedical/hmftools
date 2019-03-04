@@ -74,7 +74,7 @@ public abstract class SampleDetailsPage {
 
         final List<String> lines = Lists.newArrayList("The samples have been sequenced at " + Commons.HARTWIG_ADDRESS,
                 "The samples have been analyzed by Next Generation Sequencing",
-                "The sample name of this sample is: " + sampleReport().sampleId(),
+                "The name of this sample is: " + sampleReport().sampleId(),
                 "The tumor barcode of sample is: " + sampleReport().barcodeTumor(),
                 "The reference barcode of sample is: " + sampleReport().barcodeReference(),
                 "The pathology tumor percentage for this sample is " + sampleReport().pathologyTumorPercentage(),
