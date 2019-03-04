@@ -73,14 +73,14 @@ public class StructuralVariantFactory {
     @NotNull
     private final CompoundFilter filter;
 
-    public StructuralVariantFactory(@NotNull VariantContextFilter filter) {
+    public StructuralVariantFactory(final @NotNull VariantContextFilter filter) {
         this.filter = new CompoundFilter(true);
         this.filter.add(new ChromosomeFilter());
         this.filter.add(new ExcludeCNVFilter());
         this.filter.add(filter);
     }
 
-    public void addVariantContext(@NotNull VariantContext context) {
+    public void addVariantContext(final @NotNull VariantContext context) {
         if (filter.test(context)) {
             final StructuralVariantType type = type(context);
             if (type.equals(StructuralVariantType.BND)) {
@@ -114,6 +114,11 @@ public class StructuralVariantFactory {
     @NotNull
     public List<StructuralVariant> results() {
         return results;
+    }
+
+    @NotNull
+    public List<VariantContext> unmatched() {
+        return Lists.newArrayList(unmatched.values());
     }
 
     @NotNull

@@ -2,13 +2,8 @@ package com.hartwig.hmftools.svannotation;
 
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantFactory.PON_FILTER_PON;
 import static com.hartwig.hmftools.svannotation.SvGeneTranscriptCollection.PRE_GENE_PROMOTOR_DISTANCE;
-import static com.hartwig.hmftools.svannotation.analysis.SvFusionAnalyser.FUSION_PAIRS_CSV;
-import static com.hartwig.hmftools.svannotation.analysis.SvFusionAnalyser.PROMISCUOUS_FIVE_CSV;
-import static com.hartwig.hmftools.svannotation.analysis.SvFusionAnalyser.PROMISCUOUS_THREE_CSV;
-import static com.hartwig.hmftools.svannotation.analysis.SvFusionAnalyser.SAMPLE_RNA_FILE;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.Arrays;
@@ -16,16 +11,7 @@ import java.util.List;
 import java.util.Set;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Multimap;
-import com.google.common.collect.Multimaps;
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.chromosome.Chromosome;
-import com.hartwig.hmftools.common.chromosome.HumanChromosome;
-import com.hartwig.hmftools.common.fusions.KnownFusionsModel;
-import com.hartwig.hmftools.common.purple.PurityAdjuster;
-import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
-import com.hartwig.hmftools.common.purple.gender.Gender;
-import com.hartwig.hmftools.common.purple.purity.PurityContext;
 import com.hartwig.hmftools.common.variant.structural.EnrichedStructuralVariant;
 import com.hartwig.hmftools.common.variant.structural.EnrichedStructuralVariantFactory;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
@@ -192,7 +178,7 @@ public class StructuralVariantAnnotator
         }
         else
         {
-            List<EnrichedStructuralVariant> svList = loadSVsFromVCF(sampleId);
+            List<EnrichedStructuralVariant> svList = loadSVsFromVCF();
 
             LOGGER.info("Sample({}) persisting {} SVs to database", sampleId, svList.size());
 
@@ -240,7 +226,7 @@ public class StructuralVariantAnnotator
         }
     }
 
-    private List<EnrichedStructuralVariant> loadSVsFromVCF(final String sampleId)
+    private List<EnrichedStructuralVariant> loadSVsFromVCF()
     {
         List<EnrichedStructuralVariant> svList = Lists.newArrayList();
 
@@ -255,7 +241,7 @@ public class StructuralVariantAnnotator
             final List<StructuralVariant> variants = readFromVcf(vcfFile);
 
             LOGGER.debug("enriching structural variants based on purple data");
-            svList = enrichStructuralVariants(sampleId, indexedFastaSequenceFile, variants);
+            svList = enrichStructuralVariants(indexedFastaSequenceFile, variants);
         }
         catch (IOException e)
         {
@@ -284,27 +270,10 @@ public class StructuralVariantAnnotator
     }
 
     @NotNull
-    private List<EnrichedStructuralVariant> enrichStructuralVariants(final String sampleId,
-            @NotNull final IndexedFastaSequenceFile indexedFastaSequenceFile, List<StructuralVariant> variants)
+    private List<EnrichedStructuralVariant> enrichStructuralVariants(@NotNull final IndexedFastaSequenceFile indexedFastaSequenceFile,
+            @NotNull final List<StructuralVariant> variants)
     {
-        final PurityContext purityContext = mDbAccess.readPurityContext(sampleId);
-
-        if (purityContext == null)
-        {
-            LOGGER.warn("Sample({} unable to retrieve purple data, enrichment may be incomplete", sampleId);
-        }
-
-        final PurityAdjuster purityAdjuster = purityContext == null
-                ? new PurityAdjuster(Gender.FEMALE, 1, 1)
-                : new PurityAdjuster(purityContext.gender(), purityContext.bestFit().purity(), purityContext.bestFit().normFactor());
-
-        final List<PurpleCopyNumber> copyNumberList = mDbAccess.readCopynumbers(sampleId);
-
-        // Not sure what cleanest solution is to prevent potential NPE?
-        final Multimap<Chromosome, PurpleCopyNumber> copyNumbers =
-                Multimaps.index(copyNumberList, x -> HumanChromosome.fromString(x.chromosome()));
-
-        return new EnrichedStructuralVariantFactory(indexedFastaSequenceFile, purityAdjuster, copyNumbers).enrich(variants);
+        return new EnrichedStructuralVariantFactory(indexedFastaSequenceFile).enrich(variants);
     }
 
     private List<StructuralVariantAnnotation> createAnnotations(List<EnrichedStructuralVariant> enrichedVariants)

@@ -218,7 +218,7 @@ public class PurityPloidyEstimateApplication {
             PurpleCopyNumberFile.write(PurpleCopyNumberFile.generateGermlineFilename(outputDirectory, tumorSample), germlineDeletions);
             FittedRegionFile.write(FittedRegionFile.generateFilename(outputDirectory, tumorSample), enrichedFittedRegions);
             GeneCopyNumberFile.write(GeneCopyNumberFile.generateFilename(outputDirectory, tumorSample), geneCopyNumbers);
-            structuralVariants.write();
+            structuralVariants.write(purityAdjuster, copyNumbers);
 
             final CircosConfig circosConfig = configSupplier.circosConfig();
             LOGGER.info("Writing plots to: {}", circosConfig.plotDirectory());
