@@ -106,7 +106,8 @@ class PurpleStructuralVariantSupplier {
     public void recoverVariant(@NotNull final VariantContext variantContext) {
         if (enabled()) {
             modified = true;
-            final VariantContext unfiltered = new VariantContextBuilder(variantContext).unfiltered().attribute(StructuralVariantFactory.RECOVERED, true).make();
+            final VariantContext unfiltered =
+                    new VariantContextBuilder(variantContext).unfiltered().attribute(StructuralVariantFactory.RECOVERED, true).make();
             if (variantContext.contains(unfiltered)) {
                 variantContexts.remove(unfiltered);
                 variantContexts.add(unfiltered);
@@ -174,7 +175,8 @@ class PurpleStructuralVariantSupplier {
         long lowerRange = Math.min(-500, copyNumber.minStart() - copyNumber.start());
         long upperRange = Math.max(500, copyNumber.maxStart() - copyNumber.start());
 
-        return new VariantContextBuilder("purple", copyNumber.chromosome(), position, copyNumber.start(), alleles).filter(StructuralVariantFactory.INFERRED)
+        return new VariantContextBuilder("purple", copyNumber.chromosome(), position, copyNumber.start(), alleles).filter(
+                StructuralVariantFactory.INFERRED)
                 .attribute(StructuralVariantFactory.INFERRED, true)
                 .id("purple_" + counter++)
                 .attribute(StructuralVariantFactory.CIPOS, Lists.newArrayList(lowerRange, upperRange))
@@ -199,7 +201,8 @@ class PurpleStructuralVariantSupplier {
         }
     }
 
-    private TreeSet<VariantContext> enriched(@NotNull final PurityAdjuster purityAdjuster, @NotNull final List<PurpleCopyNumber> copyNumbers) {
+    private TreeSet<VariantContext> enriched(@NotNull final PurityAdjuster purityAdjuster,
+            @NotNull final List<PurpleCopyNumber> copyNumbers) {
         assert (header.isPresent());
 
         final StructuralVariantFactory svFactory = new StructuralVariantFactory(x -> true);
@@ -230,22 +233,18 @@ class PurpleStructuralVariantSupplier {
             boolean reverse) {
 
         final List<Double> purpleAF = Lists.newArrayList();
-        Optional.ofNullable(variant.start().adjustedAlleleFrequency()).map(this::round).ifPresent(purpleAF::add);
-        Optional.ofNullable(variant.end())
-                .map(EnrichedStructuralVariantLeg::adjustedAlleleFrequency)
-                .map(this::round)
+        Optional.ofNullable(variant.start().adjustedAlleleFrequency()).ifPresent(purpleAF::add);
+        Optional.ofNullable(variant.end()).map(EnrichedStructuralVariantLeg::adjustedAlleleFrequency)
+
                 .ifPresent(purpleAF::add);
 
         final List<Double> purpleCN = Lists.newArrayList();
-        Optional.ofNullable(variant.start().adjustedCopyNumber()).map(this::round).ifPresent(purpleCN::add);
-        Optional.ofNullable(variant.end()).map(EnrichedStructuralVariantLeg::adjustedCopyNumber).map(this::round).ifPresent(purpleCN::add);
+        Optional.ofNullable(variant.start().adjustedCopyNumber()).ifPresent(purpleCN::add);
+        Optional.ofNullable(variant.end()).map(EnrichedStructuralVariantLeg::adjustedCopyNumber).ifPresent(purpleCN::add);
 
         final List<Double> purpleCNChange = Lists.newArrayList();
-        Optional.ofNullable(variant.start().adjustedCopyNumberChange()).map(this::round).ifPresent(purpleCNChange::add);
-        Optional.ofNullable(variant.end())
-                .map(EnrichedStructuralVariantLeg::adjustedCopyNumberChange)
-                .map(this::round)
-                .ifPresent(purpleCNChange::add);
+        Optional.ofNullable(variant.start().adjustedCopyNumberChange()).ifPresent(purpleCNChange::add);
+        Optional.ofNullable(variant.end()).map(EnrichedStructuralVariantLeg::adjustedCopyNumberChange).ifPresent(purpleCNChange::add);
 
         if (reverse) {
             Collections.reverse(purpleAF);
@@ -268,7 +267,7 @@ class PurpleStructuralVariantSupplier {
 
         Double ploidy = variant.ploidy();
         if (ploidy != null) {
-            builder.attribute(PURPLE_PLOIDY_INFO, round(ploidy));
+            builder.attribute(PURPLE_PLOIDY_INFO, ploidy);
         }
 
         return builder.make();
@@ -294,7 +293,10 @@ class PurpleStructuralVariantSupplier {
         outputVCFHeader.addMetaDataLine(new VCFHeaderLine("purpleVersion", purpleVersion));
 
         outputVCFHeader.addMetaDataLine(VCFStandardHeaderLines.getFormatLine("GT"));
-        outputVCFHeader.addMetaDataLine(new VCFInfoHeaderLine(StructuralVariantFactory.RECOVERED, 0, VCFHeaderLineType.Flag, RECOVERED_DESC));
+        outputVCFHeader.addMetaDataLine(new VCFInfoHeaderLine(StructuralVariantFactory.RECOVERED,
+                0,
+                VCFHeaderLineType.Flag,
+                RECOVERED_DESC));
         outputVCFHeader.addMetaDataLine(new VCFFilterHeaderLine(StructuralVariantFactory.INFERRED, INFERRED_DESC));
         outputVCFHeader.addMetaDataLine(new VCFInfoHeaderLine(IMPRECISE_INFO, 0, VCFHeaderLineType.Flag, IMPRECISE_DESC));
         outputVCFHeader.addMetaDataLine(new VCFInfoHeaderLine(StructuralVariantFactory.CIPOS, 2, VCFHeaderLineType.Integer, CIPOS_DESC));
@@ -341,10 +343,6 @@ class PurpleStructuralVariantSupplier {
 
     private boolean enabled() {
         return header.isPresent();
-    }
-
-    private double round(double value) {
-        return Math.round(value * 1000d) / 1000d;
     }
 
 }
