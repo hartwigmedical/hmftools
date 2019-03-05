@@ -21,7 +21,6 @@ public class SvChain {
     private List<SvVarData> mSvList;
     private List<SvLinkedPair> mLinkedPairs;
 
-    private int mLength;
     private boolean mIsClosedLoop;
     private boolean mIsValid;
 
@@ -34,7 +33,6 @@ public class SvChain {
         mId = chainId;
         mSvList = Lists.newArrayList();
         mLinkedPairs = Lists.newArrayList();
-        mLength = 0;
         mIsClosedLoop = false;
         mIsValid = true;
         mDetails = "";
@@ -251,24 +249,17 @@ public class SvChain {
         }
     }
 
-    public int getLength() { return mLength; }
-
-    public void recalcLength()
+    public int getLength()
     {
-        // defined as the TI and DB lengths plus the variant lengths for those linked at both end
-        mLength = 0;
+        // defined as the sum of the TI lengths
+        int length = 0;
 
-        for(int i = 0; i < mLinkedPairs.size(); ++i)
+        for(final SvLinkedPair pair : mLinkedPairs)
         {
-            final SvLinkedPair pair = mLinkedPairs.get(i);
-
-            mLength += abs(pair.length());
-
-            if(i > 0 && i < mLinkedPairs.size())
-            {
-                mLength += pair.first().length();
-            }
+            length += abs(pair.length());
         }
+
+        return length;
     }
 
     public int getUniqueSvCount()

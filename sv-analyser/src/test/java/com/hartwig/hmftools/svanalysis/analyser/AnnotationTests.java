@@ -90,6 +90,8 @@ public class AnnotationTests
         tester.AllVariants.add(var6);
         tester.AllVariants.add(var7);
 
+        tester.AllVariants.stream().forEach(x -> x.setPloidyRecalcData(x.getSvData().ploidy(), x.getSvData().ploidy()));
+
         tester.preClusteringInit();
         tester.addCopyNumberData();
 

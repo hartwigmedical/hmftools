@@ -17,37 +17,18 @@ public class CopyNumberTests
     public void testPloidyRecalcs()
     {
         // example
-        double cnStart = 3;
-        double cnChgStart = 0;
-        double cnEnd = 3;
-        double cnChgEnd = 4;
-        double ploidy = 4;
-        int tumorReadCount = 25;
+        double cnChgStart = 1;
+        double cnChgEnd = 0;
+        int tumorReadCountStart = 30;
+        int tumorReadCountEnd = 30;
+        double maxCNStart = 4;
+        double maxCNEnd = 5;
+        double adjVaf = 0.2;
         int[] startDepthData = {100, 100};
-        int[] endDepthData = {1000, 1000};
+        int[] endDepthData = {1, 1};
 
-        double[] calcResults =  calcAdjustedPloidyValues(cnStart, cnChgStart, cnEnd, cnChgEnd, ploidy,
-                tumorReadCount, startDepthData, endDepthData);
-
-        // assertEqual()
-
-        // prod example
-        cnStart = 5.684;
-        cnChgStart = 0.941;
-        cnEnd = 5.764;
-        cnChgEnd = 1.021;
-        ploidy = 1.017;
-        tumorReadCount = 22;
-        endDepthData[0] = 3;
-        endDepthData[1] = 0;
-
-        startDepthData[0] = 0;
-        startDepthData[1] = 0;
-
-        calcResults =  calcAdjustedPloidyValues(cnStart, cnChgStart, cnEnd, cnChgEnd, ploidy,
-                tumorReadCount, startDepthData, endDepthData);
-
-
+        double[] calcResults =  calcAdjustedPloidyValues(cnChgStart, cnChgEnd, tumorReadCountStart, tumorReadCountEnd,
+                adjVaf, adjVaf, maxCNStart, maxCNEnd, startDepthData, endDepthData);
     }
 
     @Test

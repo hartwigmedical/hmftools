@@ -14,6 +14,7 @@ import static com.hartwig.hmftools.svanalysis.analysis.ClusterAnalyser.SMALL_CLU
 import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.DEFAULT_PROXIMITY_DISTANCE;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.addSvToChrBreakendMap;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.calcConsistency;
+import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.getSvTypesStr;
 import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.ASSEMBLY_MATCH_INFER_ONLY;
 import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.ASSEMBLY_MATCH_NONE;
 import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.removedLinksWithSV;
@@ -641,22 +642,7 @@ public class SvCluster
             return mSVs.get(0).typeStr();
         }
 
-        // the following map-based naming convention leads
-        // to a predictable ordering of types: INV, CRS, BND, DEL and DUP
-        String clusterTypeStr = "";
-
-        for(int i = 0;i < mTypeCounts.length; ++i)
-        {
-            if(mTypeCounts[i] == 0)
-                continue;
-
-            if(!clusterTypeStr.isEmpty())
-                clusterTypeStr += "_";
-
-            clusterTypeStr += StructuralVariantType.values()[i] + "=" + mTypeCounts[i];
-        }
-
-        return clusterTypeStr;
+        return getSvTypesStr(mTypeCounts);
     }
 
     public int getTypeCount(StructuralVariantType type)

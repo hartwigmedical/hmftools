@@ -4,6 +4,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.centromeres.Centromeres;
 import com.hartwig.hmftools.common.chromosome.ChromosomeLengths;
 import com.hartwig.hmftools.common.region.GenomeRegion;
+import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 import com.hartwig.hmftools.svanalysis.types.SvBreakend;
 import com.hartwig.hmftools.svanalysis.types.SvVarData;
 
@@ -28,20 +29,6 @@ public class SvUtilities {
     public static String CHROMOSOME_ARM_P = "P"; // short arm, and lower position
     public static String CHROMOSOME_ARM_Q = "Q";
     public static String CHROMOSOME_ARM_CENTROMERE = "C";
-
-    // list of common annotations
-    public static String REPLICATION_EVENT = "REP";
-    public static String DOUBLE_STRANDED_BREAK = "DSB";
-    public static String TEMPLATED_INSERTION = "TI";
-    public static String DOUBLE_MINUTE = "DM";
-    public static String BREAKAGE_FUSION_BRIDGE = "BFB";
-    public static String FRAGILE_SITE = "FRAG";
-    public static String UNPHASED_EVENTS = "UNPHAS";
-
-    public static String SV_GROUP_ENCLOSED = "ENCLD";
-    public static String SV_GROUP_ENCLOSING = "ENCLG";
-    public static String SV_GROUP_OVERLAP = "OVLP";
-    public static String SV_GROUP_NEIGHBOURS = "NHRB";
 
     public static int PERMITED_DUP_BE_DISTANCE = 1;
 
@@ -111,6 +98,26 @@ public class SvUtilities {
 
             breakendList.add(index, var.getBreakend(useStart));
         }
+    }
+
+    public static final String getSvTypesStr(final int[] typeCounts)
+    {
+        // the following map-based naming convention leads
+        // to a predictable ordering of types: INV, CRS, BND, DEL and DUP
+        String clusterTypeStr = "";
+
+        for(int i = 0;i < typeCounts.length; ++i)
+        {
+            if(typeCounts[i] == 0)
+                continue;
+
+            if(!clusterTypeStr.isEmpty())
+                clusterTypeStr += "_";
+
+            clusterTypeStr += StructuralVariantType.values()[i] + "=" + typeCounts[i];
+        }
+
+        return clusterTypeStr;
     }
 
     public static boolean areVariantsLinkedByDistance(final SvVarData v1, final SvVarData v2, int permittedDistance)

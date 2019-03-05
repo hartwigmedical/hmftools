@@ -686,8 +686,8 @@ public class SvVarData
     }
 
     public boolean hasCalculatedPloidy() { return mHasCalcPloidy; }
-    public double ploidyMax() { return mPloidyMax; }
-    public double ploidyMin() { return mPloidyMin; }
+    public double ploidyMax() { return mHasCalcPloidy ? mPloidyMax : mSVData.ploidy(); }
+    public double ploidyMin() { return mHasCalcPloidy ? mPloidyMin : mSVData.ploidy(); }
 
     public static SvVarData findVariantById(final String id, List<SvVarData> svList)
     {
@@ -717,7 +717,7 @@ public class SvVarData
         return false;
     }
 
-    // private static String SPECIFIC_VAR_ID = "9619067";
+    // private static String SPECIFIC_VAR_ID = "9683592";
     private static String SPECIFIC_VAR_ID = "";
 
     public static boolean isSpecificSV(final SvVarData var)
