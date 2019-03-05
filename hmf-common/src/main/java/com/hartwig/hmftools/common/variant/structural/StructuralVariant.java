@@ -28,7 +28,7 @@ public interface StructuralVariant {
     @Nullable
     StructuralVariantLeg end();
 
-    @NotNull
+    @Nullable
     VariantContext startContext();
 
     @Nullable

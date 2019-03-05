@@ -9,6 +9,7 @@ import com.hartwig.hmftools.common.chromosome.Chromosome;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.copynumber.sv.StructuralVariantLegCopyNumber;
+import com.hartwig.hmftools.common.purple.copynumber.sv.StructuralVariantLegCopyNumberChangeFactory;
 import com.hartwig.hmftools.common.purple.copynumber.sv.StructuralVariantLegCopyNumberFactory;
 import com.hartwig.hmftools.common.purple.copynumber.sv.StructuralVariantLegPloidy;
 import com.hartwig.hmftools.common.purple.copynumber.sv.StructuralVariantLegPloidyFactory;
@@ -29,6 +30,10 @@ public final class CopyNumberEnrichedStructuralVariantFactory {
 
     @NotNull
     public List<EnrichedStructuralVariant> enrich(@NotNull final List<StructuralVariant> variants) {
+
+        final StructuralVariantLegCopyNumberChangeFactory changeFactory =
+                new StructuralVariantLegCopyNumberChangeFactory(purityAdjuster, copyNumbers, variants);
+
         final StructuralVariantLegPloidyFactory<PurpleCopyNumber> ploidyFactory =
                 new StructuralVariantLegPloidyFactory<>(purityAdjuster, PurpleCopyNumber::averageTumorCopyNumber);
         final StructuralVariantLegCopyNumberFactory<PurpleCopyNumber> copyNumberFactory =
@@ -42,7 +47,8 @@ public final class CopyNumberEnrichedStructuralVariantFactory {
             // Every SV should have a start, while end is optional.
             assert startBuilder != null;
 
-            @Nullable final StructuralVariantLeg endLeg = variant.end();
+            @Nullable
+            final StructuralVariantLeg endLeg = variant.end();
             ImmutableEnrichedStructuralVariantLeg.Builder endBuilder = createBuilder(endLeg);
 
             List<StructuralVariantLegPloidy> ploidies = ploidyFactory.create(variant, copyNumbers);
@@ -55,31 +61,31 @@ public final class CopyNumberEnrichedStructuralVariantFactory {
 
                 startBuilder.adjustedAlleleFrequency(round(startPloidy.adjustedVaf()));
                 startBuilder.adjustedCopyNumber(round(startPloidy.adjustedCopyNumber()));
-                startBuilder.adjustedCopyNumberChange(round(startPloidy.adjustedCopyNumberChange()));
+                startBuilder.adjustedCopyNumberChange(round(changeFactory.copyNumberChange(startPloidy)));
 
                 if (endPloidy != null) {
                     assert endBuilder != null;
                     endBuilder.adjustedAlleleFrequency(round(endPloidy.adjustedVaf()));
                     endBuilder.adjustedCopyNumber(round(endPloidy.adjustedCopyNumber()));
-                    endBuilder.adjustedCopyNumberChange(round(endPloidy.adjustedCopyNumberChange()));
+                    endBuilder.adjustedCopyNumberChange(round(changeFactory.copyNumberChange(endPloidy)));
                 }
             } else {
                 // Can't always get plodies (if no vaf for example) but we can still get copy number info
                 final StructuralVariantLegCopyNumber startCopyNumber = copyNumberFactory.create(variant.start(), copyNumbers);
                 startBuilder.adjustedCopyNumber(round(startCopyNumber.adjustedCopyNumber()));
-                startBuilder.adjustedCopyNumberChange(round(startCopyNumber.adjustedCopyNumberChange()));
+                startBuilder.adjustedCopyNumberChange(round(changeFactory.copyNumberChange(startCopyNumber)));
 
                 // Lacking anything else, inferred singles can use copy number change as ploidy
                 if (Optional.ofNullable(variant.filter()).filter(x -> x.equals(StructuralVariantFactory.INFERRED)).isPresent()
                         && variant.type() == StructuralVariantType.SGL) {
-                    builder.ploidy(round(startCopyNumber.adjustedCopyNumberChange()));
+                    builder.ploidy(round(changeFactory.copyNumberChange(startCopyNumber)));
                 }
 
                 if (endLeg != null) {
                     assert endBuilder != null;
                     final StructuralVariantLegCopyNumber endCopyNumber = copyNumberFactory.create(endLeg, copyNumbers);
                     endBuilder.adjustedCopyNumber(round(endCopyNumber.adjustedCopyNumber()));
-                    endBuilder.adjustedCopyNumberChange(round(endCopyNumber.adjustedCopyNumberChange()));
+                    endBuilder.adjustedCopyNumberChange(round(changeFactory.copyNumberChange(endCopyNumber)));
                 }
             }
 
@@ -98,7 +104,12 @@ public final class CopyNumberEnrichedStructuralVariantFactory {
         return ImmutableEnrichedStructuralVariantLeg.builder().from(leg);
     }
 
-    private static double round(double value) {
+    @Nullable
+    private static Double round(@Nullable final Double value) {
+        return value == null ? null : Math.round(value * 1000d) / 1000d;
+    }
+
+    private static double round(final double value) {
         return Math.round(value * 1000d) / 1000d;
     }
 }

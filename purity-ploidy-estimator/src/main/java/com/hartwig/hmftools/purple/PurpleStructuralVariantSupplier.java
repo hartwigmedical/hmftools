@@ -69,8 +69,6 @@ class PurpleStructuralVariantSupplier {
     private static final String PURPLE_CN_CHANGE_DESC = "Purity adjusted change in copy number at each breakend";
     private static final String CIPOS_DESC = "Confidence interval around POS for imprecise variants";
     private static final String SVTYPE_DESC = "Type of structural variant";
-    private static final String GT_FORMAT = "GT";
-    private static final String GT_DESC = "Genotype";
 
     private static final Allele REF_ALLELE = Allele.create("N", true);
     private static final Allele INCREASING_ALLELE = Allele.create(".N", false);
@@ -212,7 +210,10 @@ class PurpleStructuralVariantSupplier {
 
         final TreeSet<VariantContext> enrichedContexts = new TreeSet<>(new VCComparator(header.get().getSequenceDictionary()));
         for (EnrichedStructuralVariant enrichedSV : svEnricher.enrich(svFactory.results())) {
-            enrichedContexts.add(enrich(enrichedSV, enrichedSV.startContext(), false));
+            final VariantContext startContext = enrichedSV.startContext();
+            if (startContext != null) {
+                enrichedContexts.add(enrich(enrichedSV, startContext, false));
+            }
 
             final VariantContext endContext = enrichedSV.endContext();
             if (endContext != null) {

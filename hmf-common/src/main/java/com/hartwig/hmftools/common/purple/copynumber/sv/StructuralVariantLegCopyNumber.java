@@ -2,9 +2,11 @@ package com.hartwig.hmftools.common.purple.copynumber.sv;
 
 import java.util.Optional;
 
+import com.hartwig.hmftools.common.variant.structural.StructuralVariantLeg;
+
 import org.jetbrains.annotations.NotNull;
 
-public interface StructuralVariantLegCopyNumber {
+public interface StructuralVariantLegCopyNumber extends StructuralVariantLeg {
 
     byte orientation();
 
@@ -22,6 +24,7 @@ public interface StructuralVariantLegCopyNumber {
         }
     }
 
+    @Deprecated
     default double adjustedCopyNumberChange() {
         double leftCopyNumber = leftCopyNumber().orElse(0D);
         double rightCopyNumber = rightCopyNumber().orElse(0D);
