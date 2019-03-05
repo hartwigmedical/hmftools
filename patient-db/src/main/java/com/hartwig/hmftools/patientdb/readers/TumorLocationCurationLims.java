@@ -3,6 +3,7 @@ package com.hartwig.hmftools.patientdb.readers;
 import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.patientdb.LoadClinicalData;
 import com.hartwig.hmftools.patientdb.curators.TumorLocationCurator;
+import com.hartwig.hmftools.patientdb.data.ImmutableCuratedTumorLocation;
 import com.hartwig.hmftools.patientdb.data.ImmutableTumorTypeLims;
 import com.hartwig.hmftools.patientdb.data.TumorTypeLims;
 
@@ -32,11 +33,4 @@ public class TumorLocationCurationLims {
         return limsTumorCurations;
     }
 
-    @NotNull
-    public TumorTypeLims readFixedValue(@NotNull final String patientId) {
-        final TumorTypeLims TumorCurationsCOLO;
-        TumorCurationsCOLO = ImmutableTumorTypeLims.of(patientId, tumorLocationCurator.search("Melanoma"));
-        LOGGER.info(TumorCurationsCOLO);
-        return TumorCurationsCOLO;
-    }
 }
