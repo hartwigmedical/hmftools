@@ -27,8 +27,6 @@ import com.hartwig.hmftools.patientdb.curators.BiopsySiteCurator;
 import com.hartwig.hmftools.patientdb.curators.TreatmentCurator;
 import com.hartwig.hmftools.patientdb.curators.TumorLocationCurator;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
-import com.hartwig.hmftools.patientdb.data.CuratedTumorLocation;
-import com.hartwig.hmftools.patientdb.data.ImmutableTumorTypeLims;
 import com.hartwig.hmftools.patientdb.data.Patient;
 import com.hartwig.hmftools.patientdb.data.SampleData;
 import com.hartwig.hmftools.patientdb.data.TumorTypeLims;
@@ -159,7 +157,8 @@ public final class LoadClinicalData {
             if (!sampleIdsFromPatients.get(i).contains(LimsSampleType.COLO.toString())) {
                 List<SampleData> samples = samplesPerPatient.get(sampleIdsFromPatients.get(i));
                 //create sampleID
-                String sampleId = samples.toString().split(" ")[1].substring(1, samples.toString().length()-2);
+                String rawSampleId = samples.toString().split(" ")[1];
+                String sampleId = rawSampleId.substring(1, rawSampleId.length()-2);
                 patientMap.put(lims.patientId(sampleId), tumorLocationCurationLims.read(sampleId, lims.patientId(sampleId)));
             } else if (sampleIdsFromPatients.get(i).contains(LimsSampleType.COLO.toString())) {
                 patientMap.put("COLO829", tumorLocationCurationLims.readFixedValue("COLO829"));
