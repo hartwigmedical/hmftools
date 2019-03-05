@@ -6,28 +6,42 @@ import org.jetbrains.annotations.NotNull;
 
 class CopyNumberChange {
 
-    private final double totalPositivePloidy;
-    private final double totalNegativePloidy;
+    private final double totalDownPloidy;
+    private final double totalUpPloidy;
 
     private final double positiveCopyNumberProportion;
     private final double negativeCopyNumberProportion;
 
     CopyNumberChange(@NotNull final List<StructuralVariantLegPloidy> structuralVariants) {
 
-        totalPositivePloidy = structuralVariants.stream().filter(this::isPositive).mapToDouble(this::ploidy).sum();
-        totalNegativePloidy = structuralVariants.stream().filter(this::isNegative).mapToDouble(this::ploidy).sum();
-        final double totalPloidy = totalPositivePloidy + totalNegativePloidy;
+//        if (structuralVariants.stream().anyMatch(x -> x.position() == 103821416L)) {
+//            System.out.println("sdf");
+//        }
 
-        positiveCopyNumberProportion = totalPositivePloidy / totalPloidy;
-        negativeCopyNumberProportion = totalNegativePloidy / totalPloidy;
+        totalDownPloidy = structuralVariants.stream().filter(this::isPositive).mapToDouble(this::ploidy).sum();
+        totalUpPloidy = structuralVariants.stream().filter(this::isNegative).mapToDouble(this::ploidy).sum();
+        final double totalPloidy = Math.abs(totalDownPloidy - totalUpPloidy);
+        final double maxPloidy = Math.max(totalDownPloidy, totalUpPloidy);
+
+        positiveCopyNumberProportion = totalDownPloidy / totalPloidy;
+        negativeCopyNumberProportion = totalUpPloidy / totalPloidy;
     }
 
     public double copyNumberChange(@NotNull final StructuralVariantLegPloidy leg) {
-        double copyNumberChangeSimple = copyNumberChangeSimple(leg);
+//        double copyNumberChangeSimple = Math.abs(copyNumberChangeSimple(leg));
+        double copyNumberChangeSimple = leg.rightCopyNumber().orElse(0D) - leg.leftCopyNumber().orElse(0D);
+
+        double downScale = (totalUpPloidy - copyNumberChangeSimple) / (totalUpPloidy + totalDownPloidy);
+        double upScale = 1 - downScale;
 
         return isPositive(leg)
-                ? copyNumberChangeSimple * positiveCopyNumberProportion * ploidy(leg) / totalPositivePloidy
-                : copyNumberChangeSimple * negativeCopyNumberProportion * ploidy(leg) / totalNegativePloidy;
+                ? 0.25+ downScale * ploidy(leg)
+                : 0.5 + upScale * ploidy(leg);
+
+//
+//        return isPositive(leg)
+//                ? Math.abs(copyNumberChangeSimple) * positiveCopyNumberProportion * ploidy(leg) / totalPositivePloidy
+//                : Math.abs(copyNumberChangeSimple) * negativeCopyNumberProportion * ploidy(leg) / totalNegativePloidy;
     }
 
     private boolean isPositive(StructuralVariantLegPloidy ploidy) {
