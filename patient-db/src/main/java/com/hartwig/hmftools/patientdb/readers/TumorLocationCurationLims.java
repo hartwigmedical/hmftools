@@ -34,11 +34,8 @@ public class TumorLocationCurationLims {
 
     @NotNull
     public TumorTypeLims readFixedValue(@NotNull final String patientId) {
-        LOGGER.info("COLO829");
         final TumorTypeLims TumorCurationsCOLO;
-        LOGGER.info("COLO829");
         TumorCurationsCOLO = ImmutableTumorTypeLims.of(patientId, tumorLocationCurator.search("Melanoma"));
-        LOGGER.info("COLO829");
         LOGGER.info(TumorCurationsCOLO);
         return TumorCurationsCOLO;
     }
