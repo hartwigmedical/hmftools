@@ -18,10 +18,10 @@ public abstract class SampleReport {
     @NotNull
     public abstract String sampleId();
 
-    @Nullable
+    @NotNull
     public abstract String barcodeTumor();
 
-    @Nullable
+    @NotNull
     public abstract String barcodeReference();
 
     @Nullable
@@ -85,6 +85,6 @@ public abstract class SampleReport {
             throw new IllegalStateException("CORE sample present without patient number: " + sampleId());
         }
 
-        return isCoreSample ? title + " - " + patientNumber + " (" + projectName() + ")" : title + " - " + sampleId();
+        return isCoreSample ? title + " - " + sampleId() + " (" + patientNumber() + ")" : title + " - " + sampleId();
     }
 }

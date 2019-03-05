@@ -22,10 +22,13 @@ import com.hartwig.hmftools.common.ecrf.formstatus.FormStatusModel;
 import com.hartwig.hmftools.common.ecrf.formstatus.FormStatusReader;
 import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.lims.LimsFactory;
+import com.hartwig.hmftools.common.lims.LimsSampleType;
 import com.hartwig.hmftools.patientdb.curators.BiopsySiteCurator;
 import com.hartwig.hmftools.patientdb.curators.TreatmentCurator;
 import com.hartwig.hmftools.patientdb.curators.TumorLocationCurator;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
+import com.hartwig.hmftools.patientdb.data.CuratedTumorLocation;
+import com.hartwig.hmftools.patientdb.data.ImmutableTumorTypeLims;
 import com.hartwig.hmftools.patientdb.data.Patient;
 import com.hartwig.hmftools.patientdb.data.SampleData;
 import com.hartwig.hmftools.patientdb.data.TumorTypeLims;
@@ -119,11 +122,11 @@ public final class LoadClinicalData {
 
         for (Map.Entry<String, List<SampleData>> sampleData : samplesPerPatient.entrySet()) {
             String patient = sampleData.getKey();
-            if (patient.contains("CORE")) {
+            if (patient.contains(LimsSampleType.CORE.toString())) {
                 corePatients.add(patient);
-            } else if (patient.contains("WIDE")) {
+            } else if (patient.contains(LimsSampleType.WIDE.toString())) {
                 widePatients.add(patient);
-            } else if (patient.contains("COLO")) {
+            } else if (patient.contains(LimsSampleType.COLO.toString())) {
                 coloPatients.add(patient);
             }
         }
@@ -153,15 +156,13 @@ public final class LoadClinicalData {
             @NotNull final Lims lims) {
         final Map<String, TumorTypeLims> patientMap = Maps.newHashMap();
         for (int i = 0; i < sampleIdsFromPatients.size(); i++) {
-            if (!sampleIdsFromPatients.get(i).contains("COLO")) {
+            if (!sampleIdsFromPatients.get(i).contains(LimsSampleType.COLO.toString())) {
                 List<SampleData> samples = samplesPerPatient.get(sampleIdsFromPatients.get(i));
-
                 //create sampleID
-                String sampleId = samples.toString().split(" ")[1].substring(1, 14);
+                String sampleId = samples.toString().split(" ")[1].substring(1, samples.toString().length()-2);
                 patientMap.put(sampleId, tumorLocationCurationLims.read(sampleId, lims.patientId(sampleId)));
-            } else if (sampleIdsFromPatients.get(i).contains("COLO")) {
-                String sampleId = sampleIdsFromPatients.toString().substring(1, 9);
-                patientMap.put(sampleId, tumorLocationCurationLims.readFixedValue(sampleId));
+            } else if (sampleIdsFromPatients.get(i).contains(LimsSampleType.COLO.toString())) {
+                patientMap.put("COLO829", tumorLocationCurationLims.readFixedValue("COLO829"));
             }
         }
         return patientMap;
@@ -205,7 +206,8 @@ public final class LoadClinicalData {
         int missingSamples = 0;
         LOGGER.info(String.format("Writing clinical data for %s sequenced patients.", sequencedPatientIdentifiers.size()));
         for (final String patientIdentifier : sequencedPatientIdentifiers) {
-            if (patientIdentifier.contains("CPCT") || patientIdentifier.contains("DRUP") || patientIdentifier.contains("WIDE")) {
+            if (patientIdentifier.contains(LimsSampleType.CPCT.toString()) || patientIdentifier.contains(LimsSampleType.DRUP.toString())
+                    || patientIdentifier.contains(LimsSampleType.WIDE.toString())) {
                 Patient patient = patients.get(patientIdentifier);
                 if (patient == null) {
                     missingPatients++;

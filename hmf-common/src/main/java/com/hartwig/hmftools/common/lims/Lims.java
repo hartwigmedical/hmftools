@@ -80,7 +80,7 @@ public class Lims {
 
     public boolean isCoreSample(@NotNull final String sample) {
         String label = label(sample);
-        return label.equalsIgnoreCase("core");
+        return label.equalsIgnoreCase(LimsSampleType.CORE.toString());
     }
 
     @NotNull
@@ -108,7 +108,7 @@ public class Lims {
         LimsJsonSampleData sampleData = dataPerSample.get(sample);
         if (sampleData != null) {
             String refBarcode = sampleData.refBarcodeId();
-            if (refBarcode.isEmpty()) {
+            if (refBarcode == null || refBarcode.isEmpty()) {
                 return "not determined";
             } else {
                 return refBarcode;
@@ -126,7 +126,7 @@ public class Lims {
             arrivalDate = preLimsArrivalDates.get(sample);
         }
 
-        if (arrivalDate == null && !sample.contains("COLO")) {
+        if (arrivalDate == null && !sample.contains(LimsSampleType.COLO.toString())) {
             LOGGER.warn("Could not find a valid arrival date for sample: " + sample + " in LIMS");
         }
 
