@@ -325,7 +325,8 @@ public final class LoadClinicalData {
         final String runsFolderPathCOLO = cmd.getOptionValue(RUNS_DIR_COLO);
         final List<RunContext> runContextsCOLO = RunsFolderReader.getRunContexts(new File(runsFolderPathCOLO));
         LOGGER.info(String.format("Loading run contexts from %s", runsFolderPathCOLO) + " (" + runContextsCOLO.size() + " sets).");
-        return Utils.sequencedPatientIdentifiers(runContextsCOLO).toString();
+        Set<String> COLOpatient = Utils.sequencedPatientIdentifiers(runContextsCOLO);
+        return COLOpatient.toString();
     }
 
     @NotNull
