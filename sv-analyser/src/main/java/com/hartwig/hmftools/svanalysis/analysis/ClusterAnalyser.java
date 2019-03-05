@@ -15,10 +15,7 @@ import static com.hartwig.hmftools.common.variant.structural.StructuralVariantTy
 import static com.hartwig.hmftools.svanalysis.analysis.ClusterAnnotations.annotateClusterArmSegments;
 import static com.hartwig.hmftools.svanalysis.analysis.ClusterAnnotations.annotateTemplatedInsertions;
 import static com.hartwig.hmftools.svanalysis.analysis.ClusterAnnotations.classifyChainedClusters;
-import static com.hartwig.hmftools.svanalysis.analysis.ClusterAnnotations.findIncompleteFoldbackCandidates;
 import static com.hartwig.hmftools.svanalysis.analysis.ClusterAnnotations.findPotentialDoubleMinuteClusters;
-import static com.hartwig.hmftools.svanalysis.analysis.ClusterAnnotations.reportDoubleMinutes;
-import static com.hartwig.hmftools.svanalysis.analysis.ClusterAnnotations.reportDuplicationCopyNumberData;
 import static com.hartwig.hmftools.svanalysis.analysis.LinkFinder.MIN_TEMPLATED_INSERTION_LENGTH;
 import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.CLUSTER_REASON_COMMON_ARMS;
 import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.CLUSTER_REASON_FOLDBACKS;
@@ -939,7 +936,7 @@ public class ClusterAnalyser {
 
                         breakend.getSV().setFoldbackLink(
                                 isStart,
-                                breakend.getSV().getFoldbackLink(isStart),
+                                breakend.getSV().getFoldbackBreakend(isStart),
                                 breakend.getSV().getFoldbackLen(isStart),
                                 foldbackInfo);
                     }
@@ -986,12 +983,14 @@ public class ClusterAnalyser {
                 return;
         }
 
-        boolean v1Start = beEnd.usesStart();
-        boolean v2Start = beStart.usesStart();
+        boolean beEndUsesStart = beEnd.usesStart();
+        boolean beStartUsesStart = beStart.usesStart();
 
         String chainInfo = "0;0;0";
 
-        if(varEnd.equals(varStart))
+        boolean singleSV = varEnd.equals(varStart);
+
+        if(singleSV)
         {
             // constraint is that the ends of this INV don't link to BND taking the path off this chromosome
             final SvChain chain = cluster1.findChain(varEnd);
@@ -1028,7 +1027,7 @@ public class ClusterAnalyser {
 
             // check if a path can be walked between these 2 breakends along the chain
             // without going back through this foldback point
-            int[] chainData = chain1.breakendsAreChained(varEnd, !v1Start, varStart, !v2Start);
+            int[] chainData = chain1.breakendsAreChained(varEnd, !beEndUsesStart, varStart, !beStartUsesStart);
 
             if(chainData[CHAIN_LINK_COUNT] == 0)
                 return;
@@ -1048,13 +1047,13 @@ public class ClusterAnalyser {
         if((beEnd.orientation() == 1 && beEnd.position() < beStart.position()) || (beEnd.orientation() == -1 && beEnd.position() > beStart.position()))
         {
             // be1 is facing away from be2, so need to take its copy number on the break side
-            cn1 = varEnd.copyNumber(v1Start) - varEnd.copyNumberChange(v1Start);
-            cn2 = varStart.copyNumber(v2Start);
+            cn1 = varEnd.copyNumber(beEndUsesStart) - varEnd.copyNumberChange(beEndUsesStart);
+            cn2 = varStart.copyNumber(beStartUsesStart);
         }
         else
         {
-            cn2 = varStart.copyNumber(v2Start) - varStart.copyNumberChange(v2Start);
-            cn1 = varEnd.copyNumber(v1Start);
+            cn2 = varStart.copyNumber(beStartUsesStart) - varStart.copyNumberChange(beStartUsesStart);
+            cn1 = varEnd.copyNumber(beEndUsesStart);
         }
 
         if(!copyNumbersEqual(cn1, cn2))
@@ -1067,11 +1066,11 @@ public class ClusterAnalyser {
         // b) shortest length
 
         boolean skipFoldback = false;
-        if(!varEnd.getFoldbackLink(v1Start).isEmpty() && !varEnd.equals(varStart) && varEnd.getFoldbackLen(v1Start) < length)
+        if(varEnd.getFoldbackBreakend(beEndUsesStart) != null && !singleSV && varEnd.getFoldbackLen(beEndUsesStart) < length)
         {
             skipFoldback = true;
         }
-        else if(!varStart.getFoldbackLink(v2Start).isEmpty() && !varEnd.equals(varStart) && varStart.getFoldbackLen(v2Start) < length)
+        else if(varStart.getFoldbackBreakend(beStartUsesStart) != null && !singleSV && varStart.getFoldbackLen(beStartUsesStart) < length)
         {
             skipFoldback = true;
         }
@@ -1079,14 +1078,20 @@ public class ClusterAnalyser {
         if(skipFoldback)
             return;
 
-        if(!varEnd.getFoldbackLink(v1Start).isEmpty())
-            clearFoldbackInfo(varEnd.getFoldbackLink(v1Start), varEnd.id(), cluster1);
+        if(varEnd.getFoldbackBreakend(beEndUsesStart) != null)
+        {
+            final SvBreakend otherBreakend = varEnd.getFoldbackBreakend(beEndUsesStart);
+            otherBreakend.getSV().setFoldbackLink(otherBreakend.usesStart(), null, -1, "");
+        }
 
-        if(!varStart.getFoldbackLink(v2Start).isEmpty())
-            clearFoldbackInfo(varStart.getFoldbackLink(v2Start), varStart.id(), cluster2);
+        if(varStart.getFoldbackBreakend(beStartUsesStart) != null)
+        {
+            final SvBreakend otherBreakend = varStart.getFoldbackBreakend(beStartUsesStart);
+            otherBreakend.getSV().setFoldbackLink(otherBreakend.usesStart(), null, -1, "");
+        }
 
-        varEnd.setFoldbackLink(v1Start, varStart.id(), length, chainInfo);
-        varStart.setFoldbackLink(v2Start, varEnd.id(), length, chainInfo);
+        varEnd.setFoldbackLink(beEndUsesStart, beStart, length, chainInfo);
+        varStart.setFoldbackLink(beStartUsesStart, beEnd, length, chainInfo);
 
         if(varEnd.equals(varStart))
         {
@@ -1132,25 +1137,12 @@ public class ClusterAnalyser {
 
                 boolean foldbackIsStart = chain.firstLinkOpenOnStart();
 
-                var.setFoldbackLink(foldbackIsStart, var.id(), 0, chainInfo);
+                var.setFoldbackLink(foldbackIsStart, var.getBreakend(foldbackIsStart), 0, chainInfo);
 
                 LOGGER.debug("cluster({}) foldback translocation SV({}) with self on {}",
                         cluster.id(), var.posId(), foldbackIsStart ? "start" : "end");
             }
         }
-    }
-
-    private void clearFoldbackInfo(final String varId, final String matchVarId, SvCluster cluster)
-    {
-        SvVarData var = findVariantById(varId, cluster.getSVs());
-
-        if(var == null)
-            return;
-
-        if(var.getFoldbackLink(true).equals(matchVarId))
-            var.setFoldbackLink(true, "", -1, "");
-        else
-            var.setFoldbackLink(false, "", -1, "");
     }
 
     public void checkSkippedLOHEvents()

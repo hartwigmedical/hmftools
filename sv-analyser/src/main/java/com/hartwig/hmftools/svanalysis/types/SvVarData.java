@@ -51,8 +51,8 @@ public class SvVarData
     private SvCluster mCluster;
     private String mClusterReason;
 
-    private String mFoldbackLinkStart;
-    private String mFoldbackLinkEnd;
+    private SvBreakend mFoldbackLinkStart; // either the 2 breakends for this SV, or another SV's breaked
+    private SvBreakend mFoldbackLinkEnd;
     private int mFoldbackLenStart;
     private int mFoldbackLenEnd;
     private String mFoldbackLinkInfoStart;
@@ -143,8 +143,8 @@ public class SvVarData
         mDBStart = null;
         mDBEnd = null;
 
-        mFoldbackLinkStart = "";
-        mFoldbackLinkEnd = "";
+        mFoldbackLinkStart = null;
+        mFoldbackLinkEnd = null;
         mFoldbackLenStart = -1;
         mFoldbackLenEnd = -1;
         mFoldbackLinkInfoStart = "";
@@ -480,10 +480,19 @@ public class SvVarData
             mDBEnd = link;
     }
 
-    public final String getFoldbackLink(boolean useStart) { return useStart ? mFoldbackLinkStart : mFoldbackLinkEnd; }
+    public final String getFoldbackLink(boolean useStart)
+    {
+        if(useStart && mFoldbackLinkStart != null)
+            return mFoldbackLinkStart.getSV().id();
+        else if(!useStart && mFoldbackLinkEnd != null)
+            return mFoldbackLinkEnd.getSV().id();
+        else
+            return "";
+    }
+    public final SvBreakend getFoldbackBreakend(boolean useStart) { return useStart ? mFoldbackLinkStart : mFoldbackLinkEnd; }
     public int getFoldbackLen(boolean useStart) { return useStart ? mFoldbackLenStart : mFoldbackLenEnd; }
     public final String getFoldbackLinkInfo(boolean useStart) { return useStart ? mFoldbackLinkInfoStart : mFoldbackLinkInfoEnd; }
-    public void setFoldbackLink(boolean isStart, String link, int length, String linkInfo)
+    public void setFoldbackLink(boolean isStart, final SvBreakend link, int length, String linkInfo)
     {
         if(isStart)
         {
@@ -500,7 +509,7 @@ public class SvVarData
 
         if(mCluster != null)
         {
-            if (mFoldbackLinkStart.isEmpty() && mFoldbackLinkEnd.isEmpty())
+            if (mFoldbackLinkStart == null && mFoldbackLinkEnd == null)
             {
                 mCluster.deregisterFoldback(this);
             }

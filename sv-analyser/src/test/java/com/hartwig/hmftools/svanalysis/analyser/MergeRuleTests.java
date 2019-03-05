@@ -126,7 +126,7 @@ public class MergeRuleTests
 
         tester.Analyser.clusterAndAnalyse();
 
-        assertEquals(tester.getClusters().size(), 1);
+        assertEquals(1, tester.getClusters().size());
         assertTrue(inv1.getClusterReason().contains(CLUSTER_REASON_FOLDBACKS));
         assertTrue(inv2.getClusterReason().contains(CLUSTER_REASON_FOLDBACKS));
 

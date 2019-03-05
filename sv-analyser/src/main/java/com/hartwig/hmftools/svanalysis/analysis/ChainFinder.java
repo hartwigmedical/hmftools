@@ -1,8 +1,12 @@
 package com.hartwig.hmftools.svanalysis.analysis;
 
 import static java.lang.Math.abs;
+import static java.lang.Math.max;
+import static java.lang.Math.min;
 import static java.lang.Math.round;
 
+import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DUP;
+import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INV;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.svanalysis.analysis.LinkFinder.MIN_TEMPLATED_INSERTION_LENGTH;
 import static com.hartwig.hmftools.svanalysis.analysis.LinkFinder.areLinkedSection;
@@ -19,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.svanalysis.types.ChainSvData;
 import com.hartwig.hmftools.svanalysis.types.SvBreakend;
 import com.hartwig.hmftools.svanalysis.types.SvChain;
 import com.hartwig.hmftools.svanalysis.types.SvCluster;
@@ -670,6 +675,7 @@ public class ChainFinder
         // form a map of each breakend to its set of all other breakends which can form a valid TI
         // need to exclude breakends which are already assigned to an assembled TI
         // unless replication permits additional instances of it
+        // add them in such a way that the nearest ones are first
         mSvBreakendPossibleLinks.clear();
 
         final Map<String,List<SvBreakend>> chrBreakendMap = mCluster.getChrBreakendMap();
@@ -729,7 +735,7 @@ public class ChainFinder
                         mSvBreakendPossibleLinks.put(upperBreakend, upperPairs);
                     }
 
-                    upperPairs.add(newPair);
+                    upperPairs.add(0, newPair); // add to front since always nearer than the one prior
                 }
             }
         }
@@ -928,6 +934,103 @@ public class ChainFinder
                     mCluster.id(), mCluster.getCount(), mPartialChains.size(), mUnlinkedSVs.size(),
                     mUnlinkedBreakendMap.size(), mSvReplicationMap.size());
         }
+    }
+
+    private void assessClusterProperties()
+    {
+        /* report on:
+        - every foldback, replication count, ploidy min-max, orientation, other significant SVs faced
+        - every DUP which faces a foldback without
+        - any other INV with replication count >= highest foldback rep count
+        */
+
+        List<ChainSvData> chainSvDataList = Lists.newArrayList();
+
+        // if(mCluster.getUniqueSvCount())
+
+
+
+
+        List<SvVarData> foldbacks = mCluster.getFoldbacks();
+
+
+
+        List<SvVarData> overlappingDups = Lists.newArrayList();
+        List<SvVarData> overlappingInvs = Lists.newArrayList();
+
+        for(int i = 0; i < foldbacks.size(); ++i)
+        {
+            final SvVarData fbVar = foldbacks.get(i);
+            long fbPosStart = 0;
+            long fbPosEnd = 0;
+
+            if(fbVar.type() == INV)
+            {
+                fbPosStart = fbVar.position(true);
+                fbPosEnd = fbVar.position(false);
+            }
+            else
+            {
+                String otherSvId = fbVar.getFoldbackLink(true);
+                long fbPos1 = fbVar.position(true);
+                long fbPos2 = 0;
+
+                if(otherSvId.isEmpty())
+                {
+                    otherSvId = fbVar.getFoldbackLink(false);
+                    fbPos1 = fbVar.position(false);
+                }
+                // find its pair
+                for(int j = 0; j < foldbacks.size(); ++j)
+                {
+                    SvVarData otherFb = foldbacks.get(j);
+
+                    if(otherFb.getFoldbackLink(true).equals(fbVar.id()))
+                    {
+                        fbPos2 = otherFb.position(true);
+                    }
+                    else if(otherFb.getFoldbackLink(false).equals(fbVar.id()))
+                    {
+                        fbPos2 = otherFb.position(false);
+                    }
+                }
+
+                fbPosStart = min(fbPos1, fbPos2);
+                fbPosEnd = max(fbPos1, fbPos2);
+            }
+
+            for(SvVarData var : mCluster.getSVs())
+            {
+                if(var.isReplicatedSv())
+                    continue;
+
+                if(var.type() != DUP && var.type() != INV)
+                    continue;
+
+                if(!var.chromosome(true).equals(fbVar.chromosome(true)))
+                    continue;
+
+                if(var.position(true) < fbPosStart && var.position(false) > fbPosEnd)
+                {
+
+                }
+            }
+        }
+
+
+        int maxRepCount = 0;
+
+        for(Map.Entry<SvVarData,Integer> entry : mSvReplicationMap.entrySet())
+        {
+            maxRepCount = max(maxRepCount, entry.getValue());
+        }
+
+        LOGGER.info("cluster({}: {}) SVs({}) foldbacks({}) maxReplication",
+                mCluster.id(), mCluster.getDesc(), mCluster.getUniqueSvCount(), mCluster.getFoldbacks().size(), maxRepCount);
+
+
+
+
     }
 
 }

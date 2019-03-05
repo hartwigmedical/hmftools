@@ -923,6 +923,9 @@ public class ClusterAnnotations
         final Map<String,List<SvCNData>> chrCopyNumberDataMap = cnAnalyser.getChrCnDataMap();
         final Map<String,SvCNData[]> svCopyNumberDataMap = cnAnalyser.getSvIdCnDataMap();
 
+        if(chrCopyNumberDataMap.isEmpty() || svCopyNumberDataMap.isEmpty())
+            return;
+
         for (final Map.Entry<String, List<SvBreakend>> entry : chrBreakendMap.entrySet())
         {
             final String chromosome = entry.getKey();
@@ -1263,96 +1266,6 @@ public class ClusterAnnotations
             return false;
 
         return true;
-    }
-
-    public static void reportDuplicationCopyNumberData(final String sampleId, final SvCluster cluster,
-            final Map<String, List<SvBreakend>> chrBreakendMap, final CNAnalyser cnAnalyser)
-    {
-        if(cnAnalyser == null)
-            return;
-
-        if(cluster.getUniqueSvCount() != 1 || cluster.getSV(0).type() != DUP)
-            return;
-
-        // gather copy number data surrounding this DUP
-        final SvVarData var = cluster.getSV(0);
-
-        final SvCNData[] cnDataPair = cnAnalyser.getSvIdCnDataMap().get(var.id());
-
-        if(cnDataPair == null)
-            return;
-
-        // check for SVs wholy contained within or overlapping
-        int svWithinCount = 0;
-        int svOverlappingCount = 0;
-
-        final SvBreakend lowerBreakend = var.getBreakend(true);
-        final SvBreakend upperBreakend = var.getBreakend(false);
-        List<SvBreakend> breakendList = chrBreakendMap.get(lowerBreakend.chromosome());
-
-        List<SvVarData> svWithinList = Lists.newArrayList();
-
-        for(int i = lowerBreakend.getChrPosIndex() + 1; i < upperBreakend.getChrPosIndex(); ++i)
-        {
-            final SvBreakend otherBreakend = breakendList.get(i);
-            final SvVarData otherSV = otherBreakend.getSV();
-
-            if(otherSV.isLocal())
-            {
-                if(svWithinList.contains(otherSV)) // avoid double-counting
-                    continue;
-
-                svWithinList.add(otherSV);
-
-                if(otherSV.position(true) >= lowerBreakend.position() && otherSV.position(false) <= upperBreakend.position())
-                {
-                    ++svWithinCount;
-                }
-                else
-                {
-                    ++svOverlappingCount;
-                }
-            }
-            else
-            {
-                ++svOverlappingCount;
-            }
-
-        }
-
-        // extract copy number info for these breakends
-
-        // for a DUP, find the CN segment preceding this breakend
-        final SvCNData cnDataStart = cnDataPair[SVI_START];
-        final SvCNData cnDataPrevStart = cnAnalyser.getCNSegment(lowerBreakend.chromosome(), cnDataStart.getIndex() - 1);
-        final SvCNData cnDataNextEnd = cnDataPair[SVI_END]; // since CN segment is chosen as the one following the end breakend position
-        final SvCNData cnDataEnd = cnAnalyser.getCNSegment(lowerBreakend.chromosome(), cnDataStart.getIndex() - 1);
-
-        final PurityContext purityContext = cnAnalyser.getPurityContext();
-
-        // SampleId,SamplePurity,SamplePloidy,ClusterId,Svid,Chromosome,PosStart,PosEnd,
-        // CNStart,CNEnd,CNChgStart,CNChgEnd,Ploidy,PloidyMin,PloidyMax,SVWithin,SVOverlapping
-        // BafCountStart,DWCStart,MajorAPStart,MinorAPStart,BafCountEnd,DWCEnd,MajorAPEnd,MinorAPEnd
-
-        String infoStr = String.format("%s,%.2f,%.2f,%d,%s,%s,%d,%d",
-                sampleId, purityContext.bestFit().purity(), purityContext.bestFit().ploidy(),
-                cluster.id(), var.id(), var.chromosome(true), var.position(true), var.position(false));
-
-        infoStr += String.format(",%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f",
-                var.copyNumber(true), var.copyNumber(false),
-                var.copyNumberChange(true), var.copyNumberChange(false),
-                var.getSvData().ploidy(), var.ploidyMin(), var.ploidyMax());
-
-        infoStr += String.format(",%d,%d", svWithinCount, svOverlappingCount);
-
-        infoStr += String.format(",%d,%d,%.2f,%.2f,%d,%d,%.2f,%.2f",
-                cnDataPrevStart.BafCount, cnDataPrevStart.DepthWindowCount,
-                cnDataPrevStart.ActualBaf * cnDataPrevStart.CopyNumber, (1 - cnDataPrevStart.ActualBaf) * cnDataPrevStart.CopyNumber,
-                cnDataNextEnd.BafCount, cnDataNextEnd.DepthWindowCount,
-                cnDataNextEnd.ActualBaf * cnDataNextEnd.CopyNumber, (1 - cnDataNextEnd.ActualBaf) * cnDataNextEnd.CopyNumber);
-
-        LOGGER.info("DUP_CN_DATA: {}", infoStr);
-
     }
 
     private static double DOUBLE_MINUTE_PLOIDY_THRESHOLD = 8;
