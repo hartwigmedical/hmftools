@@ -160,7 +160,7 @@ public final class LoadClinicalData {
                 List<SampleData> samples = samplesPerPatient.get(sampleIdsFromPatients.get(i));
                 //create sampleID
                 String sampleId = samples.toString().split(" ")[1].substring(1, samples.toString().length()-2);
-                patientMap.put(sampleId, tumorLocationCurationLims.read(sampleId, lims.patientId(sampleId)));
+                patientMap.put(lims.patientId(sampleId), tumorLocationCurationLims.read(sampleId, lims.patientId(sampleId)));
             } else if (sampleIdsFromPatients.get(i).contains(LimsSampleType.COLO.toString())) {
                 patientMap.put("COLO829", tumorLocationCurationLims.readFixedValue("COLO829"));
             }
