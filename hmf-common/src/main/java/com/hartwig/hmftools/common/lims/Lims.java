@@ -126,7 +126,7 @@ public class Lims {
             arrivalDate = preLimsArrivalDates.get(sample);
         }
 
-        if (arrivalDate == null && !sample.contains(LimsSampleType.COLO.toString())) {
+        if (arrivalDate == null) {
             LOGGER.warn("Could not find a valid arrival date for sample: " + sample + " in LIMS");
         }
 

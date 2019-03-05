@@ -85,7 +85,7 @@ public abstract class SampleDetailsPage {
                 "This report is addressed at: " + recipient);
 
         if (sampleReport().isCoreSample()) {
-            lines.add("The hospital patient ID is: " + sampleReport().patientNumber());
+            lines.add("The hospital patient ID is: " + sampleReport().hospitalPatientId());
             lines.add("The project name of sample is: " + sampleReport().projectName());
             lines.add("The contact names are: " + sampleReport().contactNames());
             lines.add("The contact emails are: " + sampleReport().contactEmails());

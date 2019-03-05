@@ -58,7 +58,7 @@ public final class Utils {
             LOGGER.error("run name {} had less than 5 parts after splitting on _", runName);
             return Strings.EMPTY;
         } else if (runName.contains("COLO")){ //take sample ID of COLO
-            return names[1] + "T";
+            return names[1];
         }
         return names[4];
     }

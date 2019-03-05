@@ -109,7 +109,7 @@ public abstract class NonSequenceablePage {
                         .setStyle(fontStyle()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
                 cmp.text("The HMF sample ID is " + sampleReport().sampleId() + " and the hospital patient ID is "
-                        + sampleReport().patientNumber()).setStyle(fontStyle()),
+                        + sampleReport().hospitalPatientId()).setStyle(fontStyle()),
                 cmp.text("The internal tumor barcode is " + sampleReport().barcodeTumor() + " and the internal blood barcode is "
                         + sampleReport().barcodeReference()).setStyle(fontStyle()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),

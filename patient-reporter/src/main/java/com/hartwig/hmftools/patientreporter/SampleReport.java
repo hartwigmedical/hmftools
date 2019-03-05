@@ -58,7 +58,7 @@ public abstract class SampleReport {
     public abstract String submission();
 
     @Nullable
-    public abstract String patientNumber();
+    public abstract String hospitalPatientId();
 
     public abstract boolean isCoreSample();
 
@@ -80,11 +80,11 @@ public abstract class SampleReport {
     @Value.Derived
     public String buildReportTitle(@NotNull String title) {
         boolean isCoreSample = isCoreSample();
-        String patientNumber = patientNumber();
+        String patientNumber = hospitalPatientId();
         if (isCoreSample && patientNumber == null) {
             throw new IllegalStateException("CORE sample present without patient number: " + sampleId());
         }
 
-        return isCoreSample ? title + " - " + sampleId() + " (" + patientNumber() + ")" : title + " - " + sampleId();
+        return isCoreSample ? title + " - " + sampleId() + " (" + hospitalPatientId() + ")" : title + " - " + sampleId();
     }
 }
