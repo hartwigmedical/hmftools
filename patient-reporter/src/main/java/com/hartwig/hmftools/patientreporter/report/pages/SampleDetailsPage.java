@@ -77,16 +77,16 @@ public abstract class SampleDetailsPage {
                 "The name of this sample is: " + sampleReport().sampleId(),
                 "The pathology tumor percentage for this sample is " + sampleReport().pathologyTumorPercentage(),
                 "This experiment is performed on the tumor sample which arrived on " + formattedDate(sampleReport().tumorArrivalDate())
-                        + "and the tumor barcode is " + sampleReport().barcodeTumor(),
+                        + "and the internal tumor barcode is " + sampleReport().barcodeTumor(),
                 "This experiment is performed on the blood sample which arrived on " + formattedDate(sampleReport().bloodArrivalDate())
-                        + " and the reference barcode is " + sampleReport().barcodeReference(),
+                        + " and the internal blood barcode is " + sampleReport().barcodeReference(),
                 "This experiment is performed according to lab procedures: " + sampleReport().labProcedures(),
                 "This report is generated and verified by: " + user(),
                 "This report is addressed at: " + recipient);
 
         if (sampleReport().isCoreSample()) {
-            lines.add("The hospital patient number is: " + sampleReport().patientNumber());
-            lines.add("The project name of sample is: " + sampleReport().projectName() + " with submission " + sampleReport().submission());
+            lines.add("The hospital patient ID is: " + sampleReport().patientNumber());
+            lines.add("The project name of sample is: " + sampleReport().projectName());
             lines.add("The contact names are: " + sampleReport().contactNames());
             lines.add("The contact emails are: " + sampleReport().contactEmails());
         }

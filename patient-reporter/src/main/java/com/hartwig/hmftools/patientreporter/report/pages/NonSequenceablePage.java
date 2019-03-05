@@ -108,12 +108,10 @@ public abstract class NonSequenceablePage {
                 cmp.text("When possible, please resubmit using the same DVO with project name " + sampleReport().projectName() + ".")
                         .setStyle(fontStyle()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
-                cmp.text("The name of the sample is " + sampleReport().sampleId() + " and the hospital patient number is "
+                cmp.text("The HMF sample ID is " + sampleReport().sampleId() + " and the hospital patient ID is "
                         + sampleReport().patientNumber()).setStyle(fontStyle()),
-                cmp.text("The tumor barcode of sample is " + sampleReport().barcodeTumor() + " and the reference barcode of sample is "
+                cmp.text("The internal tumor barcode is " + sampleReport().barcodeTumor() + " and the internal blood barcode is "
                         + sampleReport().barcodeReference()).setStyle(fontStyle()),
-                cmp.text("The project name of sample is " + sampleReport().projectName() + " with submission " + sampleReport().submission())
-                        .setStyle(fontStyle()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
                 shallowSeqText(),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
