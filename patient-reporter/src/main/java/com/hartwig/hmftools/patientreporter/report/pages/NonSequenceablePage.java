@@ -139,8 +139,8 @@ public abstract class NonSequenceablePage {
                         + "In case additional tumor material cannot be provided, please be notified that the patient will not be "
                         + "evaluable for the " + study().studyCode() + " study.").setStyle(fontStyle()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
-                cmp.text("The name of the sample is " + sampleReport().sampleId()).setStyle(fontStyle()),
-                cmp.text("The tumor barcode of sample is " + sampleReport().barcodeTumor() + " and the reference barcode of sample is "
+                cmp.text("The HMF sample ID is " + sampleReport().sampleId()).setStyle(fontStyle()),
+                cmp.text("The internal tumor barcode is " + sampleReport().barcodeTumor() + " and the internal blood barcode is "
                         + sampleReport().barcodeReference()).setStyle(fontStyle()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
                 cmp.text("The tumor percentage estimated by Pathology UMC Utrecht is " + sampleReport().pathologyTumorPercentage())
