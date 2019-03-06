@@ -11,6 +11,10 @@ import static com.hartwig.hmftools.common.variant.structural.StructuralVariantTy
 import static com.hartwig.hmftools.svanalysis.analysis.LinkFinder.MIN_TEMPLATED_INSERTION_LENGTH;
 import static com.hartwig.hmftools.svanalysis.analysis.LinkFinder.areLinkedSection;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.getProximity;
+import static com.hartwig.hmftools.svanalysis.types.ChainSvData.CHAIN_SV_TYPE_COMPLEX_DUP;
+import static com.hartwig.hmftools.svanalysis.types.ChainSvData.CHAIN_SV_TYPE_COMPLEX_INV;
+import static com.hartwig.hmftools.svanalysis.types.ChainSvData.CHAIN_SV_TYPE_FOLDBACK;
+import static com.hartwig.hmftools.svanalysis.types.ChainSvData.CHAIN_SV_TYPE_SIMPLE;
 import static com.hartwig.hmftools.svanalysis.types.SvChain.checkChainReplication;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.isSpecificCluster;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_END;
@@ -21,6 +25,7 @@ import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.LINK_TYPE_TI;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.svanalysis.types.ChainSvData;
@@ -173,6 +178,8 @@ public class ChainFinder
             setSvReplicationCounts();
 
             determinePossibleLinks();
+
+            assessClusterProperties();
 
             // now find the best next candidate link giving priority to replication count, following by min link resolution
             // and lastly shortest distance
@@ -940,83 +947,136 @@ public class ChainFinder
     {
         /* report on:
         - every foldback, replication count, ploidy min-max, orientation, other significant SVs faced
-        - every DUP which faces a foldback without
-        - any other INV with replication count >= highest foldback rep count
+        - every DUP or INV which faces or overlaps a foldback without nearest linking possibilites
         */
 
+        if(mCluster.getUniqueSvCount() > 20 || mCluster.getUniqueSvCount() < 4 || mCluster.getTypeCount(SGL) > 2)
+            return;
+
         List<ChainSvData> chainSvDataList = Lists.newArrayList();
+        List<ChainSvData> foldbackDataList = Lists.newArrayList();
 
-        // if(mCluster.getUniqueSvCount())
-
-
-
-
-        List<SvVarData> foldbacks = mCluster.getFoldbacks();
-
-
-
-        List<SvVarData> overlappingDups = Lists.newArrayList();
-        List<SvVarData> overlappingInvs = Lists.newArrayList();
-
-        for(int i = 0; i < foldbacks.size(); ++i)
+        // first gather up foldbacks
+        for(SvVarData var : mCluster.getFoldbacks())
         {
-            final SvVarData fbVar = foldbacks.get(i);
-            long fbPosStart = 0;
-            long fbPosEnd = 0;
+            ChainSvData svData = new ChainSvData(var);
+            svData.Type = CHAIN_SV_TYPE_FOLDBACK;
 
-            if(fbVar.type() == INV)
+            if(var.isChainedFoldback())
             {
-                fbPosStart = fbVar.position(true);
-                fbPosEnd = fbVar.position(false);
+                // only add one instance
+                boolean exists = false;
+                for (ChainSvData otherData : foldbackDataList)
+                {
+                    if (var.equals(otherData.DualFoldbackOtherSV))
+                    {
+                        exists = true;
+                        break;
+                    }
+                }
+
+                if (exists)
+                    continue;
+
+                final SvBreakend fbBreakend = var.getFoldbackBreakend(true) != null
+                        ? var.getFoldbackBreakend(true) : var.getFoldbackBreakend(false);
+
+                svData.DualFoldbackOtherSV = fbBreakend.getSV();
+            }
+
+            foldbackDataList.add(svData);
+        }
+
+        chainSvDataList.addAll(foldbackDataList);
+
+        for(SvVarData var : mCluster.getSVs())
+        {
+            if (var.isReplicatedSv())
+                continue;
+
+            if (var.isFoldback()) // already included
+                continue;
+
+            ChainSvData svData = new ChainSvData(var);
+
+            // check for INVs and DUPs overlapping foldbacks
+            if(var.type() == DUP || var.type() == INV)
+            {
+                for(ChainSvData otherData : foldbackDataList)
+                {
+                    final String chromosome = otherData.getBreakend(true).chromosome();
+                    long fbPosStart = otherData.getBreakend(true).position();
+                    long fbPosEnd = otherData.getBreakend(false).position();
+
+                    if(var.chromosome(true).equals(chromosome))
+                    {
+                        if(var.position(true) < fbPosStart && var.position(false) > fbPosEnd)
+                        {
+                            svData.OverlappedFoldbacks.add(otherData.SV);
+                        }
+                    }
+                }
+            }
+
+            if(!svData.OverlappedFoldbacks.isEmpty())
+            {
+                svData.Type = var.type() == DUP ? CHAIN_SV_TYPE_COMPLEX_DUP : CHAIN_SV_TYPE_COMPLEX_INV;
             }
             else
             {
-                String otherSvId = fbVar.getFoldbackLink(true);
-                long fbPos1 = fbVar.position(true);
-                long fbPos2 = 0;
-
-                if(otherSvId.isEmpty())
-                {
-                    otherSvId = fbVar.getFoldbackLink(false);
-                    fbPos1 = fbVar.position(false);
-                }
-                // find its pair
-                for(int j = 0; j < foldbacks.size(); ++j)
-                {
-                    SvVarData otherFb = foldbacks.get(j);
-
-                    if(otherFb.getFoldbackLink(true).equals(fbVar.id()))
-                    {
-                        fbPos2 = otherFb.position(true);
-                    }
-                    else if(otherFb.getFoldbackLink(false).equals(fbVar.id()))
-                    {
-                        fbPos2 = otherFb.position(false);
-                    }
-                }
-
-                fbPosStart = min(fbPos1, fbPos2);
-                fbPosEnd = max(fbPos1, fbPos2);
+                svData.Type = CHAIN_SV_TYPE_SIMPLE;
             }
 
-            for(SvVarData var : mCluster.getSVs())
+            chainSvDataList.add(svData);
+        }
+
+        // now set stats about possible links between the complex types
+        List<ChainSvData> complexTypes = chainSvDataList.stream().filter(x -> x.Type != CHAIN_SV_TYPE_SIMPLE).collect(Collectors.toList());
+
+        for(int i = 0; i < complexTypes.size(); ++i)
+        {
+            ChainSvData svData = complexTypes.get(i);
+
+            for(int be = SVI_START; be <= SVI_END; ++be)
             {
-                if(var.isReplicatedSv())
+                if (svData.Type == CHAIN_SV_TYPE_SIMPLE)
                     continue;
 
-                if(var.type() != DUP && var.type() != INV)
+                boolean isStart = isStart(be);
+
+                SvBreakend breakend = svData.getBreakend(isStart);
+
+                List<SvLinkedPair> possibleLinks = mSvBreakendPossibleLinks.get(breakend);
+
+                if (possibleLinks == null || possibleLinks.isEmpty())
                     continue;
 
-                if(!var.chromosome(true).equals(fbVar.chromosome(true)))
-                    continue;
-
-                if(var.position(true) < fbPosStart && var.position(false) > fbPosEnd)
+                for (SvLinkedPair pair : possibleLinks)
                 {
+                    for (int j = i + 1; j < complexTypes.size(); ++j)
+                    {
+                        ChainSvData otherData = complexTypes.get(j);
+                        SvBreakend otherBreakend = null;
 
+                        if (pair.first() == otherData.SV)
+                        {
+                            otherBreakend = pair.first().getBreakend(pair.firstLinkOnStart());
+                        }
+                        else if (pair.second() == otherData.SV)
+                        {
+                            otherBreakend = pair.second().getBreakend(pair.secondLinkOnStart());
+                        }
+                        else
+                        {
+                            continue;
+                        }
+
+                        svData.getFacingBreakends(isStart).add(otherBreakend);
+                        otherData.getFacingBreakends(otherBreakend.usesStart()).add(breakend);
+                    }
                 }
             }
         }
-
 
         int maxRepCount = 0;
 

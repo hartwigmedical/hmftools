@@ -6,12 +6,9 @@ import static java.lang.Math.min;
 import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.BND;
-import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DUP;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.typeAsInt;
 import static com.hartwig.hmftools.svanalysis.analysis.CNAnalyser.CENTROMERE_CN;
-import static com.hartwig.hmftools.svanalysis.analysis.CNAnalyser.DWC_NEXT_INDEX;
-import static com.hartwig.hmftools.svanalysis.analysis.CNAnalyser.DWC_PREV_INDEX;
 import static com.hartwig.hmftools.svanalysis.analysis.CNAnalyser.P_ARM_TELOMERE_CN;
 import static com.hartwig.hmftools.svanalysis.analysis.CNAnalyser.Q_ARM_TELOMERE_CN;
 import static com.hartwig.hmftools.svanalysis.analysis.ClusterAnalyser.SHORT_TI_LENGTH;
@@ -50,8 +47,6 @@ import com.hartwig.hmftools.svanalysis.types.SvVarData;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
-import sun.awt.image.ImageWatched;
 
 // post-clustering and chaining routines for annotating clusters, chains and links
 
@@ -775,6 +770,83 @@ public class ClusterAnnotations
             else if(chainsWithCNLoss == chainCount)
             {
                 cluster.addAnnotation("CN_LOSS");
+            }
+        }
+    }
+
+    public static void addFoldbackAnnotations(final List<SvCluster> clusters)
+    {
+        // now foldbacks are known, add other annotations about them
+        for(final SvCluster cluster : clusters)
+        {
+            final Map<String, List<SvBreakend>> chrBreakendMap = cluster.getChrBreakendMap();
+
+            for (final Map.Entry<String, List<SvBreakend>> entry : chrBreakendMap.entrySet())
+            {
+                int chromosomeFoldbackCount = 0;
+
+                for(final SvBreakend breakend : entry.getValue())
+                {
+                    if (!breakend.getSV().isFoldback())
+                        continue;
+
+                    // only process each SV's foldback once where both breakends are part of it
+                    if(!breakend.getSV().isChainedFoldback() && !breakend.usesStart())
+                        continue;
+
+                    ++chromosomeFoldbackCount;
+                }
+
+                if(chromosomeFoldbackCount == 0)
+                    continue;
+
+                int foldbackIndex = 0;
+
+                for(final SvBreakend breakend : entry.getValue())
+                {
+                    // isSpecificSV(breakend.getSV());
+
+                    if(!breakend.getSV().isFoldback())
+                        continue;
+
+                    if(!breakend.getSV().isChainedFoldback() && !breakend.usesStart())
+                        continue;
+
+                    final String existingInfo = breakend.getSV().getFoldbackInfo(breakend.usesStart());
+
+                    long armLength = SvUtilities.getChromosomalArmLength(breakend.chromosome(), breakend.arm());
+                    double positionPercent;
+                    int foldbackRank;
+
+                    if(breakend.arm() == CHROMOSOME_ARM_P)
+                    {
+                        foldbackRank = foldbackIndex;
+                        positionPercent = breakend.position() / (double)armLength;
+                    }
+                    else
+                    {
+                        foldbackRank = chromosomeFoldbackCount - foldbackIndex - 1;
+                        long chromosomeLength = SvUtilities.CHROMOSOME_LENGTHS.get(breakend.chromosome());
+                        long centromere = chromosomeLength - armLength;
+                        positionPercent = 1 - (breakend.position() - centromere) / (double)armLength;
+                    }
+
+                    ++foldbackIndex;
+
+                    String facesTorC = (breakend.orientation() == 1) == (breakend.arm() == CHROMOSOME_ARM_P) ? "T" : "C";
+
+                    String foldbackInfo = String.format("%s;%s;%d;%.4f", existingInfo, facesTorC, foldbackRank, positionPercent);
+
+                    for(int be = SVI_START; be <= SVI_END; ++be)
+                    {
+                        boolean isStart = isStart(be);
+
+                        if(breakend.getSV().getFoldbackBreakend(isStart) == null)
+                            continue;
+
+                        breakend.getSV().setFoldbackInfo(isStart, foldbackInfo);
+                    }
+                }
             }
         }
     }

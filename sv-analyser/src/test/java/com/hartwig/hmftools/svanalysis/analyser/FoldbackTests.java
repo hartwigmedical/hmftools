@@ -4,7 +4,6 @@ import static com.hartwig.hmftools.svanalysis.analyser.SvTestHelper.createDel;
 import static com.hartwig.hmftools.svanalysis.analyser.SvTestHelper.createDup;
 import static com.hartwig.hmftools.svanalysis.analyser.SvTestHelper.createInv;
 import static com.hartwig.hmftools.svanalysis.analyser.SvTestHelper.createSgl;
-import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_DEL_INT_TI;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -36,7 +35,7 @@ public class FoldbackTests
 
         assertEquals(var1.getFoldbackLink(true), var1.id());
         assertEquals(var1.getFoldbackLink(false), var1.id());
-        assertEquals(var1.getFoldbackLen(true), 100);
+        assertEquals(var1.getFoldbackLength(true), 100);
 
         // now test with a deletion bridge obscuring the backmost breakend
         tester.clearClustersAndSVs();
@@ -53,7 +52,7 @@ public class FoldbackTests
 
         assertEquals(var1.getFoldbackLink(true), var1.id());
         assertEquals(var1.getFoldbackLink(false), var1.id());
-        assertEquals(var1.getFoldbackLen(true), 100);
+        assertEquals(var1.getFoldbackLength(true), 100);
 
         // now invalidate the foldback by putting a deletion bridge at the start
         tester.clearClustersAndSVs();

@@ -29,7 +29,6 @@ import static com.hartwig.hmftools.svanalysis.types.SvArmCluster.ARM_CL_SINGLE;
 import static com.hartwig.hmftools.svanalysis.types.SvArmCluster.getArmClusterData;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.INT_DB_COUNT;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.INT_SHORT_DB_COUNT;
-import static com.hartwig.hmftools.svanalysis.types.SvCluster.isSpecificCluster;
 import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.LINK_TYPE_TI;
 
 import java.io.BufferedWriter;
@@ -416,8 +415,8 @@ public class SvSampleAnalyser {
                         cluster.getSynDelDupLength(), cluster.getSynDelDupTILength()));
 
                 writer.write(String.format(",%s,%d,%s,%s,%d,%s",
-                        var.getFoldbackLink(true), var.getFoldbackLen(true), var.getFoldbackLinkInfo(true),
-                        var.getFoldbackLink(false), var.getFoldbackLen(false), var.getFoldbackLinkInfo(false)));
+                        var.getFoldbackLink(true), var.getFoldbackLength(true), var.getFoldbackInfo(true),
+                        var.getFoldbackLink(false), var.getFoldbackLength(false), var.getFoldbackInfo(false)));
 
                 writer.write(String.format(",%s,%s,%.4f,%.4f",
                         var.getGeneInBreakend(true), var.getGeneInBreakend(false),

@@ -453,6 +453,7 @@ public class ChainingTests
     @Ignore
     public void testComplexChaining3()
     {
+        // based on CPCT02210035 with 2 foldbacks, a quasi foldback and a complex DUP (CENTRO - A - B - C - B - D - A - B - C - B - E - 17)
         SvTestHelper tester = new SvTestHelper();
         tester.logVerbose(true);
 

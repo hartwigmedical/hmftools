@@ -51,12 +51,12 @@ public class SvVarData
     private SvCluster mCluster;
     private String mClusterReason;
 
-    private SvBreakend mFoldbackLinkStart; // either the 2 breakends for this SV, or another SV's breaked
-    private SvBreakend mFoldbackLinkEnd;
+    private SvBreakend mFoldbackBeStart; // either the 2 breakends for this SV, or another SV's breaked
+    private SvBreakend mFoldbackBeEnd;
     private int mFoldbackLenStart;
     private int mFoldbackLenEnd;
-    private String mFoldbackLinkInfoStart;
-    private String mFoldbackLinkInfoEnd;
+    private String mFoldbackInfoStart;
+    private String mFoldbackInfoEnd;
 
     private long mNearestSvDistance;
     private String mNearestSvRelation;
@@ -143,12 +143,12 @@ public class SvVarData
         mDBStart = null;
         mDBEnd = null;
 
-        mFoldbackLinkStart = null;
-        mFoldbackLinkEnd = null;
+        mFoldbackBeStart = null;
+        mFoldbackBeEnd = null;
         mFoldbackLenStart = -1;
         mFoldbackLenEnd = -1;
-        mFoldbackLinkInfoStart = "";
-        mFoldbackLinkInfoEnd = "";
+        mFoldbackInfoStart = "";
+        mFoldbackInfoEnd = "";
 
         mConsecBEStart = "";
         mConsecBEEnd = "";
@@ -482,34 +482,47 @@ public class SvVarData
 
     public final String getFoldbackLink(boolean useStart)
     {
-        if(useStart && mFoldbackLinkStart != null)
-            return mFoldbackLinkStart.getSV().id();
-        else if(!useStart && mFoldbackLinkEnd != null)
-            return mFoldbackLinkEnd.getSV().id();
+        if(useStart && mFoldbackBeStart != null)
+            return mFoldbackBeStart.getSV().id();
+        else if(!useStart && mFoldbackBeEnd != null)
+            return mFoldbackBeEnd.getSV().id();
         else
             return "";
     }
-    public final SvBreakend getFoldbackBreakend(boolean useStart) { return useStart ? mFoldbackLinkStart : mFoldbackLinkEnd; }
-    public int getFoldbackLen(boolean useStart) { return useStart ? mFoldbackLenStart : mFoldbackLenEnd; }
-    public final String getFoldbackLinkInfo(boolean useStart) { return useStart ? mFoldbackLinkInfoStart : mFoldbackLinkInfoEnd; }
+    
+    public final SvBreakend getFoldbackBreakend(boolean useStart) { return useStart ? mFoldbackBeStart : mFoldbackBeEnd; }
+    public int getFoldbackLength(boolean useStart) { return useStart ? mFoldbackLenStart : mFoldbackLenEnd; }
+    public final String getFoldbackInfo(boolean useStart) { return useStart ? mFoldbackInfoStart : mFoldbackInfoEnd; }
+    public boolean isFoldback() { return mFoldbackBeEnd != null || mFoldbackBeStart != null; }
+    public boolean isChainedFoldback()
+    {
+        if(mFoldbackBeEnd != null && mFoldbackBeEnd != mBreakendStart)
+            return true;
+        else if(mFoldbackBeStart != null && mFoldbackBeStart != mBreakendEnd)
+            return true;
+        else
+            return false;
+
+    }
+
     public void setFoldbackLink(boolean isStart, final SvBreakend link, int length, String linkInfo)
     {
         if(isStart)
         {
-            mFoldbackLinkStart = link;
+            mFoldbackBeStart = link;
             mFoldbackLenStart = length;
-            mFoldbackLinkInfoStart = linkInfo;
+            mFoldbackInfoStart = linkInfo;
         }
         else
         {
-            mFoldbackLinkEnd = link;
+            mFoldbackBeEnd = link;
             mFoldbackLenEnd = length;
-            mFoldbackLinkInfoEnd = linkInfo;
+            mFoldbackInfoEnd = linkInfo;
         }
 
         if(mCluster != null)
         {
-            if (mFoldbackLinkStart == null && mFoldbackLinkEnd == null)
+            if (mFoldbackBeStart == null && mFoldbackBeEnd == null)
             {
                 mCluster.deregisterFoldback(this);
             }
@@ -518,6 +531,14 @@ public class SvVarData
                 mCluster.registerFoldback(this);
             }
         }
+    }
+
+    public void setFoldbackInfo(boolean isStart, final String info)
+    {
+        if(isStart)
+            mFoldbackInfoStart = info;
+        else
+            mFoldbackInfoEnd = info;
     }
 
     public String getConsecBEStart(boolean useStart) { return useStart ? mConsecBEStart : mConsecBEEnd; }

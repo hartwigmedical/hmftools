@@ -12,6 +12,7 @@ import static com.hartwig.hmftools.common.variant.structural.StructuralVariantTy
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INS;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INV;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
+import static com.hartwig.hmftools.svanalysis.analysis.ClusterAnnotations.addFoldbackAnnotations;
 import static com.hartwig.hmftools.svanalysis.analysis.ClusterAnnotations.annotateClusterArmSegments;
 import static com.hartwig.hmftools.svanalysis.analysis.ClusterAnnotations.annotateTemplatedInsertions;
 import static com.hartwig.hmftools.svanalysis.analysis.ClusterAnnotations.classifyChainedClusters;
@@ -22,7 +23,6 @@ import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.CLUST
 import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.CLUSTER_REASON_LOOSE_OVERLAP;
 import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.addClusterReason;
 import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.applyCopyNumberReplication;
-import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.CHROMOSOME_ARM_P;
 import static com.hartwig.hmftools.svanalysis.annotators.LineElementAnnotator.markLineCluster;
 import static com.hartwig.hmftools.svanalysis.types.SvArmCluster.mergeArmClusters;
 import static com.hartwig.hmftools.svanalysis.types.SvChain.CHAIN_ASSEMBLY_LINK_COUNT;
@@ -38,24 +38,18 @@ import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_SGL_
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_SIMPLE_SV;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.copyNumbersEqual;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.areSpecificClusters;
-import static com.hartwig.hmftools.svanalysis.types.SvCluster.isSpecificCluster;
 import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.ASSEMBLY_MATCH_MATCHED;
-import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.LINK_TYPE_TI;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_END;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_START;
-import static com.hartwig.hmftools.svanalysis.types.SvVarData.findVariantById;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.haveSameChrArms;
-import static com.hartwig.hmftools.svanalysis.types.SvVarData.isSpecificSV;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.isStart;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
-import com.hartwig.hmftools.svanalysis.types.SvArmCluster;
 import com.hartwig.hmftools.svanalysis.types.SvArmGroup;
 import com.hartwig.hmftools.svanalysis.types.SvBreakend;
 import com.hartwig.hmftools.svanalysis.types.SvChain;
@@ -861,88 +855,6 @@ public class ClusterAnalyser {
                 checkReplicatedBreakendFoldback(breakend);
             }
         }
-
-        // now foldbacks are known, add other annotations about them
-        for(final SvCluster cluster : mClusters)
-        {
-            final Map<String, List<SvBreakend>> chrBreakendMap = cluster.getChrBreakendMap();
-
-            for (final Map.Entry<String, List<SvBreakend>> entry : chrBreakendMap.entrySet())
-            {
-                int chromosomeFoldbackCount = 0;
-
-                for(final SvBreakend breakend : entry.getValue())
-                {
-                    if (breakend.getSV().getFoldbackLink(breakend.usesStart()).isEmpty())
-                        continue;
-
-                    if (!breakend.getSV().getFoldbackLink(true).isEmpty()
-                        && !breakend.getSV().getFoldbackLink(false).isEmpty() && !breakend.usesStart())
-                    {
-                        continue;
-                    }
-
-                    ++chromosomeFoldbackCount;
-                }
-
-                int foldbackIndex = 0;
-
-                for(final SvBreakend breakend : entry.getValue())
-                {
-                    // isSpecificSV(breakend.getSV());
-
-                    if(breakend.getSV().getFoldbackLink(breakend.usesStart()).isEmpty())
-                        continue;
-
-                    if(!breakend.getSV().getFoldbackLink(true).isEmpty()
-                    && !breakend.getSV().getFoldbackLink(false).isEmpty() && !breakend.usesStart())
-                    {
-                        // only process each SV's foldback once where both breakends are part of it
-                        continue;
-                    }
-
-                    final String existingInfo = breakend.getSV().getFoldbackLinkInfo(breakend.usesStart());
-
-                    long armLength = SvUtilities.getChromosomalArmLength(breakend.chromosome(), breakend.arm());
-                    double positionPercent;
-                    int foldbackRank;
-
-                    if(breakend.arm() == CHROMOSOME_ARM_P)
-                    {
-                        foldbackRank = foldbackIndex;
-                        positionPercent = breakend.position() / (double)armLength;
-                    }
-                    else
-                    {
-                        foldbackRank = chromosomeFoldbackCount - foldbackIndex - 1;
-                        long chromosomeLength = SvUtilities.CHROMOSOME_LENGTHS.get(breakend.chromosome());
-                        long centromere = chromosomeLength - armLength;
-                        positionPercent = 1 - (breakend.position() - centromere) / (double)armLength;
-                    }
-
-                    ++foldbackIndex;
-
-                    String facesTorC = (breakend.orientation() == 1) == (breakend.arm() == CHROMOSOME_ARM_P) ? "T" : "C";
-
-                    String foldbackInfo = String.format("%s;%s;%d;%.4f",
-                            existingInfo, facesTorC, foldbackRank, positionPercent);
-
-                    for(int be = SVI_START; be <= SVI_END; ++be)
-                    {
-                        boolean isStart = isStart(be);
-
-                        if(breakend.getSV().getFoldbackLink(isStart).isEmpty())
-                            continue;
-
-                        breakend.getSV().setFoldbackLink(
-                                isStart,
-                                breakend.getSV().getFoldbackBreakend(isStart),
-                                breakend.getSV().getFoldbackLen(isStart),
-                                foldbackInfo);
-                    }
-                }
-            }
-        }
     }
 
     public static int MAX_FOLDBACK_CHAIN_LENGTH = 5000;
@@ -968,9 +880,11 @@ public class ClusterAnalyser {
         if(cluster1.isResolved() && cluster1.getTypeCount(INV) == 0)
             return;
 
+        boolean singleSV = varEnd.equals(varStart);
+
         SvCluster cluster2 = null;
 
-        if(varEnd.equals(varStart))
+        if(singleSV)
         {
             cluster2 = cluster1;
         }
@@ -987,8 +901,6 @@ public class ClusterAnalyser {
         boolean beStartUsesStart = beStart.usesStart();
 
         String chainInfo = "0;0;0";
-
-        boolean singleSV = varEnd.equals(varStart);
 
         if(singleSV)
         {
@@ -1066,11 +978,11 @@ public class ClusterAnalyser {
         // b) shortest length
 
         boolean skipFoldback = false;
-        if(varEnd.getFoldbackBreakend(beEndUsesStart) != null && !singleSV && varEnd.getFoldbackLen(beEndUsesStart) < length)
+        if(varEnd.getFoldbackBreakend(beEndUsesStart) != null && !singleSV && varEnd.getFoldbackLength(beEndUsesStart) < length)
         {
             skipFoldback = true;
         }
-        else if(varStart.getFoldbackBreakend(beStartUsesStart) != null && !singleSV && varStart.getFoldbackLen(beStartUsesStart) < length)
+        else if(varStart.getFoldbackBreakend(beStartUsesStart) != null && !singleSV && varStart.getFoldbackLength(beStartUsesStart) < length)
         {
             skipFoldback = true;
         }
@@ -1276,6 +1188,8 @@ public class ClusterAnalyser {
 
         annotateTemplatedInsertions(mClusters, mClusteringMethods.getChrBreakendMap());
         // checkSkippedLOHEvents();
+
+        addFoldbackAnnotations(mClusters);
 
         findPotentialDoubleMinuteClusters(mSampleId, mClusteringMethods.getChrBreakendMap(), mCopyNumberAnalyser);
     }
