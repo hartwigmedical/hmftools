@@ -54,38 +54,38 @@ public final class CopyNumberEnrichedStructuralVariantFactory {
             List<StructuralVariantLegPloidy> ploidies = ploidyFactory.create(variant, copyNumbers);
             if (!ploidies.isEmpty()) {
                 // The implied ploidy should be equal between start and end, so doesn't matter what we pick.
-                builder.ploidy(round(ploidies.get(0).averageImpliedPloidy()));
+                builder.ploidy((ploidies.get(0).averageImpliedPloidy()));
 
                 StructuralVariantLegPloidy startPloidy = ploidies.get(0);
                 StructuralVariantLegPloidy endPloidy = ploidies.size() <= 1 ? null : ploidies.get(1);
 
-                startBuilder.adjustedAlleleFrequency(round(startPloidy.adjustedVaf()));
-                startBuilder.adjustedCopyNumber(round(startPloidy.adjustedCopyNumber()));
-                startBuilder.adjustedCopyNumberChange(round(changeFactory.copyNumberChange(startPloidy)));
+                startBuilder.adjustedAlleleFrequency((startPloidy.adjustedVaf()));
+                startBuilder.adjustedCopyNumber((startPloidy.adjustedCopyNumber()));
+                startBuilder.adjustedCopyNumberChange((changeFactory.copyNumberChange(startPloidy)));
 
                 if (endPloidy != null) {
                     assert endBuilder != null;
-                    endBuilder.adjustedAlleleFrequency(round(endPloidy.adjustedVaf()));
-                    endBuilder.adjustedCopyNumber(round(endPloidy.adjustedCopyNumber()));
-                    endBuilder.adjustedCopyNumberChange(round(changeFactory.copyNumberChange(endPloidy)));
+                    endBuilder.adjustedAlleleFrequency((endPloidy.adjustedVaf()));
+                    endBuilder.adjustedCopyNumber((endPloidy.adjustedCopyNumber()));
+                    endBuilder.adjustedCopyNumberChange((changeFactory.copyNumberChange(endPloidy)));
                 }
             } else {
                 // Can't always get plodies (if no vaf for example) but we can still get copy number info
                 final StructuralVariantLegCopyNumber startCopyNumber = copyNumberFactory.create(variant.start(), copyNumbers);
-                startBuilder.adjustedCopyNumber(round(startCopyNumber.adjustedCopyNumber()));
-                startBuilder.adjustedCopyNumberChange(round(changeFactory.copyNumberChange(startCopyNumber)));
+                startBuilder.adjustedCopyNumber((startCopyNumber.adjustedCopyNumber()));
+                startBuilder.adjustedCopyNumberChange((changeFactory.copyNumberChange(startCopyNumber)));
 
                 // Lacking anything else, inferred singles can use copy number change as ploidy
                 if (Optional.ofNullable(variant.filter()).filter(x -> x.equals(StructuralVariantFactory.INFERRED)).isPresent()
                         && variant.type() == StructuralVariantType.SGL) {
-                    builder.ploidy(round(changeFactory.copyNumberChange(startCopyNumber)));
+                    builder.ploidy((changeFactory.copyNumberChange(startCopyNumber)));
                 }
 
                 if (endLeg != null) {
                     assert endBuilder != null;
                     final StructuralVariantLegCopyNumber endCopyNumber = copyNumberFactory.create(endLeg, copyNumbers);
-                    endBuilder.adjustedCopyNumber(round(endCopyNumber.adjustedCopyNumber()));
-                    endBuilder.adjustedCopyNumberChange(round(changeFactory.copyNumberChange(endCopyNumber)));
+                    endBuilder.adjustedCopyNumber((endCopyNumber.adjustedCopyNumber()));
+                    endBuilder.adjustedCopyNumberChange((changeFactory.copyNumberChange(endCopyNumber)));
                 }
             }
 
@@ -104,12 +104,4 @@ public final class CopyNumberEnrichedStructuralVariantFactory {
         return ImmutableEnrichedStructuralVariantLeg.builder().from(leg);
     }
 
-    @Nullable
-    private static Double round(@Nullable final Double value) {
-        return value == null ? null : Math.round(value * 1000d) / 1000d;
-    }
-
-    private static double round(final double value) {
-        return Math.round(value * 1000d) / 1000d;
-    }
 }
