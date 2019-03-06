@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.patientreporter.qcfail;
 
+import com.hartwig.hmftools.common.lims.LimsSampleType;
+
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -8,12 +10,6 @@ public enum NotAnalysableStudy {
     DRUP("DRUP", "DRUP-01"),
     CORE("CORE", "CORE"),
     WIDE("WIDE", "WIDE-01");
-
-    private static final String CPCT_IDENTIFIER = "CPCT";
-    private static final String DRUP_IDENTIFIER = "DRUP";
-    private static final String CORE_IDENTIFIER = "CORE";
-    private static final String WIDE_IDENTIFIER = "WIDE";
-
 
     @NotNull
     private final String studyName;
@@ -27,13 +23,15 @@ public enum NotAnalysableStudy {
 
     @Nullable
     public static NotAnalysableStudy fromSample(@NotNull final String sample) {
-        if (sample.contains(CPCT_IDENTIFIER)) {
+        LimsSampleType type = LimsSampleType.fromSampleId(sample);
+
+        if (type == LimsSampleType.CPCT) {
             return CPCT;
-        } else if (sample.contains(DRUP_IDENTIFIER)) {
+        } else if (type == LimsSampleType.DRUP) {
             return DRUP;
-        } else if (sample.contains(CORE_IDENTIFIER)) {
+        } else if (type == LimsSampleType.CORE) {
             return CORE;
-        } else if (sample.contains(WIDE_IDENTIFIER)) {
+        } else if (type == LimsSampleType.WIDE) {
             return WIDE;
         }
         return null;
