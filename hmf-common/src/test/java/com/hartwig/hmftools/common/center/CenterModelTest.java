@@ -21,14 +21,12 @@ public class CenterModelTest {
         assertNotNull(center);
         assertEquals("CpctPI", CenterModel.getPI("CPCT02010001", center, "henk"));
         assertEquals("DrupPI", CenterModel.getPI("DRUP01010001", center, "henk"));
-     //   assertEquals(Strings.EMPTY, CenterModel.getPI("DoesNotExist", center, "henk"));
 
         // Center with '*' for drup pi & recipients
         final CenterData center2 = centerModel.centerPerId("02");
         assertNotNull(center2);
         assertEquals("CpctPI2", CenterModel.getPI("CPCT02010001", center2, "henk"));
         assertEquals("CpctPI2", CenterModel.getPI("DRUP01010001", center2, "henk"));
- //       assertEquals(Strings.EMPTY, CenterModel.getPI("DoesNotExist", center2, "henk"));
 
         assertNull(centerModel.centerPerId("03"));
     }
@@ -48,7 +46,6 @@ public class CenterModelTest {
         final CenterModel centerModel = buildTestCenterModel();
 
         assertEquals("CpctPI, Address, Zip City", centerModel.addresseeStringForSample("henk", "CPCT02010001T"));
-      //  assertNull(centerModel.addresseeStringForSample("henk", "DoesNotExist"));
     }
 
     @Test
@@ -56,7 +53,6 @@ public class CenterModelTest {
         final CenterModel centerModel = buildTestCenterModel();
 
         assertEquals("Address, Zip City", centerModel.addresseeStringForProject("HMF-001-002"));
-      //  assertNull(centerModel.addresseeStringForProject("DoesNotExist"));
     }
 
     @NotNull
