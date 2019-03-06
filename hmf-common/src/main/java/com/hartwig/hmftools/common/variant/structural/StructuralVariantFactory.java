@@ -32,6 +32,7 @@ public class StructuralVariantFactory {
     public final static String CIPOS = "CIPOS";
     public final static String SVTYPE = "SVTYPE";
     public static final String PON_FILTER_PON = "PON";
+    public final static String IMPRECISE = "IMPRECISE";
 
     private final static String MATE_ID = "MATEID";
     private final static String PAR_ID = "PARID";
@@ -42,7 +43,6 @@ public class StructuralVariantFactory {
     private final static String BPI_START = "BPI_START";
     private final static String BPI_END = "BPI_END";
     private final static String BPI_AF = "BPI_AF";
-    private final static String IMPRECISE = "IMPRECISE";
     private final static String SOMATIC_SCORE = "SOMATICSCORE"; // only applicable for Manta and will be removed when fully on GRIDSS
     private final static String IHOMPOS = "IHOMPOS";
     private final static String VARIANT_FRAGMENT_BREAKPOINT_COVERAGE = "VF";
