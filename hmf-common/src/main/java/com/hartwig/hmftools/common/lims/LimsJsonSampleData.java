@@ -42,6 +42,17 @@ abstract class LimsJsonSampleData {
     public abstract String arrivalDateString();
 
     @NotNull
+    @SerializedName("requester_email")
+    public abstract String requesterEmail();
+
+    @NotNull
+    @SerializedName("requester_name")
+    public abstract String requesterName();
+
+    @SerializedName("shallowseq")
+    public abstract int shallowSeq();
+
+    @NotNull
     @SerializedName("dna_conc")
     public abstract String dnaConcentration();
 
@@ -78,7 +89,7 @@ abstract class LimsJsonSampleData {
 
     @NotNull
     @SerializedName("submission")
-    public abstract String submission();
+    public abstract String submissionSamples();
 
     @NotNull
     @Value.Derived

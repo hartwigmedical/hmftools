@@ -4,6 +4,7 @@ import java.time.LocalDate;
 
 import com.google.gson.annotations.SerializedName;
 import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocation;
+import com.hartwig.hmftools.common.lims.LimsSampleType;
 
 import org.apache.logging.log4j.util.Strings;
 import org.immutables.value.Value;
@@ -18,10 +19,10 @@ public abstract class SampleReport {
     @NotNull
     public abstract String sampleId();
 
-    @Nullable
+    @NotNull
     public abstract String barcodeTumor();
 
-    @Nullable
+    @NotNull
     public abstract String barcodeReference();
 
     @Nullable
@@ -58,9 +59,7 @@ public abstract class SampleReport {
     public abstract String submission();
 
     @Nullable
-    public abstract String patientNumber();
-
-    public abstract boolean isCoreSample();
+    public abstract String hospitalPatientId();
 
     @NotNull
     @Value.Derived
@@ -79,12 +78,13 @@ public abstract class SampleReport {
     @NotNull
     @Value.Derived
     public String buildReportTitle(@NotNull String title) {
-        boolean isCoreSample = isCoreSample();
-        String patientNumber = patientNumber();
-        if (isCoreSample && patientNumber == null) {
+        LimsSampleType type = LimsSampleType.fromSampleId(sampleId());
+
+        String patientNumber = hospitalPatientId();
+        if (type == LimsSampleType.CORE && patientNumber == null) {
             throw new IllegalStateException("CORE sample present without patient number: " + sampleId());
         }
 
-        return isCoreSample ? title + " - " + patientNumber + " (" + projectName() + ")" : title + " - " + sampleId();
+        return type == LimsSampleType.CORE ? title + " - " + sampleId() + " (" + hospitalPatientId() + ")" : title + " - " + sampleId();
     }
 }

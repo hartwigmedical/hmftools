@@ -8,6 +8,7 @@ import static com.hartwig.hmftools.patientreporter.report.Commons.tableHeaderSty
 
 import static net.sf.dynamicreports.report.builder.DynamicReports.cmp;
 
+import com.hartwig.hmftools.common.lims.LimsSampleType;
 import com.hartwig.hmftools.patientreporter.NotAnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.SampleReport;
 import com.hartwig.hmftools.patientreporter.qcfail.NotAnalysableReason;
@@ -47,11 +48,13 @@ public abstract class NonSequenceablePage {
     public ComponentBuilder<?, ?> reportComponent() {
         return cmp.verticalList(MainPageTopSection.build(reason().title(), sampleReport()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
-                mainPageNotAnalysableSection());
+                mainPageNotAnalysableSection(sampleReport().sampleId()));
     }
 
     @NotNull
-    private ComponentBuilder<?, ?> mainPageNotAnalysableSection() {
+    private ComponentBuilder<?, ?> mainPageNotAnalysableSection(@NotNull String sampleId) {
+        LimsSampleType type = LimsSampleType.fromSampleId(sampleId);
+
         if (sampleReport().recipient() == null) {
             throw new IllegalStateException("No recipient address present for sample " + sampleReport().sampleId());
         }
@@ -92,7 +95,7 @@ public abstract class NonSequenceablePage {
             }
         }
 
-        return sampleReport().isCoreSample() ? CORELayout(title, subTitle, message) : CPCTDRUPLayout(title, subTitle, message);
+        return type == LimsSampleType.CORE ? CORELayout(title, subTitle, message) : CPCTDRUPLayout(title, subTitle, message);
     }
 
     @NotNull
@@ -108,12 +111,10 @@ public abstract class NonSequenceablePage {
                 cmp.text("When possible, please resubmit using the same DVO with project name " + sampleReport().projectName() + ".")
                         .setStyle(fontStyle()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
-                cmp.text("The name of the sample is " + sampleReport().sampleId() + " and the hospital patient number is "
-                        + sampleReport().patientNumber()).setStyle(fontStyle()),
-                cmp.text("The tumor barcode of sample is " + sampleReport().barcodeTumor() + " and the reference barcode of sample is "
+                cmp.text("The HMF sample ID is " + sampleReport().sampleId() + " and the hospital patient ID is "
+                        + sampleReport().hospitalPatientId()).setStyle(fontStyle()),
+                cmp.text("The internal tumor barcode is " + sampleReport().barcodeTumor() + " and the internal blood barcode is "
                         + sampleReport().barcodeReference()).setStyle(fontStyle()),
-                cmp.text("The project name of sample is " + sampleReport().projectName() + " with submission " + sampleReport().submission())
-                        .setStyle(fontStyle()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
                 shallowSeqText(),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
@@ -141,8 +142,8 @@ public abstract class NonSequenceablePage {
                         + "In case additional tumor material cannot be provided, please be notified that the patient will not be "
                         + "evaluable for the " + study().studyCode() + " study.").setStyle(fontStyle()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
-                cmp.text("The name of the sample is " + sampleReport().sampleId()).setStyle(fontStyle()),
-                cmp.text("The tumor barcode of sample is " + sampleReport().barcodeTumor() + " and the reference barcode of sample is "
+                cmp.text("The HMF sample ID is " + sampleReport().sampleId()).setStyle(fontStyle()),
+                cmp.text("The internal tumor barcode is " + sampleReport().barcodeTumor() + " and the internal blood barcode is "
                         + sampleReport().barcodeReference()).setStyle(fontStyle()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
                 cmp.text("The tumor percentage estimated by Pathology UMC Utrecht is " + sampleReport().pathologyTumorPercentage())

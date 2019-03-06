@@ -117,8 +117,7 @@ public class PDFWriterTest {
                 "ContactMe",
                 "contact@me.com",
                 "ABC",
-                "123456",
-                false);
+                "123456");
 
         NotAnalysedPatientReport patientReport = ImmutableNotAnalysedPatientReport.of(sampleReport,
                 reason,

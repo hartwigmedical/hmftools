@@ -33,20 +33,23 @@ public final class EnrichedStructuralVariantFactory {
 
         for (StructuralVariant variant : variants) {
             final VariantContext context = variant.startContext();
-            final Double purplePloidy = context.hasAttribute(PURPLE_PLOIDY) ? context.getAttributeAsDouble(PURPLE_PLOIDY, 0) : null;
+            if (context != null) {
 
-            final ImmutableEnrichedStructuralVariant.Builder builder = ImmutableEnrichedStructuralVariant.builder()
-                    .from(variant)
-                    .ploidy(purplePloidy)
-                    .start(createBuilder(context, 0, variant.start()));
+                final Double purplePloidy = context.hasAttribute(PURPLE_PLOIDY) ? context.getAttributeAsDouble(PURPLE_PLOIDY, 0) : null;
 
-            @Nullable
-            final StructuralVariantLeg endLeg = variant.end();
-            if (endLeg != null) {
-                builder.end(createBuilder(context, 1, endLeg));
+                final ImmutableEnrichedStructuralVariant.Builder builder = ImmutableEnrichedStructuralVariant.builder()
+                        .from(variant)
+                        .ploidy(purplePloidy)
+                        .start(createBuilder(context, 0, variant.start()));
+
+                @Nullable
+                final StructuralVariantLeg endLeg = variant.end();
+                if (endLeg != null) {
+                    builder.end(createBuilder(context, 1, endLeg));
+                }
+
+                result.add(builder.build());
             }
-
-            result.add(builder.build());
         }
 
         return result;
@@ -68,9 +71,9 @@ public final class EnrichedStructuralVariantFactory {
         final ImmutableEnrichedStructuralVariantLeg.Builder builder = ImmutableEnrichedStructuralVariantLeg.builder()
                 .from(leg)
                 .refGenomeContext(context(leg.chromosome(), leg.position()))
-                .adjustedAlleleFrequency(purpleAF.size() == 2 ? purpleAF.get(index) : null)
-                .adjustedCopyNumber(purpleCN.size() == 2 ? purpleCN.get(index) : null)
-                .adjustedCopyNumberChange(purpleCNChange.size() == 2 ? purpleCNChange.get(index) : null);
+                .adjustedAlleleFrequency(purpleAF.size() > index ? purpleAF.get(index) : null)
+                .adjustedCopyNumber(purpleCN.size() > index ? purpleCN.get(index) : null)
+                .adjustedCopyNumberChange(purpleCNChange.size() > index ? purpleCNChange.get(index) : null);
         return builder.build();
     }
 

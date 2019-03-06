@@ -30,7 +30,6 @@ public class LimsTest {
         final String primaryTumor = "Prostate";
         final String labSopVersions = "PREP1V2-QC1V2-SEQ1V2";
         final String labRemarks = "CPCT WIDE project";
-        final String label = "WIDE";
         final String projectName = "projectX";
         final String contactEmail = "henk@hmf.nl";
         final String contactName = "henk";
@@ -47,18 +46,19 @@ public class LimsTest {
                 .primaryTumor(primaryTumor)
                 .labSopVersions(labSopVersions)
                 .labRemarks(labRemarks)
-                .labelSample(label)
                 .projectName(projectName)
-                .submission(SUBMISSION)
+                .submissionSamples(SUBMISSION)
                 .refBarcodeId(refBarcode)
                 .tumorBarcodeId(tumorBarcode)
                 .patientId(patientId)
+                .requesterEmail(contactEmail)
+                .requesterName(contactName)
+                .shallowSeq(0)
                 .build();
 
         final LimsJsonSubmissionData submissionData = ImmutableLimsJsonSubmissionData.builder()
                 .submission(SUBMISSION)
-                .contactEmails(contactEmail)
-                .contactNames(contactName)
+                .projectName("projectX")
                 .build();
 
         final Lims lims = buildTestLimsWithSampleAndSubmission(sampleData, submissionData);
@@ -71,8 +71,8 @@ public class LimsTest {
         assertEquals(projectName, lims.projectName(SAMPLE));
         assertEquals(LimsTestUtil.toDate(arrivalDate), lims.arrivalDate(SAMPLE));
         assertEquals(LimsTestUtil.toDate(samplingDate), lims.samplingDate(SAMPLE));
-        assertEquals(refBarcode, lims.barcodeReferenceOfSample(SAMPLE));
-        assertEquals(tumorBarcode, lims.barcodeTumorOfSample(SAMPLE));
+        assertEquals(refBarcode, lims.barcodeReference(SAMPLE));
+        assertEquals(tumorBarcode, lims.barcodeTumor(SAMPLE));
 
         Integer dnaAmount = lims.dnaNanograms(SAMPLE);
         assertNotNull(dnaAmount);
@@ -125,8 +125,8 @@ public class LimsTest {
 
         assertEquals(1, lims.sampleCount());
 
-        assertEquals("N/A", lims.contactEmails(SAMPLE));
-        assertEquals("N/A", lims.contactNames(SAMPLE));
+        assertEquals("", lims.contactEmails(SAMPLE));
+        assertEquals("", lims.contactNames(SAMPLE));
         assertNull(lims.arrivalDate(SAMPLE));
         assertNull(lims.samplingDate(SAMPLE));
         assertNull(lims.dnaNanograms(SAMPLE));
@@ -137,7 +137,7 @@ public class LimsTest {
 
     @Test
     public void noPathologyTumorPercentageDeterminedForCORE() {
-        final LimsJsonSampleData sampleData = createLimsSampleDataBuilder().sampleId(SAMPLE).labelSample("CORE").build();
+        final LimsJsonSampleData sampleData = createLimsSampleDataBuilder().sampleId(SAMPLE).shallowSeq(1).build();
 
         Lims lims = buildTestLimsWithSample(sampleData);
         assertEquals("not determined", lims.pathologyTumorPercentage(SAMPLE));
@@ -163,7 +163,7 @@ public class LimsTest {
     @Test
     public void canRetrievePathologyPercentageForSample() {
         final LimsJsonSampleData sampleData =
-                createLimsSampleDataBuilder().sampleId(SAMPLE).labRemarks("").labelSample("").tumorPercentageString("70").build();
+                createLimsSampleDataBuilder().sampleId(SAMPLE).labRemarks("").shallowSeq(0).tumorPercentageString("70").build();
 
         Lims lims = buildTestLimsWithSample(sampleData);
         assertEquals("not determined", lims.purityShallowSeq(SAMPLE));
@@ -173,7 +173,7 @@ public class LimsTest {
     @Test
     public void canRetrieveShallowSeqPurityForCPCTSample() {
         final LimsJsonSampleData sampleData =
-                createLimsSampleDataBuilder().sampleId("CPCT02990001T").labelSample("").labRemarks("ShallowSeq").build();
+                createLimsSampleDataBuilder().sampleId("CPCT02990001T").labRemarks("ShallowSeq").build();
 
         Lims lims = buildTestLimsWithSampleAndShallowSeq(sampleData, "0.2");
         assertEquals("20%", lims.purityShallowSeq("CPCT02990001T"));

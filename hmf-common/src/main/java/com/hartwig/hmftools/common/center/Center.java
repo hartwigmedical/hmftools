@@ -28,13 +28,19 @@ public final class Center {
 
     private static final int FIELD_COUNT = 13;
 
+    private static final int SAMPLE_ID_COLUMN_MANUAL = 0;
+    private static final int HOSPITAL_COLUMN_MANUAL = 1;
+
+    private static final int FIELD_COUNT_MANUAL = 2;
+
+
     private static final String FIELD_SEPARATOR = ",";
 
     private Center() {
     }
 
     @NotNull
-    public static CenterModel readFromCSV(@NotNull final String pathToCsv) throws IOException {
+    public static CenterModel readFromCSV(@NotNull final String pathToCsv, @NotNull final String pathToCsvManual) throws IOException {
         final Map<String, CenterData> centerPerId = Maps.newHashMap();
         final Map<String, CenterData> centerPerHospital = Maps.newHashMap();
 
@@ -56,6 +62,25 @@ public final class Center {
                 LOGGER.warn("Could not properly parse line in center csv: " + line);
             }
         }
-        return ImmutableCenterModel.of(centerPerId, centerPerHospital);
+        return ImmutableCenterModel.of(centerPerId, centerPerHospital, readFromCSVManual(pathToCsvManual));
     }
+
+    @NotNull
+    private static Map<String, CenterDataManualMapping>  readFromCSVManual(@NotNull final String pathToCsv) throws IOException {
+        final Map<String, CenterDataManualMapping> centerPerIdManual = Maps.newHashMap();
+
+        final List<String> lines = FileReader.build().readLines(new File(pathToCsv).toPath());
+        for (final String line : lines) {
+            final String[] parts = line.split(FIELD_SEPARATOR, FIELD_COUNT_MANUAL);
+            if (parts.length == FIELD_COUNT_MANUAL) {
+                CenterDataManualMapping centerManual = ImmutableCenterDataManualMapping.of(parts[HOSPITAL_COLUMN_MANUAL]);
+
+                centerPerIdManual.put(parts[SAMPLE_ID_COLUMN_MANUAL], centerManual);
+            } else if (parts.length > 0) {
+                LOGGER.warn("Could not properly parse line in center csv: " + line);
+            }
+        }
+        return centerPerIdManual;
+    }
+
 }

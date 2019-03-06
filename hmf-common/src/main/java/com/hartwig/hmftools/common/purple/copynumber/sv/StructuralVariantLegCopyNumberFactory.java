@@ -40,9 +40,9 @@ public class StructuralVariantLegCopyNumberFactory<T extends GenomeRegion> {
                 selector.select(svPositionRight).flatMap(x -> Optional.ofNullable(copyNumberExtractor.apply(x))).map(x -> Math.max(0, x));
 
         return ImmutableStructuralVariantLegCopyNumberImpl.builder()
+                .from(leg)
                 .leftCopyNumber(left)
                 .rightCopyNumber(right)
-                .orientation(leg.orientation())
                 .build();
     }
 }

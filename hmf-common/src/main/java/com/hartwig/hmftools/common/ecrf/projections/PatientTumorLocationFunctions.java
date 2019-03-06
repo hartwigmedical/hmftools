@@ -3,6 +3,8 @@ package com.hartwig.hmftools.common.ecrf.projections;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.hartwig.hmftools.common.lims.LimsSampleType;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -37,7 +39,9 @@ public final class PatientTumorLocationFunctions {
 
     @NotNull
     private static String toPatientIdentifier(@NotNull final String sample) {
-        if (sample.length() >= 12 && (sample.startsWith("CPCT") || sample.startsWith("DRUP"))) {
+        LimsSampleType type = LimsSampleType.fromSampleId(sample);
+        if (sample.length() >= 12 && (type == LimsSampleType.CPCT || type == LimsSampleType.DRUP || type == LimsSampleType.WIDE
+                || type == LimsSampleType.CORE)) {
             return sample.substring(0, 12);
         }
         // If we want to generate a report for non-CPCT/non-DRUP we assume patient and sample are identical.

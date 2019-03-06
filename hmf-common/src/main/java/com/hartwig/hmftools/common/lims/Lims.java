@@ -53,20 +53,18 @@ public class Lims {
 
     @NotNull
     public String contactEmails(@NotNull final String sample) {
-        String submission = submission(sample);
-        LimsJsonSubmissionData submissionData = dataPerSubmission.get(submission);
-        return submissionData != null ? submissionData.contactEmails() : "N/A";
+        LimsJsonSampleData sampleData = dataPerSample.get(sample);
+        return sampleData != null ? sampleData.requesterEmail() : "N/A";
     }
 
     @NotNull
     public String contactNames(@NotNull final String sample) {
-        String submission = submission(sample);
-        LimsJsonSubmissionData submissionData = dataPerSubmission.get(submission);
-        return submissionData != null ? submissionData.contactNames() : "N/A";
+        LimsJsonSampleData sampleData = dataPerSample.get(sample);
+        return sampleData != null ? sampleData.requesterName() : "N/A";
     }
 
     @NotNull
-    public String submissionID(@NotNull final String sample) {
+    public String submissionId(@NotNull final String sample) {
         String submission = submission(sample);
         LimsJsonSubmissionData submissionData = dataPerSubmission.get(submission);
         return submissionData != null ? submissionData.submission() : "N/A";
@@ -78,37 +76,33 @@ public class Lims {
         return sampleData != null ? sampleData.hospitalPatientId() : null;
     }
 
-    public boolean isCoreSample(@NotNull final String sample) {
-        String label = label(sample);
-        return label.equalsIgnoreCase("core");
-    }
-
     @NotNull
     public String projectName(@NotNull final String sample) {
-        LimsJsonSampleData sampleData = dataPerSample.get(sample);
-        return sampleData != null ? sampleData.projectName() : "N/A";
+        String submission = submission(sample);
+        LimsJsonSubmissionData submissionData = dataPerSubmission.get(submission);
+        return submissionData != null ? submissionData.projectName() : "N/A";
     }
 
     @NotNull
-    public String barcodeTumorOfSample(@NotNull final String sample) {
+    public String barcodeTumor(@NotNull final String sample) {
         LimsJsonSampleData sampleData = dataPerSample.get(sample);
         if (sampleData != null) {
             String tumorBarcode = sampleData.tumorBarcodeId();
             if (tumorBarcode.isEmpty()) {
                 return "not determined";
             } else {
-               return tumorBarcode;
+                return tumorBarcode;
             }
         }
         return "N/A";
     }
 
     @NotNull
-    public String barcodeReferenceOfSample(@NotNull final String sample) {
+    public String barcodeReference(@NotNull final String sample) {
         LimsJsonSampleData sampleData = dataPerSample.get(sample);
         if (sampleData != null) {
             String refBarcode = sampleData.refBarcodeId();
-            if (refBarcode.isEmpty()) {
+            if (refBarcode == null || refBarcode.isEmpty()) {
                 return "not determined";
             } else {
                 return refBarcode;
@@ -126,7 +120,7 @@ public class Lims {
             arrivalDate = preLimsArrivalDates.get(sample);
         }
 
-        if (arrivalDate == null && !sample.contains("COLO")) {
+        if (arrivalDate == null) {
             LOGGER.warn("Could not find a valid arrival date for sample: " + sample + " in LIMS");
         }
 
@@ -233,16 +227,10 @@ public class Lims {
         return "N/A";
     }
 
-    @NotNull
-    private String label(@NotNull final String sample) {
-        LimsJsonSampleData sampleData = dataPerSample.get(sample);
-        return sampleData != null ? sampleData.labelSample() : "N/A";
-    }
-
     @Nullable
     private String submission(@NotNull String sample) {
         LimsJsonSampleData sampleData = dataPerSample.get(sample);
-        return sampleData != null ? sampleData.submission() : null;
+        return sampleData != null ? sampleData.submissionSamples() : null;
     }
 
     private boolean shallowSeqExecuted(@NotNull String sample) {
@@ -251,8 +239,14 @@ public class Lims {
 
         String labRemarks = sampleData.labRemarks();
 
-        return isCoreSample(sample) || (labRemarks != null && (labRemarks.toLowerCase().contains("cpctwide") || labRemarks.toLowerCase()
-                .contains("shallowseq")));
+        if (sampleData.shallowSeq() == 1) {
+            return true;
+        } else if (labRemarks != null) {
+            String labRemarksLowerCase = labRemarks.toLowerCase();
+            return labRemarksLowerCase.contains("cpctwide") || labRemarksLowerCase.contains("shallowseq");
+        }
+
+        return false;
     }
 
     @Nullable

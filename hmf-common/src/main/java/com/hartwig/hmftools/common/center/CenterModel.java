@@ -5,6 +5,8 @@ import java.util.Map;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.lims.Lims;
+import com.hartwig.hmftools.common.lims.LimsSampleType;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -25,31 +27,36 @@ public abstract class CenterModel {
     @NotNull
     protected abstract Map<String, CenterData> centerPerHospital();
 
-    @Nullable
-    public String addresseeStringForSample(@NotNull final String sample) {
-        final String centerId = getCenterIdFromSample(sample);
-        if (centerId == null) {
-            return null;
-        }
-        final CenterData center = centerPerId(centerId);
-        if (center == null) {
-            LOGGER.error("Center model does not contain id " + centerId);
-            return null;
-        }
-        checkAddresseeFields(sample, center);
-        return getPI(sample, center) + ", " + center.addressName() + ", " + center.addressZip() + " " + center.addressCity();
-    }
+    @NotNull
+    protected abstract Map<String, CenterDataManualMapping> centerPerIdManual();
 
     @Nullable
-    public String addresseeStringForProject(@NotNull final String projectName) {
-        // Assume project name for CORE is HOSPITAL-X-Y
-        String hospitalFromProjectName = projectName.split("-")[0];
-        final CenterData center = centerPerHospital().get(hospitalFromProjectName);
-        if (center == null) {
-            LOGGER.error("Center model cannot find center details for project " + projectName);
-            return null;
+    public String addresseeStringForSample(@NotNull final String contactNames, @NotNull final String sample) {
+        String adres = "";
+        if (sample.startsWith("CORE19") || sample.contains("CORE18")) {
+            final CenterDataManualMapping centerDataManualMapping = centerPerIdManual().get(sample);
+            final CenterData center = centerPerHospital().get(centerDataManualMapping.addressName());
+            if (center == null) {
+                LOGGER.error("Center model cannot find center details for project " + centerDataManualMapping);
+                return null;
+            }
+            adres = center.addressName() + ", " + center.addressZip() + " " + center.addressCity();
+
+        } else {
+            final String centerId = getCenterIdFromSample(sample);
+            if (centerId == null) {
+                return null;
+            }
+            final CenterData center = centerPerId(centerId);
+            if (center == null) {
+                LOGGER.error("Center model does not contain id " + centerId);
+                return null;
+            }
+            checkAddresseeFields(sample, center, contactNames);
+            adres = getPI(sample, center, contactNames) + ", " + center.addressName() + ", " + center.addressZip() + " "
+                    + center.addressCity();
         }
-        return center.addressName() + ", " + center.addressZip() + " " + center.addressCity();
+        return adres;
     }
 
     @Nullable
@@ -61,17 +68,21 @@ public abstract class CenterModel {
     @Nullable
     private static String getCenterIdFromSample(@NotNull final String sample) {
         final String ucSample = sample.toUpperCase();
-        if ((ucSample.startsWith("DRUP") || ucSample.startsWith("CPCT")) && sample.length() >= 12) {
+        LimsSampleType type = LimsSampleType.fromSampleId(ucSample);
+
+        if (type == LimsSampleType.DRUP || type == LimsSampleType.CPCT || type == LimsSampleType.WIDE
+                || type == LimsSampleType.CORE && sample.length() >= 12) {
             return sample.substring(6, 8);
         }
 
-        LOGGER.warn("Sample parameter: " + sample + " is not in CPCT/DRUP format");
+        LOGGER.warn("Sample parameter: " + sample + " is not in CPCT/DRUP/WIDE/CORE format");
         return null;
     }
 
-    private static void checkAddresseeFields(@NotNull final String sample, @NotNull final CenterData center) {
+    private static void checkAddresseeFields(@NotNull final String sample, @NotNull final CenterData center,
+            @NotNull final String contactNames) {
         final List<String> missingFields = Lists.newArrayList();
-        if (getPI(sample, center).isEmpty()) {
+        if (getPI(sample, center, contactNames).isEmpty()) {
             missingFields.add("PI");
         }
         if (center.addressName().isEmpty()) {
@@ -90,15 +101,19 @@ public abstract class CenterModel {
 
     @NotNull
     @VisibleForTesting
-    static String getPI(@NotNull final String sample, @NotNull final CenterData center) {
-        if (sample.toUpperCase().startsWith("CPCT")) {
+    static String getPI(@NotNull final String sample, @NotNull final CenterData center, @NotNull final String contactNames) {
+        LimsSampleType type = LimsSampleType.fromSampleId(sample);
+
+        if (type == LimsSampleType.CPCT) {
             return center.cpctPI();
-        } else if (sample.toUpperCase().startsWith("DRUP")) {
+        } else if (type == LimsSampleType.DRUP) {
             final String drupPi = center.drupPI();
             if (drupPi.trim().equals("*")) {
                 return center.cpctPI();
             }
             return center.drupPI();
+        } else if (type == LimsSampleType.WIDE || type == LimsSampleType.CORE) {
+            return contactNames;
         }
         return Strings.EMPTY;
     }

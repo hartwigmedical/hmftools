@@ -1,36 +1,28 @@
 package com.hartwig.hmftools.common.lims;
 
-import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 public enum LimsSampleType {
-    CORE("CORE"),
-    WIDE("WIDE"),
-    CPCT("CPCT"),
-    DRUP("DRUP"),
-    UNDEFINED(Strings.EMPTY);
+    CORE,
+    WIDE,
+    CPCT,
+    DRUP,
+    COLO;
 
     @NotNull
-    private final String studyType;
-
-    LimsSampleType(@NotNull final String studyType) {
-        this.studyType = studyType;
-    }
-
-    @NotNull
-   public String labelSample() {
-        return studyType;
-    }
-
-    @NotNull
-    public static LimsSampleType fromSample(@NotNull final String label) {
-
-        switch (label) {
-            case "CORE": return CORE;
-            case "WIDE": return WIDE;
-            case "CPCT": return CPCT;
-            case "DRUP": return DRUP;
-            default: return UNDEFINED;
+    public static LimsSampleType fromSampleId(@NotNull String sampleId) {
+        if (sampleId.startsWith("CPCT")) {
+            return CPCT;
+        } else if (sampleId.startsWith("WIDE")) {
+            return WIDE;
+        } else if (sampleId.startsWith("CORE")) {
+            return CORE;
+        } else if (sampleId.startsWith("DRUP")) {
+            return DRUP;
+        } else if (sampleId.startsWith("COLO")) {
+            return COLO;
         }
+
+        throw new IllegalStateException("Cannot resolve type for sampleId: " + sampleId);
     }
 }

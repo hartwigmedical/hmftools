@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Optional;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.lims.LimsSampleType;
 import com.hartwig.hmftools.patientreporter.PatientReport;
 import com.hartwig.hmftools.patientreporter.SampleReport;
 import com.hartwig.hmftools.patientreporter.report.Commons;
@@ -44,11 +45,11 @@ public abstract class SampleDetailsPage {
     }
 
     @NotNull
-    public ComponentBuilder<?, ?> reportComponent() {
+    public ComponentBuilder<?, ?> reportComponent(@NotNull String sampleId) {
         return cmp.verticalList(cmp.verticalGap(SECTION_VERTICAL_GAP),
                 cmp.text(Commons.TITLE_SEQUENCE + " - Sample Details & Disclaimer").setStyle(sectionHeaderStyle()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
-                sampleDetailsSection(),
+                sampleDetailsSection(sampleId),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
                 disclaimerSection());
     }
@@ -64,7 +65,9 @@ public abstract class SampleDetailsPage {
     }
 
     @NotNull
-    private ComponentBuilder<?, ?> sampleDetailsSection() {
+    private ComponentBuilder<?, ?> sampleDetailsSection(@NotNull String sampleId) {
+        LimsSampleType type = LimsSampleType.fromSampleId(sampleId);
+
         String recipient = sampleReport().recipient();
         if (recipient == null) {
             LOGGER.warn("No recipient address present for sample " + sampleReport().sampleId());
@@ -74,19 +77,19 @@ public abstract class SampleDetailsPage {
 
         final List<String> lines = Lists.newArrayList("The samples have been sequenced at " + Commons.HARTWIG_ADDRESS,
                 "The samples have been analyzed by Next Generation Sequencing",
-                "The name of this sample is: " + sampleReport().sampleId(),
+                "The HMF sample ID is: " + sampleReport().sampleId(),
                 "The pathology tumor percentage for this sample is " + sampleReport().pathologyTumorPercentage(),
                 "This experiment is performed on the tumor sample which arrived on " + formattedDate(sampleReport().tumorArrivalDate())
-                        + "and the tumor barcode is " + sampleReport().barcodeTumor(),
+                        + " and the internal tumor barcode is " + sampleReport().barcodeTumor(),
                 "This experiment is performed on the blood sample which arrived on " + formattedDate(sampleReport().bloodArrivalDate())
-                        + " and the reference barcode is " + sampleReport().barcodeReference(),
+                        + " and the internal blood barcode is " + sampleReport().barcodeReference(),
                 "This experiment is performed according to lab procedures: " + sampleReport().labProcedures(),
                 "This report is generated and verified by: " + user(),
                 "This report is addressed at: " + recipient);
 
-        if (sampleReport().isCoreSample()) {
-            lines.add("The hospital patient number is: " + sampleReport().patientNumber());
-            lines.add("The project name of sample is: " + sampleReport().projectName() + " with submission " + sampleReport().submission());
+        if (type == LimsSampleType.CORE) {
+            lines.add("The hospital patient ID is: " + sampleReport().hospitalPatientId());
+            lines.add("The project name of sample is: " + sampleReport().projectName());
             lines.add("The contact names are: " + sampleReport().contactNames());
             lines.add("The contact emails are: " + sampleReport().contactEmails());
         }

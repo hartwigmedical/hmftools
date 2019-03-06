@@ -11,6 +11,5 @@ public class NotAnalysableStudyTest {
     public void canDeriveStudyFromSampleName() {
         assertEquals(NotAnalysableStudy.CPCT, NotAnalysableStudy.fromSample("CPCT02010500T"));
         assertEquals(NotAnalysableStudy.DRUP, NotAnalysableStudy.fromSample("DRUP01010400TII"));
-        assertNull(NotAnalysableStudy.fromSample("PMC010001"));
     }
 }
