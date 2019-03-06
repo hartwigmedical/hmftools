@@ -16,41 +16,68 @@ public class CopyNumberChangeTest {
     private static final double EPSILON = 1e-10;
 
     @Test
-    public void testTwoPositiveOrientationsGivePositiveCopyNumberChange() {
-        double copyNumberChange = 1;
-
-        final StructuralVariantLegPloidy leg1 = svPloidy(1, 1, copyNumberChange);
-        final StructuralVariantLegPloidy leg2 = svPloidy(1, 1.5, copyNumberChange);
+    public void testTwoPositiveOrientationsHaveNoCopyNumberChange() {
+        final StructuralVariantLegPloidy leg1 = svPloidy(1, 1, 2, 2);
+        final StructuralVariantLegPloidy leg2 = svPloidy(1, 1.5, 2, 2);
         final List<StructuralVariantLegPloidy> legList = Lists.newArrayList(leg1, leg2);
-        assertCopyNumberChange(copyNumberChange, legList);
+        assertPloidy(0, legList);
+        assertCopyNumberChange(0, legList);
 
         final CopyNumberChange victim = new CopyNumberChange(legList);
-        assertEquals(-0.4, victim.copyNumberChange(leg1), EPSILON);
-        assertEquals(-0.6, victim.copyNumberChange(leg2), EPSILON);
+        assertEquals(0, victim.copyNumberChange(leg1), EPSILON);
+        assertEquals(0, victim.copyNumberChange(leg2), EPSILON);
     }
 
     @Test
-    public void testTwoPositiveOrientationsGiveNegativeCopyNumberChange() {
-        double copyNumberChange = -2;
+    public void testTwoPositiveOrientationsHaveSmallCopyNumberChange() {
 
-        final StructuralVariantLegPloidy leg1 = svPloidy(1, 1, copyNumberChange);
-        final StructuralVariantLegPloidy leg2 = svPloidy(1, 1.5, copyNumberChange);
+        final StructuralVariantLegPloidy leg1 = svPloidy(1, 1, 3, 2);
+        final StructuralVariantLegPloidy leg2 = svPloidy(1, 1.5, 3, 2);
         final List<StructuralVariantLegPloidy> legList = Lists.newArrayList(leg1, leg2);
-        assertCopyNumberChange(copyNumberChange, legList);
+        assertPloidy(1, legList);
+        assertCopyNumberChange(-1, legList);
 
         final CopyNumberChange victim = new CopyNumberChange(legList);
-        assertEquals(0.8, victim.copyNumberChange(leg1), EPSILON);
-        assertEquals(1.2, victim.copyNumberChange(leg2), EPSILON);
+        assertEquals(0.4, victim.copyNumberChange(leg1), EPSILON);
+        assertEquals(0.6, victim.copyNumberChange(leg2), EPSILON);
+    }
+
+    @Test
+    public void testTwoPositiveOrientationsHaveLargeCopyNumberChange() {
+
+        final StructuralVariantLegPloidy leg1 = svPloidy(1, 1, 4, 1);
+        final StructuralVariantLegPloidy leg2 = svPloidy(1, 1.5, 4, 1);
+        final List<StructuralVariantLegPloidy> legList = Lists.newArrayList(leg1, leg2);
+        assertPloidy(3, legList);
+        assertCopyNumberChange(-3, legList);
+
+        final CopyNumberChange victim = new CopyNumberChange(legList);
+        assertEquals(1.2, victim.copyNumberChange(leg1), EPSILON);
+        assertEquals(1.8, victim.copyNumberChange(leg2), EPSILON);
+    }
+
+    @Test
+    public void testTwoPositiveOrientationsIncreaseCopyNumber() {
+
+        final StructuralVariantLegPloidy leg1 = svPloidy(1, 1, 3, 4.5);
+        final StructuralVariantLegPloidy leg2 = svPloidy(1, 1.5, 3, 4.5);
+        final List<StructuralVariantLegPloidy> legList = Lists.newArrayList(leg1, leg2);
+        assertPloidy(-1.5, legList);
+        assertCopyNumberChange(1.5, legList);
+
+        final CopyNumberChange victim = new CopyNumberChange(legList);
+        assertEquals(-0.6, victim.copyNumberChange(leg1), EPSILON);
+        assertEquals(-0.9, victim.copyNumberChange(leg2), EPSILON);
     }
 
     @Test
     public void testTwoNegativeOrientationsGivePositiveCopyNumberChange() {
-        double copyNumberChange = 3;
 
-        final StructuralVariantLegPloidy leg1 = svPloidy(-1, 1, copyNumberChange);
-        final StructuralVariantLegPloidy leg2 = svPloidy(-1, 1.5, copyNumberChange);
+        final StructuralVariantLegPloidy leg1 = svPloidy(-1, 1, 1, 4);
+        final StructuralVariantLegPloidy leg2 = svPloidy(-1, 1.5, 1, 4);
         final List<StructuralVariantLegPloidy> legList = Lists.newArrayList(leg1, leg2);
-        assertCopyNumberChange(copyNumberChange, legList);
+        assertPloidy(3, legList);
+        assertCopyNumberChange(3, legList);
 
         final CopyNumberChange victim = new CopyNumberChange(legList);
         assertEquals(1.2, victim.copyNumberChange(leg1), EPSILON);
@@ -59,12 +86,12 @@ public class CopyNumberChangeTest {
 
     @Test
     public void testTwoNegativeOrientationsGiveNegativeCopyNumberChange() {
-        double copyNumberChange = -3;
 
-        final StructuralVariantLegPloidy leg1 = svPloidy(-1, 1, copyNumberChange);
-        final StructuralVariantLegPloidy leg2 = svPloidy(-1, 1.5, copyNumberChange);
+        final StructuralVariantLegPloidy leg1 = svPloidy(-1, 1, 4, 1);
+        final StructuralVariantLegPloidy leg2 = svPloidy(-1, 1.5, 4, 1);
         final List<StructuralVariantLegPloidy> legList = Lists.newArrayList(leg1, leg2);
-        assertCopyNumberChange(copyNumberChange, legList);
+        assertPloidy(-3, legList);
+        assertCopyNumberChange(-3, legList);
 
         final CopyNumberChange victim = new CopyNumberChange(legList);
         assertEquals(-1.2, victim.copyNumberChange(leg1), EPSILON);
@@ -74,33 +101,40 @@ public class CopyNumberChangeTest {
     @Test
     public void testTwoDifferentDirections() {
 
-        double copyNumberChange = -0.4;
-
-        final StructuralVariantLegPloidy leg1 = svPloidy(-1, 1, copyNumberChange);
-        final StructuralVariantLegPloidy leg2 = svPloidy(1, 1.5, copyNumberChange);
+        final StructuralVariantLegPloidy leg1 = svPloidy(-1, 1, 2, 1.6);
+        final StructuralVariantLegPloidy leg2 = svPloidy(1, 1.5, 2, 1.6);
         final List<StructuralVariantLegPloidy> legList = Lists.newArrayList(leg1, leg2);
-        //        assertCopyNumberChange(copyNumberChange, legList);
+        assertPloidy(2.5, legList);
+        assertCopyNumberChange(-0.4, legList);
 
         final CopyNumberChange victim = new CopyNumberChange(legList);
         assertEquals(1.05, victim.copyNumberChange(leg1), EPSILON);
         assertEquals(1.45, victim.copyNumberChange(leg2), EPSILON);
+    }
 
-        System.out.println(victim.copyNumberChange(leg1));
-        System.out.println(victim.copyNumberChange(leg2));
+    @Test
+    public void testTwoDifferentDirectionsThroughZero() {
 
+        final StructuralVariantLegPloidy leg1 = svPloidy(-1, 1, 1, 0.6);
+        final StructuralVariantLegPloidy leg2 = svPloidy(1, 1.5, 1, 0.6);
+        final List<StructuralVariantLegPloidy> legList = Lists.newArrayList(leg1, leg2);
+        assertPloidy(1.6, legList);
+        assertCopyNumberChange(-0.4, legList);
+
+        final CopyNumberChange victim = new CopyNumberChange(legList);
+        assertEquals(0.6, victim.copyNumberChange(leg1), EPSILON);
+        assertEquals(1, victim.copyNumberChange(leg2), EPSILON);
     }
 
     @Test
     public void testMultipleInDifferentDirection() {
 
-        double copyNumberChange = -0.6;
-
-        final StructuralVariantLegPloidy leg1 = svPloidy(-1, 1, copyNumberChange);
-        final StructuralVariantLegPloidy leg2 = svPloidy(1, 0.7, copyNumberChange);
-        final StructuralVariantLegPloidy leg3 = svPloidy(1, 0.8, copyNumberChange);
+        final StructuralVariantLegPloidy leg1 = svPloidy(-1, 1, 2, 1.4);
+        final StructuralVariantLegPloidy leg2 = svPloidy(1, 0.7, 2, 1.4);
+        final StructuralVariantLegPloidy leg3 = svPloidy(1, 0.8, 2, 1.4);
         final List<StructuralVariantLegPloidy> legList = Lists.newArrayList(leg1, leg2, leg3);
-        assertAbsCopyNumberChange(legList);
-        assertCopyNumberChange(copyNumberChange, legList);
+        assertPloidy(2.5, legList);
+        assertCopyNumberChange(-0.6, legList);
 
         final CopyNumberChange victim = new CopyNumberChange(legList);
         assertEquals(0.95, victim.copyNumberChange(leg1), EPSILON);
@@ -111,44 +145,47 @@ public class CopyNumberChangeTest {
     @Test
     public void testMultipleInDifferentDirectionPositive() {
 
-        double copyNumberChange = -0.5;
 
-        final StructuralVariantLegPloidy leg1 = svPloidy(-1, 0.6, copyNumberChange);
-        final StructuralVariantLegPloidy leg2 = svPloidy(1, 1, copyNumberChange);
-        final StructuralVariantLegPloidy leg3 = svPloidy(1, 1, copyNumberChange);
+        final StructuralVariantLegPloidy leg1 = svPloidy(-1, 0.6, 2, 2.5);
+        final StructuralVariantLegPloidy leg2 = svPloidy(1, 1, 2, 2.5);
+        final StructuralVariantLegPloidy leg3 = svPloidy(1, 1, 2, 2.5);
         final List<StructuralVariantLegPloidy> legList = Lists.newArrayList(leg1, leg2, leg3);
+
+        assertPloidy(2.6, legList);
+        assertCopyNumberChange(0.5, legList);
+
         final CopyNumberChange victim = new CopyNumberChange(legList);
-
-        assertCopyNumberChange(copyNumberChange, legList);
-        assertAbsCopyNumberChange(legList);
-
-        double c1 = victim.copyNumberChange(leg1);
-        double c2 = victim.copyNumberChange(leg2);
-        double c3 = victim.copyNumberChange(leg3);
-
-        System.out.println(c1 - c2 - c3);
-        System.out.println(c1 + c2 + c3);
-
-        //
-        //        assertEquals(0.6, victim.copyNumberChange(leg1), EPSILON);
-        //        assertEquals(0.55, victim.copyNumberChange(leg2), EPSILON);
-        //        assertEquals(0.55, victim.copyNumberChange(leg3), EPSILON);
+        assertEquals(1.55, victim.copyNumberChange(leg1), EPSILON);
+        assertEquals(0.525, victim.copyNumberChange(leg2), EPSILON);
+        assertEquals(0.525, victim.copyNumberChange(leg3), EPSILON);
     }
 
     @Test
     public void testNoCopyNumberChange() {
 
-        double copyNumberChange = 0;
-
-        final StructuralVariantLegPloidy leg1 = svPloidy(-1, 1, copyNumberChange);
-        final StructuralVariantLegPloidy leg2 = svPloidy(1, 0.75, copyNumberChange);
+        final StructuralVariantLegPloidy leg1 = svPloidy(-1, 1, 2, 2);
+        final StructuralVariantLegPloidy leg2 = svPloidy(1, 0.75, 2, 2);
         final List<StructuralVariantLegPloidy> legList = Lists.newArrayList(leg1, leg2);
         final CopyNumberChange victim = new CopyNumberChange(legList);
-        assertAbsCopyNumberChange(legList);
-        assertCopyNumberChange(copyNumberChange, legList);
+        assertPloidy(1.75, legList);
+        assertCopyNumberChange(0, legList);
 
         assertEquals(0.875, victim.copyNumberChange(leg1), EPSILON);
         assertEquals(0.875, victim.copyNumberChange(leg2), EPSILON);
+    }
+
+    @Test
+    public void testNoCopyNumberChangeThroughZero() {
+
+        final StructuralVariantLegPloidy leg1 = svPloidy(-1, 1, 0.8, 0.8);
+        final StructuralVariantLegPloidy leg2 = svPloidy(1, 0.75, 0.8, 0.8);
+        final List<StructuralVariantLegPloidy> legList = Lists.newArrayList(leg1, leg2);
+        final CopyNumberChange victim = new CopyNumberChange(legList);
+        assertPloidy(1.55, legList);
+        assertCopyNumberChange(0, legList);
+
+        assertEquals(0.775, victim.copyNumberChange(leg1), EPSILON);
+        assertEquals(0.775, victim.copyNumberChange(leg2), EPSILON);
     }
 
     private void assertCopyNumberChange(double expected, List<StructuralVariantLegPloidy> legList) {
@@ -158,17 +195,16 @@ public class CopyNumberChangeTest {
         assertEquals(expected, sumCopyNumberChange, EPSILON);
     }
 
-    private void assertAbsCopyNumberChange(@NotNull final List<StructuralVariantLegPloidy> legList) {
+    private void assertPloidy(double expected, @NotNull final List<StructuralVariantLegPloidy> legList) {
         final CopyNumberChange victim = new CopyNumberChange(legList);
 
-        double sumPloidy = legList.stream().mapToDouble(StructuralVariantLegPloidy::averageImpliedPloidy).sum();
         double sumCopyNumberChange = legList.stream().mapToDouble(victim::copyNumberChange).sum();
-        assertEquals(sumPloidy, sumCopyNumberChange, EPSILON);
+        assertEquals(expected, sumCopyNumberChange, EPSILON);
     }
 
     @NotNull
-    private static StructuralVariantLegPloidy svPloidy(int orientation, double ploidy, double copyNumberChange) {
-        return PurpleDatamodelTest.svLegPloidy(orientation, Optional.of(0d), Optional.of(copyNumberChange), ploidy).build();
+    private static StructuralVariantLegPloidy svPloidy(int orientation, double ploidy, double leftCopyNumber, double rightCopyNumber) {
+        return PurpleDatamodelTest.svLegPloidy(orientation, Optional.of(leftCopyNumber), Optional.of(rightCopyNumber), ploidy).build();
     }
 
 }

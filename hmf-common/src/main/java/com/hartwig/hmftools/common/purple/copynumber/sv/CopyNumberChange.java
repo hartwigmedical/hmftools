@@ -17,7 +17,8 @@ class CopyNumberChange {
     CopyNumberChange(@NotNull final List<StructuralVariantLegPloidy> structuralVariants) {
         assert (!structuralVariants.isEmpty());
 
-        double copyNumberChangeSimple = copyNumberDifference(structuralVariants.get(0));
+        final StructuralVariantLegPloidy template = structuralVariants.get(0);
+        double copyNumberDifference = copyNumberDifference(template);
 
         int upCount = 0;
         int downCount = 0;
@@ -44,13 +45,16 @@ class CopyNumberChange {
             }
         }
 
-        downScale = (upPloidy - copyNumberChangeSimple) / (upPloidy + downPloidy);
+        downScale = (upPloidy - copyNumberDifference) / (upPloidy + downPloidy);
         upScale = 1 - downScale;
 
         if (upCount > 0 && downCount > 0 && minPloidyVariant != null) {
-            double totalPloidy = upPloidy + downPloidy;
+            double targetDownPloidy = Math.min(template.leftCopyNumber().orElse(0d), downPloidy);
+            double targetUpPloidy = Math.min(template.rightCopyNumber().orElse(0d), upPloidy);
+
+            double targetPloidy = targetUpPloidy + targetDownPloidy;
             double explainedPloidy = downScale * downPloidy + upScale * upPloidy;
-            double offsetRequired = (totalPloidy - explainedPloidy);
+            double offsetRequired = (targetPloidy - explainedPloidy);
             downOffset = offsetRequired / (2 * downCount);
             upOffset = downOffset * downCount / upCount;
         } else {
