@@ -264,7 +264,7 @@ public class Lims {
         String labRemarks = sampleData.labRemarks();
 
         return isCoreSample(sample) || (labRemarks != null && (labRemarks.toLowerCase().contains("cpctwide") || labRemarks.toLowerCase()
-                .contains("shallowseq")));
+                .contains("shallowseq") || shallowSeqDone(sample).equals("shallowSeqYes")));
     }
 
     @Nullable
