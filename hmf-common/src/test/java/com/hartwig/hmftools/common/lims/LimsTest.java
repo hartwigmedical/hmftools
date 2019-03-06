@@ -30,7 +30,6 @@ public class LimsTest {
         final String primaryTumor = "Prostate";
         final String labSopVersions = "PREP1V2-QC1V2-SEQ1V2";
         final String labRemarks = "CPCT WIDE project";
-        final String label = "WIDE";
         final String projectName = "projectX";
         final String contactEmail = "henk@hmf.nl";
         final String contactName = "henk";
@@ -48,7 +47,7 @@ public class LimsTest {
                 .labSopVersions(labSopVersions)
                 .labRemarks(labRemarks)
                 .projectName(projectName)
-                .submission(SUBMISSION)
+                .submissionSamples(SUBMISSION)
                 .refBarcodeId(refBarcode)
                 .tumorBarcodeId(tumorBarcode)
                 .patientId(patientId)
@@ -59,6 +58,7 @@ public class LimsTest {
 
         final LimsJsonSubmissionData submissionData = ImmutableLimsJsonSubmissionData.builder()
                 .submission(SUBMISSION)
+                .projectName("projectX")
                 .build();
 
         final Lims lims = buildTestLimsWithSampleAndSubmission(sampleData, submissionData);

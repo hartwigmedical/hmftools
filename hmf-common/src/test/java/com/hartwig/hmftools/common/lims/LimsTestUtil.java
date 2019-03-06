@@ -27,7 +27,7 @@ final class LimsTestUtil {
                 .labSopVersions(Strings.EMPTY)
                 .labelSample(Strings.EMPTY)
                 .projectName(Strings.EMPTY)
-                .submission(Strings.EMPTY)
+                .submissionSamples(Strings.EMPTY)
                 .patientId(Strings.EMPTY)
                 .requesterName(Strings.EMPTY)
                 .requesterEmail(Strings.EMPTY)

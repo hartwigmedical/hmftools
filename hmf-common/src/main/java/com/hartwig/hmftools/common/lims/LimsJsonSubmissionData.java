@@ -15,4 +15,8 @@ abstract class LimsJsonSubmissionData {
     @NotNull
     @SerializedName("submission")
     public abstract String submission();
+
+    @NotNull
+    @SerializedName("project_name")
+    public abstract String projectName();
 }

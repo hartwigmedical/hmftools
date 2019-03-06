@@ -50,8 +50,7 @@ public class LimsFactoryTest {
         assertEquals("PREP013V23-QC037V20-SEQ008V25", refData.labProcedures());
         assertNull(refData.labRemarks());
         assertEquals("CPCT", refData.labelSample());
-        assertEquals("HMFregCPCT", refData.projectName());
-        assertEquals("HMFregCPCT", refData.submission());
+        assertEquals("HMFregCPCT", refData.submissionSamples());
 
         final String tumorSampleId = "SAMP01010003T";
         final LimsJsonSampleData tumorData = dataPerSample.get(tumorSampleId);
@@ -65,8 +64,7 @@ public class LimsFactoryTest {
         assertEquals("N/A", tumorData.labProcedures());
         assertEquals("this is a test", tumorData.labRemarks());
         assertEquals("CPCT", tumorData.labelSample());
-        assertEquals("HMFregCPCT", tumorData.projectName());
-        assertEquals("HMFregCPCT", tumorData.submission());
+        assertEquals("HMFregCPCT", tumorData.submissionSamples());
     }
 
     @Test

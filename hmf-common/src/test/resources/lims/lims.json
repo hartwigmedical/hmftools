@@ -53,11 +53,13 @@
   "submissions" : {
     "ABCDEF123": {
       "submission": "ABCDEF123",
-      "project_type": "CORE"
+      "project_type": "CORE",
+      "project_name": "ABC"
     },
     "ABCDEF124": {
       "submission": "ABCDEF1234",
-      "project_type": "RESEARCH"
+      "project_type": "RESEARCH",
+      "project_name": "ABC"
     }
   }
 }

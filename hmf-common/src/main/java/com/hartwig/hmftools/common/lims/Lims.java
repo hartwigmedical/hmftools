@@ -78,8 +78,9 @@ public class Lims {
 
     @NotNull
     public String projectName(@NotNull final String sample) {
-        LimsJsonSampleData sampleData = dataPerSample.get(sample);
-        return sampleData != null ? sampleData.projectName() : "N/A";
+        String submission = submission(sample);
+        LimsJsonSubmissionData submissionData = dataPerSubmission.get(submission);
+        return submissionData != null ? submissionData.projectName() : "N/A";
     }
 
     @NotNull
@@ -229,7 +230,7 @@ public class Lims {
     @Nullable
     private String submission(@NotNull String sample) {
         LimsJsonSampleData sampleData = dataPerSample.get(sample);
-        return sampleData != null ? sampleData.submission() : null;
+        return sampleData != null ? sampleData.submissionSamples() : null;
     }
 
     private boolean shallowSeqExecuted(@NotNull String sample) {
