@@ -76,16 +76,6 @@ public class Lims {
         return sampleData != null ? sampleData.hospitalPatientId() : null;
     }
 
-    public boolean isCoreSample(@NotNull final String sample) {
-        String label = label(sample);
-        return label.equalsIgnoreCase(LimsSampleType.CORE.toString());
-    }
-
-    public boolean isWideSample(@NotNull final String sample) {
-        String label = label(sample);
-        return label.equalsIgnoreCase(LimsSampleType.WIDE.toString());
-    }
-
     @NotNull
     public String projectName(@NotNull final String sample) {
         LimsJsonSampleData sampleData = dataPerSample.get(sample);
@@ -234,12 +224,6 @@ public class Lims {
         }
         LOGGER.warn("Could not find lab SOP versions for sample: " + sample + " in LIMS");
         return "N/A";
-    }
-
-    @NotNull
-    private String label(@NotNull final String sample) {
-        LimsJsonSampleData sampleData = dataPerSample.get(sample);
-        return sampleData != null ? sampleData.labelSample() : "N/A";
     }
 
     @Nullable

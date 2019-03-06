@@ -4,6 +4,7 @@ import java.time.LocalDate;
 
 import com.google.gson.annotations.SerializedName;
 import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocation;
+import com.hartwig.hmftools.common.lims.LimsSampleType;
 
 import org.apache.logging.log4j.util.Strings;
 import org.immutables.value.Value;
@@ -60,8 +61,6 @@ public abstract class SampleReport {
     @Nullable
     public abstract String hospitalPatientId();
 
-    public abstract boolean isCoreSample();
-
     @NotNull
     @Value.Derived
     public String primaryTumorLocationString() {
@@ -79,12 +78,13 @@ public abstract class SampleReport {
     @NotNull
     @Value.Derived
     public String buildReportTitle(@NotNull String title) {
-        boolean isCoreSample = isCoreSample();
+        LimsSampleType type = LimsSampleType.fromSampleId(sampleId());
+
         String patientNumber = hospitalPatientId();
-        if (isCoreSample && patientNumber == null) {
+        if (type == LimsSampleType.CORE && patientNumber == null) {
             throw new IllegalStateException("CORE sample present without patient number: " + sampleId());
         }
 
-        return isCoreSample ? title + " - " + sampleId() + " (" + hospitalPatientId() + ")" : title + " - " + sampleId();
+        return type == LimsSampleType.CORE ? title + " - " + sampleId() + " (" + hospitalPatientId() + ")" : title + " - " + sampleId();
     }
 }

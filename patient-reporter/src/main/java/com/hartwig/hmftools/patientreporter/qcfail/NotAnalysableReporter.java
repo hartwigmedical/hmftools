@@ -36,7 +36,6 @@ public abstract class NotAnalysableReporter {
                 PatientTumorLocationFunctions.findPatientTumorLocationForSample(baseReportData().patientTumorLocations(), sample);
 
         LimsSampleType type = LimsSampleType.fromSampleId(sample);
-        boolean isCoreSample = baseReportData().limsModel().isCoreSample(sample);
         final SampleReport sampleReport = ImmutableSampleReport.of(sample,
                 lims.barcodeTumor(sample), lims.barcodeReference(sample),
                 patientTumorLocation,
@@ -52,8 +51,7 @@ public abstract class NotAnalysableReporter {
                 lims.contactNames(sample),
                 lims.contactEmails(sample),
                 lims.submissionId(sample),
-                lims.hospitalPatientId(sample),
-                isCoreSample);
+                lims.hospitalPatientId(sample));
 
         return ImmutableNotAnalysedPatientReport.of(sampleReport,
                 reason,

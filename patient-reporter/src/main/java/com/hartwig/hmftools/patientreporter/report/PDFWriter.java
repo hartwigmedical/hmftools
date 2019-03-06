@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.hartwig.hmftools.common.lims.LimsSampleType;
 import com.hartwig.hmftools.patientreporter.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.NotAnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.SampleReport;
@@ -64,7 +65,9 @@ public class PDFWriter {
 
     @NotNull
     private String fileName(@NotNull SampleReport sampleReport) {
-        String filePrefix = sampleReport.isCoreSample() ? sampleReport.sampleId() + "_" + sampleReport.hospitalPatientId(): sampleReport.sampleId();
+        LimsSampleType type = LimsSampleType.fromSampleId(sampleReport.sampleId());
+
+        String filePrefix = type == LimsSampleType.CORE ? sampleReport.sampleId() + "_" + sampleReport.hospitalPatientId(): sampleReport.sampleId();
         return reportDirectory + File.separator + filePrefix + "_hmf_report.pdf";
     }
 
@@ -96,7 +99,7 @@ public class PDFWriter {
                 .newPage()
                 .add(ImmutableExplanationPage.builder().build().reportComponent())
                 .newPage()
-                .add(SampleDetailsPage.of(report).reportComponent());
+                .add(SampleDetailsPage.of(report).reportComponent(report.sampleReport().sampleId()));
 
         // Hack to get page footers working; the footer band and noData bands are exclusive:
         //  - footerBand, detailBand, etc are shown when data source is not empty

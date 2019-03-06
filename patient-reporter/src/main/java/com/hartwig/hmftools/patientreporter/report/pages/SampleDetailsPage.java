@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Optional;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.lims.LimsSampleType;
 import com.hartwig.hmftools.patientreporter.PatientReport;
 import com.hartwig.hmftools.patientreporter.SampleReport;
 import com.hartwig.hmftools.patientreporter.report.Commons;
@@ -44,11 +45,11 @@ public abstract class SampleDetailsPage {
     }
 
     @NotNull
-    public ComponentBuilder<?, ?> reportComponent() {
+    public ComponentBuilder<?, ?> reportComponent(@NotNull String sampleId) {
         return cmp.verticalList(cmp.verticalGap(SECTION_VERTICAL_GAP),
                 cmp.text(Commons.TITLE_SEQUENCE + " - Sample Details & Disclaimer").setStyle(sectionHeaderStyle()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
-                sampleDetailsSection(),
+                sampleDetailsSection(sampleId),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
                 disclaimerSection());
     }
@@ -64,7 +65,9 @@ public abstract class SampleDetailsPage {
     }
 
     @NotNull
-    private ComponentBuilder<?, ?> sampleDetailsSection() {
+    private ComponentBuilder<?, ?> sampleDetailsSection(@NotNull String sampleId) {
+        LimsSampleType type = LimsSampleType.fromSampleId(sampleId);
+
         String recipient = sampleReport().recipient();
         if (recipient == null) {
             LOGGER.warn("No recipient address present for sample " + sampleReport().sampleId());
@@ -84,7 +87,7 @@ public abstract class SampleDetailsPage {
                 "This report is generated and verified by: " + user(),
                 "This report is addressed at: " + recipient);
 
-        if (sampleReport().isCoreSample()) {
+        if (type == LimsSampleType.CORE) {
             lines.add("The hospital patient ID is: " + sampleReport().hospitalPatientId());
             lines.add("The project name of sample is: " + sampleReport().projectName());
             lines.add("The contact names are: " + sampleReport().contactNames());

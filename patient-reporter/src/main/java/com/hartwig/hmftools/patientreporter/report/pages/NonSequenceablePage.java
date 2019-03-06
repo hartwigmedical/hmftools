@@ -8,6 +8,7 @@ import static com.hartwig.hmftools.patientreporter.report.Commons.tableHeaderSty
 
 import static net.sf.dynamicreports.report.builder.DynamicReports.cmp;
 
+import com.hartwig.hmftools.common.lims.LimsSampleType;
 import com.hartwig.hmftools.patientreporter.NotAnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.SampleReport;
 import com.hartwig.hmftools.patientreporter.qcfail.NotAnalysableReason;
@@ -47,11 +48,13 @@ public abstract class NonSequenceablePage {
     public ComponentBuilder<?, ?> reportComponent() {
         return cmp.verticalList(MainPageTopSection.build(reason().title(), sampleReport()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
-                mainPageNotAnalysableSection());
+                mainPageNotAnalysableSection(sampleReport().sampleId()));
     }
 
     @NotNull
-    private ComponentBuilder<?, ?> mainPageNotAnalysableSection() {
+    private ComponentBuilder<?, ?> mainPageNotAnalysableSection(@NotNull String sampleId) {
+        LimsSampleType type = LimsSampleType.fromSampleId(sampleId);
+
         if (sampleReport().recipient() == null) {
             throw new IllegalStateException("No recipient address present for sample " + sampleReport().sampleId());
         }
@@ -92,7 +95,7 @@ public abstract class NonSequenceablePage {
             }
         }
 
-        return sampleReport().isCoreSample() ? CORELayout(title, subTitle, message) : CPCTDRUPLayout(title, subTitle, message);
+        return type == LimsSampleType.CORE ? CORELayout(title, subTitle, message) : CPCTDRUPLayout(title, subTitle, message);
     }
 
     @NotNull
