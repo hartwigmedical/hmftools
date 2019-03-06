@@ -49,12 +49,11 @@ public class CenterModelTest {
         assertEquals("CpctPI, Address, Zip City", centerModel.addresseeStringForSample("henk", "CPCT02010001T"));
     }
 
-//    @Ignore
-//    public void canLookupAddresseeForProject() {
-//        final CenterModel centerModel = buildTestCenterModel();
-//
-//        assertEquals("Address, Zip City", centerModel.addresseeStringForProject("HMF-001-002"));
-//    }
+    @Test
+    public void canLookAdressForCORESample() {
+        final CenterModel centerModel = buildTestCenterModel();
+        assertEquals("Address, Zip City", centerModel.addresseeStringForSample("henk", "CORE18001224T"));
+    }
 
     @NotNull
     private static CenterModel buildTestCenterModel() {
@@ -65,8 +64,7 @@ public class CenterModelTest {
         centerPerId.put("01", ImmutableCenterData.of("CPCT Recip", "DRUP Recip", "Address", "Zip", "City", "CpctPI", "DrupPI"));
         centerPerId.put("02", ImmutableCenterData.of("CPCT Recip2", "*", "Address2", "Zip2", "City2", "CpctPI2", "*"));
         centerPerHospital.put("HMF", ImmutableCenterData.of("CPCT Recip", "DRUP Recip", "Address", "Zip", "City", "CpctPI", "DrupPI"));
-      //  centerPerIdManual.putAll("CORE18001224T", ImmutableCenterDataManualMapping.of("1", "2"));
-
+        centerPerIdManual.put("CORE18001224T", ImmutableCenterDataManualMapping.of("HMF"));
 
         return ImmutableCenterModel.of(centerPerId, centerPerHospital, centerPerIdManual);
     }
