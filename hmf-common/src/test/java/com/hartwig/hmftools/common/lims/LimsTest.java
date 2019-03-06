@@ -125,8 +125,8 @@ public class LimsTest {
 
         assertEquals(1, lims.sampleCount());
 
-        assertNull(lims.contactEmails(SAMPLE));
-        assertNull(lims.contactNames(SAMPLE));
+        assertEquals("", lims.contactEmails(SAMPLE));
+        assertEquals("", lims.contactNames(SAMPLE));
         assertNull(lims.arrivalDate(SAMPLE));
         assertNull(lims.samplingDate(SAMPLE));
         assertNull(lims.dnaNanograms(SAMPLE));

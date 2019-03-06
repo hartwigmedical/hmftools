@@ -29,6 +29,8 @@ final class LimsTestUtil {
                 .projectName(Strings.EMPTY)
                 .submission(Strings.EMPTY)
                 .patientId(Strings.EMPTY)
+                .requesterName(Strings.EMPTY)
+                .requesterEmail(Strings.EMPTY)
                 .shallowSeq(0);
     }
 }

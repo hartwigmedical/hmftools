@@ -51,13 +51,13 @@ public class Lims {
         return sampleData != null ? sampleData.sampleId() : "N/A";
     }
 
-    @Nullable
+    @NotNull
     public String contactEmails(@NotNull final String sample) {
         LimsJsonSampleData sampleData = dataPerSample.get(sample);
         return sampleData != null ? sampleData.requesterEmail() : "N/A";
     }
 
-    @Nullable
+    @NotNull
     public String contactNames(@NotNull final String sample) {
         LimsJsonSampleData sampleData = dataPerSample.get(sample);
         return sampleData != null ? sampleData.requesterName() : "N/A";

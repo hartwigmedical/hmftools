@@ -41,11 +41,11 @@ abstract class LimsJsonSampleData {
     @SerializedName("arrival_date")
     public abstract String arrivalDateString();
 
-    @Nullable
+    @NotNull
     @SerializedName("requester_email")
     public abstract String requesterEmail();
 
-    @Nullable
+    @NotNull
     @SerializedName("requester_name")
     public abstract String requesterName();
 
