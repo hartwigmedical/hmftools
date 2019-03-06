@@ -64,21 +64,7 @@ public class Lims {
     }
 
     @NotNull
-    private String shallowSeqDone(@NotNull final String sample) {
-        LimsJsonSampleData sampleData = dataPerSample.get(sample);
-        if (sampleData != null) {
-            int shallowSeqValue = sampleData.shallowSeq();
-            if (shallowSeqValue == 0) {
-                return "shallowSeqNo";
-            } else if (shallowSeqValue == 1) {
-                return "shallowSeqYes";
-            }
-        }
-        return "N/A";
-    }
-
-    @NotNull
-    public String submissionID(@NotNull final String sample) {
+    public String submissionId(@NotNull final String sample) {
         String submission = submission(sample);
         LimsJsonSubmissionData submissionData = dataPerSubmission.get(submission);
         return submissionData != null ? submissionData.submission() : "N/A";
@@ -107,21 +93,21 @@ public class Lims {
     }
 
     @NotNull
-    public String barcodeTumorOfSample(@NotNull final String sample) {
+    public String barcodeTumor(@NotNull final String sample) {
         LimsJsonSampleData sampleData = dataPerSample.get(sample);
         if (sampleData != null) {
             String tumorBarcode = sampleData.tumorBarcodeId();
             if (tumorBarcode.isEmpty()) {
                 return "not determined";
             } else {
-               return tumorBarcode;
+                return tumorBarcode;
             }
         }
         return "N/A";
     }
 
     @NotNull
-    public String barcodeReferenceOfSample(@NotNull final String sample) {
+    public String barcodeReference(@NotNull final String sample) {
         LimsJsonSampleData sampleData = dataPerSample.get(sample);
         if (sampleData != null) {
             String refBarcode = sampleData.refBarcodeId();
@@ -268,8 +254,14 @@ public class Lims {
 
         String labRemarks = sampleData.labRemarks();
 
-        return isCoreSample(sample) || (labRemarks != null && (labRemarks.toLowerCase().contains("cpctwide") || labRemarks.toLowerCase()
-                .contains("shallowseq") || shallowSeqDone(sample).equals("shallowSeqYes")));
+        if (sampleData.shallowSeq() == 1) {
+            return true;
+        } else if (labRemarks != null) {
+            String labRemarksLowerCase = labRemarks.toLowerCase();
+            return labRemarksLowerCase.contains("cpctwide") || labRemarksLowerCase.contains("shallowseq");
+        }
+
+        return false;
     }
 
     @Nullable

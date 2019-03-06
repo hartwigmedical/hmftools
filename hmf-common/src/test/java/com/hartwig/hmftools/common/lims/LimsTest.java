@@ -72,8 +72,8 @@ public class LimsTest {
         assertEquals(projectName, lims.projectName(SAMPLE));
         assertEquals(LimsTestUtil.toDate(arrivalDate), lims.arrivalDate(SAMPLE));
         assertEquals(LimsTestUtil.toDate(samplingDate), lims.samplingDate(SAMPLE));
-        assertEquals(refBarcode, lims.barcodeReferenceOfSample(SAMPLE));
-        assertEquals(tumorBarcode, lims.barcodeTumorOfSample(SAMPLE));
+        assertEquals(refBarcode, lims.barcodeReference(SAMPLE));
+        assertEquals(tumorBarcode, lims.barcodeTumor(SAMPLE));
 
         Integer dnaAmount = lims.dnaNanograms(SAMPLE);
         assertNotNull(dnaAmount);

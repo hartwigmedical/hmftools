@@ -5,6 +5,7 @@ import java.util.Optional;
 import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocation;
 import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocationFunctions;
 import com.hartwig.hmftools.common.lims.Lims;
+import com.hartwig.hmftools.common.lims.LimsSampleType;
 import com.hartwig.hmftools.patientreporter.BaseReportData;
 import com.hartwig.hmftools.patientreporter.ImmutableNotAnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.ImmutableSampleReport;
@@ -34,22 +35,23 @@ public abstract class NotAnalysableReporter {
         final PatientTumorLocation patientTumorLocation =
                 PatientTumorLocationFunctions.findPatientTumorLocationForSample(baseReportData().patientTumorLocations(), sample);
 
+        LimsSampleType type = LimsSampleType.fromSampleId(sample);
         boolean isCoreSample = baseReportData().limsModel().isCoreSample(sample);
         final SampleReport sampleReport = ImmutableSampleReport.of(sample,
-                lims.barcodeTumorOfSample(sample), lims.barcodeReferenceOfSample(sample),
+                lims.barcodeTumor(sample), lims.barcodeReference(sample),
                 patientTumorLocation,
                 lims.purityShallowSeq(sample),
                 lims.pathologyTumorPercentage(sample),
                 lims.arrivalDate(sample),
                 null,
                 lims.labProcedures(sample),
-                isCoreSample
+                type == LimsSampleType.CORE
                         ? baseReportData().centerModel().addresseeStringForProject(lims.projectName(sample))
                         : baseReportData().centerModel().addresseeStringForSample(sample),
                 lims.projectName(sample),
                 lims.contactNames(sample),
                 lims.contactEmails(sample),
-                lims.submissionID(sample),
+                lims.submissionId(sample),
                 lims.hospitalPatientId(sample),
                 isCoreSample);
 

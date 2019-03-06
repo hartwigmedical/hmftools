@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.common.lims;
 
+import org.jetbrains.annotations.NotNull;
 
 public enum LimsSampleType {
     CORE,
@@ -7,4 +8,10 @@ public enum LimsSampleType {
     CPCT,
     DRUP,
     COLO;
+
+    @NotNull
+    public static LimsSampleType fromSampleId(@NotNull String sampleId) {
+        // TODO
+        return CORE;
+    }
 }

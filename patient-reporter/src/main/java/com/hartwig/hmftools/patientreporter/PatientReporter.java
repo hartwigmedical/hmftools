@@ -100,7 +100,7 @@ abstract class PatientReporter {
         boolean isCoreSample = baseReportData().limsModel().isCoreSample(tumorSample);
         Lims lims = baseReportData().limsModel();
         final SampleReport sampleReport = ImmutableSampleReport.of(tumorSample,
-                lims.barcodeTumorOfSample(tumorSample), lims.barcodeReferenceOfSample(tumorSample),
+                lims.barcodeTumor(tumorSample), lims.barcodeReference(tumorSample),
                 patientTumorLocation,
                 lims.purityShallowSeq(tumorSample),
                 lims.pathologyTumorPercentage(tumorSample),
@@ -113,7 +113,7 @@ abstract class PatientReporter {
                 lims.projectName(tumorSample),
                 lims.contactNames(tumorSample),
                 lims.contactEmails(tumorSample),
-                lims.submissionID(tumorSample),
+                lims.submissionId(tumorSample),
                 lims.hospitalPatientId(tumorSample),
                 isCoreSample);
 
