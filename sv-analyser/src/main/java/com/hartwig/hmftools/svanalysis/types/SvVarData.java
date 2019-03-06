@@ -489,7 +489,7 @@ public class SvVarData
         else
             return "";
     }
-    
+
     public final SvBreakend getFoldbackBreakend(boolean useStart) { return useStart ? mFoldbackBeStart : mFoldbackBeEnd; }
     public int getFoldbackLength(boolean useStart) { return useStart ? mFoldbackLenStart : mFoldbackLenEnd; }
     public final String getFoldbackInfo(boolean useStart) { return useStart ? mFoldbackInfoStart : mFoldbackInfoEnd; }
@@ -539,6 +539,14 @@ public class SvVarData
             mFoldbackInfoStart = info;
         else
             mFoldbackInfoEnd = info;
+    }
+
+    public final SvVarData getChainedFoldbackSv()
+    {
+        if(!isChainedFoldback())
+            return this;
+
+        return mFoldbackBeStart != null ? mFoldbackBeStart.getSV() : mFoldbackBeEnd.getSV();
     }
 
     public String getConsecBEStart(boolean useStart) { return useStart ? mConsecBEStart : mConsecBEEnd; }

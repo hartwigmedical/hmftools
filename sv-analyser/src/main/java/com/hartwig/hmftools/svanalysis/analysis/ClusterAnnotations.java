@@ -784,6 +784,7 @@ public class ClusterAnnotations
             for (final Map.Entry<String, List<SvBreakend>> entry : chrBreakendMap.entrySet())
             {
                 int chromosomeFoldbackCount = 0;
+                List<SvVarData> chainedFoldbacks = Lists.newArrayList(); // to avoid double counting
 
                 for(final SvBreakend breakend : entry.getValue())
                 {
@@ -791,8 +792,19 @@ public class ClusterAnnotations
                         continue;
 
                     // only process each SV's foldback once where both breakends are part of it
-                    if(!breakend.getSV().isChainedFoldback() && !breakend.usesStart())
-                        continue;
+                    if(!breakend.getSV().isChainedFoldback())
+                    {
+                        if(!breakend.usesStart())
+                            continue;
+                    }
+                    else
+                    {
+                        final SvVarData otherSv = breakend.getSV().getChainedFoldbackSv();
+                        if(chainedFoldbacks.contains(otherSv))
+                            continue;
+
+                        chainedFoldbacks.add(breakend.getSV());
+                    }
 
                     ++chromosomeFoldbackCount;
                 }
@@ -800,6 +812,7 @@ public class ClusterAnnotations
                 if(chromosomeFoldbackCount == 0)
                     continue;
 
+                chainedFoldbacks.clear();
                 int foldbackIndex = 0;
 
                 for(final SvBreakend breakend : entry.getValue())
@@ -809,10 +822,24 @@ public class ClusterAnnotations
                     if(!breakend.getSV().isFoldback())
                         continue;
 
-                    if(!breakend.getSV().isChainedFoldback() && !breakend.usesStart())
-                        continue;
+                    if(!breakend.getSV().isChainedFoldback())
+                    {
+                        if(!breakend.usesStart())
+                            continue;
+                    }
+                    else
+                    {
+                        final SvVarData otherSv = breakend.getSV().getChainedFoldbackSv();
+                        if(chainedFoldbacks.contains(otherSv))
+                            continue;
 
-                    final String existingInfo = breakend.getSV().getFoldbackInfo(breakend.usesStart());
+                        chainedFoldbacks.add(breakend.getSV());
+                    }
+
+                    String existingInfo = breakend.getSV().getFoldbackInfo(breakend.usesStart());
+
+                    if(existingInfo.isEmpty())
+                        existingInfo = breakend.getSV().getFoldbackInfo(!breakend.usesStart());;
 
                     long armLength = SvUtilities.getChromosomalArmLength(breakend.chromosome(), breakend.arm());
                     double positionPercent;
@@ -985,13 +1012,30 @@ public class ClusterAnnotations
         }
     }
 
-    private static double DM_PLOIDY_MIN_RATIO = 2.5;
+    private static double DM_PLOIDY_MIN_RATIO = 2.3;
     private static double DM_MIN_PLOIDY = 3;
+
+    private static double DM_PLOIDY_INCOMPLETE_MIN_RATIO = 4;
+    private static double DM_INCOMPLETE_MIN_PLOIDY = 10;
+
     private static int DM_MAX_SV_COUNT = 16;
 
     public static void findPotentialDoubleMinuteClusters(final String sampleId,
             final Map<String, List<SvBreakend>> chrBreakendMap, final CNAnalyser cnAnalyser)
     {
+        /* Identify potential DM clusters if:
+            - each of their breakends is X times the major allele ploidy of the near CN segment
+            - they have offsetting facing breakends on each arm
+            - any SVs they skip over have ploidy X times less than the DM
+            - skip any groups containing SGLs/NONEs
+
+           In addition, check any loose SVs which meet the above critieria but weren't complete:
+           - eg if they contain SGLs or NONES
+           - they aren't all offset on an arm
+        */
+
+        List<SvBreakend> incompleteDMBreakends = Lists.newArrayList();
+
         final Map<String,List<SvCNData>> chrCopyNumberDataMap = cnAnalyser.getChrCnDataMap();
         final Map<String,SvCNData[]> svCopyNumberDataMap = cnAnalyser.getSvIdCnDataMap();
 
@@ -1027,11 +1071,22 @@ public class ClusterAnnotations
 
             for(final SvBreakend breakend : breakendList)
             {
-                // double ploidy = breakend.getSV().getSvData().ploidy();
                 double minPloidy = breakend.getSV().ploidyMin();
                 double maxPloidy = breakend.getSV().ploidyMax();
 
                 isSpecificSV(breakend.getSV());
+
+                // first check the min ploidy vs the adjacent CN segment
+                double adjacentMap = getAdjacentMajorAllelePloidy(breakend, svCopyNumberDataMap, cnDataList);
+
+                if(Double.isNaN(adjacentMap))
+                    continue;
+
+                if(minPloidy >= DM_INCOMPLETE_MIN_PLOIDY && minPloidy >= DM_PLOIDY_INCOMPLETE_MIN_RATIO * adjacentMap)
+                {
+                    // keep track of all high-ploidy breakends for later analysis of incomplete DM groups
+                    incompleteDMBreakends.add(breakend);
+                }
 
                 if(!inPotentialDM)
                 {
@@ -1097,7 +1152,7 @@ public class ClusterAnnotations
                     if(!isValidDMBreakend(breakend, svCopyNumberDataMap, chrCopyNumberDataMap))
                     {
                         inPotentialDM = false;
-                        LOGGER.debug("cancelling potential DM group at invalid SV");
+                        LOGGER.debug("cancelling potential DM group(count={} first={}) at invalid SV", dmSVList.size(), dmSVList.get(0).posId());
                         continue;
                     }
 
@@ -1116,81 +1171,24 @@ public class ClusterAnnotations
 
                         if (isDmGroupResolved)
                         {
-                            final SvCNData[] cnDataPair = svCopyNumberDataMap.get(var.id());
-                            if(cnDataPair == null)
-                            {
-                                LOGGER.warn("missing CN data for DM SV({})", var.id());
-                                inPotentialDM = false;
-                                continue;
-                            }
-
                             // check that the next breakend drops back below the required threshold
-                            final SvCNData cnData = breakend.usesStart() ? cnDataPair[SVI_START] : cnDataPair[SVI_END];
-                            double nextMap = cnData.majorAllelePloidy();
-
-                            if(minDMPloidy < nextMap * DM_PLOIDY_MIN_RATIO)
+                            if(minDMPloidy < adjacentMap * DM_PLOIDY_MIN_RATIO)
                             {
-                                LOGGER.debug(String.format("cancelling potential DM group: minDmPloidy(%.2f) vs nextMap(%.2f)",
-                                        minDMPloidy, nextMap));
+                                LOGGER.debug(String.format("cancelling potential DM group(count={} first={}): minDmPloidy(%.2f) vs nextMap(%.2f)",
+                                        dmSVList.size(), dmSVList.get(0).posId(), minDMPloidy, adjacentMap));
 
                                 inPotentialDM = false;
                                 continue;
                             }
 
-                            maxOutsideMap = max(maxOutsideMap, nextMap);
+                            maxOutsideMap = max(maxOutsideMap, adjacentMap);
 
                             LOGGER.debug("DM group identified");
 
-                            String clusterInfo = "";
-                            String svInfo = "";
-                            List<SvCluster> clusters = Lists.newArrayList();
+                            // remove from consideration of incomplete DM groups
+                            dmBreakendList.stream().forEach(x -> incompleteDMBreakends.remove(x));
 
-                            int[] typeCounts = new int[StructuralVariantType.values().length];
-
-                            for(final SvVarData dmVar : dmSVList)
-                            {
-                                ++typeCounts[typeAsInt(dmVar.type())];
-
-                                if(!svInfo.isEmpty())
-                                {
-                                    svInfo += ";";
-                                }
-
-                                svInfo += dmVar.id();
-
-                                final SvCluster cluster = dmVar.getCluster();
-                                if (!clusters.contains(cluster))
-                                {
-                                    clusters.add(cluster);
-
-                                    cluster.addAnnotation(CLUSTER_ANNONTATION_DM);
-
-                                    if(!clusterInfo.isEmpty())
-                                        clusterInfo += ";";
-
-                                    clusterInfo += String.format("%d-%s-%s", cluster.id(), cluster.getDesc(), cluster.getResolvedType());
-                                }
-                            }
-
-                            final String dmTypesStr = getSvTypesStr(typeCounts);
-
-                            final PurityContext purityContext = cnAnalyser.getPurityContext();
-                            double samplePurity = purityContext != null ? purityContext.bestFit().purity() : 0;
-                            double samplePloidy = purityContext != null ? purityContext.bestFit().ploidy() : 0;
-
-                            long dmLength = getChainLength(dmSVList);
-
-                            // SampleId,SamplePurity,SamplePloidy,ClusterInfo,SvTypes,SvInfo,Chromosome,DMPosStart,DMPosEnd,
-                            // MinDMCopyNumber,MaxDMCopyNumber,MinDMPloidy,SVOverlapCount,MaxOutsideMAP,DMLength
-
-                            String infoStr = String.format("%s,%.2f,%.2f,%s,%s,%s,%s,%d,%d",
-                                sampleId, samplePurity, samplePloidy, clusterInfo, dmTypesStr, svInfo,
-                                    chromosome, dmBreakendList.get(0).position(), breakend.position());
-
-                            infoStr += String.format(",%.2f,%.2f,%.2f,%d,%.2f,%d",
-                                    minDMCopyNumber, maxDMCopyNumber, minDMPloidy, overlappedCount, maxOutsideMap, dmLength);
-
-                            LOGGER.info("POTENTIAL_DM_DATA: {}", infoStr);
+                            reportPotentialDoubleMinuteGroup(sampleId, dmSVList, true, cnAnalyser, overlappedCount);
                             inPotentialDM = false;
                             continue;
                         }
@@ -1198,47 +1196,212 @@ public class ClusterAnnotations
 
                     if(dmSVList.size() >= DM_MAX_SV_COUNT && !isDmGroupResolved)
                     {
-                        LOGGER.debug("cancelling potential DM group at max SV count");
+                        LOGGER.debug("cancelling potential DM group(count={} first={}) at max SV count",
+                                dmSVList.size(), dmSVList.get(0).posId());
                         inPotentialDM = false;
                         continue;
                     }
                 }
             }
         }
-    }
 
-    private static long getChainLength(List<SvVarData> dmSVList)
-    {
-        if(dmSVList.size() == 1)
+        if(incompleteDMBreakends.isEmpty())
+            return;
+
+        // now follow-up on any incomplete potential DM groups
+
+        // first check that both breakends are present for all non-SGL SVs
+        List<SvVarData> incompleteDMSvList = Lists.newArrayList();
+
+        for(int i = 0; i < incompleteDMBreakends.size(); ++i)
         {
-            return dmSVList.get(0).length();
+            SvBreakend breakend = incompleteDMBreakends.get(i);
+
+            if(breakend.getSV().isNullBreakend())
+            {
+                incompleteDMSvList.add(breakend.getSV());
+            }
+            else
+            {
+                for (int j = i+1; j < incompleteDMBreakends.size(); ++j)
+                {
+                    SvBreakend otherBreakend = incompleteDMBreakends.get(j);
+                    if (breakend.getSV() == otherBreakend.getSV())
+                    {
+                        incompleteDMSvList.add(breakend.getSV());
+                        break;
+                    }
+                }
+            }
         }
 
-        // create a temporary cluster and try to chain it
-        SvCluster dmCluster = new SvCluster(0);
-        dmSVList.stream().forEach(x -> dmCluster.addVariant(x));
+        if(incompleteDMSvList.isEmpty())
+            return;
 
-        LinkFinder linkFinder = new LinkFinder();
-        dmCluster.setAssemblyLinkedPairs(linkFinder.createAssemblyLinkedPairs(dmCluster));
+        // follow a chain through any linked chromosomes to create a set of related SVs
+        while(!incompleteDMSvList.isEmpty())
+        {
+            List<String> chromosomeList = Lists.newArrayList();
 
-        ChainFinder chainFinder = new ChainFinder();
-        chainFinder.initialise(dmCluster);
-        chainFinder.formClusterChains(false);
+            SvVarData var = incompleteDMSvList.get(0);
 
-        if(dmCluster.getChains().size() != 1)
+            if(!chromosomeList.contains(var.chromosome(true)))
+                chromosomeList.add(var.chromosome(true));
+
+            if(!var.isNullBreakend() && !chromosomeList.contains(var.chromosome(false)))
+                chromosomeList.add(var.chromosome(false));
+
+            List<SvVarData> dmSvList = Lists.newArrayList();
+            dmSvList.add(var);
+
+            boolean addedMoreChromosomes = true;
+
+            while(addedMoreChromosomes)
+            {
+                addedMoreChromosomes = false;
+
+                for (int j = 1; j < incompleteDMSvList.size(); ++j)
+                {
+                    SvVarData otherVar = incompleteDMSvList.get(j);
+
+                    if (!chromosomeList.contains(otherVar.chromosome(true)) && !chromosomeList.contains(otherVar.chromosome(false)))
+                        continue;
+
+                    if(!dmSvList.contains(otherVar))
+                        dmSvList.add(otherVar);
+
+                    if(!chromosomeList.contains(otherVar.chromosome(true)))
+                    {
+                        addedMoreChromosomes = true;
+                        chromosomeList.add(otherVar.chromosome(true));
+                        break;
+                    }
+
+                    if(!var.isNullBreakend() && !chromosomeList.contains(otherVar.chromosome(false)))
+                    {
+                        addedMoreChromosomes = true;
+                        chromosomeList.add(otherVar.chromosome(false));
+                        break;
+                    }
+                }
+            }
+
+            if(dmSvList.isEmpty())
+                break;
+
+            dmSvList.stream().forEach(x -> incompleteDMSvList.remove(x));
+
+            reportPotentialDoubleMinuteGroup(sampleId, dmSvList, false, cnAnalyser, 0);
+        }
+    }
+
+    private static void reportPotentialDoubleMinuteGroup(final String sampleId, List<SvVarData> dmSVList, boolean isComplete,
+            final CNAnalyser cnAnalyser, int overlappedCount)
+    {
+        String clusterInfo = "";
+        String svInfo = "";
+        List<SvCluster> clusters = Lists.newArrayList();
+
+        int[] typeCounts = new int[StructuralVariantType.values().length];
+        List<String> chromosomes = Lists.newArrayList();
+
+        double minDMPloidy = 0;
+        double maxDMCopyNumber = 0;
+
+        for(final SvVarData var : dmSVList)
+        {
+            ++typeCounts[typeAsInt(var.type())];
+
+            if(minDMPloidy == 0 || var.ploidyMin() < minDMPloidy)
+                minDMPloidy = var.ploidyMin();
+
+            maxDMCopyNumber = max(maxDMCopyNumber, max(var.copyNumber(true), var.copyNumber(false)));
+
+            if(!chromosomes.contains(var.chromosome(true)))
+                chromosomes.add(var.chromosome(true));
+
+            if(!var.isNullBreakend() && !chromosomes.contains(var.chromosome(false)))
+                chromosomes.add(var.chromosome(false));
+
+            if(!svInfo.isEmpty())
+            {
+                svInfo += ";";
+            }
+
+            svInfo += var.id();
+
+            final SvCluster cluster = var.getCluster();
+            if (!clusters.contains(cluster))
+            {
+                clusters.add(cluster);
+
+                cluster.addAnnotation(CLUSTER_ANNONTATION_DM);
+
+                if(!clusterInfo.isEmpty())
+                    clusterInfo += ";";
+
+                clusterInfo += String.format("%d-%s-%s", cluster.id(), cluster.getDesc(), cluster.getResolvedType());
+            }
+        }
+
+        final String dmTypesStr = getSvTypesStr(typeCounts);
+
+        final PurityContext purityContext = cnAnalyser.getPurityContext();
+        double samplePurity = purityContext != null ? purityContext.bestFit().purity() : 0;
+        double samplePloidy = purityContext != null ? purityContext.bestFit().ploidy() : 0;
+
+        long dmLength = isComplete ? getChainLength(dmSVList) : 0;
+
+        // get amplified genes list by looking at all section tranversed by this chain
+        // or breakends with genes in them?
+        long posStart = 0;
+        long posEnd = 0;
+
+        if(isComplete && dmSVList.size() == 1)
+        {
+            SvVarData dup = dmSVList.get(0);
+            posStart = dup.position(true);
+            posEnd = dup.position(false);
+        }
+
+        String chromosomeStr = "";
+        for(String chr : chromosomes)
+        {
+            if(!chromosomeStr.isEmpty())
+                chromosomeStr += ";";
+
+            chromosomeStr += chr;
+        }
+
+        // SampleId,SamplePurity,SamplePloidy,IsComplete,GroupCount,ClusterInfo,SvTypes,SvInfo,Chromosomes,DMPosStart,DMPosEnd,
+        // MaxDMCopyNumber,MinDMPloidy,SVOverlapCount,DMLength
+        String infoStr = String.format("%s,%.2f,%.2f,%s,%d,%s,%s,%s,%s,%d,%d",
+                sampleId, samplePurity, samplePloidy, isComplete, dmSVList.size(), clusterInfo, dmTypesStr, svInfo,
+                chromosomeStr, posStart, posEnd);
+
+        infoStr += String.format(",%.2f,%.2f,%d,%d",
+                 maxDMCopyNumber, minDMPloidy, overlappedCount, dmLength);
+
+        LOGGER.info("POTENTIAL_DM_DATA: {}", infoStr);
+    }
+
+    private static double getAdjacentMajorAllelePloidy(final SvBreakend breakend,
+            final Map<String,SvCNData[]> svCopyNumberDataMap, final List<SvCNData> cnDataList)
+    {
+        // check the major allele ploidy outside this breakend
+        final SvCNData[] cnDataPair = svCopyNumberDataMap.get(breakend.getSV().id());
+        if(cnDataPair == null)
             return 0;
 
-        final SvChain chain = dmCluster.getChains().get(0);
+        final SvCNData cnData = breakend.usesStart() ? cnDataPair[SVI_START] : cnDataPair[SVI_END];
+        if(cnData == null)
+            return Double.NaN;
 
-        int chainLength = chain.getLength();
-        final SvBreakend chainStart = chain.getOpenBreakend(true);
-        final SvBreakend chainEnd = chain.getOpenBreakend(false);
+        // CN data is always the segment that starts with the SV's position, so the adjacent
+        // segment will already be correct for orientation +1, but needs to take the preceding one for -1
+        final SvCNData adjacentCNData = breakend.orientation() == -1 ? cnDataList.get(cnData.getIndex() - 1) : cnData;
 
-        if(!chainStart.chromosome().equals(chainEnd.chromosome()))
-            return 0;
-
-        chainLength += abs(chainStart.position() - chainEnd.position());
-        return chainLength;
+        return adjacentCNData.majorAllelePloidy();
     }
 
     private static boolean isValidDMBreakend(final SvBreakend breakend,
@@ -1338,6 +1501,40 @@ public class ClusterAnnotations
             return false;
 
         return true;
+    }
+
+    private static long getChainLength(List<SvVarData> dmSVList)
+    {
+        if(dmSVList.size() == 1)
+        {
+            return dmSVList.get(0).length();
+        }
+
+        // create a temporary cluster and try to chain it
+        SvCluster dmCluster = new SvCluster(0);
+        dmSVList.stream().forEach(x -> dmCluster.addVariant(x));
+
+        LinkFinder linkFinder = new LinkFinder();
+        dmCluster.setAssemblyLinkedPairs(linkFinder.createAssemblyLinkedPairs(dmCluster));
+
+        ChainFinder chainFinder = new ChainFinder();
+        chainFinder.initialise(dmCluster);
+        chainFinder.formClusterChains(false);
+
+        if(dmCluster.getChains().size() != 1)
+            return 0;
+
+        final SvChain chain = dmCluster.getChains().get(0);
+
+        int chainLength = chain.getLength();
+        final SvBreakend chainStart = chain.getOpenBreakend(true);
+        final SvBreakend chainEnd = chain.getOpenBreakend(false);
+
+        if(!chainStart.chromosome().equals(chainEnd.chromosome()))
+            return 0;
+
+        chainLength += abs(chainStart.position() - chainEnd.position());
+        return chainLength;
     }
 
     private static double DOUBLE_MINUTE_PLOIDY_THRESHOLD = 8;

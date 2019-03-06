@@ -179,7 +179,7 @@ public class ChainFinder
 
             determinePossibleLinks();
 
-            assessClusterProperties();
+            // assessClusterProperties();
 
             // now find the best next candidate link giving priority to replication count, following by min link resolution
             // and lastly shortest distance

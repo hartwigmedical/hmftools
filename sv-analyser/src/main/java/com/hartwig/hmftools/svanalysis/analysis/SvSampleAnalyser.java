@@ -289,7 +289,7 @@ public class SvSampleAnalyser {
                 mSvFileWriter.write(",NearestLen,NearestType,DBLenStart,DBLenEnd,SynDelDupLen,SynDelDupTILen");
 
                 // proximity info and other link info
-                mSvFileWriter.write(",FoldbackLnkStart,FoldbackLenStart,FoldbackLinkInfoStart,FoldbackLnkEnd,FoldbackLenEnd,FoldbackLinkInfoEnd");
+                mSvFileWriter.write(",FoldbackLnkStart,FoldbackLenStart,FoldbackInfoStart,FoldbackLnkEnd,FoldbackLenEnd,FoldbackInfoEnd");
 
                 // gene & replication info
                 mSvFileWriter.write(",GeneStart,GeneEnd,RepOriginStart,RepOriginEnd");
