@@ -57,7 +57,6 @@ class PurpleStructuralVariantSupplier {
 
     private static final String RECOVERED_DESC = "Entry has been recovered";
     private static final String INFERRED_DESC = "Breakend inferred from copy number transition";
-    private static final String IMPRECISE_INFO = "IMPRECISE";
     private static final String IMPRECISE_DESC = "Imprecise structural variation";
     private static final String PURPLE_PLOIDY_INFO = "PURPLE_PLOIDY";
     private static final String PURPLE_PLOIDY_DESC = "Purity adjusted ploidy of variant";
@@ -175,9 +174,8 @@ class PurpleStructuralVariantSupplier {
         long lowerRange = Math.min(-500, copyNumber.minStart() - copyNumber.start());
         long upperRange = Math.max(500, copyNumber.maxStart() - copyNumber.start());
 
-        return new VariantContextBuilder("purple", copyNumber.chromosome(), position, copyNumber.start(), alleles).filter(
-                StructuralVariantFactory.INFERRED)
-                .attribute(StructuralVariantFactory.INFERRED, true)
+        return new VariantContextBuilder("purple", copyNumber.chromosome(), position, copyNumber.start(), alleles).filter(StructuralVariantFactory.INFERRED)
+                .attribute(StructuralVariantFactory.IMPRECISE, true)
                 .id("purple_" + counter++)
                 .attribute(StructuralVariantFactory.CIPOS, Lists.newArrayList(lowerRange, upperRange))
                 .attribute(StructuralVariantFactory.SVTYPE, "BND")
@@ -298,7 +296,7 @@ class PurpleStructuralVariantSupplier {
                 VCFHeaderLineType.Flag,
                 RECOVERED_DESC));
         outputVCFHeader.addMetaDataLine(new VCFFilterHeaderLine(StructuralVariantFactory.INFERRED, INFERRED_DESC));
-        outputVCFHeader.addMetaDataLine(new VCFInfoHeaderLine(IMPRECISE_INFO, 0, VCFHeaderLineType.Flag, IMPRECISE_DESC));
+        outputVCFHeader.addMetaDataLine(new VCFInfoHeaderLine(StructuralVariantFactory.IMPRECISE, 0, VCFHeaderLineType.Flag, IMPRECISE_DESC));
         outputVCFHeader.addMetaDataLine(new VCFInfoHeaderLine(StructuralVariantFactory.CIPOS, 2, VCFHeaderLineType.Integer, CIPOS_DESC));
         outputVCFHeader.addMetaDataLine(new VCFInfoHeaderLine(StructuralVariantFactory.SVTYPE, 1, VCFHeaderLineType.String, SVTYPE_DESC));
         outputVCFHeader.addMetaDataLine(new VCFInfoHeaderLine(PURPLE_AF_INFO, UNBOUNDED, VCFHeaderLineType.Float, PURPLE_AF_DESC));
