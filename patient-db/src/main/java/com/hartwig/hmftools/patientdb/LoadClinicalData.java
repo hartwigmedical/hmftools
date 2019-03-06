@@ -125,11 +125,14 @@ public final class LoadClinicalData {
 
         for (Map.Entry<String, List<SampleData>> sampleData : samplesPerPatient.entrySet()) {
             String patient = sampleData.getKey();
-            if (patient.contains(LimsSampleType.CORE.toString())) {
+            LimsSampleType type = LimsSampleType.fromSampleId(patient);
+            LimsSampleType typeColo = LimsSampleType.fromSampleId(patientIdCOLO);
+
+            if (type == LimsSampleType.CORE) {
                 corePatients.add(patient);
-            } else if (patient.contains(LimsSampleType.WIDE.toString())) {
+            } else if (type == LimsSampleType.WIDE) {
                 widePatients.add(patient);
-            } else if (patientIdCOLO.contains(LimsSampleType.COLO.toString())) {
+            } else if (typeColo == LimsSampleType.COLO) {
                 coloPatient.add(patientIdCOLO);
             }
         }
