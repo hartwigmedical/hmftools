@@ -64,7 +64,7 @@ public class Lims {
     }
 
     @NotNull
-    public String shallowSeqDone(@NotNull final String sample) {
+    private String shallowSeqDone(@NotNull final String sample) {
         LimsJsonSampleData sampleData = dataPerSample.get(sample);
         if (sampleData != null) {
             int shallowSeqValue = sampleData.shallowSeq();
@@ -93,6 +93,11 @@ public class Lims {
     public boolean isCoreSample(@NotNull final String sample) {
         String label = label(sample);
         return label.equalsIgnoreCase(LimsSampleType.CORE.toString());
+    }
+
+    public boolean isWideSample(@NotNull final String sample) {
+        String label = label(sample);
+        return label.equalsIgnoreCase(LimsSampleType.WIDE.toString());
     }
 
     @NotNull
