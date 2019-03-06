@@ -2,54 +2,69 @@ package com.hartwig.hmftools.common.purple.copynumber.sv;
 
 import java.util.List;
 
+import com.hartwig.hmftools.common.numeric.Doubles;
+
 import org.jetbrains.annotations.NotNull;
 
 class CopyNumberChange {
 
-    private final double totalDownPloidy;
-    private final double totalUpPloidy;
+    private final double downScale;
+    private final double upScale;
 
-    private final double positiveCopyNumberProportion;
-    private final double negativeCopyNumberProportion;
+    private final double downOffset;
+    private final double upOffset;
 
     CopyNumberChange(@NotNull final List<StructuralVariantLegPloidy> structuralVariants) {
+        assert (!structuralVariants.isEmpty());
 
-//        if (structuralVariants.stream().anyMatch(x -> x.position() == 103821416L)) {
-//            System.out.println("sdf");
-//        }
+        double copyNumberChangeSimple = copyNumberDifference(structuralVariants.get(0));
 
-        totalDownPloidy = structuralVariants.stream().filter(this::isPositive).mapToDouble(this::ploidy).sum();
-        totalUpPloidy = structuralVariants.stream().filter(this::isNegative).mapToDouble(this::ploidy).sum();
-        final double totalPloidy = Math.abs(totalDownPloidy - totalUpPloidy);
-        final double maxPloidy = Math.max(totalDownPloidy, totalUpPloidy);
+        int upCount = 0;
+        int downCount = 0;
+        double upPloidy = 0;
+        double downPloidy = 0;
+        double minPloidy = Double.MAX_VALUE;
 
-        positiveCopyNumberProportion = totalDownPloidy / totalPloidy;
-        negativeCopyNumberProportion = totalUpPloidy / totalPloidy;
+        StructuralVariantLegPloidy minPloidyVariant = null;
+
+        for (StructuralVariantLegPloidy structuralVariant : structuralVariants) {
+            double ploidy = ploidy(structuralVariant);
+
+            if (isPositive(structuralVariant)) {
+                downCount++;
+                downPloidy += ploidy;
+            } else {
+                upCount++;
+                upPloidy += ploidy;
+            }
+
+            if (Doubles.lessThan(ploidy, minPloidy)) {
+                minPloidy = ploidy;
+                minPloidyVariant = structuralVariant;
+            }
+        }
+
+        downScale = (upPloidy - copyNumberChangeSimple) / (upPloidy + downPloidy);
+        upScale = 1 - downScale;
+
+        if (upCount > 0 && downCount > 0 && minPloidyVariant != null) {
+            double totalPloidy = upPloidy + downPloidy;
+            double explainedPloidy = downScale * downPloidy + upScale * upPloidy;
+            double offsetRequired = (totalPloidy - explainedPloidy);
+            downOffset = offsetRequired / (2 * downCount);
+            upOffset = downOffset * downCount / upCount;
+        } else {
+            downOffset = 0;
+            upOffset = 0;
+        }
     }
 
     public double copyNumberChange(@NotNull final StructuralVariantLegPloidy leg) {
-//        double copyNumberChangeSimple = Math.abs(copyNumberChangeSimple(leg));
-        double copyNumberChangeSimple = leg.rightCopyNumber().orElse(0D) - leg.leftCopyNumber().orElse(0D);
-
-        double downScale = (totalUpPloidy - copyNumberChangeSimple) / (totalUpPloidy + totalDownPloidy);
-        double upScale = 1 - downScale;
-
-        return isPositive(leg)
-                ? 0.25+ downScale * ploidy(leg)
-                : 0.5 + upScale * ploidy(leg);
-
-//
-//        return isPositive(leg)
-//                ? Math.abs(copyNumberChangeSimple) * positiveCopyNumberProportion * ploidy(leg) / totalPositivePloidy
-//                : Math.abs(copyNumberChangeSimple) * negativeCopyNumberProportion * ploidy(leg) / totalNegativePloidy;
+        return isPositive(leg) ? downOffset + downScale * ploidy(leg) : upOffset + upScale * ploidy(leg);
     }
 
     private boolean isPositive(StructuralVariantLegPloidy ploidy) {
         return ploidy.orientation() == 1;
-    }
-
-    private boolean isNegative(StructuralVariantLegPloidy ploidy) {
-        return !isPositive(ploidy);
     }
 
     private double ploidy(StructuralVariantLegPloidy ploidy) {
@@ -62,5 +77,9 @@ class CopyNumberChange {
         double rightCopyNumber = copyNumber.rightCopyNumber().orElse(0D);
 
         return copyNumber.orientation() == 1 ? leftCopyNumber - rightCopyNumber : rightCopyNumber - leftCopyNumber;
+    }
+
+    private double copyNumberDifference(@NotNull final StructuralVariantLegPloidy leg) {
+        return leg.rightCopyNumber().orElse(0D) - leg.leftCopyNumber().orElse(0D);
     }
 }
