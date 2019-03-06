@@ -29,6 +29,7 @@ import htsjdk.samtools.SAMSequenceDictionary;
 import htsjdk.samtools.util.CloseableIterator;
 import htsjdk.tribble.index.tabix.TabixFormat;
 import htsjdk.tribble.index.tabix.TabixIndexCreator;
+import htsjdk.tribble.util.ParsingUtils;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.variantcontext.VariantContextBuilder;
 import htsjdk.variant.variantcontext.VariantContextComparator;
@@ -87,7 +88,10 @@ public class SageHotspotAnnotation {
         LOGGER.info("Loading somatic variants from {}", inputVcf);
         try (CloseableIterator<VariantContext> inputIterator = inputReader.iterator()) {
             while (inputIterator.hasNext()) {
-                tree.add(annotate(inputIterator.next()));
+                final VariantContext context = annotate(inputIterator.next());
+                if (!tree.add(context)) {
+                    LOGGER.warn("Failed to load source variant {}", simpleString(context));
+                }
             }
         }
 
@@ -99,11 +103,20 @@ public class SageHotspotAnnotation {
                 .map(this::annotate)
                 .collect(Collectors.toList());
         for (VariantContext sageVariant : sageVariants) {
-            final List<VariantContext> overlapping = inputReader.query(sageVariant.getContig(), sageVariant.getStart(), sageVariant.getEnd()).toList();
-            final VariantContext primary = primary(sageVariant, overlapping);
+            final List<VariantContext> sourceOverlappingSage =
+                    inputReader.query(sageVariant.getContig(), sageVariant.getStart(), sageVariant.getEnd()).toList();
+            final VariantContext primary = primary(sageVariant, sourceOverlappingSage);
             if (primary.equals(sageVariant)) {
-                overlapping.forEach(tree::remove);
-                tree.add(sageVariant);
+                if (tree.add(sageVariant)) {
+                    LOGGER.info("Adding hotspot variant {}", sageVariant);
+                    sourceOverlappingSage.forEach(tree::remove);
+                    sourceOverlappingSage.forEach(x -> LOGGER.info("Dropping source variant {}", simpleString(x)));
+                } else {
+                    LOGGER.warn("Failed to load hotspot variant {}", simpleString(sageVariant));
+                }
+
+            } else {
+                LOGGER.info("Dropping hotspot variant {} in favour of source variant {}", simpleString(sageVariant), simpleString(primary));
             }
         }
 
@@ -177,7 +190,7 @@ public class SageHotspotAnnotation {
         return options;
     }
 
-    private class VCComparator extends VariantContextComparator {
+    static class VCComparator extends VariantContextComparator {
 
         VCComparator(final SAMSequenceDictionary dictionary) {
             super(dictionary);
@@ -186,11 +199,22 @@ public class SageHotspotAnnotation {
         @Override
         public int compare(final VariantContext firstVariantContext, final VariantContext secondVariantContext) {
             int positionResult = super.compare(firstVariantContext, secondVariantContext);
+            if (positionResult != 0) {
+                return positionResult;
+            }
 
-            return positionResult == 0 ? firstVariantContext.getReference()
-                    .getBaseString()
-                    .compareTo(secondVariantContext.getReference().getBaseString()) : positionResult;
+            final String firstAlleles = ParsingUtils.sortList(firstVariantContext.getAlleles()).toString();
+            final String secondAlleles = ParsingUtils.sortList(secondVariantContext.getAlleles()).toString();
+
+            return firstAlleles.compareTo(secondAlleles);
         }
+
+    }
+
+    @NotNull
+    private static String simpleString(@NotNull final VariantContext context) {
+        return "[" + context.getContig() + ":" + context.getStart() + " Type:" + context.getType() + " Alleles:" + ParsingUtils.sortList(
+                context.getAlleles()) + "]";
     }
 
 }
