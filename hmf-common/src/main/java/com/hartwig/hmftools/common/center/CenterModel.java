@@ -53,12 +53,8 @@ public abstract class CenterModel {
                 return null;
             }
             checkAddresseeFields(sample, center, contactNames);
-            if (sample.startsWith("CORE01")) {
-                return center.addressName() + ", " + center.addressZip() + " " + center.addressCity();
-            } else {
-                adres = getPI(sample, center, contactNames) + ", " + center.addressName() + ", " + center.addressZip() + " "
-                        + center.addressCity();
-            }
+            adres = getPI(sample, center, contactNames) + ", " + center.addressName() + ", " + center.addressZip() + " "
+                    + center.addressCity();
         }
         return adres;
     }
@@ -116,7 +112,7 @@ public abstract class CenterModel {
                 return center.cpctPI();
             }
             return center.drupPI();
-        } else if (type == LimsSampleType.WIDE) {
+        } else if (type == LimsSampleType.WIDE || type == LimsSampleType.CORE) {
             return contactNames;
         }
         return Strings.EMPTY;
