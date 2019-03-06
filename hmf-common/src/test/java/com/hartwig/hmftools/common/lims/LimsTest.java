@@ -14,7 +14,6 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
 import org.jetbrains.annotations.NotNull;
-import org.junit.Ignore;
 import org.junit.Test;
 
 public class LimsTest {
@@ -23,7 +22,6 @@ public class LimsTest {
     private static final String SUBMISSION = "ABCDEF123";
 
     @Test
-    @Ignore("Lieke fix")
     public void canReadProperlyDefinedSample() {
         final String arrivalDate = "2017-05-01";
         final String samplingDate = "2017-04-15";
@@ -49,7 +47,6 @@ public class LimsTest {
                 .primaryTumor(primaryTumor)
                 .labSopVersions(labSopVersions)
                 .labRemarks(labRemarks)
-                .labelSample(label)
                 .projectName(projectName)
                 .submission(SUBMISSION)
                 .refBarcodeId(refBarcode)
@@ -57,7 +54,7 @@ public class LimsTest {
                 .patientId(patientId)
                 .requesterEmail(contactEmail)
                 .requesterName(contactName)
-                .shallowSeq(1)
+                .shallowSeq(0)
                 .build();
 
         final LimsJsonSubmissionData submissionData = ImmutableLimsJsonSubmissionData.builder()
@@ -113,7 +110,6 @@ public class LimsTest {
     }
 
     @Test
-    @Ignore("Lieke fix")
     public void invalidDataYieldsNullOrNA() {
         final LimsJsonSampleData sampleData = createLimsSampleDataBuilder().sampleId(SAMPLE)
                 .samplingDateString("IsNotADate")
@@ -141,7 +137,7 @@ public class LimsTest {
 
     @Test
     public void noPathologyTumorPercentageDeterminedForCORE() {
-        final LimsJsonSampleData sampleData = createLimsSampleDataBuilder().sampleId(SAMPLE).labelSample("CORE").build();
+        final LimsJsonSampleData sampleData = createLimsSampleDataBuilder().sampleId(SAMPLE).shallowSeq(1).build();
 
         Lims lims = buildTestLimsWithSample(sampleData);
         assertEquals("not determined", lims.pathologyTumorPercentage(SAMPLE));
@@ -165,10 +161,9 @@ public class LimsTest {
     }
 
     @Test
-    @Ignore("Lieke fix")
     public void canRetrievePathologyPercentageForSample() {
         final LimsJsonSampleData sampleData =
-                createLimsSampleDataBuilder().sampleId(SAMPLE).labRemarks("").labelSample("").tumorPercentageString("70").build();
+                createLimsSampleDataBuilder().sampleId(SAMPLE).labRemarks("").shallowSeq(0).tumorPercentageString("70").build();
 
         Lims lims = buildTestLimsWithSample(sampleData);
         assertEquals("not determined", lims.purityShallowSeq(SAMPLE));
@@ -178,7 +173,7 @@ public class LimsTest {
     @Test
     public void canRetrieveShallowSeqPurityForCPCTSample() {
         final LimsJsonSampleData sampleData =
-                createLimsSampleDataBuilder().sampleId("CPCT02990001T").labelSample("").labRemarks("ShallowSeq").build();
+                createLimsSampleDataBuilder().sampleId("CPCT02990001T").labRemarks("ShallowSeq").build();
 
         Lims lims = buildTestLimsWithSampleAndShallowSeq(sampleData, "0.2");
         assertEquals("20%", lims.purityShallowSeq("CPCT02990001T"));

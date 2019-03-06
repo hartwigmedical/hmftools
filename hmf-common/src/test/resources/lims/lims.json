@@ -18,7 +18,7 @@
       "unused": "hello world",
       "requester_email": "henk@hmf.nl",
       "requester_name": "henk",
-      "shallowseq": 1
+      "shallowseq": 0
     },
     "FR00000001": {
       "tumor_perc": 30,
