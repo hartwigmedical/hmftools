@@ -66,15 +66,19 @@ public abstract class CenterModel {
     @Nullable
     private static String getCenterIdFromSample(@NotNull final String sample) {
         final String ucSample = sample.toUpperCase();
-        if ((ucSample.startsWith("DRUP") || ucSample.startsWith("CPCT")) && sample.length() >= 12) {
+        LimsSampleType type = LimsSampleType.fromSampleId(ucSample);
+
+        if (type == LimsSampleType.DRUP || type == LimsSampleType.CPCT || type == LimsSampleType.WIDE
+                || type == LimsSampleType.CORE && sample.length() >= 12) {
             return sample.substring(6, 8);
         }
 
-        LOGGER.warn("Sample parameter: " + sample + " is not in CPCT/DRUP format");
+        LOGGER.warn("Sample parameter: " + sample + " is not in CPCT/DRUP/WIDE/CORE format");
         return null;
     }
 
-    private static void checkAddresseeFields(@NotNull final String sample, @NotNull final CenterData center, @NotNull final String contactNames) {
+    private static void checkAddresseeFields(@NotNull final String sample, @NotNull final CenterData center,
+            @NotNull final String contactNames) {
         final List<String> missingFields = Lists.newArrayList();
         if (getPI(sample, center, contactNames).isEmpty()) {
             missingFields.add("PI");
@@ -96,15 +100,17 @@ public abstract class CenterModel {
     @NotNull
     @VisibleForTesting
     static String getPI(@NotNull final String sample, @NotNull final CenterData center, @NotNull final String contactNames) {
-        if (sample.toUpperCase().startsWith("CPCT")) {
+        LimsSampleType type = LimsSampleType.fromSampleId(sample);
+
+        if (type == LimsSampleType.CPCT) {
             return center.cpctPI();
-        } else if (sample.toUpperCase().startsWith("DRUP")) {
+        } else if (type == LimsSampleType.DRUP) {
             final String drupPi = center.drupPI();
             if (drupPi.trim().equals("*")) {
                 return center.cpctPI();
             }
             return center.drupPI();
-        } else if (sample.toUpperCase().startsWith("WIDE")){
+        } else if (type == LimsSampleType.WIDE) {
             return contactNames;
         }
         return Strings.EMPTY;
