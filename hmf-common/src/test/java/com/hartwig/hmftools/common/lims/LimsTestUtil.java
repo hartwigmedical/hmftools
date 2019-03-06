@@ -28,6 +28,7 @@ final class LimsTestUtil {
                 .labelSample(Strings.EMPTY)
                 .projectName(Strings.EMPTY)
                 .submission(Strings.EMPTY)
-                .patientId(Strings.EMPTY);
+                .patientId(Strings.EMPTY)
+                .shallowSeq(1);
     }
 }

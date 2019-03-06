@@ -15,7 +15,10 @@
       "dna_conc": 143,
       "ptum": "NA",
       "label": "CPCT",
-      "unused": "hello world"
+      "unused": "hello world",
+      "requester_email": "henk@hmf.nl",
+      "requester_name": "henk",
+      "shallowseq": 1
     },
     "FR00000001": {
       "tumor_perc": 30,
@@ -33,7 +36,10 @@
       "ptum": "NA",
       "label": "CPCT",
       "hospital_patient_id": "something",
-      "lab_remarks": "this is a test"
+      "lab_remarks": "this is a test",
+      "requester_email": "henk@hmf.nl",
+      "requester_name": "henk",
+      "shallowseq": 1
     },
     "FR00000002": {
       "analysis_type": "do not analyze me",
@@ -46,14 +52,10 @@
   },
   "submissions" : {
     "ABCDEF123": {
-      "contact_email": "email",
-      "contact_name": "name",
       "submission": "ABCDEF123",
       "project_type": "CORE"
     },
     "ABCDEF124": {
-      "contact_email": "email2",
-      "contact_name": "name2",
       "submission": "ABCDEF1234",
       "project_type": "RESEARCH"
     }

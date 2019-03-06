@@ -51,18 +51,30 @@ public class Lims {
         return sampleData != null ? sampleData.sampleId() : "N/A";
     }
 
-    @NotNull
+    @Nullable
     public String contactEmails(@NotNull final String sample) {
-        String submission = submission(sample);
-        LimsJsonSubmissionData submissionData = dataPerSubmission.get(submission);
-        return submissionData != null ? submissionData.contactEmails() : "N/A";
+        LimsJsonSampleData sampleData = dataPerSample.get(sample);
+        return sampleData != null ? sampleData.requesterEmail() : "N/A";
+    }
+
+    @Nullable
+    public String contactNames(@NotNull final String sample) {
+        LimsJsonSampleData sampleData = dataPerSample.get(sample);
+        return sampleData != null ? sampleData.requesterName() : "N/A";
     }
 
     @NotNull
-    public String contactNames(@NotNull final String sample) {
-        String submission = submission(sample);
-        LimsJsonSubmissionData submissionData = dataPerSubmission.get(submission);
-        return submissionData != null ? submissionData.contactNames() : "N/A";
+    public String shallowSeqDone(@NotNull final String sample) {
+        LimsJsonSampleData sampleData = dataPerSample.get(sample);
+        if (sampleData != null) {
+            int shallowSeqValue = sampleData.shallowSeq();
+            if (shallowSeqValue == 0) {
+                return "shallowSeqNo";
+            } else if (shallowSeqValue == 1) {
+                return "shallowSeqYes";
+            }
+        }
+        return "N/A";
     }
 
     @NotNull

@@ -53,12 +53,13 @@ public class LimsTest {
                 .refBarcodeId(refBarcode)
                 .tumorBarcodeId(tumorBarcode)
                 .patientId(patientId)
+                .requesterEmail(contactEmail)
+                .requesterName(contactName)
+                .shallowSeq(1)
                 .build();
 
         final LimsJsonSubmissionData submissionData = ImmutableLimsJsonSubmissionData.builder()
                 .submission(SUBMISSION)
-                .contactEmails(contactEmail)
-                .contactNames(contactName)
                 .build();
 
         final Lims lims = buildTestLimsWithSampleAndSubmission(sampleData, submissionData);
@@ -125,8 +126,8 @@ public class LimsTest {
 
         assertEquals(1, lims.sampleCount());
 
-        assertEquals("N/A", lims.contactEmails(SAMPLE));
-        assertEquals("N/A", lims.contactNames(SAMPLE));
+        assertNull(lims.contactEmails(SAMPLE));
+        assertNull(lims.contactNames(SAMPLE));
         assertNull(lims.arrivalDate(SAMPLE));
         assertNull(lims.samplingDate(SAMPLE));
         assertNull(lims.dnaNanograms(SAMPLE));
