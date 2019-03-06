@@ -285,7 +285,7 @@ public class SvClusteringMethods {
         {
             SvCluster cluster = clusters.get(i);
 
-            if(cluster.getCount() == 1 || cluster.getCount() != cluster.getTypeCount(DEL))
+            if(cluster.getSvCount() == 1 || cluster.getSvCount() != cluster.getTypeCount(DEL))
                 continue;
 
             List<SvVarData> delSVs = Lists.newArrayList(cluster.getSVs());
@@ -416,7 +416,7 @@ public class SvClusteringMethods {
         for(SvCluster cluster : clusters)
         {
             // check for sub-clonal / low-copy-number supported variants
-            if(cluster.getCount() == 1 && isLowQualityVariant(cluster.getSVs().get(0)))
+            if(cluster.getSvCount() == 1 && isLowQualityVariant(cluster.getSV(0)))
             {
                 cluster.setResolved(true, RESOLVED_TYPE_LOW_QUALITY);
                 continue;
@@ -470,10 +470,10 @@ public class SvClusteringMethods {
             return;
 
         // avoid what will likely be balanced translocations
-        if(cluster.getCount() == 2 && cluster.getTypeCount(BND) == 2)
+        if(cluster.getSvCount() == 2 && cluster.getTypeCount(BND) == 2)
             return;
 
-        int maxReplication = cluster.getCount() > MAX_CLUSTER_COUNT_REPLICATION ? 8 : MAX_SV_REPLICATION_MULTIPLE;
+        int maxReplication = cluster.getSvCount() > MAX_CLUSTER_COUNT_REPLICATION ? 8 : MAX_SV_REPLICATION_MULTIPLE;
 
         // first establish the lowest copy number change
         double minCopyNumber = cluster.getMinCNChange();
@@ -497,11 +497,11 @@ public class SvClusteringMethods {
         }
 
         // replicate the SVs which have a higher copy number than their peers
-        int clusterCount = cluster.getCount();
+        int clusterCount = cluster.getSvCount();
 
         for(int i = 0; i < clusterCount; ++i)
         {
-            SvVarData var = cluster.getSVs().get(i);
+            SvVarData var = cluster.getSV(i);
             double calcCopyNumber = var.getRoundedCNChange();
 
             int svMultiple = (int)round(calcCopyNumber / minCopyNumber);
@@ -669,7 +669,7 @@ public class SvClusteringMethods {
 
 
             LOGGER.debug("cluster({} svs={}) merges in other cluster({} svs={}) on LOH event(sv1={} sv2={} len={})",
-                    lohClusterStart.id(), lohClusterStart.getUniqueSvCount(), lohClusterEnd.id(), lohClusterEnd.getUniqueSvCount(),
+                    lohClusterStart.id(), lohClusterStart.getSvCount(), lohClusterEnd.id(), lohClusterEnd.getSvCount(),
                     lohEvent.StartSV, lohEvent.EndSV, lohEvent.Length);
 
             lohSvStart.addClusterReason(CLUSTER_REASON_LOH, lohSvEnd.id());
@@ -834,13 +834,13 @@ public class SvClusteringMethods {
                 SvVarData var = breakend.getSV();
                 final SvCluster cluster = var.getCluster();
 
-                if(cluster == null || cluster.getSVs().get(0) == null)
+                if(cluster == null || cluster.getSV(0) == null)
                 {
                     LOGGER.warn("null");
                 }
 
                 // take the point of view of the cluster with the solo single
-                if(cluster.getCount() != 1 || cluster.getSVs().get(0).type() != SGL || cluster.isResolved())
+                if(cluster.getSvCount() != 1 || cluster.getSV(0).type() != SGL || cluster.isResolved())
                     continue;
 
                 // now look for a proximate cluster with either another solo single or needing one to be resolved
@@ -864,7 +864,7 @@ public class SvClusteringMethods {
                     final SvBreakend followingBreakend = breakendList.get(i + 2);
                     final SvCluster followingCluster = followingBreakend.getSV().getCluster();
 
-                    if(followingCluster.getCount() == 1 && followingBreakend.getSV().type() == SGL && !followingCluster.isResolved())
+                    if(followingCluster.getSvCount() == 1 && followingBreakend.getSV().type() == SGL && !followingCluster.isResolved())
                     {
                         long followingProximity = abs(nextBreakend.position() - followingBreakend.position());
 
@@ -918,11 +918,11 @@ public class SvClusteringMethods {
         // - 2 x SGLs + another SV could form a simple cluster-2 resolved type
         // - a SGL + another SV could form a simple cluster-2 resolved type
 
-        final SvVarData soloSingle = soloSingleCluster.getSVs().get(0);
+        final SvVarData soloSingle = soloSingleCluster.getSV(0);
 
-        if(otherCluster.getCount() == 1)
+        if(otherCluster.getSvCount() == 1)
         {
-            final SvVarData otherVar = otherCluster.getSVs().get(0);
+            final SvVarData otherVar = otherCluster.getSV(0);
 
             if(otherVar.type() == SGL)
             {

@@ -48,6 +48,7 @@ public class SvCluster
     private List<String> mAnnotationList;
 
     private List<SvVarData> mSVs;
+    private List<SvVarData> mReplicatedSVs; // combined original and replicated SV
     private List<SvChain> mChains; // pairs of SVs linked into chains
     private List<SvLinkedPair> mLinkedPairs; // final set after chaining and linking
     private List<SvLinkedPair> mInferredLinkedPairs; // forming a templated insertion
@@ -55,7 +56,7 @@ public class SvCluster
     private List<SvArmGroup> mArmGroups;
     private List<SvArmCluster> mArmClusters; // clusters of proximate SVs on an arm, currently only used for annotations
     private Map<String, List<SvBreakend>> mChrBreakendMap;
-    private List<SvVarData> mUnchainedSVs;
+    private List<SvVarData> mUnchainedSVs; // includes replicated SVs
     private boolean mIsResolved;
     private String mResolvedType;
 
@@ -109,6 +110,7 @@ public class SvCluster
     {
         mId = clusterId;
         mSVs = Lists.newArrayList();
+        mReplicatedSVs = Lists.newArrayList();
         mArmGroups = Lists.newArrayList();
         mArmClusters = Lists.newArrayList();
         mTypeCounts = new int[StructuralVariantType.values().length];
@@ -152,12 +154,14 @@ public class SvCluster
 
     public int id() { return mId; }
 
-    public int getCount() { return mSVs.size(); }
+    public int getSvCount() { return mSVs.size(); }
+    public int getSvCount(boolean includeReplicated) { return includeReplicated ? mReplicatedSVs.size() : mSVs.size(); }
 
     public final String getDesc() { return mDesc; }
     public final void setDesc(final String desc) { mDesc = desc; }
 
-    public List<SvVarData> getSVs() { return mSVs; }
+    public final List<SvVarData> getSVs() { return mSVs; }
+    public final List<SvVarData> getSVs(boolean includeReplicated) { return includeReplicated ? mReplicatedSVs : mSVs; }
     public final SvVarData getSV(int index) { return index < mSVs.size() ? mSVs.get(index) : null; }
 
     public void addVariant(final SvVarData var)
@@ -168,10 +172,16 @@ public class SvCluster
             return;
         }
 
-        mSVs.add(var);
+        if(!var.isReplicatedSv())
+        {
+            mSVs.add(var);
+        }
+
         var.setCluster(this);
 
+        mReplicatedSVs.add(var);
         mUnchainedSVs.add(var);
+
         mRequiresRecalc = true;
 
         if(!mHasLinkingLineElements)
@@ -237,9 +247,9 @@ public class SvCluster
             return;
 
         int i = 0;
-        while(i < mSVs.size())
+        while(i < mReplicatedSVs.size())
         {
-            SvVarData var = mSVs.get(i);
+            SvVarData var = mReplicatedSVs.get(i);
 
             if(var.isReplicatedSv())
             {
@@ -257,7 +267,7 @@ public class SvCluster
         if(!var.isReplicatedSv())
             return;
 
-        mSVs.remove(var);
+        mReplicatedSVs.remove(var);
         mUnchainedSVs.remove(var);
 
         // remove from any cached links
@@ -293,16 +303,7 @@ public class SvCluster
         }
 
         // retest cluster status again
-        mHasReplicatedSVs = false;
-        for(final SvVarData sv : mSVs)
-        {
-            if (sv.isReplicatedSv())
-            {
-                mHasReplicatedSVs = true;
-                break;
-            }
-        }
-
+        mHasReplicatedSVs = mReplicatedSVs.size() > mSVs.size();
         mRequiresRecalc = true;
     }
 
@@ -365,14 +366,6 @@ public class SvCluster
     public List<SvArmGroup> getArmGroups() { return mArmGroups; }
     public Map<String, List<SvBreakend>> getChrBreakendMap() { return mChrBreakendMap; }
 
-    public int getUniqueSvCount()
-    {
-        if(!mHasReplicatedSVs)
-            return mSVs.size();
-
-        return (int)mSVs.stream().filter(x -> !x.isReplicatedSv()).count();
-    }
-
     public boolean hasReplicatedSVs() { return mHasReplicatedSVs; }
 
     public List<SvChain> getChains() { return mChains; }
@@ -407,7 +400,7 @@ public class SvCluster
     public void dissolveLinksAndChains()
     {
         mUnchainedSVs.clear();
-        mUnchainedSVs.addAll(mSVs);
+        mUnchainedSVs.addAll(mReplicatedSVs);
         mChains.clear();
         mLinkedPairs.clear();
         mInferredLinkedPairs.clear();
@@ -452,12 +445,12 @@ public class SvCluster
     public void mergeOtherCluster(final SvCluster other, boolean logDetails)
     {
         // just add the other cluster's variants - no preservation of links or chains
-        if(other.getCount() > getCount())
+        if(other.getSvCount() > getSvCount())
         {
             if(logDetails)
             {
                 LOGGER.debug("cluster({} svs={}) merges in other cluster({} svs={})",
-                        other.id(), other.getCount(), id(), getCount());
+                        other.id(), other.getSvCount(), id(), getSvCount());
             }
 
             // maintain the id of the larger group
@@ -466,7 +459,7 @@ public class SvCluster
         else if(logDetails)
         {
             LOGGER.debug("cluster({} svs={}) merges in other cluster({} svs={})",
-                    id(), getCount(), other.id(), other.getCount());
+                    id(), getSvCount(), other.id(), other.getSvCount());
         }
 
         addVariantLists(other);
@@ -510,7 +503,7 @@ public class SvCluster
 
     private void addVariantLists(final SvCluster other)
     {
-        for(final SvVarData var : other.getSVs())
+        for(final SvVarData var : other.getSVs(true))
         {
             addVariant(var);
         }
@@ -563,7 +556,7 @@ public class SvCluster
         if(!mRequiresRecalc)
             return;
 
-        mConsistencyCount = calcConsistency(mSVs);
+        mConsistencyCount = calcConsistency(mReplicatedSVs);
 
         mIsConsistent = (mConsistencyCount == 0);
 
@@ -581,7 +574,7 @@ public class SvCluster
         if(isSimpleSingleSV())
         {
             LOGGER.debug("cluster({}) simple svCount({}) desc({}) armCount({}) consistency({}) ",
-                    id(), getCount(), getDesc(), getArmCount(), getConsistencyCount());
+                    id(), getSvCount(), getDesc(), getArmCount(), getConsistencyCount());
         }
         else
         {
@@ -627,7 +620,7 @@ public class SvCluster
             }
 
             LOGGER.debug(String.format("cluster(%d) complex SVs(%d rep=%d) desc(%s res=%s) arms(%d) consis(%d) chains(%d perc=%.2f) replic(%s) %s",
-                    id(), getUniqueSvCount(), getCount(), getDesc(), mResolvedType,
+                    id(), getSvCount(), getSvCount(true), getDesc(), mResolvedType,
                     getArmCount(), getConsistencyCount(),
                     mChains.size(), chainedPerc, mHasReplicatedSVs, otherInfo));
         }
@@ -720,7 +713,6 @@ public class SvCluster
         mUnlinkedRemoteSVs = mSVs.stream()
                 .filter(x -> x.isCrossArm())
                 .filter(x -> !x.inLineElement())
-                .filter(x -> !x.isReplicatedSv())
                 .filter(x -> !mShortTIRemoteSVs.contains(x))
                 .collect(Collectors.toList());
 
@@ -754,9 +746,6 @@ public class SvCluster
 
         for (final SvVarData var : mSVs)
         {
-            if(var.isReplicatedSv())
-                continue;
-
             double calcCopyNumber = var.getRoundedCNChange();
 
             if (mMinCNChange < 0 || calcCopyNumber < mMinCNChange)
@@ -845,7 +834,7 @@ public class SvCluster
             mLinkedPairs.addAll(chain.getLinkedPairs());
         }
 
-        for(SvVarData var : mSVs)
+        for(SvVarData var : mReplicatedSVs)
         {
             for(int be = SVI_START; be <= SVI_END; ++be)
             {

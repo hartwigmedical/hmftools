@@ -262,9 +262,12 @@ public class SvChain {
         return length;
     }
 
-    public int getUniqueSvCount()
+    public int getSvCount(boolean includeReplicated)
     {
-        return (int)mSvList.stream().filter(x -> !x.isReplicatedSv()).count();
+        if(includeReplicated)
+            return mSvList.size();
+        else
+            return (int)mSvList.stream().filter(x -> !x.isReplicatedSv()).count();
     }
 
     public boolean hasSV(final SvVarData var, boolean allowReplicated)
@@ -424,7 +427,7 @@ public class SvChain {
 
                 if(chain1.identicalChain(chain2))
                 {
-                    boolean allReplicatedSVs = chain2.getUniqueSvCount() == 0;
+                    boolean allReplicatedSVs = chain2.getSvCount() == 0;
 
                     LOGGER.debug("cluster({}) removing duplicate chain({}) vs origChain({}) all replicated({})",
                             cluster.id(), chain2.id(), chain1.id(), allReplicatedSVs);

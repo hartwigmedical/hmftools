@@ -373,7 +373,7 @@ public class ChainingTests
         assertEquals(tester.Analyser.getClusters().size(), 1);
 
         final SvCluster cluster = tester.Analyser.getClusters().get(0);
-        assertEquals(cluster.getUniqueSvCount(), 8);
+        assertEquals(cluster.getSvCount(), 8);
         assertEquals(cluster.getSubClusters().size(), 5);
 
         // check links

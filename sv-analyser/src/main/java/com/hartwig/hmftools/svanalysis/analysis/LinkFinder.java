@@ -50,7 +50,7 @@ public class LinkFinder
 
         if(findInferred)
         {
-            List<SvLinkedPair> inferredLinkedPairs = createInferredLinkedPairs(cluster, cluster.getSVs(), false);
+            List<SvLinkedPair> inferredLinkedPairs = createInferredLinkedPairs(cluster, cluster.getSVs(true), false);
             cluster.setInferredLinkedPairs(inferredLinkedPairs);
         }
     }
@@ -61,14 +61,14 @@ public class LinkFinder
 
         // find 2 breakends with matching assembly info and form them into a linked pair
         // if have have multiple assembly info and it doesn't match, don't link them
-        if(cluster.getCount() < 2)
+        if(cluster.getSvCount() < 2)
             return linkedPairs;
 
         // isSpecificCluster(cluster);
 
-        for (int i = 0; i < cluster.getCount(); ++i)
+        for (int i = 0; i < cluster.getSvCount(true); ++i)
         {
-            SvVarData var1 = cluster.getSVs().get(i);
+            SvVarData var1 = cluster.getSVs(true).get(i);
 
             if(var1.type() == StructuralVariantType.INS || var1.isNullBreakend())
                 continue;
@@ -84,9 +84,9 @@ public class LinkFinder
             {
                 boolean v1Start = isStart(be1);
 
-                for (int j = i+1; j < cluster.getCount(); ++j)
+                for (int j = i+1; j < cluster.getSvCount(true); ++j)
                 {
-                    SvVarData var2 = cluster.getSVs().get(j);
+                    SvVarData var2 = cluster.getSVs(true).get(j);
 
                     if(var1.equals(var2, true))
                         continue;

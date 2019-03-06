@@ -188,13 +188,13 @@ public class FusionDisruptionAnalyser
             // for now only consider simple SVs and resolved small clusters
             for (final SvCluster cluster : clusters)
             {
-                if (cluster.getCount() == 1) // simple clusters already checked
+                if (cluster.getSvCount() == 1) // simple clusters already checked
                     continue;
 
                 // if(cluster.hasReplicatedSVs() || !cluster.isFullyChained() || cluster.getTypeCount(SGL) > 0)
                 //    continue;
 
-                if (cluster.getUniqueSvCount() > maxClusterSize)
+                if (cluster.getSvCount() > maxClusterSize)
                     continue;
 
                 for (final SvChain chain : cluster.getChains())
@@ -357,7 +357,7 @@ public class FusionDisruptionAnalyser
             }
         }
 
-        String clusterInfo = String.format("%d,%d,%s", cluster.id(), cluster.getUniqueSvCount(), cluster.getResolvedType());
+        String clusterInfo = String.format("%d,%d,%s", cluster.id(), cluster.getSvCount(), cluster.getResolvedType());
 
         if(!mSkipFusionOutput)
         {
@@ -658,7 +658,7 @@ public class FusionDisruptionAnalyser
         SvChain chain = cluster.findChain(breakend.getSV());
 
         final String clusterInfo = String.format("%d;%d;%d;%d",
-                cluster.id(), cluster.getUniqueSvCount(),
+                cluster.id(), cluster.getSvCount(),
                 chain != null ? chain.id() : cluster.getChainId(breakend.getSV()), chain != null ? chain.getSvCount() : 1);
 
         rnaFusionData.setClusterInfo(clusterInfo, isUpstream);

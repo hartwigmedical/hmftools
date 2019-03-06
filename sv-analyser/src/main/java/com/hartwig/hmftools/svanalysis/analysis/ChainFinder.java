@@ -94,15 +94,15 @@ public class ChainFinder
 
     public void formClusterChains(boolean assembledLinksOnly)
     {
-        List<SvVarData> svList = Lists.newArrayList(mCluster.getSVs());
+        List<SvVarData> svList = Lists.newArrayList(mCluster.getSVs(true));
 
         if(svList.size() < 2)
             return;
 
-        if (mCluster.getCount() >= 4)
+        if (mCluster.getSvCount() >= 4)
         {
             LOGGER.debug("cluster({}) assemblyLinks({}) svCount({} rep={})",
-                    mCluster.id(), mAssemblyLinkedPairs.size(), mCluster.getUniqueSvCount(), mCluster.getCount());
+                    mCluster.id(), mAssemblyLinkedPairs.size(), mCluster.getSvCount(), mCluster.getSvCount(true));
         }
 
         isSpecificCluster(mCluster);
@@ -145,7 +145,7 @@ public class ChainFinder
         {
             if(chain.identicalChain(newChain))
             {
-                boolean allReplicatedSVs = newChain.getUniqueSvCount() == 0;
+                boolean allReplicatedSVs = newChain.getSvCount(false) == 0;
 
                 LOGGER.debug("cluster({}) skipping duplicate chain({}) vs origChain({}) all replicated({})",
                         mCluster.id(), newChain.id(), chain.id(), allReplicatedSVs);
@@ -795,9 +795,6 @@ public class ChainFinder
 
         for(final SvVarData var : mCluster.getSVs())
         {
-            if(var.isReplicatedSv())
-                continue;
-
             if(var.getReplicatedCount() > 0)
             {
                 mSvReplicationMap.put(var, var.getReplicatedCount());
@@ -808,7 +805,7 @@ public class ChainFinder
     private void setUnlinkedBreakends()
     {
         // make a cache of all unchained breakends in those of replicated SVs
-        for(final SvVarData var : mCluster.getSVs())
+        for(final SvVarData var : mCluster.getSVs(true))
         {
             for (int be = SVI_START; be <= SVI_END; ++be)
             {
@@ -832,7 +829,7 @@ public class ChainFinder
             }
         }
 
-        mUnlinkedSVs.addAll(mCluster.getSVs());
+        mUnlinkedSVs.addAll(mCluster.getSVs(true));
     }
 
     private List<SvVarData> getMaxReplicationSvIds()
@@ -932,13 +929,13 @@ public class ChainFinder
 
     private void checkProgress()
     {
-        if(mCluster.getCount() < 100)
+        if(mCluster.getSvCount() < 100)
             return;
 
         if((mPartialChains.size() % 100) == 0 || (mUnlinkedBreakendMap.size() % 100) == 0)
         {
             LOGGER.debug("cluster({}) progress: SVs({}) partialChains({}) unlinked(SVs={} breakends={}) replicatedSVs({})",
-                    mCluster.id(), mCluster.getCount(), mPartialChains.size(), mUnlinkedSVs.size(),
+                    mCluster.id(), mCluster.getSvCount(), mPartialChains.size(), mUnlinkedSVs.size(),
                     mUnlinkedBreakendMap.size(), mSvReplicationMap.size());
         }
     }
@@ -950,7 +947,7 @@ public class ChainFinder
         - every DUP or INV which faces or overlaps a foldback without nearest linking possibilites
         */
 
-        if(mCluster.getUniqueSvCount() > 20 || mCluster.getUniqueSvCount() < 4 || mCluster.getTypeCount(SGL) > 2)
+        if(mCluster.getSvCount() > 20 || mCluster.getSvCount() < 4 || mCluster.getTypeCount(SGL) > 2)
             return;
 
         List<ChainSvData> chainSvDataList = Lists.newArrayList();
@@ -991,9 +988,6 @@ public class ChainFinder
 
         for(SvVarData var : mCluster.getSVs())
         {
-            if (var.isReplicatedSv())
-                continue;
-
             if (var.isFoldback()) // already included
                 continue;
 
@@ -1086,7 +1080,7 @@ public class ChainFinder
         }
 
         LOGGER.info("cluster({}: {}) SVs({}) foldbacks({}) maxReplication",
-                mCluster.id(), mCluster.getDesc(), mCluster.getUniqueSvCount(), mCluster.getFoldbacks().size(), maxRepCount);
+                mCluster.id(), mCluster.getDesc(), mCluster.getSvCount(), mCluster.getFoldbacks().size(), maxRepCount);
 
 
 

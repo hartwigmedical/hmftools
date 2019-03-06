@@ -279,7 +279,7 @@ public class LineElementAnnotator {
             }
         }
 
-        if(cluster.getUniqueSvCount() == knownCount && cluster.getTypeCount(BND) >= 1)
+        if(cluster.getSvCount() == knownCount && cluster.getTypeCount(BND) >= 1)
         {
             LOGGER.debug("cluster({}) marked as line with all known({})", cluster.id(), knownCount);
             cluster.markAsLine();
@@ -304,12 +304,12 @@ public class LineElementAnnotator {
         {
             int sglCount = cluster.getTypeCount(SGL);
 
-            if(sglCount >= 1 && sglCount <= 2 && sglCount == cluster.getCount())
+            if(sglCount >= 1 && sglCount <= 2 && sglCount == cluster.getSvCount())
             {
                 LOGGER.debug("cluster({}) marked as line with poly A/T SGL", cluster.id());
                 cluster.markAsLine();
             }
-            else if(cluster.getTypeCount(INS) == 1 && cluster.getCount() == 1)
+            else if(cluster.getTypeCount(INS) == 1 && cluster.getSvCount() == 1)
             {
                 cluster.markAsLine();
             }

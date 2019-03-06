@@ -159,7 +159,7 @@ public class ClusterAnalyser {
         // log basic clustering details
         for(SvCluster cluster : mClusters)
         {
-            if(cluster.getCount() > 1)
+            if(cluster.getSvCount() > 1)
                 cluster.logDetails();
         }
 
@@ -191,11 +191,11 @@ public class ClusterAnalyser {
             if(!cluster.isResolved() && cluster.getResolvedType() != RESOLVED_TYPE_NONE)
             {
                 // any cluster with a long DEL or DUP not merged can now be marked as resolved
-                if(cluster.getCount() == 1 &&  cluster.getResolvedType() == RESOLVED_TYPE_SIMPLE_SV)
+                if(cluster.getSvCount() == 1 &&  cluster.getResolvedType() == RESOLVED_TYPE_SIMPLE_SV)
                     cluster.setResolved(true, RESOLVED_TYPE_SIMPLE_SV);
 
                 // mark off any fully chained simple clusters
-                if(cluster.getCount() == 1 &&  cluster.getResolvedType() == RESOLVED_TYPE_SIMPLE_CHAIN)
+                if(cluster.getSvCount() == 1 &&  cluster.getResolvedType() == RESOLVED_TYPE_SIMPLE_CHAIN)
                     cluster.setResolved(true, RESOLVED_TYPE_SIMPLE_CHAIN);
             }
 
@@ -220,14 +220,14 @@ public class ClusterAnalyser {
         // chain small clusters and only assembled links in larger ones
         for(SvCluster cluster : mClusters)
         {
-            if(cluster.getCount() == 1 && cluster.isSimpleSVs())
+            if(cluster.getSvCount() == 1 && cluster.isSimpleSVs())
             {
                 setClusterResolvedState(cluster);
                 continue;
             }
 
             // more complicated clusters for now
-            boolean isSimple =  cluster.getCount() <= SMALL_CLUSTER_SIZE && cluster.isConsistent() && !cluster.hasVariedCopyNumber();
+            boolean isSimple =  cluster.getSvCount() <= SMALL_CLUSTER_SIZE && cluster.isConsistent() && !cluster.hasVariedCopyNumber();
 
             // inferred links are used to classify simple resolved types involving 2-3 SVs
             mLinkFinder.findLinkedPairs(cluster, isSimple);
@@ -243,7 +243,7 @@ public class ClusterAnalyser {
 
                 if(cluster.isFullyChained() && cluster.isConsistent())
                 {
-                    LOGGER.debug("sample({}) cluster({}) simple and consistent with {} SVs", mSampleId, cluster.id(), cluster.getCount());
+                    LOGGER.debug("sample({}) cluster({}) simple and consistent with {} SVs", mSampleId, cluster.id(), cluster.getSvCount());
                 }
             }
         }
@@ -259,7 +259,7 @@ public class ClusterAnalyser {
                 continue;
 
             // these are either already chained or no need to chain
-            if (cluster.isSimpleSingleSV() || cluster.isFullyChained() || cluster.getUniqueSvCount() < 2)
+            if (cluster.isSimpleSingleSV() || cluster.isFullyChained() || cluster.getSvCount() < 2)
                 continue;
 
             cluster.dissolveLinksAndChains();
@@ -306,10 +306,10 @@ public class ClusterAnalyser {
 
         // isSpecificCluster(cluster);
 
-        if(mConfig.MaxClusterSize > 0 && (cluster.getUniqueSvCount() > mConfig.MaxClusterSize || cluster.getCount() > mConfig.MaxClusterSize * 5))
+        if(mConfig.MaxClusterSize > 0 && (cluster.getSvCount() > mConfig.MaxClusterSize || cluster.getSvCount(true) > mConfig.MaxClusterSize * 5))
         {
             LOGGER.info("cluster({}) skipping large cluster: unique({}) replicated({})",
-                    cluster.id(), cluster.getUniqueSvCount(), cluster.getCount());
+                    cluster.id(), cluster.getSvCount(), cluster.getSvCount(true));
             return;
         }
 
@@ -351,7 +351,7 @@ public class ClusterAnalyser {
         }
 
         // next simple reciprocal inversions and translocations
-        if (cluster.getCount() == 2 && cluster.isConsistent())
+        if (cluster.getSvCount() == 2 && cluster.isConsistent())
         {
             if(cluster.getTypeCount(BND) == 2)
             {
@@ -363,8 +363,8 @@ public class ClusterAnalyser {
             }
             else if(cluster.getTypeCount(SGL) == 2)
             {
-                final SvVarData var1 = cluster.getSVs().get(0);
-                final SvVarData var2 = cluster.getSVs().get(1);
+                final SvVarData var1 = cluster.getSV(0);
+                final SvVarData var2 = cluster.getSV(1);
 
                 if(var1.orientation(true) != var2.orientation(true))
                 {
@@ -479,7 +479,7 @@ public class ClusterAnalyser {
                 if(cluster1.hasSubClusters())
                 {
                     LOGGER.debug("cluster({} svs={}) merges in cluster({} svs={})",
-                            cluster1.id(), cluster1.getCount(), cluster2.id(), cluster2.getCount());
+                            cluster1.id(), cluster1.getSvCount(), cluster2.id(), cluster2.getSvCount());
 
                     cluster2Merged = true;
 
@@ -505,7 +505,7 @@ public class ClusterAnalyser {
                     newCluster = new SvCluster(mClusteringMethods.getNextClusterId());
 
                     LOGGER.debug("new cluster({}) from merge of cluster({} svs={}) and cluster({} svs={})",
-                            newCluster.id(), cluster1.id(), cluster1.getCount(), cluster2.id(), cluster2.getCount());
+                            newCluster.id(), cluster1.id(), cluster1.getSvCount(), cluster2.id(), cluster2.getSvCount());
 
                     newCluster.addSubCluster(cluster1);
 

@@ -312,7 +312,7 @@ public class SvSampleAnalyser {
                     continue;
                 }
 
-                int clusterSvCount = cluster.getUniqueSvCount();
+                int clusterSvCount = cluster.getSvCount();
 
                 SvCluster subCluster = cluster;
                 if(cluster.hasSubClusters())
@@ -464,7 +464,7 @@ public class SvSampleAnalyser {
 
             for(final SvCluster cluster : getClusters())
             {
-                int clusterSvCount = cluster.getUniqueSvCount();
+                int clusterSvCount = cluster.getSvCount();
 
                 writer.write(
                         String.format("%s,%d,%s,%d,%s,%s,%d",
@@ -548,7 +548,7 @@ public class SvSampleAnalyser {
 
             for(final SvCluster cluster : getClusters())
             {
-                int clusterSvCount = cluster.getUniqueSvCount();
+                int clusterSvCount = cluster.getSvCount();
 
                 // isSpecificCluster(cluster);
 

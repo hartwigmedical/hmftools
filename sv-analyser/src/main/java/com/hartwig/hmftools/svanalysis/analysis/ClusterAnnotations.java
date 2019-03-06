@@ -60,7 +60,7 @@ public class ClusterAnnotations
         if (cluster.isResolved())
             return;
 
-        if (cluster.getCount() < 6)
+        if (cluster.getSvCount() < 6)
             return;
 
         // isSpecificCluster(cluster);
@@ -511,7 +511,7 @@ public class ClusterAnnotations
         boolean isIncomplete = !cluster.isFullyChained() || cluster.getTypeCount(SGL) > 0;
 
         // skip simple chained clusters
-        if(cluster.getArmCount() == 1 && cluster.getCount() == 2)
+        if(cluster.getArmCount() == 1 && cluster.getSvCount() == 2)
             return;
 
         isSpecificCluster(cluster);
@@ -884,7 +884,7 @@ public class ClusterAnnotations
         // for each cluster with incomplete foldbacks, search for candidate clusters which could resolve it
 
         // for now just focus on single foldback clusters
-        if(cluster.getCount() > 1 || cluster.getFoldbacks().size() != 1)
+        if(cluster.getSvCount() > 1 || cluster.getFoldbacks().size() != 1)
             return;
 
         if(cluster.isResolved()) // eg LowQual
@@ -992,7 +992,7 @@ public class ClusterAnnotations
 
             // OtherClusterId,OtherClusterCount,OtherClusterDesc,OtherResolvedType,CNBeforeSame,CNBeforeOpp,CNAfterSame,CNAfterOpp
             infoStr += String.format(",%d,%d,%s,%s,%.2f,%.2f,%.2f,%.2f",
-                    nextCluster.id(), nextCluster.getUniqueSvCount(), nextCluster.getDesc(), nextCluster.getResolvedType(),
+                    nextCluster.id(), nextCluster.getSvCount(), nextCluster.getDesc(), nextCluster.getResolvedType(),
                     cnBeforeSame, cnBeforeDiff, cnAfterSame, cnAfterDiff);
 
             LOGGER.info("INCONSIST_FBS: {}", infoStr);
@@ -1549,9 +1549,6 @@ public class ClusterAnnotations
 
         for(final SvVarData var : cluster.getSVs())
         {
-            if(var.isReplicatedSv())
-                continue;
-
             double ploidy = var.getSvData().ploidy();
             int i = 0;
             for(; i < ploidyList.size(); ++i)
@@ -1605,7 +1602,7 @@ public class ClusterAnnotations
             if(i == ploidyList.size() - 1)
             {
                 LOGGER.debug(String.format("cluster(%s count=%d) DM highPloidyCount(%d chr=%d) currentSV(%s) ploidy(%.2f) with no others",
-                        cluster.id(), cluster.getUniqueSvCount(), svsAboveThreshold, highPloidyChromosomes.size(), var.posId(), ploidy));
+                        cluster.id(), cluster.getSvCount(), svsAboveThreshold, highPloidyChromosomes.size(), var.posId(), ploidy));
                 isPotentialDM = true;
                 break;
             }
@@ -1616,7 +1613,7 @@ public class ClusterAnnotations
                 if(nextPloidy * DOUBLE_MINUTE_PLOIDY_GAP_RATIO < ploidy)
                 {
                     LOGGER.debug(String.format("cluster(%s count=%d) DM highPloidyCount(%d chr=%d) currentSV(%s) ploidy(%.2f) vs next(%.3f)",
-                            cluster.id(), cluster.getUniqueSvCount(), svsAboveThreshold, highPloidyChromosomes.size(),
+                            cluster.id(), cluster.getSvCount(), svsAboveThreshold, highPloidyChromosomes.size(),
                             indexSvList.get(i).posId(), ploidy, nextPloidy));
                     isPotentialDM = true;
                     break;

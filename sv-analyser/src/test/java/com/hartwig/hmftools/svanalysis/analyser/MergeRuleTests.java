@@ -79,7 +79,7 @@ public class MergeRuleTests
         tester.mergeOnProximity();
 
         assertEquals(tester.getClusters().size(), 4);
-        assertEquals(tester.getClusters().get(0).getCount(), 10);
+        assertEquals(tester.getClusters().get(0).getSvCount(), 10);
         assertTrue(tester.getClusters().get(1).getSVs().contains(var7));
         assertTrue(tester.getClusters().get(2).getSVs().contains(var8));
         assertTrue(tester.getClusters().get(3).getSVs().contains(var9));
@@ -207,7 +207,7 @@ public class MergeRuleTests
         SvCluster mainCluster = null;
         for(final SvCluster cluster : tester.getClusters())
         {
-            if(cluster.getCount() == 5)
+            if(cluster.getSvCount() == 5)
             {
                 mainCluster = cluster;
                 break;

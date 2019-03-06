@@ -100,18 +100,18 @@ public class AnnotationTests
         assertEquals(5, tester.Analyser.getClusters().size());
 
         SvCluster cluster = tester.Analyser.getClusters().get(0);
-        assertEquals(1, cluster.getUniqueSvCount());
+        assertEquals(1, cluster.getSvCount());
         assertTrue(cluster.getSVs().contains(var1));
         assertTrue(cluster.getAnnotations().contains(CLUSTER_ANNONTATION_DM));
 
         cluster = tester.Analyser.getClusters().get(2);
-        assertEquals(2, cluster.getUniqueSvCount());
+        assertEquals(2, cluster.getSvCount());
         assertTrue(cluster.getSVs().contains(var3));
         assertTrue(cluster.getSVs().contains(var4));
         assertTrue(cluster.getAnnotations().contains(CLUSTER_ANNONTATION_DM));
 
         cluster = tester.Analyser.getClusters().get(4);
-        assertEquals(2, cluster.getUniqueSvCount());
+        assertEquals(2, cluster.getSvCount());
         assertTrue(cluster.getSVs().contains(var6));
         assertTrue(cluster.getSVs().contains(var7));
         assertTrue(cluster.getAnnotations().contains(CLUSTER_ANNONTATION_DM));
