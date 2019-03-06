@@ -61,6 +61,8 @@ public class PatientReporterApplication {
     private static final String HIGH_CONFIDENCE_BED = "high_confidence_bed";
 
     private static final String CENTER_CSV = "center_csv";
+    private static final String CENTER_CSV_MANUAL = "center_manual_csv";
+
     private static final String RVA_LOGO = "rva_logo";
     private static final String SIGNATURE = "signature";
     private static final String COMMENTS = "comments";
@@ -113,7 +115,7 @@ public class PatientReporterApplication {
         final Lims lims = LimsFactory.fromLimsDirectory(limsDirectory);
         LOGGER.info(" Loaded data for {} samples.", lims.sampleCount());
 
-        final CenterModel centerModel = Center.readFromCSV(cmd.getOptionValue(CENTER_CSV));
+        final CenterModel centerModel = Center.readFromCSV(cmd.getOptionValue(CENTER_CSV), cmd.getOptionValue(CENTER_CSV_MANUAL));
         return ImmutableBaseReportData.of(patientTumorLocations,
                 lims,
                 centerModel,
@@ -202,6 +204,8 @@ public class PatientReporterApplication {
         final String tumorLocationCsv = cmd.getOptionValue(TUMOR_LOCATION_CSV);
         final String limsDirectory = cmd.getOptionValue(LIMS_DIRECTORY);
         final String centerCsv = cmd.getOptionValue(CENTER_CSV);
+        final String centerManualCsv = cmd.getOptionValue(CENTER_CSV_MANUAL);
+
         final String signaturePath = cmd.getOptionValue(SIGNATURE);
         final String rvaLogoPath = cmd.getOptionValue(RVA_LOGO);
 
@@ -211,6 +215,8 @@ public class PatientReporterApplication {
             LOGGER.warn(LIMS_DIRECTORY + " has to be an existing directory: " + limsDirectory);
         } else if (centerCsv == null || !exists(centerCsv)) {
             LOGGER.warn(CENTER_CSV + " has to be an existing file: " + centerCsv);
+        } else if (centerManualCsv == null || !exists(centerManualCsv)) {
+            LOGGER.warn(CENTER_CSV_MANUAL + " has to be an existing file: " + centerManualCsv);
         } else if (signaturePath == null || !exists(signaturePath)) {
             LOGGER.warn(SIGNATURE + " has to be an existing file: " + signaturePath);
         } else if (rvaLogoPath == null || !exists(rvaLogoPath)) {
@@ -248,6 +254,7 @@ public class PatientReporterApplication {
         options.addOption(FASTA_FILE_LOCATION, true, "Path towards the FASTA file containing the ref genome.");
         options.addOption(HIGH_CONFIDENCE_BED, true, "Path towards the high confidence BED file.");
         options.addOption(CENTER_CSV, true, "Path towards a CSV containing center (centerPerHospital) data.");
+        options.addOption(CENTER_CSV_MANUAL, true, "Path towards a CSV containing center (centerPerHospital) data for manual curation.");
         options.addOption(SIGNATURE, true, "Path towards a image file containing the signature to be appended at the end of the report.");
         options.addOption(RVA_LOGO, true, "Path towards a image file containing the logo.");
         options.addOption(COMMENTS, true, "Additional comments to be added to the report, if any.");

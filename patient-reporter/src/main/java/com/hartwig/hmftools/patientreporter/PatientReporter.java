@@ -109,9 +109,7 @@ abstract class PatientReporter {
                 lims.arrivalDate(tumorSample),
                 lims.arrivalDate(run.refSample()),
                 lims.labProcedures(tumorSample),
-                type == LimsSampleType.CORE
-                        ? baseReportData().centerModel().addresseeStringForProject(lims.projectName(tumorSample))
-                        : baseReportData().centerModel().addresseeStringForSample(lims.contactNames(tumorSample), tumorSample),
+                baseReportData().centerModel().addresseeStringForSample(lims.contactNames(tumorSample), tumorSample),
                 lims.projectName(tumorSample),
                 lims.contactNames(tumorSample),
                 lims.contactEmails(tumorSample),

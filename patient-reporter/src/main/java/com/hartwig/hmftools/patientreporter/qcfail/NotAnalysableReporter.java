@@ -44,9 +44,7 @@ public abstract class NotAnalysableReporter {
                 lims.arrivalDate(sample),
                 null,
                 lims.labProcedures(sample),
-                type == LimsSampleType.CORE
-                        ? baseReportData().centerModel().addresseeStringForProject(lims.projectName(sample))
-                        : baseReportData().centerModel().addresseeStringForSample(lims.contactNames(sample), sample),
+                baseReportData().centerModel().addresseeStringForSample(lims.contactNames(sample), sample),
                 lims.projectName(sample),
                 lims.contactNames(sample),
                 lims.contactEmails(sample),

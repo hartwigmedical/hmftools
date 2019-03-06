@@ -27,34 +27,40 @@ public abstract class CenterModel {
     @NotNull
     protected abstract Map<String, CenterData> centerPerHospital();
 
-    @Nullable
-    public String addresseeStringForSample(@NotNull final String contactNames, @NotNull final String sample) {
-        final String centerId = getCenterIdFromSample(sample);
-        if (centerId == null) {
-            return null;
-        }
-        final CenterData center = centerPerId(centerId);
-        if (center == null) {
-            LOGGER.error("Center model does not contain id " + centerId);
-            return null;
-        }
-        checkAddresseeFields(sample, center, contactNames);
-        return getPI(sample, center, contactNames) + ", " + center.addressName() + ", " + center.addressZip() + " " + center.addressCity();
-    }
+    @NotNull
+    protected abstract Map<String, CenterDataManualMapping> centerPerIdManual();
 
     @Nullable
-    public String addresseeStringForProject(@NotNull final String projectName) {
-        // Assume project name for CORE is HOSPITAL-X-Y
-        String hospitalFromProjectName = projectName.split("-")[0];
-        if (hospitalFromProjectName.equals("NKI")) {
-            hospitalFromProjectName = "AVL";
+    public String addresseeStringForSample(@NotNull final String contactNames, @NotNull final String sample) {
+        String adres = "";
+        if (sample.startsWith("CORE19") || sample.contains("CORE18")) {
+            final CenterDataManualMapping centerDataManualMapping = centerPerIdManual().get(sample);
+            final CenterData center = centerPerHospital().get(centerDataManualMapping.addressName());
+            if (center == null) {
+                LOGGER.error("Center model cannot find center details for project " + centerDataManualMapping);
+                return null;
+            }
+            adres = center.addressName() + ", " + center.addressZip() + " " + center.addressCity();
+
+        } else {
+            final String centerId = getCenterIdFromSample(sample);
+            if (centerId == null) {
+                return null;
+            }
+            final CenterData center = centerPerId(centerId);
+            if (center == null) {
+                LOGGER.error("Center model does not contain id " + centerId);
+                return null;
+            }
+            checkAddresseeFields(sample, center, contactNames);
+            if (sample.startsWith("CORE01")) {
+                return center.addressName() + ", " + center.addressZip() + " " + center.addressCity();
+            } else {
+                adres = getPI(sample, center, contactNames) + ", " + center.addressName() + ", " + center.addressZip() + " "
+                        + center.addressCity();
+            }
         }
-        final CenterData center = centerPerHospital().get(hospitalFromProjectName);
-        if (center == null) {
-            LOGGER.error("Center model cannot find center details for project " + projectName);
-            return null;
-        }
-        return center.addressName() + ", " + center.addressZip() + " " + center.addressCity();
+        return adres;
     }
 
     @Nullable

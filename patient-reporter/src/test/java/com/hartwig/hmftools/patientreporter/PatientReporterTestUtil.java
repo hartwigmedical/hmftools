@@ -35,6 +35,8 @@ public final class PatientReporterTestUtil {
     private static final String KNOWLEDGEBASE_PATH = Resources.getResource("actionability").getPath();
 
     private static final String CENTER_CSV = Resources.getResource("csv/centers.csv").getPath();
+    private static final String CENTER_MANUAL_CSV = Resources.getResource("csv/manual_mapping.csv").getPath();
+
     private static final String DRUP_GENES_CSV = Resources.getResource("csv/drup_genes.csv").getPath();
     private static final String HOTSPOT_TSV = Resources.getResource("csv/hotspots.tsv").getPath();
 
@@ -64,7 +66,7 @@ public final class PatientReporterTestUtil {
         try {
             final List<PatientTumorLocation> patientTumorLocations = Lists.newArrayList();
             final Lims lims = LimsFactory.empty();
-            final CenterModel centerModel = Center.readFromCSV(CENTER_CSV);
+            final CenterModel centerModel = Center.readFromCSV(CENTER_CSV, CENTER_MANUAL_CSV);
             return ImmutableBaseReportData.of(patientTumorLocations, lims, centerModel, SIGNATURE_PATH, RVA_LOGO_PATH);
         } catch (IOException exception) {
             throw new IllegalStateException("Could not generate test base reporter data: " + exception.getMessage());
