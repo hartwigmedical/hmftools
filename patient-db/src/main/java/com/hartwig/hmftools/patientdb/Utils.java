@@ -54,7 +54,7 @@ public final class Utils {
     @NotNull
     private static String getPatientIdentifier(@NotNull final String runName) {
         final String[] names = runName.split("_");
-        LimsSampleType type = LimsSampleType.fromRunName(names[1]);
+        LimsSampleType type = LimsSampleType.fromRunName(runName);
         if (names.length < 5 && type != LimsSampleType.COLO) {
             LOGGER.error("run name {} had less than 5 parts after splitting on _", runName);
             return Strings.EMPTY;
