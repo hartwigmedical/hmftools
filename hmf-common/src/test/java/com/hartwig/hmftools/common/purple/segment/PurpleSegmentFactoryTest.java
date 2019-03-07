@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.common.purple.segment;
 
 import static com.hartwig.hmftools.common.purple.segment.SegmentSupport.BND;
+import static com.hartwig.hmftools.common.purple.segment.SegmentSupport.CENTROMERE;
 import static com.hartwig.hmftools.common.purple.segment.SegmentSupport.MULTIPLE;
 import static com.hartwig.hmftools.common.purple.segment.SegmentSupport.NONE;
 import static com.hartwig.hmftools.common.purple.segment.SegmentSupport.TELOMERE;
@@ -22,51 +23,68 @@ import org.junit.Test;
 
 public class PurpleSegmentFactoryTest {
     private static final GenomePosition CHROMOSOME_LENGTH = GenomePositions.create("1", 10_000_000);
-    private static final GenomePosition CHROMOSOME_CENTROMERE = GenomePositions.create("1", 10_000_001);
+    private static final GenomePosition CHROMOSOME_CENTROMERE = GenomePositions.create("1", 5_000_001);
 
     @Test
     public void testEmpty() {
         final List<PurpleSegment> segments = PurpleSegmentFactory.create(CHROMOSOME_CENTROMERE, CHROMOSOME_LENGTH, Collections.emptyList());
-        assertEquals(1, segments.size());
-        assertPurpleSegment(segments.get(0), 1, CHROMOSOME_LENGTH.position(), true, TELOMERE);
+        assertEquals(2, segments.size());
+        assertPurpleSegment(segments.get(0), 1, CHROMOSOME_CENTROMERE.position() - 1, true, TELOMERE);
+        assertPurpleSegment(segments.get(1), CHROMOSOME_CENTROMERE.position(), CHROMOSOME_LENGTH.position(), true, CENTROMERE);
     }
 
     @Test
     public void testSingleSV() {
         final List<Cluster> clusters = Lists.newArrayList(cluster(17001, 18881).build());
         final List<PurpleSegment> segments = PurpleSegmentFactory.create(CHROMOSOME_CENTROMERE, CHROMOSOME_LENGTH, clusters);
-        assertEquals(2, segments.size());
+        assertEquals(3, segments.size());
         assertPurpleSegment(segments.get(0), 1, 18880, true, TELOMERE);
-        assertPurpleSegment(segments.get(1), 18881, CHROMOSOME_LENGTH.position(), false, BND);
+        assertPurpleSegment(segments.get(1), 18881, CHROMOSOME_CENTROMERE.position() - 1, false, BND);
+        assertPurpleSegment(segments.get(2), CHROMOSOME_CENTROMERE.position(), CHROMOSOME_LENGTH.position(), false, CENTROMERE);
     }
+
+
+    @Test
+    public void testSVAtCentromere() {
+        final List<Cluster> clusters = Lists.newArrayList(cluster(17001, CHROMOSOME_CENTROMERE.position()).build());
+        final List<PurpleSegment> segments = PurpleSegmentFactory.create(CHROMOSOME_CENTROMERE, CHROMOSOME_LENGTH, clusters);
+        assertEquals(2, segments.size());
+
+        assertPurpleSegment(segments.get(0), 1, CHROMOSOME_CENTROMERE.position() - 1, true, TELOMERE);
+        assertPurpleSegment(segments.get(1), CHROMOSOME_CENTROMERE.position(), CHROMOSOME_LENGTH.position(), false, CENTROMERE);
+    }
+
 
     @Test
     public void testSingleSVWithRatioSupport() {
         final Cluster cluster = addRatios(cluster(17002, 18881), 17050, 19000).build();
         final List<PurpleSegment> segments =
                 PurpleSegmentFactory.create(CHROMOSOME_CENTROMERE, CHROMOSOME_LENGTH, Lists.newArrayList(cluster));
-        assertEquals(2, segments.size());
+        assertEquals(3, segments.size());
         assertPurpleSegment(segments.get(0), 1, 18880, true, TELOMERE);
-        assertPurpleSegment(segments.get(1), 18881, CHROMOSOME_LENGTH.position(), true, BND);
+        assertPurpleSegment(segments.get(1), 18881, CHROMOSOME_CENTROMERE.position() - 1, true, BND);
+        assertPurpleSegment(segments.get(2), CHROMOSOME_CENTROMERE.position(), CHROMOSOME_LENGTH.position(), true, CENTROMERE);
     }
 
     @Test
     public void testMultipleSVAtSamePosition() {
         final List<Cluster> clusters = Lists.newArrayList(cluster(17001, 18881).addVariants(variant(18881)).build());
         final List<PurpleSegment> segments = PurpleSegmentFactory.create(CHROMOSOME_CENTROMERE, CHROMOSOME_LENGTH, clusters);
-        assertEquals(2, segments.size());
+        assertEquals(3, segments.size());
         assertPurpleSegment(segments.get(0), 1, 18880, true, TELOMERE);
-        assertPurpleSegment(segments.get(1), 18881, CHROMOSOME_LENGTH.position(), false, MULTIPLE);
+        assertPurpleSegment(segments.get(1), 18881, CHROMOSOME_CENTROMERE.position() - 1, false, MULTIPLE);
+        assertPurpleSegment(segments.get(2), CHROMOSOME_CENTROMERE.position(), CHROMOSOME_LENGTH.position(), false, CENTROMERE);
     }
 
     @Test
     public void testMultipleSVInSameCluster() {
         final List<Cluster> clusters = Lists.newArrayList(cluster(17001, 18881).addVariants(variant(19991)).build());
         final List<PurpleSegment> segments = PurpleSegmentFactory.create(CHROMOSOME_CENTROMERE, CHROMOSOME_LENGTH, clusters);
-        assertEquals(3, segments.size());
+        assertEquals(4, segments.size());
         assertPurpleSegment(segments.get(0), 1, 18880, true, TELOMERE);
         assertPurpleSegment(segments.get(1), 18881, 19990, false, BND);
-        assertPurpleSegment(segments.get(2), 19991, CHROMOSOME_LENGTH.position(), false, BND);
+        assertPurpleSegment(segments.get(2), 19991, CHROMOSOME_CENTROMERE.position() - 1, false, BND);
+        assertPurpleSegment(segments.get(3), CHROMOSOME_CENTROMERE.position(), CHROMOSOME_LENGTH.position(), false, CENTROMERE);
     }
 
     @Test
@@ -74,9 +92,11 @@ public class PurpleSegmentFactoryTest {
         final Cluster cluster = addRatios(cluster(17002), 18881, 19000).build();
         final List<PurpleSegment> segments =
                 PurpleSegmentFactory.create(CHROMOSOME_CENTROMERE, CHROMOSOME_LENGTH, Lists.newArrayList(cluster));
-        assertEquals(2, segments.size());
+        assertEquals(3, segments.size());
         assertPurpleSegment(segments.get(0), 1, 18880, true, TELOMERE);
-        assertPurpleSegment(segments.get(1), 18881, CHROMOSOME_LENGTH.position(), true, NONE);
+        assertPurpleSegment(segments.get(1), 18881, CHROMOSOME_CENTROMERE.position() - 1, true, NONE);
+        assertPurpleSegment(segments.get(2), CHROMOSOME_CENTROMERE.position(), CHROMOSOME_LENGTH.position(), true, CENTROMERE);
+
     }
 
     private static void assertPurpleSegment(@NotNull final PurpleSegment victim, long start, long end, boolean ratioSupport,

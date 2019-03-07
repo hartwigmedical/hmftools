@@ -26,7 +26,8 @@ public final class PurpleSegmentFactory {
     private final Map<Chromosome, GenomePosition> lengths;
     private final Map<Chromosome, GenomePosition> centromeres;
 
-    public PurpleSegmentFactory(final int windowSize, final Map<Chromosome, GenomePosition> centromeres, final Map<Chromosome, GenomePosition> lengths) {
+    public PurpleSegmentFactory(final int windowSize, final Map<Chromosome, GenomePosition> centromeres,
+            final Map<Chromosome, GenomePosition> lengths) {
         this.windowSize = windowSize;
         this.centromeres = centromeres;
         this.lengths = lengths;
@@ -66,8 +67,14 @@ public final class PurpleSegmentFactory {
     @VisibleForTesting
     static List<PurpleSegment> create(@NotNull final GenomePosition centromere, @NotNull final GenomePosition length,
             @NotNull final Collection<Cluster> clusters) {
+        return addCentromere(centromere, create(length, clusters));
+    }
+
+    @NotNull
+    @VisibleForTesting
+    static List<PurpleSegment> create(@NotNull final GenomePosition length, @NotNull final Collection<Cluster> clusters) {
         final List<PurpleSegment> result = Lists.newArrayList();
-        ModifiablePurpleSegment segment = create(length.chromosome(), 1).setSupport(SegmentSupport.TELOMERE);
+        ModifiablePurpleSegment segment = create(length.chromosome()).setSupport(SegmentSupport.TELOMERE);
 
         for (final Cluster cluster : clusters) {
             boolean ratioSupport = !cluster.ratios().isEmpty();
@@ -76,7 +83,7 @@ public final class PurpleSegmentFactory {
             if (!variants.isEmpty()) {
                 for (final SVSegment variant : variants) {
                     if (variant.position() != segment.start()) {
-                        result.add(setEnd(centromere, segment, (variant.position() - 1)));
+                        result.add(segment.setEnd(variant.position() - 1));
                         segment = createFromCluster(cluster, variant, ratioSupport);
                     } else {
                         segment.setSupport(SegmentSupport.MULTIPLE);
@@ -89,23 +96,23 @@ public final class PurpleSegmentFactory {
 
                 // DO FIRST
                 final GenomePosition firstRatioBreak = pcfPositions.get(0);
-                result.add(setEnd(centromere, segment, firstRatioBreak.position() - 1));
+                result.add(segment.setEnd(firstRatioBreak.position() - 1));
                 segment = create(firstRatioBreak.chromosome(), firstRatioBreak.position(), pcfPositions);
             }
         }
 
-        result.add(setEnd(centromere, segment, length.position()));
+        result.add(segment.setEnd(length.position()));
         return result;
     }
 
     @NotNull
-    private static ModifiablePurpleSegment create(@NotNull String chromosome, long start) {
+    private static ModifiablePurpleSegment create(@NotNull String chromosome) {
         return ModifiablePurpleSegment.create()
                 .setChromosome(chromosome)
                 .setRatioSupport(true)
-                .setStart(start)
-                .setMinStart(start)
-                .setMaxStart(start)
+                .setStart((long) 1)
+                .setMinStart((long) 1)
+                .setMaxStart((long) 1)
                 .setEnd(0)
                 .setSvCluster(false)
                 .setSupport(SegmentSupport.NONE);
@@ -137,8 +144,7 @@ public final class PurpleSegmentFactory {
     }
 
     @NotNull
-    private static ModifiablePurpleSegment createFromCluster(@NotNull Cluster cluster, @NotNull SVSegment variant,
-            boolean ratioSupport) {
+    private static ModifiablePurpleSegment createFromCluster(@NotNull Cluster cluster, @NotNull SVSegment variant, boolean ratioSupport) {
         return ModifiablePurpleSegment.create()
                 .setChromosome(cluster.chromosome())
                 .setRatioSupport(ratioSupport)
@@ -150,13 +156,36 @@ public final class PurpleSegmentFactory {
                 .setSupport(SegmentSupport.fromVariant(variant.type()));
     }
 
-    private static ModifiablePurpleSegment setEnd(@Nullable GenomePosition centromere, @NotNull ModifiablePurpleSegment segment, long end) {
-        segment.setEnd(end);
+    @NotNull
+    private static List<PurpleSegment> addCentromere(@Nullable final GenomePosition centromere,
+            @NotNull final List<PurpleSegment> segments) {
+        final List<PurpleSegment> result = Lists.newArrayList();
 
-        if (centromere != null && segment.contains(centromere)) {
-            segment.setSupport(SegmentSupport.CENTROMERE);
+        for (PurpleSegment segment : segments) {
+            if (centromere != null && segment.contains(centromere)) {
+                if (segment.start() == centromere.position()) {
+                    final PurpleSegment start = ImmutablePurpleSegment.builder().from(segment).support(SegmentSupport.CENTROMERE).build();
+                    result.add(start);
+                } else {
+                    final PurpleSegment start = ImmutablePurpleSegment.builder().from(segment).end(centromere.position() - 1).build();
+                    final PurpleSegment end = ImmutablePurpleSegment.builder()
+                            .from(segment)
+                            .start(centromere.position())
+                            .minStart(centromere.position())
+                            .maxStart(centromere.position())
+                            .support(SegmentSupport.CENTROMERE)
+                            .build();
+
+                    result.add(start);
+                    result.add(end);
+                }
+
+            } else {
+                result.add(segment);
+            }
+
         }
 
-        return segment;
+        return result;
     }
 }
