@@ -6,8 +6,6 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.context.RunContext;
-import com.hartwig.hmftools.common.lims.Lims;
-import com.hartwig.hmftools.common.lims.LimsSampleType;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -54,12 +52,11 @@ public final class Utils {
 
     @NotNull
     private static String getPatientIdentifier(@NotNull final String runName) {
-        LimsSampleType type = LimsSampleType.fromSampleId(runName);
         final String[] names = runName.split("_");
-        if (names.length < 5 && type != LimsSampleType.COLO) {
+        if (names.length < 5 && !runName.contains("COLO")) {
             LOGGER.error("run name {} had less than 5 parts after splitting on _", runName);
             return Strings.EMPTY;
-        } else if (type == LimsSampleType.COLO){ //take sample ID of COLO
+        } else if (runName.contains("COLO")){ //take sample ID of COLO
             return names[1];
         }
         return names[4];
