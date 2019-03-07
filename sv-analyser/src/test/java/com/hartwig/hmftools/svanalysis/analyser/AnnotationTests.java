@@ -21,6 +21,7 @@ import com.hartwig.hmftools.svanalysis.types.SvCNData;
 import com.hartwig.hmftools.svanalysis.types.SvCluster;
 import com.hartwig.hmftools.svanalysis.types.SvVarData;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 public class AnnotationTests
@@ -57,7 +58,7 @@ public class AnnotationTests
 
     }
 
-    @Test
+    @Ignore
     public void testPotentialDoubleMinutes()
     {
         SvTestHelper tester = new SvTestHelper();
