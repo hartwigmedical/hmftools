@@ -54,10 +54,11 @@ public final class Utils {
     @NotNull
     private static String getPatientIdentifier(@NotNull final String runName) {
         final String[] names = runName.split("_");
-        if (names.length < 5 && !runName.contains("COLO")) {
+        LimsSampleType type = LimsSampleType.fromRunName(names[1]);
+        if (names.length < 5 && type != LimsSampleType.COLO) {
             LOGGER.error("run name {} had less than 5 parts after splitting on _", runName);
             return Strings.EMPTY;
-        } else if (runName.contains("COLO")){ //take sample ID of COLO
+        } else if (type == LimsSampleType.COLO){ //take sample ID of COLO
             return names[1];
         }
         return names[4];
