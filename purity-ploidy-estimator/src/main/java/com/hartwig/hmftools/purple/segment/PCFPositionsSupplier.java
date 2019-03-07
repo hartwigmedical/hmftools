@@ -2,16 +2,11 @@ package com.hartwig.hmftools.purple.segment;
 
 import static com.hartwig.hmftools.common.position.GenomePositions.union;
 
-import java.util.Map;
-
-import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.chromosome.Chromosome;
 import com.hartwig.hmftools.common.pcf.ImmutablePCFPosition;
 import com.hartwig.hmftools.common.pcf.PCFPosition;
 import com.hartwig.hmftools.common.pcf.PCFSource;
-import com.hartwig.hmftools.common.position.GenomePosition;
-import com.hartwig.hmftools.common.window.Window;
 import com.hartwig.hmftools.purple.config.AmberData;
 import com.hartwig.hmftools.purple.config.CobaltData;
 import com.hartwig.hmftools.purple.config.CommonConfig;
@@ -35,20 +30,19 @@ public final class PCFPositionsSupplier {
         final Multimap<Chromosome, PCFPosition> tumorBAF = amberData.tumorSegments();
 
         LOGGER.info("Merging reference and tumor ratio break points");
-        return union(union(union(tumorBreakPoints, referenceBreakPoint), tumorBAF),
-                centromeres(config.windowSize(), configSupplier.refGenomeConfig().centromere()));
+        return union(union(tumorBreakPoints, referenceBreakPoint), tumorBAF);
     }
 
-    @NotNull
-    private static Multimap<Chromosome, PCFPosition> centromeres(int windowSize, @NotNull final Map<Chromosome, GenomePosition> centromeres) {
-        final Multimap<Chromosome, PCFPosition> result = ArrayListMultimap.create();
-        final Window window = new Window(windowSize);
-        for (Map.Entry<Chromosome, GenomePosition> entry : centromeres.entrySet()) {
-            final GenomePosition centromere = entry.getValue();
-            result.put(entry.getKey(), create(centromere.chromosome(), window.start(centromere.position())));
-        }
-        return result;
-    }
+    //    @NotNull
+    //    private static Multimap<Chromosome, PCFPosition> centromeres(int windowSize, @NotNull final Map<Chromosome, GenomePosition> centromeres) {
+    //        final Multimap<Chromosome, PCFPosition> result = ArrayListMultimap.create();
+    //        final Window window = new Window(windowSize);
+    //        for (Map.Entry<Chromosome, GenomePosition> entry : centromeres.entrySet()) {
+    //            final GenomePosition centromere = entry.getValue();
+    //            result.put(entry.getKey(), create(centromere.chromosome(), window.start(centromere.position())));
+    //        }
+    //        return result;
+    //    }
 
     @NotNull
     private static PCFPosition create(@NotNull final String chromosome, long position) {

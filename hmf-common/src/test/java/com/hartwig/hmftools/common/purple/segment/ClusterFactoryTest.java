@@ -147,10 +147,10 @@ public class ClusterFactoryTest {
             @Nullable Long firstRatio, @Nullable Long finalRatio) {
         assertEquals(start, cluster.start());
         assertEquals(Math.max(finalVariant == null ? 0 : finalVariant, finalRatio == null ? 0 : finalRatio), cluster.end());
-        assertEquals(firstVariant, cluster.firstVariant());
-        assertEquals(finalVariant, cluster.finalVariant());
-        assertEquals(firstRatio, cluster.firstRatio());
-        assertEquals(finalRatio, cluster.finalRatio());
+        assertEquals(firstVariant, firstVariant(cluster));
+        assertEquals(finalVariant, finalVariant(cluster));
+        assertEquals(firstRatio, firstRatio(cluster));
+        assertEquals(finalRatio, finalRatio(cluster));
     }
 
     @NotNull
@@ -212,4 +212,28 @@ public class ClusterFactoryTest {
     private static PCFPosition ratio(long position) {
         return ImmutablePCFPosition.builder().chromosome(CHROM).position(position).source(PCFSource.TUMOR_RATIO).minPosition(0).maxPosition(0).build();
     }
+
+
+    @Nullable
+    private static Long firstVariant(Cluster cluster) {
+        return cluster.variants().isEmpty() ? null : cluster.variants().get(0).position();
+    }
+
+    @Nullable
+    private static Long finalVariant(Cluster cluster) {
+        return cluster.variants().isEmpty() ? null :cluster.variants().get(cluster.variants().size() - 1).position();
+    }
+
+    @Nullable
+    private static Long firstRatio(Cluster cluster) {
+        return cluster.ratios().isEmpty() ? null : cluster.ratios().get(0).position();
+    }
+
+    @Nullable
+    private static Long finalRatio(Cluster cluster) {
+        return cluster.ratios().isEmpty() ? null : cluster.ratios().get(cluster.ratios().size() - 1).position();
+    }
+
+
+
 }

@@ -28,25 +28,4 @@ abstract class Cluster implements GenomeRegion {
         return pcfPositions().stream().filter(x -> !x.source().equals(PCFSource.TUMOR_BAF)).collect(Collectors.toList());
     }
 
-
-    @Nullable
-    Long firstVariant() {
-        return variants().isEmpty() ? null : variants().get(0).position();
-    }
-
-    @Nullable
-    Long finalVariant() {
-        return variants().isEmpty() ? null : variants().get(variants().size() - 1).position();
-    }
-
-    @Nullable
-    Long firstRatio() {
-        return ratios().isEmpty() ? null : ratios().get(0).position();
-    }
-
-    @Nullable
-    Long finalRatio() {
-        return ratios().isEmpty() ? null : ratios().get(ratios().size() - 1).position();
-    }
-
 }
