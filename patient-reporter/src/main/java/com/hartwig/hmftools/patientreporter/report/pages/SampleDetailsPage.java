@@ -89,7 +89,7 @@ public abstract class SampleDetailsPage {
 
         if (type == LimsSampleType.CORE) {
             lines.add("The hospital patient ID is: " + sampleReport().hospitalPatientId());
-            lines.add("The project name of sample is: " + sampleReport().projectName());
+            lines.add("The project name of sample is: " + sampleReport().projectName() + " and the submission ID is " + sampleReport().submission());
             lines.add("The contact names are: " + sampleReport().contactNames());
             lines.add("The contact emails are: " + sampleReport().contactEmails());
         }

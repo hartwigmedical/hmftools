@@ -88,7 +88,7 @@ public final class SomaticVariantDataSource {
             } else {
                 if (variant1.gene().equals(variant2.gene())) {
                     // sort on genomic position if gene is the same
-                    return ((int) variant1.position() > (int) variant2.position()) ? (int) variant1.position() : (int) variant2.position();
+                    return ((int) variant1.position() < (int) variant2.position()) ? (int) variant1.position() : (int) variant2.position();
                 } else {
                     return variant1.gene().compareTo(variant2.gene());
                 }

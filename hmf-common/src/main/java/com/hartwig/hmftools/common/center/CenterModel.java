@@ -33,7 +33,7 @@ public abstract class CenterModel {
     @Nullable
     public String addresseeStringForSample(@NotNull final String contactNames, @NotNull final String sample) {
         String adres = "";
-        if (sample.startsWith("CORE19") || sample.contains("CORE18")) {
+        if (sample.startsWith("CORE19") || sample.contains("CORE18")) { // This are the old core names
             final CenterDataManualMapping centerDataManualMapping = centerPerIdManual().get(sample);
             final CenterData center = centerPerHospital().get(centerDataManualMapping.addressName());
             if (center == null) {
@@ -112,7 +112,7 @@ public abstract class CenterModel {
                 return center.cpctPI();
             }
             return center.drupPI();
-        } else if (type == LimsSampleType.WIDE || type == LimsSampleType.CORE) {
+        } else if (type == LimsSampleType.WIDE) {
             return contactNames;
         }
         return Strings.EMPTY;
