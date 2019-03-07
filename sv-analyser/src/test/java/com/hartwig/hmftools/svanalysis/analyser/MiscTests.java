@@ -6,6 +6,7 @@ import static com.hartwig.hmftools.svanalysis.analyser.SvTestHelper.createDup;
 import static com.hartwig.hmftools.svanalysis.analyser.SvTestHelper.createIns;
 import static com.hartwig.hmftools.svanalysis.analyser.SvTestHelper.createInv;
 import static com.hartwig.hmftools.svanalysis.analyser.SvTestHelper.createSgl;
+import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.appendStr;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.calcConsistency;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.makeChrArmStr;
 
@@ -53,6 +54,11 @@ public class MiscTests
     public void testMiscMethods()
     {
         assertTrue(makeChrArmStr("1", "P").equals("1_P"));
+
+        String test = "something";
+        test = appendStr(test, "else", ';');
+
+        assertEquals("something;else", test);
     }
 
 

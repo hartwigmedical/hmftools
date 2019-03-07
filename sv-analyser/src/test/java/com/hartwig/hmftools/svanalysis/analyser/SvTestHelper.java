@@ -8,6 +8,7 @@ import static com.hartwig.hmftools.common.variant.structural.StructuralVariantTy
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INS;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INV;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
+import static com.hartwig.hmftools.svanalysis.analysis.ClusterAnnotations.ALL_ANNOTATIONS;
 import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.DEFAULT_PROXIMITY_DISTANCE;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.CHROMOSOME_ARM_P;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.CHROMOSOME_ARM_Q;
@@ -55,6 +56,8 @@ public class SvTestHelper
     public SvTestHelper()
     {
         Config = new SvaConfig(DEFAULT_PROXIMITY_DISTANCE);
+        Config.RequiredAnnotations = ALL_ANNOTATIONS;
+
         ClusteringMethods = new SvClusteringMethods(Config.ProximityDistance);
         Analyser = new ClusterAnalyser(Config, ClusteringMethods);
         CopyNumberAnalyser = new CNAnalyser("", null);

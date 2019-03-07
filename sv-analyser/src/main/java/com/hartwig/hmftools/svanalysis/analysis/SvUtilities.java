@@ -120,6 +120,11 @@ public class SvUtilities {
         return clusterTypeStr;
     }
 
+    public static String appendStr(final String dest, final String source, char delim)
+    {
+        return dest.isEmpty() ? source : dest + delim + source;
+    }
+
     public static boolean areVariantsLinkedByDistance(final SvVarData v1, final SvVarData v2, int permittedDistance)
     {
         if(v1.id().equals(v2.id()))

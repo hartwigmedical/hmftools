@@ -15,6 +15,7 @@ import static com.hartwig.hmftools.svanalysis.analysis.CNAnalyser.Q_ARM_TELOMERE
 import static com.hartwig.hmftools.svanalysis.analysis.ClusterAnalyser.SHORT_TI_LENGTH;
 import static com.hartwig.hmftools.svanalysis.analysis.LinkFinder.NO_DB_MARKER;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.CHROMOSOME_ARM_P;
+import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.appendStr;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.calcConsistency;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.copyNumbersEqual;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.getSvTypesStr;
@@ -173,10 +174,9 @@ public class ClusterAnnotations
             if (otherCluster == cluster || otherCluster.isResolved())
                 continue;
 
-            if(!traversedInfo.isEmpty())
-                traversedInfo += ";";
-
-            traversedInfo += String.format("%d %.2f", breakend.orientation(), breakend.getSV().copyNumberChange(breakend.usesStart()));
+            traversedInfo = appendStr(traversedInfo,
+                    String.format("%d %.2f", breakend.orientation(), breakend.getSV().copyNumberChange(breakend.usesStart())),
+                    ';');
         }
 
         return traversedInfo;
@@ -651,6 +651,7 @@ public class ClusterAnnotations
         String arm = "";
         double maxFoldbackPloidy = 0;
         String foldbackIds = "";
+        String foldbackOrientations = "";
 
         List<SvVarData> chainedFoldbacks = Lists.newArrayList(); // to avoid double counting
 
@@ -704,10 +705,9 @@ public class ClusterAnnotations
             maxFoldbackPloidy = max(maxFoldbackPloidy, breakend.getSV().ploidyMin());
             ++foldbackCount;
 
-            if(!foldbackIds.isEmpty())
-                foldbackIds += ";";
-
-            foldbackIds += breakend.getSV().id();
+            foldbackIds = appendStr(foldbackIds, breakend.getSV().id(), ';');
+            String direction = (breakend.orientation() == 1) == (breakend.arm() == CHROMOSOME_ARM_P) ? "T" : "C";
+            foldbackOrientations = appendStr(foldbackOrientations, direction, ';');
         }
 
         if(breakendLower == null && breakendUpper == null)
@@ -799,21 +799,19 @@ public class ClusterAnnotations
                 String clusterInfo = String.format("%d/%d/%.2f/%.2f",
                         nextCluster.id(), nextCluster.getSvCount(), netPloidy, maxOpposingPloidy);
 
-                if(!allClusterInfo.isEmpty())
-                    allClusterInfo += ";";
-
-                allClusterInfo += clusterInfo;
+                allClusterInfo = appendStr(allClusterInfo, clusterInfo, ';');
             }
         }
 
-        // SampleId,ClusterId,ClusterCount,FoldbackCount,IsMultiArm,ClusterDesc,Chromosome,Arm,SvIds,PosLower,PosUpper,
+        // SampleId,ClusterId,ClusterCount,FoldbackCount,IsMultiArm,ClusterDesc,Chromosome,Arm,SvIds,Orientations,PosLower,PosUpper,
         // MaxFoldbackPloidy,TelomereCN,CentromereCNChg,OpposingClusterCount,OpposingClusterInfo
 
         String infoStr = String.format("%s,%d,%d,%d,%s,%s,%s,%s",
                 sampleId, cluster.id(), cluster.getSvCount(), foldbackCount, isMultiArm, cluster.getDesc(), chromosome, arm);
 
-        infoStr += String.format(",%s,%d,%d,%.2f,%.2f,%.2f,%d,%s",
-                foldbackIds, breakendLower != null ? breakendLower.position() : -1, breakendUpper != null ? breakendUpper.position() : -1,
+        infoStr += String.format(",%s,%s,%d,%d,%.2f,%.2f,%.2f,%d,%s",
+                foldbackIds, foldbackOrientations,
+                breakendLower != null ? breakendLower.position() : -1, breakendUpper != null ? breakendUpper.position() : -1,
                 maxFoldbackPloidy, telomereCN, centromereCNChange, opposingClusterCount, allClusterInfo);
 
         LOGGER.info("INCONSIST_FBS: {}", infoStr);
@@ -1130,12 +1128,7 @@ public class ClusterAnnotations
             if(!var.isNullBreakend() && !chromosomes.contains(var.chromosome(false)))
                 chromosomes.add(var.chromosome(false));
 
-            if(!svInfo.isEmpty())
-            {
-                svInfo += ";";
-            }
-
-            svInfo += var.id();
+            svInfo = appendStr(svInfo, var.id(), ';');
 
             final SvCluster cluster = var.getCluster();
             if (!clusters.contains(cluster))
@@ -1143,11 +1136,7 @@ public class ClusterAnnotations
                 clusters.add(cluster);
 
                 cluster.addAnnotation(CLUSTER_ANNONTATION_DM);
-
-                if(!clusterInfo.isEmpty())
-                    clusterInfo += ";";
-
-                clusterInfo += String.format("%d-%s-%s", cluster.id(), cluster.getDesc(), cluster.getResolvedType());
+                clusterInfo = appendStr(clusterInfo, String.format("%d-%s-%s", cluster.id(), cluster.getDesc(), cluster.getResolvedType()), ';');
             }
         }
 
@@ -1178,10 +1167,7 @@ public class ClusterAnnotations
         String chromosomeStr = "";
         for(String chr : chromosomes)
         {
-            if(!chromosomeStr.isEmpty())
-                chromosomeStr += ";";
-
-            chromosomeStr += chr;
+            chromosomeStr = appendStr(chromosomeStr, chr, ';');
         }
 
         // SampleId,SamplePurity,SamplePloidy,IsComplete,GroupCount,ClusterInfo,SvTypes,SvInfo,Chromosomes,DMPosStart,DMPosEnd,
@@ -1331,14 +1317,7 @@ public class ClusterAnnotations
 
             for(final EnsemblGeneData geneData : genesList)
             {
-                String transId = geneCollection.getCanonicalTranscriptId(geneData);
-                if(transId != "")
-                {
-                    if(!genesStr.isEmpty())
-                        genesStr += ";";
-
-                    genesStr += transId;
-                }
+                genesStr = appendStr(genesStr, geneData.GeneName, ';');
             }
         }
 

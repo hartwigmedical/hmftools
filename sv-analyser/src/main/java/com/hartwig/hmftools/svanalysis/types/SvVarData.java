@@ -9,6 +9,7 @@ import static com.hartwig.hmftools.common.variant.structural.StructuralVariantTy
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DUP;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INS;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
+import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.appendStr;
 import static com.hartwig.hmftools.svanalysis.annotators.FragileSiteAnnotator.NO_FS;
 import static com.hartwig.hmftools.svanalysis.annotators.LineElementAnnotator.NO_LINE_ELEMENT;
 import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.ASSEMBLY_MATCH_MATCHED;
@@ -315,10 +316,7 @@ public class SvVarData
         if(mClusterReason.contains(reason))
             return;
 
-        if(!mClusterReason.isEmpty())
-            mClusterReason += ";";
-
-        mClusterReason += reason;
+        mClusterReason = appendStr(mClusterReason, reason, ';');
 
         if(!otherId.isEmpty())
             mClusterReason += "_" + otherId;
