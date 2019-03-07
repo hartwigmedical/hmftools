@@ -119,7 +119,7 @@ public final class LoadClinicalData {
             @NotNull TumorLocationCurator tumorLocationCurator, @NotNull Lims lims, @NotNull String patientIdCOLO) {
         List<String> corePatients = Lists.newArrayList();
         List<String> widePatients = Lists.newArrayList();
-        List<String> coloPatient = Lists.newArrayList();
+        Set<String> coloPatient = Sets.newHashSet();
 
         TumorLocationCurationLims tumorLocationCurationLims = new TumorLocationCurationLims(lims, tumorLocationCurator);
 
@@ -144,7 +144,7 @@ public final class LoadClinicalData {
         Map<String, TumorTypeLims> WIDEPatientsData = readLimsPatients(tumorLocationCurationLims, widePatients, samplesPerPatient, lims);
         LOGGER.info(String.format("Finished curation of %s WIDE patients.", WIDEPatientsData.size()));
 
-        LOGGER.info(String.format("Interpreting and curating data for %s COLO patients.", coloPatient));
+        LOGGER.info(String.format("Interpreting and curating data for %s COLO patients.", coloPatient.size()));
         Map<String, TumorTypeLims> COLOPatientsData = Maps.newHashMap();
         COLOPatientsData.put(patientIdCOLO,
                 ImmutableTumorTypeLims.of(patientIdCOLO, ImmutableCuratedTumorLocation.of("Skin", "Melanoma", "Melanoma")));
