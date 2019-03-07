@@ -12,11 +12,16 @@ import static com.hartwig.hmftools.common.variant.structural.StructuralVariantTy
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INS;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INV;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
-import static com.hartwig.hmftools.svanalysis.analysis.ClusterAnnotations.addFoldbackAnnotations;
-import static com.hartwig.hmftools.svanalysis.analysis.ClusterAnnotations.annotateClusterArmSegments;
+import static com.hartwig.hmftools.svanalysis.analysis.ClusterAnnotations.DOUBLE_MINUTES;
+import static com.hartwig.hmftools.svanalysis.analysis.ClusterAnnotations.FOLDBACK_MATCHES;
+import static com.hartwig.hmftools.svanalysis.analysis.ClusterAnnotations.REPLICATION_REPAIR;
+import static com.hartwig.hmftools.svanalysis.analysis.ClusterAnnotations.annotateChainedClusters;
+import static com.hartwig.hmftools.svanalysis.analysis.ClusterAnnotations.annotateFoldbacks;
 import static com.hartwig.hmftools.svanalysis.analysis.ClusterAnnotations.annotateTemplatedInsertions;
-import static com.hartwig.hmftools.svanalysis.analysis.ClusterAnnotations.classifyChainedClusters;
+import static com.hartwig.hmftools.svanalysis.analysis.ClusterAnnotations.findIncompleteFoldbackCandidates;
 import static com.hartwig.hmftools.svanalysis.analysis.ClusterAnnotations.findPotentialDoubleMinuteClusters;
+import static com.hartwig.hmftools.svanalysis.analysis.ClusterAnnotations.reportClusterArmSegments;
+import static com.hartwig.hmftools.svanalysis.analysis.ClusterAnnotations.runAnnotation;
 import static com.hartwig.hmftools.svanalysis.analysis.LinkFinder.MIN_TEMPLATED_INSERTION_LENGTH;
 import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.CLUSTER_REASON_COMMON_ARMS;
 import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.CLUSTER_REASON_FOLDBACKS;
@@ -209,7 +214,6 @@ public class ClusterAnalyser {
             //     logArmClusterData(cluster);
 
             reportClusterFeatures(cluster);
-            annotateClusterArmSegments(cluster);
         }
 
         reportOtherFeatures();
@@ -1188,27 +1192,35 @@ public class ClusterAnalyser {
 
     private void reportOtherFeatures()
     {
-        // analyseOverlappingTIs();
-
         annotateTemplatedInsertions(mClusters, mClusteringMethods.getChrBreakendMap());
         // checkSkippedLOHEvents();
 
-        addFoldbackAnnotations(mClusters);
+        annotateFoldbacks(mClusters);
 
-        findPotentialDoubleMinuteClusters(mSampleId, mClusteringMethods.getChrBreakendMap(), mCopyNumberAnalyser, mGeneCollection);
+        if(runAnnotation(mConfig.RequiredAnnotations, DOUBLE_MINUTES))
+        {
+            findPotentialDoubleMinuteClusters(mSampleId, mClusteringMethods.getChrBreakendMap(), mCopyNumberAnalyser, mGeneCollection);
+        }
     }
 
     private void reportClusterFeatures(final SvCluster cluster)
     {
         // reportDoubleMinutes(cluster, mClusteringMethods.getChrBreakendMap());
 
-        checkLooseFoldbacks(cluster);
+        checkLooseFoldbacks(cluster); // required for cluster-level arm group info (eg COMPLEX OTHER)
 
-        classifyChainedClusters(cluster, mClusteringMethods.getProximityDistance());
+        annotateChainedClusters(cluster, mClusteringMethods.getProximityDistance());
 
-        // reportDuplicationCopyNumberData(mSampleId, cluster, mClusteringMethods.getChrBreakendMap(), mCopyNumberAnalyser);
+        if(runAnnotation(mConfig.RequiredAnnotations, FOLDBACK_MATCHES))
+        {
+            findIncompleteFoldbackCandidates(mSampleId, cluster, mClusteringMethods.getChrBreakendMap(), mCopyNumberAnalyser);
+        }
 
-        // findIncompleteFoldbackCandidates(mSampleId, cluster, mClusteringMethods.getChrBreakendMap(), mClusteringMethods.getChrCopyNumberMap());
+        if(runAnnotation(mConfig.RequiredAnnotations, REPLICATION_REPAIR))
+        {
+            reportClusterArmSegments(cluster);
+        }
+
     }
 
     private final SvBreakend getNextUnresolvedBreakend(final List<SvBreakend> breakendList, int startIndex, boolean traverseUp)

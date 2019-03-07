@@ -822,6 +822,30 @@ public class CNAnalyser {
         }
     }
 
+    public double getCentromereCopyNumberChange(final String chromosome, boolean fromPArm)
+    {
+        // returns a positive value for CN change if it drops across the centromere
+        List<SvCNData> cnDataList = mChrCnDataMap.get(chromosome);
+
+        if(cnDataList == null || cnDataList.isEmpty())
+            return 0;
+
+        for(int i = 0; i < cnDataList.size(); ++i)
+        {
+            SvCNData cnData = cnDataList.get(i);
+
+            if(cnData.matchesSegment(CENTROMERE, false))
+            {
+                SvCNData nextCnData = cnDataList.get(i+1);
+                double cnChange = cnData.CopyNumber - nextCnData.CopyNumber;
+
+                return fromPArm ? cnChange : -cnChange;
+            }
+        }
+
+        return 0;
+    }
+
     public final List<StructuralVariantData> createNoneSegments()
     {
         List<StructuralVariantData> svList = Lists.newArrayList();
@@ -1058,12 +1082,11 @@ public class CNAnalyser {
 
                         writer.write(String.format(",%s,%d,%d,%.4f,%.4f,%d,%d",
                                 svData.startChromosome(), svData.startPosition(), svData.startOrientation(),
-                                maxCNStart, cnChgStart, startDepthData[DWC_PREV_INDEX], startDepthData[DWC_NEXT_INDEX]));
+                                maxCNStart, cnChgStart, startDepthData[0], startDepthData[1]));
 
                         writer.write(String.format(",%s,%d,%d,%.4f,%.4f,%d,%d",
                                 svData.endChromosome(), svData.endPosition(), svData.endOrientation(), maxCNEnd, cnChgEnd,
-                                endDepthData != null ? endDepthData[DWC_PREV_INDEX] : 0,
-                                endDepthData != null ? endDepthData[DWC_NEXT_INDEX] : 0));
+                                endDepthData != null ? endDepthData[0] : 0, endDepthData != null ? endDepthData[1] : 0));
 
                         writer.write(String.format(",%.2f,%.2f,%.2f,%.2f",
                                 ploidyEstimate, ploidyUncertainty,
@@ -1213,7 +1236,7 @@ public class CNAnalyser {
 
     private static double calcCopyNumberSideUncertainty(double copyNumber, final int[] depthData)
     {
-        int minDepthCount = min(depthData[DWC_PREV_INDEX], depthData[DWC_NEXT_INDEX]);
+        int minDepthCount = min(depthData[0], depthData[1]);
 
         if(minDepthCount <= 0)
             return NO_DEPTH_CNCHANGE_UNC * copyNumber;
@@ -1319,30 +1342,6 @@ public class CNAnalyser {
             return null;
 
         return cnDataList.get(index);
-    }
-
-
-    public static int DWC_PREV_INDEX = 0;
-    public static int DWC_NEXT_INDEX = 1;
-
-    private final int[] extractDepthWindowData(final SvCNData cnData)
-    {
-        // get depth window count at and before this segment - ie straddling the breakend
-        int[] depthWindowData = new int[DWC_NEXT_INDEX+1];
-
-        final List<SvCNData> cnDataList = mChrCnDataMap.get(cnData.Chromosome);
-
-        depthWindowData[DWC_NEXT_INDEX] = cnData.DepthWindowCount;
-
-        if(cnData.getIndex() > 0)
-        {
-            final SvCNData prevCnData = cnDataList.get(cnData.getIndex()-1);
-
-            if(prevCnData.Chromosome.equals(cnData.Chromosome))
-                depthWindowData[DWC_PREV_INDEX] = prevCnData.DepthWindowCount;
-        }
-
-        return depthWindowData;
     }
 
     private static int PLOIDY_CALC_COLUMN_COUNT = 4;

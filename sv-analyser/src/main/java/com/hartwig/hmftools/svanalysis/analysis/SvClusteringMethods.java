@@ -1312,7 +1312,7 @@ public class SvClusteringMethods {
         if(otherPair.first().arm(otherPair.firstLinkOnStart()) != otherPair.second().arm(otherPair.secondLinkOnStart()))
             return false;
 
-        if(tiTraversesComplexSVs(cluster, tiPair))
+        if(tiPair.isInferred() && tiTraversesComplexSVs(cluster, tiPair))
             return false;
 
         long tiPos1 = tiPair.first().position(tiPair.firstLinkOnStart());

@@ -19,6 +19,7 @@ public class SvaConfig
     final public int MaxClusterSize; // for analysis and chaining
 
     public boolean LogVerbose;
+    public String RequiredAnnotations;
 
     // config options
     private static final String CLUSTER_BASE_DISTANCE = "cluster_bases";
@@ -30,6 +31,7 @@ public class SvaConfig
     private static final String MAX_SAMPLES = "max_samples"; // for testing only
     private static final String WRITE_VISUALISATION_DATA = "write_vis_data";
     private static final String MAX_CLUSTER_SIZE = "max_cluster_size";
+    private static final String REQUIRED_ANNOTATIONS = "annotations";
 
     private static int DEFAULT_MAX_CLUSTER_SIZE = 1000;
 
@@ -46,6 +48,7 @@ public class SvaConfig
         FragileSiteFile = cmd.getOptionValue(FRAGILE_SITE_FILE, "");
         LineElementFile = cmd.getOptionValue(LINE_ELEMENT_FILE, "");
         ReplicationOriginsFile = cmd.getOptionValue(REPLICATION_ORIGINS_FILE, "");
+        RequiredAnnotations = cmd.getOptionValue(REQUIRED_ANNOTATIONS, "");
         MaxSamples = Integer.parseInt(cmd.getOptionValue(MAX_SAMPLES, "0"));
         LogVerbose = cmd.hasOption(LOG_VERBOSE);
         WriteVisualisationData = cmd.hasOption(WRITE_VISUALISATION_DATA);
@@ -59,6 +62,7 @@ public class SvaConfig
         FragileSiteFile = "";
         LineElementFile = "";
         ReplicationOriginsFile = "";
+        RequiredAnnotations = "";
         SampleId = "";
         MaxSamples = 0;
         LogVerbose = false;
@@ -78,5 +82,6 @@ public class SvaConfig
         options.addOption(LOG_VERBOSE, false, "Log extra detail");
         options.addOption(WRITE_VISUALISATION_DATA, false, "Optional: write files for Circos");
         options.addOption(MAX_CLUSTER_SIZE, true, "Optional: max cluster size for chaining");
+        options.addOption(REQUIRED_ANNOTATIONS, true, "Optional: string list of annotations");
     }
 }

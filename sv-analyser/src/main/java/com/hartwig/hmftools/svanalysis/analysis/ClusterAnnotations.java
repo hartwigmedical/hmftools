@@ -47,6 +47,7 @@ import com.hartwig.hmftools.svanalysis.types.SvCluster;
 import com.hartwig.hmftools.svanalysis.types.SvLinkedPair;
 import com.hartwig.hmftools.svanalysis.types.SvVarData;
 import com.hartwig.hmftools.svannotation.SvGeneTranscriptCollection;
+import com.sun.jmx.snmp.SnmpVarBind;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -57,195 +58,21 @@ public class ClusterAnnotations
 {
     private static final Logger LOGGER = LogManager.getLogger(ClusterAnnotations.class);
 
+    public static final String ALL_ANNOTATIONS = "ALL";
+    public static final String DOUBLE_MINUTES = "DM";
+    public static final String FOLDBACK_MATCHES = "FBM";
+    public static final String CHROMOTHRIPSIS = "CT";
+    public static final String REPLICATION_REPAIR = "REPR";
 
-    public static void annotateClusterArmSegments(final SvCluster cluster)
+    public static boolean runAnnotation(final String annotationsList, final String annotation)
     {
-        if (cluster.isResolved())
-            return;
+        if(annotationsList.isEmpty())
+            return false;
 
-        if (cluster.getSvCount() < 6)
-            return;
+        if(annotationsList.contains(ALL_ANNOTATIONS))
+            return true;
 
-        // isSpecificCluster(cluster);
-
-        final Map<String, List<SvBreakend>> chrBreakendMap = cluster.getChrBreakendMap();
-
-        for (final Map.Entry<String, List<SvBreakend>> entry : chrBreakendMap.entrySet())
-        {
-            List<SvBreakend> breakendList = entry.getValue();
-
-            if (breakendList.size() < 6)
-                continue;
-
-            // first establish the lowest copy number segments
-            int bndCount = 0;
-            boolean hasConsecutiveOrientations = false;
-            double lowestCopyNumber = -1;
-
-            List<SvArmCluster> localSegments = Lists.newArrayList();
-            SvArmCluster armCuster = null;
-
-            for (int i = 0; i < breakendList.size() - 1; ++i)
-            {
-                final SvBreakend breakend = breakendList.get(i);
-
-                if(!hasConsecutiveOrientations && i < breakendList.size() - 1)
-                {
-                    hasConsecutiveOrientations = (breakend.orientation() != breakendList.get(i+1).orientation());
-                }
-
-                double lowCopyNumber = breakend.getCopyNumber(false);
-
-                if (breakend.orientation() == 1 && (lowestCopyNumber == -1 || lowCopyNumber < lowestCopyNumber))
-                {
-                    // a new lowest segment, which will be the first original DSB
-                    // all previous breakends will be put into the first arm cluster
-                    lowestCopyNumber = lowCopyNumber;
-
-                    localSegments.clear();
-
-                    // add all previous breakends to the first arm cluster
-                    armCuster = new SvArmCluster(localSegments.size(), cluster, breakend.chromosome(), breakend.arm());
-
-                    for (int j = 0; j <= i; ++j)
-                        armCuster.addBreakend(breakendList.get(j));
-
-                    localSegments.add(armCuster);
-                    armCuster = null;
-                }
-                else if (breakend.orientation() == 1 && copyNumbersEqual(lowestCopyNumber, lowCopyNumber))
-                {
-                    // end of a segment since next CN equals the low - add the last breakend
-                    if(armCuster == null)
-                    {
-                        // probably an indication of failed clustering, so work around it
-                        armCuster = new SvArmCluster(localSegments.size(), cluster, breakend.chromosome(), breakend.arm());
-                        localSegments.add(armCuster);
-                    }
-
-                    armCuster.addBreakend(breakend);
-                    armCuster = null;
-                }
-                else
-                {
-                    // either continuation of an existing segment or start of a new one
-                    if (armCuster == null)
-                    {
-                        armCuster = new SvArmCluster(localSegments.size(), cluster, breakend.chromosome(), breakend.arm());
-                        localSegments.add(armCuster);
-                    }
-
-                    armCuster.addBreakend(breakend);
-                }
-
-                if (breakend.getSV().type() == BND)
-                    ++bndCount;
-            }
-
-            if (bndCount > 0 || !hasConsecutiveOrientations)
-                continue;
-
-            for (final SvArmCluster armCluster : localSegments)
-            {
-                List<SvBreakend> acBreakendList = armCluster.getBreakends();
-
-                if(acBreakendList.size() < 4)
-                    continue;
-
-                int backwardCount = (int)acBreakendList.stream().filter(x -> x.orientation() == 1).count();
-                int forwardCount = (int)acBreakendList.stream().filter(x -> x.orientation() == -1).count();
-
-                // form into mutually exclusive pairs based on copy number change match
-                List<SvBreakend> unlinkedBreakends = Lists.newArrayList(acBreakendList);
-                List<SvLinkedPair> pairs = formPossibleLinkedPairsByShortest(unlinkedBreakends);
-
-                LOGGER.debug("cluster({}) armCluster({} : {}_{}) count({} fwd={} bak={}) pairs({}) unlinked({})",
-                        cluster.id(), armCluster.id(), armCluster.chromosome(), armCluster.arm(),
-                        acBreakendList.size(), forwardCount, backwardCount, pairs.size(), unlinkedBreakends.size());
-            }
-        }
-    }
-
-    private static List<SvLinkedPair> formPossibleLinkedPairsByShortest(List<SvBreakend> unlinkedBreakends)
-    {
-        List<SvLinkedPair> pairs = Lists.newArrayList();
-
-        while(!unlinkedBreakends.isEmpty())
-        {
-            boolean pairFound = false;
-
-            for(int i = 0; i < unlinkedBreakends.size() - 2; ++i)
-            {
-                final SvBreakend be1 = unlinkedBreakends.get(i);
-                final SvBreakend be2 = unlinkedBreakends.get(i+1);
-
-                if(be1.orientation() != -1 || be2.orientation() != 1)
-                    continue;
-
-                // pair off these if the CN matches
-                if (!copyNumbersEqual(be1.copyNumberChange(), be2.copyNumberChange()))
-                    continue;
-
-                SvLinkedPair pair = SvLinkedPair.from(be1, be2, LINK_TYPE_TI);
-                pairs.add(pair);
-
-                pairFound = true;
-                unlinkedBreakends.remove(i+1); // higher index removed first
-                unlinkedBreakends.remove(i);
-                break;
-            }
-
-            if(!pairFound)
-                break;
-        }
-
-        return pairs;
-    }
-
-    private static List<SvLinkedPair> formPossibleLinkedPairsConsecutively(List<SvBreakend> unlinkedBreakends)
-    {
-        List<SvLinkedPair> pairs = Lists.newArrayList();
-
-        int j = 0;
-        while(j < unlinkedBreakends.size())
-        {
-            final SvBreakend be1 = unlinkedBreakends.get(j);
-
-            if(be1.orientation() == 1)
-            {
-                ++j;
-                continue;
-            }
-
-            boolean linkFound = false;
-            for(int k = j+1; k < unlinkedBreakends.size(); ++k)
-            {
-                final SvBreakend be2 = unlinkedBreakends.get(k);
-
-                if (be2.orientation() == -1)
-                    continue;
-
-                // pair off these if the CN matches
-                if (!copyNumbersEqual(be1.copyNumberChange(), be2.copyNumberChange()))
-                    continue;
-
-                SvLinkedPair pair = SvLinkedPair.from(be1, be2, LINK_TYPE_TI);
-                pairs.add(pair);
-
-                linkFound = true;
-                unlinkedBreakends.remove(k); // higher index removed first
-                unlinkedBreakends.remove(j);
-                break;
-
-            }
-
-            if(linkFound)
-                continue;
-            else
-                ++j;
-        }
-
-        return pairs;
+        return annotationsList.contains(annotation);
     }
 
     public static void annotateTemplatedInsertions(final List<SvCluster> clusters, final Map<String, List<SvBreakend>> chrBreakendMap)
@@ -261,7 +88,7 @@ public class ClusterAnnotations
             if(cluster.getChains().isEmpty())
                 continue;
 
-            // isSpecificCluster(cluster);
+            isSpecificCluster(cluster);
 
             // gather up start and end arms from each chain
             List<String> startEndArms = Lists.newArrayList();
@@ -421,91 +248,12 @@ public class ClusterAnnotations
         return nextSvData;
     }
 
-    public static void analyseOverlappingTIs(final String sampleId, final Map<String, List<SvBreakend>> chrBreakendMap)
-    {
-        // look for any TIs where one falls within the bounds of the other, as a sign of replication after shattering
-        for(final Map.Entry<String, List<SvBreakend>> entry : chrBreakendMap.entrySet())
-        {
-            List<SvBreakend> breakendList = entry.getValue();
-
-            for(int i = 1; i < breakendList.size() - 3; ++i)
-            {
-                final SvBreakend beStart1 = breakendList.get(i);
-                final SvBreakend beStart2 = breakendList.get(i + 1);
-
-                if(beStart1.orientation() == 1 || beStart2.orientation() == 1)
-                    continue;
-
-                final SvBreakend beEnd1 = breakendList.get(i + 2);
-                final SvBreakend beEnd2 = breakendList.get(i + 3);
-
-                if(beEnd1.orientation() == -1 || beEnd2.orientation() == -1)
-                    continue;
-
-                // now the orientations are correct, check if these 2 sets of breakends form one TI enclosed by the other
-
-                SvLinkedPair pair1 = beStart1.getSV().getLinkedPair(beStart1.usesStart());
-                SvLinkedPair pair2 = beStart2.getSV().getLinkedPair(beStart2.usesStart());
-
-                boolean pair1Matched = pair1 != null && pair1.hasBreakend(beEnd2);
-                boolean pair2Matched = pair2 != null && pair2.hasBreakend(beEnd1);
-
-                boolean sameCluster = beStart1.getSV().getCluster() == beStart2.getSV().getCluster()
-                        && beStart1.getSV().getCluster() == beEnd1.getSV().getCluster()
-                        && beStart1.getSV().getCluster() == beEnd2.getSV().getCluster();
-
-                long startGap = beStart2.position() - beStart1.position();
-
-                if((pair1Matched && pair2Matched) || (pair1 != null && pair2 != null))
-                {
-                    LOGGER.info("sample({}) cluster({}) matched TIs: outer({}) inner({}) gap(start={} middle={} end={})",
-                            sampleId, sameCluster ? beStart1.getSV().getCluster().id() : "multiple",
-                            pair1.toString(), pair2.toString(), beStart2.position() - beStart1.position(),
-                            beEnd2.position() - beStart2.position(), beEnd2.position() - beEnd1.position());
-
-                    long endGap = pair1.length() - pair2.length() - startGap;
-
-                    if(!pair1Matched || !pair2Matched)
-                    {
-                        if (endGap < 0)
-                            continue;
-                    }
-
-                    LOGGER.info("sample({}) cluster({}) enclosed TIs: outer({}) inner({}) gap(start={} middle={} end={})",
-                            sampleId, sameCluster ? beStart1.getSV().getCluster().id() : "multiple",
-                            pair1.toString(), pair2.toString(), startGap, pair2.length(), endGap);
-
-                    LOGGER.info("ENCLOSED_TI: {},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{}",
-                            sampleId, sameCluster ? beStart1.getSV().getCluster().id() : "multiple",
-                            pair1.first().chromosome(pair1.firstLinkOnStart()), pair1Matched, pair1Matched,
-                            pair1.first().id(), pair1.first().position(pair1.firstLinkOnStart()),
-                            pair1.second().id(), pair1.second().position(pair1.secondLinkOnStart()),
-                            pair2.first().id(), pair2.first().position(pair2.firstLinkOnStart()),
-                            pair2.second().id(), pair2.second().position(pair2.secondLinkOnStart()),
-                            pair1.length(), pair2.length(), startGap, endGap);
-
-                }
-                else
-                {
-                    // breakend form 2 TIs with one enclosed by pairings don't match for some reason
-                    LOGGER.info("ENCLOSED_TI: {},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{}",
-                            sampleId, sameCluster ? beStart1.getSV().getCluster().id() : "multiple",
-                            beStart1.chromosome(), pair1Matched, pair1Matched,
-                            beStart1.getSV().id(), beStart1.position(), beStart2.getSV().id(), beStart2.position(),
-                            beEnd1.getSV().id(), beEnd1.position(), beEnd2.getSV().id(), beEnd2.position(),
-                            beEnd2.position() - beStart1.position(), beEnd1.position() - beStart2.position(),
-                            startGap, beEnd2.position() - beEnd1.position());
-                }
-            }
-        }
-    }
-
     private static int CHAIN_TI_COUNT = 0;
     private static int CHAIN_TI_DB_COUNT = 1;
     private static int CHAIN_TI_SHORT_COUNT = 2;
     private static int CHAIN_TI_ASMB_COUNT = 3;
 
-    public static void classifyChainedClusters(final SvCluster cluster, long proximityCutoff)
+    public static void annotateChainedClusters(final SvCluster cluster, long proximityCutoff)
     {
         if(cluster.isResolved())
             return;
@@ -777,7 +525,7 @@ public class ClusterAnnotations
         }
     }
 
-    public static void addFoldbackAnnotations(final List<SvCluster> clusters)
+    public static void annotateFoldbacks(final List<SvCluster> clusters)
     {
         // now foldbacks are known, add other annotations about them
         for(final SvCluster cluster : clusters)
@@ -882,137 +630,193 @@ public class ClusterAnnotations
     }
 
     public static void findIncompleteFoldbackCandidates(final String sampleId, final SvCluster cluster,
-            final Map<String, List<SvBreakend>> chrBreakendMap, final Map<String, double[]> chrCopyNumberMap)
+            final Map<String, List<SvBreakend>> chrBreakendMap, final CNAnalyser cnAnalyser)
     {
         // for each cluster with incomplete foldbacks, search for candidate clusters which could resolve it
 
         // for now just focus on single foldback clusters
-        if(cluster.getSvCount() > 1 || cluster.getFoldbacks().size() != 1)
+        if(cluster.getFoldbacks().isEmpty())
             return;
 
         if(cluster.isResolved()) // eg LowQual
             return;
 
-        final SvVarData var = cluster.getSV(0);
-        final SvBreakend breakendLower = var.getBreakend(true);
-        final SvBreakend breakendUpper = var.getBreakend(false);
+        // find every other non-simple cluster which has a breakend facing one of the foldbacks in this cluster
 
-        final String chromosome = breakendLower.chromosome();
+        // first establish the bounds of the the foldbacks, independently for each arm
+        int foldbackCount = 0;
 
-        boolean facesCentromere = (breakendLower.orientation() == -1) == (breakendLower.arm() == CHROMOSOME_ARM_P);
+        boolean isMultiArm = false;
+        String chromosome = "";
+        String arm = "";
+        double maxFoldbackPloidy = 0;
+        String foldbackIds = "";
 
-        // walk away from this breakend and make note of candidate resolving clusters
-        final SvBreakend innerBreakend = breakendLower.orientation() == 1 ? breakendLower : breakendUpper;
-        final SvBreakend outerBreakend = breakendLower.orientation() == 1 ? breakendUpper : breakendLower;
+        List<SvVarData> chainedFoldbacks = Lists.newArrayList(); // to avoid double counting
 
-        final double[] cnData = chrCopyNumberMap.get(chromosome);
+        // find the outermost foldbacks to check against all other opposing cluster breakends
+        SvBreakend breakendLower = null; // lowest facing up
+        SvBreakend breakendUpper = null; // highest facing down
 
-        double centromereCN = 0;
-        double telomereCN = 0;
-        if(cnData != null)
+        for(SvVarData var : cluster.getFoldbacks())
         {
-            centromereCN = cnData[CENTROMERE_CN];
-            telomereCN = breakendLower.arm() == CHROMOSOME_ARM_P ? cnData[P_ARM_TELOMERE_CN] : cnData[Q_ARM_TELOMERE_CN];
-        }
+            SvBreakend breakend = null;
 
-        double lowSideCN = outerBreakend.getCopyNumber(outerBreakend.orientation() == -1);
-
-        final List<SvBreakend> breakendList = chrBreakendMap.get(chromosome);
-
-        int index = innerBreakend.getChrPosIndex();
-
-        final List<SvCluster> processedClusters = Lists.newArrayList();
-        boolean candidateLogged = false;
-
-        while(true)
-        {
-            if(innerBreakend.orientation() == 1) // walk in the direction the foldback faces
-                --index;
-            else
-                ++index;
-
-            if(index < 0 || index >= breakendList.size())
-                break;
-
-            final SvBreakend nextBreakend = breakendList.get(index);
-            if(nextBreakend.arm() != innerBreakend.arm())
-                break;
-
-            if(nextBreakend.orientation() == innerBreakend.orientation())
-                continue;
-
-            final SvCluster nextCluster = nextBreakend.getSV().getCluster();
-
-            if(processedClusters.contains(nextCluster))
-                continue;
-
-            processedClusters.add(nextCluster);
-
-            if(nextCluster.isResolved() || nextCluster.isConsistent())
-                continue;
-
-            // report this next cluster if it's not simple and if it has unmatched breakends facing the opposite direction
-
-            // fields: SampleId,ClusterId,Chromosome,Arm,Orientation,Ploidy,CNChg
-            // FacesCentromere,CentromereCN,TelomereCN,LowSideCN
-            //
-            String infoStr = String.format("%s,%d,%s,%s,%d,%.2f,%.2f,%s,%.2f,%.2f,%.2f",
-                    sampleId, cluster.id(), chromosome, innerBreakend.arm(), innerBreakend.orientation(),
-                    innerBreakend.getSV().getSvData().ploidy(), innerBreakend.copyNumberChange(),
-                    facesCentromere, centromereCN, telomereCN, lowSideCN);
-
-            // report other cluster's features
-            double cnBeforeSame = 0;
-            double cnBeforeDiff = 0;
-            double cnAfterSame = 0;
-            double cnAfterDiff = 0;
-
-            final List<SvBreakend> nextClusterBreakends = nextCluster.getChrBreakendMap().get(chromosome);
-
-            for(final SvBreakend otherBreakend : nextClusterBreakends)
+            if (!var.isChainedFoldback())
             {
-                if(otherBreakend.arm() != innerBreakend.arm())
+                breakend = var.getBreakend(true);
+            }
+            else
+            {
+                final SvVarData otherSv = var.getChainedFoldbackSv();
+                if (chainedFoldbacks.contains(otherSv))
                     continue;
 
-                boolean isBefore = (otherBreakend.position() < innerBreakend.position()) == (innerBreakend.orientation() == -1);
-                boolean sameOrientation = otherBreakend.orientation() == innerBreakend.orientation();
+                chainedFoldbacks.add(var);
+                breakend = var.getFoldbackBreakend(true);
 
-                if(isBefore)
+                if (breakend == null)
+                    breakend = var.getFoldbackBreakend(false);
+            }
+
+            if (chromosome == "")
+            {
+                chromosome = breakend.chromosome();
+                arm = breakend.arm();
+            }
+            else if (!breakend.chromosome().equals(chromosome) || !breakend.arm().equals(arm))
+            {
+                isMultiArm = true;
+            }
+
+            if(!isMultiArm)
+            {
+                if (breakend.orientation() == 1 && (breakendUpper == null || breakend.position() > breakendUpper.position()))
                 {
-                    if(sameOrientation)
-                        cnBeforeSame += otherBreakend.copyNumberChange();
-                    else
-                        cnBeforeDiff += otherBreakend.copyNumberChange();
+                    breakendUpper = breakend;
                 }
-                else
+                else if (breakend.orientation() == -1 && (breakendLower == null || breakend.position() < breakendLower.position()))
                 {
-                    if(sameOrientation)
-                        cnAfterSame += otherBreakend.copyNumberChange();
-                    else
-                        cnAfterDiff += otherBreakend.copyNumberChange();
+                    breakendLower = breakend;
                 }
             }
 
-            // OtherClusterId,OtherClusterCount,OtherClusterDesc,OtherResolvedType,CNBeforeSame,CNBeforeOpp,CNAfterSame,CNAfterOpp
-            infoStr += String.format(",%d,%d,%s,%s,%.2f,%.2f,%.2f,%.2f",
-                    nextCluster.id(), nextCluster.getSvCount(), nextCluster.getDesc(), nextCluster.getResolvedType(),
-                    cnBeforeSame, cnBeforeDiff, cnAfterSame, cnAfterDiff);
+            maxFoldbackPloidy = max(maxFoldbackPloidy, breakend.getSV().ploidyMin());
+            ++foldbackCount;
 
-            LOGGER.info("INCONSIST_FBS: {}", infoStr);
-            candidateLogged = true;
+            if(!foldbackIds.isEmpty())
+                foldbackIds += ";";
+
+            foldbackIds += breakend.getSV().id();
         }
 
-        if(!candidateLogged)
+        if(breakendLower == null && breakendUpper == null)
+            return;
+
+        // get CN change across the centromere
+        double centromereCNChange = cnAnalyser.getCentromereCopyNumberChange(chromosome, arm.equals(CHROMOSOME_ARM_P));
+
+        final double[] cnData = cnAnalyser.getChrCopyNumberMap().get(chromosome);
+
+        double telomereCN = 0;
+        if (cnData != null)
         {
-            String infoStr = String.format("%s,%d,%s,%s,%d,%.2f,%.2f,%s,%.2f,%.2f,%.2f",
-                    sampleId, cluster.id(), chromosome, innerBreakend.arm(), innerBreakend.orientation(),
-                    innerBreakend.getSV().getSvData().ploidy(), innerBreakend.copyNumberChange(),
-                    facesCentromere, centromereCN, telomereCN, lowSideCN);
-
-            infoStr += ",-1,0,,,0,0,0,0";
-
-            LOGGER.info("INCONSIST_FBS: {}", infoStr);
+            telomereCN = arm == CHROMOSOME_ARM_P ? cnData[P_ARM_TELOMERE_CN] : cnData[Q_ARM_TELOMERE_CN];
         }
+
+        // now find all clusters with opposing breakends
+
+        final List<SvBreakend> breakendList = chrBreakendMap.get(chromosome);
+
+        // cache max opposing and net ploidy for each opposing cluster
+        List<SvCluster> processedClusters = Lists.newArrayList();
+        int opposingClusterCount = 0;
+        String allClusterInfo = "";
+
+        for(int i = 0; i <= 1; ++i)
+        {
+            SvBreakend fbBreakend = (i == 0) ? breakendLower : breakendUpper;
+
+            if(fbBreakend == null)
+                continue;
+
+            int index = fbBreakend.getChrPosIndex();
+
+            while (true)
+            {
+                if (fbBreakend.orientation() == 1) // walk in the direction the foldback faces
+                    --index;
+                else
+                    ++index;
+
+                if (index < 0 || index >= breakendList.size())
+                    break;
+
+                final SvBreakend nextBreakend = breakendList.get(index);
+                if (nextBreakend.arm() != fbBreakend.arm())
+                    break;
+
+                if (nextBreakend.orientation() == fbBreakend.orientation())
+                    continue;
+
+                final SvCluster nextCluster = nextBreakend.getSV().getCluster();
+
+                if(processedClusters.contains(nextCluster))
+                    continue;
+
+                processedClusters.add(nextCluster);
+
+                if (nextCluster.isResolved())
+                    continue;
+
+                // found an opposing non-simple cluster, gather up details about it
+                // max opposing CN min poidy and net ploidy
+                final List<SvBreakend> nextClusterBreakends = nextCluster.getChrBreakendMap().get(chromosome);
+
+                double maxOpposingPloidy = 0;
+                double netPloidy = 0;
+
+                for(final SvBreakend otherBreakend : nextClusterBreakends)
+                {
+                    if (otherBreakend.arm() != fbBreakend.arm())
+                        continue;
+
+                    netPloidy += otherBreakend.getSV().ploidyMin() * otherBreakend.orientation();
+
+                    // take the max opposing breakend for lower and upper FB breakends
+                    if(breakendLower != null && otherBreakend.orientation() == 1 && otherBreakend.position() > breakendLower.position())
+                    {
+                        maxOpposingPloidy = max(maxOpposingPloidy, otherBreakend.getSV().ploidyMin());
+                    }
+                    else if(breakendUpper != null && otherBreakend.orientation() == -1 && otherBreakend.position() < breakendUpper.position())
+                    {
+                        maxOpposingPloidy = max(maxOpposingPloidy, otherBreakend.getSV().ploidyMin());
+                    }
+                }
+
+                ++opposingClusterCount;
+
+                String clusterInfo = String.format("%d/%d/%.2f/%.2f",
+                        nextCluster.id(), nextCluster.getSvCount(), netPloidy, maxOpposingPloidy);
+
+                if(!allClusterInfo.isEmpty())
+                    allClusterInfo += ";";
+
+                allClusterInfo += clusterInfo;
+            }
+        }
+
+        // SampleId,ClusterId,ClusterCount,FoldbackCount,IsMultiArm,ClusterDesc,Chromosome,Arm,SvIds,PosLower,PosUpper,
+        // MaxFoldbackPloidy,TelomereCN,CentromereCNChg,OpposingClusterCount,OpposingClusterInfo
+
+        String infoStr = String.format("%s,%d,%d,%d,%s,%s,%s,%s",
+                sampleId, cluster.id(), cluster.getSvCount(), foldbackCount, isMultiArm, cluster.getDesc(), chromosome, arm);
+
+        infoStr += String.format(",%s,%d,%d,%.2f,%.2f,%.2f,%d,%s",
+                foldbackIds, breakendLower != null ? breakendLower.position() : -1, breakendUpper != null ? breakendUpper.position() : -1,
+                maxFoldbackPloidy, telomereCN, centromereCNChange, opposingClusterCount, allClusterInfo);
+
+        LOGGER.info("INCONSIST_FBS: {}", infoStr);
     }
 
     private static double DM_PLOIDY_MIN_RATIO = 2.3;
@@ -1726,6 +1530,196 @@ public class ClusterAnnotations
             cluster.addAnnotation(CLUSTER_ANNONTATION_DM);
         }
         */
+    }
+
+    public static void reportClusterArmSegments(final SvCluster cluster)
+    {
+        if (cluster.isResolved())
+            return;
+
+        if (cluster.getSvCount() < 6)
+            return;
+
+        // isSpecificCluster(cluster);
+
+        final Map<String, List<SvBreakend>> chrBreakendMap = cluster.getChrBreakendMap();
+
+        for (final Map.Entry<String, List<SvBreakend>> entry : chrBreakendMap.entrySet())
+        {
+            List<SvBreakend> breakendList = entry.getValue();
+
+            if (breakendList.size() < 6)
+                continue;
+
+            // first establish the lowest copy number segments
+            int bndCount = 0;
+            boolean hasConsecutiveOrientations = false;
+            double lowestCopyNumber = -1;
+
+            List<SvArmCluster> localSegments = Lists.newArrayList();
+            SvArmCluster armCuster = null;
+
+            for (int i = 0; i < breakendList.size() - 1; ++i)
+            {
+                final SvBreakend breakend = breakendList.get(i);
+
+                if(!hasConsecutiveOrientations && i < breakendList.size() - 1)
+                {
+                    hasConsecutiveOrientations = (breakend.orientation() != breakendList.get(i+1).orientation());
+                }
+
+                double lowCopyNumber = breakend.getCopyNumber(false);
+
+                if (breakend.orientation() == 1 && (lowestCopyNumber == -1 || lowCopyNumber < lowestCopyNumber))
+                {
+                    // a new lowest segment, which will be the first original DSB
+                    // all previous breakends will be put into the first arm cluster
+                    lowestCopyNumber = lowCopyNumber;
+
+                    localSegments.clear();
+
+                    // add all previous breakends to the first arm cluster
+                    armCuster = new SvArmCluster(localSegments.size(), cluster, breakend.chromosome(), breakend.arm());
+
+                    for (int j = 0; j <= i; ++j)
+                        armCuster.addBreakend(breakendList.get(j));
+
+                    localSegments.add(armCuster);
+                    armCuster = null;
+                }
+                else if (breakend.orientation() == 1 && copyNumbersEqual(lowestCopyNumber, lowCopyNumber))
+                {
+                    // end of a segment since next CN equals the low - add the last breakend
+                    if(armCuster == null)
+                    {
+                        // probably an indication of failed clustering, so work around it
+                        armCuster = new SvArmCluster(localSegments.size(), cluster, breakend.chromosome(), breakend.arm());
+                        localSegments.add(armCuster);
+                    }
+
+                    armCuster.addBreakend(breakend);
+                    armCuster = null;
+                }
+                else
+                {
+                    // either continuation of an existing segment or start of a new one
+                    if (armCuster == null)
+                    {
+                        armCuster = new SvArmCluster(localSegments.size(), cluster, breakend.chromosome(), breakend.arm());
+                        localSegments.add(armCuster);
+                    }
+
+                    armCuster.addBreakend(breakend);
+                }
+
+                if (breakend.getSV().type() == BND)
+                    ++bndCount;
+            }
+
+            if (bndCount > 0 || !hasConsecutiveOrientations)
+                continue;
+
+            for (final SvArmCluster armCluster : localSegments)
+            {
+                List<SvBreakend> acBreakendList = armCluster.getBreakends();
+
+                if(acBreakendList.size() < 4)
+                    continue;
+
+                int backwardCount = (int)acBreakendList.stream().filter(x -> x.orientation() == 1).count();
+                int forwardCount = (int)acBreakendList.stream().filter(x -> x.orientation() == -1).count();
+
+                // form into mutually exclusive pairs based on copy number change match
+                List<SvBreakend> unlinkedBreakends = Lists.newArrayList(acBreakendList);
+                List<SvLinkedPair> pairs = formPossibleLinkedPairsByShortest(unlinkedBreakends);
+
+                LOGGER.debug("cluster({}) armCluster({} : {}_{}) count({} fwd={} bak={}) pairs({}) unlinked({})",
+                        cluster.id(), armCluster.id(), armCluster.chromosome(), armCluster.arm(),
+                        acBreakendList.size(), forwardCount, backwardCount, pairs.size(), unlinkedBreakends.size());
+            }
+        }
+    }
+
+    private static List<SvLinkedPair> formPossibleLinkedPairsByShortest(List<SvBreakend> unlinkedBreakends)
+    {
+        List<SvLinkedPair> pairs = Lists.newArrayList();
+
+        while(!unlinkedBreakends.isEmpty())
+        {
+            boolean pairFound = false;
+
+            for(int i = 0; i < unlinkedBreakends.size() - 2; ++i)
+            {
+                final SvBreakend be1 = unlinkedBreakends.get(i);
+                final SvBreakend be2 = unlinkedBreakends.get(i+1);
+
+                if(be1.orientation() != -1 || be2.orientation() != 1)
+                    continue;
+
+                // pair off these if the CN matches
+                if (!copyNumbersEqual(be1.copyNumberChange(), be2.copyNumberChange()))
+                    continue;
+
+                SvLinkedPair pair = SvLinkedPair.from(be1, be2, LINK_TYPE_TI);
+                pairs.add(pair);
+
+                pairFound = true;
+                unlinkedBreakends.remove(i+1); // higher index removed first
+                unlinkedBreakends.remove(i);
+                break;
+            }
+
+            if(!pairFound)
+                break;
+        }
+
+        return pairs;
+    }
+
+    private static List<SvLinkedPair> formPossibleLinkedPairsConsecutively(List<SvBreakend> unlinkedBreakends)
+    {
+        List<SvLinkedPair> pairs = Lists.newArrayList();
+
+        int j = 0;
+        while(j < unlinkedBreakends.size())
+        {
+            final SvBreakend be1 = unlinkedBreakends.get(j);
+
+            if(be1.orientation() == 1)
+            {
+                ++j;
+                continue;
+            }
+
+            boolean linkFound = false;
+            for(int k = j+1; k < unlinkedBreakends.size(); ++k)
+            {
+                final SvBreakend be2 = unlinkedBreakends.get(k);
+
+                if (be2.orientation() == -1)
+                    continue;
+
+                // pair off these if the CN matches
+                if (!copyNumbersEqual(be1.copyNumberChange(), be2.copyNumberChange()))
+                    continue;
+
+                SvLinkedPair pair = SvLinkedPair.from(be1, be2, LINK_TYPE_TI);
+                pairs.add(pair);
+
+                linkFound = true;
+                unlinkedBreakends.remove(k); // higher index removed first
+                unlinkedBreakends.remove(j);
+                break;
+
+            }
+
+            if(linkFound)
+                continue;
+            else
+                ++j;
+        }
+
+        return pairs;
     }
 
     public static void findChainRepeatedSegments(final String sampleId, final SvCluster cluster, final SvChain chain)
