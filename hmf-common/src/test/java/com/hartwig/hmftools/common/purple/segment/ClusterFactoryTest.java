@@ -215,22 +215,22 @@ public class ClusterFactoryTest {
 
 
     @Nullable
-    static Long firstVariant(Cluster cluster) {
+    private static Long firstVariant(Cluster cluster) {
         return cluster.variants().isEmpty() ? null : cluster.variants().get(0).position();
     }
 
     @Nullable
-    static Long finalVariant(Cluster cluster) {
+    private static Long finalVariant(Cluster cluster) {
         return cluster.variants().isEmpty() ? null :cluster.variants().get(cluster.variants().size() - 1).position();
     }
 
     @Nullable
-    static Long firstRatio(Cluster cluster) {
+    private static Long firstRatio(Cluster cluster) {
         return cluster.ratios().isEmpty() ? null : cluster.ratios().get(0).position();
     }
 
     @Nullable
-    static Long finalRatio(Cluster cluster) {
+    private static Long finalRatio(Cluster cluster) {
         return cluster.ratios().isEmpty() ? null : cluster.ratios().get(cluster.ratios().size() - 1).position();
     }
 
