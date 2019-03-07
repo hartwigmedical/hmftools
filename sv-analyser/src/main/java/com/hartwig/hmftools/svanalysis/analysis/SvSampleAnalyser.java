@@ -51,7 +51,9 @@ import com.hartwig.hmftools.svanalysis.types.SvLOH;
 import com.hartwig.hmftools.svanalysis.types.SvLinkedPair;
 import com.hartwig.hmftools.svanalysis.types.SvVarData;
 import com.hartwig.hmftools.svanalysis.types.SvaConfig;
+import com.hartwig.hmftools.svannotation.SvGeneTranscriptCollection;
 
+import org.apache.commons.cli.CommandLine;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -128,6 +130,7 @@ public class SvSampleAnalyser {
     public void setChrCopyNumberMap(final Map<String, double[]> data) { mClusteringMethods.setChrCopyNumberMap(data); }
     public final VisualiserWriter getVisWriter() { return mVisWriter; }
     public void setCopyNumberAnalyser(CNAnalyser cnAnalyser) { mAnalyser.setCopyNumberAnalyser(cnAnalyser); }
+    public void setGeneCollection(SvGeneTranscriptCollection geneCollection) { mAnalyser.setGeneCollection(geneCollection); }
 
     private void clearState()
     {

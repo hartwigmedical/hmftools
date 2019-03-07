@@ -6,6 +6,7 @@ import static java.lang.Math.min;
 import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.BND;
+import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DUP;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.typeAsInt;
 import static com.hartwig.hmftools.svanalysis.analysis.CNAnalyser.CENTROMERE_CN;
@@ -36,6 +37,7 @@ import java.util.Map;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
+import com.hartwig.hmftools.common.variant.structural.annotation.EnsemblGeneData;
 import com.hartwig.hmftools.svanalysis.types.SvArmCluster;
 import com.hartwig.hmftools.svanalysis.types.SvArmGroup;
 import com.hartwig.hmftools.svanalysis.types.SvBreakend;
@@ -44,6 +46,7 @@ import com.hartwig.hmftools.svanalysis.types.SvChain;
 import com.hartwig.hmftools.svanalysis.types.SvCluster;
 import com.hartwig.hmftools.svanalysis.types.SvLinkedPair;
 import com.hartwig.hmftools.svanalysis.types.SvVarData;
+import com.hartwig.hmftools.svannotation.SvGeneTranscriptCollection;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -1020,8 +1023,8 @@ public class ClusterAnnotations
 
     private static int DM_MAX_SV_COUNT = 16;
 
-    public static void findPotentialDoubleMinuteClusters(final String sampleId,
-            final Map<String, List<SvBreakend>> chrBreakendMap, final CNAnalyser cnAnalyser)
+    public static void findPotentialDoubleMinuteClusters(final String sampleId, final Map<String,
+            List<SvBreakend>> chrBreakendMap, final CNAnalyser cnAnalyser, final SvGeneTranscriptCollection geneCollection)
     {
         /* Identify potential DM clusters if:
             - each of their breakends is X times the major allele ploidy of the near CN segment
@@ -1174,7 +1177,7 @@ public class ClusterAnnotations
                             // check that the next breakend drops back below the required threshold
                             if(minDMPloidy < adjacentMap * DM_PLOIDY_MIN_RATIO)
                             {
-                                LOGGER.debug(String.format("cancelling potential DM group(count={} first={}): minDmPloidy(%.2f) vs nextMap(%.2f)",
+                                LOGGER.debug(String.format("cancelling potential DM group(count=%d first=%s): minDmPloidy(%.2f) vs nextMap(%.2f)",
                                         dmSVList.size(), dmSVList.get(0).posId(), minDMPloidy, adjacentMap));
 
                                 inPotentialDM = false;
@@ -1188,7 +1191,7 @@ public class ClusterAnnotations
                             // remove from consideration of incomplete DM groups
                             dmBreakendList.stream().forEach(x -> incompleteDMBreakends.remove(x));
 
-                            reportPotentialDoubleMinuteGroup(sampleId, dmSVList, true, cnAnalyser, overlappedCount);
+                            reportPotentialDoubleMinuteGroup(sampleId, dmSVList, true, overlappedCount, cnAnalyser, geneCollection);
                             inPotentialDM = false;
                             continue;
                         }
@@ -1291,12 +1294,12 @@ public class ClusterAnnotations
 
             dmSvList.stream().forEach(x -> incompleteDMSvList.remove(x));
 
-            reportPotentialDoubleMinuteGroup(sampleId, dmSvList, false, cnAnalyser, 0);
+            reportPotentialDoubleMinuteGroup(sampleId, dmSvList, false, 0, cnAnalyser, geneCollection);
         }
     }
 
     private static void reportPotentialDoubleMinuteGroup(final String sampleId, List<SvVarData> dmSVList, boolean isComplete,
-            final CNAnalyser cnAnalyser, int overlappedCount)
+            int overlappedCount, final CNAnalyser cnAnalyser, final SvGeneTranscriptCollection geneCollection)
     {
         String clusterInfo = "";
         String svInfo = "";
@@ -1350,7 +1353,11 @@ public class ClusterAnnotations
         double samplePurity = purityContext != null ? purityContext.bestFit().purity() : 0;
         double samplePloidy = purityContext != null ? purityContext.bestFit().ploidy() : 0;
 
-        long dmLength = isComplete ? getChainLength(dmSVList) : 0;
+        final SvChain chain = isComplete ? createDMChain(dmSVList) : null;
+
+        long dmChainLength = chain != null ? chain.getLength(true) : 0;
+
+        String amplifiedGenesStr = chain != null ? getAmplifiedGenesList(chain, geneCollection) : "";
 
         // get amplified genes list by looking at all section tranversed by this chain
         // or breakends with genes in them?
@@ -1374,13 +1381,13 @@ public class ClusterAnnotations
         }
 
         // SampleId,SamplePurity,SamplePloidy,IsComplete,GroupCount,ClusterInfo,SvTypes,SvInfo,Chromosomes,DMPosStart,DMPosEnd,
-        // MaxDMCopyNumber,MinDMPloidy,SVOverlapCount,DMLength
+        // MaxDMCopyNumber,MinDMPloidy,SVOverlapCount,DMLength,AmplifiedGenes
         String infoStr = String.format("%s,%.2f,%.2f,%s,%d,%s,%s,%s,%s,%d,%d",
                 sampleId, samplePurity, samplePloidy, isComplete, dmSVList.size(), clusterInfo, dmTypesStr, svInfo,
                 chromosomeStr, posStart, posEnd);
 
-        infoStr += String.format(",%.2f,%.2f,%d,%d",
-                 maxDMCopyNumber, minDMPloidy, overlappedCount, dmLength);
+        infoStr += String.format(",%.2f,%.2f,%d,%d,%s",
+                 maxDMCopyNumber, minDMPloidy, overlappedCount, dmChainLength, amplifiedGenesStr);
 
         LOGGER.info("POTENTIAL_DM_DATA: {}", infoStr);
     }
@@ -1503,11 +1510,50 @@ public class ClusterAnnotations
         return true;
     }
 
-    private static long getChainLength(List<SvVarData> dmSVList)
+    private static final String getAmplifiedGenesList(final SvChain chain, final SvGeneTranscriptCollection geneCollection)
+    {
+        if(geneCollection == null)
+            return "";
+
+        String genesStr = "";
+        for(SvLinkedPair pair : chain.getLinkedPairs())
+        {
+            String chromosome = pair.chromosome();
+
+            List<EnsemblGeneData> genesList = geneCollection.findGenesByRegion(chromosome, pair.getBreakend(true).position(), pair.getBreakend(false).position());
+
+            if(genesList.isEmpty())
+                continue;
+
+            for(final EnsemblGeneData geneData : genesList)
+            {
+                String transId = geneCollection.getCanonicalTranscriptId(geneData);
+                if(transId != "")
+                {
+                    if(!genesStr.isEmpty())
+                        genesStr += ";";
+
+                    genesStr += transId;
+                }
+            }
+        }
+
+        return genesStr;
+    }
+
+    private static final SvChain createDMChain(List<SvVarData> dmSVList)
     {
         if(dmSVList.size() == 1)
         {
-            return dmSVList.get(0).length();
+            // special case creating a chain out of a DUP
+            SvChain chain = new SvChain(0);
+            final SvVarData var = dmSVList.get(0);
+            if(var.type() != DUP)
+                return null;
+
+            SvLinkedPair pair = new SvLinkedPair(var, var, LINK_TYPE_TI, true, false);
+            chain.addLink(pair, true);
+            return chain;
         }
 
         // create a temporary cluster and try to chain it
@@ -1522,19 +1568,9 @@ public class ClusterAnnotations
         chainFinder.formClusterChains(false);
 
         if(dmCluster.getChains().size() != 1)
-            return 0;
+            return null;
 
-        final SvChain chain = dmCluster.getChains().get(0);
-
-        int chainLength = chain.getLength();
-        final SvBreakend chainStart = chain.getOpenBreakend(true);
-        final SvBreakend chainEnd = chain.getOpenBreakend(false);
-
-        if(!chainStart.chromosome().equals(chainEnd.chromosome()))
-            return 0;
-
-        chainLength += abs(chainStart.position() - chainEnd.position());
-        return chainLength;
+        return dmCluster.getChains().get(0);
     }
 
     private static double DOUBLE_MINUTE_PLOIDY_THRESHOLD = 8;

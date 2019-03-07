@@ -249,7 +249,7 @@ public class SvChain {
         }
     }
 
-    public int getLength()
+    public int getLength(boolean closeEnds)
     {
         // defined as the sum of the TI lengths
         int length = 0;
@@ -257,6 +257,20 @@ public class SvChain {
         for(final SvLinkedPair pair : mLinkedPairs)
         {
             length += abs(pair.length());
+        }
+
+        if(closeEnds)
+        {
+            final SvBreakend chainStart = getOpenBreakend(true);
+            final SvBreakend chainEnd = getOpenBreakend(false);
+
+            if(mLinkedPairs.size() == 1 && chainEnd.getSV() == chainStart.getSV()) // skip the special single DUP case
+                return length;
+
+            if (chainStart.chromosome().equals(chainEnd.chromosome()))
+            {
+                length += abs(chainStart.position() - chainEnd.position());
+            }
         }
 
         return length;

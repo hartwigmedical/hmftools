@@ -212,6 +212,39 @@ public class SvGeneTranscriptCollection
         return exonDataList;
     }
 
+    public final List<EnsemblGeneData> findGenesByRegion(final String chromosome, long posStart, long posEnd)
+    {
+        List<EnsemblGeneData> genesList = Lists.newArrayList();
+
+        final List<EnsemblGeneData> geneDataList = mChromosomeGeneDataMap.get(chromosome);
+
+        for(final EnsemblGeneData geneData : geneDataList)
+        {
+            if(posStart <= geneData.GeneStart && posEnd >= geneData.GeneEnd)
+            {
+                genesList.add(geneData);
+            }
+        }
+
+        return genesList;
+    }
+
+    public final String getCanonicalTranscriptId(final EnsemblGeneData geneData)
+    {
+        final List<TranscriptExonData> transExonDataList = mGeneTransExonDataMap.get(geneData.GeneId);
+
+        if (transExonDataList == null || transExonDataList.isEmpty())
+            return "";
+
+        for (final TranscriptExonData transData : transExonDataList)
+        {
+            if (transData.IsCanonical)
+                return transData.TransName;
+        }
+
+        return "";
+    }
+
     private List<EnsemblGeneData> findGeneRegions(long position, List<EnsemblGeneData> geneDataList, int upstreamDistance)
     {
         List<EnsemblGeneData> matchedGenes = Lists.newArrayList();
@@ -608,7 +641,7 @@ public class SvGeneTranscriptCollection
         if(!EnsemblDAO.loadTranscriptExonData(mDataPath, mGeneTransExonDataMap))
             return false;
 
-        if(EnsemblDAO.loadEnsemblGeneData(mDataPath, mChromosomeGeneDataMap, mChromosomeReverseGeneDataMap))
+        if(!EnsemblDAO.loadEnsemblGeneData(mDataPath, mChromosomeGeneDataMap, mChromosomeReverseGeneDataMap))
             return false;
 
         if(!EnsemblDAO.loadTranscriptProteinData(mDataPath, mEnsemblProteinDataMap))

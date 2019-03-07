@@ -58,15 +58,17 @@ import com.hartwig.hmftools.svanalysis.types.SvLOH;
 import com.hartwig.hmftools.svanalysis.types.SvVarData;
 import com.hartwig.hmftools.svanalysis.types.SvLinkedPair;
 import com.hartwig.hmftools.svanalysis.types.SvaConfig;
+import com.hartwig.hmftools.svannotation.SvGeneTranscriptCollection;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 public class ClusterAnalyser {
 
-    final SvaConfig mConfig;
-    SvClusteringMethods mClusteringMethods;
-    CNAnalyser mCopyNumberAnalyser;
+    private final SvaConfig mConfig;
+    private SvClusteringMethods mClusteringMethods;
+    private CNAnalyser mCopyNumberAnalyser;
+    private SvGeneTranscriptCollection mGeneCollection;
 
     String mSampleId;
     private List<SvVarData> mAllVariants;
@@ -90,6 +92,7 @@ public class ClusterAnalyser {
         mConfig = config;
         mClusteringMethods = clusteringMethods;
         mCopyNumberAnalyser = null;
+        mGeneCollection = null;
         mClusters = Lists.newArrayList();
         mAllVariants = Lists.newArrayList();
         mSampleId = "";
@@ -108,6 +111,7 @@ public class ClusterAnalyser {
     {
         mCopyNumberAnalyser = cnAnalyser;
     }
+    public void setGeneCollection(final SvGeneTranscriptCollection geneCollection) { mGeneCollection = geneCollection; }
 
     // access for unit testing
     public final SvClusteringMethods getClusterer() { return mClusteringMethods; }
@@ -1045,7 +1049,7 @@ public class ClusterAnalyser {
             && chain.firstLinkOpenOnStart() == chain.lastLinkOpenOnStart())
             {
                 final String chainInfo = String.format("%d;%d;%d",
-                        chain.getLinkCount(), chain.getAssemblyLinkCount(), chain.getLength());
+                        chain.getLinkCount(), chain.getAssemblyLinkCount(), chain.getLength(false));
 
                 boolean foldbackIsStart = chain.firstLinkOpenOnStart();
 
@@ -1191,7 +1195,7 @@ public class ClusterAnalyser {
 
         addFoldbackAnnotations(mClusters);
 
-        findPotentialDoubleMinuteClusters(mSampleId, mClusteringMethods.getChrBreakendMap(), mCopyNumberAnalyser);
+        findPotentialDoubleMinuteClusters(mSampleId, mClusteringMethods.getChrBreakendMap(), mCopyNumberAnalyser, mGeneCollection);
     }
 
     private void reportClusterFeatures(final SvCluster cluster)

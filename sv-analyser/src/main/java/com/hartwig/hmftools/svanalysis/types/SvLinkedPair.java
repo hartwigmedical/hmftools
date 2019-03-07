@@ -105,6 +105,8 @@ public class SvLinkedPair {
             return beFirst.position() > beSecond.position() ? beFirst : beSecond;
     }
 
+    public final String chromosome() { return mFirst.chromosome(mFirstLinkOnStart); }
+
     public final String linkType() { return mLinkType; }
     public final int length() { return mLinkLength; }
 

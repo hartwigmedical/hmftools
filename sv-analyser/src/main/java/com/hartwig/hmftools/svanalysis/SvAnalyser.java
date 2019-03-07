@@ -27,6 +27,7 @@ import com.hartwig.hmftools.svanalysis.types.SvaConfig;
 import com.hartwig.hmftools.svanalysis.analysis.SvSampleAnalyser;
 import com.hartwig.hmftools.svanalysis.annotators.DriverGeneAnnotator;
 import com.hartwig.hmftools.svanalysis.types.SvVarData;
+import com.hartwig.hmftools.svannotation.SvGeneTranscriptCollection;
 import com.hartwig.hmftools.svannotation.analysis.SvFusionAnalyser;
 
 import org.apache.commons.cli.CommandLine;
@@ -138,33 +139,50 @@ public class SvAnalyser {
             FusionDisruptionAnalyser fusionAnalyser = null;
             boolean runFusions = cmd.hasOption(RUN_FUSIONS);
 
-            if((runFusions || checkDrivers) && cmd.hasOption(GENE_TRANSCRIPTS_DIR))
+            SvGeneTranscriptCollection ensemblDataCache = null;
+
+            if(cmd.hasOption(GENE_TRANSCRIPTS_DIR))
             {
-                fusionAnalyser = new FusionDisruptionAnalyser();
-                fusionAnalyser.loadFusionReferenceData(cmd, svaConfig.OutputCsvPath, cmd.getOptionValue(GENE_TRANSCRIPTS_DIR,""));
-                fusionAnalyser.setVisWriter(sampleAnalyser.getVisWriter());
+                ensemblDataCache = new SvGeneTranscriptCollection();
+                ensemblDataCache.setDataPath(cmd.getOptionValue(GENE_TRANSCRIPTS_DIR));
 
-                if(cmd.hasOption(SKIP_FUSION_OUTPUT))
-                    fusionAnalyser.skipFusionOutput(true);
-
-                sampleAnalyser.getVisWriter().setGeneDataCollection(fusionAnalyser.getGeneTranscriptCollection());
-
-                if(!fusionAnalyser.getRnaSampleIds().isEmpty() && samplesList.size() > 1)
+                if(!ensemblDataCache.loadEnsemblData())
                 {
-                    samplesList.clear();
-                    samplesList.addAll(fusionAnalyser.getRnaSampleIds());
-
-                    LOGGER.info("running {} sample based on RNA fusion input", samplesList.size());
+                    LOGGER.error("Ensembl data cache load failed, exiting");
+                    return;
                 }
 
-                // fusionAnalyser.writeGeneProbabilityData();
-            }
+                sampleAnalyser.setGeneCollection(ensemblDataCache);
+                sampleAnalyser.getVisWriter().setGeneDataCollection(ensemblDataCache);
 
-            if(checkDrivers)
-            {
-                driverGeneAnnotator = new DriverGeneAnnotator(dbAccess, fusionAnalyser.getGeneTranscriptCollection(), svaConfig.OutputCsvPath);
-                driverGeneAnnotator.loadConfig(cmd);
-                driverGeneAnnotator.setVisWriter(sampleAnalyser.getVisWriter());
+                if(runFusions)
+                {
+                    fusionAnalyser = new FusionDisruptionAnalyser();
+
+                    fusionAnalyser.loadFusionReferenceData(cmd, svaConfig.OutputCsvPath, ensemblDataCache);
+                    fusionAnalyser.setVisWriter(sampleAnalyser.getVisWriter());
+
+                    if(cmd.hasOption(SKIP_FUSION_OUTPUT))
+                        fusionAnalyser.skipFusionOutput(true);
+
+                    if(!fusionAnalyser.getRnaSampleIds().isEmpty() && samplesList.size() > 1)
+                    {
+                        samplesList.clear();
+                        samplesList.addAll(fusionAnalyser.getRnaSampleIds());
+
+                        LOGGER.info("running {} sample based on RNA fusion input", samplesList.size());
+                    }
+
+                    // fusionAnalyser.writeGeneProbabilityData();
+
+                }
+
+                if(checkDrivers)
+                {
+                    driverGeneAnnotator = new DriverGeneAnnotator(dbAccess, ensemblDataCache, svaConfig.OutputCsvPath);
+                    driverGeneAnnotator.loadConfig(cmd);
+                    driverGeneAnnotator.setVisWriter(sampleAnalyser.getVisWriter());
+                }
             }
 
             boolean createNoneSvsFromCNData = cmd.hasOption(INCLUDE_NONE_SEGMENTS);

@@ -78,22 +78,16 @@ public class FusionDisruptionAnalyser
     }
 
     public void skipFusionOutput(boolean toggle) { mSkipFusionOutput = toggle; }
-    public final SvGeneTranscriptCollection getGeneTranscriptCollection() { return mEnsemblDataCache; }
 
-    public void loadFusionReferenceData(final CommandLine cmdLineArgs, final String outputDir, final String ensemblDataDir)
+    public void loadFusionReferenceData(final CommandLine cmdLineArgs, final String outputDir, SvGeneTranscriptCollection ensemblDataCache)
     {
         mOutputDir = outputDir;
 
-        mFusionFinder = new SvFusionAnalyser(cmdLineArgs, mEnsemblDataCache, mOutputDir);
+        mEnsemblDataCache = ensemblDataCache;
+        mFusionFinder = new SvFusionAnalyser(cmdLineArgs, ensemblDataCache, mOutputDir);
 
         List<HmfTranscriptRegion> transcriptRegions = HmfGenePanelSupplier.allGeneList37();
         mChromosomeTranscriptMap = Multimaps.fromRegions(transcriptRegions);
-
-        if(!ensemblDataDir.isEmpty())
-        {
-            mEnsemblDataCache.setDataPath(ensemblDataDir);
-            mEnsemblDataCache.loadEnsemblData();
-        }
     }
 
     public final Set<String> getRnaSampleIds() { return mFusionFinder.getSampleRnaData().keySet(); }
