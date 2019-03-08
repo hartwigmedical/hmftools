@@ -174,6 +174,7 @@ public class Lims {
                         try {
                             return Math.round(Double.parseDouble(shallowSeq.purityShallowSeq()) * 100) + "%";
                         } catch (final NumberFormatException e) {
+                            LOGGER.warn("Could not convert shallow seq to a percentage: " + shallowSeq.purityShallowSeq());
                             return "N/A";
                         }
                     }
