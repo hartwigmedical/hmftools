@@ -154,7 +154,7 @@ public class LimsTest {
     @Test
     public void shallowSeqPurityErrorForSample() {
         final LimsJsonSampleData sampleData =
-                createLimsSampleDataBuilder().sampleId(SAMPLE).labelSample("").labRemarks("ShallowSeq").build();
+                createLimsSampleDataBuilder().sampleId(SAMPLE).labRemarks("ShallowSeq").build();
 
         Lims lims = buildTestLimsWithSample(sampleData);
         assertEquals("N/A", lims.purityShallowSeq(SAMPLE));
@@ -182,7 +182,7 @@ public class LimsTest {
     @Test
     public void canRetrieveShallowSeqPurityForCORESample() {
         final LimsJsonSampleData sampleData =
-                createLimsSampleDataBuilder().sampleId("CORE00000001T").labRemarks("ShallowSeq").labelSample("CORE").build();
+                createLimsSampleDataBuilder().sampleId("CORE00000001T").labRemarks("ShallowSeq").build();
 
         Lims lims = buildTestLimsWithSampleAndShallowSeq(sampleData, "0.3");
         assertEquals("30%", lims.purityShallowSeq("CORE00000001T"));
@@ -191,7 +191,7 @@ public class LimsTest {
     @Test
     public void canRetrieveShallowSeqBelowDetectionLimitForCPCTSample() {
         final LimsJsonSampleData sampleData =
-                createLimsSampleDataBuilder().sampleId("CPCT02990003T").labelSample("").labRemarks("ShallowSeq").build();
+                createLimsSampleDataBuilder().sampleId("CPCT02990003T").labRemarks("ShallowSeq").build();
 
         Lims lims = buildTestLimsWithSampleAndShallowSeq(sampleData, "below detection threshold");
         assertEquals("below detection threshold", lims.purityShallowSeq("CPCT02990003T"));
@@ -200,7 +200,7 @@ public class LimsTest {
     @Test
     public void canRetrieveShallowSeqBelowDetectionLimitForCORESample() {
         final LimsJsonSampleData sampleData =
-                createLimsSampleDataBuilder().sampleId("CPCT02990003T").labelSample("").labRemarks("ShallowSeq").build();
+                createLimsSampleDataBuilder().sampleId("CPCT02990003T").labRemarks("ShallowSeq").build();
 
         Lims lims = buildTestLimsWithSampleAndShallowSeq(sampleData, "below detection threshold");
         assertEquals("below detection threshold", lims.purityShallowSeq("CPCT02990003T"));

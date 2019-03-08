@@ -80,10 +80,6 @@ abstract class LimsJsonSampleData {
     public abstract String labRemarks();
 
     @NotNull
-    @SerializedName("label")
-    public abstract String labelSample();
-
-    @NotNull
     @SerializedName("project_name")
     public abstract String projectName();
 
