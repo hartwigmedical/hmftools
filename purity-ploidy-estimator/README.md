@@ -119,60 +119,123 @@ For each [ploidy|purity] combination tested an implied major and minor allele pl
 
 The following chart illustrates the deviation penalty applied for each of minor and major allele ploidy at both 30% and 70% purity.
 
-![Image Name](src/main/resources/readme/FittedPurityPenalty.png)
+![Deviation Penalty](src/main/resources/readme/FittedPurityDeviationPenalty.png)
 
-### Segmentation
-The idea is to identify maximal set of break points so we can have discrete segments with a single BAF and absolute copy number.
+#### Event Penalty Multiplier
 
-1. GC normalization
-2. Calculate read ratio
-3. Apply piecewise constant fit (PCF) to normal ratios
-4. Apply PCF to tumor ratios
-5. Combine ratio segments
-6. Integrate structural variant breaks (if available)
+An event penalty multiplier is intended to further penalise [sample ploidy,purity] combinations based on the number of alterations required to get from a normal diploid chromosome to the implied minor and major allele ploidies.  In particular, this model penalises higher ploidy solutions that can be highly degenerate and lead to low deviation penalties, but are unlikely to be the most parsimonious or biologically plausible solution.  
 
-### Segment Observations
-Determine median BAF and average normal and tumor depth ratios of each segment.
+The event penalty multiplier is given by:
 
-### Fit Purity and Ploidy
+`EventPenaltyMultiplier = 1 +0.3 * min(SingleEventDistance, WholeGenomeDoublingDistance);
+WholeGenomeDoublingDistance = 1 + abs(majorAllele - 2) +abs(minorAllele - 2);
+SingleEventDistance = abs(majorAllele - 1) + abs(minorAllele - 1);`
 
-Jointly fit tumor purity and CNV ratio normalisation factor (Norm Factor) according to the following principles:
+Note that a diploid segment with implied minor allele ploidy = implied major allele ploidy = 1 has an eventPenalty multiplier of exactly 1 whilst all other solutions have increasingly higher multipliers as the minor and major allele deviate further from 1.   The formula includes an explicit reduced penalty for a doubling of both major and minor allele ploidy since there is a known common mechanism of whole genome doubling which can occur in a single event.
 
-* The absolute copy number of EACH segment should be close to an integer ploidy
-* The BAF of EACH segment should be close to a % implied by integer ploidy and major allele counts.
-* Higher ploidies have more degenerate fits but are less biologically plausible and should be penalised
-* Segments are weighted by the count of BAF observations which is treated as a proxy for segment length and confidence of BAF and ratio inputs.
-* Segments with lower observed BAFs have more degenerate fits and are weighted less in the fit
+The Deviation Penalty and Event Penalty Multiplier are aggregated independently across all segments that are diploid in the germline and have a tumor depth ratio of <3x the average depth.  An average is calculated for each value weighted by the number of BAF observations in each segment.     The averaged numbers are multiplied by each other to form an overall ploidy penalty for the sample.
 
-An excel model of the model used to score each segment is available from [Excel Models](https://resources.hartwigmedicalfoundation.nl). 
-
-### Absolute Copy Number Per Segment
-
-For each segment calculate the absolute copy number implied by our fitted purity.
-
-To allow for poly clonality BAF is ignored at this stage.
-
-### Determine Broad CNV Regions
-We want to reduce our maximal # of breakpoints into broad copy number regions across each chromosome.
-
-At this stage we consider only regions with high BAF count and no evidence of germline noise.
-
-Merge neighbouring regions if BAF and copy number are sufficient close to each other.
-
-### Determine Focal Breakpoints
-Extend broad regions from HC segments to the remaining LC segments where possible or create new breakpoints where necessary so as to :
-
-* Identify potential focal amplifications/deletions between HC segments within identified broad regions
-* Refine the location of breakpoints between identified broad regions
-* Identify amplifications / deletions prior to the 1st HC segment or after the last HC segments
+The following chart shows the shape of the combined ploidy penalty
 
 
-### Estimate Uncertainty
-Consider all fitted purities within 10% of the best score.
-
-Calculate min/max purity and ploidy.
+![Combined Ploidy Penalty](src/main/resources/readme/FittedPurityPenalty.png)
 
 
+#### Somatic Deviation Penalty
+
+If somatic variants are provided, an additional somatic penalty is added to fits which lead to somatic variants with ploidies higher than the major allele ploidy, since these are biologically implausible.   This feature was introduced primarily to deal with a degeneracy where in certain situations a lower purity, lower sample ploidy solutions may provide a plausible minor and major allele ploidy fit to the copy number data, but imply that many SNVs exceed the major allele ploidy which is biologically implausible.
+
+The somatic penalty is determined for each [sample plody,purity] combination by sampling 1000 somatic SNV per tumor and comparing the observed ploidy with an upper bound expectation of the variant’s ploidy from the 99.9% percentile of a binomial distribution given the major allele at the SNV location.   The penalty applied to a single SNV is the max(0,impled SNV ploidy - 99.9% expected bound given the major allele).   The somatic penalty is averaged across the 1000 variants and multiplied by a somaticPenaltyWeight [0.3] constant and added to the ploidy penalty.
+
+#### Candidates
+While the lowest scoring purity becomes the fitted purity, we also examine other solutions within 10% or 0.0005 of the best solution. These become potential candidates if we need to resort to using the somatic purity described below. We also record the min and max of the purity, ploidy and diploid proportions of the candidates to give some context around the confidence in the solution.
+
+Note that a segment is diploid only if both the major and minor allele are between 0.8 and 1.2 inclusive. 
+
+#### Somatic Purity
+If the lowest scoring solution is highly diploid (>= 0.95) and there is a wide range (>= 0.15) of valid purities in the candidate solutions we enter somatic mode. Once in this mode, the sample status will be changed from NORMAL to one of HIGHLY_DIPLOID, NO_TUMOR or SOMATIC according to the logic described below.  
+
+First we calculate a somatic purity. To do this, we use a kernel density estimator to find the somatic variant allele frequency peaks. Each peak implies a tumor purity of twice the frequency. We select the largest significant (>= 50) peak that implies a purity within the candidate solutions to be the somatic purity.
+
+If the somatics are unable to help, either because there are none, or because the somatic purity and the fitted purity are both too low (< 0.17) then we continue to use the fitted purity but flag the solution with a status of HIGHLY_DIPLOID. 
+
+If there are only a small number of somatics variants (< 300) with a sufficiently large (>= 0.1) allelic frequency we will flag the solution as NO_TUMOR and use the somatic purity if it exists otherwise fall back on the fitted purity. 
+
+If we have not met the criteria for HIGHLY_DIPLOID or NO_TUMOR then we set the status to SOMATIC and use the somatic purity.
+
+### 4. Copy Number Smoothing 
+
+Since the initial segmentation algorithm is highly sensitive, and there is a significant amount of noise in the read depth in whole genome sequencing, many adjacent segments will have a similar copy number and BAF profile and are unlikely to represent a real somatic copy number change in the tumor.  We therefore apply a smoothing algorithm to merge the raw segments into a final set of smoothed copy number regions. 
+
+The following criteria apply when deciding to merge segments:
+
+1. Never merge across a segment breakpoint with structural variant support.
+2. Do not merge segments if the minimum BAF count in the segments being compared > 0 and the change in observed BAF > 0.03 and the minor allele tolerance is exceeded. The absolute minor allele tolerance is 0.3 + 0.5 * max(copy number of compared segments) / sqrt (min count of BAF points ).  For tumors with purity < 20% the absolute tolerances are increased inversely proportional to the purity to allow for greater noise in tumour copy number and BAF measurements.
+3. Merge segments where the absolute or relative difference in either the copy number or ref normalised copy number is within tolerances. Absolute copy number tolerance is  0.3 + 2 / sqrt(min depth window count). Relative copy number tolerance is 10%. Ref normalised copy number uses the actual germline ratios rather than the typical (1 for autosomes, 0.5 for Y etc.).  Again for tumors with purity < 20% the absolute tolerances are increased.
+4. Start from most confident germline diploid segment (highest tumor depth window count) and extend outwards in both directions until we reach a segment outside of tolerance. Then move on to next most confident unsmoothed germline diploid segment. 
+5. It is possible to merge in (multiple) segments that would otherwise be outside of tolerances if:
+  -  The total dubious region is sufficiently small (<30k bases or <50k bases if approaching centromere); and
+  - The dubious region does not end because of a structural variant; and
+  - The dubious region ends at a centromere, telomere or a segment that is within tolerances.
+
+When merging segments, the depth window count (number of COBALT windows) of each segment is used as a proxy for confidence and is used to calculate a weighted average of the copy number. Similarly, the BAF count is used tom calculated the weighted average BAF. The min and max start of the combined region is the minimum from each segment.  
+
+Any regions that are non-diploid in the germline are smoothed over, thus the copy number profile represents the somatic copy number without influence from the germline. However, PURPLE can sometimes call somatic amplification in germline amplified regions. This feature is supported based on the observation in several samples that double minute amplifications are sometimes detectable as amplifications even in the germline reference sample presumably due to circulating tumor cells in the blood. The somatic amplification is called conservatively and must be amplified in the tumor at least 5 times and with at least one extra copy than the smoothed region containing it. The region must also be directly adjacent to a structural variant. 
+
+
+### 5. Inferring copy number for regions without read depth information
+
+Where clusters of SVs exist which are closer together than our read depth ratio window resolution of 1,000 bases, the segments in between will not have any copy number information associated with them. We calculate then use ploidies of the structural variants to resolve this.
+
+The outermost segment of any SV cluster will be associated with a structural variant whose ploidy can be determined from the adjacent copy number region and the VAF of the SV. Note that if we are inferring from a lower copy number region into a higher one and the VAF is > 0.75 then we use the read depth rather than the VAF to infer a ploidy. We use the average copy number and read depth of the sample to do this.
+
+Given a SV ploidy, we use orientation of the structural variant to calculate the change in copy number across the SV and hence the copy number of the outermost unknown segment. We repeat this process iteratively and infer the copy number of all regions within a cluster.
+
+When the entire short arm of a chromosome is lacking copy number information (generally on chromosome 13,14,15,21, or 22), the copy number of the long arm is extended to the short arm.
+
+
+### 6. Allele specific ploidy inferring
+
+Once copy number region smoothing and inference is complete, it is possible there will be regions without BAF points which will result in a unknown allele specific ploidies, since BAF coverage of the genome is limited and many copy number regions can be very small.
+
+For these regions, we infer a BAF and allele specific ploidies of one or more consecutive regions with unknown BAF by first examining neighbouring regions with known allele specific ploidies and inferring based on the observed copy number changes to the unknown regions.   Where possible, we assume that only one allele changes ploidy in a set of consecutive regions of unknown allele specific ploidy. The other allele is held constant.
+
+Which allele ploidy to hold remain constant from the neighbouring region depends on a number of rules including on whether the allele specific ploidy is known on both sides of the unknown region or only one one side.
+
+If only one side of the unknown region is available then we determine which of the major or minor allele of that neighbour to remain constant with the following logic:
+- If the unknown region is tiny (<= 30 bases) and is greater in copy number than the neighbour, then hold the minor allele constant.
+- Else, find the nearest copy number region where one allele changed by more than 0.5 ploidy and hold constant the allele that did not change.
+- Failing everything else, keep the minor allele constant. 
+
+If there is neighbouring information on both sides of the unknown region, then the following rules apply to determine which allele ploidy to hold constant:
+- If both the major and minor allele of the neighbours are significantly different (> 0.5) but the minor allele of one matches the major allele of the other ( < 0.5) then choose the matching allele ploidy as the constant ploidy.
+- Else, If the major allele of the neighbours is significantly different keep the minor allele constant.
+- Else, If the minor allele of the neighbours is significantly different keep the major allele constant.
+- Else, If the unknown region is tiny (<= 30 bases) and is greater in copy number than the neighbour with the highest baf count, then hold constant that neighbours minor allele.
+- Else, If the unknown region is flanked by large ( > 1,000,000) LOH regions but is not a small region (< 1000 bases) then find the nearest region on each side(without crossing the centromere) with a change in minor or major allele. If found, re-apply logic from the first three steps. 
+- Failing everything else, hold constant the minor allele of the neighbour with the largest number of BAF observations.
+
+At this stage we have determined a copy number and minor allele ploidy for every base in the genome
+
+
+### 7. Structural Variant Recovery and Single Breakend Filtering 
+TODO
+
+### 8. Identify germline copy number alterations that are homozygously deleted in the tumor
+During the smoothing process, regions that are homozygously or heterozygously deleted from the germline are smoothed over for the purposes of producing the somatic output . However, as some of these regions are of specific interest we include them in a separate germline copy number output that contains the homozygous deletes from the germline as well as any deletes that are heterozygous in the germline but homozygous in the tumor. 
+
+
+### 9. Determine a QC Status for the tumor
+The status field reflects how we have determined the purity of the sample:
+- **NORMAL** - PURPLE fit the purity using COBALT and AMBER output.
+- **HIGHLY_DIPLOID** - The fitted purity solution is highly diploid (> 95%) with a large range of potential solutions, but somatic variants are unable to help either because they were not supplied or because their implied purity was too low.
+- **SOMATIC** - Somatic variants have improved the otherwise highly diploid solution.
+- **NO_TUMOR** - PURPLE failed to find any aneuploidy and somatic variants were supplied but there were fewer than 300 with observed VAF > 0.1.
+
+PURPLE also provides a qc status that can fail for the following 3 reasons:
+- **FAIL_SEGMENT** - We remove samples with more than 120 copy number segments unsupported at either end by SV breakpoints. This step was added to remove samples with extreme GC bias, with differences in depth of up to or in excess of 10x between high and low GC regions. GC normalisation is unreliable when the corrections are so extreme so we filter.
+- **FAIL_DELETED_GENES** - We fail any sample with more than 280 deleted genes. This QC step was added after observing that in a handful of samples with high MB scale positive GC bias we sometimes systematically underestimate the copy number in high GC regions. This can lead us to incorrectly infer homozygous loss of entire chromosomes, particularly on chromosome 17 and 19.
+- **FAIL_GENDER** - If the AMBER and COBALT gender are inconsistent we use the COBALT gender but fail the sample.
 
 ## Usage
 
