@@ -119,7 +119,7 @@ For each [ploidy|purity] combination tested an implied major and minor allele pl
 
 The following chart illustrates the deviation penalty applied for each of minor and major allele ploidy at both 30% and 70% purity.
 
-![Image Name](purity-ploidy-estimator/resources/readme/FittedPurityDeviationPenalty.png)
+![Image Name](src/main/resources/readme/FittedPurityPenalty.png)
 
 ### Segmentation
 The idea is to identify maximal set of break points so we can have discrete segments with a single BAF and absolute copy number.
