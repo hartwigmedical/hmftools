@@ -140,11 +140,12 @@ public final class SomaticVariantDataSource {
 
     @NotNull
     private static String extractCodonField(@NotNull String HGVsCoding) {
+        StringBuilder stringAppend = new StringBuilder();
         String codonSplit = HGVsCoding.substring(2);
         String codon = "";
         for (int i = 0; i < codonSplit.length(); i++) {
             if (Character.isDigit(codonSplit.charAt(i))) {
-                codon = codon + Character.toString(codonSplit.charAt(i));
+                codon = stringAppend.append(codon).append(Character.toString(codonSplit.charAt(i))).toString();
             } else if (!Character.isDigit(codonSplit.charAt(i))) {
                 break;
             }
