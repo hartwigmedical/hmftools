@@ -434,7 +434,6 @@ final class ExampleAnalysisTestFactory {
     private static List<ReportableSomaticVariant> createCOLO829SomaticVariants(@NotNull PurityAdjuster purityAdjuster) {
         ReportableSomaticVariant variant1 = ImmutableReportableSomaticVariant.builder()
                 .gene("BRAF")
-                .position(140453136)
                 .isDrupActionable(true)
                 .hgvsCodingImpact("c.1799T>A")
                 .hgvsProteinImpact("p.Val600Glu")
@@ -452,7 +451,6 @@ final class ExampleAnalysisTestFactory {
 
         ReportableSomaticVariant variant2 = ImmutableReportableSomaticVariant.builder()
                 .gene("CDKN2A")
-                .position(0)
                 .isDrupActionable(true)
                 .hgvsCodingImpact("c.369_370delCG")
                 .hgvsProteinImpact("p.Gly124fs")
@@ -470,7 +468,6 @@ final class ExampleAnalysisTestFactory {
 
         ReportableSomaticVariant variant3 = ImmutableReportableSomaticVariant.builder()
                 .gene("SF3B1")
-                .position(198266779)
                 .isDrupActionable(false)
                 .hgvsCodingImpact("c.2153C>T")
                 .hgvsProteinImpact("p.Pro718Leu")
@@ -488,7 +485,6 @@ final class ExampleAnalysisTestFactory {
 
         ReportableSomaticVariant variant4 = ImmutableReportableSomaticVariant.builder()
                 .gene("TP63")
-                .position(198266779)
                 .isDrupActionable(false)
                 .hgvsCodingImpact("c.1497G>T")
                 .hgvsProteinImpact("p.Met499Ile")
