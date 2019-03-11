@@ -87,7 +87,7 @@ public final class SomaticVariantDataSource {
                 return (driverLikelihood1 - driverLikelihood2) < 0 ? 1 : -1;
             } else {
                 if (variant1.gene().equals(variant2.gene())) {
-                    // sort on genomic position if gene is the same
+                    // sort on codon position if gene is the same
                     return extractCodonField(variant2.hgvsCodingImpact()).compareTo(extractCodonField(variant1.hgvsCodingImpact()));
                 } else {
                     return variant1.gene().compareTo(variant2.gene());
