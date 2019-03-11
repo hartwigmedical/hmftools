@@ -54,17 +54,10 @@ public class RecoverStructuralVariants implements Closeable {
     private static final double UNBALANCED_MIN_COPY_NUMBER = 0.5;
     private static final double UNBALANCED_UNEXPLAINED_PERCENT = 0.5;
     private static final double UNBALANCED_MIN_DEPTH_WINDOW_COUNT = 5;
+    private static final double MIN_PLOIDY_AS_PERCENTAGE_OF_COPY_NUMBER_CHANGE = 0.5;
+
     private static final int MIN_MATE_UNCERTAINTY = 150;
     private static final String AF_FILTERED = "af";
-
-    //    There are two situations where PURPLE will attempt to recover structural variants. The first is when a copy number segment is unsupported by an existing structural variant. The second is to search for an structural variant which could offset the copy number impact of an existing “unbalanced” structural variant break that has a ploidy not supported by the copy number change. A structural variant is considered unbalanced if the unexplained copy number change (ie. the ploidy - copy number change) is greater than 50% of the copy number at the breakpoint and > 0.5. An unbalanced structural variant must also have a min depth window count of 5 in the copy number segments  immediately before and after the SV breakpoint.
-    //
-    //    Eligible recovery candidates must:
-    //    Be within 1kb of the min and max range of an unsupported copy number breakpoint or within 1kb of the unbalanced structural variant (If not a single breakend, the other breakpoint must also be within 1 kb of the min-max range of a copy number breakpoint)
-    //    Not be “AF” filtered in GRIDSS (ie. excluding variants with an allelic fraction of less than 0.5% in the tumour)
-    //    Have a minimum qual score of 1000 for single breakends and 350 for all others.
-    //    Have a ploidy of at least 50% of the unexplained copy number change.
-    //
 
     private static final Comparator<RecoveredVariant> QUALITY_COMPARATOR = comparingDouble(x -> x.context().getPhredScaledQual());
 
@@ -117,7 +110,7 @@ public class RecoverStructuralVariants implements Closeable {
                     if (current.segmentStartSupport() != SegmentSupport.MULTIPLE && isSupportedByDepthWindowCounts(prev, current)) {
                         int expectedOrientation = -1 * leg.orientation();
                         recoverSingleVariant(expectedOrientation,
-                                0.5 * unexplainedCopyNumberChange,
+                                MIN_PLOIDY_AS_PERCENTAGE_OF_COPY_NUMBER_CHANGE * unexplainedCopyNumberChange,
                                 index,
                                 chromosomeCopyNumbers).ifPresent(result::add);
                     }
@@ -140,10 +133,11 @@ public class RecoverStructuralVariants implements Closeable {
                 final PurpleCopyNumber current = chromosomeCopyNumbers.get(index);
                 if (current.segmentStartSupport() == SegmentSupport.NONE) {
                     PurpleCopyNumber prev = chromosomeCopyNumbers.get(index - 1);
-                    double expectedPloidy = Math.abs(prev.averageTumorCopyNumber() - current.averageTumorCopyNumber());
+                    double expectedPloidy = MIN_PLOIDY_AS_PERCENTAGE_OF_COPY_NUMBER_CHANGE * Math.abs(
+                            prev.averageTumorCopyNumber() - current.averageTumorCopyNumber());
 
                     int expectedOrientation = Doubles.greaterThan(current.averageTumorCopyNumber(), prev.averageTumorCopyNumber()) ? -1 : 1;
-                    recoverSingleVariant(expectedOrientation, 0.5 * expectedPloidy, index, chromosomeCopyNumbers).ifPresent(result::add);
+                    recoverSingleVariant(expectedOrientation, expectedPloidy, index, chromosomeCopyNumbers).ifPresent(result::add);
                 }
             }
         }
