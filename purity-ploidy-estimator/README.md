@@ -45,7 +45,7 @@ Providing a high quality set of structural variant calls to PURPLE allows exact 
 For these purposes, PURPLE provides full support and integration with the structural variant caller [GRIDSS](https://github.com/PapenfussLab/gridss). GRIDSS can be run directly on tumor and reference BAMs. Alternatively a lightweight version of GRIDSS can be used to re-analyse a set of variant calls and provide additional filtering and accurate VAF estimation.
 
 
-###Somatic Variant Input VCF (optional)
+### Somatic Variant Input VCF (optional)
 An high quality set of somatic SNV and INDEL calls can also improve the accuracy and utility of PURPLE. If provided, the variants are used for enhancing the purity and ploidy fit in 2 ways.   Firstly, each solution receives a penalty for the proportion of somatic variants which have implied ploidies that are inconsistent with the minor and major allele ploidy. Secondly, for highly diploid samples, the VAFs of the somatic variants are used directly to calculate a somatic variant implied purity.
 
 For both purposes, accurate VAF estimation is essential.   For this purpose, PURPLE requires the ‘AD’ (Alllelic Depth) field in the vcf.  High quality filtering of artefacts and false positive calls is also critical to achieving an accurate fit.
@@ -99,7 +99,7 @@ The specific scoring principles applied are the following:
 
 For each [sample ploidy,purity] combination we calculate a fit score using the following formula
 
-Fit Score = DeviationPenalty * EventPenaltyMultiplier + SomaticDeviationPenalty
+`Fit Score = DeviationPenalty * EventPenaltyMultiplier + SomaticDeviationPenalty`
 
 The  [sample ploidy,purity] combination with the lowest fit score is selected by PURPLE as the final fit score.
 
@@ -127,9 +127,11 @@ An event penalty multiplier is intended to further penalise [sample ploidy,purit
 
 The event penalty multiplier is given by:
 
-`EventPenaltyMultiplier = 1 +0.3 * min(SingleEventDistance, WholeGenomeDoublingDistance);
-WholeGenomeDoublingDistance = 1 + abs(majorAllele - 2) +abs(minorAllele - 2);
-SingleEventDistance = abs(majorAllele - 1) + abs(minorAllele - 1);`
+`EventPenaltyMultiplier = 1 +0.3 * min(SingleEventDistance, WholeGenomeDoublingDistance);`
+
+`WholeGenomeDoublingDistance = 1 + abs(majorAllele - 2) +abs(minorAllele - 2);`
+
+`SingleEventDistance = abs(majorAllele - 1) + abs(minorAllele - 1);`
 
 Note that a diploid segment with implied minor allele ploidy = implied major allele ploidy = 1 has an eventPenalty multiplier of exactly 1 whilst all other solutions have increasingly higher multipliers as the minor and major allele deviate further from 1.   The formula includes an explicit reduced penalty for a doubling of both major and minor allele ploidy since there is a known common mechanism of whole genome doubling which can occur in a single event.
 
@@ -219,7 +221,20 @@ At this stage we have determined a copy number and minor allele ploidy for every
 
 
 ### 7. Structural Variant Recovery and Single Breakend Filtering 
-TODO
+PURPLE will remove any unlinked, single breakends with very low copy number change support (< 10%).   In regions of very high copy number an excess of single breakend calls is frequently observed, but nearly always with low VAF support.  They are presumed to be an artefact and are hence filtered. 
+
+PURPLE also attempts to recover entries from a set of lower confidence structural variants if a recovery vcf (parameter: sv_recovery_vcf) is provided.
+
+There are two situations where PURPLE will attempt to recover structural variants. The first is when a copy number segment is unsupported by an existing structural variant. The second is to search for an structural variant which could offset the copy number impact of an existing “unbalanced” structural variant break that has a ploidy not supported by the copy number change. A structural variant is considered unbalanced if the unexplained copy number change (ie. the ploidy - copy number change) is greater than 50% of the copy number at the breakpoint and > 0.5. An unbalanced structural variant must also have a min depth window count of 5 in the copy number segments  immediately before and after the SV breakpoint.
+
+Eligible recovery candidates must:
+1. Be within 1kb of the min and max range of an unsupported copy number breakpoint or within 1kb of the unbalanced structural variant (If not a single breakend, the other breakpoint must also be within 1 kb of the min-max range of a copy number breakpoint)
+2. Not be “AF” filtered in GRIDSS (ie. excluding variants with an allelic fraction of less than 0.5% in the tumour)
+3. Have a minimum qual score of 1000 for single breakends and 350 for all others.
+4. Have a ploidy of at least 50% of the unexplained copy number change.
+
+Following the successful recovery or removal of any structural variants we will rerun the segmentation, copy number smoothing and minor allele ploidy smoothing with the updated structural variants to produce a final set of copy number segments and breakpoints. Note that the purity estimation does not change.
+
 
 ### 8. Identify germline copy number alterations that are homozygously deleted in the tumor
 During the smoothing process, regions that are homozygously or heterozygously deleted from the germline are smoothed over for the purposes of producing the somatic output . However, as some of these regions are of specific interest we include them in a separate germline copy number output that contains the homozygous deletes from the germline as well as any deletes that are heterozygous in the germline but homozygous in the tumor. 
