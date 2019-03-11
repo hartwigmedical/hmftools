@@ -54,11 +54,11 @@ public class AnnotationTests
 
         tester.Analyser.clusterAndAnalyse();
 
-        assertEquals(tester.Analyser.getClusters().size(), 3);
+        assertEquals(2, tester.Analyser.getClusters().size());
 
     }
 
-    @Ignore
+    @Test
     public void testPotentialDoubleMinutes()
     {
         SvTestHelper tester = new SvTestHelper();

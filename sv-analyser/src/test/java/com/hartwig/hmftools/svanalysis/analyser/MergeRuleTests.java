@@ -155,6 +155,31 @@ public class MergeRuleTests
         assertTrue(inv1.getClusterReason().contains(CLUSTER_REASON_FOLDBACKS));
         assertTrue(inv2.getClusterReason().contains(CLUSTER_REASON_FOLDBACKS));
 
+        tester.clearClustersAndSVs();
+
+        // test with a single foldback facing the centromere
+        SvVarData inv3 = createInv(tester.nextVarId(), "2", 10000, 10100, -1);
+        tester.AllVariants.add(inv3);
+
+        SvVarData sgl2 = createSgl(tester.nextVarId(), "2", 20000, 1, false);
+        tester.AllVariants.add(sgl2);
+
+        // next is too far away
+        SvVarData sgl3 = createSgl(tester.nextVarId(), "2", 10000000, 1, false);
+        tester.AllVariants.add(sgl3);
+
+        tester.preClusteringInit();
+
+        tester.Analyser.clusterAndAnalyse();
+
+        assertEquals(tester.getClusters().size(), 2);
+        assertTrue(tester.getClusters().get(0).getSVs().contains(inv3));
+        assertTrue(tester.getClusters().get(0).getSVs().contains(sgl2));
+        assertTrue(tester.getClusters().get(1).getSVs().contains(sgl3));
+
+        assertTrue(inv3.getClusterReason().contains(CLUSTER_REASON_FOLDBACKS));
+        assertTrue(sgl2.getClusterReason().contains(CLUSTER_REASON_FOLDBACKS));
+
     }
 
     @Test

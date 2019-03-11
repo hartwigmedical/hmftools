@@ -822,13 +822,20 @@ public class CNAnalyser {
         }
     }
 
-    public double getCentromereCopyNumberChange(final String chromosome, boolean fromPArm)
+    public static int CN_SEG_DATA_CN_BEFORE = 0;
+    public static int CN_SEG_DATA_MAP_BEFORE = 1;
+    public static int CN_SEG_DATA_CN_AFTER = 2;
+    public static int CN_SEG_DATA_MAP_AFTER = 3;
+
+    public double[] getCentromereCopyNumberData(final String chromosome, boolean fromPArm)
     {
-        // returns a positive value for CN change if it drops across the centromere
+        // get copy number and major allele ploidy for the segment leading up and leading from the centromere
         List<SvCNData> cnDataList = mChrCnDataMap.get(chromosome);
 
+        double[] results = new double[CN_SEG_DATA_MAP_AFTER+1];
+
         if(cnDataList == null || cnDataList.isEmpty())
-            return 0;
+            return results;
 
         for(int i = 0; i < cnDataList.size(); ++i)
         {
@@ -837,13 +844,27 @@ public class CNAnalyser {
             if(cnData.matchesSegment(CENTROMERE, false))
             {
                 SvCNData nextCnData = cnDataList.get(i+1);
-                double cnChange = cnData.CopyNumber - nextCnData.CopyNumber;
 
-                return fromPArm ? cnChange : -cnChange;
+                if(fromPArm)
+                {
+                    results[CN_SEG_DATA_CN_BEFORE] = cnData.CopyNumber;
+                    results[CN_SEG_DATA_MAP_BEFORE] = cnData.majorAllelePloidy();
+                    results[CN_SEG_DATA_CN_AFTER] = nextCnData.CopyNumber;
+                    results[CN_SEG_DATA_MAP_AFTER] = nextCnData.majorAllelePloidy();
+                }
+                else
+                {
+                    results[CN_SEG_DATA_CN_BEFORE] = nextCnData.CopyNumber;
+                    results[CN_SEG_DATA_MAP_BEFORE] = nextCnData.majorAllelePloidy();
+                    results[CN_SEG_DATA_CN_AFTER] = cnData.CopyNumber;
+                    results[CN_SEG_DATA_MAP_AFTER] = cnData.majorAllelePloidy();
+                }
+
+                break;
             }
         }
 
-        return 0;
+        return results;
     }
 
     public final List<StructuralVariantData> createNoneSegments()

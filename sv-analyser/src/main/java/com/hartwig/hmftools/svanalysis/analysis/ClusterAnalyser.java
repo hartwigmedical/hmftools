@@ -18,6 +18,7 @@ import static com.hartwig.hmftools.svanalysis.analysis.ClusterAnnotations.REPLIC
 import static com.hartwig.hmftools.svanalysis.analysis.ClusterAnnotations.annotateChainedClusters;
 import static com.hartwig.hmftools.svanalysis.analysis.ClusterAnnotations.annotateFoldbacks;
 import static com.hartwig.hmftools.svanalysis.analysis.ClusterAnnotations.annotateTemplatedInsertions;
+import static com.hartwig.hmftools.svanalysis.analysis.ClusterAnnotations.checkLooseFoldbacks;
 import static com.hartwig.hmftools.svanalysis.analysis.ClusterAnnotations.findIncompleteFoldbackCandidates;
 import static com.hartwig.hmftools.svanalysis.analysis.ClusterAnnotations.findPotentialDoubleMinuteClusters;
 import static com.hartwig.hmftools.svanalysis.analysis.ClusterAnnotations.reportClusterArmSegments;
@@ -562,13 +563,14 @@ public class ClusterAnalyser {
 
     private boolean canMergeClustersOnFoldbacks(final SvCluster cluster1, final SvCluster cluster2)
     {
+        // merge any clusters with foldbacks on the same arm
         final List<SvVarData> cluster1Foldbacks = cluster1.getFoldbacks();
         final List<SvVarData> cluster2Foldbacks = cluster2.getFoldbacks();
 
-        if(cluster1Foldbacks.isEmpty() && cluster2Foldbacks.isEmpty())
+        if (cluster1Foldbacks.isEmpty() && cluster2Foldbacks.isEmpty())
             return false;
 
-        if(!cluster1Foldbacks.isEmpty() && !cluster2Foldbacks.isEmpty())
+        if (!cluster1Foldbacks.isEmpty() && !cluster2Foldbacks.isEmpty())
         {
             for (final SvVarData var1 : cluster1Foldbacks)
             {
@@ -577,7 +579,7 @@ public class ClusterAnalyser {
                     boolean v1Start = isStart(be1);
 
                     if (be1 == SVI_END && var1.type() != BND)
-                            continue;
+                        continue;
 
                     if (var1.getFoldbackLink(v1Start).isEmpty())
                         continue;
@@ -589,7 +591,7 @@ public class ClusterAnalyser {
                             boolean v2Start = isStart(be2);
 
                             if (be2 == SVI_END && var2.type() != BND)
-                                    continue;
+                                continue;
 
                             if (var2.getFoldbackLink(v2Start).isEmpty())
                                 continue;
@@ -609,50 +611,56 @@ public class ClusterAnalyser {
             }
         }
 
-        final Map<String, List<SvBreakend>> chrBreakendMap = mClusteringMethods.getChrBreakendMap();
-
-        // additionally check whether any of the foldbacks face an opposing SV in the other cluster
-        // must be the next SV, less than 5M bases and
-        for(int i = 0; i <= 1; ++i)
+        if(mConfig.MergeInconsistentFoldbacks)
         {
-            final List<SvVarData> foldbacks = (i == 0) ? cluster1Foldbacks : cluster2Foldbacks;
-            final SvCluster foldbackCluster = (i == 0) ? cluster1 : cluster2;
-            final SvCluster otherCluster = (i == 0) ? cluster2 : cluster1;
+            final Map<String, List<SvBreakend>> chrBreakendMap = mClusteringMethods.getChrBreakendMap();
 
-            for (final SvVarData var : foldbacks)
+            // additionally check whether any of the foldbacks face an opposing SV in the other cluster,
+            // and they must be the next SV and within 5M bases away
+            for (int i = 0; i <= 1; ++i)
             {
-                for (int be1 = SVI_START; be1 <= SVI_END; ++be1)
+                final List<SvVarData> foldbacks = (i == 0) ? cluster1Foldbacks : cluster2Foldbacks;
+                final SvCluster foldbackCluster = (i == 0) ? cluster1 : cluster2;
+                final SvCluster otherCluster = (i == 0) ? cluster2 : cluster1;
+
+                for (final SvVarData var : foldbacks)
                 {
-                    boolean isStart = isStart(be1);
+                    // get the inner-most breakend
+                    SvBreakend foldbackBreakend = null;
 
-                    if (be1 == SVI_END && var.type() != BND)
-                        continue;
-
-                    if (var.getFoldbackLink(isStart).isEmpty())
-                        continue;
-
-                    final SvBreakend foldbackBreakend = var.getBreakend(isStart);
+                    if (!var.isChainedFoldback())
+                    {
+                        foldbackBreakend = var.orientation(true) == 1 ? var.getBreakend(true) : var.getBreakend(false);
+                    }
+                    else
+                    {
+                        SvBreakend be1 = var.getFoldbackBreakend(true) != null ? var.getBreakend(true) : var.getBreakend(false);
+                        SvBreakend be2 = var.getChainedFoldbackBreakend();
+                        foldbackBreakend = (var.orientation(true) == 1) == (be1.position() < be2.position()) ? be1 : be2;
+                    }
 
                     final List<SvBreakend> breakendList = chrBreakendMap.get(foldbackBreakend.chromosome());
-                    boolean traverseUp = foldbackBreakend.orientation() == -1;
-                    int nextIndex = traverseUp ? foldbackBreakend.getChrPosIndex() + 1 : foldbackBreakend.getChrPosIndex() - 1;
 
-                    SvBreakend nextBreakend = getNextUnresolvedBreakend(breakendList, nextIndex, traverseUp);
+                    SvBreakend nextBreakend = getNextUnresolvedBreakend(foldbackBreakend, breakendList);
 
-                    if(nextBreakend == null || nextBreakend.getSV().getCluster() != otherCluster)
+                    if (nextBreakend == null || nextBreakend.orientation() == foldbackBreakend.orientation()
+                    || nextBreakend.getSV().getCluster() != otherCluster)
                         continue;
 
-                    if(abs(nextBreakend.position() - foldbackBreakend.position()) > MAX_FOLDBACK_NEXT_CLUSTER_DISTANCE)
+                    if (abs(nextBreakend.position() - foldbackBreakend.position()) > MAX_FOLDBACK_NEXT_CLUSTER_DISTANCE)
                         continue;
 
                     double fbPloidy = foldbackBreakend.getSV().getSvData().ploidy();
                     double nbPloidy = nextBreakend.getSV().getSvData().ploidy();
 
-                    if(nbPloidy < fbPloidy && !copyNumbersEqual(nbPloidy, fbPloidy))
+                    if (nbPloidy < fbPloidy && !copyNumbersEqual(nbPloidy, fbPloidy))
                         continue;
 
                     LOGGER.debug("cluster({}) foldback breakend({}) faces cluster({}) breakend({})",
                             foldbackCluster.id(), foldbackBreakend.toString(), otherCluster.id(), nextBreakend.toString());
+
+                    addClusterReason(foldbackCluster, CLUSTER_REASON_FOLDBACKS, nextBreakend.getSV().id());
+                    addClusterReason(otherCluster, CLUSTER_REASON_FOLDBACKS, var.id());
 
                     return true;
                 }
@@ -660,6 +668,37 @@ public class ClusterAnalyser {
         }
 
         return false;
+    }
+
+    private final SvBreakend getNextUnresolvedBreakend(final SvBreakend foldbackBreakend, final List<SvBreakend> breakendList)
+    {
+        // select the next breakend after this foldback if it's in a different, unresolved cluster
+        boolean traverseUp = foldbackBreakend.orientation() == -1;
+        int startIndex = traverseUp ? foldbackBreakend.getChrPosIndex() + 1 : foldbackBreakend.getChrPosIndex() - 1;
+        final SvCluster fbCluster = foldbackBreakend.getSV().getCluster();
+
+        int index = startIndex;
+
+        while(index >= 0 && index < breakendList.size())
+        {
+            final SvBreakend breakend = breakendList.get(index);
+            final SvCluster cluster = breakend.getSV().getCluster();
+
+            if(!cluster.isResolved())
+            {
+                if(cluster != fbCluster)
+                    return breakend;
+                else
+                    return null;
+            }
+
+            if(traverseUp)
+                ++index;
+            else
+                --index;
+        }
+
+        return null;
     }
 
     private boolean canMergeClustersOnCommonArms(final SvCluster cluster1, final SvCluster cluster2, long armWidthCutoff)
@@ -810,6 +849,7 @@ public class ClusterAnalyser {
 
     public void markFoldbacks()
     {
+        // find all valid consective breakends formed either from a single SV or a chained set
         for(final Map.Entry<String, List<SvBreakend>> entry : mClusteringMethods.getChrBreakendMap().entrySet())
         {
             List<SvBreakend> breakendList = entry.getValue();
@@ -1065,131 +1105,6 @@ public class ClusterAnalyser {
         }
     }
 
-    public void checkSkippedLOHEvents()
-    {
-        List<SvLOH> lohList = mClusteringMethods.getSampleLohData().get(mSampleId);
-        List<SvLOH> unmatchedLohList = Lists.newArrayList();
-
-        if(lohList != null)
-            unmatchedLohList.addAll(lohList.stream().filter(x -> x.Skipped).collect(Collectors.toList()));
-
-        int matchedLohCount = 0;
-
-        // check if an LOH was a skipped for being a potential TI or DB
-        int index = 0;
-        while(index < unmatchedLohList.size())
-        {
-            final SvLOH lohEvent = unmatchedLohList.get(index);
-
-            boolean matched = false;
-            long lohLength = lohEvent.PosEnd - lohEvent.PosStart;
-
-            final List<SvBreakend> breakendList = mClusteringMethods.getChrBreakendMap().get(lohEvent.Chromosome);
-
-            for(int i = 0; i < breakendList.size(); ++i)
-            {
-                final SvBreakend breakend = breakendList.get(i);
-                final SvVarData var = breakend.getSV();
-
-                if(!lohEvent.StartSV.equals(var.id()))
-                    continue;
-
-                if(lohEvent.StartSV.equals(var.id()) && lohEvent.EndSV.equals(var.id()))
-                {
-                    LOGGER.debug("var({} {}) matches skipped LOH: chr({}) breaks({} -> {}, len={})",
-                            var.id(), var.type(), lohEvent.Chromosome, lohEvent.PosStart, lohEvent.PosEnd, lohLength);
-
-                    if(var.type() == INV || var.type() == DUP)
-                        matched = true;
-
-                    break;
-                }
-
-                for (int be1 = SVI_START; be1 <= SVI_END; ++be1)
-                {
-                    boolean v1Start = isStart(be1);
-
-                    final SvLinkedPair dbPair = var.getDBLink(v1Start);
-
-                    if (dbPair != null && dbPair.getOtherSV(var).id().equals(lohEvent.EndSV)
-                    && dbPair.getBreakend(true).position() == lohEvent.PosStart
-                    && dbPair.getBreakend(false).position() == lohEvent.PosEnd - 1)
-                    {
-                        LOGGER.debug("deletionBridge({}) matches skipped LOH: chr({}) breaks({} -> {}, len={})",
-                                var.getDBLink(v1Start).toString(), lohEvent.Chromosome,
-                                lohEvent.PosStart, lohEvent.PosEnd, lohLength);
-                        matched = true;
-                        break;
-                    }
-
-                    final SvLinkedPair tiPair = var.getLinkedPair(v1Start);
-
-                    if (tiPair != null && tiPair.getOtherSV(var).id().equals(lohEvent.EndSV)
-                    && tiPair.getBreakend(true).position() == lohEvent.PosStart
-                    && tiPair.getBreakend(false).position() == lohEvent.PosEnd - 1)
-                    {
-                        LOGGER.debug("templatedInsertion({}) matches skipped LOH: chr({}) breaks({} -> {}, len={})",
-                                var.getLinkedPair(v1Start).toString(), lohEvent.Chromosome,
-                                lohEvent.PosStart, lohEvent.PosEnd, lohLength);
-                        matched = true;
-                        break;
-                    }
-                }
-
-                if(!matched)
-                {
-                    // check for line and SGLs which may not have formed TIs
-                    SvVarData varEnd = null;
-
-                    if (i < breakendList.size() - 1 && breakendList.get(i + 1).getSV().id().equals(lohEvent.EndSV))
-                    {
-                        // should be the next SV
-                        varEnd = breakendList.get(i + 1).getSV();
-                    }
-
-                    if (var.inLineElement() || (varEnd != null && varEnd.inLineElement()))
-                    {
-                        LOGGER.debug("line SVs({} and {}) match skipped LOH: chr({}) breaks({} -> {}, len={})",
-                                var.id(), varEnd != null ? varEnd.id() : "null",
-                                lohEvent.Chromosome, lohEvent.PosStart, lohEvent.PosEnd, lohLength);
-                        matched = true;
-                    }
-                    else if (var.type() == SGL || (varEnd != null && varEnd.type() == SGL))
-                    {
-                        matched = true;
-                    }
-                }
-
-                break;
-            }
-
-            if(matched || lohEvent.matchesSegment(MULTIPLE, true) || lohEvent.matchesSegment(MULTIPLE, false))
-            {
-                unmatchedLohList.remove(index);
-                ++matchedLohCount;
-            }
-            else
-            {
-                ++index;
-            }
-        }
-
-        if(!unmatchedLohList.isEmpty())
-        {
-            LOGGER.info("sample({}) has matched({}) unmatched({}) skipped LOH events",
-                    mSampleId, matchedLohCount, unmatchedLohList.size());
-
-            for(final SvLOH lohEvent : unmatchedLohList)
-            {
-                LOGGER.info("unmatched LOH: chr({}) breaks({} -> {}, len={}) SV start({} {}) end({} {}) {} SV",
-                        lohEvent.Chromosome, lohEvent.PosStart, lohEvent.PosEnd, lohEvent.PosEnd - lohEvent.PosStart,
-                        lohEvent.StartSV, lohEvent.SegStart, lohEvent.EndSV, lohEvent.SegEnd,
-                        lohEvent.StartSV == lohEvent.EndSV ? "same" : "diff");
-            }
-        }
-
-    }
-
     private void reportOtherFeatures()
     {
         annotateTemplatedInsertions(mClusters, mClusteringMethods.getChrBreakendMap());
@@ -1221,87 +1136,6 @@ public class ClusterAnalyser {
             reportClusterArmSegments(cluster);
         }
 
-    }
-
-    private final SvBreakend getNextUnresolvedBreakend(final List<SvBreakend> breakendList, int startIndex, boolean traverseUp)
-    {
-        int index = startIndex;
-
-        while(index >= 0 && index < breakendList.size())
-        {
-            final SvBreakend breakend = breakendList.get(index);
-            final SvCluster cluster = breakend.getSV().getCluster();
-
-            if (!cluster.isResolved())
-                return breakend;
-
-            if(traverseUp)
-                ++index;
-            else
-                --index;
-        }
-
-        return null;
-    }
-
-    private void checkLooseFoldbacks(final SvCluster cluster)
-    {
-        if (cluster.isResolved() || cluster.isFullyChained())
-            return;
-
-        final Map<String, List<SvBreakend>> chrBreakendMap = cluster.getChrBreakendMap();
-
-        for (final Map.Entry<String, List<SvBreakend>> entry : chrBreakendMap.entrySet())
-        {
-            List<SvBreakend> breakendList = entry.getValue();
-
-            for (int i = 0; i < breakendList.size() - 1; ++i)
-            {
-                final SvBreakend lowerBreakend = breakendList.get(i);
-                SvBreakend upperBreakend = breakendList.get(i + 1);
-
-                boolean isFoldback = false;
-
-                if (lowerBreakend.arm() != upperBreakend.arm())
-                    continue;
-
-                if (lowerBreakend.orientation() != upperBreakend.orientation())
-                {
-                    // allow for short DBs where the breakends remain in a foldback
-                    if (i < breakendList.size() - 2)
-                    {
-                        final SvBreakend nextBreakend = breakendList.get(i + 2);
-
-                        if (!lowerBreakend.getSV().getFoldbackLink(lowerBreakend.usesStart()).isEmpty()
-                                && lowerBreakend.getSV().getFoldbackLink(lowerBreakend.usesStart())
-                                .equals(nextBreakend.getSV().getFoldbackLink(nextBreakend.usesStart())))
-                        {
-                            isFoldback = true;
-                            upperBreakend = nextBreakend;
-                        }
-                    }
-
-                    if (!isFoldback)
-                        continue;
-                }
-
-                final SvBreakend frontBE = lowerBreakend.orientation() == 1 ? lowerBreakend : upperBreakend;
-                final SvBreakend backBE = lowerBreakend.orientation() == 1 ? upperBreakend : lowerBreakend;
-
-                if (frontBE.getSV().getDBLink(frontBE.usesStart()) != null)
-                {
-                    // check for an overlapping short DB which would invalidate these consecutive breakends
-                    if (frontBE.getSV().getDBLink(frontBE.usesStart()).length() < 0)
-                        continue;
-                }
-
-                final SvVarData frontSv = frontBE.getSV();
-                final SvVarData backSv = backBE.getSV();
-
-                frontSv.setConsecBEStart(backSv.origId(), frontBE.usesStart());
-                backSv.setConsecBEStart(frontSv.origId(), backBE.usesStart());
-            }
-        }
     }
 
     public void logStats()

@@ -500,7 +500,11 @@ public class SvVarData
             return true;
         else
             return false;
+    }
 
+    public final SvBreakend getChainedFoldbackBreakend()
+    {
+        return mFoldbackBeStart != null ? mFoldbackBeStart : mFoldbackBeEnd;
     }
 
     public void setFoldbackLink(boolean isStart, final SvBreakend link, int length, String linkInfo)
