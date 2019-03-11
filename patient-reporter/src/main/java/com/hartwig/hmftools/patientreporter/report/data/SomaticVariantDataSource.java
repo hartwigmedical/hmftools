@@ -139,9 +139,9 @@ public final class SomaticVariantDataSource {
     }
 
     @NotNull
-    private static String extractCodonField(@NotNull String HGVsCoding) {
+    private static String extractCodonField(@NotNull String hgvsCoding) {
         StringBuilder stringAppend = new StringBuilder();
-        String codonSplit = HGVsCoding.substring(2);
+        String codonSplit = hgvsCoding.substring(2);
         String codon = "";
         for (int i = 0; i < codonSplit.length(); i++) {
             if (Character.isDigit(codonSplit.charAt(i))) {
