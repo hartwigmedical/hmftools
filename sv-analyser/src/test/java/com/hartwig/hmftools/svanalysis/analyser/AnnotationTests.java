@@ -51,11 +51,26 @@ public class AnnotationTests
         tester.AllVariants.add(var4);
 
         tester.preClusteringInit();
-
         tester.Analyser.clusterAndAnalyse();
 
         assertEquals(2, tester.Analyser.getClusters().size());
 
+        tester.clearClustersAndSVs();
+
+        final SvVarData var5 = createInv(tester.nextVarId(), "1", 1000, 2000, -1);
+        final SvVarData var6 = createInv(tester.nextVarId(), "1", 3000, 5000, -1);
+        final SvVarData var7 = createInv(tester.nextVarId(), "1", 4000, 6000, 1);
+        final SvVarData var8 = createInv(tester.nextVarId(), "1", 7000, 8000, 1);
+
+        tester.AllVariants.add(var5);
+        tester.AllVariants.add(var6);
+        tester.AllVariants.add(var7);
+        tester.AllVariants.add(var8);
+
+        tester.preClusteringInit();
+        tester.Analyser.clusterAndAnalyse();
+
+        assertEquals(1, tester.Analyser.getClusters().size());
     }
 
     @Test

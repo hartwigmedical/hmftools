@@ -825,15 +825,6 @@ public class ClusterAnnotations
                 foldbackChained = appendStr(foldbackChained, Boolean.toString(var.isChainedFoldback()), ';');
             }
 
-            // get data for all cluster SVs on this arm
-            /*
-            CN @ Centromere  (only have CNChange right now)
-            MajorAllelePloidy@ Telomere
-            MajorAllelePloidy@ Centromere
-            minClusterArmCentromereFacingPloidy
-            minClusterArmTelomereFacingPloidy
-            */
-
             List<SvCNData> cnDataList = chrCopyNumberDataMap.get(chromosome);
 
             long telomereEndPos = 0;
@@ -845,11 +836,17 @@ public class ClusterAnnotations
             double telomereMinFacingPloidy = Double.NaN;
             double centromereMinFacingPloidy = Double.NaN;
 
+            if(chromosome.equals("16") && arm.equals(CHROMOSOME_ARM_Q))
+            {
+                LOGGER.debug("spec chr and arm");
+            }
+
             List<SvBreakend> clusterBreakendList = cluster.getChrBreakendMap().get(chromosome);
 
             for(int i = 0; i < clusterBreakendList.size(); ++i)
             {
                 SvBreakend breakend = clusterBreakendList.get(i);
+                SvBreakend nextBreakend = i < clusterBreakendList.size() - 1 ? clusterBreakendList.get(i+1) : null;
 
                 if(breakend.arm() != arm)
                 {
@@ -859,35 +856,82 @@ public class ClusterAnnotations
                         continue;
                 }
 
-                if((arm == CHROMOSOME_ARM_P && telomereEndPos == 0) || (arm == CHROMOSOME_ARM_Q && i == clusterBreakendList.size() - 1))
+                // take CN data from the breakends closest to the telomere and centromere
+                if((arm == CHROMOSOME_ARM_P && telomereEndPos == 0)
+                || (arm == CHROMOSOME_ARM_Q && nextBreakend == null))
                 {
                     telomereEndPos = breakend.position();
-                    telomereEndCN = breakend.copyNumber();
-                    telomereEndMap = getAdjacentMajorAllelePloidy(breakend, svCopyNumberDataMap, cnDataList);
+
+                    SvCNData cnData = getAdjacentCNData(breakend, svCopyNumberDataMap, cnDataList);
+
+                    if(cnData != null)
+                    {
+                        telomereEndCN = cnData.CopyNumber;
+                        telomereEndMap = cnData.majorAllelePloidy();
+                    }
                 }
 
-                if((arm == CHROMOSOME_ARM_P && breakend.position() > centromereEndPos) || (arm == CHROMOSOME_ARM_Q && centromereEndPos == 0))
+                if((arm == CHROMOSOME_ARM_P && (nextBreakend == null || nextBreakend.arm() != arm))
+                || (arm == CHROMOSOME_ARM_Q && centromereEndPos == 0))
                 {
                     centromereEndPos = breakend.position();
-                    centromereEndCN = breakend.copyNumber();
-                    centromereEndMap = getAdjacentMajorAllelePloidy(breakend, svCopyNumberDataMap, cnDataList);
+
+                    SvCNData cnData = getAdjacentCNData(breakend, svCopyNumberDataMap, cnDataList);
+
+                    if(cnData != null)
+                    {
+                        centromereEndCN = cnData.CopyNumber;
+                        centromereEndMap = cnData.majorAllelePloidy();
+                    }
                 }
 
+                /*
                 // find the number of offseting breakends for this breakend
                 boolean facesTelomere = (breakend.orientation() == 1) == (arm == CHROMOSOME_ARM_P);
-                double ploidyTotal = breakend.getSV().ploidyMin();
+                double ploidyTotal = breakend.copyNumberChange();// may switch back to ploidy once is consistent with copy number
 
                 int j = breakend.orientation() == 1 ? i - 1 : i + 1;
+                long prevPos = breakend.position();
+                boolean seenNegOrient = false;
+                boolean seenPosOrient = false;
                 while(j >= 0 && j < clusterBreakendList.size() - 1)
                 {
-                    SvBreakend nextBreakend = clusterBreakendList.get(j);
+                    SvBreakend otherBreakend = clusterBreakendList.get(j);
 
-                    if(nextBreakend.arm() == arm)
+                    if(otherBreakend.arm() == arm)
                     {
-                        if (nextBreakend.orientation() == breakend.orientation())
-                            ploidyTotal += nextBreakend.getSV().ploidyMin();
+                        // TEMP: skip multiple breakends
+                        boolean skipBreakend = false;
+                        if(prevPos == otherBreakend.position())
+                        {
+                            if ((otherBreakend.orientation() == 1 && seenPosOrient)
+                            || (otherBreakend.orientation() == -1 && seenNegOrient))
+                            {
+                                LOGGER.debug("skipping multiple breakend({}) with same orientation", otherBreakend.toString());
+                                skipBreakend = true;
+                            }
+                            else
+                            {
+                                if (otherBreakend.orientation() == 1)
+                                    seenPosOrient = true;
+                                else
+                                    seenNegOrient = true;
+                            }
+                        }
                         else
-                            ploidyTotal -= nextBreakend.getSV().ploidyMin();
+                        {
+                            prevPos = otherBreakend.position();
+                            seenPosOrient = false;
+                            seenNegOrient = false;
+                        }
+
+                        if(!skipBreakend)
+                        {
+                            if (otherBreakend.orientation() == breakend.orientation())
+                                ploidyTotal += otherBreakend.copyNumberChange();
+                            else
+                                ploidyTotal -= otherBreakend.copyNumberChange();
+                        }
                     }
 
                     if(breakend.orientation() == 1)
@@ -910,13 +954,21 @@ public class ClusterAnnotations
                     else
                         centromereMinFacingPloidy = max(centromereMinFacingPloidy, ploidyTotal);
                 }
+                */
             }
 
-            if(Double.isNaN(centromereMinFacingPloidy))
+            /*
+            if(Double.isNaN(centromereMinFacingPloidy) || centromereMinFacingPloidy < 0)
                 centromereMinFacingPloidy = 0;
 
-            if(Double.isNaN(telomereMinFacingPloidy))
+            if(Double.isNaN(telomereMinFacingPloidy) || telomereMinFacingPloidy < 0)
                 telomereMinFacingPloidy = 0;
+            */
+
+            double[] netPloidies = calcNetCopyNumberChangeAcrossCluster(clusterBreakendList, arm);
+
+            telomereMinFacingPloidy = netPloidies[0];
+            centromereMinFacingPloidy = netPloidies[1];
 
             // get centromere & telomere data
             double[] centromereCNData = cnAnalyser.getCentromereCopyNumberData(chromosome, arm.equals(CHROMOSOME_ARM_P));
@@ -966,7 +1018,7 @@ public class ClusterAnnotations
 
                     final SvCluster nextCluster = nextBreakend.getSV().getCluster();
 
-                    if (processedClusters.contains(nextCluster))
+                    if (nextCluster == cluster || processedClusters.contains(nextCluster))
                         continue;
 
                     processedClusters.add(nextCluster);
@@ -1036,6 +1088,95 @@ public class ClusterAnnotations
 
             LOGGER.info("INCONSIST_FBS: {}", infoStr);
         }
+    }
+
+    private static double[] calcNetCopyNumberChangeAcrossCluster(final List<SvBreakend> breakendList, final String arm)
+    {
+        // find the net copy number change facing both the telomere and centromere
+        double telomereMinFacingPloidy = 0;
+        double centromereMinFacingPloidy = 0;
+
+        for(int i = 0; i <= 1; ++i) // first forwards, then backwards through the breakends
+        {
+            byte currentOrientation = (i == 0) ? (byte)-1 : (byte)1;
+
+            long prevPos = 0;
+            boolean seenNegOrient = false;
+            boolean seenPosOrient = false;
+            double netPloidy = 0;
+            double maxPloidy = 0;
+
+            int index = (i == 0) ? 0 : breakendList.size() - 1;
+            while(index >= 0 && index < breakendList.size())
+            {
+                SvBreakend breakend = breakendList.get(index);
+
+                if (breakend.arm() == arm)
+                {
+                    // TEMP: skip multiple breakends
+                    boolean skipBreakend = false;
+                    if (prevPos == breakend.position())
+                    {
+                        if ((breakend.orientation() == 1 && seenPosOrient)
+                        || (breakend.orientation() == -1 && seenNegOrient))
+                        {
+                            LOGGER.debug("skipping multiple breakend({}) with same orientation", breakend.toString());
+                            skipBreakend = true;
+                        }
+                        else
+                        {
+                            if (breakend.orientation() == 1)
+                                seenPosOrient = true;
+                            else
+                                seenNegOrient = true;
+                        }
+                    }
+                    else
+                    {
+                        prevPos = breakend.position();
+                        seenPosOrient = false;
+                        seenNegOrient = false;
+                    }
+
+                    if (!skipBreakend)
+                    {
+                        if (breakend.orientation() == currentOrientation)
+                            netPloidy += breakend.copyNumberChange();
+                        else
+                            netPloidy -= breakend.copyNumberChange();
+
+                        maxPloidy = max(maxPloidy, netPloidy);
+                    }
+                }
+                else
+                {
+                    // early exit if into next arm
+                    if(i == 0 && arm == CHROMOSOME_ARM_P)
+                        break;
+                    else if(i == 1 && arm == CHROMOSOME_ARM_Q)
+                        break;
+                }
+
+                if(i == 0)
+                    ++index;
+                else
+                    --index;
+            }
+
+            boolean facesTelomere = (currentOrientation == 1) == (arm == CHROMOSOME_ARM_P);
+
+            if(facesTelomere)
+            {
+                telomereMinFacingPloidy = maxPloidy;
+            }
+            else
+            {
+                centromereMinFacingPloidy = maxPloidy;
+            }
+        }
+
+        double[] results = {telomereMinFacingPloidy, centromereMinFacingPloidy};
+        return results;
     }
 
     private static double DM_PLOIDY_MIN_RATIO = 2.3;
@@ -1403,23 +1544,31 @@ public class ClusterAnnotations
         LOGGER.info("POTENTIAL_DM_DATA: {}", infoStr);
     }
 
-    private static double getAdjacentMajorAllelePloidy(final SvBreakend breakend,
+    private static final SvCNData getAdjacentCNData(final SvBreakend breakend,
             final Map<String,SvCNData[]> svCopyNumberDataMap, final List<SvCNData> cnDataList)
     {
         // check the major allele ploidy outside this breakend
         final SvCNData[] cnDataPair = svCopyNumberDataMap.get(breakend.getSV().id());
         if(cnDataPair == null)
-            return 0;
+            return null;
 
         final SvCNData cnData = breakend.usesStart() ? cnDataPair[SVI_START] : cnDataPair[SVI_END];
         if(cnData == null)
-            return Double.NaN;
+            return null;
 
         // CN data is always the segment that starts with the SV's position, so the adjacent
         // segment will already be correct for orientation +1, but needs to take the preceding one for -1
         final SvCNData adjacentCNData = breakend.orientation() == -1 ? cnDataList.get(cnData.getIndex() - 1) : cnData;
 
-        return adjacentCNData.majorAllelePloidy();
+        return adjacentCNData;
+    }
+
+    private static double getAdjacentMajorAllelePloidy(final SvBreakend breakend,
+            final Map<String,SvCNData[]> svCopyNumberDataMap, final List<SvCNData> cnDataList)
+    {
+        final SvCNData adjacentCNData = getAdjacentCNData(breakend, svCopyNumberDataMap, cnDataList);
+
+        return adjacentCNData != null ? adjacentCNData.majorAllelePloidy() : Double.NaN;
     }
 
     private static boolean isValidDMBreakend(final SvBreakend breakend,

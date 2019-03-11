@@ -203,40 +203,40 @@ public class SvCluster
         {
             ++mTypeCounts[typeAsInt(var.type())];
 
-            if(var.type() == BND || var.isCrossArm())
+            if (var.type() == BND || var.isCrossArm())
                 mRecalcRemoteSVStatus = true;
 
             addSvToChrBreakendMap(var, mChrBreakendMap);
             addSvToArmCluster(var);
-        }
 
-        // keep track of all SVs in their respective chromosomal arms
-        for(int be = SVI_START; be <= SVI_END; ++be)
-        {
-            if(be == SVI_END && var.isNullBreakend())
-                continue;
-
-            if(be == SVI_END && var.isLocal())
-                continue;
-
-            boolean useStart = isStart(be);
-
-            boolean groupFound = false;
-            for(SvArmGroup armGroup : mArmGroups)
+            // keep track of all SVs in their respective chromosomal arms
+            for (int be = SVI_START; be <= SVI_END; ++be)
             {
-                if(armGroup.chromosome().equals(var.chromosome(useStart)) && armGroup.arm().equals(var.arm(useStart)))
+                if (be == SVI_END && var.isNullBreakend())
+                    continue;
+
+                if (be == SVI_END && var.isLocal())
+                    continue;
+
+                boolean useStart = isStart(be);
+
+                boolean groupFound = false;
+                for (SvArmGroup armGroup : mArmGroups)
                 {
-                    armGroup.addVariant(var);
-                    groupFound = true;
-                    break;
+                    if (armGroup.chromosome().equals(var.chromosome(useStart)) && armGroup.arm().equals(var.arm(useStart)))
+                    {
+                        armGroup.addVariant(var);
+                        groupFound = true;
+                        break;
+                    }
                 }
-            }
 
-            if(!groupFound)
-            {
-                SvArmGroup armGroup = new SvArmGroup(this, var.chromosome(useStart), var.arm(useStart));
-                armGroup.addVariant(var);
-                mArmGroups.add(armGroup);
+                if (!groupFound)
+                {
+                    SvArmGroup armGroup = new SvArmGroup(this, var.chromosome(useStart), var.arm(useStart));
+                    armGroup.addVariant(var);
+                    mArmGroups.add(armGroup);
+                }
             }
         }
     }
