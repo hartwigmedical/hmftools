@@ -23,16 +23,16 @@ public class Lims {
     @NotNull
     private final Set<String> samplesWithoutSamplingDate;
     @NotNull
-    private final Map<String, LimsShallowSeqData> dataShallowSeq;
+    private final Map<String, LimsShallowSeqData> shallowSeqPerSample;
 
     Lims(@NotNull final Map<String, LimsJsonSampleData> dataPerSample, @NotNull final Map<String, LimsJsonSubmissionData> dataPerSubmission,
             @NotNull final Map<String, LocalDate> preLimsArrivalDates, @NotNull final Set<String> samplesWithoutSamplingDate,
-            @NotNull final Map<String, LimsShallowSeqData> dataShallowSeq) {
+            @NotNull final Map<String, LimsShallowSeqData> shallowSeqPerSample) {
         this.dataPerSample = dataPerSample;
         this.dataPerSubmission = dataPerSubmission;
         this.preLimsArrivalDates = preLimsArrivalDates;
         this.samplesWithoutSamplingDate = samplesWithoutSamplingDate;
-        this.dataShallowSeq = dataShallowSeq;
+        this.shallowSeqPerSample = shallowSeqPerSample;
     }
 
     public int sampleCount() {
@@ -158,7 +158,7 @@ public class Lims {
     @NotNull
     public String purityShallowSeq(@NotNull String sample) {
         LimsJsonSampleData sampleData = dataPerSample.get(sample);
-        LimsShallowSeqData shallowSeq = dataShallowSeq.get(sample);
+        LimsShallowSeqData shallowSeq = shallowSeqPerSample.get(sample);
 
         if (sampleData != null) {
             boolean purityShallowExecuted = shallowSeqExecuted(sample);
@@ -174,6 +174,7 @@ public class Lims {
                         try {
                             return Math.round(Double.parseDouble(shallowSeq.purityShallowSeq()) * 100) + "%";
                         } catch (final NumberFormatException e) {
+                            LOGGER.warn("Could not convert shallow seq to a percentage: " + shallowSeq.purityShallowSeq());
                             return "N/A";
                         }
                     }

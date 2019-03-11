@@ -24,6 +24,7 @@ import com.hartwig.hmftools.common.collect.Multimaps;
 import com.hartwig.hmftools.common.numeric.Doubles;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
+import com.hartwig.hmftools.common.purple.copynumber.sv.StructuralVariantLegCopyNumberChangeFactory;
 import com.hartwig.hmftools.common.purple.copynumber.sv.StructuralVariantLegPloidy;
 import com.hartwig.hmftools.common.purple.copynumber.sv.StructuralVariantLegPloidyFactory;
 import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
@@ -54,12 +55,14 @@ public class RecoverStructuralVariants implements Closeable {
 
     private static final Comparator<RecoveredVariant> QUALITY_COMPARATOR = comparingDouble(x -> x.context().getPhredScaledQual());
 
+    private final PurityAdjuster purityAdjuster;
     private final ListMultimap<Chromosome, PurpleCopyNumber> allCopyNumbers;
     private final AbstractFeatureReader<VariantContext, LineIterator> reader;
     private final StructuralVariantLegPloidyFactory<PurpleCopyNumber> ploidyFactory;
 
     public RecoverStructuralVariants(@NotNull final PurityAdjuster purityAdjuster, @NotNull final String recoveryVCF,
             @NotNull final List<PurpleCopyNumber> allCopyNumbers) {
+        this.purityAdjuster = purityAdjuster;
         this.reader = getFeatureReader(recoveryVCF, new VCFCodec(), true);
         this.allCopyNumbers = Multimaps.fromRegions(allCopyNumbers);
         ploidyFactory = new StructuralVariantLegPloidyFactory<>(purityAdjuster, PurpleCopyNumber::averageTumorCopyNumber);
@@ -73,20 +76,22 @@ public class RecoverStructuralVariants implements Closeable {
                 currentVariants.stream().filter(x -> x.type() != StructuralVariantType.SGL).collect(Collectors.toList());
 
         final List<StructuralVariantLegPloidy> doubleEndedPloidies = ploidyFactory.create(doubleEndedVariants, allCopyNumbers);
+        final StructuralVariantLegCopyNumberChangeFactory changeFactory =
+                new StructuralVariantLegCopyNumberChangeFactory(purityAdjuster, allCopyNumbers, currentVariants);
 
-        recoverFromUnbalancedVariants(doubleEndedPloidies).forEach(x -> addToMap(result, x));
+        recoverFromUnbalancedVariants(changeFactory, doubleEndedPloidies).forEach(x -> addToMap(result, x));
         recoverFromUnexplainedSegments().forEach(x -> addToMap(result, x));
 
         return result.values();
     }
 
     @NotNull
-    private List<RecoveredVariant> recoverFromUnbalancedVariants(@NotNull final List<StructuralVariantLegPloidy> svPloidies)
-            throws IOException {
+    private List<RecoveredVariant> recoverFromUnbalancedVariants(@NotNull final StructuralVariantLegCopyNumberChangeFactory changeFactory,
+            @NotNull final List<StructuralVariantLegPloidy> svPloidies) throws IOException {
         final List<RecoveredVariant> result = Lists.newArrayList();
 
         for (StructuralVariantLegPloidy svPloidy : svPloidies) {
-            if (isUnbalanced(svPloidy)) {
+            if (isUnbalanced(changeFactory, svPloidy)) {
                 final List<PurpleCopyNumber> chromosomeCopyNumbers = allCopyNumbers.get(HumanChromosome.fromString(svPloidy.chromosome()));
                 int index = indexOf(svPloidy.cnaPosition(), chromosomeCopyNumbers);
                 if (index > 0) {
@@ -331,8 +336,10 @@ public class RecoverStructuralVariants implements Closeable {
         }
     }
 
-    private static boolean isUnbalanced(@NotNull final StructuralVariantLegPloidy svPloidy) {
+    private static boolean isUnbalanced(@NotNull final StructuralVariantLegCopyNumberChangeFactory changeFactory,
+            @NotNull final StructuralVariantLegPloidy svPloidy) {
         return Doubles.greaterThan(svPloidy.averageImpliedPloidy(), UNBALANCED_MIN_PLOIDY) && Doubles.lessThan(absAdjustedCopyNumberChange(
+                changeFactory,
                 svPloidy), UNBALANCED_MAX_COPY_NUMBER_CHANGE);
     }
 
@@ -341,11 +348,9 @@ public class RecoverStructuralVariants implements Closeable {
                 || next.depthWindowCount() >= UNBALANCED_MIN_DEPTH_WINDOW_COUNT);
     }
 
-    private static double absAdjustedCopyNumberChange(@NotNull final StructuralVariantLegPloidy ploidy) {
-        double leftCopyNumber = ploidy.leftCopyNumber().orElse(0D);
-        double rightCopyNumber = ploidy.rightCopyNumber().orElse(0D);
-
-        return ploidy.orientation() == 1 ? leftCopyNumber - rightCopyNumber : rightCopyNumber - leftCopyNumber;
+    private static double absAdjustedCopyNumberChange(@NotNull final StructuralVariantLegCopyNumberChangeFactory changeFactory,
+            @NotNull final StructuralVariantLegPloidy ploidy) {
+        return changeFactory.copyNumberChange(ploidy);
     }
 
     @Override

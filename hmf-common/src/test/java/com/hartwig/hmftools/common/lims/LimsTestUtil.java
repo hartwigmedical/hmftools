@@ -25,7 +25,6 @@ final class LimsTestUtil {
                 .dnaConcentration(Strings.EMPTY)
                 .primaryTumor(Strings.EMPTY)
                 .labSopVersions(Strings.EMPTY)
-                .labelSample(Strings.EMPTY)
                 .projectName(Strings.EMPTY)
                 .submissionSamples(Strings.EMPTY)
                 .patientId(Strings.EMPTY)

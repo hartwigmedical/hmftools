@@ -18,6 +18,7 @@ import com.hartwig.hmftools.common.collect.Multimaps;
 import com.hartwig.hmftools.common.numeric.Doubles;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
+import com.hartwig.hmftools.common.purple.copynumber.sv.StructuralVariantLegCopyNumberChangeFactory;
 import com.hartwig.hmftools.common.purple.copynumber.sv.StructuralVariantLegPloidy;
 import com.hartwig.hmftools.common.purple.copynumber.sv.StructuralVariantLegPloidyFactory;
 import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
@@ -126,9 +127,12 @@ class PurpleStructuralVariantSupplier {
         }
     }
 
-    public int hardFilterLowVAFSingles(@NotNull final PurityAdjuster purityAdjuster, @NotNull final List<PurpleCopyNumber> copyNumbers) {
+    public int removeLowVAFSingles(@NotNull final PurityAdjuster purityAdjuster, @NotNull final List<PurpleCopyNumber> copyNumbers) {
         int removed = 0;
         final ListMultimap<Chromosome, PurpleCopyNumber> copyNumberMap = Multimaps.fromRegions(copyNumbers);
+
+        final StructuralVariantLegCopyNumberChangeFactory copyNumberChangeFactory =
+                new StructuralVariantLegCopyNumberChangeFactory(purityAdjuster, Multimaps.fromRegions(copyNumbers), variants());
 
         final StructuralVariantLegPloidyFactory<PurpleCopyNumber> ploidyFactory =
                 new StructuralVariantLegPloidyFactory<>(purityAdjuster, PurpleCopyNumber::averageTumorCopyNumber);
@@ -136,14 +140,14 @@ class PurpleStructuralVariantSupplier {
         final Iterator<VariantContext> iterator = variantContexts.iterator();
         while (iterator.hasNext()) {
             final VariantContext variantContext = iterator.next();
-            if (!variantContext.hasAttribute(StructuralVariantFactory.RECOVERED)) {
+            if (!isRecovered(variantContext)) {
                 final StructuralVariantFactory factory = new StructuralVariantFactory(new PassingVariantFilter());
                 factory.addVariantContext(variantContext);
                 final List<StructuralVariant> variants = factory.results();
                 if (!variants.isEmpty()) {
                     final StructuralVariant variant = variants.get(0);
                     if (variant.type() == StructuralVariantType.SGL && !isLinked(variant)) {
-                        if (filter(ploidyFactory.create(variant, copyNumberMap))) {
+                        if (filter(copyNumberChangeFactory, ploidyFactory.create(variant, copyNumberMap))) {
                             iterator.remove();
                             removed++;
                             modified = true;
@@ -174,7 +178,8 @@ class PurpleStructuralVariantSupplier {
         long lowerRange = Math.min(-500, copyNumber.minStart() - copyNumber.start());
         long upperRange = Math.max(500, copyNumber.maxStart() - copyNumber.start());
 
-        return new VariantContextBuilder("purple", copyNumber.chromosome(), position, copyNumber.start(), alleles).filter(StructuralVariantFactory.INFERRED)
+        return new VariantContextBuilder("purple", copyNumber.chromosome(), position, copyNumber.start(), alleles).filter(
+                StructuralVariantFactory.INFERRED)
                 .attribute(StructuralVariantFactory.IMPRECISE, true)
                 .id("purple_" + counter++)
                 .attribute(StructuralVariantFactory.CIPOS, Lists.newArrayList(lowerRange, upperRange))
@@ -296,7 +301,10 @@ class PurpleStructuralVariantSupplier {
                 VCFHeaderLineType.Flag,
                 RECOVERED_DESC));
         outputVCFHeader.addMetaDataLine(new VCFFilterHeaderLine(StructuralVariantFactory.INFERRED, INFERRED_DESC));
-        outputVCFHeader.addMetaDataLine(new VCFInfoHeaderLine(StructuralVariantFactory.IMPRECISE, 0, VCFHeaderLineType.Flag, IMPRECISE_DESC));
+        outputVCFHeader.addMetaDataLine(new VCFInfoHeaderLine(StructuralVariantFactory.IMPRECISE,
+                0,
+                VCFHeaderLineType.Flag,
+                IMPRECISE_DESC));
         outputVCFHeader.addMetaDataLine(new VCFInfoHeaderLine(StructuralVariantFactory.CIPOS, 2, VCFHeaderLineType.Integer, CIPOS_DESC));
         outputVCFHeader.addMetaDataLine(new VCFInfoHeaderLine(StructuralVariantFactory.SVTYPE, 1, VCFHeaderLineType.String, SVTYPE_DESC));
         outputVCFHeader.addMetaDataLine(new VCFInfoHeaderLine(PURPLE_AF_INFO, UNBOUNDED, VCFHeaderLineType.Float, PURPLE_AF_DESC));
@@ -309,20 +317,25 @@ class PurpleStructuralVariantSupplier {
         return outputVCFHeader;
     }
 
-    private boolean filter(@NotNull final List<StructuralVariantLegPloidy> legs) {
+    private boolean filter(@NotNull final StructuralVariantLegCopyNumberChangeFactory changeFactory,
+            @NotNull final List<StructuralVariantLegPloidy> legs) {
         if (!legs.isEmpty()) {
             final StructuralVariantLegPloidy leg = legs.get(0);
             if (!Doubles.isZero(leg.adjustedCopyNumber())) {
-                return Doubles.lessThan(leg.adjustedCopyNumberChange() / leg.adjustedCopyNumber(), MIN_UNLINKED_SGL_VAF);
+                return Doubles.lessThan(changeFactory.copyNumberChange(leg) / leg.adjustedCopyNumber(), MIN_UNLINKED_SGL_VAF);
             }
         }
 
         return false;
     }
 
-    private boolean isLinked(@NotNull final StructuralVariant variantContext) {
+    private static boolean isLinked(@NotNull final StructuralVariant variantContext) {
         final Predicate<String> isLinkedString = linkedBy -> linkedBy != null && !linkedBy.isEmpty() && !linkedBy.equals(".");
         return isLinkedString.test(variantContext.startLinkedBy()) || isLinkedString.test(variantContext.endLinkedBy());
+    }
+
+    private static boolean isRecovered(@NotNull VariantContext variantContext) {
+        return variantContext.hasAttribute(StructuralVariantFactory.RECOVERED);
     }
 
     private class VCComparator extends VariantContextComparator {

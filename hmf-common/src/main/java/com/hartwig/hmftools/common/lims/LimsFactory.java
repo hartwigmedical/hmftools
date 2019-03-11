@@ -50,8 +50,8 @@ public final class LimsFactory {
                 readPreLIMSArrivalDateCsv(limsDirectory + File.separator + PRE_LIMS_ARRIVAL_DATES_FILE);
         Set<String> samplesWithoutSamplingDate =
                 readSamplesWithoutSamplingDateCsv(limsDirectory + File.separator + SAMPLES_WITHOUT_SAMPLING_DATE_FILE);
-        Map<String, LimsShallowSeqData> shallowSeqSample = readLimsShallowSeq(limsDirectory + File.separator + LIMS_SHALLOW_SEQ);
-        return new Lims(dataPerSample, dataPerSubmission, preLIMSArrivalDates, samplesWithoutSamplingDate, shallowSeqSample);
+        Map<String, LimsShallowSeqData> shallowSeqPerSample = readLimsShallowSeq(limsDirectory + File.separator + LIMS_SHALLOW_SEQ);
+        return new Lims(dataPerSample, dataPerSubmission, preLIMSArrivalDates, samplesWithoutSamplingDate, shallowSeqPerSample);
     }
 
     @NotNull

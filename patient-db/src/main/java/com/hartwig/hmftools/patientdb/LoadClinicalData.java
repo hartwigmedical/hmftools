@@ -84,11 +84,11 @@ public final class LoadClinicalData {
 
             final DatabaseAccess dbWriter = createDbWriter(cmd);
 
-            Lims limsData = readingLims(cmd);
+            Lims lims = readLims(cmd);
 
             String patientIdCOLO = loadSamplesCOLO(cmd);
             patientIdCOLO = patientIdCOLO.substring(1, patientIdCOLO.length() - 1);
-            final Map<String, List<SampleData>> samplesPerPatient = loadSamplesPerPatient(cmd, limsData);
+            final Map<String, List<SampleData>> samplesPerPatient = loadSamplesPerPatient(cmd, lims);
             final EcrfModels ecrfModels = loadEcrfModels(cmd);
 
             if (cmd.hasOption(DO_LOAD_RAW_ECRF)) {
@@ -102,24 +102,26 @@ public final class LoadClinicalData {
                     cmd.getOptionValue(CSV_OUT_DIR),
                     Optional.ofNullable(cmd.getOptionValue(TUMOR_LOCATION_SYMLINK)),
                     Optional.ofNullable(cmd.getOptionValue(PORTAL_DATA_LINK)),
-                    limsData);
+                    lims);
         } else {
             final HelpFormatter formatter = new HelpFormatter();
             formatter.printHelp("patient-db", options);
         }
     }
 
-    private static Lims readingLims(@NotNull CommandLine cmd) throws IOException {
+    @NotNull
+    private static Lims readLims(@NotNull CommandLine cmd) throws IOException {
         final String limsDirectory = cmd.getOptionValue(LIMS_DIRECTORY);
         LOGGER.info(String.format("Loading samples from LIMS on %s.", limsDirectory));
         return LimsFactory.fromLimsDirectory(limsDirectory);
     }
 
+    @NotNull
     private static Map<String, TumorTypeLims> loadAndInterpretPatientsFromLims(@NotNull Map<String, List<SampleData>> samplesPerPatient,
             @NotNull TumorLocationCurator tumorLocationCurator, @NotNull Lims lims, @NotNull String patientIdCOLO) {
         List<String> corePatients = Lists.newArrayList();
         List<String> widePatients = Lists.newArrayList();
-        List<String> coloPatient = Lists.newArrayList();
+        Set<String> coloPatient = Sets.newHashSet();
 
         TumorLocationCurationLims tumorLocationCurationLims = new TumorLocationCurationLims(lims, tumorLocationCurator);
 
@@ -144,7 +146,7 @@ public final class LoadClinicalData {
         Map<String, TumorTypeLims> WIDEPatientsData = readLimsPatients(tumorLocationCurationLims, widePatients, samplesPerPatient, lims);
         LOGGER.info(String.format("Finished curation of %s WIDE patients.", WIDEPatientsData.size()));
 
-        LOGGER.info(String.format("Interpreting and curating data for %s COLO patients.", coloPatient));
+        LOGGER.info(String.format("Interpreting and curating data for %s COLO patients.", coloPatient.size()));
         Map<String, TumorTypeLims> COLOPatientsData = Maps.newHashMap();
         COLOPatientsData.put(patientIdCOLO,
                 ImmutableTumorTypeLims.of(patientIdCOLO, ImmutableCuratedTumorLocation.of("Skin", "Melanoma", "Melanoma")));
@@ -163,8 +165,8 @@ public final class LoadClinicalData {
             @NotNull List<String> sampleIdsFromPatients, @NotNull final Map<String, List<SampleData>> samplesPerPatient,
             @NotNull final Lims lims) {
         final Map<String, TumorTypeLims> patientMap = Maps.newHashMap();
-        for (int i = 0; i < sampleIdsFromPatients.size(); i++) {
-            List<SampleData> samples = samplesPerPatient.get(sampleIdsFromPatients.get(i));
+        for (String sampleIdsFromPatient : sampleIdsFromPatients) {
+            List<SampleData> samples = samplesPerPatient.get(sampleIdsFromPatient);
             //create sampleID
             String rawSampleId = samples.toString().split(" ")[1];
             String sampleId = rawSampleId.substring(1, rawSampleId.length() - 2);
@@ -282,11 +284,11 @@ public final class LoadClinicalData {
     }
 
     private static boolean checkInputs(@NotNull CommandLine cmd) {
-        final String runsFolderPathCPCTandDRUP = cmd.getOptionValue(RUNS_DIR_CPCT_DRUP);
+        final String runsFolderPathCPCTAndDRUP = cmd.getOptionValue(RUNS_DIR_CPCT_DRUP);
         final String runsFolderPathCore = cmd.getOptionValue(RUNS_DIR_CORE);
         final String runsFolderPathColo = cmd.getOptionValue(RUNS_DIR_COLO);
 
-        boolean allParamsPresent = !Utils.anyNull(runsFolderPathCPCTandDRUP,
+        boolean allParamsPresent = !Utils.anyNull(runsFolderPathCPCTAndDRUP,
                 runsFolderPathCore,
                 runsFolderPathColo,
                 cmd.getOptionValue(DB_USER),
@@ -298,25 +300,29 @@ public final class LoadClinicalData {
                 cmd.getOptionValue(LIMS_DIRECTORY),
                 cmd.getOptionValue(CSV_OUT_DIR));
 
-        boolean validRunDirectory = true;
+        boolean validRunDirectories = true;
         if (allParamsPresent) {
-            final File runDirectoryCPCTandDRUP = new File(runsFolderPathCPCTandDRUP);
-            final File runDirectoryCORE = new File(runsFolderPathCore);
-            final File runDirectoryCOLO = new File(runsFolderPathColo);
+            final File runDirectoryCPCTAndDRUP = new File(runsFolderPathCPCTAndDRUP);
 
-            if (!runDirectoryCPCTandDRUP.isDirectory()) {
-                validRunDirectory = false;
-                if (!runDirectoryCPCTandDRUP.exists()) {
-                    LOGGER.warn("dir " + runDirectoryCPCTandDRUP + " does not exist.");
-                } else if (!runDirectoryCORE.isDirectory()) {
-                    LOGGER.warn("dir " + runDirectoryCORE + " does not exist.");
-                } else if (!runDirectoryCOLO.isDirectory()) {
-                    LOGGER.warn("dir " + runDirectoryCOLO + " does not exist.");
-                }
+            if (!runDirectoryCPCTAndDRUP.exists() || !runDirectoryCPCTAndDRUP.isDirectory()) {
+                validRunDirectories = false;
+                LOGGER.warn("CPCT and DRUP run directory " + runDirectoryCPCTAndDRUP + " does not exist or is not a directory.");
+            }
+
+            final File runDirectoryCORE = new File(runsFolderPathCore);
+            if (!runDirectoryCORE.exists() || !runDirectoryCORE.isDirectory()) {
+                validRunDirectories = false;
+                LOGGER.warn("CORE run directory " + runDirectoryCPCTAndDRUP + " does not exist or is not a directory.");
+            }
+
+            final File runDirectoryCOLO = new File(runsFolderPathColo);
+            if (!runDirectoryCOLO.exists() || !runDirectoryCOLO.isDirectory()) {
+                validRunDirectories = false;
+                LOGGER.warn("COLO run directory " + runDirectoryCPCTAndDRUP + " does not exist or is not a directory.");
             }
         }
 
-        return allParamsPresent && validRunDirectory;
+        return validRunDirectories && allParamsPresent;
     }
 
     @NotNull

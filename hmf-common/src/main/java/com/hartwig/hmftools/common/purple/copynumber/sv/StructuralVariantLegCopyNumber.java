@@ -24,12 +24,4 @@ public interface StructuralVariantLegCopyNumber extends StructuralVariantLeg {
         }
     }
 
-    @Deprecated
-    default double adjustedCopyNumberChange() {
-        double leftCopyNumber = leftCopyNumber().orElse(0D);
-        double rightCopyNumber = rightCopyNumber().orElse(0D);
-
-        return orientation() == 1 ? leftCopyNumber - rightCopyNumber : rightCopyNumber - leftCopyNumber;
-    }
-
 }

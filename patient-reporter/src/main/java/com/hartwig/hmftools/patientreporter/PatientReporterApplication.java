@@ -13,7 +13,6 @@ import com.hartwig.hmftools.common.lims.LimsFactory;
 import com.hartwig.hmftools.patientreporter.qcfail.ImmutableNotAnalysableReporter;
 import com.hartwig.hmftools.patientreporter.qcfail.NotAnalysableReason;
 import com.hartwig.hmftools.patientreporter.qcfail.NotAnalysableReporter;
-import com.hartwig.hmftools.patientreporter.qcfail.NotAnalysableStudy;
 import com.hartwig.hmftools.patientreporter.report.PDFWriter;
 import com.hartwig.hmftools.patientreporter.structural.SvAnalyzer;
 
@@ -181,8 +180,6 @@ public class PatientReporterApplication {
             LOGGER.warn(NOT_ANALYSABLE_REASON + " has to be low_tumor_percentage, low_dna_yield, post_analysis_fail or shallow_seq.");
         } else if (notAnalysedSample == null) {
             LOGGER.warn(NOT_ANALYSED_SAMPLE + " has to be provided.");
-        } else if (NotAnalysableStudy.fromSample(notAnalysedSample) == null && !notAnalysedSample.contains("CORE")) {
-            LOGGER.warn("Could not determine study for sample " + notAnalysedSample);
         } else {
             return true;
         }

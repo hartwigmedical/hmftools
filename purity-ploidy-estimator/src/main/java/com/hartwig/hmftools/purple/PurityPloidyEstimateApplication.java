@@ -157,11 +157,11 @@ public class PurityPloidyEstimateApplication {
                     structuralVariants,
                     purityAdjuster,
                     copyNumberFactory.copyNumbers());
-            final int filteredSVCount = structuralVariants.hardFilterLowVAFSingles(purityAdjuster, copyNumberFactory.copyNumbers());
-            if (recoveredSVCount > 0 || filteredSVCount > 0) {
+            final int removedSVCount = structuralVariants.removeLowVAFSingles(purityAdjuster, copyNumberFactory.copyNumbers());
+            if (recoveredSVCount > 0 || removedSVCount > 0) {
                 LOGGER.info("Reapplying segmentation with {} recovered structural variants and after removing {} filtered variants",
                         recoveredSVCount,
-                        filteredSVCount);
+                        removedSVCount);
                 final List<ObservedRegion> recoveredObservedRegions = segmentation.createSegments(structuralVariants.variants());
 
                 LOGGER.info("Recalculating copy number");

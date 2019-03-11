@@ -118,6 +118,9 @@ public abstract class NonSequenceablePage {
                 cmp.text("The internal tumor barcode is " + sampleReport().barcodeTumor() + " and the internal blood barcode is "
                         + sampleReport().barcodeReference()).setStyle(fontStyle()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
+                cmp.text("The tumor percentage estimated by Pathology UMC Utrecht is " + sampleReport().pathologyTumorPercentage())
+                        .setStyle(fontStyle()),
+                cmp.verticalGap(SECTION_VERTICAL_GAP),
                 shallowSeqText(),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
                 sampleArrivalDateText(),
