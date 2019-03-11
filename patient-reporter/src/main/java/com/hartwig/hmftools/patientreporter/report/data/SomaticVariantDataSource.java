@@ -138,6 +138,7 @@ public final class SomaticVariantDataSource {
         }
     }
 
+    @NotNull
     private static String extractCodonField(@NotNull String HGVsCoding) {
         String codonSplit = HGVsCoding.substring(2);
         String codon = "";
