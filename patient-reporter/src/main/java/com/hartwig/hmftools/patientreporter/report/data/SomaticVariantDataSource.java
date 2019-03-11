@@ -88,7 +88,7 @@ public final class SomaticVariantDataSource {
             } else {
                 if (variant1.gene().equals(variant2.gene())) {
                     // sort on genomic position if gene is the same
-                    return ((int) variant1.position() < (int) variant2.position()) ? (int) variant1.position() : (int) variant2.position();
+                    return extractCodonField(variant1.hgvsCodingImpact()).compareTo(extractCodonField(variant2.hgvsCodingImpact()));
                 } else {
                     return variant1.gene().compareTo(variant2.gene());
                 }
@@ -136,5 +136,18 @@ public final class SomaticVariantDataSource {
             default:
                 return Strings.EMPTY;
         }
+    }
+
+    private static String extractCodonField(@NotNull String HGVsCoding) {
+        String codonSplit = HGVsCoding.substring(2);
+        String codon = "";
+        for (int i = 0; i < codonSplit.length(); i++) {
+            if (Character.isDigit(codonSplit.charAt(i))) {
+                codon = codon + Character.toString(codonSplit.charAt(i));
+            } else if (!Character.isDigit(codonSplit.charAt(i))) {
+                break;
+            }
+        }
+        return codon;
     }
 }
