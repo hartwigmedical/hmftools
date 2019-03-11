@@ -46,7 +46,7 @@ java -jar variant-annotator-x.y-with-dependencies.jar
     -db_url "mysql://localhost/hmfpatients"
     -db_user username
     -db_pass password
-    -sample SAMPLE_ID
+    -sample SAMPLE_ID or * to run in batch mode
 ``` 
 
 Other options for running:

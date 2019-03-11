@@ -77,6 +77,12 @@ public class StructuralVariantAnnotator
 
     private boolean initialise()
     {
+        if(!mCmdLineArgs.hasOption(SAMPLE) || mCmdLineArgs.getOptionValue(SAMPLE).isEmpty())
+        {
+            LOGGER.error("required Sample config missing");
+            return false;
+        }
+
         mSampleId = mCmdLineArgs.getOptionValue(SAMPLE);
 
         try
@@ -127,22 +133,15 @@ public class StructuralVariantAnnotator
 
         if (samplesList.isEmpty())
         {
-            if (mSampleId.isEmpty() || mSampleId.equals("*"))
+            if (mSampleId.equals("*"))
             {
                 samplesList = mDbAccess.structuralVariantSampleList("");
 
-                LOGGER.info("Loaded {} samples from database", samplesList.size());
+                LOGGER.info("batch mode: loaded {} samples from database", samplesList.size());
             }
             else
             {
-                if (mSampleId.contains(","))
-                {
-                    samplesList.addAll(Arrays.asList(mSampleId.split(",")));
-                }
-                else
-                {
-                    samplesList.add(mSampleId);
-                }
+                samplesList.add(mSampleId);
             }
         }
 
