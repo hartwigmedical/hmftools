@@ -140,4 +140,7 @@ public interface StructuralVariant {
     }
 
     boolean recovered();
+
+    @Nullable
+    String recoveryMethod();
 }

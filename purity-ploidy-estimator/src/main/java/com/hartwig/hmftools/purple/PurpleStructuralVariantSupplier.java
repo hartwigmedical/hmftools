@@ -1,5 +1,9 @@
 package com.hartwig.hmftools.purple;
 
+import static com.hartwig.hmftools.common.variant.structural.StructuralVariantFactory.CIPOS;
+import static com.hartwig.hmftools.common.variant.structural.StructuralVariantFactory.RECOVERY_METHOD;
+import static com.hartwig.hmftools.common.variant.structural.StructuralVariantFactory.SVTYPE;
+
 import static htsjdk.variant.vcf.VCFHeaderLineCount.UNBOUNDED;
 
 import java.io.File;
@@ -57,6 +61,7 @@ class PurpleStructuralVariantSupplier {
     private static final double MIN_UNLINKED_SGL_VAF = 0.1;
 
     private static final String RECOVERED_DESC = "Entry has been recovered";
+    private static final String RECOVERY_METHOD_DESC = "Method used to recover, either UNBALANCED_SV or UNSUPPORTED_BREAKPOINT";
     private static final String INFERRED_DESC = "Breakend inferred from copy number transition";
     private static final String IMPRECISE_DESC = "Imprecise structural variation";
     private static final String PURPLE_PLOIDY_INFO = "PURPLE_PLOIDY";
@@ -182,8 +187,8 @@ class PurpleStructuralVariantSupplier {
                 StructuralVariantFactory.INFERRED)
                 .attribute(StructuralVariantFactory.IMPRECISE, true)
                 .id("purple_" + counter++)
-                .attribute(StructuralVariantFactory.CIPOS, Lists.newArrayList(lowerRange, upperRange))
-                .attribute(StructuralVariantFactory.SVTYPE, "BND")
+                .attribute(CIPOS, Lists.newArrayList(lowerRange, upperRange))
+                .attribute(SVTYPE, "BND")
                 .noGenotypes()
                 .make();
     }
@@ -305,10 +310,11 @@ class PurpleStructuralVariantSupplier {
                 0,
                 VCFHeaderLineType.Flag,
                 IMPRECISE_DESC));
-        outputVCFHeader.addMetaDataLine(new VCFInfoHeaderLine(StructuralVariantFactory.CIPOS, 2, VCFHeaderLineType.Integer, CIPOS_DESC));
-        outputVCFHeader.addMetaDataLine(new VCFInfoHeaderLine(StructuralVariantFactory.SVTYPE, 1, VCFHeaderLineType.String, SVTYPE_DESC));
+        outputVCFHeader.addMetaDataLine(new VCFInfoHeaderLine(CIPOS, 2, VCFHeaderLineType.Integer, CIPOS_DESC));
+        outputVCFHeader.addMetaDataLine(new VCFInfoHeaderLine(SVTYPE, 1, VCFHeaderLineType.String, SVTYPE_DESC));
         outputVCFHeader.addMetaDataLine(new VCFInfoHeaderLine(PURPLE_AF_INFO, UNBOUNDED, VCFHeaderLineType.Float, PURPLE_AF_DESC));
         outputVCFHeader.addMetaDataLine(new VCFInfoHeaderLine(PURPLE_CN_INFO, UNBOUNDED, VCFHeaderLineType.Float, PURPLE_CN_DESC));
+        outputVCFHeader.addMetaDataLine(new VCFInfoHeaderLine(RECOVERY_METHOD, 1, VCFHeaderLineType.String, RECOVERY_METHOD_DESC));
         outputVCFHeader.addMetaDataLine(new VCFInfoHeaderLine(PURPLE_PLOIDY_INFO, 1, VCFHeaderLineType.Float, PURPLE_PLOIDY_DESC));
         outputVCFHeader.addMetaDataLine(new VCFInfoHeaderLine(PURPLE_CN_CHANGE_INFO,
                 UNBOUNDED,

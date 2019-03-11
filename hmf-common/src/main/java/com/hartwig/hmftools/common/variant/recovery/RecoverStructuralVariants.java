@@ -2,6 +2,8 @@ package com.hartwig.hmftools.common.variant.recovery;
 
 import static java.util.Comparator.comparingDouble;
 
+import static com.hartwig.hmftools.common.variant.structural.StructuralVariantFactory.RECOVERY_METHOD;
+
 import static htsjdk.tribble.AbstractFeatureReader.getFeatureReader;
 
 import java.io.Closeable;
@@ -41,6 +43,7 @@ import org.jetbrains.annotations.Nullable;
 import htsjdk.tribble.AbstractFeatureReader;
 import htsjdk.tribble.readers.LineIterator;
 import htsjdk.variant.variantcontext.VariantContext;
+import htsjdk.variant.variantcontext.VariantContextBuilder;
 import htsjdk.variant.vcf.VCFCodec;
 
 public class RecoverStructuralVariants implements Closeable {
@@ -89,8 +92,8 @@ public class RecoverStructuralVariants implements Closeable {
         final StructuralVariantLegCopyNumberChangeFactory changeFactory =
                 new StructuralVariantLegCopyNumberChangeFactory(purityAdjuster, allCopyNumbers, currentVariants);
 
-        recoverFromUnbalancedVariants(changeFactory, doubleEndedPloidies).forEach(x -> addToMap(result, x));
-        recoverFromUnexplainedSegments().forEach(x -> addToMap(result, x));
+        recoverFromUnbalancedVariants(changeFactory, doubleEndedPloidies).forEach(x -> addToMap(result, "UNBALANCED_SV", x));
+        recoverFromUnexplainedSegments().forEach(x -> addToMap(result, "UNSUPPORTED_BREAKPOINT", x));
 
         return result.values();
     }
@@ -365,12 +368,18 @@ public class RecoverStructuralVariants implements Closeable {
         return regions.get(regions.size() - 1);
     }
 
-    private static void addToMap(@NotNull Map<String, VariantContext> map, @NotNull RecoveredVariant variant) {
-        map.put(variant.context().getID(), variant.context());
+    private static void addToMap(@NotNull final Map<String, VariantContext> map, @NotNull final String method,
+            @NotNull final RecoveredVariant variant) {
+        map.put(variant.context().getID(), addMethod(method, variant.context()));
         VariantContext mate = variant.mate();
         if (mate != null) {
-            map.put(mate.getID(), mate);
+            map.put(mate.getID(), addMethod(method, mate));
         }
+    }
+
+    @NotNull
+    private static VariantContext addMethod(@NotNull final String method, @NotNull final VariantContext context) {
+        return new VariantContextBuilder(context).attribute(RECOVERY_METHOD, method).make();
     }
 
     private static boolean isUnbalanced(double unexplainedCopyNumberChange, @NotNull final StructuralVariantLegPloidy leg) {

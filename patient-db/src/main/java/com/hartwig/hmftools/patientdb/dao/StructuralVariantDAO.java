@@ -3,7 +3,6 @@ package com.hartwig.hmftools.patientdb.dao;
 import static com.hartwig.hmftools.patientdb.Config.DB_BATCH_INSERT_SIZE;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.STRUCTURALVARIANT;
 
-import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.Date;
 import java.util.List;
@@ -27,9 +26,6 @@ import org.jooq.InsertValuesStepN;
 import org.jooq.Record;
 import org.jooq.Record1;
 import org.jooq.Result;
-import org.jooq.UpdatableRecord;
-import org.jooq.UpdateQuery;
-import org.jooq.UpdateSetFirstStep;
 
 class StructuralVariantDAO {
     @NotNull
@@ -257,6 +253,7 @@ class StructuralVariantDAO {
                     STRUCTURALVARIANT.STARTLINKEDBY,
                     STRUCTURALVARIANT.ENDLINKEDBY,
                     STRUCTURALVARIANT.RECOVERED,
+                    STRUCTURALVARIANT.RECOVERYMETHOD,
                     STRUCTURALVARIANT.STARTREFCONTEXT,
                     STRUCTURALVARIANT.ENDREFCONTEXT,
                     STRUCTURALVARIANT.INSERTSEQUENCEALIGNMENTS,
@@ -317,6 +314,7 @@ class StructuralVariantDAO {
                 variant.startLinkedBy(),
                 variant.endLinkedBy(),
                 variant.recovered(),
+                variant.recoveryMethod(),
                 variant.start().refGenomeContext(),
                 variant.end() == null ? null : variant.end().refGenomeContext(),
                 DatabaseUtil.checkStringLength(variant.insertSequenceAlignments(), STRUCTURALVARIANT.INSERTSEQUENCEALIGNMENTS),
