@@ -47,8 +47,8 @@ public class RecoverStructuralVariants implements Closeable {
     private static final double MIN_LENGTH = 1000;
     private static final double MIN_MATE_QUAL_SCORE = 350;
     private static final double MIN_SINGLE_QUAL_SCORE = 1000;
-    private static final double UNBALANCED_MIN_PLOIDY = 0.5;
-    private static final double UNBALANCED_MAX_COPY_NUMBER_CHANGE = 0.25;
+    private static final double UNBALANCED_MIN_COPY_NUMBER = 0.5;
+    private static final double UNBALANCED_UNEXPLAINED_PERCENT = 0.5;
     private static final double UNBALANCED_MIN_DEPTH_WINDOW_COUNT = 5;
     private static final int MIN_MATE_UNCERTAINTY = 150;
     private static final String AF_FILTERED = "af";
@@ -337,10 +337,12 @@ public class RecoverStructuralVariants implements Closeable {
     }
 
     private static boolean isUnbalanced(@NotNull final StructuralVariantLegCopyNumberChangeFactory changeFactory,
-            @NotNull final StructuralVariantLegPloidy svPloidy) {
-        return Doubles.greaterThan(svPloidy.averageImpliedPloidy(), UNBALANCED_MIN_PLOIDY) && Doubles.lessThan(absAdjustedCopyNumberChange(
-                changeFactory,
-                svPloidy), UNBALANCED_MAX_COPY_NUMBER_CHANGE);
+            @NotNull final StructuralVariantLegPloidy leg) {
+
+        double copyNumberChange = changeFactory.copyNumberChange(leg);
+        double unexplainedCopyNumberChange = copyNumberChange - leg.averageImpliedPloidy();
+        return Doubles.greaterThan(unexplainedCopyNumberChange, UNBALANCED_UNEXPLAINED_PERCENT * leg.adjustedCopyNumber())
+                && Doubles.greaterOrEqual(unexplainedCopyNumberChange, UNBALANCED_MIN_COPY_NUMBER);
     }
 
     private static boolean isSupportedByDepthWindowCounts(@NotNull final PurpleCopyNumber prev, @Nullable final PurpleCopyNumber next) {
@@ -348,10 +350,6 @@ public class RecoverStructuralVariants implements Closeable {
                 || next.depthWindowCount() >= UNBALANCED_MIN_DEPTH_WINDOW_COUNT);
     }
 
-    private static double absAdjustedCopyNumberChange(@NotNull final StructuralVariantLegCopyNumberChangeFactory changeFactory,
-            @NotNull final StructuralVariantLegPloidy ploidy) {
-        return changeFactory.copyNumberChange(ploidy);
-    }
 
     @Override
     public void close() throws IOException {
