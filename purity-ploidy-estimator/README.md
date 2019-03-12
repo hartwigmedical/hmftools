@@ -221,20 +221,26 @@ At this stage we have determined a copy number and minor allele ploidy for every
 
 
 ### 7. Structural Variant Recovery and Single Breakend Filtering 
-PURPLE will remove any unlinked, single breakends with very low copy number change support (< 10%).   In regions of very high copy number an excess of single breakend calls is frequently observed, but nearly always with low VAF support.  They are presumed to be an artefact and are hence filtered. 
+PURPLE will remove any unlinked, single breakends with very low copy number change support (< 10%). 
+In regions of very high copy number an excess of single breakend calls is frequently observed, but nearly always with low VAF support. 
+They are presumed to be an artefact and are hence filtered.
 
 PURPLE also attempts to recover entries from a set of lower confidence structural variants if a recovery vcf (parameter: sv_recovery_vcf) is provided.
 
-There are two situations where PURPLE will attempt to recover structural variants. The first is when a copy number segment is unsupported by an existing structural variant. The second is to search for an structural variant which could offset the copy number impact of an existing “unbalanced” structural variant break that has a ploidy not supported by the copy number change. A structural variant is considered unbalanced if the unexplained copy number change (ie. the ploidy - copy number change) is greater than 50% of the copy number at the breakpoint and > 0.5. An unbalanced structural variant must also have a min depth window count of 5 in the copy number segments  immediately before and after the SV breakpoint.
+There are two situations where PURPLE will attempt to recover structural variants. 
+The first is when a copy number segment is unsupported by an existing structural variant. 
+The second is to search for an structural variant which could offset the copy number impact of an existing “unbalanced” structural variant break that has a ploidy not supported by the copy number change. 
+A structural variant is considered unbalanced if the unexplained copy number change (ie. the ploidy - copy number change) is greater than 20% of the copy number at the breakpoint and > 0.5. 
+An unbalanced structural variant must also have a min depth window count of 5 in the copy number segments immediately before and after the SV breakpoint.
 
 Eligible recovery candidates must:
+
 1. Be within 1kb of the min and max range of an unsupported copy number breakpoint or within 1kb of the unbalanced structural variant (If not a single breakend, the other breakpoint must also be within 1 kb of the min-max range of a copy number breakpoint)
 2. Not be “AF” filtered in GRIDSS (ie. excluding variants with an allelic fraction of less than 0.5% in the tumour)
 3. Have a minimum qual score of 1000 for single breakends and 350 for all others.
-4. Have a ploidy of at least 50% of the unexplained copy number change.
+4. Have a ploidy of at least 50% of the unexplained copy number change and of at least 0.5.
 
 Following the successful recovery or removal of any structural variants we will rerun the segmentation, copy number smoothing and minor allele ploidy smoothing with the updated structural variants to produce a final set of copy number segments and breakpoints. Note that the purity estimation does not change.
-
 
 ### 8. Identify germline copy number alterations that are homozygously deleted in the tumor
 During the smoothing process, regions that are homozygously or heterozygously deleted from the germline are smoothed over for the purposes of producing the somatic output . However, as some of these regions are of specific interest we include them in a separate germline copy number output that contains the homozygous deletes from the germline as well as any deletes that are heterozygous in the germline but homozygous in the tumor. 

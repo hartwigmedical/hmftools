@@ -21,11 +21,12 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.chromosome.Chromosome;
 import com.hartwig.hmftools.common.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.collect.Multimaps;
 import com.hartwig.hmftools.common.numeric.Doubles;
+import com.hartwig.hmftools.common.position.GenomePosition;
+import com.hartwig.hmftools.common.position.GenomePositions;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.copynumber.sv.StructuralVariantLegCopyNumberChangeFactory;
@@ -45,7 +46,6 @@ import htsjdk.tribble.AbstractFeatureReader;
 import htsjdk.tribble.readers.LineIterator;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.variantcontext.VariantContextBuilder;
-import htsjdk.variant.variantcontext.VariantContextComparator;
 import htsjdk.variant.vcf.VCFCodec;
 
 public class RecoverStructuralVariants implements Closeable {
@@ -55,7 +55,7 @@ public class RecoverStructuralVariants implements Closeable {
     private static final double MIN_SINGLE_QUAL_SCORE = 1000;
     private static final double UNBALANCED_MIN_DEPTH_WINDOW_COUNT = 5;
     private static final double UNBALANCED_MIN_UNEXPLAINED_COPY_NUMBER_CHANGE = 0.5;
-    private static final double UNBALANCED_MIN_UNEXPLAINED_COPY_NUMBER_CHANGE_AS_PERCENT_OF_COPY_NUMBER = 0.25;
+    private static final double UNBALANCED_MIN_UNEXPLAINED_COPY_NUMBER_CHANGE_AS_PERCENT_OF_COPY_NUMBER = 0.2;
 
     private static final double MIN_PLOIDY = 0.5;
     private static final double MIN_PLOIDY_AS_PERCENTAGE_OF_COPY_NUMBER_CHANGE = 0.5;
@@ -376,9 +376,10 @@ public class RecoverStructuralVariants implements Closeable {
         VariantContext mate = variant.mate();
         final boolean contextIsStart;
         if (mate != null) {
-            final Set<String> contigs = Sets.newHashSet(variant.context().getContig(), mate.getContig());
-            final VariantContextComparator comparator = new VariantContextComparator(Lists.newArrayList(contigs));
-            contextIsStart = comparator.compare(variant.context(), mate) <= 0;
+            final GenomePosition matePosition = GenomePositions.create(mate.getContig(), mate.getStart());
+            final GenomePosition contextPosition = GenomePositions.create(variant.context().getContig(), variant.context().getStart());
+
+            contextIsStart = contextPosition.compareTo(matePosition) <= 0;
             map.put(mate.getID(), addMethod(method + (contextIsStart ? "_START" : "_END"), mate));
         } else {
             contextIsStart = true;
