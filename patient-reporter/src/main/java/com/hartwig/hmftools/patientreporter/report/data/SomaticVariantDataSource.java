@@ -89,7 +89,7 @@ public final class SomaticVariantDataSource {
             } else {
                 if (variant1.gene().equals(variant2.gene())) {
                     // sort on codon position if gene is the same
-                    return extractCodonField(variant1.hgvsCodingImpact()) - extractCodonField(variant2.hgvsCodingImpact()) < 0 ? 1 : -1;
+                    return extractCodonField(variant1.hgvsCodingImpact()) - extractCodonField(variant2.hgvsCodingImpact()) < 0 ? -1 : 1;
                 } else {
                     return variant1.gene().compareTo(variant2.gene());
                 }
