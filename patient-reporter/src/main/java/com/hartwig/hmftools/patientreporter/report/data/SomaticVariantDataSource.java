@@ -5,6 +5,7 @@ import static net.sf.dynamicreports.report.builder.DynamicReports.field;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.patientreporter.report.util.PatientReportFormat;
 import com.hartwig.hmftools.patientreporter.variants.ReportableSomaticVariant;
@@ -139,13 +140,14 @@ public final class SomaticVariantDataSource {
     }
 
     @NotNull
-    private static String extractCodonField(@NotNull String hgvsCoding) {
+    @VisibleForTesting
+    static String extractCodonField(@NotNull String hgvsCoding) {
         StringBuilder stringAppend = new StringBuilder();
         String codonSplit = hgvsCoding.substring(2);
         String codon = "";
         for (int i = 0; i < codonSplit.length(); i++) {
             if (Character.isDigit(codonSplit.charAt(i))) {
-                codon = stringAppend.append(codon).append(Character.toString(codonSplit.charAt(i))).toString();
+                codon = stringAppend.append(Character.toString(codonSplit.charAt(i))).toString();
             } else if (!Character.isDigit(codonSplit.charAt(i))) {
                 break;
             }
