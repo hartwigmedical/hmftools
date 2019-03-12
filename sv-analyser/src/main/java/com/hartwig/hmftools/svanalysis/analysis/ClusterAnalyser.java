@@ -5,7 +5,6 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.Math.round;
 
-import static com.hartwig.hmftools.common.purple.segment.SegmentSupport.MULTIPLE;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.BND;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DEL;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DUP;
@@ -21,7 +20,7 @@ import static com.hartwig.hmftools.svanalysis.analysis.ClusterAnnotations.annota
 import static com.hartwig.hmftools.svanalysis.analysis.ClusterAnnotations.checkLooseFoldbacks;
 import static com.hartwig.hmftools.svanalysis.analysis.ClusterAnnotations.findIncompleteFoldbackCandidates;
 import static com.hartwig.hmftools.svanalysis.analysis.ClusterAnnotations.findPotentialDoubleMinuteClusters;
-import static com.hartwig.hmftools.svanalysis.analysis.ClusterAnnotations.reportClusterArmSegments;
+import static com.hartwig.hmftools.svanalysis.analysis.ClusterAnnotations.reportClusterRepRepairSegments;
 import static com.hartwig.hmftools.svanalysis.analysis.ClusterAnnotations.runAnnotation;
 import static com.hartwig.hmftools.svanalysis.analysis.LinkFinder.MIN_TEMPLATED_INSERTION_LENGTH;
 import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.CLUSTER_REASON_COMMON_ARMS;
@@ -60,7 +59,6 @@ import com.hartwig.hmftools.svanalysis.types.SvArmGroup;
 import com.hartwig.hmftools.svanalysis.types.SvBreakend;
 import com.hartwig.hmftools.svanalysis.types.SvChain;
 import com.hartwig.hmftools.svanalysis.types.SvCluster;
-import com.hartwig.hmftools.svanalysis.types.SvLOH;
 import com.hartwig.hmftools.svanalysis.types.SvVarData;
 import com.hartwig.hmftools.svanalysis.types.SvLinkedPair;
 import com.hartwig.hmftools.svanalysis.types.SvaConfig;
@@ -1133,7 +1131,7 @@ public class ClusterAnalyser {
 
         if(runAnnotation(mConfig.RequiredAnnotations, REPLICATION_REPAIR))
         {
-            reportClusterArmSegments(cluster);
+            reportClusterRepRepairSegments(mSampleId, cluster);
         }
 
     }

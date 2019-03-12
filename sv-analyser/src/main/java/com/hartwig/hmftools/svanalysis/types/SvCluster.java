@@ -282,26 +282,6 @@ public class SvCluster
             var.getReplicatedSv().setReplicatedCount(newReplicationCount);
         }
 
-        for(int be = SVI_START; be <= SVI_END; ++be)
-        {
-            if (be == SVI_END && var.isNullBreakend())
-                continue;
-
-            if (be == SVI_END && var.isLocal())
-                continue;
-
-            boolean useStart = isStart(be);
-
-            for (SvArmGroup armGroup : mArmGroups)
-            {
-                if(armGroup.chromosome().equals(var.chromosome(useStart)) && armGroup.arm().equals(var.arm(useStart)))
-                {
-                    mArmGroups.remove(var);
-                    break;
-                }
-            }
-        }
-
         // retest cluster status again
         mHasReplicatedSVs = mReplicatedSVs.size() > mSVs.size();
         mRequiresRecalc = true;

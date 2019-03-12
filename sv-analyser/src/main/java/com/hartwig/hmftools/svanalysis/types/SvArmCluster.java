@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.svanalysis.types;
 
+import static java.lang.Math.max;
+
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.isSpecificCluster;
 
 import java.util.List;
@@ -21,6 +23,8 @@ public class SvArmCluster
     private final String mArm;
     private long mStartPos;
     private long mEndPos;
+    private double mMinCopyNumber;
+    private double mMaxCopyNumber;
 
     private static final Logger LOGGER = LogManager.getLogger(SvArmCluster.class);
 
@@ -33,6 +37,8 @@ public class SvArmCluster
         mStartPos = 0;
         mEndPos = 0;
         mBreakends = Lists.newArrayList();
+        mMaxCopyNumber = 0;
+        mMinCopyNumber = 0;
     }
 
     public int id() { return mId; }
@@ -65,7 +71,17 @@ public class SvArmCluster
 
         mStartPos = mBreakends.get(0).position();
         mEndPos = mBreakends.get(mBreakends.size()-1).position();
+
+        double lowCopyNumber = breakend.getCopyNumber(true);
+
+        if(mMinCopyNumber == 0 || lowCopyNumber < mMinCopyNumber)
+            mMinCopyNumber = lowCopyNumber;
+
+        mMaxCopyNumber = max(mMaxCopyNumber, breakend.getCopyNumber(false));
     }
+
+    public double getMinCopyNumber() { return mMinCopyNumber; }
+    public double getMaxCopyNumber() { return mMaxCopyNumber; }
 
     public static final int ARM_CL_SINGLE = 0;
     public static final int ARM_CL_REMOTE_TI = 1;

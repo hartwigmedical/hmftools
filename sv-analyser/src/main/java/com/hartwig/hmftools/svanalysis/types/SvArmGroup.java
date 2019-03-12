@@ -23,6 +23,7 @@ public class SvArmGroup {
 
     private final String mId;
     private List<SvVarData> mSVs;
+    private List<SvBreakend> mBreakends;
     final SvCluster mCluster;
 
     private final String mChromosome;
@@ -46,6 +47,7 @@ public class SvArmGroup {
         mArm = arm;
 
         mSVs = Lists.newArrayList();
+        mBreakends = Lists.newArrayList();
         mStartPos = -1;
         mEndPos = -1;
         mConsistency = 0;
@@ -65,10 +67,39 @@ public class SvArmGroup {
     }
 
     public List<SvVarData> getSVs() { return mSVs; }
+    public List<SvBreakend> getBreakends() { return mBreakends; }
 
     public void addVariant(final SvVarData var)
     {
         mSVs.add(var);
+
+        for(int be = SVI_START; be <= SVI_END; ++be)
+        {
+            if(var.isNullBreakend() && be == SVI_END)
+                continue;
+
+            SvBreakend breakend = var.getBreakend(isStart(be));
+
+            if(!breakend.chromosome().equals(mChromosome) || !breakend.arm().equals(mArm))
+                continue;
+
+            int index = 0;
+            while(index < mBreakends.size())
+            {
+                final SvBreakend otherBreakend = mBreakends.get(index);
+
+                if(breakend.position() < otherBreakend.position())
+                    break;
+
+                ++index;
+            }
+
+            mBreakends.add(index, breakend);
+        }
+
+        mStartPos = mBreakends.get(0).position();
+        mEndPos = mBreakends.get(mBreakends.size()-1).position();
+
         mRequiresRecalc = true;
     }
 
@@ -82,32 +113,11 @@ public class SvArmGroup {
         if(!mRequiresRecalc)
             return;
 
-        mStartPos = -1;
-        mEndPos = -1;
         mConsistency = 0;
 
-        for(final SvVarData var : mSVs)
+        for(final SvBreakend breakend : mBreakends)
         {
-            if(var.type() == BND && bndIgnoreList.contains(var)) // skip any BNDs only in this arm as a short TI
-                continue;
-
-            for(int be = SVI_START; be <= SVI_END; ++be)
-            {
-                if(be == SVI_END && var.isNullBreakend())
-                    continue;
-
-                boolean useStart = isStart(be);
-
-                if(!var.chromosome(useStart).equals(mChromosome) || !var.arm(useStart).equals(mArm))
-                    continue;
-
-                mConsistency += calcConsistency(var, useStart);
-
-                long position = var.position(useStart);
-
-                mStartPos = mStartPos == -1 ? position : min(mStartPos, position);
-                mEndPos = max(mEndPos, position);
-            }
+            mConsistency += calcConsistency(breakend.getSV(), breakend.usesStart());
         }
 
         //LOGGER.debug("cluster({}) arm({}) SVs({}) range({} -> {}) consistency({})",
