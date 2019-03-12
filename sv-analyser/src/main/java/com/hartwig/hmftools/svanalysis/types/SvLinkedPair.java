@@ -105,6 +105,9 @@ public class SvLinkedPair {
             return beFirst.position() > beSecond.position() ? beFirst : beSecond;
     }
 
+    public final SvBreakend getFirstBreakend() { return mFirst.getBreakend(mFirstLinkOnStart); }
+    public final SvBreakend getSecondBreakend() { return mSecond.getBreakend(mSecondLinkOnStart); }
+
     public final String chromosome() { return mFirst.chromosome(mFirstLinkOnStart); }
 
     public final String linkType() { return mLinkType; }
@@ -290,6 +293,11 @@ public class SvLinkedPair {
     {
         return (mFirst.equals(other.first(), true) || mSecond.equals(other.second(), true)
             || mFirst.equals(other.second(), true) || mSecond.equals(other.first(), true));
+    }
+
+    public boolean hasVariant(final SvVarData var)
+    {
+        return mFirst.equals(var, true) || mSecond.equals(var, true);
     }
 
     public static void removedLinksWithSV(List<SvLinkedPair> list, final SvVarData var)

@@ -56,7 +56,6 @@ public class SvTestHelper
     public SvTestHelper()
     {
         Config = new SvaConfig(DEFAULT_PROXIMITY_DISTANCE);
-        Config.RequiredAnnotations = ALL_ANNOTATIONS;
 
         ClusteringMethods = new SvClusteringMethods(Config.ProximityDistance);
         Analyser = new ClusterAnalyser(Config, ClusteringMethods);

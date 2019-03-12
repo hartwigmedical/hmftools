@@ -224,9 +224,45 @@ public class ChainingTests
         assertEquals(3, chain.getLinkCount());
     }
 
+    @Test
+    public void testBFBChain1()
+    {
+        // vanilla BFB of the form centromere - A - B - A - C - A - R - telomere, where R is the resolving SV
+        SvTestHelper tester = new SvTestHelper();
+        tester.logVerbose(true);
+        tester.Analyser.getChainFinder().setLogWorking(true);
+        tester.Analyser.getChainFinder().setNewMethod(true);
+
+        final SvVarData varA = createTestSv("A", "1", "1", 2000,3000, -1, -1, INV, 4, 7, 3, 3, 3, "");
+        final SvVarData varB = createTestSv("B", "1", "1", 9000,10000, 1, 1, INV, 4, 3, 1, 1, 1, "");
+        final SvVarData varC = createTestSv("C", "1", "1", 5000,6000, 1, 1, INV, 7, 6, 1, 1, 1, "");
+        final SvVarData varR = createTestSv("R", "1", "1", 1000,8000, 1, 1, INV, 2, 5, 1, 1, 1, "");
+
+        tester.AllVariants.add(varA);
+        tester.AllVariants.add(varB);
+        tester.AllVariants.add(varC);
+        tester.AllVariants.add(varR);
+
+        tester.preClusteringInit();
+        tester.Analyser.clusterAndAnalyse();
+
+        assertEquals(varA.getFoldbackLink(true), varA.id());
+        assertEquals(varB.getFoldbackLink(true), varB.id());
+        assertEquals(varC.getFoldbackLink(true), varC.id());
+
+        assertEquals(1, tester.Analyser.getClusters().size());
+        final SvCluster cluster = tester.Analyser.getClusters().get(0);
+
+        assertEquals(1, cluster.getChains().size());
+
+        final SvChain chain = cluster.getChains().get(0);
+
+        assertEquals(5, chain.getLinkCount());
+    }
+
     @Ignore
     @Test
-    public void testComplexChaining1()
+    public void testActualComplexChaining1()
     {
         // from sampleId CPCT02020258T but not sure if has clustered all SVs correctly
         SvTestHelper tester = new SvTestHelper();
@@ -302,7 +338,7 @@ public class ChainingTests
     }
 
     @Test
-    public void testComplexChaining2()
+    public void testActualComplexChaining2()
     {
         // based on COLO829T chromosomes 3 + 6,10,12 and 1
 
@@ -403,7 +439,7 @@ public class ChainingTests
     }
 
     @Test
-    public void testSimpleChaining1()
+    public void testActualSimpleChaining1()
     {
         // based on CPCT02010325T clusterId 37, where the shortest TI of 76 bases is actually ignored so as to make 2 chains
         SvTestHelper tester = new SvTestHelper();
@@ -451,7 +487,7 @@ public class ChainingTests
 
     @Test
     @Ignore
-    public void testComplexChaining3()
+    public void testActualComplexChaining3()
     {
         // based on CPCT02210035 with 2 foldbacks, a quasi foldback and a complex DUP (CENTRO - A - B - C - B - D - A - B - C - B - E - 17)
         SvTestHelper tester = new SvTestHelper();
@@ -536,6 +572,97 @@ public class ChainingTests
 
         // assertEquals(14, cluster.getChains().get(0).getLinkCount());
         // assertEquals(3, cluster.getChains().get(1).getLinkCount());
+    }
+
+    @Test
+    @Ignore
+    public void testActualComplexChaining4()
+    {
+        // based on CPCT02080180T with 3 foldbacks
+        SvTestHelper tester = new SvTestHelper();
+        tester.logVerbose(true);
+
+        SvVarData var1 = createTestSv("10655900","17","17",63727835,63729894,-1,1,DUP,7.79,5.33,1.04,1.04,1.02,"");
+        SvVarData var2 = createTestSv("10655899","17","17",60677725,63728985,1,1,INV,3.81,5.94,0.69,0.61,0.64,"");
+        SvVarData var3 = createTestSv("10655901","17","17",53291465,63857338,1,1,INV,6.03,5.96,3.01,2.8,2.79,"");
+        SvVarData var4 = createTestSv("10655903","17","17",61869930,66092317,-1,1,DUP,4.19,4.11,1.01,1.03,1.11,"");
+        SvVarData var5 = createTestSv("10655904","17","17",54264135,66294080,-1,-1,INV,4.23,4.13,1.08,1.05,0.88,"");
+        SvVarData var6 = createTestSv("10655905","17","17",63856359,66440216,-1,1,DUP,5.96,6.19,1.67,1.44,1.56,"");
+        SvVarData var7 = createTestSv("10655896","17","17",57423968,60669111,1,1,INV,5.15,5.14,2.05,2.04,2.13,"");
+        SvVarData var8 = createTestSv("10655908","17","17",66436776,66453504,-1,1,DUP,7.47,4.47,1.12,0.24,1.13,"");
+        SvVarData var9 = createTestSv("10655910","17","17",63721643,66759055,-1,1,DUP,6.75,5.3,1.42,0.79,0.93,"");
+        SvVarData var10 = createTestSv("10655912","17","17",65376257,70213096,-1,-1,INV,4.11,4.16,0.95,0.99,1.02,"");
+        SvVarData var11 = createTestSv("10655907","17","17",66435843,66442464,-1,1,DUP,6.35,6.76,2.22,2.29,2.28,"");
+        SvVarData var12 = createTestSv("10655909","17","17",66438835,66755919,1,-1,DEL,7.47,5.3,1.28,1.08,1.28,"");
+        SvVarData var13 = createTestSv("10655911","17","17",53813746,66761458,-1,1,DUP,4.24,4.51,1.12,1.35,0.84,"");
+        SvVarData var14 = createTestSv("10655906","17","17",63728656,66441779,1,-1,DEL,7.79,6.76,1.85,2.01,1.88,"");
+        SvVarData var15 = createTestSv("10655920","17","17",62335817,79024217,1,-1,DEL,4.19,4.13,1.08,1.02,0.86,"");
+        SvVarData var16 = createTestSv("10655913","17","17",60677626,73851024,-1,-1,INV,3.81,3.82,0.71,0.71,0.71,"");
+        SvVarData var17 = createTestSv("10655914","17","17",71119404,73853333,1,-1,DEL,4.16,4.9,1.05,1.08,0.77,"");
+        SvVarData var18 = createTestSv("10655892","17","17",53422106,56798618,1,-1,DEL,5.2,5.15,2.08,2.01,2.03,"");
+        SvVarData var19 = createTestSv("10655893","17","17",53292876,58826153,-1,1,DUP,5.2,5.19,2.18,2.04,2.32,"");
+        SvVarData var20 = createTestSv("10655895","17","17",59899569,60451461,-1,-1,INV,5.14,5.14,1.99,2.05,2.01,"");
+        SvVarData var21 = createTestSv("10655915","17","17",73854033,73858713,1,1,INV,6.12,5.01,1.11,1.11,0.98,"");
+        SvVarData var22 = createTestSv("10655916","17","17",73853710,73858861,-1,1,DUP,6.12,3.9,1.22,0.75,1.04,"");
+        SvVarData var23 = createTestSv("10655917","17","17",73859108,73862099,-1,-1,INV,4.68,6.4,1.53,1.72,1.46,"");
+        SvVarData var24 = createTestSv("10655894","17","17",60447627,60450127,1,1,INV,5.14,4.13,1.01,1.04,1.07,"");
+        SvVarData var25 = createTestSv("10655919","17","17",57571922,75330355,-1,1,DUP,5.19,5.13,2.09,2.02,2.02,"");
+        SvVarData var26 = createTestSv("10655918","17","17",63715443,73862172,-1,1,DUP,5.33,6.4,2.22,1.28,1.33,"");
+        SvVarData var27 = createTestSv("10655889","17","17",53286924,53816913,1,1,INV,5.04,4.24,1.08,1.09,0.95,"");
+        SvVarData var28 = createTestSv("10655888","17","17",53280088,53288151,-1,-1,INV,5.04,6.03,1.92,2.07,2.04,"");
+        SvVarData var29 = createTestSv("10655891","17","17",51738130,54666910,1,1,INV,4.15,4.17,1.03,1.03,1.03,"");
+
+        var2.setAssemblyData(true, "asmb_2_16");
+        var16.setAssemblyData(true, "asmb_2_16");
+
+        var23.setAssemblyData(false, "asmb_23_26");
+        var26.setAssemblyData(false, "asmb_23_26");
+
+        tester.AllVariants.add(var1);
+        tester.AllVariants.add(var2);
+        tester.AllVariants.add(var3);
+        tester.AllVariants.add(var4);
+        tester.AllVariants.add(var5);
+        tester.AllVariants.add(var6);
+        tester.AllVariants.add(var7);
+        tester.AllVariants.add(var8);
+        tester.AllVariants.add(var9);
+        tester.AllVariants.add(var10);
+        tester.AllVariants.add(var11);
+        tester.AllVariants.add(var12);
+        tester.AllVariants.add(var13);
+        tester.AllVariants.add(var14);
+        tester.AllVariants.add(var15);
+        tester.AllVariants.add(var16);
+        tester.AllVariants.add(var17);
+        tester.AllVariants.add(var18);
+        tester.AllVariants.add(var19);
+        tester.AllVariants.add(var20);
+        tester.AllVariants.add(var21);
+        tester.AllVariants.add(var22);
+        tester.AllVariants.add(var23);
+        tester.AllVariants.add(var24);
+        tester.AllVariants.add(var25);
+        tester.AllVariants.add(var26);
+        tester.AllVariants.add(var27);
+        tester.AllVariants.add(var28);
+        tester.AllVariants.add(var29);
+
+        tester.preClusteringInit();
+
+        tester.Analyser.clusterAndAnalyse();
+
+        // first check foldbacks are in place
+        assertEquals(var21.getFoldbackLink(true), var21.id());
+        assertEquals(var23.getFoldbackLink(true), var23.id());
+        assertEquals(var24.getFoldbackLink(true), var24.id());
+
+        // now check final chain-finding across all sub-clusters
+        assertEquals(tester.Analyser.getClusters().size(), 1);
+        final SvCluster cluster = tester.Analyser.getClusters().get(0);
+
+        // assertEquals(cluster.getChains().size(), 6);
+
     }
 
 }

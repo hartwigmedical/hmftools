@@ -8,6 +8,7 @@ import static com.hartwig.hmftools.svanalysis.analyser.SvTestHelper.createBnd;
 import static com.hartwig.hmftools.svanalysis.analyser.SvTestHelper.createInv;
 import static com.hartwig.hmftools.svanalysis.analyser.SvTestHelper.createSgl;
 import static com.hartwig.hmftools.svanalysis.analyser.SvTestHelper.createTestSv;
+import static com.hartwig.hmftools.svanalysis.analysis.ClusterAnnotations.ALL_ANNOTATIONS;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.CLUSTER_ANNONTATION_DM;
 
 import static org.junit.Assert.assertEquals;
@@ -31,6 +32,7 @@ public class AnnotationTests
     {
         SvTestHelper tester = new SvTestHelper();
         tester.logVerbose(true);
+        tester.Config.RequiredAnnotations = ALL_ANNOTATIONS;
 
         double[] chrCopyNumbers = {2.0, 2.0, 2.0};
         tester.ClusteringMethods.getChrCopyNumberMap().put("1", chrCopyNumbers);
@@ -78,6 +80,7 @@ public class AnnotationTests
     {
         SvTestHelper tester = new SvTestHelper();
         tester.logVerbose(true);
+        tester.Config.RequiredAnnotations = ALL_ANNOTATIONS;
 
         CNAnalyser cnAnalyser = new CNAnalyser("", null);
 

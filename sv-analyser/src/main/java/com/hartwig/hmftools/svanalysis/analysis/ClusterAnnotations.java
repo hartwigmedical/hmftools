@@ -43,6 +43,7 @@ import static com.hartwig.hmftools.svanalysis.types.SvVarData.isStart;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.DoubleToLongFunction;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
@@ -865,10 +866,16 @@ public class ClusterAnnotations
                 {
                     telomereEndPos = breakend.position();
 
-                    SvCNData cnData = getAdjacentCNData(breakend, svCopyNumberDataMap, cnDataList);
+                    SvCNData cnData = getCNData(breakend, svCopyNumberDataMap);
 
                     if(cnData != null)
                     {
+                        if(arm == CHROMOSOME_ARM_P)
+                        {
+                            // need the preceding segment
+                            cnData = cnDataList.get(cnData.getIndex() - 1);
+                        }
+
                         telomereEndCN = cnData.CopyNumber;
                         telomereEndMap = cnData.majorAllelePloidy();
                     }
@@ -879,10 +886,16 @@ public class ClusterAnnotations
                 {
                     centromereEndPos = breakend.position();
 
-                    SvCNData cnData = getAdjacentCNData(breakend, svCopyNumberDataMap, cnDataList);
+                    SvCNData cnData = getCNData(breakend, svCopyNumberDataMap);
 
                     if(cnData != null)
                     {
+                        if(arm == CHROMOSOME_ARM_Q)
+                        {
+                            // need the preceding segment
+                            cnData = cnDataList.get(cnData.getIndex() - 1);
+                        }
+
                         centromereEndCN = cnData.CopyNumber;
                         centromereEndMap = cnData.majorAllelePloidy();
                     }
@@ -1469,32 +1482,28 @@ public class ClusterAnnotations
 
         LOGGER.info("POTENTIAL_DM_DATA: {}", infoStr);
     }
-
-    private static final SvCNData getAdjacentCNData(final SvBreakend breakend,
-            final Map<String,SvCNData[]> svCopyNumberDataMap, final List<SvCNData> cnDataList)
+    private static final SvCNData getCNData(final SvBreakend breakend, final Map<String,SvCNData[]> svCopyNumberDataMap)
     {
         // check the major allele ploidy outside this breakend
         final SvCNData[] cnDataPair = svCopyNumberDataMap.get(breakend.getSV().id());
-        if(cnDataPair == null)
+        if (cnDataPair == null)
             return null;
 
-        final SvCNData cnData = breakend.usesStart() ? cnDataPair[SVI_START] : cnDataPair[SVI_END];
-        if(cnData == null)
-            return null;
-
-        // CN data is always the segment that starts with the SV's position, so the adjacent
-        // segment will already be correct for orientation +1, but needs to take the preceding one for -1
-        final SvCNData adjacentCNData = breakend.orientation() == -1 ? cnDataList.get(cnData.getIndex() - 1) : cnData;
-
-        return adjacentCNData;
+        return breakend.usesStart() ? cnDataPair[SVI_START] : cnDataPair[SVI_END];
     }
 
     private static double getAdjacentMajorAllelePloidy(final SvBreakend breakend,
             final Map<String,SvCNData[]> svCopyNumberDataMap, final List<SvCNData> cnDataList)
     {
-        final SvCNData adjacentCNData = getAdjacentCNData(breakend, svCopyNumberDataMap, cnDataList);
+        final SvCNData cnData = getCNData(breakend, svCopyNumberDataMap);
+        if(cnData == null)
+            return Double.NaN;
 
-        return adjacentCNData != null ? adjacentCNData.majorAllelePloidy() : Double.NaN;
+        // CN data is always the segment that starts with the SV's position, so the adjacent
+        // segment will already be correct for orientation +1, but needs to take the preceding one for -1
+        final SvCNData adjacentCNData = breakend.orientation() == -1 ? cnDataList.get(cnData.getIndex() - 1) : cnData;
+
+        return adjacentCNData.majorAllelePloidy();
     }
 
     private static boolean isValidDMBreakend(final SvBreakend breakend,
@@ -1890,7 +1899,7 @@ public class ClusterAnnotations
 
                 LOGGER.log(logLevel,
                         String.format("REP_REPAIR: armCluster(%s) type(%s) count(%d fwd=%d bak=%d) pairs(%d) unlinked(%d) CN(%.2f -> %.2f)",
-                        armCluster.id(), armGroup.toString(), typeToString(armCluster.getType()),
+                        armGroup.toString(), typeToString(armCluster.getType()),
                         acBreakendList.size(), forwardCount, backwardCount, pairs.size(), unlinkedBreakends.size(),
                         armCluster.getMinCopyNumber(), armCluster.getMaxCopyNumber()));
             }
