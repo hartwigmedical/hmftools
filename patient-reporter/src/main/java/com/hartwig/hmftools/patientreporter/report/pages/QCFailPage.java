@@ -201,5 +201,4 @@ public abstract class QCFailPage {
         return cmp.text("The results on this report are based on tests that are performed under ISO/ICE-17025:2005 accreditation.")
                 .setStyle(fontStyle());
     }
-
 }

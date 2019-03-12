@@ -89,7 +89,7 @@ public final class SomaticVariantDataSource {
             } else {
                 if (variant1.gene().equals(variant2.gene())) {
                     // sort on codon position if gene is the same
-                    return extractCodonField(variant2.hgvsCodingImpact()).compareTo(extractCodonField(variant1.hgvsCodingImpact()));
+                    return extractCodonField(variant1.hgvsCodingImpact()) - extractCodonField(variant2.hgvsCodingImpact()) < 0 ? 1 : -1;
                 } else {
                     return variant1.gene().compareTo(variant2.gene());
                 }
@@ -139,19 +139,20 @@ public final class SomaticVariantDataSource {
         }
     }
 
-    @NotNull
     @VisibleForTesting
-    static String extractCodonField(@NotNull String hgvsCoding) {
-        StringBuilder stringAppend = new StringBuilder();
-        String codonSplit = hgvsCoding.substring(2);
-        String codon = "";
-        for (int i = 0; i < codonSplit.length(); i++) {
-            if (Character.isDigit(codonSplit.charAt(i))) {
-                codon = stringAppend.append(Character.toString(codonSplit.charAt(i))).toString();
-            } else if (!Character.isDigit(codonSplit.charAt(i))) {
-                break;
+    static int extractCodonField(@NotNull String hgvsCoding) {
+        StringBuilder codonAppender = new StringBuilder();
+        boolean noDigitFound = true;
+        // hgvsCoding starts with "c.", we need to skip that...
+        int index = 2;
+        while (noDigitFound && index < hgvsCoding.length()) {
+            if (Character.isDigit(hgvsCoding.charAt(index))) {
+                codonAppender.append(Character.toString(hgvsCoding.charAt(index)));
+            } else {
+                noDigitFound = false;
             }
+            index++;
         }
-        return codon;
+        return Integer.valueOf(codonAppender.toString());
     }
 }
