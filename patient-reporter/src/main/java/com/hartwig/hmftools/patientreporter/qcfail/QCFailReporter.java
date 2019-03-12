@@ -7,9 +7,9 @@ import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocationFunction
 import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.lims.LimsSampleType;
 import com.hartwig.hmftools.patientreporter.BaseReportData;
-import com.hartwig.hmftools.patientreporter.ImmutableNotAnalysedPatientReport;
+import com.hartwig.hmftools.patientreporter.ImmutableQCFailReport;
 import com.hartwig.hmftools.patientreporter.ImmutableSampleReport;
-import com.hartwig.hmftools.patientreporter.NotAnalysedPatientReport;
+import com.hartwig.hmftools.patientreporter.QCFailReport;
 import com.hartwig.hmftools.patientreporter.SampleReport;
 
 import org.immutables.value.Value;
@@ -19,16 +19,16 @@ import org.jetbrains.annotations.Nullable;
 @Value.Immutable
 @Value.Style(allParameters = true,
              passAnnotations = { NotNull.class, Nullable.class })
-public abstract class NotAnalysableReporter {
+public abstract class QCFailReporter {
 
     @NotNull
     abstract BaseReportData baseReportData();
 
-    public NotAnalysedPatientReport run(@NotNull final String sample, @NotNull final NotAnalysableReason reason,
+    public QCFailReport run(@NotNull final String sample, @NotNull final QCFailReason reason,
             @Nullable final String comments) {
         final Lims lims = baseReportData().limsModel();
 
-        final NotAnalysableStudy study = NotAnalysableStudy.fromSample(sample);
+        final QCFailStudy study = QCFailStudy.fromSample(sample);
 
         assert study != null;
 
@@ -51,7 +51,7 @@ public abstract class NotAnalysableReporter {
                 lims.submissionId(sample),
                 lims.hospitalPatientId(sample));
 
-        return ImmutableNotAnalysedPatientReport.of(sampleReport,
+        return ImmutableQCFailReport.of(sampleReport,
                 reason,
                 study,
                 Optional.ofNullable(comments),

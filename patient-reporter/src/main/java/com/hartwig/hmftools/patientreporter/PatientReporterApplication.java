@@ -11,9 +11,9 @@ import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocation;
 import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.lims.LimsFactory;
 import com.hartwig.hmftools.common.lims.LimsSampleType;
-import com.hartwig.hmftools.patientreporter.qcfail.ImmutableNotAnalysableReporter;
-import com.hartwig.hmftools.patientreporter.qcfail.NotAnalysableReason;
-import com.hartwig.hmftools.patientreporter.qcfail.NotAnalysableReporter;
+import com.hartwig.hmftools.patientreporter.qcfail.ImmutableQCFailReporter;
+import com.hartwig.hmftools.patientreporter.qcfail.QCFailReason;
+import com.hartwig.hmftools.patientreporter.qcfail.QCFailReporter;
 import com.hartwig.hmftools.patientreporter.report.PDFWriter;
 import com.hartwig.hmftools.patientreporter.structural.SvAnalyzer;
 
@@ -42,9 +42,9 @@ public class PatientReporterApplication {
     private static final String LIMS_DIRECTORY = "lims";
     private static final String REPORT_DIRECTORY = "report_dir";
     private static final String RUN_DIRECTORY = "run_dir";
-    private static final String NOT_ANALYSABLE = "not_analysable";
-    private static final String NOT_ANALYSABLE_REASON = "not_analysable_reason";
-    private static final String NOT_ANALYSED_SAMPLE = "not_analysable_sample";
+    private static final String QC_FAIL = "qc_fail";
+    private static final String QC_FAIL_REASON = "qc_fail_reason";
+    private static final String QC_FAIL_SAMPLE = "qc_fail_sample";
 
     private static final String DO_REPORT_GERMLINE = "do_report_germline";
     private static final String FUSION_CSV = "fusion_csv";
@@ -80,16 +80,16 @@ public class PatientReporterApplication {
         LOGGER.info("Running patient reporter v" + VERSION);
         final ReportWriter reportWriter = new PDFWriter();
 
-        if (cmd.hasOption(NOT_ANALYSABLE) && validInputForNonAnalysableReport(cmd)) {
-            final String sample = cmd.getOptionValue(NOT_ANALYSED_SAMPLE);
-            LOGGER.info("Generating non-analysable report for {}", sample);
-            final NotAnalysableReason reason = NotAnalysableReason.fromIdentifier(cmd.getOptionValue(NOT_ANALYSABLE_REASON));
-            final NotAnalysableReporter reporter = ImmutableNotAnalysableReporter.of(buildBaseReportData(cmd));
+        if (cmd.hasOption(QC_FAIL) && validInputForQCFailReport(cmd)) {
+            final String sample = cmd.getOptionValue(QC_FAIL_SAMPLE);
+            LOGGER.info("Generating qc-fail report for {}", sample);
+            final QCFailReason reason = QCFailReason.fromIdentifier(cmd.getOptionValue(QC_FAIL_REASON));
+            final QCFailReporter reporter = ImmutableQCFailReporter.of(buildBaseReportData(cmd));
 
-            final NotAnalysedPatientReport report = reporter.run(sample, reason, cmd.getOptionValue(COMMENTS));
+            final QCFailReport report = reporter.run(sample, reason, cmd.getOptionValue(COMMENTS));
             final String outputFilePath = generateOutputFilePathForPatientReport(cmd.getOptionValue(REPORT_DIRECTORY), report);
-            reportWriter.writeNonSequenceableReport(report, outputFilePath);
-        } else if (validInputForPatientReporter(cmd)) {
+            reportWriter.writeQCFailReport(report, outputFilePath);
+        } else if (validInputForAnalysedSample(cmd)) {
             LOGGER.info("Generating sequence report...");
             final SequencedReportData reporterData = buildReporterData(cmd);
             final PatientReporter reporter = buildReporter(cmd, reporterData);
@@ -97,7 +97,7 @@ public class PatientReporterApplication {
             final AnalysedPatientReport report =
                     reporter.run(cmd.getOptionValue(RUN_DIRECTORY), cmd.hasOption(DO_REPORT_GERMLINE), cmd.getOptionValue(COMMENTS));
             final String outputFilePath = generateOutputFilePathForPatientReport(cmd.getOptionValue(REPORT_DIRECTORY), report);
-            reportWriter.writeSequenceReport(report, outputFilePath);
+            reportWriter.writeAnalysedPatientReport(report, outputFilePath);
         } else {
             printUsageAndExit(options);
         }
@@ -150,7 +150,7 @@ public class PatientReporterApplication {
         return ImmutablePatientReporter.of(buildBaseReportData(cmd), sequencedReportData, svAnalyzer);
     }
 
-    private static boolean validInputForPatientReporter(@NotNull final CommandLine cmd) {
+    private static boolean validInputForAnalysedSample(@NotNull final CommandLine cmd) {
         final String runDirectory = cmd.getOptionValue(RUN_DIRECTORY);
         final String knowledgebasePath = cmd.getOptionValue(KNOWLEDGEBASE_PATH);
         final String drupGenesCsv = cmd.getOptionValue(DRUP_GENES_CSV);
@@ -183,14 +183,13 @@ public class PatientReporterApplication {
         return false;
     }
 
-    private static boolean validInputForNonAnalysableReport(@NotNull final CommandLine cmd) {
-        final NotAnalysableReason notAnalysableReason = NotAnalysableReason.fromIdentifier(cmd.getOptionValue(NOT_ANALYSABLE_REASON));
-        final String notAnalysedSample = cmd.getOptionValue(NOT_ANALYSED_SAMPLE);
-        LOGGER.info("sampleId: " + notAnalysedSample);
-        if (notAnalysableReason == NotAnalysableReason.UNDEFINED) {
-            LOGGER.warn(NOT_ANALYSABLE_REASON + " has to be low_tumor_percentage, low_dna_yield, post_analysis_fail or shallow_seq.");
-        } else if (notAnalysedSample == null) {
-            LOGGER.warn(NOT_ANALYSED_SAMPLE + " has to be provided.");
+    private static boolean validInputForQCFailReport(@NotNull final CommandLine cmd) {
+        final QCFailReason qcFailReason = QCFailReason.fromIdentifier(cmd.getOptionValue(QC_FAIL_REASON));
+        final String qcFailSample = cmd.getOptionValue(QC_FAIL_SAMPLE);
+        if (qcFailReason == QCFailReason.UNDEFINED) {
+            LOGGER.warn(QC_FAIL_REASON + " has to be low_tumor_percentage, low_dna_yield, post_analysis_fail or shallow_seq.");
+        } else if (qcFailSample == null) {
+            LOGGER.warn(QC_FAIL_SAMPLE + " has to be provided.");
         } else {
             return true;
         }
@@ -250,11 +249,9 @@ public class PatientReporterApplication {
         options.addOption(LIMS_DIRECTORY, true, "Complete path a directory holding the LIMS data");
         options.addOption(REPORT_DIRECTORY, true, "Complete path to where the PDF reports have to be saved.");
         options.addOption(RUN_DIRECTORY, true, "Complete path towards a single run dir where patient reporter will run on.");
-        options.addOption(NOT_ANALYSABLE, false, "If set, generates a non-analysable report.");
-        options.addOption(NOT_ANALYSABLE_REASON,
-                true,
-                "Either 'low_tumor_percentage', 'low_dna_yield', 'post_analysis_fail' or 'shallow_seq'");
-        options.addOption(NOT_ANALYSED_SAMPLE, true, "In case of non-sequenceable reports, the name of the sample used.");
+        options.addOption(QC_FAIL, false, "If set, generates a qc-fail report.");
+        options.addOption(QC_FAIL_REASON, true, "Either 'low_tumor_percentage', 'low_dna_yield', 'post_analysis_fail' or 'shallow_seq'");
+        options.addOption(QC_FAIL_SAMPLE, true, "In case of qc-fail reports, the name of the sample used.");
         options.addOption(DO_REPORT_GERMLINE, false, "If provided, report germline. Otherwise do not report germline.");
         options.addOption(KNOWLEDGEBASE_PATH, true, "Path towards a directory holding knowledgebase output files.");
         options.addOption(DRUP_GENES_CSV, true, "Path towards a CSV containing genes that could potentially indicate inclusion in DRUP.");

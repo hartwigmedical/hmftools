@@ -9,10 +9,10 @@ import static com.hartwig.hmftools.patientreporter.report.Commons.tableHeaderSty
 import static net.sf.dynamicreports.report.builder.DynamicReports.cmp;
 
 import com.hartwig.hmftools.common.lims.LimsSampleType;
-import com.hartwig.hmftools.patientreporter.NotAnalysedPatientReport;
+import com.hartwig.hmftools.patientreporter.QCFailReport;
 import com.hartwig.hmftools.patientreporter.SampleReport;
-import com.hartwig.hmftools.patientreporter.qcfail.NotAnalysableReason;
-import com.hartwig.hmftools.patientreporter.qcfail.NotAnalysableStudy;
+import com.hartwig.hmftools.patientreporter.qcfail.QCFailReason;
+import com.hartwig.hmftools.patientreporter.qcfail.QCFailStudy;
 import com.hartwig.hmftools.patientreporter.report.Commons;
 import com.hartwig.hmftools.patientreporter.report.components.MainPageTopSection;
 
@@ -25,7 +25,7 @@ import net.sf.dynamicreports.report.builder.component.TextFieldBuilder;
 @Value.Immutable
 @Value.Style(passAnnotations = NotNull.class,
              allParameters = true)
-public abstract class NonSequenceablePage {
+public abstract class QCFailPage {
 
     @NotNull
     abstract SampleReport sampleReport();
@@ -34,25 +34,25 @@ public abstract class NonSequenceablePage {
     abstract String user();
 
     @NotNull
-    abstract NotAnalysableReason reason();
+    abstract QCFailReason reason();
 
     @NotNull
-    abstract NotAnalysableStudy study();
+    abstract QCFailStudy study();
 
     @NotNull
-    public static NonSequenceablePage of(@NotNull NotAnalysedPatientReport report) {
-        return ImmutableNonSequenceablePage.of(report.sampleReport(), report.user(), report.reason(), report.study());
+    public static QCFailPage of(@NotNull QCFailReport report) {
+        return ImmutableQCFailPage.of(report.sampleReport(), report.user(), report.reason(), report.study());
     }
 
     @NotNull
     public ComponentBuilder<?, ?> reportComponent() {
         return cmp.verticalList(MainPageTopSection.build(reason().title(), sampleReport()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
-                mainPageNotAnalysableSection(sampleReport().sampleId()));
+                mainPageQCFailSection(sampleReport().sampleId()));
     }
 
     @NotNull
-    private ComponentBuilder<?, ?> mainPageNotAnalysableSection(@NotNull String sampleId) {
+    private ComponentBuilder<?, ?> mainPageQCFailSection(@NotNull String sampleId) {
         LimsSampleType type = LimsSampleType.fromSampleId(sampleId);
 
         if (sampleReport().recipient() == null) {

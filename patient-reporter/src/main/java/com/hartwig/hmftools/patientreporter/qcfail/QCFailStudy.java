@@ -5,7 +5,7 @@ import com.hartwig.hmftools.common.lims.LimsSampleType;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public enum NotAnalysableStudy {
+public enum QCFailStudy {
     CPCT("CPCT", "CPCT-02"),
     DRUP("DRUP", "DRUP-01"),
     CORE("CORE", "CORE"),
@@ -16,13 +16,13 @@ public enum NotAnalysableStudy {
     @NotNull
     private final String studyCode;
 
-    NotAnalysableStudy(@NotNull final String studyName, @NotNull final String studyCode) {
+    QCFailStudy(@NotNull final String studyName, @NotNull final String studyCode) {
         this.studyName = studyName;
         this.studyCode = studyCode;
     }
 
     @Nullable
-    public static NotAnalysableStudy fromSample(@NotNull final String sample) {
+    public static QCFailStudy fromSample(@NotNull final String sample) {
         LimsSampleType type = LimsSampleType.fromSampleId(sample);
 
         if (type == LimsSampleType.CPCT) {

@@ -6,7 +6,7 @@ import org.jetbrains.annotations.NotNull;
 
 public interface ReportWriter {
 
-    void writeSequenceReport(@NotNull AnalysedPatientReport report, @NotNull String outputFilePath) throws IOException;
+    void writeAnalysedPatientReport(@NotNull AnalysedPatientReport report, @NotNull String outputFilePath) throws IOException;
 
-    void writeNonSequenceableReport(@NotNull NotAnalysedPatientReport report, @NotNull String outputFilePath) throws IOException;
+    void writeQCFailReport(@NotNull QCFailReport report, @NotNull String outputFilePath) throws IOException;
 }

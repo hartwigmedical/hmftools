@@ -11,13 +11,13 @@ import java.nio.file.Files;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.patientreporter.AnalysedPatientReport;
-import com.hartwig.hmftools.patientreporter.NotAnalysedPatientReport;
+import com.hartwig.hmftools.patientreporter.QCFailReport;
 import com.hartwig.hmftools.patientreporter.ReportWriter;
 import com.hartwig.hmftools.patientreporter.report.pages.ImmutableCircosPage;
 import com.hartwig.hmftools.patientreporter.report.pages.ImmutableEvidenceSummaryPage;
 import com.hartwig.hmftools.patientreporter.report.pages.ImmutableExplanationPage;
 import com.hartwig.hmftools.patientreporter.report.pages.ImmutableFindingsPage;
-import com.hartwig.hmftools.patientreporter.report.pages.NonSequenceablePage;
+import com.hartwig.hmftools.patientreporter.report.pages.QCFailPage;
 import com.hartwig.hmftools.patientreporter.report.pages.SampleDetailsPage;
 
 import org.apache.logging.log4j.LogManager;
@@ -38,14 +38,14 @@ public class PDFWriter implements ReportWriter {
     }
 
     @Override
-    public void writeSequenceReport(@NotNull AnalysedPatientReport report, @NotNull String outputFilePath) throws IOException {
-        final JasperReportBuilder reportBuilder = generatePatientReport(report);
+    public void writeAnalysedPatientReport(@NotNull AnalysedPatientReport report, @NotNull String outputFilePath) throws IOException {
+        final JasperReportBuilder reportBuilder = generateAnalysedPatientReport(report);
         writeReport(outputFilePath, reportBuilder);
     }
 
     @Override
-    public void writeNonSequenceableReport(@NotNull NotAnalysedPatientReport report, @NotNull String outputFilePath) throws IOException {
-        final JasperReportBuilder reportBuilder = generateNotAnalysableReport(report);
+    public void writeQCFailReport(@NotNull QCFailReport report, @NotNull String outputFilePath) throws IOException {
+        final JasperReportBuilder reportBuilder = generateQCFailReport(report);
         writeReport(outputFilePath, reportBuilder);
     }
 
@@ -64,7 +64,7 @@ public class PDFWriter implements ReportWriter {
 
     @VisibleForTesting
     @NotNull
-    static JasperReportBuilder generateNotAnalysableReport(@NotNull NotAnalysedPatientReport report) {
+    static JasperReportBuilder generateQCFailReport(@NotNull QCFailReport report) {
         // Hack to get page footers working; the footer band and noData bands are exclusive, see additional comment below for details
         final DRDataSource singleItemDataSource = new DRDataSource("item");
         singleItemDataSource.add(new Object());
@@ -74,13 +74,13 @@ public class PDFWriter implements ReportWriter {
                 .lastPageFooter(cmp.verticalList(signatureFooter(report.signaturePath()),
                         cmp.pageXslashY(),
                         cmp.text("End of report.").setStyle(stl.style().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER))))
-                .addDetail(NonSequenceablePage.of(report).reportComponent())
+                .addDetail(QCFailPage.of(report).reportComponent())
                 .setDataSource(singleItemDataSource);
     }
 
     @VisibleForTesting
     @NotNull
-    static JasperReportBuilder generatePatientReport(@NotNull AnalysedPatientReport report) {
+    static JasperReportBuilder generateAnalysedPatientReport(@NotNull AnalysedPatientReport report) {
         final ComponentBuilder<?, ?> totalReport = cmp.multiPageList()
                 .add(ImmutableEvidenceSummaryPage.of(report).reportComponent())
                 .newPage()
@@ -95,7 +95,7 @@ public class PDFWriter implements ReportWriter {
         // Hack to get page footers working; the footer band and noData bands are exclusive:
         //  - footerBand, detailBand, etc are shown when data source is not empty
         //  - noData band is shown when data source is empty; intended to be used when there is no data to show in the report
-        //  (e.g. would be appropriate to be used for notAnalysableReport)
+        //  (e.g. would be appropriate to be used for qcFailReport)
         //
         // more info: http://www.dynamicreports.org/examples/bandreport
 
