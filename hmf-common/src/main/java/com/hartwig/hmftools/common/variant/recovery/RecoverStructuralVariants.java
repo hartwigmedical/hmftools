@@ -21,6 +21,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.chromosome.Chromosome;
 import com.hartwig.hmftools.common.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.collect.Multimaps;
@@ -44,6 +45,7 @@ import htsjdk.tribble.AbstractFeatureReader;
 import htsjdk.tribble.readers.LineIterator;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.variantcontext.VariantContextBuilder;
+import htsjdk.variant.variantcontext.VariantContextComparator;
 import htsjdk.variant.vcf.VCFCodec;
 
 public class RecoverStructuralVariants implements Closeable {
@@ -52,7 +54,7 @@ public class RecoverStructuralVariants implements Closeable {
     private static final double MIN_MATE_QUAL_SCORE = 350;
     private static final double MIN_SINGLE_QUAL_SCORE = 1000;
     private static final double UNBALANCED_MIN_DEPTH_WINDOW_COUNT = 5;
-    private static final double UNBALANCED_MIN_UNEXPLAINED_PERCENT = 0.5;
+    private static final double UNBALANCED_MIN_UNEXPLAINED_PERCENT_OF_COPY_NUMBER = 0.5;
     private static final double UNBALANCED_MIN_UNEXPLAINED_COPY_NUMBER_CHANGE = 0.5;
     private static final double MIN_PLOIDY_AS_PERCENTAGE_OF_COPY_NUMBER_CHANGE = 0.5;
 
@@ -86,7 +88,7 @@ public class RecoverStructuralVariants implements Closeable {
                 new StructuralVariantLegCopyNumberChangeFactory(purityAdjuster, allCopyNumbers, currentVariants);
 
         recoverFromUnbalancedVariants(changeFactory, doubleEndedPloidies).forEach(x -> addToMap(result, "UNBALANCED_SV", x));
-        recoverFromUnexplainedSegments().forEach(x -> addToMap(result, "UNSUPPORTED_BREAKPOINT", x));
+        recoverFromUnexplainedSegments().forEach(x -> addToMap(result, "UNSUPPORTED_BREAKEND", x));
 
         return result.values();
     }
@@ -244,6 +246,7 @@ public class RecoverStructuralVariants implements Closeable {
 
         // This should never actually occur because we are searching within this area
         if (!isInRangeOfCopyNumberSegment(start, allCopyNumbers.get(HumanChromosome.fromString(start.chromosome())))) {
+            System.out.println("EVIL");
             return false;
         }
 
@@ -368,11 +371,18 @@ public class RecoverStructuralVariants implements Closeable {
 
     private static void addToMap(@NotNull final Map<String, VariantContext> map, @NotNull final String method,
             @NotNull final RecoveredVariant variant) {
-        map.put(variant.context().getID(), addMethod(method, variant.context()));
         VariantContext mate = variant.mate();
-        if (mate != null) {
-            map.put(mate.getID(), addMethod(method, mate));
+        final boolean contextIsStart;
+        if (mate!= null) {
+            final Set<String> contigs = Sets.newHashSet(variant.context().getContig(), mate.getContig());
+            final VariantContextComparator comparator = new VariantContextComparator(Lists.newArrayList(contigs));
+            contextIsStart = comparator.compare(variant.context(), mate) <= 0;
+            map.put(mate.getID(), addMethod(method + (contextIsStart ? "_START" : "_END"), mate));
+        } else {
+            contextIsStart = true;
         }
+
+        map.put(variant.context().getID(), addMethod(method + (contextIsStart ? "_START" : "_END"), variant.context()));
     }
 
     @NotNull
@@ -381,7 +391,7 @@ public class RecoverStructuralVariants implements Closeable {
     }
 
     private static boolean isUnbalanced(double unexplainedCopyNumberChange, double copyNumber) {
-        return Doubles.greaterOrEqual(unexplainedCopyNumberChange, UNBALANCED_MIN_UNEXPLAINED_PERCENT * copyNumber) && Doubles.greaterOrEqual(
+        return Doubles.greaterOrEqual(unexplainedCopyNumberChange, UNBALANCED_MIN_UNEXPLAINED_PERCENT_OF_COPY_NUMBER * copyNumber) && Doubles.greaterOrEqual(
                 unexplainedCopyNumberChange, UNBALANCED_MIN_UNEXPLAINED_COPY_NUMBER_CHANGE);
     }
 

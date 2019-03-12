@@ -61,7 +61,7 @@ class PurpleStructuralVariantSupplier {
     private static final double MIN_UNLINKED_SGL_VAF = 0.1;
 
     private static final String RECOVERED_DESC = "Entry has been recovered";
-    private static final String RECOVERY_METHOD_DESC = "Method used to recover, either UNBALANCED_SV or UNSUPPORTED_BREAKPOINT";
+    private static final String RECOVERY_METHOD_DESC = "Method used to recover, one of [UNBALANCED_SV_START, UNBALANCED_SV_END, UNSUPPORTED_BREAKEND_START, UNSUPPORTED_BREAKEND_END]";
     private static final String INFERRED_DESC = "Breakend inferred from copy number transition";
     private static final String IMPRECISE_DESC = "Imprecise structural variation";
     private static final String PURPLE_PLOIDY_INFO = "PURPLE_PLOIDY";
