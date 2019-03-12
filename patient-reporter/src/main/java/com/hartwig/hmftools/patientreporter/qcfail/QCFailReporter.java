@@ -5,7 +5,6 @@ import java.util.Optional;
 import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocation;
 import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocationFunctions;
 import com.hartwig.hmftools.common.lims.Lims;
-import com.hartwig.hmftools.common.lims.LimsSampleType;
 import com.hartwig.hmftools.patientreporter.BaseReportData;
 import com.hartwig.hmftools.patientreporter.ImmutableQCFailReport;
 import com.hartwig.hmftools.patientreporter.ImmutableSampleReport;
@@ -24,8 +23,7 @@ public abstract class QCFailReporter {
     @NotNull
     abstract BaseReportData baseReportData();
 
-    public QCFailReport run(@NotNull final String sample, @NotNull final QCFailReason reason,
-            @Nullable final String comments) {
+    public QCFailReport run(@NotNull final String sample, @NotNull final QCFailReason reason, @Nullable final String comments) {
         final Lims lims = baseReportData().limsModel();
 
         final QCFailStudy study = QCFailStudy.fromSample(sample);
@@ -35,9 +33,9 @@ public abstract class QCFailReporter {
         final PatientTumorLocation patientTumorLocation =
                 PatientTumorLocationFunctions.findPatientTumorLocationForSample(baseReportData().patientTumorLocations(), sample);
 
-        LimsSampleType type = LimsSampleType.fromSampleId(sample);
         final SampleReport sampleReport = ImmutableSampleReport.of(sample,
-                lims.barcodeTumor(sample), lims.barcodeReference(sample),
+                lims.barcodeTumor(sample),
+                lims.barcodeReference(sample),
                 patientTumorLocation,
                 lims.purityShallowSeq(sample),
                 lims.pathologyTumorPercentage(sample),

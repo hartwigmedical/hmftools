@@ -14,6 +14,7 @@ import java.util.Optional;
 
 import com.hartwig.hmftools.common.ecrf.projections.ImmutablePatientTumorLocation;
 import com.hartwig.hmftools.patientreporter.AnalysedPatientReport;
+import com.hartwig.hmftools.patientreporter.ExampleAnalysisTestFactory;
 import com.hartwig.hmftools.patientreporter.ImmutableQCFailReport;
 import com.hartwig.hmftools.patientreporter.ImmutableSampleReport;
 import com.hartwig.hmftools.patientreporter.QCFailReport;
@@ -37,7 +38,7 @@ public class PDFWriterTest {
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd-MMM-yyyy", Locale.ENGLISH);
 
     @Test
-    public void canGenerateSequenceReportForCOLO829() throws DRException, IOException {
+    public void canGeneratePatientReportForCOLO829() throws DRException, IOException {
         AnalysedPatientReport patientReport = ExampleAnalysisTestFactory.buildCOLO829();
 
         JasperReportBuilder report = PDFWriter.generateAnalysedPatientReport(patientReport);
@@ -49,7 +50,7 @@ public class PDFWriterTest {
     }
 
     @Test
-    public void canGenerateSequenceReportForCompletelyFilledInReport() throws DRException, IOException {
+    public void canGeneratePatientReportForCompletelyFilledInReport() throws DRException, IOException {
         AnalysedPatientReport patientReport = ExampleAnalysisTestFactory.buildAnalysisWithAllTablesFilledIn();
 
         JasperReportBuilder report = PDFWriter.generateAnalysedPatientReport(patientReport);

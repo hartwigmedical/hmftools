@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.patientreporter.report;
+package com.hartwig.hmftools.patientreporter;
 
 import static com.hartwig.hmftools.patientreporter.PatientReporterTestFactory.createTestCopyNumberBuilder;
 import static com.hartwig.hmftools.patientreporter.PatientReporterTestUtil.testBaseReportData;
@@ -30,11 +30,6 @@ import com.hartwig.hmftools.common.purple.purity.FittedPurity;
 import com.hartwig.hmftools.common.purple.purity.ImmutableFittedPurity;
 import com.hartwig.hmftools.common.variant.Clonality;
 import com.hartwig.hmftools.common.variant.Hotspot;
-import com.hartwig.hmftools.patientreporter.AnalysedPatientReport;
-import com.hartwig.hmftools.patientreporter.BaseReportData;
-import com.hartwig.hmftools.patientreporter.ImmutableAnalysedPatientReport;
-import com.hartwig.hmftools.patientreporter.ImmutableSampleReport;
-import com.hartwig.hmftools.patientreporter.SampleReport;
 import com.hartwig.hmftools.patientreporter.germline.GermlineVariant;
 import com.hartwig.hmftools.patientreporter.germline.ImmutableGermlineVariant;
 import com.hartwig.hmftools.patientreporter.structural.ImmutableReportableGeneDisruption;
@@ -47,7 +42,7 @@ import com.hartwig.hmftools.patientreporter.variants.ReportableSomaticVariant;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
-final class ExampleAnalysisTestFactory {
+public final class ExampleAnalysisTestFactory {
 
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd-MMM-yyyy", Locale.ENGLISH);
 
@@ -55,7 +50,7 @@ final class ExampleAnalysisTestFactory {
     }
 
     @NotNull
-    static AnalysedPatientReport buildCOLO829() {
+    public static AnalysedPatientReport buildCOLO829() {
         final double impliedTumorPurity = 1D;
         final double averageTumorPloidy = 3.1;
         final int tumorMutationalLoad = 182;
@@ -102,7 +97,7 @@ final class ExampleAnalysisTestFactory {
     }
 
     @NotNull
-    static AnalysedPatientReport buildAnalysisWithAllTablesFilledIn() {
+    public static AnalysedPatientReport buildAnalysisWithAllTablesFilledIn() {
         final double impliedTumorPurity = 1D;
         final double averageTumorPloidy = 3.1;
         final int tumorMutationalLoad = 182;
