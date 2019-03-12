@@ -10,6 +10,7 @@ import com.hartwig.hmftools.common.center.CenterModel;
 import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocation;
 import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.lims.LimsFactory;
+import com.hartwig.hmftools.common.lims.LimsSampleType;
 import com.hartwig.hmftools.patientreporter.qcfail.ImmutableNotAnalysableReporter;
 import com.hartwig.hmftools.patientreporter.qcfail.NotAnalysableReason;
 import com.hartwig.hmftools.patientreporter.qcfail.NotAnalysableReporter;
@@ -27,8 +28,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.core.config.Configurator;
 import org.jetbrains.annotations.NotNull;
-
-import net.sf.dynamicreports.report.exception.DRException;
 
 public class PatientReporterApplication {
 
@@ -66,7 +65,7 @@ public class PatientReporterApplication {
     private static final String SIGNATURE = "signature";
     private static final String COMMENTS = "comments";
 
-    public static void main(final String... args) throws ParseException, IOException, DRException {
+    public static void main(final String... args) throws ParseException, IOException {
         final Options options = createOptions();
         final CommandLine cmd = createCommandLine(options, args);
 
@@ -79,7 +78,7 @@ public class PatientReporterApplication {
         }
 
         LOGGER.info("Running patient reporter v" + VERSION);
-        final PDFWriter pdfWriter = new PDFWriter(cmd.getOptionValue(REPORT_DIRECTORY));
+        final ReportWriter reportWriter = new PDFWriter();
 
         if (cmd.hasOption(NOT_ANALYSABLE) && validInputForNonAnalysableReport(cmd)) {
             final String sample = cmd.getOptionValue(NOT_ANALYSED_SAMPLE);
@@ -88,7 +87,8 @@ public class PatientReporterApplication {
             final NotAnalysableReporter reporter = ImmutableNotAnalysableReporter.of(buildBaseReportData(cmd));
 
             final NotAnalysedPatientReport report = reporter.run(sample, reason, cmd.getOptionValue(COMMENTS));
-            pdfWriter.writeNonSequenceableReport(report);
+            final String outputFilePath = generateOutputFilePathForPatientReport(cmd.getOptionValue(REPORT_DIRECTORY), report);
+            reportWriter.writeNonSequenceableReport(report, outputFilePath);
         } else if (validInputForPatientReporter(cmd)) {
             LOGGER.info("Generating sequence report...");
             final SequencedReportData reporterData = buildReporterData(cmd);
@@ -96,10 +96,21 @@ public class PatientReporterApplication {
 
             final AnalysedPatientReport report =
                     reporter.run(cmd.getOptionValue(RUN_DIRECTORY), cmd.hasOption(DO_REPORT_GERMLINE), cmd.getOptionValue(COMMENTS));
-            pdfWriter.writeSequenceReport(report);
+            final String outputFilePath = generateOutputFilePathForPatientReport(cmd.getOptionValue(REPORT_DIRECTORY), report);
+            reportWriter.writeSequenceReport(report, outputFilePath);
         } else {
             printUsageAndExit(options);
         }
+    }
+
+    @NotNull
+    private static String generateOutputFilePathForPatientReport(@NotNull String reportDirectory, @NotNull PatientReport patientReport) {
+        SampleReport sampleReport = patientReport.sampleReport();
+        LimsSampleType type = LimsSampleType.fromSampleId(sampleReport.sampleId());
+
+        String filePrefix =
+                type == LimsSampleType.CORE ? sampleReport.sampleId() + "_" + sampleReport.hospitalPatientId() : sampleReport.sampleId();
+        return reportDirectory + File.separator + filePrefix + "_hmf_report.pdf";
     }
 
     @NotNull
@@ -240,7 +251,8 @@ public class PatientReporterApplication {
         options.addOption(REPORT_DIRECTORY, true, "Complete path to where the PDF reports have to be saved.");
         options.addOption(RUN_DIRECTORY, true, "Complete path towards a single run dir where patient reporter will run on.");
         options.addOption(NOT_ANALYSABLE, false, "If set, generates a non-analysable report.");
-        options.addOption(NOT_ANALYSABLE_REASON, true,
+        options.addOption(NOT_ANALYSABLE_REASON,
+                true,
                 "Either 'low_tumor_percentage', 'low_dna_yield', 'post_analysis_fail' or 'shallow_seq'");
         options.addOption(NOT_ANALYSED_SAMPLE, true, "In case of non-sequenceable reports, the name of the sample used.");
         options.addOption(DO_REPORT_GERMLINE, false, "If provided, report germline. Otherwise do not report germline.");
