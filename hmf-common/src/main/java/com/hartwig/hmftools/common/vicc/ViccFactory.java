@@ -1,11 +1,12 @@
-package com.hartwig.hmftools.common.vicc_knowledgebase;
+package com.hartwig.hmftools.common.vicc;
 
 import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
-import java.time.LocalDate;
-import java.util.Map;
 
-import com.google.common.collect.Maps;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -29,18 +30,23 @@ public class ViccFactory {
     private ViccFactory() {
     }
 
-    @NotNull
-    public static VICC VICCDirectory(@NotNull final String viccDirectory) throws IOException {
+    public static void VICCDirectory(@NotNull final String viccDirectory) throws IOException {
         final String brcaJsonPath = viccDirectory + File.separator + BRCA_JSON_FILE;
 
-        Map<String, FileBRCA> BRCA = readingBRCAFile(brcaJsonPath);
+        readingBRCAFile(brcaJsonPath);
 
-
-        return new VICC(BRCA);
     }
 
-    @NotNull
-    public static Map<String, FileBRCA> readingBRCAFile(@NotNull String brcaJsonPath) {
-        return Maps.newHashMap();
+    public static void readingBRCAFile(@NotNull String brcaJsonPath) throws IOException {
+
+      //  final Gson gson = VICCGsonAdaptor.buildSampleGson();
+        final Object object = new JsonParser().parse(new FileReader(brcaJsonPath));
+        JsonArray jsonObject = (JsonArray) object;
+        for (Object dataJson : jsonObject ){
+            JsonObject brca = (JsonObject) dataJson;
+            brca.getAsJsonObject("brca").get("Variant_frequency_LOVD");
+        }
+
     }
+
 }
