@@ -16,8 +16,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-public class jsonConverterApplication {
-    private static final Logger LOGGER = LogManager.getLogger(jsonConverterApplication.class);
+public class JsonConverterApplication {
+    private static final Logger LOGGER = LogManager.getLogger(JsonConverterApplication.class);
 
     private static final String ALL_JSON_FILE = "allFile";
     private static final String BRCA_JSON_FILE = "brcaFile";
