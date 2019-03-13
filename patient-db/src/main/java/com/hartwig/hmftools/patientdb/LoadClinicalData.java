@@ -172,9 +172,9 @@ public final class LoadClinicalData {
         Map<String, Patient> drupPatients = readEcrfPatients(drupPatientReader, drupEcrfModel.patients(), samplesPerPatient);
         LOGGER.info(String.format("Finished curation of %s DRUP patients.", drupPatients.size()));
 
-        LOGGER.info("Starting reading patients from LIMS");
+        LOGGER.info("Interpreting and curating data based off LIMS");
         Map<String, Patient> patientsFromLims = readLimsPatients(samplesPerPatient, tumorLocationCurator);
-        LOGGER.info(String.format("Finished reading %s patients from LIMS", patientsFromLims.keySet().size()));
+        LOGGER.info(String.format("Finished curation of %s patients based off LIMS", patientsFromLims.keySet().size()));
 
         Map<String, Patient> mergedPatients = Maps.newHashMap();
         mergedPatients.putAll(cpctPatients);
