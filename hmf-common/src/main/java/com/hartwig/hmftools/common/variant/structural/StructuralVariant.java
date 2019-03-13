@@ -143,4 +143,7 @@ public interface StructuralVariant {
 
     @Nullable
     String recoveryMethod();
+
+    @Nullable
+    String recoveryFilter();
 }
