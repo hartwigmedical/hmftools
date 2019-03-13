@@ -30,6 +30,9 @@ import static com.hartwig.hmftools.svanalysis.types.SvArmCluster.getArmClusterDa
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.INT_DB_COUNT;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.INT_SHORT_DB_COUNT;
 import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.LINK_TYPE_TI;
+import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_END;
+import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_START;
+import static com.hartwig.hmftools.svanalysis.types.SvVarData.isStart;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -45,6 +48,7 @@ import com.hartwig.hmftools.svanalysis.annotators.LineElementAnnotator;
 import com.hartwig.hmftools.svanalysis.annotators.ReplicationOriginAnnotator;
 import com.hartwig.hmftools.svanalysis.annotators.VisualiserWriter;
 import com.hartwig.hmftools.svanalysis.types.SvBreakend;
+import com.hartwig.hmftools.svanalysis.types.SvCNData;
 import com.hartwig.hmftools.svanalysis.types.SvChain;
 import com.hartwig.hmftools.svanalysis.types.SvCluster;
 import com.hartwig.hmftools.svanalysis.types.SvLOH;
@@ -52,6 +56,7 @@ import com.hartwig.hmftools.svanalysis.types.SvLinkedPair;
 import com.hartwig.hmftools.svanalysis.types.SvVarData;
 import com.hartwig.hmftools.svanalysis.types.SvaConfig;
 import com.hartwig.hmftools.svannotation.SvGeneTranscriptCollection;
+import com.sun.jmx.snmp.SnmpVarBind;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.logging.log4j.LogManager;
@@ -75,7 +80,7 @@ public class SvSampleAnalyser {
     private LineElementAnnotator mLineElementAnnotator;
     private ReplicationOriginAnnotator mReplicationOriginAnnotator;
     private SvClusteringMethods mClusteringMethods;
-    private Map<String,Map<String,double[]>> mSampleSvPloidyCalcMap;
+    private CNAnalyser mCopyNumberAnalyser;
 
     private PerformanceCounter mPerfCounter;
     private PerformanceCounter mPc1;
@@ -89,12 +94,14 @@ public class SvSampleAnalyser {
     public SvSampleAnalyser(final SvaConfig config)
     {
         mConfig = config;
+        mSampleId = "";
+
         mClusteringMethods = new SvClusteringMethods(mConfig.ProximityDistance);
         mAnalyser = new ClusterAnalyser(config, mClusteringMethods);
         mVisWriter = new VisualiserWriter(config.OutputCsvPath, config.WriteVisualisationData);
 
         mAllVariants = Lists.newArrayList();
-        mSampleSvPloidyCalcMap = null;
+        mCopyNumberAnalyser = null;
 
         mSvFileWriter = null;
         mLinksFileWriter = null;
@@ -118,18 +125,20 @@ public class SvSampleAnalyser {
         mPc5 = new PerformanceCounter("WriteCSV");
 
         mPerfCounter.start();
-
-        clearState();
     }
 
     public final List<SvVarData> getVariants() { return mAllVariants; }
     public final List<SvCluster> getClusters() { return mAnalyser.getClusters(); }
     public final Map<String, List<SvBreakend>> getChrBreakendMap() { return mClusteringMethods.getChrBreakendMap(); }
-    public void setSampleLohData(final Map<String, List<SvLOH>> data) { mClusteringMethods.setSampleLohData(data); }
-    public void setSamplePloidyCalcData(final Map<String,Map<String,double[]>> data) { mSampleSvPloidyCalcMap = data; }
-    public void setChrCopyNumberMap(final Map<String, double[]> data) { mClusteringMethods.setChrCopyNumberMap(data); }
     public final VisualiserWriter getVisWriter() { return mVisWriter; }
-    public void setCopyNumberAnalyser(CNAnalyser cnAnalyser) { mAnalyser.setCopyNumberAnalyser(cnAnalyser); }
+    public void setCopyNumberAnalyser(CNAnalyser cnAnalyser)
+    {
+        mCopyNumberAnalyser = cnAnalyser;
+        mAnalyser.setCopyNumberAnalyser(cnAnalyser);
+        mClusteringMethods.setSampleLohData(mCopyNumberAnalyser.getSampleLohData());
+        mClusteringMethods.setChrCopyNumberMap(mCopyNumberAnalyser.getChrCopyNumberMap());
+    }
+
     public void setGeneCollection(SvGeneTranscriptCollection geneCollection) { mAnalyser.setGeneCollection(geneCollection); }
 
     private void clearState()
@@ -137,11 +146,14 @@ public class SvSampleAnalyser {
         mClusteringMethods.clearLOHBreakendData(mSampleId);
 
         // reduce maps with already processed sample data for the larger data sources
-        if(mSampleSvPloidyCalcMap != null)
-            mSampleSvPloidyCalcMap.remove(mSampleId); // shrink the data source to make future look-ups faster
+        if(!mSampleId.isEmpty())
+        {
+            if (mCopyNumberAnalyser.getSampleSvPloidyCalcMap() != null)
+                mCopyNumberAnalyser.getSampleSvPloidyCalcMap().remove(mSampleId); // shrink the data source to make future look-ups faster
 
-        if(mClusteringMethods.getSampleLohData() != null)
-            mClusteringMethods.getSampleLohData().remove(mSampleId);
+            if (mClusteringMethods.getSampleLohData() != null)
+                mClusteringMethods.getSampleLohData().remove(mSampleId);
+        }
 
         mSampleId = "";
         mAllVariants.clear();
@@ -158,23 +170,65 @@ public class SvSampleAnalyser {
         mAllVariants = Lists.newArrayList(variants);
         mVisWriter.setSampleId(sampleId);
 
-        if(mSampleSvPloidyCalcMap != null && !mSampleSvPloidyCalcMap.isEmpty())
-        {
-            Map<String, double[]> svPloidyData = mSampleSvPloidyCalcMap.get(mSampleId);
+        // look-up and cache relevant CN data into each SV
+        final Map<String,double[]> svPloidyCalcDataMap = mCopyNumberAnalyser.getSampleSvPloidyCalcMap().get(mSampleId);
+        final Map<String,SvCNData[]> svIdCnDataMap = mCopyNumberAnalyser.getSvIdCnDataMap();
+        final Map<String,List<SvCNData>> chrCnDataMap = mCopyNumberAnalyser.getChrCnDataMap();
 
-            for(final SvVarData var : mAllVariants)
+        setSvCopyNumberData(
+                mAllVariants,
+                mCopyNumberAnalyser.getSampleSvPloidyCalcMap().get(mSampleId),
+                mCopyNumberAnalyser.getSvIdCnDataMap(),
+                mCopyNumberAnalyser.getChrCnDataMap());
+
+        LOGGER.debug("loaded {} SVs", mAllVariants.size());
+    }
+
+    public static void setSvCopyNumberData(List<SvVarData> svList, final Map<String,double[]> svPloidyCalcDataMap,
+            final Map<String,SvCNData[]> svIdCnDataMap, final Map<String,List<SvCNData>> chrCnDataMap)
+    {
+        if((svPloidyCalcDataMap == null || svPloidyCalcDataMap.isEmpty()) && svIdCnDataMap.isEmpty())
+            return;
+
+        List<SvCNData> cnDataList = null;
+        String currentChromosome = "";
+        for(final SvVarData var : svList)
+        {
+            if(svPloidyCalcDataMap != null)
             {
-                final double[] ploidyData = svPloidyData.get(var.id());
-                if(ploidyData != null)
+                final double[] ploidyData = svPloidyCalcDataMap.get(var.id());
+                if (ploidyData != null)
                 {
                     double estPloidy = ploidyData[0];
                     double estUncertainty = ploidyData[1];
                     var.setPloidyRecalcData(estPloidy - estUncertainty, estPloidy + estUncertainty);
                 }
             }
-        }
 
-        LOGGER.debug("loaded {} SVs", mAllVariants.size());
+            final SvCNData[] cnDataPair = svIdCnDataMap.get(var.id());
+
+            if(cnDataPair == null)
+                continue;
+
+            for(int be = SVI_START; be <= SVI_END; ++be)
+            {
+                if(var.isNullBreakend() && be == SVI_END)
+                    continue;
+
+                boolean isStart = isStart(be);
+
+                if(!currentChromosome.equals(var.chromosome(isStart)))
+                {
+                    currentChromosome = var.chromosome(isStart);
+                    cnDataList = chrCnDataMap.get(currentChromosome);
+                }
+
+                SvCNData cnDataPost = cnDataPair[be];
+                SvCNData cnDataPrev = cnDataList.get(cnDataPost.getIndex() - 1);
+
+                var.setCopyNumberData(isStart, cnDataPrev, cnDataPost);
+            }
+        }
     }
 
     public void analyse()

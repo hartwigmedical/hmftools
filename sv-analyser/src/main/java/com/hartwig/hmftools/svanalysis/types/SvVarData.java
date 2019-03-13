@@ -87,9 +87,14 @@ public class SvVarData
     private double mReplicationOriginStart;
     private double mReplicationOriginEnd;
 
+    // copy number related data
     private boolean mHasCalcPloidy;
     private double mPloidyMin;
     private double mPloidyMax;
+    private SvCNData mCnDataPrevStart; // segment leading to the start position
+    private SvCNData mCnDataPostStart; // segment starting with the position position
+    private SvCNData mCnDataPrevEnd;
+    private SvCNData mCnDataPostEnd;
 
     public static final String NONE_SEGMENT_INFERRED = "INFERRED";
 
@@ -163,18 +168,13 @@ public class SvVarData
         mReplicationOriginStart = 0;
         mReplicationOriginEnd = 0;
 
-        if(mSVData.ploidyMin() != null && mSVData.ploidyMax() != null && mSVData.ploidyMax() > 0)
-        {
-            mHasCalcPloidy = true;
-            mPloidyMin = max(mSVData.ploidyMin(), 0);
-            mPloidyMax = mSVData.ploidyMax();
-        }
-        else
-        {
-            mHasCalcPloidy = false;
-            mPloidyMin = 0;
-            mPloidyMax = 0;
-        }
+        mHasCalcPloidy = false;
+        mPloidyMin = 0;
+        mPloidyMax = 0;
+        mCnDataPrevStart = null;
+        mCnDataPostStart = null;
+        mCnDataPrevEnd = null;
+        mCnDataPostEnd = null;
     }
 
     public static SvVarData from(final EnrichedStructuralVariant enrichedSV)
@@ -730,15 +730,23 @@ public class SvVarData
     public double ploidyMax() { return mHasCalcPloidy ? mPloidyMax : mSVData.ploidy(); }
     public double ploidyMin() { return mHasCalcPloidy ? mPloidyMin : mSVData.ploidy(); }
 
-    public static SvVarData findVariantById(final String id, List<SvVarData> svList)
+    public final SvCNData getCopyNumberData(boolean isStart, boolean isPrevious)
     {
-        for(SvVarData var : svList)
-        {
-            if(var.id().equals(id))
-                return var;
-        }
+        return isStart ? (isPrevious ? mCnDataPrevStart : mCnDataPostStart) : (isPrevious ? mCnDataPrevEnd : mCnDataPostEnd);
+    }
 
-        return null;
+    public void setCopyNumberData(boolean isStart, final SvCNData prevData, final SvCNData postData)
+    {
+        if(isStart)
+        {
+            mCnDataPrevStart = prevData;
+            mCnDataPostStart = postData;
+        }
+        else
+        {
+            mCnDataPrevEnd = prevData;
+            mCnDataPostEnd = postData;
+        }
     }
 
     public static boolean haveSameChrArms(final SvVarData var1, final SvVarData var2)

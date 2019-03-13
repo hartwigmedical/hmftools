@@ -10,6 +10,7 @@ import static com.hartwig.hmftools.common.variant.structural.StructuralVariantTy
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.svanalysis.analysis.ClusterAnnotations.ALL_ANNOTATIONS;
 import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.DEFAULT_PROXIMITY_DISTANCE;
+import static com.hartwig.hmftools.svanalysis.analysis.SvSampleAnalyser.setSvCopyNumberData;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.CHROMOSOME_ARM_P;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.CHROMOSOME_ARM_Q;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.getChromosomalArm;
@@ -373,6 +374,13 @@ public class SvTestHelper
                 cnDataPair[breakend.usesStart() ? SVI_START : SVI_END] = cnData;
             }
         }
+
+        setSvCopyNumberData(
+                AllVariants,
+                CopyNumberAnalyser.getSampleSvPloidyCalcMap().get(SampleId),
+                CopyNumberAnalyser.getSvIdCnDataMap(),
+                CopyNumberAnalyser.getChrCnDataMap());
+
     }
 
 }

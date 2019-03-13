@@ -187,10 +187,6 @@ public class SvAnalyser {
 
             boolean createNoneSvsFromCNData = cmd.hasOption(INCLUDE_NONE_SEGMENTS);
 
-            sampleAnalyser.setChrCopyNumberMap(cnAnalyser.getChrCopyNumberMap());
-            sampleAnalyser.setSampleLohData(cnAnalyser.getSampleLohData());
-            sampleAnalyser.setSamplePloidyCalcData(cnAnalyser.getSampleSvPloidyCalcMap());
-
             if(driverGeneAnnotator != null)
             {
                 driverGeneAnnotator.setLohData(cnAnalyser.getSampleLohData());

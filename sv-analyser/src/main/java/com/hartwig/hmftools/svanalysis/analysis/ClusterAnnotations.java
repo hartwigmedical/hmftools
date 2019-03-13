@@ -788,7 +788,6 @@ public class ClusterAnnotations
         boolean isMultiArm = armGroupFoldbacks.size() > 1;
 
         final Map<String, List<SvCNData>> chrCopyNumberDataMap = cnAnalyser.getChrCnDataMap();
-        final Map<String, SvCNData[]> svCopyNumberDataMap = cnAnalyser.getSvIdCnDataMap();
 
         // now look at each arm with foldbacks independently
         for(Map.Entry<SvArmGroup, List<SvVarData>> entry : armGroupFoldbacks.entrySet())
@@ -866,16 +865,10 @@ public class ClusterAnnotations
                 {
                     telomereEndPos = breakend.position();
 
-                    SvCNData cnData = getCNData(breakend, svCopyNumberDataMap);
+                    SvCNData cnData = breakend.getSV().getCopyNumberData(breakend.usesStart(), arm == CHROMOSOME_ARM_P);
 
                     if(cnData != null)
                     {
-                        if(arm == CHROMOSOME_ARM_P)
-                        {
-                            // need the preceding segment
-                            cnData = cnDataList.get(cnData.getIndex() - 1);
-                        }
-
                         telomereEndCN = cnData.CopyNumber;
                         telomereEndMap = cnData.majorAllelePloidy();
                     }
@@ -886,16 +879,10 @@ public class ClusterAnnotations
                 {
                     centromereEndPos = breakend.position();
 
-                    SvCNData cnData = getCNData(breakend, svCopyNumberDataMap);
+                    SvCNData cnData = breakend.getSV().getCopyNumberData(breakend.usesStart(), arm == CHROMOSOME_ARM_Q);
 
                     if(cnData != null)
                     {
-                        if(arm == CHROMOSOME_ARM_Q)
-                        {
-                            // need the preceding segment
-                            cnData = cnDataList.get(cnData.getIndex() - 1);
-                        }
-
                         centromereEndCN = cnData.CopyNumber;
                         centromereEndMap = cnData.majorAllelePloidy();
                     }
@@ -1143,9 +1130,8 @@ public class ClusterAnnotations
         List<SvBreakend> incompleteDMBreakends = Lists.newArrayList();
 
         final Map<String,List<SvCNData>> chrCopyNumberDataMap = cnAnalyser.getChrCnDataMap();
-        final Map<String,SvCNData[]> svCopyNumberDataMap = cnAnalyser.getSvIdCnDataMap();
 
-        if(chrCopyNumberDataMap.isEmpty() || svCopyNumberDataMap.isEmpty())
+        if(chrCopyNumberDataMap.isEmpty())
             return;
 
         for (final Map.Entry<String, List<SvBreakend>> entry : chrBreakendMap.entrySet())
@@ -1183,7 +1169,7 @@ public class ClusterAnnotations
                 isSpecificSV(breakend.getSV());
 
                 // first check the min ploidy vs the adjacent CN segment
-                double adjacentMap = getAdjacentMajorAllelePloidy(breakend, svCopyNumberDataMap, cnDataList);
+                double adjacentMap = getAdjacentMajorAllelePloidy(breakend);
 
                 if(Double.isNaN(adjacentMap))
                     continue;
@@ -1209,18 +1195,13 @@ public class ClusterAnnotations
                         continue;
                     }
 
-                    if(!isValidDMBreakend(breakend, svCopyNumberDataMap, chrCopyNumberDataMap))
+                    if(!isValidDMBreakend(breakend))
                         continue;
 
                     final SvVarData var = breakend.getSV();
 
                     // check the major allele ploidy outside this breakend
-                    final SvCNData[] cnDataPair = svCopyNumberDataMap.get(var.id());
-                    if(cnDataPair == null)
-                        continue;
-
-                    final SvCNData cnData = breakend.usesStart() ? cnDataPair[SVI_START] : cnDataPair[SVI_END];
-                    final SvCNData prevCnData = cnDataList.get(cnData.getIndex() - 1);
+                    final SvCNData prevCnData = var.getCopyNumberData(breakend.usesStart(), true);
                     double prevMap = prevCnData.majorAllelePloidy();
 
                     if(minPloidy < prevMap * DM_PLOIDY_MIN_RATIO)
@@ -1255,7 +1236,7 @@ public class ClusterAnnotations
                     final SvVarData var = breakend.getSV();
 
                     // cancel a potential group if it encounters a high-ploidy SGL
-                    if(!isValidDMBreakend(breakend, svCopyNumberDataMap, chrCopyNumberDataMap))
+                    if(!isValidDMBreakend(breakend))
                     {
                         inPotentialDM = false;
                         LOGGER.debug("cancelling potential DM group(count={} first={}) at invalid SV", dmSVList.size(), dmSVList.get(0).posId());
@@ -1482,32 +1463,18 @@ public class ClusterAnnotations
 
         LOGGER.info("POTENTIAL_DM_DATA: {}", infoStr);
     }
-    private static final SvCNData getCNData(final SvBreakend breakend, final Map<String,SvCNData[]> svCopyNumberDataMap)
-    {
-        // check the major allele ploidy outside this breakend
-        final SvCNData[] cnDataPair = svCopyNumberDataMap.get(breakend.getSV().id());
-        if (cnDataPair == null)
-            return null;
 
-        return breakend.usesStart() ? cnDataPair[SVI_START] : cnDataPair[SVI_END];
-    }
-
-    private static double getAdjacentMajorAllelePloidy(final SvBreakend breakend,
-            final Map<String,SvCNData[]> svCopyNumberDataMap, final List<SvCNData> cnDataList)
+    private static double getAdjacentMajorAllelePloidy(final SvBreakend breakend)
     {
-        final SvCNData cnData = getCNData(breakend, svCopyNumberDataMap);
+        final SvCNData cnData = breakend.getSV().getCopyNumberData(breakend.usesStart(), breakend.orientation() == -1);
+
         if(cnData == null)
             return Double.NaN;
 
-        // CN data is always the segment that starts with the SV's position, so the adjacent
-        // segment will already be correct for orientation +1, but needs to take the preceding one for -1
-        final SvCNData adjacentCNData = breakend.orientation() == -1 ? cnDataList.get(cnData.getIndex() - 1) : cnData;
-
-        return adjacentCNData.majorAllelePloidy();
+        return cnData.majorAllelePloidy();
     }
 
-    private static boolean isValidDMBreakend(final SvBreakend breakend,
-            final Map<String,SvCNData[]> svCopyNumberDataMap, final Map<String,List<SvCNData>> chrCopyNumberDataMap)
+    private static boolean isValidDMBreakend(final SvBreakend breakend)
     {
         final SvVarData var = breakend.getSV();
 
@@ -1523,9 +1490,6 @@ public class ClusterAnnotations
         if (remoteTI == null)
             return false;
 
-        final String remoteChr = breakend.getSV().getBreakend(!breakend.usesStart()).chromosome();
-        final List<SvCNData> cnDataList = chrCopyNumberDataMap.get(remoteChr);
-
         // check ploidy context of remote breakends as well
         for(int be = SVI_START; be <= SVI_END; ++be)
         {
@@ -1539,23 +1503,14 @@ public class ClusterAnnotations
             if(remoteOtherBreakend == null || !remoteOtherBreakend.chromosome().equals(breakend.chromosome()))
                 return false;
 
-            final SvCNData[] cnDataPair = svCopyNumberDataMap.get(remoteSV.id());
-            if (cnDataPair == null)
+            // check that the next breakend drops back below the required threshold
+            final SvCNData applicableCNData = remoteBreakend.getSV().getCopyNumberData(remoteBreakend.usesStart(), isStart);
+
+            if (applicableCNData == null)
             {
                 LOGGER.warn("missing CN data for DM SV({})", remoteSV.id());
                 return false;
             }
-
-            // check that the next breakend drops back below the required threshold
-            final SvCNData cnData = remoteBreakend.usesStart() ? cnDataPair[SVI_START] : cnDataPair[SVI_END];
-
-            if(cnDataList.size() <= cnData.getIndex())
-            {
-                LOGGER.error("chr({}) invalid cnDataIndex({}) vs list size({})", remoteChr, cnData.getIndex(), cnDataList.size());
-                return false;
-            }
-
-            final SvCNData applicableCNData = isStart ? cnDataList.get(cnData.getIndex() - 1) : cnData;
             double outsideMap = applicableCNData.majorAllelePloidy();
 
             if (var.ploidyMin() < outsideMap * DM_PLOIDY_MIN_RATIO)

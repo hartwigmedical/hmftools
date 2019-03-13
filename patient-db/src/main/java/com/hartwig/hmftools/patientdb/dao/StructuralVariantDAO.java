@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.patientdb.dao;
 
+import static com.hartwig.hmftools.common.variant.structural.StructuralVariantFactory.INFERRED;
 import static com.hartwig.hmftools.patientdb.Config.DB_BATCH_INSERT_SIZE;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.STRUCTURALVARIANT;
 
@@ -51,6 +52,15 @@ class StructuralVariantDAO {
                     record.getValue(STRUCTURALVARIANT.ENDCHROMOSOME) == null && record.getValue(STRUCTURALVARIANT.ENDPOSITION) == null
                             && record.getValue(STRUCTURALVARIANT.ENDORIENTATION) == null;
 
+            final String filterStr = record.getValue(STRUCTURALVARIANT.FILTER);
+
+            // TEMP CAS: ploidy correction for NONE segment SVs
+            Double ploidy = record.getValue(STRUCTURALVARIANT.PLOIDY);
+            if(isSingleBreakend && ploidy == null && filterStr.equals(INFERRED))
+            {
+                ploidy = getValueNotNull(record.getValue(STRUCTURALVARIANT.ADJUSTEDSTARTCOPYNUMBERCHANGE));
+            }
+
             structuralVariants.add(ImmutableStructuralVariantData.builder()
                     .id(String.valueOf(record.getValue(STRUCTURALVARIANT.ID)))
                     .vcfId(String.valueOf(record.getValue(STRUCTURALVARIANT.VCFID)))
@@ -68,7 +78,7 @@ class StructuralVariantDAO {
                     .adjustedEndAF(getValueNotNull(record.getValue(STRUCTURALVARIANT.ADJUSTEDENDAF)))
                     .adjustedEndCopyNumber(getValueNotNull(record.getValue(STRUCTURALVARIANT.ADJUSTEDENDCOPYNUMBER)))
                     .adjustedEndCopyNumberChange(getValueNotNull(record.getValue(STRUCTURALVARIANT.ADJUSTEDENDCOPYNUMBERCHANGE)))
-                    .ploidy(getValueNotNull(record.getValue(STRUCTURALVARIANT.PLOIDY)))
+                    .ploidy(getValueNotNull(ploidy))
                     .ploidyMin(getValueNotNull(record.getValue(STRUCTURALVARIANT.PLOIDYMIN)))
                     .ploidyMax(getValueNotNull(record.getValue(STRUCTURALVARIANT.PLOIDYMAX)))
                     .type(isSingleBreakend
@@ -76,7 +86,7 @@ class StructuralVariantDAO {
                             : StructuralVariantType.fromAttribute(record.getValue(STRUCTURALVARIANT.TYPE)))
                     .homology(record.getValue(STRUCTURALVARIANT.STARTHOMOLOGYSEQUENCE))
                     .insertSequence(record.getValue(STRUCTURALVARIANT.INSERTSEQUENCE))
-                    .filter(record.getValue(STRUCTURALVARIANT.FILTER))
+                    .filter(filterStr)
                     .imprecise(byteToBoolean(record.getValue(STRUCTURALVARIANT.IMPRECISE)))
                     .qualityScore(record.getValue(STRUCTURALVARIANT.QUALSCORE))
                     .event(getValueNotNull(record.getValue(STRUCTURALVARIANT.EVENT)))
