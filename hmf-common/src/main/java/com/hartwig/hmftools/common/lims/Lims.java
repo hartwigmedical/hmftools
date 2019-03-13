@@ -46,13 +46,13 @@ public class Lims {
     }
 
     @NotNull
-    public String contactEmails(@NotNull final String sample) {
+    public String requesterEmail(@NotNull final String sample) {
         LimsJsonSampleData sampleData = dataPerSample.get(sample);
         return sampleData != null ? sampleData.requesterEmail() : "N/A";
     }
 
     @NotNull
-    public String contactNames(@NotNull final String sample) {
+    public String requesterName(@NotNull final String sample) {
         LimsJsonSampleData sampleData = dataPerSample.get(sample);
         return sampleData != null ? sampleData.requesterName() : "N/A";
     }
@@ -161,7 +161,7 @@ public class Lims {
                 LOGGER.warn("BFX lims and lab status do not match for sample " + sample + "!");
             } else {
                 if (purityShallowExecuted) {
-                    LOGGER.info("Retrieved purity from shallow seq.");
+                    LOGGER.info("Retrieved purity from shallow seq: " + shallowSeq.purityShallowSeq());
                     if (shallowSeq.purityShallowSeq().equals("below detection threshold")) {
                         return "below detection threshold";
                     } else {

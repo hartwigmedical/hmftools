@@ -109,10 +109,10 @@ abstract class PatientReporter {
                 lims.arrivalDate(tumorSample),
                 lims.arrivalDate(run.refSample()),
                 lims.labProcedures(tumorSample),
-                baseReportData().centerModel().addresseeStringForSample(lims.contactNames(tumorSample), tumorSample),
+                baseReportData().centerModel().addresseeStringForSample(lims.requesterName(tumorSample), tumorSample),
                 lims.projectName(tumorSample),
-                lims.contactNames(tumorSample),
-                lims.contactEmails(tumorSample),
+                lims.requesterName(tumorSample),
+                lims.requesterEmail(tumorSample),
                 lims.submissionId(tumorSample),
                 lims.hospitalPatientId(tumorSample));
 
