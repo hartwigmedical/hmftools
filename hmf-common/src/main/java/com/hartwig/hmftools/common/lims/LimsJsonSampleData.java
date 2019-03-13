@@ -85,7 +85,7 @@ abstract class LimsJsonSampleData {
 
     @NotNull
     @SerializedName("submission")
-    public abstract String submissionSamples();
+    public abstract String submission();
 
     @NotNull
     @Value.Derived

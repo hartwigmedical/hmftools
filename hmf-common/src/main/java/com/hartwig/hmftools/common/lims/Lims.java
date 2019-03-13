@@ -225,7 +225,7 @@ public class Lims {
     @Nullable
     private String submission(@NotNull String sample) {
         LimsJsonSampleData sampleData = dataPerSample.get(sample);
-        return sampleData != null ? sampleData.submissionSamples() : null;
+        return sampleData != null ? sampleData.submission() : null;
     }
 
     private boolean shallowSeqExecuted(@NotNull String sample) {

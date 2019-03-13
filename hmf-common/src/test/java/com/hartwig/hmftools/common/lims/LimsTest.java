@@ -34,9 +34,8 @@ public class LimsTest {
         final String contactEmail = "henk@hmf.nl";
         final String contactName = "henk";
         final String refBarcode = "A123";
-        final String tumorBarcode = "not determinded";
+        final String tumorBarcode = "not determined";
         final String patientId = "CPCT02991111";
-
 
         final LimsJsonSampleData sampleData = createLimsSampleDataBuilder().sampleId(SAMPLE)
                 .samplingDateString(samplingDate)
@@ -47,7 +46,7 @@ public class LimsTest {
                 .labSopVersions(labSopVersions)
                 .labRemarks(labRemarks)
                 .projectName(projectName)
-                .submissionSamples(SUBMISSION)
+                .submission(SUBMISSION)
                 .refBarcodeId(refBarcode)
                 .tumorBarcodeId(tumorBarcode)
                 .patientId(patientId)

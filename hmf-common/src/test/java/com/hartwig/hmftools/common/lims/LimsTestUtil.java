@@ -26,7 +26,7 @@ final class LimsTestUtil {
                 .primaryTumor(Strings.EMPTY)
                 .labSopVersions(Strings.EMPTY)
                 .projectName(Strings.EMPTY)
-                .submissionSamples(Strings.EMPTY)
+                .submission(Strings.EMPTY)
                 .patientId(Strings.EMPTY)
                 .requesterName(Strings.EMPTY)
                 .requesterEmail(Strings.EMPTY)
