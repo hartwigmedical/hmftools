@@ -27,7 +27,7 @@ import com.hartwig.hmftools.patientdb.data.BiopsyTreatmentResponseData;
 import com.hartwig.hmftools.patientdb.data.Patient;
 import com.hartwig.hmftools.patientdb.data.PreTreatmentData;
 import com.hartwig.hmftools.patientdb.data.TumorMarkerData;
-import com.hartwig.hmftools.patientdb.readers.PatientReader;
+import com.hartwig.hmftools.patientdb.readers.EcrfPatientReader;
 import com.hartwig.hmftools.patientdb.readers.cpct.CpctPatientReader;
 import com.hartwig.hmftools.patientdb.readers.cpct.CpctUtil;
 import com.hartwig.hmftools.patientdb.validators.PatientValidator;
@@ -51,7 +51,7 @@ public class LoadClinicalDataTest {
         assertEquals(1, cpctEcrfModel.patientCount());
         assertEquals(1298, Lists.newArrayList(cpctEcrfModel.fields()).size());
 
-        PatientReader cpctPatientReader = new CpctPatientReader(tumorLocationCurator,
+        EcrfPatientReader cpctPatientReader = new CpctPatientReader(tumorLocationCurator,
                 CpctUtil.extractHospitalMap(cpctEcrfModel),
                 biopsySiteCurator,
                 treatmentCurator);

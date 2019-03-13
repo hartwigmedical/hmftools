@@ -8,7 +8,7 @@ import com.hartwig.hmftools.patientdb.data.SampleData;
 
 import org.jetbrains.annotations.NotNull;
 
-public interface PatientReader {
+public interface EcrfPatientReader {
 
     @NotNull
     Patient read(@NotNull final EcrfPatient ecrfPatient, @NotNull final List<SampleData> sequencedBiopsies);

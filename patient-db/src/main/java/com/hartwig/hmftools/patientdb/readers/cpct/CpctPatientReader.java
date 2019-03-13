@@ -22,11 +22,11 @@ import com.hartwig.hmftools.patientdb.matchers.BiopsyMatcher;
 import com.hartwig.hmftools.patientdb.matchers.MatchResult;
 import com.hartwig.hmftools.patientdb.matchers.TreatmentMatcher;
 import com.hartwig.hmftools.patientdb.matchers.TreatmentResponseMatcher;
-import com.hartwig.hmftools.patientdb.readers.PatientReader;
+import com.hartwig.hmftools.patientdb.readers.EcrfPatientReader;
 
 import org.jetbrains.annotations.NotNull;
 
-public class CpctPatientReader implements PatientReader {
+public class CpctPatientReader implements EcrfPatientReader {
     @NotNull
     private final BaselineReader baselineReader;
     @NotNull

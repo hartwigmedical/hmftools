@@ -1,19 +1,13 @@
 package com.hartwig.hmftools.patientdb.readers;
 
 import com.hartwig.hmftools.common.lims.Lims;
-import com.hartwig.hmftools.patientdb.LoadClinicalData;
 import com.hartwig.hmftools.patientdb.curators.TumorLocationCurator;
-import com.hartwig.hmftools.patientdb.data.ImmutableCuratedTumorLocation;
 import com.hartwig.hmftools.patientdb.data.ImmutableTumorTypeLims;
 import com.hartwig.hmftools.patientdb.data.TumorTypeLims;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 public class TumorLocationCurationLims {
-
-    private static final Logger LOGGER = LogManager.getLogger(TumorLocationCurationLims.class);
 
     @NotNull
     private final Lims lims;
