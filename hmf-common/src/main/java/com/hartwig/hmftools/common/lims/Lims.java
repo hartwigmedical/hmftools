@@ -46,12 +46,6 @@ public class Lims {
     }
 
     @NotNull
-    public String sampleId(@NotNull final String sample) {
-        LimsJsonSampleData sampleData = dataPerSample.get(sample);
-        return sampleData != null ? sampleData.sampleId() : "N/A";
-    }
-
-    @NotNull
     public String contactEmails(@NotNull final String sample) {
         LimsJsonSampleData sampleData = dataPerSample.get(sample);
         return sampleData != null ? sampleData.requesterEmail() : "N/A";
