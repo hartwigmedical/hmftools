@@ -222,6 +222,7 @@ public final class LoadClinicalData {
     private static Map<String, Patient> readColoPatients() {
         final Map<String, Patient> patientMap = Maps.newHashMap();
         final ColoPatientReader coloPatientReader = new ColoPatientReader();
+        LOGGER.info("Creating patient representation for COLO829");
         Patient colo829Patient = coloPatientReader.read("COLO829T");
 
         patientMap.put(colo829Patient.patientIdentifier(), colo829Patient);
