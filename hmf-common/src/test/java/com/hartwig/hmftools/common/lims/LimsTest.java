@@ -31,8 +31,8 @@ public class LimsTest {
         final String labSopVersions = "PREP1V2-QC1V2-SEQ1V2";
         final String labRemarks = "CPCT WIDE project";
         final String projectName = "projectX";
-        final String contactEmail = "henk@hmf.nl";
-        final String contactName = "henk";
+        final String requesterEmail = "henk@hmf.nl";
+        final String requesterName = "henk";
         final String refBarcode = "A123";
         final String tumorBarcode = "not determined";
         final String patientId = "CPCT02991111";
@@ -50,22 +50,20 @@ public class LimsTest {
                 .refBarcodeId(refBarcode)
                 .tumorBarcodeId(tumorBarcode)
                 .patientId(patientId)
-                .requesterEmail(contactEmail)
-                .requesterName(contactName)
+                .requesterEmail(requesterEmail)
+                .requesterName(requesterName)
                 .shallowSeq(0)
                 .build();
 
-        final LimsJsonSubmissionData submissionData = ImmutableLimsJsonSubmissionData.builder()
-                .submission(SUBMISSION)
-                .projectName("projectX")
-                .build();
+        final LimsJsonSubmissionData submissionData =
+                ImmutableLimsJsonSubmissionData.builder().submission(SUBMISSION).projectName("projectX").build();
 
         final Lims lims = buildTestLimsWithSampleAndSubmission(sampleData, submissionData);
 
         assertEquals(1, lims.sampleCount());
 
-        assertEquals(contactEmail, lims.requesterEmail(SAMPLE));
-        assertEquals(contactName, lims.requesterName(SAMPLE));
+        assertEquals(requesterEmail, lims.requesterEmail(SAMPLE));
+        assertEquals(requesterName, lims.requesterName(SAMPLE));
         assertNull(lims.hospitalPatientId(SAMPLE));
         assertEquals(projectName, lims.projectName(SAMPLE));
         assertEquals(LimsTestUtil.toDate(arrivalDate), lims.arrivalDate(SAMPLE));
@@ -111,58 +109,50 @@ public class LimsTest {
     @Test
     public void invalidDataYieldsNullOrNA() {
         final LimsJsonSampleData sampleData = createLimsSampleDataBuilder().sampleId(SAMPLE)
-                .samplingDateString("IsNotADate")
                 .arrivalDateString("IsNotADate")
+                .samplingDateString("IsNotADate")
                 .dnaConcentration("IsNotADNAConcentration")
                 .tumorPercentageString("IsNotANumber")
-                .primaryTumor("anything")
                 .labSopVersions("anything")
-                .labRemarks("anything")
                 .build();
 
         final Lims lims = buildTestLimsWithSample(sampleData);
 
         assertEquals(1, lims.sampleCount());
 
-        assertEquals("", lims.requesterEmail(SAMPLE));
-        assertEquals("", lims.requesterName(SAMPLE));
         assertNull(lims.arrivalDate(SAMPLE));
         assertNull(lims.samplingDate(SAMPLE));
         assertNull(lims.dnaNanograms(SAMPLE));
         assertEquals("N/A", lims.pathologyTumorPercentage(SAMPLE));
-        assertEquals("not determined", lims.purityShallowSeq(SAMPLE));
         assertEquals("N/A", lims.labProcedures(SAMPLE));
     }
 
     @Test
-    public void noPathologyTumorPercentageDeterminedForCORE() {
+    public void noPathologyTumorPercentageDeterminedForShallowSeq() {
+        final LimsJsonSampleData sampleData1 = createLimsSampleDataBuilder().sampleId(SAMPLE).shallowSeq(1).build();
+
+        Lims lims1 = buildTestLimsWithSample(sampleData1);
+        assertEquals("not determined", lims1.pathologyTumorPercentage(SAMPLE));
+
+        final LimsJsonSampleData sampleData2 = createLimsSampleDataBuilder().sampleId(SAMPLE).labRemarks("ShallowSeq").build();
+
+        Lims lims2 = buildTestLimsWithSample(sampleData2);
+        assertEquals("not determined", lims2.pathologyTumorPercentage(SAMPLE));
+    }
+
+    @Test
+    public void missingShallowSeqDataForSampleYieldsNA() {
         final LimsJsonSampleData sampleData = createLimsSampleDataBuilder().sampleId(SAMPLE).shallowSeq(1).build();
 
         Lims lims = buildTestLimsWithSample(sampleData);
-        assertEquals("not determined", lims.pathologyTumorPercentage(SAMPLE));
-    }
-
-    @Test
-    public void noPathologyTumorPercentageForShallowSeq() {
-        final LimsJsonSampleData sampleData = createLimsSampleDataBuilder().sampleId(SAMPLE).labRemarks("ShallowSeq").build();
-
-        Lims lims = buildTestLimsWithSample(sampleData);
-        assertEquals("not determined", lims.pathologyTumorPercentage(SAMPLE));
-    }
-
-    @Test
-    public void shallowSeqPurityErrorForSample() {
-        final LimsJsonSampleData sampleData =
-                createLimsSampleDataBuilder().sampleId(SAMPLE).labRemarks("ShallowSeq").build();
-
-        Lims lims = buildTestLimsWithSample(sampleData);
         assertEquals("N/A", lims.purityShallowSeq(SAMPLE));
+        assertEquals("not determined", lims.pathologyTumorPercentage(SAMPLE));
     }
 
     @Test
     public void canRetrievePathologyPercentageForSample() {
         final LimsJsonSampleData sampleData =
-                createLimsSampleDataBuilder().sampleId(SAMPLE).labRemarks("").shallowSeq(0).tumorPercentageString("70").build();
+                createLimsSampleDataBuilder().sampleId(SAMPLE).shallowSeq(0).tumorPercentageString("70").build();
 
         Lims lims = buildTestLimsWithSample(sampleData);
         assertEquals("not determined", lims.purityShallowSeq(SAMPLE));
@@ -170,39 +160,21 @@ public class LimsTest {
     }
 
     @Test
-    public void canRetrieveShallowSeqPurityForCPCTSample() {
-        final LimsJsonSampleData sampleData =
-                createLimsSampleDataBuilder().sampleId("CPCT02990001T").labRemarks("ShallowSeq").build();
+    public void canRetrieveShallowSeqPurityForSample() {
+        final LimsJsonSampleData sampleData = createLimsSampleDataBuilder().sampleId(SAMPLE).shallowSeq(1).build();
 
         Lims lims = buildTestLimsWithSampleAndShallowSeq(sampleData, "0.2");
-        assertEquals("20%", lims.purityShallowSeq("CPCT02990001T"));
+        assertEquals("20%", lims.purityShallowSeq(SAMPLE));
+        assertEquals("not determined", lims.pathologyTumorPercentage(SAMPLE));
     }
 
     @Test
-    public void canRetrieveShallowSeqPurityForCORESample() {
-        final LimsJsonSampleData sampleData =
-                createLimsSampleDataBuilder().sampleId("CORE00000001T").labRemarks("ShallowSeq").build();
-
-        Lims lims = buildTestLimsWithSampleAndShallowSeq(sampleData, "0.3");
-        assertEquals("30%", lims.purityShallowSeq("CORE00000001T"));
-    }
-
-    @Test
-    public void canRetrieveShallowSeqBelowDetectionLimitForCPCTSample() {
-        final LimsJsonSampleData sampleData =
-                createLimsSampleDataBuilder().sampleId("CPCT02990003T").labRemarks("ShallowSeq").build();
+    public void canRetrieveShallowSeqBelowDetectionLimitForSample() {
+        final LimsJsonSampleData sampleData = createLimsSampleDataBuilder().sampleId(SAMPLE).shallowSeq(1).build();
 
         Lims lims = buildTestLimsWithSampleAndShallowSeq(sampleData, "below detection threshold");
-        assertEquals("below detection threshold", lims.purityShallowSeq("CPCT02990003T"));
-    }
-
-    @Test
-    public void canRetrieveShallowSeqBelowDetectionLimitForCORESample() {
-        final LimsJsonSampleData sampleData =
-                createLimsSampleDataBuilder().sampleId("CPCT02990003T").labRemarks("ShallowSeq").build();
-
-        Lims lims = buildTestLimsWithSampleAndShallowSeq(sampleData, "below detection threshold");
-        assertEquals("below detection threshold", lims.purityShallowSeq("CPCT02990003T"));
+        assertEquals("below detection threshold", lims.purityShallowSeq(SAMPLE));
+        assertEquals("not determined", lims.pathologyTumorPercentage(SAMPLE));
     }
 
     @NotNull
