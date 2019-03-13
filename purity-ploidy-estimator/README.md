@@ -359,7 +359,21 @@ java -jar purple.jar \
 
 ### CIRCOS Output
 
-When enabled, CIRCOS diagrams will be creating in the <output>/plot directory. A typical example is shown below:
+When enabled, an input and output diagram will be created in the /plot directory. 
+The first figure shows the input to PURPLE from AMBER and COBALT. 
+The second figure shows the output from PURPLE.
+
+A typical input figure is shown below:
+
+![Input CIRCOS](src/main/resources/readme/COLO829.input.png)
+
+The outer first circle show the COBALT ratios of the reference and tumor samples in green and blue respectively.
+Note the reference ratios are after GC and diploid normalization has been applied. 
+The tumor ratios are after GC normalization has been applied.
+
+The inner circle shows the raw AMBER BAF points in orange.
+
+A typical output figure is shown below:
 
 ![Output CIRCOS](src/main/resources/readme/COLO829.circos.png)
 
