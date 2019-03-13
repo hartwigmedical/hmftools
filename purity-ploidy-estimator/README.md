@@ -194,7 +194,7 @@ We also record the min and max of the purity, ploidy and diploid proportions of 
 Note that a segment is diploid only if both the major and minor allele are between 0.8 and 1.2 inclusive. 
 
 #### Somatic Purity
-If the lowest scoring solution is highly diploid (>= 0.95) and there is a wide range (>= 0.15) of valid purities in the candidate solutions we enter somatic mode. 
+If any of the candidate solutions are highly diploid (>= 0.95) and there is a wide range (>= 0.15) of valid purities in the candidate solutions we enter somatic mode. 
 Once in this mode, the sample status will be changed from NORMAL to one of HIGHLY_DIPLOID, NO_TUMOR or SOMATIC according to the logic described below.  
 
 First we calculate a somatic purity. 
