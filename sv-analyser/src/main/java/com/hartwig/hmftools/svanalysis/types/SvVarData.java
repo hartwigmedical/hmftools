@@ -210,6 +210,9 @@ public class SvVarData
         init();
 
         mIdStr = other.getSvData().id() + "r";
+        mStartArm = other.arm(true);
+        mEndArm = other.arm(false);
+
         mBreakendStart = new SvBreakend(this, true);
         mBreakendStart.setChrPosIndex(other.getBreakend(true).getChrPosIndex());
 
@@ -219,8 +222,6 @@ public class SvVarData
             mBreakendEnd.setChrPosIndex(other.getBreakend(false).getChrPosIndex());
         }
 
-        mStartArm = other.arm(true);
-        mEndArm = other.arm(false);
         mStartFragileSite = other.isFragileSite(true);
         mEndFragileSite = other.isFragileSite(false);
         mStartLineElement = other.getLineElement(true);

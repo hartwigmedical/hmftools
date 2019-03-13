@@ -10,13 +10,10 @@ import static com.hartwig.hmftools.common.variant.structural.StructuralVariantTy
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.svanalysis.analysis.LinkFinder.MIN_TEMPLATED_INSERTION_LENGTH;
 import static com.hartwig.hmftools.svanalysis.analysis.LinkFinder.areLinkedSection;
-import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.getProximity;
 import static com.hartwig.hmftools.svanalysis.types.ChainSvData.CHAIN_SV_TYPE_COMPLEX_DUP;
 import static com.hartwig.hmftools.svanalysis.types.ChainSvData.CHAIN_SV_TYPE_COMPLEX_INV;
 import static com.hartwig.hmftools.svanalysis.types.ChainSvData.CHAIN_SV_TYPE_FOLDBACK;
 import static com.hartwig.hmftools.svanalysis.types.ChainSvData.CHAIN_SV_TYPE_SIMPLE;
-import static com.hartwig.hmftools.svanalysis.types.SvChain.checkChainReplication;
-import static com.hartwig.hmftools.svanalysis.types.SvCluster.isSpecificCluster;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_END;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_START;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.isStart;
@@ -34,7 +31,6 @@ import com.hartwig.hmftools.svanalysis.types.SvChain;
 import com.hartwig.hmftools.svanalysis.types.SvCluster;
 import com.hartwig.hmftools.svanalysis.types.SvVarData;
 import com.hartwig.hmftools.svanalysis.types.SvLinkedPair;
-import com.sun.jmx.snmp.SnmpVarBind;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -76,7 +72,7 @@ public class ChainFinder
         mLogVerbose = false;
         mLogWorking = false;
         mIsValid = true;
-        mNewMethod = false;
+        mNewMethod = true;
     }
 
     public void initialise(SvCluster cluster)
@@ -190,14 +186,24 @@ public class ChainFinder
 
             while (true)
             {
-                List<SvLinkedPair> possiblePairs = findPossiblePairs();
+                boolean isRestrictedSet = false;
+                List<SvLinkedPair> possiblePairs = findSingleOptionPairs();
+
+                if(!possiblePairs.isEmpty())
+                {
+                    isRestrictedSet = true;
+                }
+                else
+                {
+                    possiblePairs = findPrioritisedPairs();
+                }
 
                 if(possiblePairs == null)
                     break;
                 else if(possiblePairs.isEmpty())
                     continue;
 
-                processPossiblePairs(possiblePairs);
+                processPossiblePairs(possiblePairs, isRestrictedSet);
                 checkProgress();
             }
         }
@@ -255,13 +261,16 @@ public class ChainFinder
                     }
                 }
 
-                // then check if any of these run into a breakend of higher ploidy? if so, take the nearest
+                // then check if any of these run into a breakend of higher ploidy, and if so, take the nearest pair set
+                // eg for A - B - A, where A has double ploidy of B, and both ends of B connect to same end of A
+                // in the logic below, the SV in question is the B variant
                 List<SvVarData> otherSVs = Lists.newArrayList();
                 for(SvLinkedPair pair : varPairs)
                 {
-                    SvVarData otherSV = pair.getOtherSV(var);
+                    SvVarData otherSV = pair.getOtherSV(var); // the SV with equal or higher ploidy
+                    double otherVarPloidy = otherSV.getRoundedCNChange();
 
-                    if(varPloidy > 2 * otherSV.getRoundedCNChange())
+                    if(varPloidy > otherVarPloidy) // || varPloidy * 2 > otherVarPloidy
                         continue;
 
                     if(otherSVs.contains(otherSV))
@@ -274,40 +283,38 @@ public class ChainFinder
                     int endsMatchedOnOtherVarEnd = 0;
                     long linkOnOtherVarStartLength = 0;
                     long linkOnOtherVarEndLength = 0;
+                    int maxLinkOnOtherVarStart = 0;
+                    int maxLinkOnOtherVarEnd = 0;
                     List<SvLinkedPair> startLinks = Lists.newArrayList();
                     List<SvLinkedPair> endLinks = Lists.newArrayList();
 
                     for(SvLinkedPair otherPair : varPairs)
                     {
-                        if(otherPair.hasBreakend(otherSV, true)
+                        int maxPairCount = getMaxUnlinkedPairCount(otherPair);
+
+                        if(maxPairCount == 0)
+                            continue;
+
+                        if(otherPair.hasBreakend(otherSV, true) && getUnlinkedBreakendCount(otherSV.getBreakend(true)) > 1
                         && (otherPair.hasBreakend(var, true) || otherPair.hasBreakend(var, false)))
                         {
-                            // check that there are sufficient available links to support both pairs
-                            List<SvBreakend> otherSvAvailables = mUnlinkedBreakendMap.get(otherSV.getBreakend(true));
+                            // link can be made from start of this var to both ends of the other SV, and record the shortest pair length
+                            ++endsMatchedOnOtherVarStart;
+                            maxLinkOnOtherVarStart = max(maxLinkOnOtherVarStart, maxPairCount);
+                            startLinks.add(otherPair);
 
-                            if(otherSvAvailables != null && otherSvAvailables.size() > 1)
-                            {
-                                // link can be made from start of other var to both ends of this SV, and record the shortest pair length
-                                ++endsMatchedOnOtherVarStart;
-                                startLinks.add(otherPair);
-
-                                if (linkOnOtherVarStartLength == 0 || otherPair.length() < linkOnOtherVarStartLength)
-                                    linkOnOtherVarStartLength = otherPair.length();
-                            }
+                            if (linkOnOtherVarStartLength == 0 || otherPair.length() < linkOnOtherVarStartLength)
+                                linkOnOtherVarStartLength = otherPair.length();
                         }
-                        else if(otherPair.hasBreakend(otherSV, false)
+                        else if(otherPair.hasBreakend(otherSV, false) && getUnlinkedBreakendCount(otherSV.getBreakend(false)) > 1
                         && (otherPair.hasBreakend(var, true) || otherPair.hasBreakend(var, false)))
                         {
-                            List<SvBreakend> otherSvAvailables = mUnlinkedBreakendMap.get(otherSV.getBreakend(false));
+                            ++endsMatchedOnOtherVarEnd;
+                            maxLinkOnOtherVarEnd = max(maxLinkOnOtherVarEnd, maxPairCount);
+                            endLinks.add(otherPair);
 
-                            if(otherSvAvailables != null && otherSvAvailables.size() > 1)
-                            {
-                                ++endsMatchedOnOtherVarEnd;
-                                endLinks.add(otherPair);
-
-                                if (linkOnOtherVarEndLength == 0 || otherPair.length() < linkOnOtherVarEndLength)
-                                    linkOnOtherVarEndLength = otherPair.length();
-                            }
+                            if (linkOnOtherVarEndLength == 0 || otherPair.length() < linkOnOtherVarEndLength)
+                                linkOnOtherVarEndLength = otherPair.length();
                         }
                     }
 
@@ -358,7 +365,8 @@ public class ChainFinder
 
                     if(endsMatchedOnOtherVarStart == 2 && endsMatchedOnOtherVarEnd == 2)
                     {
-                        if(linkOnOtherVarStartLength < linkOnOtherVarEndLength)
+                        // prioritise potential link count followed by length
+                        if(maxLinkOnOtherVarStart > maxLinkOnOtherVarEnd || linkOnOtherVarStartLength < linkOnOtherVarEndLength)
                         {
                             possiblePairs.addAll(startLinks);
                         }
@@ -393,7 +401,7 @@ public class ChainFinder
         return possiblePairs;
     }
 
-    private List<SvLinkedPair> findPossiblePairs()
+    private List<SvLinkedPair> findPrioritisedPairs()
     {
         if (mNewMethod && mHasReplication)
         {
@@ -403,6 +411,60 @@ public class ChainFinder
         {
             return findPossiblePairsOld();
         }
+    }
+
+    private List<SvLinkedPair> findSingleOptionPairs()
+    {
+        List<SvLinkedPair> restrictedPairs = Lists.newArrayList();
+
+        if(!mHasReplication || !mNewMethod)
+            return restrictedPairs;
+
+        for(Map.Entry<SvBreakend,List<SvBreakend>> entry : mUnlinkedBreakendMap.entrySet())
+        {
+            if(entry.getValue().size() > 1)
+                continue;
+
+            // check possible pairs for this restricted breakend
+            List<SvLinkedPair> varPairs = mSvBreakendPossibleLinks.get(entry.getKey());
+
+            if(varPairs != null && varPairs.size() == 1)
+            {
+                SvLinkedPair newPair = varPairs.get(0);
+
+                // add this if it doesn't clash, and if it does then take the highest ploidy first
+                int index = 0;
+                boolean canAdd = true;
+                while(index < restrictedPairs.size())
+                {
+                    SvLinkedPair otherPair = restrictedPairs.get(index);
+
+                    if(otherPair == newPair || !otherPair.hasLinkClash(newPair) && !otherPair.oppositeMatch(newPair))
+                    {
+                        ++index;
+                        continue;
+                    }
+
+                    double ploidySumNew = newPair.first().ploidyMin() + newPair.second().ploidyMin();
+                    double ploidySumOther = otherPair.first().ploidyMin() + otherPair.second().ploidyMin();
+
+                    if(ploidySumNew > ploidySumOther)
+                    {
+                        restrictedPairs.remove(index);
+                    }
+                    else
+                    {
+                        canAdd = false;
+                        break;
+                    }
+                }
+
+                if(canAdd)
+                    restrictedPairs.add(newPair);
+            }
+        }
+
+        return restrictedPairs;
     }
 
     private List<SvLinkedPair> findPossiblePairsOld()
@@ -460,7 +522,7 @@ public class ChainFinder
         return possiblePairs;
     }
 
-    private void processPossiblePairs(List<SvLinkedPair> possiblePairs)
+    private void processPossiblePairs(List<SvLinkedPair> possiblePairs, boolean isRestrictedSet)
     {
         while (!possiblePairs.isEmpty())
         {
@@ -489,31 +551,27 @@ public class ChainFinder
 
             if(mHasReplication)
             {
-                List<SvBreakend> beListStart = mUnlinkedBreakendMap.get(shortestPair.getBreakend(true));
-                List<SvBreakend> beListEnd = mUnlinkedBreakendMap.get(shortestPair.getBreakend(false));
+                int beStartCount = getUnlinkedBreakendCount(shortestPair.getBreakend(true));
+                int beEndCount = getUnlinkedBreakendCount(shortestPair.getBreakend(false));
 
                 if(mNewMethod)
                 {
-                    if(beListStart != null && beListStart.size() > 1 && beListEnd != null && beListEnd.size() > 1)
+                    if(beStartCount > 1 && beEndCount > 1)
                     {
-                        pairRepeatCount = min(beListStart.size(), beListEnd.size());
+                        pairRepeatCount = min(beStartCount, beEndCount);
                     }
                 }
                 else
                 {
-                    if(beListStart != null && beListStart.size() > 1 && beListEnd != null && beListStart.size() == beListEnd.size())
+                    if(beStartCount > 1 && beStartCount == beEndCount)
                     {
-                        pairRepeatCount = beListStart.size();
+                        pairRepeatCount = beStartCount;
                     }
-
                 }
 
                 if(pairRepeatCount > 1)
                 {
-                    pairRepeatCount = beListStart.size();
-
-                    LOGGER.debug("cluster({}) repeating pair({}) {} times",
-                            mCluster.id(), shortestPair.toString(), pairRepeatCount);
+                    LOGGER.debug("repeating pair({}) {} times", shortestPair.toString(), pairRepeatCount);
                 }
             }
 
@@ -523,39 +581,51 @@ public class ChainFinder
                 addPairToChain(shortestPair, false);
             }
 
-            // having added a new pair, remove any other conflicting pairs
-            int index = 0;
-            while (index < possiblePairs.size())
-            {
-                SvLinkedPair pair = possiblePairs.get(index);
-                if (pair.oppositeMatch(shortestPair))
-                {
-                    possiblePairs.remove(index);
-                    continue;
-                }
+            if(!mIsValid)
+                return;
 
-                if(mHasReplication)
+            if(!isRestrictedSet)
+            {
+                List<SvLinkedPair> restrictedPairs = findSingleOptionPairs();
+                if(!restrictedPairs.isEmpty())
                 {
-                    if(findUnlinkedMatchingBreakend(pair.getBreakend(true)) == null
-                    || findUnlinkedMatchingBreakend(pair.getBreakend(false)) == null)
+                    possiblePairs = restrictedPairs;
+                    isRestrictedSet = true;
+                }
+            }
+
+            if(!isRestrictedSet)
+            {
+                // having added a new pair, remove any other conflicting pairs
+                int index = 0;
+                while (index < possiblePairs.size())
+                {
+                    SvLinkedPair pair = possiblePairs.get(index);
+                    if (pair.oppositeMatch(shortestPair))
                     {
-                        // replicated instances exhausted
                         possiblePairs.remove(index);
                         continue;
                     }
-                }
-                else if(pair.hasLinkClash(shortestPair))
-                {
-                    possiblePairs.remove(index);
-                    continue;
-                }
 
-                ++index;
+                    if (mHasReplication)
+                    {
+                        if (findUnlinkedMatchingBreakend(pair.getBreakend(true)) == null
+                        || findUnlinkedMatchingBreakend(pair.getBreakend(false)) == null)
+                        {
+                            // replicated instances exhausted
+                            possiblePairs.remove(index);
+                            continue;
+                        }
+                    }
+                    else if (pair.hasLinkClash(shortestPair))
+                    {
+                        possiblePairs.remove(index);
+                        continue;
+                    }
+
+                    ++index;
+                }
             }
-
-
-            if(!mIsValid)
-                return;
         }
     }
 
@@ -785,6 +855,19 @@ public class ChainFinder
         return breakendList.get(0);
     }
 
+    private int getUnlinkedBreakendCount(final SvBreakend breakend)
+    {
+        List<SvBreakend> beList = mUnlinkedBreakendMap.get(breakend);
+        return beList != null ? beList.size() : 0;
+    }
+
+    private int getMaxUnlinkedPairCount(final SvLinkedPair pair)
+    {
+        int first = getUnlinkedBreakendCount(pair.getBreakend(true));
+        int second = getUnlinkedBreakendCount(pair.getBreakend(false));
+        return min(first, second);
+    }
+
     private void addAssemblyLinksToChains()
     {
         if(mAssemblyLinkedPairs.isEmpty())
@@ -832,7 +915,7 @@ public class ChainFinder
 
                 if(mLogWorking)
                 {
-                    LOGGER.debug("breakend({}) as no more possible links", breakend);
+                    // LOGGER.debug("breakend({}) has no more possible links", breakend);
                 }
 
                 SvVarData origSV = origBreakend.getSV();
@@ -932,7 +1015,7 @@ public class ChainFinder
                             {
                                 if(mLogWorking)
                                 {
-                                    LOGGER.debug("breakend({}) as no more possible links", otherBreakend);
+                                    // LOGGER.debug("breakend({}) has no more possible links", otherBreakend);
                                 }
 
                                 mSvBreakendPossibleLinks.remove(otherBreakend);
@@ -953,7 +1036,7 @@ public class ChainFinder
         {
             if(mLogWorking)
             {
-                LOGGER.debug("breakend({}) as no more possible links", origBreakend);
+                //LOGGER.debug("breakend({}) has no more possible links", origBreakend);
             }
 
             mSvBreakendPossibleLinks.remove(origBreakend);

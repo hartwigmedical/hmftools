@@ -166,6 +166,7 @@ public class ChainingTests
         // 2 SVs which could link on both ends
         SvTestHelper tester = new SvTestHelper();
         tester.logVerbose(true);
+        tester.Analyser.getChainFinder().setNewMethod(true);
 
         final SvVarData var1 = createInv("0", "1", 100,200, -1);
         final SvVarData var2 = createDel("1", "1", 300,400);
@@ -231,7 +232,6 @@ public class ChainingTests
         SvTestHelper tester = new SvTestHelper();
         tester.logVerbose(true);
         tester.Analyser.getChainFinder().setLogWorking(true);
-        tester.Analyser.getChainFinder().setNewMethod(true);
 
         final SvVarData varA = createTestSv("A", "1", "1", 2000,3000, -1, -1, INV, 4, 7, 3, 3, 3, "");
         final SvVarData varB = createTestSv("B", "1", "1", 9000,10000, 1, 1, INV, 4, 3, 1, 1, 1, "");
@@ -260,6 +260,43 @@ public class ChainingTests
         assertEquals(5, chain.getLinkCount());
     }
 
+    @Test
+    public void testBFBChain2()
+    {
+        // BFB of the form centromere - A - B - A - C - A - D - B - A - C - A - B - R - telomere,
+        // where D is a complex DUP around the section B - A - C - A and R is the resolving SV
+        SvTestHelper tester = new SvTestHelper();
+        tester.logVerbose(true);
+        tester.Analyser.getChainFinder().setLogWorking(true);
+
+        final SvVarData varA = createTestSv("A", "1", "1", 2000,3000, -1, -1, INV, 6, 11, 5, 5, 5, "");
+        final SvVarData varB = createTestSv("B", "1", "1", 9000,10000, 1, 1, INV, 8, 5, 3, 3, 3, "");
+        final SvVarData varC = createTestSv("C", "1", "1", 5000,6000, 1, 1, INV, 12, 10, 2, 2, 2, "");
+        final SvVarData varD = createTestSv("D", "1", "1", 7000,8000, -1, 1, DUP, 9, 9, 1, 1, 1, "");
+        final SvVarData varR = createTestSv("R", "1", "1", 1000,4000, 1, -1, DEL, 2, 11, 1, 1, 1, "");
+
+        tester.AllVariants.add(varA);
+        tester.AllVariants.add(varB);
+        tester.AllVariants.add(varC);
+        tester.AllVariants.add(varD);
+        tester.AllVariants.add(varR);
+
+        tester.preClusteringInit();
+        tester.Analyser.clusterAndAnalyse();
+
+        assertEquals(varA.getFoldbackLink(true), varA.id());
+        assertEquals(varB.getFoldbackLink(true), varB.id());
+        assertEquals(varC.getFoldbackLink(true), varC.id());
+
+        assertEquals(1, tester.Analyser.getClusters().size());
+        final SvCluster cluster = tester.Analyser.getClusters().get(0);
+
+        assertEquals(1, cluster.getChains().size());
+
+        final SvChain chain = cluster.getChains().get(0);
+
+        assertEquals(11, chain.getLinkCount());
+    }
     @Ignore
     @Test
     public void testActualComplexChaining1()
@@ -345,7 +382,7 @@ public class ChainingTests
         SvTestHelper tester = new SvTestHelper();
         tester.logVerbose(true);
 
-            /*
+        /*
             Id	Type	Ploidy	ChrStart	PosStart	OS	AS	CNStart	CNChgS	ChrEnd	PosEnd	    OE	AE	CNEnd	CNChgEnd
             77	INV	    3.96	3	        24565108	-1	P	6.07	4.07	3	    24566180	-1	P	10.14	4.07
             78	SGL	    2.62	3	        25331584	-1	P	12.17	2.03	0	    -1	        0	P	0	    0
@@ -368,7 +405,7 @@ public class ChainingTests
             09:16:20.470 [main] [DEBUG] chain(0) 7: pair(89 6:26194117:start & 88 6:26194040:end) TI assembly len=77
             09:16:20.470 [main] [DEBUG] chain(0) 8: pair(88 3:26431918:start & 79r 3:26663922:start) TI inferred len=232004
             09:16:20.470 [main] [DEBUG] chain(0) 9: pair(79r 3:26664498:end & 77r 3:24565108:start) TI inferred len=2099390
-             */
+         */
 
         // merge 5 clusters with varying levels of copy number change (ie replication) from 4 foldbacks
         final SvVarData var1 = createTestSv("77", "3", "3", 24565108, 24566180, -1, -1, INV, 6.1, 10.1, 4.07, 4.07, 3.96, "");
@@ -582,35 +619,35 @@ public class ChainingTests
         SvTestHelper tester = new SvTestHelper();
         tester.logVerbose(true);
 
-        SvVarData var1 = createTestSv("10655900","17","17",63727835,63729894,-1,1,DUP,7.79,5.33,1.04,1.04,1.02,"");
-        SvVarData var2 = createTestSv("10655899","17","17",60677725,63728985,1,1,INV,3.81,5.94,0.69,0.61,0.64,"");
-        SvVarData var3 = createTestSv("10655901","17","17",53291465,63857338,1,1,INV,6.03,5.96,3.01,2.8,2.79,"");
-        SvVarData var4 = createTestSv("10655903","17","17",61869930,66092317,-1,1,DUP,4.19,4.11,1.01,1.03,1.11,"");
-        SvVarData var5 = createTestSv("10655904","17","17",54264135,66294080,-1,-1,INV,4.23,4.13,1.08,1.05,0.88,"");
-        SvVarData var6 = createTestSv("10655905","17","17",63856359,66440216,-1,1,DUP,5.96,6.19,1.67,1.44,1.56,"");
-        SvVarData var7 = createTestSv("10655896","17","17",57423968,60669111,1,1,INV,5.15,5.14,2.05,2.04,2.13,"");
-        SvVarData var8 = createTestSv("10655908","17","17",66436776,66453504,-1,1,DUP,7.47,4.47,1.12,0.24,1.13,"");
-        SvVarData var9 = createTestSv("10655910","17","17",63721643,66759055,-1,1,DUP,6.75,5.3,1.42,0.79,0.93,"");
-        SvVarData var10 = createTestSv("10655912","17","17",65376257,70213096,-1,-1,INV,4.11,4.16,0.95,0.99,1.02,"");
-        SvVarData var11 = createTestSv("10655907","17","17",66435843,66442464,-1,1,DUP,6.35,6.76,2.22,2.29,2.28,"");
-        SvVarData var12 = createTestSv("10655909","17","17",66438835,66755919,1,-1,DEL,7.47,5.3,1.28,1.08,1.28,"");
-        SvVarData var13 = createTestSv("10655911","17","17",53813746,66761458,-1,1,DUP,4.24,4.51,1.12,1.35,0.84,"");
-        SvVarData var14 = createTestSv("10655906","17","17",63728656,66441779,1,-1,DEL,7.79,6.76,1.85,2.01,1.88,"");
-        SvVarData var15 = createTestSv("10655920","17","17",62335817,79024217,1,-1,DEL,4.19,4.13,1.08,1.02,0.86,"");
-        SvVarData var16 = createTestSv("10655913","17","17",60677626,73851024,-1,-1,INV,3.81,3.82,0.71,0.71,0.71,"");
-        SvVarData var17 = createTestSv("10655914","17","17",71119404,73853333,1,-1,DEL,4.16,4.9,1.05,1.08,0.77,"");
-        SvVarData var18 = createTestSv("10655892","17","17",53422106,56798618,1,-1,DEL,5.2,5.15,2.08,2.01,2.03,"");
-        SvVarData var19 = createTestSv("10655893","17","17",53292876,58826153,-1,1,DUP,5.2,5.19,2.18,2.04,2.32,"");
-        SvVarData var20 = createTestSv("10655895","17","17",59899569,60451461,-1,-1,INV,5.14,5.14,1.99,2.05,2.01,"");
-        SvVarData var21 = createTestSv("10655915","17","17",73854033,73858713,1,1,INV,6.12,5.01,1.11,1.11,0.98,"");
-        SvVarData var22 = createTestSv("10655916","17","17",73853710,73858861,-1,1,DUP,6.12,3.9,1.22,0.75,1.04,"");
-        SvVarData var23 = createTestSv("10655917","17","17",73859108,73862099,-1,-1,INV,4.68,6.4,1.53,1.72,1.46,"");
-        SvVarData var24 = createTestSv("10655894","17","17",60447627,60450127,1,1,INV,5.14,4.13,1.01,1.04,1.07,"");
-        SvVarData var25 = createTestSv("10655919","17","17",57571922,75330355,-1,1,DUP,5.19,5.13,2.09,2.02,2.02,"");
-        SvVarData var26 = createTestSv("10655918","17","17",63715443,73862172,-1,1,DUP,5.33,6.4,2.22,1.28,1.33,"");
-        SvVarData var27 = createTestSv("10655889","17","17",53286924,53816913,1,1,INV,5.04,4.24,1.08,1.09,0.95,"");
-        SvVarData var28 = createTestSv("10655888","17","17",53280088,53288151,-1,-1,INV,5.04,6.03,1.92,2.07,2.04,"");
-        SvVarData var29 = createTestSv("10655891","17","17",51738130,54666910,1,1,INV,4.15,4.17,1.03,1.03,1.03,"");
+        SvVarData var1 = createTestSv("900","17","17",63727835,63729894,-1,1,DUP,7.79,5.33,1.04,1.04,1.02,"");
+        SvVarData var2 = createTestSv("899","17","17",60677725,63728985,1,1,INV,3.81,5.94,0.69,0.61,0.64,"");
+        SvVarData var3 = createTestSv("901","17","17",53291465,63857338,1,1,INV,6.03,5.96,3.01,2.8,2.79,"");
+        SvVarData var4 = createTestSv("903","17","17",61869930,66092317,-1,1,DUP,4.19,4.11,1.01,1.03,1.11,"");
+        SvVarData var5 = createTestSv("904","17","17",54264135,66294080,-1,-1,INV,4.23,4.13,1.08,1.05,0.88,"");
+        SvVarData var6 = createTestSv("905","17","17",63856359,66440216,-1,1,DUP,5.96,6.19,1.67,1.44,1.56,"");
+        SvVarData var7 = createTestSv("896","17","17",57423968,60669111,1,1,INV,5.15,5.14,2.05,2.04,2.13,"");
+        SvVarData var8 = createTestSv("908","17","17",66436776,66453504,-1,1,DUP,7.47,4.47,1.12,0.24,1.13,"");
+        SvVarData var9 = createTestSv("910","17","17",63721643,66759055,-1,1,DUP,6.75,5.3,1.42,0.79,0.93,"");
+        SvVarData var10 = createTestSv("912","17","17",65376257,70213096,-1,-1,INV,4.11,4.16,0.95,0.99,1.02,"");
+        SvVarData var11 = createTestSv("907","17","17",66435843,66442464,-1,1,DUP,6.35,6.76,2.22,2.29,2.28,"");
+        SvVarData var12 = createTestSv("909","17","17",66438835,66755919,1,-1,DEL,7.47,5.3,1.28,1.08,1.28,"");
+        SvVarData var13 = createTestSv("911","17","17",53813746,66761458,-1,1,DUP,4.24,4.51,1.12,1.35,0.84,"");
+        SvVarData var14 = createTestSv("906","17","17",63728656,66441779,1,-1,DEL,7.79,6.76,1.85,2.01,1.88,"");
+        SvVarData var15 = createTestSv("920","17","17",62335817,79024217,1,-1,DEL,4.19,4.13,1.08,1.02,0.86,"");
+        SvVarData var16 = createTestSv("913","17","17",60677626,73851024,-1,-1,INV,3.81,3.82,0.71,0.71,0.71,"");
+        SvVarData var17 = createTestSv("914","17","17",71119404,73853333,1,-1,DEL,4.16,4.9,1.05,1.08,0.77,"");
+        SvVarData var18 = createTestSv("892","17","17",53422106,56798618,1,-1,DEL,5.2,5.15,2.08,2.01,2.03,"");
+        SvVarData var19 = createTestSv("893","17","17",53292876,58826153,-1,1,DUP,5.2,5.19,2.18,2.04,2.32,"");
+        SvVarData var20 = createTestSv("895","17","17",59899569,60451461,-1,-1,INV,5.14,5.14,1.99,2.05,2.01,"");
+        SvVarData var21 = createTestSv("915","17","17",73854033,73858713,1,1,INV,6.12,5.01,1.11,1.11,0.98,"");
+        SvVarData var22 = createTestSv("916","17","17",73853710,73858861,-1,1,DUP,6.12,3.9,1.22,0.75,1.04,"");
+        SvVarData var23 = createTestSv("917","17","17",73859108,73862099,-1,-1,INV,4.68,6.4,1.53,1.72,1.46,"");
+        SvVarData var24 = createTestSv("894","17","17",60447627,60450127,1,1,INV,5.14,4.13,1.01,1.04,1.07,"");
+        SvVarData var25 = createTestSv("919","17","17",57571922,75330355,-1,1,DUP,5.19,5.13,2.09,2.02,2.02,"");
+        SvVarData var26 = createTestSv("918","17","17",63715443,73862172,-1,1,DUP,5.33,6.4,2.22,1.28,1.33,"");
+        SvVarData var27 = createTestSv("889","17","17",53286924,53816913,1,1,INV,5.04,4.24,1.08,1.09,0.95,"");
+        SvVarData var28 = createTestSv("888","17","17",53280088,53288151,-1,-1,INV,5.04,6.03,1.92,2.07,2.04,"");
+        SvVarData var29 = createTestSv("891","17","17",51738130,54666910,1,1,INV,4.15,4.17,1.03,1.03,1.03,"");
 
         var2.setAssemblyData(true, "asmb_2_16");
         var16.setAssemblyData(true, "asmb_2_16");

@@ -5,6 +5,7 @@ import static java.lang.Math.abs;
 import static com.hartwig.hmftools.svanalysis.analysis.LinkFinder.areLinkedSection;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.appendStr;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.calcConsistency;
+import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.makeChrArmStr;
 
 import java.util.List;
 
@@ -241,6 +242,8 @@ public class SvChain {
 
     public void logLinks()
     {
+        LOGGER.debug("chain({}): {}", mId, getSequenceStr(this));
+
         for(int i = 0; i < mLinkedPairs.size(); ++i)
         {
             final SvLinkedPair pair = mLinkedPairs.get(i);
@@ -484,6 +487,65 @@ public class SvChain {
         }
 
         return true;
+    }
+
+    private static String CHAIN_SEQ_DELIM = " - ";
+
+    private static String breakendSeqStr(final SvBreakend breakend)
+    {
+        return String.format("%s_%s_%s",
+                breakend.usesStart() ? "s" : "e", breakend.getOrigSV().id(), breakend.usesStart() ? "e" : "s");
+    }
+
+    public static String getSequenceStr(final SvChain chain)
+    {
+        String sequenceStr = "";
+
+        for(int i = 0; i < chain.getLinkedPairs().size(); ++i)
+        {
+            SvLinkedPair pair = chain.getLinkedPairs().get(i);
+
+            if(i == 0)
+            {
+                if(!pair.first().isNullBreakend())
+                {
+                    SvBreakend startBreakend = chain.getOpenBreakend(true);
+
+                    sequenceStr += makeChrArmStr(startBreakend.chromosome(), startBreakend.arm());
+                    sequenceStr += CHAIN_SEQ_DELIM;
+
+                    sequenceStr += breakendSeqStr(startBreakend);
+                    sequenceStr += CHAIN_SEQ_DELIM;
+                }
+                else
+                {
+                    sequenceStr += "sgl_unclear";
+
+                    sequenceStr += CHAIN_SEQ_DELIM;
+
+                    sequenceStr += breakendSeqStr(pair.first().getBreakend(true));
+                    sequenceStr += CHAIN_SEQ_DELIM;
+                }
+            }
+
+            sequenceStr += breakendSeqStr(pair.getSecondBreakend());
+            sequenceStr += CHAIN_SEQ_DELIM;
+
+            if(i == chain.getLinkedPairs().size() - 1)
+            {
+                if(!pair.second().isNullBreakend())
+                {
+                    SvBreakend endBreakend = chain.getOpenBreakend(false);
+                    sequenceStr += makeChrArmStr(endBreakend.chromosome(), endBreakend.arm());
+                }
+                else
+                {
+                    sequenceStr += "sgl_unclear";
+                }
+            }
+        }
+
+        return sequenceStr;
     }
 
     public static List<SvVarData> getRepeatedSvSequence(final List<SvVarData> svList, int firstIndex, int secondIndex, boolean walkForwards)
