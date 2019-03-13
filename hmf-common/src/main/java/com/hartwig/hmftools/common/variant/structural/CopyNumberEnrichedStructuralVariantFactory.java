@@ -6,6 +6,7 @@ import java.util.Optional;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.chromosome.Chromosome;
+import com.hartwig.hmftools.common.collect.Multimaps;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.copynumber.sv.StructuralVariantLegCopyNumber;
@@ -21,6 +22,11 @@ public final class CopyNumberEnrichedStructuralVariantFactory {
 
     private final PurityAdjuster purityAdjuster;
     private final Multimap<Chromosome, PurpleCopyNumber> copyNumbers;
+
+    public CopyNumberEnrichedStructuralVariantFactory(@NotNull final PurityAdjuster purityAdjuster,
+            @NotNull final List<PurpleCopyNumber> copyNumbers) {
+        this(purityAdjuster, Multimaps.fromRegions(copyNumbers));
+    }
 
     public CopyNumberEnrichedStructuralVariantFactory(@NotNull final PurityAdjuster purityAdjuster,
             @NotNull final Multimap<Chromosome, PurpleCopyNumber> copyNumbers) {

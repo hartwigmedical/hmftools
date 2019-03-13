@@ -207,6 +207,9 @@ public class PurityPloidyEstimateApplication {
                         purityContext,
                         qcChecks,
                         geneCopyNumbers);
+
+//                CopyNumberEnrichedStructuralVariantFactory enrichedSVFactory = new CopyNumberEnrichedStructuralVariantFactory(purityAdjuster, copyNumbers);
+//                dbAccess.writeStructuralVariants(tumorSample, enrichedSVFactory.enrich(structuralVariants.variants()));
             }
 
             LOGGER.info("Writing purple data to: {}", outputDirectory);
@@ -251,7 +254,7 @@ public class PurityPloidyEstimateApplication {
         try (final RecoverStructuralVariants recovery = new RecoverStructuralVariants(purityAdjuster, vcfRecoveryFile, copyNumbers)) {
             final Collection<VariantContext> recoveredVariants = recovery.recoverVariants(structuralVariants.variants());
             if (!recoveredVariants.isEmpty()) {
-                recoveredVariants.forEach(structuralVariants::recoverVariant);
+                recoveredVariants.forEach(structuralVariants::addVariant);
             }
             return recoveredVariants.size();
         }

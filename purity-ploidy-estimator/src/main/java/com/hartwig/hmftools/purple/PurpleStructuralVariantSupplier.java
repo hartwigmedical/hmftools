@@ -13,7 +13,6 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
-import java.util.StringJoiner;
 import java.util.TreeSet;
 import java.util.function.Predicate;
 
@@ -112,26 +111,11 @@ class PurpleStructuralVariantSupplier {
         vcfReader.close();
     }
 
-    public void recoverVariant(@NotNull final VariantContext variantContext) {
+    public void addVariant(@NotNull final VariantContext variantContext) {
         if (enabled()) {
-
-            final String recoveryFilter;
-            if (variantContext.isNotFiltered()) {
-                recoveryFilter = "PASS";
-            } else {
-                final StringJoiner recoveryFilterJoiner = new StringJoiner(",");
-                variantContext.getFilters().forEach(recoveryFilterJoiner::add);
-                recoveryFilter = recoveryFilterJoiner.toString();
-            }
-
-            modified = true;
-            final VariantContext unfiltered = new VariantContextBuilder(variantContext).unfiltered()
-                    .attribute(StructuralVariantFactory.RECOVERED, true)
-                    .attribute(RECOVERY_FILTER, recoveryFilter)
-                    .make();
-            if (variantContext.contains(unfiltered)) {
-                variantContexts.remove(unfiltered);
-                variantContexts.add(unfiltered);
+            if (variantContext.contains(variantContext)) {
+                variantContexts.remove(variantContext);
+                variantContexts.add(variantContext);
             }
         }
     }
@@ -331,7 +315,7 @@ class PurpleStructuralVariantSupplier {
         outputVCFHeader.addMetaDataLine(new VCFInfoHeaderLine(PURPLE_AF_INFO, UNBOUNDED, VCFHeaderLineType.Float, PURPLE_AF_DESC));
         outputVCFHeader.addMetaDataLine(new VCFInfoHeaderLine(PURPLE_CN_INFO, UNBOUNDED, VCFHeaderLineType.Float, PURPLE_CN_DESC));
         outputVCFHeader.addMetaDataLine(new VCFInfoHeaderLine(RECOVERY_METHOD, 1, VCFHeaderLineType.String, RECOVERY_METHOD_DESC));
-        outputVCFHeader.addMetaDataLine(new VCFInfoHeaderLine(RECOVERY_FILTER, 1, VCFHeaderLineType.String, RECOVERY_FILTER_DESC));
+        outputVCFHeader.addMetaDataLine(new VCFInfoHeaderLine(RECOVERY_FILTER, UNBOUNDED, VCFHeaderLineType.String, RECOVERY_FILTER_DESC));
         outputVCFHeader.addMetaDataLine(new VCFInfoHeaderLine(PURPLE_PLOIDY_INFO, 1, VCFHeaderLineType.Float, PURPLE_PLOIDY_DESC));
         outputVCFHeader.addMetaDataLine(new VCFInfoHeaderLine(PURPLE_CN_CHANGE_INFO,
                 UNBOUNDED,

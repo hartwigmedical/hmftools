@@ -2,6 +2,7 @@ package com.hartwig.hmftools.common.variant.recovery;
 
 import static java.util.Comparator.comparingDouble;
 
+import static com.hartwig.hmftools.common.variant.structural.StructuralVariantFactory.RECOVERY_FILTER;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantFactory.RECOVERY_METHOD;
 
 import static htsjdk.tribble.AbstractFeatureReader.getFeatureReader;
@@ -14,6 +15,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.StringJoiner;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -21,6 +23,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.chromosome.Chromosome;
 import com.hartwig.hmftools.common.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.collect.Multimaps;
@@ -89,8 +92,8 @@ public class RecoverStructuralVariants implements Closeable {
         final StructuralVariantLegCopyNumberChangeFactory changeFactory =
                 new StructuralVariantLegCopyNumberChangeFactory(purityAdjuster, allCopyNumbers, currentVariants);
 
-        recoverFromUnbalancedVariants(changeFactory, doubleEndedPloidies).forEach(x -> addToMap(result, "UNBALANCED_SV", x));
-        recoverFromUnexplainedSegments().forEach(x -> addToMap(result, "UNSUPPORTED_BREAKEND", x));
+        recoverFromUnbalancedVariants(changeFactory, doubleEndedPloidies).forEach(x -> addToMap(result, x, "UNBALANCED_SV"));
+        recoverFromUnexplainedSegments().forEach(x -> addToMap(result, x, "UNSUPPORTED_BREAKEND"));
 
         return result.values();
     }
@@ -142,7 +145,10 @@ public class RecoverStructuralVariants implements Closeable {
                     double unexplainedCopyNumberChange = Math.abs(prev.averageTumorCopyNumber() - current.averageTumorCopyNumber());
 
                     int expectedOrientation = Doubles.greaterThan(current.averageTumorCopyNumber(), prev.averageTumorCopyNumber()) ? -1 : 1;
-                    recoverSingleVariant(expectedOrientation, unexplainedCopyNumberChange, index, chromosomeCopyNumbers).ifPresent(result::add);
+                    recoverSingleVariant(expectedOrientation,
+                            unexplainedCopyNumberChange,
+                            index,
+                            chromosomeCopyNumbers).ifPresent(result::add);
                 }
             }
         }
@@ -371,26 +377,63 @@ public class RecoverStructuralVariants implements Closeable {
         return regions.get(regions.size() - 1);
     }
 
-    private static void addToMap(@NotNull final Map<String, VariantContext> map, @NotNull final String method,
-            @NotNull final RecoveredVariant variant) {
-        VariantContext mate = variant.mate();
-        final boolean contextIsStart;
-        if (mate != null) {
-            final GenomePosition matePosition = GenomePositions.create(mate.getContig(), mate.getStart());
-            final GenomePosition contextPosition = GenomePositions.create(variant.context().getContig(), variant.context().getStart());
-
-            contextIsStart = contextPosition.compareTo(matePosition) <= 0;
-            map.put(mate.getID(), addMethod(method + (contextIsStart ? "_START" : "_END"), mate));
-        } else {
-            contextIsStart = true;
-        }
-
-        map.put(variant.context().getID(), addMethod(method + (contextIsStart ? "_START" : "_END"), variant.context()));
+    private static void addToMap(@NotNull final Map<String, VariantContext> map, @NotNull final RecoveredVariant variant,
+            @NotNull final String method) {
+        recover(variant, method).forEach(x -> map.put(x.getID(), x));
     }
 
     @NotNull
-    private static VariantContext addMethod(@NotNull final String method, @NotNull final VariantContext context) {
-        return new VariantContextBuilder(context).attribute(RECOVERY_METHOD, method).make();
+    private static List<VariantContext> recover(@NotNull final RecoveredVariant variant, @NotNull final String partialMethod) {
+        final List<VariantContext> result = Lists.newArrayList();
+        final Set<String> recoveryFilterSet = filterSet(variant.context());
+        final VariantContext mate = variant.mate();
+
+        final String recoveryMethod;
+        final String recoveryFilter;
+        if (mate != null) {
+            final GenomePosition matePosition = GenomePositions.create(mate.getContig(), mate.getStart());
+            final GenomePosition contextPosition = GenomePositions.create(variant.context().getContig(), variant.context().getStart());
+            final boolean contextIsStart = contextPosition.compareTo(matePosition) <= 0;
+            recoveryFilterSet.addAll(filterSet(mate));
+
+            recoveryMethod = partialMethod + (contextIsStart ? "_START" : "_END");
+            recoveryFilter = filterString(recoveryFilterSet);
+            result.add(recover(mate, recoveryMethod, recoveryFilter));
+
+        } else {
+            recoveryMethod = partialMethod + "_START";
+            recoveryFilter = filterString(recoveryFilterSet);
+        }
+
+        result.add(recover(variant.context(), recoveryMethod, recoveryFilter));
+        return result;
+    }
+
+    @NotNull
+    private static String filterString(@NotNull final Set<String> filters) {
+        if (filters.isEmpty()) {
+            return "PASS";
+        }
+
+        final StringJoiner recoveryFilterJoiner = new StringJoiner(",");
+        filters.stream().sorted().forEach(recoveryFilterJoiner::add);
+
+        return recoveryFilterJoiner.toString();
+    }
+
+    @NotNull
+    private static Set<String> filterSet(@NotNull VariantContext variantContext) {
+        return variantContext.isNotFiltered() ? Sets.newHashSet("PASS") : Sets.newHashSet(variantContext.getFilters());
+    }
+
+    @NotNull
+    private static VariantContext recover(@NotNull final VariantContext context, @NotNull final String recoveryMethod,
+            @NotNull final String recoveryFilter) {
+        return new VariantContextBuilder(context).unfiltered()
+                .attribute(StructuralVariantFactory.RECOVERED, true)
+                .attribute(RECOVERY_METHOD, recoveryMethod)
+                .attribute(RECOVERY_FILTER, recoveryFilter)
+                .make();
     }
 
     private static boolean isUnbalanced(double unexplainedCopyNumberChange, double copyNumber) {
