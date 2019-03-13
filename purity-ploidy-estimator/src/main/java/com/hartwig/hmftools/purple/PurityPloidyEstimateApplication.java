@@ -208,8 +208,6 @@ public class PurityPloidyEstimateApplication {
                         qcChecks,
                         geneCopyNumbers);
 
-//                CopyNumberEnrichedStructuralVariantFactory enrichedSVFactory = new CopyNumberEnrichedStructuralVariantFactory(purityAdjuster, copyNumbers);
-//                dbAccess.writeStructuralVariants(tumorSample, enrichedSVFactory.enrich(structuralVariants.variants()));
             }
 
             LOGGER.info("Writing purple data to: {}", outputDirectory);
@@ -307,7 +305,8 @@ public class PurityPloidyEstimateApplication {
     }
 
     @NotNull
-    private static PurpleStructuralVariantSupplier structuralVariants(@NotNull final VersionInfo version, @NotNull final ConfigSupplier configSupplier) {
+    private static PurpleStructuralVariantSupplier structuralVariants(@NotNull final VersionInfo version,
+            @NotNull final ConfigSupplier configSupplier) {
         final CommonConfig commonConfig = configSupplier.commonConfig();
         final StructuralVariantConfig svConfig = configSupplier.structuralVariantConfig();
         if (svConfig.file().isPresent()) {

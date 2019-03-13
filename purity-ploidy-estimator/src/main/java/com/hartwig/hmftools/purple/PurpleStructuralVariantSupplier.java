@@ -242,9 +242,7 @@ class PurpleStructuralVariantSupplier {
 
         final List<Double> purpleAF = Lists.newArrayList();
         Optional.ofNullable(variant.start().adjustedAlleleFrequency()).ifPresent(purpleAF::add);
-        Optional.ofNullable(variant.end()).map(EnrichedStructuralVariantLeg::adjustedAlleleFrequency)
-
-                .ifPresent(purpleAF::add);
+        Optional.ofNullable(variant.end()).map(EnrichedStructuralVariantLeg::adjustedAlleleFrequency).ifPresent(purpleAF::add);
 
         final List<Double> purpleCN = Lists.newArrayList();
         Optional.ofNullable(variant.start().adjustedCopyNumber()).ifPresent(purpleCN::add);

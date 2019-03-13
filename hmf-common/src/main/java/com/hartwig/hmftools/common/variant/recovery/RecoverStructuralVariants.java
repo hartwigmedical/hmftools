@@ -15,7 +15,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.StringJoiner;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -389,7 +388,6 @@ public class RecoverStructuralVariants implements Closeable {
         final VariantContext mate = variant.mate();
 
         final String recoveryMethod;
-        final String recoveryFilter;
         if (mate != null) {
             final GenomePosition matePosition = GenomePositions.create(mate.getContig(), mate.getStart());
             final GenomePosition contextPosition = GenomePositions.create(variant.context().getContig(), variant.context().getStart());
@@ -397,29 +395,16 @@ public class RecoverStructuralVariants implements Closeable {
             recoveryFilterSet.addAll(filterSet(mate));
 
             recoveryMethod = partialMethod + (contextIsStart ? "_START" : "_END");
-            recoveryFilter = filterString(recoveryFilterSet);
-            result.add(recover(mate, recoveryMethod, recoveryFilter));
+            result.add(recover(mate, recoveryMethod, recoveryFilterSet.stream().sorted().collect(Collectors.toList())));
 
         } else {
             recoveryMethod = partialMethod + "_START";
-            recoveryFilter = filterString(recoveryFilterSet);
         }
 
-        result.add(recover(variant.context(), recoveryMethod, recoveryFilter));
+        result.add(recover(variant.context(), recoveryMethod, recoveryFilterSet.stream().sorted().collect(Collectors.toList())));
         return result;
     }
 
-    @NotNull
-    private static String filterString(@NotNull final Set<String> filters) {
-        if (filters.isEmpty()) {
-            return "PASS";
-        }
-
-        final StringJoiner recoveryFilterJoiner = new StringJoiner(",");
-        filters.stream().sorted().forEach(recoveryFilterJoiner::add);
-
-        return recoveryFilterJoiner.toString();
-    }
 
     @NotNull
     private static Set<String> filterSet(@NotNull VariantContext variantContext) {
@@ -428,11 +413,11 @@ public class RecoverStructuralVariants implements Closeable {
 
     @NotNull
     private static VariantContext recover(@NotNull final VariantContext context, @NotNull final String recoveryMethod,
-            @NotNull final String recoveryFilter) {
+            @NotNull final List<String> recoveryFilters) {
         return new VariantContextBuilder(context).unfiltered()
                 .attribute(StructuralVariantFactory.RECOVERED, true)
                 .attribute(RECOVERY_METHOD, recoveryMethod)
-                .attribute(RECOVERY_FILTER, recoveryFilter)
+                .attribute(RECOVERY_FILTER, recoveryFilters)
                 .make();
     }
 

@@ -313,7 +313,7 @@ public class StructuralVariantFactory {
         builder = builder.id(context.getID())
             .recovered(context.hasAttribute(RECOVERED))
             .recoveryMethod(context.getAttributeAsString(RECOVERY_METHOD, null))
-            .recoveryFilter(context.getAttributeAsString(RECOVERY_FILTER, null))
+            .recoveryFilter(context.getAttributeAsStringList(RECOVERY_FILTER, "").stream().collect(Collectors.joining(",")))
             .event(context.getAttributeAsString(EVENT, null))
             .startLinkedBy(context.getAttributeAsStringList(LOCAL_LINKED_BY, "")
                     .stream()
