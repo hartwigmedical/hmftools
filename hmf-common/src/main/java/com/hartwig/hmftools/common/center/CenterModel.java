@@ -5,7 +5,6 @@ import java.util.Map;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.lims.LimsSampleType;
 
 import org.apache.logging.log4j.LogManager;
@@ -32,15 +31,15 @@ public abstract class CenterModel {
 
     @Nullable
     public String addresseeStringForSample(@NotNull final String contactNames, @NotNull final String sample) {
-        String adres = "";
+        String address;
         if (sample.startsWith("CORE19") || sample.contains("CORE18")) { // This are the old core names
             final CenterDataManualMapping centerDataManualMapping = centerPerIdManual().get(sample);
             final CenterData center = centerPerHospital().get(centerDataManualMapping.addressName());
             if (center == null) {
-                LOGGER.error("Center model cannot find center details for project " + centerDataManualMapping);
+                LOGGER.error("CenterModelFactory model cannot find center details for project " + centerDataManualMapping);
                 return null;
             }
-            adres = center.addressName() + ", " + center.addressZip() + " " + center.addressCity();
+            address = center.addressName() + ", " + center.addressZip() + " " + center.addressCity();
 
         } else {
             final String centerId = getCenterIdFromSample(sample);
@@ -49,14 +48,14 @@ public abstract class CenterModel {
             }
             final CenterData center = centerPerId(centerId);
             if (center == null) {
-                LOGGER.error("Center model does not contain id " + centerId);
+                LOGGER.error("CenterModelFactory model does not contain id " + centerId);
                 return null;
             }
             checkAddresseeFields(sample, center, contactNames);
-            adres = getPI(sample, center, contactNames) + ", " + center.addressName() + ", " + center.addressZip() + " "
+            address = getPI(sample, center, contactNames) + ", " + center.addressName() + ", " + center.addressZip() + " "
                     + center.addressCity();
         }
-        return adres;
+        return address;
     }
 
     @Nullable

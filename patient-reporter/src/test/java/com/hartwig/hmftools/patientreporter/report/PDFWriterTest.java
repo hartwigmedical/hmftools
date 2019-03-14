@@ -113,7 +113,7 @@ public class PDFWriterTest {
                 LocalDate.parse("05-Jan-2018", DATE_FORMATTER),
                 LocalDate.parse("01-Jan-2018", DATE_FORMATTER),
                 "PREP013V23-QC037V20-SEQ008V25",
-                "HMF Testing Center",
+                "HMF Testing CenterModelFactory",
                 "COLO-001-002",
                 "ContactMe",
                 "contact@me.com",

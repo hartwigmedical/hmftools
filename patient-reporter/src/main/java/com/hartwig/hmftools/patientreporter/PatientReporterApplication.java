@@ -5,8 +5,8 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.util.List;
 
-import com.hartwig.hmftools.common.center.Center;
 import com.hartwig.hmftools.common.center.CenterModel;
+import com.hartwig.hmftools.common.center.CenterModelFactory;
 import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocation;
 import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.lims.LimsFactory;
@@ -125,7 +125,7 @@ public class PatientReporterApplication {
         final Lims lims = LimsFactory.fromLimsDirectory(limsDirectory);
         LOGGER.info(" Loaded data for {} samples.", lims.sampleCount());
 
-        final CenterModel centerModel = Center.readFromCSV(cmd.getOptionValue(CENTER_CSV), cmd.getOptionValue(CENTER_CSV_MANUAL));
+        final CenterModel centerModel = CenterModelFactory.readFromCSV(cmd.getOptionValue(CENTER_CSV), cmd.getOptionValue(CENTER_CSV_MANUAL));
         return ImmutableBaseReportData.of(patientTumorLocations,
                 lims,
                 centerModel,

@@ -8,9 +8,7 @@ import java.util.Map;
 
 import com.google.common.collect.Maps;
 
-import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
-import org.junit.Ignore;
 import org.junit.Test;
 
 public class CenterModelTest {
@@ -23,7 +21,7 @@ public class CenterModelTest {
         assertEquals("CpctPI", CenterModel.getPI("CPCT02010001", center, "henk"));
         assertEquals("DrupPI", CenterModel.getPI("DRUP01010001", center, "henk"));
 
-        // Center with '*' for drup pi & recipients
+        // CenterModelFactory with '*' for drup pi & recipients
         final CenterData center2 = centerModel.centerPerId("02");
         assertNotNull(center2);
         assertEquals("CpctPI2", CenterModel.getPI("CPCT02010001", center2, "henk"));

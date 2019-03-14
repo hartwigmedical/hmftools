@@ -12,11 +12,11 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-public final class Center {
+public final class CenterModelFactory {
 
-    private static final Logger LOGGER = LogManager.getLogger(Center.class);
+    private static final Logger LOGGER = LogManager.getLogger(CenterModelFactory.class);
 
-    private static final int ID_COLUMN = 0;
+    private static final int HOSPITAL_ID_COLUMN = 0;
     private static final int HOSPITAL_COLUMN = 1;
     private static final int CPCT_PI_COLUMN = 3;
     private static final int CPCT_RECIPIENTS_COLUMN = 4;
@@ -33,10 +33,9 @@ public final class Center {
 
     private static final int FIELD_COUNT_MANUAL = 2;
 
-
     private static final String FIELD_SEPARATOR = ",";
 
-    private Center() {
+    private CenterModelFactory() {
     }
 
     @NotNull
@@ -56,7 +55,7 @@ public final class Center {
                         parts[CPCT_PI_COLUMN],
                         parts[DRUP_PI_COLUMN]);
 
-                centerPerId.put(parts[ID_COLUMN], center);
+                centerPerId.put(parts[HOSPITAL_ID_COLUMN], center);
                 centerPerHospital.put(parts[HOSPITAL_COLUMN], center);
             } else if (parts.length > 0) {
                 LOGGER.warn("Could not properly parse line in center csv: " + line);
@@ -82,5 +81,4 @@ public final class Center {
         }
         return centerPerIdManual;
     }
-
 }

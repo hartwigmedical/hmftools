@@ -8,8 +8,8 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.TreeMultimap;
 import com.google.common.io.Resources;
 import com.hartwig.hmftools.common.actionability.ActionabilityAnalyzer;
-import com.hartwig.hmftools.common.center.Center;
 import com.hartwig.hmftools.common.center.CenterModel;
+import com.hartwig.hmftools.common.center.CenterModelFactory;
 import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocation;
 import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.lims.LimsFactory;
@@ -66,7 +66,7 @@ public final class PatientReporterTestUtil {
         try {
             final List<PatientTumorLocation> patientTumorLocations = Lists.newArrayList();
             final Lims lims = LimsFactory.empty();
-            final CenterModel centerModel = Center.readFromCSV(CENTER_CSV, CENTER_MANUAL_CSV);
+            final CenterModel centerModel = CenterModelFactory.readFromCSV(CENTER_CSV, CENTER_MANUAL_CSV);
             return ImmutableBaseReportData.of(patientTumorLocations, lims, centerModel, SIGNATURE_PATH, RVA_LOGO_PATH);
         } catch (IOException exception) {
             throw new IllegalStateException("Could not generate test base reporter data: " + exception.getMessage());
