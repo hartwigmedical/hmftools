@@ -124,6 +124,7 @@ public abstract class HospitalModel {
             missingFields.add("city");
         }
         if (!missingFields.isEmpty()) {
+            // for CORE requester are empty
             LOGGER.warn("Some address fields (" + Strings.join(missingFields, ',') + ") are missing.");
         }
     }
