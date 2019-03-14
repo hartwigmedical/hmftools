@@ -42,7 +42,7 @@ public abstract class QCFailReporter {
                 lims.arrivalDate(sample),
                 null,
                 lims.labProcedures(sample),
-                baseReportData().hospitalModel().addresseeStringForSample(lims.requesterName(sample), sample),
+                baseReportData().hospitalModel().addresseeStringForSample(sample, lims.requesterName(sample)),
                 lims.projectName(sample),
                 lims.requesterName(sample),
                 lims.requesterEmail(sample),

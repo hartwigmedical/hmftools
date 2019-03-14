@@ -21,9 +21,9 @@ final class SequencedReportDataLoader {
     }
 
     @NotNull
-    static SequencedReportData buildFromFiles(@NotNull String knowledgebasePath, @NotNull String drupGeneCsv,
+    static SequencedReportData buildFromFiles(@NotNull String knowledgebaseDir, @NotNull String drupGeneCsv,
             @NotNull String hotspotTsv, @NotNull String fastaFileLocation, @NotNull String highConfidenceBed) throws IOException {
-        final ActionabilityAnalyzer actionabilityAnalyzer = ActionabilityAnalyzer.fromKnowledgebase(knowledgebasePath);
+        final ActionabilityAnalyzer actionabilityAnalyzer = ActionabilityAnalyzer.fromKnowledgebase(knowledgebaseDir);
 
         final DrupActionabilityModel drupActionabilityModel = DrupActionabilityModelFactory.buildFromCsv(drupGeneCsv);
         final GeneModel panelGeneModel = GeneModelFactory.create(drupActionabilityModel);

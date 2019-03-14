@@ -24,38 +24,25 @@ public abstract class HospitalModel {
     protected abstract Map<String, HospitalData> hospitalPerId();
 
     @NotNull
-    protected abstract Map<String, HospitalData> hospitalPerHospital();
-
-    @NotNull
-    protected abstract Map<String, HospitalSampleMapping> hospitalPerIdManual();
+    protected abstract Map<String, HospitalSampleMapping> sampleHospitalMapping();
 
     @Nullable
-    public String addresseeStringForSample(@NotNull final String contactNames, @NotNull final String sample) {
-        String address;
-        if (sample.startsWith("CORE19") || sample.contains("CORE18")) { // These are the old core names
-            final HospitalSampleMapping hospitalSampleMapping = hospitalPerIdManual().get(sample);
-            final HospitalData hospital = hospitalPerHospital().get(hospitalSampleMapping.addressName());
-            if (hospital == null) {
-                LOGGER.error("HospitalModelFactory model cannot find hospital details for project " + hospitalSampleMapping);
-                return null;
-            }
-            address = hospital.addressName() + ", " + hospital.addressZip() + " " + hospital.addressCity();
+    public String addresseeStringForSample(@NotNull final String sample, @NotNull final String requesterName) {
+        HospitalData hospital = findHospitalForSample(sample);
 
-        } else {
-            final String HospitalId = getHospitalIdFromSample(sample);
-            if (HospitalId == null) {
-                return null;
-            }
-            final HospitalData hospital = hospitalPerId(HospitalId);
-            if (hospital == null) {
-                LOGGER.error("Hospital model does not contain id " + HospitalId);
-                return null;
-            }
-            checkAddresseeFields(sample, hospital, contactNames);
-            address = getPI(sample, hospital, contactNames) + ", " + hospital.addressName() + ", " + hospital.addressZip() + " "
-                    + hospital.addressCity();
+        if (hospital == null) {
+            return null;
         }
-        return address;
+
+        checkAddresseeFields(sample, hospital, requesterName);
+
+        String requester = determineRequester(sample, hospital, requesterName);
+        String hospitalAddress = hospital.addressName() + ", " + hospital.addressZip() + " " + hospital.addressCity();
+        return requester.isEmpty() ? hospitalAddress : requester + ", " + hospitalAddress;
+    }
+
+    public int hospitalCount() {
+        return hospitalPerId().values().size();
     }
 
     @Nullable
@@ -65,24 +52,67 @@ public abstract class HospitalModel {
     }
 
     @Nullable
-    private static String getHospitalIdFromSample(@NotNull final String sample) {
-        final String ucSample = sample.toUpperCase();
-        LimsSampleType type = LimsSampleType.fromSampleId(ucSample);
+    private HospitalData findHospitalForSample(@NotNull String sample) {
+        final HospitalData hospital;
+        if (sample.startsWith("CORE19") || sample.contains("CORE18")) {
+            // These are the old core names, we need to manually map them.
+            final HospitalSampleMapping hospitalSampleMapping = sampleHospitalMapping().get(sample);
+            if (hospitalSampleMapping == null) {
+                LOGGER.error("Cannot find sample hospital mapping for sample " + sample);
+                return null;
+            } else {
+                hospital = findByHospital(hospitalSampleMapping.hospital());
+                if (hospital == null) {
+                    LOGGER.error("Cannot find hospital details for sample " + sample + " using " + hospitalSampleMapping.hospital());
+                    return null;
+                }
+            }
+        } else {
+            final String hospitalId = extractHospitalIdFromSample(sample);
+            if (hospitalId == null) {
+                LOGGER.error("Could not extract hospital ID for sample " + sample);
+                return null;
+            }
+
+            hospital = hospitalPerId().get(hospitalId);
+            if (hospital == null) {
+                LOGGER.error("Hospital model does not contain id " + hospitalId);
+                return null;
+            }
+        }
+
+        return hospital;
+    }
+
+    @Nullable
+    private HospitalData findByHospital(@NotNull String hospital) {
+        for (HospitalData hospitalData : hospitalPerId().values()) {
+            if (hospitalData.hospital().equals(hospital)) {
+                return hospitalData;
+            }
+        }
+        return null;
+    }
+
+    @Nullable
+    private static String extractHospitalIdFromSample(@NotNull final String sample) {
+        LimsSampleType type = LimsSampleType.fromSampleId(sample);
 
         if (type == LimsSampleType.DRUP || type == LimsSampleType.CPCT || type == LimsSampleType.WIDE
                 || type == LimsSampleType.CORE && sample.length() >= 12) {
+            // We assume all these projects follow a structure like CPCT##<hospital><identifier>
             return sample.substring(6, 8);
         }
 
-        LOGGER.warn("Sample parameter: " + sample + " is not in CPCT/DRUP/WIDE/CORE format");
+        LOGGER.error("Sample parameter: " + sample + " is not in CPCT/DRUP/WIDE/CORE format");
         return null;
     }
 
     private static void checkAddresseeFields(@NotNull final String sample, @NotNull final HospitalData hospital,
-            @NotNull final String contactNames) {
+            @NotNull final String requesterName) {
         final List<String> missingFields = Lists.newArrayList();
-        if (getPI(sample, hospital, contactNames).isEmpty()) {
-            missingFields.add("PI");
+        if (determineRequester(sample, hospital, requesterName).isEmpty()) {
+            missingFields.add("requester");
         }
         if (hospital.addressName().isEmpty()) {
             missingFields.add("name");
@@ -100,7 +130,8 @@ public abstract class HospitalModel {
 
     @NotNull
     @VisibleForTesting
-    static String getPI(@NotNull final String sample, @NotNull final HospitalData hospital, @NotNull final String contactNames) {
+    static String determineRequester(@NotNull final String sample, @NotNull final HospitalData hospital,
+            @NotNull final String requesterName) {
         LimsSampleType type = LimsSampleType.fromSampleId(sample);
 
         if (type == LimsSampleType.CPCT) {
@@ -112,7 +143,7 @@ public abstract class HospitalModel {
             }
             return hospital.drupPI();
         } else if (type == LimsSampleType.WIDE) {
-            return contactNames;
+            return requesterName;
         }
         return Strings.EMPTY;
     }

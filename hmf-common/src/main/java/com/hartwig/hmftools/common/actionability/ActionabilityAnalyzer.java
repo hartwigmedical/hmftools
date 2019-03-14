@@ -45,8 +45,8 @@ public class ActionabilityAnalyzer {
     private final CancerTypeAnalyzer cancerTypeAnalyzer;
 
     @NotNull
-    public static ActionabilityAnalyzer fromKnowledgebase(@NotNull String knowledgebasePath) throws IOException {
-        String basePath = knowledgebasePath + File.separator;
+    public static ActionabilityAnalyzer fromKnowledgebase(@NotNull String knowledgebaseDirectory) throws IOException {
+        String basePath = knowledgebaseDirectory + File.separator;
         SomaticVariantEvidenceAnalyzer variantAnalyzer =
                 SomaticVariantEvidenceAnalyzerFactory.loadFromFileVariantsAndFileRanges(basePath + ACTIONABLE_VARIANT_FILE,
                         basePath + ACTIONABLE_RANGES_FILE);
@@ -58,7 +58,7 @@ public class ActionabilityAnalyzer {
                 basePath + ACTIONABLE_PROMISCUOUS_THREE_FILE);
 
         CancerTypeAnalyzer cancerTypeAnalyzer =
-                CancerTypeAnalyzer.createFromKnowledgeBase(knowledgebasePath + File.separator + CANCER_TYPE_DOID_MAPPING_FILE);
+                CancerTypeAnalyzer.createFromKnowledgeBase(basePath + CANCER_TYPE_DOID_MAPPING_FILE);
 
         return new ActionabilityAnalyzer(variantAnalyzer, cnvAnalyzer, fusionAnalyzer, cancerTypeAnalyzer);
     }

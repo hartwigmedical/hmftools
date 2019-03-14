@@ -10,13 +10,13 @@ import org.junit.Test;
 
 public class HospitalModelFactoryTest {
 
-    private static final String HOSPITAL_RESOURCE = Resources.getResource("hospital/hospitals.csv").getPath();
-    private static final String HOSPITAL_SAMPLE_MAPPING_RESOURCE = Resources.getResource("hospital/sample_hospital_mapping.csv").getPath();
+    private static final String HOSPITAL_RESOURCE = Resources.getResource("hospital").getPath();
 
     @Test
-    public void canReadFromFile() throws IOException {
-        final HospitalModel hospitalModel = HospitalModelFactory.readFromCSV(HOSPITAL_RESOURCE, HOSPITAL_SAMPLE_MAPPING_RESOURCE);
-        assertEquals(2, hospitalModel.hospitalPerId().size());
-        assertEquals(2, hospitalModel.hospitalPerHospital().size());
+    public void canReadFromHospitalDirectory() throws IOException {
+        final HospitalModel hospitalModel = HospitalModelFactory.fromHospitalDirectory(HOSPITAL_RESOURCE);
+
+        assertEquals(2, hospitalModel.hospitalCount());
+        assertEquals(1, hospitalModel.sampleHospitalMapping().size());
     }
 }

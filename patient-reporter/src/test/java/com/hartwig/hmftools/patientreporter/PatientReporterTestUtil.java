@@ -32,10 +32,7 @@ public final class PatientReporterTestUtil {
 
     private static final String REF_GENOME_PATH = Resources.getResource("refgenome/ref.fasta").getPath();
 
-    private static final String KNOWLEDGEBASE_PATH = Resources.getResource("actionability").getPath();
-
-    private static final String HOSPITAL_CSV = Resources.getResource("csv/hospitals.csv").getPath();
-    private static final String HOSPITAL_MANUAL_CSV = Resources.getResource("csv/manual_mapping.csv").getPath();
+    private static final String KNOWLEDGEBASE_DIRECTORY = Resources.getResource("actionability").getPath();
 
     private static final String DRUP_GENES_CSV = Resources.getResource("csv/drup_genes.csv").getPath();
     private static final String HOTSPOT_TSV = Resources.getResource("csv/hotspots.tsv").getPath();
@@ -53,7 +50,7 @@ public final class PatientReporterTestUtil {
 
     @NotNull
     public static ActionabilityAnalyzer testActionabilityAnalyzer() throws IOException {
-        return ActionabilityAnalyzer.fromKnowledgebase(KNOWLEDGEBASE_PATH);
+        return ActionabilityAnalyzer.fromKnowledgebase(KNOWLEDGEBASE_DIRECTORY);
     }
 
     @NotNull
@@ -63,14 +60,10 @@ public final class PatientReporterTestUtil {
 
     @NotNull
     public static BaseReportData testBaseReportData() {
-        try {
-            final List<PatientTumorLocation> patientTumorLocations = Lists.newArrayList();
-            final Lims lims = LimsFactory.empty();
-            final HospitalModel hospitalModel = HospitalModelFactory.readFromCSV(HOSPITAL_CSV, HOSPITAL_MANUAL_CSV);
-            return ImmutableBaseReportData.of(patientTumorLocations, lims, hospitalModel, SIGNATURE_PATH, RVA_LOGO_PATH);
-        } catch (IOException exception) {
-            throw new IllegalStateException("Could not generate test base reporter data: " + exception.getMessage());
-        }
+        final List<PatientTumorLocation> patientTumorLocations = Lists.newArrayList();
+        final Lims lims = LimsFactory.empty();
+        final HospitalModel hospitalModel = HospitalModelFactory.empty();
+        return ImmutableBaseReportData.of(patientTumorLocations, lims, hospitalModel, SIGNATURE_PATH, RVA_LOGO_PATH);
     }
 
     @NotNull
