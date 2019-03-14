@@ -104,21 +104,24 @@ public class PDFWriterTest {
     @NotNull
     private static JasperReportBuilder generateQCFailCPCTReport(@Nullable Double pathologyTumorPercentage,
             @Nullable Double shallowSeqPurity, @NotNull QCFailReason reason) {
-        SampleReport sampleReport = ImmutableSampleReport.of("CPCT02991111T",
-                "A1",
-                "A2",
-                ImmutablePatientTumorLocation.of("CPCT02991111", "Skin", "Melanoma"),
-                shallowSeqPurity != null ? PatientReportFormat.formatPercent(shallowSeqPurity) : "not determined",
-                pathologyTumorPercentage != null ? PatientReportFormat.formatPercent(pathologyTumorPercentage) : "not determined",
-                LocalDate.parse("05-Jan-2018", DATE_FORMATTER),
-                LocalDate.parse("01-Jan-2018", DATE_FORMATTER),
-                "PREP013V23-QC037V20-SEQ008V25",
-                "HMF Testing HospitalModelFactory",
-                "COLO-001-002",
-                "ContactMe",
-                "contact@me.com",
-                "ABC",
-                "123456");
+        SampleReport sampleReport = ImmutableSampleReport.builder()
+                .sampleId("CPCT02991111T")
+                .barcodeTumor("FR1")
+                .barcodeReference("FR2")
+                .patientTumorLocation(ImmutablePatientTumorLocation.of("CPCT02991111", "Skin", "Melanoma"))
+                .purityShallowSeq(shallowSeqPurity != null ? PatientReportFormat.formatPercent(shallowSeqPurity) : "not determined")
+                .pathologyTumorPercentage(
+                        pathologyTumorPercentage != null ? PatientReportFormat.formatPercent(pathologyTumorPercentage) : "not determined")
+                .tumorArrivalDate(LocalDate.parse("05-Jan-2018", DATE_FORMATTER))
+                .bloodArrivalDate(LocalDate.parse("01-Jan-2018", DATE_FORMATTER))
+                .labProcedures("PREP013V23-QC037V20-SEQ008V25")
+                .addressee("HMF Testing Center")
+                .projectName("COLO-001-002")
+                .requesterName("ContactMe")
+                .requesterEmail("contact@me.com")
+                .submissionId("ABC")
+                .hospitalPatientId("123456")
+                .build();
 
         QCFailReport patientReport = ImmutableQCFailReport.of(sampleReport,
                 reason,
