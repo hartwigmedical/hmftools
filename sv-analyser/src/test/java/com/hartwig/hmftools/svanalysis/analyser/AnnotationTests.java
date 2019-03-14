@@ -31,7 +31,7 @@ public class AnnotationTests
     public void testUnderClusteredFoldbackAnnotations()
     {
         SvTestHelper tester = new SvTestHelper();
-        tester.logVerbose(true);
+        // tester.logVerbose(true);
         tester.Config.RequiredAnnotations = ALL_ANNOTATIONS;
 
         double[] chrCopyNumbers = {2.0, 2.0, 2.0};
@@ -79,7 +79,7 @@ public class AnnotationTests
     public void testPotentialDoubleMinutes()
     {
         SvTestHelper tester = new SvTestHelper();
-        tester.logVerbose(true);
+        // tester.logVerbose(true);
         tester.Config.RequiredAnnotations = ALL_ANNOTATIONS;
 
         CNAnalyser cnAnalyser = new CNAnalyser("", null);

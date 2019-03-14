@@ -38,7 +38,7 @@ public class ChainingTests
 {
 
     @Test
-    public void testBasicChainBuilding()
+    public void testChainRoutines()
     {
         // create a chain out of simple DELs and test the various chaining features
         final SvVarData var1 = createDel("1", "1", 1100, 1200);
@@ -166,7 +166,6 @@ public class ChainingTests
         // 2 SVs which could link on both ends
         SvTestHelper tester = new SvTestHelper();
         tester.logVerbose(true);
-        tester.Analyser.getChainFinder().setNewMethod(true);
 
         final SvVarData var1 = createInv("0", "1", 100,200, -1);
         final SvVarData var2 = createDel("1", "1", 300,400);

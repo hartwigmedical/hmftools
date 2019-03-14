@@ -51,14 +51,11 @@ import com.hartwig.hmftools.svanalysis.types.SvBreakend;
 import com.hartwig.hmftools.svanalysis.types.SvCNData;
 import com.hartwig.hmftools.svanalysis.types.SvChain;
 import com.hartwig.hmftools.svanalysis.types.SvCluster;
-import com.hartwig.hmftools.svanalysis.types.SvLOH;
 import com.hartwig.hmftools.svanalysis.types.SvLinkedPair;
 import com.hartwig.hmftools.svanalysis.types.SvVarData;
 import com.hartwig.hmftools.svanalysis.types.SvaConfig;
 import com.hartwig.hmftools.svannotation.SvGeneTranscriptCollection;
-import com.sun.jmx.snmp.SnmpVarBind;
 
-import org.apache.commons.cli.CommandLine;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 

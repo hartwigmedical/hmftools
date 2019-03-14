@@ -11,13 +11,10 @@ import static com.hartwig.hmftools.common.variant.structural.StructuralVariantTy
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INV;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.typeAsInt;
-import static com.hartwig.hmftools.svanalysis.analysis.CNAnalyser.CENTROMERE_CN;
 import static com.hartwig.hmftools.svanalysis.analysis.CNAnalyser.CN_SEG_DATA_CN_AFTER;
 import static com.hartwig.hmftools.svanalysis.analysis.CNAnalyser.CN_SEG_DATA_CN_BEFORE;
 import static com.hartwig.hmftools.svanalysis.analysis.CNAnalyser.CN_SEG_DATA_MAP_AFTER;
 import static com.hartwig.hmftools.svanalysis.analysis.CNAnalyser.CN_SEG_DATA_MAP_BEFORE;
-import static com.hartwig.hmftools.svanalysis.analysis.CNAnalyser.P_ARM_TELOMERE_CN;
-import static com.hartwig.hmftools.svanalysis.analysis.CNAnalyser.Q_ARM_TELOMERE_CN;
 import static com.hartwig.hmftools.svanalysis.analysis.ClusterAnalyser.SHORT_TI_LENGTH;
 import static com.hartwig.hmftools.svanalysis.analysis.LinkFinder.NO_DB_MARKER;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.CHROMOSOME_ARM_P;
@@ -26,7 +23,6 @@ import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.appendStr;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.calcConsistency;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.copyNumbersEqual;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.getSvTypesStr;
-import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.makeChrArmStr;
 import static com.hartwig.hmftools.svanalysis.types.SvArmCluster.typeToString;
 import static com.hartwig.hmftools.svanalysis.types.SvBreakend.DIRECTION_CENTROMERE;
 import static com.hartwig.hmftools.svanalysis.types.SvChain.getRepeatedSvSequence;
@@ -44,7 +40,6 @@ import static com.hartwig.hmftools.svanalysis.types.SvVarData.isStart;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.DoubleToLongFunction;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
@@ -61,7 +56,6 @@ import com.hartwig.hmftools.svanalysis.types.SvLOH;
 import com.hartwig.hmftools.svanalysis.types.SvLinkedPair;
 import com.hartwig.hmftools.svanalysis.types.SvVarData;
 import com.hartwig.hmftools.svannotation.SvGeneTranscriptCollection;
-import com.sun.jmx.snmp.SnmpVarBind;
 
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;

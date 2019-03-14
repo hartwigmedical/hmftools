@@ -33,7 +33,7 @@ public class ChainingActualTests
     {
         // from sampleId CPCT02020258T but not sure if has clustered all SVs correctly
         SvTestHelper tester = new SvTestHelper();
-        tester.logVerbose(true);
+        //tester.logVerbose(true);
 
         final SvVarData var1 = createTestSv("717", "11", "11", 67149357,67150121, -1, -1, INV, 10.4, 18, 7.51, 7.51, 6, "");
         final SvVarData var2 = createTestSv("719", "11", "11", 67465724,68587766, -1, 1, DUP, 20.7, 19.7, 2.75, 1.54, 2, "");
@@ -211,7 +211,7 @@ public class ChainingActualTests
     {
         // based on CPCT02010325T clusterId 37, where the shortest TI of 76 bases is actually ignored so as to make 2 chains
         SvTestHelper tester = new SvTestHelper();
-        tester.logVerbose(true);
+        // tester.logVerbose(true);
 
         final SvVarData var1 = createTestSv("7821420","18","X",23601785,48007145,-1,1,BND,1.92,1.96,0.98,0.95,1.03, "");
         final SvVarData var2 = createTestSv("7821421","X","X",48004021,48123140,-1,-1,INV,0.92,0.99,0.92,0.99,0.96, "");
@@ -259,7 +259,7 @@ public class ChainingActualTests
     {
         // based on CPCT02210035, chr 12 with 2 foldbacks, a quasi foldback and a complex DUP (CENTRO - A - B - C - B - D - A - B - C - B - E - 17)
         SvTestHelper tester = new SvTestHelper();
-        tester.logVerbose(true);
+        // tester.logVerbose(true);
 
         final SvVarData var1 = createTestSv("536","12","12",61264340,65981274,-1,1, DUP,3.05,3.03,2.24,2.02,1.95,"");
         final SvVarData var2 = createTestSv("537","12","12",65910212,65983577,1,-1, DEL,2.85,2.94,1.85,1.92,1.72,"");
@@ -350,7 +350,7 @@ public class ChainingActualTests
     {
         // based on CPCT02080180T with 3 foldbacks
         SvTestHelper tester = new SvTestHelper();
-        tester.logVerbose(true);
+        // tester.logVerbose(true);
         tester.Analyser.getChainFinder().setLogVerbose(true);
 
         SvVarData var1 = createTestSv("900","17","17",63727835,63729894,-1,1,DUP,7.79,5.33,1.04,1.04,1.02,"");
