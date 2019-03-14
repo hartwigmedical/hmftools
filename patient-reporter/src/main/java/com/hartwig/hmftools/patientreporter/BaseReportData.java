@@ -3,7 +3,7 @@ package com.hartwig.hmftools.patientreporter;
 import java.util.List;
 
 import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocation;
-import com.hartwig.hmftools.common.hospital.CenterModel;
+import com.hartwig.hmftools.common.hospital.HospitalModel;
 import com.hartwig.hmftools.common.lims.Lims;
 
 import org.immutables.value.Value;
@@ -22,7 +22,7 @@ public abstract class BaseReportData {
     public abstract Lims limsModel();
 
     @NotNull
-    public abstract CenterModel centerModel();
+    public abstract HospitalModel hospitalModel();
 
     @NotNull
     public abstract String signaturePath();

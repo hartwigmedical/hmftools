@@ -17,55 +17,55 @@ import org.jetbrains.annotations.Nullable;
 @Value.Immutable
 @Value.Style(allParameters = true,
              passAnnotations = { NotNull.class, Nullable.class })
-public abstract class CenterModel {
-    private static final Logger LOGGER = LogManager.getLogger(CenterModel.class);
+public abstract class HospitalModel {
+    private static final Logger LOGGER = LogManager.getLogger(HospitalModel.class);
 
     @NotNull
-    protected abstract Map<String, CenterData> centerPerId();
+    protected abstract Map<String, HospitalData> hospitalPerId();
 
     @NotNull
-    protected abstract Map<String, CenterData> centerPerHospital();
+    protected abstract Map<String, HospitalData> hospitalPerHospital();
 
     @NotNull
-    protected abstract Map<String, CenterDataManualMapping> centerPerIdManual();
+    protected abstract Map<String, HospitalSampleMapping> hospitalPerIdManual();
 
     @Nullable
     public String addresseeStringForSample(@NotNull final String contactNames, @NotNull final String sample) {
         String address;
-        if (sample.startsWith("CORE19") || sample.contains("CORE18")) { // This are the old core names
-            final CenterDataManualMapping centerDataManualMapping = centerPerIdManual().get(sample);
-            final CenterData center = centerPerHospital().get(centerDataManualMapping.addressName());
-            if (center == null) {
-                LOGGER.error("CenterModelFactory model cannot find center details for project " + centerDataManualMapping);
+        if (sample.startsWith("CORE19") || sample.contains("CORE18")) { // These are the old core names
+            final HospitalSampleMapping hospitalSampleMapping = hospitalPerIdManual().get(sample);
+            final HospitalData hospital = hospitalPerHospital().get(hospitalSampleMapping.addressName());
+            if (hospital == null) {
+                LOGGER.error("HospitalModelFactory model cannot find hospital details for project " + hospitalSampleMapping);
                 return null;
             }
-            address = center.addressName() + ", " + center.addressZip() + " " + center.addressCity();
+            address = hospital.addressName() + ", " + hospital.addressZip() + " " + hospital.addressCity();
 
         } else {
-            final String centerId = getCenterIdFromSample(sample);
-            if (centerId == null) {
+            final String HospitalId = getHospitalIdFromSample(sample);
+            if (HospitalId == null) {
                 return null;
             }
-            final CenterData center = centerPerId(centerId);
-            if (center == null) {
-                LOGGER.error("CenterModelFactory model does not contain id " + centerId);
+            final HospitalData hospital = hospitalPerId(HospitalId);
+            if (hospital == null) {
+                LOGGER.error("Hospital model does not contain id " + HospitalId);
                 return null;
             }
-            checkAddresseeFields(sample, center, contactNames);
-            address = getPI(sample, center, contactNames) + ", " + center.addressName() + ", " + center.addressZip() + " "
-                    + center.addressCity();
+            checkAddresseeFields(sample, hospital, contactNames);
+            address = getPI(sample, hospital, contactNames) + ", " + hospital.addressName() + ", " + hospital.addressZip() + " "
+                    + hospital.addressCity();
         }
         return address;
     }
 
     @Nullable
     @VisibleForTesting
-    CenterData centerPerId(@Nullable final String centerId) {
-        return centerPerId().get(centerId);
+    HospitalData hospitalPerId(@Nullable final String hospitalId) {
+        return hospitalPerId().get(hospitalId);
     }
 
     @Nullable
-    private static String getCenterIdFromSample(@NotNull final String sample) {
+    private static String getHospitalIdFromSample(@NotNull final String sample) {
         final String ucSample = sample.toUpperCase();
         LimsSampleType type = LimsSampleType.fromSampleId(ucSample);
 
@@ -78,19 +78,19 @@ public abstract class CenterModel {
         return null;
     }
 
-    private static void checkAddresseeFields(@NotNull final String sample, @NotNull final CenterData center,
+    private static void checkAddresseeFields(@NotNull final String sample, @NotNull final HospitalData hospital,
             @NotNull final String contactNames) {
         final List<String> missingFields = Lists.newArrayList();
-        if (getPI(sample, center, contactNames).isEmpty()) {
+        if (getPI(sample, hospital, contactNames).isEmpty()) {
             missingFields.add("PI");
         }
-        if (center.addressName().isEmpty()) {
+        if (hospital.addressName().isEmpty()) {
             missingFields.add("name");
         }
-        if (center.addressZip().isEmpty()) {
+        if (hospital.addressZip().isEmpty()) {
             missingFields.add("zip");
         }
-        if (center.addressCity().isEmpty()) {
+        if (hospital.addressCity().isEmpty()) {
             missingFields.add("city");
         }
         if (!missingFields.isEmpty()) {
@@ -100,17 +100,17 @@ public abstract class CenterModel {
 
     @NotNull
     @VisibleForTesting
-    static String getPI(@NotNull final String sample, @NotNull final CenterData center, @NotNull final String contactNames) {
+    static String getPI(@NotNull final String sample, @NotNull final HospitalData hospital, @NotNull final String contactNames) {
         LimsSampleType type = LimsSampleType.fromSampleId(sample);
 
         if (type == LimsSampleType.CPCT) {
-            return center.cpctPI();
+            return hospital.cpctPI();
         } else if (type == LimsSampleType.DRUP) {
-            final String drupPi = center.drupPI();
+            final String drupPi = hospital.drupPI();
             if (drupPi.trim().equals("*")) {
-                return center.cpctPI();
+                return hospital.cpctPI();
             }
-            return center.drupPI();
+            return hospital.drupPI();
         } else if (type == LimsSampleType.WIDE) {
             return contactNames;
         }

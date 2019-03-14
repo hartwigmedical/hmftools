@@ -9,8 +9,8 @@ import com.google.common.collect.TreeMultimap;
 import com.google.common.io.Resources;
 import com.hartwig.hmftools.common.actionability.ActionabilityAnalyzer;
 import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocation;
-import com.hartwig.hmftools.common.hospital.CenterModel;
-import com.hartwig.hmftools.common.hospital.CenterModelFactory;
+import com.hartwig.hmftools.common.hospital.HospitalModel;
+import com.hartwig.hmftools.common.hospital.HospitalModelFactory;
 import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.lims.LimsFactory;
 import com.hartwig.hmftools.common.variant.enrich.CompoundEnrichment;
@@ -34,8 +34,8 @@ public final class PatientReporterTestUtil {
 
     private static final String KNOWLEDGEBASE_PATH = Resources.getResource("actionability").getPath();
 
-    private static final String CENTER_CSV = Resources.getResource("csv/centers.csv").getPath();
-    private static final String CENTER_MANUAL_CSV = Resources.getResource("csv/manual_mapping.csv").getPath();
+    private static final String HOSPITAL_CSV = Resources.getResource("csv/hospitals.csv").getPath();
+    private static final String HOSPITAL_MANUAL_CSV = Resources.getResource("csv/manual_mapping.csv").getPath();
 
     private static final String DRUP_GENES_CSV = Resources.getResource("csv/drup_genes.csv").getPath();
     private static final String HOTSPOT_TSV = Resources.getResource("csv/hotspots.tsv").getPath();
@@ -66,8 +66,8 @@ public final class PatientReporterTestUtil {
         try {
             final List<PatientTumorLocation> patientTumorLocations = Lists.newArrayList();
             final Lims lims = LimsFactory.empty();
-            final CenterModel centerModel = CenterModelFactory.readFromCSV(CENTER_CSV, CENTER_MANUAL_CSV);
-            return ImmutableBaseReportData.of(patientTumorLocations, lims, centerModel, SIGNATURE_PATH, RVA_LOGO_PATH);
+            final HospitalModel hospitalModel = HospitalModelFactory.readFromCSV(HOSPITAL_CSV, HOSPITAL_MANUAL_CSV);
+            return ImmutableBaseReportData.of(patientTumorLocations, lims, hospitalModel, SIGNATURE_PATH, RVA_LOGO_PATH);
         } catch (IOException exception) {
             throw new IllegalStateException("Could not generate test base reporter data: " + exception.getMessage());
         }

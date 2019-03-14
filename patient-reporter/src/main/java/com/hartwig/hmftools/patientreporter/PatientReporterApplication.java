@@ -6,8 +6,8 @@ import java.nio.file.Files;
 import java.util.List;
 
 import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocation;
-import com.hartwig.hmftools.common.hospital.CenterModel;
-import com.hartwig.hmftools.common.hospital.CenterModelFactory;
+import com.hartwig.hmftools.common.hospital.HospitalModel;
+import com.hartwig.hmftools.common.hospital.HospitalModelFactory;
 import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.lims.LimsFactory;
 import com.hartwig.hmftools.common.lims.LimsSampleType;
@@ -125,10 +125,9 @@ public class PatientReporterApplication {
         final Lims lims = LimsFactory.fromLimsDirectory(limsDirectory);
         LOGGER.info(" Loaded data for {} samples.", lims.sampleCount());
 
-        final CenterModel centerModel = CenterModelFactory.readFromCSV(cmd.getOptionValue(CENTER_CSV), cmd.getOptionValue(CENTER_CSV_MANUAL));
+        final HospitalModel hospitalModel = HospitalModelFactory.readFromCSV(cmd.getOptionValue(CENTER_CSV), cmd.getOptionValue(CENTER_CSV_MANUAL));
         return ImmutableBaseReportData.of(patientTumorLocations,
-                lims,
-                centerModel,
+                lims, hospitalModel,
                 cmd.getOptionValue(SIGNATURE),
                 cmd.getOptionValue(RVA_LOGO));
     }
@@ -259,8 +258,8 @@ public class PatientReporterApplication {
         options.addOption(LOG_DEBUG, false, "If provided, set the log level to debug rather than default.");
         options.addOption(FASTA_FILE_LOCATION, true, "Path towards the FASTA file containing the ref genome.");
         options.addOption(HIGH_CONFIDENCE_BED, true, "Path towards the high confidence BED file.");
-        options.addOption(CENTER_CSV, true, "Path towards a CSV containing center (centerPerHospital) data.");
-        options.addOption(CENTER_CSV_MANUAL, true, "Path towards a CSV containing center (centerPerHospital) data for manual curation.");
+        options.addOption(CENTER_CSV, true, "Path towards a CSV containing center (hospitalPerHospital) data.");
+        options.addOption(CENTER_CSV_MANUAL, true, "Path towards a CSV containing center (hospitalPerHospital) data for manual curation.");
         options.addOption(SIGNATURE, true, "Path towards a image file containing the signature to be appended at the end of the report.");
         options.addOption(RVA_LOGO, true, "Path towards a image file containing the logo.");
         options.addOption(COMMENTS, true, "Additional comments to be added to the report, if any.");
