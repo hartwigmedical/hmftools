@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.center;
+package com.hartwig.hmftools.common.hospital;
 
 import java.io.File;
 import java.io.IOException;

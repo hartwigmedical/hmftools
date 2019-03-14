@@ -5,9 +5,9 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.util.List;
 
-import com.hartwig.hmftools.common.center.CenterModel;
-import com.hartwig.hmftools.common.center.CenterModelFactory;
 import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocation;
+import com.hartwig.hmftools.common.hospital.CenterModel;
+import com.hartwig.hmftools.common.hospital.CenterModelFactory;
 import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.lims.LimsFactory;
 import com.hartwig.hmftools.common.lims.LimsSampleType;

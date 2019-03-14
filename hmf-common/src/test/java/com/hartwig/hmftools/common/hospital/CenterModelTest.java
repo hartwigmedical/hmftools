@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.center;
+package com.hartwig.hmftools.common.hospital;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;

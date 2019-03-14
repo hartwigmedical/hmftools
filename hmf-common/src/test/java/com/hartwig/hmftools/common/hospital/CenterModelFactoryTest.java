@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.center;
+package com.hartwig.hmftools.common.hospital;
 
 import static org.junit.Assert.assertEquals;
 
@@ -10,8 +10,8 @@ import org.junit.Test;
 
 public class CenterModelFactoryTest {
 
-    private static final String CENTER_RESOURCE = Resources.getResource("center/centers.csv").getPath();
-    private static final String CENTER_RESOURCE_MANUAL = Resources.getResource("center/manual_mapping.csv").getPath();
+    private static final String CENTER_RESOURCE = Resources.getResource("hospital/centers.csv").getPath();
+    private static final String CENTER_RESOURCE_MANUAL = Resources.getResource("hospital/manual_mapping.csv").getPath();
 
     @Test
     public void canReadFromFile() throws IOException {

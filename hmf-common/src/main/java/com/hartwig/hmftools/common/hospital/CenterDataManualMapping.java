@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.center;
+package com.hartwig.hmftools.common.hospital;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
