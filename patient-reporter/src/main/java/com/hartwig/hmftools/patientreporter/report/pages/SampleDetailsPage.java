@@ -66,32 +66,31 @@ public abstract class SampleDetailsPage {
 
     @NotNull
     private ComponentBuilder<?, ?> sampleDetailsSection(@NotNull String sampleId) {
-        LimsSampleType type = LimsSampleType.fromSampleId(sampleId);
-
-        String recipient = sampleReport().addressee();
-        if (recipient == null) {
-            LOGGER.warn("No addressee address present for sample " + sampleReport().sampleId());
+        String addressee = sampleReport().addressee();
+        if (addressee == null) {
+            LOGGER.warn("No addressee present for sample " + sampleReport().sampleId());
         }
 
-        recipient = recipient != null ? recipient : "?";
+        addressee = addressee != null ? addressee : "N/A";
 
         final List<String> lines = Lists.newArrayList("The samples have been sequenced at " + Commons.HARTWIG_ADDRESS,
                 "The samples have been analyzed by Next Generation Sequencing",
                 "The HMF sample ID is: " + sampleReport().sampleId(),
                 "The pathology tumor percentage for this sample is " + sampleReport().pathologyTumorPercentage(),
                 "This experiment is performed on the tumor sample which arrived on " + formattedDate(sampleReport().tumorArrivalDate())
-                        + " and the internal tumor barcode is " + sampleReport().barcodeTumor(),
+                        + " with internal tumor barcode " + sampleReport().barcodeTumor(),
                 "This experiment is performed on the blood sample which arrived on " + formattedDate(sampleReport().bloodArrivalDate())
-                        + " and the internal blood barcode is " + sampleReport().barcodeReference(),
+                        + " with internal blood barcode " + sampleReport().barcodeReference(),
                 "This experiment is performed according to lab procedures: " + sampleReport().labProcedures(),
                 "This report is generated and verified by: " + user(),
-                "This report is addressed at: " + recipient);
+                "This report is addressed at: " + addressee);
 
+        LimsSampleType type = LimsSampleType.fromSampleId(sampleId);
         if (type == LimsSampleType.CORE) {
             lines.add("The hospital patient ID is: " + sampleReport().hospitalPatientId());
-            lines.add("The project name of sample is: " + sampleReport().projectName() + " and the submissionId ID is " + sampleReport().submissionId());
-            lines.add("The contact names are: " + sampleReport().requesterName());
-            lines.add("The contact emails are: " + sampleReport().requesterEmail());
+            lines.add("The project name of sample is: " + sampleReport().projectName() + " and the submission ID is "
+                    + sampleReport().submissionId());
+            lines.add("The requester is: " + sampleReport().requesterName() + " (" + sampleReport().requesterEmail() + ")");
         }
 
         comments().ifPresent(comments -> lines.add("Comments: " + comments));

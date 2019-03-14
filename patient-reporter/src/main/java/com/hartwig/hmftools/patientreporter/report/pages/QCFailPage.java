@@ -95,12 +95,12 @@ public abstract class QCFailPage {
             }
         }
 
-        return type == LimsSampleType.CORE ? CORELayout(title, subTitle, message) : CPCTDRUPLayout(title, subTitle, message);
+        return type == LimsSampleType.CORE ? coreLayout(title, subTitle, message) : defaultLayout(title, subTitle, message);
     }
 
     @NotNull
-    private ComponentBuilder<?, ?> CORELayout(@NotNull String title, @NotNull String subTitle, @NotNull String message) {
-        String contactDetails = sampleReport().requesterName() + " (" + sampleReport().requesterEmail() + ")";
+    private ComponentBuilder<?, ?> coreLayout(@NotNull String title, @NotNull String subTitle, @NotNull String message) {
+        String requester = sampleReport().requesterName() + " (" + sampleReport().requesterEmail() + ")";
         return cmp.verticalList(cmp.text(title).setStyle(tableHeaderStyle().setFontSize(12)).setHeight(20),
                 cmp.text(subTitle).setStyle(dataTableStyle().setFontSize(12)).setHeight(20),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
@@ -115,11 +115,9 @@ public abstract class QCFailPage {
                         + sampleReport().hospitalPatientId()).setStyle(fontStyle()),
                 cmp.text("The project name of sample is " + sampleReport().projectName() + " and the submissionId ID is "
                         + sampleReport().submissionId()).setStyle(fontStyle()),
-                cmp.text("The internal tumor barcode is " + sampleReport().barcodeTumor() + " and the internal blood barcode is "
-                        + sampleReport().barcodeReference()).setStyle(fontStyle()),
+                internalBarcodeText(),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
-                cmp.text("The tumor percentage estimated by Pathology UMC Utrecht is " + sampleReport().pathologyTumorPercentage())
-                        .setStyle(fontStyle()),
+                pathologyText(),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
                 shallowSeqText(),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
@@ -127,7 +125,7 @@ public abstract class QCFailPage {
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
                 recipientText(),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
-                cmp.text("The contact details are : " + contactDetails).setStyle(fontStyle()),
+                cmp.text("The requester is: " + requester).setStyle(fontStyle()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
                 accreditationText(),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
@@ -135,7 +133,7 @@ public abstract class QCFailPage {
     }
 
     @NotNull
-    private ComponentBuilder<?, ?> CPCTDRUPLayout(@NotNull String title, @NotNull String subTitle, @NotNull String message) {
+    private ComponentBuilder<?, ?> defaultLayout(@NotNull String title, @NotNull String subTitle, @NotNull String message) {
         return cmp.verticalList(cmp.text(title).setStyle(tableHeaderStyle().setFontSize(12)).setHeight(20),
                 cmp.text(subTitle).setStyle(dataTableStyle().setFontSize(12)).setHeight(20),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
@@ -148,11 +146,9 @@ public abstract class QCFailPage {
                         + "evaluable for the " + study().studyCode() + " study.").setStyle(fontStyle()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
                 cmp.text("The HMF sample ID is " + sampleReport().sampleId()).setStyle(fontStyle()),
-                cmp.text("The internal tumor barcode is " + sampleReport().barcodeTumor() + " and the internal blood barcode is "
-                        + sampleReport().barcodeReference()).setStyle(fontStyle()),
+                internalBarcodeText(),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
-                cmp.text("The tumor percentage estimated by Pathology UMC Utrecht is " + sampleReport().pathologyTumorPercentage())
-                        .setStyle(fontStyle()),
+                pathologyText(),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
                 shallowSeqText(),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
@@ -166,8 +162,15 @@ public abstract class QCFailPage {
     }
 
     @NotNull
-    private static TextFieldBuilder<String> questionsText() {
-        return cmp.text("For questions, please contact us via info@hartwigmedicalfoundation.nl").setStyle(fontStyle());
+    private TextFieldBuilder<String> internalBarcodeText() {
+        return cmp.text("The internal tumor barcode is " + sampleReport().barcodeTumor() + " and the internal blood barcode is "
+                + sampleReport().barcodeReference()).setStyle(fontStyle());
+    }
+
+    @NotNull
+    private TextFieldBuilder<String> pathologyText() {
+        return cmp.text("The tumor percentage estimated by Pathology UMC Utrecht is " + sampleReport().pathologyTumorPercentage())
+                .setStyle(fontStyle());
     }
 
     @NotNull
@@ -200,5 +203,10 @@ public abstract class QCFailPage {
     private TextFieldBuilder<String> accreditationText() {
         return cmp.text("The results on this report are based on tests that are performed under ISO/ICE-17025:2005 accreditation.")
                 .setStyle(fontStyle());
+    }
+
+    @NotNull
+    private static TextFieldBuilder<String> questionsText() {
+        return cmp.text("For questions, please contact us via info@hartwigmedicalfoundation.nl").setStyle(fontStyle());
     }
 }
