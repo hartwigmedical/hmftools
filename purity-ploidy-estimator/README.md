@@ -169,7 +169,7 @@ Note that a diploid segment with implied minor allele ploidy = implied major all
 The formula includes an explicit reduced penalty for a doubling of both major and minor allele ploidy since there is a known common mechanism of whole genome doubling which can occur in a single event.
 
 The Deviation Penalty and Event Penalty Multiplier are aggregated independently across all segments that are diploid in the germline and have a tumor depth ratio of <3x the average depth. 
-An average is calculated for each value weighted by the number of BAF observations in each segment.     The averaged numbers are multiplied by each other to form an overall ploidy penalty for the sample.
+An average is calculated for each value weighted by the number of BAF observations in each segment. The averaged numbers are multiplied by each other to form an overall ploidy penalty for the sample.
 
 The following chart shows the shape of the combined ploidy penalty
 
@@ -194,13 +194,13 @@ We also record the min and max of the purity, ploidy and diploid proportions of 
 Note that a segment is diploid only if both the major and minor allele are between 0.8 and 1.2 inclusive. 
 
 #### Somatic Purity
-If any of the candidate solutions are highly diploid (>= 0.95) and there is a wide range (>= 0.15) of valid purities in the candidate solutions we enter somatic mode. 
+If any of the candidate solutions are highly diploid (>= 0.97) and there is a wide range (>= 0.15) of valid purities in the candidate solutions we enter somatic mode. 
 Once in this mode, the sample status will be changed from NORMAL to one of HIGHLY_DIPLOID, NO_TUMOR or SOMATIC according to the logic described below.  
 
 First we calculate a somatic purity. 
-To do this, we use a kernel density estimator to find the somatic variant allele frequency peaks. 
+To do this, we use a kernel density estimator to find significant (n >= 50) somatic variant allele frequency peaks. 
 Each peak implies a tumor purity of twice the frequency. 
-We select the largest significant (>= 50) peak that implies a purity within the candidate solutions to be the somatic purity.
+We select the peak that implies the largest purity within the candidate solutions as the somatic purity.
 
 If the somatics are unable to help, either because there are none, or because the somatic purity and the fitted purity are both too low (< 0.17) then we continue to use the fitted purity but flag the solution with a status of HIGHLY_DIPLOID. 
 
@@ -359,7 +359,7 @@ java -jar purple.jar \
 
 ### CIRCOS Output
 
-When enabled, an input and output diagram will be created in the /plot directory. 
+When enabled, an input and output diagram will be created in the output/plot directory. 
 The first figure shows the input to PURPLE from AMBER and COBALT. 
 The second figure shows the output from PURPLE.
 
@@ -367,8 +367,8 @@ A typical input figure is shown below:
 
 ![Input CIRCOS](src/main/resources/readme/COLO829.input.png)
 
-The outer first circle show the COBALT ratios of the reference and tumor samples in green and blue respectively.
-Note the reference ratios are after GC and diploid normalization has been applied. 
+The outer circle shows the COBALT ratios of the reference and tumor samples in green and blue respectively.
+Note the reference ratios are after GC and diploid normalization have been applied. 
 The tumor ratios are after GC normalization has been applied.
 
 The inner circle shows the raw AMBER BAF points in orange.

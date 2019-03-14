@@ -34,7 +34,7 @@ public interface SomaticConfig {
     int SOMATIC_MIN_PEAK_DEFAULT = 50;
     int SOMATIC_MIN_TOTAL_DEFAULT = 300;
     double SOMATIC_DEVIATION_WEIGHT_DEFAULT = 1;
-    double HIGHLY_DIPLOID_PERCENTAGE_DEFAULT = 0.95;
+    double HIGHLY_DIPLOID_PERCENTAGE_DEFAULT = 0.97;
     double MIN_SOMATIC_UNADJUSTED_VAF = 0.1;
 
     static void addOptions(@NotNull Options options) {
