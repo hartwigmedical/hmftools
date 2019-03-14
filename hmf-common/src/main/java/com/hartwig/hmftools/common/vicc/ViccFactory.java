@@ -30,7 +30,7 @@ public abstract class ViccFactory {
         JsonParser parser = new JsonParser();
         JsonReader reader = new JsonReader(new FileReader(brcaJsonPath));
         reader.setLenient(true);
-        int index = 1;
+        int index = 0;
         while (reader.hasNext()) {
             JsonObject object = parser.parse(reader).getAsJsonObject();
             LOGGER.info(object);
@@ -40,9 +40,11 @@ public abstract class ViccFactory {
             writer.append(brca1.toString());
             writer.append("\n");
             index++;
+            LOGGER.info(index);
         }
-        LOGGER.info(index);
         writer.close();
+        reader.endObject();
+        reader.close();
     }
 
     private static void writeToCsvFile(@NotNull String csvFormatString, @NotNull PrintWriter writer) throws IOException {
