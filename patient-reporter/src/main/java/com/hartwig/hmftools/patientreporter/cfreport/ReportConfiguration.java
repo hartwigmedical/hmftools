@@ -2,6 +2,8 @@ package com.hartwig.hmftools.patientreporter.cfreport;
 
 import com.hartwig.hmftools.patientreporter.PatientReporterApplication;
 
+import java.awt.*;
+
 /**
  * Static configuration variables for the report
  */
@@ -19,5 +21,15 @@ public class ReportConfiguration {
     public static final float PAGE_MARGIN_LEFT = 75;
     public static final float PAGE_MARGIN_RIGHT = 45;
     public static final float PAGE_MARGIN_BOTTOM = 100;
+
+    // Color palette
+    public static final Color PALETTE_BLUE = new Color(38, 90, 166);
+    public static final Color PALETTE_MID_BLUE = new Color(110, 139, 189);
+    public static final Color PALETTE_RED = new Color(232, 60, 55);
+    public static final Color PALETTE_CYAN = new Color(0, 179, 233);
+    public static final Color PALETTE_DARK_GREY = new Color(39, 47, 50);
+    public static final Color PALETTE_MID_GREY = new Color(101, 106, 108);
+    public static final Color PALETTE_LIGHT_GREY = new Color(205, 206, 207);
+    public static final Color PALETTE_PINK = new Color(230, 21, 124);
 
 }

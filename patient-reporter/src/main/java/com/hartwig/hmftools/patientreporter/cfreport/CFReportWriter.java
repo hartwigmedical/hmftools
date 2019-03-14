@@ -4,6 +4,7 @@ import com.hartwig.hmftools.patientreporter.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.QCFailReport;
 import com.hartwig.hmftools.patientreporter.ReportWriter;
 
+import com.hartwig.hmftools.patientreporter.cfreport.components.SidePanel;
 import com.lowagie.text.*;
 import com.lowagie.text.pdf.PdfWriter;
 
@@ -30,6 +31,7 @@ public class CFReportWriter implements ReportWriter {
 
     /**
      * Temporary main method for quick running while report is in development
+     *
      * @TODO: Remove this
      * @deprecated
      */
@@ -55,6 +57,11 @@ public class CFReportWriter implements ReportWriter {
             e.printStackTrace();
             return;
         }
+
+        report.newPage();
+        report.newPage();
+
+
 
         // Close report (gets written to file by closing)
         report.close();
