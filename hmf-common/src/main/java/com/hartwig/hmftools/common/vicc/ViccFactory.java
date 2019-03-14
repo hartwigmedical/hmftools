@@ -30,20 +30,18 @@ public abstract class ViccFactory {
         JsonParser parser = new JsonParser();
         JsonReader reader = new JsonReader(new FileReader(brcaJsonPath));
         reader.setLenient(true);
-
+        int index = 1;
         while (reader.hasNext()) {
             JsonObject object = parser.parse(reader).getAsJsonObject();
             LOGGER.info(object);
-
+            BRCA brca1 =  ImmutableBRCA.builder()
+                    .variantFrequencyLOVD(object.getAsJsonObject("brca").get("Variant_frequency_LOVD").toString())
+                    .clinVarAccessionENIGMA(object.getAsJsonObject("brca").get("ClinVarAccession_ENIGMA").toString()).build();
+            writer.append(brca1.toString());
+            writer.append("\n");
+            index++;
         }
-
-        JsonObject object = parser.parse(reader).getAsJsonObject();
-
-        BRCA brca1 =  ImmutableBRCA.builder()
-                .variantFrequencyLOVD(object.getAsJsonObject("brca").get("Variant_frequency_LOVD").toString())
-               .clinVarAccessionENIGMA(object.getAsJsonObject("brca").get("ClinVarAccession_ENIGMA").toString()).build();
-        writer.append(brca1.toString());
-        writer.append("\n");
+        LOGGER.info(index);
         writer.close();
     }
 
