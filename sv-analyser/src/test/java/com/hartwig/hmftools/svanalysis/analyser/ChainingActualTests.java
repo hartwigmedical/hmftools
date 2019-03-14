@@ -9,6 +9,7 @@ import static com.hartwig.hmftools.svanalysis.analyser.SvTestHelper.createTestSv
 import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.ASSEMBLY_MATCH_MATCHED;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.util.HashMap;
 import java.util.List;
@@ -175,6 +176,7 @@ public class ChainingActualTests
         assertEquals(tester.Analyser.getClusters().size(), 1);
 
         final SvCluster cluster = tester.Analyser.getClusters().get(0);
+        assertTrue(cluster.hasReplicatedSVs());
         assertEquals(cluster.getSvCount(), 8);
         assertEquals(cluster.getSubClusters().size(), 5);
 
@@ -255,34 +257,36 @@ public class ChainingActualTests
     @Ignore
     public void testActualComplexChaining3()
     {
-        // based on CPCT02210035 with 2 foldbacks, a quasi foldback and a complex DUP (CENTRO - A - B - C - B - D - A - B - C - B - E - 17)
+        // based on CPCT02210035, chr 12 with 2 foldbacks, a quasi foldback and a complex DUP (CENTRO - A - B - C - B - D - A - B - C - B - E - 17)
         SvTestHelper tester = new SvTestHelper();
         tester.logVerbose(true);
 
-        final SvVarData var1 = createTestSv("536","12","12",61264340,65981274,-1,1,DUP,3.05,3.03,2.24,2.02,1.95,"");
-        final SvVarData var2 = createTestSv("537","12","12",65910212,65983577,1,-1,DEL,2.85,2.94,1.85,1.92,1.72,"");
-        final SvVarData var3 = createTestSv("538","12","12",65980999,65990480,-1,1,DUP,3.03,2.94,2.03,1.84,2.06,"");
-        final SvVarData var4 = createTestSv("539","12","12",61263455,66021729,1,-1,DEL,2.98,2.96,2.17,2.17,2.17,"");
-        final SvVarData var5 = createTestSv("540","12","12",61265162,66158890,1,-1,DEL,3.05,4.98,2.02,2.02,2.02,"");
-        final SvVarData var6 = createTestSv("541","12","12",66021681,66159101,-1,1,DUP,3.31,4.98,2.22,1.86,2.06,"");
-        final SvVarData var7 = createTestSv("542","12","12",66021726,66160271,1,1,INV,3.31,5.13,2.53,2.17,2.24,"");
-        final SvVarData var8 = createTestSv("543","12","12",66159115,66232527,-1,1,DUP,5.13,5.03,2.01,2.05,1.82,"");
+        final SvVarData var1 = createTestSv("536","12","12",61264340,65981274,-1,1, DUP,3.05,3.03,2.24,2.02,1.95,"");
+        final SvVarData var2 = createTestSv("537","12","12",65910212,65983577,1,-1, DEL,2.85,2.94,1.85,1.92,1.72,"");
+        final SvVarData var3 = createTestSv("538","12","12",65980999,65990480,-1,1, DUP,3.03,2.94,2.03,1.84,2.06,"");
+        final SvVarData var4 = createTestSv("539","12","12",61263455,66021729,1,-1, DEL,2.98,2.96,2.17,2.17,2.17,"");
+        final SvVarData var5 = createTestSv("540","12","12",61265162,66158890,1,-1, DEL,3.05,4.98,2.02,2.02,2.02,"");
+        final SvVarData var6 = createTestSv("541","12","12",66021681,66159101,-1,1, DUP,3.31,4.98,2.22,1.86,2.06,"");
+        final SvVarData var7 = createTestSv("542","12","12",66021726,66160271,1,1, INV,3.31,5.13,2.53,2.17,2.24,"");
+        final SvVarData var8 = createTestSv("543","12","12",66159115,66232527,-1,1, DUP,5.13,5.03,2.01,2.05,1.82,"");
 
         // foldback (event B)
-        final SvVarData var9 = createTestSv("545","12","12",68517628,68519581,-1,-1,INV,12.84,20.85,7.85,8.01,7.19,"");
-        final SvVarData var10 = createTestSv("547","12","12",66303014,69950579,-1,1,DUP,4.97,17.06,2,2.3,1.92,"");
-        final SvVarData var11 = createTestSv("548","12","12",65910168,69953088,-1,1,DUP,2.85,14.76,1.79,1.56,1.87,"");
+        final SvVarData var9 = createTestSv("545","12","12",68517628,68519581,-1,-1, INV,12.84,20.85,7.85,8.01,7.19,"");
+
+        // complex DUP
+        final SvVarData var10 = createTestSv("547","12","12",66303014,69950579,-1,1, DUP,4.97,17.06,2,2.3,1.92,"");
+        final SvVarData var11 = createTestSv("548","12","12",65910168,69953088,-1,1, DUP,2.85,14.76,1.79,1.56,1.87,"");
 
         // inversion (event C)
-        final SvVarData var12 = createTestSv("550","12","12",69609346,70421507,1,1,INV,20.85,13.2,3.79,4.25,4.25,"");
+        final SvVarData var12 = createTestSv("550","12","12",69609346,70421507,1,1, INV,20.85,13.2,3.79,4.25,4.25,"");
 
         // foldback (event A)
-        final SvVarData var13 = createTestSv("551","12","12",70872871,70876753,1,1,INV,8.95,4.78,4.17,3.66,3.74,"");
+        final SvVarData var13 = createTestSv("551","12","12",70872871,70876753,1,1, INV,8.95,4.78,4.17,3.66,3.74,"");
 
-        final SvVarData var14 = createTestSv("552","4","12",44130417,70876777,1,-1,BND,2.87,2.02,0.89,0.9,0.81,"");
-        final SvVarData var15 = createTestSv("603","12","17",66164961,52543282,-1,-1,BND,5.03,4.22,2.07,2.4,1.91,"");
-        final SvVarData var16 = createTestSv("604","17","17",52543279,52543541,1,1,INV,3.24,4.22,1.42,1.42,1.45,"");
-        final SvVarData var17 = createTestSv("605","17","17",52543194,52543771,-1,-1,INV,3.24,4,1.2,1.2,1.21,"");
+        final SvVarData var14 = createTestSv("552","4","12",44130417,70876777,1,-1, BND,2.87,2.02,0.89,0.9,0.81,"");
+        final SvVarData var15 = createTestSv("603","12","17",66164961,52543282,-1,-1, BND,5.03,4.22,2.07,2.4,1.91,"");
+        final SvVarData var16 = createTestSv("604","17","17",52543279,52543541,1,1, INV,3.24,4.22,1.42,1.42,1.45,"");
+        final SvVarData var17 = createTestSv("605","17","17",52543194,52543771,-1,-1, INV,3.24,4,1.2,1.2,1.21,"");
 
 
         // mark assembled links
@@ -334,7 +338,7 @@ public class ChainingActualTests
         assertEquals(tester.Analyser.getClusters().size(), 1);
         final SvCluster cluster = tester.Analyser.getClusters().get(0);
 
-        assertEquals(cluster.getChains().size(), 6);
+        assertEquals(2, cluster.getChains().size());
 
         // assertEquals(14, cluster.getChains().get(0).getLinkCount());
         // assertEquals(3, cluster.getChains().get(1).getLinkCount());

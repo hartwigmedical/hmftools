@@ -511,7 +511,7 @@ public class SvChain {
                 {
                     SvBreakend startBreakend = chain.getOpenBreakend(true);
 
-                    sequenceStr += makeChrArmStr(startBreakend.chromosome(), startBreakend.arm());
+                    sequenceStr += makeChrArmStr(startBreakend.chromosome(), startBreakend.arm()) + "_" + startBreakend.direction();
                     sequenceStr += CHAIN_SEQ_DELIM;
 
                     sequenceStr += breakendSeqStr(startBreakend);
@@ -536,7 +536,7 @@ public class SvChain {
                 if(!pair.second().isNullBreakend())
                 {
                     SvBreakend endBreakend = chain.getOpenBreakend(false);
-                    sequenceStr += makeChrArmStr(endBreakend.chromosome(), endBreakend.arm());
+                    sequenceStr += makeChrArmStr(endBreakend.chromosome(), endBreakend.arm()) + "_" + endBreakend.direction();
                 }
                 else
                 {

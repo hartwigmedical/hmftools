@@ -6,10 +6,14 @@ import static com.hartwig.hmftools.common.io.FileWriterUtils.closeBufferedWriter
 import static com.hartwig.hmftools.common.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.CHROMOSOME_ARM_P;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.CHROMOSOME_ARM_Q;
+import static com.hartwig.hmftools.svanalysis.types.SvBreakend.DIRECTION_CENTROMERE;
+import static com.hartwig.hmftools.svanalysis.types.SvBreakend.DIRECTION_TELOMERE;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_LOW_QUALITY;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_SIMPLE_SV;
+import static com.hartwig.hmftools.svanalysis.types.SvCluster.isSpecificCluster;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_END;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_START;
+import static com.hartwig.hmftools.svanalysis.types.SvVarData.isSpecificSV;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.isStart;
 
 import java.io.BufferedWriter;
@@ -176,12 +180,14 @@ public class VisualiserWriter
                     continue;
                 }
 
+                isSpecificCluster(cluster);
+
                 for (final SvChain chain : cluster.getChains())
                 {
                     List<SvLinkedPair> uniquePairs = Lists.newArrayList();
 
                     // log the start of the chain
-                    SvBreakend breakend = chain.getFirstSV().getBreakend(chain.firstLinkOpenOnStart());
+                    SvBreakend breakend = chain.getOpenBreakend(true);
                     boolean startsOnEnd = chain.getFirstSV().equals(chain.getLastSV(), true);
 
                     if(breakend != null)
@@ -232,8 +238,7 @@ public class VisualiserWriter
                     }
 
                     // log the end of the chain out to centromere or telomere
-                    // log the start of the chain
-                    breakend = chain.getLastSV().getBreakend(chain.lastLinkOpenOnStart());
+                    breakend = chain.getOpenBreakend(false);
 
                     if(breakend != null && !startsOnEnd)
                     {
@@ -278,23 +283,23 @@ public class VisualiserWriter
         }
     }
 
-    private static final String getPositionValue(final SvBreakend breakend, boolean isStart)
+    private static final String getPositionValue(final SvBreakend breakend, boolean isChainEnd)
     {
         if(breakend.orientation() == 1 && breakend.arm().equals(CHROMOSOME_ARM_P))
         {
-            return isStart ? "T" : Long.toString(breakend.position());
+            return isChainEnd ? DIRECTION_TELOMERE : Long.toString(breakend.position());
         }
         else if(breakend.orientation() == -1 && breakend.arm().equals(CHROMOSOME_ARM_P))
         {
-            return isStart ? Long.toString(breakend.position()) : "C";
+            return isChainEnd ? Long.toString(breakend.position()) : DIRECTION_CENTROMERE;
         }
         else if(breakend.orientation() == -1 && breakend.arm().equals(CHROMOSOME_ARM_Q))
         {
-            return isStart ? Long.toString(breakend.position()) : "T";
+            return isChainEnd ? Long.toString(breakend.position()) : DIRECTION_TELOMERE;
         }
         else
         {
-            return isStart ? "C" : Long.toString(breakend.position());
+            return isChainEnd ? DIRECTION_CENTROMERE : Long.toString(breakend.position());
         }
     }
 

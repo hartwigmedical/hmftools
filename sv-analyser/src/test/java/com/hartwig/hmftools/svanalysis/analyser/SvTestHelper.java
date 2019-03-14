@@ -237,7 +237,15 @@ public class SvTestHelper
 
         var.setChromosomalArms(startArm, endArm);
 
+        // by default
+        var.setPloidyRecalcData(var.getSvData().ploidy(), var.getSvData().ploidy());
+
         return var;
+    }
+
+    public void setDefaultPloidyCalcData()
+    {
+        AllVariants.stream().forEach(x -> x.setPloidyRecalcData(x.getSvData().ploidy(), x.getSvData().ploidy()));
     }
 
     public void addCopyNumberData()

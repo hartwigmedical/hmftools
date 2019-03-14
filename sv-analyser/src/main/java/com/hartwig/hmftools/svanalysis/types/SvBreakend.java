@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.svanalysis.types;
 
 import static com.hartwig.hmftools.svanalysis.analysis.CNAnalyser.MIN_LOH_CN;
+import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.CHROMOSOME_ARM_P;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.makeChrArmStr;
 
 public class SvBreakend {
@@ -39,6 +40,11 @@ public class SvBreakend {
 
     public void setChrPosIndex(int index) { mChrPosIndex = index; }
     public int getChrPosIndex() { return mChrPosIndex; }
+
+    public static String DIRECTION_CENTROMERE = "C";
+    public static String DIRECTION_TELOMERE = "T";
+
+    public String direction() { return (mOrientation == 1) == (mArm == CHROMOSOME_ARM_P) ? DIRECTION_TELOMERE : DIRECTION_CENTROMERE; }
 
     public final String toString()
     {

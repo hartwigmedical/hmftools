@@ -740,6 +740,7 @@ public class SvCluster
 
                 int minPloidyInt = (int)ceil(var.ploidyMin());
                 int maxPloidyInt = (int)floor(var.ploidyMax());
+                maxPloidyInt = max(minPloidyInt, maxPloidyInt);
 
                 if(tightestMaxPloidy == -1 || var.ploidyMax() < tightestMaxPloidy)
                     tightestMaxPloidy = var.ploidyMax();
@@ -981,7 +982,7 @@ public class SvCluster
 
 
     private static int SPECIFIC_CLUSTER_ID = -1;
-    // private static int SPECIFIC_CLUSTER_ID = 92;
+    // private static int SPECIFIC_CLUSTER_ID = 382;
 
     public static boolean isSpecificCluster(final SvCluster cluster)
     {

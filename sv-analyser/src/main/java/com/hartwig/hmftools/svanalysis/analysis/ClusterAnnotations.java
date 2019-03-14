@@ -28,6 +28,7 @@ import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.copyNumbersEq
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.getSvTypesStr;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.makeChrArmStr;
 import static com.hartwig.hmftools.svanalysis.types.SvArmCluster.typeToString;
+import static com.hartwig.hmftools.svanalysis.types.SvBreakend.DIRECTION_CENTROMERE;
 import static com.hartwig.hmftools.svanalysis.types.SvChain.getRepeatedSvSequence;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.CLUSTER_ANNONTATION_CT;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.CLUSTER_ANNONTATION_DM;
@@ -684,9 +685,8 @@ public class ClusterAnnotations
 
                     ++foldbackIndex;
 
-                    String facesTorC = (breakend.orientation() == 1) == (breakend.arm() == CHROMOSOME_ARM_P) ? "T" : "C";
-
-                    String foldbackInfo = String.format("%s;%s;%d;%.4f", existingInfo, facesTorC, foldbackRank, positionPercent);
+                    String foldbackInfo = String.format("%s;%s;%d;%.4f",
+                            existingInfo, breakend.direction(), foldbackRank, positionPercent);
 
                     for(int be = SVI_START; be <= SVI_END; ++be)
                     {
@@ -820,9 +820,9 @@ public class ClusterAnnotations
                     breakendLower = breakend;
                 }
 
-                String direction = (breakend.orientation() == 1) == (breakend.arm() == CHROMOSOME_ARM_P) ? "T" : "C";
+                String direction = breakend.direction();
                 foldbackOrientations = appendStr(foldbackOrientations, direction, ';');
-                double ploidy = direction == "C" ? abs(var.ploidyMin()) : -abs(var.ploidyMin());
+                double ploidy = direction == DIRECTION_CENTROMERE ? abs(var.ploidyMin()) : -abs(var.ploidyMin());
                 foldbackPloidies = appendStr(foldbackPloidies, String.format("%.2f", ploidy), ';');
                 foldbackIds = appendStr(foldbackIds, breakend.getSV().id(), ';');
                 foldbackChained = appendStr(foldbackChained, Boolean.toString(var.isChainedFoldback()), ';');

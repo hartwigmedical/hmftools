@@ -5,15 +5,8 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.Math.round;
 
-import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DUP;
-import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INV;
-import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.svanalysis.analysis.LinkFinder.MIN_TEMPLATED_INSERTION_LENGTH;
-import static com.hartwig.hmftools.svanalysis.analysis.LinkFinder.areLinkedSection;
-import static com.hartwig.hmftools.svanalysis.types.ChainSvData.CHAIN_SV_TYPE_COMPLEX_DUP;
-import static com.hartwig.hmftools.svanalysis.types.ChainSvData.CHAIN_SV_TYPE_COMPLEX_INV;
-import static com.hartwig.hmftools.svanalysis.types.ChainSvData.CHAIN_SV_TYPE_FOLDBACK;
-import static com.hartwig.hmftools.svanalysis.types.ChainSvData.CHAIN_SV_TYPE_SIMPLE;
+import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.ASSEMBLY_MATCH_MATCHED;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_END;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_START;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.isStart;
@@ -22,10 +15,8 @@ import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.LINK_TYPE_TI;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.svanalysis.types.ChainSvData;
 import com.hartwig.hmftools.svanalysis.types.SvBreakend;
 import com.hartwig.hmftools.svanalysis.types.SvChain;
 import com.hartwig.hmftools.svanalysis.types.SvCluster;
@@ -46,6 +37,7 @@ public class ChainFinder
     private List<SvLinkedPair> mAssemblyLinkedPairs;
     private List<SvLinkedPair> mChainClosingPairs;
     private List<SvVarData> mFoldbacks;
+    private List<SvVarData> mComplexDupCandidates;
 
     private List<SvChain> mPartialChains;
     private int mNextChainId;
@@ -66,6 +58,7 @@ public class ChainFinder
         mLinkIndex = 0;
         mPartialChains = Lists.newArrayList();
         mFoldbacks = Lists.newArrayList();
+        mComplexDupCandidates = Lists.newArrayList();
         mUnlinkedSVs = Lists.newArrayList();
         mChainClosingPairs = Lists.newArrayList();
         mUnlinkedBreakendMap = new HashMap();
@@ -89,10 +82,12 @@ public class ChainFinder
         mChainClosingPairs.clear();
         mFoldbacks.clear();
         mFoldbacks.addAll(mCluster.getFoldbacks());
+        mComplexDupCandidates.clear();
 
         mPartialChains.clear();
         mUnlinkedSVs.clear();
         mUnlinkedBreakendMap.clear();
+        mSvBreakendPossibleLinks.clear();
     }
 
     public void setLogVerbose(boolean toggle) { mLogVerbose = toggle; }
@@ -1101,9 +1096,13 @@ public class ChainFinder
         // need to exclude breakends which are already assigned to an assembled TI
         // unless replication permits additional instances of it
         // add them in such a way that the nearest ones are first
-        mSvBreakendPossibleLinks.clear();
 
         final Map<String,List<SvBreakend>> chrBreakendMap = mCluster.getChrBreakendMap();
+
+        // a map of potential complex DUPs to the number of breakends with counts:
+        // # breakends where maxPloidy(NearestFacingBE) > 2 x minPloidy(BE)
+        // # breakends where maxPloidy(BE) < minPloidy(NearestFacingBE)
+        Map<SvVarData,int[]> candidateComplexDups = new HashMap();
 
         for (final Map.Entry<String, List<SvBreakend>> entry : chrBreakendMap.entrySet())
         {
@@ -1119,9 +1118,14 @@ public class ChainFinder
                 if(alreadyLinkedBreakend(lowerBreakend))
                     continue;
 
+                int skippedNonAssembledIndex = -1;
+
                 for (int j = i+1; j < breakendList.size(); ++j)
                 {
                     final SvBreakend upperBreakend = breakendList.get(j);
+
+                    if(skippedNonAssembledIndex == -1 && upperBreakend.getSV().getAssemblyMatchType(upperBreakend.usesStart()) != ASSEMBLY_MATCH_MATCHED)
+                        skippedNonAssembledIndex = j;
 
                     if(upperBreakend.orientation() != 1)
                         continue;
@@ -1161,9 +1165,55 @@ public class ChainFinder
                     }
 
                     upperPairs.add(0, newPair); // add to front since always nearer than the one prior
+
+                    if(skippedNonAssembledIndex == -1 || skippedNonAssembledIndex == j)
+                    {
+                        // make note of any breakends which run into a high-ploidy SV at their first opposing breakend
+                        if (!lowerBreakend.getSV().isFoldback())
+                        {
+                            testComplexDupConditions(candidateComplexDups, lowerBreakend, upperBreakend);
+                        }
+
+                        if (!upperBreakend.getSV().isFoldback())
+                        {
+                            testComplexDupConditions(candidateComplexDups, upperBreakend, lowerBreakend);
+                        }
+                    }
                 }
             }
         }
+
+        for(Map.Entry<SvVarData,int[]> entry : candidateComplexDups.entrySet())
+        {
+            SvVarData var = entry.getKey();
+            int[] ploidyCounts = entry.getValue();
+
+            if(ploidyCounts[0] == 2 && ploidyCounts[1] >= 1)
+            {
+                LOGGER.debug("identified potential complex dup({} {})", var.posId(), var.type());
+                mComplexDupCandidates.add(var);
+            }
+        }
+    }
+
+    private boolean testComplexDupConditions(Map<SvVarData,int[]> complexDupsMap, SvBreakend breakend, SvBreakend higherPloidyBreakend)
+    {
+        if(breakend.getSV().ploidyMin() * 2 > higherPloidyBreakend.getSV().ploidyMax())
+            return false;
+
+        int[] ploidyCounts = complexDupsMap.get(breakend.getSV());
+        if(ploidyCounts == null)
+        {
+            ploidyCounts = new int[2];
+            complexDupsMap.put(breakend.getSV(), ploidyCounts);
+        }
+
+        ++ploidyCounts[0];
+
+        if(breakend.getSV().ploidyMax() < higherPloidyBreakend.getSV().ploidyMin())
+            ++ploidyCounts[1];
+
+        return true;
     }
 
     private boolean alreadyLinkedBreakend(final SvBreakend breakend)
@@ -1375,153 +1425,6 @@ public class ChainFinder
                     mCluster.id(), mCluster.getSvCount(), mPartialChains.size(), mUnlinkedSVs.size(),
                     mUnlinkedBreakendMap.size(), mSvReplicationMap.size());
         }
-    }
-
-    private void assessClusterProperties()
-    {
-        /* report on:
-        - every foldback, replication count, ploidy min-max, orientation, other significant SVs faced
-        - every DUP or INV which faces or overlaps a foldback without nearest linking possibilites
-        */
-
-        if(mCluster.getSvCount() > 20 || mCluster.getSvCount() < 4 || mCluster.getTypeCount(SGL) > 2)
-            return;
-
-        List<ChainSvData> chainSvDataList = Lists.newArrayList();
-        List<ChainSvData> foldbackDataList = Lists.newArrayList();
-
-        // first gather up foldbacks
-        for(SvVarData var : mCluster.getFoldbacks())
-        {
-            ChainSvData svData = new ChainSvData(var);
-            svData.Type = CHAIN_SV_TYPE_FOLDBACK;
-
-            if(var.isChainedFoldback())
-            {
-                // only add one instance
-                boolean exists = false;
-                for (ChainSvData otherData : foldbackDataList)
-                {
-                    if (var.equals(otherData.DualFoldbackOtherSV))
-                    {
-                        exists = true;
-                        break;
-                    }
-                }
-
-                if (exists)
-                    continue;
-
-                final SvBreakend fbBreakend = var.getFoldbackBreakend(true) != null
-                        ? var.getFoldbackBreakend(true) : var.getFoldbackBreakend(false);
-
-                svData.DualFoldbackOtherSV = fbBreakend.getSV();
-            }
-
-            foldbackDataList.add(svData);
-        }
-
-        chainSvDataList.addAll(foldbackDataList);
-
-        for(SvVarData var : mCluster.getSVs())
-        {
-            if (var.isFoldback()) // already included
-                continue;
-
-            ChainSvData svData = new ChainSvData(var);
-
-            // check for INVs and DUPs overlapping foldbacks
-            if(var.type() == DUP || var.type() == INV)
-            {
-                for(ChainSvData otherData : foldbackDataList)
-                {
-                    final String chromosome = otherData.getBreakend(true).chromosome();
-                    long fbPosStart = otherData.getBreakend(true).position();
-                    long fbPosEnd = otherData.getBreakend(false).position();
-
-                    if(var.chromosome(true).equals(chromosome))
-                    {
-                        if(var.position(true) < fbPosStart && var.position(false) > fbPosEnd)
-                        {
-                            svData.OverlappedFoldbacks.add(otherData.SV);
-                        }
-                    }
-                }
-            }
-
-            if(!svData.OverlappedFoldbacks.isEmpty())
-            {
-                svData.Type = var.type() == DUP ? CHAIN_SV_TYPE_COMPLEX_DUP : CHAIN_SV_TYPE_COMPLEX_INV;
-            }
-            else
-            {
-                svData.Type = CHAIN_SV_TYPE_SIMPLE;
-            }
-
-            chainSvDataList.add(svData);
-        }
-
-        // now set stats about possible links between the complex types
-        List<ChainSvData> complexTypes = chainSvDataList.stream().filter(x -> x.Type != CHAIN_SV_TYPE_SIMPLE).collect(Collectors.toList());
-
-        for(int i = 0; i < complexTypes.size(); ++i)
-        {
-            ChainSvData svData = complexTypes.get(i);
-
-            for(int be = SVI_START; be <= SVI_END; ++be)
-            {
-                if (svData.Type == CHAIN_SV_TYPE_SIMPLE)
-                    continue;
-
-                boolean isStart = isStart(be);
-
-                SvBreakend breakend = svData.getBreakend(isStart);
-
-                List<SvLinkedPair> possibleLinks = mSvBreakendPossibleLinks.get(breakend);
-
-                if (possibleLinks == null || possibleLinks.isEmpty())
-                    continue;
-
-                for (SvLinkedPair pair : possibleLinks)
-                {
-                    for (int j = i + 1; j < complexTypes.size(); ++j)
-                    {
-                        ChainSvData otherData = complexTypes.get(j);
-                        SvBreakend otherBreakend = null;
-
-                        if (pair.first() == otherData.SV)
-                        {
-                            otherBreakend = pair.first().getBreakend(pair.firstLinkOnStart());
-                        }
-                        else if (pair.second() == otherData.SV)
-                        {
-                            otherBreakend = pair.second().getBreakend(pair.secondLinkOnStart());
-                        }
-                        else
-                        {
-                            continue;
-                        }
-
-                        svData.getFacingBreakends(isStart).add(otherBreakend);
-                        otherData.getFacingBreakends(otherBreakend.usesStart()).add(breakend);
-                    }
-                }
-            }
-        }
-
-        int maxRepCount = 0;
-
-        for(Map.Entry<SvVarData,Integer> entry : mSvReplicationMap.entrySet())
-        {
-            maxRepCount = max(maxRepCount, entry.getValue());
-        }
-
-        LOGGER.info("cluster({}: {}) SVs({}) foldbacks({}) maxReplication",
-                mCluster.id(), mCluster.getDesc(), mCluster.getSvCount(), mCluster.getFoldbacks().size(), maxRepCount);
-
-
-
-
     }
 
 }

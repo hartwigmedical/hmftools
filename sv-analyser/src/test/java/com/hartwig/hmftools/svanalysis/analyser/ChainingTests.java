@@ -301,8 +301,8 @@ public class ChainingTests
     @Test
     public void testComplexDupChain()
     {
-        // simple chain with replicated section centromere - A - B - A - C - A - D - B - A - C - A - B - R - telomere,
-        // where D is a complex DUP around the section B - A - C - A and R is the resolving SV
+        // simple chain with replicated section: centromere - A - B - C - D - DUP - B - C - D - E - telomere,
+        // where D is a complex DUP around the section B - C - D
         SvTestHelper tester = new SvTestHelper();
         tester.logVerbose(true);
         tester.Analyser.getChainFinder().setLogVerbose(true);
@@ -310,7 +310,7 @@ public class ChainingTests
         final SvVarData varA = createTestSv("A", "1", "1", 1000,5000, 1, 1, INV, 2, 2, 1, 1, 1, "");
         final SvVarData varB = createTestSv("B", "1", "1", 4000,9000, -1, 1, DUP, 3, 3, 2, 2, 2, "");
         final SvVarData varC = createTestSv("C", "1", "1", 7000,8000, 1, -1, DEL, 3, 3, 2, 2, 2, "");
-        final SvVarData varD = createTestSv("D", "1", "1", 3000,6000, -1, 1, DUP, 3, 3, 2, 2, 2, "");
+        final SvVarData varD = createTestSv("D", "1", "1", 3000,6000, 1, -1, DEL, 3, 3, 2, 2, 2, "");
         final SvVarData varE = createTestSv("E", "1", "1", 2000,10000, -1, -1, INV, 2, 2, 1, 1, 1, "");
         final SvVarData varDup = createTestSv("DUP", "1", "1", 2500,4500, -1, 1, DUP, 3, 3, 1, 1, 1, "");
 
@@ -324,11 +324,10 @@ public class ChainingTests
         tester.preClusteringInit();
         tester.Analyser.clusterAndAnalyse();
 
-        // assertEquals(varA.getFoldbackLink(true), varA.id());
-
         assertEquals(1, tester.Analyser.getClusters().size());
         final SvCluster cluster = tester.Analyser.getClusters().get(0);
 
+        assertTrue(cluster.getFoldbacks().isEmpty());
         assertEquals(1, cluster.getChains().size());
 
         final SvChain chain = cluster.getChains().get(0);
