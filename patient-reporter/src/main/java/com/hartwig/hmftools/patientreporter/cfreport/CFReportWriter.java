@@ -6,6 +6,7 @@ import com.hartwig.hmftools.patientreporter.ReportWriter;
 
 import com.hartwig.hmftools.patientreporter.cfreport.components.SidePanel;
 import com.lowagie.text.*;
+import com.lowagie.text.pdf.PdfTemplate;
 import com.lowagie.text.pdf.PdfWriter;
 
 import org.apache.logging.log4j.LogManager;
@@ -60,8 +61,6 @@ public class CFReportWriter implements ReportWriter {
 
         report.newPage();
         report.newPage();
-
-
 
         // Close report (gets written to file by closing)
         report.close();

@@ -17,8 +17,12 @@ public class PageEvent extends PdfPageEventHelper {
         SidePanel.draw((document.getPageNumber() == 1), writer);
 
         // Add footer
-        Footer.drawFooter(document.getPageNumber(), writer);
+        Footer.drawFooter(document, writer);
 
     }
 
+    @Override
+    public void onCloseDocument(PdfWriter writer, Document document) { }
+
 }
+
