@@ -33,21 +33,22 @@ public abstract class QCFailReporter {
         final PatientTumorLocation patientTumorLocation =
                 PatientTumorLocationFunctions.findPatientTumorLocationForSample(baseReportData().patientTumorLocations(), sample);
 
-        final SampleReport sampleReport = ImmutableSampleReport.of(sample,
-                lims.barcodeTumor(sample),
-                lims.barcodeReference(sample),
-                patientTumorLocation,
-                lims.purityShallowSeq(sample),
-                lims.pathologyTumorPercentage(sample),
-                lims.arrivalDate(sample),
-                null,
-                lims.labProcedures(sample),
-                baseReportData().hospitalModel().addresseeStringForSample(sample, lims.requesterName(sample)),
-                lims.projectName(sample),
-                lims.requesterName(sample),
-                lims.requesterEmail(sample),
-                lims.submissionId(sample),
-                lims.hospitalPatientId(sample));
+        final SampleReport sampleReport = ImmutableSampleReport.builder()
+                .sampleId(sample)
+                .barcodeTumor(lims.barcodeTumor(sample))
+                .barcodeReference(lims.barcodeReference(sample))
+                .patientTumorLocation(patientTumorLocation)
+                .purityShallowSeq(lims.purityShallowSeq(sample))
+                .pathologyTumorPercentage(lims.pathologyTumorPercentage(sample))
+                .tumorArrivalDate(lims.arrivalDate(sample))
+                .labProcedures(lims.labProcedures(sample))
+                .addressee(baseReportData().hospitalModel().addresseeStringForSample(sample, lims.requesterName(sample)))
+                .projectName(lims.projectName(sample))
+                .requesterName(lims.requesterName(sample))
+                .requesterEmail(lims.requesterEmail(sample))
+                .submissionId(lims.submissionId(sample))
+                .hospitalPatientId(lims.hospitalPatientId(sample))
+                .build();
 
         return ImmutableQCFailReport.of(sampleReport,
                 reason,
