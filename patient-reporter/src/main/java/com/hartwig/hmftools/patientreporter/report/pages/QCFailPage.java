@@ -55,8 +55,8 @@ public abstract class QCFailPage {
     private ComponentBuilder<?, ?> mainPageQCFailSection(@NotNull String sampleId) {
         LimsSampleType type = LimsSampleType.fromSampleId(sampleId);
 
-        if (sampleReport().recipient() == null) {
-            throw new IllegalStateException("No recipient address present for sample " + sampleReport().sampleId());
+        if (sampleReport().addressee() == null) {
+            throw new IllegalStateException("No addressee address present for sample " + sampleReport().sampleId());
         }
 
         final String title;
@@ -100,7 +100,7 @@ public abstract class QCFailPage {
 
     @NotNull
     private ComponentBuilder<?, ?> CORELayout(@NotNull String title, @NotNull String subTitle, @NotNull String message) {
-        String contactDetails = sampleReport().contactNames() + " (" + sampleReport().contactEmails() + ")";
+        String contactDetails = sampleReport().requesterName() + " (" + sampleReport().requesterEmail() + ")";
         return cmp.verticalList(cmp.text(title).setStyle(tableHeaderStyle().setFontSize(12)).setHeight(20),
                 cmp.text(subTitle).setStyle(dataTableStyle().setFontSize(12)).setHeight(20),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
@@ -113,8 +113,8 @@ public abstract class QCFailPage {
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
                 cmp.text("The HMF sample ID is " + sampleReport().sampleId() + " and the hospital patient ID is "
                         + sampleReport().hospitalPatientId()).setStyle(fontStyle()),
-                cmp.text("The project name of sample is " + sampleReport().projectName() + " and the submission ID is "
-                        + sampleReport().submission()).setStyle(fontStyle()),
+                cmp.text("The project name of sample is " + sampleReport().projectName() + " and the submissionId ID is "
+                        + sampleReport().submissionId()).setStyle(fontStyle()),
                 cmp.text("The internal tumor barcode is " + sampleReport().barcodeTumor() + " and the internal blood barcode is "
                         + sampleReport().barcodeReference()).setStyle(fontStyle()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
@@ -192,7 +192,7 @@ public abstract class QCFailPage {
 
     @NotNull
     private TextFieldBuilder<String> recipientText() {
-        return cmp.text("This report is generated and verified by: " + user() + " and is addressed at " + sampleReport().recipient())
+        return cmp.text("This report is generated and verified by: " + user() + " and is addressed at " + sampleReport().addressee())
                 .setStyle(fontStyle());
     }
 

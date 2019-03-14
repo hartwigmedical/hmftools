@@ -68,9 +68,9 @@ public abstract class SampleDetailsPage {
     private ComponentBuilder<?, ?> sampleDetailsSection(@NotNull String sampleId) {
         LimsSampleType type = LimsSampleType.fromSampleId(sampleId);
 
-        String recipient = sampleReport().recipient();
+        String recipient = sampleReport().addressee();
         if (recipient == null) {
-            LOGGER.warn("No recipient address present for sample " + sampleReport().sampleId());
+            LOGGER.warn("No addressee address present for sample " + sampleReport().sampleId());
         }
 
         recipient = recipient != null ? recipient : "?";
@@ -89,9 +89,9 @@ public abstract class SampleDetailsPage {
 
         if (type == LimsSampleType.CORE) {
             lines.add("The hospital patient ID is: " + sampleReport().hospitalPatientId());
-            lines.add("The project name of sample is: " + sampleReport().projectName() + " and the submission ID is " + sampleReport().submission());
-            lines.add("The contact names are: " + sampleReport().contactNames());
-            lines.add("The contact emails are: " + sampleReport().contactEmails());
+            lines.add("The project name of sample is: " + sampleReport().projectName() + " and the submissionId ID is " + sampleReport().submissionId());
+            lines.add("The contact names are: " + sampleReport().requesterName());
+            lines.add("The contact emails are: " + sampleReport().requesterEmail());
         }
 
         comments().ifPresent(comments -> lines.add("Comments: " + comments));

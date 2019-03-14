@@ -2,7 +2,6 @@ package com.hartwig.hmftools.patientreporter;
 
 import java.time.LocalDate;
 
-import com.google.gson.annotations.SerializedName;
 import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocation;
 import com.hartwig.hmftools.common.lims.LimsSampleType;
 
@@ -43,20 +42,20 @@ public abstract class SampleReport {
     @NotNull
     public abstract String labProcedures();
 
-    @Nullable
-    public abstract String recipient();
-
     @NotNull
     public abstract String projectName();
 
     @NotNull
-    public abstract String contactNames();
+    public abstract String requesterName();
 
     @NotNull
-    public abstract String contactEmails();
+    public abstract String requesterEmail();
+
+    @Nullable
+    public abstract String addressee();
 
     @NotNull
-    public abstract String submission();
+    public abstract String submissionId();
 
     @Nullable
     public abstract String hospitalPatientId();

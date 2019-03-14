@@ -146,19 +146,23 @@ public final class ExampleAnalysisTestFactory {
     @NotNull
     private static SampleReport createCOLO829SampleReport() {
         final String sample = "COLO829T";
-        return ImmutableSampleReport.of(sample, "A1", "A2",
-                ImmutablePatientTumorLocation.of("COLO829", "Skin", "Melanoma"),
-                Strings.EMPTY,
-                "80%",
-                LocalDate.parse("05-Jan-2018", DATE_FORMATTER),
-                LocalDate.parse("01-Jan-2018", DATE_FORMATTER),
-                "PREP013V23-QC037V20-SEQ008V25",
-                "HMF Testing HospitalModelFactory",
-                "COLO",
-                Strings.EMPTY,
-                Strings.EMPTY,
-                Strings.EMPTY,
-                Strings.EMPTY);
+        return ImmutableSampleReport.builder()
+                .sampleId(sample)
+                .barcodeTumor("A1")
+                .barcodeReference("A2")
+                .patientTumorLocation(ImmutablePatientTumorLocation.of("COLO829", "Skin", "Melanoma"))
+                .purityShallowSeq(Strings.EMPTY)
+                .pathologyTumorPercentage("80%")
+                .tumorArrivalDate(LocalDate.parse("05-Jan-2018", DATE_FORMATTER))
+                .bloodArrivalDate(LocalDate.parse("01-Jan-2018", DATE_FORMATTER))
+                .labProcedures("PREP013V23-QC037V20-SEQ008V25")
+                .requesterName(Strings.EMPTY)
+                .requesterEmail(Strings.EMPTY)
+                .addressee("HMF Testing Center")
+                .projectName("COLO")
+                .hospitalPatientId(Strings.EMPTY)
+                .submissionId(Strings.EMPTY)
+                .build();
     }
 
     @NotNull
