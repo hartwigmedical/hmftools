@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.patientreporter.report;
+package com.hartwig.hmftools.patientreporter;
 
 import static com.hartwig.hmftools.patientreporter.PatientReporterTestFactory.createTestCopyNumberBuilder;
 import static com.hartwig.hmftools.patientreporter.PatientReporterTestUtil.testBaseReportData;
@@ -30,11 +30,6 @@ import com.hartwig.hmftools.common.purple.purity.FittedPurity;
 import com.hartwig.hmftools.common.purple.purity.ImmutableFittedPurity;
 import com.hartwig.hmftools.common.variant.Clonality;
 import com.hartwig.hmftools.common.variant.Hotspot;
-import com.hartwig.hmftools.patientreporter.AnalysedPatientReport;
-import com.hartwig.hmftools.patientreporter.BaseReportData;
-import com.hartwig.hmftools.patientreporter.ImmutableAnalysedPatientReport;
-import com.hartwig.hmftools.patientreporter.ImmutableSampleReport;
-import com.hartwig.hmftools.patientreporter.SampleReport;
 import com.hartwig.hmftools.patientreporter.germline.GermlineVariant;
 import com.hartwig.hmftools.patientreporter.germline.ImmutableGermlineVariant;
 import com.hartwig.hmftools.patientreporter.structural.ImmutableReportableGeneDisruption;
@@ -47,7 +42,7 @@ import com.hartwig.hmftools.patientreporter.variants.ReportableSomaticVariant;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
-final class ExampleAnalysisTestFactory {
+public final class ExampleAnalysisTestFactory {
 
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd-MMM-yyyy", Locale.ENGLISH);
 
@@ -55,7 +50,7 @@ final class ExampleAnalysisTestFactory {
     }
 
     @NotNull
-    static AnalysedPatientReport buildCOLO829() {
+    public static AnalysedPatientReport buildCOLO829() {
         final double impliedTumorPurity = 1D;
         final double averageTumorPloidy = 3.1;
         final int tumorMutationalLoad = 182;
@@ -102,7 +97,7 @@ final class ExampleAnalysisTestFactory {
     }
 
     @NotNull
-    static AnalysedPatientReport buildAnalysisWithAllTablesFilledIn() {
+    public static AnalysedPatientReport buildAnalysisWithAllTablesFilledIn() {
         final double impliedTumorPurity = 1D;
         final double averageTumorPloidy = 3.1;
         final int tumorMutationalLoad = 182;
@@ -151,19 +146,23 @@ final class ExampleAnalysisTestFactory {
     @NotNull
     private static SampleReport createCOLO829SampleReport() {
         final String sample = "COLO829T";
-        return ImmutableSampleReport.of(sample, "A1", "A2",
-                ImmutablePatientTumorLocation.of("COLO829", "Skin", "Melanoma"),
-                Strings.EMPTY,
-                "80%",
-                LocalDate.parse("05-Jan-2018", DATE_FORMATTER),
-                LocalDate.parse("01-Jan-2018", DATE_FORMATTER),
-                "PREP013V23-QC037V20-SEQ008V25",
-                "HMF Testing Center",
-                "COLO",
-                Strings.EMPTY,
-                Strings.EMPTY,
-                Strings.EMPTY,
-                Strings.EMPTY);
+        return ImmutableSampleReport.builder()
+                .sampleId(sample)
+                .barcodeTumor("A1")
+                .barcodeReference("A2")
+                .patientTumorLocation(ImmutablePatientTumorLocation.of("COLO829", "Skin", "Melanoma"))
+                .purityShallowSeq(Strings.EMPTY)
+                .pathologyTumorPercentage("80%")
+                .tumorArrivalDate(LocalDate.parse("05-Jan-2018", DATE_FORMATTER))
+                .bloodArrivalDate(LocalDate.parse("01-Jan-2018", DATE_FORMATTER))
+                .labProcedures("PREP013V23-QC037V20-SEQ008V25")
+                .requesterName(Strings.EMPTY)
+                .requesterEmail(Strings.EMPTY)
+                .addressee("HMF Testing Center")
+                .projectName("COLO")
+                .hospitalPatientId(Strings.EMPTY)
+                .submissionId(Strings.EMPTY)
+                .build();
     }
 
     @NotNull
@@ -434,7 +433,6 @@ final class ExampleAnalysisTestFactory {
     private static List<ReportableSomaticVariant> createCOLO829SomaticVariants(@NotNull PurityAdjuster purityAdjuster) {
         ReportableSomaticVariant variant1 = ImmutableReportableSomaticVariant.builder()
                 .gene("BRAF")
-                .position(140453136)
                 .isDrupActionable(true)
                 .hgvsCodingImpact("c.1799T>A")
                 .hgvsProteinImpact("p.Val600Glu")
@@ -452,7 +450,6 @@ final class ExampleAnalysisTestFactory {
 
         ReportableSomaticVariant variant2 = ImmutableReportableSomaticVariant.builder()
                 .gene("CDKN2A")
-                .position(0)
                 .isDrupActionable(true)
                 .hgvsCodingImpact("c.369_370delCG")
                 .hgvsProteinImpact("p.Gly124fs")
@@ -470,7 +467,6 @@ final class ExampleAnalysisTestFactory {
 
         ReportableSomaticVariant variant3 = ImmutableReportableSomaticVariant.builder()
                 .gene("SF3B1")
-                .position(198266779)
                 .isDrupActionable(false)
                 .hgvsCodingImpact("c.2153C>T")
                 .hgvsProteinImpact("p.Pro718Leu")
@@ -488,7 +484,6 @@ final class ExampleAnalysisTestFactory {
 
         ReportableSomaticVariant variant4 = ImmutableReportableSomaticVariant.builder()
                 .gene("TP63")
-                .position(198266779)
                 .isDrupActionable(false)
                 .hgvsCodingImpact("c.1497G>T")
                 .hgvsProteinImpact("p.Met499Ile")

@@ -25,21 +25,4 @@ public enum LimsSampleType {
 
         throw new IllegalStateException("Cannot resolve type for sampleId: " + sampleId);
     }
-
-    @NotNull
-    public static LimsSampleType fromRunName(@NotNull String runName) {
-        if (runName.contains("CPCT")) {
-            return CPCT;
-        } else if (runName.contains("WIDE")) {
-            return WIDE;
-        } else if (runName.contains("CORE")) {
-            return CORE;
-        } else if (runName.contains("DRUP")) {
-            return DRUP;
-        } else if (runName.contains("COLO")) {
-            return COLO;
-        }
-
-        throw new IllegalStateException("Cannot resolve type for run name: " + runName);
-    }
 }

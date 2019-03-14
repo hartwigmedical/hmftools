@@ -5,14 +5,15 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.util.List;
 
-import com.hartwig.hmftools.common.center.Center;
-import com.hartwig.hmftools.common.center.CenterModel;
 import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocation;
+import com.hartwig.hmftools.common.hospital.HospitalModel;
+import com.hartwig.hmftools.common.hospital.HospitalModelFactory;
 import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.lims.LimsFactory;
-import com.hartwig.hmftools.patientreporter.qcfail.ImmutableNotAnalysableReporter;
-import com.hartwig.hmftools.patientreporter.qcfail.NotAnalysableReason;
-import com.hartwig.hmftools.patientreporter.qcfail.NotAnalysableReporter;
+import com.hartwig.hmftools.common.lims.LimsSampleType;
+import com.hartwig.hmftools.patientreporter.qcfail.ImmutableQCFailReporter;
+import com.hartwig.hmftools.patientreporter.qcfail.QCFailReason;
+import com.hartwig.hmftools.patientreporter.qcfail.QCFailReporter;
 import com.hartwig.hmftools.patientreporter.report.PDFWriter;
 import com.hartwig.hmftools.patientreporter.structural.SvAnalyzer;
 
@@ -28,8 +29,6 @@ import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.core.config.Configurator;
 import org.jetbrains.annotations.NotNull;
 
-import net.sf.dynamicreports.report.exception.DRException;
-
 public class PatientReporterApplication {
 
     private static final Logger LOGGER = LogManager.getLogger(PatientReporterApplication.class);
@@ -39,34 +38,34 @@ public class PatientReporterApplication {
     // Uncomment this line when generating an example report using PDFWriterTest
     //        public static final String VERSION = "5.9";
 
-    private static final String TUMOR_LOCATION_CSV = "tumor_location_csv";
-    private static final String LIMS_DIRECTORY = "lims";
-    private static final String REPORT_DIRECTORY = "report_dir";
     private static final String RUN_DIRECTORY = "run_dir";
-    private static final String NOT_ANALYSABLE = "not_analysable";
-    private static final String NOT_ANALYSABLE_REASON = "not_analysable_reason";
-    private static final String NOT_ANALYSED_SAMPLE = "not_analysable_sample";
+
+    private static final String LIMS_DIRECTORY = "lims_dir";
+    private static final String HOSPITALS_DIRECTORY = "hospital_dir";
+    private static final String REPORT_DIRECTORY = "report_dir";
+    private static final String KNOWLEDGEBASE_DIRECTORY = "knowledgebase_dir";
+
+    private static final String QC_FAIL = "qc_fail";
+    private static final String QC_FAIL_REASON = "qc_fail_reason";
+    private static final String QC_FAIL_SAMPLE = "qc_fail_sample";
 
     private static final String DO_REPORT_GERMLINE = "do_report_germline";
     private static final String FUSION_CSV = "fusion_csv";
     private static final String DISRUPTION_CSV = "disruption_csv";
 
-    private static final String KNOWLEDGEBASE_PATH = "knowledgebase_path";
-    private static final String DRUP_GENES_CSV = "drup_genes_csv";
-    private static final String HOTSPOT_TSV = "hotspot_tsv";
-    private static final String LOG_DEBUG = "log_debug";
-
     private static final String FASTA_FILE_LOCATION = "fasta_file_location";
     private static final String HIGH_CONFIDENCE_BED = "high_confidence_bed";
-
-    private static final String CENTER_CSV = "center_csv";
-    private static final String CENTER_CSV_MANUAL = "center_manual_csv";
+    private static final String TUMOR_LOCATION_CSV = "tumor_location_csv";
+    private static final String DRUP_GENES_CSV = "drup_genes_csv";
+    private static final String HOTSPOT_TSV = "hotspot_tsv";
 
     private static final String RVA_LOGO = "rva_logo";
     private static final String SIGNATURE = "signature";
     private static final String COMMENTS = "comments";
 
-    public static void main(final String... args) throws ParseException, IOException, DRException {
+    private static final String LOG_DEBUG = "log_debug";
+
+    public static void main(final String... args) throws ParseException, IOException {
         final Options options = createOptions();
         final CommandLine cmd = createCommandLine(options, args);
 
@@ -79,52 +78,68 @@ public class PatientReporterApplication {
         }
 
         LOGGER.info("Running patient reporter v" + VERSION);
-        final PDFWriter pdfWriter = new PDFWriter(cmd.getOptionValue(REPORT_DIRECTORY));
+        final ReportWriter reportWriter = new PDFWriter();
 
-        if (cmd.hasOption(NOT_ANALYSABLE) && validInputForNonAnalysableReport(cmd)) {
-            final String sample = cmd.getOptionValue(NOT_ANALYSED_SAMPLE);
-            LOGGER.info("Generating non-analysable report for {}", sample);
-            final NotAnalysableReason reason = NotAnalysableReason.fromIdentifier(cmd.getOptionValue(NOT_ANALYSABLE_REASON));
-            final NotAnalysableReporter reporter = ImmutableNotAnalysableReporter.of(buildBaseReportData(cmd));
+        if (cmd.hasOption(QC_FAIL) && validInputForQCFailReport(cmd)) {
+            final String sample = cmd.getOptionValue(QC_FAIL_SAMPLE);
+            LOGGER.info("Generating qc-fail report for {}", sample);
+            final QCFailReason reason = QCFailReason.fromIdentifier(cmd.getOptionValue(QC_FAIL_REASON));
+            final QCFailReporter reporter = ImmutableQCFailReporter.of(buildBaseReportData(cmd));
 
-            final NotAnalysedPatientReport report = reporter.run(sample, reason, cmd.getOptionValue(COMMENTS));
-            pdfWriter.writeNonSequenceableReport(report);
-        } else if (validInputForPatientReporter(cmd)) {
+            final QCFailReport report = reporter.run(sample, reason, cmd.getOptionValue(COMMENTS));
+            final String outputFilePath = generateOutputFilePathForPatientReport(cmd.getOptionValue(REPORT_DIRECTORY), report);
+            reportWriter.writeQCFailReport(report, outputFilePath);
+        } else if (validInputForAnalysedSample(cmd)) {
             LOGGER.info("Generating sequence report...");
             final SequencedReportData reporterData = buildReporterData(cmd);
             final PatientReporter reporter = buildReporter(cmd, reporterData);
 
             final AnalysedPatientReport report =
                     reporter.run(cmd.getOptionValue(RUN_DIRECTORY), cmd.hasOption(DO_REPORT_GERMLINE), cmd.getOptionValue(COMMENTS));
-            pdfWriter.writeSequenceReport(report);
+            final String outputFilePath = generateOutputFilePathForPatientReport(cmd.getOptionValue(REPORT_DIRECTORY), report);
+            reportWriter.writeAnalysedPatientReport(report, outputFilePath);
         } else {
             printUsageAndExit(options);
         }
     }
 
     @NotNull
+    private static String generateOutputFilePathForPatientReport(@NotNull String reportDirectory, @NotNull PatientReport patientReport) {
+        SampleReport sampleReport = patientReport.sampleReport();
+        LimsSampleType type = LimsSampleType.fromSampleId(sampleReport.sampleId());
+
+        String filePrefix =
+                type == LimsSampleType.CORE ? sampleReport.sampleId() + "_" + sampleReport.hospitalPatientId() : sampleReport.sampleId();
+        return reportDirectory + File.separator + filePrefix + "_hmf_report.pdf";
+    }
+
+    @NotNull
     private static BaseReportData buildBaseReportData(@NotNull final CommandLine cmd) throws IOException {
         String tumorLocationCsv = cmd.getOptionValue(TUMOR_LOCATION_CSV);
-        LOGGER.info("Loading ECRF CSV dump from {}.", tumorLocationCsv);
+        LOGGER.info("Loading tumor location CSV from {}.", tumorLocationCsv);
         final List<PatientTumorLocation> patientTumorLocations = PatientTumorLocation.readRecords(tumorLocationCsv);
-        LOGGER.info(" Loaded data for {} patients.", patientTumorLocations.size());
+        LOGGER.info(" Loaded tumor locations for {} patients.", patientTumorLocations.size());
 
         String limsDirectory = cmd.getOptionValue(LIMS_DIRECTORY);
         LOGGER.info("Loading LIMS database from {}.", limsDirectory);
         final Lims lims = LimsFactory.fromLimsDirectory(limsDirectory);
         LOGGER.info(" Loaded data for {} samples.", lims.sampleCount());
 
-        final CenterModel centerModel = Center.readFromCSV(cmd.getOptionValue(CENTER_CSV), cmd.getOptionValue(CENTER_CSV_MANUAL));
+        String hospitalsDirectory = cmd.getOptionValue(HOSPITALS_DIRECTORY);
+        LOGGER.info("Loading hospitals from {}.", hospitalsDirectory);
+        final HospitalModel hospitalModel = HospitalModelFactory.fromHospitalDirectory(hospitalsDirectory);
+        LOGGER.info(" Loaded data for {} hospitals.", hospitalModel.hospitalCount());
+
         return ImmutableBaseReportData.of(patientTumorLocations,
                 lims,
-                centerModel,
+                hospitalModel,
                 cmd.getOptionValue(SIGNATURE),
                 cmd.getOptionValue(RVA_LOGO));
     }
 
     @NotNull
     private static SequencedReportData buildReporterData(@NotNull final CommandLine cmd) throws IOException {
-        return SequencedReportDataLoader.buildFromFiles(cmd.getOptionValue(KNOWLEDGEBASE_PATH),
+        return SequencedReportDataLoader.buildFromFiles(cmd.getOptionValue(KNOWLEDGEBASE_DIRECTORY),
                 cmd.getOptionValue(DRUP_GENES_CSV),
                 cmd.getOptionValue(HOTSPOT_TSV),
                 cmd.getOptionValue(FASTA_FILE_LOCATION),
@@ -139,9 +154,9 @@ public class PatientReporterApplication {
         return ImmutablePatientReporter.of(buildBaseReportData(cmd), sequencedReportData, svAnalyzer);
     }
 
-    private static boolean validInputForPatientReporter(@NotNull final CommandLine cmd) {
+    private static boolean validInputForAnalysedSample(@NotNull final CommandLine cmd) {
         final String runDirectory = cmd.getOptionValue(RUN_DIRECTORY);
-        final String knowledgebasePath = cmd.getOptionValue(KNOWLEDGEBASE_PATH);
+        final String knowledgebaseDirectory = cmd.getOptionValue(KNOWLEDGEBASE_DIRECTORY);
         final String drupGenesCsv = cmd.getOptionValue(DRUP_GENES_CSV);
         final String hotspotTsv = cmd.getOptionValue(HOTSPOT_TSV);
         final String fusionsCsv = cmd.getOptionValue(FUSION_CSV);
@@ -152,8 +167,8 @@ public class PatientReporterApplication {
 
         if (runDirectory == null || !exists(runDirectory) || !isDirectory(runDirectory)) {
             LOGGER.warn(RUN_DIRECTORY + " has to be an existing directory: " + runDirectory);
-        } else if (knowledgebasePath == null || !exists(knowledgebasePath) || !isDirectory(knowledgebasePath)) {
-            LOGGER.warn(KNOWLEDGEBASE_PATH + " has to be an existing directory: " + knowledgebasePath);
+        } else if (knowledgebaseDirectory == null || !exists(knowledgebaseDirectory) || !isDirectory(knowledgebaseDirectory)) {
+            LOGGER.warn(KNOWLEDGEBASE_DIRECTORY + " has to be an existing directory: " + knowledgebaseDirectory);
         } else if (drupGenesCsv == null || !exists(drupGenesCsv)) {
             LOGGER.warn(DRUP_GENES_CSV + " has to be an existing file: " + drupGenesCsv);
         } else if (hotspotTsv == null || !exists(hotspotTsv)) {
@@ -172,14 +187,13 @@ public class PatientReporterApplication {
         return false;
     }
 
-    private static boolean validInputForNonAnalysableReport(@NotNull final CommandLine cmd) {
-        final NotAnalysableReason notAnalysableReason = NotAnalysableReason.fromIdentifier(cmd.getOptionValue(NOT_ANALYSABLE_REASON));
-        final String notAnalysedSample = cmd.getOptionValue(NOT_ANALYSED_SAMPLE);
-        LOGGER.info("sampleId: " + notAnalysedSample);
-        if (notAnalysableReason == NotAnalysableReason.UNDEFINED) {
-            LOGGER.warn(NOT_ANALYSABLE_REASON + " has to be low_tumor_percentage, low_dna_yield, post_analysis_fail or shallow_seq.");
-        } else if (notAnalysedSample == null) {
-            LOGGER.warn(NOT_ANALYSED_SAMPLE + " has to be provided.");
+    private static boolean validInputForQCFailReport(@NotNull final CommandLine cmd) {
+        final QCFailReason qcFailReason = QCFailReason.fromIdentifier(cmd.getOptionValue(QC_FAIL_REASON));
+        final String qcFailSample = cmd.getOptionValue(QC_FAIL_SAMPLE);
+        if (qcFailReason == QCFailReason.UNDEFINED) {
+            LOGGER.warn(QC_FAIL_REASON + " has to be low_tumor_percentage, low_dna_yield, post_analysis_fail or shallow_seq.");
+        } else if (qcFailSample == null) {
+            LOGGER.warn(QC_FAIL_SAMPLE + " has to be provided.");
         } else {
             return true;
         }
@@ -200,8 +214,7 @@ public class PatientReporterApplication {
     private static boolean validInputForBaseReportData(@NotNull final CommandLine cmd) {
         final String tumorLocationCsv = cmd.getOptionValue(TUMOR_LOCATION_CSV);
         final String limsDirectory = cmd.getOptionValue(LIMS_DIRECTORY);
-        final String centerCsv = cmd.getOptionValue(CENTER_CSV);
-        final String centerManualCsv = cmd.getOptionValue(CENTER_CSV_MANUAL);
+        final String hospitalDirectory = cmd.getOptionValue(HOSPITALS_DIRECTORY);
 
         final String signaturePath = cmd.getOptionValue(SIGNATURE);
         final String rvaLogoPath = cmd.getOptionValue(RVA_LOGO);
@@ -210,10 +223,8 @@ public class PatientReporterApplication {
             LOGGER.warn(TUMOR_LOCATION_CSV + " has to be an existing file: " + tumorLocationCsv);
         } else if (limsDirectory == null || !exists(limsDirectory) || !isDirectory(limsDirectory)) {
             LOGGER.warn(LIMS_DIRECTORY + " has to be an existing directory: " + limsDirectory);
-        } else if (centerCsv == null || !exists(centerCsv)) {
-            LOGGER.warn(CENTER_CSV + " has to be an existing file: " + centerCsv);
-        } else if (centerManualCsv == null || !exists(centerManualCsv)) {
-            LOGGER.warn(CENTER_CSV_MANUAL + " has to be an existing file: " + centerManualCsv);
+        } else if (hospitalDirectory == null || !exists(hospitalDirectory) || !isDirectory(hospitalDirectory)) {
+            LOGGER.warn(HOSPITALS_DIRECTORY + " has to be an existing directory: " + hospitalDirectory);
         } else if (signaturePath == null || !exists(signaturePath)) {
             LOGGER.warn(SIGNATURE + " has to be an existing file: " + signaturePath);
         } else if (rvaLogoPath == null || !exists(rvaLogoPath)) {
@@ -235,28 +246,26 @@ public class PatientReporterApplication {
     @NotNull
     private static Options createOptions() {
         final Options options = new Options();
-        options.addOption(TUMOR_LOCATION_CSV, true, "Complete path towards the (curated) tumor location csv.");
-        options.addOption(LIMS_DIRECTORY, true, "Complete path a directory holding the LIMS data");
-        options.addOption(REPORT_DIRECTORY, true, "Complete path to where the PDF reports have to be saved.");
-        options.addOption(RUN_DIRECTORY, true, "Complete path towards a single run dir where patient reporter will run on.");
-        options.addOption(NOT_ANALYSABLE, false, "If set, generates a non-analysable report.");
-        options.addOption(NOT_ANALYSABLE_REASON, true,
-                "Either 'low_tumor_percentage', 'low_dna_yield', 'post_analysis_fail' or 'shallow_seq'");
-        options.addOption(NOT_ANALYSED_SAMPLE, true, "In case of non-sequenceable reports, the name of the sample used.");
+        options.addOption(RUN_DIRECTORY, true, "Path towards a single run dir where patient reporter will run on.");
+        options.addOption(LIMS_DIRECTORY, true, "Path a directory holding the LIMS data");
+        options.addOption(HOSPITALS_DIRECTORY, true, "Path towards a directory containing hospital data.");
+        options.addOption(REPORT_DIRECTORY, true, "Path to where the PDF reports have to be saved.");
+        options.addOption(KNOWLEDGEBASE_DIRECTORY, true, "Path towards a directory holding knowledgebase output files.");
+        options.addOption(QC_FAIL, false, "If set, generates a qc-fail report.");
+        options.addOption(QC_FAIL_REASON, true, "Either 'low_tumor_percentage', 'low_dna_yield', 'post_analysis_fail' or 'shallow_seq'");
+        options.addOption(QC_FAIL_SAMPLE, true, "In case of qc-fail reports, the name of the sample used.");
         options.addOption(DO_REPORT_GERMLINE, false, "If provided, report germline. Otherwise do not report germline.");
-        options.addOption(KNOWLEDGEBASE_PATH, true, "Path towards a directory holding knowledgebase output files.");
-        options.addOption(DRUP_GENES_CSV, true, "Path towards a CSV containing genes that could potentially indicate inclusion in DRUP.");
-        options.addOption(HOTSPOT_TSV, true, "Path towards a TSV containing known hotspot variants.");
-        options.addOption(LOG_DEBUG, false, "If provided, set the log level to debug rather than default.");
-        options.addOption(FASTA_FILE_LOCATION, true, "Path towards the FASTA file containing the ref genome.");
-        options.addOption(HIGH_CONFIDENCE_BED, true, "Path towards the high confidence BED file.");
-        options.addOption(CENTER_CSV, true, "Path towards a CSV containing center (centerPerHospital) data.");
-        options.addOption(CENTER_CSV_MANUAL, true, "Path towards a CSV containing center (centerPerHospital) data for manual curation.");
-        options.addOption(SIGNATURE, true, "Path towards a image file containing the signature to be appended at the end of the report.");
-        options.addOption(RVA_LOGO, true, "Path towards a image file containing the logo.");
-        options.addOption(COMMENTS, true, "Additional comments to be added to the report, if any.");
         options.addOption(FUSION_CSV, true, "Path towards a CSV of fusions of the sample");
         options.addOption(DISRUPTION_CSV, true, "Path towards a CSV of disruptions of the sample");
+        options.addOption(FASTA_FILE_LOCATION, true, "Path towards the FASTA file containing the ref genome.");
+        options.addOption(HIGH_CONFIDENCE_BED, true, "Path towards the high confidence BED file.");
+        options.addOption(TUMOR_LOCATION_CSV, true, "Path towards the (curated) tumor location csv.");
+        options.addOption(DRUP_GENES_CSV, true, "Path towards a CSV containing genes that could potentially indicate inclusion in DRUP.");
+        options.addOption(HOTSPOT_TSV, true, "Path towards a TSV containing known hotspot variants.");
+        options.addOption(RVA_LOGO, true, "Path towards a image file containing the logo.");
+        options.addOption(SIGNATURE, true, "Path towards a image file containing the signature to be appended at the end of the report.");
+        options.addOption(COMMENTS, true, "Additional comments to be added to the report, if any.");
+        options.addOption(LOG_DEBUG, false, "If provided, set the log level to debug rather than default.");
         return options;
     }
 

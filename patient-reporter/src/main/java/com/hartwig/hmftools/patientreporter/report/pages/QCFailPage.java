@@ -9,10 +9,10 @@ import static com.hartwig.hmftools.patientreporter.report.Commons.tableHeaderSty
 import static net.sf.dynamicreports.report.builder.DynamicReports.cmp;
 
 import com.hartwig.hmftools.common.lims.LimsSampleType;
-import com.hartwig.hmftools.patientreporter.NotAnalysedPatientReport;
+import com.hartwig.hmftools.patientreporter.QCFailReport;
 import com.hartwig.hmftools.patientreporter.SampleReport;
-import com.hartwig.hmftools.patientreporter.qcfail.NotAnalysableReason;
-import com.hartwig.hmftools.patientreporter.qcfail.NotAnalysableStudy;
+import com.hartwig.hmftools.patientreporter.qcfail.QCFailReason;
+import com.hartwig.hmftools.patientreporter.qcfail.QCFailStudy;
 import com.hartwig.hmftools.patientreporter.report.Commons;
 import com.hartwig.hmftools.patientreporter.report.components.MainPageTopSection;
 
@@ -25,7 +25,7 @@ import net.sf.dynamicreports.report.builder.component.TextFieldBuilder;
 @Value.Immutable
 @Value.Style(passAnnotations = NotNull.class,
              allParameters = true)
-public abstract class NonSequenceablePage {
+public abstract class QCFailPage {
 
     @NotNull
     abstract SampleReport sampleReport();
@@ -34,29 +34,29 @@ public abstract class NonSequenceablePage {
     abstract String user();
 
     @NotNull
-    abstract NotAnalysableReason reason();
+    abstract QCFailReason reason();
 
     @NotNull
-    abstract NotAnalysableStudy study();
+    abstract QCFailStudy study();
 
     @NotNull
-    public static NonSequenceablePage of(@NotNull NotAnalysedPatientReport report) {
-        return ImmutableNonSequenceablePage.of(report.sampleReport(), report.user(), report.reason(), report.study());
+    public static QCFailPage of(@NotNull QCFailReport report) {
+        return ImmutableQCFailPage.of(report.sampleReport(), report.user(), report.reason(), report.study());
     }
 
     @NotNull
     public ComponentBuilder<?, ?> reportComponent() {
         return cmp.verticalList(MainPageTopSection.build(reason().title(), sampleReport()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
-                mainPageNotAnalysableSection(sampleReport().sampleId()));
+                mainPageQCFailSection(sampleReport().sampleId()));
     }
 
     @NotNull
-    private ComponentBuilder<?, ?> mainPageNotAnalysableSection(@NotNull String sampleId) {
+    private ComponentBuilder<?, ?> mainPageQCFailSection(@NotNull String sampleId) {
         LimsSampleType type = LimsSampleType.fromSampleId(sampleId);
 
-        if (sampleReport().recipient() == null) {
-            throw new IllegalStateException("No recipient address present for sample " + sampleReport().sampleId());
+        if (sampleReport().addressee() == null) {
+            throw new IllegalStateException("No addressee address present for sample " + sampleReport().sampleId());
         }
 
         final String title;
@@ -95,12 +95,12 @@ public abstract class NonSequenceablePage {
             }
         }
 
-        return type == LimsSampleType.CORE ? CORELayout(title, subTitle, message) : CPCTDRUPLayout(title, subTitle, message);
+        return type == LimsSampleType.CORE ? coreLayout(title, subTitle, message) : defaultLayout(title, subTitle, message);
     }
 
     @NotNull
-    private ComponentBuilder<?, ?> CORELayout(@NotNull String title, @NotNull String subTitle, @NotNull String message) {
-        String contactDetails = sampleReport().contactNames() + " (" + sampleReport().contactEmails() + ")";
+    private ComponentBuilder<?, ?> coreLayout(@NotNull String title, @NotNull String subTitle, @NotNull String message) {
+        String requester = sampleReport().requesterName() + " (" + sampleReport().requesterEmail() + ")";
         return cmp.verticalList(cmp.text(title).setStyle(tableHeaderStyle().setFontSize(12)).setHeight(20),
                 cmp.text(subTitle).setStyle(dataTableStyle().setFontSize(12)).setHeight(20),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
@@ -113,21 +113,17 @@ public abstract class NonSequenceablePage {
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
                 cmp.text("The HMF sample ID is " + sampleReport().sampleId() + " and the hospital patient ID is "
                         + sampleReport().hospitalPatientId()).setStyle(fontStyle()),
-                cmp.text("The project name of sample is " + sampleReport().projectName() + " and the submission ID is "
-                        + sampleReport().submission()).setStyle(fontStyle()),
-                cmp.text("The internal tumor barcode is " + sampleReport().barcodeTumor() + " and the internal blood barcode is "
-                        + sampleReport().barcodeReference()).setStyle(fontStyle()),
+                cmp.text("The project name of sample is " + sampleReport().projectName() + " and the submissionId ID is "
+                        + sampleReport().submissionId()).setStyle(fontStyle()),
+                internalBarcodeText(),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
-                cmp.text("The tumor percentage estimated by Pathology UMC Utrecht is " + sampleReport().pathologyTumorPercentage())
-                        .setStyle(fontStyle()),
-                cmp.verticalGap(SECTION_VERTICAL_GAP),
+                pathologyText(),
                 shallowSeqText(),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
                 sampleArrivalDateText(),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
                 recipientText(),
-                cmp.verticalGap(SECTION_VERTICAL_GAP),
-                cmp.text("The contact details are : " + contactDetails).setStyle(fontStyle()),
+                cmp.text("The requester is: " + requester).setStyle(fontStyle()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
                 accreditationText(),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
@@ -135,7 +131,7 @@ public abstract class NonSequenceablePage {
     }
 
     @NotNull
-    private ComponentBuilder<?, ?> CPCTDRUPLayout(@NotNull String title, @NotNull String subTitle, @NotNull String message) {
+    private ComponentBuilder<?, ?> defaultLayout(@NotNull String title, @NotNull String subTitle, @NotNull String message) {
         return cmp.verticalList(cmp.text(title).setStyle(tableHeaderStyle().setFontSize(12)).setHeight(20),
                 cmp.text(subTitle).setStyle(dataTableStyle().setFontSize(12)).setHeight(20),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
@@ -148,12 +144,9 @@ public abstract class NonSequenceablePage {
                         + "evaluable for the " + study().studyCode() + " study.").setStyle(fontStyle()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
                 cmp.text("The HMF sample ID is " + sampleReport().sampleId()).setStyle(fontStyle()),
-                cmp.text("The internal tumor barcode is " + sampleReport().barcodeTumor() + " and the internal blood barcode is "
-                        + sampleReport().barcodeReference()).setStyle(fontStyle()),
+                internalBarcodeText(),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
-                cmp.text("The tumor percentage estimated by Pathology UMC Utrecht is " + sampleReport().pathologyTumorPercentage())
-                        .setStyle(fontStyle()),
-                cmp.verticalGap(SECTION_VERTICAL_GAP),
+                pathologyText(),
                 shallowSeqText(),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
                 sampleArrivalDateText(),
@@ -166,8 +159,15 @@ public abstract class NonSequenceablePage {
     }
 
     @NotNull
-    private static TextFieldBuilder<String> questionsText() {
-        return cmp.text("For questions, please contact us via info@hartwigmedicalfoundation.nl").setStyle(fontStyle());
+    private TextFieldBuilder<String> internalBarcodeText() {
+        return cmp.text("The internal tumor barcode is " + sampleReport().barcodeTumor() + " and the internal blood barcode is "
+                + sampleReport().barcodeReference()).setStyle(fontStyle());
+    }
+
+    @NotNull
+    private TextFieldBuilder<String> pathologyText() {
+        return cmp.text("The tumor percentage estimated by Pathology UMC Utrecht is " + sampleReport().pathologyTumorPercentage())
+                .setStyle(fontStyle());
     }
 
     @NotNull
@@ -192,7 +192,7 @@ public abstract class NonSequenceablePage {
 
     @NotNull
     private TextFieldBuilder<String> recipientText() {
-        return cmp.text("This report is generated and verified by: " + user() + " and is addressed at " + sampleReport().recipient())
+        return cmp.text("This report is generated and verified by: " + user() + " and is addressed at " + sampleReport().addressee())
                 .setStyle(fontStyle());
     }
 
@@ -202,4 +202,8 @@ public abstract class NonSequenceablePage {
                 .setStyle(fontStyle());
     }
 
+    @NotNull
+    private static TextFieldBuilder<String> questionsText() {
+        return cmp.text("For questions, please contact us via info@hartwigmedicalfoundation.nl").setStyle(fontStyle());
+    }
 }

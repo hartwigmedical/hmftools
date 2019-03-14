@@ -103,7 +103,6 @@ public final class SomaticVariantAnalyzer {
     private static ImmutableReportableSomaticVariant.Builder fromVariant(@NotNull EnrichedSomaticVariant variant) {
         return ImmutableReportableSomaticVariant.builder()
                 .gene(variant.gene())
-                .position(variant.position())
                 .hgvsCodingImpact(variant.canonicalHgvsCodingImpact())
                 .hgvsProteinImpact(variant.canonicalHgvsProteinImpact())
                 .totalReadCount(variant.totalReadCount())

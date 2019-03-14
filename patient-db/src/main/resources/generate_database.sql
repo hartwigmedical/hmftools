@@ -502,6 +502,8 @@ CREATE TABLE structuralVariant
     endLinkedBy varchar(512),
     vcfId varchar(255),
     recovered BOOLEAN NOT NULL,
+    recoveryMethod varchar(64),
+    recoveryFilter varchar(255),
     startRefContext varchar(255),
     endRefContext varchar(255),
     insertSequenceAlignments varchar(512),

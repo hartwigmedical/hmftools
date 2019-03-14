@@ -8,9 +8,9 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.TreeMultimap;
 import com.google.common.io.Resources;
 import com.hartwig.hmftools.common.actionability.ActionabilityAnalyzer;
-import com.hartwig.hmftools.common.center.Center;
-import com.hartwig.hmftools.common.center.CenterModel;
 import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocation;
+import com.hartwig.hmftools.common.hospital.HospitalModel;
+import com.hartwig.hmftools.common.hospital.HospitalModelFactory;
 import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.lims.LimsFactory;
 import com.hartwig.hmftools.common.variant.enrich.CompoundEnrichment;
@@ -32,10 +32,7 @@ public final class PatientReporterTestUtil {
 
     private static final String REF_GENOME_PATH = Resources.getResource("refgenome/ref.fasta").getPath();
 
-    private static final String KNOWLEDGEBASE_PATH = Resources.getResource("actionability").getPath();
-
-    private static final String CENTER_CSV = Resources.getResource("csv/centers.csv").getPath();
-    private static final String CENTER_MANUAL_CSV = Resources.getResource("csv/manual_mapping.csv").getPath();
+    private static final String KNOWLEDGEBASE_DIRECTORY = Resources.getResource("actionability").getPath();
 
     private static final String DRUP_GENES_CSV = Resources.getResource("csv/drup_genes.csv").getPath();
     private static final String HOTSPOT_TSV = Resources.getResource("csv/hotspots.tsv").getPath();
@@ -53,7 +50,7 @@ public final class PatientReporterTestUtil {
 
     @NotNull
     public static ActionabilityAnalyzer testActionabilityAnalyzer() throws IOException {
-        return ActionabilityAnalyzer.fromKnowledgebase(KNOWLEDGEBASE_PATH);
+        return ActionabilityAnalyzer.fromKnowledgebase(KNOWLEDGEBASE_DIRECTORY);
     }
 
     @NotNull
@@ -63,14 +60,10 @@ public final class PatientReporterTestUtil {
 
     @NotNull
     public static BaseReportData testBaseReportData() {
-        try {
-            final List<PatientTumorLocation> patientTumorLocations = Lists.newArrayList();
-            final Lims lims = LimsFactory.empty();
-            final CenterModel centerModel = Center.readFromCSV(CENTER_CSV, CENTER_MANUAL_CSV);
-            return ImmutableBaseReportData.of(patientTumorLocations, lims, centerModel, SIGNATURE_PATH, RVA_LOGO_PATH);
-        } catch (IOException exception) {
-            throw new IllegalStateException("Could not generate test base reporter data: " + exception.getMessage());
-        }
+        final List<PatientTumorLocation> patientTumorLocations = Lists.newArrayList();
+        final Lims lims = LimsFactory.empty();
+        final HospitalModel hospitalModel = HospitalModelFactory.empty();
+        return ImmutableBaseReportData.of(patientTumorLocations, lims, hospitalModel, SIGNATURE_PATH, RVA_LOGO_PATH);
     }
 
     @NotNull

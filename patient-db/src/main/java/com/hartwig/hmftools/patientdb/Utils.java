@@ -6,7 +6,6 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.context.RunContext;
-import com.hartwig.hmftools.common.lims.LimsSampleType;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -46,20 +45,17 @@ public final class Utils {
     @NotNull
     static Set<String> sequencedPatientIdentifiers(@NotNull final List<RunContext> runContexts) {
         return runContexts.stream()
-                .map(runContext -> getPatientIdentifier(runContext.setName()))
+                .map(runContext -> extractPatientIdentifier(runContext.setName()))
                 .filter(patientIdentifier -> !patientIdentifier.isEmpty())
                 .collect(Collectors.toSet());
     }
 
     @NotNull
-    private static String getPatientIdentifier(@NotNull final String runName) {
+    private static String extractPatientIdentifier(@NotNull final String runName) {
         final String[] names = runName.split("_");
-        LimsSampleType type = LimsSampleType.fromRunName(runName);
-        if (names.length < 5 && type != LimsSampleType.COLO) {
-            LOGGER.error("run name {} had less than 5 parts after splitting on _", runName);
+        if (names.length < 5) {
+            LOGGER.error("Run name {} had less than 5 parts after splitting on _", runName);
             return Strings.EMPTY;
-        } else if (type == LimsSampleType.COLO){ //take sample ID of COLO
-            return names[1];
         }
         return names[4];
     }

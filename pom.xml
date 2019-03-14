@@ -35,6 +35,7 @@
         <module>knowledgebase-importer</module>
         <module>sig_analyser</module>
         <module>actionability-vs-soc</module>
+        <module>vicc-knowledgebase-importer</module>
     </modules>
 
     <properties>
@@ -59,7 +60,7 @@
 
         <amber.version>2.1</amber.version>
         <cobalt.version>1.5</cobalt.version>
-        <purple.version>2.19</purple.version>
+        <purple.version>2.20</purple.version>
 
         <immutables.version>2.4.4</immutables.version>
         <htsjdk.version>2.12.0</htsjdk.version>

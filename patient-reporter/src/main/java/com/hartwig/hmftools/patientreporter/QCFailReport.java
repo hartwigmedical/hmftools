@@ -2,8 +2,8 @@ package com.hartwig.hmftools.patientreporter;
 
 import java.util.Optional;
 
-import com.hartwig.hmftools.patientreporter.qcfail.NotAnalysableReason;
-import com.hartwig.hmftools.patientreporter.qcfail.NotAnalysableStudy;
+import com.hartwig.hmftools.patientreporter.qcfail.QCFailReason;
+import com.hartwig.hmftools.patientreporter.qcfail.QCFailStudy;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -12,16 +12,16 @@ import org.jetbrains.annotations.Nullable;
 @Value.Immutable
 @Value.Style(allParameters = true,
              passAnnotations = { NotNull.class, Nullable.class })
-public abstract class NotAnalysedPatientReport implements PatientReport {
+public abstract class QCFailReport implements PatientReport {
     @Override
     @NotNull
     public abstract SampleReport sampleReport();
 
     @NotNull
-    public abstract NotAnalysableReason reason();
+    public abstract QCFailReason reason();
 
     @NotNull
-    public abstract NotAnalysableStudy study();
+    public abstract QCFailStudy study();
 
     @Override
     @NotNull

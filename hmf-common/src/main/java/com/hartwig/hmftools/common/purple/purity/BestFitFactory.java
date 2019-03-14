@@ -28,9 +28,8 @@ public class BestFitFactory {
     private final BestFit bestFit;
 
     public BestFitFactory(double minSomaticUnadjustedVaf, int minVariants, int minPeak, double highlyDiploidPercentage,
-            double minSomaticPurity, double minSomaticPuritySpread, @NotNull final List<FittedPurity> fittedPurities,
-            @NotNull final List<SomaticVariant> somatics) {
-        assert (!fittedPurities.isEmpty());
+            double minSomaticPurity, double minSomaticPuritySpread, @NotNull final List<FittedPurity> bestFitPerPurity, @NotNull final List<SomaticVariant> somatics) {
+        assert (!bestFitPerPurity.isEmpty());
         this.minSomaticUnadjustedVaf = minSomaticUnadjustedVaf;
         this.minVariants = minVariants;
         this.minSomaticPurity = minSomaticPurity;
@@ -38,15 +37,16 @@ public class BestFitFactory {
 
         long somaticsWithSufficientVafCount = somaticsWithSufficientVaf(somatics);
 
-        Collections.sort(fittedPurities);
-        FittedPurity lowestScore = fittedPurities.get(0);
+        Collections.sort(bestFitPerPurity);
+        FittedPurity lowestScore = bestFitPerPurity.get(0);
 
-        final FittedPurityScore score = FittedPurityScoreFactory.score(inRangeOfLowest(lowestScore.score(), fittedPurities));
+        final List<FittedPurity> bestFitPerPurityCandidates = inRangeOfLowest(lowestScore.score(), bestFitPerPurity);
+        final FittedPurityScore score = FittedPurityScoreFactory.score(bestFitPerPurityCandidates);
 
         final FittedPurity fit;
         final FittedPurityStatus status;
         if (Doubles.greaterOrEqual(score.puritySpread(), minSomaticPuritySpread) && isHighlyDiploid(score)) {
-            final Optional<FittedPurity> somaticFit = new SomaticFitFactory(minPeak).fromSomatics(fittedPurities, somatics);
+            final Optional<FittedPurity> somaticFit = new SomaticFitFactory(minPeak).fromSomatics(bestFitPerPurityCandidates, somatics);
 
             if (noDetectableTumor(somaticsWithSufficientVafCount)) {
                 status = FittedPurityStatus.NO_TUMOR;
@@ -65,7 +65,7 @@ public class BestFitFactory {
             fit = lowestScore;
         }
 
-        bestFit = ImmutableBestFit.builder().fit(fit).status(status).score(score).bestFitPerPurity(fittedPurities).build();
+        bestFit = ImmutableBestFit.builder().fit(fit).status(status).score(score).bestFitPerPurity(bestFitPerPurity).build();
     }
 
     private long somaticsWithSufficientVaf(@NotNull Collection<SomaticVariant> variants) {
@@ -77,8 +77,9 @@ public class BestFitFactory {
     }
 
     private boolean somaticsWontHelp(int somaticCount, double lowestScoringPurity, @NotNull final Optional<FittedPurity> somaticFit) {
-        return !somaticFit.isPresent() || somaticCount == 0 || (Doubles.lessThan(lowestScoringPurity, minSomaticPurity)
-                && Doubles.lessThan(somaticFit.get().purity(), minSomaticPurity));
+        return !somaticFit.isPresent() || somaticCount == 0 || (Doubles.lessThan(lowestScoringPurity, minSomaticPurity) && Doubles.lessThan(
+                somaticFit.get().purity(),
+                minSomaticPurity));
     }
 
     private boolean isHighlyDiploid(@NotNull final FittedPurityScore score) {

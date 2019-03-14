@@ -30,10 +30,12 @@ import org.jetbrains.annotations.NotNull;
 public class LoadEvidenceData {
 
     private static final Logger LOGGER = LogManager.getLogger(LoadEvidenceData.class);
-    private static final String KNOWLEDGEBASE_PATH = "knowledgebase_path";
+    private static final String KNOWLEDGEBASE_DIRECTORY = "knowledgebase_dir";
+
     private static final String DB_USER = "db_user";
     private static final String DB_PASS = "db_pass";
     private static final String DB_URL = "db_url";
+
     private static final String RUN_DIR = "run_dir";
 
     public static void main(@NotNull final String[] args) throws ParseException, IOException, SQLException {
@@ -43,9 +45,9 @@ public class LoadEvidenceData {
         final String password = cmd.getOptionValue(DB_PASS);
         final String databaseUrl = cmd.getOptionValue(DB_URL);
         final String runDirectoryPath = cmd.getOptionValue(RUN_DIR);
-        final String knowledgebasePath = cmd.getOptionValue(KNOWLEDGEBASE_PATH);
+        final String knowledgebaseDirectory = cmd.getOptionValue(KNOWLEDGEBASE_DIRECTORY);
 
-        if (Utils.anyNull(userName, password, databaseUrl, runDirectoryPath, knowledgebasePath)) {
+        if (Utils.anyNull(userName, password, databaseUrl, runDirectoryPath, knowledgebaseDirectory)) {
             printUsageAndExit(options);
         }
 
@@ -57,7 +59,7 @@ public class LoadEvidenceData {
 
         DatabaseAccess dbAccess = databaseAccess(cmd);
 
-        ActionabilityAnalyzer actionabilityAnalyzer = ActionabilityAnalyzer.fromKnowledgebase(knowledgebasePath);
+        ActionabilityAnalyzer actionabilityAnalyzer = ActionabilityAnalyzer.fromKnowledgebase(knowledgebaseDirectory);
 
         RunContext runContext = ProductionRunContextFactory.fromRunDirectory(runDirectory.toPath().toString());
         String sample = runContext.tumorSample();
@@ -149,7 +151,7 @@ public class LoadEvidenceData {
         options.addOption(DB_USER, true, "Database user name.");
         options.addOption(DB_PASS, true, "Database password.");
         options.addOption(DB_URL, true, "Database url.");
-        options.addOption(KNOWLEDGEBASE_PATH, true, "Path towards the folder containing knowledgebase files.");
+        options.addOption(KNOWLEDGEBASE_DIRECTORY, true, "Path towards the folder containing knowledgebase files.");
         options.addOption(RUN_DIR, true, "Path towards the folder containing patient run.");
         return options;
     }

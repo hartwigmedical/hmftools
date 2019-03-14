@@ -19,6 +19,7 @@ import com.hartwig.hmftools.common.variant.structural.StructuralVariantLeg;
 
 import org.jetbrains.annotations.NotNull;
 
+@SuppressWarnings("OptionalUsedAsFieldOrParameterType")
 public class StructuralVariantLegPloidyFactory<T extends GenomeRegion> {
 
     private static final double VAF_TO_USE_READ_DEPTH = 0.75;
@@ -109,17 +110,29 @@ public class StructuralVariantLegPloidyFactory<T extends GenomeRegion> {
     @NotNull
     Optional<ModifiableStructuralVariantLegPloidy> create(@NotNull final StructuralVariantLeg leg,
             @NotNull final GenomeRegionSelector<T> selector) {
-
         final StructuralVariantLegCopyNumber legCopyNumber = copyNumberFactory.create(leg, selector);
+        return create(leg, legCopyNumber.leftCopyNumber(), legCopyNumber.rightCopyNumber());
+    }
 
+
+    public StructuralVariantLegPloidy singleLegPloidy(@NotNull final StructuralVariantLeg leg, double leftCopyNumber, double rightCopyNumber) {
+        ModifiableStructuralVariantLegPloidy modiyable = create(leg, Optional.of(leftCopyNumber), Optional.of(rightCopyNumber)).get();
+        return modiyable.setAverageImpliedPloidy(modiyable.unweightedImpliedPloidy());
+    }
+
+
+    @VisibleForTesting
+    @NotNull
+    Optional<ModifiableStructuralVariantLegPloidy> create(@NotNull final StructuralVariantLeg leg, @NotNull Optional<Double> leftCopyNumber,
+            Optional<Double> rightCopyNumber) {
         final Optional<Double> largerCopyNumber;
         final Optional<Double> smallerCopyNumber;
         if (leg.orientation() == 1) {
-            largerCopyNumber = legCopyNumber.leftCopyNumber();
-            smallerCopyNumber = legCopyNumber.rightCopyNumber();
+            largerCopyNumber = leftCopyNumber;
+            smallerCopyNumber = rightCopyNumber;
         } else {
-            largerCopyNumber = legCopyNumber.rightCopyNumber();
-            smallerCopyNumber = legCopyNumber.leftCopyNumber();
+            largerCopyNumber = rightCopyNumber;
+            smallerCopyNumber = leftCopyNumber;
         }
 
         if (!largerCopyNumber.isPresent() && !smallerCopyNumber.isPresent()) {
@@ -165,8 +178,9 @@ public class StructuralVariantLegPloidyFactory<T extends GenomeRegion> {
         }
 
         return Optional.of(ModifiableStructuralVariantLegPloidy.create()
-                .from(legCopyNumber)
                 .from(leg)
+                .setLeftCopyNumber(leftCopyNumber)
+                .setRightCopyNumber(rightCopyNumber)
                 .setObservedVaf(observedVaf)
                 .setAdjustedVaf(adjustedVaf)
                 .setOrientation(leg.orientation())

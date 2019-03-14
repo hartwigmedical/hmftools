@@ -207,6 +207,7 @@ public class PurityPloidyEstimateApplication {
                         purityContext,
                         qcChecks,
                         geneCopyNumbers);
+
             }
 
             LOGGER.info("Writing purple data to: {}", outputDirectory);
@@ -251,7 +252,7 @@ public class PurityPloidyEstimateApplication {
         try (final RecoverStructuralVariants recovery = new RecoverStructuralVariants(purityAdjuster, vcfRecoveryFile, copyNumbers)) {
             final Collection<VariantContext> recoveredVariants = recovery.recoverVariants(structuralVariants.variants());
             if (!recoveredVariants.isEmpty()) {
-                recoveredVariants.forEach(structuralVariants::recoverVariant);
+                recoveredVariants.forEach(structuralVariants::addVariant);
             }
             return recoveredVariants.size();
         }
@@ -277,15 +278,13 @@ public class PurityPloidyEstimateApplication {
                 observedRegions,
                 snpSomatics);
 
-        final List<FittedPurity> bestFitPerPurity = fittedPurityFactory.bestFitPerPurity();
-
         final BestFitFactory bestFitFactory = new BestFitFactory(somaticConfig.minSomaticUnadjustedVaf(),
                 somaticConfig.minTotalVariants(),
                 somaticConfig.minPeakVariants(),
                 somaticConfig.highlyDiploidPercentage(),
                 somaticConfig.minSomaticPurity(),
                 somaticConfig.minSomaticPuritySpread(),
-                bestFitPerPurity,
+                fittedPurityFactory.bestFitPerPurity(),
                 snpSomatics);
         return bestFitFactory.bestFit();
     }
@@ -304,7 +303,8 @@ public class PurityPloidyEstimateApplication {
     }
 
     @NotNull
-    private static PurpleStructuralVariantSupplier structuralVariants(@NotNull final VersionInfo version, @NotNull final ConfigSupplier configSupplier) {
+    private static PurpleStructuralVariantSupplier structuralVariants(@NotNull final VersionInfo version,
+            @NotNull final ConfigSupplier configSupplier) {
         final CommonConfig commonConfig = configSupplier.commonConfig();
         final StructuralVariantConfig svConfig = configSupplier.structuralVariantConfig();
         if (svConfig.file().isPresent()) {

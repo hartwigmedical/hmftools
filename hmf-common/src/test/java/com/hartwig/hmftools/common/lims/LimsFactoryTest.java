@@ -49,7 +49,7 @@ public class LimsFactoryTest {
         assertEquals("NA", refData.primaryTumor());
         assertEquals("PREP013V23-QC037V20-SEQ008V25", refData.labProcedures());
         assertNull(refData.labRemarks());
-        assertEquals("HMFregCPCT", refData.submissionSamples());
+        assertEquals("HMFregCPCT", refData.submission());
 
         final String tumorSampleId = "SAMP01010003T";
         final LimsJsonSampleData tumorData = dataPerSample.get(tumorSampleId);
@@ -59,10 +59,10 @@ public class LimsFactoryTest {
         assertEquals("143", tumorData.dnaConcentration());
         assertEquals("2016-01-04", tumorData.samplingDateString());
         assertEquals("30", tumorData.tumorPercentageString());
-        assertEquals("NA", refData.primaryTumor());
+        assertEquals("NA", tumorData.primaryTumor());
         assertEquals("N/A", tumorData.labProcedures());
         assertEquals("this is a test", tumorData.labRemarks());
-        assertEquals("HMFregCPCT", tumorData.submissionSamples());
+        assertEquals("HMFregCPCT", tumorData.submission());
     }
 
     @Test
@@ -96,7 +96,7 @@ public class LimsFactoryTest {
                 LimsFactory.readSamplesWithoutSamplingDateCsv(LIMS_DIRECTORY + File.separator + "samples_without_sampling_date.csv");
 
         assertEquals(2, samplesWithoutSamplingDate.size());
-        assertTrue(samplesWithoutSamplingDate.contains("CPCT02990001T"));
+        assertTrue(samplesWithoutSamplingDate.contains("SAMP01011234T"));
         assertFalse(samplesWithoutSamplingDate.contains("Does not exist"));
     }
 
@@ -106,7 +106,7 @@ public class LimsFactoryTest {
                 LimsFactory.readLimsShallowSeq(LIMS_DIRECTORY + File.separator + "shallow_seq_purity.csv");
         assertEquals(3, shallowSeqPuritySample.size());
 
-        final String sample = "CPCT02990001T";
+        final String sample = "SAMP01011234T";
         final LimsShallowSeqData limsShallowSeqData = shallowSeqPuritySample.get(sample);
 
         assertEquals(sample, limsShallowSeqData.sampleId());

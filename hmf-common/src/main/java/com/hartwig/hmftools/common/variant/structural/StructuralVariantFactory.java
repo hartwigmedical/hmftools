@@ -28,6 +28,8 @@ import htsjdk.variant.variantcontext.filter.VariantContextFilter;
 public class StructuralVariantFactory {
 
     public final static String RECOVERED = "RECOVERED";
+    public final static String RECOVERY_METHOD = "RECOVERY_METHOD";
+    public final static String RECOVERY_FILTER = "RECOVERY_FILTER";
     public static final String INFERRED = "INFERRED";
     public final static String CIPOS = "CIPOS";
     public final static String SVTYPE = "SVTYPE";
@@ -310,6 +312,8 @@ public class StructuralVariantFactory {
 
         builder = builder.id(context.getID())
             .recovered(context.hasAttribute(RECOVERED))
+            .recoveryMethod(context.getAttributeAsString(RECOVERY_METHOD, null))
+            .recoveryFilter(context.getAttributeAsStringList(RECOVERY_FILTER, "").stream().collect(Collectors.joining(",")))
             .event(context.getAttributeAsString(EVENT, null))
             .startLinkedBy(context.getAttributeAsStringList(LOCAL_LINKED_BY, "")
                     .stream()

@@ -5,21 +5,19 @@ import static net.sf.dynamicreports.report.builder.DynamicReports.report;
 import static net.sf.dynamicreports.report.builder.DynamicReports.stl;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.hartwig.hmftools.common.lims.LimsSampleType;
 import com.hartwig.hmftools.patientreporter.AnalysedPatientReport;
-import com.hartwig.hmftools.patientreporter.NotAnalysedPatientReport;
-import com.hartwig.hmftools.patientreporter.SampleReport;
+import com.hartwig.hmftools.patientreporter.QCFailReport;
+import com.hartwig.hmftools.patientreporter.ReportWriter;
 import com.hartwig.hmftools.patientreporter.report.pages.ImmutableCircosPage;
 import com.hartwig.hmftools.patientreporter.report.pages.ImmutableEvidenceSummaryPage;
 import com.hartwig.hmftools.patientreporter.report.pages.ImmutableExplanationPage;
 import com.hartwig.hmftools.patientreporter.report.pages.ImmutableFindingsPage;
-import com.hartwig.hmftools.patientreporter.report.pages.NonSequenceablePage;
+import com.hartwig.hmftools.patientreporter.report.pages.QCFailPage;
 import com.hartwig.hmftools.patientreporter.report.pages.SampleDetailsPage;
 
 import org.apache.logging.log4j.LogManager;
@@ -32,48 +30,41 @@ import net.sf.dynamicreports.report.constant.HorizontalTextAlignment;
 import net.sf.dynamicreports.report.datasource.DRDataSource;
 import net.sf.dynamicreports.report.exception.DRException;
 
-public class PDFWriter {
+public class PDFWriter implements ReportWriter {
 
     private static final Logger LOGGER = LogManager.getLogger(PDFWriter.class);
 
-    @NotNull
-    private final String reportDirectory;
-
-    public PDFWriter(@NotNull final String reportDirectory) {
-        this.reportDirectory = reportDirectory;
+    public PDFWriter() {
     }
 
-    public void writeSequenceReport(@NotNull AnalysedPatientReport report) throws IOException, DRException {
-        final JasperReportBuilder reportBuilder = generatePatientReport(report);
-        writeReport(fileName(report.sampleReport()), reportBuilder);
+    @Override
+    public void writeAnalysedPatientReport(@NotNull AnalysedPatientReport report, @NotNull String outputFilePath) throws IOException {
+        final JasperReportBuilder reportBuilder = generateAnalysedPatientReport(report);
+        writeReport(outputFilePath, reportBuilder);
     }
 
-    public void writeNonSequenceableReport(@NotNull NotAnalysedPatientReport report) throws IOException, DRException {
-        final JasperReportBuilder reportBuilder = generateNotAnalysableReport(report);
-        writeReport(fileName(report.sampleReport()), reportBuilder);
+    @Override
+    public void writeQCFailReport(@NotNull QCFailReport report, @NotNull String outputFilePath) throws IOException {
+        final JasperReportBuilder reportBuilder = generateQCFailReport(report);
+        writeReport(outputFilePath, reportBuilder);
     }
 
-    private static void writeReport(@NotNull String fileName, @NotNull JasperReportBuilder report)
-            throws FileNotFoundException, DRException {
+    private static void writeReport(@NotNull String fileName, @NotNull JasperReportBuilder report) throws IOException {
         if (Files.exists(new File(fileName).toPath())) {
             LOGGER.warn("Could not write " + fileName + " as it already exists.");
         } else {
-            report.toPdf(new FileOutputStream(fileName));
+            try {
+                report.toPdf(new FileOutputStream(fileName));
+            } catch (DRException e) {
+                throw new IOException("Could not generate pdf due to DynamicReports exception: " + e.getMessage());
+            }
             LOGGER.info("Created patient report at " + fileName);
         }
     }
 
-    @NotNull
-    private String fileName(@NotNull SampleReport sampleReport) {
-        LimsSampleType type = LimsSampleType.fromSampleId(sampleReport.sampleId());
-
-        String filePrefix = type == LimsSampleType.CORE ? sampleReport.sampleId() + "_" + sampleReport.hospitalPatientId(): sampleReport.sampleId();
-        return reportDirectory + File.separator + filePrefix + "_hmf_report.pdf";
-    }
-
     @VisibleForTesting
     @NotNull
-    static JasperReportBuilder generateNotAnalysableReport(@NotNull NotAnalysedPatientReport report) {
+    static JasperReportBuilder generateQCFailReport(@NotNull QCFailReport report) {
         // Hack to get page footers working; the footer band and noData bands are exclusive, see additional comment below for details
         final DRDataSource singleItemDataSource = new DRDataSource("item");
         singleItemDataSource.add(new Object());
@@ -83,13 +74,13 @@ public class PDFWriter {
                 .lastPageFooter(cmp.verticalList(signatureFooter(report.signaturePath()),
                         cmp.pageXslashY(),
                         cmp.text("End of report.").setStyle(stl.style().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER))))
-                .addDetail(NonSequenceablePage.of(report).reportComponent())
+                .addDetail(QCFailPage.of(report).reportComponent())
                 .setDataSource(singleItemDataSource);
     }
 
     @VisibleForTesting
     @NotNull
-    static JasperReportBuilder generatePatientReport(@NotNull AnalysedPatientReport report) {
+    static JasperReportBuilder generateAnalysedPatientReport(@NotNull AnalysedPatientReport report) {
         final ComponentBuilder<?, ?> totalReport = cmp.multiPageList()
                 .add(ImmutableEvidenceSummaryPage.of(report).reportComponent())
                 .newPage()
@@ -104,7 +95,7 @@ public class PDFWriter {
         // Hack to get page footers working; the footer band and noData bands are exclusive:
         //  - footerBand, detailBand, etc are shown when data source is not empty
         //  - noData band is shown when data source is empty; intended to be used when there is no data to show in the report
-        //  (e.g. would be appropriate to be used for notAnalysableReport)
+        //  (e.g. would be appropriate to be used for qcFailReport)
         //
         // more info: http://www.dynamicreports.org/examples/bandreport
 

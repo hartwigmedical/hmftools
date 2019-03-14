@@ -22,6 +22,11 @@ class SomaticFitFactory {
 
     @NotNull
     Optional<FittedPurity> fromSomatics(@NotNull final List<FittedPurity> candidates, @NotNull final List<SomaticVariant> variants) {
+        if (candidates.isEmpty()) {
+            LOGGER.info("Unable to determine somatic implied purity as there are no candidates.");
+            return Optional.empty();
+        }
+
         double minPurity = candidates.stream().mapToDouble(FittedPurity::purity).min().orElse(0);
         double maxPurity = candidates.stream().mapToDouble(FittedPurity::purity).max().orElse(1);
 

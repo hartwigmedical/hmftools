@@ -3,7 +3,6 @@ package com.hartwig.hmftools.patientdb;
 import java.io.File;
 import java.io.IOException;
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -27,15 +26,13 @@ import com.hartwig.hmftools.patientdb.curators.BiopsySiteCurator;
 import com.hartwig.hmftools.patientdb.curators.TreatmentCurator;
 import com.hartwig.hmftools.patientdb.curators.TumorLocationCurator;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
-import com.hartwig.hmftools.patientdb.data.ImmutableCuratedTumorLocation;
-import com.hartwig.hmftools.patientdb.data.ImmutableTumorTypeLims;
 import com.hartwig.hmftools.patientdb.data.Patient;
 import com.hartwig.hmftools.patientdb.data.SampleData;
-import com.hartwig.hmftools.patientdb.data.TumorTypeLims;
+import com.hartwig.hmftools.patientdb.readers.ColoPatientReader;
+import com.hartwig.hmftools.patientdb.readers.EcrfPatientReader;
+import com.hartwig.hmftools.patientdb.readers.LimsPatientReader;
 import com.hartwig.hmftools.patientdb.readers.LimsSampleReader;
-import com.hartwig.hmftools.patientdb.readers.PatientReader;
 import com.hartwig.hmftools.patientdb.readers.RunsFolderReader;
-import com.hartwig.hmftools.patientdb.readers.TumorLocationCurationLims;
 import com.hartwig.hmftools.patientdb.readers.cpct.CpctPatientReader;
 import com.hartwig.hmftools.patientdb.readers.cpct.CpctUtil;
 import com.hartwig.hmftools.patientdb.readers.drup.DrupPatientReader;
@@ -58,7 +55,6 @@ public final class LoadClinicalData {
 
     private static final String RUNS_DIR_CPCT_DRUP = "runs_dir_cpct_drup";
     private static final String RUNS_DIR_CORE = "runs_dir_core";
-    private static final String RUNS_DIR_COLO = "runs_dir_colo";
     private static final String CPCT_ECRF_FILE = "cpct_ecrf";
     private static final String CPCT_FORM_STATUS_CSV = "cpct_form_status_csv";
     private static final String DRUP_ECRF_FILE = "drup_ecrf";
@@ -84,10 +80,8 @@ public final class LoadClinicalData {
 
             final DatabaseAccess dbWriter = createDbWriter(cmd);
 
-            Lims lims = readLims(cmd);
+            final Lims lims = buildLims(cmd);
 
-            String patientIdCOLO = loadSamplesCOLO(cmd);
-            patientIdCOLO = patientIdCOLO.substring(1, patientIdCOLO.length() - 1);
             final Map<String, List<SampleData>> samplesPerPatient = loadSamplesPerPatient(cmd, lims);
             final EcrfModels ecrfModels = loadEcrfModels(cmd);
 
@@ -97,7 +91,6 @@ public final class LoadClinicalData {
 
             writeClinicalData(dbWriter,
                     samplesPerPatient,
-                    patientIdCOLO,
                     ecrfModels,
                     cmd.getOptionValue(CSV_OUT_DIR),
                     Optional.ofNullable(cmd.getOptionValue(TUMOR_LOCATION_SYMLINK)),
@@ -110,88 +103,15 @@ public final class LoadClinicalData {
     }
 
     @NotNull
-    private static Lims readLims(@NotNull CommandLine cmd) throws IOException {
+    private static Lims buildLims(@NotNull CommandLine cmd) throws IOException {
         final String limsDirectory = cmd.getOptionValue(LIMS_DIRECTORY);
         LOGGER.info(String.format("Loading samples from LIMS on %s.", limsDirectory));
         return LimsFactory.fromLimsDirectory(limsDirectory);
     }
 
-    @NotNull
-    private static Map<String, TumorTypeLims> loadAndInterpretPatientsFromLims(@NotNull Map<String, List<SampleData>> samplesPerPatient,
-            @NotNull TumorLocationCurator tumorLocationCurator, @NotNull Lims lims, @NotNull String patientIdCOLO) {
-        List<String> corePatients = Lists.newArrayList();
-        List<String> widePatients = Lists.newArrayList();
-        Set<String> coloPatient = Sets.newHashSet();
-
-        TumorLocationCurationLims tumorLocationCurationLims = new TumorLocationCurationLims(lims, tumorLocationCurator);
-
-        for (Map.Entry<String, List<SampleData>> sampleData : samplesPerPatient.entrySet()) {
-            String patient = sampleData.getKey();
-            LimsSampleType type = LimsSampleType.fromSampleId(patient);
-            LimsSampleType typeColo = LimsSampleType.fromSampleId(patientIdCOLO);
-
-            if (type == LimsSampleType.CORE) {
-                corePatients.add(patient);
-            } else if (type == LimsSampleType.WIDE) {
-                widePatients.add(patient);
-            } else if (typeColo == LimsSampleType.COLO) {
-                coloPatient.add(patientIdCOLO);
-            }
-        }
-        LOGGER.info(String.format("Interpreting and curating data for %s CORE patients.", corePatients.size()));
-        Map<String, TumorTypeLims> corePatientsData = readLimsPatients(tumorLocationCurationLims, corePatients, samplesPerPatient, lims);
-        LOGGER.info(String.format("Finished curation of %s CORE patients.", corePatientsData.size()));
-
-        LOGGER.info(String.format("Interpreting and curating data for %s WIDE patients.", widePatients.size()));
-        Map<String, TumorTypeLims> WIDEPatientsData = readLimsPatients(tumorLocationCurationLims, widePatients, samplesPerPatient, lims);
-        LOGGER.info(String.format("Finished curation of %s WIDE patients.", WIDEPatientsData.size()));
-
-        LOGGER.info(String.format("Interpreting and curating data for %s COLO patients.", coloPatient.size()));
-        Map<String, TumorTypeLims> COLOPatientsData = Maps.newHashMap();
-        COLOPatientsData.put(patientIdCOLO,
-                ImmutableTumorTypeLims.of(patientIdCOLO, ImmutableCuratedTumorLocation.of("Skin", "Melanoma", "Melanoma")));
-        LOGGER.info(String.format("Finished curation of %s COLO patients.", COLOPatientsData.size()));
-
-        Map<String, TumorTypeLims> mergedPatients = Maps.newHashMap();
-        mergedPatients.putAll(corePatientsData);
-        mergedPatients.putAll(WIDEPatientsData);
-        mergedPatients.putAll(COLOPatientsData);
-
-        return mergedPatients;
-    }
-
-    @NotNull
-    private static Map<String, TumorTypeLims> readLimsPatients(@NotNull final TumorLocationCurationLims tumorLocationCurationLims,
-            @NotNull List<String> sampleIdsFromPatients, @NotNull final Map<String, List<SampleData>> samplesPerPatient,
-            @NotNull final Lims lims) {
-        final Map<String, TumorTypeLims> patientMap = Maps.newHashMap();
-        for (String sampleIdsFromPatient : sampleIdsFromPatients) {
-            List<SampleData> samples = samplesPerPatient.get(sampleIdsFromPatient);
-            //create sampleID
-            String rawSampleId = samples.toString().split(" ")[1];
-            String sampleId = rawSampleId.substring(1, rawSampleId.length() - 2);
-            patientMap.put(lims.patientId(sampleId), tumorLocationCurationLims.read(sampleId, lims.patientId(sampleId)));
-
-        }
-        return patientMap;
-    }
-
-    @NotNull
-    private static Map<String, Patient> readEcrfPatients(@NotNull final PatientReader reader, @NotNull final Iterable<EcrfPatient> patients,
-            @NotNull final Map<String, List<SampleData>> samplesPerPatient) {
-        final Map<String, Patient> patientMap = Maps.newHashMap();
-        for (final EcrfPatient ecrfPatient : patients) {
-            List<SampleData> samples = samplesPerPatient.get(ecrfPatient.patientId());
-            Patient patient = reader.read(ecrfPatient, samples != null ? samples : Lists.newArrayList());
-            patientMap.put(patient.patientIdentifier(), patient);
-        }
-        return patientMap;
-    }
-
     private static void writeClinicalData(@NotNull final DatabaseAccess dbAccess, @NotNull Map<String, List<SampleData>> samplesPerPatient,
-            @NotNull String patientIdCOLO, @NotNull EcrfModels ecrfModels, @NotNull String csvOutputDir,
-            @NotNull Optional<String> tumorLocationSymlink, @NotNull Optional<String> portalDataLink, @NotNull Lims lims)
-            throws IOException {
+            @NotNull EcrfModels ecrfModels, @NotNull String csvOutputDir, @NotNull Optional<String> tumorLocationSymlink,
+            @NotNull Optional<String> portalDataLink, @NotNull Lims lims) throws IOException {
         TumorLocationCurator tumorLocationCurator = TumorLocationCurator.fromProductionResource();
         BiopsySiteCurator biopsySiteCurator = BiopsySiteCurator.fromProductionResource();
         TreatmentCurator treatmentCurator = TreatmentCurator.fromProductionResource();
@@ -199,14 +119,7 @@ public final class LoadClinicalData {
         Map<String, Patient> patients =
                 loadAndInterpretAllPatients(samplesPerPatient, ecrfModels, tumorLocationCurator, treatmentCurator, biopsySiteCurator);
 
-        Map<String, TumorTypeLims> patientsMergedLims =
-                loadAndInterpretPatientsFromLims(samplesPerPatient, tumorLocationCurator, lims, patientIdCOLO);
-
-        DumpClinicalData.writeClinicalDumps(csvOutputDir,
-                patients.values(),
-                tumorLocationSymlink,
-                portalDataLink,
-                patientsMergedLims.values());
+        DumpClinicalData.writeClinicalDumps(csvOutputDir, patients.values(), tumorLocationSymlink, portalDataLink);
 
         LOGGER.info("Clearing interpreted clinical tables in database.");
         dbAccess.clearClinicalTables();
@@ -216,20 +129,17 @@ public final class LoadClinicalData {
         int missingSamples = 0;
         LOGGER.info(String.format("Writing clinical data for %s sequenced patients.", sequencedPatientIdentifiers.size()));
         for (final String patientIdentifier : sequencedPatientIdentifiers) {
-            if (patientIdentifier.contains(LimsSampleType.CPCT.toString()) || patientIdentifier.contains(LimsSampleType.DRUP.toString())
-                    || patientIdentifier.contains(LimsSampleType.WIDE.toString())) {
-                Patient patient = patients.get(patientIdentifier);
-                if (patient == null) {
-                    missingPatients++;
-                    missingSamples += samplesPerPatient.get(patientIdentifier).size();
-                    dbAccess.writeSampleClinicalData(patientIdentifier, samplesPerPatient.get(patientIdentifier));
-                } else {
-                    dbAccess.writeFullClinicalData(patient);
-                    List<ValidationFinding> findings = PatientValidator.validatePatient(patient);
+            Patient patient = patients.get(patientIdentifier);
+            if (patient == null) {
+                missingPatients++;
+                missingSamples += samplesPerPatient.get(patientIdentifier).size();
+                dbAccess.writeSampleClinicalData(patientIdentifier, samplesPerPatient.get(patientIdentifier));
+            } else {
+                dbAccess.writeFullClinicalData(patient);
+                List<ValidationFinding> findings = PatientValidator.validatePatient(patient);
 
-                    dbAccess.writeValidationFindings(findings);
-                    dbAccess.writeValidationFindings(patient.matchFindings());
-                }
+                dbAccess.writeValidationFindings(findings);
+                dbAccess.writeValidationFindings(patient.matchFindings());
             }
         }
         if (missingPatients > 0) {
@@ -247,7 +157,7 @@ public final class LoadClinicalData {
             @NotNull BiopsySiteCurator biopsySiteCurator) {
         final EcrfModel cpctEcrfModel = ecrfModels.cpctModel();
         LOGGER.info(String.format("Interpreting and curating data for %s CPCT patients.", cpctEcrfModel.patientCount()));
-        PatientReader cpctPatientReader = new CpctPatientReader(tumorLocationCurator,
+        EcrfPatientReader cpctPatientReader = new CpctPatientReader(tumorLocationCurator,
                 CpctUtil.extractHospitalMap(cpctEcrfModel),
                 biopsySiteCurator,
                 treatmentCurator);
@@ -257,15 +167,66 @@ public final class LoadClinicalData {
 
         final EcrfModel drupEcrfModel = ecrfModels.drupModel();
         LOGGER.info(String.format("Interpreting and curating data for %s DRUP patients.", drupEcrfModel.patientCount()));
-        PatientReader drupPatientReader = new DrupPatientReader(tumorLocationCurator, biopsySiteCurator);
+        EcrfPatientReader drupPatientReader = new DrupPatientReader(tumorLocationCurator, biopsySiteCurator);
 
         Map<String, Patient> drupPatients = readEcrfPatients(drupPatientReader, drupEcrfModel.patients(), samplesPerPatient);
         LOGGER.info(String.format("Finished curation of %s DRUP patients.", drupPatients.size()));
 
+        LOGGER.info("Interpreting and curating data based off LIMS");
+        Map<String, Patient> patientsFromLims = readLimsPatients(samplesPerPatient, tumorLocationCurator);
+        LOGGER.info(String.format("Finished curation of %s patients based off LIMS", patientsFromLims.keySet().size()));
+
         Map<String, Patient> mergedPatients = Maps.newHashMap();
         mergedPatients.putAll(cpctPatients);
         mergedPatients.putAll(drupPatients);
+        mergedPatients.putAll(patientsFromLims);
+        mergedPatients.putAll(readColoPatients());
         return mergedPatients;
+    }
+
+    @NotNull
+    private static Map<String, Patient> readEcrfPatients(@NotNull final EcrfPatientReader reader,
+            @NotNull final Iterable<EcrfPatient> patients, @NotNull final Map<String, List<SampleData>> samplesPerPatient) {
+        final Map<String, Patient> patientMap = Maps.newHashMap();
+        for (final EcrfPatient ecrfPatient : patients) {
+            List<SampleData> samples = samplesPerPatient.get(ecrfPatient.patientId());
+            Patient patient = reader.read(ecrfPatient, samples != null ? samples : Lists.newArrayList());
+            patientMap.put(patient.patientIdentifier(), patient);
+        }
+        return patientMap;
+    }
+
+    @NotNull
+    private static Map<String, Patient> readLimsPatients(@NotNull final Map<String, List<SampleData>> samplesPerPatient,
+            @NotNull TumorLocationCurator tumorLocationCurator) {
+        final Map<String, Patient> patientMap = Maps.newHashMap();
+        final LimsPatientReader limsPatientReader = new LimsPatientReader(tumorLocationCurator);
+
+        for (Map.Entry<String, List<SampleData>> entry : samplesPerPatient.entrySet()) {
+            List<SampleData> samples = entry.getValue();
+            if (!samples.isEmpty()) {
+                LimsSampleType sampleType = LimsSampleType.fromSampleId(samples.get(0).sampleId());
+
+                if (sampleType == LimsSampleType.CORE || sampleType == LimsSampleType.WIDE) {
+                    String patientId = entry.getKey();
+                    Patient limsPatient = limsPatientReader.read(patientId, samples);
+                    patientMap.put(patientId, limsPatient);
+                }
+            }
+        }
+
+        return patientMap;
+    }
+
+    @NotNull
+    private static Map<String, Patient> readColoPatients() {
+        final Map<String, Patient> patientMap = Maps.newHashMap();
+        final ColoPatientReader coloPatientReader = new ColoPatientReader();
+        LOGGER.info("Creating patient representation for COLO829");
+        Patient colo829Patient = coloPatientReader.read("COLO829T");
+
+        patientMap.put(colo829Patient.patientIdentifier(), colo829Patient);
+        return patientMap;
     }
 
     private static void writeRawEcrf(@NotNull DatabaseAccess dbWriter, @NotNull Set<String> sequencedPatients,
@@ -283,84 +244,30 @@ public final class LoadClinicalData {
         LOGGER.info(String.format("Finished writing raw drup ecrf data for %s patients.", drupEcrfModel.patientCount()));
     }
 
-    private static boolean checkInputs(@NotNull CommandLine cmd) {
-        final String runsFolderPathCPCTAndDRUP = cmd.getOptionValue(RUNS_DIR_CPCT_DRUP);
-        final String runsFolderPathCore = cmd.getOptionValue(RUNS_DIR_CORE);
-        final String runsFolderPathColo = cmd.getOptionValue(RUNS_DIR_COLO);
-
-        boolean allParamsPresent = !Utils.anyNull(runsFolderPathCPCTAndDRUP,
-                runsFolderPathCore,
-                runsFolderPathColo,
-                cmd.getOptionValue(DB_USER),
-                cmd.getOptionValue(DB_PASS),
-                cmd.getOptionValue(DB_URL),
-                cmd.getOptionValue(CPCT_ECRF_FILE),
-                cmd.getOptionValue(CPCT_FORM_STATUS_CSV),
-                cmd.getOptionValue(DRUP_ECRF_FILE),
-                cmd.getOptionValue(LIMS_DIRECTORY),
-                cmd.getOptionValue(CSV_OUT_DIR));
-
-        boolean validRunDirectories = true;
-        if (allParamsPresent) {
-            final File runDirectoryCPCTAndDRUP = new File(runsFolderPathCPCTAndDRUP);
-
-            if (!runDirectoryCPCTAndDRUP.exists() || !runDirectoryCPCTAndDRUP.isDirectory()) {
-                validRunDirectories = false;
-                LOGGER.warn("CPCT and DRUP run directory " + runDirectoryCPCTAndDRUP + " does not exist or is not a directory.");
-            }
-
-            final File runDirectoryCORE = new File(runsFolderPathCore);
-            if (!runDirectoryCORE.exists() || !runDirectoryCORE.isDirectory()) {
-                validRunDirectories = false;
-                LOGGER.warn("CORE run directory " + runDirectoryCPCTAndDRUP + " does not exist or is not a directory.");
-            }
-
-            final File runDirectoryCOLO = new File(runsFolderPathColo);
-            if (!runDirectoryCOLO.exists() || !runDirectoryCOLO.isDirectory()) {
-                validRunDirectories = false;
-                LOGGER.warn("COLO run directory " + runDirectoryCPCTAndDRUP + " does not exist or is not a directory.");
-            }
-        }
-
-        return validRunDirectories && allParamsPresent;
-    }
-
-    @NotNull
-    private static String loadSamplesCOLO(@NotNull CommandLine cmd) throws IOException {
-        final String runsFolderPathCOLO = cmd.getOptionValue(RUNS_DIR_COLO);
-        final List<RunContext> runContextsCOLO = RunsFolderReader.getRunContexts(new File(runsFolderPathCOLO));
-        LOGGER.info(String.format("Loading run contexts from %s", runsFolderPathCOLO) + " (" + runContextsCOLO.size() + " sets).");
-        Set<String> COLOpatient = Utils.sequencedPatientIdentifiers(runContextsCOLO);
-        return COLOpatient.toString();
-    }
-
     @NotNull
     private static Map<String, List<SampleData>> loadSamplesPerPatient(@NotNull CommandLine cmd, @NotNull Lims lims) throws IOException {
-        final String runsFolderPathCPCTandDRUP = cmd.getOptionValue(RUNS_DIR_CPCT_DRUP);
+        final String runsFolderPathCPCTAndDRUP = cmd.getOptionValue(RUNS_DIR_CPCT_DRUP);
+        final List<RunContext> runContextsCPCTAndDRUP = RunsFolderReader.getRunContexts(new File(runsFolderPathCPCTAndDRUP));
+        LOGGER.info(String.format("Loading run contexts from %s (%s sets)", runsFolderPathCPCTAndDRUP, runContextsCPCTAndDRUP.size()));
+
         final String runsFolderPathCORE = cmd.getOptionValue(RUNS_DIR_CORE);
-
-        List<RunContext> runContextsAll = new ArrayList<>();
-
-        final List<RunContext> runContextsCPCTandDRUP = RunsFolderReader.getRunContexts(new File(runsFolderPathCPCTandDRUP));
-        LOGGER.info(String.format("Loading run contexts from %s", runsFolderPathCPCTandDRUP) + " (" + runContextsCPCTandDRUP.size()
-                + " sets).");
-
         final List<RunContext> runContextsCORE = RunsFolderReader.getRunContexts(new File(runsFolderPathCORE));
-        LOGGER.info(String.format("Loading run contexts from %s", runsFolderPathCORE) + " (" + runContextsCORE.size() + " sets).");
+        LOGGER.info(String.format("Loading run contexts from %s (%s sets)", runsFolderPathCORE, runContextsCORE.size()));
 
-        runContextsAll.addAll(runContextsCPCTandDRUP);
+        List<RunContext> runContextsAll = Lists.newArrayList();
+        runContextsAll.addAll(runContextsCPCTAndDRUP);
         runContextsAll.addAll(runContextsCORE);
 
         LOGGER.info(String.format("Finished loading %s run contexts.", runContextsAll.size()));
 
-        Map<String, List<SampleData>> samplesPerPatient = readSamplesPerPatient(lims, runContextsAll);
+        Map<String, List<SampleData>> samplesPerPatient = extractSamplesFromRunContexts(lims, runContextsAll);
         LOGGER.info(String.format("Loaded samples for %s patients from LIMS", samplesPerPatient.keySet().size()));
 
         return samplesPerPatient;
     }
 
     @NotNull
-    private static Map<String, List<SampleData>> readSamplesPerPatient(@NotNull Lims lims, @NotNull List<RunContext> runContexts) {
+    private static Map<String, List<SampleData>> extractSamplesFromRunContexts(@NotNull Lims lims, @NotNull List<RunContext> runContexts) {
         LimsSampleReader sampleReader = new LimsSampleReader(lims);
 
         final Set<String> sequencedPatientIdentifiers = Utils.sequencedPatientIdentifiers(runContexts);
@@ -410,12 +317,45 @@ public final class LoadClinicalData {
         return new DatabaseAccess(cmd.getOptionValue(DB_USER), cmd.getOptionValue(DB_PASS), jdbcUrl);
     }
 
+    private static boolean checkInputs(@NotNull CommandLine cmd) {
+        final String runsFolderPathCPCTAndDRUP = cmd.getOptionValue(RUNS_DIR_CPCT_DRUP);
+        final String runsFolderPathCore = cmd.getOptionValue(RUNS_DIR_CORE);
+
+        boolean allParamsPresent = !Utils.anyNull(runsFolderPathCPCTAndDRUP,
+                runsFolderPathCore,
+                cmd.getOptionValue(DB_USER),
+                cmd.getOptionValue(DB_PASS),
+                cmd.getOptionValue(DB_URL),
+                cmd.getOptionValue(CPCT_ECRF_FILE),
+                cmd.getOptionValue(CPCT_FORM_STATUS_CSV),
+                cmd.getOptionValue(DRUP_ECRF_FILE),
+                cmd.getOptionValue(LIMS_DIRECTORY),
+                cmd.getOptionValue(CSV_OUT_DIR));
+
+        boolean validRunDirectories = true;
+        if (allParamsPresent) {
+            final File runDirectoryCPCTAndDRUP = new File(runsFolderPathCPCTAndDRUP);
+
+            if (!runDirectoryCPCTAndDRUP.exists() || !runDirectoryCPCTAndDRUP.isDirectory()) {
+                validRunDirectories = false;
+                LOGGER.warn("CPCT and DRUP run directory " + runDirectoryCPCTAndDRUP + " does not exist or is not a directory.");
+            }
+
+            final File runDirectoryCORE = new File(runsFolderPathCore);
+            if (!runDirectoryCORE.exists() || !runDirectoryCORE.isDirectory()) {
+                validRunDirectories = false;
+                LOGGER.warn("CORE run directory " + runDirectoryCPCTAndDRUP + " does not exist or is not a directory.");
+            }
+        }
+
+        return validRunDirectories && allParamsPresent;
+    }
+
     @NotNull
     private static Options createOptions() {
         final Options options = new Options();
         options.addOption(RUNS_DIR_CPCT_DRUP, true, "Path towards the folder containing cpct and drup patient runs.");
         options.addOption(RUNS_DIR_CORE, true, "Path towards the folder containing core patient runs.");
-        options.addOption(RUNS_DIR_COLO, true, "Path towards the folder containing colo run.");
 
         options.addOption(DB_USER, true, "Database user name.");
         options.addOption(DB_PASS, true, "Database password.");

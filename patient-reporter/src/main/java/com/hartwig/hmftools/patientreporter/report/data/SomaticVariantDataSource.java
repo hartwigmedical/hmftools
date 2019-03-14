@@ -5,6 +5,7 @@ import static net.sf.dynamicreports.report.builder.DynamicReports.field;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.patientreporter.report.util.PatientReportFormat;
 import com.hartwig.hmftools.patientreporter.variants.ReportableSomaticVariant;
@@ -87,8 +88,8 @@ public final class SomaticVariantDataSource {
                 return (driverLikelihood1 - driverLikelihood2) < 0 ? 1 : -1;
             } else {
                 if (variant1.gene().equals(variant2.gene())) {
-                    // sort on genomic position if gene is the same
-                    return ((int) variant1.position() < (int) variant2.position()) ? (int) variant1.position() : (int) variant2.position();
+                    // sort on codon position if gene is the same
+                    return extractCodonField(variant1.hgvsCodingImpact()) - extractCodonField(variant2.hgvsCodingImpact()) < 0 ? -1 : 1;
                 } else {
                     return variant1.gene().compareTo(variant2.gene());
                 }
@@ -136,5 +137,22 @@ public final class SomaticVariantDataSource {
             default:
                 return Strings.EMPTY;
         }
+    }
+
+    @VisibleForTesting
+    static int extractCodonField(@NotNull String hgvsCoding) {
+        StringBuilder codonAppender = new StringBuilder();
+        boolean noDigitFound = true;
+        // hgvsCoding starts with "c.", we need to skip that...
+        int index = 2;
+        while (noDigitFound && index < hgvsCoding.length()) {
+            if (Character.isDigit(hgvsCoding.charAt(index))) {
+                codonAppender.append(Character.toString(hgvsCoding.charAt(index)));
+            } else {
+                noDigitFound = false;
+            }
+            index++;
+        }
+        return Integer.valueOf(codonAppender.toString());
     }
 }

@@ -42,7 +42,7 @@ public final class LimsFactory {
 
     @NotNull
     public static Lims fromLimsDirectory(@NotNull final String limsDirectory) throws IOException {
-        final String limsJsonPath = limsDirectory + File.separator + LIMS_JSON_FILE;
+        String limsJsonPath = limsDirectory + File.separator + LIMS_JSON_FILE;
         Map<String, LimsJsonSampleData> dataPerSample = readLimsJsonSamples(limsJsonPath);
         Map<String, LimsJsonSubmissionData> dataPerSubmission = readLimsJsonSubmissions(limsJsonPath);
 
