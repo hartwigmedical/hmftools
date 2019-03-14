@@ -123,7 +123,6 @@ public abstract class QCFailPage {
                 sampleArrivalDateText(),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
                 recipientText(),
-                cmp.verticalGap(SECTION_VERTICAL_GAP),
                 cmp.text("The requester is: " + requester).setStyle(fontStyle()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
                 accreditationText(),
