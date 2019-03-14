@@ -34,6 +34,7 @@ public abstract class ViccFactory {
         while (reader.hasNext()) {
             JsonObject object = parser.parse(reader).getAsJsonObject();
             LOGGER.info(object);
+            LOGGER.info(object.keySet()); // keys of object
             BRCA brca1 =  ImmutableBRCA.builder()
                     .variantFrequencyLOVD(object.getAsJsonObject("brca").get("Variant_frequency_LOVD").toString())
                     .clinVarAccessionENIGMA(object.getAsJsonObject("brca").get("ClinVarAccession_ENIGMA").toString()).build();
