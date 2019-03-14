@@ -825,6 +825,10 @@ public class ChainFinder
                         boolean isStart = isStart(be);
 
                         SvBreakend openBreakend = chain.getOpenBreakend(isStart); // this will be one of the pair breakends
+
+                        if(openBreakend == null)
+                            continue; // eg ending on a SGL
+
                         List<SvBreakend> possibleBreakends = mUnlinkedBreakendMap.get(openBreakend.getOrigBreakend());
                         SvVarData chainSV = chain.getChainEndSV(isStart);
 

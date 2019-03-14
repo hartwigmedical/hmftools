@@ -723,6 +723,7 @@ public class SvCluster
 
         double tightestMinPloidy = 0;
         double tightestMaxPloidy = -1;
+        int countHalfToOnePloidy = 0;
 
         for (final SvVarData var : mSVs)
         {
@@ -744,6 +745,9 @@ public class SvCluster
                     tightestMaxPloidy = var.ploidyMax();
 
                 tightestMinPloidy = max(var.ploidyMin(), tightestMinPloidy);
+
+                if(var.ploidyMin() < 1 && var.ploidyMax() > 0.5)
+                    ++countHalfToOnePloidy;
 
                 for(int i = minPloidyInt; i <= maxPloidyInt; ++i)
                 {
@@ -780,12 +784,21 @@ public class SvCluster
                 mMaxCNChange = max(mMaxCNChange, ploidy);
             }
 
-            if(mMinCNChange < mMaxCNChange && tightestMaxPloidy > tightestMinPloidy && tightestMaxPloidy - tightestMinPloidy < 1)
+            if(mMinCNChange < mMaxCNChange)
             {
-                // if all SVs cover the same value but it's not an integer, still consider them uniform
-                mMinCNChange = 1;
-                mMaxCNChange = 1;
+                if (tightestMaxPloidy > tightestMinPloidy && tightestMaxPloidy - tightestMinPloidy < 1)
+                {
+                    // if all SVs cover the same value but it's not an integer, still consider them uniform
+                    mMinCNChange = 1;
+                    mMaxCNChange = 1;
+                }
+                else if (countHalfToOnePloidy == svCalcPloidyCount)
+                {
+                    mMinCNChange = 1;
+                    mMaxCNChange = 1;
+                }
             }
+
         }
     }
 

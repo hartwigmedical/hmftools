@@ -224,6 +224,10 @@ public class SvSampleAnalyser {
                 }
 
                 SvCNData cnDataPost = cnDataPair[be];
+
+                if(cnDataList == null || cnDataPost == null)
+                    continue;
+
                 SvCNData cnDataPrev = cnDataList.get(cnDataPost.getIndex() - 1);
 
                 var.setCopyNumberData(isStart, cnDataPrev, cnDataPost);

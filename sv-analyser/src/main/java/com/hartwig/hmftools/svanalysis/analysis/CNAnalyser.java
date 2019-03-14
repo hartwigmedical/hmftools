@@ -296,27 +296,11 @@ public class CNAnalyser {
 
                 for(SvCNData cnData : cnDataList)
                 {
-                    if (!cnData.matchesSV(true) && !cnData.matchesSegment(NONE, true))
-                        continue;
+                    // if (!cnData.matchesSV(true) && !cnData.matchesSegment(NONE, true))
+                    //    continue;
 
                     // ignore orientation during matching since CN change is not a reliable determinant of SV orientation
                     long cnPosition = cnData.StartPos;
-
-                    if(!svData.type().toString().equals(cnData.SegStart))
-                    {
-                        if(svData.type() == SGL && svData.filter().equals(NONE_SEGMENT_INFERRED) && cnData.matchesSegment(NONE, true))
-                        {
-                            // SGL inferred == NONE in CN table
-                        }
-                        else if(cnData.matchesSegment(MULTIPLE, true))
-                        {
-                            // also valid
-                        }
-                        else
-                        {
-                            continue;
-                        }
-                    }
 
                     if(svOrientation == 1)
                         --cnPosition;
@@ -324,10 +308,20 @@ public class CNAnalyser {
                     if (svPosition != cnPosition)
                         continue;
 
-                    if(cnData.matchesSegment(MULTIPLE, true))
+                    if(!svData.type().toString().equals(cnData.SegStart))
                     {
-                        LOGGER.debug("SV({} chr={} pos={}) matches multiple CN segment: id({})",
-                                svData.id(), svChromosome, svPosition, cnData.id());
+                        if(svData.type() == SGL && svData.filter().equals(NONE_SEGMENT_INFERRED) && cnData.matchesSegment(NONE, true))
+                        {
+                            // SGL inferred == NONE in CN table
+                        }
+                        else
+                        {
+                            // allow matches if the position if correct
+                            LOGGER.debug("SV({} chr={} pos={} type={}) matches {} CN segment: id({})",
+                                    svData.id(), svChromosome, svPosition, svData.type(), cnData.SegStart, cnData.id());
+
+                            // continue;
+                        }
                     }
 
                     // a match has been found
@@ -1036,8 +1030,6 @@ public class CNAnalyser {
                 final SvCNData cnEndNextData = cnDataPair[SVI_END];
                 final SvCNData cnEndData = cnEndNextData != null ? getCNSegment(cnEndNextData.Chromosome, cnEndNextData.getIndex() - 1) : null;
 
-
-                // double ploidy = svData.ploidy();
                 int tumorReadCountStart = svData.startTumourVariantFragmentCount();
                 int tumorReadCountEnd = svData.endTumourVariantFragmentCount();
 
@@ -1062,10 +1054,9 @@ public class CNAnalyser {
                 double ploidyEstimate = calcResults[APC_EST_PLOIDY];
                 double ploidyUncertainty = calcResults[APC_EST_UNCERTAINTY];
 
-                // NONE segment SVs will usually fail on the ploidy recalc
-                if(!svData.filter().equals(NONE_SEGMENT_INFERRED) && (Double.isNaN(ploidyEstimate) || Double.isNaN(ploidyUncertainty)))
+                if(ploidyUncertainty == 0 || Double.isNaN(ploidyEstimate) || Double.isNaN(ploidyUncertainty))
                 {
-                    LOGGER.debug("sample({}) svID({} type={}) ploidy(est={} unc={}",
+                    LOGGER.debug("sample({}) svID({} type={}) unexpected ploidy(est={} unc={})",
                             sampleId, svData.id(), svData.type(), ploidyEstimate, ploidyUncertainty);
                 }
 
@@ -1160,22 +1151,28 @@ public class CNAnalyser {
         }
 
         // calculate a ploidy for each side independently
-        double ploidyStart = adjVafStart * maxCNStart;
-        double ploidyUncertaintyStart = calcPloidyUncertainty(tumorReadCountStart, adjVafStart, maxCNStart, cnUncertaintyStart);
-
-        if(ploidyUncertaintyStart > 0)
+        if(adjVafStart > 0)
         {
-            observations.add(ploidyStart);
-            uncertainties.add(ploidyUncertaintyStart);
+            double ploidyStart = adjVafStart * maxCNStart;
+            double ploidyUncertaintyStart = calcPloidyUncertainty(tumorReadCountStart, adjVafStart, maxCNStart, cnUncertaintyStart);
+
+            if (ploidyUncertaintyStart > 0)
+            {
+                observations.add(ploidyStart);
+                uncertainties.add(ploidyUncertaintyStart);
+            }
         }
 
-        double ploidyEnd = adjVafEnd * maxCNEnd;
-        double ploidyUncertaintyEnd = calcPloidyUncertainty(tumorReadCountEnd, adjVafEnd, maxCNEnd, cnUncertaintyEnd);
-
-        if(ploidyUncertaintyEnd > 0)
+        if(adjVafEnd > 0)
         {
-            observations.add(ploidyEnd);
-            uncertainties.add(ploidyUncertaintyEnd);
+            double ploidyEnd = adjVafEnd * maxCNEnd;
+            double ploidyUncertaintyEnd = calcPloidyUncertainty(tumorReadCountEnd, adjVafEnd, maxCNEnd, cnUncertaintyEnd);
+
+            if (ploidyUncertaintyEnd > 0)
+            {
+                observations.add(ploidyEnd);
+                uncertainties.add(ploidyUncertaintyEnd);
+            }
         }
 
         double estPloidy = 0;
@@ -1282,13 +1279,6 @@ public class CNAnalyser {
 
         int maxIterations = 20;
         int iterations = 0;
-
-        /*
-        double initRange = 3.7 / sqrt(expectedVal); // works for requiredProb = 1e-4
-        int testValue = (int) Double.max(round(expectedVal * (1 - initRange)), 0);
-        int testValueUpper = (int) Double.max(round(expectedVal * (1 - initRange*0.5)), 0);
-        int testValueLower = (int) Double.max(round(expectedVal * (1 - initRange*2)), 0);
-        */
 
         double refCount = 25;
         double refRangePerc = 0.44;
