@@ -116,9 +116,9 @@ public class PatientReporterApplication {
     @NotNull
     private static BaseReportData buildBaseReportData(@NotNull final CommandLine cmd) throws IOException {
         String tumorLocationCsv = cmd.getOptionValue(TUMOR_LOCATION_CSV);
-        LOGGER.info("Loading ECRF CSV dump from {}.", tumorLocationCsv);
+        LOGGER.info("Loading tumor location CSV from {}.", tumorLocationCsv);
         final List<PatientTumorLocation> patientTumorLocations = PatientTumorLocation.readRecords(tumorLocationCsv);
-        LOGGER.info(" Loaded data for {} patients.", patientTumorLocations.size());
+        LOGGER.info(" Loaded tumor locations for {} patients.", patientTumorLocations.size());
 
         String limsDirectory = cmd.getOptionValue(LIMS_DIRECTORY);
         LOGGER.info("Loading LIMS database from {}.", limsDirectory);
