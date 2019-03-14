@@ -31,6 +31,12 @@ public abstract class ViccFactory {
         JsonReader reader = new JsonReader(new FileReader(brcaJsonPath));
         reader.setLenient(true);
 
+        while (reader.hasNext()) {
+            JsonObject object = parser.parse(reader).getAsJsonObject();
+            LOGGER.info(object);
+
+        }
+
         JsonObject object = parser.parse(reader).getAsJsonObject();
 
         BRCA brca1 =  ImmutableBRCA.builder()
