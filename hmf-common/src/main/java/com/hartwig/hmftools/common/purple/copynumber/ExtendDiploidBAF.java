@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.numeric.Doubles;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;
 import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
@@ -101,21 +102,27 @@ class ExtendDiploidBAF {
         }
 
         final Optional<FittedRegion> optionalNearestDifferentSource = nearestDifferentRegion(inferRegion, regions);
-        if (optionalNearestDifferentSource.filter(x -> !isSingleSmallRegionFlankedByLargeLOH(x, inferRegion, regions)).isPresent()) {
+        if (optionalNearestDifferentSource.isPresent()) {
+            final FittedRegion nearestSource = optionalNearestDifferentSource.get();
+
+            if (isSingleSmallRegionFlankedByLargeLOH(nearestSource, inferRegion, regions)) {
+                return primarySource.minorAllelePloidy();
+            }
 
             final FittedRegion leftSource = regions.get(inferRegion.leftSourceIndex).region();
             final FittedRegion rightSource = regions.get(inferRegion.rightSourceIndex).region();
 
-            final FittedRegion one = optionalNearestDifferentSource.get();
-            final FittedRegion two = secondarySource.start() < leftSource.start() ? rightSource : leftSource;
+            // Need other to be the one we compared with when finding nearest different region
+            final FittedRegion other = nearestSource.start() > rightSource.start() ? rightSource : leftSource;
 
-            return minorOrMajorMovedTargetPloidy(primarySource, one, two);
+            return minorOrMajorMovedTargetPloidy(primarySource, nearestSource, other);
         }
 
         return primarySource.minorAllelePloidy();
     }
 
-    private static double minorOrMajorMovedTargetPloidy(@NotNull final FittedRegion source, @NotNull final FittedRegion primary,
+    @VisibleForTesting
+    static double minorOrMajorMovedTargetPloidy(@NotNull final FittedRegion source, @NotNull final FittedRegion primary,
             @NotNull final FittedRegion secondary) {
         boolean isMinorDifferent = isMinorAlleleDifferent(primary, secondary);
         boolean isMajorDifferent = isMajorAlleleDifferent(primary, secondary);
@@ -124,19 +131,31 @@ class ExtendDiploidBAF {
         if (isMinorDifferent && isMajorDifferent) {
 
             if (Doubles.lessThan(Math.abs(primary.minorAllelePloidy() - secondary.majorAllelePloidy()), MIN_COPY_NUMBER_CHANGE)) {
-                return source.minorAllelePloidy();
+                double average = (primary.minorAllelePloidy() + secondary.majorAllelePloidy()) / 2;
+                return closestAllele(average, source);
             }
 
             if (Doubles.lessThan(Math.abs(primary.majorAllelePloidy() - secondary.minorAllelePloidy()), MIN_COPY_NUMBER_CHANGE)) {
-                return source.majorAllelePloidy();
+                double average = (primary.majorAllelePloidy() + secondary.minorAllelePloidy()) / 2;
+                return closestAllele(average, source);
             }
         }
 
         if (isMajorDifferent) {
+            // Correct
             return source.minorAllelePloidy();
         }
 
+        // Correct
         return source.majorAllelePloidy();
+    }
+
+    private static double closestAllele(double target, @NotNull final FittedRegion source) {
+        double sourceMinorDistanceFromAverage = Math.abs(source.minorAllelePloidy() - target);
+        double sourceMajorDistanceFromAverage = Math.abs(source.majorAllelePloidy() - target);
+        return Doubles.lessThan(sourceMinorDistanceFromAverage, sourceMajorDistanceFromAverage)
+                ? source.minorAllelePloidy()
+                : source.majorAllelePloidy();
     }
 
     private static void inferBetween(@NotNull final InferRegion inferRegion, @NotNull final List<CombinedRegion> regions) {
@@ -195,7 +214,6 @@ class ExtendDiploidBAF {
 
         Optional<FittedRegion> optionalRight = lookRight(inferRegion, regions);
         Optional<FittedRegion> optionalLeft = lookLeft(inferRegion, regions);
-
         if (!optionalRight.isPresent()) {
             return optionalLeft;
         }
@@ -274,9 +292,8 @@ class ExtendDiploidBAF {
     private static boolean isSingleSmallRegionFlankedByLargeLOH(@NotNull final FittedRegion nearestSource,
             @NotNull final InferRegion inferRegion, @NotNull final List<CombinedRegion> regions) {
 
-        long distance = nearestSource.start() > regions.get(inferRegion.leftTargetIndex).end()
-                ? nearestSource.start() - regions.get(inferRegion.leftTargetIndex).end()
-                : regions.get(inferRegion.leftTargetIndex).start() - nearestSource.end();
+        long distance = nearestSource.start() > regions.get(inferRegion.leftTargetIndex).end() ? nearestSource.start() - regions.get(
+                inferRegion.leftTargetIndex).end() : regions.get(inferRegion.leftTargetIndex).start() - nearestSource.end();
 
         return isSingleSmallRegionFlankedByLOH(inferRegion, regions) && distance > LOH_MAX_NEAREST_DISTANCE;
     }

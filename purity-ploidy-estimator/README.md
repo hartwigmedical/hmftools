@@ -269,8 +269,11 @@ If there is neighbouring information on both sides of the unknown region, then t
 - If both the major and minor allele of the neighbours are significantly different (> 0.5) but the minor allele of one matches the major allele of the other ( < 0.5) then choose the matching allele ploidy as the constant ploidy.
 - Else, If the major allele of the neighbours is significantly different keep the minor allele constant.
 - Else, If the minor allele of the neighbours is significantly different keep the major allele constant.
-- Else, If the unknown region is tiny (<= 30 bases) and is greater in copy number than the neighbour with the highest baf count, then hold constant that neighbours minor allele.
-- Else, If the unknown region is flanked by large ( > 1,000,000) LOH regions but is not a small region (< 1000 bases) then find the nearest region on each side(without crossing the centromere) with a change in minor or major allele. If found, re-apply logic from the first three steps. 
+- Else, If the unknown region is tiny (<= 30 bases), and is greater in copy number than the neighbour with the largest number of BAF observations, then hold constant that neighbours minor allele.  
+This rule is intended to deal with the very short overlap which can occur at double strand breaks particularly for LINE insertions.
+- Else, If the unknown region is small (<= 1000 bases) and is flanked by large (> 1,000,000 bases) LOH regions, then hold constant the minor allele from the neighbour with the largest number of BAF observations.
+This rule is intended to ensure that short templated insertions do not break regions of LOH.
+- Else, Find the nearest region on each side (without crossing the centromere) with a change in minor or major allele. If found, re-apply logic from the first three steps. 
 - Failing everything else, hold constant the minor allele of the neighbour with the largest number of BAF observations.
 
 At this stage we have determined a copy number and minor allele ploidy for every base in the genome
