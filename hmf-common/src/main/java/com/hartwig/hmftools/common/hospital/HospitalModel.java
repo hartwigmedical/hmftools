@@ -113,7 +113,7 @@ public abstract class HospitalModel {
         final List<String> missingFields = Lists.newArrayList();
         LimsSampleType type = LimsSampleType.fromSampleId(sample);
 
-        if (determineRequester(sample, hospital, requesterName).isEmpty()) {
+        if (type != LimsSampleType.CORE && determineRequester(sample, hospital, requesterName).isEmpty()) {
             missingFields.add("requester");
         }
         if (hospital.addressName().isEmpty()) {
@@ -125,9 +125,7 @@ public abstract class HospitalModel {
         if (hospital.addressCity().isEmpty()) {
             missingFields.add("city");
         }
-        if (!missingFields.isEmpty() && !type.equals(LimsSampleType.CORE)) {
-            LOGGER.warn("Some address fields (" + Strings.join(missingFields, ',') + ") are missing.");
-        } else if (!missingFields.isEmpty() && type.equals(LimsSampleType.CORE) && !missingFields.contains("requester")) {
+        if (!missingFields.isEmpty()) {
             LOGGER.warn("Some address fields (" + Strings.join(missingFields, ',') + ") are missing.");
         }
     }
