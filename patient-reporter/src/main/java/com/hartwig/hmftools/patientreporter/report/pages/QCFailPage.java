@@ -147,6 +147,7 @@ public abstract class QCFailPage {
                 internalBarcodeText(),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
                 pathologyText(),
+                cmp.verticalGap(SECTION_VERTICAL_GAP),
                 shallowSeqText(),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
                 sampleArrivalDateText(),
