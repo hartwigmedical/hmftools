@@ -94,61 +94,51 @@ public class FusionDisruptionAnalyser
     public final List<GeneFusion> getFusions() { return mFusions; }
     public void setVisWriter(VisualiserWriter writer) { mVisWriter = writer; }
 
-    private void setSvGenesList(final SvVarData var, boolean applyPromotorDistance)
+    public static void setSvGeneData(final List<SvVarData> svList, SvGeneTranscriptCollection geneCollection, boolean applyPromotorDistance)
     {
-        List<GeneAnnotation> genesList = Lists.newArrayList();
-
-        int upstreamDistance = applyPromotorDistance ? PRE_GENE_PROMOTOR_DISTANCE : 0;
-
-        for(int be = SVI_START; be <= SVI_END; ++be)
+        for(final SvVarData var : svList)
         {
-            if(be == SVI_END && var.isNullBreakend())
-                continue;
+            List<GeneAnnotation> genesList = Lists.newArrayList();
 
-            boolean isStart = isStart(be);
+            int upstreamDistance = applyPromotorDistance ? PRE_GENE_PROMOTOR_DISTANCE : 0;
 
-            genesList.addAll(mEnsemblDataCache.findGeneAnnotationsBySv(
-                    var.dbId(), isStart, var.chromosome(isStart), var.position(isStart), upstreamDistance));
+            for (int be = SVI_START; be <= SVI_END; ++be)
+            {
+                if (be == SVI_END && var.isNullBreakend())
+                    continue;
+
+                boolean isStart = isStart(be);
+
+                genesList.addAll(geneCollection.findGeneAnnotationsBySv(
+                        var.dbId(), isStart, var.chromosome(isStart), var.position(isStart), upstreamDistance));
+            }
+
+            if (genesList.isEmpty())
+                return;
+
+            List<GeneAnnotation> startGenes = Lists.newArrayList();
+            List<GeneAnnotation> endGenes = Lists.newArrayList();
+
+            for (GeneAnnotation gene : genesList)
+            {
+                gene.setSvData(var.getSvData());
+
+                if (gene.isStart())
+                    startGenes.add(gene);
+                else
+                    endGenes.add(gene);
+            }
+
+            var.setGenesList(startGenes, true);
+            var.setGenesList(endGenes, false);
         }
-
-        if(genesList.isEmpty())
-            return;
-
-        List<GeneAnnotation> startGenes = Lists.newArrayList();
-        List<GeneAnnotation> endGenes = Lists.newArrayList();
-
-        for(GeneAnnotation gene : genesList)
-        {
-            gene.setSvData(var.getSvData());
-
-            if(gene.isStart())
-                startGenes.add(gene);
-            else
-                endGenes.add(gene);
-        }
-
-        var.setGenesList(startGenes, true);
-        var.setGenesList(endGenes, false);
     }
 
-    public void setSvGeneData(final String sampleId, final List<SvVarData> svList, boolean applyPromotorDistance,
-            Map<String, List<SvBreakend>> chrBreakendMap)
+    public void run(final String sampleId, final List<SvVarData> svList, final List<SvCluster> clusters, Map<String, List<SvBreakend>> chrBreakendMap)
     {
         mSampleId = sampleId;
         mChrBreakendMap = chrBreakendMap;
 
-        for(final SvVarData var : svList)
-        {
-            if (var.isReplicatedSv())
-                continue;
-
-            // cache transcript info against each SV
-            setSvGenesList(var, applyPromotorDistance);
-        }
-    }
-
-    public void run(final List<SvVarData> svList, final List<SvCluster> clusters)
-    {
         findFusions(svList, clusters);
 
         assessRnaFusions();

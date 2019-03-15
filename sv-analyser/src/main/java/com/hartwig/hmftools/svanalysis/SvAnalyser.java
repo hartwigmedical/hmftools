@@ -4,6 +4,7 @@ import static com.hartwig.hmftools.common.variant.structural.StructuralVariantFa
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.MIN_SAMPLE_PURITY;
 import static com.hartwig.hmftools.svanalysis.analysis.CNAnalyser.CN_ANALYSIS_ONLY;
 import static com.hartwig.hmftools.svanalysis.analysis.CNAnalyser.SV_PLOIDY_CALC_FILE;
+import static com.hartwig.hmftools.svanalysis.analysis.FusionDisruptionAnalyser.setSvGeneData;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.NONE_SEGMENT_INFERRED;
 
 import java.sql.SQLException;
@@ -227,9 +228,9 @@ public class SvAnalyser {
 
                 sampleAnalyser.analyse();
 
-                if(runFusions || checkDrivers)
+                if(ensemblDataCache != null)
                 {
-                    fusionAnalyser.setSvGeneData(sampleId, svVarData, runFusions, sampleAnalyser.getChrBreakendMap());
+                    setSvGeneData(svVarData, ensemblDataCache, runFusions);
                 }
 
                 if(checkDrivers)
@@ -244,7 +245,7 @@ public class SvAnalyser {
 
                 if(runFusions)
                 {
-                    fusionAnalyser.run(svVarData, sampleAnalyser.getClusters());
+                    fusionAnalyser.run(sampleId, svVarData, sampleAnalyser.getClusters(), sampleAnalyser.getChrBreakendMap());
                 }
 
                 sampleAnalyser.writeOutput();

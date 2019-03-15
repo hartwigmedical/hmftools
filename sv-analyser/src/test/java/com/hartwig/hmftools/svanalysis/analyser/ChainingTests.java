@@ -230,7 +230,6 @@ public class ChainingTests
         // vanilla BFB of the form centromere - A - B - A - C - A - R - telomere, where R is the resolving SV
         SvTestHelper tester = new SvTestHelper();
         tester.logVerbose(true);
-        tester.Analyser.getChainFinder().setLogVerbose(true);
 
         final SvVarData varA = createTestSv("A", "1", "1", 2000,3000, -1, -1, INV, 4, 7, 3, 3, 3, "");
         final SvVarData varB = createTestSv("B", "1", "1", 9000,10000, 1, 1, INV, 4, 3, 1, 1, 1, "");
@@ -266,7 +265,6 @@ public class ChainingTests
         // where D is a complex DUP around the section B - A - C - A and R is the resolving SV
         SvTestHelper tester = new SvTestHelper();
         tester.logVerbose(true);
-        tester.Analyser.getChainFinder().setLogVerbose(true);
 
         final SvVarData varA = createTestSv("A", "1", "1", 2000,3000, -1, -1, INV, 6, 11, 5, 5, 5, "");
         final SvVarData varB = createTestSv("B", "1", "1", 9000,10000, 1, 1, INV, 8, 5, 3, 3, 3, "");
@@ -304,7 +302,6 @@ public class ChainingTests
         // where D is a complex DUP around the section B - C - D
         SvTestHelper tester = new SvTestHelper();
         tester.logVerbose(true);
-        tester.Analyser.getChainFinder().setLogVerbose(true);
 
         final SvVarData varA = createTestSv("A", "1", "1", 1000,5000, 1, 1, INV, 2, 2, 1, 1, 1, "");
         final SvVarData varB = createTestSv("B", "1", "1", 4000,9000, -1, 1, DUP, 3, 3, 2, 2, 2, "");
@@ -332,6 +329,52 @@ public class ChainingTests
         final SvChain chain = cluster.getChains().get(0);
 
         assertEquals(8, chain.getLinkCount());
+    }
+
+    @Test
+    public void testBFBChainWithChainedFoldbacks()
+    {
+        // BFB of the form centromere - A - B - A - C - A - R - telomere, where R is the resolving SV
+        // but assembled fragments are inserted into each of the foldbacks, requiring linking to make use of matching ploidy
+        SvTestHelper tester = new SvTestHelper();
+        tester.logVerbose(true);
+
+        final SvVarData varA1 = createTestSv("A1", "1", "1", 2000,5500, -1, -1, INV, 5, 12, 4, 4, 4, "");
+        final SvVarData varA2 = createTestSv("A2", "1", "1", 3000,5600, -1, 1, DUP, 9, 12, 4, 4, 4, "");
+
+        varA1.setAssemblyData(false, "asmb_A1_A2");
+        varA2.setAssemblyData(false, "asmb_A1_A2");
+
+        final SvVarData varB = createTestSv("B", "1", "1", 9000,10000, 1, 1, INV, 6, 4, 2, 2, 2, "");
+
+        // functions as a foldback but interrupted by the assembled TI A1-A2
+        final SvVarData varC = createTestSv("C", "1", "1", 5000,6000, 1, 1, INV, 9, 8, 1, 1, 1, "");
+        final SvVarData varR = createTestSv("R", "1", "1", 1000,8000, 1, 1, INV, 2, 7, 1, 1, 1, "");
+
+        tester.AllVariants.add(varA1);
+        tester.AllVariants.add(varA2);
+        tester.AllVariants.add(varB);
+        tester.AllVariants.add(varC);
+        tester.AllVariants.add(varR);
+
+        tester.preClusteringInit();
+        tester.Analyser.clusterAndAnalyse();
+
+        assertTrue(varA1.isChainedFoldback());
+        assertTrue(varA2.isChainedFoldback());
+        assertEquals(varA2.id(), varA1.getFoldbackLink(true));
+        assertEquals(varA1.id(), varA2.getFoldbackLink(true));
+        assertEquals(varB.id(), varB.getFoldbackLink(true));
+
+        assertEquals(1, tester.Analyser.getClusters().size());
+        final SvCluster cluster = tester.Analyser.getClusters().get(0);
+
+        assertEquals(1, cluster.getChains().size());
+
+        final SvChain chain = cluster.getChains().get(0);
+
+        int linkCount = 2 * 4 + 1 * 2 + 2 - 1;
+        assertEquals(linkCount, chain.getLinkCount());
     }
 
 

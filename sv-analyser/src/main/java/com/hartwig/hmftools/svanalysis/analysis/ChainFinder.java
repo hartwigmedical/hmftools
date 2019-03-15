@@ -289,6 +289,59 @@ public class ChainFinder
     {
         List<SvLinkedPair> possiblePairs = Lists.newArrayList();
 
+        // find the highest pair of SVs with matching ploidy
+        int maxRepCount = 1;
+
+        for(Map.Entry<SvVarData,Integer> entry : mSvReplicationMap.entrySet())
+        {
+            int repCount = entry.getValue();
+            SvVarData var = entry.getKey();
+
+            if(repCount <= 1)
+                continue;
+
+            if(repCount >= maxRepCount)
+            {
+                List<SvLinkedPair> newPairs = Lists.newArrayList();
+
+                // check whether this SV has any possible links with SVs of the same (remaining rep count)
+                for(int be = SVI_START; be <= SVI_END; ++be)
+                {
+                    if(var.isNullBreakend() && be == SVI_END)
+                        continue;
+
+                    boolean isStart = isStart(be);
+                    SvBreakend breakend = var.getBreakend(isStart);
+                    List<SvLinkedPair> svLinks = mSvBreakendPossibleLinks.get(breakend);
+
+                    if(svLinks == null)
+                        continue;
+
+                    for(SvLinkedPair pair : svLinks)
+                    {
+                        if(possiblePairs.contains(pair))
+                            continue;
+
+                        SvVarData otherVar = pair.getOtherSV(var);
+                        Integer otherRepCount = mSvReplicationMap.get(otherVar);
+                        if(otherRepCount != null && otherRepCount == repCount)
+                        {
+                            log(LOG_LEVEL_VERBOSE, String.format("pair({}) with matching high-rep count({})",
+                                    pair.toString(), repCount));
+                            newPairs.add(pair);
+                        }
+                    }
+                }
+
+                if(repCount > maxRepCount)
+                {
+                    maxRepCount = repCount;
+                    possiblePairs.clear();
+                }
+
+                possiblePairs.addAll(newPairs);
+            }
+        }
 
         return possiblePairs;
     }
@@ -536,7 +589,7 @@ public class ChainFinder
         // find the best next candidate link giving priority to replication count
 
         // first check if there are SVs with a higher replication count, and if so favour these first
-        List<SvVarData> maxRepSVs = !mSvReplicationMap.isEmpty() ? getMaxReplicationSvIds() : null;
+        List<SvVarData> maxRepSVs = !mSvReplicationMap.isEmpty() ? getMaxReplicationSVs() : null;
 
         List<SvBreakend> breakendList = Lists.newArrayList();
 
@@ -1167,8 +1220,14 @@ public class ChainFinder
                 {
                     final SvBreakend upperBreakend = breakendList.get(j);
 
-                    if(skippedNonAssembledIndex == -1 && upperBreakend.getSV().getAssemblyMatchType(upperBreakend.usesStart()) != ASSEMBLY_MATCH_MATCHED)
-                        skippedNonAssembledIndex = j;
+                    if(skippedNonAssembledIndex == -1)
+                    {
+                        if(upperBreakend.getSV().getAssemblyMatchType(upperBreakend.usesStart()) != ASSEMBLY_MATCH_MATCHED)
+                        {
+                            // invalidate the possibility of these 2 breakends satisfying the complex DUP scenario
+                            skippedNonAssembledIndex = j;
+                        }
+                    }
 
                     if(upperBreakend.orientation() != 1)
                         continue;
@@ -1214,49 +1273,81 @@ public class ChainFinder
                         // make note of any breakends which run into a high-ploidy SV at their first opposing breakend
                         if (!lowerBreakend.getSV().isFoldback())
                         {
-                            testComplexDupConditions(candidateComplexDups, lowerBreakend, upperBreakend);
+                            checkIsComplexDupSV(lowerBreakend, upperBreakend);
                         }
 
                         if (!upperBreakend.getSV().isFoldback())
                         {
-                            testComplexDupConditions(candidateComplexDups, upperBreakend, lowerBreakend);
+                            checkIsComplexDupSV(upperBreakend, lowerBreakend);
                         }
                     }
                 }
             }
         }
-
-        for(Map.Entry<SvVarData,int[]> entry : candidateComplexDups.entrySet())
-        {
-            SvVarData var = entry.getKey();
-            int[] ploidyCounts = entry.getValue();
-
-            if(ploidyCounts[0] == 2 && ploidyCounts[1] >= 1)
-            {
-                LOGGER.debug("identified potential complex dup({} {})", var.posId(), var.type());
-                mComplexDupCandidates.add(var);
-            }
-        }
     }
 
-    private boolean testComplexDupConditions(Map<SvVarData,int[]> complexDupsMap, SvBreakend breakend, SvBreakend higherPloidyBreakend)
+    private void checkIsComplexDupSV(SvBreakend lowerPloidyBreakend, SvBreakend higherPloidyBreakend)
     {
-        if(breakend.getSV().ploidyMin() * 2 > higherPloidyBreakend.getSV().ploidyMax())
-            return false;
+        SvVarData var = lowerPloidyBreakend.getSV();
 
-        int[] ploidyCounts = complexDupsMap.get(breakend.getSV());
-        if(ploidyCounts == null)
+        if(var.isNullBreakend())
+            return;
+
+        if(mComplexDupCandidates.contains(var))
+            return;
+
+        if(var.ploidyMin() * 2 > higherPloidyBreakend.getSV().ploidyMax())
+            return;
+
+        boolean lessThanMax = var.ploidyMax() < higherPloidyBreakend.getSV().ploidyMin();
+
+        // check whether the other breakend satisfies the same ploidy comparison criteria
+        SvBreakend otherBreakend = var.getBreakend(!lowerPloidyBreakend.usesStart());
+
+        final List<SvBreakend> breakendList = mCluster.getChrBreakendMap().get(otherBreakend.chromosome());
+
+        boolean traverseUp = otherBreakend.orientation() == -1;
+        int index = traverseUp ? 0 : breakendList.size() - 1;
+
+        boolean breakendFound = false;
+        while(index >= 0 && index < breakendList.size())
         {
-            ploidyCounts = new int[2];
-            complexDupsMap.put(breakend.getSV(), ploidyCounts);
+            final SvBreakend breakend = breakendList.get(index);
+
+            if(!breakendFound)
+            {
+                if(breakend == otherBreakend)
+                {
+                    breakendFound = true;
+                }
+
+                index += traverseUp ? 1 : -1;
+                continue;
+            }
+
+            SvVarData otherSV = breakend.getSV();
+
+            if (otherSV.getAssemblyMatchType(breakend.usesStart()) == ASSEMBLY_MATCH_MATCHED || otherSV == var)
+            {
+                index += traverseUp ? 1 : -1;
+                continue;
+            }
+
+            if (breakend.orientation() == otherBreakend.orientation())
+                break;
+
+            if(var.ploidyMin() * 2 <= otherSV.ploidyMax())
+            {
+                if(lessThanMax || var.ploidyMax() < otherSV.ploidyMin())
+                {
+                    LOGGER.debug("identified complex dup({} {}) vs SVs({} & {})",
+                            var.posId(), var.type(), higherPloidyBreakend.getSV().id(), otherSV.id());
+                    mComplexDupCandidates.add(var);
+                }
+            }
+
+            break;
         }
-
-        ++ploidyCounts[0];
-
-        if(breakend.getSV().ploidyMax() < higherPloidyBreakend.getSV().ploidyMin())
-            ++ploidyCounts[1];
-
-        return true;
     }
 
     private boolean alreadyLinkedBreakend(final SvBreakend breakend)
@@ -1343,7 +1434,7 @@ public class ChainFinder
         mUnlinkedSVs.addAll(mCluster.getSVs(true));
     }
 
-    private List<SvVarData> getMaxReplicationSvIds()
+    private List<SvVarData> getMaxReplicationSVs()
     {
         List<SvVarData> maxRepIds = Lists.newArrayList();
         int maxRepCount = 1;

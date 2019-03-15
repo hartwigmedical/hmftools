@@ -329,6 +329,7 @@ public class SvSampleAnalyser {
                 mSvFileWriter.write(",ClusterDesc,IsResolved,ResolvedType,Consistency,ArmCount");
 
                 // SV info
+                mSvFileWriter.write(",ActBafStartPrev,ActBafStartPost,ActBafEndPrev,ActBafEndPost");
                 mSvFileWriter.write(",Homology,InexactHOStart,InexactHOEnd,InsertSeq,Imprecise,QualScore");
                 mSvFileWriter.write(",RefContextStart,RefContextEnd,InsSeqAlignments,Recovered");
 
@@ -410,8 +411,11 @@ public class SvSampleAnalyser {
                                 cluster.getDesc(), cluster.isResolved(), cluster.getResolvedType(),
                                 cluster.getConsistencyCount(), cluster.getArmCount()));
 
-                int dbLenStart = var.getDBLink(true) != null ? var.getDBLink(true).length() : NO_DB_MARKER;
-                int dbLenEnd = var.getDBLink(false) != null ? var.getDBLink(false).length() : NO_DB_MARKER;
+                writer.write(String.format(",%.2f,%,2f,%,2f,%,2f",
+                        var.getCopyNumberData(true, true) != null ? var.getCopyNumberData(true, true).ActualBaf : 0,
+                        var.getCopyNumberData(true, false) != null ? var.getCopyNumberData(true, false).ActualBaf : 0,
+                        var.getCopyNumberData(false, true) != null ? var.getCopyNumberData(false, true).ActualBaf : 0,
+                        var.getCopyNumberData(false, false) != null ? var.getCopyNumberData(false, false).ActualBaf : 0));
 
                 final String insSeqAlignments = dbData.insertSequenceAlignments().replaceAll(",", ";");
 
@@ -467,6 +471,9 @@ public class SvSampleAnalyser {
                 }
 
                 writer.write(chainStr);
+
+                int dbLenStart = var.getDBLink(true) != null ? var.getDBLink(true).length() : NO_DB_MARKER;
+                int dbLenEnd = var.getDBLink(false) != null ? var.getDBLink(false).length() : NO_DB_MARKER;
 
                 writer.write(String.format(",%d,%s,%d,%d,%d,%d",
                         var.getNearestSvDistance(), var.getNearestSvRelation(), dbLenStart, dbLenEnd,
