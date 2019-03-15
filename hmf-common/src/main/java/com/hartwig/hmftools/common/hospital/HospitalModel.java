@@ -111,21 +111,29 @@ public abstract class HospitalModel {
     private static void checkAddresseeFields(@NotNull final String sample, @NotNull final HospitalData hospital,
             @NotNull final String requesterName) {
         final List<String> missingFields = Lists.newArrayList();
+        final List<String> missingFieldsCORE = Lists.newArrayList();
+        LimsSampleType type = LimsSampleType.fromSampleId(sample);
+
         if (determineRequester(sample, hospital, requesterName).isEmpty()) {
             missingFields.add("requester");
         }
         if (hospital.addressName().isEmpty()) {
             missingFields.add("name");
+            missingFieldsCORE.add("name");
         }
         if (hospital.addressZip().isEmpty()) {
             missingFields.add("zip");
+            missingFieldsCORE.add("zip");
         }
         if (hospital.addressCity().isEmpty()) {
             missingFields.add("city");
+            missingFieldsCORE.add("city");
         }
-        if (!missingFields.isEmpty()) {
+        if (!missingFields.isEmpty() && type != LimsSampleType.CORE) {
             // for CORE requester are empty
             LOGGER.warn("Some address fields (" + Strings.join(missingFields, ',') + ") are missing.");
+        } else if (!missingFieldsCORE.isEmpty() && type == LimsSampleType.CORE) {
+            LOGGER.warn("Some address fields (" + Strings.join(missingFieldsCORE, ',') + ") are missing.");
         }
     }
 
