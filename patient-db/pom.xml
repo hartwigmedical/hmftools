@@ -9,7 +9,7 @@
     </parent>
 
     <artifactId>patient-db</artifactId>
-    <version>3.15</version>
+    <version>3.16</version>
     <packaging>jar</packaging>
     <name>HMF Tools - Patient Database</name>
 
