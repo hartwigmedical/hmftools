@@ -126,9 +126,8 @@ public abstract class HospitalModel {
             missingFields.add("city");
         }
         if (!missingFields.isEmpty() && !type.equals(LimsSampleType.CORE)) {
-            // for CORE requester are empty
             LOGGER.warn("Some address fields (" + Strings.join(missingFields, ',') + ") are missing.");
-        } else if (!missingFields.isEmpty() && type.equals(LimsSampleType.CORE) && missingFields.contains("requester")) {
+        } else if (!missingFields.isEmpty() && type.equals(LimsSampleType.CORE) && !missingFields.contains("requester")) {
             LOGGER.warn("Some address fields (" + Strings.join(missingFields, ',') + ") are missing.");
         }
     }
