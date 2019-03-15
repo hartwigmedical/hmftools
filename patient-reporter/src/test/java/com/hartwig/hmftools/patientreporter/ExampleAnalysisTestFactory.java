@@ -148,8 +148,8 @@ public final class ExampleAnalysisTestFactory {
         final String sample = "COLO829T";
         return ImmutableSampleReport.builder()
                 .sampleId(sample)
-                .barcodeTumor("A1")
-                .barcodeReference("A2")
+                .barcodeTumor("FR12345678")
+                .barcodeReference("FR12123488")
                 .patientTumorLocation(ImmutablePatientTumorLocation.of("COLO829", "Skin", "Melanoma"))
                 .purityShallowSeq(Strings.EMPTY)
                 .pathologyTumorPercentage("80%")
