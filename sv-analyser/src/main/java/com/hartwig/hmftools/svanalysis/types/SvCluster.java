@@ -982,7 +982,7 @@ public class SvCluster
 
 
     private static int SPECIFIC_CLUSTER_ID = -1;
-    // private static int SPECIFIC_CLUSTER_ID = 382;
+    // private static int SPECIFIC_CLUSTER_ID = 304;
 
     public static boolean isSpecificCluster(final SvCluster cluster)
     {
@@ -992,8 +992,8 @@ public class SvCluster
         return false;
     }
 
-    private static int SPECIFIC_CLUSTER_ID_2 = 29;
-    // private static int SPECIFIC_CLUSTER_ID_2 = -1;
+    // private static int SPECIFIC_CLUSTER_ID_2 = 29;
+    private static int SPECIFIC_CLUSTER_ID_2 = -1;
 
     public static boolean areSpecificClusters(final SvCluster cluster1, final SvCluster cluster2)
     {

@@ -360,7 +360,7 @@ public class SvClusteringMethods {
         for(int i = 0; i < clusters.size(); ++i)
         {
             SvCluster cluster1 = clusters.get(i);
-            isSpecificCluster(cluster1);
+            // isSpecificCluster(cluster1);
 
             // check all SVs in this cluster reference it
             for(SvVarData var : cluster1.getSVs())

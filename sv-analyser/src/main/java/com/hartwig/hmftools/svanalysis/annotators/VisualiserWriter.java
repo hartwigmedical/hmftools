@@ -180,7 +180,7 @@ public class VisualiserWriter
                     continue;
                 }
 
-                isSpecificCluster(cluster);
+                // isSpecificCluster(cluster);
 
                 for (final SvChain chain : cluster.getChains())
                 {

@@ -6,6 +6,7 @@ import static java.lang.Math.min;
 import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.svanalysis.analysis.LinkFinder.MIN_TEMPLATED_INSERTION_LENGTH;
+import static com.hartwig.hmftools.svanalysis.types.SvCluster.isSpecificCluster;
 import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.ASSEMBLY_MATCH_MATCHED;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_END;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_START;
@@ -72,7 +73,7 @@ public class ChainFinder
 
     // chaining state
     private List<SvLinkedPair> mAssemblyLinkedPairs;
-    private List<SvLinkedPair> mChainClosingPairs;
+    private List<SvLinkedPair> mSkippedPairs;
     private List<SvVarData> mFoldbacks;
     private List<SvVarData> mComplexDupCandidates;
     private boolean mSkippedPair;
@@ -98,7 +99,7 @@ public class ChainFinder
         mFoldbacks = Lists.newArrayList();
         mComplexDupCandidates = Lists.newArrayList();
         mUnlinkedSVs = Lists.newArrayList();
-        mChainClosingPairs = Lists.newArrayList();
+        mSkippedPairs = Lists.newArrayList();
         mUnlinkedBreakendMap = new HashMap();
         mSvReplicationMap = new HashMap();
         mSvBreakendPossibleLinks = new HashMap();
@@ -119,7 +120,7 @@ public class ChainFinder
         mSkippedPair = false;
 
         mAssemblyLinkedPairs = Lists.newArrayList(cluster.getAssemblyLinkedPairs());
-        mChainClosingPairs.clear();
+        mSkippedPairs.clear();
         mFoldbacks.clear();
         mFoldbacks.addAll(mCluster.getFoldbacks());
         mComplexDupCandidates.clear();
@@ -148,7 +149,7 @@ public class ChainFinder
                     mCluster.id(), mAssemblyLinkedPairs.size(), mCluster.getSvCount(), mCluster.getSvCount(true));
         }
 
-        // isSpecificCluster(mCluster);
+        isSpecificCluster(mCluster);
         // mLogWorking = isSpecificCluster(mCluster);
 
         buildChains(assembledLinksOnly);
@@ -243,10 +244,13 @@ public class ChainFinder
 
         determinePossibleLinks();
 
+        int iterationsWithoutNewLinks = 0; // protection against loops
+
         while (true)
         {
             boolean isRestrictedSet = false;
             mSkippedPair = false;
+            int lastAddedIndex = mLinkIndex;
 
             List<SvLinkedPair> possiblePairs = findSingleOptionPairs();
 
@@ -274,13 +278,30 @@ public class ChainFinder
 
             if(possiblePairs.isEmpty())
             {
-                if(mSkippedPair)
-                    continue;
-
-                break;
+                if(!mSkippedPair)
+                    break;
+            }
+            else
+            {
+                processPossiblePairs(possiblePairs, isRestrictedSet);
             }
 
-            processPossiblePairs(possiblePairs, isRestrictedSet);
+            if(lastAddedIndex == mLinkIndex)
+            {
+                ++iterationsWithoutNewLinks;
+
+                if (iterationsWithoutNewLinks > 5)
+                {
+                    LOGGER.error("cluster({}) 5 iterations without adding a new link", mCluster.id());
+                    mIsValid = false;
+                    break;
+                }
+            }
+            else
+            {
+                iterationsWithoutNewLinks = 0;
+            }
+
             checkProgress();
         }
     }
@@ -322,16 +343,21 @@ public class ChainFinder
                         if(possiblePairs.contains(pair))
                             continue;
 
+                        if(mSkippedPairs.contains(pair))
+                            continue;
+
                         SvVarData otherVar = pair.getOtherSV(var);
                         Integer otherRepCount = mSvReplicationMap.get(otherVar);
                         if(otherRepCount != null && otherRepCount == repCount)
                         {
-                            log(LOG_LEVEL_VERBOSE, String.format("pair({}) with matching high-rep count({})",
-                                    pair.toString(), repCount));
+                            log(LOG_LEVEL_VERBOSE, String.format("pair(%s) with matching high-rep count(%s)", pair.toString(), repCount));
                             newPairs.add(pair);
                         }
                     }
                 }
+
+                if(newPairs.isEmpty())
+                    continue;
 
                 if(repCount > maxRepCount)
                 {
@@ -342,6 +368,8 @@ public class ChainFinder
                 possiblePairs.addAll(newPairs);
             }
         }
+
+        removeSkippedPairs(possiblePairs);
 
         return possiblePairs;
     }
@@ -517,7 +545,7 @@ public class ChainFinder
 
         if(!possiblePairs.isEmpty())
         {
-            removeChainClosingPairs(possiblePairs);
+            removeSkippedPairs(possiblePairs);
         }
 
         return possiblePairs;
@@ -534,7 +562,7 @@ public class ChainFinder
 
             SvLinkedPair newPair = entry.getValue().get(0);
 
-            if(mChainClosingPairs.contains(newPair))
+            if(mSkippedPairs.contains(newPair))
                 continue;
 
             int minLinkCount = getMaxUnlinkedPairCount(newPair);
@@ -614,7 +642,7 @@ public class ChainFinder
         // next take the pairings with the least alternatives
         List<SvLinkedPair> possiblePairs = findFewestOptionPairs(breakendList, isMaxReplicated);
 
-        removeChainClosingPairs(possiblePairs);
+        removeSkippedPairs(possiblePairs);
 
         if (possiblePairs.isEmpty())
         {
@@ -634,9 +662,11 @@ public class ChainFinder
         return possiblePairs;
     }
 
-    private void removeChainClosingPairs(List<SvLinkedPair> possiblePairs)
+    private void removeSkippedPairs(List<SvLinkedPair> possiblePairs)
     {
-        if(mChainClosingPairs.isEmpty())
+        // some pairs are temporarily unavailable for use (eg those which would close a chain)
+        // to to avoid continually trying to add them, keep them out of consideration until a new links is added
+        if(mSkippedPairs.isEmpty())
             return;
 
         int index = 0;
@@ -644,7 +674,7 @@ public class ChainFinder
         {
             SvLinkedPair pair = possiblePairs.get(index);
 
-            if(mChainClosingPairs.contains(pair))
+            if(mSkippedPairs.contains(pair))
                 possiblePairs.remove(index);
             else
                 ++index;
@@ -812,7 +842,7 @@ public class ChainFinder
 
         if(linkAdded)
         {
-            mChainClosingPairs.clear(); // any chain-closing links can now be re-evaluated
+            mSkippedPairs.clear(); // any skipped links can now be re-evaluated
         }
     }
 
@@ -864,6 +894,8 @@ public class ChainFinder
         {
             // test this link against each ends to the chain
             boolean addToStart = false;
+            pairToChain[0] = pairToChain[1] = false; // reset for scenario where skipped adding to both ends of chain
+
             for(int be = SVI_START; be <= SVI_END; ++be)
             {
                 boolean isStart = isStart(be);
@@ -950,10 +982,10 @@ public class ChainFinder
                     log(LOG_LEVEL_VERBOSE, String.format("skipping linked pair(%s) would close existing chain(%d)",
                             newPair.toString(), chain.id()));
 
-                    if(!mChainClosingPairs.contains(newPair))
+                    if(!mSkippedPairs.contains(newPair))
                     {
                         mSkippedPair = true;
-                        mChainClosingPairs.add(pair);
+                        mSkippedPairs.add(pair);
                     }
 
                     linkClosesChain = true;

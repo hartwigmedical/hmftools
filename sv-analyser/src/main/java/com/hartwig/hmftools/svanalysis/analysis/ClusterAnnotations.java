@@ -97,7 +97,7 @@ public class ClusterAnnotations
             if(cluster.getChains().isEmpty())
                 continue;
 
-            isSpecificCluster(cluster);
+            // isSpecificCluster(cluster);
 
             // gather up start and end arms from each chain
             List<String> startEndArms = Lists.newArrayList();
@@ -170,7 +170,14 @@ public class ClusterAnnotations
     private static String getTraversedSvData(final SvCluster cluster, final List<SvBreakend> breakendList, int lowerIndex, int upperIndex)
     {
         if(lowerIndex >= upperIndex - 1)
+        {
             return "";
+        }
+        else if(lowerIndex < 0 || upperIndex >= breakendList.size())
+        {
+            LOGGER.error("invalid indices({} & {}) vs breakend list size({})", lowerIndex, upperIndex, breakendList.size());
+            return "";
+        }
 
         String traversedInfo = "";
 
@@ -333,7 +340,7 @@ public class ClusterAnnotations
         if(cluster.getArmCount() == 1 && cluster.getSvCount() == 2)
             return;
 
-        isSpecificCluster(cluster);
+        // isSpecificCluster(cluster);
 
         /* data to gather for each arm in the chain
             - number of links

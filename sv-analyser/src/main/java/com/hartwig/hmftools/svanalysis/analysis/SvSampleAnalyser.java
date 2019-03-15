@@ -329,7 +329,6 @@ public class SvSampleAnalyser {
                 mSvFileWriter.write(",ClusterDesc,IsResolved,ResolvedType,Consistency,ArmCount");
 
                 // SV info
-                mSvFileWriter.write(",ActBafStartPrev,ActBafStartPost,ActBafEndPrev,ActBafEndPost");
                 mSvFileWriter.write(",Homology,InexactHOStart,InexactHOEnd,InsertSeq,Imprecise,QualScore");
                 mSvFileWriter.write(",RefContextStart,RefContextEnd,InsSeqAlignments,Recovered");
 
@@ -352,6 +351,9 @@ public class SvSampleAnalyser {
 
                 // gene & replication info
                 mSvFileWriter.write(",GeneStart,GeneEnd,RepOriginStart,RepOriginEnd");
+
+                // extra copy number info
+                mSvFileWriter.write(",ActBafStartPrev,ActBafStartPost,ActBafEndPrev,ActBafEndPost");
 
                 mSvFileWriter.newLine();
             }
@@ -410,12 +412,6 @@ public class SvSampleAnalyser {
                         String.format(",%s,%s,%s,%d,%d",
                                 cluster.getDesc(), cluster.isResolved(), cluster.getResolvedType(),
                                 cluster.getConsistencyCount(), cluster.getArmCount()));
-
-                writer.write(String.format(",%.2f,%,2f,%,2f,%,2f",
-                        var.getCopyNumberData(true, true) != null ? var.getCopyNumberData(true, true).ActualBaf : 0,
-                        var.getCopyNumberData(true, false) != null ? var.getCopyNumberData(true, false).ActualBaf : 0,
-                        var.getCopyNumberData(false, true) != null ? var.getCopyNumberData(false, true).ActualBaf : 0,
-                        var.getCopyNumberData(false, false) != null ? var.getCopyNumberData(false, false).ActualBaf : 0));
 
                 final String insSeqAlignments = dbData.insertSequenceAlignments().replaceAll(",", ";");
 
@@ -486,6 +482,12 @@ public class SvSampleAnalyser {
                 writer.write(String.format(",%s,%s,%.4f,%.4f",
                         var.getGeneInBreakend(true), var.getGeneInBreakend(false),
                         var.getReplicationOrigin(true), var.getReplicationOrigin(false)));
+
+                writer.write(String.format(",%.2f,%,2f,%,2f,%,2f",
+                        var.getCopyNumberData(true, true) != null ? var.getCopyNumberData(true, true).ActualBaf : 0,
+                        var.getCopyNumberData(true, false) != null ? var.getCopyNumberData(true, false).ActualBaf : 0,
+                        var.getCopyNumberData(false, true) != null ? var.getCopyNumberData(false, true).ActualBaf : 0,
+                        var.getCopyNumberData(false, false) != null ? var.getCopyNumberData(false, false).ActualBaf : 0));
 
                 ++lineCount;
                 writer.newLine();
