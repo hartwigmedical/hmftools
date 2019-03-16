@@ -216,7 +216,9 @@ If we have not met the criteria for HIGHLY_DIPLOID or NO_TUMOR then we set the s
 A simplified demonstration of the fitting algorithm is illustrated in the following figure. 
 Using a fixed ploidy, the algorithm models a number of purities to minimize the difference between the observed (blue) and expected (red) BAF and tumor ratio.
 
-<img src="src/main/resources/readme/PurpleFitting.gif" width="500" align="middle" alt="Fitting Demonstration">
+<p align="center">
+    <img src="src/main/resources/readme/PurpleFitting.gif" width="500" alt="Fitting Demonstration">
+</p>
 
 
 ### 4. Copy Number Smoothing 
