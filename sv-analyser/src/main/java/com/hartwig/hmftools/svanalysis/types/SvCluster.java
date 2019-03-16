@@ -544,6 +544,8 @@ public class SvCluster
 
         setMinMaxCNChange();
 
+        resetBreakendMapIndices();
+
         mRequiresRecalc = false;
     }
 
@@ -817,6 +819,20 @@ public class SvCluster
         return (mMaxCNChange > mMinCNChange && mMinCNChange >= 0);
     }
 
+    private void resetBreakendMapIndices()
+    {
+        for (Map.Entry<String, List<SvBreakend>> entry : mChrBreakendMap.entrySet())
+        {
+            List<SvBreakend> breakendList = entry.getValue();
+
+            for (int i = 0; i < breakendList.size(); ++i)
+            {
+                final SvBreakend breakend = breakendList.get(i);
+                breakend.setClusterChrPosIndex(i);
+            }
+        }
+    }
+
     public void cacheLinkedPairs()
     {
         // moves assembly and inferred linked pairs which are used in chains to a set of 'final' linked pairs
@@ -982,7 +998,7 @@ public class SvCluster
 
 
     private static int SPECIFIC_CLUSTER_ID = -1;
-    // private static int SPECIFIC_CLUSTER_ID = 304;
+    // private static int SPECIFIC_CLUSTER_ID = 32;
 
     public static boolean isSpecificCluster(final SvCluster cluster)
     {

@@ -7,7 +7,8 @@ import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.makeChrArmStr
 public class SvBreakend {
 
     private final SvVarData mSV;
-    private int mChrPosIndex; // position in chromosome
+    private int mChrPosIndex; // position in chromosome's breakend list
+    private int mClusterChrPosIndex;
     private final String mChromosome;
     private final String mArm ;
     private final String mChrArm;
@@ -19,6 +20,7 @@ public class SvBreakend {
     {
         mSV = var;
         mChrPosIndex = -1;
+        mClusterChrPosIndex = -1;
         mUsesStart = useStart;
         mChromosome = var.chromosome(useStart);
         mArm = var.arm(useStart);
@@ -40,6 +42,9 @@ public class SvBreakend {
 
     public void setChrPosIndex(int index) { mChrPosIndex = index; }
     public int getChrPosIndex() { return mChrPosIndex; }
+
+    public void setClusterChrPosIndex(int index) { mClusterChrPosIndex = index; }
+    public int getClusterChrPosIndex() { return mClusterChrPosIndex; }
 
     public static String DIRECTION_CENTROMERE = "C";
     public static String DIRECTION_TELOMERE = "T";
@@ -66,6 +71,7 @@ public class SvBreakend {
         }
     }
 
+    // for convenience
     public double copyNumberChange()
     {
         return mSV.copyNumberChange(mUsesStart);
@@ -74,5 +80,37 @@ public class SvBreakend {
     {
         return mSV.copyNumber(mUsesStart);
     }
+    public double ploidy() { return mSV.getSvData().ploidy(); }
+
+    public double majorAllelePloidy(boolean usePrevious)
+    {
+        SvCNData cnData = mSV.getCopyNumberData(mUsesStart, usePrevious);
+
+        if(cnData == null)
+            return 0;
+
+        return cnData.majorAllelePloidy();
+    }
+
+    public double minorAllelePloidy(boolean usePrevious)
+    {
+        SvCNData cnData = mSV.getCopyNumberData(mUsesStart, usePrevious);
+
+        if(cnData == null)
+            return 0;
+
+        return cnData.minorAllelePloidy();
+    }
+
+    public double actualBaf(boolean usePrevious)
+    {
+        SvCNData cnData = mSV.getCopyNumberData(mUsesStart, usePrevious);
+
+        if(cnData == null)
+            return 0;
+
+        return cnData.ActualBaf;
+    }
+
 
 }

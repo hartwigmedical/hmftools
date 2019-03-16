@@ -97,6 +97,8 @@ public class SvSampleAnalyser {
         mAnalyser = new ClusterAnalyser(config, mClusteringMethods);
         mVisWriter = new VisualiserWriter(config.OutputCsvPath, config.WriteVisualisationData);
 
+        mAnalyser.getChainFinder().setUseAllelePloidies(true);
+
         mAllVariants = Lists.newArrayList();
         mCopyNumberAnalyser = null;
 
@@ -484,10 +486,9 @@ public class SvSampleAnalyser {
                         var.getReplicationOrigin(true), var.getReplicationOrigin(false)));
 
                 writer.write(String.format(",%.2f,%,2f,%,2f,%,2f",
-                        var.getCopyNumberData(true, true) != null ? var.getCopyNumberData(true, true).ActualBaf : 0,
-                        var.getCopyNumberData(true, false) != null ? var.getCopyNumberData(true, false).ActualBaf : 0,
-                        var.getCopyNumberData(false, true) != null ? var.getCopyNumberData(false, true).ActualBaf : 0,
-                        var.getCopyNumberData(false, false) != null ? var.getCopyNumberData(false, false).ActualBaf : 0));
+                        var.getBreakend(true).actualBaf(true), var.getBreakend(true).actualBaf(false),
+                        !var.isNullBreakend() ? var.getBreakend(false).actualBaf(true) : 0,
+                        !var.isNullBreakend() ? var.getBreakend(false).actualBaf(false) : 0));
 
                 ++lineCount;
                 writer.newLine();
