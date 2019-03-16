@@ -119,12 +119,15 @@ The purity fitting and smoothing steps below use only the DIPLOID germline segme
 
 ### 3. Sample Purity and Ploidy
 
-To estimate purity and sample ploidy, we use a model which considers a matrix of all possible sample purities and ploidies and scores each possible combination on a segment by segment basis, based on a set of principles which aim to choose the most parsimonious solution for the fit.      
+To estimate purity and sample ploidy, we use a model which considers a matrix of all possible sample purities and ploidies and scores each 
+possible combination on a segment by segment basis, based on a set of principles which aim to choose the most parsimonious solution for the fit.      
 
 The specific scoring principles applied are the following:
-1. **Penalise sub-clonality**:   The major and minor allele of each segment should be close to an integer ploidy for clonal solutions. Due to sampling noise, small deviations from integer ploidies will be observed even, but larger deviations require subclonal features and are penalised.
+1. **Penalise sub-clonality**:   The major and minor allele of each segment should be close to an integer ploidy for clonal solutions. 
+Due to sampling noise, small deviations from integer ploidies will be observed even, but larger deviations require subclonal features and are penalised.
 2. **Penalise higher ploidy solutions**:  Higher ploidies have more degenerate fits but are less biologically plausible and are given an event penalty.
-3. **Penalise solutions with implausible somatic SNV ploidies**: SNVs in principle occur on only one chromatid and should not be found on both alleles.   Therefore we penalise solutions where SNV ploidies exceed the major allele ploidy.   
+3. **Penalise solutions with implausible somatic SNV ploidies**: SNVs in principle occur on only one chromatid and should not be found on both alleles.   
+Therefore we penalise solutions where SNV ploidies exceed the major allele ploidy.   
 4. **Weigh segments by count of BAF observations**: Segments are weighted by the count of BAF observations which is treated as a proxy for confidence of BAF and read depth ratio inputs.
 5. **Place more weight on segments with higher observed BAF**: segments with lower observed BAFs have more degenerate fits and are weighted less in the fit
 
@@ -207,6 +210,13 @@ If the somatics are unable to help, either because there are none, or because th
 If there are only a small number of somatics variants (< 300) with a sufficiently large (>= 0.1) allelic frequency we will flag the solution as NO_TUMOR and use the somatic purity if it exists otherwise fall back on the fitted purity. 
 
 If we have not met the criteria for HIGHLY_DIPLOID or NO_TUMOR then we set the status to SOMATIC and use the somatic purity.
+
+#### Demonstration
+
+A simplified demonstration of the fitting algorithm is illustrated in the following figure. 
+Using a fixed ploidy, the algorithm models a number of purities to minimize the difference between the observed (blue) and expected (red) BAF and tumor ratio.
+
+![Fitting Demonstration](src/main/resources/readme/PurpleFitting.gif)
 
 ### 4. Copy Number Smoothing 
 
