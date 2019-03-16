@@ -111,7 +111,9 @@ public abstract class HospitalModel {
     private static void checkAddresseeFields(@NotNull final String sample, @NotNull final HospitalData hospital,
             @NotNull final String requesterName) {
         final List<String> missingFields = Lists.newArrayList();
-        if (determineRequester(sample, hospital, requesterName).isEmpty()) {
+        LimsSampleType type = LimsSampleType.fromSampleId(sample);
+
+        if (type != LimsSampleType.CORE && determineRequester(sample, hospital, requesterName).isEmpty()) {
             missingFields.add("requester");
         }
         if (hospital.addressName().isEmpty()) {
@@ -124,7 +126,6 @@ public abstract class HospitalModel {
             missingFields.add("city");
         }
         if (!missingFields.isEmpty()) {
-            // for CORE requester are empty
             LOGGER.warn("Some address fields (" + Strings.join(missingFields, ',') + ") are missing.");
         }
     }

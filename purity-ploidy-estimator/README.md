@@ -119,12 +119,15 @@ The purity fitting and smoothing steps below use only the DIPLOID germline segme
 
 ### 3. Sample Purity and Ploidy
 
-To estimate purity and sample ploidy, we use a model which considers a matrix of all possible sample purities and ploidies and scores each possible combination on a segment by segment basis, based on a set of principles which aim to choose the most parsimonious solution for the fit.      
+To estimate purity and sample ploidy, we use a model which considers a matrix of all possible sample purities and ploidies and scores each 
+possible combination on a segment by segment basis, based on a set of principles which aim to choose the most parsimonious solution for the fit.      
 
 The specific scoring principles applied are the following:
-1. **Penalise sub-clonality**:   The major and minor allele of each segment should be close to an integer ploidy for clonal solutions. Due to sampling noise, small deviations from integer ploidies will be observed even, but larger deviations require subclonal features and are penalised.
+1. **Penalise sub-clonality**:   The major and minor allele of each segment should be close to an integer ploidy for clonal solutions. 
+Due to sampling noise, small deviations from integer ploidies will be observed even, but larger deviations require subclonal features and are penalised.
 2. **Penalise higher ploidy solutions**:  Higher ploidies have more degenerate fits but are less biologically plausible and are given an event penalty.
-3. **Penalise solutions with implausible somatic SNV ploidies**: SNVs in principle occur on only one chromatid and should not be found on both alleles.   Therefore we penalise solutions where SNV ploidies exceed the major allele ploidy.   
+3. **Penalise solutions with implausible somatic SNV ploidies**: SNVs in principle occur on only one chromatid and should not be found on both alleles.   
+Therefore we penalise solutions where SNV ploidies exceed the major allele ploidy.   
 4. **Weigh segments by count of BAF observations**: Segments are weighted by the count of BAF observations which is treated as a proxy for confidence of BAF and read depth ratio inputs.
 5. **Place more weight on segments with higher observed BAF**: segments with lower observed BAFs have more degenerate fits and are weighted less in the fit
 
@@ -208,6 +211,16 @@ If there are only a small number of somatics variants (< 300) with a sufficientl
 
 If we have not met the criteria for HIGHLY_DIPLOID or NO_TUMOR then we set the status to SOMATIC and use the somatic purity.
 
+#### Demonstration
+
+A simplified demonstration of the fitting algorithm is illustrated in the following figure. 
+Using a fixed ploidy, the algorithm models a number of purities to minimize the difference between the observed (blue) and expected (red) BAF and tumor ratio.
+
+<p align="center">
+    <img src="src/main/resources/readme/PurpleFitting.gif" width="500" alt="Fitting Demonstration">
+</p>
+
+
 ### 4. Copy Number Smoothing 
 
 Since the initial segmentation algorithm is highly sensitive, and there is a significant amount of noise in the read depth in whole genome sequencing, many adjacent segments will have a similar copy number and BAF profile and are unlikely to represent a real somatic copy number change in the tumor. 
@@ -269,8 +282,11 @@ If there is neighbouring information on both sides of the unknown region, then t
 - If both the major and minor allele of the neighbours are significantly different (> 0.5) but the minor allele of one matches the major allele of the other ( < 0.5) then choose the matching allele ploidy as the constant ploidy.
 - Else, If the major allele of the neighbours is significantly different keep the minor allele constant.
 - Else, If the minor allele of the neighbours is significantly different keep the major allele constant.
-- Else, If the unknown region is tiny (<= 30 bases) and is greater in copy number than the neighbour with the highest baf count, then hold constant that neighbours minor allele.
-- Else, If the unknown region is flanked by large ( > 1,000,000) LOH regions but is not a small region (< 1000 bases) then find the nearest region on each side(without crossing the centromere) with a change in minor or major allele. If found, re-apply logic from the first three steps. 
+- Else, If the unknown region is tiny (<= 30 bases), and is greater in copy number than the neighbour with the largest number of BAF observations, then hold constant that neighbours minor allele.  
+This rule is intended to deal with the very short overlap which can occur at double strand breaks particularly for LINE insertions.
+- Else, If the unknown region is small (<= 1000 bases) and is flanked by large (> 1,000,000 bases) LOH regions, then hold constant the minor allele from the neighbour with the largest number of BAF observations.
+This rule is intended to ensure that short templated insertions do not break regions of LOH.
+- Else, Find the nearest region on each side (without crossing the centromere) with a change in minor or major allele. If found, re-apply logic from the first three steps. 
 - Failing everything else, hold constant the minor allele of the neighbour with the largest number of BAF observations.
 
 At this stage we have determined a copy number and minor allele ploidy for every base in the genome

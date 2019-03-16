@@ -6,6 +6,7 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.purple.PurpleDatamodelTest;
+import com.hartwig.hmftools.common.purple.region.FittedRegion;
 import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 
 import org.jetbrains.annotations.NotNull;
@@ -24,10 +25,10 @@ public class ExtendDiploidBAFTest {
         assertAlleleTarget(1, 3, 2, 1);
     }
 
-    private void assertAlleleTarget(double majorTarget, double copyNumber,  double expectedMajor, double expectedMinor) {
+    private void assertAlleleTarget(double majorTarget, double copyNumber, double expectedMajor, double expectedMinor) {
         double baf = ExtendDiploidBAF.bafForTargetAllele(majorTarget, copyNumber);
         double actualMajor = baf * copyNumber;
-        double actualMinor = (1-baf) * copyNumber;
+        double actualMinor = (1 - baf) * copyNumber;
         assertEquals(expectedMajor, actualMajor, EPSILON);
         assertEquals(expectedMinor, actualMinor, EPSILON);
     }
@@ -55,14 +56,12 @@ public class ExtendDiploidBAFTest {
         CombinedRegion cr3a = create(1032, 2000, SegmentSupport.NONE, 100, 1, 1.9);
         CombinedRegion cr4 = create(2001, 3000, SegmentSupport.NONE, 100, 0.666, 3);
 
+        List<CombinedRegion> result = ExtendDiploidBAF.extendBAF(Lists.newArrayList(cr1, cr2, cr3, cr4));
+        assertEquals(0, result.get(1).region().minorAllelePloidy(), EPSILON);
 
-        List<CombinedRegion> result =  ExtendDiploidBAF.extendBAF(Lists.newArrayList(cr1, cr2, cr3, cr4));
-        assertEquals(0, result.get(1).region().minorAllelePloidy(),  EPSILON);
-
-        result =  ExtendDiploidBAF.extendBAF(Lists.newArrayList(cr1, cr2a, cr3a, cr4));
-        assertEquals(0.3, result.get(1).region().minorAllelePloidy(),  EPSILON);
+        result = ExtendDiploidBAF.extendBAF(Lists.newArrayList(cr1, cr2a, cr3a, cr4));
+        assertEquals(0.3, result.get(1).region().minorAllelePloidy(), EPSILON);
     }
-
 
     @Test
     public void testSmallRegionWithinLargeLOHRegion() {
@@ -71,8 +70,8 @@ public class ExtendDiploidBAFTest {
         CombinedRegion cr3 = create(101_000_001, 101_001_000, SegmentSupport.NONE, 0, 0, 3.0);
         CombinedRegion cr4 = create(101_001_001, 104_000_000, SegmentSupport.NONE, 1000, 1, 2.0);
 
-        List<CombinedRegion> result =  ExtendDiploidBAF.extendBAF(Lists.newArrayList(cr1, cr2, cr3, cr4));
-        assertEquals(0, result.get(2).region().minorAllelePloidy(),  EPSILON);
+        List<CombinedRegion> result = ExtendDiploidBAF.extendBAF(Lists.newArrayList(cr1, cr2, cr3, cr4));
+        assertEquals(0, result.get(2).region().minorAllelePloidy(), EPSILON);
     }
 
     @Test
@@ -82,9 +81,66 @@ public class ExtendDiploidBAFTest {
         CombinedRegion cr3 = create(101_001_001, 102_001_000, SegmentSupport.NONE, 1000, 1, 2.0);
         CombinedRegion cr4 = create(102_001_001, 104_000_000, SegmentSupport.NONE, 1000, 0.66, 3);
 
-        List<CombinedRegion> result =  ExtendDiploidBAF.extendBAF(Lists.newArrayList(cr1, cr2, cr3, cr4));
-        assertEquals(0, result.get(1).region().minorAllelePloidy(),  EPSILON);
+        List<CombinedRegion> result = ExtendDiploidBAF.extendBAF(Lists.newArrayList(cr1, cr2, cr3, cr4));
+        assertEquals(0, result.get(1).region().minorAllelePloidy(), EPSILON);
     }
+
+    @Test
+    public void testMinorOrMajorMovedTargetPloidyWithCommonMinor() {
+        final FittedRegion left = create(1.01, 2.01);
+        final FittedRegion right = create(1.02, 3.02);
+        final FittedRegion sourceLikeLeft = create(1.03, 2.03);
+        final FittedRegion sourceLikeRight = create(1.04, 3.04);
+
+        assertEquals(1.01, ExtendDiploidBAF.minorOrMajorMovedTargetPloidy(left, left, right), EPSILON);
+        assertEquals(1.02, ExtendDiploidBAF.minorOrMajorMovedTargetPloidy(right, left, right), EPSILON);
+
+        assertEquals(1.03, ExtendDiploidBAF.minorOrMajorMovedTargetPloidy(sourceLikeLeft, left, right), EPSILON);
+        assertEquals(1.04, ExtendDiploidBAF.minorOrMajorMovedTargetPloidy(sourceLikeRight, left, right), EPSILON);
+    }
+
+    @Test
+    public void testMinorOrMajorMovedTargetPloidyWithCommonMakor() {
+        final FittedRegion left = create(1.01, 2.01);
+        final FittedRegion right = create(0.02, 2.02);
+        final FittedRegion sourceLikeLeft = create(1.03, 2.03);
+        final FittedRegion sourceLikeRight = create(0.04, 2.04);
+
+        assertEquals(2.01, ExtendDiploidBAF.minorOrMajorMovedTargetPloidy(left, left, right), EPSILON);
+        assertEquals(2.02, ExtendDiploidBAF.minorOrMajorMovedTargetPloidy(right, left, right), EPSILON);
+
+        assertEquals(2.03, ExtendDiploidBAF.minorOrMajorMovedTargetPloidy(sourceLikeLeft, left, right), EPSILON);
+        assertEquals(2.04, ExtendDiploidBAF.minorOrMajorMovedTargetPloidy(sourceLikeRight, left, right), EPSILON);
+    }
+
+    @Test
+    public void testMinorOrMajorMovedTargetPloidyWithMajorMinorCross() {
+        final FittedRegion left = create(1.01, 2.01);
+        final FittedRegion right = create(2.02, 3.02);
+        final FittedRegion sourceLikeLeft = create(1.03, 2.03);
+        final FittedRegion sourceLikeRight = create(2.04, 3.04);
+
+        assertEquals(2.01, ExtendDiploidBAF.minorOrMajorMovedTargetPloidy(left, left, right), EPSILON);
+        assertEquals(2.02, ExtendDiploidBAF.minorOrMajorMovedTargetPloidy(right, left, right), EPSILON);
+
+        assertEquals(2.03, ExtendDiploidBAF.minorOrMajorMovedTargetPloidy(sourceLikeLeft, left, right), EPSILON);
+        assertEquals(2.04, ExtendDiploidBAF.minorOrMajorMovedTargetPloidy(sourceLikeRight, left, right), EPSILON);
+    }
+
+    @Test
+    public void testMinorOrMajorMovedTargetPloidyWithMinorMajorCross() {
+        final FittedRegion left = create(1.01, 2.01);
+        final FittedRegion right = create(0.02, 1.02);
+        final FittedRegion sourceLikeLeft = create(0.03, 1.03);
+        final FittedRegion sourceLikeRight = create(0.04, 1.04);
+
+        assertEquals(1.01, ExtendDiploidBAF.minorOrMajorMovedTargetPloidy(left, left, right), EPSILON);
+        assertEquals(1.02, ExtendDiploidBAF.minorOrMajorMovedTargetPloidy(right, left, right), EPSILON);
+
+        assertEquals(1.03, ExtendDiploidBAF.minorOrMajorMovedTargetPloidy(sourceLikeLeft, left, right), EPSILON);
+        assertEquals(1.04, ExtendDiploidBAF.minorOrMajorMovedTargetPloidy(sourceLikeRight, left, right), EPSILON);
+    }
+
 
     private void assertInferRegion(@NotNull final ExtendDiploidBAF.InferRegion victim, int expectedLeftSource, int expectedLeftTarget,
             int expectedRightTarget, int expectedRightSource) {
@@ -111,4 +167,13 @@ public class ExtendDiploidBAFTest {
                 .tumorCopyNumber(copyNumber)
                 .build());
     }
+
+    @NotNull
+    private static FittedRegion create(double minorAllele, double majorAllele) {
+        double copyNumber = minorAllele + majorAllele;
+        double baf = majorAllele / copyNumber;
+
+        return PurpleDatamodelTest.createDefaultFittedRegion("1", 1, 1000).tumorBAF(baf).tumorCopyNumber(copyNumber).build();
+    }
+
 }

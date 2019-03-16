@@ -106,8 +106,8 @@ public class PDFWriterTest {
             @Nullable Double shallowSeqPurity, @NotNull QCFailReason reason) {
         SampleReport sampleReport = ImmutableSampleReport.builder()
                 .sampleId("CPCT02991111T")
-                .barcodeTumor("FR1")
-                .barcodeReference("FR2")
+                .barcodeTumor("FR12345678")
+                .barcodeReference("FR12123488")
                 .patientTumorLocation(ImmutablePatientTumorLocation.of("CPCT02991111", "Skin", "Melanoma"))
                 .purityShallowSeq(shallowSeqPurity != null ? PatientReportFormat.formatPercent(shallowSeqPurity) : "not determined")
                 .pathologyTumorPercentage(
