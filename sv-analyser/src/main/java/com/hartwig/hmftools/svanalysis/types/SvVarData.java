@@ -18,8 +18,6 @@ import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.ASSEMBLY_MATCH_
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.variant.structural.EnrichedStructuralVariant;
-import com.hartwig.hmftools.common.variant.structural.ImmutableStructuralVariantData;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantData;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneAnnotation;
@@ -177,6 +175,7 @@ public class SvVarData
         mCnDataPostEnd = null;
     }
 
+    /*
     public static SvVarData from(final EnrichedStructuralVariant enrichedSV)
     {
         StructuralVariantData svData =
@@ -202,6 +201,7 @@ public class SvVarData
 
         return new SvVarData(svData);
     }
+    */
 
     public SvVarData(final SvVarData other)
     {

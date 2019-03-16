@@ -511,8 +511,6 @@ CREATE TABLE structuralVariant
     insertSequenceRepeatType varchar(64),
     insertSequenceRepeatOrientation tinyint,
     insertSequenceRepeatCoverage DOUBLE PRECISION,
-    ploidyMin DOUBLE PRECISION,
-    ploidyMax DOUBLE PRECISION,
     PRIMARY KEY (id),
     INDEX(sampleId)
 );

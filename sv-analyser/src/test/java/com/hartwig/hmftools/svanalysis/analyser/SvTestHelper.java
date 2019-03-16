@@ -189,8 +189,6 @@ public class SvTestHelper
                         .adjustedEndCopyNumber(cnEnd)
                         .adjustedEndCopyNumberChange(cnChgEnd)
                         .ploidy(ploidy)
-                        .ploidyMin(0.0)
-                        .ploidyMax(0.0)
                         .type(type)
                         .homology("")
                         .vcfId("")

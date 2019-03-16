@@ -75,8 +75,6 @@ class StructuralVariantDAO {
                     .adjustedEndCopyNumber(getValueNotNull(record.getValue(STRUCTURALVARIANT.ADJUSTEDENDCOPYNUMBER)))
                     .adjustedEndCopyNumberChange(getValueNotNull(record.getValue(STRUCTURALVARIANT.ADJUSTEDENDCOPYNUMBERCHANGE)))
                     .ploidy(getValueNotNull(ploidy))
-                    .ploidyMin(getValueNotNull(record.getValue(STRUCTURALVARIANT.PLOIDYMIN)))
-                    .ploidyMax(getValueNotNull(record.getValue(STRUCTURALVARIANT.PLOIDYMAX)))
                     .type(isSingleBreakend
                             ? StructuralVariantType.SGL
                             : StructuralVariantType.fromAttribute(record.getValue(STRUCTURALVARIANT.TYPE)))
@@ -337,6 +335,7 @@ class StructuralVariantDAO {
                 timestamp);
     }
 
+    /*
     public void updateCalculatedPloidy(final List<StructuralVariantData> svDataList)
     {
         Timestamp timestamp = new Timestamp(new Date().getTime());
@@ -362,6 +361,7 @@ class StructuralVariantDAO {
         {
         }
     }
+    */
 
     public void deleteStructuralVariantsForSample(@NotNull String sample) {
         context.delete(STRUCTURALVARIANT).where(STRUCTURALVARIANT.SAMPLEID.eq(sample)).execute();

@@ -29,8 +29,6 @@ public abstract class StructuralVariantData {
     public abstract Double adjustedEndCopyNumber();
     public abstract Double adjustedEndCopyNumberChange();
     public abstract Double ploidy();
-    public abstract Double ploidyMin();
-    public abstract Double ploidyMax();
     public abstract String homology();
     public abstract String filter();
     public abstract String insertSequence();

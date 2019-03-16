@@ -908,8 +908,6 @@ public class CNAnalyser {
                             .vcfId("")
                             .type(SGL)
                             .ploidy(copyNumberChange)
-                            .ploidyMin(copyNumberChange)
-                            .ploidyMax(copyNumberChange)
                             .startPosition(position)
                             .startChromosome(noneCnRecord.chromosome())
                             .startOrientation(orientation)
@@ -1069,6 +1067,7 @@ public class CNAnalyser {
                 double[] ploidyCalcs = {ploidyEstimate, ploidyUncertainty};
                 svDataMap.put(svData.id(), ploidyCalcs);
 
+                /*
                 if(mUpdateAdjustedPloidyToDB)
                 {
                     updatedSvDataList.add(ImmutableStructuralVariantData.builder()
@@ -1077,6 +1076,7 @@ public class CNAnalyser {
                             .ploidyMax(ploidyEstimate + ploidyUncertainty)
                             .build());
                 }
+                */
 
                 if (writer != null)
                 {
@@ -1117,7 +1117,7 @@ public class CNAnalyser {
 
         if (mUpdateAdjustedPloidyToDB)
         {
-            mDbAccess.updateCalculatedPloidy(updatedSvDataList);
+            //mDbAccess.updateCalculatedPloidy(updatedSvDataList);
         }
     }
 
