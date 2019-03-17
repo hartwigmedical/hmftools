@@ -16,6 +16,7 @@ import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.LINK_TYPE_TI;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.svanalysis.types.SvBreakend;
@@ -76,7 +77,8 @@ public class ChainFinder
     private List<SvLinkedPair> mSkippedPairs;
     private List<SvVarData> mFoldbacks;
     private List<SvVarData> mComplexDupCandidates;
-    private boolean mSkippedPair;
+
+    private boolean mSkippedPair; // keep track of any excluded pair or SV without exiting the chaining routine
 
     private List<SvChain> mPartialChains;
     private int mNextChainId;
@@ -153,7 +155,6 @@ public class ChainFinder
                     mCluster.id(), mAssemblyLinkedPairs.size(), mCluster.getSvCount(), mCluster.getSvCount(true));
         }
 
-        isSpecificCluster(mCluster);
         // mLogWorking = isSpecificCluster(mCluster);
 
         buildChains(assembledLinksOnly);
@@ -244,6 +245,8 @@ public class ChainFinder
         if(assembledLinksOnly)
             return;
 
+        isSpecificCluster(mCluster);
+
         setSvReplicationCounts();
 
         if(mUseAllelePloidies)
@@ -280,6 +283,13 @@ public class ChainFinder
                 if(possiblePairs.isEmpty())
                 {
                     possiblePairs = findMaxReplicationPairs();
+                }
+
+                if(possiblePairs.isEmpty())
+                {
+                    // try all remaining
+                    List<SvBreakend> breakendList = mUnlinkedBreakendMap.keySet().stream().collect(Collectors.toList());
+                    possiblePairs = findFewestOptionPairs(breakendList, false);
                 }
             }
 
@@ -591,7 +601,7 @@ public class ChainFinder
                 double ploidySumOther = otherPair.first().ploidyMin() + otherPair.second().ploidyMin();
                 int otherMinLinkCount = getMaxUnlinkedPairCount(otherPair);
 
-                if(minLinkCount < otherMinLinkCount || ploidySumNew > ploidySumOther || newPair.length() < otherPair.length())
+                if(minLinkCount < otherMinLinkCount || newPair.length() < otherPair.length()) // || ploidySumNew > ploidySumOther
                 {
                     restrictedPairs.remove(index);
                 }
@@ -643,8 +653,6 @@ public class ChainFinder
         // next take the pairings with the least alternatives
         List<SvLinkedPair> possiblePairs = findFewestOptionPairs(breakendList, isMaxReplicated);
 
-        removeSkippedPairs(possiblePairs);
-
         if (possiblePairs.isEmpty())
         {
             if (isMaxReplicated)
@@ -658,6 +666,8 @@ public class ChainFinder
                     mSvReplicationMap.remove(var);
                 }
             }
+
+            // mSkippedPair = true;
         }
 
         return possiblePairs;
@@ -742,6 +752,8 @@ public class ChainFinder
                 }
             }
         }
+
+        removeSkippedPairs(minLinkPairs);
 
         return minLinkPairs;
     }
@@ -1559,8 +1571,8 @@ public class ChainFinder
                         if(clusterAP < CLUSTER_ALLELE_PLOIDY_MIN)
                         {
                             // this lower breakend cannot match with anything futher upstream
-                            log(LOG_LEVEL_VERBOSE, String.format("lowerBreakend(%s) limited at upperBreakend(%s) with clusterAP(%.2f)",
-                                    lowerBreakend.toString(), upperBreakend.toString(), clusterAP));
+                            log(LOG_LEVEL_VERBOSE, String.format("breakends lower(%d: %s) limited at upper(%d: %s) with clusterAP(%.2f)",
+                                    i, lowerBreakend.toString(), j, upperBreakend.toString(), clusterAP));
 
                             break;
                         }
