@@ -23,6 +23,7 @@ import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_END;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_START;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.isStart;
 import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.findLinkedPair;
+import static com.hartwig.hmftools.svanalysis.types.SvaConfig.SPECIFIC_CLUSTER_ID;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
@@ -1007,10 +1008,6 @@ public class SvCluster
     public void setArmData(int origins, int fragments) { mOriginArms = origins; mFragmentArms = fragments; }
     public int getOriginArms() { return mOriginArms; }
     public int getFragmentArms() { return mFragmentArms; }
-
-
-    private static int SPECIFIC_CLUSTER_ID = -1;
-    // private static int SPECIFIC_CLUSTER_ID = 32;
 
     public static boolean isSpecificCluster(final SvCluster cluster)
     {

@@ -20,6 +20,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.svanalysis.types.SvBreakend;
+import com.hartwig.hmftools.svanalysis.types.SvCNData;
 import com.hartwig.hmftools.svanalysis.types.SvChain;
 import com.hartwig.hmftools.svanalysis.types.SvCluster;
 import com.hartwig.hmftools.svanalysis.types.SvVarData;
@@ -1287,7 +1288,7 @@ public class ChainFinder
                     {
                         // a gap in the cluster so need to evaluate this contiguous section
                         inSegment = false;
-                        boolean validCalcs = calculateClusterSegmentPloidies(chromosome, allelePloidies, segStartIndex, i, segStartBreakend, breakend);
+                        boolean validCalcs = calculateNoneClusterSegmentPloidies(chromosome, allelePloidies, segStartIndex, i, segStartBreakend, breakend);
                         ++totalSegCount;
 
                         if(validCalcs)
@@ -1295,13 +1296,15 @@ public class ChainFinder
                     }
                 }
             }
+
+            calculateClusterSegmentPloidies(chromosome, allelePloidies);
         }
 
         LOGGER.debug("cluster({}) chromosomes({}) AP totalSegments({} valid={})",
                 mCluster.id(), chrBreakendMap.size(), totalSegCount, totalValidSegCount);
     }
 
-    private boolean calculateClusterSegmentPloidies(final String chromosome, double[][] allelePloidies,
+    private boolean calculateNoneClusterSegmentPloidies(final String chromosome, double[][] allelePloidies,
             int startIndex, int endIndex, SvBreakend startBreakend, SvBreakend endBreakend)
     {
         double startMajorAP = startBreakend.majorAllelePloidy(true);
@@ -1310,135 +1313,121 @@ public class ChainFinder
         int startMinorAPR = (int)round(startMinorAP);
         boolean startMajorAPIsInt = isPloidyCloseToInteger(startMajorAP);
         boolean startMinorAPIsInt = isPloidyCloseToInteger(startMinorAP);
-        double endMajorAP = endBreakend.majorAllelePloidy(false);
-        double endMinorAP = endBreakend.minorAllelePloidy(false);
-        double startCopyNumber = startBreakend.getCopyNumber(true);
 
-        double aPloidy = 0;
-        double bPloidy = 0;
-        double bNonClusterPloidyMin = -1;
+        // map each major and minor AP into a frequency
+        Map<Integer,Integer> ploidyFrequency = new HashMap();
 
-        if(startMajorAPIsInt && startMinorAPIsInt && startMajorAPR == startMinorAPR)
-        {
-            aPloidy = startMajorAP;
-            bPloidy = startMajorAP;
-        }
-        else
-        {
-            // map each major and minor AP into a frequency
-            Map<Integer,Integer> ploidyFrequency = new HashMap();
-
-            int segCount = endIndex - startIndex + 1;
-            for (int i = startIndex; i <= endIndex; ++i)
-            {
-                int majorAP = (int)round(allelePloidies[i][MAJOR_AP]);
-                int minorAP = (int)round(allelePloidies[i][MINOR_AP]);
-
-                if(i == startIndex)
-                {
-                    bNonClusterPloidyMin = min(allelePloidies[i][MAJOR_AP], allelePloidies[i][MINOR_AP]);
-                }
-                else
-                {
-                    bNonClusterPloidyMin = min(bNonClusterPloidyMin, min(allelePloidies[i][MAJOR_AP], allelePloidies[i][MINOR_AP]));
-                }
-
-                Integer repeatCount = ploidyFrequency.get(majorAP);
-                if(repeatCount == null)
-                    ploidyFrequency.put(majorAP, 1);
-                else
-                    ploidyFrequency.put(majorAP, repeatCount+1);
-
-                if(minorAP != majorAP)
-                {
-                    repeatCount = ploidyFrequency.get(minorAP);
-                    if(repeatCount == null)
-                        ploidyFrequency.put(minorAP, 1);
-                    else
-                        ploidyFrequency.put(minorAP, repeatCount+1);
-                }
-            }
-
-            int maxPloidyCount = 0;
-            int maxPloidyValue = 0;
-
-            for(Map.Entry<Integer,Integer> entry : ploidyFrequency.entrySet())
-            {
-                if(entry.getValue() > maxPloidyCount)
-                {
-                    maxPloidyCount = entry.getValue();
-                    maxPloidyValue = entry.getKey();
-                }
-            }
-
-            int startMajorCount = ploidyFrequency.get(startMajorAPR) != null ? ploidyFrequency.get(startMajorAPR) : 0;
-            int startMinorCount = ploidyFrequency.get(startMinorAPR) != null ? ploidyFrequency.get(startMinorAPR) : 0;
-
-            boolean aPloidyValid = maxPloidyCount >= segCount * 0.8;
-            boolean startMajorMatched = startMajorCount >= segCount * 0.8;
-            boolean startMinorMatched = startMinorCount >= segCount * 0.8;
-
-            if (!aPloidyValid && !startMajorMatched && !startMinorMatched)
-            {
-                LOGGER.debug("cluster({}) chromosome({}) insufficient matches: index({} to {}) freq({} {} times)) major({}) minor({})",
-                        mCluster.id(), chromosome, startIndex, endIndex, maxPloidyValue, maxPloidyCount, startMajorCount, startMinorCount);
-
-                return false;
-            }
-            else if (maxPloidyValue != startMajorAPR && maxPloidyValue != startMinorAPR)
-            {
-                LOGGER.debug("cluster({}) chromosome({}) inconsistency: index({} to {}) freq({} {} times)) major({} {} times) minor({} {} times)",
-                        mCluster.id(), chromosome, startIndex, endIndex, maxPloidyValue, maxPloidyCount,
-                        startMajorAPR, startMajorCount, startMinorAPR, startMinorCount);
-
-                return false;
-            }
-
-            if (maxPloidyValue == startMajorAPR)
-            {
-                // take the highest if close to matching all segments
-                aPloidy = startMajorAPIsInt ? startMajorAP : maxPloidyValue;
-                bPloidy = startMinorAPIsInt ? startMinorAP : round(startCopyNumber) - aPloidy;
-            }
-            else
-            {
-                aPloidy = startMinorAPIsInt ? startMinorAP : maxPloidyValue;
-                bPloidy = startMajorAPIsInt ? startMajorAP : round(startCopyNumber) - aPloidy;
-            }
-        }
-
-        // use knowledge of the cluster's ploidy and orientation to infer the non-disrupted B allele ploidy
-        double clusterStartPloidy = startBreakend.ploidy();
-        if(startBreakend.orientation() == -1)
-            clusterStartPloidy *= -1;
-        else
-            clusterStartPloidy = min(clusterStartPloidy, bPloidy);
-
-        double bNonClusterPloidy;
-        if(bNonClusterPloidyMin >= 0 && bNonClusterPloidyMin <= aPloidy && isPloidyCloseToInteger(bNonClusterPloidyMin))
-            bNonClusterPloidy = bNonClusterPloidyMin;
-        else
-            bNonClusterPloidy = bPloidy - clusterStartPloidy;
-
-        // now use this values to set cluster ploidies
+        int segCount = endIndex - startIndex + 1;
         for (int i = startIndex; i <= endIndex; ++i)
+        {
+            int majorAP = (int)round(allelePloidies[i][MAJOR_AP]);
+            int minorAP = (int)round(allelePloidies[i][MINOR_AP]);
+            Integer repeatCount = ploidyFrequency.get(majorAP);
+            if(repeatCount == null)
+                ploidyFrequency.put(majorAP, 1);
+            else
+                ploidyFrequency.put(majorAP, repeatCount+1);
+
+            if(minorAP != majorAP)
+            {
+                repeatCount = ploidyFrequency.get(minorAP);
+                if(repeatCount == null)
+                    ploidyFrequency.put(minorAP, 1);
+                else
+                    ploidyFrequency.put(minorAP, repeatCount+1);
+            }
+        }
+
+        int maxPloidyCount = 0;
+        double aPloidy = 0;
+
+        for(Map.Entry<Integer,Integer> entry : ploidyFrequency.entrySet())
+        {
+            if(entry.getValue() > maxPloidyCount)
+            {
+                maxPloidyCount = entry.getValue();
+                aPloidy = entry.getKey();
+            }
+        }
+
+        boolean aPloidyValid = maxPloidyCount >= segCount * 0.9;
+
+        if(!aPloidyValid)
+            return false;
+
+        // use knowledge of A to find a minimum for non-disrupted B
+        double bPloidyMin = -1;
+
+        double startClusterPloidy = startBreakend.orientation() == 1 ? startBreakend.ploidy() : 0;
+
+        if(startMajorAPIsInt && startMajorAPR == aPloidy)
+        {
+            bPloidyMin = startMinorAP - startClusterPloidy;
+        }
+        else if(startMinorAPIsInt && startMinorAPR == aPloidy)
+        {
+            bPloidyMin = startMajorAP - startClusterPloidy;
+        }
+
+        double endClusterPloidy = endBreakend.orientation() == -1 ? endBreakend.ploidy() : 0;
+
+        for (int i = startIndex; i <= endIndex; ++i)
+        {
+            int majorAP = (int) round(allelePloidies[i][MAJOR_AP]);
+            int minorAP = (int) round(allelePloidies[i][MINOR_AP]);
+
+            if(majorAP == aPloidy)
+            {
+                if(i == endIndex)
+                    minorAP -= endClusterPloidy;
+
+                bPloidyMin = bPloidyMin == -1 ? minorAP : min(minorAP, bPloidyMin);
+            }
+            else if(minorAP == aPloidy)
+            {
+                if(i == endIndex)
+                    majorAP -= endClusterPloidy;
+
+                bPloidyMin = bPloidyMin == -1 ? majorAP : min(majorAP, bPloidyMin);
+            }
+        }
+
+        // set these values int each segment
+        for (int i = startIndex; i <= endIndex; ++i)
+        {
+            allelePloidies[i][A_FIXED_AP] = aPloidy;
+            allelePloidies[i][B_NON_DIS_AP] = bPloidyMin;
+        }
+
+        return true;
+    }
+
+    private boolean calculateClusterSegmentPloidies(final String chromosome, double[][] allelePloidies)
+    {
+        // first establish the non-disrupted B ploidy across all segments
+        double bNonClusterPloidyMin = allelePloidies[0][B_NON_DIS_AP];
+        for(int i = 1; i < allelePloidies.length; ++i)
+        {
+            bNonClusterPloidyMin = min(bNonClusterPloidyMin, allelePloidies[i][B_NON_DIS_AP]);
+        }
+
+        // finally set a cluster ploidy using knowledge of the other 2 ploidies
+        for(int i = 0; i < allelePloidies.length; ++i)
         {
             double majorAP = allelePloidies[i][MAJOR_AP];
             double minorAP = allelePloidies[i][MINOR_AP];
-            allelePloidies[i][A_FIXED_AP] = aPloidy;
-            allelePloidies[i][B_NON_DIS_AP] = bNonClusterPloidy;
+            double aPloidy = allelePloidies[i][A_FIXED_AP];
+
+            allelePloidies[i][B_NON_DIS_AP] = bNonClusterPloidyMin;
 
             double clusterPloidy = 0;
             if(majorAP > aPloidy + 0.5)
             {
-                clusterPloidy = majorAP - bNonClusterPloidy;
-
-                // sometimes high copy number affects the calculation of the other allele
-                minorAP = aPloidy; // not currently corrected back into the array
+                clusterPloidy = majorAP - bNonClusterPloidyMin;
             }
             else
             {
-                clusterPloidy = minorAP - bNonClusterPloidy;
+                clusterPloidy = minorAP - bNonClusterPloidyMin;
             }
 
             allelePloidies[i][CLUSTER_AP] = max(clusterPloidy, 0.0);
