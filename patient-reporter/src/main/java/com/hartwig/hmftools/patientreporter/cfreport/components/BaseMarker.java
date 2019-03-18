@@ -14,11 +14,11 @@ import java.util.Random;
  */
 public class BaseMarker {
 
-    private static final float WIDTH = 11.5f;
-    private static final float HEIGHT = 2.5f;
+    private static final float WIDTH = 12.3f;
+    private static final float HEIGHT = 1.9f;
     private static final float RADIUS = HEIGHT * .5f;
 
-    private static final float LINE_WIDTH = .5f;
+    private static final float LINE_WIDTH = .25f;
 
     /**
      * Draw line of base markers at the bottom of the page
@@ -29,8 +29,8 @@ public class BaseMarker {
 
         // Positioning in pt
         final float startX = 156f;
-        final float y = 62;
-        final float deltaX = 84;
+        final float y = 22;
+        final float deltaX = 87;
 
         final float markerCount = fullWidth ? 5 : 3;
         final float redProbability = .2f;
@@ -53,10 +53,10 @@ public class BaseMarker {
     public static void drawSidepanelMarkers(boolean fullHeight, @NotNull PdfWriter pdfWriter) {
 
         // Positioning in pt
-        final float startX = 442;
-        final float startY = 799.2f; // 62
-        final float deltaX = 31.5f;
-        final float deltaY = -38.8f;
+        final float startX = 455;
+        final float startY = fullHeight  ? 22 : 775;
+        final float deltaX = 35;
+        final float deltaY = 42;
 
         final float redProbability = .05f;
         final float filledProbability = .15f;

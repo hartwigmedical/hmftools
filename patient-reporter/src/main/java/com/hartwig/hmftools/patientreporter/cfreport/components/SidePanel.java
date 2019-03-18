@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.patientreporter.cfreport.components;
 
 import com.hartwig.hmftools.patientreporter.cfreport.ReportConfiguration;
+import com.lowagie.text.Rectangle;
 import com.lowagie.text.pdf.PdfContentByte;
 import com.lowagie.text.pdf.PdfWriter;
 import org.jetbrains.annotations.NotNull;
@@ -21,7 +22,10 @@ public class SidePanel {
 
         PdfContentByte pb = writer.getDirectContent();
         pb.saveState();
-        pb.rectangle(414, 819, 156, fullheight ? -780 : -100);
+
+        Rectangle pageSize = writer.getPageSize();
+
+        pb.rectangle(pageSize.getWidth(), pageSize.getHeight(), -170, fullheight ? -pageSize.getHeight() : -110);
         pb.setColorFill(ReportConfiguration.PALETTE_BLUE);
         pb.fill();
         pb.restoreState();
