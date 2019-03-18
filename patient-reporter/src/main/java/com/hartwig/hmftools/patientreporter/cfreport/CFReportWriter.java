@@ -20,6 +20,8 @@ public class CFReportWriter implements ReportWriter {
 
     private static final Logger LOGGER = LogManager.getLogger(CFReportWriter.class);
 
+    private static final PageEvent pageEvent = new PageEvent();
+
     @Override
     public void writeAnalysedPatientReport(@NotNull final AnalysedPatientReport report, @NotNull final String outputFilePath) {
         // TODO!
@@ -53,14 +55,22 @@ public class CFReportWriter implements ReportWriter {
         // Add content to report
         report.open();
         try {
+
+            pageEvent.setSidePanelPageMode(SidePanel.PageMode.SummaryPage);
             report.add(new Phrase("Hello world"));
+
+            pageEvent.setSidePanelPageMode(SidePanel.PageMode.ContentPage);
+            report.newPage();
+
+            pageEvent.setSidePanelPageMode(SidePanel.PageMode.ClosingPage);
+            report.newPage();
+
         } catch (DocumentException e) {
             e.printStackTrace();
             return;
         }
 
-        report.newPage();
-        report.newPage();
+
 
         // Close report (gets written to file by closing)
         report.close();
@@ -106,7 +116,7 @@ public class CFReportWriter implements ReportWriter {
         try {
 
             final PdfWriter pdfWriter = PdfWriter.getInstance(report, new FileOutputStream(outputFilePath));
-            pdfWriter.setPageEvent(new PageEvent());
+            pdfWriter.setPageEvent(pageEvent);
 
             return pdfWriter;
 

@@ -9,12 +9,20 @@ import com.lowagie.text.pdf.PdfWriter;
 
 public class PageEvent extends PdfPageEventHelper {
 
+    private SidePanel.PageMode sidePanelPageMode = SidePanel.PageMode.SummaryPage;
+
+    public void setSidePanelPageMode(SidePanel.PageMode pageMode) {
+        sidePanelPageMode = pageMode;
+    }
+
+
+    @Override
     public void onStartPage(PdfWriter writer, Document document) {
 
         //@TODO Add header
 
         // Add side panel
-        SidePanel.draw((document.getPageNumber() == 1), writer);
+        SidePanel.draw(sidePanelPageMode, writer);
 
         // Add footer
         Footer.drawFooter(document, writer);
