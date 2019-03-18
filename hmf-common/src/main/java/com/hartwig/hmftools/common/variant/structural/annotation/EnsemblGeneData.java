@@ -43,7 +43,7 @@ public class EnsemblGeneData
 
         Synonyms = Arrays.stream(synonyms.split(";")).collect(Collectors.toList());
 
-        if(!entrezIds.equals("NULL"))
+        if(!entrezIds.equalsIgnoreCase("NULL"))
         {
             String[] entrezIdStr = entrezIds.split(";");
             EntrezIds = Arrays.stream(entrezIdStr).filter(x -> !x.isEmpty()).map(x -> Integer.parseInt(x)).collect(Collectors.toList());

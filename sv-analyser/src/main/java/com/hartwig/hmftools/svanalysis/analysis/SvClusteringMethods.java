@@ -98,6 +98,7 @@ public class SvClusteringMethods {
     public static String CLUSTER_REASON_FOLDBACKS = "Foldback";
     public static String CLUSTER_REASON_SOLO_SINGLE = "Single";
     public static String CLUSTER_REASON_LOOSE_OVERLAP = "LooseOverlap";
+    public static String CLUSTER_REASON_LOH_CHAIN = "LohChain";
     public static String CLUSTER_REASON_INV_OVERLAP = "InvOverlap";
     public static String CLUSTER_REASON_LONG_DEL_DUP = "LongDelDup";
 
@@ -634,16 +635,18 @@ public class SvClusteringMethods {
 
             for(final SvBreakend breakend : breakendList)
             {
-                if(breakend.getSV().id().equals(lohEvent.StartSV))
+                if(breakend.orientation() == 1 && breakend.getSV().id().equals(lohEvent.StartSV))
                 {
                     lohClusterStart = breakend.getSV().getCluster();
                     lohSvStart = breakend.getSV();
+                    lohClusterStart.addLohEvent(lohEvent);
                     lohEvent.setBreakend(breakend, true);
                 }
 
-                if(breakend.getSV().id().equals(lohEvent.EndSV))
+                if(breakend.orientation() == -1 && breakend.getSV().id().equals(lohEvent.EndSV))
                 {
                     lohClusterEnd = breakend.getSV().getCluster();
+                    lohClusterEnd.addLohEvent(lohEvent);
                     lohSvEnd = breakend.getSV();
                     lohEvent.setBreakend(breakend, false);
                 }
@@ -666,7 +669,6 @@ public class SvClusteringMethods {
 
             if(lohClusterStart.hasLinkingLineElements() || lohClusterEnd.hasLinkingLineElements())
                 continue;
-
 
             LOGGER.debug("cluster({} svs={}) merges in other cluster({} svs={}) on LOH event(sv1={} sv2={} len={})",
                     lohClusterStart.id(), lohClusterStart.getSvCount(), lohClusterEnd.id(), lohClusterEnd.getSvCount(),

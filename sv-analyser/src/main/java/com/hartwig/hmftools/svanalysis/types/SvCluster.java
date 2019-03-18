@@ -57,6 +57,7 @@ public class SvCluster
     private List<SvArmCluster> mArmClusters; // clusters of proximate SVs on an arm, currently only used for annotations
     private Map<String, List<SvBreakend>> mChrBreakendMap;
     private List<SvVarData> mUnchainedSVs; // includes replicated SVs
+    private List<SvLOH> mLohEvents;
     private boolean mIsResolved;
     private String mResolvedType;
 
@@ -133,6 +134,7 @@ public class SvCluster
         mInferredLinkedPairs = Lists.newArrayList();
         mChains = Lists.newArrayList();
         mUnchainedSVs = Lists.newArrayList();
+        mLohEvents = Lists.newArrayList();
 
         mLongDelDups = Lists.newArrayList();
         mFoldbacks = Lists.newArrayList();
@@ -348,6 +350,14 @@ public class SvCluster
 
     public boolean hasReplicatedSVs() { return mHasReplicatedSVs; }
 
+    public void addLohEvent(final SvLOH lohEvent)
+    {
+        if(!mLohEvents.contains(lohEvent))
+            mLohEvents.add(lohEvent);
+    }
+
+    public final List<SvLOH> getLohEvents() { return mLohEvents; }
+
     public List<SvChain> getChains() { return mChains; }
 
     public void addChain(SvChain chain, boolean resetId)
@@ -474,6 +484,8 @@ public class SvCluster
 
         // merge the second cluster into the first
         addVariantLists(cluster);
+
+        cluster.getLohEvents().stream().forEach(this::addLohEvent);
 
         for(SvChain chain : cluster.getChains())
         {

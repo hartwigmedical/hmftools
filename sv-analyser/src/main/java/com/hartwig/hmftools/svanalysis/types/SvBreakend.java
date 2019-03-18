@@ -40,6 +40,8 @@ public class SvBreakend {
     public final byte orientation() { return mOrientation; }
     public boolean usesStart() { return mUsesStart; }
 
+    public final SvBreakend getOtherBreakend() { return mSV.getBreakend(!mUsesStart); }
+
     public void setChrPosIndex(int index) { mChrPosIndex = index; }
     public int getChrPosIndex() { return mChrPosIndex; }
 
