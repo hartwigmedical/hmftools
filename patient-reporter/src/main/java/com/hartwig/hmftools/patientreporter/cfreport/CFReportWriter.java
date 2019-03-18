@@ -3,6 +3,7 @@ package com.hartwig.hmftools.patientreporter.cfreport;
 import com.hartwig.hmftools.patientreporter.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.QCFailReport;
 import com.hartwig.hmftools.patientreporter.ReportWriter;
+import com.hartwig.hmftools.patientreporter.cfreport.components.Footer;
 import com.itextpdf.kernel.events.PdfDocumentEvent;
 import com.itextpdf.kernel.geom.PageSize;
 import com.itextpdf.kernel.pdf.PdfDocument;
@@ -46,10 +47,11 @@ public class CFReportWriter implements ReportWriter {
         try {
 
             final Document report = initializeReport(outputFilePath);
+            final PdfDocument document = report.getPdfDocument();
 
             PageEventHandler pageEvents = new PageEventHandler();
             pageEvents.setPageMode(PageEventHandler.PageMode.SummaryPage);
-            report.getPdfDocument().addEventHandler(PdfDocumentEvent.START_PAGE, pageEvents);
+            document.addEventHandler(PdfDocumentEvent.START_PAGE, pageEvents);
 
             // Add summary page
             report.add(new Paragraph("Summary"));
@@ -64,6 +66,7 @@ public class CFReportWriter implements ReportWriter {
             report.add(new AreaBreak(AreaBreakType.NEXT_PAGE));
             report.add(new Paragraph("Sample Details & Disclaimer"));
 
+            Footer.writeTotalPageCount(document);
             report.close();
 
         } catch (IOException e) {
