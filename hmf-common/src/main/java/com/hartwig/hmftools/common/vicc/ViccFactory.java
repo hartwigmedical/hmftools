@@ -4,6 +4,8 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.ArrayList;
+import java.util.List;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
@@ -25,27 +27,33 @@ public abstract class ViccFactory {
     public static void extractBRCAFile(@NotNull String brcaJsonPath) throws IOException {
         final String csvFileName = "/data/experiments/knowledgebase_vicckb/brca.csv";
         PrintWriter writer = new PrintWriter(new File(csvFileName));
-        writer.append("Variant_frequency_LOVD;ClinVarAccession_ENIGMA\n");
-
         JsonParser parser = new JsonParser();
         JsonReader reader = new JsonReader(new FileReader(brcaJsonPath));
         reader.setLenient(true);
+
         int index = 0;
-        while (reader.hasNext()) {
-            JsonObject object = parser.parse(reader).getAsJsonObject();
-            LOGGER.info(object);
-            LOGGER.info(object.keySet()); // keys of object
-            BRCA brca1 =  ImmutableBRCA.builder()
-                    .variantFrequencyLOVD(object.getAsJsonObject("brca").get("Variant_frequency_LOVD").toString())
-                    .clinVarAccessionENIGMA(object.getAsJsonObject("brca").get("ClinVarAccession_ENIGMA").toString()).build();
-            writer.append(brca1.toString());
-            writer.append("\n");
-            index++;
-            LOGGER.info(index);
+
+        try {
+            while (reader.hasNext()) {
+                LOGGER.info(index);
+                JsonObject object = parser.parse(reader).getAsJsonObject();
+                if (index == 0) {
+                    LOGGER.info(object.getAsJsonObject("brca").keySet()); // Set of keys
+                    writer.append(object.getAsJsonObject("brca").keySet().toString());
+                }
+                StringBuilder StringToCSV = new StringBuilder();
+                for (int i = 0; i < object.getAsJsonObject("brca").keySet().size(); i++) {
+                    List<String> keysOfBRCAObject = new ArrayList<>(object.getAsJsonObject("brca").keySet());
+                    StringToCSV.append(object.getAsJsonObject("brca").get(keysOfBRCAObject.get(i))).append(";"); // merge 1 object to string
+                }
+                index++;
+                writer.append(StringToCSV);
+                writer.append("\n");
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
         }
         writer.close();
-        reader.endObject();
-        reader.close();
     }
 
     private static void writeToCsvFile(@NotNull String csvFormatString, @NotNull PrintWriter writer) throws IOException {
