@@ -3,24 +3,25 @@ package com.hartwig.hmftools.patientreporter.cfreport;
 import com.hartwig.hmftools.patientreporter.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.QCFailReport;
 import com.hartwig.hmftools.patientreporter.ReportWriter;
-
-import com.hartwig.hmftools.patientreporter.cfreport.components.SidePanel;
-import com.lowagie.text.*;
-import com.lowagie.text.pdf.PdfTemplate;
-import com.lowagie.text.pdf.PdfWriter;
-
+import com.itextpdf.kernel.events.PdfDocumentEvent;
+import com.itextpdf.kernel.geom.PageSize;
+import com.itextpdf.kernel.pdf.PdfDocument;
+import com.itextpdf.kernel.pdf.PdfWriter;
+import com.itextpdf.layout.Document;
+import com.itextpdf.layout.element.AreaBreak;
+import com.itextpdf.layout.element.Paragraph;
+import com.itextpdf.layout.property.AreaBreakType;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
 import java.nio.file.Files;
 
 public class CFReportWriter implements ReportWriter {
 
     private static final Logger LOGGER = LogManager.getLogger(CFReportWriter.class);
-
-    private static final PageEvent pageEvent = new PageEvent();
 
     @Override
     public void writeAnalysedPatientReport(@NotNull final AnalysedPatientReport report, @NotNull final String outputFilePath) {
@@ -42,90 +43,61 @@ public class CFReportWriter implements ReportWriter {
 
         String outputFilePath = "/Users/Wilco/hmf/tmp/temp_" + String.valueOf(System.currentTimeMillis()) + ".pdf";
 
-        // Initialize report and writer
-        final Document report = initializeReport();
-        final PdfWriter pdfWriter;
-        try {
-            pdfWriter = initializePdfWriter(report, outputFilePath);
-        } catch (Exception e) {
-            e.printStackTrace();
-            return;
-        }
-
-        // Add content to report
-        report.open();
         try {
 
-            pageEvent.setSidePanelPageMode(SidePanel.PageMode.SummaryPage);
-            report.add(new Phrase("Hello world"));
+            final Document report = initializeReport(outputFilePath);
 
-            pageEvent.setSidePanelPageMode(SidePanel.PageMode.ContentPage);
-            report.newPage();
+            PageEventHandler pageEvents = new PageEventHandler();
+            pageEvents.setPageMode(PageEventHandler.PageMode.SummaryPage);
+            report.getPdfDocument().addEventHandler(PdfDocumentEvent.START_PAGE, pageEvents);
 
-            pageEvent.setSidePanelPageMode(SidePanel.PageMode.ClosingPage);
-            report.newPage();
+            // Add summary page
+            report.add(new Paragraph("Summary"));
 
-        } catch (DocumentException e) {
+            // Add intermediate pages
+            pageEvents.setPageMode(PageEventHandler.PageMode.ContentPage);
+            report.add(new AreaBreak(AreaBreakType.NEXT_PAGE));
+            report.add(new Paragraph("Therapy details"));
+
+            // Add closing page
+            pageEvents.setPageMode(PageEventHandler.PageMode.ClosingPage);
+            report.add(new AreaBreak(AreaBreakType.NEXT_PAGE));
+            report.add(new Paragraph("Sample Details & Disclaimer"));
+
+            report.close();
+
+        } catch (IOException e) {
             e.printStackTrace();
-            return;
         }
-
-
-
-        // Close report (gets written to file by closing)
-        report.close();
-        pdfWriter.close();
 
     }
 
     /**
-     * Initialize report with relevant metadata
+     * Initialize report document with relevant metadata
      * @return
      */
     @NotNull
-    private static Document initializeReport() {
+    private static Document initializeReport(@NotNull final String outputFilePath) throws IOException {
 
-        //
-        Document document = new Document(PageSize.A4,
-                ReportConfiguration.PAGE_MARGIN_LEFT,
-                ReportConfiguration.PAGE_MARGIN_RIGHT,
-                ReportConfiguration.PAGE_MARGIN_TOP,
-                ReportConfiguration.PAGE_MARGIN_BOTTOM);
-
-        // Set document metadata
-        document.addTitle(ReportConfiguration.METADATA_TITLE);
-        document.addAuthor(ReportConfiguration.METADATA_AUTHOR);
-
-        return document;
-    }
-
-    /**
-     * Initialize a PdfWriter for the given Document
-     *
-     * @param report            report document
-     * @param outputFilePath    file where the document will be written when the writer is closed
-     * @return
-     * @throws IOException
-     */
-    private static PdfWriter initializePdfWriter(@NotNull Document report, @NotNull final String outputFilePath) throws IOException {
-
+        // Prevent overwriting existing files
         if (Files.exists(new File(outputFilePath).toPath())) {
             throw new IOException("Could not write " + outputFilePath + " as it already exists.");
         }
 
-        try {
+        // Create PDF with metadata
+        final PdfDocument pdf = new PdfDocument(new PdfWriter(outputFilePath));
+        pdf.setDefaultPageSize(PageSize.A4);
+        pdf.getDocumentInfo().setTitle(ReportConfiguration.METADATA_TITLE);
+        pdf.getDocumentInfo().setAuthor(ReportConfiguration.METADATA_AUTHOR);
 
-            final PdfWriter pdfWriter = PdfWriter.getInstance(report, new FileOutputStream(outputFilePath));
-            pdfWriter.setPageEvent(pageEvent);
+        // Create document
+        final Document document = new Document(pdf);
+        document.setMargins(ReportConfiguration.PAGE_MARGIN_LEFT,
+                ReportConfiguration.PAGE_MARGIN_RIGHT,
+                ReportConfiguration.PAGE_MARGIN_TOP,
+                ReportConfiguration.PAGE_MARGIN_BOTTOM);
 
-            return pdfWriter;
-
-        } catch (DocumentException e) {
-            throw new IOException("Could not generate pdf due to iText Document exception: " + e.getMessage());
-        } catch (FileNotFoundException e) {
-            throw new IOException("Could not generate pdf because the file " + outputFilePath + " could not be created");
-        }
-
+        return document;
     }
 
- }
+}

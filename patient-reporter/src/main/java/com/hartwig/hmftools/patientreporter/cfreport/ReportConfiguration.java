@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.patientreporter.cfreport;
 
 import com.hartwig.hmftools.patientreporter.PatientReporterApplication;
+import com.itextpdf.kernel.colors.DeviceRgb;
 
 import java.awt.*;
 
@@ -23,10 +24,10 @@ public class ReportConfiguration {
     public static final float PAGE_MARGIN_BOTTOM = 100;
 
     // Color palette
-    public static final Color PALETTE_BLUE = new Color(38, 90, 166);
+    public static final DeviceRgb PALETTE_BLUE = new DeviceRgb(38, 90, 166);
     public static final Color PALETTE_MID_BLUE = new Color(110, 139, 189);
-    public static final Color PALETTE_RED = new Color(232, 60, 55);
-    public static final Color PALETTE_CYAN = new Color(0, 179, 233);
+    public static final DeviceRgb PALETTE_RED = new DeviceRgb(232, 60, 55);
+    public static final DeviceRgb PALETTE_CYAN = new DeviceRgb(0, 179, 233);
     public static final Color PALETTE_DARK_GREY = new Color(39, 47, 50);
     public static final Color PALETTE_MID_GREY = new Color(101, 106, 108);
     public static final Color PALETTE_LIGHT_GREY = new Color(205, 206, 207);
