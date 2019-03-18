@@ -38,7 +38,15 @@ public abstract class ViccFactory {
                 LOGGER.info(index);
                 JsonObject object = parser.parse(reader).getAsJsonObject();
                 if (index == 0) {
+                    LOGGER.info(object.getAsJsonObject("features").keySet()); // Set of keys
+                    LOGGER.info(object.getAsJsonObject("tags").keySet()); // Set of keys
+                    LOGGER.info(object.getAsJsonObject("genes").keySet()); // Set of keys
+                    LOGGER.info(object.getAsJsonObject("source").keySet()); // Set of keys
+                    LOGGER.info(object.getAsJsonObject("dev_tags").keySet()); // Set of keys
+                    LOGGER.info(object.getAsJsonObject("gene_identifiers").keySet()); // Set of keys
+                    LOGGER.info(object.getAsJsonObject("feature_names").keySet()); // Set of keys
                     LOGGER.info(object.getAsJsonObject("brca").keySet()); // Set of keys
+                    LOGGER.info(object.getAsJsonObject("association").keySet()); // Set of keys
                     writer.append(object.getAsJsonObject("brca").keySet().toString());
                 }
                 StringBuilder StringToCSV = new StringBuilder();
