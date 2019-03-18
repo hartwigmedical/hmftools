@@ -33,4 +33,12 @@ public class ReportConfiguration {
     public static final Color PALETTE_LIGHT_GREY = new Color(205, 206, 207);
     public static final Color PALETTE_PINK = new Color(230, 21, 124);
 
+
+
+    public ReportConfiguration() {
+
+    }
+
+
+
 }

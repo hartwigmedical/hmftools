@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.patientreporter.cfreport;
 
 import com.hartwig.hmftools.patientreporter.cfreport.components.Footer;
+import com.hartwig.hmftools.patientreporter.cfreport.components.Header;
 import com.hartwig.hmftools.patientreporter.cfreport.components.SidePanel;
 import com.itextpdf.kernel.events.Event;
 import com.itextpdf.kernel.events.IEventHandler;
@@ -30,6 +31,7 @@ public class PageEventHandler implements IEventHandler {
             final PdfPage page = documentEvent.getPage();
 
             // Add sidepanel and footer to new page
+            Header.addHeader(page);
             SidePanel.addSidePanel(page, pageMode);
             Footer.addFooter(page, pageMode);
 

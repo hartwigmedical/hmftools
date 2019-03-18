@@ -4,10 +4,14 @@ import com.hartwig.hmftools.patientreporter.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.QCFailReport;
 import com.hartwig.hmftools.patientreporter.ReportWriter;
 import com.hartwig.hmftools.patientreporter.cfreport.components.Footer;
+import com.hartwig.hmftools.patientreporter.cfreport.components.Header;
+import com.itextpdf.io.image.ImageData;
+import com.itextpdf.io.image.ImageDataFactory;
 import com.itextpdf.kernel.events.PdfDocumentEvent;
 import com.itextpdf.kernel.geom.PageSize;
 import com.itextpdf.kernel.pdf.PdfDocument;
 import com.itextpdf.kernel.pdf.PdfWriter;
+import com.itextpdf.kernel.pdf.xobject.PdfImageXObject;
 import com.itextpdf.layout.Document;
 import com.itextpdf.layout.element.AreaBreak;
 import com.itextpdf.layout.element.Paragraph;
@@ -15,9 +19,13 @@ import com.itextpdf.layout.property.AreaBreakType;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
+import sun.misc.IOUtils;
 
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.net.MalformedURLException;
 import java.nio.file.Files;
 
 public class CFReportWriter implements ReportWriter {
@@ -34,24 +42,20 @@ public class CFReportWriter implements ReportWriter {
         // Does not need to be implemented
     }
 
-    /**
-     * Temporary main method for quick running while report is in development
-     *
-     * @TODO: Remove this
-     * @deprecated
-     */
-    public static void main(String[] args) {
-
-        String outputFilePath = "/Users/Wilco/hmf/tmp/temp_" + String.valueOf(System.currentTimeMillis()) + ".pdf";
+    public void createReport(String outputFilePath) {
 
         try {
 
             final Document report = initializeReport(outputFilePath);
             final PdfDocument document = report.getPdfDocument();
 
+            // Setup page event handling (used for automatic generation of header, sidepanel and footer)
             PageEventHandler pageEvents = new PageEventHandler();
             pageEvents.setPageMode(PageEventHandler.PageMode.SummaryPage);
             document.addEventHandler(PdfDocumentEvent.START_PAGE, pageEvents);
+
+            // Load resources (images and fonts)
+            Header.loadHmfLogo(this.getClass().getClassLoader());
 
             // Add summary page
             report.add(new Paragraph("Summary"));
@@ -72,6 +76,18 @@ public class CFReportWriter implements ReportWriter {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    /**
+     * Temporary main method for quick running while report is in development
+     *
+     * @TODO: Remove this
+     * @deprecated
+     */
+    public static void main(String[] args) {
+
+        CFReportWriter writer = new CFReportWriter();
+        writer.createReport("/Users/Wilco/hmf/tmp/temp_" + String.valueOf(System.currentTimeMillis()) + ".pdf");
 
     }
 
