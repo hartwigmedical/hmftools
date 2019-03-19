@@ -6,6 +6,81 @@ It combines B-allele frequency (BAF), read depth ratios, somatic variants and st
 
 PURPLE supports both grch 37 and 38 reference assemblies. 
 
+## Usage
+
+### Mandatory Arguments
+
+Argument  | Description
+---|---
+reference  | Name of the reference sample. This should correspond to the value used in AMBER and COBALT.
+tumor  | Name of the tumor sample. This should correspond to the value used in AMBER and COBALT.
+output_dir | Path to the output directory. This directory will be created if it does not already exist. 
+amber | Path to AMBER output. This should correspond to the output_dir used in AMBER.
+cobalt | Path to COBALT output. This should correspond to the output_dir used in COBALT.
+gc_profile | Path to GC profile.
+
+The GC Profile file used by HMF (GC_profile.hg19.1000bp.cnp) is available to download from [HMF-Pipeline-Resources](https://resources.hartwigmedicalfoundation.nl). 
+A HG38 equivalent is also available.
+
+### Optional Arguments
+
+Argument | Default | Description 
+---|---|---
+run_dir | None | If provided, default values of <run_dir>/amber, <run_dir>/cobalt and <run_dir>/purple will be supplied for amber, cobalt and output_dir parameters respectively.
+threads | 2 | Number of threads to use.
+somatic_vcf | None | Optional location of somatic variants vcf.  Sample name must match tumor parameter. GZ files supported.
+structural_vcf | None | Optional location of structural variants vcf. Sample name must match tumor parameter. GZ files supported.
+sv_recovery_vcf | None | Optional location of structural variants recovery vcf. Sample name must match tumor parameter. GZ files supported.
+circos | None | Optional path to circos binary. When supplied, circos graphs will be written to <output_dir>/plot
+db_enabled | None | This parameter has no arguments. Optionally include if you wish to persist results to a database. Database initialization script can be found [here](https://github.com/hartwigmedical/hmftools/blob/master/patient-db/src/main/resources/generate_database.sql).
+db_user | None | Database username. Mandatory if db_enabled.
+db_pass | None | Database password. Mandatory if db_enabled.
+db_url | None | Database URL. Should be of format: `mysql://localhost:3306/hmfpatients`. Mandatory if db_enabled.
+ref_genome | Detect | Will attempt to detect reference genome from COBALT output but failing that must be either hg18 or hg38.
+
+#### Optional Somatic Fit Arguments
+The following arguments control the somatic fit. Changing these values without a through understanding of the system is not recommended.
+
+Argument | Default | Description 
+---|---|---
+somatic_min_peak | 50 | Minimum number of somatic variants to consider a peak.
+somatic_min_total | 300 | Minimum number of somatic variants required to assist highly diploid fits.
+somatic_min_purity_spread | 0.15 | Minimum spread within candidate purities before somatics can be used.
+somatic_min_purity | 0.17 | Somatic fit will not be used if both somatic and fitted purities are less than this value.
+somatic_deviation_weight | 1 | Proportion of somatic deviation to include in fitted purity score.
+highly_diploid_percentage | 0.97 | Proportion of genome that must be diploid before using somatic fit.
+
+### Example Usage
+
+```
+java -jar purple.jar \
+   -reference COLO829R \
+   -tumor COLO829T \
+   -output_dir /path/to/COLO829/purple \
+   -amber /path/to/COLO829/amber \
+   -cobalt /path/to/COLO829/cobalt \
+   -gc_profile /path/to/GC_profile.hg19.1000bp.cnp \
+   -somatic_vcf /path/to/COLO829/COLO829.somatic.vcf.gz \
+   -structural_vcf /path/to/COLO829/COLO829.sv.vcf.gz \
+   -sv_recovery_vcf /path/to/COLO829/COLO829.sv.all.vcf.gz \
+   -circos /path/to/circos-0.69-5/bin/circos \
+   -db_enabled -db_user build -db_pass build -db_url mysql://localhost:3306/hmfpatients?serverTimezone=UTC
+```
+
+Note that it is possible to supply a run_dir parameter in which case default values of the amber, cobalt and output_dir parameters will become <run_dir>/amber, <run_dir>/cobalt and <run_dir>/purple respectively.
+It is still possible to override these default parameters but supplying a value, ie:
+
+```
+java -jar purple.jar \
+   -reference COLO829R \
+   -tumor COLO829T \
+   -run_dir /path/to/COLO829 \
+   -output_dir /path/to/COLO829/purple_pilot \
+   -gc_profile /Users/jon/hmf/analyses/COLO829/GC_profile.1000bp.cnp 
+```
+
+In this case the output_directory will be set to `/path/to/COLO829/purple_pilot` while the amber and cobalt parameters will have the default values `/path/to/COLO829/amber` and `/path/to/COLO829/cobalt`.
+
 
 ## Input
 
@@ -322,94 +397,7 @@ PURPLE also provides a qc status that can fail for the following 3 reasons:
 - **FAIL_DELETED_GENES** - We fail any sample with more than 280 deleted genes. This QC step was added after observing that in a handful of samples with high MB scale positive GC bias we sometimes systematically underestimate the copy number in high GC regions. This can lead us to incorrectly infer homozygous loss of entire chromosomes, particularly on chromosome 17 and 19.
 - **FAIL_GENDER** - If the AMBER and COBALT gender are inconsistent we use the COBALT gender but fail the sample.
 
-## Usage
 
-### Mandatory Arguments
-
-Argument  | Description
----|---
-reference  | Name of the reference sample. This should correspond to the value used in AMBER and COBALT.
-tumor  | Name of the tumor sample. This should correspond to the value used in AMBER and COBALT.
-output_dir | Path to the output directory. This directory will be created if it does not already exist. 
-amber | Path to AMBER output. This should correspond to the output_dir used in AMBER.
-cobalt | Path to COBALT output. This should correspond to the output_dir used in COBALT.
-gc_profile | Path to GC profile.
-
-The GC Profile file used by HMF (GC_profile.hg19.1000bp.cnp) is available to download from [HMF-Pipeline-Resources](https://resources.hartwigmedicalfoundation.nl). 
-A HG38 equivalent is also available.
-
-### Optional Arguments
-
-Argument | Default | Description 
----|---|---
-run_dir | None | If provided, default values of <run_dir>/amber, <run_dir>/cobalt and <run_dir>/purple will be supplied for amber, cobalt and output_dir parameters respectively.
-threads | 2 | Number of threads to use.
-somatic_vcf | None | Optional location of somatic variants vcf.  Sample name must match tumor parameter. GZ files supported.
-structural_vcf | None | Optional location of structural variants vcf. Sample name must match tumor parameter. GZ files supported.
-sv_recovery_vcf | None | Optional location of structural variants recovery vcf. Sample name must match tumor parameter. GZ files supported.
-circos | None | Optional path to circos binary. When supplied, circos graphs will be written to <output_dir>/plot
-db_enabled | None | This parameter has no arguments. Optionally include if you wish to persist results to a database. Database initialization script can be found [here](https://github.com/hartwigmedical/hmftools/blob/master/patient-db/src/main/resources/generate_database.sql).
-db_user | None | Database username. Mandatory if db_enabled.
-db_pass | None | Database password. Mandatory if db_enabled.
-db_url | None | Database URL. Should be of format: `mysql://localhost:3306/hmfpatients`. Mandatory if db_enabled.
-ref_genome | Detect | Will attempt to detect reference genome from COBALT output but failing that must be either hg18 or hg38.
-
-#### Optional Somatic Fit Arguments
-The following arguments control the somatic fit. Changing these values without a through understanding of the system is not recommended.
-
-Argument | Default | Description 
----|---|---
-somatic_min_peak | 50 | Minimum number of somatic variants to consider a peak.
-somatic_min_total | 300 | Minimum number of somatic variants required to assist highly diploid fits.
-somatic_min_purity_spread | 0.15 | Minimum spread within candidate purities before somatics can be used.
-somatic_min_purity | 0.17 | Somatic fit will not be used if both somatic and fitted purities are less than this value.
-somatic_deviation_weight | 1 | Proportion of somatic deviation to include in fitted purity score.
-highly_diploid_percentage | 0.97 | Proportion of genome that must be diploid before using somatic fit.
-
-### Example Usage
-
-```
-java -jar purple.jar \
-   -reference COLO829R \
-   -tumor COLO829T \
-   -output_dir /path/to/COLO829/purple \
-   -amber /path/to/COLO829/amber \
-   -cobalt /path/to/COLO829/cobalt \
-   -gc_profile /path/to/GC_profile.hg19.1000bp.cnp \
-   -somatic_vcf /path/to/COLO829/COLO829.somatic.vcf.gz \
-   -structural_vcf /path/to/COLO829/COLO829.sv.vcf.gz \
-   -sv_recovery_vcf /path/to/COLO829/COLO829.sv.all.vcf.gz \
-   -circos /path/to/circos-0.69-5/bin/circos \
-   -db_enabled -db_user build -db_pass build -db_url mysql://localhost:3306/hmfpatients?serverTimezone=UTC
-```
-
-Note that it is possible to supply a run_dir parameter in which case default values of the amber, cobalt and output_dir parameters will become <run_dir>/amber, <run_dir>/cobalt and <run_dir>/purple respectively.
-It is still possible to override these default parameters but supplying a value, ie:
-
-```
-java -jar purple.jar \
-   -reference COLO829R \
-   -tumor COLO829T \
-   -run_dir /path/to/COLO829 \
-   -output_dir /path/to/COLO829/purple_pilot \
-   -gc_profile /Users/jon/hmf/analyses/COLO829/GC_profile.1000bp.cnp 
-```
-
-In this case the output_directory will be set to `/path/to/COLO829/purple_pilot` while the amber and cobalt parameters will have the default values `/path/to/COLO829/amber` and `/path/to/COLO829/cobalt`.
-
-## Performance Characteristics
-Performance numbers were taken from a 72 core machine using COLO829 data including generation of CIRCOS diagram but excluding database writing.
-Elapsed time is measured in minutes. 
-CPU time is minutes spent in user mode. 
-Peak memory is measure in gigabytes.
-
-PURPLE has the following characteristics:
-
-Threads | Elapsed Time| CPU Time | Peak Mem
----|---|---|---
-1 | 1.5 | 3 | 4.13
-2 | 1 | 3 | 4.18
-4 | 1 | 3 | 4.38
 
 ## Output
 
@@ -453,6 +441,20 @@ Minor allele copy numbers above 1 (blue) indicate amplification events of both A
 
 The innermost circle displays the observed structural variants within or between the chromosomes. 
 Translocations are indicated in blue, deletions in red, insertions in yellow, tandem duplications in green and inversions in black.
+
+## Performance Characteristics
+Performance numbers were taken from a 72 core machine using COLO829 data including generation of CIRCOS diagram but excluding database writing.
+Elapsed time is measured in minutes. 
+CPU time is minutes spent in user mode. 
+Peak memory is measure in gigabytes.
+
+PURPLE has the following characteristics:
+
+Threads | Elapsed Time| CPU Time | Peak Mem
+---|---|---|---
+1 | 1.5 | 3 | 4.13
+2 | 1 | 3 | 4.18
+4 | 1 | 3 | 4.38
 
 
 ## Version History
