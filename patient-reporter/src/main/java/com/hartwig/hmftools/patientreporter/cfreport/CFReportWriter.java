@@ -4,14 +4,10 @@ import com.hartwig.hmftools.patientreporter.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.QCFailReport;
 import com.hartwig.hmftools.patientreporter.ReportWriter;
 import com.hartwig.hmftools.patientreporter.cfreport.components.Footer;
-import com.hartwig.hmftools.patientreporter.cfreport.components.Header;
-import com.itextpdf.io.image.ImageData;
-import com.itextpdf.io.image.ImageDataFactory;
 import com.itextpdf.kernel.events.PdfDocumentEvent;
 import com.itextpdf.kernel.geom.PageSize;
 import com.itextpdf.kernel.pdf.PdfDocument;
 import com.itextpdf.kernel.pdf.PdfWriter;
-import com.itextpdf.kernel.pdf.xobject.PdfImageXObject;
 import com.itextpdf.layout.Document;
 import com.itextpdf.layout.element.AreaBreak;
 import com.itextpdf.layout.element.Paragraph;
@@ -19,13 +15,9 @@ import com.itextpdf.layout.property.AreaBreakType;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
-import sun.misc.IOUtils;
 
-import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
-import java.net.MalformedURLException;
 import java.nio.file.Files;
 
 public class CFReportWriter implements ReportWriter {
@@ -54,9 +46,6 @@ public class CFReportWriter implements ReportWriter {
             pageEvents.setPageMode(PageEventHandler.PageMode.SummaryPage);
             document.addEventHandler(PdfDocumentEvent.START_PAGE, pageEvents);
 
-            // Load resources (images and fonts)
-            Header.loadHmfLogo(this.getClass().getClassLoader());
-
             // Add summary page
             report.add(new Paragraph("Summary"));
 
@@ -76,6 +65,7 @@ public class CFReportWriter implements ReportWriter {
         } catch (IOException e) {
             e.printStackTrace();
         }
+
     }
 
     /**
@@ -106,15 +96,15 @@ public class CFReportWriter implements ReportWriter {
         // Create PDF with metadata
         final PdfDocument pdf = new PdfDocument(new PdfWriter(outputFilePath));
         pdf.setDefaultPageSize(PageSize.A4);
-        pdf.getDocumentInfo().setTitle(ReportConfiguration.METADATA_TITLE);
-        pdf.getDocumentInfo().setAuthor(ReportConfiguration.METADATA_AUTHOR);
+        pdf.getDocumentInfo().setTitle(ReportResources.METADATA_TITLE);
+        pdf.getDocumentInfo().setAuthor(ReportResources.METADATA_AUTHOR);
 
         // Create document
         final Document document = new Document(pdf);
-        document.setMargins(ReportConfiguration.PAGE_MARGIN_LEFT,
-                ReportConfiguration.PAGE_MARGIN_RIGHT,
-                ReportConfiguration.PAGE_MARGIN_TOP,
-                ReportConfiguration.PAGE_MARGIN_BOTTOM);
+        document.setMargins(ReportResources.PAGE_MARGIN_LEFT,
+                ReportResources.PAGE_MARGIN_RIGHT,
+                ReportResources.PAGE_MARGIN_TOP,
+                ReportResources.PAGE_MARGIN_BOTTOM);
 
         return document;
     }

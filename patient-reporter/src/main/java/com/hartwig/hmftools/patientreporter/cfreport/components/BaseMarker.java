@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.patientreporter.cfreport.components;
 
-import com.hartwig.hmftools.patientreporter.cfreport.ReportConfiguration;
+import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
 import com.itextpdf.kernel.colors.DeviceRgb;
 import com.itextpdf.kernel.pdf.canvas.PdfCanvas;
 import org.jetbrains.annotations.NotNull;
@@ -11,7 +11,7 @@ import java.util.Random;
  * Class to draw a rounded rectangle (as DNA Base reference) for both the footer and the
  * side panel
  */
-public class BaseMarker {
+public final class BaseMarker {
 
     private static final float WIDTH = 12.3f;
     private static final float HEIGHT = 1.9f;
@@ -71,7 +71,7 @@ public class BaseMarker {
 
                 float x = xStart + col * xSpacing;
                 float y = yStart + row * ySpacing;
-                DeviceRgb color = (r.nextFloat() < redProbability) ? ReportConfiguration.PALETTE_RED : ReportConfiguration.PALETTE_CYAN;
+                DeviceRgb color = (r.nextFloat() < redProbability) ? ReportResources.PALETTE_RED : ReportResources.PALETTE_CYAN;
                 boolean filled = (r.nextFloat() < filledProbability);
 
                 drawMarker(x, y, color, filled, canvas);

@@ -1,13 +1,13 @@
 package com.hartwig.hmftools.patientreporter.cfreport.components;
 
 import com.hartwig.hmftools.patientreporter.cfreport.PageEventHandler;
-import com.hartwig.hmftools.patientreporter.cfreport.ReportConfiguration;
+import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
 import com.itextpdf.kernel.geom.Rectangle;
 import com.itextpdf.kernel.pdf.PdfPage;
 import com.itextpdf.kernel.pdf.canvas.PdfCanvas;
 import org.jetbrains.annotations.NotNull;
 
-public class SidePanel {
+public final class SidePanel {
 
     public static void addSidePanel(PdfPage page, PageEventHandler.PageMode pageMode) {
 
@@ -37,7 +37,7 @@ public class SidePanel {
         final float RECTANGLE_HEIGHT_SHORT = 110;    // Height of the blue rectangle in pt when not full page height
 
         canvas.rectangle(pageSize.getWidth(), pageSize.getHeight(), -RECTANGLE_WIDTH, fullHeight ? -pageSize.getHeight() : -RECTANGLE_HEIGHT_SHORT);
-        canvas.setFillColor(ReportConfiguration.PALETTE_BLUE);
+        canvas.setFillColor(ReportResources.PALETTE_BLUE);
         canvas.fill();
 
     }

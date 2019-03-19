@@ -10,7 +10,7 @@ import com.itextpdf.layout.Canvas;
 import com.itextpdf.layout.element.Paragraph;
 import com.itextpdf.layout.property.TextAlignment;
 
-public class Footer {
+public final class Footer {
 
     // Total page count template
     private static final float PAGECOUNT_WIDTH = 20;
