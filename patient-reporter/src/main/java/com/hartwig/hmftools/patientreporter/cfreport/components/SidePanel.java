@@ -9,18 +9,22 @@ import org.jetbrains.annotations.NotNull;
 
 public final class SidePanel {
 
-    public static void addSidePanel(PdfPage page, PageEventHandler.PageMode pageMode) {
+    public static void addSidePanel(PdfPage page, boolean fullHeight, boolean fullContent) {
 
         // Draw background and markers
         final PdfCanvas canvas = new PdfCanvas(page.getLastContentStream(), page.getResources(), page.getDocument());
         final Rectangle pageSize = page.getPageSize();
-        final boolean fullHeight = (pageMode == PageEventHandler.PageMode.SummaryPage || pageMode == PageEventHandler.PageMode.ClosingPage);
 
         drawBackgroundRect(fullHeight, canvas, pageSize);
         BaseMarker.drawMarkerGrid(4, (fullHeight ? 20 : 2),455, 35, fullHeight ? 22 : 775, 42, .05f, .15f, canvas);
         canvas.release();
 
         // @TODO Add sidepanel content from SampleReport
+        if (fullHeight && fullContent) {
+
+        } else {
+
+        }
 
     }
 

@@ -3,10 +3,8 @@ package com.hartwig.hmftools.patientreporter.cfreport;
 import com.hartwig.hmftools.patientreporter.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.QCFailReport;
 import com.hartwig.hmftools.patientreporter.ReportWriter;
+import com.hartwig.hmftools.patientreporter.cfreport.chapters.*;
 import com.hartwig.hmftools.patientreporter.cfreport.components.Footer;
-import com.hartwig.hmftools.patientreporter.cfreport.components.tables.EvidenceTable;
-import com.hartwig.hmftools.patientreporter.cfreport.components.tables.TableCell;
-import com.hartwig.hmftools.patientreporter.cfreport.components.tables.TableHeaderCell;
 import com.itextpdf.kernel.events.PdfDocumentEvent;
 import com.itextpdf.kernel.geom.PageSize;
 import com.itextpdf.kernel.pdf.PdfDocument;
@@ -14,9 +12,7 @@ import com.itextpdf.kernel.pdf.PdfWriter;
 import com.itextpdf.layout.Document;
 import com.itextpdf.layout.element.AreaBreak;
 import com.itextpdf.layout.element.Paragraph;
-import com.itextpdf.layout.element.Table;
 import com.itextpdf.layout.property.AreaBreakType;
-import com.itextpdf.layout.property.UnitValue;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -43,33 +39,24 @@ public class CFReportWriter implements ReportWriter {
 
         try {
 
+            // Initialize report with metadata
             final Document report = initializeReport(outputFilePath);
             final PdfDocument document = report.getPdfDocument();
 
             // Setup page event handling (used for automatic generation of header, sidepanel and footer)
-            PageEventHandler pageEvents = new PageEventHandler();
-            pageEvents.setPageMode(PageEventHandler.PageMode.SummaryPage);
-            document.addEventHandler(PdfDocumentEvent.START_PAGE, pageEvents);
+            PageEventHandler pageEventHandler = new PageEventHandler();
+            document.addEventHandler(PdfDocumentEvent.START_PAGE, pageEventHandler);
 
-            // Add summary page
-            report.add(new Paragraph("Summary").addStyle(ReportResources.chapterTitleStyle()));
+            // Add chapters
+            new SummaryChapter().render(pageEventHandler, report);
+            new TherapyDetailsChapter().render(pageEventHandler, report);
+            new ActionableOrDriversChapter().render(pageEventHandler, report);
+            new TumorCharacteristicsChapter().render(pageEventHandler, report);
+            new CircosChapter().render(pageEventHandler, report);
+            new ExplanationChapter().render(pageEventHandler, report);
+            new DetailsAndDisclaimerChapter().render(pageEventHandler, report);
 
-            // Add intermediate pages
-            pageEvents.setPageMode(PageEventHandler.PageMode.ContentPage);
-            report.add(new AreaBreak(AreaBreakType.NEXT_PAGE));
-            report.add(new Paragraph("Therapy details").addStyle(ReportResources.chapterTitleStyle()));
-
-            EvidenceTable et = new EvidenceTable();
-            for (int i = 0; i < 10; i++) {
-                et.addRow("BRAF p.Val600Glu", "Specific", "Binimetinib + Encorafenib", "A", "Responsive", "OncoKB");
-            }
-            report.add(et.getTable());
-
-            // Add closing page
-            pageEvents.setPageMode(PageEventHandler.PageMode.ClosingPage);
-            report.add(new AreaBreak(AreaBreakType.NEXT_PAGE));
-            report.add(new Paragraph("Sample details & disclaimer").addStyle(ReportResources.chapterTitleStyle()));
-
+            // Update total page count on pages and close document
             Footer.writeTotalPageCount(document);
             report.close();
 

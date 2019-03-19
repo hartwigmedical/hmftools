@@ -10,16 +10,12 @@ import com.itextpdf.kernel.pdf.PdfPage;
 
 public class PageEventHandler implements IEventHandler {
 
-    public enum PageMode {
-        SummaryPage,        // Full height sidepanel, full content
-        ClosingPage,        // Full height sidepanel, just ID and report date
-        ContentPage         // Short sidepanel with just ID and report date
-    };
+    private boolean fullSidebar = true;
+    private boolean fullSidebarContent = true;
 
-    private PageMode pageMode = PageMode.SummaryPage;
-
-    public void setPageMode(PageMode pageMode) {
-        this.pageMode = pageMode;
+    public void setSidebarType(boolean full, boolean fullContent) {
+        fullSidebar = full;
+        fullSidebarContent = fullSidebar ? fullContent : false;
     }
 
     @Override
@@ -32,8 +28,8 @@ public class PageEventHandler implements IEventHandler {
 
             // Add sidepanel and footer to new page
             Header.addHeader(page);
-            SidePanel.addSidePanel(page, pageMode);
-            Footer.addFooter(page, pageMode);
+            SidePanel.addSidePanel(page, fullSidebar, fullSidebarContent);
+            Footer.addFooter(page, !fullSidebar);
 
         }
 

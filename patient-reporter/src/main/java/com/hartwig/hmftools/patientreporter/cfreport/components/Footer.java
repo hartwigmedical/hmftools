@@ -21,7 +21,7 @@ public final class Footer {
     private static final float PAGECOUNT_DESCENT = 0;
     private static final PdfFormXObject PAGECOUNT_PLACEHOLDER = new PdfFormXObject(new Rectangle(0, 0, PAGECOUNT_WIDTH, PAGECOUNT_HEIGHT));
 
-    public static void addFooter(PdfPage page, PageEventHandler.PageMode pageMode) {
+    public static void addFooter(PdfPage page, boolean fullWidth) {
 
         final PdfCanvas canvas = new PdfCanvas(page.getLastContentStream(), page.getResources(), page.getDocument());
 
@@ -33,7 +33,6 @@ public final class Footer {
         canvas.addXObject(PAGECOUNT_PLACEHOLDER, PAGECOUNT_X + PAGECOUNT_HSPACING, PAGECOUNT_Y - PAGECOUNT_DESCENT);
 
         // Draw markers
-        final boolean fullWidth = (pageMode != PageEventHandler.PageMode.SummaryPage && pageMode != PageEventHandler.PageMode.ClosingPage);
         BaseMarker.drawMarkerGrid(fullWidth ? 5 : 3,1,156, 87, 22, 0, .2f, 0, canvas);
 
         canvas.release();
