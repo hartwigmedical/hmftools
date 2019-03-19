@@ -42,7 +42,6 @@ public abstract class ViccFactory {
                 LOGGER.info(object.keySet());
                 if (index == 0) {
                     //                    LOGGER.info(object.getAsJsonObject("features").keySet()); // Set of keys
-                    //                    LOGGER.info(object.getAsJsonObject("dev_tags").keySet()); // Set of keys
                     writer.append(object.getAsJsonObject("brca").keySet().toString());
                     writer.append(",genes");
                     writer.append(",tags");
@@ -141,6 +140,23 @@ public abstract class ViccFactory {
                 JsonArray arrayDevTags = object.getAsJsonArray("dev_tags");
                 StringToCSVBRCA.append(arrayDevTags).append(";");// merge 1 object to string
 
+                //features
+                JsonArray arrayFeatures = object.getAsJsonArray("features");
+                JsonObject objectFeatures = (JsonObject) arrayFeatures.iterator().next();
+                for (int i = 0; i < objectFeatures.keySet().size(); i++) {
+                    List<String> keysOfFeaturesObject = new ArrayList<>(objectFeatures.keySet());
+
+                    if (keysOfFeaturesObject.get(i).equals("sequence_ontology")) {
+                        List<String> keysOfSequenceOntologyObject =
+                                new ArrayList<>(objectFeatures.getAsJsonObject("sequence_ontology").keySet());
+
+                        for (int e = 0; e < objectFeatures.getAsJsonObject("sequence_ontology").keySet().size(); e++) {
+                            LOGGER.info(objectFeatures.get("sequence_ontology").getAsJsonObject().get(keysOfSequenceOntologyObject.get(e)));
+                        }
+                    } else {
+                        LOGGER.info(objectFeatures.get(keysOfFeaturesObject.get(i)));
+                    }
+                }
                 index++;
                 writer.append(StringToCSVBRCA);
                 writer.append("\n");
