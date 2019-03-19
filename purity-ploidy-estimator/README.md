@@ -342,7 +342,7 @@ A HG38 equivalent is also available.
 
 Argument | Default | Description 
 ---|---|---
-run_dir | If provided, default values of <run_dir>/amber, <run_dir>/cobalt and <run_dir>/purple will be supplied for amber, cobalt and output_dir parameters respectively.
+run_dir | None | If provided, default values of <run_dir>/amber, <run_dir>/cobalt and <run_dir>/purple will be supplied for amber, cobalt and output_dir parameters respectively.
 threads | 2 | Number of threads to use.
 somatic_min_peak | 100 | Minimum number of somatic variants to consider a peak.
 somatic_min_total | 1000 | Minimum number of somatic variants required to assist highly diploid fits.
