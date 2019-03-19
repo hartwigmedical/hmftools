@@ -8,13 +8,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.stream.JsonReader;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.immutables.value.internal.$processor$.$Generator_Modifiables;
 import org.jetbrains.annotations.NotNull;
 
 public abstract class ViccFactory {
@@ -44,7 +44,6 @@ public abstract class ViccFactory {
                     //                    LOGGER.info(object.getAsJsonObject("features").keySet()); // Set of keys
                     //                    LOGGER.info(object.getAsJsonObject("dev_tags").keySet()); // Set of keys
                     //                    LOGGER.info(object.getAsJsonObject("feature_names").keySet()); // Set of keys
-                    //                    LOGGER.info(object.getAsJsonObject("association").keySet()); // Set of keys
                     writer.append(object.getAsJsonObject("brca").keySet().toString());
                     writer.append(",genes");
                     writer.append(",tags");
@@ -82,18 +81,69 @@ public abstract class ViccFactory {
                     StringToCSVBRCA.append(objectGeneIdentiefiers.get(keysOfGeneIdentifiersObject.get(i))).append(";");
                 }
 
-            index++;
-            writer.append(StringToCSVBRCA);
-            writer.append("\n");
-        }
-    } catch(
-    IOException e)
+                //association
+                for (int i = 0; i < object.getAsJsonObject("association").keySet().size(); i++) {
+                    List<String> keysOfAssocationObject = new ArrayList<>(object.getAsJsonObject("association").keySet());
+                    if (keysOfAssocationObject.get(i).equals("description")) {
+                        JsonElement description = object.getAsJsonObject("association").get(keysOfAssocationObject.get(i));
+                        LOGGER.info(description);
+                    } else if (keysOfAssocationObject.get(i).equals("evidence")) {
+                        JsonElement elementEvidence = object.getAsJsonObject("association").get("evidence");
+                        JsonArray arrayEvidence = elementEvidence.getAsJsonArray();
+                        JsonObject objectEvidence = (JsonObject) arrayEvidence.iterator().next();
+                        for (int a = 0; a < objectEvidence.keySet().size(); a++) {
+                            List<String> keysOfEvidenceObject = new ArrayList<>(objectEvidence.keySet());
+                            if (keysOfEvidenceObject.get(a).equals("evidenceType")) {
+                                for (int b = 0; b < objectEvidence.get("evidenceType").getAsJsonObject().keySet().size(); b++) {
+                                    List<String> keysOfEvidenceTypeObject =
+                                            new ArrayList<>(objectEvidence.get("evidenceType").getAsJsonObject().keySet());
+                                    LOGGER.info(objectEvidence.get("evidenceType").getAsJsonObject().get(keysOfEvidenceTypeObject.get(b)));
 
-    {
-        e.printStackTrace();
-    }
+                                }
+                            } else {
+                                JsonElement info = objectEvidence.get(keysOfEvidenceObject.get(a));
+                                LOGGER.info(info);
+                            }
+                        }
+                    } else if (keysOfAssocationObject.get(i).equals("environmentalContexts")) {
+                        JsonElement elementEnvironmentalContexts = object.getAsJsonObject("association").get("environmentalContexts");
+                        LOGGER.info(elementEnvironmentalContexts);
+                    } else if (keysOfAssocationObject.get(i).equals("evidence_label")) {
+                        JsonElement evidence_label = object.getAsJsonObject("association").get(keysOfAssocationObject.get(i));
+                        LOGGER.info(evidence_label);
+                    } else if (keysOfAssocationObject.get(i).equals("phenotype")) {
+                        JsonElement elementPhenotype = object.getAsJsonObject("association").get("phenotype");
+                        LOGGER.info(elementPhenotype.getAsJsonObject().keySet());
+                        for (int a = 0; a < elementPhenotype.getAsJsonObject().keySet().size(); a++) {
+                            List<String> keysOfPhenotypeObject = new ArrayList<>(elementPhenotype.getAsJsonObject().keySet());
+                            LOGGER.info(keysOfPhenotypeObject.get(a));
+                            if (keysOfPhenotypeObject.get(a).equals("type")) {
+                                List<String> keysOfPhenotypeTypeObject =
+                                        new ArrayList<>(elementPhenotype.getAsJsonObject().get("type").getAsJsonObject().keySet());
+                                for (int c = 0; c < keysOfPhenotypeObject.size(); c++) {
+                                    LOGGER.info(elementPhenotype.getAsJsonObject()
+                                            .get("type")
+                                            .getAsJsonObject()
+                                            .get(keysOfPhenotypeTypeObject.get(c)));
+                                }
+                            } else {
+                                JsonElement elemtPhenotype = elementPhenotype.getAsJsonObject().get(keysOfPhenotypeObject.get(a));
+                            }
+                        }
+                    } else if (keysOfAssocationObject.get(i).equals("oncogenic")) {
+                        JsonElement oncogenic = object.getAsJsonObject("association").get(keysOfAssocationObject.get(i));
+                        LOGGER.info(oncogenic);
+                    }
+                }
+                index++;
+                writer.append(StringToCSVBRCA);
+                writer.append("\n");
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         writer.close();
-}
+    }
 
     private static void writeToCsvFile(@NotNull String csvFormatString, @NotNull PrintWriter writer) throws IOException {
         writer.append(csvFormatString);
