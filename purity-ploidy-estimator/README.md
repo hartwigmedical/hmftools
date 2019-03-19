@@ -344,8 +344,6 @@ Argument | Default | Description
 ---|---|---
 run_dir | None | If provided, default values of <run_dir>/amber, <run_dir>/cobalt and <run_dir>/purple will be supplied for amber, cobalt and output_dir parameters respectively.
 threads | 2 | Number of threads to use.
-somatic_min_peak | 100 | Minimum number of somatic variants to consider a peak.
-somatic_min_total | 1000 | Minimum number of somatic variants required to assist highly diploid fits.
 somatic_vcf | None | Optional location of somatic variants vcf.  Sample name must match tumor parameter. GZ files supported.
 structural_vcf | None | Optional location of structural variants vcf. Sample name must match tumor parameter. GZ files supported.
 sv_recovery_vcf | None | Optional location of structural variants recovery vcf. Sample name must match tumor parameter. GZ files supported.
@@ -355,6 +353,18 @@ db_user | None | Database username. Mandatory if db_enabled.
 db_pass | None | Database password. Mandatory if db_enabled.
 db_url | None | Database URL. Should be of format: `mysql://localhost:3306/hmfpatients`. Mandatory if db_enabled.
 ref_genome | Detect | Will attempt to detect reference genome from COBALT output but failing that must be either hg18 or hg38.
+
+#### Optional Somatic Fit Arguments
+The following arguments control the somatic fit. Changing these values without a through understanding of the system is not recommended.
+
+Argument | Default | Description 
+---|---|---
+somatic_min_peak | 50 | Minimum number of somatic variants to consider a peak.
+somatic_min_total | 300 | Minimum number of somatic variants required to assist highly diploid fits.
+somatic_min_purity_spread | 0.15 | Minimum spread within candidate purities before somatics can be used.
+somatic_min_purity | 0.17 | Somatic fit will not be used if both somatic and fitted purities are less than this value.
+somatic_deviation_weight | 1 | Proportion of somatic deviation to include in fitted purity score.
+highly_diploid_percentage | 0.97 | Proportion of genome that must be diploid before using somatic fit.
 
 ### Example Usage
 

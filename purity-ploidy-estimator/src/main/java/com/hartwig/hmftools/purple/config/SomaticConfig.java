@@ -40,11 +40,11 @@ public interface SomaticConfig {
     static void addOptions(@NotNull Options options) {
         options.addOption(SOMATIC_MIN_PEAK, true, "Minimum number of somatic variants to consider a peak. Default 50.");
         options.addOption(SOMATIC_MIN_TOTAL, true, "Minimum number of somatic variants required to assist highly diploid fits. Default 300.");
-        options.addOption(SOMATIC_MIN_PURITY, true, "Somatic purities below this minimum will not be used. Default 0.16");
-        options.addOption(SOMATIC_MIN_PURITY_SPREAD, true, "Minimum purity spread before somatics can be used. Default 0.15");
+        options.addOption(SOMATIC_MIN_PURITY, true, "Somatic fit will not be used if both somatic and fitted purities are less than this value. Default 0.17");
+        options.addOption(SOMATIC_MIN_PURITY_SPREAD, true, "Minimum spread within candidate purities before somatics can be used. Default 0.15");
         options.addOption(SOMATIC_VARIANTS, true, "Optional location of somatic variant vcf to assist fitting in highly-diploid samples.");
-        options.addOption(SOMATIC_DEVIATION_WEIGHT, true, "SOMATIC_DEVIATION_WEIGHT");
-        options.addOption(HIGHLY_DIPLOID_PERCENTAGE, true, "HIGHLY_DIPLOID_PERCENTAGE");
+        options.addOption(SOMATIC_DEVIATION_WEIGHT, true, "Proportion of somatic deviation to include in fitted purity score. Default 1.");
+        options.addOption(HIGHLY_DIPLOID_PERCENTAGE, true, "Proportion of genome that must be diploid before using somatic fit. Default 0.97.");
     }
 
     Optional<File> file();
