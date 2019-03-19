@@ -33,6 +33,7 @@ import com.hartwig.hmftools.common.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.collect.Multimaps;
 import com.hartwig.hmftools.common.region.BEDFileLoader;
 import com.hartwig.hmftools.common.region.GenomeRegion;
+import com.hartwig.hmftools.common.version.VersionInfo;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -54,6 +55,7 @@ public class AmberApplication implements AutoCloseable {
     private final Predicate<BaseDepth> homozygousFilter;
     private final Predicate<BaseDepth> heterozygousFilter;
     private final AmberPersistence persistence;
+    private final VersionInfo versionInfo;
 
     public static void main(final String... args) throws IOException, InterruptedException, ExecutionException {
         final Options options = AmberConfig.createOptions();
@@ -68,6 +70,8 @@ public class AmberApplication implements AutoCloseable {
     }
 
     private AmberApplication(final Options options, final String... args) throws IOException, ParseException {
+        versionInfo = new VersionInfo("amber.version");
+        LOGGER.info("AMBER version: {}", versionInfo.version());
 
         final CommandLine cmd = createCommandLine(args, options);
         config = AmberConfig.createConfig(cmd);
@@ -115,7 +119,7 @@ public class AmberApplication implements AutoCloseable {
         final List<TumorContamination> contaminationList = Lists.newArrayList(tumorContamination.values());
 
         persistence.persisQC(amberBAFList, contaminationList);
-        persistence.persistVersionInfo();
+        persistence.persistVersionInfo(versionInfo);
         persistence.persistContamination(contaminationList);
         persistence.persistTumorBAF(tumorBAFList);
         persistence.persistAmberBAF(amberBAFList);
