@@ -60,10 +60,6 @@ java -Xmx32G -cp amber.jar com.hartwig.hmftools.amber.AmberApplication \
    -bed /path/to/GermlineHetPon.hg19.bed.gz 
 ```
 
-Please note the PURPLE jar file also contains the AMBER source so may be used in place of the AMBER jar file in the example above, i.e.:
-```
-java -Xmx48G -cp purple.jar com.hartwig.hmftools.amber.AmberApplication
-```
 
 ## Performance Characteristics
 Performance numbers were taken from a 72 core machine using COLO829 data with an average read depth of 35 and 93 in the normal and tumor respectively. 
@@ -151,3 +147,12 @@ java -cp amber.jar com.hartwig.hmftools.amber.pileup.AmberFromPileupApplication 
     -reference /path/to/mpileup/REFERENCE.mpileup \
     -tumor /path/to/mpileup/TUMOR.mpileup
 ```
+
+## Version History
+
+- 2.2 
+  - Fixed typo in header of TUMOR.amber.baf file.
+- 2.1
+  - Add statistical contamination check.
+- 2.0
+  - Read directly from bams without intermidiary pileup step for significant performance improvements. 
