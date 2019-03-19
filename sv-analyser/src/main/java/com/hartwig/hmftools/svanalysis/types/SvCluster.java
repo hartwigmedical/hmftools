@@ -464,7 +464,6 @@ public class SvCluster
                 addChain(chain, true);
             }
         }
-
     }
 
     private void addVariantLists(final SvCluster other)
@@ -479,6 +478,11 @@ public class SvCluster
         mInversions.addAll(other.getInversions());
         mFoldbacks.addAll(other.getFoldbacks());
         mLongDelDups.addAll(other.getLongDelDups());
+    }
+
+    public void addClusterReason(final String reason, final String linkingVarId)
+    {
+        mSVs.forEach(x -> x.addClusterReason(reason, linkingVarId));
     }
 
     public boolean isConsistent()

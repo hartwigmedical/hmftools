@@ -840,11 +840,6 @@ public class ClusterAnnotations
             double telomereMinFacingPloidy = Double.NaN;
             double centromereMinFacingPloidy = Double.NaN;
 
-            if(chromosome.equals("16") && arm.equals(CHROMOSOME_ARM_Q))
-            {
-                LOGGER.debug("spec chr and arm");
-            }
-
             List<SvBreakend> clusterBreakendList = cluster.getChrBreakendMap().get(chromosome);
 
             for(int i = 0; i < clusterBreakendList.size(); ++i)

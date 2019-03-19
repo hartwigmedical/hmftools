@@ -11,6 +11,7 @@ import static com.hartwig.hmftools.common.variant.structural.StructuralVariantTy
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INS;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INV;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
+import static com.hartwig.hmftools.svanalysis.analysis.CNAnalyser.CN_SEG_DATA_CN_BEFORE;
 import static com.hartwig.hmftools.svanalysis.analysis.ClusterAnnotations.DOUBLE_MINUTES;
 import static com.hartwig.hmftools.svanalysis.analysis.ClusterAnnotations.FOLDBACK_MATCHES;
 import static com.hartwig.hmftools.svanalysis.analysis.ClusterAnnotations.REPLICATION_REPAIR;
@@ -27,9 +28,10 @@ import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.CLUST
 import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.CLUSTER_REASON_FOLDBACKS;
 import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.CLUSTER_REASON_LOH_CHAIN;
 import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.CLUSTER_REASON_LOOSE_OVERLAP;
+import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.CLUSTER_REASON_NET_ARM_CN;
 import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.CLUSTER_REASON_PLOIDY_MAP;
-import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.addClusterReason;
 import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.applyCopyNumberReplication;
+import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.CHROMOSOME_ARM_P;
 import static com.hartwig.hmftools.svanalysis.annotators.LineElementAnnotator.markLineCluster;
 import static com.hartwig.hmftools.svanalysis.types.SvArmCluster.mergeArmClusters;
 import static com.hartwig.hmftools.svanalysis.types.SvChain.CHAIN_ASSEMBLY_LINK_COUNT;
@@ -45,15 +47,12 @@ import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_SGL_
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_SIMPLE_SV;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.copyNumbersEqual;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.areSpecificClusters;
-import static com.hartwig.hmftools.svanalysis.types.SvCluster.isSpecificCluster;
 import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.ASSEMBLY_MATCH_MATCHED;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_END;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_START;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.haveSameChrArms;
-import static com.hartwig.hmftools.svanalysis.types.SvVarData.isSpecificSV;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.isStart;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -481,6 +480,9 @@ public class ClusterAnalyser {
         if(mergePloidyResolvingClusters())
             foundClustersToMerge = true;
 
+        if(mergeNetCopyNumberResolvingClusters())
+            foundClustersToMerge = true;
+
         return foundClustersToMerge;
     }
 
@@ -550,10 +552,10 @@ public class ClusterAnalyser {
                                     cluster.id(), breakend.getSV().posId(), resolvingCluster.id(), resolvingBreakend.toString(),
                                     String.format("%.2f -> %.2f", breakendPloidy, majorAP));
 
-                            cluster.mergeOtherCluster(resolvingCluster);
+                            resolvingCluster.addClusterReason(CLUSTER_REASON_PLOIDY_MAP, breakend.getSV().id());
+                            cluster.addClusterReason(CLUSTER_REASON_PLOIDY_MAP, nextBreakend.getSV().id());
 
-                            addClusterReason(resolvingCluster, CLUSTER_REASON_PLOIDY_MAP, breakend.getSV().id());
-                            addClusterReason(cluster, CLUSTER_REASON_PLOIDY_MAP, nextBreakend.getSV().id());
+                            cluster.mergeOtherCluster(resolvingCluster);
 
                             mergedClusters.add(resolvingCluster);
 
@@ -608,25 +610,28 @@ public class ClusterAnalyser {
 
                 for(int be = SVI_START; be <= SVI_END; ++be)
                 {
-                    SvBreakend breakend = lohEvent.getBreakend(isStart(be));
+                    SvBreakend lohBreakend = lohEvent.getBreakend(isStart(be));
 
-                    if(breakend == null || breakend.getSV().type() != DUP)
+                    if(lohBreakend == null || lohBreakend.getSV().type() != DUP)
                         continue;
 
                     // walk towards the LOH from the other end of this DUP to see if it can find a resolving event within the cluster
-                    List<SvBreakend> breakendList = mClusteringMethods.getChrBreakendMap().get(breakend.chromosome());
+                    List<SvBreakend> fullBreakendList = mClusteringMethods.getChrBreakendMap().get(lohBreakend.chromosome());
 
-                    SvBreakend otherBreakend = breakend.getOtherBreakend();
+                    SvBreakend otherBreakend = lohBreakend.getOtherBreakend();
                     int index = otherBreakend.getChrPosIndex();
                     boolean traverseUp = otherBreakend.orientation() == -1;
 
-                    while(index <= 0 || index < breakendList.size())
+                    while(true)
                     {
                         index += traverseUp ? 1 : -1;
 
-                        SvBreakend nextBreakend = breakendList.get(index);
+                        if(index < 0 || index >= fullBreakendList.size())
+                            break;
 
-                        if(nextBreakend == breakend)
+                        SvBreakend nextBreakend = fullBreakendList.get(index);
+
+                        if(nextBreakend == lohBreakend)
                             break;
 
                         if(nextBreakend.orientation() == otherBreakend.orientation())
@@ -637,12 +642,12 @@ public class ClusterAnalyser {
                             continue;
 
                         LOGGER.debug("cluster({}) SV({}) resolved prior to LOH by other cluster({}) breakend({})",
-                                lohCluster.id(), breakend.getSV().posId(), otherCluster.id(), otherBreakend.toString());
+                                lohCluster.id(), lohBreakend.getSV().posId(), otherCluster.id(), otherBreakend.toString());
+
+                        otherCluster.addClusterReason(CLUSTER_REASON_LOH_CHAIN, lohBreakend.getSV().id());
+                        lohCluster.addClusterReason(CLUSTER_REASON_LOH_CHAIN, nextBreakend.getSV().id());
 
                         lohCluster.mergeOtherCluster(otherCluster);
-
-                        addClusterReason(otherCluster, CLUSTER_REASON_LOH_CHAIN, breakend.getSV().id());
-                        addClusterReason(lohCluster, CLUSTER_REASON_LOH_CHAIN, nextBreakend.getSV().id());
 
                         mergedClusters.add(otherCluster);
 
@@ -651,6 +656,163 @@ public class ClusterAnalyser {
                 }
 
                 ++lohIndex;
+            }
+        }
+
+        if(mergedClusters.isEmpty())
+            return false;
+
+        mergedClusters.forEach(x -> mClusters.remove(x));
+        return true;
+    }
+
+    private boolean mergeNetCopyNumberResolvingClusters()
+    {
+        if(!mUseAllelePloidies)
+            return false;
+
+        // calculate the next CN change across all breakends on an arm
+        // if it needs to be resolved prior to the telomere or centromere and another cluster
+        // can help do that, then merge in that cluster
+
+        List<SvCluster> mergedClusters = Lists.newArrayList();
+
+        int clusterIndex = 0;
+        while(clusterIndex < mClusters.size())
+        {
+            SvCluster cluster = mClusters.get(clusterIndex);
+
+            if(mergedClusters.contains(cluster) || cluster.isResolved())
+            {
+                ++clusterIndex;
+                continue;
+            }
+
+            boolean mergedOtherClusters = false;
+
+            for (final Map.Entry<String, List<SvBreakend>> entry : cluster.getChrBreakendMap().entrySet())
+            {
+                final String chromosome = entry.getKey();
+                List<SvBreakend> breakendList = entry.getValue();
+                List<SvCNData> cnDataList = mCopyNumberAnalyser.getChrCnDataMap().get(chromosome);
+
+                if(cnDataList == null || cnDataList.isEmpty())
+                    return false;
+
+                List<SvBreakend> fullBreakendList = mClusteringMethods.getChrBreakendMap().get(entry.getKey());
+
+                // take note of arm breakend boundaries and the net CN change
+
+                SvBreakend lowerBreakend = null;
+                SvBreakend upperBreakend = null;
+                double netCNChange = 0;
+
+                String currentArm = "";
+
+                for (int i = 0; i < breakendList.size(); ++i)
+                {
+                    SvBreakend breakend = breakendList.get(i);
+
+                    if (currentArm != breakend.arm())
+                    {
+                        //reset for a new arm
+                        currentArm = breakend.arm();
+                        lowerBreakend = breakend;
+                        netCNChange = 0;
+
+                    }
+
+                    netCNChange += breakend.copyNumberChange();
+
+                    if (i < breakendList.size() - 1 && breakendList.get(i + 1).arm() != currentArm)
+                    {
+                        continue;
+                    }
+
+                    // end of an arm
+                    upperBreakend = breakend;
+
+                    // now look towards the telomere and centromere and work out there is likely a breakend missing
+                    // which would explain the net CN change
+
+                    if (netCNChange < 1)
+                        continue;
+
+                    double[] centromereCNData = mCopyNumberAnalyser.getCentromereCopyNumberData(chromosome, currentArm.equals(CHROMOSOME_ARM_P));
+
+                    SvCNData telemoreData = currentArm == CHROMOSOME_ARM_P ? cnDataList.get(0) : cnDataList.get(cnDataList.size() - 1);
+                    double telomereCN = telemoreData.CopyNumber;
+                    double telomereMAP = telemoreData.majorAllelePloidy();
+
+                    for(int j = 0; j <= 1; ++j)
+                    {
+                        boolean traverseUp = (j == 0);
+                        SvBreakend clusterBreakend = traverseUp ? upperBreakend : lowerBreakend;
+                        int index = clusterBreakend.getChrPosIndex();
+
+                        double clusterEndCopyNumber = clusterBreakend.copyNumber();
+                        double armEndCopyNumber = (traverseUp == (currentArm == CHROMOSOME_ARM_P)) ? centromereCNData[CN_SEG_DATA_CN_BEFORE]: telomereCN;
+
+                        if(armEndCopyNumber >= clusterEndCopyNumber - 1)
+                            continue;
+
+                        while(true)
+                        {
+                            index += traverseUp ? 1 : -1;
+
+                            if(index < 0 || index >= fullBreakendList.size())
+                                break;
+
+                            SvBreakend nextBreakend = fullBreakendList.get(index);
+
+                            if(nextBreakend.arm() != currentArm)
+                                break;
+
+                            SvCluster otherCluster = nextBreakend.getSV().getCluster();
+
+                            if(otherCluster.isResolved() || otherCluster == cluster || mergedClusters.contains(otherCluster))
+                                continue;
+
+                            if(nextBreakend.orientation() != clusterBreakend.orientation())
+                            {
+                                // candidate found
+                                LOGGER.debug("cluster({}) arm({}) outerBE({}) requires cluster({}) breakend({}) prior to CN drop({})",
+                                        cluster.id(), currentArm, clusterBreakend.toString(), otherCluster.id(), nextBreakend.toString(),
+                                        String.format("%.2f -> %.2f", clusterEndCopyNumber, armEndCopyNumber));
+
+                                otherCluster.addClusterReason(CLUSTER_REASON_NET_ARM_CN, clusterBreakend.getSV().id());
+                                cluster.addClusterReason(CLUSTER_REASON_NET_ARM_CN, nextBreakend.getSV().id());
+
+                                cluster.mergeOtherCluster(otherCluster);
+
+                                mergedClusters.add(otherCluster);
+
+                                mergedOtherClusters = true;
+                                break;
+
+                            }
+                        }
+
+                        // as soon as another cluster is merged in, must revaluate everything incuding clutser bounds and net CN change
+                        if(mergedOtherClusters)
+                            break;
+                    }
+
+                    if(mergedOtherClusters)
+                        break;
+                }
+
+                if(mergedOtherClusters)
+                    break;
+            }
+
+            if(mergedOtherClusters)
+            {
+                // repeat this cluster
+            }
+            else
+            {
+                ++clusterIndex;
             }
         }
 
@@ -704,8 +866,8 @@ public class ClusterAnalyser {
                             LOGGER.debug("cluster({}) SV({}) and cluster({}) SV({}) have foldbacks on same arm",
                                     cluster1.id(), var1.posId(), cluster2.id(), var2.posId());
 
-                            addClusterReason(cluster1, CLUSTER_REASON_FOLDBACKS, var2.id());
-                            addClusterReason(cluster2, CLUSTER_REASON_FOLDBACKS, var1.id());
+                            cluster1.addClusterReason(CLUSTER_REASON_FOLDBACKS, var2.id());
+                            cluster2.addClusterReason(CLUSTER_REASON_FOLDBACKS, var1.id());
                             return true;
                         }
                     }
@@ -761,8 +923,8 @@ public class ClusterAnalyser {
                     LOGGER.debug("cluster({}) foldback breakend({}) faces cluster({}) breakend({})",
                             foldbackCluster.id(), foldbackBreakend.toString(), otherCluster.id(), nextBreakend.toString());
 
-                    addClusterReason(foldbackCluster, CLUSTER_REASON_FOLDBACKS, nextBreakend.getSV().id());
-                    addClusterReason(otherCluster, CLUSTER_REASON_FOLDBACKS, var.id());
+                    foldbackCluster.addClusterReason(CLUSTER_REASON_FOLDBACKS, nextBreakend.getSV().id());
+                    otherCluster.addClusterReason(CLUSTER_REASON_FOLDBACKS, var.id());
 
                     return true;
                 }
@@ -854,8 +1016,8 @@ public class ClusterAnalyser {
 
                         final String commonArms = var1.id() + "_" + var2.id();
 
-                        addClusterReason(cluster1, CLUSTER_REASON_COMMON_ARMS, commonArms);
-                        addClusterReason(cluster2, CLUSTER_REASON_COMMON_ARMS, commonArms);
+                        cluster1.addClusterReason(CLUSTER_REASON_COMMON_ARMS, commonArms);
+                        cluster2.addClusterReason(CLUSTER_REASON_COMMON_ARMS, commonArms);
                         return true;
                     }
                 }
@@ -946,10 +1108,10 @@ public class ClusterAnalyser {
                         LOGGER.debug("cluster({}) breakends({} & {}) overlap cluster({}) breakend({})",
                                 cluster.id(), lowerBreakend.toString(), upperBreakend.toString(), otherCluster.id(), otherBreakend.toString());
 
-                        cluster.mergeOtherCluster(otherCluster);
+                        otherCluster.addClusterReason(CLUSTER_REASON_LOOSE_OVERLAP, lowerBreakend.getSV().id());
+                        cluster.addClusterReason(CLUSTER_REASON_LOOSE_OVERLAP, otherBreakend.getSV().id());
 
-                        addClusterReason(otherCluster, CLUSTER_REASON_LOOSE_OVERLAP, lowerBreakend.getSV().id());
-                        addClusterReason(cluster, CLUSTER_REASON_LOOSE_OVERLAP, otherBreakend.getSV().id());
+                        cluster.mergeOtherCluster(otherCluster);
 
                         mergedClusters.add(otherCluster);
 

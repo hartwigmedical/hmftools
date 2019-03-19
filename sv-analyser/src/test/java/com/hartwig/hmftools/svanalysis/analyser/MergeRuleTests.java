@@ -7,6 +7,7 @@ import static com.hartwig.hmftools.svanalysis.analyser.SvTestHelper.createIns;
 import static com.hartwig.hmftools.svanalysis.analyser.SvTestHelper.createInv;
 import static com.hartwig.hmftools.svanalysis.analyser.SvTestHelper.createSgl;
 import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.CLUSTER_REASON_FOLDBACKS;
+import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.CLUSTER_REASON_LOH_CHAIN;
 import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.CLUSTER_REASON_LOOSE_OVERLAP;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.ASSEMBLY_TYPE_EQV;
 
@@ -213,6 +214,9 @@ public class MergeRuleTests
 
         // now check final chain-finding across all sub-clusters
         assertEquals(tester.Analyser.getClusters().size(), 1);
+
+        assertTrue(var1.getClusterReason().contains(CLUSTER_REASON_LOH_CHAIN));
+        assertTrue(var2.getClusterReason().contains(CLUSTER_REASON_LOH_CHAIN));
     }
 
     @Test
