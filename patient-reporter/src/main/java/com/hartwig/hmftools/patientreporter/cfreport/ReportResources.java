@@ -5,6 +5,7 @@ import com.itextpdf.io.image.ImageData;
 import com.itextpdf.io.image.ImageDataFactory;
 import com.itextpdf.kernel.colors.DeviceRgb;
 import com.itextpdf.kernel.font.PdfFont;
+import com.itextpdf.kernel.font.PdfFontFactory;
 import com.itextpdf.layout.Style;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -28,10 +29,12 @@ public final class ReportResources {
     public static final String METADATA_AUTHOR = HARTWIG_NAME;
 
     // Page margins for normal content (so excluding header and footer) in pt
-    public static final float PAGE_MARGIN_TOP = 107;
+    public static final float PAGE_MARGIN_TOP = 100;
     public static final float PAGE_MARGIN_LEFT = 55.5f;
     public static final float PAGE_MARGIN_RIGHT = 29;
     public static final float PAGE_MARGIN_BOTTOM = 62;
+
+    public static final float TABLE_FULL_WIDTH = 510;
 
     // Color palette
     public static final DeviceRgb PALETTE_BLUE = new DeviceRgb(38, 90, 166);
@@ -45,57 +48,60 @@ public final class ReportResources {
     public static final DeviceRgb PALETTE_BLACK = new DeviceRgb(0, 0, 0);
 
     // Fonts
-    private static PdfFont mainFontBook = null;
-    private static PdfFont mainFontBold = null;
+    private static String FONT_REGULAR_PATH = "fonts/nimbus-sans/NimbusSansL-Regular.ttf";
+    private static String FONT_BOLD_PATH = "fonts/nimbus-sans/NimbusSansL-Bold.ttf";
+    private static PdfFont fontRegular = null;
+    private static PdfFont fontBold = null;
 
     private ReportResources() {}
 
-    public static final PdfFont getMainFontBook() {
-        if (mainFontBook == null) {
-            // Load font
+    public static final PdfFont getFontRegular() {
+        if (fontRegular == null) {
+            fontRegular = loadFont(FONT_REGULAR_PATH);
         }
-        return mainFontBook;
+        return fontRegular;
     }
 
-    public static final PdfFont getMainFontBold() {
-        if (mainFontBold == null) {
-            // Load font
+    public static final PdfFont getFontBold() {
+        if (fontBold == null) {
+            fontBold = loadFont(FONT_BOLD_PATH);
         }
-        return mainFontBold;
+        return fontBold;
     }
 
     public static final Style chapterTitleStyle() {
         return new Style()
-                .setFont(getMainFontBold())
+                .setFont(getFontBold())
                 .setFontSize(16)
-                .setFontColor(ReportResources.PALETTE_BLUE);
+                .setFontColor(ReportResources.PALETTE_BLUE)
+                .setMarginTop(0);
     }
 
     public static final Style sectionTitleStyle() {
         return new Style()
-                .setFont(getMainFontBold())
+                .setFont(getFontBold())
                 .setFontSize(11)
                 .setFontColor(ReportResources.PALETTE_BLUE);
     }
 
-    public static final Style tableheaderStyle() {
+    public static final Style tableHeaderStyle() {
         return new Style()
-                .setFont(getMainFontBook())
+                .setFont(getFontRegular())
                 .setFontSize(7)
-                .setFontColor(ReportResources.PALETTE_DARK_GREY);
+                .setFontColor(ReportResources.PALETTE_MID_GREY);
 
     }
 
     public static final Style tableContentStyle() {
         return new Style()
-                .setFont(getMainFontBook())
+                .setFont(getFontRegular())
                 .setFontSize(8)
-                .setFontColor(ReportResources.PALETTE_BLACK);
+                .setFontColor(ReportResources.PALETTE_DARK_GREY);
     }
 
     public static final Style subTextStyle() {
         return new Style()
-                .setFont(getMainFontBook())
+                .setFont(getFontRegular())
                 .setFontSize(7)
                 .setFontColor(ReportResources.PALETTE_BLACK);
     }
@@ -142,6 +148,15 @@ public final class ReportResources {
 
         return data;
 
+    }
+
+    private static final PdfFont loadFont(String resourcePath) {
+        try {
+            return PdfFontFactory.createFont(resourcePath);
+        } catch (Exception e) {
+            LOGGER.warn(e.getMessage());
+            return null;
+        }
     }
 
 }

@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.patientreporter.cfreport.components;
+package com.hartwig.hmftools.patientreporter.cfreport.components.tables;
 
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
 import com.itextpdf.layout.borders.Border;
@@ -11,6 +11,8 @@ public class TableCell extends Cell {
         super();
         setBorder(Border.NO_BORDER);
         setBorderBottom(new SolidBorder(ReportResources.PALETTE_MID_GREY, 0.25f));
+        addStyle(ReportResources.tableContentStyle());
+        setKeepTogether(true);
     }
 
 }
