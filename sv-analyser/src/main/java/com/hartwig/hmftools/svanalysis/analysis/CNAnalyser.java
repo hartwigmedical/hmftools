@@ -295,6 +295,8 @@ public class CNAnalyser {
                 if(cnDataList == null || cnDataList.isEmpty())
                     continue;
 
+                boolean cnDataFound = false;
+
                 for(SvCNData cnData : cnDataList)
                 {
                     // if (!cnData.matchesSV(true) && !cnData.matchesSegment(NONE, true))
@@ -320,8 +322,6 @@ public class CNAnalyser {
                             // allow matches if the position if correct
                             LOGGER.debug("SV({} chr={} pos={} type={}) matches {} CN segment: id({})",
                                     svData.id(), svChromosome, svPosition, svData.type(), cnData.SegStart, cnData.id());
-
-                            // continue;
                         }
                     }
 
@@ -337,6 +337,15 @@ public class CNAnalyser {
                     }
 
                     cnDataItems[be] = cnData;
+                    cnDataFound = true;
+                }
+
+                if(!cnDataFound)
+                {
+                    LOGGER.debug("SV({} chr={} pos={} type={}) {} unmatched)",
+                            svData.id(), svChromosome, svPosition, svData.type(), isStart ? "start" : "end");
+
+                    ++unmatchedSVs;
                 }
             }
         }
@@ -345,6 +354,17 @@ public class CNAnalyser {
         {
             LOGGER.warn("sample({}) has {} unmatched CN-SV segments", sampleId, unmatchedSVs);
         }
+    }
+
+    private StructuralVariantData getSvDataById(final String svId)
+    {
+        for (final StructuralVariantData svData : mSvDataList)
+        {
+            if(svData.id().equals(svId))
+                return svData;
+        }
+
+        return null;
     }
 
     private boolean isSingleVariant(final SvCNData cnData)
@@ -1007,22 +1027,29 @@ public class CNAnalyser {
         Map<String,double[]> svDataMap = new HashMap();
         mSampleSvPloidyCalcMap.put(sampleId, svDataMap);
 
-        List<StructuralVariantData> updatedSvDataList = Lists.newArrayList();
-
         try
         {
             BufferedWriter writer = mRecalcPloidyFileWriter;
 
             for (Map.Entry<String, SvCNData[]> entry : mSvIdCnDataMap.entrySet())
             {
+                final String svId = entry.getKey();
                 final SvCNData[] cnDataPair = entry.getValue();
 
                 final SvCNData cnStartData = cnDataPair[SVI_START];
 
                 if (cnStartData == null)
+                {
+                    LOGGER.error("SV({}) missing start copy number data", svId);
                     continue;
+                }
 
-                final StructuralVariantData svData = cnStartData.getStructuralVariantData();
+                StructuralVariantData svData = cnStartData.getStructuralVariantData();
+
+                if(!svData.id().equals(svId))
+                {
+                    svData = getSvDataById(svId);
+                }
 
                 final SvCNData cnStartPrevData = getCNSegment(cnStartData.Chromosome,  cnStartData.getIndex() - 1);
 

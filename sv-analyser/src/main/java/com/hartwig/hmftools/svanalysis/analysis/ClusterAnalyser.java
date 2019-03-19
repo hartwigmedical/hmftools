@@ -536,7 +536,7 @@ public class ClusterAnalyser {
                         if(nextCluster == cluster)
                             break;
 
-                        if(nextCluster.isResolved())
+                        if(nextCluster.isResolved() || mergedClusters.contains(nextCluster))
                             continue;
 
                         resolvingCluster = nextCluster;
@@ -633,7 +633,7 @@ public class ClusterAnalyser {
                             continue;
 
                         SvCluster otherCluster = nextBreakend.getSV().getCluster();
-                        if(otherCluster == otherBreakend.getSV().getCluster())
+                        if(otherCluster == lohCluster || mergedClusters.contains(otherCluster))
                             continue;
 
                         LOGGER.debug("cluster({}) SV({}) resolved prior to LOH by other cluster({}) breakend({})",
@@ -940,7 +940,7 @@ public class ClusterAnalyser {
 
                         final SvCluster otherCluster = otherBreakend.getSV().getCluster();
 
-                        if (otherCluster == cluster || otherCluster.isResolved())
+                        if (otherCluster == cluster || otherCluster.isResolved() || mergedClusters.contains(otherCluster))
                             continue;
 
                         LOGGER.debug("cluster({}) breakends({} & {}) overlap cluster({}) breakend({})",
