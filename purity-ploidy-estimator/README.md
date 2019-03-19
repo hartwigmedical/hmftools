@@ -211,15 +211,6 @@ If there are only a small number of somatics variants (< 300) with a sufficientl
 
 If we have not met the criteria for HIGHLY_DIPLOID or NO_TUMOR then we set the status to SOMATIC and use the somatic purity.
 
-#### Demonstration
-
-A simplified demonstration of the fitting algorithm is illustrated in the following figure. 
-Using a fixed ploidy, the algorithm models a number of purities to minimize the difference between the observed (blue) and expected (red) BAF and tumor ratio.
-
-<p align="center">
-    <img src="src/main/resources/readme/PurpleFitting.gif" width="500" alt="Fitting Demonstration">
-</p>
-
 
 ### 4. Copy Number Smoothing 
 
