@@ -20,7 +20,10 @@ public interface CommonConfig {
     String outputDirectory();
 
     @NotNull
-    String runDirectory();
+    String amberDirectory();
+
+    @NotNull
+    String cobaltDirectory();
 
     @NotNull
     String gcProfile();

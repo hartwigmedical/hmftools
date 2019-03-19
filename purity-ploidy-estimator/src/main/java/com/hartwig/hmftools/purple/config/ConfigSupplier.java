@@ -10,6 +10,7 @@ import java.util.Optional;
 
 import com.hartwig.hmftools.common.context.ProductionRunContextFactory;
 import com.hartwig.hmftools.common.context.RunContext;
+import com.hartwig.hmftools.common.io.exception.MalformedFileException;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.HelpFormatter;
@@ -23,12 +24,14 @@ public class ConfigSupplier {
 
     private static final Logger LOGGER = LogManager.getLogger(CommonConfig.class);
 
-    private static final String REF_SAMPLE = "ref_sample";
-    private static final String TUMOR_SAMPLE = "tumor_sample";
+    private static final String REF_SAMPLE = "reference";
+    private static final String TUMOR_SAMPLE = "tumor";
     private static final String RUN_DIRECTORY = "run_dir";
     private static final String OUTPUT_DIRECTORY = "output_dir";
     private static final String OUTPUT_DIRECTORY_DEFAULT = "purple";
     private static final String GC_PROFILE = "gc_profile";
+    private static final String AMBER = "amber";
+    private static final String COBALT = "cobalt";
 
     private static final String CIRCOS = "circos";
 
@@ -39,14 +42,16 @@ public class ConfigSupplier {
     private static final int MIN_DIPLOID_TUMOR_RATIO_COUNT_AT_CENTROMERE_DEFAULT = 50;
 
     public static void addOptions(@NotNull Options options) {
-        options.addOption(REF_SAMPLE, true, "The reference sample name. Defaults to value in metadata.");
-        options.addOption(TUMOR_SAMPLE, true, "The tumor sample name. Defaults to value in metadata.");
-        options.addOption(RUN_DIRECTORY, true, "The path containing the data for a single run.");
-        options.addOption(OUTPUT_DIRECTORY, true, "The output path. Defaults to run_dir/purple/");
+        options.addOption(REF_SAMPLE, true, "Name of the reference sample. This should correspond to the value used in AMBER and COBALT.");
+        options.addOption(TUMOR_SAMPLE, true, "Name of the tumor sample. This should correspond to the value used in AMBER and COBALT.");
+        options.addOption(RUN_DIRECTORY,
+                true,
+                "If provided, default values of <run_dir>/amber, <run_dir>/cobalt and <run_dir>/purple will be supplied for amber, cobalt and output_dir parameters respectively.");
+
 
         options.addOption(CIRCOS, true, "Location of circos binary.");
 
-        options.addOption(GC_PROFILE, true, "Location of GC Profile.");
+        options.addOption(GC_PROFILE, true, "Path to GC profile.");
 
         options.addOption(MIN_DIPLOID_TUMOR_RATIO_COUNT,
                 true,
@@ -56,14 +61,16 @@ public class ConfigSupplier {
                 true,
                 "Minimum ratio count while smoothing before diploid regions become suspect while approaching centromere.");
 
+        options.addOption(OUTPUT_DIRECTORY, true, "Path to the output directory. Required if <run_dir> not set, otherwise defaults to run_dir/purple/");
+        options.addOption(COBALT, true, "Path to COBALT output directory. Required if <run_dir> not set, otherwise defaults to <run_dir>/cobalt.");
+        options.addOption(AMBER, true, "Path to AMBER output directory. Required if <run_dir> not set, otherwise defaults to <run_dir>/amber");
+
         DBConfig.addOptions(options);
         FittingConfig.addOptions(options);
         FitScoreConfig.addOptions(options);
         SomaticConfig.addOptions(options);
         StructuralVariantConfig.addOptions(options);
         RefGenomeData.addOptions(options);
-        CobaltData.addOptions(options);
-        AmberData.addOptions(options);
     }
 
     private final CommonConfig commonConfig;
@@ -80,11 +87,6 @@ public class ConfigSupplier {
     private final AmberData amberData;
 
     public ConfigSupplier(@NotNull CommandLine cmd, @NotNull Options opt) throws ParseException, IOException {
-        final String runDirectory = cmd.getOptionValue(RUN_DIRECTORY);
-        if (runDirectory == null) {
-            printHelp(opt);
-            throw new ParseException(RUN_DIRECTORY + " is a mandatory argument");
-        }
 
         final String gcProfile = cmd.getOptionValue(GC_PROFILE);
         if (gcProfile == null) {
@@ -92,15 +94,48 @@ public class ConfigSupplier {
             throw new ParseException(GC_PROFILE + " is a mandatory argument");
         }
 
+        if (!cmd.hasOption(RUN_DIRECTORY)) {
+            if (!cmd.hasOption(REF_SAMPLE)) {
+                printHelp(opt);
+                throw new ParseException(REF_SAMPLE + " is a mandatory argument");
+            }
+            if (!cmd.hasOption(TUMOR_SAMPLE)) {
+                printHelp(opt);
+                throw new ParseException(TUMOR_SAMPLE + " is a mandatory argument");
+            }
+
+            if (!cmd.hasOption(OUTPUT_DIRECTORY)) {
+                printHelp(opt);
+                throw new ParseException("Either " + RUN_DIRECTORY + " or " + OUTPUT_DIRECTORY + " must be supplied as a parameter");
+            }
+
+            if (!cmd.hasOption(AMBER)) {
+                printHelp(opt);
+                throw new ParseException("Either " + RUN_DIRECTORY + " or " + AMBER + " must be supplied as a parameter");
+            }
+
+            if (!cmd.hasOption(COBALT)) {
+                printHelp(opt);
+                throw new ParseException("Either " + RUN_DIRECTORY + " or " + COBALT + " must be supplied as a parameter");
+            }
+        }
+
+        final String runDirectory = cmd.getOptionValue(RUN_DIRECTORY);
         final String refSample;
         final String tumorSample;
         if (cmd.hasOption(REF_SAMPLE) && cmd.hasOption(TUMOR_SAMPLE)) {
             refSample = cmd.getOptionValue(REF_SAMPLE);
             tumorSample = cmd.getOptionValue(TUMOR_SAMPLE);
         } else {
-            final RunContext runContext = ProductionRunContextFactory.fromRunDirectory(runDirectory);
-            refSample = cmd.hasOption(REF_SAMPLE) ? cmd.getOptionValue(REF_SAMPLE) : runContext.refSample();
-            tumorSample = cmd.hasOption(TUMOR_SAMPLE) ? cmd.getOptionValue(TUMOR_SAMPLE) : runContext.tumorSample();
+
+            try {
+                final RunContext runContext = ProductionRunContextFactory.fromRunDirectory(runDirectory);
+                refSample = cmd.hasOption(REF_SAMPLE) ? cmd.getOptionValue(REF_SAMPLE) : runContext.refSample();
+                tumorSample = cmd.hasOption(TUMOR_SAMPLE) ? cmd.getOptionValue(TUMOR_SAMPLE) : runContext.tumorSample();
+            } catch (MalformedFileException e) {
+                printHelp(opt);
+                throw new ParseException("Unable to resolve " + REF_SAMPLE + " and " + TUMOR_SAMPLE + " from meta data. These parameters must be supplied.");
+            }
         }
 
         final String outputDirectory = defaultValue(cmd, OUTPUT_DIRECTORY, runDirectory + File.separator + OUTPUT_DIRECTORY_DEFAULT);
@@ -109,11 +144,15 @@ public class ConfigSupplier {
             throw new IOException("Unable to write directory " + outputDirectory);
         }
 
+        final String amberDirectory = cmd.hasOption(AMBER) ? cmd.getOptionValue(AMBER) : runDirectory + File.separator + "amber";
+        final String cobaltDirectory = cmd.hasOption(COBALT) ? cmd.getOptionValue(COBALT) : runDirectory + File.separator + "cobalt";
+
         commonConfig = ImmutableCommonConfig.builder()
                 .refSample(refSample)
                 .tumorSample(tumorSample)
                 .outputDirectory(outputDirectory)
-                .runDirectory(runDirectory)
+                .amberDirectory(amberDirectory)
+                .cobaltDirectory(cobaltDirectory)
                 .gcProfile(gcProfile)
                 .build();
 
@@ -134,8 +173,8 @@ public class ConfigSupplier {
         somaticConfig = SomaticConfig.createSomaticConfig(cmd);
         structuralVariantConfig = createStructuralVariantConfig(cmd, opt);
 
-        cobaltData = CobaltData.createCobaltData(cmd, commonConfig);
-        amberData = AmberData.createAmberData(cmd, commonConfig);
+        cobaltData = CobaltData.createCobaltData(commonConfig);
+        amberData = AmberData.createAmberData(commonConfig);
 
         refGenomeData = RefGenomeData.createRefGenomeConfig(cmd, cobaltData);
     }

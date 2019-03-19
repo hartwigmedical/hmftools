@@ -1,32 +1,40 @@
 # AMBER
 AMBER is designed to generate a tumor BAF file for use in PURPLE. 
 
-Looking directly at the bam files, it locates heterozygous sites within the reference sample then calculates the allelic frequency of corresponding sites in the tumour. Finally, the Bioconductor copy number package is used to generate pcf segments from the BAF file.
+Looking directly at the bam files, AMBER locates heterozygous sites within the reference sample then calculates the allelic frequency of corresponding sites in the tumour. 
 
-Prior versions of AMBER relied on mpileups of the tumor and reference rather than the bams themselves. This method is deprecated but still available in the jar file as AmberFromPileupApplication. See below for more details.  
+AMBER also locates homozygous sites in the reference to detect evidence of contamination in the tumor.
+
+Finally, the Bioconductor copy number package is used to generate pcf segments from the BAF file.
+
+Prior versions of AMBER relied on mpileups of the tumor and reference rather than the bams themselves. 
+This method is deprecated but still available in the jar file as AmberFromPileupApplication. 
+See below for more details.  
 
 ## R Dependencies
 Segmentation is done with the Bioconductor [copynumber](http://bioconductor.org/packages/release/bioc/html/copynumber.html) package.
 
-This can be installed in R with the following commands:
+This can be installed in R (3.5+) with the following commands:
 ```
-   source("https://bioconductor.org/biocLite.R")
-   biocLite("copynumber")
+    library(BiocManager) # Get it from CRAN
+    install("copynumber")
 ```
 
 ## Mandatory Arguments
 
 Argument | Description 
 ---|---
-tumor | Name of the tumor sample
-tumor_bam | Path to (indexed) tumor bam file
-reference | Name of the reference sample
-reference_bam | Path to (indexed) reference bam file
-output_dir | Path to the output directory
-ref_genome | Path to the ref genome fasta file
+reference | Name of the reference sample.
+reference_bam | Path to (indexed) reference bam file.
+tumor | Name of the tumor sample.
+tumor_bam | Path to (indexed) tumor bam file.
+output_dir | Path to the output directory. This directory will be created if it does not already exist.
+ref_genome | Path to the ref genome fasta file.
 bed | Path to bed file containing likely heterozygous sites (see below). Gz files supported.  
 
-The bed file used by HMF (GermlineHetPon.hg19.bed.gz) is available to download from [HMF-Pipeline-Resources.](https://resources.hartwigmedicalfoundation.nl) The sites were chosen by running the GATK HaplotypeCaller over 1700 germline samples and then selecting all SNP sites which are heterozygous in 800 to 900 of the samples. The 1.3 million sites provided in this file typically result in 450k+ BAF points. A HG38 equivalent is also available.
+The bed file used by HMF (GermlineHetPon.hg19.bed.gz) is available to download from [HMF-Pipeline-Resources](https://resources.hartwigmedicalfoundation.nl). 
+The sites were chosen by running the GATK HaplotypeCaller over 1700 germline samples and then selecting all SNP sites which are heterozygous in 800 to 900 of the samples. 
+The 1.3 million sites provided in this file typically result in 450k+ BAF points. A HG38 equivalent is also available.
 
 ## Optional Arguments
 
@@ -43,31 +51,36 @@ max_het_af_percent | 0.65 | Maximum allelic frequency to be considered heterozyg
 ## Example Usage
 
 ```
-java -Xmx48G -cp amber.jar com.hartwig.hmftools.amber.AmberApplication \
-   -threads 12 \
-   -tumor TUMOR \
-   -tumor_bam /path/to/tumor/bam/TUMOR.bam \
-   -reference REFERENCE \
-   -reference_bam /path/to/reference/bam/REFERENCE.bam \
+java -Xmx32G -cp amber.jar com.hartwig.hmftools.amber.AmberApplication \
+   -reference COLO829R -reference_bam /run_dir/COLO829R.bam \ 
+   -tumor COLO829T -tumor_bam /run_dir/COLO829T.bam \ 
    -output_dir /run_dir/amber/ \
+   -threads 16 \
    -ref_genome /path/to/refGenome/refGenome.fasta \
    -bed /path/to/GermlineHetPon.hg19.bed.gz 
 ```
 
+Please note the PURPLE jar file also contains the AMBER source so may be used in place of the AMBER jar file in the example above, i.e.:
+```
+java -Xmx48G -cp purple.jar com.hartwig.hmftools.amber.AmberApplication
+```
+
 ## Performance Characteristics
-Performance numbers were taken from a 72 core machine using COLO829 data with an average read depth of 35 and 93 in the normal and tumor respectively. Elapsed time is measured in minutes. CPU time is minutes spent in user mode. 
+Performance numbers were taken from a 72 core machine using COLO829 data with an average read depth of 35 and 93 in the normal and tumor respectively. 
+Elapsed time is measured in minutes. 
+CPU time is minutes spent in user mode. 
+Peak memory is measure in gigabytes.
 
 Reading directly from the bam, AMBER has the following characteristics:
 
-Amber Method | Threads | Elapsed Time| CPU Time 
----|---|---|---
-Bam | 1 | 77 | 83 
-Bam | 2 | 43 | 91
-Bam | 4 | 22 | 113
-Bam | 8 | 14 | 110
-Bam | 16 | 10 | 115 
-Bam | 32 | 6 | 118
-Bam | 64 | 4 | 168
+Amber Method | Threads | Elapsed Time| CPU Time | Peak Mem
+---|---|---|---|---
+Bam | 1 | 144 | 230 | 15.04
+Bam | 8 | 22 | 164 | 18.40
+Bam | 16 | 12 | 164 | 21.00
+Bam | 32 | 8 | 170 | 21.60
+Bam | 48 | 7 | 199 | 21.43
+Bam | 64 | 6 | 221 | 21.78
 
 For comparison, the deprecated pileup method has the following characteristics:
 

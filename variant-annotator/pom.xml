@@ -12,7 +12,7 @@
 
     <artifactId>variant-annotator</artifactId>
     <packaging>jar</packaging>
-    <version>2.12</version>
+    <version>${hmf-variant-annotation.version}</version>
     <name>HMF Tools - Variant Annotator</name>
 
     <dependencies>

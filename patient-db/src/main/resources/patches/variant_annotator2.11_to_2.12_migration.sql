@@ -7,3 +7,7 @@ ADD insertSequenceRepeatCoverage DOUBLE PRECISION;
 ALTER TABLE structuralVariant
 ADD recoveryMethod varchar(64) AFTER recovered,
 ADD recoveryFilter varchar(255) AFTER recoveryMethod;
+
+ALTER TABLE structuralVariant
+ADD ploidyMin DOUBLE PRECISION,
+ADD ploidyMax DOUBLE PRECISION;

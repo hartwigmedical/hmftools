@@ -1,63 +1,73 @@
-# COBALT 1.2
+# COBALT
 
-**Co**unt **ba**m **l**ines is designed to count the number of read starts within each 1000 base window of a tumor and reference bam.
+**Co**unt **ba**m **l**ines determines the read depth ratios of the supplied tumor and reference genomes. 
 
-It will only include reads that match ALL the following criteria:
-* Equals or exceeds min quality (default 10)
-* Is not unmapped
-* Is not duplicated
-* Is neither secondary nor supplementary
+COBALT starts with the raw read counts per 1,000 base window for both normal and tumor samples by counting the number of alignment starts in the respective bam files with a mapping quality score of at least 10 that is neither unmapped, duplicated, secondary, nor supplementary. 
+Windows with a GC content less than 0.2 or greater than 0.6 or with an average mappability below 0.85 are excluded from further analysis.
 
-It then applies GC normalization to calculate the read ratios.
+Next we apply a GC normalization to calculate the read ratios. 
+We divide the read count of each window by the median read count of all windows sharing the same GC content then normalise further to the ratio of the median to mean read count of all windows. 
 
-The reference ratios then have a further diploid normalization applied to them.
-This normalization assumes that the median ratio of the surrounding 10Mbase window (minimum 1Mbases readable) is diploid.
+The reference sample ratios have a further ‘diploid’ normalization applied to them to remove megabase scale GC biases. 
+This normalization assumes that the median ratio of each 10Mb window (minimum 1Mb readable) should be diploid for autosomes and haploid for sex chromosomes in males in the germline sample.
 
 Finally, the Bioconductor copy number package is used to generate segments from the ratio file.
-
 
 ## R Dependencies
 Segmentation is done with the Bioconductor [copynumber](http://bioconductor.org/packages/release/bioc/html/copynumber.html) package.
 
-This can be installed in R with the following commands:
+This can be installed in R (3.5+) with the following commands:
 ```
-   source("https://bioconductor.org/biocLite.R")
-   biocLite("copynumber")
+    library(BiocManager) # Get it from CRAN
+    install("copynumber")
 ```
-
 
 ## Usage
 
 Argument | Default | Description
 ---|---|---
--reference_bam | None | Location of reference bam file. Can be omitted to regenerate ratios if prior cobalt file already exists.
--tumor_bam | None | Location of tumor bam file. Can be omitted to regenerate ratios if prior cobalt file already exists.
--output_dir | None | Directory to write output
--reference | None | Name of reference sample
--tumor | None | Name of tumor sample
--threads | 4 | Number of threads to use
--min_quality | 10 | Min quality
--gc_profile | None | Location of GC profile. Available to download from [HMF-Pipeline-Resources.](https://resources.hartwigmedicalfoundation.nl)
+reference | None | Name of the reference sample.
+reference_bam | None | Path to reference bam file. Can be omitted to regenerate ratios if prior cobalt file already exists.
+tumor | None | Name of tumor sample.
+tumor_bam | None | Path to tumor bam file. Can be omitted to regenerate ratios if prior cobalt file already exists.
+output_dir | None | Path to the output directory. This directory will be created if it does not already exist.
+threads | 4 | Number of threads to use.
+min_quality | 10 | Min quality.
+gc_profile | None | Path to GC profile. 
 
-Arguments without default values are mandatory.
+The GC Profile file used by HMF (GC_profile.hg19.1000bp.cnp) is available to download from [HMF-Pipeline-Resources](https://resources.hartwigmedicalfoundation.nl). 
+A HG38 equivalent is also available.
 
 ### Example Usage
 
 ```
-java -jar cobalt.jar -reference REFERENCE -reference_bam /run_dir/REFERENCE.bam -tumor TUMOR -tumor_bam /run_dir/TUMOR.bam -output_dir /run_dir/cobalt -threads 24 -gc_profile /path/to/GC_profile.1000bp.cnp
+java -cp -Xmx8G cobalt.jar com.hartwig.hmftools.cobalt.CountBamLinesApplication \
+    -reference COLO829R -reference_bam /run_dir/COLO829R.bam \ 
+    -tumor COLO829T -tumor_bam /run_dir/COLO829T.bam \ 
+    -output_dir /run_dir/cobalt \ 
+    -threads 16 \ 
+    -gc_profile /path/to/GC_profile.hg19.1000bp.cnp
 ```
 
-## Input
+Please note the PURPLE jar file also contains the COBALT source so may be used in place of the COBALT jar file in the example above, i.e.:
+```
+java -cp -Xmx8G purple.jar com.hartwig.hmftools.cobalt.CountBamLinesApplication
+```
 
-GCProfile should be a tab delimited file (without header) with the following format:
+## Performance Characteristics
+Performance numbers were taken from a 72 core machine using COLO829 data with an average read depth of 35 and 93 in the normal and tumor respectively. 
+Elapsed time is measured in minutes. 
+CPU time is minutes spent in user mode. 
+Peak memory is measure in gigabytes.
 
-Chromosome | Start (zero-based index) | GC Content | Non N Percentage | Mappable Percentage
----|---|---|---|---
-1 | 1465000 | 0.557 | 1 | 0.903
-1 | 1466000 | 0.511 | 1 | 0.849
 
-Note that a window must have a mappable percentage >= 0.85 to be considered mappable. 
-
+Threads | Elapsed Time| CPU Time | Peak Mem
+---|---|---|---
+1 | 111 | 122 | 3.85
+8 | 17 | 127 | 4.49
+16 | 10 | 139 | 4.58 
+32 | 11 | 184 | 4.33
+48 | 10 | 153 | 4.35
 
 
 ## Output
@@ -71,6 +81,14 @@ The following tab delimited files are written:
 
 `/run_dir/cobalt/REFERENCE.cobalt.ratio.pcf`
 
-TUMOR.cobalt contains the counts and ratios of the reference and tumor.
+TUMOR.cobalt contains the counts and ratios of the reference and tumor:
 
-TUMOR.cobalt.ratio.pcf contains the segmented regions determined from the ratios.
+Chromosome | Position | ReferenceReadCount | TumorReadCount | ReferenceGCRatio | TumorGCRatio | ReferenceGCDiploidRatio
+---|---|---|---|---|---|---
+1|4000001|204|504|0.8803|0.855|0.8982
+1|4001001|203|570|0.8429|0.9149|0.86
+1|4002001|155|473|0.6463|0.7654|0.6594
+1|4003001|260|566|1.098|0.9328|1.1203
+1|4004001|256|550|1.1144|0.9428|1.1371
+
+TUMOR.cobalt.ratio.pcf and REFERENCE.cobalt.ratio.pcf contain the segmented regions determined from the ratios.

@@ -22,8 +22,6 @@ import com.hartwig.hmftools.common.position.GenomePosition;
 import com.hartwig.hmftools.common.position.GenomePositions;
 import com.hartwig.hmftools.common.purple.gender.Gender;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -36,7 +34,6 @@ import org.jetbrains.annotations.Nullable;
 public interface CobaltData {
 
     Logger LOGGER = LogManager.getLogger(CobaltData.class);
-    String COBALT = "cobalt";
 
     @NotNull
     Gender gender();
@@ -53,15 +50,11 @@ public interface CobaltData {
 
     Multimap<Chromosome, PCFPosition> referenceSegments();
 
-    static void addOptions(@NotNull Options options) {
-        options.addOption(COBALT, true, "COBALT directory. Defaults to <run_dir>/cobalt");
-    }
 
     @NotNull
-    static CobaltData createCobaltData(@NotNull final CommandLine cmd, @NotNull final CommonConfig commonConfig)
+    static CobaltData createCobaltData(@NotNull final CommonConfig commonConfig)
             throws ParseException, IOException {
-        final String cobaltDirectory =
-                cmd.hasOption(COBALT) ? cmd.getOptionValue(COBALT) : commonConfig.runDirectory() + File.separator + "cobalt";
+        final String cobaltDirectory = commonConfig.cobaltDirectory();
         final String cobaltFilename = CobaltRatioFile.generateFilename(cobaltDirectory, commonConfig.tumorSample());
         if (!new File(cobaltFilename).exists()) {
             throw new ParseException("Unable to open cobalt ratio file: " + cobaltFilename);
