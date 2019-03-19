@@ -106,6 +106,13 @@ public final class ReportResources {
                 .setFontColor(ReportResources.PALETTE_BLACK);
     }
 
+    public static final Style pageNumberStyle() {
+        return new Style()
+                .setFont(getFontBold())
+                .setFontSize(8)
+                .setFontColor(ReportResources.PALETTE_BLUE);
+    }
+
     /**
      * Load image data from resource stream. Returns null when loading fails
      *
