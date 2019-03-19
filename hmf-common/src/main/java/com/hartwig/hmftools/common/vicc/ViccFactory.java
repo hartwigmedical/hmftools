@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.common.vicc;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -39,8 +40,7 @@ public abstract class ViccFactory {
         StringBuilder stringToCSVGenes = new StringBuilder();
         JsonArray arrayGenes = object.getAsJsonArray("genes");
         String genes = arrayGenes.toString();
-        LOGGER.info(genes); // TODO: remove [] from string
-        stringToCSVGenes.append(genes).append(";");// merge 1 object to string
+        stringToCSVGenes.append(genes).append(";");// TODO: remove [] from string
         headerCSV.append("genes").append(";");
         return stringToCSVGenes;
     }
@@ -76,7 +76,6 @@ public abstract class ViccFactory {
         //gene_identifiers object
         StringBuilder stringToCSVGeneIdentifiers = new StringBuilder();
         JsonArray arrayGeneIdentifiers = object.getAsJsonArray("gene_identifiers");
-        LOGGER.info(arrayGeneIdentifiers);
         JsonObject objectGeneIdentiefiers = (JsonObject) arrayGeneIdentifiers.iterator().next();
         for (int i = 0; i < objectGeneIdentiefiers.keySet().size(); i++) {
             List<String> keysOfGeneIdentifiersObject = new ArrayList<>(objectGeneIdentiefiers.keySet());
@@ -93,7 +92,7 @@ public abstract class ViccFactory {
             List<String> keysOfAssocationObject = new ArrayList<>(object.getAsJsonObject("association").keySet());
             if (keysOfAssocationObject.get(i).equals("description")) {
                 JsonElement description = object.getAsJsonObject("association").get(keysOfAssocationObject.get(i));
-                LOGGER.info(description);
+                stringToCSVAssociation.append(description);
             } else if (keysOfAssocationObject.get(i).equals("evidence")) {
                 JsonElement elementEvidence = object.getAsJsonObject("association").get("evidence");
                 JsonArray arrayEvidence = elementEvidence.getAsJsonArray();
@@ -108,7 +107,7 @@ public abstract class ViccFactory {
                         }
                     } else {
                         JsonElement info = objectEvidence.get(keysOfEvidenceObject.get(a));
-                        LOGGER.info(info);
+                        stringToCSVAssociation.append(info);
                     }
                 }
             } else if (keysOfAssocationObject.get(i).equals("environmentalContexts")) {
@@ -226,9 +225,13 @@ public abstract class ViccFactory {
                 writer.append(stringToCSVAll);
                 writer.append("\n");
             }
-        } catch (IOException e) {
+            reader.endObject();
+            reader.close();
+        } catch (FileNotFoundException e) {
             e.printStackTrace();
         }
+
+
         writer.close();
     }
 
