@@ -28,10 +28,10 @@ public final class ReportResources {
     public static final String METADATA_AUTHOR = HARTWIG_NAME;
 
     // Page margins for normal content (so excluding header and footer) in pt
-    public static final float PAGE_MARGIN_TOP = 115;
-    public static final float PAGE_MARGIN_LEFT = 75;
-    public static final float PAGE_MARGIN_RIGHT = 45;
-    public static final float PAGE_MARGIN_BOTTOM = 100;
+    public static final float PAGE_MARGIN_TOP = 107;
+    public static final float PAGE_MARGIN_LEFT = 55.5f;
+    public static final float PAGE_MARGIN_RIGHT = 29;
+    public static final float PAGE_MARGIN_BOTTOM = 62;
 
     // Color palette
     public static final DeviceRgb PALETTE_BLUE = new DeviceRgb(38, 90, 166);
