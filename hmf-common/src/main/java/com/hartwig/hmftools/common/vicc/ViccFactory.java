@@ -43,7 +43,6 @@ public abstract class ViccFactory {
                 if (index == 0) {
                     //                    LOGGER.info(object.getAsJsonObject("features").keySet()); // Set of keys
                     //                    LOGGER.info(object.getAsJsonObject("dev_tags").keySet()); // Set of keys
-                    //                    LOGGER.info(object.getAsJsonObject("feature_names").keySet()); // Set of keys
                     writer.append(object.getAsJsonObject("brca").keySet().toString());
                     writer.append(",genes");
                     writer.append(",tags");
@@ -98,7 +97,6 @@ public abstract class ViccFactory {
                                     List<String> keysOfEvidenceTypeObject =
                                             new ArrayList<>(objectEvidence.get("evidenceType").getAsJsonObject().keySet());
                                     LOGGER.info(objectEvidence.get("evidenceType").getAsJsonObject().get(keysOfEvidenceTypeObject.get(b)));
-
                                 }
                             } else {
                                 JsonElement info = objectEvidence.get(keysOfEvidenceObject.get(a));
@@ -138,6 +136,10 @@ public abstract class ViccFactory {
 
                 //feature_names
                 LOGGER.info(object.getAsJsonPrimitive("feature_names"));
+
+                //dev_tags
+                JsonArray arrayDevTags = object.getAsJsonArray("dev_tags");
+                StringToCSVBRCA.append(arrayDevTags).append(";");// merge 1 object to string
 
                 index++;
                 writer.append(StringToCSVBRCA);
