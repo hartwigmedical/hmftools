@@ -178,7 +178,6 @@ public class ChainingActualTests
         final SvCluster cluster = tester.Analyser.getClusters().get(0);
         assertTrue(cluster.hasReplicatedSVs());
         assertEquals(cluster.getSvCount(), 8);
-        assertEquals(cluster.getSubClusters().size(), 5);
 
         // check links
         assertEquals(var4.getAssemblyMatchType(false), ASSEMBLY_MATCH_MATCHED);

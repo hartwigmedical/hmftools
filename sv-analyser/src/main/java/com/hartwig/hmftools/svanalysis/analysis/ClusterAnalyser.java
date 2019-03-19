@@ -87,6 +87,7 @@ public class ClusterAnalyser {
     private ChainFinder mChainFinder;
     private LinkFinder mLinkFinder;
 
+    private boolean mUseAllelePloidies;
     private boolean mRunValidationChecks;
 
     PerformanceCounter mPcClustering;
@@ -112,6 +113,7 @@ public class ClusterAnalyser {
         mChainFinder.setLogVerbose(mConfig.LogVerbose);
         mLinkFinder.setLogVerbose(mConfig.LogVerbose);
         mRunValidationChecks = false;
+        mUseAllelePloidies = false;
 
         mPcClustering = new PerformanceCounter("Clustering");
         mPcChaining = new PerformanceCounter("Chaining");
@@ -123,6 +125,11 @@ public class ClusterAnalyser {
         mCopyNumberAnalyser = cnAnalyser;
     }
     public void setGeneCollection(final SvGeneTranscriptCollection geneCollection) { mGeneCollection = geneCollection; }
+    public void setUseAllelePloidies(boolean toggle)
+    {
+        mChainFinder.setUseAllelePloidies(toggle);
+        mUseAllelePloidies = toggle;
+    }
 
     // access for unit testing
     public final SvClusteringMethods getClusterer() { return mClusteringMethods; }
@@ -416,7 +423,7 @@ public class ClusterAnalyser {
         // merge on links between common arms
         // merge if one cluster has footprints which overlap unresolved complex SVs
         // merge clusters which resolve another's LOH DUP
-        List<SvCluster> mergedClusters = Lists.newArrayList();
+        boolean foundClustersToMerge = false;
 
         long longDelDupCutoffLength = mClusteringMethods.getDelDupCutoffLength();
 
@@ -439,9 +446,6 @@ public class ClusterAnalyser {
 
             List<SvCluster> cluster1Overlaps = getTraversedClusters(cluster1);
             List<SvCluster> cluster1PloidyResolves = getHighPloidyResolvingClusters(cluster1);
-
-            boolean cluster1Merged = false;
-            SvCluster newCluster = null;
 
             int index2 = index1 + 1;
             while(index2 < mClusters.size())
@@ -521,76 +525,16 @@ public class ClusterAnalyser {
                     continue;
                 }
 
-                boolean cluster2Merged = false;
+                foundClustersToMerge = true;
+                cluster1.mergeOtherCluster(cluster2, false);
 
-                if(cluster1.hasSubClusters())
-                {
-                    LOGGER.debug("cluster({} svs={}) merges in cluster({} svs={})",
-                            cluster1.id(), cluster1.getSvCount(), cluster2.id(), cluster2.getSvCount());
-
-                    cluster2Merged = true;
-
-                    if(cluster2.hasSubClusters())
-                    {
-                        for(SvCluster subCluster : cluster2.getSubClusters())
-                        {
-                            cluster1.addSubCluster(subCluster);
-                        }
-                    }
-                    else
-                    {
-                        cluster1.addSubCluster(cluster2);
-                    }
-                }
-                else
-                {
-                    cluster1Merged = true;
-                    cluster2Merged = true;
-
-                    newCluster = new SvCluster(mClusteringMethods.getNextClusterId());
-
-                    LOGGER.debug("new cluster({}) from merge of cluster({} svs={}) and cluster({} svs={})",
-                            newCluster.id(), cluster1.id(), cluster1.getSvCount(), cluster2.id(), cluster2.getSvCount());
-
-                    newCluster.addSubCluster(cluster1);
-
-                    if(cluster2.hasSubClusters())
-                    {
-                        for(SvCluster subCluster : cluster2.getSubClusters())
-                        {
-                            newCluster.addSubCluster(subCluster);
-                        }
-                    }
-                    else
-                    {
-                        newCluster.addSubCluster(cluster2);
-                    }
-
-                    mergedClusters.add(newCluster);
-                }
-
-                if(cluster2Merged)
-                    mClusters.remove(index2);
-                else
-                    ++index2;
-
-                if(cluster1Merged)
-                    break;
+                mClusters.remove(index2);
             }
 
-            if(cluster1Merged && newCluster != null)
-            {
-                // cluster has been replaced with a combined one
-                mClusters.remove(index1);
-                mClusters.add(index1, newCluster);
-            }
-            else
-            {
-                ++index1;
-            }
+            ++index1;
         }
 
-        return !mergedClusters.isEmpty();
+        return foundClustersToMerge;
     }
 
     private static int MAX_FOLDBACK_NEXT_CLUSTER_DISTANCE = 5000000;
@@ -856,6 +800,9 @@ public class ClusterAnalyser {
     {
         // find any breakend which proceeds past another cluster before the major allele ploidy drops below its ploidy
         List<SvCluster> resolvingClusters = Lists.newArrayList();
+
+        if(!mUseAllelePloidies)
+            return resolvingClusters;
 
         // isSpecificCluster(cluster);
 

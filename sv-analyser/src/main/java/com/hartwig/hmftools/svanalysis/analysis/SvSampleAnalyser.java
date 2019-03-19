@@ -97,7 +97,7 @@ public class SvSampleAnalyser {
         mAnalyser = new ClusterAnalyser(config, mClusteringMethods);
         mVisWriter = new VisualiserWriter(config.OutputCsvPath, config.WriteVisualisationData);
 
-        mAnalyser.getChainFinder().setUseAllelePloidies(true);
+        mAnalyser.setUseAllelePloidies(true);
 
         mAllVariants = Lists.newArrayList();
         mCopyNumberAnalyser = null;
@@ -327,7 +327,7 @@ public class SvSampleAnalyser {
                 mSvFileWriter.write(",ArmStart,AFStart,CNStart,CNChgStart,ArmEnd,AFEnd,CNEnd,CNChgEnd,Ploidy,PloidyMin,PloidyMax");
 
                 // cluster info
-                mSvFileWriter.write(",ClusterId,SubClusterId,ClusterCount,ClusterReason");
+                mSvFileWriter.write(",ClusterId,ClusterCount,ClusterReason");
                 mSvFileWriter.write(",ClusterDesc,IsResolved,ResolvedType,Consistency,ArmCount");
 
                 // SV info
@@ -377,19 +377,6 @@ public class SvSampleAnalyser {
 
                 int clusterSvCount = cluster.getSvCount();
 
-                SvCluster subCluster = cluster;
-                if(cluster.hasSubClusters())
-                {
-                    for(final SvCluster sc : cluster.getSubClusters())
-                    {
-                        if(sc.getSVs().contains(var))
-                        {
-                            subCluster = sc;
-                            break;
-                        }
-                    }
-                }
-
                 final StructuralVariantData dbData = var.getSvData();
 
                 ++svCount;
@@ -407,8 +394,8 @@ public class SvSampleAnalyser {
                                 dbData.ploidy(), var.ploidyMin(), var.ploidyMax()));
 
                 writer.write(
-                        String.format(",%d,%d,%d,%s",
-                                cluster.id(), subCluster.id(), clusterSvCount, var.getClusterReason()));
+                        String.format(",%d,%d,%s",
+                                cluster.id(), clusterSvCount, var.getClusterReason()));
 
                 writer.write(
                         String.format(",%s,%s,%s,%d,%d",

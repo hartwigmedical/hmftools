@@ -68,7 +68,6 @@ public class SvCluster
     private long mSynDelDupTI;
     private long mSynDelDupLength;
 
-    private List<SvCluster> mSubClusters;
     private boolean mHasReplicatedSVs;
 
     // cached lists of identified special cases
@@ -146,7 +145,6 @@ public class SvCluster
         mUnlinkedRemoteSVs = Lists.newArrayList();
         mRecalcRemoteSVStatus = false;
 
-        mSubClusters = Lists.newArrayList();
         mHasReplicatedSVs = false;
 
         mMinCNChange = 0;
@@ -457,6 +455,8 @@ public class SvCluster
 
         addVariantLists(other);
 
+        other.getLohEvents().stream().forEach(this::addLohEvent);
+
         if(other.isFullyChained())
         {
             for (SvChain chain : other.getChains())
@@ -465,35 +465,6 @@ public class SvCluster
             }
         }
 
-    }
-    public void addSubCluster(SvCluster cluster)
-    {
-        if(mSubClusters.contains(cluster))
-            return;
-
-        if(cluster.hasSubClusters())
-        {
-            for(SvCluster subCluster : cluster.getSubClusters())
-            {
-                addSubCluster(subCluster);
-            }
-
-            return;
-        }
-        else
-        {
-            mSubClusters.add(cluster);
-        }
-
-        // merge the second cluster into the first
-        addVariantLists(cluster);
-
-        cluster.getLohEvents().stream().forEach(this::addLohEvent);
-
-        for(SvChain chain : cluster.getChains())
-        {
-            addChain(chain, true);
-        }
     }
 
     private void addVariantLists(final SvCluster other)
@@ -509,9 +480,6 @@ public class SvCluster
         mFoldbacks.addAll(other.getFoldbacks());
         mLongDelDups.addAll(other.getLongDelDups());
     }
-
-    public List<SvCluster> getSubClusters() { return mSubClusters; }
-    public boolean hasSubClusters() { return !mSubClusters.isEmpty(); }
 
     public boolean isConsistent()
     {

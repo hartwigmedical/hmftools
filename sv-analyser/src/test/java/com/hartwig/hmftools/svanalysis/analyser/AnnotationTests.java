@@ -57,7 +57,7 @@ public class AnnotationTests
 
         assertTrue(var1.isFoldback());
         assertEquals(2, tester.Analyser.getClusters().size());
-        SvCluster cluster = tester.Analyser.getClusters().get(0);
+        SvCluster cluster = tester.Analyser.getClusters().get(1);
         assertTrue(cluster.getSVs().contains(var4));
 
         tester.clearClustersAndSVs();
