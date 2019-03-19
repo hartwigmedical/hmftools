@@ -357,7 +357,6 @@ db_url | None | Database URL. Should be of format: `mysql://localhost:3306/hmfpa
 ref_genome | Detect | Will attempt to detect reference genome from COBALT output but failing that must be either hg18 or hg38
 output_dir |  <run_dir>/purple | PURPLE output directory.
 
-Note that the run_dir parameter can substitute for the amber, cobalt and output_dir parameters.
 
 ### Example Usage
 
