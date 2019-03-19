@@ -43,7 +43,6 @@ public abstract class ViccFactory {
                 if (index == 0) {
                     //                    LOGGER.info(object.getAsJsonObject("features").keySet()); // Set of keys
                     //                    LOGGER.info(object.getAsJsonObject("dev_tags").keySet()); // Set of keys
-                    //                    LOGGER.info(object.getAsJsonObject("gene_identifiers").keySet()); // Set of keys
                     //                    LOGGER.info(object.getAsJsonObject("feature_names").keySet()); // Set of keys
                     //                    LOGGER.info(object.getAsJsonObject("association").keySet()); // Set of keys
                     writer.append(object.getAsJsonObject("brca").keySet().toString());
@@ -74,17 +73,27 @@ public abstract class ViccFactory {
                 //Source
                 StringToCSVBRCA.append(object.getAsJsonPrimitive("source")).append(";");// merge 1 object to string
 
+                //gene_identifiers
+                JsonArray arrayGeneIdentifiers = object.getAsJsonArray("gene_identifiers");
+                LOGGER.info(arrayGeneIdentifiers);
+                JsonObject objectGeneIdentiefiers = (JsonObject) arrayGeneIdentifiers.iterator().next();
+                for (int i = 0; i < objectGeneIdentiefiers.keySet().size(); i++) {
+                    List<String> keysOfGeneIdentifiersObject = new ArrayList<>(objectGeneIdentiefiers.keySet());
+                    StringToCSVBRCA.append(objectGeneIdentiefiers.get(keysOfGeneIdentifiersObject.get(i))).append(";");
+                }
 
-
-                index++;
-                writer.append(StringToCSVBRCA);
-                writer.append("\n");
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
+            index++;
+            writer.append(StringToCSVBRCA);
+            writer.append("\n");
         }
-        writer.close();
+    } catch(
+    IOException e)
+
+    {
+        e.printStackTrace();
     }
+        writer.close();
+}
 
     private static void writeToCsvFile(@NotNull String csvFormatString, @NotNull PrintWriter writer) throws IOException {
         writer.append(csvFormatString);
