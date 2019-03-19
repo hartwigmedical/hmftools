@@ -368,7 +368,7 @@ Elapsed time is measured in minutes.
 CPU time is minutes spent in user mode. 
 Peak memory is measure in gigabytes.
 
-The following PURPLE characteristics are inclusive of CIRCOS diagram generation but exclude writing to database:
+PURPLE has the following characteristics:
 
 Threads | Elapsed Time| CPU Time | Peak Mem
 ---|---|---|---
