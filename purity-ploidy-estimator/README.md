@@ -1,16 +1,17 @@
 
 # PURPLE
 
-PURPLE is a **pur**ity **pl**oidy **e**stimator. It combines B-allele frequency (BAF), read depth ratios, somatic variants and structural variants to estimate the purity and copy number profile of a tumor sample.
+PURPLE is a **pur**ity **pl**oidy **e**stimator. 
+It combines B-allele frequency (BAF), read depth ratios, somatic variants and structural variants to estimate the purity and copy number profile of a tumor sample.
 
 PURPLE supports both grch 37 and 38 reference assemblies. 
 
 
 ## Input
 
-The PURPLE algorithm relies on AMBER and COBALT, which are delivered with the PURPLE release, to calculate the tumor BAF and read depth ratios respectively.    
+The PURPLE algorithm relies on [AMBER](https://github.com/hartwigmedical/hmftools/tree/master/amber) and [COBALT](https://github.com/hartwigmedical/hmftools/tree/master/count-bam-lines) to calculate the tumor BAF and read depth ratios respectively.    
 
-It is also strongly recommended also to run PURPLE with a high quality set of somatic SNV and INDEL calls and somatic structural variant calls.  
+It is also strongly recommended to run PURPLE with a high quality set of somatic SNV and INDEL calls and somatic structural variant calls.  
 
 
 ### COBALT
@@ -25,7 +26,6 @@ We divide the read count of each window by the median read count of all windows 
 
 Finally, the reference sample ratios have a further ‘diploid’ normalization applied to them to remove megabase scale GC biases. 
 This normalization assumes that the median ratio of each 10Mb window (minimum 1Mb readable) should be diploid for autosomes and haploid for sex chromosomes in males in the germline sample.
-
 
 For more information on how to run COBALT please refer to the [readme](https://github.com/hartwigmedical/hmftools/tree/master/count-bam-lines).
 
@@ -370,6 +370,20 @@ java -jar purple.jar \
    -circos /Users/jon/hmf/tools/circos-0.69-5/bin/circos \
    -db_enabled -db_user build -db_pass build -db_url mysql://localhost:3306/hmfpatients?serverTimezone=UTC
 ```
+
+## Performance Characteristics
+Performance numbers were taken from a 72 core machine using COLO829 data including generation of CIRCOS diagram but excluding database writing.
+Elapsed time is measured in minutes. 
+CPU time is minutes spent in user mode. 
+Peak memory is measure in gigabytes.
+
+The following PURPLE characteristics are inclusive of CIRCOS diagram generation but exclude writing to database:
+
+Threads | Elapsed Time| CPU Time | Peak Mem
+---|---|---|---
+1 | 1.5 | 3 | 4.13
+2 | 1 | 3 | 4.18
+4 | 1 | 3 | 4.38
 
 ## Output
 
