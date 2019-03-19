@@ -149,7 +149,7 @@ public class SvCluster
 
         mMinCNChange = 0;
         mMaxCNChange = 0;
-        mValidAllelePloidySegmentPerc = 0;
+        mValidAllelePloidySegmentPerc = 1.0;
 
         mOriginArms = 0;
         mFragmentArms = 0;
@@ -704,7 +704,7 @@ public class SvCluster
         int svCalcPloidyCount = 0;
         Map<Integer,Integer> ploidyFrequency = new HashMap();
 
-        // isSpecificCluster(this);
+        isSpecificCluster(this);
 
         double tightestMinPloidy = 0;
         double tightestMaxPloidy = -1;
@@ -713,6 +713,14 @@ public class SvCluster
         for (final SvVarData var : mSVs)
         {
             double calcCopyNumber = var.getRoundedCNChange();
+
+            if(calcCopyNumber <= 0)
+            {
+                LOGGER.debug("cluster({}) has SV({}) with zero effective CN change: {}",
+                        mId, var.id(), String.format("start=%.2f end=%.2f p=%.2f pMax=%.2f pMin=%.2f",
+                                var.copyNumberChange(true), var.copyNumberChange(false),
+                                var.getSvData().ploidy(), var.ploidyMax(), var.ploidyMin()));
+            }
 
             if (mMinCNChange < 0 || calcCopyNumber < mMinCNChange)
                 mMinCNChange = calcCopyNumber;
@@ -764,7 +772,7 @@ public class SvCluster
                     break;
                 }
 
-                if (mMinCNChange < 0 || ploidy < mMinCNChange)
+                if (ploidy > 0 && (mMinCNChange < 0 || ploidy < mMinCNChange))
                     mMinCNChange = ploidy;
 
                 mMaxCNChange = max(mMaxCNChange, ploidy);

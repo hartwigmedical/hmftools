@@ -553,7 +553,7 @@ public class SvSampleAnalyser {
                 writer.write(
                         String.format(",%d,%d,%s,%d,%s,%.2f",
                                 cluster.getSynDelDupLength(), cluster.getSynDelDupTILength(), cluster.getAnnotations(),
-                                cluster.getUnlinkedSVs(), chainInfo, cluster.getValidAllelePloidySegmentPerc()));
+                                cluster.getUnlinkedSVs().size(), chainInfo, cluster.getValidAllelePloidySegmentPerc()));
 
                 // ArmClusterCount,AcSoloSv,AcRemoteTI,AcDsb,AcMultipleDsb,AcSingleFb,AcFbTI,AcFbDSB
                 // ArmFbPairSame,ArmFbPairOpp,ArmFbPairFacing,AcComplexFb,AcComplexLine,AcComplexOther

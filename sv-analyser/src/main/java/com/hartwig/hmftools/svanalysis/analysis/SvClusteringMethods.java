@@ -427,8 +427,6 @@ public class SvClusteringMethods {
             if(cluster.hasLinkingLineElements())
                 continue;
 
-            // applyCopyNumberReplication(cluster);
-
             markClusterLongDelDups(cluster);
             markClusterInversions(cluster);
         }
@@ -495,7 +493,7 @@ public class SvClusteringMethods {
                     cluster.id(), minCopyNumber, maxCopyNumber);
 
             // scale the replication down
-            replicationFactor = maxReplication / (double)(maxCopyNumber / minCopyNumber);
+            replicationFactor = maxReplication / (maxCopyNumber / minCopyNumber);
         }
 
         // replicate the SVs which have a higher copy number than their peers

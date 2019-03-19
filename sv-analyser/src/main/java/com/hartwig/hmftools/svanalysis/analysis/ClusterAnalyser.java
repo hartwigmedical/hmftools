@@ -427,40 +427,23 @@ public class ClusterAnalyser {
 
         long longDelDupCutoffLength = mClusteringMethods.getDelDupCutoffLength();
 
-        Map<SvCluster, List<SvCluster>> lohResolvingClustersMap = new HashMap();
-        Map<SvCluster, List<SvCluster>> overlappingClustersMap = new HashMap();
-        Map<SvCluster, List<SvCluster>> ploidyResolvingClustersMap = new HashMap();
-
         int index1 = 0;
         while(index1 < mClusters.size())
         {
             SvCluster cluster1 = mClusters.get(index1);
 
-            List<SvCluster> cluster1ResolvingLohs = getResolvingLohClusters(cluster1);
-
-            if(cluster1.isResolved() && cluster1ResolvingLohs.isEmpty())
+            if(cluster1.isResolved())
             {
                 ++index1;
                 continue;
             }
-
-            List<SvCluster> cluster1Overlaps = getTraversedClusters(cluster1);
-            List<SvCluster> cluster1PloidyResolves = getHighPloidyResolvingClusters(cluster1);
 
             int index2 = index1 + 1;
             while(index2 < mClusters.size())
             {
                 SvCluster cluster2 = mClusters.get(index2);
 
-                List<SvCluster> cluster2ResolvingLohs = lohResolvingClustersMap.get(cluster2);
-
-                if(cluster2ResolvingLohs == null)
-                {
-                    cluster2ResolvingLohs = getResolvingLohClusters(cluster2);
-                    lohResolvingClustersMap.put(cluster2, cluster2ResolvingLohs);
-                }
-
-                if(cluster2.isResolved() && cluster2ResolvingLohs.isEmpty())
+                if(cluster2.isResolved())
                 {
                     ++index2;
                     continue;
@@ -473,51 +456,6 @@ public class ClusterAnalyser {
 
                 if(!canMergeClusters)
                     canMergeClusters = canMergeClustersOnCommonArms(cluster1, cluster2, longDelDupCutoffLength);
-
-                if(!canMergeClusters)
-                {
-                    List<SvCluster> cluster2Overlaps = overlappingClustersMap.get(cluster2);
-
-                    if (cluster2Overlaps == null)
-                    {
-                        cluster2Overlaps = getTraversedClusters(cluster2);
-                        overlappingClustersMap.put(cluster2, cluster2Overlaps);
-                    }
-
-                    if(cluster1Overlaps.contains(cluster2) || cluster2Overlaps.contains(cluster1))
-                    {
-                        addClusterReason(cluster1, CLUSTER_REASON_LOOSE_OVERLAP, "");
-                        addClusterReason(cluster2, CLUSTER_REASON_LOOSE_OVERLAP, "");
-                        canMergeClusters = true;
-                    }
-                }
-
-                if(!canMergeClusters)
-                {
-                    if (cluster1ResolvingLohs.contains(cluster2) || cluster2ResolvingLohs.contains(cluster1))
-                    {
-                        addClusterReason(cluster1, CLUSTER_REASON_LOH_CHAIN, "");
-                        addClusterReason(cluster2, CLUSTER_REASON_LOH_CHAIN, "");
-                        canMergeClusters = true;
-                    }
-                }
-
-                if(!canMergeClusters)
-                {
-                    List<SvCluster> cluster2PloidyResolves = ploidyResolvingClustersMap.get(cluster2);
-                    if(cluster2PloidyResolves == null)
-                    {
-                        cluster2PloidyResolves = getHighPloidyResolvingClusters(cluster2);
-                        ploidyResolvingClustersMap.put(cluster2, cluster2PloidyResolves);
-                    }
-
-                    if (cluster1PloidyResolves.contains(cluster2) || cluster2PloidyResolves.contains(cluster1))
-                    {
-                        addClusterReason(cluster1, CLUSTER_REASON_PLOIDY_MAP, "");
-                        addClusterReason(cluster2, CLUSTER_REASON_PLOIDY_MAP, "");
-                        canMergeClusters = true;
-                    }
-                }
 
                 if(!canMergeClusters)
                 {
@@ -534,7 +472,193 @@ public class ClusterAnalyser {
             ++index1;
         }
 
+        if(mergeTraversingClusters())
+            foundClustersToMerge = true;
+
+        if(mergeLOHResolvingClusters())
+            foundClustersToMerge = true;
+
+        if(mergePloidyResolvingClusters())
+            foundClustersToMerge = true;
+
         return foundClustersToMerge;
+    }
+
+    private boolean mergePloidyResolvingClusters()
+    {
+        if(!mUseAllelePloidies)
+            return false;
+
+        // merge clusters if one resolves another's LOH event with a DUP on one side
+        List<SvCluster> mergedClusters = Lists.newArrayList();
+
+        int clusterIndex = 0;
+        while(clusterIndex < mClusters.size())
+        {
+            SvCluster cluster = mClusters.get(clusterIndex);
+
+            if(mergedClusters.contains(cluster) || cluster.isResolved())
+            {
+                ++clusterIndex;
+                continue;
+            }
+
+            boolean mergedOtherClusters = false;
+
+            for (final Map.Entry<String, List<SvBreakend>> entry : cluster.getChrBreakendMap().entrySet())
+            {
+                List<SvBreakend> breakendList = entry.getValue();
+
+                List<SvBreakend> fullBreakendList = mClusteringMethods.getChrBreakendMap().get(entry.getKey());
+
+                for (SvBreakend breakend : breakendList)
+                {
+                    boolean traverseUp = breakend.orientation() == -1;
+                    double breakendPloidy = breakend.ploidy();
+                    SvCluster resolvingCluster = null;
+                    SvBreakend resolvingBreakend = null;
+
+                    int index = breakend.getChrPosIndex();
+
+                    while(true)
+                    {
+                        index += traverseUp ? 1 : -1;
+
+                        if(index < 0 || index >= fullBreakendList.size())
+                            break;
+
+                        SvBreakend nextBreakend = fullBreakendList.get(index);
+
+                        if(nextBreakend.orientation() == breakend.orientation())
+                            continue;
+
+                        SvCluster nextCluster = nextBreakend.getSV().getCluster();
+                        if(nextCluster == cluster)
+                            break;
+
+                        if(nextCluster.isResolved())
+                            continue;
+
+                        resolvingCluster = nextCluster;
+                        resolvingBreakend = nextBreakend;
+
+                        double majorAP = nextBreakend.majorAllelePloidy(!traverseUp);
+
+                        if(majorAP < breakendPloidy)
+                        {
+                            LOGGER.debug("cluster({}) SV({}) requires cluster({}) breakend({}) prior to MAP drop({})",
+                                    cluster.id(), breakend.getSV().posId(), resolvingCluster.id(), resolvingBreakend.toString(),
+                                    String.format("%.2f -> %.2f", breakendPloidy, majorAP));
+
+                            cluster.mergeOtherCluster(resolvingCluster);
+
+                            addClusterReason(resolvingCluster, CLUSTER_REASON_PLOIDY_MAP, breakend.getSV().id());
+                            addClusterReason(cluster, CLUSTER_REASON_PLOIDY_MAP, nextBreakend.getSV().id());
+
+                            mergedClusters.add(resolvingCluster);
+
+                            mergedOtherClusters = true;
+                            break;
+                        }
+                    }
+
+                    if(mergedOtherClusters)
+                        break;
+                }
+
+                if(mergedOtherClusters)
+                    break;
+            }
+
+            if(mergedOtherClusters)
+            {
+                // repeat this cluster
+            }
+            else
+            {
+                ++clusterIndex;
+            }
+        }
+
+        if(mergedClusters.isEmpty())
+            return false;
+
+        mergedClusters.forEach(x -> mClusters.remove(x));
+        return true;
+    }
+
+    private boolean mergeLOHResolvingClusters()
+    {
+        // merge clusters if one resolves another's LOH event with a DUP on one side
+        List<SvCluster> clustersWithLohEvents = mClusters.stream().filter(x -> !x.getLohEvents().isEmpty()).collect(Collectors.toList());
+
+        List<SvCluster> mergedClusters = Lists.newArrayList();
+
+        for(SvCluster lohCluster : clustersWithLohEvents)
+        {
+            if(mergedClusters.contains(lohCluster)) // if this has LOH events they will have been added to the parent cluster
+                continue;
+
+            List<SvLOH> lohEvents = lohCluster.getLohEvents();
+
+            int lohIndex = 0; // used since merging another cluster can add more LOH events
+            while(lohIndex < lohEvents.size())
+            {
+                SvLOH lohEvent = lohEvents.get(lohIndex);
+
+                for(int be = SVI_START; be <= SVI_END; ++be)
+                {
+                    SvBreakend breakend = lohEvent.getBreakend(isStart(be));
+
+                    if(breakend == null || breakend.getSV().type() != DUP)
+                        continue;
+
+                    // walk towards the LOH from the other end of this DUP to see if it can find a resolving event within the cluster
+                    List<SvBreakend> breakendList = mClusteringMethods.getChrBreakendMap().get(breakend.chromosome());
+
+                    SvBreakend otherBreakend = breakend.getOtherBreakend();
+                    int index = otherBreakend.getChrPosIndex();
+                    boolean traverseUp = otherBreakend.orientation() == -1;
+
+                    while(index <= 0 || index < breakendList.size())
+                    {
+                        index += traverseUp ? 1 : -1;
+
+                        SvBreakend nextBreakend = breakendList.get(index);
+
+                        if(nextBreakend == breakend)
+                            break;
+
+                        if(nextBreakend.orientation() == otherBreakend.orientation())
+                            continue;
+
+                        SvCluster otherCluster = nextBreakend.getSV().getCluster();
+                        if(otherCluster == otherBreakend.getSV().getCluster())
+                            continue;
+
+                        LOGGER.debug("cluster({}) SV({}) resolved prior to LOH by other cluster({}) breakend({})",
+                                lohCluster.id(), breakend.getSV().posId(), otherCluster.id(), otherBreakend.toString());
+
+                        lohCluster.mergeOtherCluster(otherCluster);
+
+                        addClusterReason(otherCluster, CLUSTER_REASON_LOH_CHAIN, breakend.getSV().id());
+                        addClusterReason(lohCluster, CLUSTER_REASON_LOH_CHAIN, nextBreakend.getSV().id());
+
+                        mergedClusters.add(otherCluster);
+
+                        break;
+                    }
+                }
+
+                ++lohIndex;
+            }
+        }
+
+        if(mergedClusters.isEmpty())
+            return false;
+
+        mergedClusters.forEach(x -> mClusters.remove(x));
+        return true;
     }
 
     private static int MAX_FOLDBACK_NEXT_CLUSTER_DISTANCE = 5000000;
@@ -741,212 +865,121 @@ public class ClusterAnalyser {
         return false;
     }
 
-    private List<SvCluster> getResolvingLohClusters(final SvCluster cluster)
+    private boolean mergeTraversingClusters()
     {
-        List<SvCluster> resolvingClusters = Lists.newArrayList();
+        // merge clusters if one is straddling by opposing breakends in the other
+        List<SvCluster> mergedClusters = Lists.newArrayList();
 
-        if(cluster.getLohEvents().isEmpty())
-            return resolvingClusters;
-
-        for(SvLOH lohEvent : cluster.getLohEvents())
+        int clusterIndex = 0;
+        while(clusterIndex < mClusters.size())
         {
-            for(int be = SVI_START; be <= SVI_END; ++be)
+            SvCluster cluster = mClusters.get(clusterIndex);
+
+            if(mergedClusters.contains(cluster) || cluster.isResolved())
             {
-                SvBreakend breakend = lohEvent.getBreakend(isStart(be));
+                ++clusterIndex;
+                continue;
+            }
 
-                if(breakend == null || breakend.getSV().type() != DUP)
-                    continue;
+            boolean mergedOtherClusters = false;
 
-                // walk towards the LOH from the other end of this DUP to see if it can find a resolving event within the cluster
-                List<SvBreakend> breakendList = mClusteringMethods.getChrBreakendMap().get(breakend.chromosome());
+            for (final Map.Entry<String, List<SvBreakend>> entry : cluster.getChrBreakendMap().entrySet())
+            {
+                List<SvBreakend> breakendList = entry.getValue();
 
-                SvBreakend otherBreakend = breakend.getOtherBreakend();
-                int index = otherBreakend.getChrPosIndex();
-                boolean traverseUp = otherBreakend.orientation() == -1;
+                List<SvBreakend> fullBreakendList = mClusteringMethods.getChrBreakendMap().get(entry.getKey());
 
-                while(index <= 0 || index < breakendList.size())
+                for (int i = 0; i < breakendList.size() - 1; ++i)
                 {
-                    index += traverseUp ? 1 : -1;
+                    final SvBreakend lowerBreakend = breakendList.get(i);
+                    SvBreakend upperBreakend = breakendList.get(i + 1);
 
-                    SvBreakend nextBreakend = breakendList.get(index);
+                    boolean isFoldback = false;
 
-                    if(nextBreakend == breakend)
-                        break;
-
-                    if(nextBreakend.orientation() == otherBreakend.orientation())
+                    if (lowerBreakend.arm() != upperBreakend.arm())
                         continue;
 
-                    SvCluster otherCluster = nextBreakend.getSV().getCluster();
-                    if(otherCluster == otherBreakend.getSV().getCluster())
-                        continue;
-
-                    if(!resolvingClusters.contains(otherCluster))
+                    if (lowerBreakend.orientation() != upperBreakend.orientation())
                     {
-                        LOGGER.debug("cluster({}) SV({}) resolved prior to LOH by other cluster({}) breakend({})",
-                                cluster.id(), breakend.getSV().posId(), otherCluster.id(), otherBreakend.toString());
+                        // allow for short DBs where the breakends remain in a foldback
+                        if (i < breakendList.size() - 2)
+                        {
+                            final SvBreakend nextBreakend = breakendList.get(i + 2);
 
-                        resolvingClusters.add(otherCluster);
+                            if (!lowerBreakend.getSV().getFoldbackLink(lowerBreakend.usesStart()).isEmpty()
+                                    && lowerBreakend.getSV().getFoldbackLink(lowerBreakend.usesStart())
+                                    .equals(nextBreakend.getSV().getFoldbackLink(nextBreakend.usesStart())))
+                            {
+                                isFoldback = true;
+                                upperBreakend = nextBreakend;
+                            }
+                        }
+
+                        if (!isFoldback)
+                            continue;
                     }
 
+                    final SvBreakend frontBE = lowerBreakend.orientation() == 1 ? lowerBreakend : upperBreakend;
+
+                    if (frontBE.getSV().getDBLink(frontBE.usesStart()) != null)
+                    {
+                        // check for an overlapping short DB which would invalidate these consecutive breakends
+                        if (frontBE.getSV().getDBLink(frontBE.usesStart()).length() < 0)
+                            continue;
+                    }
+
+                    for (int j = lowerBreakend.getChrPosIndex() + 1; j <= upperBreakend.getChrPosIndex() - 1; ++j)
+                    {
+                        final SvBreakend otherBreakend = fullBreakendList.get(j);
+
+                        if(otherBreakend.getSV().type() != BND && otherBreakend.getSV().type() != SGL)
+                            continue;
+
+                        if(otherBreakend.orientation() == lowerBreakend.orientation())
+                            continue;
+
+                        final SvCluster otherCluster = otherBreakend.getSV().getCluster();
+
+                        if (otherCluster == cluster || otherCluster.isResolved())
+                            continue;
+
+                        LOGGER.debug("cluster({}) breakends({} & {}) overlap cluster({}) breakend({})",
+                                cluster.id(), lowerBreakend.toString(), upperBreakend.toString(), otherCluster.id(), otherBreakend.toString());
+
+                        cluster.mergeOtherCluster(otherCluster);
+
+                        addClusterReason(otherCluster, CLUSTER_REASON_LOOSE_OVERLAP, lowerBreakend.getSV().id());
+                        addClusterReason(cluster, CLUSTER_REASON_LOOSE_OVERLAP, otherBreakend.getSV().id());
+
+                        mergedClusters.add(otherCluster);
+
+                        mergedOtherClusters = true;
+                        break;
+                    }
+
+                    if(mergedOtherClusters)
+                        break;
+                }
+
+                if(mergedOtherClusters)
                     break;
-                }
             }
-        }
 
-        return resolvingClusters;
-    }
-
-    private List<SvCluster> getHighPloidyResolvingClusters(final SvCluster cluster)
-    {
-        // find any breakend which proceeds past another cluster before the major allele ploidy drops below its ploidy
-        List<SvCluster> resolvingClusters = Lists.newArrayList();
-
-        if(!mUseAllelePloidies)
-            return resolvingClusters;
-
-        // isSpecificCluster(cluster);
-
-        for (final Map.Entry<String, List<SvBreakend>> entry : cluster.getChrBreakendMap().entrySet())
-        {
-            List<SvBreakend> breakendList = entry.getValue();
-
-            List<SvBreakend> fullBreakendList = mClusteringMethods.getChrBreakendMap().get(entry.getKey());
-
-            for (SvBreakend breakend : breakendList)
+            if(mergedOtherClusters)
             {
-                boolean traverseUp = breakend.orientation() == -1;
-                double breakendPloidy = breakend.ploidy();
-                SvCluster resolvingCluster = null;
-                SvBreakend resolvingBreakend = null;
-
-                int index = breakend.getChrPosIndex();
-
-                while(true)
-                {
-                    index += traverseUp ? 1 : -1;
-
-                    if(index < 0 || index >= fullBreakendList.size())
-                        break;
-
-                    SvBreakend nextBreakend = fullBreakendList.get(index);
-
-                    if(nextBreakend.orientation() == breakend.orientation())
-                        continue;
-
-                    SvCluster nextCluster = nextBreakend.getSV().getCluster();
-                    if(nextCluster == cluster)
-                        break;
-
-                    if(nextCluster.isResolved())
-                        continue;
-
-                    resolvingCluster = nextCluster;
-                    resolvingBreakend = nextBreakend;
-
-                    double majorAP = nextBreakend.majorAllelePloidy(!traverseUp);
-
-                    if(majorAP < breakendPloidy)
-                    {
-                        if(!resolvingClusters.contains(resolvingCluster))
-                        {
-                            LOGGER.debug("cluster({}) SV({}) requires cluster({}) breakend({}) prior to MAP drop({})",
-                                    cluster.id(), breakend.getSV().posId(), resolvingCluster.id(), resolvingBreakend.toString(),
-                                    String.format("%.2f -> %.2f", breakendPloidy, majorAP));
-
-                            resolvingClusters.add(resolvingCluster);
-                        }
-
-                        break;
-                    }
-                }
+                // repeat this cluster
             }
-        }
-
-        return resolvingClusters;
-    }
-
-    private List<SvCluster> getTraversedClusters(final SvCluster cluster)
-    {
-        // find all clusters which are overlapped by consecutive same-orientation SVs in this cluster
-        // and where the overlapped clusters contain opposing orientation BNDs or SGLs
-        List<SvCluster> traversedClusters = Lists.newArrayList();
-
-        if(cluster.isResolved() || cluster.isFullyChained())
-            return traversedClusters;
-
-        final Map<String, List<SvBreakend>> chrBreakendMap = cluster.getChrBreakendMap();
-
-        for (final Map.Entry<String, List<SvBreakend>> entry : chrBreakendMap.entrySet())
-        {
-            List<SvBreakend> breakendList = entry.getValue();
-
-            List<SvBreakend> fullBreakendList = mClusteringMethods.getChrBreakendMap().get(entry.getKey());
-
-            for (int i = 0; i < breakendList.size() - 1; ++i)
+            else
             {
-                final SvBreakend lowerBreakend = breakendList.get(i);
-                SvBreakend upperBreakend = breakendList.get(i + 1);
-
-                boolean isFoldback = false;
-
-                if (lowerBreakend.arm() != upperBreakend.arm())
-                    continue;
-
-                if (lowerBreakend.orientation() != upperBreakend.orientation())
-                {
-                    // allow for short DBs where the breakends remain in a foldback
-                    if (i < breakendList.size() - 2)
-                    {
-                        final SvBreakend nextBreakend = breakendList.get(i + 2);
-
-                        if (!lowerBreakend.getSV().getFoldbackLink(lowerBreakend.usesStart()).isEmpty()
-                                && lowerBreakend.getSV().getFoldbackLink(lowerBreakend.usesStart())
-                                .equals(nextBreakend.getSV().getFoldbackLink(nextBreakend.usesStart())))
-                        {
-                            isFoldback = true;
-                            upperBreakend = nextBreakend;
-                        }
-                    }
-
-                    if (!isFoldback)
-                        continue;
-                }
-
-                final SvBreakend frontBE = lowerBreakend.orientation() == 1 ? lowerBreakend : upperBreakend;
-
-                if (frontBE.getSV().getDBLink(frontBE.usesStart()) != null)
-                {
-                    // check for an overlapping short DB which would invalidate these consecutive breakends
-                    if (frontBE.getSV().getDBLink(frontBE.usesStart()).length() < 0)
-                        continue;
-                }
-
-                for (int j = lowerBreakend.getChrPosIndex() + 1; j <= upperBreakend.getChrPosIndex() - 1; ++j)
-                {
-                    final SvBreakend breakend = fullBreakendList.get(j);
-
-                    if(breakend.getSV().type() != BND && breakend.getSV().type() != SGL)
-                        continue;
-
-                    if(breakend.orientation() == lowerBreakend.orientation())
-                        continue;
-
-                    final SvCluster otherCluster = breakend.getSV().getCluster();
-
-                    if (otherCluster == cluster || otherCluster.isResolved())
-                        continue;
-
-                    if(!traversedClusters.contains(otherCluster))
-                    {
-                        //LOGGER.debug("cluster({}) breakends({} & {}) overlap cluster({}) breakend({})",
-                        //        cluster.id(), lowerBreakend.toString(), upperBreakend.toString(), otherCluster.id(), breakend.toString());
-                        traversedClusters.add(otherCluster);
-                    }
-                }
+                ++clusterIndex;
             }
         }
 
-        return traversedClusters;
+        if(mergedClusters.isEmpty())
+            return false;
+
+        mergedClusters.forEach(x -> mClusters.remove(x));
+        return true;
     }
 
     public void markFoldbacks()
