@@ -17,13 +17,16 @@ public abstract class ReportChapter {
 
     public void render(PageEventHandler eventHandler, Document report) {
 
-        // Setup event handler
+        // Reconfigure event handler for upcoming pages
+        eventHandler.setChapterTitle(getName());
+
         boolean fullSidebar = getChapterType() == ChapterType.SummaryChapter || getChapterType() == ChapterType.ClosingChapter;
         boolean fullContent = getChapterType() == ChapterType.SummaryChapter;
         eventHandler.setSidebarType(fullSidebar, fullContent);
 
-        // Initialize chapter
-        startChapter(getName(), getChapterType() != ChapterType.ClosingChapter.SummaryChapter, report);
+        // Start chapter
+        boolean addPageBreak = (getChapterType() != ChapterType.ClosingChapter.SummaryChapter);
+        startChapter(getName(), addPageBreak, report);
 
         // Render chapter specific content
         renderChapterContent(report);
@@ -37,8 +40,7 @@ public abstract class ReportChapter {
             report.add(new AreaBreak(AreaBreakType.NEXT_PAGE));
         }
 
-        // Add chapter title
-        report.add(new Paragraph(chapterName).addStyle(ReportResources.chapterTitleStyle()));
+        // @TODO add chapter to outline
 
     }
 
@@ -46,8 +48,6 @@ public abstract class ReportChapter {
 
     public abstract ChapterType getChapterType();
 
-
     protected abstract void renderChapterContent(Document report);
-
 
 }

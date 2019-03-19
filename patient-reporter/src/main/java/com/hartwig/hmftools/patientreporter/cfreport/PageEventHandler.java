@@ -10,8 +10,14 @@ import com.itextpdf.kernel.pdf.PdfPage;
 
 public class PageEventHandler implements IEventHandler {
 
-    private boolean fullSidebar = true;
-    private boolean fullSidebarContent = true;
+    private boolean fullSidebar;
+    private boolean fullSidebarContent;
+
+    private String chapterTitle = "Undefined";
+
+    public void setChapterTitle(String chapterTitle) {
+        this.chapterTitle = chapterTitle;
+    }
 
     public void setSidebarType(boolean full, boolean fullContent) {
         fullSidebar = full;
@@ -26,11 +32,9 @@ public class PageEventHandler implements IEventHandler {
 
             final PdfPage page = documentEvent.getPage();
 
-            // Add sidepanel and footer to new page
-            Header.addHeader(page);
+            Header.addHeader(chapterTitle, page);
             SidePanel.addSidePanel(page, fullSidebar, fullSidebarContent);
             Footer.addFooter(page, !fullSidebar);
-
         }
 
     }

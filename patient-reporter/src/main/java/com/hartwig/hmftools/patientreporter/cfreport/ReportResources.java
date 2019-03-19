@@ -29,7 +29,7 @@ public final class ReportResources {
     public static final String METADATA_AUTHOR = HARTWIG_NAME;
 
     // Page margins for normal content (so excluding header and footer) in pt
-    public static final float PAGE_MARGIN_TOP = 100;
+    public static final float PAGE_MARGIN_TOP = 150; // Top margin also excludes the chapter title, which is rendered in the header
     public static final float PAGE_MARGIN_LEFT = 55.5f;
     public static final float PAGE_MARGIN_RIGHT = 29;
     public static final float PAGE_MARGIN_BOTTOM = 62;

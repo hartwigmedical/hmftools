@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.patientreporter.cfreport.chapters;
 
 import com.itextpdf.layout.Document;
+import com.itextpdf.layout.element.Paragraph;
 
 public class SummaryChapter extends ReportChapter {
 
@@ -16,6 +17,7 @@ public class SummaryChapter extends ReportChapter {
 
     @Override
     protected void renderChapterContent(Document report) {
+        report.add(new Paragraph("Summary content"));
 
     }
 
