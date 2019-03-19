@@ -60,7 +60,6 @@ Elapsed time is measured in minutes.
 CPU time is minutes spent in user mode. 
 Peak memory is measure in gigabytes.
 
-COBALT has the following characteristics:
 
 Threads | Elapsed Time| CPU Time | Peak Mem
 ---|---|---|---
@@ -75,8 +74,11 @@ Threads | Elapsed Time| CPU Time | Peak Mem
 The following tab delimited files are written:
 
 `/run_dir/cobalt/TUMOR.cobalt`
+
 `/run_dir/cobalt/TUMOR.chr.len`
+
 `/run_dir/cobalt/TUMOR.cobalt.ratio.pcf`
+
 `/run_dir/cobalt/REFERENCE.cobalt.ratio.pcf`
 
 TUMOR.cobalt contains the counts and ratios of the reference and tumor:
