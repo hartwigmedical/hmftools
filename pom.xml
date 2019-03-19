@@ -61,7 +61,7 @@
 
         <amber.version>2.1</amber.version>
         <cobalt.version>1.5</cobalt.version>
-        <purple.version>2.20</purple.version>
+        <purple.version>2.21</purple.version>
 
         <immutables.version>2.4.4</immutables.version>
         <htsjdk.version>2.12.0</htsjdk.version>

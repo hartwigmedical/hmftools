@@ -14,8 +14,6 @@ import com.hartwig.hmftools.common.pcf.PCFSource;
 import com.hartwig.hmftools.common.purple.baf.ExpectedBAF;
 import com.hartwig.hmftools.common.purple.gender.Gender;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -28,8 +26,6 @@ import org.jetbrains.annotations.Nullable;
 public interface AmberData {
 
     Logger LOGGER = LogManager.getLogger(AmberData.class);
-    String AMBER = "amber";
-
     int DEFAULT_READ_DEPTH = 100;
 
     @NotNull
@@ -42,16 +38,11 @@ public interface AmberData {
 
     int averageTumorDepth();
 
-    static void addOptions(@NotNull Options options) {
-        options.addOption(AMBER, true, "AMBER directory. Defaults to <run_dir>/amber");
-    }
-
     @NotNull
-    static AmberData createAmberData(@NotNull final CommandLine cmd, @NotNull final CommonConfig commonConfig)
+    static AmberData createAmberData(@NotNull final CommonConfig commonConfig)
             throws ParseException, IOException {
 
-        final String amberDirectory =
-                cmd.hasOption(AMBER) ? cmd.getOptionValue(AMBER) : commonConfig.runDirectory() + File.separator + "amber";
+        final String amberDirectory = commonConfig.amberDirectory();
         final String amberFilename = AmberBAFFile.generateAmberFilename(amberDirectory, commonConfig.tumorSample());
         if (!new File(amberFilename).exists()) {
             throw new ParseException("Unable to open amber baf file: " + amberFilename);

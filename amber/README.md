@@ -24,12 +24,12 @@ This can be installed in R (3.5+) with the following commands:
 
 Argument | Description 
 ---|---
-reference | Name of the reference sample
-reference_bam | Path to (indexed) reference bam file
-tumor | Name of the tumor sample
-tumor_bam | Path to (indexed) tumor bam file
-output_dir | Path to the output directory
-ref_genome | Path to the ref genome fasta file
+reference | Name of the reference sample.
+reference_bam | Path to (indexed) reference bam file.
+tumor | Name of the tumor sample.
+tumor_bam | Path to (indexed) tumor bam file.
+output_dir | Path to the output directory. This directory will be created if it does not already exist.
+ref_genome | Path to the ref genome fasta file.
 bed | Path to bed file containing likely heterozygous sites (see below). Gz files supported.  
 
 The bed file used by HMF (GermlineHetPon.hg19.bed.gz) is available to download from [HMF-Pipeline-Resources](https://resources.hartwigmedicalfoundation.nl). 

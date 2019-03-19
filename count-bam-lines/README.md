@@ -26,13 +26,13 @@ This can be installed in R (3.5+) with the following commands:
 
 Argument | Default | Description
 ---|---|---
-reference | None | Name of the reference sample
+reference | None | Name of the reference sample.
 reference_bam | None | Path to reference bam file. Can be omitted to regenerate ratios if prior cobalt file already exists.
-tumor | None | Name of tumor sample
+tumor | None | Name of tumor sample.
 tumor_bam | None | Path to tumor bam file. Can be omitted to regenerate ratios if prior cobalt file already exists.
-output_dir | None | Path to the output directory
-threads | 4 | Number of threads to use
-min_quality | 10 | Min quality
+output_dir | None | Path to the output directory. This directory will be created if it does not already exist.
+threads | 4 | Number of threads to use.
+min_quality | 10 | Min quality.
 gc_profile | None | Path to GC profile. 
 
 The GC Profile file used by HMF (GC_profile.hg19.1000bp.cnp) is available to download from [HMF-Pipeline-Resources](https://resources.hartwigmedicalfoundation.nl). 
@@ -64,7 +64,7 @@ COBALT has the following characteristics:
 
 Threads | Elapsed Time| CPU Time | Peak Mem
 ---|---|---|---
-1 | x | x | x
+1 | 111 | 122 | 3.85
 8 | 17 | 127 | 4.49
 16 | 10 | 139 | 4.58 
 32 | 11 | 184 | 4.33
