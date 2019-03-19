@@ -10,31 +10,31 @@
 
     <modules>
         <module>hmf-common</module>
-        <!--<module>hmf-extensions</module>-->
-        <!--<module>api-clients</module>-->
-        <!--<module>patient-db</module>-->
-        <!--<module>ensembl-db</module>-->
-        <!--<module>variant-annotator</module>-->
-        <!--<module>patient-reporter</module>-->
-        <!--<module>health-checker</module>-->
-        <!--<module>fastq-stats</module>-->
-        <!--<module>amber</module>-->
-        <!--<module>sage</module>-->
-        <!--<module>count-bam-lines</module>-->
-        <!--<module>purity-ploidy-estimator</module>-->
-        <!--<module>hmf-gene-panel-builder</module>-->
-        <!--<module>strelka-post-process</module>-->
-        <!--<module>bam-slicer</module>-->
-        <!--<module>bachelor</module>-->
-        <!--<module>bachelor-pp</module>-->
-        <!--<module>hmf-id-generator</module>-->
-        <!--<module>portal-data-converter</module>-->
-        <!--<module>sv-analyser</module>-->
-        <!--<module>sv-visualiser</module>-->
-        <!--<module>sv-graphs</module>-->
-        <!--<module>knowledgebase-importer</module>-->
-        <!--<module>sig_analyser</module>-->
-        <!--<module>actionability-vs-soc</module>-->
+        <module>hmf-extensions</module>
+        <module>api-clients</module>
+        <module>patient-db</module>
+        <module>ensembl-db</module>
+        <module>variant-annotator</module>
+        <module>patient-reporter</module>
+        <module>health-checker</module>
+        <module>fastq-stats</module>
+        <module>amber</module>
+        <module>sage</module>
+        <module>count-bam-lines</module>
+        <module>purity-ploidy-estimator</module>
+        <module>hmf-gene-panel-builder</module>
+        <module>strelka-post-process</module>
+        <module>bam-slicer</module>
+        <module>bachelor</module>
+        <module>bachelor-pp</module>
+        <module>hmf-id-generator</module>
+        <module>portal-data-converter</module>
+        <module>sv-analyser</module>
+        <module>sv-visualiser</module>
+        <module>sv-graphs</module>
+        <module>knowledgebase-importer</module>
+        <module>sig_analyser</module>
+        <module>actionability-vs-soc</module>
         <module>vicc-knowledgebase-importer</module>
     </modules>
 
