@@ -75,7 +75,7 @@ Reading directly from the bam, AMBER has the following characteristics:
 
 Amber Method | Threads | Elapsed Time| CPU Time | Peak Mem
 ---|---|---|---|---
-Bam | 1 | ? | ? | ?
+Bam | 1 | 144 | 230 | 15.04
 Bam | 8 | 22 | 164 | 18.40
 Bam | 16 | 12 | 164 | 21.00
 Bam | 32 | 8 | 170 | 21.60
