@@ -23,6 +23,149 @@ public abstract class ViccFactory {
     private ViccFactory() {
     }
 
+    private static StringBuilder readingObjectBRCA(@NotNull JsonObject object) {
+        //BRCA object
+        StringBuilder stringToCSVBRCA = new StringBuilder();
+        for (int i = 0; i < object.getAsJsonObject("brca").keySet().size(); i++) {
+            List<String> keysOfBRCAObject = new ArrayList<>(object.getAsJsonObject("brca").keySet());
+            stringToCSVBRCA.append(object.getAsJsonObject("brca").get(keysOfBRCAObject.get(i))).append(";"); // merge 1 object to string
+        }
+        return stringToCSVBRCA;
+    }
+
+    private static StringBuilder readingObjectGenes(@NotNull JsonObject object) {
+        //Genes object
+        StringBuilder stringToCSVGenes = new StringBuilder();
+        JsonArray arrayGenes = object.getAsJsonArray("genes");
+        String genes = arrayGenes.toString();
+        LOGGER.info(genes); // TODO: remove [] from string
+        stringToCSVGenes.append(genes).append(";");// merge 1 object to string
+        return stringToCSVGenes;
+    }
+
+    private static StringBuilder readingObjectTags(@NotNull JsonObject object) {
+        //Tags object
+        StringBuilder stringToCSVTags = new StringBuilder();
+        JsonArray arrayTags = object.getAsJsonArray("tags");
+        String tags = arrayTags.toString();
+        stringToCSVTags.append(tags).append(";");// merge 1 object to string
+        return stringToCSVTags;
+    }
+
+    private static StringBuilder readingObjectDevTags(@NotNull JsonObject object) {
+        //dev_tags
+        StringBuilder stringToCSVDevTags = new StringBuilder();
+        JsonArray arrayDevTags = object.getAsJsonArray("dev_tags");
+        stringToCSVDevTags.append(arrayDevTags).append(";");// merge 1 object to string
+        return stringToCSVDevTags;
+    }
+
+    private static StringBuilder readingObjectSource(@NotNull JsonObject object) {
+        //Source object
+        StringBuilder stringToCSVSource = new StringBuilder();
+        stringToCSVSource.append(object.getAsJsonPrimitive("source")).append(";");// merge 1 object to string
+        return stringToCSVSource;
+    }
+
+    private static StringBuilder readingObjectGeneIdentifiers(@NotNull JsonObject object) {
+        //gene_identifiers object
+        StringBuilder stringToCSVGeneIdentifiers = new StringBuilder();
+        JsonArray arrayGeneIdentifiers = object.getAsJsonArray("gene_identifiers");
+        LOGGER.info(arrayGeneIdentifiers);
+        JsonObject objectGeneIdentiefiers = (JsonObject) arrayGeneIdentifiers.iterator().next();
+        for (int i = 0; i < objectGeneIdentiefiers.keySet().size(); i++) {
+            List<String> keysOfGeneIdentifiersObject = new ArrayList<>(objectGeneIdentiefiers.keySet());
+            stringToCSVGeneIdentifiers.append(objectGeneIdentiefiers.get(keysOfGeneIdentifiersObject.get(i))).append(";");
+        }
+        return stringToCSVGeneIdentifiers;
+    }
+
+    private static StringBuilder readingObjectAssociation(@NotNull JsonObject object) {
+        //association object
+        StringBuilder stringToCSVAssociation = new StringBuilder();
+        for (int i = 0; i < object.getAsJsonObject("association").keySet().size(); i++) {
+            List<String> keysOfAssocationObject = new ArrayList<>(object.getAsJsonObject("association").keySet());
+            if (keysOfAssocationObject.get(i).equals("description")) {
+                JsonElement description = object.getAsJsonObject("association").get(keysOfAssocationObject.get(i));
+                LOGGER.info(description);
+            } else if (keysOfAssocationObject.get(i).equals("evidence")) {
+                JsonElement elementEvidence = object.getAsJsonObject("association").get("evidence");
+                JsonArray arrayEvidence = elementEvidence.getAsJsonArray();
+                JsonObject objectEvidence = (JsonObject) arrayEvidence.iterator().next();
+                for (int a = 0; a < objectEvidence.keySet().size(); a++) {
+                    List<String> keysOfEvidenceObject = new ArrayList<>(objectEvidence.keySet());
+                    if (keysOfEvidenceObject.get(a).equals("evidenceType")) {
+                        for (int b = 0; b < objectEvidence.get("evidenceType").getAsJsonObject().keySet().size(); b++) {
+                            List<String> keysOfEvidenceTypeObject =
+                                    new ArrayList<>(objectEvidence.get("evidenceType").getAsJsonObject().keySet());
+                            LOGGER.info(objectEvidence.get("evidenceType").getAsJsonObject().get(keysOfEvidenceTypeObject.get(b)));
+                        }
+                    } else {
+                        JsonElement info = objectEvidence.get(keysOfEvidenceObject.get(a));
+                        LOGGER.info(info);
+                    }
+                }
+            } else if (keysOfAssocationObject.get(i).equals("environmentalContexts")) {
+                JsonElement elementEnvironmentalContexts = object.getAsJsonObject("association").get("environmentalContexts");
+                LOGGER.info(elementEnvironmentalContexts);
+            } else if (keysOfAssocationObject.get(i).equals("evidence_label")) {
+                JsonElement evidence_label = object.getAsJsonObject("association").get(keysOfAssocationObject.get(i));
+                LOGGER.info(evidence_label);
+            } else if (keysOfAssocationObject.get(i).equals("phenotype")) {
+                JsonElement elementPhenotype = object.getAsJsonObject("association").get("phenotype");
+                LOGGER.info(elementPhenotype.getAsJsonObject().keySet());
+                for (int a = 0; a < elementPhenotype.getAsJsonObject().keySet().size(); a++) {
+                    List<String> keysOfPhenotypeObject = new ArrayList<>(elementPhenotype.getAsJsonObject().keySet());
+                    LOGGER.info(keysOfPhenotypeObject.get(a));
+                    if (keysOfPhenotypeObject.get(a).equals("type")) {
+                        List<String> keysOfPhenotypeTypeObject =
+                                new ArrayList<>(elementPhenotype.getAsJsonObject().get("type").getAsJsonObject().keySet());
+                        for (int c = 0; c < keysOfPhenotypeObject.size(); c++) {
+                            LOGGER.info(elementPhenotype.getAsJsonObject()
+                                    .get("type")
+                                    .getAsJsonObject()
+                                    .get(keysOfPhenotypeTypeObject.get(c)));
+                        }
+                    } else {
+                        JsonElement elemtPhenotype = elementPhenotype.getAsJsonObject().get(keysOfPhenotypeObject.get(a));
+                    }
+                }
+            } else if (keysOfAssocationObject.get(i).equals("oncogenic")) {
+                JsonElement oncogenic = object.getAsJsonObject("association").get(keysOfAssocationObject.get(i));
+                LOGGER.info(oncogenic);
+            }
+        }
+        return stringToCSVAssociation;
+    }
+
+    private static StringBuilder readingObjectFeaturesNames(@NotNull JsonObject object) {
+        //feature_names object
+        StringBuilder stringToCSVFeaturesNames = new StringBuilder();
+        LOGGER.info(object.getAsJsonPrimitive("feature_names"));
+        return stringToCSVFeaturesNames;
+    }
+
+    private static StringBuilder readingObjectFeatures(@NotNull JsonObject object) {
+        //features
+        StringBuilder stringToCSVFeatures = new StringBuilder();
+        JsonArray arrayFeatures = object.getAsJsonArray("features");
+        JsonObject objectFeatures = (JsonObject) arrayFeatures.iterator().next();
+        for (int i = 0; i < objectFeatures.keySet().size(); i++) {
+            List<String> keysOfFeaturesObject = new ArrayList<>(objectFeatures.keySet());
+
+            if (keysOfFeaturesObject.get(i).equals("sequence_ontology")) {
+                List<String> keysOfSequenceOntologyObject = new ArrayList<>(objectFeatures.getAsJsonObject("sequence_ontology").keySet());
+
+                for (int e = 0; e < objectFeatures.getAsJsonObject("sequence_ontology").keySet().size(); e++) {
+                    LOGGER.info(objectFeatures.get("sequence_ontology").getAsJsonObject().get(keysOfSequenceOntologyObject.get(e)));
+                }
+            } else {
+                LOGGER.info(objectFeatures.get(keysOfFeaturesObject.get(i)));
+            }
+        }
+        return stringToCSVFeatures;
+    }
+
     public static void extractAllFile(@NotNull String allJsonPath) throws IOException {
     }
 
@@ -47,118 +190,31 @@ public abstract class ViccFactory {
                     writer.append(",tags");
                     writer.append(",source");
                 }
-                StringBuilder StringToCSVBRCA = new StringBuilder();
+                StringBuilder stringToCSVAll = new StringBuilder();
 
-                //BRCA
-                for (int i = 0; i < object.getAsJsonObject("brca").keySet().size(); i++) {
-                    List<String> keysOfBRCAObject = new ArrayList<>(object.getAsJsonObject("brca").keySet());
-                    StringToCSVBRCA.append(object.getAsJsonObject("brca").get(keysOfBRCAObject.get(i)))
-                            .append(";"); // merge 1 object to string
-                }
+                StringBuilder StringToCSVBRCA = readingObjectBRCA(object);
+                StringBuilder StringToCSVGenes = readingObjectGenes(object);
+                StringBuilder StringToCSVTags = readingObjectTags(object);
+                StringBuilder StringToCSVDevTags = readingObjectDevTags(object);
+                StringBuilder StringToCSVSource = readingObjectSource(object);
+                StringBuilder StringToCSVGeneIdentifiers = readingObjectGeneIdentifiers(object);
+                StringBuilder StringToCSVAssociation = readingObjectAssociation(object);
+                StringBuilder StringToCSVFeaturesNames = readingObjectFeaturesNames(object);
+                StringBuilder StringToCSVFeatures = readingObjectFeatures(object);
 
-                //Genes
-                JsonArray arrayGenes = object.getAsJsonArray("genes");
-                String genes = arrayGenes.toString();
-                LOGGER.info(genes); // TODO: remove [] from string
-                StringToCSVBRCA.append(genes).append(";");// merge 1 object to string
+                stringToCSVAll.append(StringToCSVBRCA)
+                        .append(StringToCSVGenes)
+                        .append(StringToCSVTags)
+                        .append(StringToCSVDevTags)
+                        .append(StringToCSVSource)
+                        .append(StringToCSVGeneIdentifiers)
+                        .append(StringToCSVAssociation)
+                        .append(StringToCSVFeaturesNames)
+                        .append(StringToCSVFeatures);
 
-                //Tags
-                JsonArray arrayTags = object.getAsJsonArray("tags");
-                String tags = arrayTags.toString();
-                StringToCSVBRCA.append(tags).append(";");// merge 1 object to string
-
-                //Source
-                StringToCSVBRCA.append(object.getAsJsonPrimitive("source")).append(";");// merge 1 object to string
-
-                //gene_identifiers
-                JsonArray arrayGeneIdentifiers = object.getAsJsonArray("gene_identifiers");
-                LOGGER.info(arrayGeneIdentifiers);
-                JsonObject objectGeneIdentiefiers = (JsonObject) arrayGeneIdentifiers.iterator().next();
-                for (int i = 0; i < objectGeneIdentiefiers.keySet().size(); i++) {
-                    List<String> keysOfGeneIdentifiersObject = new ArrayList<>(objectGeneIdentiefiers.keySet());
-                    StringToCSVBRCA.append(objectGeneIdentiefiers.get(keysOfGeneIdentifiersObject.get(i))).append(";");
-                }
-
-                //association
-                for (int i = 0; i < object.getAsJsonObject("association").keySet().size(); i++) {
-                    List<String> keysOfAssocationObject = new ArrayList<>(object.getAsJsonObject("association").keySet());
-                    if (keysOfAssocationObject.get(i).equals("description")) {
-                        JsonElement description = object.getAsJsonObject("association").get(keysOfAssocationObject.get(i));
-                        LOGGER.info(description);
-                    } else if (keysOfAssocationObject.get(i).equals("evidence")) {
-                        JsonElement elementEvidence = object.getAsJsonObject("association").get("evidence");
-                        JsonArray arrayEvidence = elementEvidence.getAsJsonArray();
-                        JsonObject objectEvidence = (JsonObject) arrayEvidence.iterator().next();
-                        for (int a = 0; a < objectEvidence.keySet().size(); a++) {
-                            List<String> keysOfEvidenceObject = new ArrayList<>(objectEvidence.keySet());
-                            if (keysOfEvidenceObject.get(a).equals("evidenceType")) {
-                                for (int b = 0; b < objectEvidence.get("evidenceType").getAsJsonObject().keySet().size(); b++) {
-                                    List<String> keysOfEvidenceTypeObject =
-                                            new ArrayList<>(objectEvidence.get("evidenceType").getAsJsonObject().keySet());
-                                    LOGGER.info(objectEvidence.get("evidenceType").getAsJsonObject().get(keysOfEvidenceTypeObject.get(b)));
-                                }
-                            } else {
-                                JsonElement info = objectEvidence.get(keysOfEvidenceObject.get(a));
-                                LOGGER.info(info);
-                            }
-                        }
-                    } else if (keysOfAssocationObject.get(i).equals("environmentalContexts")) {
-                        JsonElement elementEnvironmentalContexts = object.getAsJsonObject("association").get("environmentalContexts");
-                        LOGGER.info(elementEnvironmentalContexts);
-                    } else if (keysOfAssocationObject.get(i).equals("evidence_label")) {
-                        JsonElement evidence_label = object.getAsJsonObject("association").get(keysOfAssocationObject.get(i));
-                        LOGGER.info(evidence_label);
-                    } else if (keysOfAssocationObject.get(i).equals("phenotype")) {
-                        JsonElement elementPhenotype = object.getAsJsonObject("association").get("phenotype");
-                        LOGGER.info(elementPhenotype.getAsJsonObject().keySet());
-                        for (int a = 0; a < elementPhenotype.getAsJsonObject().keySet().size(); a++) {
-                            List<String> keysOfPhenotypeObject = new ArrayList<>(elementPhenotype.getAsJsonObject().keySet());
-                            LOGGER.info(keysOfPhenotypeObject.get(a));
-                            if (keysOfPhenotypeObject.get(a).equals("type")) {
-                                List<String> keysOfPhenotypeTypeObject =
-                                        new ArrayList<>(elementPhenotype.getAsJsonObject().get("type").getAsJsonObject().keySet());
-                                for (int c = 0; c < keysOfPhenotypeObject.size(); c++) {
-                                    LOGGER.info(elementPhenotype.getAsJsonObject()
-                                            .get("type")
-                                            .getAsJsonObject()
-                                            .get(keysOfPhenotypeTypeObject.get(c)));
-                                }
-                            } else {
-                                JsonElement elemtPhenotype = elementPhenotype.getAsJsonObject().get(keysOfPhenotypeObject.get(a));
-                            }
-                        }
-                    } else if (keysOfAssocationObject.get(i).equals("oncogenic")) {
-                        JsonElement oncogenic = object.getAsJsonObject("association").get(keysOfAssocationObject.get(i));
-                        LOGGER.info(oncogenic);
-                    }
-                }
-
-                //feature_names
-                LOGGER.info(object.getAsJsonPrimitive("feature_names"));
-
-                //dev_tags
-                JsonArray arrayDevTags = object.getAsJsonArray("dev_tags");
-                StringToCSVBRCA.append(arrayDevTags).append(";");// merge 1 object to string
-
-                //features
-                JsonArray arrayFeatures = object.getAsJsonArray("features");
-                JsonObject objectFeatures = (JsonObject) arrayFeatures.iterator().next();
-                for (int i = 0; i < objectFeatures.keySet().size(); i++) {
-                    List<String> keysOfFeaturesObject = new ArrayList<>(objectFeatures.keySet());
-
-                    if (keysOfFeaturesObject.get(i).equals("sequence_ontology")) {
-                        List<String> keysOfSequenceOntologyObject =
-                                new ArrayList<>(objectFeatures.getAsJsonObject("sequence_ontology").keySet());
-
-                        for (int e = 0; e < objectFeatures.getAsJsonObject("sequence_ontology").keySet().size(); e++) {
-                            LOGGER.info(objectFeatures.get("sequence_ontology").getAsJsonObject().get(keysOfSequenceOntologyObject.get(e)));
-                        }
-                    } else {
-                        LOGGER.info(objectFeatures.get(keysOfFeaturesObject.get(i)));
-                    }
-                }
+                LOGGER.info(stringToCSVAll);
                 index++;
-                writer.append(StringToCSVBRCA);
+                writer.append(stringToCSVAll);
                 writer.append("\n");
             }
         } catch (IOException e) {
