@@ -453,3 +453,39 @@ Minor allele copy numbers above 1 (blue) indicate amplification events of both A
 
 The innermost circle displays the observed structural variants within or between the chromosomes. 
 Translocations are indicated in blue, deletions in red, insertions in yellow, tandem duplications in green and inversions in black.
+
+
+## Version History
+- 2.21
+  - No functional changes.
+  - Changed ref_sample and tumor_sample parameters to reference and tumor respectively to be consistent with AMBER and COBALT. 
+  - Made run_dir parameter optional so long as output_dir, amber and cobalt parameters are set.
+- 2.20
+  - Added purity and copy number fields to structural variant VCF output
+  - Fixed bug in somatic fit logic to only select from candidate purities.
+  - Fixed BAF inferring bug
+- 2.19
+  - Improvements to SV copy number inferring.
+  - Improvements to SV recovery.
+- 2.18
+  - Allow recovery of pon filtered SVs
+- 2.17
+  - Added HG38 support for gene copy numbers.
+  - Look further out to infer baf if there are no amber points in a region.
+  - Fixed bug where some structural variant breakpoints were off by one base.  
+- 2.16
+  - Added support for hg38. Purple will try to automatically detect the ref genome used from the cobalt output otherwise -ref_genome should be set to either hg19 or hg38.
+  - Added feature to recover filtered structural variants. If supplied, the recovery vcf will be searched for candidates at any copy number break points that are currently unexplained by an SV.
+    If suitable, they will be recovered and included in the segmentation and smoothing algorithms. 
+    All passing and recovered structural variants are now written as a VCF to the purple output directory.
+- 2.15
+  - New ploidy penalty model adopted using minor and major allele ploidy deviation instead of baf and copy number deviation.
+  - A somatic deviation penalty has been added to penalise fits which lead to somatic variants with higher ploidies than the major allele ploidy. 
+    The 99.9% upper cutoff for binomial distribution from the major allele ploidy is used as a cutoff to mark variants as inconsistent. 
+    1000 somatic variants are sampled per tumor, with the somatic penalty equal to the sum of the deviations over the 99.9% cutoff divided by the number of somatic variants sampled.
+  - Cutoff to be classified as highly diploid tightened (minor and major allele ploidy must both be between 0.8 and 1.2).
+  - If there is <300 variants (all types) with raw vaf > 10% then mark as NO_TUMOR (formerly was if there were >1000 SNP in total). 
+    Purity is set to what it would have been if NO_TUMOR rule had not been applied (ie the somatic peak or highly diploid)
+- 2.14
+  - Added check for excessive deleted genes.
+  - Added C11orf95 to gene panel.    
