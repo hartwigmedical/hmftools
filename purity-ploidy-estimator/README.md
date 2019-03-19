@@ -346,17 +346,15 @@ run_dir | None | If provided, default values of <run_dir>/amber, <run_dir>/cobal
 threads | 2 | Number of threads to use.
 somatic_min_peak | 100 | Minimum number of somatic variants to consider a peak.
 somatic_min_total | 1000 | Minimum number of somatic variants required to assist highly diploid fits.
-somatic_vcf | None | Optional location of somatic variants vcf. Sample name should match <tumor>. GZ files supported.
-structural_vcf | None | Optional location of structural variants vcf. Sample name should match <tumor>. GZ files supported.
-sv_recovery_vcf | None | Optional location of structural variants recovery vcf. Sample name should match <tumor>. GZ files supported.
+somatic_vcf | None | Optional location of somatic variants vcf.  Sample name must match tumor parameter. GZ files supported.
+structural_vcf | None | Optional location of structural variants vcf. Sample name must match tumor parameter. GZ files supported.
+sv_recovery_vcf | None | Optional location of structural variants recovery vcf. Sample name must match tumor parameter. GZ files supported.
 circos | None | Optional path to circos binary. When supplied, circos graphs will be written to <output_dir>/plot
 db_enabled | None | This parameter has no arguments. Optionally include if you wish to persist results to a database. Database initialization script can be found [here](https://github.com/hartwigmedical/hmftools/blob/master/patient-db/src/main/resources/generate_database.sql).
 db_user | None | Database username. Mandatory if db_enabled.
 db_pass | None | Database password. Mandatory if db_enabled.
 db_url | None | Database URL. Should be of format: `mysql://localhost:3306/hmfpatients`. Mandatory if db_enabled.
-ref_genome | Detect | Will attempt to detect reference genome from COBALT output but failing that must be either hg18 or hg38
-output_dir |  <run_dir>/purple | PURPLE output directory.
-
+ref_genome | Detect | Will attempt to detect reference genome from COBALT output but failing that must be either hg18 or hg38.
 
 ### Example Usage
 
@@ -380,14 +378,14 @@ It is still possible to override these default parameters but supplying a value,
 
 ```
 java -jar purple.jar \
-   -reference COLO829BL \
-   -tumor COLO829 \
+   -reference COLO829R \
+   -tumor COLO829T \
    -run_dir /path/to/COLO829 \
-   -output_dir /path/to/COLO829/purple_experiment \
+   -output_dir /path/to/COLO829/purple_pilot \
    -gc_profile /Users/jon/hmf/analyses/COLO829/GC_profile.1000bp.cnp 
 ```
 
-In this case the output_directory will be set to `/path/to/COLO829/purple_experiment` while the amber and cobalt parameters will have the default values `/path/to/COLO829/amber` and `/path/to/COLO829/cobalt`.
+In this case the output_directory will be set to `/path/to/COLO829/purple_pilot` while the amber and cobalt parameters will have the default values `/path/to/COLO829/amber` and `/path/to/COLO829/cobalt`.
 
 ## Performance Characteristics
 Performance numbers were taken from a 72 core machine using COLO829 data including generation of CIRCOS diagram but excluding database writing.
