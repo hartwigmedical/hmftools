@@ -135,6 +135,10 @@ public abstract class ViccFactory {
                         LOGGER.info(oncogenic);
                     }
                 }
+
+                //feature_names
+                LOGGER.info(object.getAsJsonPrimitive("feature_names"));
+
                 index++;
                 writer.append(StringToCSVBRCA);
                 writer.append("\n");
