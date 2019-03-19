@@ -111,12 +111,12 @@ public class ConfigSupplier {
 
             if (!cmd.hasOption(AMBER)) {
                 printHelp(opt);
-                throw new ParseException("Either " + OUTPUT_DIRECTORY + " or " + AMBER + " must be supplied as a parameter");
+                throw new ParseException("Either " + RUN_DIRECTORY + " or " + AMBER + " must be supplied as a parameter");
             }
 
             if (!cmd.hasOption(COBALT)) {
                 printHelp(opt);
-                throw new ParseException("Either " + OUTPUT_DIRECTORY + " or " + COBALT + " must be supplied as a parameter");
+                throw new ParseException("Either " + RUN_DIRECTORY + " or " + COBALT + " must be supplied as a parameter");
             }
         }
 
