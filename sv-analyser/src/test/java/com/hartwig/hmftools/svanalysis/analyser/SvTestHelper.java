@@ -85,6 +85,9 @@ public class SvTestHelper
     public void preClusteringInit()
     {
         ClusteringMethods.populateChromosomeBreakendMap(AllVariants);
+
+        addCopyNumberData();
+
         ClusteringMethods.annotateNearestSvData();
         LinkFinder.findDeletionBridges(ClusteringMethods.getChrBreakendMap());
         ClusteringMethods.setSimpleVariantLengths(SampleId);
@@ -148,13 +151,13 @@ public class SvTestHelper
     public static SvVarData createInv(final String varId, final String chromosome, long posStart, long posEnd, int orientation)
     {
         return createTestSv(varId, chromosome, chromosome, posStart, posEnd, orientation, orientation, INV,
-                orientation == 1 ? 3 : 2, orientation == 1 ? 2 : 3, 1, 1, 1, "");
+                orientation == 1 ? 4 : 3, orientation == 1 ? 3 : 4, 1, 1, 1, "");
     }
 
     public static SvVarData createSgl(final String varId, final String chromosome, long position, int orientation, boolean isNoneSegment)
     {
         SvVarData var = createTestSv(varId, chromosome, "0", position, -1, orientation, -1, SGL,
-                2, 0, 1, 0, 1, "");
+                3, 0, 1, 0, 1, "");
 
         return var;
     }
@@ -162,7 +165,7 @@ public class SvTestHelper
     public static SvVarData createBnd(final String varId, final String chrStart, long posStart, int orientStart, final String chrEnd, long posEnd, int orientEnd)
     {
         SvVarData var = createTestSv(varId, chrStart, chrEnd, posStart, posEnd, orientStart, orientEnd, BND,
-                1, 1, 1, 1, 1, "");
+                3, 3, 1, 1, 1, "");
 
         return var;
     }
@@ -248,9 +251,16 @@ public class SvTestHelper
 
     public void addCopyNumberData()
     {
+        // use SV breakend data to re-create the copy number segments
+        // NOTE: positions adjusted for orientation are not done correctly
         Map<String, List<SvCNData>> chrCnDataMap = CopyNumberAnalyser.getChrCnDataMap();
         final Map<String, List<SvBreakend>> chrBreakendMap = ClusteringMethods.getChrBreakendMap();
         Map<String,SvCNData[]> svIdCnDataMap = CopyNumberAnalyser.getSvIdCnDataMap();
+
+        chrCnDataMap.clear();
+        svIdCnDataMap.clear();
+
+        double nonDisruptedAP = 1;
 
         int cnId = 0;
         for (final Map.Entry<String, List<SvBreakend>> entry : chrBreakendMap.entrySet())

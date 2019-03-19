@@ -44,7 +44,7 @@ public class AnnotationTests
         final SvVarData var2 = createBnd("1", "1", 1000, 1, "2", 1000, -1);
         final SvVarData var3 = createBnd("2", "1", 200000, 1, "2", 1100, 1);
 
-        // single other cluster
+        // single other cluster - will be merged in because it faces the foldback
         final SvVarData var4 = createSgl("3", "1", 150000, 1, false);
 
         tester.AllVariants.add(var1);
@@ -55,7 +55,10 @@ public class AnnotationTests
         tester.preClusteringInit();
         tester.Analyser.clusterAndAnalyse();
 
+        assertTrue(var1.isFoldback());
         assertEquals(2, tester.Analyser.getClusters().size());
+        SvCluster cluster = tester.Analyser.getClusters().get(0);
+        assertTrue(cluster.getSVs().contains(var4));
 
         tester.clearClustersAndSVs();
 

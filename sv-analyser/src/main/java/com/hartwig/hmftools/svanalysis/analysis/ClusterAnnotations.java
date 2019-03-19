@@ -1629,7 +1629,7 @@ public class ClusterAnnotations
 
         for(final SvVarData var : cluster.getSVs())
         {
-            double ploidy = var.getSvData().ploidy();
+            double ploidy = var.ploidy();
             int i = 0;
             for(; i < ploidyList.size(); ++i)
             {
@@ -1718,7 +1718,7 @@ public class ClusterAnnotations
                     if(breakend.getSV().getCluster() == cluster)
                         continue;
 
-                    if(breakend.getSV().getSvData().ploidy() * DOUBLE_MINUTE_PLOIDY_GAP_RATIO >= minPloidyAboveThreshold)
+                    if(breakend.ploidy() * DOUBLE_MINUTE_PLOIDY_GAP_RATIO >= minPloidyAboveThreshold)
                     {
                         otherClustersHaveHighPloidy = true;
                         break;

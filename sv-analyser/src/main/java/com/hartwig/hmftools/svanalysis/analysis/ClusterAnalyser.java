@@ -27,6 +27,7 @@ import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.CLUST
 import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.CLUSTER_REASON_FOLDBACKS;
 import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.CLUSTER_REASON_LOH_CHAIN;
 import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.CLUSTER_REASON_LOOSE_OVERLAP;
+import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.CLUSTER_REASON_PLOIDY_MAP;
 import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.addClusterReason;
 import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.applyCopyNumberReplication;
 import static com.hartwig.hmftools.svanalysis.annotators.LineElementAnnotator.markLineCluster;
@@ -44,12 +45,15 @@ import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_SGL_
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_SIMPLE_SV;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.copyNumbersEqual;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.areSpecificClusters;
+import static com.hartwig.hmftools.svanalysis.types.SvCluster.isSpecificCluster;
 import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.ASSEMBLY_MATCH_MATCHED;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_END;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_START;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.haveSameChrArms;
+import static com.hartwig.hmftools.svanalysis.types.SvVarData.isSpecificSV;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.isStart;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -291,22 +295,11 @@ public class ClusterAnalyser {
 
     public void mergeClusters()
     {
-        // now look at merging unresolved & inconsistent clusters where they share the same chromosomal arms
-        List<SvCluster> mergedClusters = Lists.newArrayList();
-
-        mergedClusters = mergeInconsistentClusters(mergedClusters);
-        boolean foundMerges = !mergedClusters.isEmpty();
+        boolean foundMerges = mergeInconsistentClusters();
 
         while(foundMerges)
         {
-            List<SvCluster> newMergedClusters = mergeInconsistentClusters(mergedClusters);
-            foundMerges = !newMergedClusters.isEmpty();
-
-            for(SvCluster cluster : newMergedClusters)
-            {
-                if(!mergedClusters.contains(cluster))
-                    mergedClusters.add(cluster);
-            }
+            foundMerges = mergeInconsistentClusters();
         }
     }
 
@@ -416,20 +409,20 @@ public class ClusterAnalyser {
         }
     }
 
-    private List<SvCluster> mergeInconsistentClusters(List<SvCluster> existingMergedClusters)
+    private boolean mergeInconsistentClusters()
     {
         // second round of cluster merging on more complex criteria and inconsistencies:
         // merge on foldbacks on the same arm
         // merge on links between common arms
         // merge if one cluster has footprints which overlap unresolved complex SVs
-
-        // any merges result in a new cluster with the original clusters made into sub-clusters
-        // subsequent merging keeps the 'super' clusters and adds more sub-clusters
-        // the purpose of sub-clusters was to a) allow de-merging and b) preserve chains and links
-        // but this could be revisited
+        // merge clusters which resolve another's LOH DUP
         List<SvCluster> mergedClusters = Lists.newArrayList();
 
         long longDelDupCutoffLength = mClusteringMethods.getDelDupCutoffLength();
+
+        Map<SvCluster, List<SvCluster>> lohResolvingClustersMap = new HashMap();
+        Map<SvCluster, List<SvCluster>> overlappingClustersMap = new HashMap();
+        Map<SvCluster, List<SvCluster>> ploidyResolvingClustersMap = new HashMap();
 
         int index1 = 0;
         while(index1 < mClusters.size())
@@ -445,6 +438,7 @@ public class ClusterAnalyser {
             }
 
             List<SvCluster> cluster1Overlaps = getTraversedClusters(cluster1);
+            List<SvCluster> cluster1PloidyResolves = getHighPloidyResolvingClusters(cluster1);
 
             boolean cluster1Merged = false;
             SvCluster newCluster = null;
@@ -454,7 +448,13 @@ public class ClusterAnalyser {
             {
                 SvCluster cluster2 = mClusters.get(index2);
 
-                List<SvCluster> cluster2ResolvingLohs = getResolvingLohClusters(cluster2);
+                List<SvCluster> cluster2ResolvingLohs = lohResolvingClustersMap.get(cluster2);
+
+                if(cluster2ResolvingLohs == null)
+                {
+                    cluster2ResolvingLohs = getResolvingLohClusters(cluster2);
+                    lohResolvingClustersMap.put(cluster2, cluster2ResolvingLohs);
+                }
 
                 if(cluster2.isResolved() && cluster2ResolvingLohs.isEmpty())
                 {
@@ -472,7 +472,13 @@ public class ClusterAnalyser {
 
                 if(!canMergeClusters)
                 {
-                    List<SvCluster> cluster2Overlaps = getTraversedClusters(cluster2);
+                    List<SvCluster> cluster2Overlaps = overlappingClustersMap.get(cluster2);
+
+                    if (cluster2Overlaps == null)
+                    {
+                        cluster2Overlaps = getTraversedClusters(cluster2);
+                        overlappingClustersMap.put(cluster2, cluster2Overlaps);
+                    }
 
                     if(cluster1Overlaps.contains(cluster2) || cluster2Overlaps.contains(cluster1))
                     {
@@ -480,10 +486,31 @@ public class ClusterAnalyser {
                         addClusterReason(cluster2, CLUSTER_REASON_LOOSE_OVERLAP, "");
                         canMergeClusters = true;
                     }
-                    else if(cluster1ResolvingLohs.contains(cluster2) || cluster2ResolvingLohs.contains(cluster1))
+                }
+
+                if(!canMergeClusters)
+                {
+                    if (cluster1ResolvingLohs.contains(cluster2) || cluster2ResolvingLohs.contains(cluster1))
                     {
                         addClusterReason(cluster1, CLUSTER_REASON_LOH_CHAIN, "");
                         addClusterReason(cluster2, CLUSTER_REASON_LOH_CHAIN, "");
+                        canMergeClusters = true;
+                    }
+                }
+
+                if(!canMergeClusters)
+                {
+                    List<SvCluster> cluster2PloidyResolves = ploidyResolvingClustersMap.get(cluster2);
+                    if(cluster2PloidyResolves == null)
+                    {
+                        cluster2PloidyResolves = getHighPloidyResolvingClusters(cluster2);
+                        ploidyResolvingClustersMap.put(cluster2, cluster2PloidyResolves);
+                    }
+
+                    if (cluster1PloidyResolves.contains(cluster2) || cluster2PloidyResolves.contains(cluster1))
+                    {
+                        addClusterReason(cluster1, CLUSTER_REASON_PLOIDY_MAP, "");
+                        addClusterReason(cluster2, CLUSTER_REASON_PLOIDY_MAP, "");
                         canMergeClusters = true;
                     }
                 }
@@ -509,8 +536,6 @@ public class ClusterAnalyser {
                         {
                             cluster1.addSubCluster(subCluster);
                         }
-
-                        existingMergedClusters.remove(cluster2);
                     }
                     else
                     {
@@ -535,8 +560,6 @@ public class ClusterAnalyser {
                         {
                             newCluster.addSubCluster(subCluster);
                         }
-
-                        existingMergedClusters.remove(cluster2);
                     }
                     else
                     {
@@ -567,7 +590,7 @@ public class ClusterAnalyser {
             }
         }
 
-        return mergedClusters;
+        return !mergedClusters.isEmpty();
     }
 
     private static int MAX_FOLDBACK_NEXT_CLUSTER_DISTANCE = 5000000;
@@ -661,8 +684,8 @@ public class ClusterAnalyser {
                     if (abs(nextBreakend.position() - foldbackBreakend.position()) > MAX_FOLDBACK_NEXT_CLUSTER_DISTANCE)
                         continue;
 
-                    double fbPloidy = foldbackBreakend.getSV().getSvData().ploidy();
-                    double nbPloidy = nextBreakend.getSV().getSvData().ploidy();
+                    double fbPloidy = foldbackBreakend.ploidy();
+                    double nbPloidy = nextBreakend.ploidy();
 
                     if (nbPloidy < fbPloidy && !copyNumbersEqual(nbPloidy, fbPloidy))
                         continue;
@@ -813,13 +836,81 @@ public class ClusterAnalyser {
                     if(otherCluster == otherBreakend.getSV().getCluster())
                         continue;
 
-                    // LOGGER.debug("cluster({}) SV({}) resolved prior to LOH by other cluster({}) breakend({})",
-                    //        cluster.id(), breakend.getSV().posId(), otherCluster.id(), otherBreakend.toString());
-
                     if(!resolvingClusters.contains(otherCluster))
+                    {
+                        LOGGER.debug("cluster({}) SV({}) resolved prior to LOH by other cluster({}) breakend({})",
+                                cluster.id(), breakend.getSV().posId(), otherCluster.id(), otherBreakend.toString());
+
                         resolvingClusters.add(otherCluster);
+                    }
 
                     break;
+                }
+            }
+        }
+
+        return resolvingClusters;
+    }
+
+    private List<SvCluster> getHighPloidyResolvingClusters(final SvCluster cluster)
+    {
+        // find any breakend which proceeds past another cluster before the major allele ploidy drops below its ploidy
+        List<SvCluster> resolvingClusters = Lists.newArrayList();
+
+        // isSpecificCluster(cluster);
+
+        for (final Map.Entry<String, List<SvBreakend>> entry : cluster.getChrBreakendMap().entrySet())
+        {
+            List<SvBreakend> breakendList = entry.getValue();
+
+            List<SvBreakend> fullBreakendList = mClusteringMethods.getChrBreakendMap().get(entry.getKey());
+
+            for (SvBreakend breakend : breakendList)
+            {
+                boolean traverseUp = breakend.orientation() == -1;
+                double breakendPloidy = breakend.ploidy();
+                SvCluster resolvingCluster = null;
+                SvBreakend resolvingBreakend = null;
+
+                int index = breakend.getChrPosIndex();
+
+                while(true)
+                {
+                    index += traverseUp ? 1 : -1;
+
+                    if(index < 0 || index >= fullBreakendList.size())
+                        break;
+
+                    SvBreakend nextBreakend = fullBreakendList.get(index);
+
+                    if(nextBreakend.orientation() == breakend.orientation())
+                        continue;
+
+                    SvCluster nextCluster = nextBreakend.getSV().getCluster();
+                    if(nextCluster == cluster)
+                        break;
+
+                    if(nextCluster.isResolved())
+                        continue;
+
+                    resolvingCluster = nextCluster;
+                    resolvingBreakend = nextBreakend;
+
+                    double majorAP = nextBreakend.majorAllelePloidy(!traverseUp);
+
+                    if(majorAP < breakendPloidy)
+                    {
+                        if(!resolvingClusters.contains(resolvingCluster))
+                        {
+                            LOGGER.debug("cluster({}) SV({}) requires cluster({}) breakend({}) prior to MAP drop({})",
+                                    cluster.id(), breakend.getSV().posId(), resolvingCluster.id(), resolvingBreakend.toString(),
+                                    String.format("%.2f -> %.2f", breakendPloidy, majorAP));
+
+                            resolvingClusters.add(resolvingCluster);
+                        }
+
+                        break;
+                    }
                 }
             }
         }

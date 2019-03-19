@@ -82,7 +82,7 @@ public class SvBreakend {
     {
         return mSV.copyNumber(mUsesStart);
     }
-    public double ploidy() { return mSV.getSvData().ploidy(); }
+    public double ploidy() { return mSV.ploidy(); }
 
     public double majorAllelePloidy(boolean usePrevious)
     {

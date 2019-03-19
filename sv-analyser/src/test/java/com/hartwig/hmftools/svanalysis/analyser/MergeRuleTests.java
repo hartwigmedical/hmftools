@@ -14,10 +14,13 @@ import static org.junit.Assert.assertEquals;
 
 import static junit.framework.TestCase.assertTrue;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.svanalysis.types.SvCluster;
+import com.hartwig.hmftools.svanalysis.types.SvLOH;
 import com.hartwig.hmftools.svanalysis.types.SvVarData;
 
 import org.junit.Ignore;
@@ -180,6 +183,36 @@ public class MergeRuleTests
         assertTrue(inv3.getClusterReason().contains(CLUSTER_REASON_FOLDBACKS));
         assertTrue(sgl2.getClusterReason().contains(CLUSTER_REASON_FOLDBACKS));
 
+    }
+
+    @Test
+    public void testLohResolvingClusterMerge()
+    {
+        SvTestHelper tester = new SvTestHelper();
+
+        SvVarData var1 = createDup("1", "1", 10000, 50000);
+        SvVarData var2 = createBnd("2", "1", 20000, 1, "3", 1000, 1);
+
+        tester.AllVariants.add(var1);
+        tester.AllVariants.add(var2);
+
+        Map<String, List<SvLOH>> lohDataMap = new HashMap();
+        List<SvLOH> lohData = Lists.newArrayList();
+
+        lohData.add(new SvLOH(tester.SampleId, "1", 1, 2, 50000, 1000000,
+                "DUP", "TELOMERE", 1, 1, 1, 0, 1, 1,
+                var1.id(), "", false, true));
+
+        lohDataMap.put(tester.SampleId, lohData);
+
+        tester.ClusteringMethods.setSampleLohData(lohDataMap);
+
+        tester.preClusteringInit();
+
+        tester.Analyser.clusterAndAnalyse();
+
+        // now check final chain-finding across all sub-clusters
+        assertEquals(tester.Analyser.getClusters().size(), 1);
     }
 
     @Test

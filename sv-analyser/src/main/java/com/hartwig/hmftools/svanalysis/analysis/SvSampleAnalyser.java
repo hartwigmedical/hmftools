@@ -522,7 +522,7 @@ public class SvSampleAnalyser {
                 mClusterFileWriter.write(",DelCount,DupCount,InsCount,InvCount,BndCount,SglCount");
                 mClusterFileWriter.write(",Consistency,ArmCount,OriginArms,FragmentArms,IsLINE,HasReplicated,Foldbacks,DSBs,ShortDSBs");
                 mClusterFileWriter.write(",TotalLinks,AssemblyLinks,LongDelDups,UnlinkedRemotes,ShortTIRemotes,MinCopyNumber,MaxCopyNumber");
-                mClusterFileWriter.write(",SynDelDupLen,SynDelDupAvgTILen,Annotations,ChainInfo");
+                mClusterFileWriter.write(",SynDelDupLen,SynDelDupAvgTILen,Annotations,UnchainedSVs,ChainInfo,AlleleValidPerc");
                 mClusterFileWriter.write(",ArmClusterCount,AcSoloSv,AcRemoteTI,AcDsb,AcMultipleDsb,AcSingleFb,AcFbTI,AcFbDSB");
                 mClusterFileWriter.write(",ArmFbPairSame,ArmFbPairOpp,ArmFbPairFacing,AcComplexFb,AcComplexLine,AcComplexOther");
                 mClusterFileWriter.newLine();
@@ -564,8 +564,9 @@ public class SvSampleAnalyser {
                                 cluster.getMinCNChange(), cluster.getMaxCNChange()));
 
                 writer.write(
-                        String.format(",%d,%d,%s,%s",
-                                cluster.getSynDelDupLength(), cluster.getSynDelDupTILength(), cluster.getAnnotations(), chainInfo));
+                        String.format(",%d,%d,%s,%d,%s,%.2f",
+                                cluster.getSynDelDupLength(), cluster.getSynDelDupTILength(), cluster.getAnnotations(),
+                                cluster.getUnlinkedSVs(), chainInfo, cluster.getValidAllelePloidySegmentPerc()));
 
                 // ArmClusterCount,AcSoloSv,AcRemoteTI,AcDsb,AcMultipleDsb,AcSingleFb,AcFbTI,AcFbDSB
                 // ArmFbPairSame,ArmFbPairOpp,ArmFbPairFacing,AcComplexFb,AcComplexLine,AcComplexOther

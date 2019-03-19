@@ -15,6 +15,7 @@ import static com.hartwig.hmftools.common.purple.segment.SegmentSupport.NONE;
 import static com.hartwig.hmftools.common.purple.segment.SegmentSupport.TELOMERE;
 import static com.hartwig.hmftools.common.purple.segment.SegmentSupport.UNKNOWN;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantFactory.PON_FILTER_PON;
+import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INV;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.svanalysis.analysis.ClusterAnalyser.SHORT_TI_LENGTH;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.NONE_SEGMENT_INFERRED;
@@ -81,7 +82,7 @@ public class CNAnalyser {
     public static final String CN_ANALYSIS_ONLY = "run_cn_analysis";
     public static final String SV_PLOIDY_CALC_FILE = "sv_ploidy_file";
     private static final String LOH_DATA_FILE = "loh_file";
-    private static final String WRITE_PLOIDY_TO_FILE = "write_ploidy_to_file";
+    private static final String WRITE_PLOIDY_TO_FILE = "write_ploidy_data";
     private static final String UPDATE_PLOIDY_TO_DB = "update_ploidy_to_db";
     private static final String WRITE_VERBOSE_PLOIDY_DATA = "verbose_ploidy_data";
 
@@ -1045,6 +1046,21 @@ public class CNAnalyser {
 
                 double cnChgEnd = svData.adjustedEndCopyNumberChange();
 
+                // for the special case of a foldback inversion, the CN change isn't reliable for the breakends, but the CN change over the region is reliable
+                // so use this value instead
+                if(cnEndData != null && svData.type() == INV && (cnStartData.getIndex() == cnEndData.getIndex()))
+                {
+                    if(cnStartPrevData.DepthWindowCount > cnStartData.DepthWindowCount && cnEndNextData.DepthWindowCount > cnStartData.DepthWindowCount)
+                    {
+                        double cnChange = abs(cnStartPrevData.CopyNumber - cnEndNextData.CopyNumber) * 0.5;
+
+                        // use the DWC from the outer segments
+                        endDepthData[0] = endDepthData[1];
+                        startDepthData[1] = startDepthData[0];
+                        cnChgStart = cnChgEnd = cnChange;
+                    }
+                }
+
                 final double calcResults[] = calcAdjustedPloidyValues(cnChgStart, cnChgEnd,
                         tumorReadCountStart, tumorReadCountEnd, adjVafStart, adjVafEnd, maxCNStart, maxCNEnd,
                         startDepthData, cnEndData != null ? endDepthData : null);
@@ -1236,11 +1252,6 @@ public class CNAnalyser {
 
         double poissonRCLow = calcPoisonReadCount(tumorReadCount, POIS_PROB_LOW);
         double poissonRCHigh = calcPoisonReadCount(tumorReadCount, POIS_PROB_HIGH);
-
-        // old method:
-        // double ploidyUncertainty = ploidy * (poissonRCHigh - poissonRCLow) * 0.5 / tumorReadCount;
-
-        // ploidy uncertainty =(Poisson_High*(maxCN+proportionCNChangeUsedInPloidy*cnChgUncOnSide)-B13*(PoissonLow-proportionCNChangeUsedInPloidy*CNChgUnc))/2
 
         double poissonVafLow = adjVaf * poissonRCLow / tumorReadCount;
         double poissonVafHigh = adjVaf * poissonRCHigh / tumorReadCount;

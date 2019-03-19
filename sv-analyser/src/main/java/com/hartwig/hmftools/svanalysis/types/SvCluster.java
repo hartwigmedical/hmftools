@@ -84,6 +84,7 @@ public class SvCluster
 
     private double mMinCNChange;
     private double mMaxCNChange;
+    private double mValidAllelePloidySegmentPerc;
 
     private int mOriginArms;
     private int mFragmentArms;
@@ -150,6 +151,7 @@ public class SvCluster
 
         mMinCNChange = 0;
         mMaxCNChange = 0;
+        mValidAllelePloidySegmentPerc = 0;
 
         mOriginArms = 0;
         mFragmentArms = 0;
@@ -831,6 +833,9 @@ public class SvCluster
 
         return (mMaxCNChange > mMinCNChange && mMinCNChange >= 0);
     }
+
+    public double getValidAllelePloidySegmentPerc() { return mValidAllelePloidySegmentPerc; }
+    public void setValidAllelePloidySegmentPerc(double percent) { mValidAllelePloidySegmentPerc = percent; }
 
     private void resetBreakendMapIndices()
     {

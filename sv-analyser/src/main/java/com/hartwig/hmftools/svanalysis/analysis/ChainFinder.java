@@ -173,9 +173,9 @@ public class ChainFinder
                     uniqueUnlinkedSVs.add(var.getOrigSV());
             }
 
-            LOGGER.debug("cluster({}) chaining finished: chains({}) unlinked SVs({} unique={}) breakends({} reps={})",
+            LOGGER.debug("cluster({}) chaining finished: chains({}) unlinked SVs({} unique={}) breakends({} reps={}) validAllelePerc({})",
                     mCluster.id(), mPartialChains.size(), mUnlinkedSVs.size(), uniqueUnlinkedSVs.size(),
-                    mUnlinkedBreakendMap.size(), breakendCount);
+                    mUnlinkedBreakendMap.size(), breakendCount, String.format("%.2f", mCluster.getValidAllelePloidySegmentPerc()));
         }
 
         if(!mIsValid)
@@ -1397,6 +1397,7 @@ public class ChainFinder
         {
             allelePloidies[i][A_FIXED_AP] = aPloidy;
             allelePloidies[i][B_NON_DIS_AP] = bPloidyMin;
+            allelePloidies[i][AP_DATA_VALID] = AP_IS_VALID;
         }
 
         return true;
@@ -1412,8 +1413,15 @@ public class ChainFinder
         }
 
         // finally set a cluster ploidy using knowledge of the other 2 ploidies
-        for(int i = 0; i < allelePloidies.length; ++i)
+        int validSegments = 0;
+        int segmentCount = allelePloidies.length;
+        for(int i = 0; i < segmentCount; ++i)
         {
+            if(allelePloidies[i][AP_DATA_VALID] != AP_IS_VALID)
+                continue;
+
+            ++validSegments;
+
             double majorAP = allelePloidies[i][MAJOR_AP];
             double minorAP = allelePloidies[i][MINOR_AP];
             double aPloidy = allelePloidies[i][A_FIXED_AP];
@@ -1433,6 +1441,9 @@ public class ChainFinder
             allelePloidies[i][CLUSTER_AP] = max(clusterPloidy, 0.0);
             allelePloidies[i][AP_DATA_VALID] = AP_IS_VALID;
         }
+
+        double validSectionPercent = validSegments / (double)segmentCount;
+        mCluster.setValidAllelePloidySegmentPerc(validSectionPercent);
 
         return true;
     }

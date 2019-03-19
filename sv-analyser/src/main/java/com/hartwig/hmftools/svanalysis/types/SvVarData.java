@@ -175,34 +175,6 @@ public class SvVarData
         mCnDataPostEnd = null;
     }
 
-    /*
-    public static SvVarData from(final EnrichedStructuralVariant enrichedSV)
-    {
-        StructuralVariantData svData =
-            ImmutableStructuralVariantData.builder()
-                .id(enrichedSV.id())
-                .startChromosome(enrichedSV.chromosome(true))
-                .endChromosome(enrichedSV.chromosome(false))
-                .startPosition(enrichedSV.position(true))
-                .endPosition(enrichedSV.position(false))
-                .startOrientation(enrichedSV.orientation(true))
-                .endOrientation(enrichedSV.orientation(false))
-                .startAF(enrichedSV.start().alleleFrequency())
-                .adjustedStartAF(enrichedSV.start().adjustedAlleleFrequency())
-                .adjustedStartCopyNumber(enrichedSV.start().adjustedCopyNumber())
-                .adjustedStartCopyNumberChange(enrichedSV.start().adjustedCopyNumberChange())
-                .endAF(enrichedSV.end().alleleFrequency())
-                .adjustedEndAF(enrichedSV.end().adjustedAlleleFrequency())
-                .adjustedEndCopyNumber(enrichedSV.end().adjustedCopyNumber())
-                .adjustedEndCopyNumberChange(enrichedSV.end().adjustedCopyNumberChange())
-                .ploidy(enrichedSV.ploidy())
-                .type(enrichedSV.type())
-                .build();
-
-        return new SvVarData(svData);
-    }
-    */
-
     public SvVarData(final SvVarData other)
     {
         mSVData = other.getSvData();
@@ -353,20 +325,26 @@ public class SvVarData
         return false;
     }
 
-    public final double copyNumberChange(boolean isStart)
+    public double ploidy()
+    {
+        // use the estimated ploidy when present
+        return mHasCalcPloidy ? (mPloidyMax + mPloidyMin) * 0.5 : mSVData.ploidy();
+    }
+
+    public double copyNumberChange(boolean isStart)
     {
         // TEMP: precise DBs cause incorrect copy number change, so in this case use ploidy
         if(isStart)
         {
             if(mDBStart != null && mDBStart.length() == 0)
-                return mSVData.ploidy();
+                return ploidy();
             else
                 return mSVData.adjustedStartCopyNumberChange();
         }
         else
         {
             if(mDBEnd != null && mDBEnd.length() == 0)
-                return mSVData.ploidy();
+                return ploidy();
             else
                 return mSVData.adjustedEndCopyNumberChange();
         }
@@ -405,7 +383,7 @@ public class SvVarData
 
     public boolean hasInconsistentCopyNumberChange(boolean useStart)
     {
-        return mSVData.ploidy() - copyNumberChange(useStart) > 0.8;
+        return ploidy() - copyNumberChange(useStart) > 0.8;
     }
 
     public long getNearestSvDistance() { return mNearestSvDistance; }
@@ -766,7 +744,7 @@ public class SvVarData
         return false;
     }
 
-    // private static String SPECIFIC_VAR_ID = "9683592";
+    // private static String SPECIFIC_VAR_ID = "9559903";
     private static String SPECIFIC_VAR_ID = "";
 
     public static boolean isSpecificSV(final SvVarData var)

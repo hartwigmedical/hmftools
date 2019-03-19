@@ -99,6 +99,7 @@ public class SvClusteringMethods {
     public static String CLUSTER_REASON_SOLO_SINGLE = "Single";
     public static String CLUSTER_REASON_LOOSE_OVERLAP = "LooseOverlap";
     public static String CLUSTER_REASON_LOH_CHAIN = "LohChain";
+    public static String CLUSTER_REASON_PLOIDY_MAP = "PloidyMap";
     public static String CLUSTER_REASON_INV_OVERLAP = "InvOverlap";
     public static String CLUSTER_REASON_LONG_DEL_DUP = "LongDelDup";
 
@@ -973,7 +974,7 @@ public class SvClusteringMethods {
                     return RESOLVED_TYPE_NONE;
                 }
 
-                double cnInconsistency = otherVar.getSvData().ploidy() - otherVar.copyNumberChange(inconsistentOnStart);
+                double cnInconsistency = otherVar.ploidy() - otherVar.copyNumberChange(inconsistentOnStart);
 
                 if(round(cnInconsistency) != round(soloSingle.copyNumberChange(true)))
                     return RESOLVED_TYPE_NONE;
