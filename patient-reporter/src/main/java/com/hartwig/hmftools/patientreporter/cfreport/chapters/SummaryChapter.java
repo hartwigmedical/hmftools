@@ -2,21 +2,18 @@ package com.hartwig.hmftools.patientreporter.cfreport.chapters;
 
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
 import com.hartwig.hmftools.patientreporter.cfreport.components.BodyText;
+import com.hartwig.hmftools.patientreporter.cfreport.components.InlineBarChart;
 import com.hartwig.hmftools.patientreporter.cfreport.components.LineDivider;
 import com.hartwig.hmftools.patientreporter.cfreport.components.SectionTitle;
 import com.hartwig.hmftools.patientreporter.cfreport.components.tables.TableHelper;
 import com.itextpdf.layout.Document;
 import com.itextpdf.layout.Style;
-import com.itextpdf.layout.borders.Border;
 import com.itextpdf.layout.element.Cell;
 import com.itextpdf.layout.element.Div;
 import com.itextpdf.layout.element.Paragraph;
 import com.itextpdf.layout.element.Table;
 import com.itextpdf.layout.property.UnitValue;
 import com.itextpdf.layout.property.VerticalAlignment;
-import com.sun.xml.internal.ws.util.StringUtils;
-import com.sun.xml.internal.ws.wsdl.writer.document.soap.Body;
-import org.jcp.xml.dsig.internal.dom.ApacheCanonicalizer;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.StringJoiner;
@@ -79,22 +76,23 @@ public class SummaryChapter extends ReportChapter {
         // Initialize table
         Table table = new Table(UnitValue.createPercentArray(new float[] {1, 1}));
         table.setWidth(getContentWidth());
-
         table.addCell(TableHelper.getLayoutCell().add(SectionTitle.getSectionTitle("Treatment indications")));
         table.addCell(TableHelper.getLayoutCell().add(BodyText.getParagraph("Summary of number of alterations with number of treatment indication and/or clinical studies")));
         table.addCell(TableHelper.getLayoutCell(1, 2).setHeight(TABLE_SPACER_HEIGHT)); // Spacer
 
+        // Alterations/therapy
+        int therapyGeneCount = 1;
+        int therapyCount = 8;
         table.addCell(getBottomAlignedLayoutCell()
                 .add(BodyText.getParagraph("Gene alteration(s) with therapy indication(s)")));
-        table.addCell(getBottomAlignedLayoutCell()
-                .add(new Paragraph(String.format("%d (%d treatments)", 1, 8))
-                .addStyle(ReportResources.dataHighlightStyle())));
+        table.addCell(getTreatmentIndicationCell(therapyGeneCount, therapyCount, "treatments"));
 
+        // Alterations/clinical study
+        int studyGeneCount = 2;
+        int studyCount = 7;
         table.addCell(getBottomAlignedLayoutCell()
                 .add(BodyText.getParagraph("Gene alteration(s) with clinical study eligibility")));
-        table.addCell(getBottomAlignedLayoutCell()
-                .add(new Paragraph(String.format("%d (%d studies)", 1, 8))
-                .addStyle(ReportResources.dataHighlightStyle())));
+        table.addCell(getTreatmentIndicationCell(studyGeneCount, studyCount, "studies"));
 
         div.add(table);
 
@@ -110,26 +108,52 @@ public class SummaryChapter extends ReportChapter {
         // Initialize table
         Table table = new Table(UnitValue.createPercentArray(new float[] {1, .33f, .66f}));
         table.setWidth(getContentWidth());
-
         table.addCell(TableHelper.getLayoutCell().add(SectionTitle.getSectionTitle("Tumor characteristics summary")));
         table.addCell(TableHelper.getLayoutCell(1, 2).add(BodyText.getParagraph("Whole genome sequencing based tumor characteristics.")));
         table.addCell(TableHelper.getLayoutCell(1, 3).setHeight(TABLE_SPACER_HEIGHT)); // Spacer
 
-        table.addCell(getBottomAlignedLayoutCell().add(BodyText.getParagraph("Tumor purity of biopsy")));
-        table.addCell(getBottomAlignedLayoutCell().add(new Paragraph("[VAL]")));
-        table.addCell(getBottomAlignedLayoutCell().add(new Paragraph("[BAR]")));
+        // Tumor purity
+        float tumorPurity = 74.4f;
+        InlineBarChart tumorPurityChart = new InlineBarChart(tumorPurity, 0f, 100f);
+        tumorPurityChart.setWidth(41);
+        tumorPurityChart.setHeight(6);
+        table.addCell(getBottomAlignedLayoutCell()
+                .add(BodyText.getParagraph("Tumor purity of biopsy")));
+        table.addCell(getBottomAlignedLayoutCell()
+                .add(new Paragraph(String.format(java.util.Locale.US,"%.0f%%", tumorPurity)))
+                .addStyle(ReportResources.dataHighlightStyle()));
+        table.addCell(getBottomAlignedLayoutCell()
+                .add(tumorPurityChart));
 
-        table.addCell(getBottomAlignedLayoutCell().add(BodyText.getParagraph("Average tumor ploidy")));
-        table.addCell(getBottomAlignedLayoutCell().add(new Paragraph("[VAL]")));
-        table.addCell(getBottomAlignedLayoutCell().add(new Paragraph("[BAR]")));
+        // Tumor characteristics
+        float ploidy = 3.1f;
+        table.addCell(getBottomAlignedLayoutCell()
+                .add(BodyText.getParagraph("Average tumor ploidy")));
+        table.addCell(getBottomAlignedLayoutCell()
+                .add(new Paragraph(String.format(java.util.Locale.US, "%.1f", ploidy)))
+                .addStyle(ReportResources.dataHighlightStyle()));
+        table.addCell(getBottomAlignedLayoutCell().
+                add(new Paragraph("[BAR]")));
 
-        table.addCell(getBottomAlignedLayoutCell().add(BodyText.getParagraph("Tumor mutational load")));
-        table.addCell(getBottomAlignedLayoutCell().add(new Paragraph("[VAL]")));
-        table.addCell(getBottomAlignedLayoutCell().add(new Paragraph("[BAR]")));
+        // Tumor mutational
+        String mutationalLoad = "High";
+        table.addCell(getBottomAlignedLayoutCell()
+                .add(BodyText.getParagraph("Tumor mutational load")));
+        table.addCell(getBottomAlignedLayoutCell()
+                .add(new Paragraph(mutationalLoad))
+                .addStyle(ReportResources.dataHighlightStyle()));
+        table.addCell(getBottomAlignedLayoutCell()
+                .add(new Paragraph("[BAR]")));
 
-        table.addCell(getBottomAlignedLayoutCell().add(BodyText.getParagraph("Microsatellite (in)stability")));
-        table.addCell(getBottomAlignedLayoutCell().add(new Paragraph("[VAL]")));
-        table.addCell(getBottomAlignedLayoutCell().add(new Paragraph("[BAR]")));
+        // Microsatellite stability
+        String microsatelliteStability = "Stable";
+        table.addCell(getBottomAlignedLayoutCell()
+                .add(BodyText.getParagraph("Microsatellite (in)stability")));
+        table.addCell(getBottomAlignedLayoutCell()
+                .add(new Paragraph(microsatelliteStability))
+                .addStyle(ReportResources.dataHighlightStyle()));
+        table.addCell(getBottomAlignedLayoutCell()
+                .add(new Paragraph("[BAR]")));
 
         div.add(table);
 
@@ -230,6 +254,25 @@ public class SummaryChapter extends ReportChapter {
                 .add(new Paragraph(geneString))
                 .addStyle(style);
                 return c;
+
+    }
+
+    @NotNull
+    private static final Cell getTreatmentIndicationCell(int geneCount, int treatmentCount, @NotNull String treatmentsName) {
+
+        String treatmentText;
+        Style style;
+        if (geneCount > 0) {
+            treatmentText = String.format("%d (%d %s)", geneCount, treatmentCount, treatmentsName);
+            style = ReportResources.dataHighlightStyle();
+        } else {
+            treatmentText = "NONE";
+            style = ReportResources.dataHighlightNaStyle();
+        }
+
+        return getBottomAlignedLayoutCell()
+                .add(new Paragraph(treatmentText))
+                .addStyle(style);
 
     }
 
