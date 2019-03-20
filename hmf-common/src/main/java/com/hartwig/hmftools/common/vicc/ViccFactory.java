@@ -93,7 +93,7 @@ public abstract class ViccFactory {
         for (int i = 0; i < object.getAsJsonObject("association").keySet().size(); i++) {
             List<String> keysOfAssocationObject = new ArrayList<>(object.getAsJsonObject("association").keySet());
             if (keysOfAssocationObject.get(i).equals("description")) {
-                stringToCSVAssociation.append(object.getAsJsonObject("association").get(keysOfAssocationObject.get(i))); // assocaition data
+                stringToCSVAssociation.append(object.getAsJsonObject("association").get(keysOfAssocationObject.get(i))); // association data
             } else if (keysOfAssocationObject.get(i).equals("evidence")) {
                 JsonElement elementEvidence = object.getAsJsonObject("association").get("evidence");
                 JsonArray arrayEvidence = elementEvidence.getAsJsonArray();
@@ -108,17 +108,17 @@ public abstract class ViccFactory {
                                     new ArrayList<>(objectEvidence.get("evidenceType").getAsJsonObject().keySet());
                             stringToCSVAssociation.append(objectEvidence.get("evidenceType")
                                     .getAsJsonObject()
-                                    .get(keysOfEvidenceTypeObject.get(b))); // assocaition data
+                                    .get(keysOfEvidenceTypeObject.get(b))); // association data
 
                         }
                     } else {
-                        stringToCSVAssociation.append(objectEvidence.get(keysOfEvidenceObject.get(a))); // assocaition data
+                        stringToCSVAssociation.append(objectEvidence.get(keysOfEvidenceObject.get(a))); // association data
                     }
                 }
             } else if (keysOfAssocationObject.get(i).equals("environmentalContexts")) {
-                stringToCSVAssociation.append(object.getAsJsonObject("association").get("environmentalContexts")); // assocaition data
+                stringToCSVAssociation.append(object.getAsJsonObject("association").get("environmentalContexts")); // association data
             } else if (keysOfAssocationObject.get(i).equals("evidence_label")) {
-                stringToCSVAssociation.append(object.getAsJsonObject("association").get(keysOfAssocationObject.get(i))); // assocaition data
+                stringToCSVAssociation.append(object.getAsJsonObject("association").get(keysOfAssocationObject.get(i))); // association data
             } else if (keysOfAssocationObject.get(i).equals("phenotype")) {
                 JsonElement elementPhenotype = object.getAsJsonObject("association").get("phenotype");
                 for (int a = 0; a < elementPhenotype.getAsJsonObject().keySet().size(); a++) {
@@ -127,16 +127,16 @@ public abstract class ViccFactory {
                         List<String> keysOfPhenotypeTypeObject =
                                 new ArrayList<>(elementPhenotype.getAsJsonObject().get("type").getAsJsonObject().keySet());
                         for (int c = 0; c < keysOfPhenotypeObject.size(); c++) {
-                            stringToCSVAssociation.append(elementPhenotype.getAsJsonObject() // assocaition data
+                            stringToCSVAssociation.append(elementPhenotype.getAsJsonObject() // association data
                                     .get("type").getAsJsonObject().get(keysOfPhenotypeTypeObject.get(c)));
                         }
                     } else {
                         stringToCSVAssociation.append(elementPhenotype.getAsJsonObject()
-                                .get(keysOfPhenotypeObject.get(a))); // assocaition data
+                                .get(keysOfPhenotypeObject.get(a))); // association data
                     }
                 }
             } else if (keysOfAssocationObject.get(i).equals("oncogenic")) {
-                stringToCSVAssociation.append(object.getAsJsonObject("association").get(keysOfAssocationObject.get(i))); // assocaition data
+                stringToCSVAssociation.append(object.getAsJsonObject("association").get(keysOfAssocationObject.get(i))); // association data
             }
             LOGGER.info(keysOfAssocationObject);
         }
