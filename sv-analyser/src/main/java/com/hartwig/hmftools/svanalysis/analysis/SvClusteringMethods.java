@@ -99,8 +99,8 @@ public class SvClusteringMethods {
     public static String CLUSTER_REASON_SOLO_SINGLE = "Single";
     public static String CLUSTER_REASON_LOOSE_OVERLAP = "LooseOverlap";
     public static String CLUSTER_REASON_LOH_CHAIN = "LohChain";
-    public static String CLUSTER_REASON_NET_ARM_CN = "NetArmCN";
-    public static String CLUSTER_REASON_PLOIDY_MAP = "PloidyMAP";
+    public static String CLUSTER_REASON_NET_ARM_END_PLOIDY = "ArmEndPloidy";
+    public static String CLUSTER_REASON_BE_PLOIDY_DROP = "BEPloidy";
     public static String CLUSTER_REASON_INV_OVERLAP = "InvOverlap";
     public static String CLUSTER_REASON_LONG_DEL_DUP = "LongDelDup";
 
@@ -241,6 +241,7 @@ public class SvClusteringMethods {
                             cluster = new SvCluster(getNextClusterId());
                             cluster.addVariant(var);
                             cluster.addVariant(nextVar);
+                            cluster.addClusterReason(CLUSTER_REASON_PROXIMITY);
                             clusters.add(cluster);
                         }
                         else if (cluster != null && nextCluster != null)
@@ -676,6 +677,7 @@ public class SvClusteringMethods {
 
             lohSvStart.addClusterReason(CLUSTER_REASON_LOH, lohSvEnd.id());
             lohSvEnd.addClusterReason(CLUSTER_REASON_LOH, lohSvStart.id());
+            lohClusterStart.addClusterReason(CLUSTER_REASON_LOH);
 
             lohClusterStart.mergeOtherCluster(lohClusterEnd);
             clusters.remove(lohClusterEnd);
@@ -771,6 +773,7 @@ public class SvClusteringMethods {
                 cluster2Svs.addAll(cluster2.getInversions());
 
                 boolean canMergeClusters = false;
+                String clusterReason = "";
 
                 for (final SvVarData var1 : cluster1Svs)
                 {
@@ -785,7 +788,8 @@ public class SvClusteringMethods {
                         LOGGER.debug("cluster({}) SV({} {}) and cluster({}) SV({} {}) have inversion or longDelDup overlap",
                                 cluster1.id(), var1.posId(), var1.type(), cluster2.id(), var2.posId(), var2.type());
 
-                        var1.addClusterReason(var2.type() == INV ? CLUSTER_REASON_INV_OVERLAP : CLUSTER_REASON_LONG_DEL_DUP, var2.id());
+                        clusterReason = var2.type() == INV ? CLUSTER_REASON_INV_OVERLAP : CLUSTER_REASON_LONG_DEL_DUP;
+                        var1.addClusterReason(clusterReason, var2.id());
                         var2.addClusterReason(var1.type() == INV ? CLUSTER_REASON_INV_OVERLAP : CLUSTER_REASON_LONG_DEL_DUP, var1.id());
 
                         canMergeClusters = true;
@@ -800,6 +804,7 @@ public class SvClusteringMethods {
                 if(canMergeClusters)
                 {
                     cluster1.mergeOtherCluster(cluster2);
+                    cluster1.addClusterReason(clusterReason);
                     clusters.remove(index2);
                 }
                 else
@@ -901,6 +906,7 @@ public class SvClusteringMethods {
                 if(resolvedType != RESOLVED_TYPE_NONE)
                 {
                     otherCluster.mergeOtherCluster(cluster);
+                    otherCluster.addClusterReason(CLUSTER_REASON_SOLO_SINGLE);
                     otherCluster.setResolved(true, resolvedType);
 
                     clusters.remove(cluster);

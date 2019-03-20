@@ -13,6 +13,7 @@ import static com.hartwig.hmftools.svanalysis.analysis.ClusterAnalyser.SHORT_TI_
 import static com.hartwig.hmftools.svanalysis.analysis.ClusterAnalyser.SMALL_CLUSTER_SIZE;
 import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.DEFAULT_PROXIMITY_DISTANCE;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.addSvToChrBreakendMap;
+import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.appendStr;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.calcConsistency;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.getSvTypesStr;
 import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.ASSEMBLY_MATCH_INFER_ONLY;
@@ -61,6 +62,7 @@ public class SvCluster
     private List<SvLOH> mLohEvents;
     private boolean mIsResolved;
     private String mResolvedType;
+    private String mClusteringReasons;
 
     // specific cluster type data
 
@@ -150,6 +152,7 @@ public class SvCluster
         mMinCNChange = 0;
         mMaxCNChange = 0;
         mValidAllelePloidySegmentPerc = 1.0;
+        mClusteringReasons = "";
 
         mOriginArms = 0;
         mFragmentArms = 0;
@@ -435,13 +438,19 @@ public class SvCluster
 
     public void mergeOtherCluster(final SvCluster other, boolean logDetails)
     {
+        if(other == this || other.id() == id())
+        {
+            LOGGER.error("attempting to merge same cluster({})", id());
+            return;
+        }
+
         // just add the other cluster's variants - no preservation of links or chains
         if(other.getSvCount() > getSvCount())
         {
             if(logDetails)
             {
-                LOGGER.debug("cluster({} svs={}) merges in other cluster({} svs={})",
-                        other.id(), other.getSvCount(), id(), getSvCount());
+                LOGGER.debug("cluster({} svs={}) merges in other cluster({} svs={}) and adopts new ID",
+                        id(), getSvCount(), other.id(), other.getSvCount());
             }
 
             // maintain the id of the larger group
@@ -457,12 +466,15 @@ public class SvCluster
 
         other.getLohEvents().stream().forEach(this::addLohEvent);
 
+        String[] clusterReasons = other.getClusteringReasons().split(";");
+        for(int i = 0; i < clusterReasons.length; ++i)
+        {
+            addClusterReason(clusterReasons[i]);
+        }
+
         if(other.isFullyChained())
         {
-            for (SvChain chain : other.getChains())
-            {
-                addChain(chain, true);
-            }
+            other.getChains().forEach(x -> addChain(x, true));
         }
     }
 
@@ -483,7 +495,18 @@ public class SvCluster
     public void addClusterReason(final String reason, final String linkingVarId)
     {
         mSVs.forEach(x -> x.addClusterReason(reason, linkingVarId));
+        addClusterReason(reason);
     }
+
+    public void addClusterReason(final String reason)
+    {
+        if(!mClusteringReasons.contains(reason))
+        {
+            mClusteringReasons = appendStr(mClusteringReasons, reason, ';');
+        }
+    }
+
+    public final String getClusteringReasons() { return mClusteringReasons; }
 
     public boolean isConsistent()
     {

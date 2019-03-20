@@ -15,6 +15,7 @@ import static com.hartwig.hmftools.common.purple.segment.SegmentSupport.NONE;
 import static com.hartwig.hmftools.common.purple.segment.SegmentSupport.TELOMERE;
 import static com.hartwig.hmftools.common.purple.segment.SegmentSupport.UNKNOWN;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantFactory.PON_FILTER_PON;
+import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INS;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INV;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.svanalysis.analysis.ClusterAnalyser.SHORT_TI_LENGTH;
@@ -340,7 +341,7 @@ public class CNAnalyser {
                     cnDataFound = true;
                 }
 
-                if(!cnDataFound)
+                if(!cnDataFound && svData.type() != INS)
                 {
                     LOGGER.debug("SV({} chr={} pos={} type={}) {} unmatched)",
                             svData.id(), svChromosome, svPosition, svData.type(), isStart ? "start" : "end");

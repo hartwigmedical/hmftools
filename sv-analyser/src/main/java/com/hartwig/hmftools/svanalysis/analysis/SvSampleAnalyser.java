@@ -507,7 +507,7 @@ public class SvSampleAnalyser {
 
                 mClusterFileWriter.write("SampleId,ClusterId,ClusterDesc,ClusterCount,ResolvedType,FullyChained,ChainCount");
                 mClusterFileWriter.write(",DelCount,DupCount,InsCount,InvCount,BndCount,SglCount");
-                mClusterFileWriter.write(",Consistency,ArmCount,OriginArms,FragmentArms,IsLINE,HasReplicated,Foldbacks,DSBs,ShortDSBs");
+                mClusterFileWriter.write(",ClusterReasons,Consistency,ArmCount,OriginArms,FragmentArms,IsLINE,HasReplicated,Foldbacks,DSBs,ShortDSBs");
                 mClusterFileWriter.write(",TotalLinks,AssemblyLinks,LongDelDups,UnlinkedRemotes,ShortTIRemotes,MinCopyNumber,MaxCopyNumber");
                 mClusterFileWriter.write(",SynDelDupLen,SynDelDupAvgTILen,Annotations,UnchainedSVs,ChainInfo,AlleleValidPerc");
                 mClusterFileWriter.write(",ArmClusterCount,AcSoloSv,AcRemoteTI,AcDsb,AcMultipleDsb,AcSingleFb,AcFbTI,AcFbDSB");
@@ -534,8 +534,9 @@ public class SvSampleAnalyser {
                 final int[] delCounts = cluster.getInternalDeletionCounts();
 
                 writer.write(
-                        String.format(",%d,%d,%d,%d,%s,%s,%d,%d,%d",
-                                cluster.getConsistencyCount(), cluster.getArmCount(), cluster.getOriginArms(), cluster.getFragmentArms(),
+                        String.format(",%s,%d,%d,%d,%d,%s,%s,%d,%d,%d",
+                                cluster.getClusteringReasons(), cluster.getConsistencyCount(),
+                                cluster.getArmCount(), cluster.getOriginArms(), cluster.getFragmentArms(),
                                 cluster.hasLinkingLineElements(), cluster.hasReplicatedSVs(),
                                 cluster.getFoldbacks().size(), delCounts[INT_DB_COUNT], delCounts[INT_SHORT_DB_COUNT]));
 

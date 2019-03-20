@@ -11,13 +11,14 @@ import static com.hartwig.hmftools.common.variant.structural.StructuralVariantTy
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INS;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INV;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
-import static com.hartwig.hmftools.svanalysis.analysis.CNAnalyser.CN_SEG_DATA_CN_BEFORE;
+import static com.hartwig.hmftools.svanalysis.analysis.CNAnalyser.CN_SEG_DATA_MAP_BEFORE;
 import static com.hartwig.hmftools.svanalysis.analysis.ClusterAnnotations.DOUBLE_MINUTES;
 import static com.hartwig.hmftools.svanalysis.analysis.ClusterAnnotations.FOLDBACK_MATCHES;
 import static com.hartwig.hmftools.svanalysis.analysis.ClusterAnnotations.REPLICATION_REPAIR;
 import static com.hartwig.hmftools.svanalysis.analysis.ClusterAnnotations.annotateChainedClusters;
 import static com.hartwig.hmftools.svanalysis.analysis.ClusterAnnotations.annotateFoldbacks;
 import static com.hartwig.hmftools.svanalysis.analysis.ClusterAnnotations.annotateTemplatedInsertions;
+import static com.hartwig.hmftools.svanalysis.analysis.ClusterAnnotations.calcNetCopyNumberChangeAcrossCluster;
 import static com.hartwig.hmftools.svanalysis.analysis.ClusterAnnotations.checkLooseFoldbacks;
 import static com.hartwig.hmftools.svanalysis.analysis.ClusterAnnotations.findIncompleteFoldbackCandidates;
 import static com.hartwig.hmftools.svanalysis.analysis.ClusterAnnotations.findPotentialDoubleMinuteClusters;
@@ -28,10 +29,12 @@ import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.CLUST
 import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.CLUSTER_REASON_FOLDBACKS;
 import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.CLUSTER_REASON_LOH_CHAIN;
 import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.CLUSTER_REASON_LOOSE_OVERLAP;
-import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.CLUSTER_REASON_NET_ARM_CN;
-import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.CLUSTER_REASON_PLOIDY_MAP;
+import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.CLUSTER_REASON_NET_ARM_END_PLOIDY;
+import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.CLUSTER_REASON_BE_PLOIDY_DROP;
 import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.applyCopyNumberReplication;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.CHROMOSOME_ARM_P;
+import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.CHROMOSOME_ARM_Q;
+import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.findCentromereBreakendIndex;
 import static com.hartwig.hmftools.svanalysis.annotators.LineElementAnnotator.markLineCluster;
 import static com.hartwig.hmftools.svanalysis.types.SvArmCluster.mergeArmClusters;
 import static com.hartwig.hmftools.svanalysis.types.SvChain.CHAIN_ASSEMBLY_LINK_COUNT;
@@ -552,8 +555,8 @@ public class ClusterAnalyser {
                                     cluster.id(), breakend.getSV().posId(), resolvingCluster.id(), resolvingBreakend.toString(),
                                     String.format("%.2f -> %.2f", breakendPloidy, majorAP));
 
-                            resolvingCluster.addClusterReason(CLUSTER_REASON_PLOIDY_MAP, breakend.getSV().id());
-                            cluster.addClusterReason(CLUSTER_REASON_PLOIDY_MAP, nextBreakend.getSV().id());
+                            resolvingCluster.addClusterReason(CLUSTER_REASON_BE_PLOIDY_DROP, breakend.getSV().id());
+                            cluster.addClusterReason(CLUSTER_REASON_BE_PLOIDY_DROP, nextBreakend.getSV().id());
 
                             cluster.mergeOtherCluster(resolvingCluster);
 
@@ -675,6 +678,15 @@ public class ClusterAnalyser {
         // if it needs to be resolved prior to the telomere or centromere and another cluster
         // can help do that, then merge in that cluster
 
+        /* for the first and last uninterrupted footprint of each cluster on each chromosome, calculate the minimal number
+        of telomeric/centromeric facing ploidy that is required to explain the orientation and ploidy of the breakends limited
+        to the major allele ploidy immediately flanking the cluster
+
+          If this exceeds the telomeric / centromeric major allele ploidy then search for other (non-resolved) clusters that
+          could explain the drop in ploidy. If there is only one cluster that can explain the full change in major allele
+          ploidy cluster with that, else choose the nearest cluster.
+        */
+
         List<SvCluster> mergedClusters = Lists.newArrayList();
 
         int clusterIndex = 0;
@@ -697,91 +709,80 @@ public class ClusterAnalyser {
                 List<SvCNData> cnDataList = mCopyNumberAnalyser.getChrCnDataMap().get(chromosome);
 
                 if(cnDataList == null || cnDataList.isEmpty())
-                    return false;
+                    continue;
 
                 List<SvBreakend> fullBreakendList = mClusteringMethods.getChrBreakendMap().get(entry.getKey());
 
-                // take note of arm breakend boundaries and the net CN change
-
-                SvBreakend lowerBreakend = null;
-                SvBreakend upperBreakend = null;
-                double netCNChange = 0;
-
-                String currentArm = "";
-
-                for (int i = 0; i < breakendList.size(); ++i)
+                for(int armIndex = 0; armIndex <= 1; ++armIndex)
                 {
-                    SvBreakend breakend = breakendList.get(i);
+                    String arm = (armIndex == 0) ? CHROMOSOME_ARM_P : CHROMOSOME_ARM_Q;
 
-                    if (currentArm != breakend.arm())
-                    {
-                        //reset for a new arm
-                        currentArm = breakend.arm();
-                        lowerBreakend = breakend;
-                        netCNChange = 0;
+                    int centomereBreakendIndex = findCentromereBreakendIndex(breakendList, arm);
 
-                    }
+                    if(centomereBreakendIndex == -1)
+                        continue; // no breakends on this arm
 
-                    netCNChange += breakend.copyNumberChange();
+                    SvBreakend lowerBreakend = arm == CHROMOSOME_ARM_P ? breakendList.get(0) : breakendList.get(centomereBreakendIndex);
 
-                    if (i < breakendList.size() - 1 && breakendList.get(i + 1).arm() != currentArm)
-                    {
-                        continue;
-                    }
+                    SvBreakend upperBreakend = arm == CHROMOSOME_ARM_P ? breakendList.get(centomereBreakendIndex)
+                            : breakendList.get(breakendList.size() - 1);
 
-                    // end of an arm
-                    upperBreakend = breakend;
+                    double[] boundaryCNData = calcNetCopyNumberChangeAcrossCluster(breakendList, arm, true);
+                    double telomereMinFacingPloidy = boundaryCNData[0];
+                    double centromereMinFacingPloidy = boundaryCNData[1];
 
-                    // now look towards the telomere and centromere and work out there is likely a breakend missing
-                    // which would explain the net CN change
+                    double[] centromereCNData = mCopyNumberAnalyser.getCentromereCopyNumberData(chromosome, arm.equals(CHROMOSOME_ARM_P));
 
-                    if (netCNChange < 1)
-                        continue;
-
-                    double[] centromereCNData = mCopyNumberAnalyser.getCentromereCopyNumberData(chromosome, currentArm.equals(CHROMOSOME_ARM_P));
-
-                    SvCNData telemoreData = currentArm == CHROMOSOME_ARM_P ? cnDataList.get(0) : cnDataList.get(cnDataList.size() - 1);
+                    SvCNData telemoreData = arm == CHROMOSOME_ARM_P ? cnDataList.get(0) : cnDataList.get(cnDataList.size() - 1);
                     double telomereCN = telemoreData.CopyNumber;
                     double telomereMAP = telemoreData.majorAllelePloidy();
 
-                    for(int j = 0; j <= 1; ++j)
+                    // now look towards the telomere and centromere and work out there is likely a breakend missing
+                    // which would explain the net CN change
+                    for(int directionIndex = 0; directionIndex <= 1; ++directionIndex)
                     {
-                        boolean traverseUp = (j == 0);
+                        boolean traverseUp = (directionIndex == 0);
                         SvBreakend clusterBreakend = traverseUp ? upperBreakend : lowerBreakend;
-                        int index = clusterBreakend.getChrPosIndex();
+                        boolean facingCentromere = traverseUp == (arm == CHROMOSOME_ARM_P);
 
-                        double clusterEndCopyNumber = clusterBreakend.copyNumber();
-                        double armEndCopyNumber = (traverseUp == (currentArm == CHROMOSOME_ARM_P)) ? centromereCNData[CN_SEG_DATA_CN_BEFORE]: telomereCN;
+                        double tOrCMinFacingPloidy = facingCentromere ? centromereMinFacingPloidy : telomereMinFacingPloidy;
+                        double clusterBoundaryMAP = clusterBreakend.majorAllelePloidy(!traverseUp);
+                        double clusterBoundaryMinPloidy = min(tOrCMinFacingPloidy, clusterBoundaryMAP);
 
-                        if(armEndCopyNumber >= clusterEndCopyNumber - 1)
+                        double armEndMAP = facingCentromere ? centromereCNData[CN_SEG_DATA_MAP_BEFORE] : telomereMAP;
+
+                        if(clusterBoundaryMinPloidy < armEndMAP || copyNumbersEqual(armEndMAP, clusterBoundaryMinPloidy))
                             continue;
 
-                        while(true)
+                        int index = clusterBreakend.getChrPosIndex();
+                        while (true)
                         {
                             index += traverseUp ? 1 : -1;
 
-                            if(index < 0 || index >= fullBreakendList.size())
+                            if (index < 0 || index >= fullBreakendList.size())
                                 break;
 
                             SvBreakend nextBreakend = fullBreakendList.get(index);
 
-                            if(nextBreakend.arm() != currentArm)
+                            if (nextBreakend.arm() != arm)
                                 break;
 
                             SvCluster otherCluster = nextBreakend.getSV().getCluster();
 
-                            if(otherCluster.isResolved() || otherCluster == cluster || mergedClusters.contains(otherCluster))
+                            if (otherCluster.isResolved() || otherCluster == cluster || mergedClusters.contains(otherCluster))
                                 continue;
 
-                            if(nextBreakend.orientation() != clusterBreakend.orientation())
+                            if (nextBreakend.orientation() != clusterBreakend.orientation())
                             {
                                 // candidate found
-                                LOGGER.debug("cluster({}) arm({}) outerBE({}) requires cluster({}) breakend({}) prior to CN drop({})",
-                                        cluster.id(), currentArm, clusterBreakend.toString(), otherCluster.id(), nextBreakend.toString(),
-                                        String.format("%.2f -> %.2f", clusterEndCopyNumber, armEndCopyNumber));
+                                LOGGER.debug("cluster({}) arm({} facing {}) outerBE({}) requires cluster({}) breakend({}) prior to CN drop({})",
+                                        cluster.id(), arm, facingCentromere ? "centro" : "telo",
+                                        clusterBreakend.toString(), otherCluster.id(), nextBreakend.toString(),
+                                        String.format("cluster minPloidy=%.2f map=%.2f arm map=%.2f",
+                                                clusterBoundaryMinPloidy, clusterBoundaryMAP, armEndMAP));
 
-                                otherCluster.addClusterReason(CLUSTER_REASON_NET_ARM_CN, clusterBreakend.getSV().id());
-                                cluster.addClusterReason(CLUSTER_REASON_NET_ARM_CN, nextBreakend.getSV().id());
+                                otherCluster.addClusterReason(CLUSTER_REASON_NET_ARM_END_PLOIDY, clusterBreakend.getSV().id());
+                                cluster.addClusterReason(CLUSTER_REASON_NET_ARM_END_PLOIDY, nextBreakend.getSV().id());
 
                                 cluster.mergeOtherCluster(otherCluster);
 
@@ -789,22 +790,23 @@ public class ClusterAnalyser {
 
                                 mergedOtherClusters = true;
                                 break;
-
                             }
                         }
 
-                        // as soon as another cluster is merged in, must revaluate everything incuding clutser bounds and net CN change
                         if(mergedOtherClusters)
                             break;
-                    }
+
+                    } // end each direction within an arm
 
                     if(mergedOtherClusters)
                         break;
-                }
+
+                } // end each arm
 
                 if(mergedOtherClusters)
                     break;
-            }
+
+            } // end each chromosome
 
             if(mergedOtherClusters)
             {

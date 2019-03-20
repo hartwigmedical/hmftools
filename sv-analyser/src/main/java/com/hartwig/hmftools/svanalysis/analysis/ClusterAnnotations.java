@@ -885,7 +885,7 @@ public class ClusterAnnotations
                 }
             }
 
-            double[] netPloidies = calcNetCopyNumberChangeAcrossCluster(clusterBreakendList, arm);
+            double[] netPloidies = calcNetCopyNumberChangeAcrossCluster(clusterBreakendList, arm, false);
 
             telomereMinFacingPloidy = netPloidies[0];
             centromereMinFacingPloidy = netPloidies[1];
@@ -1010,7 +1010,8 @@ public class ClusterAnnotations
         }
     }
 
-    private static double[] calcNetCopyNumberChangeAcrossCluster(final List<SvBreakend> breakendList, final String arm)
+    public static double[] calcNetCopyNumberChangeAcrossCluster(final List<SvBreakend> breakendList, final String arm,
+            boolean breakOnOtherCluster)
     {
         // find the net copy number change facing both the telomere and centromere
         double telomereMinFacingPloidy = 0;
@@ -1028,9 +1029,14 @@ public class ClusterAnnotations
             double maxPloidy = 0;
 
             int index = traverseUp ? 0 : breakendList.size() - 1;
+            int prevFullListIndex = -1;
             while(index >= 0 && index < breakendList.size())
             {
                 SvBreakend breakend = breakendList.get(index);
+
+                // optionally break as soon as this cluster skips over another cluster's breakend
+                if(breakOnOtherCluster && prevFullListIndex > -1 && abs(breakend.getChrPosIndex() - prevFullListIndex) > 1)
+                    break;
 
                 if (breakend.arm() == arm)
                 {

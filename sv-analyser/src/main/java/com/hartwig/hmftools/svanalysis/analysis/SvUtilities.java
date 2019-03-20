@@ -100,6 +100,34 @@ public class SvUtilities {
         }
     }
 
+    public static int findCentromereBreakendIndex(final List<SvBreakend> breakendList, final String arm)
+    {
+        // return the last breakend list index prior to the centromere from either arm direction,
+        // returning an index out of bounds if all breakends are on the other arm
+        if(arm == CHROMOSOME_ARM_P)
+        {
+            int i = 0;
+            for(; i < breakendList.size(); ++i)
+            {
+                if(breakendList.get(i).arm() == CHROMOSOME_ARM_Q)
+                    break;
+            }
+
+            return i - 1;
+        }
+        else
+        {
+            int i = breakendList.size() - 1;
+            for(; i >= 0; --i)
+            {
+                if(breakendList.get(i).arm() == CHROMOSOME_ARM_P)
+                    break;
+            }
+
+            return i + 1 >= breakendList.size() ? -1 : i + 1;
+        }
+    }
+
     public static final String getSvTypesStr(final int[] typeCounts)
     {
         // the following map-based naming convention leads

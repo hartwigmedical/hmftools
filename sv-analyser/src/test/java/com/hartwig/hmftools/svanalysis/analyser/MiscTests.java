@@ -6,27 +6,27 @@ import static com.hartwig.hmftools.svanalysis.analyser.SvTestHelper.createDup;
 import static com.hartwig.hmftools.svanalysis.analyser.SvTestHelper.createIns;
 import static com.hartwig.hmftools.svanalysis.analyser.SvTestHelper.createInv;
 import static com.hartwig.hmftools.svanalysis.analyser.SvTestHelper.createSgl;
+import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.CHROMOSOME_ARM_P;
+import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.CHROMOSOME_ARM_Q;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.appendStr;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.calcConsistency;
+import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.findCentromereBreakendIndex;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.makeChrArmStr;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import java.util.List;
+
+import com.hartwig.hmftools.svanalysis.analysis.SvUtilities;
 import com.hartwig.hmftools.svanalysis.stats.FisherExactTest;
+import com.hartwig.hmftools.svanalysis.types.SvBreakend;
 import com.hartwig.hmftools.svanalysis.types.SvVarData;
 
 import org.junit.Test;
 
 public class MiscTests
 {
-    @Test
-    public void testProximityMethods()
-    {
-        // assertEquals(0.08, FittingConfig.MIN_PURITY_DEFAULT, EPSILON);
-        //assertEquals(1.0, FittingConfig.MAX_PURITY_DEFAULT, EPSILON);
-
-    }
 
     @Test
     public void testConsistency()
@@ -59,6 +59,56 @@ public class MiscTests
         test = appendStr(test, "else", ';');
 
         assertEquals("something;else", test);
+    }
+
+    @Test
+    public void testBreakendLists()
+    {
+        SvTestHelper tester = new SvTestHelper();
+
+        // 4 breakends, 2 on each arm
+        long centromerePos = SvUtilities.getChromosomalArmLength("1", CHROMOSOME_ARM_P);
+        long qArmPos = centromerePos + 10000000;
+        final SvVarData var1 = createDel(tester.nextVarId(), "1", 100,200);
+        final SvVarData var2 = createDel(tester.nextVarId(), "1", 300,400);
+        final SvVarData var3 = createDel(tester.nextVarId(), "1", qArmPos + 1000, qArmPos + 2000);
+        final SvVarData var4 = createDel(tester.nextVarId(), "1", qArmPos + 10000,qArmPos + 20000);
+
+        // add them out of order which will require partial chain reconciliation
+        tester.AllVariants.add(var1);
+        tester.AllVariants.add(var2);
+        tester.AllVariants.add(var3);
+        tester.AllVariants.add(var4);
+
+        tester.preClusteringInit();
+
+        List<SvBreakend> breakendList = tester.ClusteringMethods.getChrBreakendMap().get("1");
+
+        assertEquals(3, findCentromereBreakendIndex(breakendList, CHROMOSOME_ARM_P));
+        assertEquals(4, findCentromereBreakendIndex(breakendList, CHROMOSOME_ARM_Q));
+
+        // try again with breakends only in 1 list
+        tester.clearClustersAndSVs();
+        tester.AllVariants.add(var1);
+        tester.AllVariants.add(var2);
+
+        tester.preClusteringInit();
+
+        breakendList = tester.ClusteringMethods.getChrBreakendMap().get("1");
+
+        assertEquals(3, findCentromereBreakendIndex(breakendList, CHROMOSOME_ARM_P));
+        assertEquals(-1, findCentromereBreakendIndex(breakendList, CHROMOSOME_ARM_Q));
+
+        tester.clearClustersAndSVs();
+        tester.AllVariants.add(var3);
+        tester.AllVariants.add(var4);
+
+        tester.preClusteringInit();
+
+        breakendList = tester.ClusteringMethods.getChrBreakendMap().get("1");
+
+        assertEquals(-1, findCentromereBreakendIndex(breakendList, CHROMOSOME_ARM_P));
+        assertEquals(0, findCentromereBreakendIndex(breakendList, CHROMOSOME_ARM_Q));
     }
 
 
