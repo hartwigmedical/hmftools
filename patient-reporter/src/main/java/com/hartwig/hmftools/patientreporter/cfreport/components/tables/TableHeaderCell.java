@@ -5,6 +5,9 @@ import com.itextpdf.layout.borders.Border;
 import com.itextpdf.layout.element.Cell;
 import com.itextpdf.layout.property.VerticalAlignment;
 
+/**
+ * @deprecated
+ */
 public class TableHeaderCell extends Cell {
 
     public TableHeaderCell() {

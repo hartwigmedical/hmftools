@@ -7,6 +7,9 @@ import com.itextpdf.layout.element.Table;
 import com.itextpdf.layout.property.UnitValue;
 import org.jetbrains.annotations.NotNull;
 
+/**
+ * @deprecated
+ */
 public abstract class ReportTable {
 
     protected final Table table;

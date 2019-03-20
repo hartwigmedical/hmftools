@@ -108,11 +108,26 @@ public final class ReportResources {
                 .setFontColor(ReportResources.PALETTE_BLACK);
     }
 
+
     public static final Style subTextStyle() {
         return new Style()
                 .setFont(getFontRegular())
                 .setFontSize(7)
                 .setFontColor(ReportResources.PALETTE_BLACK);
+    }
+
+    public static final Style dataHighlightStyle() {
+        return new Style()
+                .setFont(getFontBold())
+                .setFontSize(11)
+                .setFontColor(ReportResources.PALETTE_BLUE);
+    }
+
+    public static final Style dataHighlightNaStyle() {
+        return new Style()
+                .setFont(getFontBold())
+                .setFontSize(7)
+                .setFontColor(ReportResources.PALETTE_BLUE);
     }
 
     public static final Style pageNumberStyle() {

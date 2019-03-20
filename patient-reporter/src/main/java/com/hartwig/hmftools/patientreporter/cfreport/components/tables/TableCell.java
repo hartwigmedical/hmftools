@@ -4,7 +4,11 @@ import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
 import com.itextpdf.layout.borders.Border;
 import com.itextpdf.layout.borders.SolidBorder;
 import com.itextpdf.layout.element.Cell;
+import org.jetbrains.annotations.NotNull;
 
+/**
+ * @deprecated
+ */
 public class TableCell extends Cell {
 
     public TableCell() {
