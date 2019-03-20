@@ -2,10 +2,12 @@ package com.hartwig.hmftools.patientreporter.cfreport.chapters;
 
 import com.hartwig.hmftools.patientreporter.cfreport.PageEventHandler;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
+import com.hartwig.hmftools.patientreporter.variants.ReportableSomaticVariant;
 import com.itextpdf.layout.Document;
 import com.itextpdf.layout.element.AreaBreak;
 import com.itextpdf.layout.element.Paragraph;
 import com.itextpdf.layout.property.AreaBreakType;
+import org.jetbrains.annotations.NotNull;
 
 public abstract class ReportChapter {
 
@@ -15,7 +17,7 @@ public abstract class ReportChapter {
         ContentChapter       // Short sidepanel with just ID and report date
     };
 
-    public void render(PageEventHandler eventHandler, Document report) {
+    public void render(@NotNull PageEventHandler eventHandler, @NotNull Document report) {
 
         // Reconfigure event handler for upcoming pages
         eventHandler.setChapterTitle(getName());
@@ -33,7 +35,7 @@ public abstract class ReportChapter {
 
     }
 
-    private static final void startChapter(String chapterName, boolean addPageBreak, Document report) {
+    private static final void startChapter(@NotNull String chapterName, boolean addPageBreak, @NotNull Document report) {
 
         // Add page break for all subsequent chapters
         if (addPageBreak) {
@@ -48,6 +50,14 @@ public abstract class ReportChapter {
 
     public abstract ChapterType getChapterType();
 
-    protected abstract void renderChapterContent(Document report);
+    protected abstract void renderChapterContent(@NotNull Document report);
+
+    protected final float getContentWidth() {
+        if (getChapterType() == ChapterType.SummaryChapter || getChapterType() == ChapterType.ClosingChapter) {
+            return ReportResources.CONTENT_WIDTH_NARROW;
+        } else {
+            return ReportResources.CONTENT_WIDTH_WIDE;
+        }
+    }
 
 }

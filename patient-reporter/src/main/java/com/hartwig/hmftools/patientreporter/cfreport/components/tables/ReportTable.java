@@ -15,7 +15,7 @@ public abstract class ReportTable {
 
         // Initialize table
         table = new Table(UnitValue.createPercentArray(columnPercentageWidths));
-        table.setWidth(ReportResources.TABLE_FULL_WIDTH);
+        table.setWidth(ReportResources.CONTENT_WIDTH_WIDE);
 
         // Add header columns
         for (String name: headerNames) {

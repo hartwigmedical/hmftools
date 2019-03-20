@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.patientreporter.cfreport.chapters;
 
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
+import com.hartwig.hmftools.patientreporter.cfreport.components.SectionTitle;
 import com.hartwig.hmftools.patientreporter.cfreport.components.tables.ClinicalTrialsTable;
 import com.hartwig.hmftools.patientreporter.cfreport.components.tables.EvidenceTable;
 import com.itextpdf.layout.Document;
@@ -28,7 +29,7 @@ public class TherapyDetailsChapter extends ReportChapter {
 
     private static void addTumorTypeEvidence(@NotNull Document report) {
 
-        report.add(new Paragraph("Tumor type specific evidence").addStyle(ReportResources.sectionTitleStyle()));
+        report.add(SectionTitle.getSectionTitle("Tumor type specific evidence"));
 
         EvidenceTable table = new EvidenceTable();
         for (int i = 0; i < 10; i++) {
@@ -40,7 +41,7 @@ public class TherapyDetailsChapter extends ReportChapter {
 
     private static void addClinicalTrials(@NotNull Document report) {
 
-        report.add(new Paragraph("Clinical trials (NL)").addStyle(ReportResources.sectionTitleStyle()));
+        report.add(SectionTitle.getSectionTitle("Clinical trials (NL)"));
 
         ClinicalTrialsTable table = new ClinicalTrialsTable();
         for (int i = 0; i < 10; i++) {
@@ -52,7 +53,7 @@ public class TherapyDetailsChapter extends ReportChapter {
 
     private static void addOtherTumorTypeEvidence(@NotNull Document report) {
 
-        report.add(new Paragraph("Evidence on other tumor types").addStyle(ReportResources.sectionTitleStyle()));
+        report.add(SectionTitle.getSectionTitle("Evidence on other tumor types"));
 
         EvidenceTable table = new EvidenceTable();
         for (int i = 0; i < 50; i++) {

@@ -34,7 +34,9 @@ public final class ReportResources {
     public static final float PAGE_MARGIN_RIGHT = 29;
     public static final float PAGE_MARGIN_BOTTOM = 62;
 
-    public static final float TABLE_FULL_WIDTH = 510;
+
+    public static final float CONTENT_WIDTH_NARROW = 330; // Width of the content on a narrow page (page with full sidepanel)
+    public static final float CONTENT_WIDTH_WIDE = 510; // Width of the content on a narrow page (page without full sidepanel)
 
     // Color palette
     public static final DeviceRgb PALETTE_BLUE = new DeviceRgb(38, 90, 166);
@@ -97,6 +99,13 @@ public final class ReportResources {
                 .setFont(getFontRegular())
                 .setFontSize(8)
                 .setFontColor(ReportResources.PALETTE_DARK_GREY);
+    }
+
+    public static final Style bodyTextStyle() {
+        return new Style()
+                .setFont(getFontRegular())
+                .setFontSize(8)
+                .setFontColor(ReportResources.PALETTE_BLACK);
     }
 
     public static final Style subTextStyle() {
