@@ -6,6 +6,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -498,8 +499,10 @@ public class CircosDataWriter {
 
     @NotNull
     private Map<String, Integer> contigLengths(@NotNull final List<GenomePosition> positions) {
-        final Map<String, Integer> results = Maps.newHashMap();
-        for (GenomePosition position : positions) {
+        final Map<String, Integer> results = new LinkedHashMap<>();
+        final List<GenomePosition> sortedPositions = positions.stream().sorted().collect(toList());
+
+        for (GenomePosition position : sortedPositions) {
             int end = (int) position.position();
             results.merge(position.chromosome(), end, Math::max);
         }
