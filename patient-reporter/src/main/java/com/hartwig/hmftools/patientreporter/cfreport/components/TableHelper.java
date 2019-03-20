@@ -1,9 +1,10 @@
-package com.hartwig.hmftools.patientreporter.cfreport.components.tables;
+package com.hartwig.hmftools.patientreporter.cfreport.components;
 
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
 import com.itextpdf.layout.borders.Border;
 import com.itextpdf.layout.borders.SolidBorder;
 import com.itextpdf.layout.element.Cell;
+import com.itextpdf.layout.element.IBlockElement;
 import com.itextpdf.layout.element.Paragraph;
 import com.itextpdf.layout.element.Table;
 import com.itextpdf.layout.property.UnitValue;
@@ -28,7 +29,7 @@ public final class TableHelper {
 
         // Add header columns
         for (String name: headerNames) {
-            table.addHeaderCell(new TableHeaderCell().add(new Paragraph(name.toUpperCase())));
+            table.addHeaderCell(getHeaderCell().add(new Paragraph(name.toUpperCase())));
         }
 
         return table;
@@ -52,15 +53,28 @@ public final class TableHelper {
     /**
      * Get a cell that implements the visual content style for the main report tables
      *
+     * @param text
      * @return
      */
     @NotNull
-    public static Cell getContentCell() {
+    public static Cell getContentCell(@NotNull String text) {
+        return getContentCell(new Paragraph(text));
+    }
+
+    /**
+     * Get a cell that implements the visual content style for the main report tables
+     *
+     * @param element
+     * @return
+     */
+    @NotNull
+    public static Cell getContentCell(@NotNull IBlockElement element) {
         Cell c = new Cell();
         c.setBorder(Border.NO_BORDER);
         c.setBorderBottom(new SolidBorder(ReportResources.PALETTE_MID_GREY, 0.25f));
         c.addStyle(ReportResources.tableContentStyle());
         c.setKeepTogether(true);
+        c.add(element);
         return c;
     }
 

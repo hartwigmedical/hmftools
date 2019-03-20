@@ -2,7 +2,7 @@ package com.hartwig.hmftools.patientreporter.cfreport.chapters;
 
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
 import com.hartwig.hmftools.patientreporter.cfreport.components.*;
-import com.hartwig.hmftools.patientreporter.cfreport.components.tables.TableHelper;
+import com.hartwig.hmftools.patientreporter.cfreport.components.TableHelper;
 import com.itextpdf.layout.Document;
 import com.itextpdf.layout.Style;
 import com.itextpdf.layout.element.Cell;
