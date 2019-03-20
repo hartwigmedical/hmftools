@@ -85,7 +85,6 @@ public final class TableHelper {
         Cell c = new Cell(rowspan, colspan);
         c.setBorder(Border.NO_BORDER);
         c.setKeepTogether(true);
-        c.setVerticalAlignment(VerticalAlignment.BOTTOM);
         return c;
     }
 

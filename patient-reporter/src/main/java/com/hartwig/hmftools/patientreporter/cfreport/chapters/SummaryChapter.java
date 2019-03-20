@@ -13,6 +13,7 @@ import com.itextpdf.layout.element.Div;
 import com.itextpdf.layout.element.Paragraph;
 import com.itextpdf.layout.element.Table;
 import com.itextpdf.layout.property.UnitValue;
+import com.itextpdf.layout.property.VerticalAlignment;
 import com.sun.xml.internal.ws.util.StringUtils;
 import com.sun.xml.internal.ws.wsdl.writer.document.soap.Body;
 import org.jcp.xml.dsig.internal.dom.ApacheCanonicalizer;
@@ -83,12 +84,16 @@ public class SummaryChapter extends ReportChapter {
         table.addCell(TableHelper.getLayoutCell().add(BodyText.getParagraph("Summary of number of alterations with number of treatment indication and/or clinical studies")));
         table.addCell(TableHelper.getLayoutCell(1, 2).setHeight(TABLE_SPACER_HEIGHT)); // Spacer
 
-        table.addCell(TableHelper.getLayoutCell().add(BodyText.getParagraph("Gene alteration(s) with therapy indication(s)")));
-        table.addCell(TableHelper.getLayoutCell().add(new Paragraph(String.format("%d (%d treatments)", 1, 8))
+        table.addCell(getBottomAlignedLayoutCell()
+                .add(BodyText.getParagraph("Gene alteration(s) with therapy indication(s)")));
+        table.addCell(getBottomAlignedLayoutCell()
+                .add(new Paragraph(String.format("%d (%d treatments)", 1, 8))
                 .addStyle(ReportResources.dataHighlightStyle())));
 
-        table.addCell(TableHelper.getLayoutCell().add(BodyText.getParagraph("Gene alteration(s) with clinical study eligibility")));
-        table.addCell(TableHelper.getLayoutCell().add(new Paragraph(String.format("%d (%d studies)", 1, 8))
+        table.addCell(getBottomAlignedLayoutCell()
+                .add(BodyText.getParagraph("Gene alteration(s) with clinical study eligibility")));
+        table.addCell(getBottomAlignedLayoutCell()
+                .add(new Paragraph(String.format("%d (%d studies)", 1, 8))
                 .addStyle(ReportResources.dataHighlightStyle())));
 
         div.add(table);
@@ -110,21 +115,21 @@ public class SummaryChapter extends ReportChapter {
         table.addCell(TableHelper.getLayoutCell(1, 2).add(BodyText.getParagraph("Whole genome sequencing based tumor characteristics.")));
         table.addCell(TableHelper.getLayoutCell(1, 3).setHeight(TABLE_SPACER_HEIGHT)); // Spacer
 
-        table.addCell(TableHelper.getLayoutCell().add(BodyText.getParagraph("Tumor purity of biopsy")));
-        table.addCell(TableHelper.getLayoutCell().add(new Paragraph("[VAL]")));
-        table.addCell(TableHelper.getLayoutCell().add(new Paragraph("[BAR]")));
+        table.addCell(getBottomAlignedLayoutCell().add(BodyText.getParagraph("Tumor purity of biopsy")));
+        table.addCell(getBottomAlignedLayoutCell().add(new Paragraph("[VAL]")));
+        table.addCell(getBottomAlignedLayoutCell().add(new Paragraph("[BAR]")));
 
-        table.addCell(TableHelper.getLayoutCell().add(BodyText.getParagraph("Average tumor ploidy")));
-        table.addCell(TableHelper.getLayoutCell().add(new Paragraph("[VAL]")));
-        table.addCell(TableHelper.getLayoutCell().add(new Paragraph("[BAR]")));
+        table.addCell(getBottomAlignedLayoutCell().add(BodyText.getParagraph("Average tumor ploidy")));
+        table.addCell(getBottomAlignedLayoutCell().add(new Paragraph("[VAL]")));
+        table.addCell(getBottomAlignedLayoutCell().add(new Paragraph("[BAR]")));
 
-        table.addCell(TableHelper.getLayoutCell().add(BodyText.getParagraph("Tumor mutational load")));
-        table.addCell(TableHelper.getLayoutCell().add(new Paragraph("[VAL]")));
-        table.addCell(TableHelper.getLayoutCell().add(new Paragraph("[BAR]")));
+        table.addCell(getBottomAlignedLayoutCell().add(BodyText.getParagraph("Tumor mutational load")));
+        table.addCell(getBottomAlignedLayoutCell().add(new Paragraph("[VAL]")));
+        table.addCell(getBottomAlignedLayoutCell().add(new Paragraph("[BAR]")));
 
-        table.addCell(TableHelper.getLayoutCell().add(BodyText.getParagraph("Microsatellite (in)stability")));
-        table.addCell(TableHelper.getLayoutCell().add(new Paragraph("[VAL]")));
-        table.addCell(TableHelper.getLayoutCell().add(new Paragraph("[BAR]")));
+        table.addCell(getBottomAlignedLayoutCell().add(BodyText.getParagraph("Microsatellite (in)stability")));
+        table.addCell(getBottomAlignedLayoutCell().add(new Paragraph("[VAL]")));
+        table.addCell(getBottomAlignedLayoutCell().add(new Paragraph("[BAR]")));
 
         div.add(table);
 
@@ -147,29 +152,29 @@ public class SummaryChapter extends ReportChapter {
 
         // Genes with driver variant
         String[] driverVariantGenes = {"CDKN2A", "BRAF"};
-        table.addCell(TableHelper.getLayoutCell().add(BodyText.getParagraph("Genes with driver variant")));
+        table.addCell(getBottomAlignedLayoutCell().add(BodyText.getParagraph("Genes with driver variant")));
         table.addCell(getGeneListCell(driverVariantGenes));
 
         // Reported variants
         int reportedVariants = 4;
         Style reportedVariantsStyle = (reportedVariants > 0) ? ReportResources.dataHighlightStyle() : ReportResources.dataHighlightNaStyle();
-        table.addCell(TableHelper.getLayoutCell().add(BodyText.getParagraph("Nr. of reported variants")));
-        table.addCell(TableHelper.getLayoutCell().add(new Paragraph(String.valueOf(reportedVariants))
+        table.addCell(getBottomAlignedLayoutCell().add(BodyText.getParagraph("Nr. of reported variants")));
+        table.addCell(getBottomAlignedLayoutCell().add(new Paragraph(String.valueOf(reportedVariants))
                 .addStyle(reportedVariantsStyle)));
 
         // Copy gain genes
         String[] copyGainGenes = {};
-        table.addCell(TableHelper.getLayoutCell().add(BodyText.getParagraph("Genes with copy-gain")));
+        table.addCell(getBottomAlignedLayoutCell().add(BodyText.getParagraph("Genes with copy-gain")));
         table.addCell(getGeneListCell(copyGainGenes));
 
         // Copy loss genes
         String[] copyLossGenes = {"PTEN"};
-        table.addCell(TableHelper.getLayoutCell().add(BodyText.getParagraph("Genes with copy-loss")));
+        table.addCell(getBottomAlignedLayoutCell().add(BodyText.getParagraph("Genes with copy-loss")));
         table.addCell(getGeneListCell(copyLossGenes));
 
         // Gene fusions
         String[] fusionGenes = {};
-        table.addCell(TableHelper.getLayoutCell().add(BodyText.getParagraph("Gene fusions")));
+        table.addCell(getBottomAlignedLayoutCell().add(BodyText.getParagraph("Gene fusions")));
         table.addCell(getGeneListCell(fusionGenes));
 
         div.add(table);
@@ -194,6 +199,13 @@ public class SummaryChapter extends ReportChapter {
     }
 
     @NotNull
+    private static final Cell getBottomAlignedLayoutCell() {
+        Cell c = TableHelper.getLayoutCell()
+                .setVerticalAlignment(VerticalAlignment.BOTTOM);
+        return c;
+    }
+
+    @NotNull
     private static final Cell getGeneListCell(@NotNull String[] genes) {
 
         // Concatenate genes
@@ -214,11 +226,12 @@ public class SummaryChapter extends ReportChapter {
         Style style = genes.length > 0 ? ReportResources.dataHighlightStyle() : ReportResources.dataHighlightNaStyle();
 
         // Build table
-        Cell c = TableHelper.getLayoutCell()
+        Cell c = getBottomAlignedLayoutCell()
                 .add(new Paragraph(geneString))
                 .addStyle(style);
                 return c;
 
     }
+
 
 }
