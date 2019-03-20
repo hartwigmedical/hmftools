@@ -14,7 +14,7 @@ import org.jetbrains.annotations.NotNull;
 
 public class CopyNumberAlterations {
 
-
+    // From DB: select sampleId, chromosome, start, end, copyNumber, actualBaf from copyNumber where sampleId = 'xxxxx';
 
     private static final String COMMENT = "#";
     private static final String DELIMITER = "\t";
