@@ -6,11 +6,13 @@ import org.jetbrains.annotations.NotNull;
 
 public class BodyText {
 
-    public static final Paragraph getParagraph(@NotNull String text) {
-        Paragraph p = new Paragraph();
-        p.add(text);
-        p.addStyle(ReportResources.bodyTextStyle());
-        return p;
+    @NotNull
+    public static final Paragraph createBodyText(@NotNull String text) {
+
+        return new Paragraph()
+            .add(text)
+            .addStyle(ReportResources.bodyTextStyle());
+
     }
 
 }

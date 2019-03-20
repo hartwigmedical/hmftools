@@ -1,16 +1,16 @@
 package com.hartwig.hmftools.patientreporter.cfreport.components;
 
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
-import com.itextpdf.layout.Style;
-import com.itextpdf.layout.borders.Border;
 import com.itextpdf.layout.borders.SolidBorder;
 import com.itextpdf.layout.element.Paragraph;
 import com.itextpdf.layout.element.Text;
 import com.itextpdf.layout.property.BorderRadius;
+import org.jetbrains.annotations.NotNull;
 
 public class DataLabel {
 
-    public static final Paragraph createDataLabel(String text) {
+    @NotNull
+    public static final Paragraph createDataLabel(@NotNull String text) {
 
         return new Paragraph()
                 .add(new Text(text)
@@ -21,4 +21,5 @@ public class DataLabel {
                 .setBorderRadius(new BorderRadius(3f)));
 
     }
+
 }

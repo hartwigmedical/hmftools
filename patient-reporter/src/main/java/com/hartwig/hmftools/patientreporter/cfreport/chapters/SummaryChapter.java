@@ -9,7 +9,6 @@ import com.itextpdf.layout.element.Cell;
 import com.itextpdf.layout.element.Div;
 import com.itextpdf.layout.element.Paragraph;
 import com.itextpdf.layout.element.Table;
-import com.itextpdf.layout.property.BorderRadius;
 import com.itextpdf.layout.property.UnitValue;
 import com.itextpdf.layout.property.VerticalAlignment;
 import org.jetbrains.annotations.NotNull;
@@ -68,7 +67,7 @@ public class SummaryChapter extends ReportChapter {
     private final void renderSummaryText(@NotNull Document report) {
 
         Div div = initializeSummarySectionDiv(getContentWidth());
-        div.add(SectionTitle.getSectionTitle("Summary"));
+        div.add(SectionTitle.createSectionTitle("Summary"));
 
         // Add content to div
         String content = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vivamus eget porta turpis. Lorem ipsum dolor sit amet, " +
@@ -76,7 +75,7 @@ public class SummaryChapter extends ReportChapter {
                 "condimentum. Suspendisse eget nulla egestas, fermentum urna ut, bibendum ipsum. Nulla varius, dui elementum faucibus ultricies, " +
                 "nisi velit dignissim arcu, nec feugiat dui magna eu felis. Maecenas at odio pharetra, sodales velit vitae, gravida mauris. Pellentesque " +
                 "id ultrices diam. Integer non ex ut neque auctor pellentesque. Ut et nibh faucibus, pretium erat efficitur, vehicula lorem.";
-        Paragraph p = BodyText.getParagraph(content);
+        Paragraph p = BodyText.createBodyText(content);
         p.setWidth(getContentWidth());
         div.add(p);
 
@@ -92,22 +91,22 @@ public class SummaryChapter extends ReportChapter {
         // Initialize table
         Table table = new Table(UnitValue.createPercentArray(new float[] {1, 1}));
         table.setWidth(getContentWidth());
-        table.addCell(TableHelper.getLayoutCell().add(SectionTitle.getSectionTitle("Treatment indications")));
-        table.addCell(TableHelper.getLayoutCell().add(BodyText.getParagraph("Summary of number of alterations with number of treatment indication and/or clinical studies")));
+        table.addCell(TableHelper.getLayoutCell().add(SectionTitle.createSectionTitle("Treatment indications")));
+        table.addCell(TableHelper.getLayoutCell().add(BodyText.createBodyText("Summary of number of alterations with number of treatment indication and/or clinical studies")));
         table.addCell(TableHelper.getLayoutCell(1, 2).setHeight(TABLE_SPACER_HEIGHT)); // Spacer
 
         // Alterations/therapy
         int therapyGeneCount = 1;
         int therapyCount = 8;
         table.addCell(getBottomAlignedLayoutCell()
-                .add(BodyText.getParagraph("Gene alteration(s) with therapy indication(s)")));
+                .add(BodyText.createBodyText("Gene alteration(s) with therapy indication(s)")));
         table.addCell(getTreatmentIndicationCell(therapyGeneCount, therapyCount, "treatments"));
 
         // Alterations/clinical study
         int studyGeneCount = 2;
         int studyCount = 7;
         table.addCell(getBottomAlignedLayoutCell()
-                .add(BodyText.getParagraph("Gene alteration(s) with clinical study eligibility")));
+                .add(BodyText.createBodyText("Gene alteration(s) with clinical study eligibility")));
         table.addCell(getTreatmentIndicationCell(studyGeneCount, studyCount, "studies"));
 
         div.add(table);
@@ -124,14 +123,14 @@ public class SummaryChapter extends ReportChapter {
         // Initialize table
         Table table = new Table(UnitValue.createPercentArray(new float[] {1, .33f, .66f}));
         table.setWidth(getContentWidth());
-        table.addCell(TableHelper.getLayoutCell().add(SectionTitle.getSectionTitle("Tumor characteristics summary")));
-        table.addCell(TableHelper.getLayoutCell(1, 2).add(BodyText.getParagraph("Whole genome sequencing based tumor characteristics.")));
+        table.addCell(TableHelper.getLayoutCell().add(SectionTitle.createSectionTitle("Tumor characteristics summary")));
+        table.addCell(TableHelper.getLayoutCell(1, 2).add(BodyText.createBodyText("Whole genome sequencing based tumor characteristics.")));
         table.addCell(TableHelper.getLayoutCell(1, 3).setHeight(TABLE_SPACER_HEIGHT)); // Spacer
 
         // Tumor purity
         float tumorPurity = 74.4f;
         table.addCell(getBottomAlignedLayoutCell()
-                .add(BodyText.getParagraph("Tumor purity of biopsy")));
+                .add(BodyText.createBodyText("Tumor purity of biopsy")));
         table.addCell(getBottomAlignedLayoutCell()
                 .add(new Paragraph(String.format(java.util.Locale.US,"%.0f%%", tumorPurity)))
                 .addStyle(ReportResources.dataHighlightStyle()));
@@ -141,7 +140,7 @@ public class SummaryChapter extends ReportChapter {
         // Tumor characteristics
         float ploidy = 3.1f;
         table.addCell(getBottomAlignedLayoutCell()
-                .add(BodyText.getParagraph("Average tumor ploidy")));
+                .add(BodyText.createBodyText("Average tumor ploidy")));
         table.addCell(getBottomAlignedLayoutCell()
                 .add(new Paragraph(String.format(java.util.Locale.US, "%.1f", ploidy)))
                 .addStyle(ReportResources.dataHighlightStyle()));
@@ -151,7 +150,7 @@ public class SummaryChapter extends ReportChapter {
         // Tumor mutational load
         String mutationalLoad = "High";
         table.addCell(getBottomAlignedLayoutCell()
-                .add(BodyText.getParagraph("Tumor mutational load")));
+                .add(BodyText.createBodyText("Tumor mutational load")));
         table.addCell(getBottomAlignedLayoutCell()
                 .add(new Paragraph(mutationalLoad))
                 .addStyle(ReportResources.dataHighlightStyle()));
@@ -161,7 +160,7 @@ public class SummaryChapter extends ReportChapter {
         // Microsatellite stability
         String microsatelliteStability = "Stable";
         table.addCell(getBottomAlignedLayoutCell()
-                .add(BodyText.getParagraph("Microsatellite (in)stability")));
+                .add(BodyText.createBodyText("Microsatellite (in)stability")));
         table.addCell(getBottomAlignedLayoutCell()
                 .add(new Paragraph(microsatelliteStability))
                 .addStyle(ReportResources.dataHighlightStyle()));
@@ -182,36 +181,36 @@ public class SummaryChapter extends ReportChapter {
         // Initialize table
         Table table = new Table(UnitValue.createPercentArray(new float[] {1, 1}));
         table.setWidth(getContentWidth());
-        table.addCell(TableHelper.getLayoutCell().add(SectionTitle.getSectionTitle("Genomic alterations\n summary")));
-        table.addCell(TableHelper.getLayoutCell().add(BodyText.getParagraph("Summary on genomic alterations " +
+        table.addCell(TableHelper.getLayoutCell().add(SectionTitle.createSectionTitle("Genomic alterations\n summary")));
+        table.addCell(TableHelper.getLayoutCell().add(BodyText.createBodyText("Summary on genomic alterations " +
                 "(somatic variants, copy number changes, gene disruptions and gene fusions).")));
         table.addCell(TableHelper.getLayoutCell(1, 2).setHeight(TABLE_SPACER_HEIGHT)); // Spacer
 
         // Genes with driver variant
         String[] driverVariantGenes = {"CDKN2A", "BRAF"};
-        table.addCell(getBottomAlignedLayoutCell().add(BodyText.getParagraph("Genes with driver variant")));
+        table.addCell(getBottomAlignedLayoutCell().add(BodyText.createBodyText("Genes with driver variant")));
         table.addCell(getGeneListCell(driverVariantGenes));
 
         // Reported variants
         int reportedVariants = 4;
         Style reportedVariantsStyle = (reportedVariants > 0) ? ReportResources.dataHighlightStyle() : ReportResources.dataHighlightNaStyle();
-        table.addCell(getBottomAlignedLayoutCell().add(BodyText.getParagraph("Nr. of reported variants")));
+        table.addCell(getBottomAlignedLayoutCell().add(BodyText.createBodyText("Nr. of reported variants")));
         table.addCell(getBottomAlignedLayoutCell().add(new Paragraph(String.valueOf(reportedVariants))
                 .addStyle(reportedVariantsStyle)));
 
         // Copy gain genes
         String[] copyGainGenes = {};
-        table.addCell(getBottomAlignedLayoutCell().add(BodyText.getParagraph("Genes with copy-gain")));
+        table.addCell(getBottomAlignedLayoutCell().add(BodyText.createBodyText("Genes with copy-gain")));
         table.addCell(getGeneListCell(copyGainGenes));
 
         // Copy loss genes
         String[] copyLossGenes = {"PTEN"};
-        table.addCell(getBottomAlignedLayoutCell().add(BodyText.getParagraph("Genes with copy-loss")));
+        table.addCell(getBottomAlignedLayoutCell().add(BodyText.createBodyText("Genes with copy-loss")));
         table.addCell(getGeneListCell(copyLossGenes));
 
         // Gene fusions
         String[] fusionGenes = {};
-        table.addCell(getBottomAlignedLayoutCell().add(BodyText.getParagraph("Gene fusions")));
+        table.addCell(getBottomAlignedLayoutCell().add(BodyText.createBodyText("Gene fusions")));
         table.addCell(getGeneListCell(fusionGenes));
 
         div.add(table);
@@ -229,7 +228,7 @@ public class SummaryChapter extends ReportChapter {
         div.setWidth(width);
 
         // Add divider and section title
-        div.add(LineDivider.getLineDivider(width));
+        div.add(LineDivider.createLineDivider(width));
 
         return div;
 

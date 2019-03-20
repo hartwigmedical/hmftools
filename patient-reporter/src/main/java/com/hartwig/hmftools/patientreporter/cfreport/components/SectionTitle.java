@@ -6,10 +6,12 @@ import org.jetbrains.annotations.NotNull;
 
 public class SectionTitle {
 
-    public static Paragraph getSectionTitle(@NotNull String title) {
-        return new Paragraph(title).addStyle(ReportResources.sectionTitleStyle());
+    @NotNull
+    public static Paragraph createSectionTitle(@NotNull String title) {
+
+        return new Paragraph(title)
+                .addStyle(ReportResources.sectionTitleStyle());
+
     }
-
-
 
 }
