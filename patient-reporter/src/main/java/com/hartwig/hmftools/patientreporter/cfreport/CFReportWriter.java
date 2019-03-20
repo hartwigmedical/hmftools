@@ -10,9 +10,6 @@ import com.itextpdf.kernel.geom.PageSize;
 import com.itextpdf.kernel.pdf.PdfDocument;
 import com.itextpdf.kernel.pdf.PdfWriter;
 import com.itextpdf.layout.Document;
-import com.itextpdf.layout.element.AreaBreak;
-import com.itextpdf.layout.element.Paragraph;
-import com.itextpdf.layout.property.AreaBreakType;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -35,6 +32,11 @@ public class CFReportWriter implements ReportWriter {
         // Does not need to be implemented
     }
 
+    /**
+     *
+     * @param outputFilePath
+     * @deprecated
+     */
     public void createReport(String outputFilePath) {
 
         try {

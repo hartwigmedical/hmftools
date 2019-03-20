@@ -1,10 +1,7 @@
 package com.hartwig.hmftools.patientreporter.cfreport.chapters;
 
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
-import com.hartwig.hmftools.patientreporter.cfreport.components.BodyText;
-import com.hartwig.hmftools.patientreporter.cfreport.components.InlineBarChart;
-import com.hartwig.hmftools.patientreporter.cfreport.components.LineDivider;
-import com.hartwig.hmftools.patientreporter.cfreport.components.SectionTitle;
+import com.hartwig.hmftools.patientreporter.cfreport.components.*;
 import com.hartwig.hmftools.patientreporter.cfreport.components.tables.TableHelper;
 import com.itextpdf.layout.Document;
 import com.itextpdf.layout.Style;
@@ -12,6 +9,7 @@ import com.itextpdf.layout.element.Cell;
 import com.itextpdf.layout.element.Div;
 import com.itextpdf.layout.element.Paragraph;
 import com.itextpdf.layout.element.Table;
+import com.itextpdf.layout.property.BorderRadius;
 import com.itextpdf.layout.property.UnitValue;
 import com.itextpdf.layout.property.VerticalAlignment;
 import org.jetbrains.annotations.NotNull;
@@ -20,7 +18,7 @@ import java.util.StringJoiner;
 
 public class SummaryChapter extends ReportChapter {
 
-    private final static float TABLE_SPACER_HEIGHT = 10;
+    private final static float TABLE_SPACER_HEIGHT = 5;
 
     @Override
     public final String getName() {
@@ -46,6 +44,24 @@ public class SummaryChapter extends ReportChapter {
         Div div = new Div();
         div.setKeepTogether(true);
         div.setWidth(getContentWidth());
+
+        // Initialize table
+        Table table = new Table(UnitValue.createPercentArray(new float[] {1, 1}));
+        table.setWidth(getContentWidth());
+
+        table.addCell(TableHelper.getLayoutCell()
+                .add(new Paragraph("PRIMARY TUMOR LOCATION")
+                        .addStyle(ReportResources.subTextStyle())));
+        table.addCell(TableHelper.getLayoutCell()
+                .add(new Paragraph("CANCER SUBTYPE")
+                        .addStyle(ReportResources.subTextStyle())));
+        table.addCell(TableHelper.getLayoutCell()
+                .add(DataLabel.createDataLabel("Skin")));
+        table.addCell(TableHelper.getLayoutCell()
+                .add(DataLabel.createDataLabel("Melanoma")));
+
+        div.add(table);
+        report.add(div);
 
     }
 
@@ -114,16 +130,13 @@ public class SummaryChapter extends ReportChapter {
 
         // Tumor purity
         float tumorPurity = 74.4f;
-        InlineBarChart tumorPurityChart = new InlineBarChart(tumorPurity, 0f, 100f);
-        tumorPurityChart.setWidth(41);
-        tumorPurityChart.setHeight(6);
         table.addCell(getBottomAlignedLayoutCell()
                 .add(BodyText.getParagraph("Tumor purity of biopsy")));
         table.addCell(getBottomAlignedLayoutCell()
                 .add(new Paragraph(String.format(java.util.Locale.US,"%.0f%%", tumorPurity)))
                 .addStyle(ReportResources.dataHighlightStyle()));
         table.addCell(getBottomAlignedLayoutCell()
-                .add(tumorPurityChart));
+                .add(getInlineBarChart(tumorPurity, 0f, 100f)));
 
         // Tumor characteristics
         float ploidy = 3.1f;
@@ -135,7 +148,7 @@ public class SummaryChapter extends ReportChapter {
         table.addCell(getBottomAlignedLayoutCell().
                 add(new Paragraph("[BAR]")));
 
-        // Tumor mutational
+        // Tumor mutational load
         String mutationalLoad = "High";
         table.addCell(getBottomAlignedLayoutCell()
                 .add(BodyText.getParagraph("Tumor mutational load")));
@@ -143,7 +156,7 @@ public class SummaryChapter extends ReportChapter {
                 .add(new Paragraph(mutationalLoad))
                 .addStyle(ReportResources.dataHighlightStyle()));
         table.addCell(getBottomAlignedLayoutCell()
-                .add(new Paragraph("[BAR]")));
+                .add(getInlineBarChart(90, 0f, 100f)));
 
         // Microsatellite stability
         String microsatelliteStability = "Stable";
@@ -276,5 +289,12 @@ public class SummaryChapter extends ReportChapter {
 
     }
 
+    @NotNull
+    private static final InlineBarChart getInlineBarChart(float v, float min, float max) {
+        InlineBarChart tumorPurityChart = new InlineBarChart(v, min, max);
+        tumorPurityChart.setWidth(41);
+        tumorPurityChart.setHeight(6);
+        return tumorPurityChart;
+    }
 
 }

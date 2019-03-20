@@ -39,6 +39,8 @@ public final class ReportResources {
     public static final float CONTENT_WIDTH_WIDE = 510; // Width of the content on a narrow page (page without full sidepanel)
 
     // Color palette
+    public static final DeviceRgb PALETTE_WHITE = new DeviceRgb(255, 255, 255);
+    public static final DeviceRgb PALETTE_BLACK = new DeviceRgb(0, 0, 0);
     public static final DeviceRgb PALETTE_BLUE = new DeviceRgb(38, 90, 166);
     public static final DeviceRgb PALETTE_MID_BLUE = new DeviceRgb(110, 139, 189);
     public static final DeviceRgb PALETTE_RED = new DeviceRgb(232, 60, 55);
@@ -47,7 +49,6 @@ public final class ReportResources {
     public static final DeviceRgb PALETTE_MID_GREY = new DeviceRgb(101, 106, 108);
     public static final DeviceRgb PALETTE_LIGHT_GREY = new DeviceRgb(205, 206, 207);
     public static final DeviceRgb PALETTE_PINK = new DeviceRgb(230, 21, 124);
-    public static final DeviceRgb PALETTE_BLACK = new DeviceRgb(0, 0, 0);
 
     // Fonts
     private static String FONT_REGULAR_PATH = "fonts/nimbus-sans/NimbusSansL-Regular.ttf";
