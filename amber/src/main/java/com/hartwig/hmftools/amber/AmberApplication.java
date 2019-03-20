@@ -137,15 +137,17 @@ public class AmberApplication implements AutoCloseable {
 
         final List<Future<BaseDepthEvidence>> futures = Lists.newArrayList();
         for (final String contig : bedRegionsSortedSet.keySet()) {
-            for (final List<GenomeRegion> inner : Lists.partition(Lists.newArrayList(bedRegionsSortedSet.get(contig)), partitionSize)) {
-                final BaseDepthEvidence evidence = new BaseDepthEvidence(config.typicalReadDepth(),
-                        config.minMappingQuality(),
-                        config.minBaseQuality(),
-                        contig,
-                        config.referenceBamPath(),
-                        readerFactory,
-                        inner);
-                futures.add(executorService.submit(completion.task(evidence)));
+            if (HumanChromosome.contains(contig)) {
+                for (final List<GenomeRegion> inner : Lists.partition(Lists.newArrayList(bedRegionsSortedSet.get(contig)), partitionSize)) {
+                    final BaseDepthEvidence evidence = new BaseDepthEvidence(config.typicalReadDepth(),
+                            config.minMappingQuality(),
+                            config.minBaseQuality(),
+                            contig,
+                            config.referenceBamPath(),
+                            readerFactory,
+                            inner);
+                    futures.add(executorService.submit(completion.task(evidence)));
+                }
             }
         }
 
