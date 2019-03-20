@@ -26,7 +26,7 @@ A HG38 equivalent is also available.
 
 Argument | Default | Description 
 ---|---|---
-run_dir | None | If provided, default values of <run_dir>/amber, <run_dir>/cobalt and <run_dir>/purple will be supplied for amber, cobalt and output_dir parameters respectively.
+run_dir | None | If provided, parameters `amber`, `cobalt` and `output_dir` are no longer mandatory and will have default values of <run_dir>/amber, <run_dir>/cobalt and <run_dir>/purple respectively unless overridden.
 threads | 2 | Number of threads to use.
 somatic_vcf | None | Optional location of somatic variants vcf.  Sample name must match tumor parameter. GZ files supported.
 structural_vcf | None | Optional location of structural variants vcf. Sample name must match tumor parameter. GZ files supported.
@@ -66,21 +66,6 @@ java -jar purple.jar \
    -circos /path/to/circos-0.69-5/bin/circos \
    -db_enabled -db_user build -db_pass build -db_url mysql://localhost:3306/hmfpatients?serverTimezone=UTC
 ```
-
-Note that it is possible to supply a run_dir parameter in which case default values of the amber, cobalt and output_dir parameters will become <run_dir>/amber, <run_dir>/cobalt and <run_dir>/purple respectively.
-It is still possible to override these default parameters but supplying a value, ie:
-
-```
-java -jar purple.jar \
-   -reference COLO829R \
-   -tumor COLO829T \
-   -run_dir /path/to/COLO829 \
-   -output_dir /path/to/COLO829/purple_pilot \
-   -gc_profile /Users/jon/hmf/analyses/COLO829/GC_profile.1000bp.cnp 
-```
-
-In this case the output_directory will be set to `/path/to/COLO829/purple_pilot` while the amber and cobalt parameters will have the default values `/path/to/COLO829/amber` and `/path/to/COLO829/cobalt`.
-
 
 ## Input
 
