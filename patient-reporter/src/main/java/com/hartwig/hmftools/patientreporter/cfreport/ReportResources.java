@@ -13,6 +13,8 @@ import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 /**
  * Shared info, settings and resources for the report
@@ -27,6 +29,8 @@ public final class ReportResources {
     // PDF Document metadata
     public static final String METADATA_TITLE = "HMF Sequencing Report v" + PatientReporterApplication.VERSION;
     public static final String METADATA_AUTHOR = HARTWIG_NAME;
+    public static final String DATE_TIME_FORMAT = "dd-MMM-yyyy";
+    public static final String REPORT_DATE = new SimpleDateFormat(DATE_TIME_FORMAT).format(new Date());
 
     // Page margins for normal content (so excluding header and footer) in pt
     public static final float PAGE_MARGIN_TOP = 150; // Top margin also excludes the chapter title, which is rendered in the header
@@ -136,6 +140,20 @@ public final class ReportResources {
                 .setFont(getFontBold())
                 .setFontSize(8)
                 .setFontColor(ReportResources.PALETTE_BLUE);
+    }
+
+    public static final Style sidepanelLabelStyle() {
+        return new Style()
+                .setFont(getFontBold())
+                .setFontSize(7)
+                .setFontColor(ReportResources.PALETTE_WHITE);
+    }
+
+    public static final Style sidepanelValueStyle() {
+        return new Style()
+                .setFont(getFontBold())
+                .setFontSize(11)
+                .setFontColor(ReportResources.PALETTE_WHITE);
     }
 
     /**
