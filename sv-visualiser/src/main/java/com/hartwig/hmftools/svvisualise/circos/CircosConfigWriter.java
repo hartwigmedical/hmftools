@@ -66,7 +66,7 @@ public class CircosConfigWriter {
         final Charset charset = StandardCharsets.UTF_8;
         final String template =
                 readResource("/visualisation/cluster.template")
-                        .replaceAll("SUBSTITUTE_IDEOGRAM_SPACING", chromosomeCount > 1 ? "0.005r" : "1u")
+                        .replaceAll("SUBSTITUTE_IDEOGRAM_SPACING", chromosomeCount > 1 ? "0.005r" : "10u")
 
                         .replaceAll("SUBSTITUTE_HISTOGRAM", histogramPlots(maxTracks))
                         .replaceAll("SUBSTITUTE_TERMINAL", terminalTexts(maxTracks))
