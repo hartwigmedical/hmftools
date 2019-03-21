@@ -28,8 +28,24 @@ public class Segments {
     private static final RefGenome REF_GENOME = RefGenome.HG19;
 
     @NotNull
+    public static Segment chromosome(@NotNull final String sampleId, @NotNull final String chromosome) {
+        return ImmutableSegment.builder()
+                .sampleId(sampleId)
+                .clusterId(-1)
+                .chainId(-1)
+                .chromosome(chromosome)
+                .start(1)
+                .end(REF_GENOME.lengths().get(HumanChromosome.fromString(chromosome)))
+                .track(0)
+                .startTerminal(SegmentTerminal.TELOMERE)
+                .endTerminal(SegmentTerminal.TELOMERE)
+                .traverseCount(0)
+                .build();
+    }
+
+    @NotNull
     public static List<Segment> readTracks(@NotNull final String fileName) throws IOException {
-        return incrementOnChromosome(fromString(Files.readAllLines(new File(fileName).toPath())));
+        return fromString(Files.readAllLines(new File(fileName).toPath()));
     }
 
     @NotNull
@@ -141,7 +157,7 @@ public class Segments {
 
         int currentTrack = 1;
         for (final Segment segment : segments) {
-            if (simpleClusters.contains(segment.clusterId())) {
+            if (simpleClusters.contains(segment.clusterId()) || segment.clusterId() == -1) {
                 result.add(ImmutableSegment.builder().from(segment).track(0).build());
             } else {
 

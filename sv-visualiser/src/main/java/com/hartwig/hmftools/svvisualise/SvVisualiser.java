@@ -103,8 +103,12 @@ public class SvVisualiser implements AutoCloseable {
 
     @Nullable
     private Object runChromosome(@NotNull final String chromosome) throws IOException, InterruptedException {
-        final String sample = config.sample() + ".chr" + chromosome + (config.debug() ? ".debug" : "");
+        if (!HumanChromosome.contains(chromosome)) {
+            LOGGER.warn("Chromosome {} not permitted", chromosome);
+            return null;
+        }
 
+        final String sample = config.sample() + ".chr" + chromosome + (config.debug() ? ".debug" : "");
         final List<Integer> clusterIds = config.links()
                 .stream()
                 .filter(x -> x.startChromosome().equals(chromosome) || x.endChromosome().equals(chromosome))
@@ -119,6 +123,7 @@ public class SvVisualiser implements AutoCloseable {
 
         final List<Segment> chromosomeSegments =
                 config.segments().stream().filter(x -> clusterIds.contains(x.clusterId())).collect(toList());
+        chromosomeSegments.add(Segments.chromosome(config.sample(), chromosome));
 
         final List<Exon> chromosomeExons = config.exons().stream().filter(x -> clusterIds.contains(x.clusterId())).collect(toList());
 
@@ -158,8 +163,7 @@ public class SvVisualiser implements AutoCloseable {
         return runFiltered(sample, clusterLinks, clusterSegments, clusterExons);
     }
 
-    private Object runFiltered(@NotNull final String sample, @NotNull final List<Link> links, @NotNull final List<Segment> filteredSegments,
-            @NotNull final List<Exon> exons) throws IOException, InterruptedException {
+    private Object runFiltered(@NotNull final String sample, @NotNull final List<Link> links, @NotNull final List<Segment> filteredSegments, @NotNull final List<Exon> exons) throws IOException, InterruptedException {
 
         final List<GenomePosition> positionsToCover = Lists.newArrayList();
         positionsToCover.addAll(Links.allPositions(links));

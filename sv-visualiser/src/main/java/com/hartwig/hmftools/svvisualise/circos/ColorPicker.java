@@ -16,6 +16,8 @@ import org.jetbrains.annotations.NotNull;
 
 public class ColorPicker {
 
+    private static final Color BLACK = new Color(1, 1, 1);
+
     private static final Color COLOR1 = new Color(31, 120, 180);
     private static final Color COLOR2 = new Color(227, 26, 28);
     private static final Color COLOR3 = new Color(255, 127, 0);
@@ -56,6 +58,10 @@ public class ColorPicker {
 
     @NotNull
     public String color(final int clusterId, final int chainId) {
+        if (clusterId == -1 || chainId == -1) {
+            return toString(BLACK);
+        }
+
         return clusterMode ? colorMap.get(clusterId) : colorMap.get(chainId);
     }
 
@@ -137,7 +143,6 @@ public class ColorPicker {
 
         return result;
     }
-
 
     private static double connectorTransparency(int links) {
         if (links < 10) {
