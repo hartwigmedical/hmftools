@@ -200,6 +200,17 @@ public final class ReportResources {
     }
 
     /**
+     * Text style for legends and footnotes
+     * @return
+     */
+    public static final Style subTextBoldStyle() {
+        return new Style()
+                .setFont(getFontBold())
+                .setFontSize(7)
+                .setFontColor(ReportResources.PALETTE_BLACK);
+    }
+
+    /**
      * Text style for data highlight (e.g. big numbers)
      * @return
      */

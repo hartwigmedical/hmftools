@@ -24,7 +24,6 @@ public class ExplanationChapter extends ReportChapter {
     @Override
     protected void renderChapterContent(Document report) {
 
-        // Main content
         Table table = new Table(UnitValue.createPercentArray(new float[] {1, 1, 1}));
         table.setWidth(getContentWidth());
 
