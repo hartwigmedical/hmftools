@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.svvisualise;
 
 import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toSet;
 
 import static com.hartwig.hmftools.svvisualise.circos.Span.allPositions;
 
@@ -109,11 +110,11 @@ public class SvVisualiser implements AutoCloseable {
         }
 
         final String sample = config.sample() + ".chr" + chromosome + (config.debug() ? ".debug" : "");
-        final List<Integer> clusterIds = config.links()
+        final Set<Integer> clusterIds = config.links()
                 .stream()
                 .filter(x -> x.startChromosome().equals(chromosome) || x.endChromosome().equals(chromosome))
                 .map(Link::clusterId)
-                .collect(toList());
+                .collect(toSet());
 
         final List<Link> chromosomeLinks = config.links().stream().filter(x -> clusterIds.contains(x.clusterId())).collect(toList());
         if (chromosomeLinks.isEmpty()) {
