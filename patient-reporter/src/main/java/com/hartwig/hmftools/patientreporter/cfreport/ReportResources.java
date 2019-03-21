@@ -7,6 +7,8 @@ import com.itextpdf.kernel.colors.DeviceRgb;
 import com.itextpdf.kernel.font.PdfFont;
 import com.itextpdf.kernel.font.PdfFontFactory;
 import com.itextpdf.layout.Style;
+import com.itextpdf.layout.element.Paragraph;
+import com.itextpdf.layout.element.Text;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -25,6 +27,8 @@ public final class ReportResources {
 
     public static final String HARTWIG_NAME = "Hartwig Medical Foundation";
     public static final String HARTWIG_ADDRESS = HARTWIG_NAME + ", Science Park 408, 1098XH Amsterdam";
+    public static final String CONTACT_EMAIL_GENERAL = "info@hartwigmedicalfoundation.nl";
+    public static final String CONTACT_EMAIL_QA = "qualitysystem@hartwigmedicalfoundation.nl";
 
     // PDF Document metadata
     public static final String METADATA_TITLE = "HMF Sequencing Report v" + PatientReporterApplication.VERSION;
@@ -62,6 +66,24 @@ public final class ReportResources {
 
     private ReportResources() {}
 
+    @NotNull
+    public static final Text styledText(@NotNull String text, @NotNull Style style) {
+        return new Text(text)
+            .addStyle(style);
+    }
+
+    @NotNull
+    public static final Paragraph styledParagraph(@NotNull String text, @NotNull Style style) {
+        return styledParagraph(style)
+                .add(text);
+    }
+
+    @NotNull
+    public static final Paragraph styledParagraph(@NotNull Style style) {
+        return new Paragraph()
+                .addStyle(style);
+    }
+
     public static final PdfFont getFontRegular() {
         if (fontRegular == null) {
             fontRegular = loadFont(FONT_REGULAR_PATH);
@@ -76,6 +98,10 @@ public final class ReportResources {
         return fontBold;
     }
 
+    /**
+     * Chapter title text style
+     * @return
+     */
     public static final Style chapterTitleStyle() {
         return new Style()
                 .setFont(getFontBold())
@@ -84,6 +110,10 @@ public final class ReportResources {
                 .setMarginTop(0);
     }
 
+    /**
+     * Section title text style
+     * @return
+     */
     public static final Style sectionTitleStyle() {
         return new Style()
                 .setFont(getFontBold())
@@ -91,6 +121,10 @@ public final class ReportResources {
                 .setFontColor(ReportResources.PALETTE_BLUE);
     }
 
+    /**
+     * Content table header style
+     * @return
+     */
     public static final Style tableHeaderStyle() {
         return new Style()
                 .setFont(getFontRegular())
@@ -99,6 +133,10 @@ public final class ReportResources {
 
     }
 
+    /**
+     * Content table body text style
+     * @return
+     */
     public static final Style tableContentStyle() {
         return new Style()
                 .setFont(getFontRegular())
@@ -106,6 +144,10 @@ public final class ReportResources {
                 .setFontColor(ReportResources.PALETTE_DARK_GREY);
     }
 
+    /**
+     * Body text style for content on summary page
+     * @return
+     */
     public static final Style bodyTextStyle() {
         return new Style()
                 .setFont(getFontRegular())
@@ -113,7 +155,43 @@ public final class ReportResources {
                 .setFontColor(ReportResources.PALETTE_BLACK);
     }
 
+    /**
+     * Heading style for content on "Report explanation" and "Sample details & disclaimers" page
+     * @return
+     */
+    public static final Style smallBodyHeadingStyle() {
+        return new Style()
+                .setFont(getFontBold())
+                .setFontSize(10)
+                .setFontColor(ReportResources.PALETTE_BLACK);
+    }
 
+    /**
+     * Body text style for content on "Report explanation" and "Sample details & disclaimers" page
+     * @return
+     */
+    public static final Style smallBodyTextStyle() {
+        return new Style()
+                .setFont(getFontRegular())
+                .setFontSize(7)
+                .setFontColor(ReportResources.PALETTE_BLACK);
+    }
+
+    /**
+     * Emphasized body text style for content on "Report explanation" and "Sample details & disclaimers" page
+     * @return
+     */
+    public static final Style smallBodyBoldTextStyle() {
+        return new Style()
+                .setFont(getFontBold())
+                .setFontSize(7)
+                .setFontColor(ReportResources.PALETTE_BLACK);
+    }
+
+    /**
+     * Text style for legends and footnotes
+     * @return
+     */
     public static final Style subTextStyle() {
         return new Style()
                 .setFont(getFontRegular())
@@ -121,6 +199,10 @@ public final class ReportResources {
                 .setFontColor(ReportResources.PALETTE_BLACK);
     }
 
+    /**
+     * Text style for data highlight (e.g. big numbers)
+     * @return
+     */
     public static final Style dataHighlightStyle() {
         return new Style()
                 .setFont(getFontBold())
@@ -128,6 +210,12 @@ public final class ReportResources {
                 .setFontColor(ReportResources.PALETTE_BLUE);
     }
 
+    /**
+     * Text style for data highlight (e.g. big numbers) when data
+     * is not available
+     *
+     * @return
+     */
     public static final Style dataHighlightNaStyle() {
         return new Style()
                 .setFont(getFontBold())
@@ -135,6 +223,10 @@ public final class ReportResources {
                 .setFontColor(ReportResources.PALETTE_BLUE);
     }
 
+    /**
+     * Text style for the page numbers
+     * @return
+     */
     public static final Style pageNumberStyle() {
         return new Style()
                 .setFont(getFontBold())
@@ -142,6 +234,10 @@ public final class ReportResources {
                 .setFontColor(ReportResources.PALETTE_BLUE);
     }
 
+    /**
+     * Text style for the labels in the side panel
+     * @return
+     */
     public static final Style sidepanelLabelStyle() {
         return new Style()
                 .setFont(getFontBold())
@@ -149,6 +245,10 @@ public final class ReportResources {
                 .setFontColor(ReportResources.PALETTE_WHITE);
     }
 
+    /**
+     * Text style for the content in the side panel
+     * @return
+     */
     public static final Style sidepanelValueStyle() {
         return new Style()
                 .setFont(getFontBold())
