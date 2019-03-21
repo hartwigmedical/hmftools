@@ -198,7 +198,7 @@ public class SummaryChapter extends ReportChapter {
         Table table = new Table(UnitValue.createPercentArray(new float[] {1, 1}));
         table.setWidth(getContentWidth());
         table.addCell(TableHelper.getLayoutCell()
-                .add(new Paragraph("Genomic alterations summary")
+                .add(new Paragraph("Genomic alterations r\nsummary")
                         .addStyle(ReportResources.sectionTitleStyle())));
         table.addCell(TableHelper.getLayoutCell()
                 .add(new Paragraph("Summary on genomic alterations " +
