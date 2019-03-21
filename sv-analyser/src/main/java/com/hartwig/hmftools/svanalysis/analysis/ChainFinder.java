@@ -5,6 +5,7 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.Math.round;
 
+import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DEL;
 import static com.hartwig.hmftools.svanalysis.analysis.LinkFinder.MIN_TEMPLATED_INSERTION_LENGTH;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.isSpecificCluster;
 import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.ASSEMBLY_MATCH_MATCHED;
@@ -20,10 +21,8 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.svanalysis.types.SvBreakend;
-import com.hartwig.hmftools.svanalysis.types.SvCNData;
 import com.hartwig.hmftools.svanalysis.types.SvChain;
 import com.hartwig.hmftools.svanalysis.types.SvCluster;
-import com.hartwig.hmftools.svanalysis.types.SvLOH;
 import com.hartwig.hmftools.svanalysis.types.SvVarData;
 import com.hartwig.hmftools.svanalysis.types.SvLinkedPair;
 
@@ -86,12 +85,14 @@ public class ChainFinder
     private int mNextChainId;
     private List<SvVarData> mUnlinkedSVs;
     private Map<SvBreakend,List<SvBreakend>> mUnlinkedBreakendMap;
-    private Map<SvVarData,Integer> mSvReplicationMap;
+    private Map<SvVarData,Integer> mSvReplicationMap; // diminishes as SVs are added to chains
+    private Map<SvVarData,Integer> mSvOriginalReplicationMap;
 
     private Map<SvBreakend,List<SvLinkedPair>> mSvBreakendPossibleLinks;
     private Map<String, double[][]> mChrAllelePloidies;
 
     private int mLinkIndex;
+    private String mLinkReason;
     private boolean mIsValid;
     private boolean mLogVerbose;
     private boolean mRunValidation;
@@ -99,8 +100,6 @@ public class ChainFinder
 
     public ChainFinder()
     {
-        mNextChainId = 0;
-        mLinkIndex = 0;
         mPartialChains = Lists.newArrayList();
         mFoldbacks = Lists.newArrayList();
         mComplexDupCandidates = Lists.newArrayList();
@@ -108,6 +107,7 @@ public class ChainFinder
         mSkippedPairs = Lists.newArrayList();
         mUnlinkedBreakendMap = new HashMap();
         mSvReplicationMap = new HashMap();
+        mSvOriginalReplicationMap = new HashMap();
         mSvBreakendPossibleLinks = new HashMap();
         mChrAllelePloidies = new HashMap();
         mHasReplication = false;
@@ -115,6 +115,9 @@ public class ChainFinder
         mRunValidation = false;
         mIsValid = true;
         mSkippedPair = false;
+        mNextChainId = 0;
+        mLinkIndex = 0;
+        mLinkReason = "";
         mUseAllelePloidies = false;
     }
 
@@ -138,6 +141,7 @@ public class ChainFinder
         mUnlinkedBreakendMap.clear();
         mSvBreakendPossibleLinks.clear();
         mSvReplicationMap.clear();
+        mSvOriginalReplicationMap.clear();
         mChrAllelePloidies.clear();
     }
 
@@ -277,6 +281,7 @@ public class ChainFinder
             if(!possiblePairs.isEmpty())
             {
                 isRestrictedSet = true;
+                mLinkReason = "SingleOption";
             }
             else
             {
@@ -284,15 +289,29 @@ public class ChainFinder
                 {
                     possiblePairs = findDuplicationPairs();
 
-                    if(possiblePairs.isEmpty())
+                    if(!possiblePairs.isEmpty())
+                    {
+                        mLinkReason = "Duplication";
+                    }
+                    else
                     {
                         possiblePairs = findPloidyMatchPairs();
+
+                        if(!possiblePairs.isEmpty())
+                        {
+                            mLinkReason = "PloidyMatch";
+                        }
                     }
                 }
 
                 if(possiblePairs.isEmpty())
                 {
                     possiblePairs = findMaxReplicationPairs();
+
+                    if(!possiblePairs.isEmpty())
+                    {
+                        mLinkReason = "HighPloidy";
+                    }
                 }
 
                 if(possiblePairs.isEmpty())
@@ -300,6 +319,11 @@ public class ChainFinder
                     // try all remaining
                     List<SvBreakend> breakendList = mUnlinkedBreakendMap.keySet().stream().collect(Collectors.toList());
                     possiblePairs = findFewestOptionPairs(breakendList, false);
+
+                    if(!possiblePairs.isEmpty())
+                    {
+                        mLinkReason = "Fewest";
+                    }
                 }
             }
 
@@ -352,7 +376,7 @@ public class ChainFinder
             {
                 List<SvLinkedPair> newPairs = Lists.newArrayList();
 
-                // check whether this SV has any possible links with SVs of the same (remaining rep count)
+                // check whether this SV has any possible links with SVs of the same (remaining) rep count
                 for(int be = SVI_START; be <= SVI_END; ++be)
                 {
                     if(var.isNullBreakend() && be == SVI_END)
@@ -607,8 +631,6 @@ public class ChainFinder
                     continue;
                 }
 
-                double ploidySumNew = newPair.first().ploidyMin() + newPair.second().ploidyMin();
-                double ploidySumOther = otherPair.first().ploidyMin() + otherPair.second().ploidyMin();
                 int otherMinLinkCount = getMaxUnlinkedPairCount(otherPair);
 
                 if(minLinkCount < otherMinLinkCount || newPair.length() < otherPair.length()) // || ploidySumNew > ploidySumOther
@@ -635,24 +657,30 @@ public class ChainFinder
 
     private List<SvLinkedPair> findMaxReplicationPairs()
     {
-        // find the best next candidate link giving priority to replication count
+        // look at the remaining SVs with replication at least 2 and those with the highest
+        // remaining replication count and then those with fewest options
+        List<SvLinkedPair> possiblePairs = Lists.newArrayList();
 
         // first check if there are SVs with a higher replication count, and if so favour these first
         List<SvVarData> maxRepSVs = !mSvReplicationMap.isEmpty() ? getMaxReplicationSVs() : null;
+
+        if(maxRepSVs == null || maxRepSVs.isEmpty())
+            return possiblePairs;
 
         List<SvBreakend> breakendList = Lists.newArrayList();
 
         for (final SvBreakend breakend : mUnlinkedBreakendMap.keySet())
         {
-            if (maxRepSVs != null && !maxRepSVs.contains(breakend.getSV()))
-                continue;
-
-            breakendList.add(breakend);
+            if (maxRepSVs.contains(breakend.getSV()))
+            {
+                breakendList.add(breakend);
+            }
         }
 
-        boolean isMaxReplicated = maxRepSVs != null && !maxRepSVs.isEmpty();
+        if(breakendList.isEmpty())
+            return possiblePairs;
 
-        if (mLogVerbose && isMaxReplicated)
+        if (mLogVerbose)
         {
             for (SvVarData var : maxRepSVs)
             {
@@ -661,20 +689,17 @@ public class ChainFinder
         }
 
         // next take the pairings with the least alternatives
-        List<SvLinkedPair> possiblePairs = findFewestOptionPairs(breakendList, isMaxReplicated);
+        possiblePairs = findFewestOptionPairs(breakendList, true);
 
         if (possiblePairs.isEmpty())
         {
-            if (isMaxReplicated)
+            // these high-replication SVs yielded no possible links so remove them from consideration
+            for (final SvVarData var : maxRepSVs)
             {
-                // these high-replication SVs yielded no possible links so remove them from consideration
-                for (final SvVarData var : maxRepSVs)
-                {
-                    log(LOG_LEVEL_VERBOSE, String.format("cluster(%s) removing high-replicated SV(%s %s)",
-                            mCluster.id(), var.posId(), var.type()));
+                log(LOG_LEVEL_VERBOSE, String.format("cluster(%s) removing high-replicated SV(%s %s)",
+                        mCluster.id(), var.posId(), var.type()));
 
-                    mSvReplicationMap.remove(var);
-                }
+                mSvReplicationMap.remove(var);
             }
 
             // mSkippedPair = true;
@@ -780,7 +805,8 @@ public class ChainFinder
             SvLinkedPair shortestPair = null;
             for (SvLinkedPair pair : possiblePairs)
             {
-                log(LOG_LEVEL_VERBOSE, String.format("possible pair: %s length(%s)", pair.toString(), pair.length()));
+                log(LOG_LEVEL_VERBOSE, String.format("method(%s) possible pair: %s length(%s)",
+                        mLinkReason, pair.toString(), pair.length()));
 
                 if (shortestPair == null || pair.length() < shortestPair.length())
                 {
@@ -1019,8 +1045,9 @@ public class ChainFinder
             chain.addLink(newPair, addToStart);
             addedToChain = true;
 
-            LOGGER.debug("index({}) adding linked pair({} {} len={}) to existing chain({}) {}",
-                    mLinkIndex, newPair.toString(), newPair.assemblyInferredStr(), newPair.length(), chain.id(), addToStart ? "start" : "end");
+            LOGGER.debug("index({}) method({}) adding linked pair({} {} len={}) to existing chain({}) {}",
+                    mLinkIndex, mLinkReason,
+                    newPair.toString(), newPair.assemblyInferredStr(), newPair.length(), chain.id(), addToStart ? "start" : "end");
             break;
         }
 
@@ -1035,9 +1062,11 @@ public class ChainFinder
             pairToChain[SVI_START] = true;
             pairToChain[SVI_END] = true;
 
-            LOGGER.debug("index({}) adding linked pair({} {}) to new chain({})",
-                    mLinkIndex, newPair.toString(), newPair.assemblyInferredStr(), chain.id());
+            LOGGER.debug("index({}) method({}) adding linked pair({} {}) to new chain({})",
+                    mLinkIndex, mLinkReason, newPair.toString(), newPair.assemblyInferredStr(), chain.id());
         }
+
+        newPair.setLinkReason(mLinkReason);
 
         registerNewLink(newPair, pairToChain);
         ++mLinkIndex;
@@ -1083,6 +1112,8 @@ public class ChainFinder
         if(mAssemblyLinkedPairs.isEmpty())
             return;
 
+        mLinkReason = "Assembly";
+
         for(SvLinkedPair pair : mAssemblyLinkedPairs)
         {
             addPairToChain(pair, true);
@@ -1115,6 +1146,9 @@ public class ChainFinder
                 return;
             }
 
+            SvVarData origSV = origBreakend.getSV();
+            final SvBreakend otherOrigBreakend = origSV.getBreakend(!breakend.usesStart());
+
             breakendList.remove(breakend);
 
             boolean hasUnlinkedBreakend = true;
@@ -1125,12 +1159,17 @@ public class ChainFinder
 
                 // LOGGER.debug("breakend({}) has no more possible links", breakend);
 
-                SvVarData origSV = origBreakend.getSV();
-
-                if(origSV.isFoldback() && mUnlinkedBreakendMap.get(origSV.getBreakend(!breakend.usesStart())) == null)
+                if(getUnlinkedBreakendCount(otherOrigBreakend) == 0)
                 {
-                    // remove if not instances of this SV remain
-                    mFoldbacks.remove(origSV);
+                    if(origSV.isFoldback())
+                    {
+                        // remove if no other instances of this SV remain
+                        mFoldbacks.remove(origSV);
+                    }
+                    else if(mComplexDupCandidates.contains(origSV))
+                    {
+                        mComplexDupCandidates.remove(origSV);
+                    }
                 }
             }
 
@@ -1145,7 +1184,6 @@ public class ChainFinder
             }
 
             // check for an opposite pairing between these 2 SVs - need to look into other breakends' lists
-            final SvBreakend otherOrigBreakend = breakend.getOrigSV().getBreakend(!breakend.usesStart());
 
             possibleLinks = otherOrigBreakend != null && !mSvBreakendPossibleLinks.isEmpty() ? mSvBreakendPossibleLinks.get(otherOrigBreakend) : null;
 
@@ -1599,7 +1637,7 @@ public class ChainFinder
     {
         SvVarData var = lowerPloidyBreakend.getSV();
 
-        if(var.isNullBreakend())
+        if(var.isNullBreakend() || var.type() == DEL)
             return;
 
         if(mComplexDupCandidates.contains(var))
@@ -1663,45 +1701,12 @@ public class ChainFinder
     {
         // assembled links have already been added to chains prior to determining remaining possible links
         // so these need to be excluded unless their replication count allows them to be used again
-        SvVarData var = breakend.getSV();
+        return breakend.isAssembledLink() && getUnlinkedBreakendCount(breakend) == 0;
+    }
 
-        if(var.getAssemblyMatchType(breakend.usesStart()) != ASSEMBLY_MATCH_MATCHED)
-            return false;
-
-        return getUnlinkedBreakendCount(breakend) == 0;
-
-        /*
-        SvLinkedPair assembledPair = var.getLinkedPair(breakend.usesStart());
-
-        if(assembledPair == null)
-            return false;
-
-        if(!mHasReplication)
-            return true;
-
-        // check whether replication would still allow this breakend to be used again
-        Integer beRepCount = mSvReplicationMap.get(var);
-
-        if (beRepCount == null)
-            return true;
-
-        int beRepCountRemainder = beRepCount;
-
-        // each time this breakend is connected to another breakend via assembly,
-        // it subtracts from it potential usage for inferred links
-        final SvBreakend otherBreakend = assembledPair.getOtherBreakend(breakend);
-        Integer otherBeRepCount = mSvReplicationMap.get(otherBreakend.getSV());
-
-        if(otherBeRepCount == null)
-            --beRepCountRemainder;
-        else
-            beRepCountRemainder -= otherBeRepCount;
-
-        if(beRepCountRemainder <= 0)
-            return true;
-
-        return false;
-        */
+    private int getSvReplicationCount(final SvVarData var)
+    {
+        return mSvOriginalReplicationMap.get(var);
     }
 
     private void setSvReplicationCounts()
@@ -1714,6 +1719,11 @@ public class ChainFinder
             if(var.getReplicatedCount() > 0)
             {
                 mSvReplicationMap.put(var, var.getReplicatedCount());
+                mSvOriginalReplicationMap.put(var, var.getReplicatedCount());
+            }
+            else
+            {
+                mSvOriginalReplicationMap.put(var, 1);
             }
         }
     }
@@ -1867,7 +1877,7 @@ public class ChainFinder
         if(!mHasReplication || mCluster.getSvCount() < 100)
             return;
 
-        if((mLinkIndex % 1000) == 0)
+        if((mLinkIndex % 100) == 0)
         {
             LOGGER.debug("cluster({}) chaining progress: SVs({}) partialChains({}) unlinked(SVs={} breakends={}) replicatedSVs({})",
                     mCluster.id(), mCluster.getSvCount(), mPartialChains.size(), mUnlinkedSVs.size(),

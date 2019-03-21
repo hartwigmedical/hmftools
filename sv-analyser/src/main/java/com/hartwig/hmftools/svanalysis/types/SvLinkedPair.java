@@ -19,6 +19,7 @@ public class SvLinkedPair {
     private boolean mIsInferred;
 
     // other annotations
+    private String mLinkReason;
     private int mDBLenFirst;
     private int mDBLenSecond;
     private int mTraversedSVCount;
@@ -48,6 +49,7 @@ public class SvLinkedPair {
         mLinkType = linkType;
         mIsInferred = true;
 
+        mLinkReason = "";
         mDBLenFirst = 0;
         mDBLenSecond = 0;
         mTraversedSVCount = 0;
@@ -116,7 +118,10 @@ public class SvLinkedPair {
     public void setIsInferred(boolean toggle) { mIsInferred = toggle; }
     public boolean isInferred() { return mIsInferred; }
     public boolean isAssembled() { return !mIsInferred; }
-    public String assemblyInferredStr() { return mIsInferred ? "inferred" : "assembly"; }
+    public String assemblyInferredStr() { return mIsInferred ? "Inferred" : "Assembly"; }
+
+    public String getLinkReason() { return mLinkReason; }
+    public void setLinkReason(String reason) { mLinkReason = reason; }
 
     public void setDBLenFirst(int length) { mDBLenFirst = length; }
     public int getDBLenFirst() { return mDBLenFirst; }

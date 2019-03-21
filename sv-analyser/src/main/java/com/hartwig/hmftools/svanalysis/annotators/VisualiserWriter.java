@@ -182,10 +182,11 @@ public class VisualiserWriter
 
                 // isSpecificCluster(cluster);
 
+                // for any linked pair which is repeated in a separate chain, skip writing it for subsequent chains
+                List<SvLinkedPair> uniquePairs = Lists.newArrayList();
+
                 for (final SvChain chain : cluster.getChains())
                 {
-                    List<SvLinkedPair> uniquePairs = Lists.newArrayList();
-
                     // log the start of the chain
                     SvBreakend breakend = chain.getOpenBreakend(true);
                     boolean startsOnEnd = chain.getFirstSV().equals(chain.getLastSV(), true);
@@ -203,6 +204,7 @@ public class VisualiserWriter
                     {
                         boolean isRepeat = false;
 
+                        // only log each chain link once, and log how many times the link has been used
                         for (final SvLinkedPair existingPair : uniquePairs)
                         {
                             if(pair.matches(existingPair))
@@ -222,10 +224,9 @@ public class VisualiserWriter
 
                         int pairRepeatCount = 0;
 
-                        for (final SvLinkedPair existingPair : chain.getLinkedPairs())
+                        for (final SvChain otherChain : cluster.getChains())
                         {
-                            if(pair.matches(existingPair))
-                                ++pairRepeatCount;
+                            pairRepeatCount += otherChain.getLinkedPairs().stream().filter(x -> x.matches(pair)).count();
                         }
 
                         final SvBreakend beStart = pair.getBreakend(true);
