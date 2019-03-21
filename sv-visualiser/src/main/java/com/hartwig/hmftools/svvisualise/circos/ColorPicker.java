@@ -39,17 +39,21 @@ public class ColorPicker {
     private final Map<Integer, String> colorMap;
     private final double connectorTransparency;
 
-    public ColorPicker(@NotNull final List<Link> links) {
-        long clusterCount = links.stream().mapToLong(Link::clusterId).distinct().count();
-        if (clusterCount > 1) {
-            clusterMode = true;
-            colorMap = clusterMap(links);
-        } else {
-            clusterMode = false;
-            colorMap = chainMap(links);
-        }
 
-        connectorTransparency = connectorTransparency(links.size());
+    @NotNull
+    public static ColorPicker clusterColors(@NotNull final List<Link> links) {
+        return new ColorPicker(colorsByCluster(links), true, connectorTransparency(links.size()));
+    }
+
+    @NotNull
+    public static ColorPicker chainColors(@NotNull final List<Link> links) {
+        return new ColorPicker(colorsByChain(links), false, connectorTransparency(links.size()));
+    }
+
+    private ColorPicker(@NotNull final Map<Integer, String> colorMap, final boolean clusterMode, final double connectorTransparency) {
+        this.clusterMode = clusterMode;
+        this.colorMap = colorMap;
+        this.connectorTransparency = connectorTransparency;
     }
 
     @NotNull
@@ -84,7 +88,7 @@ public class ColorPicker {
         return toString(INS);
     }
 
-    private class ClusterSize {
+    private static class ClusterSize {
 
         final int clusterId;
         final long count;
@@ -96,7 +100,7 @@ public class ColorPicker {
     }
 
     @NotNull
-    private Map<Integer, String> clusterMap(@NotNull final List<Link> links) {
+    private static Map<Integer, String> colorsByCluster(@NotNull final List<Link> links) {
         final Map<Integer, String> result = Maps.newHashMap();
 
         final Comparator<ClusterSize> longComparator = Comparator.<ClusterSize>comparingLong(x -> x.count).reversed();
@@ -126,7 +130,7 @@ public class ColorPicker {
     }
 
     @NotNull
-    private Map<Integer, String> chainMap(@NotNull final List<Link> links) {
+    private static Map<Integer, String> colorsByChain(@NotNull final List<Link> links) {
         final Map<Integer, String> result = Maps.newHashMap();
 
         if (!links.isEmpty()) {

@@ -123,16 +123,21 @@ public class SvVisualiser implements AutoCloseable {
             return null;
         }
 
-        final List<Segment> chromosomeSegments = config.segments().stream().filter(x -> clusterIds.contains(x.clusterId())).collect(toList());
+        final List<Segment> chromosomeSegments =
+                config.segments().stream().filter(x -> clusterIds.contains(x.clusterId())).collect(toList());
         chromosomeSegments.add(Segments.chromosome(config.sample(), chromosome));
 
         final Set<String> chromosomesOfInterest = Sets.newHashSet(chromosome);
-        chromosomeLinks.forEach(x -> {chromosomesOfInterest.add(x.startChromosome()); chromosomesOfInterest.add(x.endChromosome());});
+        chromosomeLinks.forEach(x -> {
+            chromosomesOfInterest.add(x.startChromosome());
+            chromosomesOfInterest.add(x.endChromosome());
+        });
         chromosomeSegments.forEach(x -> chromosomesOfInterest.add(x.chromosome()));
 
-        final List<Exon> chromosomeExons = config.exons().stream().filter(x -> chromosomesOfInterest.contains(x.chromosome())).collect(toList());
+        final List<Exon> chromosomeExons =
+                config.exons().stream().filter(x -> chromosomesOfInterest.contains(x.chromosome())).collect(toList());
 
-        return runFiltered(sample, chromosomeLinks, chromosomeSegments, chromosomeExons);
+        return runFiltered(ColorPicker::clusterColors, sample, chromosomeLinks, chromosomeSegments, chromosomeExons);
     }
 
     @Nullable
@@ -165,10 +170,12 @@ public class SvVisualiser implements AutoCloseable {
                         .debug() ? ".debug" : "");
 
         final List<Exon> clusterExons = config.exons().stream().filter(x -> x.clusterId() == clusterId).collect(toList());
-        return runFiltered(sample, clusterLinks, clusterSegments, clusterExons);
+        return runFiltered(ColorPicker::chainColors, sample, clusterLinks, clusterSegments, clusterExons);
     }
 
-    private Object runFiltered(@NotNull final String sample, @NotNull final List<Link> links, @NotNull final List<Segment> filteredSegments, @NotNull final List<Exon> filteredExons) throws IOException, InterruptedException {
+    private Object runFiltered(@NotNull final ColorPickerFactory colorPickerFactory, @NotNull final String sample,
+            @NotNull final List<Link> links, @NotNull final List<Segment> filteredSegments, @NotNull final List<Exon> filteredExons)
+            throws IOException, InterruptedException {
 
         final List<GenomePosition> positionsToCover = Lists.newArrayList();
         positionsToCover.addAll(Links.allPositions(links));
@@ -182,9 +189,10 @@ public class SvVisualiser implements AutoCloseable {
         positionsToCover.addAll(allPositions(exons));
 
         // Limit copy numbers to within segments and links (plus a little extra)
-        final List<CopyNumberAlteration> alterations = CopyNumberAlterations.copyNumbers(100, config.copyNumberAlterations(), Span.span(positionsToCover));
+        final List<CopyNumberAlteration> alterations =
+                CopyNumberAlterations.copyNumbers(100, config.copyNumberAlterations(), Span.span(positionsToCover));
 
-        final ColorPicker color = new ColorPicker(links);
+        final ColorPicker color = colorPickerFactory.create(links);
 
         final int chromosomeCount = (int) segments.stream().map(GenomeRegion::chromosome).distinct().count();
         int maxTracks = segments.stream().mapToInt(Segment::track).max().orElse(0) + 1;
@@ -213,4 +221,10 @@ public class SvVisualiser implements AutoCloseable {
         executorService.shutdown();
         LOGGER.info("Complete");
     }
+
+    private interface ColorPickerFactory {
+        @NotNull
+        ColorPicker create(@NotNull final List<Link> links);
+    }
+
 }
