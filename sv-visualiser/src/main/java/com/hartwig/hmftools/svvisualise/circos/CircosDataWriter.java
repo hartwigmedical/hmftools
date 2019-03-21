@@ -414,7 +414,7 @@ public class CircosDataWriter {
 
         double rTrack1 = CircosConfigWriter.svTrackPixels(maxTracks, 0);
         for (Link link : links) {
-            if (link.isSimpleSV()) {
+            if (link.connectorsOnly()) {
                 if (link.isValidStart()) {
                     final String start = new StringJoiner(DELIMITER).add(circosContig(link.startChromosome()))
                             .add(String.valueOf(link.startPosition()))

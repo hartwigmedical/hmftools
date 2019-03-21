@@ -40,8 +40,16 @@ public abstract class Link {
 
     public abstract int traverseCount();
 
+    public boolean connectorsOnly() {
+        return isSimpleSV() || isLineElement();
+    }
+
     public boolean isSimpleSV() {
         return resolvedType().equals("SimpleSV");
+    }
+
+    public boolean isLineElement() {
+        return resolvedType().equals("Line");
     }
 
     public boolean isValidStart() {

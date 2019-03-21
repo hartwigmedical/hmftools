@@ -146,21 +146,20 @@ public class Segments {
 
     }
 
-    @VisibleForTesting
     @NotNull
-    static List<Segment> incrementOnChromosome(@NotNull final List<Segment> segments, @NotNull final List<Link> links) {
+    private static List<Segment> incrementOnChromosome(@NotNull final List<Segment> segments, @NotNull final List<Link> links) {
 
-        final Set<Integer> simpleClusters = links.stream().filter(Link::isSimpleSV).map(Link::clusterId).collect(Collectors.toSet());
+        final Set<Integer> clustersWithoutSegments =
+                links.stream().filter(Link::connectorsOnly).map(Link::clusterId).collect(Collectors.toSet());
 
         final Map<String, Integer> trackMap = Maps.newHashMap();
         final List<Segment> result = Lists.newArrayList();
 
         int currentTrack = 1;
         for (final Segment segment : segments) {
-            if (simpleClusters.contains(segment.clusterId()) || segment.clusterId() == -1) {
+            if (segment.clusterId() == -1) {
                 result.add(ImmutableSegment.builder().from(segment).track(0).build());
-            } else {
-
+            } else if (!clustersWithoutSegments.contains(segment.clusterId())) {
                 final String chromosome = segment.chromosome();
                 if (!trackMap.containsKey(chromosome)) {
                     trackMap.put(chromosome, currentTrack);
