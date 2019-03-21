@@ -12,8 +12,8 @@
         <module>hmf-common</module>
         <module>hmf-extensions</module>
         <module>api-clients</module>
-        <module>patient-db</module>
         <module>ensembl-db</module>
+        <module>patient-db</module>
         <module>variant-annotator</module>
         <module>patient-reporter</module>
         <module>health-checker</module>
