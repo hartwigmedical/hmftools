@@ -242,7 +242,10 @@ public class SvChain {
 
     public void logLinks()
     {
-        LOGGER.debug("chain({}): {}", mId, getSequenceStr(this));
+        if(mLinkedPairs.size() < 50)
+        {
+            LOGGER.debug("chain({}): {}", mId, getSequenceStr(this));
+        }
 
         for(int i = 0; i < mLinkedPairs.size(); ++i)
         {

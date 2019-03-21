@@ -731,7 +731,7 @@ public class SvCluster
         int svCalcPloidyCount = 0;
         Map<Integer,Integer> ploidyFrequency = new HashMap();
 
-        isSpecificCluster(this);
+        // isSpecificCluster(this);
 
         double tightestMinPloidy = 0;
         double tightestMaxPloidy = -1;

@@ -23,6 +23,7 @@ import com.hartwig.hmftools.svanalysis.types.SvBreakend;
 import com.hartwig.hmftools.svanalysis.types.SvCNData;
 import com.hartwig.hmftools.svanalysis.types.SvChain;
 import com.hartwig.hmftools.svanalysis.types.SvCluster;
+import com.hartwig.hmftools.svanalysis.types.SvLOH;
 import com.hartwig.hmftools.svanalysis.types.SvVarData;
 import com.hartwig.hmftools.svanalysis.types.SvLinkedPair;
 
@@ -93,6 +94,7 @@ public class ChainFinder
     private int mLinkIndex;
     private boolean mIsValid;
     private boolean mLogVerbose;
+    private boolean mRunValidation;
     private boolean mUseAllelePloidies;
 
     public ChainFinder()
@@ -110,6 +112,7 @@ public class ChainFinder
         mChrAllelePloidies = new HashMap();
         mHasReplication = false;
         mLogVerbose = false;
+        mRunValidation = false;
         mIsValid = true;
         mSkippedPair = false;
         mUseAllelePloidies = false;
@@ -138,7 +141,13 @@ public class ChainFinder
         mChrAllelePloidies.clear();
     }
 
-    public void setLogVerbose(boolean toggle) { mLogVerbose = toggle; }
+    public void setLogVerbose(boolean toggle)
+    {
+        mLogVerbose = toggle;
+        setRunValidation(toggle);
+    }
+
+    public void setRunValidation(boolean toggle) { mRunValidation = toggle; }
     public void setUseAllelePloidies(boolean toggle) { mUseAllelePloidies = toggle; }
 
     public void formClusterChains(boolean assembledLinksOnly)
@@ -1033,6 +1042,9 @@ public class ChainFinder
         registerNewLink(newPair, pairToChain);
         ++mLinkIndex;
 
+        if(mRunValidation)
+            checkHasValidState();
+
         if(addedToChain)
         {
             // now see if any partial chains can be linked
@@ -1472,9 +1484,10 @@ public class ChainFinder
     private void determinePossibleLinks()
     {
         // form a map of each breakend to its set of all other breakends which can form a valid TI
-        // need to exclude breakends which are already assigned to an assembled TI
-        // unless replication permits additional instances of it
-        // add them in such a way that the nearest ones are first
+        // need to exclude breakends which are already assigned to an assembled TI unless replication permits additional instances of it
+        // add possible links to a list ordered from shortest to longest length
+        // do not chain past a zero cluster allele ploidy
+        // identify potential complex DUP candidates along the way
 
         final Map<String,List<SvBreakend>> chrBreakendMap = mCluster.getChrBreakendMap();
 
@@ -1496,7 +1509,7 @@ public class ChainFinder
 
                 boolean lowerValidAP = mUseAllelePloidies && hasValidAllelePloidyData(lowerBreakend, allelePloidies);
 
-                int skippedNonAssembledIndex = -1;
+                int skippedNonAssembledIndex = -1; // the first index of a non-assembled breakend after the current one
 
                 for (int j = i+1; j < breakendList.size(); ++j)
                 {
@@ -1504,7 +1517,7 @@ public class ChainFinder
 
                     if(skippedNonAssembledIndex == -1)
                     {
-                        if(upperBreakend.getSV().getAssemblyMatchType(upperBreakend.usesStart()) != ASSEMBLY_MATCH_MATCHED)
+                        if(!upperBreakend.isAssembledLink())
                         {
                             // invalidate the possibility of these 2 breakends satisfying the complex DUP scenario
                             skippedNonAssembledIndex = j;
@@ -1648,40 +1661,47 @@ public class ChainFinder
 
     private boolean alreadyLinkedBreakend(final SvBreakend breakend)
     {
-        Integer beRepCount = null;
-        int beRepCountRemainder = 0;
+        // assembled links have already been added to chains prior to determining remaining possible links
+        // so these need to be excluded unless their replication count allows them to be used again
+        SvVarData var = breakend.getSV();
 
-        for(SvLinkedPair pair : mAssemblyLinkedPairs)
-        {
-            if(pair.hasBreakend(breakend, true))
-            {
-                // check whether replication would still allow this breakend to be used again
-                if(beRepCount == null)
-                {
-                    beRepCount = mSvReplicationMap.get(breakend.getOrigSV());
+        if(var.getAssemblyMatchType(breakend.usesStart()) != ASSEMBLY_MATCH_MATCHED)
+            return false;
 
-                    if (beRepCount == null)
-                        return true;
+        return getUnlinkedBreakendCount(breakend) == 0;
 
-                    beRepCountRemainder = beRepCount;
-                }
+        /*
+        SvLinkedPair assembledPair = var.getLinkedPair(breakend.usesStart());
 
-                // each time this breakend is connected to another breakend via assembly,
-                // it subtracts from it potential usage for inferred links
-                final SvBreakend otherBreakend = pair.getOtherBreakend(breakend);
-                Integer otherBeRepCount = mSvReplicationMap.get(otherBreakend.getOrigSV());
+        if(assembledPair == null)
+            return false;
 
-                if(otherBeRepCount == null)
-                    --beRepCountRemainder;
-                else
-                    beRepCountRemainder -= otherBeRepCount;
+        if(!mHasReplication)
+            return true;
 
-                if(beRepCountRemainder <= 0)
-                    return true;
-            }
-        }
+        // check whether replication would still allow this breakend to be used again
+        Integer beRepCount = mSvReplicationMap.get(var);
+
+        if (beRepCount == null)
+            return true;
+
+        int beRepCountRemainder = beRepCount;
+
+        // each time this breakend is connected to another breakend via assembly,
+        // it subtracts from it potential usage for inferred links
+        final SvBreakend otherBreakend = assembledPair.getOtherBreakend(breakend);
+        Integer otherBeRepCount = mSvReplicationMap.get(otherBreakend.getSV());
+
+        if(otherBeRepCount == null)
+            --beRepCountRemainder;
+        else
+            beRepCountRemainder -= otherBeRepCount;
+
+        if(beRepCountRemainder <= 0)
+            return true;
 
         return false;
+        */
     }
 
     private void setSvReplicationCounts()
@@ -1847,12 +1867,35 @@ public class ChainFinder
         if(!mHasReplication || mCluster.getSvCount() < 100)
             return;
 
-        if((mPartialChains.size() % 100) == 0 || (mUnlinkedBreakendMap.size() % 100) == 0)
+        if((mLinkIndex % 1000) == 0)
         {
-            LOGGER.debug("cluster({}) progress: SVs({}) partialChains({}) unlinked(SVs={} breakends={}) replicatedSVs({})",
+            LOGGER.debug("cluster({}) chaining progress: SVs({}) partialChains({}) unlinked(SVs={} breakends={}) replicatedSVs({})",
                     mCluster.id(), mCluster.getSvCount(), mPartialChains.size(), mUnlinkedSVs.size(),
                     mUnlinkedBreakendMap.size(), mSvReplicationMap.size());
         }
     }
+
+    private boolean checkHasValidState()
+    {
+        // first check that the remaining possible links are supported by unlinked breakends
+        for(Map.Entry<SvBreakend,List<SvLinkedPair>> entry : mSvBreakendPossibleLinks.entrySet())
+        {
+            SvBreakend breakend = entry.getKey();
+
+            List<SvBreakend> breakendList = mUnlinkedBreakendMap.get(breakend);
+
+            if(breakendList == null)
+            {
+                LOGGER.error("cluster({}) runIndex({}): breakend({}) has {} possible pairs but no available breakends",
+                        mCluster.id(), mLinkIndex, breakend.toString(), entry.getValue().size());
+
+                mIsValid = false;
+            }
+        }
+
+        return mIsValid;
+    }
+
+
 
 }

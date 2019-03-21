@@ -647,7 +647,10 @@ public class SvClusteringMethods {
                 if(breakend.orientation() == -1 && breakend.getSV().id().equals(lohEvent.EndSV))
                 {
                     lohClusterEnd = breakend.getSV().getCluster();
-                    lohClusterEnd.addLohEvent(lohEvent);
+
+                    if(!lohClusterEnd.getLohEvents().contains(lohEvent))
+                        lohClusterEnd.addLohEvent(lohEvent);
+
                     lohSvEnd = breakend.getSV();
                     lohEvent.setBreakend(breakend, false);
                 }
@@ -671,7 +674,7 @@ public class SvClusteringMethods {
             if(lohClusterStart.hasLinkingLineElements() || lohClusterEnd.hasLinkingLineElements())
                 continue;
 
-            LOGGER.debug("cluster({} svs={}) merges in other cluster({} svs={}) on LOH event(sv1={} sv2={} len={})",
+            LOGGER.debug("cluster({} svs={}) merges in other cluster({} svs={}) on LOH event: SVs({} and {}) length({})",
                     lohClusterStart.id(), lohClusterStart.getSvCount(), lohClusterEnd.id(), lohClusterEnd.getSvCount(),
                     lohEvent.StartSV, lohEvent.EndSV, lohEvent.Length);
 

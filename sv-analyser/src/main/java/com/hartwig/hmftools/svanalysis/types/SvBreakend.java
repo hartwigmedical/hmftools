@@ -3,6 +3,7 @@ package com.hartwig.hmftools.svanalysis.types;
 import static com.hartwig.hmftools.svanalysis.analysis.CNAnalyser.MIN_LOH_CN;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.CHROMOSOME_ARM_P;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.makeChrArmStr;
+import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.ASSEMBLY_MATCH_MATCHED;
 
 public class SvBreakend {
 
@@ -55,9 +56,6 @@ public class SvBreakend {
 
     public final String toString()
     {
-        if(mSV == null)
-            return String.format("%s %d:%d", mChromosome, mOrientation, mPosition);
-
         return mSV.posId(mUsesStart);
     }
 
@@ -112,6 +110,11 @@ public class SvBreakend {
             return 0;
 
         return cnData.ActualBaf;
+    }
+
+    public boolean isAssembledLink()
+    {
+        return mSV.getAssemblyMatchType(mUsesStart) == ASSEMBLY_MATCH_MATCHED;
     }
 
 

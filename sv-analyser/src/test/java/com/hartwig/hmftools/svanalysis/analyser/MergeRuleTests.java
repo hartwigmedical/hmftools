@@ -10,6 +10,7 @@ import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.CLUST
 import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.CLUSTER_REASON_LOH_CHAIN;
 import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.CLUSTER_REASON_LOOSE_OVERLAP;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.ASSEMBLY_TYPE_EQV;
+import static com.hartwig.hmftools.svanalysis.types.SvVarData.isSpecificSV;
 
 import static org.junit.Assert.assertEquals;
 
@@ -189,20 +190,59 @@ public class MergeRuleTests
     @Test
     public void testLohResolvingClusterMerge()
     {
+        // merge clusters based on their SVs being required to stop a SV chaining through an LOH event
         SvTestHelper tester = new SvTestHelper();
 
-        SvVarData var1 = createDup("1", "1", 10000, 50000);
-        SvVarData var2 = createBnd("2", "1", 20000, 1, "3", 1000, 1);
+        SvVarData var1 = createDel("1", "1", 10000, 60000);
+
+        SvVarData var2 = createDup("2", "1", 20000, 50000);
+
+        SvVarData var3 = createBnd("3", "1", 30000, 1, "2", 10000, 1);
+
+        SvVarData var4 = createBnd("4", "1", 40000, -1, "2", 20000, 1);
+
+        SvVarData var5 = createDel("5", "1", 70000, 120000);
+
+        SvVarData var6 = createDup("6", "1", 80000, 110000);
+
+        SvVarData var7 = createBnd("7", "1", 90000, 1, "2", 80000, 1);
+
+        SvVarData var8 = createBnd("8", "1", 100000, -1, "2", 90000, -1);
+
+        SvVarData var9 = createDup("9", "2", 30000, 60000);
+
+        SvVarData var10 = createDel("10", "2", 40000, 50000);
 
         tester.AllVariants.add(var1);
         tester.AllVariants.add(var2);
+        tester.AllVariants.add(var3);
+        tester.AllVariants.add(var4);
+        tester.AllVariants.add(var5);
+        tester.AllVariants.add(var6);
+        tester.AllVariants.add(var7);
+        tester.AllVariants.add(var8);
+        tester.AllVariants.add(var9);
+        tester.AllVariants.add(var10);
+        // tester.AllVariants.add(var11);
 
         Map<String, List<SvLOH>> lohDataMap = new HashMap();
         List<SvLOH> lohData = Lists.newArrayList();
 
-        lohData.add(new SvLOH(tester.SampleId, "1", 1, 2, 50000, 1000000,
-                "DUP", "TELOMERE", 1, 1, 1, 0, 1, 1,
-                var1.id(), "", false, true));
+        lohData.add(new SvLOH(tester.SampleId, "1", 1, 2, 10000, 20000,
+                "DEL", "DUP", 1, 1, 1, 0, 1, 10000,
+                var1.id(), var2.id(), false, true));
+
+        lohData.add(new SvLOH(tester.SampleId, "1", 1, 2, 50000, 60000,
+                "DUP", "DEL", 1, 1, 1, 0, 1, 19000,
+                var2.id(), var1.id(), false, true));
+
+        lohData.add(new SvLOH(tester.SampleId, "1", 1, 2, 110000, 120000,
+                "DUP", "DEL", 1, 1, 1, 0, 1, 10000,
+                var6.id(), var5.id(), false, true));
+
+        lohData.add(new SvLOH(tester.SampleId, "2", 1, 2, 20000, 30000,
+                "BND", "DUP", 1, 1, 1, 0, 1, 10000,
+                var4.id(), var9.id(), false, true));
 
         lohDataMap.put(tester.SampleId, lohData);
 
@@ -213,10 +253,12 @@ public class MergeRuleTests
         tester.Analyser.clusterAndAnalyse();
 
         // now check final chain-finding across all sub-clusters
-        assertEquals(tester.Analyser.getClusters().size(), 1);
+        assertEquals(1, tester.Analyser.getClusters().size());
 
-        assertTrue(var1.getClusterReason().contains(CLUSTER_REASON_LOH_CHAIN));
         assertTrue(var2.getClusterReason().contains(CLUSTER_REASON_LOH_CHAIN));
+        assertTrue(var2.getClusterReason().contains(var4.id()));
+        assertTrue(var4.getClusterReason().contains(CLUSTER_REASON_LOH_CHAIN));
+        assertTrue(var4.getClusterReason().contains(var2.id()));
     }
 
     @Test

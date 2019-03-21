@@ -306,9 +306,18 @@ public class ClusterAnalyser {
     {
         boolean foundMerges = mergeInconsistentClusters();
 
+        int iterations = 1;
+
         while(foundMerges)
         {
             foundMerges = mergeInconsistentClusters();
+            ++iterations;
+
+            if(iterations > 20)
+            {
+                LOGGER.warn("reached {} iterations of clustering merging", iterations);
+                break;
+            }
         }
     }
 
@@ -534,6 +543,9 @@ public class ClusterAnalyser {
 
                         SvBreakend nextBreakend = fullBreakendList.get(index);
 
+                        if(nextBreakend.arm() != breakend.arm())
+                            break;
+
                         if(nextBreakend.orientation() == breakend.orientation())
                             continue;
 
@@ -549,7 +561,7 @@ public class ClusterAnalyser {
 
                         double majorAP = nextBreakend.majorAllelePloidy(!traverseUp);
 
-                        if(majorAP < breakendPloidy)
+                        if(majorAP < breakendPloidy - 1 && !copyNumbersEqual(majorAP, breakendPloidy))
                         {
                             LOGGER.debug("cluster({}) SV({}) requires cluster({}) breakend({}) prior to MAP drop({})",
                                     cluster.id(), breakend.getSV().posId(), resolvingCluster.id(), resolvingBreakend.toString(),
@@ -611,11 +623,21 @@ public class ClusterAnalyser {
             {
                 SvLOH lohEvent = lohEvents.get(lohIndex);
 
+                if(!lohEvent.IsValid)
+                {
+                    ++lohIndex;
+                    continue;
+                }
+
                 for(int be = SVI_START; be <= SVI_END; ++be)
                 {
                     SvBreakend lohBreakend = lohEvent.getBreakend(isStart(be));
 
                     if(lohBreakend == null || lohBreakend.getSV().type() != DUP)
+                        continue;
+
+                    // it's possible that the breakends for this LOH are not clustered, eg if one is LINE
+                    if(lohBreakend.getSV().getCluster() != lohCluster)
                         continue;
 
                     // walk towards the LOH from the other end of this DUP to see if it can find a resolving event within the cluster
@@ -645,7 +667,7 @@ public class ClusterAnalyser {
                             continue;
 
                         LOGGER.debug("cluster({}) SV({}) resolved prior to LOH by other cluster({}) breakend({})",
-                                lohCluster.id(), lohBreakend.getSV().posId(), otherCluster.id(), otherBreakend.toString());
+                                lohCluster.id(), lohBreakend.getSV().posId(), otherCluster.id(), nextBreakend.toString());
 
                         otherCluster.addClusterReason(CLUSTER_REASON_LOH_CHAIN, lohBreakend.getSV().id());
                         lohCluster.addClusterReason(CLUSTER_REASON_LOH_CHAIN, nextBreakend.getSV().id());
@@ -653,7 +675,6 @@ public class ClusterAnalyser {
                         lohCluster.mergeOtherCluster(otherCluster);
 
                         mergedClusters.add(otherCluster);
-
                         break;
                     }
                 }
@@ -734,7 +755,6 @@ public class ClusterAnalyser {
                     double[] centromereCNData = mCopyNumberAnalyser.getCentromereCopyNumberData(chromosome, arm.equals(CHROMOSOME_ARM_P));
 
                     SvCNData telemoreData = arm == CHROMOSOME_ARM_P ? cnDataList.get(0) : cnDataList.get(cnDataList.size() - 1);
-                    double telomereCN = telemoreData.CopyNumber;
                     double telomereMAP = telemoreData.majorAllelePloidy();
 
                     // now look towards the telomere and centromere and work out there is likely a breakend missing
