@@ -6,6 +6,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -161,7 +162,7 @@ public class CircosDataWriter {
                     .add(String.valueOf(min))
                     .add(String.valueOf(min))
                     .add(geneName)
-                    .add("label_size=" +labelSize + "p,rpadding=0.1r")
+                    .add("label_size=" +labelSize + "p,rpadding=0r")
                     .toString();
             result.add(exonString);
         }
@@ -171,7 +172,7 @@ public class CircosDataWriter {
 
     private static double geneNameLabelSize(@NotNull final String gene) {
         double availablePixels = CircosConfigWriter.PIXELS * (CircosConfigWriter.EXON_OUTER_RADIUS - CircosConfigWriter.EXON_INNER_RADIUS);
-        return Math.min(18, Math.floor(availablePixels / gene.length()));
+        return Math.min(26, 4 + Math.floor(availablePixels / gene.length()));
     }
 
     @NotNull
@@ -360,7 +361,7 @@ public class CircosDataWriter {
                     .add(circosContig(link.endChromosome()))
                     .add(String.valueOf(link.endPosition()))
                     .add(String.valueOf(link.endPosition()))
-                    .add(colorPicker.color(link.clusterId(), link.chainId()) + "," + thickness(link.traverseCount()))
+                    .add(colorPicker.transparentColor(link.clusterId(), link.chainId()) + "," + thickness(link.traverseCount()))
                     .toString();
             result.add(linkString);
         }
@@ -371,11 +372,12 @@ public class CircosDataWriter {
     @NotNull
     private List<String> createConnectors(int maxTracks, @NotNull final List<Segment> segments, @NotNull final List<Link> links) {
         final List<String> result = Lists.newArrayList();
+
         for (Segment segment : segments) {
 
-            final double r1 = CircosConfigWriter.svTrackPixels(maxTracks, segment.track());
-
             final GenomePosition startPosition = GenomePositions.create(segment.chromosome(), segment.start());
+
+            final double r1 = CircosConfigWriter.svTrackPixels(maxTracks, segment.track());
             int startLinkUsage = Links.linkTraverseCount(startPosition, links);
 
             if (startLinkUsage > 0) {
@@ -387,14 +389,16 @@ public class CircosDataWriter {
                 final String start = new StringJoiner(DELIMITER).add(circosContig(segment.chromosome()))
                         .add(String.valueOf(segment.start()))
                         .add(String.valueOf(segment.start()))
-                        .add("r1=" + r1 + "p," + colorPicker.connectorColor(segment.clusterId(), segment.chainId()) + "," + thickness(
+                        .add("r1=" + r1 + "p," + colorPicker.transparentColor(segment.clusterId(), segment.chainId()) + "," + thickness(
                                 startLinkUsage - segmentsBelow))
                         .toString();
                 result.add(start);
             }
 
             final GenomePosition endPosition = GenomePositions.create(segment.chromosome(), segment.end());
+
             int endLinkUsage = Links.linkTraverseCount(endPosition, links);
+
 
             if (endLinkUsage > 0) {
                 long segmentsBelow = segments.stream()
@@ -403,7 +407,7 @@ public class CircosDataWriter {
                 final String end = new StringJoiner(DELIMITER).add(circosContig(segment.chromosome()))
                         .add(String.valueOf(segment.end()))
                         .add(String.valueOf(segment.end()))
-                        .add("r1=" + r1 + "p," + colorPicker.connectorColor(segment.clusterId(), segment.chainId()) + "," + thickness(
+                        .add("r1=" + r1 + "p," + colorPicker.transparentColor(segment.clusterId(), segment.chainId()) + "," + thickness(
                                 endLinkUsage - segmentsBelow))
                         .toString();
                 result.add(end);
@@ -413,12 +417,12 @@ public class CircosDataWriter {
 
         double rTrack1 = CircosConfigWriter.svTrackPixels(maxTracks, 0);
         for (Link link : links) {
-            if (link.isSimpleSV()) {
+            if (link.connectorsOnly()) {
                 if (link.isValidStart()) {
                     final String start = new StringJoiner(DELIMITER).add(circosContig(link.startChromosome()))
                             .add(String.valueOf(link.startPosition()))
                             .add(String.valueOf(link.startPosition()))
-                            .add("r1=" + rTrack1 + "p," + colorPicker.connectorColor(link.clusterId(), link.chainId()) + "," + thickness(
+                            .add("r1=" + rTrack1 + "p," + colorPicker.transparentColor(link.clusterId(), link.chainId()) + "," + thickness(
                                     link.traverseCount()))
                             .toString();
                     result.add(start);
@@ -428,7 +432,7 @@ public class CircosDataWriter {
                     final String end = new StringJoiner(DELIMITER).add(circosContig(link.endChromosome()))
                             .add(String.valueOf(link.endPosition()))
                             .add(String.valueOf(link.endPosition()))
-                            .add("r1=" + rTrack1 + "p," + colorPicker.connectorColor(link.clusterId(), link.chainId()) + "," + thickness(
+                            .add("r1=" + rTrack1 + "p," + colorPicker.transparentColor(link.clusterId(), link.chainId()) + "," + thickness(
                                     link.traverseCount()))
                             .toString();
                     result.add(end);
@@ -438,7 +442,7 @@ public class CircosDataWriter {
 
         }
 
-        return result.stream().sorted().collect(toList());
+        return result;
     }
 
     @NotNull
@@ -498,8 +502,10 @@ public class CircosDataWriter {
 
     @NotNull
     private Map<String, Integer> contigLengths(@NotNull final List<GenomePosition> positions) {
-        final Map<String, Integer> results = Maps.newHashMap();
-        for (GenomePosition position : positions) {
+        final Map<String, Integer> results = new LinkedHashMap<>();
+        final List<GenomePosition> sortedPositions = positions.stream().sorted().collect(toList());
+
+        for (GenomePosition position : sortedPositions) {
             int end = (int) position.position();
             results.merge(position.chromosome(), end, Math::max);
         }
@@ -581,7 +587,7 @@ public class CircosDataWriter {
 
     @NotNull
     private static String thickness(long usage) {
-        return "thickness=" + Math.max(1, Math.min(10, usage) * 4);
+        return "thickness=" + Math.max(1, 3 + 1.5 * Math.min(4, usage - 1));
     }
 
     @NotNull

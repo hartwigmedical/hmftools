@@ -31,9 +31,7 @@ class AmberPersistence {
         this.config = config;
     }
 
-    void persistVersionInfo() throws IOException {
-
-        final VersionInfo versionInfo = new VersionInfo("amber.version");
+    void persistVersionInfo(@NotNull final  VersionInfo versionInfo ) throws IOException {
         versionInfo.write(config.outputDirectory());
     }
 

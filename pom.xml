@@ -12,8 +12,8 @@
         <module>hmf-common</module>
         <module>hmf-extensions</module>
         <module>api-clients</module>
-        <module>patient-db</module>
         <module>ensembl-db</module>
+        <module>patient-db</module>
         <module>variant-annotator</module>
         <module>patient-reporter</module>
         <module>health-checker</module>
@@ -59,7 +59,7 @@
         <hmf-sv-analyser.version>1.0</hmf-sv-analyser.version>
         <hmf-sv-graphs.version>1.0</hmf-sv-graphs.version>
 
-        <amber.version>2.1</amber.version>
+        <amber.version>2.2</amber.version>
         <cobalt.version>1.5</cobalt.version>
         <purple.version>2.21</purple.version>
 
