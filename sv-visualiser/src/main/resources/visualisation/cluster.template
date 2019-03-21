@@ -79,7 +79,7 @@ chromosomes_display_default = yes
 		file             = SUBSTITUTE_SAMPLE.gene.name.circos
 
 		r0 = SUBSTITUTE_EXON_INNER_RADIUSr
-		r1 = SUBSTITUTE_EXON_OUTER_RADIUSr
+		r1 = 1r
 
 		show_links   = no
 		label_size   = 10p

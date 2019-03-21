@@ -162,7 +162,7 @@ public class CircosDataWriter {
                     .add(String.valueOf(min))
                     .add(String.valueOf(min))
                     .add(geneName)
-                    .add("label_size=" +labelSize + "p,rpadding=0.1r")
+                    .add("label_size=" +labelSize + "p,rpadding=0r")
                     .toString();
             result.add(exonString);
         }
@@ -172,7 +172,7 @@ public class CircosDataWriter {
 
     private static double geneNameLabelSize(@NotNull final String gene) {
         double availablePixels = CircosConfigWriter.PIXELS * (CircosConfigWriter.EXON_OUTER_RADIUS - CircosConfigWriter.EXON_INNER_RADIUS);
-        return Math.min(18, Math.floor(availablePixels / gene.length()));
+        return Math.min(26, 4 + Math.floor(availablePixels / gene.length()));
     }
 
     @NotNull
