@@ -1,8 +1,9 @@
 package com.hartwig.hmftools.patientreporter.cfreport.chapters;
 
-import com.hartwig.hmftools.patientreporter.cfreport.components.SectionTitle;
+import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
 import com.hartwig.hmftools.patientreporter.cfreport.components.TableHelper;
 import com.itextpdf.layout.Document;
+import com.itextpdf.layout.element.Paragraph;
 import com.itextpdf.layout.element.Table;
 import org.jetbrains.annotations.NotNull;
 
@@ -27,7 +28,8 @@ public class TherapyDetailsChapter extends ReportChapter {
 
     private static void addTumorTypeEvidence(@NotNull Document report) {
 
-        report.add(SectionTitle.createSectionTitle("Tumor type specific evidence"));
+        report.add(new Paragraph("Tumor type specific evidence")
+                .addStyle(ReportResources.sectionTitleStyle()));
 
         Table table = TableHelper.getReportTable(
                 new float[] {18, 12, 61, 8, 15, 6},
@@ -48,7 +50,8 @@ public class TherapyDetailsChapter extends ReportChapter {
 
     private static void addClinicalTrials(@NotNull Document report) {
 
-        report.add(SectionTitle.createSectionTitle("Clinical trials (NL)"));
+        report.add(new Paragraph("Clinical trials (NL)")
+                .addStyle(ReportResources.sectionTitleStyle()));
 
         Table table = TableHelper.getReportTable(
                 new float[] {18, 12, 69, 15, 6},
@@ -68,7 +71,8 @@ public class TherapyDetailsChapter extends ReportChapter {
 
     private static void addOtherTumorTypeEvidence(@NotNull Document report) {
 
-        report.add(SectionTitle.createSectionTitle("Evidence on other tumor types"));
+        report.add(new Paragraph("Evidence on other tumor types")
+                .addStyle(ReportResources.sectionTitleStyle()));
 
         Table table = TableHelper.getReportTable(
                 new float[] {18, 12, 61, 8, 15, 6},

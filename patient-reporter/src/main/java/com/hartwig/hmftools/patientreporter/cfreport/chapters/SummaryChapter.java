@@ -68,7 +68,8 @@ public class SummaryChapter extends ReportChapter {
     private final void renderSummaryText(@NotNull Document report) {
 
         Div div = initializeSummarySectionDiv(getContentWidth());
-        div.add(SectionTitle.createSectionTitle("Summary"));
+        div.add(new Paragraph("Summary")
+                .addStyle(ReportResources.sectionTitleStyle()));
 
         // Add content to div
         String content = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vivamus eget porta turpis. Lorem ipsum dolor sit amet, " +
@@ -94,7 +95,9 @@ public class SummaryChapter extends ReportChapter {
         Table table = new Table(UnitValue.createPercentArray(new float[] {1, 1}));
         table.setWidth(getContentWidth());
         table.addCell(TableHelper.getLayoutCell()
-                .add(SectionTitle.createSectionTitle("Treatment indications")));
+                .add(new Paragraph("Treatment indications")
+                        .addStyle(ReportResources.sectionTitleStyle())));
+
         table.addCell(TableHelper.getLayoutCell()
                 .add(new Paragraph("Summary of number of alterations with number of treatment indication and/or clinical studies")
                         .addStyle(BODY_TEXT_STYLE)));
@@ -128,7 +131,9 @@ public class SummaryChapter extends ReportChapter {
         // Initialize table
         Table table = new Table(UnitValue.createPercentArray(new float[] {1, .33f, .66f}));
         table.setWidth(getContentWidth());
-        table.addCell(TableHelper.getLayoutCell().add(SectionTitle.createSectionTitle("Tumor characteristics summary")));
+        table.addCell(TableHelper.getLayoutCell()
+                .add(new Paragraph("Tumor characteristics summary")
+                        .addStyle(ReportResources.sectionTitleStyle())));
         table.addCell(TableHelper.getLayoutCell(1, 2).add(
                 new Paragraph("Whole genome sequencing based tumor characteristics.")
                     .addStyle(BODY_TEXT_STYLE)));
@@ -193,7 +198,8 @@ public class SummaryChapter extends ReportChapter {
         Table table = new Table(UnitValue.createPercentArray(new float[] {1, 1}));
         table.setWidth(getContentWidth());
         table.addCell(TableHelper.getLayoutCell()
-                .add(SectionTitle.createSectionTitle("Genomic alterations\n summary")));
+                .add(new Paragraph("Genomic alterations summary")
+                        .addStyle(ReportResources.sectionTitleStyle())));
         table.addCell(TableHelper.getLayoutCell()
                 .add(new Paragraph("Summary on genomic alterations " +
                 "(somatic variants, copy number changes, gene disruptions and gene fusions).")
