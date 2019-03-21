@@ -4,9 +4,9 @@ import java.io.File;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.hotspot.SAMConsumer;
 import com.hartwig.hmftools.common.position.GenomePositionSelector;
 import com.hartwig.hmftools.common.position.GenomePositionSelectorFactory;
@@ -36,14 +36,19 @@ public class TumorContaminationEvidence implements Callable<TumorContaminationEv
         this.contig = contig;
         this.bamFile = bamFile;
         this.samReaderFactory = samReaderFactory;
+        this.evidenceMap = Maps.newHashMap();
+
+        final List<ModifiableBaseDepth> tumorRecords = Lists.newArrayList();
+        for (BaseDepth baseDepth : baseDepths) {
+            ModifiableBaseDepth modifiableBaseDepth = BaseDepthFactory.create(baseDepth);
+            evidenceMap.put(baseDepth, modifiableBaseDepth);
+            tumorRecords.add(modifiableBaseDepth);
+        }
+        this.selector = GenomePositionSelectorFactory.create(tumorRecords);
+
         final GenomeRegionBuilder builder = new GenomeRegionBuilder(contig, typicalReadDepth);
         baseDepths.forEach(x -> builder.addPosition(x.position()));
-        final List<GenomeRegion> bafRegions1 = builder.build();
-        final List<ModifiableBaseDepth> tumorRecords = baseDepths.stream().map(BaseDepthFactory::create).collect(Collectors.toList());
-
-        this.evidenceMap = tumorRecords.stream().collect(Collectors.toMap(x -> x, x -> x));
-        this.selector = GenomePositionSelectorFactory.create(tumorRecords);
-        this.supplier = new SAMConsumer(minMappingQuality, bafRegions1);
+        this.supplier = new SAMConsumer(minMappingQuality, builder.build());
     }
 
     @NotNull

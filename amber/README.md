@@ -151,6 +151,7 @@ java -cp amber.jar com.hartwig.hmftools.amber.pileup.AmberFromPileupApplication 
 ## Version History
 - Next version
   - Gracefully handle contigs outside the ref genome. 
+  - Fixed bug where TumorContamination file had two copies of tumor info rather than normal and tumor
 - 2.2 
   - Fixed typo in header of TUMOR.amber.baf file.
 - 2.1
