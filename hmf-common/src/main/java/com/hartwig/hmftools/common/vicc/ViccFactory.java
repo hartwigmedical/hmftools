@@ -8,6 +8,7 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.google.common.collect.Lists;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -89,6 +90,9 @@ public abstract class ViccFactory {
     private static StringBuilder readingObjectAssociation(@NotNull JsonObject object, @NotNull StringBuilder headerCSV) {
         //association object
         int indexValue;
+        List<String> headerEvidence=Lists.newArrayList();
+        List<String> headerPhenotype=Lists.newArrayList();
+
         StringBuilder stringToCSVAssociation = new StringBuilder();
         for (int i = 0; i < object.getAsJsonObject("association").keySet().size(); i++) {
             List<String> keysOfAssocationObject = new ArrayList<>(object.getAsJsonObject("association").keySet());
@@ -98,18 +102,20 @@ public abstract class ViccFactory {
                 JsonElement elementEvidence = object.getAsJsonObject("association").get("evidence");
                 JsonArray arrayEvidence = elementEvidence.getAsJsonArray();
                 JsonObject objectEvidence = (JsonObject) arrayEvidence.iterator().next();
-                indexValue = keysOfAssocationObject.indexOf("evidence");
-                keysOfAssocationObject.set(indexValue, String.join(",", objectEvidence.keySet()));
+
                 for (int a = 0; a < objectEvidence.keySet().size(); a++) {
                     List<String> keysOfEvidenceObject = new ArrayList<>(objectEvidence.keySet());
                     if (keysOfEvidenceObject.get(a).equals("evidenceType")) {
+                        indexValue = keysOfEvidenceObject.indexOf("evidenceType");
+                        keysOfEvidenceObject.remove(indexValue);
+                        keysOfEvidenceObject.add(indexValue, String.join(",", objectEvidence.get("evidenceType").getAsJsonObject().keySet()));
+                        headerEvidence = keysOfEvidenceObject;
                         for (int b = 0; b < objectEvidence.get("evidenceType").getAsJsonObject().keySet().size(); b++) {
                             List<String> keysOfEvidenceTypeObject =
                                     new ArrayList<>(objectEvidence.get("evidenceType").getAsJsonObject().keySet());
                             stringToCSVAssociation.append(objectEvidence.get("evidenceType")
                                     .getAsJsonObject()
                                     .get(keysOfEvidenceTypeObject.get(b))); // association data
-
                         }
                     } else {
                         stringToCSVAssociation.append(objectEvidence.get(keysOfEvidenceObject.get(a))); // association data
@@ -124,8 +130,15 @@ public abstract class ViccFactory {
                 for (int a = 0; a < elementPhenotype.getAsJsonObject().keySet().size(); a++) {
                     List<String> keysOfPhenotypeObject = new ArrayList<>(elementPhenotype.getAsJsonObject().keySet());
                     if (keysOfPhenotypeObject.get(a).equals("type")) {
+
                         List<String> keysOfPhenotypeTypeObject =
                                 new ArrayList<>(elementPhenotype.getAsJsonObject().get("type").getAsJsonObject().keySet());
+
+                        indexValue = keysOfPhenotypeObject.indexOf("type");
+                        keysOfPhenotypeObject.remove(indexValue);
+                        keysOfPhenotypeObject.add(indexValue, String.join(",",keysOfPhenotypeTypeObject));
+                        headerPhenotype = keysOfPhenotypeObject;
+
                         for (int c = 0; c < keysOfPhenotypeObject.size(); c++) {
                             stringToCSVAssociation.append(elementPhenotype.getAsJsonObject() // association data
                                     .get("type").getAsJsonObject().get(keysOfPhenotypeTypeObject.get(c)));
@@ -138,7 +151,9 @@ public abstract class ViccFactory {
             } else if (keysOfAssocationObject.get(i).equals("oncogenic")) {
                 stringToCSVAssociation.append(object.getAsJsonObject("association").get(keysOfAssocationObject.get(i))); // association data
             }
-            LOGGER.info(keysOfAssocationObject);
+            keysOfAssocationObject.set(keysOfAssocationObject.indexOf("evidence"), String.join(",",headerEvidence));
+            keysOfAssocationObject.set(keysOfAssocationObject.indexOf("phenotype"), String.join(",",headerPhenotype));
+            headerCSV.append(keysOfAssocationObject); // header features
         }
         return stringToCSVAssociation;
     }
@@ -175,6 +190,7 @@ public abstract class ViccFactory {
                 stringToCSVFeatures.append(objectFeatures.get(keysOfFeaturesObject.get(i))); // features data
             }
             headerCSV.append(keysOfFeaturesObject); // header features
+            LOGGER.info(headerCSV);
         }
         return stringToCSVFeatures;
     }
