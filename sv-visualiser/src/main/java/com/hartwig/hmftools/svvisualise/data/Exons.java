@@ -1,12 +1,20 @@
 package com.hartwig.hmftools.svvisualise.data;
 
+import static com.hartwig.hmftools.svvisualise.circos.Span.maxPositionPerChromosome;
+import static com.hartwig.hmftools.svvisualise.circos.Span.minPositionPerChromosome;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.position.GenomePosition;
+import com.hartwig.hmftools.svvisualise.circos.Span;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -17,13 +25,31 @@ public class Exons {
     private static final String DELIMITER = ",";
 
     @NotNull
+    public static List<Exon> exonsInSegments(@NotNull final List<Exon> exons, @NotNull final List<Segment> segments, @NotNull final List<Link> links) {
+        final List<GenomePosition> allPositions = Lists.newArrayList();
+        allPositions.addAll(Span.allPositions(segments));
+        allPositions.addAll(Links.allPositions(links));
+
+        final Map<String, Long> minPositionPerChromosome = minPositionPerChromosome(allPositions);
+        final Map<String, Long> maxPositionPerChromosome = maxPositionPerChromosome(allPositions);
+
+        final Predicate<Exon> inSegments = exon -> {
+            long min = minPositionPerChromosome.containsKey(exon.chromosome()) ? minPositionPerChromosome.get(exon.chromosome()) : 0;
+            long max = maxPositionPerChromosome.containsKey(exon.chromosome()) ? maxPositionPerChromosome.get(exon.chromosome()) : 0;
+            return exon.start() >= min && exon.end() <= max;
+        };
+
+        return exons.stream().filter(inSegments).collect(Collectors.toList());
+    }
+
+    @NotNull
     public static List<Exon> readExons(@NotNull final String fileName) throws IOException {
         return fromString(Files.readAllLines(new File(fileName).toPath()));
     }
 
     @VisibleForTesting
     @NotNull
-    static List<Exon> fromString(@NotNull final List<String> lines) {
+    private static List<Exon> fromString(@NotNull final List<String> lines) {
         final List<Exon> result = Lists.newArrayList();
 
         for (final String line : lines) {

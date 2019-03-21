@@ -28,6 +28,7 @@ import com.hartwig.hmftools.svvisualise.circos.Span;
 import com.hartwig.hmftools.svvisualise.data.CopyNumberAlteration;
 import com.hartwig.hmftools.svvisualise.data.CopyNumberAlterations;
 import com.hartwig.hmftools.svvisualise.data.Exon;
+import com.hartwig.hmftools.svvisualise.data.Exons;
 import com.hartwig.hmftools.svvisualise.data.Link;
 import com.hartwig.hmftools.svvisualise.data.Links;
 import com.hartwig.hmftools.svvisualise.data.Segment;
@@ -122,11 +123,14 @@ public class SvVisualiser implements AutoCloseable {
             return null;
         }
 
-        final List<Segment> chromosomeSegments =
-                config.segments().stream().filter(x -> clusterIds.contains(x.clusterId())).collect(toList());
+        final List<Segment> chromosomeSegments = config.segments().stream().filter(x -> clusterIds.contains(x.clusterId())).collect(toList());
         chromosomeSegments.add(Segments.chromosome(config.sample(), chromosome));
 
-        final List<Exon> chromosomeExons = config.exons().stream().filter(x -> clusterIds.contains(x.clusterId())).collect(toList());
+        final Set<String> chromosomesOfInterest = Sets.newHashSet(chromosome);
+        chromosomeLinks.forEach(x -> {chromosomesOfInterest.add(x.startChromosome()); chromosomesOfInterest.add(x.endChromosome());});
+        chromosomeSegments.forEach(x -> chromosomesOfInterest.add(x.chromosome()));
+
+        final List<Exon> chromosomeExons = config.exons().stream().filter(x -> chromosomesOfInterest.contains(x.chromosome())).collect(toList());
 
         return runFiltered(sample, chromosomeLinks, chromosomeSegments, chromosomeExons);
     }
@@ -164,15 +168,20 @@ public class SvVisualiser implements AutoCloseable {
         return runFiltered(sample, clusterLinks, clusterSegments, clusterExons);
     }
 
-    private Object runFiltered(@NotNull final String sample, @NotNull final List<Link> links, @NotNull final List<Segment> filteredSegments, @NotNull final List<Exon> exons) throws IOException, InterruptedException {
+    private Object runFiltered(@NotNull final String sample, @NotNull final List<Link> links, @NotNull final List<Segment> filteredSegments, @NotNull final List<Exon> filteredExons) throws IOException, InterruptedException {
 
         final List<GenomePosition> positionsToCover = Lists.newArrayList();
         positionsToCover.addAll(Links.allPositions(links));
-        positionsToCover.addAll(allPositions(exons));
 
-        final List<Segment> segments = Segments.ensureCoverage(1000, filteredSegments, links, exons);
+        // Need to extend terminal segments past any current segments and links
+        final List<Segment> segments = Segments.extendTerminals(1000, filteredSegments, links);
         positionsToCover.addAll(allPositions(segments));
 
+        // Limit exons to within segments and links
+        final List<Exon> exons = Exons.exonsInSegments(filteredExons, segments, links);
+        positionsToCover.addAll(allPositions(exons));
+
+        // Limit copy numbers to within segments and links (plus a little extra)
         final List<CopyNumberAlteration> alterations = CopyNumberAlterations.copyNumbers(100, config.copyNumberAlterations(), Span.span(positionsToCover));
 
         final ColorPicker color = new ColorPicker(links);

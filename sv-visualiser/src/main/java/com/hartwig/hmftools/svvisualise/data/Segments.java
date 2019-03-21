@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.svvisualise.data;
 
+import static com.hartwig.hmftools.svvisualise.circos.Span.maxPositionPerChromosome;
+import static com.hartwig.hmftools.svvisualise.circos.Span.minPositionPerChromosome;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -49,14 +52,12 @@ public class Segments {
     }
 
     @NotNull
-    public static List<Segment> ensureCoverage(long terminalDistance, @NotNull final List<Segment> segments,
-            @NotNull final List<Link> links, @NotNull final List<Exon> exons) {
+    public static List<Segment> extendTerminals(long terminalDistance, @NotNull final List<Segment> segments, @NotNull final List<Link> links) {
         final Map<Chromosome, Long> centromeres = REF_GENOME.centromeres();
 
         final List<GenomePosition> allPositions = Lists.newArrayList();
         allPositions.addAll(Span.allPositions(segments));
         allPositions.addAll(Links.allPositions(links));
-        allPositions.addAll(Span.allPositions(exons));
 
         final Map<String, Long> minPositionPerChromosome = minPositionPerChromosome(allPositions);
         final Map<String, Long> maxPositionPerChromosome = maxPositionPerChromosome(allPositions);
@@ -189,13 +190,5 @@ public class Segments {
         return result;
     }
 
-    @NotNull
-    private static Map<String, Long> maxPositionPerChromosome(@NotNull final List<GenomePosition> tracks) {
-        return tracks.stream().collect(Collectors.toMap(GenomePosition::chromosome, GenomePosition::position, Math::max));
-    }
 
-    @NotNull
-    private static Map<String, Long> minPositionPerChromosome(@NotNull final List<GenomePosition> tracks) {
-        return tracks.stream().collect(Collectors.toMap(GenomePosition::chromosome, GenomePosition::position, Math::min));
-    }
 }

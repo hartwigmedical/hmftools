@@ -2,6 +2,7 @@ package com.hartwig.hmftools.svvisualise.circos;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
@@ -14,6 +15,16 @@ import com.hartwig.hmftools.common.region.GenomeRegionFactory;
 import org.jetbrains.annotations.NotNull;
 
 public class Span {
+
+    @NotNull
+    public static Map<String, Long> maxPositionPerChromosome(@NotNull final List<GenomePosition> tracks) {
+        return tracks.stream().collect(Collectors.toMap(GenomePosition::chromosome, GenomePosition::position, Math::max));
+    }
+
+    @NotNull
+    public static Map<String, Long> minPositionPerChromosome(@NotNull final List<GenomePosition> tracks) {
+        return tracks.stream().collect(Collectors.toMap(GenomePosition::chromosome, GenomePosition::position, Math::min));
+    }
 
     @NotNull
     public static List<GenomeRegion> span(@NotNull final List<GenomePosition> positions) {
