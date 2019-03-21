@@ -92,10 +92,12 @@ public abstract class ViccFactory {
         int indexValue;
         List<String> headerEvidence=Lists.newArrayList();
         List<String> headerPhenotype=Lists.newArrayList();
+        List<String> keysOfAssocationObject=Lists.newArrayList();
 
         StringBuilder stringToCSVAssociation = new StringBuilder();
         for (int i = 0; i < object.getAsJsonObject("association").keySet().size(); i++) {
-            List<String> keysOfAssocationObject = new ArrayList<>(object.getAsJsonObject("association").keySet());
+            keysOfAssocationObject = new ArrayList<>(object.getAsJsonObject("association").keySet());
+
             if (keysOfAssocationObject.get(i).equals("description")) {
                 stringToCSVAssociation.append(object.getAsJsonObject("association").get(keysOfAssocationObject.get(i))); // association data
             } else if (keysOfAssocationObject.get(i).equals("evidence")) {
@@ -153,8 +155,8 @@ public abstract class ViccFactory {
             }
             keysOfAssocationObject.set(keysOfAssocationObject.indexOf("evidence"), String.join(",",headerEvidence));
             keysOfAssocationObject.set(keysOfAssocationObject.indexOf("phenotype"), String.join(",",headerPhenotype));
-            headerCSV.append(keysOfAssocationObject); // header features
         }
+        headerCSV.append(keysOfAssocationObject); // header features
         return stringToCSVAssociation;
     }
 
@@ -169,12 +171,11 @@ public abstract class ViccFactory {
     private static StringBuilder readObjectFeatures(@NotNull JsonObject object, @NotNull StringBuilder headerCSV) {
         //features
         StringBuilder stringToCSVFeatures = new StringBuilder();
-        StringBuilder header = new StringBuilder();
         JsonArray arrayFeatures = object.getAsJsonArray("features");
         JsonObject objectFeatures = (JsonObject) arrayFeatures.iterator().next();
         int indexValue;
+        List<String> keysOfFeaturesObject = new ArrayList<>(objectFeatures.keySet());
         for (int i = 0; i < objectFeatures.keySet().size(); i++) {
-            List<String> keysOfFeaturesObject = new ArrayList<>(objectFeatures.keySet());
 
             if (keysOfFeaturesObject.get(i).equals("sequence_ontology")) {
                 List<String> keysOfSequenceOntologyObject = new ArrayList<>(objectFeatures.getAsJsonObject("sequence_ontology").keySet());
@@ -189,9 +190,8 @@ public abstract class ViccFactory {
             } else {
                 stringToCSVFeatures.append(objectFeatures.get(keysOfFeaturesObject.get(i))); // features data
             }
-            headerCSV.append(keysOfFeaturesObject); // header features
-            LOGGER.info(headerCSV);
         }
+        headerCSV.append(keysOfFeaturesObject); // header features
         return stringToCSVFeatures;
     }
 
@@ -211,12 +211,7 @@ public abstract class ViccFactory {
             while (reader.hasNext()) {
                 LOGGER.info(index);
                 JsonObject object = parser.parse(reader).getAsJsonObject();
-                if (index == 0) {
-                    writer.append(object.getAsJsonObject("brca").keySet().toString());
-                    writer.append(",genes");
-                    writer.append(",tags");
-                    writer.append(",source");
-                }
+
                 StringBuilder stringToCSVAll = new StringBuilder();
                 StringBuilder headerCSV = new StringBuilder();
 
@@ -238,9 +233,12 @@ public abstract class ViccFactory {
                         .append(StringToCSVGeneIdentifiers)
                         .append(StringToCSVAssociation)
                         .append(StringToCSVFeaturesNames)
-                        .append(StringToCSVFeatures);
+                        .append(StringToCSVFeatures)
+                ;
 
                 index++;
+                writer.append(headerCSV);
+                writer.append("\n");
                 writer.append(stringToCSVAll);
                 writer.append("\n");
             }
@@ -251,11 +249,6 @@ public abstract class ViccFactory {
         }
 
         writer.close();
-    }
-
-    private static void writeToCsvFile(@NotNull String csvFormatString, @NotNull PrintWriter writer) throws IOException {
-        writer.append(csvFormatString);
-
     }
 
     public static void extractCgiFile(@NotNull String cgiJsonPath) throws IOException {
