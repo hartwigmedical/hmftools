@@ -18,14 +18,15 @@ public class ColorPicker {
 
     private static final Color BLACK = new Color(1, 1, 1);
 
-    private static final Color COLOR1 = new Color(31, 120, 180);
-    private static final Color COLOR2 = new Color(227, 26, 28);
-    private static final Color COLOR3 = new Color(255, 127, 0);
-    private static final Color COLOR4 = new Color(51, 160, 44);
-    private static final Color COLOR5 = new Color(106, 61, 154);
-    private static final Color COLOR6 = new Color(140, 81, 10);
-    private static final Color COLOR7 = new Color(1, 102, 94);
-    private static final Color COLOR8 = new Color(212, 193, 23);
+    private static final Color COLOR6 = new Color(31, 120, 180);
+    private static final Color COLOR7 = new Color(227, 26, 28);
+    private static final Color COLOR8 = new Color(51, 160, 44);
+    private static final Color COLOR5 = new Color(212, 193, 23);
+
+    private static final Color COLOR1 = new Color(106, 61, 154);
+    private static final Color COLOR2 = new Color(140, 81, 10);
+    private static final Color COLOR3 = new Color(1, 102, 94);
+    private static final Color COLOR4 = new Color(255, 127, 0);
 
     private static final Color DEL = new Color(251, 154, 153);
     private static final Color DUP = new Color(178, 223, 138);
@@ -52,7 +53,7 @@ public class ColorPicker {
     }
 
     @NotNull
-    public String connectorColor(final int clusterId, final int chainId) {
+    public String transparentColor(final int clusterId, final int chainId) {
         String opaqueColor = color(clusterId, chainId);
         return opaqueColor.replace(")", "," + connectorTransparency + ")");
     }
@@ -152,15 +153,19 @@ public class ColorPicker {
 
     private static double connectorTransparency(int links) {
         if (links < 10) {
-            return 1;
+            return 0.7;
         }
 
         if (links < 50) {
-            return 0.8;
+            return 0.6;
         }
 
         if (links < 100) {
             return 0.5;
+        }
+
+        if (links < 200) {
+            return 0.4;
         }
 
         if (links < 400) {

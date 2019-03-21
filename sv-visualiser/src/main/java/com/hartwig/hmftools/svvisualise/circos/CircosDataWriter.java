@@ -361,7 +361,7 @@ public class CircosDataWriter {
                     .add(circosContig(link.endChromosome()))
                     .add(String.valueOf(link.endPosition()))
                     .add(String.valueOf(link.endPosition()))
-                    .add(colorPicker.color(link.clusterId(), link.chainId()) + "," + thickness(link.traverseCount()))
+                    .add(colorPicker.transparentColor(link.clusterId(), link.chainId()) + "," + thickness(link.traverseCount()))
                     .toString();
             result.add(linkString);
         }
@@ -372,11 +372,12 @@ public class CircosDataWriter {
     @NotNull
     private List<String> createConnectors(int maxTracks, @NotNull final List<Segment> segments, @NotNull final List<Link> links) {
         final List<String> result = Lists.newArrayList();
+
         for (Segment segment : segments) {
 
-            final double r1 = CircosConfigWriter.svTrackPixels(maxTracks, segment.track());
-
             final GenomePosition startPosition = GenomePositions.create(segment.chromosome(), segment.start());
+
+            final double r1 = CircosConfigWriter.svTrackPixels(maxTracks, segment.track());
             int startLinkUsage = Links.linkTraverseCount(startPosition, links);
 
             if (startLinkUsage > 0) {
@@ -388,14 +389,16 @@ public class CircosDataWriter {
                 final String start = new StringJoiner(DELIMITER).add(circosContig(segment.chromosome()))
                         .add(String.valueOf(segment.start()))
                         .add(String.valueOf(segment.start()))
-                        .add("r1=" + r1 + "p," + colorPicker.connectorColor(segment.clusterId(), segment.chainId()) + "," + thickness(
+                        .add("r1=" + r1 + "p," + colorPicker.transparentColor(segment.clusterId(), segment.chainId()) + "," + thickness(
                                 startLinkUsage - segmentsBelow))
                         .toString();
                 result.add(start);
             }
 
             final GenomePosition endPosition = GenomePositions.create(segment.chromosome(), segment.end());
+
             int endLinkUsage = Links.linkTraverseCount(endPosition, links);
+
 
             if (endLinkUsage > 0) {
                 long segmentsBelow = segments.stream()
@@ -404,7 +407,7 @@ public class CircosDataWriter {
                 final String end = new StringJoiner(DELIMITER).add(circosContig(segment.chromosome()))
                         .add(String.valueOf(segment.end()))
                         .add(String.valueOf(segment.end()))
-                        .add("r1=" + r1 + "p," + colorPicker.connectorColor(segment.clusterId(), segment.chainId()) + "," + thickness(
+                        .add("r1=" + r1 + "p," + colorPicker.transparentColor(segment.clusterId(), segment.chainId()) + "," + thickness(
                                 endLinkUsage - segmentsBelow))
                         .toString();
                 result.add(end);
@@ -419,7 +422,7 @@ public class CircosDataWriter {
                     final String start = new StringJoiner(DELIMITER).add(circosContig(link.startChromosome()))
                             .add(String.valueOf(link.startPosition()))
                             .add(String.valueOf(link.startPosition()))
-                            .add("r1=" + rTrack1 + "p," + colorPicker.connectorColor(link.clusterId(), link.chainId()) + "," + thickness(
+                            .add("r1=" + rTrack1 + "p," + colorPicker.transparentColor(link.clusterId(), link.chainId()) + "," + thickness(
                                     link.traverseCount()))
                             .toString();
                     result.add(start);
@@ -429,7 +432,7 @@ public class CircosDataWriter {
                     final String end = new StringJoiner(DELIMITER).add(circosContig(link.endChromosome()))
                             .add(String.valueOf(link.endPosition()))
                             .add(String.valueOf(link.endPosition()))
-                            .add("r1=" + rTrack1 + "p," + colorPicker.connectorColor(link.clusterId(), link.chainId()) + "," + thickness(
+                            .add("r1=" + rTrack1 + "p," + colorPicker.transparentColor(link.clusterId(), link.chainId()) + "," + thickness(
                                     link.traverseCount()))
                             .toString();
                     result.add(end);
@@ -439,7 +442,7 @@ public class CircosDataWriter {
 
         }
 
-        return result.stream().sorted().collect(toList());
+        return result;
     }
 
     @NotNull
@@ -584,7 +587,7 @@ public class CircosDataWriter {
 
     @NotNull
     private static String thickness(long usage) {
-        return "thickness=" + Math.max(1, Math.min(10, usage) * 4);
+        return "thickness=" + Math.max(1, 3 + 1.5 * Math.min(4, usage - 1));
     }
 
     @NotNull
