@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.common.vicc;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -14,6 +13,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.stream.JsonReader;
+import com.google.gson.stream.JsonToken;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -90,16 +90,17 @@ public abstract class ViccFactory {
     private static StringBuilder readObjectAssociation(@NotNull JsonObject object, @NotNull StringBuilder headerCSV) {
         //association object
         int indexValue;
-        List<String> headerEvidence=Lists.newArrayList();
-        List<String> headerPhenotype=Lists.newArrayList();
-        List<String> keysOfAssocationObject=Lists.newArrayList();
+        List<String> headerEvidence = Lists.newArrayList();
+        List<String> headerPhenotype = Lists.newArrayList();
+        List<String> keysOfAssocationObject = Lists.newArrayList();
 
         StringBuilder stringToCSVAssociation = new StringBuilder();
         for (int i = 0; i < object.getAsJsonObject("association").keySet().size(); i++) {
             keysOfAssocationObject = new ArrayList<>(object.getAsJsonObject("association").keySet());
 
             if (keysOfAssocationObject.get(i).equals("description")) {
-                stringToCSVAssociation.append(object.getAsJsonObject("association").get(keysOfAssocationObject.get(i))).append(";"); // association data
+                stringToCSVAssociation.append(object.getAsJsonObject("association").get(keysOfAssocationObject.get(i)))
+                        .append(";"); // association data
             } else if (keysOfAssocationObject.get(i).equals("evidence")) {
                 JsonElement elementEvidence = object.getAsJsonObject("association").get("evidence");
                 JsonArray arrayEvidence = elementEvidence.getAsJsonArray();
@@ -110,7 +111,8 @@ public abstract class ViccFactory {
                     if (keysOfEvidenceObject.get(a).equals("evidenceType")) {
                         indexValue = keysOfEvidenceObject.indexOf("evidenceType");
                         keysOfEvidenceObject.remove(indexValue);
-                        keysOfEvidenceObject.add(indexValue, String.join(",", objectEvidence.get("evidenceType").getAsJsonObject().keySet()));
+                        keysOfEvidenceObject.add(indexValue,
+                                String.join(",", objectEvidence.get("evidenceType").getAsJsonObject().keySet()));
                         headerEvidence = keysOfEvidenceObject;
                         for (int b = 0; b < objectEvidence.get("evidenceType").getAsJsonObject().keySet().size(); b++) {
                             List<String> keysOfEvidenceTypeObject =
@@ -124,9 +126,11 @@ public abstract class ViccFactory {
                     }
                 }
             } else if (keysOfAssocationObject.get(i).equals("environmentalContexts")) {
-                stringToCSVAssociation.append(object.getAsJsonObject("association").get("environmentalContexts")).append(";"); // association data
+                stringToCSVAssociation.append(object.getAsJsonObject("association").get("environmentalContexts"))
+                        .append(";"); // association data
             } else if (keysOfAssocationObject.get(i).equals("evidence_label")) {
-                stringToCSVAssociation.append(object.getAsJsonObject("association").get(keysOfAssocationObject.get(i))).append(";"); // association data
+                stringToCSVAssociation.append(object.getAsJsonObject("association").get(keysOfAssocationObject.get(i)))
+                        .append(";"); // association data
             } else if (keysOfAssocationObject.get(i).equals("phenotype")) {
                 JsonElement elementPhenotype = object.getAsJsonObject("association").get("phenotype");
                 for (int a = 0; a < elementPhenotype.getAsJsonObject().keySet().size(); a++) {
@@ -138,7 +142,7 @@ public abstract class ViccFactory {
 
                         indexValue = keysOfPhenotypeObject.indexOf("type");
                         keysOfPhenotypeObject.remove(indexValue);
-                        keysOfPhenotypeObject.add(indexValue, String.join(",",keysOfPhenotypeTypeObject));
+                        keysOfPhenotypeObject.add(indexValue, String.join(",", keysOfPhenotypeTypeObject));
                         headerPhenotype = keysOfPhenotypeObject;
 
                         for (int c = 0; c < keysOfPhenotypeObject.size(); c++) {
@@ -146,15 +150,16 @@ public abstract class ViccFactory {
                                     .get("type").getAsJsonObject().get(keysOfPhenotypeTypeObject.get(c))).append(";");
                         }
                     } else {
-                        stringToCSVAssociation.append(elementPhenotype.getAsJsonObject()
-                                .get(keysOfPhenotypeObject.get(a))).append(";"); // association data
+                        stringToCSVAssociation.append(elementPhenotype.getAsJsonObject().get(keysOfPhenotypeObject.get(a)))
+                                .append(";"); // association data
                     }
                 }
             } else if (keysOfAssocationObject.get(i).equals("oncogenic")) {
-                stringToCSVAssociation.append(object.getAsJsonObject("association").get(keysOfAssocationObject.get(i))).append(";"); // association data
+                stringToCSVAssociation.append(object.getAsJsonObject("association").get(keysOfAssocationObject.get(i)))
+                        .append(";"); // association data
             }
-            keysOfAssocationObject.set(keysOfAssocationObject.indexOf("evidence"), String.join(",",headerEvidence));
-            keysOfAssocationObject.set(keysOfAssocationObject.indexOf("phenotype"), String.join(",",headerPhenotype));
+            keysOfAssocationObject.set(keysOfAssocationObject.indexOf("evidence"), String.join(",", headerEvidence));
+            keysOfAssocationObject.set(keysOfAssocationObject.indexOf("phenotype"), String.join(",", headerPhenotype));
         }
         headerCSV.append(keysOfAssocationObject).append(";"); // header features
         return stringToCSVAssociation;
@@ -199,54 +204,44 @@ public abstract class ViccFactory {
     }
 
     public static void extractBRCAFile(@NotNull String brcaJsonPath) throws IOException {
-        final String csvFileName = "/data/experiments/knowledgebase_vicckb/brca.csv";
+        final String csvFileName = "/Users/liekeschoenmaker/hmf/tmp/brca.csv";
         PrintWriter writer = new PrintWriter(new File(csvFileName));
         JsonParser parser = new JsonParser();
         JsonReader reader = new JsonReader(new FileReader(brcaJsonPath));
         reader.setLenient(true);
 
-        int index = 0;
+        while (reader.peek() != JsonToken.END_DOCUMENT) {
+            JsonObject object = parser.parse(reader).getAsJsonObject();
 
-        try {
-            while (reader.hasNext()) {
-                LOGGER.info(index);
-                JsonObject object = parser.parse(reader).getAsJsonObject();
+            StringBuilder stringToCSVAll = new StringBuilder();
+            StringBuilder headerCSV = new StringBuilder();
 
-                StringBuilder stringToCSVAll = new StringBuilder();
-                StringBuilder headerCSV = new StringBuilder();
+            StringBuilder StringToCSVBRCA = readObjectBRCA(object, headerCSV);
+            StringBuilder StringToCSVGenes = readObjectGenes(object, headerCSV);
+            StringBuilder StringToCSVTags = readObjectTags(object, headerCSV);
+            StringBuilder StringToCSVDevTags = readObjectDevTags(object, headerCSV);
+            StringBuilder StringToCSVSource = readObjectSource(object, headerCSV);
+            StringBuilder StringToCSVGeneIdentifiers = readObjectGeneIdentifiers(object, headerCSV);
+            StringBuilder StringToCSVAssociation = readObjectAssociation(object, headerCSV);
+            StringBuilder StringToCSVFeaturesNames = readObjectFeaturesNames(object, headerCSV);
+            StringBuilder StringToCSVFeatures = readObjectFeatures(object, headerCSV);
 
-                StringBuilder StringToCSVBRCA = readObjectBRCA(object, headerCSV);
-                StringBuilder StringToCSVGenes = readObjectGenes(object, headerCSV);
-                StringBuilder StringToCSVTags = readObjectTags(object, headerCSV);
-                StringBuilder StringToCSVDevTags = readObjectDevTags(object, headerCSV);
-                StringBuilder StringToCSVSource = readObjectSource(object, headerCSV);
-                StringBuilder StringToCSVGeneIdentifiers = readObjectGeneIdentifiers(object, headerCSV);
-                StringBuilder StringToCSVAssociation = readObjectAssociation(object, headerCSV);
-                StringBuilder StringToCSVFeaturesNames = readObjectFeaturesNames(object, headerCSV);
-                StringBuilder StringToCSVFeatures = readObjectFeatures(object, headerCSV);
+            stringToCSVAll.append(StringToCSVBRCA)
+                    .append(StringToCSVGenes)
+                    .append(StringToCSVTags)
+                    .append(StringToCSVDevTags)
+                    .append(StringToCSVSource)
+                    .append(StringToCSVGeneIdentifiers)
+                    .append(StringToCSVAssociation)
+                    .append(StringToCSVFeaturesNames)
+                    .append(StringToCSVFeatures);
 
-                stringToCSVAll.append(StringToCSVBRCA)
-                        .append(StringToCSVGenes)
-                        .append(StringToCSVTags)
-                        .append(StringToCSVDevTags)
-                        .append(StringToCSVSource)
-                        .append(StringToCSVGeneIdentifiers)
-                        .append(StringToCSVAssociation)
-                        .append(StringToCSVFeaturesNames)
-                        .append(StringToCSVFeatures)
-                ;
-
-                index++;
-                writer.append(headerCSV);
-                writer.append("\n");
-                writer.append(stringToCSVAll);
-                writer.append("\n");
-            }
-            reader.endObject();
-            reader.close();
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
+            writer.append(headerCSV);
+            writer.append("\n");
+            writer.append(stringToCSVAll);
+            writer.append("\n");
         }
+        reader.close();
 
         writer.close();
     }
