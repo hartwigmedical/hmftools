@@ -742,12 +742,13 @@ public class SvCluster
         double tightestMinPloidy = 0;
         double tightestMaxPloidy = -1;
         int countHalfToOnePloidy = 0;
+        double minCopyNumberChange = -1;
 
         for (final SvVarData var : mSVs)
         {
-            double calcCopyNumber = var.getRoundedCNChange();
+            double calcCNChange = var.getRoundedCNChange();
 
-            if(calcCopyNumber <= 0)
+            if(calcCNChange <= 0)
             {
                 LOGGER.debug("cluster({}) has SV({}) with zero effective CN change: {}",
                         mId, var.id(), String.format("start=%.2f end=%.2f p=%.2f pMax=%.2f pMin=%.2f",
@@ -755,17 +756,22 @@ public class SvCluster
                                 var.getSvData().ploidy(), var.ploidyMax(), var.ploidyMin()));
             }
 
-            if (mMinCNChange < 0 || calcCopyNumber < mMinCNChange)
-                mMinCNChange = calcCopyNumber;
+            if (mMinCNChange < 0 || calcCNChange < mMinCNChange)
+            {
+                mMinCNChange = calcCNChange;
+                minCopyNumberChange = calcCNChange;
+            }
 
-            mMaxCNChange = max(mMaxCNChange, calcCopyNumber);
+            mMaxCNChange = max(mMaxCNChange, calcCNChange);
 
             if(var.hasCalculatedPloidy())
             {
                 ++svCalcPloidyCount;
 
                 int minPloidyInt = (int)ceil(var.ploidyMin());
+                int maxPloidyUpper = (int)ceil(var.ploidyMax());
                 int maxPloidyInt = (int)floor(var.ploidyMax());
+                // int maxPloidyInt = maxPloidyUpper - var.ploidyMax() < 0.1 ? maxPloidyUpper : maxPloidyLower;
                 maxPloidyInt = max(minPloidyInt, maxPloidyInt);
 
                 if(tightestMaxPloidy == -1 || var.ploidyMax() < tightestMaxPloidy)
@@ -806,7 +812,9 @@ public class SvCluster
                 }
 
                 if (ploidy > 0 && (mMinCNChange < 0 || ploidy < mMinCNChange))
-                    mMinCNChange = ploidy;
+                     mMinCNChange = ploidy;
+
+                mMinCNChange = max(mMinCNChange, minCopyNumberChange);
 
                 mMaxCNChange = max(mMaxCNChange, ploidy);
             }

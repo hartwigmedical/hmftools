@@ -259,7 +259,7 @@ public class ChainFinder
         if(assembledLinksOnly)
             return;
 
-        isSpecificCluster(mCluster);
+        // isSpecificCluster(mCluster);
 
         setSvReplicationCounts();
 

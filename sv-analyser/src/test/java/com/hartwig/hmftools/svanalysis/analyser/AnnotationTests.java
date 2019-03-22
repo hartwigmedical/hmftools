@@ -115,7 +115,6 @@ public class AnnotationTests
         // tester.setDefaultPloidyCalcData();
 
         tester.preClusteringInit();
-        tester.addCopyNumberData();
 
         tester.Analyser.clusterAndAnalyse();
 
