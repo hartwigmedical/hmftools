@@ -211,6 +211,7 @@ public class MergeRuleTests
 
         SvVarData var9 = createDup("9", "2", 30000, 60000);
 
+        // does run unto the DUP in the LOH but isn't clustered since is simple
         SvVarData var10 = createDel("10", "2", 40000, 50000);
 
         tester.AllVariants.add(var1);
@@ -252,8 +253,8 @@ public class MergeRuleTests
 
         tester.Analyser.clusterAndAnalyse();
 
-        // now check final chain-finding across all sub-clusters
-        assertEquals(1, tester.Analyser.getClusters().size());
+        assertEquals(2, tester.Analyser.getClusters().size());
+        assertTrue(var10.getCluster().getSvCount() == 1);
 
         assertTrue(var2.getClusterReason().contains(CLUSTER_REASON_LOH_CHAIN));
         assertTrue(var2.getClusterReason().contains(var4.id()));

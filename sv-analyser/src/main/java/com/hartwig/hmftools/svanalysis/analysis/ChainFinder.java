@@ -281,7 +281,7 @@ public class ChainFinder
             if(!possiblePairs.isEmpty())
             {
                 isRestrictedSet = true;
-                mLinkReason = "SingleOption";
+                mLinkReason = "ONLY";
             }
             else
             {
@@ -291,7 +291,7 @@ public class ChainFinder
 
                     if(!possiblePairs.isEmpty())
                     {
-                        mLinkReason = "Duplication";
+                        mLinkReason = "FB_DUP";
                     }
                     else
                     {
@@ -299,7 +299,7 @@ public class ChainFinder
 
                         if(!possiblePairs.isEmpty())
                         {
-                            mLinkReason = "PloidyMatch";
+                            mLinkReason = "PL_MAT";
                         }
                     }
                 }
@@ -310,7 +310,7 @@ public class ChainFinder
 
                     if(!possiblePairs.isEmpty())
                     {
-                        mLinkReason = "HighPloidy";
+                        mLinkReason = "PL_MAX";
                     }
                 }
 
@@ -322,7 +322,7 @@ public class ChainFinder
 
                     if(!possiblePairs.isEmpty())
                     {
-                        mLinkReason = "Fewest";
+                        mLinkReason = "FEW";
                     }
                 }
             }
@@ -1112,7 +1112,7 @@ public class ChainFinder
         if(mAssemblyLinkedPairs.isEmpty())
             return;
 
-        mLinkReason = "Assembly";
+        mLinkReason = "ASMB";
 
         for(SvLinkedPair pair : mAssemblyLinkedPairs)
         {

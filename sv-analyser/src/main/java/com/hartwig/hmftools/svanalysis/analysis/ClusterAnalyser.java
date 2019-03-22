@@ -607,7 +607,10 @@ public class ClusterAnalyser {
     private boolean mergeLOHResolvingClusters()
     {
         // merge clusters if one resolves another's LOH event with a DUP on one side
-        List<SvCluster> clustersWithLohEvents = mClusters.stream().filter(x -> !x.getLohEvents().isEmpty()).collect(Collectors.toList());
+        List<SvCluster> clustersWithLohEvents = mClusters.stream()
+                .filter(x -> !x.getLohEvents().isEmpty())
+                .filter(x -> !x.hasLinkingLineElements())
+                .collect(Collectors.toList());
 
         List<SvCluster> mergedClusters = Lists.newArrayList();
 
@@ -646,6 +649,8 @@ public class ClusterAnalyser {
                     SvBreakend otherBreakend = lohBreakend.getOtherBreakend();
                     int index = otherBreakend.getChrPosIndex();
                     boolean traverseUp = otherBreakend.orientation() == -1;
+                    SvCluster resolvingCluster = null;
+                    SvBreakend resolvingBreakend = null;
 
                     while(true)
                     {
@@ -657,25 +662,40 @@ public class ClusterAnalyser {
                         SvBreakend nextBreakend = fullBreakendList.get(index);
 
                         if(nextBreakend == lohBreakend)
+                        {
+                            // the LOH was reached without finding an offsetting SV
+                            if(resolvingCluster == null)
+                                break;
+
+                            LOGGER.debug("cluster({}) SV({}) resolved prior to LOH by other cluster({}) breakend({})",
+                                    lohCluster.id(), lohBreakend.getSV().posId(), resolvingCluster.id(), resolvingBreakend.toString());
+
+                            resolvingCluster.addClusterReason(CLUSTER_REASON_LOH_CHAIN, lohBreakend.getSV().id());
+                            lohCluster.addClusterReason(CLUSTER_REASON_LOH_CHAIN, resolvingBreakend.getSV().id());
+
+                            lohCluster.mergeOtherCluster(resolvingCluster);
+
+                            mergedClusters.add(resolvingCluster);
                             break;
+                        }
 
                         if(nextBreakend.orientation() == otherBreakend.orientation())
                             continue;
 
                         SvCluster otherCluster = nextBreakend.getSV().getCluster();
-                        if(otherCluster == lohCluster || mergedClusters.contains(otherCluster))
+
+                        if(otherCluster == lohCluster)
+                            break; // own cluster resolves this LOH breakend
+
+                        if(mergedClusters.contains(otherCluster) || otherCluster.isResolved())
                             continue;
 
-                        LOGGER.debug("cluster({}) SV({}) resolved prior to LOH by other cluster({}) breakend({})",
-                                lohCluster.id(), lohBreakend.getSV().posId(), otherCluster.id(), nextBreakend.toString());
+                        if(resolvingCluster != null)
+                            break; // cannot apply this rule if more than 1 cluster meet the conditions
 
-                        otherCluster.addClusterReason(CLUSTER_REASON_LOH_CHAIN, lohBreakend.getSV().id());
-                        lohCluster.addClusterReason(CLUSTER_REASON_LOH_CHAIN, nextBreakend.getSV().id());
-
-                        lohCluster.mergeOtherCluster(otherCluster);
-
-                        mergedClusters.add(otherCluster);
-                        break;
+                        // found an option, but continue on to see if any other clusters also satisfy the same conditions
+                        resolvingBreakend = nextBreakend;
+                        resolvingCluster = otherCluster;
                     }
                 }
 

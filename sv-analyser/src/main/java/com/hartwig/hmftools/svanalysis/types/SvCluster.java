@@ -476,6 +476,12 @@ public class SvCluster
         {
             other.getChains().forEach(x -> addChain(x, true));
         }
+
+        if(other.hasLinkingLineElements())
+        {
+            // retain status as a LINE cluster
+            markAsLine();
+        }
     }
 
     private void addVariantLists(final SvCluster other)

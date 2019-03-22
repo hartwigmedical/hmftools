@@ -215,8 +215,6 @@ public class SvLinkedPair {
             return String.format("%s %s:%d SGL-on-null",
                     var.id(), var.chromosome(true), var.position(true));
         }
-
-
     }
 
     public static final SvLinkedPair findLinkedPair(final List<SvLinkedPair> linkedPairs, final SvVarData var, boolean useStart)

@@ -166,7 +166,7 @@ public class VisualiserWriter
                 outputFileName += "SVA_VIS_SEGMENTS.csv";
 
                 mSegmentsFileWriter = createBufferedWriter(outputFileName, false);
-                mSegmentsFileWriter.write("SampleId,ClusterId,ChainId,Chr,PosStart,PosEnd,TraverseCount");
+                mSegmentsFileWriter.write("SampleId,ClusterId,ChainId,Chr,PosStart,PosEnd,TraverseCount,Reason");
                 mSegmentsFileWriter.newLine();
             }
 
@@ -232,8 +232,8 @@ public class VisualiserWriter
                         final SvBreakend beStart = pair.getBreakend(true);
                         final SvBreakend beEnd= pair.getBreakend(false);
 
-                        writer.write(String.format(",%s,%d,%d,%d",
-                                beStart.chromosome(), beStart.position(), beEnd.position(), pairRepeatCount));
+                        writer.write(String.format(",%s,%d,%d,%d,%s",
+                                beStart.chromosome(), beStart.position(), beEnd.position(), pairRepeatCount, pair.getLinkReason()));
 
                         writer.newLine();
                     }
