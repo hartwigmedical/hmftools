@@ -1,20 +1,20 @@
 package com.hartwig.hmftools.common.vicc;
 
+import static org.junit.Assert.*;
+
 import java.io.IOException;
 
-import com.google.common.io.Resources;
-
-import org.junit.Ignore;
 import org.junit.Test;
 
 public class ViccFactoryTest {
-
-    private static final String BRCA_FILE_PATH = Resources.getResource("vicc_knowledgebase").getPath();
-
-    @Test
-    @Ignore
-    public void convertBRCA() throws IOException {
-        ViccFactory.extractBRCAFile(BRCA_FILE_PATH + "/brca.json");
-    }
-
+    
+//    @Test
+//    public void convertBRCA() throws IOException {
+//        ViccFactory.extractBRCAFile("/Users/liekeschoenmaker/hmf/tmp/brca.json");
+//    }
+//
+//    @Test
+//    public void convertAll() throws IOException {
+//        ViccFactory.extractBRCAFile("/Users/liekeschoenmaker/hmf/tmp/all.json");
+//    }
 }
