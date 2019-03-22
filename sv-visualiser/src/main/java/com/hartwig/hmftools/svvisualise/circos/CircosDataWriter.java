@@ -90,7 +90,7 @@ public class CircosDataWriter {
         Files.write(new File(geneNamePath).toPath(), geneName(exons));
 
         final String textPath = filePrefix + ".text.circos";
-        Files.write(new File(textPath).toPath(), createPositionText(debug, unadjustedLinks, links, unadjustedSegments, segments));
+        Files.write(new File(textPath).toPath(), createPositionText(debug, unadjustedLinks, links, segments));
 
         final String histogramPath = filePrefix + ".histogram.circos";
         Files.write(new File(histogramPath).toPath(), createHistogramTrack(contigLengths, segments));
@@ -527,8 +527,7 @@ public class CircosDataWriter {
     }
 
     @NotNull
-    private List<String> createPositionText(boolean debug, @NotNull final List<Link> originalLinks, @NotNull final List<Link> scaledLinks,
-            @NotNull final List<Segment> originalSegments, @NotNull final List<Segment> scaledSegments) {
+    private List<String> createPositionText(boolean debug, @NotNull final List<Link> originalLinks, @NotNull final List<Link> scaledLinks, @NotNull final List<Segment> scaledSegments) {
 
         final Set<String> result = Sets.newHashSet();
 
@@ -558,82 +557,35 @@ public class CircosDataWriter {
             }
         }
 
-        for (int i = 0; i < originalSegments.size(); i++) {
-            final Segment original = originalSegments.get(i);
-            final Segment scaled = scaledSegments.get(i);
-
-            if (original.startTerminal() != SegmentTerminal.NONE) {
-                final String startText = terminalString(original.startTerminal(), original.chromosome(), original.start());
-                final String start = new StringJoiner(DELIMITER).add(circosContig(original.chromosome()))
-                        .add(String.valueOf(scaled.start()))
-                        .add(String.valueOf(scaled.start()))
+        for (final Segment segment : scaledSegments) {
+            if (segment.startTerminal() != SegmentTerminal.NONE) {
+                final String startText = segment.startTerminal() == SegmentTerminal.CENTROMERE ? "Centromere" : "Telomere";
+                final String start = new StringJoiner(DELIMITER).add(circosContig(segment.chromosome()))
+                        .add(String.valueOf(segment.start()))
+                        .add(String.valueOf(segment.start()))
                         .add(startText)
                         .toString();
                 result.add(start);
             }
 
-            if (original.endTerminal() != SegmentTerminal.NONE) {
-                final String endText = terminalString(original.endTerminal(), original.chromosome(), original.end());
-                final String start = new StringJoiner(DELIMITER).add(circosContig(original.chromosome()))
-                        .add(String.valueOf(scaled.end()))
-                        .add(String.valueOf(scaled.end()))
+            if (segment.endTerminal() != SegmentTerminal.NONE) {
+                final String endText = segment.endTerminal() == SegmentTerminal.CENTROMERE ? "Centromere" : "Telomere";
+                final String start = new StringJoiner(DELIMITER).add(circosContig(segment.chromosome()))
+                        .add(String.valueOf(segment.end()))
+                        .add(String.valueOf(segment.end()))
                         .add(endText)
                         .toString();
                 result.add(start);
             }
+
         }
 
         return result.stream().sorted().distinct().collect(toList());
     }
 
     @NotNull
-    private Set<String> centomeresToReport(@NotNull final List<Segment> segments) {
-        final Set<String> result = Sets.newHashSet();
-        final Set<String> chromsomesToExamine = Sets.newHashSet();
-
-        for (Segment segment : segments) {
-            if (segment.startTerminal() == SegmentTerminal.CENTROMERE) {
-                result.add(segment.chromosome());
-            }
-
-            if (segment.endTerminal() == SegmentTerminal.CENTROMERE) {
-                result.add(segment.chromosome());
-            }
-        }
-
-        final List<GenomeRegion> segmentSpan = Span.spanRegions(segments);
-        for (GenomeRegion genomeRegion : segmentSpan) {
-            long centromere = REF_GENOME.centromeres().get(HumanChromosome.fromString(genomeRegion.chromosome()));
-
-        }
-
-
-        return result;
-    }
-
-    @NotNull
     private static String circosContig(@NotNull final String chromosome) {
         return "hs" + HumanChromosome.fromString(chromosome);
-    }
-
-    @NotNull
-    private static String terminalString(@NotNull final SegmentTerminal terminal, @NotNull final String chromosome, long originalPosition) {
-        assert (terminal != SegmentTerminal.NONE);
-
-        if (terminal == SegmentTerminal.CENTROMERE) {
-            return "Centromere";
-        }
-
-        if (terminal == SegmentTerminal.TELOMERE && originalPosition == 1) {
-            return "1";
-        }
-
-        long length = REF_GENOME.lengths().get(HumanChromosome.fromString(chromosome));
-        if (terminal == SegmentTerminal.TELOMERE && originalPosition == length) {
-            return POSITION_FORMAT.format(originalPosition);
-        }
-
-        return "Telomere";
     }
 
     @NotNull
