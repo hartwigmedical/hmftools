@@ -587,6 +587,31 @@ public class CircosDataWriter {
     }
 
     @NotNull
+    private Set<String> centomeresToReport(@NotNull final List<Segment> segments) {
+        final Set<String> result = Sets.newHashSet();
+        final Set<String> chromsomesToExamine = Sets.newHashSet();
+
+        for (Segment segment : segments) {
+            if (segment.startTerminal() == SegmentTerminal.CENTROMERE) {
+                result.add(segment.chromosome());
+            }
+
+            if (segment.endTerminal() == SegmentTerminal.CENTROMERE) {
+                result.add(segment.chromosome());
+            }
+        }
+
+        final List<GenomeRegion> segmentSpan = Span.spanRegions(segments);
+        for (GenomeRegion genomeRegion : segmentSpan) {
+            long centromere = REF_GENOME.centromeres().get(HumanChromosome.fromString(genomeRegion.chromosome()));
+
+        }
+
+
+        return result;
+    }
+
+    @NotNull
     private static String circosContig(@NotNull final String chromosome) {
         return "hs" + HumanChromosome.fromString(chromosome);
     }
