@@ -54,6 +54,7 @@ public class Segments {
     @NotNull
     public static List<Segment> extendTerminals(long terminalDistance, @NotNull final List<Segment> segments, @NotNull final List<Link> links) {
         final Map<Chromosome, Long> centromeres = REF_GENOME.centromeres();
+        final Map<Chromosome, Long> lengths = REF_GENOME.lengths();
 
         final List<GenomePosition> allPositions = Lists.newArrayList();
         allPositions.addAll(Span.allPositions(segments));
@@ -65,12 +66,13 @@ public class Segments {
         final List<Segment> result = Lists.newArrayList();
         for (Segment segment : segments) {
             final long centromere = centromeres.get(HumanChromosome.fromString(segment.chromosome()));
+            final long length = lengths.get(HumanChromosome.fromString(segment.chromosome()));
 
             if (segment.startTerminal() != SegmentTerminal.NONE) {
                 final long minPositionOnChromosome = minPositionPerChromosome.get(segment.chromosome());
                 final long startPosition = segment.startTerminal() == SegmentTerminal.CENTROMERE && minPositionOnChromosome < centromere
                         ? centromere
-                        : minPositionOnChromosome - terminalDistance;
+                        : Math.max(1, minPositionOnChromosome - terminalDistance);
 
                 segment = ImmutableSegment.builder().from(segment).start(startPosition).build();
             }
@@ -79,7 +81,7 @@ public class Segments {
                 final long maxPositionOnChromosome = maxPositionPerChromosome.get(segment.chromosome());
                 final long endPosition = segment.endTerminal() == SegmentTerminal.CENTROMERE && maxPositionOnChromosome > centromere
                         ? centromere
-                        : maxPositionOnChromosome + terminalDistance;
+                        : Math.min(length, maxPositionOnChromosome + terminalDistance);
 
                 segment = ImmutableSegment.builder().from(segment).end(endPosition).build();
             }
