@@ -267,8 +267,11 @@ public abstract class ViccFactory {
             StringBuilder stringToCSVAll = new StringBuilder();
             StringBuilder headerCSV = new StringBuilder();
             StringBuilder StringToCSVSource = readObjectSource(object, headerCSV);
+            StringBuilder StringToCSVGenes = readObjectGenes(object, headerCSV);
 
             stringToCSVAll.append(StringToCSVSource);
+            stringToCSVAll.append(StringToCSVGenes);
+
 
             writer.append(headerCSV);
             writer.append("/n");

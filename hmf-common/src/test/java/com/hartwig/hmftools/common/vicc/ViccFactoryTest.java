@@ -10,11 +10,11 @@ public class ViccFactoryTest {
     
 //    @Test
 //    public void convertBRCA() throws IOException {
-//        ViccFactory.extractBRCAFile("/Users/liekeschoenmaker/hmf/tmp/brca.json");
+//        ViccFactory.extractBRCAFile("hmf/tmp/brca.json");
 //    }
 //
 //    @Test
 //    public void convertAll() throws IOException {
-//        ViccFactory.extractBRCAFile("/Users/liekeschoenmaker/hmf/tmp/all.json");
+//        ViccFactory.extractBRCAFile("hmf/tmp/all.json");
 //    }
 }
