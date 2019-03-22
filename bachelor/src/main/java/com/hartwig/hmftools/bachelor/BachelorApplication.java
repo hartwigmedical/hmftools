@@ -48,6 +48,7 @@ public class BachelorApplication {
     private static final String OUTPUT_DIR = "output_dir";
     private static final String VALIDATE = "validate";
     private static final String SAMPLE = "sample";
+    private static final String CREATE_FILTER_FILE = "filter_file";
     private static final String LOG_DEBUG = "log_debug";
     private static final String BATCH_MAX_DIR = "max_batch_dir"; // only for testing
 
@@ -95,6 +96,7 @@ public class BachelorApplication {
         options.addOption(BATCH_DIRECTORY, true, "runs directory to batch process");
         options.addOption(BATCH_MAX_DIR, true, "Max batch directories to batch process");
         options.addOption(VALIDATE, false, "only validate the configs");
+        options.addOption(CREATE_FILTER_FILE, true, "Optional: create black and white list filter files");
         options.addOption(SAMPLE_LIST_FILE, true, "Optional: limiting list of sample IDs to process");
         options.addOption(SAMPLE, true, "sample id");
         options.addOption(LOG_DEBUG, false, "Sets log level to Debug, off by default");
@@ -145,6 +147,22 @@ public class BachelorApplication {
 
         mOutputDir = cmd.getOptionValue(OUTPUT_DIR);
 
+        if(cmd.hasOption(CREATE_FILTER_FILE))
+        {
+            LOGGER.info("building filter files");
+            final String filterInputFile = cmd.getOptionValue(CREATE_FILTER_FILE);
+            FilterFileBuilder filterFileBuilder = new FilterFileBuilder();
+
+            final Program program = mProgramMap.values().iterator().next();
+
+            if(!filterFileBuilder.initialise(filterInputFile, mOutputDir, program))
+                return false;
+
+            filterFileBuilder.run();
+            LOGGER.info("run complete");
+            return true;
+        }
+
         if(cmd.hasOption(BATCH_DIRECTORY))
         {
             mBatchDirectory = cmd.getOptionValue(BATCH_DIRECTORY);
@@ -181,8 +199,6 @@ public class BachelorApplication {
 
         if(!mProgram.loadConfig(mProgramMap))
             return false;
-
-        // final BachelorEligibility eligibility = BachelorEligibility.fromMap(mProgramMap);
 
         if (mIsBatchRun)
         {
