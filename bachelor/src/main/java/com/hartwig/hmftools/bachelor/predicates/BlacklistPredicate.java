@@ -23,7 +23,6 @@ public class BlacklistPredicate implements Predicate<VariantModel> {
 
     @NotNull
     private final Collection<String> transcripts;
-    @NotNull
     private final List<ProgramBlacklist.Exclusion> blacklist;
 
     private static final Logger LOGGER = LogManager.getLogger(BlacklistPredicate.class);
@@ -34,12 +33,17 @@ public class BlacklistPredicate implements Predicate<VariantModel> {
     }
 
     @Override
-    public boolean test(final VariantModel variantModel) {
-        for (final SnpEffAnnotation annotation : variantModel.sampleAnnotations()) {
+    public boolean test(final VariantModel variantModel)
+    {
+        for (final SnpEffAnnotation annotation : variantModel.sampleAnnotations())
+        {
             final boolean transcriptMatches = transcripts.contains(annotation.transcript());
-            if (transcriptMatches) {
-                for (ProgramBlacklist.Exclusion exclusion : blacklist) {
-                    if (test(exclusion, variantModel.context(), annotation)) {
+            if (transcriptMatches)
+            {
+                for (ProgramBlacklist.Exclusion exclusion : blacklist)
+                {
+                    if (matchesBlacklistExclusion(exclusion, variantModel.context(), annotation))
+                    {
                         return true;
                     }
                 }
@@ -48,12 +52,12 @@ public class BlacklistPredicate implements Predicate<VariantModel> {
         return false;
     }
 
-    private static boolean test(final ProgramBlacklist.Exclusion blacklist, final VariantContext context,
+    public static boolean matchesBlacklistExclusion(final ProgramBlacklist.Exclusion blacklist, final VariantContext context,
             final SnpEffAnnotation annotation) {
 
         if (blacklist.getHGVSP() != null && !annotation.hgvsProtein().isEmpty()
-        && blacklist.getHGVSP().equals(annotation.hgvsProtein().replaceFirst("^p\\.", ""))) {
-
+        && blacklist.getHGVSP().equals(annotation.hgvsProtein().replaceFirst("^p\\.", "")))
+        {
             LOGGER.debug("variant({}) found in blacklist HGVSP({})", context.getID(), blacklist.getHGVSP());
             return true;
         }
@@ -82,16 +86,41 @@ public class BlacklistPredicate implements Predicate<VariantModel> {
         return false;
     }
 
-    private static boolean atPosition(final VariantContext v, final String position) {
-        // TODO: robust enough check?
+    private static boolean atPosition(final VariantContext v, final String position)
+    {
         return position.equals(v.getContig() + ":" + v.getStart());
     }
 
-    @NotNull
-    private static List<Integer> proteinPosition(@NotNull final SnpEffAnnotation annotation) {
+    public static List<Integer> proteinPosition(@NotNull final SnpEffAnnotation annotation)
+    {
         return Arrays.stream(annotation.aaPosAndLength().split("/"))
                 .filter(s -> !s.isEmpty())
                 .map(Integer::parseInt)
                 .collect(Collectors.toList());
+    }
+
+    public static String asString(final ProgramBlacklist.Exclusion blacklist)
+    {
+        if (blacklist.getHGVSP() != null)
+        {
+            return String.format("gene(%s) HGVS protein(%s)", blacklist.getGene().getName(), blacklist.getHGVSP().toString());
+        }
+
+        if (blacklist.getHGVSC() != null)
+        {
+            return String.format("gene(%s) HGVS coding(%s)", blacklist.getGene().getName(), blacklist.getHGVSC().toString());
+        }
+
+        if(blacklist.getMinCodon() != null)
+        {
+            return String.format("gene(%s) minCodon(%d)", blacklist.getGene().getName(), blacklist.getMinCodon().intValue());
+        }
+
+        if(blacklist.getPosition() != null)
+        {
+            return String.format("gene(%s) position(%s)", blacklist.getGene().getName(), blacklist.getPosition().toString());
+        }
+
+        return "";
     }
 }

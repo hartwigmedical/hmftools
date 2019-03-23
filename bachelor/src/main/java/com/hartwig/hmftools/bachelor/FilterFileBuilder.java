@@ -1,6 +1,11 @@
 package com.hartwig.hmftools.bachelor;
 
 import static com.hartwig.hmftools.bachelor.EligibilityReport.MatchType.GENE_TRANSCRIPT;
+import static com.hartwig.hmftools.bachelor.predicates.BlacklistPredicate.asString;
+import static com.hartwig.hmftools.bachelor.predicates.BlacklistPredicate.matchesBlacklistExclusion;
+import static com.hartwig.hmftools.bachelor.predicates.BlacklistPredicate.proteinPosition;
+import static com.hartwig.hmftools.bachelor.predicates.WhitelistPredicate.matchesWhitelistDbSNPId;
+import static com.hartwig.hmftools.bachelor.predicates.WhitelistPredicate.matchesWhitelistGeneProtein;
 import static com.hartwig.hmftools.common.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.variant.VariantConsequence.FRAMESHIFT_VARIANT;
@@ -18,22 +23,21 @@ import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Multimap;
-import com.google.common.collect.Sets;
+import com.hartwig.hmftools.bachelor.predicates.WhitelistPredicate;
 import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotation;
 import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotationFactory;
 
 import nl.hartwigmedicalfoundation.bachelor.GeneIdentifier;
 import nl.hartwigmedicalfoundation.bachelor.Program;
+import nl.hartwigmedicalfoundation.bachelor.ProgramBlacklist;
 import nl.hartwigmedicalfoundation.bachelor.ProgramPanel;
+import nl.hartwigmedicalfoundation.bachelor.ProgramWhitelist;
 import nl.hartwigmedicalfoundation.bachelor.SnpEffect;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import htsjdk.samtools.util.CloseableIterator;
 import htsjdk.tribble.TribbleException;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.vcf.VCFFileReader;
@@ -44,6 +48,11 @@ public class FilterFileBuilder
     private String mInputFilterFile;
     private List<String> mRequiredEffects;
     private List<String> mPanelTranscripts;
+    private ProgramBlacklist mConfigBlacklist;
+    private ProgramWhitelist mConfigWhitelist;
+    private boolean[] mMatchedBlacklistExclusions;
+    private boolean[] mMatchedWhitelistExclusions;
+
     private BufferedWriter mFilterWriter;
 
     private static final Logger LOGGER = LogManager.getLogger(FilterFileBuilder.class);
@@ -55,6 +64,8 @@ public class FilterFileBuilder
         mRequiredEffects = Lists.newArrayList();
         mPanelTranscripts = Lists.newArrayList();
         mFilterWriter = null;
+        mMatchedBlacklistExclusions = null;
+        mMatchedWhitelistExclusions = null;
     }
 
     public boolean initialise(final String filterFile, final String outputDir, final Program program)
@@ -78,6 +89,18 @@ public class FilterFileBuilder
         // take up a collection of the effects to search for
         mRequiredEffects = programConfig.getSnpEffect().stream().map(SnpEffect::value).collect(Collectors.toList());
         mPanelTranscripts = geneslist.stream().map(GeneIdentifier::getEnsembl).collect(Collectors.toList());
+        mConfigBlacklist = program.getBlacklist();
+        mConfigWhitelist = program.getWhitelist();
+
+        if(!mConfigBlacklist.getExclusion().isEmpty())
+        {
+            mMatchedBlacklistExclusions = new boolean[mConfigBlacklist.getExclusion().size()];
+        }
+
+        if(!mConfigWhitelist.getVariantOrDbSNP().isEmpty())
+        {
+            mMatchedWhitelistExclusions = new boolean[mConfigWhitelist.getVariantOrDbSNP().size()];
+        }
 
         return true;
     }
@@ -93,6 +116,30 @@ public class FilterFileBuilder
             for (final VariantContext variant : vcfReader)
             {
                 processVariant(variant);
+            }
+
+            // log any unmap'tched blacklist or whitelist items
+            if(mMatchedBlacklistExclusions != null)
+            {
+                for(int i = 0; i < mMatchedBlacklistExclusions.length; ++i)
+                {
+                    final ProgramBlacklist.Exclusion exclusion = mConfigBlacklist.getExclusion().get(i);
+
+                    LOGGER.info("blacklist exclusion {}: {}",
+                            mMatchedBlacklistExclusions[i] ? "matched" : "not matched", asString(exclusion));
+                }
+            }
+
+            if(mMatchedWhitelistExclusions != null)
+            {
+                for(int i = 0; i < mMatchedWhitelistExclusions.length; ++i)
+                {
+                    final Object exclusion = mConfigWhitelist.getVariantOrDbSNP().get(i);
+
+                    LOGGER.info("whitelist exclusion {}: {}",
+                            mMatchedWhitelistExclusions[i] ? "matched" : "not matched",
+                            WhitelistPredicate.asString(exclusion));
+                }
             }
         }
         catch (final TribbleException e)
@@ -144,6 +191,8 @@ public class FilterFileBuilder
             if(!matchesRequiredEffect)
                 continue;
 
+            String gene = snpEff.gene();
+
             // next check whether the significance makes it irrelevant
             String effects = snpEff.effects();
             List<String> effectsList = Arrays.stream(effects.split("&")).collect(Collectors.toList());
@@ -153,6 +202,8 @@ public class FilterFileBuilder
 
             if(hasCodingEffect)
             {
+                checkExistingBlacklistConditions(gene, variant, snpEff);
+
                 if(clinvarSignificance.equals(CLINVAR_BENIGN) || clinvarSignificance.equals(CLINVAR_LIKELY_BENIGN))
                 {
                     continue;
@@ -160,39 +211,15 @@ public class FilterFileBuilder
             }
             else
             {
+                checkExistingWhitelistConditions(gene, variant, snpEff);
+
                 if(!clinvarSignificance.equals(CLINVAR_PATHOGENIC) && !clinvarSignificance.equals(CLINVAR_LIKELY_PATHOGENIC))
                 {
                     continue;
                 }
             }
 
-            String gene = snpEff.gene();
-            String transcriptId = snpEff.transcript();
-
-            String chromosome = variant.getContig();
-            long position = variant.getStart();
-            String ref = variant.getReference().getBaseString();
-            String alt = variant.getAlleles().get(1).getBaseString();
-
-            ref = ref.replaceAll("\\*", "");
-            alt = alt.replaceAll("\\*", "");
-
-            String clinvarDisease = variant.getCommonInfo().getAttributeAsString(CLINVAR_DISEASE_NAME, "");
-            String clinvarEffects = variant.getCommonInfo().getAttributeAsString(CLINVAR_MC, "");
-
-            if(LOGGER.isDebugEnabled())
-            {
-                // now extract other required Clinvar info
-                LOGGER.debug("var({}:{}) ref({}) alt({}) effect({}) gene({} trans={}) clinvar({}, {}, {})",
-                        variant.getContig(), variant.getStart(),
-                        variant.getReference().getBaseString(), variant.getAlleles().get(1).getBaseString(),
-                        snpEff.effects(), snpEff.transcript(),
-                        clinvarSignificance,  clinvarDisease, clinvarEffects);
-            }
-
-            writeFilterRecord(
-                    chromosome, position, ref, alt, gene, transcriptId,
-                    effects, clinvarDisease, clinvarSignificance, clinvarEffects);
+            writeFilterRecord(variant, snpEff, effects, clinvarSignificance);
         }
     }
 
@@ -210,23 +237,110 @@ public class FilterFileBuilder
         return false;
     }
 
-    private void writeFilterRecord(final String chromosome, long position, final String ref, final String alt, final String gene,
-            final String transcriptId, final String effect, final String clinvarDisease, final String clinvarSignificance,
-            final String clinvarEffects)
+    private boolean checkExistingBlacklistConditions(final String gene, final VariantContext variant, final SnpEffAnnotation snpAnnotation)
     {
+        // check whether any of the configured blacklist conditions are covered by the clinvar variants
+        /*
+         <Exclusion><Gene name="BRCA2"/>
+           <MinCodon>3326</MinCodon> OR <HGVS.c>1094_1095insAATT</HGVS.c> OR <Position>11:108121410</Position>
+         </Exclusion>
+        */
+
+        for(int index = 0; index < mConfigBlacklist.getExclusion().size(); ++index)
+        {
+            final ProgramBlacklist.Exclusion exclusion = mConfigBlacklist.getExclusion().get(index);
+
+            if(exclusion.getGene().getName().equals(gene))
+            {
+                if(matchesBlacklistExclusion(exclusion, variant, snpAnnotation))
+                {
+                    /*
+                    List<Integer> proteinPositions = proteinPosition(snpAnnotation);
+                    String hgvsp = snpAnnotation.hgvsProtein();
+                    String hgvsc = snpAnnotation.hgvsCoding();
+                    */
+
+                    LOGGER.debug("clinar variant for gene({}) matched with blacklist exclusion", gene);
+                    mMatchedBlacklistExclusions[index] = true;
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    private boolean checkExistingWhitelistConditions(final String gene, final VariantContext variant, final SnpEffAnnotation snpAnnotation)
+    {
+        for(int index = 0; index < mConfigWhitelist.getVariantOrDbSNP().size(); ++index)
+        {
+            final Object variantOrDbSNP = mConfigWhitelist.getVariantOrDbSNP().get(index);
+
+            if (variantOrDbSNP instanceof ProgramWhitelist.Variant)
+            {
+                final ProgramWhitelist.Variant geneProtein = (ProgramWhitelist.Variant) variantOrDbSNP;
+
+                if (matchesWhitelistGeneProtein(geneProtein, variant, snpAnnotation))
+                {
+                    LOGGER.debug("clinar variant for gene({}) matched with whitelist exclusion", gene);
+                    mMatchedWhitelistExclusions[index] = true;
+                    return true;
+                }
+            }
+            else
+            {
+                if(matchesWhitelistDbSNPId((String)variantOrDbSNP, variant, snpAnnotation))
+                {
+                    LOGGER.debug("clinar variant for gene({}) matched with whitelist exclusion", gene);
+                    mMatchedWhitelistExclusions[index] = true;
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    private void writeFilterRecord(final VariantContext variant, final SnpEffAnnotation snpEff,
+            final String gene, final String clinvarSignificance)
+    {
+        String transcriptId = snpEff.transcript();
+        String chromosome = variant.getContig();
+        long position = variant.getStart();
+        String ref = variant.getReference().getBaseString();
+        String alt = variant.getAlleles().get(1).getBaseString();
+
+        ref = ref.replaceAll("\\*", "");
+        alt = alt.replaceAll("\\*", "");
+
+        String effects = snpEff.effects();
+        String clinvarDisease = variant.getCommonInfo().getAttributeAsString(CLINVAR_DISEASE_NAME, "");
+        String clinvarEffects = variant.getCommonInfo().getAttributeAsString(CLINVAR_MC, "");
+
+        String hgvsp = snpEff.hgvsProtein();
+        String hgvsc = snpEff.hgvsCoding();
+
+        if(LOGGER.isDebugEnabled())
+        {
+            // now extract other required Clinvar info
+            LOGGER.debug("var({}:{}) ref({}) alt({}) effect({}) gene({} trans={}) clinvar({}, {}, {})",
+                    variant.getContig(), position, ref, alt, snpEff.effects(), gene, transcriptId,
+                    clinvarSignificance,  clinvarDisease, clinvarEffects);
+        }
+
         try
         {
             mFilterWriter.write(String.format("%s,%s,%s,%d,%s,%s,%s",
-                    gene, transcriptId, chromosome, position, ref, alt, effect, ""));
+                    gene, snpEff.transcript(), chromosome, position, ref, alt, effects, ""));
 
-            mFilterWriter.write(String.format(",%s,%s,%s",
-                    clinvarSignificance, clinvarDisease, clinvarEffects));
+            mFilterWriter.write(String.format(",%s,%s,%s,%s,%s",
+                    hgvsp, hgvsc, clinvarSignificance, clinvarDisease, clinvarEffects));
             mFilterWriter.newLine();
 
         }
         catch(IOException e)
         {
-
+            LOGGER.error("error writing filter output: {}", e.toString());
         }
     }
 
@@ -244,7 +358,7 @@ public class FilterFileBuilder
             mFilterWriter = createBufferedWriter(filterFileName, false);
 
             mFilterWriter.write("Gene,TranscriptId,Chromsome,Position,Ref,Alt,Effect,ProteinCodon");
-            mFilterWriter.write(",ClinvarDiagnosis,ClinvarDisesase,ClinvarEffects");
+            mFilterWriter.write(",HgvsProtein,HgvsCoding,ClinvarDiagnosis,ClinvarDisesase,ClinvarEffects");
             mFilterWriter.newLine();
         }
         catch (IOException e)
