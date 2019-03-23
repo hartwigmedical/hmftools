@@ -36,6 +36,60 @@ public abstract class ViccFactory {
         return stringToCSVBRCA;
     }
 
+    private static StringBuilder readObjectCGI(@NotNull JsonObject object, @NotNull StringBuilder headerCSV) {
+        //CGI object
+        StringBuilder stringToCSVCGI = new StringBuilder();
+        return stringToCSVCGI;
+    }
+
+    private static StringBuilder readObjectCIVIC(@NotNull JsonObject object, @NotNull StringBuilder headerCSV) {
+        //CIVIC object
+        StringBuilder stringToCSVCIVIC = new StringBuilder();
+        return stringToCSVCIVIC;
+    }
+
+    private static StringBuilder readObjectJax(@NotNull JsonObject object, @NotNull StringBuilder headerCSV) {
+        //Jax object
+        StringBuilder stringToCSVJax = new StringBuilder();
+        return stringToCSVJax;
+    }
+
+    private static StringBuilder readObjectJaxTrials(@NotNull JsonObject object, @NotNull StringBuilder headerCSV) {
+        //Jax_trails object
+        StringBuilder stringToCSVJaxTrials = new StringBuilder();
+        return stringToCSVJaxTrials;
+    }
+
+    private static StringBuilder readObjectMolecularMatch(@NotNull JsonObject object, @NotNull StringBuilder headerCSV) {
+        //MolecularMatch object
+        StringBuilder stringToCSVMolecularMatch = new StringBuilder();
+        return stringToCSVMolecularMatch;
+    }
+
+    private static StringBuilder readObjectMolecularMatchTrials(@NotNull JsonObject object, @NotNull StringBuilder headerCSV) {
+        //MolecularMatchTrials object
+        StringBuilder stringToCSVMolecularMatchTrials = new StringBuilder();
+        return stringToCSVMolecularMatchTrials;
+    }
+
+    private static StringBuilder readObjectOncokb(@NotNull JsonObject object, @NotNull StringBuilder headerCSV) {
+        //ONCOKB object
+        StringBuilder stringToCSVOncoKb = new StringBuilder();
+        return stringToCSVOncoKb;
+    }
+
+    private static StringBuilder readObjectPmkb(@NotNull JsonObject object, @NotNull StringBuilder headerCSV) {
+        //PMKB object
+        StringBuilder stringToCSVPmkb = new StringBuilder();
+        return stringToCSVPmkb;
+    }
+
+    private static StringBuilder readObjectSage(@NotNull JsonObject object, @NotNull StringBuilder headerCSV) {
+        //SAGE object
+        StringBuilder stringToCSVSage = new StringBuilder();
+        return stringToCSVSage;
+    }
+
     private static StringBuilder readObjectGenes(@NotNull JsonObject object, @NotNull StringBuilder headerCSV) {
         //Genes object
         StringBuilder stringToCSVGenes = new StringBuilder();
@@ -201,6 +255,34 @@ public abstract class ViccFactory {
     }
 
     public static void extractAllFile(@NotNull String allJsonPath) throws IOException {
+        final String csvFileName = "/Users/liekeschoenmaker/hmf/tmp/all.csv";
+        PrintWriter writer = new PrintWriter(new File(csvFileName));
+        JsonParser parser = new JsonParser();
+        JsonReader reader = new JsonReader(new FileReader(csvFileName));
+        reader.setLenient(true);
+
+        while (reader.peek() != JsonToken.END_DOCUMENT) {
+            JsonObject object = parser.parse(reader).getAsJsonObject();
+
+            StringBuilder stringToCSVAll = new StringBuilder();
+            StringBuilder headerCSV = new StringBuilder();
+            StringBuilder StringToCSVSource = readObjectSource(object, headerCSV);
+            StringBuilder StringToCSVGenes = readObjectGenes(object, headerCSV);
+
+            stringToCSVAll.append(StringToCSVSource);
+            stringToCSVAll.append(StringToCSVGenes);
+
+
+            writer.append(headerCSV);
+            writer.append("/n");
+            writer.append(stringToCSVAll);
+            writer.append("/n");
+
+
+
+        }
+        reader.close();
+        writer.close();
     }
 
     public static void extractBRCAFile(@NotNull String brcaJsonPath) throws IOException {
@@ -242,7 +324,6 @@ public abstract class ViccFactory {
             writer.append("\n");
         }
         reader.close();
-
         writer.close();
     }
 

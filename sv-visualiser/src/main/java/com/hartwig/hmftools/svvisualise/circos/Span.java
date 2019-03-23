@@ -3,6 +3,7 @@ package com.hartwig.hmftools.svvisualise.circos;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
@@ -36,6 +37,22 @@ public class Span {
                     positions.stream().filter(x -> x.chromosome().equals(chromosome)).mapToLong(GenomePosition::position).min().orElse(0);
             long max =
                     positions.stream().filter(x -> x.chromosome().equals(chromosome)).mapToLong(GenomePosition::position).max().orElse(0);
+
+            result.add(GenomeRegionFactory.create(chromosome, min, max));
+        }
+
+        Collections.sort(result);
+        return result;
+    }
+
+    @NotNull
+    public static List<GenomeRegion> spanRegions(@NotNull final List<? extends GenomeRegion> regions) {
+        final List<GenomeRegion> result = Lists.newArrayList();
+
+        final Set<String> chromosomes = regions.stream().map(GenomeRegion::chromosome).collect(Collectors.toSet());
+        for (final String chromosome : chromosomes) {
+            long min = regions.stream().filter(x -> x.chromosome().equals(chromosome)).mapToLong(GenomeRegion::start).min().orElse(0);
+            long max = regions.stream().filter(x -> x.chromosome().equals(chromosome)).mapToLong(GenomeRegion::end).max().orElse(0);
 
             result.add(GenomeRegionFactory.create(chromosome, min, max));
         }

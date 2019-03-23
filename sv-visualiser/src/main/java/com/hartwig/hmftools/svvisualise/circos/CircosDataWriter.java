@@ -5,6 +5,7 @@ import static java.util.stream.Collectors.toList;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.text.DecimalFormat;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -14,7 +15,6 @@ import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.position.GenomePosition;
@@ -30,6 +30,8 @@ import com.hartwig.hmftools.svvisualise.data.Segment;
 import org.jetbrains.annotations.NotNull;
 
 public class CircosDataWriter {
+
+    private static DecimalFormat POSITION_FORMAT = new DecimalFormat("#,###");
 
     private static final int MIN_KAROTYPE_LENGTH = 10;
     private static final String DELIMITER = "\t";
@@ -162,7 +164,7 @@ public class CircosDataWriter {
                     .add(String.valueOf(min))
                     .add(String.valueOf(min))
                     .add(geneName)
-                    .add("label_size=" +labelSize + "p,rpadding=0r")
+                    .add("label_size=" + labelSize + "p,rpadding=0r")
                     .toString();
             result.add(exonString);
         }
@@ -227,21 +229,27 @@ public class CircosDataWriter {
     private List<String> createDistances(@NotNull final List<CopyNumberAlteration> unadjustedSegment,
             @NotNull final List<CopyNumberAlteration> segments) {
 
-        final Map<String, Integer> contigLengths = contigLengthsFromRegions(segments);
+        final long labelSize;
+        if (segments.size() < 50) {
+            labelSize = 30;
+        } else if (segments.size() < 100) {
+            labelSize = 25;
+        } else {
+            labelSize = 20;
+        }
 
         final List<String> result = Lists.newArrayList();
         for (int i = 0; i < unadjustedSegment.size(); i++) {
             final CopyNumberAlteration adjusted = segments.get(i);
             final CopyNumberAlteration unadjusted = unadjustedSegment.get(i);
 
-            if (adjusted.start() != 1 && adjusted.end() != contigLengths.get(adjusted.chromosome())) {
-                final String distance = new StringJoiner(DELIMITER).add(circosContig(adjusted.chromosome()))
-                        .add(String.valueOf(adjusted.start()))
-                        .add(String.valueOf(adjusted.end()))
-                        .add(shorthand(unadjusted.end() - unadjusted.start()))
-                        .toString();
-                result.add(distance);
-            }
+            final String distance = new StringJoiner(DELIMITER).add(circosContig(adjusted.chromosome()))
+                    .add(String.valueOf(adjusted.start()))
+                    .add(String.valueOf(adjusted.end()))
+                    .add(shorthand(unadjusted.end() - unadjusted.start()))
+                    .add("labelSize=" + labelSize + "p")
+                    .toString();
+            result.add(distance);
         }
         return result;
     }
@@ -399,7 +407,6 @@ public class CircosDataWriter {
 
             int endLinkUsage = Links.linkTraverseCount(endPosition, links);
 
-
             if (endLinkUsage > 0) {
                 long segmentsBelow = segments.stream()
                         .filter(x -> x.chromosome().equals(segment.chromosome()) && x.end() == segment.end() && x.track() < segment.track())
@@ -513,18 +520,8 @@ public class CircosDataWriter {
     }
 
     @NotNull
-    private Map<String, Integer> contigLengthsFromRegions(@NotNull final List<? extends GenomeRegion> positions) {
-        final Map<String, Integer> results = Maps.newHashMap();
-        for (GenomeRegion region : positions) {
-            int end = (int) region.end();
-            results.merge(region.chromosome(), end, Math::max);
-        }
-        return results;
-    }
-
-    @NotNull
     private List<String> createPositionText(boolean debug, @NotNull final List<Link> originalLinks, @NotNull final List<Link> scaledLinks,
-            @NotNull final List<Segment> segments) {
+            @NotNull final List<Segment> scaledSegments) {
 
         final Set<String> result = Sets.newHashSet();
 
@@ -537,7 +534,7 @@ public class CircosDataWriter {
                 final String start = new StringJoiner(DELIMITER).add(circosContig(scaled.startChromosome()))
                         .add(String.valueOf(scaled.startPosition()))
                         .add(String.valueOf(scaled.startPosition()))
-                        .add(String.valueOf(debug ? original.svId() : original.startPosition()))
+                        .add(String.valueOf(debug ? original.svId() : POSITION_FORMAT.format(original.startPosition())))
                         .toString();
 
                 result.add(start);
@@ -547,14 +544,14 @@ public class CircosDataWriter {
                 final String start = new StringJoiner(DELIMITER).add(circosContig(scaled.endChromosome()))
                         .add(String.valueOf(scaled.endPosition()))
                         .add(String.valueOf(scaled.endPosition()))
-                        .add(String.valueOf(debug ? original.svId() : original.endPosition()))
+                        .add(String.valueOf(debug ? original.svId() : POSITION_FORMAT.format(original.endPosition())))
                         .toString();
 
                 result.add(start);
             }
         }
 
-        for (final Segment segment : segments) {
+        for (final Segment segment : scaledSegments) {
             if (segment.startTerminal() != SegmentTerminal.NONE) {
                 final String startText = segment.startTerminal() == SegmentTerminal.CENTROMERE ? "Centromere" : "Telomere";
                 final String start = new StringJoiner(DELIMITER).add(circosContig(segment.chromosome()))

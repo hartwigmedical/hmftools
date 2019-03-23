@@ -14,10 +14,12 @@ import java.util.stream.Collectors;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.chromosome.Chromosome;
 import com.hartwig.hmftools.common.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.position.GenomePosition;
 import com.hartwig.hmftools.common.refgenome.RefGenome;
+import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.svvisualise.circos.SegmentTerminal;
 import com.hartwig.hmftools.svvisualise.circos.Span;
 
@@ -31,7 +33,7 @@ public class Segments {
     private static final RefGenome REF_GENOME = RefGenome.HG19;
 
     @NotNull
-    public static Segment chromosome(@NotNull final String sampleId, @NotNull final String chromosome) {
+    public static Segment entireChromosome(@NotNull final String sampleId, @NotNull final String chromosome) {
         return ImmutableSegment.builder()
                 .sampleId(sampleId)
                 .clusterId(-1)
@@ -47,12 +49,30 @@ public class Segments {
     }
 
     @NotNull
+    private static Segment centromere(@NotNull final String sampleId, @NotNull final String chromosome) {
+        long position = REF_GENOME.centromeres().get(HumanChromosome.fromString(chromosome));
+        return ImmutableSegment.builder()
+                .sampleId(sampleId)
+                .clusterId(-1)
+                .chainId(-1)
+                .chromosome(chromosome)
+                .start(position)
+                .end(position)
+                .track(0)
+                .startTerminal(SegmentTerminal.CENTROMERE)
+                .endTerminal(SegmentTerminal.CENTROMERE)
+                .traverseCount(0)
+                .build();
+    }
+
+    @NotNull
     public static List<Segment> readTracks(@NotNull final String fileName) throws IOException {
         return fromString(Files.readAllLines(new File(fileName).toPath()));
     }
 
     @NotNull
-    public static List<Segment> extendTerminals(long terminalDistance, @NotNull final List<Segment> segments, @NotNull final List<Link> links) {
+    public static List<Segment> extendTerminals(long terminalDistance, @NotNull final List<Segment> segments,
+            @NotNull final List<Link> links) {
         final Map<Chromosome, Long> centromeres = REF_GENOME.centromeres();
         final Map<Chromosome, Long> lengths = REF_GENOME.lengths();
 
@@ -89,7 +109,38 @@ public class Segments {
             result.add(segment);
         }
 
-        return incrementOnChromosome(result, links);
+        return incrementOnChromosome(addCentromeres(result), links);
+    }
+
+    @NotNull
+    public static List<Segment> addCentromeres(@NotNull final List<Segment> segments) {
+        if (segments.isEmpty()) {
+            return segments;
+        }
+        final List<Segment> result = Lists.newArrayList(segments);
+        final Set<String> existingCentromeres = segments.stream()
+                .filter(x -> x.startTerminal() == SegmentTerminal.CENTROMERE || x.endTerminal() == SegmentTerminal.CENTROMERE)
+                .map(GenomeRegion::chromosome)
+                .collect(Collectors.toSet());
+
+        final Set<String> requiredCentomeres = Sets.newHashSet();
+        final List<GenomeRegion> segmentSpan = Span.spanRegions(segments);
+        for (final GenomeRegion genomeRegion : segmentSpan) {
+            long centromere = REF_GENOME.centromeres().get(HumanChromosome.fromString(genomeRegion.chromosome()));
+            if (genomeRegion.start() < centromere && genomeRegion.end() > centromere) {
+                requiredCentomeres.add(genomeRegion.chromosome());
+            }
+        }
+
+        requiredCentomeres.removeAll(existingCentromeres);
+        if (!requiredCentomeres.isEmpty()) {
+            final String sampleId = segments.get(0).sampleId();
+            for (final String requiredCentromere : requiredCentomeres) {
+                result.add(centromere(sampleId, requiredCentromere));
+            }
+        }
+
+        return result;
     }
 
     @VisibleForTesting
@@ -179,7 +230,6 @@ public class Segments {
 
     }
 
-
     @NotNull
     private static List<Segment> incrementOnChromosome(@NotNull final List<Segment> segments, @NotNull final List<Link> links) {
 
@@ -222,6 +272,5 @@ public class Segments {
 
         return result;
     }
-
 
 }

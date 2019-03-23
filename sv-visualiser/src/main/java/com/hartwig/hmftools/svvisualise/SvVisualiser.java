@@ -125,7 +125,7 @@ public class SvVisualiser implements AutoCloseable {
 
         final List<Segment> chromosomeSegments =
                 config.segments().stream().filter(x -> clusterIds.contains(x.clusterId())).collect(toList());
-        chromosomeSegments.add(Segments.chromosome(config.sample(), chromosome));
+        chromosomeSegments.add(Segments.entireChromosome(config.sample(), chromosome));
 
         final Set<String> chromosomesOfInterest = Sets.newHashSet(chromosome);
         chromosomeLinks.forEach(x -> {

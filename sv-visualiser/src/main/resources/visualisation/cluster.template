@@ -94,7 +94,7 @@ chromosomes_display_default = yes
 
 
 	# -----------------------------------------------------------
-	# Backgound
+	# Background
 	<plot>
 		r0   = SUBSTITUTE_SV_INNER_RADIUSr
 		r1   = SUBSTITUTE_SV_OUTER_RADIUSr

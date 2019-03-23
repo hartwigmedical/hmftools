@@ -4,8 +4,8 @@ import java.io.IOException;
 
 import com.google.common.io.Resources;
 
-import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.Ignore;
 
 public class ViccFactoryTest {
 
@@ -16,5 +16,4 @@ public class ViccFactoryTest {
     public void convertBRCA() throws IOException {
         ViccFactory.extractBRCAFile(BRCA_FILE_PATH + "/brca.json");
     }
-
 }
