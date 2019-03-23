@@ -88,21 +88,24 @@ public class AnnotationTests
         CNAnalyser cnAnalyser = new CNAnalyser("", null);
 
         // first a simple DUP
-        final SvVarData var1 = createTestSv("0","1","1",500,600,-1,1, DUP,5,5,3,3,3,"");
+        final SvVarData var1 = createTestSv("0","1","1",500,600,-1,1, DUP,3);
 
         // filler
         final SvVarData var2 = createSgl("1", "1", 11500, 1, false);
 
         // then a pair of BNDs forming a remote TI
-        final SvVarData var3 = createTestSv("2","1","2",21000,1000,-1,-1, BND,5,5,3,3,3,"");
-        final SvVarData var4 = createTestSv("3","1","2",22000,1100,1,1, BND,5,5,3,3,3,"");
+        final SvVarData var3 = createTestSv("2","1","2",21000,1000,-1,-1, BND,3);
+        final SvVarData var4 = createTestSv("3","1","2",22000,1100,1,1, BND,3);
 
         // filler
         final SvVarData var5 = createSgl("4", "1", 31500, 1, false);
 
         // the a pair of overlapping inversions
-        final SvVarData var6 = createTestSv("5","1","1",51000,61000,-1,-1, INV,5,5,3,3,3,"");
-        final SvVarData var7 = createTestSv("6","1","1",52000,62000,1,1, INV,5,5,3,3,3,"");
+        final SvVarData var6 = createTestSv("5","1","1",51000,61000,-1,-1, INV,3);
+        final SvVarData var7 = createTestSv("6","1","1",52000,62000,1,1, INV,3);
+
+        // CN profile
+        //
 
         tester.AllVariants.add(var1);
         tester.AllVariants.add(var2);
@@ -129,7 +132,7 @@ public class AnnotationTests
         assertEquals(2, cluster.getSvCount());
         assertTrue(cluster.getSVs().contains(var3));
         assertTrue(cluster.getSVs().contains(var4));
-        assertTrue(cluster.getAnnotations().contains(CLUSTER_ANNONTATION_DM));
+        // assertTrue(cluster.getAnnotations().contains(CLUSTER_ANNONTATION_DM));
 
         cluster = tester.Analyser.getClusters().get(4);
         assertEquals(2, cluster.getSvCount());

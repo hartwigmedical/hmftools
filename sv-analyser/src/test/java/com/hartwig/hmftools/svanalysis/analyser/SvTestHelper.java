@@ -171,6 +171,14 @@ public class SvTestHelper
     }
 
     public static SvVarData createTestSv(final String varId, final String chrStart, final String chrEnd,
+            long posStart, long posEnd, int orientStart, int orientEnd, StructuralVariantType type, double ploidy)
+    {
+        // let the copy number test data routine take care of setting CN and CN change data
+        return createTestSv(varId, chrStart, chrEnd, posStart, posEnd, orientStart, orientEnd, type,
+                0, 0, ploidy, ploidy, ploidy, "");
+    }
+
+    public static SvVarData createTestSv(final String varId, final String chrStart, final String chrEnd,
             long posStart, long posEnd, int orientStart, int orientEnd, StructuralVariantType type,
             double cnStart, double cnEnd, double cnChgStart, double cnChgEnd, double ploidy, final String insertSeq)
     {
@@ -249,9 +257,17 @@ public class SvTestHelper
         AllVariants.stream().forEach(x -> x.setPloidyRecalcData(x.getSvData().ploidy(), x.getSvData().ploidy()));
     }
 
+    private double calcActualBaf(double copyNumber, double nonDisruptedAP)
+    {
+        double disruptedPloidy  = copyNumber - nonDisruptedAP;
+        return disruptedPloidy >= nonDisruptedAP ? disruptedPloidy / copyNumber : nonDisruptedAP / copyNumber;
+    }
+
     public void addCopyNumberData()
     {
         // use SV breakend data to re-create the copy number segments
+        // assume CN is 2 at the telomere and by default Actual BAF = 0.5
+
         // NOTE: positions adjusted for orientation are not done correctly
         Map<String, List<SvCNData>> chrCnDataMap = CopyNumberAnalyser.getChrCnDataMap();
         final Map<String, List<SvBreakend>> chrBreakendMap = ClusteringMethods.getChrBreakendMap();
@@ -261,6 +277,8 @@ public class SvTestHelper
         svIdCnDataMap.clear();
 
         double nonDisruptedAP = 1;
+        double currentCopyNumber = 2;
+        double currentActualBaf = 0.5;
 
         int cnId = 0;
         for (final Map.Entry<String, List<SvBreakend>> entry : chrBreakendMap.entrySet())
@@ -277,41 +295,70 @@ public class SvTestHelper
             {
                 final SvBreakend breakend = breakendList.get(i);
                 final SvVarData var = breakend.getSV();
+                double ploidy = var.ploidy();
 
                 SvCNData cnData = null;
 
                 if (i == 0)
                 {
+                    if(breakend.orientation() == 1)
+                    {
+                        currentCopyNumber = nonDisruptedAP + ploidy;
+                    }
+
+                    currentActualBaf = calcActualBaf(currentCopyNumber, nonDisruptedAP);
+
                     // add telomere segment at start, and centromere as soon as the breakend crosses the centromere
                     if(breakend.arm() == CHROMOSOME_ARM_Q)
                     {
                         SvCNData extraCnData = new SvCNData(cnId++, chromosome, 0, centromerePosition,
-                                breakend.getCopyNumber(true),
-                                TELOMERE.toString(), CENTROMERE.toString(),
-                                1, 0.5, 100);
+                                currentCopyNumber, TELOMERE.toString(), CENTROMERE.toString(),
+                                1, currentActualBaf, 100);
 
                         extraCnData.setIndex(cnDataList.size());
                         cnDataList.add(extraCnData);
 
                         extraCnData = new SvCNData(cnId++, chromosome, centromerePosition, breakend.position() - 1,
-                                breakend.getCopyNumber(true),
-                                CENTROMERE.toString(), var.type().toString(),
-                                1, 0.5, 100);
+                                currentCopyNumber, CENTROMERE.toString(), var.type().toString(),
+                                1, currentActualBaf, 100);
 
                         extraCnData.setIndex(cnDataList.size());
                         cnDataList.add(extraCnData);
                     }
                     else
                     {
+                        if(breakend.orientation() == 1)
+                        {
+                            // copy number and actual BAF as expected
+                        }
+                        else
+                        {
+                            // no chromatid running to telomere on this end
+                            currentCopyNumber = nonDisruptedAP;
+                            currentActualBaf = 1;
+                        }
+
                         SvCNData extraCnData = new SvCNData(cnId++, chromosome, 0, breakend.position() - 1,
-                                breakend.getCopyNumber(true),
-                                TELOMERE.toString(), var.type().toString(),
-                                1, 0.5, 100);
+                                currentCopyNumber, TELOMERE.toString(), var.type().toString(),
+                                1, currentActualBaf, 100);
 
                         extraCnData.setIndex(cnDataList.size());
                         cnDataList.add(extraCnData);
                     }
                 }
+
+                if(breakend.orientation() == 1)
+                {
+                    // copy number drop
+                    currentCopyNumber -= ploidy;
+                }
+                else
+                {
+                    // no chromatid running to telomere on this end
+                    currentCopyNumber += ploidy;
+                }
+
+                currentActualBaf = calcActualBaf(currentCopyNumber, nonDisruptedAP);
 
                 if (i < breakendList.size() - 1)
                 {
@@ -320,17 +367,15 @@ public class SvTestHelper
                     if(breakend.arm() == CHROMOSOME_ARM_P && nextBreakend.arm() == CHROMOSOME_ARM_Q)
                     {
                         cnData = new SvCNData(cnId++, chromosome, breakend.position(), centromerePosition-1,
-                                breakend.getCopyNumber(false),
-                                var.type().toString(), CENTROMERE.toString(),
-                                1, 0.5, 100);
+                                currentCopyNumber, var.type().toString(), CENTROMERE.toString(),
+                                1, currentActualBaf, 100);
 
                         cnData.setIndex(cnDataList.size());
                         cnDataList.add(cnData);
 
                         SvCNData extraCnData = new SvCNData(cnId++, chromosome, centromerePosition, nextBreakend.position() - 1,
-                                breakend.getCopyNumber(false),
-                                CENTROMERE.toString(), nextBreakend.getSV().type().toString(),
-                                1, 0.5, 100);
+                                currentCopyNumber, CENTROMERE.toString(), nextBreakend.getSV().type().toString(),
+                                1, currentActualBaf, 100);
 
                         extraCnData.setIndex(cnDataList.size());
                         cnDataList.add(extraCnData);
@@ -338,9 +383,8 @@ public class SvTestHelper
                     else
                     {
                         cnData = new SvCNData(cnId++, chromosome, breakend.position(), nextBreakend.position() - 1,
-                                breakend.getCopyNumber(false),
-                                var.type().toString(), nextBreakend.getSV().type().toString(),
-                                1, 0.5, 100);
+                                currentCopyNumber, var.type().toString(), nextBreakend.getSV().type().toString(),
+                                1, currentActualBaf, 100);
 
                         cnData.setIndex(cnDataList.size());
                         cnDataList.add(cnData);
@@ -352,9 +396,9 @@ public class SvTestHelper
                     if(breakend.arm() == CHROMOSOME_ARM_P)
                     {
                         cnData = new SvCNData(cnId++, chromosome, breakend.position(), centromerePosition - 1,
-                                breakend.getCopyNumber(false),
+                                currentCopyNumber,
                                 var.type().toString(), CENTROMERE.toString(),
-                                1, 0.5, 100);
+                                1, currentActualBaf, 100);
 
                         cnData.setIndex(cnDataList.size());
                         cnDataList.add(cnData);
@@ -370,9 +414,8 @@ public class SvTestHelper
                     else
                     {
                         cnData = new SvCNData(cnId++, chromosome, breakend.position(), chromosomeLength,
-                                breakend.getCopyNumber(false),
-                                var.type().toString(), TELOMERE.toString(),
-                                1, 0.5, 100);
+                                currentCopyNumber, var.type().toString(), TELOMERE.toString(),
+                                1, currentActualBaf, 100);
 
                         cnData.setIndex(cnDataList.size());
                         cnDataList.add(cnData);
@@ -388,6 +431,10 @@ public class SvTestHelper
                 }
 
                 cnDataPair[breakend.usesStart() ? SVI_START : SVI_END] = cnData;
+
+                // set copy number data back into the SV
+                double beCopyNumber = breakend.orientation() == 1 ? currentCopyNumber + ploidy : currentCopyNumber;
+                breakend.getSV().setCopyNumberData(breakend.usesStart(), beCopyNumber, ploidy);
             }
         }
 

@@ -86,6 +86,12 @@ public class SvVarData
     private double mReplicationOriginEnd;
 
     // copy number related data
+    private double mCopyNumberStart; // cached from SV data but modifiable
+    private double mCopyNumberEnd;
+    private double mCopyNumberChangeStart;
+    private double mCopyNumberChangeEnd;
+    private double mPloidy;
+
     private boolean mHasCalcPloidy;
     private double mPloidyMin;
     private double mPloidyMax;
@@ -166,6 +172,12 @@ public class SvVarData
         mReplicationOriginStart = 0;
         mReplicationOriginEnd = 0;
 
+        mCopyNumberStart = mSVData.adjustedStartCopyNumber();
+        mCopyNumberEnd = mSVData.adjustedEndCopyNumber();
+        mCopyNumberChangeStart = mSVData.adjustedStartCopyNumberChange();
+        mCopyNumberChangeEnd = mSVData.adjustedEndCopyNumberChange();
+        mPloidy = mSVData.ploidy();
+
         mHasCalcPloidy = false;
         mPloidyMin = 0;
         mPloidyMax = 0;
@@ -229,7 +241,7 @@ public class SvVarData
     public final String chromosome(boolean isStart) { return isStart ? mSVData.startChromosome() : mSVData.endChromosome(); }
     public final long position(boolean isStart) { return isStart ? mSVData.startPosition() : mSVData.endPosition(); }
     public final byte orientation(boolean isStart){ return isStart ? mSVData.startOrientation() : mSVData.endOrientation(); }
-    public final double copyNumber(boolean isStart){ return isStart ? mSVData.adjustedStartCopyNumber() : mSVData.adjustedEndCopyNumber(); }
+    public final double copyNumber(boolean isStart){ return isStart ? mCopyNumberStart : mCopyNumberEnd; }
     public final StructuralVariantType type() { return mSVData.type(); }
 
     public SvBreakend getBreakend(boolean isStart) { return isStart ? mBreakendStart : mBreakendEnd; }
@@ -328,7 +340,7 @@ public class SvVarData
     public double ploidy()
     {
         // use the estimated ploidy when present
-        return mHasCalcPloidy ? (mPloidyMax + mPloidyMin) * 0.5 : mSVData.ploidy();
+        return mHasCalcPloidy ? (mPloidyMax + mPloidyMin) * 0.5 : mPloidy;
     }
 
     public double copyNumberChange(boolean isStart)
@@ -337,16 +349,30 @@ public class SvVarData
         if(isStart)
         {
             if(mDBStart != null && mDBStart.length() == 0)
-                return ploidy();
+                return mPloidy;
             else
-                return mSVData.adjustedStartCopyNumberChange();
+                return mCopyNumberChangeStart;
         }
         else
         {
             if(mDBEnd != null && mDBEnd.length() == 0)
-                return ploidy();
+                return mPloidy;
             else
-                return mSVData.adjustedEndCopyNumberChange();
+                return mCopyNumberChangeEnd;
+        }
+    }
+
+    public void setCopyNumberData(boolean isStart, double copyNumber, double copyNumberChange)
+    {
+        if(isStart)
+        {
+            mCopyNumberStart = copyNumber;
+            mCopyNumberChangeStart = copyNumberChange;
+        }
+        else
+        {
+            mCopyNumberEnd = copyNumber;
+            mCopyNumberChangeEnd = copyNumberChange;
         }
     }
 
@@ -705,8 +731,8 @@ public class SvVarData
     }
 
     public boolean hasCalculatedPloidy() { return mHasCalcPloidy; }
-    public double ploidyMax() { return mHasCalcPloidy ? mPloidyMax : mSVData.ploidy(); }
-    public double ploidyMin() { return mHasCalcPloidy ? mPloidyMin : mSVData.ploidy(); }
+    public double ploidyMax() { return mHasCalcPloidy ? mPloidyMax : mPloidy; }
+    public double ploidyMin() { return mHasCalcPloidy ? mPloidyMin : mPloidy; }
 
     public final SvCNData getCopyNumberData(boolean isStart, boolean isPrevious)
     {
