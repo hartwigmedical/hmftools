@@ -4,6 +4,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.VariantConsequence;
@@ -12,33 +13,34 @@ import htsjdk.variant.variantcontext.VariantContext;
 
 public class BachelorGermlineVariant implements Comparable<BachelorGermlineVariant>
 {
-    private String mSampleId;
-    private String mSource;
-    private String mProgram;
-    private String mVariantId;
-    private String mGene;
-    private String mTranscriptId;
-    private String mChromosome;
-    private long mPosition;
-    private String mRef;
-    private String mAlts;
-    private String mEffects;
-    private List<String> mEffectsList;
-    private String mAnnotations;
-    private int mPhredScore;
-    private boolean mIsHomozygous;
-    private String mHgvsProtein;
-    private String mHgvsCoding;
-    private String mMatchType;
-    private String mSignificance;
-    private String mDiagnosis;
-    private String mCodonInfo;
+    public final String SampleId;
+    public final String Program;
+    public final String VariantId;
+    public final String Gene;
+    public final String TranscriptId;
+    public final String Chromosome;
+    public final long Position;
+    public final String Ref;
+    public final String Alts;
+    public final CodingEffect CodingEffect;
+    public final String Effects;
+    public final String Annotations;
+    public final int PhredScore;
+    public final boolean IsHomozygous;
+    public final String HgvsProtein;
+    public final String HgvsCoding;
+    public final String MatchType;
+    public final String CodonInfo;
 
-    private int mGermlineAltCount;
-    private int mGermlineReadDepth;
-    private int mTumorAltCount;
-    private int mTumorReadDepth;
+    public int mGermlineAltCount;
+    public int mGermlineReadDepth;
+    public int mTumorAltCount;
+    public int mTumorReadDepth;
     private boolean mReadDataSet;
+    public final List<String> mEffectsList;
+
+    public String mSignificance;
+    public String mDiagnosis;
 
     private double mAdjustedVaf;
 
@@ -48,33 +50,32 @@ public class BachelorGermlineVariant implements Comparable<BachelorGermlineVaria
 
     public static int PHRED_SCORE_CUTOFF = 150;
 
-    public BachelorGermlineVariant(String sampleId, String source, String program, String varId,
+    public BachelorGermlineVariant(String sampleId, String program, String varId,
             String gene, String transcriptId, String chromosome, long position,
-            String ref, String alts, String effects, String annotations, String hgvsProtein,
+            String ref, String alts, CodingEffect codingEffect, String effects, String annotations, String hgvsProtein,
             boolean isHomozygous, int phredScore, String hgvsCoding, String matchType, String codonInfo)
     {
-        mSampleId = sampleId;
-        mSource = source;
-        mProgram = program;
-        mVariantId = varId;
-        mGene = gene;
-        mTranscriptId = transcriptId;
-        mChromosome = chromosome;
-        mPosition = position;
-        mRef = ref;
-        mAlts = alts;
-        mAnnotations = annotations;
-        mPhredScore = phredScore;
-        mIsHomozygous = isHomozygous;
-        mHgvsProtein = hgvsProtein;
-        mHgvsCoding = hgvsCoding;
-        mMatchType = matchType;
-        mCodonInfo = codonInfo;
+        SampleId = sampleId;
+        Program = program;
+        VariantId = varId;
+        Gene = gene;
+        TranscriptId = transcriptId;
+        Chromosome = chromosome;
+        Position = position;
+        Annotations = annotations;
+        PhredScore = phredScore;
+        IsHomozygous = isHomozygous;
+        HgvsProtein = hgvsProtein;
+        HgvsCoding = hgvsCoding;
+        MatchType = matchType;
+        CodonInfo = codonInfo;
 
-        mRef = mRef.replaceAll("\\*", "");
-        mAlts = mAlts.replaceAll("\\*", "");
+        Ref = ref.replaceAll("\\*", "");
+        Alts = alts.replaceAll("\\*", "");
 
-        mEffects = effects;
+        CodingEffect = codingEffect;
+        Effects = effects;
+
         mEffectsList = Arrays.stream(effects.split("&")).collect(Collectors.toList());
 
         mGermlineAltCount = 0;
@@ -95,14 +96,14 @@ public class BachelorGermlineVariant implements Comparable<BachelorGermlineVaria
     public int compareTo(final BachelorGermlineVariant other)
     {
         // sort based on Chromosome then Position
-        if(other.chromosome().equals(mChromosome))
+        if(other.Chromosome.equals(Chromosome))
         {
-            return mPosition < other.position() ? -1 : 1;
+            return Position < other.Position ? -1 : 1;
         }
         else
         {
-            int chr = chromosomeToInt(mChromosome);
-            int otherChr = chromosomeToInt(other.chromosome());
+            int chr = chromosomeToInt(Chromosome);
+            int otherChr = chromosomeToInt(other.Chromosome);
 
             if(chr > 0 && otherChr > 0)
                 return chr < otherChr ? -1 : 1;
@@ -111,7 +112,7 @@ public class BachelorGermlineVariant implements Comparable<BachelorGermlineVaria
             else if(otherChr > 0)
                 return 1;
             else
-                return mChromosome.compareTo(other.chromosome());
+                return Chromosome.compareTo(other.Chromosome);
         }
     }
 
@@ -127,23 +128,7 @@ public class BachelorGermlineVariant implements Comparable<BachelorGermlineVaria
         }
     }
 
-    public final String variantId() { return mVariantId; };
-    public final String sampleId() { return mSampleId; };
-    public final String source() { return mSource; };
-    public final String program() { return mProgram; };
-    public final String gene() { return mGene; };
-    public final String transcriptId() { return mTranscriptId; };
-    public final String chromosome() { return mChromosome; };
-    public long position() { return mPosition; };
-    public final String ref() { return mRef; };
-    public final String alts() { return mAlts; };
-    public final String effects() { return mEffects; };
     public final List<String> effectsList() { return mEffectsList; }
-    public final String annotations() { return mAnnotations; };
-    public final String hgvsProtein() { return mHgvsProtein; };
-    public final String hgvsCoding() { return mHgvsCoding; };
-    public boolean isHomozygous() { return mIsHomozygous; }
-    public String matchType() { return mMatchType; }
     public int getGermlineAltCount() { return mGermlineAltCount; }
     public int getGermlineRefCount() { return mGermlineReadDepth - mGermlineAltCount; }
     public int getGermlineReadDepth() { return mGermlineReadDepth; }
@@ -160,7 +145,6 @@ public class BachelorGermlineVariant implements Comparable<BachelorGermlineVaria
     public void setTumorAltCount(int count) { mTumorAltCount = count; }
     public final String getDiagnosis() { return mDiagnosis; }
     public final String getSignificance() { return mSignificance; }
-    public final String codonInfo() { return mCodonInfo; }
 
     public void setDiagnosis(final String text) { mDiagnosis = text; }
     public void setSignificance(final String text) { mSignificance = text; }
@@ -205,13 +189,9 @@ public class BachelorGermlineVariant implements Comparable<BachelorGermlineVaria
         return mSomaticVariant != null && mEnrichedVariant != null && mVariantContext != null;
     }
 
-    public int phredScore()
-    {
-        return mPhredScore;
-    }
     public boolean isLowScore()
     {
-        return mPhredScore < PHRED_SCORE_CUTOFF && mAdjustedVaf < 0;
+        return PhredScore < PHRED_SCORE_CUTOFF && mAdjustedVaf < 0;
     }
 
     public final SomaticVariant getSomaticVariant() { return mSomaticVariant; }

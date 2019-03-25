@@ -29,15 +29,15 @@ public class BachelorRecordFilter
 
     public boolean matches(final BachelorGermlineVariant var)
     {
-        if(!var.chromosome().equals(Chromosome) || var.position() != Position
-        || !var.ref().equals(Ref) || !var.alts().equals(Alt))
+        if(!var.Chromosome.equals(Chromosome) || var.Position != Position
+        || !var.Ref.equals(Ref) || !var.Alts.equals(Alt))
         {
             return false;
         }
 
         for(final String effect : var.effectsList())
         {
-            if (STOP_GAINED.isParentTypeOf(var.effects()) && Effects.contains("nonsense"))
+            if (STOP_GAINED.isParentTypeOf(var.Effects) && Effects.contains("nonsense"))
                 return true;
 
             if (Effects.contains(effect))

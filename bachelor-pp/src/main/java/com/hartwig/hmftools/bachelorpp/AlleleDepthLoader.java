@@ -18,14 +18,14 @@ import com.hartwig.hmftools.common.pileup.PileupFile;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-public class AlleleDepthLoader {
-
+public class AlleleDepthLoader
+{
     private static final String MPILEUP_FILE_EXTN = ".mpu";
-
-    private static final Logger LOGGER = LogManager.getLogger(AlleleDepthLoader.class);
 
     private String mSampleId;
     private List<Pileup> mPileupData;
+
+    private static final Logger LOGGER = LogManager.getLogger(AlleleDepthLoader.class);
 
     AlleleDepthLoader()
     {
@@ -52,9 +52,10 @@ public class AlleleDepthLoader {
 
             LOGGER.debug("found {} mini-pileup files", mpuFiles.size());
 
-            for (final File mpuFile : mpuFiles) {
-
-                if (mpuFile.isDirectory()) {
+            for (final File mpuFile : mpuFiles)
+            {
+                if (mpuFile.isDirectory())
+                {
                     continue;
                 }
 
@@ -80,14 +81,17 @@ public class AlleleDepthLoader {
         // match up read info from MP with the bachelor records
         for (BachelorGermlineVariant bachRecord : germlineVariants)
         {
+            if(bachRecord.isReadDataSet()) // set from the germline VCF, no need to extract from the BAMs
+                continue;
+
             boolean matched = false;
 
             for (final Pileup pileup : mPileupData)
             {
-                if (!bachRecord.chromosome().equals(pileup.chromosome()))
+                if (!bachRecord.Chromosome.equals(pileup.chromosome()))
                     continue;
 
-                if (bachRecord.position() != pileup.position())
+                if (bachRecord.Position != pileup.position())
                     continue;
 
                 matched = true;
@@ -103,21 +107,21 @@ public class AlleleDepthLoader {
                 {
                     altCount = pileup.deleteCount();
                 }
-                else if (bachRecord.alts().length() == bachRecord.ref().length() && bachRecord.alts().length() == 1)
+                else if (bachRecord.Alts.length() == bachRecord.Ref.length() && bachRecord.Alts.length() == 1)
                 {
-                    if (bachRecord.alts().charAt(0) == 'A')
+                    if (bachRecord.Alts.charAt(0) == 'A')
                     {
                         altCount = pileup.aMismatchCount();
                     }
-                    else if (bachRecord.alts().charAt(0) == 'C')
+                    else if (bachRecord.Alts.charAt(0) == 'C')
                     {
                         altCount = pileup.cMismatchCount();
                     }
-                    else if (bachRecord.alts().charAt(0) == 'G')
+                    else if (bachRecord.Alts.charAt(0) == 'G')
                     {
                         altCount = pileup.gMismatchCount();
                     }
-                    else if (bachRecord.alts().charAt(0) == 'T')
+                    else if (bachRecord.Alts.charAt(0) == 'T')
                     {
                         altCount = pileup.tMismatchCount();
                     }
@@ -126,7 +130,7 @@ public class AlleleDepthLoader {
                 bachRecord.setTumorData(altCount, altCount + refCount);
 
                 LOGGER.debug("sample({} chr({}) position({}) matched, counts(ref={} alt={} depth={})",
-                        mSampleId, bachRecord.chromosome(), bachRecord.position(),
+                        mSampleId, bachRecord.Chromosome, bachRecord.Position,
                         bachRecord.getTumorRefCount(), bachRecord.getTumorAltCount(), bachRecord.getTumorReadDepth());
 
                 break;
@@ -135,7 +139,7 @@ public class AlleleDepthLoader {
             if(!matched && !bachRecord.isReadDataSet())
             {
                 LOGGER.warn("sample({} var({}) chr({}) position({}) no pile-up record found",
-                        mSampleId, bachRecord.variantId(), bachRecord.chromosome(), bachRecord.position());
+                        mSampleId, bachRecord.VariantId, bachRecord.Chromosome, bachRecord.Position);
                 return false;
             }
         }
