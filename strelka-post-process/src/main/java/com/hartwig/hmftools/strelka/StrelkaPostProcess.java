@@ -2,14 +2,13 @@ package com.hartwig.hmftools.strelka;
 
 import java.util.List;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.position.GenomePosition;
 import com.hartwig.hmftools.common.slicing.Slicer;
+import com.hartwig.hmftools.common.strelka.StrelkaAllelicDepth;
 import com.hartwig.hmftools.common.variant.filter.HotspotFilter;
 
-import org.apache.commons.lang3.ArrayUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -28,8 +27,6 @@ final class StrelkaPostProcess implements VariantContextFilter {
     private static final String INDEL_QUAL_FIELD = "QSI_NT";
     private static final String SNP_TIER_INDEX_FIELD = "TQSS_NT";
     private static final String INDEL_TIER_INDEX_FIELD = "TQSI_NT";
-    private static final String TIR_FIELD = "TIR";
-    private static final String TAR_FIELD = "TAR";
     private static final String SEPARATOR = ",";
     static final String TUMOR_GENOTYPE = "TUMOR";
 
@@ -106,10 +103,10 @@ final class StrelkaPostProcess implements VariantContextFilter {
     static double allelicFrequency(@NotNull final VariantContext variant) {
         if (variant.isSNP()) {
             final int tierIndex = getIntField(variant, SNP_TIER_INDEX_FIELD) - 1;
-            return readAf(variant, tierIndex, StrelkaPostProcess::snpAlleleKey);
+            return readAf(variant, tierIndex, StrelkaAllelicDepth::snpAlleleKey);
         } else if (variant.isIndel()) {
             final int tierIndex = getIntField(variant, INDEL_TIER_INDEX_FIELD) - 1;
-            return readAf(variant, tierIndex, StrelkaPostProcess::indelAlleleKey);
+            return readAf(variant, tierIndex, StrelkaAllelicDepth::indelAlleleKey);
         } else {
             throw new IllegalStateException("record is not indel or snp: " + variant);
         }
@@ -145,41 +142,7 @@ final class StrelkaPostProcess implements VariantContextFilter {
 
     @VisibleForTesting
     static int[] getAD(@NotNull final VariantContext variant) {
-        if (variant.isSNP()) {
-            return readAD(variant, StrelkaPostProcess::snpAlleleKey);
-        } else if (variant.isIndel()) {
-            return readAD(variant, StrelkaPostProcess::indelAlleleKey);
-        } else {
-            throw new IllegalStateException("record is not indel or snp: " + variant);
-        }
-    }
-
-    @NotNull
-    private static int[] readAD(@NotNull final VariantContext variant, @NotNull Function<Allele, String> alleleKey) {
-        final Genotype tumorGenotype = variant.getGenotype(TUMOR_GENOTYPE);
-        final List<Integer> alleleAds = variant.getAlleles().stream().map(allele -> {
-            final String[] alleleADs = tumorGenotype.getExtendedAttribute(alleleKey.apply(allele), "0").toString().split(SEPARATOR);
-            if (alleleADs.length > 0) {
-                try {
-                    return Integer.parseInt(alleleADs[0]);
-                } catch (final NumberFormatException e) {
-                    return 0;
-                }
-            }
-            return 0;
-        }).collect(Collectors.toList());
-        final Integer[] ads = new Integer[alleleAds.size()];
-        return ArrayUtils.toPrimitive(alleleAds.toArray(ads));
-    }
-
-    @NotNull
-    private static String snpAlleleKey(@NotNull final Allele allele) {
-        return allele.getBaseString() + "U";
-    }
-
-    @NotNull
-    private static String indelAlleleKey(@NotNull final Allele allele) {
-        return allele.isReference() ? TAR_FIELD : TIR_FIELD;
+        return StrelkaAllelicDepth.readAD(TUMOR_GENOTYPE, variant);
     }
 
     @VisibleForTesting
