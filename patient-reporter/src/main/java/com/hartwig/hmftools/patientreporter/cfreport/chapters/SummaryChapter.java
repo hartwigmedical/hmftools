@@ -140,7 +140,7 @@ public class SummaryChapter extends ReportChapter {
         table.addCell(TableHelper.getLayoutCell(1, 3).setHeight(TABLE_SPACER_HEIGHT)); // Spacer
 
         // Tumor purity
-        float tumorPurity = 74.4f;
+        float tumorPurity = 100; //74.4f;
         table.addCell(getBottomAlignedLayoutCell()
                 .add(new Paragraph("Tumor purity of biopsy")
                         .addStyle(BODY_TEXT_STYLE)));
@@ -158,8 +158,7 @@ public class SummaryChapter extends ReportChapter {
         table.addCell(getBottomAlignedLayoutCell()
                 .add(new Paragraph(String.format(java.util.Locale.US, "%.1f", ploidy))
                         .addStyle(ReportResources.dataHighlightStyle())));
-        table.addCell(getBottomAlignedLayoutCell()
-                .add(new Paragraph("[BAR]")));
+        table.addCell(getBottomAlignedLayoutCell());
 
         // Tumor mutational load
         String mutationalLoad = "High";
@@ -181,7 +180,7 @@ public class SummaryChapter extends ReportChapter {
                 .add(new Paragraph(microsatelliteStability)
                         .addStyle(ReportResources.dataHighlightStyle())));
         table.addCell(getBottomAlignedLayoutCell()
-                .add(new Paragraph("[BAR]")));
+                .add(getInlineBarChart(.6f, 0f, 10f)));
 
         div.add(table);
 

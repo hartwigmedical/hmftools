@@ -32,10 +32,6 @@ public class InlineBarChart extends Div {
         return max;
     }
 
-    protected final float getFillPercentage() {
-        return normalize(value, min, max);
-    }
-
     /**
      * Remap v from [inMin, inMax] to [0, 1]
      * @param v
@@ -83,7 +79,7 @@ public class InlineBarChart extends Div {
             final float width = area.getWidth();
             final float height = area.getHeight();
             final float radius = height * .5f;
-            final float filledWidth = barChart.getFillPercentage() * width;
+            final float filledWidth = map(barChart.getValue(), barChart.getMin(), barChart.getMax(), height, width);
 
             // Background
             canvas.setFillColor(ReportResources.PALETTE_LIGHT_GREY);
