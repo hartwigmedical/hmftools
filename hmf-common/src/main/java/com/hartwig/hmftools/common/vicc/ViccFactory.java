@@ -142,6 +142,7 @@ public abstract class ViccFactory {
         JsonArray arrayGeneIdentifiers = object.getAsJsonArray("gene_identifiers");
         if (arrayGeneIdentifiers.size() == 0) {
             stringToCSVGeneIdentifiers.append(Strings.EMPTY).append(";").append(Strings.EMPTY).append(";").append(Strings.EMPTY).append(";");
+            headerCSV.append("symbol").append(";").append("entrez_id").append(";").append("ensembl_gene_id").append(";");
         } else {
             for (int j = 0; j < arrayGeneIdentifiers.size(); j++) {
                 JsonObject objectGeneIdentiefiers = (JsonObject) arrayGeneIdentifiers.get(j);
