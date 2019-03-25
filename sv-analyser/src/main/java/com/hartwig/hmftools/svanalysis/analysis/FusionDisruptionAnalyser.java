@@ -6,6 +6,7 @@ import static com.hartwig.hmftools.svanalysis.types.SvChain.CHAIN_LENGTH;
 import static com.hartwig.hmftools.svanalysis.types.SvChain.CHAIN_LINK_COUNT;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_END;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_START;
+import static com.hartwig.hmftools.svanalysis.types.SvVarData.isSpecificSV;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.isStart;
 import static com.hartwig.hmftools.svannotation.SvGeneTranscriptCollection.EXON_RANK_MIN;
 import static com.hartwig.hmftools.svannotation.SvGeneTranscriptCollection.PRE_GENE_PROMOTOR_DISTANCE;
@@ -98,6 +99,8 @@ public class FusionDisruptionAnalyser
     {
         for(final SvVarData var : svList)
         {
+            isSpecificSV(var);
+
             List<GeneAnnotation> genesList = Lists.newArrayList();
 
             int upstreamDistance = applyPromotorDistance ? PRE_GENE_PROMOTOR_DISTANCE : 0;
@@ -114,7 +117,7 @@ public class FusionDisruptionAnalyser
             }
 
             if (genesList.isEmpty())
-                return;
+                continue;
 
             List<GeneAnnotation> startGenes = Lists.newArrayList();
             List<GeneAnnotation> endGenes = Lists.newArrayList();
@@ -128,6 +131,8 @@ public class FusionDisruptionAnalyser
                 else
                     endGenes.add(gene);
             }
+
+            LOGGER.debug("SV({}) matched {} start genes, {} end genes", var.id(), startGenes.size(), endGenes.size());
 
             var.setGenesList(startGenes, true);
             var.setGenesList(endGenes, false);
@@ -374,6 +379,8 @@ public class FusionDisruptionAnalyser
 
         if (rnaFusionList == null || rnaFusionList.isEmpty())
             return;
+
+        LOGGER.debug("assessing {} RNA fusions", rnaFusionList.size());
 
         for (final RnaFusionData rnaFusion : rnaFusionList)
         {
