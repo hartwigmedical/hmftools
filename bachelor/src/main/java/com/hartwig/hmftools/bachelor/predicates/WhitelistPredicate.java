@@ -77,7 +77,7 @@ public class WhitelistPredicate implements Predicate<VariantModel> {
                 }
                 else if (variantOrDbSNP instanceof String)
                 {
-                    if(matchesWhitelistDbSNPId((String) variantOrDbSNP, variantModel.context(), annotation))
+                    if(matchesWhitelistDbSNPId((String) variantOrDbSNP, variantModel.context()))
                     {
                         return true;
                     }
@@ -125,7 +125,7 @@ public class WhitelistPredicate implements Predicate<VariantModel> {
         */
     }
 
-    public static boolean matchesWhitelistDbSNPId(final String dnSNPId, final VariantContext variant, final SnpEffAnnotation annotation)
+    public static boolean matchesWhitelistDbSNPId(final String dnSNPId, final VariantContext variant)
     {
         Set<String> varDbSNPList = Lists.newArrayList(variant.getID()
                 .split(","))
