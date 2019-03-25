@@ -24,14 +24,16 @@ public class ExplanationChapter extends ReportChapter {
     @Override
     protected void renderChapterContent(Document report) {
 
-        Table table = new Table(UnitValue.createPercentArray(new float[] {1, 1, 1}));
+        Table table = new Table(UnitValue.createPercentArray(new float[] {1, 0.1f, 1, 0.1f, 1}));
         table.setWidth(getContentWidth());
 
         // 1st row
         table.addCell(TableHelper.getLayoutCell()
                 .add(getSectionTitle("Details on the report in general")));
+        table.addCell(TableHelper.getLayoutCell()); // Spacer
         table.addCell(TableHelper.getLayoutCell()
                 .add(getSectionTitle("Details on the reported clinical evidence")));
+        table.addCell(TableHelper.getLayoutCell()); // Spacer
         table.addCell(TableHelper.getLayoutCell()
                 .add(getSectionTitle("Details on reported somatic variants")));
 
@@ -43,12 +45,14 @@ public class ExplanationChapter extends ReportChapter {
                         "Variant detection in samples with lower tumor content is less sensitive. In case of a low tumor purity (below 20%) likelihood of failing to detect potential variants increases.",
                         "The (implied) tumor purity is the percentage of tumor cells in the biopsy based on analysis of whole genome data."
                 })));
+        table.addCell(TableHelper.getLayoutCell()); // Spacer
         table.addCell(TableHelper.getLayoutCell()
                 .add(getContentDiv(new String[]{
                         "The CGI, OncoKb and CiViC knowledgebases are used to annotate variants of all types with clinical evidence, with a hyperlink to the specific evidence items. NOTE: If a certain evidence item or drug-biomarker is missing from the knowledgebases it will also not be included in this report.",
                         "More information on (CGI) biomarkers can be found on https://www.cancergenomeinterpreter.org/biomarkers",
                         "Clinical trials are matched against the iClusion database (https://iclusion.org) including a link to the specific trial."
                 })));
+        table.addCell(TableHelper.getLayoutCell()); // Spacer
         table.addCell(TableHelper.getLayoutCell()
                 .add(getContentDiv(new String[]{
                         "The 'Read Depth' displays the raw number of reads supporting the variant versus the total number of reads on the mutated position.",
@@ -57,11 +61,17 @@ public class ExplanationChapter extends ReportChapter {
                         "The 'Driver' field is based on the driver probability calculated based on the HMF database. A variant in a gene with High driver likelihood is likely to be positively selected for during the oncogenic process."
                 })));
 
+
+        // Spacer
+        table.addCell(TableHelper.getLayoutCell(1, 5).setHeight(30)); // Spacer
+
         // 3rd row
         table.addCell(TableHelper.getLayoutCell()
                 .add(getSectionTitle("Details on reported gene copy numbers")));
+        table.addCell(TableHelper.getLayoutCell()); // Spacer
         table.addCell(TableHelper.getLayoutCell()
                 .add(getSectionTitle("Details on reported gene fusions")));
+        table.addCell(TableHelper.getLayoutCell()); // Spacer
         table.addCell(TableHelper.getLayoutCell()
                 .add(getSectionTitle("Details on reported gene disruptions")));
 
@@ -74,12 +84,14 @@ public class ExplanationChapter extends ReportChapter {
                         "Any gene where only a part along the canonical transcript has less than 0.5 copies is reported as a partial loss.",
                         "Any gene with more copies than 3 times the average tumor ploidy is reported as a gain."
                 })));
+        table.addCell(TableHelper.getLayoutCell()); // Spacer
         table.addCell(TableHelper.getLayoutCell()
                 .add(getContentDiv(new String[]{
                         "The canonical, or otherwise longest transcript validly fused is reported.",
                         "Fusions are restricted to those in a known fusion list based on CiViC, OncoKB, CGI and COSMIC",
                         "We additionally select fusions where one partner is promiscuous in either 5' or 3' position."
                 })));
+        table.addCell(TableHelper.getLayoutCell()); // Spacer
         table.addCell(TableHelper.getLayoutCell()
                 .add(getContentDiv(new String[]{
                         "Genes are reported as being disrupted if their canonical transcript has been disrupted",

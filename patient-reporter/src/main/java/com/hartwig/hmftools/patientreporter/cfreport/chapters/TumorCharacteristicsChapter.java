@@ -72,9 +72,12 @@ public class TumorCharacteristicsChapter extends ReportChapter {
                 .addStyle(ReportResources.sectionTitleStyle()));
 
         // Add content table
-        Table table = new Table(UnitValue.createPercentArray(new float[] {1, 2}));
+        Table table = new Table(UnitValue.createPercentArray(new float[] {1, 0.1f, 1.9f}));
         table.setWidth(getContentWidth());
         table.addCell(TableHelper.getLayoutCell().add(DataLabel.createDataLabel(highlight)));
+
+        table.addCell(TableHelper.getLayoutCell(2,1)); // Spacer
+
         table.addCell(TableHelper.getLayoutCell(2, 1).add(chart));
         table.addCell(TableHelper.getLayoutCell()
                 .add(new Paragraph(description)

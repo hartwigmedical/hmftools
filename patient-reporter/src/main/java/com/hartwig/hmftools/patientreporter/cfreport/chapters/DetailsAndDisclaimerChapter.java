@@ -32,10 +32,11 @@ public class DetailsAndDisclaimerChapter extends ReportChapter {
     protected void renderChapterContent(Document report) {
 
         // Main content
-        Table table = new Table(UnitValue.createPercentArray(new float[] {1, 1}));
+        Table table = new Table(UnitValue.createPercentArray(new float[] {1, 0.1f, 1}));
         table.setWidth(getContentWidth());
         table.addCell(TableHelper.getLayoutCell()
                 .add(getSampleDetailsDiv()));
+        table.addCell(TableHelper.getLayoutCell()); // Spacer
         table.addCell(TableHelper.getLayoutCell()
                 .add(getDisclaimerDiv()));
         report.add(table);
