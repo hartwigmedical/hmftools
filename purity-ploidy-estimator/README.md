@@ -6,6 +6,32 @@ It combines B-allele frequency (BAF), read depth ratios, somatic variants and st
 
 PURPLE supports both grch 37 and 38 reference assemblies. 
 
+## Contents
+
+* [Usage](#usage)
+  + [Mandatory Arguments](#mandatory-arguments)
+  + [Optional Arguments](#optional-arguments)
+  + [Example Usage](#example-usage)
+* [Input](#input)
+  + [COBALT](#cobalt)
+  + [AMBER](#amber)
+  + [Structural Variant Input VCFs (optional)](#structural-variant-input-vcfs--optional-)
+  + [Somatic Variant Input VCF (optional)](#somatic-variant-input-vcf--optional-)
+* [Algorithm](#algorithm)
+  + [1. Gender](#1-gender)
+  + [2. Segmentation](#2-segmentation)
+  + [3. Sample Purity and Ploidy](#3-sample-purity-and-ploidy)
+  + [4. Copy Number Smoothing](#4-copy-number-smoothing)
+  + [5. Inferring copy number for regions without read depth information](#5-inferring-copy-number-for-regions-without-read-depth-information)
+  + [6. Allele specific ploidy inferring](#6-allele-specific-ploidy-inferring)
+  + [7. Structural Variant Recovery and Single Breakend Filtering](#7-structural-variant-recovery-and-single-breakend-filtering)
+  + [8. Identify germline copy number alterations that are homozygously deleted in the tumor](#8-identify-germline-copy-number-alterations-that-are-homozygously-deleted-in-the-tumor)
+  + [9. Determine a QC Status for the tumor](#9-determine-a-qc-status-for-the-tumor)
+* [Output](#output)
+  + [CIRCOS Output](#circos-output)
+* [Performance Characteristics](#performance-characteristics)
+* [Version History](#version-history)
+
 ## Usage
 
 ### Mandatory Arguments
