@@ -29,7 +29,7 @@ public class CircosChapter extends ReportChapter {
         // Explanation
         Table table = new Table(UnitValue.createPercentArray(new float[] {1, 1, 1}));
         table.setWidth(getContentWidth());
-        
+
         table.addCell(TableHelper.getLayoutCell().add(new Div()
             .add(getContentDiv("The outer first circle", " shows the chromosomes. The darker shaded areas represent large gaps in the human reference genome: i.e. regions of centromeres, heterochromatin & missing short arms."))
             .add(getContentDiv("The second circle", " shows the somatic variants (incl. exon, intron and intergenic regions). Somatic variants are further divided into an outer ring of single nucleotide polymorphism (SNP) allele frequencies and an inner ring of short insertion/deletion (INDEL) locations. SNP allele frequencies have been corrected for tumor purity and scale from 0 to 100%. Each dot represents a single somatic variant. SNPs are colored according to the type of base change (e.g. C>T/G>A in red) and are in concordance with the coloring used in Alexandrov et al. 2013 Nature paper that describes the use of mutational signatures. INDELs are colored yellow and red for insertions and deletions respectively."))));

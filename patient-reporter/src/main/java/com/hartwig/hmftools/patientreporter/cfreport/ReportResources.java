@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.patientreporter.cfreport;
 
 import com.hartwig.hmftools.patientreporter.PatientReporterApplication;
+import com.itextpdf.io.font.PdfEncodings;
 import com.itextpdf.io.image.ImageData;
 import com.itextpdf.io.image.ImageDataFactory;
 import com.itextpdf.kernel.colors.DeviceRgb;
@@ -313,7 +314,7 @@ public final class ReportResources {
 
     private static final PdfFont loadFont(String resourcePath) {
         try {
-            return PdfFontFactory.createFont(resourcePath);
+            return PdfFontFactory.createFont(resourcePath, PdfEncodings.IDENTITY_H);
         } catch (Exception e) {
             LOGGER.warn(e.getMessage());
             return null;
