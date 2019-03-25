@@ -17,7 +17,6 @@ public class SvaConfig
     final public int MaxSamples;
     final public boolean WriteVisualisationData;
     final public int MaxClusterSize; // for analysis and chaining
-    public boolean MergeInconsistentFoldbacks;
 
     public boolean LogVerbose;
     public String RequiredAnnotations;
@@ -57,7 +56,6 @@ public class SvaConfig
         LogVerbose = cmd.hasOption(LOG_VERBOSE);
         WriteVisualisationData = cmd.hasOption(WRITE_VISUALISATION_DATA);
         MaxClusterSize = cmd.hasOption(MAX_CLUSTER_SIZE) ? Integer.parseInt(cmd.getOptionValue(MAX_CLUSTER_SIZE)) : DEFAULT_MAX_CLUSTER_SIZE;
-        MergeInconsistentFoldbacks = false;
 
         SPECIFIC_CLUSTER_ID = Integer.parseInt(cmd.getOptionValue(LOG_CLUSTER_ID, "-1"));
     }
@@ -75,7 +73,6 @@ public class SvaConfig
         LogVerbose = false;
         WriteVisualisationData = false;
         MaxClusterSize = DEFAULT_MAX_CLUSTER_SIZE;
-        MergeInconsistentFoldbacks = true;
     }
 
     public boolean hasMultipleSamples() { return SampleId.isEmpty() || SampleId.equals("*"); }

@@ -917,59 +917,56 @@ public class ClusterAnalyser {
             }
         }
 
-        if(mConfig.MergeInconsistentFoldbacks)
+        final Map<String, List<SvBreakend>> chrBreakendMap = mClusteringMethods.getChrBreakendMap();
+
+        // additionally check whether any of the foldbacks face an opposing SV in the other cluster,
+        // and they must be the next SV and within 5M bases away
+        for (int i = 0; i <= 1; ++i)
         {
-            final Map<String, List<SvBreakend>> chrBreakendMap = mClusteringMethods.getChrBreakendMap();
+            final List<SvVarData> foldbacks = (i == 0) ? cluster1Foldbacks : cluster2Foldbacks;
+            final SvCluster foldbackCluster = (i == 0) ? cluster1 : cluster2;
+            final SvCluster otherCluster = (i == 0) ? cluster2 : cluster1;
 
-            // additionally check whether any of the foldbacks face an opposing SV in the other cluster,
-            // and they must be the next SV and within 5M bases away
-            for (int i = 0; i <= 1; ++i)
+            for (final SvVarData var : foldbacks)
             {
-                final List<SvVarData> foldbacks = (i == 0) ? cluster1Foldbacks : cluster2Foldbacks;
-                final SvCluster foldbackCluster = (i == 0) ? cluster1 : cluster2;
-                final SvCluster otherCluster = (i == 0) ? cluster2 : cluster1;
+                // get the inner-most breakend
+                SvBreakend foldbackBreakend = null;
 
-                for (final SvVarData var : foldbacks)
+                if (!var.isChainedFoldback())
                 {
-                    // get the inner-most breakend
-                    SvBreakend foldbackBreakend = null;
-
-                    if (!var.isChainedFoldback())
-                    {
-                        foldbackBreakend = var.orientation(true) == 1 ? var.getBreakend(true) : var.getBreakend(false);
-                    }
-                    else
-                    {
-                        SvBreakend be1 = var.getFoldbackBreakend(true) != null ? var.getBreakend(true) : var.getBreakend(false);
-                        SvBreakend be2 = var.getChainedFoldbackBreakend();
-                        foldbackBreakend = (var.orientation(true) == 1) == (be1.position() < be2.position()) ? be1 : be2;
-                    }
-
-                    final List<SvBreakend> breakendList = chrBreakendMap.get(foldbackBreakend.chromosome());
-
-                    SvBreakend nextBreakend = getNextUnresolvedBreakend(foldbackBreakend, breakendList);
-
-                    if (nextBreakend == null || nextBreakend.orientation() == foldbackBreakend.orientation()
-                    || nextBreakend.getSV().getCluster() != otherCluster)
-                        continue;
-
-                    if (abs(nextBreakend.position() - foldbackBreakend.position()) > MAX_FOLDBACK_NEXT_CLUSTER_DISTANCE)
-                        continue;
-
-                    double fbPloidy = foldbackBreakend.ploidy();
-                    double nbPloidy = nextBreakend.ploidy();
-
-                    if (nbPloidy < fbPloidy && !copyNumbersEqual(nbPloidy, fbPloidy))
-                        continue;
-
-                    LOGGER.debug("cluster({}) foldback breakend({}) faces cluster({}) breakend({})",
-                            foldbackCluster.id(), foldbackBreakend.toString(), otherCluster.id(), nextBreakend.toString());
-
-                    foldbackCluster.addClusterReason(CLUSTER_REASON_FOLDBACKS, nextBreakend.getSV().id());
-                    otherCluster.addClusterReason(CLUSTER_REASON_FOLDBACKS, var.id());
-
-                    return true;
+                    foldbackBreakend = var.orientation(true) == 1 ? var.getBreakend(true) : var.getBreakend(false);
                 }
+                else
+                {
+                    SvBreakend be1 = var.getFoldbackBreakend(true) != null ? var.getBreakend(true) : var.getBreakend(false);
+                    SvBreakend be2 = var.getChainedFoldbackBreakend();
+                    foldbackBreakend = (var.orientation(true) == 1) == (be1.position() < be2.position()) ? be1 : be2;
+                }
+
+                final List<SvBreakend> breakendList = chrBreakendMap.get(foldbackBreakend.chromosome());
+
+                SvBreakend nextBreakend = getNextUnresolvedBreakend(foldbackBreakend, breakendList);
+
+                if (nextBreakend == null || nextBreakend.orientation() == foldbackBreakend.orientation()
+                || nextBreakend.getSV().getCluster() != otherCluster)
+                    continue;
+
+                if (abs(nextBreakend.position() - foldbackBreakend.position()) > MAX_FOLDBACK_NEXT_CLUSTER_DISTANCE)
+                    continue;
+
+                double fbPloidy = foldbackBreakend.ploidy();
+                double nbPloidy = nextBreakend.ploidy();
+
+                if (nbPloidy < fbPloidy && !copyNumbersEqual(nbPloidy, fbPloidy))
+                    continue;
+
+                LOGGER.debug("cluster({}) foldback breakend({}) faces cluster({}) breakend({})",
+                        foldbackCluster.id(), foldbackBreakend.toString(), otherCluster.id(), nextBreakend.toString());
+
+                foldbackCluster.addClusterReason(CLUSTER_REASON_FOLDBACKS, nextBreakend.getSV().id());
+                otherCluster.addClusterReason(CLUSTER_REASON_FOLDBACKS, var.id());
+
+                return true;
             }
         }
 
