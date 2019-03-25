@@ -86,19 +86,6 @@ public class WhitelistPredicate implements Predicate<VariantModel> {
         }
 
         return false;
-
-        /*
-            if (inDbSNPWhitelist(variant))
-            {
-                LOGGER.debug("variant({}) found in dbSNP whitelist", variant.context().getID());
-                return true;
-            }
-            else if (inProteinWhitelist(variant))
-            {
-                LOGGER.debug("variant({}) found in protein whitelist", variant.context().getID());
-                return true;
-            }
-     */
     }
 
     public static boolean matchesWhitelistGeneProtein(ProgramWhitelist.Variant geneProtein,
@@ -115,14 +102,6 @@ public class WhitelistPredicate implements Predicate<VariantModel> {
         }
 
         return false;
-
-        /*
-        return variant.sampleAnnotations()
-                .stream()
-                .filter(a -> !a.hgvsProtein().isEmpty())
-                .filter(a -> mTranscriptProteins.containsKey(a.transcript()))
-                .anyMatch(a -> mTranscriptProteins.get(a.transcript()).contains(a.hgvsProtein().replaceFirst("^p\\.", "")));
-        */
     }
 
     public static boolean matchesWhitelistDbSNPId(final String dnSNPId, final VariantContext variant)

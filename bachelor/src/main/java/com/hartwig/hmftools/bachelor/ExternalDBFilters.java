@@ -1,35 +1,26 @@
 package com.hartwig.hmftools.bachelor;
 
-import static com.hartwig.hmftools.bachelor.EligibilityReport.MatchType.GENE_TRANSCRIPT;
 import static com.hartwig.hmftools.bachelor.predicates.BlacklistPredicate.asString;
 import static com.hartwig.hmftools.bachelor.predicates.BlacklistPredicate.matchesBlacklistExclusion;
-import static com.hartwig.hmftools.bachelor.predicates.BlacklistPredicate.proteinPosition;
-import static com.hartwig.hmftools.bachelor.predicates.WhitelistPredicate.matchesWhitelistDbSNPId;
 import static com.hartwig.hmftools.bachelor.predicates.WhitelistPredicate.matchesWhitelistGeneProtein;
 import static com.hartwig.hmftools.common.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.variant.CodingEffect.NONSENSE_OR_FRAMESHIFT;
 import static com.hartwig.hmftools.common.variant.CodingEffect.SPLICE;
-import static com.hartwig.hmftools.common.variant.VariantConsequence.FRAMESHIFT_VARIANT;
-import static com.hartwig.hmftools.common.variant.VariantConsequence.SPLICE_ACCEPTOR_VARIANT;
-import static com.hartwig.hmftools.common.variant.VariantConsequence.SPLICE_DONOR_VARIANT;
-import static com.hartwig.hmftools.common.variant.VariantConsequence.STOP_GAINED;
 
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.Arrays;
-import java.util.Collection;
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.bachelor.predicates.WhitelistPredicate;
 import com.hartwig.hmftools.common.variant.CodingEffect;
-import com.hartwig.hmftools.common.variant.VariantConsequence;
 import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotation;
 import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotationFactory;
 
@@ -47,7 +38,7 @@ import htsjdk.tribble.TribbleException;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.vcf.VCFFileReader;
 
-public class FilterFileBuilder
+public class ExternalDBFilters
 {
     private String mOutputDir;
     private String mInputFilterFile;
@@ -60,9 +51,9 @@ public class FilterFileBuilder
 
     private BufferedWriter mFilterWriter;
 
-    private static final Logger LOGGER = LogManager.getLogger(FilterFileBuilder.class);
+    private static final Logger LOGGER = LogManager.getLogger(ExternalDBFilters.class);
 
-    public FilterFileBuilder()
+    public ExternalDBFilters()
     {
         mOutputDir = "";
         mInputFilterFile = "";
@@ -73,7 +64,66 @@ public class FilterFileBuilder
         mMatchedWhitelistExclusions = null;
     }
 
-    public boolean initialise(final String filterFile, final String outputDir, final Program program)
+    private static int BACHELOR_FILTER_CSV_FIELD_COUNT = 10;
+
+    public static List<VariantFilter> loadExternalFilters(final String filterFile)
+    {
+        List<VariantFilter> filters = Lists.newArrayList();
+
+        if (filterFile.isEmpty() || !Files.exists(Paths.get(filterFile)))
+            return filters;
+
+        try
+        {
+            BufferedReader file = new BufferedReader(new FileReader(filterFile));
+
+            file.readLine(); // skip header
+
+            String line = null;
+            int lineIndex = 0;
+
+            while ((line = file.readLine()) != null)
+            {
+                if (line.isEmpty())
+                    break;
+
+                ++lineIndex;
+
+                // parse CSV data
+                String[] items = line.split(",");
+
+                if (items.length < BACHELOR_FILTER_CSV_FIELD_COUNT)
+                {
+                    LOGGER.error("invalid item count({}), fileIndex({})", items.length, lineIndex);
+                    continue;
+                }
+
+                // Gene,TranscriptId,Chromsome,Position,Ref,Alt,CodingEffect,AllEffects,HgvsProtein,HgvsCoding,DBSnpId,ExistingConMatched,ClinvarDiagnosis
+                VariantFilter filter = new VariantFilter(
+                        items[0],
+                        items[1],
+                        items[2],
+                        Long.parseLong(items[3]),
+                        items[4],
+                        items[5],
+                        CodingEffect.valueOf(items[6]),
+                        items[8],
+                        items[10],
+                        -1);
+
+                filters.add(filter);
+            }
+
+        }
+        catch (IOException exception)
+        {
+            LOGGER.error("Failed to read bachelor input CSV file({})", filterFile);
+        }
+
+        return filters;
+    }
+
+    public boolean createFilterFile(final String filterFile, final String outputDir, final Program program)
     {
         mOutputDir = outputDir;
         mInputFilterFile = filterFile;
@@ -107,11 +157,6 @@ public class FilterFileBuilder
             mMatchedWhitelistExclusions = new boolean[mConfigWhitelist.getVariantOrDbSNP().size()];
         }
 
-        return true;
-    }
-
-    public void run()
-    {
         try
         {
             File vcfFile = new File(mInputFilterFile);
@@ -155,10 +200,12 @@ public class FilterFileBuilder
         catch (final TribbleException e)
         {
             LOGGER.error("failed to read filter input VCF file: {}", e.getMessage());
-            return;
+            return false;
         }
 
         closeBufferedWriter(mFilterWriter);
+
+        return true;
     }
 
     // Clinvar annotations

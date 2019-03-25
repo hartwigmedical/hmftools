@@ -40,20 +40,6 @@ import htsjdk.variant.vcf.VCFFileReader;
 
 public class BachelorApplication {
 
-    private static final Logger LOGGER = LogManager.getLogger(BachelorApplication.class);
-    private static final String CONFIG_XML = "configXml";
-    private static final String CONFIG_DIRECTORY = "configDirectory";
-    private static final String RUN_DIRECTORY = "runDirectory";
-    private static final String BATCH_DIRECTORY = "batchDirectory";
-    private static final String OUTPUT_DIR = "output_dir";
-    private static final String VALIDATE = "validate";
-    private static final String SAMPLE = "sample";
-    private static final String CREATE_FILTER_FILE = "filter_file";
-    private static final String LOG_DEBUG = "log_debug";
-    private static final String BATCH_MAX_DIR = "max_batch_dir"; // only for testing
-
-    private static final String SAMPLE_LIST_FILE = "sample_list_file";
-
     private BachelorProgram mProgram;
 
     private Map<String, Program> mProgramMap;
@@ -63,11 +49,16 @@ public class BachelorApplication {
     private String mOutputDir;
     private String mBatchDirectory;
     private String mRunDirectory;
+    private String mExternalFiltersFile;
     private boolean mIsBatchRun;
     private boolean mIsSingleRun;
     private String mSampleId;
     private List<String> mLimitedSampleList;
     private int mMaxBatchDirectories;
+    private boolean mSkipIndexFile;
+
+    private static final Logger LOGGER = LogManager.getLogger(BachelorApplication.class);
+
 
     private BachelorApplication()
     {
@@ -80,34 +71,10 @@ public class BachelorApplication {
         mIsBatchRun = false;
         mBatchDirectory = "";
         mOutputDir = "";
+        mExternalFiltersFile = "";
         mMaxBatchDirectories = 0;
+        mSkipIndexFile = false;
         mLimitedSampleList = Lists.newArrayList();
-    }
-
-    @NotNull
-    private static Options createOptions()
-    {
-        final Options options = new Options();
-
-        options.addOption(CONFIG_DIRECTORY, true, "folder to find program XMLs");
-        options.addOption(CONFIG_XML, true, "single config XML to run");
-        options.addOption(OUTPUT_DIR, true, "output file");
-        options.addOption(RUN_DIRECTORY, true, "the run directory to look for inputs");
-        options.addOption(BATCH_DIRECTORY, true, "runs directory to batch process");
-        options.addOption(BATCH_MAX_DIR, true, "Max batch directories to batch process");
-        options.addOption(VALIDATE, false, "only validate the configs");
-        options.addOption(CREATE_FILTER_FILE, true, "Optional: create black and white list filter files");
-        options.addOption(SAMPLE_LIST_FILE, true, "Optional: limiting list of sample IDs to process");
-        options.addOption(SAMPLE, true, "sample id");
-        options.addOption(LOG_DEBUG, false, "Sets log level to Debug, off by default");
-        return options;
-    }
-
-    @NotNull
-    private static CommandLine createCommandLine(@NotNull final Options options, @NotNull final String... args) throws ParseException
-    {
-        final CommandLineParser parser = new DefaultParser();
-        return parser.parse(options, args);
     }
 
     private boolean loadConfig(final CommandLine cmd)
@@ -145,20 +112,19 @@ public class BachelorApplication {
             return false;
         }
 
+        mExternalFiltersFile = cmd.getOptionValue(EXTERNAL_FILTER_FILE, "");
         mOutputDir = cmd.getOptionValue(OUTPUT_DIR);
+        mSkipIndexFile = cmd.hasOption(SKIP_INDEX_FILE);
 
         if(cmd.hasOption(CREATE_FILTER_FILE))
         {
             LOGGER.info("building filter files");
             final String filterInputFile = cmd.getOptionValue(CREATE_FILTER_FILE);
-            FilterFileBuilder filterFileBuilder = new FilterFileBuilder();
+            ExternalDBFilters filterFileBuilder = new ExternalDBFilters();
 
             final Program program = mProgramMap.values().iterator().next();
 
-            if(!filterFileBuilder.initialise(filterInputFile, mOutputDir, program))
-                return false;
-
-            filterFileBuilder.run();
+            filterFileBuilder.createFilterFile(filterInputFile, mOutputDir, program);
             LOGGER.info("run complete");
             return true;
         }
@@ -199,6 +165,11 @@ public class BachelorApplication {
 
         if(!mProgram.loadConfig(mProgramMap))
             return false;
+
+        if(!mExternalFiltersFile.isEmpty())
+        {
+            mProgram.addExternalFilters(ExternalDBFilters.loadExternalFilters(mExternalFiltersFile));
+        }
 
         if (mIsBatchRun)
         {
@@ -294,9 +265,9 @@ public class BachelorApplication {
 
         LOGGER.debug("Processing vcf: {}", vcf.getPath());
 
-        try (final VCFFileReader reader = new VCFFileReader(vcf, true))
+        try (final VCFFileReader reader = new VCFFileReader(vcf, !mSkipIndexFile))
         {
-            return mProgram.processVCF(sampleId, reader);
+            return mProgram.processVcfFile(sampleId, reader, !mSkipIndexFile);
         }
         catch (final TribbleException e)
         {
@@ -344,14 +315,14 @@ public class BachelorApplication {
         {
             for (final EligibilityReport r : result)
             {
-                mMainDataWriter.write(String.format("%s,%s,%s,%s,%s,%s",
-                        r.sampleId(), r.source().toString(), r.program(), r.id(), r.genes(), r.transcriptId()));
+                mMainDataWriter.write(String.format("%s,%s,%s,%s,%s",
+                        r.sampleId(), r.program(), r.id(), r.genes(), r.transcriptId()));
 
-                mMainDataWriter.write(String.format(",%s,%d,%s,%s,%s,%s",
-                        r.chrom(), r.pos(), r.ref(), r.alts(), r.effects(), r.annotations()));
+                mMainDataWriter.write(String.format(",%s,%d,%s,%s,%s,%s,%s",
+                        r.chrom(), r.pos(), r.ref(), r.alts(), r.codingEffect(), r.effects(), r.annotations()));
 
-                mMainDataWriter.write(String.format(",%s,%s,%d,%s,%s,%d,%d,%d,%d,%s",
-                        r.hgvsProtein(), r.isHomozygous(), r.phredScore(), r.hgvsCoding(), r.matchType(),
+                mMainDataWriter.write(String.format(",%s,%s,%d,%s,%s,%s,%d,%d,%d,%d,%s",
+                        r.hgvsProtein(), r.isHomozygous(), r.phredScore(), r.hgvsCoding(), r.matchType(), r.hasDepthInfo(),
                         r.germlineAltCount(), r.germlineReadDepth(), r.tumorAltCount(), r.tumorReadDepth(), r.condonInfo()));
 
                 mMainDataWriter.newLine();
@@ -386,9 +357,9 @@ public class BachelorApplication {
         {
             mMainDataWriter = createBufferedWriter(mainFileName, false);
 
-            mMainDataWriter.write("SAMPLEID,SOURCE,PROGRAM,ID,GENE,TRANSCRIPT_ID,CHROM,POS,REF,ALTS");
-            mMainDataWriter.write(",EFFECTS,ANNOTATIONS,HGVS_PROTEIN,IS_HOMOZYGOUS,PHRED_SCORE,HGVS_CODING");
-            mMainDataWriter.write(",MATCH_TYPE,GL_ALT_COUNT,GL_READ_DEPTH,TUMOR_ALT_COUNT,TUMOR_READ_DEPTH,CODON_INFO");
+            mMainDataWriter.write("SampleId,Program,Id,Gene,TranscriptId,Chromosome,Position,Ref,Alt");
+            mMainDataWriter.write(",CodingEffect,Effect,Annotations,HgvsProtein,IsHomozygous,PhredScore,HgvsCoding");
+            mMainDataWriter.write(",MatchType,HasDepthInfo,GermlineAltCount,GermlineReadDepth,TumorAltCount,TumorReadDepth,CodonInfo");
 
             mMainDataWriter.newLine();
 
@@ -400,6 +371,48 @@ public class BachelorApplication {
         }
     }
 
+    private static final String CONFIG_XML = "configXml";
+    private static final String CONFIG_DIRECTORY = "configDirectory";
+    private static final String RUN_DIRECTORY = "runDirectory";
+    private static final String BATCH_DIRECTORY = "batchDirectory";
+    private static final String OUTPUT_DIR = "output_dir";
+    private static final String VALIDATE = "validate";
+    private static final String SKIP_INDEX_FILE = "skip_index_file";
+    private static final String SAMPLE = "sample";
+    private static final String EXTERNAL_FILTER_FILE = "ext_filter_file";
+    private static final String CREATE_FILTER_FILE = "create_filter_file";
+    private static final String LOG_DEBUG = "log_debug";
+    private static final String BATCH_MAX_DIR = "max_batch_dir"; // only for testing
+
+    private static final String SAMPLE_LIST_FILE = "sample_list_file";
+
+    @NotNull
+    private static Options createOptions()
+    {
+        final Options options = new Options();
+
+        options.addOption(CONFIG_DIRECTORY, true, "folder to find program XMLs");
+        options.addOption(CONFIG_XML, true, "single config XML to run");
+        options.addOption(OUTPUT_DIR, true, "output file");
+        options.addOption(RUN_DIRECTORY, true, "the run directory to look for inputs");
+        options.addOption(BATCH_DIRECTORY, true, "runs directory to batch process");
+        options.addOption(BATCH_MAX_DIR, true, "Max batch directories to batch process");
+        options.addOption(VALIDATE, false, "only validate the configs");
+        options.addOption(SKIP_INDEX_FILE, false, "Skip VCF index file");
+        options.addOption(EXTERNAL_FILTER_FILE, true, "Optional: name of an external filter file");
+        options.addOption(CREATE_FILTER_FILE, true, "Optional: create black and white list filter files");
+        options.addOption(SAMPLE_LIST_FILE, true, "Optional: limiting list of sample IDs to process");
+        options.addOption(SAMPLE, true, "sample id");
+        options.addOption(LOG_DEBUG, false, "Sets log level to Debug, off by default");
+        return options;
+    }
+
+    @NotNull
+    private static CommandLine createCommandLine(@NotNull final Options options, @NotNull final String... args) throws ParseException
+    {
+        final CommandLineParser parser = new DefaultParser();
+        return parser.parse(options, args);
+    }
     public static void main(final String... args)
     {
         final Options options = createOptions();

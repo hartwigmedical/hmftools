@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.bachelor;
 
+import com.hartwig.hmftools.common.variant.CodingEffect;
+
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -10,23 +12,12 @@ abstract class EligibilityReport {
     @NotNull
     public abstract String sampleId();
 
-    enum ReportType {
-        GERMLINE_MUTATION,
-        SOMATIC_MUTATION,
-        GERMLINE_DELETION,
-        SOMATIC_DELETION,
-        SOMATIC_DISRUPTION
-    }
-
     enum MatchType {
         NONE,
         GENE_TRANSCRIPT,
         HOTSPOT_LOCATION,
         WHITELIST
     }
-
-    @NotNull
-    public abstract ReportType source();
 
     public abstract MatchType matchType();
 
@@ -53,6 +44,8 @@ abstract class EligibilityReport {
     @NotNull
     public abstract String alts();
 
+    public abstract CodingEffect codingEffect();
+
     @NotNull
     public abstract String effects();
 
@@ -66,6 +59,8 @@ abstract class EligibilityReport {
     public abstract boolean isHomozygous();
 
     public abstract int phredScore();
+
+    public abstract boolean hasDepthInfo();
 
     public abstract int germlineAltCount();
 

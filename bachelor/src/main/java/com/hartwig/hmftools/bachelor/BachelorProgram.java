@@ -4,7 +4,9 @@ import static com.hartwig.hmftools.bachelor.EligibilityReport.MatchType.GENE_TRA
 import static com.hartwig.hmftools.bachelor.EligibilityReport.MatchType.HOTSPOT_LOCATION;
 import static com.hartwig.hmftools.bachelor.EligibilityReport.MatchType.NONE;
 import static com.hartwig.hmftools.bachelor.EligibilityReport.MatchType.WHITELIST;
+import static com.hartwig.hmftools.common.variant.CodingEffect.NONSENSE_OR_FRAMESHIFT;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -22,17 +24,20 @@ import com.hartwig.hmftools.bachelor.predicates.BlacklistPredicate;
 import com.hartwig.hmftools.bachelor.predicates.WhitelistPredicate;
 import com.hartwig.hmftools.common.genepanel.HmfGenePanelSupplier;
 import com.hartwig.hmftools.common.region.HmfTranscriptRegion;
+import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotation;
 import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotationFactory;
 
 import nl.hartwigmedicalfoundation.bachelor.GeneIdentifier;
 import nl.hartwigmedicalfoundation.bachelor.HotspotLocation;
 import nl.hartwigmedicalfoundation.bachelor.Program;
+import nl.hartwigmedicalfoundation.bachelor.ProgramBlacklist;
 import nl.hartwigmedicalfoundation.bachelor.ProgramPanel;
 import nl.hartwigmedicalfoundation.bachelor.SnpEffect;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.NotNull;
 
 import htsjdk.samtools.util.CloseableIterator;
 import htsjdk.variant.variantcontext.Genotype;
@@ -46,10 +51,9 @@ public class BachelorProgram
     private List<String> mRequiredEffects;
     private List<String> mPanelTranscripts;
     private List<HotspotLocation> mHotspots;
-    private Predicate<VariantModel> mWhiteList;
-    private Predicate<VariantModel> mBlackList;
-    private boolean mHasWhitelist;
-    private boolean mHasBlacklist;
+
+    private List<VariantFilter> mWhitelistFilters;
+    private List<VariantFilter> mBlacklistFilters;
 
     private SortedSetMultimap<String, HmfTranscriptRegion> mGenesByChromosomeMap;
     private Map<String, HmfTranscriptRegion> mAllGenesMap;
@@ -68,10 +72,8 @@ public class BachelorProgram
         mPanelTranscripts = null;
         mHotspots = null;
 
-        mBlackList = null;
-        mWhiteList = null;
-        mHasWhitelist = false;
-        mHasBlacklist = false;
+        mWhitelistFilters = Lists.newArrayList();
+        mBlacklistFilters = Lists.newArrayList();
 
         mReports = Lists.newArrayList();
 
@@ -136,41 +138,84 @@ public class BachelorProgram
             }
         }
 
+        // merge XML white and black lists into the same format
         if(program.getBlacklist() != null && !program.getBlacklist().getExclusion().isEmpty())
         {
-            final Predicate<VariantModel> inBlacklist = new BlacklistPredicate(geneToEnsemblMap.values(), program.getBlacklist());
-            mBlackList = v -> !inBlacklist.test(v);
-            mHasBlacklist = true;
+            for (ProgramBlacklist.Exclusion exclusion : program.getBlacklist().getExclusion())
+            {
+                String hgvsProtein = exclusion.getHGVSP() != null ? exclusion.getHGVSP() : "";
+                int minCodon = exclusion.getMinCodon() != null ? exclusion.getMinCodon().intValue() : -1;
+
+                String chromosome = "";
+                long position = 0;
+
+                if(exclusion.getPosition() != null)
+                {
+                    String[] chrPos = exclusion.getPosition().split(":");
+
+                    if(chrPos.length == 2)
+                    {
+                        chromosome = chrPos[0];
+                        position = Long.parseLong(chrPos[1]);
+                    }
+                }
+
+                VariantFilter filter = new VariantFilter(exclusion.getGene().getName(), "", chromosome, position,
+                        "", "", NONSENSE_OR_FRAMESHIFT, hgvsProtein, "", minCodon);
+
+                mBlacklistFilters.add(filter);
+            }
         }
 
         if(program.getWhitelist() != null && !program.getWhitelist().getVariantOrDbSNP().isEmpty())
         {
-            mWhiteList = new WhitelistPredicate(geneToEnsemblMap, program.getWhitelist());
-            mHasWhitelist = program.getWhitelist() != null && !program.getWhitelist().getVariantOrDbSNP().isEmpty();
+            // add to generic filter collection if to be used
         }
 
         return true;
     }
 
+    public void addExternalFilters(final List<VariantFilter> filters)
+    {
+        // split into white and black list based on the coding effect
+        mBlacklistFilters.addAll(filters.stream()
+                .filter(x -> x.Effect == NONSENSE_OR_FRAMESHIFT || x.Effect == CodingEffect.SPLICE)
+                .collect(Collectors.toList()));
+
+        mWhitelistFilters.addAll(filters.stream()
+                .filter(x -> x.Effect != NONSENSE_OR_FRAMESHIFT && x.Effect != CodingEffect.SPLICE)
+                .collect(Collectors.toList()));
+    }
+
     public String name() { return mName; }
 
-    List<EligibilityReport> processVCF(final String sampleId, final VCFFileReader reader)
+    List<EligibilityReport> processVcfFile(final String sampleId, final VCFFileReader reader, boolean usesIndex)
     {
         mReports.clear();
 
-        for (final HmfTranscriptRegion region : mTranscriptRegions)
+        if(usesIndex)
         {
-            // LOGGER.debug("chromosome({} start={} end={})", region.chromosome(), (int) region.geneStart(), (int) region.geneEnd());
-
-            final CloseableIterator<VariantContext> query = reader.query(region.chromosome(), (int) region.geneStart(), (int) region.geneEnd());
-
-            while (query.hasNext())
+            for (final HmfTranscriptRegion region : mTranscriptRegions)
             {
-                final VariantContext variant = query.next();
-                processVariant(variant, sampleId, region);
+                final CloseableIterator<VariantContext> query =
+                        reader.query(region.chromosome(), (int) region.geneStart(), (int) region.geneEnd());
+
+                while (query.hasNext())
+                {
+                    final VariantContext variant = query.next();
+                    processVariant(variant, sampleId, region);
+                }
+
+                query.close();
+            }
+        }
+        else
+        {
+            for (final VariantContext variant : reader)
+            {
+                processVariant(variant, sampleId, null);
             }
 
-            query.close();
         }
 
         return mReports;
@@ -197,8 +242,6 @@ public class BachelorProgram
         EligibilityReport.MatchType matchType = NONE;
 
         // first check the transcript
-        SnpEffAnnotation relevantSnpEff = null;
-        String annotationsStr = "";
 
         for (int i = 0; i < sampleAnnotations.size(); ++i)
         {
@@ -218,142 +261,193 @@ public class BachelorProgram
                     continue;
             }
 
+            final String gene = snpEff.gene();
+            CodingEffect codingEffect = CodingEffect.effect(gene, snpEff.consequences());
+
+            final String varId = variant.getID();
+            final String transcriptId = snpEff.transcript();
+            final String chromosome = variant.getContig();
+            final long position = variant.getStart();
+            final String ref = variant.getReference().toString();
+            final String alt = snpEff.allele();
+            final String effects = snpEff.effects();
+            final String hgvsProtein = snpEff.hgvsProtein();
+            final String hgvsCoding = snpEff.hgvsCoding();
+
             for (String requiredEffect : mRequiredEffects)
             {
-                if (snpEff.effects().contains(requiredEffect))
+                if (effects.contains(requiredEffect))
                 {
-                    LOGGER.debug("match found: program({}): var({}:{}) ref({}) alt({}) on effect({}) and transcript({})",
-                            mName, variant.getContig(), variant.getStart(),
-                            variant.getReference().getBaseString(), variant.getAlleles().get(1).getBaseString(),
-                            snpEff.effects(), snpEff.transcript());
+                    LOGGER.debug("match found: gene({} {}) var({}:{}) ref({}) alt({}) on effect({})",
+                            gene, transcriptId, chromosome, position, ref, alt, effects);
 
                     matchType = GENE_TRANSCRIPT;
-                    relevantSnpEff = snpEff;
-                    annotationsStr = SnpEffAnnotationFactory.rawAnnotations(variant).get(i);
                     break;
                 }
             }
 
-            if (matchType == GENE_TRANSCRIPT)
-                break;
-        }
-
-        if(matchType == NONE && mHasWhitelist)
-        {
-            VariantModel sampleVariant = new VariantModel(refGenotype.getSampleName(), variant);
-
-            if(mWhiteList.test(sampleVariant))
-                matchType = WHITELIST;
-        }
-
-        // then check the hotspot location
-        if(matchType == NONE)
-        {
-            for (final HotspotLocation hotspot : mHotspots)
+            if (matchType == GENE_TRANSCRIPT && !mBlacklistFilters.isEmpty())
             {
-                if (variant.getStart() != hotspot.getPosition().intValue() || !variant.getContig().equals(hotspot.getChromosome()))
-                    continue;
-
-                if (!variant.getReference().getBaseString().equals(hotspot.getRef())
-                        || variant.getAlleles().size() < 2 || !variant.getAlleles().get(1).getBaseString().equals(hotspot.getAlt()))
+                for(final VariantFilter filter : mBlacklistFilters)
                 {
-                    continue;
+                    if(!filter.Gene.equals(gene))
+                        continue;
+
+                    if(!filter.HgvsProteinCodon.isEmpty())
+                    {
+                        if(filter.HgvsProteinCodon.equals(hgvsProtein))
+                        {
+                            LOGGER.debug("gene({} {}) var({}:{}) ref({}) alt({}) blacklisted on hgvsProtein({})",
+                                    gene, transcriptId, chromosome, position, ref, alt, hgvsProtein);
+                            return;
+                        }
+
+                        continue;
+                    }
+
+                    if(!filter.DBSnpId.isEmpty())
+                    {
+                        if(varId.contains(filter.DBSnpId))
+                        {
+                            LOGGER.debug("gene({} {}) var({}:{}) ref({}) alt({}) blacklisted on DBSnpId({})",
+                                    gene, transcriptId, chromosome, position, ref, alt, varId);
+                            return;
+                        }
+
+                        continue;
+                    }
+
+                    if(filter.MinCodon >= 0)
+                    {
+                        final List<Integer> proteinPositions = proteinPosition(snpEff);
+
+                        if(!proteinPositions.isEmpty() && filter.MinCodon <= proteinPositions.get(0))
+                        {
+                            LOGGER.debug("gene({} {}) var({}:{}) ref({}) alt({}) blacklisted on minCodon({})",
+                                    gene, transcriptId, chromosome, position, ref, alt, proteinPositions.get(0));
+                            return;
+                        }
+                    }
+
+                    if(filter.Position == position && filter.Ref.equals(ref) && filter.Alt.equals(alt))
+                    {
+                        LOGGER.debug("gene({} {}) var({}:{}) ref({}) alt({}) blacklisted on position and ref/alt",
+                                gene, transcriptId, chromosome, position, ref, alt);
+                        return;
+                    }
+
                 }
-
-                matchType = HOTSPOT_LOCATION;
-
-                LOGGER.debug("match found: program({}): var({}:{}) ref({}) alt({}) on hotspot location",
-                        mName, variant.getContig(), variant.getStart(),
-                        variant.getReference().getBaseString(), variant .getAlleles() .get(1) .getBaseString());
             }
-        }
 
-        if(matchType == HOTSPOT_LOCATION || matchType == WHITELIST)
-        {
-            // select the first relevant feature
-            for (int i = 0; i < sampleAnnotations.size(); ++i)
+            if (matchType == NONE && !mWhitelistFilters.isEmpty())
             {
-                final SnpEffAnnotation snpEff = sampleAnnotations.get(i);
+                for(final VariantFilter filter : mWhitelistFilters)
+                {
+                    if(!filter.Gene.equals(gene))
+                        continue;
 
-                if (!snpEff.isTranscriptFeature())
-                    continue;
+                    if(!filter.HgvsProteinCodon.isEmpty() && filter.HgvsProteinCodon.equals(hgvsProtein))
+                    {
+                        LOGGER.debug("match found: gene({} {}) var({}:{}) ref({}) alt({}) on hgvsProtein({}) whitelist",
+                                gene, transcriptId, chromosome, position, ref, alt, hgvsProtein);
+                        matchType = WHITELIST;
+                        break;
+                    }
 
-                relevantSnpEff = snpEff;
-                annotationsStr = SnpEffAnnotationFactory.rawAnnotations(variant).get(i);
-                break;
+                    if(!filter.DBSnpId.isEmpty() && varId.contains(filter.DBSnpId))
+                    {
+                        LOGGER.debug("match found: gene({} {}) var({}:{}) ref({}) alt({}) on DBSnpId({}) whitelist",
+                                gene, transcriptId, chromosome, position, ref, alt, varId);
+                        matchType = WHITELIST;
+                        break;
+                    }
+                }
             }
-        }
 
-        // check blacklistings
-        if(mHasBlacklist)
-        {
-            VariantModel sampleVariant = new VariantModel(refGenotype.getSampleName(), variant);
-
-            if(!mBlackList.test(sampleVariant))
+            // then check the hotspot location
+            if(matchType == NONE && !mHotspots.isEmpty())
             {
-                LOGGER.debug("var({}:{}) ref({}) alt({}) blacklisted",
-                        variant.getContig(), variant.getStart(), variant.getReference().getBaseString(),
-                        variant .getAlleles().get(1).getBaseString());
+                for (final HotspotLocation hotspot : mHotspots)
+                {
+                    if (position != hotspot.getPosition().intValue() || !chromosome.equals(hotspot.getChromosome()))
+                        continue;
+
+                    if (!ref.equals(hotspot.getRef()) || variant.getAlleles().size() < 2 || !alt.equals(hotspot.getAlt()))
+                    {
+                        continue;
+                    }
+
+                    matchType = HOTSPOT_LOCATION;
+
+                    LOGGER.debug("match found: gene({} {}) var({}:{}) ref({}) alt({}) on hotspot location)",
+                            gene, transcriptId, chromosome, position, ref, alt, varId);
+                }
+            }
+
+            if(matchType == NONE)
                 return;
+
+            String annotationsStr = SnpEffAnnotationFactory.rawAnnotations(variant).get(i);
+
+            boolean isHomozygous = refGenotype.isHom();
+            int phredScore = refGenotype.getPL().length >= 1 ? refGenotype.getPL()[0] : 0;
+
+            int germlineAltCount = refGenotype.getAD()[1];
+            int germlineReadDepth = refGenotype.getDP();
+
+            int tumorAltCount = 0;
+            int tumorReadDepth = 0;
+            boolean hasDepthInfo = false;
+
+            if (variant.getGenotypes().size() >= 2)
+            {
+                hasDepthInfo = true;
+                final Genotype tumorGenotype = variant.getGenotype(1);
+                int[] alleleData = tumorGenotype.getAD();
+                tumorAltCount = alleleData[1];
+                tumorReadDepth = tumorGenotype.getDP();
             }
+
+            final String codonInfo = snpEff.aaPosAndLength();
+
+            EligibilityReport report = ImmutableEligibilityReport.builder()
+                    .sampleId(sampleId)
+                    .program(mName)
+                    .matchType(matchType)
+                    .id(variant.getID())
+                    .genes(gene)
+                    .transcriptId(transcriptId)
+                    .chrom(chromosome)
+                    .pos(position)
+                    .ref(ref)
+                    .alts(alt)
+                    .effects(effects)
+                    .codingEffect(codingEffect)
+                    .annotations(annotationsStr)
+                    .hgvsProtein(hgvsProtein)
+                    .hgvsCoding(hgvsCoding)
+                    .isHomozygous(isHomozygous)
+                    .phredScore(phredScore)
+                    .hasDepthInfo(hasDepthInfo)
+                    .germlineAltCount(germlineAltCount)
+                    .germlineReadDepth(germlineReadDepth)
+                    .tumorAltCount(tumorAltCount)
+                    .tumorReadDepth(tumorReadDepth)
+                    .condonInfo(codonInfo)
+                    .build();
+
+            mReports.add(report);
         }
-
-        if (matchType == NONE)
-            return;
-
-        boolean isHomozygous = refGenotype.isHom();
-        int phredScore = refGenotype.getPL().length >= 1 ? refGenotype.getPL()[0] : 0;
-
-        int germlineAltCount = refGenotype.getAD()[1];
-        int germlineReadDepth = refGenotype.getDP();
-
-        int tumorAltCount = 0;
-        int tumorReadDepth = 0;
-
-        if(variant.getGenotypes().size() >= 2)
-        {
-            final Genotype tumorGenotype = variant.getGenotype(1);
-            int[] alleleData = tumorGenotype.getAD();
-            tumorAltCount = alleleData[1];
-            tumorReadDepth = tumorGenotype.getDP();
-        }
-
-        final String codonInfo = relevantSnpEff.aaPosAndLength();
-
-        EligibilityReport report = ImmutableEligibilityReport.builder()
-                .sampleId(sampleId)
-                .source(EligibilityReport.ReportType.GERMLINE_MUTATION)
-                .program(mName)
-                .matchType(matchType)
-                .id(variant.getID())
-                .genes(relevantSnpEff.gene())
-                .transcriptId(relevantSnpEff.transcript())
-                .chrom(variant.getContig())
-                .pos(variant.getStart())
-                .ref(variant.getReference().toString())
-                .alts(relevantSnpEff.allele())
-                .effects(relevantSnpEff.effects())
-                .annotations(annotationsStr)
-                .hgvsProtein(relevantSnpEff.hgvsProtein())
-                .hgvsCoding(relevantSnpEff.hgvsCoding())
-                .isHomozygous(isHomozygous)
-                .phredScore(phredScore)
-                .germlineAltCount(germlineAltCount)
-                .germlineReadDepth(germlineReadDepth)
-                .tumorAltCount(tumorAltCount)
-                .tumorReadDepth(tumorReadDepth)
-                .condonInfo(codonInfo)
-                .build();
-
-        mReports.add(report);
     }
 
-    public boolean hasWhiteList() { return mHasWhitelist; }
-    public Predicate<VariantModel> whitelist() { return mWhiteList; }
+    private static List<Integer> proteinPosition(final SnpEffAnnotation annotation)
+    {
+        return Arrays.stream(annotation.aaPosAndLength().split("/"))
+                .filter(s -> !s.isEmpty())
+                .map(Integer::parseInt)
+                .collect(Collectors.toList());
+    }
 
-    public List<String> requiredEffects() { return mRequiredEffects; }
-    public List<String> panelTranscripts() { return mPanelTranscripts; }
-    public List<HotspotLocation> hotspots() { return mHotspots; }
 
     private void initialiseGeneData()
     {
