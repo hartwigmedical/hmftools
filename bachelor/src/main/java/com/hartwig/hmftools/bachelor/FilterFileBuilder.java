@@ -219,7 +219,7 @@ public class FilterFileBuilder
                 }
             }
 
-            writeFilterRecord(variant, snpEff, effects, clinvarSignificance);
+            writeFilterRecord(variant, snpEff, gene, clinvarSignificance);
         }
     }
 

@@ -27,83 +27,6 @@ import org.junit.Test;
 public class ChainingActualTests
 {
 
-    @Ignore
-    @Test
-    public void testActualComplexChaining1()
-    {
-        // from sampleId CPCT02020258T but not sure if has clustered all SVs correctly
-        SvTestHelper tester = new SvTestHelper();
-        //tester.logVerbose(true);
-
-        final SvVarData var1 = createTestSv("717", "11", "11", 67149357,67150121, -1, -1, INV, 10.4, 18, 7.51, 7.51, 6, "");
-        final SvVarData var2 = createTestSv("719", "11", "11", 67465724,68587766, -1, 1, DUP, 20.7, 19.7, 2.75, 1.54, 2, "");
-        final SvVarData var3 = createTestSv("731", "11", "11", 68574864,70107010, 1, -1, DEL, 19.7, 21.0, 1.6, 2.05, 1.9, "");
-        final SvVarData var4 = createTestSv("728", "11", "11", 68587010,69911892, -1, -1, INV, 19.7, 15.3, 1.67, 1.66, 1.54, "");
-        final SvVarData var5 = createTestSv("723", "11", "11", 68797542,68897549, 1, 1, INV, 18.7, 15.6, 3.04, 3.96, 3.33, "");
-        final SvVarData var6 = createTestSv("726", "11", "11", 69720626,69722514, -1, -1, INV, 9.8, 13.8, 4.13, 3.94, 4.2, "");
-        final SvVarData var7 = createTestSv("727", "11", "11", 69722658,69724290, 1, -1, DEL, 13.8,13.7, 3.98, 3.88, 4.36, "");
-        final SvVarData var8 = createTestSv("732", "11", "11", 70106999,70107331, 1, 1, INV, 20.8, 21, 1.85, 1.85, 1.82, "");
-        final SvVarData var9 = createTestSv("733", "11", "11", 70170579,70173624, 1, -1, DEL, 19.2, 19.4, 0.67, 0.86, 0.94, "");
-        final SvVarData var10 = createTestSv("734", "11", "11", 70173632,70174021, 1, 1, INV, 19.4, 18.3, 1.07, 0.71, 0.78, "");
-        final SvVarData var11 = createTestSv("720", "1", "11", 100499653,68672544, 1, -1, BND, 2.05, 19.6, 1, 1.4, 1.2, "");
-        final SvVarData var12 = createTestSv("462", "1", "1", 113342526,113343275, -1, -1, INV, 3, 3.9, 0.93, 0.93, 1.11, "");
-
-        // mark assembled links
-        var3.setAssemblyData(false, "asmb1");
-        var8.setAssemblyData(false, "asmb1");
-
-        var9.setAssemblyData(false, "asmb2");
-        var10.setAssemblyData(false, "asmb2");
-
-        var6.setAssemblyData(false, "asmb3");
-        var7.setAssemblyData(true, "asmb3");
-
-        tester.AllVariants.add(var1);
-        tester.AllVariants.add(var2);
-        tester.AllVariants.add(var3);
-        tester.AllVariants.add(var4);
-        tester.AllVariants.add(var5);
-        tester.AllVariants.add(var6);
-        tester.AllVariants.add(var7);
-        tester.AllVariants.add(var8);
-        tester.AllVariants.add(var9);
-        tester.AllVariants.add(var10);
-        tester.AllVariants.add(var11);
-        tester.AllVariants.add(var12);
-
-        Map<String, List<SvLOH>> lohDataMap = new HashMap();
-        List<SvLOH> lohData = Lists.newArrayList();
-
-        lohData.add(new SvLOH(tester.SampleId, "1", 1, 2, 100499653, 113342526,
-                "BND", "INV", 1, 1, 1, 0, 1, 1,
-                "720", "462", false, true));
-
-        lohDataMap.put(tester.SampleId, lohData);
-
-        tester.ClusteringMethods.setSampleLohData(lohDataMap);
-
-        tester.preClusteringInit();
-
-        tester.Analyser.clusterAndAnalyse();
-
-        // first check foldbacks are in place
-        assertEquals(var1.getFoldbackLink(true), var1.id());
-        assertEquals(var5.getFoldbackLink(true), var5.id());
-        assertEquals(var6.getFoldbackLink(true), var6.id());
-        assertEquals(var9.getFoldbackLink(true), var10.id());
-        assertEquals(var10.getFoldbackLink(true), var9.id());
-        assertEquals(var12.getFoldbackLink(true), var12.id());
-
-        // now check final chain-finding across all sub-clusters
-        assertEquals(tester.Analyser.getClusters().size(), 1);
-        final SvCluster cluster = tester.Analyser.getClusters().get(0);
-
-        assertEquals(2, cluster.getChains().size());
-
-        assertEquals(14, cluster.getChains().get(0).getLinkCount());
-        assertEquals(3, cluster.getChains().get(1).getLinkCount());
-    }
-
     @Test
     public void testActualComplexChaining2()
     {
@@ -211,12 +134,13 @@ public class ChainingActualTests
         // based on CPCT02010325T clusterId 37, where the shortest TI of 76 bases is actually ignored so as to make 2 chains
         SvTestHelper tester = new SvTestHelper();
         // tester.logVerbose(true);
+        tester.Analyser.getChainFinder().setMaxPossibleLinks(0);
 
         final SvVarData var1 = createTestSv("7821420","18","X",23601785,48007145,-1,1,BND,1.92,1.96,0.98,0.95,1.03, "");
         final SvVarData var2 = createTestSv("7821421","X","X",48004021,48123140,-1,-1,INV,0.92,0.99,0.92,0.99,0.96, "");
         final SvVarData var3 = createTestSv("7821422","X","X",48082005,66755692,1,1,INV,1.01,1,1.01,1,0.86, "");
         final SvVarData var4 = createTestSv("7821423","18","X",23577410,66767221,1,-1,BND,1.95,0.97,1.02,0.97,1.01, "");
-        final SvVarData var5 = createTestSv("7821424","X","X",47973211,67907761,1,1,INV,1,0.97,1,0.97,0.99, "");
+        final SvVarData var5 = createTestSv("7821424","X","X",47973211,67907761,1,1, INV,1,0.97,1,0.97,0.99, "");
         final SvVarData var6 = createTestSv("7821425","X","X",48007069,67910047,-1,-1,INV,1.96,1,1.04,1,0.99, "");
 
         tester.AllVariants.add(var1);
@@ -246,10 +170,83 @@ public class ChainingActualTests
         final SvCluster cluster = tester.Analyser.getClusters().get(0);
 
         assertEquals(2, cluster.getChains().size());
+    }
 
-        // assertEquals(14, cluster.getChains().get(0).getLinkCount());
-        // assertEquals(3, cluster.getChains().get(1).getLinkCount());
+    @Ignore
+    @Test
+    public void testActualComplexChaining1()
+    {
+        // from sampleId CPCT02020258T but not sure if has clustered all SVs correctly
+        SvTestHelper tester = new SvTestHelper();
+        //tester.logVerbose(true);
 
+        final SvVarData var1 = createTestSv("717", "11", "11", 67149357,67150121, -1, -1, INV, 10.4, 18, 7.51, 7.51, 6, "");
+        final SvVarData var2 = createTestSv("719", "11", "11", 67465724,68587766, -1, 1, DUP, 20.7, 19.7, 2.75, 1.54, 2, "");
+        final SvVarData var3 = createTestSv("731", "11", "11", 68574864,70107010, 1, -1, DEL, 19.7, 21.0, 1.6, 2.05, 1.9, "");
+        final SvVarData var4 = createTestSv("728", "11", "11", 68587010,69911892, -1, -1, INV, 19.7, 15.3, 1.67, 1.66, 1.54, "");
+        final SvVarData var5 = createTestSv("723", "11", "11", 68797542,68897549, 1, 1, INV, 18.7, 15.6, 3.04, 3.96, 3.33, "");
+        final SvVarData var6 = createTestSv("726", "11", "11", 69720626,69722514, -1, -1, INV, 9.8, 13.8, 4.13, 3.94, 4.2, "");
+        final SvVarData var7 = createTestSv("727", "11", "11", 69722658,69724290, 1, -1, DEL, 13.8,13.7, 3.98, 3.88, 4.36, "");
+        final SvVarData var8 = createTestSv("732", "11", "11", 70106999,70107331, 1, 1, INV, 20.8, 21, 1.85, 1.85, 1.82, "");
+        final SvVarData var9 = createTestSv("733", "11", "11", 70170579,70173624, 1, -1, DEL, 19.2, 19.4, 0.67, 0.86, 0.94, "");
+        final SvVarData var10 = createTestSv("734", "11", "11", 70173632,70174021, 1, 1, INV, 19.4, 18.3, 1.07, 0.71, 0.78, "");
+        final SvVarData var11 = createTestSv("720", "1", "11", 100499653,68672544, 1, -1, BND, 2.05, 19.6, 1, 1.4, 1.2, "");
+        final SvVarData var12 = createTestSv("462", "1", "1", 113342526,113343275, -1, -1, INV, 3, 3.9, 0.93, 0.93, 1.11, "");
+
+        // mark assembled links
+        var3.setAssemblyData(false, "asmb1");
+        var8.setAssemblyData(false, "asmb1");
+
+        var9.setAssemblyData(false, "asmb2");
+        var10.setAssemblyData(false, "asmb2");
+
+        var6.setAssemblyData(false, "asmb3");
+        var7.setAssemblyData(true, "asmb3");
+
+        tester.AllVariants.add(var1);
+        tester.AllVariants.add(var2);
+        tester.AllVariants.add(var3);
+        tester.AllVariants.add(var4);
+        tester.AllVariants.add(var5);
+        tester.AllVariants.add(var6);
+        tester.AllVariants.add(var7);
+        tester.AllVariants.add(var8);
+        tester.AllVariants.add(var9);
+        tester.AllVariants.add(var10);
+        tester.AllVariants.add(var11);
+        tester.AllVariants.add(var12);
+
+        Map<String, List<SvLOH>> lohDataMap = new HashMap();
+        List<SvLOH> lohData = Lists.newArrayList();
+
+        lohData.add(new SvLOH(tester.SampleId, "1", 1, 2, 100499653, 113342526,
+                "BND", "INV", 1, 1, 1, 0, 1, 1,
+                "720", "462", false, true));
+
+        lohDataMap.put(tester.SampleId, lohData);
+
+        tester.ClusteringMethods.setSampleLohData(lohDataMap);
+
+        tester.preClusteringInit();
+
+        tester.Analyser.clusterAndAnalyse();
+
+        // first check foldbacks are in place
+        assertEquals(var1.getFoldbackLink(true), var1.id());
+        assertEquals(var5.getFoldbackLink(true), var5.id());
+        assertEquals(var6.getFoldbackLink(true), var6.id());
+        assertEquals(var9.getFoldbackLink(true), var10.id());
+        assertEquals(var10.getFoldbackLink(true), var9.id());
+        assertEquals(var12.getFoldbackLink(true), var12.id());
+
+        // now check final chain-finding across all sub-clusters
+        assertEquals(tester.Analyser.getClusters().size(), 1);
+        final SvCluster cluster = tester.Analyser.getClusters().get(0);
+
+        assertEquals(2, cluster.getChains().size());
+
+        assertEquals(14, cluster.getChains().get(0).getLinkCount());
+        assertEquals(3, cluster.getChains().get(1).getLinkCount());
     }
 
     @Test
