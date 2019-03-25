@@ -1,8 +1,7 @@
 package com.hartwig.hmftools.bachelor;
 
-import static com.hartwig.hmftools.bachelor.predicates.BlacklistPredicate.asString;
-import static com.hartwig.hmftools.bachelor.predicates.BlacklistPredicate.matchesBlacklistExclusion;
-import static com.hartwig.hmftools.bachelor.predicates.WhitelistPredicate.matchesWhitelistGeneProtein;
+import static com.hartwig.hmftools.bachelor.BachelorProgram.matchesBlacklistExclusion;
+import static com.hartwig.hmftools.bachelor.BachelorProgram.matchesWhitelistGeneProtein;
 import static com.hartwig.hmftools.common.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.variant.CodingEffect.NONSENSE_OR_FRAMESHIFT;
@@ -19,7 +18,6 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.bachelor.predicates.WhitelistPredicate;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotation;
 import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotationFactory;
@@ -178,7 +176,7 @@ public class ExternalDBFilters
                     if(!mMatchedBlacklistExclusions[i])
                     {
                         LOGGER.info("blacklist exclusion {}: {}",
-                                mMatchedBlacklistExclusions[i] ? "matched" : "not matched", asString(exclusion));
+                                mMatchedBlacklistExclusions[i] ? "matched" : "not matched", blacklistExclusionAsString(exclusion));
                     }
                 }
             }
@@ -192,7 +190,7 @@ public class ExternalDBFilters
                     if(!mMatchedWhitelistExclusions[i])
                     {
                         LOGGER.info("whitelist exclusion {}: {}",
-                                mMatchedWhitelistExclusions[i] ? "matched" : "not matched", WhitelistPredicate.asString(exclusion));
+                                mMatchedWhitelistExclusions[i] ? "matched" : "not matched", whitelistExclusionAsString(exclusion));
                     }
                 }
             }
@@ -207,6 +205,45 @@ public class ExternalDBFilters
 
         return true;
     }
+
+    private static String blacklistExclusionAsString(final ProgramBlacklist.Exclusion blacklist)
+    {
+        if (blacklist.getHGVSP() != null)
+        {
+            return String.format("gene(%s) HGVS protein(%s)", blacklist.getGene().getName(), blacklist.getHGVSP().toString());
+        }
+
+        if (blacklist.getHGVSC() != null)
+        {
+            return String.format("gene(%s) HGVS coding(%s)", blacklist.getGene().getName(), blacklist.getHGVSC().toString());
+        }
+
+        if(blacklist.getMinCodon() != null)
+        {
+            return String.format("gene(%s) minCodon(%d)", blacklist.getGene().getName(), blacklist.getMinCodon().intValue());
+        }
+
+        if(blacklist.getPosition() != null)
+        {
+            return String.format("gene(%s) position(%s)", blacklist.getGene().getName(), blacklist.getPosition().toString());
+        }
+
+        return "";
+    }
+
+    private static String whitelistExclusionAsString(final Object variantOrDbSNP)
+    {
+        if (variantOrDbSNP instanceof ProgramWhitelist.Variant)
+        {
+            final ProgramWhitelist.Variant geneProtein = (ProgramWhitelist.Variant) variantOrDbSNP;
+            return String.format("gene(%s) protein(%s)", geneProtein.getGene().getName(), geneProtein.getHGVSP().toString());
+        }
+        else
+        {
+            return String.format("DbSNP ID(%s)", (String) variantOrDbSNP);
+        }
+    }
+
 
     // Clinvar annotations
     private static String CLINVAR_SIGNIFICANCE = "CLNSIG";

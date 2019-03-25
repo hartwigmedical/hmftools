@@ -11,7 +11,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.HashMultimap;
@@ -20,8 +19,6 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 import com.google.common.collect.SortedSetMultimap;
-import com.hartwig.hmftools.bachelor.predicates.BlacklistPredicate;
-import com.hartwig.hmftools.bachelor.predicates.WhitelistPredicate;
 import com.hartwig.hmftools.common.genepanel.HmfGenePanelSupplier;
 import com.hartwig.hmftools.common.region.HmfTranscriptRegion;
 import com.hartwig.hmftools.common.variant.CodingEffect;
@@ -32,12 +29,12 @@ import nl.hartwigmedicalfoundation.bachelor.GeneIdentifier;
 import nl.hartwigmedicalfoundation.bachelor.HotspotLocation;
 import nl.hartwigmedicalfoundation.bachelor.Program;
 import nl.hartwigmedicalfoundation.bachelor.ProgramBlacklist;
+import nl.hartwigmedicalfoundation.bachelor.ProgramWhitelist;
 import nl.hartwigmedicalfoundation.bachelor.ProgramPanel;
 import nl.hartwigmedicalfoundation.bachelor.SnpEffect;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.jetbrains.annotations.NotNull;
 
 import htsjdk.samtools.util.CloseableIterator;
 import htsjdk.variant.variantcontext.Genotype;
@@ -448,6 +445,81 @@ public class BachelorProgram
                 .collect(Collectors.toList());
     }
 
+    public static boolean matchesWhitelistGeneProtein(ProgramWhitelist.Variant geneProtein,
+            final VariantContext context, final SnpEffAnnotation annotation)
+    {
+        if(!geneProtein.getGene().getName().equals(annotation.gene()))
+            return false;
+
+        if (geneProtein.getHGVSP() != null && !annotation.hgvsProtein().isEmpty()
+                && geneProtein.getHGVSP().equals(annotation.hgvsProtein().replaceFirst("^p\\.", "")))
+        {
+            LOGGER.debug("variant({}) found in blacklist HGVSP({})", context.getID(), geneProtein.getHGVSP());
+            return true;
+        }
+
+        return false;
+    }
+
+    public static boolean matchesWhitelistDbSNPId(final String dnSNPId, final VariantContext variant)
+    {
+        Set<String> varDbSNPList = Lists.newArrayList(variant.getID()
+                .split(","))
+                .stream().filter(s -> s.startsWith("rs"))
+                .collect(Collectors.toSet());
+
+        if(varDbSNPList.contains(dnSNPId))
+        {
+            LOGGER.debug("variant({}) matched in whitelist rs DB Ids list({})", variant.getID());
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+
+    public static boolean matchesBlacklistExclusion(final ProgramBlacklist.Exclusion blacklist, final VariantContext context,
+            final SnpEffAnnotation annotation) {
+
+        if (blacklist.getHGVSP() != null && !annotation.hgvsProtein().isEmpty()
+        && blacklist.getHGVSP().equals(annotation.hgvsProtein().replaceFirst("^p\\.", "")))
+        {
+            LOGGER.debug("variant({}) found in blacklist HGVSP({})", context.getID(), blacklist.getHGVSP());
+            return true;
+        }
+
+        if (blacklist.getHGVSC() != null && !annotation.hgvsCoding().isEmpty()
+        && blacklist.getHGVSC().equals(annotation.hgvsCoding().replaceFirst("^c\\.", ""))) {
+
+            LOGGER.debug("variant({}) found in blacklist HGVSC({})", context.getID(), blacklist.getHGVSC());
+
+            return true;
+        }
+
+        final List<Integer> proteinPositions = proteinPosition(annotation);
+        if (blacklist.getMinCodon() != null && !proteinPositions.isEmpty()
+                && blacklist.getMinCodon().intValue() <= proteinPositions.get(0))
+        {
+
+            LOGGER.debug("variant({}) found in blacklist minCodon({})", context.getID(), blacklist.getMinCodon());
+            return true;
+        }
+
+        if(blacklist.getPosition() != null && atPosition(context, blacklist.getPosition()))
+        {
+            LOGGER.debug("variant({}) found in blacklist postition({})", context.getID(), blacklist.getPosition());
+            return true;
+        }
+
+        return false;
+    }
+
+    private static boolean atPosition(final VariantContext v, final String position)
+    {
+        return position.equals(v.getContig() + ":" + v.getStart());
+    }
+
 
     private void initialiseGeneData()
     {
@@ -465,5 +537,72 @@ public class BachelorProgram
             mAllTranscriptsMap.put(region.transcriptID(), region);
         }
     }
+
+    /*  OLD BLACKLIST PREDICATE
+
+        public boolean test(final VariantModel variantModel)
+        {
+            for (final SnpEffAnnotation annotation : variantModel.sampleAnnotations())
+            {
+                final boolean transcriptMatches = transcripts.contains(annotation.transcript());
+                if (transcriptMatches)
+                {
+                    for (ProgramBlacklist.Exclusion exclusion : blacklist)
+                    {
+                        if (matchesBlacklistExclusion(exclusion, variantModel.context(), annotation))
+                        {
+                            return true;
+                        }
+                    }
+                }
+            }
+            return false;
+        }
+
+
+        public static List<Integer> proteinPosition(@NotNull final SnpEffAnnotation annotation)
+        {
+            return Arrays.stream(annotation.aaPosAndLength().split("/"))
+                    .filter(s -> !s.isEmpty())
+                    .map(Integer::parseInt)
+                    .collect(Collectors.toList());
+        }
+
+    */
+
+    /* OLD WHITELIST PREDICATE
+
+        public boolean test(final VariantModel variantModel)
+        {
+            if(mWhitelist == null)
+                return false;
+
+            for (final SnpEffAnnotation annotation : variantModel.sampleAnnotations())
+            {
+                for (final Object variantOrDbSNP : mWhitelist.getVariantOrDbSNP())
+                {
+                    if (variantOrDbSNP instanceof ProgramWhitelist.Variant)
+                    {
+                        final ProgramWhitelist.Variant whitelistVar = (ProgramWhitelist.Variant) variantOrDbSNP;
+
+                        if(matchesWhitelistGeneProtein(whitelistVar, variantModel.context(), annotation))
+                        {
+                            return true;
+                        }
+                    }
+                    else if (variantOrDbSNP instanceof String)
+                    {
+                        if(matchesWhitelistDbSNPId((String) variantOrDbSNP, variantModel.context()))
+                        {
+                            return true;
+                        }
+                    }
+                }
+            }
+
+            return false;
+        }
+
+    */
 
 }
