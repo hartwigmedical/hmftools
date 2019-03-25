@@ -17,6 +17,7 @@ import com.google.gson.stream.JsonToken;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 public abstract class ViccFactory {
@@ -90,11 +91,20 @@ public abstract class ViccFactory {
         return stringToCSVSage;
     }
 
+    private static StringBuilder readObjectSource(@NotNull JsonObject object, @NotNull StringBuilder headerCSV) {
+        //Source object
+        StringBuilder stringToCSVSource = new StringBuilder();
+        stringToCSVSource.append(object.getAsJsonPrimitive("source")).append(";"); // source data
+        headerCSV.append("source").append(";"); // header source
+        return stringToCSVSource;
+    }
+
     private static StringBuilder readObjectGenes(@NotNull JsonObject object, @NotNull StringBuilder headerCSV) {
         //Genes object
         StringBuilder stringToCSVGenes = new StringBuilder();
         JsonArray arrayGenes = object.getAsJsonArray("genes");
         String genes = arrayGenes.toString();
+        genes = genes.substring(1, genes.length() - 1);
         stringToCSVGenes.append(genes).append(";"); // genes data
         headerCSV.append("genes").append(";"); // header genes
         return stringToCSVGenes;
@@ -105,6 +115,7 @@ public abstract class ViccFactory {
         StringBuilder stringToCSVTags = new StringBuilder();
         JsonArray arrayTags = object.getAsJsonArray("tags");
         String tags = arrayTags.toString();
+        tags = tags.substring(1, tags.length() - 1);
         stringToCSVTags.append(tags).append(";"); // tags data
         headerCSV.append("tags").append(";"); // header tags
         return stringToCSVTags;
@@ -114,30 +125,50 @@ public abstract class ViccFactory {
         //dev_tags
         StringBuilder stringToCSVDevTags = new StringBuilder();
         JsonArray arrayDevTags = object.getAsJsonArray("dev_tags");
-        stringToCSVDevTags.append(arrayDevTags).append(";"); // dev tags data
+        String devTags = arrayDevTags.toString();
+        devTags = devTags.substring(1, devTags.length() - 1);
+        stringToCSVDevTags.append(devTags).append(";"); // dev tags data
         headerCSV.append("dev_tags").append(";"); // header tags data
         return stringToCSVDevTags;
-    }
-
-    private static StringBuilder readObjectSource(@NotNull JsonObject object, @NotNull StringBuilder headerCSV) {
-        //Source object
-        StringBuilder stringToCSVSource = new StringBuilder();
-        stringToCSVSource.append(object.getAsJsonPrimitive("source")).append(";"); // source data
-        headerCSV.append("source").append(";"); // header source
-        return stringToCSVSource;
     }
 
     private static StringBuilder readObjectGeneIdentifiers(@NotNull JsonObject object, @NotNull StringBuilder headerCSV) {
         //gene_identifiers object
         StringBuilder stringToCSVGeneIdentifiers = new StringBuilder();
+        StringBuilder stringSymbol = new StringBuilder();
+        StringBuilder stringEntrezId = new StringBuilder();
+        StringBuilder stringEnsembleGeneId = new StringBuilder();
+        String header = "";
         JsonArray arrayGeneIdentifiers = object.getAsJsonArray("gene_identifiers");
-        JsonObject objectGeneIdentiefiers = (JsonObject) arrayGeneIdentifiers.iterator().next();
-        for (int i = 0; i < objectGeneIdentiefiers.keySet().size(); i++) {
-            List<String> keysOfGeneIdentifiersObject = new ArrayList<>(objectGeneIdentiefiers.keySet());
-            stringToCSVGeneIdentifiers.append(objectGeneIdentiefiers.get(keysOfGeneIdentifiersObject.get(i)))
-                    .append(";"); // gene identifiers data
+        if (arrayGeneIdentifiers.size() == 0) {
+            stringToCSVGeneIdentifiers.append(Strings.EMPTY).append(";").append(Strings.EMPTY).append(";").append(Strings.EMPTY).append(";");
+        } else {
+            for (int j = 0; j < arrayGeneIdentifiers.size(); j++) {
+                JsonObject objectGeneIdentiefiers = (JsonObject) arrayGeneIdentifiers.get(j);
+                for (int i = 0; i < objectGeneIdentiefiers.keySet().size(); i++) {
+                    List<String> keysOfGeneIdentifiersObject = new ArrayList<>(objectGeneIdentiefiers.keySet());
+                    if (keysOfGeneIdentifiersObject.get(i).equals("symbol")) {
+                        JsonElement symbol = objectGeneIdentiefiers.get(keysOfGeneIdentifiersObject.get(i));
+                        stringSymbol.append(symbol).append(",");
+                    } else if (keysOfGeneIdentifiersObject.get(i).equals("entrez_id")) {
+                        JsonElement entrezId = objectGeneIdentiefiers.get(keysOfGeneIdentifiersObject.get(i));
+                        stringEntrezId.append(entrezId).append(",");
+                    } else if (keysOfGeneIdentifiersObject.get(i).equals("ensembl_gene_id")) {
+                        JsonElement ensemblGeneID = objectGeneIdentiefiers.get(keysOfGeneIdentifiersObject.get(i));
+                        stringEnsembleGeneId.append(ensemblGeneID).append(",");
+                    }
+                }
+                header = objectGeneIdentiefiers.keySet().toString().substring(1, objectGeneIdentiefiers.keySet().toString().length()-1);
+
+            }
+            headerCSV.append(header).append(";"); // header gene identifiers
+            stringToCSVGeneIdentifiers.append(stringSymbol)
+                    .append(";")
+                    .append(stringEntrezId)
+                    .append(";")
+                    .append(stringEnsembleGeneId)
+                    .append(";");
         }
-        headerCSV.append(objectGeneIdentiefiers.keySet()).append(";"); // header gene identifiers
         return stringToCSVGeneIdentifiers;
     }
 
@@ -258,27 +289,56 @@ public abstract class ViccFactory {
         final String csvFileName = "/Users/liekeschoenmaker/hmf/tmp/all.csv";
         PrintWriter writer = new PrintWriter(new File(csvFileName));
         JsonParser parser = new JsonParser();
-        JsonReader reader = new JsonReader(new FileReader(csvFileName));
+        JsonReader reader = new JsonReader(new FileReader(allJsonPath));
         reader.setLenient(true);
-
+        int index = 1;
         while (reader.peek() != JsonToken.END_DOCUMENT) {
+            LOGGER.info(index);
             JsonObject object = parser.parse(reader).getAsJsonObject();
 
             StringBuilder stringToCSVAll = new StringBuilder();
             StringBuilder headerCSV = new StringBuilder();
+            headerCSV.append("index").append(";");
             StringBuilder StringToCSVSource = readObjectSource(object, headerCSV);
             StringBuilder StringToCSVGenes = readObjectGenes(object, headerCSV);
+            StringBuilder StringToCSVTags = readObjectTags(object, headerCSV);
+            StringBuilder StringToCSVDevTags = readObjectDevTags(object, headerCSV);
+            StringBuilder StringToCSVGeneIdentifiers = readObjectGeneIdentifiers(object, headerCSV);
 
+            //            if (StringToCSVSource.toString().equals("brca")) {
+            //                readObjectBRCA(object, headerCSV);
+            //            } else if (StringToCSVSource.toString().equals("cgi")) {
+            //                readObjectCGI(object, headerCSV);
+            //            } else if (StringToCSVSource.toString().equals("civic")) {
+            //                readObjectCIVIC(object, headerCSV);
+            //            } else if (StringToCSVSource.toString().equals("jax")) {
+            //                readObjectJax(object, headerCSV);
+            //            } else if (StringToCSVSource.toString().equals("jaxtrials")) {
+            //                readObjectJaxTrials(object, headerCSV);
+            //            } else if (StringToCSVSource.toString().equals("molecularmatch")) {
+            //                readObjectMolecularMatch(object, headerCSV);
+            //            } else if (StringToCSVSource.toString().equals("molecularmatchtrials")){
+            //                readObjectMolecularMatchTrials(object, headerCSV);
+            //            } else if (StringToCSVSource.toString().equals("oncokb")) {
+            //                readObjectOncokb(object, headerCSV);
+            //            } else if (StringToCSVSource.toString().equals("pmkb")) {
+            //                readObjectPmkb(object, headerCSV);
+            //            } else if (StringToCSVSource.toString().equals("sage")) {
+            //                readObjectSage(object, headerCSV);
+            //            }
+            stringToCSVAll.append(index).append(";");
             stringToCSVAll.append(StringToCSVSource);
-            stringToCSVAll.append(StringToCSVGenes);
-
+                        stringToCSVAll.append(StringToCSVGenes);
+                        stringToCSVAll.append(StringToCSVTags);
+                        stringToCSVAll.append(StringToCSVDevTags);
+            stringToCSVAll.append(StringToCSVGeneIdentifiers);
 
             writer.append(headerCSV);
-            writer.append("/n");
+            writer.append("\n");
             writer.append(stringToCSVAll);
-            writer.append("/n");
+            writer.append("\n");
 
-
+            index++;
 
         }
         reader.close();
@@ -286,45 +346,45 @@ public abstract class ViccFactory {
     }
 
     public static void extractBRCAFile(@NotNull String brcaJsonPath) throws IOException {
-        final String csvFileName = "/Users/liekeschoenmaker/hmf/tmp/brca.csv";
-        PrintWriter writer = new PrintWriter(new File(csvFileName));
-        JsonParser parser = new JsonParser();
-        JsonReader reader = new JsonReader(new FileReader(brcaJsonPath));
-        reader.setLenient(true);
-
-        while (reader.peek() != JsonToken.END_DOCUMENT) {
-            JsonObject object = parser.parse(reader).getAsJsonObject();
-
-            StringBuilder stringToCSVAll = new StringBuilder();
-            StringBuilder headerCSV = new StringBuilder();
-
-            StringBuilder StringToCSVBRCA = readObjectBRCA(object, headerCSV);
-            StringBuilder StringToCSVGenes = readObjectGenes(object, headerCSV);
-            StringBuilder StringToCSVTags = readObjectTags(object, headerCSV);
-            StringBuilder StringToCSVDevTags = readObjectDevTags(object, headerCSV);
-            StringBuilder StringToCSVSource = readObjectSource(object, headerCSV);
-            StringBuilder StringToCSVGeneIdentifiers = readObjectGeneIdentifiers(object, headerCSV);
-            StringBuilder StringToCSVAssociation = readObjectAssociation(object, headerCSV);
-            StringBuilder StringToCSVFeaturesNames = readObjectFeaturesNames(object, headerCSV);
-            StringBuilder StringToCSVFeatures = readObjectFeatures(object, headerCSV);
-
-            stringToCSVAll.append(StringToCSVBRCA)
-                    .append(StringToCSVGenes)
-                    .append(StringToCSVTags)
-                    .append(StringToCSVDevTags)
-                    .append(StringToCSVSource)
-                    .append(StringToCSVGeneIdentifiers)
-                    .append(StringToCSVAssociation)
-                    .append(StringToCSVFeaturesNames)
-                    .append(StringToCSVFeatures);
-
-            writer.append(headerCSV);
-            writer.append("\n");
-            writer.append(stringToCSVAll);
-            writer.append("\n");
-        }
-        reader.close();
-        writer.close();
+        //        final String csvFileName = "/Users/liekeschoenmaker/hmf/tmp/brca.csv";
+        //        PrintWriter writer = new PrintWriter(new File(csvFileName));
+        //        JsonParser parser = new JsonParser();
+        //        JsonReader reader = new JsonReader(new FileReader(brcaJsonPath));
+        //        reader.setLenient(true);
+        //
+        //        while (reader.peek() != JsonToken.END_DOCUMENT) {
+        //            JsonObject object = parser.parse(reader).getAsJsonObject();
+        //
+        //            StringBuilder stringToCSVAll = new StringBuilder();
+        //            StringBuilder headerCSV = new StringBuilder();
+        //
+        //            StringBuilder StringToCSVBRCA = readObjectBRCA(object, headerCSV);
+        //            StringBuilder StringToCSVGenes = readObjectGenes(object, headerCSV);
+        //            StringBuilder StringToCSVTags = readObjectTags(object, headerCSV);
+        //            StringBuilder StringToCSVDevTags = readObjectDevTags(object, headerCSV);
+        //            StringBuilder StringToCSVSource = readObjectSource(object, headerCSV);
+        //            StringBuilder StringToCSVGeneIdentifiers = readObjectGeneIdentifiers(object, headerCSV);
+        //            StringBuilder StringToCSVAssociation = readObjectAssociation(object, headerCSV);
+        //            StringBuilder StringToCSVFeaturesNames = readObjectFeaturesNames(object, headerCSV);
+        //            StringBuilder StringToCSVFeatures = readObjectFeatures(object, headerCSV);
+        //
+        //            stringToCSVAll.append(StringToCSVBRCA)
+        //                    .append(StringToCSVGenes)
+        //                    .append(StringToCSVTags)
+        //                    .append(StringToCSVDevTags)
+        //                    .append(StringToCSVSource)
+        //                    .append(StringToCSVGeneIdentifiers)
+        //                    .append(StringToCSVAssociation)
+        //                    .append(StringToCSVFeaturesNames)
+        //                    .append(StringToCSVFeatures);
+        //
+        //            writer.append(headerCSV);
+        //            writer.append("\n");
+        //            writer.append(stringToCSVAll);
+        //            writer.append("\n");
+        //        }
+        //        reader.close();
+        //        writer.close();
     }
 
     public static void extractCgiFile(@NotNull String cgiJsonPath) throws IOException {
