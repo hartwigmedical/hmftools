@@ -16,4 +16,10 @@ public class ViccFactoryTest {
     public void convertBRCA() throws IOException {
         ViccFactory.extractBRCAFile(BRCA_FILE_PATH + "/brca.json");
     }
+
+    @Test
+    @Ignore
+    public void convertAll() throws IOException {
+        ViccFactory.extractAllFile("all.json");
+    }
 }
