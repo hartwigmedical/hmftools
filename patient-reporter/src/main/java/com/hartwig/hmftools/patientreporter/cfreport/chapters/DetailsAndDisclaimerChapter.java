@@ -9,6 +9,7 @@ import com.itextpdf.layout.element.Paragraph;
 import com.itextpdf.layout.element.Table;
 import com.itextpdf.layout.element.Text;
 import com.itextpdf.layout.property.UnitValue;
+import org.jetbrains.annotations.NotNull;
 
 public class DetailsAndDisclaimerChapter extends ReportChapter {
 
@@ -58,38 +59,15 @@ public class DetailsAndDisclaimerChapter extends ReportChapter {
                 .addStyle(BODY_TEXT_HEADER_STYLE));
 
         // Content
-        div.add(new Paragraph("The samples have been sequenced at ")
-                .addStyle(BODY_TEXT_STYLE)
-                .add(new Text(ReportResources.HARTWIG_ADDRESS)
-                        .addStyle(BODY_TEXT_BOLD_STYLE)));
-
-        div.add(new Paragraph("The samples have been analyzed by Next Generation Sequencing")
-                        .addStyle(BODY_TEXT_STYLE));
-
-        div.add(new Paragraph("This experiment is performed on the tumor sample which arrived on ")
-                .addStyle(BODY_TEXT_STYLE)
-                .add(new Text("05-Jan-2018")
-                        .addStyle(BODY_TEXT_BOLD_STYLE)));
-
-        div.add(new Paragraph("The pathology tumor percentage for this sample is 80%")
-                .addStyle(BODY_TEXT_STYLE));
-
-        div.add(new Paragraph("This experiment is performed on the blood sample which arrived on ")
-                .addStyle(BODY_TEXT_STYLE)
-                .add(new Text("01-Jan-2018")
-                        .addStyle(BODY_TEXT_BOLD_STYLE)));
-
-        div.add(new Paragraph("This experiment is performed according to lab procedures: PREP013V23-QC037V20-SEQ008V25")
-                .addStyle(BODY_TEXT_STYLE));
-
-        div.add(new Paragraph("This report is generated and verified by: korneelduyvesteyn")
-                .addStyle(BODY_TEXT_STYLE));
-
-        div.add(new Paragraph("This report is addressed at: HMF Testing Center")
-                .addStyle(BODY_TEXT_STYLE));
-
-        div.add(new Paragraph("Comments: this is a test report and is based off COLO829")
-                .addStyle(BODY_TEXT_STYLE));
+        div.add(getContentParagraph("The samples have been sequenced at ", ReportResources.HARTWIG_ADDRESS));
+        div.add(getContentParagraph("The samples have been analyzed by Next Generation Sequencing "));
+        div.add(getContentParagraph("This experiment is performed on the tumor sample which arrived on ", "05-Jan-2018"));
+        div.add(getContentParagraph("The pathology tumor percentage for this sample is 80%"));
+        div.add(getContentParagraph("This experiment is performed on the blood sample which arrived on ", "01-Jan-2018"));
+        div.add(getContentParagraph("This experiment is performed according to lab procedures: PREP013V23-QC037V20-SEQ008V25"));
+        div.add(getContentParagraph("This report is generated and verified by: korneelduyvesteyn"));
+        div.add(getContentParagraph("This report is addressed at: HMF Testing Center"));
+        div.add(getContentParagraph("Comments: this is a test report and is based off COLO829"));
 
         return div;
 
@@ -103,26 +81,29 @@ public class DetailsAndDisclaimerChapter extends ReportChapter {
         div.add(new Paragraph("Disclaimer")
                 .addStyle(BODY_TEXT_HEADER_STYLE));
 
-        // Content
-        div.add(new Paragraph("The data on which this report is based is generated from tests that are performed under ISO/ICE-17025:2005 accreditation.")
-                .addStyle(BODY_TEXT_STYLE));
-
-        div.add(new Paragraph("The analysis done for this report has passed all internal quality controls.")
-                .addStyle(BODY_TEXT_STYLE));
-
-        div.add(new Paragraph("For feedback or complaints please contact ")
-                .addStyle(BODY_TEXT_STYLE)
-                .add(new Text(ReportResources.CONTACT_EMAIL_QA)
-                        .addStyle(BODY_TEXT_BOLD_STYLE)));
-
-        div.add(new Paragraph("For general questions, please contact us at ")
-                .addStyle(BODY_TEXT_STYLE)
-                .add(new Text(ReportResources.CONTACT_EMAIL_GENERAL)
-                        .addStyle(BODY_TEXT_BOLD_STYLE)));
+        div.add(getContentParagraph("The data on which this report is based is generated from tests that are performed under ISO/ICE-17025:2005 accreditation."));
+        div.add(getContentParagraph("The analysis done for this report has passed all internal quality controls."));
+        div.add(getContentParagraph("For feedback or complaints please contact ", ReportResources.CONTACT_EMAIL_QA));
+        div.add(getContentParagraph("For general questions, please contact us at ", ReportResources.CONTACT_EMAIL_GENERAL));
 
         return div;
 
     }
 
+    @NotNull
+    private final static Paragraph getContentParagraph(@NotNull String text) {
+        return new Paragraph(text)
+                .addStyle(BODY_TEXT_STYLE)
+                .setFixedLeading(ReportResources.BODY_TEXT_LEADING);
+    }
+
+    @NotNull
+    private final static Paragraph getContentParagraph(@NotNull String regularPart, @NotNull String boldPart) {
+
+        return getContentParagraph(regularPart)
+                .add(new Text(boldPart)
+                        .addStyle(BODY_TEXT_BOLD_STYLE))
+                .setFixedLeading(ReportResources.BODY_TEXT_LEADING);
+    }
 
 }

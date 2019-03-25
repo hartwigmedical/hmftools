@@ -76,7 +76,10 @@ public class TumorCharacteristicsChapter extends ReportChapter {
         table.setWidth(getContentWidth());
         table.addCell(TableHelper.getLayoutCell().add(DataLabel.createDataLabel(highlight)));
         table.addCell(TableHelper.getLayoutCell(2, 1).add(chart));
-        table.addCell(TableHelper.getLayoutCell().add(new Paragraph(description).addStyle(ReportResources.bodyTextStyle())));
+        table.addCell(TableHelper.getLayoutCell()
+                .add(new Paragraph(description)
+                        .addStyle(ReportResources.bodyTextStyle())
+                        .setFixedLeading(ReportResources.BODY_TEXT_LEADING)));
         table.addCell(TableHelper.getLayoutCell(1, 2).setHeight(TABLE_SPACER_HEIGHT)); // Spacer
         div.add(table);
 

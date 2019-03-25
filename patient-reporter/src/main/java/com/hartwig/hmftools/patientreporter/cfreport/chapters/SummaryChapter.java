@@ -20,6 +20,7 @@ public class SummaryChapter extends ReportChapter {
 
     private final static float TABLE_SPACER_HEIGHT = 5;
 
+
     @Override
     public final String getName() {
         return "Summary";
@@ -80,7 +81,7 @@ public class SummaryChapter extends ReportChapter {
 
         div.add(new Paragraph(content)
                 .setWidth(getContentWidth())
-                .addStyle(BODY_TEXT_STYLE));
+                .addStyle(BODY_TEXT_STYLE).setFixedLeading(11));
 
         report.add(div);
 
@@ -100,21 +101,26 @@ public class SummaryChapter extends ReportChapter {
 
         table.addCell(TableHelper.getLayoutCell()
                 .add(new Paragraph("Summary of number of alterations with number of treatment indication and/or clinical studies")
-                        .addStyle(BODY_TEXT_STYLE)));
+                        .addStyle(BODY_TEXT_STYLE)
+                        .setFixedLeading(ReportResources.BODY_TEXT_LEADING)));
         table.addCell(TableHelper.getLayoutCell(1, 2).setHeight(TABLE_SPACER_HEIGHT)); // Spacer
 
         // Alterations/therapy
         int therapyGeneCount = 1;
         int therapyCount = 8;
         table.addCell(getMiddleAlignedCell()
-                .add(new Paragraph("Gene alteration(s) with therapy indication(s)").addStyle(BODY_TEXT_STYLE)));
+                .add(new Paragraph("Gene alteration(s) with therapy indication(s)")
+                        .addStyle(BODY_TEXT_STYLE)
+                        .setFixedLeading(ReportResources.BODY_TEXT_LEADING)));
         table.addCell(getTreatmentIndicationCell(therapyGeneCount, therapyCount, "treatments"));
 
         // Alterations/clinical study
         int studyGeneCount = 2;
         int studyCount = 7;
         table.addCell(getMiddleAlignedCell()
-                .add(new Paragraph("Gene alteration(s) with clinical study eligibility").addStyle(BODY_TEXT_STYLE)));
+                .add(new Paragraph("Gene alteration(s) with clinical study eligibility")
+                        .addStyle(BODY_TEXT_STYLE)
+                        .setFixedLeading(ReportResources.BODY_TEXT_LEADING)));
         table.addCell(getTreatmentIndicationCell(studyGeneCount, studyCount, "studies"));
 
         div.add(table);

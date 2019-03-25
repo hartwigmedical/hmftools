@@ -43,7 +43,6 @@ public final class ReportResources {
     public static final float PAGE_MARGIN_RIGHT = 29;
     public static final float PAGE_MARGIN_BOTTOM = 62;
 
-
     public static final float CONTENT_WIDTH_NARROW = 330; // Width of the content on a narrow page (page with full sidepanel)
     public static final float CONTENT_WIDTH_WIDE = 510; // Width of the content on a narrow page (page without full sidepanel)
 
@@ -59,11 +58,12 @@ public final class ReportResources {
     public static final DeviceRgb PALETTE_LIGHT_GREY = new DeviceRgb(205, 206, 207);
     public static final DeviceRgb PALETTE_PINK = new DeviceRgb(230, 21, 124);
 
-    // Fonts
+    // Fonts and text spacing
     private static String FONT_REGULAR_PATH = "fonts/nimbus-sans/NimbusSansL-Regular.ttf";
     private static String FONT_BOLD_PATH = "fonts/nimbus-sans/NimbusSansL-Bold.ttf";
     private static PdfFont fontRegular = null;
     private static PdfFont fontBold = null;
+    public static final float BODY_TEXT_LEADING = 10f;
 
     private ReportResources() {}
 
