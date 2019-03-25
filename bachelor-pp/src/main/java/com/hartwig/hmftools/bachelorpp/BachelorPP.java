@@ -1,14 +1,7 @@
 package com.hartwig.hmftools.bachelorpp;
 
-import static com.hartwig.hmftools.bachelorpp.BachelorDataCollection.loadBachelorFilters;
 import static com.hartwig.hmftools.common.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.io.FileWriterUtils.createBufferedWriter;
-import static com.hartwig.hmftools.common.variant.VariantConsequence.FRAMESHIFT_VARIANT;
-import static com.hartwig.hmftools.common.variant.VariantConsequence.MISSENSE_VARIANT;
-import static com.hartwig.hmftools.common.variant.VariantConsequence.SPLICE_ACCEPTOR_VARIANT;
-import static com.hartwig.hmftools.common.variant.VariantConsequence.SPLICE_DONOR_VARIANT;
-import static com.hartwig.hmftools.common.variant.VariantConsequence.STOP_GAINED;
-import static com.hartwig.hmftools.common.variant.VariantConsequence.SYNONYMOUS_VARIANT;
 import static com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotationFactory.SNPEFF_IDENTIFIER;
 
 import java.io.BufferedReader;
@@ -16,10 +9,6 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardOpenOption;
 import java.sql.SQLException;
 import java.util.Collections;
 import java.util.List;
@@ -30,7 +19,6 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.bachelorpp.types.BachelorGermlineVariant;
-import com.hartwig.hmftools.bachelorpp.types.BachelorRecordFilter;
 import com.hartwig.hmftools.common.chromosome.Chromosome;
 import com.hartwig.hmftools.common.collect.Multimaps;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
@@ -89,8 +77,6 @@ public class BachelorPP
     private static final String MAX_READ_COUNT = "max_read_count";
 
     // file locations
-    private static final String WHITELIST_FILE = "whitelist_file";
-    private static final String BLACKLIST_FILE = "blacklist_file";
     private static final String SAMPLE_LIST_FILE = "sample_list_file";
 
     private static final String DB_USER = "db_user";
@@ -105,11 +91,8 @@ public class BachelorPP
     private IndexedFastaSequenceFile mIndexedFastaSequenceFile;
     private boolean mIsBatchMode;
     private boolean mUploadRecordsToDB;
-    private boolean mApplyFilters;
     private BufferedWriter mWriter;
     private AlleleDepthLoader mAllelDepthLoader;
-    private List<BachelorRecordFilter> mWhitelistFilters;
-    private List<BachelorRecordFilter> mBlacklistFilters;
     private List<String> mLimitedSampleList;
 
     private BachelorPP()
@@ -119,12 +102,9 @@ public class BachelorPP
         mIndexedFastaSequenceFile = null;
         mIsBatchMode = false;
         mUploadRecordsToDB = false;
-        mApplyFilters = false;
         mAllelDepthLoader = null;
         mWriter = null;
 
-        mWhitelistFilters = Lists.newArrayList();
-        mBlacklistFilters = Lists.newArrayList();
         mLimitedSampleList = Lists.newArrayList();
     }
 
@@ -158,15 +138,6 @@ public class BachelorPP
                 LOGGER.error("reference file loading failed");
                 return false;
             }
-        }
-
-        if (cmd.hasOption(WHITELIST_FILE) || cmd.hasOption(BLACKLIST_FILE))
-        {
-            mApplyFilters = true;
-            mWhitelistFilters = loadBachelorFilters(cmd.getOptionValue(WHITELIST_FILE));
-            mBlacklistFilters = loadBachelorFilters(cmd.getOptionValue(BLACKLIST_FILE));
-
-            LOGGER.info("loaded filter: whitelist({}) blacklist({})", mWhitelistFilters.size(), mBlacklistFilters.size());
         }
 
         mUploadRecordsToDB = cmd.hasOption(WRITE_TO_DB);
@@ -257,20 +228,6 @@ public class BachelorPP
     private void processCurrentRecords(final CommandLine cmd, List<BachelorGermlineVariant> bachRecords,
             final String sampleId, final String sampleDirectory, final String bachelorDataDir)
     {
-        if (mApplyFilters)
-        {
-            LOGGER.debug("applying white and black list filters");
-            bachRecords = applyFilters(bachRecords, cmd);
-
-            if (bachRecords.isEmpty())
-            {
-                LOGGER.info("all records were filtered out");
-                return;
-            }
-
-            LOGGER.debug("{} records after filtering", bachRecords.size());
-        }
-
         if (!mIsBatchMode)
         {
             if (!mAllelDepthLoader.applyPileupData(bachRecords))
@@ -540,69 +497,6 @@ public class BachelorPP
         }
     }
 
-    private List<BachelorGermlineVariant> applyFilters(final List<BachelorGermlineVariant> bachRecords, CommandLine cmdLineArgs)
-    {
-        if (mWhitelistFilters.isEmpty() && mBlacklistFilters.isEmpty())
-            return bachRecords;
-
-        List<BachelorGermlineVariant> filteredRecords = Lists.newArrayList();
-
-        for (int index = 0; index < bachRecords.size(); ++index)
-        {
-            final BachelorGermlineVariant bachRecord = bachRecords.get(index);
-
-            if (index > 0 && (index % 1000) == 0)
-            {
-                LOGGER.info("processed {} records", index);
-            }
-
-            boolean keepRecord = false;
-            BachelorRecordFilter matchedFilter = null;
-
-            if (bachRecord.hasEffect(FRAMESHIFT_VARIANT) || bachRecord.hasEffect(STOP_GAINED)
-            || bachRecord.hasEffect(SPLICE_ACCEPTOR_VARIANT) || bachRecord.hasEffect(SPLICE_DONOR_VARIANT))
-            {
-                keepRecord = true;
-
-                for (final BachelorRecordFilter filter : mBlacklistFilters)
-                {
-                    if (filter.matches(bachRecord))
-                    {
-                        matchedFilter = filter;
-                        break;
-                    }
-                }
-            }
-            else if (bachRecord.hasEffect(MISSENSE_VARIANT) || bachRecord.hasEffect(SYNONYMOUS_VARIANT))
-            {
-                keepRecord = false;
-
-                for (final BachelorRecordFilter filter : mWhitelistFilters)
-                {
-                    if (filter.matches(bachRecord))
-                    {
-                        keepRecord = true;
-                        matchedFilter = filter;
-                        break;
-                    }
-                }
-            }
-
-            if (matchedFilter != null)
-            {
-                bachRecord.setDiagnosis(matchedFilter.Diagnosis);
-                bachRecord.setSignificance(matchedFilter.Significance);
-            }
-
-            if (keepRecord)
-            {
-                filteredRecords.add(bachRecord);
-            }
-        }
-
-        return filteredRecords;
-    }
-
     private void writeToDatabase(final String sampleId, final List<BachelorGermlineVariant> bachRecords)
     {
         final GermlineVariantDAO germlineDAO = new GermlineVariantDAO(mDbAccess.context());
@@ -636,12 +530,6 @@ public class BachelorPP
                 mWriter.write(",Effects,CodingEffect,VcfReadData,GermlineAltCount,GermlineReadDepth,TumorAltCount,TumorReadDepth");
                 mWriter.write(",AdjCopyNumber,AdjustedVaf,HighConfidenceRegion,TrinucleotideContext,Microhomology,RepeatSequence,RepeatCount");
                 mWriter.write(",HgvsProtein,HgvsCoding,Biallelic,Hotspot,Mappability,GermlineStatus,MinorAllelePloidy,Filter,CodonInfo");
-
-                if (mApplyFilters)
-                {
-                    mWriter.write(",ClinvarDiagnosis,ClinvarSignificance");
-                }
-
                 mWriter.newLine();
             }
 
@@ -699,11 +587,6 @@ public class BachelorPP
                                 bachRecord.isLowScore() ? "ARTEFACT" : "PASS",
                                 bachRecord.CodonInfo));
 
-                if (mApplyFilters)
-                {
-                    writer.write(String.format(",%s,%s", bachRecord.getDiagnosis(), bachRecord.getSignificance()));
-                }
-
                 writer.newLine();
             }
         } catch (final IOException e)
@@ -758,8 +641,6 @@ public class BachelorPP
         options.addOption(DB_URL, true, "Database url");
 
         options.addOption(WRITE_TO_DB, false, "Whether to upload records to DB");
-        options.addOption(WHITELIST_FILE, true, "Additional whitelist checks on bachelor input file");
-        options.addOption(BLACKLIST_FILE, true, "Additional blacklist checks on bachelor input file");
 
         options.addOption(LOG_DEBUG, false, "Sets log level to Debug, default level is Info");
 

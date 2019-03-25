@@ -7,7 +7,6 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.bachelorpp.types.BachelorGermlineVariant;
-import com.hartwig.hmftools.bachelorpp.types.BachelorRecordFilter;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 
 import org.apache.logging.log4j.LogManager;
@@ -254,64 +253,6 @@ public class BachelorDataCollection
     }
 
     public final List<BachelorGermlineVariant> getBachelorVariants() { return mGermlineVariants; }
-
-    private static int FILTER_CSV_FIELD_COUNT = 26;
-
-    public static List<BachelorRecordFilter> loadBachelorFilters(final String filename)
-    {
-        if (filename.isEmpty())
-            return Lists.newArrayList();
-
-        List<BachelorRecordFilter> filterRecords = Lists.newArrayList();
-
-        try {
-
-            BufferedReader fileReader = new BufferedReader(new FileReader(filename));
-
-            String line = fileReader.readLine(); // skip header
-
-            while ((line = fileReader.readLine()) != null) {
-
-                // parse CSV data
-                String[] items = line.split("\t");
-
-                //              0   1   2  3   4   5    6           13         17         25
-                // CSV fields CHROM,POS,ID,REF,ALT,QUAL,FILTER, ... CLNDN, .. CLNSIG, ... MC
-
-//                 [1] "CHROM"        "POS"          "ID"           "REF"          "ALT"          "QUAL"         "FILTER"       "AF_ESP"       "AF_EXAC"      "AF_TGP"
-//                        [11] "ALLELEID"     "CLNDISDB"     "CLNDISDBINCL" "CLNDN"        "CLNDNINCL"    "CLNHGVS"      "CLNREVSTAT"   "CLNSIG"       "CLNSIGCONF"   "CLNSIGINCL"
-//                        [21] "CLNVC"        "CLNVCSO"      "CLNVI"        "DBVARID"      "GENEINFO"     "MC"           "ORIGIN"       "RS"           "SSR"
-
-                if (items.length < FILTER_CSV_FIELD_COUNT)
-                {
-                    LOGGER.warn("invalid item count({}), recordIndex({}) in file({})", items.length, filterRecords.size(), filename);
-                    return filterRecords;
-                }
-
-                BachelorRecordFilter filterRecord = new BachelorRecordFilter(
-                        items[0],
-                        Long.parseLong(items[1]),
-                        items[2],
-                        items[3],
-                        items[4],
-                        items[13],
-                        items[17],
-                        items[25]);
-
-                filterRecords.add(filterRecord);
-            }
-
-            LOGGER.debug("loaded {} filter records", filterRecords.size());
-
-        }
-        catch (IOException exception)
-        {
-            LOGGER.error("Failed to read bachelor input CSV file({})", filename);
-            return filterRecords;
-        }
-
-        return filterRecords;
-    }
 
 }
 
