@@ -124,10 +124,42 @@ If provided, the variants are used for enhancing the purity and ploidy fit in 2 
 Firstly, each solution receives a penalty for the proportion of somatic variants which have implied ploidies that are inconsistent with the minor and major allele ploidy. 
 Secondly, for highly diploid samples, the VAFs of the somatic variants are used directly to calculate a somatic variant implied purity.
 
-For both purposes, accurate VAF estimation is essential. 
-For this purpose, PURPLE requires the ‘AD’ (Alllelic Depth) field in the vcf.
-High quality filtering of artefacts and false positive calls is also critical to achieving an accurate fit.
+For both purposes, accurate VAF estimation is essential thus PURPLE requires the ‘AD’ (Alllelic Depth) field in the vcf.
+High quality filtering of artifacts and false positive calls is also critical to achieving an accurate fit. 
 
+#### Preparing Strelka output for PURPLE 
+
+HMF currently uses Strelka for somatic calling. A number of transformations are required to prepare Stelka output for use in PURPLE. 
+At a minimum this includes:
+1. Merging SNP and INDEL output
+2. Renaming samples from NORMAL and TUMOR to names consistent with AMBER/COBALT/PURPLE
+3. Generating the AD field from Strelka's AU,GU,TU,CU,TIR and TAR fields. The PURPLE jar contains a tool to do (demonstrated below). 
+
+The resultant pipeline might look something like this:
+
+```
+### Merge strelka output
+java -jar /path/to/GenomeAnalysisTK.jar \
+    -T CombineVariants \
+    -R /path/to/Homo_sapiens.GRCh37.GATK.illumina.fa \
+    --genotypemergeoption unsorted \
+    -V:snvs strelka.snvs.vcf \
+    -V:indels strelka.indels.vcf \
+    -o strelka.merged.vcf
+
+### Replace NORMAL and TUMOR
+sed -i 's/NORMAL/COLO829R/g' strelka.merged.vcf
+sed -i 's/TUMOR/COLO829T/g' strelka.merged.vcf
+
+### Add Allelic Depth field
+java -Xmx4G -cp purple.jar com.hartwig.hmftools.purple.tools.AnnotateStrelkaWithAllelicDepth -in strelka.merged.vcf -out strelka.merged.annotated.vcf.gz
+
+``` 
+
+At this point, file `strelka.merged.annotated.vcf.gz` is ready to be used by PURPLE. 
+The actual HMF somatic pipeline includes a number of additional filtering steps including applying a panel of normals.  
+
+While these steps are specific to Strelka, these principles can be applied to other callers. 
 
 ## Algorithm
 
@@ -443,6 +475,9 @@ Threads | Elapsed Time| CPU Time | Peak Mem
 
 
 ## Version History
+- 2.22
+  - Added new tool to annotate SNPs and INDELS in strelka output with AD field. Will **not** override existing AD values. 
+  - Example Usage: `java -Xmx4G -cp purple.jar com.hartwig.hmftools.purple.tools.AnnotateStrelkaWithAllelicDepth -in strelka.vcf -out strelka.annotated.vcf`
 - 2.21
   - No functional changes.
   - Changed ref_sample and tumor_sample parameters to reference and tumor respectively to be consistent with AMBER and COBALT. 
