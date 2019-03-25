@@ -138,7 +138,7 @@ At a minimum this includes:
 The resultant pipeline might look something like this:
 
 ```
-### Merge strelka output
+### Merge strelka snp and indel output
 java -jar /path/to/GenomeAnalysisTK.jar \
     -T CombineVariants \
     -R /path/to/Homo_sapiens.GRCh37.GATK.illumina.fa \
@@ -147,12 +147,13 @@ java -jar /path/to/GenomeAnalysisTK.jar \
     -V:indels strelka.indels.vcf \
     -o strelka.merged.vcf
 
-### Replace NORMAL and TUMOR
+### Replace NORMAL and TUMOR with actual sample names
 sed -i 's/NORMAL/COLO829R/g' strelka.merged.vcf
 sed -i 's/TUMOR/COLO829T/g' strelka.merged.vcf
 
 ### Add Allelic Depth field
-java -Xmx4G -cp purple.jar com.hartwig.hmftools.purple.tools.AnnotateStrelkaWithAllelicDepth -in strelka.merged.vcf -out strelka.merged.annotated.vcf.gz
+java -Xmx4G -cp purple.jar com.hartwig.hmftools.purple.tools.AnnotateStrelkaWithAllelicDepth \ 
+    -in strelka.merged.vcf -out strelka.merged.annotated.vcf.gz
 
 ``` 
 
