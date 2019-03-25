@@ -82,6 +82,8 @@ public class ChainFinder
     private List<SvLinkedPair> mSkippedPairs;
     private List<SvVarData> mFoldbacks;
     private List<SvVarData> mComplexDupCandidates;
+    private List<SvLinkedPair> mUniquePairs;
+
 
     private boolean mSkippedPair; // keep track of any excluded pair or SV without exiting the chaining routine
 
@@ -113,6 +115,7 @@ public class ChainFinder
         mComplexDupCandidates = Lists.newArrayList();
         mUnlinkedSVs = Lists.newArrayList();
         mSkippedPairs = Lists.newArrayList();
+        mUniquePairs = Lists.newArrayList();
         mUnlinkedBreakendMap = Maps.newHashMap();
         mSvReplicationMap = Maps.newHashMap();
         mSvOriginalReplicationMap = Maps.newHashMap();
@@ -1249,6 +1252,26 @@ public class ChainFinder
                 }
             }
         }
+
+        // track unique pairs to avoid conflicts (eg end-to-end and start-to-start)
+        for(SvLinkedPair existingPair : mUniquePairs)
+        {
+            if(newPair.matches(existingPair))
+                return;
+        }
+
+        mUniquePairs.add(newPair);
+    }
+
+    private boolean isOppositeMatchVsExisting(final SvLinkedPair pair)
+    {
+        for(SvLinkedPair existingPair : mUniquePairs)
+        {
+            if(pair.oppositeMatch(existingPair))
+                return true;
+        }
+
+        return false;
     }
 
     private void removePossibleLinks(List<SvLinkedPair> possibleLinks, SvBreakend fullyLinkedBreakend)
@@ -1719,7 +1742,6 @@ public class ChainFinder
         return mMaxPossibleLinks > 0 && linkCount >= mMaxPossibleLinks;
     }
 
-
     private boolean addMorePossibleLinks(SvBreakend breakend, boolean applyMax)
     {
         Integer lastIndex = mBreakendLastLinkIndexMap.get(breakend);
@@ -1813,6 +1835,10 @@ public class ChainFinder
             }
 
             if(skipPair)
+                continue;
+
+            // check for a clash against existing pairs
+            if(isOppositeMatchVsExisting(newPair))
                 continue;
 
             ++linksAdded;
