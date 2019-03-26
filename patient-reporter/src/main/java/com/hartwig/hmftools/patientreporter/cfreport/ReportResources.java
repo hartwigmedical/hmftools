@@ -54,18 +54,22 @@ public final class ReportResources {
     public static final DeviceRgb PALETTE_BLACK = new DeviceRgb(0, 0, 0);
     public static final DeviceRgb PALETTE_BLUE = new DeviceRgb(38, 90, 166);
     public static final DeviceRgb PALETTE_MID_BLUE = new DeviceRgb(110, 139, 189);
+    public static final DeviceRgb PALETTE_DARK_BLUE = new DeviceRgb(93, 85, 164);
     public static final DeviceRgb PALETTE_RED = new DeviceRgb(232, 60, 55);
     public static final DeviceRgb PALETTE_CYAN = new DeviceRgb(0, 179, 233);
     public static final DeviceRgb PALETTE_DARK_GREY = new DeviceRgb(39, 47, 50);
     public static final DeviceRgb PALETTE_MID_GREY = new DeviceRgb(101, 106, 108);
     public static final DeviceRgb PALETTE_LIGHT_GREY = new DeviceRgb(205, 206, 207);
     public static final DeviceRgb PALETTE_PINK = new DeviceRgb(230, 21, 124);
+    public static final DeviceRgb PALETTE_VIOLET = new DeviceRgb(156, 97, 168);
 
     // Fonts and text spacing
     private static String FONT_REGULAR_PATH = "fonts/nimbus-sans/NimbusSansL-Regular.ttf";
     private static String FONT_BOLD_PATH = "fonts/nimbus-sans/NimbusSansL-Bold.ttf";
+    private static String ICON_FONT_PATH = "fonts/hmf-icons/hmf-icons.ttf";
     private static PdfFont fontRegular = null;
     private static PdfFont fontBold = null;
+    private static PdfFont iconFont = null;
     public static final float BODY_TEXT_LEADING = 10f;
 
     private ReportResources() {}
@@ -100,6 +104,13 @@ public final class ReportResources {
             fontBold = loadFont(FONT_BOLD_PATH);
         }
         return fontBold;
+    }
+
+    public static final PdfFont getIconFont() {
+        if (iconFont == null) {
+            iconFont = loadFont(ICON_FONT_PATH);
+        }
+        return iconFont;
     }
 
     /**
