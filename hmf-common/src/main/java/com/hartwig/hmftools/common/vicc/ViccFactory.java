@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 import com.google.common.collect.Lists;
 import com.google.gson.JsonArray;
@@ -159,7 +160,8 @@ public abstract class ViccFactory {
                         stringEnsembleGeneId.append(ensemblGeneID).append(",");
                     }
                 }
-                header = objectGeneIdentiefiers.keySet().toString().substring(1, objectGeneIdentiefiers.keySet().toString().length()-1);
+                Set<String> set = objectGeneIdentiefiers.keySet();
+                header = String.join(";", set);
 
             }
             headerCSV.append(header).append(";"); // header gene identifiers
