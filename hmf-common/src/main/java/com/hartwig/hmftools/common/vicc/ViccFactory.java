@@ -5,6 +5,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
@@ -142,7 +143,12 @@ public abstract class ViccFactory {
         String header = "";
         JsonArray arrayGeneIdentifiers = object.getAsJsonArray("gene_identifiers");
         if (arrayGeneIdentifiers.size() == 0) {
-            stringToCSVGeneIdentifiers.append(Strings.EMPTY).append(";").append(Strings.EMPTY).append(";").append(Strings.EMPTY).append(";");
+            stringToCSVGeneIdentifiers.append(Strings.EMPTY)
+                    .append(";")
+                    .append(Strings.EMPTY)
+                    .append(";")
+                    .append(Strings.EMPTY)
+                    .append(";");
             headerCSV.append("symbol").append(";").append("entrez_id").append(";").append("ensembl_gene_id").append(";");
         } else {
             for (int j = 0; j < arrayGeneIdentifiers.size(); j++) {
@@ -264,27 +270,125 @@ public abstract class ViccFactory {
     private static StringBuilder readObjectFeatures(@NotNull JsonObject object, @NotNull StringBuilder headerCSV) {
         //features
         StringBuilder stringToCSVFeatures = new StringBuilder();
+        List<String> b = Lists.newArrayList();
+        List<String> keysOfSequenceOntologyObjectMerged;
         JsonArray arrayFeatures = object.getAsJsonArray("features");
-        JsonObject objectFeatures = (JsonObject) arrayFeatures.iterator().next();
-        int indexValue;
-        List<String> keysOfFeaturesObject = new ArrayList<>(objectFeatures.keySet());
-        for (int i = 0; i < objectFeatures.keySet().size(); i++) {
+        if (arrayFeatures.size() == 0) {
+            stringToCSVFeatures.append(Strings.EMPTY)
+                    .append(";")
+                    .append(Strings.EMPTY)
+                    .append(";")
+                    .append(Strings.EMPTY)
+                    .append(";")
+                    .append(Strings.EMPTY)
+                    .append(";")
+                    .append(Strings.EMPTY)
+                    .append(";")
+                    .append(Strings.EMPTY)
+                    .append(";")
+                    .append(Strings.EMPTY)
+                    .append(";")
+                    .append(Strings.EMPTY)
+                    .append(";")
+                    .append(Strings.EMPTY)
+                    .append(";")
+                    .append(Strings.EMPTY)
+                    .append(";")
+                    .append(Strings.EMPTY)
+                    .append(";")
+                    .append(Strings.EMPTY)
+                    .append(";")
+                    .append(Strings.EMPTY)
+                    .append(";")
+                    .append(Strings.EMPTY)
+                    .append(";")
+                    .append(Strings.EMPTY)
+                    .append(";")
+                    .append(Strings.EMPTY)
+                    .append(";")
+                    .append(Strings.EMPTY)
+                    .append(";")
+                    .append(Strings.EMPTY)
+                    .append(";");
 
-            if (keysOfFeaturesObject.get(i).equals("sequence_ontology")) {
-                List<String> keysOfSequenceOntologyObject = new ArrayList<>(objectFeatures.getAsJsonObject("sequence_ontology").keySet());
-                indexValue = keysOfFeaturesObject.indexOf("sequence_ontology");
-                keysOfFeaturesObject.set(indexValue, String.join(",", keysOfSequenceOntologyObject));
+            headerCSV.append("provenance_rule")
+                    .append(";")
+                    .append("end")
+                    .append(";")
+                    .append("description")
+                    .append(";")
+                    .append("links")
+                    .append(";")
+                    .append("hierarchy")
+                    .append(";")
+                    .append("soid")
+                    .append(";")
+                    .append("parent_soid")
+                    .append(";")
+                    .append("name")
+                    .append(";")
+                    .append("parent_name")
+                    .append(";")
+                    .append("provenance")
+                    .append(";")
+                    .append("start")
+                    .append(";")
+                    .append("synonyms")
+                    .append(";")
+                    .append("biomarker_type")
+                    .append(";")
+                    .append("referenceName")
+                    .append(";")
+                    .append("alt")
+                    .append(";")
+                    .append("ref")
+                    .append(";")
+                    .append("chromosome")
+                    .append(";")
+                    .append("name")
+                    .append(";");
+        } else {
+            JsonObject objectFeatures = (JsonObject) arrayFeatures.iterator().next();
+            int indexValue;
+            List<String> keysOfFeaturesObject = new ArrayList<>(objectFeatures.keySet());
 
-                for (int e = 0; e < objectFeatures.getAsJsonObject("sequence_ontology").keySet().size(); e++) {
-                    stringToCSVFeatures.append(objectFeatures.get("sequence_ontology")
-                            .getAsJsonObject()
-                            .get(keysOfSequenceOntologyObject.get(e))).append(";"); // features data
+            for (int i = 0; i < objectFeatures.keySet().size(); i++) {
+
+                if (keysOfFeaturesObject.get(i).equals("sequence_ontology")) {
+                    List<String> keysOfSequenceOntologyObject =
+                            new ArrayList<>(objectFeatures.getAsJsonObject("sequence_ontology").keySet());
+                    indexValue = keysOfFeaturesObject.indexOf("sequence_ontology");
+                    keysOfFeaturesObject.set(indexValue, String.join(";", keysOfSequenceOntologyObject));
+
+
+
+                    for (int e = 0; e < objectFeatures.getAsJsonObject("sequence_ontology").keySet().size(); e++) {
+                        b.add(objectFeatures.get("sequence_ontology")
+                                .getAsJsonObject()
+                                .get(keysOfSequenceOntologyObject.get(e)).toString());
+
+                    }
+                } else {
+                    b.add(objectFeatures.get(keysOfFeaturesObject.get(i)).toString());
                 }
-            } else {
-                stringToCSVFeatures.append(objectFeatures.get(keysOfFeaturesObject.get(i))).append(";"); // features data
+
             }
+
+            keysOfSequenceOntologyObjectMerged = keysOfFeaturesObject;
+            if (!keysOfFeaturesObject.get(1).equals("entrez_id")) {
+                keysOfSequenceOntologyObjectMerged.add(1, "entrez_id");
+                b.add(1, Strings.EMPTY);
+            }
+            if (!keysOfFeaturesObject.get(3).equals("name")) {
+                keysOfSequenceOntologyObjectMerged.add(3, "name");
+                b.add(3,Strings.EMPTY);
+            }
+            stringToCSVFeatures.append(b.toString().replace(",", ";"));
+
+            String header = String.join(";", keysOfSequenceOntologyObjectMerged);
+            headerCSV.append(header).append(";"); // header features
         }
-        headerCSV.append(keysOfFeaturesObject).append(";"); // header features
+
         return stringToCSVFeatures;
     }
 
@@ -295,7 +399,7 @@ public abstract class ViccFactory {
         JsonReader reader = new JsonReader(new FileReader(allJsonPath));
         reader.setLenient(true);
         int index = 1;
-        while (reader.peek() != JsonToken.END_DOCUMENT) {
+        while (reader.peek() != JsonToken.END_DOCUMENT && index < 10) {
             LOGGER.info(index);
             JsonObject object = parser.parse(reader).getAsJsonObject();
 
@@ -303,10 +407,12 @@ public abstract class ViccFactory {
             StringBuilder headerCSV = new StringBuilder();
             headerCSV.append("index").append(";");
             StringBuilder StringToCSVSource = readObjectSource(object, headerCSV);
-            StringBuilder StringToCSVGenes = readObjectGenes(object, headerCSV);
-            StringBuilder StringToCSVTags = readObjectTags(object, headerCSV);
-            StringBuilder StringToCSVDevTags = readObjectDevTags(object, headerCSV);
-            StringBuilder StringToCSVGeneIdentifiers = readObjectGeneIdentifiers(object, headerCSV);
+
+            //            StringBuilder StringToCSVGenes = readObjectGenes(object, headerCSV);
+//            StringBuilder StringToCSVTags = readObjectTags(object, headerCSV);
+//            StringBuilder StringToCSVDevTags = readObjectDevTags(object, headerCSV);
+//            StringBuilder StringToCSVGeneIdentifiers = readObjectGeneIdentifiers(object, headerCSV);
+            StringBuilder StringToCSVFeatures = readObjectFeatures(object, headerCSV);
 
             //            if (StringToCSVSource.toString().equals("brca")) {
             //                readObjectBRCA(object, headerCSV);
@@ -331,10 +437,11 @@ public abstract class ViccFactory {
             //            }
             stringToCSVAll.append(index).append(";");
             stringToCSVAll.append(StringToCSVSource);
-                        stringToCSVAll.append(StringToCSVGenes);
-                        stringToCSVAll.append(StringToCSVTags);
-                        stringToCSVAll.append(StringToCSVDevTags);
-            stringToCSVAll.append(StringToCSVGeneIdentifiers);
+//            stringToCSVAll.append(StringToCSVGenes);
+//            stringToCSVAll.append(StringToCSVTags);
+//            stringToCSVAll.append(StringToCSVDevTags);
+//            stringToCSVAll.append(StringToCSVGeneIdentifiers);
+            stringToCSVAll.append(StringToCSVFeatures);
 
             writer.append(headerCSV);
             writer.append("\n");
