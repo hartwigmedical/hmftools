@@ -115,6 +115,9 @@ public class VisualiserWriter
                 int chainCount = chains.isEmpty() ? 1 : chains.size();
                 int unchainedChainId = chains.isEmpty() ? var.getCluster().getChainId(var) : -1;
 
+                // int repeatCount = !chains.isEmpty() ? max(var.getReplicatedCount(), 1) : 1;
+                int repeatCount = (int)var.getRoundedCNChange();
+
                 for(int i = 0; i < chainCount; ++i)
                 {
                     int chainId = chains.isEmpty() ? unchainedChainId : chains.get(i).id();
@@ -142,7 +145,6 @@ public class VisualiserWriter
                                         breakend.getSV().getFoldbackLink(isStart).isEmpty() ? "NORMAL" : "FOLDBACK"));
                     }
 
-                    int repeatCount = !chains.isEmpty() ? max(var.getReplicatedCount(), 1) : 1;
                     writer.write(String.format(",%d", repeatCount));
 
                     writer.newLine();

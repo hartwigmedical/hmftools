@@ -25,6 +25,7 @@ public class SvChain {
 
     private boolean mIsClosedLoop;
     private boolean mIsValid;
+    private int mReplicationCount; // if a chain is identically repeated, report the number of times this occurs
 
     private String mDetails;
 
@@ -38,6 +39,7 @@ public class SvChain {
         mIsClosedLoop = false;
         mIsValid = true;
         mDetails = "";
+        mReplicationCount = 1;
     }
 
     public int id() { return mId; }
@@ -239,6 +241,9 @@ public class SvChain {
 
         mIsValid = true;
     }
+
+    public int getReplicationCount() { return mReplicationCount; }
+    public void addToReplicationCount() { ++mReplicationCount; }
 
     public void logLinks()
     {

@@ -253,6 +253,8 @@ public class ChainFinder
                 LOGGER.debug("cluster({}) skipping duplicate chain({}) vs origChain({}) all replicated({})",
                         mCluster.id(), newChain.id(), chain.id(), allReplicatedSVs);
 
+                chain.addToReplicationCount();
+
                 // remove these replicated SVs as well as the replicated chain
                 if(allReplicatedSVs)
                 {
