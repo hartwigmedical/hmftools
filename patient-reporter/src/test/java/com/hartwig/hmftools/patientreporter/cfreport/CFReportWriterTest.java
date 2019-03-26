@@ -5,10 +5,12 @@ import com.hartwig.hmftools.patientreporter.ExampleAnalysisTestFactory;
 
 import org.junit.Test;
 
+import java.io.IOException;
+
 public class CFReportWriterTest {
 
     @Test
-    public void canGeneratePatientReportForCOLO829() {
+    public void canGeneratePatientReportForCOLO829() throws IOException {
         AnalysedPatientReport colo829Report = ExampleAnalysisTestFactory.buildCOLO829();
 
         CFReportWriter reportWriter = new CFReportWriter();

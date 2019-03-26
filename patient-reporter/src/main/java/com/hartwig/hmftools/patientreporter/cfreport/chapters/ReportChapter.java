@@ -42,8 +42,6 @@ public abstract class ReportChapter {
             report.add(new AreaBreak(AreaBreakType.NEXT_PAGE));
         }
 
-        // @TODO add chapter to outline
-
     }
 
     public abstract String getName();
