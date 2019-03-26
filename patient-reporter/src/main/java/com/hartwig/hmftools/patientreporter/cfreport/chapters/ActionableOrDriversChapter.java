@@ -7,7 +7,6 @@ import com.itextpdf.layout.Document;
 import com.itextpdf.layout.Style;
 import com.itextpdf.layout.element.Paragraph;
 import com.itextpdf.layout.element.Table;
-import com.itextpdf.layout.property.HorizontalAlignment;
 import com.itextpdf.layout.property.TextAlignment;
 import org.jetbrains.annotations.NotNull;
 
@@ -43,7 +42,7 @@ public class ActionableOrDriversChapter extends ReportChapter {
         // Section content
         if (isAvailable) {
 
-            Table table = TableHelper.getReportTable(new float[]{1, 1, 1, 1, 1, 1, 1, 1, 1, 1});
+            Table table = TableHelper.createReportContentTable(new float[]{1, 1, 1, 1, 1, 1, 1, 1, 1, 1});
             table.addHeaderCell(TableHelper.getHeaderCell("Gene"));
             table.addHeaderCell(TableHelper.getHeaderCell("Variant"));
             table.addHeaderCell(TableHelper.getHeaderCell("Impact"));
@@ -86,7 +85,7 @@ public class ActionableOrDriversChapter extends ReportChapter {
         // Section content
         if (isAvailable) {
 
-            Table table = TableHelper.getReportTable(new float[]{4, 4, 4, 2, 1});
+            Table table = TableHelper.createReportContentTable(new float[]{4, 4, 4, 2, 1});
             table.addHeaderCell(TableHelper.getHeaderCell("Chromosome"));
             table.addHeaderCell(TableHelper.getHeaderCell("Chromosome band"));
             table.addHeaderCell(TableHelper.getHeaderCell("Gene"));
@@ -119,7 +118,7 @@ public class ActionableOrDriversChapter extends ReportChapter {
         // Section content
         if (isAvailable) {
 
-            Table table = TableHelper.getReportTable(new float[]{2, .8f, 1.5f, 1.5f, 3f});
+            Table table = TableHelper.createReportContentTable(new float[]{2, .8f, 1.5f, 1.5f, 3f});
             table.addHeaderCell(TableHelper.getHeaderCell("Fusion"));
             table.addHeaderCell(TableHelper.getHeaderCell("Transcript"));
             table.addHeaderCell(TableHelper.getHeaderCell("Context"));
@@ -154,7 +153,7 @@ public class ActionableOrDriversChapter extends ReportChapter {
         // Section content
         if (isAvailable) {
 
-            Table table = TableHelper.getReportTable(new float[]{1, 1, 2, .8f, 1.5f, 1.5f, 1.5f});
+            Table table = TableHelper.createReportContentTable(new float[]{1, 1, 2, .8f, 1.5f, 1.5f, 1.5f});
             table.addHeaderCell(TableHelper.getHeaderCell("Location"));
             table.addHeaderCell(TableHelper.getHeaderCell("Gene"));
             table.addHeaderCell(TableHelper.getHeaderCell("Disrupted range"));
@@ -198,7 +197,7 @@ public class ActionableOrDriversChapter extends ReportChapter {
     @NotNull
     private static final Table getNoneTable() {
 
-        Table table = TableHelper.getReportTable(new float[] {1});
+        Table table = TableHelper.createReportContentTable(new float[] {1});
         table.addCell(TableHelper.getDisabledContentCell(new Paragraph("NONE")));
         table.addCell(TableHelper.getLayoutCell(10, 1).setHeight(TABLE_BOTTOM_SPACER_HEIGHT));
 

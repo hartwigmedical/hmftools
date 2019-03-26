@@ -4,9 +4,8 @@ import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
 import com.hartwig.hmftools.patientreporter.cfreport.components.TableHelper;
 import com.hartwig.hmftools.patientreporter.cfreport.components.Icon;
 import com.itextpdf.layout.Document;
-import com.itextpdf.layout.element.Paragraph;
-import com.itextpdf.layout.element.Table;
-import com.itextpdf.layout.element.Text;
+import com.itextpdf.layout.borders.Border;
+import com.itextpdf.layout.element.*;
 import com.itextpdf.layout.property.VerticalAlignment;
 import org.jetbrains.annotations.NotNull;
 
@@ -26,23 +25,41 @@ public class TherapyDetailsChapter extends ReportChapter {
 
     @Override
     protected void renderChapterContent(Document report) {
-        addTumorTypeEvidence(report);
-        addClinicalTrials(report);
-        addOtherTumorTypeEvidence(report);
+
+        Table chapterTable = new Table(1);
+
+        chapterTable.addCell(new Cell()
+                .add(createTumorTypeEvidenceTable())
+                .setPadding(0)
+                .setBorder(Border.NO_BORDER));
+
+        chapterTable.addCell(new Cell()
+                .add(createClinicalTrialsTable())
+                .setPadding(0)
+                .setBorder(Border.NO_BORDER));
+
+        chapterTable.addCell(new Cell()
+                .add(createOtherTumorTypeEvidenceTable())
+                .setPadding(0)
+                .setBorder(Border.NO_BORDER));
+
+        // Add legend/footnote that will appear on each page of the chapter
+        chapterTable.addFooterCell(new Cell()
+                .add(createChapterFootnote())
+                .setPadding(0)
+                .setBorder(Border.NO_BORDER));
+
+        report.add(chapterTable);
+
     }
 
-    private static void addTumorTypeEvidence(@NotNull Document report) {
+    @NotNull
+    private static Table createTumorTypeEvidenceTable() {
 
-        report.add(new Paragraph("Tumor type specific evidence")
-                .addStyle(ReportResources.sectionTitleStyle()));
-
-        Table table = TableHelper.getReportTable(
-                new float[] {18, 12, 61, 8, 15, 6},
-                new String[] {"Drivers", "Match", "Treatments", "Level of evidence", "Response", "Source"});
-
-
-        String[] levels = {"A", "B", "C", "D"};
-        String[][] treatmentCombinations = {
+        // Temporary content
+        // @TODO remove
+        final String[] levels = {"A", "B", "C", "D"};
+        final String[][] treatmentCombinations = {
                 {"Binimetinib", "Encorafenib" },
                 {"RO4987655"},
                 {"Dabrafenib"},
@@ -51,63 +68,82 @@ public class TherapyDetailsChapter extends ReportChapter {
                 {"Cobimetinib", "Vemurafenib", "Encorafenib"},
                 {"Encorafenib"}
         };
+
+        // Create content table
+        Table contentTable = TableHelper.createReportContentTable(new float[] {18, 12, 61, 8, 15, 6});
         for (int i = 0; i < 10; i++) {
 
             final String level = levels[(int) (Math.random() * (float) levels.length)];
             String[] treatments = treatmentCombinations[(int) (Math.random() * (float) treatmentCombinations.length)];
 
-            table.addCell(TableHelper.getContentCell("BRAF p.Val600Glu"));
-            table.addCell(TableHelper.getContentCell(createTreatmentMatchParagraph(Math.random() > 0.5)));
-            table.addCell(TableHelper.getContentCell(createTreatmentParagraph(treatments)).setVerticalAlignment(VerticalAlignment.TOP));
-            table.addCell(TableHelper.getContentCell(new Paragraph(Icon.createLevelIcon(level))));
-            table.addCell(TableHelper.getContentCell("Responsive"));
-            table.addCell(TableHelper.getContentCell("OncoKB"));
+            contentTable.addCell(TableHelper.getContentCell("BRAF p.Val600Glu"));
+            contentTable.addCell(TableHelper.getContentCell(createTreatmentMatchParagraph(Math.random() > 0.5)));
+            contentTable.addCell(TableHelper.getContentCell(createTreatmentParagraph(treatments)).setVerticalAlignment(VerticalAlignment.TOP));
+            contentTable.addCell(TableHelper.getContentCell(new Paragraph(Icon.createLevelIcon(level))));
+            contentTable.addCell(TableHelper.getContentCell("Responsive"));
+            contentTable.addCell(TableHelper.getContentCell("OncoKB"));
+
         }
 
-        report.add(table);
+        // Create report table that handles page breaks
+        return TableHelper.createWrappingReportTable("Tumor type specific evidence", contentTable, new Cell[]  {
+                TableHelper.getHeaderCell("Drivers"),
+                TableHelper.getHeaderCell("Match"),
+                TableHelper.getHeaderCell("Treatments"),
+                TableHelper.getHeaderCell("Level of evidence"),
+                TableHelper.getHeaderCell("Response"),
+                TableHelper.getHeaderCell("Source")
+        });
 
     }
 
-    private static void addClinicalTrials(@NotNull Document report) {
+    @NotNull
+    private static Table createClinicalTrialsTable() {
 
-        report.add(new Paragraph("Clinical trials (NL)")
-                .addStyle(ReportResources.sectionTitleStyle()));
-
-        Table table = TableHelper.getReportTable(
-                new float[] {18, 12, 69, 15, 6},
-                new String[] {"Drivers", "Match", "Treatments", "CCMO", "Source"});
-
-        for (int i = 0; i < 10; i++) {
-            table.addCell(TableHelper.getContentCell("BRAF p.Val600Glu"));
-            table.addCell(TableHelper.getContentCell(createTreatmentMatchParagraph(Math.random() > 0.5)));
-            table.addCell(TableHelper.getContentCell(createTreatmentParagraph(new String[] {"Binimetinib", "Encorafenib"})));
-            table.addCell(TableHelper.getContentCell("NL57739.031.16"));
-            table.addCell(TableHelper.getContentCell("IClusion"));
+        // Create content table
+        Table contentTable = TableHelper.createReportContentTable(new float[] {18, 12, 69, 15, 6});
+        for (int i = 0; i < 20; i++) {
+            contentTable.addCell(TableHelper.getContentCell("BRAF p.Val600Glu"));
+            contentTable.addCell(TableHelper.getContentCell(createTreatmentMatchParagraph(Math.random() > 0.5)));
+            contentTable.addCell(TableHelper.getContentCell(createTreatmentParagraph(new String[] {"Binimetinib", "Encorafenib"})));
+            contentTable.addCell(TableHelper.getContentCell("NL57739.031.16"));
+            contentTable.addCell(TableHelper.getContentCell("IClusion"));
         }
 
-        report.add(table);
+        // Create report table that handles page breaks
+        return TableHelper.createWrappingReportTable("Clinical trials (NL)", contentTable, new Cell[] {
+                TableHelper.getHeaderCell("Drivers"),
+                TableHelper.getHeaderCell("Match"),
+                TableHelper.getHeaderCell("Treatments"),
+                TableHelper.getHeaderCell("CCMO"),
+                TableHelper.getHeaderCell("Source")
+        });
 
     }
 
-    private static void addOtherTumorTypeEvidence(@NotNull Document report) {
+    @NotNull
+    private static Table createOtherTumorTypeEvidenceTable() {
 
-        report.add(new Paragraph("Evidence on other tumor types")
-                .addStyle(ReportResources.sectionTitleStyle()));
-
-        Table table = TableHelper.getReportTable(
-                new float[] {18, 12, 61, 8, 15, 6},
-                new String[] {"Drivers", "Match", "Treatments", "Level of evidence", "Response", "Source"});
-
+        // Create content table
+        Table contentTable = TableHelper.createReportContentTable(new float[] {18, 12, 61, 8, 15, 6});
         for (int i = 0; i < 10; i++) {
-            table.addCell(TableHelper.getContentCell("BRAF p.Val600Glu"));
-            table.addCell(TableHelper.getContentCell(createTreatmentMatchParagraph(Math.random() > 0.5)));
-            table.addCell(TableHelper.getContentCell(createTreatmentParagraph(new String[] {"Vemurafenib"})));
-            table.addCell(TableHelper.getContentCell(new Paragraph(Icon.createLevelIcon("A"))));
-            table.addCell(TableHelper.getContentCell("Responsive"));
-            table.addCell(TableHelper.getContentCell("OncoKB"));
+            contentTable.addCell(TableHelper.getContentCell("BRAF p.Val600Glu"));
+            contentTable.addCell(TableHelper.getContentCell(createTreatmentMatchParagraph(Math.random() > 0.5)));
+            contentTable.addCell(TableHelper.getContentCell(createTreatmentParagraph(new String[] {"Vemurafenib"})));
+            contentTable.addCell(TableHelper.getContentCell(new Paragraph(Icon.createLevelIcon("A"))));
+            contentTable.addCell(TableHelper.getContentCell("Responsive"));
+            contentTable.addCell(TableHelper.getContentCell("OncoKB"));
         }
 
-        report.add(table);
+        // Create report table that handles page breaks
+        return TableHelper.createWrappingReportTable("Evidence on other tumor types", contentTable, new Cell[] {
+                TableHelper.getHeaderCell("Drivers"),
+                TableHelper.getHeaderCell("Match"),
+                TableHelper.getHeaderCell("Treatments"),
+                TableHelper.getHeaderCell("Level of evidence"),
+                TableHelper.getHeaderCell("Response"),
+                TableHelper.getHeaderCell("Source")
+        });
 
     }
 
@@ -140,6 +176,24 @@ public class TherapyDetailsChapter extends ReportChapter {
                         .addStyle(ReportResources.tableContentStyle()));
 
         return p;
+    }
+
+    @NotNull
+    private final static Paragraph createChapterFootnote() {
+        return new Paragraph()
+                .setKeepTogether(true)
+                .add("The Cancer Genome Interpreter (CGI), OncoKB and CiViC knowledge bases are used to " +
+                    "annotate variants of all types with clinical evidence. Only treatment associated evidence with a high " +
+                    "level of evidence ( ")
+                .add(Icon.createIcon(Icon.IconType.LEVEL_A))
+                .add(" validated association; ")
+                .add(Icon.createIcon(Icon.IconType.LEVEL_B))
+                .add(" strong clinical evidence) are reported here. Potential evidence items with a lower level of evidence ( ")
+                .add(Icon.createIcon(Icon.IconType.LEVEL_C))
+                .add(" case study, limited clinical evidence; ")
+                .add(Icon.createIcon(Icon.IconType.LEVEL_D))
+                .add(" pre-clinical) are not reported.")
+                    .addStyle(ReportResources.subTextStyle());
     }
 
 }

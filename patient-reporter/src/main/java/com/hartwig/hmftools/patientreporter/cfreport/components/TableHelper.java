@@ -7,8 +7,6 @@ import com.itextpdf.layout.element.Cell;
 import com.itextpdf.layout.element.IBlockElement;
 import com.itextpdf.layout.element.Paragraph;
 import com.itextpdf.layout.element.Table;
-import com.itextpdf.layout.property.HorizontalAlignment;
-import com.itextpdf.layout.property.TextAlignment;
 import com.itextpdf.layout.property.UnitValue;
 import com.itextpdf.layout.property.VerticalAlignment;
 import org.jetbrains.annotations.NotNull;
@@ -22,30 +20,67 @@ public final class TableHelper {
      * @return
      */
     @NotNull
-    public static Table getReportTable(float[] columnPercentageWidths) {
+    public static Table createReportContentTable(float[] columnPercentageWidths) {
+
         return new Table(UnitValue.createPercentArray(columnPercentageWidths))
                 .setWidth(ReportResources.CONTENT_WIDTH_WIDE);
+
     }
 
-    /**
-     * Get a table that implements the visual style for the main report tables
-     *
-     * @param columnPercentageWidths
-     * @param headerNames
-     * @return
-     */
-    @NotNull
-    public static Table getReportTable(float[] columnPercentageWidths, @NotNull String[] headerNames) {
+    public static Table createWrappingReportTable(String tableTitle, Table contentTable, Cell[] headerCells) {
 
-        // Initialize table
-        Table table = getReportTable(columnPercentageWidths);
+        // Add "continues on next page" footer to the content table
+        contentTable.addFooterCell(new Cell(1, contentTable.getNumberOfColumns())
+                .setBorder(Border.NO_BORDER)
+                .setPaddingTop(5)
+                .setPaddingBottom(5)
+                .add(new Paragraph("The table continues on the next page".toUpperCase())
+                        .addStyle(ReportResources.subTextStyle())))
+                .setSkipLastFooter(true);
 
-        // Add header columns
-        for (String name: headerNames) {
-            table.addHeaderCell(getHeaderCell(name));
+        // Wrap content table with a table that shows "continued from the previous table" after page break
+        Table continuedWrapTable = new Table(1)
+                .setWidth(contentTable.getWidth())
+                .addHeaderCell(new Cell()
+                        .setBorder(Border.NO_BORDER)
+                        .add(new Paragraph("Continued from the previous page".toUpperCase())
+                                .addStyle(ReportResources.subTextStyle())))
+                .setSkipFirstHeader(true)
+                .addCell(new Cell()
+                        .add(contentTable)
+                        .setPadding(0)
+                        .setBorder(Border.NO_BORDER));
+
+        // Wrap continuedWrapTable in table that contains the content table column headers
+        float[] contentColumnSizes = new float[contentTable.getNumberOfColumns()];
+        for (int i = 0; i < contentColumnSizes.length; i++) {
+            contentColumnSizes[i] = contentTable.getColumnWidth(i).getValue();
         }
 
-        return table;
+        Table headerWrapTable = new Table(contentColumnSizes)
+            .setWidth(contentTable.getWidth());
+        for (Cell headerCell: headerCells) {
+            headerWrapTable.addHeaderCell(headerCell);
+        }
+        headerWrapTable.addCell(new Cell()
+                .add(continuedWrapTable)
+                .setPadding(0)
+                .setBorder(Border.NO_BORDER));
+
+        // Wrap heading table with table that shows the table title
+        Table titleTable = new Table(1)
+                .setWidth(contentTable.getWidth())
+                .setMarginBottom(20)
+                .addHeaderCell(new Cell()
+                        .setBorder(Border.NO_BORDER)
+                        .add(new Paragraph(tableTitle)
+                                .addStyle(ReportResources.sectionTitleStyle())))
+                .addCell(new Cell()
+                        .add(headerWrapTable)
+                        .setPadding(0)
+                        .setBorder(Border.NO_BORDER));
+
+        return titleTable;
 
     }
 
