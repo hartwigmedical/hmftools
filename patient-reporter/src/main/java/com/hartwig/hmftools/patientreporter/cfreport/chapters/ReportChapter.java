@@ -7,6 +7,8 @@ import com.itextpdf.layout.element.AreaBreak;
 import com.itextpdf.layout.property.AreaBreakType;
 import org.jetbrains.annotations.NotNull;
 
+import java.io.IOException;
+
 public abstract class ReportChapter {
 
     public enum ChapterType {
@@ -15,7 +17,7 @@ public abstract class ReportChapter {
         ContentChapter       // Short sidepanel with just ID and report date
     };
 
-    public void render(@NotNull PageEventHandler eventHandler, @NotNull Document report) {
+    public void render(@NotNull PageEventHandler eventHandler, @NotNull Document report) throws IOException {
 
         // Reconfigure event handler for upcoming pages
         eventHandler.setChapterTitle(getName());
@@ -48,7 +50,7 @@ public abstract class ReportChapter {
 
     public abstract ChapterType getChapterType();
 
-    protected abstract void renderChapterContent(@NotNull Document report);
+    protected abstract void renderChapterContent(@NotNull Document report) throws IOException;
 
     protected final float getContentWidth() {
         if (getChapterType() == ChapterType.SummaryChapter || getChapterType() == ChapterType.ClosingChapter) {

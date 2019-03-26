@@ -23,12 +23,12 @@ public class CFReportWriter implements ReportWriter {
     private static final Logger LOGGER = LogManager.getLogger(CFReportWriter.class);
 
     @Override
-    public void writeAnalysedPatientReport(@NotNull final AnalysedPatientReport report, @NotNull final String outputFilePath) {
+    public void writeAnalysedPatientReport(@NotNull final AnalysedPatientReport report, @NotNull final String outputFilePath) throws IOException {
         // TODO!
     }
 
     @Override
-    public void writeQCFailReport(@NotNull final QCFailReport report, @NotNull final String outputFilePath) {
+    public void writeQCFailReport(@NotNull final QCFailReport report, @NotNull final String outputFilePath) throws IOException {
         // Does not need to be implemented
     }
 
@@ -37,7 +37,7 @@ public class CFReportWriter implements ReportWriter {
      * @param outputFilePath
      * @deprecated
      */
-    public void createReport(String outputFilePath) {
+    public void createReport(String outputFilePath) throws IOException {
 
         try {
 
@@ -51,12 +51,12 @@ public class CFReportWriter implements ReportWriter {
 
             // Add chapters
             new SummaryChapter().render(pageEventHandler, report);
-//            new TherapyDetailsChapter().render(pageEventHandler, report);
+            new TherapyDetailsChapter().render(pageEventHandler, report);
             new ActionableOrDriversChapter().render(pageEventHandler, report);
-//            new TumorCharacteristicsChapter().render(pageEventHandler, report);
-//            new CircosChapter().render(pageEventHandler, report);
-//            new ExplanationChapter().render(pageEventHandler, report);
-//            new DetailsAndDisclaimerChapter().render(pageEventHandler, report);
+            new TumorCharacteristicsChapter().render(pageEventHandler, report);
+            new CircosChapter().render(pageEventHandler, report);
+            new ExplanationChapter().render(pageEventHandler, report);
+            new DetailsAndDisclaimerChapter().render(pageEventHandler, report);
 
             // Update total page count on pages and close document
             Footer.writeTotalPageCount(document);
@@ -76,8 +76,12 @@ public class CFReportWriter implements ReportWriter {
      */
     public static void main(String[] args) {
 
-        CFReportWriter writer = new CFReportWriter();
-        writer.createReport("/Users/Wilco/hmf/tmp/temp_" + String.valueOf(System.currentTimeMillis()) + ".pdf");
+        try {
+            CFReportWriter writer = new CFReportWriter();
+            writer.createReport("/Users/Wilco/hmf/tmp/temp_" + String.valueOf(System.currentTimeMillis()) + ".pdf");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
     }
 

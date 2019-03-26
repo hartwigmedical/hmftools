@@ -152,7 +152,7 @@ public class ActionableOrDriversChapter extends ReportChapter {
         report.add(getSectionTitle("Somatic gene disruptions", isAvailable));
 
         // Section content
-        if (isAvailable) { 
+        if (isAvailable) {
 
             Table table = TableHelper.getReportTable(new float[]{1, 1, 2, .8f, 1.5f, 1.5f, 1.5f});
             table.addHeaderCell(TableHelper.getHeaderCell("Location"));

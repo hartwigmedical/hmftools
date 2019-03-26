@@ -2,13 +2,16 @@ package com.hartwig.hmftools.patientreporter.cfreport.chapters;
 
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
 import com.hartwig.hmftools.patientreporter.cfreport.components.TableHelper;
+import com.itextpdf.io.IOException;
+import com.itextpdf.io.image.ImageDataFactory;
+import com.itextpdf.kernel.pdf.xobject.PdfImageXObject;
 import com.itextpdf.layout.Document;
-import com.itextpdf.layout.element.Div;
-import com.itextpdf.layout.element.Paragraph;
-import com.itextpdf.layout.element.Table;
-import com.itextpdf.layout.element.Text;
+import com.itextpdf.layout.element.*;
+import com.itextpdf.layout.property.HorizontalAlignment;
 import com.itextpdf.layout.property.UnitValue;
 import org.jetbrains.annotations.NotNull;
+
+import java.net.MalformedURLException;
 
 public class CircosChapter extends ReportChapter {
     @Override
@@ -22,9 +25,21 @@ public class CircosChapter extends ReportChapter {
     }
 
     @Override
-    protected void renderChapterContent(Document report) {
+    protected void renderChapterContent(Document report) throws IOException {
 
-        // @TODO Add Circos plot
+        // Add Circos plot
+        final String circosPath = "/Users/wilco/Projects/hmftools/patient-reporter/src/test/resources/circos/circos_example.png";
+        try {
+            final Image circosImage = new Image(ImageDataFactory.create(circosPath));
+            circosImage.setMaxHeight(400);
+            circosImage.setHorizontalAlignment(HorizontalAlignment.CENTER);
+            circosImage.setMarginBottom(8);
+            if (circosImage != null) {
+                report.add(circosImage);
+            }
+        } catch (MalformedURLException e) {
+            throw new IOException("Failed to read circos plot image at " + circosPath);
+        }
 
         // Explanation
         Table table = new Table(UnitValue.createPercentArray(new float[] {1, 0.1f, 1, 0.1f, 1}));
