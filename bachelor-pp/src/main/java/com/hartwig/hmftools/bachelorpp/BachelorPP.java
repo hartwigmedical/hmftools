@@ -2,6 +2,9 @@ package com.hartwig.hmftools.bachelorpp;
 
 import static com.hartwig.hmftools.common.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.io.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.common.variant.CodingEffect.NONE;
+import static com.hartwig.hmftools.common.variant.CodingEffect.SPLICE;
+import static com.hartwig.hmftools.common.variant.VariantType.INDEL;
 import static com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotationFactory.SNPEFF_IDENTIFIER;
 
 import java.io.BufferedReader;
@@ -33,6 +36,7 @@ import com.hartwig.hmftools.common.region.BEDFileLoader;
 import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.common.variant.ClonalityCutoffKernel;
 import com.hartwig.hmftools.common.variant.ClonalityFactory;
+import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariantFactory;
 import com.hartwig.hmftools.common.variant.PurityAdjustedSomaticVariant;
@@ -61,9 +65,6 @@ import htsjdk.variant.variantcontext.VariantContextBuilder;
 
 public class BachelorPP
 {
-
-    private static final Logger LOGGER = LogManager.getLogger(BachelorPP.class);
-
     // config items
     private static final String SAMPLE = "sample";
     private static final String REF_GENOME = "ref_genome";
@@ -94,6 +95,8 @@ public class BachelorPP
     private BufferedWriter mWriter;
     private AlleleDepthLoader mAllelDepthLoader;
     private List<String> mLimitedSampleList;
+
+    private static final Logger LOGGER = LogManager.getLogger(BachelorPP.class);
 
     private BachelorPP()
     {
@@ -285,24 +288,17 @@ public class BachelorPP
 
             annotateRecords(specificSample, sampleRecords, cmd, sampleDirectory);
 
-            int validRecordCount = 0;
-            for (final BachelorGermlineVariant bachRecord : sampleRecords)
-            {
-                if (bachRecord.isValid())
-                {
-                    ++validRecordCount;
-                }
-            }
+            filterRecords(sampleId, sampleRecords);
 
-            if (validRecordCount == 0)
+            if (sampleRecords.isEmpty())
             {
-                LOGGER.info("sample({}) has no valid germline reports", specificSample, validRecordCount);
+                LOGGER.info("sample({}) has no valid germline reports", specificSample);
                 continue;
             }
 
             if (mUploadRecordsToDB)
             {
-                LOGGER.info("sample({}) writing {} germline reports to database", specificSample, validRecordCount);
+                LOGGER.info("sample({}) writing {} germline reports to database", specificSample, sampleRecords.size());
                 writeToDatabase(specificSample, sampleRecords);
             }
 
@@ -394,7 +390,8 @@ public class BachelorPP
                 List<FittedRegion> fittedRegionData = FittedRegionFile.read(FittedRegionFile.generateFilename(purplePath, sampleId));
 
                 copyNumberRegions = Multimaps.fromRegions(fittedRegionData);
-            } catch (IOException e)
+            }
+            catch (IOException e)
             {
                 LOGGER.error("failed to read purple data from {}: {}", purplePath, e.toString());
                 return;
@@ -497,6 +494,69 @@ public class BachelorPP
         }
     }
 
+    private static int INDEL_REPEAT_LIMIT = 8;
+
+    private void filterRecords(final String sampleId, final List<BachelorGermlineVariant> bachRecords)
+    {
+        // currently the only filter is on INDELs with either microhomology matching the gain or loss, or with high repeat count
+        int index = 0;
+        while(index < bachRecords.size())
+        {
+            BachelorGermlineVariant bachRecord = bachRecords.get(index);
+
+            if (!bachRecord.isValid())
+            {
+                bachRecords.remove(index);
+                continue;
+            }
+
+            final EnrichedSomaticVariant enrichedVariant = bachRecord.getEnrichedVariant();
+
+            if(enrichedVariant.type() == INDEL && (bachRecord.CodingEffect == SPLICE || bachRecord.CodingEffect == NONE))
+            {
+                int repeatCount = enrichedVariant.repeatCount();
+
+                if(repeatCount > INDEL_REPEAT_LIMIT)
+                {
+                    LOGGER.debug("filtered var({}) indel {} with high repeatCount({})",
+                            bachRecord.asString(), bachRecord.CodingEffect, repeatCount);
+                    bachRecords.remove(index);
+                    continue;
+                }
+
+                final String microhomology = enrichedVariant.microhomology();
+                final String ref = bachRecord.Ref;
+                final String alt = bachRecord.Alts;
+
+                String mergeStr1;
+                String mergeStr2;
+                String compareStr;
+                if(alt.length() > ref.length())
+                {
+                    mergeStr1 = ref + microhomology;
+                    mergeStr2 = microhomology + ref;
+                    compareStr = alt;
+                }
+                else
+                {
+                    mergeStr1 = alt + microhomology;
+                    mergeStr2 = microhomology + alt;
+                    compareStr = ref;
+                }
+
+                if(compareStr.equals(mergeStr1) || compareStr.equals(mergeStr2))
+                {
+                    LOGGER.debug("filtered var({}) indel {} with ref, alt and microHom equal",
+                            bachRecord.asString(), bachRecord.CodingEffect, repeatCount);
+                    bachRecords.remove(index);
+                    continue;
+                }
+            }
+
+            ++index;
+        }
+    }
+
     private void writeToDatabase(final String sampleId, final List<BachelorGermlineVariant> bachRecords)
     {
         final GermlineVariantDAO germlineDAO = new GermlineVariantDAO(mDbAccess.context());
@@ -549,17 +609,17 @@ public class BachelorPP
                                 bachRecord.Chromosome,
                                 bachRecord.Position));
 
-                final EnrichedSomaticVariant region = bachRecord.getEnrichedVariant();
+                final EnrichedSomaticVariant enrichedVariant = bachRecord.getEnrichedVariant();
 
                 writer.write(
                         String.format(",%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%d,%d,%d,%d",
-                                region.type(),
-                                region.ref(),
-                                region.alt(),
+                                enrichedVariant.type(),
+                                enrichedVariant.ref(),
+                                enrichedVariant.alt(),
                                 bachRecord.Gene,
                                 bachRecord.TranscriptId,
-                                region.dbsnpID() == null ? "" : region.dbsnpID(),
-                                region.canonicalCosmicID() == null ? "" : region.canonicalCosmicID(),
+                                enrichedVariant.dbsnpID() == null ? "" : enrichedVariant.dbsnpID(),
+                                enrichedVariant.canonicalCosmicID() == null ? "" : enrichedVariant.canonicalCosmicID(),
                                 bachRecord.Effects,
                                 bachRecord.CodingEffect,
                                 bachRecord.isReadDataSet(), bachRecord.getGermlineAltCount(), bachRecord.getGermlineReadDepth(),
@@ -567,23 +627,23 @@ public class BachelorPP
 
                 writer.write(
                         String.format(",%.2f,%.2f,%s,%s,%s,%s,%d",
-                                region.adjustedCopyNumber(),
+                                enrichedVariant.adjustedCopyNumber(),
                                 bachRecord.getAdjustedVaf(),
-                                region.highConfidenceRegion(),
-                                region.trinucleotideContext(),
-                                region.microhomology(),
-                                region.repeatSequence(),
-                                region.repeatCount()));
+                                enrichedVariant.highConfidenceRegion(),
+                                enrichedVariant.trinucleotideContext(),
+                                enrichedVariant.microhomology(),
+                                enrichedVariant.repeatSequence(),
+                                enrichedVariant.repeatCount()));
 
                 writer.write(
                         String.format(",%s,%s,%s,%s,%s,%s,%.2f,%s,%s",
                                 bachRecord.HgvsProtein,
                                 bachRecord.HgvsCoding,
                                 bachRecord.isBiallelic(),
-                                region.hotspot(),
-                                region.mappability(),
+                                enrichedVariant.hotspot(),
+                                enrichedVariant.mappability(),
                                 bachRecord.IsHomozygous ? "HOM" : "HET",
-                                region.minorAllelePloidy(),
+                                enrichedVariant.minorAllelePloidy(),
                                 bachRecord.isLowScore() ? "ARTEFACT" : "PASS",
                                 bachRecord.CodonInfo));
 

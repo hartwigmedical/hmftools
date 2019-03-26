@@ -40,7 +40,6 @@ public class BachelorGermlineVariant implements Comparable<BachelorGermlineVaria
     public final List<String> mEffectsList;
 
     public String mSignificance;
-    public String mDiagnosis;
 
     private double mAdjustedVaf;
 
@@ -86,11 +85,15 @@ public class BachelorGermlineVariant implements Comparable<BachelorGermlineVaria
         mAdjustedVaf = 0;
 
         mSignificance = "";
-        mDiagnosis = "";
 
         mSomaticVariant = null;
         mVariantContext = null;
         mEnrichedVariant = null;
+    }
+
+    public String asString()
+    {
+        return String.format("id(%s) location(%s:%d) gene(%s)", VariantId, Chromosome, Position, Gene);
     }
 
     public int compareTo(final BachelorGermlineVariant other)
@@ -128,7 +131,6 @@ public class BachelorGermlineVariant implements Comparable<BachelorGermlineVaria
         }
     }
 
-    public final List<String> effectsList() { return mEffectsList; }
     public int getGermlineAltCount() { return mGermlineAltCount; }
     public int getGermlineRefCount() { return mGermlineReadDepth - mGermlineAltCount; }
     public int getGermlineReadDepth() { return mGermlineReadDepth; }
@@ -141,13 +143,6 @@ public class BachelorGermlineVariant implements Comparable<BachelorGermlineVaria
         mTumorAltCount = altCount;
         mTumorReadDepth = readDepth;
     }
-
-    public void setTumorAltCount(int count) { mTumorAltCount = count; }
-    public final String getDiagnosis() { return mDiagnosis; }
-    public final String getSignificance() { return mSignificance; }
-
-    public void setDiagnosis(final String text) { mDiagnosis = text; }
-    public void setSignificance(final String text) { mSignificance = text; }
 
     public void setReadData(int glCount, int glReadDepth, int tumorCount, int tumorReadDepth)
     {
