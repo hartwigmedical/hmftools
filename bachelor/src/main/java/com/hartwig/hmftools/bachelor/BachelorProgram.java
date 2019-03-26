@@ -1,10 +1,11 @@
 package com.hartwig.hmftools.bachelor;
 
-import static com.hartwig.hmftools.bachelor.EligibilityReport.MatchType.GENE_TRANSCRIPT;
-import static com.hartwig.hmftools.bachelor.EligibilityReport.MatchType.HOTSPOT_LOCATION;
 import static com.hartwig.hmftools.bachelor.EligibilityReport.MatchType.NONE;
+import static com.hartwig.hmftools.bachelor.EligibilityReport.MatchType.REQUIRED_EFFECT;
 import static com.hartwig.hmftools.bachelor.EligibilityReport.MatchType.WHITELIST;
+import static com.hartwig.hmftools.bachelor.ExternalDBFilters.isBenign;
 import static com.hartwig.hmftools.common.variant.CodingEffect.NONSENSE_OR_FRAMESHIFT;
+import static com.hartwig.hmftools.common.variant.CodingEffect.SPLICE;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -47,10 +48,9 @@ public class BachelorProgram
 
     private List<String> mRequiredEffects;
     private List<String> mPanelTranscripts;
-    private List<HotspotLocation> mHotspots;
 
-    private List<VariantFilter> mWhitelistFilters;
-    private List<VariantFilter> mBlacklistFilters;
+    private Map<String,List<VariantFilter>> mWhitelistFilters;
+    private Map<String,List<VariantFilter>> mBlacklistFilters;
 
     private SortedSetMultimap<String, HmfTranscriptRegion> mGenesByChromosomeMap;
     private Map<String, HmfTranscriptRegion> mAllGenesMap;
@@ -67,10 +67,9 @@ public class BachelorProgram
         mName = "";
         mRequiredEffects = null;
         mPanelTranscripts = null;
-        mHotspots = null;
 
-        mWhitelistFilters = Lists.newArrayList();
-        mBlacklistFilters = Lists.newArrayList();
+        mWhitelistFilters = Maps.newHashMap();
+        mBlacklistFilters = Maps.newHashMap();
 
         mReports = Lists.newArrayList();
 
@@ -104,7 +103,6 @@ public class BachelorProgram
         final List<GeneIdentifier> genes = panel.getGene();
 
         // take up a collection of the effects to search for
-        mHotspots = panel.getHotspot();
         mRequiredEffects = panel.getSnpEffect().stream().map(SnpEffect::value).collect(Collectors.toList());
         mPanelTranscripts = genes.stream().map(GeneIdentifier::getEnsembl).collect(Collectors.toList());
 
@@ -145,22 +143,36 @@ public class BachelorProgram
 
                 String chromosome = "";
                 long position = 0;
+                String ref = "";
+                String alt = "";
 
                 if(exclusion.getPosition() != null)
                 {
-                    String[] chrPos = exclusion.getPosition().split(":");
+                    String[] varDetails = exclusion.getPosition().split(":");
 
-                    if(chrPos.length == 2)
+                    if(varDetails.length == 4)
                     {
-                        chromosome = chrPos[0];
-                        position = Long.parseLong(chrPos[1]);
+                        chromosome = varDetails[0];
+                        position = Long.parseLong(varDetails[1]);
+                        ref = varDetails[2];
+                        alt = varDetails[3];
                     }
                 }
 
-                VariantFilter filter = new VariantFilter(exclusion.getGene().getName(), "", chromosome, position,
-                        "", "", NONSENSE_OR_FRAMESHIFT, hgvsProtein, "", minCodon);
+                final String gene = exclusion.getGene().getName();
 
-                mBlacklistFilters.add(filter);
+                VariantFilter filter = new VariantFilter(gene, "", chromosome, position,
+                        ref, alt, NONSENSE_OR_FRAMESHIFT, hgvsProtein, "", "", minCodon);
+
+                List<VariantFilter> filters = mBlacklistFilters.get(gene);
+
+                if(filters == null)
+                {
+                    filters = Lists.newArrayList();
+                    mBlacklistFilters.put(gene, filters);
+                }
+
+                filters.add(filter);
             }
         }
 
@@ -172,16 +184,37 @@ public class BachelorProgram
         return true;
     }
 
-    public void addExternalFilters(final List<VariantFilter> filters)
+    public void addExternalFilters(final List<VariantFilter> allFilters)
     {
         // split into white and black list based on the coding effect
-        mBlacklistFilters.addAll(filters.stream()
-                .filter(x -> x.Effect == NONSENSE_OR_FRAMESHIFT || x.Effect == CodingEffect.SPLICE)
-                .collect(Collectors.toList()));
+        for(VariantFilter filter : allFilters)
+        {
+            List<VariantFilter> filters = null;
 
-        mWhitelistFilters.addAll(filters.stream()
-                .filter(x -> x.Effect != NONSENSE_OR_FRAMESHIFT && x.Effect != CodingEffect.SPLICE)
-                .collect(Collectors.toList()));
+            if(filter.Effect == NONSENSE_OR_FRAMESHIFT || filter.Effect == CodingEffect.SPLICE)
+            {
+                filters = mBlacklistFilters.get(filter.Gene);
+
+                if(filters == null)
+                {
+                    filters = Lists.newArrayList();
+                    mBlacklistFilters.put(filter.Gene, filters);
+                }
+            }
+            else
+            {
+                filters = mWhitelistFilters.get(filter.Gene);
+
+                if(filters == null)
+                {
+                    filters = Lists.newArrayList();
+                    mWhitelistFilters.put(filter.Gene, filters);
+                }
+            }
+
+            filters.add(filter);
+
+        }
     }
 
     public String name() { return mName; }
@@ -244,6 +277,9 @@ public class BachelorProgram
         {
             final SnpEffAnnotation snpEff = sampleAnnotations.get(i);
 
+            if(!snpEff.allele().equals(refGenotype.getAllele(1).getBaseString()))
+                continue; // skip alleles for the second sample (ie the tumor)
+
             if (!snpEff.isTranscriptFeature())
                 continue;
 
@@ -265,8 +301,9 @@ public class BachelorProgram
             final String transcriptId = snpEff.transcript();
             final String chromosome = variant.getContig();
             final long position = variant.getStart();
-            final String ref = variant.getReference().toString();
-            final String alt = snpEff.allele();
+            final String ref = variant.getReference().toString().replaceAll("\\*", "");
+            final String alt = snpEff.allele().replaceAll("\\*", "");
+
             final String effects = snpEff.effects();
             final String hgvsProtein = snpEff.hgvsProtein();
             final String hgvsCoding = snpEff.hgvsCoding();
@@ -278,106 +315,115 @@ public class BachelorProgram
                     LOGGER.debug("match found: gene({} {}) var({}:{}) ref({}) alt({}) on effect({})",
                             gene, transcriptId, chromosome, position, ref, alt, effects);
 
-                    matchType = GENE_TRANSCRIPT;
+                    matchType = REQUIRED_EFFECT;
                     break;
                 }
             }
 
-            if (matchType == GENE_TRANSCRIPT && !mBlacklistFilters.isEmpty())
+            boolean matchesFilter = false;
+
+            if (matchType == REQUIRED_EFFECT && !mBlacklistFilters.isEmpty())
             {
-                for(final VariantFilter filter : mBlacklistFilters)
+                List<VariantFilter> filters = mBlacklistFilters.get(gene);
+
+                if(filters != null)
                 {
-                    if(!filter.Gene.equals(gene))
-                        continue;
-
-                    if(!filter.HgvsProteinCodon.isEmpty())
+                    for(final VariantFilter filter : filters)
                     {
-                        if(filter.HgvsProteinCodon.equals(hgvsProtein))
+                        boolean isBenign = isBenign(filter.ClinvarSignificance);
+
+                        if (!filter.HgvsProteinCodon.isEmpty())
                         {
-                            LOGGER.debug("gene({} {}) var({}:{}) ref({}) alt({}) blacklisted on hgvsProtein({})",
-                                    gene, transcriptId, chromosome, position, ref, alt, hgvsProtein);
-                            return;
+                            if (filter.HgvsProteinCodon.equals(hgvsProtein))
+                            {
+                                LOGGER.debug("gene({} {}) var({}:{}) ref({}) alt({}) blacklisted on hgvsProtein({})",
+                                        gene, transcriptId, chromosome, position, ref, alt, hgvsProtein);
+
+                                matchesFilter = true;
+
+                                if (isBenign)
+                                    return;
+                            }
+
+                            continue;
                         }
 
-                        continue;
-                    }
-
-                    if(!filter.DBSnpId.isEmpty())
-                    {
-                        if(varId.contains(filter.DBSnpId))
+                        if (!filter.DBSnpId.isEmpty())
                         {
-                            LOGGER.debug("gene({} {}) var({}:{}) ref({}) alt({}) blacklisted on DBSnpId({})",
-                                    gene, transcriptId, chromosome, position, ref, alt, varId);
-                            return;
+                            if (varId.contains(filter.DBSnpId))
+                            {
+                                LOGGER.debug("gene({} {}) var({}:{}) ref({}) alt({}) blacklisted on DBSnpId({})",
+                                        gene, transcriptId, chromosome, position, ref, alt, varId);
+
+                                matchesFilter = true;
+
+                                if (isBenign)
+                                    return;
+                            }
+
+                            continue;
                         }
 
-                        continue;
-                    }
-
-                    if(filter.MinCodon >= 0)
-                    {
-                        final List<Integer> proteinPositions = proteinPosition(snpEff);
-
-                        if(!proteinPositions.isEmpty() && filter.MinCodon <= proteinPositions.get(0))
+                        if (filter.MinCodon >= 0)
                         {
-                            LOGGER.debug("gene({} {}) var({}:{}) ref({}) alt({}) blacklisted on minCodon({})",
-                                    gene, transcriptId, chromosome, position, ref, alt, proteinPositions.get(0));
-                            return;
+                            final List<Integer> proteinPositions = proteinPosition(snpEff);
+
+                            if (!proteinPositions.isEmpty() && filter.MinCodon <= proteinPositions.get(0))
+                            {
+                                LOGGER.debug("gene({} {}) var({}:{}) ref({}) alt({}) blacklisted on minCodon({})",
+                                        gene, transcriptId, chromosome, position, ref, alt, proteinPositions.get(0));
+
+                                matchesFilter = true;
+
+                                if (isBenign)
+                                    return;
+                            }
+                        }
+
+                        if (filter.Chromosome.equals(chromosome) && filter.Position == position
+                                && filter.Ref.equals(ref) && filter.Alt.equals(alt))
+                        {
+                            LOGGER.debug("gene({} {}) var({}:{}) ref({}) alt({}) blacklisted on position, ref & alt",
+                                    gene, transcriptId, chromosome, position, ref, alt);
+
+                            matchesFilter = true;
+
+                            if (isBenign)
+                                return;
                         }
                     }
-
-                    if(filter.Position == position && filter.Ref.equals(ref) && filter.Alt.equals(alt))
-                    {
-                        LOGGER.debug("gene({} {}) var({}:{}) ref({}) alt({}) blacklisted on position and ref/alt",
-                                gene, transcriptId, chromosome, position, ref, alt);
-                        return;
-                    }
-
                 }
             }
 
             if (matchType == NONE && !mWhitelistFilters.isEmpty())
             {
-                for(final VariantFilter filter : mWhitelistFilters)
+                List<VariantFilter> filters = mWhitelistFilters.get(gene);
+
+                if(filters != null)
                 {
-                    if(!filter.Gene.equals(gene))
-                        continue;
-
-                    if(!filter.HgvsProteinCodon.isEmpty() && filter.HgvsProteinCodon.equals(hgvsProtein))
+                    for (final VariantFilter filter : filters)
                     {
-                        LOGGER.debug("match found: gene({} {}) var({}:{}) ref({}) alt({}) on hgvsProtein({}) whitelist",
-                                gene, transcriptId, chromosome, position, ref, alt, hgvsProtein);
-                        matchType = WHITELIST;
-                        break;
-                    }
+                        if (!filter.HgvsProteinCodon.isEmpty() && filter.HgvsProteinCodon.equals(hgvsProtein))
+                        {
+                            LOGGER.debug("match found: gene({} {}) var({}:{}) ref({}) alt({}) on hgvsProtein({}) whitelist",
+                                    gene, transcriptId, chromosome, position, ref, alt, hgvsProtein);
+                            matchType = WHITELIST;
+                            break;
+                        }
 
-                    if(!filter.DBSnpId.isEmpty() && varId.contains(filter.DBSnpId))
-                    {
-                        LOGGER.debug("match found: gene({} {}) var({}:{}) ref({}) alt({}) on DBSnpId({}) whitelist",
-                                gene, transcriptId, chromosome, position, ref, alt, varId);
-                        matchType = WHITELIST;
-                        break;
+                        if (!filter.DBSnpId.isEmpty() && varId.contains(filter.DBSnpId))
+                        {
+                            LOGGER.debug("match found: gene({} {}) var({}:{}) ref({}) alt({}) on DBSnpId({}) whitelist",
+                                    gene, transcriptId, chromosome, position, ref, alt, varId);
+                            matchType = WHITELIST;
+                            break;
+                        }
                     }
                 }
-            }
 
-            // then check the hotspot location
-            if(matchType == NONE && !mHotspots.isEmpty())
-            {
-                for (final HotspotLocation hotspot : mHotspots)
+                if(matchType == WHITELIST)
                 {
-                    if (position != hotspot.getPosition().intValue() || !chromosome.equals(hotspot.getChromosome()))
-                        continue;
-
-                    if (!ref.equals(hotspot.getRef()) || variant.getAlleles().size() < 2 || !alt.equals(hotspot.getAlt()))
-                    {
-                        continue;
-                    }
-
-                    matchType = HOTSPOT_LOCATION;
-
-                    LOGGER.debug("match found: gene({} {}) var({}:{}) ref({}) alt({}) on hotspot location)",
-                            gene, transcriptId, chromosome, position, ref, alt, varId);
+                    matchesFilter = true;
                 }
             }
 
@@ -389,7 +435,14 @@ public class BachelorProgram
             boolean isHomozygous = refGenotype.isHom();
             int phredScore = refGenotype.getPL().length >= 1 ? refGenotype.getPL()[0] : 0;
 
-            int germlineAltCount = refGenotype.getAD()[1];
+            int alleleIndex = 1;
+            for(; alleleIndex < variant.getAlleles().size(); ++alleleIndex)
+            {
+                if(variant.getAlleles().get(alleleIndex).getBaseString().equals(refGenotype.getAllele(1).getBaseString()))
+                    break;
+            }
+
+            int germlineAltCount = alleleIndex < refGenotype.getAD().length ? refGenotype.getAD()[alleleIndex] : 0;
             int germlineReadDepth = refGenotype.getDP();
 
             int tumorAltCount = 0;
@@ -431,6 +484,7 @@ public class BachelorProgram
                     .tumorAltCount(tumorAltCount)
                     .tumorReadDepth(tumorReadDepth)
                     .condonInfo(codonInfo)
+                    .matchesClinvarFilter(matchesFilter)
                     .build();
 
             mReports.add(report);
@@ -459,24 +513,6 @@ public class BachelorProgram
         }
 
         return false;
-    }
-
-    public static boolean matchesWhitelistDbSNPId(final String dnSNPId, final VariantContext variant)
-    {
-        Set<String> varDbSNPList = Lists.newArrayList(variant.getID()
-                .split(","))
-                .stream().filter(s -> s.startsWith("rs"))
-                .collect(Collectors.toSet());
-
-        if(varDbSNPList.contains(dnSNPId))
-        {
-            LOGGER.debug("variant({}) matched in whitelist rs DB Ids list({})", variant.getID());
-            return true;
-        }
-        else
-        {
-            return false;
-        }
     }
 
     public static boolean matchesBlacklistExclusion(final ProgramBlacklist.Exclusion blacklist, final VariantContext context,
@@ -537,6 +573,30 @@ public class BachelorProgram
             mAllTranscriptsMap.put(region.transcriptID(), region);
         }
     }
+
+    /* HOTSPOT logic
+
+        // then check the hotspot location
+        if(matchType == NONE && !mHotspots.isEmpty())
+        {
+            for (final HotspotLocation hotspot : mHotspots)
+            {
+                if (position != hotspot.getPosition().intValue() || !chromosome.equals(hotspot.getChromosome()))
+                    continue;
+
+                if (!ref.equals(hotspot.getRef()) || variant.getAlleles().size() < 2 || !alt.equals(hotspot.getAlt()))
+                {
+                    continue;
+                }
+
+                matchType = HOTSPOT_LOCATION;
+
+                LOGGER.debug("match found: gene({} {}) var({}:{}) ref({}) alt({}) on hotspot location)",
+                        gene, transcriptId, chromosome, position, ref, alt, varId);
+            }
+        }
+
+    */
 
     /*  OLD BLACKLIST PREDICATE
 
@@ -603,6 +663,23 @@ public class BachelorProgram
             return false;
         }
 
+        public static boolean matchesWhitelistDbSNPId(final String dnSNPId, final VariantContext variant)
+        {
+            Set<String> varDbSNPList = Lists.newArrayList(variant.getID()
+                    .split(","))
+                    .stream().filter(s -> s.startsWith("rs"))
+                    .collect(Collectors.toSet());
+
+            if(varDbSNPList.contains(dnSNPId))
+            {
+                LOGGER.debug("variant({}) matched in whitelist rs DB Ids list({})", variant.getID());
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
     */
 
 }

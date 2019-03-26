@@ -14,10 +14,11 @@ public class VariantFilter
     public final String HgvsProteinCodon;
     public final String DBSnpId;
     public final int MinCodon;
+    public final String ClinvarSignificance;
 
     public VariantFilter(final String gene, final String trancriptId,
-            final String chromosome, long position, final String ref, final String alt,
-            final CodingEffect effect, final String hgvsProteinCodon, final String dbSnpId, int minCodon)
+            final String chromosome, long position, final String ref, final String alt, final CodingEffect effect,
+            final String hgvsProteinCodon, final String dbSnpId, final String clinvarSig, int minCodon)
     {
         Gene = gene;
         TranscriptId = trancriptId;
@@ -29,29 +30,7 @@ public class VariantFilter
         HgvsProteinCodon = hgvsProteinCodon;
         DBSnpId = dbSnpId;
         MinCodon = minCodon;
+        ClinvarSignificance = clinvarSig;
     }
-
-    /*
-    public boolean matches(final BachelorGermlineVariant var)
-    {
-        if(!var.chromosome().equals(Chromosome) || var.position() != Position
-                || !var.ref().equals(Ref) || !var.alts().equals(Alt))
-        {
-            return false;
-        }
-
-        for(final String effect : var.effectsList())
-        {
-            if (STOP_GAINED.isParentTypeOf(var.effects()) && Effects.contains("nonsense"))
-                return true;
-
-            if (Effects.contains(effect))
-                return true;
-        }
-
-        return false;
-    }
-    */
-
 
 }

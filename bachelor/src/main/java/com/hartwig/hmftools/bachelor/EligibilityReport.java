@@ -14,7 +14,7 @@ abstract class EligibilityReport {
 
     enum MatchType {
         NONE,
-        GENE_TRANSCRIPT,
+        REQUIRED_EFFECT,
         HOTSPOT_LOCATION,
         WHITELIST
     }
@@ -71,4 +71,6 @@ abstract class EligibilityReport {
     public abstract int tumorReadDepth();
 
     public abstract String condonInfo();
+
+    public abstract boolean matchesClinvarFilter();
 }

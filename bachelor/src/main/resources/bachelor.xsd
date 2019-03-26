@@ -73,13 +73,7 @@
                             <xsd:element name="HGVS.p" type="xsd:string"/>
                             <xsd:element name="HGVS.c" type="xsd:string"/>
                             <xsd:element name="MinCodon" type="xsd:positiveInteger"/>
-                            <xsd:element name="Position">
-                                <xsd:simpleType>
-                                    <xsd:restriction base="xsd:string">
-                                        <xsd:pattern value="(([0-9]+)|X|Y|MT):[0-9]+"/>
-                                    </xsd:restriction>
-                                </xsd:simpleType>
-                            </xsd:element>
+                            <xsd:element name="Position" type="xsd:string"/>
                         </xsd:choice>
                     </xsd:sequence>
                 </xsd:complexType>

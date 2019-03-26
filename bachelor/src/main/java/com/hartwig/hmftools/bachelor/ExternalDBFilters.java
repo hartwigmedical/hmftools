@@ -44,6 +44,8 @@ public class ExternalDBFilters
     private List<String> mPanelTranscripts;
     private ProgramBlacklist mConfigBlacklist;
     private ProgramWhitelist mConfigWhitelist;
+
+    private boolean mRunMatching;
     private boolean[] mMatchedBlacklistExclusions;
     private boolean[] mMatchedWhitelistExclusions;
 
@@ -58,11 +60,12 @@ public class ExternalDBFilters
         mRequiredEffects = Lists.newArrayList();
         mPanelTranscripts = Lists.newArrayList();
         mFilterWriter = null;
+        mRunMatching = false;
         mMatchedBlacklistExclusions = null;
         mMatchedWhitelistExclusions = null;
     }
 
-    private static int BACHELOR_FILTER_CSV_FIELD_COUNT = 10;
+    private static int BACHELOR_FILTER_CSV_FIELD_COUNT = 12;
 
     public static List<VariantFilter> loadExternalFilters(final String filterFile)
     {
@@ -71,6 +74,8 @@ public class ExternalDBFilters
         if (filterFile.isEmpty() || !Files.exists(Paths.get(filterFile)))
             return filters;
 
+        int lineIndex = 0;
+
         try
         {
             BufferedReader file = new BufferedReader(new FileReader(filterFile));
@@ -78,7 +83,6 @@ public class ExternalDBFilters
             file.readLine(); // skip header
 
             String line = null;
-            int lineIndex = 0;
 
             while ((line = file.readLine()) != null)
             {
@@ -96,7 +100,7 @@ public class ExternalDBFilters
                     continue;
                 }
 
-                // Gene,TranscriptId,Chromsome,Position,Ref,Alt,CodingEffect,AllEffects,HgvsProtein,HgvsCoding,DBSnpId,ExistingConMatched,ClinvarDiagnosis
+                // Gene,TranscriptId,Chromosome,Position,Ref,Alt,CodingEffect,AllEffects,HgvsProtein,HgvsCoding,DBSnpId,ClinvarSignificance
                 VariantFilter filter = new VariantFilter(
                         items[0],
                         items[1],
@@ -107,15 +111,16 @@ public class ExternalDBFilters
                         CodingEffect.valueOf(items[6]),
                         items[8],
                         items[10],
+                        items[11],
                         -1);
 
                 filters.add(filter);
             }
 
         }
-        catch (IOException exception)
+        catch (IOException e)
         {
-            LOGGER.error("Failed to read bachelor input CSV file({})", filterFile);
+            LOGGER.error("Failed to read bachelor input CSV file({}) index({}): {}", filterFile, lineIndex, e.toString());
         }
 
         return filters;
@@ -145,14 +150,17 @@ public class ExternalDBFilters
         mConfigBlacklist = program.getBlacklist();
         mConfigWhitelist = program.getWhitelist();
 
-        if(!mConfigBlacklist.getExclusion().isEmpty())
+        if(mRunMatching)
         {
-            mMatchedBlacklistExclusions = new boolean[mConfigBlacklist.getExclusion().size()];
-        }
+            if (!mConfigBlacklist.getExclusion().isEmpty())
+            {
+                mMatchedBlacklistExclusions = new boolean[mConfigBlacklist.getExclusion().size()];
+            }
 
-        if(!mConfigWhitelist.getVariantOrDbSNP().isEmpty())
-        {
-            mMatchedWhitelistExclusions = new boolean[mConfigWhitelist.getVariantOrDbSNP().size()];
+            if (!mConfigWhitelist.getVariantOrDbSNP().isEmpty())
+            {
+                mMatchedWhitelistExclusions = new boolean[mConfigWhitelist.getVariantOrDbSNP().size()];
+            }
         }
 
         try
@@ -255,6 +263,16 @@ public class ExternalDBFilters
     private static String CLINVAR_BENIGN = "Benign";
     private static String CLINVAR_LIKELY_BENIGN = "Likely_benign";
 
+    public static boolean isPathogenic(final String clinvarSignificance)
+    {
+        return clinvarSignificance.contains(CLINVAR_PATHOGENIC) || clinvarSignificance.contains(CLINVAR_LIKELY_PATHOGENIC);
+    }
+
+    public static boolean isBenign(final String clinvarSignificance)
+    {
+        return clinvarSignificance.contains(CLINVAR_BENIGN) || clinvarSignificance.contains(CLINVAR_LIKELY_BENIGN);
+    }
+
     private void processVariant(final VariantContext variant)
     {
         // LOGGER.debug("read var({}) chr({}))", variant.getID(), variant.getContig());
@@ -274,8 +292,7 @@ public class ExternalDBFilters
 
             String clinvarSignificance = variant.getCommonInfo().getAttributeAsString(CLINVAR_SIGNIFICANCE, "");
 
-            boolean isPathogenic = clinvarSignificance.contains(CLINVAR_PATHOGENIC) || clinvarSignificance.contains(CLINVAR_LIKELY_PATHOGENIC);
-            boolean isBenign = clinvarSignificance.contains(CLINVAR_BENIGN) || clinvarSignificance.contains(CLINVAR_LIKELY_BENIGN);
+            boolean isPathogenic = isPathogenic(clinvarSignificance);
 
             boolean matchesRequiredEffect = false;
 
@@ -298,22 +315,13 @@ public class ExternalDBFilters
 
             CodingEffect codingEffect = CodingEffect.effect(gene, snpEff.consequences());
 
-            boolean existingConditionMatched = false;
-
             if(codingEffect == NONSENSE_OR_FRAMESHIFT || codingEffect == SPLICE)
             {
-                existingConditionMatched = checkExistingBlacklistConditions(gene, variant, snpEff);
-
-                if(!isBenign)
-                {
-                    continue;
-                }
-
-                // will form part of the blacklist
+                checkExistingBlacklistConditions(gene, variant, snpEff);
             }
             else
             {
-                existingConditionMatched = checkExistingWhitelistConditions(gene, variant, snpEff);
+                checkExistingWhitelistConditions(gene, variant, snpEff);
 
                 if(!isPathogenic)
                 {
@@ -323,12 +331,15 @@ public class ExternalDBFilters
                 // will form part of the whitelist
             }
 
-            writeFilterRecord(variant, snpEff, gene, codingEffect, clinvarSignificance, existingConditionMatched);
+            writeFilterRecord(variant, snpEff, gene, codingEffect, clinvarSignificance);
         }
     }
 
-    private boolean checkExistingBlacklistConditions(final String gene, final VariantContext variant, final SnpEffAnnotation snpAnnotation)
+    private void checkExistingBlacklistConditions(final String gene, final VariantContext variant, final SnpEffAnnotation snpAnnotation)
     {
+        if(!mRunMatching)
+            return;
+
         // check whether any of the configured blacklist conditions are covered by the clinvar variants
         /*
          <Exclusion><Gene name="BRCA2"/>
@@ -346,16 +357,17 @@ public class ExternalDBFilters
                 {
                     LOGGER.debug("clinar variant for gene({}) matched with blacklist exclusion", gene);
                     mMatchedBlacklistExclusions[index] = true;
-                    return true;
+                    break;
                 }
             }
         }
-
-        return false;
     }
 
-    private boolean checkExistingWhitelistConditions(final String gene, final VariantContext variant, final SnpEffAnnotation snpAnnotation)
+    private void checkExistingWhitelistConditions(final String gene, final VariantContext variant, final SnpEffAnnotation snpAnnotation)
     {
+        if(!mRunMatching)
+            return;
+
         String rsDbSnpId = variant.getCommonInfo().getAttributeAsString(CLINVAR_RS_DB_SNP_ID, "");
 
         for(int index = 0; index < mConfigWhitelist.getVariantOrDbSNP().size(); ++index)
@@ -370,7 +382,7 @@ public class ExternalDBFilters
                 {
                     LOGGER.debug("clinar variant for gene({}) matched with whitelist geneProtein exclusion", gene);
                     mMatchedWhitelistExclusions[index] = true;
-                    return true;
+                    break;
                 }
             }
             else
@@ -380,16 +392,14 @@ public class ExternalDBFilters
                 {
                     LOGGER.debug("clinar variant for gene({}) matched with whitelist exclusion rsDbSnpId({})", gene, rsDbSnpId);
                     mMatchedWhitelistExclusions[index] = true;
-                    return true;
+                    break;
                 }
             }
         }
-
-        return false;
     }
 
     private void writeFilterRecord(final VariantContext variant, final SnpEffAnnotation snpEff,
-            final String gene, CodingEffect codingEffect, final String clinvarSignificance, boolean existingConditionMatched)
+            final String gene, CodingEffect codingEffect, final String clinvarSignificance)
     {
         String transcriptId = snpEff.transcript();
         String chromosome = variant.getContig();
@@ -421,8 +431,8 @@ public class ExternalDBFilters
             mFilterWriter.write(String.format("%s,%s,%s,%d,%s,%s,%s,%s",
                     gene, snpEff.transcript(), chromosome, position, ref, alt, codingEffect, effects));
 
-            mFilterWriter.write(String.format(",%s,%s,%s,%s",
-                    existingConditionMatched, hgvsp, hgvsc, rsDbSnpId));
+            mFilterWriter.write(String.format(",%s,%s,%s",
+                    hgvsp, hgvsc, rsDbSnpId));
 
             mFilterWriter.write(String.format(",%s,%s,%s",
                     clinvarSignificance, clinvarDisease, clinvarEffects));
@@ -450,8 +460,8 @@ public class ExternalDBFilters
             mFilterWriter = createBufferedWriter(filterFileName, false);
 
             mFilterWriter.write("Gene,TranscriptId,Chromsome,Position,Ref,Alt,CodingEffect,AllEffects");
-            mFilterWriter.write(",ExistingConditionMatched,HgvsProtein,HgvsCoding,DBSnpId");
-            mFilterWriter.write(",ClinvarDiagnosis,ClinvarDisesase,ClinvarEffects");
+            mFilterWriter.write(",HgvsProtein,HgvsCoding,DBSnpId");
+            mFilterWriter.write(",ClinvarSignificance,ClinvarDisease,ClinvarEffects");
             mFilterWriter.newLine();
         }
         catch (IOException e)
