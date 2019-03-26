@@ -34,13 +34,14 @@ public class BachelorDataCollection
     private static final int COL_INDEX_HZ = 13;
     private static final int COL_INDEX_PHRED = 14;
     private static final int COL_INDEX_CODING = 15;
-    private static final int COL_INDEX_MATCH_TYPE = 16;
-    private static final int COL_INDEX_HAS_DEPTH = 17;
-    private static final int COL_INDEX_GL_ALT_COUNT = 18;
-    private static final int COL_INDEX_GL_READ_DEPTH = 19;
-    private static final int COL_INDEX_TUMOR_ALT_COUNT = 20;
-    private static final int COL_INDEX_TUMOR_READ_DEPTH = 21;
-    private static final int COL_INDEX_CODON_INFO = 22;
+    private static final int COL_INDEX_CLINVAR_MATCH = 16;
+    private static final int COL_INDEX_MATCH_TYPE = 17;
+    private static final int COL_INDEX_HAS_DEPTH = 18;
+    private static final int COL_INDEX_GL_ALT_COUNT = 19;
+    private static final int COL_INDEX_GL_READ_DEPTH = 20;
+    private static final int COL_INDEX_TUMOR_ALT_COUNT = 21;
+    private static final int COL_INDEX_TUMOR_READ_DEPTH = 22;
+    private static final int COL_INDEX_CODON_INFO = 23;
 
     private static final int BACHELOR_CSV_FIELD_COUNT = COL_INDEX_CODON_INFO + 1;
 
@@ -164,10 +165,6 @@ public class BachelorDataCollection
                 try
                 {
 
-                    // extra fields from newer versions
-                    final String matchType = items.length > COL_INDEX_MATCH_TYPE ? items[COL_INDEX_MATCH_TYPE] : "";
-                    final String codonInfo = items.length > COL_INDEX_CODON_INFO ? items[COL_INDEX_CODON_INFO] : "";
-
                     BachelorGermlineVariant bachRecord = new BachelorGermlineVariant(sampleId,
                             items[COL_INDEX_PROGRAM],
                             items[COL_INDEX_SV_ID],
@@ -184,8 +181,9 @@ public class BachelorDataCollection
                             Boolean.parseBoolean(items[COL_INDEX_HZ]),
                             Integer.parseInt(items[COL_INDEX_PHRED]),
                             items[COL_INDEX_CODING],
-                            matchType,
-                            codonInfo);
+                            items[COL_INDEX_MATCH_TYPE],
+                            Boolean.parseBoolean(items[COL_INDEX_CLINVAR_MATCH]),
+                            items[COL_INDEX_CODON_INFO]);
 
                     boolean hasDepthInfo = Boolean.parseBoolean(items[COL_INDEX_HAS_DEPTH]);
 

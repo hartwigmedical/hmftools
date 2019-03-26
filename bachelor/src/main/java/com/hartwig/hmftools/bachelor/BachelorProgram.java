@@ -324,72 +324,28 @@ public class BachelorProgram
 
             if (matchType == REQUIRED_EFFECT && !mBlacklistFilters.isEmpty())
             {
+                // for variants matching the required effects, check whether they should be blacklisted
+                // for Clinvar entries this is if the variant is Benign, for other filters any match will cause a blacklist
+                final List<Integer> proteinPositions = proteinPosition(snpEff);
+                int proteinPosition = !proteinPositions.isEmpty() ? proteinPositions.get(0) : -1;
+
                 List<VariantFilter> filters = mBlacklistFilters.get(gene);
 
                 if(filters != null)
                 {
                     for(final VariantFilter filter : filters)
                     {
-                        boolean isBenign = isBenign(filter.ClinvarSignificance);
+                        matchesFilter = filter.blacklistMatch(gene, chromosome, position, ref, alt, proteinPosition);
 
-                        if (!filter.HgvsProteinCodon.isEmpty())
+                        if(matchesFilter)
                         {
-                            if (filter.HgvsProteinCodon.equals(hgvsProtein))
+                            if(isBenign(filter.ClinvarSignificance) || filter.ClinvarSignificance.isEmpty())
                             {
-                                LOGGER.debug("gene({} {}) var({}:{}) ref({}) alt({}) blacklisted on hgvsProtein({})",
-                                        gene, transcriptId, chromosome, position, ref, alt, hgvsProtein);
+                                LOGGER.debug("gene({}) var({}:{}:{}) ref({}) alt({}) protein({}) blacklisted",
+                                        gene, varId, chromosome, position, ref, alt, hgvsProtein);
 
-                                matchesFilter = true;
-
-                                if (isBenign)
-                                    return;
-                            }
-
-                            continue;
-                        }
-
-                        if (!filter.DBSnpId.isEmpty())
-                        {
-                            if (varId.contains(filter.DBSnpId))
-                            {
-                                LOGGER.debug("gene({} {}) var({}:{}) ref({}) alt({}) blacklisted on DBSnpId({})",
-                                        gene, transcriptId, chromosome, position, ref, alt, varId);
-
-                                matchesFilter = true;
-
-                                if (isBenign)
-                                    return;
-                            }
-
-                            continue;
-                        }
-
-                        if (filter.MinCodon >= 0)
-                        {
-                            final List<Integer> proteinPositions = proteinPosition(snpEff);
-
-                            if (!proteinPositions.isEmpty() && filter.MinCodon <= proteinPositions.get(0))
-                            {
-                                LOGGER.debug("gene({} {}) var({}:{}) ref({}) alt({}) blacklisted on minCodon({})",
-                                        gene, transcriptId, chromosome, position, ref, alt, proteinPositions.get(0));
-
-                                matchesFilter = true;
-
-                                if (isBenign)
-                                    return;
-                            }
-                        }
-
-                        if (filter.Chromosome.equals(chromosome) && filter.Position == position
-                                && filter.Ref.equals(ref) && filter.Alt.equals(alt))
-                        {
-                            LOGGER.debug("gene({} {}) var({}:{}) ref({}) alt({}) blacklisted on position, ref & alt",
-                                    gene, transcriptId, chromosome, position, ref, alt);
-
-                            matchesFilter = true;
-
-                            if (isBenign)
                                 return;
+                            }
                         }
                     }
                 }
@@ -403,27 +359,15 @@ public class BachelorProgram
                 {
                     for (final VariantFilter filter : filters)
                     {
-                        if (!filter.HgvsProteinCodon.isEmpty() && filter.HgvsProteinCodon.equals(hgvsProtein))
+                        if(filter.whitelistMatch(gene, chromosome, position, ref, alt, codingEffect, hgvsProtein))
                         {
-                            LOGGER.debug("match found: gene({} {}) var({}:{}) ref({}) alt({}) on hgvsProtein({}) whitelist",
-                                    gene, transcriptId, chromosome, position, ref, alt, hgvsProtein);
+                            LOGGER.debug("match found: gene({} {}) var({}:{}:{}) ref({}) alt({}) hgvsProtein({}) whitelisted",
+                                    gene, transcriptId, varId, chromosome, position, ref, alt, hgvsProtein);
                             matchType = WHITELIST;
-                            break;
-                        }
-
-                        if (!filter.DBSnpId.isEmpty() && varId.contains(filter.DBSnpId))
-                        {
-                            LOGGER.debug("match found: gene({} {}) var({}:{}) ref({}) alt({}) on DBSnpId({}) whitelist",
-                                    gene, transcriptId, chromosome, position, ref, alt, varId);
-                            matchType = WHITELIST;
+                            matchesFilter = true;
                             break;
                         }
                     }
-                }
-
-                if(matchType == WHITELIST)
-                {
-                    matchesFilter = true;
                 }
             }
 

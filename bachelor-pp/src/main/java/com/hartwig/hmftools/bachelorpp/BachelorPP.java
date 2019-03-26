@@ -589,7 +589,7 @@ public class BachelorPP
                 mWriter.write("SampleId,Program,Chromosome,Position,Type,Ref,Alt,Gene,TranscriptId,DbsnpId,CosmicId");
                 mWriter.write(",Effects,CodingEffect,VcfReadData,GermlineAltCount,GermlineReadDepth,TumorAltCount,TumorReadDepth");
                 mWriter.write(",AdjCopyNumber,AdjustedVaf,HighConfidenceRegion,TrinucleotideContext,Microhomology,RepeatSequence,RepeatCount");
-                mWriter.write(",HgvsProtein,HgvsCoding,Biallelic,Hotspot,Mappability,GermlineStatus,MinorAllelePloidy,Filter,CodonInfo");
+                mWriter.write(",HgvsProtein,HgvsCoding,Biallelic,Hotspot,Mappability,GermlineStatus,MinorAllelePloidy,Filter,CodonInfo,ClinvarMatch");
                 mWriter.newLine();
             }
 
@@ -636,7 +636,7 @@ public class BachelorPP
                                 enrichedVariant.repeatCount()));
 
                 writer.write(
-                        String.format(",%s,%s,%s,%s,%s,%s,%.2f,%s,%s",
+                        String.format(",%s,%s,%s,%s,%s,%s,%.2f,%s,%s,%s",
                                 bachRecord.HgvsProtein,
                                 bachRecord.HgvsCoding,
                                 bachRecord.isBiallelic(),
@@ -645,7 +645,8 @@ public class BachelorPP
                                 bachRecord.IsHomozygous ? "HOM" : "HET",
                                 enrichedVariant.minorAllelePloidy(),
                                 bachRecord.isLowScore() ? "ARTEFACT" : "PASS",
-                                bachRecord.CodonInfo));
+                                bachRecord.CodonInfo,
+                                bachRecord.ClinvarMatch));
 
                 writer.newLine();
             }
