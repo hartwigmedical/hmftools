@@ -5,8 +5,10 @@ import com.hartwig.hmftools.patientreporter.cfreport.components.DataLabel;
 import com.hartwig.hmftools.patientreporter.cfreport.components.InlineBarChart;
 import com.hartwig.hmftools.patientreporter.cfreport.components.LineDivider;
 import com.hartwig.hmftools.patientreporter.cfreport.components.TableHelper;
+import com.itextpdf.kernel.colors.Color;
 import com.itextpdf.layout.Document;
 import com.itextpdf.layout.Style;
+import com.itextpdf.layout.borders.SolidBorder;
 import com.itextpdf.layout.element.Cell;
 import com.itextpdf.layout.element.Div;
 import com.itextpdf.layout.element.Paragraph;
@@ -113,8 +115,7 @@ public class SummaryChapter extends ReportChapter {
         int therapyCount = 8;
         table.addCell(createMiddleAlignedCell()
                 .add(new Paragraph("Gene alteration(s) with therapy indication(s)")
-                        .addStyle(BODY_TEXT_STYLE)
-                        .setFixedLeading(ReportResources.BODY_TEXT_LEADING)));
+                        .addStyle(BODY_TEXT_STYLE)));
         table.addCell(createTreatmentIndicationCell(therapyGeneCount, therapyCount, "treatments"));
 
         // Alterations/clinical study
@@ -122,8 +123,7 @@ public class SummaryChapter extends ReportChapter {
         int studyCount = 7;
         table.addCell(createMiddleAlignedCell()
                 .add(new Paragraph("Gene alteration(s) with clinical study eligibility")
-                        .addStyle(BODY_TEXT_STYLE)
-                        .setFixedLeading(ReportResources.BODY_TEXT_LEADING)));
+                        .addStyle(BODY_TEXT_STYLE)));
         table.addCell(createTreatmentIndicationCell(studyGeneCount, studyCount, "studies"));
 
         div.add(table);
@@ -154,7 +154,7 @@ public class SummaryChapter extends ReportChapter {
                 .add(new Paragraph("Tumor purity of biopsy")
                         .addStyle(BODY_TEXT_STYLE)));
         table.addCell(createMiddleAlignedCell()
-                .add(new Paragraph(String.format(java.util.Locale.US,"%.0f%%", tumorPurity))
+                .add(createHighlightParagraph(String.format(java.util.Locale.US,"%.0f%%", tumorPurity))
                         .addStyle(ReportResources.dataHighlightStyle())));
         table.addCell(createMiddleAlignedCell()
                 .add(createInlineBarChart(tumorPurity, 0f, 100f)));
@@ -165,7 +165,7 @@ public class SummaryChapter extends ReportChapter {
                 .add(new Paragraph("Average tumor ploidy")
                         .addStyle(BODY_TEXT_STYLE)));
         table.addCell(createMiddleAlignedCell()
-                .add(new Paragraph(String.format(java.util.Locale.US, "%.1f", ploidy))
+                .add(createHighlightParagraph(String.format(java.util.Locale.US, "%.1f", ploidy))
                         .addStyle(ReportResources.dataHighlightStyle())));
         table.addCell(createMiddleAlignedCell());
 
@@ -175,7 +175,7 @@ public class SummaryChapter extends ReportChapter {
                 .add(new Paragraph("Tumor mutational load")
                         .addStyle(BODY_TEXT_STYLE)));
         table.addCell(createMiddleAlignedCell()
-                .add(new Paragraph(mutationalLoad))
+                .add(createHighlightParagraph(mutationalLoad))
                 .addStyle(ReportResources.dataHighlightStyle()));
         table.addCell(createMiddleAlignedCell()
                 .add(createInlineBarChart(90, 0f, 100f)));
@@ -186,7 +186,7 @@ public class SummaryChapter extends ReportChapter {
                 .add(new Paragraph("Microsatellite (in)stability")
                         .addStyle(BODY_TEXT_STYLE)));
         table.addCell(createMiddleAlignedCell()
-                .add(new Paragraph(microsatelliteStability)
+                .add(createHighlightParagraph(microsatelliteStability)
                         .addStyle(ReportResources.dataHighlightStyle())));
         table.addCell(createMiddleAlignedCell()
                 .add(createInlineBarChart(.6f, 0f, 10f)));
@@ -228,7 +228,7 @@ public class SummaryChapter extends ReportChapter {
                 .add(new Paragraph("Nr. of reported variants")
                         .addStyle(BODY_TEXT_STYLE)));
         table.addCell(createMiddleAlignedCell()
-                .add(new Paragraph(String.valueOf(reportedVariants))
+                .add(createHighlightParagraph(String.valueOf(reportedVariants))
                 .addStyle(reportedVariantsStyle)));
 
         // Copy gain genes
@@ -303,9 +303,15 @@ public class SummaryChapter extends ReportChapter {
 
         // Build table
         return createMiddleAlignedCell()
-                .add(new Paragraph(geneString))
+                .add(createHighlightParagraph(geneString))
                 .addStyle(style);
 
+    }
+
+    @NotNull
+    private static Paragraph createHighlightParagraph(String text) {
+        return new Paragraph(text)
+                .setFixedLeading(14);
     }
 
     @NotNull
@@ -322,7 +328,7 @@ public class SummaryChapter extends ReportChapter {
         }
 
         return createMiddleAlignedCell()
-                .add(new Paragraph(treatmentText))
+                .add(createHighlightParagraph(treatmentText))
                 .addStyle(style);
 
     }
