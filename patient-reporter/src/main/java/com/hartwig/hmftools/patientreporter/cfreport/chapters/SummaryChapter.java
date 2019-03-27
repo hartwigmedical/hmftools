@@ -206,7 +206,7 @@ public class SummaryChapter extends ReportChapter {
         Table table = new Table(UnitValue.createPercentArray(new float[] {1, 1}));
         table.setWidth(getContentWidth());
         table.addCell(TableHelper.getLayoutCell()
-                .add(new Paragraph("Genomic alterations r\nsummary")
+                .add(new Paragraph("Genomic alterations \nsummary")
                         .addStyle(ReportResources.sectionTitleStyle())));
         table.addCell(TableHelper.getLayoutCell()
                 .add(new Paragraph("Summary on genomic alterations " +
@@ -267,7 +267,9 @@ public class SummaryChapter extends ReportChapter {
         div.setWidth(width);
 
         // Add divider and section title
-        div.add(LineDivider.createLineDivider(width));
+        div.add(LineDivider
+                .createLineDivider(width)
+                .setMarginBottom(4));
 
         return div;
 
