@@ -8,6 +8,7 @@ import com.itextpdf.layout.element.Cell;
 import com.itextpdf.layout.element.Paragraph;
 import com.itextpdf.layout.element.Table;
 import com.itextpdf.layout.property.TextAlignment;
+import com.itextpdf.layout.property.VerticalAlignment;
 import org.jetbrains.annotations.NotNull;
 
 public class ActionableOrDriversChapter extends ReportChapter {
@@ -57,13 +58,20 @@ public class ActionableOrDriversChapter extends ReportChapter {
         });
 
         for (int i = 0; i < 4; i++) {
+
+            float vafPerc = (float) Math.random() * 100f;
+
+            InlineBarChart chart = new InlineBarChart(vafPerc, 0f, 100f);
+            chart.setWidth(41);
+            chart.setHeight(6);
+
             contentTable.addCell(TableHelper.getContentCell("BRAF*"));
             contentTable.addCell(TableHelper.getContentCell("c.1799T>A*"));
             contentTable.addCell(TableHelper.getContentCell("p.Val6000Glu"));
             contentTable.addCell(TableHelper.getContentCell("107 / 161").setTextAlignment(TextAlignment.RIGHT));
             contentTable.addCell(TableHelper.getContentCell("Yes"));
-            contentTable.addCell(TableHelper.getContentCell("AAAABB (65%)"));
-            contentTable.addCell(TableHelper.getContentCell(new InlineBarChart(.6f, 0.0f, 1.0f)));
+            contentTable.addCell(TableHelper.getContentCell(String.format("AAAABB (%.0f%%)", vafPerc)));
+            contentTable.addCell(TableHelper.getContentCell(chart).setVerticalAlignment(VerticalAlignment.MIDDLE));
             contentTable.addCell(TableHelper.getContentCell("Clonal"));
             contentTable.addCell(TableHelper.getContentCell("-"));
             contentTable.addCell(TableHelper.getContentCell("High"));

@@ -43,7 +43,7 @@ public class SummaryChapter extends ReportChapter {
         renderGenomicAlterations(report);
     }
 
-    private final void renderTumorLocationAndType(@NotNull Document report) {
+    private void renderTumorLocationAndType(@NotNull Document report) {
 
         Div div = new Div();
         div.setKeepTogether(true);
@@ -69,7 +69,7 @@ public class SummaryChapter extends ReportChapter {
 
     }
 
-    private final void renderSummaryText(@NotNull Document report) {
+    private void renderSummaryText(@NotNull Document report) {
 
         Div div = initializeSummarySectionDiv(getContentWidth());
         div.add(new Paragraph("Summary")
@@ -90,7 +90,7 @@ public class SummaryChapter extends ReportChapter {
 
     }
 
-    private final void renderTreatmentIndications(@NotNull Document report) {
+    private void renderTreatmentIndications(@NotNull Document report) {
 
         // Initialize div
         Div div = initializeSummarySectionDiv(getContentWidth());
@@ -132,7 +132,7 @@ public class SummaryChapter extends ReportChapter {
 
     }
 
-    private final void renderTumorCharacteristics(@NotNull Document report) {
+    private void renderTumorCharacteristics(@NotNull Document report) {
 
         // Initialize div
         Div div = initializeSummarySectionDiv(getContentWidth());
@@ -197,7 +197,7 @@ public class SummaryChapter extends ReportChapter {
 
     }
 
-    private final void renderGenomicAlterations(@NotNull Document report) {
+    private void renderGenomicAlterations(@NotNull Document report) {
 
         // Initialize div
         Div div = initializeSummarySectionDiv(getContentWidth());
@@ -260,7 +260,7 @@ public class SummaryChapter extends ReportChapter {
     }
 
     @NotNull
-    private static final Div initializeSummarySectionDiv(float width) {
+    private static Div initializeSummarySectionDiv(float width) {
 
         Div div = new Div();
         div.setKeepTogether(true);
@@ -274,14 +274,14 @@ public class SummaryChapter extends ReportChapter {
     }
 
     @NotNull
-    private static final Cell getMiddleAlignedCell() {
+    private static Cell getMiddleAlignedCell() {
         Cell c = TableHelper.getLayoutCell()
                 .setVerticalAlignment(VerticalAlignment.MIDDLE);
         return c;
     }
 
     @NotNull
-    private static final Cell getGeneListCell(@NotNull String[] genes) {
+    private static Cell getGeneListCell(@NotNull String[] genes) {
 
         // Concatenate genes
         String geneString;
@@ -309,7 +309,7 @@ public class SummaryChapter extends ReportChapter {
     }
 
     @NotNull
-    private static final Cell getTreatmentIndicationCell(int geneCount, int treatmentCount, @NotNull String treatmentsName) {
+    private static Cell getTreatmentIndicationCell(int geneCount, int treatmentCount, @NotNull String treatmentsName) {
 
         String treatmentText;
         Style style;
@@ -328,11 +328,11 @@ public class SummaryChapter extends ReportChapter {
     }
 
     @NotNull
-    private static final InlineBarChart getInlineBarChart(float v, float min, float max) {
-        InlineBarChart tumorPurityChart = new InlineBarChart(v, min, max);
-        tumorPurityChart.setWidth(41);
-        tumorPurityChart.setHeight(6);
-        return tumorPurityChart;
+    private static InlineBarChart getInlineBarChart(float v, float min, float max) {
+        InlineBarChart chart = new InlineBarChart(v, min, max);
+        chart.setWidth(41);
+        chart.setHeight(6);
+        return chart;
     }
 
 }
