@@ -78,7 +78,8 @@ public class TherapyDetailsChapter extends ReportChapter {
                 {"Dabrafenib", "Trametinib"},
                 {"Vemurafenib"},
                 {"Cobimetinib", "Vemurafenib", "Encorafenib"},
-                {"Encorafenib"}
+                {"Encorafenib"},
+                {"Cobimetinib", "Vemurafenib", "Encorafenib", "RO4987655", "Dabrafenib", "Binimetinib", "Trametinib"}
         };
 
         // Create content table

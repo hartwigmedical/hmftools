@@ -79,7 +79,7 @@ public final class TableHelper {
                 .setMarginBottom(TABLE_BOTTOM_MARGIN)
                 .addHeaderCell(new Cell()
                         .setBorder(Border.NO_BORDER)
-                        .setPaddingBottom(0)
+                        .setPadding(0)
                         .add(new Paragraph(tableTitle)
                                 .addStyle(ReportResources.sectionTitleStyle())))
                 .addCell(new Cell()
@@ -165,6 +165,8 @@ public final class TableHelper {
         Cell c = new Cell(rowspan, colspan);
         c.setBorder(Border.NO_BORDER);
         c.setKeepTogether(true);
+        c.setPadding(0);
+        c.setMargin(0);
         return c;
     }
 
