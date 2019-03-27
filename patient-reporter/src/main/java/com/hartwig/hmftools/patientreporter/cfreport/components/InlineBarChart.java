@@ -8,13 +8,13 @@ import com.itextpdf.layout.renderer.DivRenderer;
 import com.itextpdf.layout.renderer.DrawContext;
 import com.itextpdf.layout.renderer.IRenderer;
 
-class InlineBarChart extends Div {
+public class InlineBarChart extends Div {
 
     private float value;
     private float min;
     private float max;
 
-    InlineBarChart(float value, float min, float max) {
+    public InlineBarChart(float value, float min, float max) {
         this.value = value;
         this.min = min;
         this.max = max;
@@ -46,7 +46,7 @@ class InlineBarChart extends Div {
 
     private class BarChartRenderer extends DivRenderer {
 
-        public BarChartRenderer(final InlineBarChart inlineBarChart) {
+        BarChartRenderer(final InlineBarChart inlineBarChart) {
             super(inlineBarChart);
         }
 
