@@ -409,7 +409,7 @@ public class SvCluster
 
     public List<SvVarData> getUnlinkedSVs() { return mUnchainedSVs; }
 
-    public boolean isSimpleSingleSV() { return isSimpleSVs(); }
+    public boolean isSimpleSingleSV() { return getSvCount() == 1 && isSimpleSVs(); }
 
     public boolean isSimpleSVs()
     {
@@ -569,7 +569,7 @@ public class SvCluster
     {
         updateClusterDetails();
 
-        if(isSimpleSingleSV())
+        if(isSimpleSVs())
         {
             LOGGER.debug("cluster({}) simple svCount({}) desc({}) armCount({}) consistency({}) ",
                     id(), getSvCount(), getDesc(), getArmCount(), getConsistencyCount());
@@ -921,6 +921,23 @@ public class SvCluster
     public final List<SvChain> findChains(final SvVarData var)
     {
         return mChains.stream().filter(x -> x.hasSV(var, true)).collect(Collectors.toList());
+    }
+
+    public final SvChain findSameChainForSVs(SvVarData var1, SvVarData var2)
+    {
+        List<SvChain> chains1 = findChains(var1);
+        List<SvChain> chains2 = findChains(var2);
+
+        for(SvChain chain1 : chains1)
+        {
+            for(SvChain chain2 : chains2)
+            {
+                if(chain1 == chain2)
+                    return chain1;
+            }
+        }
+
+        return null;
     }
 
     public int getChainId(final SvVarData var)

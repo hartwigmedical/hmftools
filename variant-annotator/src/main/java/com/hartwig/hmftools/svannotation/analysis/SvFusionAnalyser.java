@@ -748,7 +748,6 @@ public class SvFusionAnalyser
                 mRnaWriter.newLine();
             }
 
-
             BufferedWriter writer = mRnaWriter;
 
             writer.write(String.format("%s,%s,%s,%s,%s",

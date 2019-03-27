@@ -132,7 +132,7 @@ public class FusionDisruptionAnalyser
                     endGenes.add(gene);
             }
 
-            LOGGER.debug("SV({}) matched {} start genes, {} end genes", var.id(), startGenes.size(), endGenes.size());
+            // LOGGER.debug("SV({}) matched {} start genes, {} end genes", var.id(), startGenes.size(), endGenes.size());
 
             var.setGenesList(startGenes, true);
             var.setGenesList(endGenes, false);
@@ -489,6 +489,9 @@ public class FusionDisruptionAnalyser
         // run them through fusion logic (ie a pair of breakend lists), but don't require phase matching
         if(!upstreamBreakends.isEmpty() && !downstreamBreakends.isEmpty())
         {
+            LOGGER.debug("rna fusion({}) found {} upstream breakends, {} downstream breakends",
+                    rnaFusion.Name, upstreamBreakends.size(), downstreamBreakends.size());
+
             GeneFusion topCandidateFusion = null;
             SvBreakend topUpBreakend = null;
             SvBreakend topDownBreakend = null;
@@ -521,6 +524,8 @@ public class FusionDisruptionAnalyser
                         topCandidateFusion = possibleFusion;
                         topUpBreakend = upBreakend;
                         topDownBreakend = downBreakend;
+
+                        LOGGER.debug("rnaFusion({}) first pair({} & {})", rnaFusion.Name, upBreakend.toString(), downBreakend.toString());
                     }
                 }
             }
@@ -612,7 +617,10 @@ public class FusionDisruptionAnalyser
                         rnaFusion.setTranscriptData(closestTrans, isUpstream, isViable, exonsSkipped);
                     }
 
-                    setFusionClusterInfo(rnaFusion, closestBreakend, isUpstream);
+                    setFusionClusterInfo(rnaFusion, closestBreakend, isUpstream, null);
+
+                    LOGGER.debug("rnaFusion({}) {} closest breakend({}) distance({})",
+                            rnaFusion.Name, isUpstream ? "up" :"down", closestBreakend.toString(), closestDistance);
                 }
             }
         }
@@ -620,21 +628,25 @@ public class FusionDisruptionAnalyser
 
     private void setFusionClusterChainInfo(final RnaFusionData rnaFusionData, final SvBreakend breakendUp, final SvBreakend breakendDown)
     {
-        setFusionClusterInfo(rnaFusionData, breakendUp, true);
-        setFusionClusterInfo(rnaFusionData, breakendDown, false);
+        SvVarData varUp = breakendUp.getSV();
+        SvCluster clusterUp = varUp.getCluster();
+        SvVarData varDown = breakendDown.getSV();
+        SvCluster clusterDown = varDown.getCluster();
 
-        if(breakendUp.getSV().equals(breakendDown.getSV(), true))
-            return;
+        SvChain matchingChain = null;
 
-        SvCluster clusterUp = breakendUp.getSV().getCluster();
-        SvChain chainUp = clusterUp.findChain(breakendUp.getSV());
-
-        SvCluster clusterDown = breakendDown.getSV().getCluster();
-        SvChain chainDown = clusterDown.findChain(breakendDown.getSV());
-
-        if(chainUp != null && chainUp == chainDown)
+        if(breakendUp.getSV() != breakendDown.getSV() && clusterUp == clusterDown)
         {
-            final int chainData[] = chainUp.breakendsAreChained(breakendUp.getSV(), breakendUp.usesStart(), breakendDown.getSV(), breakendUp.usesStart());
+            // check for a matching chain if the clusters are the same
+            matchingChain = clusterUp.findSameChainForSVs(varUp, varDown);
+        }
+
+        setFusionClusterInfo(rnaFusionData, breakendUp, true, matchingChain);
+        setFusionClusterInfo(rnaFusionData, breakendDown, false, matchingChain);
+
+        if(matchingChain != null)
+        {
+            final int chainData[] = matchingChain.breakendsAreChained(varUp, breakendUp.usesStart(), varDown, breakendDown.usesStart());
             final String chainInfo = String.format("%d;%d", chainData[CHAIN_LINK_COUNT], chainData[CHAIN_LENGTH]);
 
             // data: ChainLinks;ChainLength
@@ -642,11 +654,11 @@ public class FusionDisruptionAnalyser
         }
     }
 
-    private void setFusionClusterInfo(final RnaFusionData rnaFusionData, final SvBreakend breakend, boolean isUpstream)
+    private void setFusionClusterInfo(final RnaFusionData rnaFusionData, final SvBreakend breakend, boolean isUpstream, SvChain specificChain)
     {
         // data: ClusterId;ClusterCount;ChainId;ChainCount
         SvCluster cluster = breakend.getSV().getCluster();
-        SvChain chain = cluster.findChain(breakend.getSV());
+        SvChain chain = specificChain != null ? specificChain : cluster.findChain(breakend.getSV());
 
         final String clusterInfo = String.format("%d;%d;%d;%d",
                 cluster.id(), cluster.getSvCount(),
@@ -679,29 +691,51 @@ public class FusionDisruptionAnalyser
             }
          */
 
+        SvVarData currentStartSV = beCurrentStart.getSV();
+        SvVarData currentEndSV = beCurrentEnd.getSV();
+        SvVarData candidateStartSV = beCandidateStart.getSV();
+        SvVarData candidateEndSV = beCandidateEnd.getSV();
+
         // give priority to same SV
-        boolean currentSameSV = beCurrentStart.getSV() == beCurrentEnd.getSV();
-        boolean candidateSameSV = beCandidateStart.getSV() == beCandidateEnd.getSV();
+        boolean currentSameSV = currentStartSV == currentEndSV;
+        boolean candidateSameSV = candidateStartSV == candidateEndSV;
 
         if(currentSameSV != candidateSameSV)
             return candidateSameSV;
 
         // then whether chained
-        final SvChain currentChainStart = beCurrentStart.getSV().getCluster().findChain(beCurrentStart.getSV());
-        boolean currentSameChain = currentChainStart != null && currentChainStart == beCurrentEnd.getSV().getCluster().findChain(beCurrentEnd.getSV());
-
-        final SvChain candidateChainStart = beCandidateStart.getSV().getCluster().findChain(beCandidateStart.getSV());
-        boolean candidateSameChain = candidateChainStart != null && candidateChainStart == beCandidateEnd.getSV().getCluster().findChain(beCandidateEnd.getSV());
-
-        if(currentSameChain != candidateSameChain)
-            return candidateSameChain;
-
-        // then in same cluster
-        boolean currentSameCluster = beCurrentStart.getSV().getCluster() == beCurrentEnd.getSV().getCluster();
-        boolean candidateSameCluster = beCandidateStart.getSV().getCluster() == beCandidateEnd.getSV().getCluster();
+        boolean currentSameCluster = currentStartSV.getCluster() == currentEndSV.getCluster();
+        boolean candidateSameCluster = candidateStartSV.getCluster() == candidateEndSV.getCluster();
 
         if(currentSameCluster != candidateSameCluster)
+        {
+            LOGGER.debug("current pair({} & {}) clusters({} & {}), candidate pair({} & {}) clusters({} & {})",
+                    currentStartSV.id(), currentEndSV.id(), currentStartSV.getCluster().id(), currentEndSV.getCluster().id(),
+                    candidateStartSV.id(), candidateEndSV.id(), candidateStartSV.getCluster().id(), candidateEndSV.getCluster().id());
+
             return candidateSameCluster;
+        }
+
+        if(currentSameCluster && candidateSameCluster)
+        {
+            // check whether one pair is in the same chain and the other not
+            SvChain currentMatchingChain = currentStartSV.getCluster().findSameChainForSVs(currentStartSV, currentEndSV);
+
+            SvChain candidateMatchingChain = candidateStartSV.getCluster().findSameChainForSVs(candidateStartSV, candidateEndSV);
+
+            LOGGER.debug("current pair({} & {}) clusters({} chain={}), candidate pair({} & {}) clusters({} chain={})",
+                    currentStartSV.id(), currentEndSV.id(), currentStartSV.getCluster().id(),
+                    currentMatchingChain != null ? currentMatchingChain.id() : "diff",
+                    candidateStartSV.id(), candidateEndSV.id(), candidateStartSV.getCluster().id(),
+                    candidateMatchingChain != null ? candidateMatchingChain.id() : "diff");
+
+            if(currentMatchingChain != null && candidateMatchingChain == null)
+                return false;
+            if(currentMatchingChain == null && candidateMatchingChain != null)
+                return true;
+        }
+
+        // otherwise revert to whichever positions are closest to the RNA breakends
 
         // lastly the nearest to the RNA positions
         double currentPosDiff = (abs(rnaFusion.PositionUp - beCurrentStart.position()) + abs(rnaFusion.PositionDown - beCurrentEnd.position())) * 0.5;

@@ -50,6 +50,7 @@ import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_SGL_
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_SIMPLE_SV;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.copyNumbersEqual;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.areSpecificClusters;
+import static com.hartwig.hmftools.svanalysis.types.SvCluster.isSpecificCluster;
 import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.ASSEMBLY_MATCH_MATCHED;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_END;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_START;
@@ -243,7 +244,7 @@ public class ClusterAnalyser {
         // chain small clusters and only assembled links in larger ones
         for(SvCluster cluster : mClusters)
         {
-            if(cluster.getSvCount() == 1 && cluster.isSimpleSVs())
+            if(cluster.isSimpleSingleSV())
             {
                 setClusterResolvedState(cluster);
                 continue;
@@ -266,7 +267,7 @@ public class ClusterAnalyser {
 
                 if(cluster.isFullyChained() && cluster.isConsistent())
                 {
-                    LOGGER.debug("sample({}) cluster({}) simple and consistent with {} SVs", mSampleId, cluster.id(), cluster.getSvCount());
+                    LOGGER.debug("cluster({}) simple and consistent with {} SVs", cluster.id(), cluster.getSvCount());
                 }
             }
         }
@@ -276,7 +277,7 @@ public class ClusterAnalyser {
     {
         for (SvCluster cluster : mClusters)
         {
-            // isSpecificCluster(cluster);
+            isSpecificCluster(cluster);
 
             if (cluster.isResolved() && cluster.getResolvedType() != RESOLVED_TYPE_LINE)
                 continue;

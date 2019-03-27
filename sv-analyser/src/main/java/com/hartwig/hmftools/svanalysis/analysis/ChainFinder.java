@@ -7,6 +7,7 @@ import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DEL;
 import static com.hartwig.hmftools.svanalysis.analysis.LinkFinder.MIN_TEMPLATED_INSERTION_LENGTH;
+import static com.hartwig.hmftools.svanalysis.types.SvCluster.isSpecificCluster;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_END;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_START;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.isStart;
@@ -106,7 +107,7 @@ public class ChainFinder
     private boolean mUseAllelePloidies;
     private int mMaxPossibleLinks;
 
-    private static int DEFAULT_MAX_POSSIBLE_LINKS = 5;
+    private static int DEFAULT_MAX_POSSIBLE_LINKS = 0;
 
     public ChainFinder()
     {
@@ -190,6 +191,8 @@ public class ChainFinder
         }
 
         // mLogWorking = isSpecificCluster(mCluster);
+
+        isSpecificCluster(mCluster);
 
         buildChains(assembledLinksOnly);
 
