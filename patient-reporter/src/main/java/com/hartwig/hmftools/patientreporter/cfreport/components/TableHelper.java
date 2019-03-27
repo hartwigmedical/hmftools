@@ -76,12 +76,13 @@ public final class TableHelper {
                         .setPadding(0)
                         .setBorder(Border.NO_BORDER));
 
-        // Wrap heading table with table that shows the table title
+        // Wrap continuedWrapTable with table that shows the table title
         Table titleTable = new Table(1)
                 .setWidth(contentTable.getWidth())
                 .setMarginBottom(TABLE_BOTTOM_MARGIN)
                 .addHeaderCell(new Cell()
                         .setBorder(Border.NO_BORDER)
+                        .setPaddingBottom(0)
                         .add(new Paragraph(tableTitle)
                                 .addStyle(ReportResources.sectionTitleStyle())))
                 .addCell(new Cell()
@@ -115,6 +116,7 @@ public final class TableHelper {
     @NotNull
     public static Cell getHeaderCell() {
         Cell c = new Cell();
+        c.setHeight(23); // Set fixed height to create consistent spacing between table title and header
         c.setBorder(Border.NO_BORDER);
         c.setVerticalAlignment(VerticalAlignment.BOTTOM);
         c.addStyle(ReportResources.tableHeaderStyle());
