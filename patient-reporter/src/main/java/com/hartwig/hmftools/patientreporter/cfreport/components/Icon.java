@@ -2,7 +2,6 @@ package com.hartwig.hmftools.patientreporter.cfreport.components;
 
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
 import com.itextpdf.kernel.colors.DeviceRgb;
-import com.itextpdf.layout.element.Paragraph;
 import com.itextpdf.layout.element.Text;
 import org.jetbrains.annotations.NotNull;
 

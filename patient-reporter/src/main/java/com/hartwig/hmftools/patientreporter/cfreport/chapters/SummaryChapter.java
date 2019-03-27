@@ -1,7 +1,10 @@
 package com.hartwig.hmftools.patientreporter.cfreport.chapters;
 
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
-import com.hartwig.hmftools.patientreporter.cfreport.components.*;
+import com.hartwig.hmftools.patientreporter.cfreport.components.DataLabel;
+import com.hartwig.hmftools.patientreporter.cfreport.components.InlineBarChart;
+import com.hartwig.hmftools.patientreporter.cfreport.components.LineDivider;
+import com.hartwig.hmftools.patientreporter.cfreport.components.TableHelper;
 import com.itextpdf.layout.Document;
 import com.itextpdf.layout.Style;
 import com.itextpdf.layout.element.Cell;

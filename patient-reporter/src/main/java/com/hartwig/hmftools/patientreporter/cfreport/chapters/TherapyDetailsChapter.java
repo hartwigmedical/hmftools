@@ -1,11 +1,14 @@
 package com.hartwig.hmftools.patientreporter.cfreport.chapters;
 
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
-import com.hartwig.hmftools.patientreporter.cfreport.components.TableHelper;
 import com.hartwig.hmftools.patientreporter.cfreport.components.Icon;
+import com.hartwig.hmftools.patientreporter.cfreport.components.TableHelper;
 import com.itextpdf.layout.Document;
 import com.itextpdf.layout.borders.Border;
-import com.itextpdf.layout.element.*;
+import com.itextpdf.layout.element.Cell;
+import com.itextpdf.layout.element.Paragraph;
+import com.itextpdf.layout.element.Table;
+import com.itextpdf.layout.element.Text;
 import com.itextpdf.layout.property.VerticalAlignment;
 import org.jetbrains.annotations.NotNull;
 
@@ -24,7 +27,7 @@ public class TherapyDetailsChapter extends ReportChapter {
     }
 
     @Override
-    protected void renderChapterContent(Document report) {
+    protected void renderChapterContent(@NotNull Document report) {
 
         Table chapterTable = new Table(1);
 
@@ -70,8 +73,16 @@ public class TherapyDetailsChapter extends ReportChapter {
         };
 
         // Create content table
-        Table contentTable = TableHelper.createReportContentTable(new float[] {18, 12, 61, 8, 15, 6});
-        for (int i = 0; i < 10; i++) {
+        Table contentTable = TableHelper.createReportContentTable(new float[] {18, 12, 61, 8, 15, 6}, new Cell[]  {
+                TableHelper.getHeaderCell("Drivers"),
+                TableHelper.getHeaderCell("Match"),
+                TableHelper.getHeaderCell("Treatments"),
+                TableHelper.getHeaderCell("Level of evidence"),
+                TableHelper.getHeaderCell("Response"),
+                TableHelper.getHeaderCell("Source")
+        });
+
+        for (int i = 0; i < 20; i++) {
 
             final String level = levels[(int) (Math.random() * (float) levels.length)];
             String[] treatments = treatmentCombinations[(int) (Math.random() * (float) treatmentCombinations.length)];
@@ -86,14 +97,7 @@ public class TherapyDetailsChapter extends ReportChapter {
         }
 
         // Create report table that handles page breaks
-        return TableHelper.createWrappingReportTable("Tumor type specific evidence", contentTable, new Cell[]  {
-                TableHelper.getHeaderCell("Drivers"),
-                TableHelper.getHeaderCell("Match"),
-                TableHelper.getHeaderCell("Treatments"),
-                TableHelper.getHeaderCell("Level of evidence"),
-                TableHelper.getHeaderCell("Response"),
-                TableHelper.getHeaderCell("Source")
-        });
+        return TableHelper.createWrappingReportTable("Tumor type specific evidence", contentTable);
 
     }
 
@@ -101,7 +105,14 @@ public class TherapyDetailsChapter extends ReportChapter {
     private static Table createClinicalTrialsTable() {
 
         // Create content table
-        Table contentTable = TableHelper.createReportContentTable(new float[] {18, 12, 69, 15, 6});
+        Table contentTable = TableHelper.createReportContentTable(new float[] {18, 12, 69, 15, 6}, new Cell[] {
+                TableHelper.getHeaderCell("Drivers"),
+                TableHelper.getHeaderCell("Match"),
+                TableHelper.getHeaderCell("Treatments"),
+                TableHelper.getHeaderCell("CCMO"),
+                TableHelper.getHeaderCell("Source")
+        });
+
         for (int i = 0; i < 20; i++) {
             contentTable.addCell(TableHelper.getContentCell("BRAF p.Val600Glu"));
             contentTable.addCell(TableHelper.getContentCell(createTreatmentMatchParagraph(Math.random() > 0.5)));
@@ -111,13 +122,7 @@ public class TherapyDetailsChapter extends ReportChapter {
         }
 
         // Create report table that handles page breaks
-        return TableHelper.createWrappingReportTable("Clinical trials (NL)", contentTable, new Cell[] {
-                TableHelper.getHeaderCell("Drivers"),
-                TableHelper.getHeaderCell("Match"),
-                TableHelper.getHeaderCell("Treatments"),
-                TableHelper.getHeaderCell("CCMO"),
-                TableHelper.getHeaderCell("Source")
-        });
+        return TableHelper.createWrappingReportTable("Clinical trials (NL)", contentTable);
 
     }
 
@@ -125,7 +130,15 @@ public class TherapyDetailsChapter extends ReportChapter {
     private static Table createOtherTumorTypeEvidenceTable() {
 
         // Create content table
-        Table contentTable = TableHelper.createReportContentTable(new float[] {18, 12, 61, 8, 15, 6});
+        Table contentTable = TableHelper.createReportContentTable(new float[] {18, 12, 61, 8, 15, 6}, new Cell[] {
+                TableHelper.getHeaderCell("Drivers"),
+                TableHelper.getHeaderCell("Match"),
+                TableHelper.getHeaderCell("Treatments"),
+                TableHelper.getHeaderCell("Level of evidence"),
+                TableHelper.getHeaderCell("Response"),
+                TableHelper.getHeaderCell("Source")
+        });
+
         for (int i = 0; i < 10; i++) {
             contentTable.addCell(TableHelper.getContentCell("BRAF p.Val600Glu"));
             contentTable.addCell(TableHelper.getContentCell(createTreatmentMatchParagraph(Math.random() > 0.5)));
@@ -136,19 +149,12 @@ public class TherapyDetailsChapter extends ReportChapter {
         }
 
         // Create report table that handles page breaks
-        return TableHelper.createWrappingReportTable("Evidence on other tumor types", contentTable, new Cell[] {
-                TableHelper.getHeaderCell("Drivers"),
-                TableHelper.getHeaderCell("Match"),
-                TableHelper.getHeaderCell("Treatments"),
-                TableHelper.getHeaderCell("Level of evidence"),
-                TableHelper.getHeaderCell("Response"),
-                TableHelper.getHeaderCell("Source")
-        });
+        return TableHelper.createWrappingReportTable("Evidence on other tumor types", contentTable);
 
     }
 
     @NotNull
-    private final static Paragraph createTreatmentMatchParagraph(boolean matchIsSpecific) {
+    private static Paragraph createTreatmentMatchParagraph(boolean matchIsSpecific) {
         return new Paragraph()
                 .add(Icon.createIcon(matchIsSpecific ? Icon.IconType.MATCH_SPECIFIC : Icon.IconType.MATCH_BROAD))
                 .add(new Text(" " + (matchIsSpecific ? "Specific" : "Broad"))
@@ -156,7 +162,7 @@ public class TherapyDetailsChapter extends ReportChapter {
     }
 
     @NotNull
-    private final static Paragraph createTreatmentParagraph(@NotNull String[] treatments) {
+    private static Paragraph createTreatmentParagraph(@NotNull String[] treatments) {
 
         Paragraph p = new Paragraph();
         StringJoiner joiner = new StringJoiner(" + ");
@@ -179,7 +185,7 @@ public class TherapyDetailsChapter extends ReportChapter {
     }
 
     @NotNull
-    private final static Paragraph createChapterFootnote() {
+    private static Paragraph createChapterFootnote() {
         return new Paragraph()
                 .setKeepTogether(true)
                 .add("The Cancer Genome Interpreter (CGI), OncoKB and CiViC knowledge bases are used to " +

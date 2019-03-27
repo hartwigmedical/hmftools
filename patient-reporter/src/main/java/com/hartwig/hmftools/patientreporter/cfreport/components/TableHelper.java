@@ -7,11 +7,12 @@ import com.itextpdf.layout.element.Cell;
 import com.itextpdf.layout.element.IBlockElement;
 import com.itextpdf.layout.element.Paragraph;
 import com.itextpdf.layout.element.Table;
-import com.itextpdf.layout.property.UnitValue;
 import com.itextpdf.layout.property.VerticalAlignment;
 import org.jetbrains.annotations.NotNull;
 
 public final class TableHelper {
+
+    private final static float TABLE_BOTTOM_MARGIN = 20;
 
     /**
      * Get a table that implements the visual style for the main report tables
@@ -20,14 +21,38 @@ public final class TableHelper {
      * @return
      */
     @NotNull
-    public static Table createReportContentTable(float[] columnPercentageWidths) {
+    public static Table createReportContentTable(float[] columnPercentageWidths, Cell[] headerCells) {
 
-        return new Table(UnitValue.createPercentArray(columnPercentageWidths))
+        Table table = new Table(columnPercentageWidths)
                 .setWidth(ReportResources.CONTENT_WIDTH_WIDE);
+
+        for (Cell headerCell: headerCells) {
+            table.addHeaderCell(headerCell);
+        }
+
+        return table;
 
     }
 
-    public static Table createWrappingReportTable(String tableTitle, Table contentTable, Cell[] headerCells) {
+    @NotNull
+    public static Table createNoneReportTable(@NotNull String tableTitle) {
+
+        Cell headerCell = new Cell()
+                .setBorder(Border.NO_BORDER)
+                .add(new Paragraph(tableTitle)
+                        .addStyle(ReportResources.sectionTitleStyle()
+                                .setFontColor(ReportResources.PALETTE_LIGHT_GREY)));
+
+        Table table = TableHelper.createReportContentTable(new float[] {1}, new Cell[] { headerCell });
+        table.setKeepTogether(true);
+        table.setMarginBottom(TABLE_BOTTOM_MARGIN);
+        table.addCell(TableHelper.getDisabledContentCell(new Paragraph("NONE")));
+
+        return table;
+
+    }
+
+    public static Table createWrappingReportTable(String tableTitle, Table contentTable)  {
 
         // Add "continues on next page" footer to the content table
         contentTable.addFooterCell(new Cell(1, contentTable.getNumberOfColumns())
@@ -51,38 +76,24 @@ public final class TableHelper {
                         .setPadding(0)
                         .setBorder(Border.NO_BORDER));
 
-        // Wrap continuedWrapTable in table that contains the content table column headers
-        float[] contentColumnSizes = new float[contentTable.getNumberOfColumns()];
-        for (int i = 0; i < contentColumnSizes.length; i++) {
-            contentColumnSizes[i] = contentTable.getColumnWidth(i).getValue();
-        }
-
-        Table headerWrapTable = new Table(contentColumnSizes)
-            .setWidth(contentTable.getWidth());
-        for (Cell headerCell: headerCells) {
-            headerWrapTable.addHeaderCell(headerCell);
-        }
-        headerWrapTable.addCell(new Cell()
-                .add(continuedWrapTable)
-                .setPadding(0)
-                .setBorder(Border.NO_BORDER));
-
         // Wrap heading table with table that shows the table title
         Table titleTable = new Table(1)
                 .setWidth(contentTable.getWidth())
-                .setMarginBottom(20)
+                .setMarginBottom(TABLE_BOTTOM_MARGIN)
                 .addHeaderCell(new Cell()
                         .setBorder(Border.NO_BORDER)
                         .add(new Paragraph(tableTitle)
                                 .addStyle(ReportResources.sectionTitleStyle())))
                 .addCell(new Cell()
-                        .add(headerWrapTable)
+                        .add(continuedWrapTable)
                         .setPadding(0)
                         .setBorder(Border.NO_BORDER));
 
         return titleTable;
 
     }
+
+
 
     /**
      * Get a cell that implements the visual header style for the main report tables
