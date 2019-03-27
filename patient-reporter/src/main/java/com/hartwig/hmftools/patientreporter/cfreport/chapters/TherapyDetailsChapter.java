@@ -132,7 +132,7 @@ public class TherapyDetailsChapter extends ReportChapter {
                 TableHelper.getHeaderCell("Source")
         });
 
-        for (int i = 0; i < 20; i++) {
+        for (int i = 0; i < 10; i++) {
             contentTable.addCell(TableHelper.getContentCell("BRAF p.Val600Glu"));
             contentTable.addCell(TableHelper.getContentCell(createTreatmentMatchParagraph(Math.random() > 0.5)));
             contentTable.addCell(TableHelper.getContentCell(createTreatmentParagraph(new String[] {"Binimetinib", "Encorafenib"})));

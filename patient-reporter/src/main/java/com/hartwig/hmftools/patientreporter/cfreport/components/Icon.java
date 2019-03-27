@@ -118,7 +118,8 @@ public class Icon {
 
         return new Text(iconType.getText())
                 .setFont(ReportResources.getIconFont())
-                .setFontColor(color);
+                .setFontColor(color)
+                .setCharacterSpacing(1);
     }
 
 }
