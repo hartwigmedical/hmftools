@@ -114,6 +114,30 @@ public final class ReportResources {
     }
 
     /**
+     * Get the max fitting font size
+     * @param font
+     * @param initalFontSize
+     * @param text
+     * @param maxWidth
+     * @return smallest font size where text fits in maxWidth, or minFontSize
+     */
+    public final static float getMaxPointSizeForWidth(@NotNull PdfFont font, float initalFontSize, float minFontSize, @NotNull String text, float maxWidth) {
+        final float fontIncrement = 0.1f;
+
+        float fontSize = initalFontSize;
+        float width = font.getWidth(text, initalFontSize);
+        while (width > maxWidth && fontSize > minFontSize) {
+
+            fontSize -= fontIncrement;
+            width = font.getWidth(text, fontSize);
+
+        }
+
+        return fontSize;
+
+    }
+
+    /**
      * Chapter title text style
      * @return
      */

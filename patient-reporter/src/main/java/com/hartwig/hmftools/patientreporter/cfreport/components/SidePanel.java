@@ -19,24 +19,24 @@ public final class SidePanel {
         // Draw background and markers
         final PdfCanvas canvas = new PdfCanvas(page.getLastContentStream(), page.getResources(), page.getDocument());
         final Rectangle pageSize = page.getPageSize();
-        drawBackgroundRect(fullHeight, canvas, pageSize);
+        renderBackgroundRect(fullHeight, canvas, pageSize);
         BaseMarker.drawMarkerGrid(4, (fullHeight ? 20 : 2), CONTENT_X_START, 35, 820, -ROW_SPACING, .05f, .15f, canvas);
 
         // Add sidepanel content that is always on the sidepoanel (full height or not)
         int sideTextIndex = 0;
         Canvas cv = new Canvas(canvas, page.getDocument(), page.getPageSize());
 
-        cv.add(createSidepanelDiv(sideTextIndex++, "HMF sample id", "CORE-01-99-1234T"));
-        cv.add(createSidepanelDiv(sideTextIndex++, "Report date", ReportResources.REPORT_DATE));
+        cv.add(createSidePanelDiv(sideTextIndex++, "HMF sample id", "CORE-01-99-1234T"));
+        cv.add(createSidePanelDiv(sideTextIndex++, "Report date", ReportResources.REPORT_DATE));
 
         // Add sidepanel content that is only on the summary page
         if (fullHeight && fullContent) {
-            cv.add(createSidepanelDiv(sideTextIndex++, "Name requestor", "Dr. Nola pluijmen"));
-            cv.add(createSidepanelDiv(sideTextIndex++, "Email requestor", "NolaPluijmen415@gmail.com"));
-            cv.add(createSidepanelDiv(sideTextIndex++, "Hospital", "OLVG Oost"));
-            cv.add(createSidepanelDiv(sideTextIndex++, "Hospital patiend id", "839493929"));
-            cv.add(createSidepanelDiv(sideTextIndex++, "Gender", "Female"));
-            cv.add(createSidepanelDiv(sideTextIndex++, "Birth date", "11-Nov-1954"));
+            cv.add(createSidePanelDiv(sideTextIndex++, "Name requestor", "Dr. Nola pluijmen"));
+            cv.add(createSidePanelDiv(sideTextIndex++, "Email requestor", "NolaPluijmen415@undefinedmedicalcenter.com"));
+            cv.add(createSidePanelDiv(sideTextIndex++, "Hospital", "OLVG Oost"));
+            cv.add(createSidePanelDiv(sideTextIndex++, "Hospital patiend id", "839493929"));
+            cv.add(createSidePanelDiv(sideTextIndex++, "Gender", "Female"));
+            cv.add(createSidePanelDiv(sideTextIndex++, "Birth date", "11-Nov-1954"));
         }
 
         canvas.release();
@@ -50,7 +50,7 @@ public final class SidePanel {
      * @param canvas
      * @param pageSize
      */
-    private static final void drawBackgroundRect(boolean fullHeight, @NotNull PdfCanvas canvas, @NotNull Rectangle pageSize) {
+    private static void renderBackgroundRect(boolean fullHeight, @NotNull PdfCanvas canvas, @NotNull Rectangle pageSize) {
 
         final float RECTANGLE_WIDTH = 170;           // Width of the blue rectangle in pt
         final float RECTANGLE_HEIGHT_SHORT = 110;    // Height of the blue rectangle in pt when not full page height
@@ -62,10 +62,11 @@ public final class SidePanel {
     }
 
     @NotNull
-    private static final Div createSidepanelDiv(int index, @NotNull String label, @NotNull String value) {
+    private static Div createSidePanelDiv(int index, @NotNull String label, @NotNull String value) {
 
         final float Y_START = 802;
         final float VALUE_TEXT_Y_OFFSET = 16;
+        final float MAX_WIDTH = 120;
 
         Div div = new Div();
         div.setKeepTogether(true);
@@ -74,16 +75,21 @@ public final class SidePanel {
         float yPos = Y_START - index * ROW_SPACING;
         div.add(new Paragraph(label.toUpperCase())
                 .addStyle(ReportResources.sidepanelLabelStyle())
-                .setFixedPosition(CONTENT_X_START, yPos, 200));
+                .setFixedPosition(CONTENT_X_START, yPos, MAX_WIDTH));
 
-        // Add value
+
+        // Add value (auto resize the font if needed)
+        final float valueFontSize = ReportResources.getMaxPointSizeForWidth(ReportResources.getFontBold(), 11, 6, value, MAX_WIDTH);
         yPos -= VALUE_TEXT_Y_OFFSET;
         div.add(new Paragraph(value)
-                .addStyle(ReportResources.sidepanelValueStyle())
-                .setFixedPosition(CONTENT_X_START, yPos, 200));
+                .addStyle(ReportResources.sidepanelValueStyle()
+                        .setFontSize(valueFontSize))
+                .setFixedPosition(CONTENT_X_START, yPos, MAX_WIDTH));
 
         return div;
 
     }
+
+
 
  }
