@@ -1,9 +1,11 @@
 package com.hartwig.hmftools.patientreporter.cfreport.chapters;
 
+import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
 import com.hartwig.hmftools.patientreporter.cfreport.components.InlineBarChart;
 import com.hartwig.hmftools.patientreporter.cfreport.components.TableHelper;
 import com.itextpdf.layout.Document;
 import com.itextpdf.layout.element.Cell;
+import com.itextpdf.layout.element.Paragraph;
 import com.itextpdf.layout.element.Table;
 import com.itextpdf.layout.property.TextAlignment;
 import org.jetbrains.annotations.NotNull;
@@ -66,6 +68,17 @@ public class ActionableOrDriversChapter extends ReportChapter {
             contentTable.addCell(TableHelper.getContentCell("-"));
             contentTable.addCell(TableHelper.getContentCell("High"));
         }
+
+        // Add table footnotes
+        contentTable.addCell(TableHelper.getLayoutCell(1, contentTable.getNumberOfColumns())
+                .add(new Paragraph("* Marked gene(s) are included in the DRUP study and indicate potential eligibility in " +
+                        "DRUP. Please note that the marking is NOT based on the specific mutation reported for this sample, " +
+                        "but only on a gene-level.")
+                        .addStyle(ReportResources.subTextStyle())));
+        contentTable.addCell(TableHelper.getLayoutCell(1, contentTable.getNumberOfColumns())
+                .add(new Paragraph("# Marked variant(s) are also present in the germline of the patient. Referral " +
+                        "to a genetic specialist should be considered if a hereditary condition is suspected.")
+                        .addStyle(ReportResources.subTextStyle())));
 
         // Create report table that handles page breaks
         return TableHelper.createWrappingReportTable(chapterTitle, contentTable);

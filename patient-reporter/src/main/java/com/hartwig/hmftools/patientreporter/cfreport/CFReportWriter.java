@@ -3,8 +3,7 @@ package com.hartwig.hmftools.patientreporter.cfreport;
 import com.hartwig.hmftools.patientreporter.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.QCFailReport;
 import com.hartwig.hmftools.patientreporter.ReportWriter;
-import com.hartwig.hmftools.patientreporter.cfreport.chapters.ActionableOrDriversChapter;
-import com.hartwig.hmftools.patientreporter.cfreport.chapters.SummaryChapter;
+import com.hartwig.hmftools.patientreporter.cfreport.chapters.*;
 import com.hartwig.hmftools.patientreporter.cfreport.components.Footer;
 import com.itextpdf.kernel.events.PdfDocumentEvent;
 import com.itextpdf.kernel.geom.PageSize;
@@ -52,12 +51,12 @@ public class CFReportWriter implements ReportWriter {
 
             // Add chapters
             new SummaryChapter().render(pageEventHandler, report);
-//            new TherapyDetailsChapter().render(pageEventHandler, report);
+            new TherapyDetailsChapter().render(pageEventHandler, report);
             new ActionableOrDriversChapter().render(pageEventHandler, report);
-//            new TumorCharacteristicsChapter().render(pageEventHandler, report);
-//            new CircosChapter().render(pageEventHandler, report);
-//            new ExplanationChapter().render(pageEventHandler, report);
-//            new DetailsAndDisclaimerChapter().render(pageEventHandler, report);
+            new TumorCharacteristicsChapter().render(pageEventHandler, report);
+            new CircosChapter().render(pageEventHandler, report);
+            new ExplanationChapter().render(pageEventHandler, report);
+            new DetailsAndDisclaimerChapter().render(pageEventHandler, report);
 
             // Update total page count on pages and close document
             Footer.writeTotalPageCount(document);
