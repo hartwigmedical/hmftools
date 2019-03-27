@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.svanalysis.types;
 
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion;
-import com.hartwig.hmftools.svannotation.analysis.RnaFusionData;
 
 public class SvFusion
 {

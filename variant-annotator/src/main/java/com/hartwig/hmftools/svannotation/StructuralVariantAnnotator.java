@@ -116,12 +116,6 @@ public class StructuralVariantAnnotator
     {
         List<String> samplesList = Lists.newArrayList();
 
-        if (mSampleId.equals("*") && !mFusionAnalyser.getSampleRnaData().isEmpty())
-        {
-            // take the samples list from the RNA file, assuming only those files are of interest
-            samplesList.addAll(mFusionAnalyser.getSampleRnaData().keySet());
-        }
-
         if (mEnsemblDataDir.isEmpty())
         {
             LOGGER.error("Ensembl data cache directory missing");

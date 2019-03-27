@@ -324,6 +324,7 @@ public class SvAnalyser {
         SvFusionAnalyser.addCmdLineArgs(options);
         StatisticRoutines.addCmdLineArgs(options);
         DriverGeneAnnotator.addCmdLineArgs(options);
+        FusionDisruptionAnalyser.addCmdLineArgs(options);
 
         return options;
     }

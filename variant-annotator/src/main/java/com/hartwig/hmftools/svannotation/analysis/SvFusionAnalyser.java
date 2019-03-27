@@ -7,7 +7,6 @@ import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.common.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.io.FileWriterUtils.createBufferedWriter;
-import static com.hartwig.hmftools.common.variant.structural.annotation.GeneAnnotation.isDownstream;
 import static com.hartwig.hmftools.common.variant.structural.annotation.GeneAnnotation.isUpstream;
 import static com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion.REPORTABLE_TYPE_3P_PROM;
 import static com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion.REPORTABLE_TYPE_5P_PROM;
@@ -17,19 +16,13 @@ import static com.hartwig.hmftools.common.variant.structural.annotation.GeneFusi
 import static com.hartwig.hmftools.svannotation.SvGeneTranscriptCollection.EXON_RANK_MAX;
 import static com.hartwig.hmftools.svannotation.SvGeneTranscriptCollection.EXON_RANK_MIN;
 
-import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileReader;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.List;
-import java.util.Map;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.fusions.KnownFusionsModel;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneAnnotation;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion;
@@ -51,20 +44,16 @@ public class SvFusionAnalyser
     public static final String PROMISCUOUS_FIVE_CSV = "promiscuous_five_csv";
     public static final String PROMISCUOUS_THREE_CSV = "promiscuous_three_csv";
 
-    public static final String SAMPLE_RNA_FILE = "sample_rna_file";
-
     private static final int EXON_THRESHOLD = 1;
 
     private KnownFusionsModel mKnownFusionsModel;
 
-    private Map<String, List<RnaFusionData>> mSampleRnaData;
     private SvGeneTranscriptCollection mGeneTranscriptCollection;
     private List<String> mProteinsRequiredKept;
     private List<String> mProteinsRequiredLost;
 
     private final String mOutputDir;
     private BufferedWriter mFusionWriter;
-    private BufferedWriter mRnaWriter;
 
     private static final Logger LOGGER = LogManager.getLogger(SvFusionAnalyser.class);
 
@@ -76,8 +65,6 @@ public class SvFusionAnalyser
         mKnownFusionsModel = null;
 
         mFusionWriter = null;
-        mRnaWriter = null;
-        mSampleRnaData = Maps.newHashMap();
 
         mProteinsRequiredKept = Lists.newArrayList();
         mProteinsRequiredLost = Lists.newArrayList();
@@ -106,11 +93,6 @@ public class SvFusionAnalyser
                 LOGGER.warn("no known fusion files loaded");
             }
         }
-
-        if (cmd.hasOption(SAMPLE_RNA_FILE))
-        {
-            loadSampleRnaData(cmd.getOptionValue(SAMPLE_RNA_FILE));
-        }
     }
 
     public static void addCmdLineArgs(Options options)
@@ -118,7 +100,6 @@ public class SvFusionAnalyser
         options.addOption(FUSION_PAIRS_CSV, true, "Path towards a CSV containing white-listed gene fusion pairs.");
         options.addOption(PROMISCUOUS_FIVE_CSV, true, "Path towards a CSV containing white-listed promiscuous 5' genes.");
         options.addOption(PROMISCUOUS_THREE_CSV, true, "Path towards a CSV containing white-listed promiscuous 3' genes.");
-        options.addOption(SAMPLE_RNA_FILE, true, "Sample RNA data to match");
     }
 
     public final List<GeneFusion> findFusions(final List<StructuralVariantAnnotation> annotations)
@@ -646,185 +627,6 @@ public class SvFusionAnalyser
         }
     }
 
-    public final Map<String, List<RnaFusionData>> getSampleRnaData() { return mSampleRnaData; }
-    public final List<RnaFusionData> getSampleRnaData(final String sampleId) { return mSampleRnaData.get(sampleId); }
-
-    private static int COL_SAMPLEID = 0;
-    private static int COL_NAME = 1;
-    private static int COL_JUNCT_RC = 2;
-    private static int COL_SPAN_RC = 3;
-    private static int COL_SPLICE = 4;
-    private static int COL_GENE_UP = 5;
-    private static int COL_CHR_UP = 7;
-    private static int COL_POS_UP = 8;
-    private static int COL_STRAND_UP = 9;
-    private static int COL_GENE_DOWN = 10;
-    private static int COL_CHR_DOWN = 12;
-    private static int COL_POS_DOWN = 13;
-    private static int COL_STRAND_DOWN = 14;
-
-    private boolean loadSampleRnaData(final String filename)
-    {
-        if (filename.isEmpty() || !Files.exists(Paths.get(filename)))
-            return false;
-
-        try
-        {
-            BufferedReader fileReader = new BufferedReader(new FileReader(filename));
-
-            String line = fileReader.readLine();
-
-            if (line == null)
-            {
-                LOGGER.error("empty RNA data file({})", filename);
-                return false;
-            }
-
-            line = fileReader.readLine(); // skip header
-
-            String currentSampleId = "";
-            List<RnaFusionData> rnaDataList = Lists.newArrayList();
-
-            while (line != null)
-            {
-                // parse CSV data
-                String[] items = line.split(",");
-
-                // check if still on the same variant
-                final String sampleId = items[COL_SAMPLEID];
-
-                if(currentSampleId.isEmpty() || !currentSampleId.equals(sampleId))
-                {
-                    currentSampleId = sampleId;
-                    rnaDataList = Lists.newArrayList();
-                    mSampleRnaData.put(currentSampleId, rnaDataList);
-                }
-
-                RnaFusionData rnaData = new RnaFusionData(
-                        items[COL_NAME],
-                        items[COL_GENE_UP], items[COL_GENE_DOWN], items[COL_CHR_UP], items[COL_CHR_DOWN],
-                        Long.parseLong(items[COL_POS_UP]), Long.parseLong(items[COL_POS_DOWN]),
-                        Byte.parseByte(items[COL_STRAND_UP]), Byte.parseByte(items[COL_STRAND_DOWN]),
-                        Integer.parseInt(items[COL_JUNCT_RC]),Integer.parseInt(items[COL_SPAN_RC]), items[COL_SPLICE]);
-
-                rnaDataList.add(rnaData);
-
-                line = fileReader.readLine();
-            }
-
-        }
-        catch(IOException e)
-        {
-            LOGGER.warn("failed to load sample RNA data file({}): {}", filename, e.toString());
-            return false;
-        }
-
-        return true;
-    }
-
-    public void writeRnaMatchData(final String sampleId, final RnaFusionData rnaFusion)
-    {
-        try
-        {
-            if(mRnaWriter == null)
-            {
-                String outputFilename = mOutputDir;
-
-                outputFilename += "RNA_MATCH_DATA.csv";
-
-                mRnaWriter = createBufferedWriter(outputFilename, false);
-
-                mRnaWriter.write("SampleId,FusionName,GeneUp,GeneDown,ViableFusion");
-
-                mRnaWriter.write(",SvIdUp,ChrUp,PosUp,RnaPosUp,OrientUp,StrandUp,TypeUp,ClusterInfoUp");
-                mRnaWriter.write(",TransValidUp,TransIdUp,ExonsSkippedUp,RegionTypeUp,CodingTypeUp,ExonUp,DisruptiveUp,DistancePrevUp");
-
-                mRnaWriter.write(",SvIdDown,ChrDown,PosDown,RnaPosDown,OrientDown,StrandDown,TypeDown,ClusterInfoDown");
-                mRnaWriter.write(",TransValidDown,TransIdDown,ExonsSkippedDown,RegionTypeDown,CodingTypeDown,ExonDown,DisruptiveDown,DistancePrevDown");
-
-                mRnaWriter.write(",ChainInfo,JunctionReadCount,SpanningFragCount,SpliceType");
-                mRnaWriter.write(",ExonMinRankUp,ExonMaxRankUp,ExonMinRankDown,ExonMaxRankDown");
-
-                mRnaWriter.newLine();
-            }
-
-            BufferedWriter writer = mRnaWriter;
-
-            writer.write(String.format("%s,%s,%s,%s,%s",
-                    sampleId, rnaFusion.Name, rnaFusion.GeneUp, rnaFusion.GeneDown, rnaFusion.isViableFusion()));
-
-            final Transcript transUp = rnaFusion.getTrans(true);
-
-            if(transUp != null)
-            {
-                writer.write(String.format(",%d,%s,%d,%d,%d,%d,%s,%s",
-                        transUp.parent().id(), transUp.parent().chromosome(), transUp.parent().position(), rnaFusion.PositionUp,
-                        transUp.parent().orientation(), transUp.parent().Strand, transUp.parent().type(),
-                        rnaFusion.getClusterInfo(true)));
-
-                writer.write(String.format(",%s,%s,%d,%s,%s,%d,%s,%d",
-                        rnaFusion.getTransValid(true), transUp.StableId, rnaFusion.getExonsSkipped(true),
-                        transUp.regionType(), transUp.codingType(),
-                        transUp.exonUpstream(), transUp.isDisruptive(), transUp.exonDistanceUp()));
-            }
-            else
-            {
-                writer.write(String.format(",%s,%s,%d,%d,%d,%d,%s,%s",
-                        "", rnaFusion.ChrUp, 0, rnaFusion.PositionUp,
-                        0, rnaFusion.StrandUp, "", ""));
-
-                writer.write(String.format(",%s,,,,,,,", rnaFusion.getTransValid(true)));
-            }
-
-            final Transcript transDown = rnaFusion.getTrans(false);
-
-            if(transDown != null)
-            {
-                writer.write(
-                        String.format(",%d,%s,%d,%d,%d,%d,%s,%s",
-                                transDown.parent().id(), transDown.parent().chromosome(), transDown.parent().position(), rnaFusion.PositionDown,
-                                transDown.parent().orientation(), transDown.parent().Strand, transDown.parent().type(),
-                                rnaFusion.getClusterInfo(false)));
-
-                writer.write(
-                        String.format(",%s,%s,%d,%s,%s,%d,%s,%d",
-                                rnaFusion.getTransValid(false), transDown.StableId, rnaFusion.getExonsSkipped(false),
-                                transDown.regionType(), transDown.codingType(),
-                                transDown.exonDownstream(), transDown.isDisruptive(), transDown.exonDistanceUp()));
-            }
-            else
-            {
-                writer.write(String.format(",%s,%s,%d,%d,%d,%d,%s,%s",
-                        "", rnaFusion.ChrDown, 0, rnaFusion.PositionDown,
-                        0, rnaFusion.StrandDown, "", ""));
-
-                writer.write(String.format(",%s,,,,,,,", rnaFusion.getTransValid(false)));
-            }
-
-            writer.write(String.format(",%s,%d,%d,%s",
-                    !rnaFusion.getChainInfo().isEmpty() ? rnaFusion.getChainInfo() : "0;0",
-                    rnaFusion.JunctionReadCount, rnaFusion.SpanningFragCount, rnaFusion.SpliceType));
-
-            writer.write(String.format(",%d,%d,%d,%d",
-                    rnaFusion.exonMinRankUp(), rnaFusion.exonMaxRankUp(), rnaFusion.exonMinRankDown(), rnaFusion.exonMaxRankDown()));
-
-            writer.newLine();
-        }
-        catch (final IOException e)
-        {
-            LOGGER.error("error writing RNA match data: {}", e.toString());
-        }
-    }
-
-    public void setRnaFusionData(final RnaFusionData rnaFusion)
-    {
-        int[] transUpExonData = mGeneTranscriptCollection.getExonRankings(rnaFusion.GeneUp, rnaFusion.PositionUp);
-        rnaFusion.setExonUpRank(transUpExonData[EXON_RANK_MIN], transUpExonData[EXON_RANK_MAX]);
-
-        transUpExonData = mGeneTranscriptCollection.getExonRankings(rnaFusion.GeneDown, rnaFusion.PositionDown);
-        rnaFusion.setExonDownRank(transUpExonData[EXON_RANK_MIN], transUpExonData[EXON_RANK_MAX]);
-    }
-
     private static int MAX_PROMOTOR_DISTANCE_UP = 100000;
 
     public boolean isTranscriptBreakendViableForRnaBoundary(final Transcript trans, boolean isUpstream, long breakendPosition,
@@ -930,6 +732,5 @@ public class SvFusionAnalyser
     public void onCompleted()
     {
         closeBufferedWriter(mFusionWriter);
-        closeBufferedWriter(mRnaWriter);
     }
 }
