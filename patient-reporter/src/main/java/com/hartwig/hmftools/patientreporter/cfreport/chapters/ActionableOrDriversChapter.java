@@ -14,7 +14,9 @@ import org.jetbrains.annotations.NotNull;
 
 public class ActionableOrDriversChapter extends ReportChapter {
 
-    private final static float TABLE_BOTTOM_SPACER_HEIGHT = 30;
+
+    private final static float COL_WIDTH_COPIES = 40;
+
 
     @Override
     public String getName() {
@@ -45,11 +47,11 @@ public class ActionableOrDriversChapter extends ReportChapter {
         }
 
         // Create content table
-        Table contentTable = TableHelper.createReportContentTable(new float[] {1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, new Cell[]  {
+        Table contentTable = TableHelper.createReportContentTable(new float[] {45, 75, 50, 60, 40, 60, 40, 55, 50, 30}, new Cell[]  {
                 TableHelper.getHeaderCell("Gene"),
                 TableHelper.getHeaderCell("Variant"),
                 TableHelper.getHeaderCell("Impact"),
-                TableHelper.getHeaderCell("Read depth").setTextAlignment(TextAlignment.RIGHT),
+                TableHelper.getHeaderCell("Read depth").setTextAlignment(TextAlignment.CENTER),
                 TableHelper.getHeaderCell("Hotspot"),
                 TableHelper.getHeaderCell("Ploidy (VAF)"),
                 TableHelper.getHeaderCell(), // Spacer for graph
@@ -63,8 +65,8 @@ public class ActionableOrDriversChapter extends ReportChapter {
             float vafPerc = (float) Math.random() * 100f;
 
             InlineBarChart chart = new InlineBarChart(vafPerc, 0f, 100f);
-            chart.setWidth(41);
-            chart.setHeight(6);
+            chart.setWidth(20);
+            chart.setHeight(4);
 
             contentTable.addCell(TableHelper.getContentCell("BRAF*"));
             contentTable.addCell(TableHelper.getContentCell("c.1799T>A*"));
@@ -73,7 +75,7 @@ public class ActionableOrDriversChapter extends ReportChapter {
                     .setFont(ReportResources.getFontBold())
                     .add(new Text("161")
                             .setFont(ReportResources.getFontRegular()))
-                    .setTextAlignment(TextAlignment.RIGHT)));
+                    .setTextAlignment(TextAlignment.CENTER)));
             contentTable.addCell(TableHelper.getContentCell("Yes"));
             contentTable.addCell(TableHelper.getContentCell(String.format("AAAABB (%.0f%%)", vafPerc)));
             contentTable.addCell(TableHelper.getContentCell(chart).setVerticalAlignment(VerticalAlignment.MIDDLE));
@@ -102,19 +104,20 @@ public class ActionableOrDriversChapter extends ReportChapter {
     private Table createGainsAndLossesTable() {
 
         final String chapterTitle = "Tumor specific gains & losses";
-        final boolean isAvailable = false;
+        final boolean isAvailable = true;
 
         if (!isAvailable) {
             return TableHelper.createNoneReportTable(chapterTitle);
         }
 
         // Create content table
-        Table contentTable = TableHelper.createReportContentTable(new float[] {4, 4, 4, 2, 1}, new Cell[]  {
+        Table contentTable = TableHelper.createReportContentTable(new float[] {60, 80, 100, 80, 40, 130}, new Cell[]  {
                 TableHelper.getHeaderCell("Chromosome"),
                 TableHelper.getHeaderCell("Chromosome band"),
                 TableHelper.getHeaderCell("Gene"),
                 TableHelper.getHeaderCell("Type"),
-                TableHelper.getHeaderCell("Copies").setTextAlignment(TextAlignment.RIGHT)
+                TableHelper.getHeaderCell("Copies").setTextAlignment(TextAlignment.RIGHT),
+                TableHelper.getHeaderCell("") // Spacer
         });
 
         for (int i = 0; i < 4; i++) {
@@ -123,6 +126,7 @@ public class ActionableOrDriversChapter extends ReportChapter {
             contentTable.addCell(TableHelper.getContentCell("PTEN"));
             contentTable.addCell(TableHelper.getContentCell("partial loss"));
             contentTable.addCell(TableHelper.getContentCell("0").setTextAlignment(TextAlignment.RIGHT));
+            contentTable.addCell(TableHelper.getContentCell("")); // Spacer
         }
 
         // Create report table that handles page breaks
@@ -141,19 +145,25 @@ public class ActionableOrDriversChapter extends ReportChapter {
         }
 
         // Create content table
-        Table contentTable = TableHelper.createReportContentTable(new float[] {2, .8f, 1.5f, 1.5f, 3f}, new Cell[]  {
+        Table contentTable = TableHelper.createReportContentTable(new float[] {60, 67.5f, 67.5f, 67.5f, 67.5f, 40, 20, 110}, new Cell[]  {
                 TableHelper.getHeaderCell("Fusion"),
-                TableHelper.getHeaderCell("Transcript"),
-                TableHelper.getHeaderCell("Context"),
+                TableHelper.getHeaderCell("Transcript \nstart"),
+                TableHelper.getHeaderCell("Transcript \nend"),
+                TableHelper.getHeaderCell("Context \nstart"),
+                TableHelper.getHeaderCell("Context \nend"),
                 TableHelper.getHeaderCell("Copies").setTextAlignment(TextAlignment.RIGHT),
+                TableHelper.getHeaderCell(""), // Spacer
                 TableHelper.getHeaderCell("Source")
         });
 
         for (int i = 0; i < 4; i++) {
             contentTable.addCell(TableHelper.getContentCell("---"));
-            contentTable.addCell(TableHelper.getContentCell("## - ##"));
-            contentTable.addCell(TableHelper.getContentCell("## - ##"));
+            contentTable.addCell(TableHelper.getContentCell("##"));
+            contentTable.addCell(TableHelper.getContentCell("##"));
+            contentTable.addCell(TableHelper.getContentCell("##"));
+            contentTable.addCell(TableHelper.getContentCell("##"));
             contentTable.addCell(TableHelper.getContentCell("0").setTextAlignment(TextAlignment.RIGHT));
+            contentTable.addCell(TableHelper.getContentCell("")); // Spacer
             contentTable.addCell(TableHelper.getContentCell("http://oncokb.org/"));
         }
 
@@ -173,14 +183,14 @@ public class ActionableOrDriversChapter extends ReportChapter {
         }
 
         // Create content table
-        Table contentTable = TableHelper.createReportContentTable(new float[] {1, 1, 2, .8f, 1.5f, 1.5f, 1.5f}, new Cell[]  {
+        Table contentTable = TableHelper.createReportContentTable(new float[] {60, 80, 100, 80, 40, 65, 65}, new Cell[]  {
                 TableHelper.getHeaderCell("Location"),
                 TableHelper.getHeaderCell("Gene"),
                 TableHelper.getHeaderCell("Disrupted range"),
                 TableHelper.getHeaderCell("Type"),
                 TableHelper.getHeaderCell("Copies").setTextAlignment(TextAlignment.RIGHT),
-                TableHelper.getHeaderCell("Gene min copies").setTextAlignment(TextAlignment.RIGHT),
-                TableHelper.getHeaderCell("Gene max copies").setTextAlignment(TextAlignment.RIGHT)
+                TableHelper.getHeaderCell("Gene \nmin copies").setTextAlignment(TextAlignment.RIGHT),
+                TableHelper.getHeaderCell("Gene \nmax copies").setTextAlignment(TextAlignment.RIGHT)
         });
 
         for (int i = 0; i < 4; i++) {
