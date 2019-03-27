@@ -16,6 +16,15 @@ import java.util.StringJoiner;
 
 public class TherapyDetailsChapter extends ReportChapter {
 
+    private final static float COL_WIDTH_DRIVERS = 90;
+    private final static float COL_WIDTH_MATCH = 60;
+    private final static float COL_WIDTH_LEVEL = 42;
+    private final static float COL_WIDTH_RESPONSE_CCMO = 75;
+    private final static float COL_WIDTH_SOURCE = 30;
+    private final static float COL_WIDTH_TREATMENTS = 210;
+    private final static float COL_WIDTH_TREATMENTS_5COL = COL_WIDTH_TREATMENTS + COL_WIDTH_LEVEL;
+
+
     @Override
     public String getName() {
         return "Therapy details";
@@ -73,7 +82,13 @@ public class TherapyDetailsChapter extends ReportChapter {
         };
 
         // Create content table
-        Table contentTable = TableHelper.createReportContentTable(new float[] {18, 12, 61, 8, 15, 6}, new Cell[]  {
+        Table contentTable = TableHelper.createReportContentTable(new float[] {
+                COL_WIDTH_DRIVERS,
+                COL_WIDTH_MATCH,
+                COL_WIDTH_TREATMENTS,
+                COL_WIDTH_LEVEL,
+                COL_WIDTH_RESPONSE_CCMO,
+                COL_WIDTH_SOURCE }, new Cell[]  {
                 TableHelper.getHeaderCell("Drivers"),
                 TableHelper.getHeaderCell("Match"),
                 TableHelper.getHeaderCell("Treatments"),
@@ -105,7 +120,11 @@ public class TherapyDetailsChapter extends ReportChapter {
     private static Table createClinicalTrialsTable() {
 
         // Create content table
-        Table contentTable = TableHelper.createReportContentTable(new float[] {18, 12, 69, 15, 6}, new Cell[] {
+        Table contentTable = TableHelper.createReportContentTable(new float[] {COL_WIDTH_DRIVERS,
+                COL_WIDTH_MATCH,
+                COL_WIDTH_TREATMENTS_5COL,
+                COL_WIDTH_RESPONSE_CCMO,
+                COL_WIDTH_SOURCE }, new Cell[] {
                 TableHelper.getHeaderCell("Drivers"),
                 TableHelper.getHeaderCell("Match"),
                 TableHelper.getHeaderCell("Treatments"),
@@ -130,7 +149,13 @@ public class TherapyDetailsChapter extends ReportChapter {
     private static Table createOtherTumorTypeEvidenceTable() {
 
         // Create content table
-        Table contentTable = TableHelper.createReportContentTable(new float[] {18, 12, 61, 8, 15, 6}, new Cell[] {
+        Table contentTable = TableHelper.createReportContentTable(new float[] {
+                COL_WIDTH_DRIVERS,
+                COL_WIDTH_MATCH,
+                COL_WIDTH_TREATMENTS,
+                COL_WIDTH_LEVEL,
+                COL_WIDTH_RESPONSE_CCMO,
+                COL_WIDTH_SOURCE }, new Cell[] {
                 TableHelper.getHeaderCell("Drivers"),
                 TableHelper.getHeaderCell("Match"),
                 TableHelper.getHeaderCell("Treatments"),
