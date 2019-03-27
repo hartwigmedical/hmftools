@@ -7,6 +7,7 @@ import com.itextpdf.layout.Document;
 import com.itextpdf.layout.element.Cell;
 import com.itextpdf.layout.element.Paragraph;
 import com.itextpdf.layout.element.Table;
+import com.itextpdf.layout.element.Text;
 import com.itextpdf.layout.property.TextAlignment;
 import com.itextpdf.layout.property.VerticalAlignment;
 import org.jetbrains.annotations.NotNull;
@@ -68,7 +69,11 @@ public class ActionableOrDriversChapter extends ReportChapter {
             contentTable.addCell(TableHelper.getContentCell("BRAF*"));
             contentTable.addCell(TableHelper.getContentCell("c.1799T>A*"));
             contentTable.addCell(TableHelper.getContentCell("p.Val6000Glu"));
-            contentTable.addCell(TableHelper.getContentCell("107 / 161").setTextAlignment(TextAlignment.RIGHT));
+            contentTable.addCell(TableHelper.getContentCell(new Paragraph("107 / ")
+                    .setFont(ReportResources.getFontBold())
+                    .add(new Text("161")
+                            .setFont(ReportResources.getFontRegular()))
+                    .setTextAlignment(TextAlignment.RIGHT)));
             contentTable.addCell(TableHelper.getContentCell("Yes"));
             contentTable.addCell(TableHelper.getContentCell(String.format("AAAABB (%.0f%%)", vafPerc)));
             contentTable.addCell(TableHelper.getContentCell(chart).setVerticalAlignment(VerticalAlignment.MIDDLE));
