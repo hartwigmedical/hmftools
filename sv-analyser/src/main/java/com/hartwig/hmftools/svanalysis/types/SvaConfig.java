@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.svanalysis.types;
 
+import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.DEFAULT_PROXIMITY_DISTANCE;
+
 import java.io.File;
 
 import org.apache.commons.cli.CommandLine;
@@ -46,7 +48,9 @@ public class SvaConfig
 
         OutputCsvPath = dataOutputDir;
 
-        ProximityDistance = Integer.parseInt(cmd.getOptionValue(CLUSTER_BASE_DISTANCE, "0"));
+        ProximityDistance = cmd.hasOption(CLUSTER_BASE_DISTANCE) ? Integer.parseInt(cmd.getOptionValue(CLUSTER_BASE_DISTANCE))
+                : DEFAULT_PROXIMITY_DISTANCE;
+
         SampleId = sampleId;
         FragileSiteFile = cmd.getOptionValue(FRAGILE_SITE_FILE, "");
         LineElementFile = cmd.getOptionValue(LINE_ELEMENT_FILE, "");
