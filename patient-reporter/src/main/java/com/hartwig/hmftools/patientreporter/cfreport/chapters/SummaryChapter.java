@@ -71,7 +71,7 @@ public class SummaryChapter extends ReportChapter {
 
     private void renderSummaryText(@NotNull Document report) {
 
-        Div div = initializeSummarySectionDiv(getContentWidth());
+        Div div = createSectionStartDiv(getContentWidth());
         div.add(new Paragraph("Summary")
                 .addStyle(ReportResources.sectionTitleStyle()));
 
@@ -93,7 +93,7 @@ public class SummaryChapter extends ReportChapter {
     private void renderTreatmentIndications(@NotNull Document report) {
 
         // Initialize div
-        Div div = initializeSummarySectionDiv(getContentWidth());
+        Div div = createSectionStartDiv(getContentWidth());
 
         // Initialize table
         Table table = new Table(UnitValue.createPercentArray(new float[] {1, 1}));
@@ -111,20 +111,20 @@ public class SummaryChapter extends ReportChapter {
         // Alterations/therapy
         int therapyGeneCount = 1;
         int therapyCount = 8;
-        table.addCell(getMiddleAlignedCell()
+        table.addCell(createMiddleAlignedCell()
                 .add(new Paragraph("Gene alteration(s) with therapy indication(s)")
                         .addStyle(BODY_TEXT_STYLE)
                         .setFixedLeading(ReportResources.BODY_TEXT_LEADING)));
-        table.addCell(getTreatmentIndicationCell(therapyGeneCount, therapyCount, "treatments"));
+        table.addCell(createTreatmentIndicationCell(therapyGeneCount, therapyCount, "treatments"));
 
         // Alterations/clinical study
         int studyGeneCount = 2;
         int studyCount = 7;
-        table.addCell(getMiddleAlignedCell()
+        table.addCell(createMiddleAlignedCell()
                 .add(new Paragraph("Gene alteration(s) with clinical study eligibility")
                         .addStyle(BODY_TEXT_STYLE)
                         .setFixedLeading(ReportResources.BODY_TEXT_LEADING)));
-        table.addCell(getTreatmentIndicationCell(studyGeneCount, studyCount, "studies"));
+        table.addCell(createTreatmentIndicationCell(studyGeneCount, studyCount, "studies"));
 
         div.add(table);
 
@@ -135,7 +135,7 @@ public class SummaryChapter extends ReportChapter {
     private void renderTumorCharacteristics(@NotNull Document report) {
 
         // Initialize div
-        Div div = initializeSummarySectionDiv(getContentWidth());
+        Div div = createSectionStartDiv(getContentWidth());
 
         // Initialize table
         Table table = new Table(UnitValue.createPercentArray(new float[] {1, .33f, .66f}));
@@ -150,46 +150,46 @@ public class SummaryChapter extends ReportChapter {
 
         // Tumor purity
         float tumorPurity = 100; //74.4f;
-        table.addCell(getMiddleAlignedCell()
+        table.addCell(createMiddleAlignedCell()
                 .add(new Paragraph("Tumor purity of biopsy")
                         .addStyle(BODY_TEXT_STYLE)));
-        table.addCell(getMiddleAlignedCell()
+        table.addCell(createMiddleAlignedCell()
                 .add(new Paragraph(String.format(java.util.Locale.US,"%.0f%%", tumorPurity))
                         .addStyle(ReportResources.dataHighlightStyle())));
-        table.addCell(getMiddleAlignedCell()
-                .add(getInlineBarChart(tumorPurity, 0f, 100f)));
+        table.addCell(createMiddleAlignedCell()
+                .add(createInlineBarChart(tumorPurity, 0f, 100f)));
 
         // Tumor characteristics
         float ploidy = 3.1f;
-        table.addCell(getMiddleAlignedCell()
+        table.addCell(createMiddleAlignedCell()
                 .add(new Paragraph("Average tumor ploidy")
                         .addStyle(BODY_TEXT_STYLE)));
-        table.addCell(getMiddleAlignedCell()
+        table.addCell(createMiddleAlignedCell()
                 .add(new Paragraph(String.format(java.util.Locale.US, "%.1f", ploidy))
                         .addStyle(ReportResources.dataHighlightStyle())));
-        table.addCell(getMiddleAlignedCell());
+        table.addCell(createMiddleAlignedCell());
 
         // Tumor mutational load
         String mutationalLoad = "High";
-        table.addCell(getMiddleAlignedCell()
+        table.addCell(createMiddleAlignedCell()
                 .add(new Paragraph("Tumor mutational load")
                         .addStyle(BODY_TEXT_STYLE)));
-        table.addCell(getMiddleAlignedCell()
+        table.addCell(createMiddleAlignedCell()
                 .add(new Paragraph(mutationalLoad))
                 .addStyle(ReportResources.dataHighlightStyle()));
-        table.addCell(getMiddleAlignedCell()
-                .add(getInlineBarChart(90, 0f, 100f)));
+        table.addCell(createMiddleAlignedCell()
+                .add(createInlineBarChart(90, 0f, 100f)));
 
         // Microsatellite stability
         String microsatelliteStability = "Stable";
-        table.addCell(getMiddleAlignedCell()
+        table.addCell(createMiddleAlignedCell()
                 .add(new Paragraph("Microsatellite (in)stability")
                         .addStyle(BODY_TEXT_STYLE)));
-        table.addCell(getMiddleAlignedCell()
+        table.addCell(createMiddleAlignedCell()
                 .add(new Paragraph(microsatelliteStability)
                         .addStyle(ReportResources.dataHighlightStyle())));
-        table.addCell(getMiddleAlignedCell()
-                .add(getInlineBarChart(.6f, 0f, 10f)));
+        table.addCell(createMiddleAlignedCell()
+                .add(createInlineBarChart(.6f, 0f, 10f)));
 
         div.add(table);
 
@@ -200,7 +200,7 @@ public class SummaryChapter extends ReportChapter {
     private void renderGenomicAlterations(@NotNull Document report) {
 
         // Initialize div
-        Div div = initializeSummarySectionDiv(getContentWidth());
+        Div div = createSectionStartDiv(getContentWidth());
 
         // Initialize table
         Table table = new Table(UnitValue.createPercentArray(new float[] {1, 1}));
@@ -216,41 +216,41 @@ public class SummaryChapter extends ReportChapter {
 
         // Genes with driver variant
         String[] driverVariantGenes = {"CDKN2A", "BRAF"};
-        table.addCell(getMiddleAlignedCell()
+        table.addCell(createMiddleAlignedCell()
                 .add(new Paragraph("Genes with driver variant")
                         .addStyle(BODY_TEXT_STYLE)));
-        table.addCell(getGeneListCell(driverVariantGenes));
+        table.addCell(createGeneListCell(driverVariantGenes));
 
         // Reported variants
         int reportedVariants = 4;
         Style reportedVariantsStyle = (reportedVariants > 0) ? ReportResources.dataHighlightStyle() : ReportResources.dataHighlightNaStyle();
-        table.addCell(getMiddleAlignedCell()
+        table.addCell(createMiddleAlignedCell()
                 .add(new Paragraph("Nr. of reported variants")
                         .addStyle(BODY_TEXT_STYLE)));
-        table.addCell(getMiddleAlignedCell()
+        table.addCell(createMiddleAlignedCell()
                 .add(new Paragraph(String.valueOf(reportedVariants))
                 .addStyle(reportedVariantsStyle)));
 
         // Copy gain genes
         String[] copyGainGenes = {};
-        table.addCell(getMiddleAlignedCell()
+        table.addCell(createMiddleAlignedCell()
                 .add(new Paragraph("Genes with copy-gain")
                         .addStyle(BODY_TEXT_STYLE)));
-        table.addCell(getGeneListCell(copyGainGenes));
+        table.addCell(createGeneListCell(copyGainGenes));
 
         // Copy loss genes
         String[] copyLossGenes = {"PTEN"};
-        table.addCell(getMiddleAlignedCell()
+        table.addCell(createMiddleAlignedCell()
                 .add(new Paragraph("Genes with copy-loss")
                         .addStyle(BODY_TEXT_STYLE)));
-        table.addCell(getGeneListCell(copyLossGenes));
+        table.addCell(createGeneListCell(copyLossGenes));
 
         // Gene fusions
         String[] fusionGenes = {};
-        table.addCell(getMiddleAlignedCell()
+        table.addCell(createMiddleAlignedCell()
                 .add(new Paragraph("Gene fusions")
                         .addStyle(BODY_TEXT_STYLE)));
-        table.addCell(getGeneListCell(fusionGenes));
+        table.addCell(createGeneListCell(fusionGenes));
 
         div.add(table);
 
@@ -260,7 +260,7 @@ public class SummaryChapter extends ReportChapter {
     }
 
     @NotNull
-    private static Div initializeSummarySectionDiv(float width) {
+    private static Div createSectionStartDiv(float width) {
 
         Div div = new Div();
         div.setKeepTogether(true);
@@ -276,14 +276,14 @@ public class SummaryChapter extends ReportChapter {
     }
 
     @NotNull
-    private static Cell getMiddleAlignedCell() {
+    private static Cell createMiddleAlignedCell() {
         Cell c = TableHelper.getLayoutCell()
                 .setVerticalAlignment(VerticalAlignment.MIDDLE);
         return c;
     }
 
     @NotNull
-    private static Cell getGeneListCell(@NotNull String[] genes) {
+    private static Cell createGeneListCell(@NotNull String[] genes) {
 
         // Concatenate genes
         String geneString;
@@ -303,7 +303,7 @@ public class SummaryChapter extends ReportChapter {
         Style style = genes.length > 0 ? ReportResources.dataHighlightStyle() : ReportResources.dataHighlightNaStyle();
 
         // Build table
-        Cell c = getMiddleAlignedCell()
+        Cell c = createMiddleAlignedCell()
                 .add(new Paragraph(geneString))
                 .addStyle(style);
                 return c;
@@ -311,7 +311,7 @@ public class SummaryChapter extends ReportChapter {
     }
 
     @NotNull
-    private static Cell getTreatmentIndicationCell(int geneCount, int treatmentCount, @NotNull String treatmentsName) {
+    private static Cell createTreatmentIndicationCell(int geneCount, int treatmentCount, @NotNull String treatmentsName) {
 
         String treatmentText;
         Style style;
@@ -323,14 +323,14 @@ public class SummaryChapter extends ReportChapter {
             style = ReportResources.dataHighlightNaStyle();
         }
 
-        return getMiddleAlignedCell()
+        return createMiddleAlignedCell()
                 .add(new Paragraph(treatmentText))
                 .addStyle(style);
 
     }
 
     @NotNull
-    private static InlineBarChart getInlineBarChart(float v, float min, float max) {
+    private static InlineBarChart createInlineBarChart(float v, float min, float max) {
         InlineBarChart chart = new InlineBarChart(v, min, max);
         chart.setWidth(41);
         chart.setHeight(6);

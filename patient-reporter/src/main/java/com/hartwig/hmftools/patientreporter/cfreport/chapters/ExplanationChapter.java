@@ -28,17 +28,17 @@ public class ExplanationChapter extends ReportChapter {
 
         // 1st row
         table.addCell(TableHelper.getLayoutCell()
-                .add(getSectionTitle("Details on the report in general")));
+                .add(createSectionTitle("Details on the report in general")));
         table.addCell(TableHelper.getLayoutCell()); // Spacer
         table.addCell(TableHelper.getLayoutCell()
-                .add(getSectionTitle("Details on the reported clinical evidence")));
+                .add(createSectionTitle("Details on the reported clinical evidence")));
         table.addCell(TableHelper.getLayoutCell()); // Spacer
         table.addCell(TableHelper.getLayoutCell()
-                .add(getSectionTitle("Details on reported somatic variants")));
+                .add(createSectionTitle("Details on reported somatic variants")));
 
         // 2nd row
         table.addCell(TableHelper.getLayoutCell()
-                .add(getContentDiv(new String[]{
+                .add(createContentDiv(new String[]{
                         "The analysis is based on reference genome version GRCh37.",
                         "Transcripts used for reporting can be found on https://github.com/hartwigmedical and are " +
                                 "generally the canonical transcripts as defined by Ensembl.",
@@ -49,7 +49,7 @@ public class ExplanationChapter extends ReportChapter {
                 })));
         table.addCell(TableHelper.getLayoutCell()); // Spacer
         table.addCell(TableHelper.getLayoutCell()
-                .add(getContentDiv(new String[]{
+                .add(createContentDiv(new String[]{
                         "The CGI, OncoKb and CiViC knowledgebases are used to annotate variants of all types with " +
                                 "clinical evidence, with a hyperlink to the specific evidence items. NOTE: If a certain " +
                                 "evidence item or drug-biomarker is missing from the knowledgebases it will also not be " +
@@ -60,7 +60,7 @@ public class ExplanationChapter extends ReportChapter {
                 })));
         table.addCell(TableHelper.getLayoutCell()); // Spacer
         table.addCell(TableHelper.getLayoutCell()
-                .add(getContentDiv(new String[]{
+                .add(createContentDiv(new String[]{
                         "The 'Read Depth' displays the raw number of reads supporting the variant versus the total " +
                                 "number of reads on the mutated position.",
                         "The 'Ploidy (VAF)' field displays the tumor ploidy for the observed position. The ploidy has " +
@@ -81,17 +81,17 @@ public class ExplanationChapter extends ReportChapter {
 
         // 3rd row
         table.addCell(TableHelper.getLayoutCell()
-                .add(getSectionTitle("Details on reported gene copy numbers")));
+                .add(createSectionTitle("Details on reported gene copy numbers")));
         table.addCell(TableHelper.getLayoutCell()); // Spacer
         table.addCell(TableHelper.getLayoutCell()
-                .add(getSectionTitle("Details on reported gene fusions")));
+                .add(createSectionTitle("Details on reported gene fusions")));
         table.addCell(TableHelper.getLayoutCell()); // Spacer
         table.addCell(TableHelper.getLayoutCell()
-                .add(getSectionTitle("Details on reported gene disruptions")));
+                .add(createSectionTitle("Details on reported gene disruptions")));
 
         // 4th row
         table.addCell(TableHelper.getLayoutCell()
-                .add(getContentDiv(new String[]{
+                .add(createContentDiv(new String[]{
                         "The lowest copy number value along the exonic regions of the canonical transcript is " +
                                 "determined as a measure for the gene's copy number.",
                         "Copy numbers are corrected for the implied tumor purity and represent the number of copies " +
@@ -104,14 +104,14 @@ public class ExplanationChapter extends ReportChapter {
                 })));
         table.addCell(TableHelper.getLayoutCell()); // Spacer
         table.addCell(TableHelper.getLayoutCell()
-                .add(getContentDiv(new String[]{
+                .add(createContentDiv(new String[]{
                         "The canonical, or otherwise longest transcript validly fused is reported.",
                         "Fusions are restricted to those in a known fusion list based on CiViC, OncoKB, CGI and COSMIC",
                         "We additionally select fusions where one partner is promiscuous in either 5' or 3' position."
                 })));
         table.addCell(TableHelper.getLayoutCell()); // Spacer
         table.addCell(TableHelper.getLayoutCell()
-                .add(getContentDiv(new String[]{
+                .add(createContentDiv(new String[]{
                         "Genes are reported as being disrupted if their canonical transcript has been disrupted",
                         "The range of the disruption is indicated by the intron/exon/promoter region of the break point " +
                                 "occurred and the direction the disruption faces.",
@@ -124,7 +124,7 @@ public class ExplanationChapter extends ReportChapter {
     }
 
     @NotNull
-    private final static Paragraph getSectionTitle(@NotNull String sectionTitle) {
+    private final static Paragraph createSectionTitle(@NotNull String sectionTitle) {
 
         return new Paragraph(sectionTitle)
                 .addStyle(ReportResources.smallBodyHeadingStyle());
@@ -132,7 +132,7 @@ public class ExplanationChapter extends ReportChapter {
     }
 
     @NotNull
-    private final static Div getContentDiv(@NotNull String[] contentParagraphs) {
+    private final static Div createContentDiv(@NotNull String[] contentParagraphs) {
 
         Div div = new Div();
 

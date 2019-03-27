@@ -36,10 +36,10 @@ public class DetailsAndDisclaimerChapter extends ReportChapter {
         Table table = new Table(UnitValue.createPercentArray(new float[] {1, 0.1f, 1}));
         table.setWidth(getContentWidth());
         table.addCell(TableHelper.getLayoutCell()
-                .add(getSampleDetailsDiv()));
+                .add(createSampleDetailsDiv()));
         table.addCell(TableHelper.getLayoutCell()); // Spacer
         table.addCell(TableHelper.getLayoutCell()
-                .add(getDisclaimerDiv()));
+                .add(createDisclaimerDiv()));
         report.add(table);
 
         // End of report text
@@ -47,12 +47,12 @@ public class DetailsAndDisclaimerChapter extends ReportChapter {
                 .setMarginTop(50)
                 .addStyle(BODY_TEXT_STYLE));
 
-        report.add(getSignatureDiv().setPaddingTop(80));
+        report.add(createSignatureDiv().setPaddingTop(80));
 
     }
 
     @NotNull
-    private static final Div getSampleDetailsDiv() {
+    private static final Div createSampleDetailsDiv() {
 
         Div div = new Div();
 
@@ -61,22 +61,22 @@ public class DetailsAndDisclaimerChapter extends ReportChapter {
                 .addStyle(BODY_TEXT_HEADER_STYLE));
 
         // Content
-        div.add(getContentParagraph("The samples have been sequenced at ", ReportResources.HARTWIG_ADDRESS));
-        div.add(getContentParagraph("The samples have been analyzed by Next Generation Sequencing "));
-        div.add(getContentParagraph("This experiment is performed on the tumor sample which arrived on ", "05-Jan-2018"));
-        div.add(getContentParagraph("The pathology tumor percentage for this sample is 80%"));
-        div.add(getContentParagraph("This experiment is performed on the blood sample which arrived on ", "01-Jan-2018"));
-        div.add(getContentParagraph("This experiment is performed according to lab procedures: PREP013V23-QC037V20-SEQ008V25"));
-        div.add(getContentParagraph("This report is generated and verified by: korneelduyvesteyn"));
-        div.add(getContentParagraph("This report is addressed at: HMF Testing Center"));
-        div.add(getContentParagraph("Comments: this is a test report and is based off COLO829"));
+        div.add(createContentParagraph("The samples have been sequenced at ", ReportResources.HARTWIG_ADDRESS));
+        div.add(createContentParagraph("The samples have been analyzed by Next Generation Sequencing "));
+        div.add(createContentParagraph("This experiment is performed on the tumor sample which arrived on ", "05-Jan-2018"));
+        div.add(createContentParagraph("The pathology tumor percentage for this sample is 80%"));
+        div.add(createContentParagraph("This experiment is performed on the blood sample which arrived on ", "01-Jan-2018"));
+        div.add(createContentParagraph("This experiment is performed according to lab procedures: PREP013V23-QC037V20-SEQ008V25"));
+        div.add(createContentParagraph("This report is generated and verified by: korneelduyvesteyn"));
+        div.add(createContentParagraph("This report is addressed at: HMF Testing Center"));
+        div.add(createContentParagraph("Comments: this is a test report and is based off COLO829"));
 
         return div;
 
     }
 
     @NotNull
-    private static final Div getDisclaimerDiv() {
+    private static final Div createDisclaimerDiv() {
 
         Div div = new Div();
 
@@ -84,17 +84,17 @@ public class DetailsAndDisclaimerChapter extends ReportChapter {
         div.add(new Paragraph("Disclaimer")
                 .addStyle(BODY_TEXT_HEADER_STYLE));
 
-        div.add(getContentParagraph("The data on which this report is based is generated from tests that are performed under ISO/ICE-17025:2005 accreditation."));
-        div.add(getContentParagraph("The analysis done for this report has passed all internal quality controls."));
-        div.add(getContentParagraph("For feedback or complaints please contact ", ReportResources.CONTACT_EMAIL_QA));
-        div.add(getContentParagraph("For general questions, please contact us at ", ReportResources.CONTACT_EMAIL_GENERAL));
+        div.add(createContentParagraph("The data on which this report is based is generated from tests that are performed under ISO/ICE-17025:2005 accreditation."));
+        div.add(createContentParagraph("The analysis done for this report has passed all internal quality controls."));
+        div.add(createContentParagraph("For feedback or complaints please contact ", ReportResources.CONTACT_EMAIL_QA));
+        div.add(createContentParagraph("For general questions, please contact us at ", ReportResources.CONTACT_EMAIL_GENERAL));
 
         return div;
 
     }
 
     @NotNull
-    private static final Div getSignatureDiv() throws IOException {
+    private static final Div createSignatureDiv() throws IOException {
 
         Div div = new Div();
         div.setKeepTogether(true);
@@ -140,16 +140,16 @@ public class DetailsAndDisclaimerChapter extends ReportChapter {
     }
 
     @NotNull
-    private final static Paragraph getContentParagraph(@NotNull String text) {
+    private final static Paragraph createContentParagraph(@NotNull String text) {
         return new Paragraph(text)
                 .addStyle(BODY_TEXT_STYLE)
                 .setFixedLeading(ReportResources.BODY_TEXT_LEADING);
     }
 
     @NotNull
-    private final static Paragraph getContentParagraph(@NotNull String regularPart, @NotNull String boldPart) {
+    private final static Paragraph createContentParagraph(@NotNull String regularPart, @NotNull String boldPart) {
 
-        return getContentParagraph(regularPart)
+        return createContentParagraph(regularPart)
                 .add(new Text(boldPart)
                         .addStyle(BODY_TEXT_BOLD_STYLE))
                 .setFixedLeading(ReportResources.BODY_TEXT_LEADING);

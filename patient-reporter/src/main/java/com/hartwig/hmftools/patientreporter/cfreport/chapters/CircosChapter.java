@@ -45,10 +45,10 @@ public class CircosChapter extends ReportChapter {
         table.setWidth(getContentWidth());
 
         table.addCell(TableHelper.getLayoutCell().add(new Div()
-            .add(getContentParagraph("The outer first circle", " shows the chromosomes. The darker " +
+            .add(createContentParagraph("The outer first circle", " shows the chromosomes. The darker " +
                     "shaded areas represent large gaps in the human reference genome: i.e. regions of centromeres, " +
                     "heterochromatin & missing short arms."))
-            .add(getContentParagraph("The second circle", " shows the somatic variants (incl. exon, " +
+            .add(createContentParagraph("The second circle", " shows the somatic variants (incl. exon, " +
                     "intron and intergenic regions). Somatic variants are further divided into an outer ring of single " +
                     "nucleotide polymorphism (SNP) allele frequencies and an inner ring of short insertion/deletion (INDEL) " +
                     "locations. SNP allele frequencies have been corrected for tumor purity and scale from 0 to 100%. Each " +
@@ -60,12 +60,12 @@ public class CircosChapter extends ReportChapter {
         table.addCell(TableHelper.getLayoutCell()); // Spacer
 
         table.addCell(TableHelper.getLayoutCell().add(new Div()
-            .add(getContentParagraph("The third circle", " shows all observed tumor purity adjusted " +
+            .add(createContentParagraph("The third circle", " shows all observed tumor purity adjusted " +
                     "copy number changes,including both focal and chromosomal somatic events. Copy number losses are " +
                     "indicated in red, green shows regions of copy number gain. The scale ranges from 0 (complete loss) " +
                     "to 6 (high level gains). If the absolute copy number is > 6 it is shown as 6 with a green dot on " +
                     "the diagram.")
-            .add(getContentParagraph("The fourth circle", " represents the observed 'minor allele " +
+            .add(createContentParagraph("The fourth circle", " represents the observed 'minor allele " +
                     "copy numbers’ across the chromosome. The range of the chart is from 0 to 3. The expected normal " +
                     "minor allele copy number is 1, and anything below 1 is shown as a loss (orange) and represents a " +
                     "LOH event. Minor allele copy numbers above 1 (blue) indicate amplification events of both A and B " +
@@ -74,7 +74,7 @@ public class CircosChapter extends ReportChapter {
         table.addCell(TableHelper.getLayoutCell()); // Spacer
 
         table.addCell(TableHelper.getLayoutCell().add(new Div()
-                .add(getContentParagraph("The innermost circle", " displays the observed structural " +
+                .add(createContentParagraph("The innermost circle", " displays the observed structural " +
                         "variants within or between the chromosomes. Translocations are indicated in blue, deletions in " +
                         "red, insertions in yellow, tandem duplications in green and inversions in black."))));
 
@@ -83,7 +83,7 @@ public class CircosChapter extends ReportChapter {
     }
 
     @NotNull
-    private final static Paragraph getContentParagraph(@NotNull String boldPart, @NotNull String regularPart) {
+    private final static Paragraph createContentParagraph(@NotNull String boldPart, @NotNull String regularPart) {
         return new Paragraph(boldPart)
             .addStyle(ReportResources.subTextBoldStyle())
                 .setFixedLeading(ReportResources.BODY_TEXT_LEADING)
