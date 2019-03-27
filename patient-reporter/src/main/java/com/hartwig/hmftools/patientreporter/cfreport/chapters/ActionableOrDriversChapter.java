@@ -86,6 +86,7 @@ public class ActionableOrDriversChapter extends ReportChapter {
 
         // Add table footnotes
         contentTable.addCell(TableHelper.getLayoutCell(1, contentTable.getNumberOfColumns())
+                .setPaddingTop(10)
                 .add(new Paragraph("* Marked gene(s) are included in the DRUP study and indicate potential eligibility in " +
                         "DRUP. Please note that the marking is NOT based on the specific mutation reported for this sample, " +
                         "but only on a gene-level.")
