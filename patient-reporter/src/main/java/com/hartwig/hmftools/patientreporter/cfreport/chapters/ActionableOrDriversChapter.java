@@ -31,13 +31,13 @@ public class ActionableOrDriversChapter extends ReportChapter {
     }
 
     @NotNull
-    private final Table createTumorVariantsTable() {
+    private Table createTumorVariantsTable() {
 
         final String chapterTitle = "Tumor specific variants";
         final boolean isAvailable = true;
 
         if (!isAvailable) {
-            return createNoneTable(chapterTitle);
+            return TableHelper.createNoneReportTable(chapterTitle);
         }
 
         // Create content table
@@ -73,13 +73,13 @@ public class ActionableOrDriversChapter extends ReportChapter {
     }
 
     @NotNull
-    private final Table createGainsAndLossesTable() {
+    private Table createGainsAndLossesTable() {
 
         final String chapterTitle = "Tumor specific gains & losses";
         final boolean isAvailable = false;
 
         if (!isAvailable) {
-            return createNoneTable(chapterTitle);
+            return TableHelper.createNoneReportTable(chapterTitle);
         }
 
         // Create content table
@@ -105,13 +105,13 @@ public class ActionableOrDriversChapter extends ReportChapter {
     }
 
     @NotNull
-    private final Table createSomaticFusionsTable() {
+    private Table createSomaticFusionsTable() {
 
         final String chapterTitle = "Somatic gene fusions";
         final boolean isAvailable = true;
 
         if (!isAvailable) {
-            return createNoneTable(chapterTitle);
+            return TableHelper.createNoneReportTable(chapterTitle);
         }
 
         // Create content table
@@ -137,13 +137,13 @@ public class ActionableOrDriversChapter extends ReportChapter {
     }
 
     @NotNull
-    private final Table createDisruptionsTable() {
+    private Table createDisruptionsTable() {
 
         final String chapterTitle = "Tumor specific gene disruptions";
         final boolean isAvailable = true;
 
         if (!isAvailable) {
-            return createNoneTable(chapterTitle);
+            return TableHelper.createNoneReportTable(chapterTitle);
         }
 
         // Create content table
@@ -169,19 +169,6 @@ public class ActionableOrDriversChapter extends ReportChapter {
 
         // Create report table that handles page breaks
         return TableHelper.createWrappingReportTable(chapterTitle, contentTable);
-
-    }
-
-    @NotNull
-    private static Table createNoneTable(String sectionTitle) {
-//
-//        Table table = TableHelper.createReportContentTable(new float[] {1}, new Cell[] {});
-//        table.addCell(TableHelper.getDisabledContentCell(new Paragraph("NONE")));
-//        table.addCell(TableHelper.getLayoutCell(10, 1).setHeight(TABLE_BOTTOM_SPACER_HEIGHT));
-//
-
-        return TableHelper.createNoneReportTable(sectionTitle);
-
 
     }
 
