@@ -214,6 +214,7 @@ public class TherapyDetailsChapter extends ReportChapter {
     private static Paragraph createChapterFootnote() {
         return new Paragraph()
                 .setKeepTogether(true)
+                .setFixedLeading(ReportResources.BODY_TEXT_LEADING)
                 .add("The Cancer Genome Interpreter (CGI), OncoKB and CiViC knowledge bases are used to " +
                     "annotate variants of all types with clinical evidence. Only treatment associated evidence with a high " +
                     "level of evidence ( ")
