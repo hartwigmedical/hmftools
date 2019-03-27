@@ -41,8 +41,8 @@ public class PageEventHandler implements IEventHandler {
             if (firstPageOfChapter) {
                 firstPageOfChapter = false;
             }
-            SidePanel.addSidePanel(page, fullSidebar, fullSidebarContent);
-            Footer.addFooter(page, !fullSidebar);
+            SidePanel.renderSidePanel(page, fullSidebar, fullSidebarContent);
+            Footer.renderFooter(page, !fullSidebar);
         }
 
     }

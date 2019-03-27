@@ -27,7 +27,7 @@ public final class BaseMarker {
      * @param filled
      * @param canvas
      */
-    public static void drawMarker(float x, float y, @NotNull DeviceRgb color, boolean filled, @NotNull PdfCanvas canvas) {
+    public static void renderMarker(float x, float y, @NotNull DeviceRgb color, boolean filled, @NotNull PdfCanvas canvas) {
 
         canvas.roundRectangle(x, y, WIDTH, HEIGHT, RADIUS);
         canvas.setLineWidth(LINE_WIDTH);
@@ -62,7 +62,7 @@ public final class BaseMarker {
      * @param filledProbability     probability of a filled marker [0.0, 1.0]; higher value is more probable
      * @param canvas                canvas to draw on
      */
-    public static void drawMarkerGrid(float xCount, float yCount, float xStart, float xSpacing, float yStart, float ySpacing, float redProbability, float filledProbability, @NotNull PdfCanvas canvas) {
+    public static void renderMarkerGrid(float xCount, float yCount, float xStart, float xSpacing, float yStart, float ySpacing, float redProbability, float filledProbability, @NotNull PdfCanvas canvas) {
 
         Random r = new Random();
         for (int row = 0; row < yCount; row++) {
@@ -74,7 +74,7 @@ public final class BaseMarker {
                 DeviceRgb color = (r.nextFloat() < redProbability) ? ReportResources.PALETTE_RED : ReportResources.PALETTE_CYAN;
                 boolean filled = (r.nextFloat() < filledProbability);
 
-                drawMarker(x, y, color, filled, canvas);
+                renderMarker(x, y, color, filled, canvas);
 
             }
 

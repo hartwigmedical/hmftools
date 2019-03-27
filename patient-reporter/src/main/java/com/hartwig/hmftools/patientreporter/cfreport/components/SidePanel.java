@@ -14,13 +14,13 @@ public final class SidePanel {
     private static final float ROW_SPACING = 42;
     private static final float CONTENT_X_START = 455;
 
-    public static void addSidePanel(PdfPage page, boolean fullHeight, boolean fullContent) {
+    public static void renderSidePanel(PdfPage page, boolean fullHeight, boolean fullContent) {
 
         // Draw background and markers
         final PdfCanvas canvas = new PdfCanvas(page.getLastContentStream(), page.getResources(), page.getDocument());
         final Rectangle pageSize = page.getPageSize();
         renderBackgroundRect(fullHeight, canvas, pageSize);
-        BaseMarker.drawMarkerGrid(4, (fullHeight ? 20 : 2), CONTENT_X_START, 35, 820, -ROW_SPACING, .05f, .15f, canvas);
+        BaseMarker.renderMarkerGrid(4, (fullHeight ? 20 : 2), CONTENT_X_START, 35, 820, -ROW_SPACING, .05f, .15f, canvas);
 
         // Add sidepanel content that is always on the sidepoanel (full height or not)
         int sideTextIndex = 0;
