@@ -330,7 +330,7 @@ public class ClusterAnnotations
 
     public static void annotateChainedClusters(final SvCluster cluster, long proximityCutoff)
     {
-        if(cluster.isResolved())
+        if(cluster.isResolved() || cluster.getChains().isEmpty())
             return;
 
         boolean isComplex = cluster.hasReplicatedSVs() || !cluster.getFoldbacks().isEmpty();

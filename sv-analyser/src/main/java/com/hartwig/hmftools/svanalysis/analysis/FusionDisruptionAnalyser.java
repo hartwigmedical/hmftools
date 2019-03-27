@@ -123,15 +123,38 @@ public class FusionDisruptionAnalyser
     public final List<GeneFusion> getFusions() { return mFusions; }
     public void setVisWriter(VisualiserWriter writer) { mVisWriter = writer; }
 
-    public static void setSvGeneData(final List<SvVarData> svList, SvGeneTranscriptCollection geneCollection, boolean applyPromotorDistance)
+    public static void setSvGeneData(final List<SvVarData> svList, SvGeneTranscriptCollection geneCollection,
+            boolean applyPromotorDistance, boolean selectiveLoading)
     {
+        int upstreamDistance = applyPromotorDistance ? PRE_GENE_PROMOTOR_DISTANCE : 0;
+
+        if(selectiveLoading)
+        {
+            // only load transcript info for the genes covered
+            Map<String,Boolean> restrictedGeneIds = Maps.newHashMap();
+
+            for (final SvVarData var : svList)
+            {
+                // isSpecificSV(var);
+                for (int be = SVI_START; be <= SVI_END; ++be)
+                {
+                    if (be == SVI_END && var.isNullBreakend())
+                        continue;
+
+                    boolean isStart = isStart(be);
+
+                    geneCollection.populateGeneIdList(restrictedGeneIds, var.chromosome(isStart), var.position(isStart), upstreamDistance);
+                }
+            }
+
+            geneCollection.loadEnsemblTranscriptData(restrictedGeneIds);
+        }
+
         for(final SvVarData var : svList)
         {
             // isSpecificSV(var);
 
             List<GeneAnnotation> genesList = Lists.newArrayList();
-
-            int upstreamDistance = applyPromotorDistance ? PRE_GENE_PROMOTOR_DISTANCE : 0;
 
             for (int be = SVI_START; be <= SVI_END; ++be)
             {
@@ -676,7 +699,7 @@ public class FusionDisruptionAnalyser
 
         if(matchingChain != null)
         {
-            final int chainData[] = matchingChain.breakendsAreChained(varUp, breakendUp.usesStart(), varDown, breakendDown.usesStart());
+            final int chainData[] = matchingChain.breakendsAreChained(varUp, !breakendUp.usesStart(), varDown, !breakendDown.usesStart());
             final String chainInfo = String.format("%d;%d", chainData[CHAIN_LINK_COUNT], chainData[CHAIN_LENGTH]);
 
             // data: ChainLinks;ChainLength

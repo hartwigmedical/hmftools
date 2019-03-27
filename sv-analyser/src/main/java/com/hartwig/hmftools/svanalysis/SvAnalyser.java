@@ -140,6 +140,8 @@ public class SvAnalyser {
             FusionDisruptionAnalyser fusionAnalyser = null;
             boolean runFusions = cmd.hasOption(RUN_FUSIONS);
 
+            boolean isSingleSample = samplesList.size() == 1;
+
             SvGeneTranscriptCollection ensemblDataCache = null;
 
             if(cmd.hasOption(GENE_TRANSCRIPTS_DIR))
@@ -147,7 +149,7 @@ public class SvAnalyser {
                 ensemblDataCache = new SvGeneTranscriptCollection();
                 ensemblDataCache.setDataPath(cmd.getOptionValue(GENE_TRANSCRIPTS_DIR));
 
-                if(!ensemblDataCache.loadEnsemblData())
+                if(!ensemblDataCache.loadEnsemblData(isSingleSample))
                 {
                     LOGGER.error("Ensembl data cache load failed, exiting");
                     return;
@@ -230,7 +232,7 @@ public class SvAnalyser {
 
                 if(ensemblDataCache != null)
                 {
-                    setSvGeneData(svVarData, ensemblDataCache, runFusions);
+                    setSvGeneData(svVarData, ensemblDataCache, runFusions, isSingleSample);
                 }
 
                 if(checkDrivers)

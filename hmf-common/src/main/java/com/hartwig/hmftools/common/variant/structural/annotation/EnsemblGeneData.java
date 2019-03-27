@@ -8,7 +8,7 @@ import com.google.common.collect.Lists;
 
 public class EnsemblGeneData
 {
-    public final String GeneId;
+    public final String GeneId; // aka StableId
     public final String GeneName;
     public final String Chromosome;
     public final byte Strand;

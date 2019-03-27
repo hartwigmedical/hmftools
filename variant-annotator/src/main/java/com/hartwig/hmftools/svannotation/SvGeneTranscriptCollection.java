@@ -37,7 +37,7 @@ public class SvGeneTranscriptCollection
 {
     private String mDataPath;
 
-    private Map<String, List<TranscriptExonData>> mGeneTransExonDataMap;
+    private Map<String, List<TranscriptExonData>> mGeneTransExonDataMap;// keyed by GeneId (aka StableId)
     private Map<String, List<EnsemblGeneData>> mChromosomeGeneDataMap;
     private Map<String, List<EnsemblGeneData>> mChromosomeReverseGeneDataMap; // order by gene end not start
     private Map<Integer, List<TranscriptProteinData>> mEnsemblProteinDataMap;
@@ -96,6 +96,22 @@ public class SvGeneTranscriptCollection
 
     private static int SPECIFIC_VAR_ID = -1;
     // private static int SPECIFIC_VAR_ID = 4558066;
+
+    public void populateGeneIdList(Map<String,Boolean> uniqueGeneIds, final String chromosome, long position, int upstreamDistance)
+    {
+        // find the unique set of geneIds
+        final List<EnsemblGeneData> geneRegions = mChromosomeGeneDataMap.get(chromosome);
+
+        if (geneRegions == null)
+            return;
+
+        List<EnsemblGeneData> matchedGenes = findGeneRegions(position, geneRegions, upstreamDistance);
+
+        for (final EnsemblGeneData geneData : matchedGenes)
+        {
+            uniqueGeneIds.put(geneData.GeneId,true);
+        }
+    }
 
     public List<GeneAnnotation> findGeneAnnotationsBySv(int svId, boolean isStart, final String chromosome, long position,
             int upstreamDistance)
@@ -636,18 +652,41 @@ public class SvGeneTranscriptCollection
         return exonMatchData;
     }
 
-    public boolean loadEnsemblData()
+    public boolean loadEnsemblData(boolean delayTranscriptLoading)
     {
-        if(!EnsemblDAO.loadTranscriptExonData(mDataPath, mGeneTransExonDataMap))
-            return false;
-
         if(!EnsemblDAO.loadEnsemblGeneData(mDataPath, mChromosomeGeneDataMap, mChromosomeReverseGeneDataMap))
             return false;
 
-        if(!EnsemblDAO.loadTranscriptProteinData(mDataPath, mEnsemblProteinDataMap))
-            return false;
+        if(!delayTranscriptLoading)
+        {
+            if (!EnsemblDAO.loadTranscriptExonData(mDataPath, mGeneTransExonDataMap, Maps.newHashMap()))
+                return false;
+
+            if(!EnsemblDAO.loadTranscriptProteinData(mDataPath, mEnsemblProteinDataMap, Maps.newHashMap()))
+                return false;
+        }
 
         return true;
+    }
+
+    public boolean loadEnsemblTranscriptData(final Map<String,Boolean> uniqueGeneIds)
+    {
+        mGeneTransExonDataMap.clear();
+
+        if(!EnsemblDAO.loadTranscriptExonData(mDataPath, mGeneTransExonDataMap, uniqueGeneIds))
+            return false;
+
+        Map<Integer,Boolean> uniqueTransIds = Maps.newHashMap();
+
+        for(List<TranscriptExonData> transExonList : mGeneTransExonDataMap.values())
+        {
+            for(TranscriptExonData transExonData : transExonList)
+            {
+                uniqueTransIds.put(transExonData.TransId, true);
+            }
+        }
+
+        return EnsemblDAO.loadTranscriptProteinData(mDataPath, mEnsemblProteinDataMap, uniqueTransIds);
     }
 
     public void writeBreakendData(final String sampleId, final List<StructuralVariantAnnotation> annotations)
@@ -896,5 +935,6 @@ public class SvGeneTranscriptCollection
                     regionTotals[GENE_PHASING_REGION_CODING_2]);
         }
     }
+
 
 }

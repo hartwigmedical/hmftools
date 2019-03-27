@@ -368,7 +368,8 @@ public class EnsemblDAO
     private static int TE_CODING_START = 13;
     private static int TE_CODING_END = 14;
 
-    public static boolean loadTranscriptExonData(final String dataPath, Map<String, List<TranscriptExonData>> geneTransExonDataMap)
+    public static boolean loadTranscriptExonData(final String dataPath, Map<String, List<TranscriptExonData>> geneTransExonDataMap,
+            Map<String,Boolean> restrictedGeneIds)
     {
         String filename = dataPath;
 
@@ -391,6 +392,7 @@ public class EnsemblDAO
 
             int exonCount = 0;
             String currentGene = "";
+            String lastSkippedGeneId = "";
             List<TranscriptExonData> transExonDataList = null;
 
             line = fileReader.readLine(); // skip header
@@ -402,6 +404,13 @@ public class EnsemblDAO
 
                 // check if still on the same variant
                 final String geneId = items[TE_GENE_ID];
+
+                if(lastSkippedGeneId.equals(geneId) || (!restrictedGeneIds.isEmpty() && restrictedGeneIds.get(geneId) == null))
+                {
+                    lastSkippedGeneId = geneId;
+                    line = fileReader.readLine();
+                    continue;
+                }
 
                 if(!geneId.equals(currentGene))
                 {
@@ -431,7 +440,7 @@ public class EnsemblDAO
                 line = fileReader.readLine();
             }
 
-            LOGGER.debug("loaded {} gene records, {} exon", geneTransExonDataMap.size(), exonCount);
+            LOGGER.debug("loaded {} gene records, {} exons", geneTransExonDataMap.size(), exonCount);
         }
         catch(IOException e)
         {
@@ -498,7 +507,8 @@ public class EnsemblDAO
     private static int PF_END = 4;
     private static int PF_DESC = 5;
 
-    public static boolean loadTranscriptProteinData(final String dataPath, Map<Integer, List<TranscriptProteinData>> proteinDataMap)
+    public static boolean loadTranscriptProteinData(final String dataPath, Map<Integer, List<TranscriptProteinData>> proteinDataMap,
+            Map<Integer,Boolean> restrictedTransIds)
     {
         String filename = dataPath;
 
@@ -532,6 +542,12 @@ public class EnsemblDAO
 
                 // check if still on the same variant
                 int transId = Integer.parseInt(items[PF_TRANS_ID]);
+
+                if(!restrictedTransIds.isEmpty() && restrictedTransIds.get(transId) == null)
+                {
+                    line = fileReader.readLine();
+                    continue;
+                }
 
                 if(transId != currentTransId)
                 {

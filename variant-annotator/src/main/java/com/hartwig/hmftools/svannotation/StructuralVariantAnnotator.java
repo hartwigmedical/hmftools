@@ -123,7 +123,7 @@ public class StructuralVariantAnnotator
         }
 
         mSvGeneTranscriptCollection.setDataPath(mEnsemblDataDir);
-        mSvGeneTranscriptCollection.loadEnsemblData();
+        mSvGeneTranscriptCollection.loadEnsemblData(false);
 
         if (samplesList.isEmpty())
         {
