@@ -36,7 +36,7 @@ public final class SidePanel {
             cv.add(createSidePanelDiv(sideTextIndex++, "Hospital", "OLVG Oost"));
             cv.add(createSidePanelDiv(sideTextIndex++, "Hospital patiend id", "839493929"));
             cv.add(createSidePanelDiv(sideTextIndex++, "Gender", "Female"));
-            cv.add(createSidePanelDiv(sideTextIndex++, "Birth date", "11-Nov-1954"));
+            cv.add(createSidePanelDiv(sideTextIndex, "Birth date", "11-Nov-1954"));
         }
 
         canvas.release();
@@ -45,10 +45,6 @@ public final class SidePanel {
 
     /**
      * Draw background rectangle, either full height or only top
-     *
-     * @param fullHeight
-     * @param canvas
-     * @param pageSize
      */
     private static void renderBackgroundRect(boolean fullHeight, @NotNull PdfCanvas canvas, @NotNull Rectangle pageSize) {
 

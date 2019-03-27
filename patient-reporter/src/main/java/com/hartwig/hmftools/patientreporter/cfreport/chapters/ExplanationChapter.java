@@ -21,7 +21,7 @@ public class ExplanationChapter extends ReportChapter {
     }
 
     @Override
-    protected void renderChapterContent(Document report) {
+    protected void renderChapterContent(@NotNull Document report) {
 
         Table table = new Table(UnitValue.createPercentArray(new float[] {1, 0.1f, 1, 0.1f, 1}));
         table.setWidth(getContentWidth());
@@ -124,25 +124,20 @@ public class ExplanationChapter extends ReportChapter {
     }
 
     @NotNull
-    private final static Paragraph createSectionTitle(@NotNull String sectionTitle) {
-
+    private static Paragraph createSectionTitle(@NotNull String sectionTitle) {
         return new Paragraph(sectionTitle)
                 .addStyle(ReportResources.smallBodyHeadingStyle());
-
     }
 
     @NotNull
-    private final static Div createContentDiv(@NotNull String[] contentParagraphs) {
+    private static Div createContentDiv(@NotNull String[] contentParagraphs) {
 
         Div div = new Div();
-
-        // Content
         for (String s: contentParagraphs) {
             div.add(new Paragraph(s)
                     .addStyle(ReportResources.smallBodyTextStyle())
                     .setFixedLeading(ReportResources.BODY_TEXT_LEADING));
         }
-
         return div;
 
     }

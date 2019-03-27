@@ -11,26 +11,16 @@ import java.util.Random;
  * Class to draw a rounded rectangle (as DNA Base reference) for both the footer and the
  * side panel
  */
-public final class BaseMarker {
-
-    private static final float WIDTH = 12.3f;
-    private static final float HEIGHT = 1.9f;
-    private static final float RADIUS = HEIGHT * .5f;
-    private static final float LINE_WIDTH = .25f;
+class BaseMarker {
 
     /**
      * Draw single marker at x,y with given color. PdfCanvas is *not* released after drawing
-     *
-     * @param x
-     * @param y
-     * @param color
-     * @param filled
-     * @param canvas
      */
-    public static void renderMarker(float x, float y, @NotNull DeviceRgb color, boolean filled, @NotNull PdfCanvas canvas) {
+    private static void renderMarker(float x, float y, @NotNull DeviceRgb color, boolean filled, @NotNull PdfCanvas canvas) {
 
-        canvas.roundRectangle(x, y, WIDTH, HEIGHT, RADIUS);
-        canvas.setLineWidth(LINE_WIDTH);
+        final float height = 1.9f;
+        canvas.roundRectangle(x, y, 12.3f, height, height * .5f);
+        canvas.setLineWidth(.25f);
 
         if (filled) {
 

@@ -277,9 +277,8 @@ public class SummaryChapter extends ReportChapter {
 
     @NotNull
     private static Cell createMiddleAlignedCell() {
-        Cell c = TableHelper.getLayoutCell()
+        return TableHelper.getLayoutCell()
                 .setVerticalAlignment(VerticalAlignment.MIDDLE);
-        return c;
     }
 
     @NotNull
@@ -303,10 +302,9 @@ public class SummaryChapter extends ReportChapter {
         Style style = genes.length > 0 ? ReportResources.dataHighlightStyle() : ReportResources.dataHighlightNaStyle();
 
         // Build table
-        Cell c = createMiddleAlignedCell()
+        return createMiddleAlignedCell()
                 .add(new Paragraph(geneString))
                 .addStyle(style);
-                return c;
 
     }
 

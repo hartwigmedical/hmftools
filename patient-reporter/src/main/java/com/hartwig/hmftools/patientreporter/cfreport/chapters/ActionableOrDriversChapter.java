@@ -14,10 +14,6 @@ import org.jetbrains.annotations.NotNull;
 
 public class ActionableOrDriversChapter extends ReportChapter {
 
-
-    private final static float COL_WIDTH_COPIES = 40;
-
-
     @Override
     public String getName() {
         return "Actionable or drivers";
@@ -29,7 +25,7 @@ public class ActionableOrDriversChapter extends ReportChapter {
     }
 
     @Override
-    protected void renderChapterContent(Document report) {
+    protected void renderChapterContent(@NotNull Document report) {
         report.add(createTumorVariantsTable());
         report.add(createGainsAndLossesTable());
         report.add(createSomaticFusionsTable());

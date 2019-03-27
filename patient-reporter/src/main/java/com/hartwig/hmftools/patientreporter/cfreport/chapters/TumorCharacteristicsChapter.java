@@ -28,7 +28,7 @@ public class TumorCharacteristicsChapter extends ReportChapter {
     }
 
     @Override
-    protected void renderChapterContent(Document report) {
+    protected void renderChapterContent(@NotNull Document report) {
 
         final DecimalFormat wholeNumberFormat = new DecimalFormat("#");
         final DecimalFormat oneDecimalFormat = new DecimalFormat("#.#");
@@ -73,7 +73,7 @@ public class TumorCharacteristicsChapter extends ReportChapter {
     }
 
     @NotNull
-    private final Div createCharacteristicDiv(@NotNull String title, @NotNull String highlight, @NotNull String description, @NotNull BarChart chart) {
+    private Div createCharacteristicDiv(@NotNull String title, @NotNull String highlight, @NotNull String description, @NotNull BarChart chart) {
 
         // Initialize div
         Div div = new Div();

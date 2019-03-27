@@ -72,29 +72,34 @@ public class Icon {
     };
 
     @NotNull
-    public final static Text createLevelIcon(@NotNull String level) {
+    public static Text createLevelIcon(@NotNull String level) {
 
         // Uppercase level
         level = level.toUpperCase();
 
-        IconType iconType = IconType.INVALID;
-        if (level.equals("A")) {
-            iconType = IconType.LEVEL_A;
-        } else if (level.equals("B")) {
-            iconType = IconType.LEVEL_B;
-        } else if (level.equals("C")) {
-            iconType = IconType.LEVEL_C;
-        } else if (level.equals("D")) {
-            iconType = IconType.LEVEL_D;
-        } else {
-            return new Text("");
+        IconType iconType;
+        switch (level) {
+            case "A":
+                iconType = IconType.LEVEL_A;
+                break;
+            case "B":
+                iconType = IconType.LEVEL_B;
+                break;
+            case "C":
+                iconType = IconType.LEVEL_C;
+                break;
+            case "D":
+                iconType = IconType.LEVEL_D;
+                break;
+            default:
+                return new Text("");
         }
 
         return createIcon(iconType);
 
     }
 
-    public final static Text createTreatmentIcon(@NotNull String treatmentName) {
+    public static Text createTreatmentIcon(@NotNull String treatmentName) {
 
         // Determine color by first character of name
         int charCode = !treatmentName.isEmpty() ? (int) treatmentName.charAt(0) : 0;
@@ -105,12 +110,12 @@ public class Icon {
     }
 
     @NotNull
-    public final static Text createIcon(@NotNull IconType iconType) {
+    public static Text createIcon(@NotNull IconType iconType) {
         return createIcon(iconType, iconType.getDefaultColor());
     }
 
     @NotNull
-    public final static Text createIcon(@NotNull IconType iconType, @NotNull DeviceRgb color) {
+    private static Text createIcon(@NotNull IconType iconType, @NotNull DeviceRgb color) {
 
         if (iconType == IconType.INVALID) {
             return new Text("");

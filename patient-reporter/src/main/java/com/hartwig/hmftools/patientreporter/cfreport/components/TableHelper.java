@@ -16,9 +16,6 @@ public final class TableHelper {
 
     /**
      * Get a table that implements the visual style for the main report tables
-     *
-     * @param columnPercentageWidths
-     * @return
      */
     @NotNull
     public static Table createReportContentTable(float[] columnPercentageWidths, Cell[] headerCells) {
@@ -77,7 +74,7 @@ public final class TableHelper {
                         .setBorder(Border.NO_BORDER));
 
         // Wrap continuedWrapTable with table that shows the table title
-        Table titleTable = new Table(1)
+        return new Table(1)
                 .setWidth(contentTable.getWidth())
                 .setMarginBottom(TABLE_BOTTOM_MARGIN)
                 .addHeaderCell(new Cell()
@@ -90,16 +87,10 @@ public final class TableHelper {
                         .setPadding(0)
                         .setBorder(Border.NO_BORDER));
 
-        return titleTable;
-
     }
-
-
 
     /**
      * Get a cell that implements the visual header style for the main report tables
-     *
-     * @return
      */
     @NotNull
     public static Cell getHeaderCell(@NotNull String text) {
@@ -110,8 +101,6 @@ public final class TableHelper {
 
     /**
      * Get a cell that implements the visual header style for the main report tables
-     *
-     * @return
      */
     @NotNull
     public static Cell getHeaderCell() {
@@ -125,9 +114,6 @@ public final class TableHelper {
 
     /**
      * Get a cell that implements the visual content style for the main report tables
-     *
-     * @param text
-     * @return
      */
     @NotNull
     public static Cell getContentCell(@NotNull String text) {
@@ -136,9 +122,6 @@ public final class TableHelper {
 
     /**
      * Get a cell that implements the visual content style for the main report tables
-     *
-     * @param element
-     * @return
      */
     @NotNull
     public static Cell getContentCell(@NotNull IBlockElement element) {
@@ -153,12 +136,9 @@ public final class TableHelper {
 
     /**
      * Get a cell that implements the visual content disabled style for the main report tables
-     *
-     * @param element
-     * @return
      */
     @NotNull
-    public static Cell getDisabledContentCell(@NotNull IBlockElement element) {
+    private static Cell getDisabledContentCell(@NotNull IBlockElement element) {
         Cell c = new Cell();
         c.setBorder(Border.NO_BORDER);
         c.setBorderBottom(new SolidBorder(ReportResources.PALETTE_LIGHT_GREY, 0.25f));
@@ -170,8 +150,6 @@ public final class TableHelper {
 
     /**
      * Get a cell that has no borders (just for positioning elements)
-     *
-     * @return
      */
     @NotNull
     public static Cell getLayoutCell() {
@@ -180,8 +158,6 @@ public final class TableHelper {
 
     /**
      * Get a cell that has no borders (just for positioning elements)
-     *
-     * @return
      */
     @NotNull
     public static Cell getLayoutCell(int rowspan, int colspan) {

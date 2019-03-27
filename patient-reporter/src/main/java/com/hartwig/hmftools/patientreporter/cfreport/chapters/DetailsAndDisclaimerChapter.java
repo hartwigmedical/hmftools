@@ -18,7 +18,6 @@ public class DetailsAndDisclaimerChapter extends ReportChapter {
     private final static Style BODY_TEXT_STYLE = ReportResources.smallBodyTextStyle();
     private final static Style BODY_TEXT_BOLD_STYLE = ReportResources.smallBodyBoldTextStyle();
 
-
     @Override
     public String getName() {
         return "Sample details & disclaimers";
@@ -30,7 +29,7 @@ public class DetailsAndDisclaimerChapter extends ReportChapter {
     }
 
     @Override
-    protected void renderChapterContent(Document report) throws IOException {
+    protected void renderChapterContent(@NotNull Document report) throws IOException {
 
         // Main content
         Table table = new Table(UnitValue.createPercentArray(new float[] {1, 0.1f, 1}));
@@ -52,7 +51,7 @@ public class DetailsAndDisclaimerChapter extends ReportChapter {
     }
 
     @NotNull
-    private static final Div createSampleDetailsDiv() {
+    private static Div createSampleDetailsDiv() {
 
         Div div = new Div();
 
@@ -76,7 +75,7 @@ public class DetailsAndDisclaimerChapter extends ReportChapter {
     }
 
     @NotNull
-    private static final Div createDisclaimerDiv() {
+    private static Div createDisclaimerDiv() {
 
         Div div = new Div();
 
@@ -94,7 +93,7 @@ public class DetailsAndDisclaimerChapter extends ReportChapter {
     }
 
     @NotNull
-    private static final Div createSignatureDiv() throws IOException {
+    private static Div createSignatureDiv() throws IOException {
 
         Div div = new Div();
         div.setKeepTogether(true);
@@ -128,9 +127,7 @@ public class DetailsAndDisclaimerChapter extends ReportChapter {
             signatureImage.setMaxHeight(60);
             signatureImage.setMarginTop(-15); // Set negative margin so the signature slightly overlaps the signature text
             signatureImage.setMarginLeft(10);
-            if (signatureImage != null) {
-                div.add(signatureImage);
-            }
+            div.add(signatureImage);
         } catch (MalformedURLException e) {
             throw new IOException("Failed to read signature image at " + signaturePath);
         }
@@ -140,15 +137,14 @@ public class DetailsAndDisclaimerChapter extends ReportChapter {
     }
 
     @NotNull
-    private final static Paragraph createContentParagraph(@NotNull String text) {
+    private static Paragraph createContentParagraph(@NotNull String text) {
         return new Paragraph(text)
                 .addStyle(BODY_TEXT_STYLE)
                 .setFixedLeading(ReportResources.BODY_TEXT_LEADING);
     }
 
     @NotNull
-    private final static Paragraph createContentParagraph(@NotNull String regularPart, @NotNull String boldPart) {
-
+    private static Paragraph createContentParagraph(@NotNull String regularPart, @NotNull String boldPart) {
         return createContentParagraph(regularPart)
                 .add(new Text(boldPart)
                         .addStyle(BODY_TEXT_BOLD_STYLE))

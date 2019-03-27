@@ -15,7 +15,7 @@ public abstract class ReportChapter {
         SummaryChapter,      // Full height sidepanel, full content
         ClosingChapter,      // Full height sidepanel, just ID and report date
         ContentChapter       // Short sidepanel with just ID and report date
-    };
+    }
 
     public void render(@NotNull PageEventHandler eventHandler, @NotNull Document report) throws IOException {
 
@@ -28,15 +28,15 @@ public abstract class ReportChapter {
         eventHandler.setSidebarType(fullSidebar, fullContent);
 
         // Start chapter
-        boolean addPageBreak = (getChapterType() != ChapterType.ClosingChapter.SummaryChapter);
-        startChapter(getName(), addPageBreak, report);
+        boolean addPageBreak = (getChapterType() != ChapterType.SummaryChapter);
+        startChapter(addPageBreak, report);
 
         // Render chapter specific content
         renderChapterContent(report);
 
     }
 
-    private static final void startChapter(@NotNull String chapterName, boolean addPageBreak, @NotNull Document report) {
+    private static void startChapter(boolean addPageBreak, @NotNull Document report) {
 
         // Add page break for all subsequent chapters
         if (addPageBreak) {
@@ -51,7 +51,7 @@ public abstract class ReportChapter {
 
     protected abstract void renderChapterContent(@NotNull Document report) throws IOException;
 
-    protected final float getContentWidth() {
+    final float getContentWidth() {
         if (getChapterType() == ChapterType.SummaryChapter || getChapterType() == ChapterType.ClosingChapter) {
             return ReportResources.CONTENT_WIDTH_NARROW;
         } else {

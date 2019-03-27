@@ -8,7 +8,7 @@ import org.jetbrains.annotations.NotNull;
 public class LineDivider {
 
     @NotNull
-    public static final LineSeparator createLineDivider(float width) {
+    public static LineSeparator createLineDivider(float width) {
 
         SolidLine line = new SolidLine(1f);
         line.setColor(ReportResources.PALETTE_BLUE);

@@ -24,7 +24,7 @@ public class CircosChapter extends ReportChapter {
     }
 
     @Override
-    protected void renderChapterContent(Document report) throws IOException {
+    protected void renderChapterContent(@NotNull Document report) throws IOException {
 
         // Add Circos plot
         final String circosPath = "/Users/wilco/Projects/hmftools/patient-reporter/src/test/resources/circos/circos_example.png";
@@ -33,9 +33,7 @@ public class CircosChapter extends ReportChapter {
             circosImage.setMaxHeight(400);
             circosImage.setHorizontalAlignment(HorizontalAlignment.CENTER);
             circosImage.setMarginBottom(8);
-            if (circosImage != null) {
-                report.add(circosImage);
-            }
+            report.add(circosImage);
         } catch (MalformedURLException e) {
             throw new IOException("Failed to read circos plot image at " + circosPath);
         }
@@ -83,7 +81,7 @@ public class CircosChapter extends ReportChapter {
     }
 
     @NotNull
-    private final static Paragraph createContentParagraph(@NotNull String boldPart, @NotNull String regularPart) {
+    private static Paragraph createContentParagraph(@NotNull String boldPart, @NotNull String regularPart) {
         return new Paragraph(boldPart)
             .addStyle(ReportResources.subTextBoldStyle())
                 .setFixedLeading(ReportResources.BODY_TEXT_LEADING)

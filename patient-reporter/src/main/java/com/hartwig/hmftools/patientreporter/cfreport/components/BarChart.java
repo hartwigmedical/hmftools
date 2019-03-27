@@ -20,7 +20,7 @@ public class BarChart extends InlineBarChart {
 
     private String lowLabel;
     private String highLabel;
-    private String[] tickLabels = {};
+    private String[] tickLabels;
 
     private boolean overshootEnabled = false;
     private String overshootLabel = "";
@@ -60,7 +60,7 @@ public class BarChart extends InlineBarChart {
         return new BarChartRenderer(this);
     }
 
-    public final static String[] createTickMarkLabels(float min, float max, float increment, @NotNull NumberFormat format) {
+    public static String[] createTickMarkLabels(float min, float max, float increment, @NotNull NumberFormat format) {
 
         int valueCount = 1 + (int) ((max - min) / increment);
 
@@ -75,14 +75,11 @@ public class BarChart extends InlineBarChart {
 
     private class BarChartRenderer extends DivRenderer {
 
-        private final BarChart barChart;
-
         private final float BAR_OUTLINE_HEIGHT = 9f;
         private final float BAR_INSET = 2f;
 
-        public BarChartRenderer(final BarChart barChart) {
+        BarChartRenderer(final BarChart barChart) {
             super(barChart);
-            this.barChart = barChart;
         }
 
         public void draw(final DrawContext drawContext) {
