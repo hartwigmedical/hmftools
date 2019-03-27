@@ -21,6 +21,7 @@ public abstract class ReportChapter {
 
         // Reconfigure event handler for upcoming pages
         eventHandler.setChapterTitle(getName());
+        eventHandler.resetChapterPageCounter();
 
         boolean fullSidebar = getChapterType() == ChapterType.SummaryChapter || getChapterType() == ChapterType.ClosingChapter;
         boolean fullContent = getChapterType() == ChapterType.SummaryChapter;

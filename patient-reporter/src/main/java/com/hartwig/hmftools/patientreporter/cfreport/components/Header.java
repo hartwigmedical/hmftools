@@ -13,7 +13,7 @@ public final class Header {
     private static final String HMF_LOGO_PATH = "pdf/hartwig_logo.jpg";
     private static PdfImageXObject hmfLogoObj = null;
 
-    public static void addHeader(String chapterTitle, PdfPage page) {
+    public static void addHeader(String chapterTitle, boolean firstPageOfChapter, PdfPage page) {
 
         final PdfCanvas pdfCanvas = new PdfCanvas(page.getLastContentStream(), page.getResources(), page.getDocument());
         Canvas cv = new Canvas(pdfCanvas, page.getDocument(), page.getPageSize());
@@ -45,9 +45,14 @@ public final class Header {
                 .setFixedPosition(230, 791, 300));
 
         // Add chapter title
-        cv.add(new Paragraph(chapterTitle)
+        Paragraph chapterTitleParagraph = new Paragraph(chapterTitle)
                 .addStyle(ReportResources.chapterTitleStyle())
-                .setFixedPosition(ReportResources.PAGE_MARGIN_LEFT, 721, 500));
+                .setFixedPosition(ReportResources.PAGE_MARGIN_LEFT, 721, 500);
+        if (!firstPageOfChapter) {
+            chapterTitleParagraph.add(new Text(" (Continued)").setFontSize(11));
+        }
+
+        cv.add(chapterTitleParagraph);
 
         pdfCanvas.release();
 

@@ -14,6 +14,7 @@ public class PageEventHandler implements IEventHandler {
     private boolean fullSidebarContent;
 
     private String chapterTitle = "Undefined";
+    private boolean firstPageOfChapter = true;
 
     public void setChapterTitle(String chapterTitle) {
         this.chapterTitle = chapterTitle;
@@ -24,6 +25,10 @@ public class PageEventHandler implements IEventHandler {
         fullSidebarContent = fullSidebar ? fullContent : false;
     }
 
+    public void resetChapterPageCounter() {
+        firstPageOfChapter = true;
+    }
+
     @Override
     public void handleEvent(Event event) {
 
@@ -32,7 +37,10 @@ public class PageEventHandler implements IEventHandler {
 
             final PdfPage page = documentEvent.getPage();
 
-            Header.addHeader(chapterTitle, page);
+            Header.addHeader(chapterTitle, firstPageOfChapter, page);
+            if (firstPageOfChapter) {
+                firstPageOfChapter = false;
+            }
             SidePanel.addSidePanel(page, fullSidebar, fullSidebarContent);
             Footer.addFooter(page, !fullSidebar);
         }
