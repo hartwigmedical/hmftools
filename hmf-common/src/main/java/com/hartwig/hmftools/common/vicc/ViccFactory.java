@@ -62,7 +62,6 @@ public abstract class ViccFactory {
         if (object.getAsJsonObject("jax") != null) {
             List<String> keysOfJax = new ArrayList<>(object.getAsJsonObject("jax").keySet());
 
-            LOGGER.info(keysOfJax);
             for (int j = 0; j < keysOfJax.size(); j++) {
                 if (keysOfJax.get(j).equals("molecularProfile")) {
                     JsonObject jaxObject = object.getAsJsonObject("jax").get(keysOfJax.get(j)).getAsJsonObject();
@@ -226,68 +225,9 @@ public abstract class ViccFactory {
             }
         } else {
             stringToCSVPmkb.append(";;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;");
-            headerCSV.append("id")
-                    .append(";")
-                    .append("name")
-                    .append(";")
-                    .append("id")
-                    .append(";")
-                    .append("name")
-                    .append(";")
-                    .append("amino_acid_change")
-                    .append(";")
-                    .append("germline")
-                    .append(";")
-                    .append("partner_gene")
-                    .append(";")
-                    .append("codons")
-                    .append(";")
-                    .append("description")
-                    .append(";")
-                    .append("exons")
-                    .append(";")
-                    .append("notes")
-                    .append(";")
-                    .append("cosmic")
-                    .append(";")
-                    .append("effect")
-                    .append(";")
-                    .append("cnv_type")
-                    .append(";")
-                    .append("id")
-                    .append(";")
-                    .append("cytoband")
-                    .append(";")
-                    .append("variant_type")
-                    .append(";")
-                    .append("dna_change")
-                    .append(";")
-                    .append("coordinates")
-                    .append(";")
-                    .append("chromosome_based_cnv")
-                    .append(";")
-                    .append("description")
-                    .append(";")
-                    .append("created_at")
-                    .append(";")
-                    .append("updated_at")
-                    .append(";")
-                    .append("active_ind")
-                    .append(";")
-                    .append("external_id")
-                    .append(";")
-                    .append("id")
-                    .append(";")
-                    .append("name")
-                    .append(";")
-                    .append("transcript")
-                    .append(";")
-                    .append("description_type")
-                    .append(";")
-                    .append("chromosome")
-                    .append(";")
-                    .append("name")
-                    .append(";");
+            headerCSV.append("id;name;id;name;amino_acid_change;germline;partner_gene;codons;description;exons;notes;cosmic;effect;cnv_type;id"
+                    + ";cytoband;variant_type;dna_change;coordinates;chromosome_based_cnv;description;created_at;updated_at;active_ind"
+                    + ";external_id;id;name;transcript;description_type;chromosome;name;");
         }
 
         return stringToCSVPmkb;
@@ -307,38 +247,8 @@ public abstract class ViccFactory {
             Set<String> set = object.getAsJsonObject("sage").keySet();
             headerCSV.append(String.join(";", set));
         } else {
-            stringToCSVSage.append(Strings.EMPTY)
-                    .append(";")
-                    .append(Strings.EMPTY)
-                    .append(";")
-                    .append(Strings.EMPTY)
-                    .append(";")
-                    .append(Strings.EMPTY)
-                    .append(";")
-                    .append(Strings.EMPTY)
-                    .append(";")
-                    .append(Strings.EMPTY)
-                    .append(";")
-                    .append(Strings.EMPTY)
-                    .append(";")
-                    .append(Strings.EMPTY)
-                    .append(";");
-            headerCSV.append("entrez_id")
-                    .append(";")
-                    .append("clinical_manifestation")
-                    .append(";")
-                    .append("publication_url")
-                    .append(";")
-                    .append("germline_or_somatic")
-                    .append(";")
-                    .append("evidence_label")
-                    .append(";")
-                    .append("drug_labels")
-                    .append(";")
-                    .append("response_type")
-                    .append(";")
-                    .append("gene")
-                    .append(";");
+            stringToCSVSage.append(";;;;;;;;");
+            headerCSV.append("entrez_id;clinical_manifestation;publication_url;germline_or_somatic;evidence_label;drug_labels;response_type;gene;");
         }
         return stringToCSVSage;
     }
@@ -393,13 +303,8 @@ public abstract class ViccFactory {
         String header = "";
         JsonArray arrayGeneIdentifiers = object.getAsJsonArray("gene_identifiers");
         if (arrayGeneIdentifiers.size() == 0) {
-            stringToCSVGeneIdentifiers.append(Strings.EMPTY)
-                    .append(";")
-                    .append(Strings.EMPTY)
-                    .append(";")
-                    .append(Strings.EMPTY)
-                    .append(";");
-            headerCSV.append("symbol").append(";").append("entrez_id").append(";").append("ensembl_gene_id").append(";");
+            headerCSV.append("symbol;entrez_id;ensembl_gene_id;");
+            stringToCSVGeneIdentifiers.append(";;;");
         } else {
             for (int j = 0; j < arrayGeneIdentifiers.size(); j++) {
                 JsonObject objectGeneIdentiefiers = (JsonObject) arrayGeneIdentifiers.get(j);
