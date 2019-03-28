@@ -89,14 +89,22 @@ public final class TableHelper {
 
     }
 
+
     /**
      * Get a cell that implements the visual header style for the main report tables
      */
     @NotNull
     public static Cell getHeaderCell(@NotNull String text) {
-        Cell c = getHeaderCell();
-        c.add(new Paragraph(text.toUpperCase()));
-        return c;
+        return getHeaderCell(text, 1);
+    }
+
+    /**
+     * Get a cell that implements the visual header style for the main report tables
+     */
+    @NotNull
+    public static Cell getHeaderCell(@NotNull String text, int colspan) {
+        return getHeaderCell(colspan)
+                .add(new Paragraph(text.toUpperCase()));
     }
 
     /**
@@ -104,7 +112,15 @@ public final class TableHelper {
      */
     @NotNull
     public static Cell getHeaderCell() {
-        Cell c = new Cell();
+        return getHeaderCell(1);
+    }
+
+    /**
+     * Get a cell that implements the visual header style for the main report tables
+     */
+    @NotNull
+    public static Cell getHeaderCell(int colspan) {
+        Cell c = new Cell(1, colspan);
         c.setHeight(23); // Set fixed height to create consistent spacing between table title and header
         c.setBorder(Border.NO_BORDER);
         c.setVerticalAlignment(VerticalAlignment.BOTTOM);

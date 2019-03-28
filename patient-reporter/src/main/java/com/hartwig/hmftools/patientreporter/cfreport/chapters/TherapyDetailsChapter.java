@@ -9,6 +9,8 @@ import com.itextpdf.layout.element.Cell;
 import com.itextpdf.layout.element.Paragraph;
 import com.itextpdf.layout.element.Table;
 import com.itextpdf.layout.element.Text;
+import com.itextpdf.layout.property.HorizontalAlignment;
+import com.itextpdf.layout.property.TextAlignment;
 import com.itextpdf.layout.property.VerticalAlignment;
 import org.jetbrains.annotations.NotNull;
 
@@ -21,8 +23,9 @@ public class TherapyDetailsChapter extends ReportChapter {
     private final static float COL_WIDTH_LEVEL = 42;
     private final static float COL_WIDTH_RESPONSE_CCMO = 75;
     private final static float COL_WIDTH_SOURCE = 30;
-    private final static float COL_WIDTH_TREATMENTS = 210;
-    private final static float COL_WIDTH_TREATMENTS_5COL = COL_WIDTH_TREATMENTS + COL_WIDTH_LEVEL;
+    private final static float COL_WIDTH_TREATMENT_ICONS = 20;
+    private final static float COL_WIDTH_TREATMENT_LIST = 190;
+    private final static float COL_WIDTH_TREATMENT_LIST_5COL = COL_WIDTH_TREATMENT_LIST + COL_WIDTH_LEVEL;
 
 
     @Override
@@ -86,13 +89,14 @@ public class TherapyDetailsChapter extends ReportChapter {
         Table contentTable = TableHelper.createReportContentTable(new float[] {
                 COL_WIDTH_DRIVERS,
                 COL_WIDTH_MATCH,
-                COL_WIDTH_TREATMENTS,
+                COL_WIDTH_TREATMENT_ICONS,
+                COL_WIDTH_TREATMENT_LIST,
                 COL_WIDTH_LEVEL,
                 COL_WIDTH_RESPONSE_CCMO,
                 COL_WIDTH_SOURCE }, new Cell[]  {
                 TableHelper.getHeaderCell("Drivers"),
                 TableHelper.getHeaderCell("Match"),
-                TableHelper.getHeaderCell("Treatments"),
+                TableHelper.getHeaderCell("Treatments", 2),
                 TableHelper.getHeaderCell("Level of evidence"),
                 TableHelper.getHeaderCell("Response"),
                 TableHelper.getHeaderCell("Source")
@@ -105,7 +109,8 @@ public class TherapyDetailsChapter extends ReportChapter {
 
             contentTable.addCell(TableHelper.getContentCell("BRAF p.Val600Glu"));
             contentTable.addCell(TableHelper.getContentCell(createTreatmentMatchParagraph(Math.random() > 0.5)));
-            contentTable.addCell(TableHelper.getContentCell(createTreatmentParagraph(treatments)).setVerticalAlignment(VerticalAlignment.TOP));
+            contentTable.addCell(TableHelper.getContentCell(createTreatmentIcons(treatments)).setVerticalAlignment(VerticalAlignment.TOP));
+            contentTable.addCell(TableHelper.getContentCell(createTreatmentList(treatments)).setVerticalAlignment(VerticalAlignment.TOP));
             contentTable.addCell(TableHelper.getContentCell(new Paragraph(Icon.createLevelIcon(level))));
             contentTable.addCell(TableHelper.getContentCell("Responsive"));
             contentTable.addCell(TableHelper.getContentCell("OncoKB"));
@@ -120,15 +125,18 @@ public class TherapyDetailsChapter extends ReportChapter {
     @NotNull
     private static Table createClinicalTrialsTable() {
 
+        String[] treatments = {"Binimetinib", "Encorafenib"};
+
         // Create content table
         Table contentTable = TableHelper.createReportContentTable(new float[] {COL_WIDTH_DRIVERS,
                 COL_WIDTH_MATCH,
-                COL_WIDTH_TREATMENTS_5COL,
+                COL_WIDTH_TREATMENT_ICONS,
+                COL_WIDTH_TREATMENT_LIST_5COL,
                 COL_WIDTH_RESPONSE_CCMO,
                 COL_WIDTH_SOURCE }, new Cell[] {
                 TableHelper.getHeaderCell("Drivers"),
                 TableHelper.getHeaderCell("Match"),
-                TableHelper.getHeaderCell("Treatments"),
+                TableHelper.getHeaderCell("Treatments", 2),
                 TableHelper.getHeaderCell("CCMO"),
                 TableHelper.getHeaderCell("Source")
         });
@@ -136,7 +144,8 @@ public class TherapyDetailsChapter extends ReportChapter {
         for (int i = 0; i < 10; i++) {
             contentTable.addCell(TableHelper.getContentCell("BRAF p.Val600Glu"));
             contentTable.addCell(TableHelper.getContentCell(createTreatmentMatchParagraph(Math.random() > 0.5)));
-            contentTable.addCell(TableHelper.getContentCell(createTreatmentParagraph(new String[] {"Binimetinib", "Encorafenib"})));
+            contentTable.addCell(TableHelper.getContentCell(createTreatmentIcons(treatments)).setVerticalAlignment(VerticalAlignment.TOP));
+            contentTable.addCell(TableHelper.getContentCell(createTreatmentList(treatments)).setVerticalAlignment(VerticalAlignment.TOP));
             contentTable.addCell(TableHelper.getContentCell("NL57739.031.16"));
             contentTable.addCell(TableHelper.getContentCell("IClusion"));
         }
@@ -149,17 +158,20 @@ public class TherapyDetailsChapter extends ReportChapter {
     @NotNull
     private static Table createOtherTumorTypeEvidenceTable() {
 
+        String[] treatments = {"Cobimetinib", "Vemurafenib", "Encorafenib"};
+
         // Create content table
         Table contentTable = TableHelper.createReportContentTable(new float[] {
                 COL_WIDTH_DRIVERS,
                 COL_WIDTH_MATCH,
-                COL_WIDTH_TREATMENTS,
+                COL_WIDTH_TREATMENT_ICONS,
+                COL_WIDTH_TREATMENT_LIST,
                 COL_WIDTH_LEVEL,
                 COL_WIDTH_RESPONSE_CCMO,
                 COL_WIDTH_SOURCE }, new Cell[] {
                 TableHelper.getHeaderCell("Drivers"),
                 TableHelper.getHeaderCell("Match"),
-                TableHelper.getHeaderCell("Treatments"),
+                TableHelper.getHeaderCell("Treatments", 2),
                 TableHelper.getHeaderCell("Level of evidence"),
                 TableHelper.getHeaderCell("Response"),
                 TableHelper.getHeaderCell("Source")
@@ -168,7 +180,8 @@ public class TherapyDetailsChapter extends ReportChapter {
         for (int i = 0; i < 10; i++) {
             contentTable.addCell(TableHelper.getContentCell("BRAF p.Val600Glu"));
             contentTable.addCell(TableHelper.getContentCell(createTreatmentMatchParagraph(Math.random() > 0.5)));
-            contentTable.addCell(TableHelper.getContentCell(createTreatmentParagraph(new String[] {"Vemurafenib"})));
+            contentTable.addCell(TableHelper.getContentCell(createTreatmentIcons(treatments)).setVerticalAlignment(VerticalAlignment.TOP));
+            contentTable.addCell(TableHelper.getContentCell(createTreatmentList(treatments)).setVerticalAlignment(VerticalAlignment.TOP));
             contentTable.addCell(TableHelper.getContentCell(new Paragraph(Icon.createLevelIcon("A"))));
             contentTable.addCell(TableHelper.getContentCell("Responsive"));
             contentTable.addCell(TableHelper.getContentCell("OncoKB"));
@@ -185,6 +198,26 @@ public class TherapyDetailsChapter extends ReportChapter {
                 .add(Icon.createIcon(matchIsSpecific ? Icon.IconType.MATCH_SPECIFIC : Icon.IconType.MATCH_BROAD))
                 .add(new Text(" " + (matchIsSpecific ? "Specific" : "Broad"))
                         .addStyle(ReportResources.tableContentStyle()));
+    }
+
+    @NotNull
+    private static Paragraph createTreatmentIcons(@NotNull String[] treatments) {
+        Paragraph p = new Paragraph();
+        for (String treatmentName: treatments) {
+            p.add(Icon.createTreatmentIcon(treatmentName.trim()));
+        }
+        return p;
+    }
+
+    @NotNull static Paragraph createTreatmentList(@NotNull String[] treatments) {
+
+        StringJoiner joiner = new StringJoiner(" + ");
+        for (String treatmentName: treatments) {
+            joiner.add(treatmentName.trim());
+        }
+
+        return new Paragraph(joiner.toString())
+                .addStyle(ReportResources.tableContentStyle());
     }
 
     @NotNull
