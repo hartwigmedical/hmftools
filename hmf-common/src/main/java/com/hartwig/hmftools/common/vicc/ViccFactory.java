@@ -41,6 +41,18 @@ public abstract class ViccFactory {
     private static StringBuilder readObjectCGI(@NotNull JsonObject object, @NotNull StringBuilder headerCSV) {
         //CGI object
         StringBuilder stringToCSVCGI = new StringBuilder();
+        if (object.getAsJsonObject("cgi") != null) {
+            List<String> keysOfCGI = new ArrayList<>(object.getAsJsonObject("cgi").keySet());
+            for (int i = 0; i < keysOfCGI.size(); i++) {
+                stringToCSVCGI.append(object.getAsJsonObject("cgi").get(keysOfCGI.get(i))).append(";");
+            }
+            headerCSV.append("Targeting; Source; cDNA; Primary Tumor type; individual_mutation; Drug full name; Curator; Drug family; Alteration; Drug; Biomarker; gDNA; Drug status; Gene; transcript; strand; info; Assay type; Alteration type; region; Evidence level; Association; Metastatic Tumor Type");
+
+        } else {
+            headerCSV.append("Targeting; Source; cDNA; Primary Tumor type; individual_mutation; Drug full name; Curator; Drug family; Alteration; Drug; Biomarker; gDNA; Drug status; Gene; transcript; strand; info; Assay type; Alteration type; region; Evidence level; Association; Metastatic Tumor Type");
+            stringToCSVCGI.append(";;;;;;;;;;;;;;;;;;;;;; ");
+
+        }
         return stringToCSVCGI;
     }
 
@@ -641,7 +653,7 @@ public abstract class ViccFactory {
         JsonReader reader = new JsonReader(new FileReader(allJsonPath));
         reader.setLenient(true);
         int index = 1;
-        while (reader.peek() != JsonToken.END_DOCUMENT && index < 10093) {
+        while (reader.peek() != JsonToken.END_DOCUMENT && index < 100) {
             LOGGER.info(index);
             JsonObject object = parser.parse(reader).getAsJsonObject();
 
@@ -658,7 +670,9 @@ public abstract class ViccFactory {
             //  StringBuilder StringToCSVSage = readObjectSage(object, headerCSV);
             // StringBuilder StringToCSVPmkb = readObjectPmkb(object, headerCSV);
             // StringBuilder StringToCSVJax = readObjectJax(object, headerCSV);
-            StringBuilder StringToCSVJaxTrials = readObjectJaxTrials(object, headerCSV);
+           // StringBuilder StringToCSVJaxTrials = readObjectJaxTrials(object, headerCSV);
+            StringBuilder StringToCSVCGI = readObjectCGI(object, headerCSV);
+
 
             stringToCSVAll.append(index).append(";");
             stringToCSVAll.append(StringToCSVSource);
@@ -666,7 +680,7 @@ public abstract class ViccFactory {
             //            stringToCSVAll.append(StringToCSVTags);
             //            stringToCSVAll.append(StringToCSVDevTags);
             //            stringToCSVAll.append(StringToCSVGeneIdentifiers);
-            stringToCSVAll.append(StringToCSVJaxTrials);
+            stringToCSVAll.append(StringToCSVCGI);
 
             writer.append(headerCSV);
             writer.append("\n");
