@@ -16,6 +16,7 @@ import java.util.Optional;
 import java.util.TreeSet;
 import java.util.function.Predicate;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.chromosome.Chromosome;
@@ -82,7 +83,6 @@ class PurpleStructuralVariantSupplier {
     private static final Allele INCREASING_ALLELE = Allele.create(".N", false);
     private static final Allele DECREASING_ALLELE = Allele.create("N.", false);
 
-    private final String purpleVersion;
     private final String outputVCF;
     private final Optional<VCFHeader> header;
     private final TreeSet<VariantContext> variantContexts;
@@ -95,14 +95,12 @@ class PurpleStructuralVariantSupplier {
         header = Optional.empty();
         variantContexts = new TreeSet<>();
         outputVCF = Strings.EMPTY;
-        purpleVersion = "0";
     }
 
     PurpleStructuralVariantSupplier(@NotNull final String version, @NotNull final String templateVCF, @NotNull final String outputVCF) {
         final VCFFileReader vcfReader = new VCFFileReader(new File(templateVCF), false);
         this.outputVCF = outputVCF;
-        purpleVersion = version;
-        header = Optional.of(generateOutputHeader(vcfReader.getFileHeader()));
+        header = Optional.of(generateOutputHeader(version, vcfReader.getFileHeader()));
         variantContexts = new TreeSet<>(new VCComparator(header.get().getSequenceDictionary()));
         for (VariantContext context : vcfReader) {
             variantContexts.add(context);
@@ -294,8 +292,9 @@ class PurpleStructuralVariantSupplier {
     }
 
     @NotNull
-    private VCFHeader generateOutputHeader(@NotNull final VCFHeader template) {
-        final VCFHeader outputVCFHeader = new VCFHeader(template.getMetaDataInInputOrder(), template.getSampleNamesInOrder());
+    @VisibleForTesting
+    static VCFHeader generateOutputHeader(@NotNull final String purpleVersion, @NotNull final VCFHeader template) {
+        final VCFHeader outputVCFHeader = new VCFHeader(template.getMetaDataInInputOrder(), template.getGenotypeSamples());
         outputVCFHeader.addMetaDataLine(new VCFHeaderLine("purpleVersion", purpleVersion));
 
         outputVCFHeader.addMetaDataLine(VCFStandardHeaderLines.getFormatLine("GT"));
