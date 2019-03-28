@@ -124,6 +124,8 @@ public class ExternalDBFilters
             LOGGER.error("Failed to read bachelor input CSV file({}) index({}): {}", filterFile, lineIndex, e.toString());
         }
 
+        LOGGER.info("loaded {} clinvar filter records", filters.size());
+
         return filters;
     }
 
@@ -299,17 +301,22 @@ public class ExternalDBFilters
                 continue;
 
             String clinvarSignificance = variant.getCommonInfo().getAttributeAsString(CLINVAR_SIGNIFICANCE, "");
+            clinvarSignificance = stripArrayChars(clinvarSignificance);
+
             String clinvarSigInfo = variant.getCommonInfo().getAttributeAsString(CLINVAR_SIG_INFO, "");
 
             if(!clinvarSigInfo.isEmpty())
             {
-                clinvarSigInfo = clinvarSigInfo.replaceAll(",", ";");
-                clinvarSigInfo = clinvarSigInfo.replaceAll("\\[", "");
-                clinvarSigInfo = clinvarSigInfo.replaceAll("]", "");
+                clinvarSigInfo = stripArrayChars(clinvarSigInfo);
             }
 
-            boolean isConflicting = isConflicting(clinvarSignificance);
-            boolean isPathogenic = isPathogenic(clinvarSignificance) || (isConflicting && isPathogenic(clinvarSigInfo));
+            boolean isPathogenic = isPathogenic(clinvarSignificance);
+
+            if(!isPathogenic && isConflicting(clinvarSignificance))
+            {
+                // look in the significance field for a clear likelihood
+                isPathogenic = isPathogenic(clinvarSigInfo) && !isBenign(clinvarSigInfo);
+            }
 
             boolean matchesRequiredEffect = false;
 
@@ -347,6 +354,14 @@ public class ExternalDBFilters
 
             writeFilterRecord(variant, snpEff, gene, codingEffect, clinvarSignificance, clinvarSigInfo);
         }
+    }
+
+    private static String stripArrayChars(String str)
+    {
+        str = str.replaceAll(",", ";");
+        str = str.replaceAll("\\[", "");
+        str = str.replaceAll("]", "");
+        return str;
     }
 
     private void checkExistingBlacklistConditions(final String gene, final VariantContext variant, final SnpEffAnnotation snpAnnotation)

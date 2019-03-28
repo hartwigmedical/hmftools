@@ -50,6 +50,7 @@ public class BachelorApplication {
     private String mBatchDirectory;
     private String mRunDirectory;
     private String mExternalFiltersFile;
+    private boolean mCreateFiltersMode;
     private boolean mIsBatchRun;
     private boolean mIsSingleRun;
     private String mSampleId;
@@ -69,6 +70,7 @@ public class BachelorApplication {
         mSampleId = "";
         mIsSingleRun = false;
         mIsBatchRun = false;
+        mCreateFiltersMode = false;
         mBatchDirectory = "";
         mOutputDir = "";
         mExternalFiltersFile = "";
@@ -112,13 +114,10 @@ public class BachelorApplication {
             return false;
         }
 
-        mExternalFiltersFile = cmd.getOptionValue(EXTERNAL_FILTER_FILE, "");
-        mOutputDir = cmd.getOptionValue(OUTPUT_DIR);
-        mSkipIndexFile = cmd.hasOption(SKIP_INDEX_FILE);
-
         if(cmd.hasOption(CREATE_FILTER_FILE))
         {
-            LOGGER.info("building filter files");
+            mCreateFiltersMode = true;
+            LOGGER.info("building Clinvar filter files");
             final String filterInputFile = cmd.getOptionValue(CREATE_FILTER_FILE);
             ExternalDBFilters filterFileBuilder = new ExternalDBFilters();
 
@@ -128,6 +127,10 @@ public class BachelorApplication {
             LOGGER.info("run complete");
             return true;
         }
+
+        mExternalFiltersFile = cmd.getOptionValue(EXTERNAL_FILTER_FILE, "");
+        mOutputDir = cmd.getOptionValue(OUTPUT_DIR);
+        mSkipIndexFile = cmd.hasOption(SKIP_INDEX_FILE);
 
         if(cmd.hasOption(BATCH_DIRECTORY))
         {
@@ -161,6 +164,9 @@ public class BachelorApplication {
 
     private boolean run()
     {
+        if(mCreateFiltersMode)
+            return true;
+
         mProgram = new BachelorProgram();
 
         if(!mProgram.loadConfig(mProgramMap))
@@ -419,6 +425,7 @@ public class BachelorApplication {
         final CommandLineParser parser = new DefaultParser();
         return parser.parse(options, args);
     }
+
     public static void main(final String... args)
     {
         final Options options = createOptions();
