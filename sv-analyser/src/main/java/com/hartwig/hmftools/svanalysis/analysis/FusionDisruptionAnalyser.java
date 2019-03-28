@@ -4,8 +4,6 @@ import static java.lang.Math.abs;
 
 import static com.hartwig.hmftools.common.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.io.FileWriterUtils.createBufferedWriter;
-import static com.hartwig.hmftools.svanalysis.types.SvChain.CHAIN_LENGTH;
-import static com.hartwig.hmftools.svanalysis.types.SvChain.CHAIN_LINK_COUNT;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_END;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_START;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.isStart;
@@ -26,14 +24,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.chromosome.Chromosome;
-import com.hartwig.hmftools.common.chromosome.HumanChromosome;
-import com.hartwig.hmftools.common.collect.Multimaps;
-import com.hartwig.hmftools.common.genepanel.HmfGenePanelSupplier;
-import com.hartwig.hmftools.common.region.HmfTranscriptRegion;
 import com.hartwig.hmftools.common.variant.structural.annotation.EnsemblGeneData;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneAnnotation;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion;
@@ -61,20 +53,18 @@ public class FusionDisruptionAnalyser
 
     private String mSampleId;
     private String mOutputDir;
-    private SvGeneTranscriptCollection mEnsemblDataCache;
+    private SvGeneTranscriptCollection mGeneTransCollection;
     private Map<String, List<SvBreakend>> mChrBreakendMap;
 
-    private boolean mSkipFusionOutput;
+    private boolean mSkipFusionCheck;
     private List<GeneFusion> mFusions;
-    // private List<SvFusion> mSvFusionList;
     private Map<String, List<RnaFusionData>> mSampleRnaData;
-
-    ListMultimap<Chromosome, HmfTranscriptRegion> mChromosomeTranscriptMap;
 
     private VisualiserWriter mVisWriter;
     private BufferedWriter mRnaWriter;
 
     public static final String SAMPLE_RNA_FILE = "sample_rna_file";
+    public static final String SKIP_FUSION_OUTPUT = "skip_fusion_output";
 
     private static final Logger LOGGER = LogManager.getLogger(FusionDisruptionAnalyser.class);
 
@@ -82,11 +72,10 @@ public class FusionDisruptionAnalyser
     {
         mFusionFinder = null;
         mDisruptionFinder = null;
-        mEnsemblDataCache = new SvGeneTranscriptCollection();
-        mChromosomeTranscriptMap = null;
+        mGeneTransCollection = new SvGeneTranscriptCollection();
         mOutputDir = "";
         mFusions = Lists.newArrayList();
-        mSkipFusionOutput = false;
+        mSkipFusionCheck = false;
         mVisWriter = null;
 
         mSampleRnaData = Maps.newHashMap();
@@ -98,25 +87,22 @@ public class FusionDisruptionAnalyser
     public static void addCmdLineArgs(Options options)
     {
         options.addOption(SAMPLE_RNA_FILE, true, "Sample RNA data to match");
+        options.addOption(SKIP_FUSION_OUTPUT, false, "No fusion search or output");
     }
-
-    public void skipFusionOutput(boolean toggle) { mSkipFusionOutput = toggle; }
 
     public void loadFusionReferenceData(final CommandLine cmdLineArgs, final String outputDir, SvGeneTranscriptCollection ensemblDataCache)
     {
         mOutputDir = outputDir;
 
-        mEnsemblDataCache = ensemblDataCache;
+        mGeneTransCollection = ensemblDataCache;
         mFusionFinder = new SvFusionAnalyser(cmdLineArgs, ensemblDataCache, mOutputDir);
 
-        List<HmfTranscriptRegion> transcriptRegions = HmfGenePanelSupplier.allGeneList37();
-        mChromosomeTranscriptMap = Multimaps.fromRegions(transcriptRegions);
+        mSkipFusionCheck = cmdLineArgs.hasOption(SKIP_FUSION_OUTPUT);
 
         if (cmdLineArgs.hasOption(SAMPLE_RNA_FILE))
         {
             loadSampleRnaData(cmdLineArgs.getOptionValue(SAMPLE_RNA_FILE));
         }
-
     }
 
     public final Set<String> getRnaSampleIds() { return mSampleRnaData.keySet(); }
@@ -195,9 +181,11 @@ public class FusionDisruptionAnalyser
         mSampleId = sampleId;
         mChrBreakendMap = chrBreakendMap;
 
-        findFusions(svList, clusters);
+        if(!mSkipFusionCheck)
+            findFusions(svList, clusters);
 
-        assessRnaFusions();
+        if(!mSampleRnaData.isEmpty())
+            assessRnaFusions();
     }
 
     private void findFusions(final List<SvVarData> svList, final List<SvCluster> clusters)
@@ -207,34 +195,34 @@ public class FusionDisruptionAnalyser
 
         mFusions.clear();
 
-        // always report SVs by themselves
-        for(final SvVarData var : svList)
+        boolean checkSoloSVs = false;
+        boolean checkClusters = true;
+
+        if(checkSoloSVs)
         {
-            if(var.isReplicatedSv())
-                continue;
+            // always report SVs by themselves
+            for (final SvVarData var : svList)
+            {
+                if (var.isReplicatedSv())
+                    continue;
 
-            if(var.isNullBreakend())
-                continue;
+                if (var.isNullBreakend())
+                    continue;
 
-            checkFusions(var.getGenesList(true), var.getGenesList(false), var.getCluster());
+                checkFusions(var.getGenesList(true), var.getGenesList(false), var.getCluster(),
+                        null, 0, 0);
+            }
         }
-
-        boolean checkClusters = false;
 
         if(checkClusters)
         {
-            int maxClusterSize = 50;
-
             // for now only consider simple SVs and resolved small clusters
             for (final SvCluster cluster : clusters)
             {
                 if (cluster.getSvCount() == 1) // simple clusters already checked
                     continue;
 
-                // if(cluster.hasReplicatedSVs() || !cluster.isFullyChained() || cluster.getTypeCount(SGL) > 0)
-                //    continue;
-
-                if (cluster.getSvCount() > maxClusterSize)
+                if(cluster.getChains().isEmpty())
                     continue;
 
                 for (final SvChain chain : cluster.getChains())
@@ -249,123 +237,135 @@ public class FusionDisruptionAnalyser
     {
         final List<SvLinkedPair> linkedPairs = chain.getLinkedPairs();
 
-        // the aim here is to find any 2 fused genes from any 2 links in the chain
-        // if say SV index 1 is fused with SV index 4, going through linked pairs 1-2, 2-3 and 3-4,
-        // the fusion will come from the other breakend of the 1-2 link (being the section fused in)
-        // with the other breakend of the 3-4 link
+        // the lower link (index-wise) uses the other end of the link
+        // the upper link uses the other end of the link as well
 
-        // so given that each linked pair's 'first' SV points up and 'second' points down the chain,
-        // a fusion will come from the lower link's 'second' breakend region and the upper link's first' breakend section
-        boolean inPossibleFusion = false;
-        List<SvLinkedPair> traversedLinks = Lists.newArrayList();
-        int startIndex = -1;
-        int endIndex = -1;
-        SvBreakend beStart = null;
-        SvBreakend beEnd = null;
-        List<GeneAnnotation> genesListStart = null;
-
-        for(int lpIndex = 0; lpIndex < linkedPairs.size(); ++lpIndex)
+        for (int lpIndex1 = 0; lpIndex1 < linkedPairs.size(); ++lpIndex1)
         {
-            final SvLinkedPair linkedPair = linkedPairs.get(lpIndex);
+            SvLinkedPair pair1 = linkedPairs.get(lpIndex1);
 
-            final SvVarData varStart = linkedPair.first();
-            final SvVarData varEnd = linkedPair.second();
+            SvVarData lowerSV = pair1.first();
 
-            if (!inPossibleFusion)
+            if(lowerSV.isNullBreakend())
+                continue;
+
+            SvBreakend lowerBreakend = pair1.first().getBreakend(!pair1.firstLinkOnStart());
+
+            List<GeneAnnotation> genesListLower = lowerSV.getGenesList(lowerBreakend.usesStart());
+
+            if (genesListLower.isEmpty())
+                continue;
+
+            if(lpIndex1 > 0)
             {
-                // check whether the first breakend's other end falls within a gene
-                genesListStart = varStart.getGenesList(linkedPair.firstUnlinkedOnStart());
+                SvLinkedPair prevPair = linkedPairs.get(lpIndex1 - 1);
+                checkBreakendExtendsPastGene(lowerBreakend, genesListLower, prevPair.getFirstBreakend().position());
 
-                if (genesListStart.isEmpty())
+                if (genesListLower.isEmpty())
                     continue;
-
-                startIndex = lpIndex;
-                beStart = varStart.getBreakend(linkedPair.firstUnlinkedOnStart());
-                inPossibleFusion = true;
             }
 
-            // test the end link
-            List<GeneAnnotation> genesListEnd = varEnd.getGenesList(linkedPair.secondUnlinkedOnStart());
+            long totalLinkLength = 0;
 
-            if (genesListEnd.isEmpty())
+            for (int lpIndex2 = lpIndex1; lpIndex2 < linkedPairs.size(); ++lpIndex2)
             {
-                // add this link to be checked for genes if a fusions is found
-                traversedLinks.add(linkedPair);
+                SvLinkedPair pair2 = linkedPairs.get(lpIndex2);
+
+                SvVarData upperSV = pair2.second();
+
+                if(upperSV.isNullBreakend())
+                    continue;
+
+                SvBreakend upperBreakend = upperSV.getBreakend(!pair1.secondLinkOnStart());
+                List<GeneAnnotation> genesListUpper = upperSV.getGenesList(upperBreakend.usesStart());
+
+                if (genesListUpper.isEmpty())
+                    continue;
+
+                if(lpIndex2 < linkedPairs.size() - 1)
+                {
+                    SvLinkedPair nextPair = linkedPairs.get(lpIndex2 + 1);
+                    checkBreakendExtendsPastGene(upperBreakend, genesListUpper, nextPair.getSecondBreakend().position());
+
+                    if (genesListUpper.isEmpty())
+                        continue;
+                }
+
+                totalLinkLength += pair2.length();
+
+                if (pairTraversesGene(pair2))
+                {
+                    // if the TI traverses any gene it invalidates any fusion
+
+                    // move ahead to start again at the next index
+                    lpIndex1 = lpIndex2;
+                    break;
+                }
+
+                // test the fusion between these 2 breakends
+                LOGGER.info("cluster({}) chain({}) potential fusion: be1({} {}) & be2({} {}) link indices({} -> {}) traversalLen({})",
+                        cluster.id(), chain.id(), lowerBreakend.toString(), genesListLower.get(0).GeneName,
+                        upperBreakend.toString(), genesListUpper.get(0).GeneName, lpIndex1, lpIndex2, totalLinkLength);
+
+                checkFusions(genesListLower, genesListUpper, cluster, chain, lpIndex2 - lpIndex1 + 1, totalLinkLength);
+
+                // if the upper breakend is in a gene, any further fusions will need to start from this location
+                lpIndex1 = lpIndex2;
+                break;
+            }
+        }
+    }
+
+    private void checkBreakendExtendsPastGene(SvBreakend breakend, List<GeneAnnotation> genesList, long otherPosition)
+    {
+        int index = 0;
+        while(index < genesList.size())
+        {
+            GeneAnnotation geneAnnotation = genesList.get(index);
+            EnsemblGeneData geneData = mGeneTransCollection.getGeneDataById(geneAnnotation.StableId);
+
+            if(geneData == null)
+            {
+                genesList.remove(index);
                 continue;
             }
 
-            endIndex = lpIndex;
-            beEnd = varEnd.getBreakend(linkedPair.secondUnlinkedOnStart());
-
-            // check any traversed section before continuing on
-            boolean traversesGene = false;
-            long traversalLength = 0;
-
-            for(final SvLinkedPair pair : traversedLinks)
+            // check whether the other position extends beyond the gene bounds
+            if((breakend.orientation() == 1 && otherPosition > geneData.GeneStart)
+            || (breakend.orientation() == -1 && otherPosition < geneData.GeneEnd))
             {
-                final String chr = pair.first().chromosome(pair.firstLinkOnStart());
-                long firstPos = pair.first().position(pair.firstLinkOnStart());
-                long secondPos = pair.second().position(pair.secondLinkOnStart());
-                long startPos = firstPos < secondPos ? firstPos : secondPos;
-                long endPos = firstPos > secondPos ? firstPos : secondPos;
-
-                traversalLength += endPos - startPos;
-
-                List<HmfTranscriptRegion> transcripts = findGenesForRegion(chr, startPos, endPos);
-
-                if(transcripts.isEmpty())
-                    continue;
-
-                traversesGene = true;
-
-                LOGGER.info("cluster({}) chain({}) potential fusion: be1({} {}) & be2({} {}) indices({} -> {}) section({}: {} - {}) traverses {} genes (eg {})",
-                        cluster.id(), chain.id(), beStart.toString(), genesListStart.get(0).GeneName, beEnd.toString(), genesListEnd.get(0).GeneName,
-                        startIndex, endIndex, chr, startPos, endPos, transcripts.size(), transcripts.get(0).geneID());
-
-                break;
+                genesList.remove(index);
+                continue;
             }
 
-            if(!traversesGene)
-            {
-                if (startIndex < endIndex)
-                {
-                    LOGGER.info("cluster({}) chain({}) potential fusion: be1({} {}) & be2({} {}) link indices({} -> {}) traversalLen({})",
-                            cluster.id(), chain.id(), beStart.toString(), genesListStart.get(0).GeneName,
-                            beEnd.toString(), genesListEnd.get(0).GeneName, startIndex, endIndex, traversalLength);
-                }
-
-                checkFusions(genesListStart, genesListEnd, cluster);
-            }
-
-            // reset state
-            inPossibleFusion = false;
-            traversedLinks.clear();
-            startIndex = -1;
-            beStart = null;
-            genesListStart = null;
+            ++index;
         }
     }
 
-    private List<HmfTranscriptRegion> findGenesForRegion(final String chromosome, long startPos, long endPos)
+    private boolean pairTraversesGene(SvLinkedPair pair)
     {
-        List<HmfTranscriptRegion> coveredTranscripts = Lists.newArrayList();
-        final List<HmfTranscriptRegion> allTranscripts = mChromosomeTranscriptMap.get(HumanChromosome.fromString(chromosome));
+        // check traversal of any gene by this section
+        long lowerPos = pair.getBreakend(true).position();
+        long upperPos = pair.getBreakend(false).position();
 
-        if(allTranscripts == null)
-            return coveredTranscripts;
+        List<EnsemblGeneData> geneDataList = mGeneTransCollection.getChrGeneDataMap().get(pair.chromosome());
 
-        for(final HmfTranscriptRegion transRegion : allTranscripts)
+        for(EnsemblGeneData geneData : geneDataList)
         {
-            if(startPos <= transRegion.geneStart() && endPos >= transRegion.geneEnd())
-            {
-                coveredTranscripts.add(transRegion);
-            }
+            if(lowerPos > geneData.GeneEnd)
+                continue;
+
+            if(upperPos < geneData.GeneStart)
+                break;
+
+            return true;
         }
 
-        return coveredTranscripts;
+        return false;
     }
 
-    private void checkFusions(List<GeneAnnotation> breakendGenes1, List<GeneAnnotation> breakendGenes2, final SvCluster cluster)
+    private void checkFusions(List<GeneAnnotation> breakendGenes1, List<GeneAnnotation> breakendGenes2,
+            final SvCluster cluster, final SvChain chain, int links, long chainLength)
     {
         if (breakendGenes1.isEmpty() || breakendGenes2.isEmpty())
             return;
@@ -397,12 +397,17 @@ public class FusionDisruptionAnalyser
             }
         }
 
-        String clusterInfo = String.format("%d,%d,%s", cluster.id(), cluster.getSvCount(), cluster.getResolvedType());
-
-        if(!mSkipFusionOutput)
+        if(chain != null)
         {
-            mFusionFinder.writeFusions(fusions, mSampleId, clusterInfo, true);
+            LOGGER.info("sample({}) chained fusion: cluster({}) chain({}) links({}) length({})",
+                    mSampleId, cluster.id(), chain.id(), links, chainLength);
         }
+
+        String clusterInfo = String.format("%d,%d,%s;%d;%d;%d",
+                cluster.id(), cluster.getSvCount(), cluster.getResolvedType(),
+                chain != null ? chain.id() : -1, links, chainLength);
+
+        mFusionFinder.writeFusions(fusions, mSampleId, clusterInfo, true);
 
         if(mVisWriter != null)
         {
@@ -694,8 +699,8 @@ public class FusionDisruptionAnalyser
                     {
                         // for non-viable breakends, provide the exons skipped count
                         final String geneId = isUpstream ? rnaFusion.GeneUp : rnaFusion.GeneDown;
-                        final int rnaExonData[] = mEnsemblDataCache.getExonRankings(geneId, rnaPosition);
-                        final int svPosExonData[] = mEnsemblDataCache.getExonRankings(geneId, closestBreakend.position());
+                        final int rnaExonData[] = mGeneTransCollection.getExonRankings(geneId, rnaPosition);
+                        final int svPosExonData[] = mGeneTransCollection.getExonRankings(geneId, closestBreakend.position());
 
                         exonsSkipped = abs(rnaExonData[EXON_RANK_MIN] - svPosExonData[EXON_RANK_MIN]);
                     }
@@ -811,10 +816,10 @@ public class FusionDisruptionAnalyser
 
     public void setRnaFusionData(final RnaFusionData rnaFusion)
     {
-        int[] transUpExonData = mEnsemblDataCache.getExonRankings(rnaFusion.GeneUp, rnaFusion.PositionUp);
+        int[] transUpExonData = mGeneTransCollection.getExonRankings(rnaFusion.GeneUp, rnaFusion.PositionUp);
         rnaFusion.setExonUpRank(transUpExonData[EXON_RANK_MIN], transUpExonData[EXON_RANK_MAX]);
 
-        transUpExonData = mEnsemblDataCache.getExonRankings(rnaFusion.GeneDown, rnaFusion.PositionDown);
+        transUpExonData = mGeneTransCollection.getExonRankings(rnaFusion.GeneDown, rnaFusion.PositionDown);
         rnaFusion.setExonDownRank(transUpExonData[EXON_RANK_MIN], transUpExonData[EXON_RANK_MAX]);
     }
 

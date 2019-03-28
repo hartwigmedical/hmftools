@@ -75,13 +75,23 @@ public class SvGeneTranscriptCollection
     public final Map<String, List<EnsemblGeneData>> getChrGeneDataMap() { return mChromosomeGeneDataMap; }
     public Map<Integer, List<TranscriptProteinData>> getTranscriptProteinDataMap() { return mEnsemblProteinDataMap; }
 
-    public final EnsemblGeneData getGeneData(final String geneName)
+    public final EnsemblGeneData getGeneDataByName(final String geneName)
+    {
+        return getGeneData(geneName, true);
+    }
+
+    public final EnsemblGeneData getGeneDataById(final String geneId)
+    {
+        return getGeneData(geneId, false);
+    }
+
+    private final EnsemblGeneData getGeneData(final String gene, boolean byName)
     {
         for(Map.Entry<String, List<EnsemblGeneData>> entry : mChromosomeGeneDataMap.entrySet())
         {
             for(final EnsemblGeneData geneData : entry.getValue())
             {
-                if(geneData.GeneName.equals(geneName))
+                if((byName && geneData.GeneName.equals(gene)) || (!byName && geneData.GeneId.equals(gene)))
                     return geneData;
             }
         }
@@ -548,7 +558,7 @@ public class SvGeneTranscriptCollection
         // finds the exon before and after this position, setting to -1 if before the first or beyond the last exon
         int[] exonData = new int[EXON_RANK_MAX+1];
 
-        final EnsemblGeneData geneData = getGeneData(geneName);
+        final EnsemblGeneData geneData = getGeneDataByName(geneName);
 
         if(geneData == null)
             return exonData;

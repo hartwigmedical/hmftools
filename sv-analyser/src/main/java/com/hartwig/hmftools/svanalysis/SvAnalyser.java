@@ -3,25 +3,20 @@ package com.hartwig.hmftools.svanalysis;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantFactory.PON_FILTER_PON;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.MIN_SAMPLE_PURITY;
 import static com.hartwig.hmftools.svanalysis.analysis.CNAnalyser.CN_ANALYSIS_ONLY;
-import static com.hartwig.hmftools.svanalysis.analysis.CNAnalyser.SV_PLOIDY_CALC_FILE;
 import static com.hartwig.hmftools.svanalysis.analysis.FusionDisruptionAnalyser.setSvGeneData;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.NONE_SEGMENT_INFERRED;
 
 import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
-import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantData;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 import com.hartwig.hmftools.svanalysis.analysis.CNAnalyser;
 import com.hartwig.hmftools.svanalysis.analysis.FusionDisruptionAnalyser;
-import com.hartwig.hmftools.svanalysis.simulation.SvSimShattering;
 import com.hartwig.hmftools.svanalysis.simulation.SvSimulator;
 import com.hartwig.hmftools.svanalysis.stats.StatisticRoutines;
 import com.hartwig.hmftools.svanalysis.types.SvaConfig;
@@ -53,8 +48,7 @@ public class SvAnalyser {
     public static final String DATA_OUTPUT_PATH = "data_output_path";
     private static final String LOG_DEBUG = "log_debug";
     private static final String DRIVERS_CHECK = "check_drivers";
-    private static final String RUN_FUSIONS = "run_fusions";
-    private static final String SKIP_FUSION_OUTPUT = "skip_fusion_output";
+    private static final String CHECK_FUSIONS = "check_fusions";
     private static final String INCLUDE_NONE_SEGMENTS = "incl_none_segments";
     private static final String GENE_TRANSCRIPTS_DIR = "gene_transcripts_dir";
     private static final String STATS_ROUTINES = "stats_routines";
@@ -138,7 +132,7 @@ public class SvAnalyser {
             boolean checkDrivers = cmd.hasOption(DRIVERS_CHECK);
 
             FusionDisruptionAnalyser fusionAnalyser = null;
-            boolean runFusions = cmd.hasOption(RUN_FUSIONS);
+            boolean checkFusions = cmd.hasOption(CHECK_FUSIONS);
 
             boolean isSingleSample = samplesList.size() == 1;
 
@@ -158,15 +152,12 @@ public class SvAnalyser {
                 sampleAnalyser.setGeneCollection(ensemblDataCache);
                 sampleAnalyser.getVisWriter().setGeneDataCollection(ensemblDataCache);
 
-                if(runFusions)
+                if(checkFusions)
                 {
                     fusionAnalyser = new FusionDisruptionAnalyser();
 
                     fusionAnalyser.loadFusionReferenceData(cmd, svaConfig.OutputCsvPath, ensemblDataCache);
                     fusionAnalyser.setVisWriter(sampleAnalyser.getVisWriter());
-
-                    if(cmd.hasOption(SKIP_FUSION_OUTPUT))
-                        fusionAnalyser.skipFusionOutput(true);
 
                     if(!fusionAnalyser.getRnaSampleIds().isEmpty() && samplesList.size() > 1)
                     {
@@ -232,7 +223,7 @@ public class SvAnalyser {
 
                 if(ensemblDataCache != null)
                 {
-                    setSvGeneData(svVarData, ensemblDataCache, runFusions, isSingleSample);
+                    setSvGeneData(svVarData, ensemblDataCache, checkFusions, isSingleSample);
                 }
 
                 if(checkDrivers)
@@ -245,7 +236,7 @@ public class SvAnalyser {
                     driverGeneAnnotator.annotateSVs(sampleId, sampleAnalyser.getClusters(), sampleAnalyser.getChrBreakendMap());
                 }
 
-                if(runFusions)
+                if(checkFusions)
                 {
                     fusionAnalyser.run(sampleId, svVarData, sampleAnalyser.getClusters(), sampleAnalyser.getChrBreakendMap());
                 }
@@ -314,8 +305,7 @@ public class SvAnalyser {
         options.addOption(DATA_OUTPUT_PATH, true, "CSV output directory");
         options.addOption(LOG_DEBUG, false, "Sets log level to Debug, off by default");
         options.addOption(DRIVERS_CHECK, false, "Check SVs against drivers catalog");
-        options.addOption(RUN_FUSIONS, false, "Run fusion detection");
-        options.addOption(SKIP_FUSION_OUTPUT, false, "Skip writing fusion data");
+        options.addOption(CHECK_FUSIONS, false, "Run fusion detection");
         options.addOption(INCLUDE_NONE_SEGMENTS, false, "Include copy number NONE segments in SV analysis");
         options.addOption(GENE_TRANSCRIPTS_DIR, true, "Optional: file with sample gene transcript data");
         options.addOption(STATS_ROUTINES, false, "Optional: calc stats routines");
