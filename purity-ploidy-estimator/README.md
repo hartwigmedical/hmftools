@@ -28,7 +28,8 @@ PURPLE supports both grch 37 and 38 reference assemblies.
   + [8. Identify germline copy number alterations that are homozygously deleted in the tumor](#8-identify-germline-copy-number-alterations-that-are-homozygously-deleted-in-the-tumor)
   + [9. Determine a QC Status for the tumor](#9-determine-a-qc-status-for-the-tumor)
 * [Output](#output)
-  + [CIRCOS Output](#circos-output)
+  + [Files](#file-output)
+  + [CIRCOS](#circos-output)
 * [Performance Characteristics](#performance-characteristics)
 * [Version History](#version-history)
 
@@ -444,6 +445,33 @@ PURPLE also provides a qc status that can fail for the following 3 reasons:
 
 
 ## Output
+
+### File Output
+
+PURPLE generates a number of tab separated output files as described in the following sections.
+
+#### Purity File 
+
+The purity file `TUMOR.purple.purity` contains a single row with a summary of the purity fit:
+
+Column  | Example Value | Description
+---|---|---
+Purity  | 0.98 | Purity of tumor in the sample.
+NormFactor | 0.64 | Factor to convert tumor ratio to copy number. Lower number implies higher ploidy.
+Score | 0.68 | Score of fit.
+Diploid Proportion | 0.02 | Proportion of copy number regions that have 1 (+- 0.2) minor and major allele.
+Ploidy | 3.10 | Average ploidy of the tumor sample after adjusting for purity.
+Gender | MALE | One of MALE, FEMALE or MALE_KLINEFELTER.
+Status | NORMAL | One of NORMAL, HIGHLY_DIPLOID, SOMATIC or NO_TUMOR.
+PolyclonalProportion | 0.09 | Proportion of copy number regions that are more than 0.25 from a whole copy number
+MinPurity | 0.95 | Minimum purity with score within 10% of best. 
+MaxPurity | 1.00 | Maximim purity with score within 10% of best.
+MinPloidy | 3.08 | Minimum ploidy with score within 10% of best. 
+MaxPloidy | 3.13 | Maximim ploidy with score within 10% of best.
+Version | 2.24 | Version of PURPLE
+SomaticDeviation | 0.00 | Penalty from somatic variants with implied ploidies that are inconsistent with the minor and major allele ploidy. 
+
+
 
 ### CIRCOS Output
 
