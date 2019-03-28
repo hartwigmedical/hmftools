@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.patientreporter.cfreport;
 
+import com.hartwig.hmftools.patientreporter.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.cfreport.components.Footer;
 import com.hartwig.hmftools.patientreporter.cfreport.components.Header;
 import com.hartwig.hmftools.patientreporter.cfreport.components.SidePanel;
@@ -7,14 +8,21 @@ import com.itextpdf.kernel.events.Event;
 import com.itextpdf.kernel.events.IEventHandler;
 import com.itextpdf.kernel.events.PdfDocumentEvent;
 import com.itextpdf.kernel.pdf.PdfPage;
+import org.jetbrains.annotations.NotNull;
 
 public class PageEventHandler implements IEventHandler {
+
+    private AnalysedPatientReport patientReport;
 
     private boolean fullSidebar;
     private boolean fullSidebarContent;
 
     private String chapterTitle = "Undefined";
     private boolean firstPageOfChapter = true;
+
+    public PageEventHandler(@NotNull AnalysedPatientReport patientReport) {
+        this.patientReport = patientReport;
+    }
 
     public void setChapterTitle(String chapterTitle) {
         this.chapterTitle = chapterTitle;
@@ -41,7 +49,7 @@ public class PageEventHandler implements IEventHandler {
             if (firstPageOfChapter) {
                 firstPageOfChapter = false;
             }
-            SidePanel.renderSidePanel(page, fullSidebar, fullSidebarContent);
+            SidePanel.renderSidePanel(page, patientReport, fullSidebar, fullSidebarContent);
             Footer.renderFooter(page, !fullSidebar);
         }
 

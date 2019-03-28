@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.patientreporter.cfreport.components;
 
+import com.hartwig.hmftools.patientreporter.AnalysedPatientReport;
+import com.hartwig.hmftools.patientreporter.SampleReport;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
 import com.itextpdf.kernel.geom.Rectangle;
 import com.itextpdf.kernel.pdf.PdfPage;
@@ -11,12 +13,16 @@ import com.itextpdf.layout.element.Paragraph;
 import com.itextpdf.layout.property.VerticalAlignment;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.StringJoiner;
+
 public final class SidePanel {
 
     private static final float ROW_SPACING = 42;
     private static final float CONTENT_X_START = 455;
 
-    public static void renderSidePanel(PdfPage page, boolean fullHeight, boolean fullContent) {
+    public static void renderSidePanel(PdfPage page, @NotNull AnalysedPatientReport patientReport, boolean fullHeight, boolean fullContent) {
+
+        final SampleReport sampleReport = patientReport.sampleReport();
 
         // Draw background and markers
         final PdfCanvas canvas = new PdfCanvas(page.getLastContentStream(), page.getResources(), page.getDocument());
@@ -24,21 +30,43 @@ public final class SidePanel {
         renderBackgroundRect(fullHeight, canvas, pageSize);
         BaseMarker.renderMarkerGrid(4, (fullHeight ? 20 : 2), CONTENT_X_START, 35, 820, -ROW_SPACING, .05f, .15f, canvas);
 
-        // Add sidepanel content that is always on the sidepoanel (full height or not)
+        // Add side panel content that is always on the side panel (full height or not)
         int sideTextIndex = 0;
         Canvas cv = new Canvas(canvas, page.getDocument(), page.getPageSize());
 
-        cv.add(createSidePanelDiv(sideTextIndex++, "HMF sample id", "CORE-01-99-1234T"));
+        cv.add(createSidePanelDiv(sideTextIndex++, "HMF sample id", patientReport.sampleReport().sampleId()));
         cv.add(createSidePanelDiv(sideTextIndex++, "Report date", ReportResources.REPORT_DATE));
 
-        // Add sidepanel content that is only on the summary page
+        // Add side panel content that is only on the summary page
         if (fullHeight && fullContent) {
-            cv.add(createSidePanelDiv(sideTextIndex++, "Name requestor", "Dr. Nola pluijmen"));
-            cv.add(createSidePanelDiv(sideTextIndex++, "Email requestor", "NolaPluijmen415@undefinedmedicalcenter.com"));
-            cv.add(createSidePanelDiv(sideTextIndex++, "Hospital", "OLVG Oost"));
-            cv.add(createSidePanelDiv(sideTextIndex++, "Hospital patiend id", "839493929"));
-            cv.add(createSidePanelDiv(sideTextIndex++, "Gender", "Female"));
-            cv.add(createSidePanelDiv(sideTextIndex, "Birth date", "11-Nov-1954"));
+
+            if (!sampleReport.contactNames().isEmpty()) {
+                cv.add(createSidePanelDiv(sideTextIndex++, "Name requestor", sampleReport.contactNames()));
+            }
+
+            if (!sampleReport.contactEmails().isEmpty()) {
+                cv.add(createSidePanelDiv(sideTextIndex++, "Email requestor", sampleReport.contactEmails()));
+            }
+
+            // @TODO Hospital not in data?
+//            if (!sampleReport.hospital().isEmpty()) {
+//                cv.add(createSidePanelDiv(sideTextIndex++, "Hospital", sampleReport.hospital()));
+//            }
+
+            if (sampleReport.hospitalPatientId() != null && !sampleReport.hospitalPatientId().isEmpty()) {
+                cv.add(createSidePanelDiv(sideTextIndex++, "Hospital patient id", sampleReport.hospitalPatientId()));
+            }
+
+            // @TODO Patient gender not in data?
+//            if (!sampleReport.patientGender().isEmpty()) {
+//                cv.add(createSidePanelDiv(sideTextIndex++, "Hospital", sampleReport.patientGender()));
+//            }
+
+            // @TODO Patient birth date not in data?
+//            if (sampleReport.patientBirthDate() != null) {
+//                cv.add(createSidePanelDiv(sideTextIndex, "Hospital", ReportResources.formatDate(sampleReport.patientBirthDate())));
+//            }
+
         }
 
         canvas.release();

@@ -33,7 +33,7 @@ public class CFReportWriter implements ReportWriter {
         final PdfDocument pdfDocument = reportDocument.getPdfDocument();
 
         // Setup page event handling (used for automatic generation of header, side panel and footer)
-        final PageEventHandler pageEventHandler = new PageEventHandler();
+        final PageEventHandler pageEventHandler = new PageEventHandler(report);
         pdfDocument.addEventHandler(PdfDocumentEvent.START_PAGE, pageEventHandler);
 
         // Add chapters

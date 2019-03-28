@@ -13,10 +13,13 @@ import com.itextpdf.layout.element.Text;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.Date;
 
 /**
@@ -304,6 +307,12 @@ public final class ReportResources {
                 .setFont(getFontBold())
                 .setFontSize(11)
                 .setFontColor(ReportResources.PALETTE_WHITE);
+    }
+
+    @NotNull
+    public static String formatDate(@Nullable final LocalDate date) {
+        final DateTimeFormatter formatter = DateTimeFormatter.ofPattern(DATE_TIME_FORMAT);
+        return date != null ? formatter.format(date) : "Unknown";
     }
 
     /**
