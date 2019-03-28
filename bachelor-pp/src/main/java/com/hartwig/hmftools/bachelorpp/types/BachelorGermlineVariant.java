@@ -32,6 +32,8 @@ public class BachelorGermlineVariant implements Comparable<BachelorGermlineVaria
     public final String MatchType;
     public final boolean ClinvarMatch;
     public final String CodonInfo;
+    public final String ClinvarSig;
+    public final String ClinvarSigInfo;
 
     public int mGermlineAltCount;
     public int mGermlineReadDepth;
@@ -53,7 +55,8 @@ public class BachelorGermlineVariant implements Comparable<BachelorGermlineVaria
     public BachelorGermlineVariant(String sampleId, String program, String varId,
             String gene, String transcriptId, String chromosome, long position,
             String ref, String alts, CodingEffect codingEffect, String effects, String annotations, String hgvsProtein,
-            boolean isHomozygous, int phredScore, String hgvsCoding, String matchType, boolean clinvarMatch, String codonInfo)
+            boolean isHomozygous, int phredScore, String hgvsCoding, String matchType, String codonInfo,
+            boolean clinvarMatch, String clinvarSig, String clinvarSigInfo)
     {
         SampleId = sampleId;
         Program = program;
@@ -69,6 +72,8 @@ public class BachelorGermlineVariant implements Comparable<BachelorGermlineVaria
         HgvsCoding = hgvsCoding;
         MatchType = matchType;
         ClinvarMatch = clinvarMatch;
+        ClinvarSig = clinvarSig;
+        ClinvarSigInfo = clinvarSigInfo;
         CodonInfo = codonInfo;
 
         Ref = ref.replaceAll("\\*", "");

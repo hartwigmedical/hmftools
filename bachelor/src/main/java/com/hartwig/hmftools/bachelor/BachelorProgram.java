@@ -429,8 +429,8 @@ public class BachelorProgram
                     .tumorReadDepth(tumorReadDepth)
                     .condonInfo(codonInfo)
                     .matchesClinvarFilter(matchedFilter != null)
-                    .clinvarSignificance(matchedFilter.ClinvarSignificance)
-                    .clinvarSigInfo(matchedFilter.ClinvarSigInfo)
+                    .clinvarSignificance(matchedFilter != null ? matchedFilter.ClinvarSignificance : "")
+                    .clinvarSigInfo(matchedFilter != null ? matchedFilter.ClinvarSigInfo : "")
                     .build();
 
             mReports.add(report);

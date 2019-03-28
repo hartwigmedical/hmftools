@@ -34,6 +34,7 @@ import com.hartwig.hmftools.common.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.collect.Multimaps;
 import com.hartwig.hmftools.common.genepanel.HmfGenePanelSupplier;
 import com.hartwig.hmftools.common.region.HmfTranscriptRegion;
+import com.hartwig.hmftools.common.variant.structural.annotation.EnsemblGeneData;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneAnnotation;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion;
 import com.hartwig.hmftools.svanalysis.annotators.VisualiserWriter;
@@ -463,7 +464,6 @@ public class FusionDisruptionAnalyser
             - if no breakend is found on either upstream or downstream gene meeting the above criteria then record the nearest ID,
             distance and min number of skipped splice sites.
         */
-
 
         // viable breakends and their matching transcript
         List<SvBreakend> viableUpBreakends = Lists.newArrayList();
@@ -971,9 +971,12 @@ public class FusionDisruptionAnalyser
                     mSampleRnaData.put(currentSampleId, rnaDataList);
                 }
 
+                // check that gene names match Ensembl
+                String geneUp = items[COL_GENE_UP].toUpperCase();
+                String geneDown = items[COL_GENE_DOWN].toUpperCase();
+
                 RnaFusionData rnaData = new RnaFusionData(
-                        items[COL_NAME],
-                        items[COL_GENE_UP], items[COL_GENE_DOWN], items[COL_CHR_UP], items[COL_CHR_DOWN],
+                        items[COL_NAME], geneUp, geneDown, items[COL_CHR_UP], items[COL_CHR_DOWN],
                         Long.parseLong(items[COL_POS_UP]), Long.parseLong(items[COL_POS_DOWN]),
                         Byte.parseByte(items[COL_STRAND_UP]), Byte.parseByte(items[COL_STRAND_DOWN]),
                         Integer.parseInt(items[COL_JUNCT_RC]),Integer.parseInt(items[COL_SPAN_RC]), items[COL_SPLICE]);
@@ -991,6 +994,38 @@ public class FusionDisruptionAnalyser
         }
 
         return true;
+    }
+
+    private String checkAlternateGeneName(final String geneName)
+    {
+        if(geneName.equals("C10ORF112"))
+            return "MALRD1";
+
+        if(geneName.equals("C10ORF112"))
+            return "MALRD1";
+
+        if(geneName.equals("C10ORF112"))
+            return "MALRD1";
+
+        if(geneName.equals("C10ORF112"))
+            return "MALRD1";
+
+        if(geneName.equals("C10ORF112"))
+            return "MALRD1";
+
+        if(geneName.equals("C10ORF112"))
+            return "MALRD1";
+
+        /*
+        ENSG00000204740	MALRD1	10	1	19492779	20079330	C10ORF112
+        ENSG00000150076	C10ORF68	10	1	32832297	33171802	C10ORF68
+        ENSG00000077684	JADE1	4	1	129730779	129796379	PHF17
+        ENSG00000043143	JADE2	5	1	133860003	133918918	PHF15
+        ENSG00000185662	SMIM23	5	1	171212876	171221602	C5ORF50
+        */
+
+        return geneName;
+
     }
 
     public void close()

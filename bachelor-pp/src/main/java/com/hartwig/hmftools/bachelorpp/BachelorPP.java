@@ -589,7 +589,8 @@ public class BachelorPP
                 mWriter.write("SampleId,Program,Chromosome,Position,Type,Ref,Alt,Gene,TranscriptId,DbsnpId,CosmicId");
                 mWriter.write(",Effects,CodingEffect,VcfReadData,GermlineAltCount,GermlineReadDepth,TumorAltCount,TumorReadDepth");
                 mWriter.write(",AdjCopyNumber,AdjustedVaf,HighConfidenceRegion,TrinucleotideContext,Microhomology,RepeatSequence,RepeatCount");
-                mWriter.write(",HgvsProtein,HgvsCoding,Biallelic,Hotspot,Mappability,GermlineStatus,MinorAllelePloidy,Filter,CodonInfo,ClinvarMatch");
+                mWriter.write(",HgvsProtein,HgvsCoding,Biallelic,Hotspot,Mappability,GermlineStatus,MinorAllelePloidy,Filter,CodonInfo");
+                mWriter.write(",ClinvarMatch,ClinvarSignificance,ClinvarSigInfo");
                 mWriter.newLine();
             }
 
@@ -602,51 +603,30 @@ public class BachelorPP
                     continue;
                 }
 
-                writer.write(
-                        String.format("%s,%s,%s,%d",
-                                bachRecord.SampleId,
-                                bachRecord.Program,
-                                bachRecord.Chromosome,
-                                bachRecord.Position));
+                writer.write(String.format("%s,%s,%s,%d",
+                        bachRecord.SampleId, bachRecord.Program, bachRecord.Chromosome, bachRecord.Position));
 
                 final EnrichedSomaticVariant enrichedVariant = bachRecord.getEnrichedVariant();
 
-                writer.write(
-                        String.format(",%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%d,%d,%d,%d",
-                                enrichedVariant.type(),
-                                enrichedVariant.ref(),
-                                enrichedVariant.alt(),
-                                bachRecord.Gene,
-                                bachRecord.TranscriptId,
-                                enrichedVariant.dbsnpID() == null ? "" : enrichedVariant.dbsnpID(),
-                                enrichedVariant.canonicalCosmicID() == null ? "" : enrichedVariant.canonicalCosmicID(),
-                                bachRecord.Effects,
-                                bachRecord.CodingEffect,
-                                bachRecord.isReadDataSet(), bachRecord.getGermlineAltCount(), bachRecord.getGermlineReadDepth(),
-                                bachRecord.getTumorAltCount(), bachRecord.getTumorReadDepth()));
+                writer.write(String.format(",%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%d,%d,%d,%d",
+                        enrichedVariant.type(), enrichedVariant.ref(), enrichedVariant.alt(),
+                        bachRecord.Gene, bachRecord.TranscriptId,
+                        enrichedVariant.dbsnpID() == null ? "" : enrichedVariant.dbsnpID(),
+                        enrichedVariant.canonicalCosmicID() == null ? "" : enrichedVariant.canonicalCosmicID(),
+                        bachRecord.Effects, bachRecord.CodingEffect,
+                        bachRecord.isReadDataSet(), bachRecord.getGermlineAltCount(), bachRecord.getGermlineReadDepth(),
+                        bachRecord.getTumorAltCount(), bachRecord.getTumorReadDepth()));
 
-                writer.write(
-                        String.format(",%.2f,%.2f,%s,%s,%s,%s,%d",
-                                enrichedVariant.adjustedCopyNumber(),
-                                bachRecord.getAdjustedVaf(),
-                                enrichedVariant.highConfidenceRegion(),
-                                enrichedVariant.trinucleotideContext(),
-                                enrichedVariant.microhomology(),
-                                enrichedVariant.repeatSequence(),
-                                enrichedVariant.repeatCount()));
+                writer.write(String.format(",%.2f,%.2f,%s,%s,%s,%s,%d",
+                        enrichedVariant.adjustedCopyNumber(), bachRecord.getAdjustedVaf(), enrichedVariant.highConfidenceRegion(),
+                        enrichedVariant.trinucleotideContext(), enrichedVariant.microhomology(), enrichedVariant.repeatSequence(),
+                        enrichedVariant.repeatCount()));
 
-                writer.write(
-                        String.format(",%s,%s,%s,%s,%s,%s,%.2f,%s,%s,%s",
-                                bachRecord.HgvsProtein,
-                                bachRecord.HgvsCoding,
-                                bachRecord.isBiallelic(),
-                                enrichedVariant.hotspot(),
-                                enrichedVariant.mappability(),
-                                bachRecord.IsHomozygous ? "HOM" : "HET",
-                                enrichedVariant.minorAllelePloidy(),
-                                bachRecord.isLowScore() ? "ARTEFACT" : "PASS",
-                                bachRecord.CodonInfo,
-                                bachRecord.ClinvarMatch));
+                writer.write(String.format(",%s,%s,%s,%s,%s,%s,%.2f,%s,%s,%s,%s,%s",
+                        bachRecord.HgvsProtein, bachRecord.HgvsCoding, bachRecord.isBiallelic(), enrichedVariant.hotspot(),
+                        enrichedVariant.mappability(), bachRecord.IsHomozygous ? "HOM" : "HET", enrichedVariant.minorAllelePloidy(),
+                        bachRecord.isLowScore() ? "ARTEFACT" : "PASS", bachRecord.CodonInfo,
+                        bachRecord.ClinvarMatch, bachRecord.ClinvarSig, bachRecord.ClinvarSigInfo));
 
                 writer.newLine();
             }
