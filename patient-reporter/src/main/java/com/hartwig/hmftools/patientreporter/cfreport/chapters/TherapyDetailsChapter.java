@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.patientreporter.cfreport.chapters;
 
+import com.hartwig.hmftools.patientreporter.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
 import com.hartwig.hmftools.patientreporter.cfreport.components.Icon;
 import com.hartwig.hmftools.patientreporter.cfreport.components.TableHelper;
@@ -39,7 +40,7 @@ public class TherapyDetailsChapter extends ReportChapter {
     }
 
     @Override
-    protected void renderChapterContent(@NotNull Document report) {
+    protected void renderChapterContent(@NotNull final AnalysedPatientReport patientReport, @NotNull final Document reportDocument) {
 
         Table chapterTable = new Table(1);
 
@@ -64,7 +65,7 @@ public class TherapyDetailsChapter extends ReportChapter {
                 .setPadding(0)
                 .setBorder(Border.NO_BORDER));
 
-        report.add(chapterTable);
+        reportDocument.add(chapterTable);
 
     }
 

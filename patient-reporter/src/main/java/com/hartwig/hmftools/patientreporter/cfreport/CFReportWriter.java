@@ -37,13 +37,13 @@ public class CFReportWriter implements ReportWriter {
         pdfDocument.addEventHandler(PdfDocumentEvent.START_PAGE, pageEventHandler);
 
         // Add chapters
-        new SummaryChapter().render(pageEventHandler, reportDocument);
-        new TherapyDetailsChapter().render(pageEventHandler, reportDocument);
-        new ActionableOrDriversChapter().render(pageEventHandler, reportDocument);
-        new TumorCharacteristicsChapter().render(pageEventHandler, reportDocument);
-        new CircosChapter().render(pageEventHandler, reportDocument);
-        new ExplanationChapter().render(pageEventHandler, reportDocument);
-        new DetailsAndDisclaimerChapter().render(pageEventHandler, reportDocument);
+        new SummaryChapter().render(pageEventHandler, report, reportDocument);
+        new TherapyDetailsChapter().render(pageEventHandler, report, reportDocument);
+        new ActionableOrDriversChapter().render(pageEventHandler, report, reportDocument);
+        new TumorCharacteristicsChapter().render(pageEventHandler, report, reportDocument);
+        new CircosChapter().render(pageEventHandler, report, reportDocument);
+        new ExplanationChapter().render(pageEventHandler, report, reportDocument);
+        new DetailsAndDisclaimerChapter().render(pageEventHandler, report, reportDocument);
 
         // Update total page count on pages and close document
         pageEventHandler.writeTotalPageCount(pdfDocument);

@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.patientreporter.cfreport.chapters;
 
+import com.hartwig.hmftools.patientreporter.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.cfreport.PageEventHandler;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
 import com.itextpdf.layout.Document;
@@ -17,7 +18,7 @@ public abstract class ReportChapter {
         ContentChapter       // Short sidepanel with just ID and report date
     }
 
-    public void render(@NotNull PageEventHandler eventHandler, @NotNull Document report) throws IOException {
+    public void render(@NotNull final PageEventHandler eventHandler, @NotNull final AnalysedPatientReport patientReport, @NotNull final Document reportDocument) throws IOException {
 
         // Reconfigure event handler for upcoming pages
         eventHandler.setChapterTitle(getName());
@@ -29,10 +30,10 @@ public abstract class ReportChapter {
 
         // Start chapter
         boolean addPageBreak = (getChapterType() != ChapterType.SummaryChapter);
-        startChapter(addPageBreak, report);
+        startChapter(addPageBreak, reportDocument);
 
         // Render chapter specific content
-        renderChapterContent(report);
+        renderChapterContent(patientReport, reportDocument);
 
     }
 
@@ -49,7 +50,7 @@ public abstract class ReportChapter {
 
     public abstract ChapterType getChapterType();
 
-    protected abstract void renderChapterContent(@NotNull Document report) throws IOException;
+    protected abstract void renderChapterContent(@NotNull final AnalysedPatientReport patientReport, @NotNull final Document reportDocument) throws IOException;
 
     final float getContentWidth() {
         if (getChapterType() == ChapterType.SummaryChapter || getChapterType() == ChapterType.ClosingChapter) {

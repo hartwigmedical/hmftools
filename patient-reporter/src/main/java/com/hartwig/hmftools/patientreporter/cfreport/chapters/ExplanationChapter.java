@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.patientreporter.cfreport.chapters;
 
+import com.hartwig.hmftools.patientreporter.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
 import com.hartwig.hmftools.patientreporter.cfreport.components.TableHelper;
 import com.itextpdf.layout.Document;
@@ -21,7 +22,7 @@ public class ExplanationChapter extends ReportChapter {
     }
 
     @Override
-    protected void renderChapterContent(@NotNull Document report) {
+    protected void renderChapterContent(@NotNull final AnalysedPatientReport patientReport, @NotNull final Document reportDocument) {
 
         Table table = new Table(UnitValue.createPercentArray(new float[] {1, 0.1f, 1, 0.1f, 1}));
         table.setWidth(getContentWidth());
@@ -119,7 +120,7 @@ public class ExplanationChapter extends ReportChapter {
                                 "(insertion), SGL (single) or BND (translocation)."
                 })));
 
-        report.add(table);
+        reportDocument.add(table);
 
     }
 

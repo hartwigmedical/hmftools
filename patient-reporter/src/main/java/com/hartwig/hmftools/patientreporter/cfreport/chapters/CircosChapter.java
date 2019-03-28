@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.patientreporter.cfreport.chapters;
 
+import com.hartwig.hmftools.patientreporter.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
 import com.hartwig.hmftools.patientreporter.cfreport.components.TableHelper;
 import com.itextpdf.io.IOException;
@@ -24,7 +25,7 @@ public class CircosChapter extends ReportChapter {
     }
 
     @Override
-    protected void renderChapterContent(@NotNull Document report) throws IOException {
+    protected void renderChapterContent(@NotNull final AnalysedPatientReport patientReport, @NotNull final Document reportDocument) throws IOException {
 
         // Add Circos plot
         final String circosPath = "/Users/wilco/Projects/hmftools/patient-reporter/src/test/resources/circos/circos_example.png";
@@ -33,7 +34,7 @@ public class CircosChapter extends ReportChapter {
             circosImage.setMaxHeight(400);
             circosImage.setHorizontalAlignment(HorizontalAlignment.CENTER);
             circosImage.setMarginBottom(8);
-            report.add(circosImage);
+            reportDocument.add(circosImage);
         } catch (MalformedURLException e) {
             throw new IOException("Failed to read circos plot image at " + circosPath);
         }
@@ -76,7 +77,7 @@ public class CircosChapter extends ReportChapter {
                         "variants within or between the chromosomes. Translocations are indicated in blue, deletions in " +
                         "red, insertions in yellow, tandem duplications in green and inversions in black."))));
 
-        report.add(table);
+        reportDocument.add(table);
 
     }
 

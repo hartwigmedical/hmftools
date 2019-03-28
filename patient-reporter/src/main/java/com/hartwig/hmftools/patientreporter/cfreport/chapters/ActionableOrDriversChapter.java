@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.patientreporter.cfreport.chapters;
 
+import com.hartwig.hmftools.patientreporter.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
 import com.hartwig.hmftools.patientreporter.cfreport.components.InlineBarChart;
 import com.hartwig.hmftools.patientreporter.cfreport.components.TableHelper;
@@ -25,11 +26,11 @@ public class ActionableOrDriversChapter extends ReportChapter {
     }
 
     @Override
-    protected void renderChapterContent(@NotNull Document report) {
-        report.add(createTumorVariantsTable());
-        report.add(createGainsAndLossesTable());
-        report.add(createSomaticFusionsTable());
-        report.add(createDisruptionsTable());
+    protected void renderChapterContent(@NotNull final AnalysedPatientReport patientReport, @NotNull Document reportDocument) {
+        reportDocument.add(createTumorVariantsTable());
+        reportDocument.add(createGainsAndLossesTable());
+        reportDocument.add(createSomaticFusionsTable());
+        reportDocument.add(createDisruptionsTable());
     }
 
     @NotNull

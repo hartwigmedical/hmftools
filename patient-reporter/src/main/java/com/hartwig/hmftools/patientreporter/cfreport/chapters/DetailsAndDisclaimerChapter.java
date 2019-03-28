@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.patientreporter.cfreport.chapters;
 
+import com.hartwig.hmftools.patientreporter.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
 import com.hartwig.hmftools.patientreporter.cfreport.components.TableHelper;
 import com.itextpdf.io.IOException;
@@ -25,7 +26,7 @@ public class DetailsAndDisclaimerChapter extends ReportChapter {
     }
 
     @Override
-    protected void renderChapterContent(@NotNull Document report) throws IOException {
+    protected void renderChapterContent(@NotNull final AnalysedPatientReport patientReport, @NotNull final Document reportDocument) throws IOException {
 
         // Main content
         Table table = new Table(UnitValue.createPercentArray(new float[] {1, 0.1f, 1}));
@@ -35,14 +36,14 @@ public class DetailsAndDisclaimerChapter extends ReportChapter {
         table.addCell(TableHelper.getLayoutCell()); // Spacer
         table.addCell(TableHelper.getLayoutCell()
                 .add(createDisclaimerDiv()));
-        report.add(table);
+        reportDocument.add(table);
 
         // End of report text
-        report.add(new Paragraph("— End of report —")
+        reportDocument.add(new Paragraph("— End of report —")
                 .setMarginTop(50)
                 .addStyle(ReportResources.smallBodyTextStyle()));
 
-        report.add(createSignatureDiv().setPaddingTop(80));
+        reportDocument.add(createSignatureDiv().setPaddingTop(80));
 
     }
 
