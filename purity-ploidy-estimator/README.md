@@ -454,11 +454,6 @@ PURPLE generates a number of tab separated output files as described in the foll
 
 The purity file `TUMOR.purple.purity` contains a single row with a summary of the purity fit:
 
-```
-#Purity	NormFactor	Score	DiploidProportion	Ploidy	Gender	Status	PolyclonalProportion	MinPurity	MaxPurity	MinPloidy	MaxPloidy	MinDiploidProportion	MaxDiploidProportion	Version	SomaticDeviation
-0.9800	0.6400	0.6867	0.0199	3.1076	MALE	NORMAL	0.0932	0.9500	1.0000	3.0813	3.1345	0.0199	0.0199	2.20	0.0000
-```
-
 
 Column  | Example Value | Description
 ---|---|---
@@ -482,12 +477,11 @@ SomaticDeviation | 0.00 | Penalty from somatic variants with implied ploidies th
 The purity range file `TUMOR.purple.purity.range` file summarises the best fit per purity sorted by score. 
 Descriptions of the fields are the same as above.
 
-```
-#Purity	NormFactor	Score	DiploidProportion	Ploidy	SomaticDeviation
-0.9800	0.6400	0.6867	0.0199	3.1076	0.0000
-0.9900	0.6400	0.6888	0.0199	3.0965	0.0000
-1.0000	0.6300	0.6928	0.0199	3.1345	0.0000
-```
+Purity|NormFactor|Score|DiploidProportion|Ploidy|SomaticDeviation
+---|---|---|---|---|---
+0.9800|0.6400|0.6867|0.0199|3.1076|0.0000
+0.9900|0.6400|0.6888|0.0199|3.0965|0.0000
+1.0000|0.6300|0.6928|0.0199|3.1345|0.0000
 
 
 ### CIRCOS Output
