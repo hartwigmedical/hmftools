@@ -5,8 +5,10 @@ import com.itextpdf.kernel.geom.Rectangle;
 import com.itextpdf.kernel.pdf.PdfPage;
 import com.itextpdf.kernel.pdf.canvas.PdfCanvas;
 import com.itextpdf.layout.Canvas;
+import com.itextpdf.layout.borders.SolidBorder;
 import com.itextpdf.layout.element.Div;
 import com.itextpdf.layout.element.Paragraph;
+import com.itextpdf.layout.property.VerticalAlignment;
 import org.jetbrains.annotations.NotNull;
 
 public final class SidePanel {
@@ -44,7 +46,7 @@ public final class SidePanel {
     }
 
     /**
-     * Draw background rectangle, either full height or only top
+     * Draw background rectangle, either full height or only top of the page
      */
     private static void renderBackgroundRect(boolean fullHeight, @NotNull PdfCanvas canvas, @NotNull Rectangle pageSize) {
 
@@ -61,7 +63,7 @@ public final class SidePanel {
     private static Div createSidePanelDiv(int index, @NotNull String label, @NotNull String value) {
 
         final float Y_START = 802;
-        final float VALUE_TEXT_Y_OFFSET = 16;
+        final float VALUE_TEXT_Y_OFFSET = 18;
         final float MAX_WIDTH = 120;
 
         Div div = new Div();
@@ -80,12 +82,13 @@ public final class SidePanel {
         div.add(new Paragraph(value)
                 .addStyle(ReportResources.sidepanelValueStyle()
                         .setFontSize(valueFontSize))
-                .setFixedPosition(CONTENT_X_START, yPos, MAX_WIDTH));
+                .setHeight(15)
+                .setFixedPosition(CONTENT_X_START, yPos, MAX_WIDTH)
+                .setFixedLeading(valueFontSize)
+        );
 
         return div;
 
     }
-
-
 
  }
