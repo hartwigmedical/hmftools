@@ -327,9 +327,6 @@ public class ExternalDBFilters
 
             String gene = snpEff.gene();
 
-            // next check whether the significance makes it irrelevant
-            // String effects = snpEff.effects();
-
             CodingEffect codingEffect = CodingEffect.effect(gene, snpEff.consequences());
 
             if(codingEffect == NONSENSE_OR_FRAMESHIFT || codingEffect == SPLICE)
