@@ -5,13 +5,16 @@ import com.hartwig.hmftools.patientreporter.QCFailReport;
 import com.hartwig.hmftools.patientreporter.ReportWriter;
 import com.hartwig.hmftools.patientreporter.cfreport.chapters.*;
 import com.hartwig.hmftools.patientreporter.cfreport.components.Footer;
+
 import com.itextpdf.kernel.events.PdfDocumentEvent;
 import com.itextpdf.kernel.geom.PageSize;
 import com.itextpdf.kernel.pdf.PdfDocument;
 import com.itextpdf.kernel.pdf.PdfWriter;
 import com.itextpdf.layout.Document;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
@@ -24,7 +27,31 @@ public class CFReportWriter implements ReportWriter {
 
     @Override
     public void writeAnalysedPatientReport(@NotNull final AnalysedPatientReport report, @NotNull final String outputFilePath) throws IOException {
-        // TODO!
+
+        // Initialize report with metadata
+        final Document reportDocument = initializeReport(outputFilePath);
+        final PdfDocument pdfDocument = reportDocument.getPdfDocument();
+
+        // Setup page event handling (used for automatic generation of header, side panel and footer)
+        final PageEventHandler pageEventHandler = new PageEventHandler();
+        pdfDocument.addEventHandler(PdfDocumentEvent.START_PAGE, pageEventHandler);
+
+        // Add chapters
+        new SummaryChapter().render(pageEventHandler, reportDocument);
+        new TherapyDetailsChapter().render(pageEventHandler, reportDocument);
+        new ActionableOrDriversChapter().render(pageEventHandler, reportDocument);
+        new TumorCharacteristicsChapter().render(pageEventHandler, reportDocument);
+        new CircosChapter().render(pageEventHandler, reportDocument);
+        new ExplanationChapter().render(pageEventHandler, reportDocument);
+        new DetailsAndDisclaimerChapter().render(pageEventHandler, reportDocument);
+
+        // Update total page count on pages and close document
+        Footer.writeTotalPageCount(pdfDocument);
+        reportDocument.close();
+        pdfDocument.close();
+
+        LOGGER.info("Created patient report at " + outputFilePath);
+
     }
 
     @Override
@@ -33,61 +60,7 @@ public class CFReportWriter implements ReportWriter {
     }
 
     /**
-     *
-     * @param outputFilePath
-     * @deprecated
-     */
-    public void createReport(String outputFilePath) throws IOException {
-
-        try {
-
-            // Initialize report with metadata
-            final Document report = initializeReport(outputFilePath);
-            final PdfDocument document = report.getPdfDocument();
-
-            // Setup page event handling (used for automatic generation of header, sidepanel and footer)
-            PageEventHandler pageEventHandler = new PageEventHandler();
-            document.addEventHandler(PdfDocumentEvent.START_PAGE, pageEventHandler);
-
-            // Add chapters
-            new SummaryChapter().render(pageEventHandler, report);
-            new TherapyDetailsChapter().render(pageEventHandler, report);
-            new ActionableOrDriversChapter().render(pageEventHandler, report);
-            new TumorCharacteristicsChapter().render(pageEventHandler, report);
-            new CircosChapter().render(pageEventHandler, report);
-            new ExplanationChapter().render(pageEventHandler, report);
-            new DetailsAndDisclaimerChapter().render(pageEventHandler, report);
-
-            // Update total page count on pages and close document
-            Footer.writeTotalPageCount(document);
-            report.close();
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-    }
-
-    /**
-     * Temporary main method for quick running while report is in development
-     *
-     * @TODO: Remove this
-     * @deprecated
-     */
-    public static void main(String[] args) {
-
-        try {
-            CFReportWriter writer = new CFReportWriter();
-            writer.createReport("/Users/Wilco/hmf/tmp/temp_" + String.valueOf(System.currentTimeMillis()) + ".pdf");
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-    }
-
-    /**
      * Initialize report document with relevant metadata
-     * @return
      */
     @NotNull
     private static Document initializeReport(@NotNull final String outputFilePath) throws IOException {
