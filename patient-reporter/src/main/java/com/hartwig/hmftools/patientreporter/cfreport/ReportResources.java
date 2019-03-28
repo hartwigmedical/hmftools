@@ -1,6 +1,8 @@
 package com.hartwig.hmftools.patientreporter.cfreport;
 
 import com.hartwig.hmftools.patientreporter.PatientReporterApplication;
+import com.itextpdf.io.font.FontProgram;
+import com.itextpdf.io.font.FontProgramFactory;
 import com.itextpdf.io.font.PdfEncodings;
 import com.itextpdf.io.image.ImageData;
 import com.itextpdf.io.image.ImageDataFactory;
@@ -70,9 +72,11 @@ public final class ReportResources {
     private static String FONT_REGULAR_PATH = "fonts/nimbus-sans/NimbusSansL-Regular.ttf";
     private static String FONT_BOLD_PATH = "fonts/nimbus-sans/NimbusSansL-Bold.ttf";
     private static String ICON_FONT_PATH = "fonts/hmf-icons/hmf-icons.ttf";
-    private static PdfFont fontRegular = null;
-    private static PdfFont fontBold = null;
-    private static PdfFont iconFont = null;
+
+    private static FontProgram fontProgramRegular = null;
+    private static FontProgram fontProgramBold = null;
+    private static FontProgram iconFontProgram = null;
+
     public static final float BODY_TEXT_LEADING = 10f;
 
     private ReportResources() {}
@@ -96,24 +100,24 @@ public final class ReportResources {
     }
 
     public static final PdfFont getFontRegular() {
-        if (fontRegular == null) {
-            fontRegular = loadFont(FONT_REGULAR_PATH);
+        if (fontProgramRegular == null) {
+            fontProgramRegular = loadFontProgram(FONT_REGULAR_PATH);
         }
-        return fontRegular;
+        return createFontFromProgram(fontProgramRegular);
     }
 
     public static final PdfFont getFontBold() {
-        if (fontBold == null) {
-            fontBold = loadFont(FONT_BOLD_PATH);
+        if (fontProgramBold == null) {
+            fontProgramBold = loadFontProgram(FONT_BOLD_PATH);
         }
-        return fontBold;
+        return createFontFromProgram(fontProgramBold);
     }
 
     public static final PdfFont getIconFont() {
-        if (iconFont == null) {
-            iconFont = loadFont(ICON_FONT_PATH);
+        if (iconFontProgram == null) {
+            iconFontProgram = loadFontProgram(ICON_FONT_PATH);
         }
-        return iconFont;
+        return createFontFromProgram(iconFontProgram);
     }
 
     /**
@@ -359,13 +363,18 @@ public final class ReportResources {
 
     }
 
-    private static final PdfFont loadFont(String resourcePath) {
+    @Nullable
+    private static final FontProgram loadFontProgram(@NotNull String resourcePath) {
         try {
-            return PdfFontFactory.createFont(resourcePath, PdfEncodings.IDENTITY_H);
+            return FontProgramFactory.createFont(resourcePath);
         } catch (Exception e) {
             LOGGER.warn(e.getMessage());
             return null;
         }
+    }
+
+    private static final PdfFont createFontFromProgram(@NotNull FontProgram program) {
+        return PdfFontFactory.createFont(program, PdfEncodings.IDENTITY_H);
     }
 
 }

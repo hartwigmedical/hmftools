@@ -46,7 +46,7 @@ public class CFReportWriter implements ReportWriter {
         new DetailsAndDisclaimerChapter().render(pageEventHandler, reportDocument);
 
         // Update total page count on pages and close document
-        Footer.writeTotalPageCount(pdfDocument);
+        pageEventHandler.writeTotalPageCount(pdfDocument);
         reportDocument.close();
         pdfDocument.close();
 

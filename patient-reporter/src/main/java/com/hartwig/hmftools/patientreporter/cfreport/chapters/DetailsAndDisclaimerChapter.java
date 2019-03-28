@@ -14,10 +14,6 @@ import java.net.MalformedURLException;
 
 public class DetailsAndDisclaimerChapter extends ReportChapter {
 
-    private final static Style BODY_TEXT_HEADER_STYLE = ReportResources.smallBodyHeadingStyle();
-    private final static Style BODY_TEXT_STYLE = ReportResources.smallBodyTextStyle();
-    private final static Style BODY_TEXT_BOLD_STYLE = ReportResources.smallBodyBoldTextStyle();
-
     @Override
     public String getName() {
         return "Sample details & disclaimers";
@@ -44,7 +40,7 @@ public class DetailsAndDisclaimerChapter extends ReportChapter {
         // End of report text
         report.add(new Paragraph("— End of report —")
                 .setMarginTop(50)
-                .addStyle(BODY_TEXT_STYLE));
+                .addStyle(ReportResources.smallBodyTextStyle()));
 
         report.add(createSignatureDiv().setPaddingTop(80));
 
@@ -57,7 +53,7 @@ public class DetailsAndDisclaimerChapter extends ReportChapter {
 
         // Heading
         div.add(new Paragraph("Sample details")
-                .addStyle(BODY_TEXT_HEADER_STYLE));
+                .addStyle(ReportResources.smallBodyHeadingStyle()));
 
         // Content
         div.add(createContentParagraph("The samples have been sequenced at ", ReportResources.HARTWIG_ADDRESS));
@@ -81,7 +77,7 @@ public class DetailsAndDisclaimerChapter extends ReportChapter {
 
         // Heading
         div.add(new Paragraph("Disclaimer")
-                .addStyle(BODY_TEXT_HEADER_STYLE));
+                .addStyle(ReportResources.smallBodyHeadingStyle()));
 
         div.add(createContentParagraph("The data on which this report is based is generated from tests that are performed under ISO/ICE-17025:2005 accreditation."));
         div.add(createContentParagraph("The analysis done for this report has passed all internal quality controls."));
@@ -139,7 +135,7 @@ public class DetailsAndDisclaimerChapter extends ReportChapter {
     @NotNull
     private static Paragraph createContentParagraph(@NotNull String text) {
         return new Paragraph(text)
-                .addStyle(BODY_TEXT_STYLE)
+                .addStyle(ReportResources.smallBodyTextStyle())
                 .setFixedLeading(ReportResources.BODY_TEXT_LEADING);
     }
 
@@ -147,7 +143,7 @@ public class DetailsAndDisclaimerChapter extends ReportChapter {
     private static Paragraph createContentParagraph(@NotNull String regularPart, @NotNull String boldPart) {
         return createContentParagraph(regularPart)
                 .add(new Text(boldPart)
-                        .addStyle(BODY_TEXT_BOLD_STYLE))
+                        .addStyle(ReportResources.smallBodyBoldTextStyle()))
                 .setFixedLeading(ReportResources.BODY_TEXT_LEADING);
     }
 
