@@ -85,30 +85,126 @@ public abstract class ViccFactory {
         //PMKB object
         StringBuilder stringToCSVPmkb = new StringBuilder();
         List<String> keysOfPmkb;
-
+        String header = "";
+        int indexValue;
+        StringBuilder stringId = new StringBuilder();
+        StringBuilder stringName = new StringBuilder();
         if (object.getAsJsonObject("pmkb") != null) {
-
             keysOfPmkb = new ArrayList<>(object.getAsJsonObject("pmkb").keySet());
-
-
             for (int j = 0; j < keysOfPmkb.size(); j++) {
-
-                if (keysOfPmkb.get(j).equals("tumor")){
-                    LOGGER.info(object.getAsJsonObject("pmkb").get("tumor"));
-
+                if (keysOfPmkb.get(j).equals("tumor")) {
+                    JsonObject pmkbObject = object.getAsJsonObject("pmkb").get(keysOfPmkb.get(j)).getAsJsonObject();
+                    List<String> keysOfVariant = new ArrayList<>(pmkbObject.keySet());
+                    for (int x = 0; x < pmkbObject.keySet().size(); x++) {
+                        stringToCSVPmkb.append(pmkbObject.get(keysOfVariant.get(x))).append(";");
+                    }
+                    headerCSV.append(String.join(";", pmkbObject.keySet())).append(";");
                 } else if (keysOfPmkb.get(j).equals("tissues")) {
-                    LOGGER.info(object.getAsJsonObject("pmkb").get(keysOfPmkb.get(j)));
-
-
+                    JsonArray arrayTissue = object.getAsJsonObject("pmkb").get(keysOfPmkb.get(j)).getAsJsonArray();
+                    for (int x = 0; x < arrayTissue.size(); x++) {
+                        JsonObject objectTissue = (JsonObject) arrayTissue.get(x);
+                        Set<String> set = objectTissue.keySet();
+                        header = String.join(";", set);
+                        for (int v = 0; v < objectTissue.keySet().size(); v++) {
+                            List<String> keysTissue = new ArrayList<>(objectTissue.keySet());
+                            if (keysTissue.get(v).equals("id")) {
+                                JsonElement idTissue = objectTissue.get(keysTissue.get(v));
+                                stringId.append(idTissue).append(",");
+                            } else if (keysTissue.get(v).equals("name")) {
+                                JsonElement nameTissue = objectTissue.get(keysTissue.get(v));
+                                stringName.append(nameTissue).append(",");
+                            }
+                        }
+                    }
+                    headerCSV.append(String.join(";", header)).append(";");
+                    stringToCSVPmkb.append(stringId).append(";").append(stringName).append(";");
                 } else if (keysOfPmkb.get(j).equals("variant")) {
-                    LOGGER.info(object.getAsJsonObject("pmkb").get(keysOfPmkb.get(j)));
+                    JsonObject pmkbObject = object.getAsJsonObject("pmkb").get(keysOfPmkb.get(j)).getAsJsonObject();
+                    List<String> keysOfVariant = new ArrayList<>(pmkbObject.keySet());
+                    for (int x = 0; x < pmkbObject.keySet().size(); x++) {
+                        if (keysOfVariant.get(x).equals("gene")) {
+                            JsonElement elementGene = object.getAsJsonObject("pmkb").get("variant");
+                            List<String> keysGene = new ArrayList<>(elementGene.getAsJsonObject().get("gene").getAsJsonObject().keySet());
 
+                            indexValue = keysOfVariant.indexOf("gene");
+                            keysOfVariant.remove(indexValue);
+                            keysOfVariant.add(indexValue, String.join(";", keysGene));
+
+                            for (int d = 0; d < keysGene.size(); d++) {
+                                stringToCSVPmkb.append(elementGene.getAsJsonObject() // association data
+                                        .get("gene").getAsJsonObject().get(keysGene.get(d))).append(";");
+                            }
+                        } else {
+                            stringToCSVPmkb.append(pmkbObject.get(keysOfVariant.get(x))).append(";");
+                        }
+                    }
+                    headerCSV.append(String.join(";", keysOfVariant)).append(";");
                 }
             }
-            LOGGER.info(keysOfPmkb);
         } else {
-            LOGGER.info("pmkb");
-
+            stringToCSVPmkb.append(";;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;");
+            headerCSV.append("id")
+                    .append(";")
+                    .append("name")
+                    .append(";")
+                    .append("id")
+                    .append(";")
+                    .append("name")
+                    .append(";")
+                    .append("amino_acid_change")
+                    .append(";")
+                    .append("germline")
+                    .append(";")
+                    .append("partner_gene")
+                    .append(";")
+                    .append("codons")
+                    .append(";")
+                    .append("description")
+                    .append(";")
+                    .append("exons")
+                    .append(";")
+                    .append("notes")
+                    .append(";")
+                    .append("cosmic")
+                    .append(";")
+                    .append("effect")
+                    .append(";")
+                    .append("cnv_type")
+                    .append(";")
+                    .append("id")
+                    .append(";")
+                    .append("cytoband")
+                    .append(";")
+                    .append("variant_type")
+                    .append(";")
+                    .append("dna_change")
+                    .append(";")
+                    .append("coordinates")
+                    .append(";")
+                    .append("chromosome_based_cnv")
+                    .append(";")
+                    .append("description")
+                    .append(";")
+                    .append("created_at")
+                    .append(";")
+                    .append("updated_at")
+                    .append(";")
+                    .append("active_ind")
+                    .append(";")
+                    .append("external_id")
+                    .append(";")
+                    .append("id")
+                    .append(";")
+                    .append("name")
+                    .append(";")
+                    .append("transcript")
+                    .append(";")
+                    .append("description_type")
+                    .append(";")
+                    .append("chromosome")
+                    .append(";")
+                    .append("name")
+                    .append(";");
         }
 
         return stringToCSVPmkb;
@@ -483,7 +579,7 @@ public abstract class ViccFactory {
             //            StringBuilder StringToCSVDevTags = readObjectDevTags(object, headerCSV);
             //            StringBuilder StringToCSVGeneIdentifiers = readObjectGeneIdentifiers(object, headerCSV);
             //            StringBuilder StringToCSVFeatures = readObjectFeatures(object, headerCSV);
-            StringBuilder StringToCSVSage = readObjectSage(object, headerCSV);
+            //  StringBuilder StringToCSVSage = readObjectSage(object, headerCSV);
             StringBuilder StringToCSVPmkb = readObjectPmkb(object, headerCSV);
 
             stringToCSVAll.append(index).append(";");
