@@ -502,6 +502,8 @@ Threads | Elapsed Time| CPU Time | Peak Mem
 
 
 ## Version History
+- 2.24
+  - Recovered SVs were not being used for re-segmentation.
 - 2.23
   - Fixed bug where SV VCF samples were being sorted into alphabetical order. Now they will be in same order as input VCF.
 - 2.22

@@ -10,10 +10,8 @@ import static htsjdk.variant.vcf.VCFHeaderLineCount.UNBOUNDED;
 import java.io.File;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
-import java.util.TreeSet;
 import java.util.function.Predicate;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -34,17 +32,16 @@ import com.hartwig.hmftools.common.variant.structural.EnrichedStructuralVariantL
 import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantFactory;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
+import com.hartwig.hmftools.purple.sv.VariantContextCollection;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
-import htsjdk.samtools.SAMSequenceDictionary;
 import htsjdk.tribble.index.tabix.TabixFormat;
 import htsjdk.tribble.index.tabix.TabixIndexCreator;
 import htsjdk.variant.variantcontext.Allele;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.variantcontext.VariantContextBuilder;
-import htsjdk.variant.variantcontext.VariantContextComparator;
 import htsjdk.variant.variantcontext.filter.PassingVariantFilter;
 import htsjdk.variant.variantcontext.writer.Options;
 import htsjdk.variant.variantcontext.writer.VariantContextWriter;
@@ -85,25 +82,24 @@ class PurpleStructuralVariantSupplier {
 
     private final String outputVCF;
     private final Optional<VCFHeader> header;
-    private final TreeSet<VariantContext> variantContexts;
-    private final List<StructuralVariant> variants = Lists.newArrayList();
-    private boolean modified = true;
+    private final VariantContextCollection variants;
 
     private int counter = 0;
 
     PurpleStructuralVariantSupplier() {
         header = Optional.empty();
-        variantContexts = new TreeSet<>();
         outputVCF = Strings.EMPTY;
+        variants = new VariantContextCollection(Collections.emptyList());
     }
 
     PurpleStructuralVariantSupplier(@NotNull final String version, @NotNull final String templateVCF, @NotNull final String outputVCF) {
         final VCFFileReader vcfReader = new VCFFileReader(new File(templateVCF), false);
         this.outputVCF = outputVCF;
         header = Optional.of(generateOutputHeader(version, vcfReader.getFileHeader()));
-        variantContexts = new TreeSet<>(new VCComparator(header.get().getSequenceDictionary()));
+        variants = new VariantContextCollection(header.get());
+
         for (VariantContext context : vcfReader) {
-            variantContexts.add(context);
+            variants.add(context);
         }
 
         vcfReader.close();
@@ -111,10 +107,7 @@ class PurpleStructuralVariantSupplier {
 
     public void addVariant(@NotNull final VariantContext variantContext) {
         if (enabled()) {
-            if (variantContext.contains(variantContext)) {
-                variantContexts.remove(variantContext);
-                variantContexts.add(variantContext);
-            }
+            variants.add(variantContext);
         }
     }
 
@@ -124,14 +117,13 @@ class PurpleStructuralVariantSupplier {
                 PurpleCopyNumber copyNumber = copyNumbers.get(i);
                 if (copyNumber.segmentStartSupport() == SegmentSupport.NONE) {
                     final PurpleCopyNumber prev = copyNumbers.get(i - 1);
-                    variantContexts.add(infer(copyNumber, prev));
+                    variants.add(infer(copyNumber, prev));
                 }
             }
         }
     }
 
     public int removeLowVAFSingles(@NotNull final PurityAdjuster purityAdjuster, @NotNull final List<PurpleCopyNumber> copyNumbers) {
-        int removed = 0;
         final ListMultimap<Chromosome, PurpleCopyNumber> copyNumberMap = Multimaps.fromRegions(copyNumbers);
 
         final StructuralVariantLegCopyNumberChangeFactory copyNumberChangeFactory =
@@ -140,9 +132,7 @@ class PurpleStructuralVariantSupplier {
         final StructuralVariantLegPloidyFactory<PurpleCopyNumber> ploidyFactory =
                 new StructuralVariantLegPloidyFactory<>(purityAdjuster, PurpleCopyNumber::averageTumorCopyNumber);
 
-        final Iterator<VariantContext> iterator = variantContexts.iterator();
-        while (iterator.hasNext()) {
-            final VariantContext variantContext = iterator.next();
+        final Predicate<VariantContext> removePredicate = variantContext -> {
             if (!isRecovered(variantContext)) {
                 final StructuralVariantFactory factory = new StructuralVariantFactory(new PassingVariantFilter());
                 factory.addVariantContext(variantContext);
@@ -150,17 +140,15 @@ class PurpleStructuralVariantSupplier {
                 if (!variants.isEmpty()) {
                     final StructuralVariant variant = variants.get(0);
                     if (variant.type() == StructuralVariantType.SGL && !isLinked(variant)) {
-                        if (filter(copyNumberChangeFactory, ploidyFactory.create(variant, copyNumberMap))) {
-                            iterator.remove();
-                            removed++;
-                            modified = true;
-                        }
+                        return filter(copyNumberChangeFactory, ploidyFactory.create(variant, copyNumberMap));
                     }
                 }
             }
-        }
 
-        return removed;
+            return false;
+        };
+
+        return variants.remove(removePredicate);
     }
 
     @NotNull
@@ -207,31 +195,32 @@ class PurpleStructuralVariantSupplier {
         }
     }
 
-    private TreeSet<VariantContext> enriched(@NotNull final PurityAdjuster purityAdjuster,
+    @NotNull
+    private Iterable<VariantContext> enriched(@NotNull final PurityAdjuster purityAdjuster,
             @NotNull final List<PurpleCopyNumber> copyNumbers) {
         assert (header.isPresent());
 
         final StructuralVariantFactory svFactory = new StructuralVariantFactory(x -> true);
-        variantContexts.forEach(svFactory::addVariantContext);
+        variants.forEach(svFactory::addVariantContext);
 
         final CopyNumberEnrichedStructuralVariantFactory svEnricher =
                 new CopyNumberEnrichedStructuralVariantFactory(purityAdjuster, Multimaps.fromRegions(copyNumbers));
 
-        final TreeSet<VariantContext> enrichedContexts = new TreeSet<>(new VCComparator(header.get().getSequenceDictionary()));
+        final VariantContextCollection enrichedCollection = new VariantContextCollection(header.get());
         for (EnrichedStructuralVariant enrichedSV : svEnricher.enrich(svFactory.results())) {
             final VariantContext startContext = enrichedSV.startContext();
             if (startContext != null) {
-                enrichedContexts.add(enrich(enrichedSV, startContext, false));
+                enrichedCollection.add(enrich(enrichedSV, startContext, false));
             }
 
             final VariantContext endContext = enrichedSV.endContext();
             if (endContext != null) {
-                enrichedContexts.add(enrich(enrichedSV, endContext, true));
+                enrichedCollection.add(enrich(enrichedSV, endContext, true));
             }
         }
 
-        enrichedContexts.addAll(svFactory.unmatched());
-        return enrichedContexts;
+        svFactory.unmatched().forEach(enrichedCollection::add);
+        return enrichedCollection;
     }
 
     @NotNull
@@ -279,16 +268,7 @@ class PurpleStructuralVariantSupplier {
 
     @NotNull
     public List<StructuralVariant> variants() {
-        if (modified) {
-            modified = false;
-            final StructuralVariantFactory factory = new StructuralVariantFactory(new PassingVariantFilter());
-            variantContexts.forEach(factory::addVariantContext);
-
-            variants.clear();
-            variants.addAll(factory.results());
-        }
-
-        return variants;
+        return variants.passingVariants();
     }
 
     @NotNull
@@ -340,20 +320,6 @@ class PurpleStructuralVariantSupplier {
 
     private static boolean isRecovered(@NotNull VariantContext variantContext) {
         return variantContext.hasAttribute(StructuralVariantFactory.RECOVERED);
-    }
-
-    private class VCComparator extends VariantContextComparator {
-
-        VCComparator(final SAMSequenceDictionary dictionary) {
-            super(dictionary);
-        }
-
-        @Override
-        public int compare(final VariantContext firstVariantContext, final VariantContext secondVariantContext) {
-            int positionResult = super.compare(firstVariantContext, secondVariantContext);
-
-            return positionResult == 0 ? firstVariantContext.getID().compareTo(secondVariantContext.getID()) : positionResult;
-        }
     }
 
     private boolean enabled() {
