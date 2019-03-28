@@ -55,8 +55,8 @@ Argument | Default | Description
 run_dir | None | If provided, parameters `amber`, `cobalt` and `output_dir` are no longer mandatory and will have default values of <run_dir>/amber, <run_dir>/cobalt and <run_dir>/purple respectively unless overridden.
 threads | 2 | Number of threads to use.
 somatic_vcf | None | Optional location of somatic variants vcf.  Sample name must match tumor parameter. GZ files supported.
-structural_vcf | None | Optional location of structural variants vcf. Sample name must match tumor parameter. GZ files supported.
-sv_recovery_vcf | None | Optional location of structural variants recovery vcf. Sample name must match tumor parameter. GZ files supported.
+structural_vcf | None | Optional location of structural variants vcf. GZ files supported.
+sv_recovery_vcf | None | Optional location of structural variants recovery vcf. GZ files supported.
 circos | None | Optional path to circos binary. When supplied, circos graphs will be written to <output_dir>/plot
 db_enabled | None | This parameter has no arguments. Optionally include if you wish to persist results to a database. Database initialization script can be found [here](https://github.com/hartwigmedical/hmftools/blob/master/patient-db/src/main/resources/generate_database.sql).
 db_user | None | Database username. Mandatory if db_enabled.
@@ -502,6 +502,10 @@ Threads | Elapsed Time| CPU Time | Peak Mem
 
 
 ## Version History
+- 2.24
+  - Recovered SVs were not being used for re-segmentation.
+- 2.23
+  - Fixed bug where SV VCF samples were being sorted into alphabetical order. Now they will be in same order as input VCF.
 - 2.22
   - Added new tool to annotate SNPs and INDELS in strelka output with AD field. Will **not** override existing AD values. 
   - Example Usage: `java -Xmx4G -cp purple.jar com.hartwig.hmftools.purple.tools.AnnotateStrelkaWithAllelicDepth -in strelka.vcf -out strelka.annotated.vcf`
