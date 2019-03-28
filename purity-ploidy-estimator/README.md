@@ -485,7 +485,7 @@ Purity|NormFactor|Score|DiploidProportion|Ploidy|SomaticDeviation
 
 #### Copy Number File
 
-The copy number file `TUMOR.purple.cnv` contains contiguous, smoothed copy number segments of the genome:
+The copy number file `TUMOR.purple.cnv` contains contiguous, copy number segments of the tumor sample:
 
 Column  | Example Value | Description
 ---|---|---
@@ -494,15 +494,15 @@ Start  | 1 | Segment start
 End  | 87337011 | Segment end
 CopyNumber  | 2.8189 | Copy number of the segment
 BafCount  | 4464 | Count of AMBER baf points covered by this segment
-ObservedBAF  | 0.7094 | Segment BAF of combined normal and tumor sample
-ActualBAF  | 0.7124 | Segment BAF of tumor after adjusting for purity and ploidy
+ObservedBAF  | 0.7094 | Combined reference and tumor BAF
+ActualBAF  | 0.7124 | Tumor BAF after adjusting for purity and ploidy
 SegmentStartSupport  | TELOMERE | Reason segment was created. Can be CENTROMERE, TELOMERE, a SV type, or NONE.
 SegmentEndSupport  | BND | Reason segment ended. Will match SegmentStartSupport of following segment.
 Method | BAF_WEIGHTED | Method used to determine copy number. One of BAF_WEIGHTED, STRUCTURAL_VARIANT, LONG_ARM, GERMLINE_AMPLIFICATION
 DepthWindowCount | 77277 | Count of COBALT windows covered by this segment
 GcContent | 0.4351 | Proportion of segment that is G or C
-MinStart | 1 | Represents the minimum start of this segment if there is any uncertainty.
-MaxStart | 1 | Represents the maximum start of this segment if there is any uncertainty.
+MinStart | 1 | Minimum start location of this segment if there is any uncertainty.
+MaxStart | 1 | Maximum start location of this segment if there is any uncertainty.
 
 
 ### CIRCOS Output
