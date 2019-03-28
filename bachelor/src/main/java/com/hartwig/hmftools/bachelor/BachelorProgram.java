@@ -162,7 +162,7 @@ public class BachelorProgram
                 final String gene = exclusion.getGene().getName();
 
                 VariantFilter filter = new VariantFilter(gene, "", chromosome, position,
-                        ref, alt, NONSENSE_OR_FRAMESHIFT, hgvsProtein, "", "", minCodon);
+                        ref, alt, NONSENSE_OR_FRAMESHIFT, hgvsProtein, "", "", "", minCodon);
 
                 List<VariantFilter> filters = mBlacklistFilters.get(gene);
 
@@ -320,7 +320,7 @@ public class BachelorProgram
                 }
             }
 
-            boolean matchesFilter = false;
+            VariantFilter matchedFilter = null;
 
             if (matchType == REQUIRED_EFFECT && !mBlacklistFilters.isEmpty())
             {
@@ -335,10 +335,10 @@ public class BachelorProgram
                 {
                     for(final VariantFilter filter : filters)
                     {
-                        matchesFilter = filter.blacklistMatch(gene, chromosome, position, ref, alt, proteinPosition);
-
-                        if(matchesFilter)
+                        if(filter.blacklistMatch(gene, chromosome, position, ref, alt, proteinPosition))
                         {
+                            matchedFilter = filter;
+
                             if(isBenign(filter.ClinvarSignificance) || filter.ClinvarSignificance.isEmpty())
                             {
                                 LOGGER.debug("gene({}) var({}:{}:{}) ref({}) alt({}) protein({}) blacklisted",
@@ -364,7 +364,7 @@ public class BachelorProgram
                             LOGGER.debug("match found: gene({} {}) var({}:{}:{}) ref({}) alt({}) hgvsProtein({}) whitelisted",
                                     gene, transcriptId, varId, chromosome, position, ref, alt, hgvsProtein);
                             matchType = WHITELIST;
-                            matchesFilter = true;
+                            matchedFilter = filter;
                             break;
                         }
                     }
@@ -428,7 +428,9 @@ public class BachelorProgram
                     .tumorAltCount(tumorAltCount)
                     .tumorReadDepth(tumorReadDepth)
                     .condonInfo(codonInfo)
-                    .matchesClinvarFilter(matchesFilter)
+                    .matchesClinvarFilter(matchedFilter != null)
+                    .clinvarSignificance(matchedFilter.ClinvarSignificance)
+                    .clinvarSigInfo(matchedFilter.ClinvarSigInfo)
                     .build();
 
             mReports.add(report);

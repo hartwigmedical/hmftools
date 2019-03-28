@@ -321,10 +321,13 @@ public class BachelorApplication {
                 mMainDataWriter.write(String.format(",%s,%d,%s,%s,%s,%s,%s",
                         r.chrom(), r.pos(), r.ref(), r.alts(), r.codingEffect(), r.effects(), r.annotations()));
 
-                mMainDataWriter.write(String.format(",%s,%s,%d,%s,%s,%s,%s,%d,%d,%d,%d,%s",
-                        r.hgvsProtein(), r.isHomozygous(), r.phredScore(), r.hgvsCoding(), r.matchesClinvarFilter(), r.matchType(),
+                mMainDataWriter.write(String.format(",%s,%s,%d,%s,%s,%s,%d,%d,%d,%d,%s",
+                        r.hgvsProtein(), r.isHomozygous(), r.phredScore(), r.hgvsCoding(), r.matchType(),
                         r.hasDepthInfo(), r.germlineAltCount(), r.germlineReadDepth(), r.tumorAltCount(), r.tumorReadDepth(),
                         r.condonInfo()));
+
+                mMainDataWriter.write(String.format(",%s,%s,%s",
+                        r.matchesClinvarFilter(), r.clinvarSignificance(), r.clinvarSigInfo()));
 
                 mMainDataWriter.newLine();
 
@@ -359,8 +362,10 @@ public class BachelorApplication {
             mMainDataWriter = createBufferedWriter(mainFileName, false);
 
             mMainDataWriter.write("SampleId,Program,Id,Gene,TranscriptId,Chromosome,Position,Ref,Alt");
-            mMainDataWriter.write(",CodingEffect,Effect,Annotations,HgvsProtein,IsHomozygous,PhredScore,HgvsCoding,ClinvarMatch");
+            mMainDataWriter.write(",CodingEffect,Effect,Annotations,HgvsProtein,IsHomozygous,PhredScore,HgvsCoding,");
             mMainDataWriter.write(",MatchType,HasDepthInfo,GermlineAltCount,GermlineReadDepth,TumorAltCount,TumorReadDepth,CodonInfo");
+            mMainDataWriter.write(",ClinvarMatch,ClinvarSignificance,ClinvarSigInfo");
+
 
             mMainDataWriter.newLine();
 

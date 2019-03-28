@@ -65,7 +65,7 @@ public class ExternalDBFilters
         mMatchedWhitelistExclusions = null;
     }
 
-    private static int BACHELOR_FILTER_CSV_FIELD_COUNT = 12;
+    private static int BACHELOR_FILTER_CSV_FIELD_COUNT = 13;
 
     public static List<VariantFilter> loadExternalFilters(final String filterFile)
     {
@@ -112,6 +112,7 @@ public class ExternalDBFilters
                         items[8],
                         items[10],
                         items[11],
+                        items[12],
                         -1);
 
                 filters.add(filter);
@@ -255,6 +256,7 @@ public class ExternalDBFilters
 
     // Clinvar annotations
     private static String CLINVAR_SIGNIFICANCE = "CLNSIG";
+    private static String CLINVAR_SIG_INFO = "CLNSIGCONF";
     private static String CLINVAR_DISEASE_NAME = "CLNDN";
     private static String CLINVAR_MC = "MC";
     private static String CLINVAR_RS_DB_SNP_ID = "RS";
@@ -262,6 +264,7 @@ public class ExternalDBFilters
     private static String CLINVAR_LIKELY_PATHOGENIC = "Likely_pathogenic";
     private static String CLINVAR_BENIGN = "Benign";
     private static String CLINVAR_LIKELY_BENIGN = "Likely_benign";
+    private static String CLINVAR_CONFLICTING = "Conflicting";
 
     public static boolean isPathogenic(final String clinvarSignificance)
     {
@@ -271,6 +274,11 @@ public class ExternalDBFilters
     public static boolean isBenign(final String clinvarSignificance)
     {
         return clinvarSignificance.contains(CLINVAR_BENIGN) || clinvarSignificance.contains(CLINVAR_LIKELY_BENIGN);
+    }
+
+    public static boolean isConflicting(final String clinvarSignificance)
+    {
+        return clinvarSignificance.contains(CLINVAR_CONFLICTING);
     }
 
     private void processVariant(final VariantContext variant)
@@ -291,8 +299,17 @@ public class ExternalDBFilters
                 continue;
 
             String clinvarSignificance = variant.getCommonInfo().getAttributeAsString(CLINVAR_SIGNIFICANCE, "");
+            String clinvarSigInfo = variant.getCommonInfo().getAttributeAsString(CLINVAR_SIG_INFO, "");
 
-            boolean isPathogenic = isPathogenic(clinvarSignificance);
+            if(!clinvarSigInfo.isEmpty())
+            {
+                clinvarSigInfo = clinvarSigInfo.replaceAll(",", ";");
+                clinvarSigInfo = clinvarSigInfo.replaceAll("\\[", "");
+                clinvarSigInfo = clinvarSigInfo.replaceAll("]", "");
+            }
+
+            boolean isConflicting = isConflicting(clinvarSignificance);
+            boolean isPathogenic = isPathogenic(clinvarSignificance) || (isConflicting && isPathogenic(clinvarSigInfo));
 
             boolean matchesRequiredEffect = false;
 
@@ -331,7 +348,7 @@ public class ExternalDBFilters
                 // will form part of the whitelist
             }
 
-            writeFilterRecord(variant, snpEff, gene, codingEffect, clinvarSignificance);
+            writeFilterRecord(variant, snpEff, gene, codingEffect, clinvarSignificance, clinvarSigInfo);
         }
     }
 
@@ -399,7 +416,7 @@ public class ExternalDBFilters
     }
 
     private void writeFilterRecord(final VariantContext variant, final SnpEffAnnotation snpEff,
-            final String gene, CodingEffect codingEffect, final String clinvarSignificance)
+            final String gene, CodingEffect codingEffect, final String clinvarSignificance, final String clinvarSigInfo)
     {
         String transcriptId = snpEff.transcript();
         String chromosome = variant.getContig();
@@ -434,8 +451,8 @@ public class ExternalDBFilters
             mFilterWriter.write(String.format(",%s,%s,%s",
                     hgvsp, hgvsc, rsDbSnpId));
 
-            mFilterWriter.write(String.format(",%s,%s,%s",
-                    clinvarSignificance, clinvarDisease, clinvarEffects));
+            mFilterWriter.write(String.format(",%s,%s,%s,%s",
+                    clinvarSignificance, clinvarSigInfo, clinvarDisease, clinvarEffects));
 
             mFilterWriter.newLine();
 
@@ -461,7 +478,7 @@ public class ExternalDBFilters
 
             mFilterWriter.write("Gene,TranscriptId,Chromsome,Position,Ref,Alt,CodingEffect,AllEffects");
             mFilterWriter.write(",HgvsProtein,HgvsCoding,DBSnpId");
-            mFilterWriter.write(",ClinvarSignificance,ClinvarDisease,ClinvarEffects");
+            mFilterWriter.write(",ClinvarSignificance,ClinvarSigInfo,ClinvarDisease,ClinvarEffects");
             mFilterWriter.newLine();
         }
         catch (IOException e)

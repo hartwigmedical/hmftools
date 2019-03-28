@@ -52,7 +52,8 @@ public class CodingEffectTest {
     @Test
     public void testEffectPriority() {
         assertEffect(NONSENSE_OR_FRAMESHIFT, RANDOM_GENE, STOP_GAINED, MISSENSE_VARIANT, SPLICE_ACCEPTOR_VARIANT, INTRON_VARIANT);
-        assertEffect(MISSENSE, RANDOM_GENE, MISSENSE_VARIANT, SPLICE_ACCEPTOR_VARIANT, SYNONYMOUS_VARIANT, INTRON_VARIANT);
+        assertEffect(SPLICE, RANDOM_GENE, MISSENSE_VARIANT, SPLICE_ACCEPTOR_VARIANT, SYNONYMOUS_VARIANT, INTRON_VARIANT);
+        assertEffect(MISSENSE, RANDOM_GENE, MISSENSE_VARIANT, SYNONYMOUS_VARIANT, INTRON_VARIANT);
         assertEffect(SPLICE, RANDOM_GENE, SPLICE_ACCEPTOR_VARIANT, INTRON_VARIANT);
         assertEffect(SYNONYMOUS, RANDOM_GENE, SYNONYMOUS_VARIANT, INTRON_VARIANT);
         assertEffect(NONE, RANDOM_GENE, INTRON_VARIANT);
@@ -61,7 +62,7 @@ public class CodingEffectTest {
     @Test
     public void testTP53SpliceRegionVariant() {
         assertEffect(NONE, RANDOM_GENE, SPLICE_REGION_VARIANT);
-        assertEffect(SPLICE, "TP53", SPLICE_REGION_VARIANT);
+        assertEffect(SPLICE, "TP53", SPLICE_REGION_VARIANT, SYNONYMOUS_VARIANT);
     }
 
     private static void assertEffect(@NotNull final CodingEffect expected, @NotNull final String gene, @NotNull final VariantConsequence... consequences) {

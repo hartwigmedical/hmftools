@@ -20,12 +20,13 @@ public class VariantFilter
     public final String DBSnpId;
     public final int MinCodon;
     public final String ClinvarSignificance;
+    public final String ClinvarSigInfo;
 
     private static final Logger LOGGER = LogManager.getLogger(VariantFilter.class);
 
     public VariantFilter(final String gene, final String trancriptId,
             final String chromosome, long position, final String ref, final String alt, final CodingEffect effect,
-            final String hgvsProteinCodon, final String dbSnpId, final String clinvarSig, int minCodon)
+            final String hgvsProteinCodon, final String dbSnpId, final String clinvarSig, final String clinvarSigInfo, int minCodon)
     {
         Gene = gene;
         TranscriptId = trancriptId;
@@ -38,6 +39,7 @@ public class VariantFilter
         DBSnpId = dbSnpId;
         MinCodon = minCodon;
         ClinvarSignificance = clinvarSig;
+        ClinvarSigInfo = clinvarSigInfo;
     }
 
     public boolean blacklistMatch(String gene, String chromosome, long position, String ref, String alt, int proteinPosition)

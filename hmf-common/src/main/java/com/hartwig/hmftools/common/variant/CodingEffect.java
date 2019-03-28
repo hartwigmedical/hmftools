@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.common.variant;
 
+import static com.hartwig.hmftools.common.variant.VariantConsequence.SPLICE_REGION_VARIANT;
+import static com.hartwig.hmftools.common.variant.VariantConsequence.SYNONYMOUS_VARIANT;
+
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -15,17 +18,26 @@ public enum CodingEffect {
 
     @NotNull
     public static CodingEffect effect(@NotNull final String gene, @NotNull final List<VariantConsequence> consequences) {
+
         final List<CodingEffect> simplifiedEffects = consequences.stream().map(x -> effect(gene, x)).collect(Collectors.toList());
+
+        if(gene.equals("TP53"))
+        {
+            // TP53 has some known pathogenic variants in splice regions
+            if(consequences.contains(SYNONYMOUS_VARIANT) && consequences.contains(SPLICE_REGION_VARIANT))
+                return SPLICE;
+        }
+
         if (simplifiedEffects.stream().anyMatch(x -> x.equals(NONSENSE_OR_FRAMESHIFT))) {
             return NONSENSE_OR_FRAMESHIFT;
         }
 
-        if (simplifiedEffects.stream().anyMatch(x -> x.equals(MISSENSE))) {
-            return MISSENSE;
-        }
-
         if (simplifiedEffects.stream().anyMatch(x -> x.equals(SPLICE))) {
             return SPLICE;
+        }
+
+        if (simplifiedEffects.stream().anyMatch(x -> x.equals(MISSENSE))) {
+            return MISSENSE;
         }
 
         if (simplifiedEffects.stream().anyMatch(x -> x.equals(SYNONYMOUS))) {
@@ -37,10 +49,6 @@ public enum CodingEffect {
 
     @NotNull
     private static CodingEffect effect(@NotNull final String gene, @NotNull final VariantConsequence consequence) {
-        // Below exception exists because TP53 has some known pathogenic variants in splice regions.
-        if (gene.equals("TP53") && consequence.equals(VariantConsequence.SPLICE_REGION_VARIANT)) {
-            return SPLICE;
-        }
 
         switch (consequence) {
             case FRAMESHIFT_VARIANT:

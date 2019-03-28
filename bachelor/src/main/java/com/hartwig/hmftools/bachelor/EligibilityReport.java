@@ -73,4 +73,8 @@ abstract class EligibilityReport {
     public abstract String condonInfo();
 
     public abstract boolean matchesClinvarFilter();
+
+    public abstract String clinvarSignificance();
+
+    public abstract String clinvarSigInfo();
 }
