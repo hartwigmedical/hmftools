@@ -26,6 +26,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.variant.structural.annotation.EnsemblGeneData;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneAnnotation;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion;
@@ -59,12 +60,14 @@ public class FusionDisruptionAnalyser
     private boolean mSkipFusionCheck;
     private List<GeneFusion> mFusions;
     private Map<String, List<RnaFusionData>> mSampleRnaData;
+    private PerformanceCounter mPerfCounter;
 
     private VisualiserWriter mVisWriter;
     private BufferedWriter mRnaWriter;
 
     public static final String SAMPLE_RNA_FILE = "sample_rna_file";
     public static final String SKIP_FUSION_OUTPUT = "skip_fusion_output";
+    public static final String PRE_GENE_BREAKEND_DISTANCE = "fusion_gene_distance";
 
     private static final Logger LOGGER = LogManager.getLogger(FusionDisruptionAnalyser.class);
 
@@ -81,6 +84,8 @@ public class FusionDisruptionAnalyser
         mSampleRnaData = Maps.newHashMap();
         mRnaWriter = null;
 
+        mPerfCounter = new PerformanceCounter("Fusions");
+
         mChrBreakendMap = null;
     }
 
@@ -88,6 +93,7 @@ public class FusionDisruptionAnalyser
     {
         options.addOption(SAMPLE_RNA_FILE, true, "Sample RNA data to match");
         options.addOption(SKIP_FUSION_OUTPUT, false, "No fusion search or output");
+        options.addOption(PRE_GENE_BREAKEND_DISTANCE, true, "Distance after to a breakend to consider in a gene");
     }
 
     public void loadFusionReferenceData(final CommandLine cmdLineArgs, final String outputDir, SvGeneTranscriptCollection ensemblDataCache)
@@ -98,6 +104,12 @@ public class FusionDisruptionAnalyser
         mFusionFinder = new SvFusionAnalyser(cmdLineArgs, ensemblDataCache, mOutputDir);
 
         mSkipFusionCheck = cmdLineArgs.hasOption(SKIP_FUSION_OUTPUT);
+
+        if(cmdLineArgs.hasOption(PRE_GENE_BREAKEND_DISTANCE))
+        {
+            int preGeneBreakendDistance = Integer.parseInt(cmdLineArgs.getOptionValue(PRE_GENE_BREAKEND_DISTANCE));
+            PRE_GENE_PROMOTOR_DISTANCE = preGeneBreakendDistance;
+        }
 
         if (cmdLineArgs.hasOption(SAMPLE_RNA_FILE))
         {
@@ -178,6 +190,8 @@ public class FusionDisruptionAnalyser
 
     public void run(final String sampleId, final List<SvVarData> svList, final List<SvCluster> clusters, Map<String, List<SvBreakend>> chrBreakendMap)
     {
+        mPerfCounter.start();
+
         mSampleId = sampleId;
         mChrBreakendMap = chrBreakendMap;
 
@@ -186,6 +200,10 @@ public class FusionDisruptionAnalyser
 
         if(!mSampleRnaData.isEmpty())
             assessRnaFusions();
+
+        mChrBreakendMap = null;
+
+        mPerfCounter.stop();
     }
 
     private void findFusions(final List<SvVarData> svList, final List<SvCluster> clusters)
@@ -375,6 +393,12 @@ public class FusionDisruptionAnalyser
         if (fusions.isEmpty())
             return;
 
+        if(chain != null)
+        {
+            // a chain cannot be an exon-exon fusion, so cull any of these
+            fusions = fusions.stream().filter(x -> !x.isExonic()).collect(Collectors.toList());
+        }
+
         // mFusions.addAll(fusions);
 
         if(LOGGER.isDebugEnabled())
@@ -446,6 +470,9 @@ public class FusionDisruptionAnalyser
 
             writeRnaMatchData(mSampleId, rnaFusion);
         }
+
+        // move from consideration to de-link RNA data from SV types
+        mSampleRnaData.remove(mSampleId);
     }
 
     public void annotateRnaFusions(final RnaFusionData rnaFusion)
@@ -1065,6 +1092,8 @@ public class FusionDisruptionAnalyser
 
     public void close()
     {
+        mPerfCounter.logStats();
+
         if(mFusionFinder != null)
             mFusionFinder.onCompleted();
 

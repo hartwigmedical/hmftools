@@ -13,6 +13,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
+import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantData;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 import com.hartwig.hmftools.svanalysis.analysis.CNAnalyser;
@@ -187,10 +188,15 @@ public class SvAnalyser {
                 driverGeneAnnotator.setChrCopyNumberMap(cnAnalyser.getChrCopyNumberMap());
             }
 
+            PerformanceCounter prefCounter = new PerformanceCounter("SVA Total");
+
             int count = 0;
             for (final String sampleId : samplesList)
             {
                 ++count;
+
+                prefCounter.start();
+
                 List<StructuralVariantData> svRecords = dbAccess.readStructuralVariantData(sampleId);
 
                 List<SvVarData> svVarData = createSvData(svRecords, !createNoneSvsFromCNData);
@@ -243,12 +249,16 @@ public class SvAnalyser {
 
                 sampleAnalyser.writeOutput();
 
+                prefCounter.stop();
+
                 if(svaConfig.MaxSamples > 0 && count >= svaConfig.MaxSamples)
                 {
                     LOGGER.info("exiting after max sample count {} reached", count);
                     break;
                 }
             }
+
+            prefCounter.logStats();
 
             sampleAnalyser.close();
 

@@ -79,12 +79,9 @@ public class SvSampleAnalyser {
     private SvClusteringMethods mClusteringMethods;
     private CNAnalyser mCopyNumberAnalyser;
 
-    private PerformanceCounter mPerfCounter;
-    private PerformanceCounter mPc1;
-    private PerformanceCounter mPc2;
-    private PerformanceCounter mPc3;
-    private PerformanceCounter mPc4;
-    private PerformanceCounter mPc5;
+    private PerformanceCounter mPcPrep;
+    private PerformanceCounter mPcClusterAnalyse;
+    private PerformanceCounter mPcWrite;
 
     private static final Logger LOGGER = LogManager.getLogger(SvSampleAnalyser.class);
 
@@ -115,15 +112,9 @@ public class SvSampleAnalyser {
         mReplicationOriginAnnotator = new ReplicationOriginAnnotator();
         mReplicationOriginAnnotator.loadReplicationOrigins(mConfig.ReplicationOriginsFile);
 
-        mPerfCounter = new PerformanceCounter("Total");
-
-        // mPc1 = new PerformanceCounter("Annotate&Filter");
-        mPc2 = new PerformanceCounter("Preparation");
-        mPc3 = new PerformanceCounter("ClusterAndAnalyse");
-        // mPc4 = new PerformanceCounter("Analyse");
-        mPc5 = new PerformanceCounter("WriteCSV");
-
-        mPerfCounter.start();
+        mPcPrep = new PerformanceCounter("Preparation");
+        mPcClusterAnalyse = new PerformanceCounter("ClusterAndAnalyse");
+        mPcWrite = new PerformanceCounter("WriteCSV");
     }
 
     public final List<SvVarData> getVariants() { return mAllVariants; }
@@ -241,26 +232,26 @@ public class SvSampleAnalyser {
 
         LOGGER.debug("sample({}) clustering {} variants", mSampleId, mAllVariants.size());
 
-        mPc2.start();
+        mPcPrep.start();
         annotateAndFilterVariants();
         mClusteringMethods.populateChromosomeBreakendMap(mAllVariants);
         mClusteringMethods.annotateNearestSvData();
         LinkFinder.findDeletionBridges(mClusteringMethods.getChrBreakendMap());
         mClusteringMethods.setSimpleVariantLengths(mSampleId);
         mReplicationOriginAnnotator.setReplicationOrigins(mClusteringMethods.getChrBreakendMap());
-        mPc2.stop();
+        mPcPrep.stop();
 
-        mPc3.start();
+        mPcClusterAnalyse.start();
 
         mAnalyser.setSampleData(mSampleId, mAllVariants);
         mAnalyser.clusterAndAnalyse();
 
-        mPc3.stop();
+        mPcClusterAnalyse.stop();
     }
 
     public void writeOutput()
     {
-        mPc5.start();
+        mPcWrite.start();
 
         if(!mConfig.OutputCsvPath.isEmpty())
         {
@@ -275,7 +266,7 @@ public class SvSampleAnalyser {
             mVisWriter.writeOutput(mAnalyser.getClusters(), mAllVariants);
         }
 
-        mPc5.stop();
+        mPcWrite.stop();
 
     }
 
@@ -665,13 +656,9 @@ public class SvSampleAnalyser {
         mVisWriter.close();
 
         // log perf stats
-        mPerfCounter.stop();
-        mPerfCounter.logStats(false);
-        // mPc1.logStats(false);
-        mPc2.logStats(false);
-        mPc3.logStats(false);
-        // mPc4.logStats(false);
-        mPc5.logStats(false);
+        mPcPrep.logStats();
+        mPcClusterAnalyse.logStats();
+        mPcWrite.logStats();
 
         mAnalyser.logStats();
     }

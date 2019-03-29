@@ -4,7 +4,7 @@ public class GeneFusion
 {
     private final Transcript mUpstreamTrans;
 
-    private final Transcript mDownstream;
+    private final Transcript mDownstreamTrans;
 
     private String mPrimarySource;
 
@@ -22,7 +22,7 @@ public class GeneFusion
     public GeneFusion(final Transcript upstreamTrans, final Transcript downstream, boolean phaseMatched, boolean viable)
     {
         mUpstreamTrans = upstreamTrans;
-        mDownstream = downstream;
+        mDownstreamTrans = downstream;
         mPrimarySource = "";
         mIsReportable = false;
         mKnownFusionType = REPORTABLE_TYPE_NONE;
@@ -31,7 +31,7 @@ public class GeneFusion
     }
 
     public Transcript upstreamTrans() { return mUpstreamTrans; }
-    public Transcript downstreamTrans() { return mDownstream; }
+    public Transcript downstreamTrans() { return mDownstreamTrans; }
 
     public boolean reportable(){ return mIsReportable; }
     public void setReportable(boolean toggle) { mIsReportable = toggle; }
@@ -44,4 +44,9 @@ public class GeneFusion
 
     public boolean phaseMatched(){ return mPhaseMatched; }
     public boolean viable(){ return mViable; }
+
+    public boolean isExonic()
+    {
+        return mUpstreamTrans.isExonic() &&mDownstreamTrans.isExonic();
+    }
 }

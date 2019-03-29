@@ -37,8 +37,6 @@ public class GeneAnnotation {
     private double mPloidy;
     private String mInsertSequence;
 
-    private String mPrecedingGeneId;
-
     public GeneAnnotation(int varId, final boolean isStart, final String geneName, final String stableId,
             final int strand, final List<String> synonyms, final List<Integer> entrezIds,
             final String karyotypeBand)
@@ -56,13 +54,13 @@ public class GeneAnnotation {
         mPosition = -1;
         mPloidy = 0;
         mInsertSequence = "";
-        mPrecedingGeneId = "";
 
         mSynonyms = synonyms;
         mEntrezIds = entrezIds;
         mKaryotypeBand = karyotypeBand;
     }
 
+    /*
     public GeneAnnotation(@NotNull final EnrichedStructuralVariant variant, final boolean isStart, final String geneName,
             final String stableId, final int strand, final List<String> synonyms, final List<Integer> entrezIds, final String karyotypeBand)
     {
@@ -79,7 +77,6 @@ public class GeneAnnotation {
         mPloidy = 0;
         mVarId = -1;
         mInsertSequence = "";
-        mPrecedingGeneId = "";
 
         if(variant != null)
         {
@@ -96,6 +93,7 @@ public class GeneAnnotation {
         mEntrezIds = entrezIds;
         mKaryotypeBand = karyotypeBand;
     }
+    */
 
     public void setPositionalData(final String chromosome, long position, byte orientation)
     {
@@ -170,9 +168,6 @@ public class GeneAnnotation {
     public String karyotypeBand() {
         return mKaryotypeBand;
     }
-
-    public final String getmPrecedingGeneId() { return mPrecedingGeneId; }
-    public void setPrecedingGeneId(final String geneId) { mPrecedingGeneId = geneId; }
 
     public static boolean isUpstream(final GeneAnnotation gene)
     {

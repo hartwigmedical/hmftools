@@ -168,14 +168,7 @@ public class SvGeneTranscriptCollection
                     // annotate with preceding gene info if the up distance isn't set
                     if(transcript.exonDistanceUp() == -1)
                     {
-                        EnsemblGeneData precedingGene = findPrecedingGene(geneData, geneData.Strand == 1 ? geneRegionsReversed : geneRegions);
-                        if(precedingGene != null)
-                        {
-                            currentGene.setPrecedingGeneId(precedingGene.GeneId);
-
-                            long preDistance = geneData.Strand == 1 ? position - precedingGene.GeneEnd : precedingGene.GeneStart - position;
-                            transcript.setExonDistances((int)preDistance, transcript.exonDistanceDown());
-                        }
+                        setPrecedingGeneDistance(transcript, geneData, position, geneRegions, geneRegionsReversed);
                     }
                 }
 
@@ -187,6 +180,20 @@ public class SvGeneTranscriptCollection
         }
 
         return geneAnnotations;
+    }
+
+    private void setPrecedingGeneDistance(
+            Transcript transcript, final EnsemblGeneData geneData, long position,
+            final List<EnsemblGeneData> geneRegions, final List<EnsemblGeneData> geneRegionsReversed)
+    {
+        // annotate with preceding gene info if the up distance isn't set
+        long precedingGeneSAPos = findPrecedingGeneSpliceAcceptorPosition(geneData, geneData.Strand == 1 ? geneRegionsReversed : geneRegions);
+
+        if(precedingGeneSAPos >= 0)
+        {
+            long preDistance = geneData.Strand == 1 ? position - precedingGeneSAPos : precedingGeneSAPos - position;
+            transcript.setExonDistances((int)preDistance, transcript.exonDistanceDown());
+        }
     }
 
     public static List<TranscriptExonData> nextTranscriptExons(final List<TranscriptExonData> transExonDataList, int currentIndex)
@@ -210,11 +217,11 @@ public class SvGeneTranscriptCollection
         return transcriptExons;
     }
 
-    public final List<TranscriptExonData> getTranscriptExons(final String geneName, final String transcriptId)
+    public final List<TranscriptExonData> getTranscriptExons(final String geneId, final String transcriptId)
     {
         List<TranscriptExonData> exonDataList = Lists.newArrayList();
 
-        final List<TranscriptExonData> transExonDataList = mGeneTransExonDataMap.get(geneName);
+        final List<TranscriptExonData> transExonDataList = mGeneTransExonDataMap.get(geneId);
 
         if (transExonDataList == null || transExonDataList.isEmpty())
             return exonDataList;
@@ -289,41 +296,55 @@ public class SvGeneTranscriptCollection
         return matchedGenes;
     }
 
-    private EnsemblGeneData findPrecedingGene(final EnsemblGeneData geneData, List<EnsemblGeneData> geneDataList)
+    private long findPrecedingGeneSpliceAcceptorPosition(final EnsemblGeneData refGene, List<EnsemblGeneData> geneDataList)
     {
-        // find the first upstream non-overlapping gene
-        if(geneData.Strand == 1)
+        // find the first upstream non-overlapping gene with a splice acceptor
+        if(refGene.Strand == 1)
         {
-            for(int i = geneData.getReverseListIndex() - 1; i >= 0; --i)
+            for(int i = refGene.getReverseListIndex() - 1; i >= 0; --i)
             {
                 final EnsemblGeneData gene = geneDataList.get(i);
 
-                if(gene.Strand != geneData.Strand)
+                if(gene.Strand != refGene.Strand)
                     continue;
 
-                if(gene.GeneEnd > geneData.GeneStart)
+                if(gene.GeneEnd > refGene.GeneStart)
                     continue;
 
-                return gene;
+                List<TranscriptExonData> transExonData = getTranscriptExons(gene.GeneId, "");
+
+                if(transExonData.size() <= 1)
+                    continue;
+
+                // otherwise taken the start of the last exon
+                TranscriptExonData lastExonData = transExonData.get(transExonData.size() - 1);
+                return lastExonData.ExonStart;
             }
         }
         else
         {
-            for(int i = geneData.getListIndex() + 1; i < geneDataList.size(); ++i)
+            for(int i = refGene.getListIndex() + 1; i < geneDataList.size(); ++i)
             {
                 final EnsemblGeneData gene = geneDataList.get(i);
 
-                if(gene.Strand != geneData.Strand)
+                if(gene.Strand != refGene.Strand)
                     continue;
 
-                if(gene.GeneStart < geneData.GeneEnd)
+                if(gene.GeneStart < refGene.GeneEnd)
                     continue;
 
-                return gene;
+                List<TranscriptExonData> transExonData = getTranscriptExons(gene.GeneId, "");
+
+                if(transExonData.size() <= 1)
+                    continue;
+
+                // otherwise taken the start of the last exon
+                TranscriptExonData lastExonData = transExonData.get(0);
+                return lastExonData.ExonEnd;
             }
         }
 
-        return null;
+        return -1;
     }
 
     public static Transcript extractTranscriptExonData(final List<TranscriptExonData> transcriptExons, long position, final GeneAnnotation geneAnnotation)

@@ -1477,9 +1477,9 @@ public class ClusterAnalyser {
 
     public void logStats()
     {
-        mPcClustering.logStats(false);
-        mPcChaining.logStats(false);
-        mPcAnnotation.logStats(false);
+        mPcClustering.logStats();
+        mPcChaining.logStats();
+        mPcAnnotation.logStats();
     }
 
 }

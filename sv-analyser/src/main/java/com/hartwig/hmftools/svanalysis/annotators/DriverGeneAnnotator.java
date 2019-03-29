@@ -40,6 +40,7 @@ import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.gene.ImmutableGeneCopyNumber;
 import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 import com.hartwig.hmftools.common.region.HmfTranscriptRegion;
+import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneAnnotation;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 import com.hartwig.hmftools.svanalysis.types.DriverGeneData;
@@ -69,6 +70,8 @@ public class DriverGeneAnnotator
     private String mOutputDir;
     private double mSamplePloidy;
     private List<DriverGeneData> mDriverGeneDataList;
+
+    private PerformanceCounter mPerfCounter;
 
     // references only
     private String mSampleId;
@@ -101,6 +104,8 @@ public class DriverGeneAnnotator
         mWriteMatchedGeneCopyNumber = false;
         mGCNFileWriter = null;
         mVisWriter = null;
+
+        mPerfCounter = new PerformanceCounter("Drivers");
     }
 
     private static final String WRITE_GCN_DATA = "write_gcn_data";
@@ -201,6 +206,8 @@ public class DriverGeneAnnotator
 
     public void annotateSVs(final String sampleId, final List<SvCluster> clusters, final Map<String, List<SvBreakend>> chrBreakendMap)
     {
+        mPerfCounter.start();
+
         mSampleId = sampleId;
         mChrBreakendMap = chrBreakendMap;
 
@@ -263,6 +270,11 @@ public class DriverGeneAnnotator
                 annotateBiallelicEvent(driverGeneData);
             }
         }
+
+        mSampleLOHData.clear();
+        mChrBreakendMap = null;
+
+        mPerfCounter.stop();
     }
 
     private void annotateDeleteEvent(final DriverGeneData driverGeneData, final List<SvBreakend> breakendList)
@@ -733,6 +745,8 @@ public class DriverGeneAnnotator
 
     public void close()
     {
+        mPerfCounter.logStats();
+
         closeBufferedWriter(mFileWriter);
         closeBufferedWriter(mGCNFileWriter);
     }
