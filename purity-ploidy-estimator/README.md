@@ -485,17 +485,17 @@ Purity|NormFactor|Score|DiploidProportion|Ploidy|SomaticDeviation
 
 #### Copy Number File
 
-The copy number file `TUMOR.purple.cnv` contains contiguous, copy number segments of the tumor sample:
+The copy number file `TUMOR.purple.cnv` contains the copy number information over contiguous segments of the tumor sample:
 
 Column  | Example Value | Description
 ---|---|---
-Chromosome  | 1 | Segment chromosome
-Start  | 1 | Segment start
-End  | 87337011 | Segment end
-CopyNumber  | 2.8189 | Copy number of the segment
+Chromosome  | 1 | Chromosome of copy number segment
+Start  | 1 | Start base of copy number segment
+End  | 87337011 | End base of copy number segment
+CopyNumber  | 2.8189 | Fitted absolute copy number of region adjusted for purity and ploidy
 BafCount  | 4464 | Count of AMBER baf points covered by this segment
-ObservedBAF  | 0.7094 | Combined reference and tumor BAF
-ActualBAF  | 0.7124 | Tumor BAF after adjusting for purity and ploidy
+ObservedBAF  | 0.7094 | Combined reference and tumor BAF **un**adjusted for purity and ploidy
+BAF  | 0.7124 | Tumor BAF after adjusted for purity and ploidy
 SegmentStartSupport  | TELOMERE | Reason segment was created. Can be CENTROMERE, TELOMERE, a SV type, or NONE.
 SegmentEndSupport  | BND | Reason segment ended. Will match SegmentStartSupport of following segment.
 Method | BAF_WEIGHTED | Method used to determine copy number. One of BAF_WEIGHTED, STRUCTURAL_VARIANT, LONG_ARM, GERMLINE_AMPLIFICATION
@@ -503,6 +503,8 @@ DepthWindowCount | 77277 | Count of COBALT windows covered by this segment
 GcContent | 0.4351 | Proportion of segment that is G or C
 MinStart | 1 | Minimum start location of this segment if there is any uncertainty.
 MaxStart | 1 | Maximum start location of this segment if there is any uncertainty.
+MinorAllelePloidy | 0.8165 | Ploidy of minor allele adjusted for purity
+MajorAllelePloidy | 2.0076 | Ploidy of major allele adjusted for purity
 
 
 ### CIRCOS Output
@@ -564,6 +566,7 @@ Threads | Elapsed Time| CPU Time | Peak Mem
 ## Version History
 - Upcoming
   - Removed unused columns from GeneCopyNumber output
+  - Added minorAllelePloidy and majorAllelePloidy to copy number output
 - 2.24
   - Recovered SVs were not being used for re-segmentation.
 - 2.23

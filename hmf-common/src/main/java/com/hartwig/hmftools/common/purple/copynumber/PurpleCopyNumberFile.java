@@ -67,7 +67,7 @@ public enum PurpleCopyNumberFile {
                 .add("copyNumber")
                 .add("bafCount")
                 .add("observedBAF")
-                .add("actualBAF")
+                .add("baf")
                 .add("segmentStartSupport")
                 .add("segmentEndSupport")
                 .add("method")
@@ -75,6 +75,8 @@ public enum PurpleCopyNumberFile {
                 .add("gcContent")
                 .add("minStart")
                 .add("maxStart")
+                .add("minorAllelePloidy")
+                .add("majorAllelePloidy")
                 .toString();
     }
 
@@ -94,6 +96,8 @@ public enum PurpleCopyNumberFile {
                 .add(FORMAT.format(copyNumber.gcContent()))
                 .add(String.valueOf(copyNumber.minStart()))
                 .add(String.valueOf(copyNumber.maxStart()))
+                .add(FORMAT.format(copyNumber.minorAllelePloidy()))
+                .add(FORMAT.format(copyNumber.majorAllelePloidy()))
                 .toString();
     }
 
@@ -111,16 +115,10 @@ public enum PurpleCopyNumberFile {
                 .segmentStartSupport(SegmentSupport.valueOf(values[7]))
                 .segmentEndSupport(SegmentSupport.valueOf(values[8]))
                 .method(CopyNumberMethod.valueOf(values[9]))
-                .depthWindowCount(0)
-                .gcContent(0)
-                .minStart(0)
-                .maxStart(0);
-        if (values.length > 10) {
-            builder.depthWindowCount(Integer.valueOf(values[10]));
-        }
-        if (values.length > 11) {
-            builder.gcContent(Double.valueOf(values[11])).minStart(Long.valueOf(values[12])).maxStart(Long.valueOf(values[13]));
-        }
+                .depthWindowCount(Integer.valueOf(values[10]))
+                .gcContent(Double.valueOf(values[11]))
+                .minStart(Long.valueOf(values[12]))
+                .maxStart(Long.valueOf(values[13]));
 
         return builder.build();
     }
