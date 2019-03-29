@@ -100,7 +100,7 @@ public class ExternalDBFilters
                     continue;
                 }
 
-                // Gene,TranscriptId,Chromosome,Position,Ref,Alt,CodingEffect,AllEffects,HgvsProtein,HgvsCoding,DBSnpId,ClinvarSignificance
+                // Gene,TranscriptId,Chromosome,Position,Ref,Alt,CodingEffect,AllEffects,HgvsProtein,HgvsCoding,DBSnpId,ClinvarSignificance,ClinvarSigInfo
                 VariantFilter filter = new VariantFilter(
                         items[0],
                         items[1],
