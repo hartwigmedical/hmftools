@@ -333,14 +333,14 @@ public class VisualiserWriter
             }
 
             // first remove duplicates from amongst the genes
-            List<String> logggedGenes = Lists.newArrayList();
+            List<String> loggedGenes = Lists.newArrayList();
 
             for(final VisGeneData geneData : mGeneData)
             {
-                if(logggedGenes.contains(geneData.GeneId))
+                if(loggedGenes.contains(geneData.GeneId))
                     continue;
 
-                logggedGenes.add(geneData.GeneId);
+                loggedGenes.add(geneData.GeneId);
 
                 // log relevant exons
                 final List<TranscriptExonData> exonDataLst = mGeneTranscriptCollection.getTranscriptExons(geneData.GeneId, geneData.TranscriptId);

@@ -111,19 +111,21 @@ public class ChainFinder
 
     public ChainFinder()
     {
-        mPartialChains = Lists.newArrayList();
-        mFoldbacks = Lists.newArrayList();
-        mComplexDupCandidates = Lists.newArrayList();
         mAdjacentMatchingPairs = Lists.newArrayList();
-        mUnlinkedSVs = Lists.newArrayList();
+        mAssemblyLinkedPairs = null;
+        mBreakendLastLinkIndexMap = Maps.newHashMap();
+        mChrAllelePloidies = Maps.newHashMap();
+        mComplexDupCandidates = Lists.newArrayList();
+        mFoldbacks = Lists.newArrayList();
+        mPartialChains = Lists.newArrayList();
         mSkippedPairs = Lists.newArrayList();
+        mSvBreakendPossibleLinks = Maps.newHashMap();
+        mSvOriginalReplicationMap = Maps.newHashMap();
+        mSvReplicationMap = Maps.newHashMap();
+        mUnlinkedSVs = Lists.newArrayList();
         mUniquePairs = Lists.newArrayList();
         mUnlinkedBreakendMap = Maps.newHashMap();
-        mSvReplicationMap = Maps.newHashMap();
-        mSvOriginalReplicationMap = Maps.newHashMap();
-        mSvBreakendPossibleLinks = Maps.newHashMap();
-        mChrAllelePloidies = Maps.newHashMap();
-        mBreakendLastLinkIndexMap= Maps.newHashMap();
+
         mHasReplication = false;
         mLogVerbose = false;
         mRunValidation = false;
@@ -145,20 +147,23 @@ public class ChainFinder
         mIsValid = true;
         mSkippedPair = false;
 
-        mAssemblyLinkedPairs = Lists.newArrayList(cluster.getAssemblyLinkedPairs());
-        mSkippedPairs.clear();
-        mFoldbacks.clear();
-        mFoldbacks.addAll(mCluster.getFoldbacks());
-        mComplexDupCandidates.clear();
+        // critical that all state is cleared before the next run
         mAdjacentMatchingPairs.clear();
-
-        mPartialChains.clear();
-        mUnlinkedSVs.clear();
-        mUnlinkedBreakendMap.clear();
-        mSvBreakendPossibleLinks.clear();
-        mSvReplicationMap.clear();
-        mSvOriginalReplicationMap.clear();
+        mAssemblyLinkedPairs = Lists.newArrayList(cluster.getAssemblyLinkedPairs());
+        mBreakendLastLinkIndexMap.clear();
         mChrAllelePloidies.clear();
+        mComplexDupCandidates.clear();
+        mFoldbacks.clear();
+        mPartialChains.clear();
+        mSkippedPairs.clear();
+        mSvBreakendPossibleLinks.clear();
+        mSvOriginalReplicationMap.clear();
+        mSvReplicationMap.clear();
+        mUnlinkedBreakendMap.clear();
+        mUniquePairs.clear();
+        mUnlinkedSVs.clear();
+
+        mFoldbacks.addAll(mCluster.getFoldbacks());
     }
 
     public void setLogVerbose(boolean toggle)
