@@ -118,7 +118,7 @@ public class PerformanceCounter {
     }
 
     public void logStats() {
-        logStats(true);
+        logStats(false);
     }
 
     public void logStats(boolean logIntervals)
