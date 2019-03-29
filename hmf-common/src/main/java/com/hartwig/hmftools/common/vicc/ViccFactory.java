@@ -297,7 +297,6 @@ public abstract class ViccFactory {
                     }
                 }
             }
-
         } else {
             stringToCSVOncoKb.append(";;;;;;;;;;;;;;;;;;;;;;;;;");
         }
