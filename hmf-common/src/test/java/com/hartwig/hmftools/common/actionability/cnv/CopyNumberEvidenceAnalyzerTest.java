@@ -46,12 +46,6 @@ public class CopyNumberEvidenceAnalyzerTest {
                 .minRegionStartSupport(SegmentSupport.NONE)
                 .minRegionEndSupport(SegmentSupport.NONE)
                 .minRegionMethod(CopyNumberMethod.UNKNOWN)
-                .nonsenseBiallelicCount(0)
-                .nonsenseNonBiallelicCount(0)
-                .nonsenseNonBiallelicPloidy(0)
-                .spliceBiallelicCount(0)
-                .spliceNonBiallelicCount(0)
-                .missenseNonBiallelicPloidy(0)
                 .minMinorAllelePloidy(0)
                 .transcriptID("trans")
                 .transcriptVersion(1)
@@ -59,9 +53,6 @@ public class CopyNumberEvidenceAnalyzerTest {
                 .chromosome("1")
                 .start(1)
                 .end(2)
-                .spliceNonBiallelicPloidy(0)
-                .missenseBiallelicCount(0)
-                .missenseNonBiallelicCount(0)
                 .build();
 
            assertFalse(cnvAnalyzer.evidenceForCopyNumber(geneCopyNumber, 2D, "Breast", cancerTypeAnalyzer).isEmpty());

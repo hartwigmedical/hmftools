@@ -872,15 +872,6 @@ public class DriverGeneAnnotator
                         .minRegionStartSupport(SegmentSupport.valueOf(items[index++]))
                         .minRegionEndSupport(SegmentSupport.valueOf(items[index++]))
                         .minRegionMethod(CopyNumberMethod.valueOf(items[index++]))
-                        .nonsenseBiallelicCount(Integer.parseInt(items[index++]))
-                        .nonsenseNonBiallelicCount(Integer.parseInt(items[index++]))
-                        .nonsenseNonBiallelicPloidy(Double.parseDouble(items[index++]))
-                        .spliceBiallelicCount(Integer.parseInt(items[index++]))
-                        .spliceNonBiallelicCount(Integer.parseInt(items[index++]))
-                        .spliceNonBiallelicPloidy(Double.parseDouble(items[index++]))
-                        .missenseBiallelicCount(Integer.parseInt(items[index++]))
-                        .missenseNonBiallelicCount(Integer.parseInt(items[index++]))
-                        .missenseNonBiallelicPloidy(Double.parseDouble(items[index++]))
                         .minMinorAllelePloidy(Double.parseDouble(items[index++]))
                         .build();
 
@@ -928,11 +919,7 @@ public class DriverGeneAnnotator
                     gcnData.minRegionStartSupport(), gcnData.minRegionEndSupport(), gcnData.minRegionMethod().toString()));
 
 
-            writer.write(String.format(",%d,%d,%.4f,%d,%d,%.4f,%d,%d,%.4f,%.4f,",
-                    gcnData.nonsenseBiallelicCount(), gcnData.nonsenseNonBiallelicCount(), gcnData.nonsenseNonBiallelicPloidy(),
-                    gcnData.spliceBiallelicCount(), gcnData.spliceNonBiallelicCount(), gcnData.spliceNonBiallelicPloidy(),
-                    gcnData.missenseBiallelicCount(), gcnData.missenseNonBiallelicCount(), gcnData.missenseNonBiallelicPloidy(),
-                    gcnData.minMinorAllelePloidy()));
+            writer.write(String.format(",%.4f,", gcnData.minMinorAllelePloidy()));
 
             writer.newLine();
 

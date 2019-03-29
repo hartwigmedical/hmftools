@@ -17,11 +17,11 @@ public class GeneCopyNumberFileTest {
     @Test
     public void testSupportOlderFileFormat() {
         final String oldVersion =
-                "1\t11869\t14409\tDDX11L1\t2.60025049329193\t2.60025049329193\t2.60025049329193\t1\t0\t0\tENST00000456328\t2\tp36.33";
+                "1\t11869\t14409\tDDX11L1\t2.5717\t2.5717\t0\t1\t0\t0\tENST00000456328\t2\tp36.33\t1\t1\t87337011\tTELOMERE\tBND\tBAF_WEIGHTED\t0\t0\t0.0000\t0\t0\t0.0000\t0\t0\t0.0000\t0.5491";
 
         GeneCopyNumber copyNumber = GeneCopyNumberFile.fromString(oldVersion);
         assertEquals(11869, copyNumber.start());
-        assertEquals("p36.33", copyNumber.chromosomeBand());
+        assertEquals(0.5491, copyNumber.minMinorAllelePloidy(), 0.00001);
     }
 
     @Test
@@ -66,15 +66,6 @@ public class GeneCopyNumberFileTest {
                 .minRegionMethod(randomMethod(random))
                 .minRegionStartSupport(randomSupport(random))
                 .minRegionEndSupport(randomSupport(random))
-                .nonsenseBiallelicCount(random.nextInt())
-                .nonsenseNonBiallelicCount(random.nextInt())
-                .nonsenseNonBiallelicPloidy(nextDouble(random))
-                .spliceBiallelicCount(random.nextInt())
-                .spliceNonBiallelicCount(random.nextInt())
-                .spliceNonBiallelicPloidy(nextDouble(random))
-                .missenseBiallelicCount(random.nextInt())
-                .missenseNonBiallelicCount(random.nextInt())
-                .missenseNonBiallelicPloidy(random.nextInt())
                 .minMinorAllelePloidy(nextDouble(random));
     }
 

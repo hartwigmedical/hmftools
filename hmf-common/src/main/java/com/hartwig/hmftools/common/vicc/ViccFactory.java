@@ -5,7 +5,6 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
@@ -42,6 +41,20 @@ public abstract class ViccFactory {
     private static StringBuilder readObjectCGI(@NotNull JsonObject object, @NotNull StringBuilder headerCSV) {
         //CGI object
         StringBuilder stringToCSVCGI = new StringBuilder();
+        if (object.getAsJsonObject("cgi") != null) {
+            List<String> keysOfCGI = new ArrayList<>(object.getAsJsonObject("cgi").keySet());
+            for (int i = 0; i < keysOfCGI.size(); i++) {
+                stringToCSVCGI.append(object.getAsJsonObject("cgi").get(keysOfCGI.get(i))).append(";");
+            }
+            headerCSV.append(
+                    "Targeting; Source; cDNA; Primary Tumor type; individual_mutation; Drug full name; Curator; Drug family; Alteration; Drug; Biomarker; gDNA; Drug status; Gene; transcript; strand; info; Assay type; Alteration type; region; Evidence level; Association; Metastatic Tumor Type");
+
+        } else {
+            headerCSV.append(
+                    "Targeting; Source; cDNA; Primary Tumor type; individual_mutation; Drug full name; Curator; Drug family; Alteration; Drug; Biomarker; gDNA; Drug status; Gene; transcript; strand; info; Assay type; Alteration type; region; Evidence level; Association; Metastatic Tumor Type");
+            stringToCSVCGI.append(";;;;;;;;;;;;;;;;;;;;;; ");
+
+        }
         return stringToCSVCGI;
     }
 
@@ -54,12 +67,187 @@ public abstract class ViccFactory {
     private static StringBuilder readObjectJax(@NotNull JsonObject object, @NotNull StringBuilder headerCSV) {
         //Jax object
         StringBuilder stringToCSVJax = new StringBuilder();
+        StringBuilder stringUrl = new StringBuilder();
+        StringBuilder stringId = new StringBuilder();
+        StringBuilder stringPubmedId = new StringBuilder();
+        StringBuilder stringTitle = new StringBuilder();
+        int indexValue;
+        if (object.getAsJsonObject("jax") != null) {
+            List<String> keysOfJax = new ArrayList<>(object.getAsJsonObject("jax").keySet());
+
+            for (int j = 0; j < keysOfJax.size(); j++) {
+                if (keysOfJax.get(j).equals("molecularProfile")) {
+                    JsonObject jaxObject = object.getAsJsonObject("jax").get(keysOfJax.get(j)).getAsJsonObject();
+                    List<String> keysOfMolecularProfile = new ArrayList<>(jaxObject.keySet());
+                    for (int x = 0; x < jaxObject.keySet().size(); x++) {
+                        stringToCSVJax.append(jaxObject.get(keysOfMolecularProfile.get(x))).append(";");
+                    }
+                    indexValue = keysOfJax.indexOf("molecularProfile");
+                    keysOfJax.remove(indexValue);
+                    keysOfJax.add(indexValue, String.join(";", keysOfMolecularProfile));
+                } else if (keysOfJax.get(j).equals("therapy")) {
+                    JsonObject jaxObject = object.getAsJsonObject("jax").get(keysOfJax.get(j)).getAsJsonObject();
+                    List<String> keysOfTherapy = new ArrayList<>(jaxObject.keySet());
+                    for (int x = 0; x < jaxObject.keySet().size(); x++) {
+                        stringToCSVJax.append(jaxObject.get(keysOfTherapy.get(x))).append(";");
+                    }
+                    indexValue = keysOfJax.indexOf("therapy");
+                    keysOfJax.remove(indexValue);
+                    keysOfJax.add(indexValue, String.join(";", keysOfTherapy));
+                } else if (keysOfJax.get(j).equals("indication")) {
+                    JsonObject jaxObject = object.getAsJsonObject("jax").get(keysOfJax.get(j)).getAsJsonObject();
+                    List<String> keysOfIndication = new ArrayList<>(jaxObject.keySet());
+                    for (int x = 0; x < jaxObject.keySet().size(); x++) {
+                        stringToCSVJax.append(jaxObject.get(keysOfIndication.get(x))).append(";");
+                    }
+                    indexValue = keysOfJax.indexOf("indication");
+                    keysOfJax.remove(indexValue);
+                    keysOfJax.add(indexValue, String.join(";", keysOfIndication));
+                } else if (keysOfJax.get(j).equals("references")) {
+                    JsonArray jaxArray = object.getAsJsonObject("jax").get(keysOfJax.get(j)).getAsJsonArray();
+                    indexValue = keysOfJax.indexOf("references");
+
+                    for (int x = 0; x < jaxArray.size(); x++) {
+                        JsonObject objectRefereces = (JsonObject) jaxArray.get(x);
+                        Set<String> set = objectRefereces.keySet();
+                        keysOfJax.remove(indexValue);
+                        keysOfJax.add(indexValue, String.join(";", set));
+
+                        for (int v = 0; v < objectRefereces.keySet().size(); v++) {
+                            List<String> keysRefereces = new ArrayList<>(objectRefereces.keySet());
+                            if (keysRefereces.get(v).equals("url")) {
+                                JsonElement url = objectRefereces.get(keysRefereces.get(v));
+                                stringUrl.append(url).append(",");
+                            } else if (keysRefereces.get(v).equals("id")) {
+                                JsonElement url = objectRefereces.get(keysRefereces.get(v));
+                                stringId.append(url).append(",");
+                            } else if (keysRefereces.get(v).equals("pubMedId")) {
+                                JsonElement url = objectRefereces.get(keysRefereces.get(v));
+                                stringPubmedId.append(url).append(",");
+                            } else if (keysRefereces.get(v).equals("title")) {
+                                JsonElement url = objectRefereces.get(keysRefereces.get(v));
+                                stringTitle.append(url).append(",");
+                            }
+
+                        }
+                    }
+                    headerCSV.append(String.join(";", keysOfJax)).append(";");
+                    stringToCSVJax.append(stringUrl)
+                            .append(";")
+                            .append(stringId)
+                            .append(";")
+                            .append(stringPubmedId)
+                            .append(";")
+                            .append(stringTitle)
+                            .append(";");
+                } else {
+                    stringToCSVJax.append(object.getAsJsonObject("jax").get(keysOfJax.get(j))).append(";");
+                }
+            }
+
+        } else {
+            headerCSV.append(
+                    "responseType;approvalStatus;profileName;id;id;therapyName;evidenceType;source;id;name;efficacyEvidence;url;id;pubMedId;title;id;");
+            stringToCSVJax.append(";;;;;;;;;;;;;;;;");
+        }
         return stringToCSVJax;
     }
 
     private static StringBuilder readObjectJaxTrials(@NotNull JsonObject object, @NotNull StringBuilder headerCSV) {
         //Jax_trails object
         StringBuilder stringToCSVJaxTrials = new StringBuilder();
+        StringBuilder stringSource = new StringBuilder();
+        StringBuilder stringId = new StringBuilder();
+        StringBuilder stringName = new StringBuilder();
+        StringBuilder stringTherapyName = new StringBuilder();
+        StringBuilder stringTherapyId = new StringBuilder();
+        StringBuilder stringRequirementType = new StringBuilder();
+        StringBuilder stringProfileId = new StringBuilder();
+        StringBuilder stringProfileName = new StringBuilder();
+
+        if (object.getAsJsonObject("jax_trials") != null) {
+            List<String> keysOfJaxTrials = new ArrayList<>(object.getAsJsonObject("jax_trials").keySet());
+            for (int x = 0; x < keysOfJaxTrials.size(); x++) {
+                if (keysOfJaxTrials.get(x).equals("indications")) {
+                    JsonArray jaxTrailsArray = object.getAsJsonObject("jax_trials").get(keysOfJaxTrials.get(x)).getAsJsonArray();
+                    JsonObject objectIndications = (JsonObject) jaxTrailsArray.get(x);
+                    for (int v = 0; v < objectIndications.keySet().size(); v++) {
+                        List<String> keysIndications = new ArrayList<>(objectIndications.keySet());
+                        if (keysIndications.get(v).equals("source")) {
+                            JsonElement source = objectIndications.get(keysIndications.get(v));
+                            stringSource.append(source).append(";");
+                        } else if (keysIndications.get(v).equals("id")) {
+                            JsonElement id = objectIndications.get(keysIndications.get(v));
+                            stringSource.append(id).append(";");
+                        } else if (keysIndications.get(v).equals("name")) {
+                            JsonElement name = objectIndications.get(keysIndications.get(v));
+                            stringSource.append(name).append(";");
+                        }
+                    }
+                    stringToCSVJaxTrials.append(stringSource).append(stringId).append(stringName);
+                } else if (keysOfJaxTrials.get(x).equals("variantRequirementDetails")) {
+                    JsonElement jaxTrailsArray = object.getAsJsonObject("jax_trials").get(keysOfJaxTrials.get(x));
+                    for (int v = 0; v < jaxTrailsArray.getAsJsonArray().size(); v++) {
+                        List<String> keysVariantRequirementDetails =
+                                new ArrayList<>(jaxTrailsArray.getAsJsonArray().get(v).getAsJsonObject().keySet());
+
+                        if (keysVariantRequirementDetails.get(v).equals("molecularProfile")) {
+
+                            JsonElement elementVariantRequirementDetails =
+                                    object.getAsJsonObject("jax_trials").get("variantRequirementDetails");
+                            for (int y = 0; y < elementVariantRequirementDetails.getAsJsonArray().size(); y++) {
+                                JsonElement elementMolecularProfile =
+                                        elementVariantRequirementDetails.getAsJsonArray().get(y).getAsJsonObject().get("molecularProfile");
+                                JsonElement elementRequirementType =
+                                        elementVariantRequirementDetails.getAsJsonArray().get(y).getAsJsonObject().get("requirementType");
+                                stringRequirementType.append(elementRequirementType);
+                                List<String> keysMolecularProfile = new ArrayList<>(elementMolecularProfile.getAsJsonObject().keySet());
+                                for (int i = 0; i < keysMolecularProfile.size(); i++) {
+                                    if (keysMolecularProfile.get(i).equals("profileName")) {
+                                        JsonElement profileName = elementMolecularProfile.getAsJsonObject().get("profileName");
+                                        stringProfileName.append(profileName).append(",");
+                                    } else if (keysMolecularProfile.get(i).equals("id")) {
+                                        JsonElement profileId = elementMolecularProfile.getAsJsonObject().get("id");
+                                        stringProfileId.append(profileId).append(",");
+                                    }
+                                }
+
+                            }
+                            stringToCSVJaxTrials.append(stringProfileName)
+                                    .append(";")
+                                    .append(stringProfileId)
+                                    .append(";")
+                                    .append(stringRequirementType)
+                                    .append(";");
+                        }
+                    }
+                } else if (keysOfJaxTrials.get(x).equals("therapies")) {
+                    JsonElement jaxTrailsArray = object.getAsJsonObject("jax_trials").get(keysOfJaxTrials.get(x));
+                    for (int v = 0; v < jaxTrailsArray.getAsJsonArray().size(); v++) {
+                        List<String> keysTherapies = new ArrayList<>(jaxTrailsArray.getAsJsonArray().get(v).getAsJsonObject().keySet());
+                        JsonObject objectTherapies = jaxTrailsArray.getAsJsonArray().get(v).getAsJsonObject();
+
+                        for (int z = 0; z < keysTherapies.size(); z++) {
+                            if (keysTherapies.get(z).equals("id")) {
+                                JsonElement id = objectTherapies.get(keysTherapies.get(z));
+                                stringTherapyId.append(id).append(",");
+                            } else if (keysTherapies.get(z).equals("therapyName")) {
+                                JsonElement therapyName = objectTherapies.get(keysTherapies.get(z));
+                                stringTherapyName.append(therapyName).append(",");
+                            }
+                        }
+                    }
+                    stringToCSVJaxTrials.append(stringTherapyId).append(";").append(stringTherapyName).append(";");
+                } else {
+                    stringToCSVJaxTrials.append(object.getAsJsonObject("jax_trials").get(keysOfJaxTrials.get(x))).append(";");
+                }
+            }
+        } else {
+            stringToCSVJaxTrials.append(";;;;;;;;;;;;;;;");
+
+        }
+        headerCSV.append(
+                "source;id;name;title;gender;nctId;sponsors;recruitment;variantRequirements;updateDate;phase;profileName;id;requirementType;id;therapyName");
         return stringToCSVJaxTrials;
     }
 
@@ -78,6 +266,43 @@ public abstract class ViccFactory {
     private static StringBuilder readObjectOncokb(@NotNull JsonObject object, @NotNull StringBuilder headerCSV) {
         //ONCOKB object
         StringBuilder stringToCSVOncoKb = new StringBuilder();
+        if (object.getAsJsonObject("oncokb") != null) {
+            List<String> keysOfoncoKb = new ArrayList<>(object.getAsJsonObject("oncokb").keySet());
+            for (int x = 0; x < keysOfoncoKb.size(); x++) {
+                JsonObject pmkbObject = object.getAsJsonObject("oncokb").get(keysOfoncoKb.get(x)).getAsJsonObject();
+                List<String> keysOfBiological = new ArrayList<>(pmkbObject.keySet());
+                for (int y = 0; y < keysOfBiological.size(); y++) {
+                    if (keysOfBiological.get(y).equals("variant")) {
+                        JsonObject oncokbVariant = pmkbObject.get(keysOfBiological.get(y)).getAsJsonObject();
+                        List<String> keysOfVariant = new ArrayList<>(oncokbVariant.keySet());
+                        for (int z = 0; z < keysOfVariant.size(); z++) {
+                            if (keysOfVariant.get(z).equals("consequence")) {
+                                JsonObject oncokbConsequence = oncokbVariant.get(keysOfVariant.get(z)).getAsJsonObject();
+                                List<String> keysOfConsequence = new ArrayList<>(oncokbConsequence.keySet());
+                                for (int v = 0; v < keysOfConsequence.size(); v++) {
+                                    stringToCSVOncoKb.append(oncokbConsequence.get(keysOfConsequence.get(v))).append(";");
+                                }
+                            } else if (keysOfVariant.get(z).equals("gene")) {
+                                JsonObject oncokbGene = oncokbVariant.get(keysOfVariant.get(z)).getAsJsonObject();
+                                List<String> keysOfGene = new ArrayList<>(oncokbGene.keySet());
+                                for (int i = 0; i < keysOfGene.size(); i++) {
+                                    stringToCSVOncoKb.append(oncokbGene.get(keysOfGene.get(i))).append(";");
+                                }
+                            } else {
+                                stringToCSVOncoKb.append(oncokbVariant.get(keysOfVariant.get(z))).append(";");
+                            }
+                        }
+                    } else {
+                        stringToCSVOncoKb.append(pmkbObject.get(keysOfBiological.get(y))).append(";");
+                    }
+                }
+            }
+        } else {
+            stringToCSVOncoKb.append(";;;;;;;;;;;;;;;;;;;;;;;;;");
+        }
+        headerCSV.append("mutationEffectPmids;Isoform;variantResidues;proteinStart;name;proteinEnd;refResidues;alteration;term;description;"
+                + "isGenerallyTruncating;oncogene;name;hugoSymbol;curatedRefSeq;entrezGeneId;geneAliases;tsg;curatedIsoform;Entrez Gene ID;"
+                + "oncogenic;mutationEffect;RefSeq;gene;mutationEffectAbstracts;");
         return stringToCSVOncoKb;
     }
 
@@ -85,30 +310,68 @@ public abstract class ViccFactory {
         //PMKB object
         StringBuilder stringToCSVPmkb = new StringBuilder();
         List<String> keysOfPmkb;
-
+        String header = "";
+        int indexValue;
+        StringBuilder stringId = new StringBuilder();
+        StringBuilder stringName = new StringBuilder();
         if (object.getAsJsonObject("pmkb") != null) {
-
             keysOfPmkb = new ArrayList<>(object.getAsJsonObject("pmkb").keySet());
-
-
             for (int j = 0; j < keysOfPmkb.size(); j++) {
-
-                if (keysOfPmkb.get(j).equals("tumor")){
-                    LOGGER.info(object.getAsJsonObject("pmkb").get("tumor"));
-
+                if (keysOfPmkb.get(j).equals("tumor")) {
+                    JsonObject pmkbObject = object.getAsJsonObject("pmkb").get(keysOfPmkb.get(j)).getAsJsonObject();
+                    List<String> keysOfVariant = new ArrayList<>(pmkbObject.keySet());
+                    for (int x = 0; x < pmkbObject.keySet().size(); x++) {
+                        stringToCSVPmkb.append(pmkbObject.get(keysOfVariant.get(x))).append(";");
+                    }
+                    headerCSV.append(String.join(";", pmkbObject.keySet())).append(";");
                 } else if (keysOfPmkb.get(j).equals("tissues")) {
-                    LOGGER.info(object.getAsJsonObject("pmkb").get(keysOfPmkb.get(j)));
-
-
+                    JsonArray arrayTissue = object.getAsJsonObject("pmkb").get(keysOfPmkb.get(j)).getAsJsonArray();
+                    for (int x = 0; x < arrayTissue.size(); x++) {
+                        JsonObject objectTissue = (JsonObject) arrayTissue.get(x);
+                        Set<String> set = objectTissue.keySet();
+                        header = String.join(";", set);
+                        for (int v = 0; v < objectTissue.keySet().size(); v++) {
+                            List<String> keysTissue = new ArrayList<>(objectTissue.keySet());
+                            if (keysTissue.get(v).equals("id")) {
+                                JsonElement idTissue = objectTissue.get(keysTissue.get(v));
+                                stringId.append(idTissue).append(",");
+                            } else if (keysTissue.get(v).equals("name")) {
+                                JsonElement nameTissue = objectTissue.get(keysTissue.get(v));
+                                stringName.append(nameTissue).append(",");
+                            }
+                        }
+                    }
+                    headerCSV.append(String.join(";", header)).append(";");
+                    stringToCSVPmkb.append(stringId).append(";").append(stringName).append(";");
                 } else if (keysOfPmkb.get(j).equals("variant")) {
-                    LOGGER.info(object.getAsJsonObject("pmkb").get(keysOfPmkb.get(j)));
+                    JsonObject pmkbObject = object.getAsJsonObject("pmkb").get(keysOfPmkb.get(j)).getAsJsonObject();
+                    List<String> keysOfVariant = new ArrayList<>(pmkbObject.keySet());
+                    for (int x = 0; x < pmkbObject.keySet().size(); x++) {
+                        if (keysOfVariant.get(x).equals("gene")) {
+                            JsonElement elementGene = object.getAsJsonObject("pmkb").get("variant");
+                            List<String> keysGene = new ArrayList<>(elementGene.getAsJsonObject().get("gene").getAsJsonObject().keySet());
 
+                            indexValue = keysOfVariant.indexOf("gene");
+                            keysOfVariant.remove(indexValue);
+                            keysOfVariant.add(indexValue, String.join(";", keysGene));
+
+                            for (int d = 0; d < keysGene.size(); d++) {
+                                stringToCSVPmkb.append(elementGene.getAsJsonObject() // association data
+                                        .get("gene").getAsJsonObject().get(keysGene.get(d))).append(";");
+                            }
+                        } else {
+                            stringToCSVPmkb.append(pmkbObject.get(keysOfVariant.get(x))).append(";");
+                        }
+                    }
+                    headerCSV.append(String.join(";", keysOfVariant)).append(";");
                 }
             }
-            LOGGER.info(keysOfPmkb);
         } else {
-            LOGGER.info("pmkb");
-
+            stringToCSVPmkb.append(";;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;");
+            headerCSV.append(
+                    "id;name;id;name;amino_acid_change;germline;partner_gene;codons;description;exons;notes;cosmic;effect;cnv_type;id"
+                            + ";cytoband;variant_type;dna_change;coordinates;chromosome_based_cnv;description;created_at;updated_at;active_ind"
+                            + ";external_id;id;name;transcript;description_type;chromosome;name;");
         }
 
         return stringToCSVPmkb;
@@ -128,38 +391,9 @@ public abstract class ViccFactory {
             Set<String> set = object.getAsJsonObject("sage").keySet();
             headerCSV.append(String.join(";", set));
         } else {
-            stringToCSVSage.append(Strings.EMPTY)
-                    .append(";")
-                    .append(Strings.EMPTY)
-                    .append(";")
-                    .append(Strings.EMPTY)
-                    .append(";")
-                    .append(Strings.EMPTY)
-                    .append(";")
-                    .append(Strings.EMPTY)
-                    .append(";")
-                    .append(Strings.EMPTY)
-                    .append(";")
-                    .append(Strings.EMPTY)
-                    .append(";")
-                    .append(Strings.EMPTY)
-                    .append(";");
-            headerCSV.append("entrez_id")
-                    .append(";")
-                    .append("clinical_manifestation")
-                    .append(";")
-                    .append("publication_url")
-                    .append(";")
-                    .append("germline_or_somatic")
-                    .append(";")
-                    .append("evidence_label")
-                    .append(";")
-                    .append("drug_labels")
-                    .append(";")
-                    .append("response_type")
-                    .append(";")
-                    .append("gene")
-                    .append(";");
+            stringToCSVSage.append(";;;;;;;;");
+            headerCSV.append(
+                    "entrez_id;clinical_manifestation;publication_url;germline_or_somatic;evidence_label;drug_labels;response_type;gene;");
         }
         return stringToCSVSage;
     }
@@ -214,13 +448,8 @@ public abstract class ViccFactory {
         String header = "";
         JsonArray arrayGeneIdentifiers = object.getAsJsonArray("gene_identifiers");
         if (arrayGeneIdentifiers.size() == 0) {
-            stringToCSVGeneIdentifiers.append(Strings.EMPTY)
-                    .append(";")
-                    .append(Strings.EMPTY)
-                    .append(";")
-                    .append(Strings.EMPTY)
-                    .append(";");
-            headerCSV.append("symbol").append(";").append("entrez_id").append(";").append("ensembl_gene_id").append(";");
+            headerCSV.append("symbol;entrez_id;ensembl_gene_id;");
+            stringToCSVGeneIdentifiers.append(";;;");
         } else {
             for (int j = 0; j < arrayGeneIdentifiers.size(); j++) {
                 JsonObject objectGeneIdentiefiers = (JsonObject) arrayGeneIdentifiers.get(j);
@@ -469,7 +698,7 @@ public abstract class ViccFactory {
         JsonReader reader = new JsonReader(new FileReader(allJsonPath));
         reader.setLenient(true);
         int index = 1;
-        while (reader.peek() != JsonToken.END_DOCUMENT && index < 1000) {
+        while (reader.peek() != JsonToken.END_DOCUMENT && index < 3100) {
             LOGGER.info(index);
             JsonObject object = parser.parse(reader).getAsJsonObject();
 
@@ -483,8 +712,12 @@ public abstract class ViccFactory {
             //            StringBuilder StringToCSVDevTags = readObjectDevTags(object, headerCSV);
             //            StringBuilder StringToCSVGeneIdentifiers = readObjectGeneIdentifiers(object, headerCSV);
             //            StringBuilder StringToCSVFeatures = readObjectFeatures(object, headerCSV);
-            StringBuilder StringToCSVSage = readObjectSage(object, headerCSV);
-            StringBuilder StringToCSVPmkb = readObjectPmkb(object, headerCSV);
+            //  StringBuilder StringToCSVSage = readObjectSage(object, headerCSV);
+            // StringBuilder StringToCSVPmkb = readObjectPmkb(object, headerCSV);
+            // StringBuilder StringToCSVJax = readObjectJax(object, headerCSV);
+            // StringBuilder StringToCSVJaxTrials = readObjectJaxTrials(object, headerCSV);
+            //StringBuilder StringToCSVCGI = readObjectCGI(object, headerCSV);
+            StringBuilder StringToCSVOncokb = readObjectOncokb(object, headerCSV);
 
             stringToCSVAll.append(index).append(";");
             stringToCSVAll.append(StringToCSVSource);
@@ -492,7 +725,7 @@ public abstract class ViccFactory {
             //            stringToCSVAll.append(StringToCSVTags);
             //            stringToCSVAll.append(StringToCSVDevTags);
             //            stringToCSVAll.append(StringToCSVGeneIdentifiers);
-            stringToCSVAll.append(StringToCSVPmkb);
+            stringToCSVAll.append(StringToCSVOncokb);
 
             writer.append(headerCSV);
             writer.append("\n");

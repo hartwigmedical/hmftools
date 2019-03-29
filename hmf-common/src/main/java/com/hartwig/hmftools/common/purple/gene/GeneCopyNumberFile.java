@@ -75,21 +75,14 @@ public final class GeneCopyNumberFile {
                 .add("MinRegionStartSupport")
                 .add("MinRegionEndSupport")
                 .add("MinRegionMethod")
-                .add("NonsenseBiallelicCount")
-                .add("NonsenseNonBiallelicCount")
-                .add("NonsenseNonBiallelicPloidy")
-                .add("SpliceBiallelicCount")
-                .add("SpliceNonBiallelicCount")
-                .add("SpliceNonBiallelicPloidy")
-                .add("MissenseBiallelicCount")
-                .add("MissenseNonBiallelicCount")
-                .add("MissenseNonBiallelicPloidy")
                 .add("MinMinorAllelePloidy")
                 .toString();
     }
 
     @NotNull
     private static String toString(@NotNull final GeneCopyNumber geneCopyNumber) {
+
+
         return new StringJoiner(DELIMITER).add(String.valueOf(geneCopyNumber.chromosome()))
                 .add(String.valueOf(geneCopyNumber.start()))
                 .add(String.valueOf(geneCopyNumber.end()))
@@ -109,15 +102,6 @@ public final class GeneCopyNumberFile {
                 .add(String.valueOf(geneCopyNumber.minRegionStartSupport()))
                 .add(String.valueOf(geneCopyNumber.minRegionEndSupport()))
                 .add(String.valueOf(geneCopyNumber.minRegionMethod()))
-                .add(String.valueOf(geneCopyNumber.nonsenseBiallelicCount()))
-                .add(String.valueOf(geneCopyNumber.nonsenseNonBiallelicCount()))
-                .add(FORMAT.format(geneCopyNumber.nonsenseNonBiallelicPloidy()))
-                .add(String.valueOf(geneCopyNumber.spliceBiallelicCount()))
-                .add(String.valueOf(geneCopyNumber.spliceNonBiallelicCount()))
-                .add(FORMAT.format(geneCopyNumber.spliceNonBiallelicPloidy()))
-                .add(String.valueOf(geneCopyNumber.missenseBiallelicCount()))
-                .add(String.valueOf(geneCopyNumber.missenseNonBiallelicCount()))
-                .add(FORMAT.format(geneCopyNumber.missenseNonBiallelicPloidy()))
                 .add(FORMAT.format(geneCopyNumber.minMinorAllelePloidy()))
                 .toString();
     }
@@ -153,15 +137,6 @@ public final class GeneCopyNumberFile {
                 .minRegionMethod(CopyNumberMethod.UNKNOWN)
                 .minRegionStartSupport(SegmentSupport.NONE)
                 .minRegionEndSupport(SegmentSupport.NONE)
-                .nonsenseBiallelicCount(0)
-                .nonsenseNonBiallelicCount(0)
-                .nonsenseNonBiallelicPloidy(0)
-                .spliceBiallelicCount(0)
-                .spliceNonBiallelicCount(0)
-                .spliceNonBiallelicPloidy(0)
-                .missenseBiallelicCount(0)
-                .missenseNonBiallelicCount(0)
-                .missenseNonBiallelicPloidy(0)
                 .minMinorAllelePloidy(0);
 
         if (values.length >= 19) {
@@ -172,18 +147,8 @@ public final class GeneCopyNumberFile {
                     .minRegionEndSupport(SegmentSupport.valueOf(values[17]))
                     .minRegionMethod(CopyNumberMethod.valueOf(values[18]));
         }
-        if (values.length == 29) {
-            builder.nonsenseBiallelicCount(Integer.valueOf(values[19]))
-                    .nonsenseNonBiallelicCount(Integer.valueOf(values[20]))
-                    .nonsenseNonBiallelicPloidy(Double.valueOf(values[21]))
-                    .spliceBiallelicCount(Integer.valueOf(values[22]))
-                    .spliceNonBiallelicCount(Integer.valueOf(values[23]))
-                    .spliceNonBiallelicPloidy(Double.valueOf(values[24]))
-                    .missenseBiallelicCount(Integer.valueOf(values[25]))
-                    .missenseNonBiallelicCount(Integer.valueOf(values[26]))
-                    .missenseNonBiallelicPloidy(Double.valueOf(values[27]))
-                    .minMinorAllelePloidy(Double.valueOf(values[28]));
-        }
+
+        builder.minMinorAllelePloidy(Double.valueOf(values[values.length - 1]));
 
         return builder.build();
     }

@@ -15,8 +15,8 @@ PURPLE supports both grch 37 and 38 reference assemblies.
 * [Input](#input)
   + [COBALT](#cobalt)
   + [AMBER](#amber)
-  + [Structural Variant Input VCFs (optional)](#structural-variant-input-vcfs--optional-)
-  + [Somatic Variant Input VCF (optional)](#somatic-variant-input-vcf--optional-)
+  + [Structural Variant Input VCFs (optional)](#structural-variant-input-vcfs-optional)
+  + [Somatic Variant Input VCF (optional)](#somatic-variant-input-vcf-optional)
 * [Algorithm](#algorithm)
   + [1. Gender](#1-gender)
   + [2. Segmentation](#2-segmentation)
@@ -28,7 +28,8 @@ PURPLE supports both grch 37 and 38 reference assemblies.
   + [8. Identify germline copy number alterations that are homozygously deleted in the tumor](#8-identify-germline-copy-number-alterations-that-are-homozygously-deleted-in-the-tumor)
   + [9. Determine a QC Status for the tumor](#9-determine-a-qc-status-for-the-tumor)
 * [Output](#output)
-  + [CIRCOS Output](#circos-output)
+  + [Files](#file-output)
+  + [CIRCOS](#circos-output)
 * [Performance Characteristics](#performance-characteristics)
 * [Version History](#version-history)
 
@@ -445,6 +446,94 @@ PURPLE also provides a qc status that can fail for the following 3 reasons:
 
 ## Output
 
+### File Output
+
+PURPLE generates a number of tab separated output files as described in the following sections.
+
+#### Purity File 
+
+The purity file `TUMOR.purple.purity` contains a single row with a summary of the purity fit:
+
+
+Column  | Example Value | Description
+---|---|---
+Purity  | 0.98 | Purity of tumor in the sample.
+NormFactor | 0.64 | Factor to convert tumor ratio to copy number. Lower number implies higher ploidy.
+Score | 0.68 | Score of fit.
+Diploid Proportion | 0.02 | Proportion of copy number regions that have 1 (+- 0.2) minor and major allele.
+Ploidy | 3.10 | Average ploidy of the tumor sample after adjusting for purity.
+Gender | MALE | One of MALE, FEMALE or MALE_KLINEFELTER.
+Status | NORMAL | One of NORMAL, HIGHLY_DIPLOID, SOMATIC or NO_TUMOR.
+PolyclonalProportion | 0.09 | Proportion of copy number regions that are more than 0.25 from a whole copy number
+MinPurity | 0.95 | Minimum purity with score within 10% of best. 
+MaxPurity | 1.00 | Maximim purity with score within 10% of best.
+MinPloidy | 3.08 | Minimum ploidy with score within 10% of best. 
+MaxPloidy | 3.13 | Maximim ploidy with score within 10% of best.
+Version | 2.24 | Version of PURPLE
+SomaticDeviation | 0.00 | Penalty from somatic variants with implied ploidies that are inconsistent with the minor and major allele ploidy. 
+
+#### Purity Range File
+
+The purity range file `TUMOR.purple.purity.range` file summarises the best fit per purity sorted by score. 
+Descriptions of the fields are the same as above.
+
+Purity|NormFactor|Score|DiploidProportion|Ploidy|SomaticDeviation
+---|---|---|---|---|---
+0.9800|0.6400|0.6867|0.0199|3.1076|0.0000
+0.9900|0.6400|0.6888|0.0199|3.0965|0.0000
+1.0000|0.6300|0.6928|0.0199|3.1345|0.0000
+
+#### Copy Number File
+
+The copy number file `TUMOR.purple.cnv` contains the copy number for all (contiguous) segments of the tumor sample:
+
+Column  | Example Value | Description
+---|---|---
+Chromosome  | 1 | Chromosome of copy number segment
+Start  | 1 | Start base of copy number segment
+End  | 87337011 | End base of copy number segment
+CopyNumber  | 2.8189 | Fitted absolute copy number of region adjusted for purity and ploidy
+BafCount  | 4464 | Count of AMBER baf points covered by this segment
+ObservedBAF  | 0.7094 | Combined reference and tumor BAF **un**adjusted for purity and ploidy
+BAF  | 0.7124 | Tumor BAF after adjusted for purity and ploidy
+SegmentStartSupport  | TELOMERE | Reason segment was created. Can be CENTROMERE, TELOMERE, a SV type, or NONE.
+SegmentEndSupport  | BND | Reason segment ended. Will match SegmentStartSupport of following segment.
+Method | BAF_WEIGHTED | Method used to determine copy number. One of BAF_WEIGHTED, STRUCTURAL_VARIANT, LONG_ARM, GERMLINE_AMPLIFICATION
+DepthWindowCount | 77277 | Count of COBALT windows covered by this segment
+GcContent | 0.4351 | Proportion of segment that is G or C
+MinStart | 1 | Minimum start location of this segment if there is any uncertainty.
+MaxStart | 1 | Maximum start location of this segment if there is any uncertainty.
+MinorAllelePloidy | 0.8165 | Ploidy of minor allele adjusted for purity
+MajorAllelePloidy | 2.0076 | Ploidy of major allele adjusted for purity
+
+#### Gene Copy Number File
+
+The gene copy number file `TUMOR.purple.gene.cnv` summarises copy number alterations of each gene in the HMF gene panel:
+
+Column  | Example Value | Description
+---|---|---
+Chromosome  | 9 | Chromosome gene is on
+Start  | 21968055 | Start location of gene transcript
+End  | 21974865 | End location of gene transcript
+Gene  | CDKN2A | Name of gene
+MinCopyNumber  | 2.0098 | Minimum copy number found in the gene exons
+MaxCopyNumber  | 2.0098 | Maximum copy number found in the gene exons
+SomaticRegions | 1 | Count of somatic copy number regions this gene spans
+GermlineHomRegions | 0 | Count of homozygous germline regions this gene spans
+GermlineHet2HomRegions | 0 | Count of regions that are heterozygous in the germline but homozygous in the tumor this gene spans
+GermlineHet2HomRegions | 0 | Count of regions that are heterozygous in the germline but homozygous in the tumor this gene spans
+TranscriptId | ENST00000498124 | Ensembl Transcript ID
+TranscriptVersion | 1 | Ensembl Transcript ID Version
+ChromosomeBand | p21.3 | Chromosome Band of the gene
+MinRegions | 1 | Number of somatic regions inside the gene that share the min copy number
+MinRegionStart | 1 | Start base of the copy number region overlapping the gene with the minimum copy number
+MinRegionEnd | 28031835 | End base of the copy number region overlapping the gene with the minimum copy number
+MinRegionStartSupport | TELOMERE | Start support of the copy number region overlapping the gene with the minimum copy number
+MinRegionEndSupport | INV | End support of the copy number region overlapping the gene with the minimum copy number
+MinRegionMethod | BAF_WEIGHTED | Method used to determine copy number of the copy number region overlapping the gene with the minimum copy number
+MinMinorAllelePloidy | 0 | Minimum allele ploidy found over the gene exons - useful for identifying LOH events  
+
+
 ### CIRCOS Output
 
 When enabled, an input and output diagram will be created in the output/plot directory. 
@@ -502,6 +591,9 @@ Threads | Elapsed Time| CPU Time | Peak Mem
 
 
 ## Version History
+- Upcoming
+  - Removed unused columns from GeneCopyNumber output
+  - Added minorAllelePloidy and majorAllelePloidy to copy number output
 - 2.24
   - Recovered SVs were not being used for re-segmentation.
 - 2.23

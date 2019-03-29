@@ -22,7 +22,7 @@ import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
-import org.jooq.InsertValuesStep16;
+import org.jooq.InsertValuesStep18;
 import org.jooq.InsertValuesStepN;
 import org.jooq.Record;
 import org.jooq.Result;
@@ -51,7 +51,7 @@ class CopyNumberDAO {
                     .method(CopyNumberMethod.valueOf(record.getValue(COPYNUMBER.COPYNUMBERMETHOD)))
                     .segmentStartSupport(SegmentSupport.valueOf(record.getValue(COPYNUMBER.SEGMENTSTARTSUPPORT)))
                     .segmentEndSupport(SegmentSupport.valueOf(record.getValue(COPYNUMBER.SEGMENTENDSUPPORT)))
-                    .averageActualBAF(record.getValue(COPYNUMBER.ACTUALBAF))
+                    .averageActualBAF(record.getValue(COPYNUMBER.BAF))
                     .averageObservedBAF(record.getValue(COPYNUMBER.OBSERVEDBAF))
                     .averageTumorCopyNumber(record.getValue(COPYNUMBER.COPYNUMBER_))
                     .depthWindowCount(record.getValue(COPYNUMBER.DEPTHWINDOWCOUNT))
@@ -70,7 +70,7 @@ class CopyNumberDAO {
         context.delete(COPYNUMBER).where(COPYNUMBER.SAMPLEID.eq(sample)).execute();
 
         for (List<PurpleCopyNumber> splitCopyNumbers : Iterables.partition(copyNumbers, DB_BATCH_INSERT_SIZE)) {
-            InsertValuesStep16 inserter = context.insertInto(COPYNUMBER,
+            InsertValuesStep18 inserter = context.insertInto(COPYNUMBER,
                     COPYNUMBER.SAMPLEID,
                     COPYNUMBER.CHROMOSOME,
                     COPYNUMBER.START,
@@ -80,8 +80,10 @@ class CopyNumberDAO {
                     COPYNUMBER.SEGMENTENDSUPPORT,
                     COPYNUMBER.BAFCOUNT,
                     COPYNUMBER.OBSERVEDBAF,
-                    COPYNUMBER.ACTUALBAF,
+                    COPYNUMBER.BAF,
                     COPYNUMBER.COPYNUMBER_,
+                    COPYNUMBER.MINORALLELEPLOIDY,
+                    COPYNUMBER.MAJORALLELEPLOIDY,
                     COPYNUMBER.DEPTHWINDOWCOUNT,
                     COPYNUMBER.GCCONTENT,
                     COPYNUMBER.MINSTART,
@@ -97,7 +99,7 @@ class CopyNumberDAO {
         context.delete(COPYNUMBERGERMLINE).where(COPYNUMBERGERMLINE.SAMPLEID.eq(sample)).execute();
 
         for (List<PurpleCopyNumber> splitCopyNumbers : Iterables.partition(copyNumbers, DB_BATCH_INSERT_SIZE)) {
-            InsertValuesStep16 inserter = context.insertInto(COPYNUMBERGERMLINE,
+            InsertValuesStep18 inserter = context.insertInto(COPYNUMBERGERMLINE,
                     COPYNUMBERGERMLINE.SAMPLEID,
                     COPYNUMBERGERMLINE.CHROMOSOME,
                     COPYNUMBERGERMLINE.START,
@@ -107,8 +109,10 @@ class CopyNumberDAO {
                     COPYNUMBERGERMLINE.SEGMENTENDSUPPORT,
                     COPYNUMBERGERMLINE.BAFCOUNT,
                     COPYNUMBERGERMLINE.OBSERVEDBAF,
-                    COPYNUMBERGERMLINE.ACTUALBAF,
-                    COPYNUMBERGERMLINE.COPYNUMBER,
+                    COPYNUMBER.BAF,
+                    COPYNUMBER.COPYNUMBER_,
+                    COPYNUMBER.MINORALLELEPLOIDY,
+                    COPYNUMBER.MAJORALLELEPLOIDY,
                     COPYNUMBERGERMLINE.DEPTHWINDOWCOUNT,
                     COPYNUMBERGERMLINE.GCCONTENT,
                     COPYNUMBERGERMLINE.MINSTART,
@@ -119,7 +123,7 @@ class CopyNumberDAO {
         }
     }
 
-    private static void addCopynumberRecord(@NotNull Timestamp timestamp, @NotNull InsertValuesStep16 inserter, @NotNull String sample,
+    private static void addCopynumberRecord(@NotNull Timestamp timestamp, @NotNull InsertValuesStep18 inserter, @NotNull String sample,
             @NotNull PurpleCopyNumber region) {
         //noinspection unchecked
         inserter.values(sample,
@@ -133,6 +137,8 @@ class CopyNumberDAO {
                 DatabaseUtil.decimal(region.averageObservedBAF()),
                 DatabaseUtil.decimal(region.averageActualBAF()),
                 DatabaseUtil.decimal(region.averageTumorCopyNumber()),
+                DatabaseUtil.decimal(region.minorAllelePloidy()),
+                DatabaseUtil.decimal(region.majorAllelePloidy()),
                 region.depthWindowCount(),
                 DatabaseUtil.decimal(region.gcContent()),
                 region.minStart(),
@@ -281,7 +287,7 @@ class CopyNumberDAO {
                     .method(CopyNumberMethod.valueOf(record.getValue(COPYNUMBER.COPYNUMBERMETHOD)))
                     .segmentStartSupport(SegmentSupport.valueOf(record.getValue(COPYNUMBER.SEGMENTSTARTSUPPORT)))
                     .segmentEndSupport(SegmentSupport.valueOf(record.getValue(COPYNUMBER.SEGMENTENDSUPPORT)))
-                    .averageActualBAF(record.getValue(COPYNUMBER.ACTUALBAF))
+                    .averageActualBAF(record.getValue(COPYNUMBER.BAF))
                     .averageObservedBAF(record.getValue(COPYNUMBER.OBSERVEDBAF))
                     .averageTumorCopyNumber(record.getValue(COPYNUMBER.COPYNUMBER_))
                     .depthWindowCount(record.getValue(COPYNUMBER.DEPTHWINDOWCOUNT))
