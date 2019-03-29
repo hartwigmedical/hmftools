@@ -77,26 +77,26 @@ public class GeneCollectionTests
 
         // test exon ranks given a position
 
-        int[] transUpExonData = geneTransCache.getExonRankings(geneName, 11400);
+        int[] transUpExonData = geneTransCache.getExonRankings(geneId, 11400);
 
         assertEquals(1, transUpExonData[EXON_RANK_MIN]);
         assertEquals(2, transUpExonData[EXON_RANK_MAX]);
 
         // before the first
-        transUpExonData = geneTransCache.getExonRankings(geneName, 9000);
+        transUpExonData = geneTransCache.getExonRankings(geneId, 9000);
 
         assertEquals(0, transUpExonData[EXON_RANK_MIN]);
         assertEquals(1, transUpExonData[EXON_RANK_MAX]);
 
         // after the last
-        transUpExonData = geneTransCache.getExonRankings(geneName, 16000);
+        transUpExonData = geneTransCache.getExonRankings(geneId, 16000);
 
         assertEquals(4, transUpExonData[EXON_RANK_MIN]);
         assertEquals(-1, transUpExonData[EXON_RANK_MAX]);
 
 
         // on an exon boundary
-        transUpExonData = geneTransCache.getExonRankings(geneName, 12500);
+        transUpExonData = geneTransCache.getExonRankings(geneId, 12500);
 
         assertEquals(3, transUpExonData[EXON_RANK_MIN]);
         assertEquals(3, transUpExonData[EXON_RANK_MAX]);

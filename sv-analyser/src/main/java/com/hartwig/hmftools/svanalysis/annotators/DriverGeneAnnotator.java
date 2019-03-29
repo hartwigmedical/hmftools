@@ -845,11 +845,10 @@ public class DriverGeneAnnotator
 
                 //                          0       1       2           3   4   5      6              7           8
 //                mGCNFileWriter.write("modified,sampleId,chromosome,start,end,gene,chromosomeBand,transcriptId,transcriptVersion");
-                //                       10             11           12             13                  14                 15        16              17             18                  19                      20
-//                mGCNFileWriter.write(",minCopyNumber,maxCopyNumber,somaticRegions,germlineHomRegions,germlineHetRegions,minRegions,minRegionStart,minRegionEnd,minRegionStartSupport,minRegionEndSupport,minRegionMethod");
-                //                          21
-//                mGCNFileWriter.write(",nonsenseBiallelicVariants,nonsenseNonBiallelicVariants,nonsenseNonBiallelicPloidy,spliceBiallelicVariants,spliceNonBiallelicVariants,spliceNonBiallelicPloidy");
-//                mGCNFileWriter.write(",missenseBiallelicVariants,missenseNonBiallelicVariants,missenseNonBiallelicPloidy,minMinorAllelePloidy");
+                //                       10             11           12             13                  14                 15        16              17
+//                mGCNFileWriter.write(",minCopyNumber,maxCopyNumber,somaticRegions,germlineHomRegions,germlineHetRegions,minRegions,minRegionStart,minRegionEnd");
+                //                          18                  19                      20          21
+//                mGCNFileWriter.write(",minRegionStartSupport,minRegionEndSupport,minRegionMethod,minMinorAllelePloidy");
 
                 int index = 2;
 
@@ -898,9 +897,8 @@ public class DriverGeneAnnotator
                 mGCNFileWriter = createBufferedWriter(outputFileName, false);
 
                 mGCNFileWriter.write("modified,sampleId,chromosome,start,end,gene,chromosomeBand,transcriptId,transcriptVersion");
-                mGCNFileWriter.write(",minCopyNumber,maxCopyNumber,somaticRegions,germlineHomRegions,germlineHetRegions,minRegions,minRegionStart,minRegionEnd,minRegionStartSupport,minRegionEndSupport,minRegionMethod");
-                mGCNFileWriter.write(",nonsenseBiallelicVariants,nonsenseNonBiallelicVariants,nonsenseNonBiallelicPloidy,spliceBiallelicVariants,spliceNonBiallelicVariants,spliceNonBiallelicPloidy");
-                mGCNFileWriter.write(",missenseBiallelicVariants,missenseNonBiallelicVariants,missenseNonBiallelicPloidy,minMinorAllelePloidy");
+                mGCNFileWriter.write(",minCopyNumber,maxCopyNumber,somaticRegions,germlineHomRegions,germlineHetRegions,minRegions,minRegionStart,minRegionEnd");
+                mGCNFileWriter.write(",minRegionStartSupport,minRegionEndSupport,minRegionMethod,minMinorAllelePloidy");
                 mGCNFileWriter.newLine();
             }
 
