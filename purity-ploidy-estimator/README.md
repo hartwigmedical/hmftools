@@ -485,7 +485,7 @@ Purity|NormFactor|Score|DiploidProportion|Ploidy|SomaticDeviation
 
 #### Copy Number File
 
-The copy number file `TUMOR.purple.cnv` contains the copy number information over contiguous segments of the tumor sample:
+The copy number file `TUMOR.purple.cnv` contains the copy number for all (contiguous) segments of the tumor sample:
 
 Column  | Example Value | Description
 ---|---|---
@@ -505,6 +505,33 @@ MinStart | 1 | Minimum start location of this segment if there is any uncertaint
 MaxStart | 1 | Maximum start location of this segment if there is any uncertainty.
 MinorAllelePloidy | 0.8165 | Ploidy of minor allele adjusted for purity
 MajorAllelePloidy | 2.0076 | Ploidy of major allele adjusted for purity
+
+#### Gene Copy Number File
+
+The gene copy number file `TUMOR.purple.gene.cnv` summarises copy number alterations of each gene in the HMF gene panel:
+
+Column  | Example Value | Description
+---|---|---
+Chromosome  | 9 | Chromosome gene is on
+Start  | 21968055 | Start location of gene transcript
+End  | 21974865 | End location of gene transcript
+Gene  | CDKN2A | Name of gene
+MinCopyNumber  | 2.0098 | Minimum copy number found in the gene exons
+MaxCopyNumber  | 2.0098 | Maximum copy number found in the gene exons
+SomaticRegions | 1 | Count of somatic copy number regions this gene spans
+GermlineHomRegions | 0 | Count of homozygous germline regions this gene spans
+GermlineHet2HomRegions | 0 | Count of regions that are heterozygous in the germline but homozygous in the tumor this gene spans
+GermlineHet2HomRegions | 0 | Count of regions that are heterozygous in the germline but homozygous in the tumor this gene spans
+TranscriptId | ENST00000498124 | Ensembl Transcript ID
+TranscriptVersion | 1 | Ensembl Transcript ID Version
+ChromosomeBand | p21.3 | Chromosome Band of the gene
+MinRegions | 1 | Number of somatic regions inside the gene that share the min copy number
+MinRegionStart | 1 | Start base of the copy number region overlapping the gene with the minimum copy number
+MinRegionEnd | 28031835 | End base of the copy number region overlapping the gene with the minimum copy number
+MinRegionStartSupport | TELOMERE | Start support of the copy number region overlapping the gene with the minimum copy number
+MinRegionEndSupport | INV | End support of the copy number region overlapping the gene with the minimum copy number
+MinRegionMethod | BAF_WEIGHTED | Method used to determine copy number of the copy number region overlapping the gene with the minimum copy number
+MinMinorAllelePloidy | 0 | Minimum allele ploidy found over the gene exons - useful for identifying LOH events  
 
 
 ### CIRCOS Output
