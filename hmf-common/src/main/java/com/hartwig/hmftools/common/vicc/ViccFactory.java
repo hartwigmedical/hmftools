@@ -157,15 +157,12 @@ public abstract class ViccFactory {
                     List<String> keysOfLifeCycleActions = new ArrayList<>(civicObject.keySet());
                     for (int i = 0; i < keysOfLifeCycleActions.size(); i++) {
                         if (keysOfLifeCycleActions.get(i).equals("last_commented_on")) {
-                            LOGGER.info("last_commented_on");
                             commandCIVIC(civicObject, keysOfLifeCycleActions, "last_commented_on", stringToCSVCIVIC);
                         }
                         if (keysOfLifeCycleActions.get(i).equals("last_modified")) {
-                            LOGGER.info("last_modified");
                             commandCIVIC(civicObject, keysOfLifeCycleActions, "last_modified", stringToCSVCIVIC);
                         }
                         if (keysOfLifeCycleActions.get(i).equals("last_reviewed")) {
-                            LOGGER.info("last_reviewed");
                             commandCIVIC(civicObject, keysOfLifeCycleActions, "last_reviewed", stringToCSVCIVIC);
                         }
                     }
