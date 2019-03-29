@@ -35,24 +35,6 @@ public interface GeneCopyNumber extends TranscriptRegion, CopyNumber {
 
     CopyNumberMethod minRegionMethod();
 
-    int nonsenseBiallelicCount();
-
-    int nonsenseNonBiallelicCount();
-
-    double nonsenseNonBiallelicPloidy();
-
-    int spliceBiallelicCount();
-
-    int spliceNonBiallelicCount();
-
-    double spliceNonBiallelicPloidy();
-
-    int missenseBiallelicCount();
-
-    int missenseNonBiallelicCount();
-
-    double missenseNonBiallelicPloidy();
-
     double minMinorAllelePloidy();
 
     default int totalRegions() {

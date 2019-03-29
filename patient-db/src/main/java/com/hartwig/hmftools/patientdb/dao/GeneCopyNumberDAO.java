@@ -17,7 +17,7 @@ import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
-import org.jooq.InsertValuesStepN;
+import org.jooq.InsertValuesStep21;
 import org.jooq.Record;
 import org.jooq.Result;
 
@@ -56,15 +56,6 @@ class GeneCopyNumberDAO {
                     .minRegionStartSupport(SegmentSupport.valueOf(record.getValue(GENECOPYNUMBER.MINREGIONSTARTSUPPORT)))
                     .minRegionEndSupport(SegmentSupport.valueOf(record.getValue(GENECOPYNUMBER.MINREGIONENDSUPPORT)))
                     .minRegionMethod(CopyNumberMethod.valueOf(record.getValue(GENECOPYNUMBER.MINREGIONMETHOD)))
-                    .nonsenseBiallelicCount(record.getValue(GENECOPYNUMBER.NONSENSEBIALLELICVARIANTS))
-                    .nonsenseNonBiallelicCount(record.getValue(GENECOPYNUMBER.NONSENSENONBIALLELICVARIANTS))
-                    .nonsenseNonBiallelicPloidy(record.getValue(GENECOPYNUMBER.NONSENSENONBIALLELICPLOIDY))
-                    .spliceBiallelicCount(record.getValue(GENECOPYNUMBER.SPLICEBIALLELICVARIANTS))
-                    .spliceNonBiallelicCount(record.getValue(GENECOPYNUMBER.SPLICENONBIALLELICVARIANTS))
-                    .spliceNonBiallelicPloidy(record.getValue(GENECOPYNUMBER.SPLICENONBIALLELICPLOIDY))
-                    .missenseBiallelicCount(record.getValue(GENECOPYNUMBER.MISSENSEBIALLELICVARIANTS))
-                    .missenseNonBiallelicCount(record.getValue(GENECOPYNUMBER.MISSENSENONBIALLELICVARIANTS))
-                    .missenseNonBiallelicPloidy(record.getValue(GENECOPYNUMBER.MISSENSENONBIALLELICPLOIDY))
                     .minMinorAllelePloidy(record.getValue(GENECOPYNUMBER.MINMINORALLELEPLOIDY))
                     .build());
         }
@@ -76,7 +67,7 @@ class GeneCopyNumberDAO {
         deleteGeneCopyNumberForSample(sample);
 
         for (List<GeneCopyNumber> splitCopyNumbers : Iterables.partition(copyNumbers, DB_BATCH_INSERT_SIZE)) {
-            InsertValuesStepN inserter = context.insertInto(GENECOPYNUMBER,
+            InsertValuesStep21 inserter = context.insertInto(GENECOPYNUMBER,
                     GENECOPYNUMBER.SAMPLEID,
                     GENECOPYNUMBER.CHROMOSOME,
                     GENECOPYNUMBER.START,
@@ -96,15 +87,6 @@ class GeneCopyNumberDAO {
                     GENECOPYNUMBER.MINREGIONSTARTSUPPORT,
                     GENECOPYNUMBER.MINREGIONENDSUPPORT,
                     GENECOPYNUMBER.MINREGIONMETHOD,
-                    GENECOPYNUMBER.NONSENSEBIALLELICVARIANTS,
-                    GENECOPYNUMBER.NONSENSENONBIALLELICVARIANTS,
-                    GENECOPYNUMBER.NONSENSENONBIALLELICPLOIDY,
-                    GENECOPYNUMBER.SPLICEBIALLELICVARIANTS,
-                    GENECOPYNUMBER.SPLICENONBIALLELICVARIANTS,
-                    GENECOPYNUMBER.SPLICENONBIALLELICPLOIDY,
-                    GENECOPYNUMBER.MISSENSEBIALLELICVARIANTS,
-                    GENECOPYNUMBER.MISSENSENONBIALLELICVARIANTS,
-                    GENECOPYNUMBER.MISSENSENONBIALLELICPLOIDY,
                     GENECOPYNUMBER.MINMINORALLELEPLOIDY,
                     COPYNUMBER.MODIFIED);
             splitCopyNumbers.forEach(x -> addCopynumberRecord(timestamp, inserter, sample, x));
@@ -112,7 +94,7 @@ class GeneCopyNumberDAO {
         }
     }
 
-    private static void addCopynumberRecord(@NotNull Timestamp timestamp, @NotNull InsertValuesStepN inserter, @NotNull String sample,
+    private static void addCopynumberRecord(@NotNull Timestamp timestamp, @NotNull InsertValuesStep21 inserter, @NotNull String sample,
             @NotNull GeneCopyNumber gene) {
         //noinspection unchecked
         inserter.values(sample,
@@ -134,15 +116,6 @@ class GeneCopyNumberDAO {
                 gene.minRegionStartSupport(),
                 gene.minRegionEndSupport(),
                 gene.minRegionMethod(),
-                gene.nonsenseBiallelicCount(),
-                gene.nonsenseNonBiallelicCount(),
-                DatabaseUtil.decimal(gene.nonsenseNonBiallelicPloidy()),
-                gene.spliceBiallelicCount(),
-                gene.spliceNonBiallelicCount(),
-                DatabaseUtil.decimal(gene.spliceNonBiallelicPloidy()),
-                gene.missenseBiallelicCount(),
-                gene.missenseNonBiallelicCount(),
-                DatabaseUtil.decimal(gene.missenseNonBiallelicPloidy()),
                 DatabaseUtil.decimal(gene.minMinorAllelePloidy()),
                 timestamp);
     }

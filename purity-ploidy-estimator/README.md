@@ -562,6 +562,8 @@ Threads | Elapsed Time| CPU Time | Peak Mem
 
 
 ## Version History
+- Upcoming
+  - Removed unused columns from GeneCopyNumber output
 - 2.24
   - Recovered SVs were not being used for re-segmentation.
 - 2.23

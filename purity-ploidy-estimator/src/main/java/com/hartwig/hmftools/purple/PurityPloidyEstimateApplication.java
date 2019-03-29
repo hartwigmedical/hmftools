@@ -189,11 +189,22 @@ public class PurityPloidyEstimateApplication {
 
             final List<GeneCopyNumber> geneCopyNumbers = GeneCopyNumberFactory.geneCopyNumbers(configSupplier.refGenomeConfig().genePanel(),
                     copyNumbers,
-                    germlineDeletions,
-                    enrichedSomatics);
+                    germlineDeletions);
 
             LOGGER.info("Generating QC Stats");
             final PurpleQC qcChecks = PurpleQCFactory.create(bestFit.fit(), copyNumbers, amberGender, cobaltGender, geneCopyNumbers);
+
+
+            LOGGER.info("Writing purple data to: {}", outputDirectory);
+            version.write(outputDirectory);
+            PurpleQCFile.write(PurpleQCFile.generateFilename(outputDirectory, tumorSample), qcChecks);
+            FittedPurityFile.write(outputDirectory, tumorSample, purityContext);
+            FittedPurityRangeFile.write(outputDirectory, tumorSample, bestFit.bestFitPerPurity());
+            PurpleCopyNumberFile.write(PurpleCopyNumberFile.generateFilename(outputDirectory, tumorSample), copyNumbers);
+            PurpleCopyNumberFile.write(PurpleCopyNumberFile.generateGermlineFilename(outputDirectory, tumorSample), germlineDeletions);
+            FittedRegionFile.write(FittedRegionFile.generateFilename(outputDirectory, tumorSample), enrichedFittedRegions);
+            GeneCopyNumberFile.write(GeneCopyNumberFile.generateFilename(outputDirectory, tumorSample), geneCopyNumbers);
+            structuralVariants.write(purityAdjuster, copyNumbers);
 
             final DBConfig dbConfig = configSupplier.dbConfig();
             if (dbConfig.enabled()) {
@@ -207,19 +218,7 @@ public class PurityPloidyEstimateApplication {
                         purityContext,
                         qcChecks,
                         geneCopyNumbers);
-
             }
-
-            LOGGER.info("Writing purple data to: {}", outputDirectory);
-            version.write(outputDirectory);
-            PurpleQCFile.write(PurpleQCFile.generateFilename(outputDirectory, tumorSample), qcChecks);
-            FittedPurityFile.write(outputDirectory, tumorSample, purityContext);
-            FittedPurityRangeFile.write(outputDirectory, tumorSample, bestFit.bestFitPerPurity());
-            PurpleCopyNumberFile.write(PurpleCopyNumberFile.generateFilename(outputDirectory, tumorSample), copyNumbers);
-            PurpleCopyNumberFile.write(PurpleCopyNumberFile.generateGermlineFilename(outputDirectory, tumorSample), germlineDeletions);
-            FittedRegionFile.write(FittedRegionFile.generateFilename(outputDirectory, tumorSample), enrichedFittedRegions);
-            GeneCopyNumberFile.write(GeneCopyNumberFile.generateFilename(outputDirectory, tumorSample), geneCopyNumbers);
-            structuralVariants.write(purityAdjuster, copyNumbers);
 
             final CircosConfig circosConfig = configSupplier.circosConfig();
             LOGGER.info("Writing plots to: {}", circosConfig.plotDirectory());

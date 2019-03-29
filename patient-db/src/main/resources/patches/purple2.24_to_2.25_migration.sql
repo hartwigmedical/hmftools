@@ -1,0 +1,10 @@
+ALTER TABLE geneCopyNumber
+    DROP COLUMN nonsenseBiallelicVariants,
+    DROP COLUMN nonsenseNonBiallelicVariants,
+    DROP COLUMN nonsenseNonBiallelicPloidy,
+    DROP COLUMN spliceBiallelicVariants,
+    DROP COLUMN spliceNonBiallelicVariants,
+    DROP COLUMN spliceNonBiallelicPloidy,
+    DROP COLUMN missenseBiallelicVariants,
+    DROP COLUMN missenseNonBiallelicVariants,
+    DROP COLUMN missenseNonBiallelicPloidy;
