@@ -13,6 +13,7 @@ import static com.hartwig.hmftools.common.variant.structural.annotation.EnsemblG
 import static com.hartwig.hmftools.common.variant.structural.annotation.EnsemblGeneData.GENE_PHASING_REGION_MAX;
 import static com.hartwig.hmftools.common.variant.structural.annotation.EnsemblGeneData.phaseToRegion;
 import static com.hartwig.hmftools.common.variant.structural.annotation.Transcript.TRANS_CODING_TYPE_CODING;
+import static com.hartwig.hmftools.svannotation.analysis.SvFusionAnalyser.validFusionTranscript;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -152,6 +153,8 @@ public class SvGeneTranscriptCollection
             GeneAnnotation currentGene = new GeneAnnotation(svId, isStart, geneData.GeneName, geneData.GeneId,
                     geneData.Strand, geneData.Synonyms, geneData.EntrezIds, geneData.KaryotypeBand);
 
+            currentGene.setGeneData(geneData);
+
             // collect up all the relevant exons for each unique transcript to analyse as a collection
 
             int teIndex = 0;
@@ -163,7 +166,11 @@ public class SvGeneTranscriptCollection
 
                 if(transcript != null)
                 {
-                    currentGene.addTranscript(transcript);
+                    // only add transcript which are potential fusion candidates (with exception for canonical)
+                    if(validFusionTranscript(transcript) || transcript.isCanonical())
+                    {
+                        currentGene.addTranscript(transcript);
+                    }
 
                     // annotate with preceding gene info if the up distance isn't set
                     if(transcript.exonDistanceUp() == -1)
@@ -574,17 +581,12 @@ public class SvGeneTranscriptCollection
     public static int EXON_RANK_MIN = 0;
     public static int EXON_RANK_MAX = 1;
 
-    public int[] getExonRankings(final String geneName, long position)
+    public int[] getExonRankings(final String geneId, long position)
     {
         // finds the exon before and after this position, setting to -1 if before the first or beyond the last exon
         int[] exonData = new int[EXON_RANK_MAX+1];
 
-        final EnsemblGeneData geneData = getGeneDataByName(geneName);
-
-        if(geneData == null)
-            return exonData;
-
-        final List<TranscriptExonData> exonDataList = getTranscriptExons(geneData.GeneId, "");
+        final List<TranscriptExonData> exonDataList = getTranscriptExons(geneId, "");
 
         if(exonDataList == null || exonDataList.isEmpty())
             return exonData;

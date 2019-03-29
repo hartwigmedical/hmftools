@@ -20,6 +20,7 @@ public class GeneAnnotation {
     private int mVarId;
     private final boolean mIsStart;
 
+    private EnsemblGeneData mGeneData;
     private EnrichedStructuralVariant mVariant; // CHSH: try to remove this connection
 
     private final List<Transcript> transcripts = Lists.newArrayList();
@@ -38,8 +39,7 @@ public class GeneAnnotation {
     private String mInsertSequence;
 
     public GeneAnnotation(int varId, final boolean isStart, final String geneName, final String stableId,
-            final int strand, final List<String> synonyms, final List<Integer> entrezIds,
-            final String karyotypeBand)
+            final int strand, final List<String> synonyms, final List<Integer> entrezIds, final String karyotypeBand)
     {
         GeneName = geneName;
         StableId = stableId;
@@ -48,6 +48,7 @@ public class GeneAnnotation {
         mVarId = varId;
         mIsStart = isStart;
         mVariant = null;
+        mGeneData = null;
 
         mChromosome = "";
         mOrientation = 0;
@@ -60,40 +61,8 @@ public class GeneAnnotation {
         mKaryotypeBand = karyotypeBand;
     }
 
-    /*
-    public GeneAnnotation(@NotNull final EnrichedStructuralVariant variant, final boolean isStart, final String geneName,
-            final String stableId, final int strand, final List<String> synonyms, final List<Integer> entrezIds, final String karyotypeBand)
-    {
-        GeneName = geneName;
-        StableId = stableId;
-        Strand = strand;
-
-        mVariant = variant;
-        mIsStart = isStart;
-
-        mChromosome = "";
-        mOrientation = 0;
-        mPosition = -1;
-        mPloidy = 0;
-        mVarId = -1;
-        mInsertSequence = "";
-
-        if(variant != null)
-        {
-            mVarId = variant.primaryKey() != null ? variant.primaryKey() : 0;
-            mOrientation = variant.orientation(mIsStart);
-            mPloidy = variant.ploidy() != null ? variant.ploidy() : 0;
-            mPosition = variant.position(mIsStart);
-            mChromosome = variant.chromosome(mIsStart);
-            mSvType = variant.type();
-            mInsertSequence = variant.insertSequence();
-        }
-
-        mSynonyms = synonyms;
-        mEntrezIds = entrezIds;
-        mKaryotypeBand = karyotypeBand;
-    }
-    */
+    public void setGeneData(final EnsemblGeneData geneData) { mGeneData = geneData; }
+    public final EnsemblGeneData getGeneData() { return mGeneData; }
 
     public void setPositionalData(final String chromosome, long position, byte orientation)
     {

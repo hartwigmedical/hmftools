@@ -294,7 +294,6 @@ public class DriverGeneAnnotator
         boolean isStartBreakend = true;
 
         final DriverCatalog driverGene = driverGeneData.DriverGene;
-        // final HmfTranscriptRegion region = driverGeneData.Region;
         final GeneCopyNumber geneCN = driverGeneData.GeneCN;
 
         for (int i = 0; i < breakendList.size(); ++i)
@@ -567,8 +566,6 @@ public class DriverGeneAnnotator
 
                     driverGeneData.addSvBreakend(varStart.getBreakend(true), "SV");
                     driverGeneData.addSvBreakend(varStart.getBreakend(false), "SV");
-                    // annotateSV(varStart, driverGene,  region,  true, "SV");
-                    // annotateSV(varStart, driverGene, region, false, "SV");
 
                     if(varStart.copyNumberChange(true) > maxCopyNumber)
                     {

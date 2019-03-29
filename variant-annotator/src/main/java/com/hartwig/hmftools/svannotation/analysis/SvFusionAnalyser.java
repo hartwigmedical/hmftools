@@ -121,11 +121,6 @@ public class SvFusionAnalyser
     private static int SPECIFIC_VAR_ID = -1;
     // private static int SPECIFIC_VAR_ID = 13699019;
 
-    // private static String SPEC_GENE_1 = "ZMYND12";
-    // private static String SPEC_GENE_2 = "ABL1";
-    private static String SPEC_GENE_1 = "";
-    private static String SPEC_GENE_2 = "";
-
     public final List<GeneFusion> findFusions(final List<GeneAnnotation> breakendGenes1, final List<GeneAnnotation> breakendGenes2)
     {
         final List<GeneFusion> potentialFusions = Lists.newArrayList();
@@ -146,12 +141,6 @@ public class SvFusionAnalyser
 
                 if (startUpstream == endUpstream)
                     continue;
-
-                if((startGene.GeneName.equals(SPEC_GENE_1) && endGene.GeneName.equals(SPEC_GENE_2))
-                || (startGene.GeneName.equals(SPEC_GENE_2) && endGene.GeneName.equals(SPEC_GENE_1)))
-                {
-                    LOGGER.debug("gene match: {} and {}", startGene.GeneName, endGene.GeneName);
-                }
 
                 for (final Transcript startTrans : startGene.transcripts())
                 {
@@ -179,21 +168,41 @@ public class SvFusionAnalyser
         return potentialFusions;
     }
 
+    public static boolean validFusionTranscript(final Transcript transcript)
+    {
+        // check any conditions which would preclude this transcript being a part of a fusion no matter the other end
+        if(transcript.postCoding())
+            return false;
+
+        boolean isUpstream = isUpstream(transcript.parent());
+
+        if(isUpstream)
+        {
+            if(transcript.isPromoter())
+                return false;
+
+            if(!transcript.isDisruptive())
+                return false;
+
+        }
+        else
+        {
+            if(transcript.nonCoding())
+                return false;
+
+            if(transcript.exonMax() == 1)
+                return false;
+        }
+
+        return true;
+    }
+
     public static GeneFusion checkFusionLogic(final Transcript upstreamTrans, final Transcript downstreamTrans, boolean requirePhaseMatch)
     {
         // see FV Fusions document for permitted combinations
         boolean checkExactMatch = false;
 
-        if(upstreamTrans.postCoding() || downstreamTrans.postCoding() || downstreamTrans.nonCoding())
-            return null;
-
-        if(upstreamTrans.isPromoter())
-            return null;
-
-        if(downstreamTrans.exonMax() == 1)
-            return null;
-
-        if(!upstreamTrans.isDisruptive())
+        if(!validFusionTranscript(upstreamTrans) || !validFusionTranscript(downstreamTrans))
             return null;
 
         if(upstreamTrans.preCoding())

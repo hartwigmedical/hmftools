@@ -638,23 +638,13 @@ public class SvVarData
     {
         final List<GeneAnnotation> genesList = getGenesList(useStart);
 
-        if(genesList.isEmpty())
-            return "";
-
-        Transcript longestTrans = null;
+        String genesStr = "";
         for(final GeneAnnotation gene : genesList)
         {
-            for(final Transcript trans : gene.transcripts())
-            {
-                if(!trans.isIntronic() && !trans.isExonic())
-                    continue;
-
-                if(longestTrans == null || trans.length() > longestTrans.length())
-                    longestTrans = trans;
-            }
+            genesStr = appendStr(genesStr, gene.GeneName, ';');
         }
 
-        return longestTrans != null ? longestTrans.parent().GeneName : "";
+        return genesStr;
     }
 
     public final String getAssemblyMatchType(boolean useStart) { return useStart ? mStartAssemblyMatchType : mEndAssemblyMatchType; }
