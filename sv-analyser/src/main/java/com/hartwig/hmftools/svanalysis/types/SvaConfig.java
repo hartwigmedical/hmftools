@@ -35,8 +35,10 @@ public class SvaConfig
     private static final String MAX_CLUSTER_SIZE = "max_cluster_size";
     private static final String REQUIRED_ANNOTATIONS = "annotations";
     private static final String LOG_CLUSTER_ID = "log_cluster_id"; // for logging and breakends
+    private static final String LOG_SV_ID = "log_sv_id";
 
     public static int SPECIFIC_CLUSTER_ID = -1;
+    public static String SPECIFIC_SV_ID = "";
 
     private static int DEFAULT_MAX_CLUSTER_SIZE = 1000;
 
@@ -62,6 +64,7 @@ public class SvaConfig
         MaxClusterSize = cmd.hasOption(MAX_CLUSTER_SIZE) ? Integer.parseInt(cmd.getOptionValue(MAX_CLUSTER_SIZE)) : DEFAULT_MAX_CLUSTER_SIZE;
 
         SPECIFIC_CLUSTER_ID = Integer.parseInt(cmd.getOptionValue(LOG_CLUSTER_ID, "-1"));
+        SPECIFIC_SV_ID = cmd.getOptionValue(LOG_SV_ID, "");
     }
 
     public SvaConfig(int proximityDistance)
@@ -93,5 +96,6 @@ public class SvaConfig
         options.addOption(MAX_CLUSTER_SIZE, true, "Optional: max cluster size for chaining");
         options.addOption(REQUIRED_ANNOTATIONS, true, "Optional: string list of annotations");
         options.addOption(LOG_CLUSTER_ID, true, "Optional: log specific cluster details");
+        options.addOption(LOG_SV_ID, true, "Optional: log specific SV details");
     }
 }

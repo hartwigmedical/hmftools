@@ -279,7 +279,6 @@ public class StructuralVariantAnnotator
             StructuralVariantAnnotation annotation = new StructuralVariantAnnotation(var);
 
             Integer primaryKey = var.primaryKey();
-            assert primaryKey != null; // Not sure why this assert is valid here...
 
             List<GeneAnnotation> genesList = mSvGeneTranscriptCollection.findGeneAnnotationsBySv(primaryKey,
                     true,

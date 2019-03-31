@@ -118,20 +118,12 @@ public class SvFusionAnalyser
         return fusions;
     }
 
-    private static int SPECIFIC_VAR_ID = -1;
-    // private static int SPECIFIC_VAR_ID = 13699019;
-
     public final List<GeneFusion> findFusions(final List<GeneAnnotation> breakendGenes1, final List<GeneAnnotation> breakendGenes2)
     {
         final List<GeneFusion> potentialFusions = Lists.newArrayList();
 
         for (final GeneAnnotation startGene : breakendGenes1)
         {
-            if(startGene.id() == SPECIFIC_VAR_ID)
-            {
-                LOGGER.debug("specific var({})", startGene.id());
-            }
-
             // left is upstream, right is downstream
             boolean startUpstream = isUpstream(startGene);
 

@@ -1741,7 +1741,7 @@ public class ChainFinder
                         matchedPloidy = true;
 
                         // make note of any pairs formed from adjacent facing breakends
-                        if(j == i + 1 && newPair.length() <= DEFAULT_PROXIMITY_DISTANCE)
+                        if(j == i + 1)
                         {
                             mAdjacentMatchingPairs.add(newPair);
                         }

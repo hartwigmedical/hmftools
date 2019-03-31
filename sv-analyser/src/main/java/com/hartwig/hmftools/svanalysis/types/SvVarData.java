@@ -14,6 +14,7 @@ import static com.hartwig.hmftools.svanalysis.annotators.FragileSiteAnnotator.NO
 import static com.hartwig.hmftools.svanalysis.annotators.LineElementAnnotator.NO_LINE_ELEMENT;
 import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.ASSEMBLY_MATCH_MATCHED;
 import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.ASSEMBLY_MATCH_NONE;
+import static com.hartwig.hmftools.svanalysis.types.SvaConfig.SPECIFIC_SV_ID;
 
 import java.util.List;
 
@@ -760,12 +761,9 @@ public class SvVarData
         return false;
     }
 
-    // private static String SPECIFIC_VAR_ID = "9974890";
-    private static String SPECIFIC_VAR_ID = "";
-
     public static boolean isSpecificSV(final SvVarData var)
     {
-        if(var.id().equals(SPECIFIC_VAR_ID))
+        if(var.id().equals(SPECIFIC_SV_ID))
             return true;
 
         return false;

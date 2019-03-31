@@ -21,9 +21,8 @@ public class GeneAnnotation {
     private final boolean mIsStart;
 
     private EnsemblGeneData mGeneData;
-    private EnrichedStructuralVariant mVariant; // CHSH: try to remove this connection
 
-    private final List<Transcript> transcripts = Lists.newArrayList();
+    private List<Transcript> mTranscripts;
     @NotNull
     private final List<String> mSynonyms;
     @NotNull
@@ -45,9 +44,10 @@ public class GeneAnnotation {
         StableId = stableId;
         Strand = strand;
 
+        mTranscripts = Lists.newArrayList();
+
         mVarId = varId;
         mIsStart = isStart;
-        mVariant = null;
         mGeneData = null;
 
         mChromosome = "";
@@ -83,8 +83,6 @@ public class GeneAnnotation {
 
     public void setSvData(final EnrichedStructuralVariant var)
     {
-        mVariant = var;
-
         if(var.end() == null && !mIsStart)
             return;
 
@@ -104,36 +102,28 @@ public class GeneAnnotation {
     public double ploidy() { return mPloidy; }
     public String insertSequence() { return mInsertSequence; }
 
-    public final EnrichedStructuralVariant variant() { return mVariant; }
-
     public boolean isStart() { return mIsStart; }
     public boolean isEnd() { return !mIsStart; }
 
-    public void addTranscript(@NotNull Transcript transcript) {
-        transcripts.add(transcript);
+    public void addTranscript(Transcript transcript) {
+        mTranscripts.add(transcript);
     }
 
-    @NotNull
-    public List<Transcript> transcripts() {
-        return ImmutableList.copyOf(transcripts);
-    }
+    public List<Transcript> transcripts() { return mTranscripts; }
 
     @Nullable
     public Transcript canonical() {
-        return transcripts.stream().filter(Transcript::isCanonical).findFirst().orElse(null);
+        return mTranscripts.stream().filter(Transcript::isCanonical).findFirst().orElse(null);
     }
 
-    @NotNull
     public List<String> synonyms() {
         return ImmutableList.copyOf(mSynonyms);
     }
 
-    @NotNull
     public List<Integer> entrezIds() {
         return mEntrezIds;
     }
 
-    @NotNull
     public String karyotypeBand() {
         return mKaryotypeBand;
     }

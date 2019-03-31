@@ -105,9 +105,6 @@ public class SvGeneTranscriptCollection
         return mGeneTransExonDataMap.get(geneId);
     }
 
-    private static int SPECIFIC_VAR_ID = -1;
-    // private static int SPECIFIC_VAR_ID = 4558066;
-
     public void populateGeneIdList(Map<String,Boolean> uniqueGeneIds, final String chromosome, long position, int upstreamDistance)
     {
         // find the unique set of geneIds
@@ -128,11 +125,6 @@ public class SvGeneTranscriptCollection
             int upstreamDistance)
     {
         List<GeneAnnotation> geneAnnotations = Lists.newArrayList();
-
-        if(svId == SPECIFIC_VAR_ID)
-        {
-            LOGGER.debug("specific SV({})", svId);
-        }
 
         final List<EnsemblGeneData> geneRegions = mChromosomeGeneDataMap.get(chromosome);
         final List<EnsemblGeneData> geneRegionsReversed = mChromosomeReverseGeneDataMap.get(chromosome);
@@ -166,11 +158,7 @@ public class SvGeneTranscriptCollection
 
                 if(transcript != null)
                 {
-                    // only add transcript which are potential fusion candidates (with exception for canonical)
-                    if(validFusionTranscript(transcript) || transcript.isCanonical())
-                    {
-                        currentGene.addTranscript(transcript);
-                    }
+                    currentGene.addTranscript(transcript);
 
                     // annotate with preceding gene info if the up distance isn't set
                     if(transcript.exonDistanceUp() == -1)
