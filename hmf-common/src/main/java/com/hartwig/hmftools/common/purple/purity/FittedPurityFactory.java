@@ -43,7 +43,7 @@ public class FittedPurityFactory {
     private final double normFactorIncrements;
     private final double minNormFactor;
     private final double maxNormFactor;
-    private final double somaticDeviationWeight;
+    private final double somaticPenaltyWeight;
 
     @NotNull
     private final FittedRegionFactory fittedRegionFactory;
@@ -55,7 +55,7 @@ public class FittedPurityFactory {
 
     public FittedPurityFactory(final ExecutorService executorService, final Gender gender, final int maxPloidy, final double minPurity,
             final double maxPurity, final double purityIncrements, final double minNormFactor, final double maxNormFactor,
-            final double normFactorIncrements, final double somaticDeviationWeight, @NotNull final FittedRegionFactory fittedRegionFactory,
+            final double normFactorIncrements, final double somaticPenaltyWeight, @NotNull final FittedRegionFactory fittedRegionFactory,
             @NotNull final Collection<ObservedRegion> observedRegions, @NotNull final Collection<SomaticVariant> variants)
             throws ExecutionException, InterruptedException {
         this.executorService = executorService;
@@ -66,7 +66,7 @@ public class FittedPurityFactory {
         this.minNormFactor = minNormFactor;
         this.maxNormFactor = maxNormFactor;
         this.normFactorIncrements = normFactorIncrements;
-        this.somaticDeviationWeight = somaticDeviationWeight;
+        this.somaticPenaltyWeight = somaticPenaltyWeight;
         this.fittedRegionFactory = fittedRegionFactory;
         this.gender = gender;
 
@@ -156,11 +156,11 @@ public class FittedPurityFactory {
         }
 
         final PurityAdjuster purityAdjuster = new PurityAdjuster(gender, purity, normFactor);
-        final double somaticPenalty = Doubles.greaterThan(somaticDeviationWeight, 0)
+        final double somaticPenalty = Doubles.greaterThan(somaticPenaltyWeight, 0)
                 ? SomaticPenaltyFactory.penalty(purityAdjuster, fittedRegions, variants)
                 : 0;
 
-        return builder.score(eventPenalty * deviationPenalty + somaticDeviationWeight * somaticPenalty)
+        return builder.score(eventPenalty * deviationPenalty + somaticPenaltyWeight * somaticPenalty)
                 .diploidProportion(diploidProportion)
                 .ploidy(averagePloidy)
                 .somaticPenalty(somaticPenalty)

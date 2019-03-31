@@ -74,7 +74,7 @@ somatic_min_peak | 50 | Minimum number of somatic variants to consider a peak.
 somatic_min_total | 300 | Minimum number of somatic variants required to assist highly diploid fits.
 somatic_min_purity_spread | 0.15 | Minimum spread within candidate purities before somatics can be used.
 somatic_min_purity | 0.17 | Somatic fit will not be used if both somatic and fitted purities are less than this value.
-somatic_deviation_weight | 1 | Proportion of somatic deviation to include in fitted purity score.
+somatic_penalty_weight | 1 | Proportion of somatic penalty to include in fitted purity score.
 highly_diploid_percentage | 0.97 | Proportion of genome that must be diploid before using somatic fit.
 
 ### Example Usage
@@ -602,6 +602,7 @@ Threads | Elapsed Time| CPU Time | Peak Mem
 - Upcoming
   - Removed unused columns from GeneCopyNumber output
   - Added minorAllelePloidy and majorAllelePloidy to copy number output
+  - Cleaned up names of penalty fields and parameters to be more consistent
 - 2.24
   - Recovered SVs were not being used for re-segmentation.
 - 2.23
