@@ -24,7 +24,6 @@ import org.jetbrains.annotations.Nullable;
 import org.jooq.DSLContext;
 import org.jooq.InsertValuesStep8;
 import org.jooq.Record;
-import org.jooq.Record1;
 import org.jooq.Result;
 
 class PurityDAO {
@@ -49,7 +48,7 @@ class PurityDAO {
                 .score(result.getValue(PURITY.SCORE))
                 .diploidProportion(result.getValue(PURITY.DIPLOIDPROPORTION))
                 .ploidy(result.getValue(PURITY.PLOIDY))
-                .somaticDeviation(result.getValue(PURITY.SOMATICDEVIATION))
+                .somaticPenalty(result.getValue(PURITY.SOMATICDEVIATION))
                 .build();
 
         final FittedPurityScore score = ImmutableFittedPurityScore.builder()
@@ -125,7 +124,7 @@ class PurityDAO {
                         checks.status().toString(),
                         DatabaseUtil.decimal(bestFit.normFactor()),
                         DatabaseUtil.decimal(bestFit.score()),
-                        DatabaseUtil.decimal(bestFit.somaticDeviation()),
+                        DatabaseUtil.decimal(bestFit.somaticPenalty()),
                         DatabaseUtil.decimal(bestFit.ploidy()),
                         DatabaseUtil.decimal(bestFit.diploidProportion()),
                         DatabaseUtil.decimal(score.minDiploidProportion()),
@@ -164,7 +163,7 @@ class PurityDAO {
                 DatabaseUtil.decimal(purity.purity()),
                 DatabaseUtil.decimal(purity.normFactor()),
                 DatabaseUtil.decimal(purity.score()),
-                DatabaseUtil.decimal(purity.somaticDeviation()),
+                DatabaseUtil.decimal(purity.somaticPenalty()),
                 DatabaseUtil.decimal(purity.ploidy()),
                 DatabaseUtil.decimal(purity.diploidProportion()),
                 timestamp);

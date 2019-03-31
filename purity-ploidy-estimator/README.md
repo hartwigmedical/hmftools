@@ -275,37 +275,46 @@ The following chart illustrates the deviation penalty applied for each of minor 
 
 ![Deviation Penalty](src/main/resources/readme/FittedPurityDeviationPenalty.png)
 
-#### Event Penalty Multiplier
+#### Event Penalty
 
-An event penalty multiplier is intended to further penalise [sample ploidy,purity] combinations based on the number of alterations required to get from a normal diploid chromosome to the implied minor and major allele ploidies. 
+An event penalty is intended to further penalise [sample ploidy,purity] combinations based on the number of alterations required to get from a normal diploid chromosome to the implied minor and major allele ploidies. 
 In particular, this model penalises higher ploidy solutions that can be highly degenerate and lead to low deviation penalties, but are unlikely to be the most parsimonious or biologically plausible solution.  
 
 The event penalty multiplier is given by:
 
-`EventPenaltyMultiplier = 1 +0.3 * min(SingleEventDistance, WholeGenomeDoublingDistance);`
+`EventPenalty = 1 + 0.3 * min(SingleEventDistance, WholeGenomeDoublingDistance);`
 
-`WholeGenomeDoublingDistance = 1 + abs(majorAllele - 2) +abs(minorAllele - 2);`
+`WholeGenomeDoublingDistance = 1 + abs(majorAllele - 2) + abs(minorAllele - 2);`
 
 `SingleEventDistance = abs(majorAllele - 1) + abs(minorAllele - 1);`
 
-Note that a diploid segment with implied minor allele ploidy = implied major allele ploidy = 1 has an eventPenalty multiplier of exactly 1 whilst all other solutions have increasingly higher multipliers as the minor and major allele deviate further from 1. 
-The formula includes an explicit reduced penalty for a doubling of both major and minor allele ploidy since there is a known common mechanism of whole genome doubling which can occur in a single event.
+Note that a diploid segment with implied minor allele ploidy = implied major allele ploidy = 1 has an event penalty of exactly 1 whilst 
+all other solutions have increasingly higher multipliers as the minor and major allele deviate further from 1. 
+The formula includes an explicit reduced penalty for a doubling of both major and minor allele ploidy since there is a known common 
+mechanism of whole genome doubling which can occur in a single event.
 
-The Deviation Penalty and Event Penalty Multiplier are aggregated independently across all segments that are diploid in the germline and have a tumor depth ratio of <3x the average depth. 
-An average is calculated for each value weighted by the number of BAF observations in each segment. The averaged numbers are multiplied by each other to form an overall ploidy penalty for the sample.
+The Deviation Penalty and Event Penalty are aggregated independently across all segments that are diploid in the germline and have a tumor 
+depth ratio of <3x the average depth. 
+An average is calculated for each value weighted by the number of BAF observations in each segment. 
+The averaged numbers are multiplied by each other to form an overall ploidy penalty for the sample.
 
-The following chart shows the shape of the combined ploidy penalty
+The following chart shows the combined shape of the deviation and event penalty:
 
 
 ![Combined Ploidy Penalty](src/main/resources/readme/FittedPurityPenalty.png)
 
 
-#### Somatic Deviation Penalty
+#### Somatic Penalty
 
-If somatic variants are provided, an additional somatic penalty is added to fits which lead to somatic variants with ploidies higher than the major allele ploidy, since these are biologically implausible. 
-This feature was introduced primarily to deal with a degeneracy where in certain situations a lower purity, lower sample ploidy solutions may provide a plausible minor and major allele ploidy fit to the copy number data, but imply that many SNVs exceed the major allele ploidy which is biologically implausible.
+If somatic variants are provided, an additional somatic penalty is added to fits which lead to somatic variants with ploidies higher than 
+the major allele ploidy, since these are biologically implausible. 
+This feature was introduced primarily to deal with a degeneracy where in certain situations a lower purity, lower sample ploidy solutions 
+may provide a plausible minor and major allele ploidy fit to the copy number data, but imply that many SNVs exceed the major allele ploidy 
+which is biologically implausible.
 
-The somatic penalty is determined for each [sample plody,purity] combination by sampling 1000 somatic SNV per tumor and comparing the observed ploidy with an upper bound expectation of the variant’s ploidy from the 99.9% percentile of a binomial distribution given the major allele at the SNV location. 
+The somatic penalty is determined for each [sample plody,purity] combination by sampling 1000 somatic SNV per tumor and comparing the 
+observed ploidy with an upper bound expectation of the variant’s ploidy from the 99.9% percentile of a binomial distribution given the 
+major allele at the SNV location. 
 The penalty applied to a single SNV is the max(0,impled SNV ploidy - 99.9% expected bound given the major allele). 
 The somatic penalty is averaged across the 1000 variants and multiplied by a somaticPenaltyWeight [0.3] constant and added to the ploidy penalty.
 
@@ -454,7 +463,6 @@ PURPLE generates a number of tab separated output files as described in the foll
 
 The purity file `TUMOR.purple.purity` contains a single row with a summary of the purity fit:
 
-
 Column  | Example Value | Description
 ---|---|---
 Purity  | 0.98 | Purity of tumor in the sample.
@@ -492,7 +500,7 @@ Column  | Example Value | Description
 Chromosome  | 1 | Chromosome of copy number segment
 Start  | 1 | Start base of copy number segment
 End  | 87337011 | End base of copy number segment
-CopyNumber  | 2.8189 | Fitted absolute copy number of region adjusted for purity and ploidy
+CopyNumber  | 2.8189 | Fitted absolute copy number of segment adjusted for purity and ploidy
 BafCount  | 4464 | Count of AMBER baf points covered by this segment
 ObservedBAF  | 0.7094 | Combined reference and tumor BAF **un**adjusted for purity and ploidy
 BAF  | 0.7124 | Tumor BAF after adjusted for purity and ploidy
