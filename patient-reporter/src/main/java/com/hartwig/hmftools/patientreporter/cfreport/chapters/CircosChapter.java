@@ -28,7 +28,7 @@ public class CircosChapter extends ReportChapter {
     protected void renderChapterContent(@NotNull final AnalysedPatientReport patientReport, @NotNull final Document reportDocument) throws IOException {
 
         // Add Circos plot
-        final String circosPath = "/Users/wilco/Projects/hmftools/patient-reporter/src/test/resources/circos/circos_example.png";
+        final String circosPath = patientReport.circosPath();
         try {
             final Image circosImage = new Image(ImageDataFactory.create(circosPath));
             circosImage.setMaxHeight(400);
