@@ -173,8 +173,8 @@ class CopyNumberDAO {
                     COPYNUMBERREGION.REFNORMALISEDTUMORCOPYNUMBER,
                     COPYNUMBERREGION.MINORALLELEPLOIDYDEVIATION,
                     COPYNUMBERREGION.MAJORALLELEPLOIDYDEVIATION,
-                    COPYNUMBERREGION.TOTALDEVIATION,
-                    COPYNUMBERREGION.PLOIDYPENALTY,
+                    COPYNUMBERREGION.DEVIATIONPENALTY,
+                    COPYNUMBERREGION.EVENTPENALTY,
                     COPYNUMBERREGION.FITTEDBAF,
                     COPYNUMBERREGION.FITTEDCOPYNUMBER,
                     COPYNUMBERREGION.DEPTHWINDOWCOUNT,
@@ -245,10 +245,10 @@ class CopyNumberDAO {
                     .refNormalisedCopyNumber(record.getValue(COPYNUMBERREGION.REFNORMALISEDTUMORCOPYNUMBER))
                     .minorAllelePloidyDeviation(record.getValue(COPYNUMBERREGION.MINORALLELEPLOIDYDEVIATION))
                     .majorAllelePloidyDeviation(record.getValue(COPYNUMBERREGION.MAJORALLELEPLOIDYDEVIATION))
-                    .deviationPenalty(record.getValue(COPYNUMBERREGION.TOTALDEVIATION))
+                    .deviationPenalty(record.getValue(COPYNUMBERREGION.DEVIATIONPENALTY))
                     .fittedBAF(record.getValue(COPYNUMBERREGION.FITTEDBAF))
                     .fittedTumorCopyNumber(record.getValue(COPYNUMBERREGION.FITTEDCOPYNUMBER))
-                    .eventPenalty(record.getValue(COPYNUMBERREGION.PLOIDYPENALTY))
+                    .eventPenalty(record.getValue(COPYNUMBERREGION.EVENTPENALTY))
                     .depthWindowCount(record.getValue(COPYNUMBERREGION.DEPTHWINDOWCOUNT))
                     .minStart(record.getValue(COPYNUMBERREGION.MINSTART))
                     .maxStart(record.getValue(COPYNUMBERREGION.MAXSTART))

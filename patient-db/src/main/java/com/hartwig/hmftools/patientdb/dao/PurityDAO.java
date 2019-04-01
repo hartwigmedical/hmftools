@@ -48,7 +48,7 @@ class PurityDAO {
                 .score(result.getValue(PURITY.SCORE))
                 .diploidProportion(result.getValue(PURITY.DIPLOIDPROPORTION))
                 .ploidy(result.getValue(PURITY.PLOIDY))
-                .somaticPenalty(result.getValue(PURITY.SOMATICDEVIATION))
+                .somaticPenalty(result.getValue(PURITY.SOMATICPENALTY))
                 .build();
 
         final FittedPurityScore score = ImmutableFittedPurityScore.builder()
@@ -105,7 +105,7 @@ class PurityDAO {
                 PURITY.QCSTATUS,
                 PURITY.NORMFACTOR,
                 PURITY.SCORE,
-                PURITY.SOMATICDEVIATION,
+                PURITY.SOMATICPENALTY,
                 PURITY.PLOIDY,
                 PURITY.DIPLOIDPROPORTION,
                 PURITY.MINDIPLOIDPROPORTION,
@@ -147,7 +147,7 @@ class PurityDAO {
                 PURITYRANGE.PURITY,
                 PURITYRANGE.NORMFACTOR,
                 PURITYRANGE.SCORE,
-                PURITYRANGE.SOMATICDEVIATION,
+                PURITYRANGE.SOMATICPENALTY,
                 PURITYRANGE.PLOIDY,
                 PURITYRANGE.DIPLOIDPROPORTION,
                 PURITYRANGE.MODIFIED);
