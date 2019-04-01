@@ -16,14 +16,8 @@ import java.util.Set;
 
 public class DataUtility {
 
-    // Data ranges and thresholds
-    public static final double IMPLIED_TUMOR_PURITY_MIN = 0;
-    public static final double IMPLIED_TUMOR_PURITY_MAX = 1;
-
-    // Number formatting
+   // Number formatting
     private static final DecimalFormat PERCENTAGE_FORMAT = new DecimalFormat("#'%'");
-
-
 
     /**
      * Remap v from [inMin, inMax] to [0, 100]
@@ -42,6 +36,14 @@ public class DataUtility {
     @NotNull
     public static String formatPercentage(final double percentage) {
         return PERCENTAGE_FORMAT.format(percentage);
+    }
+
+    /**
+     * All members dealing with Tumor Purity
+     */
+    public static class TumorPurity {
+        public static final int RANGE_MIN = 0;
+        public static final int RANGE_MAX = 1;
     }
 
 
@@ -91,7 +93,9 @@ public class DataUtility {
 
     }
 
-
+    /**
+     * All methods to handle Genomic Alteration data
+     */
     public static class GenomicAlterations {
 
         @NotNull

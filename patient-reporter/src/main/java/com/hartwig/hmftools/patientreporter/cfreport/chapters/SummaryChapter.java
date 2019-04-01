@@ -155,14 +155,14 @@ public class SummaryChapter extends ReportChapter {
 
         // Tumor purity
         final double impliedPurity = patientReport.impliedPurity();
-        final double impliedPurityPercentage = DataUtility.mapPercentage(impliedPurity, DataUtility.IMPLIED_TUMOR_PURITY_MIN, DataUtility.IMPLIED_TUMOR_PURITY_MAX);
+        final double impliedPurityPercentage = DataUtility.mapPercentage(impliedPurity, DataUtility.TumorPurity.RANGE_MIN, DataUtility.TumorPurity.RANGE_MAX);
         renderTumorCharactericBarCharRow(
                 patientReport.hasReliablePurityFit(),
                 "Tumor purity of biopsy",
                 DataUtility.formatPercentage(impliedPurityPercentage),
                 impliedPurity,
-                DataUtility.IMPLIED_TUMOR_PURITY_MIN,
-                DataUtility.IMPLIED_TUMOR_PURITY_MAX,
+                DataUtility.TumorPurity.RANGE_MIN,
+                DataUtility.TumorPurity.RANGE_MAX,
                 table
         );
 
