@@ -26,7 +26,6 @@ public class DataUtility {
     public static final String NoneString = "NONE";
     public static final String NAString = "N/A";
 
-
     /**
      * Remap v from [inMin, inMax] to [0, 100]
      */
@@ -60,6 +59,29 @@ public class DataUtility {
         public static final int RANGE_MAX = 1;
     }
 
+    /**
+     * All members dealing with HR Deficiency data
+     */
+    public static class HrDeficiency {
+
+        public static final double RANGE_MIN = 0;
+        public static final double RANGE_MAX = 1;
+
+
+        /**
+         * Interpret HR Deficiency value. It's assumed the purity fit has been checked
+         */
+        @NotNull
+        public static String interpretToString(final double chordHrdScore) {
+            return new DecimalFormat("#.##").format(chordHrdScore);
+        }
+
+//        public static double graphValue(final double value) {
+//
+//        }
+
+    }
+
 
     /**
      * All members dealing with Tumor Mutational Load
@@ -83,6 +105,17 @@ public class DataUtility {
             }
         }
 
+        public static double scale(double value) {
+            return Math.log10(value);
+        }
+
+    }
+
+    public static class MutationalBurden {
+
+        public static final double RANGE_MIN = 1E-2;
+        public static final double RANGE_MAX = 120;
+
     }
 
     /**
@@ -90,7 +123,9 @@ public class DataUtility {
      */
     public static class MicroSatellite {
 
-        public static final double THRESHOLD = 4D;
+        public static final double RANGE_MIN = 1E-2;
+        public static final double RANGE_MAX = 100;
+        public static final double THRESHOLD = 4;
 
         /**
          * Interpret micro satellite indel value to be either "Stable" or "Instable". It's assumed the purity
@@ -103,6 +138,10 @@ public class DataUtility {
             } else {
                 return "Stable";
             }
+        }
+
+        public static double scale(double value) {
+            return Math.log10(value);
         }
 
     }

@@ -20,25 +20,48 @@ public class BarChart extends InlineBarChart {
 
     private String lowLabel;
     private String highLabel;
-    private String[] tickLabels;
 
     private boolean overshootEnabled = false;
     private String overshootLabel = "";
 
-    private Indicator indicator = null;
+    private Indicator[] tickMarks = {};
+    private Indicator threshold = null;
 
-
-    public BarChart(double value, double min, double max, @NotNull String lowLabel, @NotNull String highLabel, @NotNull String[] tickLabels) {
+    public BarChart(double value, double min, double max, @NotNull String lowLabel, @NotNull String highLabel) {
         super(value, min, max);
         super.setHeight(HEIGHT);
         this.lowLabel = lowLabel;
         this.highLabel = highLabel;
-        this.tickLabels = tickLabels;
+    }
+
+    public void setTickMarks(@NotNull Indicator... tickMarks) {
+        this.tickMarks = tickMarks;
+    }
+
+    public void setTickMarks(double[] values, @NotNull NumberFormat format) {
+        Indicator[] tickMarks = new Indicator[values.length];
+        for (int i = 0; i < values.length; i++) {
+            double value = values[i];
+            tickMarks[i] = new Indicator(format.format(value), value);
+        }
+        setTickMarks(tickMarks);
+    }
+
+    public void setTickMarks(double min, double max, double increment, @NotNull NumberFormat format) {
+
+        int valueCount = 1 + (int) ((max - min) / increment);
+        double[] values = new double[valueCount];
+        for (int i = 0; i < valueCount; i++) {
+            values[i] = min + i * increment;
+        }
+
+        setTickMarks(values, format);
+
     }
 
     public void setIndicator(double value, @NotNull String name) {
         if (value >= getMin() && value <= getMax()) {
-            indicator = new Indicator(name, value);
+            threshold = new Indicator(name, value);
         } else {
             System.err.println("Indicator value outside bounds");
         }
@@ -58,19 +81,6 @@ public class BarChart extends InlineBarChart {
     @Override
     public IRenderer getRenderer() {
         return new BarChartRenderer(this);
-    }
-
-    public static String[] createTickMarkLabels(double min, float max, double increment, @NotNull NumberFormat format) {
-
-        int valueCount = 1 + (int) ((max - min) / increment);
-
-        String[] tickMarkLabels = new String[valueCount];
-        for (int i = 0; i < valueCount; i++) {
-            tickMarkLabels[i] = format.format(min + i * increment);
-        }
-
-        return tickMarkLabels;
-
     }
 
     private class BarChartRenderer extends DivRenderer {
@@ -97,7 +107,7 @@ public class BarChart extends InlineBarChart {
 
             final float outerBarRadius = barOutlineRect.getHeight() * .5f;
 
-            // Overshoot indicator
+            // Overshoot threshold
             if (overshootEnabled) {
 
                 final float barOverlap = 2;
@@ -110,7 +120,6 @@ public class BarChart extends InlineBarChart {
                 canvas.roundRectangle(overshootOutlineRect.getX(), overshootOutlineRect.getY(), overshootOutlineRect.getWidth(), overshootOutlineRect.getHeight(), outerBarRadius);
                 canvas.stroke();
                 canvas.setLineDash(1f);
-
 
                 // Filled bar
                 canvas.setFillColor(ReportResources.PALETTE_BLUE);
@@ -141,7 +150,7 @@ public class BarChart extends InlineBarChart {
             // Filled bar
             final Rectangle barRect = new Rectangle(barOutlineRect.getX() + BAR_INSET, barOutlineRect.getY() +  BAR_INSET, barOutlineRect.getWidth() - 2 * BAR_INSET, barOutlineRect.getHeight() - 2 * BAR_INSET);
             canvas.setFillColor(ReportResources.PALETTE_BLUE);
-            canvas.roundRectangle(barRect.getX(), barRect.getY(), map(clampedValue, getMin(), getMax(), barRect.getHeight(), barRect.getWidth()), barRect.getHeight(), barRect.getHeight() * .5);
+            canvas.roundRectangle(barRect.getX(), barRect.getY(), map(getScaledValue(clampedValue), getScaledMin(), getScaledMax(), barRect.getHeight(), barRect.getWidth()), barRect.getHeight(), barRect.getHeight() * .5);
             canvas.fill();
 
             // Add top labels
@@ -151,10 +160,9 @@ public class BarChart extends InlineBarChart {
                     .addStyle(ReportResources.smallBodyHeadingStyle()), boundingBox.getRight(), boundingBox.getTop() - 25, TextAlignment.RIGHT);
 
             // Add tick marks
-            final float tickMarkDelta = (barRect.getWidth() - barRect.getHeight()) / ((float) tickLabels.length - 1);
-            for (int i = 0; i < tickLabels.length ; i++) {
+            for (Indicator tickMark : tickMarks) {
 
-                float x = barRect.getLeft() + barRect.getHeight() * 0.5f + i * tickMarkDelta;
+                float x = (float) map(getScaledValue(tickMark.value), getScaledMin(), getScaledMax(), barRect.getLeft(), barRect.getRight());
 
                 canvas.moveTo(x, barOutlineRect.getBottom() - 4.1f);
                 canvas.lineTo(x, barOutlineRect.getBottom() - 9.4f);
@@ -162,15 +170,15 @@ public class BarChart extends InlineBarChart {
                 canvas.setStrokeColor(ReportResources.PALETTE_BLACK);
                 canvas.stroke();
 
-                cv.showTextAligned(new Paragraph(tickLabels[i])
+                cv.showTextAligned(new Paragraph(tickMark.name)
                         .addStyle(ReportResources.subTextStyle().setFontSize(6)), x, barOutlineRect.getBottom() - 21f, TextAlignment.CENTER);
 
             }
 
-            // Add boundary indicator
-            if (indicator != null) {
+            // Add boundary threshold
+            if (threshold != null) {
 
-                float x = (float) map(indicator.value, getMin(), getMax(), barRect.getLeft(), barRect.getRight());
+                float x = (float) map(getScaledValue(threshold.value), getScaledMin(), getScaledMax(), barRect.getLeft(), barRect.getRight());
 
                 canvas.moveTo(x, barOutlineRect.getTop() + 9.5f);
                 canvas.lineTo(x, barOutlineRect.getBottom() - 10.5f);
@@ -178,7 +186,7 @@ public class BarChart extends InlineBarChart {
                 canvas.setStrokeColor(ReportResources.PALETTE_PINK);
                 canvas.stroke();
 
-                cv.showTextAligned(new Paragraph("\u2192 " + indicator.name.toUpperCase())
+                cv.showTextAligned(new Paragraph("\u2192 " + threshold.name.toUpperCase())
                         .addStyle(ReportResources.subTextBoldStyle().setFontSize(6)).setFontColor(ReportResources.PALETTE_PINK), x + 4.5f, barOutlineRect.getTop() + 3.5f, TextAlignment.LEFT);
 
             }
@@ -187,12 +195,12 @@ public class BarChart extends InlineBarChart {
 
     }
 
-    class Indicator {
+    public class Indicator {
 
         public String name;
         public double value;
 
-        Indicator(@NotNull String name, double value) {
+        public Indicator(@NotNull String name, double value) {
             this.name = name;
             this.value = value;
         }

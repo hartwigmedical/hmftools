@@ -10,9 +10,14 @@ import com.itextpdf.layout.renderer.IRenderer;
 
 public class InlineBarChart extends Div {
 
+    public static Scale LINEAR_SCALE = (v) -> { return v; };
+    public static Scale LOG10_SCALE = (v) -> { return Math.log10(v); };
+
     private double value;
     private double min;
     private double max;
+
+    private Scale scale = LINEAR_SCALE; // Default to linear scale
 
     public InlineBarChart(double value, double min, double max) {
         this.value = value;
@@ -20,16 +25,36 @@ public class InlineBarChart extends Div {
         this.max = max;
     }
 
+    public void setScale(Scale scale) {
+        this.scale = scale;
+    }
+
     public final double getValue() {
         return value;
+    }
+
+    public final double getScaledValue() {
+        return getScaledValue(getValue());
     }
 
     final double getMin() {
         return min;
     }
 
+    public final double getScaledMin() {
+        return getScaledValue(getMin());
+    }
+
     public final double getMax() {
         return max;
+    }
+
+    public final double getScaledMax() {
+        return getScaledValue(getMax());
+    }
+
+    protected final double getScaledValue(double value) {
+        return scale.scale(value);
     }
 
     /**
@@ -59,7 +84,7 @@ public class InlineBarChart extends Div {
             final float width = area.getWidth();
             final float height = area.getHeight();
             final float radius = height * .5f;
-            final float filledWidth = (float) map(getValue(), getMin(), getMax(), height, width);
+            final float filledWidth = (float) map(getScaledValue(), getScaledMin(), getScaledMax(), height, width);
 
             // Background
             canvas.setFillColor(ReportResources.PALETTE_LIGHT_GREY);
@@ -75,6 +100,10 @@ public class InlineBarChart extends Div {
 
         }
 
+    }
+
+    public interface Scale {
+        double scale(final double value);
     }
 
 }
