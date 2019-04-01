@@ -10,16 +10,25 @@ public class Transcript {
     public final int TransId;
     public final String StableId;
 
+    @Nullable
+    public final Long CodingStart;
+
+    @Nullable
+    public final Long CodingEnd;
+
+    public final long TranscriptStart;
+    public final long TranscriptEnd;
+
+    public final int ExonUpstream;
+    public final int ExonUpstreamPhase;
+    public final int ExonDownstream;
+    public final int ExonDownstreamPhase;
+    public final int ExonMax;
+
     @NotNull
     private final GeneAnnotation mGene;
 
-    private final int mExonUpstream;
-    private final int mExonUpstreamPhase;
-    private final int mExonDownstream;
-    private final int mExonDownstreamPhase;
-    private final int mExonMax;
     private int mExactCodingBase;
-
     private final int mCodingBases;
     private final int mTotalCodingBases;
 
@@ -29,14 +38,6 @@ public class Transcript {
     private String mCodingType;
     private final String mRegionType;
 
-    @Nullable
-    private final Long mCodingStart;
-
-    @Nullable
-    private final Long mCodingEnd;
-
-    private final long mTranscriptStart;
-    private final long mTranscriptEnd;
 
     private int mExonDistanceUp;
     private int mExonDistanceDown;
@@ -60,20 +61,26 @@ public class Transcript {
     public Transcript(@NotNull final GeneAnnotation parent, int transId, final String stableId,
             final int exonUpstream, final int exonUpstreamPhase, final int exonDownstream, final int exonDownstreamPhase,
             final int codingBases, final int totalCodingBases,
-            final int exonMax, final boolean canonical, final long transcriptStart, final long transcriptEnd,
+            final int exonMax, final boolean canonical, long transcriptStart, long transcriptEnd,
             final Long codingStart, final Long codingEnd)
     {
         TransId = transId;
         StableId = stableId;
+        mCanonical = canonical;
+        CodingStart = codingStart;
+        CodingEnd = codingEnd;
+        TranscriptStart = transcriptStart;
+        TranscriptEnd = transcriptEnd;
+        ExonDownstreamPhase = exonDownstreamPhase;
+        ExonUpstreamPhase = exonUpstreamPhase;
+        ExonUpstream = exonUpstream;
+        ExonDownstream = exonDownstream;
+        ExonMax = exonMax;
 
         mGene = parent;
 
-        mExonUpstream = exonUpstream;
-        mExonDownstream = exonDownstream;
-
         mExactCodingBase = -1;
 
-        mExonMax = exonMax;
         mBioType = "";
         mExonDistanceUp = 0;
         mExonDistanceDown = 0;
@@ -98,17 +105,9 @@ public class Transcript {
             mCodingBases = codingBases;
         }
 
-        mCanonical = canonical;
-        mCodingStart = codingStart;
-        mCodingEnd = codingEnd;
-        mTranscriptStart = transcriptStart;
-        mTranscriptEnd = transcriptEnd;
 
         mCodingType = calcCodingType();
         mRegionType = calcRegionType();
-
-        mExonDownstreamPhase = exonDownstreamPhase;
-        mExonUpstreamPhase = exonUpstreamPhase;
 
         if(isDownstream(mGene) && mRegionType == TRANS_REGION_TYPE_UPSTREAM)
             mIsDisruptive = false;
@@ -121,17 +120,17 @@ public class Transcript {
 
     public boolean isExonic()
     {
-        return mExonUpstream > 0 && mExonUpstream == mExonDownstream;
+        return ExonUpstream > 0 && ExonUpstream == ExonDownstream;
     }
 
     public boolean isPromoter()
     {
-        return mExonUpstream == 0 && (mExonDownstream == 1 || mExonDownstream == 2);
+        return ExonUpstream == 0 && (ExonDownstream == 1 || ExonDownstream == 2);
     }
 
     public boolean isIntronic()
     {
-        return mExonUpstream > 0 && (mExonDownstream - mExonUpstream) == 1;
+        return ExonUpstream > 0 && (ExonDownstream - ExonUpstream) == 1;
     }
 
     public long getDistanceUpstream()
@@ -140,9 +139,9 @@ public class Transcript {
             return 0;
 
         if(mGene.Strand == 1)
-            return mTranscriptStart - svPosition();
+            return TranscriptStart - svPosition();
         else
-            return svPosition() - mTranscriptEnd;
+            return svPosition() - TranscriptEnd;
     }
 
     public final String codingType() { return mCodingType; }
@@ -182,7 +181,7 @@ public class Transcript {
 
     private final String calcCodingType()
     {
-        if(mCodingStart == null || mCodingEnd == null || mTotalCodingBases == 0)
+        if(CodingStart == null || CodingEnd == null || mTotalCodingBases == 0)
         {
             return TRANS_CODING_TYPE_NON_CODING;
         }
@@ -226,31 +225,20 @@ public class Transcript {
 
     public String geneName() { return mGene.GeneName; }
 
-    public int exonUpstream() { return mExonUpstream; }
-    public int exonUpstreamPhase() { return mExonUpstreamPhase; }
-
     public int codingBases() { return mCodingBases; }
     public int calcCodingBases(boolean isUpstream) { return isUpstream ? mCodingBases : mTotalCodingBases - mCodingBases; }
     public int totalCodingBases() { return mTotalCodingBases; }
 
-    public int exonDownstream() { return mExonDownstream; }
-    public int exonDownstreamPhase() { return mExonDownstreamPhase; }
-
-    public int exonMax() { return mExonMax; }
-
     public int exactCodingBase() { return mExactCodingBase; }
     public void setExactCodingBase(int base) { mExactCodingBase = base; }
 
-    public long transcriptStart() { return mTranscriptStart; }
-    public long transcriptEnd() { return mTranscriptEnd; }
-
-    public final long length() { return mTranscriptEnd - mTranscriptStart; }
+    public final long length() { return TranscriptEnd - TranscriptStart; }
 
     public boolean isDisruptive() { return mIsDisruptive; }
     public void setIsDisruptive(boolean toggle) { mIsDisruptive = toggle; }
 
-    public long codingStart() { return mCodingStart != null ? mCodingStart : 0; }
-    public long codingEnd() { return mCodingEnd != null ? mCodingEnd : 0; }
+    public long codingStart() { return CodingStart != null ? CodingStart : 0; }
+    public long codingEnd() { return CodingEnd != null ? CodingEnd : 0; }
 
     public final String toString()
     {

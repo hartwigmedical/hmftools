@@ -182,7 +182,7 @@ public class SvFusionAnalyser
             if(transcript.nonCoding())
                 return false;
 
-            if(transcript.exonMax() == 1)
+            if(transcript.ExonMax == 1)
                 return false;
         }
 
@@ -237,7 +237,7 @@ public class SvFusionAnalyser
         if(!checkExactMatch)
         {
             // all fusions to downstream exons may be excluded, but for now definitely exclude those which end in the last exon
-            if(downstreamTrans.isExonic() && downstreamTrans.exonDownstream() == downstreamTrans.exonMax() && !downstreamTrans.preCoding())
+            if(downstreamTrans.isExonic() && downstreamTrans.ExonDownstream == downstreamTrans.ExonMax && !downstreamTrans.preCoding())
                 return null;
         }
 
@@ -253,7 +253,7 @@ public class SvFusionAnalyser
         else
         {
             // just check for a phasing match
-            phaseMatched = upstreamTrans.exonUpstreamPhase() == downstreamTrans.exonDownstreamPhase();
+            phaseMatched = upstreamTrans.ExonUpstreamPhase == downstreamTrans.ExonDownstreamPhase;
 
             if(phaseMatched || !requirePhaseMatch)
             {
@@ -308,7 +308,7 @@ public class SvFusionAnalyser
             return false;
 
         // skip fusions within the same intron
-        if(t1.isIntronic() && t2.isIntronic() && t1.exonUpstream() == t2.exonUpstream())
+        if(t1.isIntronic() && t2.isIntronic() && t1.ExonUpstream == t2.ExonUpstream)
             return false;
 
         return true;
@@ -335,7 +335,7 @@ public class SvFusionAnalyser
             return;
 
         if(intragenic(reportableFusion.upstreamTrans(), reportableFusion.downstreamTrans())
-        && reportableFusion.upstreamTrans().exonUpstreamPhase() == -1)
+        && reportableFusion.upstreamTrans().ExonUpstreamPhase == -1)
         {
             return;
         }
@@ -467,7 +467,7 @@ public class SvFusionAnalyser
 
             factor /= 100;
 
-            long length = downTrans.isCoding() ? downTrans.calcCodingBases(false) : downTrans.exonMax();
+            long length = downTrans.isCoding() ? downTrans.calcCodingBases(false) : downTrans.ExonMax;
 
             // will be a range between 1-99 * current factor
             length = min(round(length/10), 99);
@@ -485,7 +485,7 @@ public class SvFusionAnalyser
 
             factor /= 100;
 
-            length = upTrans.isCoding() ? upTrans.calcCodingBases(true) : upTrans.exonMax();
+            length = upTrans.isCoding() ? upTrans.calcCodingBases(true) : upTrans.ExonMax;
             length = min(round(length/10), 99);
             transScore += length * factor;
 
@@ -508,7 +508,7 @@ public class SvFusionAnalyser
         boolean intergenicPromiscuousMatch = mKnownFusionsModel.intergenicPromiscuousMatch(upTrans.parent().synonyms(), downTrans.parent().synonyms());
 
         boolean intragenicPromiscuousMatch = (mKnownFusionsModel.intragenicPromiscuousMatch(upTrans.parent().synonyms(), downTrans.parent().synonyms())
-                && downTrans.exonDownstream() - upTrans.exonUpstream() > EXON_THRESHOLD);
+                && downTrans.ExonDownstream - upTrans.ExonUpstream > EXON_THRESHOLD);
 
         if(intergenicPromiscuousMatch || intragenicPromiscuousMatch)
         {
@@ -533,7 +533,7 @@ public class SvFusionAnalyser
         return upstream.parent().synonyms().stream().anyMatch(downstream.parent().synonyms()::contains);
     }
 
-    public void writeFusions(final List<GeneFusion> fusions, final String sampleId,  final String clusterInfo, boolean hasMultipleSamples)
+    public void initialiseOutputFile(final String sampleId, boolean hasMultipleSamples, String clusterInfoHeaders)
     {
         try
         {
@@ -551,7 +551,13 @@ public class SvFusionAnalyser
 
                 mFusionWriter = createBufferedWriter(outputFilename, false);
 
-                mFusionWriter.write("SampleId,Reportable,KnownType,PrimarySource,ClusterId,ClusterCount,ClusterInfo");
+                mFusionWriter.write("SampleId,Reportable,KnownType,PrimarySource");
+
+                if(clusterInfoHeaders.isEmpty())
+                    mFusionWriter.write(",ClusterId,ClusterCount,ClusterInfo");
+                else
+                    mFusionWriter.write(String.format(",%s", clusterInfoHeaders));
+
 
                 mFusionWriter.write(",SvIdUp,ChrUp,PosUp,OrientUp,TypeUp,PloidyUp,GeneUp,ChrBandUp,TranscriptUp,StrandUp,RegionTypeUp,CodingTypeUp");
                 mFusionWriter.write(",ExonUp,PhaseUp,ExonMaxUp,DisruptiveUp,ExactBaseUp,CodingBasesUp,TotalCodingUp");
@@ -564,63 +570,81 @@ public class SvFusionAnalyser
                 mFusionWriter.write(",ProteinsKept,ProteinsLost");
                 mFusionWriter.newLine();
             }
+        }
+        catch (final IOException e)
+        {
+            LOGGER.error("error writing fusions: {}", e.toString());
+        }
+    }
 
+    public void writeFusions(final List<GeneFusion> fusions, final String sampleId, boolean hasMultipleSamples)
+    {
+        initialiseOutputFile(sampleId, hasMultipleSamples, "");
+        String clusterInfo = ",,";
+
+        for (final GeneFusion fusion : fusions)
+        {
+            writeFusionData(fusion, sampleId, clusterInfo);
+        }
+    }
+
+    public void writeFusionData(final GeneFusion fusion, final String sampleId, final String clusterInfo)
+    {
+        try
+        {
             BufferedWriter writer = mFusionWriter;
 
-            for(final GeneFusion fusion : fusions)
-            {
-                final Transcript upTrans = fusion.upstreamTrans();
-                final Transcript downTrans = fusion.downstreamTrans();
+            final Transcript upTrans = fusion.upstreamTrans();
+            final Transcript downTrans = fusion.downstreamTrans();
 
-                final GeneAnnotation startVar = upTrans.parent();
-                final GeneAnnotation endVar = downTrans.parent();
+            final GeneAnnotation startVar = upTrans.parent();
+            final GeneAnnotation endVar = downTrans.parent();
 
-                writer.write(String.format("%s,%s,%s,%s,%s",
-                        sampleId, fusion.reportable(), fusion.getKnownFusionType(), fusion.primarySource(), clusterInfo));
+            writer.write(String.format("%s,%s,%s,%s,%s",
+                    sampleId, fusion.reportable(), fusion.getKnownFusionType(), fusion.primarySource(), clusterInfo));
 
-                // write upstream SV, transcript and exon info
-                writer.write(
-                        String.format(",%d,%s,%d,%d,%s,%.6f",
-                                startVar.id(), startVar.chromosome(), startVar.position(), startVar.orientation(),
-                                startVar.type(), startVar.ploidy()));
+            // write upstream SV, transcript and exon info
+            writer.write(
+                    String.format(",%d,%s,%d,%d,%s,%.6f",
+                            startVar.id(), startVar.chromosome(), startVar.position(), startVar.orientation(),
+                            startVar.type(), startVar.ploidy()));
 
-                writer.write(
-                        String.format(",%s,%s,%s,%d,%s,%s",
-                                startVar.GeneName, startVar.karyotypeBand(), upTrans.StableId,
-                                startVar.Strand, upTrans.regionType(), upTrans.codingType()));
+            writer.write(
+                    String.format(",%s,%s,%s,%d,%s,%s",
+                            startVar.GeneName, startVar.karyotypeBand(), upTrans.StableId,
+                            startVar.Strand, upTrans.regionType(), upTrans.codingType()));
 
-                writer.write(
-                        String.format(",%d,%d,%d,%s",
-                                upTrans.exonUpstream(), upTrans.exonUpstreamPhase(), upTrans.exonMax(), upTrans.isDisruptive()));
-                writer.write(
-                        String.format(",%d,%d,%d,%d,%d,%d,%d,%d,%s,%s",
-                                upTrans.exactCodingBase(), upTrans.calcCodingBases(true), upTrans.totalCodingBases(),
-                                upTrans.codingStart(), upTrans.codingEnd(), upTrans.transcriptStart(), upTrans.transcriptEnd(),
-                                upTrans.exonDistanceUp(), upTrans.isCanonical(), upTrans.bioType()));
+            writer.write(
+                    String.format(",%d,%d,%d,%s",
+                            upTrans.ExonUpstream, upTrans.ExonUpstreamPhase, upTrans.ExonMax, upTrans.isDisruptive()));
+            writer.write(
+                    String.format(",%d,%d,%d,%d,%d,%d,%d,%d,%s,%s",
+                            upTrans.exactCodingBase(), upTrans.calcCodingBases(true), upTrans.totalCodingBases(),
+                            upTrans.codingStart(), upTrans.codingEnd(), upTrans.TranscriptStart, upTrans.TranscriptEnd,
+                            upTrans.exonDistanceUp(), upTrans.isCanonical(), upTrans.bioType()));
 
-                writer.write(
-                        String.format(",%d,%s,%d,%d,%s,%.6f",
-                                endVar.id(), endVar.chromosome(), endVar.position(), endVar.orientation(),
-                                endVar.type(), endVar.ploidy()));
+            writer.write(
+                    String.format(",%d,%s,%d,%d,%s,%.6f",
+                            endVar.id(), endVar.chromosome(), endVar.position(), endVar.orientation(),
+                            endVar.type(), endVar.ploidy()));
 
-                writer.write(
-                        String.format(",%s,%s,%s,%d,%s,%s",
-                                endVar.GeneName, endVar.karyotypeBand(), downTrans.StableId,
-                                endVar.Strand, downTrans.regionType(), downTrans.codingType()));
+            writer.write(
+                    String.format(",%s,%s,%s,%d,%s,%s",
+                            endVar.GeneName, endVar.karyotypeBand(), downTrans.StableId,
+                            endVar.Strand, downTrans.regionType(), downTrans.codingType()));
 
-                writer.write(
-                        String.format(",%d,%d,%d,%s",
-                                downTrans.exonDownstream(), downTrans.exonDownstreamPhase(), downTrans.exonMax(), downTrans.isDisruptive()));
+            writer.write(
+                    String.format(",%d,%d,%d,%s",
+                            downTrans.ExonDownstream, downTrans.ExonDownstreamPhase, downTrans.ExonMax, downTrans.isDisruptive()));
 
-                writer.write(
-                        String.format(",%d,%d,%d,%d,%d,%d,%d,%d,%s,%s,%s,%s",
-                                downTrans.exactCodingBase(), downTrans.calcCodingBases(false), downTrans.totalCodingBases(),
-                                downTrans.codingStart(), downTrans.codingEnd(), downTrans.transcriptStart(), downTrans.transcriptEnd(),
-                                downTrans.exonDistanceUp(), downTrans.isCanonical(), downTrans.bioType(),
-                                downTrans.getProteinFeaturesKept(), downTrans.getProteinFeaturesLost()));
+            writer.write(
+                    String.format(",%d,%d,%d,%d,%d,%d,%d,%d,%s,%s,%s,%s",
+                            downTrans.exactCodingBase(), downTrans.calcCodingBases(false), downTrans.totalCodingBases(),
+                            downTrans.codingStart(), downTrans.codingEnd(), downTrans.TranscriptStart, downTrans.TranscriptEnd,
+                            downTrans.exonDistanceUp(), downTrans.isCanonical(), downTrans.bioType(),
+                            downTrans.getProteinFeaturesKept(), downTrans.getProteinFeaturesLost()));
 
-                writer.newLine();
-            }
+            writer.newLine();
         }
         catch (final IOException e)
         {

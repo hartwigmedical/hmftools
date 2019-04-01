@@ -132,11 +132,11 @@ public class StructuralVariantAnnotationDAO {
                         transcript.StableId,
                         transcript.isCanonical(),
                         geneAnnotation.Strand,
-                        transcript.exonUpstream(),
-                        transcript.exonUpstreamPhase(),
-                        transcript.exonDownstream(),
-                        transcript.exonDownstreamPhase(),
-                        transcript.exonMax());
+                        transcript.ExonUpstream,
+                        transcript.ExonUpstreamPhase,
+                        transcript.ExonDownstream,
+                        transcript.ExonDownstreamPhase,
+                        transcript.ExonMax);
 
                 transcriptList.add(transcript);
             }

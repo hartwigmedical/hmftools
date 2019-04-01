@@ -198,8 +198,7 @@ public class StructuralVariantAnnotator
 
         if (!mOutputDir.isEmpty())
         {
-            String clusterInfo = ",,";
-            mFusionAnalyser.writeFusions(fusions, sampleId, clusterInfo, hasMultipleSamples);
+            mFusionAnalyser.writeFusions(fusions, sampleId, hasMultipleSamples);
             mDisruptionAnalyser.writeDisruptions(disruptions, sampleId, hasMultipleSamples);
 
             if (mWriteBreakends)

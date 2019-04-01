@@ -572,12 +572,19 @@ public class SvGeneTranscriptCollection
     public int[] getExonRankings(final String geneId, long position)
     {
         // finds the exon before and after this position, setting to -1 if before the first or beyond the last exon
-        int[] exonData = new int[EXON_RANK_MAX+1];
+        int[] exonData = new int[EXON_RANK_MAX + 1];
 
         final List<TranscriptExonData> exonDataList = getTranscriptExons(geneId, "");
 
-        if(exonDataList == null || exonDataList.isEmpty())
+        if (exonDataList == null || exonDataList.isEmpty())
             return exonData;
+
+        return getExonRankings(exonDataList, position);
+    }
+
+    public static int[] getExonRankings(final List<TranscriptExonData> exonDataList, long position)
+    {
+        int[] exonData = new int[EXON_RANK_MAX + 1];
 
         // first test a position outside the range of the exons
         final TranscriptExonData firstExon = exonDataList.get(0);
@@ -754,18 +761,18 @@ public class SvGeneTranscriptCollection
                                 String.format(",%s,%s,%d,%s,%s,%s,%d,%d",
                                         geneAnnotation.GeneName, geneAnnotation.StableId, geneAnnotation.Strand,
                                         transcript.StableId, transcript.isCanonical(), transcript.bioType(),
-                                        transcript.transcriptStart(), transcript.transcriptEnd()));
+                                        transcript.TranscriptStart, transcript.TranscriptEnd));
 
                         // Transcript info: exonUpstream, exonUpstreamPhase, exonDownstream, exonDownstreamPhase, exonStart, exonEnd, exonMax, canonical, codingStart, codingEnd
                         writer.write(
                                 String.format(",%d,%d,%d,%d,%d,%d,%s",
-                                        transcript.exonUpstream(), transcript.exonUpstreamPhase(),
-                                        transcript.exonDownstream(), transcript.exonDownstreamPhase(),
+                                        transcript.ExonUpstream, transcript.ExonUpstreamPhase,
+                                        transcript.ExonDownstream, transcript.ExonDownstreamPhase,
                                         transcript.codingBases(), transcript.totalCodingBases(), transcript.isDisruptive()));
 
                         writer.write(
                                 String.format(",%d,%d,%d,%s,%s,%d,%d",
-                                        transcript.exonMax(), transcript.codingStart(), transcript.codingEnd(),
+                                        transcript.ExonMax, transcript.codingStart(), transcript.codingEnd(),
                                         transcript.regionType(), transcript.codingType(),
                                         transcript.exonDistanceUp(), transcript.exonDistanceDown()));
 

@@ -109,7 +109,7 @@ public class SvDisruptionAnalyser
     {
         boolean sameTranscript = t1.StableId.equals(t2.StableId);
         boolean bothIntronic = t1.isIntronic() && t2.isIntronic();
-        boolean sameExonUpstream = t1.exonUpstream() == t2.exonUpstream();
+        boolean sameExonUpstream = t1.ExonUpstream == t2.ExonUpstream;
 
         return sameTranscript && bothIntronic && sameExonUpstream;
     }
@@ -155,7 +155,7 @@ public class SvDisruptionAnalyser
         if(trans1.parent().orientation() == trans2.parent().orientation())
             return true;
 
-        if(trans1.exonUpstream() != trans2.exonUpstream())
+        if(trans1.ExonUpstream != trans2.ExonUpstream)
             return true;
 
         return false;
@@ -198,7 +198,7 @@ public class SvDisruptionAnalyser
                         String.format(",%s,%s,%s,%d,%s,%s,%s,%s,%d,%d,%s",
                                 svBreakend.GeneName, svBreakend.karyotypeBand(), transcript.StableId, svBreakend.Strand,
                                 transcript.regionType(), transcript.codingType(), transcript.isCanonical(), transcript.bioType(),
-                                transcript.exonUpstream(), transcript.exonDownstream(), transcript.isDisruptive()));
+                                transcript.ExonUpstream, transcript.ExonDownstream, transcript.isDisruptive()));
 
                 writer.newLine();
             }
