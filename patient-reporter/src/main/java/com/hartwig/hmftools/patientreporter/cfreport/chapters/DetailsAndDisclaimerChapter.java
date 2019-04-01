@@ -1,19 +1,27 @@
 package com.hartwig.hmftools.patientreporter.cfreport.chapters;
 
 import com.hartwig.hmftools.patientreporter.AnalysedPatientReport;
+import com.hartwig.hmftools.patientreporter.SampleReport;
+import com.hartwig.hmftools.patientreporter.cfreport.DataUtility;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
 import com.hartwig.hmftools.patientreporter.cfreport.components.TableHelper;
+import com.hartwig.hmftools.patientreporter.report.pages.SampleDetailsPage;
 import com.itextpdf.io.IOException;
 import com.itextpdf.io.image.ImageDataFactory;
 import com.itextpdf.layout.Document;
 import com.itextpdf.layout.Style;
 import com.itextpdf.layout.element.*;
 import com.itextpdf.layout.property.UnitValue;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 import java.net.MalformedURLException;
 
 public class DetailsAndDisclaimerChapter extends ReportChapter {
+
+    private static final Logger LOGGER = LogManager.getLogger(SampleDetailsPage.class);
+
 
     @Override
     public String getName() {
@@ -32,7 +40,7 @@ public class DetailsAndDisclaimerChapter extends ReportChapter {
         Table table = new Table(UnitValue.createPercentArray(new float[] {1, 0.1f, 1}));
         table.setWidth(getContentWidth());
         table.addCell(TableHelper.getLayoutCell()
-                .add(createSampleDetailsDiv()));
+                .add(createSampleDetailsDiv(patientReport.sampleReport())));
         table.addCell(TableHelper.getLayoutCell()); // Spacer
         table.addCell(TableHelper.getLayoutCell()
                 .add(createDisclaimerDiv()));
@@ -43,12 +51,18 @@ public class DetailsAndDisclaimerChapter extends ReportChapter {
                 .setMarginTop(50)
                 .addStyle(ReportResources.smallBodyTextStyle()));
 
-        reportDocument.add(createSignatureDiv().setPaddingTop(80));
+        reportDocument.add(createSignatureDiv(patientReport.logoRVAPath(), patientReport.signaturePath()).setPaddingTop(80));
 
     }
 
     @NotNull
-    private static Div createSampleDetailsDiv() {
+    private static Div createSampleDetailsDiv(@NotNull final SampleReport sampleReport) {
+
+        String recipient = sampleReport.recipient();
+        if (recipient == null) {
+            LOGGER.warn("No recipient address present for sample " + sampleReport.sampleId());
+            recipient = DataUtility.NAString;
+        }
 
         Div div = new Div();
 
@@ -59,13 +73,16 @@ public class DetailsAndDisclaimerChapter extends ReportChapter {
         // Content
         div.add(createContentParagraph("The samples have been sequenced at ", ReportResources.HARTWIG_ADDRESS));
         div.add(createContentParagraph("The samples have been analyzed by Next Generation Sequencing "));
-        div.add(createContentParagraph("This experiment is performed on the tumor sample which arrived on ", "05-Jan-2018"));
-        div.add(createContentParagraph("The pathology tumor percentage for this sample is 80%"));
-        div.add(createContentParagraph("This experiment is performed on the blood sample which arrived on ", "01-Jan-2018"));
-        div.add(createContentParagraph("This experiment is performed according to lab procedures: PREP013V23-QC037V20-SEQ008V25"));
-        div.add(createContentParagraph("This report is generated and verified by: korneelduyvesteyn"));
-        div.add(createContentParagraph("This report is addressed at: HMF Testing Center"));
-        div.add(createContentParagraph("Comments: this is a test report and is based off COLO829"));
+        div.add(createContentParagraph("This experiment is performed on the tumor sample which arrived on ", DataUtility.formatDate(sampleReport.tumorArrivalDate())));
+        div.add(createContentParagraph("The pathology tumor percentage for this sample is " + sampleReport.pathologyTumorPercentage()));
+        div.add(createContentParagraph("This experiment is performed on the blood sample which arrived on ", DataUtility.formatDate(sampleReport.bloodArrivalDate())));
+        div.add(createContentParagraph("This experiment is performed according to lab procedures: " + sampleReport.labProcedures()));
+        div.add(createContentParagraph("This report is generated and verified by: [USER]")); // @TODO: User
+        div.add(createContentParagraph("This report is addressed at: " + recipient));
+        div.add(createContentParagraph("Comments: this is a test report and is based off " + sampleReport.sampleId()));
+
+        // @TODO: Optional LimsSampleType.CORE implementation?
+        // @TODO: Optional comments?
 
         return div;
 
@@ -90,13 +107,12 @@ public class DetailsAndDisclaimerChapter extends ReportChapter {
     }
 
     @NotNull
-    private static Div createSignatureDiv() throws IOException {
+    private static Div createSignatureDiv(@NotNull String rvaLogoPath, @NotNull String signaturePath) throws IOException {
 
         Div div = new Div();
         div.setKeepTogether(true);
 
         // Add RVA logo
-        final String rvaLogoPath = "/Users/wilco/Projects/hmftools/patient-reporter/src/test/resources/rva_logo/rva_logo_test.jpg";
         try {
             final Image rvaLogo = new Image(ImageDataFactory.create(rvaLogoPath));
             rvaLogo.setMaxHeight(58);
@@ -118,7 +134,6 @@ public class DetailsAndDisclaimerChapter extends ReportChapter {
         div.add(signatureText);
 
         // Add signature image
-        final String signaturePath = "/Users/wilco/Projects/hmftools/patient-reporter/src/test/resources/signature/signature_test.png";
         try {
             final Image signatureImage = new Image(ImageDataFactory.create(signaturePath));
             signatureImage.setMaxHeight(60);

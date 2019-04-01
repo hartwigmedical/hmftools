@@ -8,8 +8,11 @@ import com.hartwig.hmftools.patientreporter.report.data.SomaticVariantDataSource
 import com.hartwig.hmftools.patientreporter.structural.ReportableGeneFusion;
 import com.hartwig.hmftools.patientreporter.variants.ReportableSomaticVariant;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.text.DecimalFormat;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -18,6 +21,11 @@ public class DataUtility {
 
    // Number formatting
     private static final DecimalFormat PERCENTAGE_FORMAT = new DecimalFormat("#'%'");
+
+    // Missing/invalid data indicators
+    public static final String NoneString = "NONE";
+    public static final String NAString = "N/A";
+
 
     /**
      * Remap v from [inMin, inMax] to [0, 100]
@@ -36,6 +44,12 @@ public class DataUtility {
     @NotNull
     public static String formatPercentage(final double percentage) {
         return PERCENTAGE_FORMAT.format(percentage);
+    }
+
+    @NotNull
+    public static String formatDate(@Nullable final LocalDate date) {
+        final DateTimeFormatter formatter = DateTimeFormatter.ofPattern(ReportResources.DATE_TIME_FORMAT);
+        return date != null ? formatter.format(date) : "?";
     }
 
     /**
