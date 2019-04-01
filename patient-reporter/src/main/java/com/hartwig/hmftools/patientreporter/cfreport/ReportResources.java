@@ -81,24 +81,6 @@ public final class ReportResources {
 
     private ReportResources() {}
 
-    @NotNull
-    public static final Text styledText(@NotNull String text, @NotNull Style style) {
-        return new Text(text)
-            .addStyle(style);
-    }
-
-    @NotNull
-    public static final Paragraph styledParagraph(@NotNull String text, @NotNull Style style) {
-        return styledParagraph(style)
-                .add(text);
-    }
-
-    @NotNull
-    public static final Paragraph styledParagraph(@NotNull Style style) {
-        return new Paragraph()
-                .addStyle(style);
-    }
-
     public static final PdfFont getFontRegular() {
         if (fontProgramRegular == null) {
             fontProgramRegular = loadFontProgram(FONT_REGULAR_PATH);
@@ -311,12 +293,6 @@ public final class ReportResources {
                 .setFont(getFontBold())
                 .setFontSize(11)
                 .setFontColor(ReportResources.PALETTE_WHITE);
-    }
-
-    @NotNull
-    public static String formatDate(@Nullable final LocalDate date) {
-        final DateTimeFormatter formatter = DateTimeFormatter.ofPattern(DATE_TIME_FORMAT);
-        return date != null ? formatter.format(date) : "Unknown";
     }
 
     /**
