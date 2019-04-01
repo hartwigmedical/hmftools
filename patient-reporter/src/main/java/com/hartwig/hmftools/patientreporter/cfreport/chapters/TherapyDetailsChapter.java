@@ -103,7 +103,7 @@ public class TherapyDetailsChapter extends ReportChapter {
                 TableHelper.getHeaderCell("Source")
         });
 
-        for (int i = 0; i < 20; i++) {
+        for (int i = 0; i < 8; i++) {
 
             final String level = levels[(int) (Math.random() * (float) levels.length)];
             String[] treatments = treatmentCombinations[(int) (Math.random() * (float) treatmentCombinations.length)];

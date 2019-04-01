@@ -261,10 +261,10 @@ public class SummaryChapter extends ReportChapter {
     private void renderGenomicAlterations(@NotNull final AnalysedPatientReport patientReport, @NotNull Document report) {
 
         // Initialize div
-        Div div = createSectionStartDiv(getContentWidth());
+        final Div div = createSectionStartDiv(getContentWidth());
 
         // Initialize table
-        Table table = new Table(UnitValue.createPercentArray(new float[] {1, 1}));
+        final Table table = new Table(UnitValue.createPercentArray(new float[] {1, 1}));
         table.setWidth(getContentWidth());
         table.addCell(TableHelper.getLayoutCell()
                 .add(new Paragraph("Genomic alterations \nsummary")
@@ -276,14 +276,14 @@ public class SummaryChapter extends ReportChapter {
         table.addCell(TableHelper.getLayoutCell(1, 2).setHeight(TABLE_SPACER_HEIGHT)); // Spacer
 
         // Genes with driver variant
-        String[] driverVariantGenes = {"CDKN2A", "BRAF"};
+        final String[] driverVariantGenes = DataUtility.GenomicAlterations.somaticVariantsWithDriver(patientReport.somaticVariants());
         table.addCell(createMiddleAlignedCell()
                 .add(new Paragraph("Genes with driver variant")
                         .addStyle(BODY_TEXT_STYLE)));
         table.addCell(createGeneListCell(driverVariantGenes));
 
         // Reported variants
-        int reportedVariants = 4;
+        final int reportedVariants = DataUtility.GenomicAlterations.countSomaticVariants(patientReport.somaticVariants());
         Style reportedVariantsStyle = (reportedVariants > 0) ? ReportResources.dataHighlightStyle() : ReportResources.dataHighlightNaStyle();
         table.addCell(createMiddleAlignedCell()
                 .add(new Paragraph("Nr. of reported variants")
@@ -293,21 +293,21 @@ public class SummaryChapter extends ReportChapter {
                 .addStyle(reportedVariantsStyle)));
 
         // Copy gain genes
-        String[] copyGainGenes = {};
+        final String[] copyGainGenes = DataUtility.GenomicAlterations.amplificationGenes(patientReport.geneCopyNumbers());
         table.addCell(createMiddleAlignedCell()
                 .add(new Paragraph("Genes with copy-gain")
                         .addStyle(BODY_TEXT_STYLE)));
         table.addCell(createGeneListCell(copyGainGenes));
 
         // Copy loss genes
-        String[] copyLossGenes = {"PTEN"};
+        final String[] copyLossGenes = DataUtility.GenomicAlterations.lossGenes(patientReport.geneCopyNumbers());
         table.addCell(createMiddleAlignedCell()
                 .add(new Paragraph("Genes with copy-loss")
                         .addStyle(BODY_TEXT_STYLE)));
         table.addCell(createGeneListCell(copyLossGenes));
 
         // Gene fusions
-        String[] fusionGenes = {};
+        final String[] fusionGenes = DataUtility.GenomicAlterations.geneFusions(patientReport.geneFusions());
         table.addCell(createMiddleAlignedCell()
                 .add(new Paragraph("Gene fusions")
                         .addStyle(BODY_TEXT_STYLE)));
@@ -350,31 +350,19 @@ public class SummaryChapter extends ReportChapter {
     @NotNull
     private static Cell createGeneListCell(@NotNull String[] genes) {
 
-        // Concatenate genes
-        String geneString;
-        if (genes.length == 0) {
-            geneString = "NONE";
-        } else {
+        String geneString = (genes.length > 0)
+                ? String.join(", ", genes)
+                : "NONE";
 
-            StringJoiner joiner = new StringJoiner(", ");
-            for (String s: genes) {
-                joiner.add(s);
-            }
-            geneString = joiner.toString();
+        Style style = (genes.length > 0)
+                ? ReportResources.dataHighlightStyle()
+                : ReportResources.dataHighlightNaStyle();
 
-        }
-
-        // Fetch style
-        Style style = genes.length > 0 ? ReportResources.dataHighlightStyle() : ReportResources.dataHighlightNaStyle();
-
-        // Build table
         return createMiddleAlignedCell()
                 .add(createHighlightParagraph(geneString))
                 .addStyle(style);
 
     }
-
-
 
     @NotNull
     private static Paragraph createHighlightParagraph(String text) {
