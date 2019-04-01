@@ -59,7 +59,7 @@ public enum FittedRegionFile {
                 .add("observedNormalRatio")
                 .add("majorAllelePloidy")
                 .add("majorAllelePloidyDeviation")
-                .add("deviation")
+                .add("deviationPenalty")
                 .add("tumorCopyNumber")
                 .add("fittedTumorCopyNumber")
                 .add("fittedBAF")
@@ -70,7 +70,7 @@ public enum FittedRegionFile {
                 .add("tumorBAF")
                 .add("gcContent")
                 .add("svCluster")
-                .add("ploidyPenalty")
+                .add("eventPenalty")
                 .add("minStart")
                 .add("maxStart")
                 .toString();
@@ -91,7 +91,7 @@ public enum FittedRegionFile {
                 .add(FORMAT.format(copyNumber.observedNormalRatio()))
                 .add(FORMAT.format(copyNumber.majorAllelePloidy()))
                 .add(FORMAT.format(copyNumber.majorAllelePloidyDeviation()))
-                .add(FORMAT.format(copyNumber.deviation()))
+                .add(FORMAT.format(copyNumber.deviationPenalty()))
                 .add(FORMAT.format(copyNumber.tumorCopyNumber()))
                 .add(FORMAT.format(copyNumber.fittedTumorCopyNumber()))
                 .add(FORMAT.format(copyNumber.fittedBAF()))
@@ -102,7 +102,7 @@ public enum FittedRegionFile {
                 .add(FORMAT.format(copyNumber.tumorBAF()))
                 .add(FORMAT.format(copyNumber.gcContent()))
                 .add(String.valueOf(copyNumber.svCluster()))
-                .add(FORMAT.format(copyNumber.ploidyPenalty()))
+                .add(FORMAT.format(copyNumber.eventPenalty()))
                 .add(String.valueOf(copyNumber.minStart()))
                 .add(String.valueOf(copyNumber.maxStart()))
                 .toString();
@@ -122,7 +122,7 @@ public enum FittedRegionFile {
                 .observedTumorRatio(Double.valueOf(values[9]))
                 .observedNormalRatio(Double.valueOf(values[10]))
                 .majorAllelePloidyDeviation(Double.valueOf(values[12]))
-                .deviation(Double.valueOf(values[13]))
+                .deviationPenalty(Double.valueOf(values[13]))
                 .tumorCopyNumber(Double.valueOf(values[14]))
                 .fittedTumorCopyNumber(Double.valueOf(values[15]))
                 .fittedBAF(Double.valueOf(values[16]))
@@ -133,7 +133,7 @@ public enum FittedRegionFile {
                 .tumorBAF(Double.valueOf(values[21]))
                 .gcContent(Double.valueOf(values[22]))
                 .svCluster(Boolean.valueOf(values[23]))
-                .ploidyPenalty(Double.valueOf(values[24]))
+                .eventPenalty(Double.valueOf(values[24]))
                 .minStart(0)
                 .maxStart(0);
 

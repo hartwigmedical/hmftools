@@ -43,7 +43,7 @@ public class FittedPurityFactory {
     private final double normFactorIncrements;
     private final double minNormFactor;
     private final double maxNormFactor;
-    private final double somaticDeviationWeight;
+    private final double somaticPenaltyWeight;
 
     @NotNull
     private final FittedRegionFactory fittedRegionFactory;
@@ -55,7 +55,7 @@ public class FittedPurityFactory {
 
     public FittedPurityFactory(final ExecutorService executorService, final Gender gender, final int maxPloidy, final double minPurity,
             final double maxPurity, final double purityIncrements, final double minNormFactor, final double maxNormFactor,
-            final double normFactorIncrements, final double somaticDeviationWeight, @NotNull final FittedRegionFactory fittedRegionFactory,
+            final double normFactorIncrements, final double somaticPenaltyWeight, @NotNull final FittedRegionFactory fittedRegionFactory,
             @NotNull final Collection<ObservedRegion> observedRegions, @NotNull final Collection<SomaticVariant> variants)
             throws ExecutionException, InterruptedException {
         this.executorService = executorService;
@@ -66,7 +66,7 @@ public class FittedPurityFactory {
         this.minNormFactor = minNormFactor;
         this.maxNormFactor = maxNormFactor;
         this.normFactorIncrements = normFactorIncrements;
-        this.somaticDeviationWeight = somaticDeviationWeight;
+        this.somaticPenaltyWeight = somaticPenaltyWeight;
         this.fittedRegionFactory = fittedRegionFactory;
         this.gender = gender;
 
@@ -137,17 +137,17 @@ public class FittedPurityFactory {
     @NotNull
     private FittedPurity fitPurity(final double purity, final double normFactor) {
         ImmutableFittedPurity.Builder builder = ImmutableFittedPurity.builder().purity(purity).normFactor(normFactor);
-        double ploidyPenalty = 0;
-        double modelDeviation = 0;
+        double eventPenalty = 0;
+        double deviationPenalty = 0;
         double diploidProportion = 0;
         double averagePloidy = 0;
 
         final List<FittedRegion> fittedRegions = Lists.newArrayList();
         for (final ObservedRegion enrichedRegion : filteredRegions) {
             final FittedRegion fittedRegion = fittedRegionFactory.fitRegion(purity, normFactor, enrichedRegion);
-            ploidyPenalty += weightWithBaf(fittedRegion.ploidyPenalty(), enrichedRegion.bafCount());
-            modelDeviation += weightWithBaf(fittedRegion.deviation(), enrichedRegion.bafCount());
-            averagePloidy +=  weightWithBaf(fittedRegion.tumorCopyNumber(), enrichedRegion.bafCount());
+            eventPenalty += weightWithBaf(fittedRegion.eventPenalty(), enrichedRegion.bafCount());
+            deviationPenalty += weightWithBaf(fittedRegion.deviationPenalty(), enrichedRegion.bafCount());
+            averagePloidy += weightWithBaf(fittedRegion.tumorCopyNumber(), enrichedRegion.bafCount());
             if (fittedRegion.isDiploid()) {
                 diploidProportion += weightWithBaf(1, enrichedRegion.bafCount());
             }
@@ -156,14 +156,14 @@ public class FittedPurityFactory {
         }
 
         final PurityAdjuster purityAdjuster = new PurityAdjuster(gender, purity, normFactor);
-        final double somaticDeviation = Doubles.greaterThan(somaticDeviationWeight, 0)
-                ? SomaticDeviationFactory.deviation(purityAdjuster, fittedRegions, variants)
+        final double somaticPenalty = Doubles.greaterThan(somaticPenaltyWeight, 0)
+                ? SomaticPenaltyFactory.penalty(purityAdjuster, fittedRegions, variants)
                 : 0;
 
-        return builder.score(ploidyPenalty * modelDeviation + somaticDeviationWeight * somaticDeviation)
+        return builder.score(eventPenalty * deviationPenalty + somaticPenaltyWeight * somaticPenalty)
                 .diploidProportion(diploidProportion)
                 .ploidy(averagePloidy)
-                .somaticDeviation(somaticDeviation)
+                .somaticPenalty(somaticPenalty)
                 .build();
     }
 

@@ -91,14 +91,13 @@ public class PurpleDatamodelTest {
                 .tumorBAF(0.5)
                 .fittedBAF(0)
                 .fittedTumorCopyNumber(0)
-                .deviation(0)
+                .deviationPenalty(0)
                 .minorAllelePloidyDeviation(0)
                 .majorAllelePloidyDeviation(0)
                 .refNormalisedCopyNumber(2)
                 .ratioSupport(true)
-
                 .support(SegmentSupport.NONE)
-                .ploidyPenalty(0);
+                .eventPenalty(0);
     }
 
     @NotNull

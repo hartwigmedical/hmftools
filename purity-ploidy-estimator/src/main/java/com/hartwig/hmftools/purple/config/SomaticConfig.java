@@ -26,14 +26,14 @@ public interface SomaticConfig {
     String SOMATIC_MIN_TOTAL = "somatic_min_total";
     String SOMATIC_MIN_PURITY = "somatic_min_purity";
     String SOMATIC_MIN_PURITY_SPREAD = "somatic_min_purity_spread";
-    String SOMATIC_DEVIATION_WEIGHT = "somatic_deviation_weight";
+    String SOMATIC_PENALTY_WEIGHT = "somatic_penalty_weight";
     String HIGHLY_DIPLOID_PERCENTAGE = "highly_diploid_percentage";
 
     double SOMATIC_MIN_PURITY_DEFAULT = 0.17;
     double SOMATIC_MIN_PURITY_SPREAD_DEFAULT = 0.15;
     int SOMATIC_MIN_PEAK_DEFAULT = 50;
     int SOMATIC_MIN_TOTAL_DEFAULT = 300;
-    double SOMATIC_DEVIATION_WEIGHT_DEFAULT = 1;
+    double SOMATIC_PENALTY_WEIGHT_DEFAULT = 1;
     double HIGHLY_DIPLOID_PERCENTAGE_DEFAULT = 0.97;
     double MIN_SOMATIC_UNADJUSTED_VAF = 0.1;
 
@@ -43,7 +43,7 @@ public interface SomaticConfig {
         options.addOption(SOMATIC_MIN_PURITY, true, "Somatic fit will not be used if both somatic and fitted purities are less than this value. Default 0.17");
         options.addOption(SOMATIC_MIN_PURITY_SPREAD, true, "Minimum spread within candidate purities before somatics can be used. Default 0.15");
         options.addOption(SOMATIC_VARIANTS, true, "Optional location of somatic variant vcf to assist fitting in highly-diploid samples.");
-        options.addOption(SOMATIC_DEVIATION_WEIGHT, true, "Proportion of somatic deviation to include in fitted purity score. Default 1.");
+        options.addOption(SOMATIC_PENALTY_WEIGHT, true, "Proportion of somatic deviation to include in fitted purity score. Default 1.");
         options.addOption(HIGHLY_DIPLOID_PERCENTAGE, true, "Proportion of genome that must be diploid before using somatic fit. Default 0.97.");
     }
 
@@ -57,7 +57,7 @@ public interface SomaticConfig {
 
     double minSomaticPuritySpread();
 
-    double somaticDeviationWeight();
+    double somaticPenaltyWeight();
 
     double highlyDiploidPercentage();
 
@@ -86,7 +86,7 @@ public interface SomaticConfig {
                 .minPeakVariants(defaultIntValue(cmd, SOMATIC_MIN_PEAK, SOMATIC_MIN_PEAK_DEFAULT))
                 .minSomaticPurity(defaultValue(cmd, SOMATIC_MIN_PURITY, SOMATIC_MIN_PURITY_DEFAULT))
                 .minSomaticPuritySpread(defaultValue(cmd, SOMATIC_MIN_PURITY_SPREAD, SOMATIC_MIN_PURITY_SPREAD_DEFAULT))
-                .somaticDeviationWeight(defaultValue(cmd, SOMATIC_DEVIATION_WEIGHT, SOMATIC_DEVIATION_WEIGHT_DEFAULT))
+                .somaticPenaltyWeight(defaultValue(cmd, SOMATIC_PENALTY_WEIGHT, SOMATIC_PENALTY_WEIGHT_DEFAULT))
                 .highlyDiploidPercentage(defaultValue(cmd, HIGHLY_DIPLOID_PERCENTAGE, HIGHLY_DIPLOID_PERCENTAGE_DEFAULT))
                 .build();
     }

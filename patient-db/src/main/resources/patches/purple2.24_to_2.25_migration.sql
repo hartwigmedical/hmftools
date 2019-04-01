@@ -9,7 +9,6 @@ ALTER TABLE geneCopyNumber
     DROP COLUMN missenseNonBiallelicVariants,
     DROP COLUMN missenseNonBiallelicPloidy;
 
-
 ALTER TABLE copyNumber
     ADD COLUMN minorAllelePloidy DOUBLE PRECISION not null AFTER copyNumber,
     ADD COLUMN majorAllelePloidy DOUBLE PRECISION not null AFTER minorAllelePloidy,
@@ -26,3 +25,14 @@ ALTER TABLE copyNumberGermline
 
 UPDATE copyNumberGermline
 SET minorAllelePloidy = round(greatest(0, (1- baf) * copyNumber), 3), majorAllelePloidy = round(copyNumber - minorAllelePloidy, 3);
+
+
+ALTER TABLE purityRange
+    CHANGE somaticDeviation somaticPenalty DOUBLE PRECISION not null;
+
+ALTER TABLE purity
+    CHANGE somaticDeviation somaticPenalty DOUBLE PRECISION not null;
+
+ALTER TABLE copyNumberRegion
+    CHANGE totalDeviation deviationPenalty DOUBLE PRECISION not null,
+    CHANGE ploidyPenalty eventPenalty DOUBLE PRECISION not null;

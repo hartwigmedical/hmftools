@@ -425,7 +425,7 @@ public final class ExampleAnalysisTestFactory {
                 .normFactor(0)
                 .score(0)
                 .ploidy(averageTumorPloidy)
-                .somaticDeviation(0)
+                .somaticPenalty(0)
                 .build();
     }
 

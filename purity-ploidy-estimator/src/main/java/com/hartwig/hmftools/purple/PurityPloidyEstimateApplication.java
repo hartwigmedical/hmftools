@@ -272,7 +272,7 @@ public class PurityPloidyEstimateApplication {
                 fittingConfig.minNormFactor(),
                 fittingConfig.maxNormFactor(),
                 fittingConfig.normFactorIncrement(),
-                somaticConfig.somaticDeviationWeight(),
+                somaticConfig.somaticPenaltyWeight(),
                 fittedRegionFactory,
                 observedRegions,
                 snpSomatics);

@@ -74,7 +74,7 @@ public enum FittedPurityFile {
                 .add("MinDiploidProportion")
                 .add("MaxDiploidProportion")
                 .add("Version")
-                .add("SomaticDeviation")
+                .add("SomaticPenalty")
                 .toString();
     }
 
@@ -97,7 +97,7 @@ public enum FittedPurityFile {
                 .add(FORMAT.format(score.minDiploidProportion()))
                 .add(FORMAT.format(score.maxDiploidProportion()))
                 .add(String.valueOf(context.version()))
-                .add(FORMAT.format(purity.somaticDeviation()))
+                .add(FORMAT.format(purity.somaticPenalty()))
                 .toString();
     }
 
@@ -110,10 +110,10 @@ public enum FittedPurityFile {
                 .score(Double.valueOf(values[2]))
                 .diploidProportion(Double.valueOf(values[3]))
                 .ploidy(Double.valueOf(values[4]))
-                .somaticDeviation(0);
+                .somaticPenalty(0);
 
         if (values.length > 15) {
-            builder.somaticDeviation(Double.valueOf(values[15]));
+            builder.somaticPenalty(Double.valueOf(values[15]));
         }
 
         return builder.build();

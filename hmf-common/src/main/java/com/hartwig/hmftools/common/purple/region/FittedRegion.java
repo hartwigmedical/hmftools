@@ -26,9 +26,9 @@ public abstract class FittedRegion implements ObservedRegion {
 
     public abstract double majorAllelePloidyDeviation();
 
-    public abstract double deviation();
+    public abstract double deviationPenalty();
 
-    public abstract double ploidyPenalty();
+    public abstract double eventPenalty();
 
     public abstract double refNormalisedCopyNumber();
 
@@ -45,7 +45,6 @@ public abstract class FittedRegion implements ObservedRegion {
                 MAX_DIPLOID_PLOIDY) && Doubles.greaterOrEqual(minorAllelePloidy(), MIN_DIPLOID_PLOIDY) && Doubles.lessOrEqual(
                 minorAllelePloidy(),
                 MAX_DIPLOID_PLOIDY);
-
     }
 
 }

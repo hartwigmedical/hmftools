@@ -32,7 +32,7 @@ public class FittedRegionFileTest {
                 .observedTumorRatio(nextDouble(random))
                 .observedNormalRatio(nextDouble(random))
                 .majorAllelePloidyDeviation(nextDouble(random))
-                .deviation(nextDouble(random))
+                .deviationPenalty(nextDouble(random))
                 .tumorCopyNumber(nextDouble(random))
                 .fittedTumorCopyNumber(nextDouble(random))
                 .fittedBAF(nextDouble(random))
@@ -42,7 +42,7 @@ public class FittedRegionFileTest {
                 .depthWindowCount(random.nextInt())
                 .svCluster(random.nextBoolean())
                 .gcContent(nextDouble(random))
-                .ploidyPenalty(nextDouble(random))
+                .eventPenalty(nextDouble(random))
                 .minStart(random.nextLong())
                 .maxStart(random.nextLong())
                 .build();
