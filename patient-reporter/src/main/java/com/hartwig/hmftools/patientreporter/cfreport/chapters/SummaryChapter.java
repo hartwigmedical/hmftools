@@ -153,32 +153,18 @@ public class SummaryChapter extends ReportChapter {
                     .addStyle(BODY_TEXT_STYLE)));
         table.addCell(TableHelper.getLayoutCell(1, 3).setHeight(TABLE_SPACER_HEIGHT)); // Spacer
 
-
         // Tumor purity
-        table.addCell(createMiddleAlignedCell()
-                .add(new Paragraph("Tumor purity of biopsy")
-                        .addStyle(BODY_TEXT_STYLE)));
-        if (patientReport.hasReliablePurityFit()) {
-
-            final double impliedPurity = patientReport.impliedPurity();
-            final double impliedPurityPercentage = DataUtility.mapPercentage(impliedPurity, DataUtility.IMPLIED_TUMOR_PURITY_MIN, DataUtility.IMPLIED_TUMOR_PURITY_MAX);
-
-            table.addCell(createMiddleAlignedCell()
-                    .add(createHighlightParagraph(DataUtility.formatPercentage(impliedPurityPercentage))
-                            .addStyle(ReportResources.dataHighlightStyle())));
-
-            table.addCell(createMiddleAlignedCell()
-                    .add(createInlineBarChart((float) impliedPurity, (float) DataUtility.IMPLIED_TUMOR_PURITY_MIN, (float) DataUtility.IMPLIED_TUMOR_PURITY_MAX)));
-
-        } else {
-
-            // Purity below detection threshold
-            table.addCell(createMiddleAlignedCell(1, 2)
-                    .add(createHighlightParagraph("N/A (Below detection threshold)")
-                            .addStyle(ReportResources.dataHighlightNaStyle())));
-
-        }
-
+        final double impliedPurity = patientReport.impliedPurity();
+        final double impliedPurityPercentage = DataUtility.mapPercentage(impliedPurity, DataUtility.IMPLIED_TUMOR_PURITY_MIN, DataUtility.IMPLIED_TUMOR_PURITY_MAX);
+        renderTumorCharactericBarCharRow(
+                patientReport.hasReliablePurityFit(),
+                "Tumor purity of biopsy",
+                DataUtility.formatPercentage(impliedPurityPercentage),
+                impliedPurity,
+                DataUtility.IMPLIED_TUMOR_PURITY_MIN,
+                DataUtility.IMPLIED_TUMOR_PURITY_MAX,
+                table
+        );
 
         // Tumor ploidy
         String ploidyString;
@@ -198,51 +184,50 @@ public class SummaryChapter extends ReportChapter {
                 .add(createHighlightParagraph(ploidyString)
                         .addStyle(ploidyStyle)));
 
-
         // Tumor mutational load
-        table.addCell(createMiddleAlignedCell()
-                .add(new Paragraph("Tumor mutational load")
-                        .addStyle(BODY_TEXT_STYLE)));
-        if (patientReport.hasReliablePurityFit()) {
-
-            final int mutationalLoad = patientReport.tumorMutationalLoad();
-            final String mutationalLoadString = DataUtility.MutationalLoad.interpretToString(mutationalLoad);
-
-            table.addCell(createMiddleAlignedCell()
-                    .add(createHighlightParagraph(mutationalLoadString)
-                            .addStyle(ReportResources.dataHighlightStyle())));
-
-            // @TODO : Check chart mapping
-            table.addCell(createMiddleAlignedCell()
-                    .add(createInlineBarChart((float) mutationalLoad,
-                            (float) DataUtility.MutationalLoad.RANGE_MIN,
-                            (float) DataUtility.MutationalLoad.RANGE_MAX)));
-
-        } else {
-
-            table.addCell(createMiddleAlignedCell(1, 2)
-                    .add(createHighlightParagraph("N/A")
-                            .addStyle(ReportResources.dataHighlightNaStyle())));
-
-        }
-
+        final int mutationalLoad = patientReport.tumorMutationalLoad();
+        renderTumorCharactericBarCharRow(
+                patientReport.hasReliablePurityFit(),
+                "Tumor mutational load",
+                DataUtility.MutationalLoad.interpretToString(mutationalLoad),
+                mutationalLoad,
+                DataUtility.MutationalLoad.RANGE_MIN,
+                DataUtility.MutationalLoad.RANGE_MAX,
+                table
+        );
 
         // Microsatellite stability
-        table.addCell(createMiddleAlignedCell()
-                .add(new Paragraph("Microsatellite (in)stability")
-                        .addStyle(BODY_TEXT_STYLE)));
-        if (patientReport.hasReliablePurityFit()) {
+        final double microSatelliteIndels = patientReport.microsatelliteIndelsPerMb();
+        renderTumorCharactericBarCharRow(
+                patientReport.hasReliablePurityFit(),
+                "Microsatellite (in)stability",
+                DataUtility.MicroSatellite.interpretToString(microSatelliteIndels),
+                microSatelliteIndels,
+                0f,
+                10f,
+                table
+                );
 
-            final double microSatelliteIndels = patientReport.microsatelliteIndelsPerMb();
-            final String microSatelliteStabilityString = DataUtility.MicroSatellite.interpretToString(microSatelliteIndels);
+
+        div.add(table);
+        reportDocument.add(div);
+
+    }
+
+    private void renderTumorCharactericBarCharRow(boolean hasPurityFit, @NotNull String label, @NotNull final String valueLabel, double value, double min, double max, final Table table) {
+
+        table.addCell(createMiddleAlignedCell()
+                .add(new Paragraph(label)
+                        .addStyle(BODY_TEXT_STYLE)));
+        if (hasPurityFit) {
 
             table.addCell(createMiddleAlignedCell()
-                    .add(createHighlightParagraph(microSatelliteStabilityString)
+                    .add(createHighlightParagraph(valueLabel)
                             .addStyle(ReportResources.dataHighlightStyle())));
 
-            // @TODO : Check chart mapping
+            // @TODO : Check chart mappings
             table.addCell(createMiddleAlignedCell()
-                    .add(createInlineBarChart((float) microSatelliteIndels, 0f, 10f)));
+                    .add(createInlineBarChart((float) value, (float) min, (float) max)));
 
         } else {
 
@@ -251,10 +236,6 @@ public class SummaryChapter extends ReportChapter {
                             .addStyle(ReportResources.dataHighlightNaStyle())));
 
         }
-
-        div.add(table);
-
-        reportDocument.add(div);
 
     }
 
