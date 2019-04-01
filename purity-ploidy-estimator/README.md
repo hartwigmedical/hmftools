@@ -599,7 +599,7 @@ Threads | Elapsed Time| CPU Time | Peak Mem
 
 
 ## Version History
-- Upcoming
+- 2.25
   - Removed unused columns from GeneCopyNumber output
   - Added minorAllelePloidy and majorAllelePloidy to copy number output
   - Cleaned up names of penalty fields and parameters to be more consistent
