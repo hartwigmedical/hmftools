@@ -28,7 +28,7 @@ public class BarChart extends InlineBarChart {
     private Indicator indicator = null;
 
 
-    public BarChart(float value, float min, float max, @NotNull String lowLabel, @NotNull String highLabel, @NotNull String[] tickLabels) {
+    public BarChart(double value, double min, double max, @NotNull String lowLabel, @NotNull String highLabel, @NotNull String[] tickLabels) {
         super(value, min, max);
         super.setHeight(HEIGHT);
         this.lowLabel = lowLabel;
@@ -36,7 +36,7 @@ public class BarChart extends InlineBarChart {
         this.tickLabels = tickLabels;
     }
 
-    public void setIndicator(float value, @NotNull String name) {
+    public void setIndicator(double value, @NotNull String name) {
         if (value >= getMin() && value <= getMax()) {
             indicator = new Indicator(name, value);
         } else {
@@ -60,7 +60,7 @@ public class BarChart extends InlineBarChart {
         return new BarChartRenderer(this);
     }
 
-    public static String[] createTickMarkLabels(float min, float max, float increment, @NotNull NumberFormat format) {
+    public static String[] createTickMarkLabels(double min, float max, double increment, @NotNull NumberFormat format) {
 
         int valueCount = 1 + (int) ((max - min) / increment);
 
@@ -91,7 +91,7 @@ public class BarChart extends InlineBarChart {
 
             final float valueBarWidth = overshootEnabled ? boundingBox.getWidth() - 40 : boundingBox.getWidth();
 
-            final float clampedValue = Math.max(getMin(), Math.min(getMax(), getValue()));
+            final double clampedValue = Math.max(getMin(), Math.min(getMax(), getValue()));
 
             final Rectangle barOutlineRect = new Rectangle(boundingBox.getX(), boundingBox.getTop() - 39, valueBarWidth, BAR_OUTLINE_HEIGHT);
 
@@ -170,7 +170,7 @@ public class BarChart extends InlineBarChart {
             // Add boundary indicator
             if (indicator != null) {
 
-                float x = map(indicator.value, getMin(), getMax(), barRect.getLeft(), barRect.getRight());
+                float x = (float) map(indicator.value, getMin(), getMax(), barRect.getLeft(), barRect.getRight());
 
                 canvas.moveTo(x, barOutlineRect.getTop() + 9.5f);
                 canvas.lineTo(x, barOutlineRect.getBottom() - 10.5f);
@@ -187,12 +187,12 @@ public class BarChart extends InlineBarChart {
 
     }
 
-    private class Indicator {
+    class Indicator {
 
         public String name;
-        public float value;
+        public double value;
 
-        public Indicator(@NotNull String name, float value) {
+        Indicator(@NotNull String name, double value) {
             this.name = name;
             this.value = value;
         }

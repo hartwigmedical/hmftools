@@ -227,7 +227,7 @@ public class SummaryChapter extends ReportChapter {
 
             // @TODO : Check chart mappings
             table.addCell(createMiddleAlignedCell()
-                    .add(createInlineBarChart((float) value, (float) min, (float) max)));
+                    .add(createInlineBarChart(value, min, max)));
 
         } else {
 
@@ -371,7 +371,7 @@ public class SummaryChapter extends ReportChapter {
     }
 
     @NotNull
-    private static InlineBarChart createInlineBarChart(float v, float min, float max) {
+    private static InlineBarChart createInlineBarChart(double v, double min, double max) {
         InlineBarChart chart = new InlineBarChart(v, min, max);
         chart.setWidth(41);
         chart.setHeight(6);

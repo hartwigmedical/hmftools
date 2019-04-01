@@ -10,32 +10,32 @@ import com.itextpdf.layout.renderer.IRenderer;
 
 public class InlineBarChart extends Div {
 
-    private float value;
-    private float min;
-    private float max;
+    private double value;
+    private double min;
+    private double max;
 
-    public InlineBarChart(float value, float min, float max) {
+    public InlineBarChart(double value, double min, double max) {
         this.value = value;
         this.min = min;
         this.max = max;
     }
 
-    public final float getValue() {
+    public final double getValue() {
         return value;
     }
 
-    final float getMin() {
+    final double getMin() {
         return min;
     }
 
-    public final float getMax() {
+    public final double getMax() {
         return max;
     }
 
     /**
      * Remap v from [inMin, inMax] to [outMin, outMax]
      */
-    protected static float map(float v, float inMin, float inMax, float outMin, float outMax) {
+    protected static double map(double v, double inMin, double inMax, double outMin, double outMax) {
         return (v - inMin) * (outMax - outMin) / (inMax - inMin) + outMin;
     }
 
@@ -59,7 +59,7 @@ public class InlineBarChart extends Div {
             final float width = area.getWidth();
             final float height = area.getHeight();
             final float radius = height * .5f;
-            final float filledWidth = map(getValue(), getMin(), getMax(), height, width);
+            final float filledWidth = (float) map(getValue(), getMin(), getMax(), height, width);
 
             // Background
             canvas.setFillColor(ReportResources.PALETTE_LIGHT_GREY);
