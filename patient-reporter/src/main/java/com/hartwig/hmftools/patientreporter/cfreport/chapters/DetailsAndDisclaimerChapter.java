@@ -9,7 +9,6 @@ import com.hartwig.hmftools.patientreporter.report.pages.SampleDetailsPage;
 import com.itextpdf.io.IOException;
 import com.itextpdf.io.image.ImageDataFactory;
 import com.itextpdf.layout.Document;
-import com.itextpdf.layout.Style;
 import com.itextpdf.layout.element.*;
 import com.itextpdf.layout.property.UnitValue;
 import org.apache.logging.log4j.LogManager;
@@ -114,9 +113,6 @@ public class DetailsAndDisclaimerChapter extends ReportChapter {
         try {
             final Image rvaLogo = new Image(ImageDataFactory.create(rvaLogoPath));
             rvaLogo.setMaxHeight(58);
-            if (rvaLogo != null) {
-                div.add(rvaLogo);
-            }
         } catch (MalformedURLException e) {
             throw new IOException("Failed to read RVA logo image at " + rvaLogoPath);
         }
