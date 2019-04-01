@@ -174,7 +174,7 @@ public class SummaryChapter extends ReportChapter {
                     .format(patientReport.averageTumorPloidy());
             ploidyStyle = ReportResources.dataHighlightStyle();
         } else {
-            ploidyString = "N/A";
+            ploidyString = DataUtility.NAString;
             ploidyStyle = ReportResources.dataHighlightNaStyle();
         }
         table.addCell(createMiddleAlignedCell()
@@ -232,7 +232,7 @@ public class SummaryChapter extends ReportChapter {
         } else {
 
             table.addCell(createMiddleAlignedCell(1, 2)
-                    .add(createHighlightParagraph("N/A")
+                    .add(createHighlightParagraph(DataUtility.NAString)
                             .addStyle(ReportResources.dataHighlightNaStyle())));
 
         }
@@ -333,7 +333,7 @@ public class SummaryChapter extends ReportChapter {
 
         String geneString = (genes.length > 0)
                 ? String.join(", ", genes)
-                : "NONE";
+                : DataUtility.NoneString;
 
         Style style = (genes.length > 0)
                 ? ReportResources.dataHighlightStyle()
@@ -360,7 +360,7 @@ public class SummaryChapter extends ReportChapter {
             treatmentText = String.format("%d (%d %s)", geneCount, treatmentCount, treatmentsName);
             style = ReportResources.dataHighlightStyle();
         } else {
-            treatmentText = "NONE";
+            treatmentText = DataUtility.NoneString;
             style = ReportResources.dataHighlightNaStyle();
         }
 

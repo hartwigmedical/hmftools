@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.patientreporter.cfreport.components;
 
+import com.hartwig.hmftools.patientreporter.cfreport.DataUtility;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
 import com.itextpdf.layout.borders.Border;
 import com.itextpdf.layout.borders.SolidBorder;
@@ -43,7 +44,7 @@ public final class TableHelper {
         Table table = TableHelper.createReportContentTable(new float[] {1}, new Cell[] { headerCell });
         table.setKeepTogether(true);
         table.setMarginBottom(TABLE_BOTTOM_MARGIN);
-        table.addCell(TableHelper.getDisabledContentCell(new Paragraph("NONE")));
+        table.addCell(TableHelper.getDisabledContentCell(new Paragraph(DataUtility.NoneString)));
 
         return table;
 
