@@ -22,7 +22,6 @@ public class DetailsAndDisclaimerChapter extends ReportChapter {
 
     private static final Logger LOGGER = LogManager.getLogger(SampleDetailsPage.class);
 
-
     @Override
     public String getName() {
         return "Sample details & disclaimers";
@@ -40,7 +39,7 @@ public class DetailsAndDisclaimerChapter extends ReportChapter {
         Table table = new Table(UnitValue.createPercentArray(new float[] {1, 0.1f, 1}));
         table.setWidth(getContentWidth());
         table.addCell(TableHelper.getLayoutCell()
-                .add(createSampleDetailsDiv(patientReport.sampleReport())));
+                .add(createSampleDetailsDiv(patientReport)));
         table.addCell(TableHelper.getLayoutCell()); // Spacer
         table.addCell(TableHelper.getLayoutCell()
                 .add(createDisclaimerDiv()));
@@ -56,7 +55,9 @@ public class DetailsAndDisclaimerChapter extends ReportChapter {
     }
 
     @NotNull
-    private static Div createSampleDetailsDiv(@NotNull final SampleReport sampleReport) {
+    private static Div createSampleDetailsDiv(@NotNull final AnalysedPatientReport patientReport) {
+
+        final SampleReport sampleReport = patientReport.sampleReport();
 
         String recipient = sampleReport.recipient();
         if (recipient == null) {
@@ -77,12 +78,9 @@ public class DetailsAndDisclaimerChapter extends ReportChapter {
         div.add(createContentParagraph("The pathology tumor percentage for this sample is " + sampleReport.pathologyTumorPercentage()));
         div.add(createContentParagraph("This experiment is performed on the blood sample which arrived on ", DataUtility.formatDate(sampleReport.bloodArrivalDate())));
         div.add(createContentParagraph("This experiment is performed according to lab procedures: " + sampleReport.labProcedures()));
-        div.add(createContentParagraph("This report is generated and verified by: [USER]")); // @TODO: User
+        div.add(createContentParagraph("This report is generated and verified by: " + patientReport.user()));
         div.add(createContentParagraph("This report is addressed at: " + recipient));
-        div.add(createContentParagraph("Comments: this is a test report and is based off " + sampleReport.sampleId()));
-
-        // @TODO: Optional LimsSampleType.CORE implementation?
-        // @TODO: Optional comments?
+        patientReport.comments().ifPresent(comments -> div.add(createContentParagraph("Comments: " + comments)));
 
         return div;
 
