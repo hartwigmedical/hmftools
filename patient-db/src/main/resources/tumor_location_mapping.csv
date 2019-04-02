@@ -1,5 +1,4 @@
 searchTerm,primaryTumorLocation,subType
-"2008: Follicular NHL Stage IA (left ear) RT 8 GY; 2013: Stage IV follicular lymphoma (ww); 25Nov2015: Anal cancer",Colon/Rectum,"Anal"
 "Adenocarcinoma cardia",Stomach,"Cardiacarcinoma"
 "adenocarcinoma characterised by an immunoprofile which could it a primary tumor in the colorectum, stomach or pancreas",Unknown,"Adenocarcinoma"
 "adenocarcinoma of gall bladder, pancreatic or biliary tract",Unknown,"Adenocarcinoma of gall bladder, pancreatic or biliary tract"
@@ -63,6 +62,7 @@ searchTerm,primaryTumorLocation,subType
 "gastrinoma in stomach",NET,"Gastrinoma"
 "Gastrointestinal Carcinoid Tumor",Bone/Soft tissue,"Gastrointestinal Carcinoid"
 "Gastrointestinal Stromal Tumors (GIST)",Bone/Soft tissue,"Gastrointestinal stromal tumor (GIST)"
+"glandula parotistumor",Head and neck,"Salivary gland"
 "Glioblastoma Multiforme",Nervous system,"Glioblastoma Multiforme"
 "Glioma: anaplastic astrocytoma-like",Nervous system,"Glioma: anaplastic astrocytoma-like"
 "Glioma: anaplastic oligodendroglioma-like",Nervous system,"Glioma: anaplastic oligodendroglioma-like"
@@ -103,7 +103,6 @@ searchTerm,primaryTumorLocation,subType
 "Lung Cancer: Non-Small Cell",Lung,"Non-Small cell"
 "Lung Cancer: Small Cell",Lung,"Small Cell"
 "lung, adenocarcinoma",Lung,"Adenocarcinoma"
-"lung: adenocarcinoom",Lung,"Adenocarcinoma"
 "Lungcancer not specified",Lung,""
 "Lymphoma: Hodgkin",Lymphoid,"Hodgkin"
 "Lymphoma: Non Hodgkin",Lymphoid,"Non-Hodgkin"

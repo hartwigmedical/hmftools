@@ -54,7 +54,7 @@
         <hmf-api-clients.version>local-SNAPSHOT</hmf-api-clients.version>
         <hmf-extensions.version>local-SNAPSHOT</hmf-extensions.version>
 
-        <hmf-patient-db.version>3.16</hmf-patient-db.version>
+        <hmf-patient-db.version>3.18</hmf-patient-db.version>
         <hmf-variant-annotation.version>2.13</hmf-variant-annotation.version>
         <hmf-sv-analyser.version>1.0</hmf-sv-analyser.version>
         <hmf-sv-graphs.version>1.0</hmf-sv-graphs.version>
