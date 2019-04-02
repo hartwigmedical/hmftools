@@ -31,11 +31,14 @@ public abstract class ViccFactory {
     private static StringBuilder readObjectBRCA(@NotNull JsonObject object, @NotNull StringBuilder headerCSV) {
         //BRCA object
         StringBuilder stringToCSVBRCA = new StringBuilder();
-        for (int i = 0; i < object.getAsJsonObject("brca").keySet().size(); i++) {
-            List<String> keysOfBRCAObject = new ArrayList<>(object.getAsJsonObject("brca").keySet());
-            stringToCSVBRCA.append(object.getAsJsonObject("brca").get(keysOfBRCAObject.get(i))).append(";"); // brca data
+        if (object.getAsJsonObject("brca") != null) {
+            for (int i = 0; i < object.getAsJsonObject("brca").keySet().size(); i++) {
+                List<String> keysOfBRCAObject = new ArrayList<>(object.getAsJsonObject("brca").keySet());
+                stringToCSVBRCA.append(object.getAsJsonObject("brca").get(keysOfBRCAObject.get(i))).append(";"); // brca data
+            }
+        } else {
         }
-        headerCSV.append(object.getAsJsonObject("brca").keySet()).append(";"); // header brca
+
         return stringToCSVBRCA;
     }
 
@@ -174,7 +177,7 @@ public abstract class ViccFactory {
                         JsonObject objectEvidenceitems = (JsonObject) civicEvidenceItemsArray.get(z);
                         List<String> keysEvidenceItems = new ArrayList<>(objectEvidenceitems.keySet());
                         for (int h = 0; h < keysEvidenceItems.size(); h++) {
-                            if (keysEvidenceItems.get(h).equals("drugs")) {
+                             if (keysEvidenceItems.get(h).equals("drugs")) {
                                 JsonArray ArrayDrugs = objectEvidenceitems.get(keysEvidenceItems.get(h)).getAsJsonArray();
                                 for (int r = 0; r < ArrayDrugs.size(); r++) {
                                     JsonObject objectDrugs = (JsonObject) ArrayDrugs.get(r);
@@ -802,46 +805,47 @@ public abstract class ViccFactory {
                         }
                     }
 
-                } else if (keysOfMolecularMatch.get(x).equals("ast")){
-                    JsonObject molecularMatchObject = object.getAsJsonObject("molecularmatch").get(keysOfMolecularMatch.get(x)).getAsJsonObject();
+                } else if (keysOfMolecularMatch.get(x).equals("ast")) {
+                    JsonObject molecularMatchObject =
+                            object.getAsJsonObject("molecularmatch").get(keysOfMolecularMatch.get(x)).getAsJsonObject();
                     List<String> keysast = new ArrayList<>(molecularMatchObject.keySet());
-                    for (int q=0; q< keysast.size(); q++) {
+                    for (int q = 0; q < keysast.size(); q++) {
                         if (keysast.get(q).equals("right")) {
                             List<String> keysright = new ArrayList<>(molecularMatchObject.get(keysast.get(q)).getAsJsonObject().keySet());
-                            for (int f=0; f < keysright.size(); f++) {
+                            for (int f = 0; f < keysright.size(); f++) {
                                 stringToCSVMolecularMatch.append(keysright).append(";");
                             }
                         } else if (keysast.get(q).equals("left")) {
                             List<String> keysleft = new ArrayList<>(molecularMatchObject.get(keysast.get(q)).getAsJsonObject().keySet());
-                            for (int f=0; f < keysleft.size(); f++) {
+                            for (int f = 0; f < keysleft.size(); f++) {
                                 stringToCSVMolecularMatch.append(keysleft).append(";");
                             }
                         } else {
                             stringToCSVMolecularMatch.append(keysast).append(";");
                         }
                     }
-                } else if (keysOfMolecularMatch.get(x).equals("variantInfo")){
+                } else if (keysOfMolecularMatch.get(x).equals("variantInfo")) {
                     JsonArray molecluarMatchArray =
                             object.getAsJsonObject("molecularmatch").get(keysOfMolecularMatch.get(x)).getAsJsonArray();
                     for (int i = 0; i < molecluarMatchArray.size(); i++) {
                         JsonObject objectVariantInfo = (JsonObject) molecluarMatchArray.get(i);
                         List<String> keysVariantInfo = new ArrayList<>(objectVariantInfo.keySet());
                         for (int u = 0; u < keysVariantInfo.size(); u++) {
-                             if (keysVariantInfo.get(u).equals("consequences")) {
-                                 stringToCSVMolecularMatch.append(objectVariantInfo.get(keysVariantInfo.get(u))).append(";");
-                             } else if (keysVariantInfo.get(u).equals("locations")) {
-                                 JsonArray arrayLocations = objectVariantInfo.get(keysVariantInfo.get(u)).getAsJsonArray();
-                                 for (int h =0; h < arrayLocations.size(); h++) {
-                                     JsonObject objectLocations= (JsonObject) arrayLocations.get(h);
-                                     List<String> keysLocations = new ArrayList<>(objectLocations.keySet());
-                                     for (int d =0 ; d < keysLocations.size(); d++) {
-                                         stringToCSVMolecularMatch.append(objectLocations.get(keysLocations.get(d))).append(";");
+                            if (keysVariantInfo.get(u).equals("consequences")) {
+                                stringToCSVMolecularMatch.append(objectVariantInfo.get(keysVariantInfo.get(u))).append(";");
+                            } else if (keysVariantInfo.get(u).equals("locations")) {
+                                JsonArray arrayLocations = objectVariantInfo.get(keysVariantInfo.get(u)).getAsJsonArray();
+                                for (int h = 0; h < arrayLocations.size(); h++) {
+                                    JsonObject objectLocations = (JsonObject) arrayLocations.get(h);
+                                    List<String> keysLocations = new ArrayList<>(objectLocations.keySet());
+                                    for (int d = 0; d < keysLocations.size(); d++) {
+                                        stringToCSVMolecularMatch.append(objectLocations.get(keysLocations.get(d))).append(";");
 
-                                     }
+                                    }
 
-                                 }
+                                }
 
-                             }
+                            }
                         }
                     }
 
@@ -851,7 +855,7 @@ public abstract class ViccFactory {
                     for (int i = 0; i < molecluarMatchArray.size(); i++) {
                         JsonObject objectTierexplanation = (JsonObject) molecluarMatchArray.get(i);
                         List<String> keysTierExplanation = new ArrayList<>(objectTierexplanation.keySet());
-                        for (int s =0; s < keysTierExplanation.size(); s++) {
+                        for (int s = 0; s < keysTierExplanation.size(); s++) {
                             if (keysTierExplanation.get(s).equals("tier")) {
                                 JsonElement tier = objectTierexplanation.get(keysTierExplanation.get(s));
                                 stringTier.append(tier).append(",");
@@ -874,7 +878,7 @@ public abstract class ViccFactory {
                     for (int i = 0; i < molecluarMatchArray.size(); i++) {
                         JsonObject objectTags = (JsonObject) molecluarMatchArray.get(i);
                         List<String> keysTags = new ArrayList<>(objectTags.keySet());
-                        for (int s =0; s < keysTags.size(); s++) {
+                        for (int s = 0; s < keysTags.size(); s++) {
                             if (keysTags.get(s).equals("priority")) {
                                 JsonElement priority = objectTags.get(keysTags.get(s));
                                 stringPriorityTags.append(priority).append(",");
@@ -905,13 +909,13 @@ public abstract class ViccFactory {
                             }
                         }
                     }
-                }  else if (keysOfMolecularMatch.get(x).equals("classifications")) {
+                } else if (keysOfMolecularMatch.get(x).equals("classifications")) {
                     JsonArray molecluarMatchArray =
                             object.getAsJsonObject("molecularmatch").get(keysOfMolecularMatch.get(x)).getAsJsonArray();
                     for (int i = 0; i < molecluarMatchArray.size(); i++) {
                         JsonObject objectclassifications = (JsonObject) molecluarMatchArray.get(i);
                         List<String> keysclassifications = new ArrayList<>(objectclassifications.keySet());
-                        for (int t =0; t< keysclassifications.size(); t++) {
+                        for (int t = 0; t < keysclassifications.size(); t++) {
                             stringToCSVMolecularMatch.append(objectclassifications.get(keysclassifications.get(t))).append(";");
                         }
                     }
@@ -921,12 +925,12 @@ public abstract class ViccFactory {
                     for (int i = 0; i < molecluarMatchArray.size(); i++) {
                         JsonObject objecttherapeuticContext = (JsonObject) molecluarMatchArray.get(i);
                         List<String> keystherapeuticContext = new ArrayList<>(objecttherapeuticContext.keySet());
-                        for (int t =0; t< keystherapeuticContext.size(); t++) {
+                        for (int t = 0; t < keystherapeuticContext.size(); t++) {
                             stringToCSVMolecularMatch.append(objecttherapeuticContext.get(keystherapeuticContext.get(t))).append(";");
                         }
                     }
                 } else {
-                     stringToCSVMolecularMatch.append(object.getAsJsonObject("molecularmatch").get(keysOfMolecularMatch.get(x)));
+                    stringToCSVMolecularMatch.append(object.getAsJsonObject("molecularmatch").get(keysOfMolecularMatch.get(x)));
                 }
             }
 
@@ -1321,15 +1325,10 @@ public abstract class ViccFactory {
                             stringToCSVPmkb.append(pmkbObject.get(keysOfVariant.get(x))).append(";");
                         }
                     }
-                    headerCSV.append(String.join(";", keysOfVariant)).append(";");
                 }
             }
         } else {
             stringToCSVPmkb.append(";;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;");
-            headerCSV.append(
-                    "id;name;id;name;amino_acid_change;germline;partner_gene;codons;description;exons;notes;cosmic;effect;cnv_type;id"
-                            + ";cytoband;variant_type;dna_change;coordinates;chromosome_based_cnv;description;created_at;updated_at;active_ind"
-                            + ";external_id;id;name;transcript;description_type;chromosome;name;");
         }
 
         return stringToCSVPmkb;
@@ -1346,12 +1345,8 @@ public abstract class ViccFactory {
             for (int j = 0; j < keysOfSage.size(); j++) {
                 stringToCSVSage.append(object.getAsJsonObject("sage").get(keysOfSage.get(j))).append(";");
             }
-            Set<String> set = object.getAsJsonObject("sage").keySet();
-            headerCSV.append(String.join(";", set));
         } else {
             stringToCSVSage.append(";;;;;;;;");
-            headerCSV.append(
-                    "entrez_id;clinical_manifestation;publication_url;germline_or_somatic;evidence_label;drug_labels;response_type;gene;");
         }
         return stringToCSVSage;
     }
@@ -1360,7 +1355,6 @@ public abstract class ViccFactory {
         //Source object
         StringBuilder stringToCSVSource = new StringBuilder();
         stringToCSVSource.append(object.getAsJsonPrimitive("source")).append(";"); // source data
-        headerCSV.append("source").append(";"); // header source
         return stringToCSVSource;
     }
 
@@ -1371,7 +1365,6 @@ public abstract class ViccFactory {
         String genes = arrayGenes.toString();
         genes = genes.substring(1, genes.length() - 1);
         stringToCSVGenes.append(genes).append(";"); // genes data
-        headerCSV.append("genes").append(";"); // header genes
         return stringToCSVGenes;
     }
 
@@ -1382,7 +1375,6 @@ public abstract class ViccFactory {
         String tags = arrayTags.toString();
         tags = tags.substring(1, tags.length() - 1);
         stringToCSVTags.append(tags).append(";"); // tags data
-        headerCSV.append("tags").append(";"); // header tags
         return stringToCSVTags;
     }
 
@@ -1393,7 +1385,6 @@ public abstract class ViccFactory {
         String devTags = arrayDevTags.toString();
         devTags = devTags.substring(1, devTags.length() - 1);
         stringToCSVDevTags.append(devTags).append(";"); // dev tags data
-        headerCSV.append("dev_tags").append(";"); // header tags data
         return stringToCSVDevTags;
     }
 
@@ -1403,10 +1394,8 @@ public abstract class ViccFactory {
         StringBuilder stringSymbol = new StringBuilder();
         StringBuilder stringEntrezId = new StringBuilder();
         StringBuilder stringEnsembleGeneId = new StringBuilder();
-        String header = "";
         JsonArray arrayGeneIdentifiers = object.getAsJsonArray("gene_identifiers");
         if (arrayGeneIdentifiers.size() == 0) {
-            headerCSV.append("symbol;entrez_id;ensembl_gene_id;");
             stringToCSVGeneIdentifiers.append(";;;");
         } else {
             for (int j = 0; j < arrayGeneIdentifiers.size(); j++) {
@@ -1424,11 +1413,7 @@ public abstract class ViccFactory {
                         stringEnsembleGeneId.append(ensemblGeneID).append(",");
                     }
                 }
-                Set<String> set = objectGeneIdentiefiers.keySet();
-                header = String.join(";", set);
-
             }
-            headerCSV.append(header).append(";"); // header gene identifiers
             stringToCSVGeneIdentifiers.append(stringSymbol)
                     .append(";")
                     .append(stringEntrezId)
@@ -1656,44 +1641,72 @@ public abstract class ViccFactory {
         JsonReader reader = new JsonReader(new FileReader(allJsonPath));
         reader.setLenient(true);
         int index = 1;
-        while (reader.peek() != JsonToken.END_DOCUMENT && index < 990) {
+        StringBuilder headerCSV = new StringBuilder();
+
+        String headerIndex = "index;";
+        String headerSource = "source;";
+        String headerGenes = "genes;";
+        String headerTags = "tags;";
+        String headerDevTags = "dev_tags;";
+        String headerGeneIdentifiers = "gene_identifiers.Symbol;gene_identifiers.entrez_id;gene_identifiers.ensembl_gene_id;";
+        String headerSage =
+                "sage.entrez_id;sage.clinical_manifestation;sage.publication_url;sage.germline_or_somatic;sage.evidence_label;"
+                        + "sage.drug_labels;sage.response_type;sage.gene;";
+        String headerPmkb = "pmkb.tumor.id;pmkb.tumor.name;pmkb.tissues.id;pmkb.tissues.name;pmkb.variant.amino_acid_change;"
+                + "pmkb.variant.germline;pmkb.variant.partner_gene;pmkb.variant.codons;pmkb.variant.description;pmkb.variant.exons;"
+                + "pmkb.variant.notes;pmkb.variant.cosmic;pmkb.variant.effect;pmkb.variant.cnv_type;pmkb.variant.id;"
+                + "pmkb.variant.cytoband;pmkb.variant.variant_type;pmkb.variant.dna_change;pmkb.variant.coordinates;"
+                + "pmkb.variant.chromosome_based_cnv;pmkb.variant.gene.description;pmkb.variant.gene.created_at;"
+                + "pmkb.variant.gene.updated_at;pmkb.variant.gene.active_ind;pmkb.variant.gene.external_id;"
+                + "pmkb.variant.gene.id;pmkb.variant.gene.name;pmkb.transcript;pmkb.description_type;pmkb.chromosome;pmkb.name;";
+
+        headerCSV.append(headerIndex);
+        headerCSV.append(headerSource);
+        headerCSV.append(headerGenes);
+        headerCSV.append(headerTags);
+        headerCSV.append(headerDevTags);
+        headerCSV.append(headerGeneIdentifiers);
+        headerCSV.append(headerSage);
+        headerCSV.append(headerPmkb);
+
+        writer.append(headerCSV);
+        writer.append("\n");
+        while (reader.peek() != JsonToken.END_DOCUMENT && index < 1000) {
             LOGGER.info(index);
             JsonObject object = parser.parse(reader).getAsJsonObject();
 
             StringBuilder stringToCSVAll = new StringBuilder();
-            StringBuilder headerCSV = new StringBuilder();
             headerCSV.append("index").append(";");
             StringBuilder StringToCSVSource = readObjectSource(object, headerCSV);
+            StringBuilder StringToCSVGenes = readObjectGenes(object, headerCSV);
+            StringBuilder StringToCSVTags = readObjectTags(object, headerCSV);
+            StringBuilder StringToCSVDevTags = readObjectDevTags(object, headerCSV);
+            StringBuilder StringToCSVGeneIdentifiers = readObjectGeneIdentifiers(object, headerCSV);
+            StringBuilder StringToCSVSage = readObjectSage(object, headerCSV);
+            StringBuilder StringToCSVPmkb = readObjectPmkb(object, headerCSV);
+            StringBuilder StringToCSVCGI = readObjectCGI(object, headerCSV);
+            LOGGER.info(StringToCSVCGI);
 
-            //            StringBuilder StringToCSVGenes = readObjectGenes(object, headerCSV);
-            //            StringBuilder StringToCSVTags = readObjectTags(object, headerCSV);
-            //            StringBuilder StringToCSVDevTags = readObjectDevTags(object, headerCSV);
-            //            StringBuilder StringToCSVGeneIdentifiers = readObjectGeneIdentifiers(object, headerCSV);
-            //            StringBuilder StringToCSVFeatures = readObjectFeatures(object, headerCSV);
-            //  StringBuilder StringToCSVSage = readObjectSage(object, headerCSV);
-            // StringBuilder StringToCSVPmkb = readObjectPmkb(object, headerCSV);
+            //   StringBuilder StringToCSVAssociation = readObjectAssociation(object, headerCSV);
+            //          StringBuilder StringToCSVFeatures = readObjectFeatures(object, headerCSV);
             // StringBuilder StringToCSVJax = readObjectJax(object, headerCSV);
             // StringBuilder StringToCSVJaxTrials = readObjectJaxTrials(object, headerCSV);
-            //StringBuilder StringToCSVCGI = readObjectCGI(object, headerCSV);
             //  StringBuilder StringToCSVOncokb = readObjectOncokb(object, headerCSV);
-            // StringBuilder StringToCSVCivic = readObjectCIVIC(object, headerCSV);
             //   StringBuilder StringToMolecularMatchTrials = readObjectMolecularMatchTrials(object, headerCSV);
-            StringBuilder StringToMolecularMatch = readObjectMolecularMatch(object, headerCSV);
+            //     StringBuilder StringToMolecularMatch = readObjectMolecularMatch(object, headerCSV);
 
             stringToCSVAll.append(index).append(";");
             stringToCSVAll.append(StringToCSVSource);
-            //            stringToCSVAll.append(StringToCSVGenes);
-            //            stringToCSVAll.append(StringToCSVTags);
-            //            stringToCSVAll.append(StringToCSVDevTags);
-            //            stringToCSVAll.append(StringToCSVGeneIdentifiers);
-            //  stringToCSVAll.append(StringToCSVOncokb);
-            stringToCSVAll.append(StringToMolecularMatch);
+            stringToCSVAll.append(StringToCSVGenes);
+            stringToCSVAll.append(StringToCSVTags);
+            stringToCSVAll.append(StringToCSVDevTags);
+            stringToCSVAll.append(StringToCSVGeneIdentifiers);
+           // stringToCSVAll.append(StringToCSVSage);
+           // stringToCSVAll.append(StringToCSVPmkb);
+            stringToCSVAll.append(StringToCSVCGI);
 
-            writer.append(headerCSV);
-            writer.append("\n");
             writer.append(stringToCSVAll);
             writer.append("\n");
-
             index++;
 
         }
