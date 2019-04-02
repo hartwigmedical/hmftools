@@ -6,7 +6,7 @@ import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
 import com.hartwig.hmftools.patientreporter.cfreport.components.DataLabel;
 import com.hartwig.hmftools.patientreporter.cfreport.components.InlineBarChart;
 import com.hartwig.hmftools.patientreporter.cfreport.components.LineDivider;
-import com.hartwig.hmftools.patientreporter.cfreport.components.TableHelper;
+import com.hartwig.hmftools.patientreporter.cfreport.components.TableUtil;
 import com.itextpdf.layout.Document;
 import com.itextpdf.layout.Style;
 import com.itextpdf.layout.element.Cell;
@@ -56,15 +56,15 @@ public class SummaryChapter extends ReportChapter {
 
         patientReport.sampleReport().patientTumorLocation();
 
-        table.addCell(TableHelper.getLayoutCell()
+        table.addCell(TableUtil.getLayoutCell()
                 .add(new Paragraph("PRIMARY TUMOR LOCATION")
                         .addStyle(ReportResources.subTextStyle())));
-        table.addCell(TableHelper.getLayoutCell()
+        table.addCell(TableUtil.getLayoutCell()
                 .add(new Paragraph("CANCER SUBTYPE")
                         .addStyle(ReportResources.subTextStyle())));
-        table.addCell(TableHelper.getLayoutCell()
+        table.addCell(TableUtil.getLayoutCell()
                 .add(DataLabel.createDataLabel(patientReport.sampleReport().primaryTumorLocationString())));
-        table.addCell(TableHelper.getLayoutCell()
+        table.addCell(TableUtil.getLayoutCell()
                 .add(DataLabel.createDataLabel(patientReport.sampleReport().cancerSubTypeString())));
 
         div.add(table);
@@ -102,15 +102,15 @@ public class SummaryChapter extends ReportChapter {
         // Initialize table
         Table table = new Table(UnitValue.createPercentArray(new float[] {1, 1}));
         table.setWidth(getContentWidth());
-        table.addCell(TableHelper.getLayoutCell()
+        table.addCell(TableUtil.getLayoutCell()
                 .add(new Paragraph("Treatment indications")
                         .addStyle(ReportResources.sectionTitleStyle())));
 
-        table.addCell(TableHelper.getLayoutCell()
+        table.addCell(TableUtil.getLayoutCell()
                 .add(new Paragraph("Summary of number of alterations with number of treatment indication and/or clinical studies")
                         .addStyle(BODY_TEXT_STYLE)
                         .setFixedLeading(ReportResources.BODY_TEXT_LEADING)));
-        table.addCell(TableHelper.getLayoutCell(1, 2).setHeight(TABLE_SPACER_HEIGHT)); // Spacer
+        table.addCell(TableUtil.getLayoutCell(1, 2).setHeight(TABLE_SPACER_HEIGHT)); // Spacer
 
         // @TODO Number of alterations/treatments not directly in the data?
         // Alterations/therapy
@@ -144,13 +144,13 @@ public class SummaryChapter extends ReportChapter {
         // Initialize table
         Table table = new Table(UnitValue.createPercentArray(new float[] {1, .33f, .66f}));
         table.setWidth(getContentWidth());
-        table.addCell(TableHelper.getLayoutCell()
+        table.addCell(TableUtil.getLayoutCell()
                 .add(new Paragraph("Tumor characteristics summary")
                         .addStyle(ReportResources.sectionTitleStyle())));
-        table.addCell(TableHelper.getLayoutCell(1, 2).add(
+        table.addCell(TableUtil.getLayoutCell(1, 2).add(
                 new Paragraph("Whole genome sequencing based tumor characteristics.")
                     .addStyle(BODY_TEXT_STYLE)));
-        table.addCell(TableHelper.getLayoutCell(1, 3).setHeight(TABLE_SPACER_HEIGHT)); // Spacer
+        table.addCell(TableUtil.getLayoutCell(1, 3).setHeight(TABLE_SPACER_HEIGHT)); // Spacer
 
         // Tumor purity
         final double impliedPurity = patientReport.impliedPurity();
@@ -246,14 +246,14 @@ public class SummaryChapter extends ReportChapter {
         // Initialize table
         final Table table = new Table(UnitValue.createPercentArray(new float[] {1, 1}));
         table.setWidth(getContentWidth());
-        table.addCell(TableHelper.getLayoutCell()
+        table.addCell(TableUtil.getLayoutCell()
                 .add(new Paragraph("Genomic alterations \nsummary")
                         .addStyle(ReportResources.sectionTitleStyle())));
-        table.addCell(TableHelper.getLayoutCell()
+        table.addCell(TableUtil.getLayoutCell()
                 .add(new Paragraph("Summary on genomic alterations " +
                 "(somatic variants, copy number changes, gene disruptions and gene fusions).")
                 .addStyle(BODY_TEXT_STYLE)));
-        table.addCell(TableHelper.getLayoutCell(1, 2).setHeight(TABLE_SPACER_HEIGHT)); // Spacer
+        table.addCell(TableUtil.getLayoutCell(1, 2).setHeight(TABLE_SPACER_HEIGHT)); // Spacer
 
         // Genes with driver variant
         final String[] driverVariantGenes = GenomicAlterations.somaticVariantsWithDriver(patientReport.somaticVariants());
@@ -323,7 +323,7 @@ public class SummaryChapter extends ReportChapter {
 
     @NotNull
     private static Cell createMiddleAlignedCell(int rowspan, int colspan) {
-        return TableHelper.getLayoutCell(rowspan, colspan)
+        return TableUtil.getLayoutCell(rowspan, colspan)
                 .setVerticalAlignment(VerticalAlignment.MIDDLE);
     }
 

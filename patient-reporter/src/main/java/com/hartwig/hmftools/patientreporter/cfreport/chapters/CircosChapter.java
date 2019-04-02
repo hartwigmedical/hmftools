@@ -2,7 +2,7 @@ package com.hartwig.hmftools.patientreporter.cfreport.chapters;
 
 import com.hartwig.hmftools.patientreporter.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
-import com.hartwig.hmftools.patientreporter.cfreport.components.TableHelper;
+import com.hartwig.hmftools.patientreporter.cfreport.components.TableUtil;
 import com.itextpdf.io.IOException;
 import com.itextpdf.io.image.ImageDataFactory;
 import com.itextpdf.layout.Document;
@@ -43,7 +43,7 @@ public class CircosChapter extends ReportChapter {
         Table table = new Table(UnitValue.createPercentArray(new float[] {1, 0.1f, 1, 0.1f, 1}));
         table.setWidth(getContentWidth());
 
-        table.addCell(TableHelper.getLayoutCell().add(new Div()
+        table.addCell(TableUtil.getLayoutCell().add(new Div()
             .add(createContentParagraph("The outer first circle", " shows the chromosomes. The darker " +
                     "shaded areas represent large gaps in the human reference genome: i.e. regions of centromeres, " +
                     "heterochromatin & missing short arms."))
@@ -56,9 +56,9 @@ public class CircosChapter extends ReportChapter {
                     "that describes the use of mutational signatures. INDELs are colored yellow and red for insertions " +
                     "and deletions respectively."))));
 
-        table.addCell(TableHelper.getLayoutCell()); // Spacer
+        table.addCell(TableUtil.getLayoutCell()); // Spacer
 
-        table.addCell(TableHelper.getLayoutCell().add(new Div()
+        table.addCell(TableUtil.getLayoutCell().add(new Div()
             .add(createContentParagraph("The third circle", " shows all observed tumor purity adjusted " +
                     "copy number changes,including both focal and chromosomal somatic events. Copy number losses are " +
                     "indicated in red, green shows regions of copy number gain. The scale ranges from 0 (complete loss) " +
@@ -70,9 +70,9 @@ public class CircosChapter extends ReportChapter {
                     "LOH event. Minor allele copy numbers above 1 (blue) indicate amplification events of both A and B " +
                     "alleles at the indicated locations.")))));
 
-        table.addCell(TableHelper.getLayoutCell()); // Spacer
+        table.addCell(TableUtil.getLayoutCell()); // Spacer
 
-        table.addCell(TableHelper.getLayoutCell().add(new Div()
+        table.addCell(TableUtil.getLayoutCell().add(new Div()
                 .add(createContentParagraph("The innermost circle", " displays the observed structural " +
                         "variants within or between the chromosomes. Translocations are indicated in blue, deletions in " +
                         "red, insertions in yellow, tandem duplications in green and inversions in black."))));

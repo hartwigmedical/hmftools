@@ -6,7 +6,7 @@ import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
 import com.hartwig.hmftools.patientreporter.cfreport.components.BarChart;
 import com.hartwig.hmftools.patientreporter.cfreport.components.DataLabel;
 import com.hartwig.hmftools.patientreporter.cfreport.components.InlineBarChart;
-import com.hartwig.hmftools.patientreporter.cfreport.components.TableHelper;
+import com.hartwig.hmftools.patientreporter.cfreport.components.TableUtil;
 import com.itextpdf.layout.Document;
 import com.itextpdf.layout.element.Div;
 import com.itextpdf.layout.element.Paragraph;
@@ -131,16 +131,16 @@ public class TumorCharacteristicsChapter extends ReportChapter {
         // Add content table
         Table table = new Table(UnitValue.createPercentArray(new float[] {1, 0.1f, 1.9f}));
         table.setWidth(getContentWidth());
-        table.addCell(TableHelper.getLayoutCell().add(DataLabel.createDataLabel(highlight)));
+        table.addCell(TableUtil.getLayoutCell().add(DataLabel.createDataLabel(highlight)));
 
-        table.addCell(TableHelper.getLayoutCell(2,1)); // Spacer
+        table.addCell(TableUtil.getLayoutCell(2,1)); // Spacer
 
-        table.addCell(TableHelper.getLayoutCell(2, 1).add(chart));
-        table.addCell(TableHelper.getLayoutCell()
+        table.addCell(TableUtil.getLayoutCell(2, 1).add(chart));
+        table.addCell(TableUtil.getLayoutCell()
                 .add(new Paragraph(description)
                         .addStyle(ReportResources.bodyTextStyle())
                         .setFixedLeading(ReportResources.BODY_TEXT_LEADING)));
-        table.addCell(TableHelper.getLayoutCell(1, 2).setHeight(TABLE_SPACER_HEIGHT)); // Spacer
+        table.addCell(TableUtil.getLayoutCell(1, 2).setHeight(TABLE_SPACER_HEIGHT)); // Spacer
         div.add(table);
 
         return div;

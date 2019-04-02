@@ -4,7 +4,7 @@ import com.hartwig.hmftools.patientreporter.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.SampleReport;
 import com.hartwig.hmftools.patientreporter.cfreport.data.Util;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
-import com.hartwig.hmftools.patientreporter.cfreport.components.TableHelper;
+import com.hartwig.hmftools.patientreporter.cfreport.components.TableUtil;
 import com.hartwig.hmftools.patientreporter.report.pages.SampleDetailsPage;
 import com.itextpdf.io.IOException;
 import com.itextpdf.io.image.ImageDataFactory;
@@ -37,10 +37,10 @@ public class DetailsAndDisclaimerChapter extends ReportChapter {
         // Main content
         Table table = new Table(UnitValue.createPercentArray(new float[] {1, 0.1f, 1}));
         table.setWidth(getContentWidth());
-        table.addCell(TableHelper.getLayoutCell()
+        table.addCell(TableUtil.getLayoutCell()
                 .add(createSampleDetailsDiv(patientReport)));
-        table.addCell(TableHelper.getLayoutCell()); // Spacer
-        table.addCell(TableHelper.getLayoutCell()
+        table.addCell(TableUtil.getLayoutCell()); // Spacer
+        table.addCell(TableUtil.getLayoutCell()
                 .add(createDisclaimerDiv()));
         reportDocument.add(table);
 

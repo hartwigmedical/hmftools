@@ -6,7 +6,7 @@ import com.hartwig.hmftools.common.actionability.EvidenceScope;
 import com.hartwig.hmftools.patientreporter.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
 import com.hartwig.hmftools.patientreporter.cfreport.components.Icon;
-import com.hartwig.hmftools.patientreporter.cfreport.components.TableHelper;
+import com.hartwig.hmftools.patientreporter.cfreport.components.TableUtil;
 import com.hartwig.hmftools.patientreporter.cfreport.data.ClinicalTrials;
 import com.hartwig.hmftools.patientreporter.cfreport.data.EvidenceItems;
 import com.itextpdf.kernel.pdf.action.PdfAction;
@@ -84,11 +84,11 @@ public class TherapyDetailsChapter extends ReportChapter {
 
         // Handle empty list
         if (filteredAndSortedEvidence.size() == 0) {
-            return TableHelper.createNoneReportTable(title);
+            return TableUtil.createNoneReportTable(title);
         }
 
         // Create content table
-        Table contentTable = TableHelper.createReportContentTable(new float[] {
+        Table contentTable = TableUtil.createReportContentTable(new float[] {
                 COL_WIDTH_DRIVERS,
                 COL_WIDTH_MATCH,
                 COL_WIDTH_TREATMENT_ICONS,
@@ -96,31 +96,31 @@ public class TherapyDetailsChapter extends ReportChapter {
                 COL_WIDTH_LEVEL,
                 COL_WIDTH_RESPONSE_CCMO,
                 COL_WIDTH_SOURCE }, new Cell[]  {
-                TableHelper.getHeaderCell("Drivers"),
-                TableHelper.getHeaderCell("Match"),
-                TableHelper.getHeaderCell("Treatments", 2),
-                TableHelper.getHeaderCell("Level of evidence"),
-                TableHelper.getHeaderCell("Response"),
-                TableHelper.getHeaderCell("Source")
+                TableUtil.getHeaderCell("Drivers"),
+                TableUtil.getHeaderCell("Match"),
+                TableUtil.getHeaderCell("Treatments", 2),
+                TableUtil.getHeaderCell("Level of evidence"),
+                TableUtil.getHeaderCell("Response"),
+                TableUtil.getHeaderCell("Source")
         });
 
         for (EvidenceItem item: filteredAndSortedEvidence) {
 
             String[] treatments = item.drug().split(Pattern.quote(TREATMENT_DELIMITER));
 
-            contentTable.addCell(TableHelper.getContentCell(item.event()));
-            contentTable.addCell(TableHelper.getContentCell(createTreatmentMatchParagraph(item.scope() == EvidenceScope.SPECIFIC)));
-            contentTable.addCell(TableHelper.getContentCell(createTreatmentIcons(treatments)).setVerticalAlignment(VerticalAlignment.TOP));
-            contentTable.addCell(TableHelper.getContentCell(createTreatmentList(treatments)).setVerticalAlignment(VerticalAlignment.TOP));
-            contentTable.addCell(TableHelper.getContentCell(new Paragraph(Icon.createLevelIcon(item.level().readableString()))));
-            contentTable.addCell(TableHelper.getContentCell(item.response()));
-            contentTable.addCell(TableHelper.getContentCell(new Paragraph(item.source().sourceName()))
+            contentTable.addCell(TableUtil.getContentCell(item.event()));
+            contentTable.addCell(TableUtil.getContentCell(createTreatmentMatchParagraph(item.scope() == EvidenceScope.SPECIFIC)));
+            contentTable.addCell(TableUtil.getContentCell(createTreatmentIcons(treatments)).setVerticalAlignment(VerticalAlignment.TOP));
+            contentTable.addCell(TableUtil.getContentCell(createTreatmentList(treatments)).setVerticalAlignment(VerticalAlignment.TOP));
+            contentTable.addCell(TableUtil.getContentCell(new Paragraph(Icon.createLevelIcon(item.level().readableString()))));
+            contentTable.addCell(TableUtil.getContentCell(item.response()));
+            contentTable.addCell(TableUtil.getContentCell(new Paragraph(item.source().sourceName()))
                     .setAction(PdfAction.createURI(EvidenceItems.sourceUrl(item))));
 
         }
 
         // Create report table that handles page breaks
-        return TableHelper.createWrappingReportTable(title, contentTable);
+        return TableUtil.createWrappingReportTable(title, contentTable);
 
     }
 
@@ -133,39 +133,39 @@ public class TherapyDetailsChapter extends ReportChapter {
 
         // Handle empty list
         if (filteredAndSortedTrials.size() == 0) {
-            return TableHelper.createNoneReportTable(title);
+            return TableUtil.createNoneReportTable(title);
         }
 
         // Create content table
-        final Table contentTable = TableHelper.createReportContentTable(new float[]{COL_WIDTH_DRIVERS,
+        final Table contentTable = TableUtil.createReportContentTable(new float[]{COL_WIDTH_DRIVERS,
                         COL_WIDTH_MATCH,
                         COL_WIDTH_TREATMENT_ICONS,
                         COL_WIDTH_TREATMENT_LIST_5COL,
                         COL_WIDTH_RESPONSE_CCMO,
                         COL_WIDTH_SOURCE},
                 new Cell[]{
-                        TableHelper.getHeaderCell("Drivers"),
-                        TableHelper.getHeaderCell("Match"),
-                        TableHelper.getHeaderCell("Treatments", 2),
-                        TableHelper.getHeaderCell("CCMO"),
-                        TableHelper.getHeaderCell("Source")
+                        TableUtil.getHeaderCell("Drivers"),
+                        TableUtil.getHeaderCell("Match"),
+                        TableUtil.getHeaderCell("Treatments", 2),
+                        TableUtil.getHeaderCell("CCMO"),
+                        TableUtil.getHeaderCell("Source")
                 });
 
         for (ClinicalTrial trial: filteredAndSortedTrials) {
 
             String trialName = trial.acronym();
-            contentTable.addCell(TableHelper.getContentCell(trial.event()));
-            contentTable.addCell(TableHelper.getContentCell(createTreatmentMatchParagraph(trial.scope() == EvidenceScope.SPECIFIC)));
-            contentTable.addCell(TableHelper.getContentCell(createTreatmentIcons(new String[]{trialName})).setVerticalAlignment(VerticalAlignment.TOP));
-            contentTable.addCell(TableHelper.getContentCell(trialName).setVerticalAlignment(VerticalAlignment.TOP));
-            contentTable.addCell(TableHelper.getContentCell(ClinicalTrials.CCMOId(trial.reference())));
-            contentTable.addCell(TableHelper.getContentCell(new Paragraph(trial.source().sourceName())
+            contentTable.addCell(TableUtil.getContentCell(trial.event()));
+            contentTable.addCell(TableUtil.getContentCell(createTreatmentMatchParagraph(trial.scope() == EvidenceScope.SPECIFIC)));
+            contentTable.addCell(TableUtil.getContentCell(createTreatmentIcons(new String[]{trialName})).setVerticalAlignment(VerticalAlignment.TOP));
+            contentTable.addCell(TableUtil.getContentCell(trialName).setVerticalAlignment(VerticalAlignment.TOP));
+            contentTable.addCell(TableUtil.getContentCell(ClinicalTrials.CCMOId(trial.reference())));
+            contentTable.addCell(TableUtil.getContentCell(new Paragraph(trial.source().sourceName())
                     .setAction(PdfAction.createURI(ClinicalTrials.sourceUrl(trial)))));
 
         }
 
         // Create report table that handles page breaks
-        return TableHelper.createWrappingReportTable(title, contentTable);
+        return TableUtil.createWrappingReportTable(title, contentTable);
 
     }
 

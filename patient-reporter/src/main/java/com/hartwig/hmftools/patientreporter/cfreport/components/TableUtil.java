@@ -11,7 +11,7 @@ import com.itextpdf.layout.element.Table;
 import com.itextpdf.layout.property.VerticalAlignment;
 import org.jetbrains.annotations.NotNull;
 
-public final class TableHelper {
+public final class TableUtil {
 
     private final static float TABLE_BOTTOM_MARGIN = 20;
 
@@ -41,10 +41,10 @@ public final class TableHelper {
                         .addStyle(ReportResources.sectionTitleStyle()
                                 .setFontColor(ReportResources.PALETTE_LIGHT_GREY)));
 
-        Table table = TableHelper.createReportContentTable(new float[] {1}, new Cell[] { headerCell });
+        Table table = TableUtil.createReportContentTable(new float[] {1}, new Cell[] { headerCell });
         table.setKeepTogether(true);
         table.setMarginBottom(TABLE_BOTTOM_MARGIN);
-        table.addCell(TableHelper.getDisabledContentCell(new Paragraph(Util.NoneString)));
+        table.addCell(TableUtil.getDisabledContentCell(new Paragraph(Util.NoneString)));
 
         return table;
 
