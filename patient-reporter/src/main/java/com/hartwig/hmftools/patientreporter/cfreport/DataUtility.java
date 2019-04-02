@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.patientreporter.cfreport;
 
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.actionability.ClinicalTrial;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.patientreporter.report.data.GeneCopyNumberDataSource;
 import com.hartwig.hmftools.patientreporter.report.data.GeneFusionDataSource;
@@ -201,4 +202,5 @@ public class DataUtility {
 
     }
 
-}
+
+ }
