@@ -17,20 +17,6 @@ public class Util {
     public static final String NoneString = "NONE";
     public static final String NAString = "N/A";
 
-    /**
-     * Remap v from [inMin, inMax] to [0, 100]
-     */
-    public static double mapPercentage(final double v, final double inMin, final double inMax) {
-        return map(v, inMin, inMax, 0, 100);
-    }
-
-    /**
-     * Remap v from [inMin, inMax] to [outMin, outMax]
-     */
-    public static double map(final double v, final double inMin, final double inMax, final double outMin, final double outMax) {
-        return (v - inMin) * (outMax - outMin) / (inMax - inMin) + outMin;
-    }
-
     @NotNull
     public static String formatPercentage(final double percentage) {
         return PERCENTAGE_FORMAT.format(percentage);

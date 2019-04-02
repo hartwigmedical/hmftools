@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.patientreporter.cfreport.components;
 
+import com.hartwig.hmftools.patientreporter.cfreport.MathUtil;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
 import com.itextpdf.kernel.geom.Rectangle;
 import com.itextpdf.kernel.pdf.canvas.PdfCanvas;
@@ -101,7 +102,7 @@ public class BarChart extends InlineBarChart {
 
             final float valueBarWidth = overshootEnabled ? boundingBox.getWidth() - 40 : boundingBox.getWidth();
 
-            final double clampedValue = Math.max(getMin(), Math.min(getMax(), getValue()));
+            final double clampedValue = MathUtil.clamp(getValue(), getMin(), getMax());
 
             final Rectangle barOutlineRect = new Rectangle(boundingBox.getX(), boundingBox.getTop() - 39, valueBarWidth, BAR_OUTLINE_HEIGHT);
 
@@ -150,7 +151,7 @@ public class BarChart extends InlineBarChart {
             // Filled bar
             final Rectangle barRect = new Rectangle(barOutlineRect.getX() + BAR_INSET, barOutlineRect.getY() +  BAR_INSET, barOutlineRect.getWidth() - 2 * BAR_INSET, barOutlineRect.getHeight() - 2 * BAR_INSET);
             canvas.setFillColor(ReportResources.PALETTE_BLUE);
-            canvas.roundRectangle(barRect.getX(), barRect.getY(), map(getScaledValue(clampedValue), getScaledMin(), getScaledMax(), barRect.getHeight(), barRect.getWidth()), barRect.getHeight(), barRect.getHeight() * .5);
+            canvas.roundRectangle(barRect.getX(), barRect.getY(), MathUtil.map(getScaledValue(clampedValue), getScaledMin(), getScaledMax(), barRect.getHeight(), barRect.getWidth()), barRect.getHeight(), barRect.getHeight() * .5);
             canvas.fill();
 
             // Add top labels
@@ -162,7 +163,7 @@ public class BarChart extends InlineBarChart {
             // Add tick marks
             for (Indicator tickMark : tickMarks) {
 
-                float x = (float) map(getScaledValue(tickMark.value), getScaledMin(), getScaledMax(), barRect.getLeft(), barRect.getRight());
+                float x = (float) MathUtil.map(getScaledValue(tickMark.value), getScaledMin(), getScaledMax(), barRect.getLeft(), barRect.getRight());
 
                 canvas.moveTo(x, barOutlineRect.getBottom() - 4.1f);
                 canvas.lineTo(x, barOutlineRect.getBottom() - 9.4f);
@@ -178,7 +179,7 @@ public class BarChart extends InlineBarChart {
             // Add boundary threshold
             if (threshold != null) {
 
-                float x = (float) map(getScaledValue(threshold.value), getScaledMin(), getScaledMax(), barRect.getLeft(), barRect.getRight());
+                float x = (float) MathUtil.map(getScaledValue(threshold.value), getScaledMin(), getScaledMax(), barRect.getLeft(), barRect.getRight());
 
                 canvas.moveTo(x, barOutlineRect.getTop() + 9.5f);
                 canvas.lineTo(x, barOutlineRect.getBottom() - 10.5f);

@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.patientreporter.cfreport.chapters;
 
 import com.hartwig.hmftools.patientreporter.AnalysedPatientReport;
+import com.hartwig.hmftools.patientreporter.cfreport.MathUtil;
 import com.hartwig.hmftools.patientreporter.cfreport.data.*;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
 import com.hartwig.hmftools.patientreporter.cfreport.components.DataLabel;
@@ -154,7 +155,7 @@ public class SummaryChapter extends ReportChapter {
 
         // Tumor purity
         final double impliedPurity = patientReport.impliedPurity();
-        final double impliedPurityPercentage = Util.mapPercentage(impliedPurity, TumorPurity.RANGE_MIN, TumorPurity.RANGE_MAX);
+        final double impliedPurityPercentage = MathUtil.mapPercentage(impliedPurity, TumorPurity.RANGE_MIN, TumorPurity.RANGE_MAX);
         renderTumorCharactericBarCharRow(
                 patientReport.hasReliablePurityFit(),
                 "Tumor purity of biopsy",

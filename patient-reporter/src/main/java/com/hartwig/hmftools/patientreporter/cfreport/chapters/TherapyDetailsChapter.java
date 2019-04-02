@@ -83,7 +83,7 @@ public class TherapyDetailsChapter extends ReportChapter {
         assert(filteredAndSortedEvidence.size() == evidence.size());
 
         // Handle empty list
-        if (filteredAndSortedEvidence.size() == 0) {
+        if (filteredAndSortedEvidence.isEmpty()) {
             return TableUtil.createNoneReportTable(title);
         }
 
@@ -132,7 +132,7 @@ public class TherapyDetailsChapter extends ReportChapter {
         assert filteredAndSortedTrials.size() == trials.size();
 
         // Handle empty list
-        if (filteredAndSortedTrials.size() == 0) {
+        if (filteredAndSortedTrials.isEmpty()) {
             return TableUtil.createNoneReportTable(title);
         }
 

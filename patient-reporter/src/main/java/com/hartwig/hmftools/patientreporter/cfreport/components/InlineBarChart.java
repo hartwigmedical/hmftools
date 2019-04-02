@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.patientreporter.cfreport.components;
 
+import com.hartwig.hmftools.patientreporter.cfreport.MathUtil;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
 import com.itextpdf.kernel.geom.Rectangle;
 import com.itextpdf.kernel.pdf.canvas.PdfCanvas;
@@ -57,13 +58,6 @@ public class InlineBarChart extends Div {
         return scale.scale(value);
     }
 
-    /**
-     * Remap v from [inMin, inMax] to [outMin, outMax]
-     */
-    protected static double map(double v, double inMin, double inMax, double outMin, double outMax) {
-        return (v - inMin) * (outMax - outMin) / (inMax - inMin) + outMin;
-    }
-
     @Override
     public IRenderer getRenderer() {
         return new BarChartRenderer(this);
@@ -84,7 +78,7 @@ public class InlineBarChart extends Div {
             final float width = area.getWidth();
             final float height = area.getHeight();
             final float radius = height * .5f;
-            final float filledWidth = (float) map(getScaledValue(), getScaledMin(), getScaledMax(), height, width);
+            final float filledWidth = (float) MathUtil.map(getScaledValue(), getScaledMin(), getScaledMax(), height, width);
 
             // Background
             canvas.setFillColor(ReportResources.PALETTE_LIGHT_GREY);

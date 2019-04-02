@@ -1,9 +1,13 @@
 package com.hartwig.hmftools.patientreporter.cfreport.chapters;
 
+import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.patientreporter.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
 import com.hartwig.hmftools.patientreporter.cfreport.components.InlineBarChart;
 import com.hartwig.hmftools.patientreporter.cfreport.components.TableUtil;
+import com.hartwig.hmftools.patientreporter.cfreport.data.SomaticVariants;
+import com.hartwig.hmftools.patientreporter.cfreport.data.Util;
+import com.hartwig.hmftools.patientreporter.variants.ReportableSomaticVariant;
 import com.itextpdf.layout.Document;
 import com.itextpdf.layout.element.Cell;
 import com.itextpdf.layout.element.Paragraph;
@@ -11,7 +15,10 @@ import com.itextpdf.layout.element.Table;
 import com.itextpdf.layout.element.Text;
 import com.itextpdf.layout.property.TextAlignment;
 import com.itextpdf.layout.property.VerticalAlignment;
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
+
+import java.util.List;
 
 public class ActionableOrDriversChapter extends ReportChapter {
 
@@ -27,20 +34,23 @@ public class ActionableOrDriversChapter extends ReportChapter {
 
     @Override
     protected void renderChapterContent(@NotNull final AnalysedPatientReport patientReport, @NotNull Document reportDocument) {
-        reportDocument.add(createTumorVariantsTable());
+
+        boolean hasReliablePurityFit = patientReport.hasReliablePurityFit();
+
+        reportDocument.add(createTumorVariantsTable("Tumor specific variants",
+                patientReport.somaticVariants(), hasReliablePurityFit));
+
         reportDocument.add(createGainsAndLossesTable());
         reportDocument.add(createSomaticFusionsTable());
         reportDocument.add(createDisruptionsTable());
     }
 
     @NotNull
-    private Table createTumorVariantsTable() {
+    private Table createTumorVariantsTable(@NotNull final String title, @NotNull final List<ReportableSomaticVariant> somaticVariants, boolean hasReliablePurityFit) {
 
-        final String chapterTitle = "Tumor specific variants";
-        final boolean isAvailable = true;
-
-        if (!isAvailable) {
-            return TableUtil.createNoneReportTable(chapterTitle);
+        final List<ReportableSomaticVariant> sortedVariants = SomaticVariants.sort(somaticVariants);
+        if (sortedVariants.isEmpty()) {
+            return TableUtil.createNoneReportTable(title);
         }
 
         // Create content table
@@ -57,28 +67,27 @@ public class ActionableOrDriversChapter extends ReportChapter {
                 TableUtil.getHeaderCell("Driver")
         });
 
-        for (int i = 0; i < 4; i++) {
+        for (ReportableSomaticVariant variant : sortedVariants) {
 
-            float vafPerc = (float) Math.random() * 100f;
-
-            InlineBarChart chart = new InlineBarChart(vafPerc, 0f, 100f);
+            // @TODO: handle purity fit miss
+            InlineBarChart chart = new InlineBarChart(hasReliablePurityFit ? variant.adjustedVAF() : 0, 0, 1);
             chart.setWidth(20);
             chart.setHeight(4);
 
-            contentTable.addCell(TableUtil.getContentCell("BRAF*"));
-            contentTable.addCell(TableUtil.getContentCell("c.1799T>A*"));
-            contentTable.addCell(TableUtil.getContentCell("p.Val6000Glu"));
-            contentTable.addCell(TableUtil.getContentCell(new Paragraph("107 / ")
+            contentTable.addCell(TableUtil.getContentCell(SomaticVariants.getGeneDisplayString(variant)));
+            contentTable.addCell(TableUtil.getContentCell(variant.hgvsCodingImpact()));
+            contentTable.addCell(TableUtil.getContentCell(variant.hgvsProteinImpact()));
+            contentTable.addCell(TableUtil.getContentCell(new Paragraph(variant.alleleReadCount() + " / ")
                     .setFont(ReportResources.getFontBold())
-                    .add(new Text("161")
+                    .add(new Text(String.valueOf(variant.totalReadCount()))
                             .setFont(ReportResources.getFontRegular()))
                     .setTextAlignment(TextAlignment.CENTER)));
-            contentTable.addCell(TableUtil.getContentCell("Yes"));
-            contentTable.addCell(TableUtil.getContentCell(String.format("AAAABB (%.0f%%)", vafPerc)));
+            contentTable.addCell(TableUtil.getContentCell(SomaticVariants.getHotspotString(variant.hotspot())));
+            contentTable.addCell(TableUtil.getContentCell(SomaticVariants.getPloidyVaf(variant.adjustedCopyNumber(), variant.minorAllelePloidy(), variant.adjustedVAF(), hasReliablePurityFit)));
             contentTable.addCell(TableUtil.getContentCell(chart).setVerticalAlignment(VerticalAlignment.MIDDLE));
-            contentTable.addCell(TableUtil.getContentCell("Clonal"));
-            contentTable.addCell(TableUtil.getContentCell("-"));
-            contentTable.addCell(TableUtil.getContentCell("High"));
+            contentTable.addCell(TableUtil.getContentCell(SomaticVariants.getClonalityString(variant.clonality(), hasReliablePurityFit)));
+            contentTable.addCell(TableUtil.getContentCell(SomaticVariants.getBiallelicString(variant.biallelic(), variant.driverCategory(), hasReliablePurityFit)));
+            contentTable.addCell(TableUtil.getContentCell(SomaticVariants.getDriverString(variant.driverLikelihood())));
         }
 
         // Add table footnotes
@@ -94,7 +103,7 @@ public class ActionableOrDriversChapter extends ReportChapter {
                         .addStyle(ReportResources.subTextStyle())));
 
         // Create report table that handles page breaks
-        return TableUtil.createWrappingReportTable(chapterTitle, contentTable);
+        return TableUtil.createWrappingReportTable(title, contentTable);
 
     }
 
