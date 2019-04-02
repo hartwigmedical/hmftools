@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.patientreporter.cfreport;
 
 import com.hartwig.hmftools.patientreporter.PatientReporterApplication;
+import com.hartwig.hmftools.patientreporter.cfreport.data.Util;
 import com.itextpdf.io.font.FontProgram;
 import com.itextpdf.io.font.FontProgramFactory;
 import com.itextpdf.io.font.PdfEncodings;
@@ -10,8 +11,6 @@ import com.itextpdf.kernel.colors.DeviceRgb;
 import com.itextpdf.kernel.font.PdfFont;
 import com.itextpdf.kernel.font.PdfFontFactory;
 import com.itextpdf.layout.Style;
-import com.itextpdf.layout.element.Paragraph;
-import com.itextpdf.layout.element.Text;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -19,10 +18,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.text.SimpleDateFormat;
 import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
-import java.util.Date;
 
 /**
  * Shared info, settings and resources for the report
@@ -43,7 +39,7 @@ public final class ReportResources {
     public static final String METADATA_TITLE = "HMF Sequencing Report v" + PatientReporterApplication.VERSION;
     public static final String METADATA_AUTHOR = HARTWIG_NAME;
     public static final String DATE_TIME_FORMAT = "dd-MMM-yyyy";
-    public static final String REPORT_DATE = DataUtility.formatDate(LocalDate.now());
+    public static final String REPORT_DATE = Util.formatDate(LocalDate.now());
 
     // Page margins for normal content (so excluding header and footer) in pt
     public static final float PAGE_MARGIN_TOP = 150; // Top margin also excludes the chapter title, which is rendered in the header

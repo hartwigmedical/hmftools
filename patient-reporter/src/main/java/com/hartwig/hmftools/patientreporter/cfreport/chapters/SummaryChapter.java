@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.patientreporter.cfreport.chapters;
 
 import com.hartwig.hmftools.patientreporter.AnalysedPatientReport;
-import com.hartwig.hmftools.patientreporter.cfreport.DataUtility;
+import com.hartwig.hmftools.patientreporter.cfreport.data.*;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
 import com.hartwig.hmftools.patientreporter.cfreport.components.DataLabel;
 import com.hartwig.hmftools.patientreporter.cfreport.components.InlineBarChart;
@@ -18,7 +18,6 @@ import com.itextpdf.layout.property.VerticalAlignment;
 import org.jetbrains.annotations.NotNull;
 
 import java.text.DecimalFormat;
-import java.util.StringJoiner;
 
 public class SummaryChapter extends ReportChapter {
 
@@ -155,14 +154,14 @@ public class SummaryChapter extends ReportChapter {
 
         // Tumor purity
         final double impliedPurity = patientReport.impliedPurity();
-        final double impliedPurityPercentage = DataUtility.mapPercentage(impliedPurity, DataUtility.TumorPurity.RANGE_MIN, DataUtility.TumorPurity.RANGE_MAX);
+        final double impliedPurityPercentage = Util.mapPercentage(impliedPurity, TumorPurity.RANGE_MIN, TumorPurity.RANGE_MAX);
         renderTumorCharactericBarCharRow(
                 patientReport.hasReliablePurityFit(),
                 "Tumor purity of biopsy",
-                DataUtility.formatPercentage(impliedPurityPercentage),
+                Util.formatPercentage(impliedPurityPercentage),
                 impliedPurity,
-                DataUtility.TumorPurity.RANGE_MIN,
-                DataUtility.TumorPurity.RANGE_MAX,
+                TumorPurity.RANGE_MIN,
+                TumorPurity.RANGE_MAX,
                 table
         );
 
@@ -174,7 +173,7 @@ public class SummaryChapter extends ReportChapter {
                     .format(patientReport.averageTumorPloidy());
             ploidyStyle = ReportResources.dataHighlightStyle();
         } else {
-            ploidyString = DataUtility.NAString;
+            ploidyString = Util.NAString;
             ploidyStyle = ReportResources.dataHighlightNaStyle();
         }
         table.addCell(createMiddleAlignedCell()
@@ -189,10 +188,10 @@ public class SummaryChapter extends ReportChapter {
         renderTumorCharactericBarCharRow(
                 patientReport.hasReliablePurityFit(),
                 "Tumor mutational load",
-                DataUtility.MutationalLoad.interpretToString(mutationalLoad),
+                MutationalLoad.interpretToString(mutationalLoad),
                 mutationalLoad,
-                DataUtility.MutationalLoad.RANGE_MIN,
-                DataUtility.MutationalLoad.RANGE_MAX,
+                MutationalLoad.RANGE_MIN,
+                MutationalLoad.RANGE_MAX,
                 table
         );
 
@@ -201,7 +200,7 @@ public class SummaryChapter extends ReportChapter {
         renderTumorCharactericBarCharRow(
                 patientReport.hasReliablePurityFit(),
                 "Microsatellite (in)stability",
-                DataUtility.MicroSatellite.interpretToString(microSatelliteIndels),
+                MicroSatellite.interpretToString(microSatelliteIndels),
                 microSatelliteIndels,
                 0f,
                 10f,
@@ -232,7 +231,7 @@ public class SummaryChapter extends ReportChapter {
         } else {
 
             table.addCell(createMiddleAlignedCell(1, 2)
-                    .add(createHighlightParagraph(DataUtility.NAString)
+                    .add(createHighlightParagraph(Util.NAString)
                             .addStyle(ReportResources.dataHighlightNaStyle())));
 
         }
@@ -257,14 +256,14 @@ public class SummaryChapter extends ReportChapter {
         table.addCell(TableHelper.getLayoutCell(1, 2).setHeight(TABLE_SPACER_HEIGHT)); // Spacer
 
         // Genes with driver variant
-        final String[] driverVariantGenes = DataUtility.GenomicAlterations.somaticVariantsWithDriver(patientReport.somaticVariants());
+        final String[] driverVariantGenes = GenomicAlterations.somaticVariantsWithDriver(patientReport.somaticVariants());
         table.addCell(createMiddleAlignedCell()
                 .add(new Paragraph("Genes with driver variant")
                         .addStyle(BODY_TEXT_STYLE)));
         table.addCell(createGeneListCell(driverVariantGenes));
 
         // Reported variants
-        final int reportedVariants = DataUtility.GenomicAlterations.countSomaticVariants(patientReport.somaticVariants());
+        final int reportedVariants = GenomicAlterations.countSomaticVariants(patientReport.somaticVariants());
         Style reportedVariantsStyle = (reportedVariants > 0) ? ReportResources.dataHighlightStyle() : ReportResources.dataHighlightNaStyle();
         table.addCell(createMiddleAlignedCell()
                 .add(new Paragraph("Nr. of reported variants")
@@ -274,21 +273,21 @@ public class SummaryChapter extends ReportChapter {
                 .addStyle(reportedVariantsStyle)));
 
         // Copy gain genes
-        final String[] copyGainGenes = DataUtility.GenomicAlterations.amplificationGenes(patientReport.geneCopyNumbers());
+        final String[] copyGainGenes = GenomicAlterations.amplificationGenes(patientReport.geneCopyNumbers());
         table.addCell(createMiddleAlignedCell()
                 .add(new Paragraph("Genes with copy-gain")
                         .addStyle(BODY_TEXT_STYLE)));
         table.addCell(createGeneListCell(copyGainGenes));
 
         // Copy loss genes
-        final String[] copyLossGenes = DataUtility.GenomicAlterations.lossGenes(patientReport.geneCopyNumbers());
+        final String[] copyLossGenes = GenomicAlterations.lossGenes(patientReport.geneCopyNumbers());
         table.addCell(createMiddleAlignedCell()
                 .add(new Paragraph("Genes with copy-loss")
                         .addStyle(BODY_TEXT_STYLE)));
         table.addCell(createGeneListCell(copyLossGenes));
 
         // Gene fusions
-        final String[] fusionGenes = DataUtility.GenomicAlterations.geneFusions(patientReport.geneFusions());
+        final String[] fusionGenes = GenomicAlterations.geneFusions(patientReport.geneFusions());
         table.addCell(createMiddleAlignedCell()
                 .add(new Paragraph("Gene fusions")
                         .addStyle(BODY_TEXT_STYLE)));
@@ -333,7 +332,7 @@ public class SummaryChapter extends ReportChapter {
 
         String geneString = (genes.length > 0)
                 ? String.join(", ", genes)
-                : DataUtility.NoneString;
+                : Util.NoneString;
 
         Style style = (genes.length > 0)
                 ? ReportResources.dataHighlightStyle()
@@ -360,7 +359,7 @@ public class SummaryChapter extends ReportChapter {
             treatmentText = String.format("%d (%d %s)", geneCount, treatmentCount, treatmentsName);
             style = ReportResources.dataHighlightStyle();
         } else {
-            treatmentText = DataUtility.NoneString;
+            treatmentText = Util.NoneString;
             style = ReportResources.dataHighlightNaStyle();
         }
 

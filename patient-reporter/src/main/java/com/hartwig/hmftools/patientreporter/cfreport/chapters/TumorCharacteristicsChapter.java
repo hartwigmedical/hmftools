@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.patientreporter.cfreport.chapters;
 
 import com.hartwig.hmftools.patientreporter.AnalysedPatientReport;
-import com.hartwig.hmftools.patientreporter.cfreport.DataUtility;
+import com.hartwig.hmftools.patientreporter.cfreport.data.*;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
 import com.hartwig.hmftools.patientreporter.cfreport.components.BarChart;
 import com.hartwig.hmftools.patientreporter.cfreport.components.DataLabel;
@@ -41,8 +41,8 @@ public class TumorCharacteristicsChapter extends ReportChapter {
         // HR Deficiency
         final double hrDeficiency = patientReport.chordAnalysis().hrdValue();
         final String hrDeficiencyLabel = patientReport.hasReliablePurityFit()
-                ? DataUtility.HrDeficiency.interpretToString(hrDeficiency)
-                : DataUtility.NAString;
+                ? HrDeficiency.interpretToString(hrDeficiency)
+                : Util.NAString;
         BarChart hrChart = new BarChart(hrDeficiency, 0.0f, 1.0f, "Low", "High");
         hrChart.setTickMarks(0, 1, 0.1, singleDecimalFormat);
         hrChart.setIndicator(0.5f, "HR-Deficient");
@@ -55,17 +55,17 @@ public class TumorCharacteristicsChapter extends ReportChapter {
         // Microsatellite stability
         final double microSatelliteStability = patientReport.microsatelliteIndelsPerMb();
         final String microSatelliteStabilityString = patientReport.hasReliablePurityFit()
-                ? DataUtility.MicroSatellite.interpretToString(microSatelliteStability) + " " + new DecimalFormat("#.####").format(microSatelliteStability)
-                : DataUtility.NAString;
+                ? MicroSatellite.interpretToString(microSatelliteStability) + " " + new DecimalFormat("#.####").format(microSatelliteStability)
+                : Util.NAString;
         BarChart satelliteChart = new BarChart(
                 microSatelliteStability,
-                DataUtility.MicroSatellite.RANGE_MIN,
-                DataUtility.MicroSatellite.RANGE_MAX,
+                MicroSatellite.RANGE_MIN,
+                MicroSatellite.RANGE_MAX,
                 "MSS", "MSI");
         satelliteChart.setScale(InlineBarChart.LOG10_SCALE);
-        satelliteChart.setTickMarks(new double[] {DataUtility.MicroSatellite.RANGE_MIN, 1E-1, 1, 10, DataUtility.MicroSatellite.RANGE_MAX}, doubleDecimalFormat);
+        satelliteChart.setTickMarks(new double[] {MicroSatellite.RANGE_MIN, 1E-1, 1, 10, MicroSatellite.RANGE_MAX}, doubleDecimalFormat);
         satelliteChart.enableDefaultRangeOvershoot(">" + noDecimalFormat.format(satelliteChart.getMax()));
-        satelliteChart.setIndicator(DataUtility.MicroSatellite.THRESHOLD, "Microsatellite unstable");
+        satelliteChart.setIndicator(MicroSatellite.THRESHOLD, "Microsatellite unstable");
         reportDocument.add(createCharacteristicDiv("Microsatellite status", microSatelliteStabilityString,
                 "The microsatellite stability score represents the number of somatic inserts and deletes in " +
                         "(short) repeat sections across the whole genome of the tumor per Mb. This metric can be " +
@@ -76,18 +76,18 @@ public class TumorCharacteristicsChapter extends ReportChapter {
         // Mutational load
         final int mutationalLoad = patientReport.tumorMutationalLoad();
         final String mutationalLoadString = patientReport.hasReliablePurityFit()
-                ? DataUtility.MutationalLoad.interpretToString(mutationalLoad) + " " + noDecimalFormat.format(mutationalLoad)
-                : DataUtility.NAString;
+                ? MutationalLoad.interpretToString(mutationalLoad) + " " + noDecimalFormat.format(mutationalLoad)
+                : Util.NAString;
         BarChart mutationalLoadChart = new BarChart(
                 mutationalLoad,
-                DataUtility.MutationalLoad.RANGE_MIN,
-                DataUtility.MutationalLoad.RANGE_MAX,
+                MutationalLoad.RANGE_MIN,
+                MutationalLoad.RANGE_MAX,
                 "Low", "High");
         mutationalLoadChart.setScale(InlineBarChart.LOG10_SCALE);
         mutationalLoadChart.setTickMarks(
-                new double[] {DataUtility.MutationalLoad.RANGE_MIN, 10, 100, DataUtility.MutationalLoad.RANGE_MAX}, noDecimalFormat);
+                new double[] {MutationalLoad.RANGE_MIN, 10, 100, MutationalLoad.RANGE_MAX}, noDecimalFormat);
         mutationalLoadChart.enableDefaultRangeOvershoot(">" + noDecimalFormat.format(mutationalLoadChart.getMax()));
-        mutationalLoadChart.setIndicator(DataUtility.MutationalLoad.THRESHOLD, "Eligible for DRUP");
+        mutationalLoadChart.setIndicator(MutationalLoad.THRESHOLD, "Eligible for DRUP");
         reportDocument.add(createCharacteristicDiv("Tumor mutational load", mutationalLoadString,
                 "The tumor mutational load represents the total number of somatic missense variants across " +
                         "the whole genome of the tumor. Patients with a mutational load over 140 could be eligible for " +
@@ -99,14 +99,14 @@ public class TumorCharacteristicsChapter extends ReportChapter {
         final double mutationalBurden = patientReport.tumorMutationalBurden();
         final String mutationalBurdenString = patientReport.hasReliablePurityFit()
                 ? singleDecimalFormat.format(mutationalBurden) + " variants per Mb"
-                : DataUtility.NAString;
+                : Util.NAString;
         BarChart mutationalBurdenChart = new BarChart(
                 mutationalBurden,
-                DataUtility.MutationalBurden.RANGE_MIN,
-                DataUtility.MutationalBurden.RANGE_MAX,
+                MutationalBurden.RANGE_MIN,
+                MutationalBurden.RANGE_MAX,
                 "Low", "High");
         mutationalBurdenChart.setScale(InlineBarChart.LOG10_SCALE);
-        mutationalBurdenChart.setTickMarks(new double[] {DataUtility.MutationalBurden.RANGE_MIN, 1E-1, 1, 10, DataUtility.MutationalBurden.RANGE_MAX}, doubleDecimalFormat);
+        mutationalBurdenChart.setTickMarks(new double[] {MutationalBurden.RANGE_MIN, 1E-1, 1, 10, MutationalBurden.RANGE_MAX}, doubleDecimalFormat);
         mutationalBurdenChart.enableDefaultRangeOvershoot(">" + singleDecimalFormat.format(mutationalBurdenChart.getMax()));
         reportDocument.add(createCharacteristicDiv("Tumor mutational burden", mutationalBurdenString,
                 "The tumor mutational burden score represents the number of all somatic variants across the " +

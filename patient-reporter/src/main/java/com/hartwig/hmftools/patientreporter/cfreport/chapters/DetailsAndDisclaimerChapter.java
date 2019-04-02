@@ -2,7 +2,7 @@ package com.hartwig.hmftools.patientreporter.cfreport.chapters;
 
 import com.hartwig.hmftools.patientreporter.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.SampleReport;
-import com.hartwig.hmftools.patientreporter.cfreport.DataUtility;
+import com.hartwig.hmftools.patientreporter.cfreport.data.Util;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
 import com.hartwig.hmftools.patientreporter.cfreport.components.TableHelper;
 import com.hartwig.hmftools.patientreporter.report.pages.SampleDetailsPage;
@@ -61,7 +61,7 @@ public class DetailsAndDisclaimerChapter extends ReportChapter {
         String recipient = sampleReport.recipient();
         if (recipient == null) {
             LOGGER.warn("No recipient address present for sample " + sampleReport.sampleId());
-            recipient = DataUtility.NAString;
+            recipient = Util.NAString;
         }
 
         Div div = new Div();
@@ -73,9 +73,9 @@ public class DetailsAndDisclaimerChapter extends ReportChapter {
         // Content
         div.add(createContentParagraph("The samples have been sequenced at ", ReportResources.HARTWIG_ADDRESS));
         div.add(createContentParagraph("The samples have been analyzed by Next Generation Sequencing "));
-        div.add(createContentParagraph("This experiment is performed on the tumor sample which arrived on ", DataUtility.formatDate(sampleReport.tumorArrivalDate())));
+        div.add(createContentParagraph("This experiment is performed on the tumor sample which arrived on ", Util.formatDate(sampleReport.tumorArrivalDate())));
         div.add(createContentParagraph("The pathology tumor percentage for this sample is " + sampleReport.pathologyTumorPercentage()));
-        div.add(createContentParagraph("This experiment is performed on the blood sample which arrived on ", DataUtility.formatDate(sampleReport.bloodArrivalDate())));
+        div.add(createContentParagraph("This experiment is performed on the blood sample which arrived on ", Util.formatDate(sampleReport.bloodArrivalDate())));
         div.add(createContentParagraph("This experiment is performed according to lab procedures: " + sampleReport.labProcedures()));
         div.add(createContentParagraph("This report is generated and verified by: " + patientReport.user()));
         div.add(createContentParagraph("This report is addressed at: " + recipient));
