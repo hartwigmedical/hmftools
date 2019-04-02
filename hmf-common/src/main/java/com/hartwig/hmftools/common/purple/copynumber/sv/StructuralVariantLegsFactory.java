@@ -123,11 +123,11 @@ final class StructuralVariantLegsFactory {
         int cumulativeTumorVariantFragmentCount = 0;
         for (StructuralVariantLeg leg : legs) {
             int orientation = leg.orientation();
-            Integer tumourVariantFragmentCount = leg.tumourVariantFragmentCount();
-            Integer tumorReferenceFragmentCount = leg.tumourReferenceFragmentCount();
+            Integer tumorVariantFragmentCount = leg.tumorVariantFragmentCount();
+            Integer tumorReferenceFragmentCount = leg.tumorReferenceFragmentCount();
 
-            if (tumourVariantFragmentCount != null) {
-                cumulativeTumorVariantFragmentCount += orientation * tumourVariantFragmentCount;
+            if (tumorVariantFragmentCount != null) {
+                cumulativeTumorVariantFragmentCount += orientation * tumorVariantFragmentCount;
             }
 
             if (tumorReferenceFragmentCount != null) {
@@ -147,8 +147,8 @@ final class StructuralVariantLegsFactory {
                 .position(orientation == -1 ? cnaPosition.position() : cnaPosition.position() - 1)
                 .orientation(orientation)
                 .alleleFrequency(Math.abs(vaf))
-                .tumourVariantFragmentCount(cumulativeTumorVariantFragmentCount == 0 ? null : Math.abs(cumulativeTumorVariantFragmentCount))
-                .tumourReferenceFragmentCount(maxTumorReferenceFragmentCount == 0 ? null : Math.abs(maxTumorReferenceFragmentCount))
+                .tumorVariantFragmentCount(cumulativeTumorVariantFragmentCount == 0 ? null : Math.abs(cumulativeTumorVariantFragmentCount))
+                .tumorReferenceFragmentCount(maxTumorReferenceFragmentCount == 0 ? null : Math.abs(maxTumorReferenceFragmentCount))
                 .alleleFrequency(Math.abs(vaf))
                 .homology("")
                 .build();

@@ -158,11 +158,11 @@ public class StructuralVariantLegsFactoryTest {
     }
 
     @NotNull
-    static StructuralVariantLeg createLeg(long position, int orientation, double vaf, int tumourVariantFragmentCount) {
+    static StructuralVariantLeg createLeg(long position, int orientation, double vaf, int tumorVariantFragmentCount) {
         return PurpleDatamodelTest.createStartLeg(CHROMOSOME, position, StructuralVariantType.DEL)
                 .orientation((byte) orientation)
                 .alleleFrequency(vaf)
-                .tumourVariantFragmentCount(tumourVariantFragmentCount)
+                .tumorVariantFragmentCount(tumorVariantFragmentCount)
                 .build();
     }
 }

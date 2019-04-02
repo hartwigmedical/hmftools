@@ -209,12 +209,12 @@ public class SvTestHelper
                         .imprecise(false)
                         .qualityScore(0.0)
                         .event("")
-                        .startTumourVariantFragmentCount(0)
-                        .startTumourReferenceFragmentCount(0)
+                        .startTumorVariantFragmentCount(0)
+                        .startTumorReferenceFragmentCount(0)
                         .startNormalVariantFragmentCount(0)
                         .startNormalReferenceFragmentCount(0)
-                        .endTumourVariantFragmentCount(0)
-                        .endTumourReferenceFragmentCount(0)
+                        .endTumorVariantFragmentCount(0)
+                        .endTumorReferenceFragmentCount(0)
                         .endNormalVariantFragmentCount(0)
                         .endNormalReferenceFragmentCount(0)
                         .startIntervalOffsetStart(0)
@@ -232,6 +232,8 @@ public class SvTestHelper
                         .insertSequenceRepeatType("")
                         .insertSequenceRepeatOrientation((byte)0)
                         .insertSequenceRepeatCoverage(0.0)
+                        .startAnchoringSupportDistance(0)
+                        .endAnchoringSupportDistance(0)
                         .build();
 
         SvVarData var = new SvVarData(svData);

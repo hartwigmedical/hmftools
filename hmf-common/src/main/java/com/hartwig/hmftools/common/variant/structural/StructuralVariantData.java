@@ -40,12 +40,12 @@ public abstract class StructuralVariantData {
     public abstract Integer endIntervalOffsetEnd();
     public abstract Integer inexactHomologyOffsetStart();
     public abstract Integer inexactHomologyOffsetEnd();
-    public abstract Integer startTumourVariantFragmentCount();
-    public abstract Integer startTumourReferenceFragmentCount();
+    public abstract Integer startTumorVariantFragmentCount();
+    public abstract Integer startTumorReferenceFragmentCount();
     public abstract Integer startNormalVariantFragmentCount();
     public abstract Integer startNormalReferenceFragmentCount();
-    public abstract Integer endTumourVariantFragmentCount();
-    public abstract Integer endTumourReferenceFragmentCount();
+    public abstract Integer endTumorVariantFragmentCount();
+    public abstract Integer endTumorReferenceFragmentCount();
     public abstract Integer endNormalVariantFragmentCount();
     public abstract Integer endNormalReferenceFragmentCount();
     public abstract String startLinkedBy();
@@ -58,6 +58,8 @@ public abstract class StructuralVariantData {
     public abstract String insertSequenceRepeatType();
     public abstract Byte insertSequenceRepeatOrientation();
     public abstract Double insertSequenceRepeatCoverage();
+    public abstract int startAnchoringSupportDistance();
+    public abstract int endAnchoringSupportDistance();
 
     public abstract boolean recovered();
 

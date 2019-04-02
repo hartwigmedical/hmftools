@@ -349,7 +349,7 @@ We therefore apply a smoothing algorithm to merge the raw segments into a final 
 The following criteria apply when deciding to merge segments:
 
 1. Never merge across a segment breakpoint with structural variant support.
-2. Do not merge segments if the minimum BAF count in the segments being compared > 0 and the change in observed BAF > 0.03 and the minor allele tolerance is exceeded. The absolute minor allele tolerance is 0.3 + 0.5 * max(copy number of compared segments) / sqrt (min count of BAF points ).  For tumors with purity < 20% the absolute tolerances are increased inversely proportional to the purity to allow for greater noise in tumour copy number and BAF measurements.
+2. Do not merge segments if the minimum BAF count in the segments being compared > 0 and the change in observed BAF > 0.03 and the minor allele tolerance is exceeded. The absolute minor allele tolerance is 0.3 + 0.5 * max(copy number of compared segments) / sqrt (min count of BAF points ).  For tumors with purity < 20% the absolute tolerances are increased inversely proportional to the purity to allow for greater noise in tumor copy number and BAF measurements.
 3. Merge segments where the absolute or relative difference in either the copy number or ref normalised copy number is within tolerances. Absolute copy number tolerance is  0.3 + 2 / sqrt(min depth window count). Relative copy number tolerance is 10%. Ref normalised copy number uses the actual germline ratios rather than the typical (1 for autosomes, 0.5 for Y etc.).  Again for tumors with purity < 20% the absolute tolerances are increased.
 4. Start from most confident germline diploid segment (highest tumor depth window count) and extend outwards in both directions until we reach a segment outside of tolerance. Then move on to next most confident unsmoothed germline diploid segment. 
 5. It is possible to merge in (multiple) segments that would otherwise be outside of tolerances if:
@@ -428,7 +428,7 @@ An unbalanced structural variant must also have a min depth window count of 5 in
 Eligible recovery candidates must:
 
 1. Be within 1kb of the min and max range of an unsupported copy number breakpoint or within 1kb of the unbalanced structural variant (If not a single breakend, the other breakpoint must also be within 1 kb of the min-max range of a copy number breakpoint)
-2. Not be “AF” filtered in GRIDSS (ie. excluding variants with an allelic fraction of less than 0.5% in the tumour)
+2. Not be “AF” filtered in GRIDSS (ie. excluding variants with an allelic fraction of less than 0.5% in the tumor)
 3. Have a minimum qual score of 1000 for single breakends and 350 for all others.
 4. Have a ploidy of at least 50% of the unexplained copy number change and of at least 0.5.
 

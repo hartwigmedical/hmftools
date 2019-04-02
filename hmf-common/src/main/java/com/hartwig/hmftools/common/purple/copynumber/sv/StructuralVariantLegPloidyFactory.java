@@ -163,9 +163,9 @@ public class StructuralVariantLegPloidyFactory<T extends GenomeRegion> {
             adjustedVaf = purityAdjuster.purityAdjustedVAF(leg.chromosome(), Math.max(0.001, copyNumber), reciprocalVAF);
 
             if (averageReadDepth > 0 && Doubles.greaterThan(adjustedVaf, RECIPROCAL_VAF_TO_USE_READ_DEPTH)) {
-                final Integer tumourVariantFragmentCount = leg.tumourVariantFragmentCount();
-                if (tumourVariantFragmentCount != null && tumourVariantFragmentCount > 0) {
-                    ploidy = readDepthImpliedPloidy(tumourVariantFragmentCount);
+                final Integer tumorVariantFragmentCount = leg.tumorVariantFragmentCount();
+                if (tumorVariantFragmentCount != null && tumorVariantFragmentCount > 0) {
+                    ploidy = readDepthImpliedPloidy(tumorVariantFragmentCount);
                 } else {
                     return Optional.empty();
                 }
@@ -192,7 +192,7 @@ public class StructuralVariantLegPloidyFactory<T extends GenomeRegion> {
         return vaf / (1 - vaf);
     }
 
-    private double readDepthImpliedPloidy(int tumourVariantFragmentCount) {
-        return averageCopyNumber * tumourVariantFragmentCount / averageReadDepth;
+    private double readDepthImpliedPloidy(int tumorVariantFragmentCount) {
+        return averageCopyNumber * tumorVariantFragmentCount / averageReadDepth;
     }
 }

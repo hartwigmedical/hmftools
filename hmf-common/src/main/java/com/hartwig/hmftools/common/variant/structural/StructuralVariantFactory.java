@@ -16,6 +16,9 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.variant.filter.ChromosomeFilter;
 import com.hartwig.hmftools.common.variant.filter.ExcludeCNVFilter;
 
+import htsjdk.samtools.Cigar;
+import htsjdk.samtools.CigarElement;
+import htsjdk.samtools.TextCigarCodec;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -59,6 +62,7 @@ public class StructuralVariantFactory {
     private final static String UNTEMPLATED_SEQUENCE_REPEAT_TYPE = "INSRMRT";
     private final static String UNTEMPLATED_SEQUENCE_REPEAT_ORIENTATION = "INSRMRO";
     private final static String UNTEMPLATED_SEQUENCE_REPEAT_COVERAGE = "INSRMP";
+    private final static String ANCHOR_SUPPORT_CIGAR = "SC";
 
 
     /**
@@ -179,22 +183,23 @@ public class StructuralVariantFactory {
         final boolean isSmallDelDup =
                 (end - start) <= SMALL_DELDUP_SIZE && (type == StructuralVariantType.DEL || type == StructuralVariantType.DUP);
         final StructuralVariantLeg startLeg =
-                setLegCommon(ImmutableStructuralVariantLegImpl.builder(), context, isSmallDelDup).chromosome(context.getContig())
+                setLegCommon(ImmutableStructuralVariantLegImpl.builder(), context, isSmallDelDup, startOrientation)
+                        .chromosome(context.getContig())
                         .position(start)
-                        .orientation(startOrientation)
                         .homology(context.getAttributeAsString(HOM_SEQ, ""))
                         .alleleFrequency(af.size() == 2 ? af.get(0) : null)
                         .build();
 
         final StructuralVariantLeg endLeg =
-                setLegCommon(ImmutableStructuralVariantLegImpl.builder(), context, isSmallDelDup).chromosome(context.getContig())
+                setLegCommon(ImmutableStructuralVariantLegImpl.builder(), context, isSmallDelDup, endOrientation)
+                        .chromosome(context.getContig())
                         .position(end)
-                        .orientation(endOrientation)
                         .homology("")
                         .alleleFrequency(af.size() == 2 ? af.get(1) : null)
                         .build();
 
-        return setCommon(ImmutableStructuralVariantImpl.builder(), context).start(startLeg)
+        return setCommon(ImmutableStructuralVariantImpl.builder(), context)
+                .start(startLeg)
                 .end(endLeg)
                 .insertSequence(insertedSequence)
                 .type(type)
@@ -234,14 +239,14 @@ public class StructuralVariantFactory {
                         && startOrientation != endOrientation;
 
         final StructuralVariantLeg startLeg =
-                setLegCommon(ImmutableStructuralVariantLegImpl.builder(), first, isSmallDelDup).position(start)
-                        .orientation(startOrientation)
+                setLegCommon(ImmutableStructuralVariantLegImpl.builder(), first, isSmallDelDup, startOrientation)
+                        .position(start)
                         .homology(first.getAttributeAsString(HOM_SEQ, ""))
                         .alleleFrequency(af.size() == 2 ? af.get(0) : null)
                         .build();
 
-        final StructuralVariantLeg endLeg = setLegCommon(ImmutableStructuralVariantLegImpl.builder(), second, isSmallDelDup).position(end)
-                .orientation(endOrientation)
+        final StructuralVariantLeg endLeg = setLegCommon(ImmutableStructuralVariantLegImpl.builder(), second, isSmallDelDup, endOrientation)
+                .position(end)
                 .homology(second.getAttributeAsString(HOM_SEQ, ""))
                 .alleleFrequency(af.size() == 2 ? af.get(1) : null)
                 .build();
@@ -258,7 +263,8 @@ public class StructuralVariantFactory {
                 inferredType = StructuralVariantType.DEL;
             }
         }
-        return setCommon(ImmutableStructuralVariantImpl.builder(), first).start(startLeg)
+        return setCommon(ImmutableStructuralVariantImpl.builder(), first)
+                .start(startLeg)
                 .end(endLeg)
                 .mateId(second.getID())
                 .insertSequence(insertedSequence)
@@ -284,12 +290,13 @@ public class StructuralVariantFactory {
                 orientation == -1 ? alt.substring(1, alt.length() - refLength) : alt.substring(refLength, alt.length() - 1);
 
         final StructuralVariantLeg startLeg =
-                setLegCommon(ImmutableStructuralVariantLegImpl.builder(), context, false).orientation(orientation)
+                setLegCommon(ImmutableStructuralVariantLegImpl.builder(), context, false, orientation)
                         .homology("")
                         .alleleFrequency(af.size() >= 1 ? af.get(0) : null)
                         .build();
 
-        return setCommon(ImmutableStructuralVariantImpl.builder(), context).start(startLeg)
+        return setCommon(ImmutableStructuralVariantImpl.builder(), context)
+                .start(startLeg)
                 .insertSequence(insertedSequence)
                 .type(StructuralVariantType.SGL)
                 .filter(filters(context, null))
@@ -341,19 +348,45 @@ public class StructuralVariantFactory {
 
     @NotNull
     private static ImmutableStructuralVariantLegImpl.Builder setLegCommon(@NotNull ImmutableStructuralVariantLegImpl.Builder builder,
-            @NotNull VariantContext context, boolean ignoreRefpair) {
+                                                                          @NotNull VariantContext context, boolean ignoreRefpair, byte orientation) {
         builder.chromosome(context.getContig());
         builder.position(context.getStart());
+        builder.orientation(orientation);
 
-        builder.startOffset(0);
-        builder.endOffset(0);
+        int ciLeft = 0;
+        int ciRight = 0;
         if (context.hasAttribute(CIPOS)) {
             final List<Integer> cipos = context.getAttributeAsIntList(CIPOS, 0);
             if (cipos.size() == 2) {
-                builder.startOffset(cipos.get(0));
-                builder.endOffset(cipos.get(1));
+                ciLeft = cipos.get(0);
+                ciRight = cipos.get(1);
             }
         }
+        builder.startOffset(ciLeft);
+        builder.endOffset(ciRight);
+        int supportWidth = 0;
+        int supportCi = 0;
+        if (context.hasAttribute(ANCHOR_SUPPORT_CIGAR)) {
+            Cigar cigar = TextCigarCodec.decode(context.getAttributeAsString(ANCHOR_SUPPORT_CIGAR, ""));
+            for (CigarElement ce : cigar.getCigarElements()) {
+                switch (ce.getOperator()) {
+                    case X:
+                    case N:
+                        supportCi += ce.getLength();
+                        break;
+                    case D:
+                    case M:
+                    case EQ:
+                        supportWidth += ce.getLength();
+                        break;
+                    default:
+                        throw new RuntimeException(String.format("Unsupported support interval cigar operator \"%s\"", ce.getOperator().toString()));
+                }
+            }
+            //assert(supportCi - 1 == ciLeft + ciRight);
+        }
+        builder.anchoringSupportDistance((orientation == -1 ? -ciLeft : ciRight) + supportWidth);
+
         builder.inexactHomologyOffsetStart(0);
         builder.inexactHomologyOffsetEnd(0);
         if (context.hasAttribute(IHOMPOS)) {
@@ -379,8 +412,8 @@ public class StructuralVariantFactory {
                 Integer var = asInteger(geno.getExtendedAttribute(context.hasAttribute(PAR_ID) ? VARIANT_FRAGMENT_BREAKPOINT_COVERAGE :VARIANT_FRAGMENT_BREAKEND_COVERAGE));
                 Integer ref = asInteger(geno.getExtendedAttribute(REFERENCE_BREAKEND_READ_COVERAGE));
                 Integer refpair = asInteger(geno.getExtendedAttribute(REFERENCE_BREAKEND_READPAIR_COVERAGE));
-                builder = builder.tumourVariantFragmentCount(var);
-                builder = builder.tumourReferenceFragmentCount(ref + (ignoreRefpair ? 0 : refpair));
+                builder = builder.tumorVariantFragmentCount(var);
+                builder = builder.tumorReferenceFragmentCount(ref + (ignoreRefpair ? 0 : refpair));
             }
         }
         return builder;

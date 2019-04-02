@@ -1,0 +1,7 @@
+
+ALTER TABLE structuralVariant ADD COLUMN startAnchoringSupportDistance int after insertSequenceRepeatCoverage;
+ALTER TABLE structuralVariant ADD COLUMN endAnchoringSupportDistance int after startAnchoringSupportDistance;
+ALTER TABLE structuralVariant CHANGE COLUMN startTumourVariantFragmentCount startTumorVariantFragmentCount int;
+ALTER TABLE structuralVariant CHANGE COLUMN startTumourReferenceFragmentCount startTumorReferenceFragmentCount int;
+ALTER TABLE structuralVariant CHANGE COLUMN endTumourVariantFragmentCount endTumorVariantFragmentCount int;
+ALTER TABLE structuralVariant CHANGE COLUMN endTumourReferenceFragmentCount endTumorReferenceFragmentCount int;
