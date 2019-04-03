@@ -169,7 +169,7 @@ HMF currently uses Strelka for somatic calling. A number of transformations are 
 At a minimum this includes:
 1. Merging SNP and INDEL output
 2. Renaming samples from NORMAL and TUMOR to names consistent with AMBER/COBALT/PURPLE
-3. Generating the AD field from Strelka's AU,GU,TU,CU,TIR and TAR fields. The PURPLE jar contains a tool to do (demonstrated below). 
+3. Generating the AD field from Strelka's AU,GU,TU,CU,TIR and TAR fields. The PURPLE jar contains a tool to do this as demonstrated below. 
 
 The resultant pipeline might look something like this:
 
