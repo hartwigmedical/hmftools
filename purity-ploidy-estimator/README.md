@@ -66,7 +66,7 @@ db_url | None | Database URL. Should be of format: `mysql://localhost:3306/hmfpa
 ref_genome | Detect | Will attempt to detect reference genome from COBALT output but failing that must be either hg18 or hg38.
 
 #### Optional Somatic Fit Arguments
-The following arguments control the somatic fit. Changing these values without a through understanding of the system is not recommended.
+The following arguments control the somatic fit. Changing these values without a thorough understanding of the system is not recommended.
 
 Argument | Default | Description 
 ---|---|---
@@ -76,6 +76,15 @@ somatic_min_purity_spread | 0.15 | Minimum spread within candidate purities befo
 somatic_min_purity | 0.17 | Somatic fit will not be used if both somatic and fitted purities are less than this value.
 somatic_penalty_weight | 1 | Proportion of somatic penalty to include in fitted purity score.
 highly_diploid_percentage | 0.97 | Proportion of genome that must be diploid before using somatic fit.
+
+#### Optional Smoothing Arguments 
+The following arguments control the smoothing process. Changing these values without a thorough understanding of the system is not recommended.
+
+Argument | Default | Description 
+---|---|---
+min_diploid_tumor_ratio_count | 30 | Diploid contiguous segments without structural variant support with combined lengths less than 1000 times this value that would otherwise be distinct may be smoothed over.   
+min_diploid_tumor_ratio_count_centromere | 50 | As above, but applied when the contiguous segments have a centromere on one side. 
+
 
 ### Example Usage
 
@@ -275,6 +284,10 @@ The following chart illustrates the deviation penalty applied for each of minor 
 
 ![Deviation Penalty](src/main/resources/readme/FittedPurityDeviationPenalty.png)
 
+The total deviation penalty is calculated from the minor and major allele as:
+
+`Deviation Penalty = (MinorAlleleDeviationPenalty + MajorAlleleDeviationPenalty) * ObservedBAF` 
+
 #### Event Penalty
 
 An event penalty is intended to further penalise [sample ploidy,purity] combinations based on the number of alterations required to get from a normal diploid chromosome to the implied minor and major allele ploidies. 
@@ -441,17 +454,15 @@ However, as some of these regions are of specific interest we include them in a 
 
 ### 9. Determine a QC Status for the tumor
 The status field reflects how we have determined the purity of the sample:
-- **NORMAL** - PURPLE fit the purity using COBALT and AMBER output.
-- **HIGHLY_DIPLOID** - The fitted purity solution is highly diploid (> 95%) with a large range of potential solutions, but somatic variants are unable to help either because they were not supplied or because their implied purity was too low.
-- **SOMATIC** - Somatic variants have improved the otherwise highly diploid solution.
-- **NO_TUMOR** - PURPLE failed to find any aneuploidy and somatic variants were supplied but there were fewer than 300 with observed VAF > 0.1.
+- `NORMAL` - PURPLE fit the purity using COBALT and AMBER output.
+- `HIGHLY_DIPLOID` - The fitted purity solution is highly diploid (> 95%) with a large range of potential solutions, but somatic variants are unable to help either because they were not supplied or because their implied purity was too low.
+- `SOMATIC` - Somatic variants have improved the otherwise highly diploid solution.
+- `NO_TUMOR` - PURPLE failed to find any aneuploidy and somatic variants were supplied but there were fewer than 300 with observed VAF > 0.1.
 
 PURPLE also provides a qc status that can fail for the following 3 reasons:
-- **FAIL_SEGMENT** - We remove samples with more than 120 copy number segments unsupported at either end by SV breakpoints. This step was added to remove samples with extreme GC bias, with differences in depth of up to or in excess of 10x between high and low GC regions. GC normalisation is unreliable when the corrections are so extreme so we filter.
-- **FAIL_DELETED_GENES** - We fail any sample with more than 280 deleted genes. This QC step was added after observing that in a handful of samples with high MB scale positive GC bias we sometimes systematically underestimate the copy number in high GC regions. This can lead us to incorrectly infer homozygous loss of entire chromosomes, particularly on chromosome 17 and 19.
-- **FAIL_GENDER** - If the AMBER and COBALT gender are inconsistent we use the COBALT gender but fail the sample.
-
-
+- `FAIL_SEGMENT` - We remove samples with more than 120 copy number segments unsupported at either end by SV breakpoints. This step was added to remove samples with extreme GC bias, with differences in depth of up to or in excess of 10x between high and low GC regions. GC normalisation is unreliable when the corrections are so extreme so we filter.
+- `FAIL_DELETED_GENES` - We fail any sample with more than 280 deleted genes. This QC step was added after observing that in a handful of samples with high MB scale positive GC bias we sometimes systematically underestimate the copy number in high GC regions. This can lead us to incorrectly infer homozygous loss of entire chromosomes, particularly on chromosome 17 and 19.
+- `FAIL_GENDER` - If the AMBER and COBALT gender are inconsistent we use the COBALT gender but fail the sample.
 
 ## Output
 
@@ -465,20 +476,20 @@ The purity file `TUMOR.purple.purity` contains a single row with a summary of th
 
 Column  | Example Value | Description
 ---|---|---
-Purity  | 0.98 | Purity of tumor in the sample.
-NormFactor | 0.64 | Factor to convert tumor ratio to copy number. Lower number implies higher ploidy.
-Score | 0.68 | Score of fit.
-Diploid Proportion | 0.02 | Proportion of copy number regions that have 1 (+- 0.2) minor and major allele.
-Ploidy | 3.10 | Average ploidy of the tumor sample after adjusting for purity.
-Gender | MALE | One of MALE, FEMALE or MALE_KLINEFELTER.
-Status | NORMAL | One of NORMAL, HIGHLY_DIPLOID, SOMATIC or NO_TUMOR.
+Version | 2.25 | Version of PURPLE
+Purity  | 0.98 | Purity of tumor in the sample
+NormFactor | 0.64 | Factor to convert tumor ratio to copy number. Lower number implies higher ploidy
+Ploidy | 3.10 | Average ploidy of the tumor sample after adjusting for purity
+SomaticDeviation | 0.00 | Penalty from somatic variants with implied ploidies that are inconsistent with the minor and major allele ploidy 
+Score | 0.68 | Score of fit (lower is better)
+Diploid Proportion | 0.02 | Proportion of copy number regions that have 1 (+- 0.2) minor and major allele
 PolyclonalProportion | 0.09 | Proportion of copy number regions that are more than 0.25 from a whole copy number
-MinPurity | 0.95 | Minimum purity with score within 10% of best. 
-MaxPurity | 1.00 | Maximim purity with score within 10% of best.
-MinPloidy | 3.08 | Minimum ploidy with score within 10% of best. 
-MaxPloidy | 3.13 | Maximim ploidy with score within 10% of best.
-Version | 2.24 | Version of PURPLE
-SomaticDeviation | 0.00 | Penalty from somatic variants with implied ploidies that are inconsistent with the minor and major allele ploidy. 
+[Gender](#1-gender) | MALE | One of `MALE`, `FEMALE` or `MALE_KLINEFELTER`
+[Status](#9-determine-a-qc-status-for-the-tumor) | NORMAL | One of `NORMAL`, `HIGHLY_DIPLOID`, `SOMATIC` or `NO_TUMOR`
+MinPurity | 0.95 | Minimum purity with score within 10% of best
+MaxPurity | 1.00 | Maximim purity with score within 10% of best
+MinPloidy | 3.08 | Minimum ploidy with score within 10% of best 
+MaxPloidy | 3.13 | Maximim ploidy with score within 10% of best
 
 #### Purity Range File
 
@@ -502,11 +513,11 @@ Start  | 1 | Start base of copy number segment
 End  | 87337011 | End base of copy number segment
 CopyNumber  | 2.8189 | Fitted absolute copy number of segment adjusted for purity and ploidy
 BafCount  | 4464 | Count of AMBER baf points covered by this segment
-ObservedBAF  | 0.7094 | Combined reference and tumor BAF **un**adjusted for purity and ploidy
+ObservedBAF  | 0.7094 | Combined reference and tumor BAF in TUMOR sample **un**adjusted for purity and ploidy
 BAF  | 0.7124 | Tumor BAF after adjusted for purity and ploidy
-SegmentStartSupport  | TELOMERE | Reason segment was created. Can be CENTROMERE, TELOMERE, a SV type, or NONE.
-SegmentEndSupport  | BND | Reason segment ended. Will match SegmentStartSupport of following segment.
-Method | BAF_WEIGHTED | Method used to determine copy number. One of BAF_WEIGHTED, STRUCTURAL_VARIANT, LONG_ARM, GERMLINE_AMPLIFICATION
+SegmentStartSupport  | TELOMERE |  The type of structural variant support for the copy number breakpoint at start of region.  Allowed values:  (`CENTROMERE`, `TELOMERE`,`INV`,`DEL`,`DUP`,`BND` - translocation, `SGL` - single breakend SV support, `NONE` - no SV support for CN breakpoint, `MULT` - multiple SV support at exact breakpoint)
+SegmentEndSupport  | BND | The type of structural variant support for the copy number breakpoint at end of region. Allowed values as per SegmentStartSupport.
+Method | BAF_WEIGHTED | Method used to determine the copy number of the region. Allowed values: (`BAF_WEIGHTED` - average of all depth windows for the region ,`STRUCTURAL_VARIANT` - inferred using ploidy of flanking SVs ,`LONG_ARM` - inferred from the long arm,`GERMLINE_AMPLIFICATION` - inferred using special logic to handle regions of germline amplification)
 DepthWindowCount | 77277 | Count of COBALT windows covered by this segment
 GcContent | 0.4351 | Proportion of segment that is G or C
 MinStart | 1 | Minimum start location of this segment if there is any uncertainty.
@@ -514,13 +525,50 @@ MaxStart | 1 | Maximum start location of this segment if there is any uncertaint
 MinorAllelePloidy | 0.8165 | Ploidy of minor allele adjusted for purity
 MajorAllelePloidy | 2.0076 | Ploidy of major allele adjusted for purity
 
+
+#### Fitted Segments File
+
+The fitted segments file `TUMOR.purple.fitted` contains the copy number for all (contiguous) segments **before** the smoothing algorithm has been applied. 
+This typically results in additional entries and noise. This file also contains more detailed information that is not available in the smoothed records above:
+
+
+Column  | Example Value | Description
+---|---|---
+Chromosome  | 1 | Chromosome of copy number segment
+Start  | 13188001 | Start base of copy number segment
+End  | 16850000 | End base of copy number segment
+GermlineStatus | DIPLOID | Status of the Germline in this segment. One of DIPLOID, AMPLIFICATION, HOM_DELETION, HET_DELETION, NOISE  or UNKNOWN
+SvCluster | false | Flag to indicate if this segment is part of a cluster of structural variants
+RatioSupport | true | Flag to indicate if this segment is supported by COBALT
+Support | NONE | The type of structural variant support for the copy number breakpoint at start of region. Allowed values as per SegmentStartSupport in Copy Number file.
+GcContent | 0.4693 | Proportion of segment that is G or C
+DepthWindowCount | 2834 | Count of COBALT windows covered by this segment
+BafCount  | 225 | Count of AMBER baf points covered by this segment
+ObservedBAF  | 0.7094 | Combined reference and tumor BAF in TUMOR sample **un**adjusted for purity and ploidy
+ObservedTumorRatio  | 0.8832 | COBALT ratio in TUMOR sample **un**adjusted for purity and ploidy
+ObservedNormalRatio  | 0.9986 | COBALT ratio in REFERENCE sample 
+[MinorAllelePloidyDeviation](#deviation-penalty) | 0.7601 | Penalty for deviation of minor allele from whole number
+[MinorAllelePloidyDeviation](#deviation-penalty) | 0.2000 | Penalty for deviation of major allele from whole number
+DeviationPenalty | 0.6777 | Sum of Minor and Major Allele ploidy deviation scaled by ObservedBAF
+[EventPenalty](#event-penalty) | 1.3460 | Penalty for number of events required to take solution away from diploid
+TumorCopyNumber  | 2.7807 | Absolute tumor copy number of segment adjusted for purity and ploidy
+TumorBAF | 0.7074 | Tumor BAF after adjusted for purity and ploidy adjusted for purity and ploidy
+RefNormalisedCopyNumber  | 2.7807 | Similar to TumorCopyNumber except calculated using actual ObservedNormalRatio instead of ideal one.  
+MinorAllelePloidy | 0.8136 | Ploidy of minor allele adjusted for purity
+MajorAllelePloidy | 1.9671 | Ploidy of major allele adjusted for purity
+FittedTumorCopyNumber  | 2.8240 | Copy number **after** smoothing. Multiple contiguous may share the same value corresponding to segments in the copy number table above.
+FittedBAF  | 0.7109 | BAF **after** smoothing. Multiple contiguous may share the same value corresponding to segments in the copy number table above.
+MinStart | 12913001 | Minimum start location of this segment if there is any uncertainty.
+MaxStart | 13188001 | Maximum start location of this segment if there is any uncertainty.
+
+
 #### Gene Copy Number File
 
 The gene copy number file `TUMOR.purple.gene.cnv` summarises copy number alterations of each gene in the HMF gene panel:
 
 Column  | Example Value | Description
 ---|---|---
-Chromosome  | 9 | Chromosome gene is on
+Chromosome  | 9 | Chromosome of gene
 Start  | 21968055 | Start location of gene transcript
 End  | 21974865 | End location of gene transcript
 Gene  | CDKN2A | Name of gene

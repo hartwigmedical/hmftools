@@ -30,14 +30,12 @@ import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.variantcontext.filter.VariantContextFilter;
 import htsjdk.variant.variantcontext.writer.VariantContextWriter;
 import htsjdk.variant.variantcontext.writer.VariantContextWriterBuilder;
-import htsjdk.variant.vcf.VCFConstants;
 import htsjdk.variant.vcf.VCFFileReader;
-import htsjdk.variant.vcf.VCFFormatHeaderLine;
 import htsjdk.variant.vcf.VCFHeader;
 import htsjdk.variant.vcf.VCFHeaderLine;
-import htsjdk.variant.vcf.VCFHeaderLineCount;
 import htsjdk.variant.vcf.VCFHeaderLineType;
 import htsjdk.variant.vcf.VCFInfoHeaderLine;
+import htsjdk.variant.vcf.VCFStandardHeaderLines;
 
 public class StrelkaPostProcessApplication {
     private static final Logger LOGGER = LogManager.getLogger(StrelkaPostProcessApplication.class);
@@ -116,11 +114,9 @@ public class StrelkaPostProcessApplication {
     @NotNull
     public static VCFHeader generateOutputHeader(@NotNull final VCFHeader header, @NotNull final String sampleName) {
         final VCFHeader outputVCFHeader = new VCFHeader(header.getMetaDataInInputOrder(), Sets.newHashSet(sampleName));
-        outputVCFHeader.addMetaDataLine(new VCFFormatHeaderLine(VCFConstants.GENOTYPE_ALLELE_DEPTHS,
-                VCFHeaderLineCount.R,
-                VCFHeaderLineType.Integer,
-                "Allelic depths for the ref and alt alleles in the order listed"));
-        outputVCFHeader.addMetaDataLine(new VCFFormatHeaderLine(VCFConstants.GENOTYPE_KEY, 1, VCFHeaderLineType.String, "Genotype"));
+        outputVCFHeader.addMetaDataLine(VCFStandardHeaderLines.getFormatLine("GT"));
+        outputVCFHeader.addMetaDataLine(VCFStandardHeaderLines.getFormatLine("AD"));
+
         outputVCFHeader.addMetaDataLine(new VCFHeaderLine("StrelkaGATKCompatibility",
                 "Added GT fields to strelka calls for gatk compatibility."));
         outputVCFHeader.addMetaDataLine(new VCFInfoHeaderLine("MAPPABILITY", 1, VCFHeaderLineType.Float, "Mappability (percentage)"));
