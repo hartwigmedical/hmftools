@@ -275,6 +275,10 @@ The following chart illustrates the deviation penalty applied for each of minor 
 
 ![Deviation Penalty](src/main/resources/readme/FittedPurityDeviationPenalty.png)
 
+The total deviation penalty is calculated from the minor and major allele as:
+
+`Deviation Penalty = (MinorAlleleDeviationPenalty + MajorAlleleDeviationPenalty) * ObservedBAF` 
+
 #### Event Penalty
 
 An event penalty is intended to further penalise [sample ploidy,purity] combinations based on the number of alterations required to get from a normal diploid chromosome to the implied minor and major allele ploidies. 
@@ -471,7 +475,7 @@ Score | 0.68 | Score of fit.
 Diploid Proportion | 0.02 | Proportion of copy number regions that have 1 (+- 0.2) minor and major allele.
 Ploidy | 3.10 | Average ploidy of the tumor sample after adjusting for purity.
 Gender | MALE | One of MALE, FEMALE or MALE_KLINEFELTER.
-Status | NORMAL | One of NORMAL, HIGHLY_DIPLOID, SOMATIC or NO_TUMOR.
+Status | NORMAL | One of NORMAL, HIGHLY_DIPLOID, SOMATIC or NO_TUMOR.  [Descriptions.](#9-determine-a-qc-status-for-the-tumor)
 PolyclonalProportion | 0.09 | Proportion of copy number regions that are more than 0.25 from a whole copy number
 MinPurity | 0.95 | Minimum purity with score within 10% of best. 
 MaxPurity | 1.00 | Maximim purity with score within 10% of best.
@@ -502,17 +506,54 @@ Start  | 1 | Start base of copy number segment
 End  | 87337011 | End base of copy number segment
 CopyNumber  | 2.8189 | Fitted absolute copy number of segment adjusted for purity and ploidy
 BafCount  | 4464 | Count of AMBER baf points covered by this segment
-ObservedBAF  | 0.7094 | Combined reference and tumor BAF **un**adjusted for purity and ploidy
+ObservedBAF  | 0.7094 | Combined reference and tumor BAF in TUMOR sample **un**adjusted for purity and ploidy
 BAF  | 0.7124 | Tumor BAF after adjusted for purity and ploidy
-SegmentStartSupport  | TELOMERE | Reason segment was created. Can be CENTROMERE, TELOMERE, a SV type, or NONE.
-SegmentEndSupport  | BND | Reason segment ended. Will match SegmentStartSupport of following segment.
-Method | BAF_WEIGHTED | Method used to determine copy number. One of BAF_WEIGHTED, STRUCTURAL_VARIANT, LONG_ARM, GERMLINE_AMPLIFICATION
+SegmentStartSupport  | TELOMERE |  The type of structural variant support for the copy number breakpoint at start of region.  Allowed values:  (‘CENTROMERE’, ’TELOMERE’,‘INV’,’DEL’,’DUP’,’BND’ - translocation, ‘SGL’ - single breakend SV support, ‘NONE’ - no SV support for CN breakpoint, ‘MULT’ - multiple SV support at exact breakpoint)
+SegmentEndSupport  | BND | The type of structural variant support for the copy number breakpoint at end of region. Allowed values as per SegmentStartSupport.
+Method | BAF_WEIGHTED | Method used to determine the copy number of the region. Allowed values: (‘BAF_WEIGHTED’ - average of all depth windows for the region ,’STRUCTURAL_VARIANT’ - inferred using ploidy of flanking SVs ,’LONG_ARM’ - inferred from the long arm,’GERMLINE_AMPLIFICATION’ - inferred using special logic to handle regions of germline amplification)
 DepthWindowCount | 77277 | Count of COBALT windows covered by this segment
 GcContent | 0.4351 | Proportion of segment that is G or C
 MinStart | 1 | Minimum start location of this segment if there is any uncertainty.
 MaxStart | 1 | Maximum start location of this segment if there is any uncertainty.
 MinorAllelePloidy | 0.8165 | Ploidy of minor allele adjusted for purity
 MajorAllelePloidy | 2.0076 | Ploidy of major allele adjusted for purity
+
+
+#### Fitted Segments File
+
+The fitted segments file `TUMOR.purple.fitted` contains the copy number for all (contiguous) segments **before** the smoothing algorithm has been applied. 
+This typically results in additional entries and noise. This file also contains more detailed information that is not available in the smoothed records above:
+
+
+Column  | Example Value | Description
+---|---|---
+Chromosome  | 1 | Chromosome of copy number segment
+Start  | 13188001 | Start base of copy number segment
+End  | 16850000 | End base of copy number segment
+GermlineStatus | DIPLOID | Status of the Germline in this segment. One of DIPLOID, AMPLIFICATION, HOM_DELETION, HET_DELETION, NOISE  or UNKNOWN
+SvCluster | false | Flag to indicate if this segment is part of a cluster of structural variants
+RatioSupport | true | Flag to indicate if this segment is supported by COBALT
+Support | NONE | The type of structural variant support for the copy number breakpoint at start of region. Allowed values as per SegmentStartSupport in Copy Number file.
+GcContent | 0.4693 | Proportion of segment that is G or C
+DepthWindowCount | 2834 | Count of COBALT windows covered by this segment
+BafCount  | 225 | Count of AMBER baf points covered by this segment
+ObservedBAF  | 0.7094 | Combined reference and tumor BAF in TUMOR sample **un**adjusted for purity and ploidy
+ObservedTumorRatio  | 0.8832 | COBALT ratio in TUMOR sample **un**adjusted for purity and ploidy
+ObservedNormalRatio  | 0.9986 | COBALT ratio in REFERENCE sample 
+MinorAllelePloidyDeviation | 0.7601 | Penalty for [deviation](#deviation-penalty) of minor allele from whole number
+MinorAllelePloidyDeviation | 0.2000 | Penalty for [deviation](#deviation-penalty) of major allele from whole number
+DeviationPenalty | 0.6777 | Sum of Minor and Major Allele ploidy deviation scaled by ObservedBAF
+EventPenalty | 1.3460 | Penalty for number of [events](#event-penalty) required to take solution away from diploid
+TumorCopyNumber  | 2.7807 | Absolute tumor copy number of segment adjusted for purity and ploidy
+TumorBAF | 0.7074 | Tumor BAF after adjusted for purity and ploidy adjusted for purity and ploidy
+RefNormalisedCopyNumber  | 2.7807 | Similar to TumorCopyNumber except calculated using actual ObservedNormalRatio instead of ideal one.  
+MinorAllelePloidy | 0.8136 | Ploidy of minor allele adjusted for purity
+MajorAllelePloidy | 1.9671 | Ploidy of major allele adjusted for purity
+FittedTumorCopyNumber  | 2.8240 | Copy number **after** smoothing. Multiple contiguous may share the same value corresponding to segments in the copy number table above.
+FittedBAF  | 0.7109 | BAF **after** smoothing. Multiple contiguous may share the same value corresponding to segments in the copy number table above.
+MinStart | 12913001 | Minimum start location of this segment if there is any uncertainty.
+MaxStart | 13188001 | Maximum start location of this segment if there is any uncertainty.
+
 
 #### Gene Copy Number File
 
