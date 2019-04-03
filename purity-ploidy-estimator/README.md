@@ -66,7 +66,7 @@ db_url | None | Database URL. Should be of format: `mysql://localhost:3306/hmfpa
 ref_genome | Detect | Will attempt to detect reference genome from COBALT output but failing that must be either hg18 or hg38.
 
 #### Optional Somatic Fit Arguments
-The following arguments control the somatic fit. Changing these values without a through understanding of the system is not recommended.
+The following arguments control the somatic fit. Changing these values without a thorough understanding of the system is not recommended.
 
 Argument | Default | Description 
 ---|---|---
@@ -76,6 +76,15 @@ somatic_min_purity_spread | 0.15 | Minimum spread within candidate purities befo
 somatic_min_purity | 0.17 | Somatic fit will not be used if both somatic and fitted purities are less than this value.
 somatic_penalty_weight | 1 | Proportion of somatic penalty to include in fitted purity score.
 highly_diploid_percentage | 0.97 | Proportion of genome that must be diploid before using somatic fit.
+
+#### Optional Smoothing Arguments 
+The following arguments control the smoothing process. Changing these values without a thorough understanding of the system is not recommended.
+
+Argument | Default | Description 
+---|---|---
+min_diploid_tumor_ratio_count | 30 | Diploid contiguous segments without structural variant support with combined lengths less than 1000 times this value that would otherwise be distinct may be smoothed over.   
+min_diploid_tumor_ratio_count_centromere | 50 | As above, but applied when the contiguous segments have a centromere on one side. 
+
 
 ### Example Usage
 
@@ -559,7 +568,7 @@ The gene copy number file `TUMOR.purple.gene.cnv` summarises copy number alterat
 
 Column  | Example Value | Description
 ---|---|---
-Chromosome  | 9 | Chromosome gene is on
+Chromosome  | 9 | Chromosome of gene
 Start  | 21968055 | Start location of gene transcript
 End  | 21974865 | End location of gene transcript
 Gene  | CDKN2A | Name of gene
