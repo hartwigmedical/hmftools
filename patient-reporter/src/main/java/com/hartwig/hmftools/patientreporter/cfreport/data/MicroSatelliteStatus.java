@@ -9,11 +9,10 @@ public final class MicroSatelliteStatus {
     public static final double THRESHOLD = 4;
 
     /**
-     * Interpret micro satellite indel value to be either "Stable" or "Instable". It's assumed the purity
-     * fit has been checked
+     * Interpret micro satellite indel value to be either "Stable" or "Instable"
      */
     @NotNull
-    public static String interpretToString(double microSatelliteIndelsPerMb) {
+    public static String interpretToString(double microSatelliteIndelsPerMb, boolean hasReliablePurityFit) {
         if (microSatelliteIndelsPerMb > THRESHOLD) {
             return "Unstable";
         } else {

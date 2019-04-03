@@ -10,11 +10,15 @@ public final class HrDeficiency {
     public static final double RANGE_MAX = 1;
 
     /**
-     * Interpret HR Deficiency value. It's assumed the purity fit has been checked
+     * Interpret HR Deficiency value
      */
     @NotNull
-    public static String interpretToString(final double chordHrdScore) {
-        return new DecimalFormat("#.##").format(chordHrdScore);
+    public static String interpretToString(final double chordHrdScore, boolean hasReliablePurityFit) {
+        if (!hasReliablePurityFit) {
+            return DataUtil.NAString;
+        } else {
+            return new DecimalFormat("#.##").format(chordHrdScore);
+        }
     }
 
 }

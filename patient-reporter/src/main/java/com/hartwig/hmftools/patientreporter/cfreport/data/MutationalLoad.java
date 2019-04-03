@@ -9,16 +9,19 @@ public final class MutationalLoad {
     public static final int THRESHOLD = 140;
 
     /**
-     * Interpret mutational load value to be either "High" or "Low". It's assumed the purity
-     * fit has been checked
+     * Interpret mutational load value to be either "High" or "Low"
      */
     @NotNull
-    public static String interpretToString(final int mutationalLoad) {
-        if (mutationalLoad > THRESHOLD) {
+    public static String interpretToString(final int mutationalLoad, boolean hasReliablePurityFit) {
+
+        if (!hasReliablePurityFit) {
+            return DataUtil.NAString;
+        } else if (mutationalLoad > THRESHOLD) {
             return "High";
         } else {
             return "Low";
         }
+
     }
 
 }

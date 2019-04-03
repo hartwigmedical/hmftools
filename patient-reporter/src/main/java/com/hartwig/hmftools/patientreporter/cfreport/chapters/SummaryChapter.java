@@ -18,8 +18,6 @@ import com.itextpdf.layout.property.UnitValue;
 import com.itextpdf.layout.property.VerticalAlignment;
 import org.jetbrains.annotations.NotNull;
 
-import java.text.DecimalFormat;
-
 public class SummaryChapter extends ReportChapter {
 
     private final Style BODY_TEXT_STYLE = ReportResources.bodyTextStyle();
@@ -139,6 +137,8 @@ public class SummaryChapter extends ReportChapter {
 
     private void renderTumorCharacteristics(@NotNull final AnalysedPatientReport patientReport, @NotNull final Document reportDocument) {
 
+        final boolean hasReliablePurityFit = patientReport.hasReliablePurityFit();
+
         // Initialize div
         Div div = createSectionStartDiv(getContentWidth());
 
@@ -156,8 +156,8 @@ public class SummaryChapter extends ReportChapter {
         // Tumor purity
         final double impliedPurity = patientReport.impliedPurity();
         final double impliedPurityPercentage = MathUtil.mapPercentage(impliedPurity, TumorPurity.RANGE_MIN, TumorPurity.RANGE_MAX);
-        renderTumorCharactericBarCharRow(
-                patientReport.hasReliablePurityFit(),
+        renderTumorCharacteristicBarChartRow(
+                hasReliablePurityFit,
                 "Tumor purity of biopsy",
                 DataUtil.formatPercentage(impliedPurityPercentage),
                 impliedPurity,
@@ -166,66 +166,52 @@ public class SummaryChapter extends ReportChapter {
                 table
         );
 
+        Style dataStyle = hasReliablePurityFit ? ReportResources.dataHighlightStyle()
+                : ReportResources.dataHighlightNaStyle();
+
         // Tumor ploidy
-        String ploidyString;
-        Style ploidyStyle;
-        if (patientReport.hasReliablePurityFit()) {
-            ploidyString = new DecimalFormat("#.#")
-                    .format(patientReport.averageTumorPloidy());
-            ploidyStyle = ReportResources.dataHighlightStyle();
-        } else {
-            ploidyString = DataUtil.NAString;
-            ploidyStyle = ReportResources.dataHighlightNaStyle();
-        }
         table.addCell(createMiddleAlignedCell()
                 .add(new Paragraph("Average tumor ploidy")
                         .addStyle(BODY_TEXT_STYLE)));
         table.addCell(createMiddleAlignedCell(1, 2)
-                .add(createHighlightParagraph(ploidyString)
-                        .addStyle(ploidyStyle)));
+                .add(createHighlightParagraph(GeneUtil.getPloidyToCopiesString(patientReport.averageTumorPloidy(), hasReliablePurityFit))
+                        .addStyle(dataStyle)));
 
         // Tumor mutational load
-        final int mutationalLoad = patientReport.tumorMutationalLoad();
-        renderTumorCharactericBarCharRow(
-                patientReport.hasReliablePurityFit(),
-                "Tumor mutational load",
-                MutationalLoad.interpretToString(mutationalLoad),
-                mutationalLoad,
-                MutationalLoad.RANGE_MIN,
-                MutationalLoad.RANGE_MAX,
-                table
-        );
+        table.addCell(createMiddleAlignedCell()
+                .add(new Paragraph( "Tumor mutational load")
+                        .addStyle(BODY_TEXT_STYLE)));
+        table.addCell(createMiddleAlignedCell(1, 2)
+                .add(createHighlightParagraph(MutationalLoad.interpretToString(patientReport.tumorMutationalLoad(),
+                        hasReliablePurityFit))
+                        .addStyle(dataStyle)));
 
         // Microsatellite stability
-        final double microSatelliteIndels = patientReport.microsatelliteIndelsPerMb();
-        renderTumorCharactericBarCharRow(
-                patientReport.hasReliablePurityFit(),
-                "Microsatellite (in)stability",
-                MicroSatelliteStatus.interpretToString(microSatelliteIndels),
-                microSatelliteIndels,
-                0f,
-                10f,
-                table
-                );
-
+         table.addCell(createMiddleAlignedCell()
+                .add(new Paragraph( "Microsatellite (in)stability")
+                        .addStyle(BODY_TEXT_STYLE)));
+        table.addCell(createMiddleAlignedCell(1, 2)
+                .add(createHighlightParagraph(MicroSatelliteStatus.interpretToString(patientReport.microsatelliteIndelsPerMb(),
+                        hasReliablePurityFit))
+                        .addStyle(dataStyle)));
 
         div.add(table);
         reportDocument.add(div);
 
     }
 
-    private void renderTumorCharactericBarCharRow(boolean hasPurityFit, @NotNull String label, @NotNull final String valueLabel, double value, double min, double max, final Table table) {
+    private void renderTumorCharacteristicBarChartRow(boolean hasReliablePurityFit, @NotNull String label, @NotNull final String valueLabel, double value, double min, double max, final Table table) {
 
         table.addCell(createMiddleAlignedCell()
                 .add(new Paragraph(label)
                         .addStyle(BODY_TEXT_STYLE)));
-        if (hasPurityFit) {
+
+        if (hasReliablePurityFit) {
 
             table.addCell(createMiddleAlignedCell()
                     .add(createHighlightParagraph(valueLabel)
                             .addStyle(ReportResources.dataHighlightStyle())));
 
-            // @TODO : Check chart mappings
             table.addCell(createMiddleAlignedCell()
                     .add(createInlineBarChart(value, min, max)));
 

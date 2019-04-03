@@ -37,11 +37,11 @@ public class TumorCharacteristicsChapter extends ReportChapter {
         final DecimalFormat singleDecimalFormat = new DecimalFormat("#.#");
         final DecimalFormat doubleDecimalFormat = new DecimalFormat("#.##");
 
+        final boolean hasReliablePurityFit = patientReport.hasReliablePurityFit();
+
         // HR Deficiency
         final double hrDeficiency = patientReport.chordAnalysis().hrdValue();
-        final String hrDeficiencyLabel = patientReport.hasReliablePurityFit()
-                ? HrDeficiency.interpretToString(hrDeficiency)
-                : DataUtil.NAString;
+        final String hrDeficiencyLabel = HrDeficiency.interpretToString(hrDeficiency, hasReliablePurityFit);
         BarChart hrChart = new BarChart(hrDeficiency, HrDeficiency.RANGE_MIN, HrDeficiency.RANGE_MAX, "Low", "High");
         hrChart.setTickMarks(HrDeficiency.RANGE_MIN, HrDeficiency.RANGE_MAX, 0.1, singleDecimalFormat);
 //        hrChart.setIndicator(0.5f, "HR-Deficient");
@@ -52,8 +52,8 @@ public class TumorCharacteristicsChapter extends ReportChapter {
 
         // Microsatellite stability
         final double microSatelliteStability = patientReport.microsatelliteIndelsPerMb();
-        final String microSatelliteStabilityString = patientReport.hasReliablePurityFit()
-                ? MicroSatelliteStatus.interpretToString(microSatelliteStability) + " " + new DecimalFormat("#.####").format(microSatelliteStability)
+        final String microSatelliteStabilityString = hasReliablePurityFit
+                ? MicroSatelliteStatus.interpretToString(microSatelliteStability, hasReliablePurityFit) + " " + new DecimalFormat("#.####").format(microSatelliteStability)
                 : DataUtil.NAString;
         BarChart satelliteChart = new BarChart(
                 microSatelliteStability,
@@ -73,8 +73,8 @@ public class TumorCharacteristicsChapter extends ReportChapter {
 
         // Mutational load
         final int mutationalLoad = patientReport.tumorMutationalLoad();
-        final String mutationalLoadString = patientReport.hasReliablePurityFit()
-                ? MutationalLoad.interpretToString(mutationalLoad) + " " + noDecimalFormat.format(mutationalLoad)
+        final String mutationalLoadString = hasReliablePurityFit
+                ? MutationalLoad.interpretToString(mutationalLoad, hasReliablePurityFit) + " " + noDecimalFormat.format(mutationalLoad)
                 : DataUtil.NAString;
         BarChart mutationalLoadChart = new BarChart(
                 mutationalLoad,
@@ -95,7 +95,7 @@ public class TumorCharacteristicsChapter extends ReportChapter {
 
         // Mutational burden
         final double mutationalBurden = patientReport.tumorMutationalBurden();
-        final String mutationalBurdenString = patientReport.hasReliablePurityFit()
+        final String mutationalBurdenString = hasReliablePurityFit
                 ? singleDecimalFormat.format(mutationalBurden) + " variants per Mb"
                 : DataUtil.NAString;
         BarChart mutationalBurdenChart = new BarChart(
