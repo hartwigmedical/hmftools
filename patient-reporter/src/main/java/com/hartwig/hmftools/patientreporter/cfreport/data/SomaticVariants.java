@@ -5,11 +5,13 @@ import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.variant.Clonality;
 import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.patientreporter.cfreport.MathUtil;
+import com.hartwig.hmftools.patientreporter.report.data.SomaticVariantDataSource;
 import com.hartwig.hmftools.patientreporter.variants.ReportableSomaticVariant;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -148,4 +150,18 @@ public final class SomaticVariants {
 
     }
 
+    @NotNull
+    public static String[] somaticVariantsWithDriver(@NotNull List<ReportableSomaticVariant> variants) {
+        final List<String> returnVariants = new ArrayList<>();
+        for (final ReportableSomaticVariant variant : SomaticVariantDataSource.sort(variants)) {
+            if (SomaticVariantDataSource.driverField(variant).equals("High")) {
+                returnVariants.add(variant.gene());
+            }
+        }
+        return returnVariants.toArray(new String[0]);
+    }
+
+    public static int countSomaticVariants(@NotNull List<ReportableSomaticVariant> variants) {
+        return variants.size();
+    }
 }

@@ -257,14 +257,14 @@ public class SummaryChapter extends ReportChapter {
         table.addCell(TableUtil.getLayoutCell(1, 2).setHeight(TABLE_SPACER_HEIGHT)); // Spacer
 
         // Genes with driver variant
-        final String[] driverVariantGenes = GenomicAlterations.somaticVariantsWithDriver(patientReport.somaticVariants());
+        final String[] driverVariantGenes = SomaticVariants.somaticVariantsWithDriver(patientReport.somaticVariants());
         table.addCell(createMiddleAlignedCell()
                 .add(new Paragraph("Genes with driver variant")
                         .addStyle(BODY_TEXT_STYLE)));
         table.addCell(createGeneListCell(driverVariantGenes));
 
         // Reported variants
-        final int reportedVariants = GenomicAlterations.countSomaticVariants(patientReport.somaticVariants());
+        final int reportedVariants = SomaticVariants.countSomaticVariants(patientReport.somaticVariants());
         Style reportedVariantsStyle = (reportedVariants > 0) ? ReportResources.dataHighlightStyle() : ReportResources.dataHighlightNaStyle();
         table.addCell(createMiddleAlignedCell()
                 .add(new Paragraph("Nr. of reported variants")
@@ -274,21 +274,21 @@ public class SummaryChapter extends ReportChapter {
                 .addStyle(reportedVariantsStyle)));
 
         // Copy gain genes
-        final String[] copyGainGenes = GenomicAlterations.amplificationGenes(patientReport.geneCopyNumbers());
+        final String[] copyGainGenes = GeneCopyNumbers.amplificationGenes(patientReport.geneCopyNumbers());
         table.addCell(createMiddleAlignedCell()
                 .add(new Paragraph("Genes with copy-gain")
                         .addStyle(BODY_TEXT_STYLE)));
         table.addCell(createGeneListCell(copyGainGenes));
 
         // Copy loss genes
-        final String[] copyLossGenes = GenomicAlterations.lossGenes(patientReport.geneCopyNumbers());
+        final String[] copyLossGenes = GeneCopyNumbers.lossGenes(patientReport.geneCopyNumbers());
         table.addCell(createMiddleAlignedCell()
                 .add(new Paragraph("Genes with copy-loss")
                         .addStyle(BODY_TEXT_STYLE)));
         table.addCell(createGeneListCell(copyLossGenes));
 
         // Gene fusions
-        final String[] fusionGenes = GenomicAlterations.geneFusions(patientReport.geneFusions());
+        final String[] fusionGenes = GeneFusions.geneFusions(patientReport.geneFusions());
         table.addCell(createMiddleAlignedCell()
                 .add(new Paragraph("Gene fusions")
                         .addStyle(BODY_TEXT_STYLE)));
