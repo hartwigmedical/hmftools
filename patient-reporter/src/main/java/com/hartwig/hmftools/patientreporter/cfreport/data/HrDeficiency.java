@@ -4,10 +4,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.text.DecimalFormat;
 
-/**
- * All code dealing with HrDeficiencydata for presentation
- */
-public class HrDeficiency {
+public final class HrDeficiency {
 
     public static final double RANGE_MIN = 0;
     public static final double RANGE_MAX = 1;

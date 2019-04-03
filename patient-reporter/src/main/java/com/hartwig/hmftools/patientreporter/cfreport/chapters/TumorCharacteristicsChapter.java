@@ -37,35 +37,33 @@ public class TumorCharacteristicsChapter extends ReportChapter {
         final DecimalFormat singleDecimalFormat = new DecimalFormat("#.#");
         final DecimalFormat doubleDecimalFormat = new DecimalFormat("#.##");
 
-
         // HR Deficiency
         final double hrDeficiency = patientReport.chordAnalysis().hrdValue();
         final String hrDeficiencyLabel = patientReport.hasReliablePurityFit()
                 ? HrDeficiency.interpretToString(hrDeficiency)
-                : Util.NAString;
-        BarChart hrChart = new BarChart(hrDeficiency, 0.0f, 1.0f, "Low", "High");
-        hrChart.setTickMarks(0, 1, 0.1, singleDecimalFormat);
+                : DataUtil.NAString;
+        BarChart hrChart = new BarChart(hrDeficiency, HrDeficiency.RANGE_MIN, HrDeficiency.RANGE_MAX, "Low", "High");
+        hrChart.setTickMarks(HrDeficiency.RANGE_MIN, HrDeficiency.RANGE_MAX, 0.1, singleDecimalFormat);
         hrChart.setIndicator(0.5f, "HR-Deficient");
         reportDocument.add(createCharacteristicDiv("HR-Deficiency score", hrDeficiencyLabel,
                 "The HR-deficiency score is determined by CHORD, a WGS signature-based classifier comparing " +
                         "the signature of this sample with signatures found across samples with known BRCA1/BRCA2 " +
                         "inactivation.", hrChart));
 
-
         // Microsatellite stability
         final double microSatelliteStability = patientReport.microsatelliteIndelsPerMb();
         final String microSatelliteStabilityString = patientReport.hasReliablePurityFit()
-                ? MicroSatellite.interpretToString(microSatelliteStability) + " " + new DecimalFormat("#.####").format(microSatelliteStability)
-                : Util.NAString;
+                ? MicroSatelliteStatus.interpretToString(microSatelliteStability) + " " + new DecimalFormat("#.####").format(microSatelliteStability)
+                : DataUtil.NAString;
         BarChart satelliteChart = new BarChart(
                 microSatelliteStability,
-                MicroSatellite.RANGE_MIN,
-                MicroSatellite.RANGE_MAX,
+                MicroSatelliteStatus.RANGE_MIN,
+                MicroSatelliteStatus.RANGE_MAX,
                 "MSS", "MSI");
         satelliteChart.setScale(InlineBarChart.LOG10_SCALE);
-        satelliteChart.setTickMarks(new double[] {MicroSatellite.RANGE_MIN, 1E-1, 1, 10, MicroSatellite.RANGE_MAX}, doubleDecimalFormat);
+        satelliteChart.setTickMarks(new double[] {MicroSatelliteStatus.RANGE_MIN, 1E-1, 1, 10, MicroSatelliteStatus.RANGE_MAX}, doubleDecimalFormat);
         satelliteChart.enableDefaultRangeOvershoot(">" + noDecimalFormat.format(satelliteChart.getMax()));
-        satelliteChart.setIndicator(MicroSatellite.THRESHOLD, "Microsatellite unstable");
+        satelliteChart.setIndicator(MicroSatelliteStatus.THRESHOLD, "Microsatellite unstable");
         reportDocument.add(createCharacteristicDiv("Microsatellite status", microSatelliteStabilityString,
                 "The microsatellite stability score represents the number of somatic inserts and deletes in " +
                         "(short) repeat sections across the whole genome of the tumor per Mb. This metric can be " +
@@ -77,7 +75,7 @@ public class TumorCharacteristicsChapter extends ReportChapter {
         final int mutationalLoad = patientReport.tumorMutationalLoad();
         final String mutationalLoadString = patientReport.hasReliablePurityFit()
                 ? MutationalLoad.interpretToString(mutationalLoad) + " " + noDecimalFormat.format(mutationalLoad)
-                : Util.NAString;
+                : DataUtil.NAString;
         BarChart mutationalLoadChart = new BarChart(
                 mutationalLoad,
                 MutationalLoad.RANGE_MIN,
@@ -99,7 +97,7 @@ public class TumorCharacteristicsChapter extends ReportChapter {
         final double mutationalBurden = patientReport.tumorMutationalBurden();
         final String mutationalBurdenString = patientReport.hasReliablePurityFit()
                 ? singleDecimalFormat.format(mutationalBurden) + " variants per Mb"
-                : Util.NAString;
+                : DataUtil.NAString;
         BarChart mutationalBurdenChart = new BarChart(
                 mutationalBurden,
                 MutationalBurden.RANGE_MIN,
@@ -114,8 +112,6 @@ public class TumorCharacteristicsChapter extends ReportChapter {
 
 
     }
-
-
 
     @NotNull
     private Div createCharacteristicDiv(@NotNull String title, @NotNull String highlight, @NotNull String description, @NotNull BarChart chart) {
@@ -146,7 +142,5 @@ public class TumorCharacteristicsChapter extends ReportChapter {
         return div;
 
     }
-
-
 
 }

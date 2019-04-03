@@ -9,10 +9,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class GeneCopyNumbers {
+public final class GeneCopyNumbers {
 
     @NotNull
-    public static List<GeneCopyNumber> sort(@NotNull List<GeneCopyNumber> geneCopyNumbers) {
+    public static List<GeneCopyNumber> sort(@NotNull final List<GeneCopyNumber> geneCopyNumbers) {
         return geneCopyNumbers.stream().sorted((copyNumber1, copyNumber2) -> {
             String location1 = GeneUtil.zeroPrefixed(copyNumber1.chromosome() + copyNumber1.chromosomeBand());
             String location2 = GeneUtil.zeroPrefixed(copyNumber2.chromosome() + copyNumber2.chromosomeBand());
@@ -26,7 +26,7 @@ public class GeneCopyNumbers {
     }
 
     @NotNull
-    public static String[] amplificationGenes(@NotNull List<GeneCopyNumber> copyNumbers) {
+    public static String[] amplificationGenes(@NotNull final List<GeneCopyNumber> copyNumbers) {
         final List<String> returnVariants = new ArrayList<>();
         for (GeneCopyNumber copyNumber : copyNumbers) {
             if (GeneCopyNumberDataSource.type(copyNumber).equals("gain")) {

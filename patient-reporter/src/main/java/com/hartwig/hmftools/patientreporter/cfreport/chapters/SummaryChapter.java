@@ -159,7 +159,7 @@ public class SummaryChapter extends ReportChapter {
         renderTumorCharactericBarCharRow(
                 patientReport.hasReliablePurityFit(),
                 "Tumor purity of biopsy",
-                Util.formatPercentage(impliedPurityPercentage),
+                DataUtil.formatPercentage(impliedPurityPercentage),
                 impliedPurity,
                 TumorPurity.RANGE_MIN,
                 TumorPurity.RANGE_MAX,
@@ -174,7 +174,7 @@ public class SummaryChapter extends ReportChapter {
                     .format(patientReport.averageTumorPloidy());
             ploidyStyle = ReportResources.dataHighlightStyle();
         } else {
-            ploidyString = Util.NAString;
+            ploidyString = DataUtil.NAString;
             ploidyStyle = ReportResources.dataHighlightNaStyle();
         }
         table.addCell(createMiddleAlignedCell()
@@ -201,7 +201,7 @@ public class SummaryChapter extends ReportChapter {
         renderTumorCharactericBarCharRow(
                 patientReport.hasReliablePurityFit(),
                 "Microsatellite (in)stability",
-                MicroSatellite.interpretToString(microSatelliteIndels),
+                MicroSatelliteStatus.interpretToString(microSatelliteIndels),
                 microSatelliteIndels,
                 0f,
                 10f,
@@ -232,7 +232,7 @@ public class SummaryChapter extends ReportChapter {
         } else {
 
             table.addCell(createMiddleAlignedCell(1, 2)
-                    .add(createHighlightParagraph(Util.NAString)
+                    .add(createHighlightParagraph(DataUtil.NAString)
                             .addStyle(ReportResources.dataHighlightNaStyle())));
 
         }
@@ -333,7 +333,7 @@ public class SummaryChapter extends ReportChapter {
 
         String geneString = (genes.length > 0)
                 ? String.join(", ", genes)
-                : Util.NoneString;
+                : DataUtil.NoneString;
 
         Style style = (genes.length > 0)
                 ? ReportResources.dataHighlightStyle()
@@ -360,7 +360,7 @@ public class SummaryChapter extends ReportChapter {
             treatmentText = String.format("%d (%d %s)", geneCount, treatmentCount, treatmentsName);
             style = ReportResources.dataHighlightStyle();
         } else {
-            treatmentText = Util.NoneString;
+            treatmentText = DataUtil.NoneString;
             style = ReportResources.dataHighlightNaStyle();
         }
 

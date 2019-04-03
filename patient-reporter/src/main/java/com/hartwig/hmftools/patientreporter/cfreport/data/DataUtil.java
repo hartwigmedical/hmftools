@@ -8,7 +8,7 @@ import java.text.DecimalFormat;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 
-public class Util {
+public final class DataUtil {
 
    // Number formatting
     private static final DecimalFormat PERCENTAGE_FORMAT = new DecimalFormat("#'%'");

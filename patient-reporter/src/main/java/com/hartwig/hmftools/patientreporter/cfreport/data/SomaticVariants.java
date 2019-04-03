@@ -49,17 +49,17 @@ public final class SomaticVariants {
     public static String getPloidyVaf(double adjustedCopyNumber, double minorAllelePloidy, double adjustedVAF, boolean hasReliablePurityFit) {
 
         if (!hasReliablePurityFit) {
-            return Util.NAString;
+            return DataUtil.NAString;
         }
 
         return descriptiveBAF(adjustedCopyNumber, minorAllelePloidy) + " ("
-                + Util.formatPercentage(MathUtil.mapPercentageClamped(adjustedVAF, 0, 1))
+                + DataUtil.formatPercentage(MathUtil.mapPercentageClamped(adjustedVAF, 0, 1))
                 + ")";
     }
 
     @NotNull
     @VisibleForTesting
-    static String descriptiveBAF(double adjustedCopyNumber, double minorAllelePloidy) {
+    private static String descriptiveBAF(double adjustedCopyNumber, double minorAllelePloidy) {
         int totalAlleleCount = (int) Math.max(0, Math.round(adjustedCopyNumber));
         int minorAlleleCount = (int) Math.max(0, Math.round(minorAllelePloidy));
         int majorAlleleCount = Math.max(0, totalAlleleCount - minorAlleleCount);
@@ -103,7 +103,7 @@ public final class SomaticVariants {
     public static String getClonalityString(@NotNull Clonality clonality, boolean hasReliablePurityFit) {
 
         if (!hasReliablePurityFit) {
-            return Util.NAString;
+            return DataUtil.NAString;
         }
 
         switch (clonality) {
@@ -122,7 +122,7 @@ public final class SomaticVariants {
     public static String getBiallelicString(boolean biallelic, DriverCategory driverCategory, boolean hasReliablePurityFit) {
 
         if (!hasReliablePurityFit) {
-            return Util.NAString;
+            return DataUtil.NAString;
         }
 
         if (driverCategory != DriverCategory.ONCO) {

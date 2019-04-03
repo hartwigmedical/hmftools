@@ -4,19 +4,17 @@ import com.hartwig.hmftools.patientreporter.report.data.GeneFusionDataSource;
 import com.hartwig.hmftools.patientreporter.structural.ReportableGeneFusion;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import static com.hartwig.hmftools.common.fusions.KnownFusionsModel.*;
-import static com.hartwig.hmftools.common.fusions.KnownFusionsModel.CIVIC;
 
-public class GeneFusions {
+public final class GeneFusions {
 
     @NotNull
-    public  static String[] geneFusions(@NotNull List<ReportableGeneFusion> fusions) {
+    public  static String[] geneFusions(@NotNull final List<ReportableGeneFusion> fusions) {
         final List<String> returnVariants = new ArrayList<>();
         for (ReportableGeneFusion fusion : GeneFusionDataSource.sort(fusions)) {
             returnVariants.add(GeneFusionDataSource.name(fusion));
@@ -25,7 +23,7 @@ public class GeneFusions {
     }
 
     @NotNull
-    public static List<ReportableGeneFusion> sort(@NotNull List<ReportableGeneFusion> fusions) {
+    public static List<ReportableGeneFusion> sort(@NotNull final List<ReportableGeneFusion> fusions) {
         return fusions.stream().sorted((fusion1, fusion2) -> {
             if (fusion1.geneStart().equals(fusion2.geneStart())) {
                 return fusion1.geneEnd().compareTo(fusion2.geneEnd());
@@ -36,7 +34,7 @@ public class GeneFusions {
     }
 
     @NotNull
-    public static String getName(@NotNull ReportableGeneFusion fusion) {
+    public static String getName(@NotNull final ReportableGeneFusion fusion) {
         return fusion.geneStart() + " - " + fusion.geneEnd();
     }
 

@@ -7,20 +7,20 @@ import org.jetbrains.annotations.NotNull;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class EvidenceItems {
+public final class EvidenceItems {
 
     /**
      * Get all evidence items from the list that are not a trial source or should be included in report
      */
     @NotNull
-    public static List<EvidenceItem> filter(@NotNull List<EvidenceItem> evidenceItems) {
+    public static List<EvidenceItem> filter(@NotNull final List<EvidenceItem> evidenceItems) {
         return evidenceItems.stream()
                 .filter(evidenceItem -> (!evidenceItem.source().isTrialSource() && evidenceItem.level().includeInReport()))
                 .collect(Collectors.toList());
     }
 
     @NotNull
-    public static List<EvidenceItem> sort(@NotNull List<EvidenceItem> evidenceItems) {
+    public static List<EvidenceItem> sort(@NotNull final List<EvidenceItem> evidenceItems) {
         return evidenceItems.stream().sorted((item1, item2) -> {
             if (item1.level().equals(item2.level())) {
                 if (item1.event().equals(item2.event())) {

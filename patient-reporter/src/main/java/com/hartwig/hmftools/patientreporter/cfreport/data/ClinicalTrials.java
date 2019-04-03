@@ -7,20 +7,20 @@ import org.jetbrains.annotations.NotNull;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class ClinicalTrials {
+public final class ClinicalTrials {
 
     /**
      * Get all trials from the list that are a trial source
      */
     @NotNull
-    public static List<ClinicalTrial> filter(@NotNull List<ClinicalTrial> trials) {
+    public static List<ClinicalTrial> filter(@NotNull final List<ClinicalTrial> trials) {
         return trials.stream()
                 .filter(trial -> trial.source().isTrialSource())
                 .collect(Collectors.toList());
     }
 
     @NotNull
-    public static List<ClinicalTrial> sort(@NotNull List<ClinicalTrial> trials) {
+    public static List<ClinicalTrial> sort(@NotNull final List<ClinicalTrial> trials) {
         return trials.stream().sorted((item1, item2) -> {
             if (item1.event().equals(item2.event())) {
                 return item1.acronym().compareTo(item2.acronym());

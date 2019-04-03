@@ -10,7 +10,7 @@ import java.util.stream.Collectors;
 public final class GeneDisruptions {
 
     @NotNull
-    public static List<ReportableGeneDisruption> sort(@NotNull List<ReportableGeneDisruption> disruptions) {
+    public static List<ReportableGeneDisruption> sort(@NotNull final List<ReportableGeneDisruption> disruptions) {
         return disruptions.stream().sorted((disruption1, disruption2) -> {
             String locationAndGene1 = GeneUtil.zeroPrefixed(disruption1.location()) + disruption1.gene();
             String locationAndGene2 = GeneUtil.zeroPrefixed(disruption2.location()) + disruption2.gene();
@@ -27,7 +27,7 @@ public final class GeneDisruptions {
     public static String getCopyNumberString(@Nullable Integer copies, boolean hasReliablePurityFit) {
 
         if (!hasReliablePurityFit || copies == null) {
-            return Util.NAString;
+            return DataUtil.NAString;
         } else {
             return String.valueOf(copies);
         }

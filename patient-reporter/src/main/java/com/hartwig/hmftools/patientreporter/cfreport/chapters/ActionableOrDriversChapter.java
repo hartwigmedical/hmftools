@@ -133,7 +133,7 @@ public class ActionableOrDriversChapter extends ReportChapter {
             contentTable.addCell(TableUtil.getContentCell(copyNumber.chromosomeBand()));
             contentTable.addCell(TableUtil.getContentCell(copyNumber.gene()));
             contentTable.addCell(TableUtil.getContentCell(GeneCopyNumbers.getType(copyNumber)));
-            contentTable.addCell(TableUtil.getContentCell(hasReliablePurityFit ? String.valueOf(copyNumber.value()) : Util.NAString).setTextAlignment(TextAlignment.RIGHT));
+            contentTable.addCell(TableUtil.getContentCell(hasReliablePurityFit ? String.valueOf(copyNumber.value()) : DataUtil.NAString).setTextAlignment(TextAlignment.RIGHT));
             contentTable.addCell(TableUtil.getContentCell("")); // Spacer
         }
 

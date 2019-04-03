@@ -4,13 +4,13 @@ import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class GeneUtil {
+public final class GeneUtil {
 
     @NotNull
     public static String getPloidyToCopiesString(@Nullable Double ploidy, boolean hasReliablePurityFit) {
 
         if (!hasReliablePurityFit) {
-            return Util.NAString;
+            return DataUtil.NAString;
         } else {
             return ploidy != null ? String.format("%.1f", ploidy) : Strings.EMPTY;
         }

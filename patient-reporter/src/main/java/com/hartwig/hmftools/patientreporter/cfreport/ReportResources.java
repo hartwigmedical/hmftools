@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.patientreporter.cfreport;
 
 import com.hartwig.hmftools.patientreporter.PatientReporterApplication;
-import com.hartwig.hmftools.patientreporter.cfreport.data.Util;
+import com.hartwig.hmftools.patientreporter.cfreport.data.DataUtil;
 import com.itextpdf.io.font.FontProgram;
 import com.itextpdf.io.font.FontProgramFactory;
 import com.itextpdf.io.font.PdfEncodings;
@@ -39,7 +39,7 @@ public final class ReportResources {
     public static final String METADATA_TITLE = "HMF Sequencing Report v" + PatientReporterApplication.VERSION;
     public static final String METADATA_AUTHOR = HARTWIG_NAME;
     public static final String DATE_TIME_FORMAT = "dd-MMM-yyyy";
-    public static final String REPORT_DATE = Util.formatDate(LocalDate.now());
+    public static final String REPORT_DATE = DataUtil.formatDate(LocalDate.now());
 
     // Page margins for normal content (so excluding header and footer) in pt
     public static final float PAGE_MARGIN_TOP = 150; // Top margin also excludes the chapter title, which is rendered in the header
