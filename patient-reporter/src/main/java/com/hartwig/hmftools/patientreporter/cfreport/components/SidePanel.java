@@ -3,6 +3,7 @@ package com.hartwig.hmftools.patientreporter.cfreport.components;
 import com.hartwig.hmftools.patientreporter.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.SampleReport;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
+import com.hartwig.hmftools.patientreporter.cfreport.data.DataUtil;
 import com.itextpdf.kernel.geom.Rectangle;
 import com.itextpdf.kernel.pdf.PdfPage;
 import com.itextpdf.kernel.pdf.canvas.PdfCanvas;
@@ -13,6 +14,7 @@ import com.itextpdf.layout.element.Paragraph;
 import com.itextpdf.layout.property.VerticalAlignment;
 import org.jetbrains.annotations.NotNull;
 
+import java.time.LocalDate;
 import java.util.StringJoiner;
 
 public final class SidePanel {
@@ -40,32 +42,35 @@ public final class SidePanel {
         // Add side panel content that is only on the summary page
         if (fullHeight && fullContent) {
 
-            if (!sampleReport.contactNames().isEmpty()) {
-                cv.add(createSidePanelDiv(sideTextIndex++, "Name requestor", sampleReport.contactNames()));
+            final String contactNames = "Dr. Nola Pluijmen"; // @TODO Replace with sampleReport.contactNames() which can be null or empty string
+            if (contactNames != null && !contactNames.isEmpty()) {
+                cv.add(createSidePanelDiv(sideTextIndex++, "Name requestor", contactNames));
             }
 
-            if (!sampleReport.contactEmails().isEmpty()) {
-                cv.add(createSidePanelDiv(sideTextIndex++, "Email requestor", sampleReport.contactEmails()));
+            final String contactEmails = "NolaPluijmen415@gmail.com"; // @TODO Replace with sampleReport.contactEmails() which can be null or empty string
+            if (contactEmails != null && !contactEmails.isEmpty()) {
+                cv.add(createSidePanelDiv(sideTextIndex++, "Email requestor", contactEmails));
             }
 
-            // @TODO Hospital not in data?
-//            if (!sampleReport.hospital().isEmpty()) {
-//                cv.add(createSidePanelDiv(sideTextIndex++, "Hospital", sampleReport.hospital()));
-//            }
-
-            if (sampleReport.hospitalPatientId() != null && !sampleReport.hospitalPatientId().isEmpty()) {
-                cv.add(createSidePanelDiv(sideTextIndex++, "Hospital patient id", sampleReport.hospitalPatientId()));
+            final String hospitalName = "OLVG Oost"; // @TODO Replace with sampleReport.hospital() which can be null or empty string
+            if (hospitalName != null && !hospitalName.isEmpty()) {
+                cv.add(createSidePanelDiv(sideTextIndex++, "Hospital", hospitalName));
             }
 
-            // @TODO Patient gender not in data?
-//            if (!sampleReport.patientGender().isEmpty()) {
-//                cv.add(createSidePanelDiv(sideTextIndex++, "Hospital", sampleReport.patientGender()));
-//            }
+            final String hospitalPatientId = sampleReport.hospitalPatientId();
+            if (hospitalPatientId != null && !hospitalPatientId.isEmpty()) {
+                cv.add(createSidePanelDiv(sideTextIndex++, "Hospital patient id", hospitalPatientId));
+            }
 
-            // @TODO Patient birth date not in data?
-//            if (sampleReport.patientBirthDate() != null) {
-//                cv.add(createSidePanelDiv(sideTextIndex, "Hospital", ReportResources.formatDate(sampleReport.patientBirthDate())));
-//            }
+            final String patientGender = "Female"; // @TODO Replace with sampleReport.patientGender() which can be null or empty string
+            if (patientGender != null && !patientGender.isEmpty()) {
+                cv.add(createSidePanelDiv(sideTextIndex++, "Gender", patientGender));
+            }
+
+            final LocalDate patientBirthDate = LocalDate.of(1973, 10, 4); // @TODO Replace with sampleReport.patientBirthDate() which can be null
+            if (patientBirthDate != null) {
+                cv.add(createSidePanelDiv(sideTextIndex, "Birth rdate", DataUtil.formatDate(patientBirthDate)));
+            }
 
         }
 
