@@ -44,7 +44,7 @@ public class TumorCharacteristicsChapter extends ReportChapter {
                 : DataUtil.NAString;
         BarChart hrChart = new BarChart(hrDeficiency, HrDeficiency.RANGE_MIN, HrDeficiency.RANGE_MAX, "Low", "High");
         hrChart.setTickMarks(HrDeficiency.RANGE_MIN, HrDeficiency.RANGE_MAX, 0.1, singleDecimalFormat);
-        hrChart.setIndicator(0.5f, "HR-Deficient");
+//        hrChart.setIndicator(0.5f, "HR-Deficient");
         reportDocument.add(createCharacteristicDiv("HR-Deficiency score", hrDeficiencyLabel,
                 "The HR-deficiency score is determined by CHORD, a WGS signature-based classifier comparing " +
                         "the signature of this sample with signatures found across samples with known BRCA1/BRCA2 " +
