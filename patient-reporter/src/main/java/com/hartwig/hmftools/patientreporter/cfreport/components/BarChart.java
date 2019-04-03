@@ -150,9 +150,11 @@ public class BarChart extends InlineBarChart {
 
             // Filled bar
             final Rectangle barRect = new Rectangle(barOutlineRect.getX() + BAR_INSET, barOutlineRect.getY() +  BAR_INSET, barOutlineRect.getWidth() - 2 * BAR_INSET, barOutlineRect.getHeight() - 2 * BAR_INSET);
-            canvas.setFillColor(ReportResources.PALETTE_BLUE);
-            canvas.roundRectangle(barRect.getX(), barRect.getY(), MathUtil.map(getScaledValue(clampedValue), getScaledMin(), getScaledMax(), barRect.getHeight(), barRect.getWidth()), barRect.getHeight(), barRect.getHeight() * .5);
-            canvas.fill();
+            if (getValue() > getMin()) {
+                canvas.setFillColor(ReportResources.PALETTE_BLUE);
+                canvas.roundRectangle(barRect.getX(), barRect.getY(), MathUtil.map(getScaledValue(clampedValue), getScaledMin(), getScaledMax(), barRect.getHeight(), barRect.getWidth()), barRect.getHeight(), barRect.getHeight() * .5);
+                canvas.fill();
+            }
 
             // Add top labels
             cv.showTextAligned(new Paragraph(lowLabel)

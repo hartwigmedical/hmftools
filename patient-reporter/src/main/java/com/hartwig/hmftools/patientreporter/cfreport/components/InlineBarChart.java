@@ -86,9 +86,11 @@ public class InlineBarChart extends Div {
             canvas.fill();
 
             // Fill
-            canvas.setFillColor(ReportResources.PALETTE_BLUE);
-            canvas.roundRectangle(x, y, filledWidth, height, radius);
-            canvas.fill();
+            if (getValue() > getMin()) {
+                canvas.setFillColor(ReportResources.PALETTE_BLUE);
+                canvas.roundRectangle(x, y, filledWidth, height, radius);
+                canvas.fill();
+            }
 
             super.draw(drawContext);
 
