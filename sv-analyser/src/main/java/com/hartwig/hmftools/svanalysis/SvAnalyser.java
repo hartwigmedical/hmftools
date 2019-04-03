@@ -157,7 +157,7 @@ public class SvAnalyser {
                 {
                     fusionAnalyser = new FusionDisruptionAnalyser();
 
-                    fusionAnalyser.loadFusionReferenceData(cmd, svaConfig.OutputCsvPath, ensemblDataCache);
+                    fusionAnalyser.initialise(cmd, svaConfig.OutputCsvPath, ensemblDataCache);
                     fusionAnalyser.setVisWriter(sampleAnalyser.getVisWriter());
 
                     if(!fusionAnalyser.getRnaSampleIds().isEmpty() && samplesList.size() > 1)

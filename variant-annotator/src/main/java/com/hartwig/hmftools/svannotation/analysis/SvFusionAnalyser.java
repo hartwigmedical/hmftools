@@ -47,6 +47,7 @@ public class SvFusionAnalyser
     private static final int EXON_THRESHOLD = 1;
 
     private KnownFusionsModel mKnownFusionsModel;
+    boolean mHasValidConfigData;
 
     private SvGeneTranscriptCollection mGeneTranscriptCollection;
     private List<String> mProteinsRequiredKept;
@@ -63,6 +64,7 @@ public class SvFusionAnalyser
         mOutputDir = outputDir;
 
         mKnownFusionsModel = null;
+        mHasValidConfigData = false;
 
         mFusionWriter = null;
 
@@ -87,6 +89,7 @@ public class SvFusionAnalyser
                         new FileInputStream(cmd.getOptionValue(PROMISCUOUS_THREE_CSV)));
 
                 LOGGER.debug("loaded known fusion data");
+                mHasValidConfigData = true;
             }
             catch (IOException e)
             {
@@ -94,6 +97,8 @@ public class SvFusionAnalyser
             }
         }
     }
+
+    public void setHasValidConfigData(boolean toggle) { mHasValidConfigData = toggle; }
 
     public static void addCmdLineArgs(Options options)
     {
@@ -104,9 +109,12 @@ public class SvFusionAnalyser
 
     public final List<GeneFusion> findFusions(final List<StructuralVariantAnnotation> annotations)
     {
-        LOGGER.debug("finding fusions in {} annotations", annotations.size());
-
         List<GeneFusion> fusions = Lists.newArrayList();
+
+        if(!mHasValidConfigData)
+            return fusions;
+
+        LOGGER.debug("finding fusions in {} annotations", annotations.size());
 
         for (final StructuralVariantAnnotation annotation : annotations)
         {
@@ -121,6 +129,9 @@ public class SvFusionAnalyser
     public final List<GeneFusion> findFusions(final List<GeneAnnotation> breakendGenes1, final List<GeneAnnotation> breakendGenes2)
     {
         final List<GeneFusion> potentialFusions = Lists.newArrayList();
+
+        if(!mHasValidConfigData)
+            return potentialFusions;
 
         for (final GeneAnnotation startGene : breakendGenes1)
         {
@@ -146,8 +157,11 @@ public class SvFusionAnalyser
                         if(geneFusion == null)
                             continue;
 
-                        geneFusion.setPrimarySource(
-                                mKnownFusionsModel.primarySource(upstreamTrans.parent().synonyms(), downstreamTrans.parent().synonyms()));
+                        if(mHasValidConfigData && mKnownFusionsModel != null)
+                        {
+                            geneFusion.setPrimarySource(mKnownFusionsModel.primarySource(
+                                    upstreamTrans.parent().synonyms(), downstreamTrans.parent().synonyms()));
+                        }
 
                         potentialFusions.add(geneFusion);
                     }
@@ -329,6 +343,9 @@ public class SvFusionAnalyser
 
     private void setReportableGeneFusions(final List<GeneFusion> fusions)
     {
+        if(fusions.isEmpty())
+            return;
+
         GeneFusion reportableFusion = determineReportableFusion(fusions);
 
         if(reportableFusion == null)
@@ -502,6 +519,9 @@ public class SvFusionAnalyser
 
     private String getKnownFusionType(final Transcript upTrans, final Transcript downTrans)
     {
+        if(mHasValidConfigData && mKnownFusionsModel == null)
+            return REPORTABLE_TYPE_KNOWN;
+
         if(mKnownFusionsModel.exactMatch(upTrans.parent().synonyms(), downTrans.parent().synonyms()))
             return REPORTABLE_TYPE_KNOWN;
 
@@ -590,6 +610,9 @@ public class SvFusionAnalyser
 
     public void writeFusionData(final GeneFusion fusion, final String sampleId, final String clusterInfo)
     {
+        if(mFusionWriter == null)
+            return;
+
         try
         {
             BufferedWriter writer = mFusionWriter;

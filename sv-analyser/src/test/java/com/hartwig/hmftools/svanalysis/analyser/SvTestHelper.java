@@ -29,8 +29,12 @@ import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 import com.hartwig.hmftools.common.variant.structural.ImmutableStructuralVariantData;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantData;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
+import com.hartwig.hmftools.common.variant.structural.annotation.EnsemblGeneData;
+import com.hartwig.hmftools.common.variant.structural.annotation.GeneAnnotation;
+import com.hartwig.hmftools.common.variant.structural.annotation.TranscriptExonData;
 import com.hartwig.hmftools.svanalysis.analysis.CNAnalyser;
 import com.hartwig.hmftools.svanalysis.analysis.ClusterAnalyser;
+import com.hartwig.hmftools.svanalysis.analysis.FusionDisruptionAnalyser;
 import com.hartwig.hmftools.svanalysis.analysis.LinkFinder;
 import com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods;
 import com.hartwig.hmftools.svanalysis.analysis.SvUtilities;
@@ -39,6 +43,7 @@ import com.hartwig.hmftools.svanalysis.types.SvCNData;
 import com.hartwig.hmftools.svanalysis.types.SvaConfig;
 import com.hartwig.hmftools.svanalysis.types.SvCluster;
 import com.hartwig.hmftools.svanalysis.types.SvVarData;
+import com.hartwig.hmftools.svannotation.SvGeneTranscriptCollection;
 
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.core.config.Configurator;
@@ -51,6 +56,7 @@ public class SvTestHelper
     public SvClusteringMethods ClusteringMethods;
     public ClusterAnalyser Analyser;
     public CNAnalyser CopyNumberAnalyser;
+    public FusionDisruptionAnalyser FusionAnalyser;
 
     private int mNextVarId;
 
@@ -65,6 +71,8 @@ public class SvTestHelper
 
         Analyser.setRunValidationChecks(true);
 
+        FusionAnalyser = null;
+
         SampleId = "TEST";
         AllVariants = Lists.newArrayList();
 
@@ -72,6 +80,13 @@ public class SvTestHelper
         mNextVarId = 0;
 
         Configurator.setRootLevel(Level.DEBUG);
+    }
+
+    public void initialiseFusions(SvGeneTranscriptCollection geneTranscriptCollection)
+    {
+        FusionAnalyser = new FusionDisruptionAnalyser();
+        FusionAnalyser.initialise(null, "", geneTranscriptCollection);
+        FusionAnalyser.setHasValidConfigData(true);
     }
 
     public final String nextVarId() { return String.format("%d", mNextVarId++); }
@@ -117,10 +132,7 @@ public class SvTestHelper
         ClusteringMethods.clusterByProximity(AllVariants, Analyser.getClusters());
     }
 
-
     public final List<SvCluster> getClusters() { return Analyser.getClusters(); }
-
-
 
     public static SvVarData createSv(final String varId, final String chrStart, final String chrEnd,
             long posStart, long posEnd, int orientStart, int orientEnd, StructuralVariantType type, final String insertSeq)
@@ -446,4 +458,45 @@ public class SvTestHelper
 
     }
 
+    public static GeneAnnotation createGeneAnnotation(int svId, boolean isStart, final String geneName, String stableId, int strand,
+            final String chromosome, long position, int orientation)
+    {
+        List<String> synonyms = Lists.newArrayList();
+        List<Integer> entrezIds = Lists.newArrayList();
+        String karyotypeBand = "";
+
+        GeneAnnotation gene = new GeneAnnotation(svId, isStart, geneName, stableId, strand, synonyms, entrezIds, karyotypeBand);
+        gene.setPositionalData(chromosome, position, (byte)orientation);
+
+        return gene;
+    }
+
+    // Ensembl data types
+    public static EnsemblGeneData createEnsemblGeneData(String geneId, String geneName, String chromosome, int strand, long geneStart, long geneEnd)
+    {
+        return new EnsemblGeneData(geneId, geneName, chromosome, (byte)strand, geneStart, geneEnd, "", "", "");
+    }
+
+    public static void addTransExonData(SvGeneTranscriptCollection geneTransCache, final String geneId, List<TranscriptExonData> transExonList)
+    {
+        geneTransCache.getGeneExonDataMap().put(geneId, transExonList);
+    }
+
+    public static void addGeneData(SvGeneTranscriptCollection geneTransCache, final String chromosome, List<EnsemblGeneData> geneDataList)
+    {
+        geneTransCache.getChrGeneDataMap().put(chromosome, geneDataList);
+
+        // for now only support non-overlapping genes, which keeps the lists and their indices the same
+
+        List<EnsemblGeneData> reverseGeneDataList = Lists.newArrayList(geneDataList);
+
+        for(int i = 0; i < geneDataList.size(); ++i)
+        {
+            EnsemblGeneData geneData = geneDataList.get(i);
+            geneData.setListIndex(i);
+            geneData.setReverseListIndex(i);
+        }
+
+        geneTransCache.getChrReverseGeneDataMap().put(chromosome, reverseGeneDataList);
+    }
 }

@@ -74,6 +74,7 @@ public class SvGeneTranscriptCollection
 
     public final Map<String, List<TranscriptExonData>> getGeneExonDataMap() { return mGeneTransExonDataMap; }
     public final Map<String, List<EnsemblGeneData>> getChrGeneDataMap() { return mChromosomeGeneDataMap; }
+    public final Map<String, List<EnsemblGeneData>> getChrReverseGeneDataMap() { return mChromosomeReverseGeneDataMap; }
     public Map<Integer, List<TranscriptProteinData>> getTranscriptProteinDataMap() { return mEnsemblProteinDataMap; }
 
     public final EnsemblGeneData getGeneDataByName(final String geneName)

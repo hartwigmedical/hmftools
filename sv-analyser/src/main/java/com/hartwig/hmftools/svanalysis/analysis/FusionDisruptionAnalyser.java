@@ -69,7 +69,6 @@ public class FusionDisruptionAnalyser
     private boolean mSkipFusionCheck;
     private boolean mLogReportableOnly;
     private List<GeneFusion> mFusions;
-    private List<GeneFusion> mReportableFusions;
     private Map<String, List<RnaFusionData>> mSampleRnaData;
     private PerformanceCounter mPerfCounter;
 
@@ -89,7 +88,6 @@ public class FusionDisruptionAnalyser
         mGeneTransCollection = new SvGeneTranscriptCollection();
         mOutputDir = "";
         mFusions = Lists.newArrayList();
-        mReportableFusions = Lists.newArrayList();
         mSkipFusionCheck = false;
         mLogReportableOnly = true;
         mVisWriter = null;
@@ -109,36 +107,42 @@ public class FusionDisruptionAnalyser
         options.addOption(PRE_GENE_BREAKEND_DISTANCE, true, "Distance after to a breakend to consider in a gene");
     }
 
-    public void loadFusionReferenceData(final CommandLine cmdLineArgs, final String outputDir, SvGeneTranscriptCollection ensemblDataCache)
+    public void initialise(final CommandLine cmdLineArgs, final String outputDir, SvGeneTranscriptCollection ensemblDataCache)
     {
         mOutputDir = outputDir;
 
         mGeneTransCollection = ensemblDataCache;
         mFusionFinder = new SvFusionAnalyser(cmdLineArgs, ensemblDataCache, mOutputDir);
 
-        mSkipFusionCheck = cmdLineArgs.hasOption(SKIP_FUSION_OUTPUT);
-
-        if(!mSkipFusionCheck)
+        if(cmdLineArgs != null)
         {
-            String clusterInfoHeaders = "ClusterId,ClusterCount,ResolvedType,OverlapUp,OverlapDown,ChainInfo";
-            mFusionFinder.initialiseOutputFile("", true, clusterInfoHeaders);
-        }
+            mSkipFusionCheck = cmdLineArgs.hasOption(SKIP_FUSION_OUTPUT);
 
-        if(cmdLineArgs.hasOption(PRE_GENE_BREAKEND_DISTANCE))
-        {
-            int preGeneBreakendDistance = Integer.parseInt(cmdLineArgs.getOptionValue(PRE_GENE_BREAKEND_DISTANCE));
-            PRE_GENE_PROMOTOR_DISTANCE = preGeneBreakendDistance;
-        }
+            if (!mSkipFusionCheck)
+            {
+                String clusterInfoHeaders = "ClusterId,ClusterCount,ResolvedType,OverlapUp,OverlapDown,ChainInfo";
+                mFusionFinder.initialiseOutputFile("", true, clusterInfoHeaders);
+            }
 
-        if (cmdLineArgs.hasOption(SAMPLE_RNA_FILE))
-        {
-            loadSampleRnaData(cmdLineArgs.getOptionValue(SAMPLE_RNA_FILE));
+            if (cmdLineArgs.hasOption(PRE_GENE_BREAKEND_DISTANCE))
+            {
+                int preGeneBreakendDistance = Integer.parseInt(cmdLineArgs.getOptionValue(PRE_GENE_BREAKEND_DISTANCE));
+                PRE_GENE_PROMOTOR_DISTANCE = preGeneBreakendDistance;
+            }
+
+            if (cmdLineArgs.hasOption(SAMPLE_RNA_FILE))
+            {
+                loadSampleRnaData(cmdLineArgs.getOptionValue(SAMPLE_RNA_FILE));
+            }
         }
     }
 
     public final Set<String> getRnaSampleIds() { return mSampleRnaData.keySet(); }
     public final List<GeneFusion> getFusions() { return mFusions; }
     public void setVisWriter(VisualiserWriter writer) { mVisWriter = writer; }
+
+    // for testing
+    public void setHasValidConfigData(boolean toggle) { mFusionFinder.setHasValidConfigData(toggle); }
 
     public static void setSvGeneData(final List<SvVarData> svList, SvGeneTranscriptCollection geneCollection,
             boolean applyPromotorDistance, boolean selectiveLoading)
@@ -188,7 +192,6 @@ public class FusionDisruptionAnalyser
                 {
                     gene.setSvData(var.getSvData());
 
-                    /*
                     int transIndex = 0;
                     while(transIndex < gene.transcripts().size())
                     {
@@ -204,8 +207,6 @@ public class FusionDisruptionAnalyser
                             ++transIndex;
                         }
                     }
-                    */
-
                 }
 
                 var.setGenesList(genesList, isStart);
@@ -235,7 +236,6 @@ public class FusionDisruptionAnalyser
             return;
 
         mFusions.clear();
-        mReportableFusions.clear();
 
         boolean checkSoloSVs = true;
         boolean checkClusters = true;
@@ -259,6 +259,10 @@ public class FusionDisruptionAnalyser
             if (var.isNullBreakend())
                 continue;
 
+            // skip SVs which have been chained or in larger
+            if(var.getCluster().getSvCount() > 1 && var.getCluster().findChain(var) != null)
+                continue;
+
             isSpecificSV(var);
 
             List<GeneAnnotation> genesListStart = Lists.newArrayList(var.getGenesList(true));
@@ -266,9 +270,6 @@ public class FusionDisruptionAnalyser
 
             if(genesListStart.isEmpty() || genesListEnd.isEmpty())
                 continue;
-
-            // checkFusions(var.getBreakend(true), var.getBreakend(false), genesListStart, genesListEnd, var.getCluster(), null, 0, 0);
-
 
             List<GeneFusion> fusions = mFusionFinder.findFusions(genesListStart, genesListEnd);
 
@@ -334,16 +335,24 @@ public class FusionDisruptionAnalyser
 
     private void findChainedFusions(final SvCluster cluster, final SvChain chain)
     {
+        // look for fusions formed by breakends connected in a chain
+        // start with a link, take the breakend on the lower side (ie the 'second' SV breakend of the previous link
+        // or for the first pair, the open breakend at the start of the chain)
+        // and test a fusion with the first breakend in the current pair
+        // proceding from their test this lower breakend against each next pair's first breakend,
+        // thereby skipping over each pair in between, as long as they do no traverse any genes
         final List<SvLinkedPair> linkedPairs = chain.getLinkedPairs();
 
         // the lower link (index-wise) uses the other end of the link
-        // the upper link uses the other end of the link as well
+        // the upper link uses the current pair's first breakend
 
         for (int lpIndex1 = 0; lpIndex1 < linkedPairs.size(); ++lpIndex1)
         {
             SvLinkedPair pair1 = linkedPairs.get(lpIndex1);
 
             SvVarData lowerSV = pair1.first();
+
+            isSpecificSV(lowerSV);
 
             if (lowerSV.isNullBreakend())
                 continue;
@@ -357,41 +366,71 @@ public class FusionDisruptionAnalyser
 
             long totalLinkLength = 0;
 
-            for (int lpIndex2 = lpIndex1; lpIndex2 < linkedPairs.size(); ++lpIndex2)
+            for (int lpIndex2 = lpIndex1; lpIndex2 <= linkedPairs.size(); ++lpIndex2)
             {
-                SvLinkedPair pair2 = linkedPairs.get(lpIndex2);
+                SvLinkedPair pair2 = null;
+                SvVarData upperSV = null;
+                SvBreakend upperBreakend = null;
 
-                SvVarData upperSV = pair2.second();
+                if(lpIndex2 < linkedPairs.size())
+                {
+                    pair2 = linkedPairs.get(lpIndex2);
+                    upperSV = pair2.first();
+                    upperBreakend = pair2.getFirstBreakend();
+                }
+                else
+                {
+                    // at the last link, take the open breakend of the chain
+                    upperBreakend = chain.getOpenBreakend(false);
 
-                if (upperSV.isNullBreakend())
-                    continue;
+                    if(upperBreakend == null) // can be null for SGLs at end of chain
+                        break;
 
-                SvBreakend upperBreakend = upperSV.getBreakend(!pair2.secondLinkOnStart());
+                    upperSV = upperBreakend.getSV();
+                }
+
+                isSpecificSV(upperSV);
+
                 List<GeneAnnotation> genesListUpper = Lists.newArrayList(upperSV.getGenesList(upperBreakend.usesStart()));
 
                 if (genesListUpper.isEmpty())
-                    continue;
-
-                totalLinkLength += pair2.length();
-
-                if (pairTraversesGene(pair2))
                 {
-                    // if the TI traverses any gene it invalidates any fusion
+                    // skipping this pair but record its length and check if it traverses any genes
 
-                    // move ahead to start again at the next index
-                    lpIndex1 = lpIndex2;
-                    break;
+                    if (lpIndex2 > lpIndex1)
+                    {
+                        if (pair2 != null)
+                        {
+                            if (pairTraversesGene(pair2))
+                            {
+                                // if the TI traverses any gene it invalidates any fusion
+
+                                // move ahead to start again at the next index (less 1 since will be incremented)
+                                break;
+                            }
+
+                            totalLinkLength += pair2.length();
+                        }
+                    }
+
+                    continue;
+                }
+
+                if (lpIndex2 > lpIndex1)
+                {
+                    LOGGER.debug("cluster({}) chain({}) potential chained fusion: be1({} {}) & be2({} {}) link indices({} -> {}) traversalLen({})",
+                            cluster.id(), chain.id(), lowerBreakend.toString(), genesListLower.get(0).GeneName,
+                            upperBreakend.toString(), genesListUpper.get(0).GeneName, lpIndex1, lpIndex2, totalLinkLength);
                 }
 
                 // test the fusion between these 2 breakends
-                LOGGER.debug("cluster({}) chain({}) potential fusion: be1({} {}) & be2({} {}) link indices({} -> {}) traversalLen({})",
-                        cluster.id(), chain.id(), lowerBreakend.toString(), genesListLower.get(0).GeneName,
-                        upperBreakend.toString(), genesListUpper.get(0).GeneName, lpIndex1, lpIndex2, totalLinkLength);
-
                 List<GeneFusion> fusions = mFusionFinder.findFusions(genesListLower, genesListUpper);
 
-                // a chain cannot be an exon-exon fusion, so cull any of these
-                fusions = fusions.stream().filter(x -> !x.isExonic()).collect(Collectors.toList());
+                if (lpIndex2 > lpIndex1)
+                {
+                    // a chain cannot be an exon-exon fusion, so cull any of these
+                    fusions = fusions.stream().filter(x -> !x.isExonic()).collect(Collectors.toList());
+                }
 
                 if(mLogReportableOnly)
                 {
@@ -399,10 +438,7 @@ public class FusionDisruptionAnalyser
                 }
 
                 if(fusions.isEmpty())
-                {
-                    lpIndex1 = lpIndex2;
-                    break;
-                }
+                    continue;
 
                 for(GeneFusion fusion : fusions)
                 {
@@ -419,7 +455,7 @@ public class FusionDisruptionAnalyser
                         SvBreakend breakend = lowerBreakend.position() == gene.position() ? lowerBreakend : upperBreakend;
 
                         boolean isChainEnd = (breakend == lowerBreakend && lpIndex1 == 0)
-                                || (breakend == upperBreakend && lpIndex2 == linkedPairs.size() - 1);
+                                || (breakend == upperBreakend && pair2 == null);
 
                         if(isChainEnd)
                         {
@@ -428,13 +464,13 @@ public class FusionDisruptionAnalyser
                         else
                         {
                             // looks within and beyond the chain to check for disruptions
-                            int linkIndex = breakend == lowerBreakend ? lpIndex1 - 1 : lpIndex2 + 1;
+                            int linkIndex = breakend == lowerBreakend ? lpIndex1 - 1 : lpIndex2;
                             disruptedTranscriptsStr[i] = checkTranscriptDisruptionInfo(breakend, transcript, chain, linkIndex);
                         }
                     }
 
                     // ClusterId,ClusterCount,ResolvedType,OverlapUp,OverlapDown,ChainInfo
-                    int linksCount = lpIndex2 - lpIndex1 + 1;
+                    int linksCount = lpIndex2 - lpIndex1;
 
                     String chainInfo = String.format("%d;%d;%d", chain.id(), linksCount, totalLinkLength);
 
@@ -445,8 +481,9 @@ public class FusionDisruptionAnalyser
                     writeFusionData(fusion, cluster, clusterChainInfo);
                 }
 
-                // if the upper breakend is in a gene, any further fusions will need to start from this location
-                lpIndex1 = lpIndex2;
+                // if a fusion was made across any links, then any further search will need to begin from the end of this fusion segment
+                if(lpIndex2 > lpIndex1 + 1)
+                    lpIndex1 = lpIndex2 - 1;
                 break;
             }
         }
@@ -524,8 +561,7 @@ public class FusionDisruptionAnalyser
 
     private String checkTranscriptDisruptionInfo(final SvBreakend breakend, final Transcript transcript, final SvChain chain, int linkIndex)
     {
-        // starting with this breakend and working onwards from it in the chain, are there any disruptions to the transcript
-
+        // starting with this breakend and working onwards from it in the chain, check for any disruptions to the transcript
         SvLinkedPair startPair = chain.getLinkedPairs().get(linkIndex);
         boolean traverseUp = startPair.getFirstBreakend() == breakend; // whether to search up or down the chain
 
@@ -548,6 +584,7 @@ public class FusionDisruptionAnalyser
             SvLinkedPair pair = chain.getLinkedPairs().get(linkIndex);
 
             // identify next exon after this TI
+            // the breakend's transcript info cannot be used because it faces the opposite way from the fusing breakend
             SvBreakend nextBreakend = traverseUp ? pair.getSecondBreakend() : pair.getFirstBreakend();
 
             // exit if the next breakend is now past the end of the transcript
@@ -557,16 +594,23 @@ public class FusionDisruptionAnalyser
                 break;
             }
 
-            int[] prevExonRankings = getExonRankings(exonDataList, nextBreakend.position());
-
-            Transcript nextTranscript = getNextMatchingTranscript(nextBreakend, transcript);
-            // can be null if 3'UTR
-
-            if(nextTranscript != null && nextTranscript.isExonic())
-                ++disruptedExons;
-
             ++totalBreakends;
             ++facingBreakends;
+
+            SvBreakend currentBreakend = traverseUp ? pair.getFirstBreakend() : pair.getSecondBreakend();
+
+            // the end of the TI remains within this transcript - check if it skipped any exons
+            int[] currentExonRankings = getExonRankings(exonDataList, currentBreakend.position());
+            int[] nextExonRankings = getExonRankings(exonDataList, nextBreakend.position());
+
+            if(currentExonRankings[EXON_RANK_MAX] != nextExonRankings[EXON_RANK_MAX])
+            {
+                disruptedExons += abs(currentExonRankings[EXON_RANK_MAX] - nextExonRankings[EXON_RANK_MAX]);
+                transcriptTerminated = true;
+                break;
+            }
+
+            // check if can follow this next SV to its other breakend
 
             if(nextBreakend.getSV().isNullBreakend())
                 break;
@@ -574,7 +618,7 @@ public class FusionDisruptionAnalyser
             // for now only allow DELs that aren't disruptive
             if(!nextBreakend.getSV().isSimpleType())
             {
-                disruptedExons += max(transcript.ExonMax - prevExonRankings[EXON_RANK_MAX], 0);
+                disruptedExons += max(transcript.ExonMax - nextExonRankings[EXON_RANK_MAX], 0);
                 transcriptTerminated = true;
                 break;
             }
@@ -597,14 +641,22 @@ public class FusionDisruptionAnalyser
 
             ++totalBreakends;
 
-            nextTranscript = getNextMatchingTranscript(nextOtherBreakend, transcript);
+            Transcript nextTranscript = getNextMatchingTranscript(nextOtherBreakend, transcript);
 
-            if(nextTranscript == null || nextTranscript.ExonDownstream != prevTranscript.ExonDownstream || nextTranscript.isExonic())
+            if (nextTranscript == null || nextTranscript.isExonic() || nextTranscript.ExonDownstream != prevTranscript.ExonDownstream)
             {
-                if(nextTranscript == null)
+                if (nextTranscript == null)
+                {
                     disruptedExons += abs(transcript.ExonMax - prevTranscript.ExonDownstream);
+                }
                 else
-                    disruptedExons += abs(nextTranscript.ExonDownstream - prevTranscript.ExonDownstream);
+                {
+                    if (nextTranscript.isExonic())
+                        ++disruptedExons;
+
+                    if (nextTranscript.ExonDownstream != prevTranscript.ExonDownstream)
+                        disruptedExons += abs(nextTranscript.ExonDownstream - prevTranscript.ExonDownstream);
+                }
 
                 transcriptTerminated = true;
                 break;
@@ -629,7 +681,7 @@ public class FusionDisruptionAnalyser
 
     private final Transcript getNextMatchingTranscript(final SvBreakend breakend, final Transcript transcript)
     {
-        List<GeneAnnotation> matchingGene = breakend.getSV().getGenesList(breakend.usesStart())
+        List<GeneAnnotation> matchingGene = breakend.getOrigSV().getGenesList(breakend.usesStart())
                 .stream()
                 .filter(x -> x.GeneName.equals(transcript.parent().GeneName))
                 .collect(Collectors.toList());
@@ -672,121 +724,26 @@ public class FusionDisruptionAnalyser
 
     private void writeFusionData(GeneFusion fusion, final SvCluster cluster, final String clusterChainInfo)
     {
-        // format expected for cluster and chain info:
-        // ClusterId,ClusterCount,ResolvedType,OverlapUp,OverlapDown,ChainInfo
+        mFusions.add(fusion);
 
         if (fusion.reportable() || !mLogReportableOnly)
         {
+            // format expected for cluster and chain info:
+            // ClusterId,ClusterCount,ResolvedType,OverlapUp,OverlapDown,ChainInfo
             mFusionFinder.writeFusionData(fusion, mSampleId, clusterChainInfo);
         }
 
-        if(fusion.reportable())
+        if(fusion.reportable() && mVisWriter != null)
         {
-            if (mVisWriter != null)
-            {
-                mVisWriter.addGeneExonData(cluster.id(),
-                        fusion.upstreamTrans().parent().StableId, fusion.upstreamTrans().parent().GeneName,
-                        fusion.upstreamTrans().StableId, fusion.upstreamTrans().parent().chromosome(), "FUSION");
+            mVisWriter.addGeneExonData(cluster.id(),
+                    fusion.upstreamTrans().parent().StableId, fusion.upstreamTrans().parent().GeneName,
+                    fusion.upstreamTrans().StableId, fusion.upstreamTrans().parent().chromosome(), "FUSION");
 
-                mVisWriter.addGeneExonData(cluster.id(),
-                        fusion.downstreamTrans().parent().StableId, fusion.downstreamTrans().parent().GeneName,
-                        fusion.downstreamTrans().StableId, fusion.downstreamTrans().parent().chromosome(), "FUSION");
-            }
+            mVisWriter.addGeneExonData(cluster.id(),
+                    fusion.downstreamTrans().parent().StableId, fusion.downstreamTrans().parent().GeneName,
+                    fusion.downstreamTrans().StableId, fusion.downstreamTrans().parent().chromosome(), "FUSION");
         }
     }
-
-    /*
-    private void checkFusions(SvBreakend breakend1, SvBreakend breakend2,
-            List<GeneAnnotation> breakendGenes1, List<GeneAnnotation> breakendGenes2,
-            final SvCluster cluster, final SvChain chain, int linkIndex1, int linkIndex2, long chainLength)
-    {
-        if (breakendGenes1.isEmpty() || breakendGenes2.isEmpty())
-            return;
-
-        List<GeneFusion> fusions = mFusionFinder.findFusions(breakendGenes1, breakendGenes2);
-
-        if (fusions.isEmpty())
-            return;
-
-        if(chain != null)
-        {
-            // a chain cannot be an exon-exon fusion, so cull any of these
-            fusions = fusions.stream().filter(x -> !x.isExonic()).collect(Collectors.toList());
-        }
-
-        List<GeneFusion> reportableFusions = fusions.stream().filter(GeneFusion::reportable).collect(Collectors.toList());
-
-        String clusterInfo = "";
-
-        if(chain != null)
-        {
-            int linksCount = linkIndex2 - linkIndex1 + 1;
-            clusterInfo = String.format("%d,%d,%s;%d;%d;%d",
-                    cluster.id(), cluster.getSvCount(), cluster.getResolvedType(), chain.id(), linksCount, chainLength);
-
-            mFusionFinder.writeFusions(reportableFusions, mSampleId, clusterInfo, true);
-        }
-        else if(breakend1.getSV() == breakend2.getSV())
-        {
-            // TEMP: report on end disruption for single SVs
-            SvVarData var = breakend1.getSV();
-
-            // remove any gene disrupted, how many breakends before end of gene, how many clustered, how many facing, min distance
-            for (final GeneFusion fusion : reportableFusions)
-            {
-                String[] disruptedTranscriptsStr = {"", ""};
-
-                for(int i = 0; i <=1; ++i)
-                {
-                    boolean isUpstream = (i == 0);
-
-                    // look at each gene in turn
-                    Transcript transcript = isUpstream ? fusion.upstreamTrans() : fusion.downstreamTrans();
-                    GeneAnnotation gene = isUpstream ? fusion.upstreamTrans().parent() : fusion.downstreamTrans().parent();
-
-                    SvBreakend breakend = var.getBreakend(gene.isStart());
-
-                    disruptedTranscriptsStr[i] = checkTranscriptDisruptionInfo(breakend, transcript);
-                }
-
-                clusterInfo = String.format("%d,%s,%s",
-                        cluster.id(), disruptedTranscriptsStr, disruptedTranscriptsStr);
-
-                mFusionFinder.writeFusionData(fusion, mSampleId, clusterInfo, true);
-            }
-        }
-
-        // mFusions.addAll(fusions);
-
-
-        if(LOGGER.isDebugEnabled())
-        {
-            for (final GeneFusion fusion : reportableFusions)
-            {
-                final Transcript upstream = fusion.upstreamTrans();
-                final Transcript downstream = fusion.downstreamTrans();
-                final GeneAnnotation upGene = upstream.parent();
-                final GeneAnnotation downGene = downstream.parent();
-
-                LOGGER.debug("sample({}) fusion: up({} {} {} {} ph={}) upSV({}: {}:{}:{} start={} strand={}) down({} {} {} {} ph={}) downSV({}: {}:{}:{} start={} strand={})",
-                        mSampleId, upstream.geneName(), upstream.StableId, upstream.regionType(), upstream.codingType(), upstream.ExonUpstreamPhase,
-                        upGene.id(), upGene.chromosome(), upGene.position(), upGene.orientation(), upGene.isStart(), upGene.Strand,
-                        downstream.geneName(), downstream.StableId, downstream.regionType(), downstream.codingType(), downstream.ExonDownstreamPhase,
-                        downGene.id(), downGene.chromosome(), downGene.position(), downGene.orientation(), downGene.isStart(), downGene.Strand);
-            }
-        }
-
-        if(chain != null)
-        {
-            LOGGER.debug("sample({}) chained fusion: cluster({}) chain({}) links({}) length({})",
-                    mSampleId, cluster.id(), chain.id(), links, chainLength);
-        }
-
-        // for now only log reportable fusions
-        // mFusionFinder.writeFusions(reportableFusions, mSampleId, clusterInfo, true);
-
-    }
-    */
 
     private void assessRnaFusions()
     {
