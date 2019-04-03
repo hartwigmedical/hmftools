@@ -45,17 +45,22 @@ public abstract class ViccFactory {
     private static StringBuilder readObjectCGI(@NotNull JsonObject object, @NotNull StringBuilder headerCSV) {
         //CGI object
         StringBuilder stringToCSVCGI = new StringBuilder();
+        StringBuilder stringInfo = new StringBuilder();
         if (object.getAsJsonObject("cgi") != null) {
             List<String> keysOfCGI = new ArrayList<>(object.getAsJsonObject("cgi").keySet());
             for (int i = 0; i < keysOfCGI.size(); i++) {
-                stringToCSVCGI.append(object.getAsJsonObject("cgi").get(keysOfCGI.get(i))).append(";");
+                if (keysOfCGI.get(i).equals("info")) {
+                    JsonElement elementInfo = object.getAsJsonObject("cgi").get(keysOfCGI.get(i));
+                    for (int z = 0; z < elementInfo.getAsJsonArray().size(); z++) {
+                        String info = elementInfo.getAsJsonArray().get(z).toString().replaceAll(";", ":");
+                        stringInfo.append(info).append(",");
+                    }
+                    stringToCSVCGI.append(stringInfo).append(";");
+                } else {
+                    stringToCSVCGI.append(object.getAsJsonObject("cgi").get(keysOfCGI.get(i))).append(";");
+                }
             }
-            headerCSV.append(
-                    "Targeting; Source; cDNA; Primary Tumor type; individual_mutation; Drug full name; Curator; Drug family; Alteration; Drug; Biomarker; gDNA; Drug status; Gene; transcript; strand; info; Assay type; Alteration type; region; Evidence level; Association; Metastatic Tumor Type");
-
         } else {
-            headerCSV.append(
-                    "Targeting; Source; cDNA; Primary Tumor type; individual_mutation; Drug full name; Curator; Drug family; Alteration; Drug; Biomarker; gDNA; Drug status; Gene; transcript; strand; info; Assay type; Alteration type; region; Evidence level; Association; Metastatic Tumor Type");
             stringToCSVCGI.append(";;;;;;;;;;;;;;;;;;;;;; ");
 
         }
@@ -177,7 +182,7 @@ public abstract class ViccFactory {
                         JsonObject objectEvidenceitems = (JsonObject) civicEvidenceItemsArray.get(z);
                         List<String> keysEvidenceItems = new ArrayList<>(objectEvidenceitems.keySet());
                         for (int h = 0; h < keysEvidenceItems.size(); h++) {
-                             if (keysEvidenceItems.get(h).equals("drugs")) {
+                            if (keysEvidenceItems.get(h).equals("drugs")) {
                                 JsonArray ArrayDrugs = objectEvidenceitems.get(keysEvidenceItems.get(h)).getAsJsonArray();
                                 for (int r = 0; r < ArrayDrugs.size(); r++) {
                                     JsonObject objectDrugs = (JsonObject) ArrayDrugs.get(r);
@@ -1649,9 +1654,8 @@ public abstract class ViccFactory {
         String headerTags = "tags;";
         String headerDevTags = "dev_tags;";
         String headerGeneIdentifiers = "gene_identifiers.Symbol;gene_identifiers.entrez_id;gene_identifiers.ensembl_gene_id;";
-        String headerSage =
-                "sage.entrez_id;sage.clinical_manifestation;sage.publication_url;sage.germline_or_somatic;sage.evidence_label;"
-                        + "sage.drug_labels;sage.response_type;sage.gene;";
+        String headerSage = "sage.entrez_id;sage.clinical_manifestation;sage.publication_url;sage.germline_or_somatic;sage.evidence_label;"
+                + "sage.drug_labels;sage.response_type;sage.gene;";
         String headerPmkb = "pmkb.tumor.id;pmkb.tumor.name;pmkb.tissues.id;pmkb.tissues.name;pmkb.variant.amino_acid_change;"
                 + "pmkb.variant.germline;pmkb.variant.partner_gene;pmkb.variant.codons;pmkb.variant.description;pmkb.variant.exons;"
                 + "pmkb.variant.notes;pmkb.variant.cosmic;pmkb.variant.effect;pmkb.variant.cnv_type;pmkb.variant.id;"
@@ -1659,19 +1663,59 @@ public abstract class ViccFactory {
                 + "pmkb.variant.chromosome_based_cnv;pmkb.variant.gene.description;pmkb.variant.gene.created_at;"
                 + "pmkb.variant.gene.updated_at;pmkb.variant.gene.active_ind;pmkb.variant.gene.external_id;"
                 + "pmkb.variant.gene.id;pmkb.variant.gene.name;pmkb.transcript;pmkb.description_type;pmkb.chromosome;pmkb.name;";
+        String headerBRCA = "brca.Variant_frequency_LOVD;brca.Allele_frequency_FIN_ExAC;brca.ClinVarAccession_ENIGMA;"
+                + "brca.Homozygous_count_AFR_ExAC;brca.BX_ID_ExAC;brca.Variant_in_LOVD;brca.Allele_frequency_AFR_ExAC;brca.DBID_LOVD;"
+                + "brca.Chr;brca.BX_ID_ENIGMA;brca.Co_occurrence_LR_exLOVD;brca.Homozygous_count_EAS_ExAC;brca.Submitter_ClinVar;"
+                + "brca.Allele_frequency_EAS_ExAC;brca.Hg37_End;brca.Submitters_LOVD;brca.Clinical_classification_BIC;"
+                + "brca.Homozygous_count_NFE_ExAC;brca.Allele_count_SAS_ExAC;brca.Method_ClinVar;brca.Allele_count_NFE_ExAC;"
+                + "brca.Pathogenicity_all;brca.Germline_or_Somatic_BIC;brca.Homozygous_count_SAS_ExAC;brca.BIC_Nomenclature;"
+                + "brca.Assertion_method_ENIGMA;brca.Literature_source_exLOVD;brca.Change_Type_id;brca.Collection_method_ENIGMA;"
+                + "brca.Sum_family_LR_exLOVD;brca.HGVS_cDNA_LOVD”;brca.Homozygous_count_FIN_ExAC;brca.EAS_Allele_frequency_1000_Genomes;"
+                + "brca.Ethnicity_BIC;brca.Individuals_LOVD;brca.Variant_in_ExAC;brca.URL_ENIGMA;brca.Allele_Origin_ClinVar;"
+                + "brca.Allele_frequency_AMR_ExAC;brca.Variant_in_1000_Genomes;brca.AFR_Allele_frequency_1000_Genomes;"
+                + "brca.BX_ID_exLOVD;brca.Source;brca.Condition_ID_value_ENIGMA;brca.HGVS_Protein;brca.Ref;brca.Allele_number_AFR_ExAC;"
+                + "brca.Allele_count_AFR_ExAC;brca.BX_ID_LOVD;brca.Synonyms;brca.Gene_Symbol;brca.Comment_on_clinical_significance_ENIGMA;"
+                + "brca.Missense_analysis_prior_probability_exLOVD;brca.Allele_number_FIN_ExAC;brca.Posterior_probability_exLOVD;"
+                + "brca.Polyphen_Score;brca.Reference_Sequence;brca.Allele_count_EAS_ExAC;brca.Hg38_End;brca.HGVS_cDNA;"
+                + "brca.Functional_analysis_technique_LOVD;brca.SAS_Allele_frequency_1000_Genomes;brca.RNA_LOVD;"
+                + "brca.Combined_prior_probablility_exLOVD;brca.BX_ID_ClinVar;brca.IARC_class_exLOVD;brca.BX_ID_BIC;brca.Sift_Prediction;"
+                + "brca.Allele_number_NFE_ExAC;brca.Allele_origin_ENIGMA”;brca.Allele_number_OTH_ExAC;brca.Hg36_End;"
+                + "brca.Allele_frequency_SAS_ExAC;brca.Date_Last_Updated_ClinVar;brca.Allele_number_EAS_ExAC;"
+                + "brca.Allele_frequency_OTH_ExAC;brca.Source_URL;brca.SCV_ClinVar;brca.Pathogenicity_expert;"
+                + "brca.Allele_frequency_1000_Genomes;brca.Functional_analysis_result_LOVD;brca.AMR_Allele_frequency_1000_Genomes;"
+                + "brca.Variant_in_ESP;brca.Variant_in_BIC;brca.Clinical_significance_ENIGMA;brca.Max_Allele_Frequency;"
+                + "brca.Allele_count_AMR_ExAC;brca.Variant_in_ENIGMA;brca.BX_ID_ESP;brca.Patient_nationality_BIC”;brca.BX_ID_1000_Genomes;"
+                + "brca.Genomic_Coordinate_hg37;brca.Genomic_Coordinate_hg36;brca.EUR_Allele_frequency_1000_Genomes;"
+                + "brca.Number_of_family_member_carrying_mutation_BIC;brca.Segregation_LR_exLOVD”;brca.Allele_Frequency;"
+                + "brca.Minor_allele_frequency_percent_ESP;brca.Allele_frequency_ExAC”;brca.Mutation_type_BIC;"
+                + "brca.Assertion_method_citation_ENIGMA;brca.Condition_ID_type_ENIGMA;brca.Allele_count_OTH_ExAC;brca.HGVS_protein_LOVD;"
+                + "brca.Variant_in_ClinVar;brca.Clinical_importance_BIC;brca.Discordant;brca.Allele_count_FIN_ExAC;"
+                + "brca.Condition_category_ENIGMA;brca.Allele_Frequency_ESP;brca.Homozygous_count_OTH_ExAC;brca.Genetic_origin_LOVD;"
+                + "brca.id;brca.Homozygous_count_AMR_ExAC;brca.Clinical_Significance_ClinVar;brca.AA_Allele_Frequency_ESP;"
+                + "brca.Protein_Change;brca.Variant_in_exLOVD;brca.EA_Allele_Frequency_ESP;brca.HGVS_RNA;"
+                + "brca.Clinical_significance_citations_ENIGMA;brca.Variant_effect_LOVD;brca.Polyphen_Prediction;brca.Data_Release_id;"
+                + "brca.Hg37_Start;brca.Hg36_Start;brca.Sift_Score;brca.Genomic_Coordinate_hg38;brca.Alt;brca.Literature_citation_BIC;"
+                + "brca.Variant_haplotype_LOVD;brca.Allele_frequency_NFE_ExAC;brca.Hg38_Start;brca.Pos;brca.Date_last_evaluated_ENIGMA;"
+                + "brca.Allele_number_SAS_ExAC;brca.Allele_number_AMR_ExAC;";
+        String headerCGI = "cgi.Targeting;cgi.Source”;cgi.cDNA;cgi.Primary Tumor type;cgi.individual_mutation;cgi.Drug full name;"
+                + "cgi.Curator;cgi.Drug family;cgi.Alteration;cgi.Drug;cgi.Biomarker;cgi.gDNA;cgi.Drug status;cgi.Gene;cgi.transcript;"
+                + "cgi.strand;cgi.info;cgi.Assay type;cgi.Alteration type;cgi.region;cgi.Evidence level;cgi.Association;"
+                + "cgi.Metastatic Tumor Type;";
 
         headerCSV.append(headerIndex);
         headerCSV.append(headerSource);
-        headerCSV.append(headerGenes);
-        headerCSV.append(headerTags);
-        headerCSV.append(headerDevTags);
-        headerCSV.append(headerGeneIdentifiers);
-        headerCSV.append(headerSage);
-        headerCSV.append(headerPmkb);
+        //        headerCSV.append(headerGenes);
+        //        headerCSV.append(headerTags);
+        //        headerCSV.append(headerDevTags);
+        //        headerCSV.append(headerGeneIdentifiers);
+        //        headerCSV.append(headerSage);
+        //        headerCSV.append(headerPmkb);
+        //        headerCSV.append(headerBRCA);
+        headerCSV.append(headerCGI);
 
         writer.append(headerCSV);
         writer.append("\n");
-        while (reader.peek() != JsonToken.END_DOCUMENT && index < 1000) {
+        while (reader.peek() != JsonToken.END_DOCUMENT) {
             LOGGER.info(index);
             JsonObject object = parser.parse(reader).getAsJsonObject();
 
@@ -1684,25 +1728,18 @@ public abstract class ViccFactory {
             StringBuilder StringToCSVGeneIdentifiers = readObjectGeneIdentifiers(object, headerCSV);
             StringBuilder StringToCSVSage = readObjectSage(object, headerCSV);
             StringBuilder StringToCSVPmkb = readObjectPmkb(object, headerCSV);
+            StringBuilder StringToCSVBrca = readObjectBRCA(object, headerCSV);
             StringBuilder StringToCSVCGI = readObjectCGI(object, headerCSV);
-            LOGGER.info(StringToCSVCGI);
-
-            //   StringBuilder StringToCSVAssociation = readObjectAssociation(object, headerCSV);
-            //          StringBuilder StringToCSVFeatures = readObjectFeatures(object, headerCSV);
-            // StringBuilder StringToCSVJax = readObjectJax(object, headerCSV);
-            // StringBuilder StringToCSVJaxTrials = readObjectJaxTrials(object, headerCSV);
-            //  StringBuilder StringToCSVOncokb = readObjectOncokb(object, headerCSV);
-            //   StringBuilder StringToMolecularMatchTrials = readObjectMolecularMatchTrials(object, headerCSV);
-            //     StringBuilder StringToMolecularMatch = readObjectMolecularMatch(object, headerCSV);
 
             stringToCSVAll.append(index).append(";");
             stringToCSVAll.append(StringToCSVSource);
-            stringToCSVAll.append(StringToCSVGenes);
-            stringToCSVAll.append(StringToCSVTags);
-            stringToCSVAll.append(StringToCSVDevTags);
-            stringToCSVAll.append(StringToCSVGeneIdentifiers);
-           // stringToCSVAll.append(StringToCSVSage);
-           // stringToCSVAll.append(StringToCSVPmkb);
+            //            stringToCSVAll.append(StringToCSVGenes);
+            //            stringToCSVAll.append(StringToCSVTags);
+            //            stringToCSVAll.append(StringToCSVDevTags);
+            //            stringToCSVAll.append(StringToCSVGeneIdentifiers);
+            //            stringToCSVAll.append(StringToCSVSage);
+            //            stringToCSVAll.append(StringToCSVPmkb);
+            //            stringToCSVAll.append(StringToCSVBrca);
             stringToCSVAll.append(StringToCSVCGI);
 
             writer.append(stringToCSVAll);
@@ -1715,45 +1752,6 @@ public abstract class ViccFactory {
     }
 
     public static void extractBRCAFile(@NotNull String brcaJsonPath) throws IOException {
-        //        final String csvFileName = "/Users/liekeschoenmaker/hmf/tmp/brca.csv";
-        //        PrintWriter writer = new PrintWriter(new File(csvFileName));
-        //        JsonParser parser = new JsonParser();
-        //        JsonReader reader = new JsonReader(new FileReader(brcaJsonPath));
-        //        reader.setLenient(true);
-        //
-        //        while (reader.peek() != JsonToken.END_DOCUMENT) {
-        //            JsonObject object = parser.parse(reader).getAsJsonObject();
-        //
-        //            StringBuilder stringToCSVAll = new StringBuilder();
-        //            StringBuilder headerCSV = new StringBuilder();
-        //
-        //            StringBuilder StringToCSVBRCA = readObjectBRCA(object, headerCSV);
-        //            StringBuilder StringToCSVGenes = readObjectGenes(object, headerCSV);
-        //            StringBuilder StringToCSVTags = readObjectTags(object, headerCSV);
-        //            StringBuilder StringToCSVDevTags = readObjectDevTags(object, headerCSV);
-        //            StringBuilder StringToCSVSource = readObjectSource(object, headerCSV);
-        //            StringBuilder StringToCSVGeneIdentifiers = readObjectGeneIdentifiers(object, headerCSV);
-        //            StringBuilder StringToCSVAssociation = readObjectAssociation(object, headerCSV);
-        //            StringBuilder StringToCSVFeaturesNames = readObjectFeaturesNames(object, headerCSV);
-        //            StringBuilder StringToCSVFeatures = readObjectFeatures(object, headerCSV);
-        //
-        //            stringToCSVAll.append(StringToCSVBRCA)
-        //                    .append(StringToCSVGenes)
-        //                    .append(StringToCSVTags)
-        //                    .append(StringToCSVDevTags)
-        //                    .append(StringToCSVSource)
-        //                    .append(StringToCSVGeneIdentifiers)
-        //                    .append(StringToCSVAssociation)
-        //                    .append(StringToCSVFeaturesNames)
-        //                    .append(StringToCSVFeatures);
-        //
-        //            writer.append(headerCSV);
-        //            writer.append("\n");
-        //            writer.append(stringToCSVAll);
-        //            writer.append("\n");
-        //        }
-        //        reader.close();
-        //        writer.close();
     }
 
     public static void extractCgiFile(@NotNull String cgiJsonPath) throws IOException {
