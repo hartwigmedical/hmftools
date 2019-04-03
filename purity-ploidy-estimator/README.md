@@ -82,8 +82,8 @@ The following arguments control the smoothing process. Changing these values wit
 
 Argument | Default | Description 
 ---|---|---
-min_diploid_tumor_ratio_count | 30 | Diploid contiguous segments without structural variant support with combined lengths less than 1000 times this value that would otherwise be distinct may be smoothed over.   
-min_diploid_tumor_ratio_count_centromere | 50 | As above, but applied when the contiguous segments have a centromere on one side. 
+min_diploid_tumor_ratio_count | 30 | Always smooth over contiguous segments which are fewer than this number of depth windows long and which have no SV support on either side and which are bounded on both sides by copy number regions which could be smoothed together using our normal smoothing rules. This is intended to assist with smoothing residual GC noise in regions of very high or low GC content where no SV support exists.   
+min_diploid_tumor_ratio_count_centromere | 50 | Always smooth over copy number breakpoints which are fewer than this number of depth windows from the centromere or telomere and which have no further SV breakpoints nearer to the the centromere or telomere.  This is intended to help smooth over noisy mapping in repetitive regions close to the telomere and centromere. 
 
 
 ### Example Usage
