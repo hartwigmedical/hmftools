@@ -41,17 +41,6 @@ public class GeneFusions {
     }
 
     @NotNull
-    public static String getPloidyToCopiesString(@Nullable Double ploidy, boolean hasReliablePurityFit) {
-
-        if (!hasReliablePurityFit) {
-            return Util.NAString;
-        } else {
-            return ploidy != null ? String.format("%.1f", ploidy) : Strings.EMPTY;
-        }
-
-    }
-
-    @NotNull
     public static String getSourceUrl(@NotNull String sourceName) {
         switch (sourceName) {
             case ONCOKB:

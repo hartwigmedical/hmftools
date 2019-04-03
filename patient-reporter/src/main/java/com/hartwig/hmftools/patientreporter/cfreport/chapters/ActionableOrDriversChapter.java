@@ -6,6 +6,7 @@ import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
 import com.hartwig.hmftools.patientreporter.cfreport.components.InlineBarChart;
 import com.hartwig.hmftools.patientreporter.cfreport.components.TableUtil;
 import com.hartwig.hmftools.patientreporter.cfreport.data.*;
+import com.hartwig.hmftools.patientreporter.structural.ReportableGeneDisruption;
 import com.hartwig.hmftools.patientreporter.structural.ReportableGeneFusion;
 import com.hartwig.hmftools.patientreporter.variants.ReportableSomaticVariant;
 import com.itextpdf.kernel.pdf.action.PdfAction;
@@ -43,7 +44,8 @@ public class ActionableOrDriversChapter extends ReportChapter {
                 patientReport.geneCopyNumbers(), hasReliablePurityFit));
         reportDocument.add(createSomaticFusionsTable( "Somatic gene fusions",
                 patientReport.geneFusions(), hasReliablePurityFit));
-        reportDocument.add(createDisruptionsTable());
+        reportDocument.add(createDisruptionsTable("Tumor specific gene disruptions",
+                patientReport.geneDisruptions(), hasReliablePurityFit));
     }
 
     @NotNull
@@ -166,7 +168,7 @@ public class ActionableOrDriversChapter extends ReportChapter {
             contentTable.addCell(TableUtil.getContentCell(fusion.geneEndTranscript()));
             contentTable.addCell(TableUtil.getContentCell(fusion.geneContextStart()));
             contentTable.addCell(TableUtil.getContentCell(fusion.geneContextEnd()));
-            contentTable.addCell(TableUtil.getContentCell(GeneFusions.getPloidyToCopiesString(fusion.ploidy(), hasReliablePurityFit)).setTextAlignment(TextAlignment.RIGHT));
+            contentTable.addCell(TableUtil.getContentCell(GeneUtil.getPloidyToCopiesString(fusion.ploidy(), hasReliablePurityFit)).setTextAlignment(TextAlignment.RIGHT));
             contentTable.addCell(TableUtil.getContentCell("")); // Spacer
             contentTable.addCell(TableUtil.getContentCell(new Paragraph(fusion.source())
                     .setAction(PdfAction.createURI(GeneFusions.getSourceUrl(fusion.source())))));
@@ -179,13 +181,11 @@ public class ActionableOrDriversChapter extends ReportChapter {
     }
 
     @NotNull
-    private Table createDisruptionsTable() {
+    private Table createDisruptionsTable(@NotNull final String title, @NotNull final List<ReportableGeneDisruption> disruptions, boolean hasReliablePurityFit) {
 
-        final String chapterTitle = "Tumor specific gene disruptions";
-        final boolean isAvailable = true;
-
-        if (!isAvailable) {
-            return TableUtil.createNoneReportTable(chapterTitle);
+        final List<ReportableGeneDisruption> sortedDisruptions = GeneDisruptions.sort(disruptions);
+        if (sortedDisruptions.isEmpty()) {
+            return TableUtil.createNoneReportTable(title);
         }
 
         // Create content table
@@ -199,18 +199,18 @@ public class ActionableOrDriversChapter extends ReportChapter {
                 TableUtil.getHeaderCell("Gene \nmax copies").setTextAlignment(TextAlignment.RIGHT)
         });
 
-        for (int i = 0; i < 4; i++) {
-            contentTable.addCell(TableUtil.getContentCell("q23.31"));
-            contentTable.addCell(TableUtil.getContentCell("PTEN"));
-            contentTable.addCell(TableUtil.getContentCell("Intron 5 -> Intron 6"));
-            contentTable.addCell(TableUtil.getContentCell("DEL"));
-            contentTable.addCell(TableUtil.getContentCell("1.8").setTextAlignment(TextAlignment.RIGHT));
-            contentTable.addCell(TableUtil.getContentCell("0").setTextAlignment(TextAlignment.RIGHT));
-            contentTable.addCell(TableUtil.getContentCell("2").setTextAlignment(TextAlignment.RIGHT));
+        for (ReportableGeneDisruption disruption : sortedDisruptions) {
+            contentTable.addCell(TableUtil.getContentCell(disruption.location()));
+            contentTable.addCell(TableUtil.getContentCell(disruption.gene()));
+            contentTable.addCell(TableUtil.getContentCell(disruption.range()));
+            contentTable.addCell(TableUtil.getContentCell(disruption.type()));
+            contentTable.addCell(TableUtil.getContentCell(GeneUtil.getPloidyToCopiesString(disruption.ploidy(), hasReliablePurityFit)).setTextAlignment(TextAlignment.RIGHT));
+            contentTable.addCell(TableUtil.getContentCell(GeneDisruptions.getCopyNumberString(disruption.geneMinCopies(), hasReliablePurityFit)).setTextAlignment(TextAlignment.RIGHT));
+            contentTable.addCell(TableUtil.getContentCell(GeneDisruptions.getCopyNumberString(disruption.geneMaxCopies(), hasReliablePurityFit)).setTextAlignment(TextAlignment.RIGHT));
         }
 
         // Create report table that handles page breaks
-        return TableUtil.createWrappingReportTable(chapterTitle, contentTable);
+        return TableUtil.createWrappingReportTable(title, contentTable);
 
     }
 
