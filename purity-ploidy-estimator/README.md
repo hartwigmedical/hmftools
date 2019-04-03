@@ -445,17 +445,15 @@ However, as some of these regions are of specific interest we include them in a 
 
 ### 9. Determine a QC Status for the tumor
 The status field reflects how we have determined the purity of the sample:
-- **NORMAL** - PURPLE fit the purity using COBALT and AMBER output.
-- **HIGHLY_DIPLOID** - The fitted purity solution is highly diploid (> 95%) with a large range of potential solutions, but somatic variants are unable to help either because they were not supplied or because their implied purity was too low.
-- **SOMATIC** - Somatic variants have improved the otherwise highly diploid solution.
-- **NO_TUMOR** - PURPLE failed to find any aneuploidy and somatic variants were supplied but there were fewer than 300 with observed VAF > 0.1.
+- `NORMAL` - PURPLE fit the purity using COBALT and AMBER output.
+- `HIGHLY_DIPLOID` - The fitted purity solution is highly diploid (> 95%) with a large range of potential solutions, but somatic variants are unable to help either because they were not supplied or because their implied purity was too low.
+- `SOMATIC` - Somatic variants have improved the otherwise highly diploid solution.
+- `NO_TUMOR` - PURPLE failed to find any aneuploidy and somatic variants were supplied but there were fewer than 300 with observed VAF > 0.1.
 
 PURPLE also provides a qc status that can fail for the following 3 reasons:
-- **FAIL_SEGMENT** - We remove samples with more than 120 copy number segments unsupported at either end by SV breakpoints. This step was added to remove samples with extreme GC bias, with differences in depth of up to or in excess of 10x between high and low GC regions. GC normalisation is unreliable when the corrections are so extreme so we filter.
-- **FAIL_DELETED_GENES** - We fail any sample with more than 280 deleted genes. This QC step was added after observing that in a handful of samples with high MB scale positive GC bias we sometimes systematically underestimate the copy number in high GC regions. This can lead us to incorrectly infer homozygous loss of entire chromosomes, particularly on chromosome 17 and 19.
-- **FAIL_GENDER** - If the AMBER and COBALT gender are inconsistent we use the COBALT gender but fail the sample.
-
-
+- `FAIL_SEGMENT` - We remove samples with more than 120 copy number segments unsupported at either end by SV breakpoints. This step was added to remove samples with extreme GC bias, with differences in depth of up to or in excess of 10x between high and low GC regions. GC normalisation is unreliable when the corrections are so extreme so we filter.
+- `FAIL_DELETED_GENES` - We fail any sample with more than 280 deleted genes. This QC step was added after observing that in a handful of samples with high MB scale positive GC bias we sometimes systematically underestimate the copy number in high GC regions. This can lead us to incorrectly infer homozygous loss of entire chromosomes, particularly on chromosome 17 and 19.
+- `FAIL_GENDER` - If the AMBER and COBALT gender are inconsistent we use the COBALT gender but fail the sample.
 
 ## Output
 
@@ -475,7 +473,7 @@ Score | 0.68 | Score of fit.
 Diploid Proportion | 0.02 | Proportion of copy number regions that have 1 (+- 0.2) minor and major allele.
 Ploidy | 3.10 | Average ploidy of the tumor sample after adjusting for purity.
 Gender | MALE | One of MALE, FEMALE or MALE_KLINEFELTER.
-Status | NORMAL | One of NORMAL, HIGHLY_DIPLOID, SOMATIC or NO_TUMOR.  [Descriptions.](#9-determine-a-qc-status-for-the-tumor)
+Status | [NORMAL](#9-determine-a-qc-status-for-the-tumor) | One of `NORMAL`, `HIGHLY_DIPLOID`, `SOMATIC` or `NO_TUMOR`
 PolyclonalProportion | 0.09 | Proportion of copy number regions that are more than 0.25 from a whole copy number
 MinPurity | 0.95 | Minimum purity with score within 10% of best. 
 MaxPurity | 1.00 | Maximim purity with score within 10% of best.
@@ -508,9 +506,9 @@ CopyNumber  | 2.8189 | Fitted absolute copy number of segment adjusted for purit
 BafCount  | 4464 | Count of AMBER baf points covered by this segment
 ObservedBAF  | 0.7094 | Combined reference and tumor BAF in TUMOR sample **un**adjusted for purity and ploidy
 BAF  | 0.7124 | Tumor BAF after adjusted for purity and ploidy
-SegmentStartSupport  | TELOMERE |  The type of structural variant support for the copy number breakpoint at start of region.  Allowed values:  (‘CENTROMERE’, ’TELOMERE’,‘INV’,’DEL’,’DUP’,’BND’ - translocation, ‘SGL’ - single breakend SV support, ‘NONE’ - no SV support for CN breakpoint, ‘MULT’ - multiple SV support at exact breakpoint)
+SegmentStartSupport  | TELOMERE |  The type of structural variant support for the copy number breakpoint at start of region.  Allowed values:  (`CENTROMERE`, `TELOMERE`,`INV`,`DEL`,`DUP`,`BND` - translocation, `SGL` - single breakend SV support, `NONE` - no SV support for CN breakpoint, `MULT` - multiple SV support at exact breakpoint)
 SegmentEndSupport  | BND | The type of structural variant support for the copy number breakpoint at end of region. Allowed values as per SegmentStartSupport.
-Method | BAF_WEIGHTED | Method used to determine the copy number of the region. Allowed values: (‘BAF_WEIGHTED’ - average of all depth windows for the region ,’STRUCTURAL_VARIANT’ - inferred using ploidy of flanking SVs ,’LONG_ARM’ - inferred from the long arm,’GERMLINE_AMPLIFICATION’ - inferred using special logic to handle regions of germline amplification)
+Method | BAF_WEIGHTED | Method used to determine the copy number of the region. Allowed values: (`BAF_WEIGHTED` - average of all depth windows for the region ,`STRUCTURAL_VARIANT` - inferred using ploidy of flanking SVs ,`LONG_ARM` - inferred from the long arm,`GERMLINE_AMPLIFICATION` - inferred using special logic to handle regions of germline amplification)
 DepthWindowCount | 77277 | Count of COBALT windows covered by this segment
 GcContent | 0.4351 | Proportion of segment that is G or C
 MinStart | 1 | Minimum start location of this segment if there is any uncertainty.
