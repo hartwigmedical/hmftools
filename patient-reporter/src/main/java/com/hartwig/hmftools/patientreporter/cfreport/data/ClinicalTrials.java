@@ -1,10 +1,15 @@
 package com.hartwig.hmftools.patientreporter.cfreport.data;
 
 import com.hartwig.hmftools.common.actionability.ClinicalTrial;
+import com.hartwig.hmftools.common.actionability.EvidenceItem;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 public final class ClinicalTrials {
@@ -60,6 +65,25 @@ public final class ClinicalTrials {
         String[] splitExtAndCCMO = reference.split("\\(");
         String ext = splitExtAndCCMO[0];
         return ext.substring(3).trim();
+    }
+
+    public static int uniqueOnLabelEventCount(@NotNull final List<ClinicalTrial> trials) {
+        return (int) trials.stream()
+                .filter(e -> e.isOnLabel())
+                .filter(distinctByKey(e -> e.event()))
+                .count();
+    }
+
+    public static int uniqueOnLabelStudies(@NotNull final List<ClinicalTrial> trials) {
+        return (int) trials.stream()
+                .filter(e -> e.isOnLabel())
+                .filter(distinctByKey(e -> e.acronym()))
+                .count();
+    }
+
+    private static <T> Predicate<T> distinctByKey(Function<? super T, Object> keyExtractor) {
+        Map<Object, Boolean> map = new ConcurrentHashMap<>();
+        return t -> map.putIfAbsent(keyExtractor.apply(t), Boolean.TRUE) == null;
     }
 
 }

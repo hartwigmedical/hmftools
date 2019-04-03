@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.patientreporter.cfreport.chapters;
 
+import com.hartwig.hmftools.common.actionability.ClinicalTrial;
+import com.hartwig.hmftools.common.actionability.EvidenceItem;
 import com.hartwig.hmftools.patientreporter.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.cfreport.MathUtil;
 import com.hartwig.hmftools.patientreporter.cfreport.data.*;
@@ -17,6 +19,9 @@ import com.itextpdf.layout.element.Table;
 import com.itextpdf.layout.property.UnitValue;
 import com.itextpdf.layout.property.VerticalAlignment;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
+import java.util.List;
 
 public class SummaryChapter extends ReportChapter {
 
@@ -37,8 +42,20 @@ public class SummaryChapter extends ReportChapter {
     @Override
     protected final void renderChapterContent(@NotNull final AnalysedPatientReport patientReport, @NotNull final Document reportDocument) {
         renderTumorLocationAndType(patientReport, reportDocument);
-        renderSummaryText(patientReport, reportDocument);
-        renderTreatmentIndications(patientReport, reportDocument);
+
+        // @TODO Replace this fixed text with the patientReport.summaryText method.
+        // Return value from that method can be null which is gracefully handled by renderSummaryText :
+        // final String summaryContent = patientReport.summaryText();
+        final String summaryContent = "Melanoma sample with an activating BRAF mutation that is associated with " +
+                "response to BRAF-inhibitors (in combination with an MEK-inhibitor). The tumor shows a complete " +
+                "inactivation of CDKN2A, indicating potential benefit of CDK4/6 inhibitors (e.g. palbociclib). The " +
+                "observed complete loss of PTEN likely results in an activation of the PI3K-AKT-mTOR pathway and " +
+                "suggests eligibility for treatment (study) using mTOR/PI3K inhibitors. In addition, the tumor samples " +
+                "shows a high mutational burden that is associated with an increased response rate to checkpoint " +
+                "inhibitor immunotherapy.";
+        renderSummaryText(summaryContent, reportDocument);
+
+        renderTreatmentIndications(patientReport.tumorSpecificEvidence(), patientReport.clinicalTrials(), reportDocument);
         renderTumorCharacteristics(patientReport, reportDocument);
         renderGenomicAlterations(patientReport, reportDocument);
     }
@@ -71,21 +88,17 @@ public class SummaryChapter extends ReportChapter {
 
     }
 
-    private void renderSummaryText(@NotNull final AnalysedPatientReport patientReport, @NotNull final Document reportDocument) {
+    private void renderSummaryText(@Nullable final String text, @NotNull final Document reportDocument) {
+
+        if (text == null) {
+            return;
+        }
 
         Div div = createSectionStartDiv(getContentWidth());
         div.add(new Paragraph("Summary")
                 .addStyle(ReportResources.sectionTitleStyle()));
 
-        // @TODO Report summary not in data
-        // Add content to div
-        String content = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vivamus eget porta turpis. Lorem ipsum dolor sit amet, " +
-                "consectetur adipiscing elit. Nullam interdum sodales ullamcorper. Nulla vestibulum ipsum quis ipsum congue, quis commodo velit " +
-                "condimentum. Suspendisse eget nulla egestas, fermentum urna ut, bibendum ipsum. Nulla varius, dui elementum faucibus ultricies, " +
-                "nisi velit dignissim arcu, nec feugiat dui magna eu felis. Maecenas at odio pharetra, sodales velit vitae, gravida mauris. Pellentesque " +
-                "id ultrices diam. Integer non ex ut neque auctor pellentesque. Ut et nibh faucibus, pretium erat efficitur, vehicula lorem.";
-
-        div.add(new Paragraph(content)
+        div.add(new Paragraph(text)
                 .setWidth(getContentWidth())
                 .addStyle(BODY_TEXT_STYLE).setFixedLeading(11));
 
@@ -93,7 +106,8 @@ public class SummaryChapter extends ReportChapter {
 
     }
 
-    private void renderTreatmentIndications(@NotNull final AnalysedPatientReport patientReport, @NotNull Document reportDocument) {
+    private void renderTreatmentIndications(@NotNull final List<EvidenceItem> tumorSpecificEvidence,
+                                            @NotNull final List<ClinicalTrial> trials, @NotNull Document reportDocument) {
 
         // Initialize div
         Div div = createSectionStartDiv(getContentWidth());
@@ -111,19 +125,17 @@ public class SummaryChapter extends ReportChapter {
                         .setFixedLeading(ReportResources.BODY_TEXT_LEADING)));
         table.addCell(TableUtil.getLayoutCell(1, 2).setHeight(TABLE_SPACER_HEIGHT)); // Spacer
 
-        // @TODO Number of alterations/treatments not directly in the data?
-        // Alterations/therapy
-        int therapyGeneCount = 1;
-        int therapyCount = 8;
+        // Alterations/therapies
+        int therapyGeneCount = EvidenceItems.uniqueEventCount(tumorSpecificEvidence);
+        int therapyCount = EvidenceItems.uniqueTherapyCount(tumorSpecificEvidence);
         table.addCell(createMiddleAlignedCell()
                 .add(new Paragraph("Gene alteration(s) with therapy indication(s)")
                         .addStyle(BODY_TEXT_STYLE)));
         table.addCell(createTreatmentIndicationCell(therapyGeneCount, therapyCount, "treatments"));
 
-        // @TODO Number of alterations/studies not directly in the data?
         // Alterations/clinical study
-        int studyGeneCount = 2;
-        int studyCount = 7;
+        int studyGeneCount = ClinicalTrials.uniqueOnLabelEventCount(trials);
+        int studyCount = ClinicalTrials.uniqueOnLabelStudies(trials);
         table.addCell(createMiddleAlignedCell()
                 .add(new Paragraph("Gene alteration(s) with clinical study eligibility")
                         .addStyle(BODY_TEXT_STYLE)));

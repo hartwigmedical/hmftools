@@ -4,7 +4,12 @@ import com.hartwig.hmftools.common.actionability.EvidenceItem;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 public final class EvidenceItems {
@@ -53,6 +58,23 @@ public final class EvidenceItems {
                 return Strings.EMPTY;
         }
 
+    }
+
+    public static int uniqueEventCount(@NotNull final List<EvidenceItem> evidenceItems) {
+        return (int) evidenceItems.stream()
+                .filter(distinctByKey(e -> e.event()))
+                .count();
+    }
+
+    public static int uniqueTherapyCount(@NotNull final List<EvidenceItem> evidenceItems) {
+        return (int) evidenceItems.stream()
+                .filter(distinctByKey(e -> e.drug()))
+                .count();
+    }
+
+    private static <T> Predicate<T> distinctByKey(Function<? super T, Object> keyExtractor) {
+        Map<Object, Boolean> map = new ConcurrentHashMap<>();
+        return t -> map.putIfAbsent(keyExtractor.apply(t), Boolean.TRUE) == null;
     }
 
 }
