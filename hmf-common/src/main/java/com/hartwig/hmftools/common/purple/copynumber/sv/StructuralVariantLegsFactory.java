@@ -151,6 +151,7 @@ final class StructuralVariantLegsFactory {
                 .tumorReferenceFragmentCount(maxTumorReferenceFragmentCount == 0 ? null : Math.abs(maxTumorReferenceFragmentCount))
                 .alleleFrequency(Math.abs(vaf))
                 .homology("")
+                .anchoringSupportDistance(0)
                 .build();
     }
 
