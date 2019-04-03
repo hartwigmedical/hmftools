@@ -472,8 +472,8 @@ NormFactor | 0.64 | Factor to convert tumor ratio to copy number. Lower number i
 Score | 0.68 | Score of fit.
 Diploid Proportion | 0.02 | Proportion of copy number regions that have 1 (+- 0.2) minor and major allele.
 Ploidy | 3.10 | Average ploidy of the tumor sample after adjusting for purity.
-Gender | MALE | One of MALE, FEMALE or MALE_KLINEFELTER.
-Status | [NORMAL](#9-determine-a-qc-status-for-the-tumor) | One of `NORMAL`, `HIGHLY_DIPLOID`, `SOMATIC` or `NO_TUMOR`
+Gender | MALE | One of `MALE`, `FEMALE` or `MALE_KLINEFELTER`.
+[Status](#9-determine-a-qc-status-for-the-tumor) | NORMAL | One of `NORMAL`, `HIGHLY_DIPLOID`, `SOMATIC` or `NO_TUMOR`
 PolyclonalProportion | 0.09 | Proportion of copy number regions that are more than 0.25 from a whole copy number
 MinPurity | 0.95 | Minimum purity with score within 10% of best. 
 MaxPurity | 1.00 | Maximim purity with score within 10% of best.
@@ -538,10 +538,10 @@ BafCount  | 225 | Count of AMBER baf points covered by this segment
 ObservedBAF  | 0.7094 | Combined reference and tumor BAF in TUMOR sample **un**adjusted for purity and ploidy
 ObservedTumorRatio  | 0.8832 | COBALT ratio in TUMOR sample **un**adjusted for purity and ploidy
 ObservedNormalRatio  | 0.9986 | COBALT ratio in REFERENCE sample 
-MinorAllelePloidyDeviation | 0.7601 | Penalty for [deviation](#deviation-penalty) of minor allele from whole number
-MinorAllelePloidyDeviation | 0.2000 | Penalty for [deviation](#deviation-penalty) of major allele from whole number
+[MinorAllelePloidyDeviation](#deviation-penalty) | 0.7601 | Penalty for deviation of minor allele from whole number
+[MinorAllelePloidyDeviation](#deviation-penalty) | 0.2000 | Penalty for deviation of major allele from whole number
 DeviationPenalty | 0.6777 | Sum of Minor and Major Allele ploidy deviation scaled by ObservedBAF
-EventPenalty | 1.3460 | Penalty for number of [events](#event-penalty) required to take solution away from diploid
+[EventPenalty](#event-penalty) | 1.3460 | Penalty for number of events required to take solution away from diploid
 TumorCopyNumber  | 2.7807 | Absolute tumor copy number of segment adjusted for purity and ploidy
 TumorBAF | 0.7074 | Tumor BAF after adjusted for purity and ploidy adjusted for purity and ploidy
 RefNormalisedCopyNumber  | 2.7807 | Similar to TumorCopyNumber except calculated using actual ObservedNormalRatio instead of ideal one.  
