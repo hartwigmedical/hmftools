@@ -1233,12 +1233,65 @@ public abstract class ViccFactory {
     private static StringBuilder readObjectOncokb(@NotNull JsonObject object, @NotNull StringBuilder headerCSV) {
         //ONCOKB object
         StringBuilder stringToCSVOncoKb = new StringBuilder();
+        StringBuilder info = new StringBuilder();
+        StringBuilder extra = new StringBuilder();
+        StringBuilder biologicalInfo = new StringBuilder();
+        StringBuilder clinicallInfo = new StringBuilder();
+        StringBuilder stringLink = new StringBuilder();
+        StringBuilder stringText = new StringBuilder();
+
         if (object.getAsJsonObject("oncokb") != null) {
             List<String> keysOfoncoKb = new ArrayList<>(object.getAsJsonObject("oncokb").keySet());
             for (int x = 0; x < keysOfoncoKb.size(); x++) {
                 JsonObject pmkbObject = object.getAsJsonObject("oncokb").get(keysOfoncoKb.get(x)).getAsJsonObject();
                 List<String> keysOfBiological = new ArrayList<>(pmkbObject.keySet());
                 for (int y = 0; y < keysOfBiological.size(); y++) {
+                    if (keysOfoncoKb.get(x).equals("biological")) {
+                        if (keysOfBiological.get(y).equals("mutationEffectPmids")) {
+                            info.append(pmkbObject.get(keysOfBiological.get(y))).append(";");
+                        } else if (keysOfBiological.get(y).equals("Isoform")) {
+                            info.append(pmkbObject.get(keysOfBiological.get(y))).append(";");
+                            info.append(";;;");
+                        } else if (keysOfBiological.get(y).equals("mutationEffectAbstracts")) {
+                            biologicalInfo.append(pmkbObject.get(keysOfBiological.get(y))).append(";");
+                            biologicalInfo.append(";;;;;;;;");
+                        } else if (keysOfBiological.get(y).equals("Entrez Gene ID") || keysOfBiological.get(y).equals("oncogenic")
+                                || keysOfBiological.get(y).equals("mutationEffect") || keysOfBiological.get(y).equals("RefSeq")
+                                || keysOfBiological.get(y).equals("gene")) {
+                            biologicalInfo.append(pmkbObject.get(keysOfBiological.get(y))).append(";");
+                        }
+
+                    } else if (keysOfoncoKb.get(x).equals("clinical")) {
+                        if (keysOfBiological.get(y).equals("RefSeq")) {
+                            info.append(";;");
+                            info.append(pmkbObject.get(keysOfBiological.get(y))).append(";");
+                        } else if (keysOfBiological.get(y).equals("level") || keysOfBiological.get(y).equals("Isoform")) {
+                            info.append(pmkbObject.get(keysOfBiological.get(y))).append(";");
+                        } else if (keysOfBiological.get(y).equals("drugAbstracts")) {
+                            JsonArray drugs = pmkbObject.get(keysOfBiological.get(y)).getAsJsonArray();
+                            for (int v = 0; v < drugs.size(); v++) {
+                                JsonObject objectDrugs = (JsonObject) drugs.get(v);
+                                List<String> keysDrugs = new ArrayList<>(objectDrugs.keySet());
+                                for (int u = 0; u < keysDrugs.size(); u++) {
+                                    if (keysDrugs.get(u).equals("text")) {
+                                        JsonElement text = objectDrugs.get(keysDrugs.get(u));
+                                        stringText.append(text).append(",");
+                                    } else if (keysDrugs.get(u).equals("link")) {
+                                        JsonElement link = objectDrugs.get(keysDrugs.get(u));
+                                        stringLink.append(link).append(",");
+                                    }
+                                }
+                            }
+                            clinicallInfo.append(stringText).append(";").append(stringLink).append(";");
+                        } else if (keysOfBiological.get(y).equals("Entrez Gene ID")) {
+                            clinicallInfo.append(";;;;;;");
+                            clinicallInfo.append(pmkbObject.get(keysOfBiological.get(y))).append(";");
+                        } else if (keysOfBiological.get(y).equals("drugPmids") || keysOfBiological.get(y).equals("cancerType")
+                                || keysOfBiological.get(y).equals("drug") || keysOfBiological.get(y).equals("gene") || keysOfBiological.get(
+                                y).equals("level_label")) {
+                            clinicallInfo.append(pmkbObject.get(keysOfBiological.get(y))).append(";");
+                        }
+                    }
                     if (keysOfBiological.get(y).equals("variant")) {
                         JsonObject oncokbVariant = pmkbObject.get(keysOfBiological.get(y)).getAsJsonObject();
                         List<String> keysOfVariant = new ArrayList<>(oncokbVariant.keySet());
@@ -1247,29 +1300,34 @@ public abstract class ViccFactory {
                                 JsonObject oncokbConsequence = oncokbVariant.get(keysOfVariant.get(z)).getAsJsonObject();
                                 List<String> keysOfConsequence = new ArrayList<>(oncokbConsequence.keySet());
                                 for (int v = 0; v < keysOfConsequence.size(); v++) {
-                                    stringToCSVOncoKb.append(oncokbConsequence.get(keysOfConsequence.get(v))).append(";");
+                                    extra.append(oncokbConsequence.get(keysOfConsequence.get(v))).append(";");
                                 }
                             } else if (keysOfVariant.get(z).equals("gene")) {
                                 JsonObject oncokbGene = oncokbVariant.get(keysOfVariant.get(z)).getAsJsonObject();
                                 List<String> keysOfGene = new ArrayList<>(oncokbGene.keySet());
                                 for (int i = 0; i < keysOfGene.size(); i++) {
-                                    stringToCSVOncoKb.append(oncokbGene.get(keysOfGene.get(i))).append(";");
+                                    extra.append(oncokbGene.get(keysOfGene.get(i))).append(";");
                                 }
-                            } else {
-                                stringToCSVOncoKb.append(oncokbVariant.get(keysOfVariant.get(z))).append(";");
+                            } else  {
+                                extra.append(oncokbVariant.get(keysOfVariant.get(z))).append(";");
                             }
                         }
-                    } else {
-                        stringToCSVOncoKb.append(pmkbObject.get(keysOfBiological.get(y))).append(";");
+                    } else if (!keysOfBiological.get(y).equals("mutationEffectPmids") && !keysOfBiological.get(y).equals("Isoform")
+                            && !keysOfBiological.get(y).equals("RefSeq") && !keysOfBiological.get(y).equals("level")
+                            && !keysOfBiological.get(y).equals("Entrez Gene ID") && !keysOfBiological.get(y).equals("drugPmids")
+                            && !keysOfBiological.get(y).equals("cancerType") && !keysOfBiological.get(y).equals("drug") && !keysOfBiological
+                            .get(y)
+                            .equals("gene") && !keysOfBiological.get(y).equals("level_label") && !keysOfBiological.get(y)
+                            .equals("oncogenic") && !keysOfBiological.get(y).equals("mutationEffect") && !keysOfBiological.get(y)
+                            .equals("mutationEffectAbstracts") && !keysOfBiological.get(y).equals("drugAbstracts")) {
+                        extra.append(pmkbObject.get(keysOfBiological.get(y))).append(";");
                     }
                 }
             }
+            stringToCSVOncoKb.append(info).append(extra).append(biologicalInfo).append(clinicallInfo);
         } else {
-            stringToCSVOncoKb.append(";;;;;;;;;;;;;;;;;;;;;;;;;");
+            stringToCSVOncoKb.append(";;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;");
         }
-        headerCSV.append("mutationEffectPmids;Isoform;variantResidues;proteinStart;name;proteinEnd;refResidues;alteration;term;description;"
-                + "isGenerallyTruncating;oncogene;name;hugoSymbol;curatedRefSeq;entrezGeneId;geneAliases;tsg;curatedIsoform;Entrez Gene ID;"
-                + "oncogenic;mutationEffect;RefSeq;gene;mutationEffectAbstracts;");
         return stringToCSVOncoKb;
     }
 
@@ -1701,6 +1759,19 @@ public abstract class ViccFactory {
                 + "cgi.Curator;cgi.Drug family;cgi.Alteration;cgi.Drug;cgi.Biomarker;cgi.gDNA;cgi.Drug status;cgi.Gene;cgi.transcript;"
                 + "cgi.strand;cgi.info;cgi.Assay type;cgi.Alteration type;cgi.region;cgi.Evidence level;cgi.Association;"
                 + "cgi.Metastatic Tumor Type;";
+        String headerOncokb = "oncokb.biological.mutationEffectPmids;oncokb.biological.Isoform;oncokb.clinical.RefSeq;"
+                + "oncokb.clinical.level;oncokb.clinical.Isoform;oncokb.biological.variant.variantResidues;"
+                + "oncokb.biological.variant.proteinStart;oncokb.biological.variant.name;oncokb.biological.variant.proteinEnd;"
+                + "oncokb.biological.variant.refResidues;oncokb.biological.variant.alteration;oncokb.biological.variant.consequence.term;"
+                + "oncokb.biological.variant.consequence.description;oncokb.biological.variant.consequence.isGenerallyTruncating;"
+                + "oncokb.biological.variant.gene.oncogene;oncokb.biological.variant.gene.name;oncokb.biological.variant.gene.hugoSymbol;"
+                + "oncokb.biological.variant.gene.curatedRefSeq;oncokb.biological.variant.gene.entrezGeneId;"
+                + "oncokb.biological.variant.gene.geneAliases;oncokb.biological.variant.gene.tsg;"
+                + "oncokb.biological.variant.gene.curatedIsoform;oncokb.biological.Entrez Gene ID;oncokb.biological.oncogenic;"
+                + "oncokb.biological.mutationEffect;oncokb.biological.RefSeq;oncokb.biological.gene;"
+                + "oncokb.biological.mutationEffectAbstracts;oncokb.clinical.Entrez Gene ID;oncokb.clinical.drugPmids;"
+                + "oncokb.clinical.cancerType;oncokb.clinical.drug;oncokb.clinical.drugAbstracts.text;oncokb.clinical.drugAbstracts.link;"
+                + "oncokb.clinical.gene;oncokb.clinical.level_label;";
 
         headerCSV.append(headerIndex);
         headerCSV.append(headerSource);
@@ -1711,7 +1782,8 @@ public abstract class ViccFactory {
         //        headerCSV.append(headerSage);
         //        headerCSV.append(headerPmkb);
         //        headerCSV.append(headerBRCA);
-        headerCSV.append(headerCGI);
+        //        headerCSV.append(headerCGI);
+        headerCSV.append(headerOncokb);
 
         writer.append(headerCSV);
         writer.append("\n");
@@ -1730,6 +1802,7 @@ public abstract class ViccFactory {
             StringBuilder StringToCSVPmkb = readObjectPmkb(object, headerCSV);
             StringBuilder StringToCSVBrca = readObjectBRCA(object, headerCSV);
             StringBuilder StringToCSVCGI = readObjectCGI(object, headerCSV);
+            StringBuilder StringToCSVOncokb = readObjectOncokb(object, headerCSV);
 
             stringToCSVAll.append(index).append(";");
             stringToCSVAll.append(StringToCSVSource);
@@ -1740,7 +1813,8 @@ public abstract class ViccFactory {
             //            stringToCSVAll.append(StringToCSVSage);
             //            stringToCSVAll.append(StringToCSVPmkb);
             //            stringToCSVAll.append(StringToCSVBrca);
-            stringToCSVAll.append(StringToCSVCGI);
+            //            stringToCSVAll.append(StringToCSVCGI);
+            stringToCSVAll.append(StringToCSVOncokb);
 
             writer.append(stringToCSVAll);
             writer.append("\n");
