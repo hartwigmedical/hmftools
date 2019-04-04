@@ -504,7 +504,6 @@ public class ClusterAnalyser {
         if(!mUseAllelePloidies)
             return false;
 
-        // merge clusters if one resolves another's LOH event with a DUP on one side
         List<SvCluster> mergedClusters = Lists.newArrayList();
 
         int clusterIndex = 0;
@@ -523,16 +522,18 @@ public class ClusterAnalyser {
             for (final Map.Entry<String, List<SvBreakend>> entry : cluster.getChrBreakendMap().entrySet())
             {
                 List<SvBreakend> breakendList = entry.getValue();
+                long lowerArmBoundary = breakendList.get(0).position();
+                long upperArmBoundary = breakendList.get(breakendList.size() - 1).position();
 
                 List<SvBreakend> fullBreakendList = mClusteringMethods.getChrBreakendMap().get(entry.getKey());
 
                 for (SvBreakend breakend : breakendList)
                 {
-                    boolean traverseUp = breakend.orientation() == -1;
                     double breakendPloidy = breakend.ploidy();
                     SvCluster resolvingCluster = null;
                     SvBreakend resolvingBreakend = null;
 
+                    boolean traverseUp = breakend.orientation() == -1;
                     int index = breakend.getChrPosIndex();
 
                     while(true)
@@ -545,6 +546,10 @@ public class ClusterAnalyser {
                         SvBreakend nextBreakend = fullBreakendList.get(index);
 
                         if(nextBreakend.arm() != breakend.arm())
+                            break;
+
+                        // only cluster with variants within this cluster's boundaries
+                        if(nextBreakend.position() < lowerArmBoundary || nextBreakend.position() > upperArmBoundary)
                             break;
 
                         if(nextBreakend.orientation() == breakend.orientation())
