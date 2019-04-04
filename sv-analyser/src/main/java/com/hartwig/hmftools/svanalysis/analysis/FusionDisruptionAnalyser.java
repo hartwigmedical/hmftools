@@ -144,8 +144,10 @@ public class FusionDisruptionAnalyser
 
             if(cmdLineArgs.hasOption(RESTRICTED_GENE_LIST))
             {
-                String[] restrictedGenes = cmdLineArgs.getOptionValue(RESTRICTED_GENE_LIST).split(";");
-                mRestrictedGenes = Arrays.stream(restrictedGenes).collect(Collectors.toList());
+                String restrictedGenesStr = cmdLineArgs.getOptionValue(RESTRICTED_GENE_LIST);
+                mRestrictedGenes = Arrays.stream(restrictedGenesStr.split(";")).collect(Collectors.toList());
+
+                LOGGER.info("restricting fusion genes to: {}", restrictedGenesStr);
             }
         }
     }
@@ -535,12 +537,6 @@ public class FusionDisruptionAnalyser
                         writeFusionData(fusion, cluster, clusterChainInfo);
                     }
                 }
-
-                /*
-                // if these breakends were candidates for a fusion, then regardless of whether any were found, they are invalid for use
-                // any further up the chain since it would mean traversing the same transcipts which is not permitted
-                break;
-                */
             }
         }
     }
@@ -700,19 +696,6 @@ public class FusionDisruptionAnalyser
 
             // keep track of any skipped exons
             SvBreakend nextOtherBreakend = nextBreakend.getOtherBreakend();
-
-            /*
-            boolean nextIsPromotor = (nextOtherBreakend.position() < transcript.TranscriptStart || nextOtherBreakend.position() > transcript.TranscriptEnd);
-
-            if((nextOtherBreakend.orientation() == 1 && nextOtherBreakend.position() > transcript.TranscriptEnd)
-            || (nextOtherBreakend.orientation() == -1 && nextOtherBreakend.position() < transcript.TranscriptStart))
-            {
-                // SV link has left the transcript
-                disruptedExons += max(transcript.ExonMax - prevExonRankings[EXON_RANK_MAX], 0);
-                transcriptTerminated = true;
-                break;
-            }
-            */
 
             ++totalBreakends;
 
