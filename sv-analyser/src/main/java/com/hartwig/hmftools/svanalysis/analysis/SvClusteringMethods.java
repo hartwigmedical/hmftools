@@ -328,6 +328,7 @@ public class SvClusteringMethods {
                     SvCluster newCluster = new SvCluster(getNextClusterId());
                     newClusters.add(newCluster);
                     newCluster.addVariant(var);
+                    var.clearClusterReason();
                 }
             }
 

@@ -207,7 +207,7 @@ public class SvAnalyser {
                     continue;
                 }
 
-                LOGGER.info("sample({}) processing {} SVs, totalProcessed({})", sampleId, svVarData.size(), count);
+                LOGGER.info("sample({}) processing {} SVs, samplesComplete({})", sampleId, svVarData.size(), count);
 
                 cnAnalyser.loadSampleData(sampleId, svRecords, createNoneSvsFromCNData);
 

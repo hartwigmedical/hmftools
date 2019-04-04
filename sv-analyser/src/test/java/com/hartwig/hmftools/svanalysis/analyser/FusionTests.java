@@ -104,6 +104,7 @@ public class FusionTests
 
         addTransExonData(geneTransCache, geneId2, transExonList);
 
+        PRE_GENE_PROMOTOR_DISTANCE = 200;
 
         // test 1: create a chain of DELs with a single-SV fusion which link between exon 2-3 of upstream to 2-3 of downstream
 
@@ -132,8 +133,6 @@ public class FusionTests
 
         assertEquals(1, cluster.getChains().size());
 
-        PRE_GENE_PROMOTOR_DISTANCE = 200;
-
         tester.FusionAnalyser.setSvGeneData(tester.AllVariants, geneTransCache, true, false);
         tester.FusionAnalyser.run(tester.SampleId, tester.AllVariants, tester.getClusters(), tester.ClusteringMethods.getChrBreakendMap());
 
@@ -141,8 +140,10 @@ public class FusionTests
 
         GeneFusion fusion = tester.FusionAnalyser.getFusions().get(0);
         assertEquals(var3.dbId(), fusion.upstreamTrans().parent().id());
+        assertEquals(var3.dbId(), fusion.downstreamTrans().parent().id());
 
-        // this time a chain from the first to the last variant with the middle 2 going out to non-disruptive locations
+
+        // test 2: this time a chain from the first to the last variant with the middle 2 going out to non-disruptive locations
         tester.clearClustersAndSVs();
 
         // upstream trans
@@ -179,6 +180,48 @@ public class FusionTests
         assertEquals(var4.dbId(), fusion.downstreamTrans().parent().id());
 
 
+        // test 3: this time 2 potential fusions beween SVs 3 & 4
+        tester.clearClustersAndSVs();
+
+        PRE_GENE_PROMOTOR_DISTANCE = 500;
+
+        var1 = createDel("0", chromosome, 100,200);
+
+        var2 = createDel("1", chromosome, 300,400);
+
+        // deletes an exon within gene 1
+        var3 = createDel("2", chromosome, 1400,1720);
+
+        // from coding region of gene 1 to coding of gene 2
+        var4 = createDel("3", chromosome, 1780, 11550);
+
+        tester.AllVariants.add(var1);
+        tester.AllVariants.add(var2);
+        tester.AllVariants.add(var3);
+        tester.AllVariants.add(var4);
+
+        tester.preClusteringInit();
+        tester.Analyser.clusterAndAnalyse();
+
+        assertEquals(1, tester.Analyser.getClusters().size());
+        cluster = tester.Analyser.getClusters().get(0);
+
+        assertEquals(1, cluster.getChains().size());
+
+        tester.FusionAnalyser.setSvGeneData(tester.AllVariants, geneTransCache, true, false);
+        tester.FusionAnalyser.run(tester.SampleId, tester.AllVariants, tester.getClusters(), tester.ClusteringMethods.getChrBreakendMap());
+
+        /*
+        assertEquals(2, tester.FusionAnalyser.getFusions().size());
+
+        fusion = tester.FusionAnalyser.getFusions().get(0);
+        assertEquals(var3.dbId(), fusion.upstreamTrans().parent().id());
+        assertEquals(var4.dbId(), fusion.downstreamTrans().parent().id());
+
+        fusion = tester.FusionAnalyser.getFusions().get(1);
+        assertEquals(var4.dbId(), fusion.upstreamTrans().parent().id());
+        assertEquals(var4.dbId(), fusion.downstreamTrans().parent().id());
+        */
     }
 
 }

@@ -322,7 +322,6 @@ public class MergeRuleTests
         if(mainCluster == null)
             assertTrue(false);
 
-        assertTrue(consec1.getClusterReason().contains(CLUSTER_REASON_LOOSE_OVERLAP));
         assertTrue(overlap1.getClusterReason().contains(CLUSTER_REASON_LOOSE_OVERLAP));
         assertTrue(overlap2.getClusterReason().contains(CLUSTER_REASON_LOOSE_OVERLAP));
     }

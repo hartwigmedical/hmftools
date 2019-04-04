@@ -498,12 +498,6 @@ public class SvCluster
         mLongDelDups.addAll(other.getLongDelDups());
     }
 
-    public void addClusterReason(final String reason, final String linkingVarId)
-    {
-        mSVs.forEach(x -> x.addClusterReason(reason, linkingVarId));
-        addClusterReason(reason);
-    }
-
     public void addClusterReason(final String reason)
     {
         if(!mClusteringReasons.contains(reason))

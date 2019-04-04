@@ -20,12 +20,12 @@ import com.hartwig.hmftools.common.region.HmfTranscriptRegion;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneAnnotation;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneDisruption;
-import com.hartwig.hmftools.common.variant.structural.annotation.ImmutableGeneDisruption;
 import com.hartwig.hmftools.common.variant.structural.annotation.StructuralVariantAnnotation;
 import com.hartwig.hmftools.common.variant.structural.annotation.Transcript;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.ensembl.database.homo_sapiens_core.tables.Gene;
 import org.jetbrains.annotations.NotNull;
 
 public class SvDisruptionAnalyser
@@ -89,11 +89,13 @@ public class SvDisruptionAnalyser
             {
                 for (final Transcript transcript : gene.transcripts())
                 {
-                    final GeneDisruption disruption = ImmutableGeneDisruption.builder()
-                            .reportable(mDisruptionGeneIDPanel.stream().anyMatch(geneID -> gene.synonyms().contains(geneID))
-                                    && transcript.isCanonical())
-                            .linkedAnnotation(transcript)
-                            .build();
+                    GeneDisruption disruption = new GeneDisruption(transcript);
+
+                    if(transcript.isCanonical()
+                    && mDisruptionGeneIDPanel.stream().anyMatch(geneID -> gene.synonyms().contains(geneID)))
+                    {
+                        disruption.setReportable(true);
+                    }
 
                     disruptions.add(disruption);
                 }
@@ -112,6 +114,30 @@ public class SvDisruptionAnalyser
         boolean sameExonUpstream = t1.ExonUpstream == t2.ExonUpstream;
 
         return sameTranscript && bothIntronic && sameExonUpstream;
+    }
+
+    public static void markNonDisruptiveTranscripts(List<GeneAnnotation> genesStart, List<GeneAnnotation> genesEnd)
+    {
+        if(genesStart.isEmpty() || genesEnd.isEmpty())
+            return;
+
+        for(final GeneAnnotation startGene : genesStart)
+        {
+            for (final Transcript trans1 : startGene.transcripts())
+            {
+                for (final GeneAnnotation endGene : genesEnd)
+                {
+                    for (final Transcript trans2 : endGene.transcripts())
+                    {
+                        if(!areDisruptivePair(trans1, trans2))
+                        {
+                            trans1.setIsDisruptive(false);
+                            trans2.setIsDisruptive(false);
+                        }
+                    }
+                }
+            }
+        }
     }
 
     public static void setBreakendDisruptive(final List<StructuralVariantAnnotation> annotations)
@@ -185,7 +211,7 @@ public class SvDisruptionAnalyser
 
             for(final GeneDisruption disruption : disruptions)
             {
-                final Transcript transcript = disruption.linkedAnnotation();
+                final Transcript transcript = disruption.transcript();
 
                 final GeneAnnotation svBreakend = transcript.parent();
 

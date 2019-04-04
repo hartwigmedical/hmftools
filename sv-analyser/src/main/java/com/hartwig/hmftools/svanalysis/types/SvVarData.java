@@ -313,6 +313,7 @@ public class SvVarData
         }
     }
 
+    public void clearClusterReason() { mClusterReason = ""; }
     public final String getClusterReason() { return mClusterReason; }
 
     public boolean isReplicatedSv() { return mIsReplicatedSv; }

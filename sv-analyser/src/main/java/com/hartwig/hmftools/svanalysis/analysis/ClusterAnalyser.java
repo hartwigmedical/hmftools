@@ -568,8 +568,11 @@ public class ClusterAnalyser {
                                     cluster.id(), breakend.getSV().posId(), resolvingCluster.id(), resolvingBreakend.toString(),
                                     String.format("%.2f -> %.2f", breakendPloidy, majorAP));
 
-                            resolvingCluster.addClusterReason(CLUSTER_REASON_BE_PLOIDY_DROP, breakend.getSV().id());
-                            cluster.addClusterReason(CLUSTER_REASON_BE_PLOIDY_DROP, nextBreakend.getSV().id());
+                            breakend.getSV().addClusterReason(CLUSTER_REASON_BE_PLOIDY_DROP, nextBreakend.getSV().id());
+                            nextBreakend.getSV().addClusterReason(CLUSTER_REASON_BE_PLOIDY_DROP, breakend.getSV().id());
+
+                            resolvingCluster.addClusterReason(CLUSTER_REASON_BE_PLOIDY_DROP);
+                            cluster.addClusterReason(CLUSTER_REASON_BE_PLOIDY_DROP);
 
                             cluster.mergeOtherCluster(resolvingCluster);
 
@@ -671,8 +674,11 @@ public class ClusterAnalyser {
                             LOGGER.debug("cluster({}) SV({}) resolved prior to LOH by other cluster({}) breakend({})",
                                     lohCluster.id(), lohBreakend.getSV().posId(), resolvingCluster.id(), resolvingBreakend.toString());
 
-                            resolvingCluster.addClusterReason(CLUSTER_REASON_LOH_CHAIN, lohBreakend.getSV().id());
-                            lohCluster.addClusterReason(CLUSTER_REASON_LOH_CHAIN, resolvingBreakend.getSV().id());
+                            lohBreakend.getSV().addClusterReason(CLUSTER_REASON_LOH_CHAIN, resolvingBreakend.getSV().id());
+                            resolvingBreakend.getSV().addClusterReason(CLUSTER_REASON_LOH_CHAIN, lohBreakend.getSV().id());
+
+                            resolvingCluster.addClusterReason(CLUSTER_REASON_LOH_CHAIN);
+                            lohCluster.addClusterReason(CLUSTER_REASON_LOH_CHAIN);
 
                             lohCluster.mergeOtherCluster(resolvingCluster);
 
@@ -822,8 +828,11 @@ public class ClusterAnalyser {
                                         String.format("cluster minPloidy=%.2f map=%.2f arm map=%.2f",
                                                 clusterBoundaryMinPloidy, clusterBoundaryMAP, armEndMAP));
 
-                                otherCluster.addClusterReason(CLUSTER_REASON_NET_ARM_END_PLOIDY, clusterBreakend.getSV().id());
-                                cluster.addClusterReason(CLUSTER_REASON_NET_ARM_END_PLOIDY, nextBreakend.getSV().id());
+                                clusterBreakend.getSV().addClusterReason(CLUSTER_REASON_NET_ARM_END_PLOIDY, nextBreakend.getSV().id());
+                                nextBreakend.getSV().addClusterReason(CLUSTER_REASON_NET_ARM_END_PLOIDY, clusterBreakend.getSV().id());
+
+                                otherCluster.addClusterReason(CLUSTER_REASON_NET_ARM_END_PLOIDY);
+                                cluster.addClusterReason(CLUSTER_REASON_NET_ARM_END_PLOIDY);
 
                                 cluster.mergeOtherCluster(otherCluster);
 
@@ -909,8 +918,11 @@ public class ClusterAnalyser {
                             LOGGER.debug("cluster({}) SV({}) and cluster({}) SV({}) have foldbacks on same arm",
                                     cluster1.id(), var1.posId(), cluster2.id(), var2.posId());
 
-                            cluster1.addClusterReason(CLUSTER_REASON_FOLDBACKS, var2.id());
-                            cluster2.addClusterReason(CLUSTER_REASON_FOLDBACKS, var1.id());
+                            var1.addClusterReason(CLUSTER_REASON_FOLDBACKS, var2.id());
+                            var2.addClusterReason(CLUSTER_REASON_FOLDBACKS, var1.id());
+
+                            cluster1.addClusterReason(CLUSTER_REASON_FOLDBACKS);
+                            cluster2.addClusterReason(CLUSTER_REASON_FOLDBACKS);
                             return true;
                         }
                     }
@@ -964,8 +976,11 @@ public class ClusterAnalyser {
                 LOGGER.debug("cluster({}) foldback breakend({}) faces cluster({}) breakend({})",
                         foldbackCluster.id(), foldbackBreakend.toString(), otherCluster.id(), nextBreakend.toString());
 
-                foldbackCluster.addClusterReason(CLUSTER_REASON_FOLDBACKS, nextBreakend.getSV().id());
-                otherCluster.addClusterReason(CLUSTER_REASON_FOLDBACKS, var.id());
+                var.addClusterReason(CLUSTER_REASON_FOLDBACKS, nextBreakend.getSV().id());
+                nextBreakend.getSV().addClusterReason(CLUSTER_REASON_FOLDBACKS, var.id());
+
+                foldbackCluster.addClusterReason(CLUSTER_REASON_FOLDBACKS);
+                otherCluster.addClusterReason(CLUSTER_REASON_FOLDBACKS);
 
                 return true;
             }
@@ -1054,10 +1069,13 @@ public class ClusterAnalyser {
                         LOGGER.debug("cluster({}) and cluster({}) have common links with SV({}) and SV({})",
                                 cluster1.id(), cluster2.id(), var1.posId(), var2.posId());
 
-                        final String commonArms = var1.id() + "_" + var2.id();
+                        // final String commonArms = var1.id() + "_" + var2.id();
 
-                        cluster1.addClusterReason(CLUSTER_REASON_COMMON_ARMS, commonArms);
-                        cluster2.addClusterReason(CLUSTER_REASON_COMMON_ARMS, commonArms);
+                        var1.addClusterReason(CLUSTER_REASON_COMMON_ARMS, var2.id());
+                        var2.addClusterReason(CLUSTER_REASON_COMMON_ARMS, var1.id());
+
+                        cluster1.addClusterReason(CLUSTER_REASON_COMMON_ARMS);
+                        cluster2.addClusterReason(CLUSTER_REASON_COMMON_ARMS);
                         return true;
                     }
                 }
@@ -1148,8 +1166,11 @@ public class ClusterAnalyser {
                         LOGGER.debug("cluster({}) breakends({} & {}) overlap cluster({}) breakend({})",
                                 cluster.id(), lowerBreakend.toString(), upperBreakend.toString(), otherCluster.id(), otherBreakend.toString());
 
-                        otherCluster.addClusterReason(CLUSTER_REASON_LOOSE_OVERLAP, lowerBreakend.getSV().id());
-                        cluster.addClusterReason(CLUSTER_REASON_LOOSE_OVERLAP, otherBreakend.getSV().id());
+                        otherBreakend.getSV().addClusterReason(CLUSTER_REASON_LOOSE_OVERLAP, lowerBreakend.getSV().id());
+                        lowerBreakend.getSV().addClusterReason(CLUSTER_REASON_LOOSE_OVERLAP, otherBreakend.getSV().id());
+
+                        otherCluster.addClusterReason(CLUSTER_REASON_LOOSE_OVERLAP);
+                        cluster.addClusterReason(CLUSTER_REASON_LOOSE_OVERLAP);
 
                         cluster.mergeOtherCluster(otherCluster);
 

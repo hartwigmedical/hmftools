@@ -1,16 +1,19 @@
 package com.hartwig.hmftools.common.variant.structural.annotation;
 
-import org.immutables.value.Value;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+public class GeneDisruption
+{
+    private final Transcript mTranscript;
+    private boolean mIsReportable;
 
-@Value.Immutable
-@Value.Style(allParameters = true,
-             passAnnotations = { NotNull.class, Nullable.class })
-public abstract class GeneDisruption {
+    public GeneDisruption(final Transcript transcript)
+    {
+        mTranscript = transcript;
+        mIsReportable = false;
+    }
 
-    public abstract boolean reportable();
+    public final Transcript transcript() { return mTranscript; }
 
-    @NotNull
-    public abstract Transcript linkedAnnotation();
+    public boolean reportable(){ return mIsReportable; }
+    public void setReportable(boolean toggle) { mIsReportable = toggle; }
+
 }

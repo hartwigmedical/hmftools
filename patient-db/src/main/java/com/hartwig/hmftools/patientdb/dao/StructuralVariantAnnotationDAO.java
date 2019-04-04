@@ -193,7 +193,7 @@ public class StructuralVariantAnnotationDAO {
             batch.forEach(disruption -> disruptionInserter.values(timestamp,
                     sampleId,
                     disruption.reportable(),
-                    transcriptToDatabaseIdMap.get(disruption.linkedAnnotation())));
+                    transcriptToDatabaseIdMap.get(disruption.transcript())));
             disruptionInserter.execute();
         }
     }
