@@ -4,7 +4,7 @@ import org.jetbrains.annotations.NotNull;
 
 public final class MicroSatelliteStatus {
 
-    public static final double RANGE_MIN = 1E-2;
+    public static final double RANGE_MIN = 1;
     public static final double RANGE_MAX = 100;
     public static final double THRESHOLD = 4;
 

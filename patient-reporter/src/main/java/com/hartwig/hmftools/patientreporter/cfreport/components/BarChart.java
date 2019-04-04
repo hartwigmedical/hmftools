@@ -2,6 +2,7 @@ package com.hartwig.hmftools.patientreporter.cfreport.components;
 
 import com.hartwig.hmftools.patientreporter.cfreport.MathUtil;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
+import com.itextpdf.kernel.colors.Color;
 import com.itextpdf.kernel.geom.Rectangle;
 import com.itextpdf.kernel.pdf.canvas.PdfCanvas;
 import com.itextpdf.layout.Canvas;
@@ -21,6 +22,9 @@ public class BarChart extends InlineBarChart {
 
     private String lowLabel;
     private String highLabel;
+
+    private boolean underShootEnabled = false;
+    private String undershootLabel = "";
 
     private boolean overshootEnabled = false;
     private String overshootLabel = "";
@@ -68,9 +72,14 @@ public class BarChart extends InlineBarChart {
         }
     }
 
-    public void enableDefaultRangeOvershoot(@NotNull String overshootLabel) {
+    public void enableOvershoot(@NotNull String overshootLabel) {
         overshootEnabled = true;
         this.overshootLabel = overshootLabel;
+    }
+
+    public void enableUndershoot(@NotNull String undershootLabel) {
+        underShootEnabled = true;
+        this.undershootLabel = undershootLabel;
     }
 
     @Override
@@ -89,6 +98,10 @@ public class BarChart extends InlineBarChart {
         private final float BAR_OUTLINE_HEIGHT = 9f;
         private final float BAR_INSET = 2f;
 
+        private final float OVER_UNDER_SHOOT_WIDTH = 30;
+        private final float OVER_UNDERSHOOT_OVERLAP = 2;
+        private final float OVER_UNDER_SHOOT_LABEL_OFFSET = 4;
+
         BarChartRenderer(final BarChart barChart) {
             super(barChart);
         }
@@ -96,104 +109,156 @@ public class BarChart extends InlineBarChart {
         public void draw(final DrawContext drawContext) {
             super.draw(drawContext);
 
+            // Get canvas properties
             final PdfCanvas canvas = drawContext.getCanvas();
             final Rectangle boundingBox = this.occupiedArea.getBBox();
             final Canvas cv = new Canvas(canvas, canvas.getDocument(), boundingBox);
 
-            final float valueBarWidth = overshootEnabled ? boundingBox.getWidth() - 40 : boundingBox.getWidth();
+            final float barY = boundingBox.getTop() - 39;
+            final float tickY = barY - 21;
 
-            final double clampedValue = MathUtil.clamp(getValue(), getMin(), getMax());
-
-            final Rectangle barOutlineRect = new Rectangle(boundingBox.getX(), boundingBox.getTop() - 39, valueBarWidth, BAR_OUTLINE_HEIGHT);
-
-            final float outerBarRadius = barOutlineRect.getHeight() * .5f;
-
-            // Overshoot threshold
-            if (overshootEnabled) {
-
-                final float barOverlap = 2;
-
-                // Overshoot outline
-                final Rectangle overshootOutlineRect = new Rectangle(barOutlineRect.getX(), barOutlineRect.getY(), boundingBox.getWidth(), barOutlineRect.getHeight());
-                canvas.setStrokeColor(ReportResources.PALETTE_MID_BLUE);
-                canvas.setLineWidth(.25f);
-                canvas.setLineDash(3f, 2f);
-                canvas.roundRectangle(overshootOutlineRect.getX(), overshootOutlineRect.getY(), overshootOutlineRect.getWidth(), overshootOutlineRect.getHeight(), outerBarRadius);
-                canvas.stroke();
-                canvas.setLineDash(1f);
-
-                // Filled bar
-                canvas.setFillColor(ReportResources.PALETTE_BLUE);
-                if (getValue() > getMax()) {
-                    final Rectangle barRect = new Rectangle(overshootOutlineRect.getX() + BAR_INSET, overshootOutlineRect.getY() +  BAR_INSET, overshootOutlineRect.getWidth() - 2 * BAR_INSET, overshootOutlineRect.getHeight() - 2 * BAR_INSET);
-                    canvas.roundRectangle(barRect.getX(), barRect.getY(), barRect.getWidth(), barRect.getHeight(), barRect.getHeight() * .5);
-                    canvas.fill();
-                }
-
-                // White mask
-                canvas.setFillColor(ReportResources.PALETTE_WHITE);
-                canvas.circle(barOutlineRect.getRight() - outerBarRadius, barOutlineRect.getY() + outerBarRadius, outerBarRadius + barOverlap);
-                canvas.fill();
-
-                // Overshoot label
-                cv.showTextAligned(new Paragraph(overshootLabel)
-                        .addStyle(ReportResources.subTextStyle().setFontSize(6)), overshootOutlineRect.getRight() - 4, barOutlineRect.getBottom() - 21f, TextAlignment.RIGHT);
-
-            }
-
-            // Outer border
-            canvas.setStrokeColor(ReportResources.PALETTE_BLUE);
-            canvas.setFillColor(ReportResources.PALETTE_WHITE);
-            canvas.setLineWidth(.25f);
-            canvas.roundRectangle(barOutlineRect.getX(), barOutlineRect.getY(), barOutlineRect.getWidth(), barOutlineRect.getHeight(), outerBarRadius);
-            canvas.fillStroke();
-
-            // Filled bar
-            final Rectangle barRect = new Rectangle(barOutlineRect.getX() + BAR_INSET, barOutlineRect.getY() +  BAR_INSET, barOutlineRect.getWidth() - 2 * BAR_INSET, barOutlineRect.getHeight() - 2 * BAR_INSET);
-            if (getValue() > getMin()) {
-                canvas.setFillColor(ReportResources.PALETTE_BLUE);
-                canvas.roundRectangle(barRect.getX(), barRect.getY(), MathUtil.map(getScaledValue(clampedValue), getScaledMin(), getScaledMax(), barRect.getHeight(), barRect.getWidth()), barRect.getHeight(), barRect.getHeight() * .5);
-                canvas.fill();
-            }
-
-            // Add top labels
+            // Draw top labels
             cv.showTextAligned(new Paragraph(lowLabel)
                     .addStyle(ReportResources.smallBodyHeadingStyle()), boundingBox.getLeft(), boundingBox.getTop() - 25, TextAlignment.LEFT);
             cv.showTextAligned(new Paragraph(highLabel)
                     .addStyle(ReportResources.smallBodyHeadingStyle()), boundingBox.getRight(), boundingBox.getTop() - 25, TextAlignment.RIGHT);
 
-            // Add tick marks
+            // Draw undershoot
+            if (underShootEnabled) {
+
+                final float fillValue = (getValue() > getMin()) ? 1 : 0.1f;
+
+                // Draw bar
+                final Rectangle outerBB = new Rectangle(boundingBox.getLeft(), barY, OVER_UNDER_SHOOT_WIDTH + BAR_OUTLINE_HEIGHT, BAR_OUTLINE_HEIGHT);
+                final Rectangle innerBB = getInnerRectangle(outerBB);
+                drawRoundedRect(outerBB, innerBB, fillValue, ReportResources.PALETTE_MID_BLUE, ReportResources.PALETTE_BLUE, true, canvas);
+
+                // Draw mask
+                final float outerRadius = getHeightRadius(outerBB);
+                canvas.circle(outerBB.getRight() - outerRadius, outerBB.getY() + outerRadius, outerRadius + OVER_UNDERSHOOT_OVERLAP);
+                canvas.setFillColor(ReportResources.PALETTE_WHITE);
+                canvas.fill();
+
+                // Label
+                cv.showTextAligned(new Paragraph(undershootLabel)
+                        .addStyle(ReportResources.subTextStyle().setFontSize(6)), outerBB.getLeft() + OVER_UNDER_SHOOT_LABEL_OFFSET, tickY, TextAlignment.LEFT);
+
+            }
+
+            // Draw overshoot
+            if (overshootEnabled) {
+
+                final float fillValue = (getValue() > getMax()) ? 1 : 0;
+
+                // Draw bar
+                final Rectangle outerBB = new Rectangle(boundingBox.getRight() - OVER_UNDER_SHOOT_WIDTH - BAR_OUTLINE_HEIGHT, barY, OVER_UNDER_SHOOT_WIDTH + BAR_OUTLINE_HEIGHT, BAR_OUTLINE_HEIGHT);
+                final Rectangle innerBB = getInnerRectangle(outerBB);
+                drawRoundedRect(outerBB, innerBB, fillValue, ReportResources.PALETTE_MID_BLUE, ReportResources.PALETTE_BLUE, true, canvas);
+
+                // Draw mask
+                final float outerRadius = getHeightRadius(outerBB);
+                canvas.setFillColor(ReportResources.PALETTE_WHITE);
+                canvas.circle(outerBB.getLeft() + outerRadius, outerBB.getY() + outerRadius, outerRadius + OVER_UNDERSHOOT_OVERLAP);
+                canvas.fill();
+
+                // Label
+                cv.showTextAligned(new Paragraph(overshootLabel)
+                        .addStyle(ReportResources.subTextStyle().setFontSize(6)), outerBB.getRight() - OVER_UNDER_SHOOT_LABEL_OFFSET, tickY, TextAlignment.RIGHT);
+
+            }
+
+            // Draw main bar
+            final float fillValue = (float) MathUtil.mapClamped(getScaledValue(), getScaledMin(), getScaledMax(), 0, 1);
+            final Rectangle mainOuterBB = new Rectangle(
+                    boundingBox.getLeft() + (underShootEnabled ? OVER_UNDER_SHOOT_WIDTH : 0),
+                    barY,
+                    boundingBox.getWidth()
+                            - (underShootEnabled ? OVER_UNDER_SHOOT_WIDTH : 0)
+                            - (overshootEnabled ? OVER_UNDER_SHOOT_WIDTH : 0),
+                    BAR_OUTLINE_HEIGHT);
+            final Rectangle mainInnerBB = getInnerRectangle(mainOuterBB);
+            drawRoundedRect(mainOuterBB, mainInnerBB, fillValue, ReportResources.PALETTE_MID_BLUE, ReportResources.PALETTE_BLUE, false, canvas);
+
+            // Draw tick marks
             for (Indicator tickMark : tickMarks) {
 
-                float x = (float) MathUtil.map(getScaledValue(tickMark.value), getScaledMin(), getScaledMax(), barRect.getLeft(), barRect.getRight());
+                float x = (float) MathUtil.map(getScaledValue(tickMark.value), getScaledMin(), getScaledMax(), mainInnerBB.getLeft(), mainInnerBB.getRight());
 
-                canvas.moveTo(x, barOutlineRect.getBottom() - 4.1f);
-                canvas.lineTo(x, barOutlineRect.getBottom() - 9.4f);
+                canvas.moveTo(x, tickY + 17);
+                canvas.lineTo(x, tickY + 10);
                 canvas.setLineWidth(.25f);
                 canvas.setStrokeColor(ReportResources.PALETTE_BLACK);
                 canvas.stroke();
 
                 cv.showTextAligned(new Paragraph(tickMark.name)
-                        .addStyle(ReportResources.subTextStyle().setFontSize(6)), x, barOutlineRect.getBottom() - 21f, TextAlignment.CENTER);
+                        .addStyle(ReportResources.subTextStyle().setFontSize(6)), x, tickY, TextAlignment.CENTER);
 
             }
 
-            // Add boundary threshold
+            // Draw threshold indicator
             if (threshold != null) {
 
-                float x = (float) MathUtil.map(getScaledValue(threshold.value), getScaledMin(), getScaledMax(), barRect.getLeft(), barRect.getRight());
+                float x = (float) MathUtil.map(getScaledValue(threshold.value), getScaledMin(), getScaledMax(), mainInnerBB.getLeft(), mainInnerBB.getRight());
 
-                canvas.moveTo(x, barOutlineRect.getTop() + 9.5f);
-                canvas.lineTo(x, barOutlineRect.getBottom() - 10.5f);
+                canvas.moveTo(x, mainOuterBB.getTop() + 9.5f);
+                canvas.lineTo(x, mainOuterBB.getBottom() - 10.5f);
                 canvas.setLineWidth(1f);
                 canvas.setStrokeColor(ReportResources.PALETTE_PINK);
                 canvas.stroke();
 
                 cv.showTextAligned(new Paragraph("\u2192 " + threshold.name.toUpperCase())
-                        .addStyle(ReportResources.subTextBoldStyle().setFontSize(6)).setFontColor(ReportResources.PALETTE_PINK), x + 4.5f, barOutlineRect.getTop() + 3.5f, TextAlignment.LEFT);
+                        .addStyle(ReportResources.subTextBoldStyle().setFontSize(6)).setFontColor(ReportResources.PALETTE_PINK), x + 4.5f, mainOuterBB.getTop() + 3.5f, TextAlignment.LEFT);
 
             }
 
+        }
+
+        private void drawRoundedRect(@NotNull Rectangle outerBoundingBox, @NotNull Rectangle innerBoundingBox, float filledPercentage, @NotNull Color outlineColor, @NotNull Color fillColor, boolean dashedOutline, @NotNull PdfCanvas canvas) {
+
+            filledPercentage = (float) MathUtil.clamp(filledPercentage, 0, 1);
+            final Rectangle outerBarBoundingBox = outerBoundingBox;
+
+            // Outline
+            canvas.setStrokeColor(outlineColor);
+            canvas.setFillColor(ReportResources.PALETTE_WHITE);
+            canvas.setLineWidth(.25f);
+            if  (dashedOutline) {
+                canvas.setLineDash(3f, 2f);
+            }
+            canvas.roundRectangle(outerBarBoundingBox.getX(),
+                    outerBarBoundingBox.getY(),
+                    outerBarBoundingBox.getWidth(),
+                    outerBarBoundingBox.getHeight(),
+                    getHeightRadius(outerBarBoundingBox));
+            canvas.fillStroke();
+            canvas.setLineDash(1f); // Reset dash
+
+            // Filled bar
+            if (filledPercentage > 0) {
+                final float innerBarRadius = getHeightRadius(innerBoundingBox);
+                canvas.setFillColor(fillColor);
+                canvas.roundRectangle(
+                        innerBoundingBox.getX(),
+                        innerBoundingBox.getY(),
+                        MathUtil.map(filledPercentage, 0, 1, innerBarRadius, innerBoundingBox.getWidth()),
+                        innerBoundingBox.getHeight(),
+                        innerBarRadius);
+                canvas.fill();
+            }
+
+        }
+
+        @NotNull
+        private Rectangle getInnerRectangle(@NotNull Rectangle outerBoundingBox) {
+            return new Rectangle(
+                    outerBoundingBox.getX() + BAR_INSET,
+                    outerBoundingBox.getY() + BAR_INSET,
+                    outerBoundingBox.getWidth() - BAR_INSET * 2,
+                    outerBoundingBox.getHeight() - BAR_INSET * 2);
+        }
+
+        private float getHeightRadius(@NotNull Rectangle rect) {
+            return rect.getHeight() * 0.5f;
         }
 
     }
