@@ -161,7 +161,7 @@ class StructuralVariantDAO {
                     .inexactHomologyOffsetStart(record.getValue(STRUCTURALVARIANT.INEXACTHOMOLOGYOFFSETSTART))
                     .inexactHomologyOffsetEnd(record.getValue(STRUCTURALVARIANT.INEXACTHOMOLOGYOFFSETEND))
                     .refGenomeContext(record.getValue(STRUCTURALVARIANT.STARTREFCONTEXT))
-                    .anchoringSupportDistance(record.getValue(STRUCTURALVARIANT.STARTANCHORINGSUPPORTDISTANCE))
+                    .anchoringSupportDistance(getValueNotNull(record.getValue(STRUCTURALVARIANT.STARTANCHORINGSUPPORTDISTANCE)))
                     .build();
 
             EnrichedStructuralVariantLeg end = null;
@@ -182,7 +182,7 @@ class StructuralVariantDAO {
                         .startOffset(record.getValue(STRUCTURALVARIANT.ENDINTERVALOFFSETSTART))
                         .endOffset(record.getValue(STRUCTURALVARIANT.ENDINTERVALOFFSETEND))
                         .refGenomeContext(record.getValue(STRUCTURALVARIANT.ENDREFCONTEXT))
-                        .anchoringSupportDistance(record.getValue(STRUCTURALVARIANT.ENDANCHORINGSUPPORTDISTANCE))
+                        .anchoringSupportDistance(getValueNotNull(record.getValue(STRUCTURALVARIANT.ENDANCHORINGSUPPORTDISTANCE)))
                         .build();
             }
 
