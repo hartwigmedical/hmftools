@@ -385,7 +385,11 @@ public class StructuralVariantFactory {
             }
             //assert(supportCi - 1 == ciLeft + ciRight);
         }
-        builder.anchoringSupportDistance((orientation == -1 ? -ciLeft : ciRight) + supportWidth);
+        if (supportWidth > 0) {
+            builder.anchoringSupportDistance((orientation == -1 ? -ciLeft : ciRight) + supportWidth);
+        } else {
+            builder.anchoringSupportDistance(0);
+        }
 
         builder.inexactHomologyOffsetStart(0);
         builder.inexactHomologyOffsetEnd(0);
