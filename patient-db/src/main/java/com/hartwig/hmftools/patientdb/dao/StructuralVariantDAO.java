@@ -107,8 +107,8 @@ class StructuralVariantDAO {
                     .insertSequenceRepeatOrientation(getValueNotNull(record.getValue(STRUCTURALVARIANT.INSERTSEQUENCEREPEATORIENTATION)))
                     .insertSequenceRepeatCoverage(getValueNotNull(record.getValue(STRUCTURALVARIANT.INSERTSEQUENCEREPEATCOVERAGE)))
                     .recovered(byteToBoolean(record.getValue(STRUCTURALVARIANT.RECOVERED)))
-                    .startAnchoringSupportDistance(record.getValue(STRUCTURALVARIANT.STARTANCHORINGSUPPORTDISTANCE))
-                    .startAnchoringSupportDistance(record.getValue(STRUCTURALVARIANT.ENDANCHORINGSUPPORTDISTANCE))
+                    .startAnchoringSupportDistance(getValueNotNull(record.getValue(STRUCTURALVARIANT.STARTANCHORINGSUPPORTDISTANCE)))
+                    .endAnchoringSupportDistance(getValueNotNull(record.getValue(STRUCTURALVARIANT.ENDANCHORINGSUPPORTDISTANCE)))
                     .build());
         }
         return structuralVariants;
