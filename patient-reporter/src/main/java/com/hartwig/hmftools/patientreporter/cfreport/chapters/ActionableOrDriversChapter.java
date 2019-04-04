@@ -72,8 +72,8 @@ public class ActionableOrDriversChapter extends ReportChapter {
 
         for (ReportableSomaticVariant variant : sortedVariants) {
 
-            // @TODO: handle purity fit miss in chart
             InlineBarChart chart = new InlineBarChart(hasReliablePurityFit ? variant.adjustedVAF() : 0, 0, 1);
+            chart.setEnabled(hasReliablePurityFit);
             chart.setWidth(20);
             chart.setHeight(4);
 

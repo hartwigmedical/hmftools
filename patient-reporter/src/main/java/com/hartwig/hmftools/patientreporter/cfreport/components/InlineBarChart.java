@@ -18,6 +18,8 @@ public class InlineBarChart extends Div {
     private double min;
     private double max;
 
+    private boolean isEnabled = true;
+
     private Scale scale = LINEAR_SCALE; // Default to linear scale
 
     public InlineBarChart(double value, double min, double max) {
@@ -58,6 +60,14 @@ public class InlineBarChart extends Div {
         return scale.scale(value);
     }
 
+    public void setEnabled(boolean enabled) {
+        isEnabled = enabled;
+    }
+
+    public boolean isEnabled() {
+        return isEnabled;
+    }
+
     @Override
     public IRenderer getRenderer() {
         return new BarChartRenderer(this);
@@ -86,7 +96,7 @@ public class InlineBarChart extends Div {
             canvas.fill();
 
             // Fill
-            if (getValue() > getMin()) {
+            if (isEnabled() && getValue() > getMin()) {
                 canvas.setFillColor(ReportResources.PALETTE_BLUE);
                 canvas.roundRectangle(x, y, filledWidth, height, radius);
                 canvas.fill();
