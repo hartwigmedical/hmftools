@@ -46,6 +46,7 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 import htsjdk.samtools.SamReaderFactory;
+import htsjdk.samtools.cram.ref.ReferenceSource;
 
 public class AmberApplication implements AutoCloseable {
     private static final Logger LOGGER = LogManager.getLogger(AmberApplication.class);
@@ -101,19 +102,17 @@ public class AmberApplication implements AutoCloseable {
     }
 
     private void run() throws InterruptedException, ExecutionException, IOException {
-        final SamReaderFactory readerFactory = SamReaderFactory.make();
+        final SamReaderFactory readerFactory =
+                SamReaderFactory.make().referenceSource(new ReferenceSource(new File(config.refGenomePath())));
 
         final ListMultimap<Chromosome, BaseDepth> allNormal = normalDepth(readerFactory);
         final ListMultimap<Chromosome, BaseDepth> homNormal = Multimaps.filterEntries(allNormal, homozygousFilter);
         final ListMultimap<Chromosome, BaseDepth> hetNormal = Multimaps.filterEntries(allNormal, heterozygousFilter);
         final ListMultimap<Chromosome, TumorBAF> tumorBAFMap = tumorBAF(readerFactory, hetNormal);
 
-        final List<TumorBAF> tumorBAFList =  tumorBAFMap.values().stream().sorted().collect(Collectors.toList());
-        final List<AmberBAF> amberBAFList = tumorBAFList
-                .stream()
-                .map(AmberBAF::create)
-                .filter(AmberApplication::isValid)
-                .collect(Collectors.toList());
+        final List<TumorBAF> tumorBAFList = tumorBAFMap.values().stream().sorted().collect(Collectors.toList());
+        final List<AmberBAF> amberBAFList =
+                tumorBAFList.stream().map(AmberBAF::create).filter(AmberApplication::isValid).collect(Collectors.toList());
 
         final ListMultimap<Chromosome, TumorContamination> tumorContamination = contamination(readerFactory, homNormal);
         final List<TumorContamination> contaminationList = Lists.newArrayList(tumorContamination.values());
@@ -172,7 +171,6 @@ public class AmberApplication implements AutoCloseable {
 
         return normalBafs;
     }
-
 
     @NotNull
     private ListMultimap<Chromosome, TumorBAF> tumorBAF(@NotNull final SamReaderFactory readerFactory,
@@ -241,7 +239,6 @@ public class AmberApplication implements AutoCloseable {
         final CommandLineParser parser = new DefaultParser();
         return parser.parse(options, args);
     }
-
 
     private static boolean isValid(@NotNull final AmberBAF baf) {
         return Doubles.isFinite(baf.tumorBAF()) & Doubles.isFinite(baf.normalBAF());
