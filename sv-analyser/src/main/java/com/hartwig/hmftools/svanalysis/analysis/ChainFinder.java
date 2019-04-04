@@ -6,8 +6,7 @@ import static java.lang.Math.min;
 import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DEL;
-import static com.hartwig.hmftools.svanalysis.analysis.LinkFinder.MIN_TEMPLATED_INSERTION_LENGTH;
-import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.DEFAULT_PROXIMITY_DISTANCE;
+import static com.hartwig.hmftools.svanalysis.analysis.LinkFinder.getMinTemplatedInsertionLength;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.isSpecificCluster;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_END;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_START;
@@ -1727,7 +1726,10 @@ public class ChainFinder
                     if(alreadyLinkedBreakend(upperBreakend))
                         continue;
 
-                    if(abs(upperBreakend.position() - lowerBreakend.position()) < MIN_TEMPLATED_INSERTION_LENGTH)
+                    long distance = upperBreakend.position() - lowerBreakend.position();
+                    int minTiLength = getMinTemplatedInsertionLength(lowerBreakend, upperBreakend);
+
+                    if(distance < minTiLength)
                         continue;
 
                     // record the possible link
@@ -1863,7 +1865,10 @@ public class ChainFinder
             if(getUnlinkedBreakendCount(otherBreakend) == 0)
                 continue;
 
-            if(abs(otherBreakend.position() - breakend.position()) < MIN_TEMPLATED_INSERTION_LENGTH)
+            long distance = abs(otherBreakend.position() - breakend.position());
+            int minTiLength = getMinTemplatedInsertionLength(breakend, otherBreakend);
+
+            if(distance < minTiLength)
                 continue;
 
             List<SvLinkedPair> otherPairs = mSvBreakendPossibleLinks.get(otherBreakend);

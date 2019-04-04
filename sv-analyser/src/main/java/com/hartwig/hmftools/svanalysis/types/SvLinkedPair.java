@@ -4,6 +4,7 @@ import static java.lang.Math.abs;
 
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.svanalysis.analysis.LinkFinder.MIN_TEMPLATED_INSERTION_LENGTH;
+import static com.hartwig.hmftools.svanalysis.analysis.LinkFinder.getMinTemplatedInsertionLength;
 
 import java.util.List;
 
@@ -63,9 +64,11 @@ public class SvLinkedPair {
         int length = (int) (first.position(firstLinkOnStart) - second.position(secondLinkOnStart));
         mLinkLength = abs(length);
 
-        if (mLinkType == LINK_TYPE_TI && mLinkLength < MIN_TEMPLATED_INSERTION_LENGTH)
+        int minTILength = getMinTemplatedInsertionLength(first.getBreakend(firstLinkOnStart), second.getBreakend(secondLinkOnStart));
+
+        if (mLinkType == LINK_TYPE_TI && mLinkLength < minTILength)
         {
-            // re-label this as a deletion bridge
+            // re-label this as a deletion bridge and give it a negative length to show the overlap
             mLinkType = LINK_TYPE_DB;
             mLinkLength = -mLinkLength;
         }

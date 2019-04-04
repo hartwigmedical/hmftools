@@ -25,6 +25,7 @@ import static com.hartwig.hmftools.svanalysis.analysis.ClusterAnnotations.findPo
 import static com.hartwig.hmftools.svanalysis.analysis.ClusterAnnotations.reportClusterRepRepairSegments;
 import static com.hartwig.hmftools.svanalysis.analysis.ClusterAnnotations.runAnnotation;
 import static com.hartwig.hmftools.svanalysis.analysis.LinkFinder.MIN_TEMPLATED_INSERTION_LENGTH;
+import static com.hartwig.hmftools.svanalysis.analysis.LinkFinder.getMinTemplatedInsertionLength;
 import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.CLUSTER_REASON_COMMON_ARMS;
 import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.CLUSTER_REASON_FOLDBACKS;
 import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.CLUSTER_REASON_LOH_CHAIN;
@@ -385,21 +386,22 @@ public class ClusterAnalyser {
             }
             else if(cluster.getTypeCount(SGL) == 2)
             {
-                final SvVarData var1 = cluster.getSV(0);
-                final SvVarData var2 = cluster.getSV(1);
+                SvBreakend breakend1 = cluster.getSV(0).getBreakend(true);
+                SvBreakend breakend2 = cluster.getSV(1).getBreakend(true);
 
-                if(var1.orientation(true) != var2.orientation(true))
+                if(breakend1.orientation() != breakend2.orientation())
                 {
-                    long length = abs(var1.position(true) - var2.position(true));
+                    long length = abs(breakend1.position() - breakend2.position());
+                    int minTiLength = getMinTemplatedInsertionLength(breakend1, breakend2);
 
-                    if(length < MIN_TEMPLATED_INSERTION_LENGTH)
+                    if(length < minTiLength)
                     {
                         cluster.setResolved(true, RESOLVED_TYPE_SGL_PAIR_INS);
                     }
                     else
                     {
-                        boolean v1First = var1.position(true) < var2.position(true);
-                        boolean v1PosOrientation = var1.orientation(true) == 1;
+                        boolean v1First = breakend1.position() < breakend2.position();
+                        boolean v1PosOrientation = (breakend1.orientation() == 1);
 
                         if(v1First == v1PosOrientation)
                             cluster.setResolved(true, RESOLVED_TYPE_SGL_PAIR_DEL);
@@ -411,8 +413,6 @@ public class ClusterAnalyser {
 
             return;
         }
-
-        // isSpecificCluster(cluster);
 
         // next clusters with which start and end on the same arm, have the same start and end orientation
         // and the same start and end copy number
@@ -1232,20 +1232,20 @@ public class ClusterAnalyser {
                 }
                 else if(i < breakendList.size() - 2)
                 {
+                    // there is an breakend with opposite orientation between the 2 facing ones - check if it invalidates the foldback
                     SvBreakend postNextBreakend = breakendList.get(i + 2);
 
-                    // check for a short overlapping deletion bridge on the either breakend
-                    // that would otherwise mask this foldback
+                    // check for a short overlapping deletion bridge on either breakend that would otherwise mask this foldback
                     if(breakend.orientation() == postNextBreakend.orientation())
                     {
                         if(postNextBreakend.orientation() == 1
-                        && postNextBreakend.position() - nextBreakend.position() < MIN_TEMPLATED_INSERTION_LENGTH)
+                        && postNextBreakend.position() - nextBreakend.position() < getMinTemplatedInsertionLength(nextBreakend, postNextBreakend))
                         {
                             beFront = breakend;
                             beBack = postNextBreakend;
                         }
                         else if(postNextBreakend.orientation() == -1
-                        && nextBreakend.position() - breakend.position() < MIN_TEMPLATED_INSERTION_LENGTH)
+                        && nextBreakend.position() - breakend.position() < getMinTemplatedInsertionLength(breakend, nextBreakend))
                         {
                             beBack = breakend;
                             beFront = postNextBreakend;

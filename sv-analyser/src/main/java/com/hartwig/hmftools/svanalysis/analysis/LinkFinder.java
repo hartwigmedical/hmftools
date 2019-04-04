@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.svanalysis.analysis;
 
+import static java.lang.Math.abs;
+import static java.lang.Math.max;
+
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.copyNumbersEqual;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_END;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_START;
@@ -28,7 +31,7 @@ public class LinkFinder
     private boolean mLogVerbose;
 
     public static int MIN_TEMPLATED_INSERTION_LENGTH = 30;
-    public static int NO_DB_MARKER = -(MIN_TEMPLATED_INSERTION_LENGTH + 2);
+    public static int NO_DB_MARKER = -1000; // bigger than longest assembly read distance
     public static int SHORT_DB_LENGTH = 30;
 
     private static final Logger LOGGER = LogManager.getLogger(LinkFinder.class);
@@ -273,7 +276,10 @@ public class LinkFinder
                         if(var2.isAssemblyMatched(v2Start))
                             continue;
 
-                        if (!areLinkedSection(var1, var2, v1Start, v2Start, !cluster.hasReplicatedSVs()))
+                        long distance = abs(var1.position(v1Start) - var2.position(v2Start));
+                        int minTiLength = max(var1.getMinTemplatedLength(v1Start), var2.getMinTemplatedLength(v2Start));
+
+                        if (!areLinkedSection(var1, var2, v1Start, v2Start, !cluster.hasReplicatedSVs()) || distance < minTiLength)
                             continue;
 
                         // form a new TI from these 2 BEs
@@ -336,6 +342,12 @@ public class LinkFinder
         return linkedPairs;
     }
 
+    public static int getMinTemplatedInsertionLength(SvBreakend breakend1, SvBreakend breakend2)
+    {
+        // return the maximal length from each breakend's anchor distances if present
+        return max(breakend1.getMinTemplatedLength(), breakend2.getMinTemplatedLength());
+    }
+
     public static void findDeletionBridges(final Map<String, List<SvBreakend>> chrBreakendMap)
     {
         for (final Map.Entry<String, List<SvBreakend>> entry : chrBreakendMap.entrySet())
@@ -352,16 +364,18 @@ public class LinkFinder
                 if(var1 == var2)
                     continue;
 
-                // isSpecificSV(var1.id());
-                // isSpecificSV(var2.id());
+                if(breakend.orientation() == nextBreakend.orientation())
+                    continue;
 
-                if(areSectionBreak(var1, var2, breakend.usesStart(), nextBreakend.usesStart()))
+                long distance = nextBreakend.position() - breakend.position();
+                int minTiLength = getMinTemplatedInsertionLength(breakend, nextBreakend);
+
+                if(breakend.orientation() == 1 && nextBreakend.orientation() == -1)
                 {
                     SvLinkedPair dbPair = new SvLinkedPair(var1, var2, LINK_TYPE_DB, breakend.usesStart(), nextBreakend.usesStart());
                     markDeletionBridge(dbPair);
                 }
-                else if(areLinkedSection(var1, var2, breakend.usesStart(), nextBreakend.usesStart())
-                && nextBreakend.position() - breakend.position() < MIN_TEMPLATED_INSERTION_LENGTH)
+                else if(distance < minTiLength)
                 {
                     // will be converted into a DB
                     SvLinkedPair dbPair = new SvLinkedPair(var1, var2, LINK_TYPE_TI, breakend.usesStart(), nextBreakend.usesStart());

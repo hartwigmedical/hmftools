@@ -59,6 +59,8 @@ public class SvBreakend {
         return mSV.posId(mUsesStart);
     }
 
+    public int getMinTemplatedLength() { return mSV.getMinTemplatedLength(mUsesStart); }
+
     public double getCopyNumber(boolean lowSide)
     {
         if((mOrientation == 1 && lowSide) || (mOrientation == -1 && !lowSide))
