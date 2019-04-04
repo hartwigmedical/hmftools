@@ -1462,66 +1462,146 @@ public abstract class ViccFactory {
 
     private static StringBuilder readObjectAssociation(@NotNull JsonObject object, @NotNull StringBuilder headerCSV) {
         //association object
-        List<String> keysOfAssocationObject = Lists.newArrayList();
-
         StringBuilder stringToCSVAssociation = new StringBuilder();
+
+        StringBuilder stringKingdom = new StringBuilder();
+        StringBuilder stringDirectParent = new StringBuilder();
+        StringBuilder stringClass = new StringBuilder();
+        StringBuilder stringSubClass = new StringBuilder();
+        StringBuilder stringSuperClass = new StringBuilder();
+
+        StringBuilder stringSource = new StringBuilder();
+        StringBuilder stringTerm = new StringBuilder();
+        StringBuilder stringDescription = new StringBuilder();
+        StringBuilder stringId = new StringBuilder();
+        StringBuilder stringUsanStem = new StringBuilder();
+        StringBuilder stringApprovedCountries = new StringBuilder();
+
         for (int i = 0; i < object.getAsJsonObject("association").keySet().size(); i++) {
-            keysOfAssocationObject = new ArrayList<>(object.getAsJsonObject("association").keySet());
-            LOGGER.info(keysOfAssocationObject);
+            List<String> keysOfAssocationObject = new ArrayList<>(object.getAsJsonObject("association").keySet());
+            if (keysOfAssocationObject.get(i).equals("evidence")) {
+                JsonArray arrayEvidence = object.getAsJsonObject("association").get(keysOfAssocationObject.get(i)).getAsJsonArray();
+                for (int x = 0; x < arrayEvidence.size(); x++) {
+                    JsonObject objectEvidence = (JsonObject) arrayEvidence.get(x);
+                    List<String> keysEvidence = new ArrayList<>(objectEvidence.keySet());
+                    for (int d = 0; d < keysEvidence.size(); d++) {
+                        if (keysEvidence.get(d).equals("info")) {
+                            if (objectEvidence.get(keysEvidence.get(d)).isJsonNull()) {
+                                stringToCSVAssociation.append(";;");
+                            } else {
+                                JsonObject objectInfo = objectEvidence.get(keysEvidence.get(d)).getAsJsonObject();
 
-            if (keysOfAssocationObject.get(i).equals("description")) {
-                stringToCSVAssociation.append(object.getAsJsonObject("association").get(keysOfAssocationObject.get(i)))
-                        .append(";"); // association data
-            } else if (keysOfAssocationObject.get(i).equals("evidence")) {
-                JsonElement elementEvidence = object.getAsJsonObject("association").get("evidence");
-                JsonArray arrayEvidence = elementEvidence.getAsJsonArray();
-                JsonObject objectEvidence = (JsonObject) arrayEvidence.iterator().next();
-                LOGGER.info(objectEvidence.keySet());
-
-                for (int a = 0; a < objectEvidence.keySet().size(); a++) {
-                    List<String> keysOfEvidenceObject = new ArrayList<>(objectEvidence.keySet());
-                    if (keysOfEvidenceObject.get(a).equals("evidenceType")) {
-                        for (int b = 0; b < objectEvidence.get("evidenceType").getAsJsonObject().keySet().size(); b++) {
-                            List<String> keysOfEvidenceTypeObject =
-                                    new ArrayList<>(objectEvidence.get("evidenceType").getAsJsonObject().keySet());
-                            stringToCSVAssociation.append(objectEvidence.get("evidenceType")
-                                    .getAsJsonObject()
-                                    .get(keysOfEvidenceTypeObject.get(b))).append(";"); // association data
+                                List<String> keysInfo = new ArrayList<>(objectInfo.keySet());
+                                for (int z = 0; z < keysInfo.size(); z++) {
+                                    stringToCSVAssociation.append(objectInfo.get(keysInfo.get(z))).append(";");
+                                }
+                            }
+                        } else if (keysEvidence.get(d).equals("evidenceType")) {
+                            JsonObject objectEvidenceType = objectEvidence.get(keysEvidence.get(d)).getAsJsonObject();
+                            List<String> keysEvidenceType = new ArrayList<>(objectEvidenceType.keySet());
+                            for (int z = 0; z < keysEvidenceType.size(); z++) {
+                                stringToCSVAssociation.append(objectEvidenceType.get(keysEvidenceType.get(z))).append(";");
+                            }
+                        } else if (keysEvidence.get(d).equals("description")) {
+                            stringToCSVAssociation.append(objectEvidence.get(keysEvidence.get(d))).append(";");
                         }
-                    } else {
-                        stringToCSVAssociation.append(objectEvidence.get(keysOfEvidenceObject.get(a))).append(";"); // association data
                     }
                 }
             } else if (keysOfAssocationObject.get(i).equals("environmentalContexts")) {
-                stringToCSVAssociation.append(object.getAsJsonObject("association").get("environmentalContexts"))
-                        .append(";"); // association data
-            } else if (keysOfAssocationObject.get(i).equals("evidence_label")) {
-                stringToCSVAssociation.append(object.getAsJsonObject("association").get(keysOfAssocationObject.get(i)))
-                        .append(";"); // association data
-            } else if (keysOfAssocationObject.get(i).equals("phenotype")) {
-                JsonElement elementPhenotype = object.getAsJsonObject("association").get("phenotype");
-                for (int a = 0; a < elementPhenotype.getAsJsonObject().keySet().size(); a++) {
-                    List<String> keysOfPhenotypeObject = new ArrayList<>(elementPhenotype.getAsJsonObject().keySet());
-                    if (keysOfPhenotypeObject.get(a).equals("type")) {
-
-                        List<String> keysOfPhenotypeTypeObject =
-                                new ArrayList<>(elementPhenotype.getAsJsonObject().get("type").getAsJsonObject().keySet());
-
-                        for (int c = 0; c < keysOfPhenotypeObject.size(); c++) {
-                            stringToCSVAssociation.append(elementPhenotype.getAsJsonObject() // association data
-                                    .get("type").getAsJsonObject().get(keysOfPhenotypeTypeObject.get(c))).append(";");
+                JsonArray arrayEvidence = object.getAsJsonObject("association").get(keysOfAssocationObject.get(i)).getAsJsonArray();
+                for (int u = 0; u < arrayEvidence.size(); u++) {
+                    JsonObject objectEnvironmentalContexts = (JsonObject) arrayEvidence.get(u);
+                    List<String> keysEnvironmentalContexts = new ArrayList<>(objectEnvironmentalContexts.keySet());
+                    for (int g = 0; g < keysEnvironmentalContexts.size(); g++) {
+                        if (keysEnvironmentalContexts.get(g).equals("taxonomy")) {
+                            JsonObject objectTaxonomy = objectEnvironmentalContexts.getAsJsonObject(keysEnvironmentalContexts.get(g));
+                            List<String> keysTaxonomy = new ArrayList<>(objectTaxonomy.keySet());
+                            for (int p = 0; p < keysTaxonomy.size(); p++) {
+                                if (keysTaxonomy.get(p).equals("kingdom")) {
+                                    JsonElement kingdom = objectTaxonomy.get(keysTaxonomy.get(p));
+                                    stringKingdom.append(kingdom).append(",");
+                                } else if (keysTaxonomy.get(p).equals("direct-parent")) {
+                                    JsonElement directParent = objectTaxonomy.get(keysTaxonomy.get(p));
+                                    stringDirectParent.append(directParent).append(",");
+                                } else if (keysTaxonomy.get(p).equals("class")) {
+                                    JsonElement classTaxanomy = objectTaxonomy.get(keysTaxonomy.get(p));
+                                    stringClass.append(classTaxanomy).append(",");
+                                } else if (keysTaxonomy.get(p).equals("subclass")) {
+                                    JsonElement subClass = objectTaxonomy.get(keysTaxonomy.get(p));
+                                    stringSubClass.append(subClass).append(",");
+                                } else if (keysTaxonomy.get(p).equals("superclass")) {
+                                    JsonElement superClass = objectTaxonomy.get(keysTaxonomy.get(p));
+                                    stringSuperClass.append(superClass).append(",");
+                                }
+                            }
+                        } else {
+                            if (keysEnvironmentalContexts.get(g).equals("source")) {
+                                JsonElement source = objectEnvironmentalContexts.get(keysEnvironmentalContexts.get(g));
+                                stringSource.append(source).append(",");
+                            } else if (keysEnvironmentalContexts.get(g).equals("term")) {
+                                JsonElement term = objectEnvironmentalContexts.get(keysEnvironmentalContexts.get(g));
+                                stringTerm.append(term).append(",");
+                            } else if (keysEnvironmentalContexts.get(g).equals("description")) {
+                                JsonElement description = objectEnvironmentalContexts.get(keysEnvironmentalContexts.get(g));
+                                stringDescription.append(description).append(",");
+                            } else if (keysEnvironmentalContexts.get(g).equals("id")) {
+                                JsonElement id = objectEnvironmentalContexts.get(keysEnvironmentalContexts.get(g));
+                                stringId.append(id).append(",");
+                            } else if (keysEnvironmentalContexts.get(g).equals("usan_stem")) {
+                                JsonElement usanStem = objectEnvironmentalContexts.get(keysEnvironmentalContexts.get(g));
+                                stringUsanStem.append(usanStem).append(",");
+                            } else if (keysEnvironmentalContexts.get(g).equals("approved_countries")) {
+                                JsonElement approvedCountries = objectEnvironmentalContexts.get(keysEnvironmentalContexts.get(g));
+                                stringApprovedCountries.append(approvedCountries);
+                            }
                         }
-                    } else {
-                        stringToCSVAssociation.append(elementPhenotype.getAsJsonObject().get(keysOfPhenotypeObject.get(a)))
-                                .append(";"); // association data
                     }
                 }
-            } else if (keysOfAssocationObject.get(i).equals("oncogenic")) {
-                stringToCSVAssociation.append(object.getAsJsonObject("association").get(keysOfAssocationObject.get(i)))
-                        .append(";"); // association data
+            } else if (keysOfAssocationObject.get(i).equals("phenotype")) {
+                JsonObject objectPhenotype = object.getAsJsonObject("association").get(keysOfAssocationObject.get(i)).getAsJsonObject();
+                List<String> keysPhenotype = new ArrayList<>(objectPhenotype.keySet());
+                for (int y = 0; y < keysPhenotype.size(); y++) {
+                    if (keysPhenotype.get(y).equals("type")) {
+                        JsonObject objectInfo = objectPhenotype.get(keysPhenotype.get(y)).getAsJsonObject();
+                        List<String> keysInfo = new ArrayList<>(objectInfo.keySet());
+                        for (int z = 0; z < keysInfo.size(); z++) {
+                            stringToCSVAssociation.append(objectInfo.get(keysInfo.get(z))).append(";");
+                        }
+                    } else {
+                        stringToCSVAssociation.append(objectPhenotype.get(keysPhenotype.get(y))).append(";");
+                    }
+                }
+            } else if (keysOfAssocationObject.get(i).equals("publication_url")) {
+                JsonElement objectPublicationUrl = object.getAsJsonObject("association").get(keysOfAssocationObject.get(i));
+                stringToCSVAssociation.append(objectPublicationUrl).append(";");
+            } else {
+                JsonElement objectAssociation =
+                        object.getAsJsonObject("association").get(keysOfAssocationObject.get(i));
+                stringToCSVAssociation.append(objectAssociation).append(";");
             }
         }
-        headerCSV.append(keysOfAssocationObject).append(";"); // header features
+        stringToCSVAssociation.append(stringTerm)
+                .append(";")
+                .append(stringDescription)
+                .append(";")
+                .append(stringKingdom)
+                .append(";")
+                .append(stringDirectParent)
+                .append(";")
+                .append(stringClass)
+                .append(";")
+                .append(stringSubClass)
+                .append(";")
+                .append(stringSuperClass)
+                .append(";")
+                .append(stringSource)
+                .append(";")
+                .append(stringUsanStem)
+                .append(";")
+                .append(stringApprovedCountries)
+                .append(";")
+                .append(stringId)
+                .append(";");
         return stringToCSVAssociation;
     }
 
@@ -1742,15 +1822,15 @@ public abstract class ViccFactory {
                 + "jax_trials.therapies.id;jax_trials.therapies.therapyName;";
         String headerAssociation = "association.drug_labels;association.description;association.publication_url;association.source_link;"
                 + "association.variant_name;association.evidence.info.publications;association.evidence.evidenceType.sourceName;"
-                + "association.evidence.evidenceType.id;association.evidence.description;association.environmentalContexts.term;"
+                + "association.evidence.evidenceType.id;association.evidence.description;" + "association.evidence_label;"
+                + "association.phenotype.type.source;association.phenotype.type.term;association.phenotype.type.id;"
+                + "association.phenotype.description;association.phenotype.family;association.phenotype.id;association.evidence_level;"
+                + "association..response_type;" + "association.environmentalContexts.term;"
                 + "association.environmentalContexts.description;association.environmentalContexts.taxonomy.kingdom;"
                 + "association.environmentalContexts.taxonomy.direct-parent;association.environmentalContexts.taxonomy.class;"
                 + "association.environmentalContexts.taxonomy.subclass;association.environmentalContexts.taxonomy.superclass;"
                 + "association.environmentalContexts.source;association.environmentalContexts.usan_stem;"
-                + "association.environmentalContexts.approved_countries;association.environmentalContexts.id;association.evidence_label;"
-                + "association.phenotype.type.source;association.phenotype.type.term;association.phenotype.type.id;"
-                + "association.phenotype.description;association.phenotype.family;association.phenotype.id;association.evidence_level;"
-                + "association..response_type;";
+                + "association.environmentalContexts.approved_countries;association.environmentalContexts.id;";
 
         headerCSV.append(headerIndex);
         headerCSV.append(headerSource);
@@ -1769,7 +1849,7 @@ public abstract class ViccFactory {
 
         writer.append(headerCSV);
         writer.append("\n");
-        while (reader.peek() != JsonToken.END_DOCUMENT && index < 10) {
+        while (reader.peek() != JsonToken.END_DOCUMENT) {
             LOGGER.info(index);
             JsonObject object = parser.parse(reader).getAsJsonObject();
 
@@ -1787,7 +1867,7 @@ public abstract class ViccFactory {
             StringBuilder StringToCSVOncokb = readObjectOncokb(object, headerCSV);
             StringBuilder StringToCSVJax = readObjectJax(object, headerCSV);
             StringBuilder StringToCSVJaxTrials = readObjectJaxTrials(object, headerCSV);
-          //  StringBuilder StringToCSVAssociation = readObjectAssociation(object, headerCSV);
+            StringBuilder StringToCSVAssociation = readObjectAssociation(object, headerCSV);
 
             stringToCSVAll.append(index).append(";");
             stringToCSVAll.append(StringToCSVSource);
@@ -1802,7 +1882,7 @@ public abstract class ViccFactory {
             //            stringToCSVAll.append(StringToCSVOncokb);
             //            stringToCSVAll.append(StringToCSVJax);
             //            stringToCSVAll.append(StringToCSVJaxTrials);
-          //  stringToCSVAll.append(StringToCSVAssociation);
+            stringToCSVAll.append(StringToCSVAssociation);
 
             writer.append(stringToCSVAll);
             writer.append("\n");
