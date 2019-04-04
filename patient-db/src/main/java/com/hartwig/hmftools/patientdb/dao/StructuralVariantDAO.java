@@ -17,7 +17,6 @@ import com.hartwig.hmftools.common.variant.structural.ImmutableEnrichedStructura
 import com.hartwig.hmftools.common.variant.structural.ImmutableStructuralVariantData;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantData;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
-import com.hartwig.hmftools.patientdb.database.hmfpatients.tables.records.StructuralvariantRecord;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
@@ -84,12 +83,12 @@ class StructuralVariantDAO {
                     .imprecise(byteToBoolean(record.getValue(STRUCTURALVARIANT.IMPRECISE)))
                     .qualityScore(record.getValue(STRUCTURALVARIANT.QUALSCORE))
                     .event(getValueNotNull(record.getValue(STRUCTURALVARIANT.EVENT)))
-                    .startTumourVariantFragmentCount(getValueNotNull(record.getValue(STRUCTURALVARIANT.STARTTUMOURVARIANTFRAGMENTCOUNT)))
-                    .startTumourReferenceFragmentCount(getValueNotNull(record.getValue(STRUCTURALVARIANT.STARTTUMOURREFERENCEFRAGMENTCOUNT)))
+                    .startTumorVariantFragmentCount(getValueNotNull(record.getValue(STRUCTURALVARIANT.STARTTUMORVARIANTFRAGMENTCOUNT)))
+                    .startTumorReferenceFragmentCount(getValueNotNull(record.getValue(STRUCTURALVARIANT.STARTTUMORREFERENCEFRAGMENTCOUNT)))
                     .startNormalVariantFragmentCount(getValueNotNull(record.getValue(STRUCTURALVARIANT.STARTNORMALVARIANTFRAGMENTCOUNT)))
                     .startNormalReferenceFragmentCount(getValueNotNull(record.getValue(STRUCTURALVARIANT.STARTNORMALREFERENCEFRAGMENTCOUNT)))
-                    .endTumourVariantFragmentCount(getValueNotNull(record.getValue(STRUCTURALVARIANT.ENDTUMOURVARIANTFRAGMENTCOUNT)))
-                    .endTumourReferenceFragmentCount(getValueNotNull(record.getValue(STRUCTURALVARIANT.ENDTUMOURREFERENCEFRAGMENTCOUNT)))
+                    .endTumorVariantFragmentCount(getValueNotNull(record.getValue(STRUCTURALVARIANT.ENDTUMORVARIANTFRAGMENTCOUNT)))
+                    .endTumorReferenceFragmentCount(getValueNotNull(record.getValue(STRUCTURALVARIANT.ENDTUMORREFERENCEFRAGMENTCOUNT)))
                     .endNormalVariantFragmentCount(getValueNotNull(record.getValue(STRUCTURALVARIANT.ENDNORMALVARIANTFRAGMENTCOUNT)))
                     .endNormalReferenceFragmentCount(getValueNotNull(record.getValue(STRUCTURALVARIANT.ENDNORMALREFERENCEFRAGMENTCOUNT)))
                     .startIntervalOffsetStart(getValueNotNull(record.getValue(STRUCTURALVARIANT.STARTINTERVALOFFSETSTART)))
@@ -108,6 +107,8 @@ class StructuralVariantDAO {
                     .insertSequenceRepeatOrientation(getValueNotNull(record.getValue(STRUCTURALVARIANT.INSERTSEQUENCEREPEATORIENTATION)))
                     .insertSequenceRepeatCoverage(getValueNotNull(record.getValue(STRUCTURALVARIANT.INSERTSEQUENCEREPEATCOVERAGE)))
                     .recovered(byteToBoolean(record.getValue(STRUCTURALVARIANT.RECOVERED)))
+                    .startAnchoringSupportDistance(record.getValue(STRUCTURALVARIANT.STARTANCHORINGSUPPORTDISTANCE))
+                    .startAnchoringSupportDistance(record.getValue(STRUCTURALVARIANT.ENDANCHORINGSUPPORTDISTANCE))
                     .build());
         }
         return structuralVariants;
@@ -151,8 +152,8 @@ class StructuralVariantDAO {
                     .adjustedAlleleFrequency(record.getValue(STRUCTURALVARIANT.ADJUSTEDSTARTAF))
                     .adjustedCopyNumber(record.getValue(STRUCTURALVARIANT.ADJUSTEDSTARTCOPYNUMBER))
                     .adjustedCopyNumberChange(record.getValue(STRUCTURALVARIANT.ADJUSTEDSTARTCOPYNUMBERCHANGE))
-                    .tumourVariantFragmentCount(record.getValue(STRUCTURALVARIANT.STARTTUMOURVARIANTFRAGMENTCOUNT))
-                    .tumourReferenceFragmentCount(record.getValue(STRUCTURALVARIANT.STARTTUMOURREFERENCEFRAGMENTCOUNT))
+                    .tumorVariantFragmentCount(record.getValue(STRUCTURALVARIANT.STARTTUMORVARIANTFRAGMENTCOUNT))
+                    .tumorReferenceFragmentCount(record.getValue(STRUCTURALVARIANT.STARTTUMORREFERENCEFRAGMENTCOUNT))
                     .normalVariantFragmentCount(record.getValue(STRUCTURALVARIANT.STARTNORMALVARIANTFRAGMENTCOUNT))
                     .normalReferenceFragmentCount(record.getValue(STRUCTURALVARIANT.STARTNORMALREFERENCEFRAGMENTCOUNT))
                     .startOffset(record.getValue(STRUCTURALVARIANT.STARTINTERVALOFFSETSTART))
@@ -160,6 +161,7 @@ class StructuralVariantDAO {
                     .inexactHomologyOffsetStart(record.getValue(STRUCTURALVARIANT.INEXACTHOMOLOGYOFFSETSTART))
                     .inexactHomologyOffsetEnd(record.getValue(STRUCTURALVARIANT.INEXACTHOMOLOGYOFFSETEND))
                     .refGenomeContext(record.getValue(STRUCTURALVARIANT.STARTREFCONTEXT))
+                    .anchoringSupportDistance(record.getValue(STRUCTURALVARIANT.STARTANCHORINGSUPPORTDISTANCE))
                     .build();
 
             EnrichedStructuralVariantLeg end = null;
@@ -173,13 +175,14 @@ class StructuralVariantDAO {
                         .adjustedAlleleFrequency(record.getValue(STRUCTURALVARIANT.ADJUSTEDENDAF))
                         .adjustedCopyNumber(record.getValue(STRUCTURALVARIANT.ADJUSTEDENDCOPYNUMBER))
                         .adjustedCopyNumberChange(record.getValue(STRUCTURALVARIANT.ADJUSTEDENDCOPYNUMBERCHANGE))
-                        .tumourVariantFragmentCount(record.getValue(STRUCTURALVARIANT.ENDTUMOURVARIANTFRAGMENTCOUNT))
-                        .tumourReferenceFragmentCount(record.getValue(STRUCTURALVARIANT.ENDTUMOURREFERENCEFRAGMENTCOUNT))
+                        .tumorVariantFragmentCount(record.getValue(STRUCTURALVARIANT.ENDTUMORVARIANTFRAGMENTCOUNT))
+                        .tumorReferenceFragmentCount(record.getValue(STRUCTURALVARIANT.ENDTUMORREFERENCEFRAGMENTCOUNT))
                         .normalVariantFragmentCount(record.getValue(STRUCTURALVARIANT.ENDNORMALVARIANTFRAGMENTCOUNT))
                         .normalReferenceFragmentCount(record.getValue(STRUCTURALVARIANT.ENDNORMALREFERENCEFRAGMENTCOUNT))
                         .startOffset(record.getValue(STRUCTURALVARIANT.ENDINTERVALOFFSETSTART))
                         .endOffset(record.getValue(STRUCTURALVARIANT.ENDINTERVALOFFSETEND))
                         .refGenomeContext(record.getValue(STRUCTURALVARIANT.ENDREFCONTEXT))
+                        .anchoringSupportDistance(record.getValue(STRUCTURALVARIANT.ENDANCHORINGSUPPORTDISTANCE))
                         .build();
             }
 
@@ -243,12 +246,12 @@ class StructuralVariantDAO {
                     STRUCTURALVARIANT.IMPRECISE,
                     STRUCTURALVARIANT.QUALSCORE,
                     STRUCTURALVARIANT.EVENT,
-                    STRUCTURALVARIANT.STARTTUMOURVARIANTFRAGMENTCOUNT,
-                    STRUCTURALVARIANT.STARTTUMOURREFERENCEFRAGMENTCOUNT,
+                    STRUCTURALVARIANT.STARTTUMORVARIANTFRAGMENTCOUNT,
+                    STRUCTURALVARIANT.STARTTUMORREFERENCEFRAGMENTCOUNT,
                     STRUCTURALVARIANT.STARTNORMALVARIANTFRAGMENTCOUNT,
                     STRUCTURALVARIANT.STARTNORMALREFERENCEFRAGMENTCOUNT,
-                    STRUCTURALVARIANT.ENDTUMOURVARIANTFRAGMENTCOUNT,
-                    STRUCTURALVARIANT.ENDTUMOURREFERENCEFRAGMENTCOUNT,
+                    STRUCTURALVARIANT.ENDTUMORVARIANTFRAGMENTCOUNT,
+                    STRUCTURALVARIANT.ENDTUMORREFERENCEFRAGMENTCOUNT,
                     STRUCTURALVARIANT.ENDNORMALVARIANTFRAGMENTCOUNT,
                     STRUCTURALVARIANT.ENDNORMALREFERENCEFRAGMENTCOUNT,
                     STRUCTURALVARIANT.STARTINTERVALOFFSETSTART,
@@ -270,6 +273,8 @@ class StructuralVariantDAO {
                     STRUCTURALVARIANT.INSERTSEQUENCEREPEATTYPE,
                     STRUCTURALVARIANT.INSERTSEQUENCEREPEATORIENTATION,
                     STRUCTURALVARIANT.INSERTSEQUENCEREPEATCOVERAGE,
+                    STRUCTURALVARIANT.STARTANCHORINGSUPPORTDISTANCE,
+                    STRUCTURALVARIANT.ENDANCHORINGSUPPORTDISTANCE,
                     STRUCTURALVARIANT.MODIFIED);
             batch.forEach(entry -> addRecord(timestamp, inserter, sample, entry));
             inserter.execute();
@@ -305,12 +310,12 @@ class StructuralVariantDAO {
                 variant.imprecise(),
                 DatabaseUtil.decimal(variant.qualityScore()),
                 variant.event(),
-                variant.start().tumourVariantFragmentCount(),
-                variant.start().tumourReferenceFragmentCount(),
+                variant.start().tumorVariantFragmentCount(),
+                variant.start().tumorReferenceFragmentCount(),
                 variant.start().normalVariantFragmentCount(),
                 variant.start().normalReferenceFragmentCount(),
-                variant.end() == null ? null : variant.end().tumourVariantFragmentCount(),
-                variant.end() == null ? null : variant.end().tumourReferenceFragmentCount(),
+                variant.end() == null ? null : variant.end().tumorVariantFragmentCount(),
+                variant.end() == null ? null : variant.end().tumorReferenceFragmentCount(),
                 variant.end() == null ? null : variant.end().normalVariantFragmentCount(),
                 variant.end() == null ? null : variant.end().normalReferenceFragmentCount(),
                 variant.start().startOffset(),
@@ -332,6 +337,8 @@ class StructuralVariantDAO {
                 variant.insertSequenceRepeatType(),
                 variant.insertSequenceRepeatOrientation(),
                 variant.insertSequenceRepeatCoverage(),
+                variant.start().anchoringSupportDistance(),
+                variant.end() == null ? 0 : variant.end().anchoringSupportDistance(),
                 timestamp);
     }
 

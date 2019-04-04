@@ -36,6 +36,7 @@ public class MNVValidatorApplication {
     private static final String INPUT_VCF = "v";
     private static final String TUMOR_BAM = "b";
     private static final String OUTPUT_VCF = "o";
+    private static final String STRELKA = "strelka";
 
     public static void main(final String... args) throws ParseException {
         final Options options = createOptions();
@@ -44,6 +45,7 @@ public class MNVValidatorApplication {
         final String inputVcf = cmd.getOptionValue(INPUT_VCF);
         final String tumorBam = cmd.getOptionValue(TUMOR_BAM);
         final String outputVcf = cmd.getOptionValue(OUTPUT_VCF);
+        final boolean strelka = cmd.hasOption(STRELKA);
 
         if (inputVcf == null || tumorBam == null || outputVcf == null) {
             final HelpFormatter formatter = new HelpFormatter();
@@ -51,7 +53,7 @@ public class MNVValidatorApplication {
             System.exit(1);
         }
         LOGGER.info("Validating mnvs in {} using bam {}.", inputVcf, tumorBam);
-        processVariants(inputVcf, outputVcf, tumorBam);
+        processVariants(strelka, inputVcf, outputVcf, tumorBam);
     }
 
     @NotNull
@@ -60,6 +62,7 @@ public class MNVValidatorApplication {
         options.addOption(INPUT_VCF, true, "Path towards the input VCF");
         options.addOption(TUMOR_BAM, true, "Path towards the tumor BAM");
         options.addOption(OUTPUT_VCF, true, "Path towards the output VCF");
+        options.addOption(STRELKA, false, "Expect raw strelka input");
         return options;
     }
 
@@ -69,19 +72,23 @@ public class MNVValidatorApplication {
         return parser.parse(options, args);
     }
 
-    private static void processVariants(@NotNull final String filePath, @NotNull final String outputVcf, @NotNull final String tumorBam) {
+    private static void processVariants(boolean strelka, @NotNull final String filePath, @NotNull final String outputVcf,
+            @NotNull final String tumorBam) {
         final VCFFileReader vcfReader = new VCFFileReader(new File(filePath), false);
         final VCFHeader outputHeader = generateOutputHeader(vcfReader.getFileHeader(), "TUMOR");
         final VariantContextWriter vcfWriter = new VariantContextWriterBuilder().setOutputFile(outputVcf)
                 .setReferenceDictionary(vcfReader.getFileHeader().getSequenceDictionary())
                 .build();
-        vcfWriter.writeHeader(vcfReader.getFileHeader());
+        vcfWriter.writeHeader(outputHeader);
         final MNVValidator validator = ImmutableMNVValidator.of(tumorBam);
         final MNVMerger merger = ImmutableMNVMerger.of(outputHeader);
         Pair<PotentialMNVRegion, Optional<PotentialMNVRegion>> outputPair = ImmutablePair.of(PotentialMNVRegion.empty(), Optional.empty());
-        for (final VariantContext variant : vcfReader) {
+        for (final VariantContext rawVariant : vcfReader) {
+            final VariantContext simplifiedVariant =
+                    strelka ? StrelkaPostProcess.simplifyVariant(rawVariant, StrelkaPostProcess.TUMOR_GENOTYPE) : rawVariant;
+
             final PotentialMNVRegion potentialMNV = outputPair.getLeft();
-            outputPair = MNVDetector.addMnvToRegion(potentialMNV, variant);
+            outputPair = MNVDetector.addMnvToRegion(potentialMNV, simplifiedVariant);
             outputPair.getRight().ifPresent(mnvRegion -> validator.mergeVariants(mnvRegion, merger).forEach(vcfWriter::add));
         }
         validator.mergeVariants(outputPair.getLeft(), merger).forEach(vcfWriter::add);

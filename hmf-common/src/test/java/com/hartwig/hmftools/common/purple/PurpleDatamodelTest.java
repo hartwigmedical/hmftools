@@ -121,7 +121,8 @@ public class PurpleDatamodelTest {
                 .chromosome(startChromosome)
                 .position(startPosition)
                 .homology(Strings.EMPTY)
-                .orientation(startOrientation);
+                .orientation(startOrientation)
+                .anchoringSupportDistance(0);
     }
 
     @NotNull
@@ -145,7 +146,8 @@ public class PurpleDatamodelTest {
                 .chromosome(endChromosome)
                 .position(endPosition)
                 .orientation(endOrientation)
-                .homology("");
+                .homology("")
+                .anchoringSupportDistance(0);
     }
 
     @NotNull
@@ -219,6 +221,7 @@ public class PurpleDatamodelTest {
                 .adjustedVaf(0.5)
                 .alleleFrequency(0.5)
                 .homology("")
+                .anchoringSupportDistance(0)
                 .weight(1)
                 .averageImpliedPloidy(ploidy)
                 .unweightedImpliedPloidy(ploidy)

@@ -20,9 +20,12 @@ abstract class GapReads {
 
     abstract Map<Character, Integer> countPerBases();
 
+    @NotNull
     Character mostFrequentRead() {
-        final Optional<Map.Entry<Character, Integer>> maxCountEntry =
-                countPerBases().entrySet().stream().max(Comparator.comparing(Map.Entry::getValue));
+        final Optional<Map.Entry<Character, Integer>> maxCountEntry = countPerBases().entrySet()
+                .stream()
+                .filter(x -> !x.getKey().equals('N') & x.getValue() > 0)
+                .max(Comparator.comparing(Map.Entry::getValue));
         if (maxCountEntry.isPresent()) {
             return maxCountEntry.get().getKey();
         } else {
@@ -31,6 +34,7 @@ abstract class GapReads {
         }
     }
 
+    @NotNull
     static GapReads empty() {
         final Map<Character, Integer> reads = Maps.newHashMap();
         reads.put('G', 0);
@@ -41,6 +45,7 @@ abstract class GapReads {
         return ImmutableGapReads.of(reads);
     }
 
+    @NotNull
     static GapReads addRead(@NotNull final GapReads reads, final char read) {
         final Map<Character, Integer> updatedReads = Maps.newHashMap();
         updatedReads.putAll(reads.countPerBases());

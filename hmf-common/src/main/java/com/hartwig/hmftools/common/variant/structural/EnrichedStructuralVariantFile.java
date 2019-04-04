@@ -75,12 +75,12 @@ public enum EnrichedStructuralVariantFile {
                 .add("imprecise")
                 .add("qualScore")
                 .add("event")
-                .add("startTumourVariantFragmentCount")
-                .add("startTumourReferenceFragmentCount")
+                .add("startTumorVariantFragmentCount")
+                .add("startTumorReferenceFragmentCount")
                 .add("startNormalVariantFragmentCount")
                 .add("startNormalReferenceFragmentCount")
-                .add("endTumourVariantFragmentCount")
-                .add("endTumourReferenceFragmentCount")
+                .add("endTumorVariantFragmentCount")
+                .add("endTumorReferenceFragmentCount")
                 .add("endNormalVariantFragmentCount")
                 .add("endNormalReferenceFragmentCount")
                 .add("startIntervalOffsetStart")
@@ -91,6 +91,8 @@ public enum EnrichedStructuralVariantFile {
                 .add("inexactHomologyOffsetEnd")
                 .add("startLinkedBy")
                 .add("endLinkedBy")
+                .add("startAnchoringSupportDistance")
+                .add("endAnchoringSupportDistance")
                 .toString();
     }
 
@@ -121,12 +123,12 @@ public enum EnrichedStructuralVariantFile {
                 .add(String.valueOf(variant.imprecise()))
                 .add(String.valueOf(variant.qualityScore()))
                 .add(String.valueOf(variant.event()))
-                .add(String.valueOf(variant.start().tumourVariantFragmentCount()))
-                .add(String.valueOf(variant.start().tumourReferenceFragmentCount()))
+                .add(String.valueOf(variant.start().tumorVariantFragmentCount()))
+                .add(String.valueOf(variant.start().tumorReferenceFragmentCount()))
                 .add(String.valueOf(variant.start().normalVariantFragmentCount()))
                 .add(String.valueOf(variant.start().normalReferenceFragmentCount()))
-                .add(String.valueOf(variant.end() == null ? null : variant.end().tumourVariantFragmentCount()))
-                .add(String.valueOf(variant.end() == null ? null : variant.end().tumourReferenceFragmentCount()))
+                .add(String.valueOf(variant.end() == null ? null : variant.end().tumorVariantFragmentCount()))
+                .add(String.valueOf(variant.end() == null ? null : variant.end().tumorReferenceFragmentCount()))
                 .add(String.valueOf(variant.end() == null ? null : variant.end().normalVariantFragmentCount()))
                 .add(String.valueOf(variant.end() == null ? null : variant.end().normalReferenceFragmentCount()))
                 .add(String.valueOf(variant.start().startOffset()))
@@ -137,6 +139,8 @@ public enum EnrichedStructuralVariantFile {
                 .add(String.valueOf(variant.start().inexactHomologyOffsetEnd()))
                 .add(variant.startLinkedBy())
                 .add(variant.endLinkedBy())
+                .add(String.valueOf(variant.start().anchoringSupportDistance()))
+                .add(String.valueOf(variant.end() == null ? 0 : variant.start().anchoringSupportDistance()))
                 .toString();
     }
 

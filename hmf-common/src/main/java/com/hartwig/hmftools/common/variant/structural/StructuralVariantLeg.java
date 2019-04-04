@@ -22,16 +22,18 @@ public interface StructuralVariantLeg extends GenomeInterval {
     Integer inexactHomologyOffsetEnd();
 
     @Nullable
-    Integer tumourVariantFragmentCount();
+    Integer tumorVariantFragmentCount();
 
     @Nullable
-    Integer tumourReferenceFragmentCount();
+    Integer tumorReferenceFragmentCount();
 
     @Nullable
     Integer normalVariantFragmentCount();
 
     @Nullable
     Integer normalReferenceFragmentCount();
+
+    int anchoringSupportDistance();
 
     default long cnaPosition() {
         return orientation() ==  -1 ? position() : position() + 1;

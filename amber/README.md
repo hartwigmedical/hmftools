@@ -1,7 +1,7 @@
 # AMBER
 AMBER is designed to generate a tumor BAF file for use in PURPLE. 
 
-Looking directly at the bam files, AMBER locates heterozygous sites within the reference sample then calculates the allelic frequency of corresponding sites in the tumour. 
+Looking directly at the bam files, AMBER locates heterozygous sites within the reference sample then calculates the allelic frequency of corresponding sites in the tumor. 
 
 AMBER also locates homozygous sites in the reference to detect evidence of contamination in the tumor.
 

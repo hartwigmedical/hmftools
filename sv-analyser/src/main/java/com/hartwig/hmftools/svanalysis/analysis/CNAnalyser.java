@@ -951,12 +951,12 @@ public class CNAnalyser {
                             .adjustedEndCopyNumber(0.0)
                             .adjustedEndCopyNumberChange(0.0)
                             .event("")
-                            .startTumourVariantFragmentCount(0)
-                            .startTumourReferenceFragmentCount(0)
+                            .startTumorVariantFragmentCount(0)
+                            .startTumorReferenceFragmentCount(0)
                             .startNormalVariantFragmentCount(0)
                             .startNormalReferenceFragmentCount(0)
-                            .endTumourVariantFragmentCount(0)
-                            .endTumourReferenceFragmentCount(0)
+                            .endTumorVariantFragmentCount(0)
+                            .endTumorReferenceFragmentCount(0)
                             .endNormalVariantFragmentCount(0)
                             .endNormalReferenceFragmentCount(0)
                             .startIntervalOffsetStart(0)
@@ -974,6 +974,8 @@ public class CNAnalyser {
                             .insertSequenceRepeatCoverage(0.0)
                             .insertSequenceRepeatOrientation((byte)0)
                             .insertSequenceRepeatType("")
+                            .startAnchoringSupportDistance(0)
+                            .endAnchoringSupportDistance(0)
                             .recovered(false)
                             .build());
         }
@@ -1057,8 +1059,8 @@ public class CNAnalyser {
                 final SvCNData cnEndNextData = cnDataPair[SVI_END];
                 final SvCNData cnEndData = cnEndNextData != null ? getCNSegment(cnEndNextData.Chromosome, cnEndNextData.getIndex() - 1) : null;
 
-                int tumorReadCountStart = svData.startTumourVariantFragmentCount();
-                int tumorReadCountEnd = svData.endTumourVariantFragmentCount();
+                int tumorReadCountStart = svData.startTumorVariantFragmentCount();
+                int tumorReadCountEnd = svData.endTumorVariantFragmentCount();
 
                 double adjVafStart = svData.adjustedStartAF();
                 double adjVafEnd = svData.adjustedEndAF();

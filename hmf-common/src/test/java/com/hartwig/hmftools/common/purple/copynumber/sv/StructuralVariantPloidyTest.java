@@ -73,6 +73,7 @@ public class StructuralVariantPloidyTest {
                 .adjustedVaf(0.5)
                 .alleleFrequency(0.5)
                 .homology("")
+                .anchoringSupportDistance(0)
                 .weight(1)
                 .averageImpliedPloidy(PLOIDY)
                 .unweightedImpliedPloidy(PLOIDY)
