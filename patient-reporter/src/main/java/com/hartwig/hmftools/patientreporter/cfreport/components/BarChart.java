@@ -117,6 +117,9 @@ public class BarChart extends InlineBarChart {
             final float barY = boundingBox.getTop() - 39;
             final float tickY = barY - 21;
 
+            final boolean hasUnderShoot = isEnabled() && underShootEnabled && getValue() < getMin();
+            final boolean hasOverShoot = isEnabled() && overshootEnabled && getValue() > getMax();
+
             final Color outlineColor = isEnabled()
                     ? ReportResources.PALETTE_MID_BLUE
                     : ReportResources.PALETTE_LIGHT_GREY;
@@ -132,7 +135,7 @@ public class BarChart extends InlineBarChart {
                     .addStyle(ReportResources.smallBodyHeadingStyle().setFontColor(labelColor)), boundingBox.getRight(), boundingBox.getTop() - 25, TextAlignment.RIGHT);
 
             // Draw undershoot
-            if (underShootEnabled) {
+            if (hasUnderShoot) {
 
                 final float fillValue = isEnabled()
                         ? (getValue() > getMin() ? 1 : 0.1f)
@@ -158,7 +161,7 @@ public class BarChart extends InlineBarChart {
             }
 
             // Draw overshoot
-            if (overshootEnabled) {
+            if (hasOverShoot) {
 
                 final float fillValue = (isEnabled() && getValue() > getMax()) ? 1 : 0;
 
@@ -187,11 +190,11 @@ public class BarChart extends InlineBarChart {
                     : 0;
 
             final Rectangle mainOuterBB = new Rectangle(
-                    boundingBox.getLeft() + (underShootEnabled ? OVER_UNDER_SHOOT_WIDTH : 0),
+                    boundingBox.getLeft() + (hasUnderShoot ? OVER_UNDER_SHOOT_WIDTH : 0),
                     barY,
                     boundingBox.getWidth()
-                            - (underShootEnabled ? OVER_UNDER_SHOOT_WIDTH : 0)
-                            - (overshootEnabled ? OVER_UNDER_SHOOT_WIDTH : 0),
+                            - (hasUnderShoot ? OVER_UNDER_SHOOT_WIDTH : 0)
+                            - (hasOverShoot ? OVER_UNDER_SHOOT_WIDTH : 0),
                     BAR_OUTLINE_HEIGHT);
             final Rectangle mainInnerBB = getInnerRectangle(mainOuterBB);
             drawRoundedRect(mainOuterBB, mainInnerBB, fillValue, outlineColor, ReportResources.PALETTE_BLUE, false, canvas);
