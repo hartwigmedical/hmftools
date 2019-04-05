@@ -37,6 +37,8 @@ public abstract class ViccFactory {
                 stringToCSVBRCA.append(object.getAsJsonObject("brca").get(keysOfBRCAObject.get(i))).append(";"); // brca data
             }
         } else {
+            stringToCSVBRCA.append(";;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;"
+                    + ";;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;");
         }
 
         return stringToCSVBRCA;
@@ -61,7 +63,7 @@ public abstract class ViccFactory {
                 }
             }
         } else {
-            stringToCSVCGI.append(";;;;;;;;;;;;;;;;;;;;;; ");
+            stringToCSVCGI.append(";;;;;;;;;;;;;;;;;;;;;;; ");
 
         }
         return stringToCSVCGI;
@@ -118,7 +120,6 @@ public abstract class ViccFactory {
 
         if (object.getAsJsonObject("civic") != null) {
             List<String> keysOfCivic = new ArrayList<>(object.getAsJsonObject("civic").keySet());
-            LOGGER.info(keysOfCivic);
             for (int x = 0; x < keysOfCivic.size(); x++) {
                 if (keysOfCivic.get(x).equals("variant_types")) {
                     JsonArray civicVariantTypesArray = object.getAsJsonObject("civic").get(keysOfCivic.get(x)).getAsJsonArray();
@@ -387,7 +388,7 @@ public abstract class ViccFactory {
                 }
             }
         } else {
-            stringToCSVJaxTrials.append(";;;;;;;;;;;;;;;");
+            stringToCSVJaxTrials.append(";;;;;;;;;;;;;;;;");
         }
         return stringToCSVJaxTrials;
     }
@@ -464,7 +465,6 @@ public abstract class ViccFactory {
 
         if (object.getAsJsonObject("molecularmatch") != null) {
             List<String> keysOfMolecularMatch = new ArrayList<>(object.getAsJsonObject("molecularmatch").keySet());
-            LOGGER.info(keysOfMolecularMatch);
             for (int x = 0; x < keysOfMolecularMatch.size(); x++) {
                 if (keysOfMolecularMatch.get(x).equals("criteriaUnmet")) {
                     JsonArray molecluarMatchArray =
@@ -718,7 +718,6 @@ public abstract class ViccFactory {
                                 }
                             } else {
                                 JsonArray arrays = objectMutations.get("sources").getAsJsonArray();
-                                LOGGER.info(arrays);
                                 stringToCSVMolecularMatch.append(arrays).append(";");
                             }
                         }
@@ -1310,7 +1309,7 @@ public abstract class ViccFactory {
             }
             stringToCSVOncoKb.append(info).append(extra).append(biologicalInfo).append(clinicallInfo);
         } else {
-            stringToCSVOncoKb.append(";;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;");
+            stringToCSVOncoKb.append(";;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;");
         }
         return stringToCSVOncoKb;
     }
@@ -1686,7 +1685,13 @@ public abstract class ViccFactory {
     private static StringBuilder readObjectFeaturesNames(@NotNull JsonObject object) {
         //feature_names object
         StringBuilder stringToCSVFeaturesNames = new StringBuilder();
-        stringToCSVFeaturesNames.append(object.get("feature_names")).append(";"); // features names data
+
+        if (object.get("feature_names") == null) {
+            stringToCSVFeaturesNames.append("null").append(";");
+        } else {
+            String element = object.get("feature_names").toString().replaceAll(";", ":");
+            stringToCSVFeaturesNames.append(element).append(";");
+        }
         return stringToCSVFeaturesNames;
     }
 
@@ -1745,7 +1750,7 @@ public abstract class ViccFactory {
                 + "brca.Homozygous_count_NFE_ExAC;brca.Allele_count_SAS_ExAC;brca.Method_ClinVar;brca.Allele_count_NFE_ExAC;"
                 + "brca.Pathogenicity_all;brca.Germline_or_Somatic_BIC;brca.Homozygous_count_SAS_ExAC;brca.BIC_Nomenclature;"
                 + "brca.Assertion_method_ENIGMA;brca.Literature_source_exLOVD;brca.Change_Type_id;brca.Collection_method_ENIGMA;"
-                + "brca.Sum_family_LR_exLOVD;brca.HGVS_cDNA_LOVD”;brca.Homozygous_count_FIN_ExAC;brca.EAS_Allele_frequency_1000_Genomes;"
+                + "brca.Sum_family_LR_exLOVD;brca.HGVS_cDNA_LOVD;brca.Homozygous_count_FIN_ExAC;brca.EAS_Allele_frequency_1000_Genomes;"
                 + "brca.Ethnicity_BIC;brca.Individuals_LOVD;brca.Variant_in_ExAC;brca.URL_ENIGMA;brca.Allele_Origin_ClinVar;"
                 + "brca.Allele_frequency_AMR_ExAC;brca.Variant_in_1000_Genomes;brca.AFR_Allele_frequency_1000_Genomes;"
                 + "brca.BX_ID_exLOVD;brca.Source;brca.Condition_ID_value_ENIGMA;brca.HGVS_Protein;brca.Ref;brca.Allele_number_AFR_ExAC;"
@@ -1754,15 +1759,15 @@ public abstract class ViccFactory {
                 + "brca.Polyphen_Score;brca.Reference_Sequence;brca.Allele_count_EAS_ExAC;brca.Hg38_End;brca.HGVS_cDNA;"
                 + "brca.Functional_analysis_technique_LOVD;brca.SAS_Allele_frequency_1000_Genomes;brca.RNA_LOVD;"
                 + "brca.Combined_prior_probablility_exLOVD;brca.BX_ID_ClinVar;brca.IARC_class_exLOVD;brca.BX_ID_BIC;brca.Sift_Prediction;"
-                + "brca.Allele_number_NFE_ExAC;brca.Allele_origin_ENIGMA”;brca.Allele_number_OTH_ExAC;brca.Hg36_End;"
+                + "brca.Allele_number_NFE_ExAC;brca.Allele_origin_ENIGMA;brca.Allele_number_OTH_ExAC;brca.Hg36_End;"
                 + "brca.Allele_frequency_SAS_ExAC;brca.Date_Last_Updated_ClinVar;brca.Allele_number_EAS_ExAC;"
                 + "brca.Allele_frequency_OTH_ExAC;brca.Source_URL;brca.SCV_ClinVar;brca.Pathogenicity_expert;"
                 + "brca.Allele_frequency_1000_Genomes;brca.Functional_analysis_result_LOVD;brca.AMR_Allele_frequency_1000_Genomes;"
                 + "brca.Variant_in_ESP;brca.Variant_in_BIC;brca.Clinical_significance_ENIGMA;brca.Max_Allele_Frequency;"
-                + "brca.Allele_count_AMR_ExAC;brca.Variant_in_ENIGMA;brca.BX_ID_ESP;brca.Patient_nationality_BIC”;brca.BX_ID_1000_Genomes;"
+                + "brca.Allele_count_AMR_ExAC;brca.Variant_in_ENIGMA;brca.BX_ID_ESP;brca.Patient_nationality_BIC;brca.BX_ID_1000_Genomes;"
                 + "brca.Genomic_Coordinate_hg37;brca.Genomic_Coordinate_hg36;brca.EUR_Allele_frequency_1000_Genomes;"
-                + "brca.Number_of_family_member_carrying_mutation_BIC;brca.Segregation_LR_exLOVD”;brca.Allele_Frequency;"
-                + "brca.Minor_allele_frequency_percent_ESP;brca.Allele_frequency_ExAC”;brca.Mutation_type_BIC;"
+                + "brca.Number_of_family_member_carrying_mutation_BIC;brca.Segregation_LR_exLOVD;brca.Allele_Frequency;"
+                + "brca.Minor_allele_frequency_percent_ESP;brca.Allele_frequency_ExAC;brca.Mutation_type_BIC;"
                 + "brca.Assertion_method_citation_ENIGMA;brca.Condition_ID_type_ENIGMA;brca.Allele_count_OTH_ExAC;brca.HGVS_protein_LOVD;"
                 + "brca.Variant_in_ClinVar;brca.Clinical_importance_BIC;brca.Discordant;brca.Allele_count_FIN_ExAC;"
                 + "brca.Condition_category_ENIGMA;brca.Allele_Frequency_ESP;brca.Homozygous_count_OTH_ExAC;brca.Genetic_origin_LOVD;"
@@ -1808,7 +1813,7 @@ public abstract class ViccFactory {
                 + "association.environmentalContexts.taxonomy.subclass;association.environmentalContexts.taxonomy.superclass;"
                 + "association.environmentalContexts.source;association.environmentalContexts.usan_stem;association.environmentalContexts.toxicity;"
                 + "association.environmentalContexts.approved_countries;association.environmentalContexts.id;";
-        String headerFeaturesNames = "feature_names";
+        String headerFeaturesNames = "feature_names;";
         String headerFeatures = "features.provenance_rule;features.entrez_id;features.end;features.name;features.links;"
                 + "features.sequence_ontology.hierarchy;features.sequence_ontology.soid;features.sequence_ontology.parent_soid;"
                 + "features.sequence_ontology.name;features.sequence_ontology.parent_name;features.provenance;features.start;"
@@ -1973,26 +1978,28 @@ public abstract class ViccFactory {
 
         headerCSV.append(headerIndex);
         headerCSV.append(headerSource);
-        //        headerCSV.append(headerGenes);
-        //        headerCSV.append(headerTags);
-        //        headerCSV.append(headerDevTags);
-        //        headerCSV.append(headerGeneIdentifiers);
-        //        headerCSV.append(headerSage);
-        //        headerCSV.append(headerPmkb);
-        //        headerCSV.append(headerBRCA);
-        //        headerCSV.append(headerCGI);
-        //        headerCSV.append(headerOncokb);
-        //        headerCSV.append(headerJax);
-        //        headerCSV.append(headerJaxTrials);
-        // headerCSV.append(headerAssociation); //TODO check fields for every db
-        // headerCSV.append(headerFeaturesNames);
-        // headerCSV.append(headerFeatures); //TODO check fields for every db
+        headerCSV.append(headerGenes);
+        headerCSV.append(headerTags);
+        headerCSV.append(headerDevTags);
+        headerCSV.append(headerGeneIdentifiers);
+        headerCSV.append(headerFeaturesNames);
+        headerCSV.append(headerSage);
+        headerCSV.append(headerPmkb);
+        headerCSV.append(headerBRCA);
+        headerCSV.append(headerCGI);
+        headerCSV.append(headerOncokb);
+        headerCSV.append(headerJax);
+        headerCSV.append(headerJaxTrials);
+
+        //        headerCSV.append(headerAssociation); //TODO check fields for every db
+        //        headerCSV.append(headerFeatures); //TODO check fields for every db
         //        headerCSV.append(headerCIVIC); //TODO check fields for every db
         //        headerCSV.append(headerMolecularMatch); //TODO check fields for every db
-        //  headerCSV.append(headerMolecularMatchTrials);//TODO check fields for every db
+        //        headerCSV.append(headerMolecularMatchTrials);//TODO check fields for every db
 
         writer.append(headerCSV);
         writer.append("\n");
+
         while (reader.peek() != JsonToken.END_DOCUMENT) {
             LOGGER.info(index);
             JsonObject object = parser.parse(reader).getAsJsonObject();
@@ -2004,6 +2011,7 @@ public abstract class ViccFactory {
             StringBuilder StringToCSVTags = readObjectTags(object);
             StringBuilder StringToCSVDevTags = readObjectDevTags(object);
             StringBuilder StringToCSVGeneIdentifiers = readObjectGeneIdentifiers(object);
+            StringBuilder StringToCSVFeaturesNames = readObjectFeaturesNames(object);
             StringBuilder StringToCSVSage = readObjectSage(object);
             StringBuilder StringToCSVPmkb = readObjectPmkb(object);
             StringBuilder StringToCSVBrca = readObjectBRCA(object);
@@ -2011,8 +2019,8 @@ public abstract class ViccFactory {
             StringBuilder StringToCSVOncokb = readObjectOncokb(object);
             StringBuilder StringToCSVJax = readObjectJax(object);
             StringBuilder StringToCSVJaxTrials = readObjectJaxTrials(object);
+
             StringBuilder StringToCSVAssociation = readObjectAssociation(object); //TODO check fields for every db
-            StringBuilder StringToCSVFeaturesNames = readObjectFeaturesNames(object);
             StringBuilder StringToCSVFeatures = readObjectFeatures(object); //TODO check fields for every db
             StringBuilder StringToCSVCIVIC = readObjectCIVIC(object); //TODO check fields for every db
             StringBuilder StringToCSVMolecularMatch = readObjectMolecularMatch(object); //TODO check fields for every db
@@ -2020,18 +2028,19 @@ public abstract class ViccFactory {
 
             stringToCSVAll.append(index).append(";");
             stringToCSVAll.append(StringToCSVSource);
-            //            stringToCSVAll.append(StringToCSVGenes);
-            //            stringToCSVAll.append(StringToCSVTags);
-            //            stringToCSVAll.append(StringToCSVDevTags);
-            //            stringToCSVAll.append(StringToCSVGeneIdentifiers);
-            //            stringToCSVAll.append(StringToCSVSage);
-            //            stringToCSVAll.append(StringToCSVPmkb);
-            //            stringToCSVAll.append(StringToCSVBrca);
-            //            stringToCSVAll.append(StringToCSVCGI);
-            //            stringToCSVAll.append(StringToCSVOncokb);
-            //            stringToCSVAll.append(StringToCSVJax);
-            //            stringToCSVAll.append(StringToCSVJaxTrials);
-            //            stringToCSVAll.append(StringToCSVFeaturesNames);
+            stringToCSVAll.append(StringToCSVGenes);
+            stringToCSVAll.append(StringToCSVTags);
+            stringToCSVAll.append(StringToCSVDevTags);
+            stringToCSVAll.append(StringToCSVGeneIdentifiers);
+            stringToCSVAll.append(StringToCSVFeaturesNames);
+            stringToCSVAll.append(StringToCSVSage);
+            stringToCSVAll.append(StringToCSVPmkb);
+            stringToCSVAll.append(StringToCSVBrca);
+            stringToCSVAll.append(StringToCSVCGI);
+            stringToCSVAll.append(StringToCSVOncokb);
+            stringToCSVAll.append(StringToCSVJax);
+            stringToCSVAll.append(StringToCSVJaxTrials);
+            //            stringToCSVAll.append(StringToCSVAssociation);
             //            stringToCSVAll.append(StringToCSVFeatures);
             //            stringToCSVAll.append(StringToCSVCIVIC);
             //            stringToCSVAll.append(StringToCSVMolecularMatch);
