@@ -230,37 +230,6 @@ public abstract class ViccFactory {
             stringToCSVCIVIC.append(";;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; "
                     + ";;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;");
         }
-        headerCSV.append("variant_groups; entrez_name; display_name;description;url;so_id;id;name; civic_actionability_score; "
-                + "clinvar_entries; last_commented_on.timestamp;last_commented_on.username;last_commented_on.area_of_expertise;"
-                + "last_commented_on.url;last_commented_on.id;last_commented_on.x32;last_commented_on.x256;last_commented_on.x14;"
-                + "last_commented_on.x64;last_commented_on.x128; last_commented_on.description; last_commented_on.name;  "
-                + "last_commented_on.twitter_handle;  last_commented_on.name;   last_commented_on.bio;  "
-                + "last_commented_on.url; last_commented_on.created_at;  last_commented_on.x32;  last_commented_on.x14; "
-                + "last_commented_on.x64; last_commented_on.x128; last_commented_on.accepted_license;last_commented_on.affiliation;"
-                + "last_commented_on.avatar_url;last_commented_on.role;last_commented_on.facebook_profile;"
-                + "last_commented_on.linkedin_profile; last_commented_on.orcid; last_commented_on.display_name; "
-                + "last_commented_on.last_seen_at; last_commented_on.featured_expert; last_commented_on.id;"
-                + " last_commented_on.signup_complete; last_modified.timestamp;last_modified.username;last_modified.area_of_expertise;"
-                + "last_modified.url;last_modified.id;last_modified.x32;last_modified.x256;last_modified.x14;last_modified.x64;"
-                + "last_modified.x128; last_modified.description; last_modified.name;  last_modified.twitter_handle;  last_modified.name;  "
-                + " last_modified.bio;  last_modified.url; last_modified.created_at;  last_modified.x32;  last_modified.x14; "
-                + "last_modified.x64; last_modified.x128; last_modified.accepted_license;last_modified.affiliation;last_modified.avatar_url;"
-                + "last_modified.role;last_modified.facebook_profile;last_modified.linkedin_profile; last_modified.orcid; "
-                + "last_modified.display_name; last_modified.last_seen_at; last_modified.featured_expert; last_modified.id; "
-                + "last_modified.signup_complete;last_reviewed.timestamp;last_reviewed.username;last_reviewed.area_of_expertise;"
-                + "last_reviewed.url;last_reviewed.id;last_reviewed.x32;last_reviewed.x256;last_reviewed.x14;last_reviewed.x64;"
-                + "last_reviewed.x128; last_reviewed.description; last_reviewed.name;  last_reviewed.twitter_handle;  last_reviewed.name; "
-                + "  last_reviewed.bio;  last_reviewed.url; last_reviewed.created_at;  last_reviewed.x32;  last_reviewed.x14; "
-                + "last_reviewed.x64; last_reviewed.x128; last_reviewed.accepted_license;last_reviewed.affiliation;last_reviewed.avatar_url;"
-                + "last_reviewed.role;last_reviewed.facebook_profile;last_reviewed.linkedin_profile; last_reviewed.orcid; "
-                + "last_reviewed.display_name; last_reviewed.last_seen_at; last_reviewed.featured_expert; last_reviewed.id; "
-                + "last_reviewed.signup_complete; variant_aliases; allele_registry_id; provisional_values; gene_id; name; status; "
-                + "rating; drug_interaction_type; description; open_change_count; evidence_type; pubchem_id; id; name; variant_origin;"
-                + " doid;url;display_name;id;name;status;open_access;name;journal;citation;pmc_id;full_journal_title;source_url;"
-                + "clinical_trials;pubmed_id;is_review;year;day;month;id;evidence_direction;variant_id;clinical_significance;evidence_level;"
-                + "type;id;name; sources; entrez_id; assertions; hgvs_expressions; errors; chromosome2;reference_bases;start2;variant_bases;"
-                + "stop;stop2;representative_transcript2;start;representative_transcript;ensembl_version;chromosome;reference_build; type;"
-                + " id; description");
         return stringToCSVCIVIC;
     }
 
@@ -1810,7 +1779,79 @@ public abstract class ViccFactory {
                 + "features.sequence_ontology.name;features.sequence_ontology.parent_name;features.provenance;features.start;"
                 + "features.synonyms;features.biomarker_type;features.referenceName;features.geneSymbol;features.alt;"
                 + "features.ref;features.chromosome;features.description;";
-        String headerCIVIC = "";
+        String headerCIVIC = "civic.variant_groups;civic.entrez_name;civic.variant_types.display_name;civic.variant_types.description;"
+                + "civic.variant_types.url;civic.variant_types.so_id;civic.variant_types.d;civic.variant_types.name;"
+                + "civic.civic_actionability_score;civic.clinvar_entries;civic.lifecycle_actions.last_commented_on.timestamp;"
+                + "civic.lifecycle_actions.last_commented_on.user.username;"
+                + "civic.lifecycle_actions.last_commented_on.user.area_of_expertise;"
+                + "civic.lifecycle_actions.last_commented_on.user.organization.url;"
+                + "civic.lifecycle_actions.last_commented_on.user.organization.id;"
+                + "civic.lifecycle_actions.last_commented_on.user.organization.profile_image;"
+                + "civic.lifecycle_actions.last_commented_on.user.organization.x32;"
+                + "civic.lifecycle_actions.last_commented_on.user.organization.x256;"
+                + "civic.lifecycle_actions.last_commented_on.user.organization.x14;"
+                + "civic.lifecycle_actions.last_commented_on.user.organization.x64;"
+                + "civic.lifecycle_actions.last_commented_on.user.organization.x128;"
+                + "civic.lifecycle_actions.last_commented_on.user.organization.description;"
+                + "civic.lifecycle_actions.last_commented_on.user.organization.name;"
+                + "civic.lifecycle_actions.last_commented_on.user.twitter_handle;civic.lifecycle_actions.last_commented_on.user.name;"
+                + "civic.lifecycle_actions.last_commented_on.user.bio;civic.lifecycle_actions.last_commented_on.user.url;"
+                + "civic.lifecycle_actions.last_commented_on.user.created_at;civic.lifecycle_actions.last_commented_on.user.avatarsx32;"
+                + "civic.lifecycle_actions.last_commented_on.user.avatarsx14;civic.lifecycle_actions.last_commented_on.user.avatarsx64;"
+                + "civic.lifecycle_actions.last_commented_on.user.avatarsx128; "
+                + "civic.lifecycle_actions.last_commented_on.user.accepted_license;"
+                + "civic.lifecycle_actions.last_commented_on.user.affiliation;civic.lifecycle_actions.last_commented_on.user.avatar_url;"
+                + "civic.lifecycle_actions.last_commented_on.user.role;civic.lifecycle_actions.last_commented_on.user.facebook_profile;"
+                + "civic.lifecycle_actions.last_commented_on.user.linkedin_profile;civic.lifecycle_actions.last_commented_on.user.orcid;"
+                + "civic.lifecycle_actions.last_commented_on.user.display_name;civic.lifecycle_actions.last_commented_on.user.last_seen_at;"
+                + "civic.lifecycle_actions.last_commented_on.user.featured_expert;civic.lifecycle_actions.last_commented_on.user.id;"
+                + "civic.lifecycle_actions.last_commented_on.user.signup_complete;civic.last_modified.timestamp;"
+                + "civic.last_modified.user.username;civic.last_modified.user.area_of_expertise;civic.last_modified.user.organization.url;"
+                + "civic.last_modified.user.organization.id;civic.last_modified.user.organization.profile_image.x32;"
+                + "civic.last_modified.user.organization.profile_image.x256;civic.last_modified.user.organization.profile_image.x14;"
+                + "civic.last_modified.user.organization.profile_image.x64;civic.last_modified.user.organization.profile_image.x128;"
+                + "civic.last_modified.user.organization.description;"
+                + "civic.last_modified.user.organization.namecivic.last_modified.user.twitter_handle;civic.last_modified.user.name;"
+                + "civic.last_modified.user.bio;civic.last_modified.user.url;civic.last_modified.user.created_at;"
+                + "civic.last_modified.user.avatars.x32;civic.last_modified.user.avatars.x14;,civic.last_modified.user.avatars.x64;"
+                + "civic.last_modified.user.avatars.x128;civic.last_modified.user.accepted_license;"
+                + "civic.last_modified.user.affiliation;civic.last_modified.user.avatar_url;civic.last_modified.user.role;"
+                + "civic.last_modified.user.facebook_profile;civic.last_modified.user.linkedin_profile;civic.last_modified.user.orcid;"
+                + "civic.last_modified.user.display_name;civic.last_modified.user.last_seen_at;civic.last_modified.user.featured_expert;"
+                + "civic.last_modified.user.id;civic.last_modified.user.signup_complete;civic.last_reviewed.timestamp;"
+                + "civic.last_reviewed.user.username;civic.last_reviewed.user.area_of_expertise;civic.last_reviewed.user.organization.url;"
+                + "civic.last_reviewed.user.organization.id;civic.last_reviewed.user.organization.profile_image.x32;"
+                + "civic.last_reviewed.user.organization.profile_image.x256;civic.last_reviewed.user.organization.profile_image.x14”;"
+                + "civic.last_reviewed.user.organization.profile_image.x64;civic.last_reviewed.user.organization.profile_image.x128;"
+                + "civic.last_reviewed.user.organization.description;"
+                + "civic.last_reviewed.user.organization..name;civic.last_reviewed.user..twitter_handle;"
+                + "civic.last_reviewed.user..name;civic.last_reviewed.user..bio;civic.last_reviewed.user.url;"
+                + ",civic.last_reviewed.user.created_at;civic.last_reviewed.user.avatars.x32;civic.last_reviewed.user.avatars.x14;"
+                + "civic.last_reviewed.user.avatars.x64;civic.last_reviewed.user.avatars.x128;"
+                + "civic.last_reviewed.user..accepted_license;civic.last_reviewed.user..affiliation;civic.last_reviewed.user..avatar_url;"
+                + "civic.last_reviewed.user..role;civic.last_reviewed.user..facebook_profile;civic.last_reviewed.user..linkedin_profile;"
+                + "civic.last_reviewed.user..orcid;civic.last_reviewed.user..display_name;civic.last_reviewed.user..last_seen_at;"
+                + "civic.last_reviewed.user..featured_expert;civic.last_reviewed.user.id;civic.last_reviewed.user..signup_complete;"
+                + "civic.variant_aliases;civic.allele_registry_id;civic.provisional_values;civic.gene_id;civic.name;"
+                + "civic.evidence_items.status;civic.evidence_items.rating;civic.evidence_items.drug_interaction_type;"
+                + "civic.evidence_items.description;civic.evidence_items.open_change_count;civic.evidence_items.evidence_type;"
+                + "civic.evidence_items.drugs.pubchem_id;civic.evidence_items.drugs.id;civic.evidence_items.drugs.name;"
+                + "civic.evidence_items.variant_origin;civic.evidence_items.disease.doid;civic.evidence_items.disease.url;"
+                + "civic.evidence_items.disease.display_name;civic.evidence_items.disease.id;civic.evidence_items.disease.name;"
+                + "civic.evidence_items.source.status;civic.evidence_items.source.open_access;civic.evidence_items.source.name;"
+                + "civic.evidence_items.source.journal;civic.evidence_items.source.citation;civic.evidence_items.source.pmc_id;"
+                + "civic.evidence_items.source.full_journal_title;civic.evidence_items.source.source_url;"
+                + "civic.evidence_items.source.clinical_trials;civic.evidence_items.source.pubmed_id;"
+                + "civic.evidence_items.source.is_review;civic.evidence_items.source.publication_date.year;"
+                + "civic.evidence_items.source.publication_date.day;civic.evidence_items.source.publication_date.month;"
+                + "civic.evidence_items.source.id;civic.evidence_items.evidence_direction;civic.evidence_items.variant_id;"
+                + "civic.evidence_items.clinical_significance;civic.evidence_items.evidence_level;civic.evidence_items.type;"
+                + "civic.evidence_items.id;civic.evidence_items.name;civic.sources;civic.entrez_id;civic.assertions;civic.hgvs_expressions;"
+                + "civic.errors;civic.coordinates.chromosome2;civic.coordinates.reference_bases;civic.coordinates.start2;"
+                + "civic.coordinates.variant_bases;civic.coordinates.stop;civic.coordinates.stop2;"
+                + "civic.coordinates.representative_transcript2;civic.coordinates.start;"
+                + "civic.coordinates.representative_transcript;civic.coordinates.ensembl_version;"
+                + "civic.coordinates.chromosome;civic.coordinates.reference_build;civic.type;civic.id;civic.description;";
 
         headerCSV.append(headerIndex);
         headerCSV.append(headerSource);
@@ -1828,7 +1869,7 @@ public abstract class ViccFactory {
         // headerCSV.append(headerAssociation); //TODO check fields for every db
         // headerCSV.append(headerFeaturesNames);
         // headerCSV.append(headerFeatures); //TODO check fields for every db
-        headerCSV.append(headerCIVIC);
+        headerCSV.append(headerCIVIC); //TODO check fields for every db
 
         writer.append(headerCSV);
         writer.append("\n");
@@ -1853,7 +1894,7 @@ public abstract class ViccFactory {
             //  StringBuilder StringToCSVAssociation = readObjectAssociation(object, headerCSV); //TODO check fields for every db
             //            StringBuilder StringToCSVFeaturesNames = readObjectFeaturesNames(object, headerCSV);
             //            StringBuilder StringToCSVFeatures = readObjectFeatures(object, headerCSV); //TODO check fields for every db
-            StringBuilder StringToCSVCIVIC = readObjectCIVIC(object, headerCSV);
+            StringBuilder StringToCSVCIVIC = readObjectCIVIC(object, headerCSV); //TODO check fields for every db
 
             stringToCSVAll.append(index).append(";");
             stringToCSVAll.append(StringToCSVSource);
@@ -1870,7 +1911,7 @@ public abstract class ViccFactory {
             //            stringToCSVAll.append(StringToCSVJaxTrials);
             //            stringToCSVAll.append(StringToCSVFeaturesNames);
             //            stringToCSVAll.append(StringToCSVFeatures);
-            stringToCSVAll.append(StringToCSVCIVIC);
+//            stringToCSVAll.append(StringToCSVCIVIC);
 
             writer.append(stringToCSVAll);
             writer.append("\n");
