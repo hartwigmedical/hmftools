@@ -28,7 +28,7 @@ public abstract class ViccFactory {
     private ViccFactory() {
     }
 
-    private static StringBuilder readObjectBRCA(@NotNull JsonObject object, @NotNull StringBuilder headerCSV) {
+    private static StringBuilder readObjectBRCA(@NotNull JsonObject object) {
         //BRCA object
         StringBuilder stringToCSVBRCA = new StringBuilder();
         if (object.getAsJsonObject("brca") != null) {
@@ -42,7 +42,7 @@ public abstract class ViccFactory {
         return stringToCSVBRCA;
     }
 
-    private static StringBuilder readObjectCGI(@NotNull JsonObject object, @NotNull StringBuilder headerCSV) {
+    private static StringBuilder readObjectCGI(@NotNull JsonObject object) {
         //CGI object
         StringBuilder stringToCSVCGI = new StringBuilder();
         StringBuilder stringInfo = new StringBuilder();
@@ -67,8 +67,7 @@ public abstract class ViccFactory {
         return stringToCSVCGI;
     }
 
-    private static void commandCIVIC(@NotNull JsonObject civicObject, @NotNull List<String> keysOfLifeCycleActions, @NotNull String i,
-            @NotNull StringBuilder stringToCSVCIVIC) {
+    private static void commandCIVIC(@NotNull JsonObject civicObject, @NotNull String i, @NotNull StringBuilder stringToCSVCIVIC) {
         JsonObject objectLastCommened = civicObject.get(i).getAsJsonObject();
         List<String> keysLastCommened = new ArrayList<>(objectLastCommened.keySet());
         for (int p = 0; p < keysLastCommened.size(); p++) {
@@ -107,7 +106,7 @@ public abstract class ViccFactory {
         }
     }
 
-    private static StringBuilder readObjectCIVIC(@NotNull JsonObject object, @NotNull StringBuilder headerCSV) {
+    private static StringBuilder readObjectCIVIC(@NotNull JsonObject object) {
         //CIVIC object
         StringBuilder stringToCSVCIVIC = new StringBuilder();
         StringBuilder stringDisplayName = new StringBuilder();
@@ -165,13 +164,13 @@ public abstract class ViccFactory {
                     List<String> keysOfLifeCycleActions = new ArrayList<>(civicObject.keySet());
                     for (int i = 0; i < keysOfLifeCycleActions.size(); i++) {
                         if (keysOfLifeCycleActions.get(i).equals("last_commented_on")) {
-                            commandCIVIC(civicObject, keysOfLifeCycleActions, "last_commented_on", stringToCSVCIVIC);
+                            commandCIVIC(civicObject, "last_commented_on", stringToCSVCIVIC);
                         }
                         if (keysOfLifeCycleActions.get(i).equals("last_modified")) {
-                            commandCIVIC(civicObject, keysOfLifeCycleActions, "last_modified", stringToCSVCIVIC);
+                            commandCIVIC(civicObject, "last_modified", stringToCSVCIVIC);
                         }
                         if (keysOfLifeCycleActions.get(i).equals("last_reviewed")) {
-                            commandCIVIC(civicObject, keysOfLifeCycleActions, "last_reviewed", stringToCSVCIVIC);
+                            commandCIVIC(civicObject, "last_reviewed", stringToCSVCIVIC);
                         }
                     }
 
@@ -233,7 +232,7 @@ public abstract class ViccFactory {
         return stringToCSVCIVIC;
     }
 
-    private static StringBuilder readObjectJax(@NotNull JsonObject object, @NotNull StringBuilder headerCSV) {
+    private static StringBuilder readObjectJax(@NotNull JsonObject object) {
         //Jax object
         StringBuilder stringToCSVJax = new StringBuilder();
         StringBuilder stringUrl = new StringBuilder();
@@ -302,7 +301,7 @@ public abstract class ViccFactory {
         return stringToCSVJax;
     }
 
-    private static StringBuilder readObjectJaxTrials(@NotNull JsonObject object, @NotNull StringBuilder headerCSV) {
+    private static StringBuilder readObjectJaxTrials(@NotNull JsonObject object) {
         //Jax_trails object
         StringBuilder stringToCSVJaxTrials = new StringBuilder();
         StringBuilder stringSource = new StringBuilder();
@@ -393,7 +392,7 @@ public abstract class ViccFactory {
         return stringToCSVJaxTrials;
     }
 
-    private static StringBuilder readObjectMolecularMatch(@NotNull JsonObject object, @NotNull StringBuilder headerCSV) {
+    private static StringBuilder readObjectMolecularMatch(@NotNull JsonObject object) {
         //MolecularMatch object
         StringBuilder stringToCSVMolecularMatch = new StringBuilder();
 
@@ -937,7 +936,7 @@ public abstract class ViccFactory {
         return stringToCSVMolecularMatch;
     }
 
-    private static StringBuilder readObjectMolecularMatchTrials(@NotNull JsonObject object, @NotNull StringBuilder headerCSV) {
+    private static StringBuilder readObjectMolecularMatchTrials(@NotNull JsonObject object) {
         //MolecularMatchTrials object
         StringBuilder stringToCSVMolecularMatchTrials = new StringBuilder();
 
@@ -1215,7 +1214,7 @@ public abstract class ViccFactory {
         return stringToCSVMolecularMatchTrials;
     }
 
-    private static StringBuilder readObjectOncokb(@NotNull JsonObject object, @NotNull StringBuilder headerCSV) {
+    private static StringBuilder readObjectOncokb(@NotNull JsonObject object) {
         //ONCOKB object
         StringBuilder stringToCSVOncoKb = new StringBuilder();
         StringBuilder info = new StringBuilder();
@@ -1316,12 +1315,11 @@ public abstract class ViccFactory {
         return stringToCSVOncoKb;
     }
 
-    private static StringBuilder readObjectPmkb(@NotNull JsonObject object, @NotNull StringBuilder headerCSV) {
+    private static StringBuilder readObjectPmkb(@NotNull JsonObject object) {
         //PMKB object
         StringBuilder stringToCSVPmkb = new StringBuilder();
         List<String> keysOfPmkb;
-        String header = "";
-        int indexValue;
+
         StringBuilder stringId = new StringBuilder();
         StringBuilder stringName = new StringBuilder();
         if (object.getAsJsonObject("pmkb") != null) {
@@ -1333,13 +1331,11 @@ public abstract class ViccFactory {
                     for (int x = 0; x < pmkbObject.keySet().size(); x++) {
                         stringToCSVPmkb.append(pmkbObject.get(keysOfVariant.get(x))).append(";");
                     }
-                    headerCSV.append(String.join(";", pmkbObject.keySet())).append(";");
                 } else if (keysOfPmkb.get(j).equals("tissues")) {
                     JsonArray arrayTissue = object.getAsJsonObject("pmkb").get(keysOfPmkb.get(j)).getAsJsonArray();
                     for (int x = 0; x < arrayTissue.size(); x++) {
                         JsonObject objectTissue = (JsonObject) arrayTissue.get(x);
-                        Set<String> set = objectTissue.keySet();
-                        header = String.join(";", set);
+
                         for (int v = 0; v < objectTissue.keySet().size(); v++) {
                             List<String> keysTissue = new ArrayList<>(objectTissue.keySet());
                             if (keysTissue.get(v).equals("id")) {
@@ -1351,7 +1347,6 @@ public abstract class ViccFactory {
                             }
                         }
                     }
-                    headerCSV.append(String.join(";", header)).append(";");
                     stringToCSVPmkb.append(stringId).append(";").append(stringName).append(";");
                 } else if (keysOfPmkb.get(j).equals("variant")) {
                     JsonObject pmkbObject = object.getAsJsonObject("pmkb").get(keysOfPmkb.get(j)).getAsJsonObject();
@@ -1360,10 +1355,6 @@ public abstract class ViccFactory {
                         if (keysOfVariant.get(x).equals("gene")) {
                             JsonElement elementGene = object.getAsJsonObject("pmkb").get("variant");
                             List<String> keysGene = new ArrayList<>(elementGene.getAsJsonObject().get("gene").getAsJsonObject().keySet());
-
-                            indexValue = keysOfVariant.indexOf("gene");
-                            keysOfVariant.remove(indexValue);
-                            keysOfVariant.add(indexValue, String.join(";", keysGene));
 
                             for (int d = 0; d < keysGene.size(); d++) {
                                 stringToCSVPmkb.append(elementGene.getAsJsonObject() // association data
@@ -1382,7 +1373,7 @@ public abstract class ViccFactory {
         return stringToCSVPmkb;
     }
 
-    private static StringBuilder readObjectSage(@NotNull JsonObject object, @NotNull StringBuilder headerCSV) {
+    private static StringBuilder readObjectSage(@NotNull JsonObject object) {
         //SAGE object
         StringBuilder stringToCSVSage = new StringBuilder();
         List<String> keysOfSage;
@@ -1399,14 +1390,14 @@ public abstract class ViccFactory {
         return stringToCSVSage;
     }
 
-    private static StringBuilder readObjectSource(@NotNull JsonObject object, @NotNull StringBuilder headerCSV) {
+    private static StringBuilder readObjectSource(@NotNull JsonObject object) {
         //Source object
         StringBuilder stringToCSVSource = new StringBuilder();
         stringToCSVSource.append(object.getAsJsonPrimitive("source")).append(";"); // source data
         return stringToCSVSource;
     }
 
-    private static StringBuilder readObjectGenes(@NotNull JsonObject object, @NotNull StringBuilder headerCSV) {
+    private static StringBuilder readObjectGenes(@NotNull JsonObject object) {
         //Genes object
         StringBuilder stringToCSVGenes = new StringBuilder();
         JsonArray arrayGenes = object.getAsJsonArray("genes");
@@ -1416,7 +1407,7 @@ public abstract class ViccFactory {
         return stringToCSVGenes;
     }
 
-    private static StringBuilder readObjectTags(@NotNull JsonObject object, @NotNull StringBuilder headerCSV) {
+    private static StringBuilder readObjectTags(@NotNull JsonObject object) {
         //Tags object
         StringBuilder stringToCSVTags = new StringBuilder();
         JsonArray arrayTags = object.getAsJsonArray("tags");
@@ -1426,7 +1417,7 @@ public abstract class ViccFactory {
         return stringToCSVTags;
     }
 
-    private static StringBuilder readObjectDevTags(@NotNull JsonObject object, @NotNull StringBuilder headerCSV) {
+    private static StringBuilder readObjectDevTags(@NotNull JsonObject object) {
         //dev_tags
         StringBuilder stringToCSVDevTags = new StringBuilder();
         JsonArray arrayDevTags = object.getAsJsonArray("dev_tags");
@@ -1436,7 +1427,7 @@ public abstract class ViccFactory {
         return stringToCSVDevTags;
     }
 
-    private static StringBuilder readObjectGeneIdentifiers(@NotNull JsonObject object, @NotNull StringBuilder headerCSV) {
+    private static StringBuilder readObjectGeneIdentifiers(@NotNull JsonObject object) {
         //gene_identifiers object
         StringBuilder stringToCSVGeneIdentifiers = new StringBuilder();
         StringBuilder stringSymbol = new StringBuilder();
@@ -1472,7 +1463,7 @@ public abstract class ViccFactory {
         return stringToCSVGeneIdentifiers;
     }
 
-    private static StringBuilder readObjectAssociation(@NotNull JsonObject object, @NotNull StringBuilder headerCSV) {
+    private static StringBuilder readObjectAssociation(@NotNull JsonObject object) {
         //association object
         StringBuilder stringToCSVAssociation = new StringBuilder();
 
@@ -1692,14 +1683,14 @@ public abstract class ViccFactory {
         return stringToCSVAssociation;
     }
 
-    private static StringBuilder readObjectFeaturesNames(@NotNull JsonObject object, @NotNull StringBuilder headerCSV) {
+    private static StringBuilder readObjectFeaturesNames(@NotNull JsonObject object) {
         //feature_names object
         StringBuilder stringToCSVFeaturesNames = new StringBuilder();
         stringToCSVFeaturesNames.append(object.get("feature_names")).append(";"); // features names data
         return stringToCSVFeaturesNames;
     }
 
-    private static StringBuilder readObjectFeatures(@NotNull JsonObject object, @NotNull StringBuilder headerCSV) {
+    private static StringBuilder readObjectFeatures(@NotNull JsonObject object) {
         //features
         StringBuilder stringToCSVFeatures = new StringBuilder();
         JsonArray arrayFeatures = object.get("features").getAsJsonArray();
@@ -1998,7 +1989,7 @@ public abstract class ViccFactory {
         // headerCSV.append(headerFeatures); //TODO check fields for every db
         //        headerCSV.append(headerCIVIC); //TODO check fields for every db
         //        headerCSV.append(headerMolecularMatch); //TODO check fields for every db
-        headerCSV.append(headerMolecularMatchTrials);
+        //  headerCSV.append(headerMolecularMatchTrials);//TODO check fields for every db
 
         writer.append(headerCSV);
         writer.append("\n");
@@ -2008,24 +1999,24 @@ public abstract class ViccFactory {
 
             StringBuilder stringToCSVAll = new StringBuilder();
             headerCSV.append("index").append(";");
-            StringBuilder StringToCSVSource = readObjectSource(object, headerCSV);
-            StringBuilder StringToCSVGenes = readObjectGenes(object, headerCSV);
-            StringBuilder StringToCSVTags = readObjectTags(object, headerCSV);
-            StringBuilder StringToCSVDevTags = readObjectDevTags(object, headerCSV);
-            StringBuilder StringToCSVGeneIdentifiers = readObjectGeneIdentifiers(object, headerCSV);
-            StringBuilder StringToCSVSage = readObjectSage(object, headerCSV);
-            StringBuilder StringToCSVPmkb = readObjectPmkb(object, headerCSV);
-            StringBuilder StringToCSVBrca = readObjectBRCA(object, headerCSV);
-            StringBuilder StringToCSVCGI = readObjectCGI(object, headerCSV);
-            StringBuilder StringToCSVOncokb = readObjectOncokb(object, headerCSV);
-            StringBuilder StringToCSVJax = readObjectJax(object, headerCSV);
-            StringBuilder StringToCSVJaxTrials = readObjectJaxTrials(object, headerCSV);
-            //  StringBuilder StringToCSVAssociation = readObjectAssociation(object, headerCSV); //TODO check fields for every db
-            //            StringBuilder StringToCSVFeaturesNames = readObjectFeaturesNames(object, headerCSV);
-            //            StringBuilder StringToCSVFeatures = readObjectFeatures(object, headerCSV); //TODO check fields for every db
-            //            StringBuilder StringToCSVCIVIC = readObjectCIVIC(object, headerCSV); //TODO check fields for every db
-            //            StringBuilder StringToCSVMolecularMatch = readObjectMolecularMatch(object, headerCSV); //TODO check fields for every db
-            StringBuilder StringToCSVMolecularMatchTrials = readObjectMolecularMatchTrials(object, headerCSV);
+            StringBuilder StringToCSVSource = readObjectSource(object);
+            StringBuilder StringToCSVGenes = readObjectGenes(object);
+            StringBuilder StringToCSVTags = readObjectTags(object);
+            StringBuilder StringToCSVDevTags = readObjectDevTags(object);
+            StringBuilder StringToCSVGeneIdentifiers = readObjectGeneIdentifiers(object);
+            StringBuilder StringToCSVSage = readObjectSage(object);
+            StringBuilder StringToCSVPmkb = readObjectPmkb(object);
+            StringBuilder StringToCSVBrca = readObjectBRCA(object);
+            StringBuilder StringToCSVCGI = readObjectCGI(object);
+            StringBuilder StringToCSVOncokb = readObjectOncokb(object);
+            StringBuilder StringToCSVJax = readObjectJax(object);
+            StringBuilder StringToCSVJaxTrials = readObjectJaxTrials(object);
+            StringBuilder StringToCSVAssociation = readObjectAssociation(object); //TODO check fields for every db
+            StringBuilder StringToCSVFeaturesNames = readObjectFeaturesNames(object);
+            StringBuilder StringToCSVFeatures = readObjectFeatures(object); //TODO check fields for every db
+            StringBuilder StringToCSVCIVIC = readObjectCIVIC(object); //TODO check fields for every db
+            StringBuilder StringToCSVMolecularMatch = readObjectMolecularMatch(object); //TODO check fields for every db
+            StringBuilder StringToCSVMolecularMatchTrials = readObjectMolecularMatchTrials(object); //TODO check fields for every db
 
             stringToCSVAll.append(index).append(";");
             stringToCSVAll.append(StringToCSVSource);
@@ -2044,7 +2035,7 @@ public abstract class ViccFactory {
             //            stringToCSVAll.append(StringToCSVFeatures);
             //            stringToCSVAll.append(StringToCSVCIVIC);
             //            stringToCSVAll.append(StringToCSVMolecularMatch);
-            stringToCSVAll.append(StringToCSVMolecularMatchTrials);
+            //            stringToCSVAll.append(StringToCSVMolecularMatchTrials);
 
             writer.append(stringToCSVAll);
             writer.append("\n");
