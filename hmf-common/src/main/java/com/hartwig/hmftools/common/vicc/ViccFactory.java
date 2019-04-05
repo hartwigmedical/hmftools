@@ -77,7 +77,6 @@ public abstract class ViccFactory {
             } else if (keysLastCommened.get(p).equals("user")) {
                 JsonObject objectUser = objectLastCommened.get(keysLastCommened.get(p)).getAsJsonObject();
                 List<String> keysUser = new ArrayList<>(objectUser.keySet());
-
                 for (int g = 0; g < keysUser.size(); g++) {
                     if (keysUser.get(g).equals("organization")) {
                         JsonObject objectOrganization = objectUser.get(keysUser.get(g)).getAsJsonObject();
@@ -1811,6 +1810,7 @@ public abstract class ViccFactory {
                 + "features.sequence_ontology.name;features.sequence_ontology.parent_name;features.provenance;features.start;"
                 + "features.synonyms;features.biomarker_type;features.referenceName;features.geneSymbol;features.alt;"
                 + "features.ref;features.chromosome;features.description;";
+        String headerCIVIC = "";
 
         headerCSV.append(headerIndex);
         headerCSV.append(headerSource);
@@ -1828,10 +1828,11 @@ public abstract class ViccFactory {
         // headerCSV.append(headerAssociation); //TODO check fields for every db
         // headerCSV.append(headerFeaturesNames);
         // headerCSV.append(headerFeatures); //TODO check fields for every db
+        headerCSV.append(headerCIVIC);
 
         writer.append(headerCSV);
         writer.append("\n");
-        while (reader.peek() != JsonToken.END_DOCUMENT) {
+        while (reader.peek() != JsonToken.END_DOCUMENT && index < 10) {
             LOGGER.info(index);
             JsonObject object = parser.parse(reader).getAsJsonObject();
 
@@ -1852,6 +1853,7 @@ public abstract class ViccFactory {
             //  StringBuilder StringToCSVAssociation = readObjectAssociation(object, headerCSV); //TODO check fields for every db
             //            StringBuilder StringToCSVFeaturesNames = readObjectFeaturesNames(object, headerCSV);
             //            StringBuilder StringToCSVFeatures = readObjectFeatures(object, headerCSV); //TODO check fields for every db
+            StringBuilder StringToCSVCIVIC = readObjectCIVIC(object, headerCSV);
 
             stringToCSVAll.append(index).append(";");
             stringToCSVAll.append(StringToCSVSource);
@@ -1868,6 +1870,7 @@ public abstract class ViccFactory {
             //            stringToCSVAll.append(StringToCSVJaxTrials);
             //            stringToCSVAll.append(StringToCSVFeaturesNames);
             //            stringToCSVAll.append(StringToCSVFeatures);
+            stringToCSVAll.append(StringToCSVCIVIC);
 
             writer.append(stringToCSVAll);
             writer.append("\n");
