@@ -40,15 +40,17 @@ public class CountSupplier {
     private final int windowSize;
     private final int minMappingQuality;
     private final ExecutorService executorService;
+    private final SamReaderFactory readerFactory;
 
     public CountSupplier(final String reference, final String tumor, final String outputDirectory, final int windowSize,
-            final int minMappingQuality, final ExecutorService executorService) {
+            final int minMappingQuality, final ExecutorService executorService, final SamReaderFactory readerFactory) {
         this.reference = reference;
         this.tumor = tumor;
         this.outputDirectory = outputDirectory;
         this.windowSize = windowSize;
         this.minMappingQuality = minMappingQuality;
         this.executorService = executorService;
+        this.readerFactory = readerFactory;
     }
 
     @NotNull
@@ -77,7 +79,6 @@ public class CountSupplier {
         final File tumorFile = new File(tumorBam);
         final File referenceFile = new File(referenceBam);
 
-        final SamReaderFactory readerFactory = SamReaderFactory.make();
         final String chromosomeLengthFileName = ChromosomeLengthFile.generateFilename(outputDirectory, tumor);
         final List<ChromosomeLength> lengths;
         try (SamReader reader = readerFactory.open(tumorFile)) {

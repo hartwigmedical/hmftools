@@ -2,14 +2,17 @@
 
 **Co**unt **ba**m **l**ines determines the read depth ratios of the supplied tumor and reference genomes. 
 
-COBALT starts with the raw read counts per 1,000 base window for both normal and tumor samples by counting the number of alignment starts in the respective bam files with a mapping quality score of at least 10 that is neither unmapped, duplicated, secondary, nor supplementary. 
+COBALT starts with the raw read counts per 1,000 base window for both normal and tumor samples by counting the number of alignment starts 
+in the respective bam files with a mapping quality score of at least 10 that is neither unmapped, duplicated, secondary, nor supplementary. 
 Windows with a GC content less than 0.2 or greater than 0.6 or with an average mappability below 0.85 are excluded from further analysis.
 
 Next we apply a GC normalization to calculate the read ratios. 
-We divide the read count of each window by the median read count of all windows sharing the same GC content then normalise further to the ratio of the median to mean read count of all windows. 
+We divide the read count of each window by the median read count of all windows sharing the same GC content then normalise further to the 
+ratio of the median to mean read count of all windows. 
 
 The reference sample ratios have a further ‘diploid’ normalization applied to them to remove megabase scale GC biases. 
-This normalization assumes that the median ratio of each 10Mb window (minimum 1Mb readable) should be diploid for autosomes and haploid for sex chromosomes in males in the germline sample.
+This normalization assumes that the median ratio of each 10Mb window (minimum 1Mb readable) should be diploid for autosomes and haploid for 
+sex chromosomes in males in the germline sample.
 
 Finally, the Bioconductor copy number package is used to generate segments from the ratio file.
 
@@ -18,27 +21,35 @@ Segmentation is done with the Bioconductor [copynumber](http://bioconductor.org/
 
 This can be installed in R (3.5+) with the following commands:
 ```
-    library(BiocManager) # Get it from CRAN
+    library(BiocManager)
     install("copynumber")
 ```
 
-## Usage
+## Mandatory Arguments
 
-Argument | Default | Description
----|---|---
-reference | None | Name of the reference sample.
-reference_bam | None | Path to reference bam file. Can be omitted to regenerate ratios if prior cobalt file already exists.
-tumor | None | Name of tumor sample.
-tumor_bam | None | Path to tumor bam file. Can be omitted to regenerate ratios if prior cobalt file already exists.
-output_dir | None | Path to the output directory. This directory will be created if it does not already exist.
-threads | 4 | Number of threads to use.
-min_quality | 10 | Min quality.
-gc_profile | None | Path to GC profile. 
+Argument  | Description
+---|---
+reference | Name of the reference sample
+reference_bam | Path to reference BAM file
+tumor | Name of tumor sample
+tumor_bam | Path to tumor BAM file
+output_dir | Path to the output directory. This directory will be created if it does not already exist
+gc_profile | Path to GC profile 
 
 The GC Profile file used by HMF (GC_profile.hg19.1000bp.cnp) is available to download from [HMF-Pipeline-Resources](https://resources.hartwigmedicalfoundation.nl). 
 A HG38 equivalent is also available.
 
-### Example Usage
+COBALT supports both BAM and CRAM file formats. If using CRAM, the ref_genome argument must be included.
+
+## Optional Arguments
+
+Argument | Default | Description 
+---|---|---
+threads | 4 | Number of threads to use
+min_quality | 10 | Min quality
+ref_genome | None | Path to the reference genome fasta file if using CRAM files
+
+## Example Usage
 
 ```
 java -cp -Xmx8G cobalt.jar com.hartwig.hmftools.cobalt.CountBamLinesApplication \
@@ -92,3 +103,11 @@ Chromosome | Position | ReferenceReadCount | TumorReadCount | ReferenceGCRatio |
 1|4004001|256|550|1.1144|0.9428|1.1371
 
 TUMOR.cobalt.ratio.pcf and REFERENCE.cobalt.ratio.pcf contain the segmented regions determined from the ratios.
+
+## Version History
+- 1.6
+  - CRAM support
+- 1.5
+  - Support for HG38
+- 1.4
+  - Support for Klinefelter syndrome
