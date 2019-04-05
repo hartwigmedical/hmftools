@@ -14,7 +14,7 @@ Any missense variant with a protein coding change that exactly matches the prote
  - Gene = BRCA2 + Codon > 3326 
  - CodingEffect in (‘SPLICE’,’NONE’) AND Type = ‘INDEL’ AND (repeatCount>=8 OR indelSequence == microhomology)
  - Any frameshift variant which is offset by another frameshift variant to be net inframe in more than 50% of samples which it is found in our cohort.  These will appear as explicit variants in our blacklist configuration 
-TSC2 16:2137924 T>TCCCTGCAGTGCAGGAAAGGTAGGGCCGGGTGGGG (rs137854222) - This is classified as a frameshift variant by snpeff but overlaps the splice region and has perfect microhomology and so has no net effect on coding or splicing.
+ - TSC2 16:2137924 T>TCCCTGCAGTGCAGGAAAGGTAGGGCCGGGTGGGG (rs137854222) - This is classified as a frameshift variant by snpeff but overlaps the splice region and has perfect microhomology and so has no net effect on coding or splicing.
 
 ## Usage
 
