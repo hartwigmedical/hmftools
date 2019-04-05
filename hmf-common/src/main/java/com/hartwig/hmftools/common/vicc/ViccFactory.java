@@ -522,7 +522,6 @@ public abstract class ViccFactory {
                             .append(";")
                             .append(stringCustom)
                             .append(";");
-
                 } else if (keysOfMolecularMatch.get(x).equals("prevalence")) {
                     JsonArray molecluarMatchArray =
                             object.getAsJsonObject("molecularmatch").get(keysOfMolecularMatch.get(x)).getAsJsonArray();
@@ -564,7 +563,6 @@ public abstract class ViccFactory {
                             .append(stringCondition)
                             .append(";");
                 } else if (keysOfMolecularMatch.get(x).equals("mutations")) {
-
                     JsonArray molecluarMatchArray =
                             object.getAsJsonObject("molecularmatch").get(keysOfMolecularMatch.get(x)).getAsJsonArray();
                     for (int i = 0; i < molecluarMatchArray.size(); i++) {
@@ -573,63 +571,97 @@ public abstract class ViccFactory {
                         for (int u = 0; u < keysMutations.size(); u++) {
                             if (keysMutations.get(u).equals("transcriptConsequence")) {
                                 JsonArray arrayTranscriptConsequence = objectMutations.get("transcriptConsequence").getAsJsonArray();
-                                for (int p = 0; p < arrayTranscriptConsequence.size(); p++) {
-                                    JsonObject objectTranscriptConsequence = (JsonObject) arrayTranscriptConsequence.get(u);
+                                for (int g = 0; g < arrayTranscriptConsequence.size(); g++) {
+                                    JsonObject objectTranscriptConsequence = (JsonObject) arrayTranscriptConsequence.get(g);
                                     List<String> keysTranscriptConsequence = new ArrayList<>(objectTranscriptConsequence.keySet());
-                                    if (keysTranscriptConsequence.get(p).equals("amino_acid_change")) {
-                                        JsonElement aminoAcidChange = objectTranscriptConsequence.get(keysTranscriptConsequence.get(p));
-                                        stringAminoAcidChange.append(aminoAcidChange).append(",");
-                                    } else if (keysTranscriptConsequence.get(p).equals("compositeKey")) {
-                                        JsonElement compositeKey = objectTranscriptConsequence.get(keysTranscriptConsequence.get(p));
-                                        stringCompositeKey1.append(compositeKey).append(",");
-                                    } else if (keysTranscriptConsequence.get(p).equals("intronNumber")) {
-                                        JsonElement intronNumber = objectTranscriptConsequence.get(keysTranscriptConsequence.get(p));
-                                        stringIntronNumber.append(intronNumber).append(",");
-                                    } else if (keysTranscriptConsequence.get(p).equals("ref")) {
-                                        JsonElement ref = objectTranscriptConsequence.get(keysTranscriptConsequence.get(p));
-                                        stringRef.append(ref).append(",");
-                                    } else if (keysTranscriptConsequence.get(p).equals("exonNumber")) {
-                                        JsonElement exonNumber = objectTranscriptConsequence.get(keysTranscriptConsequence.get(p));
-                                        stringExonNumber.append(exonNumber).append(",");
-                                    } else if (keysTranscriptConsequence.get(p).equals("suppress")) {
-                                        JsonElement suppress = objectTranscriptConsequence.get(keysTranscriptConsequence.get(p));
-                                        stringSupress.append(suppress).append(",");
-                                    } else if (keysTranscriptConsequence.get(p).equals("stop")) {
-                                        JsonElement stop = objectTranscriptConsequence.get(keysTranscriptConsequence.get(p));
-                                        stringStop.append(stop).append(",");
-                                    } else if (keysTranscriptConsequence.get(p).equals("custom")) {
-                                        JsonElement custom = objectTranscriptConsequence.get(keysTranscriptConsequence.get(p));
-                                        stringCustom1.append(custom).append(",");
-                                    } else if (keysTranscriptConsequence.get(p).equals("start")) {
-                                        JsonElement start = objectTranscriptConsequence.get(keysTranscriptConsequence.get(p));
-                                        stringStart.append(start).append(",");
-                                    } else if (keysTranscriptConsequence.get(p).equals("chr")) {
-                                        JsonElement chr = objectTranscriptConsequence.get(keysTranscriptConsequence.get(p));
-                                        stringChr.append(chr).append(",");
-                                    } else if (keysTranscriptConsequence.get(p).equals("strand")) {
-                                        JsonElement strand = objectTranscriptConsequence.get(keysTranscriptConsequence.get(p));
-                                        stringStrand.append(strand).append(",");
-                                    } else if (keysTranscriptConsequence.get(p).equals("alt")) {
-                                        JsonElement alt = objectTranscriptConsequence.get(keysTranscriptConsequence.get(p));
-                                        stringAlt.append(alt).append(",");
-                                    } else if (keysTranscriptConsequence.get(p).equals("validated")) {
-                                        JsonElement validated = objectTranscriptConsequence.get(keysTranscriptConsequence.get(p));
-                                        stringValidated.append(validated).append(",");
-                                    } else if (keysTranscriptConsequence.get(p).equals("transcript")) {
-                                        JsonElement transcript = objectTranscriptConsequence.get(keysTranscriptConsequence.get(p));
-                                        stringTranscript.append(transcript).append(",");
-                                    } else if (keysTranscriptConsequence.get(p).equals("cdna")) {
-                                        JsonElement cdna = objectTranscriptConsequence.get(keysTranscriptConsequence.get(p));
-                                        stringCdna.append(cdna).append(",");
-                                    } else if (keysTranscriptConsequence.get(p).equals("referenceGenome")) {
-                                        JsonElement referenceGenome = objectTranscriptConsequence.get(keysTranscriptConsequence.get(p));
-                                        stringReferenceGenome.append(referenceGenome).append(",");
+                                    for (int p = 0; p < keysTranscriptConsequence.size(); p++) {
+                                        if (keysTranscriptConsequence.get(p).equals("amino_acid_change")) {
+                                            JsonElement aminoAcidChange = objectTranscriptConsequence.get(keysTranscriptConsequence.get(p));
+                                            stringAminoAcidChange.append(aminoAcidChange).append(",");
+                                        } else if (keysTranscriptConsequence.get(p).equals("compositeKey")) {
+                                            JsonElement compositeKey = objectTranscriptConsequence.get(keysTranscriptConsequence.get(p));
+                                            stringCompositeKey1.append(compositeKey).append(",");
+                                        } else if (keysTranscriptConsequence.get(p).equals("intronNumber")) {
+                                            JsonElement intronNumber = objectTranscriptConsequence.get(keysTranscriptConsequence.get(p));
+                                            stringIntronNumber.append(intronNumber).append(",");
+                                        } else if (keysTranscriptConsequence.get(p).equals("ref")) {
+                                            JsonElement ref = objectTranscriptConsequence.get(keysTranscriptConsequence.get(p));
+                                            stringRef.append(ref).append(",");
+                                        } else if (keysTranscriptConsequence.get(p).equals("exonNumber")) {
+                                            JsonElement exonNumber = objectTranscriptConsequence.get(keysTranscriptConsequence.get(p));
+                                            stringExonNumber.append(exonNumber).append(",");
+                                        } else if (keysTranscriptConsequence.get(p).equals("suppress")) {
+                                            JsonElement suppress = objectTranscriptConsequence.get(keysTranscriptConsequence.get(p));
+                                            stringSupress.append(suppress).append(",");
+                                        } else if (keysTranscriptConsequence.get(p).equals("stop")) {
+                                            JsonElement stop = objectTranscriptConsequence.get(keysTranscriptConsequence.get(p));
+                                            stringStop.append(stop).append(",");
+                                        } else if (keysTranscriptConsequence.get(p).equals("custom")) {
+                                            JsonElement custom = objectTranscriptConsequence.get(keysTranscriptConsequence.get(p));
+                                            stringCustom1.append(custom).append(",");
+                                        } else if (keysTranscriptConsequence.get(p).equals("start")) {
+                                            JsonElement start = objectTranscriptConsequence.get(keysTranscriptConsequence.get(p));
+                                            stringStart.append(start).append(",");
+                                        } else if (keysTranscriptConsequence.get(p).equals("chr")) {
+                                            JsonElement chr = objectTranscriptConsequence.get(keysTranscriptConsequence.get(p));
+                                            stringChr.append(chr).append(",");
+                                        } else if (keysTranscriptConsequence.get(p).equals("strand")) {
+                                            JsonElement strand = objectTranscriptConsequence.get(keysTranscriptConsequence.get(p));
+                                            stringStrand.append(strand).append(",");
+                                        } else if (keysTranscriptConsequence.get(p).equals("alt")) {
+                                            JsonElement alt = objectTranscriptConsequence.get(keysTranscriptConsequence.get(p));
+                                            stringAlt.append(alt).append(",");
+                                        } else if (keysTranscriptConsequence.get(p).equals("validated")) {
+                                            JsonElement validated = objectTranscriptConsequence.get(keysTranscriptConsequence.get(p));
+                                            stringValidated.append(validated).append(",");
+                                        } else if (keysTranscriptConsequence.get(p).equals("transcript")) {
+                                            JsonElement transcript = objectTranscriptConsequence.get(keysTranscriptConsequence.get(p));
+                                            stringTranscript.append(transcript).append(",");
+                                        } else if (keysTranscriptConsequence.get(p).equals("cdna")) {
+                                            JsonElement cdna = objectTranscriptConsequence.get(keysTranscriptConsequence.get(p));
+                                            stringCdna.append(cdna).append(",");
+                                        } else if (keysTranscriptConsequence.get(p).equals("referenceGenome")) {
+                                            JsonElement referenceGenome = objectTranscriptConsequence.get(keysTranscriptConsequence.get(p));
+                                            stringReferenceGenome.append(referenceGenome).append(",");
+                                        }
                                     }
                                 }
+                                stringToCSVMolecularMatch.append(stringAminoAcidChange)
+                                        .append(";")
+                                        .append(stringCompositeKey1)
+                                        .append(";")
+                                        .append(stringIntronNumber)
+                                        .append(";")
+                                        .append(stringRef)
+                                        .append(";")
+                                        .append(stringExonNumber)
+                                        .append(";")
+                                        .append(stringSupress)
+                                        .append(";")
+                                        .append(stringStop)
+                                        .append(";")
+                                        .append(stringCustom1)
+                                        .append(";")
+                                        .append(stringStart)
+                                        .append(";")
+                                        .append(stringChr)
+                                        .append(";")
+                                        .append(stringStrand)
+                                        .append(";")
+                                        .append(stringAlt)
+                                        .append(";")
+                                        .append(stringValidated)
+                                        .append(";")
+                                        .append(stringTranscript)
+                                        .append(";")
+                                        .append(stringCdna)
+                                        .append(";")
+                                        .append(stringReferenceGenome)
+                                        .append(";");
                             } else if (keysMutations.get(u).equals("GRCh37_location")) {
                                 JsonArray arrayLocationRefGenome = objectMutations.get("GRCh37_location").getAsJsonArray();
                                 for (int r = 0; r < arrayLocationRefGenome.size(); r++) {
-                                    JsonObject objectLocationRefGenome = (JsonObject) arrayLocationRefGenome.get(i);
+                                    JsonObject objectLocationRefGenome = (JsonObject) arrayLocationRefGenome.get(r);
                                     List<String> keysLocationRefGenome = new ArrayList<>(objectLocationRefGenome.keySet());
                                     for (int g = 0; g < keysLocationRefGenome.size(); g++) {
                                         if (keysLocationRefGenome.get(g).equals("transcript_consequences")) {
@@ -667,6 +699,18 @@ public abstract class ViccFactory {
                                                     }
                                                 }
                                             }
+                                            stringToCSVMolecularMatch.append(stringAminoAcidChangeRefLocation)
+                                                    .append(";")
+                                                    .append(stringTxSitesRefLocation)
+                                                    .append(";")
+                                                    .append(stringExonNumberRefLocation)
+                                                    .append(";")
+                                                    .append(stringIntronNumberRefLocation)
+                                                    .append(";")
+                                                    .append(stringTranscriptRefLocation)
+                                                    .append(";")
+                                                    .append(stringCdnaRefLocation)
+                                                    .append(";");
                                         } else {
                                             JsonElement elementChRCHLocation = objectLocationRefGenome.get(keysLocationRefGenome.get(g));
                                             stringToCSVMolecularMatch.append(elementChRCHLocation).append(";");
@@ -675,43 +719,11 @@ public abstract class ViccFactory {
                                 }
                             } else {
                                 JsonArray arrays = objectMutations.get("sources").getAsJsonArray();
+                                LOGGER.info(arrays);
                                 stringToCSVMolecularMatch.append(arrays).append(";");
                             }
                         }
-
                     }
-                    stringToCSVMolecularMatch.append(stringAminoAcidChange)
-                            .append(";")
-                            .append(stringCompositeKey1)
-                            .append(";")
-                            .append(stringIntronNumber)
-                            .append(";")
-                            .append(stringRef)
-                            .append(";")
-                            .append(stringExonNumber)
-                            .append(";")
-                            .append(stringSupress)
-                            .append(";")
-                            .append(stringStop)
-                            .append(";")
-                            .append(stringCustom1)
-                            .append(";")
-                            .append(stringStart)
-                            .append(";")
-                            .append(stringChr)
-                            .append(";")
-                            .append(stringStrand)
-                            .append(";")
-                            .append(stringAlt)
-                            .append(";")
-                            .append(stringValidated)
-                            .append(";")
-                            .append(stringTranscript)
-                            .append(";")
-                            .append(stringCdna)
-                            .append(";")
-                            .append(stringReferenceGenome)
-                            .append(";");
                 } else if (keysOfMolecularMatch.get(x).equals("sources")) {
                     JsonArray molecluarMatchArray =
                             object.getAsJsonObject("molecularmatch").get(keysOfMolecularMatch.get(x)).getAsJsonArray();
@@ -750,7 +762,24 @@ public abstract class ViccFactory {
 
                         }
                     }
-
+                    stringToCSVMolecularMatch.append(stringNameSources)
+                            .append(";")
+                            .append(stringSuppressSources)
+                            .append(";")
+                            .append(stringpubIdSources)
+                            .append(";")
+                            .append(stringSubTypeSources)
+                            .append(";")
+                            .append(stringValidSources)
+                            .append(";")
+                            .append(stringLinkSources)
+                            .append(";")
+                            .append(stringYearSources)
+                            .append(";")
+                            .append(stringTypeSources)
+                            .append(";")
+                            .append(stringIdSources)
+                            .append(";");
                 } else if (keysOfMolecularMatch.get(x).equals("ast")) {
                     JsonObject molecularMatchObject =
                             object.getAsJsonObject("molecularmatch").get(keysOfMolecularMatch.get(x)).getAsJsonObject();
@@ -786,15 +815,11 @@ public abstract class ViccFactory {
                                     List<String> keysLocations = new ArrayList<>(objectLocations.keySet());
                                     for (int d = 0; d < keysLocations.size(); d++) {
                                         stringToCSVMolecularMatch.append(objectLocations.get(keysLocations.get(d))).append(";");
-
                                     }
-
                                 }
-
                             }
                         }
                     }
-
                 } else if (keysOfMolecularMatch.get(x).equals("tierExplanation")) {
                     JsonArray molecluarMatchArray =
                             object.getAsJsonObject("molecularmatch").get(keysOfMolecularMatch.get(x)).getAsJsonArray();
@@ -817,7 +842,14 @@ public abstract class ViccFactory {
                             }
                         }
                     }
-
+                    stringToCSVMolecularMatch.append(stringTier)
+                            .append(";")
+                            .append(stringStep)
+                            .append(";")
+                            .append(stringMessage)
+                            .append(";")
+                            .append(stringSuccess)
+                            .append(";");
                 } else if (keysOfMolecularMatch.get(x).equals("tags")) {
                     JsonArray molecluarMatchArray =
                             object.getAsJsonObject("molecularmatch").get(keysOfMolecularMatch.get(x)).getAsJsonArray();
@@ -855,6 +887,25 @@ public abstract class ViccFactory {
                             }
                         }
                     }
+                    stringToCSVMolecularMatch.append(stringPriorityTags)
+                            .append(";")
+                            .append(stringCompositeKeyTags)
+                            .append(";")
+                            .append(stringSuppressTags)
+                            .append(";")
+                            .append(stringFilterTypeTags)
+                            .append(";")
+                            .append(stringTermTags)
+                            .append(";")
+                            .append(stringPrimaryTags)
+                            .append(";")
+                            .append(stringFacetTags)
+                            .append(";")
+                            .append(stringValidTags)
+                            .append(";")
+                            .append(stringCustomTags)
+                            .append(";");
+
                 } else if (keysOfMolecularMatch.get(x).equals("classifications")) {
                     JsonArray molecluarMatchArray =
                             object.getAsJsonObject("molecularmatch").get(keysOfMolecularMatch.get(x)).getAsJsonArray();
@@ -876,13 +927,18 @@ public abstract class ViccFactory {
                         }
                     }
                 } else {
-                    stringToCSVMolecularMatch.append(object.getAsJsonObject("molecularmatch").get(keysOfMolecularMatch.get(x)));
+                    stringToCSVMolecularMatch.append(object.getAsJsonObject("molecularmatch").get(keysOfMolecularMatch.get(x))).append(";");
                 }
             }
-
         } else {
 
         }
+
+
+
+
+
+
         return stringToCSVMolecularMatch;
     }
 
@@ -1852,6 +1908,70 @@ public abstract class ViccFactory {
                 + "civic.coordinates.representative_transcript2;civic.coordinates.start;"
                 + "civic.coordinates.representative_transcript;civic.coordinates.ensembl_version;"
                 + "civic.coordinates.chromosome;civic.coordinates.reference_build;civic.type;civic.id;civic.description;";
+        String headerMolecularMatch = "molecularmatch.criteriaUnmet.priority;molecularmatch.criteriaUnmet.compositeKey;"
+                + "molecularmatch.criteriaUnmet.suppress;molecularmatch.criteriaUnmet.filterType;molecularmatch.criteriaUnmet.term;"
+                + "molecularmatch.criteriaUnmet.primary;molecularmatch.criteriaUnmet.facet;molecularmatch.criteriaUnmet.valid;"
+                + "molecularmatch.criteriaUnmet.custom;molecularmatch.prevalence.count;molecularmatch.prevalence.percent;"
+                + "molecularmatch.prevalence.samples;molecularmatch.prevalence.studyId;molecularmatch.prevalence.molecular;"
+                + "molecularmatch.prevalence.condition;molecularmatch._score;molecularmatch.autoGenerateNarrative;"
+                + "molecularmatch.mutations.transcriptConsequence.amino_acid_change;"
+                + "molecularmatch.mutations.transcriptConsequence.compositeKey;molecularmatch.mutations.transcriptConsequence.intronNumber;"
+                + "molecularmatch.mutations.transcriptConsequence.exonNumber;molecularmatch.mutations.transcriptConsequence.suppress;"
+                + "molecularmatch.mutations.transcriptConsequence.stop;molecularmatch.mutations.transcriptConsequence.custom;"
+                + "molecularmatch.mutations.transcriptConsequence.start;molecularmatch.mutations.transcriptConsequence.chr;"
+                + "molecularmatch.mutations.transcriptConsequence.strand;molecularmatch.mutations.transcriptConsequence.validated;"
+                + "molecularmatch.mutations.transcriptConsequence.transcript;molecularmatch.mutations.transcriptConsequence.cdna;"
+                + "molecularmatch.mutations.transcriptConsequence.referenceGenome;molecularmatch.mutations.longestTranscript;"
+                + "molecularmatch.mutations.description;molecularmatch.mutations.mutation_type;molecularmatch.mutations._src;"
+                + "molecularmatch.mutations.ources;molecularmatch.mutations.synonyms;molecularmatch.mutations.parents;"
+                + "molecularmatch.mutations.GRCh37_location.compositeKey;molecularmatch.mutations.GRCh37_location.ref;"
+                + "molecularmatch.mutations.GRCh37_location.stop;molecularmatch.mutations.GRCh37_location.start;"
+                + "molecularmatch.mutations.GRCh37_location.chr”;molecularmatch.mutations.GRCh37_location.alt;"
+                + "molecularmatch.mutations.GRCh37_location.validated;"
+                + "molecularmatch.mutations.GRCh37_location.transcript_consequences.amino_acid_change;"
+                + "molecularmatch.mutations.GRCh37_location.transcript_consequences.txSites;"
+                + "molecularmatch.mutations.GRCh37_location.transcript_consequences.exonNumber;"
+                + "molecularmatch.mutations.GRCh37_location.transcript_consequences.intronNumber;"
+                + "molecularmatch.mutations.GRCh37_location.transcript_consequences.transcript;"
+                + "molecularmatch.mutations.GRCh37_location.transcript_consequences.cdna;molecularmatch.mutations.GRCh37_location.strand;"
+                + "molecularmatch.mutations.uniprotTranscript;molecularmatch.mutations.geneSymbol;molecularmatch.mutations.pathology;"
+                + "molecularmatch.mutations.transcript;molecularmatch.mutations.id;molecularmatch.mutations.cdna;"
+                + "molecularmatch.mutations.name;molecularmatch.sources.name;molecularmatch.sources.suppress;molecularmatch.sources.pubId;"
+                + "molecularmatch.sources.subType;molecularmatch.sources.valid;molecularmatch.sources.link;molecularmatch.sources.year;"
+                + "molecularmatch.sources.trialId;molecularmatch.sources.type;molecularmatch.sources.id;"
+                + "molecularmatch.clinicalSignificance;molecularmatch.id;molecularmatch.includeCondition0;"
+                + "molecularmatch.includeCondition1;molecularmatch.uniqueKey;molecularmatch.civic;molecularmatch.hashKey;"
+                + "molecularmatch.regulatoryBodyApproved;molecularmatch.version;molecularmatch.includeMutation1;"
+                + "molecularmatch.guidelineBody;molecularmatch.regulatoryBody;molecularmatch.customer;molecularmatch.direction;"
+                + "molecularmatch.ampcap;molecularmatch.ast.operator;molecularmatch.ast.right.raw;molecularmatch.ast.right.type;"
+                + "molecularmatch.ast.right.value;molecularmatch.ast.type;molecularmatch.ast.left.raw;molecularmatch.ast.left.type;"
+                + "molecularmatch.ast.left.value;molecularmatch.variantInfo.classification;molecularmatch.variantInfo.name;"
+                + "molecularmatch.variantInfo.consequences;molecularmatch.variantInfo.fusions;molecularmatch.variantInfo.locations;"
+                + "molecularmatch.variantInfo.locations.amino_acid_change;molecularmatch.variantInfo.locations.intronNumber;"
+                + "molecularmatch.variantInfo.locations.exonNumber;molecularmatch.variantInfo.locations.stop;"
+                + "molecularmatch.variantInfo.locations.start;molecularmatch.variantInfo.locations.chr;"
+                + "molecularmatch.variantInfo.locations.strand;molecularmatch.variantInfo.locations.alt;"
+                + "molecularmatch.variantInfo.locations.ref;molecularmatch.variantInfo.locations.cdna;"
+                + "molecularmatch.variantInfo.geneFusionPartner;molecularmatch.variantInfo.COSMIC_ID;,molecularmatch.variantInfo.gene;"
+                + "molecularmatch.variantInfo.transcript;molecularmatch.variantInfo.popFreqMax;molecularmatch.tier;"
+                + "molecularmatch.tierExplanation.tier;molecularmatch.tierExplanation.step;molecularmatch.tierExplanation.message;"
+                + "molecularmatch.tierExplanation.success;molecularmatch.mvld;molecularmatch.tags.priority;"
+                + "molecularmatch.tags.compositeKey;molecularmatch.tags.suppress;molecularmatch.tags.filterType;"
+                + "molecularmatch.tags.term;molecularmatch.tags.primary;molecularmatch.tags.facet;molecularmatch.tags.valid;"
+                + "molecularmatch.tags.custom;molecularmatch.criteriaMet;molecularmatch.biomarkerClass;molecularmatch.classifications.End;"
+                + "molecularmatch.classifications.classification;molecularmatch.classifications.classificationOverride;"
+                + "molecularmatch.classifications.Start;molecularmatch.classifications.Chr;molecularmatch.classifications.geneSymbol;"
+                + "molecularmatch.classifications.pathology;molecularmatch.classifications.Ref;molecularmatch.classifications.description;"
+                + "molecularmatch.classifications.priority;molecularmatch.classifications.NucleotideChange;"
+                + "molecularmatch.classifications.parents;molecularmatch.classifications.drugsExperimentalCount;"
+                + "molecularmatch.classifications.Exon;molecularmatch.classifications.drugsApprovedOffLabelCount;"
+                + "molecularmatch.classifications.ExonicFunc;molecularmatch.classifications.PopFreqMax;"
+                + "molecularmatch.classifications.copyNumberType;molecularmatch.classifications.publicationCount;"
+                + "molecularmatch.classifications.transcript;molecularmatch.classifications.dbSNP;molecularmatch.classifications.Alt;"
+                + "molecularmatch.classifications.name;molecularmatch.classifications.rootTerm;molecularmatch.classifications.sources;"
+                + "molecularmatch.classifications.drugsApprovedOnLabelCount;molecularmatch.classifications.trialCount;"
+                + "molecularmatch.classifications.alias;molecularmatch.includeDrug1;molecularmatch.therapeuticContext;"
+                + "molecularmatch.sixtier;molecularmatch.narrative;molecularmatch.expression;molecularmatch.includeGene0;";
 
         headerCSV.append(headerIndex);
         headerCSV.append(headerSource);
@@ -1869,11 +1989,12 @@ public abstract class ViccFactory {
         // headerCSV.append(headerAssociation); //TODO check fields for every db
         // headerCSV.append(headerFeaturesNames);
         // headerCSV.append(headerFeatures); //TODO check fields for every db
-        headerCSV.append(headerCIVIC); //TODO check fields for every db
+        //        headerCSV.append(headerCIVIC); //TODO check fields for every db
+        headerCSV.append(headerMolecularMatch);
 
         writer.append(headerCSV);
         writer.append("\n");
-        while (reader.peek() != JsonToken.END_DOCUMENT && index < 10) {
+        while (reader.peek() != JsonToken.END_DOCUMENT && index < 1000) {
             LOGGER.info(index);
             JsonObject object = parser.parse(reader).getAsJsonObject();
 
@@ -1894,7 +2015,8 @@ public abstract class ViccFactory {
             //  StringBuilder StringToCSVAssociation = readObjectAssociation(object, headerCSV); //TODO check fields for every db
             //            StringBuilder StringToCSVFeaturesNames = readObjectFeaturesNames(object, headerCSV);
             //            StringBuilder StringToCSVFeatures = readObjectFeatures(object, headerCSV); //TODO check fields for every db
-            StringBuilder StringToCSVCIVIC = readObjectCIVIC(object, headerCSV); //TODO check fields for every db
+            //            StringBuilder StringToCSVCIVIC = readObjectCIVIC(object, headerCSV); //TODO check fields for every db
+            StringBuilder StringToCSVMolecularMatch = readObjectMolecularMatch(object, headerCSV);
 
             stringToCSVAll.append(index).append(";");
             stringToCSVAll.append(StringToCSVSource);
@@ -1911,7 +2033,8 @@ public abstract class ViccFactory {
             //            stringToCSVAll.append(StringToCSVJaxTrials);
             //            stringToCSVAll.append(StringToCSVFeaturesNames);
             //            stringToCSVAll.append(StringToCSVFeatures);
-//            stringToCSVAll.append(StringToCSVCIVIC);
+            //            stringToCSVAll.append(StringToCSVCIVIC);
+            stringToCSVAll.append(StringToCSVMolecularMatch);
 
             writer.append(stringToCSVAll);
             writer.append("\n");
