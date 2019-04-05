@@ -2006,45 +2006,45 @@ public abstract class ViccFactory {
 
             StringBuilder stringToCSVAll = new StringBuilder();
             headerCSV.append("index").append(";");
-            StringBuilder StringToCSVSource = readObjectSource(object);
-            StringBuilder StringToCSVGenes = readObjectGenes(object);
-            StringBuilder StringToCSVTags = readObjectTags(object);
-            StringBuilder StringToCSVDevTags = readObjectDevTags(object);
-            StringBuilder StringToCSVGeneIdentifiers = readObjectGeneIdentifiers(object);
-            StringBuilder StringToCSVFeaturesNames = readObjectFeaturesNames(object);
-            StringBuilder StringToCSVSage = readObjectSage(object);
-            StringBuilder StringToCSVPmkb = readObjectPmkb(object);
-            StringBuilder StringToCSVBrca = readObjectBRCA(object);
-            StringBuilder StringToCSVCGI = readObjectCGI(object);
-            StringBuilder StringToCSVOncokb = readObjectOncokb(object);
-            StringBuilder StringToCSVJax = readObjectJax(object);
-            StringBuilder StringToCSVJaxTrials = readObjectJaxTrials(object);
+            StringBuilder stringToCSVSource = readObjectSource(object);
+            StringBuilder stringToCSVGenes = readObjectGenes(object);
+            StringBuilder stringToCSVTags = readObjectTags(object);
+            StringBuilder stringToCSVDevTags = readObjectDevTags(object);
+            StringBuilder stringToCSVGeneIdentifiers = readObjectGeneIdentifiers(object);
+            StringBuilder stringToCSVFeaturesNames = readObjectFeaturesNames(object);
+            StringBuilder stringToCSVSage = readObjectSage(object);
+            StringBuilder stringToCSVPmkb = readObjectPmkb(object);
+            StringBuilder stringToCSVBrca = readObjectBRCA(object);
+            StringBuilder stringToCSVCGI = readObjectCGI(object);
+            StringBuilder stringToCSVOncokb = readObjectOncokb(object);
+            StringBuilder stringToCSVJax = readObjectJax(object);
+            StringBuilder stringToCSVJaxTrials = readObjectJaxTrials(object);
 
-            StringBuilder StringToCSVAssociation = readObjectAssociation(object); //TODO check fields for every db
-            StringBuilder StringToCSVFeatures = readObjectFeatures(object); //TODO check fields for every db
-            StringBuilder StringToCSVCIVIC = readObjectCIVIC(object); //TODO check fields for every db
-            StringBuilder StringToCSVMolecularMatch = readObjectMolecularMatch(object); //TODO check fields for every db
-            StringBuilder StringToCSVMolecularMatchTrials = readObjectMolecularMatchTrials(object); //TODO check fields for every db
+            StringBuilder stringToCSVAssociation = readObjectAssociation(object); //TODO check fields for every db
+            StringBuilder stringToCSVFeatures = readObjectFeatures(object); //TODO check fields for every db
+            StringBuilder stringToCSVCIVIC = readObjectCIVIC(object); //TODO check fields for every db
+            StringBuilder stringToCSVMolecularMatch = readObjectMolecularMatch(object); //TODO check fields for every db
+            StringBuilder stringToCSVMolecularMatchTrials = readObjectMolecularMatchTrials(object); //TODO check fields for every db
 
             stringToCSVAll.append(index).append(";");
-            stringToCSVAll.append(StringToCSVSource);
-            stringToCSVAll.append(StringToCSVGenes);
-            stringToCSVAll.append(StringToCSVTags);
-            stringToCSVAll.append(StringToCSVDevTags);
-            stringToCSVAll.append(StringToCSVGeneIdentifiers);
-            stringToCSVAll.append(StringToCSVFeaturesNames);
-            stringToCSVAll.append(StringToCSVSage);
-            stringToCSVAll.append(StringToCSVPmkb);
-            stringToCSVAll.append(StringToCSVBrca);
-            stringToCSVAll.append(StringToCSVCGI);
-            stringToCSVAll.append(StringToCSVOncokb);
-            stringToCSVAll.append(StringToCSVJax);
-            stringToCSVAll.append(StringToCSVJaxTrials);
-            //            stringToCSVAll.append(StringToCSVAssociation);
-            //            stringToCSVAll.append(StringToCSVFeatures);
-            //            stringToCSVAll.append(StringToCSVCIVIC);
-            //            stringToCSVAll.append(StringToCSVMolecularMatch);
-            //            stringToCSVAll.append(StringToCSVMolecularMatchTrials);
+            stringToCSVAll.append(stringToCSVSource);
+            stringToCSVAll.append(stringToCSVGenes);
+            stringToCSVAll.append(stringToCSVTags);
+            stringToCSVAll.append(stringToCSVDevTags);
+            stringToCSVAll.append(stringToCSVGeneIdentifiers);
+            stringToCSVAll.append(stringToCSVFeaturesNames);
+            stringToCSVAll.append(stringToCSVSage);
+            stringToCSVAll.append(stringToCSVPmkb);
+            stringToCSVAll.append(stringToCSVBrca);
+            stringToCSVAll.append(stringToCSVCGI);
+            stringToCSVAll.append(stringToCSVOncokb);
+            stringToCSVAll.append(stringToCSVJax);
+            stringToCSVAll.append(stringToCSVJaxTrials);
+            //            stringToCSVAll.append(stringToCSVAssociation);
+            //            stringToCSVAll.append(stringToCSVFeatures);
+            //            stringToCSVAll.append(stringToCSVCIVIC);
+            //            stringToCSVAll.append(stringToCSVMolecularMatch);
+            //            stringToCSVAll.append(stringToCSVMolecularMatchTrials);
 
             writer.append(stringToCSVAll);
             writer.append("\n");
