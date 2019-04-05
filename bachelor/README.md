@@ -1,6 +1,6 @@
 # Bachelor
 
-Bachelor will report all nonsense, splice or frameshift variants which affect our included gene list but are not in the blacklist.   It will also report variants of other types which are specifically whielisted.
+Bachelor will report all nonsense, splice or frameshift variants which affect our included gene list but are not in the blacklist.   It will also report variants of other types which are specifically whitelisted.
 
 
 ### Whitelist

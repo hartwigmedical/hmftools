@@ -44,7 +44,7 @@ public class ChainingTests
         final SvVarData var1 = createDel("1", "1", 1100, 1200);
         final SvVarData var2 = createDel("2", "1", 1300, 1400);
         SvLinkedPair lp1 = new SvLinkedPair(var1, var2, LINK_TYPE_TI, false, true);
-        lp1.setIsInferred(false);
+        lp1.setIsAssembled();
 
         // test adding linked pairs of various orientations to the start and end of a chain
         SvChain chain = new SvChain(0);
@@ -56,7 +56,7 @@ public class ChainingTests
 
         final SvVarData var3 = createDel("3", "1", 1500, 1600);
         SvLinkedPair lp2 = new SvLinkedPair(var3, var2, LINK_TYPE_TI, true, false);
-        lp2.setIsInferred(false);
+        lp2.setIsAssembled();
 
         assertFalse(chain.canAddLinkedPairToStart(lp2));
         assertTrue(chain.canAddLinkedPairToEnd(lp2));

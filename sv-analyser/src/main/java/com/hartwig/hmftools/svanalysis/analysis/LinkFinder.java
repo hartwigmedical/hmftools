@@ -130,7 +130,7 @@ public class LinkFinder
 
                         // form a new TI from these 2 BEs
                         SvLinkedPair newPair = new SvLinkedPair(var1, var2, LINK_TYPE_TI, v1Start, v2Start);
-                        newPair.setIsInferred(false);
+                        newPair.setIsAssembled();
                         var1.setAssemblyMatchType(ASSEMBLY_MATCH_MATCHED, v1Start);
                         var2.setAssemblyMatchType(ASSEMBLY_MATCH_MATCHED, v2Start);
                         var1.setLinkedPair(newPair, v1Start);

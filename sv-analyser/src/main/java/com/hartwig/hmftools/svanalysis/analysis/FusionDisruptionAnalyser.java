@@ -480,18 +480,18 @@ public class FusionDisruptionAnalyser
                         {
                             totalLinkLength += pair.length();
 
-                            // if going lower to upper, if the orientation of the first breakend in the pair matches the strand of the
-                            // upstream gene, then the fusion direction for that pair is the same as a the upstream gene
+                            // if going lower to upper, if the orientation of the first breakend in the pair is opposite to the strand of
+                            // the upstream gene, then the fusion direction for that pair is the same as a the upstream gene
                             // otherwise it needs to be switched
                             int fusionDirection = 0;
 
                             if(fusionLowerToUpper)
                             {
-                                fusionDirection = pair.getFirstBreakend().orientation() == upGeneStrand ? upGeneStrand : -upGeneStrand;
+                                fusionDirection = pair.getFirstBreakend().orientation() != upGeneStrand ? upGeneStrand : -upGeneStrand;
                             }
                             else
                             {
-                                fusionDirection = pair.getSecondBreakend().orientation() == upGeneStrand ? upGeneStrand : -upGeneStrand;
+                                fusionDirection = pair.getSecondBreakend().orientation() != upGeneStrand ? upGeneStrand : -upGeneStrand;
                             }
 
                             if(validTraversal && pairTraversesGene(pair, fusionDirection))

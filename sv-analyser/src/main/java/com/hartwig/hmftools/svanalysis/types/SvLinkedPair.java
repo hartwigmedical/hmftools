@@ -10,7 +10,6 @@ import java.util.List;
 
 public class SvLinkedPair {
 
-    private int mId;
     private SvVarData mFirst;
     private SvVarData mSecond;
     private boolean mFirstLinkOnStart;
@@ -42,7 +41,6 @@ public class SvLinkedPair {
 
     public SvLinkedPair(SvVarData first, SvVarData second, final String linkType, boolean firstLinkOnStart, boolean secondLinkOnStart)
     {
-        mId = 0;
         mFirst = first;
         mSecond = second;
         mFirstLinkOnStart = firstLinkOnStart;
@@ -71,6 +69,8 @@ public class SvLinkedPair {
             // re-label this as a deletion bridge and give it a negative length to show the overlap
             mLinkType = LINK_TYPE_DB;
             mLinkLength = -mLinkLength;
+
+            // if the link is marked as assembled later on, this is reversed
         }
 
         // adjust the length of DBs to reflect the position convention for opposite breakend orientations
@@ -82,10 +82,6 @@ public class SvLinkedPair {
     {
         return new SvLinkedPair(first.getSV(), second.getSV(), linkType, first.usesStart(), second.usesStart());
     }
-
-
-    public int id() { return mId; }
-    public void setId(int Id) { mId = 0; }
 
     public final SvVarData first() { return mFirst; }
     public final SvVarData second() { return mSecond; }
@@ -118,7 +114,16 @@ public class SvLinkedPair {
     public final String linkType() { return mLinkType; }
     public final int length() { return mLinkLength; }
 
-    public void setIsInferred(boolean toggle) { mIsInferred = toggle; }
+    public void setIsAssembled()
+    {
+        mIsInferred = false;
+
+        if(mLinkLength < 0)
+        {
+            mLinkType = LINK_TYPE_TI;
+            mLinkLength = -mLinkLength;
+        }
+    }
     public boolean isInferred() { return mIsInferred; }
     public boolean isAssembled() { return !mIsInferred; }
     public String assemblyInferredStr() { return mIsInferred ? "Inferred" : "Assembly"; }
