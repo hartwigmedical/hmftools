@@ -504,7 +504,7 @@ Purity|NormFactor|Score|DiploidProportion|Ploidy|SomaticDeviation
 
 #### Copy Number File
 
-The copy number file `TUMOR.purple.cnv` contains the copy number for all (contiguous) segments of the tumor sample:
+The copy number file `TUMOR.purple.cnv` contains the copy number profile of all (contiguous) segments of the tumor sample:
 
 Column  | Example Value | Description
 ---|---|---
@@ -528,8 +528,10 @@ MajorAllelePloidy | 2.0076 | Ploidy of major allele adjusted for purity
 
 #### Fitted Segments File
 
-The fitted segments file `TUMOR.purple.fitted` contains the copy number for all (contiguous) segments **before** the smoothing algorithm has been applied. 
-This typically results in additional entries and noise. This file also contains more detailed information that is not available in the smoothed records above:
+The fitted segments file `TUMOR.purple.fitted` contains interim copy number data after segmentation and purity fitting but **before** the 
+smoothing algorithm has been applied. It contains a lot more noise but also more detailed information than is available in the smoothed 
+copy number output above. As this file is included primarily for diagnostic purposes, it is recommended that the tumor copy number profile be 
+taken from the copy number file above.
 
 
 Column  | Example Value | Description

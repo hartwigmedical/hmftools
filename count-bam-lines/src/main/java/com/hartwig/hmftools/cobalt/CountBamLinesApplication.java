@@ -32,6 +32,9 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import htsjdk.samtools.SamReaderFactory;
+import htsjdk.samtools.cram.ref.ReferenceSource;
+
 public class CountBamLinesApplication {
     private static final Logger LOGGER = LogManager.getLogger(CountBamLinesApplication.class);
 
@@ -43,6 +46,7 @@ public class CountBamLinesApplication {
     private static final String OUTPUT_DIR = "output_dir";
     private static final String GC_PROFILE = "gc_profile";
     private static final String MIN_MAPPING_QUALITY = "min_quality";
+    private static final String REF_GENOME = "ref_genome";
 
     private static final int WINDOW_SIZE_DEFAULT = 1000;
     private static final int MIN_MAPPING_QUALITY_DEFAULT = 10;
@@ -107,8 +111,9 @@ public class CountBamLinesApplication {
         final ThreadFactory namedThreadFactory = new ThreadFactoryBuilder().setNameFormat("bam-%d").build();
         final ExecutorService executorService = Executors.newFixedThreadPool(threadCount, namedThreadFactory);
 
+        final SamReaderFactory readerFactory = readerFactory(cmd);
         final CountSupplier countSupplier =
-                new CountSupplier(reference, tumor, outputDirectory, windowSize, minMappingQuality, executorService);
+                new CountSupplier(reference, tumor, outputDirectory, windowSize, minMappingQuality, executorService, readerFactory);
         final Multimap<Chromosome, CobaltCount> readCounts;
         if (useBams) {
             readCounts = countSupplier.fromBam(cmd.getOptionValue(REFERENCE_BAM), cmd.getOptionValue(TUMOR_BAM));
@@ -127,6 +132,15 @@ public class CountBamLinesApplication {
         new RatioSegmentation(executorService, outputDirectory).applySegmentation(reference, tumor);
 
         executorService.shutdown();
+    }
+
+    @NotNull
+    private static SamReaderFactory readerFactory(@NotNull final CommandLine cmd) {
+        final SamReaderFactory readerFactory = SamReaderFactory.make();
+        if (cmd.hasOption(REF_GENOME)) {
+            return readerFactory.referenceSource(new ReferenceSource(new File(cmd.getOptionValue(REF_GENOME))));
+        }
+        return readerFactory;
     }
 
     @Nullable
@@ -173,6 +187,7 @@ public class CountBamLinesApplication {
         options.addOption(OUTPUT_DIR, true, "Output directory");
         options.addOption(MIN_MAPPING_QUALITY, true, "Min quality. Default 10.");
         options.addOption(GC_PROFILE, true, "Location of GC Profile.");
+        options.addOption(REF_GENOME, true, "Path to reference genome fasta file if using CRAM files");
 
         return options;
     }

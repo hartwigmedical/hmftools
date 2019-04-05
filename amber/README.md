@@ -1,13 +1,13 @@
 # AMBER
 AMBER is designed to generate a tumor BAF file for use in PURPLE. 
 
-Looking directly at the bam files, AMBER locates heterozygous sites within the reference sample then calculates the allelic frequency of corresponding sites in the tumor. 
+Looking directly at the BAM files, AMBER locates heterozygous sites within the reference sample then calculates the allelic frequency of corresponding sites in the tumor. 
 
 AMBER also locates homozygous sites in the reference to detect evidence of contamination in the tumor.
 
 Finally, the Bioconductor copy number package is used to generate pcf segments from the BAF file.
 
-Prior versions of AMBER relied on mpileups of the tumor and reference rather than the bams themselves. 
+Prior versions of AMBER relied on mpileups of the tumor and reference rather than the BAMs themselves. 
 This method is deprecated but still available in the jar file as AmberFromPileupApplication. 
 See below for more details.  
 
@@ -16,7 +16,7 @@ Segmentation is done with the Bioconductor [copynumber](http://bioconductor.org/
 
 This can be installed in R (3.5+) with the following commands:
 ```
-    library(BiocManager) # Get it from CRAN
+    library(BiocManager)
     install("copynumber")
 ```
 
@@ -24,17 +24,19 @@ This can be installed in R (3.5+) with the following commands:
 
 Argument | Description 
 ---|---
-reference | Name of the reference sample.
-reference_bam | Path to (indexed) reference bam file.
-tumor | Name of the tumor sample.
-tumor_bam | Path to (indexed) tumor bam file.
+reference | Name of the reference sample
+reference_bam | Path to indexed reference BAM file
+tumor | Name of the tumor sample
+tumor_bam | Path to indexed tumor BAM file
 output_dir | Path to the output directory. This directory will be created if it does not already exist.
-ref_genome | Path to the ref genome fasta file.
+ref_genome | Path to the reference genome fasta file
 bed | Path to bed file containing likely heterozygous sites (see below). Gz files supported.  
 
 The bed file used by HMF (GermlineHetPon.hg19.bed.gz) is available to download from [HMF-Pipeline-Resources](https://resources.hartwigmedicalfoundation.nl). 
 The sites were chosen by running the GATK HaplotypeCaller over 1700 germline samples and then selecting all SNP sites which are heterozygous in 800 to 900 of the samples. 
 The 1.3 million sites provided in this file typically result in 450k+ BAF points. A HG38 equivalent is also available.
+
+AMBER supports both BAM and CRAM file formats. 
 
 ## Optional Arguments
 
@@ -158,4 +160,4 @@ java -cp amber.jar com.hartwig.hmftools.amber.pileup.AmberFromPileupApplication 
 - 2.1
   - Add statistical contamination check.
 - 2.0
-  - Read directly from bams without intermidiary pileup step for significant performance improvements. 
+  - Read directly from BAMs without intermidiary pileup step for significant performance improvements. 

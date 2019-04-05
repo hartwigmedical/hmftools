@@ -66,8 +66,10 @@ public class SageHotspotApplication implements AutoCloseable {
 
         final CommandLine cmd = createCommandLine(args, options);
         config = SageHotspotApplicationConfig.createConfig(cmd);
-        tumorReader = SamReaderFactory.makeDefault().open(new File(config.tumorBamPath()));
-        referenceReader = SamReaderFactory.makeDefault().open(new File(config.referenceBamPath()));
+
+        final File refGenomeFile = new File(config.refGenomePath());
+        tumorReader = SamReaderFactory.makeDefault().referenceSequence(refGenomeFile).open(new File(config.tumorBamPath()));
+        referenceReader = SamReaderFactory.makeDefault().referenceSequence(refGenomeFile).open(new File(config.referenceBamPath()));
     }
 
     private void run() throws IOException {
