@@ -10,19 +10,18 @@ Any missense inframe indel, synonymous or non-coding variant that is present in 
 Any missense variant with a protein coding change that exactly matches the protein coding change of a variant with a significance in clinvar IN (‘PATHOGENIC’,’LIKELY PATHOGENIC’) or which has conflicting evidence but none of them ‘BENIGN’ or ‘LIKELY_BENIGN’. 
 
 ### Blacklist
-Any nonsense, splice or frameshift variant which is present in clinvar with a significance IN (‘BENIGN’,’LIKELY BENIGN’)
-Gene = BRCA2 + Codon > 3326 (from existing Lynparza rules)
-CodingEffect in (‘SPLICE’,’NONE’) AND Type = ‘INDEL’ AND (repeatCount>=8 OR indelSequence == microhomology)
-
-Any frameshift variant which is offset by another frameshift variant to be net inframe in more than 50% of samples which it is found in our cohort.  These will appear as explicit variants in our blacklist configuration
-TSC2 16:2137924 T>TCCCTGCAGTGCAGGAAAGGTAGGGCCGGGTGGGG (rs137854222) - This is classified as a frameshift variant by snpeff but overlaps the splice region and has perfect microhomology and so has no net effect on coding or splicing.
+ - Any nonsense, splice or frameshift variant which is present in clinvar with a significance IN (‘BENIGN’,’LIKELY BENIGN’)
+ - Gene = BRCA2 + Codon > 3326 
+ - CodingEffect in (‘SPLICE’,’NONE’) AND Type = ‘INDEL’ AND (repeatCount>=8 OR indelSequence == microhomology)
+ - Any frameshift variant which is offset by another frameshift variant to be net inframe in more than 50% of samples which it is found in our cohort.  These will appear as explicit variants in our blacklist configuration 
+ - TSC2 16:2137924 T>TCCCTGCAGTGCAGGAAAGGTAGGGCCGGGTGGGG (rs137854222) - This is classified as a frameshift variant by snpeff but overlaps the splice region and has perfect microhomology and so has no net effect on coding or splicing.
 
 ## Usage
 
 Single-sample mode:
 
 ```bash
-java -jar bachelor_1.0.jar 
+java -jar bachelor.jar 
     -sample [sampleId] 
     -output_dir ./logs 
     -configXml bachelor.xml 
@@ -34,7 +33,7 @@ java -jar bachelor_1.0.jar
 Batch mode:
 
 ```bash
-java -jar bachelor_1.0.jar 
+java -jar bachelor.jar 
     -sample [sampleId] 
     -output_dir ./logs 
     -configXml bachelor.xml 
