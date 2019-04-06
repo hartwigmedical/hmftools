@@ -15,7 +15,7 @@ import java.io.IOException;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.sig_analyser.types.NmfMatrix;
+import com.hartwig.hmftools.sig_analyser.types.SigMatrix;
 
 import org.apache.commons.math3.distribution.ChiSquaredDistribution;
 import org.apache.commons.math3.distribution.PoissonDistribution;
@@ -151,14 +151,14 @@ public class CosineSim {
     }
 
     public static List<double[]> getTopCssPairs(
-            final NmfMatrix matrix1, final NmfMatrix matrix2, double cssMatchCutoff,
+            final SigMatrix matrix1, final SigMatrix matrix2, double cssMatchCutoff,
             boolean applyExclusivity, boolean skipRepeats)
     {
         return getTopCssPairs(matrix1, matrix2, cssMatchCutoff, applyExclusivity, skipRepeats, false, false);
     }
 
     public static List<double[]> getTopCssPairs(
-            final NmfMatrix matrix1, final NmfMatrix matrix2, double cssMatchCutoff,
+            final SigMatrix matrix1, final SigMatrix matrix2, double cssMatchCutoff,
             boolean applyExclusivity, boolean skipRepeats, boolean skipAllZeros, boolean skipZeroEntries)
     {
         // use CSS to compare each pair of columns from the 2 sets
@@ -258,7 +258,7 @@ public class CosineSim {
         return cssResults;
     }
 
-    public static void logSimilarites(final NmfMatrix matrix, double cssMatchCutoff, final String item)
+    public static void logSimilarites(final SigMatrix matrix, double cssMatchCutoff, final String item)
     {
         // use CSS to compare each pair of values and log similar ones
 
@@ -337,7 +337,7 @@ public class CosineSim {
         return probability;
     }
 
-    public static List<double[]> getTopLogLikelihoodPairs(final NmfMatrix matrix1, final NmfMatrix matrix2, double probCutoff)
+    public static List<double[]> getTopLogLikelihoodPairs(final SigMatrix matrix1, final SigMatrix matrix2, double probCutoff)
     {
         // use CSS to compare each pair of columns from the 2 sets
         // returns a list of results where the CSS value is above the cutoff, ordered by CSS descending (ie closest first)

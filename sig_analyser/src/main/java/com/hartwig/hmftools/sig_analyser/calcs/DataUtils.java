@@ -19,7 +19,7 @@ import java.util.List;
 import java.util.Random;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.sig_analyser.types.NmfMatrix;
+import com.hartwig.hmftools.sig_analyser.types.SigMatrix;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -294,7 +294,7 @@ public class DataUtils {
         return k - 1;
     }
 
-    public static NmfMatrix createMatrixFromListData(List<List<Double>> dataSet)
+    public static SigMatrix createMatrixFromListData(List<List<Double>> dataSet)
     {
         if(dataSet.isEmpty())
             return null;
@@ -303,7 +303,7 @@ public class DataUtils {
         int cols = dataSet.get(0).size();
 
         // create and populate the matrix
-        NmfMatrix matrix = new NmfMatrix(rows, cols);
+        SigMatrix matrix = new SigMatrix(rows, cols);
 
         double[][] matrixData = matrix.getData();
 
@@ -345,7 +345,7 @@ public class DataUtils {
         return sortedList;
     }
 
-    public static void initRandom(NmfMatrix matrix, double min, double max, final Random rnGenerator)
+    public static void initRandom(SigMatrix matrix, double min, double max, final Random rnGenerator)
     {
         // uniform random in range
         double[][] data = matrix.getData();
@@ -546,7 +546,7 @@ public class DataUtils {
         return Files.newBufferedWriter(outputFile);
     }
 
-    public static void writeMatrixData(BufferedWriter writer, final NmfMatrix matrix, boolean asInt) throws IOException
+    public static void writeMatrixData(BufferedWriter writer, final SigMatrix matrix, boolean asInt) throws IOException
     {
         final double[][] sigData = matrix.getData();
 

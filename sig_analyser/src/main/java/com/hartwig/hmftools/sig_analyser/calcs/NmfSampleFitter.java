@@ -12,7 +12,7 @@ import static com.hartwig.hmftools.sig_analyser.calcs.DataUtils.sumVector;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.sig_analyser.types.NmfMatrix;
+import com.hartwig.hmftools.sig_analyser.types.SigMatrix;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -22,9 +22,9 @@ public class NmfSampleFitter {
     private static final Logger LOGGER = LogManager.getLogger(NmfSampleFitter.class);
 
     private NmfConfig mConfig;
-    private NmfMatrix mRefSignatures;
-    private NmfMatrix mSampleCounts;
-    private NmfMatrix mAllContributions;
+    private SigMatrix mRefSignatures;
+    private SigMatrix mSampleCounts;
+    private SigMatrix mAllContributions;
 
     private int[] mSigCountFrequency;
 
@@ -35,17 +35,17 @@ public class NmfSampleFitter {
     private static double MIN_SIG_CONTRIBUTION_PERC = 0.01;
 
 
-    public NmfSampleFitter(final NmfConfig config, final NmfMatrix sampleCounts, final NmfMatrix refSigs)
+    public NmfSampleFitter(final NmfConfig config, final SigMatrix sampleCounts, final SigMatrix refSigs)
     {
         mConfig = config;
         mSampleCounts = sampleCounts;
-        mAllContributions = new NmfMatrix(refSigs.Cols, sampleCounts.Cols);
+        mAllContributions = new SigMatrix(refSigs.Cols, sampleCounts.Cols);
         mSigCountFrequency = new int[refSigs.Cols];
         mRefSignatures = refSigs;
         mIsValid = true;
     }
 
-    public final NmfMatrix getContributions() { return mAllContributions; }
+    public final SigMatrix getContributions() { return mAllContributions; }
     public boolean isValid() { return mIsValid; }
 
     public void fitSamples()
@@ -78,7 +78,7 @@ public class NmfSampleFitter {
     {
         int bucketCount = mSampleCounts.Rows;
 
-        NmfMatrix sampleMatrix = new NmfMatrix(bucketCount, 1);
+        SigMatrix sampleMatrix = new SigMatrix(bucketCount, 1);
 
         final double[] sampleCounts = mSampleCounts.getCol(sampleId);
         double[][] sData = sampleMatrix.getData();
@@ -93,7 +93,7 @@ public class NmfSampleFitter {
         int refSigCount = mRefSignatures.Cols;
 
         boolean[] sigsInUse = new boolean[refSigCount];
-        NmfMatrix reducedSigs = new NmfMatrix(mRefSignatures);
+        SigMatrix reducedSigs = new SigMatrix(mRefSignatures);
         int currentSigCount = 0;
 
         // start with all in use unless below required ML threshold
@@ -262,7 +262,7 @@ public class NmfSampleFitter {
         return true;
     }
 
-    private void reduceSigData(boolean[] sigsInUse, NmfMatrix sigs, int sigIndex)
+    private void reduceSigData(boolean[] sigsInUse, SigMatrix sigs, int sigIndex)
     {
         sigsInUse[sigIndex] = false;
 
@@ -295,7 +295,7 @@ public class NmfSampleFitter {
 
     }
 
-    private void enableRefSig(NmfMatrix sigs, int sigIndex)
+    private void enableRefSig(SigMatrix sigs, int sigIndex)
     {
         final double[][] refData = mRefSignatures.getData();
 
@@ -305,7 +305,7 @@ public class NmfSampleFitter {
         }
     }
 
-    private int addRequiredSigs(boolean[] sigsInUse, NmfMatrix sigs)
+    private int addRequiredSigs(boolean[] sigsInUse, SigMatrix sigs)
     {
         // force some signatures to be included: currently 2 and 5
         int sigsAdded = 0;
@@ -394,8 +394,8 @@ public class NmfSampleFitter {
         double totalCount = sumVector(counts);
 
         // perform standard adjustments
-        NmfMatrix w = new NmfMatrix(bucketCount, sigCount);
-        NmfMatrix h = new NmfMatrix(sigCount, 1);
+        SigMatrix w = new SigMatrix(bucketCount, sigCount);
+        SigMatrix h = new SigMatrix(sigCount, 1);
 
         for(int sig = 0; sig < sigCount; ++sig)
         {
@@ -403,10 +403,10 @@ public class NmfSampleFitter {
             h.set(sig, SCOL, contribs[sig]);
         }
 
-        NmfMatrix actualCounts = new NmfMatrix(bucketCount, 1);
+        SigMatrix actualCounts = new SigMatrix(bucketCount, 1);
         actualCounts.setCol(0, counts);
 
-        NmfMatrix fittedCounts = new NmfMatrix(bucketCount, 1);
+        SigMatrix fittedCounts = new SigMatrix(bucketCount, 1);
 
         // test out initial contributions and residuals
         w.multiply(h, fittedCounts, true);
@@ -460,9 +460,9 @@ public class NmfSampleFitter {
             }
 
             // fit again
-            NmfMatrix wt = w.transpose();
-            NmfMatrix hAdj = wt.multiply(actualCounts);
-            NmfMatrix hd = wt.multiply(fittedCounts);
+            SigMatrix wt = w.transpose();
+            SigMatrix hAdj = wt.multiply(actualCounts);
+            SigMatrix hd = wt.multiply(fittedCounts);
 
             hAdj.scalarDivide(hd, true);
             h.scalarMultiply(hAdj);

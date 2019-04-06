@@ -113,7 +113,7 @@ public class GenericDataLoader {
         }
         catch (IOException exception)
         {
-            LOGGER.error("failed to read data file({})", filename);
+            LOGGER.error("failed to read data file({}): {}", filename, exception.toString());
             return null;
         }
     }

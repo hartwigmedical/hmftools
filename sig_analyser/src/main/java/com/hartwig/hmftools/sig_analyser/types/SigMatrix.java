@@ -10,7 +10,8 @@ import com.hartwig.hmftools.sig_analyser.calcs.DataUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-public class NmfMatrix {
+public class SigMatrix
+{
 
     final public int Rows;
     final public int Cols;
@@ -18,9 +19,9 @@ public class NmfMatrix {
     private double[][] mData;
     private double[][] mDataTrans;
 
-    private static final Logger LOGGER = LogManager.getLogger(NmfMatrix.class);
+    private static final Logger LOGGER = LogManager.getLogger(SigMatrix.class);
 
-    public NmfMatrix(int r, int c)
+    public SigMatrix(int r, int c)
     {
         Rows = r;
         Cols = c;
@@ -29,7 +30,7 @@ public class NmfMatrix {
         mDataTrans = null;
     }
 
-    public NmfMatrix(final NmfMatrix other)
+    public SigMatrix(final SigMatrix other)
     {
         Rows = other.Rows;
         Cols = other.Cols;
@@ -141,9 +142,9 @@ public class NmfMatrix {
         return true;
     }
 
-    public NmfMatrix transpose()
+    public SigMatrix transpose()
     {
-        NmfMatrix newMatrix = new NmfMatrix(Cols, Rows);
+        SigMatrix newMatrix = new SigMatrix(Cols, Rows);
 
         final double[][] otherData = newMatrix.getData();
 
@@ -158,14 +159,14 @@ public class NmfMatrix {
         return newMatrix;
     }
 
-    public NmfMatrix multiply(final NmfMatrix other)
+    public SigMatrix multiply(final SigMatrix other)
     {
-        NmfMatrix newMatrix = new NmfMatrix(Rows, other.Cols);
+        SigMatrix newMatrix = new SigMatrix(Rows, other.Cols);
         multiply(other, newMatrix, false);
         return newMatrix;
     }
 
-    public void multiply(final NmfMatrix other, NmfMatrix dest, boolean initialiseDest)
+    public void multiply(final SigMatrix other, SigMatrix dest, boolean initialiseDest)
     {
         // matrix multiply: c[i][j] = sum_k a[i][k] * b[k][j]
         if(Cols != other.Rows)
@@ -195,7 +196,7 @@ public class NmfMatrix {
         }
     }
 
-    public void scalarMultiply(NmfMatrix other)
+    public void scalarMultiply(SigMatrix other)
     {
         // scalar product; this *= b
         final double[][] otherData = other.getData();
@@ -209,7 +210,7 @@ public class NmfMatrix {
         }
     }
 
-    public void scalarMultiplyRateAdjusted(NmfMatrix other, double rateAdjust, int adjustColLimit)
+    public void scalarMultiplyRateAdjusted(SigMatrix other, double rateAdjust, int adjustColLimit)
     {
         // apply the scalar multiplication, but dampen the first X columns for the ref signatures
         final double[][] otherData = other.getData();
@@ -233,12 +234,12 @@ public class NmfMatrix {
         }
     }
 
-    public void scalarDivide(NmfMatrix other)
+    public void scalarDivide(SigMatrix other)
     {
         scalarDivide(other, false);
     }
 
-    public void scalarDivide(NmfMatrix other, boolean allowZeros)
+    public void scalarDivide(SigMatrix other, boolean allowZeros)
     {
         // scalar product; this *= b
         final double[][] otherData = other.getData();
@@ -305,7 +306,7 @@ public class NmfMatrix {
         return col;
     }
 
-    public double sumDiffSq(final NmfMatrix other)
+    public double sumDiffSq(final SigMatrix other)
     {
         // distance squared
         final double[][] otherData = other.getData();
@@ -323,13 +324,13 @@ public class NmfMatrix {
         return d;
     }
 
-    public static NmfMatrix redimension(final NmfMatrix other, int rows, int cols)
+    public static SigMatrix redimension(final SigMatrix other, int rows, int cols)
     {
         if(other.Rows == rows && other.Cols== cols)
             return other;
 
         // returns a resized matrix, copying any data that can be
-        NmfMatrix matrix = new NmfMatrix(rows, cols);
+        SigMatrix matrix = new SigMatrix(rows, cols);
 
         int minRows = min(other.Rows, matrix.Rows);
         int minCols = min(other.Cols, matrix.Cols);
@@ -348,13 +349,13 @@ public class NmfMatrix {
         return matrix;
     }
 
-    public double euclideanDist(NmfMatrix b)
+    public double euclideanDist(SigMatrix b)
     {
         // euclidean distance
         return Math.sqrt(sumDiffSq(b));
     }
 
-    public boolean equals(final NmfMatrix other)
+    public boolean equals(final SigMatrix other)
     {
         final double[][] otherData = other.getData();
 
@@ -370,10 +371,10 @@ public class NmfMatrix {
         return true;
     }
 
-    public static NmfMatrix getDiff(final NmfMatrix first, final NmfMatrix second, boolean relative)
+    public static SigMatrix getDiff(final SigMatrix first, final SigMatrix second, boolean relative)
     {
         // return a matrix with the diffs between all entries
-        NmfMatrix results = new NmfMatrix(first.Rows, first.Cols);
+        SigMatrix results = new SigMatrix(first.Rows, first.Cols);
 
         if(first.Rows != second.Rows || first.Cols != second.Cols)
             return results;
@@ -405,7 +406,7 @@ public class NmfMatrix {
         return results;
     }
 
-    public static NmfMatrix extractNonZeros(final NmfMatrix matrix) {
+    public static SigMatrix extractNonZeros(final SigMatrix matrix) {
 
         // check for columns with all zeros and remove them from the matrix
         int nonZeroColCount = 0;
@@ -421,7 +422,7 @@ public class NmfMatrix {
         if (nonZeroColCount == matrix.Cols)
             return matrix;
 
-        NmfMatrix newMatrix = new NmfMatrix(matrix.Rows, nonZeroColCount);
+        SigMatrix newMatrix = new SigMatrix(matrix.Rows, nonZeroColCount);
 
         final double[][] mData = matrix.getData();
         double[][] nData = newMatrix.getData();

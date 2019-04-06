@@ -19,7 +19,7 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
-import com.hartwig.hmftools.sig_analyser.types.NmfMatrix;
+import com.hartwig.hmftools.sig_analyser.types.SigMatrix;
 import com.hartwig.hmftools.sig_analyser.types.SigGroup;
 
 import org.apache.logging.log4j.LogManager;
@@ -27,14 +27,14 @@ import org.apache.logging.log4j.Logger;
 
 public class SigFinder {
 
-    final NmfMatrix mSampleCounts;
+    final SigMatrix mSampleCounts;
     final NmfConfig mConfig;
     double mTotalVariants;
 
     List<SigGroup> mSigGroups;
-    NmfMatrix mSignatures;
-    NmfMatrix mContributions;
-    NmfMatrix mAllocatedCounts; // a working contribution matrix for assiging counts from proposed sigs
+    SigMatrix mSignatures;
+    SigMatrix mContributions;
+    SigMatrix mAllocatedCounts; // a working contribution matrix for assiging counts from proposed sigs
     List<Integer> mProposedSigs;
 
     final String mOutputDir;
@@ -44,7 +44,7 @@ public class SigFinder {
     private static final Logger LOGGER = LogManager.getLogger(SigFinder.class);
 
     public SigFinder(
-            final NmfMatrix sampleBucketCounts, final NmfConfig config,
+            final SigMatrix sampleBucketCounts, final NmfConfig config,
             final String outputDir,final String outputFileId, final List<String> sampleNames)
     {
         mSampleCounts = sampleBucketCounts;
@@ -62,8 +62,8 @@ public class SigFinder {
         mAllocatedCounts = null;
     }
 
-    public final NmfMatrix getSignatures() { return mSignatures; }
-    public final NmfMatrix getContributions() { return mContributions; }
+    public final SigMatrix getSignatures() { return mSignatures; }
+    public final SigMatrix getContributions() { return mContributions; }
 
     public void findSignatures()
     {
@@ -324,7 +324,7 @@ public class SigFinder {
         int bucketCount = mSampleCounts.Rows;
         int sampleCount = mSampleCounts.Cols;
 
-        mAllocatedCounts = new NmfMatrix(bucketCount, sampleCount);
+        mAllocatedCounts = new SigMatrix(bucketCount, sampleCount);
         double[][] aData = mAllocatedCounts.getData();
 
         for(Integer sigGroupId : mProposedSigs)
@@ -379,10 +379,10 @@ public class SigFinder {
         int allSampleCount = mSampleCounts.Cols;
         int sigCount = mProposedSigs.size();
 
-        mSignatures = new NmfMatrix(bucketCount, sigCount);
+        mSignatures = new SigMatrix(bucketCount, sigCount);
         double[][] sigData = mSignatures.getData();
 
-        mContributions = new NmfMatrix(sigCount, mSampleCounts.Cols);
+        mContributions = new SigMatrix(sigCount, mSampleCounts.Cols);
         double[][] contribData = mContributions.getData();
 
         int sigIndex = 0;
@@ -432,7 +432,7 @@ public class SigFinder {
         }
     }
 
-    public void writeSignatures(final NmfMatrix signatures)
+    public void writeSignatures(final SigMatrix signatures)
     {
         try
         {
@@ -456,7 +456,7 @@ public class SigFinder {
         }
     }
 
-    public void writeContributions(final NmfMatrix contributions)
+    public void writeContributions(final SigMatrix contributions)
     {
         try
         {

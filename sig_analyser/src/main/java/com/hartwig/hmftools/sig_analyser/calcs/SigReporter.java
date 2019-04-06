@@ -16,7 +16,7 @@ import static com.hartwig.hmftools.sig_analyser.calcs.DataUtils.vectorMultiply;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.sig_analyser.types.NmfMatrix;
+import com.hartwig.hmftools.sig_analyser.types.SigMatrix;
 
 import org.apache.commons.math3.distribution.PoissonDistribution;
 import org.apache.logging.log4j.LogManager;
@@ -29,12 +29,12 @@ public class SigReporter {
     final private int mSigCount;
 
     // primary input - bucket counts per sample
-    final NmfMatrix mSampleCounts;
-    final NmfMatrix mContributions;
-    final NmfMatrix mSignatures;
-    final NmfMatrix mStartSignatures; // from beginning of NMF run
-    final NmfMatrix mRefSignatures; // external sigs to compare with
-    final NmfMatrix mFittedCounts;
+    final SigMatrix mSampleCounts;
+    final SigMatrix mContributions;
+    final SigMatrix mSignatures;
+    final SigMatrix mStartSignatures; // from beginning of NMF run
+    final SigMatrix mRefSignatures; // external sigs to compare with
+    final SigMatrix mFittedCounts;
     final NmfConfig mConfig;
     final private double mTotalCount;
     final private double[] mBucketTotals;
@@ -50,8 +50,8 @@ public class SigReporter {
 
     private static final Logger LOGGER = LogManager.getLogger(SigReporter.class);
 
-    public SigReporter(final NmfMatrix sampleCounts, final NmfMatrix signatures, final NmfMatrix contributions,
-            final NmfMatrix startSigs, final NmfMatrix refSigs, final NmfConfig config)
+    public SigReporter(final SigMatrix sampleCounts, final SigMatrix signatures, final SigMatrix contributions,
+            final SigMatrix startSigs, final SigMatrix refSigs, final NmfConfig config)
     {
         mSampleCounts = sampleCounts;
         mSignatures = signatures;

@@ -14,7 +14,7 @@ import static com.hartwig.hmftools.sig_analyser.calcs.DataUtils.getPoissonRandom
 import static com.hartwig.hmftools.sig_analyser.calcs.DataUtils.getPoissonRandomLarge;
 import static com.hartwig.hmftools.sig_analyser.calcs.DataUtils.getSortedVectorIndices;
 import static com.hartwig.hmftools.sig_analyser.calcs.DataUtils.writeMatrixData;
-import static com.hartwig.hmftools.sig_analyser.types.NmfMatrix.extractNonZeros;
+import static com.hartwig.hmftools.sig_analyser.types.SigMatrix.extractNonZeros;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -27,7 +27,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.utils.GenericDataLoader;
 import com.hartwig.hmftools.common.utils.GenericDataCollection;
-import com.hartwig.hmftools.sig_analyser.types.NmfMatrix;
+import com.hartwig.hmftools.sig_analyser.types.SigMatrix;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.logging.log4j.LogManager;
@@ -46,13 +46,13 @@ public class SampleSimulator {
     private List<SimSigFactors> mSigFactors;
 
     // reference signatures used to generate bucket counts
-    private NmfMatrix mInputSignatures;
+    private SigMatrix mInputSignatures;
 
     // bucket counts per simulated sample
-    private NmfMatrix mOutputMatrix;
+    private SigMatrix mOutputMatrix;
 
     // cache the allocation of sigs to each simulated sample
-    private NmfMatrix mOutputContributions;
+    private SigMatrix mOutputContributions;
 
     // random number caches
     private double[] mPoissonDecimals;
@@ -192,9 +192,9 @@ public class SampleSimulator {
         int buckets = mInputSignatures.Rows;
         int sampleCount = mConfig.SampleCount;
 
-        mOutputMatrix = new NmfMatrix(buckets, sampleCount);
+        mOutputMatrix = new SigMatrix(buckets, sampleCount);
 
-        mOutputContributions = new NmfMatrix(mSigFactors.size(), sampleCount);
+        mOutputContributions = new SigMatrix(mSigFactors.size(), sampleCount);
         double[][] cData = mOutputContributions.getData();
 
         int sigIndex = 0;
@@ -256,7 +256,7 @@ public class SampleSimulator {
         return (int) round(variantCount);
     }
 
-    private void setBucketCounts(int variantCount, int sampleIndex, int sigIndex, NmfMatrix sampleCounts)
+    private void setBucketCounts(int variantCount, int sampleIndex, int sigIndex, SigMatrix sampleCounts)
     {
         int sigLookupIndex = sigIndex-1; // since the signatures definition matrix is now zero-based
 

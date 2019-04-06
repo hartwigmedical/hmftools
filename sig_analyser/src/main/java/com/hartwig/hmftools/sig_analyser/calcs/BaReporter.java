@@ -36,7 +36,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.utils.GenericDataLoader;
 import com.hartwig.hmftools.sig_analyser.types.BucketGroup;
 import com.hartwig.hmftools.common.utils.GenericDataCollection;
-import com.hartwig.hmftools.sig_analyser.types.NmfMatrix;
+import com.hartwig.hmftools.sig_analyser.types.SigMatrix;
 import com.hartwig.hmftools.sig_analyser.types.SampleData;
 
 import org.apache.logging.log4j.LogManager;
@@ -48,22 +48,22 @@ public class BaReporter
 
     // shared state with Bucket Analyser
     private GenericDataCollection mDataCollection;
-    private NmfMatrix mSampleCounts;
+    private SigMatrix mSampleCounts;
     private double[] mSampleTotals;
     private double mTotalCount;
     private int mBucketCount;
     private int mSampleCount;
     private int mActiveSampleCount;
-    private NmfMatrix mBackgroundCounts;
-    private NmfMatrix mElevatedCounts; // actual - expected, capped at zero
+    private SigMatrix mBackgroundCounts;
+    private SigMatrix mElevatedCounts; // actual - expected, capped at zero
     private double mElevatedCount;
     private double mAllocatedCount;
     private double mBackgroundCount;
-    private NmfMatrix mSampleBucketRatios;
+    private SigMatrix mSampleBucketRatios;
 
-    private NmfMatrix mProposedSigs;
+    private SigMatrix mProposedSigs;
     private List<Integer> mSigToBgMapping;
-    private NmfMatrix mReferenceSigs;
+    private SigMatrix mReferenceSigs;
     private boolean mUsingRefSigs;
 
     private List<SampleData> mSampleData;
@@ -95,7 +95,7 @@ public class BaReporter
 
     public void setInitialState(
             GenericDataCollection dataCollection, final String outputDir, final String outputFileId,
-            final NmfMatrix sampleCounts, final List<SampleData> sampleData,
+            final SigMatrix sampleCounts, final List<SampleData> sampleData,
             final GenericDataCollection extSampleData, final HashMap<String,Integer> extCategoriesMap,final HashMap<String, List<Integer>> cancerSamplesMap,
             final List<BucketGroup> finalBucketGroups, final List<BucketGroup> backgroundGroups)
     {
@@ -120,7 +120,7 @@ public class BaReporter
         mBackgroundGroups = backgroundGroups;
     }
 
-    public void setPreRunState(double[] sampleTotals, final NmfMatrix backgroundCounts, final NmfMatrix elevatedCounts, double totalCount, double elevatedCount, int activeSampleCount)
+    public void setPreRunState(double[] sampleTotals, final SigMatrix backgroundCounts, final SigMatrix elevatedCounts, double totalCount, double elevatedCount, int activeSampleCount)
     {
         mSampleTotals = sampleTotals;
         mBackgroundCounts = backgroundCounts;
@@ -130,7 +130,7 @@ public class BaReporter
         mActiveSampleCount = activeSampleCount;
     }
 
-    public void setFinalState(final NmfMatrix proposedSigs, final List<Integer> sigToBgMapping)
+    public void setFinalState(final SigMatrix proposedSigs, final List<Integer> sigToBgMapping)
     {
         mProposedSigs = proposedSigs;
         mSigToBgMapping = sigToBgMapping;
@@ -148,7 +148,7 @@ public class BaReporter
 
     public double getAllocatedCount() { return mAllocatedCount; }
 
-    public final NmfMatrix getReferenceSigs() { return mReferenceSigs; }
+    public final SigMatrix getReferenceSigs() { return mReferenceSigs; }
 
     public void loadReferenceSigs(final String filename, boolean usingRefSigs)
     {
@@ -523,7 +523,7 @@ public class BaReporter
         // only look at contributions above X%
         int sigCount = mFinalBucketGroups.size();
 
-        NmfMatrix contribMatrix = new NmfMatrix(sigCount, mSampleCount);
+        SigMatrix contribMatrix = new SigMatrix(sigCount, mSampleCount);
         double[][] contribData = contribMatrix.getData();
 
         double minSigContribPerc = MIN_GROUP_ALLOC_PERCENT_LOWER;

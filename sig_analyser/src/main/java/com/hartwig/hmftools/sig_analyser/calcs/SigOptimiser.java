@@ -21,7 +21,7 @@ import java.util.HashMap;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.sig_analyser.types.NmfMatrix;
+import com.hartwig.hmftools.sig_analyser.types.SigMatrix;
 import com.hartwig.hmftools.sig_analyser.types.SampleData;
 
 import org.apache.logging.log4j.LogManager;
@@ -43,13 +43,13 @@ public class SigOptimiser
     private int mBucketCount;
     private int mAllSampleCount;
     private List<Integer> mInitialBuckets; // from the non-zero ratios passed in
-    private NmfMatrix mSampleCounts; // take from the larger of unallocated + noise and the predefined allocated counts
+    private SigMatrix mSampleCounts; // take from the larger of unallocated + noise and the predefined allocated counts
     private double[] mSampleTotals; // generally each sample's unallocated counts plus noise
     private double[] mProposedTotals; // generally each sample's unallocated counts plus noise
     private double mProposedTotal;
-    private NmfMatrix mSampleNoiseRatio; // noise relative to overall sample bucket counts
-    private NmfMatrix mBucketRatioWeights; // weighted frequencies of bucket ratios
-    private NmfMatrix mBucketRatioFrequencies; // sample frequencies of bucket ratios
+    private SigMatrix mSampleNoiseRatio; // noise relative to overall sample bucket counts
+    private SigMatrix mBucketRatioWeights; // weighted frequencies of bucket ratios
+    private SigMatrix mBucketRatioFrequencies; // sample frequencies of bucket ratios
     private double mRefMaxRatio;
     private double[] mRatioSegments;
 
@@ -154,8 +154,8 @@ public class SigOptimiser
         mCacheBucketInfo = false;
 
         // make a matrix from the sample counts
-        mSampleCounts = new NmfMatrix(mBucketCount, mAllSampleCount);
-        mSampleNoiseRatio = new NmfMatrix(mBucketCount, mAllSampleCount);
+        mSampleCounts = new SigMatrix(mBucketCount, mAllSampleCount);
+        mSampleNoiseRatio = new SigMatrix(mBucketCount, mAllSampleCount);
 
         mProposedAllocs = Lists.newArrayList();
 
@@ -326,8 +326,8 @@ public class SigOptimiser
         mCacheBucketInfo = true;
 
         // make a matrix from the sample counts
-        mSampleCounts = new NmfMatrix(mBucketCount, mAllSampleCount);
-        mSampleNoiseRatio = new NmfMatrix(mBucketCount, mAllSampleCount);
+        mSampleCounts = new SigMatrix(mBucketCount, mAllSampleCount);
+        mSampleNoiseRatio = new SigMatrix(mBucketCount, mAllSampleCount);
 
         mProposedAllocs = Lists.newArrayList();
         mProposedTotals = new double[mAllSampleCount];
@@ -495,9 +495,9 @@ public class SigOptimiser
 
     public void calcBucketDistributions()
     {
-        mBucketRatioWeights = new NmfMatrix(mBucketCount, BUCKET_RATIO_SEGMENT_COUNT);
-        mBucketRatioFrequencies = new NmfMatrix(mBucketCount, BUCKET_RATIO_SEGMENT_COUNT);
-        NmfMatrix sampleBucketRatios = new NmfMatrix(mBucketCount, mSampleCount);
+        mBucketRatioWeights = new SigMatrix(mBucketCount, BUCKET_RATIO_SEGMENT_COUNT);
+        mBucketRatioFrequencies = new SigMatrix(mBucketCount, BUCKET_RATIO_SEGMENT_COUNT);
+        SigMatrix sampleBucketRatios = new SigMatrix(mBucketCount, mSampleCount);
         mRatioSegments = new double[BUCKET_RATIO_SEGMENT_COUNT];
 
         List<Integer> bucketIds = Lists.newArrayList();
@@ -528,7 +528,7 @@ public class SigOptimiser
         }
     }
 
-    private void assignBucketRatioFrequencies(final List<Integer> bucketIds, NmfMatrix sampleBucketRatios)
+    private void assignBucketRatioFrequencies(final List<Integer> bucketIds, SigMatrix sampleBucketRatios)
     {
         double[][] brwData = mBucketRatioWeights.getData();
         double[][] brfData = mBucketRatioFrequencies.getData();

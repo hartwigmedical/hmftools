@@ -7,7 +7,7 @@ import static com.hartwig.hmftools.sig_analyser.SigAnalyser.OUTPUT_FILE_ID;
 import static com.hartwig.hmftools.sig_analyser.calcs.CosineSim.getTopCssPairs;
 import static com.hartwig.hmftools.sig_analyser.calcs.DataUtils.getNewFile;
 import static com.hartwig.hmftools.sig_analyser.calcs.DataUtils.writeMatrixData;
-import static com.hartwig.hmftools.sig_analyser.types.NmfMatrix.extractNonZeros;
+import static com.hartwig.hmftools.sig_analyser.types.SigMatrix.extractNonZeros;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -18,7 +18,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.utils.GenericDataLoader;
 import com.hartwig.hmftools.common.utils.GenericDataCollection;
-import com.hartwig.hmftools.sig_analyser.types.NmfMatrix;
+import com.hartwig.hmftools.sig_analyser.types.SigMatrix;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.logging.log4j.LogManager;
@@ -33,8 +33,8 @@ public class NmfManager {
 
     private GenericDataCollection mDataCollection;
 
-    private NmfMatrix mSampleCountsMatrix;
-    private NmfMatrix mReferenceSigs;
+    private SigMatrix mSampleCountsMatrix;
+    private SigMatrix mReferenceSigs;
 
     private NmfCalculator mNmfCalculator;
     private SigFinder mSigFinder;
@@ -186,7 +186,7 @@ public class NmfManager {
         if(!sampleFitter.isValid())
             return;
 
-        NmfMatrix contributions = sampleFitter.getContributions();
+        SigMatrix contributions = sampleFitter.getContributions();
         contributions.cacheTranspose();
 
         writeSignatures(mReferenceSigs);
@@ -195,7 +195,7 @@ public class NmfManager {
         mPerfCounter.logStats();
     }
 
-    public void writeSignatures(final NmfMatrix signatures)
+    public void writeSignatures(final SigMatrix signatures)
     {
         try
         {
@@ -220,7 +220,7 @@ public class NmfManager {
         }
     }
 
-    public void writeContributions(final NmfMatrix contributions)
+    public void writeContributions(final SigMatrix contributions)
     {
         try
         {
@@ -254,20 +254,20 @@ public class NmfManager {
 
     private void testMatrixCopy()
     {
-        NmfMatrix m1 = new NmfMatrix(5, 5);
+        SigMatrix m1 = new SigMatrix(5, 5);
 
         Random random = new Random(123456);
         DataUtils.initRandom(m1, 0, 1, random);
 
-        NmfMatrix m2 = new NmfMatrix(m1);
+        SigMatrix m2 = new SigMatrix(m1);
 
         m1.set(0, 0, 100);
     }
 
     private void testSigCompare()
     {
-        NmfMatrix sigs1 = new NmfMatrix(5, 5);
-        NmfMatrix sigs2 = new NmfMatrix(5, 5);
+        SigMatrix sigs1 = new SigMatrix(5, 5);
+        SigMatrix sigs2 = new SigMatrix(5, 5);
 
         double[][] s1Data = sigs1.getData();
         double[][] s2Data = sigs2.getData();

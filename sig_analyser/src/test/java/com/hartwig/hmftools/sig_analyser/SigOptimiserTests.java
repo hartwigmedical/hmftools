@@ -1,17 +1,6 @@
 package com.hartwig.hmftools.sig_analyser;
 
-import static com.hartwig.hmftools.sig_analyser.calcs.DataUtils.copyVector;
 import static com.hartwig.hmftools.sig_analyser.calcs.DataUtils.vectorMultiply;
-
-import java.util.List;
-
-import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.utils.GenericDataCollection;
-import com.hartwig.hmftools.common.utils.GenericDataLoader;
-import com.hartwig.hmftools.sig_analyser.calcs.DataUtils;
-import com.hartwig.hmftools.sig_analyser.calcs.SigContribOptimiser;
-import com.hartwig.hmftools.sig_analyser.types.NmfMatrix;
-import com.hartwig.hmftools.sig_analyser.types.SampleData;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -28,17 +17,17 @@ public class SigOptimiserTests
         // load counts and sigs to fit with
         String countsFile = "/Users/charlesshale/data/r_data/snv_nmf_matrix_data.csv";
         GenericDataCollection dataCollection = GenericDataLoader.loadFile(countsFile);
-        NmfMatrix sampleCountsMatrix = DataUtils.createMatrixFromListData(dataCollection.getData());
+        SigMatrix sampleCountsMatrix = DataUtils.createMatrixFromListData(dataCollection.getData());
         sampleCountsMatrix.cacheTranspose();
 
         String noiseFile = "/Users/charlesshale/dev/nmf/snv_ba_sample_noise.csv";
         dataCollection = GenericDataLoader.loadFile(noiseFile);
-        NmfMatrix sampleNoiseMatrix = DataUtils.createMatrixFromListData(dataCollection.getData());
+        SigMatrix sampleNoiseMatrix = DataUtils.createMatrixFromListData(dataCollection.getData());
         sampleNoiseMatrix.cacheTranspose();
 
         String sigsFile = "/Users/charlesshale/dev/nmf/snv_ba_predefined_sigs.csv";
         dataCollection = GenericDataLoader.loadFile(sigsFile);
-        NmfMatrix sigs = DataUtils.createMatrixFromListData(dataCollection.getData());
+        SigMatrix sigs = DataUtils.createMatrixFromListData(dataCollection.getData());
         sigs.cacheTranspose();
 
 
@@ -84,7 +73,7 @@ public class SigOptimiserTests
         String sigsFile = "/Users/charlesshale/dev/nmf/snv_ba_predefined_sigs.csv";
         GenericDataCollection dataCollection = GenericDataLoader.loadFile(sigsFile);
         dataCollection = GenericDataLoader.loadFile(sigsFile);
-        NmfMatrix sigs = DataUtils.createMatrixFromListData(dataCollection.getData());
+        SigMatrix sigs = DataUtils.createMatrixFromListData(dataCollection.getData());
         sigs.cacheTranspose();
 
         int bgSigCount = 20;

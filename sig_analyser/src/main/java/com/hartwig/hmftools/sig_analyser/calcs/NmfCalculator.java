@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.Random;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.sig_analyser.types.NmfMatrix;
+import com.hartwig.hmftools.sig_analyser.types.SigMatrix;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -41,24 +41,24 @@ public class NmfCalculator {
     private static final Logger LOGGER = LogManager.getLogger(NmfCalculator.class);
 
     // primary input - bucket counts per sample
-    final NmfMatrix mSampleCounts;
+    final SigMatrix mSampleCounts;
     private double mTotalCount;
     private double[] mBucketTotals; // to help with seeding
     private double[] mSampleTotals;
 
     private int mRunId;
-    private NmfMatrix mW; // the bucket-signature values (x=BucketCount, y=SigCount)
-    private NmfMatrix mH; // the sample-signature contributions (x=SigCount, y=SampleCount)
-    private NmfMatrix mV; // the fitted matrix of samples and bucket counts (W x H)
-    private NmfMatrix mPrevW;
-    private NmfMatrix mPrevH;
-    private NmfMatrix mPrevV;
+    private SigMatrix mW; // the bucket-signature values (x=BucketCount, y=SigCount)
+    private SigMatrix mH; // the sample-signature contributions (x=SigCount, y=SampleCount)
+    private SigMatrix mV; // the fitted matrix of samples and bucket counts (W x H)
+    private SigMatrix mPrevW;
+    private SigMatrix mPrevH;
+    private SigMatrix mPrevV;
     private boolean mIsValid;
 
-    private NmfMatrix mRefSignatures;
-    private NmfMatrix mRefContributions;
-    private List<NmfMatrix> mStartSigs;
-    private NmfMatrix mRandomStartSignatures;
+    private SigMatrix mRefSignatures;
+    private SigMatrix mRefContributions;
+    private List<SigMatrix> mStartSigs;
+    private SigMatrix mRandomStartSignatures;
 
     // calculated values
     private double mTotalResiduals;
@@ -70,7 +70,7 @@ public class NmfCalculator {
     // internal constants
     private static double MIN_COST_CHANGE_PERCENT = 0.00001;
 
-    public NmfCalculator(final NmfMatrix sampleBucketCounts, final NmfConfig config)
+    public NmfCalculator(final SigMatrix sampleBucketCounts, final NmfConfig config)
     {
         mConfig = config;
         mRunId = 0;
@@ -102,8 +102,8 @@ public class NmfCalculator {
 
         mW = null;
         mH = null;
-        mV = new NmfMatrix(mBucketCount, mSampleCount);
-        mPrevV = new NmfMatrix(mBucketCount, mSampleCount);
+        mV = new SigMatrix(mBucketCount, mSampleCount);
+        mPrevV = new SigMatrix(mBucketCount, mSampleCount);
 
         mRefSignatures = null;
         mRefContributions = null;
@@ -118,26 +118,26 @@ public class NmfCalculator {
 
     public void setSigCount(int sigCount) { mSigCount = sigCount; }
 
-    public void setSignatures(final NmfMatrix refSigs)
+    public void setSignatures(final SigMatrix refSigs)
     {
         mRefSignatures = refSigs;
     }
 
-    public void setContributions(final NmfMatrix refContributions) { mRefContributions = refContributions; }
+    public void setContributions(final SigMatrix refContributions) { mRefContributions = refContributions; }
 
-    public void setRandomSignatures(final NmfMatrix randomSigs) { mRandomStartSignatures = randomSigs; }
+    public void setRandomSignatures(final SigMatrix randomSigs) { mRandomStartSignatures = randomSigs; }
 
-    public final NmfMatrix getSignatures() { return mW; }
-    public final NmfMatrix getContributions() { return mH; }
-    public final NmfMatrix getFit() { return mV; }
-    public final NmfMatrix getSampleCounts() { return mSampleCounts; }
+    public final SigMatrix getSignatures() { return mW; }
+    public final SigMatrix getContributions() { return mH; }
+    public final SigMatrix getFit() { return mV; }
+    public final SigMatrix getSampleCounts() { return mSampleCounts; }
     public double[] getBucketTotals() { return mBucketTotals; }
     public double[] getSampleTotals() { return mSampleTotals; }
     public double getTotalResiduals() { return mTotalResiduals; }
     public void clearLowestCost() { mLowestCost = 0; }
 
     public double getTotalCount() { return mTotalCount; }
-    public final NmfMatrix getRefSignatures() { return mRefSignatures; }
+    public final SigMatrix getRefSignatures() { return mRefSignatures; }
 
     public boolean isValid() { return mIsValid; }
 
@@ -165,8 +165,8 @@ public class NmfCalculator {
                     mRunId, mTotalResiduals, mTotalCount, mTotalResiduals / mTotalCount));
         }
 
-        mPrevW = new NmfMatrix(mBucketCount, mSigCount);
-        mPrevH = new NmfMatrix(mSigCount, mSampleCount);
+        mPrevW = new SigMatrix(mBucketCount, mSigCount);
+        mPrevH = new SigMatrix(mSigCount, mSampleCount);
 
         calculate();
     }
@@ -177,11 +177,11 @@ public class NmfCalculator {
         // whereas the contributions per samples are its bucket counts split across the sigs
         if (mRefSignatures != null && mRefSignatures.Cols == mSigCount) {
 
-            mW = new NmfMatrix(mRefSignatures);
+            mW = new SigMatrix(mRefSignatures);
             return;
         }
 
-        mW = new NmfMatrix(mBucketCount, mSigCount);
+        mW = new SigMatrix(mBucketCount, mSigCount);
 
         double[][] wData = mW.getData();
 
@@ -263,11 +263,11 @@ public class NmfCalculator {
     {
         if(mRefContributions != null && mRefContributions.Rows == mSigCount && mConfig.UseRefSigs)
         {
-            mH = new NmfMatrix(mRefContributions);
+            mH = new SigMatrix(mRefContributions);
             return;
         }
 
-        mH = new NmfMatrix(mSigCount, mSampleCount);
+        mH = new SigMatrix(mSigCount, mSampleCount);
 
         // if the signatures are fractions of 1 for each bucket
         // then the contributions should be based around the actual bucket counts per sample
@@ -517,9 +517,9 @@ public class NmfCalculator {
         // https://papers.nips.cc/paper/1861-algorithms-for-non-negative-matrix-factorization.pdf
 
         // update contribution matrix
-        NmfMatrix wt = mW.transpose();
-        NmfMatrix hAdj = wt.multiply(mSampleCounts);
-        NmfMatrix hd = wt.multiply(mV);
+        SigMatrix wt = mW.transpose();
+        SigMatrix hAdj = wt.multiply(mSampleCounts);
+        SigMatrix hd = wt.multiply(mV);
 
         hAdj.scalarDivide(hd, true);
         mH.scalarMultiply(hAdj);
@@ -527,10 +527,10 @@ public class NmfCalculator {
         if(mConfig.SigFloatRate > 0) {
 
             // update signatures matrix
-            NmfMatrix ht = mH.transpose();
-            NmfMatrix wAdj = mSampleCounts.multiply(ht);
-            NmfMatrix wd1 = mW.multiply(mH);
-            NmfMatrix wd = wd1.multiply(ht);
+            SigMatrix ht = mH.transpose();
+            SigMatrix wAdj = mSampleCounts.multiply(ht);
+            SigMatrix wd1 = mW.multiply(mH);
+            SigMatrix wd = wd1.multiply(ht);
 
             wAdj.scalarDivide(wd, true);
 
@@ -547,10 +547,10 @@ public class NmfCalculator {
 
     private void modelBrunet()
     {
-        NmfMatrix vWH = mSampleCounts;
+        SigMatrix vWH = mSampleCounts;
         vWH.scalarDivide(mV);
 
-        NmfMatrix wSum = new NmfMatrix(mSigCount, mSampleCount);
+        SigMatrix wSum = new SigMatrix(mSigCount, mSampleCount);
         double[][] wSumData = wSum.getData();
         for(int j = 0; j < mSigCount; ++j)
         {
@@ -562,9 +562,9 @@ public class NmfCalculator {
             }
         }
 
-        NmfMatrix wt = mW.transpose();
-        NmfMatrix wt_vWH = wt.multiply(vWH);
-        NmfMatrix hAdj = wt_vWH;
+        SigMatrix wt = mW.transpose();
+        SigMatrix wt_vWH = wt.multiply(vWH);
+        SigMatrix hAdj = wt_vWH;
         hAdj.scalarDivide(wSum);
 
         mH.scalarMultiply(hAdj);
@@ -575,7 +575,7 @@ public class NmfCalculator {
         vWH.scalarDivide(mV);
 
         // now adjust W
-        NmfMatrix hSum = new NmfMatrix(mBucketCount, mSigCount);
+        SigMatrix hSum = new SigMatrix(mBucketCount, mSigCount);
         double[][] hSumData = hSum.getData();
         for(int j = 0; j < mSigCount; ++j)
         {
@@ -587,9 +587,9 @@ public class NmfCalculator {
             }
         }
 
-        NmfMatrix ht = mH.transpose();
-        NmfMatrix vWH_ht = vWH.multiply(ht);
-        NmfMatrix wAdj = vWH_ht;
+        SigMatrix ht = mH.transpose();
+        SigMatrix vWH_ht = vWH.multiply(ht);
+        SigMatrix wAdj = vWH_ht;
         wAdj.scalarDivide(hSum);
 
         mW.scalarMultiply(wAdj);
@@ -698,7 +698,7 @@ public class NmfCalculator {
         }
 
         // check that V hasn't changed
-        final NmfMatrix vCopy = new NmfMatrix(mV);
+        final SigMatrix vCopy = new SigMatrix(mV);
         produceFit();
 
         if(!mV.hasValidData(false))
@@ -721,18 +721,18 @@ public class NmfCalculator {
 
     private void logMatrixDiffs()
     {
-        NmfMatrix relDiff = NmfMatrix.getDiff(mV, mPrevV, true);
-        NmfMatrix absDiff = NmfMatrix.getDiff(mV, mPrevV, false);
+        SigMatrix relDiff = SigMatrix.getDiff(mV, mPrevV, true);
+        SigMatrix absDiff = SigMatrix.getDiff(mV, mPrevV, false);
         double avgPercChange = relDiff.sum() / (mV.Rows * mV.Cols);
         LOGGER.debug(String.format("V-matrix diffs: abs(%.0f) relative(%.4f)", absDiff.sum(), avgPercChange));
 
-        relDiff = NmfMatrix.getDiff(mW, mPrevW, true);
-        absDiff = NmfMatrix.getDiff(mW, mPrevW, false);
+        relDiff = SigMatrix.getDiff(mW, mPrevW, true);
+        absDiff = SigMatrix.getDiff(mW, mPrevW, false);
         avgPercChange = relDiff.sum() / (mW.Rows * mW.Cols);
         LOGGER.debug(String.format("W-matrix diffs: abs(%.0f) relative(%.4f)", absDiff.sum(), avgPercChange));
 
-        relDiff = NmfMatrix.getDiff(mH, mPrevH, true);
-        absDiff = NmfMatrix.getDiff(mH, mPrevH, false);
+        relDiff = SigMatrix.getDiff(mH, mPrevH, true);
+        absDiff = SigMatrix.getDiff(mH, mPrevH, false);
         avgPercChange = relDiff.sum() / (mH.Rows * mH.Cols);
         LOGGER.debug(String.format("H-matrix diffs: abs(%.0f) relative(%.4f)", absDiff.sum(), avgPercChange));
 

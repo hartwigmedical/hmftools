@@ -18,7 +18,7 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.numeric.Doubles;
-import com.hartwig.hmftools.sig_analyser.types.NmfMatrix;
+import com.hartwig.hmftools.sig_analyser.types.SigMatrix;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -48,7 +48,7 @@ public class SigContribOptimiser
     private double[] mContribs;
     private double mContribTotal;
 
-    private NmfMatrix mSigs;
+    private SigMatrix mSigs;
 
     private int mBucketCount;
     private int mSigCount;
@@ -159,7 +159,7 @@ public class SigContribOptimiser
         }
 
         // extract sigs their cost basis (just the inverse)
-        mSigs = new NmfMatrix(mBucketCount, mSigCount);
+        mSigs = new SigMatrix(mBucketCount, mSigCount);
 
         if (mContribs.length != ratiosCollection.size())
         {

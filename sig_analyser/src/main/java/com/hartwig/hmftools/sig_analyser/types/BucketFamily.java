@@ -120,7 +120,7 @@ public class BucketFamily
         return false;
     }
 
-    public void calcAll(final NmfMatrix sampleCounts)
+    public void calcAll(final SigMatrix sampleCounts)
     {
         if(mBucketGroups.isEmpty())
             return;

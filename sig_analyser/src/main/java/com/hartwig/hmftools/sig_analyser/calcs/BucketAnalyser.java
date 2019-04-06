@@ -32,7 +32,7 @@ import static com.hartwig.hmftools.sig_analyser.types.BucketGroup.BG_TYPE_BACKGR
 import static com.hartwig.hmftools.sig_analyser.types.BucketGroup.BG_TYPE_MAJOR;
 import static com.hartwig.hmftools.sig_analyser.types.BucketGroup.BG_TYPE_UNIQUE;
 import static com.hartwig.hmftools.common.utils.GenericDataCollection.GD_TYPE_STRING;
-import static com.hartwig.hmftools.sig_analyser.types.NmfMatrix.redimension;
+import static com.hartwig.hmftools.sig_analyser.types.SigMatrix.redimension;
 import static com.hartwig.hmftools.sig_analyser.types.SampleData.PARTIAL_ALLOC_PERCENT;
 
 import java.io.BufferedWriter;
@@ -47,7 +47,7 @@ import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.utils.GenericDataLoader;
 import com.hartwig.hmftools.sig_analyser.types.BucketGroup;
 import com.hartwig.hmftools.common.utils.GenericDataCollection;
-import com.hartwig.hmftools.sig_analyser.types.NmfMatrix;
+import com.hartwig.hmftools.sig_analyser.types.SigMatrix;
 import com.hartwig.hmftools.sig_analyser.types.SampleData;
 
 import org.apache.commons.cli.CommandLine;
@@ -63,7 +63,7 @@ public class BucketAnalyser {
     private GenericDataCollection mDataCollection;
     private BaReporter mReporter;
 
-    private NmfMatrix mSampleCounts;
+    private SigMatrix mSampleCounts;
 
     // for convenience
     private double[] mSampleTotals;
@@ -73,18 +73,18 @@ public class BucketAnalyser {
     private int mActiveSampleCount; // minus the excluded samples
 
     private Map<String, List<Double>> mBucketMediansMap; // cancer-type to median bucket ratios (ie background sigs)
-    private NmfMatrix mBucketProbs;
-    private NmfMatrix mBackgroundCounts;
-    private NmfMatrix mElevatedCounts; // actual - expected, capped at zero
+    private SigMatrix mBucketProbs;
+    private SigMatrix mBackgroundCounts;
+    private SigMatrix mElevatedCounts; // actual - expected, capped at zero
     private double mElevatedCount;
     private double mBackgroundCount;
-    private NmfMatrix mPermittedElevRange;
-    private NmfMatrix mPermittedBgRange;
+    private SigMatrix mPermittedElevRange;
+    private SigMatrix mPermittedBgRange;
     private List<Double> mSampleBgAllocations;
 
-    private NmfMatrix mProposedSigs;
+    private SigMatrix mProposedSigs;
     private List<Integer> mSigToBgMapping; // for each proposed sig, a mapping can be made back to the bucket group that it came from
-    private NmfMatrix mPredefinedSigs;
+    private SigMatrix mPredefinedSigs;
     private boolean mFinalFitOnly; // using predefined sigs
     private boolean mUsingRefSigs; // using reference sigs as predefined sigs
 
@@ -813,9 +813,9 @@ public class BucketAnalyser {
         LOGGER.debug("splitting sample counts");
 
         // work out bucket median values (literally 50th percentile values
-        mBucketProbs = new NmfMatrix(mBucketCount, mSampleCount);
-        mBackgroundCounts = new NmfMatrix(mBucketCount, mSampleCount);
-        mElevatedCounts = new NmfMatrix(mBucketCount, mSampleCount);
+        mBucketProbs = new SigMatrix(mBucketCount, mSampleCount);
+        mBackgroundCounts = new SigMatrix(mBucketCount, mSampleCount);
+        mElevatedCounts = new SigMatrix(mBucketCount, mSampleCount);
 
         double[][] probData = mBucketProbs.getData();
         double[][] bgData = mBackgroundCounts.getData();
@@ -930,8 +930,8 @@ public class BucketAnalyser {
 
     private void calcCountsNoise()
     {
-        mPermittedElevRange = new NmfMatrix(mBucketCount, mSampleCount);
-        mPermittedBgRange = new NmfMatrix(mBucketCount, mSampleCount);
+        mPermittedElevRange = new SigMatrix(mBucketCount, mSampleCount);
+        mPermittedBgRange = new SigMatrix(mBucketCount, mSampleCount);
 
         if(!mApplyNoise)
             return;
@@ -3664,7 +3664,7 @@ public class BucketAnalyser {
 
         LOGGER.debug("creating {} signatures", proposedSigCount);
 
-        mProposedSigs = new NmfMatrix(mBucketCount, proposedSigCount);
+        mProposedSigs = new SigMatrix(mBucketCount, proposedSigCount);
 
         int sigId = 0;
 
@@ -4123,7 +4123,7 @@ public class BucketAnalyser {
         }
     }
 
-    public void writeSignatures(final NmfMatrix signatures, final String fileId, final List<String> sigIds)
+    public void writeSignatures(final SigMatrix signatures, final String fileId, final List<String> sigIds)
     {
         try
         {
@@ -4166,7 +4166,7 @@ public class BucketAnalyser {
     {
         int sigCount = mFinalBucketGroups.size();
 
-        NmfMatrix contribMatrix = new NmfMatrix(sigCount, mSampleCount);
+        SigMatrix contribMatrix = new SigMatrix(sigCount, mSampleCount);
         double[][] contribData = contribMatrix.getData();
 
         for(int bgIndex = 0; bgIndex < mFinalBucketGroups.size(); ++bgIndex)
