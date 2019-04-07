@@ -50,6 +50,7 @@ public class FittedPurityFactory {
     private final ExecutorService executorService;
     private final Collection<SomaticVariant> variants;
 
+    private final List<FittedPurity> all = Lists.newArrayList();
     private final List<FittedPurity> bestScoringPerPurity = Lists.newArrayList();
     private final List<ObservedRegion> filteredRegions = Lists.newArrayList();
 
@@ -93,6 +94,10 @@ public class FittedPurityFactory {
         return bestScoringPerPurity;
     }
 
+    public List<FittedPurity> all() {
+        return all;
+    }
+
     private void fitPurity() throws ExecutionException, InterruptedException {
         final List<Future<List<FittedPurity>>> futures = Lists.newArrayList();
         for (double purity = minPurity; lessOrEqual(purity, maxPurity); purity += purityIncrements) {
@@ -103,10 +108,12 @@ public class FittedPurityFactory {
             List<FittedPurity> fittedPurities = future.get();
 
             if (!fittedPurities.isEmpty()) {
+                all.addAll(fittedPurities);
                 bestScoringPerPurity.add(fittedPurities.get(0));
             }
         }
 
+        Collections.sort(all);
         Collections.sort(bestScoringPerPurity);
     }
 
@@ -156,9 +163,8 @@ public class FittedPurityFactory {
         }
 
         final PurityAdjuster purityAdjuster = new PurityAdjuster(gender, purity, normFactor);
-        final double somaticPenalty = Doubles.greaterThan(somaticPenaltyWeight, 0)
-                ? SomaticPenaltyFactory.penalty(purityAdjuster, fittedRegions, variants)
-                : 0;
+        final double somaticPenalty =
+                Doubles.greaterThan(somaticPenaltyWeight, 0) ? SomaticPenaltyFactory.penalty(purityAdjuster, fittedRegions, variants) : 0;
 
         return builder.score(eventPenalty * deviationPenalty + somaticPenaltyWeight * somaticPenalty)
                 .diploidProportion(diploidProportion)

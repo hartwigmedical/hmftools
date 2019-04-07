@@ -28,10 +28,22 @@ PURPLE supports both grch 37 and 38 reference assemblies.
   + [8. Identify germline copy number alterations that are homozygously deleted in the tumor](#8-identify-germline-copy-number-alterations-that-are-homozygously-deleted-in-the-tumor)
   + [9. Determine a QC Status for the tumor](#9-determine-a-qc-status-for-the-tumor)
 * [Output](#output)
-  + [Files](#file-output)
-  + [CIRCOS](#circos-output)
+  + [Files](#files)
+  + [CIRCOS](#circos)
+  + [Charts](#charts)
 * [Performance Characteristics](#performance-characteristics)
 * [Version History](#version-history)
+
+## R Dependencies
+
+PURPLE depends on ggplot2 and dplyr to generate output charts. These can be installed with the following R commands.  
+
+```
+install.packages("dplyr")
+install.packages("ggplot2")
+```
+
+Alternatively, PURPLE can be run with the `no_charts` arguments which will eliminate the R dependency.
 
 ## Usage
 
@@ -64,6 +76,7 @@ db_user | None | Database username. Mandatory if db_enabled.
 db_pass | None | Database password. Mandatory if db_enabled.
 db_url | None | Database URL. Should be of format: `mysql://localhost:3306/hmfpatients`. Mandatory if db_enabled.
 ref_genome | Detect | Will attempt to detect reference genome from COBALT output but failing that must be either hg18 or hg38.
+no_charts | NA | Disables creation of (non-circos) charts
 
 #### Optional Somatic Fit Arguments
 The following arguments control the somatic fit. Changing these values without a thorough understanding of the system is not recommended.
@@ -466,7 +479,7 @@ PURPLE also provides a qc status that can fail for the following 3 reasons:
 
 ## Output
 
-### File Output
+### Files
 
 PURPLE generates a number of tab separated output files as described in the following sections.
 
@@ -592,7 +605,7 @@ MinRegionMethod | BAF_WEIGHTED | Method used to determine copy number of the cop
 MinMinorAllelePloidy | 0 | Minimum allele ploidy found over the gene exons - useful for identifying LOH events  
 
 
-### CIRCOS Output
+### CIRCOS
 
 When enabled, an input and output diagram will be created in the output/plot directory. 
 The first figure shows the input to PURPLE from AMBER and COBALT. 
@@ -633,6 +646,12 @@ Minor allele copy numbers above 1 (blue) indicate amplification events of both A
 The innermost circle displays the observed structural variants within or between the chromosomes. 
 Translocations are indicated in blue, deletions in red, insertions in yellow, tandem duplications in green and inversions in black.
 
+### Charts
+
+The following 'sunrise' chart shows the range of scores of all attempted solutions of purity and ploidy.
+
+![Purity Range](src/main/resources/readme/COLO829.purity.range.png)
+
 ## Performance Characteristics
 Performance numbers were taken from a 72 core machine using COLO829 data including generation of CIRCOS diagram but excluding database writing.
 Elapsed time is measured in minutes. 
@@ -649,6 +668,9 @@ Threads | Elapsed Time| CPU Time | Peak Mem
 
 
 ## Version History
+- Upcoming
+  - Added purity range chart
+  - Added `no_chart` option
 - 2.25
   - Removed unused columns from GeneCopyNumber output
   - Added minorAllelePloidy and majorAllelePloidy to copy number output
