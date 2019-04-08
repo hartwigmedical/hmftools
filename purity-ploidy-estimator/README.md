@@ -650,7 +650,9 @@ Translocations are indicated in blue, deletions in red, insertions in yellow, ta
 
 The following 'sunrise' chart shows the range of scores of all attempted solutions of purity and ploidy.
 
-![Purity Range](src/main/resources/readme/COLO829.purity.range.png)
+<p align="center">
+    <img src="src/main/resources/readme/COLO829.purity.range.png" width="500" alt="Purity Range">
+</p>
 
 ## Performance Characteristics
 Performance numbers were taken from a 72 core machine using COLO829 data including generation of CIRCOS diagram but excluding database writing.
