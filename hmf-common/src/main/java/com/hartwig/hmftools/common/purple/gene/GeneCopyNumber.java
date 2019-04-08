@@ -42,7 +42,7 @@ public interface GeneCopyNumber extends TranscriptRegion, CopyNumber {
     }
 
     @Override
-    default int value() {
-        return (int) Math.max(0, Math.round(minCopyNumber()));
+    default double value() {
+        return Math.max(0, minCopyNumber());
     }
 }

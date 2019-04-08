@@ -4,7 +4,7 @@ import com.hartwig.hmftools.common.region.GenomeRegion;
 
 public interface CopyNumber extends GenomeRegion {
 
-    int value();
+    double value();
 
     default CopyNumberAlteration alteration() {
         return CopyNumberAlteration.fromCopyNumber(value());
