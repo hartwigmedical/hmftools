@@ -20,7 +20,6 @@ public final class GeneCopyNumberFactory {
 
         final List<GeneCopyNumber> result = Lists.newArrayList();
         for (HmfTranscriptRegion gene : genes) {
-
             final GeneCopyNumberBuilder builder = new GeneCopyNumberBuilder(gene);
             RegionZipper.zip(somaticCopyNumbers, gene.exome(), builder);
             RegionZipper.zip(germlineDeletions, gene.exome(), builder);

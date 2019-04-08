@@ -19,7 +19,7 @@ public final class SignificantGeneCopyNumberFilter {
     @NotNull
     public static List<GeneCopyNumber> filterForSignificance(@NotNull List<GeneCopyNumber> geneCopyNumbers, double averageTumorPloidy) {
         return geneCopyNumbers.stream()
-                .filter(copyNumber -> isSignificant(averageTumorPloidy, copyNumber.value()))
+                .filter(copyNumber -> isSignificant(averageTumorPloidy, copyNumber.minCopyNumber()))
                 .collect(Collectors.toList());
     }
 

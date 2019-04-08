@@ -44,7 +44,8 @@ public final class GeneCopyNumberDataSource {
                     copyNumber.chromosomeBand(),
                     copyNumber.gene(),
                     type(copyNumber),
-                    PatientReportFormat.correctValueForFitReliability(Double.toString(Math.round(copyNumber.value())), hasReliablePurityFit));
+                    PatientReportFormat.correctValueForFitReliability(Long.toString(Math.round(copyNumber.value())),
+                            hasReliablePurityFit));
         }
         return copyNumberDatasource;
     }

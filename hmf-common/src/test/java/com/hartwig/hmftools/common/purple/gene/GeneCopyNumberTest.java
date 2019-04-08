@@ -5,12 +5,11 @@ import static org.junit.Assert.assertEquals;
 import java.util.Random;
 
 import org.jetbrains.annotations.NotNull;
-import org.junit.Ignore;
 import org.junit.Test;
 
 public class GeneCopyNumberTest {
 
-    @Ignore
+    @Test
     public void testCopyNumberZero() {
         final GeneCopyNumber copyNumber = createRandom(new Random());
         assertEquals(0, copyNumber.value());
