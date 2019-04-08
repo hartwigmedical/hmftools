@@ -605,15 +605,16 @@ public class SvFusionAnalyser
         String fusionFileName = hasMultipleSamples ? "FUSIONS.csv" : sampleId + "_fusions.csv";
 
         initialiseOutputFile(fusionFileName, "");
-        String clusterInfo = ",,";
+        String noClusterInfo = ",,";
 
         for (final GeneFusion fusion : fusions)
         {
-            writeFusionData(fusion, sampleId, clusterInfo);
+            fusion.setAnnotations(noClusterInfo);
+            writeFusionData(fusion, sampleId);
         }
     }
 
-    public void writeFusionData(final GeneFusion fusion, final String sampleId, final String clusterInfo)
+    public void writeFusionData(final GeneFusion fusion, final String sampleId)
     {
         if(mFusionWriter == null)
             return;
@@ -629,7 +630,7 @@ public class SvFusionAnalyser
             final GeneAnnotation endVar = downTrans.parent();
 
             writer.write(String.format("%s,%s,%s,%s,%s",
-                    sampleId, fusion.reportable(), fusion.getKnownFusionType(), fusion.primarySource(), clusterInfo));
+                    sampleId, fusion.reportable(), fusion.getKnownFusionType(), fusion.primarySource(), fusion.getAnnotations()));
 
             // write upstream SV, transcript and exon info
             writer.write(

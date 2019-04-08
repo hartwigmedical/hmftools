@@ -84,6 +84,7 @@ public class FusionDisruptionAnalyser
     public static final String SKIP_FUSION_OUTPUT = "skip_fusion_output";
     public static final String PRE_GENE_BREAKEND_DISTANCE = "fusion_gene_distance";
     public static final String RESTRICTED_GENE_LIST = "restricted_genes";
+    public static final String LOG_REPORTABLE_ONLY = "log_reportable";
 
     private static final Logger LOGGER = LogManager.getLogger(FusionDisruptionAnalyser.class);
 
@@ -95,7 +96,7 @@ public class FusionDisruptionAnalyser
         mOutputDir = "";
         mFusions = Lists.newArrayList();
         mSkipFusionCheck = false;
-        mLogReportableOnly = true;
+        mLogReportableOnly = false;
         mVisWriter = null;
 
         mSampleRnaData = Maps.newHashMap();
@@ -113,6 +114,7 @@ public class FusionDisruptionAnalyser
         options.addOption(SKIP_FUSION_OUTPUT, false, "No fusion search or output");
         options.addOption(PRE_GENE_BREAKEND_DISTANCE, true, "Distance after to a breakend to consider in a gene");
         options.addOption(RESTRICTED_GENE_LIST, true, "Restrict fusion search to specific genes");
+        options.addOption(LOG_REPORTABLE_ONLY, true, "Only write out reportable fusions");
     }
 
     public void initialise(final CommandLine cmdLineArgs, final String outputDir, SvGeneTranscriptCollection ensemblDataCache)
@@ -152,6 +154,8 @@ public class FusionDisruptionAnalyser
 
                 LOGGER.info("restricting fusion genes to: {}", restrictedGenesStr);
             }
+
+            mLogReportableOnly = cmdLineArgs.hasOption(LOG_REPORTABLE_ONLY);
         }
     }
 
@@ -332,7 +336,8 @@ public class FusionDisruptionAnalyser
                         cluster.id(), cluster.getSvCount(), cluster.getResolvedType(),
                         disruptedTranscriptsStr[0], disruptedTranscriptsStr[1], NO_CHAIN_INFO);
 
-                writeFusionData(fusion, cluster, clusterInfo);
+                fusion.setAnnotations(clusterInfo);
+                writeFusionData(fusion, cluster);
             }
 
             mFusions.addAll(fusions);
@@ -537,7 +542,9 @@ public class FusionDisruptionAnalyser
                                 cluster.id(), cluster.getSvCount(), cluster.getResolvedType(),
                                 disruptedTranscriptsStr[0], disruptedTranscriptsStr[1], chainInfo);
 
-                        writeFusionData(fusion, cluster, clusterChainInfo);
+                        fusion.setAnnotations(clusterChainInfo);
+
+                        writeFusionData(fusion, cluster);
                     }
                 }
             }
@@ -658,7 +665,7 @@ public class FusionDisruptionAnalyser
         long minDistance = startPair.length();
 
         boolean isUpstream = isUpstream(transcript.parent());
-        Transcript prevTranscript = transcript;
+        // Transcript prevTranscript = transcript;
 
         while(linkIndex >= 0 && linkIndex <= chain.getLinkedPairs().size() - 1)
         {
@@ -678,37 +685,50 @@ public class FusionDisruptionAnalyser
             ++totalBreakends;
             ++facingBreakends;
 
-            SvBreakend currentBreakend = traverseUp ? pair.getFirstBreakend() : pair.getSecondBreakend();
+            // SvBreakend currentBreakend = traverseUp ? pair.getFirstBreakend() : pair.getSecondBreakend();
 
-            // the end of the TI remains within this transcript - check if it skipped any exons
-            int[] currentExonRankings = getExonRankings(exonDataList, currentBreakend.position());
-            int[] nextExonRankings = getExonRankings(exonDataList, nextBreakend.position());
+            int[] nextBreakendExons = getExonRankings(exonDataList, nextBreakend.position());
 
-            if(currentExonRankings[EXON_RANK_MAX] != nextExonRankings[EXON_RANK_MAX])
+            if(nextBreakendExons[EXON_RANK_MIN] == nextBreakendExons[EXON_RANK_MAX])
             {
-                disruptedExons += abs(currentExonRankings[EXON_RANK_MAX] - nextExonRankings[EXON_RANK_MAX]);
+                // TI ends in an exon which is not permitted
+                disruptedExons += max(transcript.ExonMax - nextBreakendExons[EXON_RANK_MAX], 0);
+                transcriptTerminated = true;
+                break;
+            }
+
+            if(nextBreakend.getSV().isNullBreakend())
+                break;
+
+            // for now only allow simple SVs that aren't disruptive
+            if(!nextBreakend.getSV().isSimpleType())
+            {
+                disruptedExons += max(transcript.ExonMax - nextBreakendExons[EXON_RANK_MAX], 0);
+                transcriptTerminated = true;
+                break;
+            }
+
+            // otherwise check where this next SV goes
+            SvBreakend nextOtherBreakend = nextBreakend.getOtherBreakend();
+
+            // it must remain within the same intronic section to be valid
+            int[] nextOtherBreakendExons = getExonRankings(exonDataList, nextOtherBreakend.position());
+
+            if(nextOtherBreakendExons[EXON_RANK_MIN] != nextBreakendExons[EXON_RANK_MIN]
+            || nextOtherBreakendExons[EXON_RANK_MAX] != nextBreakendExons[EXON_RANK_MAX])
+            {
+                disruptedExons += max(nextOtherBreakendExons[EXON_RANK_MIN] - nextBreakendExons[EXON_RANK_MIN],
+                    nextOtherBreakendExons[EXON_RANK_MAX] - nextBreakendExons[EXON_RANK_MAX]);
+
                 transcriptTerminated = true;
                 break;
             }
 
             // check if can follow this next SV to its other breakend
 
-            if(nextBreakend.getSV().isNullBreakend())
-                break;
-
-            // for now only allow DELs that aren't disruptive
-            if(!nextBreakend.getSV().isSimpleType())
-            {
-                disruptedExons += max(transcript.ExonMax - nextExonRankings[EXON_RANK_MAX], 0);
-                transcriptTerminated = true;
-                break;
-            }
-
-            // keep track of any skipped exons
-            SvBreakend nextOtherBreakend = nextBreakend.getOtherBreakend();
-
             ++totalBreakends;
 
+            /*
             Transcript nextTranscript = getNextMatchingTranscript(nextOtherBreakend, transcript);
 
             if (nextTranscript == null || nextTranscript.isExonic() || nextTranscript.ExonDownstream != prevTranscript.ExonDownstream)
@@ -731,6 +751,8 @@ public class FusionDisruptionAnalyser
             }
 
             prevTranscript = nextTranscript;
+            */
+
             linkIndex += traverseUp ? 1 : -1;
         }
 
@@ -815,7 +837,7 @@ public class FusionDisruptionAnalyser
         return false;
     }
 
-    private void writeFusionData(GeneFusion fusion, final SvCluster cluster, final String clusterChainInfo)
+    private void writeFusionData(GeneFusion fusion, final SvCluster cluster)
     {
         mFusions.add(fusion);
 
@@ -823,7 +845,7 @@ public class FusionDisruptionAnalyser
         {
             // format expected for cluster and chain info:
             // ClusterId,ClusterCount,ResolvedType,OverlapUp,OverlapDown,ChainInfo
-            mFusionFinder.writeFusionData(fusion, mSampleId, clusterChainInfo);
+            mFusionFinder.writeFusionData(fusion, mSampleId);
         }
 
         if(fusion.reportable() && mVisWriter != null)

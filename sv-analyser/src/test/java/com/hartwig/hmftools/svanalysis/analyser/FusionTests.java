@@ -59,7 +59,7 @@ public class FusionTests
         long transStart = 1000;
         long transEnd = 2000;
         long codingStart = 1400;
-        long codingEnd = 2000;
+        long codingEnd = 1900;
         transExonList.add(new TranscriptExonData(geneId1, transName1, transId1, isCanonical, strand, transStart, transEnd,
                 1000, 1100, 1, -1, -1, codingStart, codingEnd, ""));
 
@@ -70,7 +70,7 @@ public class FusionTests
                 1600, 1700, 3, 1, 2, codingStart, codingEnd, ""));
 
         transExonList.add(new TranscriptExonData(geneId1, transName1, transId1, isCanonical, strand, transStart, transEnd,
-                1800, 2000, 4, 2, -1, codingStart, codingEnd, ""));
+                1800, 1900, 4, 2, -1, codingStart, codingEnd, ""));
 
         addTransExonData(geneTransCache, geneId1, transExonList);
 
@@ -100,7 +100,7 @@ public class FusionTests
                 11600, 11700, 3, 2, 0, codingStart, codingEnd, ""));
 
         transExonList.add(new TranscriptExonData(geneId2, transName2, transId2, isCanonical, strand, transStart, transEnd,
-                11950, 12000, 4, 0, -1, codingStart, codingEnd, ""));
+                11950, 12000, 4, 2, -1, codingStart, codingEnd, ""));
 
         addTransExonData(geneTransCache, geneId2, transExonList);
 
@@ -141,7 +141,7 @@ public class FusionTests
         GeneFusion fusion = tester.FusionAnalyser.getFusions().get(0);
         assertEquals(var3.dbId(), fusion.upstreamTrans().parent().id());
         assertEquals(var3.dbId(), fusion.downstreamTrans().parent().id());
-
+        assertTrue(validateFusionAnnotations(fusion, true, true));
 
         // test 2: this time a chain from the first to the last variant with the middle 2 going out to non-disruptive locations
         tester.clearClustersAndSVs();
@@ -178,22 +178,22 @@ public class FusionTests
         fusion = tester.FusionAnalyser.getFusions().get(0);
         assertEquals(var1.dbId(), fusion.upstreamTrans().parent().id());
         assertEquals(var4.dbId(), fusion.downstreamTrans().parent().id());
+        assertTrue(validateFusionAnnotations(fusion, true, true));
 
-
-        // test 3: this time 2 potential fusions beween SVs 3 & 4
+        // test 3: single-SV fusion from the 3rd SV, with the other ones simple SVs within introns leaving a valid traversal
         tester.clearClustersAndSVs();
 
-        PRE_GENE_PROMOTOR_DISTANCE = 500;
+        // intronic del
+        var1 = createDel("0", chromosome, 1150,1250);
 
-        var1 = createDel("0", chromosome, 100,200);
+        // intronic dup
+        var2 = createDup("1", chromosome, 1525,1575);
 
-        var2 = createDel("1", chromosome, 300,400);
+        // fusion the 2 genes
+        var3 = createDel("2", chromosome, 1750,11550);
 
-        // deletes an exon within gene 1
-        var3 = createDel("2", chromosome, 1400,1720);
-
-        // from coding region of gene 1 to coding of gene 2
-        var4 = createDel("3", chromosome, 1780, 11550);
+        // intronic del
+        var4 = createDel("3", chromosome, 11725, 11775);
 
         tester.AllVariants.add(var1);
         tester.AllVariants.add(var2);
@@ -211,17 +211,90 @@ public class FusionTests
         tester.FusionAnalyser.setSvGeneData(tester.AllVariants, geneTransCache, true, false);
         tester.FusionAnalyser.run(tester.SampleId, tester.AllVariants, tester.getClusters(), tester.ClusteringMethods.getChrBreakendMap());
 
-        /*
         assertEquals(2, tester.FusionAnalyser.getFusions().size());
 
         fusion = tester.FusionAnalyser.getFusions().get(0);
         assertEquals(var3.dbId(), fusion.upstreamTrans().parent().id());
-        assertEquals(var4.dbId(), fusion.downstreamTrans().parent().id());
+        assertEquals(var3.dbId(), fusion.downstreamTrans().parent().id());
+
+        assertTrue(validateFusionAnnotations(fusion, true, true));
 
         fusion = tester.FusionAnalyser.getFusions().get(1);
-        assertEquals(var4.dbId(), fusion.upstreamTrans().parent().id());
+        assertEquals(var3.dbId(), fusion.upstreamTrans().parent().id());
         assertEquals(var4.dbId(), fusion.downstreamTrans().parent().id());
-        */
+
+        assertTrue(validateFusionAnnotations(fusion, true, false));
+
+
+        // test 4: invalid fusion, with a TI beyond the fusion ending in an exon upstream and skipping an exon downstream
+        tester.clearClustersAndSVs();
+
+        // del starting in an exon
+        var1 = createDel("0", chromosome, 1150,1250);
+
+        // intronic dup
+        var2 = createDup("1", chromosome, 1350,1575);
+
+        // fusion the 2 genes
+        var3 = createDel("2", chromosome, 1750,11525);
+
+        // del skips an exon
+        var4 = createDel("3", chromosome, 11575, 111800);
+
+        tester.AllVariants.add(var1);
+        tester.AllVariants.add(var2);
+        tester.AllVariants.add(var3);
+        tester.AllVariants.add(var4);
+
+        tester.preClusteringInit();
+        tester.Analyser.clusterAndAnalyse();
+
+        assertEquals(1, tester.Analyser.getClusters().size());
+        cluster = tester.Analyser.getClusters().get(0);
+
+        assertEquals(1, cluster.getChains().size());
+
+        tester.FusionAnalyser.setSvGeneData(tester.AllVariants, geneTransCache, true, false);
+        tester.FusionAnalyser.run(tester.SampleId, tester.AllVariants, tester.getClusters(), tester.ClusteringMethods.getChrBreakendMap());
+
+        assertEquals(1, tester.FusionAnalyser.getFusions().size());
+
+        fusion = tester.FusionAnalyser.getFusions().get(0);
+        assertEquals(var3.dbId(), fusion.upstreamTrans().parent().id());
+        assertEquals(var3.dbId(), fusion.downstreamTrans().parent().id());
+
+        assertTrue(validateFusionAnnotations(fusion, false, true));
+    }
+
+    private static boolean validateFusionAnnotations(final GeneFusion fusion, boolean validEnds, boolean validTraversal)
+    {
+        String[] fields = fusion.getAnnotations().split(",");
+
+        // ClusterId,ClusterCount,ResolvedType,OverlapUp,OverlapDown,ChainInfo
+        if(fields.length != 6)
+            return false;
+
+        String[] chainInfo = fields[5].split(";");
+
+        if(chainInfo.length != 4)
+            return false;
+
+        if(validTraversal != (chainInfo[3].equals("true")))
+            return false;
+
+        String[] disruptionsUp = fields[3].split(";");
+        String[] disruptionsDown = fields[4].split(";");
+
+        if(disruptionsUp.length != 6 || disruptionsDown.length != 6)
+            return false;
+
+        boolean validUp = disruptionsUp[4].equals("0") && disruptionsUp[5].equals("0");
+        boolean validDown = disruptionsDown[4].equals("0") && disruptionsDown[5].equals("0");
+
+        if(validEnds)
+            return validUp && validDown;
+        else
+            return !validUp || !validDown;
     }
 
 }

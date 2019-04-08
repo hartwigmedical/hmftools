@@ -13,6 +13,8 @@ public class GeneFusion
     private boolean mViable; // passes fusion rules
     private String mKnownFusionType;
 
+    private String mAnnotations;
+
     public static String REPORTABLE_TYPE_NONE = "";
     public static String REPORTABLE_TYPE_KNOWN = "Known";
     public static String REPORTABLE_TYPE_BOTH_PROM = "Both-Prom";
@@ -49,4 +51,7 @@ public class GeneFusion
     {
         return mUpstreamTrans.isExonic() &&mDownstreamTrans.isExonic();
     }
+
+    public final String getAnnotations() { return mAnnotations; }
+    public void setAnnotations(final String annotations) { mAnnotations = annotations; }
 }
