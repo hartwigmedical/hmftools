@@ -648,7 +648,8 @@ Translocations are indicated in blue, deletions in red, insertions in yellow, ta
 
 ### Charts
 
-The following 'sunrise' chart shows the range of scores of all attempted solutions of purity and ploidy.
+The following 'sunrise' chart shows the range of scores of all attempted solutions of purity and ploidy. 
+Crosshairs identify the selected purity / ploidy solution. 
 
 <p align="center">
     <img src="src/main/resources/readme/COLO829.purity.range.png" width="500" alt="Purity Range">
