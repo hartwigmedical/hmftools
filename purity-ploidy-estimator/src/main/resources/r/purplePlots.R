@@ -38,7 +38,7 @@ purityPloidyRangePlot <- function(range) {
 
     result = ggplot(range) +
         geom_rect(aes(fill=Score, xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax)) +
-        scale_fill_gradientn(colours=rev(rainbow(1000, start=0, end=0.22))) +
+        scale_fill_gradientn(colours=c("blue","green","yellow","orange", "red"), limits = c(min(range$Score), 4)) +
         geom_segment(aes(y = 0.085, yend = 1.05, x=bestPloidy, xend = bestPloidy), linetype = "dashed") +
         geom_label(data = data.frame(), aes(x = bestPloidy, y = 1.05, label = round(bestPloidy, 2)), size = 2.5) +
 
@@ -61,7 +61,10 @@ fittedSegmentsPlot <- function(fittedSegments) {
         WeightedMajorAllelePloidyCumSum = cumsum(Weight * majorAllelePloidy),
         WeightedMajorAllelePloidyCumSumProportion = WeightedMajorAllelePloidyCumSum / max(WeightedMajorAllelePloidyCumSum))
 
-    maxMajorAllelePloidy = ceiling(max(fittedSegments %>% filter(WeightedMajorAllelePloidyCumSumProportion <= 0.9) %>% select(majorAllelePloidy)))
+    maxData = fittedSegments %>% filter(WeightedMajorAllelePloidyCumSumProportion <= 0.9) %>% select(majorAllelePloidy, Score)
+    maxScore = ceiling(max(maxData$Score))
+    minScore = floor(min(maxData$Score))
+    maxMajorAllelePloidy = ceiling(max(maxData$majorAllelePloidy))
     maxMinorAllelePloidy = maxMajorAllelePloidy - 1
 
     p = ggplot(fittedSegments, aes(x=majorAllelePloidy,y=minorAllelePloidy)) +
@@ -69,7 +72,7 @@ fittedSegmentsPlot <- function(fittedSegments) {
         xlab("Major Allele") + ylab("Minor Allele") + ggtitle("Fitted Segment Scores") +
         scale_x_continuous(breaks = c(-200:200), limits = c(-0.1, maxMajorAllelePloidy)) +
         scale_y_continuous(breaks = c(-200:200), limits = c(-0.1, maxMinorAllelePloidy)) +
-        scale_color_gradientn(colours=rev(rainbow(1000, start=0, end=0.25))) +
+        scale_color_gradientn(colours=c("blue","green","yellow","orange", "red"), limits = c(minScore, maxScore)) +
         theme(panel.grid.minor = element_blank(), axis.ticks = element_blank(), legend.position = "right", legend.title=element_text(size=6), legend.text=element_text(size=6)) +
         scale_size(range = c(1,9), guide = "none")
 
