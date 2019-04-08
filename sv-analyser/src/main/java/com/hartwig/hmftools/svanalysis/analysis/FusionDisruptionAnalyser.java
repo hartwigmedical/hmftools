@@ -8,6 +8,7 @@ import static com.hartwig.hmftools.common.io.FileWriterUtils.closeBufferedWriter
 import static com.hartwig.hmftools.common.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DEL;
 import static com.hartwig.hmftools.common.variant.structural.annotation.GeneAnnotation.isUpstream;
+import static com.hartwig.hmftools.svanalysis.analysis.LinkFinder.getMinTemplatedInsertionLength;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.appendStr;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_END;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_START;
@@ -128,7 +129,9 @@ public class FusionDisruptionAnalyser
             if (!mSkipFusionCheck)
             {
                 String clusterInfoHeaders = "ClusterId,ClusterCount,ResolvedType,OverlapUp,OverlapDown,ChainInfo";
-                mFusionFinder.initialiseOutputFile("", true, clusterInfoHeaders);
+
+                String fusionFileName = "SVA_FUSIONS.csv";
+                mFusionFinder.initialiseOutputFile(fusionFileName, clusterInfoHeaders);
             }
 
             if (cmdLineArgs.hasOption(PRE_GENE_BREAKEND_DISTANCE))
@@ -228,7 +231,7 @@ public class FusionDisruptionAnalyser
             }
 
             // mark any transcripts as not disruptive prior to running any fusion logic
-            // markNonDisruptiveTranscripts(var.getGenesList(true), var.getGenesList(false));
+            markNonDisruptiveTranscripts(var.getGenesList(true), var.getGenesList(false));
         }
     }
 
@@ -600,8 +603,15 @@ public class FusionDisruptionAnalyser
 
             if (nextBreakend.orientation() != breakend.orientation())
             {
+                // skip breakends which cannot be chained by min TI length
+                int minTiLength = getMinTemplatedInsertionLength(breakend, nextBreakend);
+                long breakendDistance = abs(breakend.position() - nextBreakend.position());
+
+                if(breakendDistance < minTiLength)
+                    continue;
+
                 if (minDistance == -1)
-                    minDistance = abs(breakend.position() - nextBreakend.position());
+                    minDistance = breakendDistance;
 
                 ++facingBreakends;
 
@@ -1242,7 +1252,7 @@ public class FusionDisruptionAnalyser
             {
                 String outputFilename = mOutputDir;
 
-                outputFilename += "RNA_MATCH_DATA.csv";
+                outputFilename += "SVA_RNA_DATA.csv";
 
                 mRnaWriter = createBufferedWriter(outputFilename, false);
 

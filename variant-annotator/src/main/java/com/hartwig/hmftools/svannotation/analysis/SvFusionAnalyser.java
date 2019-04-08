@@ -13,8 +13,6 @@ import static com.hartwig.hmftools.common.variant.structural.annotation.GeneFusi
 import static com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion.REPORTABLE_TYPE_BOTH_PROM;
 import static com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion.REPORTABLE_TYPE_KNOWN;
 import static com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion.REPORTABLE_TYPE_NONE;
-import static com.hartwig.hmftools.svannotation.SvGeneTranscriptCollection.EXON_RANK_MAX;
-import static com.hartwig.hmftools.svannotation.SvGeneTranscriptCollection.EXON_RANK_MIN;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -107,6 +105,9 @@ public class SvFusionAnalyser
         options.addOption(PROMISCUOUS_THREE_CSV, true, "Path towards a CSV containing white-listed promiscuous 3' genes.");
     }
 
+    private static int SPECIFIC_SV_ID = -1;
+    // private static int SPECIFIC_SV_ID = 15902994;
+
     public final List<GeneFusion> findFusions(final List<StructuralVariantAnnotation> annotations)
     {
         List<GeneFusion> fusions = Lists.newArrayList();
@@ -118,6 +119,11 @@ public class SvFusionAnalyser
 
         for (final StructuralVariantAnnotation annotation : annotations)
         {
+            if(!annotation.start().isEmpty() && annotation.start().get(0).id() == SPECIFIC_SV_ID)
+            {
+                LOGGER.debug("specific SV({})", annotation.start().get(0).id());
+            }
+
             List<GeneFusion> svFusions = findFusions(annotation.start(), annotation.end());
 
             fusions.addAll(svFusions);
@@ -553,7 +559,7 @@ public class SvFusionAnalyser
         return upstream.parent().synonyms().stream().anyMatch(downstream.parent().synonyms()::contains);
     }
 
-    public void initialiseOutputFile(final String sampleId, boolean hasMultipleSamples, String clusterInfoHeaders)
+    public void initialiseOutputFile(final String fileName, String clusterInfoHeaders)
     {
         try
         {
@@ -564,10 +570,7 @@ public class SvFusionAnalyser
                 if (!outputFilename.endsWith(File.separator))
                     outputFilename += File.separator;
 
-                if(hasMultipleSamples)
-                    outputFilename += "FUSIONS.csv";
-                else
-                    outputFilename += sampleId + "_fusions.csv";
+                outputFilename += fileName;
 
                 mFusionWriter = createBufferedWriter(outputFilename, false);
 
@@ -599,7 +602,9 @@ public class SvFusionAnalyser
 
     public void writeFusions(final List<GeneFusion> fusions, final String sampleId, boolean hasMultipleSamples)
     {
-        initialiseOutputFile(sampleId, hasMultipleSamples, "");
+        String fusionFileName = hasMultipleSamples ? "FUSIONS.csv" : sampleId + "_fusions.csv";
+
+        initialiseOutputFile(fusionFileName, "");
         String clusterInfo = ",,";
 
         for (final GeneFusion fusion : fusions)
