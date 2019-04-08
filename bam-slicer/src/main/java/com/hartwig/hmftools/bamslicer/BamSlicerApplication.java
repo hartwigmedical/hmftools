@@ -52,7 +52,6 @@ import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.vcf.VCFFileReader;
 import okhttp3.OkHttpClient;
 
-@SuppressWarnings("OptionalUsedAsFieldOrParameterType")
 public class BamSlicerApplication {
     private static final Logger LOGGER = LogManager.getLogger(BamSlicerApplication.class);
     private static final String SBP_ENDPOINT_URL = System.getenv("SBP_ENDPOINT_URL");
@@ -61,7 +60,7 @@ public class BamSlicerApplication {
 
     private static final String INPUT_MODE_S3 = "s3";
     private static final String INPUT_MODE_URL = "url";
-    private static final String INPUT_MODE_FILE = "file";
+    private static final String INPUT_MODE_VCF_FILE = "file";
     private static final String INPUT = "input";
     private static final String BUCKET = "bucket";
     private static final String INDEX = "index";
@@ -82,12 +81,12 @@ public class BamSlicerApplication {
         assert cmd != null;
         // Disable default samtools buffering
         System.setProperty("samjdk.buffer_size", "0");
-        if (cmd.hasOption(INPUT_MODE_FILE)) {
+        if (cmd.hasOption(INPUT_MODE_VCF_FILE)) {
             sliceFromVCF(cmd);
         }
         if (cmd.hasOption(INPUT_MODE_S3)) {
             final Pair<URL, URL> urls = generateURLs(cmd);
-            sliceFromURLs(urls.getKey(), urls.getValue(), cmd);
+            sliceFromURLs(urls.getValue(), urls.getKey(), cmd);
         }
         if (cmd.hasOption(INPUT_MODE_URL)) {
             final URL bamURL = new URL(cmd.getOptionValue(INPUT));
@@ -117,8 +116,8 @@ public class BamSlicerApplication {
         final File vcfFile = new File(vcfPath);
         final VCFFileReader vcfReader = new VCFFileReader(vcfFile, false);
         final List<QueryInterval> queryIntervals = Lists.newArrayList();
-        for (VariantContext variant : vcfReader) {
 
+        for (VariantContext variant : vcfReader) {
             queryIntervals.add(new QueryInterval(header.getSequenceIndex(variant.getContig()),
                     Math.max(0, variant.getStart() - proximity),
                     variant.getStart() + proximity));
@@ -160,9 +159,9 @@ public class BamSlicerApplication {
         try {
             LOGGER.info("Attempting to generate S3 URLs for endpoint: {} using profile: {}", SBP_ENDPOINT_URL, SBP_PROFILE);
             final S3UrlGenerator urlGenerator = ImmutableS3UrlGenerator.of(SBP_ENDPOINT_URL, SBP_PROFILE);
-            final URL indexUrl = urlGenerator.generateUrl(cmd.getOptionValue(BUCKET), cmd.getOptionValue(INDEX), S3_EXPIRATION_HOURS);
             final URL bamUrl = urlGenerator.generateUrl(cmd.getOptionValue(BUCKET), cmd.getOptionValue(INPUT), S3_EXPIRATION_HOURS);
-            return Pair.of(indexUrl, bamUrl);
+            final URL indexUrl = urlGenerator.generateUrl(cmd.getOptionValue(BUCKET), cmd.getOptionValue(INDEX), S3_EXPIRATION_HOURS);
+            return Pair.of(bamUrl, indexUrl);
         } catch (Exception e) {
             LOGGER.error("Could not create S3 URLs. Error: {}", e.toString());
             LOGGER.error("You must run this with the sbp user or set up aws credentials and the SBP_ENDPOINT_URL environment variable");
@@ -179,10 +178,12 @@ public class BamSlicerApplication {
         final SAMFileWriter writer = new SAMFileWriterFactory().setCreateIndex(true)
                 .makeBAMWriter(reader.getFileHeader(), true, new File(cmd.getOptionValue(OUTPUT)));
         final BAMIndex bamIndex = new DiskBasedBAMFileIndex(indexFile, reader.getFileHeader().getSequenceDictionary(), false);
+
         final Optional<Pair<QueryInterval[], BAMFileSpan>> queryIntervalsAndSpan = queryIntervalsAndSpan(reader, bamIndex, cmd);
         final Optional<Chunk> unmappedChunk = getUnmappedChunk(bamIndex, HttpUtils.getHeaderField(bamUrl, "Content-Length"), cmd);
         final List<Chunk> sliceChunks = sliceChunks(queryIntervalsAndSpan, unmappedChunk);
         final SamReader cachingReader = createCachingReader(indexFile, bamUrl, cmd, sliceChunks);
+
         queryIntervalsAndSpan.ifPresent(pair -> {
             LOGGER.info("Slicing bam on bed regions...");
             final CloseableIterator<SAMRecord> bedIterator = getIterator(cachingReader, pair.getKey(), pair.getValue().toCoordinateArray());
@@ -195,6 +196,7 @@ public class BamSlicerApplication {
             writeToSlice(writer, unmappedIterator);
             LOGGER.info("Done writing unmapped reads.");
         });
+
         reader.close();
         writer.close();
         cachingReader.close();
@@ -338,7 +340,7 @@ public class BamSlicerApplication {
         final Options options = new Options();
         final OptionGroup inputModeOptionGroup = new OptionGroup();
         inputModeOptionGroup.addOption(Option.builder(INPUT_MODE_S3).required().desc("read input BAM from s3").build());
-        inputModeOptionGroup.addOption(Option.builder(INPUT_MODE_FILE).required().desc("read input BAM from file").build());
+        inputModeOptionGroup.addOption(Option.builder(INPUT_MODE_VCF_FILE).required().desc("read input BAM from file").build());
         inputModeOptionGroup.addOption(Option.builder(INPUT_MODE_URL).required().desc("read input BAM from url").build());
         options.addOptionGroup(inputModeOptionGroup);
         return options;
@@ -382,7 +384,7 @@ public class BamSlicerApplication {
     @NotNull
     private static Options createVcfOptions() {
         final Options options = new Options();
-        options.addOption(Option.builder(INPUT_MODE_FILE).required().desc("read input BAM from the filesystem").build());
+        options.addOption(Option.builder(INPUT_MODE_VCF_FILE).required().desc("read input BAM from the filesystem").build());
         options.addOption(Option.builder(INPUT).required().hasArg().desc("the input BAM to slice (required)").build());
         options.addOption(Option.builder(OUTPUT).required().hasArg().desc("the output BAM (required)").build());
         options.addOption(Option.builder(PROXIMITY).hasArg().desc("distance to slice around breakpoint (optional, default=500)").build());
@@ -404,7 +406,7 @@ public class BamSlicerApplication {
                 LOGGER.error(e.getMessage());
                 printHelpAndExit("Slice an s3 BAM file based on BED", s3Options);
             }
-        } else if (cmd.hasOption(INPUT_MODE_FILE)) {
+        } else if (cmd.hasOption(INPUT_MODE_VCF_FILE)) {
             final Options vcfOptions = createVcfOptions();
             try {
                 return parser.parse(vcfOptions, args);
