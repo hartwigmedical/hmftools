@@ -60,7 +60,7 @@ public class BamSlicerApplication {
 
     private static final String INPUT_MODE_S3 = "s3";
     private static final String INPUT_MODE_URL = "url";
-    private static final String INPUT_MODE_VCF_FILE = "file";
+    private static final String INPUT_MODE_FILE = "file";
     private static final String INPUT = "input";
     private static final String BUCKET = "bucket";
     private static final String INDEX = "index";
@@ -81,7 +81,7 @@ public class BamSlicerApplication {
         assert cmd != null;
         // Disable default samtools buffering
         System.setProperty("samjdk.buffer_size", "0");
-        if (cmd.hasOption(INPUT_MODE_VCF_FILE)) {
+        if (cmd.hasOption(INPUT_MODE_FILE)) {
             sliceFromVCF(cmd);
         }
         if (cmd.hasOption(INPUT_MODE_S3)) {
@@ -340,7 +340,7 @@ public class BamSlicerApplication {
         final Options options = new Options();
         final OptionGroup inputModeOptionGroup = new OptionGroup();
         inputModeOptionGroup.addOption(Option.builder(INPUT_MODE_S3).required().desc("read input BAM from s3").build());
-        inputModeOptionGroup.addOption(Option.builder(INPUT_MODE_VCF_FILE).required().desc("read input BAM from file").build());
+        inputModeOptionGroup.addOption(Option.builder(INPUT_MODE_FILE).required().desc("read input BAM from file").build());
         inputModeOptionGroup.addOption(Option.builder(INPUT_MODE_URL).required().desc("read input BAM from url").build());
         options.addOptionGroup(inputModeOptionGroup);
         return options;
@@ -384,7 +384,7 @@ public class BamSlicerApplication {
     @NotNull
     private static Options createVcfOptions() {
         final Options options = new Options();
-        options.addOption(Option.builder(INPUT_MODE_VCF_FILE).required().desc("read input BAM from the filesystem").build());
+        options.addOption(Option.builder(INPUT_MODE_FILE).required().desc("read input BAM from the filesystem").build());
         options.addOption(Option.builder(INPUT).required().hasArg().desc("the input BAM to slice (required)").build());
         options.addOption(Option.builder(OUTPUT).required().hasArg().desc("the output BAM (required)").build());
         options.addOption(Option.builder(PROXIMITY).hasArg().desc("distance to slice around breakpoint (optional, default=500)").build());
@@ -406,7 +406,7 @@ public class BamSlicerApplication {
                 LOGGER.error(e.getMessage());
                 printHelpAndExit("Slice an s3 BAM file based on BED", s3Options);
             }
-        } else if (cmd.hasOption(INPUT_MODE_VCF_FILE)) {
+        } else if (cmd.hasOption(INPUT_MODE_FILE)) {
             final Options vcfOptions = createVcfOptions();
             try {
                 return parser.parse(vcfOptions, args);
