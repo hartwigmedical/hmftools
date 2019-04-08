@@ -275,7 +275,7 @@ public class BamSlicerApplication {
             if (contentLengthString != null) {
                 try {
                     final long contentLength = Long.parseLong(contentLengthString);
-                    // We multiply content length with 2^16 = ~64k. Presumably 'content length' is "in terms of number of 64Kb packets.
+                    // We multiply content length with 2^16 = ~64k. Presumably 'content length' is "in terms of number of 64Kb packets".
                     return Optional.of(new Chunk(startOfLastLinearBin, contentLength << 16));
                 } catch (NumberFormatException ignored) {
                     LOGGER.error("Invalid content length ({}) for bam URL", contentLengthString);
