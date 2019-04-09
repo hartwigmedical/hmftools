@@ -18,14 +18,13 @@ public enum CodingEffect {
 
     @NotNull
     public static CodingEffect effect(@NotNull final String gene, @NotNull final List<VariantConsequence> consequences) {
+        final List<CodingEffect> simplifiedEffects = consequences.stream().map(CodingEffect::effect).collect(Collectors.toList());
 
-        final List<CodingEffect> simplifiedEffects = consequences.stream().map(x -> effect(gene, x)).collect(Collectors.toList());
-
-        if(gene.equals("TP53"))
-        {
+        if (gene.equals("TP53")) {
             // TP53 has some known pathogenic variants in splice regions
-            if(consequences.contains(SYNONYMOUS_VARIANT) && consequences.contains(SPLICE_REGION_VARIANT))
+            if (consequences.contains(SYNONYMOUS_VARIANT) && consequences.contains(SPLICE_REGION_VARIANT)) {
                 return SPLICE;
+            }
         }
 
         if (simplifiedEffects.stream().anyMatch(x -> x.equals(NONSENSE_OR_FRAMESHIFT))) {
@@ -48,8 +47,7 @@ public enum CodingEffect {
     }
 
     @NotNull
-    private static CodingEffect effect(@NotNull final String gene, @NotNull final VariantConsequence consequence) {
-
+    private static CodingEffect effect(@NotNull final VariantConsequence consequence) {
         switch (consequence) {
             case FRAMESHIFT_VARIANT:
             case STOP_GAINED:
