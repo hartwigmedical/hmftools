@@ -1,8 +1,9 @@
 package com.hartwig.hmftools.common.purple.copynumber;
 
-import com.hartwig.hmftools.common.copynumber.CopyNumber;
+
 import com.hartwig.hmftools.common.numeric.Doubles;
 import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
+import com.hartwig.hmftools.common.region.GenomeRegion;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -10,7 +11,7 @@ import org.jetbrains.annotations.Nullable;
 
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public abstract class PurpleCopyNumber implements CopyNumber {
+public abstract class PurpleCopyNumber implements GenomeRegion {
 
     public abstract int bafCount();
 
@@ -45,9 +46,4 @@ public abstract class PurpleCopyNumber implements CopyNumber {
     public abstract long minStart();
     
     public abstract long maxStart();
-
-    @Override
-    public int value() {
-       return (int) Math.max(0, Math.round(averageTumorCopyNumber()));
-    }
 }

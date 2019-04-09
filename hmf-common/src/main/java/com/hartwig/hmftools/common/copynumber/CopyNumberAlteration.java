@@ -10,8 +10,8 @@ public enum CopyNumberAlteration {
     private static final int NORMAL_HUMAN_COPY_NUMBER = 2;
 
     @NotNull
-    public static CopyNumberAlteration fromCopyNumber(final int value) {
-        if (value == NORMAL_HUMAN_COPY_NUMBER) {
+    public static CopyNumberAlteration fromCopyNumber(final double value) {
+        if (Math.round(value) == NORMAL_HUMAN_COPY_NUMBER) {
             return NEUTRAL;
         }
 

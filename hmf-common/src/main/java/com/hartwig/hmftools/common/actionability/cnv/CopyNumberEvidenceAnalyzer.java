@@ -39,7 +39,7 @@ public class CopyNumberEvidenceAnalyzer {
     public List<EvidenceItem> evidenceForCopyNumber(@NotNull GeneCopyNumber geneCopyNumber, double averageTumorPloidy,
             @Nullable String primaryTumorLocation, @NotNull CancerTypeAnalyzer cancerTypeAnalyzer) {
         List<EvidenceItem> evidenceItems = Lists.newArrayList();
-        if (SignificantGeneCopyNumberFilter.isSignificant(averageTumorPloidy, geneCopyNumber.value())) {
+        if (SignificantGeneCopyNumberFilter.isSignificant(averageTumorPloidy, geneCopyNumber.minCopyNumber())) {
             for (ActionableCopyNumber actionableCopyNumber : actionableCopyNumbers) {
                 if (typeMatches(geneCopyNumber, actionableCopyNumber) && actionableCopyNumber.gene().equals(geneCopyNumber.gene())) {
                     ImmutableEvidenceItem.Builder evidenceBuilder = fromActionableCopyNumber(actionableCopyNumber);
@@ -55,7 +55,7 @@ public class CopyNumberEvidenceAnalyzer {
     }
 
     private static boolean typeMatches(@NotNull GeneCopyNumber geneCopyNumber, @NotNull ActionableCopyNumber actionableCopyNumber) {
-        CopyNumberType geneType = geneCopyNumber.value() <= 1 ? CopyNumberType.DELETION : CopyNumberType.AMPLIFICATION;
+        CopyNumberType geneType = geneCopyNumber.minCopyNumber() < 1 ? CopyNumberType.DELETION : CopyNumberType.AMPLIFICATION;
         return geneType == actionableCopyNumber.type();
     }
 
