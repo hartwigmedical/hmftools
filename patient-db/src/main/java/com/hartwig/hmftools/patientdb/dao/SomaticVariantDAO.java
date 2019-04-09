@@ -2,6 +2,7 @@ package com.hartwig.hmftools.patientdb.dao;
 
 import static com.hartwig.hmftools.patientdb.Config.DB_BATCH_INSERT_SIZE;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.SOMATICVARIANT;
+import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.STRUCTURALVARIANT;
 
 import java.sql.Timestamp;
 import java.util.Date;
@@ -23,6 +24,7 @@ import org.jetbrains.annotations.Nullable;
 import org.jooq.DSLContext;
 import org.jooq.InsertValuesStepN;
 import org.jooq.Record;
+import org.jooq.Record1;
 import org.jooq.Result;
 
 class SomaticVariantDAO {
@@ -178,4 +180,21 @@ class SomaticVariantDAO {
     void deleteSomaticVariantForSample(@NotNull String sample) {
         context.delete(SOMATICVARIANT).where(SOMATICVARIANT.SAMPLEID.eq(sample)).execute();
     }
+
+    @NotNull
+    public final List<String> getSamplesList() {
+        final Result<Record1<String>> result = context.select(SOMATICVARIANT.SAMPLEID)
+                .from(SOMATICVARIANT)
+                .groupBy(SOMATICVARIANT.SAMPLEID)
+                .fetch();
+
+        List<String> samplesList = Lists.newArrayList();
+
+        for (Record record : result) {
+            samplesList.add(record.getValue(SOMATICVARIANT.SAMPLEID));
+        }
+
+        return samplesList;
+    }
+
 }

@@ -143,6 +143,11 @@ public class DatabaseAccess {
         somaticVariantDAO.write(sampleId, variants);
     }
 
+    @NotNull
+    public List<String> somaticVariantSampleList() {
+        return somaticVariantDAO.getSamplesList();
+    }
+
     public void writeStructuralVariants(@NotNull final String sampleId, @NotNull final List<EnrichedStructuralVariant> variants) {
         structuralVariantDAO.write(sampleId, variants);
     }
