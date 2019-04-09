@@ -6,6 +6,7 @@ import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.sig_analyser.common.DataUtils.copyVector;
 import static com.hartwig.hmftools.sig_analyser.common.DataUtils.doubleToStr;
+import static com.hartwig.hmftools.sig_analyser.common.DataUtils.doublesEqual;
 import static com.hartwig.hmftools.sig_analyser.common.DataUtils.getSortedVectorIndices;
 import static com.hartwig.hmftools.sig_analyser.common.DataUtils.greaterThan;
 import static com.hartwig.hmftools.sig_analyser.common.DataUtils.initVector;
@@ -173,9 +174,9 @@ public class SigContribOptimiser
         {
             double[] sigRatios = ratiosCollection.get(sig);
 
-            if(!Doubles.equal(sumVector(sigRatios), 1))
+            if(!doublesEqual(sumVector(sigRatios), 1))
             {
-                LOGGER.error("sig({}) has invalid ratios", sig);
+                LOGGER.error(String.format("sig(%d) has invalid ratios: total(%.6f)", sig, sumVector(sigRatios)));
                 mIsValid = false;
                 return;
             }

@@ -1,22 +1,23 @@
 package com.hartwig.hmftools.sig_analyser.nmf;
 
-import static java.lang.Math.abs;
-import static java.lang.Math.max;
 
 import static com.hartwig.hmftools.sig_analyser.common.CosineSim.calcCSS;
-import static com.hartwig.hmftools.sig_analyser.common.DataUtils.calcAbsDiffs;
 import static com.hartwig.hmftools.sig_analyser.common.DataUtils.copyVector;
-import static com.hartwig.hmftools.sig_analyser.common.DataUtils.sizeToStr;
 import static com.hartwig.hmftools.sig_analyser.common.DataUtils.sumVector;
 
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.sig_analyser.buckets.SigContribOptimiser;
 import com.hartwig.hmftools.sig_analyser.common.SigReporter;
 import com.hartwig.hmftools.sig_analyser.common.SigMatrix;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+
+// fits a sample's counts to a pre-defined signature
+// apply PCAWG fitting rules, which put constraints on how signatures are combined,
+// and the expected mutational load for them
 
 public class NmfSampleFitter
 {
@@ -31,7 +32,6 @@ public class NmfSampleFitter
 
     private static double MAX_FIT_CSS_DIFF = 0.01;
     private static double MINOR_SIG_CONTRIBUTION_PERC = 0.001;
-    private static double MIN_SIG_CONTRIBUTION_PERC = 0.01;
 
     private static final Logger LOGGER = LogManager.getLogger(NmfSampleFitter.class);
 
@@ -78,9 +78,11 @@ public class NmfSampleFitter
     {
         int bucketCount = mSampleCounts.Rows;
 
+        // prepare a matrix with only this sample's counts
         SigMatrix sampleMatrix = new SigMatrix(bucketCount, 1);
 
         final double[] sampleCounts = mSampleCounts.getCol(sampleId);
+        // final double[] sampleNoise = new double[bucketCount];
         double[][] sData = sampleMatrix.getData();
         double sampleCount = 0;
 
@@ -92,11 +94,15 @@ public class NmfSampleFitter
 
         int refSigCount = mRefSignatures.Cols;
 
+        // keep track of which sigs are active
         boolean[] sigsInUse = new boolean[refSigCount];
+
+        // inactive sigs will be zeroed out in the sigs matrix given to the NMF calculator
         SigMatrix reducedSigs = new SigMatrix(mRefSignatures);
         int currentSigCount = 0;
 
         // start with all in use unless below required ML threshold
+        // final List<double[]> sigsCollection = Lists.newArrayList();
         for(int i = 0; i < refSigCount; ++i)
         {
             if(belowRequiredMutLoad(i, sampleCount))
@@ -106,6 +112,7 @@ public class NmfSampleFitter
             else
             {
                 sigsInUse[i] = true;
+                // sigsCollection.add(reducedSigs.getCol(i));
                 ++currentSigCount;
             }
         }
@@ -113,6 +120,9 @@ public class NmfSampleFitter
         NmfCalculator nmfCalc = new NmfCalculator(sampleMatrix, mConfig);
 
         nmfCalc.setSigCount(refSigCount);
+
+        // SigContribOptimiser sigOptim = new SigContribOptimiser(bucketCount, false, 1.0);
+        // sigOptim.initialise(sampleId, sampleCounts, sampleNoise, sigsCollection, 0.001, 0);
 
         double[] prevContribs = new double[refSigCount];
         double prevResiduals = 0;
@@ -125,6 +135,8 @@ public class NmfSampleFitter
             nmfCalc.setSignatures(reducedSigs);
             nmfCalc.performRun(sampleId);
 
+            // boolean calcOk = sigOptim.fitToSample();
+
             if(!nmfCalc.isValid())
             {
                 LOGGER.warn("NMF fit failed for sample({})", sampleId);
@@ -136,13 +148,13 @@ public class NmfSampleFitter
 
             double newFitVsActualCss = calcCSS(newFit, sampleCounts);
 
-            if(iterations > 0) {
-
+            if(iterations > 0)
+            {
                 // assess the new contributions vs the actual counts, and exit if the change is greater than 0.01
                 double cssDiff = lastFitVsActualCss - newFitVsActualCss;
 
-                if (cssDiff > MAX_FIT_CSS_DIFF) {
-
+                if (cssDiff > MAX_FIT_CSS_DIFF)
+                {
                     LOGGER.debug(String.format("sample(%d) fitVsActualsCss(%.4f -> %.4f diff=%.4f) with sigCount(%d), exiting",
                             sampleId, lastFitVsActualCss, newFitVsActualCss, cssDiff, currentSigCount));
 
@@ -170,8 +182,8 @@ public class NmfSampleFitter
             double leastContrib = 0;
             int minorSigsRemoved = 0;
 
-            for (int i = 0; i < refSigCount; ++i) {
-
+            for (int i = 0; i < refSigCount; ++i)
+            {
                 if(!sigsInUse[i])
                     continue;
 
@@ -187,8 +199,8 @@ public class NmfSampleFitter
                     continue;
                 }
 
-                if(minorSigsRemoved == 0) { //  && sigPercent < MIN_SIG_CONTRIBUTION_PERC
-
+                if(minorSigsRemoved == 0)
+                {
                     // find the lowest contributing sig to remove (if no others have been this round already)
                     if (leastIndex == -1 || newContribs[i] < leastContrib) {
                         leastIndex = i;
@@ -264,35 +276,13 @@ public class NmfSampleFitter
 
     private void reduceSigData(boolean[] sigsInUse, SigMatrix sigs, int sigIndex)
     {
+        // disable a signature and set all contributions for it to zero
         sigsInUse[sigIndex] = false;
 
         for (int i = 0; i < sigs.Rows; ++i)
         {
             sigs.set(i, sigIndex, 0);
         }
-    }
-
-    private boolean belowRequiredMutLoad(int sig, double sampleCount)
-    {
-        switch(sig)
-        {
-            case 12:
-            case 13:
-                return sampleCount < 1e4;
-
-            case 5:
-            case 17:
-            case 18:
-            case 24:
-            case 25:
-            case 30:
-            case 48:
-                return sampleCount < 1e4;
-
-            default:
-                return false;
-        }
-
     }
 
     private void enableRefSig(SigMatrix sigs, int sigIndex)
@@ -305,31 +295,67 @@ public class NmfSampleFitter
         }
     }
 
+    // PCAWG inclusion and exclusion rules
+    public final static int PCAWG_SIG_1_AGE = 0;
+    public final static int PCAWG_SIG_5_AGE = 4;
+    public final static int PCAWG_SIG_7A_SKIN = 6;
+    public final static int PCAWG_SIG_7B_SKIN = 7;
+    public final static int PCAWG_SIG_7C_SKIN = 8;
+    public final static int PCAWG_SIG_7D_SKIN = 9;
+    public final static int PCAWG_SIG_10A = 12;
+    public final static int PCAWG_SIG_10B = 13;
+    public final static int PCAWG_SIG_17A = 20;
+    public final static int PCAWG_SIG_17B = 21;
+
+    private boolean belowRequiredMutLoad(int sig, double sampleCount)
+    {
+        // some signatures can only be applied for samples above a certain mutational load
+        switch(sig)
+        {
+            case PCAWG_SIG_10A:
+            case PCAWG_SIG_10B:
+                return sampleCount < 1e5;
+
+            case 5: // sig 6
+            case 17: // sig 14
+            case 18: // sig 15
+            case 24: // 20
+            case 25: // 21
+            case 30: // 26
+            case 48:
+                return sampleCount < 1e4;
+
+            default:
+                return false;
+        }
+
+    }
+
     private int addRequiredSigs(boolean[] sigsInUse, SigMatrix sigs)
     {
-        // force some signatures to be included: currently 2 and 5
+        // force some signatures to be included: currently 1 and 5
         int sigsAdded = 0;
 
-        if(!sigsInUse[0])
+        if(!sigsInUse[PCAWG_SIG_1_AGE])
         {
-            sigsInUse[0] = true;
-            enableRefSig(sigs, 0);
+            sigsInUse[PCAWG_SIG_1_AGE] = true;
+            enableRefSig(sigs, PCAWG_SIG_1_AGE);
             ++sigsAdded;
         }
 
-        if(!sigsInUse[4])
+        if(!sigsInUse[PCAWG_SIG_5_AGE])
         {
-            sigsInUse[4] = true;
-            enableRefSig(sigs, 4);
+            sigsInUse[PCAWG_SIG_5_AGE] = true;
+            enableRefSig(sigs, PCAWG_SIG_5_AGE);
             ++sigsAdded;
         }
 
         // force linked sigs to be included:
 
         // sig 7a with b,c and d
-        if(sigsInUse[6] || sigsInUse[7] || sigsInUse[8] || sigsInUse[9])
+        if(sigsInUse[PCAWG_SIG_7A_SKIN] || sigsInUse[PCAWG_SIG_7B_SKIN] || sigsInUse[PCAWG_SIG_7C_SKIN] || sigsInUse[PCAWG_SIG_7D_SKIN])
         {
-            for(int sig = 6; sig <= 9; ++sig)
+            for(int sig = PCAWG_SIG_7A_SKIN; sig <= PCAWG_SIG_7D_SKIN; ++sig)
             {
                 if (sigsInUse[sig])
                     continue;
@@ -341,9 +367,9 @@ public class NmfSampleFitter
         }
 
         // sig 10a with 10b
-        if(sigsInUse[12] && !sigsInUse[13])
+        if(sigsInUse[PCAWG_SIG_10A] && !sigsInUse[PCAWG_SIG_10B])
         {
-            for(int sig = 12; sig <= 13; ++sig)
+            for(int sig = PCAWG_SIG_10A; sig <= PCAWG_SIG_10B; ++sig)
             {
                 if (sigsInUse[sig])
                     continue;
@@ -354,8 +380,8 @@ public class NmfSampleFitter
             }
         }
 
-        // sig 10a with 10b
-        if(sigsInUse[20] && !sigsInUse[21])
+        // sig 17a with 17b
+        if(sigsInUse[PCAWG_SIG_17A] && !sigsInUse[PCAWG_SIG_17B])
         {
             for(int sig = 20; sig <= 21; ++sig)
             {
@@ -370,214 +396,5 @@ public class NmfSampleFitter
 
         return sigsAdded;
     }
-
-    public static boolean fitCountsToRatios(
-            int sampleId, final double[] counts, final double[] countsMargin, final List<double[]> ratiosCollection,
-            double[] contribs, double minContribPerc)
-    {
-        // constraints are that the fitted counts cannot exceed the actual counts (plus the margin for noise)
-        // if any single contrib drops below the required contribution percent, zero-out its sig
-
-        int SCOL = 0; // the first and only column in the per-sample matrix, since only one set of data is handled at a time
-
-        // validate inputs
-        int bucketCount = counts.length;
-
-        for(final double[] ratios : ratiosCollection)
-        {
-            if(ratios.length != bucketCount)
-                return false;
-        }
-
-        int sigCount = ratiosCollection.size();
-
-        double totalCount = sumVector(counts);
-
-        // perform standard adjustments
-        SigMatrix w = new SigMatrix(bucketCount, sigCount);
-        SigMatrix h = new SigMatrix(sigCount, 1);
-
-        for(int sig = 0; sig < sigCount; ++sig)
-        {
-            w.setCol(sig, ratiosCollection.get(sig));
-            h.set(sig, SCOL, contribs[sig]);
-        }
-
-        SigMatrix actualCounts = new SigMatrix(bucketCount, 1);
-        actualCounts.setCol(0, counts);
-
-        SigMatrix fittedCounts = new SigMatrix(bucketCount, 1);
-
-        // test out initial contributions and residuals
-        w.multiply(h, fittedCounts, true);
-
-        int iterations = 0;
-        int iterationsCap = 50;
-        int iterationsIncrement = 50;
-        int maxIterations = 250;
-
-        minContribPerc *= 0.9; // give a buffer in case a sig drops just below the min to allow it to resurface
-
-        double currentCost = 0;
-        double residuals = 0;
-        double residualsPerc = 0;
-        double prevCost = 0;
-        double costChange = 0;
-        double prevCostChange = 0;
-        double prevResiduals = residuals;
-
-        final double[][] fitData = fittedCounts.getData();
-
-        List<Integer> zeroedSigs = Lists.newArrayList();
-
-        while(iterations < iterationsCap)
-        {
-            // calc residuals
-            prevCost = currentCost;
-            prevResiduals = residuals;
-            currentCost = actualCounts.sumDiffSq(fittedCounts);
-            residuals = calcAbsDiffs(counts, fittedCounts.getCol(SCOL));
-            residualsPerc = residuals / totalCount;
-
-            if(Double.isNaN(currentCost) || Double.isInfinite(currentCost) || currentCost > 1e50)
-            {
-                LOGGER.warn("iter({}): invalid cost value: nan={} infinite={} max={}, exiting",
-                        iterations, Double.isNaN(currentCost), Double.isInfinite(currentCost), currentCost > 1e50);
-
-                return false;
-            }
-
-            if(residualsPerc < 0.01)
-                break;
-
-            if(iterations > 0)
-            {
-                prevCostChange = costChange;
-                costChange = (prevCost - currentCost) / prevCost;
-
-                if(abs(costChange) < 0.0001)
-                    break;
-            }
-
-            // fit again
-            SigMatrix wt = w.transpose();
-            SigMatrix hAdj = wt.multiply(actualCounts);
-            SigMatrix hd = wt.multiply(fittedCounts);
-
-            hAdj.scalarDivide(hd, true);
-            h.scalarMultiply(hAdj);
-
-            w.multiply(h, fittedCounts, true);
-
-            // zero-out any tiny contributions
-            for(int s = 0; s < sigCount; ++s)
-            {
-                if(zeroedSigs.contains(s))
-                    continue;;
-
-                double sigPerc = h.get(s, SCOL) / totalCount;
-                if(sigPerc < minContribPerc)
-                {
-                    zeroedSigs.add(s);
-                    h.set(s, SCOL, 0);
-
-                    for(int b = 0; b < bucketCount; ++b)
-                    {
-                        w.set(b, s, 0);
-                    }
-                }
-            }
-
-            ++iterations;
-
-            if(iterations >= iterationsCap && iterations <= maxIterations && costChange > 0.001) // 100 out of 100K, keep going if still progressing
-            {
-                iterationsCap += iterationsIncrement;
-            }
-        }
-
-        // before beginning the next set of adjustments, check for any bucket exceeding the permitted range
-        /* Ensure fitted counts are within the permitted noise range:
-            - check each bucket's fitted vs actual count
-            - if the fitted count exceeds the actual, calculate the required reduction per contributing sig for that bucket
-         */
-
-        double[] contribAdj = new double[sigCount];
-        double[][] contribData = h.getData();
-        final double[][] sigsData = w.getData();
-
-        double contribTotal = h.sum();
-
-        for(int b = 0; b < bucketCount; ++b)
-        {
-            double excessCount = fitData[b][SCOL] - (counts[b] + countsMargin[b]);
-
-            if (excessCount <= 0)
-                continue;
-
-            double[] sigInvCosts = new double[sigCount];
-            double invCostTotal = 0;
-
-            for(int s = 0; s < sigCount; ++s)
-            {
-                // how much this sig contributed to this bucket
-                double sigBucketContrib = contribData[s][SCOL] * sigsData[b][s];
-
-                if (sigBucketContrib == 0)
-                {
-                    continue;
-                }
-                // the cost basis per unit
-                double sigCostBasis = excessCount * (1 / sigsData[b][s]);
-
-                // reversed percent allocation
-                double invCost = 1 / sigCostBasis;
-
-                invCostTotal += invCost;
-                sigInvCosts[s] = invCost;
-            }
-
-            for(int s = 0; s < sigCount; ++s)
-            {
-                double sigAttribPerc = sigInvCosts[s] / invCostTotal;
-
-                if(sigAttribPerc == 0)
-                    continue;
-
-                double sigAdjust = excessCount * sigAttribPerc * (1 / sigsData[b][s]);
-
-                contribAdj[s] = max(contribAdj[s], sigAdjust);
-
-                if(sigAdjust > contribData[s][SCOL] * 1.01)
-                {
-                    LOGGER.error("excess contrib adjust");
-                }
-            }
-        }
-
-        // set the final contributions minus any adjustments
-        for(int s = 0; s < sigCount; ++s)
-        {
-            contribData[s][SCOL] -= contribAdj[s];
-            contribs[s] = max(contribData[s][SCOL], 0);
-        }
-
-        double contribAdjustments = sumVector(contribAdj);
-
-        if(contribAdjustments > 0)
-        {
-            w.multiply(h, fittedCounts, true);
-            residuals = calcAbsDiffs(counts, fittedCounts.getCol(SCOL));
-            residualsPerc = residuals / totalCount;
-        }
-
-        LOGGER.debug(String.format("sample(%d) sigs(%d -> %d) total(%s) contrib(init=%s less adj=%s) new residuals(%s perc=%.4f) iters(%d) costChg(%.4f -> %.4f)",
-                sampleId, sigCount, sigCount - zeroedSigs.size(),
-                sizeToStr(totalCount), sizeToStr(contribTotal), sizeToStr(contribAdjustments),
-                sizeToStr(residuals), residualsPerc, iterations, prevCostChange, costChange));
-
-        return true;
-    }
-
 
 }

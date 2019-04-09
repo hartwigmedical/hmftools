@@ -63,8 +63,6 @@ public class SigContribOptimiserTests
 
         int sample = 0;
 
-        // boolean calcOk = fitCountsToRatios(sample, counts, countsMargin, ratiosCollection, contribs, 0.001);
-
         SigContribOptimiser sigOptim = new SigContribOptimiser(bucketCount, true, 1.0);
         sigOptim.initialise(sample, counts, countsMargin, ratiosCollection, 0.001, 0);
         boolean calcOk = sigOptim.fitToSample();
