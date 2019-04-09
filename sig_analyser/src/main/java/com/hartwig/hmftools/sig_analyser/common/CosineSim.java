@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.sig_analyser.calcs;
+package com.hartwig.hmftools.sig_analyser.common;
 
 import static java.lang.Double.max;
 import static java.lang.Math.abs;
@@ -6,16 +6,15 @@ import static java.lang.Math.min;
 import static java.lang.Math.round;
 import static java.lang.Math.sqrt;
 
-import static com.hartwig.hmftools.sig_analyser.calcs.DataUtils.copyVector;
-import static com.hartwig.hmftools.sig_analyser.calcs.DataUtils.equalVector;
-import static com.hartwig.hmftools.sig_analyser.calcs.DataUtils.sumVector;
+import static com.hartwig.hmftools.sig_analyser.common.DataUtils.copyVector;
+import static com.hartwig.hmftools.sig_analyser.common.DataUtils.equalVector;
+import static com.hartwig.hmftools.sig_analyser.common.DataUtils.sumVector;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.sig_analyser.types.SigMatrix;
 
 import org.apache.commons.math3.distribution.ChiSquaredDistribution;
 import org.apache.commons.math3.distribution.PoissonDistribution;

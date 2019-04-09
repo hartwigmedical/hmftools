@@ -4,8 +4,8 @@ import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.MIN_SAMPLE_PURIT
 import static com.hartwig.hmftools.sig_analyser.SigAnalyser.OUTPUT_DIR;
 import static com.hartwig.hmftools.sig_analyser.SigAnalyser.OUTPUT_FILE_ID;
 import static com.hartwig.hmftools.sig_analyser.SigAnalyser.SAMPLE_IDS;
-import static com.hartwig.hmftools.sig_analyser.calcs.DataUtils.getNewFile;
-import static com.hartwig.hmftools.sig_analyser.calcs.DataUtils.writeMatrixData;
+import static com.hartwig.hmftools.sig_analyser.common.DataUtils.getNewFile;
+import static com.hartwig.hmftools.sig_analyser.common.DataUtils.writeMatrixData;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -18,7 +18,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
-import com.hartwig.hmftools.sig_analyser.types.SigMatrix;
+import com.hartwig.hmftools.sig_analyser.common.SigMatrix;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;

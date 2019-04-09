@@ -1,20 +1,21 @@
-package com.hartwig.hmftools.sig_analyser.calcs;
+package com.hartwig.hmftools.sig_analyser.nmf;
 
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.Math.sqrt;
 
-import static com.hartwig.hmftools.sig_analyser.calcs.CosineSim.CSSR_I1;
-import static com.hartwig.hmftools.sig_analyser.calcs.CosineSim.CSSR_I2;
-import static com.hartwig.hmftools.sig_analyser.calcs.CosineSim.CSSR_VAL;
-import static com.hartwig.hmftools.sig_analyser.calcs.CosineSim.getTopCssPairs;
+import static com.hartwig.hmftools.sig_analyser.common.CosineSim.CSSR_I1;
+import static com.hartwig.hmftools.sig_analyser.common.CosineSim.CSSR_I2;
+import static com.hartwig.hmftools.sig_analyser.common.CosineSim.CSSR_VAL;
+import static com.hartwig.hmftools.sig_analyser.common.CosineSim.getTopCssPairs;
 
 import java.util.List;
 import java.util.Random;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
-import com.hartwig.hmftools.sig_analyser.types.SigMatrix;
+import com.hartwig.hmftools.sig_analyser.common.SigReporter;
+import com.hartwig.hmftools.sig_analyser.common.SigMatrix;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

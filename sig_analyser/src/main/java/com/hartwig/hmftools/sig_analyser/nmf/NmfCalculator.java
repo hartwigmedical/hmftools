@@ -1,18 +1,18 @@
-package com.hartwig.hmftools.sig_analyser.calcs;
+package com.hartwig.hmftools.sig_analyser.nmf;
 
 import static java.lang.Double.max;
 import static java.lang.Math.abs;
 import static java.lang.Math.log;
 import static java.lang.Math.min;
 
-import static com.hartwig.hmftools.sig_analyser.calcs.DataUtils.doublesEqual;
-import static com.hartwig.hmftools.sig_analyser.calcs.DataUtils.sumVector;
+import static com.hartwig.hmftools.sig_analyser.common.DataUtils.doublesEqual;
+import static com.hartwig.hmftools.sig_analyser.common.DataUtils.sumVector;
 
 import java.util.List;
 import java.util.Random;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.sig_analyser.types.SigMatrix;
+import com.hartwig.hmftools.sig_analyser.common.SigMatrix;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

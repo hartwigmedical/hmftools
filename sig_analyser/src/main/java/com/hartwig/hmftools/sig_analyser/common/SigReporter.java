@@ -1,22 +1,22 @@
-package com.hartwig.hmftools.sig_analyser.calcs;
+package com.hartwig.hmftools.sig_analyser.common;
 
 import static java.lang.Math.abs;
 import static java.lang.Math.min;
 import static java.lang.Math.round;
 
-import static com.hartwig.hmftools.sig_analyser.calcs.CosineSim.CSSR_I1;
-import static com.hartwig.hmftools.sig_analyser.calcs.CosineSim.CSSR_I2;
-import static com.hartwig.hmftools.sig_analyser.calcs.CosineSim.CSSR_VAL;
-import static com.hartwig.hmftools.sig_analyser.calcs.CosineSim.calcCSS;
-import static com.hartwig.hmftools.sig_analyser.calcs.CosineSim.calcLogLikelihood;
-import static com.hartwig.hmftools.sig_analyser.calcs.CosineSim.getTopCssPairs;
-import static com.hartwig.hmftools.sig_analyser.calcs.DataUtils.sumVector;
-import static com.hartwig.hmftools.sig_analyser.calcs.DataUtils.vectorMultiply;
+import static com.hartwig.hmftools.sig_analyser.common.CosineSim.CSSR_I1;
+import static com.hartwig.hmftools.sig_analyser.common.CosineSim.CSSR_I2;
+import static com.hartwig.hmftools.sig_analyser.common.CosineSim.CSSR_VAL;
+import static com.hartwig.hmftools.sig_analyser.common.CosineSim.calcCSS;
+import static com.hartwig.hmftools.sig_analyser.common.CosineSim.calcLogLikelihood;
+import static com.hartwig.hmftools.sig_analyser.common.CosineSim.getTopCssPairs;
+import static com.hartwig.hmftools.sig_analyser.common.DataUtils.sumVector;
+import static com.hartwig.hmftools.sig_analyser.common.DataUtils.vectorMultiply;
 
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.sig_analyser.types.SigMatrix;
+import com.hartwig.hmftools.sig_analyser.nmf.NmfConfig;
 
 import org.apache.commons.math3.distribution.PoissonDistribution;
 import org.apache.logging.log4j.LogManager;

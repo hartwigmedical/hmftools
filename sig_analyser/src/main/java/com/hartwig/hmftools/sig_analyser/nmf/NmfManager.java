@@ -1,13 +1,12 @@
-package com.hartwig.hmftools.sig_analyser.calcs;
+package com.hartwig.hmftools.sig_analyser.nmf;
 
 import static java.lang.Integer.max;
 
 import static com.hartwig.hmftools.sig_analyser.SigAnalyser.OUTPUT_DIR;
 import static com.hartwig.hmftools.sig_analyser.SigAnalyser.OUTPUT_FILE_ID;
-import static com.hartwig.hmftools.sig_analyser.calcs.CosineSim.getTopCssPairs;
-import static com.hartwig.hmftools.sig_analyser.calcs.DataUtils.getNewFile;
-import static com.hartwig.hmftools.sig_analyser.calcs.DataUtils.writeMatrixData;
-import static com.hartwig.hmftools.sig_analyser.types.SigMatrix.extractNonZeros;
+import static com.hartwig.hmftools.sig_analyser.common.DataUtils.getNewFile;
+import static com.hartwig.hmftools.sig_analyser.common.DataUtils.writeMatrixData;
+import static com.hartwig.hmftools.sig_analyser.common.SigMatrix.extractNonZeros;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -18,7 +17,8 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.utils.GenericDataLoader;
 import com.hartwig.hmftools.common.utils.GenericDataCollection;
-import com.hartwig.hmftools.sig_analyser.types.SigMatrix;
+import com.hartwig.hmftools.sig_analyser.common.DataUtils;
+import com.hartwig.hmftools.sig_analyser.common.SigMatrix;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.logging.log4j.LogManager;
@@ -37,7 +37,6 @@ public class NmfManager {
     private SigMatrix mReferenceSigs;
 
     private NmfCalculator mNmfCalculator;
-    private SigFinder mSigFinder;
 
     private List<NmfRun> mRuns;
 
@@ -53,7 +52,6 @@ public class NmfManager {
         mSampleCountsMatrix = null;
         mReferenceSigs = null;
         mNmfCalculator = null;
-        mSigFinder = null;
 
         mRuns = Lists.newArrayList();
 
@@ -94,25 +92,6 @@ public class NmfManager {
         }
 
         mPerfCounter.stop();
-
-        if(mConfig.FindSignatures)
-        {
-            mSigFinder = new SigFinder(mSampleCountsMatrix, mConfig, mOutputDir, mOutputFileId, mDataCollection.getFieldNames());
-
-            mPerfCounter.start("SigFinder");
-            mSigFinder.findSignatures();
-            mPerfCounter.stop();
-
-            if(mSigFinder.getSignatures() != null)
-            {
-                mNmfCalculator.setSignatures(mSigFinder.getSignatures());
-            }
-
-            if(mSigFinder.getContributions() != null)
-            {
-                mNmfCalculator.setContributions(mSigFinder.getContributions());
-            }
-        }
     }
 
     public void run() {

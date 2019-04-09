@@ -1,16 +1,16 @@
-package com.hartwig.hmftools.sig_analyser.types;
+package com.hartwig.hmftools.sig_analyser.buckets;
 
 import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.Math.round;
 import static java.lang.Math.sqrt;
 
-import static com.hartwig.hmftools.sig_analyser.calcs.DataUtils.capValue;
-import static com.hartwig.hmftools.sig_analyser.calcs.DataUtils.copyVector;
-import static com.hartwig.hmftools.sig_analyser.calcs.DataUtils.doublesEqual;
-import static com.hartwig.hmftools.sig_analyser.calcs.DataUtils.greaterThan;
-import static com.hartwig.hmftools.sig_analyser.calcs.DataUtils.initVector;
-import static com.hartwig.hmftools.sig_analyser.calcs.DataUtils.sumVector;
+import static com.hartwig.hmftools.sig_analyser.common.DataUtils.capValue;
+import static com.hartwig.hmftools.sig_analyser.common.DataUtils.copyVector;
+import static com.hartwig.hmftools.sig_analyser.common.DataUtils.doublesEqual;
+import static com.hartwig.hmftools.sig_analyser.common.DataUtils.greaterThan;
+import static com.hartwig.hmftools.sig_analyser.common.DataUtils.initVector;
+import static com.hartwig.hmftools.sig_analyser.common.DataUtils.sumVector;
 
 import java.util.HashMap;
 import java.util.List;

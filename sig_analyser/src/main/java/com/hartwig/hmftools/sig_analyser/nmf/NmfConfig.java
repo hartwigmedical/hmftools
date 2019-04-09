@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.sig_analyser.calcs;
+package com.hartwig.hmftools.sig_analyser.nmf;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
@@ -33,11 +33,6 @@ public class NmfConfig {
 
     final public boolean FitOnly; // apply fitting routine to samples using input/ref sigs
 
-    // config for pre-NMF signature discovery
-    final public boolean FindSignatures;
-    final public double CssCutoff;
-    final public double MinSamplePerc;
-
     final public boolean LogVerbose;
 
     // command line args
@@ -52,9 +47,6 @@ public class NmfConfig {
     public static String NMF_FIT_ONLY = "nmf_fit_only";
 
     public static String NMF_SIG_EXPANSION = "nmf_sig_exp_count";
-    public static String NMF_FIND_SIGS = "nmf_find_sigs";
-    public static String NMF_FS_CSS_CUTOFF = "nmf_fs_css_cutoff";
-    public static String NMF_FS_MIN_SAMPLES = "nmf_fs_min_samples";
 
     public static String NMF_LOG_VERBOSE = "nmf_log_verbose";
 
@@ -81,9 +73,6 @@ public class NmfConfig {
         options.addOption(NMF_REF_CONTRIB_FILE, true, "Option reference contributions file");
         options.addOption(NMF_SIG_FLOAT_RATE, true, "How much any pre-discovery sig can float on each adjustment");
         options.addOption(NMF_SIG_EXPANSION, true, "Max number of sigs to expand to");
-        options.addOption(NMF_FIND_SIGS, false, "Run Sig Finder");
-        options.addOption(NMF_FS_CSS_CUTOFF, true, "Sig Finder CSS cutoff");
-        options.addOption(NMF_FS_MIN_SAMPLES, true, "Sig Finder min samples as a percent of cohort");
         options.addOption(NMF_FIT_ONLY, false, "Fit to input ref sigs, apply min-sig logic");
 
         options.addOption(NMF_LOG_VERBOSE, false, "All NMF details logged");
@@ -120,10 +109,7 @@ public class NmfConfig {
         FitOnly = cmd.hasOption(NMF_FIT_ONLY);
 
         SigExpansionCount = cmd.hasOption(NMF_SIG_EXPANSION) ? Integer.parseInt(cmd.getOptionValue(NMF_SIG_EXPANSION)) : 0;
-        FindSignatures = cmd.hasOption(NMF_FIND_SIGS);
-        CssCutoff = cmd.hasOption(NMF_FS_CSS_CUTOFF) ? Double.parseDouble(cmd.getOptionValue(NMF_FS_CSS_CUTOFF)) : 0;
         SigFloatRate = cmd.hasOption(NMF_SIG_FLOAT_RATE) ? Double.parseDouble(cmd.getOptionValue(NMF_SIG_FLOAT_RATE)) : 1.0;
-        MinSamplePerc = cmd.hasOption(NMF_FS_MIN_SAMPLES) ? Double.parseDouble(cmd.getOptionValue(NMF_FS_MIN_SAMPLES)) : 0.1;
 
         LogVerbose = cmd.hasOption(NMF_LOG_VERBOSE);
     }

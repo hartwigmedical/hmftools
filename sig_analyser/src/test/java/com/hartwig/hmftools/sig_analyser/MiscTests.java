@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.sig_analyser;
 
-import static com.hartwig.hmftools.sig_analyser.calcs.DataUtils.scaleRoundRatio;
+import static com.hartwig.hmftools.sig_analyser.common.DataUtils.scaleRoundRatio;
 
 public class MiscTests
 {

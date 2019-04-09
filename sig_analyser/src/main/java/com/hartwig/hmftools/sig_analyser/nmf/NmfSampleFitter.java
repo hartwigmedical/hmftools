@@ -1,18 +1,19 @@
-package com.hartwig.hmftools.sig_analyser.calcs;
+package com.hartwig.hmftools.sig_analyser.nmf;
 
 import static java.lang.Math.abs;
 import static java.lang.Math.max;
 
-import static com.hartwig.hmftools.sig_analyser.calcs.CosineSim.calcCSS;
-import static com.hartwig.hmftools.sig_analyser.calcs.DataUtils.calcAbsDiffs;
-import static com.hartwig.hmftools.sig_analyser.calcs.DataUtils.copyVector;
-import static com.hartwig.hmftools.sig_analyser.calcs.DataUtils.sizeToStr;
-import static com.hartwig.hmftools.sig_analyser.calcs.DataUtils.sumVector;
+import static com.hartwig.hmftools.sig_analyser.common.CosineSim.calcCSS;
+import static com.hartwig.hmftools.sig_analyser.common.DataUtils.calcAbsDiffs;
+import static com.hartwig.hmftools.sig_analyser.common.DataUtils.copyVector;
+import static com.hartwig.hmftools.sig_analyser.common.DataUtils.sizeToStr;
+import static com.hartwig.hmftools.sig_analyser.common.DataUtils.sumVector;
 
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.sig_analyser.types.SigMatrix;
+import com.hartwig.hmftools.sig_analyser.common.SigReporter;
+import com.hartwig.hmftools.sig_analyser.common.SigMatrix;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

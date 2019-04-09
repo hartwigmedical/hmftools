@@ -130,7 +130,7 @@ public class CNAnalyser {
         options.addOption(SV_PLOIDY_CALC_FILE, true, "SV_PLOIDY_CALC_FILE");
         options.addOption(WRITE_PLOIDY_TO_FILE, false, "Write adjusted ploidy to CSV");
         options.addOption(WRITE_VERBOSE_PLOIDY_DATA, false, "Write all ploidy calc working data");
-        options.addOption(UPDATE_PLOIDY_TO_DB, false, "Update SV table with ploidy calcs");
+        options.addOption(UPDATE_PLOIDY_TO_DB, false, "Update SV table with ploidy common");
     }
 
     public boolean loadConfig(final CommandLine cmd, final List<String> sampleIds)
@@ -1443,7 +1443,7 @@ public class CNAnalyser {
         }
         catch (IOException e)
         {
-            LOGGER.error("Failed to read SV ploidy calcs file({}): {}", filename, e.toString());
+            LOGGER.error("Failed to read SV ploidy common file({}): {}", filename, e.toString());
         }
     }
 

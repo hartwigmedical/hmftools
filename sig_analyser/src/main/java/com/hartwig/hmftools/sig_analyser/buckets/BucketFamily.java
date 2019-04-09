@@ -1,11 +1,12 @@
-package com.hartwig.hmftools.sig_analyser.types;
+package com.hartwig.hmftools.sig_analyser.buckets;
 
-import static com.hartwig.hmftools.sig_analyser.calcs.DataUtils.getSortedVectorIndices;
-import static com.hartwig.hmftools.sig_analyser.calcs.DataUtils.sumVector;
+import static com.hartwig.hmftools.sig_analyser.common.DataUtils.getSortedVectorIndices;
+import static com.hartwig.hmftools.sig_analyser.common.DataUtils.sumVector;
 
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.sig_analyser.common.SigMatrix;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

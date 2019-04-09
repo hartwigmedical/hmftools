@@ -1,11 +1,11 @@
 package com.hartwig.hmftools.sig_analyser;
 
-import static com.hartwig.hmftools.sig_analyser.calcs.DataUtils.greaterThan;
+import static com.hartwig.hmftools.sig_analyser.common.DataUtils.greaterThan;
 
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.sig_analyser.calcs.SigContribOptimiser;
+import com.hartwig.hmftools.sig_analyser.buckets.SigContribOptimiser;
 
 import org.junit.Test;
 

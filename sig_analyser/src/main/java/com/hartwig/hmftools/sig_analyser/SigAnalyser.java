@@ -3,12 +3,12 @@ package com.hartwig.hmftools.sig_analyser;
 import java.sql.SQLException;
 
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
-import com.hartwig.hmftools.sig_analyser.calcs.BucketAnalyser;
-import com.hartwig.hmftools.sig_analyser.calcs.CosineSim;
-import com.hartwig.hmftools.sig_analyser.calcs.NmfConfig;
-import com.hartwig.hmftools.sig_analyser.calcs.NmfManager;
-import com.hartwig.hmftools.sig_analyser.calcs.SampleSimulator;
-import com.hartwig.hmftools.sig_analyser.calcs.SimConfig;
+import com.hartwig.hmftools.sig_analyser.buckets.BucketAnalyser;
+import com.hartwig.hmftools.sig_analyser.common.CosineSim;
+import com.hartwig.hmftools.sig_analyser.nmf.NmfConfig;
+import com.hartwig.hmftools.sig_analyser.nmf.NmfManager;
+import com.hartwig.hmftools.sig_analyser.sim.SampleSimulator;
+import com.hartwig.hmftools.sig_analyser.sim.SimConfig;
 import com.hartwig.hmftools.common.utils.GenericDataLoader;
 import com.hartwig.hmftools.common.utils.GenericDataCollection;
 import com.hartwig.hmftools.sig_analyser.loaders.SigSnvLoader;

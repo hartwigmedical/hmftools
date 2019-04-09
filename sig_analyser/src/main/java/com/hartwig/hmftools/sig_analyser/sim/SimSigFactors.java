@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.sig_analyser.calcs;
+package com.hartwig.hmftools.sig_analyser.sim;
 
 public class SimSigFactors {
 

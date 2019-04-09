@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.sig_analyser.calcs;
+package com.hartwig.hmftools.sig_analyser.common;
 
 import static java.lang.Math.abs;
 import static java.lang.Math.log10;
@@ -8,19 +8,15 @@ import static java.lang.Math.pow;
 import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.common.io.FileWriterUtils.createBufferedWriter;
-import static com.hartwig.hmftools.sig_analyser.calcs.CosineSim.calcLogLikelihood;
+import static com.hartwig.hmftools.sig_analyser.common.CosineSim.calcLogLikelihood;
 
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.List;
 import java.util.Random;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.sig_analyser.types.SigMatrix;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

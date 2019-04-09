@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.sig_analyser.calcs;
+package com.hartwig.hmftools.sig_analyser.sim;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;

@@ -1,17 +1,17 @@
-package com.hartwig.hmftools.sig_analyser.types;
+package com.hartwig.hmftools.sig_analyser.buckets;
 
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
-import static com.hartwig.hmftools.sig_analyser.calcs.BucketAnalyser.MAX_NOISE_ALLOC_PERCENT;
-import static com.hartwig.hmftools.sig_analyser.calcs.DataUtils.capValue;
-import static com.hartwig.hmftools.sig_analyser.calcs.DataUtils.copyVector;
-import static com.hartwig.hmftools.sig_analyser.calcs.DataUtils.greaterThan;
-import static com.hartwig.hmftools.sig_analyser.calcs.DataUtils.initVector;
-import static com.hartwig.hmftools.sig_analyser.calcs.DataUtils.lessThan;
-import static com.hartwig.hmftools.sig_analyser.calcs.DataUtils.sumVector;
-import static com.hartwig.hmftools.sig_analyser.calcs.DataUtils.vectorMultiply;
-import static com.hartwig.hmftools.sig_analyser.types.BucketGroup.ratioRange;
+import static com.hartwig.hmftools.sig_analyser.buckets.BucketAnalyser.MAX_NOISE_ALLOC_PERCENT;
+import static com.hartwig.hmftools.sig_analyser.common.DataUtils.capValue;
+import static com.hartwig.hmftools.sig_analyser.common.DataUtils.copyVector;
+import static com.hartwig.hmftools.sig_analyser.common.DataUtils.greaterThan;
+import static com.hartwig.hmftools.sig_analyser.common.DataUtils.initVector;
+import static com.hartwig.hmftools.sig_analyser.common.DataUtils.lessThan;
+import static com.hartwig.hmftools.sig_analyser.common.DataUtils.sumVector;
+import static com.hartwig.hmftools.sig_analyser.common.DataUtils.vectorMultiply;
+import static com.hartwig.hmftools.sig_analyser.buckets.BucketGroup.ratioRange;
 
 import java.util.List;
 

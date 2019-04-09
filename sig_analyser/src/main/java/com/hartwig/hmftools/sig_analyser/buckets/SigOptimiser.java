@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.sig_analyser.calcs;
+package com.hartwig.hmftools.sig_analyser.buckets;
 
 import static java.lang.Math.abs;
 import static java.lang.Math.floor;
@@ -6,23 +6,22 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.Math.pow;
 
-import static com.hartwig.hmftools.sig_analyser.calcs.BucketAnalyser.DEFAULT_SIG_RATIO_RANGE_PERCENT;
-import static com.hartwig.hmftools.sig_analyser.calcs.DataUtils.convertToPercentages;
-import static com.hartwig.hmftools.sig_analyser.calcs.DataUtils.copyVector;
-import static com.hartwig.hmftools.sig_analyser.calcs.DataUtils.doubleToStr;
-import static com.hartwig.hmftools.sig_analyser.calcs.DataUtils.doublesEqual;
-import static com.hartwig.hmftools.sig_analyser.calcs.DataUtils.getSortedVectorIndices;
-import static com.hartwig.hmftools.sig_analyser.calcs.DataUtils.greaterThan;
-import static com.hartwig.hmftools.sig_analyser.calcs.DataUtils.initVector;
-import static com.hartwig.hmftools.sig_analyser.calcs.DataUtils.sizeToStr;
-import static com.hartwig.hmftools.sig_analyser.calcs.DataUtils.sumVector;
+import static com.hartwig.hmftools.sig_analyser.buckets.BucketAnalyser.DEFAULT_SIG_RATIO_RANGE_PERCENT;
+import static com.hartwig.hmftools.sig_analyser.common.DataUtils.convertToPercentages;
+import static com.hartwig.hmftools.sig_analyser.common.DataUtils.copyVector;
+import static com.hartwig.hmftools.sig_analyser.common.DataUtils.doubleToStr;
+import static com.hartwig.hmftools.sig_analyser.common.DataUtils.doublesEqual;
+import static com.hartwig.hmftools.sig_analyser.common.DataUtils.getSortedVectorIndices;
+import static com.hartwig.hmftools.sig_analyser.common.DataUtils.greaterThan;
+import static com.hartwig.hmftools.sig_analyser.common.DataUtils.initVector;
+import static com.hartwig.hmftools.sig_analyser.common.DataUtils.sizeToStr;
+import static com.hartwig.hmftools.sig_analyser.common.DataUtils.sumVector;
 
 import java.util.HashMap;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.sig_analyser.types.SigMatrix;
-import com.hartwig.hmftools.sig_analyser.types.SampleData;
+import com.hartwig.hmftools.sig_analyser.common.SigMatrix;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
