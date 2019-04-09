@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.copynumber;
+package com.hartwig.hmftools.patientreporter.copynumber;
 
 import org.jetbrains.annotations.NotNull;
 

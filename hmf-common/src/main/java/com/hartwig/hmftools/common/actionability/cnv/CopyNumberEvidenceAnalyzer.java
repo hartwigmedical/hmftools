@@ -11,7 +11,6 @@ import com.hartwig.hmftools.common.actionability.EvidenceLevel;
 import com.hartwig.hmftools.common.actionability.EvidenceScope;
 import com.hartwig.hmftools.common.actionability.ImmutableEvidenceItem;
 import com.hartwig.hmftools.common.actionability.cancertype.CancerTypeAnalyzer;
-import com.hartwig.hmftools.common.copynumber.SignificantGeneCopyNumberFilter;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 
 import org.jetbrains.annotations.NotNull;

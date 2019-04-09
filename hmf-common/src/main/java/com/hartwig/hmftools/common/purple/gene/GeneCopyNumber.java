@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.common.purple.gene;
 
-import com.hartwig.hmftools.common.copynumber.CopyNumberAlteration;
 import com.hartwig.hmftools.common.purple.copynumber.CopyNumberMethod;
 import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 import com.hartwig.hmftools.common.region.TranscriptRegion;
@@ -39,9 +38,5 @@ public interface GeneCopyNumber extends TranscriptRegion {
 
     default int totalRegions() {
         return somaticRegions() + germlineHet2HomRegions() + germlineHomRegions();
-    }
-
-    default CopyNumberAlteration alteration() {
-        return CopyNumberAlteration.fromCopyNumber(minCopyNumber());
     }
 }

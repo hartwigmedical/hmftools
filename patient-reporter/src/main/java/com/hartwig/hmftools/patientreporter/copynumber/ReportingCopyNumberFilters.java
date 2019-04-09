@@ -4,8 +4,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.hartwig.hmftools.common.actionability.cnv.SignificantGeneCopyNumberFilter;
 import com.hartwig.hmftools.common.chromosome.HumanChromosome;
-import com.hartwig.hmftools.common.copynumber.SignificantGeneCopyNumberFilter;
 import com.hartwig.hmftools.common.purple.gender.Gender;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.patientreporter.genepanel.GeneModel;

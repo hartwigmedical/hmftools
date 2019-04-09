@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.copynumber;
+package com.hartwig.hmftools.common.actionability.cnv;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
