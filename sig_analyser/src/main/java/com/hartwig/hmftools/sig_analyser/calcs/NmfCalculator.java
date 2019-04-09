@@ -17,20 +17,8 @@ import com.hartwig.hmftools.sig_analyser.types.SigMatrix;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-public class NmfCalculator {
-
-    /*
-     * matrix input - bucket counts (b) x samples (n)
-     * w.mult(h) = this
-     * W is weights matrix - bucket (b) x sigs (r)
-     * H is feature matrix - sigs (r) x samples (n)
-     *
-     * r = sig count (size of factor matrices)
-     * maxIterations is NUMBER OF ITERATIONS.
-     * e is ERROR (once we're below that, we can return)
-     *
-     * returns W and H matrices
-     */
+public class NmfCalculator
+{
 
     private NmfConfig mConfig;
 

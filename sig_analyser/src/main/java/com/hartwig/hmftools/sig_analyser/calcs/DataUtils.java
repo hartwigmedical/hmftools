@@ -7,6 +7,7 @@ import static java.lang.Math.min;
 import static java.lang.Math.pow;
 import static java.lang.Math.round;
 
+import static com.hartwig.hmftools.common.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.sig_analyser.calcs.CosineSim.calcLogLikelihood;
 
 import java.io.BufferedWriter;
@@ -534,16 +535,14 @@ public class DataUtils {
             return null;
 
         String outputFileName = outputDir;
-        if (!outputFileName.endsWith("/"))
+        if (!outputFileName.endsWith(File.separator))
         {
             outputFileName += File.separator;
         }
 
         outputFileName += fileName;
 
-        Path outputFile = Paths.get(outputFileName);
-
-        return Files.newBufferedWriter(outputFile);
+        return createBufferedWriter(outputFileName, false);
     }
 
     public static void writeMatrixData(BufferedWriter writer, final SigMatrix matrix, boolean asInt) throws IOException

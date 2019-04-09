@@ -294,7 +294,7 @@ public class SigReporter {
     private void compareContributions()
     {
         // look for samples which are assigned very similar ratios of signatures
-        List<double[]> contribsResults = getTopCssPairs(mContributions, mContributions, 0.98, false, true);
+        List<double[]> contribsResults = getTopCssPairs(mContributions, mContributions, 0.995, false, true);
 
         if (contribsResults.isEmpty())
         {

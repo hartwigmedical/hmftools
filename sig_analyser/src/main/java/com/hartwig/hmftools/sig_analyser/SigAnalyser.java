@@ -49,6 +49,7 @@ public class SigAnalyser
         SimConfig.addCmdLineArgs(options);
         NmfConfig.addCmdLineArgs(options);
         BucketAnalyser.addCmdLineArgs(options);
+        SigSnvLoader.addCmdLineArgs(options);
 
         final CommandLine cmd = createCommandLine(args, options);
 
@@ -69,6 +70,8 @@ public class SigAnalyser
                 {
                     snvLoader.loadData();
                 }
+
+                LOGGER.info("variant download complete");
             }
             catch(SQLException e)
             {

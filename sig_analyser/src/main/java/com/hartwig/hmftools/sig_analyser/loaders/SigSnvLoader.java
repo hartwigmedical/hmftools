@@ -21,6 +21,7 @@ import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 import com.hartwig.hmftools.sig_analyser.types.SigMatrix;
 
 import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.Options;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -29,12 +30,14 @@ public class SigSnvLoader
     private String mOutputDir;
     private String mOutputFileId;
     private DatabaseAccess mDbAccess;
+    private boolean mApplySampleQC;
 
     Map<String,Integer> mBucketStringToIndex;
     SigMatrix mSampleBucketCounts;
     List<String> mSampleIds;
 
     private static int SNV_BUCKET_COUNT = 96;
+    private static String APPLY_SAMPLE_QC = "apply_sample_qc";
 
     private static final Logger LOGGER = LogManager.getLogger(SigSnvLoader.class);
 
@@ -44,6 +47,12 @@ public class SigSnvLoader
         mOutputFileId = "";
         mBucketStringToIndex = Maps.newHashMap();
         mSampleIds = Lists.newArrayList();
+        mApplySampleQC = true;
+    }
+
+    public static void addCmdLineArgs(Options options)
+    {
+        options.addOption(APPLY_SAMPLE_QC, false, "Check sample QC status etc");
     }
 
     public boolean initialise(final DatabaseAccess dbAccess, final CommandLine cmd)
@@ -51,6 +60,8 @@ public class SigSnvLoader
         mOutputDir = cmd.getOptionValue(OUTPUT_DIR);
         mOutputFileId = cmd.getOptionValue(OUTPUT_FILE_ID);
         mDbAccess = dbAccess;
+
+        mApplySampleQC = cmd.hasOption(APPLY_SAMPLE_QC);
 
         if(cmd.hasOption(SAMPLE_IDS))
         {
@@ -103,7 +114,19 @@ public class SigSnvLoader
 
     public void loadData()
     {
-        List<String> sampleIds = !mSampleIds.isEmpty() ? mSampleIds : mDbAccess.getSamplesPassingQC(MIN_SAMPLE_PURITY);
+        List<String> sampleIds = null;
+
+        if(!mSampleIds.isEmpty())
+        {
+            sampleIds = mSampleIds;
+        }
+        else
+        {
+            if(mApplySampleQC)
+                sampleIds = mDbAccess.getSamplesPassingQC(MIN_SAMPLE_PURITY);
+            else
+                sampleIds = mDbAccess.somaticVariantSampleList();
+        }
 
         mSampleBucketCounts = new SigMatrix(SNV_BUCKET_COUNT, sampleIds.size());
 

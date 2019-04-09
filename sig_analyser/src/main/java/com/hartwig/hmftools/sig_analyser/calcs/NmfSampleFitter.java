@@ -17,11 +17,9 @@ import com.hartwig.hmftools.sig_analyser.types.SigMatrix;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-public class NmfSampleFitter {
-
-    private static final Logger LOGGER = LogManager.getLogger(NmfSampleFitter.class);
-
-    private NmfConfig mConfig;
+public class NmfSampleFitter
+{
+   private NmfConfig mConfig;
     private SigMatrix mRefSignatures;
     private SigMatrix mSampleCounts;
     private SigMatrix mAllContributions;
@@ -34,6 +32,7 @@ public class NmfSampleFitter {
     private static double MINOR_SIG_CONTRIBUTION_PERC = 0.001;
     private static double MIN_SIG_CONTRIBUTION_PERC = 0.01;
 
+    private static final Logger LOGGER = LogManager.getLogger(NmfSampleFitter.class);
 
     public NmfSampleFitter(final NmfConfig config, final SigMatrix sampleCounts, final SigMatrix refSigs)
     {
