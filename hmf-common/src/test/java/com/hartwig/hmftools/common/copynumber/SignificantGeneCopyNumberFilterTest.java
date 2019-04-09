@@ -10,7 +10,7 @@ public class SignificantGeneCopyNumberFilterTest {
     @Test
     public void canDetermineSignificantEvent() {
         assertTrue(SignificantGeneCopyNumberFilter.isSignificant(1, 0));
-        assertTrue(SignificantGeneCopyNumberFilter.isSignificant(2, 0));
+        assertTrue(SignificantGeneCopyNumberFilter.isSignificant(2, 0.3));
         assertFalse(SignificantGeneCopyNumberFilter.isSignificant(2, 1));
 
         assertFalse(SignificantGeneCopyNumberFilter.isSignificant(2, 2));

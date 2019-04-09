@@ -52,7 +52,6 @@ import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.vcf.VCFFileReader;
 import okhttp3.OkHttpClient;
 
-@SuppressWarnings("OptionalUsedAsFieldOrParameterType")
 public class BamSlicerApplication {
     private static final Logger LOGGER = LogManager.getLogger(BamSlicerApplication.class);
     private static final String SBP_ENDPOINT_URL = System.getenv("SBP_ENDPOINT_URL");
@@ -87,7 +86,7 @@ public class BamSlicerApplication {
         }
         if (cmd.hasOption(INPUT_MODE_S3)) {
             final Pair<URL, URL> urls = generateURLs(cmd);
-            sliceFromURLs(urls.getKey(), urls.getValue(), cmd);
+            sliceFromURLs(urls.getValue(), urls.getKey(), cmd);
         }
         if (cmd.hasOption(INPUT_MODE_URL)) {
             final URL bamURL = new URL(cmd.getOptionValue(INPUT));
@@ -117,8 +116,8 @@ public class BamSlicerApplication {
         final File vcfFile = new File(vcfPath);
         final VCFFileReader vcfReader = new VCFFileReader(vcfFile, false);
         final List<QueryInterval> queryIntervals = Lists.newArrayList();
-        for (VariantContext variant : vcfReader) {
 
+        for (VariantContext variant : vcfReader) {
             queryIntervals.add(new QueryInterval(header.getSequenceIndex(variant.getContig()),
                     Math.max(0, variant.getStart() - proximity),
                     variant.getStart() + proximity));
@@ -160,9 +159,9 @@ public class BamSlicerApplication {
         try {
             LOGGER.info("Attempting to generate S3 URLs for endpoint: {} using profile: {}", SBP_ENDPOINT_URL, SBP_PROFILE);
             final S3UrlGenerator urlGenerator = ImmutableS3UrlGenerator.of(SBP_ENDPOINT_URL, SBP_PROFILE);
-            final URL indexUrl = urlGenerator.generateUrl(cmd.getOptionValue(BUCKET), cmd.getOptionValue(INDEX), S3_EXPIRATION_HOURS);
             final URL bamUrl = urlGenerator.generateUrl(cmd.getOptionValue(BUCKET), cmd.getOptionValue(INPUT), S3_EXPIRATION_HOURS);
-            return Pair.of(indexUrl, bamUrl);
+            final URL indexUrl = urlGenerator.generateUrl(cmd.getOptionValue(BUCKET), cmd.getOptionValue(INDEX), S3_EXPIRATION_HOURS);
+            return Pair.of(bamUrl, indexUrl);
         } catch (Exception e) {
             LOGGER.error("Could not create S3 URLs. Error: {}", e.toString());
             LOGGER.error("You must run this with the sbp user or set up aws credentials and the SBP_ENDPOINT_URL environment variable");
@@ -179,10 +178,12 @@ public class BamSlicerApplication {
         final SAMFileWriter writer = new SAMFileWriterFactory().setCreateIndex(true)
                 .makeBAMWriter(reader.getFileHeader(), true, new File(cmd.getOptionValue(OUTPUT)));
         final BAMIndex bamIndex = new DiskBasedBAMFileIndex(indexFile, reader.getFileHeader().getSequenceDictionary(), false);
+
         final Optional<Pair<QueryInterval[], BAMFileSpan>> queryIntervalsAndSpan = queryIntervalsAndSpan(reader, bamIndex, cmd);
         final Optional<Chunk> unmappedChunk = getUnmappedChunk(bamIndex, HttpUtils.getHeaderField(bamUrl, "Content-Length"), cmd);
         final List<Chunk> sliceChunks = sliceChunks(queryIntervalsAndSpan, unmappedChunk);
         final SamReader cachingReader = createCachingReader(indexFile, bamUrl, cmd, sliceChunks);
+
         queryIntervalsAndSpan.ifPresent(pair -> {
             LOGGER.info("Slicing bam on bed regions...");
             final CloseableIterator<SAMRecord> bedIterator = getIterator(cachingReader, pair.getKey(), pair.getValue().toCoordinateArray());
@@ -195,6 +196,7 @@ public class BamSlicerApplication {
             writeToSlice(writer, unmappedIterator);
             LOGGER.info("Done writing unmapped reads.");
         });
+
         reader.close();
         writer.close();
         cachingReader.close();
@@ -273,6 +275,7 @@ public class BamSlicerApplication {
             if (contentLengthString != null) {
                 try {
                     final long contentLength = Long.parseLong(contentLengthString);
+                    // We multiply content length with 2^16 = ~64k. Presumably 'content length' is "in terms of number of 64Kb packets".
                     return Optional.of(new Chunk(startOfLastLinearBin, contentLength << 16));
                 } catch (NumberFormatException ignored) {
                     LOGGER.error("Invalid content length ({}) for bam URL", contentLengthString);

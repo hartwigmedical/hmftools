@@ -51,7 +51,7 @@ import com.hartwig.hmftools.common.variant.filter.SGTFilter;
 import com.hartwig.hmftools.common.variant.recovery.RecoverStructuralVariants;
 import com.hartwig.hmftools.common.version.VersionInfo;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
-import com.hartwig.hmftools.purple.config.CircosConfig;
+import com.hartwig.hmftools.purple.config.ChartConfig;
 import com.hartwig.hmftools.purple.config.CommonConfig;
 import com.hartwig.hmftools.purple.config.ConfigSupplier;
 import com.hartwig.hmftools.purple.config.DBConfig;
@@ -61,6 +61,7 @@ import com.hartwig.hmftools.purple.config.SmoothingConfig;
 import com.hartwig.hmftools.purple.config.SomaticConfig;
 import com.hartwig.hmftools.purple.config.StructuralVariantConfig;
 import com.hartwig.hmftools.purple.plot.ChartWriter;
+import com.hartwig.hmftools.purple.plot.RCharts;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -199,7 +200,8 @@ public class PurityPloidyEstimateApplication {
             version.write(outputDirectory);
             PurpleQCFile.write(PurpleQCFile.generateFilename(outputDirectory, tumorSample), qcChecks);
             FittedPurityFile.write(outputDirectory, tumorSample, purityContext);
-            FittedPurityRangeFile.write(outputDirectory, tumorSample, bestFit.bestFitPerPurity());
+            FittedPurityRangeFile.write(outputDirectory, tumorSample, bestFit.allFits());
+            FittedPurityRangeFile.write(outputDirectory, tumorSample, bestFit.allFits());
             PurpleCopyNumberFile.write(PurpleCopyNumberFile.generateFilename(outputDirectory, tumorSample), copyNumbers);
             PurpleCopyNumberFile.write(PurpleCopyNumberFile.generateGermlineFilename(outputDirectory, tumorSample), germlineDeletions);
             FittedRegionFile.write(FittedRegionFile.generateFilename(outputDirectory, tumorSample), enrichedFittedRegions);
@@ -220,14 +222,18 @@ public class PurityPloidyEstimateApplication {
                         geneCopyNumbers);
             }
 
-            final CircosConfig circosConfig = configSupplier.circosConfig();
-            LOGGER.info("Writing plots to: {}", circosConfig.plotDirectory());
-            new ChartWriter(tumorSample, circosConfig.plotDirectory()).write(purityContext.bestFit(),
-                    purityContext.score(),
-                    copyNumbers,
-                    enrichedSomatics);
+            final ChartConfig chartConfig = configSupplier.circosConfig();
+            if (chartConfig.enabled()) {
+                LOGGER.info("Writing charts to: {}", chartConfig.plotDirectory());
+                new ChartWriter(tumorSample, chartConfig.plotDirectory()).write(purityContext.bestFit(),
+                        purityContext.score(),
+                        copyNumbers,
+                        enrichedSomatics);
 
-            LOGGER.info("Writing circos data to: {}", circosConfig.circosDirectory());
+                new RCharts(config, chartConfig).generatePlots();
+            }
+
+            LOGGER.info("Writing circos data to: {}", chartConfig.circosDirectory());
             new GenerateCircosData(configSupplier, executorService).write(cobaltGender,
                     copyNumbers,
                     enrichedSomatics,
@@ -284,6 +290,7 @@ public class PurityPloidyEstimateApplication {
                 somaticConfig.minSomaticPurity(),
                 somaticConfig.minSomaticPuritySpread(),
                 fittedPurityFactory.bestFitPerPurity(),
+                fittedPurityFactory.all(),
                 snpSomatics);
         return bestFitFactory.bestFit();
     }

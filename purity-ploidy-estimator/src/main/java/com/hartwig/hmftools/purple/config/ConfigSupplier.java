@@ -6,7 +6,6 @@ import static com.hartwig.hmftools.purple.config.StructuralVariantConfig.createS
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Optional;
 
 import com.hartwig.hmftools.common.context.ProductionRunContextFactory;
 import com.hartwig.hmftools.common.context.RunContext;
@@ -33,8 +32,6 @@ public class ConfigSupplier {
     private static final String AMBER = "amber";
     private static final String COBALT = "cobalt";
 
-    private static final String CIRCOS = "circos";
-
     private static final String MIN_DIPLOID_TUMOR_RATIO_COUNT = "min_diploid_tumor_ratio_count";
     private static final int MIN_DIPLOID_TUMOR_RATIO_COUNT_DEFAULT = 30;
 
@@ -49,7 +46,7 @@ public class ConfigSupplier {
                 "If provided, default values of <run_dir>/amber, <run_dir>/cobalt and <run_dir>/purple will be supplied for amber, cobalt and output_dir parameters respectively.");
 
 
-        options.addOption(CIRCOS, true, "Location of circos binary.");
+
 
         options.addOption(GC_PROFILE, true, "Path to GC profile.");
 
@@ -71,12 +68,13 @@ public class ConfigSupplier {
         SomaticConfig.addOptions(options);
         StructuralVariantConfig.addOptions(options);
         RefGenomeData.addOptions(options);
+        ChartConfig.addOptions(options);
     }
 
     private final CommonConfig commonConfig;
     private final SomaticConfig somaticConfig;
     private final StructuralVariantConfig structuralVariantConfig;
-    private final CircosConfig circosConfig;
+    private final ChartConfig chartConfig;
     private final DBConfig dbConfig;
     private final FittingConfig fittingConfig;
     private final SmoothingConfig smoothingConfig;
@@ -166,7 +164,7 @@ public class ConfigSupplier {
                         MIN_DIPLOID_TUMOR_RATIO_COUNT_AT_CENTROMERE_DEFAULT))
                 .build();
 
-        circosConfig = createCircosConfig(cmd, commonConfig);
+        chartConfig = ChartConfig.createCircosConfig(cmd, commonConfig);
         dbConfig = DBConfig.createConfig(cmd);
         fittingConfig = FittingConfig.createConfig(cmd);
         fitScoreConfig = FitScoreConfig.createConfig(cmd);
@@ -215,8 +213,8 @@ public class ConfigSupplier {
     }
 
     @NotNull
-    public CircosConfig circosConfig() {
-        return circosConfig;
+    public ChartConfig circosConfig() {
+        return chartConfig;
     }
 
     @NotNull
@@ -234,14 +232,6 @@ public class ConfigSupplier {
         return smoothingConfig;
     }
 
-    @NotNull
-    private static CircosConfig createCircosConfig(@NotNull CommandLine cmd, @NotNull CommonConfig config) {
-        return ImmutableCircosConfig.builder()
-                .plotDirectory(config.outputDirectory() + File.separator + "plot")
-                .circosDirectory(config.outputDirectory() + File.separator + "circos")
-                .circosBinary(cmd.hasOption(CIRCOS) ? Optional.of(cmd.getOptionValue(CIRCOS)) : Optional.empty())
-                .build();
-    }
 
     private static void printHelp(@NotNull Options opt) {
         final HelpFormatter formatter = new HelpFormatter();

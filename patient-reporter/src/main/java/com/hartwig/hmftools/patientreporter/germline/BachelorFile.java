@@ -58,7 +58,7 @@ public final class BachelorFile {
         String[] values = line.split(DELIMITER);
 
         String program = values[1];
-        if (!program.equalsIgnoreCase("lynparza")) {
+        if (!program.equalsIgnoreCase("lynparza") && !program.equalsIgnoreCase("hmf")) {
             LOGGER.warn("Unexpected bachelor program found: " + program);
         }
 

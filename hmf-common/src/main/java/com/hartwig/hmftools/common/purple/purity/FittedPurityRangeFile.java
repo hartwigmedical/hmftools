@@ -17,7 +17,7 @@ public enum FittedPurityRangeFile {
     ;
 
     private static final DecimalFormat FORMAT = new DecimalFormat("0.0000");
-    private static final int MAX_RECORDS = 100;
+    private static final int MAX_RECORDS = 10000;
     private static final String DELIMITER = "\t";
     static final String HEADER_PREFIX = "#";
     private static final String EXTENSION = ".purple.purity.range";
@@ -43,7 +43,7 @@ public enum FittedPurityRangeFile {
     }
 
     @NotNull
-    static List<FittedPurity> fromLines(@NotNull List<String> lines) {
+    static List<FittedPurity> fromLines(@NotNull final List<String> lines) {
         return lines.stream().filter(x -> !x.startsWith(HEADER_PREFIX)).map(FittedPurityRangeFile::fromString).collect(toList());
     }
 

@@ -21,4 +21,7 @@ public interface BestFit {
 
     @NotNull
     List<FittedPurity> bestFitPerPurity();
+
+    @NotNull
+    List<FittedPurity> allFits();
 }

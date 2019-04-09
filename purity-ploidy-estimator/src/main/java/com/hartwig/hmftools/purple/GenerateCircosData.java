@@ -32,7 +32,7 @@ import com.hartwig.hmftools.common.refgenome.RefGenome;
 import com.hartwig.hmftools.common.variant.PurityAdjustedSomaticVariant;
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
-import com.hartwig.hmftools.purple.config.CircosConfig;
+import com.hartwig.hmftools.purple.config.ChartConfig;
 import com.hartwig.hmftools.purple.config.ConfigSupplier;
 
 import org.apache.logging.log4j.LogManager;
@@ -52,7 +52,7 @@ class GenerateCircosData {
     private final ExecutorService executorService;
     private final String referenceSample;
     private final String tumorSample;
-    private final CircosConfig config;
+    private final ChartConfig config;
     private final String baseCircosTumorSample;
     private final String baseCircosReferenceSample;
     private final RefGenome refGenome;

@@ -24,7 +24,7 @@ final class ReportingCopyNumberFilters {
                 SignificantGeneCopyNumberFilter.filterForSignificance(geneCopyNumbers, averageTumorPloidy);
 
         return significantGeneCopyNumbers.stream()
-                .filter(copyNumber -> includeInReport(copyNumber.value(),
+                .filter(copyNumber -> includeInReport(copyNumber.minCopyNumber(),
                         HumanChromosome.valueOf(copyNumber).isDiploid(gender),
                         panelGeneModel.isAmplificationReportable(copyNumber.gene()),
                         panelGeneModel.isDeletionReportable(copyNumber.gene())))
