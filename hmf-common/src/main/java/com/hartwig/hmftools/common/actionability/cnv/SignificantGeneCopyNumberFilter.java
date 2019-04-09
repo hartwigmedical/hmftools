@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.copynumber;
+package com.hartwig.hmftools.common.actionability.cnv;
 
 import java.util.List;
 import java.util.stream.Collectors;

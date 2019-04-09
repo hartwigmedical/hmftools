@@ -84,7 +84,7 @@ public class ConfigSupplier {
     private final CobaltData cobaltData;
     private final AmberData amberData;
 
-    public ConfigSupplier(@NotNull CommandLine cmd, @NotNull Options opt) throws ParseException, IOException {
+    public ConfigSupplier(@NotNull final String version, @NotNull CommandLine cmd, @NotNull Options opt) throws ParseException, IOException {
 
         final String gcProfile = cmd.getOptionValue(GC_PROFILE);
         if (gcProfile == null) {
@@ -146,6 +146,7 @@ public class ConfigSupplier {
         final String cobaltDirectory = cmd.hasOption(COBALT) ? cmd.getOptionValue(COBALT) : runDirectory + File.separator + "cobalt";
 
         commonConfig = ImmutableCommonConfig.builder()
+                .version(version)
                 .refSample(refSample)
                 .tumorSample(tumorSample)
                 .outputDirectory(outputDirectory)

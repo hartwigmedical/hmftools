@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.common.purple.gene;
 
-import com.hartwig.hmftools.common.copynumber.CopyNumber;
 import com.hartwig.hmftools.common.purple.copynumber.CopyNumberMethod;
 import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 import com.hartwig.hmftools.common.region.TranscriptRegion;
@@ -11,7 +10,7 @@ import org.jetbrains.annotations.Nullable;
 
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public interface GeneCopyNumber extends TranscriptRegion, CopyNumber {
+public interface GeneCopyNumber extends TranscriptRegion {
 
     double maxCopyNumber();
 
@@ -39,10 +38,5 @@ public interface GeneCopyNumber extends TranscriptRegion, CopyNumber {
 
     default int totalRegions() {
         return somaticRegions() + germlineHet2HomRegions() + germlineHomRegions();
-    }
-
-    @Override
-    default int value() {
-        return (int) Math.max(0, Math.round(minCopyNumber()));
     }
 }

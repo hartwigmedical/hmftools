@@ -28,6 +28,9 @@ public interface CommonConfig {
     @NotNull
     String gcProfile();
 
+    @NotNull
+    String version();
+
     default int windowSize() {
         return WINDOW_SIZE;
     }

@@ -5,8 +5,8 @@ import static net.sf.dynamicreports.report.builder.DynamicReports.field;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import com.hartwig.hmftools.common.copynumber.CopyNumberAlteration;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
+import com.hartwig.hmftools.patientreporter.copynumber.CopyNumberAlteration;
 import com.hartwig.hmftools.patientreporter.report.util.PatientReportFormat;
 
 import org.jetbrains.annotations.NotNull;
@@ -44,7 +44,7 @@ public final class GeneCopyNumberDataSource {
                     copyNumber.chromosomeBand(),
                     copyNumber.gene(),
                     type(copyNumber),
-                    PatientReportFormat.correctValueForFitReliability(Long.toString(Math.round(copyNumber.value())),
+                    PatientReportFormat.correctValueForFitReliability(Long.toString(Math.round(copyNumber.minCopyNumber())),
                             hasReliablePurityFit));
         }
         return copyNumberDatasource;
@@ -88,11 +88,12 @@ public final class GeneCopyNumberDataSource {
 
     @NotNull
     public static String type(@NotNull GeneCopyNumber geneCopyNumber) {
-        if (geneCopyNumber.alteration() == CopyNumberAlteration.GAIN) {
+        CopyNumberAlteration alteration = CopyNumberAlteration.fromCopyNumber(geneCopyNumber.minCopyNumber());
+        if (alteration == CopyNumberAlteration.GAIN) {
             return "gain";
         } else {
             // At this point we only have losses and gains.
-            assert geneCopyNumber.alteration() == CopyNumberAlteration.LOSS;
+            assert alteration == CopyNumberAlteration.LOSS;
             if (geneCopyNumber.maxCopyNumber() < 0.5) {
                 return "full loss";
             } else {

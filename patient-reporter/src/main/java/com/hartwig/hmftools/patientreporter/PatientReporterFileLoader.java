@@ -94,6 +94,7 @@ public final class PatientReporterFileLoader {
             return null;
         } else {
             String bachelorFile = BachelorFile.findBachelorFilePath(bachelorDirectory, sample);
+            LOGGER.debug(" Using {} as input for bachelor", bachelorFile);
             List<GermlineVariant> germlineVariants =
                     bachelorFile != null ? BachelorFile.loadBachelorFile(bachelorFile) : Lists.newArrayList();
 
