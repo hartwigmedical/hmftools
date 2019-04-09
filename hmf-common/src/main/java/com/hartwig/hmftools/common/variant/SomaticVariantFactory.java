@@ -140,7 +140,7 @@ public class SomaticVariantFactory {
         final Genotype genotype = context.getGenotype(sample);
 
         if (filter.test(context) && genotype.hasAD() && genotype.getAD().length > 1) {
-            final AllelicDepth allelicDepth = determineAlleleFrequencies(context.getGenotype(sample));
+            final AllelicDepth allelicDepth = allelicDepth(context.getGenotype(sample));
             if (allelicDepth.totalReadCount() > 0) {
                 return Optional.of(createVariantBuilder(allelicDepth, context, canonicalAnnotationFactory))
                         .map(x -> enrichment.enrich(x, context))
@@ -152,7 +152,7 @@ public class SomaticVariantFactory {
 
     @NotNull
     public SomaticVariant createSomaticVariant(@NotNull final String sample, @NotNull final VariantContext context) {
-        final AllelicDepth allelicDepth = determineAlleleFrequencies(context.getGenotype(sample));
+        final AllelicDepth allelicDepth = allelicDepth(context.getGenotype(sample));
 
         return Optional.of(createVariantBuilder(allelicDepth, context, canonicalAnnotationFactory))
                 .map(x -> enrichment.enrich(x, context))
@@ -291,7 +291,7 @@ public class SomaticVariantFactory {
     }
 
     @NotNull
-    private static AllelicDepth determineAlleleFrequencies(@NotNull final Genotype genotype) {
+    public static AllelicDepth allelicDepth(@NotNull final Genotype genotype) {
         Preconditions.checkArgument(genotype.hasAD());
 
         int[] adFields = genotype.getAD();

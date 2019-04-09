@@ -696,6 +696,7 @@ Threads | Elapsed Time| CPU Time | Peak Mem
   - Added fitted segment chart
   - Added purity range chart
   - Added `no_chart` option
+  - Write purity enriched somatic VCF into output dir 
 - 2.25
   - Removed unused columns from GeneCopyNumber output
   - Added minorAllelePloidy and majorAllelePloidy to copy number output

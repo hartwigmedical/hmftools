@@ -62,6 +62,7 @@ import com.hartwig.hmftools.purple.config.SomaticConfig;
 import com.hartwig.hmftools.purple.config.StructuralVariantConfig;
 import com.hartwig.hmftools.purple.plot.ChartWriter;
 import com.hartwig.hmftools.purple.plot.RCharts;
+import com.hartwig.hmftools.purple.somatic.SomaticVCF;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -105,7 +106,7 @@ public class PurityPloidyEstimateApplication {
         final ExecutorService executorService = Executors.newFixedThreadPool(threads);
         try {
             // Get common config
-            final ConfigSupplier configSupplier = new ConfigSupplier(cmd, options);
+            final ConfigSupplier configSupplier = new ConfigSupplier(version.version(), cmd, options);
             final CommonConfig config = configSupplier.commonConfig();
             final String outputDirectory = config.outputDirectory();
             final String tumorSample = config.tumorSample();
@@ -126,7 +127,7 @@ public class PurityPloidyEstimateApplication {
             }
 
             // Load structural and somatic variants
-            final PurpleStructuralVariantSupplier structuralVariants = structuralVariants(version, configSupplier);
+            final PurpleStructuralVariantSupplier structuralVariants = structuralVariants(configSupplier);
             final List<SomaticVariant> allSomatics = somaticVariants(configSupplier);
             final List<SomaticVariant> snpSomatics = allSomatics.stream().filter(SomaticVariant::isSnp).collect(Collectors.toList());
 
@@ -188,13 +189,11 @@ public class PurityPloidyEstimateApplication {
             final List<PurityAdjustedSomaticVariant> enrichedSomatics =
                     new PurityAdjustedSomaticVariantFactory(purityAdjuster, copyNumbers, enrichedFittedRegions).create(allSomatics);
 
-            final List<GeneCopyNumber> geneCopyNumbers = GeneCopyNumberFactory.geneCopyNumbers(configSupplier.refGenomeConfig().genePanel(),
-                    copyNumbers,
-                    germlineDeletions);
+            final List<GeneCopyNumber> geneCopyNumbers =
+                    GeneCopyNumberFactory.geneCopyNumbers(configSupplier.refGenomeConfig().genePanel(), copyNumbers, germlineDeletions);
 
             LOGGER.info("Generating QC Stats");
             final PurpleQC qcChecks = PurpleQCFactory.create(bestFit.fit(), copyNumbers, amberGender, cobaltGender, geneCopyNumbers);
-
 
             LOGGER.info("Writing purple data to: {}", outputDirectory);
             version.write(outputDirectory);
@@ -207,6 +206,7 @@ public class PurityPloidyEstimateApplication {
             FittedRegionFile.write(FittedRegionFile.generateFilename(outputDirectory, tumorSample), enrichedFittedRegions);
             GeneCopyNumberFile.write(GeneCopyNumberFile.generateFilename(outputDirectory, tumorSample), geneCopyNumbers);
             structuralVariants.write(purityAdjuster, copyNumbers);
+            new SomaticVCF(config, configSupplier.somaticConfig()).write(purityAdjuster, copyNumbers, enrichedFittedRegions);
 
             final DBConfig dbConfig = configSupplier.dbConfig();
             if (dbConfig.enabled()) {
@@ -309,8 +309,7 @@ public class PurityPloidyEstimateApplication {
     }
 
     @NotNull
-    private static PurpleStructuralVariantSupplier structuralVariants(@NotNull final VersionInfo version,
-            @NotNull final ConfigSupplier configSupplier) {
+    private static PurpleStructuralVariantSupplier structuralVariants(@NotNull final ConfigSupplier configSupplier) {
         final CommonConfig commonConfig = configSupplier.commonConfig();
         final StructuralVariantConfig svConfig = configSupplier.structuralVariantConfig();
         if (svConfig.file().isPresent()) {
@@ -318,7 +317,7 @@ public class PurityPloidyEstimateApplication {
             final String outputPath = commonConfig.outputDirectory() + File.separator + commonConfig.tumorSample() + ".purple.sv.vcf.gz";
 
             LOGGER.info("Loading structural variants from {}", filePath);
-            return new PurpleStructuralVariantSupplier(version.version(), filePath, outputPath);
+            return new PurpleStructuralVariantSupplier(commonConfig.version(), filePath, outputPath);
         } else {
             return new PurpleStructuralVariantSupplier();
         }
