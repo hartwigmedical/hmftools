@@ -62,22 +62,22 @@ public final class BachelorFile {
             LOGGER.warn("Unexpected bachelor program found: " + program);
         }
 
-        String filter = values[30].trim();
-        int refReadCount = Integer.valueOf(values[15]);
+        String filter = values[32].trim();
         int altReadCount = Integer.valueOf(values[14]);
+        int totalReadCount = Integer.valueOf(values[15]);
 
         return ImmutableGermlineVariant.builder()
                 .passFilter(filter.equalsIgnoreCase("pass"))
-                .gene(values[8].trim())
-                .hgvsCodingImpact(values[24].trim())
-                .hgvsProteinImpact(values[23].trim())
-                .totalReadCount(refReadCount + altReadCount)
+                .gene(values[7].trim())
+                .hgvsCodingImpact(values[26].trim())
+                .hgvsProteinImpact(values[25].trim())
+                .totalReadCount(totalReadCount)
                 .alleleReadCount(altReadCount)
-                .germlineStatus(values[28].trim())
-                .adjustedVAF(Double.valueOf(values[17]))
-                .adjustedCopyNumber(Double.valueOf(values[16]))
-                .minorAllelePloidy(Double.valueOf(values[29]))
-                .biallelic(Boolean.valueOf(values[25].trim()))
+                .germlineStatus(values[30].trim())
+                .adjustedVAF(Double.valueOf(values[19]))
+                .adjustedCopyNumber(Double.valueOf(values[18]))
+                .minorAllelePloidy(Double.valueOf(values[31]))
+                .biallelic(Boolean.valueOf(values[27].trim()))
                 .build();
     }
 }
