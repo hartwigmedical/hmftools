@@ -5,10 +5,6 @@ import static com.hartwig.hmftools.sig_analyser.common.CosineSim.calcCSS;
 import static com.hartwig.hmftools.sig_analyser.common.DataUtils.copyVector;
 import static com.hartwig.hmftools.sig_analyser.common.DataUtils.sumVector;
 
-import java.util.List;
-
-import com.google.common.collect.Lists;
-import com.hartwig.hmftools.sig_analyser.buckets.SigContribOptimiser;
 import com.hartwig.hmftools.sig_analyser.common.SigReporter;
 import com.hartwig.hmftools.sig_analyser.common.SigMatrix;
 
@@ -30,7 +26,8 @@ public class NmfSampleFitter
 
     private boolean mIsValid;
 
-    private static double MAX_FIT_CSS_DIFF = 0.01;
+    private static double SIG_EXCLUSION_CSS_DIFF = 0.01;
+    private static double SIG_RE_INCLUSION_CSS_DIFF = 0.05;
     private static double MINOR_SIG_CONTRIBUTION_PERC = 0.001;
 
     private static final Logger LOGGER = LogManager.getLogger(NmfSampleFitter.class);
@@ -153,7 +150,7 @@ public class NmfSampleFitter
                 // assess the new contributions vs the actual counts, and exit if the change is greater than 0.01
                 double cssDiff = lastFitVsActualCss - newFitVsActualCss;
 
-                if (cssDiff > MAX_FIT_CSS_DIFF)
+                if (cssDiff > SIG_EXCLUSION_CSS_DIFF)
                 {
                     LOGGER.debug(String.format("sample(%d) fitVsActualsCss(%.4f -> %.4f diff=%.4f) with sigCount(%d), exiting",
                             sampleId, lastFitVsActualCss, newFitVsActualCss, cssDiff, currentSigCount));
@@ -202,7 +199,8 @@ public class NmfSampleFitter
                 if(minorSigsRemoved == 0)
                 {
                     // find the lowest contributing sig to remove (if no others have been this round already)
-                    if (leastIndex == -1 || newContribs[i] < leastContrib) {
+                    if (leastIndex == -1 || newContribs[i] < leastContrib)
+                    {
                         leastIndex = i;
                         leastContrib = prevContribs[i];
                     }
@@ -247,6 +245,53 @@ public class NmfSampleFitter
             nmfCalc.performRun(sampleId);
             prevResiduals = nmfCalc.getTotalResiduals();
             prevContribs = nmfCalc.getContributions().getCol(0);
+        }
+
+        double[] currentFit = nmfCalc.getFit().getCol(0);
+        lastFitVsActualCss = calcCSS(currentFit, sampleCounts);
+
+        LOGGER.debug(String.format("sample(%d) final run with %d sigs: css(%.4f) residuals(%.0f perc=%.3f) sampleCount(%.0f)",
+                sampleId, currentSigCount, lastFitVsActualCss, nmfCalc.getTotalResiduals(),
+                nmfCalc.getTotalResiduals()/sampleCount, sampleCount));
+
+        // finally try adding back in any signature which increases the CSS by > 0.5
+        for(int i = 0; i < refSigCount; ++i)
+        {
+            if(sigsInUse[i])
+                continue;
+
+            sigsInUse[i] = true;
+            enableRefSig(reducedSigs, i);
+
+            nmfCalc.setSignatures(reducedSigs);
+            nmfCalc.performRun(sampleId);
+
+            if(!nmfCalc.isValid())
+            {
+                LOGGER.warn("NMF fit failed for sample({})", sampleId);
+                break;
+            }
+
+            final double[] newFit = nmfCalc.getFit().getCol(0);
+            double newFitVsActualCss = calcCSS(newFit, sampleCounts);
+
+            double cssDiff = newFitVsActualCss - lastFitVsActualCss;
+
+            if (cssDiff >= SIG_RE_INCLUSION_CSS_DIFF)
+            {
+                prevResiduals = nmfCalc.getTotalResiduals();
+                prevContribs = nmfCalc.getContributions().getCol(0);
+                ++currentSigCount;
+
+                LOGGER.debug(String.format("sample(%d) fitVsActualsCss(%.4f -> %.4f diff=%.4f) improved with new sig(%d) sigCount(%d)",
+                        sampleId, lastFitVsActualCss, newFitVsActualCss, cssDiff, i, currentSigCount));
+            }
+            else
+            {
+                reduceSigData(sigsInUse, reducedSigs, i);
+            }
+
+            lastFitVsActualCss = newFitVsActualCss;
         }
 
         // use the previous fit's contributions ie when still had a sufficiently high CSS
@@ -295,9 +340,17 @@ public class NmfSampleFitter
         }
     }
 
+    // PCAWG sig references
+    // 0,   1,   2,   3,   4,   5,   6,    7,    8,    9,    10,  11,  12,    13,    14,   15,   16,   17,   18,   19,   20,    21,
+    // SBS1,SBS2,SBS3,SBS4,SBS5,SBS6,SBS7a,SBS7b,SBS7c,SBS7d,SBS8,SBS9,SBS10a,SBS10b,SBS11,SBS12,SBS13,SBS14,SBS15,SBS16,SBS17a,SBS17b,
+    // 22,   23,   24,   25,   26,   27,   28,    29,  30,   31,   32,    33,  34,   35,   36,   37,   38,   39,   40 etc
+    // SBS18,SBS19,SBS20,SBS21,SBS22,SBS24,SBS26,SBS28,SBS30,SBS33,SBS34,SBS35,SBS36,SBS37,SBS38,SBS39,SBS40,SBSR1,SBSR2
+
     // PCAWG inclusion and exclusion rules
     public final static int PCAWG_SIG_1_AGE = 0;
     public final static int PCAWG_SIG_5_AGE = 4;
+    public final static int PCAWG_SIG_2_AIDAPOBEC = 1;
+    public final static int PCAWG_SIG_13_AIDAPOBEC = 16;
     public final static int PCAWG_SIG_7A_SKIN = 6;
     public final static int PCAWG_SIG_7B_SKIN = 7;
     public final static int PCAWG_SIG_7C_SKIN = 8;
@@ -366,35 +419,44 @@ public class NmfSampleFitter
             }
         }
 
-        // sig 10a with 10b
-        if(sigsInUse[PCAWG_SIG_10A] && !sigsInUse[PCAWG_SIG_10B])
+        // 2 AID-APOBEC sigs (2 and 13)
+        if(enforceSigPairInUse(PCAWG_SIG_2_AIDAPOBEC, PCAWG_SIG_13_AIDAPOBEC, sigsInUse, sigs))
         {
-            for(int sig = PCAWG_SIG_10A; sig <= PCAWG_SIG_10B; ++sig)
-            {
-                if (sigsInUse[sig])
-                    continue;
+            ++sigsAdded;
+        }
 
-                sigsInUse[sig] = true;
-                enableRefSig(sigs, sig);
-                ++sigsAdded;
-            }
+        // sig 10a with 10b
+        if(enforceSigPairInUse(PCAWG_SIG_10A, PCAWG_SIG_10B, sigsInUse, sigs))
+        {
+            ++sigsAdded;
         }
 
         // sig 17a with 17b
-        if(sigsInUse[PCAWG_SIG_17A] && !sigsInUse[PCAWG_SIG_17B])
+        if(enforceSigPairInUse(PCAWG_SIG_17A, PCAWG_SIG_17B, sigsInUse, sigs))
         {
-            for(int sig = 20; sig <= 21; ++sig)
-            {
-                if (sigsInUse[sig])
-                    continue;
-
-                sigsInUse[sig] = true;
-                enableRefSig(sigs, sig);
-                ++sigsAdded;
-            }
+            ++sigsAdded;
         }
 
         return sigsAdded;
+    }
+
+    private boolean enforceSigPairInUse(int sig1, int sig2, boolean[] sigsInUse, SigMatrix sigs)
+    {
+        if(sigsInUse[sig1] == sigsInUse[sig2])
+            return false;
+
+        if (sigsInUse[sig1])
+        {
+            sigsInUse[sig2] = true;
+            enableRefSig(sigs, sig2);
+        }
+        else
+        {
+            sigsInUse[sig1] = true;
+            enableRefSig(sigs, sig1);
+        }
+
+        return true;
     }
 
 }
