@@ -675,11 +675,17 @@ Each segment is divided into its major and minor allele ploidy. The area of each
   <img src="src/main/resources/readme/COLO829.fitted.segments.png" width="500" alt="Purity Range">
 </p>
 
-The following figure shows the AMBER BAF count weighted distribution of copy numbers throughout the fitted segments.
+The following figures shows the AMBER BAF count weighted distribution of copy number and minor allele ploidy throughout the fitted segments.
+Copy numbers are broken down by colour into their respective minor allele ploidy (MAP) while the minor allele ploidy figure is broken down by copy number. 
 
 <p align="center">
   <img src="src/main/resources/readme/COLO829.copynumber.png" width="500" alt="Copy Number PDF">
 </p>
+
+<p align="center">
+  <img src="src/main/resources/readme/COLO829.map.png" width="500" alt="Copy Number PDF">
+</p>
+
 
 ## Performance Characteristics
 Performance numbers were taken from a 72 core machine using COLO829 data including generation of CIRCOS diagram but excluding database writing.
@@ -700,6 +706,8 @@ Threads | Elapsed Time| CPU Time | Peak Mem
 - Upcoming
   - Added fitted segment chart
   - Added purity range chart
+  - Added copy number pdf
+  - Added minor allele ploidy pdf
   - Added `no_chart` option
   - Write purity enriched somatic VCF into output dir 
 - 2.25
