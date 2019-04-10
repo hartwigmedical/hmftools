@@ -18,7 +18,8 @@
       "unused": "hello world",
       "requester_email": "henk@hmf.nl",
       "requester_name": "henk",
-      "shallowseq": 0
+      "shallowseq": 0,
+      "germline_findings": ""
     },
     "FR00000001": {
       "tumor_perc": 30,
@@ -39,7 +40,8 @@
       "lab_remarks": "this is a test",
       "requester_email": "henk@hmf.nl",
       "requester_name": "henk",
-      "shallowseq": 1
+      "shallowseq": 1,
+      "germline_findings": ""
     },
     "FR00000002": {
       "analysis_type": "do not analyze me",
