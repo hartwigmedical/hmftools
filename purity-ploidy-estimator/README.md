@@ -671,10 +671,15 @@ Crosshairs identify the best purity / ploidy solution.
 The contribution of each fitted segment to the final score of the best fit is shown in the following figure. 
 Each segment is divided into its major and minor allele ploidy. The area of each circle shows the weight (AMBER baf count) of each segment.
 
-  <p align="center">
-      <img src="src/main/resources/readme/COLO829.fitted.segments.png" width="500" alt="Purity Range">
-  </p>
+<p align="center">
+  <img src="src/main/resources/readme/COLO829.fitted.segments.png" width="500" alt="Purity Range">
+</p>
 
+The following figure shows the AMBER BAF count weighted distribution of copy numbers throughout the fitted segments.
+
+<p align="center">
+  <img src="src/main/resources/readme/COLO829.copynumber.png" width="500" alt="Copy Number PDF">
+</p>
 
 ## Performance Characteristics
 Performance numbers were taken from a 72 core machine using COLO829 data including generation of CIRCOS diagram but excluding database writing.

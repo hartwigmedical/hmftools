@@ -64,7 +64,7 @@ public class ChartWriter {
     }
 
     private void copyNumberPDF(@NotNull final String subtitle, @NotNull final List<PurpleCopyNumber> copyNumbers) throws IOException {
-        String fileName = outputDirectory + File.separator + sample + ".copyNumber.png";
+        String fileName = outputDirectory + File.separator + sample + ".copynumber.old.png";
         JFreeChart chart = CopyNumberCharts.copyNumberPDF(copyNumbers);
         chart.addSubtitle(new TextTitle(subtitle));
         ChartUtilities.saveChartAsPNG(new File(fileName), chart, 500, 300);

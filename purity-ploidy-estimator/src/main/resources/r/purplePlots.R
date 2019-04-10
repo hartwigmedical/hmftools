@@ -80,6 +80,43 @@ fittedSegmentsPlot <- function(fittedSegments) {
 
 }
 
+
+
+copynumber_pdf <- function(copyNumberRegions) {
+    totalBafCount = sum(copyNumberRegions$bafCount)
+
+    maxCopyNumber = copyNumberRegions %>%
+        mutate(bucket = ceiling(copyNumber)) %>%
+        group_by(bucket) %>%
+        summarise(n = sum(bafCount)) %>%
+        mutate(cumn = cumsum(n), proportion =  cumn / max(cumn)) %>%
+        arrange(proportion) %>%
+        filter(proportion > 0.9) %>%
+        filter(row_number() == 1) %>%
+        pull(bucket)
+
+    copyNumberRegions = copyNumberRegions %>%
+        filter(!chromosome %in% c('X','Y'), copyNumber < 10, bafCount > 0) %>%
+        mutate(
+        chromosome = factor(chromosome, levels= c(1:22), ordered = T),
+        weight = bafCount/totalBafCount )
+
+
+    ggplot(copyNumberRegions, aes(x = copyNumber)) +
+        geom_histogram(aes(weight = bafCount), alpha = 0.7, fill= "#6baed6", binwidth = 0.1, color = "black",  position = "stack") +
+        #geom_histogram(aes(fill = chromosome, weight = bafCount), alpha = 0.7, color = "black", binwidth = 0.1, position = "stack") +
+        #scale_fill_manual(values = chromosomeColours) +
+        scale_x_continuous(breaks = c(0:10), limits = c(0,maxCopyNumber)) +
+        theme(panel.grid.minor = element_blank(), axis.ticks = element_blank()) +
+        xlab("Copy Number") + ylab("Baf Count") + ggtitle("CopyNumber PDF")
+}
+
+
+copyNumbers = read.table(file = paste0(purpleDir, "/", sample, ".purple.cnv"), sep = "\t", header = T, comment.char = "!") %>% select(chromosome = X.chromosome, everything())
+copyNumberPDF = copynumber_pdf(copyNumbers)
+ggsave(filename = paste0(plotDir, "/", sample, ".copynumber.png"), copyNumberPDF, units = "in", height = 4, width = 4.8, scale = 1)
+
+
 rangeDF = read.table(file = paste0(purpleDir, "/", sample, ".purple.purity.range"), sep = "\t", header = T, comment.char = "!") %>% select(Purity = X.Purity, Ploidy, Score)
 rangePlot = purityPloidyRangePlot(rangeDF)
 ggsave(filename = paste0(plotDir, "/", sample, ".purity.range.png"), rangePlot, units = "in", height = 4, width = 4.8, scale = 1)
