@@ -671,9 +671,20 @@ Crosshairs identify the best purity / ploidy solution.
 The contribution of each fitted segment to the final score of the best fit is shown in the following figure. 
 Each segment is divided into its major and minor allele ploidy. The area of each circle shows the weight (AMBER baf count) of each segment.
 
-  <p align="center">
-      <img src="src/main/resources/readme/COLO829.fitted.segments.png" width="500" alt="Purity Range">
-  </p>
+<p align="center">
+  <img src="src/main/resources/readme/COLO829.fitted.segments.png" width="500" alt="Purity Range">
+</p>
+
+The following figures shows the AMBER BAF count weighted distribution of copy number and minor allele ploidy throughout the fitted segments.
+Copy numbers are broken down by colour into their respective minor allele ploidy (MAP) while the minor allele ploidy figure is broken down by copy number. 
+
+<p align="center">
+  <img src="src/main/resources/readme/COLO829.copynumber.png" width="500" alt="Copy Number PDF">
+</p>
+
+<p align="center">
+  <img src="src/main/resources/readme/COLO829.map.png" width="500" alt="Copy Number PDF">
+</p>
 
 
 ## Performance Characteristics
@@ -695,6 +706,8 @@ Threads | Elapsed Time| CPU Time | Peak Mem
 - Upcoming
   - Added fitted segment chart
   - Added purity range chart
+  - Added copy number pdf
+  - Added minor allele ploidy pdf
   - Added `no_chart` option
   - Write purity enriched somatic VCF into output dir 
 - 2.25

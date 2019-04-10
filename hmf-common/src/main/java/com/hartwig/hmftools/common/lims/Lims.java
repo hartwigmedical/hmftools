@@ -222,6 +222,31 @@ public class Lims {
         return "N/A";
     }
 
+    public int germlineFindigsWIDE(@NotNull String sample) {
+        LimsJsonSampleData sampleData = dataPerSample.get(sample);
+        int germlineValue = 0;
+        if (sampleData != null && sample.startsWith("WIDE")) {
+            String germlineOptions = sampleData.germlineFindings();
+            if (germlineOptions.equals("1: Behandelbare toevalsbevindingen")) {
+                LOGGER.info("Patient has given informed consent for: 1: Behandelbare toevalsbevindingen");
+                germlineValue = 1;
+            } else if (germlineOptions.equals("2: Alle toevalsbevindingen")) {
+                LOGGER.info("Patient has given informed consent for: 2: Alle toevalsbevindingen");
+                germlineValue = 2;
+            } else if (germlineOptions.equals("3: Geen toevalsbevindingen, familie mag deze wel opvragen")) {
+                LOGGER.info("Patient has given informed consent for: 3: Geen toevalsbevindingen, familie mag deze wel opvragen");
+                germlineValue = 3;
+            } else if (germlineOptions.equals("4: Geen toevalsbevindingen, familie mag deze niet opvragen")) {
+                LOGGER.info("Patient has given informed consent for: 4: Geen toevalsbevindingen, familie mag deze niet opvragen");
+                germlineValue = 4;
+            } else {
+                LOGGER.info("Unrecognized value");
+            }
+            LOGGER.info("Not a WIDE sample");
+        }
+        return germlineValue;
+    }
+
     @Nullable
     private String submission(@NotNull String sample) {
         LimsJsonSampleData sampleData = dataPerSample.get(sample);

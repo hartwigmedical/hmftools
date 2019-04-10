@@ -88,6 +88,10 @@ abstract class LimsJsonSampleData {
     public abstract String submission();
 
     @NotNull
+    @SerializedName("germline_findings")
+    public abstract String germlineFindings();
+
+    @NotNull
     @Value.Derived
     public String labProcedures() {
         final Pattern pattern = Pattern.compile("PREP(\\d+)V(\\d+)-QC(\\d+)V(\\d+)-SEQ(\\d+)V(\\d+)");
