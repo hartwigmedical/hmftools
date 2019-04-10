@@ -35,6 +35,7 @@ public class NmfManager {
 
     private SigMatrix mSampleCountsMatrix;
     private SigMatrix mReferenceSigs;
+    private SigMatrix mReferenceContribs;
 
     private NmfCalculator mNmfCalculator;
 
@@ -88,7 +89,13 @@ public class NmfManager {
         if(!mConfig.RefContribFilename.isEmpty())
         {
             GenericDataCollection dataCollection = GenericDataLoader.loadFile(mConfig.RefContribFilename);
-            mNmfCalculator.setContributions(DataUtils.createMatrixFromListData(dataCollection.getData()));
+            mReferenceContribs = DataUtils.createMatrixFromListData(dataCollection.getData());
+            mReferenceContribs.cacheTranspose();
+
+            if(!mConfig.FitRestrictToContribs)
+            {
+                mNmfCalculator.setContributions(mReferenceContribs);
+            }
         }
 
         mPerfCounter.stop();
@@ -157,6 +164,11 @@ public class NmfManager {
         mPerfCounter.start("NMF");
 
         NmfSampleFitter sampleFitter = new NmfSampleFitter(mConfig, mSampleCountsMatrix, mReferenceSigs);
+
+        if(mConfig.FitRestrictToContribs)
+        {
+            sampleFitter.setRefContributions(mReferenceContribs);
+        }
 
         sampleFitter.fitSamples();
 

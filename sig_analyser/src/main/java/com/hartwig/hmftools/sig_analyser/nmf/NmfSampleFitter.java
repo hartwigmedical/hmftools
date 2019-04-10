@@ -17,8 +17,9 @@ import org.apache.logging.log4j.Logger;
 
 public class NmfSampleFitter
 {
-   private NmfConfig mConfig;
+    private NmfConfig mConfig;
     private SigMatrix mRefSignatures;
+    private SigMatrix mReferenceContribs;
     private SigMatrix mSampleCounts;
     private SigMatrix mAllContributions;
 
@@ -39,9 +40,11 @@ public class NmfSampleFitter
         mAllContributions = new SigMatrix(refSigs.Cols, sampleCounts.Cols);
         mSigCountFrequency = new int[refSigs.Cols];
         mRefSignatures = refSigs;
+        mReferenceContribs = null;
         mIsValid = true;
     }
 
+    public void setRefContributions(final SigMatrix refContribs) { mReferenceContribs = refContribs; }
     public final SigMatrix getContributions() { return mAllContributions; }
     public boolean isValid() { return mIsValid; }
 
@@ -71,7 +74,15 @@ public class NmfSampleFitter
         sigReporter.runAnalysis();
     }
 
-    private boolean fitSample(final int sampleId)
+    private boolean canSampleUseSig(int sampleId, int sig)
+    {
+        if(mReferenceContribs == null)
+            return true;
+
+        return mReferenceContribs.get(sig, sampleId) > 0;
+    }
+
+    private boolean fitSample(int sampleId)
     {
         int bucketCount = mSampleCounts.Rows;
 
@@ -102,7 +113,7 @@ public class NmfSampleFitter
         // final List<double[]> sigsCollection = Lists.newArrayList();
         for(int i = 0; i < refSigCount; ++i)
         {
-            if(belowRequiredMutLoad(i, sampleCount))
+            if(belowRequiredMutLoad(i, sampleCount) || !canSampleUseSig(sampleId, i))
             {
                 reduceSigData(sigsInUse, reducedSigs, i);
             }
@@ -257,7 +268,7 @@ public class NmfSampleFitter
         // finally try adding back in any signature which increases the CSS by > 0.5
         for(int i = 0; i < refSigCount; ++i)
         {
-            if(sigsInUse[i])
+            if(sigsInUse[i] ||  !canSampleUseSig(sampleId, i))
                 continue;
 
             sigsInUse[i] = true;
