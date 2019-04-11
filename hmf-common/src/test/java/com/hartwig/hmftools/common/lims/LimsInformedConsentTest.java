@@ -19,10 +19,12 @@ public class LimsInformedConsentTest {
                 LimsInformedConsent.extractChoiceInformedConsent("4: Geen toevalsbevindingen, familie mag deze niet opvragen",
                         "WIDE02991111T"));
         assertEquals(LimsInformedConsent.UNKNOWN, LimsInformedConsent.extractChoiceInformedConsent("", "CPCT02991111T"));
+        assertEquals(LimsInformedConsent.UNKNOWN, LimsInformedConsent.extractChoiceInformedConsent("", "DRUP02991111T"));
+        assertEquals(LimsInformedConsent.UNKNOWN, LimsInformedConsent.extractChoiceInformedConsent("", "COLO02991111T"));
+        assertEquals(LimsInformedConsent.UNKNOWN, LimsInformedConsent.extractChoiceInformedConsent("", "CORE02991111T"));
     }
 
-
-    @Test (expected = IllegalStateException.class)
+    @Test(expected = IllegalStateException.class)
     public void hasUnknownGermlineChoice() {
         LimsInformedConsent.extractChoiceInformedConsent("ALL", "WIDE02991111T");
     }
