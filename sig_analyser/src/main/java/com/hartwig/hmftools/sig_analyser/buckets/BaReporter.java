@@ -5,10 +5,10 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.Math.round;
 
-import static com.hartwig.hmftools.sig_analyser.buckets.BucketAnalyser.MIN_GROUP_ALLOC_PERCENT;
-import static com.hartwig.hmftools.sig_analyser.buckets.BucketAnalyser.MIN_GROUP_ALLOC_PERCENT_LOWER;
-import static com.hartwig.hmftools.sig_analyser.buckets.BucketAnalyser.SAMPLE_ALLOCATED_PERCENT;
-import static com.hartwig.hmftools.sig_analyser.buckets.BucketAnalyser.SIG_SIMILAR_CSS;
+import static com.hartwig.hmftools.sig_analyser.buckets.BaConfig.MIN_GROUP_ALLOC_PERCENT;
+import static com.hartwig.hmftools.sig_analyser.buckets.BaConfig.MIN_GROUP_ALLOC_PERCENT_LOWER;
+import static com.hartwig.hmftools.sig_analyser.buckets.BaConfig.SAMPLE_ALLOCATED_PERCENT;
+import static com.hartwig.hmftools.sig_analyser.buckets.BaConfig.SIG_SIMILAR_CSS;
 import static com.hartwig.hmftools.sig_analyser.common.CosineSim.CSSR_I1;
 import static com.hartwig.hmftools.sig_analyser.common.CosineSim.CSSR_I2;
 import static com.hartwig.hmftools.sig_analyser.common.CosineSim.CSSR_VAL;

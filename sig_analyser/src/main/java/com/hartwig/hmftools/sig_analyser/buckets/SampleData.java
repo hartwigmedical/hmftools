@@ -3,7 +3,7 @@ package com.hartwig.hmftools.sig_analyser.buckets;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
-import static com.hartwig.hmftools.sig_analyser.buckets.BucketAnalyser.MAX_NOISE_ALLOC_PERCENT;
+import static com.hartwig.hmftools.sig_analyser.buckets.BaConfig.MAX_NOISE_ALLOC_PERCENT;
 import static com.hartwig.hmftools.sig_analyser.common.DataUtils.capValue;
 import static com.hartwig.hmftools.sig_analyser.common.DataUtils.copyVector;
 import static com.hartwig.hmftools.sig_analyser.common.DataUtils.greaterThan;

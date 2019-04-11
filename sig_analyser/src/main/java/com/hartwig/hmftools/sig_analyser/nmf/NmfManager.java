@@ -119,7 +119,8 @@ public class NmfManager {
         double lowestRunScore = -1;
         int lowestRunIndex = -1;
 
-        for (int sigCount = startSigCount; sigCount <= maxSigCount; ++sigCount) {
+        for (int sigCount = startSigCount; sigCount <= maxSigCount; ++sigCount)
+        {
             LOGGER.info("starting run with sigCount({})", sigCount);
 
             NmfRun nmfRun = new NmfRun(mConfig, sigCount, mNmfCalculator, mReferenceSigs);
@@ -129,7 +130,8 @@ public class NmfManager {
                 break;
             }
 
-            if (lowestRunScore < 0 || nmfRun.getLowestRunScore() < lowestRunScore) {
+            if (lowestRunScore < 0 || nmfRun.getLowestRunScore() < lowestRunScore)
+            {
                 lowestRunScore = nmfRun.getLowestRunScore();
                 lowestRunIndex = mRuns.size();
             }
@@ -139,11 +141,12 @@ public class NmfManager {
 
         mPerfCounter.stop();
 
-        if (!mRuns.isEmpty()) {
-
+        if (!mRuns.isEmpty())
+        {
             final NmfRun nmfRun = mRuns.get(lowestRunIndex);
 
-            if (mRuns.size() > 1) {
+            if (mRuns.size() > 1)
+            {
                 LOGGER.info("optimal sigCount({})", nmfRun.getSigCount());
             }
 
@@ -156,7 +159,8 @@ public class NmfManager {
 
     private void runFitOnly()
     {
-        if(mReferenceSigs == null) {
+        if(mReferenceSigs == null)
+        {
             // for now only works with external sigs, in time could work with sig finder's set
             return;
         }
@@ -236,45 +240,6 @@ public class NmfManager {
         {
             LOGGER.error("error writing to outputFile");
         }
-    }
-
-    public void runTests() {
-
-        testMatrixCopy();
-    }
-
-    private void testMatrixCopy()
-    {
-        SigMatrix m1 = new SigMatrix(5, 5);
-
-        Random random = new Random(123456);
-        DataUtils.initRandom(m1, 0, 1, random);
-
-        SigMatrix m2 = new SigMatrix(m1);
-
-        m1.set(0, 0, 100);
-    }
-
-    private void testSigCompare()
-    {
-        SigMatrix sigs1 = new SigMatrix(5, 5);
-        SigMatrix sigs2 = new SigMatrix(5, 5);
-
-        double[][] s1Data = sigs1.getData();
-        double[][] s2Data = sigs2.getData();
-
-        for(int i = 0; i < sigs1.Rows; ++i)
-        {
-            for(int j = 0; j < sigs1.Cols; ++j)
-            {
-                s1Data[i][j] = (i+1) * (j+1);
-
-                if(j < sigs1.Cols-1)
-                    s2Data[i][j] = s1Data[i][j];
-            }
-        }
-
-        NmfRun.signaturesEqual(sigs1, sigs2);
     }
 
 }

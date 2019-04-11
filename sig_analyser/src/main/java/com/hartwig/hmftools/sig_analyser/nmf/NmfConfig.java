@@ -33,6 +33,7 @@ public class NmfConfig {
 
     final public boolean FitOnly; // apply fitting routine to samples using input/ref sigs
     final public boolean FitRestrictToContribs; // only allow ref sigs if allocated already
+    final public boolean ApplyPcawgRules;
 
     final public boolean LogVerbose;
 
@@ -46,6 +47,7 @@ public class NmfConfig {
     public static String NMF_REF_CONTRIB_FILE = "nmf_ref_contrib_file";
     public static String NMF_SIG_FLOAT_RATE = "nmf_sig_float_rate";
     public static String NMF_FIT_ONLY = "nmf_fit_only";
+    public static String NMF_PCAWG_RULES = "nmf_apply_pcawg_rules";
     public static String NMF_FIT_RESTRICTED = "nmf_fit_restricted";
 
     public static String NMF_SIG_EXPANSION = "nmf_sig_exp_count";
@@ -74,6 +76,7 @@ public class NmfConfig {
         options.addOption(NMF_USE_REF_SIGS, false, "If true use reference sig file, otherwise only used for comparison");
         options.addOption(NMF_REF_CONTRIB_FILE, true, "Option reference contributions file");
         options.addOption(NMF_SIG_FLOAT_RATE, true, "How much any pre-discovery sig can float on each adjustment");
+        options.addOption(NMF_PCAWG_RULES, false, "Apply PCAWG signature rules");
         options.addOption(NMF_SIG_EXPANSION, true, "Max number of sigs to expand to");
         options.addOption(NMF_FIT_ONLY, false, "Fit to input ref sigs, apply min-sig logic");
         options.addOption(NMF_FIT_RESTRICTED, false, "Fit to input ref sigs if has ref contribution");
@@ -108,6 +111,7 @@ public class NmfConfig {
 
         RefSigFilename = cmd.hasOption(NMF_REF_SIG_FILE) ? cmd.getOptionValue(NMF_REF_SIG_FILE) : "";
         UseRefSigs = cmd.hasOption(NMF_USE_REF_SIGS);
+        ApplyPcawgRules = cmd.hasOption(NMF_PCAWG_RULES);
         RefContribFilename = cmd.hasOption(NMF_REF_CONTRIB_FILE) ? cmd.getOptionValue(NMF_REF_CONTRIB_FILE) : "";
         FitOnly = cmd.hasOption(NMF_FIT_ONLY);
         FitRestrictToContribs = cmd.hasOption(NMF_FIT_RESTRICTED);

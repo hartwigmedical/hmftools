@@ -163,8 +163,8 @@ public class NmfCalculator
     {
         // to stick with convention, the signatures matrix is comprised of values between 0 - 1, with a sig's bucket ratios adding to 1
         // whereas the contributions per samples are its bucket counts split across the sigs
-        if (mRefSignatures != null && mRefSignatures.Cols == mSigCount) {
-
+        if (mRefSignatures != null && mRefSignatures.Cols == mSigCount)
+        {
             mW = new SigMatrix(mRefSignatures);
             return;
         }
@@ -273,8 +273,8 @@ public class NmfCalculator
         // non-proposed sigs need a contribution above zero to allow them to float
         double nonRefSigPercent = (1-refSigAllocation) / (mSigCount - 1);
 
-        for (int n = 0; n < mSampleCounts.Cols; ++n) {
-
+        for (int n = 0; n < mSampleCounts.Cols; ++n)
+        {
             double sampleTotal = mSampleTotals[n];
             double sigTotal = 0;
 
@@ -282,20 +282,20 @@ public class NmfCalculator
             // if not, set them all to randoms
             boolean requiresRandoms = true;
 
-            if (mRefContributions != null) {
-
-                for (int s = 0; s < mRefContributions.Rows; ++s) {
-
-                    if (mRefContributions.get(s, n) > 0) {
-
+            if (mRefContributions != null)
+            {
+                for (int s = 0; s < mRefContributions.Rows; ++s)
+                {
+                    if (mRefContributions.get(s, n) > 0)
+                    {
                         requiresRandoms = false;
                         break;
                     }
                 }
             }
 
-            for (int s = 0; s < mSigCount; ++s) {
-
+            for (int s = 0; s < mSigCount; ++s)
+            {
                 if(requiresRandoms)
                 {
                     sigFractions[s] = mRandom.nextDouble();
@@ -316,7 +316,8 @@ public class NmfCalculator
                 sigTotal += sigFractions[s];
             }
 
-            for (int s = 0; s < mSigCount; ++s) {
+            for (int s = 0; s < mSigCount; ++s)
+            {
                 hData[s][n] = sampleTotal * sigFractions[s] / sigTotal;
             }
         }
@@ -345,7 +346,8 @@ public class NmfCalculator
             // compute the fit
             produceFit();
 
-            if(mConfig.LogVerbose && i > 0) {
+            if(mConfig.LogVerbose && i > 0)
+            {
                 logMatrixDiffs();
             }
 
@@ -512,8 +514,8 @@ public class NmfCalculator
         hAdj.scalarDivide(hd, true);
         mH.scalarMultiply(hAdj);
 
-        if(mConfig.SigFloatRate > 0) {
-
+        if(mConfig.SigFloatRate > 0)
+        {
             // update signatures matrix
             SigMatrix ht = mH.transpose();
             SigMatrix wAdj = mSampleCounts.multiply(ht);
@@ -618,10 +620,10 @@ public class NmfCalculator
         final double[][] vData = mV.getData();
         final double[][] sbData = mSampleCounts.getData();
 
-        for (int n = 0; n < mSampleCount; ++n) {
-
-            for (int b = 0; b < mBucketCount; ++b) {
-
+        for (int n = 0; n < mSampleCount; ++n)
+        {
+            for (int b = 0; b < mBucketCount; ++b)
+            {
                 double A = useVAsRef ? vData[b][n] : sbData[b][n];
                 double B = !useVAsRef ? vData[b][n] : sbData[b][n];
 
@@ -671,8 +673,8 @@ public class NmfCalculator
                 }
             }
 
-            for(int j = 0; j < mH.Cols; ++j) {
-
+            for(int j = 0; j < mH.Cols; ++j)
+            {
                 hData[i][j] *= contribAdj;
             }
 

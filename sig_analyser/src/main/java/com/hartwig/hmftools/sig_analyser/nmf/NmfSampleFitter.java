@@ -373,6 +373,9 @@ public class NmfSampleFitter
 
     private boolean belowRequiredMutLoad(int sig, double sampleCount)
     {
+        if(!mConfig.ApplyPcawgRules)
+            return false;
+
         // some signatures can only be applied for samples above a certain mutational load
         switch(sig)
         {
@@ -397,6 +400,9 @@ public class NmfSampleFitter
 
     private int addRequiredSigs(boolean[] sigsInUse, SigMatrix sigs)
     {
+        if(!mConfig.ApplyPcawgRules)
+            return 0;
+
         // force some signatures to be included: currently 1 and 5
         int sigsAdded = 0;
 
