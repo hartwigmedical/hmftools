@@ -19,7 +19,6 @@ import com.hartwig.hmftools.patientreporter.report.components.MutationalLoadSect
 import com.hartwig.hmftools.patientreporter.report.data.GeneCopyNumberDataSource;
 import com.hartwig.hmftools.patientreporter.report.data.GeneDisruptionDataSource;
 import com.hartwig.hmftools.patientreporter.report.data.GeneFusionDataSource;
-import com.hartwig.hmftools.patientreporter.report.data.GermlineVariantDataSource;
 import com.hartwig.hmftools.patientreporter.report.data.SomaticVariantDataSource;
 
 import org.immutables.value.Value;
@@ -45,8 +44,6 @@ public abstract class FindingsPage {
                 geneFusionReport(report()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
                 geneDisruptionReport(report()),
-                cmp.verticalGap(SECTION_VERTICAL_GAP),
-                germlineVariantReport(report()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
                 chordReport(report()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
@@ -127,27 +124,6 @@ public abstract class FindingsPage {
                         : cmp.text("None").setStyle(fontStyle().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER));
 
         return cmp.verticalList(cmp.text("Somatic Gene Fusions").setStyle(sectionHeaderStyle()),
-                cmp.verticalGap(HEADER_TO_TABLE_VERTICAL_GAP),
-                table);
-    }
-
-    @NotNull
-    private static ComponentBuilder<?, ?> germlineVariantReport(@NotNull AnalysedPatientReport report) {
-        String noVariantsFoundText = report.hasGermlineAnalysis() ? "None" : "Reporting of HR-related germline variants is not available";
-        final ComponentBuilder<?, ?> table =
-                !report.germlineVariants().isEmpty() && report.hasGermlineAnalysis()
-                        ? cmp.subreport(monospaceBaseTable().fields(GermlineVariantDataSource.fields())
-                        .columns(col.column("Gene", GermlineVariantDataSource.GENE_FIELD),
-                                col.column("Variant", GermlineVariantDataSource.VARIANT_FIELD).setFixedWidth(90),
-                                col.column("Impact", GermlineVariantDataSource.IMPACT_FIELD).setFixedWidth(80),
-                                col.column("Read Depth", GermlineVariantDataSource.READ_DEPTH_FIELD),
-                                col.column("Germline Status", GermlineVariantDataSource.GERMLINE_STATUS_FIELD),
-                                col.column("Ploidy (VAF)", GermlineVariantDataSource.PLOIDY_VAF_FIELD).setFixedWidth(80),
-                                col.column("Biallelic", GermlineVariantDataSource.BIALLELIC_FIELD))
-                        .setDataSource(GermlineVariantDataSource.fromVariants(report.germlineVariants(), report.hasReliablePurityFit())))
-                        : cmp.text(noVariantsFoundText).setStyle(fontStyle().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER));
-
-        return cmp.verticalList(cmp.text("HR-Related Germline Variants").setStyle(sectionHeaderStyle()),
                 cmp.verticalGap(HEADER_TO_TABLE_VERTICAL_GAP),
                 table);
     }
