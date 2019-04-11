@@ -179,49 +179,6 @@ public class LimsTest {
         assertEquals("not determined", lims.pathologyTumorPercentage(SAMPLE));
     }
 
-    @Test
-    public void extractGermlineFindingOptionUnknown() {
-        final LimsJsonSampleData sampleData = createLimsSampleDataBuilder().sampleId(SAMPLE_WIDE).germlineFindings("").build();
-        Lims lims = buildTestLimsWithSample(sampleData);
-        assertEquals(0, lims.germlineFindigsWIDE(SAMPLE_WIDE));
-        assertEquals(0, lims.germlineFindigsWIDE(SAMPLE));
-    }
-
-    @Test
-    public void extractGermlineFindingOption1() {
-        final LimsJsonSampleData sampleData =
-                createLimsSampleDataBuilder().sampleId(SAMPLE_WIDE).germlineFindings("1: Behandelbare toevalsbevindingen").build();
-        Lims lims = buildTestLimsWithSample(sampleData);
-        assertEquals(1, lims.germlineFindigsWIDE(SAMPLE_WIDE));
-        assertEquals(0, lims.germlineFindigsWIDE(SAMPLE));
-    }
-
-    @Test
-    public void extractGermlineFindingOption2() {
-        final LimsJsonSampleData sampleData =
-                createLimsSampleDataBuilder().sampleId(SAMPLE_WIDE).germlineFindings("2: Alle toevalsbevindingen").build();
-        Lims lims = buildTestLimsWithSample(sampleData);
-        assertEquals(2, lims.germlineFindigsWIDE(SAMPLE_WIDE));
-    }
-
-    @Test
-    public void extractGermlineFindingOption3() {
-        final LimsJsonSampleData sampleData = createLimsSampleDataBuilder().sampleId(SAMPLE_WIDE)
-                .germlineFindings("3: Geen toevalsbevindingen, familie mag deze wel opvragen")
-                .build();
-        Lims lims = buildTestLimsWithSample(sampleData);
-        assertEquals(3, lims.germlineFindigsWIDE(SAMPLE_WIDE));
-    }
-
-    @Test
-    public void extractGermlineFindingOption4() {
-        final LimsJsonSampleData sampleData = createLimsSampleDataBuilder().sampleId(SAMPLE_WIDE)
-                .germlineFindings("4: Geen toevalsbevindingen, familie mag deze niet opvragen")
-                .build();
-        Lims lims = buildTestLimsWithSample(sampleData);
-        assertEquals(4, lims.germlineFindigsWIDE(SAMPLE_WIDE));
-    }
-
     @NotNull
     private static Lims buildTestLimsWithSampleAndSubmission(@NotNull final LimsJsonSampleData sampleData,
             @NotNull final LimsJsonSubmissionData submissionData) {
