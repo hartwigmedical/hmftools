@@ -2,6 +2,7 @@ package com.hartwig.hmftools.patientreporter.germline;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
@@ -29,11 +30,11 @@ public final class GermlineGenesReportingFile {
         Set<String> germlineVariantNotify = Sets.newHashSet();
 
         for (String lineGenes : linesGermlineGenes) {
-            germlineGenes.add(lineGenes);
+            Collections.addAll(germlineGenes, lineGenes);
         }
 
         for (String lineGenesNotify : linesGermlineVariantNotify) {
-            germlineVariantNotify.add(lineGenesNotify);
+            Collections.addAll(germlineVariantNotify, lineGenesNotify);
         }
 
         LOGGER.info(germlineGenes);
