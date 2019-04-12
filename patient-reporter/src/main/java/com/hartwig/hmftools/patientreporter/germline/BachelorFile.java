@@ -63,8 +63,8 @@ public final class BachelorFile {
         }
 
         String filter = values[32].trim();
-        int altReadCount = Integer.valueOf(values[14]);
-        int totalReadCount = Integer.valueOf(values[15]);
+        int altReadCount = Integer.valueOf(values[16]);
+        int totalReadCount = Integer.valueOf(values[17]);
 
         return ImmutableGermlineVariant.builder()
                 .passFilter(filter.equalsIgnoreCase("pass"))

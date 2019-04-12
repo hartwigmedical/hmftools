@@ -28,8 +28,8 @@ public class BachelorFileTest {
         assertEquals("c.191G>A", variant.hgvsCodingImpact());
         assertEquals("p.Cys64Tyr", variant.hgvsProteinImpact());
         assertEquals("HET", variant.germlineStatus());
-        assertEquals(33, variant.alleleReadCount());
-        assertEquals(89, variant.totalReadCount());
+        assertEquals(20, variant.alleleReadCount());
+        assertEquals(90, variant.totalReadCount());
         assertEquals(2.99, variant.adjustedCopyNumber(), EPSILON);
         assertEquals(0.12, variant.adjustedVAF(), EPSILON);
         assertEquals(1.07, variant.minorAllelePloidy(), EPSILON);
