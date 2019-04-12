@@ -19,6 +19,8 @@ import com.hartwig.hmftools.patientreporter.actionability.DrupActionabilityModel
 import com.hartwig.hmftools.patientreporter.actionability.DrupActionabilityModelFactory;
 import com.hartwig.hmftools.patientreporter.genepanel.GeneModel;
 import com.hartwig.hmftools.patientreporter.genepanel.GeneModelFactory;
+import com.hartwig.hmftools.patientreporter.germline.GermlineGenesReporting;
+import com.hartwig.hmftools.patientreporter.germline.GermlineGenesReportingFile;
 import com.hartwig.hmftools.patientreporter.structural.SvAnalyzer;
 
 import org.jetbrains.annotations.NotNull;
@@ -39,6 +41,9 @@ public final class PatientReporterTestUtil {
 
     private static final String FUSION_FILE = Resources.getResource("test_run/svAnalysis/CPCT11111111T_fusions.csv").getPath();
     private static final String DISRUPTION_FILE = Resources.getResource("test_run/svAnalysis/CPCT11111111T_disruptions.csv").getPath();
+
+    private static final String GERMLINE_REPORTED = Resources.getResource("csv/GermlineGenesReported.csv").getPath();
+    private static final String GERMLINE_REPORTED_NOTIFY = Resources.getResource("csv/GermlineVariantNotify.csv").getPath();
 
     private PatientReporterTestUtil() {
     }
@@ -67,17 +72,23 @@ public final class PatientReporterTestUtil {
     }
 
     @NotNull
+    public static GermlineGenesReporting testGermlineModel() throws IOException {
+        return GermlineGenesReportingFile.buildFromCsv(GERMLINE_REPORTED, GERMLINE_REPORTED_NOTIFY);
+    }
+
+    @NotNull
     public static SequencedReportData testSequencedReportData() {
         try {
             DrupActionabilityModel drupActionabilityModel = testDrupActionabilityModel();
             GeneModel geneModel = GeneModelFactory.create(drupActionabilityModel);
+            GermlineGenesReporting germlineGenesReporting = testGermlineModel();
             CompoundEnrichment compoundEnrichment = new CompoundEnrichment(HotspotEnrichment.fromHotspotsFile(HOTSPOT_TSV));
 
             return ImmutableSequencedReportData.of(geneModel,
                     testActionabilityAnalyzer(),
                     compoundEnrichment,
                     new IndexedFastaSequenceFile(new File(REF_GENOME_PATH)),
-                    TreeMultimap.create());
+                    TreeMultimap.create(), germlineGenesReporting);
         } catch (IOException exception) {
             throw new IllegalStateException("Could not generate test sequenced report data: " + exception.getMessage());
         }
