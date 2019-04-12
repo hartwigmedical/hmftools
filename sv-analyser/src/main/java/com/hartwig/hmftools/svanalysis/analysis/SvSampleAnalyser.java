@@ -27,18 +27,23 @@ import static com.hartwig.hmftools.svanalysis.types.SvArmCluster.ARM_CL_MULTIPLE
 import static com.hartwig.hmftools.svanalysis.types.SvArmCluster.ARM_CL_REMOTE_TI;
 import static com.hartwig.hmftools.svanalysis.types.SvArmCluster.ARM_CL_SINGLE;
 import static com.hartwig.hmftools.svanalysis.types.SvArmCluster.getArmClusterData;
-import static com.hartwig.hmftools.svanalysis.types.SvCluster.INT_DB_COUNT;
-import static com.hartwig.hmftools.svanalysis.types.SvCluster.INT_SHORT_DB_COUNT;
+import static com.hartwig.hmftools.svanalysis.types.SvChain.CM_EXT_TI;
+import static com.hartwig.hmftools.svanalysis.types.SvChain.CM_EXT_TI_CN_GAIN;
+import static com.hartwig.hmftools.svanalysis.types.SvChain.CM_DB;
+import static com.hartwig.hmftools.svanalysis.types.SvChain.CM_SHORT_DB;
+import static com.hartwig.hmftools.svanalysis.types.SvChain.CM_INT_TI;
+import static com.hartwig.hmftools.svanalysis.types.SvChain.CM_INT_TI_CN_GAIN;
+import static com.hartwig.hmftools.svanalysis.types.SvCluster.isSpecificCluster;
 import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.LINK_TYPE_TI;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_END;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_START;
+import static com.hartwig.hmftools.svanalysis.types.SvVarData.isSpecificSV;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.isStart;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
@@ -488,9 +493,10 @@ public class SvSampleAnalyser {
 
                 mClusterFileWriter.write("SampleId,ClusterId,ClusterDesc,ClusterCount,ResolvedType,FullyChained,ChainCount");
                 mClusterFileWriter.write(",DelCount,DupCount,InsCount,InvCount,BndCount,SglCount");
-                mClusterFileWriter.write(",ClusterReasons,Consistency,ArmCount,OriginArms,FragmentArms,IsLINE,HasReplicated,Foldbacks,DSBs,ShortDSBs");
+                mClusterFileWriter.write(",ClusterReasons,Consistency,ArmCount,OriginArms,FragmentArms,IsLINE,HasReplicated,Foldbacks");
+                mClusterFileWriter.write(",IntTIs,ExtTIs,IntTIsWithGain,ExtTIsWithGain,DSBs,ShortDSBs");
                 mClusterFileWriter.write(",TotalLinks,AssemblyLinks,LongDelDups,UnlinkedRemotes,ShortTIRemotes,MinCopyNumber,MaxCopyNumber");
-                mClusterFileWriter.write(",SynDelDupLen,SynDelDupAvgTILen,Annotations,UnchainedSVs,ChainInfo,AlleleValidPerc");
+                mClusterFileWriter.write(",SynDelDupLen,SynDelDupAvgTILen,Annotations,UnchainedSVs,AlleleValidPerc");
                 mClusterFileWriter.write(",ArmClusterCount,AcSoloSv,AcRemoteTI,AcDsb,AcMultipleDsb,AcSingleFb,AcFbTI,AcFbDSB");
                 mClusterFileWriter.write(",ArmFbPairSame,ArmFbPairOpp,ArmFbPairFacing,AcComplexFb,AcComplexLine,AcComplexOther");
                 mClusterFileWriter.newLine();
@@ -510,27 +516,34 @@ public class SvSampleAnalyser {
                         cluster.getTypeCount(DEL), cluster.getTypeCount(DUP), cluster.getTypeCount(INS),
                         cluster.getTypeCount(INV), cluster.getTypeCount(BND), cluster.getTypeCount(SGL)));
 
-                final int[] delCounts = cluster.getInternalDeletionCounts();
-
-                writer.write(String.format(",%s,%d,%d,%d,%d,%s,%s,%d,%d,%d",
+                writer.write(String.format(",%s,%d,%d,%d,%d,%s,%s,%d",
                         cluster.getClusteringReasons(), cluster.getConsistencyCount(),
                         cluster.getArmCount(), cluster.getOriginArms(), cluster.getFragmentArms(),
-                        cluster.hasLinkingLineElements(), cluster.hasReplicatedSVs(),
-                        cluster.getFoldbacks().size(), delCounts[INT_DB_COUNT], delCounts[INT_SHORT_DB_COUNT]));
+                        cluster.hasLinkingLineElements(), cluster.hasReplicatedSVs(), cluster.getFoldbacks().size()));
 
+                isSpecificCluster(cluster);
+
+                int[] chainData = cluster.getLinkMetrics();
+
+                writer.write(String.format(",%d,%d,%d,%d,%d,%d",
+                        chainData[CM_INT_TI], chainData[CM_EXT_TI], chainData[CM_INT_TI_CN_GAIN], chainData[CM_EXT_TI_CN_GAIN],
+                        chainData[CM_DB], chainData[CM_SHORT_DB]));
+
+                /*
                 final String chainInfo = cluster.getChains().stream()
                         .filter(x -> !x.getDetails().isEmpty())
                         .map(SvChain::getDetails)
                         .collect (Collectors.joining (";"));
+                */
 
                 writer.write(String.format(",%d,%d,%d,%d,%d,%.2f,%.2f",
                         cluster.getLinkedPairs().size(), cluster.getAssemblyLinkedPairs().size(), cluster.getLongDelDups().size(),
                         cluster.getUnlinkedRemoteSVs().size(), cluster.getShortTIRemoteSVs().size(),
                         cluster.getMinCNChange(), cluster.getMaxCNChange()));
 
-                writer.write(String.format(",%d,%d,%s,%d,%s,%.2f",
+                writer.write(String.format(",%d,%d,%s,%d,%.2f",
                         cluster.getSynDelDupLength(), cluster.getSynDelDupTILength(), cluster.getAnnotations(),
-                        cluster.getUnlinkedSVs().size(), chainInfo, cluster.getValidAllelePloidySegmentPerc()));
+                        cluster.getUnlinkedSVs().size(), cluster.getValidAllelePloidySegmentPerc()));
 
                 // ArmClusterCount,AcSoloSv,AcRemoteTI,AcDsb,AcMultipleDsb,AcSingleFb,AcFbTI,AcFbDSB
                 // ArmFbPairSame,ArmFbPairOpp,ArmFbPairFacing,AcComplexFb,AcComplexLine,AcComplexOther

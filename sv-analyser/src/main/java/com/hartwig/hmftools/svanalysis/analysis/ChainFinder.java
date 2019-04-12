@@ -198,7 +198,7 @@ public class ChainFinder
 
         // mLogWorking = isSpecificCluster(mCluster);
 
-        isSpecificCluster(mCluster);
+        // isSpecificCluster(mCluster);
 
         buildChains(assembledLinksOnly);
 

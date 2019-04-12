@@ -278,7 +278,7 @@ public class ClusterAnalyser {
     {
         for (SvCluster cluster : mClusters)
         {
-            isSpecificCluster(cluster);
+            // isSpecificCluster(cluster);
 
             if (cluster.isResolved() && cluster.getResolvedType() != RESOLVED_TYPE_LINE)
                 continue;

@@ -2,8 +2,10 @@ package com.hartwig.hmftools.svanalysis.types;
 
 import static java.lang.Math.abs;
 
+import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.appendStr;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.calcConsistency;
+import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.copyNumbersEqual;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.makeChrArmStr;
 
 import java.util.List;
@@ -553,6 +555,59 @@ public class SvChain {
         }
 
         return sequenceStr;
+    }
+
+    public static int CM_DB = 0;
+    public static int CM_SHORT_DB = 1;
+    public static int CM_INT_TI = 2;
+    public static int CM_EXT_TI = 3;
+    public static int CM_INT_TI_CN_GAIN = 4;
+    public static int CM_EXT_TI_CN_GAIN = 5;
+
+    public void extractChainMetrics(int[] chainData)
+    {
+        final SvBreakend chainStart = getOpenBreakend(true);
+        final SvBreakend chainEnd = getOpenBreakend(false);
+
+        if(chainStart == null || chainEnd == null)
+            return;
+
+        final SvBreakend lowerBreakend = chainStart.position() < chainEnd.position() ? chainStart : chainEnd;
+        final SvBreakend upperBreakend = chainStart == lowerBreakend ? chainEnd : chainStart;
+
+        // allow chains starting and ending on different chromosomes
+        // if(!chainEnd.getChrArm().equals(chainStart.getChrArm()))
+        //    return chainData;
+
+        double chainStartCN = chainStart.copyNumber();
+        double chainEndCN = chainEnd.copyNumber();
+        boolean chainEndsCNMatch = copyNumbersEqual(chainStartCN, chainEndCN);
+
+        for(final SvLinkedPair pair : mLinkedPairs)
+        {
+            if(pair.first().type() == SGL || pair.second().type() == SGL)
+                continue;
+
+            SvBreakend lowerBE = pair.getBreakend(true);
+            SvBreakend upperBE = pair.getBreakend(false);
+            double pairCN = (lowerBE.copyNumber() + upperBE.copyNumber()) * 0.5;
+            boolean pairCNExceedsChainEnds = chainEndsCNMatch && pairCN > chainStartCN && !copyNumbersEqual(pairCN, chainStartCN);
+
+            if(lowerBE.position() >= lowerBreakend.position() && upperBE.position() <= upperBreakend.position())
+            {
+                ++chainData[CM_INT_TI];
+
+                if(pairCNExceedsChainEnds)
+                    ++chainData[CM_INT_TI_CN_GAIN];
+            }
+            else
+            {
+                ++chainData[CM_EXT_TI];
+
+                if(pairCNExceedsChainEnds)
+                    ++chainData[CM_EXT_TI_CN_GAIN];
+            }
+        }
     }
 
     public static List<SvVarData> getRepeatedSvSequence(final List<SvVarData> svList, int firstIndex, int secondIndex, boolean walkForwards)

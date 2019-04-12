@@ -367,6 +367,9 @@ public class LinkFinder
                 if(breakend.orientation() == nextBreakend.orientation())
                     continue;
 
+                if(breakend.arm() != nextBreakend.arm())
+                    continue;
+
                 long distance = nextBreakend.position() - breakend.position();
                 int minTiLength = getMinTemplatedInsertionLength(breakend, nextBreakend);
 

@@ -91,11 +91,10 @@ public class SvClusteringMethods {
     public static String CLUSTER_REASON_FOLDBACKS = "Foldback";
     public static String CLUSTER_REASON_SOLO_SINGLE = "Single";
     public static String CLUSTER_REASON_LOOSE_OVERLAP = "LooseOverlap";
-    public static String CLUSTER_REASON_LOH_CHAIN = "LohChain";
+    public static String CLUSTER_REASON_LOH_CHAIN = "LOHChain";
     public static String CLUSTER_REASON_NET_ARM_END_PLOIDY = "ArmEndPloidy";
     public static String CLUSTER_REASON_BE_PLOIDY_DROP = "BEPloidy";
-    public static String CLUSTER_REASON_INV_OVERLAP = "InvOverlap";
-    public static String CLUSTER_REASON_LONG_DEL_DUP = "LongDelDup";
+    public static String CLUSTER_REASON_LONG_DEL_DUP_OR_INV = "DelDupInv";
 
     public SvClusteringMethods(int proximityLength)
     {
@@ -785,9 +784,8 @@ public class SvClusteringMethods {
                         LOGGER.debug("cluster({}) SV({} {}) and cluster({}) SV({} {}) have inversion or longDelDup overlap",
                                 cluster1.id(), var1.posId(), var1.type(), cluster2.id(), var2.posId(), var2.type());
 
-                        clusterReason = var2.type() == INV ? CLUSTER_REASON_INV_OVERLAP : CLUSTER_REASON_LONG_DEL_DUP;
-                        var1.addClusterReason(clusterReason, var2.id());
-                        var2.addClusterReason(var1.type() == INV ? CLUSTER_REASON_INV_OVERLAP : CLUSTER_REASON_LONG_DEL_DUP, var1.id());
+                        var1.addClusterReason(CLUSTER_REASON_LONG_DEL_DUP_OR_INV, var2.id());
+                        var2.addClusterReason(CLUSTER_REASON_LONG_DEL_DUP_OR_INV, var1.id());
 
                         canMergeClusters = true;
                         break;

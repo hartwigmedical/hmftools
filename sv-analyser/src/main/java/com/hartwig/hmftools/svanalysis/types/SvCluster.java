@@ -16,6 +16,9 @@ import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.addSvToChrBre
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.appendStr;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.calcConsistency;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.getSvTypesStr;
+import static com.hartwig.hmftools.svanalysis.types.SvChain.CM_DB;
+import static com.hartwig.hmftools.svanalysis.types.SvChain.CM_EXT_TI_CN_GAIN;
+import static com.hartwig.hmftools.svanalysis.types.SvChain.CM_SHORT_DB;
 import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.ASSEMBLY_MATCH_INFER_ONLY;
 import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.ASSEMBLY_MATCH_NONE;
 import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.removedLinksWithSV;
@@ -28,6 +31,7 @@ import static com.hartwig.hmftools.svanalysis.types.SvaConfig.SPECIFIC_CLUSTER_I
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
+import com.mysql.cj.x.protobuf.MysqlxNotice;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -470,11 +474,6 @@ public class SvCluster
         for(int i = 0; i < clusterReasons.length; ++i)
         {
             addClusterReason(clusterReasons[i]);
-        }
-
-        if(other.isFullyChained())
-        {
-            other.getChains().forEach(x -> addChain(x, true));
         }
 
         if(other.hasLinkingLineElements())
@@ -953,94 +952,38 @@ public class SvCluster
         return var.dbId();
     }
 
-    public int getClusterDBCount()
+    public void setArmData(int origins, int fragments) { mOriginArms = origins; mFragmentArms = fragments; }
+    public int getOriginArms() { return mOriginArms; }
+    public int getFragmentArms() { return mFragmentArms; }
+
+    public int[] getLinkMetrics()
     {
-        // deletion bridges formed between 2 SVs both in this cluster
-        int dbCount = 0;
+        int[] chainData = new int[CM_EXT_TI_CN_GAIN+1];
+        mChains.stream().forEach(x -> x.extractChainMetrics(chainData));
 
-        for(final SvVarData var : mSVs)
+        for(SvVarData var : mSVs)
         {
-            if(var.isReplicatedSv())
-                continue;
-
-            // any DEL with nothing in between its breakends is itself a deletion bridge
-            if(var.type() == DEL && var.getNearestSvRelation() == RELATION_TYPE_NEIGHBOUR)
-            {
-                dbCount += 2;
-                continue;
-            }
-
             for(int be = SVI_START; be <= SVI_END; ++be)
             {
                 if (be == SVI_END && var.isNullBreakend())
                     continue;
 
                 boolean useStart = isStart(be);
+                SvLinkedPair dbLink = var.getDBLink(useStart);
 
-                if(var.getDBLink(useStart) != null)
+                // only take matches on the lower breakend to avoid double-counting DBs
+                if(dbLink != null && dbLink.getBreakend(true).getSV() == var && dbLink.getOtherSV(var).getCluster() == this)
                 {
-                    if(var.getDBLink(useStart).getOtherSV(var).getCluster() == this)
-                        ++dbCount;
+                    ++chainData[CM_DB];
+
+                    if(dbLink.length() <= 100)
+                        ++chainData[CM_SHORT_DB];
                 }
             }
         }
 
-        return dbCount / 2;
+        return chainData;
     }
-
-    public static int INT_DB_COUNT = 0;
-    public static int INT_SHORT_DB_COUNT = 1;
-
-    public final int[] getInternalDeletionCounts()
-    {
-        int[] delCounts = {0, 0}; // all and short (< 100 bases)
-
-        // any deleted section within the breakends of the chain
-        if(!isFullyChained() || mChains.size() > 1)
-            return delCounts;
-
-        final SvChain chain = mChains.get(0);
-
-        final SvBreakend chainStart = chain.getOpenBreakend(true);
-        final SvBreakend chainEnd = chain.getOpenBreakend(false);
-        final SvBreakend lowerBreakend = chainStart.position() < chainEnd.position() ? chainStart : chainEnd;
-        final SvBreakend upperBreakend = chainStart == lowerBreakend ? chainEnd : chainStart;
-
-        if(!chainEnd.getChrArm().equals(chainStart.getChrArm()))
-            return delCounts;
-
-        // measure the DB lengths for all chained SV
-        List<SvBreakend> breakendList = mChrBreakendMap.get(chainStart.chromosome());
-
-        for(int i = 0; i < breakendList.size() - 1; ++i)
-        {
-            final SvBreakend breakend = breakendList.get(i);
-
-            if(breakend.position() < lowerBreakend.position())
-                continue;
-
-            if(breakend.position() >= upperBreakend.position())
-                break;
-
-            final SvBreakend nextBreakend = breakendList.get(i + 1);
-
-            if(nextBreakend.position() <= upperBreakend.position() && breakend.orientation() == 1 && nextBreakend.orientation() == -1)
-            {
-                ++delCounts[INT_DB_COUNT];
-
-                long dbLength = nextBreakend.position() - breakend.position();
-
-                if(dbLength <= 100)
-                    ++delCounts[INT_SHORT_DB_COUNT];
-            }
-        }
-
-        return delCounts;
-    }
-
-    public void setArmData(int origins, int fragments) { mOriginArms = origins; mFragmentArms = fragments; }
-    public int getOriginArms() { return mOriginArms; }
-    public int getFragmentArms() { return mFragmentArms; }
 
     public static boolean isSpecificCluster(final SvCluster cluster)
     {

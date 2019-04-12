@@ -356,8 +356,6 @@ public class ClusterAnnotations
         int unlinkedSvCount = cluster.getUnlinkedSVs().size();
         int inconsistentChains = 0;
         int repeatedChainEndArms = 0;
-        int chainsWithCNLoss = 0;
-        int chainsWithCNGain = 0;
 
         // isSpecificCluster(cluster);
 
@@ -373,10 +371,6 @@ public class ClusterAnnotations
 
             final SvBreakend firstBreakend = chain.getOpenBreakend(true);
             final SvBreakend lastBreakend = chain.getOpenBreakend(false);
-
-            double firstCN = firstBreakend.copyNumber();
-            double lastCN = lastBreakend.copyNumber();
-            double linkCNTotal = 0; // to track CN along TIs
 
             final String startChrArm = firstBreakend != null ? firstBreakend.getChrArm() : "";
             final String endChrArm = lastBreakend != null ? lastBreakend.getChrArm() : "";
@@ -413,7 +407,6 @@ public class ClusterAnnotations
                     continue;
 
                 chainLinkLength += pair.length();
-                linkCNTotal += (pair.getBreakend(true).copyNumber() + pair.getBreakend(false).copyNumber()) * 0.5;
 
                 final String chrArm = first.getBreakend(pair.firstLinkOnStart()).getChrArm();
 
@@ -508,40 +501,7 @@ public class ClusterAnnotations
             }
 
             chain.setDetails(chainInfo);
-
-            double lossCNTotal = 0; // to track CN loss across SVs
-
-            for (final SvVarData var : chain.getSvList())
-            {
-                if(!var.isNullBreakend())
-                {
-                    lossCNTotal += (var.copyNumber(true) - var.copyNumberChange(true)
-                            + var.copyNumber(false) - var.copyNumberChange(false)) * 0.5;
-                }
-                else
-                {
-                    lossCNTotal += var.copyNumber(false) - var.copyNumberChange(false);
-                }
-           }
-
             // LOGGER.debug("cluster({}) chain({}) {}", cluster.id(), chain.id(), chainInfo);
-
-            double avgDelCN = lossCNTotal / chain.getSvCount();
-            double avgLinkCN = linkCNTotal / chain.getLinkCount();
-
-            // summarise chain CN profile
-            if(copyNumbersEqual(firstCN, lastCN))
-            {
-                double avgChainEndCN = (firstCN + lastCN) * 0.5;
-                if(avgDelCN < avgChainEndCN && copyNumbersEqual(avgLinkCN, avgChainEndCN))
-                {
-                    ++chainsWithCNLoss;
-                }
-                else if(avgLinkCN > avgChainEndCN && copyNumbersEqual(avgDelCN, avgChainEndCN))
-                {
-                    ++chainsWithCNGain;
-                }
-            }
         }
 
         cluster.setArmData(originArms.size(), fragmentArms.size());
@@ -586,16 +546,6 @@ public class ClusterAnnotations
             if(!isComplex)
             {
                 cluster.addAnnotation(CLUSTER_ANNONTATION_CT);
-            }
-
-            // for each chain, check the CN relative to the start and end
-            if(chainsWithCNGain == chainCount)
-            {
-                cluster.addAnnotation("CN_GAIN");
-            }
-            else if(chainsWithCNLoss == chainCount)
-            {
-                cluster.addAnnotation("CN_LOSS");
             }
         }
     }
