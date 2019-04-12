@@ -97,7 +97,6 @@ public final class PatientReporterFileLoader {
             LOGGER.debug(" Using {} as input for bachelor", bachelorFile);
             List<GermlineVariant> germlineVariants =
                     bachelorFile != null ? BachelorFile.loadBachelorFile(bachelorFile) : Lists.newArrayList();
-            LOGGER.info(germlineVariants);
             return germlineVariants.stream().filter(GermlineVariant::passFilter).collect(Collectors.toList());
         }
     }

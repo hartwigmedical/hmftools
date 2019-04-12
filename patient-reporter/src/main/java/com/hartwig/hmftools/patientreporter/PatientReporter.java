@@ -32,6 +32,7 @@ import com.hartwig.hmftools.patientreporter.actionability.ClinicalTrialFactory;
 import com.hartwig.hmftools.patientreporter.actionability.ReportableEvidenceItemFactory;
 import com.hartwig.hmftools.patientreporter.copynumber.CopyNumberAnalysis;
 import com.hartwig.hmftools.patientreporter.copynumber.CopyNumberAnalyzer;
+import com.hartwig.hmftools.patientreporter.germline.FilterGermlineVariants;
 import com.hartwig.hmftools.patientreporter.germline.GermlineVariant;
 import com.hartwig.hmftools.patientreporter.structural.SvAnalysis;
 import com.hartwig.hmftools.patientreporter.structural.SvAnalyzer;
@@ -76,6 +77,8 @@ abstract class PatientReporter {
 
         final SvAnalysis svAnalysis = analyzeStructuralVariants(copyNumberAnalysis, patientTumorLocation, svAnalyzerModel());
         final List<GermlineVariant> germlineVariants = analyzeGermlineVariants(run);
+        final List<GermlineVariant> filteredGermlineVariant =
+                FilterGermlineVariants.filteringReportedGermlineVariant(germlineVariants, sequencedReportData().germlineGenesReporting());
         final ChordAnalysis chordAnalysis = analyzeChord(run);
 
         LOGGER.info("Printing analysis results:");
