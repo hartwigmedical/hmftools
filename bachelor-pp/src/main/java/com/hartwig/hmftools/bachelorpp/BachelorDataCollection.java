@@ -191,14 +191,16 @@ public class BachelorDataCollection
 
                     boolean hasDepthInfo = Boolean.parseBoolean(items[COL_INDEX_HAS_DEPTH]);
 
+                    int glAltCount = Integer.parseInt(items[COL_INDEX_GL_ALT_COUNT]);
+                    int glReadDepth = Integer.parseInt(items[COL_INDEX_GL_READ_DEPTH]);
+                    bachRecord.setGermlineData(glAltCount, glReadDepth);
+
                     if (hasDepthInfo)
                     {
-                        int glAltCount = Integer.parseInt(items[COL_INDEX_GL_ALT_COUNT]);
-                        int glReadDepth = Integer.parseInt(items[COL_INDEX_GL_READ_DEPTH]);
                         int tumorAltCount = Integer.parseInt(items[COL_INDEX_TUMOR_ALT_COUNT]);
                         int tumorReadDepth = Integer.parseInt(items[COL_INDEX_TUMOR_READ_DEPTH]);
 
-                        bachRecord.setReadData(glAltCount, glReadDepth, tumorAltCount, tumorReadDepth);
+                        bachRecord.setReadData(tumorAltCount, tumorReadDepth);
                     }
 
                     mGermlineVariants.add(bachRecord);

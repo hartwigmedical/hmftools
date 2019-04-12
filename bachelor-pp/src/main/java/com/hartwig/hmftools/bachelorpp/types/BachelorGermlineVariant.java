@@ -145,16 +145,20 @@ public class BachelorGermlineVariant implements Comparable<BachelorGermlineVaria
     public int getTumorRefCount() { return mTumorReadDepth - mTumorAltCount; }
     public int getTumorReadDepth() { return mTumorReadDepth; }
 
+    public void setGermlineData(int altCount, int readDepth)
+    {
+        mGermlineAltCount = altCount;
+        mGermlineReadDepth = readDepth;
+    }
+
     public void setTumorData(int altCount, int readDepth)
     {
         mTumorAltCount = altCount;
         mTumorReadDepth = readDepth;
     }
 
-    public void setReadData(int glCount, int glReadDepth, int tumorCount, int tumorReadDepth)
+    public void setReadData(int tumorCount, int tumorReadDepth)
     {
-        mGermlineAltCount = glCount;
-        mGermlineReadDepth = glReadDepth;
         mTumorAltCount = tumorCount;
         mTumorReadDepth = tumorReadDepth;
         mReadDataSet = true;
