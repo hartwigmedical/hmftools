@@ -24,9 +24,10 @@ public final class FilterGermlineVariants {
 
         for (GermlineVariant germlineVariant : germlineVariants) {
             if (reportingGenes.contains(germlineVariant.gene())) {
-                filteredGermlineVariant.add(germlineVariant);
+                if (germlineVariant.biallelic()) {
+                    filteredGermlineVariant.add(germlineVariant);
+                }
             }
-
         }
 
         LOGGER.info("filtered germline variants: ");
