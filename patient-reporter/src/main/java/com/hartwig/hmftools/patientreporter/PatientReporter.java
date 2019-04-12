@@ -73,12 +73,15 @@ abstract class PatientReporter {
                 PatientTumorLocationFunctions.findPatientTumorLocationForSample(baseReportData().patientTumorLocations(), tumorSample);
 
         final CopyNumberAnalysis copyNumberAnalysis = analyzeCopyNumbers(run, patientTumorLocation);
-        final SomaticVariantAnalysis somaticVariantAnalysis = analyzeSomaticVariants(run, copyNumberAnalysis, patientTumorLocation);
-
-        final SvAnalysis svAnalysis = analyzeStructuralVariants(copyNumberAnalysis, patientTumorLocation, svAnalyzerModel());
         final List<GermlineVariant> germlineVariants = analyzeGermlineVariants(run);
         final List<GermlineVariant> filteredGermlineVariant =
                 FilterGermlineVariants.filteringReportedGermlineVariant(germlineVariants, sequencedReportData().germlineGenesReporting());
+
+        final SomaticVariantAnalysis somaticVariantAnalysis =
+                analyzeSomaticVariants(run, copyNumberAnalysis, patientTumorLocation, filteredGermlineVariant);
+
+        final SvAnalysis svAnalysis = analyzeStructuralVariants(copyNumberAnalysis, patientTumorLocation, svAnalyzerModel());
+
         final ChordAnalysis chordAnalysis = analyzeChord(run);
 
         LOGGER.info("Printing analysis results:");
@@ -173,7 +176,7 @@ abstract class PatientReporter {
 
     @NotNull
     private SomaticVariantAnalysis analyzeSomaticVariants(@NotNull RunContext run, @NotNull CopyNumberAnalysis copyNumberAnalysis,
-            @Nullable PatientTumorLocation patientTumorLocation) throws IOException {
+            @Nullable PatientTumorLocation patientTumorLocation, List<GermlineVariant> filteredGermlineVariant) throws IOException {
         final String runDirectory = run.runDirectory();
         final String sample = run.tumorSample();
 
@@ -194,7 +197,7 @@ abstract class PatientReporter {
                 sequencedReportData().panelGeneModel().geneDriverCategoryMap(),
                 sequencedReportData().panelGeneModel().drupActionableGenes(),
                 sequencedReportData().actionabilityAnalyzer(),
-                patientTumorLocation);
+                patientTumorLocation, filteredGermlineVariant);
     }
 
     @NotNull

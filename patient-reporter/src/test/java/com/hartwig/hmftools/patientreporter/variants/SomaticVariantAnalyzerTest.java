@@ -43,7 +43,7 @@ public class SomaticVariantAnalyzerTest {
                 Maps.newHashMap(),
                 Sets.newHashSet(),
                 testSequencedReportData().actionabilityAnalyzer(),
-                null);
+                null, null);
 
         assertEquals(2, analysis.tumorMutationalLoad());
         assertEquals(2, analysis.reportableSomaticVariants().size());
@@ -55,7 +55,7 @@ public class SomaticVariantAnalyzerTest {
                 driverCategoryMap,
                 Sets.newHashSet(),
                 testSequencedReportData().actionabilityAnalyzer(),
-                null);
+                null, null);
 
         assertEquals(2, analysisOnco.tumorMutationalLoad());
         assertEquals(1, analysisOnco.reportableSomaticVariants().size());

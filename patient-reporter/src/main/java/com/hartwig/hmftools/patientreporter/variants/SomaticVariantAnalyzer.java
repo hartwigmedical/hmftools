@@ -20,7 +20,11 @@ import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.patientreporter.actionability.ReportableEvidenceItemFactory;
+import com.hartwig.hmftools.patientreporter.germline.GermlineVariant;
+import com.hartwig.hmftools.patientreporter.germline.ImmutableGermlineVariant;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -29,6 +33,7 @@ public final class SomaticVariantAnalyzer {
             Lists.newArrayList(CodingEffect.NONSENSE_OR_FRAMESHIFT, CodingEffect.MISSENSE, CodingEffect.SPLICE);
 
     private static final List<CodingEffect> ONCO_CODING_EFFECTS_TO_REPORT = Lists.newArrayList(CodingEffect.MISSENSE);
+    private static final Logger LOGGER = LogManager.getLogger(SomaticVariantAnalyzer.class);
 
     private SomaticVariantAnalyzer() {
     }
@@ -36,7 +41,8 @@ public final class SomaticVariantAnalyzer {
     @NotNull
     public static SomaticVariantAnalysis run(@NotNull List<EnrichedSomaticVariant> variants, @NotNull Set<String> genePanel,
             @NotNull Map<String, DriverCategory> driverCategoryPerGeneMap, @NotNull Set<String> drupActionableGenes,
-            @NotNull ActionabilityAnalyzer actionabilityAnalyzer, @Nullable PatientTumorLocation patientTumorLocation) {
+            @NotNull ActionabilityAnalyzer actionabilityAnalyzer, @Nullable PatientTumorLocation patientTumorLocation,
+            List<GermlineVariant> filteredGermlineVariant) {
         double microsatelliteIndelsPerMb = MicrosatelliteAnalyzer.determineMicrosatelliteIndelsPerMb(variants);
         int tumorMutationalLoad = MutationalLoadAnalyzer.determineTumorMutationalLoad(variants);
         double tumorMutationalBurden = MutationalBurdenAnalyzer.determineTumorMutationalBurden(variants);
@@ -62,8 +68,11 @@ public final class SomaticVariantAnalyzer {
             }
         }
 
-        List<ReportableSomaticVariant> reportableVariants =
-                toReportableSomaticVariants(variantsToReport, driverCatalog, driverCategoryPerGeneMap, drupActionableGenes);
+        List<ReportableSomaticVariant> reportableVariants = toReportableSomaticVariants(variantsToReport,
+                driverCatalog,
+                driverCategoryPerGeneMap,
+                drupActionableGenes,
+                filteredGermlineVariant);
 
         return ImmutableSomaticVariantAnalysis.of(reportableVariants,
                 filteredEvidence,
@@ -75,7 +84,7 @@ public final class SomaticVariantAnalyzer {
     @NotNull
     private static List<ReportableSomaticVariant> toReportableSomaticVariants(@NotNull List<EnrichedSomaticVariant> variants,
             @NotNull List<DriverCatalog> driverCatalog, @NotNull Map<String, DriverCategory> driverCategoryPerGene,
-            @NotNull Set<String> drupActionableGenes) {
+            @NotNull Set<String> drupActionableGenes, List<GermlineVariant> filteredGermlineVariant) {
         List<ReportableSomaticVariant> reportableVariants = Lists.newArrayList();
         for (EnrichedSomaticVariant variant : variants) {
             DriverCatalog catalog = catalogEntryForVariant(driverCatalog, variant);
