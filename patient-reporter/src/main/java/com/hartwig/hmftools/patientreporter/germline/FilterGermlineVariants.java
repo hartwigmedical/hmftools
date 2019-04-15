@@ -5,6 +5,8 @@ import java.util.Set;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
+import com.hartwig.hmftools.common.numeric.Doubles;
+import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.patientreporter.genepanel.GeneModel;
 
 import org.apache.logging.log4j.LogManager;
@@ -19,7 +21,8 @@ public final class FilterGermlineVariants {
 
     @NotNull
     public static List<GermlineVariant> filteringReportedGermlineVariant(List<GermlineVariant> germlineVariants,
-            @NotNull GermlineGenesReporting germlineGenesReporting, @NotNull GeneModel panelGeneModel) {
+            @NotNull GermlineGenesReporting germlineGenesReporting, @NotNull GeneModel panelGeneModel,
+            @NotNull List<GeneCopyNumber> geneCopyNumbers) {
         List<GermlineVariant> filteredGermlineVariant = Lists.newArrayList();
         Set<String> reportingGenes = germlineGenesReporting.germlineGenes();
         Set<String> notifyGenes = germlineGenesReporting.germlineGenesNotify();
@@ -31,7 +34,11 @@ public final class FilterGermlineVariants {
                 } else if (panelGeneModel.geneDriverCategoryMap().get(germlineVariant.gene()) == DriverCategory.TSG) { // filter genes
                     if (reportingGenes.contains(germlineVariant.gene())) {
                         if (germlineVariant.biallelic()) {
-                            filteredGermlineVariant.add(germlineVariant);
+                            for (GeneCopyNumber geneCopyNumber: geneCopyNumbers) {
+                                if (Doubles.equal(geneCopyNumber.maxCopyNumber(), 1)) {
+                                    filteredGermlineVariant.add(germlineVariant);
+                                }
+                            }
                         }
                     }
 
