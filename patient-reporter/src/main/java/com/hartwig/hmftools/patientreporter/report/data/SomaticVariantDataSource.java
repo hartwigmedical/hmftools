@@ -68,11 +68,13 @@ public final class SomaticVariantDataSource {
                     displayHgsvCodingImpact,
                     variant.hgvsProteinImpact(),
                     PatientReportFormat.readDepthField(variant),
-                    hotspotField(variant),
+                    variant.SomaticOrGermline().equals("somatic") ? hotspotField(variant) : Strings.EMPTY,
                     PatientReportFormat.correctValueForFitReliability(ploidyVaf, hasReliablePurityFit),
-                    PatientReportFormat.correctValueForFitReliability(clonalityField(variant), hasReliablePurityFit),
+                    variant.SomaticOrGermline().equals("somatic")
+                            ? PatientReportFormat.correctValueForFitReliability(clonalityField(variant), hasReliablePurityFit)
+                            : "Clonal",
                     PatientReportFormat.correctValueForFitReliability(biallelic, hasReliablePurityFit),
-                    driverField(variant));
+                    variant.SomaticOrGermline().equals("somatic") ? driverField(variant) : Strings.EMPTY);
         }
 
         return variantDataSource;
