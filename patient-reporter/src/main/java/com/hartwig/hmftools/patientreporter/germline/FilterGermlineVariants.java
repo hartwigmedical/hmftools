@@ -4,6 +4,8 @@ import java.util.List;
 import java.util.Set;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
+import com.hartwig.hmftools.patientreporter.genepanel.GeneModel;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -17,15 +19,22 @@ public final class FilterGermlineVariants {
 
     @NotNull
     public static List<GermlineVariant> filteringReportedGermlineVariant(List<GermlineVariant> germlineVariants,
-            @NotNull GermlineGenesReporting germlineGenesReporting) {
+            @NotNull GermlineGenesReporting germlineGenesReporting, @NotNull GeneModel panelGeneModel) {
         List<GermlineVariant> filteredGermlineVariant = Lists.newArrayList();
         Set<String> reportingGenes = germlineGenesReporting.germlineGenes();
         Set<String> notifyGenes = germlineGenesReporting.germlineGenesNotify();
 
         for (GermlineVariant germlineVariant : germlineVariants) {
-            if (reportingGenes.contains(germlineVariant.gene())) {
-                if (germlineVariant.biallelic()) {
+            if (germlineVariant.passFilter()) {
+                if (panelGeneModel.geneDriverCategoryMap().get(germlineVariant.gene()) == DriverCategory.ONCO) { // use all genes
                     filteredGermlineVariant.add(germlineVariant);
+                } else if (panelGeneModel.geneDriverCategoryMap().get(germlineVariant.gene()) == DriverCategory.TSG) { // filter genes
+                    if (reportingGenes.contains(germlineVariant.gene())) {
+                        if (germlineVariant.biallelic()) {
+                            filteredGermlineVariant.add(germlineVariant);
+                        }
+                    }
+
                 }
             }
         }

@@ -74,8 +74,9 @@ abstract class PatientReporter {
 
         final CopyNumberAnalysis copyNumberAnalysis = analyzeCopyNumbers(run, patientTumorLocation);
         final List<GermlineVariant> germlineVariants = analyzeGermlineVariants(run);
-        final List<GermlineVariant> filteredGermlineVariant =
-                FilterGermlineVariants.filteringReportedGermlineVariant(germlineVariants, sequencedReportData().germlineGenesReporting());
+        final List<GermlineVariant> filteredGermlineVariant = FilterGermlineVariants.filteringReportedGermlineVariant(germlineVariants,
+                sequencedReportData().germlineGenesReporting(),
+                sequencedReportData().panelGeneModel());
 
         final SomaticVariantAnalysis somaticVariantAnalysis =
                 analyzeSomaticVariants(run, copyNumberAnalysis, patientTumorLocation, filteredGermlineVariant);
@@ -197,7 +198,8 @@ abstract class PatientReporter {
                 sequencedReportData().panelGeneModel().geneDriverCategoryMap(),
                 sequencedReportData().panelGeneModel().drupActionableGenes(),
                 sequencedReportData().actionabilityAnalyzer(),
-                patientTumorLocation, filteredGermlineVariant);
+                patientTumorLocation,
+                filteredGermlineVariant);
     }
 
     @NotNull
