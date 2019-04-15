@@ -76,7 +76,6 @@ public final class SomaticVariantDataSource {
                     PatientReportFormat.correctValueForFitReliability(biallelic, hasReliablePurityFit),
                     variant.SomaticOrGermline().equals("somatic") ? driverField(variant) : Strings.EMPTY);
         }
-
         return variantDataSource;
     }
 
