@@ -73,6 +73,7 @@ public class SomaticVariantDataSourceTest {
                 .driverCategory(DriverCategory.ONCO)
                 .driverLikelihood(1D)
                 .germlineVariant(germlineVariant)
-                .SomaticOrGermline("somatic");
+                .SomaticOrGermline("somatic")
+                .notifyClinicalGeneticus(false);
     }
 }

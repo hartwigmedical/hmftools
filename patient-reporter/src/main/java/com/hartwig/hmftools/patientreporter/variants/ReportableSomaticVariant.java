@@ -57,4 +57,6 @@ public abstract class ReportableSomaticVariant implements AllelicDepth {
     public abstract List<GermlineVariant> germlineVariant();
 
     public abstract String SomaticOrGermline();
+
+    public abstract boolean notifyClinicalGeneticus();
 }

@@ -199,7 +199,7 @@ abstract class PatientReporter {
                 sequencedReportData().panelGeneModel().drupActionableGenes(),
                 sequencedReportData().actionabilityAnalyzer(),
                 patientTumorLocation,
-                filteredGermlineVariant);
+                filteredGermlineVariant, sequencedReportData().germlineGenesReporting().germlineGenesNotify());
     }
 
     @NotNull

@@ -448,6 +448,7 @@ public final class ExampleAnalysisTestFactory {
                 .driverLikelihood(1D)
                 .germlineVariant(germlineVariants)
                 .SomaticOrGermline("somatic")
+                .notifyClinicalGeneticus(false)
                 .build();
 
         ReportableSomaticVariant variant2 = ImmutableReportableSomaticVariant.builder()
@@ -467,6 +468,7 @@ public final class ExampleAnalysisTestFactory {
                 .driverLikelihood(0.9)
                 .germlineVariant(germlineVariants)
                 .SomaticOrGermline("somatic")
+                .notifyClinicalGeneticus(false)
                 .build();
 
         ReportableSomaticVariant variant3 = ImmutableReportableSomaticVariant.builder()
@@ -486,6 +488,7 @@ public final class ExampleAnalysisTestFactory {
                 .driverLikelihood(0.5)
                 .germlineVariant(germlineVariants)
                 .SomaticOrGermline("somatic")
+                .notifyClinicalGeneticus(false)
                 .build();
 
         ReportableSomaticVariant variant4 = ImmutableReportableSomaticVariant.builder()
@@ -505,6 +508,7 @@ public final class ExampleAnalysisTestFactory {
                 .driverLikelihood(0.1)
                 .germlineVariant(germlineVariants)
                 .SomaticOrGermline("somatic")
+                .notifyClinicalGeneticus(false)
                 .build();
 
         return Lists.newArrayList(variant1, variant2, variant3, variant4);
