@@ -19,10 +19,10 @@ public interface TreatmentData extends Comparable<TreatmentData> {
     String SEPARATOR = "/";
 
     @VisibleForTesting
-    String COMBI_TYPE = "Combi therapy";
+    String COMBI_TYPE = "Multiple therapy";
 
     @VisibleForTesting
-    String COMBI_MECHANISM = "Combi mechanism";
+    String COMBI_MECHANISM = "Multiple mechanism";
 
     @Nullable
     String treatmentGiven();
