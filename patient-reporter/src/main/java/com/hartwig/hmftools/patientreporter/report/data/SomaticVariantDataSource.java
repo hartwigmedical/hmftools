@@ -52,6 +52,9 @@ public final class SomaticVariantDataSource {
 
         for (final ReportableSomaticVariant variant : sort(variants)) {
             String displayGene = variant.isDrupActionable() ? variant.gene() + " *" : variant.gene();
+            String displayHgsvCodingImpact = variant.SomaticOrGermline().equalsIgnoreCase("germline")
+                    ? variant.hgvsCodingImpact() + " #"
+                    : variant.hgvsCodingImpact();
 
             String biallelic = Strings.EMPTY;
             if (variant.driverCategory() != DriverCategory.ONCO) {
@@ -62,7 +65,7 @@ public final class SomaticVariantDataSource {
                     PatientReportFormat.ploidyVafField(variant.adjustedCopyNumber(), variant.minorAllelePloidy(), variant.adjustedVAF());
 
             variantDataSource.add(displayGene,
-                    variant.hgvsCodingImpact(),
+                    displayHgsvCodingImpact,
                     variant.hgvsProteinImpact(),
                     PatientReportFormat.readDepthField(variant),
                     hotspotField(variant),
