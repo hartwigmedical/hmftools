@@ -32,22 +32,24 @@ public final class FilterGermlineVariants {
                 if (panelGeneModel.geneDriverCategoryMap().get(germlineVariant.gene()) == DriverCategory.ONCO) { // use all genes
                     filteredGermlineVariant.add(germlineVariant);
                 } else if (panelGeneModel.geneDriverCategoryMap().get(germlineVariant.gene()) == DriverCategory.TSG) { // filter genes
-                    if (reportingGenes.contains(germlineVariant.gene())) {
-                        if (germlineVariant.biallelic()) {
-                            for (GeneCopyNumber geneCopyNumber: geneCopyNumbers) {
-                                if (Doubles.equal(geneCopyNumber.maxCopyNumber(), 1)) {
-                                    filteredGermlineVariant.add(germlineVariant);
-                                }
-                            }
-                        }
-                    }
+                    filteredGermlineVariant.add(germlineVariant);
 
+
+                    //                    if (reportingGenes.contains(germlineVariant.gene())) {
+                    //                        LOGGER.info("filtering");
+                    //
+                    //                        if (germlineVariant.biallelic()) { // filter for biallelic
+                    //                            for (GeneCopyNumber geneCopyNumber: geneCopyNumbers) {
+                    //                                if (Doubles.equal(geneCopyNumber.maxCopyNumber(), 1)) { // filter for gene copy number
+                    //                                    filteredGermlineVariant.add(germlineVariant);
+                    //                                }
+                    //                            }
+                    //                        }
+                    //                    }
                 }
             }
         }
 
-        LOGGER.info("filtered germline variants: ");
-        LOGGER.info(filteredGermlineVariant);
         return filteredGermlineVariant;
     }
 }

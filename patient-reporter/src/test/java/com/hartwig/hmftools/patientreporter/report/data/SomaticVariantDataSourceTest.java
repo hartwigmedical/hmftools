@@ -8,6 +8,8 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.variant.Clonality;
 import com.hartwig.hmftools.common.variant.Hotspot;
+import com.hartwig.hmftools.patientreporter.germline.GermlineVariant;
+import com.hartwig.hmftools.patientreporter.germline.ImmutableGermlineVariant;
 import com.hartwig.hmftools.patientreporter.variants.ImmutableReportableSomaticVariant;
 import com.hartwig.hmftools.patientreporter.variants.ReportableSomaticVariant;
 
@@ -41,6 +43,20 @@ public class SomaticVariantDataSourceTest {
 
     @NotNull
     private static ImmutableReportableSomaticVariant.Builder testBuilder() {
+        List<GermlineVariant> germlineVariant = Lists.newArrayList(ImmutableGermlineVariant.builder()
+                .passFilter(true)
+                .gene("BRCA2")
+                .hgvsCodingImpact("c.5946delT")
+                .hgvsProteinImpact("p.Ser1982fs")
+                .totalReadCount(112)
+                .alleleReadCount(67)
+                .germlineStatus("HET")
+                .adjustedCopyNumber(3D)
+                .adjustedVAF(1.0)
+                .minorAllelePloidy(1D)
+                .biallelic(true)
+                .build());
+
         return ImmutableReportableSomaticVariant.builder()
                 .gene("XXX")
                 .isDrupActionable(true)
@@ -55,6 +71,8 @@ public class SomaticVariantDataSourceTest {
                 .biallelic(true)
                 .adjustedVAF(0D)
                 .driverCategory(DriverCategory.ONCO)
-                .driverLikelihood(1D);
+                .driverLikelihood(1D)
+                .germlineVariant(germlineVariant)
+                .SomaticOrGermline("somatic");
     }
 }

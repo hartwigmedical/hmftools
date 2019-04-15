@@ -88,14 +88,42 @@ public final class SomaticVariantAnalyzer {
         List<ReportableSomaticVariant> reportableVariants = Lists.newArrayList();
         for (EnrichedSomaticVariant variant : variants) {
             DriverCatalog catalog = catalogEntryForVariant(driverCatalog, variant);
+            List<GermlineVariant> germlineVariant = fromGermlineReporting(filteredGermlineVariant, variant);
 
             reportableVariants.add(fromVariant(variant).isDrupActionable(drupActionableGenes.contains(variant.gene()))
                     .driverCategory(driverCategoryPerGene.get(variant.gene()))
                     .driverLikelihood(catalog != null ? catalog.driverLikelihood() : null)
+                    .germlineVariant(germlineVariant)
+                    .SomaticOrGermline(germlineVariant.size() == 0 ? "somatic" : "germline")
                     .build());
         }
 
         return reportableVariants;
+    }
+
+    @NotNull
+    private static List<GermlineVariant> fromGermlineReporting(@Nullable List<GermlineVariant> filteredGermlineVariants,
+            @NotNull SomaticVariant variant) {
+        List<GermlineVariant> germlineVariant = Lists.newArrayList();
+        if (filteredGermlineVariants != null) {
+            for (GermlineVariant filteredGermlineVariant : filteredGermlineVariants) {
+
+                return Lists.newArrayList(ImmutableGermlineVariant.builder()
+                        .passFilter(filteredGermlineVariant.passFilter())
+                        .gene(filteredGermlineVariant.gene())
+                        .hgvsCodingImpact(filteredGermlineVariant.hgvsCodingImpact())
+                        .hgvsProteinImpact(filteredGermlineVariant.hgvsProteinImpact())
+                        .totalReadCount(filteredGermlineVariant.totalReadCount())
+                        .alleleReadCount(filteredGermlineVariant.alleleReadCount())
+                        .germlineStatus(filteredGermlineVariant.germlineStatus())
+                        .adjustedVAF(filteredGermlineVariant.adjustedVAF())
+                        .adjustedCopyNumber(filteredGermlineVariant.adjustedCopyNumber())
+                        .minorAllelePloidy(filteredGermlineVariant.minorAllelePloidy())
+                        .biallelic(filteredGermlineVariant.biallelic())
+                        .build());
+            }
+        }
+        return germlineVariant;
     }
 
     @Nullable

@@ -64,10 +64,10 @@ public final class ExampleAnalysisTestFactory {
         final List<EvidenceItem> tumorLocationSpecificEvidence = createCOLO829TumorSpecificEvidence();
         final List<ClinicalTrial> clinicalTrials = createCOLO829ClinicalTrials();
         final List<EvidenceItem> offLabelEvidence = createCOLO829OffLabelEvidence();
-        final List<ReportableSomaticVariant> somaticVariants = createCOLO829SomaticVariants(purityAdjuster);
+        final List<GermlineVariant> germlineVariants = Lists.newArrayList();
+        final List<ReportableSomaticVariant> somaticVariants = createCOLO829SomaticVariants(purityAdjuster, germlineVariants);
         final List<GeneCopyNumber> copyNumbers = createCOLO829CopyNumbers();
         final List<ReportableGeneFusion> fusions = Lists.newArrayList();
-        final List<GermlineVariant> germlineVariants = Lists.newArrayList();
         final ChordAnalysis chordAnalysis = createCOLO829ChordAnalysis();
         final List<ReportableGeneDisruption> disruptions = createCOLO829Disruptions();
 
@@ -111,10 +111,10 @@ public final class ExampleAnalysisTestFactory {
         final List<EvidenceItem> tumorLocationSpecificEvidence = createCOLO829TumorSpecificEvidence();
         final List<ClinicalTrial> clinicalTrials = createCOLO829ClinicalTrials();
         final List<EvidenceItem> offLabelEvidence = createCOLO829OffLabelEvidence();
-        final List<ReportableSomaticVariant> somaticVariants = createCOLO829SomaticVariants(purityAdjuster);
+        final List<GermlineVariant> germlineVariants = createTestGermlineVariants(purityAdjuster);
+        final List<ReportableSomaticVariant> somaticVariants = createCOLO829SomaticVariants(purityAdjuster, germlineVariants);
         final List<GeneCopyNumber> copyNumbers = createCOLO829CopyNumbers();
         final List<ReportableGeneFusion> fusions = createTestFusions();
-        final List<GermlineVariant> germlineVariants = createTestGermlineVariants(purityAdjuster);
         final ChordAnalysis chordAnalysis = createCOLO829ChordAnalysis();
         final List<ReportableGeneDisruption> disruptions = createCOLO829Disruptions();
 
@@ -430,7 +430,7 @@ public final class ExampleAnalysisTestFactory {
     }
 
     @NotNull
-    private static List<ReportableSomaticVariant> createCOLO829SomaticVariants(@NotNull PurityAdjuster purityAdjuster) {
+    private static List<ReportableSomaticVariant> createCOLO829SomaticVariants(@NotNull PurityAdjuster purityAdjuster, List<GermlineVariant> germlineVariants) {
         ReportableSomaticVariant variant1 = ImmutableReportableSomaticVariant.builder()
                 .gene("BRAF")
                 .isDrupActionable(true)
@@ -446,6 +446,8 @@ public final class ExampleAnalysisTestFactory {
                 .adjustedVAF(purityAdjuster.purityAdjustedVAF("7", 6, 107D / 161D))
                 .driverCategory(DriverCategory.ONCO)
                 .driverLikelihood(1D)
+                .germlineVariant(germlineVariants)
+                .SomaticOrGermline("somatic")
                 .build();
 
         ReportableSomaticVariant variant2 = ImmutableReportableSomaticVariant.builder()
@@ -463,6 +465,8 @@ public final class ExampleAnalysisTestFactory {
                 .adjustedVAF(purityAdjuster.purityAdjustedVAF("9", 2, 44D / 44D))
                 .driverCategory(DriverCategory.TSG)
                 .driverLikelihood(0.9)
+                .germlineVariant(germlineVariants)
+                .SomaticOrGermline("somatic")
                 .build();
 
         ReportableSomaticVariant variant3 = ImmutableReportableSomaticVariant.builder()
@@ -480,6 +484,8 @@ public final class ExampleAnalysisTestFactory {
                 .adjustedVAF(purityAdjuster.purityAdjustedVAF("2", 3, 72D / 107D))
                 .driverCategory(DriverCategory.ONCO)
                 .driverLikelihood(0.5)
+                .germlineVariant(germlineVariants)
+                .SomaticOrGermline("somatic")
                 .build();
 
         ReportableSomaticVariant variant4 = ImmutableReportableSomaticVariant.builder()
@@ -497,6 +503,8 @@ public final class ExampleAnalysisTestFactory {
                 .adjustedVAF(purityAdjuster.purityAdjustedVAF("3", 4, 48D / 103D))
                 .driverCategory(DriverCategory.TSG)
                 .driverLikelihood(0.1)
+                .germlineVariant(germlineVariants)
+                .SomaticOrGermline("somatic")
                 .build();
 
         return Lists.newArrayList(variant1, variant2, variant3, variant4);
