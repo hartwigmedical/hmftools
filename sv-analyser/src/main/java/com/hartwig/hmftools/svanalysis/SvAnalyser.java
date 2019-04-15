@@ -19,6 +19,7 @@ import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 import com.hartwig.hmftools.svanalysis.analysis.CNAnalyser;
 import com.hartwig.hmftools.svanalysis.analysis.FusionDisruptionAnalyser;
 import com.hartwig.hmftools.svanalysis.simulation.SvSimulator;
+import com.hartwig.hmftools.svanalysis.stats.MultipleBiopsyAnalyser;
 import com.hartwig.hmftools.svanalysis.stats.StatisticRoutines;
 import com.hartwig.hmftools.svanalysis.types.SvaConfig;
 import com.hartwig.hmftools.svanalysis.analysis.SvSampleAnalyser;
@@ -53,6 +54,7 @@ public class SvAnalyser {
     private static final String INCLUDE_NONE_SEGMENTS = "incl_none_segments";
     private static final String GENE_TRANSCRIPTS_DIR = "gene_transcripts_dir";
     private static final String STATS_ROUTINES = "stats_routines";
+    private static final String MULT_BIOPSY_ANALYSIS = "mult_biopsy_analysis";
     private static final String SIM_ROUTINES = "sim_routines";
 
     private static final String DB_USER = "db_user";
@@ -82,6 +84,18 @@ public class SvAnalyser {
             SvSimulator simulator = new SvSimulator();
             simulator.loadConfig(cmd);
             simulator.run();
+            return;
+        }
+
+        if(cmd.hasOption(MULT_BIOPSY_ANALYSIS))
+        {
+            MultipleBiopsyAnalyser mbAnalyser = new MultipleBiopsyAnalyser();
+
+            if(mbAnalyser.loadData(cmd))
+            {
+                mbAnalyser.runAnalysis();
+            }
+
             return;
         }
 
@@ -320,6 +334,7 @@ public class SvAnalyser {
         options.addOption(GENE_TRANSCRIPTS_DIR, true, "Optional: file with sample gene transcript data");
         options.addOption(STATS_ROUTINES, false, "Optional: calc stats routines");
         options.addOption(SIM_ROUTINES, false, "Optional: simulation routines");
+        options.addOption(MULT_BIOPSY_ANALYSIS, false, "Optional: run multiple biopsy analysis");
         SvSimulator.addCmdLineArgs(options);
         SvaConfig.addCmdLineArgs(options);
         CNAnalyser.addCmdLineArgs(options);
@@ -327,6 +342,7 @@ public class SvAnalyser {
         StatisticRoutines.addCmdLineArgs(options);
         DriverGeneAnnotator.addCmdLineArgs(options);
         FusionDisruptionAnalyser.addCmdLineArgs(options);
+        MultipleBiopsyAnalyser.addCmdLineArgs(options);
 
         return options;
     }
