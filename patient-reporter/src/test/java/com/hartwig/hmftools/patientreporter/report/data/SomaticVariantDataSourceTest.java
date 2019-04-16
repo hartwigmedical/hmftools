@@ -43,19 +43,6 @@ public class SomaticVariantDataSourceTest {
 
     @NotNull
     private static ImmutableReportableSomaticVariant.Builder testBuilder() {
-        List<GermlineVariant> germlineVariant = Lists.newArrayList(ImmutableGermlineVariant.builder()
-                .passFilter(true)
-                .gene("BRCA2")
-                .hgvsCodingImpact("c.5946delT")
-                .hgvsProteinImpact("p.Ser1982fs")
-                .totalReadCount(112)
-                .alleleReadCount(67)
-                .germlineStatus("HET")
-                .adjustedCopyNumber(3D)
-                .adjustedVAF(1.0)
-                .minorAllelePloidy(1D)
-                .biallelic(true)
-                .build());
 
         return ImmutableReportableSomaticVariant.builder()
                 .gene("XXX")
@@ -72,7 +59,6 @@ public class SomaticVariantDataSourceTest {
                 .adjustedVAF(0D)
                 .driverCategory(DriverCategory.ONCO)
                 .driverLikelihood(1D)
-                .germlineVariant(germlineVariant)
                 .SomaticOrGermline("somatic")
                 .notifyClinicalGeneticus(false);
     }

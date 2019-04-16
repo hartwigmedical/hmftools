@@ -63,7 +63,7 @@ public class SomaticVariantAnalyzerTest {
                 null, germlineVariant, Sets.newHashSet());
 
         assertEquals(2, analysis.tumorMutationalLoad());
-        assertEquals(2, analysis.reportableSomaticVariants().size());
+        assertEquals(3, analysis.reportableSomaticVariants().size());
 
         Map<String, DriverCategory> driverCategoryMap = Maps.newHashMap();
         driverCategoryMap.put(RIGHT_GENE, DriverCategory.ONCO);
@@ -75,7 +75,7 @@ public class SomaticVariantAnalyzerTest {
                 null, germlineVariant, Sets.newHashSet());
 
         assertEquals(2, analysisOnco.tumorMutationalLoad());
-        assertEquals(1, analysisOnco.reportableSomaticVariants().size());
+        assertEquals(2, analysisOnco.reportableSomaticVariants().size());
     }
 
     @NotNull
