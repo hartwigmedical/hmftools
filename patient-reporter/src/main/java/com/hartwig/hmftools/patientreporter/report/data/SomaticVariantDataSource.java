@@ -54,9 +54,9 @@ public final class SomaticVariantDataSource {
             String displayGene = variant.isDrupActionable() ? variant.gene() + " *" : variant.gene();
 
             String displayHgsvCodingImpact = variant.SomaticOrGermline().equalsIgnoreCase("germline") && variant.notifyClinicalGeneticus()
-                    ? variant.hgvsCodingImpact() + " # +"
+                    ? variant.hgvsCodingImpact() + " + #"
                     : variant.SomaticOrGermline().equalsIgnoreCase("germline") && !variant.notifyClinicalGeneticus()
-                            ? " # "
+                            ? " + "
                             : variant.hgvsCodingImpact();
 
             String biallelic = Strings.EMPTY;

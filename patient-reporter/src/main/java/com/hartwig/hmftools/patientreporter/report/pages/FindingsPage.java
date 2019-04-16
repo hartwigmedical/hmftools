@@ -59,9 +59,9 @@ public abstract class FindingsPage {
         final String drupEligibilityAddition = "Marked genes (*) are included in the DRUP study and indicate potential "
                 + "eligibility in DRUP. Please note that the marking is NOT based on the specific mutation reported for "
                 + "this sample, but only on a gene-level.";
-        final String germline = "Marked variant(s) (#) are also present in the germline of the patient. Referral to a genetic specialist "
+        final String germline = "Marked variant(s) (+) are germline variants.";
+        final String geneticus = "Marked variant(s) (#) are also present in the germline of the patient. Referral to a genetic specialist "
                 + "should be advised.";
-        final String geneticus = " Marked genes (+) are notify to clinical geneticus";
 
         final ComponentBuilder<?, ?> table =
                 !report.somaticVariants().isEmpty()
