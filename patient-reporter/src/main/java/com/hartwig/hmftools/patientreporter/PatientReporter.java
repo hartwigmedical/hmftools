@@ -74,12 +74,12 @@ abstract class PatientReporter {
 
         final CopyNumberAnalysis copyNumberAnalysis = analyzeCopyNumbers(run, patientTumorLocation);
         final List<GermlineVariant> germlineVariants = analyzeGermlineVariants(run);
-        final List<GermlineVariant> filteredGermlineVariant = FilterGermlineVariants.filteringReportedGermlineVariant(germlineVariants,
-                sequencedReportData().germlineGenesReporting(),
-                sequencedReportData().panelGeneModel(), copyNumberAnalysis.reportableGeneCopyNumbers(), tumorSample);
 
-        final SomaticVariantAnalysis somaticVariantAnalysis =
-                analyzeSomaticVariants(run, copyNumberAnalysis, patientTumorLocation, filteredGermlineVariant);
+        final SomaticVariantAnalysis somaticVariantAnalysis = analyzeSomaticVariants(run,
+                copyNumberAnalysis,
+                patientTumorLocation,
+                germlineVariants,
+                copyNumberAnalysis.reportableGeneCopyNumbers());
 
         final SvAnalysis svAnalysis = analyzeStructuralVariants(copyNumberAnalysis, patientTumorLocation, svAnalyzerModel());
 
@@ -175,7 +175,8 @@ abstract class PatientReporter {
 
     @NotNull
     private SomaticVariantAnalysis analyzeSomaticVariants(@NotNull RunContext run, @NotNull CopyNumberAnalysis copyNumberAnalysis,
-            @Nullable PatientTumorLocation patientTumorLocation, List<GermlineVariant> filteredGermlineVariant) throws IOException {
+            @Nullable PatientTumorLocation patientTumorLocation, List<GermlineVariant> germlineVariants,
+            @NotNull List<GeneCopyNumber> geneCopyNumbers) throws IOException {
         final String runDirectory = run.runDirectory();
         final String sample = run.tumorSample();
 
@@ -197,7 +198,11 @@ abstract class PatientReporter {
                 sequencedReportData().panelGeneModel().drupActionableGenes(),
                 sequencedReportData().actionabilityAnalyzer(),
                 patientTumorLocation,
-                filteredGermlineVariant, sequencedReportData().germlineGenesReporting().germlineGenesNotify());
+                germlineVariants,
+                sequencedReportData().germlineGenesReporting().germlineGenesNotify(),
+                sequencedReportData().germlineGenesReporting(),
+                sample,
+                geneCopyNumbers);
     }
 
     @NotNull

@@ -15,9 +15,11 @@ import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
 import com.hartwig.hmftools.common.variant.ImmutableEnrichedSomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariantTestBuilderFactory;
+import com.hartwig.hmftools.patientreporter.SequencedReportData;
 import com.hartwig.hmftools.patientreporter.germline.GermlineVariant;
 import com.hartwig.hmftools.patientreporter.germline.ImmutableGermlineVariant;
 
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -55,15 +57,18 @@ public class SomaticVariantAnalyzerTest {
                 .biallelic(true)
                 .build());
 
+        final SequencedReportData reporterData = testSequencedReportData();
+
+
         SomaticVariantAnalysis analysis = SomaticVariantAnalyzer.run(variants,
                 Sets.newHashSet(RIGHT_GENE),
                 Maps.newHashMap(),
                 Sets.newHashSet(),
                 testSequencedReportData().actionabilityAnalyzer(),
-                null, germlineVariant, Sets.newHashSet());
+                null, germlineVariant, Sets.newHashSet(), reporterData.germlineGenesReporting(), Strings.EMPTY, Lists.newArrayList());
 
         assertEquals(2, analysis.tumorMutationalLoad());
-        assertEquals(3, analysis.reportableSomaticVariants().size());
+        assertEquals(2, analysis.reportableSomaticVariants().size());
 
         Map<String, DriverCategory> driverCategoryMap = Maps.newHashMap();
         driverCategoryMap.put(RIGHT_GENE, DriverCategory.ONCO);
@@ -72,10 +77,10 @@ public class SomaticVariantAnalyzerTest {
                 driverCategoryMap,
                 Sets.newHashSet(),
                 testSequencedReportData().actionabilityAnalyzer(),
-                null, germlineVariant, Sets.newHashSet());
+                null, germlineVariant, Sets.newHashSet(), reporterData.germlineGenesReporting(), Strings.EMPTY, Lists.newArrayList());
 
         assertEquals(2, analysisOnco.tumorMutationalLoad());
-        assertEquals(2, analysisOnco.reportableSomaticVariants().size());
+        assertEquals(1, analysisOnco.reportableSomaticVariants().size());
     }
 
     @NotNull

@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.patientreporter.germline;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import com.google.common.collect.Lists;
@@ -8,6 +9,7 @@ import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.lims.LimsSampleType;
 import com.hartwig.hmftools.common.numeric.Doubles;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
+import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
 import com.hartwig.hmftools.patientreporter.genepanel.GeneModel;
 
 import org.apache.logging.log4j.LogManager;
@@ -22,8 +24,8 @@ public final class FilterGermlineVariants {
 
     @NotNull
     public static List<GermlineVariant> filteringReportedGermlineVariant(List<GermlineVariant> germlineVariants,
-            @NotNull GermlineGenesReporting germlineGenesReporting, @NotNull GeneModel panelGeneModel,
-            @NotNull List<GeneCopyNumber> geneCopyNumbers, @NotNull String sampleId) {
+            @NotNull GermlineGenesReporting germlineGenesReporting, @NotNull Map<String, DriverCategory> driverCategoryPerGeneMap,
+            @NotNull List<GeneCopyNumber> geneCopyNumbers, @NotNull String sampleId, @NotNull List<EnrichedSomaticVariant> variantsToReport) {
         List<GermlineVariant> filteredGermlineVariant = Lists.newArrayList();
         Set<String> reportingGenes = germlineGenesReporting.germlineGenes();
         Set<String> notifyGenes = germlineGenesReporting.germlineGenesNotify();
@@ -31,9 +33,9 @@ public final class FilterGermlineVariants {
         for (GermlineVariant germlineVariant : germlineVariants) {
             if (germlineVariant.passFilter()
                     && reportingGenes.contains(germlineVariant.gene())) { //&& LimsSampleType.fromSampleId(sampleId).equals(LimsSampleType.WIDE)
-                if (panelGeneModel.geneDriverCategoryMap().get(germlineVariant.gene()) == DriverCategory.ONCO) { // use all genes
+                if (driverCategoryPerGeneMap.get(germlineVariant.gene()) == DriverCategory.ONCO) { // use all genes
                     filteredGermlineVariant.add(germlineVariant);
-                } else if (panelGeneModel.geneDriverCategoryMap().get(germlineVariant.gene()) == DriverCategory.TSG) { // filter genes
+                } else if (driverCategoryPerGeneMap.get(germlineVariant.gene()) == DriverCategory.TSG) { // filter genes
                     if (germlineVariant.biallelic()) { // variant is biallelic (2nd hit CNV)
                         filteredGermlineVariant.add(germlineVariant);
                     } else { // min copy number in tumer = 1 (2nd hit SV)
