@@ -27,8 +27,8 @@ public class MultiBiopsyData
     public final int ClusterCount;
     public final String ResolvedType;
 
-    private List<Integer> mSharedMatches;
-    private List<Integer> mPartialMatches;
+    private List<MultiBiopsyData> mSharedMatches;
+    private List<MultiBiopsyData> mPartialMatches;
 
     private List<String> mClusterReasons;
 
@@ -78,16 +78,16 @@ public class MultiBiopsyData
 
     }
 
-    public void addMatchType(final String type, int otherSvId)
+    public void addMatchType(final String type, MultiBiopsyData other)
     {
         if(type == MATCH_TYPE_PARTIAL)
-            mPartialMatches.add(otherSvId);
+            mPartialMatches.add(other);
         else if(type == MATCH_TYPE_SHARED)
-            mSharedMatches.add(otherSvId);
+            mSharedMatches.add(other);
     }
 
-    public final List<Integer> getSharedMatches() { return mSharedMatches; }
-    public final List<Integer> getPartialMatches() { return mPartialMatches; }
+    public final List<MultiBiopsyData> getSharedMatches() { return mSharedMatches; }
+    public final List<MultiBiopsyData> getPartialMatches() { return mPartialMatches; }
 
 
     public final List<String> getClusterReasons() { return mClusterReasons; }

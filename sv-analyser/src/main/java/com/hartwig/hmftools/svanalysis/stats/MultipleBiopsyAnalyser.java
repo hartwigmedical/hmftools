@@ -2,9 +2,11 @@ package com.hartwig.hmftools.svanalysis.stats;
 
 import static java.lang.Math.abs;
 
+import static com.hartwig.hmftools.common.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.svanalysis.SvAnalyser.DATA_OUTPUT_PATH;
+import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.appendStr;
 import static com.hartwig.hmftools.svanalysis.types.MultiBiopsyData.MATCH_TYPE_PARTIAL;
 import static com.hartwig.hmftools.svanalysis.types.MultiBiopsyData.MATCH_TYPE_PRIVATE;
 import static com.hartwig.hmftools.svanalysis.types.MultiBiopsyData.MATCH_TYPE_SHARED;
@@ -20,6 +22,7 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.svanalysis.analysis.SvUtilities;
 import com.hartwig.hmftools.svanalysis.types.MultiBiopsyData;
 
 import org.apache.commons.cli.CommandLine;
@@ -34,6 +37,7 @@ public class MultipleBiopsyAnalyser
 
     private BufferedWriter mSvWriter;
     private BufferedWriter mMergeWriter;
+    private BufferedWriter mClusterOverlapWriter;
     private String mOutputDir;
 
     private static final Logger LOGGER = LogManager.getLogger(MultipleBiopsyAnalyser.class);
@@ -44,6 +48,7 @@ public class MultipleBiopsyAnalyser
         mSampleSvData = Maps.newHashMap();
         mSvWriter = null;
         mMergeWriter = null;
+        mClusterOverlapWriter = null;
         mOutputDir = "";
     }
 
@@ -162,7 +167,8 @@ public class MultipleBiopsyAnalyser
             }
 
             LOGGER.info("loaded {} SV data records", count);
-        } catch (IOException e)
+        }
+        catch (IOException e)
         {
             LOGGER.error("Failed to load patient sample IDs file({}): {}", filename, e.toString());
         }
@@ -173,6 +179,10 @@ public class MultipleBiopsyAnalyser
     public void runAnalysis()
     {
         mapSamples();
+
+        LOGGER.info("run complete");
+
+        closeOutputFiles();
     }
 
     private void mapSamples()
@@ -185,6 +195,13 @@ public class MultipleBiopsyAnalyser
             for (int i = 0; i < sampleIds.size(); ++i)
             {
                 String sample1 = sampleIds.get(i);
+
+                /*
+                if(sample1.equals("DRUP01050018T"))
+                {
+                    LOGGER.debug("spec sample({})", sample1);
+                }
+                */
 
                 List<MultiBiopsyData> mbDataList1 = mSampleSvData.get(sample1);
 
@@ -204,6 +221,15 @@ public class MultipleBiopsyAnalyser
                 }
 
                 findSharedPrivateMerges(mbDataList1);
+
+                for (int j = 0; j < sampleIds.size(); ++j)
+                {
+                    if(i == j)
+                        continue;
+
+                    String sample2 = sampleIds.get(j);
+                    reportClusterOverlaps(sample1, mbDataList1, sample2);
+                }
             }
 
             writeSampleSvData(patientId, sampleIds);
@@ -223,14 +249,14 @@ public class MultipleBiopsyAnalyser
 
                 if (matchType == MATCH_TYPE_SHARED)
                 {
-                    mbData1.addMatchType(matchType, mbData2.SvId);
-                    mbData2.addMatchType(matchType, mbData1.SvId);
+                    mbData1.addMatchType(matchType, mbData2);
+                    mbData2.addMatchType(matchType, mbData1);
                     break;
                 }
                 else if (matchType == MATCH_TYPE_PARTIAL)
                 {
-                    mbData1.addMatchType(matchType, mbData2.SvId);
-                    mbData2.addMatchType(matchType, mbData1.SvId);
+                    mbData1.addMatchType(matchType, mbData2);
+                    mbData2.addMatchType(matchType, mbData1);
                     ++partialMatches;
 
                     // continue searching within this sample
@@ -239,7 +265,7 @@ public class MultipleBiopsyAnalyser
 
             if(partialMatches > 1 || (partialMatches > 0 && !mbData1.getSharedMatches().isEmpty()))
             {
-                LOGGER.warn("Sample({}) SV({}) found {} partial matches, {} shared",
+                LOGGER.warn("sample({}) SV({}) found {} partial matches, {} shared",
                         mbData1.SampleId, mbData1.SvId, partialMatches, mbData1.getSharedMatches().size());
             }
         }
@@ -323,7 +349,102 @@ public class MultipleBiopsyAnalyser
                         mbData2.SvId, mbData2.getMatchType(), reason);
             }
         }
+    }
 
+    private void reportClusterOverlaps(String sample, List<MultiBiopsyData> mbDataList, String otherSample)
+    {
+        // for each cluster, report on the number of overlapping clusters from other same-patient samples
+        // classify each cluster as: Private - all SVs are only in one sample, Exact - all shared SVs match,
+        // SimpleSuperset - one sample has all the shared of a single other cluster, plus some private SVs
+        // Subset - one sample has no private SVs, and some but not all the shared of a single other cluster
+        // ComplexSuperset = one sample has no or some private, shared overlapping with more than 1 other cluster
+        // otherwise Mixed
+
+        int currentClusterId = -1;
+        int currentClusterCount = 0;
+        String currentResolvedType = "";
+        List<Integer> matchingClusters = Lists.newArrayList();
+        String otherClusterIds = "";
+        int privateCount = 0;
+        int sharedCount = 0;
+        int otherClustersTotal = 0;
+
+        for(int i = 0; i <= mbDataList.size(); ++i)
+        {
+            final MultiBiopsyData mbData = i < mbDataList.size() ? mbDataList.get(i) : null;
+
+            if(mbData == null || currentClusterId != mbData.ClusterId)
+            {
+                if(i > 0)
+                {
+                    String overlapType;
+                    if (sharedCount == 0)
+                    {
+                        overlapType = "Private";
+                    }
+                    else if (privateCount == 0 && matchingClusters.size() == 1 && currentClusterCount == otherClustersTotal)
+                    {
+                        overlapType = "Exact";
+                    }
+                    else if (privateCount == 0 && matchingClusters.size() == 1 && currentClusterCount < otherClustersTotal)
+                    {
+                        overlapType = "Subset";
+                    }
+                    else if (privateCount > 0 && matchingClusters.size() == 1 && sharedCount == otherClustersTotal)
+                    {
+                        overlapType = "SimpleSuperset";
+                    }
+                    else if (privateCount >= 0 && matchingClusters.size() > 1 && sharedCount == otherClustersTotal)
+                    {
+                        overlapType = "ComplexSuperset";
+                    }
+                    else
+                    {
+                        overlapType = "Mixed";
+                    }
+
+                    // write details to file
+                    writeClusterOverlapData(sample, currentClusterId, currentClusterCount, currentResolvedType, privateCount, sharedCount,
+                            matchingClusters.size(), otherClustersTotal, otherClusterIds, overlapType);
+                }
+
+                if(mbData == null)
+                    break;
+
+                matchingClusters.clear();
+                currentClusterId = mbData.ClusterId;
+                currentClusterCount= mbData.ClusterCount;
+                currentResolvedType = mbData.ResolvedType;
+                otherClusterIds = "";
+                privateCount = 0;
+                sharedCount = 0;
+                otherClustersTotal = 0;
+            }
+
+            if(mbData.getMatchType() == MATCH_TYPE_PRIVATE)
+            {
+                ++privateCount;
+                continue;
+            }
+
+            ++sharedCount;
+
+            List<MultiBiopsyData> otherSvs = Lists.newArrayList(mbData.getSharedMatches());
+            otherSvs.addAll(mbData.getPartialMatches());
+
+            for (MultiBiopsyData otherSv : otherSvs)
+            {
+                if(!otherSv.SampleId.equals(otherSample))
+                    continue;
+
+                if(!matchingClusters.contains(otherSv.ClusterId))
+                {
+                    matchingClusters.add(otherSv.ClusterId);
+                    otherClustersTotal += otherSv.ClusterCount;
+                    otherClusterIds = appendStr(otherClusterIds, String.valueOf(otherSv.ClusterId), ';');
+                }
+            }
+        }
     }
 
     private void writeSampleSvData(String patientId, List<String> sampleIds)
@@ -336,7 +457,7 @@ public class MultipleBiopsyAnalyser
 
                 mSvWriter = createBufferedWriter(outputFileName, false);
 
-                mSvWriter.write("PatientId,SampleId,SvId,Type,ClusterCount,ResolvedType,MatchType,OtherSvId");
+                mSvWriter.write("PatientId,SampleId,SvId,Type,ClusterId,ClusterCount,ResolvedType,MatchType,OtherSvId");
                 mSvWriter.newLine();
             }
 
@@ -349,9 +470,9 @@ public class MultipleBiopsyAnalyser
 
                 for(final MultiBiopsyData mbData : mbDataList)
                 {
-                    String outputStr = String.format("%s,%s,%d,%s,%d,%s",
+                    String outputStr = String.format("%s,%s,%d,%s,%d,%d,%s",
                             patientId, sampleId, mbData.SvId, mbData.Type,
-                            mbData.ClusterCount, mbData.ResolvedType);
+                            mbData.ClusterId, mbData.ClusterCount, mbData.ResolvedType);
 
                     if(mbData.getMatchType() == MATCH_TYPE_PRIVATE)
                     {
@@ -360,15 +481,15 @@ public class MultipleBiopsyAnalyser
                     }
                     else
                     {
-                        for (Integer otherSvId : mbData.getSharedMatches())
+                        for (MultiBiopsyData otherSv : mbData.getSharedMatches())
                         {
-                            mSvWriter.write(String.format("%s,%s,%d", outputStr, MATCH_TYPE_SHARED, otherSvId));
+                            mSvWriter.write(String.format("%s,%s,%d", outputStr, MATCH_TYPE_SHARED, otherSv.SvId));
                             mSvWriter.newLine();
                         }
 
-                        for (Integer otherSvId : mbData.getPartialMatches())
+                        for (MultiBiopsyData otherSv : mbData.getPartialMatches())
                         {
-                            mSvWriter.write(String.format("%s,%s,%d", outputStr, MATCH_TYPE_PARTIAL, otherSvId));
+                            mSvWriter.write(String.format("%s,%s,%d", outputStr, MATCH_TYPE_PARTIAL, otherSv.SvId));
                             mSvWriter.newLine();
                         }
                     }
@@ -397,7 +518,6 @@ public class MultipleBiopsyAnalyser
                 mMergeWriter.newLine();
             }
 
-
             mMergeWriter.write(String.format("%s,%d,%d,%s,%d,%s,%s",
                     sampleId, clusterId, svId1, matchType1, svId2, matchType2, clusterReason));
             mMergeWriter.newLine();
@@ -407,6 +527,42 @@ public class MultipleBiopsyAnalyser
             LOGGER.error("failed writing merge output data: {}", e.toString());
             return;
         }
+    }
+
+    private void writeClusterOverlapData(final String sampleId, int clusterId, int clusterCount, final String resolvedType, int privateCount,
+            int sharedCount, int matchingClustersCount, int otherClustersTotal, final String otherClusterIds, final String overlapType)
+    {
+        try
+        {
+            if (mClusterOverlapWriter == null)
+            {
+                String outputFileName = mOutputDir + "SVA_MB_CLUSTER_DATA.csv";
+
+                mClusterOverlapWriter = createBufferedWriter(outputFileName, false);
+
+                mClusterOverlapWriter.write("SampleId,ClusterId,ClusterCount,ResolvedType,PrivateCount,SharedCount");
+                mClusterOverlapWriter.write(",MatchingClustersCount,OtherClustersTotal,OverlapType,OtherClusterIds");
+                mClusterOverlapWriter.newLine();
+            }
+
+            mClusterOverlapWriter.write(String.format("%s,%d,%d,%s,%d,%d,%d,%d,%s,%s",
+                    sampleId, clusterId, clusterCount, resolvedType, privateCount, sharedCount,
+                    matchingClustersCount, otherClustersTotal, overlapType, otherClusterIds));
+
+            mClusterOverlapWriter.newLine();
+        }
+        catch (IOException e)
+        {
+            LOGGER.error("failed writing merge output data: {}", e.toString());
+            return;
+        }
+    }
+
+    private void closeOutputFiles()
+    {
+        closeBufferedWriter(mSvWriter);
+        closeBufferedWriter(mMergeWriter);
+        closeBufferedWriter(mClusterOverlapWriter);
     }
 
 }
