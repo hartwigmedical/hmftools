@@ -29,11 +29,11 @@ public final class FilterGermlineVariants {
         Set<String> notifyGenes = germlineGenesReporting.germlineGenesNotify();
 
         for (GermlineVariant germlineVariant : germlineVariants) {
-            if (germlineVariant.passFilter()) { //&& LimsSampleType.fromSampleId(sampleId).equals(LimsSampleType.WIDE)
+            if (germlineVariant.passFilter()
+                    && reportingGenes.contains(germlineVariant.gene())) { //&& LimsSampleType.fromSampleId(sampleId).equals(LimsSampleType.WIDE)
                 if (panelGeneModel.geneDriverCategoryMap().get(germlineVariant.gene()) == DriverCategory.ONCO) { // use all genes
                     filteredGermlineVariant.add(germlineVariant);
-                } else if (panelGeneModel.geneDriverCategoryMap().get(germlineVariant.gene()) == DriverCategory.TSG
-                        && reportingGenes.contains(germlineVariant.gene())) { // filter genes
+                } else if (panelGeneModel.geneDriverCategoryMap().get(germlineVariant.gene()) == DriverCategory.TSG) { // filter genes
                     if (germlineVariant.biallelic()) { // variant is biallelic (2nd hit CNV)
                         filteredGermlineVariant.add(germlineVariant);
                     } else { // min copy number in tumer = 1 (2nd hit SV)
