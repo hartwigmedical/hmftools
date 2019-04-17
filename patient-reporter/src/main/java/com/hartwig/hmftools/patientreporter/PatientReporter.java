@@ -76,7 +76,7 @@ abstract class PatientReporter {
         final List<GermlineVariant> germlineVariants = analyzeGermlineVariants(run);
         final List<GermlineVariant> filteredGermlineVariant = FilterGermlineVariants.filteringReportedGermlineVariant(germlineVariants,
                 sequencedReportData().germlineGenesReporting(),
-                sequencedReportData().panelGeneModel(), copyNumberAnalysis.reportableGeneCopyNumbers());
+                sequencedReportData().panelGeneModel(), copyNumberAnalysis.reportableGeneCopyNumbers(), tumorSample);
 
         final SomaticVariantAnalysis somaticVariantAnalysis =
                 analyzeSomaticVariants(run, copyNumberAnalysis, patientTumorLocation, filteredGermlineVariant);

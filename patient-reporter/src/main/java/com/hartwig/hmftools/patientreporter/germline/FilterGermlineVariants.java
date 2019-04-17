@@ -5,6 +5,7 @@ import java.util.Set;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
+import com.hartwig.hmftools.common.lims.LimsSampleType;
 import com.hartwig.hmftools.common.numeric.Doubles;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.patientreporter.genepanel.GeneModel;
@@ -22,34 +23,29 @@ public final class FilterGermlineVariants {
     @NotNull
     public static List<GermlineVariant> filteringReportedGermlineVariant(List<GermlineVariant> germlineVariants,
             @NotNull GermlineGenesReporting germlineGenesReporting, @NotNull GeneModel panelGeneModel,
-            @NotNull List<GeneCopyNumber> geneCopyNumbers) {
+            @NotNull List<GeneCopyNumber> geneCopyNumbers, @NotNull String sampleId) {
         List<GermlineVariant> filteredGermlineVariant = Lists.newArrayList();
         Set<String> reportingGenes = germlineGenesReporting.germlineGenes();
         Set<String> notifyGenes = germlineGenesReporting.germlineGenesNotify();
 
         for (GermlineVariant germlineVariant : germlineVariants) {
-            if (germlineVariant.passFilter()) {
+            if (germlineVariant.passFilter()) { //&& LimsSampleType.fromSampleId(sampleId).equals(LimsSampleType.WIDE)
                 if (panelGeneModel.geneDriverCategoryMap().get(germlineVariant.gene()) == DriverCategory.ONCO) { // use all genes
                     filteredGermlineVariant.add(germlineVariant);
-                } else if (panelGeneModel.geneDriverCategoryMap().get(germlineVariant.gene()) == DriverCategory.TSG) { // filter genes
-                    filteredGermlineVariant.add(germlineVariant);
-
-
-                    //                    if (reportingGenes.contains(germlineVariant.gene())) {
-                    //                        LOGGER.info("filtering");
-                    //
-                    //                        if (germlineVariant.biallelic()) { // filter for biallelic
-                    //                            for (GeneCopyNumber geneCopyNumber: geneCopyNumbers) {
-                    //                                if (Doubles.equal(geneCopyNumber.maxCopyNumber(), 1)) { // filter for gene copy number
-                    //                                    filteredGermlineVariant.add(germlineVariant);
-                    //                                }
-                    //                            }
-                    //                        }
-                    //                    }
+                } else if (panelGeneModel.geneDriverCategoryMap().get(germlineVariant.gene()) == DriverCategory.TSG
+                        && reportingGenes.contains(germlineVariant.gene())) { // filter genes
+                    if (germlineVariant.biallelic()) { // variant is biallelic (2nd hit CNV)
+                        filteredGermlineVariant.add(germlineVariant);
+                    } else { // min copy number in tumer = 1 (2nd hit SV)
+                        for (GeneCopyNumber geneCopyNumber : geneCopyNumbers) {
+                            if (Doubles.equal(geneCopyNumber.maxCopyNumber(), 1)) { // filter for gene copy number
+                                filteredGermlineVariant.add(germlineVariant);
+                            }
+                        }
+                    }
                 }
             }
         }
-
         return filteredGermlineVariant;
     }
 }
