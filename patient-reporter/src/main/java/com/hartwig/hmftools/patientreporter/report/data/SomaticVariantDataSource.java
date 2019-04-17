@@ -2,6 +2,7 @@ package com.hartwig.hmftools.patientreporter.report.data;
 
 import static net.sf.dynamicreports.report.builder.DynamicReports.field;
 
+import java.security.acl.LastOwnerException;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -10,7 +11,10 @@ import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.lims.LimsInformedConsent;
 import com.hartwig.hmftools.patientreporter.report.util.PatientReportFormat;
 import com.hartwig.hmftools.patientreporter.variants.ReportableSomaticVariant;
+import com.hartwig.hmftools.patientreporter.variants.SomaticVariantAnalyzer;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
@@ -19,6 +23,7 @@ import net.sf.dynamicreports.report.datasource.DRDataSource;
 import net.sf.jasperreports.engine.JRDataSource;
 
 public final class SomaticVariantDataSource {
+    private static final Logger LOGGER = LogManager.getLogger(SomaticVariantDataSource.class);
 
     public static final FieldBuilder<?> GENE_FIELD = field("gene", String.class);
     public static final FieldBuilder<?> VARIANT_FIELD = field("variant", String.class);
@@ -51,15 +56,16 @@ public final class SomaticVariantDataSource {
                 CLONAL_STATUS_FIELD.getName(),
                 BIALLELIC_FIELD.getName(),
                 DRIVER_FIELD.getName());
-
         for (final ReportableSomaticVariant variant : sort(variants)) {
+            LOGGER.info(variant.notifyClinicalGeneticus());
+
             String displayGene = variant.isDrupActionable() ? variant.gene() + " *" : variant.gene();
-            String codingImpact = variant.notifyClinicalGeneticus()
+            String codingImpact = variant.notifyClinicalGeneticus() && variant.SomaticOrGermline().equals("germline")
                     // germlineOptionPatient.equals(LimsInformedConsent.ALL_ACTIONABLE) || germlineOptionPatient.equals(LimsInformedConsent.ALL) &&
                     ? variant.hgvsCodingImpact() + " + # "
-                    : !variant.notifyClinicalGeneticus()
+                    : !variant.notifyClinicalGeneticus() && variant.SomaticOrGermline().equals("germline")
                             //germlineOptionPatient.equals(LimsInformedConsent.ALL_ACTIONABLE) || germlineOptionPatient.equals(LimsInformedConsent.ALL) &&
-                            ? variant.hgvsCodingImpact() + "+"
+                            ? variant.hgvsCodingImpact() + " +"
                             : variant.hgvsCodingImpact();
             String biallelic = Strings.EMPTY;
             if (variant.driverCategory() != DriverCategory.ONCO) {
