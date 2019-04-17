@@ -53,12 +53,6 @@ public final class SomaticVariantDataSource {
         for (final ReportableSomaticVariant variant : sort(variants)) {
             String displayGene = variant.isDrupActionable() ? variant.gene() + " *" : variant.gene();
 
-            String displayHgsvCodingImpact = variant.SomaticOrGermline().equalsIgnoreCase("germline") && variant.notifyClinicalGeneticus()
-                    ? variant.hgvsCodingImpact() + " + #"
-                    : variant.SomaticOrGermline().equalsIgnoreCase("germline") && !variant.notifyClinicalGeneticus()
-                            ? " + "
-                            : variant.hgvsCodingImpact();
-
             String biallelic = Strings.EMPTY;
             if (variant.driverCategory() != DriverCategory.ONCO) {
                 biallelic = variant.biallelic() ? "Yes" : "No";
@@ -68,16 +62,14 @@ public final class SomaticVariantDataSource {
                     PatientReportFormat.ploidyVafField(variant.adjustedCopyNumber(), variant.minorAllelePloidy(), variant.adjustedVAF());
 
             variantDataSource.add(displayGene,
-                    displayHgsvCodingImpact,
+                    variant.hgvsCodingImpact(),
                     variant.hgvsProteinImpact(),
                     PatientReportFormat.readDepthField(variant),
-                    variant.SomaticOrGermline().equals("somatic") ? hotspotField(variant) : Strings.EMPTY,
+                    hotspotField(variant),
                     PatientReportFormat.correctValueForFitReliability(ploidyVaf, hasReliablePurityFit),
-                    variant.SomaticOrGermline().equals("somatic")
-                            ? PatientReportFormat.correctValueForFitReliability(clonalityField(variant), hasReliablePurityFit)
-                            : "Clonal",
+                    PatientReportFormat.correctValueForFitReliability(clonalityField(variant), hasReliablePurityFit),
                     PatientReportFormat.correctValueForFitReliability(biallelic, hasReliablePurityFit),
-                    variant.SomaticOrGermline().equals("somatic") ? driverField(variant) : Strings.EMPTY);
+                    driverField(variant));
         }
         return variantDataSource;
     }
