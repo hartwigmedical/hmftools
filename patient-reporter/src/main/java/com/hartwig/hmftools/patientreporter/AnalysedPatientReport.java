@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Optional;
 
 import com.hartwig.hmftools.common.actionability.EvidenceItem;
+import com.hartwig.hmftools.common.lims.LimsInformedConsent;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.actionability.ClinicalTrial;
 import com.hartwig.hmftools.common.chord.ChordAnalysis;
@@ -50,6 +51,9 @@ public abstract class AnalysedPatientReport implements PatientReport {
 
     @NotNull
     public abstract ChordAnalysis chordAnalysis();
+
+    @Nullable
+    public abstract LimsInformedConsent germlineOptionPatient();
 
     @NotNull
     public abstract List<GeneCopyNumber> geneCopyNumbers();
