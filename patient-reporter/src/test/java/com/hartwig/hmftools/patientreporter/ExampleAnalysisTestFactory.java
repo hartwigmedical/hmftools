@@ -64,7 +64,6 @@ public final class ExampleAnalysisTestFactory {
         final List<EvidenceItem> tumorLocationSpecificEvidence = createCOLO829TumorSpecificEvidence();
         final List<ClinicalTrial> clinicalTrials = createCOLO829ClinicalTrials();
         final List<EvidenceItem> offLabelEvidence = createCOLO829OffLabelEvidence();
-        final List<GermlineVariant> germlineVariants = Lists.newArrayList();
         final List<ReportableSomaticVariant> somaticVariants = createCOLO829SomaticVariants(purityAdjuster);
         final List<GeneCopyNumber> copyNumbers = createCOLO829CopyNumbers();
         final List<ReportableGeneFusion> fusions = Lists.newArrayList();
@@ -86,7 +85,6 @@ public final class ExampleAnalysisTestFactory {
                 tumorMutationalBurden,
                 chordAnalysis,
                 true,
-                germlineVariants,
                 copyNumbers,
                 fusions,
                 disruptions,
@@ -111,7 +109,6 @@ public final class ExampleAnalysisTestFactory {
         final List<EvidenceItem> tumorLocationSpecificEvidence = createCOLO829TumorSpecificEvidence();
         final List<ClinicalTrial> clinicalTrials = createCOLO829ClinicalTrials();
         final List<EvidenceItem> offLabelEvidence = createCOLO829OffLabelEvidence();
-        final List<GermlineVariant> germlineVariants = createTestGermlineVariants(purityAdjuster);
         final List<ReportableSomaticVariant> somaticVariants = createCOLO829SomaticVariants(purityAdjuster);
         final List<GeneCopyNumber> copyNumbers = createCOLO829CopyNumbers();
         final List<ReportableGeneFusion> fusions = createTestFusions();
@@ -133,7 +130,6 @@ public final class ExampleAnalysisTestFactory {
                 tumorMutationalBurden,
                 chordAnalysis,
                 true,
-                germlineVariants,
                 copyNumbers,
                 fusions,
                 disruptions,

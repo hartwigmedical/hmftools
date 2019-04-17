@@ -139,7 +139,6 @@ abstract class PatientReporter {
                 somaticVariantAnalysis.tumorMutationalBurden(),
                 chordAnalysis,
                 doReportGermline,
-                doReportGermline ? germlineVariants : Lists.newArrayList(),
                 copyNumberAnalysis.reportableGeneCopyNumbers(),
                 svAnalysis.reportableFusions(),
                 svAnalysis.reportableDisruptions(),
