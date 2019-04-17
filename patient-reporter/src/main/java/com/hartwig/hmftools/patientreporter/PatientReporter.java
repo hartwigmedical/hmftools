@@ -63,7 +63,7 @@ abstract class PatientReporter {
     public abstract SvAnalyzer svAnalyzerModel();
 
     @NotNull
-    public AnalysedPatientReport run(@NotNull String runDirectory, boolean doReportGermline, @Nullable String comments) throws IOException {
+    public AnalysedPatientReport run(@NotNull String runDirectory, @Nullable String comments) throws IOException {
         final RunContext run = ProductionRunContextFactory.fromRunDirectory(runDirectory);
         assert run.isSomaticRun();
 
@@ -91,7 +91,6 @@ abstract class PatientReporter {
         LOGGER.info(" Tumor mutational load: " + somaticVariantAnalysis.tumorMutationalLoad());
         LOGGER.info(" Tumor mutational burden: " + somaticVariantAnalysis.tumorMutationalBurden());
         LOGGER.info(" CHORD analysis HRD prediction: " + chordAnalysis.hrdValue());
-        LOGGER.info(" Germline variants to report : " + (doReportGermline ? germlineVariants.size() : "disabled"));
         LOGGER.info(" Copy number events to report: " + copyNumberAnalysis.reportableGeneCopyNumbers().size());
         LOGGER.info(" Gene fusions to report : " + svAnalysis.reportableFusions().size());
         LOGGER.info(" Gene disruptions to report : " + svAnalysis.reportableDisruptions().size());
@@ -138,7 +137,6 @@ abstract class PatientReporter {
                 somaticVariantAnalysis.tumorMutationalLoad(),
                 somaticVariantAnalysis.tumorMutationalBurden(),
                 chordAnalysis,
-                doReportGermline,
                 copyNumberAnalysis.reportableGeneCopyNumbers(),
                 svAnalysis.reportableFusions(),
                 svAnalysis.reportableDisruptions(),

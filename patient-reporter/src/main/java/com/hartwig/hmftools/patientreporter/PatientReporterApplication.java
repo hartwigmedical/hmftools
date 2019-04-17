@@ -49,7 +49,6 @@ public class PatientReporterApplication {
     private static final String QC_FAIL_REASON = "qc_fail_reason";
     private static final String QC_FAIL_SAMPLE = "qc_fail_sample";
 
-    private static final String DO_REPORT_GERMLINE = "do_report_germline";
     private static final String FUSION_CSV = "fusion_csv";
     private static final String DISRUPTION_CSV = "disruption_csv";
 
@@ -97,7 +96,7 @@ public class PatientReporterApplication {
             final PatientReporter reporter = buildReporter(cmd, reporterData);
 
             final AnalysedPatientReport report =
-                    reporter.run(cmd.getOptionValue(RUN_DIRECTORY), cmd.hasOption(DO_REPORT_GERMLINE), cmd.getOptionValue(COMMENTS));
+                    reporter.run(cmd.getOptionValue(RUN_DIRECTORY), cmd.getOptionValue(COMMENTS));
             final String outputFilePath = generateOutputFilePathForPatientReport(cmd.getOptionValue(REPORT_DIRECTORY), report);
             reportWriter.writeAnalysedPatientReport(report, outputFilePath);
         } else {
@@ -264,7 +263,6 @@ public class PatientReporterApplication {
         options.addOption(QC_FAIL, false, "If set, generates a qc-fail report.");
         options.addOption(QC_FAIL_REASON, true, "Either 'low_tumor_percentage', 'low_dna_yield', 'post_analysis_fail' or 'shallow_seq'");
         options.addOption(QC_FAIL_SAMPLE, true, "In case of qc-fail reports, the name of the sample used.");
-        options.addOption(DO_REPORT_GERMLINE, false, "If provided, report germline. Otherwise do not report germline.");
         options.addOption(FUSION_CSV, true, "Path towards a CSV of fusions of the sample");
         options.addOption(DISRUPTION_CSV, true, "Path towards a CSV of disruptions of the sample");
         options.addOption(FASTA_FILE_LOCATION, true, "Path towards the FASTA file containing the ref genome.");
