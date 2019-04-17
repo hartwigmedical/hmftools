@@ -75,7 +75,9 @@ public abstract class FindingsPage {
                                 col.column("Clonality", SomaticVariantDataSource.CLONAL_STATUS_FIELD),
                                 col.column("Biallelic", SomaticVariantDataSource.BIALLELIC_FIELD),
                                 col.column("Driver", SomaticVariantDataSource.DRIVER_FIELD)))
-                        .setDataSource(SomaticVariantDataSource.fromVariants(report.somaticVariants(), report.hasReliablePurityFit()))
+                        .setDataSource(SomaticVariantDataSource.fromVariants(report.somaticVariants(),
+                                report.hasReliablePurityFit(),
+                                report.germlineOptionPatient()))
                         : cmp.text("None").setStyle(fontStyle().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER));
 
         return cmp.verticalList(cmp.text("Somatic Variants").setStyle(sectionHeaderStyle()),

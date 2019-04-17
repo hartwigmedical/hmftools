@@ -7,6 +7,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
+import com.hartwig.hmftools.common.lims.LimsInformedConsent;
 import com.hartwig.hmftools.patientreporter.report.util.PatientReportFormat;
 import com.hartwig.hmftools.patientreporter.variants.ReportableSomaticVariant;
 
@@ -39,7 +40,8 @@ public final class SomaticVariantDataSource {
     }
 
     @NotNull
-    public static JRDataSource fromVariants(@NotNull List<ReportableSomaticVariant> variants, boolean hasReliablePurityFit) {
+    public static JRDataSource fromVariants(@NotNull List<ReportableSomaticVariant> variants, boolean hasReliablePurityFit,
+            LimsInformedConsent germlineOptionPatient) {
         final DRDataSource variantDataSource = new DRDataSource(GENE_FIELD.getName(),
                 VARIANT_FIELD.getName(),
                 IMPACT_FIELD.getName(),
