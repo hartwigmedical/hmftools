@@ -5,6 +5,7 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -20,9 +21,11 @@ public final class EnrichedStructuralVariantFactory {
     private final static String PURPLE_CN_CHANGE = "PURPLE_CN_CHANGE";
     private final static String PURPLE_PLOIDY = "PURPLE_PLOIDY";
 
+    @Nullable
     private final IndexedFastaSequenceFile reference;
 
-    public EnrichedStructuralVariantFactory(@NotNull final IndexedFastaSequenceFile reference) {
+
+    public EnrichedStructuralVariantFactory(@Nullable final IndexedFastaSequenceFile reference) {
         this.reference = reference;
     }
 
@@ -79,6 +82,10 @@ public final class EnrichedStructuralVariantFactory {
 
     @NotNull
     private String context(@NotNull String chromosome, long position) {
+        if (reference == null) {
+            return Strings.EMPTY;
+        }
+
         final int chromosomeLength = reference.getSequenceDictionary().getSequence(chromosome).getSequenceLength();
         final ReferenceSequence sequence =
                 reference.getSubsequenceAt(chromosome, Math.max(1, position - DISTANCE), Math.min(position + DISTANCE, chromosomeLength));
