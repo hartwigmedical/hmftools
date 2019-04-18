@@ -11,6 +11,7 @@ import static net.sf.dynamicreports.report.builder.DynamicReports.cmp;
 import static net.sf.dynamicreports.report.builder.DynamicReports.col;
 import static net.sf.dynamicreports.report.builder.DynamicReports.hyperLink;
 
+import com.hartwig.hmftools.common.lims.LimsInformedConsent;
 import com.hartwig.hmftools.patientreporter.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.report.components.ChordSection;
 import com.hartwig.hmftools.patientreporter.report.components.MicrosatelliteSection;
@@ -59,6 +60,9 @@ public abstract class FindingsPage {
         final String drupEligibilityAddition = "Marked genes (*) are included in the DRUP study and indicate potential "
                 + "eligibility in DRUP. Please note that the marking is NOT based on the specific mutation reported for "
                 + "this sample, but only on a gene-level.";
+        final String germline = "Marked variant(s) (+) are germline variants.";
+        final String geneticus = "Marked variant(s) (#) are also present in the germline of the patient. Referral to a genetic specialist "
+                + "should be advised.";
 
         final ComponentBuilder<?, ?> table =
                 !report.somaticVariants().isEmpty()
@@ -72,16 +76,37 @@ public abstract class FindingsPage {
                                 col.column("Clonality", SomaticVariantDataSource.CLONAL_STATUS_FIELD),
                                 col.column("Biallelic", SomaticVariantDataSource.BIALLELIC_FIELD),
                                 col.column("Driver", SomaticVariantDataSource.DRIVER_FIELD)))
-                        .setDataSource(SomaticVariantDataSource.fromVariants(report.somaticVariants(), report.hasReliablePurityFit()))
+                        .setDataSource(SomaticVariantDataSource.fromVariants(report.somaticVariants(),
+                                report.hasReliablePurityFit(),
+                                report.germlineOptionPatient()))
                         : cmp.text("None").setStyle(fontStyle().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER));
 
-        return cmp.verticalList(cmp.text("Somatic Variants").setStyle(sectionHeaderStyle()),
-                cmp.verticalGap(HEADER_TO_TABLE_VERTICAL_GAP),
-                table,
-                cmp.verticalGap(15),
-                cmp.horizontalList(cmp.horizontalGap(10),
-                        cmp.text("*").setStyle(fontStyle()).setWidth(2),
-                        cmp.text(drupEligibilityAddition).setStyle(fontStyle().setFontSize(8))));
+        if (report.reportableGermlineVariant() && report.germlineOptionPatient().equals(LimsInformedConsent.ALL)
+                || report.germlineOptionPatient().equals(LimsInformedConsent.ALL_ACTIONABLE)) {
+            return cmp.verticalList(cmp.text("Somatic Variants").setStyle(sectionHeaderStyle()),
+                    cmp.verticalGap(HEADER_TO_TABLE_VERTICAL_GAP),
+                    table,
+                    cmp.verticalGap(15),
+                    cmp.horizontalList(cmp.horizontalGap(10),
+                            cmp.text("*").setStyle(fontStyle()).setWidth(2),
+                            cmp.text(drupEligibilityAddition).setStyle(fontStyle().setFontSize(8))),
+                    cmp.verticalGap(5),
+                    cmp.horizontalList(cmp.horizontalGap(10),
+                            cmp.text("#").setStyle(fontStyle()).setWidth(2),
+                            cmp.text(germline).setStyle(fontStyle().setFontSize(8))),
+                    cmp.verticalGap(5),
+                    cmp.horizontalList(cmp.horizontalGap(10),
+                            cmp.text("+").setStyle(fontStyle()).setWidth(2),
+                            cmp.text(geneticus).setStyle(fontStyle().setFontSize(8))));
+        } else {
+            return cmp.verticalList(cmp.text("Somatic Variants").setStyle(sectionHeaderStyle()),
+                    cmp.verticalGap(HEADER_TO_TABLE_VERTICAL_GAP),
+                    table,
+                    cmp.verticalGap(15),
+                    cmp.horizontalList(cmp.horizontalGap(10),
+                            cmp.text("*").setStyle(fontStyle()).setWidth(2),
+                            cmp.text(drupEligibilityAddition).setStyle(fontStyle().setFontSize(8))));
+        }
     }
 
     @NotNull

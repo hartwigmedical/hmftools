@@ -8,8 +8,8 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.variant.Clonality;
 import com.hartwig.hmftools.common.variant.Hotspot;
-import com.hartwig.hmftools.patientreporter.variants.ImmutableReportableSomaticVariant;
-import com.hartwig.hmftools.patientreporter.variants.ReportableSomaticVariant;
+import com.hartwig.hmftools.patientreporter.variants.ImmutableReportableVariant;
+import com.hartwig.hmftools.patientreporter.variants.ReportableVariant;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
@@ -26,13 +26,13 @@ public class SomaticVariantDataSourceTest {
 
     @Test
     public void sortCorrectlyOnCodon() {
-        ReportableSomaticVariant variant1 = testBuilder().hgvsCodingImpact("c.300T>A").build();
-        ReportableSomaticVariant variant2 = testBuilder().hgvsCodingImpact("c.4000T>A").build();
-        ReportableSomaticVariant variant3 = testBuilder().hgvsCodingImpact("c.500T>A").build();
+        ReportableVariant variant1 = testBuilder().hgvsCodingImpact("c.300T>A").build();
+        ReportableVariant variant2 = testBuilder().hgvsCodingImpact("c.4000T>A").build();
+        ReportableVariant variant3 = testBuilder().hgvsCodingImpact("c.500T>A").build();
 
-        List<ReportableSomaticVariant> variants = Lists.newArrayList(variant1, variant2, variant3);
+        List<ReportableVariant> variants = Lists.newArrayList(variant1, variant2, variant3);
 
-        List<ReportableSomaticVariant> sortedVariants = SomaticVariantDataSource.sort(variants);
+        List<ReportableVariant> sortedVariants = SomaticVariantDataSource.sort(variants);
 
         assertEquals(variant1, sortedVariants.get(0));
         assertEquals(variant3, sortedVariants.get(1));
@@ -40,8 +40,9 @@ public class SomaticVariantDataSourceTest {
     }
 
     @NotNull
-    private static ImmutableReportableSomaticVariant.Builder testBuilder() {
-        return ImmutableReportableSomaticVariant.builder()
+    private static ImmutableReportableVariant.Builder testBuilder() {
+
+        return ImmutableReportableVariant.builder()
                 .gene("XXX")
                 .isDrupActionable(true)
                 .hgvsCodingImpact("c.1A>T")
@@ -55,6 +56,8 @@ public class SomaticVariantDataSourceTest {
                 .biallelic(true)
                 .adjustedVAF(0D)
                 .driverCategory(DriverCategory.ONCO)
-                .driverLikelihood(1D);
+                .driverLikelihood(1D)
+                .SomaticOrGermline("somatic")
+                .notifyClinicalGeneticus(false);
     }
 }

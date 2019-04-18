@@ -32,10 +32,10 @@ import com.hartwig.hmftools.patientreporter.actionability.ClinicalTrialFactory;
 import com.hartwig.hmftools.patientreporter.actionability.ReportableEvidenceItemFactory;
 import com.hartwig.hmftools.patientreporter.copynumber.CopyNumberAnalysis;
 import com.hartwig.hmftools.patientreporter.copynumber.CopyNumberAnalyzer;
-import com.hartwig.hmftools.patientreporter.germline.FilterGermlineVariants;
 import com.hartwig.hmftools.patientreporter.germline.GermlineVariant;
 import com.hartwig.hmftools.patientreporter.structural.SvAnalysis;
 import com.hartwig.hmftools.patientreporter.structural.SvAnalyzer;
+import com.hartwig.hmftools.patientreporter.variants.ReportableVariant;
 import com.hartwig.hmftools.patientreporter.variants.SomaticVariantAnalysis;
 import com.hartwig.hmftools.patientreporter.variants.SomaticVariantAnalyzer;
 
@@ -63,7 +63,7 @@ abstract class PatientReporter {
     public abstract SvAnalyzer svAnalyzerModel();
 
     @NotNull
-    public AnalysedPatientReport run(@NotNull String runDirectory, boolean doReportGermline, @Nullable String comments) throws IOException {
+    public AnalysedPatientReport run(@NotNull String runDirectory, @Nullable String comments) throws IOException {
         final RunContext run = ProductionRunContextFactory.fromRunDirectory(runDirectory);
         assert run.isSomaticRun();
 
@@ -73,12 +73,24 @@ abstract class PatientReporter {
                 PatientTumorLocationFunctions.findPatientTumorLocationForSample(baseReportData().patientTumorLocations(), tumorSample);
 
         final CopyNumberAnalysis copyNumberAnalysis = analyzeCopyNumbers(run, patientTumorLocation);
-        final SomaticVariantAnalysis somaticVariantAnalysis = analyzeSomaticVariants(run, copyNumberAnalysis, patientTumorLocation);
+        final List<GermlineVariant> germlineVariants = analyzeGermlineVariants(run);
+
+        final SomaticVariantAnalysis somaticVariantAnalysis = analyzeSomaticVariants(run,
+                copyNumberAnalysis,
+                patientTumorLocation,
+                germlineVariants,
+                copyNumberAnalysis.reportableGeneCopyNumbers());
+
+        boolean hasReportableGermlineVariant = false;
+        for (ReportableVariant variantAnalysis: somaticVariantAnalysis.reportableSomaticVariants()){
+            if (variantAnalysis.SomaticOrGermline().contains("germline")) {
+                hasReportableGermlineVariant = true;
+            }
+        }
+
 
         final SvAnalysis svAnalysis = analyzeStructuralVariants(copyNumberAnalysis, patientTumorLocation, svAnalyzerModel());
-        final List<GermlineVariant> germlineVariants = analyzeGermlineVariants(run);
-        final List<GermlineVariant> filteredGermlineVariant =
-                FilterGermlineVariants.filteringReportedGermlineVariant(germlineVariants, sequencedReportData().germlineGenesReporting());
+
         final ChordAnalysis chordAnalysis = analyzeChord(run);
 
         LOGGER.info("Printing analysis results:");
@@ -87,7 +99,6 @@ abstract class PatientReporter {
         LOGGER.info(" Tumor mutational load: " + somaticVariantAnalysis.tumorMutationalLoad());
         LOGGER.info(" Tumor mutational burden: " + somaticVariantAnalysis.tumorMutationalBurden());
         LOGGER.info(" CHORD analysis HRD prediction: " + chordAnalysis.hrdValue());
-        LOGGER.info(" Germline variants to report : " + (doReportGermline ? germlineVariants.size() : "disabled"));
         LOGGER.info(" Copy number events to report: " + copyNumberAnalysis.reportableGeneCopyNumbers().size());
         LOGGER.info(" Gene fusions to report : " + svAnalysis.reportableFusions().size());
         LOGGER.info(" Gene disruptions to report : " + svAnalysis.reportableDisruptions().size());
@@ -134,8 +145,8 @@ abstract class PatientReporter {
                 somaticVariantAnalysis.tumorMutationalLoad(),
                 somaticVariantAnalysis.tumorMutationalBurden(),
                 chordAnalysis,
-                doReportGermline,
-                doReportGermline ? germlineVariants : Lists.newArrayList(),
+                lims.germlineFindigsWIDE(tumorSample),
+                hasReportableGermlineVariant,
                 copyNumberAnalysis.reportableGeneCopyNumbers(),
                 svAnalysis.reportableFusions(),
                 svAnalysis.reportableDisruptions(),
@@ -173,7 +184,8 @@ abstract class PatientReporter {
 
     @NotNull
     private SomaticVariantAnalysis analyzeSomaticVariants(@NotNull RunContext run, @NotNull CopyNumberAnalysis copyNumberAnalysis,
-            @Nullable PatientTumorLocation patientTumorLocation) throws IOException {
+            @Nullable PatientTumorLocation patientTumorLocation, List<GermlineVariant> germlineVariants,
+            @NotNull List<GeneCopyNumber> geneCopyNumbers) throws IOException {
         final String runDirectory = run.runDirectory();
         final String sample = run.tumorSample();
 
@@ -194,7 +206,12 @@ abstract class PatientReporter {
                 sequencedReportData().panelGeneModel().geneDriverCategoryMap(),
                 sequencedReportData().panelGeneModel().drupActionableGenes(),
                 sequencedReportData().actionabilityAnalyzer(),
-                patientTumorLocation);
+                patientTumorLocation,
+                germlineVariants,
+                sequencedReportData().germlineGenesReporting().germlineGenesNotify(),
+                sequencedReportData().germlineGenesReporting(),
+                sample,
+                geneCopyNumbers);
     }
 
     @NotNull

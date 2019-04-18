@@ -23,6 +23,7 @@ import com.hartwig.hmftools.common.chord.ImmutableChordAnalysis;
 import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.ecrf.projections.ImmutablePatientTumorLocation;
 import com.hartwig.hmftools.common.fusions.KnownFusionsModel;
+import com.hartwig.hmftools.common.lims.LimsInformedConsent;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.gender.Gender;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
@@ -36,8 +37,8 @@ import com.hartwig.hmftools.patientreporter.structural.ImmutableReportableGeneDi
 import com.hartwig.hmftools.patientreporter.structural.ImmutableReportableGeneFusion;
 import com.hartwig.hmftools.patientreporter.structural.ReportableGeneDisruption;
 import com.hartwig.hmftools.patientreporter.structural.ReportableGeneFusion;
-import com.hartwig.hmftools.patientreporter.variants.ImmutableReportableSomaticVariant;
-import com.hartwig.hmftools.patientreporter.variants.ReportableSomaticVariant;
+import com.hartwig.hmftools.patientreporter.variants.ImmutableReportableVariant;
+import com.hartwig.hmftools.patientreporter.variants.ReportableVariant;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
@@ -64,10 +65,9 @@ public final class ExampleAnalysisTestFactory {
         final List<EvidenceItem> tumorLocationSpecificEvidence = createCOLO829TumorSpecificEvidence();
         final List<ClinicalTrial> clinicalTrials = createCOLO829ClinicalTrials();
         final List<EvidenceItem> offLabelEvidence = createCOLO829OffLabelEvidence();
-        final List<ReportableSomaticVariant> somaticVariants = createCOLO829SomaticVariants(purityAdjuster);
+        final List<ReportableVariant> reportableVariants = createCOLO829SomaticVariants(purityAdjuster);
         final List<GeneCopyNumber> copyNumbers = createCOLO829CopyNumbers();
         final List<ReportableGeneFusion> fusions = Lists.newArrayList();
-        final List<GermlineVariant> germlineVariants = Lists.newArrayList();
         final ChordAnalysis chordAnalysis = createCOLO829ChordAnalysis();
         final List<ReportableGeneDisruption> disruptions = createCOLO829Disruptions();
 
@@ -80,13 +80,13 @@ public final class ExampleAnalysisTestFactory {
                 tumorLocationSpecificEvidence,
                 clinicalTrials,
                 offLabelEvidence,
-                somaticVariants,
+                reportableVariants,
                 microsatelliteIndelsPerMb,
                 tumorMutationalLoad,
                 tumorMutationalBurden,
                 chordAnalysis,
-                true,
-                germlineVariants,
+                LimsInformedConsent.UNKNOWN,
+                false,
                 copyNumbers,
                 fusions,
                 disruptions,
@@ -111,10 +111,9 @@ public final class ExampleAnalysisTestFactory {
         final List<EvidenceItem> tumorLocationSpecificEvidence = createCOLO829TumorSpecificEvidence();
         final List<ClinicalTrial> clinicalTrials = createCOLO829ClinicalTrials();
         final List<EvidenceItem> offLabelEvidence = createCOLO829OffLabelEvidence();
-        final List<ReportableSomaticVariant> somaticVariants = createCOLO829SomaticVariants(purityAdjuster);
+        final List<ReportableVariant> reportableVariants = createCOLO829SomaticVariants(purityAdjuster);
         final List<GeneCopyNumber> copyNumbers = createCOLO829CopyNumbers();
         final List<ReportableGeneFusion> fusions = createTestFusions();
-        final List<GermlineVariant> germlineVariants = createTestGermlineVariants(purityAdjuster);
         final ChordAnalysis chordAnalysis = createCOLO829ChordAnalysis();
         final List<ReportableGeneDisruption> disruptions = createCOLO829Disruptions();
 
@@ -127,13 +126,13 @@ public final class ExampleAnalysisTestFactory {
                 tumorLocationSpecificEvidence,
                 clinicalTrials,
                 offLabelEvidence,
-                somaticVariants,
+                reportableVariants,
                 microsatelliteIndelsPerMb,
                 tumorMutationalLoad,
                 tumorMutationalBurden,
                 chordAnalysis,
-                true,
-                germlineVariants,
+                LimsInformedConsent.UNKNOWN,
+                false,
                 copyNumbers,
                 fusions,
                 disruptions,
@@ -430,8 +429,8 @@ public final class ExampleAnalysisTestFactory {
     }
 
     @NotNull
-    private static List<ReportableSomaticVariant> createCOLO829SomaticVariants(@NotNull PurityAdjuster purityAdjuster) {
-        ReportableSomaticVariant variant1 = ImmutableReportableSomaticVariant.builder()
+    private static List<ReportableVariant> createCOLO829SomaticVariants(@NotNull PurityAdjuster purityAdjuster) {
+        ReportableVariant variant1 = ImmutableReportableVariant.builder()
                 .gene("BRAF")
                 .isDrupActionable(true)
                 .hgvsCodingImpact("c.1799T>A")
@@ -446,9 +445,11 @@ public final class ExampleAnalysisTestFactory {
                 .adjustedVAF(purityAdjuster.purityAdjustedVAF("7", 6, 107D / 161D))
                 .driverCategory(DriverCategory.ONCO)
                 .driverLikelihood(1D)
+                .SomaticOrGermline("somatic")
+                .notifyClinicalGeneticus(false)
                 .build();
 
-        ReportableSomaticVariant variant2 = ImmutableReportableSomaticVariant.builder()
+        ReportableVariant variant2 = ImmutableReportableVariant.builder()
                 .gene("CDKN2A")
                 .isDrupActionable(true)
                 .hgvsCodingImpact("c.369_370delCG")
@@ -463,9 +464,11 @@ public final class ExampleAnalysisTestFactory {
                 .adjustedVAF(purityAdjuster.purityAdjustedVAF("9", 2, 44D / 44D))
                 .driverCategory(DriverCategory.TSG)
                 .driverLikelihood(0.9)
+                .SomaticOrGermline("somatic")
+                .notifyClinicalGeneticus(false)
                 .build();
 
-        ReportableSomaticVariant variant3 = ImmutableReportableSomaticVariant.builder()
+        ReportableVariant variant3 = ImmutableReportableVariant.builder()
                 .gene("SF3B1")
                 .isDrupActionable(false)
                 .hgvsCodingImpact("c.2153C>T")
@@ -480,9 +483,11 @@ public final class ExampleAnalysisTestFactory {
                 .adjustedVAF(purityAdjuster.purityAdjustedVAF("2", 3, 72D / 107D))
                 .driverCategory(DriverCategory.ONCO)
                 .driverLikelihood(0.5)
+                .SomaticOrGermline("somatic")
+                .notifyClinicalGeneticus(false)
                 .build();
 
-        ReportableSomaticVariant variant4 = ImmutableReportableSomaticVariant.builder()
+        ReportableVariant variant4 = ImmutableReportableVariant.builder()
                 .gene("TP63")
                 .isDrupActionable(false)
                 .hgvsCodingImpact("c.1497G>T")
@@ -497,6 +502,8 @@ public final class ExampleAnalysisTestFactory {
                 .adjustedVAF(purityAdjuster.purityAdjustedVAF("3", 4, 48D / 103D))
                 .driverCategory(DriverCategory.TSG)
                 .driverLikelihood(0.1)
+                .SomaticOrGermline("somatic")
+                .notifyClinicalGeneticus(false)
                 .build();
 
         return Lists.newArrayList(variant1, variant2, variant3, variant4);

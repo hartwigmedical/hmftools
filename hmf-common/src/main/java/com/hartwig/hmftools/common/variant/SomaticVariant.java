@@ -2,7 +2,9 @@ package com.hartwig.hmftools.common.variant;
 
 import java.util.List;
 
+import com.hartwig.hmftools.common.numeric.Doubles;
 import com.hartwig.hmftools.common.position.GenomePosition;
+import com.hartwig.hmftools.common.purple.region.GermlineStatus;
 import com.hartwig.hmftools.common.variant.cosmic.CosmicAnnotation;
 import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotation;
 
@@ -94,4 +96,20 @@ public interface SomaticVariant extends GenomePosition, AllelicDepth {
     default boolean isSnp() {
         return type() == VariantType.SNP;
     }
+
+    double adjustedCopyNumber();
+
+    double adjustedVAF();
+
+    double minorAllelePloidy();
+
+    double ploidy();
+
+    default boolean biallelic() {
+        return Doubles.lessOrEqual(adjustedCopyNumber(), 0) || Doubles.greaterOrEqual(ploidy(), adjustedCopyNumber() - 0.5);
+    }
+
+    @NotNull
+    GermlineStatus germlineStatus();
+
 }

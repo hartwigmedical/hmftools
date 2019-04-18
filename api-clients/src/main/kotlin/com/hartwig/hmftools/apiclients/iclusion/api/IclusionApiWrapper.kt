@@ -53,7 +53,7 @@ class IclusionApiWrapper(endpoint: String, private val clientId: String, private
         logger.info(" Studies with CCMO identifier: ${studies.filterNot { it.ccmo.isEmpty() }.size}")
         logger.info(" Studies with mutations configured: ${studies.filterNot { it.mutations.isEmpty() }.size}")
         logger.info(" Studies with EUDRA identifier: ${studies.filterNot { it.eudra.isEmpty() }.size}")
-        logger.info(" Studies with NCT identifier: ${studies.filterNot { it.nct.isEmpty() }.size}")
+        logger.info(" Studies with NCT identifier: ${studies.filterNot { it.nct.isNullOrEmpty() }.size}")
         logger.info(" Studies with IPN ?: ${studies.filterNot { it.ipn.isNullOrEmpty() }.size}")
 
         val indications = indications().blockingIterable().toList().associateBy { it.id }
@@ -65,7 +65,7 @@ class IclusionApiWrapper(endpoint: String, private val clientId: String, private
         val variants = variants().blockingIterable().toList().associateBy { it.id }
         logger.info("Queried ${variants.size} variants via iclusion API.")
 
-        return studies.filterNot { it.mutations.isEmpty() }.map {
+        return studies.filterNot { it.mutations.isEmpty() }.map { it ->
             val indicationsForStudy = it.indication_ids.mapNotNull { indications[it] }
             val mutationsDetails = it.mutations.mapNotNull {
                 val geneName = genes[it.gene_id]?.gene_name

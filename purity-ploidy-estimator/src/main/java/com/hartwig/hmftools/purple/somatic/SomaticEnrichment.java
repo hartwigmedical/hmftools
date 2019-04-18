@@ -1,5 +1,11 @@
 package com.hartwig.hmftools.purple.somatic;
 
+import static com.hartwig.hmftools.common.variant.SomaticVariantFactory.PURPLE_AF_INFO;
+import static com.hartwig.hmftools.common.variant.SomaticVariantFactory.PURPLE_CN_INFO;
+import static com.hartwig.hmftools.common.variant.SomaticVariantFactory.PURPLE_GERMLINE_INFO;
+import static com.hartwig.hmftools.common.variant.SomaticVariantFactory.PURPLE_MINOR_ALLELE_PLOIDY_INFO;
+import static com.hartwig.hmftools.common.variant.SomaticVariantFactory.PURPLE_PLOIDY_INFO;
+
 import java.util.List;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -29,14 +35,12 @@ import htsjdk.variant.vcf.VCFInfoHeaderLine;
 
 public class SomaticEnrichment {
 
-    private static final String PURPLE_CN_INFO = "PURPLE_CN";
-    private static final String PURPLE_CN_DESC = "Purity adjusted copy number";
-    private static final String PURPLE_AF_INFO = "PURPLE_AF";
-    private static final String PURPLE_AF_DESC = "Purity adjusted allelic frequency";
-    private static final String PURPLE_MINOR_ALLELE_PLOIDY_INFO = "PURPLE_MAP";
-    private static final String PURPLE_MINOR_ALLELE_PLOIDY_DESC = "Purity adjusted minor allele ploidy";
-    private static final String PURPLE_GERMLINE_INFO = "PURPLE_GERMLINE";
-    private static final String PURPLE_GERMLINE_DESC = "Germline classification of surrounding region";
+    private static final String PURPLE_CN_DESC = "Purity adjusted copy number surrounding variant location";
+    private static final String PURPLE_MINOR_ALLELE_PLOIDY_DESC = "Purity adjusted minor allele ploidy surrounding variant location";
+    private static final String PURPLE_GERMLINE_DESC = "Germline classification surrounding variant location";
+
+    private static final String PURPLE_AF_DESC = "Purity adjusted allelic frequency of variant";
+    private static final String PURPLE_PLOIDY_DESC = "Purity adjusted ploidy of variant";
 
     @NotNull
     private final String tumorSample;
@@ -68,6 +72,7 @@ public class SomaticEnrichment {
         outputVCFHeader.addMetaDataLine(new VCFHeaderLine("purpleVersion", purpleVersion));
         outputVCFHeader.addMetaDataLine(new VCFInfoHeaderLine(PURPLE_AF_INFO, 1, VCFHeaderLineType.Float, PURPLE_AF_DESC));
         outputVCFHeader.addMetaDataLine(new VCFInfoHeaderLine(PURPLE_CN_INFO, 1, VCFHeaderLineType.Float, PURPLE_CN_DESC));
+        outputVCFHeader.addMetaDataLine(new VCFInfoHeaderLine(PURPLE_PLOIDY_INFO, 1, VCFHeaderLineType.Float, PURPLE_PLOIDY_DESC));
         outputVCFHeader.addMetaDataLine(new VCFInfoHeaderLine(PURPLE_MINOR_ALLELE_PLOIDY_INFO,
                 1,
                 VCFHeaderLineType.Float,
@@ -105,6 +110,7 @@ public class SomaticEnrichment {
         double vaf = purityAdjuster.purityAdjustedVAF(purpleCopyNumber.chromosome(), Math.max(0.001, copyNumber), depth.alleleFrequency());
 
         return builder.attribute(PURPLE_CN_INFO, copyNumber)
+                .attribute(PURPLE_PLOIDY_INFO, vaf * copyNumber)
                 .attribute(PURPLE_AF_INFO, vaf)
                 .attribute(PURPLE_MINOR_ALLELE_PLOIDY_INFO, purpleCopyNumber.minorAllelePloidy());
 

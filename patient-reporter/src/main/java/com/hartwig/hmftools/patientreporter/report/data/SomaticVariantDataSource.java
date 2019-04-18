@@ -7,9 +7,12 @@ import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
+import com.hartwig.hmftools.common.lims.LimsInformedConsent;
 import com.hartwig.hmftools.patientreporter.report.util.PatientReportFormat;
-import com.hartwig.hmftools.patientreporter.variants.ReportableSomaticVariant;
+import com.hartwig.hmftools.patientreporter.variants.ReportableVariant;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
@@ -18,6 +21,7 @@ import net.sf.dynamicreports.report.datasource.DRDataSource;
 import net.sf.jasperreports.engine.JRDataSource;
 
 public final class SomaticVariantDataSource {
+    private static final Logger LOGGER = LogManager.getLogger(SomaticVariantDataSource.class);
 
     public static final FieldBuilder<?> GENE_FIELD = field("gene", String.class);
     public static final FieldBuilder<?> VARIANT_FIELD = field("variant", String.class);
@@ -39,7 +43,8 @@ public final class SomaticVariantDataSource {
     }
 
     @NotNull
-    public static JRDataSource fromVariants(@NotNull List<ReportableSomaticVariant> variants, boolean hasReliablePurityFit) {
+    public static JRDataSource fromVariants(@NotNull List<ReportableVariant> variants, boolean hasReliablePurityFit,
+            LimsInformedConsent germlineOptionPatient) {
         final DRDataSource variantDataSource = new DRDataSource(GENE_FIELD.getName(),
                 VARIANT_FIELD.getName(),
                 IMPACT_FIELD.getName(),
@@ -49,10 +54,17 @@ public final class SomaticVariantDataSource {
                 CLONAL_STATUS_FIELD.getName(),
                 BIALLELIC_FIELD.getName(),
                 DRIVER_FIELD.getName());
+        for (final ReportableVariant variant : sort(variants)) {
+            LOGGER.info(variant.notifyClinicalGeneticus());
 
-        for (final ReportableSomaticVariant variant : sort(variants)) {
             String displayGene = variant.isDrupActionable() ? variant.gene() + " *" : variant.gene();
-
+            String codingImpact = variant.notifyClinicalGeneticus() && variant.SomaticOrGermline().equals("germline")
+                    // germlineOptionPatient.equals(LimsInformedConsent.ALL_ACTIONABLE) || germlineOptionPatient.equals(LimsInformedConsent.ALL) &&
+                    ? variant.hgvsCodingImpact() + " + # "
+                    : !variant.notifyClinicalGeneticus() && variant.SomaticOrGermline().equals("germline")
+                            //germlineOptionPatient.equals(LimsInformedConsent.ALL_ACTIONABLE) || germlineOptionPatient.equals(LimsInformedConsent.ALL) &&
+                            ? variant.hgvsCodingImpact() + " +"
+                            : variant.hgvsCodingImpact();
             String biallelic = Strings.EMPTY;
             if (variant.driverCategory() != DriverCategory.ONCO) {
                 biallelic = variant.biallelic() ? "Yes" : "No";
@@ -62,7 +74,7 @@ public final class SomaticVariantDataSource {
                     PatientReportFormat.ploidyVafField(variant.adjustedCopyNumber(), variant.minorAllelePloidy(), variant.adjustedVAF());
 
             variantDataSource.add(displayGene,
-                    variant.hgvsCodingImpact(),
+                    codingImpact,
                     variant.hgvsProteinImpact(),
                     PatientReportFormat.readDepthField(variant),
                     hotspotField(variant),
@@ -71,12 +83,11 @@ public final class SomaticVariantDataSource {
                     PatientReportFormat.correctValueForFitReliability(biallelic, hasReliablePurityFit),
                     driverField(variant));
         }
-
         return variantDataSource;
     }
 
     @NotNull
-    public static List<ReportableSomaticVariant> sort(@NotNull List<ReportableSomaticVariant> variants) {
+    public static List<ReportableVariant> sort(@NotNull List<ReportableVariant> variants) {
         return variants.stream().sorted((variant1, variant2) -> {
             Double variant1DriverLikelihood = variant1.driverLikelihood();
             Double variant2DriverLikelihood = variant2.driverLikelihood();
@@ -98,7 +109,7 @@ public final class SomaticVariantDataSource {
     }
 
     @NotNull
-    public static String driverField(@NotNull ReportableSomaticVariant variant) {
+    public static String driverField(@NotNull ReportableVariant variant) {
         Double driverLikelihood = variant.driverLikelihood();
         if (driverLikelihood == null) {
             return Strings.EMPTY;
@@ -114,7 +125,7 @@ public final class SomaticVariantDataSource {
     }
 
     @NotNull
-    private static String hotspotField(@NotNull ReportableSomaticVariant variant) {
+    private static String hotspotField(@NotNull ReportableVariant variant) {
         switch (variant.hotspot()) {
             case HOTSPOT:
                 return "Yes";
@@ -126,7 +137,7 @@ public final class SomaticVariantDataSource {
     }
 
     @NotNull
-    private static String clonalityField(@NotNull ReportableSomaticVariant variant) {
+    private static String clonalityField(@NotNull ReportableVariant variant) {
         switch (variant.clonality()) {
             case CLONAL:
                 return "Clonal";

@@ -24,6 +24,6 @@ public class PatientReporterTest {
         final SvAnalyzer svAnalyzer = testSvAnalyzerModel();
         final PatientReporter reporter = ImmutablePatientReporter.of(baseReportData, reporterData, svAnalyzer);
 
-        assertNotNull(reporter.run(RUN_DIRECTORY, true, null));
+        assertNotNull(reporter.run(RUN_DIRECTORY,  null));
     }
 }
