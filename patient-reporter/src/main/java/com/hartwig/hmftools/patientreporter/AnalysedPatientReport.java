@@ -55,6 +55,8 @@ public abstract class AnalysedPatientReport implements PatientReport {
     @Nullable
     public abstract LimsInformedConsent germlineOptionPatient();
 
+    public abstract boolean reportableGermlineVariant();
+
     @NotNull
     public abstract List<GeneCopyNumber> geneCopyNumbers();
 

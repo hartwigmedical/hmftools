@@ -11,6 +11,7 @@ import static net.sf.dynamicreports.report.builder.DynamicReports.cmp;
 import static net.sf.dynamicreports.report.builder.DynamicReports.col;
 import static net.sf.dynamicreports.report.builder.DynamicReports.hyperLink;
 
+import com.hartwig.hmftools.common.lims.LimsInformedConsent;
 import com.hartwig.hmftools.patientreporter.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.report.components.ChordSection;
 import com.hartwig.hmftools.patientreporter.report.components.MicrosatelliteSection;
@@ -80,21 +81,32 @@ public abstract class FindingsPage {
                                 report.germlineOptionPatient()))
                         : cmp.text("None").setStyle(fontStyle().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER));
 
-        return cmp.verticalList(cmp.text("Somatic Variants").setStyle(sectionHeaderStyle()),
-                cmp.verticalGap(HEADER_TO_TABLE_VERTICAL_GAP),
-                table,
-                cmp.verticalGap(15),
-                cmp.horizontalList(cmp.horizontalGap(10),
-                        cmp.text("*").setStyle(fontStyle()).setWidth(2),
-                        cmp.text(drupEligibilityAddition).setStyle(fontStyle().setFontSize(8))),
-                cmp.verticalGap(5),
-                cmp.horizontalList(cmp.horizontalGap(10),
-                        cmp.text("#").setStyle(fontStyle()).setWidth(2),
-                        cmp.text(germline).setStyle(fontStyle().setFontSize(8))),
-                cmp.verticalGap(5),
-                cmp.horizontalList(cmp.horizontalGap(10),
-                        cmp.text("+").setStyle(fontStyle()).setWidth(2),
-                        cmp.text(geneticus).setStyle(fontStyle().setFontSize(8))));
+        if (report.reportableGermlineVariant() && report.germlineOptionPatient().equals(LimsInformedConsent.ALL)
+                || report.germlineOptionPatient().equals(LimsInformedConsent.ALL_ACTIONABLE)) {
+            return cmp.verticalList(cmp.text("Somatic Variants").setStyle(sectionHeaderStyle()),
+                    cmp.verticalGap(HEADER_TO_TABLE_VERTICAL_GAP),
+                    table,
+                    cmp.verticalGap(15),
+                    cmp.horizontalList(cmp.horizontalGap(10),
+                            cmp.text("*").setStyle(fontStyle()).setWidth(2),
+                            cmp.text(drupEligibilityAddition).setStyle(fontStyle().setFontSize(8))),
+                    cmp.verticalGap(5),
+                    cmp.horizontalList(cmp.horizontalGap(10),
+                            cmp.text("#").setStyle(fontStyle()).setWidth(2),
+                            cmp.text(germline).setStyle(fontStyle().setFontSize(8))),
+                    cmp.verticalGap(5),
+                    cmp.horizontalList(cmp.horizontalGap(10),
+                            cmp.text("+").setStyle(fontStyle()).setWidth(2),
+                            cmp.text(geneticus).setStyle(fontStyle().setFontSize(8))));
+        } else {
+            return cmp.verticalList(cmp.text("Somatic Variants").setStyle(sectionHeaderStyle()),
+                    cmp.verticalGap(HEADER_TO_TABLE_VERTICAL_GAP),
+                    table,
+                    cmp.verticalGap(15),
+                    cmp.horizontalList(cmp.horizontalGap(10),
+                            cmp.text("*").setStyle(fontStyle()).setWidth(2),
+                            cmp.text(drupEligibilityAddition).setStyle(fontStyle().setFontSize(8))));
+        }
     }
 
     @NotNull

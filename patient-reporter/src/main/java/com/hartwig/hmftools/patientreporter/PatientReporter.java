@@ -36,6 +36,7 @@ import com.hartwig.hmftools.patientreporter.germline.FilterGermlineVariants;
 import com.hartwig.hmftools.patientreporter.germline.GermlineVariant;
 import com.hartwig.hmftools.patientreporter.structural.SvAnalysis;
 import com.hartwig.hmftools.patientreporter.structural.SvAnalyzer;
+import com.hartwig.hmftools.patientreporter.variants.ReportableSomaticVariant;
 import com.hartwig.hmftools.patientreporter.variants.SomaticVariantAnalysis;
 import com.hartwig.hmftools.patientreporter.variants.SomaticVariantAnalyzer;
 
@@ -80,6 +81,14 @@ abstract class PatientReporter {
                 patientTumorLocation,
                 germlineVariants,
                 copyNumberAnalysis.reportableGeneCopyNumbers());
+
+        boolean hasReportableGermlineVariant = false;
+        for (ReportableSomaticVariant variantAnalysis: somaticVariantAnalysis.reportableSomaticVariants()){
+            if (variantAnalysis.SomaticOrGermline().contains("germline")) {
+                hasReportableGermlineVariant = true;
+            }
+        }
+
 
         final SvAnalysis svAnalysis = analyzeStructuralVariants(copyNumberAnalysis, patientTumorLocation, svAnalyzerModel());
 
@@ -138,6 +147,7 @@ abstract class PatientReporter {
                 somaticVariantAnalysis.tumorMutationalBurden(),
                 chordAnalysis,
                 lims.germlineFindigsWIDE(tumorSample),
+                hasReportableGermlineVariant,
                 copyNumberAnalysis.reportableGeneCopyNumbers(),
                 svAnalysis.reportableFusions(),
                 svAnalysis.reportableDisruptions(),
