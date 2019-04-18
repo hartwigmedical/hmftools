@@ -696,7 +696,8 @@ java -cp purple.jar com.hartwig.hmftools.patientdb.LoadPurpleStructuralVariants 
     -purple_dir /path/to/COLO829/purple \
     -structural_vcf /path/to/COLO829/COLO829T.purple.sv.vcf.gz \
     -ref_genome /Users/jon/hmf/resources/Homo_sapiens.GRCh37.GATK.illumina.fasta \    
-    -db_user purple_writer -db_pass purple_writer_password -db_url mysql://localhost:3306/patientdb?serverTimezone=UTC
+    -db_user purple_writer -db_pass purple_writer_password \
+    -db_url mysql://localhost:3306/patientdb?serverTimezone=UTC
 ```
 
 The structural variant VCF produced by PURPLE is only an intermediary step in the HMF pipeline, thus there are a couple of caveats to be aware of when loading this file:
@@ -719,7 +720,8 @@ java -cp purple.jar com.hartwig.hmftools.patientdb.LoadPurpleSomaticVariants \
     -purple_dir /path/to/COLO829/purple \
     -somatic_vcf /path/to/COLO829/COLO829T.purple.somatic.vcf.gz \
     -ref_genome /Users/jon/hmf/resources/Homo_sapiens.GRCh37.GATK.illumina.fasta \    
-    -db_user purple_writer -db_pass purple_writer_password -db_url mysql://localhost:3306/patientdb?serverTimezone=UTC
+    -db_user purple_writer -db_pass purple_writer_password \
+    -db_url mysql://localhost:3306/patientdb?serverTimezone=UTC
 ```
 
 The somatic variant VCF produced by PURPLE is only an intermediary step in the HMF pipeline, thus there are a couple of caveats to be aware of when loading this file:
@@ -738,12 +740,11 @@ calculate the microsatellite status of a sample by examining its indels:
 ```
 SELECT sampleId, count(*)/2859 as indelsPerMb, if(count(*)/2859 > 4, "MSI", "MSS" ) AS status 
 FROM somaticVariant
-WHERE filter = 'PASS' AND type = 'INDEL' AND repeatCount >= 4 AND length(alt) <= 50 AND length(ref) <= 50
-AND (
-	(length(repeatSequence) BETWEEN 2 AND 4 ) OR
-	(length(repeatSequence) = 1 AND repeatCount >= 5)
-)
-AND sampleId IN ('COLO829T')
+WHERE filter = 'PASS'
+ AND type = 'INDEL' AND repeatCount >= 4 AND length(alt) <= 50 AND length(ref) <= 50
+ AND ((length(repeatSequence) BETWEEN 2 AND 4 ) OR
+	 (length(repeatSequence) = 1 AND repeatCount >= 5))
+ AND sampleId IN ('COLO829T')
 GROUP BY sampleId
 ORDER BY 2 DESC;
 ```  
