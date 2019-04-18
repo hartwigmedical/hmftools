@@ -37,8 +37,8 @@ import com.hartwig.hmftools.patientreporter.structural.ImmutableReportableGeneDi
 import com.hartwig.hmftools.patientreporter.structural.ImmutableReportableGeneFusion;
 import com.hartwig.hmftools.patientreporter.structural.ReportableGeneDisruption;
 import com.hartwig.hmftools.patientreporter.structural.ReportableGeneFusion;
-import com.hartwig.hmftools.patientreporter.variants.ImmutableReportableSomaticVariant;
-import com.hartwig.hmftools.patientreporter.variants.ReportableSomaticVariant;
+import com.hartwig.hmftools.patientreporter.variants.ImmutableReportableVariant;
+import com.hartwig.hmftools.patientreporter.variants.ReportableVariant;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
@@ -65,7 +65,7 @@ public final class ExampleAnalysisTestFactory {
         final List<EvidenceItem> tumorLocationSpecificEvidence = createCOLO829TumorSpecificEvidence();
         final List<ClinicalTrial> clinicalTrials = createCOLO829ClinicalTrials();
         final List<EvidenceItem> offLabelEvidence = createCOLO829OffLabelEvidence();
-        final List<ReportableSomaticVariant> somaticVariants = createCOLO829SomaticVariants(purityAdjuster);
+        final List<ReportableVariant> somaticVariants = createCOLO829SomaticVariants(purityAdjuster);
         final List<GeneCopyNumber> copyNumbers = createCOLO829CopyNumbers();
         final List<ReportableGeneFusion> fusions = Lists.newArrayList();
         final ChordAnalysis chordAnalysis = createCOLO829ChordAnalysis();
@@ -111,7 +111,7 @@ public final class ExampleAnalysisTestFactory {
         final List<EvidenceItem> tumorLocationSpecificEvidence = createCOLO829TumorSpecificEvidence();
         final List<ClinicalTrial> clinicalTrials = createCOLO829ClinicalTrials();
         final List<EvidenceItem> offLabelEvidence = createCOLO829OffLabelEvidence();
-        final List<ReportableSomaticVariant> somaticVariants = createCOLO829SomaticVariants(purityAdjuster);
+        final List<ReportableVariant> somaticVariants = createCOLO829SomaticVariants(purityAdjuster);
         final List<GeneCopyNumber> copyNumbers = createCOLO829CopyNumbers();
         final List<ReportableGeneFusion> fusions = createTestFusions();
         final ChordAnalysis chordAnalysis = createCOLO829ChordAnalysis();
@@ -429,8 +429,8 @@ public final class ExampleAnalysisTestFactory {
     }
 
     @NotNull
-    private static List<ReportableSomaticVariant> createCOLO829SomaticVariants(@NotNull PurityAdjuster purityAdjuster) {
-        ReportableSomaticVariant variant1 = ImmutableReportableSomaticVariant.builder()
+    private static List<ReportableVariant> createCOLO829SomaticVariants(@NotNull PurityAdjuster purityAdjuster) {
+        ReportableVariant variant1 = ImmutableReportableVariant.builder()
                 .gene("BRAF")
                 .isDrupActionable(true)
                 .hgvsCodingImpact("c.1799T>A")
@@ -449,7 +449,7 @@ public final class ExampleAnalysisTestFactory {
                 .notifyClinicalGeneticus(false)
                 .build();
 
-        ReportableSomaticVariant variant2 = ImmutableReportableSomaticVariant.builder()
+        ReportableVariant variant2 = ImmutableReportableVariant.builder()
                 .gene("CDKN2A")
                 .isDrupActionable(true)
                 .hgvsCodingImpact("c.369_370delCG")
@@ -468,7 +468,7 @@ public final class ExampleAnalysisTestFactory {
                 .notifyClinicalGeneticus(false)
                 .build();
 
-        ReportableSomaticVariant variant3 = ImmutableReportableSomaticVariant.builder()
+        ReportableVariant variant3 = ImmutableReportableVariant.builder()
                 .gene("SF3B1")
                 .isDrupActionable(false)
                 .hgvsCodingImpact("c.2153C>T")
@@ -487,7 +487,7 @@ public final class ExampleAnalysisTestFactory {
                 .notifyClinicalGeneticus(false)
                 .build();
 
-        ReportableSomaticVariant variant4 = ImmutableReportableSomaticVariant.builder()
+        ReportableVariant variant4 = ImmutableReportableVariant.builder()
                 .gene("TP63")
                 .isDrupActionable(false)
                 .hgvsCodingImpact("c.1497G>T")

@@ -8,10 +8,9 @@ import com.hartwig.hmftools.common.lims.LimsInformedConsent;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.actionability.ClinicalTrial;
 import com.hartwig.hmftools.common.chord.ChordAnalysis;
-import com.hartwig.hmftools.patientreporter.germline.GermlineVariant;
 import com.hartwig.hmftools.patientreporter.structural.ReportableGeneDisruption;
 import com.hartwig.hmftools.patientreporter.structural.ReportableGeneFusion;
-import com.hartwig.hmftools.patientreporter.variants.ReportableSomaticVariant;
+import com.hartwig.hmftools.patientreporter.variants.ReportableVariant;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -41,7 +40,7 @@ public abstract class AnalysedPatientReport implements PatientReport {
     public abstract List<EvidenceItem> offLabelEvidence();
 
     @NotNull
-    public abstract List<ReportableSomaticVariant> somaticVariants();
+    public abstract List<ReportableVariant> somaticVariants();
 
     public abstract double microsatelliteIndelsPerMb();
 

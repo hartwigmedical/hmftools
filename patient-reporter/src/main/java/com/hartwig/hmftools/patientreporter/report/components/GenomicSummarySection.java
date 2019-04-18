@@ -18,7 +18,7 @@ import com.hartwig.hmftools.patientreporter.report.data.GeneFusionDataSource;
 import com.hartwig.hmftools.patientreporter.report.data.SomaticVariantDataSource;
 import com.hartwig.hmftools.patientreporter.report.util.PatientReportFormat;
 import com.hartwig.hmftools.patientreporter.structural.ReportableGeneFusion;
-import com.hartwig.hmftools.patientreporter.variants.ReportableSomaticVariant;
+import com.hartwig.hmftools.patientreporter.variants.ReportableVariant;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -108,14 +108,14 @@ public final class GenomicSummarySection {
     }
 
     @NotNull
-    private static String countSomaticVariants(@NotNull List<ReportableSomaticVariant> variants) {
+    private static String countSomaticVariants(@NotNull List<ReportableVariant> variants) {
         return Integer.toString(variants.size());
     }
 
     @NotNull
-    private static String somaticVariantsWithDriver(@NotNull List<ReportableSomaticVariant> variants) {
+    private static String somaticVariantsWithDriver(@NotNull List<ReportableVariant> variants) {
         Set<String> somaticVariants = Sets.newHashSet();
-        for (final ReportableSomaticVariant variant : SomaticVariantDataSource.sort(variants)) {
+        for (final ReportableVariant variant : SomaticVariantDataSource.sort(variants)) {
             if (SomaticVariantDataSource.driverField(variant).equals("High")) {
                 somaticVariants.add(variant.gene());
             }

@@ -32,11 +32,10 @@ import com.hartwig.hmftools.patientreporter.actionability.ClinicalTrialFactory;
 import com.hartwig.hmftools.patientreporter.actionability.ReportableEvidenceItemFactory;
 import com.hartwig.hmftools.patientreporter.copynumber.CopyNumberAnalysis;
 import com.hartwig.hmftools.patientreporter.copynumber.CopyNumberAnalyzer;
-import com.hartwig.hmftools.patientreporter.germline.FilterGermlineVariants;
 import com.hartwig.hmftools.patientreporter.germline.GermlineVariant;
 import com.hartwig.hmftools.patientreporter.structural.SvAnalysis;
 import com.hartwig.hmftools.patientreporter.structural.SvAnalyzer;
-import com.hartwig.hmftools.patientreporter.variants.ReportableSomaticVariant;
+import com.hartwig.hmftools.patientreporter.variants.ReportableVariant;
 import com.hartwig.hmftools.patientreporter.variants.SomaticVariantAnalysis;
 import com.hartwig.hmftools.patientreporter.variants.SomaticVariantAnalyzer;
 
@@ -83,7 +82,7 @@ abstract class PatientReporter {
                 copyNumberAnalysis.reportableGeneCopyNumbers());
 
         boolean hasReportableGermlineVariant = false;
-        for (ReportableSomaticVariant variantAnalysis: somaticVariantAnalysis.reportableSomaticVariants()){
+        for (ReportableVariant variantAnalysis: somaticVariantAnalysis.reportableSomaticVariants()){
             if (variantAnalysis.SomaticOrGermline().contains("germline")) {
                 hasReportableGermlineVariant = true;
             }

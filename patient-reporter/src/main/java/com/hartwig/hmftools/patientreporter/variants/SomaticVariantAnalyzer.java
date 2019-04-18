@@ -21,13 +21,10 @@ import com.hartwig.hmftools.common.variant.Clonality;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
 import com.hartwig.hmftools.common.variant.Hotspot;
-import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.patientreporter.actionability.ReportableEvidenceItemFactory;
-import com.hartwig.hmftools.patientreporter.copynumber.CopyNumberAnalysis;
 import com.hartwig.hmftools.patientreporter.germline.FilterGermlineVariants;
 import com.hartwig.hmftools.patientreporter.germline.GermlineGenesReporting;
 import com.hartwig.hmftools.patientreporter.germline.GermlineVariant;
-import com.hartwig.hmftools.patientreporter.germline.ImmutableGermlineVariant;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -75,7 +72,7 @@ public final class SomaticVariantAnalyzer {
             }
         }
 
-        List<ReportableSomaticVariant> reportableVariants = toReportableSomaticVariants(variantsToReport,
+        List<ReportableVariant> reportableVariants = toReportableSomaticVariants(variantsToReport,
                 driverCatalog,
                 driverCategoryPerGeneMap,
                 drupActionableGenes,
@@ -93,12 +90,12 @@ public final class SomaticVariantAnalyzer {
     }
 
     @NotNull
-    private static List<ReportableSomaticVariant> toReportableSomaticVariants(@NotNull List<EnrichedSomaticVariant> variants,
+    private static List<ReportableVariant> toReportableSomaticVariants(@NotNull List<EnrichedSomaticVariant> variants,
             @NotNull List<DriverCatalog> driverCatalog, @NotNull Map<String, DriverCategory> driverCategoryPerGene,
             @NotNull Set<String> drupActionableGenes, List<GermlineVariant> germlineVariants, @NotNull Set<String> notifyGeneticus,
             GermlineGenesReporting germlineGenesReporting,
             @NotNull List<GeneCopyNumber> geneCopyNumbers, @NotNull String sampleId) {
-        List<ReportableSomaticVariant> reportableVariants = Lists.newArrayList();
+        List<ReportableVariant> reportableVariants = Lists.newArrayList();
         for (EnrichedSomaticVariant variant : variants) {
             DriverCatalog catalog = catalogEntryForVariant(driverCatalog, variant.gene());
             boolean notify = genesInNotifyClinicalGeneticus(germlineVariants, notifyGeneticus);
@@ -156,8 +153,8 @@ public final class SomaticVariantAnalyzer {
     }
 
     @NotNull
-    private static ImmutableReportableSomaticVariant.Builder fromGermline(@NotNull GermlineVariant variantGermline) {
-        return ImmutableReportableSomaticVariant.builder()
+    private static ImmutableReportableVariant.Builder fromGermline(@NotNull GermlineVariant variantGermline) {
+        return ImmutableReportableVariant.builder()
                 .gene(variantGermline.gene())
                 .hgvsCodingImpact(variantGermline.hgvsCodingImpact())
                 .hgvsProteinImpact(variantGermline.hgvsProteinImpact())
@@ -172,8 +169,8 @@ public final class SomaticVariantAnalyzer {
     }
 
     @NotNull
-    private static ImmutableReportableSomaticVariant.Builder fromVariant(@NotNull EnrichedSomaticVariant variant) {
-        return ImmutableReportableSomaticVariant.builder()
+    private static ImmutableReportableVariant.Builder fromVariant(@NotNull EnrichedSomaticVariant variant) {
+        return ImmutableReportableVariant.builder()
                 .gene(variant.gene())
                 .hgvsCodingImpact(variant.canonicalHgvsCodingImpact())
                 .hgvsProteinImpact(variant.canonicalHgvsProteinImpact())
