@@ -114,7 +114,8 @@ java -jar purple.jar \
    -structural_vcf /path/to/COLO829/COLO829.sv.vcf.gz \
    -sv_recovery_vcf /path/to/COLO829/COLO829.sv.all.vcf.gz \
    -circos /path/to/circos-0.69-5/bin/circos \
-   -db_enabled -db_user build -db_pass build -db_url mysql://localhost:3306/hmfpatients?serverTimezone=UTC
+   -db_enabled -db_user build -db_pass build \
+   -db_url mysql://localhost:3306/hmfpatients?serverTimezone=UTC
 ```
 
 ## Input
@@ -639,7 +640,7 @@ mysql -u purple_writer -p < generate_database.sql
 It is also worth noting that this script contains many more tables than just those used by PURPLE. 
 
 #### Update Tables
-If upgrading to a newer version of PURPLE, check the [patches directory](../patient-db/src/main/resources/patches/) for appropriate patch scripts. 
+If upgrading to a newer version of PURPLE, check the [patches directory](../patient-db/src/main/resources/patches/) for purplex_to_y_migration patch scripts. 
 They can be executed in a similar manner as above.
 
 #### Persist Data
@@ -651,8 +652,8 @@ The first is by including appropriate arguments when running PURPLE, eg:
 ```
 java -jar purple.jar \
     ...
-    -db_enabled -db_user purple_writer -db_pass purple_writer_password -db_url mysql://localhost:3306/patientdb?serverTimezone=UTC \
-    ...
+    -db_enabled -db_user purple_writer -db_pass purple_writer_password \
+    -db_url mysql://localhost:3306/patientdb?serverTimezone=UTC
 ```
 
 The second method can load data from reading the output files without the need to rerun PURPLE. This can be run with the following command:
@@ -661,10 +662,11 @@ The second method can load data from reading the output files without the need t
 java -cp purple.jar com.hartwig.hmftools.patientdb.LoadPurpleData \ 
     -tumor COLO829T \
     -purple_dir /path/to/COLO829/purple \
-    -db_user purple_writer -db_pass purple_writer_password -db_url mysql://localhost:3306/patientdb?serverTimezone=UTC
+    -db_user purple_writer -db_pass purple_writer_password \
+    -db_url mysql://localhost:3306/patientdb?serverTimezone=UTC
 ```
 
-Note that the second method has an optional `-data_request` flag without arguments which can load a reduced set of data such as those coming from Hartwig supplied data requests.
+Note that the second method has an optional `-data_request` flag which can load a reduced set of data such as those coming from Hartwig Medical Foundation supplied data requests.
 
 Regardless of which method is used, that sample's PURPLE data will be deleted before new records are inserted.
 PURPLE does not support updating records.
@@ -683,6 +685,77 @@ SELECT * FROM geneCopyNumber WHERE sampleId = 'COLO829T';
 ```
 
 The tables correspond to the file output described above. 
+
+#### Structural Variant Data
+
+It is possible to load the PURPLE enriched structural variants into the database with the following command:
+
+```
+java -cp purple.jar com.hartwig.hmftools.patientdb.LoadPurpleStructuralVariants \ 
+    -tumor COLO829T \
+    -purple_dir /path/to/COLO829/purple \
+    -structural_vcf /path/to/COLO829/COLO829T.purple.sv.vcf.gz \
+    -ref_genome /Users/jon/hmf/resources/Homo_sapiens.GRCh37.GATK.illumina.fasta \    
+    -db_user purple_writer -db_pass purple_writer_password -db_url mysql://localhost:3306/patientdb?serverTimezone=UTC
+```
+
+The structural variant VCF produced by PURPLE is only an intermediary step in the HMF pipeline, thus there are a couple of caveats to be aware of when loading this file:
+1. Patch scripts will be named variant_annotatorx_to_y_migration.sql and may not correspond to a PURPLE version.
+2. Not all fields in the database will be populated. Fields without a match in the VCF may be empty, null or have a default value.   
+
+Once loaded, the data can be queried with:
+
+```
+SELECT * FROM structuralVariant WHERE sampleId = 'COLO829T';
+```
+
+#### Somatic Variant Data
+
+It is possible to load the PURPLE enriched somatic variants into the database with the following command:
+
+```
+java -cp purple.jar com.hartwig.hmftools.patientdb.LoadPurpleSomaticVariants \ 
+    -tumor COLO829T \
+    -purple_dir /path/to/COLO829/purple \
+    -somatic_vcf /path/to/COLO829/COLO829T.purple.somatic.vcf.gz \
+    -ref_genome /Users/jon/hmf/resources/Homo_sapiens.GRCh37.GATK.illumina.fasta \    
+    -db_user purple_writer -db_pass purple_writer_password -db_url mysql://localhost:3306/patientdb?serverTimezone=UTC
+```
+
+The somatic variant VCF produced by PURPLE is only an intermediary step in the HMF pipeline, thus there are a couple of caveats to be aware of when loading this file:
+1. Patch scripts may be named patientdbx_to_y_migration and may not correspond to a PURPLE version.
+2. Not all fields in the database will be populated. Fields without a match in the VCF may be empty, null or have a default value.   
+
+Once loaded, the data can be queried with:
+
+```
+SELECT * FROM somaticVariant WHERE sampleId = 'COLO829T';
+```
+
+With all the resources of SQL available, it is possible to construct powerful and informative queries such as this example of how one might 
+calculate the microsatellite status of a sample by examining its indels:
+
+```
+SELECT sampleId, count(*)/2859 as indelsPerMb, if(count(*)/2859 > 4, "MSI", "MSS" ) AS status 
+FROM somaticVariant
+WHERE filter = 'PASS' AND type = 'INDEL' AND repeatCount >= 4 AND length(alt) <= 50 AND length(ref) <= 50
+AND (
+	(length(repeatSequence) BETWEEN 2 AND 4 ) OR
+	(length(repeatSequence) = 1 AND repeatCount >= 5)
+)
+AND sampleId IN ('COLO829T')
+GROUP BY sampleId
+ORDER BY 2 DESC;
+```  
+
+Similarly, it is possible to query the tumor mutation burden of all samples with a query such as:
+
+```
+SELECT sampleId, count(*)/2859 AS TMB, IF (count(*)/2859 > 10, "High", "Low") AS status
+FROM somaticVariant 
+WHERE filter = 'PASS'
+GROUP BY 1;
+```
 
 ### CIRCOS
 Data for the CIRCOS plots is found in the `output_dir/circos` directory even if the `circos` parameter is not supplied. 
@@ -785,10 +858,12 @@ Threads | Elapsed Time| CPU Time | Peak Mem
 - Upcoming
   - Added fitted segment chart
   - Added purity range chart
-  - Added copy number pdf
-  - Added minor allele ploidy pdf
+  - Added copy number pdf chart
+  - Added minor allele ploidy pdf chart
   - Added `no_chart` option
   - Write purity enriched somatic VCF into output dir 
+  - Added application to persist PURPLE structural variants to DB
+  - Added application to persist PURPLE somatic variants to DB
 - 2.25
   - Removed unused columns from GeneCopyNumber output
   - Added minorAllelePloidy and majorAllelePloidy to copy number output
