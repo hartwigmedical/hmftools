@@ -340,8 +340,6 @@ public class ClusterAnnotations
         if(cluster.getArmCount() == 1 && cluster.getSvCount() == 2)
             return;
 
-        // isSpecificCluster(cluster);
-
         /* data to gather for each arm in the chain
             - number of links
             - number of short TIs without proximate deletion bridges

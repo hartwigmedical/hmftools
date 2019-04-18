@@ -261,11 +261,11 @@ public class SvSampleAnalyser {
         if(!mConfig.OutputCsvPath.isEmpty())
         {
             writeClusterSVOutput();
+            writeClusterData();
 
             if(mConfig.hasMultipleSamples())
             {
                 writeClusterLinkData();
-                writeClusterData();
             }
 
             mVisWriter.writeOutput(mAnalyser.getClusters(), mAllVariants);

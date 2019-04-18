@@ -575,9 +575,9 @@ public class SvChain {
         final SvBreakend lowerBreakend = chainStart.position() < chainEnd.position() ? chainStart : chainEnd;
         final SvBreakend upperBreakend = chainStart == lowerBreakend ? chainEnd : chainStart;
 
-        // allow chains starting and ending on different chromosomes
-        // if(!chainEnd.getChrArm().equals(chainStart.getChrArm()))
-        //    return chainData;
+        // don't allow chains starting and ending on different chromosomes
+         if(!chainEnd.getChrArm().equals(chainStart.getChrArm()))
+            return;
 
         double chainStartCN = chainStart.copyNumber();
         double chainEndCN = chainEnd.copyNumber();
