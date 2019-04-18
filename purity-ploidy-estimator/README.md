@@ -29,6 +29,7 @@ PURPLE supports both grch 37 and 38 reference assemblies.
   + [9. Determine a QC Status for the tumor](#9-determine-a-qc-status-for-the-tumor)
 * [Output](#output)
   + [Files](#files)
+  + [Database](#database)
   + [CIRCOS](#circos)
   + [Charts](#charts)
 * [Performance Characteristics](#performance-characteristics)
@@ -604,6 +605,84 @@ MinRegionEndSupport | INV | End support of the copy number region overlapping th
 MinRegionMethod | BAF_WEIGHTED | Method used to determine copy number of the copy number region overlapping the gene with the minimum copy number
 MinMinorAllelePloidy | 0 | Minimum allele ploidy found over the gene exons - useful for identifying LOH events  
 
+### Database
+
+PURPLE can optionally persist its output to a SQL database. This is particularly useful when querying data over a cohort. 
+
+While any database with a JDBC driver is supported. The following steps illustrate how to create and query a database with MySQL 5.7.22. 
+
+#### Create Database
+
+The following commands will create a user with write permissions, a user with read permissions and a database.  
+
+```
+mysql> ​CREATE USER 'purple_writer'@'localhost' IDENTIFIED BY 'purple_writer_password'; 
+Query OK, 0 rows affected (0.00 sec)
+mysql> ​CREATE USER 'purple_reader'@'localhost' IDENTIFIED BY 'purple_reader_password'; 
+Query OK, 0 rows affected (0.00 sec)
+mysql> CREATE DATABASE patientdb; 
+Query OK, 1 row affected (0.00 sec)
+mysql> GRANT ALL on patientdb.* TO 'purple_writer'@'localhost'; 
+Query OK, 0 rows affected (0.00 sec)
+mysql> GRANT SELECT on patientdb.* TO 'purple_reader'@'localhost'; 
+Query OK, 0 rows affected (0.00 sec)
+```
+
+#### Create Tables
+If creating a database from scratch, execute the [generate_database.sql](../patient-db/src/main/resources/generate_database.sql) script from the command with the following. 
+Note that you will be prompted for a password:
+
+```
+mysql -u purple_writer -p < generate_database.sql
+```
+
+It is also worth noting that this script contains many more tables than just those used by PURPLE. 
+
+#### Update Tables
+If upgrading to a newer version of PURPLE, check the [patches directory](../patient-db/src/main/resources/patches/) for appropriate patch scripts. 
+They can be executed in a similar manner as above.
+
+#### Persist Data
+
+There are two methods for persisting to the database. 
+
+The first is by including appropriate arguments when running PURPLE, eg:
+
+```
+java -jar purple.jar \
+    ...
+    -db_enabled -db_user purple_writer -db_pass purple_writer_password -db_url mysql://localhost:3306/patientdb?serverTimezone=UTC \
+    ...
+```
+
+The second method can load data from reading the output files without the need to rerun PURPLE. This can be run with the following command:
+
+```
+java -cp purple.jar com.hartwig.hmftools.patientdb.LoadPurpleData \ 
+    -tumor COLO829T \
+    -purple_dir /path/to/COLO829/purple \
+    -db_user purple_writer -db_pass purple_writer_password -db_url mysql://localhost:3306/patientdb?serverTimezone=UTC
+```
+
+Note that the second method has an optional `-data_request` flag without arguments which can load a reduced set of data such as those coming from Hartwig supplied data requests.
+
+Regardless of which method is used, that sample's PURPLE data will be deleted before new records are inserted.
+PURPLE does not support updating records.
+
+#### Query Data
+
+After connecting to the PURPLE database (eg `mysql -u purple_reader -p -d patientdb`), you can query the following PURPLE tables:
+
+```
+SELECT * FROM purity WHERE sampleId = 'COLO829T';
+SELECT * FROM purityRange WHERE sampleId = 'COLO829T';
+SELECT * FROM copyNumberRegion WHERE sampleId = 'COLO829T';
+SELECT * FROM copyNumber WHERE sampleId = 'COLO829T';
+SELECT * FROM copyNumberGermline WHERE sampleId = 'COLO829T';
+SELECT * FROM geneCopyNumber WHERE sampleId = 'COLO829T';
+```
+
+The tables correspond to the file output described above. 
 
 ### CIRCOS
 Data for the CIRCOS plots is found in the `output_dir/circos` directory even if the `circos` parameter is not supplied. 
