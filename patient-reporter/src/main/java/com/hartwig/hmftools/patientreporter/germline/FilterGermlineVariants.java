@@ -25,29 +25,36 @@ public final class FilterGermlineVariants {
     @NotNull
     public static List<GermlineVariant> filteringReportedGermlineVariant(List<GermlineVariant> germlineVariants,
             @NotNull GermlineGenesReporting germlineGenesReporting, @NotNull Map<String, DriverCategory> driverCategoryPerGeneMap,
-            @NotNull List<GeneCopyNumber> geneCopyNumbers, @NotNull String sampleId, @NotNull List<EnrichedSomaticVariant> variantsToReport) {
+            @NotNull List<GeneCopyNumber> geneCopyNumbers, @NotNull String sampleId,
+            @NotNull List<EnrichedSomaticVariant> variantsToReport) {
         List<GermlineVariant> filteredGermlineVariant = Lists.newArrayList();
         Set<String> reportingGenes = germlineGenesReporting.germlineGenes();
 
         for (GermlineVariant germlineVariant : germlineVariants) {
+            boolean filterBiallelic = false;
+            boolean filterMinCopyNumberTumor = false;
+            boolean filterSomaticVariantInSameGene = false;
             if (germlineVariant.passFilter()
                     && reportingGenes.contains(germlineVariant.gene())) { //&& LimsSampleType.fromSampleId(sampleId).equals(LimsSampleType.WIDE)
                 if (driverCategoryPerGeneMap.get(germlineVariant.gene()) == DriverCategory.ONCO) { // use all genes
                     filteredGermlineVariant.add(germlineVariant);
                 } else if (driverCategoryPerGeneMap.get(germlineVariant.gene()) == DriverCategory.TSG) { // filter genes
                     if (germlineVariant.biallelic()) { // variant is biallelic (2nd hit CNV)
+                        filterBiallelic = true;
+                    }
+                    for (GeneCopyNumber geneCopyNumber : geneCopyNumbers) { // min copy number in tumer = 1 (2nd hit SV)
+                        if (Doubles.equal(geneCopyNumber.maxCopyNumber(), 1)) { // filter for gene copy number
+                            filterMinCopyNumberTumor = true;
+                        }
+                    }
+                    for (EnrichedSomaticVariant variant : variantsToReport) { // filter for gene copy number
+                        if (variant.gene().equals(germlineVariant.gene())) {
+                            filterSomaticVariantInSameGene = true;
+                        }
+                    }
+                    LOGGER.info(filterBiallelic);
+                    if (filterBiallelic && filterMinCopyNumberTumor && filterSomaticVariantInSameGene) {
                         filteredGermlineVariant.add(germlineVariant);
-                    } else { // min copy number in tumer = 1 (2nd hit SV)
-                        for (GeneCopyNumber geneCopyNumber : geneCopyNumbers) {
-                            if (Doubles.equal(geneCopyNumber.maxCopyNumber(), 1)) { // filter for gene copy number
-                                filteredGermlineVariant.add(germlineVariant);
-                            }
-                        }
-                        for (EnrichedSomaticVariant variant: variantsToReport) { // filter for gene copy number
-                            if (variant.gene().equals(germlineVariant.gene())) {
-                                filteredGermlineVariant.add(germlineVariant);
-                            }
-                        }
                     }
                 }
             }
