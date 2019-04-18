@@ -65,7 +65,7 @@ public final class ExampleAnalysisTestFactory {
         final List<EvidenceItem> tumorLocationSpecificEvidence = createCOLO829TumorSpecificEvidence();
         final List<ClinicalTrial> clinicalTrials = createCOLO829ClinicalTrials();
         final List<EvidenceItem> offLabelEvidence = createCOLO829OffLabelEvidence();
-        final List<ReportableVariant> somaticVariants = createCOLO829SomaticVariants(purityAdjuster);
+        final List<ReportableVariant> reportableVariants = createCOLO829SomaticVariants(purityAdjuster);
         final List<GeneCopyNumber> copyNumbers = createCOLO829CopyNumbers();
         final List<ReportableGeneFusion> fusions = Lists.newArrayList();
         final ChordAnalysis chordAnalysis = createCOLO829ChordAnalysis();
@@ -80,7 +80,7 @@ public final class ExampleAnalysisTestFactory {
                 tumorLocationSpecificEvidence,
                 clinicalTrials,
                 offLabelEvidence,
-                somaticVariants,
+                reportableVariants,
                 microsatelliteIndelsPerMb,
                 tumorMutationalLoad,
                 tumorMutationalBurden,
@@ -111,7 +111,7 @@ public final class ExampleAnalysisTestFactory {
         final List<EvidenceItem> tumorLocationSpecificEvidence = createCOLO829TumorSpecificEvidence();
         final List<ClinicalTrial> clinicalTrials = createCOLO829ClinicalTrials();
         final List<EvidenceItem> offLabelEvidence = createCOLO829OffLabelEvidence();
-        final List<ReportableVariant> somaticVariants = createCOLO829SomaticVariants(purityAdjuster);
+        final List<ReportableVariant> reportableVariants = createCOLO829SomaticVariants(purityAdjuster);
         final List<GeneCopyNumber> copyNumbers = createCOLO829CopyNumbers();
         final List<ReportableGeneFusion> fusions = createTestFusions();
         final ChordAnalysis chordAnalysis = createCOLO829ChordAnalysis();
@@ -126,7 +126,7 @@ public final class ExampleAnalysisTestFactory {
                 tumorLocationSpecificEvidence,
                 clinicalTrials,
                 offLabelEvidence,
-                somaticVariants,
+                reportableVariants,
                 microsatelliteIndelsPerMb,
                 tumorMutationalLoad,
                 tumorMutationalBurden,
