@@ -28,7 +28,6 @@ public final class FilterGermlineVariants {
             @NotNull List<GeneCopyNumber> geneCopyNumbers, @NotNull String sampleId, @NotNull List<EnrichedSomaticVariant> variantsToReport) {
         List<GermlineVariant> filteredGermlineVariant = Lists.newArrayList();
         Set<String> reportingGenes = germlineGenesReporting.germlineGenes();
-        Set<String> notifyGenes = germlineGenesReporting.germlineGenesNotify();
 
         for (GermlineVariant germlineVariant : germlineVariants) {
             if (germlineVariant.passFilter()
@@ -41,6 +40,11 @@ public final class FilterGermlineVariants {
                     } else { // min copy number in tumer = 1 (2nd hit SV)
                         for (GeneCopyNumber geneCopyNumber : geneCopyNumbers) {
                             if (Doubles.equal(geneCopyNumber.maxCopyNumber(), 1)) { // filter for gene copy number
+                                filteredGermlineVariant.add(germlineVariant);
+                            }
+                        }
+                        for (EnrichedSomaticVariant variant: variantsToReport) { // filter for gene copy number
+                            if (variant.gene().equals(germlineVariant.gene())) {
                                 filteredGermlineVariant.add(germlineVariant);
                             }
                         }
