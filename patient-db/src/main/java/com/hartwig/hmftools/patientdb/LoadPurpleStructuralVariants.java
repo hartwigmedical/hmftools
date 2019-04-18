@@ -27,7 +27,7 @@ public class LoadPurpleStructuralVariants {
 
     private static final Logger LOGGER = LogManager.getLogger(LoadPurpleStructuralVariants.class);
 
-    private static final String SAMPLE = "sample";
+    private static final String TUMOR_SAMPLE = "tumor";
     private static final String VCF = "structural_vcf";
     private static final String DB_USER = "db_user";
     private static final String DB_PASS = "db_pass";
@@ -39,7 +39,7 @@ public class LoadPurpleStructuralVariants {
         final CommandLine cmd = createCommandLine(args, options);
         final DatabaseAccess dbAccess = databaseAccess(cmd);
 
-        final String tumorSample = cmd.getOptionValue(SAMPLE);
+        final String tumorSample = cmd.getOptionValue(TUMOR_SAMPLE);
         final String vcfPath = cmd.getOptionValue(VCF);
 
         LOGGER.info("Reading data from {}", vcfPath);
@@ -61,12 +61,12 @@ public class LoadPurpleStructuralVariants {
     @NotNull
     private static Options createBasicOptions() {
         final Options options = new Options();
-        options.addOption(SAMPLE, true, "Tumor sample.");
-        options.addOption(VCF, true, "Path to the structural variant VCF file.");
+        options.addOption(TUMOR_SAMPLE, true, "Name of the tumor sample. This should correspond to the value used in PURPLE.");
+        options.addOption(VCF, true, "Path to the PURPLE structural variant VCF file.");
         options.addOption(DB_USER, true, "Database user name.");
         options.addOption(DB_PASS, true, "Database password.");
         options.addOption(DB_URL, true, "Database url.");
-        options.addOption(REF_GENOME, true, "Optional path to the (indexed) ref genome fasta file.");
+        options.addOption(REF_GENOME, true, "Path to the (indexed) ref genome fasta file.");
 
         return options;
     }
