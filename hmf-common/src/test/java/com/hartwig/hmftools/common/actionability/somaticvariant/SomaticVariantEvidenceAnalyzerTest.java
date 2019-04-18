@@ -5,6 +5,7 @@ import static org.junit.Assert.assertTrue;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.actionability.cancertype.CancerTypeAnalyzer;
 import com.hartwig.hmftools.common.actionability.cancertype.CancerTypeAnalyzerTestFactory;
+import com.hartwig.hmftools.common.purple.region.GermlineStatus;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.common.variant.ImmutableSomaticVariantImpl;
@@ -73,6 +74,11 @@ public class SomaticVariantEvidenceAnalyzerTest {
                 .hotspot(Hotspot.NON_HOTSPOT)
                 .mappability(0D)
                 .recovered(false)
+                .adjustedCopyNumber(0D)
+                .adjustedVAF(0D)
+                .minorAllelePloidy(0D)
+                .germlineStatus(GermlineStatus.UNKNOWN)
+                .ploidy(0)
                 .build();
 
         assertTrue(analyzer.evidenceForSomaticVariant(variant, "Skin", cancerTypeAnalyzer).isEmpty());

@@ -32,6 +32,11 @@ public final class SomaticVariantTestBuilderFactory {
                 .canonicalHgvsProteinImpact(Strings.EMPTY)
                 .hotspot(Hotspot.NON_HOTSPOT)
                 .recovered(false)
+                .adjustedCopyNumber(0D)
+                .adjustedVAF(0D)
+                .minorAllelePloidy(0D)
+                .germlineStatus(GermlineStatus.UNKNOWN)
+                .ploidy(0)
                 .mappability(0D);
     }
 
@@ -43,11 +48,7 @@ public final class SomaticVariantTestBuilderFactory {
                 .microhomology(Strings.EMPTY)
                 .repeatSequence(Strings.EMPTY)
                 .repeatCount(0)
-                .clonality(Clonality.UNKNOWN)
-                .adjustedCopyNumber(0D)
-                .adjustedVAF(0D)
-                .minorAllelePloidy(0D)
-                .germlineStatus(GermlineStatus.UNKNOWN);
+                .clonality(Clonality.UNKNOWN);
     }
 }
 
