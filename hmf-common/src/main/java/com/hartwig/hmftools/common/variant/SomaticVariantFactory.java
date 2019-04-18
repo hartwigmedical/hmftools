@@ -12,6 +12,7 @@ import java.util.stream.Collectors;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.purple.region.GermlineStatus;
 import com.hartwig.hmftools.common.variant.cosmic.CosmicAnnotation;
 import com.hartwig.hmftools.common.variant.cosmic.CosmicAnnotationFactory;
 import com.hartwig.hmftools.common.variant.enrich.HotspotEnrichment;
@@ -72,6 +73,12 @@ public class SomaticVariantFactory {
     private static final String ID_SEPARATOR = ";";
     private static final String MAPPABILITY_TAG = "MAPPABILITY";
     private static final String RECOVERED_FLAG = "RECOVERED";
+
+    public static final String PURPLE_CN_INFO = "PURPLE_CN";
+    public static final String PURPLE_AF_INFO = "PURPLE_AF";
+    public static final String PURPLE_PLOIDY_INFO = "PURPLE_PLOIDY";
+    public static final String PURPLE_GERMLINE_INFO = "PURPLE_GERMLINE";
+    public static final String PURPLE_MINOR_ALLELE_PLOIDY_INFO = "PURPLE_MAP";
 
     static final String PASS_FILTER = "PASS";
     private static final String NEAR_INDEL_PON_FILTER = "NEAR_INDEL_PON";
@@ -171,6 +178,11 @@ public class SomaticVariantFactory {
                 .alleleReadCount(allelicDepth.alleleReadCount())
                 .totalReadCount(allelicDepth.totalReadCount())
                 .hotspot(HotspotEnrichment.fromVariant(context))
+                .minorAllelePloidy(context.getAttributeAsDouble(PURPLE_MINOR_ALLELE_PLOIDY_INFO, 0))
+                .adjustedCopyNumber(context.getAttributeAsDouble(PURPLE_CN_INFO, 0))
+                .adjustedVAF(context.getAttributeAsDouble(PURPLE_AF_INFO, 0))
+                .germlineStatus(GermlineStatus.valueOf(context.getAttributeAsString(PURPLE_GERMLINE_INFO, "UNKNOWN")))
+                .ploidy(context.getAttributeAsDouble(PURPLE_PLOIDY_INFO, 0))
                 .recovered(context.hasAttribute(RECOVERED_FLAG))
                 .mappability(context.getAttributeAsDouble(MAPPABILITY_TAG, 0));
 
