@@ -16,11 +16,16 @@ import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.copynumber.CopyNumberMethod;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.gene.ImmutableGeneCopyNumber;
+import com.hartwig.hmftools.common.purple.region.GermlineStatus;
 import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
+import com.hartwig.hmftools.common.variant.Clonality;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
+import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.common.variant.ImmutableEnrichedSomaticVariant;
+import com.hartwig.hmftools.common.variant.ImmutableSomaticVariantImpl;
 import com.hartwig.hmftools.common.variant.SomaticVariantTestBuilderFactory;
+import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.patientreporter.PatientReporterTestUtil;
 
 import org.apache.logging.log4j.LogManager;
@@ -69,6 +74,90 @@ public class FilterGermlineVariantsTest {
         assertEquals(filteredGermlineVariantTSG.size(), 0);
     }
 
+    @Test
+    public void filterTSGGenesForGermlineVariantsCheckTSG() throws IOException {
+        List<GermlineVariant> germlineVariants = createTestGermlineVariantsTSGGene();
+        GermlineGenesReporting germlineGenesReporting = PatientReporterTestUtil.testGermlineModel();
+        Map<String, DriverCategory> driverCategoryMap = Maps.newHashMap();
+        driverCategoryMap.put("ATM", DriverCategory.TSG);
+        List<GeneCopyNumber> geneCopyNumbers = Lists.newArrayList(createTestCopyNumberBuilder().build());
+        String sampleId = "CPCT02990001T";
+        List<EnrichedSomaticVariant> variants = Lists.newArrayList(createEnriched().build());
+        List<GermlineVariant> filteredGermlineVariantONCO = FilterGermlineVariants.filteringReportedGermlineVariant(germlineVariants,
+                germlineGenesReporting,
+                driverCategoryMap,
+                geneCopyNumbers,
+                sampleId,
+                variants);
+        assertEquals(filteredGermlineVariantONCO.size(), 1);
+
+
+    }
+
+    @NotNull
+    public static ImmutableGeneCopyNumber.Builder createTestCopyNumberBuilder() {
+        return ImmutableGeneCopyNumber.builder()
+                .start(1)
+                .end(2)
+                .gene("ATM")
+                .chromosome("1")
+                .chromosomeBand(Strings.EMPTY)
+                .minRegionStart(0)
+                .minRegionStartSupport(SegmentSupport.NONE)
+                .minRegionEnd(0)
+                .minRegionEndSupport(SegmentSupport.NONE)
+                .minRegionMethod(CopyNumberMethod.UNKNOWN)
+                .minRegions(1)
+                .germlineHet2HomRegions(0)
+                .germlineHomRegions(0)
+                .somaticRegions(1)
+                .minCopyNumber(0)
+                .maxCopyNumber(1)
+                .transcriptID("trans")
+                .transcriptVersion(0)
+                .minMinorAllelePloidy(0);
+    }
+
+    @NotNull
+    public static ImmutableSomaticVariantImpl.Builder create() {
+        return ImmutableSomaticVariantImpl.builder()
+                .chromosome(Strings.EMPTY)
+                .position(0L)
+                .ref(Strings.EMPTY)
+                .alt(Strings.EMPTY)
+                .type(VariantType.UNDEFINED)
+                .filter("PASS")
+                .totalReadCount(0)
+                .alleleReadCount(0)
+                .gene("ATM")
+                .genesEffected(0)
+                .worstEffect(Strings.EMPTY)
+                .worstCodingEffect(CodingEffect.NONE)
+                .worstEffectTranscript(Strings.EMPTY)
+                .canonicalEffect(Strings.EMPTY)
+                .canonicalCodingEffect(CodingEffect.UNDEFINED)
+                .canonicalHgvsCodingImpact(Strings.EMPTY)
+                .canonicalHgvsProteinImpact(Strings.EMPTY)
+                .hotspot(Hotspot.NON_HOTSPOT)
+                .recovered(false)
+                .adjustedCopyNumber(0D)
+                .adjustedVAF(0D)
+                .minorAllelePloidy(0D)
+                .germlineStatus(GermlineStatus.UNKNOWN)
+                .ploidy(0)
+                .mappability(0D);
+    }
+
+    @NotNull
+    public static ImmutableEnrichedSomaticVariant.Builder createEnriched() {
+        return ImmutableEnrichedSomaticVariant.builder().from(create().build())
+                .trinucleotideContext(Strings.EMPTY)
+                .highConfidenceRegion(false)
+                .microhomology(Strings.EMPTY)
+                .repeatSequence(Strings.EMPTY)
+                .repeatCount(0)
+                .clonality(Clonality.UNKNOWN);
+    }
 
     @NotNull
     private static ImmutableEnrichedSomaticVariant.Builder builder() {
@@ -119,7 +208,7 @@ public class FilterGermlineVariantsTest {
                 .adjustedCopyNumber(adjustedCopyNumber)
                 .adjustedVAF(12)
                 .minorAllelePloidy(1D)
-                .biallelic(false)
+                .biallelic(true)
                 .build());
 
         return germlineVariants;
