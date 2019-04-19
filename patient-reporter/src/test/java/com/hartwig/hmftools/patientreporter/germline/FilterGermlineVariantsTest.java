@@ -1,18 +1,14 @@
 package com.hartwig.hmftools.patientreporter.germline;
 
-import static com.hartwig.hmftools.patientreporter.PatientReporterTestFactory.createTestCopyNumberBuilder;
-
 import static org.junit.Assert.*;
 
 import java.io.IOException;
-import java.security.acl.LastOwnerException;
 import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
-import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.copynumber.CopyNumberMethod;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.gene.ImmutableGeneCopyNumber;
@@ -28,20 +24,73 @@ import com.hartwig.hmftools.common.variant.SomaticVariantTestBuilderFactory;
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.patientreporter.PatientReporterTestUtil;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
 public class FilterGermlineVariantsTest {
 
-    private static final CodingEffect SPLICE = CodingEffect.SPLICE;
-    private static final CodingEffect MISSENSE = CodingEffect.MISSENSE;
-    private static final CodingEffect SYNONYMOUS = CodingEffect.SYNONYMOUS;
-    private static final String RIGHT_GENE = "RIGHT";
-    private static final String WRONG_GENE = "WRONG";
-    private static final Logger LOGGER = LogManager.getLogger(FilterGermlineVariantsTest.class);
+    @Test
+    public void checkForGermlineGenesReportedONCO() throws IOException{
+        List<GermlineVariant> germlineVariants = createTestGermlineVariantsONCOGene();
+        GermlineGenesReporting germlineGenesReporting = PatientReporterTestUtil.testGermlineModel();
+        Map<String, DriverCategory> driverCategoryMapMatch = Maps.newHashMap();
+        driverCategoryMapMatch.put("BRCA2", DriverCategory.ONCO);
+
+        List<GeneCopyNumber> geneCopyNumbers = Lists.newArrayList();
+        String sampleId = "CPCT02990001T";
+        List<EnrichedSomaticVariant> variants = Lists.newArrayList();
+
+        List<GermlineVariant> filteredGermlineVariantMatch = FilterGermlineVariants.filteringReportedGermlineVariant(germlineVariants,
+                germlineGenesReporting,
+                driverCategoryMapMatch,
+                geneCopyNumbers,
+                sampleId,
+                variants);
+        assertEquals(filteredGermlineVariantMatch.size(), 1);
+
+        Map<String, DriverCategory> driverCategoryMapNotMatch = Maps.newHashMap();
+        driverCategoryMapNotMatch.put("BRCA1", DriverCategory.ONCO);
+
+        List<GermlineVariant> filteredGermlineVariantNonMatch = FilterGermlineVariants.filteringReportedGermlineVariant(germlineVariants,
+                germlineGenesReporting,
+                driverCategoryMapNotMatch,
+                geneCopyNumbers,
+                sampleId,
+                variants);
+        assertEquals(filteredGermlineVariantNonMatch.size(), 0);
+    }
+
+    @Test
+    public void checkForGermlineGenesReportedTSG() throws IOException {
+        GermlineGenesReporting germlineGenesReporting = PatientReporterTestUtil.testGermlineModel();
+        Map<String, DriverCategory> driverCategoryMapMatch = Maps.newHashMap();
+        driverCategoryMapMatch.put("ATM", DriverCategory.TSG);
+        String sampleId = "CPCT02990001T";
+        List<GermlineVariant> germlineVariantsMatch = createTestGermlineVariantsTSGGene(true);
+        List<GeneCopyNumber> geneCopyNumbersMatch = Lists.newArrayList(createTestCopyNumberBuilder(1).build());
+        List<EnrichedSomaticVariant> variantsMatch = Lists.newArrayList(createEnriched("ATM").build());
+        List<GermlineVariant> filteredGermlineVariantMatch = FilterGermlineVariants.filteringReportedGermlineVariant(germlineVariantsMatch,
+                germlineGenesReporting,
+                driverCategoryMapMatch,
+                geneCopyNumbersMatch,
+                sampleId,
+                variantsMatch);
+        assertEquals(filteredGermlineVariantMatch.size(), 1);
+
+        List<GermlineVariant> germlineVariantsNonMatch = createTestGermlineVariantsTSGGene(true);
+        List<GeneCopyNumber> geneCopyNumbersNonMatch = Lists.newArrayList(createTestCopyNumberBuilder(1).build());
+        Map<String, DriverCategory> driverCategoryMapNonMatch = Maps.newHashMap();
+        driverCategoryMapNonMatch.put("BRCA1", DriverCategory.TSG);
+        List<EnrichedSomaticVariant> variantsNonMatch = Lists.newArrayList(createEnriched("ATM").build());
+        List<GermlineVariant> filteredGermlineVariantNonMatch = FilterGermlineVariants.filteringReportedGermlineVariant(germlineVariantsNonMatch,
+                germlineGenesReporting,
+                driverCategoryMapNonMatch,
+                geneCopyNumbersNonMatch,
+                sampleId,
+                variantsNonMatch);
+        assertEquals(filteredGermlineVariantNonMatch.size(), 0);
+    }
 
     @Test
     public void filteringONCOGenesForGermlineVariantsCheckONCO() throws IOException {
