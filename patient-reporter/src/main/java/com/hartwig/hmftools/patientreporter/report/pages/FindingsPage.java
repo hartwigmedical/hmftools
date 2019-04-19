@@ -92,11 +92,11 @@ public abstract class FindingsPage {
                             cmp.text(drupEligibilityAddition).setStyle(fontStyle().setFontSize(8))),
                     cmp.verticalGap(5),
                     cmp.horizontalList(cmp.horizontalGap(10),
-                            cmp.text("#").setStyle(fontStyle()).setWidth(2),
+                            cmp.text("+").setStyle(fontStyle()).setWidth(2),
                             cmp.text(germline).setStyle(fontStyle().setFontSize(8))),
                     cmp.verticalGap(5),
                     cmp.horizontalList(cmp.horizontalGap(10),
-                            cmp.text("+").setStyle(fontStyle()).setWidth(2),
+                            cmp.text("#").setStyle(fontStyle()).setWidth(2),
                             cmp.text(geneticus).setStyle(fontStyle().setFontSize(8))));
         } else {
             return cmp.verticalList(cmp.text("Somatic Variants").setStyle(sectionHeaderStyle()),
