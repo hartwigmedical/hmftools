@@ -55,7 +55,6 @@ public final class SomaticVariantDataSource {
                 BIALLELIC_FIELD.getName(),
                 DRIVER_FIELD.getName());
         for (final ReportableVariant variant : sort(variants)) {
-            LOGGER.info(variant.notifyClinicalGeneticus());
 
             String displayGene = variant.isDrupActionable() ? variant.gene() + " *" : variant.gene();
             String codingImpact = variant.notifyClinicalGeneticus() && variant.somaticOrGermline().equals("germline")
