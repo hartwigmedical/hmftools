@@ -76,26 +76,60 @@ public class FilterGermlineVariantsTest {
 
     @Test
     public void filterTSGGenesForGermlineVariantsCheckTSG() throws IOException {
-        List<GermlineVariant> germlineVariants = createTestGermlineVariantsTSGGene();
         GermlineGenesReporting germlineGenesReporting = PatientReporterTestUtil.testGermlineModel();
         Map<String, DriverCategory> driverCategoryMap = Maps.newHashMap();
         driverCategoryMap.put("ATM", DriverCategory.TSG);
-        List<GeneCopyNumber> geneCopyNumbers = Lists.newArrayList(createTestCopyNumberBuilder().build());
         String sampleId = "CPCT02990001T";
-        List<EnrichedSomaticVariant> variants = Lists.newArrayList(createEnriched().build());
-        List<GermlineVariant> filteredGermlineVariantONCO = FilterGermlineVariants.filteringReportedGermlineVariant(germlineVariants,
+        List<GermlineVariant> germlineVariantsAll = createTestGermlineVariantsTSGGene(true);
+        List<GeneCopyNumber> geneCopyNumbersAll = Lists.newArrayList(createTestCopyNumberBuilder(1).build());
+        List<EnrichedSomaticVariant> variantsAll = Lists.newArrayList(createEnriched("ATM").build());
+        List<GermlineVariant> filteredGermlineVariantAll = FilterGermlineVariants.filteringReportedGermlineVariant(germlineVariantsAll,
                 germlineGenesReporting,
                 driverCategoryMap,
-                geneCopyNumbers,
+                geneCopyNumbersAll,
                 sampleId,
-                variants);
-        assertEquals(filteredGermlineVariantONCO.size(), 1);
+                variantsAll);
+        assertEquals(filteredGermlineVariantAll.size(), 1);
 
+        List<GermlineVariant> germlineVariantsWrongBiallelic = createTestGermlineVariantsTSGGene(false);
+        List<GeneCopyNumber> geneCopyNumbersWrongBiallelic = Lists.newArrayList(createTestCopyNumberBuilder(1).build());
+        List<EnrichedSomaticVariant> variantsWrongBiallelic = Lists.newArrayList(createEnriched("ATM").build());
+        List<GermlineVariant> filteredGermlineVariantWrongBiallelic = FilterGermlineVariants.filteringReportedGermlineVariant(
+                germlineVariantsWrongBiallelic,
+                germlineGenesReporting,
+                driverCategoryMap,
+                geneCopyNumbersWrongBiallelic,
+                sampleId,
+                variantsWrongBiallelic);
+        assertEquals(filteredGermlineVariantWrongBiallelic.size(), 0);
 
+        List<GermlineVariant> germlineVariantsWrongSomaticGene = createTestGermlineVariantsTSGGene(true);
+        List<GeneCopyNumber> geneCopyNumbersWrongSomaticGene = Lists.newArrayList(createTestCopyNumberBuilder(1).build());
+        List<EnrichedSomaticVariant> variantsWrongSomaticGene = Lists.newArrayList(createEnriched("ALK").build());
+        List<GermlineVariant> filteredGermlineVariantWrongSomaticGene = FilterGermlineVariants.filteringReportedGermlineVariant(
+                germlineVariantsWrongSomaticGene,
+                germlineGenesReporting,
+                driverCategoryMap,
+                geneCopyNumbersWrongSomaticGene,
+                sampleId,
+                variantsWrongSomaticGene);
+        assertEquals(filteredGermlineVariantWrongSomaticGene.size(), 0);
+
+        List<GermlineVariant> germlineVariantsWrongGeneCopyNumber = createTestGermlineVariantsTSGGene(true);
+        List<GeneCopyNumber> geneCopyNumbersWrongGeneCopyNumber = Lists.newArrayList(createTestCopyNumberBuilder(2).build());
+        List<EnrichedSomaticVariant> variantsWrongGeneCopyNumber = Lists.newArrayList(createEnriched("ATM").build());
+        List<GermlineVariant> filteredGermlineVariantWrongGeneCopyNumber = FilterGermlineVariants.filteringReportedGermlineVariant(
+                germlineVariantsWrongGeneCopyNumber,
+                germlineGenesReporting,
+                driverCategoryMap,
+                geneCopyNumbersWrongGeneCopyNumber,
+                sampleId,
+                variantsWrongGeneCopyNumber);
+        assertEquals(filteredGermlineVariantWrongGeneCopyNumber.size(), 0);
     }
 
     @NotNull
-    public static ImmutableGeneCopyNumber.Builder createTestCopyNumberBuilder() {
+    public static ImmutableGeneCopyNumber.Builder createTestCopyNumberBuilder(int maxNumberFilter) {
         return ImmutableGeneCopyNumber.builder()
                 .start(1)
                 .end(2)
@@ -112,14 +146,14 @@ public class FilterGermlineVariantsTest {
                 .germlineHomRegions(0)
                 .somaticRegions(1)
                 .minCopyNumber(0)
-                .maxCopyNumber(1)
+                .maxCopyNumber(maxNumberFilter)
                 .transcriptID("trans")
                 .transcriptVersion(0)
                 .minMinorAllelePloidy(0);
     }
 
     @NotNull
-    public static ImmutableSomaticVariantImpl.Builder create() {
+    public static ImmutableSomaticVariantImpl.Builder create(@NotNull String gene) {
         return ImmutableSomaticVariantImpl.builder()
                 .chromosome(Strings.EMPTY)
                 .position(0L)
@@ -129,7 +163,7 @@ public class FilterGermlineVariantsTest {
                 .filter("PASS")
                 .totalReadCount(0)
                 .alleleReadCount(0)
-                .gene("ATM")
+                .gene(gene)
                 .genesEffected(0)
                 .worstEffect(Strings.EMPTY)
                 .worstCodingEffect(CodingEffect.NONE)
@@ -149,8 +183,9 @@ public class FilterGermlineVariantsTest {
     }
 
     @NotNull
-    public static ImmutableEnrichedSomaticVariant.Builder createEnriched() {
-        return ImmutableEnrichedSomaticVariant.builder().from(create().build())
+    public static ImmutableEnrichedSomaticVariant.Builder createEnriched(@NotNull String gene) {
+        return ImmutableEnrichedSomaticVariant.builder()
+                .from(create(gene).build())
                 .trinucleotideContext(Strings.EMPTY)
                 .highConfidenceRegion(false)
                 .microhomology(Strings.EMPTY)
@@ -190,7 +225,7 @@ public class FilterGermlineVariantsTest {
     }
 
     @NotNull
-    private static List<GermlineVariant> createTestGermlineVariantsTSGGene() {
+    private static List<GermlineVariant> createTestGermlineVariantsTSGGene(boolean biallelicFilter) {
         List<GermlineVariant> germlineVariants = Lists.newArrayList();
 
         int totalReads = 112;
@@ -208,7 +243,7 @@ public class FilterGermlineVariantsTest {
                 .adjustedCopyNumber(adjustedCopyNumber)
                 .adjustedVAF(12)
                 .minorAllelePloidy(1D)
-                .biallelic(true)
+                .biallelic(biallelicFilter)
                 .build());
 
         return germlineVariants;
