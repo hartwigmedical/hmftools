@@ -54,7 +54,7 @@ public abstract class ReportableVariant implements AllelicDepth {
 
     public abstract boolean biallelic();
 
-    public abstract String SomaticOrGermline();
+    public abstract String somaticOrGermline();
 
     public abstract boolean notifyClinicalGeneticus();
 }

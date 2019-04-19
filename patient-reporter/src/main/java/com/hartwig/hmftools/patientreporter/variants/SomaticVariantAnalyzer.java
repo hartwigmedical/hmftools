@@ -103,7 +103,7 @@ public final class SomaticVariantAnalyzer {
             reportableVariants.add(fromVariant(variant).isDrupActionable(drupActionableGenes.contains(variant.gene()))
                     .driverCategory(driverCategoryPerGene.get(variant.gene()))
                     .driverLikelihood(catalog != null ? catalog.driverLikelihood() : null)
-                    .SomaticOrGermline("somatic")
+                    .somaticOrGermline("somatic")
                     .notifyClinicalGeneticus(notify)
                     .build());
         }
@@ -122,12 +122,11 @@ public final class SomaticVariantAnalyzer {
             reportableVariants.add(fromGermline(germlineVariant).isDrupActionable(drupActionableGenes.contains(germlineVariant.gene()))
                     .driverCategory(driverCategoryPerGene.get(germlineVariant.gene()))
                     .driverLikelihood(catalog != null ? catalog.driverLikelihood() : null)
-                    .SomaticOrGermline("germline")
+                    .somaticOrGermline("germline")
                     .notifyClinicalGeneticus(notify)
                     .build());
 
         }
-        LOGGER.info("report: " + reportableVariants);
         return reportableVariants;
     }
 

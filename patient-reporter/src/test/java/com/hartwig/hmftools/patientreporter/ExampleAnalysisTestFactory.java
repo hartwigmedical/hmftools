@@ -445,7 +445,7 @@ public final class ExampleAnalysisTestFactory {
                 .adjustedVAF(purityAdjuster.purityAdjustedVAF("7", 6, 107D / 161D))
                 .driverCategory(DriverCategory.ONCO)
                 .driverLikelihood(1D)
-                .SomaticOrGermline("somatic")
+                .somaticOrGermline("somatic")
                 .notifyClinicalGeneticus(false)
                 .build();
 
@@ -464,7 +464,7 @@ public final class ExampleAnalysisTestFactory {
                 .adjustedVAF(purityAdjuster.purityAdjustedVAF("9", 2, 44D / 44D))
                 .driverCategory(DriverCategory.TSG)
                 .driverLikelihood(0.9)
-                .SomaticOrGermline("somatic")
+                .somaticOrGermline("somatic")
                 .notifyClinicalGeneticus(false)
                 .build();
 
@@ -483,7 +483,7 @@ public final class ExampleAnalysisTestFactory {
                 .adjustedVAF(purityAdjuster.purityAdjustedVAF("2", 3, 72D / 107D))
                 .driverCategory(DriverCategory.ONCO)
                 .driverLikelihood(0.5)
-                .SomaticOrGermline("somatic")
+                .somaticOrGermline("somatic")
                 .notifyClinicalGeneticus(false)
                 .build();
 
@@ -502,11 +502,30 @@ public final class ExampleAnalysisTestFactory {
                 .adjustedVAF(purityAdjuster.purityAdjustedVAF("3", 4, 48D / 103D))
                 .driverCategory(DriverCategory.TSG)
                 .driverLikelihood(0.1)
-                .SomaticOrGermline("somatic")
+                .somaticOrGermline("somatic")
                 .notifyClinicalGeneticus(false)
                 .build();
 
-        return Lists.newArrayList(variant1, variant2, variant3, variant4);
+        ReportableVariant variant5 = ImmutableReportableVariant.builder()
+                .gene("KIT")
+                .isDrupActionable(false)
+                .hgvsCodingImpact("c.1497G>T")
+                .hgvsProteinImpact("p.Met499Ile")
+                .hotspot(Hotspot.NON_HOTSPOT)
+                .clonality(Clonality.CLONAL)
+                .alleleReadCount(48)
+                .totalReadCount(103)
+                .adjustedCopyNumber(4)
+                .minorAllelePloidy(2)
+                .biallelic(true)
+                .adjustedVAF(purityAdjuster.purityAdjustedVAF("3", 4, 48D / 103D))
+                .driverCategory(DriverCategory.TSG)
+                .driverLikelihood(0.1)
+                .somaticOrGermline("germline")
+                .notifyClinicalGeneticus(true)
+                .build();
+
+        return Lists.newArrayList(variant1, variant2, variant3, variant4, variant5);
     }
 
     @NotNull
