@@ -111,7 +111,7 @@ public final class ExampleAnalysisTestFactory {
         final List<EvidenceItem> tumorLocationSpecificEvidence = createCOLO829TumorSpecificEvidence();
         final List<ClinicalTrial> clinicalTrials = createCOLO829ClinicalTrials();
         final List<EvidenceItem> offLabelEvidence = createCOLO829OffLabelEvidence();
-        final List<ReportableVariant> reportableVariants = createCOLO829SomaticVariants(purityAdjuster);
+        final List<ReportableVariant> reportableVariants = createAllSomaticVariants(purityAdjuster);
         final List<GeneCopyNumber> copyNumbers = createCOLO829CopyNumbers();
         final List<ReportableGeneFusion> fusions = createTestFusions();
         final ChordAnalysis chordAnalysis = createCOLO829ChordAnalysis();
@@ -505,8 +505,31 @@ public final class ExampleAnalysisTestFactory {
                 .somaticOrGermline("somatic")
                 .notifyClinicalGeneticus(false)
                 .build();
+        return Lists.newArrayList(variant1, variant2, variant3, variant4);
+    }
 
-        ReportableVariant variant5 = ImmutableReportableVariant.builder()
+    @NotNull
+    private static List<ReportableVariant> createAllSomaticVariants(@NotNull PurityAdjuster purityAdjuster) {
+        ReportableVariant variant1 = ImmutableReportableVariant.builder()
+                .gene("TP63")
+                .isDrupActionable(false)
+                .hgvsCodingImpact("c.1497G>T")
+                .hgvsProteinImpact("p.Met499Ile")
+                .hotspot(Hotspot.NON_HOTSPOT)
+                .clonality(Clonality.CLONAL)
+                .alleleReadCount(48)
+                .totalReadCount(103)
+                .adjustedCopyNumber(4)
+                .minorAllelePloidy(2)
+                .biallelic(false)
+                .adjustedVAF(purityAdjuster.purityAdjustedVAF("3", 4, 48D / 103D))
+                .driverCategory(DriverCategory.TSG)
+                .driverLikelihood(0.1)
+                .somaticOrGermline("somatic")
+                .notifyClinicalGeneticus(false)
+                .build();
+
+        ReportableVariant variant2 = ImmutableReportableVariant.builder()
                 .gene("KIT")
                 .isDrupActionable(false)
                 .hgvsCodingImpact("c.1497G>T")
@@ -525,7 +548,7 @@ public final class ExampleAnalysisTestFactory {
                 .notifyClinicalGeneticus(true)
                 .build();
 
-        return Lists.newArrayList(variant1, variant2, variant3, variant4, variant5);
+        return Lists.newArrayList(variant1, variant2);
     }
 
     @NotNull
