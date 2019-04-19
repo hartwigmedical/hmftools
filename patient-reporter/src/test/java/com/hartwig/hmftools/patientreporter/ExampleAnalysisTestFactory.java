@@ -132,7 +132,7 @@ public final class ExampleAnalysisTestFactory {
                 tumorMutationalBurden,
                 chordAnalysis,
                 LimsInformedConsent.UNKNOWN,
-                false,
+                true,
                 copyNumbers,
                 fusions,
                 disruptions,
