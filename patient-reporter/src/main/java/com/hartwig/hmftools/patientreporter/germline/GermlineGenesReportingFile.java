@@ -37,8 +37,6 @@ public final class GermlineGenesReportingFile {
             Collections.addAll(germlineVariantNotify, lineGenesNotify);
         }
 
-        LOGGER.info(germlineGenes);
-        LOGGER.info(germlineVariantNotify);
         return ImmutableGermlineGenesReporting.of(germlineGenes, germlineVariantNotify);
     }
 }

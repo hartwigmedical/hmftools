@@ -52,7 +52,6 @@ public final class FilterGermlineVariants {
                             filterSomaticVariantInSameGene = true;
                         }
                     }
-                    LOGGER.info(filterBiallelic);
                     if (filterBiallelic && filterMinCopyNumberTumor && filterSomaticVariantInSameGene) {
                         filteredGermlineVariant.add(germlineVariant);
                     }

@@ -82,12 +82,16 @@ abstract class PatientReporter {
                 copyNumberAnalysis.reportableGeneCopyNumbers());
 
         boolean hasReportableGermlineVariant = false;
+        List<String> reportGermline = Lists.newArrayList();
         for (ReportableVariant variantAnalysis: somaticVariantAnalysis.reportableSomaticVariants()){
-            if (variantAnalysis.SomaticOrGermline().contains("germline")) {
-                hasReportableGermlineVariant = true;
+            if (variantAnalysis.somaticOrGermline().equals("germline")) {
+                reportGermline.add("germline");
             }
         }
 
+        if (reportGermline.size() > 0) {
+            hasReportableGermlineVariant = true;
+        }
 
         final SvAnalysis svAnalysis = analyzeStructuralVariants(copyNumberAnalysis, patientTumorLocation, svAnalyzerModel());
 

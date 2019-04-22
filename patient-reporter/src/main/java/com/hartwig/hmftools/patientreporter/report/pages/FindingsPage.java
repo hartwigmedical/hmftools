@@ -24,6 +24,7 @@ import com.hartwig.hmftools.patientreporter.report.data.SomaticVariantDataSource
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
+import org.omg.PortableInterceptor.LOCATION_FORWARD;
 
 import net.sf.dynamicreports.report.builder.component.ComponentBuilder;
 import net.sf.dynamicreports.report.constant.HorizontalTextAlignment;
@@ -81,8 +82,7 @@ public abstract class FindingsPage {
                                 report.germlineOptionPatient()))
                         : cmp.text("None").setStyle(fontStyle().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER));
 
-        if (report.reportableGermlineVariant() && report.germlineOptionPatient().equals(LimsInformedConsent.ALL)
-                || report.germlineOptionPatient().equals(LimsInformedConsent.ALL_ACTIONABLE)) {
+        if (report.reportableGermlineVariant()) { //report.germlineOptionPatient().equals(LimsInformedConsent.ALL)|| report.germlineOptionPatient().equals(LimsInformedConsent.ALL_ACTIONABLE)
             return cmp.verticalList(cmp.text("Somatic Variants").setStyle(sectionHeaderStyle()),
                     cmp.verticalGap(HEADER_TO_TABLE_VERTICAL_GAP),
                     table,
@@ -92,11 +92,11 @@ public abstract class FindingsPage {
                             cmp.text(drupEligibilityAddition).setStyle(fontStyle().setFontSize(8))),
                     cmp.verticalGap(5),
                     cmp.horizontalList(cmp.horizontalGap(10),
-                            cmp.text("#").setStyle(fontStyle()).setWidth(2),
+                            cmp.text("+").setStyle(fontStyle()).setWidth(2),
                             cmp.text(germline).setStyle(fontStyle().setFontSize(8))),
                     cmp.verticalGap(5),
                     cmp.horizontalList(cmp.horizontalGap(10),
-                            cmp.text("+").setStyle(fontStyle()).setWidth(2),
+                            cmp.text("#").setStyle(fontStyle()).setWidth(2),
                             cmp.text(geneticus).setStyle(fontStyle().setFontSize(8))));
         } else {
             return cmp.verticalList(cmp.text("Somatic Variants").setStyle(sectionHeaderStyle()),
