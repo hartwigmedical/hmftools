@@ -12,13 +12,11 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.hartwig.hmftools.bachelor.types.ConfigSchema;
+import com.hartwig.hmftools.bachelor.types.BachelorGermlineVariant;
 import com.hartwig.hmftools.bachelor.types.RunDirectory;
 import com.hartwig.hmftools.common.context.ProductionRunContextFactory;
 import com.hartwig.hmftools.common.context.RunContext;
@@ -29,16 +27,14 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.xml.sax.SAXException;
 
 import htsjdk.tribble.TribbleException;
 import htsjdk.variant.vcf.VCFFileReader;
 
 public class GermlineVcfParser
 {
-    private Map<String, Program> mProgramMap;
-    private BachelorProgram mProgram;
-    ExternalDBFilters mFilterFileBuilder;
+    private Map<String, Program> mProgramConfigMap;
+    private GermlineVariantFinder mProgram;
 
     // config
     private List<String> mSampleIds;
@@ -46,7 +42,6 @@ public class GermlineVcfParser
     private String mOutputDir;
     private boolean mIsBatchMode;
     private boolean mSkipIndexFile;
-    private String mSampleDataDirectory;
     private String mExternalFiltersFile;
     private int mMaxBatchDirectories;
 
@@ -58,9 +53,7 @@ public class GermlineVcfParser
 
     public GermlineVcfParser()
     {
-        mProgramMap = null;
-        mFilterFileBuilder = null;
-
+        mProgramConfigMap = null;
         mSampleIds = Lists.newArrayList();
         mSampleDataDir = "";
         mOutputDir= "";
@@ -71,53 +64,26 @@ public class GermlineVcfParser
         mMaxBatchDirectories = 0;
     }
 
-    private static final String CONFIG_XML = "configXml";
     private static final String SKIP_INDEX_FILE = "skip_index_file";
     private static final String EXTERNAL_FILTER_FILE = "ext_filter_file";
-    private static final String CREATE_FILTER_FILE = "create_filter_file";
     private static final String BATCH_MAX_DIR = "max_batch_dir"; // only for testing
 
     public static void addCmdLineOptions(Options options)
     {
-        options.addOption(CONFIG_XML, true, "single config XML to run");
         options.addOption(BATCH_MAX_DIR, true, "Max batch directories to batch process");
         options.addOption(SKIP_INDEX_FILE, false, "Skip VCF index file");
         options.addOption(EXTERNAL_FILTER_FILE, true, "Optional: name of an external filter file");
-        options.addOption(CREATE_FILTER_FILE, true, "Optional: create black and white list filter files");
     }
 
-    public boolean initialise(final CommandLine cmd, final List<String> sampleIds, final String dataPath, final String outputDir)
+    public boolean initialise(final CommandLine cmd, Map<String, Program> configMap,
+            final List<String> sampleIds, final String dataPath, final String outputDir)
     {
-        try
-        {
-            if (cmd.hasOption(CONFIG_XML))
-            {
-                mProgramMap = loadXML(Paths.get(cmd.getOptionValue(CONFIG_XML)));
-            }
-            else
-            {
-                LOGGER.error("config directory or xml required!");
-                return false;
-            }
-        }
-        catch(Exception e)
-        {
-            LOGGER.error("error loading XML: {}", e.toString());
-            return false;
-        }
+        mProgramConfigMap = configMap;
 
-        if (mProgramMap.isEmpty())
+        if (mProgramConfigMap.isEmpty())
         {
             LOGGER.error("no Programs loaded, exiting");
             return false;
-        }
-
-        if(cmd.hasOption(CREATE_FILTER_FILE))
-        {
-            LOGGER.info("building Clinvar filter files");
-            final String filterInputFile = cmd.getOptionValue(CREATE_FILTER_FILE);
-            mFilterFileBuilder = new ExternalDBFilters(filterInputFile);
-            return true;
         }
 
         mExternalFiltersFile = cmd.getOptionValue(EXTERNAL_FILTER_FILE, "");
@@ -135,18 +101,9 @@ public class GermlineVcfParser
 
     public boolean run()
     {
-        if(mFilterFileBuilder != null)
-        {
-            final Program program = mProgramMap.values().iterator().next();
+        mProgram = new GermlineVariantFinder();
 
-            mFilterFileBuilder.createFilterFile(mOutputDir, program);
-            LOGGER.info("run complete");
-            return true;
-        }
-
-        mProgram = new BachelorProgram();
-
-        if(!mProgram.loadConfig(mProgramMap))
+        if(!mProgram.loadConfig(mProgramConfigMap))
             return false;
 
         if(!mExternalFiltersFile.isEmpty())
@@ -167,7 +124,7 @@ public class GermlineVcfParser
         {
             List<RunDirectory> runDirectories = Lists.newArrayList();
 
-            final Path root = Paths.get(mSampleDataDirectory);
+            final Path root = Paths.get(mSampleDataDir);
 
             try (final Stream<Path> stream = Files.walk(root, 1, FileVisitOption.FOLLOW_LINKS).parallel())
             {
@@ -215,6 +172,8 @@ public class GermlineVcfParser
         return true;
     }
 
+    public List<BachelorGermlineVariant> getBachelorRecords() { return mProgram.getVariants(); }
+
     private void processSampleDirectory(final RunDirectory runDir, String sampleId)
     {
         final String patient = runDir.getPatientID();
@@ -241,38 +200,24 @@ public class GermlineVcfParser
 
         LOGGER.info("Processing run for patient({}) sampleId({}) directory({})", patient, sampleId, runDir.sampleDir());
 
-        final List<EligibilityReport> result = Lists.newArrayList();
+        processVCF(sampleId, runDir.germline());
 
-        result.addAll(processVCF(sampleId, runDir.germline()));
-
-        if(result.isEmpty())
+        if(mProgram.getVariants().isEmpty())
             return;
 
         createOutputFiles();
 
         try
         {
-            for (final EligibilityReport r : result)
+            for (final BachelorGermlineVariant variant : mProgram.getVariants())
             {
-                mVcfDataWriter.write(String.format("%s,%s,%s,%s,%s",
-                        r.sampleId(), r.program(), r.id(), r.genes(), r.transcriptId()));
-
-                mVcfDataWriter.write(String.format(",%s,%d,%s,%s,%s,%s,%s",
-                        r.chrom(), r.pos(), r.ref(), r.alts(), r.codingEffect(), r.effects(), r.annotations()));
-
-                mVcfDataWriter.write(String.format(",%s,%s,%d,%s,%s,%s,%d,%d,%d,%d,%s",
-                        r.hgvsProtein(), r.isHomozygous(), r.phredScore(), r.hgvsCoding(), r.matchType(),
-                        r.hasDepthInfo(), r.germlineAltCount(), r.germlineReadDepth(), r.tumorAltCount(), r.tumorReadDepth(),
-                        r.condonInfo()));
-
-                mVcfDataWriter.write(String.format(",%s,%s,%s",
-                        r.matchesClinvarFilter(), r.clinvarSignificance(), r.clinvarSigInfo()));
-
+                mVcfDataWriter.write(variant.asCsv(true));
                 mVcfDataWriter.newLine();
 
                 if(!mIsBatchMode)
                 {
-                    mBedFileWriter.write(String.format("%s\t%s\t%d\t%d", sampleId, r.chrom(), r.pos() - 1, r.pos()));
+                    mBedFileWriter.write(String.format("%s\t%s\t%d\t%d",
+                            sampleId, variant.Chromosome, variant.Position - 1, variant.Position));
                     mBedFileWriter.newLine();
                 }
             }
@@ -283,21 +228,20 @@ public class GermlineVcfParser
         }
     }
 
-    private List<EligibilityReport> processVCF(final String sampleId, final File vcf)
+    private void processVCF(final String sampleId, final File vcf)
     {
         if(vcf == null)
-            return Lists.newArrayList();
+            return;
 
         LOGGER.debug("Processing vcf: {}", vcf.getPath());
 
         try (final VCFFileReader reader = new VCFFileReader(vcf, !mSkipIndexFile))
         {
-            return mProgram.processVcfFile(sampleId, reader, !mSkipIndexFile);
+            mProgram.processVcfFile(sampleId, reader, !mSkipIndexFile);
         }
         catch (final TribbleException e)
         {
             LOGGER.error("Error with VCF file {}: {}", vcf.getPath(), e.getMessage());
-            return Lists.newArrayList();
         }
     }
 
@@ -332,34 +276,6 @@ public class GermlineVcfParser
         {
             LOGGER.error("failed to create output files: {}", e.toString());
         }
-    }
-
-    private static Map<String, Program> loadXML(final Path path) throws IOException, SAXException
-    {
-        final ConfigSchema schema = ConfigSchema.make();
-
-        final List<Program> programs = Files.walk(path)
-                .filter(p -> p.toString().endsWith(".xml"))
-                .map(schema::processXML)
-                .filter(Objects::nonNull)
-                .collect(Collectors.toList());
-
-        final Map<String, Program> result = Maps.newHashMap();
-
-        for (final Program p : programs)
-        {
-            if (result.containsKey(p.getName()))
-            {
-                LOGGER.error("duplicate Programs detected: {}", p.getName());
-                System.exit(1);
-            }
-            else
-            {
-                result.put(p.getName(), p);
-            }
-        }
-
-        return result;
     }
 
 }

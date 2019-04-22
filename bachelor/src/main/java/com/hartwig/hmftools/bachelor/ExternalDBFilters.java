@@ -45,9 +45,9 @@ public class ExternalDBFilters
 
     private static final Logger LOGGER = LogManager.getLogger(ExternalDBFilters.class);
 
-    public ExternalDBFilters(final String filterInputFile)
+    public ExternalDBFilters(final String filterInputFile, final String outputDir)
     {
-        mOutputDir = "";
+        mOutputDir = outputDir;
         mInputFilterFile = filterInputFile;
         mRequiredEffects = Lists.newArrayList();
         mPanelTranscripts = Lists.newArrayList();
@@ -118,10 +118,8 @@ public class ExternalDBFilters
         return filters;
     }
 
-    public boolean createFilterFile(final String outputDir, final Program program)
+    public boolean createFilterFile(final Program program)
     {
-        mOutputDir = outputDir;
-
         if (!Files.exists(Paths.get(mInputFilterFile)))
         {
             LOGGER.error("failed to load filter input file: {}", mInputFilterFile);
@@ -159,31 +157,6 @@ public class ExternalDBFilters
         closeBufferedWriter(mFilterWriter);
 
         return true;
-    }
-
-    private static String exclusionAsString(final VariantException exception)
-    {
-        if (exception.getHGVSP() != null)
-        {
-            return String.format("gene(%s) HGVS protein(%s)", exception.getGene().getName(), exception.getHGVSP().toString());
-        }
-
-        if (exception.getHGVSC() != null)
-        {
-            return String.format("gene(%s) HGVS coding(%s)", exception.getGene().getName(), exception.getHGVSC().toString());
-        }
-
-        if(exception.getMinCodon() != null)
-        {
-            return String.format("gene(%s) minCodon(%d)", exception.getGene().getName(), exception.getMinCodon().intValue());
-        }
-
-        if(exception.getPosition() != null)
-        {
-            return String.format("gene(%s) position(%s)", exception.getGene().getName(), exception.getPosition().toString());
-        }
-
-        return "";
     }
 
     // Clinvar annotations

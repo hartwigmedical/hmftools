@@ -1,9 +1,9 @@
 package com.hartwig.hmftools.bachelor;
 
-import static com.hartwig.hmftools.bachelor.EligibilityReport.MatchType.NONE;
-import static com.hartwig.hmftools.bachelor.EligibilityReport.MatchType.REQUIRED_EFFECT;
-import static com.hartwig.hmftools.bachelor.EligibilityReport.MatchType.WHITELIST;
 import static com.hartwig.hmftools.bachelor.ExternalDBFilters.isBenign;
+import static com.hartwig.hmftools.bachelor.types.BachelorGermlineVariant.MATCH_TYPE_NONE;
+import static com.hartwig.hmftools.bachelor.types.BachelorGermlineVariant.MATCH_TYPE_REQUIRED_EFFECT;
+import static com.hartwig.hmftools.bachelor.types.BachelorGermlineVariant.MATCH_TYPE_WHITELIST;
 import static com.hartwig.hmftools.common.variant.CodingEffect.NONSENSE_OR_FRAMESHIFT;
 
 import java.util.Arrays;
@@ -19,6 +19,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 import com.google.common.collect.SortedSetMultimap;
+import com.hartwig.hmftools.bachelor.types.BachelorGermlineVariant;
 import com.hartwig.hmftools.bachelor.types.VariantFilter;
 import com.hartwig.hmftools.common.genepanel.HmfGenePanelSupplier;
 import com.hartwig.hmftools.common.region.HmfTranscriptRegion;
@@ -40,7 +41,7 @@ import htsjdk.variant.variantcontext.Genotype;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.vcf.VCFFileReader;
 
-public class BachelorProgram
+public class GermlineVariantFinder
 {
     private String mName;
 
@@ -56,11 +57,11 @@ public class BachelorProgram
 
     private Set<HmfTranscriptRegion> mTranscriptRegions;
 
-    private List<EligibilityReport> mReports;
+    private List<BachelorGermlineVariant> mVariants;
 
-    private static final Logger LOGGER = LogManager.getLogger(BachelorProgram.class);
+    private static final Logger LOGGER = LogManager.getLogger(GermlineVariantFinder.class);
 
-    public BachelorProgram()
+    public GermlineVariantFinder()
     {
         mName = "";
         mRequiredEffects = null;
@@ -69,12 +70,14 @@ public class BachelorProgram
         mWhitelistFilters = Maps.newHashMap();
         mBlacklistFilters = Maps.newHashMap();
 
-        mReports = Lists.newArrayList();
+        mVariants = Lists.newArrayList();
 
         mTranscriptRegions = Sets.newHashSet();
 
         initialiseGeneData();
     }
+
+    public final List<BachelorGermlineVariant> getVariants() { return mVariants; }
 
     public boolean loadConfig(Map<String, Program> input)
     {
@@ -235,9 +238,9 @@ public class BachelorProgram
 
     public String name() { return mName; }
 
-    List<EligibilityReport> processVcfFile(final String sampleId, final VCFFileReader reader, boolean usesIndex)
+    public void processVcfFile(final String sampleId, final VCFFileReader reader, boolean usesIndex)
     {
-        mReports.clear();
+        mVariants.clear();
 
         if(usesIndex)
         {
@@ -261,10 +264,7 @@ public class BachelorProgram
             {
                 processVariant(variant, sampleId, null);
             }
-
         }
-
-        return mReports;
     }
 
     private void processVariant(final VariantContext variant, final String sampleId, HmfTranscriptRegion region)
@@ -285,7 +285,7 @@ public class BachelorProgram
         // search the list of annotations for the correct allele and transcript ID to write to the result file
 
         // check the sub-conditions now - hotspot locations and gene-transcript IDs
-        EligibilityReport.MatchType matchType = NONE;
+        String matchType = MATCH_TYPE_NONE;
 
         // first check the transcript
 
@@ -331,14 +331,14 @@ public class BachelorProgram
                     LOGGER.debug("match found: gene({} {}) var({}:{}) ref({}) alt({}) on effect({})",
                             gene, transcriptId, chromosome, position, ref, alt, effects);
 
-                    matchType = REQUIRED_EFFECT;
+                    matchType = MATCH_TYPE_REQUIRED_EFFECT;
                     break;
                 }
             }
 
             VariantFilter matchedFilter = null;
 
-            if (matchType == REQUIRED_EFFECT && !mBlacklistFilters.isEmpty())
+            if (matchType == MATCH_TYPE_REQUIRED_EFFECT && !mBlacklistFilters.isEmpty())
             {
                 // for variants matching the required effects, check whether they should be blacklisted
                 // for Clinvar entries this is if the variant is Benign, for other filters any match will cause a blacklist
@@ -367,7 +367,7 @@ public class BachelorProgram
                 }
             }
 
-            if (matchType == NONE && !mWhitelistFilters.isEmpty())
+            if (matchType == MATCH_TYPE_NONE && !mWhitelistFilters.isEmpty())
             {
                 List<VariantFilter> filters = mWhitelistFilters.get(gene);
 
@@ -379,7 +379,7 @@ public class BachelorProgram
                         {
                             LOGGER.debug("match found: gene({} {}) var({}:{}:{}) ref({}) alt({}) hgvsProtein({}) whitelisted",
                                     gene, transcriptId, varId, chromosome, position, ref, alt, hgvsProtein);
-                            matchType = WHITELIST;
+                            matchType = MATCH_TYPE_WHITELIST;
                             matchedFilter = filter;
                             break;
                         }
@@ -387,7 +387,7 @@ public class BachelorProgram
                 }
             }
 
-            if(matchType == NONE)
+            if(matchType == MATCH_TYPE_NONE)
                 return;
 
             String annotationsStr = SnpEffAnnotationFactory.rawAnnotations(variant).get(i);
@@ -420,10 +420,11 @@ public class BachelorProgram
 
             final String codonInfo = snpEff.aaPosAndLength();
 
+            /*
             EligibilityReport report = ImmutableEligibilityReport.builder()
                     .sampleId(sampleId)
                     .program(mName)
-                    .matchType(matchType)
+                    .matchType(matchTypeReport)
                     .id(variant.getID())
                     .genes(gene)
                     .transcriptId(transcriptId)
@@ -448,8 +449,25 @@ public class BachelorProgram
                     .clinvarSignificance(matchedFilter != null ? matchedFilter.ClinvarSignificance : "")
                     .clinvarSigInfo(matchedFilter != null ? matchedFilter.ClinvarSigInfo : "")
                     .build();
+            */
 
-            mReports.add(report);
+            BachelorGermlineVariant germlineVariant = new BachelorGermlineVariant(
+                    sampleId, mName, variant.getID(),
+                    gene, transcriptId, chromosome, position, ref, alt,
+                    codingEffect, effects, annotationsStr, hgvsProtein, isHomozygous, phredScore, hgvsCoding,
+                    matchType, codonInfo);
+
+            if(matchedFilter != null)
+            {
+                germlineVariant.setClinvarData(matchedFilter.ClinvarSignificance, matchedFilter.ClinvarSigInfo);
+            }
+
+            germlineVariant.setGermlineData(germlineAltCount, germlineReadDepth);
+
+            if(hasDepthInfo)
+                germlineVariant.setReadData(tumorAltCount, tumorReadDepth);
+
+            mVariants.add(germlineVariant);
         }
     }
 
@@ -461,63 +479,10 @@ public class BachelorProgram
                 .collect(Collectors.toList());
     }
 
-    public static boolean matchesWhitelistGeneProtein(VariantException geneProtein,
-            final VariantContext context, final SnpEffAnnotation annotation)
-    {
-        if(!geneProtein.getGene().getName().equals(annotation.gene()))
-            return false;
-
-        if (geneProtein.getHGVSP() != null && !annotation.hgvsProtein().isEmpty()
-                && geneProtein.getHGVSP().equals(annotation.hgvsProtein().replaceFirst("^p\\.", "")))
-        {
-            LOGGER.debug("variant({}) found in blacklist HGVSP({})", context.getID(), geneProtein.getHGVSP());
-            return true;
-        }
-
-        return false;
-    }
-
-    public static boolean matchesBlacklistExclusion(final VariantException blacklist, final VariantContext context,
-            final SnpEffAnnotation annotation) {
-
-        if (blacklist.getHGVSP() != null && !annotation.hgvsProtein().isEmpty()
-        && blacklist.getHGVSP().equals(annotation.hgvsProtein().replaceFirst("^p\\.", "")))
-        {
-            LOGGER.debug("variant({}) found in blacklist HGVSP({})", context.getID(), blacklist.getHGVSP());
-            return true;
-        }
-
-        if (blacklist.getHGVSC() != null && !annotation.hgvsCoding().isEmpty()
-        && blacklist.getHGVSC().equals(annotation.hgvsCoding().replaceFirst("^c\\.", ""))) {
-
-            LOGGER.debug("variant({}) found in blacklist HGVSC({})", context.getID(), blacklist.getHGVSC());
-
-            return true;
-        }
-
-        final List<Integer> proteinPositions = proteinPosition(annotation);
-        if (blacklist.getMinCodon() != null && !proteinPositions.isEmpty()
-                && blacklist.getMinCodon().intValue() <= proteinPositions.get(0))
-        {
-
-            LOGGER.debug("variant({}) found in blacklist minCodon({})", context.getID(), blacklist.getMinCodon());
-            return true;
-        }
-
-        if(blacklist.getPosition() != null && atPosition(context, blacklist.getPosition()))
-        {
-            LOGGER.debug("variant({}) found in blacklist postition({})", context.getID(), blacklist.getPosition());
-            return true;
-        }
-
-        return false;
-    }
-
     private static boolean atPosition(final VariantContext v, final String position)
     {
         return position.equals(v.getContig() + ":" + v.getStart());
     }
-
 
     private void initialiseGeneData()
     {
