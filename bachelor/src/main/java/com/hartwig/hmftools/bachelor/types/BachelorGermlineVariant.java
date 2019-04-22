@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.bachelorpp.types;
+package com.hartwig.hmftools.bachelor.types;
 
 import java.util.Arrays;
 import java.util.List;
@@ -7,7 +7,6 @@ import java.util.stream.Collectors;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
-import com.hartwig.hmftools.common.variant.VariantConsequence;
 
 import htsjdk.variant.variantcontext.VariantContext;
 
@@ -139,7 +138,6 @@ public class BachelorGermlineVariant implements Comparable<BachelorGermlineVaria
     }
 
     public int getGermlineAltCount() { return mGermlineAltCount; }
-    public int getGermlineRefCount() { return mGermlineReadDepth - mGermlineAltCount; }
     public int getGermlineReadDepth() { return mGermlineReadDepth; }
     public int getTumorAltCount() { return mTumorAltCount; }
     public int getTumorRefCount() { return mTumorReadDepth - mTumorAltCount; }
@@ -162,17 +160,6 @@ public class BachelorGermlineVariant implements Comparable<BachelorGermlineVaria
         mTumorAltCount = tumorCount;
         mTumorReadDepth = tumorReadDepth;
         mReadDataSet = true;
-    }
-
-    public boolean hasEffect(final VariantConsequence consequence)
-    {
-        for(final String effect : mEffectsList)
-        {
-            if(consequence.isParentTypeOf(effect))
-                return true;
-        }
-
-        return false;
     }
 
     public boolean isReadDataSet() { return mReadDataSet; }

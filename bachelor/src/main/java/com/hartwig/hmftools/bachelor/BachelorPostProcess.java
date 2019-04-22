@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.bachelorpp;
+package com.hartwig.hmftools.bachelor;
 
 import static com.hartwig.hmftools.common.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.io.FileWriterUtils.createBufferedWriter;
@@ -7,10 +7,8 @@ import static com.hartwig.hmftools.common.variant.CodingEffect.SPLICE;
 import static com.hartwig.hmftools.common.variant.VariantType.INDEL;
 import static com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotationFactory.SNPEFF_IDENTIFIER;
 
-import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.Collections;
@@ -21,7 +19,8 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
-import com.hartwig.hmftools.bachelorpp.types.BachelorGermlineVariant;
+import com.hartwig.hmftools.bachelor.types.BachelorDataCollection;
+import com.hartwig.hmftools.bachelor.types.BachelorGermlineVariant;
 import com.hartwig.hmftools.common.chromosome.Chromosome;
 import com.hartwig.hmftools.common.collect.Multimaps;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
@@ -36,7 +35,6 @@ import com.hartwig.hmftools.common.region.BEDFileLoader;
 import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.common.variant.ClonalityCutoffKernel;
 import com.hartwig.hmftools.common.variant.ClonalityFactory;
-import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariantFactory;
 import com.hartwig.hmftools.common.variant.PurityAdjustedSomaticVariant;
@@ -46,8 +44,6 @@ import com.hartwig.hmftools.common.variant.SomaticVariantFactory;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.logging.log4j.Level;
@@ -63,22 +59,30 @@ import htsjdk.variant.variantcontext.GenotypeBuilder;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.variantcontext.VariantContextBuilder;
 
-public class BachelorPP
+public class BachelorPostProcess
 {
+    private DatabaseAccess mDbAccess;
+    private Multimap<String, GenomeRegion> mHighConfidenceRegions;
+    private IndexedFastaSequenceFile mIndexedFastaSequenceFile;
+    private BufferedWriter mWriter;
+    private AlleleDepthLoader mAllelDepthLoader;
+
+    private CommandLine mCmdLineArgs;
+    private List<String> mSampleIds;
+    private String mSampleDataDir;
+    private String mOutputDir;
+    private boolean mIsBatchMode;
+    private boolean mUploadRecordsToDB;
+
     // config items
-    private static final String SAMPLE = "sample";
     private static final String REF_GENOME = "ref_genome";
     private static final String HIGH_CONFIDENCE_BED = "high_confidence_bed";
     private static final String WRITE_TO_DB = "write_to_db";
     private static final String LOG_DEBUG = "log_debug";
-    private static final String SAMPLE_PATH = "sample_path"; // path to the run directory for the sample
     private static final String PURPLE_DATA_DIRECTORY = "purple_data_dir"; // purple data directory within the sample fir
     private static final String BACH_DIRECTORY = "bachelor_dir"; // usually defaults to the 'bachelor' subdirectory of the sample dir
     private static final String BACH_INPUT_FILE = "bachelor_file"; // full path
     private static final String MAX_READ_COUNT = "max_read_count";
-
-    // file locations
-    private static final String SAMPLE_LIST_FILE = "sample_list_file";
 
     private static final String DB_USER = "db_user";
     private static final String DB_PASS = "db_pass";
@@ -87,19 +91,17 @@ public class BachelorPP
     private static final String DEFAULT_BACH_DIRECTORY = "bachelor";
     private static final String DEFAULT_BACH_INPUT_FILE = "bachelor_output.csv";
 
-    private DatabaseAccess mDbAccess;
-    private Multimap<String, GenomeRegion> mHighConfidenceRegions;
-    private IndexedFastaSequenceFile mIndexedFastaSequenceFile;
-    private boolean mIsBatchMode;
-    private boolean mUploadRecordsToDB;
-    private BufferedWriter mWriter;
-    private AlleleDepthLoader mAllelDepthLoader;
-    private List<String> mLimitedSampleList;
 
-    private static final Logger LOGGER = LogManager.getLogger(BachelorPP.class);
+    private static final Logger LOGGER = LogManager.getLogger(BachelorPostProcess.class);
 
-    private BachelorPP()
+    public BachelorPostProcess()
     {
+        mCmdLineArgs = null;
+        mSampleIds = Lists.newArrayList();
+        mSampleDataDir = "";
+        mOutputDir= "";
+        mIsBatchMode = false;
+
         mDbAccess = null;
         mHighConfidenceRegions = null;
         mIndexedFastaSequenceFile = null;
@@ -107,12 +109,16 @@ public class BachelorPP
         mUploadRecordsToDB = false;
         mAllelDepthLoader = null;
         mWriter = null;
-
-        mLimitedSampleList = Lists.newArrayList();
     }
 
-    private boolean initialise(final CommandLine cmd)
+    public boolean initialise(final CommandLine cmd, final List<String> sampleIds, final String dataPath, final String outputDir)
     {
+        mCmdLineArgs = cmd;
+        mIsBatchMode = (sampleIds.size() != 1);
+        mSampleIds.addAll(sampleIds);
+        mSampleDataDir = dataPath;
+        mOutputDir = outputDir;
+
         try
         {
             mDbAccess = databaseAccess(cmd);
@@ -148,31 +154,14 @@ public class BachelorPP
         return true;
     }
 
-    private boolean run(final CommandLine cmd)
+    public void run()
     {
-        String sampleId = cmd.getOptionValue(SAMPLE);
-
-        if (sampleId == null || sampleId.equals("*"))
-        {
-            LOGGER.info("running in batch mode");
-            sampleId = "";
-            mIsBatchMode = true;
-
-            if(cmd.hasOption(SAMPLE_LIST_FILE))
-                loadSampleListFile(cmd.getOptionValue(SAMPLE_LIST_FILE));
-        }
-
-        String sampleDirectory = cmd.getOptionValue(SAMPLE_PATH);
-
-        if (!sampleDirectory.endsWith(File.separator))
-        {
-            sampleDirectory += File.separator;
-        }
+        String sampleId = mSampleIds.size() == 1 ? mSampleIds.get(0) : "";
 
         String bachelorDataDir;
-        if (cmd.hasOption(BACH_DIRECTORY))
+        if (mCmdLineArgs.hasOption(BACH_DIRECTORY))
         {
-            bachelorDataDir = sampleDirectory + cmd.getOptionValue(BACH_DIRECTORY);
+            bachelorDataDir = mSampleDataDir + mCmdLineArgs.getOptionValue(BACH_DIRECTORY);
             if (!bachelorDataDir.endsWith(File.separator))
             {
                 bachelorDataDir += File.separator;
@@ -182,14 +171,14 @@ public class BachelorPP
         }
         else
         {
-            bachelorDataDir = sampleDirectory + DEFAULT_BACH_DIRECTORY + File.separator;
+            bachelorDataDir = mSampleDataDir + DEFAULT_BACH_DIRECTORY + File.separator;
             LOGGER.debug("using default bachelor data dir: {}", bachelorDataDir);
         }
 
         String bachelorInputFile;
-        if (cmd.hasOption(BACH_INPUT_FILE))
+        if (mCmdLineArgs.hasOption(BACH_INPUT_FILE))
         {
-            bachelorInputFile = cmd.getOptionValue(BACH_INPUT_FILE);
+            bachelorInputFile = mCmdLineArgs.getOptionValue(BACH_INPUT_FILE);
             LOGGER.info("loading specific input file: {}", bachelorInputFile);
         }
         else
@@ -201,35 +190,33 @@ public class BachelorPP
         if (!mIsBatchMode)
         {
             mAllelDepthLoader = new AlleleDepthLoader();
-            mAllelDepthLoader.setSampleId(sampleId);
+            mAllelDepthLoader.setSampleId(mSampleIds.get(0));
 
             if (!mAllelDepthLoader.loadMiniPileupData(bachelorDataDir))
             {
-                return false;
+                return;
             }
         }
 
         BachelorDataCollection dataCollection = new BachelorDataCollection();
-        dataCollection.setSampleId(sampleId, mLimitedSampleList);
-        dataCollection.setMaxReadCount(Integer.parseInt(cmd.getOptionValue(MAX_READ_COUNT, "0")));
+        dataCollection.setSampleIds(mSampleIds);
+        dataCollection.setMaxReadCount(Integer.parseInt(mCmdLineArgs.getOptionValue(MAX_READ_COUNT, "0")));
 
         if (!dataCollection.loadBachelorData(bachelorInputFile))
         {
-            return false;
+            return;
         }
 
         while (dataCollection.processBachelorData())
         {
-            processCurrentRecords(cmd, dataCollection.getBachelorVariants(), sampleId, sampleDirectory, bachelorDataDir);
+            processCurrentRecords(dataCollection.getBachelorVariants(), sampleId, bachelorDataDir);
         }
 
         closeBufferedWriter(mWriter);
-
-        return true;
     }
 
-    private void processCurrentRecords(final CommandLine cmd, List<BachelorGermlineVariant> bachRecords,
-            final String sampleId, final String sampleDirectory, final String bachelorDataDir)
+    private void processCurrentRecords(List<BachelorGermlineVariant> bachRecords,
+            final String sampleId, final String bachelorDataDir)
     {
         if (!mIsBatchMode)
         {
@@ -286,7 +273,7 @@ public class BachelorPP
             // create variant objects for VCF file writing and enrichment, and cache against bachelor record
             buildVariants(specificSample, sampleRecords);
 
-            annotateRecords(specificSample, sampleRecords, cmd, sampleDirectory);
+            annotateRecords(specificSample, sampleRecords);
 
             filterRecords(sampleId, sampleRecords);
 
@@ -304,31 +291,6 @@ public class BachelorPP
 
             writeToFile(specificSample, sampleRecords, bachelorDataDir);
         }
-    }
-
-    public static void main(@NotNull final String[] args) throws ParseException
-    {
-        final Options options = createBasicOptions();
-        final CommandLine cmd = createCommandLine(args, options);
-
-        if (cmd.hasOption(LOG_DEBUG))
-        {
-            Configurator.setRootLevel(Level.DEBUG);
-        }
-
-        BachelorPP bachelorPP = new BachelorPP();
-
-        if (!bachelorPP.initialise(cmd))
-        {
-            return;
-        }
-
-        if (!bachelorPP.run(cmd))
-        {
-            return;
-        }
-
-        LOGGER.info("run complete");
     }
 
     private void buildVariants(final String sampleId, List<BachelorGermlineVariant> bachRecords)
@@ -365,16 +327,15 @@ public class BachelorPP
         }
     }
 
-    private void annotateRecords(final String sampleId, List<BachelorGermlineVariant> bachRecords, final CommandLine cmd,
-            final String sampleDirectory)
+    private void annotateRecords(final String sampleId, List<BachelorGermlineVariant> bachRecords)
     {
         final PurityContext purityContext;
         final Multimap<Chromosome, PurpleCopyNumber> copyNumbers;
         final Multimap<Chromosome, FittedRegion> copyNumberRegions;
 
-        if (cmd.hasOption(PURPLE_DATA_DIRECTORY))
+        if (mCmdLineArgs.hasOption(PURPLE_DATA_DIRECTORY))
         {
-            final String purplePath = sampleDirectory + cmd.getOptionValue(PURPLE_DATA_DIRECTORY);
+            final String purplePath = mSampleDataDir + mCmdLineArgs.getOptionValue(PURPLE_DATA_DIRECTORY);
 
             LOGGER.debug("sample({}) loading purple data from file using path {}", sampleId, purplePath);
 
@@ -636,63 +597,20 @@ public class BachelorPP
         }
     }
 
-    private void loadSampleListFile(final String filename)
+    public static void addCmdLineOptions(Options options)
     {
-        try
-        {
-            BufferedReader fileReader = new BufferedReader(new FileReader(filename));
-
-            String line = fileReader.readLine(); // skip header
-
-            while ((line = fileReader.readLine()) != null)
-            {
-                String[] items = line.split(",");
-
-                final String sampleId = items[0];
-
-                mLimitedSampleList.add(items[0]);
-            }
-
-            LOGGER.info("loaded {} specific sample ids", mLimitedSampleList.size());
-
-        }
-        catch (IOException exception)
-        {
-            LOGGER.error("Failed to read sample list input CSV file({}): {}", filename, exception.toString());
-        }
-    }
-
-
-    @NotNull
-    private static Options createBasicOptions()
-    {
-        final Options options = new Options();
-        options.addOption(SAMPLE, true, "Tumor sample");
-        options.addOption(SAMPLE_PATH, true, "Typically the sample run directory and then assumes a 'bachelor' sub-directory for bachelor and mini-pileup input files");
         options.addOption(BACH_DIRECTORY, true, "Override for specific bachelor input dir, if left out then assumes in sample path & 'bachelor' sub-directory");
         options.addOption(BACH_INPUT_FILE, true, "Override for specific bachelor input file, if left out then assumes in bachelor_dir & *germline_variants.csv");
         options.addOption(REF_GENOME, true, "Path to the ref genome fasta file");
         options.addOption(HIGH_CONFIDENCE_BED, true, "Path to the high confidence bed file");
         options.addOption(PURPLE_DATA_DIRECTORY, true, "Sub-directory with sample path for purple data");
         options.addOption(MAX_READ_COUNT, true, "Optional - for buffered input file reading");
-        options.addOption(SAMPLE_LIST_FILE, true, "Optional: limiting list of sample IDs to process");
 
         options.addOption(DB_USER, true, "Database user name");
         options.addOption(DB_PASS, true, "Database password");
         options.addOption(DB_URL, true, "Database url");
 
         options.addOption(WRITE_TO_DB, false, "Whether to upload records to DB");
-
-        options.addOption(LOG_DEBUG, false, "Sets log level to Debug, default level is Info");
-
-        return options;
-    }
-
-    @NotNull
-    private static CommandLine createCommandLine(@NotNull final String[] args, @NotNull final Options options) throws ParseException
-    {
-        final CommandLineParser parser = new DefaultParser();
-        return parser.parse(options, args);
     }
 
     @NotNull

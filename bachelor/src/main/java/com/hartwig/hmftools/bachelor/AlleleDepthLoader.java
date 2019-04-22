@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.bachelorpp;
+package com.hartwig.hmftools.bachelor;
 
 import java.io.File;
 import java.io.IOException;
@@ -11,7 +11,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.bachelorpp.types.BachelorGermlineVariant;
+import com.hartwig.hmftools.bachelor.types.BachelorGermlineVariant;
 import com.hartwig.hmftools.common.pileup.Pileup;
 import com.hartwig.hmftools.common.pileup.PileupFile;
 
@@ -33,7 +33,8 @@ public class AlleleDepthLoader
         mPileupData = Lists.newArrayList();
     }
 
-    public void setSampleId(final String sampleId) {
+    public void setSampleId(final String sampleId)
+    {
         mSampleId = sampleId;
     }
 

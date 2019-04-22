@@ -5,7 +5,6 @@ import static com.hartwig.hmftools.bachelor.EligibilityReport.MatchType.REQUIRED
 import static com.hartwig.hmftools.bachelor.EligibilityReport.MatchType.WHITELIST;
 import static com.hartwig.hmftools.bachelor.ExternalDBFilters.isBenign;
 import static com.hartwig.hmftools.common.variant.CodingEffect.NONSENSE_OR_FRAMESHIFT;
-import static com.hartwig.hmftools.common.variant.CodingEffect.SPLICE;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -20,6 +19,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 import com.google.common.collect.SortedSetMultimap;
+import com.hartwig.hmftools.bachelor.types.VariantFilter;
 import com.hartwig.hmftools.common.genepanel.HmfGenePanelSupplier;
 import com.hartwig.hmftools.common.region.HmfTranscriptRegion;
 import com.hartwig.hmftools.common.variant.CodingEffect;
@@ -27,10 +27,7 @@ import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotation;
 import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotationFactory;
 
 import nl.hartwigmedicalfoundation.bachelor.GeneIdentifier;
-import nl.hartwigmedicalfoundation.bachelor.HotspotLocation;
 import nl.hartwigmedicalfoundation.bachelor.Program;
-import nl.hartwigmedicalfoundation.bachelor.ProgramBlacklist;
-import nl.hartwigmedicalfoundation.bachelor.ProgramWhitelist;
 import nl.hartwigmedicalfoundation.bachelor.ProgramPanel;
 import nl.hartwigmedicalfoundation.bachelor.SnpEffect;
 import nl.hartwigmedicalfoundation.bachelor.VariantException;

@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.bachelor;
 
-import static com.hartwig.hmftools.bachelor.BachelorProgram.matchesBlacklistExclusion;
-import static com.hartwig.hmftools.bachelor.BachelorProgram.matchesWhitelistGeneProtein;
 import static com.hartwig.hmftools.common.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.variant.CodingEffect.NONSENSE_OR_FRAMESHIFT;
@@ -18,15 +16,14 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.bachelor.types.VariantFilter;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotation;
 import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotationFactory;
 
 import nl.hartwigmedicalfoundation.bachelor.GeneIdentifier;
 import nl.hartwigmedicalfoundation.bachelor.Program;
-import nl.hartwigmedicalfoundation.bachelor.ProgramBlacklist;
 import nl.hartwigmedicalfoundation.bachelor.ProgramPanel;
-import nl.hartwigmedicalfoundation.bachelor.ProgramWhitelist;
 import nl.hartwigmedicalfoundation.bachelor.SnpEffect;
 import nl.hartwigmedicalfoundation.bachelor.VariantException;
 
@@ -48,10 +45,10 @@ public class ExternalDBFilters
 
     private static final Logger LOGGER = LogManager.getLogger(ExternalDBFilters.class);
 
-    public ExternalDBFilters()
+    public ExternalDBFilters(final String filterInputFile)
     {
         mOutputDir = "";
-        mInputFilterFile = "";
+        mInputFilterFile = filterInputFile;
         mRequiredEffects = Lists.newArrayList();
         mPanelTranscripts = Lists.newArrayList();
         mFilterWriter = null;
@@ -121,10 +118,9 @@ public class ExternalDBFilters
         return filters;
     }
 
-    public boolean createFilterFile(final String filterFile, final String outputDir, final Program program)
+    public boolean createFilterFile(final String outputDir, final Program program)
     {
         mOutputDir = outputDir;
-        mInputFilterFile = filterFile;
 
         if (!Files.exists(Paths.get(mInputFilterFile)))
         {

@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.bachelor;
+package com.hartwig.hmftools.bachelor.types;
 
 import java.io.File;
 import java.io.IOException;
@@ -10,7 +10,7 @@ import java.util.stream.Stream;
 
 import org.jetbrains.annotations.Nullable;
 
-class RunDirectory {
+public class RunDirectory {
 
     private final Path mSampleDir;
     private final File mGermline;
@@ -19,7 +19,7 @@ class RunDirectory {
     private String VCF_FILE_SUFFIX2 = "GoNLv5.vcf";
     private String VCF_FILE_SUFFIX3 = "annotated.vcf.gz";
 
-    RunDirectory(final Path runDirectory)
+    public RunDirectory(final Path runDirectory)
     {
         mSampleDir = runDirectory;
         mGermline = findGermline();
@@ -69,9 +69,9 @@ class RunDirectory {
         }
     }
 
-    final String directoryName() { return mSampleDir.getFileName().toString(); }
+    public final String directoryName() { return mSampleDir.getFileName().toString(); }
 
-    final String getPatientID()
+    public final String getPatientID()
     {
         final String[] split = mSampleDir.getFileName().toString().split("_");
 

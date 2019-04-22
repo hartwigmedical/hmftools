@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.bachelor;
+package com.hartwig.hmftools.bachelor.types;
 
 import static com.hartwig.hmftools.common.variant.CodingEffect.MISSENSE;
 

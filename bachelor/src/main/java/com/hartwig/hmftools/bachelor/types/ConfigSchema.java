@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.bachelor;
+package com.hartwig.hmftools.bachelor.types;
 
 import java.nio.file.Path;
 
@@ -18,28 +18,32 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 import org.xml.sax.SAXException;
 
-public class BachelorSchema {
-
-    private static final Logger LOGGER = LogManager.getLogger(BachelorSchema.class);
+public class ConfigSchema
+{
+    private static final Logger LOGGER = LogManager.getLogger(ConfigSchema.class);
     private final Schema schema;
 
-    private BachelorSchema() throws SAXException {
+    private ConfigSchema() throws SAXException {
         schema = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI).newSchema(Resources.getResource("bachelor.xsd"));
     }
 
-    public static BachelorSchema make() throws SAXException {
-        return new BachelorSchema();
+    public static ConfigSchema make() throws SAXException {
+        return new ConfigSchema();
     }
 
     @Nullable
-    public Program processXML(final Path path) {
+    public Program processXML(final Path path)
+    {
         LOGGER.info("loading input file: {}", path);
-        try {
+
+        try
+        {
             final JAXBContext context = JAXBContext.newInstance(Program.class);
             final Unmarshaller unmarshaller = context.createUnmarshaller();
             unmarshaller.setSchema(schema);
             return (Program) unmarshaller.unmarshal(path.toFile());
-        } catch (final JAXBException e) {
+        }
+        catch (final JAXBException e) {
             LOGGER.error("failed to process: {}", path);
             LOGGER.error(e);
             return null;

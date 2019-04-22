@@ -1,14 +1,13 @@
-package com.hartwig.hmftools.bachelorpp;
-
-import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.GERMLINEVARIANT;
+package com.hartwig.hmftools.bachelor;
 
 import java.sql.Timestamp;
 import java.util.Date;
 import java.util.List;
 
-import com.hartwig.hmftools.bachelorpp.types.BachelorGermlineVariant;
+import com.hartwig.hmftools.bachelor.types.BachelorGermlineVariant;
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
 import com.hartwig.hmftools.patientdb.dao.DatabaseUtil;
+import com.hartwig.hmftools.patientdb.database.hmfpatients.Tables;
 
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
@@ -28,44 +27,44 @@ public class GermlineVariantDAO {
     public void write(final String sampleId, final List<BachelorGermlineVariant> bachRecords)
     {
         // first remove any existing records for this patient
-        context.delete(GERMLINEVARIANT).where(GERMLINEVARIANT.SAMPLEID.eq(sampleId)).execute();
+        context.delete(Tables.GERMLINEVARIANT).where(Tables.GERMLINEVARIANT.SAMPLEID.eq(sampleId)).execute();
 
         final Timestamp timestamp = new Timestamp(new Date().getTime());
 
-        InsertValuesStepN inserter = context.insertInto(GERMLINEVARIANT,
-                GERMLINEVARIANT.SAMPLEID,
-                GERMLINEVARIANT.CHROMOSOME,
-                GERMLINEVARIANT.POSITION,
-                GERMLINEVARIANT.FILTER,
-                GERMLINEVARIANT.TYPE,
-                GERMLINEVARIANT.REF,
-                GERMLINEVARIANT.ALT,
-                GERMLINEVARIANT.GENE,
-                GERMLINEVARIANT.DBSNPID,
-                GERMLINEVARIANT.COSMICID,
-                GERMLINEVARIANT.EFFECT,
-                GERMLINEVARIANT.CODINGEFFECT,
-                GERMLINEVARIANT.TRANSCRIPT,
-                GERMLINEVARIANT.ALLELEREADCOUNT,
-                GERMLINEVARIANT.TOTALREADCOUNT,
-                GERMLINEVARIANT.ADJUSTEDCOPYNUMBER,
-                GERMLINEVARIANT.ADJUSTEDVAF,
-                GERMLINEVARIANT.HIGHCONFIDENCE,
-                GERMLINEVARIANT.TRINUCLEOTIDECONTEXT,
-                GERMLINEVARIANT.MICROHOMOLOGY,
-                GERMLINEVARIANT.REPEATSEQUENCE,
-                GERMLINEVARIANT.REPEATCOUNT,
-                GERMLINEVARIANT.HGVSPROTEIN,
-                GERMLINEVARIANT.HGVSCODING,
-                GERMLINEVARIANT.BIALLELIC,
-                GERMLINEVARIANT.HOTSPOT,
-                GERMLINEVARIANT.MAPPABILITY,
-                GERMLINEVARIANT.GERMLINESTATUS,
-                GERMLINEVARIANT.MINORALLELEPLOIDY,
-                GERMLINEVARIANT.REFSTATUS,
-                GERMLINEVARIANT.PROGRAM,
-                GERMLINEVARIANT.SOURCE,
-                GERMLINEVARIANT.MODIFIED);
+        InsertValuesStepN inserter = context.insertInto(Tables.GERMLINEVARIANT,
+                Tables.GERMLINEVARIANT.SAMPLEID,
+                Tables.GERMLINEVARIANT.CHROMOSOME,
+                Tables.GERMLINEVARIANT.POSITION,
+                Tables.GERMLINEVARIANT.FILTER,
+                Tables.GERMLINEVARIANT.TYPE,
+                Tables.GERMLINEVARIANT.REF,
+                Tables.GERMLINEVARIANT.ALT,
+                Tables.GERMLINEVARIANT.GENE,
+                Tables.GERMLINEVARIANT.DBSNPID,
+                Tables.GERMLINEVARIANT.COSMICID,
+                Tables.GERMLINEVARIANT.EFFECT,
+                Tables.GERMLINEVARIANT.CODINGEFFECT,
+                Tables.GERMLINEVARIANT.TRANSCRIPT,
+                Tables.GERMLINEVARIANT.ALLELEREADCOUNT,
+                Tables.GERMLINEVARIANT.TOTALREADCOUNT,
+                Tables.GERMLINEVARIANT.ADJUSTEDCOPYNUMBER,
+                Tables.GERMLINEVARIANT.ADJUSTEDVAF,
+                Tables.GERMLINEVARIANT.HIGHCONFIDENCE,
+                Tables.GERMLINEVARIANT.TRINUCLEOTIDECONTEXT,
+                Tables.GERMLINEVARIANT.MICROHOMOLOGY,
+                Tables.GERMLINEVARIANT.REPEATSEQUENCE,
+                Tables.GERMLINEVARIANT.REPEATCOUNT,
+                Tables.GERMLINEVARIANT.HGVSPROTEIN,
+                Tables.GERMLINEVARIANT.HGVSCODING,
+                Tables.GERMLINEVARIANT.BIALLELIC,
+                Tables.GERMLINEVARIANT.HOTSPOT,
+                Tables.GERMLINEVARIANT.MAPPABILITY,
+                Tables.GERMLINEVARIANT.GERMLINESTATUS,
+                Tables.GERMLINEVARIANT.MINORALLELEPLOIDY,
+                Tables.GERMLINEVARIANT.REFSTATUS,
+                Tables.GERMLINEVARIANT.PROGRAM,
+                Tables.GERMLINEVARIANT.SOURCE,
+                Tables.GERMLINEVARIANT.MODIFIED);
 
         for (final BachelorGermlineVariant bachRecord : bachRecords)
         {

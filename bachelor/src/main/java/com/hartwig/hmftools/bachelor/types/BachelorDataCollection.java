@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.bachelorpp;
+package com.hartwig.hmftools.bachelor.types;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -6,7 +6,7 @@ import java.io.IOException;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.bachelorpp.types.BachelorGermlineVariant;
+import com.hartwig.hmftools.bachelor.types.BachelorGermlineVariant;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 
 import org.apache.logging.log4j.LogManager;
@@ -49,7 +49,6 @@ public class BachelorDataCollection
 
     private static final Logger LOGGER = LogManager.getLogger(BachelorDataCollection.class);
 
-    private String mSampleId;
     private List<String> mLimitedSampleList;
     private List<BachelorGermlineVariant> mGermlineVariants;
     private int mFileIndex;
@@ -59,17 +58,15 @@ public class BachelorDataCollection
 
     public BachelorDataCollection()
     {
-        mSampleId = "";
         mGermlineVariants = Lists.newArrayList();
         mFileIndex = 0;
         mMaxReadCount = 0;
         mFileReader = null;
     }
 
-    public void setSampleId(final String sampleId, final List<String> limitedSampleList)
+    public void setSampleIds(final List<String> sampleIdsList)
     {
-        mSampleId = sampleId;
-        mLimitedSampleList = limitedSampleList;
+        mLimitedSampleList.addAll(sampleIdsList);
     }
     public void setMaxReadCount(int maxReadCount) { mMaxReadCount = maxReadCount; }
 
@@ -122,9 +119,6 @@ public class BachelorDataCollection
 
                 final String sampleId = items[COL_INDEX_SAMPLE];
 
-                if (!mSampleId.equals("*") && !mSampleId.equals("") && !mSampleId.contains(sampleId))
-                    continue;
-
                 if(!mLimitedSampleList.isEmpty() && !mLimitedSampleList.contains(sampleId))
                     continue;
 
@@ -143,25 +137,6 @@ public class BachelorDataCollection
                 if(items.length > BACHELOR_CSV_FIELD_COUNT)
                 {
                     checkAnnotationItems(items);
-
-                    /*
-                    // other error checking
-                    boolean duplicateFieldFound = false;
-                    for(int j = COL_INDEX_PROGRAM+1; j < items.length; ++j)
-                    {
-                        if(items[j].equals(items[COL_INDEX_PROGRAM]))
-                        {
-                            duplicateFieldFound = true;
-                            break;
-                        }
-                    }
-
-                    if(duplicateFieldFound)
-                    {
-                        LOGGER.warn("sample({}) skipping duplicated record at fileIndex({})", sampleId, mFileIndex);
-                        continue;
-                    }
-                    */
                 }
 
                 try
