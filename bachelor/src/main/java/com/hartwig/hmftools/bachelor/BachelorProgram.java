@@ -33,6 +33,7 @@ import nl.hartwigmedicalfoundation.bachelor.ProgramBlacklist;
 import nl.hartwigmedicalfoundation.bachelor.ProgramWhitelist;
 import nl.hartwigmedicalfoundation.bachelor.ProgramPanel;
 import nl.hartwigmedicalfoundation.bachelor.SnpEffect;
+import nl.hartwigmedicalfoundation.bachelor.VariantException;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -134,54 +135,72 @@ public class BachelorProgram
         }
 
         // merge XML white and black lists into the same format
-        if(program.getBlacklist() != null && !program.getBlacklist().getExclusion().isEmpty())
+        if(program.getBlacklist() != null)
         {
-            for (ProgramBlacklist.Exclusion exclusion : program.getBlacklist().getExclusion())
+            for (VariantException exception : program.getBlacklist().getExclusion())
             {
-                String hgvsProtein = exclusion.getHGVSP() != null ? exclusion.getHGVSP() : "";
-                int minCodon = exclusion.getMinCodon() != null ? exclusion.getMinCodon().intValue() : -1;
+                VariantFilter filter = loadVariantFilter(exception);
 
-                String chromosome = "";
-                long position = 0;
-                String ref = "";
-                String alt = "";
-
-                if(exclusion.getPosition() != null)
-                {
-                    String[] varDetails = exclusion.getPosition().split(":");
-
-                    if(varDetails.length == 4)
-                    {
-                        chromosome = varDetails[0];
-                        position = Long.parseLong(varDetails[1]);
-                        ref = varDetails[2];
-                        alt = varDetails[3];
-                    }
-                }
-
-                final String gene = exclusion.getGene().getName();
-
-                VariantFilter filter = new VariantFilter(gene, "", chromosome, position,
-                        ref, alt, NONSENSE_OR_FRAMESHIFT, hgvsProtein, "", "", "", minCodon);
-
-                List<VariantFilter> filters = mBlacklistFilters.get(gene);
+                List<VariantFilter> filters = mBlacklistFilters.get(filter.Gene);
 
                 if(filters == null)
                 {
                     filters = Lists.newArrayList();
-                    mBlacklistFilters.put(gene, filters);
+                    mBlacklistFilters.put(filter.Gene, filters);
                 }
 
                 filters.add(filter);
             }
         }
 
-        if(program.getWhitelist() != null && !program.getWhitelist().getVariantOrDbSNP().isEmpty())
+        if(program.getWhitelist() != null)
         {
-            // add to generic filter collection if to be used
+            for(VariantException exception : program.getWhitelist().getInclusion())
+            {
+                VariantFilter filter = loadVariantFilter(exception);
+
+                List<VariantFilter> filters = mWhitelistFilters.get(filter.Gene);
+
+                if(filters == null)
+                {
+                    filters = Lists.newArrayList();
+                    mWhitelistFilters.put(filter.Gene, filters);
+                }
+
+                filters.add(filter);
+            }
         }
 
         return true;
+    }
+
+    private VariantFilter loadVariantFilter(final VariantException variantException)
+    {
+        String hgvsProtein = variantException.getHGVSP() != null ? variantException.getHGVSP() : "";
+        int minCodon = variantException.getMinCodon() != null ? variantException.getMinCodon().intValue() : -1;
+
+        String chromosome = "";
+        long position = 0;
+        String ref = "";
+        String alt = "";
+
+        if(variantException.getPosition() != null)
+        {
+            String[] varDetails = variantException.getPosition().split(":");
+
+            if(varDetails.length == 4)
+            {
+                chromosome = varDetails[0];
+                position = Long.parseLong(varDetails[1]);
+                ref = varDetails[2];
+                alt = varDetails[3];
+            }
+        }
+
+        final String gene = variantException.getGene().getName();
+
+        return new VariantFilter(gene, "", chromosome, position,
+                ref, alt, NONSENSE_OR_FRAMESHIFT, hgvsProtein, "", "", "", minCodon);
     }
 
     public void addExternalFilters(final List<VariantFilter> allFilters)
@@ -445,7 +464,7 @@ public class BachelorProgram
                 .collect(Collectors.toList());
     }
 
-    public static boolean matchesWhitelistGeneProtein(ProgramWhitelist.Variant geneProtein,
+    public static boolean matchesWhitelistGeneProtein(VariantException geneProtein,
             final VariantContext context, final SnpEffAnnotation annotation)
     {
         if(!geneProtein.getGene().getName().equals(annotation.gene()))
@@ -461,7 +480,7 @@ public class BachelorProgram
         return false;
     }
 
-    public static boolean matchesBlacklistExclusion(final ProgramBlacklist.Exclusion blacklist, final VariantContext context,
+    public static boolean matchesBlacklistExclusion(final VariantException blacklist, final VariantContext context,
             final SnpEffAnnotation annotation) {
 
         if (blacklist.getHGVSP() != null && !annotation.hgvsProtein().isEmpty()
@@ -542,90 +561,6 @@ public class BachelorProgram
             }
         }
 
-    */
-
-    /*  OLD BLACKLIST PREDICATE
-
-        public boolean test(final VariantModel variantModel)
-        {
-            for (final SnpEffAnnotation annotation : variantModel.sampleAnnotations())
-            {
-                final boolean transcriptMatches = transcripts.contains(annotation.transcript());
-                if (transcriptMatches)
-                {
-                    for (ProgramBlacklist.Exclusion exclusion : blacklist)
-                    {
-                        if (matchesBlacklistExclusion(exclusion, variantModel.context(), annotation))
-                        {
-                            return true;
-                        }
-                    }
-                }
-            }
-            return false;
-        }
-
-
-        public static List<Integer> proteinPosition(@NotNull final SnpEffAnnotation annotation)
-        {
-            return Arrays.stream(annotation.aaPosAndLength().split("/"))
-                    .filter(s -> !s.isEmpty())
-                    .map(Integer::parseInt)
-                    .collect(Collectors.toList());
-        }
-
-    */
-
-    /* OLD WHITELIST PREDICATE
-
-        public boolean test(final VariantModel variantModel)
-        {
-            if(mWhitelist == null)
-                return false;
-
-            for (final SnpEffAnnotation annotation : variantModel.sampleAnnotations())
-            {
-                for (final Object variantOrDbSNP : mWhitelist.getVariantOrDbSNP())
-                {
-                    if (variantOrDbSNP instanceof ProgramWhitelist.Variant)
-                    {
-                        final ProgramWhitelist.Variant whitelistVar = (ProgramWhitelist.Variant) variantOrDbSNP;
-
-                        if(matchesWhitelistGeneProtein(whitelistVar, variantModel.context(), annotation))
-                        {
-                            return true;
-                        }
-                    }
-                    else if (variantOrDbSNP instanceof String)
-                    {
-                        if(matchesWhitelistDbSNPId((String) variantOrDbSNP, variantModel.context()))
-                        {
-                            return true;
-                        }
-                    }
-                }
-            }
-
-            return false;
-        }
-
-        public static boolean matchesWhitelistDbSNPId(final String dnSNPId, final VariantContext variant)
-        {
-            Set<String> varDbSNPList = Lists.newArrayList(variant.getID()
-                    .split(","))
-                    .stream().filter(s -> s.startsWith("rs"))
-                    .collect(Collectors.toSet());
-
-            if(varDbSNPList.contains(dnSNPId))
-            {
-                LOGGER.debug("variant({}) matched in whitelist rs DB Ids list({})", variant.getID());
-                return true;
-            }
-            else
-            {
-                return false;
-            }
-        }
     */
 
 }

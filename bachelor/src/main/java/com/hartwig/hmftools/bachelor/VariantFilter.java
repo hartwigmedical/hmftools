@@ -44,30 +44,6 @@ public class VariantFilter
 
     public boolean blacklistMatch(String gene, String chromosome, long position, String ref, String alt, int proteinPosition)
     {
-        /*
-        if (!HgvsProteinCodon.isEmpty())
-        {
-            if (HgvsProteinCodon.equals(hgvsProtein))
-            {
-                LOGGER.debug("gene({}) var({}:{}) ref({}) alt({}) matches filter on hgvsProtein({})",
-                        gene, chromosome, position, ref, alt, hgvsProtein);
-
-                return true;
-            }
-        }
-
-        if (!DBSnpId.isEmpty())
-        {
-            if (varId.contains(DBSnpId))
-            {
-                LOGGER.debug("gene({}) var({}:{}) ref({}) alt({}) matches filter on DBSnpId({})",
-                        gene, chromosome, position, ref, alt, varId);
-
-                return true;
-            }
-        }
-        */
-
         if (MinCodon >= 0)
         {
             if (proteinPosition >=0 && MinCodon <= proteinPosition)
