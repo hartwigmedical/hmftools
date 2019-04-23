@@ -96,7 +96,7 @@ public class SageHotspotApplication implements AutoCloseable {
         final Set<VariantHotspot> allHotspots = Sets.newHashSet();
         allHotspots.addAll(knownHotspots);
         allHotspots.addAll(new InframeIndelHotspots(minMappingQuality, codingRegions, refSequence).findInframeIndels(tumorReader));
-        final List<GenomeRegion> allHotspotRegions = asRegions(config.typicalReadDepth(), allHotspots);
+        final List<GenomeRegion> allHotspotRegions = asRegions(config.typicalReadLength(), allHotspots);
         final SAMSlicer hotspotRegionConsumer = new SAMSlicer(minMappingQuality, allHotspotRegions);
 
         LOGGER.info("Looking for evidence of hotspots in tumor bam {}", tumorBam);

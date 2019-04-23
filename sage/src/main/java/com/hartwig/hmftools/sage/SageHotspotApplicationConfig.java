@@ -43,7 +43,7 @@ public interface SageHotspotApplicationConfig {
     int DEFAULT_MIN_MAPPING_QUALITY = 1;
     int DEFAULT_MIN_SNV_QUALITY = 100;
     int DEFAULT_MIN_INDEL_QUALITY = 150;
-    int DEFAULT_TYPICAL_READ_DEPTH = 151;
+    int DEFAULT_TYPICAL_READ_LENGTH = 151;
 
     double DEFAULT_MIN_SNV_VAF = 0.005;
     double DEFAULT_MIN_INDEL_VAF = 0.02;
@@ -128,8 +128,8 @@ public interface SageHotspotApplicationConfig {
 
     double minIndelVAF();
 
-    default int typicalReadDepth() {
-        return DEFAULT_TYPICAL_READ_DEPTH;
+    default int typicalReadLength() {
+        return DEFAULT_TYPICAL_READ_LENGTH;
     }
 
     @NotNull
