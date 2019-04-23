@@ -23,24 +23,33 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 
-public class SummaryChapter extends ReportChapter {
+public class SummaryChapter implements ReportChapter {
 
     private final Style BODY_TEXT_STYLE = ReportResources.bodyTextStyle();
 
     private final static float TABLE_SPACER_HEIGHT = 5;
+
+    private final AnalysedPatientReport patientReport;
+
+    public SummaryChapter(@NotNull final AnalysedPatientReport patientReport) {
+        this.patientReport = patientReport;
+    }
 
     @Override
     public final String getName() {
         return "Summary";
     }
 
-    @Override
-    public final ChapterType getChapterType() {
-        return ChapterType.SummaryChapter;
+    public boolean isFullWidth() {
+        return false;
+    }
+
+    public boolean hasCompleteSidebar() {
+        return true;
     }
 
     @Override
-    protected final void renderChapterContent(@NotNull final AnalysedPatientReport patientReport, @NotNull final Document reportDocument) {
+    public final void render(@NotNull final Document reportDocument) {
         renderTumorLocationAndType(patientReport, reportDocument);
 
         // @TODO Replace this fixed text with the patientReport.summaryText method.

@@ -17,22 +17,27 @@ import org.jetbrains.annotations.NotNull;
 
 import java.net.MalformedURLException;
 
-public class DetailsAndDisclaimerChapter extends ReportChapter {
+public class DetailsAndDisclaimerChapter implements ReportChapter {
 
     private static final Logger LOGGER = LogManager.getLogger(SampleDetailsPage.class);
+
+    private final AnalysedPatientReport patientReport;
+
+    public DetailsAndDisclaimerChapter(@NotNull final AnalysedPatientReport patientReport) {
+        this.patientReport = patientReport;
+    }
 
     @Override
     public String getName() {
         return "Sample details & disclaimers";
     }
 
-    @Override
-    public ChapterType getChapterType() {
-        return ChapterType.ClosingChapter;
+    public boolean isFullWidth() {
+        return false;
     }
 
     @Override
-    protected void renderChapterContent(@NotNull final AnalysedPatientReport patientReport, @NotNull final Document reportDocument) throws IOException {
+    public final void render(@NotNull final Document reportDocument) throws IOException {
 
         // Main content
         Table table = new Table(UnitValue.createPercentArray(new float[] {1, 0.1f, 1}));

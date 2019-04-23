@@ -13,19 +13,21 @@ import org.jetbrains.annotations.NotNull;
 
 import java.net.MalformedURLException;
 
-public class CircosChapter extends ReportChapter {
+public class CircosChapter implements ReportChapter {
+
+    private final AnalysedPatientReport patientReport;
+
+    public CircosChapter(@NotNull final AnalysedPatientReport patientReport) {
+        this.patientReport = patientReport;
+    }
+
     @Override
     public String getName() {
         return "CIRCOS plot";
     }
 
     @Override
-    public ChapterType getChapterType() {
-        return ChapterType.ContentChapter;
-    }
-
-    @Override
-    protected void renderChapterContent(@NotNull final AnalysedPatientReport patientReport, @NotNull final Document reportDocument) throws IOException {
+    public final void render(@NotNull final Document reportDocument) throws IOException {
 
         // Add Circos plot
         final String circosPath = patientReport.circosPath();

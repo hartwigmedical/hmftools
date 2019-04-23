@@ -22,7 +22,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.List;
 import java.util.regex.Pattern;
 
-public class TherapyDetailsChapter extends ReportChapter {
+public class TherapyDetailsChapter implements ReportChapter {
 
     private final static float COL_WIDTH_DRIVERS = 90;
     private final static float COL_WIDTH_MATCH = 60;
@@ -35,18 +35,19 @@ public class TherapyDetailsChapter extends ReportChapter {
 
     private final static String TREATMENT_DELIMITER = " + ";
 
+    private final AnalysedPatientReport patientReport;
+
+    public TherapyDetailsChapter(@NotNull final AnalysedPatientReport patientReport) {
+        this.patientReport = patientReport;
+    }
+
     @Override
     public String getName() {
         return "Therapy details";
     }
 
     @Override
-    public ChapterType getChapterType() {
-        return ChapterType.ContentChapter;
-    }
-
-    @Override
-    protected void renderChapterContent(@NotNull final AnalysedPatientReport patientReport, @NotNull final Document reportDocument) {
+    public final void render(@NotNull final Document reportDocument) {
 
         Table chapterTable = new Table(1);
 

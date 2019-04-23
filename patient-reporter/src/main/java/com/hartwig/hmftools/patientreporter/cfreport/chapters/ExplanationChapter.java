@@ -10,19 +10,21 @@ import com.itextpdf.layout.element.Table;
 import com.itextpdf.layout.property.UnitValue;
 import org.jetbrains.annotations.NotNull;
 
-public class ExplanationChapter extends ReportChapter {
+public class ExplanationChapter implements ReportChapter {
+
+    private final AnalysedPatientReport patientReport;
+
+    public ExplanationChapter(@NotNull final AnalysedPatientReport patientReport) {
+        this.patientReport = patientReport;
+    }
+
     @Override
     public String getName() {
         return "Report explanation";
     }
 
     @Override
-    public ChapterType getChapterType() {
-        return ChapterType.ContentChapter;
-    }
-
-    @Override
-    protected void renderChapterContent(@NotNull final AnalysedPatientReport patientReport, @NotNull final Document reportDocument) {
+    public final void render(@NotNull final Document reportDocument) {
 
         Table table = new Table(UnitValue.createPercentArray(new float[] {1, 0.1f, 1, 0.1f, 1}));
         table.setWidth(getContentWidth());

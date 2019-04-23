@@ -16,9 +16,15 @@ import org.jetbrains.annotations.NotNull;
 
 import java.text.DecimalFormat;
 
-public class TumorCharacteristicsChapter extends ReportChapter {
+public class TumorCharacteristicsChapter implements ReportChapter {
 
     private final static float TABLE_SPACER_HEIGHT = 30;
+
+    private final AnalysedPatientReport patientReport;
+
+    public TumorCharacteristicsChapter(@NotNull final AnalysedPatientReport patientReport) {
+        this.patientReport = patientReport;
+    }
 
     @Override
     public String getName() {
@@ -26,12 +32,7 @@ public class TumorCharacteristicsChapter extends ReportChapter {
     }
 
     @Override
-    public ChapterType getChapterType() {
-        return ChapterType.ContentChapter;
-    }
-
-    @Override
-    protected void renderChapterContent(@NotNull final AnalysedPatientReport patientReport, @NotNull final Document reportDocument) {
+    public final void render(@NotNull final Document reportDocument) {
 
         final DecimalFormat noDecimalFormat = new DecimalFormat("#");
         final DecimalFormat singleDecimalFormat = new DecimalFormat("#.#");

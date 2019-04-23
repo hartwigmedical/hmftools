@@ -21,20 +21,19 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 
-public class ActionableOrDriversChapter extends ReportChapter {
+public class ActionableOrDriversChapter implements ReportChapter {
 
-    @Override
+    private final AnalysedPatientReport patientReport;
+
+    public ActionableOrDriversChapter(@NotNull final AnalysedPatientReport patientReport) {
+        this.patientReport = patientReport;
+    }
+
     public String getName() {
         return "Actionable or drivers";
     }
 
-    @Override
-    public ChapterType getChapterType() {
-        return ChapterType.ContentChapter;
-    }
-
-    @Override
-    protected void renderChapterContent(@NotNull final AnalysedPatientReport patientReport, @NotNull Document reportDocument) {
+    public void render(@NotNull Document reportDocument) {
 
         final boolean hasReliablePurityFit = patientReport.hasReliablePurityFit();
 

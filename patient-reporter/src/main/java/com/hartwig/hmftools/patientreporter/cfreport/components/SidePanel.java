@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.patientreporter.cfreport.components;
 
-import com.hartwig.hmftools.patientreporter.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.SampleReport;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
 import com.hartwig.hmftools.patientreporter.cfreport.data.DataUtil;
@@ -8,23 +7,18 @@ import com.itextpdf.kernel.geom.Rectangle;
 import com.itextpdf.kernel.pdf.PdfPage;
 import com.itextpdf.kernel.pdf.canvas.PdfCanvas;
 import com.itextpdf.layout.Canvas;
-import com.itextpdf.layout.borders.SolidBorder;
 import com.itextpdf.layout.element.Div;
 import com.itextpdf.layout.element.Paragraph;
-import com.itextpdf.layout.property.VerticalAlignment;
 import org.jetbrains.annotations.NotNull;
 
 import java.time.LocalDate;
-import java.util.StringJoiner;
 
 public final class SidePanel {
 
     private static final float ROW_SPACING = 42;
     private static final float CONTENT_X_START = 455;
 
-    public static void renderSidePanel(PdfPage page, @NotNull AnalysedPatientReport patientReport, boolean fullHeight, boolean fullContent) {
-
-        final SampleReport sampleReport = patientReport.sampleReport();
+    public static void renderSidePanel(PdfPage page, @NotNull final SampleReport sampleReport, boolean fullHeight, boolean fullContent) {
 
         // Draw background and markers
         final PdfCanvas canvas = new PdfCanvas(page.getLastContentStream(), page.getResources(), page.getDocument());
@@ -36,7 +30,7 @@ public final class SidePanel {
         int sideTextIndex = 0;
         Canvas cv = new Canvas(canvas, page.getDocument(), page.getPageSize());
 
-        cv.add(createSidePanelDiv(sideTextIndex++, "HMF sample id", patientReport.sampleReport().sampleId()));
+        cv.add(createSidePanelDiv(sideTextIndex++, "HMF sample id", sampleReport.sampleId()));
         cv.add(createSidePanelDiv(sideTextIndex++, "Report date", ReportResources.REPORT_DATE));
 
         // Add side panel content that is only on the summary page
