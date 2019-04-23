@@ -38,6 +38,16 @@ public class BachelorApplication {
     ExternalDBFilters mFilterFileBuilder;
     private Map<String, Program> mConfigMap;
 
+    // config options
+    private static final String CONFIG_XML = "configXml";
+    private static final String RUN_MODE = "run_mode";
+    private static final String SAMPLE_DATA_DIR = "sample_data_dir";
+    private static final String OUTPUT_DIR = "output_dir";
+    private static final String SAMPLE = "sample";
+    private static final String LOG_DEBUG = "log_debug";
+    private static final String SAMPLE_LIST_FILE = "sample_list_file";
+    private static final String CREATE_FILTER_FILE = "create_filter_file";
+
     private static final String RUN_MODE_BOTH = "Both";
     private static final String RUN_MODE_VCF_PARSE = "VcfParse";
     private static final String RUN_MODE_POST_PROCESS = "PostProcess";
@@ -102,13 +112,13 @@ public class BachelorApplication {
 
         String runMode = cmd.getOptionValue(RUN_MODE, RUN_MODE_BOTH);
 
-        if(runMode == RUN_MODE_BOTH || runMode == RUN_MODE_VCF_PARSE)
+        if(runMode.equals(RUN_MODE_BOTH) || runMode.equals(RUN_MODE_VCF_PARSE))
         {
             mGermlineVcfParser = new GermlineVcfParser();
             mGermlineVcfParser.initialise(cmd, mConfigMap, sampleIds, sampleDataDirectory, outputDir);
         }
 
-        if(runMode == RUN_MODE_BOTH || runMode == RUN_MODE_POST_PROCESS)
+        if(runMode.equals(RUN_MODE_BOTH) || runMode.equals(RUN_MODE_POST_PROCESS))
         {
             mPostProcessor = new BachelorPostProcess();
             mPostProcessor.initialise(cmd, sampleIds, sampleDataDirectory);
@@ -201,20 +211,12 @@ public class BachelorApplication {
         return result;
     }
 
-    private static final String CONFIG_XML = "configXml";
-    private static final String RUN_MODE = "run_mode";
-    private static final String SAMPLE_DATA_DIR = "sample_data_dir";
-    private static final String OUTPUT_DIR = "output_dir";
-    private static final String SAMPLE = "sample";
-    private static final String LOG_DEBUG = "log_debug";
-    private static final String SAMPLE_LIST_FILE = "sample_list_file";
-    private static final String CREATE_FILTER_FILE = "create_filter_file";
-
     @NotNull
     private static Options createOptions()
     {
         final Options options = new Options();
 
+        options.addOption(RUN_MODE, true, "VcfParse, PostProcess or Both (default)");
         options.addOption(CONFIG_XML, true, "single config XML to run");
         options.addOption(OUTPUT_DIR, true, "output file");
         options.addOption(SAMPLE_DATA_DIR, true, "the run directory to look for inputs");
@@ -225,6 +227,7 @@ public class BachelorApplication {
 
         GermlineVcfParser.addCmdLineOptions(options);
         BachelorPostProcess.addCmdLineOptions(options);
+        BamCountReader.addCmdLineOptions(options);
 
         return options;
     }

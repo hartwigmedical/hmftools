@@ -130,8 +130,8 @@ public class AlleleDepthLoader
 
                 bachRecord.setTumorData(altCount, altCount + refCount);
 
-                LOGGER.debug("sample({} chr({}) position({}) matched, counts(ref={} alt={} depth={})",
-                        mSampleId, bachRecord.Chromosome, bachRecord.Position,
+                LOGGER.debug("chr({}) position({}) matched, counts(ref={} alt={} depth={})",
+                        bachRecord.Chromosome, bachRecord.Position,
                         bachRecord.getTumorRefCount(), bachRecord.getTumorAltCount(), bachRecord.getTumorReadDepth());
 
                 break;

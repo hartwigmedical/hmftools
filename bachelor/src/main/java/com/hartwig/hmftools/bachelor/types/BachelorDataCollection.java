@@ -30,6 +30,7 @@ public class BachelorDataCollection
     public BachelorDataCollection()
     {
         mGermlineVariants = Lists.newArrayList();
+        mLimitedSampleList = Lists.newArrayList();
         mFileIndex = 0;
         mFileReader = null;
     }

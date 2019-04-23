@@ -63,6 +63,7 @@ public class BachelorPostProcess
     private IndexedFastaSequenceFile mIndexedFastaSequenceFile;
     private BufferedWriter mWriter;
     private AlleleDepthLoader mAllelDepthLoader;
+    private BamCountReader mBamCountReader;
 
     private CommandLine mCmdLineArgs;
     private List<String> mSampleIds;
@@ -73,7 +74,7 @@ public class BachelorPostProcess
     private List<BachelorGermlineVariant> mBachRecords;
 
     // config items
-    private static final String REF_GENOME = "ref_genome";
+    public static final String REF_GENOME = "ref_genome";
     private static final String HIGH_CONFIDENCE_BED = "high_confidence_bed";
     private static final String WRITE_TO_DB = "write_to_db";
     private static final String PURPLE_DATA_DIRECTORY = "purple_data_dir"; // purple data directory within the sample fir
@@ -105,6 +106,7 @@ public class BachelorPostProcess
         mIsBatchMode = false;
         mUploadRecordsToDB = false;
         mAllelDepthLoader = null;
+        mBamCountReader = new BamCountReader();
         mWriter = null;
     }
 
@@ -137,6 +139,8 @@ public class BachelorPostProcess
 
                 LOGGER.debug("loading indexed fasta reference file");
                 mIndexedFastaSequenceFile = new IndexedFastaSequenceFile(new File(fastaFileLocation));
+
+                mBamCountReader.initialise(cmd, mIndexedFastaSequenceFile);
             }
             catch (IOException e)
             {
@@ -222,6 +226,8 @@ public class BachelorPostProcess
             {
                 return;
             }
+
+            mBamCountReader.readBamCounts(bachRecords);
         }
 
         Map<String, List<BachelorGermlineVariant>> sampleRecordsMap = Maps.newHashMap();
