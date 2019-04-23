@@ -617,7 +617,7 @@ The output VCF `TUMOR.purple.sv.vcf.gz` will contain all entries from the input 
 enriched with the following fields:
 
 Field | Count | Description 
---- | ---
+--- | --- | ---
 PURPLE_PLOIDY | 1 | Purity adjusted ploidy of variant
 PURPLE_AF | 1 or 2 |Purity adjusted allele frequency at each breakend
 PURPLE_CN | 1 or 2 | Purity adjusted copy number at each breakend
@@ -631,7 +631,7 @@ RECOVERY_FILTER | n | Filter prior to recovery
 The output VCF `TUMOR.purple.somatic.vcf.gz` will contain all entries from the input somatic VCF enriched with the following fields:
 
 Field | Count | Description 
---- | ---
+--- | --- | ---
 PURPLE_PLOIDY | 1 | Purity adjusted ploidy of variant
 PURPLE_AF | 1 | Purity adjusted allelic frequency of variant
 PURPLE_CN | 1 | Purity adjusted copy number surrounding variant location
