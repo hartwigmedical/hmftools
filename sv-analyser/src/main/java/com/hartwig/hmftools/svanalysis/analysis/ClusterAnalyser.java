@@ -252,7 +252,7 @@ public class ClusterAnalyser {
             }
 
             // more complicated clusters for now
-            boolean isSimple =  cluster.getSvCount() <= SMALL_CLUSTER_SIZE && cluster.isConsistent() && !cluster.hasVariedCopyNumber();
+            boolean isSimple = cluster.getSvCount() <= SMALL_CLUSTER_SIZE && cluster.isConsistent() && !cluster.hasVariedCopyNumber();
 
             // inferred links are used to classify simple resolved types involving 2-3 SVs
             mLinkFinder.findLinkedPairs(cluster, isSimple);

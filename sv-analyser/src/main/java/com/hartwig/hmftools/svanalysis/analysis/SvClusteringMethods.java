@@ -1076,13 +1076,10 @@ public class SvClusteringMethods {
             mDelDupCutoffLength = lengthsList.get(lengthIndex);
         }
 
+        mDelDupCutoffLength = min(max(mDelDupCutoffLength, MIN_SIMPLE_DUP_DEL_CUTOFF), MAX_SIMPLE_DUP_DEL_CUTOFF);
+
         LOGGER.debug("sample({}) simple dels and dups: count({}) cutoff-length({}) simpleArms({}) trimCount({})",
                 sampleId, lengthsList.size(), mDelDupCutoffLength, simpleArmCount, trimCount);
-
-        // LOGGER.info("DEL_DUP_CUTOFF: {},{},{},{},{}",
-        //        sampleId, lengthsList.size(), mDelDupCutoffLength, simpleArmCount, trimCount);
-
-        mDelDupCutoffLength = min(max(mDelDupCutoffLength, MIN_SIMPLE_DUP_DEL_CUTOFF), MAX_SIMPLE_DUP_DEL_CUTOFF);
     }
 
     public void populateChromosomeBreakendMap(final List<SvVarData> allVariants)
