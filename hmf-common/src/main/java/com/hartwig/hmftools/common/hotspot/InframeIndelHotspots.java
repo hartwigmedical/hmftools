@@ -24,7 +24,7 @@ import htsjdk.samtools.reference.ReferenceSequence;
 
 public class InframeIndelHotspots {
 
-    private final SAMConsumer samConsumer;
+    private final SAMSlicer samSlicer;
     private final IndexedFastaSequenceFile sequenceFile;
     private final ListMultimap<Chromosome, GenomeRegion> codingRegions;
 
@@ -32,14 +32,14 @@ public class InframeIndelHotspots {
             @NotNull final IndexedFastaSequenceFile sequenceFile) {
         this.sequenceFile = sequenceFile;
         this.codingRegions = Multimaps.fromRegions(regions);
-        this.samConsumer = new SAMConsumer(minMappingQuality, regions);
+        this.samSlicer = new SAMSlicer(minMappingQuality, regions);
     }
 
     @NotNull
     public Set<VariantHotspot> findInframeIndels(@NotNull final SamReader samReader) {
 
         final Set<VariantHotspot> indelsWithIncorrectRefs = Sets.newHashSet();
-        samConsumer.consume(samReader, record -> indelsWithIncorrectRefs.addAll(findInframeIndelsWithIncorrectRefs(record)));
+        samSlicer.slice(samReader, record -> indelsWithIncorrectRefs.addAll(findInframeIndelsWithIncorrectRefs(record)));
 
         return indelsWithIncorrectRefs.stream()
                 .filter(this::isInCodingRegions)

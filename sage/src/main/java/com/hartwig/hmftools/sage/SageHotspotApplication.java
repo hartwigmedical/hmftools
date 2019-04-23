@@ -18,7 +18,7 @@ import com.hartwig.hmftools.common.hotspot.HotspotEvidenceVCF;
 import com.hartwig.hmftools.common.hotspot.ImmutableHotspotEvidence;
 import com.hartwig.hmftools.common.hotspot.ImmutableVariantHotspotImpl;
 import com.hartwig.hmftools.common.hotspot.InframeIndelHotspots;
-import com.hartwig.hmftools.common.hotspot.SAMConsumer;
+import com.hartwig.hmftools.common.hotspot.SAMSlicer;
 import com.hartwig.hmftools.common.hotspot.VariantHotspot;
 import com.hartwig.hmftools.common.hotspot.VariantHotspotEvidence;
 import com.hartwig.hmftools.common.hotspot.VariantHotspotEvidenceFactory;
@@ -97,7 +97,7 @@ public class SageHotspotApplication implements AutoCloseable {
         allHotspots.addAll(knownHotspots);
         allHotspots.addAll(new InframeIndelHotspots(minMappingQuality, codingRegions, refSequence).findInframeIndels(tumorReader));
         final List<GenomeRegion> allHotspotRegions = asRegions(config.typicalReadDepth(), allHotspots);
-        final SAMConsumer hotspotRegionConsumer = new SAMConsumer(minMappingQuality, allHotspotRegions);
+        final SAMSlicer hotspotRegionConsumer = new SAMSlicer(minMappingQuality, allHotspotRegions);
 
         LOGGER.info("Looking for evidence of hotspots in tumor bam {}", tumorBam);
         final VariantHotspotEvidenceFactory tumorEvidenceFactory = new VariantHotspotEvidenceFactory(minBaseQuality);

@@ -39,7 +39,7 @@ public class VariantHotspotEvidenceFactory {
     }
 
     @NotNull
-    public List<VariantHotspotEvidence> evidence(@NotNull final SAMConsumer samConsumer,
+    public List<VariantHotspotEvidence> evidence(@NotNull final SAMSlicer samSlicer,
             @NotNull final IndexedFastaSequenceFile sequenceFile, @NotNull final SamReader samReader,
             @NotNull final Collection<VariantHotspot> hotspots) {
 
@@ -79,7 +79,7 @@ public class VariantHotspotEvidenceFactory {
             }
         };
 
-        samConsumer.consume(samReader, samRecordConsumer);
+        samSlicer.slice(samReader, samRecordConsumer);
         return new ArrayList<>(evidenceMap.values());
     }
 

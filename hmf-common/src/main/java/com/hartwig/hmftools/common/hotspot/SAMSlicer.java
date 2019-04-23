@@ -17,17 +17,17 @@ import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMRecordIterator;
 import htsjdk.samtools.SamReader;
 
-public class SAMConsumer {
+public class SAMSlicer {
 
     private final int minMappingQuality;
     private final Collection<GenomeRegion> regions;
 
-    public SAMConsumer(final int minMappingQuality, @NotNull final Collection<GenomeRegion> regions) {
+    public SAMSlicer(final int minMappingQuality, @NotNull final Collection<GenomeRegion> slices) {
         this.minMappingQuality = minMappingQuality;
-        this.regions = regions;
+        this.regions = slices;
     }
 
-    public void consume(@NotNull final SamReader samReader, @NotNull final Consumer<SAMRecord> consumer) {
+    public void slice(@NotNull final SamReader samReader, @NotNull final Consumer<SAMRecord> consumer) {
 
         final Set<String> processed = Sets.newHashSet();
         final QueryInterval[] queryIntervals = createIntervals(regions, samReader.getFileHeader());
