@@ -29,6 +29,7 @@ PURPLE supports both grch 37 and 38 reference assemblies.
   + [9. Determine a QC Status for the tumor](#9-determine-a-qc-status-for-the-tumor)
 * [Output](#output)
   + [Files](#files)
+  + [VCF](#VCF)
   + [Database](#database)
   + [CIRCOS](#circos)
   + [Charts](#charts)
@@ -605,6 +606,37 @@ MinRegionStartSupport | TELOMERE | Start support of the copy number region overl
 MinRegionEndSupport | INV | End support of the copy number region overlapping the gene with the minimum copy number
 MinRegionMethod | BAF_WEIGHTED | Method used to determine copy number of the copy number region overlapping the gene with the minimum copy number
 MinMinorAllelePloidy | 0 | Minimum allele ploidy found over the gene exons - useful for identifying LOH events  
+
+### VCF
+
+If structural or somatic VCF files have been supplied to PURPLE then corresponding VCFs will be written to the output directory enriched with purity information.
+
+####  Structural Variant VCF
+
+The output VCF `TUMOR.purple.sv.vcf.gz` will contain all entries from the input structural variant VCF and also any entries recovered from the recovery VCF 
+enriched with the following fields:
+
+Field | Count | Description 
+--- | ---
+PURPLE_PLOIDY | 1 | Purity adjusted ploidy of variant
+PURPLE_AF | 1 or 2 |Purity adjusted allele frequency at each breakend
+PURPLE_CN | 1 or 2 | Purity adjusted copy number at each breakend
+PURPLE_CN_CHANGE | 1 or 2 | Purity adjusted change in copy number at each breakend
+RECOVERED | 0 | Flag to indicate entry has been recovered
+RECOVERY_METHOD | 1 | Method used to recover, one of `UNBALANCED_SV_START`, `UNBALANCED_SV_END`, `UNSUPPORTED_BREAKEND_START`, `UNSUPPORTED_BREAKEND_END`
+RECOVERY_FILTER | n | Filter prior to recovery
+
+#### Somatic Variant VCF
+
+The output VCF `TUMOR.purple.somatic.vcf.gz` will contain all entries from the input somatic VCF enriched with the following fields:
+
+Field | Count | Description 
+--- | ---
+PURPLE_PLOIDY | 1 | Purity adjusted ploidy of variant
+PURPLE_AF | 1 | Purity adjusted allelic frequency of variant
+PURPLE_CN | 1 | Purity adjusted copy number surrounding variant location
+PURPLE_MAP | 1 | Purity adjusted minor allele ploidy surrounding variant location
+PURPLE_GERMLINE | 1 | Germline classification surrounding variant location, one of `HOM_DELETION`, `HET_DELETION`, `AMPLIFICATION`, `NOISE`, `DIPLOID`, `UNKNOWN`
 
 ### Database
 
