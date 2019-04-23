@@ -57,6 +57,18 @@ show_tick_labels    = no
         z = 20
     </highlight>
 
+    <highlight>
+		file = SUBSTITUTE_SAMPLE.segment.circos
+        <rules>
+            <rule>
+                condition = var(value) == 0
+                show = no
+            </rule>
+        </rules>
+    </highlight>
+
+
+
 </highlights>
 
 <image>
@@ -252,8 +264,6 @@ chromosomes_display_default = yes
 		</rules>
 	</plot>
 
-
-    SUBSTITUTE_HISTOGRAM
 
     SUBSTITUTE_TERMINAL
 

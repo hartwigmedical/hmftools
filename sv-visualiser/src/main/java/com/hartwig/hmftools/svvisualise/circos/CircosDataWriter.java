@@ -89,8 +89,8 @@ public class CircosDataWriter {
         final String textPath = filePrefix + ".text.circos";
         Files.write(new File(textPath).toPath(), createPositionText(debug, unadjustedLinks, links, segments));
 
-        final String histogramPath = filePrefix + ".histogram.circos";
-        Files.write(new File(histogramPath).toPath(), createHistogramTrack(contigLengths, segments));
+        final String histogramPath = filePrefix + ".segment.circos";
+        Files.write(new File(histogramPath).toPath(), createHistogramTrack(segments));
 
         final String karyotypePath = filePrefix + ".karyotype.circos";
         Files.write(new File(karyotypePath).toPath(), createKaryotypes(contigLengths));
@@ -369,7 +369,7 @@ public class CircosDataWriter {
                     .add(circosContig(link.endChromosome()))
                     .add(String.valueOf(link.endPosition()))
                     .add(String.valueOf(link.endPosition()))
-                    .add(colorPicker.transparentColor(link.clusterId(), link.chainId()) + "," + thickness(link.traverseCount()))
+                    .add(colorPicker.transparentColor(link.clusterId(), link.chainId()) + "," + thicknessString(link.traverseCount()))
                     .toString();
             result.add(linkString);
         }
@@ -385,7 +385,7 @@ public class CircosDataWriter {
 
             final GenomePosition startPosition = GenomePositions.create(segment.chromosome(), segment.start());
 
-            final double r1 = CircosConfigWriter.svTrackPixels(maxTracks, segment.track());
+            final double r1 = CircosConfigWriter.svTrackRelative(maxTracks, segment.track());
             int startLinkUsage = Links.linkTraverseCount(startPosition, links);
 
             if (startLinkUsage > 0) {
@@ -397,8 +397,8 @@ public class CircosDataWriter {
                 final String start = new StringJoiner(DELIMITER).add(circosContig(segment.chromosome()))
                         .add(String.valueOf(segment.start()))
                         .add(String.valueOf(segment.start()))
-                        .add("r1=" + r1 + "p," + colorPicker.transparentColor(segment.clusterId(), segment.chainId()) + "," + thickness(
-                                startLinkUsage - segmentsBelow))
+                        .add("r1=" + r1 + "r," + colorPicker.transparentColor(segment.clusterId(), segment.chainId()) + ","
+                                + thicknessString(startLinkUsage - segmentsBelow))
                         .toString();
                 result.add(start);
             }
@@ -414,23 +414,23 @@ public class CircosDataWriter {
                 final String end = new StringJoiner(DELIMITER).add(circosContig(segment.chromosome()))
                         .add(String.valueOf(segment.end()))
                         .add(String.valueOf(segment.end()))
-                        .add("r1=" + r1 + "p," + colorPicker.transparentColor(segment.clusterId(), segment.chainId()) + "," + thickness(
-                                endLinkUsage - segmentsBelow))
+                        .add("r1=" + r1 + "r," + colorPicker.transparentColor(segment.clusterId(), segment.chainId()) + ","
+                                + thicknessString(endLinkUsage - segmentsBelow))
                         .toString();
                 result.add(end);
             }
 
         }
 
-        double rTrack1 = CircosConfigWriter.svTrackPixels(maxTracks, 0);
+        double rTrack1 = CircosConfigWriter.svTrackRelative(maxTracks, 0);
         for (Link link : links) {
             if (link.connectorsOnly()) {
                 if (link.isValidStart()) {
                     final String start = new StringJoiner(DELIMITER).add(circosContig(link.startChromosome()))
                             .add(String.valueOf(link.startPosition()))
                             .add(String.valueOf(link.startPosition()))
-                            .add("r1=" + rTrack1 + "p," + colorPicker.transparentColor(link.clusterId(), link.chainId()) + "," + thickness(
-                                    link.traverseCount()))
+                            .add("r1=" + rTrack1 + "r," + colorPicker.transparentColor(link.clusterId(), link.chainId()) + ","
+                                    + thicknessString(link.traverseCount()))
                             .toString();
                     result.add(start);
                 }
@@ -439,8 +439,8 @@ public class CircosDataWriter {
                     final String end = new StringJoiner(DELIMITER).add(circosContig(link.endChromosome()))
                             .add(String.valueOf(link.endPosition()))
                             .add(String.valueOf(link.endPosition()))
-                            .add("r1=" + rTrack1 + "p," + colorPicker.transparentColor(link.clusterId(), link.chainId()) + "," + thickness(
-                                    link.traverseCount()))
+                            .add("r1=" + rTrack1 + "r," + colorPicker.transparentColor(link.clusterId(), link.chainId()) + ","
+                                    + thicknessString(link.traverseCount()))
                             .toString();
                     result.add(end);
                 }
@@ -471,37 +471,27 @@ public class CircosDataWriter {
     }
 
     @NotNull
-    private List<String> createHistogramTrack(@NotNull final Map<String, Integer> contigLengths, @NotNull final List<Segment> segments) {
+    private List<String> createHistogramTrack(@NotNull final List<Segment> segments) {
 
         final List<String> result = Lists.newArrayList();
-        for (Segment segment : segments) {
+        for (final Segment segment : segments) {
 
-            final int contigLength = contigLengths.get(segment.chromosome());
+            if (segment.track() > 0) {
 
-            final String start = new StringJoiner(DELIMITER).add(circosContig(segment.chromosome()))
-                    .add(String.valueOf(1))
-                    .add(String.valueOf(segment.start()))
-                    .add(String.valueOf(segment.track()))
-                    .add("thickness=0")
-                    .toString();
-            result.add(start);
+                double r0 = CircosConfigWriter.svTrackRelative(maxTracks, segment.track());
+                String r0String = "r0=" + r0 + "r";
+                double thickness = thicknessPixels(segment.traverseCount());
+                String r1String = "r1=" + r0 + "r+" + thickness + "p";
 
-            final String entry = new StringJoiner(DELIMITER).add(circosContig(segment.chromosome()))
-                    .add(String.valueOf(segment.start()))
-                    .add(String.valueOf(segment.end()))
-                    .add(String.valueOf(segment.track()))
-                    .add(colorPicker.color(segment.clusterId(), segment.chainId()) + "," + thickness(segment.traverseCount()))
-                    .toString();
-            result.add(entry);
+                final String entry = new StringJoiner(DELIMITER).add(circosContig(segment.chromosome()))
+                        .add(String.valueOf(segment.start()))
+                        .add(String.valueOf(segment.end()))
+                        .add(String.valueOf(segment.track()))
+                        .add("fill_" + colorPicker.color(segment.clusterId(), segment.chainId()) + "," + r0String + "," + r1String)
+                        .toString();
+                result.add(entry);
 
-            final String end = new StringJoiner(DELIMITER).add(circosContig(segment.chromosome()))
-                    .add(String.valueOf(segment.end()))
-                    .add(String.valueOf(contigLength))
-                    .add(String.valueOf(segment.track()))
-                    .add("thickness=0")
-                    .toString();
-            result.add(end);
-
+            }
         }
 
         return result;
@@ -583,9 +573,12 @@ public class CircosDataWriter {
     }
 
     @NotNull
-    private static String thickness(long usage) {
-        double thickness = 2 +  1.5 * Math.log(usage) / Math.log(2);
-        return "thickness=" + thickness;
+    private static String thicknessString(long usage) {
+        return "thickness=" + thicknessPixels(usage);
+    }
+
+    private static double thicknessPixels(long usage) {
+        return 2 + 1.5 * Math.log(usage) / Math.log(2);
     }
 
     @NotNull
