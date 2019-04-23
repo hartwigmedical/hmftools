@@ -16,8 +16,6 @@ public class CircosConfigWriter {
 
     static final double PIXELS = 1500;
 
-    private static final double RADIUS_PIXELS = (0.9 * PIXELS - 50);
-
     static final double EXON_INNER_RADIUS = 0.9;
     static final double EXON_OUTER_RADIUS = 0.975;
 
@@ -45,14 +43,11 @@ public class CircosConfigWriter {
         return configPath;
     }
 
-    public static double svTrackPixels(int maxTracks, int track) {
-        double start = SEGMENT_INNER_RADIUS * RADIUS_PIXELS;
-        double end = SEGMENT_OUTER_RADIUS * RADIUS_PIXELS;
-
-        double difference = end - start;
+    public static double svTrackRelative(int maxTracks, int track) {
+        double difference = SEGMENT_OUTER_RADIUS - SEGMENT_INNER_RADIUS;
         double singleTrack = difference / maxTracks;
 
-        return start + track * singleTrack;
+        return SEGMENT_INNER_RADIUS + track * singleTrack;
     }
 
     public void writeConfig(int chromosomeCount, int maxTracks, final double maxCopyNumber, final double maxMinorAllelePloidy) throws IOException {
@@ -67,9 +62,6 @@ public class CircosConfigWriter {
         final String template =
                 readResource("/visualisation/cluster.template")
                         .replaceAll("SUBSTITUTE_IDEOGRAM_SPACING", chromosomeCount > 1 ? "0.005r" : "20u")
-
-                        .replaceAll("SUBSTITUTE_HISTOGRAM", histogramPlots(maxTracks))
-                        .replaceAll("SUBSTITUTE_TERMINAL", terminalTexts(maxTracks))
 
                         .replaceAll("SUBSTITUTE_EXON_INNER_RADIUS", String.valueOf(EXON_INNER_RADIUS))
                         .replaceAll("SUBSTITUTE_EXON_OUTER_RADIUS", String.valueOf(EXON_OUTER_RADIUS))
@@ -98,33 +90,6 @@ public class CircosConfigWriter {
                         .replaceAll("SUBSTITUTE_SAMPLE", sample);
 
         Files.write(new File(configPath).toPath(), template.getBytes(charset));
-    }
-
-    @NotNull
-    private String histogramPlots(int maxTracks) throws IOException {
-        final StringBuilder builder = new StringBuilder();
-
-        final String histogramTemplate = readResource("/visualisation/cluster.template.histogram");
-        for (int i = 1; i <= maxTracks; i++) {
-            final String level = histogramTemplate.replaceAll("SUBSTITUTE_CONDITION", String.valueOf(i));
-            builder.append(level);
-        }
-
-        return builder.toString();
-    }
-
-    @NotNull
-    private String terminalTexts(int maxTracks) throws IOException {
-        final StringBuilder builder = new StringBuilder();
-
-        final String template = readResource("/visualisation/cluster.template.terminal");
-        for (int i = 1; i <= maxTracks; i++) {
-            final String level = template.replaceAll("SUBSTITUTE_TERMINAL_CONDITION", String.valueOf(i))
-                    .replaceAll("SUBSTITUTE_TERMINAL_RADIUS", String.valueOf(svTrackPixels(maxTracks, i) - 24));
-            builder.append(level);
-        }
-
-        return builder.toString();
     }
 
     @NotNull
