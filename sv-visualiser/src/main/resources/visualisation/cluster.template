@@ -264,9 +264,6 @@ chromosomes_display_default = yes
 		</rules>
 	</plot>
 
-
-    SUBSTITUTE_TERMINAL
-
 	# -----------------------------------------------------------
 	# Distances Text
 	<plot>

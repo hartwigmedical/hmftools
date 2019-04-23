@@ -110,9 +110,6 @@ public class CircosDataWriter {
         final String mapPath = filePrefix + ".map.circos";
         Files.write(new File(mapPath).toPath(), createMinorAllelePloidy(alterations));
 
-        final String terminals = filePrefix + ".terminals.circos";
-        Files.write(new File(terminals).toPath(), createTerminals(segments));
-
         final String fragile = filePrefix + ".fragile.circos";
         Files.write(new File(fragile).toPath(), highlights(fragileSites));
 
@@ -255,34 +252,6 @@ public class CircosDataWriter {
     }
 
     @NotNull
-    private List<String> createTerminals(@NotNull final List<Segment> segments) {
-        final List<String> result = Lists.newArrayList();
-        for (final Segment segment : segments) {
-            if (segment.startTerminal() != SegmentTerminal.NONE) {
-                final String cna = new StringJoiner(DELIMITER).add(circosContig(segment.chromosome()))
-                        .add(String.valueOf(segment.start()))
-                        .add(String.valueOf(segment.start()))
-                        .add(String.valueOf(segment.track() + (segment.startTerminal() == SegmentTerminal.TELOMERE ? "T" : "C")))
-                        .add(colorPicker.color(segment.clusterId(), segment.chainId()))
-                        .toString();
-                result.add(cna);
-            }
-
-            if (segment.endTerminal() != SegmentTerminal.NONE) {
-                final String cna = new StringJoiner(DELIMITER).add(circosContig(segment.chromosome()))
-                        .add(String.valueOf(segment.end()))
-                        .add(String.valueOf(segment.end()))
-                        .add(String.valueOf(segment.track() + (segment.endTerminal() == SegmentTerminal.TELOMERE ? "T" : "C")))
-                        .add(colorPicker.color(segment.clusterId(), segment.chainId()))
-                        .toString();
-                result.add(cna);
-            }
-        }
-
-        return result;
-    }
-
-    @NotNull
     private List<String> createCNA(@NotNull final List<CopyNumberAlteration> alterations) {
         final List<String> result = Lists.newArrayList();
         for (CopyNumberAlteration alteration : alterations) {
@@ -317,15 +286,19 @@ public class CircosDataWriter {
         final List<String> result = Lists.newArrayList();
         for (Segment segment : segments) {
 
+            if (segment.track() == 0) {
+                continue;
+            }
+
             final String colorOption = colorPicker.color(segment.clusterId(), segment.chainId());
 
             final GenomePosition startPosition = GenomePositions.create(segment.chromosome(), segment.start());
             final boolean isStartFoldback =
                     Links.findStartLink(startPosition, links).filter(x -> x.startInfo().equals("FOLDBACK")).isPresent()
                             || Links.findEndLink(startPosition, links).filter(x -> x.endInfo().equals("FOLDBACK")).isPresent();
-            String startGlyph = isStartFoldback ? "glyph=triangle,glyph_size=20" : "glyph=circle";
+            String startGlyph = isStartFoldback ? "glyph=triangle" : "glyph=circle";
             if (segment.startTerminal() != SegmentTerminal.NONE) {
-                startGlyph = "glyph=square,glyph_size=1";
+                startGlyph = "glyph=square";
             }
 
             final StringJoiner start = new StringJoiner(DELIMITER).add(circosContig(segment.chromosome()))
@@ -341,9 +314,9 @@ public class CircosDataWriter {
                             endPosition,
                             links).filter(x -> x.endInfo().equals("FOLDBACK")).isPresent();
 
-            String endGlyph = isEndFoldback ? "glyph=triangle,glyph_size=20" : "glyph=circle";
+            String endGlyph = isEndFoldback ? "glyph=triangle" : "glyph=circle";
             if (segment.endTerminal() != SegmentTerminal.NONE) {
-                endGlyph = "glyph=square,glyph_size=1";
+                endGlyph = "glyph=square";
             }
 
             final StringJoiner end = new StringJoiner(DELIMITER).add(circosContig(segment.chromosome()))
