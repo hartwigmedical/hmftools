@@ -550,8 +550,8 @@ public class CircosDataWriter {
         return "thickness=" + thicknessPixels(usage);
     }
 
-    private static double thicknessPixels(long usage) {
-        return 2 + 1.5 * Math.log(usage) / Math.log(2);
+    static double thicknessPixels(long usage) {
+        return Math.max(1, 2 + 1.5 * Math.log(usage) / Math.log(2));
     }
 
     @NotNull
