@@ -43,7 +43,7 @@ public final class FilterGermlineVariants {
                         filterBiallelic = true;
                     }
                     for (GeneCopyNumber geneCopyNumber : geneCopyNumbers) { // min copy number in tumer = 1 (2nd hit SV)
-                        if (Doubles.equal(geneCopyNumber.maxCopyNumber(), 1) && geneCopyNumber.gene().equals(germlineVariant.gene())) { // filter for gene copy number
+                        if (Doubles.equal(geneCopyNumber.maxCopyNumber(), 1.0) && geneCopyNumber.gene().equals(germlineVariant.gene())) { // filter for gene copy number
                             filterMinCopyNumberTumor = true;
                         }
                     }
