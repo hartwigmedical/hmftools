@@ -9,16 +9,21 @@ import static com.hartwig.hmftools.common.sam.SAMRecords.getBaseQuality;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Consumer;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ListMultimap;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.chromosome.Chromosome;
 import com.hartwig.hmftools.common.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.collect.Multimaps;
+import com.hartwig.hmftools.common.region.GenomeRegion;
+import com.hartwig.hmftools.common.region.GenomeRegionBuilder;
 import com.hartwig.hmftools.common.sam.SAMRecords;
 
 import org.jetbrains.annotations.NotNull;
@@ -30,18 +35,20 @@ import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 public class VariantHotspotEvidenceFactory {
 
     private static final int SNV_MNV_BUFFER = 1;
+    private static final int DEFAULT_TYPICAL_READ_LENGTH = 151;
 
     private final int minBaseQuality;
+    private final SAMSlicer samSlicer;
+    private final Collection<VariantHotspot> hotspots;
 
-    public VariantHotspotEvidenceFactory(int minBaseQuality) {
-
+    public VariantHotspotEvidenceFactory(int minMappingQuality, int minBaseQuality, @NotNull final Set<VariantHotspot> hotspots) {
         this.minBaseQuality = minBaseQuality;
+        this.hotspots = hotspots;
+        samSlicer = new SAMSlicer(minMappingQuality, asRegions(hotspots));
     }
 
     @NotNull
-    public List<VariantHotspotEvidence> evidence(@NotNull final SAMConsumer samConsumer,
-            @NotNull final IndexedFastaSequenceFile sequenceFile, @NotNull final SamReader samReader,
-            @NotNull final Collection<VariantHotspot> hotspots) {
+    public List<VariantHotspotEvidence> evidence(@NotNull final IndexedFastaSequenceFile sequenceFile, @NotNull final SamReader samReader) {
 
         final Map<VariantHotspot, String> refSequenceMap = Maps.newHashMap();
         final Map<VariantHotspot, ModifiableVariantHotspotEvidence> evidenceMap = Maps.newHashMap();
@@ -79,7 +86,7 @@ public class VariantHotspotEvidenceFactory {
             }
         };
 
-        samConsumer.consume(samReader, samRecordConsumer);
+        samSlicer.slice(samReader, samRecordConsumer);
         return new ArrayList<>(evidenceMap.values());
     }
 
@@ -297,6 +304,20 @@ public class VariantHotspotEvidenceFactory {
                 .setRefSupport(0)
                 .setIndelSupport(0)
                 .setReadDepth(0);
+    }
+
+    @NotNull
+    private List<GenomeRegion> asRegions(@NotNull final Set<VariantHotspot> allHotspots) {
+
+        final Map<String, GenomeRegionBuilder> builders = Maps.newHashMap();
+        allHotspots.forEach(x -> builders.computeIfAbsent(x.chromosome(), key -> new GenomeRegionBuilder(key, DEFAULT_TYPICAL_READ_LENGTH))
+                .addPosition(x.position()));
+
+        final List<GenomeRegion> results = Lists.newArrayList();
+        builders.values().forEach(x -> results.addAll(x.build()));
+
+        Collections.sort(results);
+        return results;
     }
 
 }

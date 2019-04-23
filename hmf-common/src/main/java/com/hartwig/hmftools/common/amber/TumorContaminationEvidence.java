@@ -7,7 +7,7 @@ import java.util.concurrent.Callable;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.hotspot.SAMConsumer;
+import com.hartwig.hmftools.common.hotspot.SAMSlicer;
 import com.hartwig.hmftools.common.position.GenomePositionSelector;
 import com.hartwig.hmftools.common.position.GenomePositionSelectorFactory;
 import com.hartwig.hmftools.common.region.GenomeRegion;
@@ -28,7 +28,7 @@ public class TumorContaminationEvidence implements Callable<TumorContaminationEv
     private final Map<BaseDepth, ModifiableBaseDepth> evidenceMap;
     private final GenomePositionSelector<ModifiableBaseDepth> selector;
     private final BaseDepthFactory bafFactory;
-    private final SAMConsumer supplier;
+    private final SAMSlicer supplier;
 
     public TumorContaminationEvidence(int typicalReadDepth, int minMappingQuality, int minBaseQuality, final String contig,
             final String bamFile, final SamReaderFactory samReaderFactory, final List<BaseDepth> baseDepths) {
@@ -48,7 +48,7 @@ public class TumorContaminationEvidence implements Callable<TumorContaminationEv
 
         final GenomeRegionBuilder builder = new GenomeRegionBuilder(contig, typicalReadDepth);
         baseDepths.forEach(x -> builder.addPosition(x.position()));
-        this.supplier = new SAMConsumer(minMappingQuality, builder.build());
+        this.supplier = new SAMSlicer(minMappingQuality, builder.build());
     }
 
     @NotNull
@@ -74,7 +74,7 @@ public class TumorContaminationEvidence implements Callable<TumorContaminationEv
     public TumorContaminationEvidence call() throws Exception {
 
         try (SamReader reader = samReaderFactory.open(new File(bamFile))) {
-            supplier.consume(reader, this::record);
+            supplier.slice(reader, this::record);
         }
 
         return this;

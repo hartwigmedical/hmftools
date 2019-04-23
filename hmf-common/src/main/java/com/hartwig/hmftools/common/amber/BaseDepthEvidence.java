@@ -6,7 +6,7 @@ import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.collect.Multimaps;
-import com.hartwig.hmftools.common.hotspot.SAMConsumer;
+import com.hartwig.hmftools.common.hotspot.SAMSlicer;
 import com.hartwig.hmftools.common.position.GenomePositionSelector;
 import com.hartwig.hmftools.common.position.GenomePositionSelectorFactory;
 import com.hartwig.hmftools.common.region.GenomeRegion;
@@ -27,7 +27,7 @@ public class BaseDepthEvidence implements Callable<BaseDepthEvidence> {
     private final List<ModifiableBaseDepth> evidence;
     private final GenomePositionSelector<ModifiableBaseDepth> selector;
     private final BaseDepthFactory bafFactory;
-    private final SAMConsumer supplier;
+    private final SAMSlicer supplier;
 
     public BaseDepthEvidence(int typicalReadDepth, int minMappingQuality, int minBaseQuality, final String contig, final String bamFile,
             final SamReaderFactory samReaderFactory, final List<GenomeRegion> bafRegions) {
@@ -41,7 +41,7 @@ public class BaseDepthEvidence implements Callable<BaseDepthEvidence> {
 
         this.evidence = bafRegions.stream().map(BaseDepthFactory::create).collect(Collectors.toList());
         this.selector = GenomePositionSelectorFactory.create(Multimaps.fromPositions(evidence));
-        this.supplier = new SAMConsumer(minMappingQuality, bafRegions1);
+        this.supplier = new SAMSlicer(minMappingQuality, bafRegions1);
     }
 
     @NotNull
@@ -58,7 +58,7 @@ public class BaseDepthEvidence implements Callable<BaseDepthEvidence> {
     public BaseDepthEvidence call() throws Exception {
 
         try (SamReader reader = samReaderFactory.open(new File(bamFile))) {
-            supplier.consume(reader, this::record);
+            supplier.slice(reader, this::record);
         }
 
         return this;

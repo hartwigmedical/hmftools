@@ -8,6 +8,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import java.util.Collections;
+
 import com.hartwig.hmftools.common.sam.SAMRecordsTest;
 
 import org.jetbrains.annotations.NotNull;
@@ -18,7 +20,7 @@ import htsjdk.samtools.SAMRecord;
 public class VariantHotspotEvidenceFactoryTest {
 
     private static final int MIN_BASE_QUALITY = 13;
-    private VariantHotspotEvidenceFactory victim = new VariantHotspotEvidenceFactory(MIN_BASE_QUALITY);
+    private VariantHotspotEvidenceFactory victim = new VariantHotspotEvidenceFactory(0, MIN_BASE_QUALITY, Collections.emptySet());
 
     private static final String MNV_REF_SEQUENCE = "GATACAA";
     private static final VariantHotspot MNV =

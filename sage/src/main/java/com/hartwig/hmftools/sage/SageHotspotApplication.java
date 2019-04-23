@@ -10,7 +10,6 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.hotspot.HotspotEvidence;
 import com.hartwig.hmftools.common.hotspot.HotspotEvidenceType;
@@ -18,14 +17,12 @@ import com.hartwig.hmftools.common.hotspot.HotspotEvidenceVCF;
 import com.hartwig.hmftools.common.hotspot.ImmutableHotspotEvidence;
 import com.hartwig.hmftools.common.hotspot.ImmutableVariantHotspotImpl;
 import com.hartwig.hmftools.common.hotspot.InframeIndelHotspots;
-import com.hartwig.hmftools.common.hotspot.SAMConsumer;
 import com.hartwig.hmftools.common.hotspot.VariantHotspot;
 import com.hartwig.hmftools.common.hotspot.VariantHotspotEvidence;
 import com.hartwig.hmftools.common.hotspot.VariantHotspotEvidenceFactory;
 import com.hartwig.hmftools.common.hotspot.VariantHotspotFile;
 import com.hartwig.hmftools.common.region.BEDFileLoader;
 import com.hartwig.hmftools.common.region.GenomeRegion;
-import com.hartwig.hmftools.common.region.GenomeRegionBuilder;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -76,7 +73,6 @@ public class SageHotspotApplication implements AutoCloseable {
         final String hotspotPath = config.knownHotspotPath();
         final String tumorBam = config.tumorBamPath();
         final String referenceBam = config.referenceBamPath();
-        final String refGenome = config.refGenomePath();
         final String codingRegionBedFile = config.codingRegionBedPath();
         final String outputVCF = config.outputFile();
         final String referenceSample = config.normal();
@@ -84,7 +80,8 @@ public class SageHotspotApplication implements AutoCloseable {
         final int minMappingQuality = config.minMappingQuality();
         final int minBaseQuality = config.minBaseQuality();
 
-        final IndexedFastaSequenceFile refSequence = new IndexedFastaSequenceFile(new File(refGenome));
+        final File refGenomeFile = new File(config.refGenomePath());
+        final IndexedFastaSequenceFile refSequence = new IndexedFastaSequenceFile(refGenomeFile);
 
         LOGGER.info("Loading coding regions from {}", codingRegionBedFile);
         final Collection<GenomeRegion> codingRegions = BEDFileLoader.fromBedFile(codingRegionBedFile).values();
@@ -96,18 +93,15 @@ public class SageHotspotApplication implements AutoCloseable {
         final Set<VariantHotspot> allHotspots = Sets.newHashSet();
         allHotspots.addAll(knownHotspots);
         allHotspots.addAll(new InframeIndelHotspots(minMappingQuality, codingRegions, refSequence).findInframeIndels(tumorReader));
-        final List<GenomeRegion> allHotspotRegions = asRegions(config.typicalReadDepth(), allHotspots);
-        final SAMConsumer hotspotRegionConsumer = new SAMConsumer(minMappingQuality, allHotspotRegions);
 
         LOGGER.info("Looking for evidence of hotspots in tumor bam {}", tumorBam);
-        final VariantHotspotEvidenceFactory tumorEvidenceFactory = new VariantHotspotEvidenceFactory(minBaseQuality);
-        final Map<VariantHotspot, VariantHotspotEvidence> tumorEvidence =
-                asMap(tumorEvidenceFactory.evidence(hotspotRegionConsumer, refSequence, tumorReader, allHotspots));
+        final VariantHotspotEvidenceFactory hotspotEvidenceFactory =
+                new VariantHotspotEvidenceFactory(minMappingQuality, minBaseQuality, allHotspots);
+        final Map<VariantHotspot, VariantHotspotEvidence> tumorEvidence = asMap(hotspotEvidenceFactory.evidence(refSequence, tumorReader));
 
         LOGGER.info("Looking for evidence of hotspots in reference bam {}", referenceBam);
-        final VariantHotspotEvidenceFactory referenceEvidenceFactory = new VariantHotspotEvidenceFactory(minBaseQuality);
         final Map<VariantHotspot, VariantHotspotEvidence> referenceEvidence =
-                asMap(referenceEvidenceFactory.evidence(hotspotRegionConsumer, refSequence, referenceReader, allHotspots));
+                asMap(hotspotEvidenceFactory.evidence(refSequence, referenceReader));
 
         final List<HotspotEvidence> evidence = Lists.newArrayList();
         for (Map.Entry<VariantHotspot, VariantHotspotEvidence> entry : tumorEvidence.entrySet()) {
@@ -128,20 +122,6 @@ public class SageHotspotApplication implements AutoCloseable {
                 config.minSnvQuality(),
                 config.minIndelQuality()).write(outputVCF, evidence);
 
-    }
-
-    @NotNull
-    private List<GenomeRegion> asRegions(int typicalReadDepth, @NotNull final Set<VariantHotspot> allHotspots) {
-
-        final Map<String, GenomeRegionBuilder> builders = Maps.newHashMap();
-        allHotspots.forEach(x -> builders.computeIfAbsent(x.chromosome(), key -> new GenomeRegionBuilder(key, typicalReadDepth))
-                .addPosition(x.position()));
-
-        final List<GenomeRegion> results = Lists.newArrayList();
-        builders.values().forEach(x -> results.addAll(x.build()));
-
-        Collections.sort(results);
-        return results;
     }
 
     @NotNull
