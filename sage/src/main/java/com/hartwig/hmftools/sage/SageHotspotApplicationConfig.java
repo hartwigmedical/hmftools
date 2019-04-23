@@ -128,10 +128,6 @@ public interface SageHotspotApplicationConfig {
 
     double minIndelVAF();
 
-    default int typicalReadLength() {
-        return DEFAULT_TYPICAL_READ_LENGTH;
-    }
-
     @NotNull
     static SageHotspotApplicationConfig createConfig(@NotNull final CommandLine cmd) throws ParseException {
         final StringJoiner missingJoiner = new StringJoiner(", ");
