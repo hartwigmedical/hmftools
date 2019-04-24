@@ -56,7 +56,7 @@ public class LimsTest {
                 .requesterEmail(requesterEmail)
                 .requesterName(requesterName)
                 .shallowSeq(0)
-                .germlineFindings("1")
+                .germlineFindings(Strings.EMPTY)
                 .hospitalPaSampleId(Strings.EMPTY)
                 .build();
 
@@ -84,8 +84,8 @@ public class LimsTest {
         assertEquals(primaryTumor, lims.primaryTumor(SAMPLE));
         assertEquals(labSopVersions, lims.labProcedures(SAMPLE));
 
-        assertNull(lims.germlineFindigsWIDE(SAMPLE));
-        assertNull(lims.hospitalPatientId(SAMPLE));
+        assertEquals(LimsInformedConsent.UNKNOWN, lims.germlineFindigsWIDE(SAMPLE));
+        assertEquals("", lims.hospitalPaSampleIdWIDE(SAMPLE));
     }
 
     @Test

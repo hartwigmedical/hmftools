@@ -222,6 +222,7 @@ public class Lims {
         return "N/A";
     }
 
+    @Nullable
     public LimsInformedConsent germlineFindigsWIDE(@NotNull String sample) {
         LimsJsonSampleData sampleData = dataPerSample.get(sample);
         if (sampleData != null) {
@@ -232,7 +233,7 @@ public class Lims {
         }
     }
 
-    @Nullable
+    @NotNull
     public String hospitalPaSampleIdWIDE(@NotNull String sample){
         LimsJsonSampleData sampleData = dataPerSample.get(sample);
         if (sampleData != null) {
