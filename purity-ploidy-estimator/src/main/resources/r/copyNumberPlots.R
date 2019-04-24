@@ -2,13 +2,11 @@ library(ggplot2)
 library(dplyr)
 theme_set(theme_bw())
 
-
 # Parse the arguments
 args <- commandArgs(trailing=T)
 sample <- args[1]
 purpleDir <- args[2]
 plotDir   <- args[3]
-
 
 purity_ploidy_range_plot <- function(range) {
 

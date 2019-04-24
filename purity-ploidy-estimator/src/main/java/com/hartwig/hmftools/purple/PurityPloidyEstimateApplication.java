@@ -230,7 +230,7 @@ public class PurityPloidyEstimateApplication {
                         copyNumbers,
                         enrichedSomatics);
 
-                new RCharts(config, chartConfig).generatePlots();
+                new RCharts(configSupplier).generatePlots();
             }
 
             LOGGER.info("Writing circos data to: {}", chartConfig.circosDirectory());
