@@ -117,7 +117,6 @@ public abstract class QCFailPage {
                 cmp.text("The project name of sample is " + sampleReport().projectName() + " and the submissionId ID is "
                         + sampleReport().submissionId()).setStyle(fontStyle()),
                 internalBarcodeText(),
-                cmp.text("The tissue number of pathology is: " + sampleReport().hospitalPaSampleIdWIDE()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
                 pathologyText(),
                 shallowSeqText(),
@@ -176,6 +175,7 @@ public abstract class QCFailPage {
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
                 cmp.text("The HMF sample ID is " + sampleReport().sampleId()).setStyle(fontStyle()),
                 internalBarcodeText(),
+                cmp.text("The tissue number of pathology is: " + sampleReport().hospitalPaSampleIdWIDE()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
                 pathologyText(),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
