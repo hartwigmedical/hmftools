@@ -38,7 +38,7 @@ PURPLE supports both grch 37 and 38 reference assemblies.
 
 ## R Dependencies
 
-PURPLE depends on ggplot2 and dplyr to generate output charts. These can be installed with the following R commands.  
+PURPLE depends on a number of bioconductor packages to generate output charts. These can be installed with the following R commands.  
 
 ```
 library(BiocManager)
