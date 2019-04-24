@@ -136,7 +136,6 @@ public class DetailsAndDisclaimerChapter implements ReportChapter {
         try {
             final Image signatureImage = new Image(ImageDataFactory.create(signaturePath));
             signatureImage.setMaxHeight(60);
-            signatureImage.setMarginTop(-15); // Set negative margin so the signature slightly overlaps the signature text
             signatureImage.setMarginLeft(10);
             div.add(signatureImage);
         } catch (MalformedURLException e) {
