@@ -75,7 +75,7 @@ public abstract class SampleDetailsPage {
 
         final List<String> lines = Lists.newArrayList("The samples have been sequenced at " + Commons.HARTWIG_ADDRESS,
                 "The samples have been analyzed by Next Generation Sequencing",
-                "The HMF sample ID is: " + sampleReport().sampleId(),
+                "The HMF sample ID is: " + sampleReport().sampleId() + tissueNumberPA(sampleId),
                 "The pathology tumor percentage for this sample is " + sampleReport().pathologyTumorPercentage(),
                 "This experiment is performed on the tumor sample which arrived on " + formattedDate(sampleReport().tumorArrivalDate())
                         + " with internal tumor barcode " + sampleReport().barcodeTumor(),
@@ -91,12 +91,16 @@ public abstract class SampleDetailsPage {
             lines.add("The project name of sample is: " + sampleReport().projectName() + " and the submission ID is "
                     + sampleReport().submissionId());
             lines.add("The requester is: " + sampleReport().requesterName() + " (" + sampleReport().requesterEmail() + ")");
-        } else if (type == LimsSampleType.WIDE) {
-            lines.add("The tissue number of pathology is: " + sampleReport().hospitalPaSampleIdWIDE());
         }
 
         comments().ifPresent(comments -> lines.add("Comments: " + comments));
 
         return toList("Sample details", lines);
+    }
+
+    @NotNull
+    private String tissueNumberPA(@NotNull String sampleId) {
+        LimsSampleType type = LimsSampleType.fromSampleId(sampleId);
+        return type == LimsSampleType.WIDE ? " and the tissue number of pathology is: " + sampleReport().hospitalPaSampleIdWIDE() : "";
     }
 }
