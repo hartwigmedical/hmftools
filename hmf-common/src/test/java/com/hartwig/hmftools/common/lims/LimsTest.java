@@ -102,6 +102,8 @@ public class LimsTest {
         assertEquals("N/A", lims.purityShallowSeq("DoesNotExist"));
         assertEquals("N/A", lims.primaryTumor("DoesNotExist"));
         assertEquals("N/A", lims.labProcedures("DoesNotExist"));
+        assertEquals("not known", lims.hospitalPaSampleIdWIDE("DoesNotExist"));
+        assertNull(lims.germlineFindigsWIDE("DoesNotExist"));
     }
 
     @Test

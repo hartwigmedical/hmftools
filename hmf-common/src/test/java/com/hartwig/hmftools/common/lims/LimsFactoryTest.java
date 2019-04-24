@@ -63,6 +63,8 @@ public class LimsFactoryTest {
         assertEquals("N/A", tumorData.labProcedures());
         assertEquals("this is a test", tumorData.labRemarks());
         assertEquals("HMFregCPCT", tumorData.submission());
+        assertEquals("", tumorData.hospitalPaSampleId());
+        assertEquals("", tumorData.germlineFindings());
     }
 
     @Test
