@@ -8,6 +8,7 @@ import com.itextpdf.layout.element.Cell;
 import com.itextpdf.layout.element.IBlockElement;
 import com.itextpdf.layout.element.Paragraph;
 import com.itextpdf.layout.element.Table;
+import com.itextpdf.layout.property.UnitValue;
 import com.itextpdf.layout.property.VerticalAlignment;
 import org.jetbrains.annotations.NotNull;
 
@@ -21,8 +22,9 @@ public final class TableUtil {
     @NotNull
     public static Table createReportContentTable(float[] columnPercentageWidths, Cell[] headerCells) {
 
-        Table table = new Table(columnPercentageWidths)
+        Table table = new Table(UnitValue.createPercentArray(columnPercentageWidths))
                 .setWidth(ReportResources.CONTENT_WIDTH_WIDE);
+        table.setFixedLayout();
 
         for (Cell headerCell: headerCells) {
             table.addHeaderCell(headerCell);
