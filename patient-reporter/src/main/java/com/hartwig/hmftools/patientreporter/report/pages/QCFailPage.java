@@ -95,7 +95,8 @@ public abstract class QCFailPage {
             }
         }
 
-        return type == LimsSampleType.CORE ? coreLayout(title, subTitle, message) : defaultLayout(title, subTitle, message);
+        return type == LimsSampleType.CORE ? coreLayout(title, subTitle, message) :
+                type == LimsSampleType.WIDE ? wideLayout(title, subTitle, message): defaultLayout(title, subTitle, message);
     }
 
     @NotNull
@@ -116,6 +117,7 @@ public abstract class QCFailPage {
                 cmp.text("The project name of sample is " + sampleReport().projectName() + " and the submissionId ID is "
                         + sampleReport().submissionId()).setStyle(fontStyle()),
                 internalBarcodeText(),
+                cmp.text("The tissue number of pathology is: " + sampleReport().hospitalPaSampleIdWIDE()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
                 pathologyText(),
                 shallowSeqText(),
@@ -132,6 +134,35 @@ public abstract class QCFailPage {
 
     @NotNull
     private ComponentBuilder<?, ?> defaultLayout(@NotNull String title, @NotNull String subTitle, @NotNull String message) {
+        return cmp.verticalList(cmp.text(title).setStyle(tableHeaderStyle().setFontSize(12)).setHeight(20),
+                cmp.text(subTitle).setStyle(dataTableStyle().setFontSize(12)).setHeight(20),
+                cmp.verticalGap(SECTION_VERTICAL_GAP),
+                cmp.text(message).setStyle(fontStyle()),
+                cmp.verticalGap(SECTION_VERTICAL_GAP),
+                notSequencedText(),
+                cmp.verticalGap(SECTION_VERTICAL_GAP),
+                cmp.text("When possible, please resubmit using the same " + study().studyName() + "-number. "
+                        + "In case additional tumor material cannot be provided, please be notified that the patient will not be "
+                        + "evaluable for the " + study().studyCode() + " study.").setStyle(fontStyle()),
+                cmp.verticalGap(SECTION_VERTICAL_GAP),
+                cmp.text("The HMF sample ID is " + sampleReport().sampleId()).setStyle(fontStyle()),
+                internalBarcodeText(),
+                cmp.verticalGap(SECTION_VERTICAL_GAP),
+                pathologyText(),
+                cmp.verticalGap(SECTION_VERTICAL_GAP),
+                shallowSeqText(),
+                cmp.verticalGap(SECTION_VERTICAL_GAP),
+                sampleArrivalDateText(),
+                cmp.verticalGap(SECTION_VERTICAL_GAP),
+                recipientText(),
+                cmp.verticalGap(SECTION_VERTICAL_GAP),
+                accreditationText(),
+                cmp.verticalGap(SECTION_VERTICAL_GAP),
+                questionsText());
+    }
+
+    @NotNull
+    private ComponentBuilder<?, ?> wideLayout(@NotNull String title, @NotNull String subTitle, @NotNull String message) {
         return cmp.verticalList(cmp.text(title).setStyle(tableHeaderStyle().setFontSize(12)).setHeight(20),
                 cmp.text(subTitle).setStyle(dataTableStyle().setFontSize(12)).setHeight(20),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),

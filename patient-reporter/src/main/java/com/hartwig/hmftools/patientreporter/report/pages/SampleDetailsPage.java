@@ -91,6 +91,8 @@ public abstract class SampleDetailsPage {
             lines.add("The project name of sample is: " + sampleReport().projectName() + " and the submission ID is "
                     + sampleReport().submissionId());
             lines.add("The requester is: " + sampleReport().requesterName() + " (" + sampleReport().requesterEmail() + ")");
+        } else if (type == LimsSampleType.WIDE) {
+            lines.add("The tissue number of pathology is: " + sampleReport().hospitalPaSampleIdWIDE());
         }
 
         comments().ifPresent(comments -> lines.add("Comments: " + comments));
