@@ -101,6 +101,6 @@ public abstract class SampleDetailsPage {
     @NotNull
     private String tissueNumberPA(@NotNull String sampleId) {
         LimsSampleType type = LimsSampleType.fromSampleId(sampleId);
-        return type == LimsSampleType.WIDE ? " and the tissue number of pathology is: " + sampleReport().hospitalPaSampleIdWIDE() : "";
+        return type == LimsSampleType.WIDE ? " and the tissue ID of pathology is: " + sampleReport().hospitalPaSampleIdWIDE() : "";
     }
 }
