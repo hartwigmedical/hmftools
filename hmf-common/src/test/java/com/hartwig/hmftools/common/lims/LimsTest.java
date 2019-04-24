@@ -20,7 +20,6 @@ import org.junit.Test;
 public class LimsTest {
 
     private static final String SAMPLE = "CPCT02991111T";
-    private static final String SAMPLE_WIDE = "WIDE02991111T";
 
     private static final String SUBMISSION = "ABCDEF123";
 
