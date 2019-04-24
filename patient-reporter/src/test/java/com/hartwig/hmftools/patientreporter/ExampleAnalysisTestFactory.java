@@ -161,6 +161,7 @@ public final class ExampleAnalysisTestFactory {
                 .projectName("COLO")
                 .hospitalPatientId(Strings.EMPTY)
                 .submissionId(Strings.EMPTY)
+                .hospitalPaSampleIdWIDE("A")
                 .build();
     }
 

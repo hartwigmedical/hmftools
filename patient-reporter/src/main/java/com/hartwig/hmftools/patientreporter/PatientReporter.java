@@ -133,6 +133,7 @@ abstract class PatientReporter {
                 .requesterEmail(lims.requesterEmail(tumorSample))
                 .submissionId(lims.submissionId(tumorSample))
                 .hospitalPatientId(lims.hospitalPatientId(tumorSample))
+                .hospitalPaSampleIdWIDE(lims.hospitalPaSampleIdWIDE(tumorSample))
                 .build();
 
         final List<EvidenceItem> nonTrials = ReportableEvidenceItemFactory.extractNonTrials(allEvidenceItems);

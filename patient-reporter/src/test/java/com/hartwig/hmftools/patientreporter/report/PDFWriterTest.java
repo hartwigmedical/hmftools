@@ -121,6 +121,7 @@ public class PDFWriterTest {
                 .requesterEmail("contact@me.com")
                 .submissionId("ABC")
                 .hospitalPatientId("123456")
+                .hospitalPaSampleIdWIDE("A")
                 .build();
 
         QCFailReport patientReport = ImmutableQCFailReport.of(sampleReport,

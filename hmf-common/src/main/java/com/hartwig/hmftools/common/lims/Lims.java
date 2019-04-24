@@ -232,6 +232,16 @@ public class Lims {
         }
     }
 
+    @NotNull
+    public String hospitalPaSampleIdWIDE(@NotNull String sample){
+        LimsJsonSampleData sampleData = dataPerSample.get(sample);
+        if (sampleData != null) {
+            return sampleData.hospitalPaSampleId();
+        }
+        LOGGER.info("hospital PA sample ID is not known");
+        return "not known";
+    }
+
     @Nullable
     private String submission(@NotNull String sample) {
         LimsJsonSampleData sampleData = dataPerSample.get(sample);

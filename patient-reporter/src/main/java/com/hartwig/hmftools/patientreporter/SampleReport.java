@@ -61,6 +61,9 @@ public abstract class SampleReport {
     public abstract String hospitalPatientId();
 
     @NotNull
+    public abstract String hospitalPaSampleIdWIDE();
+
+    @NotNull
     @Value.Derived
     public String primaryTumorLocationString() {
         PatientTumorLocation type = patientTumorLocation();
