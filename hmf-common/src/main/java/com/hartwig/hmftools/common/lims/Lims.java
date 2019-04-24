@@ -232,7 +232,7 @@ public class Lims {
         }
     }
 
-    @NotNull
+    @Nullable
     public String hospitalPaSampleIdWIDE(@NotNull String sample){
         LimsJsonSampleData sampleData = dataPerSample.get(sample);
         if (sampleData != null) {

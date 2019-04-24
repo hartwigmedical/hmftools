@@ -31,6 +31,7 @@ final class LimsTestUtil {
                 .requesterName(Strings.EMPTY)
                 .requesterEmail(Strings.EMPTY)
                 .germlineFindings(Strings.EMPTY)
+                .hospitalPaSampleId(Strings.EMPTY)
                 .shallowSeq(0);
     }
 }

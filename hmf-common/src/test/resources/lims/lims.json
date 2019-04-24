@@ -19,7 +19,8 @@
       "requester_email": "henk@hmf.nl",
       "requester_name": "henk",
       "shallowseq": 0,
-      "germline_findings": ""
+      "germline_findings": "",
+      "hospital_pa_sample_id": ""
     },
     "FR00000001": {
       "tumor_perc": 30,
@@ -41,7 +42,8 @@
       "requester_email": "henk@hmf.nl",
       "requester_name": "henk",
       "shallowseq": 1,
-      "germline_findings": ""
+      "germline_findings": "",
+      "hospital_pa_sample_id": ""
     },
     "FR00000002": {
       "analysis_type": "do not analyze me",

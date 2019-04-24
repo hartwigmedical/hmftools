@@ -91,10 +91,9 @@ abstract class LimsJsonSampleData {
     @SerializedName("germline_findings")
     public abstract String germlineFindings();
 
-    @NotNull
+    @Nullable
     @SerializedName("hospital_pa_sample_id")
     public abstract String hospitalPaSampleId();
-
 
     @NotNull
     @Value.Derived

@@ -13,6 +13,7 @@ import java.util.Set;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
@@ -55,6 +56,8 @@ public class LimsTest {
                 .requesterEmail(requesterEmail)
                 .requesterName(requesterName)
                 .shallowSeq(0)
+                .germlineFindings("1")
+                .hospitalPaSampleId(Strings.EMPTY)
                 .build();
 
         final LimsJsonSubmissionData submissionData =
@@ -80,6 +83,9 @@ public class LimsTest {
         assertEquals("40%", lims.pathologyTumorPercentage(SAMPLE));
         assertEquals(primaryTumor, lims.primaryTumor(SAMPLE));
         assertEquals(labSopVersions, lims.labProcedures(SAMPLE));
+
+        assertNull(lims.germlineFindigsWIDE(SAMPLE));
+        assertNull(lims.hospitalPatientId(SAMPLE));
     }
 
     @Test
