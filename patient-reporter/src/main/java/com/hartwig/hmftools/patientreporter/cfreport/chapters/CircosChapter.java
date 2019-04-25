@@ -42,7 +42,7 @@ public class CircosChapter implements ReportChapter {
         }
 
         // Explanation
-        Table table = new Table(UnitValue.createPercentArray(new float[] {1, 0.1f, 1, 0.1f, 1}));
+        Table table = new Table(UnitValue.createPercentArray(new float[] {10, 1, 10, 1, 10}));
         table.setWidth(getContentWidth());
 
         table.addCell(TableUtil.getLayoutCell().add(new Div()
