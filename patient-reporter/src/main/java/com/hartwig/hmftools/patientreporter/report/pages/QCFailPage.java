@@ -175,8 +175,8 @@ public abstract class QCFailPage {
                         + "In case additional tumor material cannot be provided, please be notified that the patient will not be "
                         + "evaluable for the " + study().studyCode() + " study.").setStyle(fontStyle()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP_QC_FAIL),
-                cmp.text("The HMF sample ID is " + sampleReport().sampleId() + " and the tissue ID of pathology is: "
-                        + sampleReport().hospitalPaSampleIdWIDE()).setStyle(fontStyle()),
+                cmp.text("The HMF sample ID is " + sampleReport().sampleId() + " and the pathology sample ID is: "
+                        + sampleReport().hospitalPathologySampleId()).setStyle(fontStyle()),
                 internalBarcodeText(),
                 cmp.verticalGap(SECTION_VERTICAL_GAP_QC_FAIL),
                 pathologyText(),

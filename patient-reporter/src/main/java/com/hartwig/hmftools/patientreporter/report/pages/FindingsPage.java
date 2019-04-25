@@ -11,7 +11,6 @@ import static net.sf.dynamicreports.report.builder.DynamicReports.cmp;
 import static net.sf.dynamicreports.report.builder.DynamicReports.col;
 import static net.sf.dynamicreports.report.builder.DynamicReports.hyperLink;
 
-import com.hartwig.hmftools.common.lims.LimsInformedConsent;
 import com.hartwig.hmftools.patientreporter.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.report.components.ChordSection;
 import com.hartwig.hmftools.patientreporter.report.components.MicrosatelliteSection;
@@ -24,7 +23,6 @@ import com.hartwig.hmftools.patientreporter.report.data.SomaticVariantDataSource
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
-import org.omg.PortableInterceptor.LOCATION_FORWARD;
 
 import net.sf.dynamicreports.report.builder.component.ComponentBuilder;
 import net.sf.dynamicreports.report.constant.HorizontalTextAlignment;
@@ -82,7 +80,7 @@ public abstract class FindingsPage {
                                 report.germlineOptionPatient()))
                         : cmp.text("None").setStyle(fontStyle().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER));
 
-        if (report.reportableGermlineVariant()) { //report.germlineOptionPatient().equals(LimsInformedConsent.ALL)|| report.germlineOptionPatient().equals(LimsInformedConsent.ALL_ACTIONABLE)
+        if (report.reportableGermlineVariant()) { //report.germlineOptionPatient().equals(LimsGermlineFindingsChoice.ALL)|| report.germlineOptionPatient().equals(LimsGermlineFindingsChoice.ALL_ACTIONABLE)
             return cmp.verticalList(cmp.text("Somatic Variants").setStyle(sectionHeaderStyle()),
                     cmp.verticalGap(HEADER_TO_TABLE_VERTICAL_GAP),
                     table,

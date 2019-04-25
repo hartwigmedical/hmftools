@@ -48,7 +48,7 @@ public abstract class QCFailReporter {
                 .requesterEmail(lims.requesterEmail(sample))
                 .submissionId(lims.submissionId(sample))
                 .hospitalPatientId(lims.hospitalPatientId(sample))
-                .hospitalPaSampleIdWIDE(lims.hospitalPaSampleIdWIDE(sample))
+                .hospitalPathologySampleId(lims.hospitalPaSampleId(sample))
                 .build();
 
         return ImmutableQCFailReport.of(sampleReport,

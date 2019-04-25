@@ -7,7 +7,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
-import com.hartwig.hmftools.common.lims.LimsInformedConsent;
+import com.hartwig.hmftools.common.lims.LimsGermlineFindingsChoice;
 import com.hartwig.hmftools.patientreporter.report.util.PatientReportFormat;
 import com.hartwig.hmftools.patientreporter.variants.ReportableVariant;
 
@@ -44,7 +44,7 @@ public final class SomaticVariantDataSource {
 
     @NotNull
     public static JRDataSource fromVariants(@NotNull List<ReportableVariant> variants, boolean hasReliablePurityFit,
-            LimsInformedConsent germlineOptionPatient) {
+            LimsGermlineFindingsChoice germlineOptionPatient) {
         final DRDataSource variantDataSource = new DRDataSource(GENE_FIELD.getName(),
                 VARIANT_FIELD.getName(),
                 IMPACT_FIELD.getName(),
@@ -58,10 +58,10 @@ public final class SomaticVariantDataSource {
 
             String displayGene = variant.isDrupActionable() ? variant.gene() + " *" : variant.gene();
             String codingImpact = variant.notifyClinicalGeneticus() && variant.somaticOrGermline().equals("germline")
-                    // germlineOptionPatient.equals(LimsInformedConsent.ALL_ACTIONABLE) || germlineOptionPatient.equals(LimsInformedConsent.ALL) &&
+                    // germlineOptionPatient.equals(LimsGermlineFindingsChoice.ALL_ACTIONABLE) || germlineOptionPatient.equals(LimsGermlineFindingsChoice.ALL) &&
                     ? variant.hgvsCodingImpact() + " + # "
                     : !variant.notifyClinicalGeneticus() && variant.somaticOrGermline().equals("germline")
-                            //germlineOptionPatient.equals(LimsInformedConsent.ALL_ACTIONABLE) || germlineOptionPatient.equals(LimsInformedConsent.ALL) &&
+                            //germlineOptionPatient.equals(LimsGermlineFindingsChoice.ALL_ACTIONABLE) || germlineOptionPatient.equals(LimsGermlineFindingsChoice.ALL) &&
                             ? variant.hgvsCodingImpact() + " +"
                             : variant.hgvsCodingImpact();
             String biallelic = Strings.EMPTY;

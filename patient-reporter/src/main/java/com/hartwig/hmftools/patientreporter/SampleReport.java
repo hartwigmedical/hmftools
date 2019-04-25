@@ -37,7 +37,7 @@ public abstract class SampleReport {
     public abstract LocalDate tumorArrivalDate();
 
     @Nullable
-    public abstract LocalDate bloodArrivalDate();
+    public abstract LocalDate referenceArrivalDate();
 
     @NotNull
     public abstract String labProcedures();
@@ -61,7 +61,7 @@ public abstract class SampleReport {
     public abstract String hospitalPatientId();
 
     @NotNull
-    public abstract String hospitalPaSampleIdWIDE();
+    public abstract String hospitalPathologySampleId();
 
     @NotNull
     @Value.Derived

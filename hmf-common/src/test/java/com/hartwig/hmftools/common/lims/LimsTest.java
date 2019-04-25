@@ -83,8 +83,8 @@ public class LimsTest {
         assertEquals(primaryTumor, lims.primaryTumor(SAMPLE));
         assertEquals(labSopVersions, lims.labProcedures(SAMPLE));
 
-        assertEquals(LimsInformedConsent.UNKNOWN, lims.germlineFindigsWIDE(SAMPLE));
-        assertEquals("", lims.hospitalPaSampleIdWIDE(SAMPLE));
+        assertEquals(LimsGermlineFindingsChoice.UNKNOWN, lims.germlineFindingsChoice(SAMPLE));
+        assertEquals("", lims.hospitalPaSampleId(SAMPLE));
     }
 
     @Test
@@ -102,8 +102,8 @@ public class LimsTest {
         assertEquals("N/A", lims.purityShallowSeq("DoesNotExist"));
         assertEquals("N/A", lims.primaryTumor("DoesNotExist"));
         assertEquals("N/A", lims.labProcedures("DoesNotExist"));
-        assertEquals("not known", lims.hospitalPaSampleIdWIDE("DoesNotExist"));
-        assertNull(lims.germlineFindigsWIDE("DoesNotExist"));
+        assertEquals("not known", lims.hospitalPaSampleId("DoesNotExist"));
+        assertEquals(LimsGermlineFindingsChoice.UNKNOWN, lims.germlineFindingsChoice("DoesNotExist"));
     }
 
     @Test

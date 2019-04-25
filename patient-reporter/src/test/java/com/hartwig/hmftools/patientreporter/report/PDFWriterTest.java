@@ -113,7 +113,7 @@ public class PDFWriterTest {
                 .pathologyTumorPercentage(
                         pathologyTumorPercentage != null ? PatientReportFormat.formatPercent(pathologyTumorPercentage) : "not determined")
                 .tumorArrivalDate(LocalDate.parse("05-Jan-2018", DATE_FORMATTER))
-                .bloodArrivalDate(LocalDate.parse("01-Jan-2018", DATE_FORMATTER))
+                .referenceArrivalDate(LocalDate.parse("01-Jan-2018", DATE_FORMATTER))
                 .labProcedures("PREP013V23-QC037V20-SEQ008V25")
                 .addressee("HMF Testing Center")
                 .projectName("COLO-001-002")
@@ -121,7 +121,7 @@ public class PDFWriterTest {
                 .requesterEmail("contact@me.com")
                 .submissionId("ABC")
                 .hospitalPatientId("123456")
-                .hospitalPaSampleIdWIDE("A")
+                .hospitalPathologySampleId("A")
                 .build();
 
         QCFailReport patientReport = ImmutableQCFailReport.of(sampleReport,

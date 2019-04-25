@@ -87,10 +87,12 @@ abstract class LimsJsonSampleData {
     @SerializedName("submission")
     public abstract String submission();
 
+    // Currently only filled in for WIDE samples
     @NotNull
     @SerializedName("germline_findings")
     public abstract String germlineFindings();
 
+    // Currently only filled in for WIDE samples
     @NotNull
     @SerializedName("hospital_pa_sample_id")
     public abstract String hospitalPaSampleId();

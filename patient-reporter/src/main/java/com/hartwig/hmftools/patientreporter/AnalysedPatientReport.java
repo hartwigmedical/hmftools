@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.Optional;
 
 import com.hartwig.hmftools.common.actionability.EvidenceItem;
-import com.hartwig.hmftools.common.lims.LimsInformedConsent;
+import com.hartwig.hmftools.common.lims.LimsGermlineFindingsChoice;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.actionability.ClinicalTrial;
 import com.hartwig.hmftools.common.chord.ChordAnalysis;
@@ -52,7 +52,7 @@ public abstract class AnalysedPatientReport implements PatientReport {
     public abstract ChordAnalysis chordAnalysis();
 
     @Nullable
-    public abstract LimsInformedConsent germlineOptionPatient();
+    public abstract LimsGermlineFindingsChoice germlineOptionPatient();
 
     public abstract boolean reportableGermlineVariant();
 
