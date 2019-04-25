@@ -63,7 +63,7 @@ public final class SidePanel {
 
             final LocalDate patientBirthDate = LocalDate.of(1973, 10, 4); // @TODO Replace with sampleReport.patientBirthDate() which can be null
             if (patientBirthDate != null) {
-                cv.add(createSidePanelDiv(sideTextIndex, "Birth rdate", DataUtil.formatDate(patientBirthDate)));
+                cv.add(createSidePanelDiv(sideTextIndex, "Birth date", DataUtil.formatDate(patientBirthDate)));
             }
 
         }
