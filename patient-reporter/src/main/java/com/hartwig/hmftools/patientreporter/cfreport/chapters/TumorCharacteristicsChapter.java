@@ -133,7 +133,7 @@ public class TumorCharacteristicsChapter implements ReportChapter {
                 .addStyle(ReportResources.sectionTitleStyle()));
 
         // Add content table
-        Table table = new Table(UnitValue.createPercentArray(new float[] {1, 0.1f, 1.9f}));
+        Table table = new Table(UnitValue.createPercentArray(new float[] {10, 1, 19}));
         table.setWidth(getContentWidth());
         table.addCell(TableUtil.getLayoutCell().add(DataLabel.createDataLabel(highlight)));
 
@@ -144,7 +144,7 @@ public class TumorCharacteristicsChapter implements ReportChapter {
                 .add(new Paragraph(description)
                         .addStyle(ReportResources.bodyTextStyle())
                         .setFixedLeading(ReportResources.BODY_TEXT_LEADING)));
-        table.addCell(TableUtil.getLayoutCell(1, 2).setHeight(TABLE_SPACER_HEIGHT)); // Spacer
+        table.addCell(TableUtil.getLayoutCell(1, 3).setHeight(TABLE_SPACER_HEIGHT)); // Spacer
         div.add(table);
 
         return div;
