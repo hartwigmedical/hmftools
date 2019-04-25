@@ -125,31 +125,23 @@ public final class LoadClinicalData {
         dbAccess.clearClinicalTables();
 
         Set<String> sequencedPatientIdentifiers = samplesPerPatient.keySet();
-        Set<String> countPatients = Sets.newHashSet();
-
         int missingPatients = 0;
         int missingSamples = 0;
+        LOGGER.info(String.format("Writing clinical data for %s sequenced patients.", sequencedPatientIdentifiers.size()));
         for (final String patientIdentifier : sequencedPatientIdentifiers) {
-            LimsSampleType sampleType = LimsSampleType.fromSampleId(patientIdentifier);
+            Patient patient = patients.get(patientIdentifier);
+            if (patient == null) {
+                missingPatients++;
+                missingSamples += samplesPerPatient.get(patientIdentifier).size();
+                dbAccess.writeSampleClinicalData(patientIdentifier, samplesPerPatient.get(patientIdentifier));
+            } else {
+                dbAccess.writeFullClinicalData(patient);
+                List<ValidationFinding> findings = PatientValidator.validatePatient(patient);
 
-            if (sampleType != LimsSampleType.CORE) {
-                Patient patient = patients.get(patientIdentifier);
-                countPatients.add(patientIdentifier);
-
-                if (patient == null) {
-                    missingPatients++;
-                    missingSamples += samplesPerPatient.get(patientIdentifier).size();
-                    dbAccess.writeSampleClinicalData(patientIdentifier, samplesPerPatient.get(patientIdentifier));
-                } else {
-                    dbAccess.writeFullClinicalData(patient);
-                    List<ValidationFinding> findings = PatientValidator.validatePatient(patient);
-
-                    dbAccess.writeValidationFindings(findings);
-                    dbAccess.writeValidationFindings(patient.matchFindings());
-                }
+                dbAccess.writeValidationFindings(findings);
+                dbAccess.writeValidationFindings(patient.matchFindings());
             }
         }
-        LOGGER.info(String.format("Writing clinical data for %s sequenced patients.", countPatients.size()));
         if (missingPatients > 0) {
             LOGGER.warn(String.format("Could not load %s patients (%s samples)!", missingPatients, missingSamples));
         }
