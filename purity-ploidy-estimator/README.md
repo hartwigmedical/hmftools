@@ -597,7 +597,6 @@ MaxCopyNumber  | 2.0098 | Maximum copy number found in the gene exons
 SomaticRegions | 1 | Count of somatic copy number regions this gene spans
 GermlineHomRegions | 0 | Count of homozygous germline regions this gene spans
 GermlineHet2HomRegions | 0 | Count of regions that are heterozygous in the germline but homozygous in the tumor this gene spans
-GermlineHet2HomRegions | 0 | Count of regions that are heterozygous in the germline but homozygous in the tumor this gene spans
 TranscriptId | ENST00000498124 | Ensembl Transcript ID
 TranscriptVersion | 1 | Ensembl Transcript ID Version
 ChromosomeBand | p21.3 | Chromosome Band of the gene
