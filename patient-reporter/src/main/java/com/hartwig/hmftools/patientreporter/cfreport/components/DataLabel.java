@@ -10,7 +10,7 @@ import org.jetbrains.annotations.NotNull;
 public class DataLabel {
 
     @NotNull
-    public static final Paragraph createDataLabel(@NotNull String text) {
+    public static Paragraph createDataLabel(@NotNull String text) {
 
         return new Paragraph()
                 .add(new Text(text)

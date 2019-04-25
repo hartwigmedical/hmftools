@@ -77,21 +77,21 @@ public final class ReportResources {
 
     private ReportResources() {}
 
-    public static final PdfFont getFontRegular() {
+    public static PdfFont getFontRegular() {
         if (fontProgramRegular == null) {
             fontProgramRegular = loadFontProgram(FONT_REGULAR_PATH);
         }
         return createFontFromProgram(fontProgramRegular);
     }
 
-    public static final PdfFont getFontBold() {
+    public static PdfFont getFontBold() {
         if (fontProgramBold == null) {
             fontProgramBold = loadFontProgram(FONT_BOLD_PATH);
         }
         return createFontFromProgram(fontProgramBold);
     }
 
-    public static final PdfFont getIconFont() {
+    public static PdfFont getIconFont() {
         if (iconFontProgram == null) {
             iconFontProgram = loadFontProgram(ICON_FONT_PATH);
         }
@@ -106,7 +106,7 @@ public final class ReportResources {
      * @param maxWidth
      * @return smallest font size where text fits in maxWidth, or minFontSize
      */
-    public final static float getMaxPointSizeForWidth(@NotNull PdfFont font, float initalFontSize, float minFontSize, @NotNull String text, float maxWidth) {
+    public static float getMaxPointSizeForWidth(@NotNull PdfFont font, float initalFontSize, float minFontSize, @NotNull String text, float maxWidth) {
         final float fontIncrement = 0.1f;
 
         float fontSize = initalFontSize;
@@ -126,7 +126,7 @@ public final class ReportResources {
      * Chapter title text style
      * @return
      */
-    public static final Style chapterTitleStyle() {
+    public static Style chapterTitleStyle() {
         return new Style()
                 .setFont(getFontBold())
                 .setFontSize(16)
@@ -138,7 +138,7 @@ public final class ReportResources {
      * Section title text style
      * @return
      */
-    public static final Style sectionTitleStyle() {
+    public static Style sectionTitleStyle() {
         return new Style()
                 .setFont(getFontBold())
                 .setFontSize(11)
@@ -149,7 +149,7 @@ public final class ReportResources {
      * Content table header style
      * @return
      */
-    public static final Style tableHeaderStyle() {
+    public static Style tableHeaderStyle() {
         return new Style()
                 .setFont(getFontRegular())
                 .setFontSize(7)
@@ -161,7 +161,7 @@ public final class ReportResources {
      * Content table body text style
      * @return
      */
-    public static final Style tableContentStyle() {
+    public static Style tableContentStyle() {
         return new Style()
                 .setFont(getFontRegular())
                 .setFontSize(8)
@@ -172,7 +172,7 @@ public final class ReportResources {
      * Body text style for content on summary page
      * @return
      */
-    public static final Style bodyTextStyle() {
+    public static Style bodyTextStyle() {
         return new Style()
                 .setFont(getFontRegular())
                 .setFontSize(8)
@@ -183,7 +183,7 @@ public final class ReportResources {
      * Heading style for content on "Report explanation" and "Sample details & disclaimers" page
      * @return
      */
-    public static final Style smallBodyHeadingStyle() {
+    public static Style smallBodyHeadingStyle() {
         return new Style()
                 .setFont(getFontBold())
                 .setFontSize(10)
@@ -194,7 +194,7 @@ public final class ReportResources {
      * Body text style for content on "Report explanation" and "Sample details & disclaimers" page
      * @return
      */
-    public static final Style smallBodyTextStyle() {
+    public static Style smallBodyTextStyle() {
         return new Style()
                 .setFont(getFontRegular())
                 .setFontSize(7)
@@ -205,7 +205,7 @@ public final class ReportResources {
      * Emphasized body text style for content on "Report explanation" and "Sample details & disclaimers" page
      * @return
      */
-    public static final Style smallBodyBoldTextStyle() {
+    public static Style smallBodyBoldTextStyle() {
         return new Style()
                 .setFont(getFontBold())
                 .setFontSize(7)
@@ -216,7 +216,7 @@ public final class ReportResources {
      * Text style for legends and footnotes
      * @return
      */
-    public static final Style subTextStyle() {
+    public static Style subTextStyle() {
         return new Style()
                 .setFont(getFontRegular())
                 .setFontSize(7)
@@ -227,7 +227,7 @@ public final class ReportResources {
      * Text style for legends and footnotes
      * @return
      */
-    public static final Style subTextBoldStyle() {
+    public static Style subTextBoldStyle() {
         return new Style()
                 .setFont(getFontBold())
                 .setFontSize(7)
@@ -238,7 +238,7 @@ public final class ReportResources {
      * Text style for data highlight (e.g. big numbers)
      * @return
      */
-    public static final Style dataHighlightStyle() {
+    public static Style dataHighlightStyle() {
         return new Style()
                 .setFont(getFontBold())
                 .setFontSize(11)
@@ -251,7 +251,7 @@ public final class ReportResources {
      *
      * @return
      */
-    public static final Style dataHighlightNaStyle() {
+    public static Style dataHighlightNaStyle() {
         return new Style()
                 .setFont(getFontBold())
                 .setFontSize(7)
@@ -262,7 +262,7 @@ public final class ReportResources {
      * Text style for the page numbers
      * @return
      */
-    public static final Style pageNumberStyle() {
+    public static Style pageNumberStyle() {
         return new Style()
                 .setFont(getFontBold())
                 .setFontSize(8)
@@ -273,7 +273,7 @@ public final class ReportResources {
      * Text style for the labels in the side panel
      * @return
      */
-    public static final Style sidepanelLabelStyle() {
+    public static Style sidepanelLabelStyle() {
         return new Style()
                 .setFont(getFontBold())
                 .setFontSize(7)
@@ -284,7 +284,7 @@ public final class ReportResources {
      * Text style for the content in the side panel
      * @return
      */
-    public static final Style sidepanelValueStyle() {
+    public static Style sidepanelValueStyle() {
         return new Style()
                 .setFont(getFontBold())
                 .setFontSize(11)
@@ -297,7 +297,7 @@ public final class ReportResources {
      * @param resourcePath
      * @return
      */
-    public static final ImageData loadImageData(@NotNull String resourcePath) {
+    public static ImageData loadImageData(@NotNull String resourcePath) {
 
         try {
 
@@ -324,7 +324,7 @@ public final class ReportResources {
      * @return
      * @throws IOException
      */
-    public static final byte[] loadResourceData(String resourcePath) throws IOException {
+    public static byte[] loadResourceData(String resourcePath) throws IOException {
 
         byte[] data = null;
         InputStream is = new ReportResources().getClass().getClassLoader().getResourceAsStream(resourcePath);
@@ -336,7 +336,7 @@ public final class ReportResources {
     }
 
     @Nullable
-    private static final FontProgram loadFontProgram(@NotNull String resourcePath) {
+    private static FontProgram loadFontProgram(@NotNull String resourcePath) {
         try {
             return FontProgramFactory.createFont(resourcePath);
         } catch (Exception e) {
@@ -345,7 +345,7 @@ public final class ReportResources {
         }
     }
 
-    private static final PdfFont createFontFromProgram(@NotNull FontProgram program) {
+    private static PdfFont createFontFromProgram(@NotNull FontProgram program) {
         return PdfFontFactory.createFont(program, PdfEncodings.IDENTITY_H);
     }
 
