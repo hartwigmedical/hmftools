@@ -65,7 +65,7 @@ public final class TableUtil {
 
         // Wrap content table with a table that shows "continued from the previous table" after page break
         Table continuedWrapTable = new Table(1)
-                .setWidth(contentTable.getWidth())
+                .setMinWidth(contentTable.getWidth())
                 .addHeaderCell(new Cell()
                         .setBorder(Border.NO_BORDER)
                         .add(new Paragraph("Continued from the previous page".toUpperCase())
@@ -78,7 +78,7 @@ public final class TableUtil {
 
         // Wrap continuedWrapTable with table that shows the table title
         return new Table(1)
-                .setWidth(contentTable.getWidth())
+                .setMinWidth(contentTable.getWidth())
                 .setMarginBottom(TABLE_BOTTOM_MARGIN)
                 .addHeaderCell(new Cell()
                         .setBorder(Border.NO_BORDER)
