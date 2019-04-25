@@ -27,9 +27,12 @@ import static com.hartwig.hmftools.svanalysis.types.SvArmCluster.ARM_CL_MULTIPLE
 import static com.hartwig.hmftools.svanalysis.types.SvArmCluster.ARM_CL_REMOTE_TI;
 import static com.hartwig.hmftools.svanalysis.types.SvArmCluster.ARM_CL_SINGLE;
 import static com.hartwig.hmftools.svanalysis.types.SvArmCluster.getArmClusterData;
+import static com.hartwig.hmftools.svanalysis.types.SvChain.CM_CHAIN_ENDS_AWAY;
+import static com.hartwig.hmftools.svanalysis.types.SvChain.CM_CHAIN_ENDS_FACE;
 import static com.hartwig.hmftools.svanalysis.types.SvChain.CM_EXT_TI;
 import static com.hartwig.hmftools.svanalysis.types.SvChain.CM_EXT_TI_CN_GAIN;
 import static com.hartwig.hmftools.svanalysis.types.SvChain.CM_DB;
+import static com.hartwig.hmftools.svanalysis.types.SvChain.CM_OVERLAPPING_TI;
 import static com.hartwig.hmftools.svanalysis.types.SvChain.CM_SHORT_DB;
 import static com.hartwig.hmftools.svanalysis.types.SvChain.CM_INT_TI;
 import static com.hartwig.hmftools.svanalysis.types.SvChain.CM_INT_TI_CN_GAIN;
@@ -494,7 +497,7 @@ public class SvSampleAnalyser {
                 mClusterFileWriter.write("SampleId,ClusterId,ClusterDesc,ClusterCount,ResolvedType,FullyChained,ChainCount");
                 mClusterFileWriter.write(",DelCount,DupCount,InsCount,InvCount,BndCount,SglCount");
                 mClusterFileWriter.write(",ClusterReasons,Consistency,ArmCount,OriginArms,FragmentArms,IsLINE,HasReplicated,Foldbacks");
-                mClusterFileWriter.write(",IntTIs,ExtTIs,IntTIsWithGain,ExtTIsWithGain,DSBs,ShortDSBs");
+                mClusterFileWriter.write(",IntTIs,ExtTIs,IntTIsWithGain,ExtTIsWithGain,OverlapTIs,DSBs,ShortDSBs,ChainEndsFace,ChainEndsAway");
                 mClusterFileWriter.write(",TotalLinks,AssemblyLinks,LongDelDups,UnlinkedRemotes,ShortTIRemotes,MinCopyNumber,MaxCopyNumber");
                 mClusterFileWriter.write(",SynDelDupLen,SynDelDupAvgTILen,Annotations,UnchainedSVs,AlleleValidPerc");
                 mClusterFileWriter.write(",ArmClusterCount,AcSoloSv,AcRemoteTI,AcDsb,AcMultipleDsb,AcSingleFb,AcFbTI,AcFbDSB");
@@ -521,13 +524,14 @@ public class SvSampleAnalyser {
                         cluster.getArmCount(), cluster.getOriginArms(), cluster.getFragmentArms(),
                         cluster.hasLinkingLineElements(), cluster.hasReplicatedSVs(), cluster.getFoldbacks().size()));
 
-                isSpecificCluster(cluster);
+                // isSpecificCluster(cluster);
 
                 int[] chainData = cluster.getLinkMetrics();
 
-                writer.write(String.format(",%d,%d,%d,%d,%d,%d",
+                writer.write(String.format(",%d,%d,%d,%d,%d,%d,%d,%d,%d",
                         chainData[CM_INT_TI], chainData[CM_EXT_TI], chainData[CM_INT_TI_CN_GAIN], chainData[CM_EXT_TI_CN_GAIN],
-                        chainData[CM_DB], chainData[CM_SHORT_DB]));
+                        chainData[CM_OVERLAPPING_TI], chainData[CM_DB], chainData[CM_SHORT_DB],
+                        chainData[CM_CHAIN_ENDS_FACE], chainData[CM_CHAIN_ENDS_AWAY]));
 
                 /*
                 final String chainInfo = cluster.getChains().stream()
@@ -583,7 +587,8 @@ public class SvSampleAnalyser {
 
                 mLinksFileWriter.write("SampleId,ClusterId,ClusterDesc,ClusterCount,ResolvedType,IsLINE,FullyChained");
                 mLinksFileWriter.write(",ChainId,ChainCount,ChainConsistent,Id1,Id2,ChrArm,IsAssembled,TILength,SynDelDupLen");
-                mLinksFileWriter.write(",NextSVDistance,NextSVTraversedCount,DBLenStart,DBLenEnd,OnArmOfOrigin,TraversedSVCount");
+                mLinksFileWriter.write(",NextSVDistance,TraversedSVCount,DBLenStart,DBLenEnd,OnArmOfOrigin");
+                mLinksFileWriter.write(",LocationType,OverlapCount,CopyNumberGain");
                 mLinksFileWriter.write(",PosStart,PosEnd,GeneStart,GeneEnd,ExonMatch");
                 mLinksFileWriter.newLine();
             }
@@ -607,21 +612,7 @@ public class SvSampleAnalyser {
 
                     for (final SvLinkedPair pair : chain.getLinkedPairs())
                     {
-                        if(pair.linkType() != LINK_TYPE_TI)
-                            continue;
-
-                        boolean isRepeat = false;
-
-                        for (final SvLinkedPair existingPair : uniquePairs)
-                        {
-                            if(pair.matches(existingPair))
-                            {
-                                isRepeat = true;
-                                break;
-                            }
-                        }
-
-                        if(isRepeat)
+                        if(uniquePairs.stream().anyMatch(x -> x.matches(pair)))
                             continue;
 
                         uniquePairs.add(pair);
@@ -637,11 +628,11 @@ public class SvSampleAnalyser {
                                 chain.id(), chainSvCount, chainConsistent,
                                 beStart.getSV().origId(), beEnd.getSV().origId(), beStart.getChrArm()));
 
-                        writer.write(String.format(",%s,%d,%d,%d,%d,%d,%d,%s,%d",
+                        writer.write(String.format(",%s,%d,%d,%d,%d,%d,%d,%s,%s,%d,%s",
                                 pair.isAssembled(), pair.length(), cluster.getSynDelDupLength(),
-                                pair.getNextSVDistance(), pair.getNextSVTraversedCount(),
+                                pair.getNextSVDistance(), pair.getTraversedSVCount(),
                                 pair.getDBLenFirst(), pair.getDBLenSecond(), pair.onArmOfOrigin(),
-                                pair.getTraversedSVCount()));
+                                pair.locationType(), pair.overlapCount(), pair.hasCopyNumberGain()));
 
 
                         writer.write(String.format(",%d,%d,%s,%s,%s",

@@ -581,6 +581,13 @@ public class ClusterAnalyser {
 
                             cluster.mergeOtherCluster(resolvingCluster);
 
+                            /*
+                            // Time,SampleId,ClusterId,SvId1,SvId2,BreakendPloidy,MajorAP
+                            LOGGER.info(String.format("CR_BE_PLOIDY: %s,%d,%s,%s,%.2f,%.2f",
+                                    mSampleId, cluster.id(), breakend.getSV().id(), resolvingBreakend.getSV().id(),
+                                    breakendPloidy, majorAP));
+                            */
+
                             mergedClusters.add(resolvingCluster);
 
                             mergedOtherClusters = true;
@@ -839,6 +846,14 @@ public class ClusterAnalyser {
                                 otherCluster.addClusterReason(CLUSTER_REASON_NET_ARM_END_PLOIDY);
                                 cluster.addClusterReason(CLUSTER_REASON_NET_ARM_END_PLOIDY);
 
+                                /*
+                                // TEMP logging for further analysis
+                                // Time,SampleId,ClusterId,SvId1,SvId2,ClusterBoundaryMinPloidy,ClusterBoundaryMAP,ArmEndMAP,FacingCentromere
+                                LOGGER.info(String.format("CR_ARM_END_PLOIDY: %s,%d,%s,%s,%.2f,%.2f,%.2f,%s",
+                                        mSampleId, cluster.id(), clusterBreakend.getSV().id(), nextBreakend.getSV().id(),
+                                        clusterBoundaryMinPloidy, clusterBoundaryMAP, armEndMAP, facingCentromere));
+                                */
+
                                 cluster.mergeOtherCluster(otherCluster);
 
                                 mergedClusters.add(otherCluster);
@@ -1092,7 +1107,7 @@ public class ClusterAnalyser {
 
     private boolean mergeTraversingClusters()
     {
-        // merge clusters if one is straddling by opposing breakends in the other
+        // merge clusters if one is straddled by opposing breakends in the other
         List<SvCluster> mergedClusters = Lists.newArrayList();
 
         int clusterIndex = 0;

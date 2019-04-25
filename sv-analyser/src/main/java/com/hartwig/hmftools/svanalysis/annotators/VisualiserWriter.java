@@ -116,7 +116,7 @@ public class VisualiserWriter
                 int unchainedChainId = chains.isEmpty() ? var.getCluster().getChainId(var) : -1;
 
                 // int repeatCount = !chains.isEmpty() ? max(var.getReplicatedCount(), 1) : 1;
-                int repeatCount = (int)var.getRoundedCNChange();
+                int repeatCount = max((int)var.getRoundedCNChange(),1);
 
                 for(int i = 0; i < chainCount; ++i)
                 {

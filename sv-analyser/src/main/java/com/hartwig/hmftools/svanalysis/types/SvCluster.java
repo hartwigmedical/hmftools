@@ -7,7 +7,6 @@ import static java.lang.Math.abs;
 import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.BND;
-import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DEL;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.typeAsInt;
 import static com.hartwig.hmftools.svanalysis.analysis.ClusterAnalyser.SHORT_TI_LENGTH;
 import static com.hartwig.hmftools.svanalysis.analysis.ClusterAnalyser.SMALL_CLUSTER_SIZE;
@@ -16,22 +15,19 @@ import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.addSvToChrBre
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.appendStr;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.calcConsistency;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.getSvTypesStr;
+import static com.hartwig.hmftools.svanalysis.types.SvChain.CM_CHAIN_ENDS_AWAY;
 import static com.hartwig.hmftools.svanalysis.types.SvChain.CM_DB;
-import static com.hartwig.hmftools.svanalysis.types.SvChain.CM_EXT_TI_CN_GAIN;
 import static com.hartwig.hmftools.svanalysis.types.SvChain.CM_SHORT_DB;
 import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.ASSEMBLY_MATCH_INFER_ONLY;
 import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.ASSEMBLY_MATCH_NONE;
 import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.removedLinksWithSV;
-import static com.hartwig.hmftools.svanalysis.types.SvVarData.RELATION_TYPE_NEIGHBOUR;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_END;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_START;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.isStart;
-import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.findLinkedPair;
 import static com.hartwig.hmftools.svanalysis.types.SvaConfig.SPECIFIC_CLUSTER_ID;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
-import com.mysql.cj.x.protobuf.MysqlxNotice;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -762,9 +758,7 @@ public class SvCluster
                 ++svCalcPloidyCount;
 
                 int minPloidyInt = (int)ceil(var.ploidyMin());
-                int maxPloidyUpper = (int)ceil(var.ploidyMax());
                 int maxPloidyInt = (int)floor(var.ploidyMax());
-                // int maxPloidyInt = maxPloidyUpper - var.ploidyMax() < 0.1 ? maxPloidyUpper : maxPloidyLower;
                 maxPloidyInt = max(minPloidyInt, maxPloidyInt);
 
                 if(tightestMaxPloidy == -1 || var.ploidyMax() < tightestMaxPloidy)
@@ -958,7 +952,7 @@ public class SvCluster
 
     public int[] getLinkMetrics()
     {
-        int[] chainData = new int[CM_EXT_TI_CN_GAIN+1];
+        int[] chainData = new int[CM_CHAIN_ENDS_AWAY +1];
         mChains.stream().forEach(x -> x.extractChainMetrics(chainData));
 
         for(SvVarData var : mSVs)

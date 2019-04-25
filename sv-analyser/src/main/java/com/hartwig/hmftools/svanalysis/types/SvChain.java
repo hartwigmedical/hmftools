@@ -7,6 +7,8 @@ import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.appendStr;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.calcConsistency;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.copyNumbersEqual;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.makeChrArmStr;
+import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.LOCATION_TYPE_INTERNAL;
+import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.LOCATION_TYPE_REMOTE;
 
 import java.util.List;
 
@@ -563,6 +565,9 @@ public class SvChain {
     public static int CM_EXT_TI = 3;
     public static int CM_INT_TI_CN_GAIN = 4;
     public static int CM_EXT_TI_CN_GAIN = 5;
+    public static int CM_OVERLAPPING_TI = 6;
+    public static int CM_CHAIN_ENDS_FACE = 7;
+    public static int CM_CHAIN_ENDS_AWAY = 8;
 
     public void extractChainMetrics(int[] chainData)
     {
@@ -575,38 +580,42 @@ public class SvChain {
         final SvBreakend lowerBreakend = chainStart.position() < chainEnd.position() ? chainStart : chainEnd;
         final SvBreakend upperBreakend = chainStart == lowerBreakend ? chainEnd : chainStart;
 
-        // don't allow chains starting and ending on different chromosomes
-         if(!chainEnd.getChrArm().equals(chainStart.getChrArm()))
-            return;
+        boolean startEndSameArm = chainEnd.getChrArm().equals(chainStart.getChrArm());
 
-        double chainStartCN = chainStart.copyNumber();
-        double chainEndCN = chainEnd.copyNumber();
-        boolean chainEndsCNMatch = copyNumbersEqual(chainStartCN, chainEndCN);
+        if(startEndSameArm)
+        {
+            if (lowerBreakend.orientation() == 1 && upperBreakend.orientation() == -1)
+            {
+                ++chainData[CM_CHAIN_ENDS_AWAY];
+            }
+            else if (lowerBreakend.orientation() == -1 && upperBreakend.orientation() == 1)
+            {
+                ++chainData[CM_CHAIN_ENDS_FACE];
+            }
+        }
 
         for(final SvLinkedPair pair : mLinkedPairs)
         {
             if(pair.first().type() == SGL || pair.second().type() == SGL)
                 continue;
 
-            SvBreakend lowerBE = pair.getBreakend(true);
-            SvBreakend upperBE = pair.getBreakend(false);
-            double pairCN = (lowerBE.copyNumber() + upperBE.copyNumber()) * 0.5;
-            boolean pairCNExceedsChainEnds = chainEndsCNMatch && pairCN > chainStartCN && !copyNumbersEqual(pairCN, chainStartCN);
-
-            if(lowerBE.position() >= lowerBreakend.position() && upperBE.position() <= upperBreakend.position())
+            if(pair.locationType() == LOCATION_TYPE_INTERNAL)
             {
                 ++chainData[CM_INT_TI];
 
-                if(pairCNExceedsChainEnds)
+                if(pair.hasCopyNumberGain())
                     ++chainData[CM_INT_TI_CN_GAIN];
             }
-            else
+            else if(pair.locationType() == LOCATION_TYPE_REMOTE)
             {
                 ++chainData[CM_EXT_TI];
 
-                if(pairCNExceedsChainEnds)
+                if(pair.hasCopyNumberGain())
                     ++chainData[CM_EXT_TI_CN_GAIN];
             }
+
+            if(pair.overlapCount() > 0)
+                ++chainData[CM_OVERLAPPING_TI];
         }
     }
 

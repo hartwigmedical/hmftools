@@ -32,6 +32,9 @@ import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_DEL_
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_DUP_EXT_TI;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.isSpecificCluster;
 import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.LINK_TYPE_TI;
+import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.LOCATION_TYPE_EXTERNAL;
+import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.LOCATION_TYPE_INTERNAL;
+import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.LOCATION_TYPE_REMOTE;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_END;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_START;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.isSpecificSV;
@@ -86,10 +89,11 @@ public class ClusterAnnotations
 
     public static void annotateTemplatedInsertions(final List<SvCluster> clusters, final Map<String, List<SvBreakend>> chrBreakendMap)
     {
-        /* work out:
-            - whether a TI has a DB on either or both sides in the same cluster
-            - number of chained assembled TIs in a row
-            - if local, the distance to the next SV in the cluster
+        /* for each TI cache if:
+            - it has a DB on either or both sides in the same cluster
+            - local, the distance to the next SV in the cluster
+            - is enclosed by the chain ends or remote if clear
+            - how many other TIs it overlaps
          */
 
         for(final SvCluster cluster : clusters)
@@ -97,18 +101,16 @@ public class ClusterAnnotations
             if(cluster.getChains().isEmpty())
                 continue;
 
-            // isSpecificCluster(cluster);
+            isSpecificCluster(cluster);
 
-            // gather up start and end arms from each chain
+            // gather up start and end arms from each chain, to determine origin arms for the cluster
             List<String> startEndArms = Lists.newArrayList();
 
             for(final SvChain chain : cluster.getChains())
             {
                 for (int be1 = SVI_START; be1 <= SVI_END; ++be1)
                 {
-                    boolean isFirst = isStart(be1);
-
-                    final SvBreakend chainEnd = chain.getChainEndSV(isFirst).getBreakend(chain.chainEndOpenOnStart(isFirst));
+                    final SvBreakend chainEnd = chain.getOpenBreakend(isStart(be1));
                     if (chainEnd == null)
                         continue;
 
@@ -119,35 +121,130 @@ public class ClusterAnnotations
 
             for(final SvChain chain : cluster.getChains())
             {
-                // use chain start and end as reference point for CN gain and whether a TI is effectively inside a synthetic DEL or not
+                final SvBreakend chainStart = chain.getOpenBreakend(true);
+                final SvBreakend chainEnd = chain.getOpenBreakend(false);
+
+                SvBreakend lowerBreakend = null;
+                SvBreakend upperBreakend = null;
+                boolean startEndSameArm = false;
+                boolean chainEndsCNMatch = false;
+                double chainEndsCN = 0;
+
+                if(chainStart != null && chainEnd != null)
+                {
+                    lowerBreakend = chainStart.position() < chainEnd.position() ? chainStart : chainEnd;
+                    upperBreakend = chainStart == lowerBreakend ? chainEnd : chainStart;
+
+                    startEndSameArm = chainEnd.getChrArm().equals(chainStart.getChrArm());
+
+                    double chainStartCN = chainStart.copyNumber();
+                    double chainEndCN = chainEnd.copyNumber();
+                    chainEndsCNMatch = copyNumbersEqual(chainStartCN, chainEndCN);
+
+                    if(chainEndsCNMatch)
+                        chainEndsCN = chainStartCN;
+                }
 
                 for(final SvLinkedPair pair : chain.getLinkedPairs())
                 {
-                    if(pair.linkType() != LINK_TYPE_TI)
-                        continue;
-
                     if(pair.first().type() == SGL || pair.second().type() == SGL)
                         continue;
 
+                    SvBreakend lowerBE = pair.getBreakend(true);
+                    SvBreakend upperBE = pair.getBreakend(false);
+                    double pairCN = (lowerBE.copyNumber() + upperBE.copyNumber()) * 0.5;
+                    boolean pairCNExceedsChainEnds = chainEndsCNMatch && pairCN > chainEndsCN && !copyNumbersEqual(pairCN, chainEndsCN);
+
+                    if(pairCNExceedsChainEnds)
+                    {
+                        pair.setHasCopyNumberGain(true);
+                    }
+
+                    if(startEndSameArm)
+                    {
+                        if(lowerBE.chromosome().equals(lowerBreakend.chromosome()))
+                        {
+                            if (lowerBE.position() >= lowerBreakend.position() && upperBE.position() <= upperBreakend.position())
+                            {
+                                pair.setLocationType(LOCATION_TYPE_INTERNAL);
+                            }
+                            else
+                            {
+                                pair.setLocationType(LOCATION_TYPE_EXTERNAL);
+                            }
+                        }
+                        else
+                        {
+                            pair.setLocationType(LOCATION_TYPE_REMOTE);
+                        }
+                    }
+                    else
+                    {
+                        if((chainStart != null && lowerBE.getChrArm().equals(chainStart.getChrArm()))
+                        || (chainEnd != null && lowerBE.getChrArm().equals(chainEnd.getChrArm())))
+                        {
+                            pair.setLocationType(LOCATION_TYPE_EXTERNAL);
+                        }
+                        else
+                        {
+                            pair.setLocationType(LOCATION_TYPE_REMOTE);
+                        }
+                    }
+
+                    List<SvLinkedPair> uniqueOverlaps = Lists.newArrayList();
+                    int overlapCount = 0;
+
+                    for(final SvLinkedPair otherPair : chain.getLinkedPairs())
+                    {
+                        if(pair == otherPair)
+                            continue;
+
+                        if(uniqueOverlaps.stream().anyMatch(x -> x.matches(otherPair)))
+                            continue;
+
+                        if(!pair.chromosome().equals(otherPair.chromosome()) || pair.length() <= otherPair.length())
+                            continue;
+
+                        uniqueOverlaps.add(otherPair);
+
+                        long pos1Start = pair.getBreakend(true).position();
+                        long pos1End = pair.getBreakend(false).position();
+                        long pos2Start = otherPair.getBreakend(true).position();
+                        long pos2End = otherPair.getBreakend(false).position();
+
+                        long overlapDistance = 0;
+                        if(pos1Start <= pos2Start && pos1End >= pos2Start)
+                            overlapDistance = pos1End - pos2Start;
+                        else if(pos1Start <= pos2End && pos1End >= pos2End)
+                            overlapDistance = pos2End - pos1Start;
+
+                        if(overlapDistance >= abs(NO_DB_MARKER)) // longer than a max DB length
+                        {
+                            ++overlapCount;
+                        }
+                    }
+
+                    pair.setOverlapCount(overlapCount);
+
                     // find closest SV in this cluster
-                    final SvVarData first = pair.first();
-                    final SvVarData second = pair.second();
-                    SvBreakend firstBreakend = first.getBreakend(pair.firstLinkOnStart());
-                    final List<SvBreakend> breakendList = chrBreakendMap.get(firstBreakend.chromosome());
+                    final List<SvBreakend> breakendList = chrBreakendMap.get(pair.chromosome());
 
                     int[] nextSVData = getNextClusterSVData(cluster, breakendList, pair);
                     pair.setNextSVData(nextSVData[NEXT_SV_DISTANCE], nextSVData[NEXT_SV_TRAVERSED_COUNT]);
 
+                    // how many SVs are traversed by this link
                     pair.setTraversedSVCount(getTraversedSvCount(cluster, breakendList,
                             pair.getBreakend(true).getChrPosIndex(), pair.getBreakend(false).getChrPosIndex()));
 
-                    SvLinkedPair dbFirst = first.getDBLink(pair.firstLinkOnStart());
+                    // closest DB info
+                    SvLinkedPair dbFirst = pair.first().getDBLink(pair.firstLinkOnStart());
                     SvLinkedPair dbSecond = pair.second().getDBLink(pair.secondLinkOnStart());
 
                     pair.setDBLenFirst(dbFirst != null ? dbFirst.length() : NO_DB_MARKER);
                     pair.setDBLenSecond(dbSecond != null ? dbSecond.length() : NO_DB_MARKER);
 
-                    if(startEndArms.contains(firstBreakend.getChrArm()))
+                    // whether this pair is on the same arm as the chain ends
+                    if(startEndArms.contains(pair.getFirstBreakend().getChrArm()))
                     {
                         pair.setOnArmOfOrigin(true);
                     }

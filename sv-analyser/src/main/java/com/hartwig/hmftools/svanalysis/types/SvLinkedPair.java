@@ -26,7 +26,8 @@ public class SvLinkedPair {
     private int mNextSVDistance;
     private int mNextSVTraversedCount;
     private boolean mOnArmOfOrigin;
-    private boolean mWithinChainStartAndEnd;
+    private String mLocationType;
+    private int mOverlapCount;
     private boolean mHasCopyNumberGain;
 
     private String mExonMatchData;
@@ -38,6 +39,11 @@ public class SvLinkedPair {
     public static String ASSEMBLY_MATCH_DIFF = "DIFF";
     public static String ASSEMBLY_MATCH_INFER_ONLY = "INFER_ONLY";
     public static String ASSEMBLY_MATCH_NONE = "NONE";
+
+    public static String LOCATION_TYPE_UNCLEAR = "Unclear";
+    public static String LOCATION_TYPE_REMOTE = "Remote"; // TI is not on arm with any chain end
+    public static String LOCATION_TYPE_EXTERNAL = "External"; // TI is on arm with a chain end but outside its bounds
+    public static String LOCATION_TYPE_INTERNAL = "Internal";
 
     public SvLinkedPair(SvVarData first, SvVarData second, final String linkType, boolean firstLinkOnStart, boolean secondLinkOnStart)
     {
@@ -55,7 +61,8 @@ public class SvLinkedPair {
         mNextSVDistance = 0;
         mNextSVTraversedCount = 0;
         mOnArmOfOrigin = false;
-        mWithinChainStartAndEnd = false;
+        mLocationType = LOCATION_TYPE_UNCLEAR;
+        mOverlapCount = 0;
         mHasCopyNumberGain = false;
         mExonMatchData = "";
 
@@ -149,8 +156,11 @@ public class SvLinkedPair {
     public void setOnArmOfOrigin(boolean toggle) { mOnArmOfOrigin = toggle; }
     public boolean onArmOfOrigin() { return mOnArmOfOrigin; }
 
-    public void setWithinChainStartAndEnd(boolean toggle) { mWithinChainStartAndEnd = toggle; }
-    public boolean withinChainStartAndEnd() { return mWithinChainStartAndEnd; }
+    public void setLocationType(final String type) { mLocationType = type; }
+    public final String locationType() { return mLocationType; }
+
+    public void setOverlapCount(int count) { mOverlapCount = count; }
+    public int overlapCount() { return mOverlapCount; }
 
     public void setHasCopyNumberGain(boolean toggle) { mHasCopyNumberGain = toggle; }
     public boolean hasCopyNumberGain() { return mHasCopyNumberGain; }
