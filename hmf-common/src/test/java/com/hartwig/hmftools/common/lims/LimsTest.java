@@ -13,13 +13,13 @@ import java.util.Set;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
 public class LimsTest {
 
     private static final String SAMPLE = "CPCT02991111T";
-    private static final String SAMPLE_WIDE = "WIDE02991111T";
 
     private static final String SUBMISSION = "ABCDEF123";
 
@@ -55,6 +55,8 @@ public class LimsTest {
                 .requesterEmail(requesterEmail)
                 .requesterName(requesterName)
                 .shallowSeq(0)
+                .germlineFindings(Strings.EMPTY)
+                .hospitalPaSampleId(Strings.EMPTY)
                 .build();
 
         final LimsJsonSubmissionData submissionData =
@@ -80,6 +82,9 @@ public class LimsTest {
         assertEquals("40%", lims.pathologyTumorPercentage(SAMPLE));
         assertEquals(primaryTumor, lims.primaryTumor(SAMPLE));
         assertEquals(labSopVersions, lims.labProcedures(SAMPLE));
+
+        assertEquals(LimsGermlineFindingsChoice.UNKNOWN, lims.germlineFindingsChoice(SAMPLE));
+        assertEquals("", lims.hospitalPaSampleId(SAMPLE));
     }
 
     @Test
@@ -97,6 +102,8 @@ public class LimsTest {
         assertEquals("N/A", lims.purityShallowSeq("DoesNotExist"));
         assertEquals("N/A", lims.primaryTumor("DoesNotExist"));
         assertEquals("N/A", lims.labProcedures("DoesNotExist"));
+        assertEquals("not known", lims.hospitalPaSampleId("DoesNotExist"));
+        assertEquals(LimsGermlineFindingsChoice.UNKNOWN, lims.germlineFindingsChoice("DoesNotExist"));
     }
 
     @Test

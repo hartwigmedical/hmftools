@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.patientreporter.report.pages;
 
 import static com.hartwig.hmftools.patientreporter.report.Commons.SECTION_VERTICAL_GAP;
+import static com.hartwig.hmftools.patientreporter.report.Commons.SECTION_VERTICAL_GAP_QC_FAIL;
 import static com.hartwig.hmftools.patientreporter.report.Commons.dataTableStyle;
 import static com.hartwig.hmftools.patientreporter.report.Commons.fontStyle;
 import static com.hartwig.hmftools.patientreporter.report.Commons.formattedDate;
@@ -95,7 +96,9 @@ public abstract class QCFailPage {
             }
         }
 
-        return type == LimsSampleType.CORE ? coreLayout(title, subTitle, message) : defaultLayout(title, subTitle, message);
+        return type == LimsSampleType.CORE
+                ? coreLayout(title, subTitle, message)
+                : type == LimsSampleType.WIDE ? wideLayout(title, subTitle, message) : defaultLayout(title, subTitle, message);
     }
 
     @NotNull
@@ -103,30 +106,30 @@ public abstract class QCFailPage {
         String requester = sampleReport().requesterName() + " (" + sampleReport().requesterEmail() + ")";
         return cmp.verticalList(cmp.text(title).setStyle(tableHeaderStyle().setFontSize(12)).setHeight(20),
                 cmp.text(subTitle).setStyle(dataTableStyle().setFontSize(12)).setHeight(20),
-                cmp.verticalGap(SECTION_VERTICAL_GAP),
+                cmp.verticalGap(SECTION_VERTICAL_GAP_QC_FAIL),
                 cmp.text(message).setStyle(fontStyle()),
-                cmp.verticalGap(SECTION_VERTICAL_GAP),
+                cmp.verticalGap(SECTION_VERTICAL_GAP_QC_FAIL),
                 notSequencedText(),
-                cmp.verticalGap(SECTION_VERTICAL_GAP),
+                cmp.verticalGap(SECTION_VERTICAL_GAP_QC_FAIL),
                 cmp.text("When possible, please resubmit using the same DVO with project name " + sampleReport().projectName() + ".")
                         .setStyle(fontStyle()),
-                cmp.verticalGap(SECTION_VERTICAL_GAP),
+                cmp.verticalGap(SECTION_VERTICAL_GAP_QC_FAIL),
                 cmp.text("The HMF sample ID is " + sampleReport().sampleId() + " and the hospital patient ID is "
                         + sampleReport().hospitalPatientId()).setStyle(fontStyle()),
                 cmp.text("The project name of sample is " + sampleReport().projectName() + " and the submissionId ID is "
                         + sampleReport().submissionId()).setStyle(fontStyle()),
                 internalBarcodeText(),
-                cmp.verticalGap(SECTION_VERTICAL_GAP),
+                cmp.verticalGap(SECTION_VERTICAL_GAP_QC_FAIL),
                 pathologyText(),
                 shallowSeqText(),
-                cmp.verticalGap(SECTION_VERTICAL_GAP),
+                cmp.verticalGap(SECTION_VERTICAL_GAP_QC_FAIL),
                 sampleArrivalDateText(),
-                cmp.verticalGap(SECTION_VERTICAL_GAP),
+                cmp.verticalGap(SECTION_VERTICAL_GAP_QC_FAIL),
                 recipientText(),
                 cmp.text("The requester is: " + requester).setStyle(fontStyle()),
-                cmp.verticalGap(SECTION_VERTICAL_GAP),
+                cmp.verticalGap(SECTION_VERTICAL_GAP_QC_FAIL),
                 accreditationText(),
-                cmp.verticalGap(SECTION_VERTICAL_GAP),
+                cmp.verticalGap(SECTION_VERTICAL_GAP_QC_FAIL),
                 questionsText());
     }
 
@@ -134,28 +137,58 @@ public abstract class QCFailPage {
     private ComponentBuilder<?, ?> defaultLayout(@NotNull String title, @NotNull String subTitle, @NotNull String message) {
         return cmp.verticalList(cmp.text(title).setStyle(tableHeaderStyle().setFontSize(12)).setHeight(20),
                 cmp.text(subTitle).setStyle(dataTableStyle().setFontSize(12)).setHeight(20),
-                cmp.verticalGap(SECTION_VERTICAL_GAP),
+                cmp.verticalGap(SECTION_VERTICAL_GAP_QC_FAIL),
                 cmp.text(message).setStyle(fontStyle()),
-                cmp.verticalGap(SECTION_VERTICAL_GAP),
+                cmp.verticalGap(SECTION_VERTICAL_GAP_QC_FAIL),
                 notSequencedText(),
-                cmp.verticalGap(SECTION_VERTICAL_GAP),
+                cmp.verticalGap(SECTION_VERTICAL_GAP_QC_FAIL),
                 cmp.text("When possible, please resubmit using the same " + study().studyName() + "-number. "
                         + "In case additional tumor material cannot be provided, please be notified that the patient will not be "
                         + "evaluable for the " + study().studyCode() + " study.").setStyle(fontStyle()),
-                cmp.verticalGap(SECTION_VERTICAL_GAP),
+                cmp.verticalGap(SECTION_VERTICAL_GAP_QC_FAIL),
                 cmp.text("The HMF sample ID is " + sampleReport().sampleId()).setStyle(fontStyle()),
                 internalBarcodeText(),
-                cmp.verticalGap(SECTION_VERTICAL_GAP),
+                cmp.verticalGap(SECTION_VERTICAL_GAP_QC_FAIL),
                 pathologyText(),
-                cmp.verticalGap(SECTION_VERTICAL_GAP),
+                cmp.verticalGap(SECTION_VERTICAL_GAP_QC_FAIL),
                 shallowSeqText(),
-                cmp.verticalGap(SECTION_VERTICAL_GAP),
+                cmp.verticalGap(SECTION_VERTICAL_GAP_QC_FAIL),
                 sampleArrivalDateText(),
-                cmp.verticalGap(SECTION_VERTICAL_GAP),
+                cmp.verticalGap(SECTION_VERTICAL_GAP_QC_FAIL),
                 recipientText(),
-                cmp.verticalGap(SECTION_VERTICAL_GAP),
+                cmp.verticalGap(SECTION_VERTICAL_GAP_QC_FAIL),
                 accreditationText(),
-                cmp.verticalGap(SECTION_VERTICAL_GAP),
+                cmp.verticalGap(SECTION_VERTICAL_GAP_QC_FAIL),
+                questionsText());
+    }
+
+    @NotNull
+    private ComponentBuilder<?, ?> wideLayout(@NotNull String title, @NotNull String subTitle, @NotNull String message) {
+        return cmp.verticalList(cmp.text(title).setStyle(tableHeaderStyle().setFontSize(12)).setHeight(20),
+                cmp.text(subTitle).setStyle(dataTableStyle().setFontSize(12)).setHeight(20),
+                cmp.verticalGap(SECTION_VERTICAL_GAP_QC_FAIL),
+                cmp.text(message).setStyle(fontStyle()),
+                cmp.verticalGap(SECTION_VERTICAL_GAP_QC_FAIL),
+                notSequencedText(),
+                cmp.verticalGap(SECTION_VERTICAL_GAP_QC_FAIL),
+                cmp.text("When possible, please resubmit using the same " + study().studyName() + "-number. "
+                        + "In case additional tumor material cannot be provided, please be notified that the patient will not be "
+                        + "evaluable for the " + study().studyCode() + " study.").setStyle(fontStyle()),
+                cmp.verticalGap(SECTION_VERTICAL_GAP_QC_FAIL),
+                cmp.text("The HMF sample ID is " + sampleReport().sampleId() + " and the pathology sample ID is: "
+                        + sampleReport().hospitalPathologySampleId()).setStyle(fontStyle()),
+                internalBarcodeText(),
+                cmp.verticalGap(SECTION_VERTICAL_GAP_QC_FAIL),
+                pathologyText(),
+                cmp.verticalGap(SECTION_VERTICAL_GAP_QC_FAIL),
+                shallowSeqText(),
+                cmp.verticalGap(SECTION_VERTICAL_GAP_QC_FAIL),
+                sampleArrivalDateText(),
+                cmp.verticalGap(SECTION_VERTICAL_GAP_QC_FAIL),
+                recipientText(),
+                cmp.verticalGap(SECTION_VERTICAL_GAP_QC_FAIL),
+                accreditationText(),
+                cmp.verticalGap(SECTION_VERTICAL_GAP_QC_FAIL),
                 questionsText());
     }
 

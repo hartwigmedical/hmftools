@@ -72,7 +72,7 @@ public class ChartWriter {
 
     private void somaticPloidyPDF(@NotNull final String subtitle, @NotNull final List<PurityAdjustedSomaticVariant> variants)
             throws IOException {
-        String fileName = outputDirectory + File.separator + sample + ".variant.png";
+        String fileName = outputDirectory + File.separator + sample + ".variant.old.png";
         JFreeChart chart = CopyNumberCharts.somaticPloidyPDF(variants);
         chart.addSubtitle(new TextTitle(subtitle));
         ChartUtilities.saveChartAsPNG(new File(fileName), chart, 500, 300);

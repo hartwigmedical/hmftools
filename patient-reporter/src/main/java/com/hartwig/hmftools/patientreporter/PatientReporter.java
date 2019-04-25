@@ -125,7 +125,7 @@ abstract class PatientReporter {
                 .purityShallowSeq(lims.purityShallowSeq(tumorSample))
                 .pathologyTumorPercentage(lims.pathologyTumorPercentage(tumorSample))
                 .tumorArrivalDate(lims.arrivalDate(tumorSample))
-                .bloodArrivalDate(lims.arrivalDate(run.refSample()))
+                .referenceArrivalDate(lims.arrivalDate(run.refSample()))
                 .labProcedures(lims.labProcedures(tumorSample))
                 .addressee(baseReportData().hospitalModel().addresseeStringForSample(tumorSample, lims.requesterName(tumorSample)))
                 .projectName(lims.projectName(tumorSample))
@@ -133,6 +133,7 @@ abstract class PatientReporter {
                 .requesterEmail(lims.requesterEmail(tumorSample))
                 .submissionId(lims.submissionId(tumorSample))
                 .hospitalPatientId(lims.hospitalPatientId(tumorSample))
+                .hospitalPathologySampleId(lims.hospitalPaSampleId(tumorSample))
                 .build();
 
         final List<EvidenceItem> nonTrials = ReportableEvidenceItemFactory.extractNonTrials(allEvidenceItems);
@@ -149,7 +150,7 @@ abstract class PatientReporter {
                 somaticVariantAnalysis.tumorMutationalLoad(),
                 somaticVariantAnalysis.tumorMutationalBurden(),
                 chordAnalysis,
-                lims.germlineFindigsWIDE(tumorSample),
+                lims.germlineFindingsChoice(tumorSample),
                 hasReportableGermlineVariant,
                 copyNumberAnalysis.reportableGeneCopyNumbers(),
                 svAnalysis.reportableFusions(),

@@ -23,7 +23,7 @@ import com.hartwig.hmftools.common.chord.ImmutableChordAnalysis;
 import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.ecrf.projections.ImmutablePatientTumorLocation;
 import com.hartwig.hmftools.common.fusions.KnownFusionsModel;
-import com.hartwig.hmftools.common.lims.LimsInformedConsent;
+import com.hartwig.hmftools.common.lims.LimsGermlineFindingsChoice;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.gender.Gender;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
@@ -85,7 +85,7 @@ public final class ExampleAnalysisTestFactory {
                 tumorMutationalLoad,
                 tumorMutationalBurden,
                 chordAnalysis,
-                LimsInformedConsent.UNKNOWN,
+                LimsGermlineFindingsChoice.UNKNOWN,
                 false,
                 copyNumbers,
                 fusions,
@@ -131,7 +131,7 @@ public final class ExampleAnalysisTestFactory {
                 tumorMutationalLoad,
                 tumorMutationalBurden,
                 chordAnalysis,
-                LimsInformedConsent.UNKNOWN,
+                LimsGermlineFindingsChoice.UNKNOWN,
                 true,
                 copyNumbers,
                 fusions,
@@ -153,7 +153,7 @@ public final class ExampleAnalysisTestFactory {
                 .purityShallowSeq(Strings.EMPTY)
                 .pathologyTumorPercentage("80%")
                 .tumorArrivalDate(LocalDate.parse("05-Jan-2018", DATE_FORMATTER))
-                .bloodArrivalDate(LocalDate.parse("01-Jan-2018", DATE_FORMATTER))
+                .referenceArrivalDate(LocalDate.parse("01-Jan-2018", DATE_FORMATTER))
                 .labProcedures("PREP013V23-QC037V20-SEQ008V25")
                 .requesterName(Strings.EMPTY)
                 .requesterEmail(Strings.EMPTY)
@@ -161,6 +161,7 @@ public final class ExampleAnalysisTestFactory {
                 .projectName("COLO")
                 .hospitalPatientId(Strings.EMPTY)
                 .submissionId(Strings.EMPTY)
+                .hospitalPathologySampleId("A")
                 .build();
     }
 

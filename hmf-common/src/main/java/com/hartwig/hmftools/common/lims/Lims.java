@@ -14,6 +14,10 @@ public class Lims {
 
     private static final Logger LOGGER = LogManager.getLogger(Lims.class);
 
+    private static final String NOT_AVAILABLE_STRING = "N/A";
+    private static final String NOT_DETERMINED_STRING = "not determined";
+    private static final String NOT_KNOWN_STRING = "not known";
+
     @NotNull
     private final Map<String, LimsJsonSampleData> dataPerSample;
     @NotNull
@@ -42,26 +46,26 @@ public class Lims {
     @NotNull
     public String patientId(@NotNull final String sample) {
         LimsJsonSampleData sampleData = dataPerSample.get(sample);
-        return sampleData != null ? sampleData.patientId() : "N/A";
+        return sampleData != null ? sampleData.patientId() : NOT_AVAILABLE_STRING;
     }
 
     @NotNull
     public String requesterEmail(@NotNull final String sample) {
         LimsJsonSampleData sampleData = dataPerSample.get(sample);
-        return sampleData != null ? sampleData.requesterEmail() : "N/A";
+        return sampleData != null ? sampleData.requesterEmail() : NOT_AVAILABLE_STRING;
     }
 
     @NotNull
     public String requesterName(@NotNull final String sample) {
         LimsJsonSampleData sampleData = dataPerSample.get(sample);
-        return sampleData != null ? sampleData.requesterName() : "N/A";
+        return sampleData != null ? sampleData.requesterName() : NOT_AVAILABLE_STRING;
     }
 
     @NotNull
     public String submissionId(@NotNull final String sample) {
         String submission = submission(sample);
         LimsJsonSubmissionData submissionData = dataPerSubmission.get(submission);
-        return submissionData != null ? submissionData.submission() : "N/A";
+        return submissionData != null ? submissionData.submission() : NOT_AVAILABLE_STRING;
     }
 
     @Nullable
@@ -74,7 +78,7 @@ public class Lims {
     public String projectName(@NotNull final String sample) {
         String submission = submission(sample);
         LimsJsonSubmissionData submissionData = dataPerSubmission.get(submission);
-        return submissionData != null ? submissionData.projectName() : "N/A";
+        return submissionData != null ? submissionData.projectName() : NOT_AVAILABLE_STRING;
     }
 
     @NotNull
@@ -83,12 +87,12 @@ public class Lims {
         if (sampleData != null) {
             String tumorBarcode = sampleData.tumorBarcodeId();
             if (tumorBarcode.isEmpty()) {
-                return "not determined";
+                return NOT_DETERMINED_STRING;
             } else {
                 return tumorBarcode;
             }
         }
-        return "N/A";
+        return NOT_AVAILABLE_STRING;
     }
 
     @NotNull
@@ -97,12 +101,12 @@ public class Lims {
         if (sampleData != null) {
             String refBarcode = sampleData.refBarcodeId();
             if (refBarcode == null || refBarcode.isEmpty()) {
-                return "not determined";
+                return NOT_DETERMINED_STRING;
             } else {
                 return refBarcode;
             }
         }
-        return "N/A";
+        return NOT_AVAILABLE_STRING;
     }
 
     @Nullable
@@ -169,15 +173,15 @@ public class Lims {
                             return Math.round(Double.parseDouble(shallowSeq.purityShallowSeq()) * 100) + "%";
                         } catch (final NumberFormatException e) {
                             LOGGER.warn("Could not convert shallow seq to a percentage: " + shallowSeq.purityShallowSeq());
-                            return "N/A";
+                            return NOT_AVAILABLE_STRING;
                         }
                     }
                 } else {
-                    return "not determined";
+                    return NOT_DETERMINED_STRING;
                 }
             }
         }
-        return "N/A";
+        return NOT_AVAILABLE_STRING;
     }
 
     @NotNull
@@ -185,21 +189,21 @@ public class Lims {
         LimsJsonSampleData sampleData = dataPerSample.get(sample);
         if (sampleData != null) {
             if (shallowSeqExecuted(sample)) {
-                return "not determined";
+                return NOT_DETERMINED_STRING;
             }
 
             String tumorPercentageString = sampleData.tumorPercentageString();
             if (tumorPercentageString == null) {
-                return "N/A";
+                return NOT_AVAILABLE_STRING;
             } else {
                 try {
                     return Long.toString(Math.round(Double.parseDouble(tumorPercentageString))) + "%";
                 } catch (final NumberFormatException e) {
-                    return "N/A";
+                    return NOT_AVAILABLE_STRING;
                 }
             }
         }
-        return "N/A";
+        return NOT_AVAILABLE_STRING;
     }
 
     @NotNull
@@ -209,7 +213,7 @@ public class Lims {
             return sampleData.primaryTumor();
         }
         // No warning raised since initially this information was not tracked so this will be missing for early samples.
-        return "N/A";
+        return NOT_AVAILABLE_STRING;
     }
 
     @NotNull
@@ -219,17 +223,28 @@ public class Lims {
             return sampleData.labProcedures();
         }
         LOGGER.warn("Could not find lab SOP versions for sample: " + sample + " in LIMS");
-        return "N/A";
+        return NOT_AVAILABLE_STRING;
     }
 
-    public LimsInformedConsent germlineFindigsWIDE(@NotNull String sample) {
+    @NotNull
+    public LimsGermlineFindingsChoice germlineFindingsChoice(@NotNull String sample) {
         LimsJsonSampleData sampleData = dataPerSample.get(sample);
         if (sampleData != null) {
             String germlineOptions = sampleData.germlineFindings();
-            return LimsInformedConsent.extractChoiceInformedConsent(germlineOptions, sample);
+            return LimsGermlineFindingsChoice.extractChoiceInformedConsent(germlineOptions, sample);
         } else {
-            return null;
+            return LimsGermlineFindingsChoice.UNKNOWN;
         }
+    }
+
+    @NotNull
+    public String hospitalPaSampleId(@NotNull String sample){
+        LimsJsonSampleData sampleData = dataPerSample.get(sample);
+        if (sampleData != null) {
+            return sampleData.hospitalPaSampleId();
+        }
+        LOGGER.info("Hospital PA sample ID is not known for " + sample);
+        return NOT_KNOWN_STRING;
     }
 
     @Nullable

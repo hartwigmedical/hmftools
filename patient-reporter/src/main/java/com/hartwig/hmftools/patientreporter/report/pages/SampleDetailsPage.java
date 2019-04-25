@@ -75,11 +75,11 @@ public abstract class SampleDetailsPage {
 
         final List<String> lines = Lists.newArrayList("The samples have been sequenced at " + Commons.HARTWIG_ADDRESS,
                 "The samples have been analyzed by Next Generation Sequencing",
-                "The HMF sample ID is: " + sampleReport().sampleId(),
+                "The HMF sample ID is: " + sampleReport().sampleId() + tissueNumberPA(sampleId),
                 "The pathology tumor percentage for this sample is " + sampleReport().pathologyTumorPercentage(),
                 "This experiment is performed on the tumor sample which arrived on " + formattedDate(sampleReport().tumorArrivalDate())
                         + " with internal tumor barcode " + sampleReport().barcodeTumor(),
-                "This experiment is performed on the blood sample which arrived on " + formattedDate(sampleReport().bloodArrivalDate())
+                "This experiment is performed on the blood sample which arrived on " + formattedDate(sampleReport().referenceArrivalDate())
                         + " with internal blood barcode " + sampleReport().barcodeReference(),
                 "This experiment is performed according to lab procedures: " + sampleReport().labProcedures(),
                 "This report is generated and verified by: " + user(),
@@ -96,5 +96,11 @@ public abstract class SampleDetailsPage {
         comments().ifPresent(comments -> lines.add("Comments: " + comments));
 
         return toList("Sample details", lines);
+    }
+
+    @NotNull
+    private String tissueNumberPA(@NotNull String sampleId) {
+        LimsSampleType type = LimsSampleType.fromSampleId(sampleId);
+        return type == LimsSampleType.WIDE ? " and the tissue ID of pathology is: " + sampleReport().hospitalPathologySampleId() : "";
     }
 }
