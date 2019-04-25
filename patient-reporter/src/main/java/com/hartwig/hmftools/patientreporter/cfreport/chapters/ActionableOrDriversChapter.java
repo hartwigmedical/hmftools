@@ -56,7 +56,7 @@ public class ActionableOrDriversChapter implements ReportChapter {
         }
 
         // Create content table
-        Table contentTable = TableUtil.createReportContentTable(new float[] {45, 75, 50, 60, 40, 60, 40, 55, 50, 30}, new Cell[]  {
+        Table contentTable = TableUtil.createReportContentTable(new float[] {45, 75, 50, 60, 40, 60, 40, 50, 50, 35}, new Cell[]  {
                 TableUtil.getHeaderCell("Gene"),
                 TableUtil.getHeaderCell("Variant"),
                 TableUtil.getHeaderCell("Impact"),
@@ -89,7 +89,7 @@ public class ActionableOrDriversChapter implements ReportChapter {
             contentTable.addCell(TableUtil.getContentCell(chart).setVerticalAlignment(VerticalAlignment.MIDDLE));
             contentTable.addCell(TableUtil.getContentCell(SomaticVariants.getClonalityString(variant.clonality(), hasReliablePurityFit)));
             contentTable.addCell(TableUtil.getContentCell(SomaticVariants.getBiallelicString(variant.biallelic(), variant.driverCategory(), hasReliablePurityFit)));
-            contentTable.addCell(TableUtil.getContentCell(SomaticVariants.getDriverString(variant.driverLikelihood())));
+            contentTable.addCell(TableUtil.getContentCell("Medium")); //SomaticVariants.getDriverString(variant.driverLikelihood())
         }
 
         // Add table footnotes
