@@ -118,6 +118,7 @@ public class DetailsAndDisclaimerChapter implements ReportChapter {
         try {
             final Image rvaLogo = new Image(ImageDataFactory.create(rvaLogoPath));
             rvaLogo.setMaxHeight(58);
+            div.add(rvaLogo);
         } catch (MalformedURLException e) {
             throw new IOException("Failed to read RVA logo image at " + rvaLogoPath);
         }
