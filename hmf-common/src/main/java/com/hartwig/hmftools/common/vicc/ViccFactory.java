@@ -1005,18 +1005,18 @@ public abstract class ViccFactory {
                                 stringInterventionType.append(interventionType).append(",");
                             }
                         }
+                        stringToCSVMolecularMatchTrials.append(stringInterventionName)
+                                .append(";")
+                                .append(stringOtherName)
+                                .append(";")
+                                .append(stringDescription)
+                                .append(";")
+                                .append(stringArmGroupLabel)
+                                .append(";")
+                                .append(stringInterventionType)
+                                .append(";");
                     }
-                    stringToCSVMolecularMatchTrials.append(stringInterventionName)
-                            .append(";")
-                            .append(stringOtherName)
-                            .append(";")
-                            .append(stringDescription)
-                            .append(";")
-                            .append(stringArmGroupLabel)
-                            .append(";")
-                            .append(stringInterventionType)
-                            .append(";");
-                    LOGGER.info(stringInterventionName);
+
                 } else if (keysOfMolecularMatchTrials.get(x).equals("locations")) {
                     JsonArray molecluarMatchTrialsArray =
                             object.getAsJsonObject("molecularmatch_trials").get(keysOfMolecularMatchTrials.get(x)).getAsJsonArray();
@@ -1230,12 +1230,8 @@ public abstract class ViccFactory {
                             .append(stringGeneratedByTerm)
                             .append(";");
                 } else {
-                    JsonElement molecularMatchTrialsElement = object.get("molecularmatch_trials");
-                    List<String> keysOther = Lists.newArrayList(molecularMatchTrialsElement.getAsJsonObject().keySet());
-                    for (int a = 0; a < keysOther.size(); a++) {
-                        JsonElement elementValue = molecularMatchTrialsElement.getAsJsonObject().get(keysOther.get(a));
-                        stringToCSVMolecularMatchTrials.append(elementValue).append(";");
-                    }
+                    stringToCSVMolecularMatchTrials.append(object.getAsJsonObject("molecularmatch_trials")
+                            .get(keysOfMolecularMatchTrials.get(x))).append(";");
                 }
             }
         }
@@ -2021,7 +2017,7 @@ public abstract class ViccFactory {
         writer.append(headerCSV);
         writer.append("\n");
 
-        while (reader.peek() != JsonToken.END_DOCUMENT && index < 100) {
+        while (reader.peek() != JsonToken.END_DOCUMENT && index < 5) {
             JsonObject object = parser.parse(reader).getAsJsonObject();
             StringBuilder stringToCSVSource = readObjectSource(object);
             LOGGER.info(index + " " + stringToCSVSource);
