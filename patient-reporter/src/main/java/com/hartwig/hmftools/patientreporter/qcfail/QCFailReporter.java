@@ -35,8 +35,8 @@ public abstract class QCFailReporter {
 
         final SampleReport sampleReport = ImmutableSampleReport.builder()
                 .sampleId(sample)
-                .barcodeTumor(lims.barcodeTumor(sample))
-                .barcodeReference(lims.barcodeReference(sample))
+                .barcodeTumor(lims.tumorBarcode(sample))
+                .barcodeReference(lims.refBarcode(sample))
                 .patientTumorLocation(patientTumorLocation)
                 .purityShallowSeq(lims.purityShallowSeq(sample))
                 .pathologyTumorPercentage(lims.pathologyTumorPercentage(sample))
@@ -48,7 +48,7 @@ public abstract class QCFailReporter {
                 .requesterEmail(lims.requesterEmail(sample))
                 .submissionId(lims.submissionId(sample))
                 .hospitalPatientId(lims.hospitalPatientId(sample))
-                .hospitalPathologySampleId(lims.hospitalPaSampleId(sample))
+                .hospitalPathologySampleId(lims.hospitalPathologySampleId(sample))
                 .build();
 
         return ImmutableQCFailReport.of(sampleReport,

@@ -119,8 +119,8 @@ abstract class PatientReporter {
         Lims lims = baseReportData().limsModel();
         final SampleReport sampleReport = ImmutableSampleReport.builder()
                 .sampleId(tumorSample)
-                .barcodeTumor(lims.barcodeTumor(tumorSample))
-                .barcodeReference(lims.barcodeReference(tumorSample))
+                .barcodeTumor(lims.tumorBarcode(tumorSample))
+                .barcodeReference(lims.refBarcode(tumorSample))
                 .patientTumorLocation(patientTumorLocation)
                 .purityShallowSeq(lims.purityShallowSeq(tumorSample))
                 .pathologyTumorPercentage(lims.pathologyTumorPercentage(tumorSample))
@@ -133,7 +133,7 @@ abstract class PatientReporter {
                 .requesterEmail(lims.requesterEmail(tumorSample))
                 .submissionId(lims.submissionId(tumorSample))
                 .hospitalPatientId(lims.hospitalPatientId(tumorSample))
-                .hospitalPathologySampleId(lims.hospitalPaSampleId(tumorSample))
+                .hospitalPathologySampleId(lims.hospitalPathologySampleId(tumorSample))
                 .build();
 
         final List<EvidenceItem> nonTrials = ReportableEvidenceItemFactory.extractNonTrials(allEvidenceItems);
@@ -150,7 +150,7 @@ abstract class PatientReporter {
                 somaticVariantAnalysis.tumorMutationalLoad(),
                 somaticVariantAnalysis.tumorMutationalBurden(),
                 chordAnalysis,
-                lims.germlineFindingsChoice(tumorSample),
+                lims.germlineReportingChoice(tumorSample),
                 hasReportableGermlineVariant,
                 copyNumberAnalysis.reportableGeneCopyNumbers(),
                 svAnalysis.reportableFusions(),

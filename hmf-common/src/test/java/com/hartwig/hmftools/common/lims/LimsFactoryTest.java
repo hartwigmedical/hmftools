@@ -22,6 +22,11 @@ public class LimsFactoryTest {
     private static final String LIMS_DIRECTORY = Resources.getResource("lims").getPath();
 
     @Test
+    public void canCreateEmptyLims() {
+        assertNotNull(LimsFactory.empty());
+    }
+
+    @Test
     public void canBuildLimsFromTestData() throws IOException {
         assertNotNull(LimsFactory.fromLimsDirectory(LIMS_DIRECTORY));
     }
@@ -42,10 +47,10 @@ public class LimsFactoryTest {
         final LimsJsonSampleData refData = dataPerSample.get(refSampleId);
         assertEquals(refSampleId, refData.sampleId());
         assertNull(refData.hospitalPatientId());
-        assertEquals("2016-01-03", refData.arrivalDateString());
+        assertEquals("2016-01-03", refData.arrivalDate());
         assertEquals("143", refData.dnaConcentration());
-        assertEquals("2016-01-02", refData.samplingDateString());
-        assertEquals("NA", refData.tumorPercentageString());
+        assertEquals("2016-01-02", refData.samplingDate());
+        assertEquals("NA", refData.pathologyTumorPercentage());
         assertEquals("NA", refData.primaryTumor());
         assertEquals("PREP013V23-QC037V20-SEQ008V25", refData.labProcedures());
         assertNull(refData.labRemarks());
@@ -55,16 +60,16 @@ public class LimsFactoryTest {
         final LimsJsonSampleData tumorData = dataPerSample.get(tumorSampleId);
         assertEquals(tumorSampleId, tumorData.sampleId());
         assertEquals("something", tumorData.hospitalPatientId());
-        assertEquals("2016-02-05", tumorData.arrivalDateString());
+        assertEquals("2016-02-05", tumorData.arrivalDate());
         assertEquals("143", tumorData.dnaConcentration());
-        assertEquals("2016-01-04", tumorData.samplingDateString());
-        assertEquals("30", tumorData.tumorPercentageString());
+        assertEquals("2016-01-04", tumorData.samplingDate());
+        assertEquals("30", tumorData.pathologyTumorPercentage());
         assertEquals("NA", tumorData.primaryTumor());
         assertEquals("N/A", tumorData.labProcedures());
         assertEquals("this is a test", tumorData.labRemarks());
         assertEquals("HMFregCPCT", tumorData.submission());
-        assertEquals("", tumorData.hospitalPaSampleId());
-        assertEquals("", tumorData.germlineFindings());
+        assertEquals("", tumorData.hospitalPathologySampleId());
+        assertEquals("", tumorData.germlineReportingChoice());
     }
 
     @Test

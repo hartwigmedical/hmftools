@@ -23,7 +23,7 @@ import com.hartwig.hmftools.common.chord.ImmutableChordAnalysis;
 import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.ecrf.projections.ImmutablePatientTumorLocation;
 import com.hartwig.hmftools.common.fusions.KnownFusionsModel;
-import com.hartwig.hmftools.common.lims.LimsGermlineFindingsChoice;
+import com.hartwig.hmftools.common.lims.LimsGermlineReportingChoice;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.gender.Gender;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
@@ -85,7 +85,7 @@ public final class ExampleAnalysisTestFactory {
                 tumorMutationalLoad,
                 tumorMutationalBurden,
                 chordAnalysis,
-                LimsGermlineFindingsChoice.UNKNOWN,
+                LimsGermlineReportingChoice.UNKNOWN,
                 false,
                 copyNumbers,
                 fusions,
@@ -131,7 +131,7 @@ public final class ExampleAnalysisTestFactory {
                 tumorMutationalLoad,
                 tumorMutationalBurden,
                 chordAnalysis,
-                LimsGermlineFindingsChoice.UNKNOWN,
+                LimsGermlineReportingChoice.UNKNOWN,
                 true,
                 copyNumbers,
                 fusions,
