@@ -199,14 +199,14 @@ public class BachelorPostProcess
 
     public void run(RunDirectory runDir, final String sampleId, @Nullable  List<BachelorGermlineVariant> bachRecords)
     {
+        mSampleDataDir = runDir.sampleDir().toString() + File.separator;
+
         if(mUsingBatchOutput)
         {
             mBachDataDir = mBatchDataDir;
-            mSampleDataDir = mBachDataDir;
         }
         else
         {
-            mSampleDataDir = runDir.sampleDir().toString() + File.separator;
             mBachDataDir = mSampleDataDir + DEFAULT_BACH_DIRECTORY + File.separator;
         }
 
@@ -219,28 +219,38 @@ public class BachelorPostProcess
             mBachRecords = bachRecords;
         }
 
+        if(mBachRecords.isEmpty())
+            return;
+
         processCurrentRecords(mBachRecords);
 
         if(!mUsingBatchOutput)
         {
             closeBufferedWriter(mWriter);
+            mWriter = null;
         }
     }
 
     private void processCurrentRecords(List<BachelorGermlineVariant> bachRecords)
     {
-        if(mReadBamsDirect)
-        {
-            mBamCountReader.readBamCounts(bachRecords, mBachDataDir);
-        }
-        else
-        {
+        String sampleBachDir = mSampleDataDir + DEFAULT_BACH_DIRECTORY + File.separator;
 
-            if (!mAllelDepthLoader.loadMiniPileupData(mBachDataDir))
-                return;
+        long recordsWithTumorData = bachRecords.stream().filter(x -> x.isReadDataSet()).count();
 
-            if (!mAllelDepthLoader.applyPileupData(bachRecords))
-                return;
+        if(recordsWithTumorData < bachRecords.size())
+        {
+            if (mReadBamsDirect)
+            {
+                mBamCountReader.readBamCounts(bachRecords, sampleBachDir);
+            }
+            else
+            {
+                if (!mAllelDepthLoader.loadMiniPileupData(sampleBachDir))
+                    return;
+
+                if (!mAllelDepthLoader.applyPileupData(bachRecords))
+                    return;
+            }
         }
 
         Map<String, List<BachelorGermlineVariant>> sampleRecordsMap = Maps.newHashMap();
@@ -541,7 +551,7 @@ public class BachelorPostProcess
                     outputFileName += File.separator;
                 }
 
-                if (!mIsBatchMode || mBatchDataDir.isEmpty())
+                if (!mUsingBatchOutput)
                 {
                     outputFileName += sampleId + "_germline_variants.csv";
                 }

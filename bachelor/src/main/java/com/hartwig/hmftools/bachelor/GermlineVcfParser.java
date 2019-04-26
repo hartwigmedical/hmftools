@@ -143,13 +143,20 @@ public class GermlineVcfParser
         }
 
         if(!mUsingBatchOutput)
+        {
             close();
+        }
     }
 
     public void close()
     {
-        closeBufferedWriter(mVcfDataWriter);
-        closeBufferedWriter(mBedFileWriter);
+        if(mUsingBatchOutput)
+        {
+            closeBufferedWriter(mVcfDataWriter);
+            mVcfDataWriter = null;
+            closeBufferedWriter(mBedFileWriter);
+            mBedFileWriter = null;
+        }
     }
 
     private void processVCF(final String sampleId, final File vcf)
@@ -199,71 +206,5 @@ public class GermlineVcfParser
             LOGGER.error("failed to create output files: {}", e.toString());
         }
     }
-
-        /*
-    public boolean run()
-    {
-
-        if (mIsBatchMode)
-        {
-            LOGGER.info("beginning batch run");
-        }
-        else
-        {
-            LOGGER.info("beginning single sample run: {}", mSampleIds.get(0));
-        }
-
-        if (mIsBatchMode)
-        {
-            List<RunDirectory> runDirectories = Lists.newArrayList();
-
-            final Path root = Paths.get(mSampleDataDir);
-
-            try (final Stream<Path> stream = Files.walk(root, 1, FileVisitOption.FOLLOW_LINKS).parallel())
-            {
-                runDirectories = stream.filter(p -> p.toFile().isDirectory())
-                        .filter(p -> !p.equals(root))
-                        .map(RunDirectory::new)
-                        .collect(Collectors.toList());
-            }
-            catch (Exception e)
-            {
-                LOGGER.error("failed walking batch directories: {}", e.toString());
-            }
-
-            LOGGER.info("found {} batch directories", runDirectories.size());
-
-            // add the filtered and passed SV entries for each file
-            for (int i = 0; i < runDirectories.size(); ++i)
-            {
-                final RunDirectory runDir = runDirectories.get(i);
-
-                processSampleDirectory(runDir, "");
-
-                if(mMaxBatchDirectories > 0 && i >= mMaxBatchDirectories)
-                    break;
-            }
-        }
-        else
-        {
-            final Path path = Paths.get(mSampleDataDir);
-
-            if (!Files.exists(path))
-            {
-                LOGGER.error("-runDirectory path does not exist");
-                return false;
-            }
-
-            processSampleDirectory(new RunDirectory(path), mSampleIds.get(0));
-        }
-
-        LOGGER.info("germline VCF parsing complete");
-
-        closeBufferedWriter(mVcfDataWriter);
-        closeBufferedWriter(mBedFileWriter);
-
-        return true;
-    }
-    */
 
 }
