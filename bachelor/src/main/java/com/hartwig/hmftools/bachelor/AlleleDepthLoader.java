@@ -22,20 +22,13 @@ public class AlleleDepthLoader
 {
     private static final String MPILEUP_FILE_EXTN = ".mpu";
 
-    private String mSampleId;
     private List<Pileup> mPileupData;
 
     private static final Logger LOGGER = LogManager.getLogger(AlleleDepthLoader.class);
 
     AlleleDepthLoader()
     {
-        mSampleId = "";
         mPileupData = Lists.newArrayList();
-    }
-
-    public void setSampleId(final String sampleId)
-    {
-        mSampleId = sampleId;
     }
 
     public boolean loadMiniPileupData(final String mpDirectory)
@@ -139,8 +132,8 @@ public class AlleleDepthLoader
 
             if(!matched && !bachRecord.isReadDataSet())
             {
-                LOGGER.warn("sample({} var({}) chr({}) position({}) no pile-up record found",
-                        mSampleId, bachRecord.VariantId, bachRecord.Chromosome, bachRecord.Position);
+                LOGGER.warn("var({}) chr({}) position({}) no pile-up record found",
+                        bachRecord.VariantId, bachRecord.Chromosome, bachRecord.Position);
                 return false;
             }
         }

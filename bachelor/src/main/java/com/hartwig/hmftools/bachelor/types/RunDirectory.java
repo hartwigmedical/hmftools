@@ -27,9 +27,7 @@ public class RunDirectory {
 
     public File germline() { return mGermline; }
 
-    public Path sampleDir() {
-        return mSampleDir;
-    }
+    public Path sampleDir() { return mSampleDir; }
 
     private File findGermline()
     {

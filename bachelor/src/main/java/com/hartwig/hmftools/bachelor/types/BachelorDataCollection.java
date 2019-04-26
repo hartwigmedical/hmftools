@@ -21,7 +21,6 @@ public class BachelorDataCollection
 {
     private static final Logger LOGGER = LogManager.getLogger(BachelorDataCollection.class);
 
-    private List<String> mLimitedSampleList;
     private List<BachelorGermlineVariant> mGermlineVariants;
     private int mFileIndex;
 
@@ -30,15 +29,10 @@ public class BachelorDataCollection
     public BachelorDataCollection()
     {
         mGermlineVariants = Lists.newArrayList();
-        mLimitedSampleList = Lists.newArrayList();
         mFileIndex = 0;
         mFileReader = null;
     }
 
-    public void setSampleIds(final List<String> sampleIdsList)
-    {
-        mLimitedSampleList.addAll(sampleIdsList);
-    }
     public boolean loadBachelorData(final String filename)
     {
         mGermlineVariants.clear();
@@ -71,9 +65,6 @@ public class BachelorDataCollection
                 }
 
                 final String sampleId = items[COL_INDEX_SAMPLE];
-
-                if(!mLimitedSampleList.isEmpty() && !mLimitedSampleList.contains(sampleId))
-                    continue;
 
                 // check for annotations with ',' which impacts string splitting
                 if(items.length > BACHELOR_CSV_FIELD_COUNT)

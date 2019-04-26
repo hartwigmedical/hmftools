@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.nio.file.FileVisitOption;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -11,10 +12,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.bachelor.types.ConfigSchema;
+import com.hartwig.hmftools.bachelor.types.RunDirectory;
+import com.hartwig.hmftools.common.context.ProductionRunContextFactory;
+import com.hartwig.hmftools.common.context.RunContext;
 
 import nl.hartwigmedicalfoundation.bachelor.Program;
 
@@ -36,21 +41,31 @@ public class BachelorApplication {
     GermlineVcfParser mGermlineVcfParser;
     BachelorPostProcess mPostProcessor;
     ExternalDBFilters mFilterFileBuilder;
+
     private Map<String, Program> mConfigMap;
+    private String mSampleDataDir;
+    private String mSingleSampleId;
+    private List<String> mRestrictedSampleIds;
+    private List<RunDirectory> mSampleDataDirectories;
+    private boolean mIsBatchMode;
+    private int mMaxBatchDirectories;
 
     // config options
-    private static final String CONFIG_XML = "configXml";
+    private static final String CONFIG_XML = "xml_config";
     private static final String RUN_MODE = "run_mode";
     private static final String SAMPLE_DATA_DIR = "sample_data_dir";
-    private static final String OUTPUT_DIR = "output_dir";
+    private static final String BATCH_OUTPUT_DIR = "batch_output_dir";
     private static final String SAMPLE = "sample";
     private static final String LOG_DEBUG = "log_debug";
     private static final String SAMPLE_LIST_FILE = "sample_list_file";
     private static final String CREATE_FILTER_FILE = "create_filter_file";
+    private static final String BATCH_MAX_DIR = "max_batch_dir"; // only for testing
 
     private static final String RUN_MODE_BOTH = "Both";
     private static final String RUN_MODE_VCF_PARSE = "VcfParse";
     private static final String RUN_MODE_POST_PROCESS = "PostProcess";
+
+    public static final String DEFAULT_BACH_DIRECTORY = "bachelor";
 
     private static final Logger LOGGER = LogManager.getLogger(BachelorApplication.class);
 
@@ -59,6 +74,12 @@ public class BachelorApplication {
         mGermlineVcfParser = null;
         mPostProcessor = null;
         mFilterFileBuilder = null;
+        mSampleDataDir = "";
+        mSingleSampleId = "";
+        mSampleDataDirectories = Lists.newArrayList();
+        mRestrictedSampleIds = Lists.newArrayList();
+        mIsBatchMode = false;
+        mMaxBatchDirectories = 0;
     }
 
     public boolean loadConfig(final CommandLine cmd)
@@ -76,56 +97,57 @@ public class BachelorApplication {
             }
         }
 
-        String outputDir = cmd.getOptionValue(OUTPUT_DIR);
+        String runMode = cmd.getOptionValue(RUN_MODE, RUN_MODE_BOTH);
+
+        LOGGER.info("run mode: {}", runMode);
+
+        String batchOutputDir = cmd.getOptionValue(BATCH_OUTPUT_DIR, "");
 
         if(cmd.hasOption(CREATE_FILTER_FILE))
         {
             LOGGER.info("building Clinvar filter files");
             final String filterInputFile = cmd.getOptionValue(CREATE_FILTER_FILE);
-            mFilterFileBuilder = new ExternalDBFilters(filterInputFile, outputDir);
+            mFilterFileBuilder = new ExternalDBFilters(filterInputFile, batchOutputDir);
             return true;
         }
 
-        String sample = cmd.getOptionValue(SAMPLE);
-        List<String> sampleIds = Lists.newArrayList();
+        mSingleSampleId = cmd.getOptionValue(SAMPLE, "");
 
-        if (sample == null || sample.equals("*"))
+        if (mSingleSampleId.isEmpty() || mSingleSampleId.equals("*"))
         {
             LOGGER.info("running in batch mode");
+            mIsBatchMode = true;
 
             if(cmd.hasOption(SAMPLE_LIST_FILE))
             {
-                sampleIds = loadSampleListFile(cmd.getOptionValue(SAMPLE_LIST_FILE));
+                mRestrictedSampleIds = loadSampleListFile(cmd.getOptionValue(SAMPLE_LIST_FILE));
             }
         }
-        else
+
+        mMaxBatchDirectories = Integer.parseInt(cmd.getOptionValue(BATCH_MAX_DIR, "0"));
+
+        mSampleDataDir = cmd.getOptionValue(SAMPLE_DATA_DIR);
+
+        if (!mSampleDataDir.endsWith(File.separator))
         {
-            sampleIds.add(sample);
+            mSampleDataDir += File.separator;
         }
 
-        String sampleDataDirectory = cmd.getOptionValue(SAMPLE_DATA_DIR);
-
-        if (!sampleDataDirectory.endsWith(File.separator))
-        {
-            sampleDataDirectory += File.separator;
-        }
-
-        String runMode = cmd.getOptionValue(RUN_MODE, RUN_MODE_BOTH);
+        setSampleDataDirectories();
 
         if(runMode.equals(RUN_MODE_BOTH) || runMode.equals(RUN_MODE_VCF_PARSE))
         {
             mGermlineVcfParser = new GermlineVcfParser();
-            mGermlineVcfParser.initialise(cmd, mConfigMap, sampleIds, sampleDataDirectory, outputDir);
+            mGermlineVcfParser.initialise(cmd, mConfigMap, mIsBatchMode, batchOutputDir);
         }
 
         if(runMode.equals(RUN_MODE_BOTH) || runMode.equals(RUN_MODE_POST_PROCESS))
         {
             mPostProcessor = new BachelorPostProcess();
-            mPostProcessor.initialise(cmd, sampleIds, sampleDataDirectory);
+            mPostProcessor.initialise(cmd, mIsBatchMode, batchOutputDir);
         }
 
         return true;
-
     }
 
     public void run()
@@ -136,21 +158,92 @@ public class BachelorApplication {
 
             mFilterFileBuilder.createFilterFile(program);
             LOGGER.info("run complete");
+            return;
+        }
+
+        for (int i = 0; i < mSampleDataDirectories.size(); ++i)
+        {
+            final RunDirectory runDir = mSampleDataDirectories.get(i);
+
+            String sampleId = "";
+
+            if(!mIsBatchMode)
+            {
+                sampleId = mSingleSampleId;
+            }
+            else
+            {
+                try
+                {
+                    final RunContext runContext = ProductionRunContextFactory.fromRunDirectory(runDir.sampleDir().toString());
+                    sampleId = runContext.tumorSample();
+                }
+                catch (Exception e)
+                {
+                    // Skip using meta data
+                    // sampleId = runDir.getPatientID();
+                    continue;
+                }
+            }
+
+            if(!mRestrictedSampleIds.isEmpty() && !mRestrictedSampleIds.contains(sampleId))
+            {
+                LOGGER.info("skipping sampleId({}) not in specified list", sampleId);
+                continue;
+            }
+
+            // processSampleDirectory(runDir, "");
+
+            if(mGermlineVcfParser != null)
+            {
+                mGermlineVcfParser.run(runDir, sampleId);
+            }
+
+            if(mPostProcessor != null)
+            {
+                mPostProcessor.run(runDir, sampleId, mGermlineVcfParser != null ? mGermlineVcfParser.getBachelorRecords() : null);
+            }
+
+            if(mMaxBatchDirectories > 0 && i >= mMaxBatchDirectories)
+                break;
         }
 
         if(mGermlineVcfParser != null)
         {
-            mGermlineVcfParser.run();
+            mGermlineVcfParser.close();
         }
 
         if(mPostProcessor != null)
         {
-            if(mGermlineVcfParser != null)
-                mPostProcessor.setBachelorRecords(mGermlineVcfParser.getBachelorRecords());
-            else
-                mPostProcessor.loadBachelorRecords();
+            mPostProcessor.close();
+        }
 
-            mPostProcessor.run();
+        LOGGER.info("run complete");
+    }
+
+    private void setSampleDataDirectories()
+    {
+        final Path sampleDataPath = Paths.get(mSampleDataDir);
+
+        if(mIsBatchMode)
+        {
+            try (final Stream<Path> stream = Files.walk(sampleDataPath, 1, FileVisitOption.FOLLOW_LINKS).parallel())
+            {
+                mSampleDataDirectories = stream.filter(p -> p.toFile().isDirectory())
+                        .filter(p -> !p.equals(sampleDataPath))
+                        .map(RunDirectory::new)
+                        .collect(Collectors.toList());
+            }
+            catch (Exception e)
+            {
+                LOGGER.error("failed walking batch directories: {}", e.toString());
+            }
+
+            LOGGER.info("found {} batch directories", mSampleDataDirectories.size());
+        }
+        else
+        {
+            mSampleDataDirectories.add(new RunDirectory(sampleDataPath));
         }
     }
 
@@ -218,11 +311,12 @@ public class BachelorApplication {
 
         options.addOption(RUN_MODE, true, "VcfParse, PostProcess or Both (default)");
         options.addOption(CONFIG_XML, true, "single config XML to run");
-        options.addOption(OUTPUT_DIR, true, "output file");
+        options.addOption(BATCH_OUTPUT_DIR, true, "Optional: when in batch mode, all output written to single file");
         options.addOption(SAMPLE_DATA_DIR, true, "the run directory to look for inputs");
         options.addOption(SAMPLE_LIST_FILE, true, "Optional: limiting list of sample IDs to process");
-        options.addOption(SAMPLE, true, "sample id");
+        options.addOption(SAMPLE, true, "Sample Id (not applicable for batch mode)");
         options.addOption(CREATE_FILTER_FILE, true, "Optional: create black and white list filter files");
+        options.addOption(BATCH_MAX_DIR, true, "Max batch directories to batch process");
         options.addOption(LOG_DEBUG, false, "Sets log level to Debug, off by default");
 
         GermlineVcfParser.addCmdLineOptions(options);
