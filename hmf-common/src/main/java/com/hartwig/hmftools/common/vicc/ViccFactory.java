@@ -1008,12 +1008,15 @@ public abstract class ViccFactory {
                     }
                     stringToCSVMolecularMatchTrials.append(stringInterventionName)
                             .append(";")
+                            .append(stringOtherName)
+                            .append(";")
                             .append(stringDescription)
                             .append(";")
                             .append(stringArmGroupLabel)
                             .append(";")
                             .append(stringInterventionType)
                             .append(";");
+                    LOGGER.info(stringInterventionName);
                 } else if (keysOfMolecularMatchTrials.get(x).equals("locations")) {
                     JsonArray molecluarMatchTrialsArray =
                             object.getAsJsonObject("molecularmatch_trials").get(keysOfMolecularMatchTrials.get(x)).getAsJsonArray();
@@ -1044,7 +1047,11 @@ public abstract class ViccFactory {
                                 stringLastUpdated.append(lastUpdated).append(",");
                             } else if (keysLocations.get(p).equals("contact")) {
                                 JsonElement contact = objectLocations.get(keysLocations.get(p));
-                                stringContact.append(contact).append(",");
+                                List<String> keysContact = Lists.newArrayList(contact.getAsJsonObject().keySet());
+                                for (int r = 0; r < keysContact.size(); r++) {
+                                    JsonElement contactData = contact.getAsJsonObject().get(keysContact.get(r));
+                                    stringContact.append(contactData).append(";");
+                                }
                             } else if (keysLocations.get(p).equals("state")) {
                                 JsonElement state = objectLocations.get(keysLocations.get(p));
                                 stringState.append(state).append(",");
@@ -1058,11 +1065,11 @@ public abstract class ViccFactory {
                                             new ArrayList<>(objectLocations.get(keysLocations.get(p)).getAsJsonObject().keySet());
                                     for (int y = 0; y < keys.size(); y++) {
                                         if (keys.get(y).equals("type")) {
-                                            JsonElement type = objectLocations.get(keysLocations.get(p));
+                                            JsonElement type = location.getAsJsonObject().get(keys.get(y));
                                             stringType.append(type).append(",");
                                         } else if (keys.get(y).equals("coordinates")) {
-                                            JsonElement coordinates = objectLocations.get(keysLocations.get(p));
-                                            stringCoordinates.append(coordinates).append(",");
+                                            JsonElement coordinates = location.getAsJsonObject().get(keys.get(y));
+                                            stringCoordinates.append(coordinates).append(";");
                                         }
                                     }
                                 }
@@ -1078,10 +1085,10 @@ public abstract class ViccFactory {
                                 List<String> keys = new ArrayList<>(objectLocations.get(keysLocations.get(p)).getAsJsonObject().keySet());
                                 for (int v = 0; v < keys.size(); v++) {
                                     if (keys.get(v).equals("lat")) {
-                                        JsonElement lat = objectLocations.get(keysLocations.get(p));
+                                        JsonElement lat = geo.getAsJsonObject().get(keys.get(v));
                                         stringLat.append(lat).append(",");
                                     } else if (keys.get(v).equals("lon")) {
-                                        JsonElement lon = objectLocations.get(keysLocations.get(p));
+                                        JsonElement lon = geo.getAsJsonObject().get(keys.get(v));
                                         stringLon.append(lon).append(",");
                                     }
                                 }
@@ -1106,6 +1113,8 @@ public abstract class ViccFactory {
                             .append(stringZip)
                             .append(";")
                             .append(stringCreated)
+                            .append(";")
+                            .append(stringCountry)
                             .append(";")
                             .append(stringId)
                             .append(";")
@@ -1139,7 +1148,23 @@ public abstract class ViccFactory {
                                 object.getAsJsonObject("molecularmatch_trials").get(keysOfMolecularMatchTrials.get(x)).getAsJsonObject();
                         List<String> keysOfOverallContact = new ArrayList<>(objectOverallContact.keySet());
                         for (int u = 0; u < keysOfOverallContact.size(); u++) {
-                            stringToCSVMolecularMatchTrials.append(objectOverallContact.get(keysOfOverallContact.get(u)));
+                            if (keysOfOverallContact.get(u).equals("phone")) {
+                                stringToCSVMolecularMatchTrials.append(objectOverallContact.get(keysOfOverallContact.get(u))).append(";");
+                            } else if (keysOfOverallContact.get(u).equals("last_name")) {
+                                if (u == 0) {
+                                    stringToCSVMolecularMatchTrials.append(";");
+                                }
+                                stringToCSVMolecularMatchTrials.append(objectOverallContact.get(keysOfOverallContact.get(u))).append(";");
+                            } else if (keysOfOverallContact.get(u).equals("email")) {
+                                stringToCSVMolecularMatchTrials.append(objectOverallContact.get(keysOfOverallContact.get(u))).append(";");
+                                if (u == 1 || u == 2) {
+                                    stringToCSVMolecularMatchTrials.append(";");
+                                }
+                            } else if (keysOfOverallContact.get(u).equals("affiliation")) {
+                                stringToCSVMolecularMatchTrials.append(objectOverallContact.get(keysOfOverallContact.get(u))).append(";");
+                            } else {
+                                stringToCSVMolecularMatchTrials.append(";;;;");
+                            }
                         }
                     }
                 } else if (keysOfMolecularMatchTrials.get(x).equals("tags")) {
@@ -1206,7 +1231,11 @@ public abstract class ViccFactory {
                             .append(";");
                 } else {
                     JsonElement molecularMatchTrialsElement = object.get("molecularmatch_trials");
-                    stringToCSVMolecularMatchTrials.append(molecularMatchTrialsElement).append(";");
+                    List<String> keysOther = Lists.newArrayList(molecularMatchTrialsElement.getAsJsonObject().keySet());
+                    for (int a = 0; a < keysOther.size(); a++) {
+                        JsonElement elementValue = molecularMatchTrialsElement.getAsJsonObject().get(keysOther.get(a));
+                        stringToCSVMolecularMatchTrials.append(elementValue).append(";");
+                    }
                 }
             }
         }
@@ -1481,7 +1510,7 @@ public abstract class ViccFactory {
         StringBuilder stringToxicity = new StringBuilder();
 
         List<String> keysOfAssocationObject = new ArrayList<>(object.getAsJsonObject("association").keySet());
-        LOGGER.info(keysOfAssocationObject);
+        // LOGGER.info(keysOfAssocationObject);
         for (int i = 0; i < object.getAsJsonObject("association").keySet().size(); i++) {
 
             if (keysOfAssocationObject.get(i).equals("drug_labels")) {
@@ -1552,7 +1581,7 @@ public abstract class ViccFactory {
                     }
                 }
             } else if (keysOfAssocationObject.get(i).equals("environmentalContexts")) {
-                if (i == 6 || i == 3 || i == 4 || i ==2) {
+                if (i == 6 || i == 3 || i == 4 || i == 2) {
                     JsonArray arrayEvidence = object.getAsJsonObject("association").get(keysOfAssocationObject.get(i)).getAsJsonArray();
                     for (int u = 0; u < arrayEvidence.size(); u++) {
                         JsonObject objectEnvironmentalContexts = (JsonObject) arrayEvidence.get(u);
@@ -1970,29 +1999,29 @@ public abstract class ViccFactory {
 
         headerCSV.append(headerIndex);
         headerCSV.append(headerSource);
-//        headerCSV.append(headerGenes);
-//        headerCSV.append(headerTags);
-//        headerCSV.append(headerDevTags);
-//        headerCSV.append(headerGeneIdentifiers);
-//        headerCSV.append(headerFeaturesNames);
-//        headerCSV.append(headerSage);
-//        headerCSV.append(headerPmkb);
-//        headerCSV.append(headerBRCA);
-//        headerCSV.append(headerCGI);
-//        headerCSV.append(headerOncokb);
-//        headerCSV.append(headerJax);
-//        headerCSV.append(headerJaxTrials);
+        //        headerCSV.append(headerGenes);
+        //        headerCSV.append(headerTags);
+        //        headerCSV.append(headerDevTags);
+        //        headerCSV.append(headerGeneIdentifiers);
+        //        headerCSV.append(headerFeaturesNames);
+        //        headerCSV.append(headerSage);
+        //        headerCSV.append(headerPmkb);
+        //        headerCSV.append(headerBRCA);
+        //        headerCSV.append(headerCGI);
+        //        headerCSV.append(headerOncokb);
+        //        headerCSV.append(headerJax);
+        //        headerCSV.append(headerJaxTrials);
 
-                headerCSV.append(headerAssociation); //TODO check fields for every db
+        //                headerCSV.append(headerAssociation); //TODO check fields for every db
         //        headerCSV.append(headerFeatures); //TODO check fields for every db
         //        headerCSV.append(headerCIVIC); //TODO check fields for every db
         //        headerCSV.append(headerMolecularMatch); //TODO check fields for every db
-        //        headerCSV.append(headerMolecularMatchTrials);//TODO check fields for every db
+        headerCSV.append(headerMolecularMatchTrials);//TODO check fields for every db
 
         writer.append(headerCSV);
         writer.append("\n");
 
-        while (reader.peek() != JsonToken.END_DOCUMENT && index < 1000) {
+        while (reader.peek() != JsonToken.END_DOCUMENT && index < 100) {
             JsonObject object = parser.parse(reader).getAsJsonObject();
             StringBuilder stringToCSVSource = readObjectSource(object);
             LOGGER.info(index + " " + stringToCSVSource);
@@ -2019,24 +2048,24 @@ public abstract class ViccFactory {
 
             stringToCSVAll.append(index).append(";");
             stringToCSVAll.append(stringToCSVSource);
-//            stringToCSVAll.append(stringToCSVGenes);
-//            stringToCSVAll.append(stringToCSVTags);
-//            stringToCSVAll.append(stringToCSVDevTags);
-//            stringToCSVAll.append(stringToCSVGeneIdentifiers);
-//            stringToCSVAll.append(stringToCSVFeaturesNames);
-//            stringToCSVAll.append(stringToCSVSage);
-//            stringToCSVAll.append(stringToCSVPmkb);
-//            stringToCSVAll.append(stringToCSVBrca);
-//            stringToCSVAll.append(stringToCSVCGI);
-//            stringToCSVAll.append(stringToCSVOncokb);
-//            stringToCSVAll.append(stringToCSVJax);
-//            stringToCSVAll.append(stringToCSVJaxTrials);
-                        stringToCSVAll.append(stringToCSVAssociation);
+            //            stringToCSVAll.append(stringToCSVGenes);
+            //            stringToCSVAll.append(stringToCSVTags);
+            //            stringToCSVAll.append(stringToCSVDevTags);
+            //            stringToCSVAll.append(stringToCSVGeneIdentifiers);
+            //            stringToCSVAll.append(stringToCSVFeaturesNames);
+            //            stringToCSVAll.append(stringToCSVSage);
+            //            stringToCSVAll.append(stringToCSVPmkb);
+            //            stringToCSVAll.append(stringToCSVBrca);
+            //            stringToCSVAll.append(stringToCSVCGI);
+            //            stringToCSVAll.append(stringToCSVOncokb);
+            //            stringToCSVAll.append(stringToCSVJax);
+            //            stringToCSVAll.append(stringToCSVJaxTrials);
+            //                        stringToCSVAll.append(stringToCSVAssociation);
             //            stringToCSVAll.append(stringToCSVFeatures);
             //            stringToCSVAll.append(stringToCSVCIVIC);
             //            stringToCSVAll.append(stringToCSVMolecularMatch);
-            //            stringToCSVAll.append(stringToCSVMolecularMatchTrials);
-
+            stringToCSVAll.append(stringToCSVMolecularMatchTrials);
+            stringToCSVAll.append(stringToCSVSource);
             writer.append(stringToCSVAll);
             writer.append("\n");
             index++;
