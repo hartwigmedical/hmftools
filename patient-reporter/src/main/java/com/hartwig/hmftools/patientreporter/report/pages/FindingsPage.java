@@ -77,10 +77,10 @@ public abstract class FindingsPage {
                                 col.column("Driver", SomaticVariantDataSource.DRIVER_FIELD)))
                         .setDataSource(SomaticVariantDataSource.fromVariants(report.somaticVariants(),
                                 report.hasReliablePurityFit(),
-                                report.germlineOptionPatient()))
+                                report.germlineReportingChoice()))
                         : cmp.text("None").setStyle(fontStyle().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER));
 
-        if (report.reportableGermlineVariant()) { //report.germlineOptionPatient().equals(LimsGermlineReportingChoice.ALL)|| report.germlineOptionPatient().equals(LimsGermlineReportingChoice.ACTIONABLE_ONLY)
+        if (report.reportableGermlineVariant()) { //report.germlineReportingChoice().equals(LimsGermlineReportingChoice.ALL)|| report.germlineReportingChoice().equals(LimsGermlineReportingChoice.ACTIONABLE_ONLY)
             return cmp.verticalList(cmp.text("Somatic Variants").setStyle(sectionHeaderStyle()),
                     cmp.verticalGap(HEADER_TO_TABLE_VERTICAL_GAP),
                     table,

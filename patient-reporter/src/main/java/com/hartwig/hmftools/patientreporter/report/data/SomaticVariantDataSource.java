@@ -58,10 +58,10 @@ public final class SomaticVariantDataSource {
 
             String displayGene = variant.isDrupActionable() ? variant.gene() + " *" : variant.gene();
             String codingImpact = variant.notifyClinicalGeneticus() && variant.somaticOrGermline().equals("germline")
-                    // germlineOptionPatient.equals(LimsGermlineReportingChoice.ACTIONABLE_ONLY) || germlineOptionPatient.equals(LimsGermlineReportingChoice.ALL) &&
+                    // germlineReportingChoice.equals(LimsGermlineReportingChoice.ACTIONABLE_ONLY) || germlineReportingChoice.equals(LimsGermlineReportingChoice.ALL) &&
                     ? variant.hgvsCodingImpact() + " + # "
                     : !variant.notifyClinicalGeneticus() && variant.somaticOrGermline().equals("germline")
-                            //germlineOptionPatient.equals(LimsGermlineReportingChoice.ACTIONABLE_ONLY) || germlineOptionPatient.equals(LimsGermlineReportingChoice.ALL) &&
+                            //germlineReportingChoice.equals(LimsGermlineReportingChoice.ACTIONABLE_ONLY) || germlineReportingChoice.equals(LimsGermlineReportingChoice.ALL) &&
                             ? variant.hgvsCodingImpact() + " +"
                             : variant.hgvsCodingImpact();
             String biallelic = Strings.EMPTY;

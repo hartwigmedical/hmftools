@@ -51,8 +51,8 @@ public abstract class AnalysedPatientReport implements PatientReport {
     @NotNull
     public abstract ChordAnalysis chordAnalysis();
 
-    @Nullable
-    public abstract LimsGermlineReportingChoice germlineOptionPatient();
+    @NotNull
+    public abstract LimsGermlineReportingChoice germlineReportingChoice();
 
     public abstract boolean reportableGermlineVariant();
 
