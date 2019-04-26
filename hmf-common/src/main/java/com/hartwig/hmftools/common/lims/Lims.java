@@ -266,7 +266,7 @@ public class Lims {
         assert sampleData != null;
 
         // TODO: Cleanup once we have switched lims to using "true/false" exclusively
-        if (sampleData.shallowSeq().equals("1") || sampleData.shallowSeq().equals("true")) {
+        if (sampleData.shallowSeq().equalsIgnoreCase("1") || sampleData.shallowSeq().equalsIgnoreCase("true")) {
             return true;
         } else {
             String labRemarks = sampleData.labRemarks();
