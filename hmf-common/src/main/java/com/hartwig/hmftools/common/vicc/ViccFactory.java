@@ -1005,18 +1005,17 @@ public abstract class ViccFactory {
                                 stringInterventionType.append(interventionType).append(",");
                             }
                         }
-                        stringToCSVMolecularMatchTrials.append(stringInterventionName)
-                                .append(";")
-                                .append(stringOtherName)
-                                .append(";")
-                                .append(stringDescription)
-                                .append(";")
-                                .append(stringArmGroupLabel)
-                                .append(";")
-                                .append(stringInterventionType)
-                                .append(";");
                     }
-
+                    stringToCSVMolecularMatchTrials.append(stringInterventionName)
+                            .append(";")
+                            .append(stringOtherName)
+                            .append(";")
+                            .append(stringDescription)
+                            .append(";")
+                            .append(stringArmGroupLabel)
+                            .append(";")
+                            .append(stringInterventionType)
+                            .append(";");
                 } else if (keysOfMolecularMatchTrials.get(x).equals("locations")) {
                     JsonArray molecluarMatchTrialsArray =
                             object.getAsJsonObject("molecularmatch_trials").get(keysOfMolecularMatchTrials.get(x)).getAsJsonArray();
@@ -1069,11 +1068,10 @@ public abstract class ViccFactory {
                                             stringType.append(type).append(",");
                                         } else if (keys.get(y).equals("coordinates")) {
                                             JsonElement coordinates = location.getAsJsonObject().get(keys.get(y));
-                                            stringCoordinates.append(coordinates).append(";");
+                                            stringCoordinates.append(coordinates).append(",");
                                         }
                                     }
                                 }
-                                stringLocation.append(stringType).append(",");
                             } else if (keysLocations.get(p).equals("po_box")) {
                                 JsonElement po_box = objectLocations.get(keysLocations.get(p));
                                 stringPoBox.append(po_box).append(",");
@@ -1102,9 +1100,7 @@ public abstract class ViccFactory {
                             }
                         }
                     }
-                    stringToCSVMolecularMatchTrials.append(stringInterventionName)
-                            .append(";")
-                            .append(stringStatus)
+                    stringToCSVMolecularMatchTrials.append(stringStatus)
                             .append(";")
                             .append(stringCity)
                             .append(";")
@@ -1121,7 +1117,6 @@ public abstract class ViccFactory {
                             .append(stringLastUpdated)
                             .append(";")
                             .append(stringContact)
-                            .append(";")
                             .append(stringState)
                             .append(";")
                             .append(stringStreet)
@@ -1157,9 +1152,6 @@ public abstract class ViccFactory {
                                 stringToCSVMolecularMatchTrials.append(objectOverallContact.get(keysOfOverallContact.get(u))).append(";");
                             } else if (keysOfOverallContact.get(u).equals("email")) {
                                 stringToCSVMolecularMatchTrials.append(objectOverallContact.get(keysOfOverallContact.get(u))).append(";");
-                                if (u == 1 || u == 2) {
-                                    stringToCSVMolecularMatchTrials.append(";");
-                                }
                             } else if (keysOfOverallContact.get(u).equals("affiliation")) {
                                 stringToCSVMolecularMatchTrials.append(objectOverallContact.get(keysOfOverallContact.get(u))).append(";");
                             } else {
@@ -1207,15 +1199,12 @@ public abstract class ViccFactory {
                             }
                         }
                     }
-                    stringToCSVMolecularMatchTrials.append(stringInterventionName)
-                            .append(";")
+                    stringToCSVMolecularMatchTrials
                             .append(stringFacet)
                             .append(";")
                             .append(stringCompositeKey)
                             .append(";")
                             .append(stringSuppress)
-                            .append(";")
-                            .append(stringGenerateBy)
                             .append(";")
                             .append(stringFilterType)
                             .append(";")
@@ -1228,6 +1217,8 @@ public abstract class ViccFactory {
                             .append(stringAlias)
                             .append(";")
                             .append(stringGeneratedByTerm)
+                            .append(";")
+                            .append(stringGenerateBy)
                             .append(";");
                 } else {
                     stringToCSVMolecularMatchTrials.append(object.getAsJsonObject("molecularmatch_trials")
@@ -1975,12 +1966,15 @@ public abstract class ViccFactory {
                 + "molecularmatch.sixtier;molecularmatch.narrative;molecularmatch.expression;molecularmatch.includeGene0;";
         String headerMolecularMatchTrials = "molecularmatch_trials.status;molecularmatch_trials.startDate;molecularmatch_trials.title;"
                 + "molecularmatch_trials.molecularAlterations;molecularmatch_trials._score;"
-                + "molecularmatch_trials.interventions.intervention_name;molecularmatch_trials.locations.status;"
+                + "molecularmatch_trials.interventions.intervention_name;"
+                + "molecularmatch_trials.interventions.other_name;molecularmatch_trials.interventions.description;"
+                + "molecularmatch_trials.interventions.arm_group_label;molecularmatch_trials.interventions.iintervention_type;"
+                + "molecularmatch_trials.locations.status;"
                 + "molecularmatch_trials.locations.city;molecularmatch_trials.locations._valid;molecularmatch_trials.locations.zip;"
                 + "molecularmatch_trials.locations.created;molecularmatch_trials.locations.country;molecularmatch_trials.locations.id;"
                 + "molecularmatch_trials.locations.lastUpdated;molecularmatch_trials.locations.contact.phone;"
                 + "molecularmatch_trials.locations.contact.name;molecularmatch_trials.locations.contact.email;"
-                + "molecularmatch_trials.locations.state;molecularmatch_trials.locations.street;molecularmatch_trials.locations.location;"
+                + "molecularmatch_trials.locations.state;molecularmatch_trials.locations.street;"
                 + "molecularmatch_trials.locations.location.type;molecularmatch_trials.locations.location.coordinates;"
                 + "molecularmatch_trials.locations.po_box;molecularmatch_trials.locations.failedGeocode;"
                 + "molecularmatch_trials.locations.geo.lat;molecularmatch_trials.locations.geo.on;"
@@ -1990,8 +1984,8 @@ public abstract class ViccFactory {
                 + "molecularmatch_trials.link”;molecularmatch_trials.phase;molecularmatch_trials.tags.facet;"
                 + "molecularmatch_trials.tags.compositeKey;molecularmatch_trials.tags.suppress;molecularmatch_trials.tags.filterType;"
                 + "molecularmatch_trials.tags.term;molecularmatch_trials.tags.custom;molecularmatch_trials.tags.priority;"
-                + "molecularmatch_trials.tags.alias;molecularmatch_trials.tags.generatedByTerm;molecularmatch_trials.id;"
-                + "molecularmatch_trials.studyType;";
+                + "molecularmatch_trials.tags.alias;molecularmatch_trials.tags.generatedByTerm;molecularmatch_trials.tags.generatedBy;"
+                + "molecularmatch_trials.id;molecularmatch_trials.studyType;";
 
         headerCSV.append(headerIndex);
         headerCSV.append(headerSource);
