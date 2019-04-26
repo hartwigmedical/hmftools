@@ -83,7 +83,7 @@ abstract class PatientReporter {
 
         boolean hasReportableGermlineVariant = false;
         List<String> reportGermline = Lists.newArrayList();
-        for (ReportableVariant variantAnalysis: somaticVariantAnalysis.reportableSomaticVariants()){
+        for (ReportableVariant variantAnalysis : somaticVariantAnalysis.reportableSomaticVariants()) {
             if (variantAnalysis.somaticOrGermline().equals("germline")) {
                 reportGermline.add("germline");
             }
@@ -117,24 +117,11 @@ abstract class PatientReporter {
         allEvidenceItems.addAll(svAnalysis.evidenceItems());
 
         Lims lims = baseReportData().limsModel();
-        final SampleReport sampleReport = ImmutableSampleReport.builder()
-                .sampleId(tumorSample)
-                .barcodeTumor(lims.tumorBarcode(tumorSample))
-                .barcodeReference(lims.refBarcode(tumorSample))
-                .patientTumorLocation(patientTumorLocation)
-                .purityShallowSeq(lims.purityShallowSeq(tumorSample))
-                .pathologyTumorPercentage(lims.pathologyTumorPercentage(tumorSample))
-                .tumorArrivalDate(lims.arrivalDate(tumorSample))
-                .referenceArrivalDate(lims.arrivalDate(run.refSample()))
-                .labProcedures(lims.labProcedures(tumorSample))
-                .addressee(baseReportData().hospitalModel().addresseeStringForSample(tumorSample, lims.requesterName(tumorSample)))
-                .projectName(lims.projectName(tumorSample))
-                .requesterName(lims.requesterName(tumorSample))
-                .requesterEmail(lims.requesterEmail(tumorSample))
-                .submissionId(lims.submissionId(tumorSample))
-                .hospitalPatientId(lims.hospitalPatientId(tumorSample))
-                .hospitalPathologySampleId(lims.hospitalPathologySampleId(tumorSample))
-                .build();
+        final SampleReport sampleReport = SampleReportFactory.fromLimsAndHospitalModel(tumorSample,
+                run.refSample(),
+                lims,
+                baseReportData().hospitalModel(),
+                patientTumorLocation);
 
         final List<EvidenceItem> nonTrials = ReportableEvidenceItemFactory.extractNonTrials(allEvidenceItems);
 

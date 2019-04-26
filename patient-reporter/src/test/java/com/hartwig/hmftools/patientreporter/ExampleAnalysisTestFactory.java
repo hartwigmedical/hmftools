@@ -147,21 +147,21 @@ public final class ExampleAnalysisTestFactory {
         final String sample = "COLO829T";
         return ImmutableSampleReport.builder()
                 .sampleId(sample)
-                .barcodeTumor("FR12345678")
-                .barcodeReference("FR12123488")
                 .patientTumorLocation(ImmutablePatientTumorLocation.of("COLO829", "Skin", "Melanoma"))
+                .refBarcode("FR12123488")
+                .refArrivalDate(LocalDate.parse("01-Jan-2018", DATE_FORMATTER))
+                .tumorBarcode("FR12345678")
+                .tumorArrivalDate(LocalDate.parse("05-Jan-2018", DATE_FORMATTER))
                 .purityShallowSeq(Strings.EMPTY)
                 .pathologyTumorPercentage("80%")
-                .tumorArrivalDate(LocalDate.parse("05-Jan-2018", DATE_FORMATTER))
-                .referenceArrivalDate(LocalDate.parse("01-Jan-2018", DATE_FORMATTER))
                 .labProcedures("PREP013V23-QC037V20-SEQ008V25")
                 .requesterName(Strings.EMPTY)
                 .requesterEmail(Strings.EMPTY)
                 .addressee("HMF Testing Center")
                 .projectName("COLO")
-                .hospitalPatientId(Strings.EMPTY)
                 .submissionId(Strings.EMPTY)
-                .hospitalPathologySampleId("A")
+                .hospitalPatientId(Strings.EMPTY)
+                .hospitalPathologySampleId(Strings.EMPTY)
                 .build();
     }
 

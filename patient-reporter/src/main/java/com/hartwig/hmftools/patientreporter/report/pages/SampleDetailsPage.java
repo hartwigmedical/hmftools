@@ -78,9 +78,9 @@ public abstract class SampleDetailsPage {
                 "The HMF sample ID is: " + sampleReport().sampleId() + tissueNumberPA(sampleId),
                 "The pathology tumor percentage for this sample is " + sampleReport().pathologyTumorPercentage(),
                 "This experiment is performed on the tumor sample which arrived on " + formattedDate(sampleReport().tumorArrivalDate())
-                        + " with internal tumor barcode " + sampleReport().barcodeTumor(),
-                "This experiment is performed on the blood sample which arrived on " + formattedDate(sampleReport().referenceArrivalDate())
-                        + " with internal blood barcode " + sampleReport().barcodeReference(),
+                        + " with internal tumor barcode " + sampleReport().tumorBarcode(),
+                "This experiment is performed on the blood sample which arrived on " + formattedDate(sampleReport().refArrivalDate())
+                        + " with internal blood barcode " + sampleReport().refBarcode(),
                 "This experiment is performed according to lab procedures: " + sampleReport().labProcedures(),
                 "This report is generated and verified by: " + user(),
                 "This report is addressed at: " + addressee);

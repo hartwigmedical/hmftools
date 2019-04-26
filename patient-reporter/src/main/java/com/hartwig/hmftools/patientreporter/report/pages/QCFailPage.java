@@ -194,8 +194,8 @@ public abstract class QCFailPage {
 
     @NotNull
     private TextFieldBuilder<String> internalBarcodeText() {
-        return cmp.text("The internal tumor barcode is " + sampleReport().barcodeTumor() + " and the internal blood barcode is "
-                + sampleReport().barcodeReference()).setStyle(fontStyle());
+        return cmp.text("The internal tumor barcode is " + sampleReport().tumorBarcode() + " and the internal blood barcode is "
+                + sampleReport().refBarcode()).setStyle(fontStyle());
     }
 
     @NotNull

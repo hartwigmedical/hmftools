@@ -10,6 +10,7 @@ import com.hartwig.hmftools.patientreporter.ImmutableQCFailReport;
 import com.hartwig.hmftools.patientreporter.ImmutableSampleReport;
 import com.hartwig.hmftools.patientreporter.QCFailReport;
 import com.hartwig.hmftools.patientreporter.SampleReport;
+import com.hartwig.hmftools.patientreporter.SampleReportFactory;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -23,9 +24,8 @@ public abstract class QCFailReporter {
     @NotNull
     abstract BaseReportData baseReportData();
 
+    @NotNull
     public QCFailReport run(@NotNull final String sample, @NotNull final QCFailReason reason, @Nullable final String comments) {
-        final Lims lims = baseReportData().limsModel();
-
         final QCFailStudy study = QCFailStudy.fromSample(sample);
 
         assert study != null;
@@ -33,23 +33,11 @@ public abstract class QCFailReporter {
         final PatientTumorLocation patientTumorLocation =
                 PatientTumorLocationFunctions.findPatientTumorLocationForSample(baseReportData().patientTumorLocations(), sample);
 
-        final SampleReport sampleReport = ImmutableSampleReport.builder()
-                .sampleId(sample)
-                .barcodeTumor(lims.tumorBarcode(sample))
-                .barcodeReference(lims.refBarcode(sample))
-                .patientTumorLocation(patientTumorLocation)
-                .purityShallowSeq(lims.purityShallowSeq(sample))
-                .pathologyTumorPercentage(lims.pathologyTumorPercentage(sample))
-                .tumorArrivalDate(lims.arrivalDate(sample))
-                .labProcedures(lims.labProcedures(sample))
-                .addressee(baseReportData().hospitalModel().addresseeStringForSample(sample, lims.requesterName(sample)))
-                .projectName(lims.projectName(sample))
-                .requesterName(lims.requesterName(sample))
-                .requesterEmail(lims.requesterEmail(sample))
-                .submissionId(lims.submissionId(sample))
-                .hospitalPatientId(lims.hospitalPatientId(sample))
-                .hospitalPathologySampleId(lims.hospitalPathologySampleId(sample))
-                .build();
+        final SampleReport sampleReport = SampleReportFactory.fromLimsAndHospitalModel(sample,
+                null,
+                baseReportData().limsModel(),
+                baseReportData().hospitalModel(),
+                patientTumorLocation);
 
         return ImmutableQCFailReport.of(sampleReport,
                 reason,
