@@ -2,6 +2,7 @@ package com.hartwig.hmftools.sig_analyser.buckets;
 
 import static java.lang.Math.abs;
 import static java.lang.Math.max;
+import static java.lang.Math.pow;
 import static java.lang.Math.round;
 import static java.lang.Math.sqrt;
 
@@ -18,6 +19,8 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.numeric.Doubles;
+
+import sun.util.locale.provider.LocaleServiceProviderPool;
 
 public class BucketGroup implements Comparable<BucketGroup> {
 
@@ -39,7 +42,6 @@ public class BucketGroup implements Comparable<BucketGroup> {
     private Map<Integer,Double> mSampleCountsMap;
     private List<double[]> mSampleCounts;
 
-    private boolean mBucketRatiosClean;
     private double[] mBucketRatios;
     private double[] mInitialBucketRatios;
     private double[] mBucketRatioRanges;
@@ -82,7 +84,6 @@ public class BucketGroup implements Comparable<BucketGroup> {
         mCombinedBucketCounts = null;
         mBucketRatios = null;
         mBucketRatioRanges = null;
-        mBucketRatiosClean = false;
         mPurity = 0;
         mScoreOverride = 0;
 
@@ -221,11 +222,6 @@ public class BucketGroup implements Comparable<BucketGroup> {
 
     public void addSample(int sampleId, double[] bucketCounts)
     {
-        addSample(sampleId, bucketCounts, true);
-    }
-
-    public void addSample(int sampleId, double[] bucketCounts, boolean reqRatioRecalc)
-    {
         if(mSampleIds.contains(sampleId))
             return;
 
@@ -242,9 +238,6 @@ public class BucketGroup implements Comparable<BucketGroup> {
             mCombinedBucketCounts[bucketId] += bucketCounts[bucketId];
             mTotalCount += bucketCounts[bucketId];
         }
-
-        if(reqRatioRecalc)
-            mBucketRatiosClean = false;
 
         mSampleIds.add(sampleId);
         mSampleCounts.add(bucketCounts);
@@ -306,8 +299,6 @@ public class BucketGroup implements Comparable<BucketGroup> {
             double sampleAlloc = mSampleCountTotals.get(samIndex);
             mPotentialAllocation -= sampleAlloc;
             mPotentialAdjAllocation -= sampleAlloc * (sampleAlloc / sample.getElevatedCount());
-
-            mBucketRatiosClean = false;
         }
 
         final double[] sampleCounts = mSampleCounts.get(samIndex);
@@ -363,33 +354,18 @@ public class BucketGroup implements Comparable<BucketGroup> {
         initialise(other);
 
         copyVector(other, mBucketRatios);
-        mTotalCount = sumVector(mCombinedBucketCounts);
 
         setIsValid();
-
-        if(mIsValid)
-            mBucketRatiosClean = true;
     }
 
-    public final void recalcBucketRatios()
+    public final void recalcBucketRatios(double sampleWeightFactor)
     {
-        calcBucketRatios(true);
-    }
-
-    private final void calcBucketRatios(boolean forceRecalc)
-    {
-        if(mBucketRatiosClean && !forceRecalc)
-            return;
+        // convert cumulative sample counts into ratios
 
         if(greaterThan(mTotalCount, 0) && mSampleIds.size() > 0)
         {
             // infer ratios from the contributing sample counts
-            mTotalCount = sumVector(mCombinedBucketCounts);
-
-            for (int i = 0; i < mBucketRatios.length; ++i)
-            {
-                mBucketRatios[i] = mCombinedBucketCounts[i] / mTotalCount;
-            }
+            mBucketRatios = calcRatiosFromSampleCounts(mSampleCountTotals, mSampleCounts, sampleWeightFactor);
         }
         else if(mInitialBucketRatios != null)
         {
@@ -405,9 +381,45 @@ public class BucketGroup implements Comparable<BucketGroup> {
                 mInitialBucketRatios = new double[mBucketRatios.length];
                 copyVector(mBucketRatios, mInitialBucketRatios);
             }
-
-            mBucketRatiosClean = true;
         }
+    }
+
+    public static double[] calcRatiosFromSampleCounts(final List<Double> sampleTotals, final List<double[]> sampleCountsList,
+            double sampleWeightFactor)
+    {
+        if(sampleCountsList.isEmpty() || sampleCountsList.size() != sampleTotals.size())
+        {
+            return null;
+        }
+
+        int bucketCount = sampleCountsList.get(0).length;
+        double[] bucketRatios = new double[bucketCount];
+
+        double totalCount = 0;
+        double[] bucketTotals = new double[bucketCount];
+
+        for(int i = 0; i < sampleTotals.size(); ++i)
+        {
+            double sampleTotal = sampleTotals.get(i);
+            double[] sampleCounts = sampleCountsList.get(i);
+
+            // dampen the effect of high mutational load samples
+            double sampleWF = sampleWeightFactor != 1 ? pow(sampleTotal, 1/sampleWeightFactor - 1) : 1;
+
+            for(int j = 0; j < bucketCount; ++j)
+            {
+                double sbCount = sampleCounts[j] * sampleWF;
+                bucketTotals[j] += sbCount;
+                totalCount += sbCount;
+            }
+        }
+
+        for (int i = 0; i < bucketCount; ++i)
+        {
+            bucketRatios[i] = bucketTotals[i] / totalCount;
+        }
+
+        return bucketRatios;
     }
 
     private void setIsValid()
@@ -417,7 +429,6 @@ public class BucketGroup implements Comparable<BucketGroup> {
         {
             if(mBucketRatios[i] < 0)
             {
-                mBucketRatiosClean = false;
                 mIsValid = false;
                 return;
             }
@@ -427,7 +438,6 @@ public class BucketGroup implements Comparable<BucketGroup> {
 
         if(Doubles.equal(ratioTotal, 1))
         {
-            mBucketRatiosClean = true;
             mIsValid = true;
         }
         else
@@ -438,7 +448,6 @@ public class BucketGroup implements Comparable<BucketGroup> {
 
     public final double[] getBucketRatios()
     {
-        calcBucketRatios(false);
         return mBucketRatios;
     }
 

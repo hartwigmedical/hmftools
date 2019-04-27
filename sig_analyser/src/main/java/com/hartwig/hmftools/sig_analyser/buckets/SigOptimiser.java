@@ -21,6 +21,7 @@ import java.util.HashMap;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.hartwig.hmftools.sig_analyser.common.SigMatrix;
 
 import org.apache.logging.log4j.LogManager;
@@ -36,7 +37,7 @@ public class SigOptimiser
     private final double[] mStartRatios;
     private boolean mAssessmentOnly;
 
-    private double mRatioRangePercentile;
+    private double mRatioRangePercentile; // percentage of middle sample's ratio data to use
 
     // initial state
     private int mBucketCount;
@@ -109,7 +110,7 @@ public class SigOptimiser
         mAllSamples = Lists.newArrayList();
         mAllSamples.addAll(samples);
 
-        mBucketInfo = new HashMap();
+        mBucketInfo = Maps.newHashMap();
 
         mStartRatios = new double[mBucketCount];
         copyVector(startRatios, mStartRatios);
@@ -276,6 +277,7 @@ public class SigOptimiser
 
     public SigOptimiser(int groupId, final List<SampleData> samples, final List<double[]> sampleCountsList, final double[] refRatios)
     {
+        // assessment only rountine - how is this different??
         mGroupId = groupId;
         mIsValid = true;
         mHasChanged = false;
@@ -539,6 +541,7 @@ public class SigOptimiser
             final double[] counts = mAssessmentOnly ? mSampleCounts.getCol(samIndex) : sample.getUnallocBucketCounts();
 
             double sampleBgTotal = 0; // total count across all buckets just in this sample
+
             for(Integer b : bucketIds)
             {
                 double sbCount = counts[b];
@@ -551,9 +554,9 @@ public class SigOptimiser
                 double rawBucketRatio = sbCount / sampleBgTotal;
                 double sampleWeight = sbCount / mUnallocBucketTotals[b];
 
-                // store in order
                 smrData[b][samIndex] = rawBucketRatio;
 
+                // find the closest ratio range segment and add this sample's data to it
                 int ratioIndex = 0;
                 while(ratioIndex < mRatioSegments.length - 1)
                 {
@@ -605,6 +608,7 @@ public class SigOptimiser
 
         double freqTotal = sumVector(mBucketRatioFrequencies.getRow(bucket)); // should be number of samples
 
+        // define percentile bounds (eg to capture the middle 60% of samples)
         double startPercentile = (1 - mRatioRangePercentile) * 0.5;
         double endPercentile = 1 - startPercentile;
         double startFreqTotal = startPercentile * freqTotal;
@@ -808,7 +812,7 @@ public class SigOptimiser
             double ratioMean = mRangeMeanRatios[bucket];
             double rangeMin = mRangesLow[bucket];
             double rangeMax = mRangesHigh[bucket];
-            double range = max(ratioMean - rangeMin, rangeMax - ratioMean);
+            double range = max(ratioMean - rangeMin, ratioMean + rangeMax);
 
             boolean changed = false;
             double bestRatio = 0;
@@ -818,7 +822,7 @@ public class SigOptimiser
             double bucketBestRatio = 0;
 
             // test a range of values around the starting ratio
-            // and repeat the process with a tighter range centered around the new best ration the second time through
+            // and repeat the process with a tighter range centered around the new best ratio the second time through
             for (int j = 0; j < 2; ++j)
             {
                 testRatios.clear();
@@ -933,7 +937,7 @@ public class SigOptimiser
         // goes through each sample and applies the input ratios to calculate what can be allocated
         // return data:
         // - allocated bucket counts - per-bucket counts with the input ratios
-        // - zeroed samples - any sample which cannot allocate anthing with the input ratios
+        // - zeroed samples - any sample which cannot allocate anything with the input ratios
         // - total allocated count across all samples
 
         final double[][] scData = mSampleCounts.getData();
@@ -1183,165 +1187,6 @@ public class SigOptimiser
         }
 
         return additionalAllocCounts;
-    }
-
-    public static boolean assessBucketDistribution(
-            int groupId, final List<double[]> sampleAllocCounts, final List<double[]> sampleUnallocCounts,
-            double[] adjRatios, double[] adjRanges, double percentileRange)
-    {
-        boolean hasChanges = false;
-        int bucketCount = adjRatios.length;
-
-        int sampleCount = sampleAllocCounts.size();
-        double[] sampleTotals = new double[sampleCount];
-        double[] sampleUnallocTotals = new double[sampleCount];
-
-        for(int s = 0; s < sampleAllocCounts.size(); ++s)
-        {
-            final double[] allocCounts = sampleAllocCounts.get(s);
-            final double[] unallocCounts = sampleUnallocCounts.get(s);
-
-            for(int bucket = 0; bucket < bucketCount; ++bucket)
-            {
-                sampleUnallocTotals[s] += unallocCounts[bucket];
-                sampleTotals[s] += allocCounts[bucket] + unallocCounts[bucket];
-            }
-        }
-
-        double[] rawBucketRatios = new double[sampleCount];
-
-        double startPercentile = (1 - percentileRange) * 0.5;
-        double endPercentile = 1 - startPercentile;
-
-        double totalCount = sumVector(sampleTotals);
-        double allocTotal = 0;
-
-        boolean noStartRatios = sumVector(adjRatios) == 0;
-
-        for(int bucket = 0; bucket < bucketCount; ++bucket)
-        {
-            if(adjRatios[bucket] == 0 && !noStartRatios)
-                continue;
-
-            double bucketUnallocTotal = 0;
-            double bucketAllocTotal = 0;
-            double bucketTotal = 0;
-
-            for(int s = 0; s < sampleAllocCounts.size(); ++s)
-            {
-                double unallocCount = sampleUnallocCounts.get(s)[bucket];
-                bucketUnallocTotal += unallocCount;
-
-                double allocCount = sampleAllocCounts.get(s)[bucket];
-                bucketAllocTotal += allocCount;
-
-                double sbCount = unallocCount + allocCount;;
-                bucketTotal += sbCount;
-
-                double rawRatio = 0;
-                if(unallocCount == 0)
-                {
-                    // treat the restricting bucket as a ratio to be pushed lower
-                    // eg if alloc = 10, alloc total = 100 and unalloc total = 200, implies ratio could be 0.05 instead of 0.1
-                    rawRatio = sbCount / sampleTotals[s];
-                }
-                else
-                {
-                    rawRatio = sbCount / sampleTotals[s];
-                }
-
-                rawBucketRatios[s] = rawRatio;
-            }
-
-            List<Integer> ratioSortedIndices = getSortedVectorIndices(rawBucketRatios, true);
-
-            double cumulativeWeight = 0;
-            double rangeMinRatio = 0;
-            double rangeMaxRatio = 0;
-            double rangeWeightTotal = 0;
-            double rangeRatioWeightTotal = 0;
-            double medianRatio = 0;
-
-            for(Integer s : ratioSortedIndices)
-            {
-                double unallocCount = sampleUnallocCounts.get(s)[bucket];
-                double allocCount = sampleAllocCounts.get(s)[bucket];
-                double sbCount = unallocCount + allocCount;;
-                double sbWeight = sbCount/bucketTotal;
-                double sampleBucketRatio = rawBucketRatios[s];
-                double sbRatioWeight = sampleBucketRatio * sbWeight;
-
-                cumulativeWeight += sbWeight;
-
-                if(cumulativeWeight < startPercentile)
-                    continue;
-
-                if (rangeMinRatio == 0 && cumulativeWeight >= startPercentile)
-                {
-                    rangeMinRatio = sampleBucketRatio;
-                }
-
-                if(medianRatio == 0 && cumulativeWeight >= 0.5)
-                    medianRatio = sampleBucketRatio;
-
-                if(cumulativeWeight < endPercentile)
-                {
-                    rangeWeightTotal += sbWeight;
-                    rangeRatioWeightTotal += sbRatioWeight;
-                    allocTotal += sbCount;
-                }
-                else
-                {
-                    if(rangeMaxRatio == 0)
-                        rangeMaxRatio = sampleBucketRatio;
-                }
-            }
-
-            if(rangeWeightTotal == 0)
-            {
-                LOGGER.error(String.format("grp(%d) bucket(%d) couldn't calc mean: range(%.3f -> %.3f) total(%s)",
-                        groupId, bucket, rangeMinRatio, rangeMaxRatio, sizeToStr(bucketTotal)));
-                continue;
-            }
-
-            double rangeBoundMean = rangeRatioWeightTotal / rangeWeightTotal;
-
-            double minRange = min(rangeBoundMean - rangeMinRatio, rangeMaxRatio - rangeBoundMean);
-            double rangePerc = (rangeMaxRatio - rangeMinRatio) / rangeBoundMean;
-
-            double countsTotal = rangeWeightTotal * bucketTotal;
-
-            boolean acceptNewRange = !noStartRatios && (rangePerc <= BUCKET_RANGE_MAX_PERCENT * 2) && (adjRanges[bucket] < rangePerc);
-
-            if(noStartRatios)
-            {
-                LOGGER.debug(String.format("grp(%d) bucket(%d) calc(avg=%.4f med=%.4f) span(%.4f -> %.4f act=%.4f perc=%.3f) total(%.3f, %s of %s)",
-                        groupId, bucket, rangeBoundMean, medianRatio, rangeMinRatio, rangeMaxRatio, minRange, rangePerc,
-                        rangeWeightTotal, sizeToStr(countsTotal), sizeToStr(bucketTotal)));
-
-            }
-            else
-            {
-                LOGGER.debug(String.format("grp(%d) bucket(%d) sigRatio(%.4f range=%.4f) calc(avg=%.4f med=%.4f) span(%.4f -> %.4f act=%.4f perc=%.3f) acceptChg(%s) total(%.3f, %s of %s)",
-                        groupId, bucket, adjRatios[bucket], adjRanges[bucket], rangeBoundMean, medianRatio, rangeMinRatio, rangeMaxRatio, minRange, rangePerc,
-                        acceptNewRange, rangeWeightTotal, sizeToStr(countsTotal), sizeToStr(bucketTotal)));
-
-            }
-
-            if(acceptNewRange)
-            {
-                adjRanges[bucket] = rangePerc;
-                hasChanges = true;
-
-
-                // leave the ratios alone for now
-            }
-        }
-
-        LOGGER.debug(String.format("grp(%d) samples(%d) buckets(%d) allocTotal(%s, %.3f of %s)",
-                groupId, sampleCount, bucketCount, sizeToStr(allocTotal), allocTotal/totalCount, sizeToStr(totalCount)));
-
-        return hasChanges;
     }
 
 

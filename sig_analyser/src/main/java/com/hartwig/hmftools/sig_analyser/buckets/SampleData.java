@@ -25,13 +25,11 @@ public class SampleData
     private boolean mExcluded;
 
     private double[] mBucketCounts;
-    private double[] mBackgroundCounts; // those assigned to the background signature
     private double[] mElevBucketCounts;
     private double[] mCountRanges;
     private double[] mAllocNoiseCounts;
     private double[] mAllocBucketCounts;
     private double[] mUnallocBucketCounts;
-    private double[] mPartialUnallocBucketCounts; // purely for the discovery phase, holding some allocated counts back
     private double mAllocPercent;
     private double mPreviousAllocPerc; // to allow tracking of changes
     private double mVarTotal;
@@ -44,13 +42,11 @@ public class SampleData
     private String mCancerType;
 
     private final List<Integer> mElevatedBuckets;
-    private final List<Integer> mUnallocBuckets;
+    private final List<Integer> mUnallocBuckets; // of the elevated buckets
     private final List<String> mCategoryData;
     private List<BucketGroup> mElevBucketGroups;
     private BucketGroup mBackgroundGroup;
     private final List<Double> mGroupAllocPercents;
-
-    public static double PARTIAL_ALLOC_PERCENT = 0.2;
 
     public SampleData(int id)
     {
@@ -121,7 +117,6 @@ public class SampleData
     public double getNoiseTotal() { return mNoiseTotal; }
 
     public final double[] getUnallocBucketCounts() { return mUnallocBucketCounts; }
-    public final double[] getPartialUnallocBucketCounts() { return mPartialUnallocBucketCounts; }
     public double getAllocPercent() { return mAllocPercent; }
     public double lastAllocPercChange() { return mAllocPercent - mPreviousAllocPerc; }
     public double getUnallocPercent() { return 1 - mAllocPercent; }
@@ -141,10 +136,8 @@ public class SampleData
         mAllocBucketCounts = new double[counts.length];
         mAllocNoiseCounts = new double[counts.length];
         mUnallocBucketCounts = new double[counts.length];
-        mPartialUnallocBucketCounts = new double[counts.length];
         mCountRanges = new double[counts.length];
         copyVector(counts, mUnallocBucketCounts);
-        copyVector(counts, mPartialUnallocBucketCounts);
         copyVector(counts, mElevBucketCounts);
         mElevatedTotal = sumVector(counts);
         mUnallocTotal = mElevatedTotal;
@@ -160,7 +153,6 @@ public class SampleData
         mUnallocBuckets.addAll(mElevatedBuckets);
 
         copyVector(mElevBucketCounts, mUnallocBucketCounts);
-        copyVector(mElevBucketCounts, mPartialUnallocBucketCounts);
         initVector(mAllocBucketCounts, 0);
         initVector(mAllocNoiseCounts, 0);
         mUnallocTotal = mElevatedTotal;
@@ -171,17 +163,14 @@ public class SampleData
         mNoiseAllocTotal = 0;
     }
 
-    public void populateBucketCountSubset(double[] counts, final List<Integer> bucketSubset, boolean usePartials)
+    public void populateBucketCountSubset(double[] counts, final List<Integer> bucketSubset)
     {
         // extract the counts for the specified subset, leaving the rest zeroed
         initVector(counts, 0);
 
         for(Integer bucketId : bucketSubset)
         {
-            if(usePartials)
-                counts[bucketId] = max(mPartialUnallocBucketCounts[bucketId], 0);
-            else
-                counts[bucketId] = max(mUnallocBucketCounts[bucketId], 0);
+            counts[bucketId] = max(mUnallocBucketCounts[bucketId], 0);
         }
     }
 
@@ -396,9 +385,6 @@ public class SampleData
                 mUnallocBucketCounts[i] -= counts[i];
                 mAllocBucketCounts[i] += counts[i];
             }
-
-            // maintain an extra unallocated count for discovery purposes - eg 10% higher at all times
-            mPartialUnallocBucketCounts[i] = min(mUnallocBucketCounts[i] + PARTIAL_ALLOC_PERCENT * mElevBucketCounts[i], mElevBucketCounts[i]);
         }
 
         mAllocTotal = capValue(sumVector(mAllocBucketCounts), 0, mElevatedTotal);
