@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.common.numeric;
 
+import java.util.Comparator;
+
 public final class Doubles {
 
     private static final double EPSILON = 1e-10;
@@ -42,5 +44,9 @@ public final class Doubles {
 
     public static double absDistanceFromInteger(double value) {
         return Math.abs((value - Math.round(value)));
+    }
+
+    public static Comparator<Double> comparator() {
+        return (o1, o2) -> Doubles.equal(o1, o2) ? 0 :  Double.compare(o1, o2);
     }
 }

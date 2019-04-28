@@ -60,14 +60,18 @@ public class FittedPurityFileTest {
 
     @NotNull
     static FittedPurity createRandomPurity(@NotNull Random random) {
+        return createRandomPurityBuilder(random).build();
+    }
+
+    @NotNull
+    static ImmutableFittedPurity.Builder createRandomPurityBuilder(@NotNull Random random) {
         return ImmutableFittedPurity.builder()
                 .purity(nextDouble(random))
                 .normFactor(nextDouble(random))
                 .score(nextDouble(random))
                 .diploidProportion(nextDouble(random))
                 .ploidy(nextDouble(random))
-                .somaticPenalty(nextDouble(random))
-                .build();
+                .somaticPenalty(nextDouble(random));
     }
 
     private static double nextDouble(@NotNull final Random random) {

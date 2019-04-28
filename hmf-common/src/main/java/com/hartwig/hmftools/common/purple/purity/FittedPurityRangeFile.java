@@ -6,10 +6,13 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.text.DecimalFormat;
+import java.util.Collections;
 import java.util.List;
 import java.util.StringJoiner;
+import java.util.TreeSet;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.numeric.Doubles;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -44,7 +47,25 @@ public enum FittedPurityRangeFile {
 
     @NotNull
     static List<FittedPurity> fromLines(@NotNull final List<String> lines) {
-        return lines.stream().filter(x -> !x.startsWith(HEADER_PREFIX)).map(FittedPurityRangeFile::fromString).collect(toList());
+        final List<FittedPurity> all =
+                lines.stream().filter(x -> !x.startsWith(HEADER_PREFIX)).map(FittedPurityRangeFile::fromString).sorted().collect(toList());
+
+        return bestFitPerPurity(all);
+    }
+
+    @NotNull
+    static List<FittedPurity> bestFitPerPurity(@NotNull final List<FittedPurity> all) {
+        Collections.sort(all);
+
+        final List<FittedPurity> result = Lists.newArrayList();
+        final TreeSet<Double> purities = new TreeSet<>(Doubles.comparator());
+        for (FittedPurity fittedPurity : all) {
+            if (purities.add(fittedPurity.purity())) {
+                result.add(fittedPurity);
+            }
+        }
+
+        return result;
     }
 
     @NotNull
