@@ -657,7 +657,7 @@ public class BaReporter
         if(mUsingRefSigs)
             return;
 
-        LOGGER.debug("testing sig reconstruction");
+        // LOGGER.debug("testing sig reconstruction");
 
         // test whether any sigs can be reconstructed from the others
         SigContribOptimiser sigOptim = new SigContribOptimiser(mBucketCount, false, 0.99);

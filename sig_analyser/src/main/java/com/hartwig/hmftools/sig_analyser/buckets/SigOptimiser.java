@@ -842,7 +842,7 @@ public class SigOptimiser
 
         if(mLogVerbose)
         {
-            LOGGER.debug(String.format("grp(%d) bucket(%d %s) sigRatio(%.3f) calc(avg=%.3f med=%.3f) span(%.3f -> %.3f act=%.3f perc=%.3f) slots(indx=%d -> %d) total(%.3f, %s of %s)",
+            LOGGER.debug(String.format("grp(%d) bucket(%d %s) startRatio(%.3f) calc(avg=%.3f med=%.3f) span(%.3f -> %.3f act=%.3f perc=%.3f) slots(indx=%d -> %d) total(%.3f, %s of %s)",
                     mGroupId, bucket, isCandidate ? "cand" : "init", mStartRatios[bucket], rangeBoundMean, medianRatio, rangeMinRatio, rangeMaxRatio, minRange, minRange/rangeBoundMean,
                     distStartIndex, distEndIndex, rangeWeightTotal, sizeToStr(countsTotal), sizeToStr(bucketTotal)));
         }

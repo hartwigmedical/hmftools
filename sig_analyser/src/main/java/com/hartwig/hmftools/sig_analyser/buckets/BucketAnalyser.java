@@ -933,6 +933,7 @@ public class BucketAnalyser {
         }
 
         // ensure that noise counts aren't disproportionately large compared with the actual counts
+        // NOTE: they will be further capped when allocations are made per bucket (by MAX_NOISE_ALLOC_PERCENT)
         if(mConfig.ApplyNoise)
         {
             for (int i = 0; i < mSampleCount; ++i)
@@ -1154,13 +1155,10 @@ public class BucketAnalyser {
                 if(sample.isExcluded())
                     continue;
 
-                /*
-                if(mConfig.logSample(sampleId))
-                {
-                    // LOGGER.debug("spec sample");
-                }
+                // mConfig.logSample(sampleId);
 
-                if(mConfig.logSample(sampleId) && mConfig.logSample(bucketGroup.getId()))
+                /*
+                if(mConfig.logSample(sampleId) && bucketGroup.getId() == 123)
                 {
                     LOGGER.debug("spec sample");
                 }
@@ -1739,6 +1737,8 @@ public class BucketAnalyser {
             proposedAllocs.add(sampleCounts.get(samIndex));
         }
 
+        /* DISABLED UNTIL CAN IMPROVE - is currently lowering allocations
+
         SigOptimiser sigOptim = new SigOptimiser(topBucketGroup.getId(), samples, proposedAllocs, newBucketRatios, candidateNewBuckets);
         sigOptim.setLogVerbose(true);
         sigOptim.setCacheBucketInfo(true);
@@ -1769,6 +1769,9 @@ public class BucketAnalyser {
         {
             topBucketGroup.setRatioRangePerc(DEFAULT_SIG_RATIO_RANGE_PERCENT);
         }
+        */
+
+        topBucketGroup.setRatioRangePerc(DEFAULT_SIG_RATIO_RANGE_PERCENT);
 
         topBucketGroup.setBucketRatios(newBucketRatios);
     }
@@ -2449,8 +2452,8 @@ public class BucketAnalyser {
             else if(sample.getAllocPercent() <= prevAllocPerc - 0.01)
                 allocResult = "worse";
 
-            LOGGER.debug(String.format("sample(%d) final fit: method(%s) groups(%d prev=%d max=%d) %s allocation(prev=%.3f new=%.3f, act=%s of %s) noise(%s %.3f/%.3f)",
-                    sample.Id, useNewFit ? "all" : "prev", sampleGroupList.size(), prevGroupCount, potentialGroupList.size(),
+            LOGGER.debug(String.format("sample(%d) final fit: method(%s) groups(%d prev=%d pot=%d) %s allocation(prev=%.3f new=%.3f, act=%s of %s) noise(%s %.3f/%.3f)",
+                    sample.Id, useNewFit ? "all" : "prev", sample.getBucketGroups().size(), prevGroupCount, potentialGroupList.size(),
                     allocResult, prevAllocPerc, sample.getAllocPercent(), sizeToStr(sample.getAllocatedCount()), sizeToStr(sampleCount),
                     sizeToStr(sample.getAllocNoise()), sample.getNoisePerc(), sample.getNoiseOfTotal()));
 
@@ -2508,10 +2511,10 @@ public class BucketAnalyser {
                     hasBackgroundGroup ? sample.getBucketCounts() : sample.getElevatedBucketCounts(),
                     sample.getCountRanges(),
                     ratiosCollection,
-                    MIN_GROUP_ALLOC_PERCENT_LOWER, mConfig.MinSampleAllocCount);
+                    reqAllocPerc, mConfig.MinSampleAllocCount);
 
             sigOptim.setSigIds(sigIds);
-            sigOptim.setLogVerbose(mConfig.logSample(sample.Id));
+            // sigOptim.setLogVerbose(mConfig.logSample(sample.Id));
 
             // each sample's background sig will remain in the list even if it drops below the required threshold
             sigOptim.setRequiredSig(backgroundGroupIndex);

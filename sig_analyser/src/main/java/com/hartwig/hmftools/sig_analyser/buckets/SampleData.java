@@ -106,6 +106,9 @@ public class SampleData
 
     public void addBucketGroup(final BucketGroup group, double allocPerc)
     {
+        if(mBucketGroups.contains(group))
+            return;
+
         mBucketGroups.add(group);
 
         if(group.isBackground())
