@@ -60,7 +60,6 @@ import com.hartwig.hmftools.purple.config.FittingConfig;
 import com.hartwig.hmftools.purple.config.SmoothingConfig;
 import com.hartwig.hmftools.purple.config.SomaticConfig;
 import com.hartwig.hmftools.purple.config.StructuralVariantConfig;
-import com.hartwig.hmftools.purple.plot.ChartWriter;
 import com.hartwig.hmftools.purple.plot.RCharts;
 import com.hartwig.hmftools.purple.somatic.SomaticVCF;
 
@@ -225,11 +224,6 @@ public class PurityPloidyEstimateApplication {
             final ChartConfig chartConfig = configSupplier.circosConfig();
             if (chartConfig.enabled()) {
                 LOGGER.info("Writing charts to: {}", chartConfig.plotDirectory());
-                new ChartWriter(tumorSample, chartConfig.plotDirectory()).write(purityContext.bestFit(),
-                        purityContext.score(),
-                        copyNumbers,
-                        enrichedSomatics);
-
                 new RCharts(configSupplier).generatePlots();
             }
 

@@ -74,7 +74,6 @@
         <dynamicreports.version>5.0.0</dynamicreports.version>
         <jasperreports.font.version>6.0.0</jasperreports.font.version>
         <jooq.version>3.9.5</jooq.version>
-        <jfreechart.version>1.0.14</jfreechart.version>
         <mysqlconnector.version>8.0.11</mysqlconnector.version>
         <apache.dbcp2.version>2.1.1</apache.dbcp2.version>
         <jaxb2.plugin.version>0.13.1</jaxb2.plugin.version>
@@ -215,11 +214,6 @@
                 <groupId>com.github.samtools</groupId>
                 <artifactId>htsjdk</artifactId>
                 <version>${htsjdk.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.jfree</groupId>
-                <artifactId>jfreechart</artifactId>
-                <version>${jfreechart.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.intellij</groupId>
