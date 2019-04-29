@@ -47,11 +47,7 @@ public class SigOptimiser
     private double[] mSampleTotals; // generally each sample's unallocated counts plus noise
     private double[] mProposedTotals; // generally each sample's unallocated counts plus noise
     private double mProposedTotal;
-    private SigMatrix mSampleNoiseRatio; // noise relative to overall sample bucket counts
-    private SigMatrix mBucketRatioWeights; // weighted frequencies of bucket ratios
-    private SigMatrix mBucketRatioFrequencies; // sample frequencies of bucket ratios
     private double mRefMaxRatio;
-    private double[] mRatioSegments;
 
     private double mCountsTotal; // total of the counts including any applied noise
 
@@ -64,6 +60,13 @@ public class SigOptimiser
     private double[] mRangesHigh;
     private double[] mCalcRanges;
     private double[] mUnallocBucketTotals; // from pure samples' unallocated counts
+    private SigMatrix mSampleNoiseRatio; // noise relative to overall sample bucket counts
+    private SigMatrix mBucketRatioWeights; // weighted frequencies of bucket ratios
+    private SigMatrix mBucketRatioFrequencies; // sample frequencies of bucket ratios
+    private double[] mRatioSegments;
+
+    private SigMatrix mSampleSigContrib; // sample sig contributions
+    private SigMatrix mSampleRatios; // sample contributions turned into ratios
 
     private double mUnallocTotal;
     private double mAllocTotal;
@@ -494,6 +497,132 @@ public class SigOptimiser
         }
     }
 
+    public void optimiseRatiosAndRanges()
+    {
+        List<Integer> bucketIds = Lists.newArrayList();
+        bucketIds.addAll(mActiveBuckets);
+        bucketIds.addAll(mCandidateNewBuckets);
+
+        mSampleSigContrib = new SigMatrix(mBucketCount, mSamples.size());
+        double[][] sscData = mSampleSigContrib.getData();
+
+        mSampleRatios = new SigMatrix(mBucketCount, mSamples.size());
+        double[][] srData = mSampleRatios.getData();
+
+        // for each sample, take the unalloc counts and convert them into ratios
+        // then sort these ratios into ordered lists by bucket
+
+        // first populate a new matrix with the unallocated counts for each sample in the relevant buckets
+        for(int s = 0; s < mSamples.size(); ++s)
+        {
+            final SampleData sample = mSamples.get(s);
+            final double[] counts = sample.getUnallocBucketCounts();
+
+            double sampleBgTotal = 0; // total count across all buckets just in this sample
+
+            for(Integer b : bucketIds)
+            {
+                double sbCount = counts[b];
+                sscData[b][s] = sbCount;
+                sampleBgTotal += sbCount;
+            }
+
+            for(Integer b : bucketIds)
+            {
+                double sbCount = counts[b];
+                srData[b][s] = sbCount / sampleBgTotal;
+            }
+        }
+
+        // now iteratively sort each bucket's ratios and cap any high values, then recalculate
+        int iterations = 0;
+        while(iterations < 10)
+        {
+            ++iterations;
+
+            for (Integer b : bucketIds)
+            {
+                calcBucketRatioLimits(b);
+
+                double ratioHighRange = mRangesHigh[b];
+
+                // cap any sample contribution above the bucket high ratio and then recalc those sample's ratios
+                int adjustedSampleCount = 0;
+                for (int s = 0; s < mSamples.size(); ++s)
+                {
+                    double sampleRatio = srData[b][s];
+
+                    if (sampleRatio > ratioHighRange)
+                    {
+                        ++adjustedSampleCount;
+                        capSampleContributions(bucketIds, b, s, ratioHighRange);
+                    }
+                }
+            }
+        }
+    }
+
+    private void calcBucketRatioLimits(int bucket)
+    {
+        double[] bucketRatios = mSampleRatios.getCol(bucket);
+
+        List<Integer> ratioSortedIndices = getSortedVectorIndices(bucketRatios, true);
+
+        // examine the spread of ratios and take the lower Xth percentile as the cap
+        int medianIndex = (int)floor(ratioSortedIndices.size() / 2);
+        double rangeLowRatio = ratioSortedIndices.get(0);
+        double medianRatio = ratioSortedIndices.get(medianIndex);
+        double rangeHighRatio = 0;
+
+        for(int i = medianIndex + 1; i < ratioSortedIndices.size(); ++i)
+        {
+            Integer samIndex = ratioSortedIndices.get(i);
+            double ratio = bucketRatios[samIndex];
+
+            if(ratio/medianRatio > DEFAULT_RATIO_RANGE_PERCENTILE)
+                break;
+
+            rangeHighRatio = ratio;
+        }
+
+        mRangesLow[bucket] = rangeLowRatio;
+        mRangesHigh[bucket] = rangeHighRatio;
+        mRangeMeanRatios[bucket] = medianRatio;
+
+        if(mLogVerbose)
+        {
+            LOGGER.debug(String.format("grp(%d) bucket(%d %s) ratio(start=%.3f median=%.3f) span(%.3f -> %.3f)",
+                    mGroupId, bucket, mStartRatios[bucket], medianRatio, rangeLowRatio, rangeHighRatio));
+        }
+    }
+
+    private void capSampleContributions(List<Integer> bucketIds, int bucket, int samIndex, double ratioLimit)
+    {
+        double[][] sscData = mSampleSigContrib.getData();
+        double[][] srData = mSampleRatios.getData();
+
+        double sampleRatio = srData[bucket][samIndex];
+
+        double sampleBgTotal = 0;
+
+        for(Integer b1 : bucketIds)
+        {
+            sampleBgTotal += sscData[b1][samIndex];
+        }
+
+        double currentBucketCount = sscData[bucket][samIndex];
+        double reducedBucketCount = floor((sampleBgTotal - currentBucketCount) / (1 - sampleRatio) * ratioLimit);
+        sscData[bucket][samIndex] = reducedBucketCount;
+        sampleBgTotal -= currentBucketCount - reducedBucketCount;
+
+        // update sample's ratios using lowered bucket count
+        for(Integer b1 : bucketIds)
+        {
+            double sbCount = sscData[b1][samIndex];
+            srData[b1][samIndex] = sbCount / sampleBgTotal;
+        }
+    }
+
     public void calcBucketDistributions()
     {
         mBucketRatioWeights = new SigMatrix(mBucketCount, BUCKET_RATIO_SEGMENT_COUNT);
@@ -518,7 +647,7 @@ public class SigOptimiser
         convertToPercentages(mCurrentRatios);
     }
 
-    public static void populateRatioSegments(double[] ratioSegments)
+    private static void populateRatioSegments(double[] ratioSegments)
     {
         double reductionFactor = 0.95;
 

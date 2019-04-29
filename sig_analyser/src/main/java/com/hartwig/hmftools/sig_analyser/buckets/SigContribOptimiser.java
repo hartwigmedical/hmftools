@@ -42,7 +42,6 @@ public class SigContribOptimiser
     private int mRequiredSig; // keep this specific sig even if it falls below the require contribution percent
     private double mRequiredSigMinContrib;
     private List<Integer> mZeroedSigs; // the signature bucket ratios
-    private boolean mApplyRange; // to the bucket ratios
 
     private double[] mCounts; // sample counts, optionally including noise
     private double[] mCurrentCounts;
@@ -106,10 +105,10 @@ public class SigContribOptimiser
         mInstances = 0;
         mAvgIterations = 0;
         mAvgPercImprove = 0;
-        mApplyRange = false;
     }
 
-    public void initialise(int sampleId, final double[] counts, final double[] countsNoise, final List<double[]> ratiosCollection, double minSigPercent, int minAllocCount)
+    public void initialise(int sampleId, final double[] counts, final double[] countsNoise, final List<double[]> ratiosCollection,
+            double minSigPercent, int minAllocCount)
     {
         mSampleId = sampleId;
         mMinContribPercent = minSigPercent;
@@ -223,7 +222,6 @@ public class SigContribOptimiser
     }
 
     public void setLogVerbose(boolean toggle) { mLogVerbose = toggle; }
-    public void setApplyRange(boolean toggle) { mApplyRange = toggle; }
     public int contributingSigCount()
     {
         int count = 0;

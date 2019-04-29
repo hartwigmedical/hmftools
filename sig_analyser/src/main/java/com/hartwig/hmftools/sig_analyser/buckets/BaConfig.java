@@ -1,6 +1,9 @@
 package com.hartwig.hmftools.sig_analyser.buckets;
 
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.utils.GenericDataCollection;
@@ -86,6 +89,7 @@ public class BaConfig
     private static String BA_RATIO_RANGE = "ba_ratio_range";
     private static String BA_MUT_LOAD_WEIGHT_FACTOR = "ba_mut_load_wf";
     private static String BA_MERGE_SIG_SCORE = "ba_merge_sig_score";
+    private static String BA_LOG_SPEC_SAMPLES = "ba_log_sample_ids";
 
 
     public BaConfig()
@@ -131,17 +135,26 @@ public class BaConfig
 
         SpecificCancer = cmd.getOptionValue(BA_SPECIFIC_CANCER, "");
         MsiFilter = cmd.getOptionValue(BA_MSI_FILTER, "");
+
+        if(cmd.hasOption(BA_LOG_SPEC_SAMPLES))
+        {
+            SampleWatchList = Arrays.stream(cmd.getOptionValue(BA_LOG_SPEC_SAMPLES).split(";"))
+                    .map(x -> Integer.parseInt(x))
+                    .collect(Collectors.toList());
+        }
     }
 
     public boolean logSample(int sampleId)
     {
-        return SampleWatchList.contains(sampleId);
+        if(SampleWatchList.contains(sampleId))
+            return true;
+
+        return false;
     }
 
     public static void addCmdLineArgs(Options options)
     {
         options.addOption(BA_USE_BACKGROUND_SIGS, true, "Default true. Whether to calculate and use background sigs");
-        options.addOption(BA_EXT_SAMPLE_DATA_FILE, true, "Sample external data");
         options.addOption(BA_EXT_SAMPLE_DATA_FILE, true, "Sample external data");
         options.addOption(BA_CSS_HIGH_THRESHOLD, true, "Cosine sim for high-match test");
         options.addOption(BA_CSS_SIG_THRESHOLD, true, "Cosine sim for comparing proposed sigs");
@@ -157,8 +170,10 @@ public class BaConfig
         options.addOption(BA_MIN_BUCKET_COUNT_OVERLAP, true, "Min buckets for candidate group discovery");
         options.addOption(BA_USE_RATIO_RANGES, false, "Allow a computed range around sig ratios");
         options.addOption(BA_RATIO_RANGE, true, "Ratio range limit");
+        options.addOption(BA_MUT_LOAD_WEIGHT_FACTOR, true, "Dampen higher mutational load samples (1 = no dampening)");
         options.addOption(BA_MSI_FILTER, true, "Use 'Include' to only look at MSI samples, or 'Exclude' to exclude them");
         options.addOption(BA_MERGE_SIG_SCORE, true, "After discovery, merge similar sigs before final fit");
+        options.addOption(BA_LOG_SPEC_SAMPLES, true, "Set of samples IDs to log, separated by ';'");
     }
 
 }

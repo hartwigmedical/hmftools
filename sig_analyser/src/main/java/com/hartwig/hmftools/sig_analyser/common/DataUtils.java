@@ -374,7 +374,8 @@ public class DataUtils {
         return paramTotal > 0 ? multTotal/paramTotal : 0;
     }
 
-    public static double calcBestFitWithinProbability(int itemId, final double[] ratios, final double[] data, double requiredProb, double reqResidualsPerc)
+    public static double calcBestFitWithinProbability(int itemId, final double[] ratios, final double[] data,
+            double requiredProb, double reqResidualsPerc)
     {
         if(data.length != ratios.length)
             return 0;
@@ -438,7 +439,7 @@ public class DataUtils {
             ++iterations;
         }
 
-        LOGGER.debug(String.format("item(%d) total(%.0f) finalAlloc(%.0f minRatio=%.0f leastSq=%.0f) residuals(%.0f perc=%.3f) prob(%.4f) iter(%s)",
+        LOGGER.debug(String.format("sample(%d) total(%.0f) finalAlloc(%.0f minRatio=%.0f leastSq=%.0f) residuals(%.0f perc=%.3f) prob(%.4f) iter(%s)",
                 itemId, dataTotal, currentAlloc, minPosAlloc, lsAlloc, residuals, residualsPerc, currentProb,
                 iterations >= maxIterations ? "max" : String.valueOf(iterations)));
 

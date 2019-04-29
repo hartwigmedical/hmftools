@@ -15,6 +15,7 @@ import static com.hartwig.hmftools.sig_analyser.common.DataUtils.getPoissonRando
 import static com.hartwig.hmftools.sig_analyser.common.DataUtils.getSortedVectorIndices;
 import static com.hartwig.hmftools.sig_analyser.common.DataUtils.writeMatrixData;
 import static com.hartwig.hmftools.sig_analyser.common.SigMatrix.extractNonZeros;
+import static com.hartwig.hmftools.sig_analyser.sim.SimSigFactors.SIG_FACTOR_CSV_ITEM_COUNT;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -68,7 +69,6 @@ public class SampleSimulator {
 
     Random mRandom;
 
-    private int SIG_FACTOR_CSV_ITEM_COUNT = 6;
     private int POISSON_DIST_SIZE = 1000;
     private int POISSON_LAMBDA = 15; // value around which the distribution is centred
 
@@ -123,24 +123,24 @@ public class SampleSimulator {
 
     private void loadSignatureFactors(final String filename) {
 
-        if (filename.isEmpty()) {
+        if (filename.isEmpty())
             return;
-        }
 
-        try {
-
+        try
+        {
             BufferedReader fileReader = new BufferedReader(new FileReader(filename));
 
             // read field names
             String line = fileReader.readLine();
 
-            if (line == null) {
+            if (line == null)
+            {
                 LOGGER.error("Empty data CSV file({})", filename);
                 return;
             }
 
-            while ((line = fileReader.readLine()) != null) {
-
+            while ((line = fileReader.readLine()) != null)
+            {
                 // parse CSV data
                 String[] items = line.split(",");
 
@@ -156,7 +156,9 @@ public class SampleSimulator {
 
             LOGGER.debug("loaded {} signature parameter sets", mSigFactors.size());
 
-        } catch (IOException exception) {
+        }
+        catch (IOException exception)
+        {
 
             LOGGER.error("failed to read data file({})", filename);
             return;
@@ -199,16 +201,17 @@ public class SampleSimulator {
         double[][] cData = mOutputContributions.getData();
 
         int sigIndex = 0;
-        for(final SimSigFactors sigFactors : mSigFactors) {
-
+        for(final SimSigFactors sigFactors : mSigFactors)
+        {
             int samplesExcluded = 0;
 
-            for (int n = 0; n < mConfig.SampleCount; ++n) {
-
+            for (int n = 0; n < mConfig.SampleCount; ++n)
+            {
                 // determine whether this sig should have any presence in this sample
                 double samSigProb = mRandom.nextDouble();
 
-                if (samSigProb > sigFactors.SampleProbability) {
+                if (samSigProb > sigFactors.SampleProbability)
+                {
                     samplesExcluded++;
                     continue;
                 }
@@ -243,7 +246,7 @@ public class SampleSimulator {
 
         // slow log-normal approach
         int poissonInt = getNextRandomInt();
-        double logNormCount = exp(meanNorm + rateFactor*poissonInt);
+        double logNormCount = exp(meanNorm + rateFactor * poissonInt);
 
         // straight random approach
 //        double maxCount = medianCount * rateFactor * 10; // temporary
@@ -320,8 +323,8 @@ public class SampleSimulator {
             return getPoissonRandomLarge(bucketCount, mRandom);
     }
 
-    private void logBucketStats() {
-
+    private void logBucketStats()
+    {
         // calculate counts, min, max, mean and median values per bucket
         final double[][] scData = mOutputMatrix.getData();
 
@@ -330,8 +333,8 @@ public class SampleSimulator {
         int medianIndex = sampleCount / 2; // not averaged for even sample counts
 
         // by bucket
-        for (int i = 0; i < mOutputMatrix.Rows; ++i) {
-
+        for (int i = 0; i < mOutputMatrix.Rows; ++i)
+        {
             int total = 0;
             int min = 0;
             int max = 0;
@@ -341,8 +344,8 @@ public class SampleSimulator {
 
             List<Integer> sortedIndices = getSortedVectorIndices(bucketCounts, true);
 
-            for (int j = 0; j < mOutputMatrix.Cols; ++j) {
-
+            for (int j = 0; j < mOutputMatrix.Cols; ++j)
+            {
                 int sampleIndex = sortedIndices.get(j);
                 int count = (int)scData[i][sampleIndex];
                 total += count;
@@ -364,13 +367,13 @@ public class SampleSimulator {
                     i, min, max, total, mean, median, total/totalCount));
         }
 
-        if(totalCount > 0) {
-
+        if(totalCount > 0)
+        {
             LOGGER.debug(String.format("rounding residuals: gross(%.1f perc=%.4f) net(%.1f perc=%.4f) vs total(%.0f)",
                     mGrossResiduals, mGrossResiduals / totalCount, mNetResiduals, mNetResiduals / totalCount, totalCount));
 
-            if(mConfig.ApplyNoise) {
-
+            if(mConfig.ApplyNoise)
+            {
                 LOGGER.debug(String.format("counts noise: gross(%d perc=%.4f) net(%d perc=%.4f) vs total(%.0f)",
                         mGrossCountNoise, mGrossCountNoise / totalCount, mNetCountNoise, mNetCountNoise / totalCount, totalCount));
             }
@@ -387,9 +390,9 @@ public class SampleSimulator {
             int i = 0;
             for(; i < mConfig.SampleCount-1; ++i)
             {
-                writer.write(String.format("Sample_%d,", i));
+                writer.write(String.format("Sample_%04d,", i));
             }
-            writer.write(String.format("Sample_%d", i));
+            writer.write(String.format("Sample_%04d", i));
 
             writer.newLine();
 
@@ -397,7 +400,8 @@ public class SampleSimulator {
 
             writer.close();
         }
-        catch (final IOException e) {
+        catch (final IOException e)
+        {
             LOGGER.error("error writing to outputFile");
         }
     }
@@ -422,14 +426,15 @@ public class SampleSimulator {
 
             writer.close();
         }
-        catch (final IOException e) {
+        catch (final IOException e)
+        {
             LOGGER.error("error writing to outputFile");
         }
     }
 
     private void generatePoissonDist()
     {
-        // generate doubles between 0-1 based on a poisson distributino
+        // generate doubles between 0-1 based on a poisson distribution
         mPoissonDecimals = new double[POISSON_DIST_SIZE];
         mPoissonInts = new int[POISSON_DIST_SIZE];
 
@@ -462,63 +467,6 @@ public class SampleSimulator {
             mPoissonIndex = 0;
 
         return mPoissonInts[mPoissonIndex++];
-    }
-
-    public void runTests()
-    {
-        // testSampleCounts();
-
-        PerformanceCounter pc = new PerformanceCounter("PoissonLarge");
-
-        int iterations = 1000;
-
-        for(int i = 1; i <= 5; ++i) {
-
-            int range = (int)pow(10, i);
-
-            pc.start();
-
-            for(int j = 0; j < iterations; ++j) {
-
-                getPoissonRandomLarge(range, mRandom);
-            }
-
-            pc.stop();
-        }
-
-        pc.logStats();
-
-//        getPoissonRandomLarge(10, mRandom);
-//        getPoissonRandomLarge(100, mRandom);
-//        getPoissonRandomLarge(1000, mRandom);
-//        getPoissonRandomLarge(10000, mRandom);
-    }
-
-    private void testSampleCounts()
-    {
-        int maxIterations = 100000;
-        int lambda = 100;
-
-        int[] freqCounts = new int[lambda*3];
-//
-//        maxIterations = matrix.Rows * matrix.Cols;
-
-        int outOfBounds = 0;
-        for(int i = 0; i < maxIterations; ++i)
-        {
-            int value = getPoissonRandom(lambda, mRandom);
-            // LOGGER.debug(String.format("%d: value(%d)", i, value));
-
-            if(value >= freqCounts.length)
-                ++outOfBounds;
-            else
-                freqCounts[value] += 1;
-        }
-
-        for(int i = 0; i < freqCounts.length; ++i)
-        {
-            LOGGER.debug(String.format("POS: %d,%d", i, freqCounts[i]));
-        }
     }
 
 }

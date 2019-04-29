@@ -6,16 +6,18 @@ public class SimSigFactors {
 
     final public String Name;
 
-    final public double SampleProbability;
+    final public double SampleProbability; // % of samples with the signature
 
     // a weighting on the random time component - 0 to 1, 1 meaning full effect, anything less lowering the impact
     final public double TimeFactor;
 
-    final public int MedianCount;
+    final public int MedianCount; // median count from this signatures for all samples which have it
 
-    final public double RateFactor;
+    final public double RateFactor; // a multiplier for expression of this sig
 
-    public SimSigFactors(String[] items)
+    public static int SIG_FACTOR_CSV_ITEM_COUNT = 6;
+
+    public SimSigFactors(final String[] items)
     {
         int item = 0;
         SigId = Integer.parseInt(items[item++]);

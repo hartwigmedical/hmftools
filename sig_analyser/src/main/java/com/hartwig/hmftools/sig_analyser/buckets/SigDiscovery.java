@@ -78,13 +78,10 @@ public class SigDiscovery
             if(sample1.isExcluded())
                 continue;
 
-            if(!!mAnalyser.getReassessSamples().isEmpty() && !mAnalyser.getReassessSamples().contains(samIndex1))
+            if(!mAnalyser.getReassessSamples().isEmpty() && !mAnalyser.getReassessSamples().contains(samIndex1))
                 continue;
 
-            if(mConfig.logSample(samIndex1))
-            {
-                //LOGGER.debug("spec sample");
-            }
+            // mConfig.logSample(samIndex1);
 
             double reqSam1AllocPercent = minAllocPercent(sample1, false);
 
@@ -113,10 +110,7 @@ public class SigDiscovery
                 if(sample2.isExcluded())
                     continue;
 
-                if(mConfig.logSample(samIndex1) && mConfig.logSample(samIndex2))
-                {
-                    // LOGGER.debug("spec sample");
-                }
+                // mConfig.logSample(samIndex1) && mConfig.logSample(samIndex2);
 
                 double reqSam2AllocPercent = minAllocPercent(sample2, false);
 
@@ -329,10 +323,7 @@ public class SigDiscovery
             // if(!mReassessSamples.isEmpty() && !mReassessSamples.contains(samIndex1))
             //     continue;
 
-            if(mConfig.logSample(samIndex1))
-            {
-                //LOGGER.debug("spec sample");
-            }
+            // mConfig.logSample(samIndex1);
 
             if(sample1.getUnallocPercent() < MIN_GROUP_ALLOC_PERCENT)
                 continue;
@@ -408,10 +399,7 @@ public class SigDiscovery
                 if (sample2.isExcluded())
                     continue;
 
-                if (mConfig.logSample(samIndex1) && mConfig.logSample(samIndex2))
-                {
-                    //LOGGER.debug("spec sample");
-                }
+                // mConfig.logSample(samIndex1) && mConfig.logSample(samIndex2)
 
                 if (sample2.getUnallocPercent() < MIN_GROUP_ALLOC_PERCENT)
                     continue;

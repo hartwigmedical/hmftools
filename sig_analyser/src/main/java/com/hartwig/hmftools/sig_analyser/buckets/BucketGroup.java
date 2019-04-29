@@ -20,8 +20,6 @@ import java.util.Map;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.numeric.Doubles;
 
-import sun.util.locale.provider.LocaleServiceProviderPool;
-
 public class BucketGroup implements Comparable<BucketGroup> {
 
     // keyed by a bucket pairing

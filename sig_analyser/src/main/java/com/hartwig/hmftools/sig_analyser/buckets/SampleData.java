@@ -24,27 +24,30 @@ public class SampleData
     private String mSampleName;
     private boolean mExcluded;
 
-    private double[] mBucketCounts;
-    private double[] mElevBucketCounts;
-    private double[] mCountRanges;
-    private double[] mAllocNoiseCounts;
-    private double[] mAllocBucketCounts;
-    private double[] mUnallocBucketCounts;
+    private double[] mBucketCounts; // counts by bucket
+    private double[] mElevBucketCounts; // counts of elevated buckets only
+    private double[] mCountRanges; // permitted noise or each bucket
+    private double[] mAllocNoiseCounts; // counts allocated to noise for each bucket
+    private double[] mAllocBucketCounts; // allocated counts for elevated buckets (excluding noise)
+    private double[] mUnallocBucketCounts; // unallocated counts for elevated buckets
     private double mAllocPercent;
     private double mPreviousAllocPerc; // to allow tracking of changes
     private double mVarTotal;
+    private double mBackgroundTotal;
     private double mElevatedTotal;
     private double mAllocTotal;
     private double mUnallocTotal;
     private double mNoiseAllocTotal;
     private double mNoiseTotal;
+    private boolean mAllocOfElevated; // any calculated allocations will by from elevated, not total count
 
     private String mCancerType;
 
     private final List<Integer> mElevatedBuckets;
     private final List<Integer> mUnallocBuckets; // of the elevated buckets
     private final List<String> mCategoryData;
-    private List<BucketGroup> mElevBucketGroups;
+    private List<BucketGroup> mBucketGroups;
+    private List<BucketGroup> mElevBucketGroups; // doesn't include any background groups
     private BucketGroup mBackgroundGroup;
     private final List<Double> mGroupAllocPercents;
 
@@ -56,13 +59,17 @@ public class SampleData
         mCancerType = "";
         mCategoryData = Lists.newArrayList();
         mElevBucketGroups = Lists.newArrayList();
+        mBucketGroups = Lists.newArrayList();
         mElevatedBuckets = Lists.newArrayList();
         mUnallocBuckets = Lists.newArrayList();
         mGroupAllocPercents = Lists.newArrayList();
         mBackgroundGroup = null;
         mAllocPercent = 0;
+        mAllocOfElevated = true;
         mPreviousAllocPerc = 0;
         mAllocTotal = 0;
+        mElevatedTotal = 0;
+        mBackgroundTotal = 0;
         mUnallocTotal = 0;
         mNoiseAllocTotal = 0;
         mNoiseTotal = 0;
@@ -90,27 +97,32 @@ public class SampleData
     public final List<Integer> getElevatedBuckets() { return mElevatedBuckets; }
     public final List<Integer> getUnallocBuckets() { return mUnallocBuckets; }
 
+    public final List<BucketGroup> getBucketGroups() { return mBucketGroups; }
     public final List<BucketGroup> getElevBucketGroups() { return mElevBucketGroups; }
-    public final List<Double> getGroupAllocPercents() { return mGroupAllocPercents; }
 
     public final BucketGroup getBackgroundGroup() { return mBackgroundGroup; }
 
-    public void setBackgroundGroup(final BucketGroup group)
-    {
-        mBackgroundGroup = group;
-    }
+    public final List<Double> getGroupAllocPercents() { return mGroupAllocPercents; }
 
-    public void addElevBucketGroup(final BucketGroup group, double allocPerc)
+    public void addBucketGroup(final BucketGroup group, double allocPerc)
     {
-        mElevBucketGroups.add(group);
+        mBucketGroups.add(group);
+
+        if(group.isBackground())
+            mBackgroundGroup = group;
+        else
+            mElevBucketGroups.add(group);
+
         mGroupAllocPercents.add(allocPerc);
     }
 
+    public final double[] getBucketCounts() { return mBucketCounts; }
     public final double[] getElevatedBucketCounts() { return mElevBucketCounts; }
     public final double[] getCountRanges() { return mCountRanges; }
     public final double[] getAllocNoiseCounts() { return mAllocNoiseCounts; }
     public double getTotalCount() { return mVarTotal; }
     public double getElevatedCount() { return mElevatedTotal; }
+    public double getBackgroundCount() { return mBackgroundTotal; }
     public double getAllocatedCount() { return mAllocTotal; }
     public double getUnallocatedCount() { return mUnallocTotal; }
     public double getAllocNoise() { return mNoiseAllocTotal; }
@@ -140,22 +152,38 @@ public class SampleData
         copyVector(counts, mUnallocBucketCounts);
         copyVector(counts, mElevBucketCounts);
         mElevatedTotal = sumVector(counts);
+        mBackgroundTotal = mVarTotal - mElevatedTotal;
         mUnallocTotal = mElevatedTotal;
 
         copyVector(ranges, mCountRanges);
         mNoiseTotal = sumVector(mCountRanges);
     }
 
-    public void clearAllocations()
+    public void clearAllocations(boolean useElevatedOnly)
     {
+        mBucketGroups.clear();
+
+        if(mBackgroundGroup != null)
+            mBucketGroups.add(mBackgroundGroup);
+
         mElevBucketGroups.clear();
         mUnallocBuckets.clear();
         mUnallocBuckets.addAll(mElevatedBuckets);
 
-        copyVector(mElevBucketCounts, mUnallocBucketCounts);
+        if(useElevatedOnly)
+        {
+            copyVector(mElevBucketCounts, mUnallocBucketCounts);
+            mUnallocTotal = mElevatedTotal;
+        }
+        else
+        {
+            mAllocOfElevated = false;
+            copyVector(mBucketCounts, mUnallocBucketCounts);
+            mUnallocTotal = mVarTotal;
+        }
+
         initVector(mAllocBucketCounts, 0);
         initVector(mAllocNoiseCounts, 0);
-        mUnallocTotal = mElevatedTotal;
         mGroupAllocPercents.clear();
         mAllocPercent = 0;
         mPreviousAllocPerc = 0;
@@ -184,13 +212,14 @@ public class SampleData
         return getPotentialAllocation(bucketRatios, false, requiredBuckets, ratioRanges);
     }
 
-    private double[] getPotentialAllocation(final double[] bucketRatios, boolean useUnallocated, final List<Integer> requiredBuckets, final double[] ratioRanges)
+    private double[] getPotentialAllocation(final double[] bucketRatios, boolean useUnallocated, final List<Integer> requiredBuckets,
+            final double[] ratioRanges)
     {
         // must cap at the actual sample counts
         // allow to go as high as the elevated probability range
         // if a single bucket required by the ratios has zero unallocated, then all are zeroed
         final double[] sampleCounts = useUnallocated ? mUnallocBucketCounts : mElevBucketCounts;
-        double countsTotal = useUnallocated ? mUnallocTotal : mElevatedTotal;
+        double countsTotal = useUnallocated ? mUnallocTotal : (mAllocOfElevated ? mElevatedTotal : mVarTotal);
 
         // first extract the remaining unallocated counts per bucket
         double minAlloc = 0;
@@ -274,6 +303,7 @@ public class SampleData
         double allocatedCount = 0;
         double allocatedActualCount = 0;
         double noiseTotal = mNoiseAllocTotal;
+        double refVarTotal = mAllocOfElevated ? mElevatedTotal : mVarTotal;
         double reductionFactor = 1;
 
         // do a preliminary check that this allocation will actually achieve the required percentage count
@@ -324,7 +354,7 @@ public class SampleData
         }
 
         // now only factors in the allocation to remaining actual counts
-        if(reqAllocationPercent > 0 && allocatedCount < reqAllocationPercent * mElevatedTotal)
+        if(reqAllocationPercent > 0 && allocatedCount < reqAllocationPercent * refVarTotal)
             return allocatedCount;
 
         // allow allocation for the caller to go up to the unallocated counts plus the permitted noise range, which
@@ -387,11 +417,11 @@ public class SampleData
             }
         }
 
-        mAllocTotal = capValue(sumVector(mAllocBucketCounts), 0, mElevatedTotal);
-        mUnallocTotal = mElevatedTotal - mAllocTotal;
+        mAllocTotal = capValue(sumVector(mAllocBucketCounts), 0, refVarTotal);
+        mUnallocTotal = refVarTotal - mAllocTotal;
 
         mPreviousAllocPerc = mAllocPercent;
-        mAllocPercent = capValue(mAllocTotal/mElevatedTotal, 0, 1);
+        mAllocPercent = capValue(mAllocTotal/refVarTotal, 0, 1);
 
         return allocatedCount;
     }
