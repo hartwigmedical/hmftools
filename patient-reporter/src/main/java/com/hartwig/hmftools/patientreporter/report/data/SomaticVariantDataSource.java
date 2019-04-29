@@ -57,10 +57,10 @@ public final class SomaticVariantDataSource {
         for (final ReportableVariant variant : sort(variants)) {
 
             String displayGene = variant.isDrupActionable() ? variant.gene() + " *" : variant.gene();
-            String codingImpact = variant.notifyClinicalGeneticus() && variant.somaticOrGermline().equals("germline")
+            String codingImpact = variant.notifyClinicalGeneticus()
                     // germlineReportingChoice.equals(LimsGermlineReportingChoice.ACTIONABLE_ONLY) || germlineReportingChoice.equals(LimsGermlineReportingChoice.ALL) &&
                     ? variant.hgvsCodingImpact() + " + # "
-                    : !variant.notifyClinicalGeneticus() && variant.somaticOrGermline().equals("germline")
+                    : !variant.notifyClinicalGeneticus()
                             //germlineReportingChoice.equals(LimsGermlineReportingChoice.ACTIONABLE_ONLY) || germlineReportingChoice.equals(LimsGermlineReportingChoice.ALL) &&
                             ? variant.hgvsCodingImpact() + " +"
                             : variant.hgvsCodingImpact();

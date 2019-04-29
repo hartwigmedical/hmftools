@@ -86,7 +86,6 @@ public final class ExampleAnalysisTestFactory {
                 tumorMutationalBurden,
                 chordAnalysis,
                 LimsGermlineReportingChoice.UNKNOWN,
-                false,
                 copyNumbers,
                 fusions,
                 disruptions,
@@ -132,7 +131,6 @@ public final class ExampleAnalysisTestFactory {
                 tumorMutationalBurden,
                 chordAnalysis,
                 LimsGermlineReportingChoice.UNKNOWN,
-                true,
                 copyNumbers,
                 fusions,
                 disruptions,
@@ -446,7 +444,6 @@ public final class ExampleAnalysisTestFactory {
                 .adjustedVAF(purityAdjuster.purityAdjustedVAF("7", 6, 107D / 161D))
                 .driverCategory(DriverCategory.ONCO)
                 .driverLikelihood(1D)
-                .somaticOrGermline("somatic")
                 .notifyClinicalGeneticus(false)
                 .build();
 
@@ -465,7 +462,6 @@ public final class ExampleAnalysisTestFactory {
                 .adjustedVAF(purityAdjuster.purityAdjustedVAF("9", 2, 44D / 44D))
                 .driverCategory(DriverCategory.TSG)
                 .driverLikelihood(0.9)
-                .somaticOrGermline("somatic")
                 .notifyClinicalGeneticus(false)
                 .build();
 
@@ -484,7 +480,6 @@ public final class ExampleAnalysisTestFactory {
                 .adjustedVAF(purityAdjuster.purityAdjustedVAF("2", 3, 72D / 107D))
                 .driverCategory(DriverCategory.ONCO)
                 .driverLikelihood(0.5)
-                .somaticOrGermline("somatic")
                 .notifyClinicalGeneticus(false)
                 .build();
 
@@ -503,7 +498,6 @@ public final class ExampleAnalysisTestFactory {
                 .adjustedVAF(purityAdjuster.purityAdjustedVAF("3", 4, 48D / 103D))
                 .driverCategory(DriverCategory.TSG)
                 .driverLikelihood(0.1)
-                .somaticOrGermline("somatic")
                 .notifyClinicalGeneticus(false)
                 .build();
         return Lists.newArrayList(variant1, variant2, variant3, variant4);
@@ -526,7 +520,6 @@ public final class ExampleAnalysisTestFactory {
                 .adjustedVAF(purityAdjuster.purityAdjustedVAF("3", 4, 48D / 103D))
                 .driverCategory(DriverCategory.TSG)
                 .driverLikelihood(0.1)
-                .somaticOrGermline("somatic")
                 .notifyClinicalGeneticus(false)
                 .build();
 
@@ -545,7 +538,6 @@ public final class ExampleAnalysisTestFactory {
                 .adjustedVAF(purityAdjuster.purityAdjustedVAF("3", 4, 48D / 103D))
                 .driverCategory(DriverCategory.TSG)
                 .driverLikelihood(0.1)
-                .somaticOrGermline("germline")
                 .notifyClinicalGeneticus(true)
                 .build();
 

@@ -97,18 +97,6 @@ abstract class PatientReporter {
                         copyNumberAnalysis.exomeGeneCopyNumbers(),
                         tumorSample);
 
-        boolean hasReportableGermlineVariant = false;
-        List<String> reportGermline = Lists.newArrayList();
-                for (ReportableVariant variantAnalysis : reportableVariants) {
-                    if (variantAnalysis.somaticOrGermline().equals("germline")) {
-                        reportGermline.add("germline");
-                    }
-                }
-
-        if (reportGermline.size() > 0) {
-            hasReportableGermlineVariant = true;
-        }
-
         final SvAnalysis svAnalysis = analyzeStructuralVariants(copyNumberAnalysis, patientTumorLocation, svAnalyzerModel());
 
         final ChordAnalysis chordAnalysis = analyzeChord(run);
@@ -154,7 +142,6 @@ abstract class PatientReporter {
                 somaticVariantAnalysis.tumorMutationalBurden(),
                 chordAnalysis,
                 lims.germlineReportingChoice(tumorSample),
-                hasReportableGermlineVariant,
                 copyNumberAnalysis.reportableGeneCopyNumbers(),
                 svAnalysis.reportableFusions(),
                 svAnalysis.reportableDisruptions(),

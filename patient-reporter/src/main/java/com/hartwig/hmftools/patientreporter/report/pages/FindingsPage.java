@@ -11,6 +11,7 @@ import static net.sf.dynamicreports.report.builder.DynamicReports.cmp;
 import static net.sf.dynamicreports.report.builder.DynamicReports.col;
 import static net.sf.dynamicreports.report.builder.DynamicReports.hyperLink;
 
+import com.hartwig.hmftools.common.lims.LimsGermlineReportingChoice;
 import com.hartwig.hmftools.patientreporter.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.report.components.ChordSection;
 import com.hartwig.hmftools.patientreporter.report.components.MicrosatelliteSection;
@@ -80,7 +81,8 @@ public abstract class FindingsPage {
                                 report.germlineReportingChoice()))
                         : cmp.text("None").setStyle(fontStyle().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER));
 
-        if (report.reportableGermlineVariant()) { //report.germlineReportingChoice().equals(LimsGermlineReportingChoice.ALL)|| report.germlineReportingChoice().equals(LimsGermlineReportingChoice.ACTIONABLE_ONLY)
+        if (report.germlineReportingChoice().equals(LimsGermlineReportingChoice.ALL) || report.germlineReportingChoice()
+                .equals(LimsGermlineReportingChoice.ACTIONABLE_ONLY)) {
             return cmp.verticalList(cmp.text("Somatic Variants").setStyle(sectionHeaderStyle()),
                     cmp.verticalGap(HEADER_TO_TABLE_VERTICAL_GAP),
                     table,

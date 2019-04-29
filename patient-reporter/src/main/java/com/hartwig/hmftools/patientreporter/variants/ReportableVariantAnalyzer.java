@@ -34,7 +34,6 @@ public class ReportableVariantAnalyzer {
             reportableVariants.add(fromVariant(variant).isDrupActionable(drupActionableGenes.contains(variant.gene()))
                     .driverCategory(driverCategoryPerGene.get(variant.gene()))
                     .driverLikelihood(catalog != null ? catalog.driverLikelihood() : null)
-                    .somaticOrGermline("somatic")
                     .notifyClinicalGeneticus(false)
                     .build());
         }
@@ -59,7 +58,6 @@ public class ReportableVariantAnalyzer {
             reportableVariants.add(fromGermline(germlineVariant).isDrupActionable(drupActionableGenes.contains(germlineVariant.gene()))
                     .driverCategory(driverCategoryPerGene.get(germlineVariant.gene()))
                     .driverLikelihood(null)
-                    .somaticOrGermline("germline")
                     .notifyClinicalGeneticus(notify)
                     .build());
 

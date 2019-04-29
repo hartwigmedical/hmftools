@@ -54,8 +54,6 @@ public abstract class AnalysedPatientReport implements PatientReport {
     @NotNull
     public abstract LimsGermlineReportingChoice germlineReportingChoice();
 
-    public abstract boolean reportableGermlineVariant();
-
     @NotNull
     public abstract List<GeneCopyNumber> geneCopyNumbers();
 
