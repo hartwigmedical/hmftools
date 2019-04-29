@@ -121,7 +121,7 @@ public class SageHotspotAnnotation {
         }
 
         LOGGER.info("Writing output to {}", outputVCF);
-        final VCFHeader header = generateOutputHeader(inputReader.getFileHeader());
+        final VCFHeader header = generateOutputHeader(inputReader.getFileHeader(), hotspotReader.getFileHeader());
         final VariantContextWriter writer = new VariantContextWriterBuilder().setOutputFile(outputVCF)
                 .setReferenceDictionary(header.getSequenceDictionary())
                 .setIndexCreator(new TabixIndexCreator(header.getSequenceDictionary(), new TabixFormat()))
@@ -165,11 +165,15 @@ public class SageHotspotAnnotation {
     }
 
     @NotNull
-    private static VCFHeader generateOutputHeader(@NotNull final VCFHeader template) {
-        final VCFHeader outputVCFHeader = new VCFHeader(template.getMetaDataInInputOrder(), template.getSampleNamesInOrder());
+    private static VCFHeader generateOutputHeader(@NotNull final VCFHeader inputVCF, @NotNull final VCFHeader hotspotVCF) {
+        final VCFHeader outputVCFHeader = new VCFHeader(inputVCF.getMetaDataInInputOrder(), inputVCF.getSampleNamesInOrder());
         outputVCFHeader.addMetaDataLine(new VCFInfoHeaderLine(HOTSPOT_FLAG, 0, VCFHeaderLineType.Flag, HOTSPOT_DESCRIPTION));
         outputVCFHeader.addMetaDataLine(new VCFInfoHeaderLine(NEAR_HOTSPOT_FLAG, 0, VCFHeaderLineType.Flag, NEAR_HOTSPOT_DESCRIPTION));
         outputVCFHeader.addMetaDataLine(new VCFInfoHeaderLine(RECOVERED_FLAG, 0, VCFHeaderLineType.Flag, RECOVERED_FLAG_DESCRIPTION));
+
+        for (VCFInfoHeaderLine headerLine : hotspotVCF.getInfoHeaderLines()) {
+            outputVCFHeader.addMetaDataLine(headerLine);
+        }
 
         return outputVCFHeader;
     }
