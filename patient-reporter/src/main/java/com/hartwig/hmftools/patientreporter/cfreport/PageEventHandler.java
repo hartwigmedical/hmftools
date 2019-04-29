@@ -8,7 +8,9 @@ import com.itextpdf.kernel.events.Event;
 import com.itextpdf.kernel.events.IEventHandler;
 import com.itextpdf.kernel.events.PdfDocumentEvent;
 import com.itextpdf.kernel.pdf.PdfDocument;
+import com.itextpdf.kernel.pdf.PdfOutline;
 import com.itextpdf.kernel.pdf.PdfPage;
+import com.itextpdf.kernel.pdf.navigation.PdfExplicitRemoteGoToDestination;
 import org.jetbrains.annotations.NotNull;
 
 public class PageEventHandler implements IEventHandler {
@@ -23,6 +25,8 @@ public class PageEventHandler implements IEventHandler {
 
     private String chapterTitle = "Undefined";
     private boolean firstPageOfChapter = true;
+
+    private PdfOutline outline = null;
 
     public PageEventHandler(@NotNull final SampleReport sampleReport) {
         this.sampleReport = sampleReport;
@@ -58,11 +62,25 @@ public class PageEventHandler implements IEventHandler {
             header.renderHeader(chapterTitle, firstPageOfChapter, page);
             if (firstPageOfChapter) {
                 firstPageOfChapter = false;
+
+                createChapterBookmark(documentEvent.getDocument(), chapterTitle);
+
             }
             SidePanel.renderSidePanel(page, sampleReport, fullSidebar, fullSidebarContent);
             footer.renderFooter(page, !fullSidebar);
 
         }
+
+    }
+
+    private void createChapterBookmark(PdfDocument pdf, String title) {
+
+        if (outline == null) {
+            outline = pdf.getOutlines(false);
+        }
+
+        PdfOutline chapterItem = outline.addOutline(title);
+        chapterItem.addDestination(PdfExplicitRemoteGoToDestination.createFitH(pdf.getNumberOfPages(), 0));
 
     }
 
