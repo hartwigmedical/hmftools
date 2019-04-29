@@ -68,7 +68,7 @@ public class TumorCharacteristicsChapter implements ReportChapter {
         satelliteChart.setTickMarks(new double[] {MicroSatelliteStatus.RANGE_MIN, 1E-1, 1, 10, MicroSatelliteStatus.RANGE_MAX}, doubleDecimalFormat);
         satelliteChart.enableUndershoot("<" + noDecimalFormat.format(satelliteChart.getMin()));
         satelliteChart.enableOvershoot(">" + noDecimalFormat.format(satelliteChart.getMax()));
-        satelliteChart.setIndicator(MicroSatelliteStatus.THRESHOLD, "Microsatellite instability");
+        satelliteChart.setIndicator(MicroSatelliteStatus.THRESHOLD, "Microsatellite \ninstability (" + doubleDecimalFormat.format(MicroSatelliteStatus.THRESHOLD) + ")");
         reportDocument.add(createCharacteristicDiv("Microsatellite status", microSatelliteStabilityString,
                 "The microsatellite stability score represents the number of somatic inserts and deletes in " +
                         "(short) repeat sections across the whole genome of the tumor per Mb. This metric can be " +
@@ -92,7 +92,8 @@ public class TumorCharacteristicsChapter implements ReportChapter {
                 new double[] {MutationalLoad.RANGE_MIN, 10, 100, MutationalLoad.RANGE_MAX}, noDecimalFormat);
         mutationalLoadChart.enableUndershoot("<" + noDecimalFormat.format(mutationalLoadChart.getMin()));
         mutationalLoadChart.enableOvershoot(">" + noDecimalFormat.format(mutationalLoadChart.getMax()));
-        mutationalLoadChart.setIndicator(MutationalLoad.THRESHOLD, "Eligible for DRUP");
+        mutationalLoadChart.setIndicator(MutationalLoad.THRESHOLD, "Eligible for \nDRUP (" + noDecimalFormat.format(MutationalLoad.THRESHOLD) + ")");
+
         reportDocument.add(createCharacteristicDiv("Tumor mutational load", mutationalLoadString,
                 "The tumor mutational load represents the total number of somatic missense variants across " +
                         "the whole genome of the tumor. Patients with a mutational load over 140 could be eligible for " +

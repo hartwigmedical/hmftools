@@ -9,6 +9,7 @@ import com.itextpdf.layout.Canvas;
 import com.itextpdf.layout.element.Div;
 import com.itextpdf.layout.element.Paragraph;
 import com.itextpdf.layout.property.TextAlignment;
+import com.itextpdf.layout.property.VerticalAlignment;
 import com.itextpdf.layout.renderer.DivRenderer;
 import com.itextpdf.layout.renderer.DrawContext;
 import com.itextpdf.layout.renderer.IRenderer;
@@ -224,14 +225,16 @@ public class BarChart extends InlineBarChart {
 
                 float x = (float) MathUtil.map(getScaledValue(threshold.value), getScaledMin(), getScaledMax(), mainInnerBB.getLeft(), mainInnerBB.getRight());
 
-                canvas.moveTo(x, mainOuterBB.getTop() + 9.5f);
+                canvas.moveTo(x, mainOuterBB.getTop() + 15f);
                 canvas.lineTo(x, mainOuterBB.getBottom() - 10.5f);
                 canvas.setLineWidth(1f);
                 canvas.setStrokeColor(ReportResources.PALETTE_PINK);
                 canvas.stroke();
 
-                cv.showTextAligned(new Paragraph("\u2192 " + threshold.name.toUpperCase())
-                        .addStyle(ReportResources.subTextBoldStyle().setFontSize(6)).setFontColor(ReportResources.PALETTE_PINK), x + 4.5f, mainOuterBB.getTop() + 3.5f, TextAlignment.LEFT);
+                cv.showTextAligned(new Paragraph("\u2192")
+                        .addStyle(ReportResources.subTextBoldStyle().setFontSize(6)).setFontColor(ReportResources.PALETTE_PINK), x + 4.5f, mainOuterBB.getTop() + 18f, TextAlignment.LEFT, VerticalAlignment.TOP);
+                cv.showTextAligned(new Paragraph(threshold.name.toUpperCase())
+                        .addStyle(ReportResources.subTextBoldStyle().setFontSize(6)).setFontColor(ReportResources.PALETTE_PINK), x + 12.5f, mainOuterBB.getTop() + 18f, TextAlignment.LEFT, VerticalAlignment.TOP);
 
             }
 
