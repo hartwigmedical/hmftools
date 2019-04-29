@@ -26,6 +26,7 @@ import com.hartwig.hmftools.patientreporter.PatientReporterTestUtil;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
+import org.junit.Ignore;
 import org.junit.Test;
 
 public class FilterGermlineVariantsTest {
@@ -35,7 +36,7 @@ public class FilterGermlineVariantsTest {
         List<GermlineVariant> germlineVariants = createTestGermlineVariantsONCOGene();
         Map<String,Boolean> germlineGenesReporting = PatientReporterTestUtil.testGermlineModel().germlineGenes();
         Map<String, DriverCategory> driverCategoryMapMatch = Maps.newHashMap();
-        driverCategoryMapMatch.put("BRCA2", DriverCategory.ONCO);
+        driverCategoryMapMatch.put("KIT", DriverCategory.ONCO);
 
         List<GeneCopyNumber> geneCopyNumbers = Lists.newArrayList();
         String sampleId = "CPCT02990001T";
@@ -50,7 +51,7 @@ public class FilterGermlineVariantsTest {
         assertEquals(filteredGermlineVariantMatch.size(), 1);
 
         Map<String, DriverCategory> driverCategoryMapNotMatch = Maps.newHashMap();
-        driverCategoryMapNotMatch.put("BRCA1", DriverCategory.ONCO);
+        driverCategoryMapNotMatch.put("AAAA", DriverCategory.ONCO);
 
         List<GermlineVariant> filteredGermlineVariantNonMatch = FilterGermlineVariants.filteringReportedGermlineVariant(germlineVariants,
                 germlineGenesReporting,
@@ -63,25 +64,64 @@ public class FilterGermlineVariantsTest {
 
     @Test
     public void checkForGermlineGenesReportedTSG() throws IOException {
-        Map<String,Boolean> germlineGenesReporting = PatientReporterTestUtil.testGermlineModel().germlineGenes();
+        Map<String, Boolean> germlineGenesReporting = PatientReporterTestUtil.testGermlineModel().germlineGenes();
         Map<String, DriverCategory> driverCategoryMapMatch = Maps.newHashMap();
-        driverCategoryMapMatch.put("ATM", DriverCategory.TSG);
+        driverCategoryMapMatch.put("BRCA2", DriverCategory.TSG);
         String sampleId = "CPCT02990001T";
         List<GermlineVariant> germlineVariantsMatch = createTestGermlineVariantsTSGGene(true);
         List<GeneCopyNumber> geneCopyNumbersMatch = Lists.newArrayList(createTestCopyNumberBuilder(1).build());
-        List<EnrichedSomaticVariant> variantsMatch = Lists.newArrayList(createEnriched("ATM").build());
+        List<EnrichedSomaticVariant> variantsMatch = Lists.newArrayList(createEnriched("BRCA2").build());
         List<GermlineVariant> filteredGermlineVariantMatch = FilterGermlineVariants.filteringReportedGermlineVariant(germlineVariantsMatch,
                 germlineGenesReporting,
                 driverCategoryMapMatch,
                 geneCopyNumbersMatch,
                 sampleId,
                 variantsMatch);
-        assertEquals(filteredGermlineVariantMatch.size(), 1);
+        assertEquals(filteredGermlineVariantMatch.size(), 1); // all three options matched
 
-        List<GermlineVariant> germlineVariantsNonMatch = createTestGermlineVariantsTSGGene(true);
-        List<GeneCopyNumber> geneCopyNumbersNonMatch = Lists.newArrayList(createTestCopyNumberBuilder(1).build());
+        List<GermlineVariant> germlineVariantsNonMatchBiallelic = createTestGermlineVariantsTSGGene(false);
+        List<GeneCopyNumber> geneCopyNumbersNonMatchBiallelic = Lists.newArrayList(createTestCopyNumberBuilder(1).build());
+        Map<String, DriverCategory> driverCategoryMapNonMatchBilallelic = Maps.newHashMap();
+        driverCategoryMapNonMatchBilallelic.put("BRCA2", DriverCategory.TSG);
+        List<EnrichedSomaticVariant> variantsNonMatchBiallelic = Lists.newArrayList(createEnriched("BRCA2").build());
+        List<GermlineVariant> filteredGermlineVariantNonMatchBiallelic = FilterGermlineVariants.filteringReportedGermlineVariant(germlineVariantsNonMatchBiallelic,
+                germlineGenesReporting,
+                driverCategoryMapNonMatchBilallelic,
+                geneCopyNumbersNonMatchBiallelic,
+                sampleId,
+                variantsNonMatchBiallelic);
+        assertEquals(filteredGermlineVariantNonMatchBiallelic.size(), 1); // option biallelic failed
+
+        List<GermlineVariant> germlineVariantsNonMatchVariant = createTestGermlineVariantsTSGGene(true);
+        List<GeneCopyNumber> geneCopyNumbersNonMatchVariant = Lists.newArrayList(createTestCopyNumberBuilder(1).build());
+        Map<String, DriverCategory> driverCategoryMapNonMatchVariant = Maps.newHashMap();
+        driverCategoryMapNonMatchVariant.put("BRCA2", DriverCategory.TSG);
+        List<EnrichedSomaticVariant> variantsNonMatchVariant = Lists.newArrayList(createEnriched("ATM").build());
+        List<GermlineVariant> filteredGermlineVariantNonMatchVariant = FilterGermlineVariants.filteringReportedGermlineVariant(germlineVariantsNonMatchVariant,
+                germlineGenesReporting,
+                driverCategoryMapNonMatchVariant,
+                geneCopyNumbersNonMatchVariant,
+                sampleId,
+                variantsNonMatchVariant);
+        assertEquals(filteredGermlineVariantNonMatchVariant.size(), 1); // option variant failed
+
+        List<GermlineVariant> germlineVariantsNonMatchCopy = createTestGermlineVariantsTSGGene(true);
+        List<GeneCopyNumber> geneCopyNumbersNonMatchCopy = Lists.newArrayList(createTestCopyNumberBuilder(0).build());
+        Map<String, DriverCategory> driverCategoryMapNonMatchCopy = Maps.newHashMap();
+        driverCategoryMapNonMatchCopy.put("BRCA2", DriverCategory.TSG);
+        List<EnrichedSomaticVariant> variantsNonMatchCopy = Lists.newArrayList(createEnriched("BRCA2").build());
+        List<GermlineVariant> filteredGermlineVariantNonMatchCopy = FilterGermlineVariants.filteringReportedGermlineVariant(germlineVariantsNonMatchCopy,
+                germlineGenesReporting,
+                driverCategoryMapNonMatchCopy,
+                geneCopyNumbersNonMatchCopy,
+                sampleId,
+                variantsNonMatchCopy);
+        assertEquals(filteredGermlineVariantNonMatchCopy.size(), 1); // option copy number failed
+
+        List<GermlineVariant> germlineVariantsNonMatch = createTestGermlineVariantsTSGGene(false);
+        List<GeneCopyNumber> geneCopyNumbersNonMatch= Lists.newArrayList(createTestCopyNumberBuilder(0).build());
         Map<String, DriverCategory> driverCategoryMapNonMatch = Maps.newHashMap();
-        driverCategoryMapNonMatch.put("BRCA1", DriverCategory.TSG);
+        driverCategoryMapNonMatch.put("BRCA2", DriverCategory.TSG);
         List<EnrichedSomaticVariant> variantsNonMatch = Lists.newArrayList(createEnriched("ATM").build());
         List<GermlineVariant> filteredGermlineVariantNonMatch = FilterGermlineVariants.filteringReportedGermlineVariant(germlineVariantsNonMatch,
                 germlineGenesReporting,
@@ -89,123 +129,132 @@ public class FilterGermlineVariantsTest {
                 geneCopyNumbersNonMatch,
                 sampleId,
                 variantsNonMatch);
-        assertEquals(filteredGermlineVariantNonMatch.size(), 1);
-    }
+        assertEquals(filteredGermlineVariantNonMatch.size(), 0); // all option failed
 
-    @Test
-    public void filteringONCOGenesForGermlineVariantsCheckONCO() throws IOException {
-        List<GermlineVariant> germlineVariants = createTestGermlineVariantsONCOGene();
-        Map<String, Boolean> germlineGenesReporting = PatientReporterTestUtil.testGermlineModel().germlineGenes();
-        Map<String, DriverCategory> driverCategoryMap = Maps.newHashMap();
-        driverCategoryMap.put("BRCA2", DriverCategory.ONCO);
-
-        List<GeneCopyNumber> geneCopyNumbers = Lists.newArrayList();
-        String sampleId = "CPCT02990001T";
-        List<EnrichedSomaticVariant> variants = Lists.newArrayList();
-
-        List<GermlineVariant> filteredGermlineVariantONCO = FilterGermlineVariants.filteringReportedGermlineVariant(germlineVariants,
+        List<GermlineVariant> germlineVariantsOptionBaillelic = createTestGermlineVariantsTSGGene(true);
+        List<GeneCopyNumber> geneCopyNumbersOptionBaillelic= Lists.newArrayList(createTestCopyNumberBuilder(0).build());
+        Map<String, DriverCategory> driverCategoryMapOptionBaillelic = Maps.newHashMap();
+        driverCategoryMapOptionBaillelic.put("BRCA2", DriverCategory.TSG);
+        List<EnrichedSomaticVariant> variantsOptionBaillelic = Lists.newArrayList(createEnriched("ATM").build());
+        List<GermlineVariant> filteredGermlineVariantOptionBaillelic = FilterGermlineVariants.filteringReportedGermlineVariant(germlineVariantsOptionBaillelic,
                 germlineGenesReporting,
-                driverCategoryMap,
-                geneCopyNumbers,
+                driverCategoryMapOptionBaillelic,
+                geneCopyNumbersOptionBaillelic,
                 sampleId,
-                variants);
-        assertEquals(filteredGermlineVariantONCO.size(), 1);
+                variantsOptionBaillelic);
+        assertEquals(filteredGermlineVariantOptionBaillelic.size(), 1); // only match biallelic
 
-        Map<String, DriverCategory> driverCategoryMapTSG = Maps.newHashMap();
-        driverCategoryMapTSG.put("ATM", DriverCategory.TSG);
-
-        List<GermlineVariant> filteredGermlineVariantTSG = FilterGermlineVariants.filteringReportedGermlineVariant(germlineVariants,
+        List<GermlineVariant> germlineVariantsOptionVariant = createTestGermlineVariantsTSGGene(false);
+        List<GeneCopyNumber> geneCopyNumbersOptionVariant = Lists.newArrayList(createTestCopyNumberBuilder(0).build());
+        Map<String, DriverCategory> driverCategoryMapOptionVaraint = Maps.newHashMap();
+        driverCategoryMapOptionVaraint.put("BRCA2", DriverCategory.TSG);
+        List<EnrichedSomaticVariant> variantsOptionVariant = Lists.newArrayList(createEnriched("BRCA2").build());
+        List<GermlineVariant> filteredGermlineVariantOptionVariant = FilterGermlineVariants.filteringReportedGermlineVariant(germlineVariantsOptionVariant,
                 germlineGenesReporting,
-                driverCategoryMapTSG,
-                geneCopyNumbers,
+                driverCategoryMapOptionVaraint,
+                geneCopyNumbersOptionVariant,
                 sampleId,
-                variants);
-        assertEquals(filteredGermlineVariantTSG.size(), 0);
-    }
+                variantsOptionVariant);
+        assertEquals(filteredGermlineVariantOptionVariant.size(), 1); // only match variant
 
-    @Test
-    public void filterTSGGenesForGermlineVariantsCheckTSG() throws IOException {
-        Map<String, Boolean> germlineGenesReporting = PatientReporterTestUtil.testGermlineModel().germlineGenes();
-        Map<String, DriverCategory> driverCategoryMap = Maps.newHashMap();
-        driverCategoryMap.put("ATM", DriverCategory.TSG);
-        String sampleId = "CPCT02990001T";
-        List<GermlineVariant> germlineVariantsAll = createTestGermlineVariantsTSGGene(true);
-        List<GeneCopyNumber> geneCopyNumbersAll = Lists.newArrayList(createTestCopyNumberBuilder(1).build());
-        List<EnrichedSomaticVariant> variantsAll = Lists.newArrayList(createEnriched("ATM").build());
-        List<GermlineVariant> filteredGermlineVariantAll = FilterGermlineVariants.filteringReportedGermlineVariant(germlineVariantsAll,
+        List<GermlineVariant> germlineVariantsOptionCopyNumber = createTestGermlineVariantsTSGGene(false);
+        List<GeneCopyNumber> geneCopyNumbersCopyNumber = Lists.newArrayList(createTestCopyNumberBuilder(1).build());
+        Map<String, DriverCategory> driverCategoryMapOptionCopyNumber = Maps.newHashMap();
+        driverCategoryMapOptionCopyNumber.put("BRCA2", DriverCategory.TSG);
+        List<EnrichedSomaticVariant> variantsOptionCopyNumber = Lists.newArrayList(createEnriched("ATM").build());
+        List<GermlineVariant> filteredGermlineVariantOptionCopyNumber = FilterGermlineVariants.filteringReportedGermlineVariant(germlineVariantsOptionCopyNumber,
                 germlineGenesReporting,
-                driverCategoryMap,
-                geneCopyNumbersAll,
+                driverCategoryMapOptionCopyNumber,
+                geneCopyNumbersCopyNumber,
                 sampleId,
-                variantsAll);
-        assertEquals(filteredGermlineVariantAll.size(), 1);
+                variantsOptionCopyNumber);
+        assertEquals(filteredGermlineVariantOptionCopyNumber.size(), 1); // only match copy number
 
-        List<GermlineVariant> germlineVariantsWrongBiallelic = createTestGermlineVariantsTSGGene(false);
-        List<GeneCopyNumber> geneCopyNumbersWrongBiallelic = Lists.newArrayList(createTestCopyNumberBuilder(1).build());
-        List<EnrichedSomaticVariant> variantsWrongBiallelic = Lists.newArrayList(createEnriched("ATM").build());
-        List<GermlineVariant> filteredGermlineVariantWrongBiallelic = FilterGermlineVariants.filteringReportedGermlineVariant(
-                germlineVariantsWrongBiallelic,
-                germlineGenesReporting,
-                driverCategoryMap,
-                geneCopyNumbersWrongBiallelic,
-                sampleId,
-                variantsWrongBiallelic);
-        assertEquals(filteredGermlineVariantWrongBiallelic.size(), 1);
-
-        List<GermlineVariant> germlineVariantsWrongSomaticGene = createTestGermlineVariantsTSGGene(true);
-        List<GeneCopyNumber> geneCopyNumbersWrongSomaticGene = Lists.newArrayList(createTestCopyNumberBuilder(1).build());
-        List<EnrichedSomaticVariant> variantsWrongSomaticGene = Lists.newArrayList(createEnriched("ALK").build());
-        List<GermlineVariant> filteredGermlineVariantWrongSomaticGene = FilterGermlineVariants.filteringReportedGermlineVariant(
-                germlineVariantsWrongSomaticGene,
-                germlineGenesReporting,
-                driverCategoryMap,
-                geneCopyNumbersWrongSomaticGene,
-                sampleId,
-                variantsWrongSomaticGene);
-        assertEquals(filteredGermlineVariantWrongSomaticGene.size(), 1);
-
-        List<GermlineVariant> germlineVariantsWrongGeneCopyNumber = createTestGermlineVariantsTSGGene(true);
-        List<GeneCopyNumber> geneCopyNumbersWrongGeneCopyNumber = Lists.newArrayList(createTestCopyNumberBuilder(2).build());
-        List<EnrichedSomaticVariant> variantsWrongGeneCopyNumber = Lists.newArrayList(createEnriched("ATM").build());
-        List<GermlineVariant> filteredGermlineVariantWrongGeneCopyNumber = FilterGermlineVariants.filteringReportedGermlineVariant(
-                germlineVariantsWrongGeneCopyNumber,
-                germlineGenesReporting,
-                driverCategoryMap,
-                geneCopyNumbersWrongGeneCopyNumber,
-                sampleId,
-                variantsWrongGeneCopyNumber);
-        assertEquals(filteredGermlineVariantWrongGeneCopyNumber.size(), 1);
     }
 
     @NotNull
-    public static ImmutableGeneCopyNumber.Builder createTestCopyNumberBuilder(int maxNumberFilter) {
+    private static List<GermlineVariant> createTestGermlineVariantsONCOGene() {
+        List<GermlineVariant> germlineVariants = Lists.newArrayList();
+
+        germlineVariants.add(ImmutableGermlineVariant.builder()
+                .passFilter(true)
+                .gene("KIT")
+                .hgvsCodingImpact(Strings.EMPTY)
+                .hgvsProteinImpact(Strings.EMPTY)
+                .totalReadCount(0)
+                .alleleReadCount(0)
+                .germlineStatus(Strings.EMPTY)
+                .adjustedCopyNumber(0)
+                .adjustedVAF(0)
+                .minorAllelePloidy(0)
+                .biallelic(false)
+                .build());
+
+        return germlineVariants;
+    }
+
+    @NotNull
+    private static List<GermlineVariant> createTestGermlineVariantsTSGGene(boolean biallelicFilter) {
+        List<GermlineVariant> germlineVariants = Lists.newArrayList();
+
+        germlineVariants.add(ImmutableGermlineVariant.builder()
+                .passFilter(true)
+                .gene("BRCA2")
+                .hgvsCodingImpact(Strings.EMPTY)
+                .hgvsProteinImpact(Strings.EMPTY)
+                .totalReadCount(0)
+                .alleleReadCount(0)
+                .germlineStatus(Strings.EMPTY)
+                .adjustedCopyNumber(0)
+                .adjustedVAF(0)
+                .minorAllelePloidy(1D)
+                .biallelic(biallelicFilter)
+                .build());
+
+        return germlineVariants;
+    }
+
+    @NotNull
+    public static ImmutableGeneCopyNumber.Builder createTestCopyNumberBuilder(int minNumberFilter) {
         return ImmutableGeneCopyNumber.builder()
-                .start(1)
-                .end(2)
-                .gene("ATM")
-                .chromosome("1")
+                .start(0)
+                .end(0)
+                .gene("BRCA2")
+                .chromosome(Strings.EMPTY)
                 .chromosomeBand(Strings.EMPTY)
                 .minRegionStart(0)
                 .minRegionStartSupport(SegmentSupport.NONE)
                 .minRegionEnd(0)
                 .minRegionEndSupport(SegmentSupport.NONE)
                 .minRegionMethod(CopyNumberMethod.UNKNOWN)
-                .minRegions(1)
+                .minRegions(0)
                 .germlineHet2HomRegions(0)
                 .germlineHomRegions(0)
-                .somaticRegions(1)
-                .minCopyNumber(0)
-                .maxCopyNumber(maxNumberFilter)
-                .transcriptID("trans")
+                .somaticRegions(0)
+                .minCopyNumber(minNumberFilter)
+                .maxCopyNumber(0)
+                .transcriptID(Strings.EMPTY)
                 .transcriptVersion(0)
                 .minMinorAllelePloidy(0);
+    }
+
+    @NotNull
+    public static ImmutableEnrichedSomaticVariant.Builder createEnriched(@NotNull String gene) {
+        return ImmutableEnrichedSomaticVariant.builder()
+                .from(create(gene).build())
+                .trinucleotideContext(Strings.EMPTY)
+                .highConfidenceRegion(false)
+                .microhomology(Strings.EMPTY)
+                .repeatSequence(Strings.EMPTY)
+                .repeatCount(0)
+                .clonality(Clonality.UNKNOWN);
     }
 
     @NotNull
     public static ImmutableSomaticVariantImpl.Builder create(@NotNull String gene) {
         return ImmutableSomaticVariantImpl.builder()
                 .chromosome(Strings.EMPTY)
-                .position(0L)
+                .position(0)
                 .ref(Strings.EMPTY)
                 .alt(Strings.EMPTY)
                 .type(VariantType.UNDEFINED)
@@ -223,79 +272,12 @@ public class FilterGermlineVariantsTest {
                 .canonicalHgvsProteinImpact(Strings.EMPTY)
                 .hotspot(Hotspot.NON_HOTSPOT)
                 .recovered(false)
-                .adjustedCopyNumber(0D)
-                .adjustedVAF(0D)
-                .minorAllelePloidy(0D)
+                .adjustedCopyNumber(0)
+                .adjustedVAF(0)
+                .minorAllelePloidy(0)
                 .germlineStatus(GermlineStatus.UNKNOWN)
                 .ploidy(0)
-                .mappability(0D);
-    }
-
-    @NotNull
-    public static ImmutableEnrichedSomaticVariant.Builder createEnriched(@NotNull String gene) {
-        return ImmutableEnrichedSomaticVariant.builder()
-                .from(create(gene).build())
-                .trinucleotideContext(Strings.EMPTY)
-                .highConfidenceRegion(false)
-                .microhomology(Strings.EMPTY)
-                .repeatSequence(Strings.EMPTY)
-                .repeatCount(0)
-                .clonality(Clonality.UNKNOWN);
-    }
-
-    @NotNull
-    private static ImmutableEnrichedSomaticVariant.Builder builder() {
-        return SomaticVariantTestBuilderFactory.createEnriched().filter("PASS");
-    }
-
-    @NotNull
-    private static List<GermlineVariant> createTestGermlineVariantsONCOGene() {
-        List<GermlineVariant> germlineVariants = Lists.newArrayList();
-
-        int totalReads = 112;
-        int altReads = 67;
-        double adjustedCopyNumber = 3D;
-
-        germlineVariants.add(ImmutableGermlineVariant.builder()
-                .passFilter(true)
-                .gene("BRCA2")
-                .hgvsCodingImpact("c.5946delT")
-                .hgvsProteinImpact("p.Ser1982fs")
-                .totalReadCount(totalReads)
-                .alleleReadCount(altReads)
-                .germlineStatus("HET")
-                .adjustedCopyNumber(adjustedCopyNumber)
-                .adjustedVAF(12)
-                .minorAllelePloidy(1D)
-                .biallelic(false)
-                .build());
-
-        return germlineVariants;
-    }
-
-    @NotNull
-    private static List<GermlineVariant> createTestGermlineVariantsTSGGene(boolean biallelicFilter) {
-        List<GermlineVariant> germlineVariants = Lists.newArrayList();
-
-        int totalReads = 112;
-        int altReads = 67;
-        double adjustedCopyNumber = 3D;
-
-        germlineVariants.add(ImmutableGermlineVariant.builder()
-                .passFilter(true)
-                .gene("ATM")
-                .hgvsCodingImpact("c.5946delT")
-                .hgvsProteinImpact("p.Ser1982fs")
-                .totalReadCount(totalReads)
-                .alleleReadCount(altReads)
-                .germlineStatus("HET")
-                .adjustedCopyNumber(adjustedCopyNumber)
-                .adjustedVAF(12)
-                .minorAllelePloidy(1D)
-                .biallelic(biallelicFilter)
-                .build());
-
-        return germlineVariants;
+                .mappability(0);
     }
 
 }
