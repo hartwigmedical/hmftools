@@ -6,6 +6,7 @@ import java.util.Set;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
+import com.hartwig.hmftools.common.lims.LimsGermlineReportingChoice;
 import com.hartwig.hmftools.common.lims.LimsSampleType;
 import com.hartwig.hmftools.common.numeric.Doubles;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
@@ -24,9 +25,9 @@ public final class FilterGermlineVariants {
 
     @NotNull
     public static List<GermlineVariant> filteringReportedGermlineVariant(List<GermlineVariant> germlineVariants,
-            @NotNull Map<String,Boolean> germlineGenesReporting, @NotNull Map<String, DriverCategory> driverCategoryPerGeneMap,
+            @NotNull Map<String, Boolean> germlineGenesReporting, @NotNull Map<String, DriverCategory> driverCategoryPerGeneMap,
             @NotNull List<GeneCopyNumber> allGeneCopyNumbers, @NotNull String sampleId,
-            @NotNull List<EnrichedSomaticVariant> variantsToReport) {
+            @NotNull List<EnrichedSomaticVariant> variantsToReport, @NotNull LimsGermlineReportingChoice choiceGermline) {
         List<GermlineVariant> filteredGermlineVariant = Lists.newArrayList();
 
         Set<String> reportingGenes = germlineGenesReporting.keySet();
@@ -35,8 +36,9 @@ public final class FilterGermlineVariants {
             boolean filterBiallelic = false;
             boolean filterMinCopyNumberTumor = false;
             boolean filterSomaticVariantInSameGene = false;
-            if (germlineVariant.passFilter()
-                    && reportingGenes.contains(germlineVariant.gene())) { //&& LimsSampleType.fromSampleId(sampleId).equals(LimsSampleType.WIDE)
+            if (germlineVariant.passFilter() && reportingGenes.contains(germlineVariant.gene()) && choiceGermline.equals(
+                    LimsGermlineReportingChoice.ALL)
+                    || choiceGermline.equals(LimsGermlineReportingChoice.ACTIONABLE_ONLY)) { //&& LimsSampleType.fromSampleId(sampleId).equals(LimsSampleType.WIDE)
                 if (driverCategoryPerGeneMap.get(germlineVariant.gene()) == DriverCategory.ONCO) { // use all genes
                     filteredGermlineVariant.add(germlineVariant);
                 } else { // filter genes

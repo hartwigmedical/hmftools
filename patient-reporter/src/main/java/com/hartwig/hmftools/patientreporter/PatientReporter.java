@@ -66,6 +66,7 @@ abstract class PatientReporter {
 
     @NotNull
     public AnalysedPatientReport run(@NotNull String runDirectory, @Nullable String comments) throws IOException {
+        Lims lims = baseReportData().limsModel();
         final RunContext run = ProductionRunContextFactory.fromRunDirectory(runDirectory);
         assert run.isSomaticRun();
 
@@ -85,7 +86,7 @@ abstract class PatientReporter {
                 sequencedReportData().panelGeneModel().geneDriverCategoryMap(),
                 copyNumberAnalysis.exomeGeneCopyNumbers(),
                 tumorSample,
-                somaticVariantAnalysis.variantsToReport());
+                somaticVariantAnalysis.variantsToReport(), lims.germlineReportingChoice(tumorSample));
 
         final List<ReportableVariant> reportableVariants =
                 ReportableVariantAnalyzer.toReportableSomaticVariants(somaticVariantAnalysis.variantsToReport(),
@@ -120,7 +121,6 @@ abstract class PatientReporter {
         allEvidenceItems.addAll(copyNumberAnalysis.evidenceItems());
         allEvidenceItems.addAll(svAnalysis.evidenceItems());
 
-        Lims lims = baseReportData().limsModel();
         final SampleReport sampleReport = SampleReportFactory.fromLimsAndHospitalModel(tumorSample,
                 run.refSample(),
                 lims,

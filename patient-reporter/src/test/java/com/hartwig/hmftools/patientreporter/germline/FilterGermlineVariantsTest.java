@@ -9,6 +9,7 @@ import java.util.Map;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
+import com.hartwig.hmftools.common.lims.LimsGermlineReportingChoice;
 import com.hartwig.hmftools.common.purple.copynumber.CopyNumberMethod;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.gene.ImmutableGeneCopyNumber;
@@ -47,7 +48,7 @@ public class FilterGermlineVariantsTest {
                 driverCategoryMapMatch,
                 geneCopyNumbers,
                 sampleId,
-                variants);
+                variants, LimsGermlineReportingChoice.ACTIONABLE_ONLY);
         assertEquals(filteredGermlineVariantMatch.size(), 1);
 
         Map<String, DriverCategory> driverCategoryMapNotMatch = Maps.newHashMap();
@@ -58,7 +59,7 @@ public class FilterGermlineVariantsTest {
                 driverCategoryMapNotMatch,
                 geneCopyNumbers,
                 sampleId,
-                variants);
+                variants, LimsGermlineReportingChoice.ACTIONABLE_ONLY);
         assertEquals(filteredGermlineVariantNonMatch.size(), 0);
     }
 
@@ -76,7 +77,7 @@ public class FilterGermlineVariantsTest {
                 driverCategoryMapMatch,
                 geneCopyNumbersMatch,
                 sampleId,
-                variantsMatch);
+                variantsMatch, LimsGermlineReportingChoice.ACTIONABLE_ONLY);
         assertEquals(filteredGermlineVariantMatch.size(), 1); // all three options matched
 
         List<GermlineVariant> germlineVariantsNonMatchBiallelic = createTestGermlineVariantsTSGGene(false);
@@ -89,7 +90,7 @@ public class FilterGermlineVariantsTest {
                 driverCategoryMapNonMatchBilallelic,
                 geneCopyNumbersNonMatchBiallelic,
                 sampleId,
-                variantsNonMatchBiallelic);
+                variantsNonMatchBiallelic, LimsGermlineReportingChoice.ACTIONABLE_ONLY);
         assertEquals(filteredGermlineVariantNonMatchBiallelic.size(), 1); // option biallelic failed
 
         List<GermlineVariant> germlineVariantsNonMatchVariant = createTestGermlineVariantsTSGGene(true);
@@ -102,7 +103,7 @@ public class FilterGermlineVariantsTest {
                 driverCategoryMapNonMatchVariant,
                 geneCopyNumbersNonMatchVariant,
                 sampleId,
-                variantsNonMatchVariant);
+                variantsNonMatchVariant, LimsGermlineReportingChoice.ACTIONABLE_ONLY);
         assertEquals(filteredGermlineVariantNonMatchVariant.size(), 1); // option variant failed
 
         List<GermlineVariant> germlineVariantsNonMatchCopy = createTestGermlineVariantsTSGGene(true);
@@ -115,7 +116,7 @@ public class FilterGermlineVariantsTest {
                 driverCategoryMapNonMatchCopy,
                 geneCopyNumbersNonMatchCopy,
                 sampleId,
-                variantsNonMatchCopy);
+                variantsNonMatchCopy, LimsGermlineReportingChoice.ACTIONABLE_ONLY);
         assertEquals(filteredGermlineVariantNonMatchCopy.size(), 1); // option copy number failed
 
         List<GermlineVariant> germlineVariantsNonMatch = createTestGermlineVariantsTSGGene(false);
@@ -128,7 +129,7 @@ public class FilterGermlineVariantsTest {
                 driverCategoryMapNonMatch,
                 geneCopyNumbersNonMatch,
                 sampleId,
-                variantsNonMatch);
+                variantsNonMatch, LimsGermlineReportingChoice.ACTIONABLE_ONLY);
         assertEquals(filteredGermlineVariantNonMatch.size(), 0); // all option failed
 
         List<GermlineVariant> germlineVariantsOptionBaillelic = createTestGermlineVariantsTSGGene(true);
@@ -141,7 +142,7 @@ public class FilterGermlineVariantsTest {
                 driverCategoryMapOptionBaillelic,
                 geneCopyNumbersOptionBaillelic,
                 sampleId,
-                variantsOptionBaillelic);
+                variantsOptionBaillelic, LimsGermlineReportingChoice.ACTIONABLE_ONLY);
         assertEquals(filteredGermlineVariantOptionBaillelic.size(), 1); // only match biallelic
 
         List<GermlineVariant> germlineVariantsOptionVariant = createTestGermlineVariantsTSGGene(false);
@@ -154,7 +155,7 @@ public class FilterGermlineVariantsTest {
                 driverCategoryMapOptionVaraint,
                 geneCopyNumbersOptionVariant,
                 sampleId,
-                variantsOptionVariant);
+                variantsOptionVariant, LimsGermlineReportingChoice.ACTIONABLE_ONLY);
         assertEquals(filteredGermlineVariantOptionVariant.size(), 1); // only match variant
 
         List<GermlineVariant> germlineVariantsOptionCopyNumber = createTestGermlineVariantsTSGGene(false);
@@ -167,7 +168,7 @@ public class FilterGermlineVariantsTest {
                 driverCategoryMapOptionCopyNumber,
                 geneCopyNumbersCopyNumber,
                 sampleId,
-                variantsOptionCopyNumber);
+                variantsOptionCopyNumber, LimsGermlineReportingChoice.ACTIONABLE_ONLY);
         assertEquals(filteredGermlineVariantOptionCopyNumber.size(), 1); // only match copy number
 
     }

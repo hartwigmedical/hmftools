@@ -12,7 +12,6 @@ import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.variant.Clonality;
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
 import com.hartwig.hmftools.common.variant.Hotspot;
-import com.hartwig.hmftools.patientreporter.germline.FilterGermlineVariants;
 import com.hartwig.hmftools.patientreporter.germline.GermlineVariant;
 
 import org.jetbrains.annotations.NotNull;
@@ -38,13 +37,6 @@ public class ReportableVariantAnalyzer {
                     .build());
         }
 
-        final List<GermlineVariant> filteredGermlineVariants = FilterGermlineVariants.filteringReportedGermlineVariant(germlineVariants,
-                germlineGenesReporting,
-                driverCategoryPerGene,
-                allGeneCopyNumbers,
-                sampleId,
-                variants);
-
         Set<String> notifyGenes = Sets.newHashSet();
         for (String key: germlineGenesReporting.keySet()) {
             if (germlineGenesReporting.get(key)) {
@@ -52,8 +44,8 @@ public class ReportableVariantAnalyzer {
             }
         }
 
-        for (GermlineVariant germlineVariant : filteredGermlineVariants) {
-            boolean notify = genesInNotifyClinicalGeneticus(filteredGermlineVariants, notifyGenes);
+        for (GermlineVariant germlineVariant : germlineVariants) {
+            boolean notify = genesInNotifyClinicalGeneticus(germlineVariants, notifyGenes);
 
             reportableVariants.add(fromGermline(germlineVariant).isDrupActionable(drupActionableGenes.contains(germlineVariant.gene()))
                     .driverCategory(driverCategoryPerGene.get(germlineVariant.gene()))
