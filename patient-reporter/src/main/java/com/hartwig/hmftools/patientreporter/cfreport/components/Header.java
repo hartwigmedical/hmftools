@@ -65,7 +65,7 @@ public final class Header {
         }
 
         // Create chapter title template
-        PdfFormXObject chapterTitleTemplate = new PdfFormXObject(new Rectangle(0, 0, 500, 20));
+        PdfFormXObject chapterTitleTemplate = new PdfFormXObject(new Rectangle(0, 0, 500, 30));
         pdfCanvas.addXObject(chapterTitleTemplate,ReportResources.PAGE_MARGIN_LEFT, 721);
         chapterPageCounters.get(chapterPageCounters.size() - 1).addPage(chapterTitleTemplate);
 
