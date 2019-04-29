@@ -43,10 +43,8 @@ public final class SomaticVariantAnalyzer {
 
     @NotNull
     public static SomaticVariantAnalysis run(@NotNull List<EnrichedSomaticVariant> variants, @NotNull Set<String> genePanel,
-            @NotNull Map<String, DriverCategory> driverCategoryPerGeneMap, @NotNull Set<String> drupActionableGenes,
-            @NotNull ActionabilityAnalyzer actionabilityAnalyzer, @Nullable PatientTumorLocation patientTumorLocation,
-            List<GermlineVariant> germlineVariants, @NotNull Set<String> notifyGeneticus, GermlineGenesReporting germlineGenesReporting,
-            @NotNull String sample, @NotNull List<GeneCopyNumber> geneCopyNumbers) {
+            @NotNull Map<String, DriverCategory> driverCategoryPerGeneMap,
+            @NotNull ActionabilityAnalyzer actionabilityAnalyzer, @Nullable PatientTumorLocation patientTumorLocation) {
         double microsatelliteIndelsPerMb = MicrosatelliteAnalyzer.determineMicrosatelliteIndelsPerMb(variants);
         int tumorMutationalLoad = MutationalLoadAnalyzer.determineTumorMutationalLoad(variants);
         double tumorMutationalBurden = MutationalBurdenAnalyzer.determineTumorMutationalBurden(variants);
@@ -72,116 +70,12 @@ public final class SomaticVariantAnalyzer {
             }
         }
 
-        List<ReportableVariant> reportableVariants = toReportableSomaticVariants(variantsToReport,
-                driverCatalog,
-                driverCategoryPerGeneMap,
-                drupActionableGenes,
-                germlineVariants,
-                notifyGeneticus,
-                germlineGenesReporting,
-                geneCopyNumbers,
-                sample);
-
-        return ImmutableSomaticVariantAnalysis.of(reportableVariants,
+        return ImmutableSomaticVariantAnalysis.of(variantsToReport,
                 filteredEvidence,
+                driverCatalog,
                 microsatelliteIndelsPerMb,
                 tumorMutationalLoad,
                 tumorMutationalBurden);
-    }
-
-    @NotNull
-    private static List<ReportableVariant> toReportableSomaticVariants(@NotNull List<EnrichedSomaticVariant> variants,
-            @NotNull List<DriverCatalog> driverCatalog, @NotNull Map<String, DriverCategory> driverCategoryPerGene,
-            @NotNull Set<String> drupActionableGenes, List<GermlineVariant> germlineVariants, @NotNull Set<String> notifyGeneticus,
-            GermlineGenesReporting germlineGenesReporting,
-            @NotNull List<GeneCopyNumber> geneCopyNumbers, @NotNull String sampleId) {
-        List<ReportableVariant> reportableVariants = Lists.newArrayList();
-        for (EnrichedSomaticVariant variant : variants) {
-            DriverCatalog catalog = catalogEntryForVariant(driverCatalog, variant.gene());
-            boolean notify = genesInNotifyClinicalGeneticus(germlineVariants, notifyGeneticus);
-
-            reportableVariants.add(fromVariant(variant).isDrupActionable(drupActionableGenes.contains(variant.gene()))
-                    .driverCategory(driverCategoryPerGene.get(variant.gene()))
-                    .driverLikelihood(catalog != null ? catalog.driverLikelihood() : null)
-                    .somaticOrGermline("somatic")
-                    .notifyClinicalGeneticus(notify)
-                    .build());
-        }
-
-        final List<GermlineVariant> filteredGermlineVariants = FilterGermlineVariants.filteringReportedGermlineVariant(germlineVariants,
-                germlineGenesReporting,
-                driverCategoryPerGene,
-                geneCopyNumbers,
-                sampleId,
-                variants);
-
-        for (GermlineVariant germlineVariant : filteredGermlineVariants) {
-            DriverCatalog catalog = catalogEntryForVariant(driverCatalog, germlineVariant.gene());
-            boolean notify = genesInNotifyClinicalGeneticus(filteredGermlineVariants, notifyGeneticus);
-
-            reportableVariants.add(fromGermline(germlineVariant).isDrupActionable(drupActionableGenes.contains(germlineVariant.gene()))
-                    .driverCategory(driverCategoryPerGene.get(germlineVariant.gene()))
-                    .driverLikelihood(catalog != null ? catalog.driverLikelihood() : null)
-                    .somaticOrGermline("germline")
-                    .notifyClinicalGeneticus(notify)
-                    .build());
-
-        }
-        return reportableVariants;
-    }
-
-    private static boolean genesInNotifyClinicalGeneticus(@Nullable List<GermlineVariant> filteredGermlineVariants,
-            @NotNull Set<String> notifyGeneticus) {
-        if (filteredGermlineVariants != null) {
-            for (GermlineVariant filteredGermlineVariant : filteredGermlineVariants) {
-                if (notifyGeneticus.contains(filteredGermlineVariant.gene())) {
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
-
-    @Nullable
-    private static DriverCatalog catalogEntryForVariant(@NotNull List<DriverCatalog> driverCatalogList, @NotNull String gene) {
-        for (DriverCatalog entry : driverCatalogList) {
-            if (entry.gene().equals(gene)) {
-                return entry;
-            }
-        }
-        return null;
-    }
-
-    @NotNull
-    private static ImmutableReportableVariant.Builder fromGermline(@NotNull GermlineVariant variantGermline) {
-        return ImmutableReportableVariant.builder()
-                .gene(variantGermline.gene())
-                .hgvsCodingImpact(variantGermline.hgvsCodingImpact())
-                .hgvsProteinImpact(variantGermline.hgvsProteinImpact())
-                .totalReadCount(variantGermline.totalReadCount())
-                .alleleReadCount(variantGermline.alleleReadCount())
-                .hotspot(Hotspot.NON_HOTSPOT)
-                .clonality(Clonality.CLONAL)
-                .adjustedCopyNumber(variantGermline.adjustedCopyNumber())
-                .adjustedVAF(variantGermline.adjustedVAF())
-                .minorAllelePloidy(variantGermline.minorAllelePloidy())
-                .biallelic(variantGermline.biallelic());
-    }
-
-    @NotNull
-    private static ImmutableReportableVariant.Builder fromVariant(@NotNull EnrichedSomaticVariant variant) {
-        return ImmutableReportableVariant.builder()
-                .gene(variant.gene())
-                .hgvsCodingImpact(variant.canonicalHgvsCodingImpact())
-                .hgvsProteinImpact(variant.canonicalHgvsProteinImpact())
-                .totalReadCount(variant.totalReadCount())
-                .alleleReadCount(variant.alleleReadCount())
-                .hotspot(variant.hotspot())
-                .clonality(variant.clonality())
-                .adjustedCopyNumber(variant.adjustedCopyNumber())
-                .adjustedVAF(variant.adjustedVAF())
-                .minorAllelePloidy(variant.minorAllelePloidy())
-                .biallelic(variant.biallelic());
     }
 
     @NotNull

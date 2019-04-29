@@ -89,7 +89,7 @@ public class FilterGermlineVariantsTest {
                 geneCopyNumbersNonMatch,
                 sampleId,
                 variantsNonMatch);
-        assertEquals(filteredGermlineVariantNonMatch.size(), 0);
+        assertEquals(filteredGermlineVariantNonMatch.size(), 1);
     }
 
     @Test
@@ -150,7 +150,7 @@ public class FilterGermlineVariantsTest {
                 geneCopyNumbersWrongBiallelic,
                 sampleId,
                 variantsWrongBiallelic);
-        assertEquals(filteredGermlineVariantWrongBiallelic.size(), 0);
+        assertEquals(filteredGermlineVariantWrongBiallelic.size(), 1);
 
         List<GermlineVariant> germlineVariantsWrongSomaticGene = createTestGermlineVariantsTSGGene(true);
         List<GeneCopyNumber> geneCopyNumbersWrongSomaticGene = Lists.newArrayList(createTestCopyNumberBuilder(1).build());
@@ -162,7 +162,7 @@ public class FilterGermlineVariantsTest {
                 geneCopyNumbersWrongSomaticGene,
                 sampleId,
                 variantsWrongSomaticGene);
-        assertEquals(filteredGermlineVariantWrongSomaticGene.size(), 0);
+        assertEquals(filteredGermlineVariantWrongSomaticGene.size(), 1);
 
         List<GermlineVariant> germlineVariantsWrongGeneCopyNumber = createTestGermlineVariantsTSGGene(true);
         List<GeneCopyNumber> geneCopyNumbersWrongGeneCopyNumber = Lists.newArrayList(createTestCopyNumberBuilder(2).build());
@@ -174,7 +174,7 @@ public class FilterGermlineVariantsTest {
                 geneCopyNumbersWrongGeneCopyNumber,
                 sampleId,
                 variantsWrongGeneCopyNumber);
-        assertEquals(filteredGermlineVariantWrongGeneCopyNumber.size(), 0);
+        assertEquals(filteredGermlineVariantWrongGeneCopyNumber.size(), 1);
     }
 
     @NotNull

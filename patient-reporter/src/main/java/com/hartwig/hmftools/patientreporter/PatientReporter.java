@@ -32,10 +32,12 @@ import com.hartwig.hmftools.patientreporter.actionability.ClinicalTrialFactory;
 import com.hartwig.hmftools.patientreporter.actionability.ReportableEvidenceItemFactory;
 import com.hartwig.hmftools.patientreporter.copynumber.CopyNumberAnalysis;
 import com.hartwig.hmftools.patientreporter.copynumber.CopyNumberAnalyzer;
+import com.hartwig.hmftools.patientreporter.germline.FilterGermlineVariants;
 import com.hartwig.hmftools.patientreporter.germline.GermlineVariant;
 import com.hartwig.hmftools.patientreporter.structural.SvAnalysis;
 import com.hartwig.hmftools.patientreporter.structural.SvAnalyzer;
 import com.hartwig.hmftools.patientreporter.variants.ReportableVariant;
+import com.hartwig.hmftools.patientreporter.variants.ReportableVariantAnalyzer;
 import com.hartwig.hmftools.patientreporter.variants.SomaticVariantAnalysis;
 import com.hartwig.hmftools.patientreporter.variants.SomaticVariantAnalyzer;
 
@@ -73,21 +75,36 @@ abstract class PatientReporter {
                 PatientTumorLocationFunctions.findPatientTumorLocationForSample(baseReportData().patientTumorLocations(), tumorSample);
 
         final CopyNumberAnalysis copyNumberAnalysis = analyzeCopyNumbers(run, patientTumorLocation);
+
+        final SomaticVariantAnalysis somaticVariantAnalysis = analyzeSomaticVariants(run, copyNumberAnalysis, patientTumorLocation);
+
         final List<GermlineVariant> germlineVariants = analyzeGermlineVariants(run);
 
-        final SomaticVariantAnalysis somaticVariantAnalysis = analyzeSomaticVariants(run,
-                copyNumberAnalysis,
-                patientTumorLocation,
-                germlineVariants,
-                copyNumberAnalysis.reportableGeneCopyNumbers());
+        final List<GermlineVariant> filteredGermlineVariants = FilterGermlineVariants.filteringReportedGermlineVariant(germlineVariants,
+                sequencedReportData().germlineGenesReporting(),
+                sequencedReportData().panelGeneModel().geneDriverCategoryMap(),
+                copyNumberAnalysis.exomeGeneCopyNumbers(),
+                tumorSample,
+                somaticVariantAnalysis.variantsToReport());
+
+        final List<ReportableVariant> reportableVariants =
+                ReportableVariantAnalyzer.toReportableSomaticVariants(somaticVariantAnalysis.variantsToReport(),
+                        somaticVariantAnalysis.driverCatalog(),
+                        sequencedReportData().panelGeneModel().geneDriverCategoryMap(),
+                        sequencedReportData().panelGeneModel().drupActionableGenes(),
+                        filteredGermlineVariants,
+                        sequencedReportData().germlineGenesReporting().germlineGenesNotify(),
+                        sequencedReportData().germlineGenesReporting(),
+                        copyNumberAnalysis.exomeGeneCopyNumbers(),
+                        tumorSample);
 
         boolean hasReportableGermlineVariant = false;
         List<String> reportGermline = Lists.newArrayList();
-        for (ReportableVariant variantAnalysis : somaticVariantAnalysis.reportableSomaticVariants()) {
-            if (variantAnalysis.somaticOrGermline().equals("germline")) {
-                reportGermline.add("germline");
-            }
-        }
+                for (ReportableVariant variantAnalysis : reportableVariants) {
+                    if (variantAnalysis.somaticOrGermline().equals("germline")) {
+                        reportGermline.add("germline");
+                    }
+                }
 
         if (reportGermline.size() > 0) {
             hasReportableGermlineVariant = true;
@@ -98,7 +115,7 @@ abstract class PatientReporter {
         final ChordAnalysis chordAnalysis = analyzeChord(run);
 
         LOGGER.info("Printing analysis results:");
-        LOGGER.info(" Somatic variants to report : " + somaticVariantAnalysis.reportableSomaticVariants().size());
+         LOGGER.info(" Somatic variants to report : " + reportableVariants.size());
         LOGGER.info(" Microsatellite Indels per Mb: " + somaticVariantAnalysis.microsatelliteIndelsPerMb());
         LOGGER.info(" Tumor mutational load: " + somaticVariantAnalysis.tumorMutationalLoad());
         LOGGER.info(" Tumor mutational burden: " + somaticVariantAnalysis.tumorMutationalBurden());
@@ -132,7 +149,7 @@ abstract class PatientReporter {
                 nonTrials.stream().filter(EvidenceItem::isOnLabel).collect(Collectors.toList()),
                 ClinicalTrialFactory.extractOnLabelTrials(allEvidenceItems),
                 nonTrials.stream().filter(item -> !item.isOnLabel()).collect(Collectors.toList()),
-                somaticVariantAnalysis.reportableSomaticVariants(),
+                reportableVariants,
                 somaticVariantAnalysis.microsatelliteIndelsPerMb(),
                 somaticVariantAnalysis.tumorMutationalLoad(),
                 somaticVariantAnalysis.tumorMutationalBurden(),
@@ -176,8 +193,7 @@ abstract class PatientReporter {
 
     @NotNull
     private SomaticVariantAnalysis analyzeSomaticVariants(@NotNull RunContext run, @NotNull CopyNumberAnalysis copyNumberAnalysis,
-            @Nullable PatientTumorLocation patientTumorLocation, List<GermlineVariant> germlineVariants,
-            @NotNull List<GeneCopyNumber> geneCopyNumbers) throws IOException {
+            @Nullable PatientTumorLocation patientTumorLocation) throws IOException {
         final String runDirectory = run.runDirectory();
         final String sample = run.tumorSample();
 
@@ -196,14 +212,8 @@ abstract class PatientReporter {
         return SomaticVariantAnalyzer.run(enrichedSomaticVariants,
                 sequencedReportData().panelGeneModel().somaticVariantGenes(),
                 sequencedReportData().panelGeneModel().geneDriverCategoryMap(),
-                sequencedReportData().panelGeneModel().drupActionableGenes(),
                 sequencedReportData().actionabilityAnalyzer(),
-                patientTumorLocation,
-                germlineVariants,
-                sequencedReportData().germlineGenesReporting().germlineGenesNotify(),
-                sequencedReportData().germlineGenesReporting(),
-                sample,
-                geneCopyNumbers);
+                patientTumorLocation);
     }
 
     @NotNull

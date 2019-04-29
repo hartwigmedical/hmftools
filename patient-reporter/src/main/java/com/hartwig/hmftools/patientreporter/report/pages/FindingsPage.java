@@ -64,7 +64,7 @@ public abstract class FindingsPage {
                 + "should be advised.";
 
         final ComponentBuilder<?, ?> table =
-                !report.somaticVariants().isEmpty()
+                !report.reportableVariants().isEmpty()
                         ? cmp.subreport(monospaceBaseTable().fields(SomaticVariantDataSource.fields())
                         .columns(col.column("Gene", SomaticVariantDataSource.GENE_FIELD),
                                 col.column("Variant", SomaticVariantDataSource.VARIANT_FIELD).setFixedWidth(90),
@@ -75,7 +75,7 @@ public abstract class FindingsPage {
                                 col.column("Clonality", SomaticVariantDataSource.CLONAL_STATUS_FIELD),
                                 col.column("Biallelic", SomaticVariantDataSource.BIALLELIC_FIELD),
                                 col.column("Driver", SomaticVariantDataSource.DRIVER_FIELD)))
-                        .setDataSource(SomaticVariantDataSource.fromVariants(report.somaticVariants(),
+                        .setDataSource(SomaticVariantDataSource.fromVariants(report.reportableVariants(),
                                 report.hasReliablePurityFit(),
                                 report.germlineReportingChoice()))
                         : cmp.text("None").setStyle(fontStyle().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER));

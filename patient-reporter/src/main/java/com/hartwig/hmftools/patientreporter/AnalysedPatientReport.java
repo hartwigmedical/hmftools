@@ -40,7 +40,7 @@ public abstract class AnalysedPatientReport implements PatientReport {
     public abstract List<EvidenceItem> offLabelEvidence();
 
     @NotNull
-    public abstract List<ReportableVariant> somaticVariants();
+    public abstract List<ReportableVariant> reportableVariants();
 
     public abstract double microsatelliteIndelsPerMb();
 
