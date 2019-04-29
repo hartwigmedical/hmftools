@@ -541,7 +541,7 @@ public class BucketAnalyser {
         perfCounter.stop();
 
         perfCounter.start("AnalyseResults");
-        assessUnallocatedCounts();
+        // assessUnallocatedCounts();
         analyseGroupsVsExtData(mFinalBucketGroups, true);
         mReporter.postRunAnalysis();
         perfCounter.stop();
@@ -2643,7 +2643,7 @@ public class BucketAnalyser {
             // mConfig.logSample(sample.Id);
 
             // tweak each group in turn to allocate the max possible using ratio ranges
-            for(final BucketGroup bucketGroup : sample.getElevBucketGroups())
+            for(final BucketGroup bucketGroup : sample.getBucketGroups())
             {
                 final double[] ratioRanges = bucketGroup.getRatioRanges();
                 final double[] bucketRatios = bucketGroup.getBucketRatios();
@@ -2666,7 +2666,8 @@ public class BucketAnalyser {
 
                 // determine if by using ratio ranges any buckets can allow extra allocations
                 // note: the vector returned is in additional to the count already allocated for this bucket group
-                double[] additionalAllocs = SigOptimiser.optimiseSampleFit(sample, bucketGroup.getId(), bucketIds, bucketRatios, ratioRanges, sampleAllocCounts, false);
+                double[] additionalAllocs = SigOptimiser.optimiseSampleFit(sample, bucketGroup.getId(), bucketIds, bucketRatios,
+                        ratioRanges, sampleAllocCounts, false);
 
                 if(additionalAllocs == null) // could do no better
                     continue;
@@ -2682,7 +2683,7 @@ public class BucketAnalyser {
             // check whether any large or larger potential allocs didn't make the cut
             for (BucketGroup bucketGroup : mFinalBucketGroups)
             {
-                if(bucketGroup.isBackground() || sample.getElevBucketGroups().contains(bucketGroup))
+                if(sample.getBucketGroups().contains(bucketGroup))
                     continue;
 
                 double[] allocCounts = sample.getPotentialUnallocCounts(bucketGroup.getBucketRatios(), bucketGroup.getBucketIds(), bucketGroup.getRatioRanges());
@@ -2719,7 +2720,7 @@ public class BucketAnalyser {
 
                     LOGGER.debug(String.format("sample(%d) added to bg(%d) refit(%s act=%s of %s) allocatedPerc(+%.3f -> %.3f) noise(%s %.3f/%.3f) groupCount(%d)",
                             sample.Id, bucketGroup.getId(), sizeToStr(allocTotal), sizeToStr(actualAlloc), sizeToStr(sampleCount), sample.lastAllocPercChange(),
-                            sample.getAllocPercent(), sizeToStr(sample.getAllocNoise()), sample.getNoisePerc(), sample.getNoiseOfTotal(), sample.getElevBucketGroups().size()));
+                            sample.getAllocPercent(), sizeToStr(sample.getAllocNoise()), sample.getNoisePerc(), sample.getNoiseOfTotal(), sample.getBucketGroups().size()));
                 }
             }
         }
@@ -2784,7 +2785,7 @@ public class BucketAnalyser {
                 copyVector(sigOptim.getRatioRanges(), bucketGroup.getRatioRanges());
             }
 
-            writeBucketGroupRatioRangeData(bucketGroup.getId(), bucketGroup.getTag(), bucketGroup.getCancerType(), bucketGroup.getEffects(), bucketGroup.getSampleCount(), sigOptim);
+            // writeBucketGroupRatioRangeData(bucketGroup.getId(), bucketGroup.getTag(), bucketGroup.getCancerType(), bucketGroup.getEffects(), bucketGroup.getSampleCount(), sigOptim);
         }
     }
 
@@ -3389,7 +3390,7 @@ public class BucketAnalyser {
                 else
                 {
                     double allocPerc = sample.getAllocPercent();
-                    final List<BucketGroup> bucketGroups = sample.getElevBucketGroups();
+                    final List<BucketGroup> bucketGroups = sample.getBucketGroups();
                     final List<Double> bgAllocPercents = sample.getGroupAllocPercents();
 
                     writer.write(String.format(",%.3f,%d", allocPerc, bucketGroups.size()));
@@ -3462,7 +3463,7 @@ public class BucketAnalyser {
                 double allocPerc = sample.getAllocPercent();
 
                 // first write out the actual group allocations
-                for(final BucketGroup bucketGroup : sample.getElevBucketGroups())
+                for(final BucketGroup bucketGroup : sample.getBucketGroups())
                 {
                     int samIndex = bucketGroup.getSampleIndex(sample.Id);
                     double actualTotal = bucketGroup.getSampleCountTotals().get(samIndex);
@@ -3500,7 +3501,7 @@ public class BucketAnalyser {
 
                 for (BucketGroup bucketGroup : mFinalBucketGroups)
                 {
-                    if (bucketGroup.isBackground() || sample.getElevBucketGroups().contains(bucketGroup))
+                    if (sample.getBucketGroups().contains(bucketGroup))
                         continue;
 
                     final double[] potentialAllocs = sample.getPotentialElevCounts(bucketGroup.getBucketRatios(), bucketGroup.getBucketIds(), bucketGroup.getRatioRanges());

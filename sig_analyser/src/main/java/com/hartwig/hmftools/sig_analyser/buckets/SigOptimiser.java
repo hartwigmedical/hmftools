@@ -894,7 +894,6 @@ public class SigOptimiser
         // mActiveBuckets.add(bucket); // for now candidates are not actually added
         mHasChanged = true;
 
-        // now add this bucket's sample counts to the totals
         mCurrentRatios[bucket] = rangeBoundMean;
         mCalcRanges[bucket] = minRange;
     }

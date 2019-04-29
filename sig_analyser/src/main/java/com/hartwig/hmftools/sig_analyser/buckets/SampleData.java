@@ -227,9 +227,8 @@ public class SampleData
         // first extract the remaining unallocated counts per bucket
         double minAlloc = 0;
 
-        for(int bIndex = 0; bIndex < requiredBuckets.size(); ++bIndex)
+        for(Integer bucket : requiredBuckets)
         {
-            Integer bucket = requiredBuckets.get(bIndex);
             double noiseCount = useUnallocated ? max(mCountRanges[bucket] - mAllocNoiseCounts[bucket], 0) : mCountRanges[bucket];
 
             // if any of the required buckets are already fully allocated, no others can be allocated
@@ -268,10 +267,8 @@ public class SampleData
 
         double noiseTotal = useUnallocated ? mNoiseAllocTotal : 0;
 
-        for(int bIndex = 0; bIndex < requiredBuckets.size(); ++bIndex)
+        for(Integer bucket : requiredBuckets)
         {
-            Integer bucket = requiredBuckets.get(bIndex);
-
             double ratio = bucketRatios[bucket] + ratioRange(ratioRanges, bucket, false);
             double potentialAlloc = minAlloc * ratio;
 
@@ -317,6 +314,7 @@ public class SampleData
 
             double unallocNoise = max(mCountRanges[i] - mAllocNoiseCounts[i], 0);
 
+            // the total allocated to noise across all buckets cannot exceed a factor of the sample total
             if(unallocNoise + noiseTotal > mVarTotal * MAX_NOISE_ALLOC_PERCENT)
             {
                 unallocNoise = max(mVarTotal * MAX_NOISE_ALLOC_PERCENT - noiseTotal, 0);
