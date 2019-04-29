@@ -122,7 +122,7 @@ public final class Commons {
     @NotNull
     public static String formattedDate(@Nullable final LocalDate date) {
         final DateTimeFormatter formatter = DateTimeFormatter.ofPattern(DATE_TIME_FORMAT);
-        return date != null ? formatter.format(date) : "?";
+        return date != null ? formatter.format(date) : "N/A";
     }
 
     @NotNull

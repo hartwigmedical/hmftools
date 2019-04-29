@@ -69,13 +69,19 @@ public abstract class SampleDetailsPage {
         String addressee = sampleReport().addressee();
         if (addressee == null) {
             LOGGER.warn("No addressee present for sample " + sampleReport().sampleId());
+            addressee = "N/A";
         }
 
-        addressee = addressee != null ? addressee : "N/A";
+        LimsSampleType type = LimsSampleType.fromSampleId(sampleId);
 
-        final List<String> lines = Lists.newArrayList("The samples have been sequenced at " + Commons.HARTWIG_ADDRESS,
+        String sampleIdentificationLine = "The HMF sample ID is: " + sampleReport().sampleId();
+        if (type == LimsSampleType.WIDE) {
+            sampleIdentificationLine += " and the tissue ID of pathology is: " + sampleReport().hospitalPathologySampleId();
+        }
+
+        List<String> lines = Lists.newArrayList("The samples have been sequenced at " + Commons.HARTWIG_ADDRESS,
                 "The samples have been analyzed by Next Generation Sequencing",
-                "The HMF sample ID is: " + sampleReport().sampleId() + tissueNumberPA(sampleId),
+                sampleIdentificationLine,
                 "The pathology tumor percentage for this sample is " + sampleReport().pathologyTumorPercentage(),
                 "This experiment is performed on the tumor sample which arrived on " + formattedDate(sampleReport().tumorArrivalDate())
                         + " with internal tumor barcode " + sampleReport().tumorBarcode(),
@@ -85,7 +91,6 @@ public abstract class SampleDetailsPage {
                 "This report is generated and verified by: " + user(),
                 "This report is addressed at: " + addressee);
 
-        LimsSampleType type = LimsSampleType.fromSampleId(sampleId);
         if (type == LimsSampleType.CORE) {
             lines.add("The hospital patient ID is: " + sampleReport().hospitalPatientId());
             lines.add("The project name of sample is: " + sampleReport().projectName() + " and the submission ID is "
@@ -96,11 +101,5 @@ public abstract class SampleDetailsPage {
         comments().ifPresent(comments -> lines.add("Comments: " + comments));
 
         return toList("Sample details", lines);
-    }
-
-    @NotNull
-    private String tissueNumberPA(@NotNull String sampleId) {
-        LimsSampleType type = LimsSampleType.fromSampleId(sampleId);
-        return type == LimsSampleType.WIDE ? " and the tissue ID of pathology is: " + sampleReport().hospitalPathologySampleId() : "";
     }
 }
