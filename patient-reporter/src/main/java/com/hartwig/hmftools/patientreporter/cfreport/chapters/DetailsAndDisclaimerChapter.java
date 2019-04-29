@@ -28,6 +28,7 @@ public class DetailsAndDisclaimerChapter implements ReportChapter {
     }
 
     @Override
+    @NotNull
     public String getName() {
         return "Sample details & disclaimers";
     }
@@ -137,7 +138,7 @@ public class DetailsAndDisclaimerChapter implements ReportChapter {
         try {
             final Image signatureImage = new Image(ImageDataFactory.create(signaturePath));
             signatureImage.setMaxHeight(60);
-            signatureImage.setMarginTop(-15); // Set negative margin so the signature slightly overlaps the signature text
+            signatureImage.setMarginTop(-30); // Set negative margin so the signature slightly overlaps the signature text
             signatureImage.setMarginLeft(10);
             div.add(signatureImage);
         } catch (MalformedURLException e) {
