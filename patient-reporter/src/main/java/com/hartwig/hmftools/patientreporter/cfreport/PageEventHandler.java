@@ -12,6 +12,7 @@ import com.itextpdf.kernel.pdf.PdfOutline;
 import com.itextpdf.kernel.pdf.PdfPage;
 import com.itextpdf.kernel.pdf.navigation.PdfExplicitRemoteGoToDestination;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public class PageEventHandler implements IEventHandler {
 
@@ -24,6 +25,7 @@ public class PageEventHandler implements IEventHandler {
     private boolean fullSidebarContent;
 
     private String chapterTitle = "Undefined";
+    private String pageNumberPrefix = null;
     private boolean firstPageOfChapter = true;
 
     private PdfOutline outline = null;
@@ -34,8 +36,12 @@ public class PageEventHandler implements IEventHandler {
         this.footer = new Footer();
     }
 
-    public void setChapterTitle(String chapterTitle) {
+    public void setChapterTitle(@NotNull String chapterTitle) {
         this.chapterTitle = chapterTitle;
+    }
+
+    public void setPageNumberPrefix(@Nullable String pageNumberPrefix) {
+        this.pageNumberPrefix = pageNumberPrefix;
     }
 
     public void setSidebarType(boolean full, boolean fullContent) {
@@ -67,7 +73,7 @@ public class PageEventHandler implements IEventHandler {
 
             }
             SidePanel.renderSidePanel(page, sampleReport, fullSidebar, fullSidebarContent);
-            footer.renderFooter(page, !fullSidebar);
+            footer.renderFooter(page, !fullSidebar, pageNumberPrefix);
 
         }
 

@@ -40,6 +40,11 @@ public class SummaryChapter implements ReportChapter {
         return "Summary";
     }
 
+    @Override
+    public String getPageNumberPrefix() {
+        return getName();
+    }
+
     public boolean isFullWidth() {
         return false;
     }

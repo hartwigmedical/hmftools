@@ -3,12 +3,17 @@ package com.hartwig.hmftools.patientreporter.cfreport.chapters;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
 import com.itextpdf.layout.Document;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
 
 public interface ReportChapter {
 
-    String getName();
+    @NotNull String getName();
+
+    default @Nullable String getPageNumberPrefix() {
+        return null;
+    }
 
     default boolean isFullWidth() {
         return true;

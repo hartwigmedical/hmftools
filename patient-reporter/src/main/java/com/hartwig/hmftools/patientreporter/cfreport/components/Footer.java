@@ -10,31 +10,23 @@ import com.itextpdf.layout.Canvas;
 import com.itextpdf.layout.element.Paragraph;
 import com.itextpdf.layout.property.TextAlignment;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
+import java.util.ArrayList;
 
 public class Footer {
 
-    // Total page count template
-    private static final float PAGE_COUNT_WIDTH = 20;
-    private static final float PAGE_COUNT_HEIGHT = 20;
-    private static final float PAGE_COUNT_X = 58;
-    private static final float PAGE_COUNT_Y = 20;
-    private static final float PAGE_COUNT_HSPACING = .8f;
-    private static final float PAGE_COUNT_DESCENT = 0;
+    private ArrayList<PageNumberTemplate> pageNumberTemplates = new ArrayList<>();
 
-    private PdfFormXObject pageCountPlaceholder = new PdfFormXObject(new Rectangle(0, 0, PAGE_COUNT_WIDTH, PAGE_COUNT_HEIGHT));
-
-    public void renderFooter(PdfPage page, boolean fullWidth) {
+    public void renderFooter(PdfPage page, boolean fullWidth, @Nullable String pageNumberPrefix) {
 
         final PdfCanvas canvas = new PdfCanvas(page.getLastContentStream(), page.getResources(), page.getDocument());
 
-        // Add current page number
+        // Add current page number template
         int pageNumber = page.getDocument().getPageNumber(page);
-        Paragraph p = createPageNumberParagraph(String.format("%d/", pageNumber));
-        Canvas cv = new Canvas(canvas, page.getDocument(), page.getPageSize());
-        cv.showTextAligned(p, PAGE_COUNT_X, PAGE_COUNT_Y, TextAlignment.CENTER.RIGHT);
-
-        // Add placeholder for total page count
-        canvas.addXObject(pageCountPlaceholder, PAGE_COUNT_X + PAGE_COUNT_HSPACING, PAGE_COUNT_Y - PAGE_COUNT_DESCENT);
+        PdfFormXObject pageNumberTemplate = new PdfFormXObject(new Rectangle(0, 0, 200, 20));
+        canvas.addXObject(pageNumberTemplate,58, 20);
+         pageNumberTemplates.add(new PageNumberTemplate(pageNumber, pageNumberPrefix, pageNumberTemplate));
 
         // Draw markers
         BaseMarker.renderMarkerGrid(fullWidth ? 5 : 3,1,156, 87, 22, 0, .2f, 0, canvas);
@@ -44,15 +36,38 @@ public class Footer {
     }
 
     public void writeTotalPageCount(@NotNull PdfDocument document) {
-        Canvas canvas = new Canvas(pageCountPlaceholder, document);
-        Paragraph p = createPageNumberParagraph(String.valueOf(document.getNumberOfPages()));
-        canvas.showTextAligned(p, 0, PAGE_COUNT_DESCENT, TextAlignment.LEFT);
+
+        int totalPageCount = document.getNumberOfPages();
+        for (PageNumberTemplate tpl: pageNumberTemplates) {
+            tpl.renderPageNumber(totalPageCount, document);
+        }
+
     }
 
-    private static Paragraph createPageNumberParagraph(@NotNull String text) {
-        return new Paragraph()
-                .add(text)
-                .addStyle(ReportResources.pageNumberStyle());
+    private static class PageNumberTemplate {
+
+        private int pageNumber;
+        private String prefix;
+        private PdfFormXObject template;
+
+        public PageNumberTemplate(int pageNumber, @Nullable String prefix, @NotNull PdfFormXObject template) {
+            this.pageNumber = pageNumber;
+            this.prefix = prefix;
+            this.template = template;
+        }
+
+        public void renderPageNumber(int totalPageCount, @NotNull PdfDocument document) {
+
+            String displayString = ((prefix != null) ? prefix.toUpperCase() + " \u2014 " : "")
+                    + pageNumber + "/" + totalPageCount;
+
+            Canvas canvas = new Canvas(template, document);
+            canvas.showTextAligned(new Paragraph()
+                    .add(displayString)
+                    .addStyle(ReportResources.pageNumberStyle()), 0, 0, TextAlignment.LEFT);
+
+        }
+
     }
 
 }

@@ -67,6 +67,7 @@ public class CFReportWriter implements ReportWriter {
 
             // Reconfigure event handler for upcoming pages
             pageEventHandler.setChapterTitle(chapter.getName());
+            pageEventHandler.setPageNumberPrefix(chapter.getPageNumberPrefix());
             pageEventHandler.resetChapterPageCounter();
             pageEventHandler.setSidebarType(!chapter.isFullWidth(), chapter.hasCompleteSidebar());
 
