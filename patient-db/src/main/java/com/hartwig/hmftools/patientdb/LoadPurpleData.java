@@ -58,20 +58,20 @@ public class LoadPurpleData {
 
         final PurpleQC purpleQC;
         final List<FittedPurity> bestFitPerPurity;
-        final List<PurpleCopyNumber> germlineDeletions;
+        final List<PurpleCopyNumber> germlineCopyNumbers;
         final List<FittedRegion> enrichedFittedRegions;
         if (cmd.hasOption(DATA_REQUEST)) {
-            LOGGER.info("Running in data request mode. Germline deletions, purity ranges and enriched regions will not be loaded.");
+            LOGGER.info("Running in data request mode. Germline copy numbers, purity ranges and enriched regions will not be loaded.");
             final Gender gender = copyNumbers.stream().anyMatch(x -> x.chromosome().equals("Y")) ? Gender.MALE : Gender.FEMALE;
             purpleQC = PurpleQCFactory.create(purityContext.bestFit(), copyNumbers, gender, gender, geneCopyNumbers);
-            germlineDeletions = Lists.newArrayList();
+            germlineCopyNumbers = Lists.newArrayList();
             bestFitPerPurity = Lists.newArrayList();
             enrichedFittedRegions = Lists.newArrayList();
 
         } else {
             purpleQC = PurpleQCFile.read(PurpleQCFile.generateFilename(purplePath, tumorSample));
             bestFitPerPurity = FittedPurityRangeFile.read(purplePath, tumorSample);
-            germlineDeletions = PurpleCopyNumberFile.read(PurpleCopyNumberFile.generateGermlineFilename(purplePath, tumorSample));
+            germlineCopyNumbers = PurpleCopyNumberFile.read(PurpleCopyNumberFile.generateGermlineFilename(purplePath, tumorSample));
             enrichedFittedRegions = FittedRegionFile.read(FittedRegionFile.generateFilename(purplePath, tumorSample));
         }
 
@@ -80,7 +80,7 @@ public class LoadPurpleData {
                 cmd.hasOption(ALIAS) ? cmd.getOptionValue(ALIAS) : tumorSample,
                 bestFitPerPurity,
                 copyNumbers,
-                germlineDeletions,
+                germlineCopyNumbers,
                 enrichedFittedRegions,
                 purityContext,
                 purpleQC,

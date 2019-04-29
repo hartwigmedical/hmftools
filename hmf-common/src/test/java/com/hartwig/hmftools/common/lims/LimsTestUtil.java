@@ -19,19 +19,17 @@ final class LimsTestUtil {
     static ImmutableLimsJsonSampleData.Builder createLimsSampleDataBuilder() {
         return ImmutableLimsJsonSampleData.builder()
                 .sampleId(Strings.EMPTY)
-                .tumorBarcodeId(Strings.EMPTY)
-                .refBarcodeId(Strings.EMPTY)
-                .arrivalDateString(Strings.EMPTY)
+                .patientId(Strings.EMPTY)
+                .tumorBarcode(Strings.EMPTY)
+                .refBarcode(Strings.EMPTY)
+                .arrivalDate(Strings.EMPTY)
                 .dnaConcentration(Strings.EMPTY)
                 .primaryTumor(Strings.EMPTY)
                 .labSopVersions(Strings.EMPTY)
-                .projectName(Strings.EMPTY)
                 .submission(Strings.EMPTY)
-                .patientId(Strings.EMPTY)
                 .requesterName(Strings.EMPTY)
                 .requesterEmail(Strings.EMPTY)
-                .germlineFindings(Strings.EMPTY)
-                .hospitalPaSampleId(Strings.EMPTY)
-                .shallowSeq(0);
+                .germlineReportingChoice(Strings.EMPTY)
+                .shallowSeq(Strings.EMPTY);
     }
 }

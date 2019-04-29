@@ -18,26 +18,26 @@ public abstract class SampleReport {
     @NotNull
     public abstract String sampleId();
 
-    @NotNull
-    public abstract String barcodeTumor();
-
-    @NotNull
-    public abstract String barcodeReference();
-
     @Nullable
     public abstract PatientTumorLocation patientTumorLocation();
+
+    @NotNull
+    public abstract String refBarcode();
+
+    @Nullable
+    public abstract LocalDate refArrivalDate();
+
+    @NotNull
+    public abstract String tumorBarcode();
+
+    @Nullable
+    public abstract LocalDate tumorArrivalDate();
 
     @NotNull
     public abstract String purityShallowSeq();
 
     @NotNull
     public abstract String pathologyTumorPercentage();
-
-    @Nullable
-    public abstract LocalDate tumorArrivalDate();
-
-    @Nullable
-    public abstract LocalDate referenceArrivalDate();
 
     @NotNull
     public abstract String labProcedures();
@@ -57,7 +57,7 @@ public abstract class SampleReport {
     @NotNull
     public abstract String submissionId();
 
-    @Nullable
+    @NotNull
     public abstract String hospitalPatientId();
 
     @NotNull
@@ -81,11 +81,6 @@ public abstract class SampleReport {
     @Value.Derived
     public String buildReportTitle(@NotNull String title) {
         LimsSampleType type = LimsSampleType.fromSampleId(sampleId());
-
-        String patientNumber = hospitalPatientId();
-        if (type == LimsSampleType.CORE && patientNumber == null) {
-            throw new IllegalStateException("CORE sample present without patient number: " + sampleId());
-        }
 
         return type == LimsSampleType.CORE ? title + " - " + sampleId() + " (" + hospitalPatientId() + ")" : title + " - " + sampleId();
     }

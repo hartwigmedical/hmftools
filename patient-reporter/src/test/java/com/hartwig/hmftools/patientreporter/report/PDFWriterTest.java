@@ -106,14 +106,13 @@ public class PDFWriterTest {
             @Nullable Double shallowSeqPurity, @NotNull QCFailReason reason) {
         SampleReport sampleReport = ImmutableSampleReport.builder()
                 .sampleId("CPCT02991111T")
-                .barcodeTumor("FR12345678")
-                .barcodeReference("FR12123488")
                 .patientTumorLocation(ImmutablePatientTumorLocation.of("CPCT02991111", "Skin", "Melanoma"))
+                .refBarcode("FR12123488")
+                .tumorBarcode("FR12345678")
+                .tumorArrivalDate(LocalDate.parse("05-Jan-2018", DATE_FORMATTER))
                 .purityShallowSeq(shallowSeqPurity != null ? PatientReportFormat.formatPercent(shallowSeqPurity) : "not determined")
                 .pathologyTumorPercentage(
                         pathologyTumorPercentage != null ? PatientReportFormat.formatPercent(pathologyTumorPercentage) : "not determined")
-                .tumorArrivalDate(LocalDate.parse("05-Jan-2018", DATE_FORMATTER))
-                .referenceArrivalDate(LocalDate.parse("01-Jan-2018", DATE_FORMATTER))
                 .labProcedures("PREP013V23-QC037V20-SEQ008V25")
                 .addressee("HMF Testing Center")
                 .projectName("COLO-001-002")

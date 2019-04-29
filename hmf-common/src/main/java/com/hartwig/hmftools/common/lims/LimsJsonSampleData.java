@@ -23,23 +23,23 @@ abstract class LimsJsonSampleData {
     @SerializedName("patient")
     public abstract String patientId();
 
-    // ref sample id could be null in lims if it is a reference sample
+    // ref_sample_id could be null in lims if the sample itself is a reference sample
     @Nullable
     @SerializedName("ref_sample_id")
-    public abstract String refBarcodeId();
+    public abstract String refBarcode();
 
     @NotNull
     @SerializedName("sample_id")
-    public abstract String tumorBarcodeId();
-
-    // Patient number is only used for CORE project
-    @Nullable
-    @SerializedName("hospital_patient_id")
-    public abstract String hospitalPatientId();
+    public abstract String tumorBarcode();
 
     @NotNull
     @SerializedName("arrival_date")
-    public abstract String arrivalDateString();
+    public abstract String arrivalDate();
+
+    // Sampling date is only known for CPCT/DRUP/WIDE/CORE tumor biopsies.
+    @Nullable
+    @SerializedName("sampling_date")
+    public abstract String samplingDate();
 
     @NotNull
     @SerializedName("requester_email")
@@ -49,30 +49,41 @@ abstract class LimsJsonSampleData {
     @SerializedName("requester_name")
     public abstract String requesterName();
 
+    @NotNull
     @SerializedName("shallowseq")
-    public abstract int shallowSeq();
+    public abstract String shallowSeq();
+
+    // Tumor biopsies analyzed in research context do not have a pathology tumor percentage. Also WIDE samples are no longer sent to PA.
+    @Nullable
+    @SerializedName("tumor_perc")
+    public abstract String pathologyTumorPercentage();
 
     @NotNull
     @SerializedName("dna_conc")
     public abstract String dnaConcentration();
-
-    // Sampling date is only known for CPCT/DRUP/WIDE/CORE tumor biopsies.
-    @Nullable
-    @SerializedName("sampling_date")
-    public abstract String samplingDateString();
-
-    // Tumor biopsies analyzed in research context do not have a proper tumor percentage filled in.
-    @Nullable
-    @SerializedName("tumor_perc")
-    public abstract String tumorPercentageString();
 
     @NotNull
     @SerializedName("ptum")
     public abstract String primaryTumor();
 
     @NotNull
-    @SerializedName("lab_sop_versions")
-    abstract String labSopVersions();
+    @SerializedName("submission")
+    public abstract String submission();
+
+    // Patient number is only used for CORE project
+    @Nullable
+    @SerializedName("hospital_patient_id")
+    public abstract String hospitalPatientId();
+
+    // Pathology sample id is only used for WIDE project
+    @Nullable
+    @SerializedName("hospital_pa_sample_id")
+    public abstract String hospitalPathologySampleId();
+
+    // Choice regarding reporting of germline findings is only used in WIDE project
+    @Nullable
+    @SerializedName("germline_findings")
+    public abstract String germlineReportingChoice();
 
     // Lab remarks is an optional field in LIMS
     @Nullable
@@ -80,22 +91,8 @@ abstract class LimsJsonSampleData {
     public abstract String labRemarks();
 
     @NotNull
-    @SerializedName("project_name")
-    public abstract String projectName();
-
-    @NotNull
-    @SerializedName("submission")
-    public abstract String submission();
-
-    // Currently only filled in for WIDE samples
-    @NotNull
-    @SerializedName("germline_findings")
-    public abstract String germlineFindings();
-
-    // Currently only filled in for WIDE samples
-    @NotNull
-    @SerializedName("hospital_pa_sample_id")
-    public abstract String hospitalPaSampleId();
+    @SerializedName("lab_sop_versions")
+    abstract String labSopVersions();
 
     @NotNull
     @Value.Derived
@@ -105,7 +102,7 @@ abstract class LimsJsonSampleData {
         if (matcher.find()) {
             return labSopVersions();
         } else {
-            return "N/A";
+            return Lims.NOT_AVAILABLE_STRING;
         }
     }
 }

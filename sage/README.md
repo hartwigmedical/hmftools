@@ -111,4 +111,6 @@ Hotspots file should be header-less and tab separated with columns: Chromosome, 
 ## Post Processing
 The HMF pipeline employs some post processing steps to further filter the output. We have generated a PON file from 1077 sage results that captures any variants that have more than one read in the germline of at least 2 samples. These variants are filtered from our output.
 
- 
+ ## Version History
+ - 1.1
+   - SageHotspotAnnotation - Merge all info header fields from hotspots vcf with source vcf   
