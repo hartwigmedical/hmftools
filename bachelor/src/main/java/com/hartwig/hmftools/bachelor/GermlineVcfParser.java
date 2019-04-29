@@ -7,20 +7,10 @@ import static com.hartwig.hmftools.common.io.FileWriterUtils.createBufferedWrite
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.FileVisitOption;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
-import com.google.common.collect.Lists;
 import com.hartwig.hmftools.bachelor.types.BachelorGermlineVariant;
 import com.hartwig.hmftools.bachelor.types.RunDirectory;
-import com.hartwig.hmftools.common.context.ProductionRunContextFactory;
-import com.hartwig.hmftools.common.context.RunContext;
 
 import nl.hartwigmedicalfoundation.bachelor.Program;
 
@@ -150,13 +140,10 @@ public class GermlineVcfParser
 
     public void close()
     {
-        if(mUsingBatchOutput)
-        {
-            closeBufferedWriter(mVcfDataWriter);
-            mVcfDataWriter = null;
-            closeBufferedWriter(mBedFileWriter);
-            mBedFileWriter = null;
-        }
+        closeBufferedWriter(mVcfDataWriter);
+        mVcfDataWriter = null;
+        closeBufferedWriter(mBedFileWriter);
+        mBedFileWriter = null;
     }
 
     private void processVCF(final String sampleId, final File vcf)

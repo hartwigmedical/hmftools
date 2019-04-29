@@ -132,17 +132,22 @@ public class BamCountReader
             return;
         }
 
-        for(int i = 0; i < bachRecords.size(); ++i)
+        for(BachelorGermlineVariant variant : bachRecords)
         {
-            BachelorGermlineVariant variant = bachRecords.get(i);
-            VariantHotspotEvidence evidence = tumorEvidence.get(i);
+            for(VariantHotspotEvidence evidence : tumorEvidence)
+            {
+                if(evidence.chromosome().equals(variant.Chromosome) && evidence.position() == variant.Position
+                && evidence.ref().equals(variant.Ref) && evidence.alt().equals(variant.Alts))
+                {
+                    variant.setTumorData(evidence.altSupport(), evidence.readDepth());
 
-            variant.setTumorData(evidence.altSupport(), evidence.readDepth());
+                    LOGGER.debug("chr({}) position({}) matched, counts(ref={} alt={} depth={})",
+                            variant.Chromosome, variant.Position,
+                            variant.getTumorRefCount(), variant.getTumorAltCount(), variant.getTumorReadDepth());
 
-            LOGGER.debug("chr({}) position({}) matched, counts(ref={} alt={} depth={})",
-                    variant.Chromosome, variant.Position,
-                    variant.getTumorRefCount(), variant.getTumorAltCount(), variant.getTumorReadDepth());
-
+                    break;
+                }
+            }
         }
     }
 
