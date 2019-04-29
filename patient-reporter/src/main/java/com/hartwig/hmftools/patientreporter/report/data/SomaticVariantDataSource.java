@@ -59,11 +59,8 @@ public final class SomaticVariantDataSource {
             String displayGene = variant.isDrupActionable() ? variant.gene() + " *" : variant.gene();
             String codingImpact = variant.notifyClinicalGeneticus()
                     // germlineReportingChoice.equals(LimsGermlineReportingChoice.ACTIONABLE_ONLY) || germlineReportingChoice.equals(LimsGermlineReportingChoice.ALL) &&
-                    ? variant.hgvsCodingImpact() + " + # "
-                    : !variant.notifyClinicalGeneticus()
-                            //germlineReportingChoice.equals(LimsGermlineReportingChoice.ACTIONABLE_ONLY) || germlineReportingChoice.equals(LimsGermlineReportingChoice.ALL) &&
-                            ? variant.hgvsCodingImpact() + " +"
-                            : variant.hgvsCodingImpact();
+                    ? variant.hgvsCodingImpact() + " # "
+                    : variant.hgvsCodingImpact();
             String biallelic = Strings.EMPTY;
             if (variant.driverCategory() != DriverCategory.ONCO) {
                 biallelic = variant.biallelic() ? "Yes" : "No";

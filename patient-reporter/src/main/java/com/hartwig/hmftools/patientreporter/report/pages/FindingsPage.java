@@ -60,7 +60,6 @@ public abstract class FindingsPage {
         final String drupEligibilityAddition = "Marked genes (*) are included in the DRUP study and indicate potential "
                 + "eligibility in DRUP. Please note that the marking is NOT based on the specific mutation reported for "
                 + "this sample, but only on a gene-level.";
-        final String germline = "Marked variant(s) (+) are germline variants.";
         final String geneticus = "Marked variant(s) (#) are also present in the germline of the patient. Referral to a genetic specialist "
                 + "should be advised.";
 
@@ -90,10 +89,6 @@ public abstract class FindingsPage {
                     cmp.horizontalList(cmp.horizontalGap(10),
                             cmp.text("*").setStyle(fontStyle()).setWidth(2),
                             cmp.text(drupEligibilityAddition).setStyle(fontStyle().setFontSize(8))),
-                    cmp.verticalGap(5),
-                    cmp.horizontalList(cmp.horizontalGap(10),
-                            cmp.text("+").setStyle(fontStyle()).setWidth(2),
-                            cmp.text(germline).setStyle(fontStyle().setFontSize(8))),
                     cmp.verticalGap(5),
                     cmp.horizontalList(cmp.horizontalGap(10),
                             cmp.text("#").setStyle(fontStyle()).setWidth(2),
