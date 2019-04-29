@@ -159,7 +159,8 @@ public class BachelorPostProcess
                 LOGGER.debug("loading indexed fasta reference file");
                 mIndexedFastaSeqFile = new IndexedFastaSequenceFile(new File(refGenomeFile));
 
-                mBamCountReader.initialise(cmd, mIndexedFastaSeqFile);
+                if(mBamCountReader != null)
+                    mBamCountReader.initialise(cmd, mIndexedFastaSeqFile);
             }
             catch (IOException e)
             {
