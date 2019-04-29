@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.patientreporter.germline;
 
+import java.util.Map;
 import java.util.Set;
 
 import org.immutables.value.Value;
@@ -12,9 +13,6 @@ import org.jetbrains.annotations.Nullable;
 public abstract class GermlineGenesReporting {
 
     @NotNull
-    public abstract Set<String> germlineGenes();
-
-    @NotNull
-    public abstract Set<String> germlineGenesNotify();
+    public abstract Map<String, Boolean> germlineGenes();
 
 }

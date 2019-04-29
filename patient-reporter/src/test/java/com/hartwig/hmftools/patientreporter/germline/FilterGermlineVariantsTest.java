@@ -33,7 +33,7 @@ public class FilterGermlineVariantsTest {
     @Test
     public void checkForGermlineGenesReportedONCO() throws IOException{
         List<GermlineVariant> germlineVariants = createTestGermlineVariantsONCOGene();
-        GermlineGenesReporting germlineGenesReporting = PatientReporterTestUtil.testGermlineModel();
+        Map<String,Boolean> germlineGenesReporting = PatientReporterTestUtil.testGermlineModel().germlineGenes();
         Map<String, DriverCategory> driverCategoryMapMatch = Maps.newHashMap();
         driverCategoryMapMatch.put("BRCA2", DriverCategory.ONCO);
 
@@ -63,7 +63,7 @@ public class FilterGermlineVariantsTest {
 
     @Test
     public void checkForGermlineGenesReportedTSG() throws IOException {
-        GermlineGenesReporting germlineGenesReporting = PatientReporterTestUtil.testGermlineModel();
+        Map<String,Boolean> germlineGenesReporting = PatientReporterTestUtil.testGermlineModel().germlineGenes();
         Map<String, DriverCategory> driverCategoryMapMatch = Maps.newHashMap();
         driverCategoryMapMatch.put("ATM", DriverCategory.TSG);
         String sampleId = "CPCT02990001T";
@@ -95,7 +95,7 @@ public class FilterGermlineVariantsTest {
     @Test
     public void filteringONCOGenesForGermlineVariantsCheckONCO() throws IOException {
         List<GermlineVariant> germlineVariants = createTestGermlineVariantsONCOGene();
-        GermlineGenesReporting germlineGenesReporting = PatientReporterTestUtil.testGermlineModel();
+        Map<String, Boolean> germlineGenesReporting = PatientReporterTestUtil.testGermlineModel().germlineGenes();
         Map<String, DriverCategory> driverCategoryMap = Maps.newHashMap();
         driverCategoryMap.put("BRCA2", DriverCategory.ONCO);
 
@@ -125,7 +125,7 @@ public class FilterGermlineVariantsTest {
 
     @Test
     public void filterTSGGenesForGermlineVariantsCheckTSG() throws IOException {
-        GermlineGenesReporting germlineGenesReporting = PatientReporterTestUtil.testGermlineModel();
+        Map<String, Boolean> germlineGenesReporting = PatientReporterTestUtil.testGermlineModel().germlineGenes();
         Map<String, DriverCategory> driverCategoryMap = Maps.newHashMap();
         driverCategoryMap.put("ATM", DriverCategory.TSG);
         String sampleId = "CPCT02990001T";

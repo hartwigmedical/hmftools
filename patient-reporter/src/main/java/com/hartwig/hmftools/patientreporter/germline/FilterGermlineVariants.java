@@ -24,11 +24,12 @@ public final class FilterGermlineVariants {
 
     @NotNull
     public static List<GermlineVariant> filteringReportedGermlineVariant(List<GermlineVariant> germlineVariants,
-            @NotNull GermlineGenesReporting germlineGenesReporting, @NotNull Map<String, DriverCategory> driverCategoryPerGeneMap,
+            @NotNull Map<String,Boolean> germlineGenesReporting, @NotNull Map<String, DriverCategory> driverCategoryPerGeneMap,
             @NotNull List<GeneCopyNumber> allGeneCopyNumbers, @NotNull String sampleId,
             @NotNull List<EnrichedSomaticVariant> variantsToReport) {
         List<GermlineVariant> filteredGermlineVariant = Lists.newArrayList();
-        Set<String> reportingGenes = germlineGenesReporting.germlineGenes();
+
+        Set<String> reportingGenes = germlineGenesReporting.keySet();
 
         for (GermlineVariant germlineVariant : germlineVariants) {
             boolean filterBiallelic = false;

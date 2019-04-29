@@ -81,7 +81,7 @@ abstract class PatientReporter {
         final List<GermlineVariant> germlineVariants = analyzeGermlineVariants(run);
 
         final List<GermlineVariant> filteredGermlineVariants = FilterGermlineVariants.filteringReportedGermlineVariant(germlineVariants,
-                sequencedReportData().germlineGenesReporting(),
+                sequencedReportData().germlineGenesReporting().germlineGenes(),
                 sequencedReportData().panelGeneModel().geneDriverCategoryMap(),
                 copyNumberAnalysis.exomeGeneCopyNumbers(),
                 tumorSample,
@@ -93,8 +93,7 @@ abstract class PatientReporter {
                         sequencedReportData().panelGeneModel().geneDriverCategoryMap(),
                         sequencedReportData().panelGeneModel().drupActionableGenes(),
                         filteredGermlineVariants,
-                        sequencedReportData().germlineGenesReporting().germlineGenesNotify(),
-                        sequencedReportData().germlineGenesReporting(),
+                        sequencedReportData().germlineGenesReporting().germlineGenes(),
                         copyNumberAnalysis.exomeGeneCopyNumbers(),
                         tumorSample);
 

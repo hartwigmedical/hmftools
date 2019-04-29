@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.Set;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
@@ -24,8 +25,8 @@ public class ReportableVariantAnalyzer {
     @NotNull
     public static List<ReportableVariant> toReportableSomaticVariants(@NotNull List<EnrichedSomaticVariant> variants,
             @NotNull List<DriverCatalog> driverCatalog, @NotNull Map<String, DriverCategory> driverCategoryPerGene,
-            @NotNull Set<String> drupActionableGenes, List<GermlineVariant> germlineVariants, @NotNull Set<String> notifyGeneticus,
-            GermlineGenesReporting germlineGenesReporting,
+            @NotNull Set<String> drupActionableGenes, List<GermlineVariant> germlineVariants,
+            Map<String,Boolean> germlineGenesReporting,
             @NotNull List<GeneCopyNumber> allGeneCopyNumbers, @NotNull String sampleId) {
         List<ReportableVariant> reportableVariants = Lists.newArrayList();
         for (EnrichedSomaticVariant variant : variants) {
@@ -46,8 +47,15 @@ public class ReportableVariantAnalyzer {
                 sampleId,
                 variants);
 
+        Set<String> notifyGenes = Sets.newHashSet();
+        for (String key: germlineGenesReporting.keySet()) {
+            if (germlineGenesReporting.get(key)) {
+                notifyGenes.add(key);
+            }
+        }
+
         for (GermlineVariant germlineVariant : filteredGermlineVariants) {
-            boolean notify = genesInNotifyClinicalGeneticus(filteredGermlineVariants, notifyGeneticus);
+            boolean notify = genesInNotifyClinicalGeneticus(filteredGermlineVariants, notifyGenes);
 
             reportableVariants.add(fromGermline(germlineVariant).isDrupActionable(drupActionableGenes.contains(germlineVariant.gene()))
                     .driverCategory(driverCategoryPerGene.get(germlineVariant.gene()))
@@ -61,10 +69,11 @@ public class ReportableVariantAnalyzer {
     }
 
     private static boolean genesInNotifyClinicalGeneticus(@Nullable List<GermlineVariant> filteredGermlineVariants,
-            @NotNull Set<String> notifyGeneticus) {
+            @NotNull Set<String> notifyGenes) {
+
         if (filteredGermlineVariants != null) {
             for (GermlineVariant filteredGermlineVariant : filteredGermlineVariants) {
-                if (notifyGeneticus.contains(filteredGermlineVariant.gene())) {
+                if (notifyGenes.contains(filteredGermlineVariant.gene())) {
                     return true;
                 }
             }

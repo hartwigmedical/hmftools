@@ -25,11 +25,11 @@ final class SequencedReportDataLoader {
     @NotNull
     static SequencedReportData buildFromFiles(@NotNull String knowledgebaseDir, @NotNull String drupGeneCsv,
             @NotNull String hotspotTsv, @NotNull String fastaFileLocation, @NotNull String highConfidenceBed,
-            @NotNull String germlineGenesCsv, @NotNull String germlineVariantsNotifyCsv) throws IOException {
+            @NotNull String germlineGenesCsv) throws IOException {
         final ActionabilityAnalyzer actionabilityAnalyzer = ActionabilityAnalyzer.fromKnowledgebase(knowledgebaseDir);
 
         final DrupActionabilityModel drupActionabilityModel = DrupActionabilityModelFactory.buildFromCsv(drupGeneCsv);
-        final GermlineGenesReporting germlineGenes = GermlineGenesReportingFile.buildFromCsv(germlineGenesCsv, germlineVariantsNotifyCsv);
+        final GermlineGenesReporting germlineGenes = GermlineGenesReportingFile.buildFromCsv(germlineGenesCsv);
         final GeneModel panelGeneModel = GeneModelFactory.create(drupActionabilityModel);
 
         return ImmutableSequencedReportData.of(panelGeneModel,
