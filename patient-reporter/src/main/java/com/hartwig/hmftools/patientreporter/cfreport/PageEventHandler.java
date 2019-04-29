@@ -53,7 +53,8 @@ public class PageEventHandler implements IEventHandler {
         firstPageOfChapter = true;
     }
 
-    public void writeTotalPageCount(@NotNull PdfDocument document) {
+    public void writeDynamicTextParts(@NotNull PdfDocument document) {
+        header.writeChapterTitles(document);
         footer.writeTotalPageCount(document);
     }
 

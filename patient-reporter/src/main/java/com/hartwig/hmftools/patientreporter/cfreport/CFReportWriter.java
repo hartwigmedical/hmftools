@@ -79,8 +79,8 @@ public class CFReportWriter implements ReportWriter {
 
         }
 
-        // Update total page count on pages and close document
-        pageEventHandler.writeTotalPageCount(doc.getPdfDocument());
+        // Update chapter titles and page numbers
+        pageEventHandler.writeDynamicTextParts(doc.getPdfDocument());
 
         // Close document
         doc.close();
