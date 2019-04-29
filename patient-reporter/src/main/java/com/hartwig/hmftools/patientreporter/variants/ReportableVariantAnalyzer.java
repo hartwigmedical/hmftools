@@ -13,7 +13,6 @@ import com.hartwig.hmftools.common.variant.Clonality;
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
 import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.patientreporter.germline.FilterGermlineVariants;
-import com.hartwig.hmftools.patientreporter.germline.GermlineGenesReporting;
 import com.hartwig.hmftools.patientreporter.germline.GermlineVariant;
 
 import org.jetbrains.annotations.NotNull;
