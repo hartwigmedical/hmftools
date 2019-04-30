@@ -64,8 +64,9 @@ public abstract class FindingsPage {
         final String drupEligibilityAddition = "Marked genes (*) are included in the DRUP study and indicate potential "
                 + "eligibility in DRUP. Please note that the marking is NOT based on the specific mutation reported for "
                 + "this sample, but only on a gene-level.";
-        final String geneticus = "Marked variant(s) (#) are also present in the germline of the patient. Referral to a genetic specialist "
-                + "should be advised.";
+        final String geneticsNotifyAddition =
+                "Marked variant(s) (#) are also present in the germline of the patient. Referral to a genetic specialist "
+                        + "should be advised.";
 
         final ComponentBuilder<?, ?> table =
                 !report.reportableVariants().isEmpty()
@@ -84,34 +85,32 @@ public abstract class FindingsPage {
                                 report.germlineReportingChoice()))
                         : cmp.text("None").setStyle(fontStyle().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER));
 
-        List<Boolean> notifyclinicalGeneticist = Lists.newArrayList();
-        for (ReportableVariant reportableVariant: report.reportableVariants()) {
+        ComponentBuilder<?, ?> baseReport = cmp.verticalList(cmp.text("Somatic Variants").setStyle(sectionHeaderStyle()),
+                cmp.verticalGap(HEADER_TO_TABLE_VERTICAL_GAP),
+                table,
+                cmp.verticalGap(15),
+                cmp.horizontalList(cmp.horizontalGap(10),
+                        cmp.text("*").setStyle(fontStyle()).setWidth(2),
+                        cmp.text(drupEligibilityAddition).setStyle(fontStyle().setFontSize(8))));
+
+        // Only display notification about germline variant when patient opts in and has a notifiable germline variant.
+        boolean notifyClinicalGeneticist = report.germlineReportingChoice() == LimsGermlineReportingChoice.ALL
+                || report.germlineReportingChoice() == LimsGermlineReportingChoice.ACTIONABLE_ONLY;
+        boolean hasNotifiableVariant = false;
+        for (ReportableVariant reportableVariant : report.reportableVariants()) {
             if (reportableVariant.notifyClinicalGeneticist()) {
-                notifyclinicalGeneticist.add(true);
+                hasNotifiableVariant = true;
             }
         }
 
-        if (report.germlineReportingChoice().equals(LimsGermlineReportingChoice.ALL) || report.germlineReportingChoice()
-                .equals(LimsGermlineReportingChoice.ACTIONABLE_ONLY) && notifyclinicalGeneticist.size() > 0) {
-            return cmp.verticalList(cmp.text("Variants").setStyle(sectionHeaderStyle()),
-                    cmp.verticalGap(HEADER_TO_TABLE_VERTICAL_GAP),
-                    table,
-                    cmp.verticalGap(15),
-                    cmp.horizontalList(cmp.horizontalGap(10),
-                            cmp.text("*").setStyle(fontStyle()).setWidth(2),
-                            cmp.text(drupEligibilityAddition).setStyle(fontStyle().setFontSize(8))),
+        if (notifyClinicalGeneticist && hasNotifiableVariant) {
+            return cmp.verticalList(baseReport,
                     cmp.verticalGap(5),
                     cmp.horizontalList(cmp.horizontalGap(10),
                             cmp.text("#").setStyle(fontStyle()).setWidth(2),
-                            cmp.text(geneticus).setStyle(fontStyle().setFontSize(8))));
+                            cmp.text(geneticsNotifyAddition).setStyle(fontStyle().setFontSize(8))));
         } else {
-            return cmp.verticalList(cmp.text("Variants").setStyle(sectionHeaderStyle()),
-                    cmp.verticalGap(HEADER_TO_TABLE_VERTICAL_GAP),
-                    table,
-                    cmp.verticalGap(15),
-                    cmp.horizontalList(cmp.horizontalGap(10),
-                            cmp.text("*").setStyle(fontStyle()).setWidth(2),
-                            cmp.text(drupEligibilityAddition).setStyle(fontStyle().setFontSize(8))));
+            return baseReport;
         }
     }
 

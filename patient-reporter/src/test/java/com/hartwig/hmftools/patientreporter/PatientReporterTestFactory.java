@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.patientreporter;
 
+import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.purple.copynumber.CopyNumberMethod;
 import com.hartwig.hmftools.common.purple.gene.ImmutableGeneCopyNumber;
 import com.hartwig.hmftools.common.purple.region.GermlineStatus;
@@ -10,6 +11,7 @@ import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.common.variant.ImmutableEnrichedSomaticVariant;
 import com.hartwig.hmftools.common.variant.ImmutableSomaticVariantImpl;
 import com.hartwig.hmftools.common.variant.VariantType;
+import com.hartwig.hmftools.patientreporter.variants.ImmutableReportableVariant;
 import com.hartwig.hmftools.patientreporter.variants.germline.ImmutableGermlineVariant;
 
 import org.apache.logging.log4j.util.Strings;
@@ -94,5 +96,25 @@ public final class PatientReporterTestFactory {
                 .adjustedVAF(0)
                 .minorAllelePloidy(1D)
                 .biallelic(false);
+    }
+
+    @NotNull
+    public static ImmutableReportableVariant.Builder createTestReportableVariantBuilder() {
+        return ImmutableReportableVariant.builder()
+                .gene(Strings.EMPTY)
+                .isDrupActionable(false)
+                .hgvsCodingImpact(Strings.EMPTY)
+                .hgvsProteinImpact(Strings.EMPTY)
+                .hotspot(Hotspot.HOTSPOT)
+                .clonality(Clonality.CLONAL)
+                .alleleReadCount(0)
+                .totalReadCount(0)
+                .adjustedCopyNumber(0)
+                .minorAllelePloidy(0)
+                .biallelic(false)
+                .adjustedVAF(0D)
+                .driverCategory(DriverCategory.ONCO)
+                .driverLikelihood(0D)
+                .notifyClinicalGeneticist(false);
     }
 }

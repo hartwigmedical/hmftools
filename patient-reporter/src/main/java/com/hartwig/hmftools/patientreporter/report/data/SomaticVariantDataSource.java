@@ -51,14 +51,20 @@ public final class SomaticVariantDataSource {
                 CLONAL_STATUS_FIELD.getName(),
                 BIALLELIC_FIELD.getName(),
                 DRIVER_FIELD.getName());
-        for (final ReportableVariant variant : sort(reportableVariants)) {
 
-            String displayGene = variant.isDrupActionable() ? variant.gene() + " *" : variant.gene();
-            String codingImpact =
-                    variant.notifyClinicalGeneticist() && germlineReportingChoice.equals(LimsGermlineReportingChoice.ACTIONABLE_ONLY)
-                            || germlineReportingChoice.equals(LimsGermlineReportingChoice.ALL)
-                            ? variant.hgvsCodingImpact() + " # "
-                            : variant.hgvsCodingImpact();
+        for (final ReportableVariant variant : sort(reportableVariants)) {
+            String geneSuffix = Strings.EMPTY;
+            if (variant.isDrupActionable()) {
+                geneSuffix += "*";
+            }
+
+            if (variant.notifyClinicalGeneticist() && (germlineReportingChoice == LimsGermlineReportingChoice.ACTIONABLE_ONLY
+                    || germlineReportingChoice == LimsGermlineReportingChoice.ALL)) {
+                geneSuffix += "#";
+            }
+
+            String displayGene = geneSuffix.isEmpty() ? variant.gene() : variant.gene() + " " + geneSuffix;
+
             String biallelic = Strings.EMPTY;
             if (variant.driverCategory() != DriverCategory.ONCO) {
                 biallelic = variant.biallelic() ? "Yes" : "No";
@@ -68,7 +74,7 @@ public final class SomaticVariantDataSource {
                     PatientReportFormat.ploidyVafField(variant.adjustedCopyNumber(), variant.minorAllelePloidy(), variant.adjustedVAF());
 
             variantDataSource.add(displayGene,
-                    codingImpact,
+                    variant.hgvsCodingImpact(),
                     variant.hgvsProteinImpact(),
                     PatientReportFormat.readDepthField(variant),
                     hotspotField(variant),
