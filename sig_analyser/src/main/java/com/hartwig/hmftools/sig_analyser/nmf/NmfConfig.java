@@ -33,7 +33,7 @@ public class NmfConfig {
 
     final public boolean FitOnly; // apply fitting routine to samples using input/ref sigs
     final public boolean FitRestrictToContribs; // only allow ref sigs if allocated already
-    final public boolean ApplyPcawgRules;
+    final public boolean ApplyPcawgRules; // when fitting to PCAWG sigs, apply their rules for inclusion and exclusion
 
     final public boolean LogVerbose;
 

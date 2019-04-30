@@ -27,6 +27,7 @@ public class NmfSampleFitter
 
     private boolean mIsValid;
 
+    // PCAWG rule constraints
     private static double SIG_EXCLUSION_CSS_DIFF = 0.01;
     private static double SIG_RE_INCLUSION_CSS_DIFF = 0.05;
     private static double MINOR_SIG_CONTRIBUTION_PERC = 0.001;
@@ -161,7 +162,7 @@ public class NmfSampleFitter
                 // assess the new contributions vs the actual counts, and exit if the change is greater than 0.01
                 double cssDiff = lastFitVsActualCss - newFitVsActualCss;
 
-                if (cssDiff > SIG_EXCLUSION_CSS_DIFF)
+                if (cssDiff > SIG_EXCLUSION_CSS_DIFF) // also apply this constraint when not applying other PCAWG fitting rules
                 {
                     LOGGER.debug(String.format("sample(%d) fitVsActualsCss(%.4f -> %.4f diff=%.4f) with sigCount(%d), exiting",
                             sampleId, lastFitVsActualCss, newFitVsActualCss, cssDiff, currentSigCount));
@@ -265,44 +266,47 @@ public class NmfSampleFitter
                 sampleId, currentSigCount, lastFitVsActualCss, nmfCalc.getTotalResiduals(),
                 nmfCalc.getTotalResiduals()/sampleCount, sampleCount));
 
-        // finally try adding back in any signature which increases the CSS by > 0.5
-        for(int i = 0; i < refSigCount; ++i)
+        if(mConfig.ApplyPcawgRules)
         {
-            if(sigsInUse[i] ||  !canSampleUseSig(sampleId, i))
-                continue;
-
-            sigsInUse[i] = true;
-            enableRefSig(reducedSigs, i);
-
-            nmfCalc.setSignatures(reducedSigs);
-            nmfCalc.performRun(sampleId);
-
-            if(!nmfCalc.isValid())
+            // finally try adding back in any signature which increases the CSS by the specified amount
+            for (int i = 0; i < refSigCount; ++i)
             {
-                LOGGER.warn("NMF fit failed for sample({})", sampleId);
-                break;
+                if (sigsInUse[i] || !canSampleUseSig(sampleId, i))
+                    continue;
+
+                sigsInUse[i] = true;
+                enableRefSig(reducedSigs, i);
+
+                nmfCalc.setSignatures(reducedSigs);
+                nmfCalc.performRun(sampleId);
+
+                if (!nmfCalc.isValid())
+                {
+                    LOGGER.warn("NMF fit failed for sample({})", sampleId);
+                    break;
+                }
+
+                final double[] newFit = nmfCalc.getFit().getCol(0);
+                double newFitVsActualCss = calcCSS(newFit, sampleCounts);
+
+                double cssDiff = newFitVsActualCss - lastFitVsActualCss;
+
+                if (cssDiff >= SIG_RE_INCLUSION_CSS_DIFF)
+                {
+                    prevResiduals = nmfCalc.getTotalResiduals();
+                    prevContribs = nmfCalc.getContributions().getCol(0);
+                    ++currentSigCount;
+
+                    LOGGER.debug(String.format("sample(%d) fitVsActualsCss(%.4f -> %.4f diff=%.4f) improved with new sig(%d) sigCount(%d)",
+                            sampleId, lastFitVsActualCss, newFitVsActualCss, cssDiff, i, currentSigCount));
+                }
+                else
+                {
+                    reduceSigData(sigsInUse, reducedSigs, i);
+                }
+
+                lastFitVsActualCss = newFitVsActualCss;
             }
-
-            final double[] newFit = nmfCalc.getFit().getCol(0);
-            double newFitVsActualCss = calcCSS(newFit, sampleCounts);
-
-            double cssDiff = newFitVsActualCss - lastFitVsActualCss;
-
-            if (cssDiff >= SIG_RE_INCLUSION_CSS_DIFF)
-            {
-                prevResiduals = nmfCalc.getTotalResiduals();
-                prevContribs = nmfCalc.getContributions().getCol(0);
-                ++currentSigCount;
-
-                LOGGER.debug(String.format("sample(%d) fitVsActualsCss(%.4f -> %.4f diff=%.4f) improved with new sig(%d) sigCount(%d)",
-                        sampleId, lastFitVsActualCss, newFitVsActualCss, cssDiff, i, currentSigCount));
-            }
-            else
-            {
-                reduceSigData(sigsInUse, reducedSigs, i);
-            }
-
-            lastFitVsActualCss = newFitVsActualCss;
         }
 
         // use the previous fit's contributions ie when still had a sufficiently high CSS

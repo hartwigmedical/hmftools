@@ -90,7 +90,7 @@ public class SigReporter {
     {
         logSignatureData();
         compareSignatures();
-        compareContributions();
+        // compareContributions();
         calcResidualData();
         logResidualData();
     }
@@ -306,8 +306,8 @@ public class SigReporter {
             double similarPerc = contribsResults.size() / totalPairs;
             LOGGER.debug(String.format("%d similar sample contributions found (perc=%.2f):", contribsResults.size(), similarPerc));
 
-            for (final double[] result : contribsResults) {
-
+            for (final double[] result : contribsResults)
+            {
                 LOGGER.debug(String.format("sample1(%.0f) sample2(%.0f) with css(%.4f)",
                         result[CSSR_I1], result[CSSR_I2], result[CSSR_VAL]));
             }
