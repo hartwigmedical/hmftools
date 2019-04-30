@@ -34,7 +34,7 @@ public class FilterGermlineVariantsTest {
                 driverCategoryMap,
                 geneCopyNumbers,
                 somaticVariants);
-        assertEquals(filteredGermlineVariantMatch.size(), 1);
+        assertEquals(1, filteredGermlineVariantMatch.size());
     }
 
     @Test
@@ -51,7 +51,7 @@ public class FilterGermlineVariantsTest {
                         driverCategoryMap,
                         geneCopyNumbersMatch,
                         variantsMatch);
-        assertEquals(filteredGermlineVariantMatch.size(), 1); // all three options matched
+        assertEquals(1, filteredGermlineVariantMatch.size()); // all three options matched
 
         List<GermlineVariant> germlineVariantsNonMatchBiallelic = createTestGermlineVariantsTSGGene(false);
         List<GeneCopyNumber> geneCopyNumbersNonMatchBiallelic = createCopyNumberListForTSG(1);
@@ -62,7 +62,7 @@ public class FilterGermlineVariantsTest {
                 driverCategoryMap,
                 geneCopyNumbersNonMatchBiallelic,
                 variantsNonMatchBiallelic);
-        assertEquals(filteredGermlineVariantNonMatchBiallelic.size(), 1); // match copy number and variant
+        assertEquals(1, filteredGermlineVariantNonMatchBiallelic.size()); // match copy number and variant
 
         List<GermlineVariant> germlineVariantsNonMatchVariant = createTestGermlineVariantsTSGGene(true);
         List<GeneCopyNumber> geneCopyNumbersNonMatchVariant = createCopyNumberListForTSG(1);
@@ -73,7 +73,7 @@ public class FilterGermlineVariantsTest {
                 driverCategoryMap,
                 geneCopyNumbersNonMatchVariant,
                 variantsNonMatchVariant);
-        assertEquals(filteredGermlineVariantNonMatchVariant.size(), 1); // match biallelic and copy number
+        assertEquals(1, filteredGermlineVariantNonMatchVariant.size()); // match biallelic and copy number
 
         List<GermlineVariant> germlineVariantsNonMatchCopy = createTestGermlineVariantsTSGGene(true);
         List<GeneCopyNumber> geneCopyNumbersNonMatchCopy = createCopyNumberListForTSG(2);
@@ -84,7 +84,7 @@ public class FilterGermlineVariantsTest {
                 driverCategoryMap,
                 geneCopyNumbersNonMatchCopy,
                 variantsNonMatchCopy);
-        assertEquals(filteredGermlineVariantNonMatchCopy.size(), 1); // match biallelic and variant
+        assertEquals(1, filteredGermlineVariantNonMatchCopy.size()); // match biallelic and variant
 
         List<GermlineVariant> germlineVariantsNonMatch = createTestGermlineVariantsTSGGene(false);
         List<GeneCopyNumber> geneCopyNumbersNonMatch = createCopyNumberListForTSG(2);
@@ -95,7 +95,7 @@ public class FilterGermlineVariantsTest {
                 driverCategoryMap,
                 geneCopyNumbersNonMatch,
                 variantsNonMatch);
-        assertEquals(filteredGermlineVariantNonMatch.size(), 0); // all option failed
+        assertEquals(0, filteredGermlineVariantNonMatch.size()); // all option failed
 
         List<GermlineVariant> germlineVariantsOptionBiallelic = createTestGermlineVariantsTSGGene(true);
         List<GeneCopyNumber> geneCopyNumbersOptionBiallelic = createCopyNumberListForTSG(2);
@@ -106,7 +106,7 @@ public class FilterGermlineVariantsTest {
                 driverCategoryMap,
                 geneCopyNumbersOptionBiallelic,
                 variantsOptionBiallelic);
-        assertEquals(filteredGermlineVariantOptionBiallelic.size(), 1); // only match biallelic
+        assertEquals(1, filteredGermlineVariantOptionBiallelic.size()); // only match biallelic
 
         List<GermlineVariant> germlineVariantsOptionVariant = createTestGermlineVariantsTSGGene(false);
         List<GeneCopyNumber> geneCopyNumbersOptionVariant = createCopyNumberListForTSG(2);
@@ -117,7 +117,7 @@ public class FilterGermlineVariantsTest {
                 driverCategoryMap,
                 geneCopyNumbersOptionVariant,
                 variantsOptionVariant);
-        assertEquals(filteredGermlineVariantOptionVariant.size(), 1); // only match variant
+        assertEquals(1, filteredGermlineVariantOptionVariant.size()); // only match variant
 
         List<GermlineVariant> germlineVariantsOptionCopyNumber = createTestGermlineVariantsTSGGene(false);
         List<GeneCopyNumber> geneCopyNumbersCopyNumber = createCopyNumberListForTSG(1);
@@ -128,7 +128,7 @@ public class FilterGermlineVariantsTest {
                 driverCategoryMap,
                 geneCopyNumbersCopyNumber,
                 variantsOptionCopyNumber);
-        assertEquals(filteredGermlineVariantOptionCopyNumber.size(), 1); // only match copy number
+        assertEquals(1, filteredGermlineVariantOptionCopyNumber.size()); // only match copy number
     }
 
     @NotNull
