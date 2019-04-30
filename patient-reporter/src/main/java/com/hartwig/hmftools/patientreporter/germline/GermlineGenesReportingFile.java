@@ -43,7 +43,7 @@ public final class GermlineGenesReportingFile {
                 } else if (parts[1].trim().equals("false")) {
                     germlineGenesMap.put(gene, false);
                 } else {
-                    LOGGER.warn("Not info about notify germline of gene");
+                    LOGGER.warn("No information about notify germline of gene");
                 }
             }
         }
