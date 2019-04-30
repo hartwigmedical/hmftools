@@ -420,37 +420,6 @@ public class GermlineVariantFinder
 
             final String codonInfo = snpEff.aaPosAndLength();
 
-            /*
-            EligibilityReport report = ImmutableEligibilityReport.builder()
-                    .sampleId(sampleId)
-                    .program(mName)
-                    .matchType(matchTypeReport)
-                    .id(variant.getID())
-                    .genes(gene)
-                    .transcriptId(transcriptId)
-                    .chrom(chromosome)
-                    .pos(position)
-                    .ref(ref)
-                    .alts(alt)
-                    .effects(effects)
-                    .codingEffect(codingEffect)
-                    .annotations(annotationsStr)
-                    .hgvsProtein(hgvsProtein)
-                    .hgvsCoding(hgvsCoding)
-                    .isHomozygous(isHomozygous)
-                    .phredScore(phredScore)
-                    .hasDepthInfo(hasDepthInfo)
-                    .germlineAltCount(germlineAltCount)
-                    .germlineReadDepth(germlineReadDepth)
-                    .tumorAltCount(tumorAltCount)
-                    .tumorReadDepth(tumorReadDepth)
-                    .condonInfo(codonInfo)
-                    .matchesClinvarFilter(matchedFilter != null)
-                    .clinvarSignificance(matchedFilter != null ? matchedFilter.ClinvarSignificance : "")
-                    .clinvarSigInfo(matchedFilter != null ? matchedFilter.ClinvarSigInfo : "")
-                    .build();
-            */
-
             BachelorGermlineVariant germlineVariant = new BachelorGermlineVariant(
                     sampleId, mName, variant.getID(),
                     gene, transcriptId, chromosome, position, ref, alt,
