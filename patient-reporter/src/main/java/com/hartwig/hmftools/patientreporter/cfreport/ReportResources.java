@@ -75,8 +75,6 @@ public final class ReportResources {
 
     public static final float BODY_TEXT_LEADING = 10f;
 
-    private ReportResources() {}
-
     public static PdfFont getFontRegular() {
         if (fontProgramRegular == null) {
             fontProgramRegular = loadFontProgram(FONT_REGULAR_PATH);
@@ -327,7 +325,7 @@ public final class ReportResources {
     public static byte[] loadResourceData(String resourcePath) throws IOException {
 
         byte[] data = null;
-        InputStream is = new ReportResources().getClass().getClassLoader().getResourceAsStream(resourcePath);
+        InputStream is = ClassLoader.getSystemResourceAsStream(resourcePath);
         data = new byte[is.available()];
         is.read(data);
 
