@@ -28,22 +28,23 @@ public final class GermlineGenesReportingFile {
 
         List<String> linesGermlineGenes = LineReader.build().readLines(new File(germlineGenesCsv).toPath(), line -> line.length() > 0);
 
-        Set<String> genes = Sets.newHashSet();
         Map<String, Boolean> germlineGenesMap = Maps.newHashMap();
 
         for (String line : linesGermlineGenes) {
             String[] parts = line.split(SEPARATOR);
 
-            String gene = parts[0].trim();
-            genes.add(gene);
-
             if (parts.length == 2) {
-                if (parts[1].trim().equals("true")) {
-                    germlineGenesMap.put(gene, true);
-                } else if (parts[1].trim().equals("false")) {
-                    germlineGenesMap.put(gene, false);
-                } else {
-                    LOGGER.warn("No information about notify germline of gene");
+                String gene = parts[0].trim();
+                String classification = parts[1].trim();
+                switch (classification) {
+                    case "true":
+                        germlineGenesMap.put(gene, true);
+                        break;
+                    case "false":
+                        germlineGenesMap.put(gene, false);
+                        break;
+                    default:
+                        LOGGER.warn("No information about notify germline of gene");
                 }
             }
         }
