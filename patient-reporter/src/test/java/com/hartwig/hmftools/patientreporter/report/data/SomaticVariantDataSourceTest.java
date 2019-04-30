@@ -57,6 +57,6 @@ public class SomaticVariantDataSourceTest {
                 .adjustedVAF(0D)
                 .driverCategory(DriverCategory.ONCO)
                 .driverLikelihood(1D)
-                .notifyClinicalGeneticus(false);
+                .notifyClinicalGeneticist(false);
     }
 }

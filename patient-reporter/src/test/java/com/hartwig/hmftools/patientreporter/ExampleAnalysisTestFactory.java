@@ -444,7 +444,7 @@ public final class ExampleAnalysisTestFactory {
                 .adjustedVAF(purityAdjuster.purityAdjustedVAF("7", 6, 107D / 161D))
                 .driverCategory(DriverCategory.ONCO)
                 .driverLikelihood(1D)
-                .notifyClinicalGeneticus(false)
+                .notifyClinicalGeneticist(false)
                 .build();
 
         ReportableVariant variant2 = ImmutableReportableVariant.builder()
@@ -462,7 +462,7 @@ public final class ExampleAnalysisTestFactory {
                 .adjustedVAF(purityAdjuster.purityAdjustedVAF("9", 2, 44D / 44D))
                 .driverCategory(DriverCategory.TSG)
                 .driverLikelihood(0.9)
-                .notifyClinicalGeneticus(false)
+                .notifyClinicalGeneticist(false)
                 .build();
 
         ReportableVariant variant3 = ImmutableReportableVariant.builder()
@@ -480,7 +480,7 @@ public final class ExampleAnalysisTestFactory {
                 .adjustedVAF(purityAdjuster.purityAdjustedVAF("2", 3, 72D / 107D))
                 .driverCategory(DriverCategory.ONCO)
                 .driverLikelihood(0.5)
-                .notifyClinicalGeneticus(false)
+                .notifyClinicalGeneticist(false)
                 .build();
 
         ReportableVariant variant4 = ImmutableReportableVariant.builder()
@@ -498,7 +498,7 @@ public final class ExampleAnalysisTestFactory {
                 .adjustedVAF(purityAdjuster.purityAdjustedVAF("3", 4, 48D / 103D))
                 .driverCategory(DriverCategory.TSG)
                 .driverLikelihood(0.1)
-                .notifyClinicalGeneticus(false)
+                .notifyClinicalGeneticist(false)
                 .build();
         return Lists.newArrayList(variant1, variant2, variant3, variant4);
     }
@@ -520,7 +520,7 @@ public final class ExampleAnalysisTestFactory {
                 .adjustedVAF(purityAdjuster.purityAdjustedVAF("3", 4, 48D / 103D))
                 .driverCategory(DriverCategory.TSG)
                 .driverLikelihood(0.1)
-                .notifyClinicalGeneticus(false)
+                .notifyClinicalGeneticist(false)
                 .build();
 
         ReportableVariant variant2 = ImmutableReportableVariant.builder()
@@ -538,7 +538,7 @@ public final class ExampleAnalysisTestFactory {
                 .adjustedVAF(purityAdjuster.purityAdjustedVAF("3", 4, 48D / 103D))
                 .driverCategory(DriverCategory.TSG)
                 .driverLikelihood(0.1)
-                .notifyClinicalGeneticus(true)
+                .notifyClinicalGeneticist(true)
                 .build();
 
         return Lists.newArrayList(variant1, variant2);
