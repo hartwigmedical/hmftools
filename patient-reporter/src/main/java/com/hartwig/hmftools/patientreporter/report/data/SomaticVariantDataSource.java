@@ -40,7 +40,7 @@ public final class SomaticVariantDataSource {
     }
 
     @NotNull
-    public static JRDataSource fromVariants(@NotNull List<ReportableVariant> variants, boolean hasReliablePurityFit,
+    public static JRDataSource fromVariants(@NotNull List<ReportableVariant> reportableVariants, boolean hasReliablePurityFit,
             LimsGermlineReportingChoice germlineReportingChoice) {
         final DRDataSource variantDataSource = new DRDataSource(GENE_FIELD.getName(),
                 VARIANT_FIELD.getName(),
@@ -51,7 +51,7 @@ public final class SomaticVariantDataSource {
                 CLONAL_STATUS_FIELD.getName(),
                 BIALLELIC_FIELD.getName(),
                 DRIVER_FIELD.getName());
-        for (final ReportableVariant variant : sort(variants)) {
+        for (final ReportableVariant variant : sort(reportableVariants)) {
 
             String displayGene = variant.isDrupActionable() ? variant.gene() + " *" : variant.gene();
             String codingImpact =
