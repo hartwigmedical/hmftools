@@ -7,18 +7,12 @@ import java.util.Set;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.lims.LimsGermlineReportingChoice;
-import com.hartwig.hmftools.common.lims.LimsSampleType;
-import com.hartwig.hmftools.common.numeric.Doubles;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
-import com.hartwig.hmftools.patientreporter.genepanel.GeneModel;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 public final class FilterGermlineVariants {
-    private static final Logger LOGGER = LogManager.getLogger(FilterGermlineVariants.class);
 
     private FilterGermlineVariants() {
     }

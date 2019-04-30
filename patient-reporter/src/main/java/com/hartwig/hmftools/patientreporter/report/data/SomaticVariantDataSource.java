@@ -11,8 +11,6 @@ import com.hartwig.hmftools.common.lims.LimsGermlineReportingChoice;
 import com.hartwig.hmftools.patientreporter.report.util.PatientReportFormat;
 import com.hartwig.hmftools.patientreporter.variants.ReportableVariant;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
@@ -21,7 +19,6 @@ import net.sf.dynamicreports.report.datasource.DRDataSource;
 import net.sf.jasperreports.engine.JRDataSource;
 
 public final class SomaticVariantDataSource {
-    private static final Logger LOGGER = LogManager.getLogger(SomaticVariantDataSource.class);
 
     public static final FieldBuilder<?> GENE_FIELD = field("gene", String.class);
     public static final FieldBuilder<?> VARIANT_FIELD = field("variant", String.class);

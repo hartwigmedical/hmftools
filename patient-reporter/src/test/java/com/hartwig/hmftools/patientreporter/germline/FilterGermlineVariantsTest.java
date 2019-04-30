@@ -21,13 +21,11 @@ import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
 import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.common.variant.ImmutableEnrichedSomaticVariant;
 import com.hartwig.hmftools.common.variant.ImmutableSomaticVariantImpl;
-import com.hartwig.hmftools.common.variant.SomaticVariantTestBuilderFactory;
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.patientreporter.PatientReporterTestUtil;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
-import org.junit.Ignore;
 import org.junit.Test;
 
 public class FilterGermlineVariantsTest {
@@ -65,7 +63,6 @@ public class FilterGermlineVariantsTest {
         Map<String, Boolean> germlineGenesReporting = PatientReporterTestUtil.testGermlineModel().germlineGenes();
         Map<String, DriverCategory> driverCategoryMapMatch = Maps.newHashMap();
         driverCategoryMapMatch.put("BRCA2", DriverCategory.TSG);
-        String sampleId = "CPCT02990001T";
         List<GermlineVariant> germlineVariantsMatch = createTestGermlineVariantsTSGGene(true);
         List<GeneCopyNumber> geneCopyNumbersMatch = Lists.newArrayList(createTestCopyNumberBuilder(1).build());
         List<EnrichedSomaticVariant> variantsMatch = Lists.newArrayList(createEnriched("BRCA2").build());
