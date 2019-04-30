@@ -43,7 +43,7 @@ public class ReportableVariantAnalyzer {
         }
 
         for (GermlineVariant germlineVariant : germlineVariants) {
-            boolean notify = genesInNotifyClinicalGeneticus(germlineVariants, notifyGenes);
+            boolean notify = genesInNotifyClinicalGeneticist(germlineVariants, notifyGenes);
 
             reportableVariants.add(fromGermline(germlineVariant).isDrupActionable(drupActionableGenes.contains(germlineVariant.gene()))
                     .driverCategory(driverCategoryPerGene.get(germlineVariant.gene()))
@@ -55,7 +55,7 @@ public class ReportableVariantAnalyzer {
         return reportableVariants;
     }
 
-    private static boolean genesInNotifyClinicalGeneticus(@Nullable List<GermlineVariant> filteredGermlineVariants,
+    private static boolean genesInNotifyClinicalGeneticist(@Nullable List<GermlineVariant> filteredGermlineVariants,
             @NotNull Set<String> notifyGenes) {
 
         if (filteredGermlineVariants != null) {
