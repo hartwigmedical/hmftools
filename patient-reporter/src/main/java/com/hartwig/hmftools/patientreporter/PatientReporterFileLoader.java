@@ -20,8 +20,8 @@ import com.hartwig.hmftools.common.purple.purity.PurityContext;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariantFactory;
 import com.hartwig.hmftools.common.variant.enrich.SomaticEnrichment;
-import com.hartwig.hmftools.patientreporter.germline.BachelorFile;
-import com.hartwig.hmftools.patientreporter.germline.GermlineVariant;
+import com.hartwig.hmftools.patientreporter.variants.germline.BachelorFile;
+import com.hartwig.hmftools.patientreporter.variants.germline.GermlineVariant;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

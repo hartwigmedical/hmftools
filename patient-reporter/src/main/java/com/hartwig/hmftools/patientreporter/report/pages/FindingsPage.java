@@ -11,6 +11,10 @@ import static net.sf.dynamicreports.report.builder.DynamicReports.cmp;
 import static net.sf.dynamicreports.report.builder.DynamicReports.col;
 import static net.sf.dynamicreports.report.builder.DynamicReports.hyperLink;
 
+import java.util.List;
+
+import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.lims.LimsGermlineReportingChoice;
 import com.hartwig.hmftools.patientreporter.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.report.components.ChordSection;
 import com.hartwig.hmftools.patientreporter.report.components.MicrosatelliteSection;
@@ -20,6 +24,7 @@ import com.hartwig.hmftools.patientreporter.report.data.GeneCopyNumberDataSource
 import com.hartwig.hmftools.patientreporter.report.data.GeneDisruptionDataSource;
 import com.hartwig.hmftools.patientreporter.report.data.GeneFusionDataSource;
 import com.hartwig.hmftools.patientreporter.report.data.SomaticVariantDataSource;
+import com.hartwig.hmftools.patientreporter.variants.ReportableVariant;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -59,12 +64,12 @@ public abstract class FindingsPage {
         final String drupEligibilityAddition = "Marked genes (*) are included in the DRUP study and indicate potential "
                 + "eligibility in DRUP. Please note that the marking is NOT based on the specific mutation reported for "
                 + "this sample, but only on a gene-level.";
-        final String germline = "Marked variant(s) (+) are germline variants.";
-        final String geneticus = "Marked variant(s) (#) are also present in the germline of the patient. Referral to a genetic specialist "
-                + "should be advised.";
+        final String geneticsNotifyAddition =
+                "Marked variant(s) (#) are also present in the germline of the patient. Referral to a genetic specialist "
+                        + "should be advised.";
 
         final ComponentBuilder<?, ?> table =
-                !report.somaticVariants().isEmpty()
+                !report.reportableVariants().isEmpty()
                         ? cmp.subreport(monospaceBaseTable().fields(SomaticVariantDataSource.fields())
                         .columns(col.column("Gene", SomaticVariantDataSource.GENE_FIELD),
                                 col.column("Variant", SomaticVariantDataSource.VARIANT_FIELD).setFixedWidth(90),
@@ -75,35 +80,37 @@ public abstract class FindingsPage {
                                 col.column("Clonality", SomaticVariantDataSource.CLONAL_STATUS_FIELD),
                                 col.column("Biallelic", SomaticVariantDataSource.BIALLELIC_FIELD),
                                 col.column("Driver", SomaticVariantDataSource.DRIVER_FIELD)))
-                        .setDataSource(SomaticVariantDataSource.fromVariants(report.somaticVariants(),
+                        .setDataSource(SomaticVariantDataSource.fromVariants(report.reportableVariants(),
                                 report.hasReliablePurityFit(),
                                 report.germlineReportingChoice()))
                         : cmp.text("None").setStyle(fontStyle().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER));
 
-        if (report.reportableGermlineVariant()) { //report.germlineReportingChoice().equals(LimsGermlineReportingChoice.ALL)|| report.germlineReportingChoice().equals(LimsGermlineReportingChoice.ACTIONABLE_ONLY)
-            return cmp.verticalList(cmp.text("Somatic Variants").setStyle(sectionHeaderStyle()),
-                    cmp.verticalGap(HEADER_TO_TABLE_VERTICAL_GAP),
-                    table,
-                    cmp.verticalGap(15),
-                    cmp.horizontalList(cmp.horizontalGap(10),
-                            cmp.text("*").setStyle(fontStyle()).setWidth(2),
-                            cmp.text(drupEligibilityAddition).setStyle(fontStyle().setFontSize(8))),
-                    cmp.verticalGap(5),
-                    cmp.horizontalList(cmp.horizontalGap(10),
-                            cmp.text("+").setStyle(fontStyle()).setWidth(2),
-                            cmp.text(germline).setStyle(fontStyle().setFontSize(8))),
+        ComponentBuilder<?, ?> baseReport = cmp.verticalList(cmp.text("Somatic Variants").setStyle(sectionHeaderStyle()),
+                cmp.verticalGap(HEADER_TO_TABLE_VERTICAL_GAP),
+                table,
+                cmp.verticalGap(15),
+                cmp.horizontalList(cmp.horizontalGap(10),
+                        cmp.text("*").setStyle(fontStyle()).setWidth(2),
+                        cmp.text(drupEligibilityAddition).setStyle(fontStyle().setFontSize(8))));
+
+        // Only display notification about germline variant when patient opts in and has a notifiable germline variant.
+        boolean notifyClinicalGeneticist = report.germlineReportingChoice() == LimsGermlineReportingChoice.ALL
+                || report.germlineReportingChoice() == LimsGermlineReportingChoice.ACTIONABLE_ONLY;
+        boolean hasNotifiableVariant = false;
+        for (ReportableVariant reportableVariant : report.reportableVariants()) {
+            if (reportableVariant.notifyClinicalGeneticist()) {
+                hasNotifiableVariant = true;
+            }
+        }
+
+        if (notifyClinicalGeneticist && hasNotifiableVariant) {
+            return cmp.verticalList(baseReport,
                     cmp.verticalGap(5),
                     cmp.horizontalList(cmp.horizontalGap(10),
                             cmp.text("#").setStyle(fontStyle()).setWidth(2),
-                            cmp.text(geneticus).setStyle(fontStyle().setFontSize(8))));
+                            cmp.text(geneticsNotifyAddition).setStyle(fontStyle().setFontSize(8))));
         } else {
-            return cmp.verticalList(cmp.text("Somatic Variants").setStyle(sectionHeaderStyle()),
-                    cmp.verticalGap(HEADER_TO_TABLE_VERTICAL_GAP),
-                    table,
-                    cmp.verticalGap(15),
-                    cmp.horizontalList(cmp.horizontalGap(10),
-                            cmp.text("*").setStyle(fontStyle()).setWidth(2),
-                            cmp.text(drupEligibilityAddition).setStyle(fontStyle().setFontSize(8))));
+            return baseReport;
         }
     }
 

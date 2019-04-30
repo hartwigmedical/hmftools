@@ -46,11 +46,11 @@ public final class GenomicSummarySection {
                 cmp.horizontalList(cmp.text("Genes with driver variant")
                                 .setStyle(summaryHeaderStyle())
                                 .setFixedWidth(genomicAlterationHeaderWidth),
-                        cmp.text(somaticVariantsWithDriver(report.somaticVariants())).setStyle(dataTableStyle())),
+                        cmp.text(somaticVariantsWithDriver(report.reportableVariants())).setStyle(dataTableStyle())),
                 cmp.horizontalList(cmp.text("Number of reported variants")
                                 .setStyle(summaryHeaderStyle())
                                 .setFixedWidth(genomicAlterationHeaderWidth),
-                        cmp.text(countSomaticVariants(report.somaticVariants())).setStyle(dataTableStyle())),
+                        cmp.text(countSomaticVariants(report.reportableVariants())).setStyle(dataTableStyle())),
                 cmp.horizontalList(cmp.text("Genes with copy-gain")
                                 .setStyle(summaryHeaderStyle())
                                 .setFixedWidth(genomicAlterationHeaderWidth),

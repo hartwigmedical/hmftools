@@ -96,9 +96,14 @@ public abstract class QCFailPage {
             }
         }
 
-        return type == LimsSampleType.CORE
-                ? coreLayout(title, subTitle, message)
-                : type == LimsSampleType.WIDE ? wideLayout(title, subTitle, message) : defaultLayout(title, subTitle, message);
+        switch (type) {
+            case CORE:
+                return coreLayout(title, subTitle, message);
+            case WIDE:
+                return wideLayout(title, subTitle, message);
+            default:
+                return defaultLayout(title, subTitle, message);
+        }
     }
 
     @NotNull
@@ -175,7 +180,7 @@ public abstract class QCFailPage {
                         + "In case additional tumor material cannot be provided, please be notified that the patient will not be "
                         + "evaluable for the " + study().studyCode() + " study.").setStyle(fontStyle()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP_QC_FAIL),
-                cmp.text("The HMF sample ID is " + sampleReport().sampleId() + " and the pathology sample ID is: "
+                cmp.text("The HMF sample ID is " + sampleReport().sampleId() + " and the tissue ID of pathology is: "
                         + sampleReport().hospitalPathologySampleId()).setStyle(fontStyle()),
                 internalBarcodeText(),
                 cmp.verticalGap(SECTION_VERTICAL_GAP_QC_FAIL),

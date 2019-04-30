@@ -650,9 +650,9 @@ While any database with a JDBC driver is supported. The following steps illustra
 The following commands will create a user with write permissions, a user with read permissions and a database.  
 
 ```
-mysql> ​CREATE USER 'purple_writer'@'localhost' IDENTIFIED BY 'purple_writer_password'; 
+mysql> ​CREATE USER 'purple_writer'@'localhost' IDENTIFIED WITH mysql_native_password BY 'purple_writer_password'; 
 Query OK, 0 rows affected (0.00 sec)
-mysql> ​CREATE USER 'purple_reader'@'localhost' IDENTIFIED BY 'purple_reader_password'; 
+mysql> ​CREATE USER 'purple_reader'@'localhost' IDENTIFIED WITH mysql_native_password BY 'purple_reader_password'; 
 Query OK, 0 rows affected (0.00 sec)
 mysql> CREATE DATABASE patientdb; 
 Query OK, 1 row affected (0.00 sec)
@@ -894,12 +894,11 @@ Threads | Elapsed Time| CPU Time | Peak Mem
 
 
 ## Version History
-- Upcoming
+- 2.26
+  - Support for MySQL 8
   - Added fitted segment chart
   - Added purity range chart
-  - Added copy number pdf chart
-  - Added minor allele ploidy pdf chart
-  - Added somatic variant ploidy pdf chart
+  - Ported existing charts to R
   - Added `no_chart` option
   - Write purity enriched somatic VCF into output dir 
   - Added application to persist PURPLE structural variants to DB

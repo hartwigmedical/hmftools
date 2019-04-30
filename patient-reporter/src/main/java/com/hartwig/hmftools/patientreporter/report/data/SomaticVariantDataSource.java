@@ -11,8 +11,6 @@ import com.hartwig.hmftools.common.lims.LimsGermlineReportingChoice;
 import com.hartwig.hmftools.patientreporter.report.util.PatientReportFormat;
 import com.hartwig.hmftools.patientreporter.variants.ReportableVariant;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
@@ -21,7 +19,6 @@ import net.sf.dynamicreports.report.datasource.DRDataSource;
 import net.sf.jasperreports.engine.JRDataSource;
 
 public final class SomaticVariantDataSource {
-    private static final Logger LOGGER = LogManager.getLogger(SomaticVariantDataSource.class);
 
     public static final FieldBuilder<?> GENE_FIELD = field("gene", String.class);
     public static final FieldBuilder<?> VARIANT_FIELD = field("variant", String.class);
@@ -43,8 +40,8 @@ public final class SomaticVariantDataSource {
     }
 
     @NotNull
-    public static JRDataSource fromVariants(@NotNull List<ReportableVariant> variants, boolean hasReliablePurityFit,
-            LimsGermlineReportingChoice germlineOptionPatient) {
+    public static JRDataSource fromVariants(@NotNull List<ReportableVariant> reportableVariants, boolean hasReliablePurityFit,
+            LimsGermlineReportingChoice germlineReportingChoice) {
         final DRDataSource variantDataSource = new DRDataSource(GENE_FIELD.getName(),
                 VARIANT_FIELD.getName(),
                 IMPACT_FIELD.getName(),
@@ -54,16 +51,20 @@ public final class SomaticVariantDataSource {
                 CLONAL_STATUS_FIELD.getName(),
                 BIALLELIC_FIELD.getName(),
                 DRIVER_FIELD.getName());
-        for (final ReportableVariant variant : sort(variants)) {
 
-            String displayGene = variant.isDrupActionable() ? variant.gene() + " *" : variant.gene();
-            String codingImpact = variant.notifyClinicalGeneticus() && variant.somaticOrGermline().equals("germline")
-                    // germlineReportingChoice.equals(LimsGermlineReportingChoice.ACTIONABLE_ONLY) || germlineReportingChoice.equals(LimsGermlineReportingChoice.ALL) &&
-                    ? variant.hgvsCodingImpact() + " + # "
-                    : !variant.notifyClinicalGeneticus() && variant.somaticOrGermline().equals("germline")
-                            //germlineReportingChoice.equals(LimsGermlineReportingChoice.ACTIONABLE_ONLY) || germlineReportingChoice.equals(LimsGermlineReportingChoice.ALL) &&
-                            ? variant.hgvsCodingImpact() + " +"
-                            : variant.hgvsCodingImpact();
+        for (final ReportableVariant variant : sort(reportableVariants)) {
+            String geneSuffix = Strings.EMPTY;
+            if (variant.isDrupActionable()) {
+                geneSuffix += "*";
+            }
+
+            if (variant.notifyClinicalGeneticist() && (germlineReportingChoice == LimsGermlineReportingChoice.ACTIONABLE_ONLY
+                    || germlineReportingChoice == LimsGermlineReportingChoice.ALL)) {
+                geneSuffix += "#";
+            }
+
+            String displayGene = geneSuffix.isEmpty() ? variant.gene() : variant.gene() + " " + geneSuffix;
+
             String biallelic = Strings.EMPTY;
             if (variant.driverCategory() != DriverCategory.ONCO) {
                 biallelic = variant.biallelic() ? "Yes" : "No";
@@ -73,7 +74,7 @@ public final class SomaticVariantDataSource {
                     PatientReportFormat.ploidyVafField(variant.adjustedCopyNumber(), variant.minorAllelePloidy(), variant.adjustedVAF());
 
             variantDataSource.add(displayGene,
-                    codingImpact,
+                    variant.hgvsCodingImpact(),
                     variant.hgvsProteinImpact(),
                     PatientReportFormat.readDepthField(variant),
                     hotspotField(variant),

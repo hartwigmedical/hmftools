@@ -58,7 +58,6 @@ public class PatientReporterApplication {
     private static final String DRUP_GENES_CSV = "drup_genes_csv";
     private static final String HOTSPOT_TSV = "hotspot_tsv";
     private static final String GERMLINE_GENES_CSV = "germline_genes_csv";
-    private static final String GERMLINE_VARIANTS_NOTIFY_CSV = "germline_variants_notify_csv";
 
     private static final String RVA_LOGO = "rva_logo";
     private static final String SIGNATURE = "signature";
@@ -145,8 +144,7 @@ public class PatientReporterApplication {
                 cmd.getOptionValue(HOTSPOT_TSV),
                 cmd.getOptionValue(FASTA_FILE_LOCATION),
                 cmd.getOptionValue(HIGH_CONFIDENCE_BED),
-                cmd.getOptionValue(GERMLINE_GENES_CSV),
-                cmd.getOptionValue(GERMLINE_VARIANTS_NOTIFY_CSV));
+                cmd.getOptionValue(GERMLINE_GENES_CSV));
     }
 
     @NotNull
@@ -165,7 +163,6 @@ public class PatientReporterApplication {
         final String fusionsCsv = cmd.getOptionValue(FUSION_CSV);
         final String disruptionsCsv = cmd.getOptionValue(DISRUPTION_CSV);
         final String germlineGenesCsv = cmd.getOptionValue(GERMLINE_GENES_CSV);
-        final String germlineVariantsNotifyCsv = cmd.getOptionValue(GERMLINE_VARIANTS_NOTIFY_CSV);
 
         final String fastaFileLocation = cmd.getOptionValue(FASTA_FILE_LOCATION);
         final String highConfidenceBed = cmd.getOptionValue(HIGH_CONFIDENCE_BED);
@@ -188,8 +185,6 @@ public class PatientReporterApplication {
             LOGGER.warn(HIGH_CONFIDENCE_BED + " has to be an existing file: " + highConfidenceBed);
         } else if (germlineGenesCsv == null || !exists(germlineGenesCsv)) {
             LOGGER.warn(GERMLINE_GENES_CSV + " has to be an existing file: " + germlineGenesCsv);
-        } else if (germlineVariantsNotifyCsv == null || !exists(germlineVariantsNotifyCsv)) {
-            LOGGER.warn(GERMLINE_VARIANTS_NOTIFY_CSV + " has to be an existing file: " + germlineVariantsNotifyCsv);
         } else {
             return true;
         }
@@ -270,7 +265,6 @@ public class PatientReporterApplication {
         options.addOption(TUMOR_LOCATION_CSV, true, "Path towards the (curated) tumor location csv.");
         options.addOption(DRUP_GENES_CSV, true, "Path towards a CSV containing genes that could potentially indicate inclusion in DRUP.");
         options.addOption(GERMLINE_GENES_CSV, true, "Path towards a CSV containing germline genes which we want to report");
-        options.addOption(GERMLINE_VARIANTS_NOTIFY_CSV, true, "Path towards a CSV containing germline genes which notify clinical geneticus");
         options.addOption(HOTSPOT_TSV, true, "Path towards a TSV containing known hotspot variants.");
         options.addOption(RVA_LOGO, true, "Path towards a image file containing the logo.");
         options.addOption(SIGNATURE, true, "Path towards a image file containing the signature to be appended at the end of the report.");

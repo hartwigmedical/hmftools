@@ -40,7 +40,7 @@ public abstract class AnalysedPatientReport implements PatientReport {
     public abstract List<EvidenceItem> offLabelEvidence();
 
     @NotNull
-    public abstract List<ReportableVariant> somaticVariants();
+    public abstract List<ReportableVariant> reportableVariants();
 
     public abstract double microsatelliteIndelsPerMb();
 
@@ -53,8 +53,6 @@ public abstract class AnalysedPatientReport implements PatientReport {
 
     @NotNull
     public abstract LimsGermlineReportingChoice germlineReportingChoice();
-
-    public abstract boolean reportableGermlineVariant();
 
     @NotNull
     public abstract List<GeneCopyNumber> geneCopyNumbers();

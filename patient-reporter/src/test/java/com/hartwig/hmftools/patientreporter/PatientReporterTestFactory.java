@@ -1,8 +1,18 @@
 package com.hartwig.hmftools.patientreporter;
 
+import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.purple.copynumber.CopyNumberMethod;
 import com.hartwig.hmftools.common.purple.gene.ImmutableGeneCopyNumber;
+import com.hartwig.hmftools.common.purple.region.GermlineStatus;
 import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
+import com.hartwig.hmftools.common.variant.Clonality;
+import com.hartwig.hmftools.common.variant.CodingEffect;
+import com.hartwig.hmftools.common.variant.Hotspot;
+import com.hartwig.hmftools.common.variant.ImmutableEnrichedSomaticVariant;
+import com.hartwig.hmftools.common.variant.ImmutableSomaticVariantImpl;
+import com.hartwig.hmftools.common.variant.VariantType;
+import com.hartwig.hmftools.patientreporter.variants.ImmutableReportableVariant;
+import com.hartwig.hmftools.patientreporter.variants.germline.ImmutableGermlineVariant;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
@@ -34,5 +44,77 @@ public final class PatientReporterTestFactory {
                 .transcriptID("trans")
                 .transcriptVersion(0)
                 .minMinorAllelePloidy(0);
+    }
+
+    @NotNull
+    public static ImmutableEnrichedSomaticVariant.Builder createTestEnrichedSomaticVariantBuilder() {
+        return ImmutableEnrichedSomaticVariant.builder()
+                .trinucleotideContext(Strings.EMPTY)
+                .highConfidenceRegion(false)
+                .microhomology(Strings.EMPTY)
+                .repeatSequence(Strings.EMPTY)
+                .repeatCount(0)
+                .clonality(Clonality.UNKNOWN)
+                .chromosome(Strings.EMPTY)
+                .position(0)
+                .ref(Strings.EMPTY)
+                .alt(Strings.EMPTY)
+                .type(VariantType.UNDEFINED)
+                .filter("PASS")
+                .totalReadCount(0)
+                .alleleReadCount(0)
+                .gene(Strings.EMPTY)
+                .genesEffected(0)
+                .worstEffect(Strings.EMPTY)
+                .worstCodingEffect(CodingEffect.NONE)
+                .worstEffectTranscript(Strings.EMPTY)
+                .canonicalEffect(Strings.EMPTY)
+                .canonicalCodingEffect(CodingEffect.UNDEFINED)
+                .canonicalHgvsCodingImpact(Strings.EMPTY)
+                .canonicalHgvsProteinImpact(Strings.EMPTY)
+                .hotspot(Hotspot.NON_HOTSPOT)
+                .recovered(false)
+                .adjustedCopyNumber(0)
+                .adjustedVAF(0)
+                .minorAllelePloidy(0)
+                .germlineStatus(GermlineStatus.UNKNOWN)
+                .ploidy(0)
+                .mappability(0);
+    }
+
+    @NotNull
+    public static ImmutableGermlineVariant.Builder createTestGermlineVariantBuilder() {
+        return ImmutableGermlineVariant.builder()
+                .passFilter(true)
+                .gene(Strings.EMPTY)
+                .hgvsCodingImpact(Strings.EMPTY)
+                .hgvsProteinImpact(Strings.EMPTY)
+                .totalReadCount(0)
+                .alleleReadCount(0)
+                .germlineStatus(Strings.EMPTY)
+                .adjustedCopyNumber(0)
+                .adjustedVAF(0)
+                .minorAllelePloidy(1D)
+                .biallelic(false);
+    }
+
+    @NotNull
+    public static ImmutableReportableVariant.Builder createTestReportableVariantBuilder() {
+        return ImmutableReportableVariant.builder()
+                .gene(Strings.EMPTY)
+                .isDrupActionable(false)
+                .hgvsCodingImpact(Strings.EMPTY)
+                .hgvsProteinImpact(Strings.EMPTY)
+                .hotspot(Hotspot.HOTSPOT)
+                .clonality(Clonality.CLONAL)
+                .alleleReadCount(0)
+                .totalReadCount(0)
+                .adjustedCopyNumber(0)
+                .minorAllelePloidy(0)
+                .biallelic(false)
+                .adjustedVAF(0D)
+                .driverCategory(DriverCategory.ONCO)
+                .driverLikelihood(0D)
+                .notifyClinicalGeneticist(false);
     }
 }

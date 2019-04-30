@@ -108,9 +108,10 @@ public class SomaticEnrichment {
 
         double copyNumber = purpleCopyNumber.averageTumorCopyNumber();
         double vaf = purityAdjuster.purityAdjustedVAF(purpleCopyNumber.chromosome(), Math.max(0.001, copyNumber), depth.alleleFrequency());
+        double ploidy = Math.max(0, vaf * copyNumber);
 
         return builder.attribute(PURPLE_CN_INFO, copyNumber)
-                .attribute(PURPLE_PLOIDY_INFO, vaf * copyNumber)
+                .attribute(PURPLE_PLOIDY_INFO, ploidy)
                 .attribute(PURPLE_AF_INFO, vaf)
                 .attribute(PURPLE_MINOR_ALLELE_PLOIDY_INFO, purpleCopyNumber.minorAllelePloidy());
 
