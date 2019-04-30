@@ -44,7 +44,7 @@ public final class SomaticVariantDataSource {
 
     @NotNull
     public static JRDataSource fromVariants(@NotNull List<ReportableVariant> variants, boolean hasReliablePurityFit,
-            LimsGermlineReportingChoice germlineOptionPatient) {
+            LimsGermlineReportingChoice germlineReportingChoice) {
         final DRDataSource variantDataSource = new DRDataSource(GENE_FIELD.getName(),
                 VARIANT_FIELD.getName(),
                 IMPACT_FIELD.getName(),
@@ -57,10 +57,11 @@ public final class SomaticVariantDataSource {
         for (final ReportableVariant variant : sort(variants)) {
 
             String displayGene = variant.isDrupActionable() ? variant.gene() + " *" : variant.gene();
-            String codingImpact = variant.notifyClinicalGeneticus()
-                    // germlineReportingChoice.equals(LimsGermlineReportingChoice.ACTIONABLE_ONLY) || germlineReportingChoice.equals(LimsGermlineReportingChoice.ALL) &&
-                    ? variant.hgvsCodingImpact() + " # "
-                    : variant.hgvsCodingImpact();
+            String codingImpact =
+                    variant.notifyClinicalGeneticus() && germlineReportingChoice.equals(LimsGermlineReportingChoice.ACTIONABLE_ONLY)
+                            || germlineReportingChoice.equals(LimsGermlineReportingChoice.ALL)
+                            ? variant.hgvsCodingImpact() + " # "
+                            : variant.hgvsCodingImpact();
             String biallelic = Strings.EMPTY;
             if (variant.driverCategory() != DriverCategory.ONCO) {
                 biallelic = variant.biallelic() ? "Yes" : "No";

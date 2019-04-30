@@ -24,8 +24,7 @@ public class ReportableVariantAnalyzer {
     public static List<ReportableVariant> toReportableSomaticVariants(@NotNull List<EnrichedSomaticVariant> variants,
             @NotNull List<DriverCatalog> driverCatalog, @NotNull Map<String, DriverCategory> driverCategoryPerGene,
             @NotNull Set<String> drupActionableGenes, List<GermlineVariant> germlineVariants,
-            Map<String,Boolean> germlineGenesReporting,
-            @NotNull List<GeneCopyNumber> allGeneCopyNumbers, @NotNull String sampleId) {
+            Map<String,Boolean> germlineGenesReporting) {
         List<ReportableVariant> reportableVariants = Lists.newArrayList();
         for (EnrichedSomaticVariant variant : variants) {
             DriverCatalog catalog = catalogEntryForVariant(driverCatalog, variant.gene());

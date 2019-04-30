@@ -40,14 +40,12 @@ public class FilterGermlineVariantsTest {
         driverCategoryMapMatch.put("KIT", DriverCategory.ONCO);
 
         List<GeneCopyNumber> geneCopyNumbers = Lists.newArrayList();
-        String sampleId = "CPCT02990001T";
         List<EnrichedSomaticVariant> variants = Lists.newArrayList();
 
         List<GermlineVariant> filteredGermlineVariantMatch = FilterGermlineVariants.filteringReportedGermlineVariant(germlineVariants,
                 germlineGenesReporting,
                 driverCategoryMapMatch,
                 geneCopyNumbers,
-                sampleId,
                 variants, LimsGermlineReportingChoice.ACTIONABLE_ONLY);
         assertEquals(filteredGermlineVariantMatch.size(), 1);
 
@@ -58,7 +56,6 @@ public class FilterGermlineVariantsTest {
                 germlineGenesReporting,
                 driverCategoryMapNotMatch,
                 geneCopyNumbers,
-                sampleId,
                 variants, LimsGermlineReportingChoice.ACTIONABLE_ONLY);
         assertEquals(filteredGermlineVariantNonMatch.size(), 0);
     }
@@ -76,7 +73,6 @@ public class FilterGermlineVariantsTest {
                 germlineGenesReporting,
                 driverCategoryMapMatch,
                 geneCopyNumbersMatch,
-                sampleId,
                 variantsMatch, LimsGermlineReportingChoice.ACTIONABLE_ONLY);
         assertEquals(filteredGermlineVariantMatch.size(), 1); // all three options matched
 
@@ -89,7 +85,6 @@ public class FilterGermlineVariantsTest {
                 germlineGenesReporting,
                 driverCategoryMapNonMatchBilallelic,
                 geneCopyNumbersNonMatchBiallelic,
-                sampleId,
                 variantsNonMatchBiallelic, LimsGermlineReportingChoice.ACTIONABLE_ONLY);
         assertEquals(filteredGermlineVariantNonMatchBiallelic.size(), 1); // option biallelic failed
 
@@ -102,7 +97,6 @@ public class FilterGermlineVariantsTest {
                 germlineGenesReporting,
                 driverCategoryMapNonMatchVariant,
                 geneCopyNumbersNonMatchVariant,
-                sampleId,
                 variantsNonMatchVariant, LimsGermlineReportingChoice.ACTIONABLE_ONLY);
         assertEquals(filteredGermlineVariantNonMatchVariant.size(), 1); // option variant failed
 
@@ -115,7 +109,6 @@ public class FilterGermlineVariantsTest {
                 germlineGenesReporting,
                 driverCategoryMapNonMatchCopy,
                 geneCopyNumbersNonMatchCopy,
-                sampleId,
                 variantsNonMatchCopy, LimsGermlineReportingChoice.ACTIONABLE_ONLY);
         assertEquals(filteredGermlineVariantNonMatchCopy.size(), 1); // option copy number failed
 
@@ -128,7 +121,6 @@ public class FilterGermlineVariantsTest {
                 germlineGenesReporting,
                 driverCategoryMapNonMatch,
                 geneCopyNumbersNonMatch,
-                sampleId,
                 variantsNonMatch, LimsGermlineReportingChoice.ACTIONABLE_ONLY);
         assertEquals(filteredGermlineVariantNonMatch.size(), 0); // all option failed
 
@@ -141,7 +133,6 @@ public class FilterGermlineVariantsTest {
                 germlineGenesReporting,
                 driverCategoryMapOptionBaillelic,
                 geneCopyNumbersOptionBaillelic,
-                sampleId,
                 variantsOptionBaillelic, LimsGermlineReportingChoice.ACTIONABLE_ONLY);
         assertEquals(filteredGermlineVariantOptionBaillelic.size(), 1); // only match biallelic
 
@@ -154,7 +145,6 @@ public class FilterGermlineVariantsTest {
                 germlineGenesReporting,
                 driverCategoryMapOptionVaraint,
                 geneCopyNumbersOptionVariant,
-                sampleId,
                 variantsOptionVariant, LimsGermlineReportingChoice.ACTIONABLE_ONLY);
         assertEquals(filteredGermlineVariantOptionVariant.size(), 1); // only match variant
 
@@ -167,7 +157,6 @@ public class FilterGermlineVariantsTest {
                 germlineGenesReporting,
                 driverCategoryMapOptionCopyNumber,
                 geneCopyNumbersCopyNumber,
-                sampleId,
                 variantsOptionCopyNumber, LimsGermlineReportingChoice.ACTIONABLE_ONLY);
         assertEquals(filteredGermlineVariantOptionCopyNumber.size(), 1); // only match copy number
 

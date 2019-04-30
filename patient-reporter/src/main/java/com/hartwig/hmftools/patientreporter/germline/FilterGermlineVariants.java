@@ -26,7 +26,7 @@ public final class FilterGermlineVariants {
     @NotNull
     public static List<GermlineVariant> filteringReportedGermlineVariant(List<GermlineVariant> germlineVariants,
             @NotNull Map<String, Boolean> germlineGenesReporting, @NotNull Map<String, DriverCategory> driverCategoryPerGeneMap,
-            @NotNull List<GeneCopyNumber> allGeneCopyNumbers, @NotNull String sampleId,
+            @NotNull List<GeneCopyNumber> allGeneCopyNumbers,
             @NotNull List<EnrichedSomaticVariant> variantsToReport, @NotNull LimsGermlineReportingChoice choiceGermline) {
         List<GermlineVariant> filteredGermlineVariant = Lists.newArrayList();
 
@@ -36,9 +36,8 @@ public final class FilterGermlineVariants {
             boolean filterBiallelic = false;
             boolean filterMinCopyNumberTumor = false;
             boolean filterSomaticVariantInSameGene = false;
-            if (germlineVariant.passFilter() && reportingGenes.contains(germlineVariant.gene()) && choiceGermline.equals(
-                    LimsGermlineReportingChoice.ALL)
-                    || choiceGermline.equals(LimsGermlineReportingChoice.ACTIONABLE_ONLY)) { //&& LimsSampleType.fromSampleId(sampleId).equals(LimsSampleType.WIDE)
+            if (germlineVariant.passFilter() && reportingGenes.contains(germlineVariant.gene()) && !choiceGermline.equals(
+                    LimsGermlineReportingChoice.UNKNOWN)) {
                 if (driverCategoryPerGeneMap.get(germlineVariant.gene()) == DriverCategory.ONCO) { // use all genes
                     filteredGermlineVariant.add(germlineVariant);
                 } else { // filter genes

@@ -85,7 +85,6 @@ abstract class PatientReporter {
                 sequencedReportData().germlineGenesReporting().germlineGenes(),
                 sequencedReportData().panelGeneModel().geneDriverCategoryMap(),
                 copyNumberAnalysis.exomeGeneCopyNumbers(),
-                tumorSample,
                 somaticVariantAnalysis.variantsToReport(), lims.germlineReportingChoice(tumorSample));
 
         final List<ReportableVariant> reportableVariants =
@@ -94,9 +93,7 @@ abstract class PatientReporter {
                         sequencedReportData().panelGeneModel().geneDriverCategoryMap(),
                         sequencedReportData().panelGeneModel().drupActionableGenes(),
                         filteredGermlineVariants,
-                        sequencedReportData().germlineGenesReporting().germlineGenes(),
-                        copyNumberAnalysis.exomeGeneCopyNumbers(),
-                        tumorSample);
+                        sequencedReportData().germlineGenesReporting().germlineGenes());
 
         final SvAnalysis svAnalysis = analyzeStructuralVariants(copyNumberAnalysis, patientTumorLocation, svAnalyzerModel());
 
