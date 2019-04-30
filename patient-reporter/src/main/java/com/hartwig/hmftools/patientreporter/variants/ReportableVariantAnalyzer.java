@@ -20,12 +20,12 @@ public class ReportableVariantAnalyzer {
 
 
     @NotNull
-    public static List<ReportableVariant> toReportableVariants(@NotNull List<EnrichedSomaticVariant> variants,
+    public static List<ReportableVariant> toReportableVariants(@NotNull List<EnrichedSomaticVariant> variantsReport,
             @NotNull List<DriverCatalog> driverCatalog, @NotNull Map<String, DriverCategory> driverCategoryPerGene,
-            @NotNull Set<String> drupActionableGenes, List<GermlineVariant> germlineVariants,
+            @NotNull Set<String> drupActionableGenes, List<GermlineVariant> filteredGermlineVariants,
             Map<String,Boolean> germlineGenesReporting) {
         List<ReportableVariant> reportableVariants = Lists.newArrayList();
-        for (EnrichedSomaticVariant variant : variants) {
+        for (EnrichedSomaticVariant variant : variantsReport) {
             DriverCatalog catalog = catalogEntryForVariant(driverCatalog, variant.gene());
 
             reportableVariants.add(fromVariant(variant).isDrupActionable(drupActionableGenes.contains(variant.gene()))
@@ -35,20 +35,21 @@ public class ReportableVariantAnalyzer {
                     .build());
         }
 
-        Set<String> notifyGenes = Sets.newHashSet();
+        Set<String> notifyForGermlineGenes = Sets.newHashSet();
         for (String key: germlineGenesReporting.keySet()) {
             if (germlineGenesReporting.get(key)) {
-                notifyGenes.add(key);
+                notifyForGermlineGenes.add(key);
             }
         }
 
-        for (GermlineVariant germlineVariant : germlineVariants) {
-            boolean notify = genesInNotifyClinicalGeneticist(germlineVariants, notifyGenes);
+        boolean notifyGeneClinicalGeneticist = genesInNotifyClinicalGeneticist(filteredGermlineVariants, notifyForGermlineGenes);
+
+        for (GermlineVariant germlineVariant : filteredGermlineVariants) {
 
             reportableVariants.add(fromGermline(germlineVariant).isDrupActionable(drupActionableGenes.contains(germlineVariant.gene()))
                     .driverCategory(driverCategoryPerGene.get(germlineVariant.gene()))
                     .driverLikelihood(null)
-                    .notifyClinicalGeneticist(notify)
+                    .notifyClinicalGeneticist(notifyGeneClinicalGeneticist)
                     .build());
 
         }
@@ -56,11 +57,11 @@ public class ReportableVariantAnalyzer {
     }
 
     private static boolean genesInNotifyClinicalGeneticist(@Nullable List<GermlineVariant> filteredGermlineVariants,
-            @NotNull Set<String> notifyGenes) {
+            @NotNull Set<String> notifyForGermlineGenes) {
 
         if (filteredGermlineVariants != null) {
             for (GermlineVariant filteredGermlineVariant : filteredGermlineVariants) {
-                if (notifyGenes.contains(filteredGermlineVariant.gene())) {
+                if (notifyForGermlineGenes.contains(filteredGermlineVariant.gene())) {
                     return true;
                 }
             }
