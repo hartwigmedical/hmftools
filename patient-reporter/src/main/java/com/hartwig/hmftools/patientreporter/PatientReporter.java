@@ -100,7 +100,9 @@ abstract class PatientReporter {
         final ChordAnalysis chordAnalysis = analyzeChord(run);
 
         LOGGER.info("Printing analysis results:");
-         LOGGER.info(" Somatic variants to report : " + reportableVariants.size());
+        LOGGER.info(" Somatic variants to report : " + somaticVariantAnalysis.variantsToReport().size());
+        LOGGER.info(" Germline variants to report: " + filteredGermlineVariants.size());
+        LOGGER.info(" Reportable variants to reports: " + reportableVariants.size());
         LOGGER.info(" Microsatellite Indels per Mb: " + somaticVariantAnalysis.microsatelliteIndelsPerMb());
         LOGGER.info(" Tumor mutational load: " + somaticVariantAnalysis.tumorMutationalLoad());
         LOGGER.info(" Tumor mutational burden: " + somaticVariantAnalysis.tumorMutationalBurden());
