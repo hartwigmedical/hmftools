@@ -15,6 +15,7 @@ import com.hartwig.hmftools.common.context.RunContext;
 import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocation;
 import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocationFunctions;
 import com.hartwig.hmftools.common.lims.Lims;
+import com.hartwig.hmftools.common.lims.LimsGermlineReportingChoice;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
@@ -224,12 +225,17 @@ abstract class PatientReporter {
         if (variants != null) {
             LOGGER.info(" " + variants.size() + " PASS germline variants loaded for sample " + sample);
 
-            return FilterGermlineVariants.filterGermlineVariantsForReporting(variants,
-                    sequencedReportData().germlineGenesReporting().germlineGenes(),
-                    sequencedReportData().panelGeneModel().geneDriverCategoryMap(),
-                    copyNumberAnalysis.exomeGeneCopyNumbers(),
-                    somaticVariantAnalysis.variantsToReport(),
-                    baseReportData().limsModel().germlineReportingChoice(sample));
+            LimsGermlineReportingChoice germlineChoice = baseReportData().limsModel().germlineReportingChoice(sample);
+            if (germlineChoice == LimsGermlineReportingChoice.UNKNOWN) {
+                LOGGER.info(" No germline reporting choice known. No germline variants will be reported!");
+                return Lists.newArrayList();
+            } else {
+                return FilterGermlineVariants.filterGermlineVariantsForReporting(variants,
+                        sequencedReportData().germlineGenesReporting().germlineGenes(),
+                        sequencedReportData().panelGeneModel().geneDriverCategoryMap(),
+                        copyNumberAnalysis.exomeGeneCopyNumbers(),
+                        somaticVariantAnalysis.variantsToReport());
+            }
         } else {
             LOGGER.warn(" Could not load germline variants. Probably bachelor hasn't been run yet!");
             return Lists.newArrayList();

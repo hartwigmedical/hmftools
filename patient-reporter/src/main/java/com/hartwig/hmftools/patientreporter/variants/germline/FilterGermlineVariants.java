@@ -20,36 +20,35 @@ public final class FilterGermlineVariants {
     @NotNull
     public static List<GermlineVariant> filterGermlineVariantsForReporting(List<GermlineVariant> germlineVariants,
             @NotNull Map<String, Boolean> germlineGenesReporting, @NotNull Map<String, DriverCategory> driverCategoryPerGeneMap,
-            @NotNull List<GeneCopyNumber> allGeneCopyNumbers,
-            @NotNull List<EnrichedSomaticVariant> variantsToReport, @NotNull LimsGermlineReportingChoice choiceGermlineReporting) {
+            @NotNull List<GeneCopyNumber> allGeneCopyNumbers, @NotNull List<EnrichedSomaticVariant> variantsToReport) {
         List<GermlineVariant> filteredGermlineVariant = Lists.newArrayList();
 
         Set<String> reportingGermlineGenes = germlineGenesReporting.keySet();
 
         for (GermlineVariant germlineVariant : germlineVariants) {
-            boolean filterBiallelic = false;
-            boolean filterMinCopyNumberTumor = false;
-            boolean filterSomaticVariantInSameGene = false;
-            if (germlineVariant.passFilter() && reportingGermlineGenes.contains(germlineVariant.gene()) && !choiceGermlineReporting.equals(
-                    LimsGermlineReportingChoice.UNKNOWN)) {
-                if (driverCategoryPerGeneMap.get(germlineVariant.gene()) == DriverCategory.ONCO) { // use all genes
+            assert germlineVariant.passFilter();
+
+            if (reportingGermlineGenes.contains(germlineVariant.gene())) {
+                if (driverCategoryPerGeneMap.get(germlineVariant.gene()) == DriverCategory.ONCO) {
+                    // Report all germline variants on reportable oncogenes.
                     filteredGermlineVariant.add(germlineVariant);
-                } else { // filter genes
-                    if (germlineVariant.biallelic()) { // variant is biallelic (2nd hit CNV)
-                        filterBiallelic = true;
+                } else {
+                    // Only report germline variants on TSGs if there is a 2nd hit.
+                    boolean filterBiallelic = germlineVariant.biallelic();
+
+                    boolean filterMinCopyNumberTumor = false;
+                    GeneCopyNumber geneCopyNumber = lookupGeneCopyNumber(allGeneCopyNumbers, germlineVariant.gene());
+                    if (Math.round(geneCopyNumber.minCopyNumber()) < 2) {
+                        filterMinCopyNumberTumor = true;
                     }
-                    for (GeneCopyNumber geneCopyNumber : allGeneCopyNumbers) { // min copy number in tumer = 1 (2nd hit SV)
-                        if (geneCopyNumber.gene().equals(germlineVariant.gene())) { // filter for gene copy number
-                            if (Math.round(geneCopyNumber.minCopyNumber()) == 1) {
-                                filterMinCopyNumberTumor = true;
-                            }
-                        }
-                    }
-                    for (EnrichedSomaticVariant variant : variantsToReport) { // filter for gene copy number
+
+                    boolean filterSomaticVariantInSameGene = false;
+                    for (EnrichedSomaticVariant variant : variantsToReport) {
                         if (variant.gene().equals(germlineVariant.gene())) {
                             filterSomaticVariantInSameGene = true;
                         }
                     }
+
                     if (filterBiallelic || filterMinCopyNumberTumor || filterSomaticVariantInSameGene) {
                         filteredGermlineVariant.add(germlineVariant);
                     }
@@ -57,5 +56,16 @@ public final class FilterGermlineVariants {
             }
         }
         return filteredGermlineVariant;
+    }
+
+    @NotNull
+    private static GeneCopyNumber lookupGeneCopyNumber(@NotNull List<GeneCopyNumber> allGeneCopyNumbers, @NotNull String gene) {
+        for (GeneCopyNumber geneCopyNumber : allGeneCopyNumbers) {
+            if (geneCopyNumber.gene().equals(gene)) {
+                return geneCopyNumber;
+            }
+        }
+
+        throw new IllegalStateException("Could not find gene copy number for gene: " + gene);
     }
 }
