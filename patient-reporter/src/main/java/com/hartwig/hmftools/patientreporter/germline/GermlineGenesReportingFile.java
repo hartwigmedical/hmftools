@@ -25,7 +25,6 @@ public final class GermlineGenesReportingFile {
 
     @NotNull
     public static GermlineGenesReporting buildFromCsv(@NotNull String germlineGenesCsv) throws IOException {
-
         List<String> linesGermlineGenes = LineReader.build().readLines(new File(germlineGenesCsv).toPath(), line -> line.length() > 0);
 
         Map<String, Boolean> germlineGenesMap = Maps.newHashMap();
@@ -35,7 +34,7 @@ public final class GermlineGenesReportingFile {
 
             if (parts.length == 2) {
                 String gene = parts[0].trim();
-                String classificationGene = parts[1].trim();
+                String classificationGene = parts[1].trim().toLowerCase();
                 switch (classificationGene) {
                     case "true":
                         germlineGenesMap.put(gene, true);
@@ -44,8 +43,10 @@ public final class GermlineGenesReportingFile {
                         germlineGenesMap.put(gene, false);
                         break;
                     default:
-                        LOGGER.warn("No information about notify germline of gene");
+                        LOGGER.warn("Could not interpret classification in germline reporting genes: " + classificationGene);
                 }
+            } else {
+                LOGGER.warn("Suspicious line detected in germline reporting genes: " + line);
             }
         }
 

@@ -5,7 +5,6 @@ import java.util.Map;
 import java.util.Set;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.variant.Clonality;
@@ -16,57 +15,36 @@ import com.hartwig.hmftools.patientreporter.germline.GermlineVariant;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class ReportableVariantAnalyzer {
+public final class ReportableVariantAnalyzer {
 
+    private ReportableVariantAnalyzer() {
+    }
 
     @NotNull
-    public static List<ReportableVariant> toReportableVariants(@NotNull List<EnrichedSomaticVariant> variantsReport,
+    public static List<ReportableVariant> mergeSomaticAndGermlineVariants(@NotNull List<EnrichedSomaticVariant> variantsReport,
             @NotNull List<DriverCatalog> driverCatalog, @NotNull Map<String, DriverCategory> driverCategoryPerGene,
             @NotNull Set<String> drupActionableGenes, List<GermlineVariant> filteredGermlineVariants,
-            Map<String,Boolean> germlineGenesReporting) {
+            @NotNull Map<String, Boolean> germlineGenesToNotifyMap) {
         List<ReportableVariant> reportableVariants = Lists.newArrayList();
         for (EnrichedSomaticVariant variant : variantsReport) {
             DriverCatalog catalog = catalogEntryForVariant(driverCatalog, variant.gene());
 
-            reportableVariants.add(fromVariant(variant).isDrupActionable(drupActionableGenes.contains(variant.gene()))
+            reportableVariants.add(fromSomaticVariant(variant).isDrupActionable(drupActionableGenes.contains(variant.gene()))
                     .driverCategory(driverCategoryPerGene.get(variant.gene()))
                     .driverLikelihood(catalog != null ? catalog.driverLikelihood() : null)
                     .notifyClinicalGeneticist(false)
                     .build());
         }
 
-        Set<String> notifyForGermlineGenes = Sets.newHashSet();
-        for (String key: germlineGenesReporting.keySet()) {
-            if (germlineGenesReporting.get(key)) {
-                notifyForGermlineGenes.add(key);
-            }
-        }
-
-        boolean notifyGeneClinicalGeneticist = genesInNotifyClinicalGeneticist(filteredGermlineVariants, notifyForGermlineGenes);
-
         for (GermlineVariant germlineVariant : filteredGermlineVariants) {
-
-            reportableVariants.add(fromGermline(germlineVariant).isDrupActionable(drupActionableGenes.contains(germlineVariant.gene()))
+            reportableVariants.add(fromGermlineVariant(germlineVariant).isDrupActionable(drupActionableGenes.contains(germlineVariant.gene()))
                     .driverCategory(driverCategoryPerGene.get(germlineVariant.gene()))
                     .driverLikelihood(null)
-                    .notifyClinicalGeneticist(notifyGeneClinicalGeneticist)
+                    .notifyClinicalGeneticist(germlineGenesToNotifyMap.get(germlineVariant.gene()))
                     .build());
 
         }
         return reportableVariants;
-    }
-
-    private static boolean genesInNotifyClinicalGeneticist(@Nullable List<GermlineVariant> filteredGermlineVariants,
-            @NotNull Set<String> notifyForGermlineGenes) {
-
-        if (filteredGermlineVariants != null) {
-            for (GermlineVariant filteredGermlineVariant : filteredGermlineVariants) {
-                if (notifyForGermlineGenes.contains(filteredGermlineVariant.gene())) {
-                    return true;
-                }
-            }
-        }
-        return false;
     }
 
     @Nullable
@@ -80,7 +58,7 @@ public class ReportableVariantAnalyzer {
     }
 
     @NotNull
-    private static ImmutableReportableVariant.Builder fromGermline(@NotNull GermlineVariant variantGermline) {
+    private static ImmutableReportableVariant.Builder fromGermlineVariant(@NotNull GermlineVariant variantGermline) {
         return ImmutableReportableVariant.builder()
                 .gene(variantGermline.gene())
                 .hgvsCodingImpact(variantGermline.hgvsCodingImpact())
@@ -96,7 +74,7 @@ public class ReportableVariantAnalyzer {
     }
 
     @NotNull
-    private static ImmutableReportableVariant.Builder fromVariant(@NotNull EnrichedSomaticVariant variant) {
+    private static ImmutableReportableVariant.Builder fromSomaticVariant(@NotNull EnrichedSomaticVariant variant) {
         return ImmutableReportableVariant.builder()
                 .gene(variant.gene())
                 .hgvsCodingImpact(variant.canonicalHgvsCodingImpact())

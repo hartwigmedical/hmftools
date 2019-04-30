@@ -18,7 +18,7 @@ public final class FilterGermlineVariants {
     }
 
     @NotNull
-    public static List<GermlineVariant> filteringReportedGermlineVariant(List<GermlineVariant> germlineVariants,
+    public static List<GermlineVariant> filterGermlineVariantsForReporting(List<GermlineVariant> germlineVariants,
             @NotNull Map<String, Boolean> germlineGenesReporting, @NotNull Map<String, DriverCategory> driverCategoryPerGeneMap,
             @NotNull List<GeneCopyNumber> allGeneCopyNumbers,
             @NotNull List<EnrichedSomaticVariant> variantsToReport, @NotNull LimsGermlineReportingChoice choiceGermlineReporting) {

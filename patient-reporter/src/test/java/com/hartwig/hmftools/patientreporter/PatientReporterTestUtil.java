@@ -42,7 +42,7 @@ public final class PatientReporterTestUtil {
     private static final String FUSION_FILE = Resources.getResource("test_run/svAnalysis/CPCT11111111T_fusions.csv").getPath();
     private static final String DISRUPTION_FILE = Resources.getResource("test_run/svAnalysis/CPCT11111111T_disruptions.csv").getPath();
 
-    private static final String GERMLINE_REPORTED = Resources.getResource("csv/GermlineGenesReported.csv").getPath();
+    private static final String GERMLINE_GENES_REPORTING_CSV = Resources.getResource("csv/germline_genes_reporting.csv").getPath();
 
     private PatientReporterTestUtil() {
     }
@@ -72,7 +72,7 @@ public final class PatientReporterTestUtil {
 
     @NotNull
     public static GermlineGenesReporting testGermlineModel() throws IOException {
-        return GermlineGenesReportingFile.buildFromCsv(GERMLINE_REPORTED);
+        return GermlineGenesReportingFile.buildFromCsv(GERMLINE_GENES_REPORTING_CSV);
     }
 
     @NotNull

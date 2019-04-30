@@ -23,9 +23,8 @@ final class SequencedReportDataLoader {
     }
 
     @NotNull
-    static SequencedReportData buildFromFiles(@NotNull String knowledgebaseDir, @NotNull String drupGeneCsv,
-            @NotNull String hotspotTsv, @NotNull String fastaFileLocation, @NotNull String highConfidenceBed,
-            @NotNull String germlineGenesCsv) throws IOException {
+    static SequencedReportData buildFromFiles(@NotNull String knowledgebaseDir, @NotNull String drupGeneCsv, @NotNull String hotspotTsv,
+            @NotNull String fastaFileLocation, @NotNull String highConfidenceBed, @NotNull String germlineGenesCsv) throws IOException {
         final ActionabilityAnalyzer actionabilityAnalyzer = ActionabilityAnalyzer.fromKnowledgebase(knowledgebaseDir);
 
         final DrupActionabilityModel drupActionabilityModel = DrupActionabilityModelFactory.buildFromCsv(drupGeneCsv);
@@ -36,6 +35,7 @@ final class SequencedReportDataLoader {
                 actionabilityAnalyzer,
                 HotspotEnrichment.fromHotspotsFile(hotspotTsv),
                 new IndexedFastaSequenceFile(new File(fastaFileLocation)),
-                BEDFileLoader.fromBedFile(highConfidenceBed), germlineGenes);
+                BEDFileLoader.fromBedFile(highConfidenceBed),
+                germlineGenes);
     }
 }

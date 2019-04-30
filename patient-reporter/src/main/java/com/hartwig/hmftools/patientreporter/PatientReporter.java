@@ -79,20 +79,14 @@ abstract class PatientReporter {
 
         final SomaticVariantAnalysis somaticVariantAnalysis = analyzeSomaticVariants(run, copyNumberAnalysis, patientTumorLocation);
 
-        final List<GermlineVariant> germlineVariants = analyzeGermlineVariants(run);
-
-        final List<GermlineVariant> filteredGermlineVariants = FilterGermlineVariants.filteringReportedGermlineVariant(germlineVariants,
-                sequencedReportData().germlineGenesReporting().germlineGenes(),
-                sequencedReportData().panelGeneModel().geneDriverCategoryMap(),
-                copyNumberAnalysis.exomeGeneCopyNumbers(),
-                somaticVariantAnalysis.variantsToReport(), lims.germlineReportingChoice(tumorSample));
+        final List<GermlineVariant> germlineVariantsForReporting = analyzeGermlineVariants(run, copyNumberAnalysis, somaticVariantAnalysis);
 
         final List<ReportableVariant> reportableVariants =
-                ReportableVariantAnalyzer.toReportableVariants(somaticVariantAnalysis.variantsToReport(),
+                ReportableVariantAnalyzer.mergeSomaticAndGermlineVariants(somaticVariantAnalysis.variantsToReport(),
                         somaticVariantAnalysis.driverCatalog(),
                         sequencedReportData().panelGeneModel().geneDriverCategoryMap(),
                         sequencedReportData().panelGeneModel().drupActionableGenes(),
-                        filteredGermlineVariants,
+                        germlineVariantsForReporting,
                         sequencedReportData().germlineGenesReporting().germlineGenes());
 
         final SvAnalysis svAnalysis = analyzeStructuralVariants(copyNumberAnalysis, patientTumorLocation, svAnalyzerModel());
@@ -101,8 +95,8 @@ abstract class PatientReporter {
 
         LOGGER.info("Printing analysis results:");
         LOGGER.info(" Somatic variants to report : " + somaticVariantAnalysis.variantsToReport().size());
-        LOGGER.info(" Germline variants to report: " + filteredGermlineVariants.size());
-        LOGGER.info(" Reportable variants to reports: " + reportableVariants.size());
+        LOGGER.info(" Germline variants to report: " + germlineVariantsForReporting.size());
+        LOGGER.info("  Total number of reportable variants: " + reportableVariants.size());
         LOGGER.info(" Microsatellite Indels per Mb: " + somaticVariantAnalysis.microsatelliteIndelsPerMb());
         LOGGER.info(" Tumor mutational load: " + somaticVariantAnalysis.tumorMutationalLoad());
         LOGGER.info(" Tumor mutational burden: " + somaticVariantAnalysis.tumorMutationalBurden());
@@ -220,28 +214,35 @@ abstract class PatientReporter {
     }
 
     @NotNull
+    private List<GermlineVariant> analyzeGermlineVariants(@NotNull RunContext run, @NotNull CopyNumberAnalysis copyNumberAnalysis,
+            @NotNull SomaticVariantAnalysis somaticVariantAnalysis) throws IOException {
+        final String runDirectory = run.runDirectory();
+        final String sample = run.tumorSample();
+
+        LOGGER.info("Loading germline variants...");
+        List<GermlineVariant> variants = PatientReporterFileLoader.loadPassedGermlineVariants(runDirectory, sample);
+        if (variants != null) {
+            LOGGER.info(" " + variants.size() + " PASS germline variants loaded for sample " + sample);
+
+            return FilterGermlineVariants.filterGermlineVariantsForReporting(variants,
+                    sequencedReportData().germlineGenesReporting().germlineGenes(),
+                    sequencedReportData().panelGeneModel().geneDriverCategoryMap(),
+                    copyNumberAnalysis.exomeGeneCopyNumbers(),
+                    somaticVariantAnalysis.variantsToReport(),
+                    baseReportData().limsModel().germlineReportingChoice(sample));
+        } else {
+            LOGGER.warn(" Could not load germline variants. Probably bachelor hasn't been run yet!");
+            return Lists.newArrayList();
+        }
+    }
+
+    @NotNull
     private SvAnalysis analyzeStructuralVariants(@NotNull CopyNumberAnalysis copyNumberAnalysis,
             @Nullable PatientTumorLocation patientTumorLocation, @NotNull SvAnalyzer svAnalyzer) {
         return svAnalyzer.run(sequencedReportData().panelGeneModel(),
                 copyNumberAnalysis.exomeGeneCopyNumbers(),
                 sequencedReportData().actionabilityAnalyzer(),
                 patientTumorLocation);
-    }
-
-    @NotNull
-    private static List<GermlineVariant> analyzeGermlineVariants(@NotNull RunContext run) throws IOException {
-        final String runDirectory = run.runDirectory();
-        final String sample = run.tumorSample();
-
-        LOGGER.info("Loading germline variants...");
-        final List<GermlineVariant> variants = PatientReporterFileLoader.loadPassedGermlineVariants(runDirectory, sample);
-        if (variants != null) {
-            LOGGER.info(" " + variants.size() + " PASS germline variants loaded for sample " + sample);
-            return variants;
-        } else {
-            LOGGER.warn(" Could not load germline variants. Probably bachelor hasn't been run yet!");
-            return Lists.newArrayList();
-        }
     }
 
     @NotNull
