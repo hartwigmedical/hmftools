@@ -11,6 +11,9 @@ import static net.sf.dynamicreports.report.builder.DynamicReports.cmp;
 import static net.sf.dynamicreports.report.builder.DynamicReports.col;
 import static net.sf.dynamicreports.report.builder.DynamicReports.hyperLink;
 
+import java.util.List;
+
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.lims.LimsGermlineReportingChoice;
 import com.hartwig.hmftools.patientreporter.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.report.components.ChordSection;
@@ -21,6 +24,7 @@ import com.hartwig.hmftools.patientreporter.report.data.GeneCopyNumberDataSource
 import com.hartwig.hmftools.patientreporter.report.data.GeneDisruptionDataSource;
 import com.hartwig.hmftools.patientreporter.report.data.GeneFusionDataSource;
 import com.hartwig.hmftools.patientreporter.report.data.SomaticVariantDataSource;
+import com.hartwig.hmftools.patientreporter.variants.ReportableVariant;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -80,9 +84,16 @@ public abstract class FindingsPage {
                                 report.germlineReportingChoice()))
                         : cmp.text("None").setStyle(fontStyle().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER));
 
+        List<Boolean> notifyclinicalGeneticist = Lists.newArrayList();
+        for (ReportableVariant reportableVariant: report.reportableVariants()) {
+            if (reportableVariant.notifyClinicalGeneticist()) {
+                notifyclinicalGeneticist.add(true);
+            }
+        }
+
         if (report.germlineReportingChoice().equals(LimsGermlineReportingChoice.ALL) || report.germlineReportingChoice()
-                .equals(LimsGermlineReportingChoice.ACTIONABLE_ONLY)) {
-            return cmp.verticalList(cmp.text("Somatic Variants").setStyle(sectionHeaderStyle()),
+                .equals(LimsGermlineReportingChoice.ACTIONABLE_ONLY) && notifyclinicalGeneticist.size() > 0) {
+            return cmp.verticalList(cmp.text("Variants").setStyle(sectionHeaderStyle()),
                     cmp.verticalGap(HEADER_TO_TABLE_VERTICAL_GAP),
                     table,
                     cmp.verticalGap(15),
@@ -94,7 +105,7 @@ public abstract class FindingsPage {
                             cmp.text("#").setStyle(fontStyle()).setWidth(2),
                             cmp.text(geneticus).setStyle(fontStyle().setFontSize(8))));
         } else {
-            return cmp.verticalList(cmp.text("Somatic Variants").setStyle(sectionHeaderStyle()),
+            return cmp.verticalList(cmp.text("Variants").setStyle(sectionHeaderStyle()),
                     cmp.verticalGap(HEADER_TO_TABLE_VERTICAL_GAP),
                     table,
                     cmp.verticalGap(15),
