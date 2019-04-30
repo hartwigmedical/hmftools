@@ -1,15 +1,11 @@
-package com.hartwig.hmftools.patientreporter.germline;
+package com.hartwig.hmftools.patientreporter.variants.germline;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.io.reader.LineReader;
 
 import org.apache.logging.log4j.LogManager;

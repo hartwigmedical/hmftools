@@ -1,6 +1,8 @@
-package com.hartwig.hmftools.patientreporter.variants;
+package com.hartwig.hmftools.patientreporter.variants.somatic;
 
 import static org.junit.Assert.assertEquals;
+
+import com.hartwig.hmftools.patientreporter.variants.somatic.MicrosatelliteAnalyzer;
 
 import org.junit.Test;
 

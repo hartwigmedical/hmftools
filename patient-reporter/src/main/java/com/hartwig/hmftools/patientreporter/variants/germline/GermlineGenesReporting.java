@@ -1,7 +1,6 @@
-package com.hartwig.hmftools.patientreporter.germline;
+package com.hartwig.hmftools.patientreporter.variants.germline;
 
 import java.util.Map;
-import java.util.Set;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;

@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.patientreporter.germline;
+package com.hartwig.hmftools.patientreporter.variants.germline;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -8,6 +8,8 @@ import java.io.IOException;
 import java.util.List;
 
 import com.google.common.io.Resources;
+import com.hartwig.hmftools.patientreporter.variants.germline.BachelorFile;
+import com.hartwig.hmftools.patientreporter.variants.germline.GermlineVariant;
 
 import org.junit.Test;
 

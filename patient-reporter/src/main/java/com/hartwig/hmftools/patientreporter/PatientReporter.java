@@ -32,14 +32,14 @@ import com.hartwig.hmftools.patientreporter.actionability.ClinicalTrialFactory;
 import com.hartwig.hmftools.patientreporter.actionability.ReportableEvidenceItemFactory;
 import com.hartwig.hmftools.patientreporter.copynumber.CopyNumberAnalysis;
 import com.hartwig.hmftools.patientreporter.copynumber.CopyNumberAnalyzer;
-import com.hartwig.hmftools.patientreporter.germline.FilterGermlineVariants;
-import com.hartwig.hmftools.patientreporter.germline.GermlineVariant;
+import com.hartwig.hmftools.patientreporter.variants.germline.FilterGermlineVariants;
+import com.hartwig.hmftools.patientreporter.variants.germline.GermlineVariant;
 import com.hartwig.hmftools.patientreporter.structural.SvAnalysis;
 import com.hartwig.hmftools.patientreporter.structural.SvAnalyzer;
 import com.hartwig.hmftools.patientreporter.variants.ReportableVariant;
 import com.hartwig.hmftools.patientreporter.variants.ReportableVariantAnalyzer;
-import com.hartwig.hmftools.patientreporter.variants.SomaticVariantAnalysis;
-import com.hartwig.hmftools.patientreporter.variants.SomaticVariantAnalyzer;
+import com.hartwig.hmftools.patientreporter.variants.somatic.SomaticVariantAnalysis;
+import com.hartwig.hmftools.patientreporter.variants.somatic.SomaticVariantAnalyzer;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

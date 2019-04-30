@@ -19,8 +19,8 @@ import com.hartwig.hmftools.patientreporter.actionability.DrupActionabilityModel
 import com.hartwig.hmftools.patientreporter.actionability.DrupActionabilityModelFactory;
 import com.hartwig.hmftools.patientreporter.genepanel.GeneModel;
 import com.hartwig.hmftools.patientreporter.genepanel.GeneModelFactory;
-import com.hartwig.hmftools.patientreporter.germline.GermlineGenesReporting;
-import com.hartwig.hmftools.patientreporter.germline.GermlineGenesReportingFile;
+import com.hartwig.hmftools.patientreporter.variants.germline.GermlineGenesReporting;
+import com.hartwig.hmftools.patientreporter.variants.germline.GermlineGenesReportingFile;
 import com.hartwig.hmftools.patientreporter.structural.SvAnalyzer;
 
 import org.jetbrains.annotations.NotNull;

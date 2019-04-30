@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.patientreporter.germline;
+package com.hartwig.hmftools.patientreporter.variants.germline;
 
 import java.util.List;
 import java.util.Map;

@@ -1,12 +1,9 @@
 package com.hartwig.hmftools.patientreporter.variants;
 
-import java.util.List;
-
 import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.variant.AllelicDepth;
 import com.hartwig.hmftools.common.variant.Clonality;
 import com.hartwig.hmftools.common.variant.Hotspot;
-import com.hartwig.hmftools.patientreporter.germline.GermlineVariant;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;

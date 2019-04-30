@@ -1,10 +1,12 @@
-package com.hartwig.hmftools.patientreporter.germline;
+package com.hartwig.hmftools.patientreporter.variants.germline;
 
 import static org.junit.Assert.*;
 
 import java.io.IOException;
 
 import com.google.common.io.Resources;
+import com.hartwig.hmftools.patientreporter.variants.germline.GermlineGenesReporting;
+import com.hartwig.hmftools.patientreporter.variants.germline.GermlineGenesReportingFile;
 
 import org.junit.Test;
 
