@@ -88,7 +88,7 @@ abstract class PatientReporter {
                 somaticVariantAnalysis.variantsToReport(), lims.germlineReportingChoice(tumorSample));
 
         final List<ReportableVariant> reportableVariants =
-                ReportableVariantAnalyzer.toReportableSomaticVariants(somaticVariantAnalysis.variantsToReport(),
+                ReportableVariantAnalyzer.toReportableVariants(somaticVariantAnalysis.variantsToReport(),
                         somaticVariantAnalysis.driverCatalog(),
                         sequencedReportData().panelGeneModel().geneDriverCategoryMap(),
                         sequencedReportData().panelGeneModel().drupActionableGenes(),
