@@ -35,8 +35,8 @@ public final class GermlineGenesReportingFile {
 
             if (parts.length == 2) {
                 String gene = parts[0].trim();
-                String classification = parts[1].trim();
-                switch (classification) {
+                String classificationGene = parts[1].trim();
+                switch (classificationGene) {
                     case "true":
                         germlineGenesMap.put(gene, true);
                         break;
