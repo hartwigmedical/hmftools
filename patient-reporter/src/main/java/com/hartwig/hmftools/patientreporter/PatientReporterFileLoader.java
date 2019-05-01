@@ -87,11 +87,11 @@ public final class PatientReporterFileLoader {
                 .fromVCFFile(sample, vcfPath.toString());
     }
 
-    @Nullable
+    @NotNull
     static List<GermlineVariant> loadPassedGermlineVariants(@NotNull String runDirectory, @NotNull String sample) throws IOException {
         String bachelorDirectory = runDirectory + File.separator + BACHELOR_DIRECTORY;
         if (!BachelorFile.hasBachelorRun(bachelorDirectory, sample)) {
-            return null;
+            throw new IllegalStateException("Cannot generate patient report without bachelor data.");
         } else {
             String bachelorFile = BachelorFile.findBachelorFilePath(bachelorDirectory, sample);
             LOGGER.debug(" Using {} as input for bachelor", bachelorFile);

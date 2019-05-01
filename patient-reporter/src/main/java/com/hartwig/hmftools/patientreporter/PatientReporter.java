@@ -222,23 +222,18 @@ abstract class PatientReporter {
 
         LOGGER.info("Loading germline variants...");
         List<GermlineVariant> variants = PatientReporterFileLoader.loadPassedGermlineVariants(runDirectory, sample);
-        if (variants != null) {
-            LOGGER.info(" " + variants.size() + " PASS germline variants loaded for sample " + sample);
+        LOGGER.info(" " + variants.size() + " PASS germline variants loaded for sample " + sample);
 
-            LimsGermlineReportingChoice germlineChoice = baseReportData().limsModel().germlineReportingChoice(sample);
-            if (germlineChoice == LimsGermlineReportingChoice.UNKNOWN) {
-                LOGGER.info(" No germline reporting choice known. No germline variants will be reported!");
-                return Lists.newArrayList();
-            } else {
-                return FilterGermlineVariants.filterGermlineVariantsForReporting(variants,
-                        sequencedReportData().germlineGenesReporting(),
-                        sequencedReportData().panelGeneModel().geneDriverCategoryMap(),
-                        copyNumberAnalysis.exomeGeneCopyNumbers(),
-                        somaticVariantAnalysis.variantsToReport());
-            }
-        } else {
-            LOGGER.warn(" Could not load germline variants. Probably bachelor hasn't been run yet!");
+        LimsGermlineReportingChoice germlineChoice = baseReportData().limsModel().germlineReportingChoice(sample);
+        if (germlineChoice == LimsGermlineReportingChoice.UNKNOWN) {
+            LOGGER.info(" No germline reporting choice known. No germline variants will be reported!");
             return Lists.newArrayList();
+        } else {
+            return FilterGermlineVariants.filterGermlineVariantsForReporting(variants,
+                    sequencedReportData().germlineGenesReporting(),
+                    sequencedReportData().panelGeneModel().geneDriverCategoryMap(),
+                    copyNumberAnalysis.exomeGeneCopyNumbers(),
+                    somaticVariantAnalysis.variantsToReport());
         }
     }
 
