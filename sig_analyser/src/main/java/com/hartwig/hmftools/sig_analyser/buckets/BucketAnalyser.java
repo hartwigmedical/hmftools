@@ -1748,6 +1748,9 @@ public class BucketAnalyser {
         if(validCalc && sigOptim.hasChanged())
         {
             copyVector(sigOptim.getFittedRatios(), newBucketRatios);
+
+            FIXME: needs to be converted to a percentage from absolute range
+
             topBucketGroup.setBucketRatioRanges(sigOptim.getRatioRanges());
 
             final List<Integer> newBuckets = sigOptim.getNewBuckets();

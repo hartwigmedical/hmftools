@@ -416,9 +416,9 @@ public class SigOptimiser
         }
         else
         {
-            initVector(mRangesHigh, DEFAULT_SIG_RATIO_RANGE_PERCENT);
-            initVector(mRangesLow, DEFAULT_SIG_RATIO_RANGE_PERCENT);
-            initVector(mCalcRanges, DEFAULT_SIG_RATIO_RANGE_PERCENT);
+            initVector(mRangesHigh, 0);
+            initVector(mRangesLow, 0);
+            initVector(mCalcRanges, 0);
             copyVector(mStartRatios, mRangeMeanRatios);
         }
 

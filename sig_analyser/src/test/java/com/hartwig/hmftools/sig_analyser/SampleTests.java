@@ -60,7 +60,7 @@ public class SampleTests
         sample.setElevatedBucketCounts(elevCounts, noiseCounts);
 
         allocCounts = sample.getPotentialElevCounts(bucketRatios, requiredBuckets, ratioRanges);
-        assertEquals(120.0, sumVector(allocCounts));
+        assertEquals(100.0, sumVector(allocCounts)); // perfect allocation skips boosting allocs with noise
 
         // test again with one ratio being the limiting factor
         for(int i = 0;i < bucketCount; ++i)
@@ -84,6 +84,91 @@ public class SampleTests
         assertEquals(10 + 10/3.0, allocCounts[0], 0.001);
         assertEquals(20 + 20/3.0, allocCounts[1], 0.001);
 
+        // finally test with ratio ranges
+        for (int i = 0; i < bucketCount; ++i)
+        {
+            ratioRanges[i] = 0.05;
+        }
+
+        bucketRatios[0] = 0.06;
+        bucketRatios[1] = 0.15;
+        bucketRatios[2] = 0.35;
+        bucketRatios[3] = 0.38;
+
+        allocCounts = sample.getPotentialElevCounts(bucketRatios, requiredBuckets, ratioRanges);
+        assertEquals(100.0, sumVector(allocCounts));
+    }
+
+    @Test
+    public void testAllocations()
+    {
+        MAX_NOISE_ALLOC_PERCENT = 0.2; // max noise of 20% of the total var count
+
+        SampleData sample = new SampleData(0);
+
+        int bucketCount = 4;
+        double[] counts = { 100, 200, 300, 400 };
+        double[] elevCounts = counts;
+        double[] noiseCounts = new double[bucketCount];
+
+        double noisePerBucket = 20;
+        List<Integer> requiredBuckets = Lists.newArrayList();
+
+        for (int i = 0; i < bucketCount; ++i)
+        {
+            requiredBuckets.add(i);
+            noiseCounts[i] = noisePerBucket;
+        }
+
+        sample.setBucketCounts(counts);
+        sample.setElevatedBucketCounts(elevCounts, noiseCounts);
+
+        // first test perfect allocation, with no noise or ratio ranges
+        double[] bucketRatios = { 0.1, 0.2, 0.3, 0.4 };
+        double[] ratioRanges = new double[bucketCount];
+
+        double[] allocCounts = sample.getPotentialElevCounts(bucketRatios, requiredBuckets, ratioRanges);
+        assertEquals(1000.0, sumVector(allocCounts));
+
+        double allocTotal = sample.allocateBucketCounts(allocCounts, 0.5);
+        assertEquals(1000.0, allocTotal);
+        assertEquals(1000.0, sample.getAllocatedCount());
+        assertEquals(1.00, sample.getAllocPercent());
+        assertEquals(0.0, sample.getAllocNoise());
+
+        // remove allocation then try again with ratio and ranges to cover counts exactly
+        sample.clearAllocations(true);
+
+        // now test with imperfect ratios and use of noise to bolster allocation
+        bucketRatios[0] = 0.2;
+        bucketRatios[1] = 0.4;
+        bucketRatios[2] = 0.3;
+        bucketRatios[3] = 0.1;
+
+        allocCounts = sample.getPotentialElevCounts(bucketRatios, requiredBuckets, ratioRanges);
+        double potentialAllocTotal = sumVector(allocCounts);
+        assertEquals(550.0, potentialAllocTotal);
+
+        allocTotal = sample.allocateBucketCounts(allocCounts, 0.5);
+        assertEquals(allocTotal, potentialAllocTotal, 0.01);
+        assertEquals(520.0, sample.getAllocatedCount());
+        assertEquals(0.52, sample.getAllocPercent());
+        assertEquals(30.0, sample.getAllocNoise());
+
+        // finally test with ratio ranges
+        for (int i = 0; i < bucketCount; ++i)
+        {
+            ratioRanges[i] = 0.05;
+        }
+
+        sample.clearAllocations(true);
+
+        allocCounts = sample.getPotentialElevCounts(bucketRatios, requiredBuckets, ratioRanges);
+        potentialAllocTotal = sumVector(allocCounts);
+        // assertEquals(1000.0, sumVector(allocCounts));
+
+        allocTotal = sample.allocateBucketCounts(allocCounts, 0.5);
+        assertEquals(allocTotal, potentialAllocTotal, 0.01);
     }
 
 }

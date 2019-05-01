@@ -10,6 +10,7 @@ import static com.hartwig.hmftools.sig_analyser.common.DataUtils.greaterThan;
 import static com.hartwig.hmftools.sig_analyser.common.DataUtils.initVector;
 import static com.hartwig.hmftools.sig_analyser.common.DataUtils.lessThan;
 import static com.hartwig.hmftools.sig_analyser.common.DataUtils.sumVector;
+import static com.hartwig.hmftools.sig_analyser.common.DataUtils.sumVectors;
 import static com.hartwig.hmftools.sig_analyser.common.DataUtils.vectorMultiply;
 import static com.hartwig.hmftools.sig_analyser.buckets.BucketGroup.ratioRange;
 
@@ -269,11 +270,6 @@ public class SampleData
 
             if(minAllocNoNoise == 0 || allocNoNoise < minAllocNoNoise)
                 minAllocNoNoise = allocNoNoise;
-
-            if(Double.isNaN(minAllocNoNoise))
-            {
-                break;
-            }
         }
 
         double[] bestAllocCounts = new double[bucketRatios.length];
@@ -287,35 +283,44 @@ public class SampleData
         // eg if maxNoise = 20 but this group is only asking to alloc 50 of 100 total counts, then only 10 of noise can be allocated
         double maxNoiseAllocation = min(mMaxNoiseTotal - currentNoiseTotal, minAllocNoNoise/countsTotal * mMaxNoiseTotal);
 
+        if(minAllocNoNoise >= mUnallocTotal)
+        {
+            // special case where no noise is required to allocate remaining counts, so don't over-allocate purely to noise
+            minAlloc = minAllocNoNoise;
+            maxNoiseAllocation = 0;
+        }
+
         // cap by the actual unallocated before working out allocation
         minAlloc = capValue(minAlloc, 0, countsTotal + maxNoiseAllocation);
 
         // if noise needs to be allocated, do this proportionally by ratio amongst the buckets which need it
-        List<Double> bucketWithNoiseRatios = Lists.newArrayList();
+        double[] bucketWithNoiseRatios = new double[requiredBuckets.size()];
 
-        for(int i = 0; i < requiredBuckets.size(); ++i)
+        if(maxNoiseAllocation > 0)
         {
-            Integer bucket = requiredBuckets.get(i);
-            bucketWithNoiseRatios.add(0.0);
-
-            double ratio = ratioRange(bucketRatios, ratioRanges, bucket, false);
-            double allocCount = minAlloc * ratio;
-
-            if(allocCount == 0)
-                continue;
-
-            double noiseCount = useUnallocated ? max(mNoiseCounts[bucket] - mAllocNoiseCounts[bucket], 0) : mNoiseCounts[bucket];
-
-            if(greaterThan(allocCount, sampleCounts[bucket] + noiseCount))
-                allocCount = sampleCounts[bucket] + noiseCount; // shouldn't happen since should have determined above
-
-            if(noiseCount > 0 && sampleCounts[bucket] < allocCount)
+            for (int i = 0; i < requiredBuckets.size(); ++i)
             {
-                bucketWithNoiseRatios.set(i, ratio);
+                Integer bucket = requiredBuckets.get(i);
+
+                double ratio = ratioRange(bucketRatios, ratioRanges, bucket, false);
+                double allocCount = minAlloc * ratio;
+
+                if (allocCount == 0)
+                    continue;
+
+                double noiseCount = useUnallocated ? max(mNoiseCounts[bucket] - mAllocNoiseCounts[bucket], 0) : mNoiseCounts[bucket];
+
+                if (greaterThan(allocCount, sampleCounts[bucket] + noiseCount))
+                    allocCount = sampleCounts[bucket] + noiseCount; // shouldn't happen since should have determined above
+
+                if (noiseCount > 0 && sampleCounts[bucket] < allocCount)
+                {
+                    bucketWithNoiseRatios[i] = ratio;
+                }
             }
         }
 
-        double noiseRatioTotal = bucketWithNoiseRatios.stream().mapToDouble(x -> x).sum();
+        double noiseRatioTotal = sumVector(bucketWithNoiseRatios);
 
         double noiseAlloc = 0;
         for(int i = 0; i < requiredBuckets.size(); ++i)
@@ -330,9 +335,9 @@ public class SampleData
             double noiseCount = useUnallocated ? max(mNoiseCounts[bucket] - mAllocNoiseCounts[bucket], 0) : mNoiseCounts[bucket];
 
             // allocate remaining noise proportionally by bucket ratio
-            double noiseRatio = bucketWithNoiseRatios.get(i);
+            double noiseRatio = bucketWithNoiseRatios[i];
             if(noiseRatio > 0)
-                noiseCount = noiseRatio / noiseRatioTotal * maxNoiseAllocation;
+                noiseCount = min(noiseRatio / noiseRatioTotal * maxNoiseAllocation, noiseCount);
 
             if(noiseCount + noiseAlloc > maxNoiseAllocation)
             {
@@ -340,7 +345,7 @@ public class SampleData
             }
 
             if(greaterThan(allocCount, sampleCounts[bucket] + noiseCount))
-                allocCount = sampleCounts[bucket] + noiseCount; // shouldn't happen since should have determined above
+                allocCount = sampleCounts[bucket] + noiseCount; // check cannot exceed actual + permitted noise
 
             bestAllocCounts[bucket] = allocCount;
 
@@ -369,7 +374,7 @@ public class SampleData
             double unallocNoise = max(mNoiseCounts[i] - mAllocNoiseCounts[i], 0);
 
             // the total allocated to noise across all buckets cannot exceed a factor of the sample total
-            if(unallocNoise + noiseTotal > mVarTotal * MAX_NOISE_ALLOC_PERCENT)
+            if(unallocNoise + noiseTotal > mMaxNoiseTotal)
             {
                 unallocNoise = max(mMaxNoiseTotal - noiseTotal, 0);
             }
@@ -392,7 +397,7 @@ public class SampleData
 
         if(lessThan(reductionFactor, 1))
         {
-            // assumption is that the counts are in proportion (eg if generated off
+            // assumption is that the counts are in proportion (eg if generated off ratios)
             allocatedCount *= reductionFactor;
             vectorMultiply(counts, reductionFactor);
         }
