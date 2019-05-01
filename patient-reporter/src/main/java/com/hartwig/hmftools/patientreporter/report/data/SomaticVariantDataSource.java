@@ -40,8 +40,7 @@ public final class SomaticVariantDataSource {
     }
 
     @NotNull
-    public static JRDataSource fromVariants(@NotNull List<ReportableVariant> reportableVariants, boolean hasReliablePurityFit,
-            LimsGermlineReportingChoice germlineReportingChoice) {
+    public static JRDataSource fromVariants(@NotNull List<ReportableVariant> reportableVariants, boolean hasReliablePurityFit) {
         final DRDataSource variantDataSource = new DRDataSource(GENE_FIELD.getName(),
                 VARIANT_FIELD.getName(),
                 IMPACT_FIELD.getName(),
@@ -58,8 +57,7 @@ public final class SomaticVariantDataSource {
                 geneSuffix += "*";
             }
 
-            if (variant.notifyClinicalGeneticist() && (germlineReportingChoice == LimsGermlineReportingChoice.ACTIONABLE_ONLY
-                    || germlineReportingChoice == LimsGermlineReportingChoice.ALL)) {
+            if (variant.notifyClinicalGeneticist()) {
                 geneSuffix += "#";
             }
 

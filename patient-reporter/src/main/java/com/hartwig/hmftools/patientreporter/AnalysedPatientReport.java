@@ -52,9 +52,6 @@ public abstract class AnalysedPatientReport implements PatientReport {
     public abstract ChordAnalysis chordAnalysis();
 
     @NotNull
-    public abstract LimsGermlineReportingChoice germlineReportingChoice();
-
-    @NotNull
     public abstract List<GeneCopyNumber> geneCopyNumbers();
 
     @NotNull

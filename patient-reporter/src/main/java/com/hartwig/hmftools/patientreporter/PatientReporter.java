@@ -80,15 +80,16 @@ abstract class PatientReporter {
 
         final SomaticVariantAnalysis somaticVariantAnalysis = analyzeSomaticVariants(run, copyNumberAnalysis, patientTumorLocation);
 
-        final List<GermlineVariant> germlineVariantsForReporting = analyzeGermlineVariants(run, copyNumberAnalysis, somaticVariantAnalysis);
+        final List<GermlineVariant> germlineVariantsToReport = analyzeGermlineVariants(run, copyNumberAnalysis, somaticVariantAnalysis);
 
         final List<ReportableVariant> reportableVariants =
                 ReportableVariantAnalyzer.mergeSomaticAndGermlineVariants(somaticVariantAnalysis.variantsToReport(),
                         somaticVariantAnalysis.driverCatalog(),
                         sequencedReportData().panelGeneModel().geneDriverCategoryMap(),
                         sequencedReportData().panelGeneModel().drupActionableGenes(),
-                        germlineVariantsForReporting,
-                        sequencedReportData().germlineGenesReporting());
+                        germlineVariantsToReport,
+                        sequencedReportData().germlineGenesReporting(),
+                        lims.germlineReportingChoice(tumorSample));
 
         final SvAnalysis svAnalysis = analyzeStructuralVariants(copyNumberAnalysis, patientTumorLocation, svAnalyzerModel());
 
@@ -96,7 +97,7 @@ abstract class PatientReporter {
 
         LOGGER.info("Printing analysis results:");
         LOGGER.info(" Somatic variants to report : " + somaticVariantAnalysis.variantsToReport().size());
-        LOGGER.info(" Germline variants to report: " + germlineVariantsForReporting.size());
+        LOGGER.info(" Germline variants to report: " + germlineVariantsToReport.size());
         LOGGER.info("  Total number of reportable variants: " + reportableVariants.size());
         LOGGER.info(" Microsatellite Indels per Mb: " + somaticVariantAnalysis.microsatelliteIndelsPerMb());
         LOGGER.info(" Tumor mutational load: " + somaticVariantAnalysis.tumorMutationalLoad());
@@ -135,7 +136,6 @@ abstract class PatientReporter {
                 somaticVariantAnalysis.tumorMutationalLoad(),
                 somaticVariantAnalysis.tumorMutationalBurden(),
                 chordAnalysis,
-                lims.germlineReportingChoice(tumorSample),
                 copyNumberAnalysis.reportableGeneCopyNumbers(),
                 svAnalysis.reportableFusions(),
                 svAnalysis.reportableDisruptions(),

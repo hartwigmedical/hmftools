@@ -36,10 +36,10 @@ public class ReportableVariantAnalyzerTest {
 
         List<ReportableVariant> reportableVariants = Lists.newArrayList();
         for (EnrichedSomaticVariant variant : variantsToReport) {
-
             DriverCatalog catalog = ReportableVariantAnalyzer.catalogEntryForVariant(driverCatalog, variant.gene());
 
-            reportableVariants.add(ReportableVariantAnalyzer.fromSomaticVariant(variant).isDrupActionable(drupActionableGenes.contains(variant.gene()))
+            reportableVariants.add(ReportableVariantAnalyzer.fromSomaticVariant(variant)
+                    .isDrupActionable(drupActionableGenes.contains(variant.gene()))
                     .driverCategory(driverCategoryMap.get(variant.gene()))
                     .driverLikelihood(catalog != null ? catalog.driverLikelihood() : null)
                     .notifyClinicalGeneticist(false)
@@ -58,22 +58,22 @@ public class ReportableVariantAnalyzerTest {
 
     @Test
     public void mergeSomaticAndGermlineVariant() {
-        List<EnrichedSomaticVariant> variantsToReport = Lists.newArrayList(PatientReporterTestFactory.createTestEnrichedSomaticVariantBuilder().gene(TSG).build());
+        List<EnrichedSomaticVariant> variantsToReport =
+                Lists.newArrayList(PatientReporterTestFactory.createTestEnrichedSomaticVariantBuilder().gene(TSG).build());
         List<DriverCatalog> driverCatalog = Lists.newArrayList(PatientReporterTestFactory.createTestDriverCatalog().build());
         Map<String, DriverCategory> driverCategoryMap = PatientReporterTestFactory.createTestDriverCategoryMap();
         Set<String> drupActionableGenes = Sets.newHashSet(ONCOGENE, TSG);
 
-        List<GermlineVariant> filteredGermlineVariants =  createTestGermlineVariantsONCOGene();
+        List<GermlineVariant> filteredGermlineVariants = createTestGermlineVariantsONCOGene();
         GermlineGenesReporting germlineGenesreporting = PatientReporterTestFactory.createTestGermlineGenesReporting();
-
 
         List<ReportableVariant> reportableVariants = Lists.newArrayList();
         for (EnrichedSomaticVariant variant : variantsToReport) {
 
             DriverCatalog catalog = ReportableVariantAnalyzer.catalogEntryForVariant(driverCatalog, variant.gene());
 
-
-            reportableVariants.add(ReportableVariantAnalyzer.fromSomaticVariant(variant).isDrupActionable(drupActionableGenes.contains(variant.gene()))
+            reportableVariants.add(ReportableVariantAnalyzer.fromSomaticVariant(variant)
+                    .isDrupActionable(drupActionableGenes.contains(variant.gene()))
                     .driverCategory(driverCategoryMap.get(variant.gene()))
                     .driverLikelihood(catalog != null ? catalog.driverLikelihood() : null)
                     .notifyClinicalGeneticist(false)
@@ -81,7 +81,8 @@ public class ReportableVariantAnalyzerTest {
         }
 
         for (GermlineVariant germlineVariant : filteredGermlineVariants) {
-            reportableVariants.add(ReportableVariantAnalyzer.fromGermlineVariant(germlineVariant).isDrupActionable(drupActionableGenes.contains(germlineVariant.gene()))
+            reportableVariants.add(ReportableVariantAnalyzer.fromGermlineVariant(germlineVariant)
+                    .isDrupActionable(drupActionableGenes.contains(germlineVariant.gene()))
                     .driverCategory(driverCategoryMap.get(germlineVariant.gene()))
                     .driverLikelihood(null)
                     .notifyClinicalGeneticist(germlineGenesreporting.genesToNotifyClinicalGeneticist(germlineVariant.gene()))
@@ -103,10 +104,10 @@ public class ReportableVariantAnalyzerTest {
         assertTrue(reportableVariants.get(2).biallelic());
     }
 
-
     @NotNull
     private static List<GermlineVariant> createTestGermlineVariantsONCOGene() {
-        GermlineVariant germlineVariant1 = PatientReporterTestFactory.createTestGermlineVariantBuilder().gene(ONCOGENE).biallelic(true).build();
+        GermlineVariant germlineVariant1 =
+                PatientReporterTestFactory.createTestGermlineVariantBuilder().gene(ONCOGENE).biallelic(true).build();
         GermlineVariant germlineVariant2 = PatientReporterTestFactory.createTestGermlineVariantBuilder().gene(TSG).biallelic(true).build();
         return Lists.newArrayList(germlineVariant1, germlineVariant2);
     }

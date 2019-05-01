@@ -8,6 +8,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
+import com.hartwig.hmftools.common.lims.LimsGermlineReportingChoice;
 import com.hartwig.hmftools.common.variant.Clonality;
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
 import com.hartwig.hmftools.common.variant.Hotspot;
@@ -26,7 +27,7 @@ public final class ReportableVariantAnalyzer {
     public static List<ReportableVariant> mergeSomaticAndGermlineVariants(@NotNull List<EnrichedSomaticVariant> variantsReport,
             @NotNull List<DriverCatalog> driverCatalog, @NotNull Map<String, DriverCategory> driverCategoryPerGene,
             @NotNull Set<String> drupActionableGenes, List<GermlineVariant> filteredGermlineVariants,
-            @NotNull GermlineGenesReporting germlineGenesReporting) {
+            @NotNull GermlineGenesReporting germlineGenesReporting, @NotNull LimsGermlineReportingChoice germlineReportingChoice) {
         List<ReportableVariant> reportableVariants = Lists.newArrayList();
         for (EnrichedSomaticVariant variant : variantsReport) {
             DriverCatalog catalog = catalogEntryForVariant(driverCatalog, variant.gene());
@@ -38,11 +39,14 @@ public final class ReportableVariantAnalyzer {
                     .build());
         }
 
+        boolean wantsToBeNotified = germlineReportingChoice == LimsGermlineReportingChoice.ALL
+                || germlineReportingChoice == LimsGermlineReportingChoice.ACTIONABLE_ONLY;
         for (GermlineVariant germlineVariant : filteredGermlineVariants) {
             reportableVariants.add(fromGermlineVariant(germlineVariant).isDrupActionable(drupActionableGenes.contains(germlineVariant.gene()))
                     .driverCategory(driverCategoryPerGene.get(germlineVariant.gene()))
                     .driverLikelihood(null)
-                    .notifyClinicalGeneticist(germlineGenesReporting.genesToNotifyClinicalGeneticist(germlineVariant.gene()))
+                    .notifyClinicalGeneticist(
+                            wantsToBeNotified && germlineGenesReporting.genesToNotifyClinicalGeneticist(germlineVariant.gene()))
                     .build());
 
         }
