@@ -150,6 +150,12 @@ public final class PatientReporterTestFactory {
     }
 
     @NotNull
+    public static GermlineReportingModel createTestEmptyGermlineGenesReporting() {
+        Map<String, Boolean> germlineGenesReportingMap = Maps.newHashMap();
+        return GermlineReportingModelTestFactory.buildFromMap(germlineGenesReportingMap);
+    }
+
+    @NotNull
     public static Map<String, DriverCategory> createTestDriverCategoryMap() {
         Map<String, DriverCategory> driverCategoryMapMatch = Maps.newHashMap();
         driverCategoryMapMatch.put(ONCOGENE, DriverCategory.ONCO);

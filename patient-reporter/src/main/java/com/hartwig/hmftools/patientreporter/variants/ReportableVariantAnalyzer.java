@@ -23,6 +23,7 @@ public final class ReportableVariantAnalyzer {
     private ReportableVariantAnalyzer() {
     }
 
+    @VisibleForTesting
     @NotNull
     public static List<ReportableVariant> mergeSomaticAndGermlineVariants(@NotNull List<EnrichedSomaticVariant> variantsReport,
             @NotNull List<DriverCatalog> driverCatalog, @NotNull Map<String, DriverCategory> driverCategoryPerGene,

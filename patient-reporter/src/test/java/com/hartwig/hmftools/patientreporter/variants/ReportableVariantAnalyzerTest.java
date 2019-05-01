@@ -12,6 +12,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
+import com.hartwig.hmftools.common.lims.LimsGermlineReportingChoice;
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
 import com.hartwig.hmftools.patientreporter.PatientReporterTestFactory;
 import com.hartwig.hmftools.patientreporter.variants.germline.GermlineReportingModel;
@@ -34,17 +35,15 @@ public class ReportableVariantAnalyzerTest {
         Map<String, DriverCategory> driverCategoryMap = PatientReporterTestFactory.createTestDriverCategoryMap();
         Set<String> drupActionableGenes = Sets.newHashSet(ONCOGENE, TSG);
 
-        List<ReportableVariant> reportableVariants = Lists.newArrayList();
-        for (EnrichedSomaticVariant variant : variantsToReport) {
-            DriverCatalog catalog = ReportableVariantAnalyzer.catalogEntryForVariant(driverCatalog, variant.gene());
+        GermlineReportingModel germlineGenesreportingModel = PatientReporterTestFactory.createTestEmptyGermlineGenesReporting();
 
-            reportableVariants.add(ReportableVariantAnalyzer.fromSomaticVariant(variant)
-                    .isDrupActionable(drupActionableGenes.contains(variant.gene()))
-                    .driverCategory(driverCategoryMap.get(variant.gene()))
-                    .driverLikelihood(catalog != null ? catalog.driverLikelihood() : null)
-                    .notifyClinicalGeneticist(false)
-                    .build());
-        }
+
+        List<ReportableVariant> reportableVariants = ReportableVariantAnalyzer.mergeSomaticAndGermlineVariants(variantsToReport,
+                driverCatalog,
+                driverCategoryMap,
+                drupActionableGenes,
+                Lists.newArrayList(),
+                germlineGenesreportingModel, LimsGermlineReportingChoice.ALL);
 
         assertEquals(2, reportableVariants.size());
         assertEquals(ONCOGENE, reportableVariants.get(0).gene());
@@ -57,7 +56,7 @@ public class ReportableVariantAnalyzerTest {
     }
 
     @Test
-    public void mergeSomaticAndGermlineVariant() {
+    public void mergeSomaticAndGermlineVariantWithNotifyGermline() {
         List<EnrichedSomaticVariant> variantsToReport =
                 Lists.newArrayList(PatientReporterTestFactory.createTestEnrichedSomaticVariantBuilder().gene(TSG).build());
         List<DriverCatalog> driverCatalog = Lists.newArrayList(PatientReporterTestFactory.createTestDriverCatalog().build());
@@ -67,28 +66,12 @@ public class ReportableVariantAnalyzerTest {
         List<GermlineVariant> filteredGermlineVariants = createTestGermlineVariantsONCOGene();
         GermlineReportingModel germlineGenesreportingModel = PatientReporterTestFactory.createTestGermlineGenesReporting();
 
-        List<ReportableVariant> reportableVariants = Lists.newArrayList();
-        for (EnrichedSomaticVariant variant : variantsToReport) {
-
-            DriverCatalog catalog = ReportableVariantAnalyzer.catalogEntryForVariant(driverCatalog, variant.gene());
-
-            reportableVariants.add(ReportableVariantAnalyzer.fromSomaticVariant(variant)
-                    .isDrupActionable(drupActionableGenes.contains(variant.gene()))
-                    .driverCategory(driverCategoryMap.get(variant.gene()))
-                    .driverLikelihood(catalog != null ? catalog.driverLikelihood() : null)
-                    .notifyClinicalGeneticist(false)
-                    .build());
-        }
-
-        for (GermlineVariant germlineVariant : filteredGermlineVariants) {
-            reportableVariants.add(ReportableVariantAnalyzer.fromGermlineVariant(germlineVariant)
-                    .isDrupActionable(drupActionableGenes.contains(germlineVariant.gene()))
-                    .driverCategory(driverCategoryMap.get(germlineVariant.gene()))
-                    .driverLikelihood(null)
-                    .notifyClinicalGeneticist(germlineGenesreportingModel.notifyAboutGene(germlineVariant.gene()))
-                    .build());
-
-        }
+        List<ReportableVariant> reportableVariants = ReportableVariantAnalyzer.mergeSomaticAndGermlineVariants(variantsToReport,
+                driverCatalog,
+                driverCategoryMap,
+                drupActionableGenes,
+                filteredGermlineVariants,
+                germlineGenesreportingModel, LimsGermlineReportingChoice.ALL);
 
         assertEquals(3, reportableVariants.size());
         assertEquals(TSG, reportableVariants.get(0).gene());
@@ -97,6 +80,38 @@ public class ReportableVariantAnalyzerTest {
 
         assertEquals(ONCOGENE, reportableVariants.get(1).gene());
         assertTrue(reportableVariants.get(1).notifyClinicalGeneticist());
+        assertTrue(reportableVariants.get(1).biallelic());
+
+        assertEquals(TSG, reportableVariants.get(2).gene());
+        assertFalse(reportableVariants.get(2).notifyClinicalGeneticist());
+        assertTrue(reportableVariants.get(2).biallelic());
+    }
+
+    @Test
+    public void mergeSomaticAndGermlineVariantWithoutNotifyGermline() {
+        List<EnrichedSomaticVariant> variantsToReport =
+                Lists.newArrayList(PatientReporterTestFactory.createTestEnrichedSomaticVariantBuilder().gene(TSG).build());
+        List<DriverCatalog> driverCatalog = Lists.newArrayList(PatientReporterTestFactory.createTestDriverCatalog().build());
+        Map<String, DriverCategory> driverCategoryMap = PatientReporterTestFactory.createTestDriverCategoryMap();
+        Set<String> drupActionableGenes = Sets.newHashSet(ONCOGENE, TSG);
+
+        List<GermlineVariant> filteredGermlineVariants = createTestGermlineVariantsONCOGene();
+        GermlineReportingModel germlineGenesreportingModel = PatientReporterTestFactory.createTestGermlineGenesReporting();
+
+        List<ReportableVariant> reportableVariants = ReportableVariantAnalyzer.mergeSomaticAndGermlineVariants(variantsToReport,
+                driverCatalog,
+                driverCategoryMap,
+                drupActionableGenes,
+                filteredGermlineVariants,
+                germlineGenesreportingModel, LimsGermlineReportingChoice.NONE);
+
+        assertEquals(3, reportableVariants.size());
+        assertEquals(TSG, reportableVariants.get(0).gene());
+        assertFalse(reportableVariants.get(0).notifyClinicalGeneticist());
+        assertTrue(reportableVariants.get(0).biallelic());
+
+        assertEquals(ONCOGENE, reportableVariants.get(1).gene());
+        assertFalse(reportableVariants.get(1).notifyClinicalGeneticist());
         assertTrue(reportableVariants.get(1).biallelic());
 
         assertEquals(TSG, reportableVariants.get(2).gene());
