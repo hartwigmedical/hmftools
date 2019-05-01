@@ -11,6 +11,7 @@ import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.variant.Clonality;
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
 import com.hartwig.hmftools.common.variant.Hotspot;
+import com.hartwig.hmftools.patientreporter.variants.germline.GermlineGenesReporting;
 import com.hartwig.hmftools.patientreporter.variants.germline.GermlineVariant;
 
 import org.jetbrains.annotations.NotNull;
@@ -25,7 +26,7 @@ public final class ReportableVariantAnalyzer {
     public static List<ReportableVariant> mergeSomaticAndGermlineVariants(@NotNull List<EnrichedSomaticVariant> variantsReport,
             @NotNull List<DriverCatalog> driverCatalog, @NotNull Map<String, DriverCategory> driverCategoryPerGene,
             @NotNull Set<String> drupActionableGenes, List<GermlineVariant> filteredGermlineVariants,
-            @NotNull Map<String, Boolean> germlineGenesToNotifyMap) {
+            @NotNull GermlineGenesReporting germlineGenesReporting) {
         List<ReportableVariant> reportableVariants = Lists.newArrayList();
         for (EnrichedSomaticVariant variant : variantsReport) {
             DriverCatalog catalog = catalogEntryForVariant(driverCatalog, variant.gene());
@@ -41,7 +42,7 @@ public final class ReportableVariantAnalyzer {
             reportableVariants.add(fromGermlineVariant(germlineVariant).isDrupActionable(drupActionableGenes.contains(germlineVariant.gene()))
                     .driverCategory(driverCategoryPerGene.get(germlineVariant.gene()))
                     .driverLikelihood(null)
-                    .notifyClinicalGeneticist(germlineGenesToNotifyMap.get(germlineVariant.gene()))
+                    .notifyClinicalGeneticist(germlineGenesReporting.genesToNotifyClinicalGeneticist(germlineVariant.gene()))
                     .build());
 
         }

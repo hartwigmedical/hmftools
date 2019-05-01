@@ -21,7 +21,7 @@ public class FilterGermlineVariantsTest {
 
     @Test
     public void checkForGermlineGenesReportedONCO() {
-        Map<String, Boolean> germlineGenesReporting = PatientReporterTestFactory.createTestGermlineGenesReporting();
+        GermlineGenesReporting germlineGenesReporting = PatientReporterTestFactory.createTestGermlineGenesReporting();
         Map<String, DriverCategory> driverCategoryMap = PatientReporterTestFactory.createTestDriverCategoryMap();
 
         List<GeneCopyNumber> geneCopyNumbers = Lists.newArrayList();
@@ -38,7 +38,7 @@ public class FilterGermlineVariantsTest {
 
     @Test
     public void checkForGermlineGenesReportedTSG() {
-        Map<String, Boolean> germlineGenesReporting = PatientReporterTestFactory.createTestGermlineGenesReporting();
+        GermlineGenesReporting germlineGenesReporting = PatientReporterTestFactory.createTestGermlineGenesReporting();
         Map<String, DriverCategory> driverCategoryMap = PatientReporterTestFactory.createTestDriverCategoryMap();
 
         List<GermlineVariant> germlineVariantsMatch = createTestGermlineVariantsTSGGene(true);

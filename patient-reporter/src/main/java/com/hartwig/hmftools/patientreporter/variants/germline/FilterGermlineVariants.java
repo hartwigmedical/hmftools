@@ -19,12 +19,11 @@ public final class FilterGermlineVariants {
 
     @NotNull
     public static List<GermlineVariant> filterGermlineVariantsForReporting(List<GermlineVariant> germlineVariants,
-            @NotNull Map<String, Boolean> germlineGenesReporting, @NotNull Map<String, DriverCategory> driverCategoryPerGeneMap,
+            @NotNull GermlineGenesReporting germlineGenesReporting, @NotNull Map<String, DriverCategory> driverCategoryPerGeneMap,
             @NotNull List<GeneCopyNumber> allGeneCopyNumbers, @NotNull List<EnrichedSomaticVariant> variantsToReport) {
         List<GermlineVariant> filteredGermlineVariant = Lists.newArrayList();
 
-        Set<String> reportingGermlineGenes = germlineGenesReporting.keySet();
-
+        Set<String> reportingGermlineGenes = germlineGenesReporting.reportableGermlineGenes();
         for (GermlineVariant germlineVariant : germlineVariants) {
             assert germlineVariant.passFilter();
 
