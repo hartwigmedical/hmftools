@@ -18,60 +18,61 @@ import java.util.Locale;
 import java.util.Optional;
 
 import static com.hartwig.hmftools.patientreporter.PatientReporterTestUtil.testBaseReportData;
-import static org.junit.Assert.assertNotNull;
 
 public class CFReportWriterTest {
 
-    private static final boolean WRITE_TO_PDF = true;
-    private static final boolean TIMESTAMP_FILES = true;
+    private static final boolean WRITE_TO_PDF = false;
+    private static final boolean TIMESTAMP_FILES = false;
 
     private static final String REPORT_BASE_DIR = System.getProperty("user.home") + File.separator + "hmf" + File.separator + "tmp";
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd-MMM-yyyy", Locale.ENGLISH);
 
     @Test
     public void canGeneratePatientReportForCOLO829() throws IOException {
-        String filename = WRITE_TO_PDF ? getReportFilePath("hmf_test_sequence_report.pdf") : null;
-
         AnalysedPatientReport colo829Report = ExampleAnalysisTestFactory.buildCOLO829();
-        new CFReportWriter().writeAnalysedPatientReport(colo829Report, filename);
+
+        CFReportWriter writer = new CFReportWriter();
+        writer.setWriteToFile(WRITE_TO_PDF);
+        writer.writeAnalysedPatientReport(colo829Report, getReportFilePath("hmf_test_sequence_report.pdf"));
     }
 
     @Test
     public void canGeneratePatientReportForCompletelyFilledInReport() throws IOException {
-        String filename = WRITE_TO_PDF ? getReportFilePath("hmf_full_test_sequence_report.pdf") : null;
-
         AnalysedPatientReport patientReport = ExampleAnalysisTestFactory.buildAnalysisWithAllTablesFilledIn();
-        new CFReportWriter().writeAnalysedPatientReport(patientReport, filename);
+
+        CFReportWriter writer = new CFReportWriter();
+        writer.setWriteToFile(WRITE_TO_PDF);
+        writer.writeAnalysedPatientReport(patientReport, getReportFilePath("hmf_full_test_sequence_report.pdf"));
     }
 
     @Test
     public void canGenerateLowTumorPercentageReport() throws IOException {
-        String filename = WRITE_TO_PDF ? getReportFilePath("hmf_low_tumor_percentage_report.pdf") : null;
-        generateQCFailCPCTReport(0.1, null, QCFailReason.LOW_TUMOR_PERCENTAGE, filename);
+        generateQCFailCPCTReport(0.1, null, QCFailReason.LOW_TUMOR_PERCENTAGE,
+                getReportFilePath("hmf_low_tumor_percentage_report.pdf"));
     }
 
     @Test
     public void canGenerateLowDNAYieldReport() throws IOException {
-        String filename = WRITE_TO_PDF ? getReportFilePath("hmf_low_dna_yield_report.pdf") : null;
-        generateQCFailCPCTReport(0.6, null, QCFailReason.LOW_DNA_YIELD, filename);
+        generateQCFailCPCTReport(0.6, null, QCFailReason.LOW_DNA_YIELD,
+                getReportFilePath("hmf_low_dna_yield_report.pdf"));
     }
 
     @Test
     public void canGeneratePostDNAIsolationFailReport() throws IOException {
-        String filename = WRITE_TO_PDF ? getReportFilePath("hmf_post_dna_isolation_fail_report.pdf") : null;
-        generateQCFailCPCTReport(0.6, null, QCFailReason.POST_ANALYSIS_FAIL, filename);
+        generateQCFailCPCTReport(0.6, null, QCFailReason.POST_ANALYSIS_FAIL,
+                getReportFilePath("hmf_post_dna_isolation_fail_report.pdf"));
 
     }
 
     @Test
     public void canGenerateLowMolecularTumorPercentage() throws IOException {
-        String filename = WRITE_TO_PDF ? getReportFilePath("hmf_low_molecular_tumor_percentage_report.pdf") : null;
-        generateQCFailCPCTReport(null, 0.15, QCFailReason.SHALLOW_SEQ_LOW_PURITY, filename);
+        generateQCFailCPCTReport(null, 0.15, QCFailReason.SHALLOW_SEQ_LOW_PURITY,
+                getReportFilePath("hmf_low_molecular_tumor_percentage_report.pdf"));
     }
 
     @NotNull
     private static void generateQCFailCPCTReport(@Nullable Double pathologyTumorPercentage,
-                                                                @Nullable Double shallowSeqPurity, @NotNull QCFailReason reason, @Nullable String filename) throws IOException {
+                                                                @Nullable Double shallowSeqPurity, @NotNull QCFailReason reason, @NotNull String filename) throws IOException {
         SampleReport sampleReport = ImmutableSampleReport.of("CPCT02991111T",
                 "A1",
                 "A2",
@@ -95,8 +96,9 @@ public class CFReportWriterTest {
                 testBaseReportData().signaturePath(),
                 testBaseReportData().logoRVAPath());
 
-        CFReportWriter reportWriter = new CFReportWriter();
-        reportWriter.writeQCFailReport(patientReport, filename);
+        CFReportWriter writer = new CFReportWriter();
+        writer.setWriteToFile(WRITE_TO_PDF);
+        writer.writeQCFailReport(patientReport, filename);
 
     }
 

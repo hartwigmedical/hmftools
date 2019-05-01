@@ -26,6 +26,8 @@ public class CFReportWriter implements ReportWriter {
 
     private static final Logger LOGGER = LogManager.getLogger(CFReportWriter.class);
 
+    private boolean writeToFile = true;
+
     @Override
     public void writeAnalysedPatientReport(@NotNull final AnalysedPatientReport report, @NotNull final String outputFilePath) throws IOException {
 
@@ -51,7 +53,11 @@ public class CFReportWriter implements ReportWriter {
         }, outputFilePath);
     }
 
-    private static void writeReport(@NotNull final SampleReport sampleReport, @NotNull ReportChapter[] chapters, @Nullable String outputFilePath) throws IOException {
+    public void setWriteToFile(boolean writeToFile) {
+        this.writeToFile = writeToFile;
+    }
+
+    private void writeReport(@NotNull final SampleReport sampleReport, @NotNull ReportChapter[] chapters, @NotNull String outputFilePath) throws IOException {
 
         // Initialize report with metadata
         final Document doc = initializeReport(outputFilePath);
@@ -99,10 +105,10 @@ public class CFReportWriter implements ReportWriter {
      * Initialize report document with relevant metadata
      */
     @NotNull
-    private static Document initializeReport(@Nullable final String outputFilePath) throws IOException {
+    private Document initializeReport(@NotNull final String outputFilePath) throws IOException {
 
         PdfWriter writer;
-        if (outputFilePath != null) {
+        if (writeToFile) {
 
             // Prevent overwriting existing files
             if (Files.exists(new File(outputFilePath).toPath())) {
