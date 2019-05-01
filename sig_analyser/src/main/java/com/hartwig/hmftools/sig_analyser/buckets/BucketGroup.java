@@ -20,6 +20,9 @@ import java.util.Map;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.numeric.Doubles;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 public class BucketGroup implements Comparable<BucketGroup> {
 
     // keyed by a bucket pairing
@@ -63,6 +66,8 @@ public class BucketGroup implements Comparable<BucketGroup> {
     public static String BG_TYPE_MAJOR = "MAJOR";
     public static String BG_TYPE_MINOR = "MINOR";
     public static String BG_TYPE_UNIQUE = "UNIQUE";
+
+    private static final Logger LOGGER = LogManager.getLogger(BucketGroup.class);
 
     public BucketGroup(int id)
     {
@@ -218,10 +223,13 @@ public class BucketGroup implements Comparable<BucketGroup> {
         mInitialSampleIds.add(sampleId);
     }
 
-    public void addSample(int sampleId, double[] bucketCounts)
+    public void addSample(int sampleId, final double[] bucketCounts)
     {
         if(mSampleIds.contains(sampleId))
+        {
+            LOGGER.warn("BG({}) attempting to add sample({}) again", mId, sampleId);
             return;
+        }
 
         initialise(bucketCounts);
 
@@ -238,14 +246,18 @@ public class BucketGroup implements Comparable<BucketGroup> {
         }
 
         mSampleIds.add(sampleId);
-        mSampleCounts.add(bucketCounts);
+
+        // take a copy in case the caller retains and changes its counts
+        double[] newBucketCounts = new double[bucketCounts.length];
+        copyVector(bucketCounts, newBucketCounts);
+        mSampleCounts.add(newBucketCounts);
 
         double sampleTotal = sumVector(bucketCounts);
         mSampleCountTotals.add(sampleTotal);
         mSampleCountsMap.put(sampleId, sampleTotal);
     }
 
-    public void addSampleCounts(int samIndex, double[] bucketCounts)
+    public void addSampleCounts(int samIndex, final double[] bucketCounts)
     {
         // add to existing counts for an existing sample
         if(samIndex < 0 || samIndex >= mSampleIds.size())

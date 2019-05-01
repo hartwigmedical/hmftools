@@ -1,0 +1,89 @@
+package com.hartwig.hmftools.sig_analyser;
+
+import static com.hartwig.hmftools.sig_analyser.buckets.BaConfig.MAX_NOISE_ALLOC_PERCENT;
+import static com.hartwig.hmftools.sig_analyser.common.DataUtils.convertToPercentages;
+import static com.hartwig.hmftools.sig_analyser.common.DataUtils.sumVector;
+
+import static junit.framework.TestCase.assertEquals;
+
+import java.util.List;
+
+import com.google.common.collect.Lists;
+import com.hartwig.hmftools.sig_analyser.buckets.SampleData;
+
+import org.junit.Test;
+
+public class SampleTests
+{
+    @Test
+    public void testPotentialAllocations()
+    {
+        MAX_NOISE_ALLOC_PERCENT = 0.2; // max noise of 20% of the total var count
+
+        SampleData sample = new SampleData(0);
+
+        int bucketCount = 4;
+        double[] counts = {10, 20, 30, 40};
+        double[] elevCounts = counts;
+
+        double[] noiseCounts = new double[bucketCount];
+
+        sample.setBucketCounts(counts);
+        sample.setElevatedBucketCounts(elevCounts, noiseCounts);
+
+        // first test perfect allocation, with no noise or ratio ranges
+        double[] bucketRatios = {0.1, 0.2, 0.3, 0.4};
+        double[] ratioRanges = new double[bucketCount];
+
+        // just first 2 buckets
+        List<Integer> requiredBuckets = Lists.newArrayList();
+        requiredBuckets.add(0);
+        requiredBuckets.add(1);
+
+        double[] allocCounts = sample.getPotentialElevCounts(bucketRatios, requiredBuckets, ratioRanges);
+        assertEquals(30.0, sumVector(allocCounts));
+
+        requiredBuckets.add(2);
+        requiredBuckets.add(3);
+
+        allocCounts = sample.getPotentialElevCounts(bucketRatios, requiredBuckets, ratioRanges);
+        assertEquals(100.0, sumVector(allocCounts));
+
+        // now test with noise in each bucket
+
+        double noisePerBucket = 10;
+        for(int i = 0;i < bucketCount; ++i)
+        {
+            noiseCounts[i] = noisePerBucket;
+        }
+
+        sample.setElevatedBucketCounts(elevCounts, noiseCounts);
+
+        allocCounts = sample.getPotentialElevCounts(bucketRatios, requiredBuckets, ratioRanges);
+        assertEquals(120.0, sumVector(allocCounts));
+
+        // test again with one ratio being the limiting factor
+        for(int i = 0;i < bucketCount; ++i)
+        {
+            bucketRatios[i] = 0.25;
+        }
+
+        // bucket 1 limits the others (4 x 10 out of 100), so noise is also limited to 40% of the max 20 available
+        allocCounts = sample.getPotentialElevCounts(bucketRatios, requiredBuckets, ratioRanges);
+        assertEquals(18.0 + 3 * 20, sumVector(allocCounts));
+        assertEquals(18.0, allocCounts[0]);
+
+        // test again with 2 buckets limited and competing for the same noise
+        bucketRatios[0] = 0.2;
+        bucketRatios[1] = 0.4;
+        bucketRatios[2] = 0.2;
+        bucketRatios[3] = 0.2;
+
+        allocCounts = sample.getPotentialElevCounts(bucketRatios, requiredBuckets, ratioRanges);
+        assertEquals(10.0 + 20 + 10 + 2 * 15, sumVector(allocCounts)); // all of buckets 1 & 2, full noise, plus ratio-limited for 3 & 5
+        assertEquals(10 + 10/3.0, allocCounts[0], 0.001);
+        assertEquals(20 + 20/3.0, allocCounts[1], 0.001);
+
+    }
+
+}

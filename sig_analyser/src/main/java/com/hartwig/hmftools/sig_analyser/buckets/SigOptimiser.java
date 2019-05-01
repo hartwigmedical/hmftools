@@ -264,7 +264,7 @@ public class SigOptimiser
                 sampleSigTotal += allCounts[b];
             }
 
-            if(sampleSigTotal / sample.getTotalCount() > SAMPLE_PURE_SIG_PERCENT)
+            if(sampleSigTotal / sample.getElevatedCount() > SAMPLE_PURE_SIG_PERCENT)
             {
                 mSamples.add(sample);
             }
@@ -272,8 +272,16 @@ public class SigOptimiser
 
         mSampleCount = mSamples.size();
 
-        LOGGER.debug(String.format("grp(%d) has %d pure samples, perc(%.3f) of total(%d)",
-                mGroupId, mSampleCount, mSampleCount/(double)mAllSampleCount, mAllSampleCount));
+        if(mSampleCount == 0)
+        {
+            LOGGER.debug("grp({}) has no pure samples", mGroupId);
+            mIsValid = false;
+        }
+        else
+        {
+            LOGGER.debug(String.format("grp(%d) has %d pure samples, perc(%.3f) of total(%d)",
+                    mGroupId, mSampleCount, mSampleCount / (double) mAllSampleCount, mAllSampleCount));
+        }
     }
 
     public void setRatioRangePercentile(double value ) { mRatioRangePercentile = value; }
@@ -292,6 +300,8 @@ public class SigOptimiser
         }
 
         mBucketCount = refRatios.length;
+
+        // no restriction to pure samples only
         mAllSampleCount = samples.size();
 
         mAllSamples = Lists.newArrayList();

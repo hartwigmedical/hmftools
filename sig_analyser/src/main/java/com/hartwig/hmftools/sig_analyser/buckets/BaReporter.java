@@ -254,13 +254,11 @@ public class BaReporter
             else
                 ++tinyMatchCount;
 
-            double noiseAllocPerc = sample.getAllocNoise() / sample.getNoiseTotal();
-
             LOGGER.debug(String.format("sample(%d: %s) %s allocated: groups(%d) buckets(%d unalloc=%d) count(total=%s bg=%s elev=%s alloc=%.3f noise=%.2f of %s) cancer(%s) effects(%d: %s)",
                     sampleId, sample.getSampleName(), fullyAllocated ? "fully" : (partiallyAllocated ? "partially" : "tiny"),
                     sample.getBucketGroups().size(), samBucketList.size(), sample.getUnallocBuckets().size(),
                     sizeToStr(sample.getTotalCount()), sizeToStr(bgTotal),
-                    sizeToStr(sample.getElevatedCount()), sample.getAllocPercent(), noiseAllocPerc, sizeToStr(sample.getNoiseTotal()),
+                    sizeToStr(sample.getElevatedCount()), sample.getAllocPercent(), sample.getNoisePerc(), sizeToStr(sample.getMaxNoise()),
                     cancerType, effectsCount, effects));
         }
 

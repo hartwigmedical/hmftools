@@ -2322,14 +2322,12 @@ public class BucketAnalyser {
 
             mConfig.logSample(sample.Id);
 
-            List<BucketGroup> sampleGroupList = sample.getBucketGroups();
-
             double prevAllocPerc = (sample.getAllocatedCount() + sample.getBackgroundCount()) / sample.getTotalCount();
-            int prevGroupCount = sampleGroupList.size();
 
             // keep track of the groups allocated during discovery in case the final fit is worse
             prevGroupList.clear();
-            prevGroupList.addAll(sampleGroupList);
+            prevGroupList.addAll(sample.getBucketGroups());
+            int prevGroupCount = prevGroupList.size();
 
             sample.clearAllocations(false);
 
@@ -2420,14 +2418,15 @@ public class BucketAnalyser {
             if(mConfig.UseRatioRanges)
             {
                 // tweak each group in turn to allocate the max possible using ratio ranges
-                for(final BucketGroup bucketGroup : sampleGroupList)
+                for(final BucketGroup bucketGroup : sample.getBucketGroups())
                 {
                     final double[] ratioRanges = bucketGroup.getRatioRanges();
                     final double[] bucketRatios = bucketGroup.getBucketRatios();
 
                     int samIndex = bucketGroup.getSampleCount() - 1;
 
-                    if(bucketGroup.getSampleIds().get(samIndex) != sample.Id)
+                    // the current sample is likely to be the last one added
+                    if(samIndex >= bucketGroup.getSampleIds().size() || bucketGroup.getSampleIds().get(samIndex) != sample.Id)
                     {
                         samIndex = bucketGroup.getSampleIndex(sample.Id);
                     }
@@ -2457,8 +2456,8 @@ public class BucketAnalyser {
                     allocResult, prevAllocPerc, sample.getAllocPercent(), sizeToStr(sample.getAllocatedCount()), sizeToStr(sampleCount),
                     sizeToStr(sample.getAllocNoise()), sample.getNoisePerc(), sample.getNoiseOfTotal()));
 
-            if(!sampleGroupList.isEmpty())
-                sampleGroupCounts.add((double)sampleGroupList.size());
+            if(!sample.getBucketGroups().isEmpty())
+                sampleGroupCounts.add((double)sample.getBucketGroups().size());
         }
 
         LOGGER.debug(String.format("sig-optim stats: instances(%d) avgIters(%.1f) avgImprovePerc(%.3f)",
@@ -2774,6 +2773,8 @@ public class BucketAnalyser {
                 sampleCountsList.add(sampleCounts);
             }
 
+            // now run the sig-optimiser for all samples in this group (not restricted to pure samples any longer)
+            // and take the ratio ranges from this routine before the final sample allocation adjustment
             SigOptimiser sigOptim = new SigOptimiser(bucketGroup.getId(), groupSamples, sampleCountsList, bucketGroup.getBucketRatios());
             sigOptim.setCacheBucketInfo(true);
             sigOptim.setRatioRangePercentile(0.9);
