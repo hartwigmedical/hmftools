@@ -2,6 +2,7 @@ package com.hartwig.hmftools.patientreporter.cfreport.chapters;
 
 import com.hartwig.hmftools.patientreporter.QCFailReport;
 import com.itextpdf.layout.Document;
+import com.itextpdf.layout.element.Paragraph;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
@@ -29,6 +30,7 @@ public class QCFailChapter implements ReportChapter {
 
     @Override
     public void render(@NotNull Document reportDocument) throws IOException {
+        reportDocument.add(new Paragraph("FAIL REPORT"));
         //@TODO Use content from this.report
     }
 
