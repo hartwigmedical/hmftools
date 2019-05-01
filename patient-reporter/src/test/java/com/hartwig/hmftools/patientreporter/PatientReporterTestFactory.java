@@ -16,8 +16,8 @@ import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.common.variant.ImmutableEnrichedSomaticVariant;
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.patientreporter.variants.ImmutableReportableVariant;
-import com.hartwig.hmftools.patientreporter.variants.germline.GermlineGenesReporting;
-import com.hartwig.hmftools.patientreporter.variants.germline.ImmutableGermlineGenesReporting;
+import com.hartwig.hmftools.patientreporter.variants.germline.GermlineReportingModel;
+import com.hartwig.hmftools.patientreporter.variants.germline.GermlineReportingModelTestFactory;
 import com.hartwig.hmftools.patientreporter.variants.germline.ImmutableGermlineVariant;
 
 import org.apache.logging.log4j.util.Strings;
@@ -143,11 +143,11 @@ public final class PatientReporterTestFactory {
     }
 
     @NotNull
-    public static GermlineGenesReporting createTestGermlineGenesReporting() {
+    public static GermlineReportingModel createTestGermlineGenesReporting() {
         Map<String, Boolean> germlineGenesReportingMap = Maps.newHashMap();
         germlineGenesReportingMap.put(ONCOGENE, true);
         germlineGenesReportingMap.put(TSG, false);
-        return ImmutableGermlineGenesReporting.builder().germlineGenes(germlineGenesReportingMap).build();
+        return GermlineReportingModelTestFactory.buildFromMap(germlineGenesReportingMap);
     }
 
     @NotNull

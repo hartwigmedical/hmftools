@@ -12,18 +12,18 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-public final class GermlineGenesReportingFile {
-    private static final Logger LOGGER = LogManager.getLogger(GermlineGenesReportingFile.class);
+public final class GermlineReportingFile {
+    private static final Logger LOGGER = LogManager.getLogger(GermlineReportingFile.class);
     private static final String SEPARATOR = ",";
 
-    private GermlineGenesReportingFile() {
+    private GermlineReportingFile() {
     }
 
     @NotNull
-    public static GermlineGenesReporting buildFromCsv(@NotNull String germlineGenesCsv) throws IOException {
+    public static GermlineReportingModel buildFromCsv(@NotNull String germlineGenesCsv) throws IOException {
         List<String> linesGermlineGenes = LineReader.build().readLines(new File(germlineGenesCsv).toPath(), line -> line.length() > 0);
 
-        Map<String, Boolean> germlineGenesMap = Maps.newHashMap();
+        Map<String, Boolean> germlineGenesAndNotifyMap = Maps.newHashMap();
 
         for (String line : linesGermlineGenes) {
             String[] parts = line.split(SEPARATOR);
@@ -33,10 +33,10 @@ public final class GermlineGenesReportingFile {
                 String classificationGene = parts[1].trim().toLowerCase();
                 switch (classificationGene) {
                     case "true":
-                        germlineGenesMap.put(gene, true);
+                        germlineGenesAndNotifyMap.put(gene, true);
                         break;
                     case "false":
-                        germlineGenesMap.put(gene, false);
+                        germlineGenesAndNotifyMap.put(gene, false);
                         break;
                     default:
                         LOGGER.warn("Could not interpret classification in germline reporting genes: " + classificationGene);
@@ -46,7 +46,7 @@ public final class GermlineGenesReportingFile {
             }
         }
 
-        return ImmutableGermlineGenesReporting.of(germlineGenesMap);
+        return new GermlineReportingModel(germlineGenesAndNotifyMap);
     }
 }
 

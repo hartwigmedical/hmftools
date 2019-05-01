@@ -10,8 +10,8 @@ import com.hartwig.hmftools.patientreporter.actionability.DrupActionabilityModel
 import com.hartwig.hmftools.patientreporter.actionability.DrupActionabilityModelFactory;
 import com.hartwig.hmftools.patientreporter.genepanel.GeneModel;
 import com.hartwig.hmftools.patientreporter.genepanel.GeneModelFactory;
-import com.hartwig.hmftools.patientreporter.variants.germline.GermlineGenesReporting;
-import com.hartwig.hmftools.patientreporter.variants.germline.GermlineGenesReportingFile;
+import com.hartwig.hmftools.patientreporter.variants.germline.GermlineReportingModel;
+import com.hartwig.hmftools.patientreporter.variants.germline.GermlineReportingFile;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -28,7 +28,7 @@ final class SequencedReportDataLoader {
         final ActionabilityAnalyzer actionabilityAnalyzer = ActionabilityAnalyzer.fromKnowledgebase(knowledgebaseDir);
 
         final DrupActionabilityModel drupActionabilityModel = DrupActionabilityModelFactory.buildFromCsv(drupGeneCsv);
-        final GermlineGenesReporting germlineGenes = GermlineGenesReportingFile.buildFromCsv(germlineGenesCsv);
+        final GermlineReportingModel germlineGenes = GermlineReportingFile.buildFromCsv(germlineGenesCsv);
         final GeneModel panelGeneModel = GeneModelFactory.create(drupActionabilityModel);
 
         return ImmutableSequencedReportData.of(panelGeneModel,

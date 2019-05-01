@@ -19,8 +19,8 @@ import com.hartwig.hmftools.patientreporter.actionability.DrupActionabilityModel
 import com.hartwig.hmftools.patientreporter.actionability.DrupActionabilityModelFactory;
 import com.hartwig.hmftools.patientreporter.genepanel.GeneModel;
 import com.hartwig.hmftools.patientreporter.genepanel.GeneModelFactory;
-import com.hartwig.hmftools.patientreporter.variants.germline.GermlineGenesReporting;
-import com.hartwig.hmftools.patientreporter.variants.germline.GermlineGenesReportingFile;
+import com.hartwig.hmftools.patientreporter.variants.germline.GermlineReportingModel;
+import com.hartwig.hmftools.patientreporter.variants.germline.GermlineReportingFile;
 import com.hartwig.hmftools.patientreporter.structural.SvAnalyzer;
 
 import org.jetbrains.annotations.NotNull;
@@ -71,23 +71,18 @@ public final class PatientReporterTestUtil {
     }
 
     @NotNull
-    public static GermlineGenesReporting testGermlineModel() throws IOException {
-        return GermlineGenesReportingFile.buildFromCsv(GERMLINE_GENES_REPORTING_CSV);
-    }
-
-    @NotNull
     public static SequencedReportData testSequencedReportData() {
         try {
             DrupActionabilityModel drupActionabilityModel = testDrupActionabilityModel();
             GeneModel geneModel = GeneModelFactory.create(drupActionabilityModel);
-            GermlineGenesReporting germlineGenesReporting = testGermlineModel();
+            GermlineReportingModel germlineReportingModel = GermlineReportingFile.buildFromCsv(GERMLINE_GENES_REPORTING_CSV);
             CompoundEnrichment compoundEnrichment = new CompoundEnrichment(HotspotEnrichment.fromHotspotsFile(HOTSPOT_TSV));
 
             return ImmutableSequencedReportData.of(geneModel,
                     testActionabilityAnalyzer(),
                     compoundEnrichment,
                     new IndexedFastaSequenceFile(new File(REF_GENOME_PATH)),
-                    TreeMultimap.create(), germlineGenesReporting);
+                    TreeMultimap.create(), germlineReportingModel);
         } catch (IOException exception) {
             throw new IllegalStateException("Could not generate test sequenced report data: " + exception.getMessage());
         }

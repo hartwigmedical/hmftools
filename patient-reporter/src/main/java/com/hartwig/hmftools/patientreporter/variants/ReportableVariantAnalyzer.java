@@ -12,7 +12,7 @@ import com.hartwig.hmftools.common.lims.LimsGermlineReportingChoice;
 import com.hartwig.hmftools.common.variant.Clonality;
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
 import com.hartwig.hmftools.common.variant.Hotspot;
-import com.hartwig.hmftools.patientreporter.variants.germline.GermlineGenesReporting;
+import com.hartwig.hmftools.patientreporter.variants.germline.GermlineReportingModel;
 import com.hartwig.hmftools.patientreporter.variants.germline.GermlineVariant;
 
 import org.jetbrains.annotations.NotNull;
@@ -27,7 +27,7 @@ public final class ReportableVariantAnalyzer {
     public static List<ReportableVariant> mergeSomaticAndGermlineVariants(@NotNull List<EnrichedSomaticVariant> variantsReport,
             @NotNull List<DriverCatalog> driverCatalog, @NotNull Map<String, DriverCategory> driverCategoryPerGene,
             @NotNull Set<String> drupActionableGenes, List<GermlineVariant> filteredGermlineVariants,
-            @NotNull GermlineGenesReporting germlineGenesReporting, @NotNull LimsGermlineReportingChoice germlineReportingChoice) {
+            @NotNull GermlineReportingModel germlineReportingModel, @NotNull LimsGermlineReportingChoice germlineReportingChoice) {
         List<ReportableVariant> reportableVariants = Lists.newArrayList();
         for (EnrichedSomaticVariant variant : variantsReport) {
             DriverCatalog catalog = catalogEntryForVariant(driverCatalog, variant.gene());
@@ -46,7 +46,7 @@ public final class ReportableVariantAnalyzer {
                     .driverCategory(driverCategoryPerGene.get(germlineVariant.gene()))
                     .driverLikelihood(null)
                     .notifyClinicalGeneticist(
-                            wantsToBeNotified && germlineGenesReporting.genesToNotifyClinicalGeneticist(germlineVariant.gene()))
+                            wantsToBeNotified && germlineReportingModel.genesToNotifyClinicalGeneticist(germlineVariant.gene()))
                     .build());
 
         }

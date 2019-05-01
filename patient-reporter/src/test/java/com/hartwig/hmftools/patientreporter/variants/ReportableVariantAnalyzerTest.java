@@ -14,7 +14,7 @@ import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
 import com.hartwig.hmftools.patientreporter.PatientReporterTestFactory;
-import com.hartwig.hmftools.patientreporter.variants.germline.GermlineGenesReporting;
+import com.hartwig.hmftools.patientreporter.variants.germline.GermlineReportingModel;
 import com.hartwig.hmftools.patientreporter.variants.germline.GermlineVariant;
 
 import org.jetbrains.annotations.NotNull;
@@ -65,7 +65,7 @@ public class ReportableVariantAnalyzerTest {
         Set<String> drupActionableGenes = Sets.newHashSet(ONCOGENE, TSG);
 
         List<GermlineVariant> filteredGermlineVariants = createTestGermlineVariantsONCOGene();
-        GermlineGenesReporting germlineGenesreporting = PatientReporterTestFactory.createTestGermlineGenesReporting();
+        GermlineReportingModel germlineGenesreportingModel = PatientReporterTestFactory.createTestGermlineGenesReporting();
 
         List<ReportableVariant> reportableVariants = Lists.newArrayList();
         for (EnrichedSomaticVariant variant : variantsToReport) {
@@ -85,7 +85,7 @@ public class ReportableVariantAnalyzerTest {
                     .isDrupActionable(drupActionableGenes.contains(germlineVariant.gene()))
                     .driverCategory(driverCategoryMap.get(germlineVariant.gene()))
                     .driverLikelihood(null)
-                    .notifyClinicalGeneticist(germlineGenesreporting.genesToNotifyClinicalGeneticist(germlineVariant.gene()))
+                    .notifyClinicalGeneticist(germlineGenesreportingModel.genesToNotifyClinicalGeneticist(germlineVariant.gene()))
                     .build());
 
         }

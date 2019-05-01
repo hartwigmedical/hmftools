@@ -21,7 +21,7 @@ public class FilterGermlineVariantsTest {
 
     @Test
     public void checkForGermlineGenesReportedONCO() {
-        GermlineGenesReporting germlineGenesReporting = PatientReporterTestFactory.createTestGermlineGenesReporting();
+        GermlineReportingModel germlineReportingModel = PatientReporterTestFactory.createTestGermlineGenesReporting();
         Map<String, DriverCategory> driverCategoryMap = PatientReporterTestFactory.createTestDriverCategoryMap();
 
         List<GeneCopyNumber> geneCopyNumbers = Lists.newArrayList();
@@ -29,7 +29,7 @@ public class FilterGermlineVariantsTest {
 
         List<GermlineVariant> germlineVariants = createTestGermlineVariantsONCOGene();
         List<GermlineVariant> filteredGermlineVariantMatch = FilterGermlineVariants.filterGermlineVariantsForReporting(germlineVariants,
-                germlineGenesReporting,
+                germlineReportingModel,
                 driverCategoryMap,
                 geneCopyNumbers,
                 somaticVariants);
@@ -38,15 +38,14 @@ public class FilterGermlineVariantsTest {
 
     @Test
     public void checkForGermlineGenesReportedTSG() {
-        GermlineGenesReporting germlineGenesReporting = PatientReporterTestFactory.createTestGermlineGenesReporting();
+        GermlineReportingModel germlineReportingModel = PatientReporterTestFactory.createTestGermlineGenesReporting();
         Map<String, DriverCategory> driverCategoryMap = PatientReporterTestFactory.createTestDriverCategoryMap();
 
         List<GermlineVariant> germlineVariantsMatch = createTestGermlineVariantsTSGGene(true);
         List<GeneCopyNumber> geneCopyNumbersMatch = createCopyNumberListForTSG(1);
         List<EnrichedSomaticVariant> variantsMatch = createEnrichedListForGene(TSG);
         List<GermlineVariant> filteredGermlineVariantMatch =
-                FilterGermlineVariants.filterGermlineVariantsForReporting(germlineVariantsMatch,
-                        germlineGenesReporting,
+                FilterGermlineVariants.filterGermlineVariantsForReporting(germlineVariantsMatch, germlineReportingModel,
                         driverCategoryMap,
                         geneCopyNumbersMatch,
                         variantsMatch);
@@ -56,8 +55,7 @@ public class FilterGermlineVariantsTest {
         List<GeneCopyNumber> geneCopyNumbersNonMatchBiallelic = createCopyNumberListForTSG(1);
         List<EnrichedSomaticVariant> variantsNonMatchBiallelic = createEnrichedListForGene(TSG);
         List<GermlineVariant> filteredGermlineVariantNonMatchBiallelic = FilterGermlineVariants.filterGermlineVariantsForReporting(
-                germlineVariantsNonMatchBiallelic,
-                germlineGenesReporting,
+                germlineVariantsNonMatchBiallelic, germlineReportingModel,
                 driverCategoryMap,
                 geneCopyNumbersNonMatchBiallelic,
                 variantsNonMatchBiallelic);
@@ -67,8 +65,7 @@ public class FilterGermlineVariantsTest {
         List<GeneCopyNumber> geneCopyNumbersNonMatchVariant = createCopyNumberListForTSG(1);
         List<EnrichedSomaticVariant> variantsNonMatchVariant = createEnrichedListForGene("AAAA");
         List<GermlineVariant> filteredGermlineVariantNonMatchVariant = FilterGermlineVariants.filterGermlineVariantsForReporting(
-                germlineVariantsNonMatchVariant,
-                germlineGenesReporting,
+                germlineVariantsNonMatchVariant, germlineReportingModel,
                 driverCategoryMap,
                 geneCopyNumbersNonMatchVariant,
                 variantsNonMatchVariant);
@@ -78,8 +75,7 @@ public class FilterGermlineVariantsTest {
         List<GeneCopyNumber> geneCopyNumbersNonMatchCopy = createCopyNumberListForTSG(2);
         List<EnrichedSomaticVariant> variantsNonMatchCopy = createEnrichedListForGene(TSG);
         List<GermlineVariant> filteredGermlineVariantNonMatchCopy = FilterGermlineVariants.filterGermlineVariantsForReporting(
-                germlineVariantsNonMatchCopy,
-                germlineGenesReporting,
+                germlineVariantsNonMatchCopy, germlineReportingModel,
                 driverCategoryMap,
                 geneCopyNumbersNonMatchCopy,
                 variantsNonMatchCopy);
@@ -89,8 +85,7 @@ public class FilterGermlineVariantsTest {
         List<GeneCopyNumber> geneCopyNumbersNonMatch = createCopyNumberListForTSG(2);
         List<EnrichedSomaticVariant> variantsNonMatch = createEnrichedListForGene("AAAA");
         List<GermlineVariant> filteredGermlineVariantNonMatch = FilterGermlineVariants.filterGermlineVariantsForReporting(
-                germlineVariantsNonMatch,
-                germlineGenesReporting,
+                germlineVariantsNonMatch, germlineReportingModel,
                 driverCategoryMap,
                 geneCopyNumbersNonMatch,
                 variantsNonMatch);
@@ -100,8 +95,7 @@ public class FilterGermlineVariantsTest {
         List<GeneCopyNumber> geneCopyNumbersOptionBiallelic = createCopyNumberListForTSG(2);
         List<EnrichedSomaticVariant> variantsOptionBiallelic = createEnrichedListForGene("AAAA");
         List<GermlineVariant> filteredGermlineVariantOptionBiallelic = FilterGermlineVariants.filterGermlineVariantsForReporting(
-                germlineVariantsOptionBiallelic,
-                germlineGenesReporting,
+                germlineVariantsOptionBiallelic, germlineReportingModel,
                 driverCategoryMap,
                 geneCopyNumbersOptionBiallelic,
                 variantsOptionBiallelic);
@@ -111,8 +105,7 @@ public class FilterGermlineVariantsTest {
         List<GeneCopyNumber> geneCopyNumbersOptionVariant = createCopyNumberListForTSG(2);
         List<EnrichedSomaticVariant> variantsOptionVariant = createEnrichedListForGene(TSG);
         List<GermlineVariant> filteredGermlineVariantOptionVariant = FilterGermlineVariants.filterGermlineVariantsForReporting(
-                germlineVariantsOptionVariant,
-                germlineGenesReporting,
+                germlineVariantsOptionVariant, germlineReportingModel,
                 driverCategoryMap,
                 geneCopyNumbersOptionVariant,
                 variantsOptionVariant);
@@ -122,8 +115,7 @@ public class FilterGermlineVariantsTest {
         List<GeneCopyNumber> geneCopyNumbersCopyNumber = createCopyNumberListForTSG(1);
         List<EnrichedSomaticVariant> variantsOptionCopyNumber = createEnrichedListForGene("AAAA");
         List<GermlineVariant> filteredGermlineVariantOptionCopyNumber = FilterGermlineVariants.filterGermlineVariantsForReporting(
-                germlineVariantsOptionCopyNumber,
-                germlineGenesReporting,
+                germlineVariantsOptionCopyNumber, germlineReportingModel,
                 driverCategoryMap,
                 geneCopyNumbersCopyNumber,
                 variantsOptionCopyNumber);
