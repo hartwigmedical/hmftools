@@ -20,6 +20,7 @@ public class HospitalModelTest {
         assertNotNull(hospital);
         assertEquals("CpctPI", HospitalModel.determineRequester("CPCT02010001", hospital, "henk"));
         assertEquals("DrupPI", HospitalModel.determineRequester("DRUP01010001", hospital, "henk"));
+        assertEquals("WidePI", HospitalModel.determineRequester("WIDE01010001", hospital, "henk"));
 
         // Revert to CPCT PI with '*' for DRUP PI & recipients
         final HospitalData hospital2 = hospitalModel.hospitalPerId("02");
@@ -59,8 +60,8 @@ public class HospitalModelTest {
         Map<String, HospitalSampleMapping> hospitalPerIdManual = Maps.newHashMap();
 
         hospitalPerId.put("01",
-                ImmutableHospitalData.of("HOSP1", "CPCT Recip", "DRUP Recip", "Address", "Zip", "City", "CpctPI", "DrupPI"));
-        hospitalPerId.put("02", ImmutableHospitalData.of("HOSP2", "CPCT Recip2", "*", "Address2", "Zip2", "City2", "CpctPI2", "*"));
+                ImmutableHospitalData.of("HOSP1", "CPCT Recip", "DRUP Recip", "WIDE Recip", "Address", "Zip", "City", "CpctPI", "DrupPI", "WidePI"));
+        hospitalPerId.put("02", ImmutableHospitalData.of("HOSP2", "CPCT Recip2", "*", "", "Address2", "Zip2", "City2", "CpctPI2", "*", "WidePI2"));
         hospitalPerIdManual.put("CORE18001224T", ImmutableHospitalSampleMapping.of("HOSP1"));
 
         return ImmutableHospitalModel.of(hospitalPerId, hospitalPerIdManual);

@@ -19,6 +19,9 @@ public abstract class HospitalData {
     public abstract String drupRecipients();
 
     @NotNull
+    public abstract String wideRecipients();
+
+    @NotNull
     public abstract String addressName();
 
     @NotNull
@@ -32,4 +35,7 @@ public abstract class HospitalData {
 
     @NotNull
     public abstract String drupPI();
+
+    @NotNull
+    public abstract String widePI();
 }

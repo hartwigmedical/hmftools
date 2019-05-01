@@ -16,7 +16,7 @@ public final class HospitalModelFactory {
 
     private static final Logger LOGGER = LogManager.getLogger(HospitalModelFactory.class);
 
-    private static final String HOSPITALS_CSV = "hospitals.csv";
+    private static final String HOSPITALS_CSV = "hospitals_pilot.csv";
     private static final String SAMPLE_HOSPITAL_MAPPING_CSV = "sample_hospital_mapping.csv";
 
     private static final int HOSPITAL_ID_COLUMN = 0;
@@ -25,10 +25,12 @@ public final class HospitalModelFactory {
     private static final int CPCT_RECIPIENTS_COLUMN = 4;
     private static final int DRUP_PI_COLUMN = 6;
     private static final int DRUP_RECIPIENTS_COLUMN = 7;
-    private static final int ADDRESS_NAME_COLUMN = 10;
-    private static final int ADDRESS_ZIP_COLUMN = 11;
-    private static final int ADDRESS_CITY_COLUMN = 12;
-    private static final int HOSPITAL_FIELD_COUNT = 13;
+    private static final int WIDE_PI_COLUMN = 9;
+    private static final int WIDE_RECIPIENTS_COLUMN = 10;
+    private static final int ADDRESS_NAME_COLUMN = 13;
+    private static final int ADDRESS_ZIP_COLUMN = 14;
+    private static final int ADDRESS_CITY_COLUMN = 15;
+    private static final int HOSPITAL_FIELD_COUNT = 16;
 
     private static final int SAMPLE_MAPPING_ID_COLUMN = 0;
     private static final int HOSPITAL_MAPPING_COLUMN = 1;
@@ -66,11 +68,13 @@ public final class HospitalModelFactory {
                 HospitalData hospital = ImmutableHospitalData.of(parts[HOSPITAL_COLUMN],
                         parts[CPCT_RECIPIENTS_COLUMN],
                         parts[DRUP_RECIPIENTS_COLUMN],
+                        parts[WIDE_RECIPIENTS_COLUMN],
                         parts[ADDRESS_NAME_COLUMN],
                         parts[ADDRESS_ZIP_COLUMN],
                         parts[ADDRESS_CITY_COLUMN],
                         parts[CPCT_PI_COLUMN],
-                        parts[DRUP_PI_COLUMN]);
+                        parts[DRUP_PI_COLUMN],
+                        parts[WIDE_PI_COLUMN]);
 
                 hospitalPerId.put(parts[HOSPITAL_ID_COLUMN], hospital);
             } else if (parts.length > 0) {

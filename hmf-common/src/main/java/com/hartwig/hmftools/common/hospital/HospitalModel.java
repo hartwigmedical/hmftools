@@ -145,7 +145,7 @@ public abstract class HospitalModel {
             }
             return hospital.drupPI();
         } else if (type == LimsSampleType.WIDE) {
-            return requesterName;
+            return hospital.widePI();
         }
         return Strings.EMPTY;
     }
