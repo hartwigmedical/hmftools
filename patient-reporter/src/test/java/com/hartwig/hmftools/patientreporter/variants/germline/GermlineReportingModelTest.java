@@ -11,6 +11,6 @@ public class GermlineReportingModelTest {
     @Test
     public void returnFalseWhenGeneIsNotKnown() {
         GermlineReportingModel empty = new GermlineReportingModel(Maps.newHashMap());
-        assertFalse(empty.genesToNotifyClinicalGeneticist("DoesNotExist"));
+        assertFalse(empty.notifyAboutGene("DoesNotExist"));
     }
 }

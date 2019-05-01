@@ -28,9 +28,6 @@ public abstract class GermlineVariant implements AllelicDepth {
     @Override
     public abstract int alleleReadCount();
 
-    @NotNull
-    public abstract String germlineStatus();
-
     public abstract double adjustedVAF();
 
     public abstract double adjustedCopyNumber();

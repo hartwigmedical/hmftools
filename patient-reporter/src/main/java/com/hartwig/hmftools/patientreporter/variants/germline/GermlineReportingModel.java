@@ -23,7 +23,7 @@ public class GermlineReportingModel {
         return germlineGenesAndAndNotificationMap.keySet();
     }
 
-    public boolean genesToNotifyClinicalGeneticist(@NotNull String germlineGene) {
+    public boolean notifyAboutGene(@NotNull String germlineGene) {
         Boolean notify = germlineGenesAndAndNotificationMap.get(germlineGene);
         if (notify == null) {
             LOGGER.warn("Requested notification status for a gene that is not amongst set of reportable germline genes: " + germlineGene);

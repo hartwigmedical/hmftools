@@ -46,7 +46,7 @@ public final class ReportableVariantAnalyzer {
                     .driverCategory(driverCategoryPerGene.get(germlineVariant.gene()))
                     .driverLikelihood(null)
                     .notifyClinicalGeneticist(
-                            wantsToBeNotified && germlineReportingModel.genesToNotifyClinicalGeneticist(germlineVariant.gene()))
+                            wantsToBeNotified && germlineReportingModel.notifyAboutGene(germlineVariant.gene()))
                     .build());
 
         }

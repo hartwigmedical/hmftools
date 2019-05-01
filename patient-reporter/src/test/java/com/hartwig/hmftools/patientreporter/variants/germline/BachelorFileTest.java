@@ -29,7 +29,6 @@ public class BachelorFileTest {
         assertEquals("BRCA1", variant.gene());
         assertEquals("c.191G>A", variant.hgvsCodingImpact());
         assertEquals("p.Cys64Tyr", variant.hgvsProteinImpact());
-        assertEquals("HET", variant.germlineStatus());
         assertEquals(20, variant.alleleReadCount());
         assertEquals(90, variant.totalReadCount());
         assertEquals(2.99, variant.adjustedCopyNumber(), EPSILON);

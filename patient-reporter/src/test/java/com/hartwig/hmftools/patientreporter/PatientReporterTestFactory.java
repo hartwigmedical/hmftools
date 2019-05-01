@@ -100,7 +100,6 @@ public final class PatientReporterTestFactory {
                 .hgvsProteinImpact(Strings.EMPTY)
                 .totalReadCount(0)
                 .alleleReadCount(0)
-                .germlineStatus(Strings.EMPTY)
                 .adjustedCopyNumber(0)
                 .adjustedVAF(0)
                 .minorAllelePloidy(1D)

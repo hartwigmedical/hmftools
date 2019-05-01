@@ -48,7 +48,6 @@ public class SomaticVariantAnalyzerTest {
                 .hgvsProteinImpact("p.Ser1982fs")
                 .totalReadCount(112)
                 .alleleReadCount(67)
-                .germlineStatus("HET")
                 .adjustedCopyNumber(3D)
                 .adjustedVAF(1.0)
                 .minorAllelePloidy(1D)

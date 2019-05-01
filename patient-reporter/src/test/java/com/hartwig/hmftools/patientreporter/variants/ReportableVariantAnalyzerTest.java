@@ -85,7 +85,7 @@ public class ReportableVariantAnalyzerTest {
                     .isDrupActionable(drupActionableGenes.contains(germlineVariant.gene()))
                     .driverCategory(driverCategoryMap.get(germlineVariant.gene()))
                     .driverLikelihood(null)
-                    .notifyClinicalGeneticist(germlineGenesreportingModel.genesToNotifyClinicalGeneticist(germlineVariant.gene()))
+                    .notifyClinicalGeneticist(germlineGenesreportingModel.notifyAboutGene(germlineVariant.gene()))
                     .build());
 
         }

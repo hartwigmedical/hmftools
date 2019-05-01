@@ -579,35 +579,6 @@ public final class ExampleAnalysisTestFactory {
                 .build();
 
         return Lists.newArrayList(fusion1, fusion2);
-
-    }
-
-    @NotNull
-    private static List<GermlineVariant> createTestGermlineVariants(@NotNull PurityAdjuster purityAdjuster) {
-        List<GermlineVariant> germlineVariants = Lists.newArrayList();
-
-        int totalReads = 112;
-        int altReads = 67;
-        double adjustedCopyNumber = 3D;
-
-        double adjustedVAF =
-                purityAdjuster.purityAdjustedVAFWithHeterozygousNormal("13", adjustedCopyNumber, (double) altReads / (double) totalReads);
-
-        germlineVariants.add(ImmutableGermlineVariant.builder()
-                .passFilter(true)
-                .gene("BRCA2")
-                .hgvsCodingImpact("c.5946delT")
-                .hgvsProteinImpact("p.Ser1982fs")
-                .totalReadCount(totalReads)
-                .alleleReadCount(altReads)
-                .germlineStatus("HET")
-                .adjustedCopyNumber(adjustedCopyNumber)
-                .adjustedVAF(adjustedVAF)
-                .minorAllelePloidy(1D)
-                .biallelic(false)
-                .build());
-
-        return germlineVariants;
     }
 
     @NotNull
