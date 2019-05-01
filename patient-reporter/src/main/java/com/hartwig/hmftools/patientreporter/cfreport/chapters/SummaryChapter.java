@@ -4,12 +4,9 @@ import com.hartwig.hmftools.common.actionability.ClinicalTrial;
 import com.hartwig.hmftools.common.actionability.EvidenceItem;
 import com.hartwig.hmftools.patientreporter.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.cfreport.MathUtil;
+import com.hartwig.hmftools.patientreporter.cfreport.components.*;
 import com.hartwig.hmftools.patientreporter.cfreport.data.*;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
-import com.hartwig.hmftools.patientreporter.cfreport.components.DataLabel;
-import com.hartwig.hmftools.patientreporter.cfreport.components.InlineBarChart;
-import com.hartwig.hmftools.patientreporter.cfreport.components.LineDivider;
-import com.hartwig.hmftools.patientreporter.cfreport.components.TableUtil;
 import com.itextpdf.layout.Document;
 import com.itextpdf.layout.Style;
 import com.itextpdf.layout.element.Cell;
@@ -55,7 +52,11 @@ public class SummaryChapter implements ReportChapter {
 
     @Override
     public final void render(@NotNull final Document reportDocument) {
-        renderTumorLocationAndType(patientReport, reportDocument);
+
+        reportDocument.add(TumorLocationAndTypeTable.createTumorLocationAndType(
+                patientReport.sampleReport().primaryTumorLocationString(),
+                patientReport.sampleReport().cancerSubTypeString(),
+                getContentWidth()));
 
         // @TODO Replace this fixed text with the patientReport.summaryText method.
         // Return value from that method can be null which is gracefully handled by renderSummaryText :
@@ -72,34 +73,6 @@ public class SummaryChapter implements ReportChapter {
         renderTreatmentIndications(patientReport.tumorSpecificEvidence(), patientReport.clinicalTrials(), reportDocument);
         renderTumorCharacteristics(patientReport, reportDocument);
         renderGenomicAlterations(patientReport, reportDocument);
-    }
-
-    private void renderTumorLocationAndType(@NotNull final AnalysedPatientReport patientReport, @NotNull final Document reportDocument) {
-
-        Div div = new Div();
-        div.setKeepTogether(true);
-        div.setWidth(getContentWidth());
-
-        // Initialize table
-        Table table = new Table(UnitValue.createPercentArray(new float[] {1, 1}));
-        table.setWidth(getContentWidth());
-
-        patientReport.sampleReport().patientTumorLocation();
-
-        table.addCell(TableUtil.getLayoutCell()
-                .add(new Paragraph("PRIMARY TUMOR LOCATION")
-                        .addStyle(ReportResources.subTextStyle())));
-        table.addCell(TableUtil.getLayoutCell()
-                .add(new Paragraph("CANCER SUBTYPE")
-                        .addStyle(ReportResources.subTextStyle())));
-        table.addCell(TableUtil.getLayoutCell()
-                .add(DataLabel.createDataLabel(patientReport.sampleReport().primaryTumorLocationString())));
-        table.addCell(TableUtil.getLayoutCell()
-                .add(DataLabel.createDataLabel(patientReport.sampleReport().cancerSubTypeString())));
-
-        div.add(table);
-        reportDocument.add(div);
-
     }
 
     private void renderSummaryText(@Nullable final String text, @NotNull final Document reportDocument) {
