@@ -23,14 +23,13 @@ public final class ReportableVariantAnalyzer {
     private ReportableVariantAnalyzer() {
     }
 
-    @VisibleForTesting
     @NotNull
-    public static List<ReportableVariant> mergeSomaticAndGermlineVariants(@NotNull List<EnrichedSomaticVariant> variantsReport,
+    public static List<ReportableVariant> mergeSomaticAndGermlineVariants(@NotNull List<EnrichedSomaticVariant> somaticVariantsReport,
             @NotNull List<DriverCatalog> driverCatalog, @NotNull Map<String, DriverCategory> driverCategoryPerGene,
-            @NotNull Set<String> drupActionableGenes, List<GermlineVariant> filteredGermlineVariants,
+            @NotNull Set<String> drupActionableGenes, @NotNull List<GermlineVariant> germlineVariantsToReport,
             @NotNull GermlineReportingModel germlineReportingModel, @NotNull LimsGermlineReportingChoice germlineReportingChoice) {
         List<ReportableVariant> reportableVariants = Lists.newArrayList();
-        for (EnrichedSomaticVariant variant : variantsReport) {
+        for (EnrichedSomaticVariant variant : somaticVariantsReport) {
             DriverCatalog catalog = catalogEntryForVariant(driverCatalog, variant.gene());
 
             reportableVariants.add(fromSomaticVariant(variant).isDrupActionable(drupActionableGenes.contains(variant.gene()))
@@ -42,21 +41,19 @@ public final class ReportableVariantAnalyzer {
 
         boolean wantsToBeNotified = germlineReportingChoice == LimsGermlineReportingChoice.ALL
                 || germlineReportingChoice == LimsGermlineReportingChoice.ACTIONABLE_ONLY;
-        for (GermlineVariant germlineVariant : filteredGermlineVariants) {
+        for (GermlineVariant germlineVariant : germlineVariantsToReport) {
             reportableVariants.add(fromGermlineVariant(germlineVariant).isDrupActionable(drupActionableGenes.contains(germlineVariant.gene()))
                     .driverCategory(driverCategoryPerGene.get(germlineVariant.gene()))
                     .driverLikelihood(null)
-                    .notifyClinicalGeneticist(
-                            wantsToBeNotified && germlineReportingModel.notifyAboutGene(germlineVariant.gene()))
+                    .notifyClinicalGeneticist(wantsToBeNotified && germlineReportingModel.notifyAboutGene(germlineVariant.gene()))
                     .build());
 
         }
         return reportableVariants;
     }
 
-    @VisibleForTesting
     @Nullable
-    public static DriverCatalog catalogEntryForVariant(@NotNull List<DriverCatalog> driverCatalogList, @NotNull String gene) {
+    private static DriverCatalog catalogEntryForVariant(@NotNull List<DriverCatalog> driverCatalogList, @NotNull String gene) {
         for (DriverCatalog entry : driverCatalogList) {
             if (entry.gene().equals(gene)) {
                 return entry;
@@ -65,9 +62,8 @@ public final class ReportableVariantAnalyzer {
         return null;
     }
 
-    @VisibleForTesting
     @NotNull
-    public static ImmutableReportableVariant.Builder fromGermlineVariant(@NotNull GermlineVariant variantGermline) {
+    private static ImmutableReportableVariant.Builder fromGermlineVariant(@NotNull GermlineVariant variantGermline) {
         return ImmutableReportableVariant.builder()
                 .gene(variantGermline.gene())
                 .hgvsCodingImpact(variantGermline.hgvsCodingImpact())
@@ -82,9 +78,8 @@ public final class ReportableVariantAnalyzer {
                 .biallelic(variantGermline.biallelic());
     }
 
-    @VisibleForTesting
     @NotNull
-    public static ImmutableReportableVariant.Builder fromSomaticVariant(@NotNull EnrichedSomaticVariant variant) {
+    private static ImmutableReportableVariant.Builder fromSomaticVariant(@NotNull EnrichedSomaticVariant variant) {
         return ImmutableReportableVariant.builder()
                 .gene(variant.gene())
                 .hgvsCodingImpact(variant.canonicalHgvsCodingImpact())

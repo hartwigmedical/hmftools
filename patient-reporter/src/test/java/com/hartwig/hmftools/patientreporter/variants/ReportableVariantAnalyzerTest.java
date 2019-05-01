@@ -9,13 +9,13 @@ import java.util.Map;
 import java.util.Set;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
-import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.lims.LimsGermlineReportingChoice;
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
 import com.hartwig.hmftools.patientreporter.PatientReporterTestFactory;
 import com.hartwig.hmftools.patientreporter.variants.germline.GermlineReportingModel;
+import com.hartwig.hmftools.patientreporter.variants.germline.GermlineReportingModelTestFactory;
 import com.hartwig.hmftools.patientreporter.variants.germline.GermlineVariant;
 
 import org.jetbrains.annotations.NotNull;
@@ -23,66 +23,63 @@ import org.junit.Test;
 
 public class ReportableVariantAnalyzerTest {
 
-    private static final String ONCOGENE = "ONCO";
-    private static final String TSG = "TSG";
+    private static final String GENE_WITH_NOTIFY = "GENE1";
+    private static final String GENE_WITHOUT_NOTIFY = "GENE2";
 
     @Test
-    public void mergeWithoutGermlineVariant() {
-        EnrichedSomaticVariant variants1 = PatientReporterTestFactory.createTestEnrichedSomaticVariantBuilder().gene(ONCOGENE).build();
-        EnrichedSomaticVariant variants2 = PatientReporterTestFactory.createTestEnrichedSomaticVariantBuilder().gene(TSG).build();
-        List<EnrichedSomaticVariant> variantsToReport = Lists.newArrayList(variants1, variants2);
-        List<DriverCatalog> driverCatalog = Lists.newArrayList(PatientReporterTestFactory.createTestDriverCatalog().build());
-        Map<String, DriverCategory> driverCategoryMap = PatientReporterTestFactory.createTestDriverCategoryMap();
-        Set<String> drupActionableGenes = Sets.newHashSet(ONCOGENE, TSG);
+    public void mergeWithoutGermlineVariantsWithDRUPActionabilityWorks() {
+        EnrichedSomaticVariant variant1 =
+                PatientReporterTestFactory.createTestEnrichedSomaticVariantBuilder().gene(GENE_WITH_NOTIFY).build();
+        EnrichedSomaticVariant variant2 =
+                PatientReporterTestFactory.createTestEnrichedSomaticVariantBuilder().gene(GENE_WITHOUT_NOTIFY).build();
 
-        GermlineReportingModel germlineGenesreportingModel = PatientReporterTestFactory.createTestEmptyGermlineGenesReporting();
-
+        List<EnrichedSomaticVariant> variantsToReport = Lists.newArrayList(variant1, variant2);
+        Set<String> drupActionableGenes = Sets.newHashSet(GENE_WITH_NOTIFY);
 
         List<ReportableVariant> reportableVariants = ReportableVariantAnalyzer.mergeSomaticAndGermlineVariants(variantsToReport,
-                driverCatalog,
-                driverCategoryMap,
+                Lists.newArrayList(),
+                Maps.newHashMap(),
                 drupActionableGenes,
                 Lists.newArrayList(),
-                germlineGenesreportingModel, LimsGermlineReportingChoice.ALL);
+                PatientReporterTestFactory.createTestEmptyGermlineGenesReporting(),
+                LimsGermlineReportingChoice.ALL);
 
         assertEquals(2, reportableVariants.size());
-        assertEquals(ONCOGENE, reportableVariants.get(0).gene());
-        assertFalse(reportableVariants.get(0).notifyClinicalGeneticist());
-        assertTrue(reportableVariants.get(0).biallelic());
 
-        assertEquals(TSG, reportableVariants.get(1).gene());
+        assertEquals(GENE_WITH_NOTIFY, reportableVariants.get(0).gene());
+        assertFalse(reportableVariants.get(0).notifyClinicalGeneticist());
+        assertTrue(reportableVariants.get(0).isDrupActionable());
+
+        assertEquals(GENE_WITHOUT_NOTIFY, reportableVariants.get(1).gene());
         assertFalse(reportableVariants.get(1).notifyClinicalGeneticist());
-        assertTrue(reportableVariants.get(1).biallelic());
+        assertFalse(reportableVariants.get(1).isDrupActionable());
     }
 
     @Test
     public void mergeSomaticAndGermlineVariantWithNotifyGermline() {
         List<EnrichedSomaticVariant> variantsToReport =
-                Lists.newArrayList(PatientReporterTestFactory.createTestEnrichedSomaticVariantBuilder().gene(TSG).build());
-        List<DriverCatalog> driverCatalog = Lists.newArrayList(PatientReporterTestFactory.createTestDriverCatalog().build());
-        Map<String, DriverCategory> driverCategoryMap = PatientReporterTestFactory.createTestDriverCategoryMap();
-        Set<String> drupActionableGenes = Sets.newHashSet(ONCOGENE, TSG);
+                Lists.newArrayList(PatientReporterTestFactory.createTestEnrichedSomaticVariantBuilder().gene(GENE_WITHOUT_NOTIFY).build());
 
-        List<GermlineVariant> filteredGermlineVariants = createTestGermlineVariantsONCOGene();
-        GermlineReportingModel germlineGenesreportingModel = PatientReporterTestFactory.createTestGermlineGenesReporting();
+        List<GermlineVariant> germlineVariantsToReport = createBiallelicGermlineVariantsOnOncoAndTSG();
+        GermlineReportingModel germlineReportingModel = createGermlineReportingModelWithOncoAndTSG();
 
         List<ReportableVariant> reportableVariants = ReportableVariantAnalyzer.mergeSomaticAndGermlineVariants(variantsToReport,
-                driverCatalog,
-                driverCategoryMap,
-                drupActionableGenes,
-                filteredGermlineVariants,
-                germlineGenesreportingModel, LimsGermlineReportingChoice.ALL);
+                Lists.newArrayList(),
+                Maps.newHashMap(),
+                Sets.newHashSet(),
+                germlineVariantsToReport,
+                germlineReportingModel,
+                LimsGermlineReportingChoice.ALL);
 
         assertEquals(3, reportableVariants.size());
-        assertEquals(TSG, reportableVariants.get(0).gene());
+        assertEquals(GENE_WITHOUT_NOTIFY, reportableVariants.get(0).gene());
         assertFalse(reportableVariants.get(0).notifyClinicalGeneticist());
-        assertTrue(reportableVariants.get(0).biallelic());
 
-        assertEquals(ONCOGENE, reportableVariants.get(1).gene());
+        assertEquals(GENE_WITH_NOTIFY, reportableVariants.get(1).gene());
         assertTrue(reportableVariants.get(1).notifyClinicalGeneticist());
         assertTrue(reportableVariants.get(1).biallelic());
 
-        assertEquals(TSG, reportableVariants.get(2).gene());
+        assertEquals(GENE_WITHOUT_NOTIFY, reportableVariants.get(2).gene());
         assertFalse(reportableVariants.get(2).notifyClinicalGeneticist());
         assertTrue(reportableVariants.get(2).biallelic());
     }
@@ -90,41 +87,47 @@ public class ReportableVariantAnalyzerTest {
     @Test
     public void mergeSomaticAndGermlineVariantWithoutNotifyGermline() {
         List<EnrichedSomaticVariant> variantsToReport =
-                Lists.newArrayList(PatientReporterTestFactory.createTestEnrichedSomaticVariantBuilder().gene(TSG).build());
-        List<DriverCatalog> driverCatalog = Lists.newArrayList(PatientReporterTestFactory.createTestDriverCatalog().build());
-        Map<String, DriverCategory> driverCategoryMap = PatientReporterTestFactory.createTestDriverCategoryMap();
-        Set<String> drupActionableGenes = Sets.newHashSet(ONCOGENE, TSG);
+                Lists.newArrayList(PatientReporterTestFactory.createTestEnrichedSomaticVariantBuilder().gene(GENE_WITHOUT_NOTIFY).build());
 
-        List<GermlineVariant> filteredGermlineVariants = createTestGermlineVariantsONCOGene();
-        GermlineReportingModel germlineGenesreportingModel = PatientReporterTestFactory.createTestGermlineGenesReporting();
+        List<GermlineVariant> germlineVariantsToReport = createBiallelicGermlineVariantsOnOncoAndTSG();
+        GermlineReportingModel germlineReportingModel = createGermlineReportingModelWithOncoAndTSG();
 
         List<ReportableVariant> reportableVariants = ReportableVariantAnalyzer.mergeSomaticAndGermlineVariants(variantsToReport,
-                driverCatalog,
-                driverCategoryMap,
-                drupActionableGenes,
-                filteredGermlineVariants,
-                germlineGenesreportingModel, LimsGermlineReportingChoice.NONE);
+                Lists.newArrayList(),
+                Maps.newHashMap(),
+                Sets.newHashSet(),
+                germlineVariantsToReport,
+                germlineReportingModel,
+                LimsGermlineReportingChoice.NONE_ALLOW_FAMILY);
 
         assertEquals(3, reportableVariants.size());
-        assertEquals(TSG, reportableVariants.get(0).gene());
+        assertEquals(GENE_WITHOUT_NOTIFY, reportableVariants.get(0).gene());
         assertFalse(reportableVariants.get(0).notifyClinicalGeneticist());
         assertTrue(reportableVariants.get(0).biallelic());
 
-        assertEquals(ONCOGENE, reportableVariants.get(1).gene());
+        assertEquals(GENE_WITH_NOTIFY, reportableVariants.get(1).gene());
         assertFalse(reportableVariants.get(1).notifyClinicalGeneticist());
         assertTrue(reportableVariants.get(1).biallelic());
 
-        assertEquals(TSG, reportableVariants.get(2).gene());
+        assertEquals(GENE_WITHOUT_NOTIFY, reportableVariants.get(2).gene());
         assertFalse(reportableVariants.get(2).notifyClinicalGeneticist());
         assertTrue(reportableVariants.get(2).biallelic());
     }
 
     @NotNull
-    private static List<GermlineVariant> createTestGermlineVariantsONCOGene() {
-        GermlineVariant germlineVariant1 =
-                PatientReporterTestFactory.createTestGermlineVariantBuilder().gene(ONCOGENE).biallelic(true).build();
-        GermlineVariant germlineVariant2 = PatientReporterTestFactory.createTestGermlineVariantBuilder().gene(TSG).biallelic(true).build();
-        return Lists.newArrayList(germlineVariant1, germlineVariant2);
+    private static GermlineReportingModel createGermlineReportingModelWithOncoAndTSG() {
+        Map<String, Boolean> germlineGenesReportingMap = Maps.newHashMap();
+        germlineGenesReportingMap.put(GENE_WITH_NOTIFY, true);
+        germlineGenesReportingMap.put(GENE_WITHOUT_NOTIFY, false);
+        return GermlineReportingModelTestFactory.buildFromMap(germlineGenesReportingMap);
     }
 
+    @NotNull
+    private static List<GermlineVariant> createBiallelicGermlineVariantsOnOncoAndTSG() {
+        GermlineVariant germlineVariant1 =
+                PatientReporterTestFactory.createTestGermlineVariantBuilder().gene(GENE_WITH_NOTIFY).biallelic(true).build();
+        GermlineVariant germlineVariant2 =
+                PatientReporterTestFactory.createTestGermlineVariantBuilder().gene(GENE_WITHOUT_NOTIFY).biallelic(true).build();
+        return Lists.newArrayList(germlineVariant1, germlineVariant2);
+    }
 }

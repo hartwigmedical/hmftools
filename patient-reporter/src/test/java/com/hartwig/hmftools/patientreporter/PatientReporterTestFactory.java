@@ -127,11 +127,11 @@ public final class PatientReporterTestFactory {
     }
 
     @NotNull
-    public static ImmutableDriverCatalog.Builder createTestDriverCatalog() {
+    public static ImmutableDriverCatalog.Builder createTestDriverCatalogBuilder() {
         return ImmutableDriverCatalog.builder()
-                .gene(ONCOGENE)
+                .gene(Strings.EMPTY)
                 .category(DriverCategory.ONCO)
-                .driver(DriverType.BIALLELIC)
+                .driver(DriverType.NONE)
                 .driverLikelihood(0)
                 .dndsLikelihood(0)
                 .missense(0)
