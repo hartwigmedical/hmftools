@@ -4,7 +4,6 @@ import com.hartwig.hmftools.common.lims.LimsSampleType;
 import com.hartwig.hmftools.patientreporter.QCFailReport;
 import com.hartwig.hmftools.patientreporter.SampleReport;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
-import com.hartwig.hmftools.patientreporter.cfreport.components.DataLabel;
 import com.hartwig.hmftools.patientreporter.cfreport.components.LineDivider;
 import com.hartwig.hmftools.patientreporter.cfreport.components.ReportSignature;
 import com.hartwig.hmftools.patientreporter.cfreport.components.TumorLocationAndTypeTable;
@@ -49,7 +48,7 @@ public class QCFailChapter implements ReportChapter {
         reportDocument.add(LineDivider.createLineDivider(getContentWidth()));
 
         reportDocument.add(createFailReasonDiv(failReport.reason(), failReport.sampleReport()));
-        reportDocument.add(LineDivider.createLineDivider(getContentWidth()));
+        reportDocument.add(LineDivider.createLineDivider(getContentWidth()).setMarginTop(10));
 
         // Content body
         LimsSampleType type = LimsSampleType.fromSampleId(failReport.sampleReport().sampleId());
