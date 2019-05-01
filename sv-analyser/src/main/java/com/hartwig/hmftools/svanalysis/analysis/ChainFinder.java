@@ -1784,7 +1784,7 @@ public class ChainFinder
 
                         if(clusterAP < CLUSTER_ALLELE_PLOIDY_MIN)
                         {
-                            // this lower breakend cannot match with anything futher upstream
+                            // this lower breakend cannot match with anything further upstream
                             log(LOG_LEVEL_VERBOSE, String.format("breakends lower(%d: %s) limited at upper(%d: %s) with clusterAP(%.2f)",
                                     i, lowerBreakend.toString(), j, upperBreakend.toString(), clusterAP));
 

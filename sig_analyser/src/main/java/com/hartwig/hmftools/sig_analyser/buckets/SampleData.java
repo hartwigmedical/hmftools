@@ -221,6 +221,13 @@ public class SampleData
         return getPotentialAllocation(bucketRatios, false, requiredBuckets, ratioRanges);
     }
 
+    // These next 2 methods are critical logic in how bucket ratios are applied to sample counts, and they work as a pair
+    // Firstly a sample's (unallocated) counts are tested against the set of external bucket ratios, making use of both noise in the
+    // counts and ratio ranges if applicable. Noise constraints are imposed per bucket, as a proportion of the sample total, and relative
+    // to how much of the sample's total this ratios are attempting to allocate
+
+    // Once the potential allocations have been determined, it is logically consistent that they can be applied to the sample without
+    // any further constraints or reductions - ie they will fall within remaining unallocated counts and permitted noise
     private double[] getPotentialAllocation(final double[] bucketRatios, boolean useUnallocated, final List<Integer> requiredBuckets,
             final double[] ratioRanges)
     {

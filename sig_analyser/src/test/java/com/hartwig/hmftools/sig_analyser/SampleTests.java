@@ -165,7 +165,6 @@ public class SampleTests
 
         allocCounts = sample.getPotentialElevCounts(bucketRatios, requiredBuckets, ratioRanges);
         potentialAllocTotal = sumVector(allocCounts);
-        // assertEquals(1000.0, sumVector(allocCounts));
 
         allocTotal = sample.allocateBucketCounts(allocCounts, 0.5);
         assertEquals(allocTotal, potentialAllocTotal, 0.01);
