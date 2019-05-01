@@ -26,7 +26,9 @@ public class ReportableVariantAnalyzerTest {
 
     @Test
     public void mergeWithoutGermlineVariant() {
-        List<EnrichedSomaticVariant> variantsToReport = Lists.newArrayList(PatientReporterTestFactory.createTestEnrichedSomaticVariantBuilder().build());
+        EnrichedSomaticVariant variants1 = PatientReporterTestFactory.createTestEnrichedSomaticVariantBuilder().gene(ONCOGENE).build();
+        EnrichedSomaticVariant variants2 = PatientReporterTestFactory.createTestEnrichedSomaticVariantBuilder().gene(TSG).build();
+        List<EnrichedSomaticVariant> variantsToReport = Lists.newArrayList(variants1, variants2);
         List<DriverCatalog> driverCatalog = Lists.newArrayList(PatientReporterTestFactory.createTestDriverCatalog().build());
         Map<String, DriverCategory> driverCategoryMap = PatientReporterTestFactory.createTestDriverCategoryMap();
         Set<String> drupActionableGenes = Sets.newHashSet(ONCOGENE, TSG);
@@ -42,20 +44,25 @@ public class ReportableVariantAnalyzerTest {
                     .notifyClinicalGeneticist(false)
                     .build());
         }
-        assertEquals(1, reportableVariants.size());
-        assertEquals("", reportableVariants.get(0).gene());
+
+        assertEquals(2, reportableVariants.size());
+        assertEquals(ONCOGENE, reportableVariants.get(0).gene());
         assertFalse(reportableVariants.get(0).notifyClinicalGeneticist());
         assertTrue(reportableVariants.get(0).biallelic());
 
+        assertEquals(TSG, reportableVariants.get(1).gene());
+        assertFalse(reportableVariants.get(1).notifyClinicalGeneticist());
+        assertTrue(reportableVariants.get(1).biallelic());
     }
 
     @Test
     public void mergeSomaticAndGermlineVariant() {
-        List<EnrichedSomaticVariant> variantsToReport = Lists.newArrayList(PatientReporterTestFactory.createTestEnrichedSomaticVariantBuilder().build());
+        List<EnrichedSomaticVariant> variantsToReport = Lists.newArrayList(PatientReporterTestFactory.createTestEnrichedSomaticVariantBuilder().gene(TSG).build());
         List<DriverCatalog> driverCatalog = Lists.newArrayList(PatientReporterTestFactory.createTestDriverCatalog().build());
         Map<String, DriverCategory> driverCategoryMap = PatientReporterTestFactory.createTestDriverCategoryMap();
         Set<String> drupActionableGenes = Sets.newHashSet(ONCOGENE, TSG);
-        List<GermlineVariant > filteredGermlineVariants =  createTestGermlineVariantsONCOGene();
+
+        List<GermlineVariant> filteredGermlineVariants =  createTestGermlineVariantsONCOGene();
         Map<String, Boolean> germlineGenesToNotifyMap = PatientReporterTestFactory.createTestGermlineGenesReporting();
 
 
@@ -81,21 +88,26 @@ public class ReportableVariantAnalyzerTest {
 
         }
 
-        assertEquals(2, reportableVariants.size());
-        assertEquals("", reportableVariants.get(0).gene());
+        assertEquals(3, reportableVariants.size());
+        assertEquals(TSG, reportableVariants.get(0).gene());
         assertFalse(reportableVariants.get(0).notifyClinicalGeneticist());
         assertTrue(reportableVariants.get(0).biallelic());
 
         assertEquals(ONCOGENE, reportableVariants.get(1).gene());
-        assertFalse(reportableVariants.get(1).notifyClinicalGeneticist());
-        assertFalse(reportableVariants.get(1).biallelic());
+        assertTrue(reportableVariants.get(1).notifyClinicalGeneticist());
+        assertTrue(reportableVariants.get(1).biallelic());
 
+        assertEquals(TSG, reportableVariants.get(2).gene());
+        assertFalse(reportableVariants.get(2).notifyClinicalGeneticist());
+        assertTrue(reportableVariants.get(2).biallelic());
     }
 
 
     @NotNull
     private static List<GermlineVariant> createTestGermlineVariantsONCOGene() {
-        return Lists.newArrayList(PatientReporterTestFactory.createTestGermlineVariantBuilder().gene(ONCOGENE).build());
+        GermlineVariant germlineVariant1 = PatientReporterTestFactory.createTestGermlineVariantBuilder().gene(ONCOGENE).biallelic(true).build();
+        GermlineVariant germlineVariant2 = PatientReporterTestFactory.createTestGermlineVariantBuilder().gene(TSG).biallelic(true).build();
+        return Lists.newArrayList(germlineVariant1, germlineVariant2);
     }
 
 }

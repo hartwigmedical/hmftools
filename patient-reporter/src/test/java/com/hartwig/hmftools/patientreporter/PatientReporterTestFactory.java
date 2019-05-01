@@ -143,7 +143,7 @@ public final class PatientReporterTestFactory {
     @NotNull
     public static Map<String, Boolean> createTestGermlineGenesReporting() {
         Map<String, Boolean> germlineGenesReporting = Maps.newHashMap();
-        germlineGenesReporting.put(ONCOGENE, false);
+        germlineGenesReporting.put(ONCOGENE, true);
         germlineGenesReporting.put(TSG, false);
         return germlineGenesReporting;
     }
