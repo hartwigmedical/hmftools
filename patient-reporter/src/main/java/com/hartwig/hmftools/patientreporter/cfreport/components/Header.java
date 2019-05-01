@@ -80,20 +80,20 @@ public final class Header {
 
     }
 
-    public static class ChapterPageCounter {
+    static class ChapterPageCounter {
 
         private String chapterTitle;
         private ArrayList<PdfFormXObject> templates = new ArrayList<>();
 
-        public ChapterPageCounter(String chapterTitle) {
+        ChapterPageCounter(String chapterTitle) {
             this.chapterTitle = chapterTitle;
         }
 
-        public void addPage(@NotNull PdfFormXObject chapterTitleTemplate) {
+        void addPage(@NotNull PdfFormXObject chapterTitleTemplate) {
             templates.add(chapterTitleTemplate);
         }
 
-        public void renderChapterTitles(@NotNull PdfDocument document) {
+        void renderChapterTitles(@NotNull PdfDocument document) {
 
             int totalChapterPages = templates.size();
 

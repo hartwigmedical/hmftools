@@ -40,7 +40,7 @@ public class BarChart extends InlineBarChart {
         this.highLabel = highLabel;
     }
 
-    public void setTickMarks(@NotNull Indicator... tickMarks) {
+    private void setTickMarks(@NotNull Indicator... tickMarks) {
         this.tickMarks = tickMarks;
     }
 
@@ -243,7 +243,6 @@ public class BarChart extends InlineBarChart {
         private void drawRoundedRect(@NotNull Rectangle outerBoundingBox, @NotNull Rectangle innerBoundingBox, float filledPercentage, @NotNull Color outlineColor, @NotNull Color fillColor, boolean dashedOutline, @NotNull PdfCanvas canvas) {
 
             filledPercentage = (float) MathUtil.clamp(filledPercentage, 0, 1);
-            final Rectangle outerBarBoundingBox = outerBoundingBox;
 
             // Outline
             canvas.setStrokeColor(outlineColor);
@@ -252,11 +251,11 @@ public class BarChart extends InlineBarChart {
             if  (dashedOutline) {
                 canvas.setLineDash(3f, 2f);
             }
-            canvas.roundRectangle(outerBarBoundingBox.getX(),
-                    outerBarBoundingBox.getY(),
-                    outerBarBoundingBox.getWidth(),
-                    outerBarBoundingBox.getHeight(),
-                    getHeightRadius(outerBarBoundingBox));
+            canvas.roundRectangle(outerBoundingBox.getX(),
+                    outerBoundingBox.getY(),
+                    outerBoundingBox.getWidth(),
+                    outerBoundingBox.getHeight(),
+                    getHeightRadius(outerBoundingBox));
             canvas.fillStroke();
             canvas.setLineDash(1f); // Reset dash
 
@@ -290,12 +289,12 @@ public class BarChart extends InlineBarChart {
 
     }
 
-    public class Indicator {
+    class Indicator {
 
-        public String name;
-        public double value;
+        String name;
+        double value;
 
-        public Indicator(@NotNull String name, double value) {
+        Indicator(@NotNull String name, double value) {
             this.name = name;
             this.value = value;
         }

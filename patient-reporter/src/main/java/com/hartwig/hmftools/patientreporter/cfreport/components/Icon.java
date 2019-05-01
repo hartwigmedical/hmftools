@@ -20,7 +20,7 @@ public class Icon {
         INVALID;
 
         @NotNull
-        public String getText() {
+        String getText() {
 
             switch (this) {
                 case LEVEL_A:
@@ -43,7 +43,7 @@ public class Icon {
 
         }
 
-        public DeviceRgb getDefaultColor() {
+        DeviceRgb getDefaultColor() {
             switch (this) {
                 case LEVEL_A:
                     return ReportResources.PALETTE_CYAN;

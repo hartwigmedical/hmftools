@@ -29,6 +29,7 @@ public class ActionableOrDriversChapter implements ReportChapter {
         this.patientReport = patientReport;
     }
 
+    @NotNull
     public String getName() {
         return "Actionable or drivers";
     }

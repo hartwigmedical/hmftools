@@ -4,7 +4,6 @@ import com.hartwig.hmftools.common.actionability.EvidenceItem;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;

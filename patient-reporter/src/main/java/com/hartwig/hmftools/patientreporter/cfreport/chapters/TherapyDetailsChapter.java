@@ -41,6 +41,7 @@ public class TherapyDetailsChapter implements ReportChapter {
         this.patientReport = patientReport;
     }
 
+    @NotNull
     @Override
     public String getName() {
         return "Therapy details";

@@ -5,8 +5,6 @@ import com.itextpdf.layout.Document;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.io.IOException;
-
 public interface ReportChapter {
 
     @NotNull String getName();
@@ -29,6 +27,6 @@ public interface ReportChapter {
                 : ReportResources.CONTENT_WIDTH_NARROW;
     }
 
-    void render(@NotNull final Document reportDocument) throws IOException;
+    void render(@NotNull final Document reportDocument);
 
 }

@@ -4,9 +4,12 @@ import com.hartwig.hmftools.common.actionability.ClinicalTrial;
 import com.hartwig.hmftools.common.actionability.EvidenceItem;
 import com.hartwig.hmftools.patientreporter.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.cfreport.MathUtil;
-import com.hartwig.hmftools.patientreporter.cfreport.components.*;
-import com.hartwig.hmftools.patientreporter.cfreport.data.*;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
+import com.hartwig.hmftools.patientreporter.cfreport.components.InlineBarChart;
+import com.hartwig.hmftools.patientreporter.cfreport.components.LineDivider;
+import com.hartwig.hmftools.patientreporter.cfreport.components.TableUtil;
+import com.hartwig.hmftools.patientreporter.cfreport.components.TumorLocationAndTypeTable;
+import com.hartwig.hmftools.patientreporter.cfreport.data.*;
 import com.itextpdf.layout.Document;
 import com.itextpdf.layout.Style;
 import com.itextpdf.layout.element.Cell;
@@ -32,6 +35,7 @@ public class SummaryChapter implements ReportChapter {
         this.patientReport = patientReport;
     }
 
+    @NotNull
     @Override
     public final String getName() {
         return "Summary";

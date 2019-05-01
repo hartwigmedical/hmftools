@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.patientreporter.cfreport.chapters;
 
-import com.hartwig.hmftools.patientreporter.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
 import com.hartwig.hmftools.patientreporter.cfreport.components.TableUtil;
 import com.itextpdf.layout.Document;
@@ -12,12 +11,10 @@ import org.jetbrains.annotations.NotNull;
 
 public class ExplanationChapter implements ReportChapter {
 
-    private final AnalysedPatientReport patientReport;
-
-    public ExplanationChapter(@NotNull final AnalysedPatientReport patientReport) {
-        this.patientReport = patientReport;
+    public ExplanationChapter() {
     }
 
+    @NotNull
     @Override
     public String getName() {
         return "Report explanation";

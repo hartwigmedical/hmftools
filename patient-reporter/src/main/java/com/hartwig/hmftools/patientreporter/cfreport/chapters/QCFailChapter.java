@@ -14,8 +14,6 @@ import com.itextpdf.layout.element.Div;
 import com.itextpdf.layout.element.Paragraph;
 import org.jetbrains.annotations.NotNull;
 
-import java.io.IOException;
-
 public class QCFailChapter implements ReportChapter {
 
     private final QCFailReport failReport;
@@ -24,6 +22,7 @@ public class QCFailChapter implements ReportChapter {
         this.failReport = failReport;
     }
 
+    @NotNull
     @Override
     public String getName() {
         return failReport.reason().title();
@@ -39,7 +38,7 @@ public class QCFailChapter implements ReportChapter {
     }
 
     @Override
-    public void render(@NotNull Document reportDocument) throws IOException {
+    public void render(@NotNull Document reportDocument) {
 
         reportDocument.add(TumorLocationAndTypeTable.createTumorLocationAndType(
                 failReport.sampleReport().primaryTumorLocationString(),
