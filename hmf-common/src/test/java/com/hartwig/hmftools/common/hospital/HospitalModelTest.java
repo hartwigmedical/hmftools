@@ -18,15 +18,15 @@ public class HospitalModelTest {
         final HospitalModel hospitalModel = buildTestHospitalModel();
         final HospitalData hospital = hospitalModel.hospitalPerId("01");
         assertNotNull(hospital);
-        assertEquals("CpctPI", HospitalModel.determineRequester("CPCT02010001", hospital, "henk"));
-        assertEquals("DrupPI", HospitalModel.determineRequester("DRUP01010001", hospital, "henk"));
-        assertEquals("WidePI", HospitalModel.determineRequester("WIDE01010001", hospital, "henk"));
+        assertEquals("CpctPI", HospitalModel.determinePI("CPCT02010001", hospital));
+        assertEquals("DrupPI", HospitalModel.determinePI("DRUP01010001", hospital));
+        assertEquals("WidePI", HospitalModel.determinePI("WIDE01010001", hospital));
 
         // Revert to CPCT PI with '*' for DRUP PI & recipients
         final HospitalData hospital2 = hospitalModel.hospitalPerId("02");
         assertNotNull(hospital2);
-        assertEquals("CpctPI2", HospitalModel.determineRequester("CPCT02010001", hospital2, "henk"));
-        assertEquals("CpctPI2", HospitalModel.determineRequester("DRUP01010001", hospital2, "henk"));
+        assertEquals("CpctPI2", HospitalModel.determinePI("CPCT02010001", hospital2));
+        assertEquals("CpctPI2", HospitalModel.determinePI("DRUP01010001", hospital2));
 
         assertNull(hospitalModel.hospitalPerId("03"));
     }
@@ -45,13 +45,13 @@ public class HospitalModelTest {
     public void canLookupAddresseeForSample() {
         final HospitalModel hospitalModel = buildTestHospitalModel();
 
-        assertEquals("CpctPI, Address, Zip City", hospitalModel.addresseeStringForSample("CPCT02010001T", "henk"));
+        assertEquals("CpctPI, Address, Zip City", hospitalModel.addresseeStringForSample("CPCT02010001T"));
     }
 
     @Test
     public void canLookAddressForCORESample() {
         final HospitalModel hospitalModel = buildTestHospitalModel();
-        assertEquals("Address, Zip City", hospitalModel.addresseeStringForSample("CORE18001224T", "henk"));
+        assertEquals("Address, Zip City", hospitalModel.addresseeStringForSample("CORE18001224T"));
     }
 
     @NotNull
@@ -60,8 +60,18 @@ public class HospitalModelTest {
         Map<String, HospitalSampleMapping> hospitalPerIdManual = Maps.newHashMap();
 
         hospitalPerId.put("01",
-                ImmutableHospitalData.of("HOSP1", "CPCT Recip", "DRUP Recip", "WIDE Recip", "Address", "Zip", "City", "CpctPI", "DrupPI", "WidePI"));
-        hospitalPerId.put("02", ImmutableHospitalData.of("HOSP2", "CPCT Recip2", "*", "", "Address2", "Zip2", "City2", "CpctPI2", "*", "WidePI2"));
+                ImmutableHospitalData.of("HOSP1",
+                        "CPCT Recip",
+                        "DRUP Recip",
+                        "WIDE Recip",
+                        "Address",
+                        "Zip",
+                        "City",
+                        "CpctPI",
+                        "DrupPI",
+                        "WidePI"));
+        hospitalPerId.put("02",
+                ImmutableHospitalData.of("HOSP2", "CPCT Recip2", "*", "", "Address2", "Zip2", "City2", "CpctPI2", "*", "WidePI2"));
         hospitalPerIdManual.put("CORE18001224T", ImmutableHospitalSampleMapping.of("HOSP1"));
 
         return ImmutableHospitalModel.of(hospitalPerId, hospitalPerIdManual);

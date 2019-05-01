@@ -30,7 +30,7 @@ public final class SampleReportFactory {
                 .purityShallowSeq(lims.purityShallowSeq(tumorSample))
                 .pathologyTumorPercentage(lims.pathologyTumorPercentage(tumorSample))
                 .labProcedures(lims.labProcedures(tumorSample))
-                .addressee(hospitalModel.addresseeStringForSample(tumorSample, lims.requesterName(tumorSample)))
+                .addressee(hospitalModel.addresseeStringForSample(tumorSample))
                 .projectName(lims.projectName(tumorSample))
                 .requesterName(lims.requesterName(tumorSample))
                 .requesterEmail(lims.requesterEmail(tumorSample))
