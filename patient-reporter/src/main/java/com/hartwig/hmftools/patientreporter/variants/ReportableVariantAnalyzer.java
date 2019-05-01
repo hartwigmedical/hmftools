@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
@@ -47,8 +48,9 @@ public final class ReportableVariantAnalyzer {
         return reportableVariants;
     }
 
+    @VisibleForTesting
     @Nullable
-    private static DriverCatalog catalogEntryForVariant(@NotNull List<DriverCatalog> driverCatalogList, @NotNull String gene) {
+    public static DriverCatalog catalogEntryForVariant(@NotNull List<DriverCatalog> driverCatalogList, @NotNull String gene) {
         for (DriverCatalog entry : driverCatalogList) {
             if (entry.gene().equals(gene)) {
                 return entry;
@@ -57,8 +59,9 @@ public final class ReportableVariantAnalyzer {
         return null;
     }
 
+    @VisibleForTesting
     @NotNull
-    private static ImmutableReportableVariant.Builder fromGermlineVariant(@NotNull GermlineVariant variantGermline) {
+    public static ImmutableReportableVariant.Builder fromGermlineVariant(@NotNull GermlineVariant variantGermline) {
         return ImmutableReportableVariant.builder()
                 .gene(variantGermline.gene())
                 .hgvsCodingImpact(variantGermline.hgvsCodingImpact())
@@ -73,8 +76,9 @@ public final class ReportableVariantAnalyzer {
                 .biallelic(variantGermline.biallelic());
     }
 
+    @VisibleForTesting
     @NotNull
-    private static ImmutableReportableVariant.Builder fromSomaticVariant(@NotNull EnrichedSomaticVariant variant) {
+    public static ImmutableReportableVariant.Builder fromSomaticVariant(@NotNull EnrichedSomaticVariant variant) {
         return ImmutableReportableVariant.builder()
                 .gene(variant.gene())
                 .hgvsCodingImpact(variant.canonicalHgvsCodingImpact())

@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
@@ -22,8 +21,8 @@ public class FilterGermlineVariantsTest {
 
     @Test
     public void checkForGermlineGenesReportedONCO() {
-        Map<String, Boolean> germlineGenesReporting = createTestGermlineGenesReporting();
-        Map<String, DriverCategory> driverCategoryMap = createTestDriverCategoryMap();
+        Map<String, Boolean> germlineGenesReporting = PatientReporterTestFactory.createTestGermlineGenesReporting();
+        Map<String, DriverCategory> driverCategoryMap = PatientReporterTestFactory.createTestDriverCategoryMap();
 
         List<GeneCopyNumber> geneCopyNumbers = Lists.newArrayList();
         List<EnrichedSomaticVariant> somaticVariants = Lists.newArrayList();
@@ -39,8 +38,8 @@ public class FilterGermlineVariantsTest {
 
     @Test
     public void checkForGermlineGenesReportedTSG() {
-        Map<String, Boolean> germlineGenesReporting = createTestGermlineGenesReporting();
-        Map<String, DriverCategory> driverCategoryMap = createTestDriverCategoryMap();
+        Map<String, Boolean> germlineGenesReporting = PatientReporterTestFactory.createTestGermlineGenesReporting();
+        Map<String, DriverCategory> driverCategoryMap = PatientReporterTestFactory.createTestDriverCategoryMap();
 
         List<GermlineVariant> germlineVariantsMatch = createTestGermlineVariantsTSGGene(true);
         List<GeneCopyNumber> geneCopyNumbersMatch = createCopyNumberListForTSG(1);
@@ -129,22 +128,6 @@ public class FilterGermlineVariantsTest {
                 geneCopyNumbersCopyNumber,
                 variantsOptionCopyNumber);
         assertEquals(1, filteredGermlineVariantOptionCopyNumber.size()); // only match copy number
-    }
-
-    @NotNull
-    private static Map<String, Boolean> createTestGermlineGenesReporting() {
-        Map<String, Boolean> germlineGenesReporting = Maps.newHashMap();
-        germlineGenesReporting.put(ONCOGENE, false);
-        germlineGenesReporting.put(TSG, false);
-        return germlineGenesReporting;
-    }
-
-    @NotNull
-    private static Map<String, DriverCategory> createTestDriverCategoryMap() {
-        Map<String, DriverCategory> driverCategoryMapMatch = Maps.newHashMap();
-        driverCategoryMapMatch.put(ONCOGENE, DriverCategory.ONCO);
-        driverCategoryMapMatch.put(TSG, DriverCategory.TSG);
-        return driverCategoryMapMatch;
     }
 
     @NotNull

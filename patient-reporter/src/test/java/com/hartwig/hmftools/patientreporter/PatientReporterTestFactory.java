@@ -1,6 +1,11 @@
 package com.hartwig.hmftools.patientreporter;
 
+import java.util.Map;
+
+import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
+import com.hartwig.hmftools.common.drivercatalog.DriverType;
+import com.hartwig.hmftools.common.drivercatalog.ImmutableDriverCatalog;
 import com.hartwig.hmftools.common.purple.copynumber.CopyNumberMethod;
 import com.hartwig.hmftools.common.purple.gene.ImmutableGeneCopyNumber;
 import com.hartwig.hmftools.common.purple.region.GermlineStatus;
@@ -9,7 +14,6 @@ import com.hartwig.hmftools.common.variant.Clonality;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.common.variant.ImmutableEnrichedSomaticVariant;
-import com.hartwig.hmftools.common.variant.ImmutableSomaticVariantImpl;
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.patientreporter.variants.ImmutableReportableVariant;
 import com.hartwig.hmftools.patientreporter.variants.germline.ImmutableGermlineVariant;
@@ -18,6 +22,9 @@ import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 public final class PatientReporterTestFactory {
+
+    private static final String ONCOGENE = "ONCO";
+    private static final String TSG = "TSG";
 
     private PatientReporterTestFactory() {
     }
@@ -117,4 +124,36 @@ public final class PatientReporterTestFactory {
                 .driverLikelihood(0D)
                 .notifyClinicalGeneticist(false);
     }
+
+    @NotNull
+    public static ImmutableDriverCatalog.Builder createTestDriverCatalog() {
+        return ImmutableDriverCatalog.builder()
+                .gene(ONCOGENE)
+                .category(DriverCategory.ONCO)
+                .driver(DriverType.BIALLELIC)
+                .driverLikelihood(0)
+                .dndsLikelihood(0)
+                .missense(0)
+                .nonsense(0)
+                .splice(0)
+                .inframe(0)
+                .frameshift(0);
+    }
+
+    @NotNull
+    public static Map<String, Boolean> createTestGermlineGenesReporting() {
+        Map<String, Boolean> germlineGenesReporting = Maps.newHashMap();
+        germlineGenesReporting.put(ONCOGENE, false);
+        germlineGenesReporting.put(TSG, false);
+        return germlineGenesReporting;
+    }
+
+    @NotNull
+    public static Map<String, DriverCategory> createTestDriverCategoryMap() {
+        Map<String, DriverCategory> driverCategoryMapMatch = Maps.newHashMap();
+        driverCategoryMapMatch.put(ONCOGENE, DriverCategory.ONCO);
+        driverCategoryMapMatch.put(TSG, DriverCategory.TSG);
+        return driverCategoryMapMatch;
+    }
+
 }
