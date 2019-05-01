@@ -13,11 +13,18 @@ import java.net.MalformedURLException;
 
 public class ReportSignature {
 
+    public static Paragraph createEndOfReportIndication() {
+        return new Paragraph("— End of report —")
+                .setMarginTop(50)
+                .addStyle(ReportResources.smallBodyTextStyle());
+    }
+
     @NotNull
     public static Div createSignatureDiv(@NotNull String rvaLogoPath, @NotNull String signaturePath) throws IOException {
 
             Div div = new Div();
             div.setKeepTogether(true);
+            div.setMarginTop(80);
 
             // Add RVA logo
             try {

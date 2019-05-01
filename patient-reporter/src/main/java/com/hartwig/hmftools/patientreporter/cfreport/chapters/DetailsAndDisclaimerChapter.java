@@ -51,12 +51,8 @@ public class DetailsAndDisclaimerChapter implements ReportChapter {
                 .add(createDisclaimerDiv()));
         reportDocument.add(table);
 
-        // End of report text
-        reportDocument.add(new Paragraph("— End of report —")
-                .setMarginTop(50)
-                .addStyle(ReportResources.smallBodyTextStyle()));
-
-        reportDocument.add(ReportSignature.createSignatureDiv(patientReport.logoRVAPath(), patientReport.signaturePath()).setPaddingTop(80));
+        reportDocument.add(ReportSignature.createEndOfReportIndication());
+        reportDocument.add(ReportSignature.createSignatureDiv(patientReport.logoRVAPath(), patientReport.signaturePath()));
 
     }
 
