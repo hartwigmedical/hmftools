@@ -50,8 +50,6 @@ public final class DrupActionabilityModelFactory {
                         LOGGER.warn("Could not resolve a classification in DRUP genes csv: " + classification);
                         break;
                 }
-            } else {
-                LOGGER.warn("Suspicious line detected in DRUP genes csv: " + line);
             }
         }
 
