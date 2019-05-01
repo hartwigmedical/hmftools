@@ -57,7 +57,7 @@ public class TumorCharacteristicsChapter implements ReportChapter {
         // Microsatellite stability
         final double microSatelliteStability = patientReport.microsatelliteIndelsPerMb();
         final String microSatelliteStabilityString = hasReliablePurityFit
-                ? MicroSatelliteStatus.interpretToString(microSatelliteStability, hasReliablePurityFit) + " " + new DecimalFormat("#.####").format(microSatelliteStability)
+                ? MicroSatelliteStatus.interpretToString(microSatelliteStability) + " " + new DecimalFormat("#.####").format(microSatelliteStability)
                 : DataUtil.NAString;
         BarChart satelliteChart = new BarChart(
                 microSatelliteStability,

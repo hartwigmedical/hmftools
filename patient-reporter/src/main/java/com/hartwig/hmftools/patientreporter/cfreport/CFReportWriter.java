@@ -38,7 +38,7 @@ public class CFReportWriter implements ReportWriter {
                         new ActionableOrDriversChapter(report),
                         new TumorCharacteristicsChapter(report),
                         new CircosChapter(report),
-                        new ExplanationChapter(report),
+                        new ExplanationChapter(),
                         new DetailsAndDisclaimerChapter(report)
                 }, outputFilePath
         );

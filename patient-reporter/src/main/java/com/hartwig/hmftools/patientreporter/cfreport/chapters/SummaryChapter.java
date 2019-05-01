@@ -194,8 +194,7 @@ public class SummaryChapter implements ReportChapter {
                 .add(new Paragraph( "Microsatellite (in)stability")
                         .addStyle(BODY_TEXT_STYLE)));
         table.addCell(createMiddleAlignedCell(1, 2)
-                .add(createHighlightParagraph(MicroSatelliteStatus.interpretToString(patientReport.microsatelliteIndelsPerMb(),
-                        hasReliablePurityFit))
+                .add(createHighlightParagraph(MicroSatelliteStatus.interpretToString(patientReport.microsatelliteIndelsPerMb()))
                         .addStyle(dataStyle)));
 
         div.add(table);
