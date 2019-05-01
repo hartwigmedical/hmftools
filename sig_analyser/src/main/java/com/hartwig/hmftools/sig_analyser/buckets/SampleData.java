@@ -256,7 +256,11 @@ public class SampleData
             double potentialAlloc = unallocCount + noiseCount;
 
             // use the low range ratio to give max possible allocation to this bucket
-            double ratio = bucketRatios[bucket] + ratioRange(ratioRanges, bucket, true);
+            double ratio = ratioRange(bucketRatios, ratioRanges, bucket, true);
+
+            if(ratio <= 0)
+                continue;
+
             double alloc = potentialAlloc / ratio;
             double allocNoNoise = unallocCount / ratio;
 
@@ -265,6 +269,11 @@ public class SampleData
 
             if(minAllocNoNoise == 0 || allocNoNoise < minAllocNoNoise)
                 minAllocNoNoise = allocNoNoise;
+
+            if(Double.isNaN(minAllocNoNoise))
+            {
+                break;
+            }
         }
 
         double[] bestAllocCounts = new double[bucketRatios.length];
@@ -289,7 +298,7 @@ public class SampleData
             Integer bucket = requiredBuckets.get(i);
             bucketWithNoiseRatios.add(0.0);
 
-            double ratio = bucketRatios[bucket] + ratioRange(ratioRanges, bucket, false);
+            double ratio = ratioRange(bucketRatios, ratioRanges, bucket, false);
             double allocCount = minAlloc * ratio;
 
             if(allocCount == 0)
@@ -312,7 +321,7 @@ public class SampleData
         for(int i = 0; i < requiredBuckets.size(); ++i)
         {
             Integer bucket = requiredBuckets.get(i);
-            double ratio = bucketRatios[bucket] + ratioRange(ratioRanges, bucket, false);
+            double ratio = ratioRange(bucketRatios, ratioRanges, bucket, false);
             double allocCount = minAlloc * ratio;
 
             if(allocCount == 0)

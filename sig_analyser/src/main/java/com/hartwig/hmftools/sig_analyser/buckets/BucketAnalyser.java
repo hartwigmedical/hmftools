@@ -2639,7 +2639,7 @@ public class BucketAnalyser {
 
             double sampleCount = sample.getElevatedCount();
 
-            // mConfig.logSample(sample.Id);
+            mConfig.logSample(sample.Id);
 
             // tweak each group in turn to allocate the max possible using ratio ranges
             for(final BucketGroup bucketGroup : sample.getBucketGroups())

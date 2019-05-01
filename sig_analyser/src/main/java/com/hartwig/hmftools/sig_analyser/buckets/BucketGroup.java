@@ -485,6 +485,16 @@ public class BucketGroup implements Comparable<BucketGroup> {
         return takeMin ? -ranges[bucket] : ranges[bucket];
     }
 
+    public static double ratioRange(final double[] ratios, final double[] ranges, int bucket, boolean takeMin)
+    {
+        if(ranges == null || ranges[bucket] == 0)
+            return ratios[bucket];
+
+        double range = takeMin ? -ranges[bucket] : ranges[bucket];
+
+        return capValue(ratios[bucket] + range, 0, 1);
+    }
+
     public double getPotentialAllocation() { return mPotentialAllocation; }
     public void addPotentialAllocation(double count) { mPotentialAllocation += count; }
     public void resetPotentialAllocation()
