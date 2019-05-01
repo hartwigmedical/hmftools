@@ -25,7 +25,6 @@ public final class SampleReportFactory {
         return builder.sampleId(tumorSample)
                 .patientTumorLocation(patientTumorLocation)
                 .refBarcode(lims.refBarcode(tumorSample))
-
                 .tumorBarcode(lims.tumorBarcode(tumorSample))
                 .tumorArrivalDate(lims.arrivalDate(tumorSample))
                 .purityShallowSeq(lims.purityShallowSeq(tumorSample))

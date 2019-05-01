@@ -44,55 +44,52 @@ import com.hartwig.hmftools.patientreporter.variants.somatic.SomaticVariantAnaly
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 
-@Value.Immutable
-@Value.Style(allParameters = true,
-             passAnnotations = { NotNull.class, Nullable.class })
-abstract class PatientReporter {
+class PatientReporter {
     private static final Logger LOGGER = LogManager.getLogger(PatientReporter.class);
 
     @NotNull
-    public abstract BaseReportData baseReportData();
-
+    private final BaseReportData baseReportData;
     @NotNull
-    public abstract SequencedReportData sequencedReportData();
-
+    private final SequencedReportData sequencedReportData;
     @NotNull
-    public abstract SvAnalyzer svAnalyzerModel();
+    private final SvAnalyzer svAnalyzerModel;
+
+    PatientReporter(@NotNull final BaseReportData baseReportData, @NotNull final SequencedReportData sequencedReportData,
+            @NotNull final SvAnalyzer svAnalyzerModel) {
+        this.baseReportData = baseReportData;
+        this.sequencedReportData = sequencedReportData;
+        this.svAnalyzerModel = svAnalyzerModel;
+    }
 
     @NotNull
     public AnalysedPatientReport run(@NotNull String runDirectory, @Nullable String comments) throws IOException {
-        Lims lims = baseReportData().limsModel();
         final RunContext run = ProductionRunContextFactory.fromRunDirectory(runDirectory);
         assert run.isSomaticRun();
 
         final String tumorSample = run.tumorSample();
 
         final PatientTumorLocation patientTumorLocation =
-                PatientTumorLocationFunctions.findPatientTumorLocationForSample(baseReportData().patientTumorLocations(), tumorSample);
+                PatientTumorLocationFunctions.findPatientTumorLocationForSample(baseReportData.patientTumorLocations(), tumorSample);
 
         final CopyNumberAnalysis copyNumberAnalysis = analyzeCopyNumbers(run, patientTumorLocation);
-
         final SomaticVariantAnalysis somaticVariantAnalysis = analyzeSomaticVariants(run, copyNumberAnalysis, patientTumorLocation);
-
         final List<GermlineVariant> germlineVariantsToReport = analyzeGermlineVariants(run, copyNumberAnalysis, somaticVariantAnalysis);
 
         final List<ReportableVariant> reportableVariants =
                 ReportableVariantAnalyzer.mergeSomaticAndGermlineVariants(somaticVariantAnalysis.variantsToReport(),
                         somaticVariantAnalysis.driverCatalog(),
-                        sequencedReportData().panelGeneModel().geneDriverCategoryMap(),
-                        sequencedReportData().panelGeneModel().drupActionableGenes(),
+                        sequencedReportData.panelGeneModel().geneDriverCategoryMap(),
+                        sequencedReportData.panelGeneModel().drupActionableGenes(),
                         germlineVariantsToReport,
-                        sequencedReportData().germlineGenesReporting(),
-                        lims.germlineReportingChoice(tumorSample));
+                        sequencedReportData.germlineReportingModel(),
+                        baseReportData.limsModel().germlineReportingChoice(tumorSample));
 
-        final SvAnalysis svAnalysis = analyzeStructuralVariants(copyNumberAnalysis, patientTumorLocation, svAnalyzerModel());
-
+        final SvAnalysis svAnalysis = analyzeStructuralVariants(copyNumberAnalysis, patientTumorLocation, svAnalyzerModel);
         final ChordAnalysis chordAnalysis = analyzeChord(run);
 
         LOGGER.info("Printing analysis results:");
@@ -106,7 +103,7 @@ abstract class PatientReporter {
         LOGGER.info(" Copy number events to report: " + copyNumberAnalysis.reportableGeneCopyNumbers().size());
         LOGGER.info(" Gene fusions to report : " + svAnalysis.reportableFusions().size());
         LOGGER.info(" Gene disruptions to report : " + svAnalysis.reportableDisruptions().size());
-        LOGGER.info("Printing actionability results:");
+        LOGGER.info("Printing actionability results (including off-label trials):");
         LOGGER.info(" Evidence items found based on variants: " + somaticVariantAnalysis.evidenceItems().size());
         LOGGER.info(" Evidence items found based on copy numbers: " + copyNumberAnalysis.evidenceItems().size());
         LOGGER.info(" Evidence items found based on fusions: " + svAnalysis.evidenceItems().size());
@@ -118,8 +115,8 @@ abstract class PatientReporter {
 
         final SampleReport sampleReport = SampleReportFactory.fromLimsAndHospitalModel(tumorSample,
                 run.refSample(),
-                lims,
-                baseReportData().hospitalModel(),
+                baseReportData.limsModel(),
+                baseReportData.hospitalModel(),
                 patientTumorLocation);
 
         final List<EvidenceItem> nonTrials = ReportableEvidenceItemFactory.extractNonTrials(allEvidenceItems);
@@ -141,8 +138,8 @@ abstract class PatientReporter {
                 svAnalysis.reportableDisruptions(),
                 PatientReporterFileLoader.findCircosPlotPath(runDirectory, tumorSample),
                 Optional.ofNullable(comments),
-                baseReportData().signaturePath(),
-                baseReportData().logoRVAPath());
+                baseReportData.signaturePath(),
+                baseReportData.logoRVAPath());
     }
 
     @NotNull
@@ -166,8 +163,8 @@ abstract class PatientReporter {
         return CopyNumberAnalyzer.run(purityContext,
                 purpleCopyNumbers,
                 exomeGeneCopyNumbers,
-                sequencedReportData().panelGeneModel(),
-                sequencedReportData().actionabilityAnalyzer(),
+                sequencedReportData.panelGeneModel(),
+                sequencedReportData.actionabilityAnalyzer(),
                 patientTumorLocation);
     }
 
@@ -179,20 +176,20 @@ abstract class PatientReporter {
 
         LOGGER.info("Loading somatic variants for sample " + sample);
         final List<SomaticVariant> variants =
-                PatientReporterFileLoader.loadPassedSomaticVariants(runDirectory, sample, sequencedReportData().somaticVariantEnrichment());
+                PatientReporterFileLoader.loadPassedSomaticVariants(runDirectory, sample, sequencedReportData.somaticVariantEnrichment());
         LOGGER.info(" " + variants.size() + " PASS somatic variants loaded for sample " + sample);
 
         LOGGER.info("Enriching somatic variants");
         final List<EnrichedSomaticVariant> enrichedSomaticVariants = enrich(variants,
                 copyNumberAnalysis,
-                sequencedReportData().highConfidenceRegions(),
-                sequencedReportData().refGenomeFastaFile());
+                sequencedReportData.highConfidenceRegions(),
+                sequencedReportData.refGenomeFastaFile());
 
         LOGGER.info("Analyzing somatic variants");
         return SomaticVariantAnalyzer.run(enrichedSomaticVariants,
-                sequencedReportData().panelGeneModel().somaticVariantGenes(),
-                sequencedReportData().panelGeneModel().geneDriverCategoryMap(),
-                sequencedReportData().actionabilityAnalyzer(),
+                sequencedReportData.panelGeneModel().somaticVariantGenes(),
+                sequencedReportData.panelGeneModel().geneDriverCategoryMap(),
+                sequencedReportData.actionabilityAnalyzer(),
                 patientTumorLocation);
     }
 
@@ -224,14 +221,14 @@ abstract class PatientReporter {
         List<GermlineVariant> variants = PatientReporterFileLoader.loadPassedGermlineVariants(runDirectory, sample);
         LOGGER.info(" " + variants.size() + " PASS germline variants loaded for sample " + sample);
 
-        LimsGermlineReportingChoice germlineChoice = baseReportData().limsModel().germlineReportingChoice(sample);
+        LimsGermlineReportingChoice germlineChoice = baseReportData.limsModel().germlineReportingChoice(sample);
         if (germlineChoice == LimsGermlineReportingChoice.UNKNOWN) {
             LOGGER.info(" No germline reporting choice known. No germline variants will be reported!");
             return Lists.newArrayList();
         } else {
             return FilterGermlineVariants.filterGermlineVariantsForReporting(variants,
-                    sequencedReportData().germlineGenesReporting(),
-                    sequencedReportData().panelGeneModel().geneDriverCategoryMap(),
+                    sequencedReportData.germlineReportingModel(),
+                    sequencedReportData.panelGeneModel().geneDriverCategoryMap(),
                     copyNumberAnalysis.exomeGeneCopyNumbers(),
                     somaticVariantAnalysis.variantsToReport());
         }
@@ -240,9 +237,9 @@ abstract class PatientReporter {
     @NotNull
     private SvAnalysis analyzeStructuralVariants(@NotNull CopyNumberAnalysis copyNumberAnalysis,
             @Nullable PatientTumorLocation patientTumorLocation, @NotNull SvAnalyzer svAnalyzer) {
-        return svAnalyzer.run(sequencedReportData().panelGeneModel(),
+        return svAnalyzer.run(sequencedReportData.panelGeneModel(),
                 copyNumberAnalysis.exomeGeneCopyNumbers(),
-                sequencedReportData().actionabilityAnalyzer(),
+                sequencedReportData.actionabilityAnalyzer(),
                 patientTumorLocation);
     }
 

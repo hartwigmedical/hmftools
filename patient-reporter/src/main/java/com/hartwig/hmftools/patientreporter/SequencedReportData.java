@@ -34,6 +34,6 @@ public abstract class SequencedReportData {
     public abstract Multimap<String, GenomeRegion> highConfidenceRegions();
 
     @NotNull
-    public abstract GermlineReportingModel germlineGenesReporting();
+    public abstract GermlineReportingModel germlineReportingModel();
 
 }

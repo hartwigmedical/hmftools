@@ -20,8 +20,6 @@ public final class DrupActionabilityModelFactory {
     private static final Logger LOGGER = LogManager.getLogger(DrupActionabilityModel.class);
 
     private static final String SEPARATOR = ",";
-    private static final String ONCO = "onco";
-    private static final String TSG = "tsg";
 
     private DrupActionabilityModelFactory() {
     }
@@ -42,16 +40,18 @@ public final class DrupActionabilityModelFactory {
             if (parts.length == 2) {
                 String classification = parts[1].trim();
                 switch (classification) {
-                    case ONCO:
+                    case "onco":
                         geneDriverCategoryMap.put(gene, DriverCategory.ONCO);
                         break;
-                    case TSG:
+                    case "tsg":
                         geneDriverCategoryMap.put(gene, DriverCategory.TSG);
                         break;
                     default:
                         LOGGER.warn("Could not resolve a classification in DRUP genes csv: " + classification);
                         break;
                 }
+            } else {
+                LOGGER.warn("Suspicious line detected in DRUP genes csv: " + line);
             }
         }
 

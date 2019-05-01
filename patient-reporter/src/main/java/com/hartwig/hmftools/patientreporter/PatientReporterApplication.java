@@ -152,7 +152,7 @@ public class PatientReporterApplication {
             throws IOException {
         final SvAnalyzer svAnalyzer = SvAnalyzer.fromFiles(cmd.getOptionValue(FUSION_CSV), cmd.getOptionValue(DISRUPTION_CSV));
 
-        return ImmutablePatientReporter.of(buildBaseReportData(cmd), sequencedReportData, svAnalyzer);
+        return new PatientReporter(buildBaseReportData(cmd), sequencedReportData, svAnalyzer);
     }
 
     private static boolean validInputForAnalysedSample(@NotNull final CommandLine cmd) {

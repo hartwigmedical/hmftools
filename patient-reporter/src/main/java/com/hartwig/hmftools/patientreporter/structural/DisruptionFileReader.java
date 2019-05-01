@@ -16,10 +16,10 @@ final class DisruptionFileReader {
 
     private static final Logger LOGGER = LogManager.getLogger(DisruptionFileReader.class);
 
+    private static final String DELIMITER = ",";
+
     private DisruptionFileReader() {
     }
-
-    private static final String DELIMITER = ",";
 
     @NotNull
     public static List<Disruption> fromDisruptionFile(@NotNull String disruptionFile) throws IOException {

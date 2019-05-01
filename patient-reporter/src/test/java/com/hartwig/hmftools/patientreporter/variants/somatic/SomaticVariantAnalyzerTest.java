@@ -41,39 +41,14 @@ public class SomaticVariantAnalyzerTest {
                         builder().gene(WRONG_GENE).canonicalCodingEffect(MISSENSE).worstCodingEffect(MISSENSE).build(),
                         builder().gene(WRONG_GENE).canonicalCodingEffect(SYNONYMOUS).worstCodingEffect(SYNONYMOUS).build());
 
-        List<GermlineVariant> germlineVariant = Lists.newArrayList(ImmutableGermlineVariant.builder()
-                .passFilter(true)
-                .gene("BRCA2")
-                .hgvsCodingImpact("c.5946delT")
-                .hgvsProteinImpact("p.Ser1982fs")
-                .totalReadCount(112)
-                .alleleReadCount(67)
-                .adjustedCopyNumber(3D)
-                .adjustedVAF(1.0)
-                .minorAllelePloidy(1D)
-                .biallelic(true)
-                .build());
-
-        final SequencedReportData reporterData = testSequencedReportData();
-
-
         SomaticVariantAnalysis analysis = SomaticVariantAnalyzer.run(variants,
                 Sets.newHashSet(RIGHT_GENE),
                 Maps.newHashMap(),
-                testSequencedReportData().actionabilityAnalyzer(), null);
+                testSequencedReportData().actionabilityAnalyzer(),
+                null);
 
         assertEquals(2, analysis.tumorMutationalLoad());
-       // assertEquals(2, analysis.reportableSomaticVariants().size());
-
-        Map<String, DriverCategory> driverCategoryMap = Maps.newHashMap();
-        driverCategoryMap.put(RIGHT_GENE, DriverCategory.ONCO);
-        SomaticVariantAnalysis analysisOnco = SomaticVariantAnalyzer.run(variants,
-                Sets.newHashSet(RIGHT_GENE),
-                Maps.newHashMap(),
-                testSequencedReportData().actionabilityAnalyzer(), null);
-
-        assertEquals(2, analysisOnco.tumorMutationalLoad());
-       // assertEquals(1, analysisOnco.reportableSomaticVariants().size());
+        assertEquals(2, analysis.variantsToReport().size());
     }
 
     @NotNull

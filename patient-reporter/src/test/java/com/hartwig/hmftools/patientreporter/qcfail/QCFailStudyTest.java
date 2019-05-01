@@ -10,5 +10,6 @@ public class QCFailStudyTest {
     public void canDeriveStudyFromSampleName() {
         assertEquals(QCFailStudy.CPCT, QCFailStudy.fromSample("CPCT02010500T"));
         assertEquals(QCFailStudy.DRUP, QCFailStudy.fromSample("DRUP01010400TII"));
+        assertEquals(QCFailStudy.WIDE, QCFailStudy.fromSample("WIDE01T"));
     }
 }

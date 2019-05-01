@@ -20,8 +20,8 @@ import org.jetbrains.annotations.Nullable;
 @Value.Style(allParameters = true,
              passAnnotations = { NotNull.class, Nullable.class })
 public abstract class AnalysedPatientReport implements PatientReport {
-    @NotNull
     @Override
+    @NotNull
     public abstract SampleReport sampleReport();
 
     public abstract double impliedPurity();
@@ -67,11 +67,11 @@ public abstract class AnalysedPatientReport implements PatientReport {
     @NotNull
     public abstract Optional<String> comments();
 
-    @NotNull
     @Override
+    @NotNull
     public abstract String signaturePath();
 
-    @NotNull
     @Override
+    @NotNull
     public abstract String logoRVAPath();
 }

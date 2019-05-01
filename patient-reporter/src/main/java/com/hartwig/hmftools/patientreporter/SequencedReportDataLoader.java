@@ -28,7 +28,7 @@ final class SequencedReportDataLoader {
         final ActionabilityAnalyzer actionabilityAnalyzer = ActionabilityAnalyzer.fromKnowledgebase(knowledgebaseDir);
 
         final DrupActionabilityModel drupActionabilityModel = DrupActionabilityModelFactory.buildFromCsv(drupGeneCsv);
-        final GermlineReportingModel germlineGenes = GermlineReportingFile.buildFromCsv(germlineGenesCsv);
+        final GermlineReportingModel germlineReportingModel = GermlineReportingFile.buildFromCsv(germlineGenesCsv);
         final GeneModel panelGeneModel = GeneModelFactory.create(drupActionabilityModel);
 
         return ImmutableSequencedReportData.of(panelGeneModel,
@@ -36,6 +36,6 @@ final class SequencedReportDataLoader {
                 HotspotEnrichment.fromHotspotsFile(hotspotTsv),
                 new IndexedFastaSequenceFile(new File(fastaFileLocation)),
                 BEDFileLoader.fromBedFile(highConfidenceBed),
-                germlineGenes);
+                germlineReportingModel);
     }
 }
