@@ -289,16 +289,9 @@ public class SummaryChapter implements ReportChapter {
     @NotNull
     private static Div createSectionStartDiv(float width) {
 
-        Div div = new Div();
-        div.setKeepTogether(true);
-        div.setWidth(width);
-
-        // Add divider and section title
-        div.add(LineDivider
-                .createLineDivider(width)
-                .setMarginBottom(4));
-
-        return div;
+        return new Div().setKeepTogether(true)
+            .setWidth(width)
+            .add(LineDivider.createLineDivider(width));
 
     }
 

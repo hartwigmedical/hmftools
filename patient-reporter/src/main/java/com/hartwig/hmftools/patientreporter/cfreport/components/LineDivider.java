@@ -16,6 +16,7 @@ public class LineDivider {
         LineSeparator ls = new LineSeparator(line);
         ls.setMarginTop(20);
         ls.setWidth(width);
+        ls.setMarginBottom(4);
 
         return ls;
 
