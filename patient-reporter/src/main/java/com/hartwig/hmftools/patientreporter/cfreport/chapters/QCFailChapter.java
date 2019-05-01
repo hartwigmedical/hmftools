@@ -6,6 +6,7 @@ import com.hartwig.hmftools.patientreporter.SampleReport;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
 import com.hartwig.hmftools.patientreporter.cfreport.components.DataLabel;
 import com.hartwig.hmftools.patientreporter.cfreport.components.LineDivider;
+import com.hartwig.hmftools.patientreporter.cfreport.components.ReportSignature;
 import com.hartwig.hmftools.patientreporter.cfreport.components.TumorLocationAndTypeTable;
 import com.hartwig.hmftools.patientreporter.qcfail.QCFailReason;
 import com.itextpdf.layout.Document;
@@ -54,6 +55,8 @@ public class QCFailChapter implements ReportChapter {
         } else {
             reportDocument.add(createCPCTDRUPContentBody());
         }
+
+        reportDocument.add(ReportSignature.createSignatureDiv(failReport.logoRVAPath(), failReport.signaturePath()).setPaddingTop(80));
 
     }
 

@@ -2,6 +2,7 @@ package com.hartwig.hmftools.patientreporter.cfreport.chapters;
 
 import com.hartwig.hmftools.patientreporter.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.SampleReport;
+import com.hartwig.hmftools.patientreporter.cfreport.components.ReportSignature;
 import com.hartwig.hmftools.patientreporter.cfreport.data.DataUtil;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
 import com.hartwig.hmftools.patientreporter.cfreport.components.TableUtil;
@@ -55,7 +56,7 @@ public class DetailsAndDisclaimerChapter implements ReportChapter {
                 .setMarginTop(50)
                 .addStyle(ReportResources.smallBodyTextStyle()));
 
-        reportDocument.add(createSignatureDiv(patientReport.logoRVAPath(), patientReport.signaturePath()).setPaddingTop(80));
+        reportDocument.add(ReportSignature.createSignatureDiv(patientReport.logoRVAPath(), patientReport.signaturePath()).setPaddingTop(80));
 
     }
 
@@ -104,46 +105,6 @@ public class DetailsAndDisclaimerChapter implements ReportChapter {
         div.add(createContentParagraph("The analysis done for this report has passed all internal quality controls."));
         div.add(createContentParagraph("For feedback or complaints please contact ", ReportResources.CONTACT_EMAIL_QA));
         div.add(createContentParagraph("For general questions, please contact us at ", ReportResources.CONTACT_EMAIL_GENERAL));
-
-        return div;
-
-    }
-
-    @NotNull
-    private static Div createSignatureDiv(@NotNull String rvaLogoPath, @NotNull String signaturePath) throws IOException {
-
-        Div div = new Div();
-        div.setKeepTogether(true);
-
-        // Add RVA logo
-        try {
-            final Image rvaLogo = new Image(ImageDataFactory.create(rvaLogoPath));
-            rvaLogo.setMaxHeight(58);
-            div.add(rvaLogo);
-        } catch (MalformedURLException e) {
-            throw new IOException("Failed to read RVA logo image at " + rvaLogoPath);
-        }
-
-        // Add signature text
-        Paragraph signatureText = new Paragraph()
-                .setFont(ReportResources.getFontBold())
-                .setFontSize(10)
-                .setFontColor(ReportResources.PALETTE_BLACK);
-
-        signatureText.add(ReportResources.SIGNATURE_NAME + ",\n");
-        signatureText.add(new Text(ReportResources.SIGNATURE_TITLE).setFont(ReportResources.getFontRegular()));
-        div.add(signatureText);
-
-        // Add signature image
-        try {
-            final Image signatureImage = new Image(ImageDataFactory.create(signaturePath));
-            signatureImage.setMaxHeight(60);
-            signatureImage.setMarginTop(-20); // Set negative margin so the signature slightly overlaps the signature text
-            signatureImage.setMarginLeft(10);
-            div.add(signatureImage);
-        } catch (MalformedURLException e) {
-            throw new IOException("Failed to read signature image at " + signaturePath);
-        }
 
         return div;
 
