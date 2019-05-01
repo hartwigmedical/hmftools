@@ -1,6 +1,8 @@
 package com.hartwig.hmftools.patientreporter.variants;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import java.util.List;
 import java.util.Map;
@@ -41,6 +43,9 @@ public class ReportableVariantAnalyzerTest {
                     .build());
         }
         assertEquals(1, reportableVariants.size());
+        assertEquals("", reportableVariants.get(0).gene());
+        assertFalse(reportableVariants.get(0).notifyClinicalGeneticist());
+        assertTrue(reportableVariants.get(0).biallelic());
 
     }
 
@@ -77,6 +82,13 @@ public class ReportableVariantAnalyzerTest {
         }
 
         assertEquals(2, reportableVariants.size());
+        assertEquals("", reportableVariants.get(0).gene());
+        assertFalse(reportableVariants.get(0).notifyClinicalGeneticist());
+        assertTrue(reportableVariants.get(0).biallelic());
+
+        assertEquals(ONCOGENE, reportableVariants.get(1).gene());
+        assertFalse(reportableVariants.get(1).notifyClinicalGeneticist());
+        assertFalse(reportableVariants.get(1).biallelic());
 
     }
 
