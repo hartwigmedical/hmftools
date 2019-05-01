@@ -184,8 +184,6 @@ public abstract class QCFailPage {
                         + sampleReport().hospitalPathologySampleId()).setStyle(fontStyle()),
                 internalBarcodeText(),
                 cmp.verticalGap(SECTION_VERTICAL_GAP_QC_FAIL),
-                pathologyText(),
-                cmp.verticalGap(SECTION_VERTICAL_GAP_QC_FAIL),
                 shallowSeqText(),
                 cmp.verticalGap(SECTION_VERTICAL_GAP_QC_FAIL),
                 sampleArrivalDateText(),
