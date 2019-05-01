@@ -19,7 +19,6 @@ import static com.hartwig.hmftools.sig_analyser.buckets.BaConfig.MAJOR_GROUP_SAM
 import static com.hartwig.hmftools.sig_analyser.buckets.BaConfig.MAX_CANDIDATE_GROUPS;
 import static com.hartwig.hmftools.sig_analyser.buckets.BaConfig.MAX_ELEVATED_PROB;
 import static com.hartwig.hmftools.sig_analyser.buckets.BaConfig.MAX_NOISE_TO_SAMPLE_RATIO;
-import static com.hartwig.hmftools.sig_analyser.buckets.BaConfig.MIN_DISCOVERY_SAMPLE_COUNT;
 import static com.hartwig.hmftools.sig_analyser.buckets.BaConfig.MIN_GROUP_ALLOC_PERCENT;
 import static com.hartwig.hmftools.sig_analyser.buckets.BaConfig.MIN_GROUP_ALLOC_PERCENT_LOWER;
 import static com.hartwig.hmftools.sig_analyser.buckets.BaConfig.PERMITTED_PROB_NOISE;
@@ -1210,14 +1209,16 @@ public class BucketAnalyser {
 
                 // optimisation: check whether the buckets for this group and sample
                 // could possibly exceed the min % threshold with a perfect fit, otherwise skip it
-                final double[] bgSampleElevCounts = sample.getPotentialElevCounts(bgRatios, groupBuckets, bucketGroup.getRatioRanges());
-                double maxPotentialPerc = sumVector(bgSampleElevCounts) / sample.getElevatedCount();
+                double[] bgSampleElevCounts = new double[mBucketCount];
+                double potentialAlloc = sample.getPotentialCounts(bgRatios, groupBuckets, bucketGroup.getRatioRanges(),
+                        bgSampleElevCounts);
+
+                double maxPotentialPerc = potentialAlloc / sample.getElevatedCount();
 
                 if(maxPotentialPerc < reqAllocPercent)
                     continue;
 
-                allocCounts = sample.getPotentialUnallocCounts(bgRatios, groupBuckets, null); // bucketGroup.getRatioRanges()
-                allocCountTotal = sumVector(allocCounts);
+                allocCountTotal = sample.getPotentialUnallocCounts(bgRatios, groupBuckets, null, allocCounts); // bucketGroup.getRatioRanges()
                 allocPercent = allocCountTotal / sample.getElevatedCount();
 
                 exceedsMinAllocPerc = allocPercent >= reqAllocPercent;
@@ -1909,19 +1910,6 @@ public class BucketAnalyser {
             // add in allocation priority order
             addBucketGroupSortedByPotentialAlloc(mTopAllocBucketGroups, bucketGroup);
         }
-
-        /*
-        // take the group with the top potential allocation from amongst the existing bucket groups and these unique ones
-        if(allCandidateGroups.isEmpty())
-            return null;
-
-        BucketGroup topUniqueGroup = allCandidateGroups.get(0);
-
-        if(topUniqueGroup.getPotentialAllocation() > 0)
-            return topUniqueGroup;
-        else
-            return null;
-        */
     }
 
     private static void addBucketGroupSortedByPotentialAlloc(List<BucketGroup> bucketGroups, BucketGroup newGroup)
@@ -1970,13 +1958,13 @@ public class BucketAnalyser {
             if(bucketGroup.hasSample(sample.Id))
                 continue;
 
-            double[] allocCounts = sample.getPotentialUnallocCounts(bucketGroup.getBucketRatios(), bucketGroup.getBucketIds(), null); // bucketGroup.getRatioRanges()
+            double[] allocCounts = new double[mBucketCount];
+            double allocTotal = sample.getPotentialUnallocCounts(bucketGroup.getBucketRatios(), bucketGroup.getBucketIds(), null,
+                    allocCounts); // bucketGroup.getRatioRanges()
 
-            double alloc = sumVector(allocCounts);
-
-            if (alloc > maxAlloc)
+            if (allocTotal > maxAlloc)
             {
-                maxAlloc = alloc;
+                maxAlloc = allocTotal;
             }
         }
 
@@ -2040,9 +2028,10 @@ public class BucketAnalyser {
                     if (bucketGroup.hasSample(sampleId))
                         continue;
 
-                    double[] allocCounts = sample.getPotentialUnallocCounts(bucketGroup.getBucketRatios(), bucketGroup.getBucketIds(), null); // bucketGroup.getRatioRanges()
+                    double[] allocCounts = new double[mBucketCount];
+                    double proposedAllocTotal = sample.getPotentialUnallocCounts(bucketGroup.getBucketRatios(), bucketGroup.getBucketIds(),
+                            null, allocCounts); // bucketGroup.getRatioRanges()
 
-                    double proposedAllocTotal = sumVector(allocCounts);
                     double proposedAllocPerc = proposedAllocTotal / sample.getElevatedCount();
 
                     if (proposedAllocPerc < reqAllocPercent || proposedAllocTotal < mConfig.MinSampleAllocCount)
@@ -2353,8 +2342,9 @@ public class BucketAnalyser {
                 }
 
                 // re-test with all elevated counts now on offer
-                double[] allocCounts = sample.getPotentialUnallocCounts(bucketGroup.getBucketRatios(), bucketGroup.getBucketIds(), bucketGroup.getRatioRanges());
-                double allocTotal = sumVector(allocCounts);
+                double[] allocCounts = new double[mBucketCount];
+                double allocTotal = sample.getPotentialUnallocCounts(bucketGroup.getBucketRatios(), bucketGroup.getBucketIds(), bucketGroup.getRatioRanges(),
+                        allocCounts);
 
                 if (sample.getBackgroundGroup() != bucketGroup && (allocTotal / sampleCount < reqAllocPercent || allocTotal < mConfig.MinSampleAllocCount))
                     continue;
@@ -2688,8 +2678,9 @@ public class BucketAnalyser {
                 if(sample.getBucketGroups().contains(bucketGroup))
                     continue;
 
-                double[] allocCounts = sample.getPotentialUnallocCounts(bucketGroup.getBucketRatios(), bucketGroup.getBucketIds(), bucketGroup.getRatioRanges());
-                double allocTotal = sumVector(allocCounts);
+                double[] allocCounts = new double[mBucketCount];
+                double allocTotal = sample.getPotentialUnallocCounts(bucketGroup.getBucketRatios(), bucketGroup.getBucketIds(), bucketGroup.getRatioRanges(),
+                        allocCounts);
 
                 if (allocTotal / sampleCount < reqAllocPercent || allocTotal < mConfig.MinSampleAllocCount)
                     continue;
@@ -3475,8 +3466,9 @@ public class BucketAnalyser {
                     double actualGrossScore = bucketGroup.calcSampleFitScore(actualAllocs, actualTotal, true);
                     double actualNetScore = bucketGroup.calcSampleFitScore(actualAllocs, actualTotal, false);
 
-                    final double[] potentialAllocs = sample.getPotentialElevCounts(bucketGroup.getBucketRatios(), bucketGroup.getBucketIds(), bucketGroup.getRatioRanges());
-                    double potentialTotal = sumVector(potentialAllocs);
+                    double[] potentialAllocs = new double[mBucketCount];
+                    double potentialTotal = sample.getPotentialCounts(bucketGroup.getBucketRatios(), bucketGroup.getBucketIds(), bucketGroup.getRatioRanges(),
+                        potentialAllocs);
 
                     double potentialGrossScore = 0;
                     double potentialNetScore = 0;
@@ -3508,8 +3500,9 @@ public class BucketAnalyser {
                     if (sample.getBucketGroups().contains(bucketGroup))
                         continue;
 
-                    final double[] potentialAllocs = sample.getPotentialElevCounts(bucketGroup.getBucketRatios(), bucketGroup.getBucketIds(), bucketGroup.getRatioRanges());
-                    double potentialTotal = sumVector(potentialAllocs);
+                    double[] potentialAllocs = new double[mBucketCount];
+                    double potentialTotal = sample.getPotentialCounts(bucketGroup.getBucketRatios(), bucketGroup.getBucketIds(),
+                            bucketGroup.getRatioRanges(), potentialAllocs);
 
                     if(potentialTotal/sampleTotal < MIN_GROUP_ALLOC_PERCENT)
                         continue;

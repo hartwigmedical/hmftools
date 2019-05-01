@@ -10,7 +10,6 @@ import static com.hartwig.hmftools.sig_analyser.common.DataUtils.greaterThan;
 import static com.hartwig.hmftools.sig_analyser.common.DataUtils.initVector;
 import static com.hartwig.hmftools.sig_analyser.common.DataUtils.lessThan;
 import static com.hartwig.hmftools.sig_analyser.common.DataUtils.sumVector;
-import static com.hartwig.hmftools.sig_analyser.common.DataUtils.sumVectors;
 import static com.hartwig.hmftools.sig_analyser.common.DataUtils.vectorMultiply;
 import static com.hartwig.hmftools.sig_analyser.buckets.BucketGroup.ratioRange;
 
@@ -42,7 +41,7 @@ public class SampleData
     private double mAllocTotal;
     private double mUnallocTotal;
     private double mNoiseAllocTotal;
-    private boolean mAllocOfElevated; // any calculated allocations will by from elevated, not total count
+    private boolean mUseElevatedForAllocation; // any calculated allocations will by from elevated, not total count
     private double mMaxNoiseTotal;
 
     private String mCancerType;
@@ -71,7 +70,7 @@ public class SampleData
         mGroupAllocPercents = Lists.newArrayList();
         mBackgroundGroup = null;
         mAllocPercent = 0;
-        mAllocOfElevated = true;
+        mUseElevatedForAllocation = true;
         mPreviousAllocPerc = 0;
         mAllocTotal = 0;
         mElevatedTotal = 0;
@@ -186,7 +185,8 @@ public class SampleData
         }
         else
         {
-            mAllocOfElevated = false;
+            // all allocations from now on will be taken from the full set of counts, not just the elevated ones
+            mUseElevatedForAllocation = false;
             copyVector(mBucketCounts, mUnallocBucketCounts);
             mUnallocTotal = mVarTotal;
         }
@@ -211,14 +211,16 @@ public class SampleData
         }
     }
 
-    public double[] getPotentialUnallocCounts(final double[] bucketRatios, final List<Integer> requiredBuckets, final double[] ratioRanges)
+    public double getPotentialUnallocCounts(final double[] bucketRatios, final List<Integer> requiredBuckets, final double[] ratioRanges,
+            double[] allocCounts)
     {
-        return getPotentialAllocation(bucketRatios, true, requiredBuckets, ratioRanges);
+        return getPotentialCounts(bucketRatios, true, requiredBuckets, ratioRanges, allocCounts);
     }
 
-    public double[] getPotentialElevCounts(final double[] bucketRatios, final List<Integer> requiredBuckets, final double[] ratioRanges)
+    public double getPotentialCounts(final double[] bucketRatios, final List<Integer> requiredBuckets,
+            final double[] ratioRanges, double[] allocCounts)
     {
-        return getPotentialAllocation(bucketRatios, false, requiredBuckets, ratioRanges);
+        return getPotentialCounts(bucketRatios, false, requiredBuckets, ratioRanges, allocCounts);
     }
 
     // These next 2 methods are critical logic in how bucket ratios are applied to sample counts, and they work as a pair
@@ -228,14 +230,17 @@ public class SampleData
 
     // Once the potential allocations have been determined, it is logically consistent that they can be applied to the sample without
     // any further constraints or reductions - ie they will fall within remaining unallocated counts and permitted noise
-    private double[] getPotentialAllocation(final double[] bucketRatios, boolean useUnallocated, final List<Integer> requiredBuckets,
-            final double[] ratioRanges)
+    private double getPotentialCounts(final double[] bucketRatios, boolean useUnallocated, final List<Integer> requiredBuckets,
+            final double[] ratioRanges, double[] allocCounts)
     {
         // must cap at the actual sample counts
         // allow to go as high as the elevated probability range
         // if a single bucket required by the ratios has zero unallocated, then all are zeroed
-        final double[] sampleCounts = useUnallocated ? mUnallocBucketCounts : mElevBucketCounts;
-        double countsTotal = useUnallocated ? mUnallocTotal : (mAllocOfElevated ? mElevatedTotal : mVarTotal);
+        final double[] sampleCounts = useUnallocated ? mUnallocBucketCounts : (mUseElevatedForAllocation ? mElevBucketCounts : mBucketCounts);
+        double countsTotal = useUnallocated ? mUnallocTotal : (mUseElevatedForAllocation ? mElevatedTotal : mVarTotal);
+
+        initVector(allocCounts, 0);
+        double allocTotal = 0; // sum of the calcalated bucket allocations
 
         // first extract the remaining unallocated counts per bucket
         double minAlloc = 0;
@@ -279,10 +284,8 @@ public class SampleData
                 minAllocNoNoise = allocNoNoise;
         }
 
-        double[] bestAllocCounts = new double[bucketRatios.length];
-
         if(minAlloc == 0)
-            return bestAllocCounts;
+            return 0;
 
         double currentNoiseTotal = useUnallocated ? mNoiseAllocTotal : 0;
 
@@ -354,7 +357,8 @@ public class SampleData
             if(greaterThan(allocCount, sampleCounts[bucket] + noiseCount))
                 allocCount = sampleCounts[bucket] + noiseCount; // check cannot exceed actual + permitted noise
 
-            bestAllocCounts[bucket] = allocCount;
+            allocCounts[bucket] = allocCount;
+            allocTotal += allocCount;
 
             if(noiseCount > 0 && sampleCounts[bucket] < allocCount)
             {
@@ -362,14 +366,14 @@ public class SampleData
             }
         }
 
-        return bestAllocCounts;
+        return allocTotal;
     }
 
     public double allocateBucketCounts(double[] counts, double reqAllocationPercent)
     {
         double allocatedCount = 0;
         double noiseTotal = mNoiseAllocTotal;
-        double refVarTotal = mAllocOfElevated ? mElevatedTotal : mVarTotal;
+        double refVarTotal = mUseElevatedForAllocation ? mElevatedTotal : mVarTotal;
         double reductionFactor = 1;
 
         // do a preliminary check that this allocation will actually achieve the required percentage count

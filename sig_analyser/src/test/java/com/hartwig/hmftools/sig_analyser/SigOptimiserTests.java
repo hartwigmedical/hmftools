@@ -50,7 +50,7 @@ public class SigOptimiserTests
                 bucketIds.add(b);
         }
 
-        double[] sampleAllocCounts = sample.getPotentialElevCounts(bgRatios, bucketIds, null);
+        double[] sampleAllocCounts = sample.getPotentialCounts(bgRatios, bucketIds, null);
         double allocTotal = sumVector(sampleAllocCounts);
         sample.allocateBucketCounts(sampleAllocCounts, 0.03);
 
@@ -63,7 +63,7 @@ public class SigOptimiserTests
                 bucketIds.add(b);
         }
 
-        // sampleAllocCounts = sample.getPotentialElevCounts(bgRatios, bucketIds);
+        // sampleAllocCounts = sample.getPotentialCounts(bgRatios, bucketIds);
         sampleAllocCounts = sample.getPotentialUnallocCounts(bgRatios, bucketIds, null);
         allocTotal = sumVector(sampleAllocCounts);
         sample.allocateBucketCounts(sampleAllocCounts, 0.03);

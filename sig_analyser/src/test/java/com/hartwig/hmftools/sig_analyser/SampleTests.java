@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.sig_analyser;
 
 import static com.hartwig.hmftools.sig_analyser.buckets.BaConfig.MAX_NOISE_ALLOC_PERCENT;
-import static com.hartwig.hmftools.sig_analyser.common.DataUtils.convertToPercentages;
 import static com.hartwig.hmftools.sig_analyser.common.DataUtils.sumVector;
 
 import static junit.framework.TestCase.assertEquals;
@@ -40,13 +39,14 @@ public class SampleTests
         requiredBuckets.add(0);
         requiredBuckets.add(1);
 
-        double[] allocCounts = sample.getPotentialElevCounts(bucketRatios, requiredBuckets, ratioRanges);
+        double[] allocCounts = new double[bucketCount];
+        double allocTotal = sample.getPotentialCounts(bucketRatios, requiredBuckets, ratioRanges, allocCounts);
         assertEquals(30.0, sumVector(allocCounts));
 
         requiredBuckets.add(2);
         requiredBuckets.add(3);
 
-        allocCounts = sample.getPotentialElevCounts(bucketRatios, requiredBuckets, ratioRanges);
+        allocTotal = sample.getPotentialCounts(bucketRatios, requiredBuckets, ratioRanges, allocCounts);
         assertEquals(100.0, sumVector(allocCounts));
 
         // now test with noise in each bucket
@@ -59,7 +59,7 @@ public class SampleTests
 
         sample.setElevatedBucketCounts(elevCounts, noiseCounts);
 
-        allocCounts = sample.getPotentialElevCounts(bucketRatios, requiredBuckets, ratioRanges);
+        sample.getPotentialCounts(bucketRatios, requiredBuckets, ratioRanges, allocCounts);
         assertEquals(100.0, sumVector(allocCounts)); // perfect allocation skips boosting allocs with noise
 
         // test again with one ratio being the limiting factor
@@ -69,8 +69,8 @@ public class SampleTests
         }
 
         // bucket 1 limits the others (4 x 10 out of 100), so noise is also limited to 40% of the max 20 available
-        allocCounts = sample.getPotentialElevCounts(bucketRatios, requiredBuckets, ratioRanges);
-        assertEquals(18.0 + 3 * 20, sumVector(allocCounts));
+        allocTotal = sample.getPotentialCounts(bucketRatios, requiredBuckets, ratioRanges, allocCounts);
+        assertEquals(18.0 + 3 * 20, allocTotal);
         assertEquals(18.0, allocCounts[0]);
 
         // test again with 2 buckets limited and competing for the same noise
@@ -79,8 +79,8 @@ public class SampleTests
         bucketRatios[2] = 0.2;
         bucketRatios[3] = 0.2;
 
-        allocCounts = sample.getPotentialElevCounts(bucketRatios, requiredBuckets, ratioRanges);
-        assertEquals(10.0 + 20 + 10 + 2 * 15, sumVector(allocCounts)); // all of buckets 1 & 2, full noise, plus ratio-limited for 3 & 5
+        allocTotal = sample.getPotentialCounts(bucketRatios, requiredBuckets, ratioRanges, allocCounts);
+        assertEquals(10.0 + 20 + 10 + 2 * 15, allocTotal); // all of buckets 1 & 2, full noise, plus ratio-limited for 3 & 5
         assertEquals(10 + 10/3.0, allocCounts[0], 0.001);
         assertEquals(20 + 20/3.0, allocCounts[1], 0.001);
 
@@ -95,8 +95,8 @@ public class SampleTests
         bucketRatios[2] = 0.35;
         bucketRatios[3] = 0.38;
 
-        allocCounts = sample.getPotentialElevCounts(bucketRatios, requiredBuckets, ratioRanges);
-        assertEquals(100.0, sumVector(allocCounts));
+        allocTotal = sample.getPotentialCounts(bucketRatios, requiredBuckets, ratioRanges, allocCounts);
+        assertEquals(100.0, allocTotal);
     }
 
     @Test
@@ -127,7 +127,8 @@ public class SampleTests
         double[] bucketRatios = { 0.1, 0.2, 0.3, 0.4 };
         double[] ratioRanges = new double[bucketCount];
 
-        double[] allocCounts = sample.getPotentialElevCounts(bucketRatios, requiredBuckets, ratioRanges);
+        double[] allocCounts = new double[bucketCount];
+                sample.getPotentialCounts(bucketRatios, requiredBuckets, ratioRanges, allocCounts);
         assertEquals(1000.0, sumVector(allocCounts));
 
         double allocTotal = sample.allocateBucketCounts(allocCounts, 0.5);
@@ -145,8 +146,7 @@ public class SampleTests
         bucketRatios[2] = 0.3;
         bucketRatios[3] = 0.1;
 
-        allocCounts = sample.getPotentialElevCounts(bucketRatios, requiredBuckets, ratioRanges);
-        double potentialAllocTotal = sumVector(allocCounts);
+        double potentialAllocTotal = sample.getPotentialCounts(bucketRatios, requiredBuckets, ratioRanges, allocCounts);
         assertEquals(550.0, potentialAllocTotal);
 
         allocTotal = sample.allocateBucketCounts(allocCounts, 0.5);
@@ -163,8 +163,7 @@ public class SampleTests
 
         sample.clearAllocations(true);
 
-        allocCounts = sample.getPotentialElevCounts(bucketRatios, requiredBuckets, ratioRanges);
-        potentialAllocTotal = sumVector(allocCounts);
+        potentialAllocTotal = sample.getPotentialCounts(bucketRatios, requiredBuckets, ratioRanges, allocCounts);
 
         allocTotal = sample.allocateBucketCounts(allocCounts, 0.5);
         assertEquals(allocTotal, potentialAllocTotal, 0.01);

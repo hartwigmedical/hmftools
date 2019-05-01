@@ -396,8 +396,9 @@ public class BaReporter
 
                 final double[] bucketRatios = bucketGroup.getBucketRatios();
                 final double[] ratioRanges = bucketGroup.getRatioRanges();
-                double[] allocCounts = sample.getPotentialUnallocCounts(bucketRatios, bucketGroup.getBucketIds(), ratioRanges);
-                double allocTotal = sumVector(allocCounts);
+
+                double[] allocCounts = new double[mBucketCount];
+                double allocTotal = sample.getPotentialUnallocCounts(bucketRatios, bucketGroup.getBucketIds(), ratioRanges, allocCounts);
 
                 if (allocTotal > maxPotAlloc)
                 {
