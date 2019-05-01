@@ -16,7 +16,7 @@ public final class HospitalModelFactory {
 
     private static final Logger LOGGER = LogManager.getLogger(HospitalModelFactory.class);
 
-    private static final String HOSPITALS_CSV = "hospitals_pilot.csv";
+    private static final String HOSPITALS_CSV = "hospitals.csv";
     private static final String SAMPLE_HOSPITAL_MAPPING_CSV = "sample_hospital_mapping.csv";
 
     private static final int HOSPITAL_ID_COLUMN = 0;
