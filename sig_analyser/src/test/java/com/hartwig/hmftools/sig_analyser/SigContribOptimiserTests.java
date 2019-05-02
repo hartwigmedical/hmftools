@@ -21,7 +21,7 @@ public class SigContribOptimiserTests
     @Test
     public void testSampleFit1()
     {
-        Configurator.setRootLevel(Level.DEBUG);
+        // Configurator.setRootLevel(Level.DEBUG);
 
         int bucketCount = 5;
         int sigCount = 3;
@@ -60,8 +60,8 @@ public class SigContribOptimiserTests
         sample.setElevatedBucketCounts(counts, noiseCounts);
 
         SigContribOptimiser sigOptim = new SigContribOptimiser(bucketCount, true, 1.0);
-        sigOptim.initialise(sampleId, counts, noiseCounts, ratiosCollection, 0.001, 0);
-        // sigOptim.initialise(sample, ratiosCollection, 0.001, 0);
+        // sigOptim.initialise(sampleId, counts, noiseCounts, ratiosCollection, 0.001, 0);
+        sigOptim.initialise(sample, ratiosCollection, 0.001, 0);
         boolean calcOk = sigOptim.fitToSample();
 
         if (!calcOk)
@@ -94,7 +94,7 @@ public class SigContribOptimiserTests
     @Test
     public void sampleFitTest2()
     {
-        Configurator.setRootLevel(Level.DEBUG);
+        // Configurator.setRootLevel(Level.DEBUG);
 
         int bucketCount = 5;
         int sigCount = 4;
@@ -129,9 +129,14 @@ public class SigContribOptimiserTests
 
         double[] noiseCounts = new double[bucketCount];
 
-        int sample = 0;
+        int sampleId = 0;
+        SampleData sample = new SampleData(sampleId);
+        sample.setBucketCounts(counts);
+        sample.setElevatedBucketCounts(counts, noiseCounts);
+
         SigContribOptimiser sigOptim = new SigContribOptimiser(bucketCount, true, 1.0);
-        sigOptim.initialise(sample, counts, noiseCounts, ratiosCollection, 0.001, 0);
+        // sigOptim.initialise(sampleId, counts, noiseCounts, ratiosCollection, 0.001, 0);
+        sigOptim.initialise(sample, ratiosCollection, 0.001, 0);
         boolean calcOk = sigOptim.fitToSample();
 
         assertTrue(calcOk);
@@ -157,7 +162,7 @@ public class SigContribOptimiserTests
             }
         }
 
-        assertEquals(1, sigOptim.getAllocPerc(), 0.001);
+        assertEquals(1, sigOptim.getAllocPerc(), 0.003);
     }
 
     @Test
@@ -201,10 +206,14 @@ public class SigContribOptimiserTests
             noiseCounts[i] = bucketNoise;
         }
 
-        int sample = 0;
+        int sampleId = 0;
+        SampleData sample = new SampleData(sampleId);
+        sample.setBucketCounts(counts);
+        sample.setElevatedBucketCounts(counts, noiseCounts);
 
         SigContribOptimiser sigOptim = new SigContribOptimiser(bucketCount, true, 1.0);
-        sigOptim.initialise(sample, counts, noiseCounts, ratiosCollection, 0.001, 0);
+        sigOptim.initialise(sampleId, counts, noiseCounts, ratiosCollection, 0.001, 0);
+        // sigOptim.initialise(sample, ratiosCollection, 0.001, 0);
         boolean calcOk = sigOptim.fitToSample();
 
         if (!calcOk)

@@ -35,6 +35,7 @@ public class SigContribOptimiser
     private List<double[]> mTestSigNewCounts;
     private List<double[]> mOtherSigNewCounts;
     private List<double[]> mMaxOtherSigNewCounts;
+    private double[] mMaxRefSigReductionCounts; // reduction to counts in the sig being tested
     private double[] mCurrentAllocCounts;
     private double[] mCurrentAllocNoise;
 
@@ -253,6 +254,7 @@ public class SigContribOptimiser
 
         mCurrentAllocCounts = new double[mBucketCount];
         mCurrentAllocNoise = new double[mBucketCount];
+        mMaxRefSigReductionCounts = new double[mBucketCount];
 
         copyVector(sample.getBucketCounts(), mRawCounts);
         copyVector(sample.getNoiseCounts(), mCountsNoise);
@@ -1276,6 +1278,7 @@ public class SigContribOptimiser
 
         copyVector(mSample.getAllocBucketCounts(), mCurrentAllocCounts);
         copyVector(mSample.getAllocNoiseCounts(), mCurrentAllocNoise);
+        initVector(mMaxRefSigReductionCounts, 0);
 
         for(int i = 0; i < mSigCount; ++i)
         {
@@ -1304,6 +1307,7 @@ public class SigContribOptimiser
                 maxReducedSig = sig;
                 maxReducedSigLoss = reducedSigContribLoss;
                 copyVector(otherSigContribGains, maxOtherSigContribGains);
+                copyVector(mReducedRefSigCounts, mMaxRefSigReductionCounts);
 
                 for(int i = 0; i < mSigCount; ++i)
                 {
@@ -1324,6 +1328,12 @@ public class SigContribOptimiser
             {
                 maxReducedSigLoss *= applyMultiple;
                 vectorMultiply(maxOtherSigContribGains, applyMultiple);
+
+                for(int i = 0; i < mSigCount; ++i)
+                {
+                    double[] maxOtherCounts = mMaxOtherSigNewCounts.get(i);
+                    vectorMultiply(maxOtherCounts, applyMultiple);
+                }
             }
 
             applySigAdjustments_v2(maxReducedSig, maxReducedSigLoss, maxOtherSigContribGains);
@@ -1479,8 +1489,6 @@ public class SigContribOptimiser
 
                     // LOGGER.debug(String.format("testing sig(%d) gain(%s) vs current(%s)", s2, sizeToStr(otherSigContribGains[s2]), sizeToStr(mContribs[s2])));
 
-                    // mSample.reduceAllocCounts(mReducedRefSigCounts);
-
                     // double newAlloc = calcSigContribution_v2(s2, mTestRefSigCounts);
                     double newAlloc = mSample.getPotentialUnallocCounts(mRatiosCollection.get(s2), mBucketIdsCollection.get(s2),
                             null, allocCounts);
@@ -1488,7 +1496,7 @@ public class SigContribOptimiser
                     if (newAlloc <= 0)
                         continue;
 
-                    if (iterations < maxIteration - 1)
+                    if (iterations < maxIteration - 1 && allocPerc < 1)
                     {
                         newAlloc *= allocPerc;
                         vectorMultiply(allocCounts, allocPerc);
@@ -1646,7 +1654,7 @@ public class SigContribOptimiser
                         mSigIds[rs], doubleToStr(mContribs[rs]), doubleToStr(refSigContribLoss), doubleToStr(totalActualOtherGain)));
             }
 
-            applyContribution_v2(rs, mReducedRefSigCounts, -refSigContribLoss);
+            applyContribution_v2(rs, mMaxRefSigReductionCounts, -refSigContribLoss);
         }
 
         List<Integer> otherSigContribIndices = getSortedVectorIndices(otherSigContribGains, false);
@@ -1663,7 +1671,7 @@ public class SigContribOptimiser
                         doubleToStr(otherSigContribGains[s2])));
             }
 
-            applyContribution_v2(s2, mOtherSigNewCounts.get(s2), otherSigContribGains[s2]);
+            applyContribution_v2(s2, mMaxOtherSigNewCounts.get(s2), otherSigContribGains[s2]);
         }
     }
 
@@ -1679,13 +1687,6 @@ public class SigContribOptimiser
             applyContribution_v2(s, allocCounts, allocTotal);
         }
     }
-
-    /*
-    private double calcSigContribution_v2(int sig, double[] allocCounts)
-    {
-        return calcSigContribution_v2(sig, allocCounts);
-    }
-    */
 
     private double calcSigContribution_v2(int sig, double[] allocCounts)
     {
@@ -1706,10 +1707,20 @@ public class SigContribOptimiser
         else
         {
             allocChange = mSample.reduceAllocCounts(newCounts);
+            allocChange *= -1;
+        }
+
+        if(!doublesEqual(newCountsTotal, allocChange))
+        {
+            LOGGER.warn(String.format("sample(%d) newCountsTotal(%.1f) != allocChange(%.1f)",
+                    mSampleId, newCountsTotal, allocChange));
         }
 
         double[] sigAllocCounts = mSigAllocCounts.get(sig);
         sumVectors(newCounts, sigAllocCounts);
+
+        mContribs[sig] += allocChange;
+        mContribTotal += allocChange;
 
         /*
         // check exceeding total or going negative
@@ -1747,12 +1758,6 @@ public class SigContribOptimiser
             return;
         }
         */
-
-        mContribs[sig] += allocChange;
-        mContribTotal += allocChange;
     }
-
-
-
 
 }

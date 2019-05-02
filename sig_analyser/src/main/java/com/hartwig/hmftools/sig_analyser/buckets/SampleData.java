@@ -498,14 +498,15 @@ public class SampleData
         double refVarTotal = mUseElevatedForAllocation ? mElevatedTotal : mVarTotal;
         copyVector(allocCounts, mAllocBucketCounts);
         copyVector(noiseCounts, mAllocNoiseCounts);
+        mAllocTotal = 0;
 
         for(int i = 0; i < allocCounts.length; ++i)
         {
             double bucketCount = mUseElevatedForAllocation ? mElevBucketCounts[i] : mBucketCounts[i];
             mUnallocBucketCounts[i] = bucketCount - mAllocBucketCounts[i];
+            mAllocTotal += mAllocBucketCounts[i];
         }
 
-        mAllocTotal = capValue(sumVector(mAllocBucketCounts), 0, refVarTotal);
         mUnallocTotal = refVarTotal - mAllocTotal;
         mAllocPercent = capValue(mAllocTotal/refVarTotal, 0, 1);
     }
