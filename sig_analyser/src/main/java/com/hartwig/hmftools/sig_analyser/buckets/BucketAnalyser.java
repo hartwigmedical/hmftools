@@ -493,7 +493,7 @@ public class BucketAnalyser {
             perfCounter.stop();
 
             analyseGroupsVsExtData(mFinalBucketGroups, false);
-            mReporter.logBucketGroups(true);
+            mReporter.logBucketGroups();
 
             if (nextBestGroup == null)
             {
@@ -1157,15 +1157,16 @@ public class BucketAnalyser {
                 // mConfig.logSample(sampleId);
 
                 /*
-                if(mConfig.logSample(sampleId) && bucketGroup.getId() == 123)
+                if(mConfig.logSample(sampleId) && bucketGroup.getId() == 194)
                 {
                     LOGGER.debug("spec sample");
                 }
                 */
 
+
                 double reqAllocPercent = minAllocPercent(sample, false);
                 boolean exceedsMinAllocPerc = false;
-                double[] allocCounts = null;
+                double[] allocCounts = new double[mBucketCount];
                 double allocCountTotal = 0;
                 double allocPercent = 0;
 
@@ -1209,16 +1210,14 @@ public class BucketAnalyser {
 
                 // optimisation: check whether the buckets for this group and sample
                 // could possibly exceed the min % threshold with a perfect fit, otherwise skip it
-                double[] bgSampleElevCounts = new double[mBucketCount];
-                double potentialAlloc = sample.getPotentialCounts(bgRatios, groupBuckets, bucketGroup.getRatioRanges(),
-                        bgSampleElevCounts);
+                double potentialAlloc = sample.getPotentialCounts(bgRatios, groupBuckets, bucketGroup.getRatioRanges(), null);
 
                 double maxPotentialPerc = potentialAlloc / sample.getElevatedCount();
 
                 if(maxPotentialPerc < reqAllocPercent)
                     continue;
 
-                allocCountTotal = sample.getPotentialUnallocCounts(bgRatios, groupBuckets, null, allocCounts); // bucketGroup.getRatioRanges()
+                allocCountTotal = sample.getPotentialUnallocCounts(bgRatios, groupBuckets, null, allocCounts);
                 allocPercent = allocCountTotal / sample.getElevatedCount();
 
                 exceedsMinAllocPerc = allocPercent >= reqAllocPercent;
@@ -1234,7 +1233,6 @@ public class BucketAnalyser {
                     // to be added to this candidate - but the counts still adjusting with the fit routine - for now too hard
                     if(maxPotentialPerc - sample.getAllocPercent() >= reqAllocPercent)
                     {
-                        // exceedsMinAllocPerc = true;
                         ++exceededOnSoloAlloc;
                     }
                 }
@@ -1271,12 +1269,16 @@ public class BucketAnalyser {
 
                     boolean validCalc = sigContribOptimiser.fitToSample();
 
-                    if (!validCalc) // couldn't reach the required percent for this canididate sig
+                    if (!validCalc) // couldn't reach the required percent for this candidate sig
                     {
                         LOGGER.warn("sample({}) fit with existing sigs failed", sample.Id);
                         mHasErrors = true;
                         continue;
                     }
+
+                    // if adding this new group makes the overall contribution worse, then skip it
+                    if(sigContribOptimiser.getAllocPerc() < sample.getAllocPercent())
+                        continue;
 
                     double candidateAlloc = sigContribOptimiser.getContribs()[candidateSigIndex];
                     allocCountTotal = candidateAlloc;
@@ -1294,7 +1296,6 @@ public class BucketAnalyser {
                         allocCounts[b] = bgRatios[b] * candidateAlloc;
                     }
 
-                    exceedsMinAllocPerc = true;
                     ++exceededOnFit;
                 }
 
@@ -1567,13 +1568,13 @@ public class BucketAnalyser {
                 double prevAllocPerc = sample.getAllocPercent();
 
                 sampleGroupList.clear();
-                for (int grpIndex = 0; grpIndex < sample.getElevBucketGroups().size(); ++grpIndex)
-                {
-                    final BucketGroup samGroup = sample.getElevBucketGroups().get(grpIndex);
-                    sampleGroupList.add(samGroup);
 
-                    // not critical to do since all reset in final fit, but reassess sample-group allocations
-                    samGroup.removeSampleAllocation(sample,  -1,false);
+                List<BucketGroup> prevGroupList = Lists.newArrayList(sample.getElevBucketGroups());
+                sampleGroupList.addAll(prevGroupList);
+
+                for (BucketGroup prevGroup : prevGroupList)
+                {
+                    prevGroup.removeSampleAllocation(sample,  -1,false);
                 }
 
                 sampleGroupList.add(topBucketGroup);
@@ -1586,7 +1587,8 @@ public class BucketAnalyser {
                 */
 
                 sample.clearAllocations(true);
-                boolean fitAllocated = fitSampleWithGroups(sigContribOptimiser, sample, sampleGroupList, prevAllocPerc, reqAllocPercent, false);
+                boolean fitAllocated = fitSampleWithGroups(sigContribOptimiser, sample, sampleGroupList, prevAllocPerc, reqAllocPercent,
+                        false, prevGroupList);
 
                 if(!fitAllocated)
                 {
@@ -1958,9 +1960,7 @@ public class BucketAnalyser {
             if(bucketGroup.hasSample(sample.Id))
                 continue;
 
-            double[] allocCounts = new double[mBucketCount];
-            double allocTotal = sample.getPotentialUnallocCounts(bucketGroup.getBucketRatios(), bucketGroup.getBucketIds(), null,
-                    allocCounts); // bucketGroup.getRatioRanges()
+            double allocTotal = sample.getPotentialUnallocCounts(bucketGroup.getBucketRatios(), bucketGroup.getBucketIds(), null, null);
 
             if (allocTotal > maxAlloc)
             {
@@ -2030,7 +2030,7 @@ public class BucketAnalyser {
 
                     double[] allocCounts = new double[mBucketCount];
                     double proposedAllocTotal = sample.getPotentialUnallocCounts(bucketGroup.getBucketRatios(), bucketGroup.getBucketIds(),
-                            null, allocCounts); // bucketGroup.getRatioRanges()
+                            null, allocCounts);
 
                     double proposedAllocPerc = proposedAllocTotal / sample.getElevatedCount();
 
@@ -2252,7 +2252,7 @@ public class BucketAnalyser {
             mFinalBucketGroups.addAll(elevatedGroups);
 
             analyseGroupsVsExtData(mFinalBucketGroups, false);
-            mReporter.logBucketGroups(true);
+            mReporter.logBucketGroups();
         }
     }
 
@@ -2374,14 +2374,16 @@ public class BucketAnalyser {
 
             if(potentialGroupList.size() > 1)
             {
-                useNewFit = fitSampleWithGroups(sigContribOptimiser, sample, potentialGroupList, prevAllocPerc, reqAllocPercent, true);
+                useNewFit = fitSampleWithGroups(sigContribOptimiser, sample, potentialGroupList, prevAllocPerc, reqAllocPercent,
+                        true, prevGroupList);
                 boolean usePrevFit = false;
 
                 if (!useNewFit)
                 {
                     // revert back to the previous set of groups added through discovery
                     sample.clearAllocations(false);
-                    usePrevFit = fitSampleWithGroups(sigContribOptimiser, sample, prevGroupList, 0, reqAllocPercent, false);
+                    usePrevFit = fitSampleWithGroups(sigContribOptimiser, sample, prevGroupList, 0, reqAllocPercent,
+                            false, prevGroupList);
                 }
 
                 if (!usePrevFit && !useNewFit)
@@ -2427,13 +2429,13 @@ public class BucketAnalyser {
                     double[] sampleAllocCounts = bucketGroup.getSampleCounts().get(samIndex);
                     final List<Integer> bucketIds = bucketGroup.getBucketIds();
 
-                    double[] newAllocs = SigOptimiser.optimiseSampleFit(sample, bucketGroup.getId(), bucketIds, bucketRatios, ratioRanges, sampleAllocCounts, false);
+                    double[] additionalAllocs = SigOptimiser.optimiseSampleFit(sample, bucketGroup.getId(), bucketIds, bucketRatios, ratioRanges, sampleAllocCounts, false);
 
-                    if(newAllocs == null) // could do no better
+                    if(additionalAllocs == null) // could do no better
                         continue;
 
-                    sample.allocateBucketCounts(newAllocs, 0);
-                    bucketGroup.addSampleCounts(samIndex, newAllocs);
+                    sample.allocateBucketCounts(additionalAllocs, 0);
+                    bucketGroup.addSampleCounts(samIndex, additionalAllocs);
                 }
             }
 
@@ -2469,132 +2471,172 @@ public class BucketAnalyser {
         }
     }
 
-    private boolean fitSampleWithGroups(SigContribOptimiser sigContribOptim, SampleData sample, List<BucketGroup> bucketGroups,
-            double prevAllocPerc, double reqAllocPerc, boolean removeAllocsOnFail)
+    private boolean fitSampleWithGroups(SigContribOptimiser sigContribOptim, SampleData sample, final List<BucketGroup> bucketGroups,
+            double prevAllocPerc, double reqAllocPerc, boolean removeAllocsOnFail, final List<BucketGroup> prevBucketGroups)
     {
-        double sampleCount = sample.getElevatedCount();
-
         int groupCount = bucketGroups.size();
         boolean hasBackgroundGroup = false;
         List<BucketGroup> addedGroups = Lists.newArrayList();
 
-        if(groupCount > 1)
+        if(groupCount == 1)
         {
-            List<double[]> ratiosCollection = Lists.newArrayList();
-            List<Integer> sigIds = Lists.newArrayList();
+            LOGGER.warn("sample({}) called to fit with a single group", sample.Id);
+        }
 
-            // add each group's data
-            int backgroundGroupIndex = -1;
-            for (int index = 0; index < groupCount; ++index)
+        List<double[]> ratiosCollection = Lists.newArrayList();
+        List<Integer> sigIds = Lists.newArrayList();
+
+        // add each group's data
+        int backgroundGroupIndex = -1;
+        for (int index = 0; index < groupCount; ++index)
+        {
+            final BucketGroup bucketGroup = bucketGroups.get(index);
+            ratiosCollection.add(bucketGroup.getBucketRatios());
+            sigIds.add(bucketGroup.getId());
+
+            if (bucketGroup == sample.getBackgroundGroup())
             {
-                final BucketGroup bucketGroup = bucketGroups.get(index);
-                ratiosCollection.add(bucketGroup.getBucketRatios());
-                sigIds.add(bucketGroup.getId());
+                backgroundGroupIndex = index;
+                hasBackgroundGroup = true;
+            }
+        }
 
-                if (bucketGroup == sample.getBackgroundGroup())
+        sigContribOptim.initialise(
+                sample.Id,
+                hasBackgroundGroup ? sample.getBucketCounts() : sample.getElevatedBucketCounts(),
+                sample.getNoiseCounts(),
+                ratiosCollection,
+                reqAllocPerc, mConfig.MinSampleAllocCount);
+
+        sigContribOptim.setSigIds(sigIds);
+        sigContribOptim.setLogVerbose(mConfig.logSample(sample.Id));
+
+        // each sample's background sig will remain in the list even if it drops below the required threshold
+        sigContribOptim.setRequiredSig(backgroundGroupIndex);
+        boolean validCalc = sigContribOptim.fitToSample();
+
+        if (!validCalc)
+        {
+            LOGGER.error("sample({}) refit of {} sigs failed", sample.Id, groupCount);
+            mHasErrors = true;
+            return false;
+        }
+
+        // if all ok, allocate each contribution to the sample
+        final double[] newGroupContribs = sigContribOptim.getContribs();
+
+        double fitAllocPerc = sigContribOptim.getAllocPerc();
+        List<Integer> sortedAllocIndices = getSortedVectorIndices(newGroupContribs, false);
+
+        if (fitAllocPerc < prevAllocPerc - 0.001)
+        {
+            LOGGER.debug(String.format("sample(%d) fit(%.3f) sigs(%d from %d) below required(%.3f)",
+                    sample.Id, fitAllocPerc, sigContribOptim.contributingSigCount(), groupCount, prevAllocPerc));
+
+            if (removeAllocsOnFail)
+            {
+                // if the set of previous groups matches this new set, then continue on even if the allocation appears lower
+                // the background group for example is not allocated in exactly the same way, nor is noise
+                boolean groupsMatch = true;
+
+                for(int i = 0; i < bucketGroups.size(); ++i)
                 {
-                    backgroundGroupIndex = index;
-                    hasBackgroundGroup = true;
-                }
-            }
-
-            sigContribOptim.initialise(
-                    sample.Id,
-                    hasBackgroundGroup ? sample.getBucketCounts() : sample.getElevatedBucketCounts(),
-                    sample.getNoiseCounts(),
-                    ratiosCollection,
-                    reqAllocPerc, mConfig.MinSampleAllocCount);
-
-            sigContribOptim.setSigIds(sigIds);
-            // sigOptim.setLogVerbose(mConfig.logSample(sample.Id));
-
-            // each sample's background sig will remain in the list even if it drops below the required threshold
-            sigContribOptim.setRequiredSig(backgroundGroupIndex);
-            boolean validCalc = sigContribOptim.fitToSample();
-
-            if (!validCalc)
-            {
-                LOGGER.error("sample({}) refit of {} sigs failed", sample.Id, groupCount);
-                mHasErrors = true;
-                return false;
-            }
-
-            // if all ok, allocate each contribution to the sample
-            final double[] newGroupContribs = sigContribOptim.getContribs();
-
-            double fitAllocPerc = sigContribOptim.getAllocPerc();
-
-            if (fitAllocPerc < prevAllocPerc - 0.001)
-            {
-                LOGGER.debug(String.format("sample(%d) fit(%.3f) sigs(%d from %d) below required(%.3f)",
-                        sample.Id, fitAllocPerc, sigContribOptim.contributingSigCount(), groupCount, prevAllocPerc));
-
-                if (removeAllocsOnFail)
-                    return false;
-            }
-
-            // finally allocate any group more than the min allocation percent
-            List<Integer> sortedAllocIndices = getSortedVectorIndices(newGroupContribs, false);
-
-            for (Integer index : sortedAllocIndices)
-            {
-                final BucketGroup bucketGroup = bucketGroups.get(index);
-                double fitAlloc = newGroupContribs[index];
-
-                boolean isBackground = bucketGroup == sample.getBackgroundGroup();
-
-                if (fitAlloc == 0 && !isBackground)
-                    break;
-
-                double grpReqAllocPerc = isBackground ? 0 : reqAllocPerc;
-
-                if(isBackground)
-                {
-                    if(fitAlloc == 0)
+                    if(newGroupContribs[i] > 0 && !prevBucketGroups.contains(bucketGroups.get(i)))
                     {
-                        LOGGER.debug(String.format("sample(%d) missed background bg(%d) fit allocation", sample.Id, bucketGroup.getId()));
-                        // force a test of allocation to the BG sig once the others have been applied
-                    }
-                }
-                else
-                {
-                    if(fitAlloc / sampleCount < grpReqAllocPerc || fitAlloc < mConfig.MinSampleAllocCount)
-                    {
-                        LOGGER.debug(String.format("sample(%d) missed fit contrib bg(%d) fit(%s perc=%.3f of %s)",
-                                sample.Id, bucketGroup.getId(), sizeToStr(fitAlloc), fitAlloc / sampleCount, sizeToStr(sampleCount)));
+                        groupsMatch = false;
                         break;
                     }
                 }
 
-                double[] allocCounts = new double[mBucketCount];
-
-                // override with the fitted contribution
-                final double[] bucketRatios = bucketGroup.getBucketRatios();
-                for (int b = 0; b < mBucketCount; ++b)
+                if(groupsMatch)
                 {
-                    double ratio = bucketRatios[b];
-                    allocCounts[b] = fitAlloc * ratio;
+                    for(BucketGroup prevGroup : prevBucketGroups)
+                    {
+                        boolean groupFound = false;
+                        for(int i = 0; i < bucketGroups.size(); ++i)
+                        {
+                            if(newGroupContribs[i] > 0 && bucketGroups.get(i) == prevGroup)
+                            {
+                                groupFound = true;
+                                break;
+                            }
+                        }
+
+                        if(!groupFound)
+                        {
+                            groupsMatch = false;
+                            break;
+                        }
+                    }
                 }
 
-                double actualAlloc = sample.allocateBucketCounts(allocCounts, grpReqAllocPerc);
-                double allocPerc = actualAlloc / sample.getElevatedCount();
+                if(!groupsMatch)
+                    return false;
+            }
+        }
 
-                if (allocPerc >= grpReqAllocPerc)
+        double sampleCount = hasBackgroundGroup ? sample.getTotalCount() : sample.getElevatedCount();
+
+        // finally allocate any group more than the min allocation percent
+
+        for(Integer index : sortedAllocIndices)
+        {
+            final BucketGroup bucketGroup = bucketGroups.get(index);
+            double fitAlloc = newGroupContribs[index];
+
+            boolean isBackground = bucketGroup == sample.getBackgroundGroup();
+
+            if(fitAlloc == 0 && !isBackground)
+                break;
+
+            double grpReqAllocPerc = isBackground ? 0 : reqAllocPerc;
+
+            if(isBackground)
+            {
+                if(fitAlloc == 0)
                 {
-                    bucketGroup.addSample(sample.Id, allocCounts);
-                    sample.addBucketGroup(bucketGroup, allocPerc);
-
-                    LOGGER.debug(String.format("sample(%d) added to bg(%d) fit(%s act=%s of %s sc=%.2f) allocatedPerc(+%.3f -> %.3f) noise(%s %.3f/%.3f)",
-                            sample.Id, bucketGroup.getId(), sizeToStr(fitAlloc), sizeToStr(actualAlloc), sizeToStr(sampleCount), bucketGroup.calcSampleFitScore(sample, true),
-                            sample.lastAllocPercChange(), sample.getAllocPercent(), sizeToStr(sample.getAllocNoise()), sample.getNoisePerc(), sample.getNoiseOfTotal()));
-
-                    addedGroups.add(bucketGroup);
+                    LOGGER.debug(String.format("sample(%d) missed background bg(%d) fit allocation", sample.Id, bucketGroup.getId()));
+                    // force a test of allocation to the BG sig once the others have been applied
                 }
-                else
+            }
+            else
+            {
+                if(fitAlloc / sampleCount < grpReqAllocPerc || fitAlloc < mConfig.MinSampleAllocCount)
                 {
-                    LOGGER.debug(String.format("sample(%d) missed alloc to bg(%d) fit(%s perc=%.3f) vs actual(%s perc=%.3f)",
-                            sample.Id, bucketGroup.getId(), sizeToStr(fitAlloc), fitAlloc / sampleCount, sizeToStr(actualAlloc), actualAlloc / sampleCount));
+                    LOGGER.debug(String.format("sample(%d) missed fit contrib bg(%d) fit(%s perc=%.3f of %s)",
+                            sample.Id, bucketGroup.getId(), sizeToStr(fitAlloc), fitAlloc / sampleCount, sizeToStr(sampleCount)));
+                    break;
                 }
+            }
+
+            double[] allocCounts = new double[mBucketCount];
+
+            // override with the fitted contribution
+            final double[] bucketRatios = bucketGroup.getBucketRatios();
+            for (int b = 0; b < mBucketCount; ++b)
+            {
+                double ratio = bucketRatios[b];
+                allocCounts[b] = fitAlloc * ratio;
+            }
+
+            double actualAlloc = sample.allocateBucketCounts(allocCounts, grpReqAllocPerc);
+            double allocPerc = actualAlloc / sampleCount;
+
+            if (actualAlloc > 0 && allocPerc >= grpReqAllocPerc)
+            {
+                bucketGroup.addSample(sample.Id, allocCounts);
+                sample.addBucketGroup(bucketGroup, allocPerc);
+
+                LOGGER.debug(String.format("sample(%d) added to bg(%d) fit(%s act=%s of %s sc=%.2f) allocatedPerc(+%.3f -> %.3f) noise(%s %.3f/%.3f)",
+                        sample.Id, bucketGroup.getId(), sizeToStr(fitAlloc), sizeToStr(actualAlloc), sizeToStr(sampleCount), bucketGroup.calcSampleFitScore(sample, true),
+                        sample.lastAllocPercChange(), sample.getAllocPercent(), sizeToStr(sample.getAllocNoise()), sample.getNoisePerc(), sample.getNoiseOfTotal()));
+
+                addedGroups.add(bucketGroup);
+            }
+            else
+            {
+                LOGGER.debug(String.format("sample(%d) missed alloc to bg(%d) fit(%s perc=%.3f) vs actual(%s perc=%.3f)",
+                        sample.Id, bucketGroup.getId(), sizeToStr(fitAlloc), fitAlloc / sampleCount, sizeToStr(actualAlloc), actualAlloc / sampleCount));
             }
         }
 
@@ -2632,7 +2674,7 @@ public class BucketAnalyser {
 
             double sampleCount = sample.getElevatedCount();
 
-            mConfig.logSample(sample.Id);
+            // mConfig.logSample(sample.Id);
 
             // tweak each group in turn to allocate the max possible using ratio ranges
             for(final BucketGroup bucketGroup : sample.getBucketGroups())

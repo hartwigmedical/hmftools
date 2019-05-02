@@ -137,6 +137,7 @@ public class SampleData
     public double getMaxNoise() { return mMaxNoiseTotal; }
 
     public final double[] getUnallocBucketCounts() { return mUnallocBucketCounts; }
+    public final double[] getAllocBucketCounts() { return mAllocBucketCounts; }
     public double getAllocPercent() { return mAllocPercent; }
     public double lastAllocPercChange() { return mAllocPercent - mPreviousAllocPerc; }
     public double getUnallocPercent() { return 1 - mAllocPercent; }
@@ -172,8 +173,9 @@ public class SampleData
     {
         mBucketGroups.clear();
 
-        if(mBackgroundGroup != null)
-            mBucketGroups.add(mBackgroundGroup);
+        // don't force the BG group into the list in case it's never actually allocated to it
+        // if(mBackgroundGroup != null)
+        //    mBucketGroups.add(mBackgroundGroup);
 
         mElevBucketGroups.clear();
         mUnallocBuckets.clear();
@@ -240,7 +242,9 @@ public class SampleData
         final double[] sampleCounts = useUnallocated ? mUnallocBucketCounts : (mUseElevatedForAllocation ? mElevBucketCounts : mBucketCounts);
         double countsTotal = useUnallocated ? mUnallocTotal : (mUseElevatedForAllocation ? mElevatedTotal : mVarTotal);
 
-        initVector(allocCounts, 0);
+        if(allocCounts != null)
+            initVector(allocCounts, 0);
+
         double allocTotal = 0; // sum of the calcalated bucket allocations
 
         // first extract the remaining unallocated counts per bucket
@@ -358,7 +362,9 @@ public class SampleData
             if(greaterThan(allocCount, sampleCounts[bucket] + noiseCount))
                 allocCount = sampleCounts[bucket] + noiseCount; // check cannot exceed actual + permitted noise
 
-            allocCounts[bucket] = allocCount;
+            if(allocCounts != null)
+                allocCounts[bucket] = allocCount;
+
             allocTotal += allocCount;
 
             if(noiseCount > 0 && sampleCounts[bucket] < allocCount)
@@ -486,6 +492,73 @@ public class SampleData
 
         return allocatedCount;
     }
+
+    public void restoreCounts(final double[] allocCounts, final double[] noiseCounts)
+    {
+        double refVarTotal = mUseElevatedForAllocation ? mElevatedTotal : mVarTotal;
+        copyVector(allocCounts, mAllocBucketCounts);
+        copyVector(noiseCounts, mAllocNoiseCounts);
+
+        for(int i = 0; i < allocCounts.length; ++i)
+        {
+            double bucketCount = mUseElevatedForAllocation ? mElevBucketCounts[i] : mBucketCounts[i];
+            mUnallocBucketCounts[i] = bucketCount - mAllocBucketCounts[i];
+        }
+
+        mAllocTotal = capValue(sumVector(mAllocBucketCounts), 0, refVarTotal);
+        mUnallocTotal = refVarTotal - mAllocTotal;
+        mAllocPercent = capValue(mAllocTotal/refVarTotal, 0, 1);
+    }
+
+    public double reduceAllocCounts(final double[] counts)
+    {
+        double refVarTotal = mUseElevatedForAllocation ? mElevatedTotal : mVarTotal;
+        double allocReductionTotal = 0;
+
+        for(int i = 0; i < counts.length; ++i)
+        {
+            if(counts[i] >= 0)
+                continue;
+
+            // take from allocated noise first of all if allocated counts are at their limit
+            double countReduction = -counts[i];
+
+            if(mUnallocBucketCounts[i] == 0)
+            {
+                double noiseReduction = 0;
+                double noiseAlloc = mAllocNoiseCounts[i];
+
+                if(noiseAlloc >= countReduction)
+                {
+                    noiseReduction = countReduction;
+                }
+                else
+                {
+                    noiseReduction = noiseAlloc;
+                    countReduction = countReduction - noiseAlloc;
+                }
+
+                if(noiseReduction > 0)
+                {
+                    mAllocNoiseCounts[i] -= noiseReduction;
+                    mNoiseAllocTotal -= noiseReduction;
+                }
+            }
+
+            mUnallocBucketCounts[i] += countReduction;
+            mAllocBucketCounts[i] -= countReduction;
+            allocReductionTotal += countReduction;
+        }
+
+        mAllocTotal = max(mAllocTotal - allocReductionTotal, 0);
+        mUnallocTotal = refVarTotal - mAllocTotal;
+
+        mPreviousAllocPerc = mAllocPercent;
+        mAllocPercent = capValue(mAllocTotal/refVarTotal, 0, 1);
+
+        return allocReductionTotal;
+    }
+
 
     private void removeUnallocBucket(Integer bucketId)
     {

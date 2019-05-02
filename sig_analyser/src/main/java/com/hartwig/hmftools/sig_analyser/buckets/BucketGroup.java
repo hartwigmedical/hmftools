@@ -23,7 +23,7 @@ import com.hartwig.hmftools.common.numeric.Doubles;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-public class BucketGroup implements Comparable<BucketGroup> {
+public class BucketGroup  {
 
     // keyed by a bucket pairing
     private int mId;
@@ -60,7 +60,6 @@ public class BucketGroup implements Comparable<BucketGroup> {
     private BucketGroup mMaxSimiliarGroup;
 
     private double mPurity; // for now a percentage of sample buckets that are elevated
-    private double mScoreOverride;
 
     public static String BG_TYPE_BACKGROUND = "BGRD";
     public static String BG_TYPE_MAJOR = "MAJOR";
@@ -88,7 +87,6 @@ public class BucketGroup implements Comparable<BucketGroup> {
         mBucketRatios = null;
         mBucketRatioRanges = null;
         mPurity = 0;
-        mScoreOverride = 0;
 
         mTotalCount = 0;
         mPotentialAllocation = 0;
@@ -126,19 +124,6 @@ public class BucketGroup implements Comparable<BucketGroup> {
     public boolean isBackground() { return mType.equals(BG_TYPE_BACKGROUND); }
 
     public int getSize() { return mBucketIds.size() * mSampleIds.size(); }
-
-    public double calcScore()
-    {
-        if(mScoreOverride > 0)
-            return mScoreOverride;
-
-        double score = sqrt(mBucketIds.size()) * mSampleIds.size();
-
-        if(mPurity > 0)
-            score *= mPurity;
-
-        return score;
-    }
 
     public double getPurity() { return mPurity; }
     public double getTotalCount() { return mTotalCount; }
@@ -184,12 +169,6 @@ public class BucketGroup implements Comparable<BucketGroup> {
     }
 
     public final String getRefSigs() { return mRefSigs; }
-
-    public int compareTo(final BucketGroup other)
-    {
-        // for descending order
-        return (int)round(other.calcScore() - calcScore());
-    }
 
     public final List<Integer> getSampleIds() { return mSampleIds; }
     public final int getSampleCount() { return mSampleIds.size(); }

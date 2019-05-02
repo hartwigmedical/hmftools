@@ -206,7 +206,7 @@ public class BaReporter
     public void postRunAnalysis()
     {
         tagMajorGroups();
-        logBucketGroups(true);
+        logBucketGroups();
         logSampleResults();
         analyseSampleUnallocCounts();
         logWorstAllocatedSamples();
@@ -287,7 +287,7 @@ public class BaReporter
         logOverallStats();
     }
 
-    public void logBucketGroups(boolean verbose)
+    public void logBucketGroups()
     {
         List<BucketGroup> bgList = mFinalBucketGroups;
 
@@ -295,16 +295,9 @@ public class BaReporter
         // Collections.sort(bgList);
 
         // log top groups
-        int maxToLog = verbose ? bgList.size() : min(bgList.size(), 40);
+        int maxToLog = bgList.size();
 
-        if(verbose)
-        {
-            LOGGER.debug("logging all bucket groups of total({})", bgList.size());
-        }
-        else
-        {
-            LOGGER.debug("logging top {} bucket groups of total({})", maxToLog, bgList.size());
-        }
+        LOGGER.debug("logging all bucket groups of total({})", bgList.size());
 
         double totalCount = mElevatedCount;
 
@@ -321,65 +314,56 @@ public class BaReporter
 
             double avgAllocPerc = allocPercTotal / bucketGroup.getSampleIds().size();
 
-            if (verbose)
+            String bucketIdsStr = "";
+
+            // log top 20 initial buckets, then any extra ones added through the broadending routine
+            final List<Integer> initBuckets = bucketGroup.getInitialBucketIds();
+            int added = 0;
+            List<Integer> descBucketRatioIndices = getSortedVectorIndices(bucketGroup.getBucketRatios(), false);
+            for(Integer bucket : descBucketRatioIndices)
             {
-                String bucketIdsStr = "";
+                if(!initBuckets.contains(bucket))
+                    continue;
 
-                // log top 20 initial buckets, then any extra ones added through the broadending routine
-                final List<Integer> initBuckets = bucketGroup.getInitialBucketIds();
-                int added = 0;
-                List<Integer> descBucketRatioIndices = getSortedVectorIndices(bucketGroup.getBucketRatios(), false);
-                for(Integer bucket : descBucketRatioIndices)
-                {
-                    if(!initBuckets.contains(bucket))
-                        continue;
+                if (!bucketIdsStr.isEmpty())
+                    bucketIdsStr += ", ";
 
-                    if (!bucketIdsStr.isEmpty())
-                        bucketIdsStr += ", ";
+                bucketIdsStr += bucket;
 
-                    bucketIdsStr += bucket;
-
-                    ++added;
-                    if(added >= 20)
-                        break;
-                }
-
-                if (!bucketGroup.getExtraBucketIds().isEmpty())
-                {
-                    bucketIdsStr += " extra=" + bucketGroup.getExtraBucketIds().toString();
-                }
-
-                double groupPerc = bucketGroup.getTotalCount() / totalCount;
-
-                String linkData = "";
-
-                if(bucketGroup.getGroupType().isEmpty())
-                    linkData = mAnalyser.isMajorGroup(bucketGroup) ? BG_TYPE_MAJOR : BG_TYPE_MINOR;
-                else
-                    linkData = bucketGroup.getGroupType();
-
-                if(!bucketGroup.getTag().isEmpty())
-                {
-                    linkData += String.format(" tag=%s", bucketGroup.getTag());
-                }
-
-                String similarGroup = "";
-                if(bucketGroup.getMaxSimiliarGroup() != null)
-                {
-                    similarGroup = String.format(" simGroup(%d %.3f)", bucketGroup.getMaxSimiliarGroup().getId(), bucketGroup.getMaxSimiliarScore());
-                }
-
-                LOGGER.debug(String.format("rank %d: bg(%d) %s cancer(%s) samples(%d) variants(avg=%s avgAllocPerc=%.3f total=%s perc=%.3f) buckets(%d: %s) effects(%s)%s",
-                        i, bucketGroup.getId(), linkData, bucketGroup.getCancerType(), bucketGroup.getSampleIds().size(),
-                        sizeToStr(bucketGroup.getAvgCount()), avgAllocPerc, sizeToStr(bucketGroup.getTotalCount()), groupPerc,
-                        bucketGroup.getBucketIds().size(), bucketIdsStr, bucketGroup.getEffects(), similarGroup));
+                ++added;
+                if(added >= 20)
+                    break;
             }
+
+            if (!bucketGroup.getExtraBucketIds().isEmpty())
+            {
+                bucketIdsStr += " extra=" + bucketGroup.getExtraBucketIds().toString();
+            }
+
+            double groupPerc = bucketGroup.getTotalCount() / totalCount;
+
+            String linkData = "";
+
+            if(bucketGroup.getGroupType().isEmpty())
+                linkData = mAnalyser.isMajorGroup(bucketGroup) ? BG_TYPE_MAJOR : BG_TYPE_MINOR;
             else
+                linkData = bucketGroup.getGroupType();
+
+            if(!bucketGroup.getTag().isEmpty())
             {
-                LOGGER.debug(String.format("rank %d: %s bg(%d) score(%.0f size=%d purity=%.2f) samples(%d) buckets(%d)",
-                        i, bucketGroup.getId(), bucketGroup.calcScore(), bucketGroup.getSize(), bucketGroup.getPurity(),
-                        bucketGroup.getSampleIds().size(), bucketGroup.getBucketIds().size()));
+                linkData += String.format(" tag=%s", bucketGroup.getTag());
             }
+
+            String similarGroup = "";
+            if(bucketGroup.getMaxSimiliarGroup() != null)
+            {
+                similarGroup = String.format(" simGroup(%d %.3f)", bucketGroup.getMaxSimiliarGroup().getId(), bucketGroup.getMaxSimiliarScore());
+            }
+
+            LOGGER.debug(String.format("rank %d: bg(%d) %s cancer(%s) samples(%d) variants(avg=%s avgAllocPerc=%.3f total=%s perc=%.3f) buckets(%d: %s) effects(%s)%s",
+                    i, bucketGroup.getId(), linkData, bucketGroup.getCancerType(), bucketGroup.getSampleIds().size(),
+                    sizeToStr(bucketGroup.getAvgCount()), avgAllocPerc, sizeToStr(bucketGroup.getTotalCount()), groupPerc,
+                    bucketGroup.getBucketIds().size(), bucketIdsStr, bucketGroup.getEffects(), similarGroup));
         }
     }
 
@@ -506,7 +490,7 @@ public class BaReporter
 
             LOGGER.debug(String.format("%d: worst sample(%d: %s) cancer(%s) unallocated(%s of %s, perc=%.3f) percOfTotal(%.4f) groupCount(%d)",
                     worstIndex, sample.Id, sample.getSampleName(), sample.getCancerType(), sizeToStr(unallocTotal),
-                    sizeToStr(sample.getElevatedCount()), sample.getUnallocPercent(), unallocTotal/mElevatedCount, sample.getElevBucketGroups().size()));
+                    sizeToStr(sample.getElevatedCount()), sample.getUnallocPercent(), unallocTotal/mElevatedCount, sample.getBucketGroups().size()));
         }
 
         double allUnallocTotal = mTotalCount - mTotalAllocatedCount;

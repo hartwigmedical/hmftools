@@ -9,6 +9,7 @@ import static junit.framework.TestCase.assertTrue;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.sig_analyser.buckets.SampleData;
 import com.hartwig.hmftools.sig_analyser.buckets.SigContribOptimiser;
 
 import org.apache.logging.log4j.Level;
@@ -20,6 +21,8 @@ public class SigContribOptimiserTests
     @Test
     public void testSampleFit1()
     {
+        Configurator.setRootLevel(Level.DEBUG);
+
         int bucketCount = 5;
         int sigCount = 3;
 
@@ -51,10 +54,14 @@ public class SigContribOptimiserTests
 
         double[] noiseCounts = new double[bucketCount];
 
-        int sample = 0;
+        int sampleId = 0;
+        SampleData sample = new SampleData(sampleId);
+        sample.setBucketCounts(counts);
+        sample.setElevatedBucketCounts(counts, noiseCounts);
 
         SigContribOptimiser sigOptim = new SigContribOptimiser(bucketCount, true, 1.0);
-        sigOptim.initialise(sample, counts, noiseCounts, ratiosCollection, 0.001, 0);
+        sigOptim.initialise(sampleId, counts, noiseCounts, ratiosCollection, 0.001, 0);
+        // sigOptim.initialise(sample, ratiosCollection, 0.001, 0);
         boolean calcOk = sigOptim.fitToSample();
 
         if (!calcOk)
@@ -81,12 +88,14 @@ public class SigContribOptimiserTests
             }
         }
 
-        assertEquals(sigOptim.getAllocPerc(), 1, 0.001);
+        assertEquals(1, sigOptim.getAllocPerc(), 0.001);
     }
 
     @Test
     public void sampleFitTest2()
     {
+        Configurator.setRootLevel(Level.DEBUG);
+
         int bucketCount = 5;
         int sigCount = 4;
 
@@ -118,14 +127,11 @@ public class SigContribOptimiserTests
             }
         }
 
-        // set initial contribution
-        double[] countsMargin = new double[bucketCount]; // { 2, 3, 1, 1, 2 };
+        double[] noiseCounts = new double[bucketCount];
 
-        // copyVector(actualContribs, contribs);
         int sample = 0;
-
         SigContribOptimiser sigOptim = new SigContribOptimiser(bucketCount, true, 1.0);
-        sigOptim.initialise(sample, counts, countsMargin, ratiosCollection, 0.001, 0);
+        sigOptim.initialise(sample, counts, noiseCounts, ratiosCollection, 0.001, 0);
         boolean calcOk = sigOptim.fitToSample();
 
         assertTrue(calcOk);
@@ -143,7 +149,7 @@ public class SigContribOptimiserTests
                 fittedCount += sigRatios[i] * finalContribs[j];
             }
 
-            if (greaterThan(fittedCount, counts[i] + countsMargin[i]))
+            if (greaterThan(fittedCount, counts[i] + noiseCounts[i]))
             {
                 // LOGGER.error(String.format("bucket(%d) fitted count(%f) exceeds count(%f) + noise(%f)", i, fittedCount, counts[i], countsMargin[i]));
                 assertTrue(false);
@@ -151,14 +157,13 @@ public class SigContribOptimiserTests
             }
         }
 
-        assertEquals(sigOptim.getAllocPerc(), 1, 0.001);
+        assertEquals(1, sigOptim.getAllocPerc(), 0.001);
     }
-
 
     @Test
     public void testSampleFitWithNoise()
     {
-        Configurator.setRootLevel(Level.DEBUG);
+        // Configurator.setRootLevel(Level.DEBUG);
 
         int bucketCount = 5;
         int sigCount = 3;
@@ -226,7 +231,7 @@ public class SigContribOptimiserTests
             }
         }
 
-        assertEquals(sigOptim.getAllocPerc(), 1, 0.001);
+        assertEquals(1, sigOptim.getAllocPerc(), 0.001);
     }
 
 }
