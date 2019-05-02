@@ -4,10 +4,8 @@ import static java.lang.Math.abs;
 import static java.lang.Math.floor;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
-import static java.lang.Math.pow;
 import static java.lang.Math.round;
 
-import static com.hartwig.hmftools.sig_analyser.buckets.BaConfig.DEFAULT_SIG_RATIO_RANGE_PERCENT;
 import static com.hartwig.hmftools.sig_analyser.common.DataUtils.convertToPercentages;
 import static com.hartwig.hmftools.sig_analyser.common.DataUtils.copyVector;
 import static com.hartwig.hmftools.sig_analyser.common.DataUtils.doubleToStr;
@@ -183,7 +181,7 @@ public class SigOptimiser
 
             final double[] counts = sample.getUnallocBucketCounts();
             final double[] allCounts = sample.getElevatedBucketCounts();
-            final double[] noise = sample.getCountRanges();
+            final double[] noise = sample.getNoiseCounts();
             final double[] allocNoise = sample.getAllocNoiseCounts();
 
             double[] proposedAllocCounts = null;
@@ -1286,7 +1284,7 @@ public class SigOptimiser
                 continue;
 
             final double[] allCounts = sample.getElevatedBucketCounts();
-            final double[] noise = sample.getCountRanges();
+            final double[] noise = sample.getNoiseCounts();
 
             for (Integer b : mActiveBuckets)
             {
@@ -1372,7 +1370,7 @@ public class SigOptimiser
                 if(!mSamples.contains(sample))
                     continue;
 
-                double noise = max(sample.getCountRanges()[bucket] - sample.getAllocNoiseCounts()[bucket], 0);
+                double noise = max(sample.getNoiseCounts()[bucket] - sample.getAllocNoiseCounts()[bucket], 0);
                 double sbCount = sample.getUnallocBucketCounts()[bucket] + noise;
 
                 if (sbCount == 0)

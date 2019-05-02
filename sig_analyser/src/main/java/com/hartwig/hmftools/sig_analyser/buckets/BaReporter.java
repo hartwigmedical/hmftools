@@ -56,8 +56,8 @@ public class BaReporter
     private SigMatrix mBackgroundCounts;
     private SigMatrix mElevatedCounts; // actual - expected, capped at zero
     private double mElevatedCount;
-    private double mAllocatedCount;
-    private double mBackgroundCount;
+
+    private double mTotalAllocatedCount;
     private SigMatrix mSampleBucketRatios;
 
     private SigMatrix mProposedSigs;
@@ -108,7 +108,7 @@ public class BaReporter
         mSampleCount = mSampleCounts.Cols;
         mActiveSampleCount = mSampleCount;
 
-        mAllocatedCount = 0;
+        mTotalAllocatedCount = 0;
 
         mSampleData = sampleData;
         mExtSampleData = extSampleData;
@@ -145,7 +145,7 @@ public class BaReporter
         }
     }
 
-    public double getAllocatedCount() { return mAllocatedCount; }
+    public double getTotalAllocatedCount() { return mTotalAllocatedCount; }
 
     public final SigMatrix getReferenceSigs() { return mReferenceSigs; }
 
@@ -159,13 +159,20 @@ public class BaReporter
 
     public void logOverallStats()
     {
-        mAllocatedCount = 0;
+        mTotalAllocatedCount = 0;
         int fullyAllocated = 0;
         double noiseAllocated = 0;
+        double elevatedAllocatedCount = 0;
+        int samplesUsingElevatedForAllocated = 0;
 
         for(final SampleData sample : mSampleData)
         {
-            mAllocatedCount += sample.getAllocatedCount();
+            if(sample.usingElevatedForAllocation())
+            {
+                ++samplesUsingElevatedForAllocated;
+            }
+
+            elevatedAllocatedCount += sample.getAllocatedCount();
 
             if(sample.getAllocPercent() >= SAMPLE_ALLOCATED_PERCENT)
                 ++fullyAllocated;
@@ -173,18 +180,27 @@ public class BaReporter
             noiseAllocated += sample.getAllocNoise();
         }
 
-        mBackgroundCount = 0;
+        double backgroundAlloc = 0;
         for(final BucketGroup bucketGroup : mBackgroundGroups)
         {
-            mBackgroundCount += bucketGroup.getTotalCount();
+            backgroundAlloc += bucketGroup.getTotalCount();
         }
 
-        double elevatedCount = mTotalCount - mBackgroundCount;
+        if(samplesUsingElevatedForAllocated == mSampleData.size())
+        {
+            mTotalAllocatedCount = elevatedAllocatedCount + backgroundAlloc;
+        }
+        else
+        {
+            mTotalAllocatedCount = elevatedAllocatedCount;
+        }
 
-        LOGGER.debug(String.format("overall: samples(%d alloc=%d) groups(%d) counts: total(%s) background(%s perc=%.3f) elevated(%s perc=%.3f) alloc(%s perc=%.3f) noise(%s perc=%.3f)",
-                mActiveSampleCount, fullyAllocated, mFinalBucketGroups.size(), sizeToStr(mTotalCount), sizeToStr(mBackgroundCount), mBackgroundCount/mTotalCount,
-                sizeToStr(elevatedCount), elevatedCount/mTotalCount, sizeToStr(mAllocatedCount), mAllocatedCount/mElevatedCount,
-                sizeToStr(noiseAllocated), noiseAllocated/mElevatedCount));
+        double initBackgroundCount = mTotalCount - mElevatedCount;
+
+        LOGGER.debug(String.format("overall: samples(%d alloc=%d) groups(%d) counts: total(%s) initial(bg=%s elev=%s) alloc(%s perc=%.3f bg=%.3f elev=%.3f) noise(%s perc=%.3f)",
+                mActiveSampleCount, fullyAllocated, mFinalBucketGroups.size(), sizeToStr(mTotalCount), sizeToStr(initBackgroundCount),
+                sizeToStr(mElevatedCount), sizeToStr(mTotalAllocatedCount), mTotalAllocatedCount/mTotalCount,
+                backgroundAlloc/mTotalCount, elevatedAllocatedCount/mTotalCount, sizeToStr(noiseAllocated), noiseAllocated/mElevatedCount));
     }
 
     public void postRunAnalysis()
@@ -493,11 +509,11 @@ public class BaReporter
                     sizeToStr(sample.getElevatedCount()), sample.getUnallocPercent(), unallocTotal/mElevatedCount, sample.getElevBucketGroups().size()));
         }
 
-        double allUnallocTotal = mElevatedCount - mAllocatedCount;
+        double allUnallocTotal = mTotalCount - mTotalAllocatedCount;
 
         LOGGER.debug(String.format("worst %d (perc=%.3f) samples have unalloc(%s) ofAllUnalloc(perc=%.3f of %s) ofTotal(%.3f)",
                 sampleCount, sampleCount/(double)nonExcludedSampleCount, sizeToStr(totalUnallocated), totalUnallocated/allUnallocTotal,
-                sizeToStr(allUnallocTotal), totalUnallocated/mAllocatedCount));
+                sizeToStr(allUnallocTotal), totalUnallocated/mTotalAllocatedCount));
 
         // report worst allocated buckets in a similar way
         List<Integer> worstBucketIndices = getSortedVectorIndices(sigUnallocatedByBucket, false);

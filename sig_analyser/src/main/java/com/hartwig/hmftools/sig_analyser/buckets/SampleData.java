@@ -126,7 +126,7 @@ public class SampleData
 
     public final double[] getBucketCounts() { return mBucketCounts; }
     public final double[] getElevatedBucketCounts() { return mElevBucketCounts; }
-    public final double[] getCountRanges() { return mNoiseCounts; }
+    public final double[] getNoiseCounts() { return mNoiseCounts; }
     public final double[] getAllocNoiseCounts() { return mAllocNoiseCounts; }
     public double getTotalCount() { return mVarTotal; }
     public double getElevatedCount() { return mElevatedTotal; }
@@ -142,6 +142,7 @@ public class SampleData
     public double getUnallocPercent() { return 1 - mAllocPercent; }
     public double getNoisePerc() { return mNoiseAllocTotal/mMaxNoiseTotal; }
     public double getNoiseOfTotal() { return mNoiseAllocTotal/mElevatedTotal; }
+    public boolean usingElevatedForAllocation() { return mUseElevatedForAllocation; }
 
     public void setBucketCounts(final double[] counts)
     {

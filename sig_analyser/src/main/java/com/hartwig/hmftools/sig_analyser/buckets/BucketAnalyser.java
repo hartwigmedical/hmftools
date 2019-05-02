@@ -446,7 +446,7 @@ public class BucketAnalyser {
                 continue;
             }
 
-            double prevAllocCount = mReporter.getAllocatedCount();
+            double prevAllocCount = mReporter.getTotalAllocatedCount();
 
             populateTopBucketGroups();
 
@@ -506,7 +506,7 @@ public class BucketAnalyser {
                 continue;
             }
 
-            double newAllocCount = mReporter.getAllocatedCount();
+            double newAllocCount = mReporter.getTotalAllocatedCount();
             if(mRunId > 0 && (newAllocCount - prevAllocCount) / mElevatedCount < 0.0001) // eg 5K out of 55M
             {
                 LOGGER.debug(String.format("run %d: negligible allocPercChange(%s -> %s)", mRunId, doubleToStr(prevAllocCount), doubleToStr(newAllocCount)));
@@ -1108,7 +1108,7 @@ public class BucketAnalyser {
 
         int maxCandidateGroups = MAX_CANDIDATE_GROUPS;
 
-        SigContribOptimiser sigOptim = new SigContribOptimiser(mBucketCount, false, SAMPLE_ALLOCATED_PERCENT);
+        SigContribOptimiser sigContribOptimiser = new SigContribOptimiser(mBucketCount, false, SAMPLE_ALLOCATED_PERCENT);
 
         int exceededOnSoloAlloc = 0;
         int exceededOnUnalloc = 0;
@@ -1262,14 +1262,14 @@ public class BucketAnalyser {
                     double[] prevContribs = new double[ratiosCollection.size()];
                     int candidateSigIndex = prevContribs.length - 1;
 
-                    sigOptim.initialise(sample.Id, sample.getElevatedBucketCounts(), sample.getCountRanges(), ratiosCollection,
+                    sigContribOptimiser.initialise(sample.Id, sample.getElevatedBucketCounts(), sample.getNoiseCounts(), ratiosCollection,
                             reqAllocPercent, mConfig.MinSampleAllocCount);
 
                     // sigOptim.setLogVerbose(mConfig.logSample(sampleId));
-                    sigOptim.setTargetSig(candidateSigIndex);
-                    sigOptim.setRequiredSig(bgGroupIndex);
+                    sigContribOptimiser.setTargetSig(candidateSigIndex);
+                    sigContribOptimiser.setRequiredSig(bgGroupIndex);
 
-                    boolean validCalc = sigOptim.fitToSample();
+                    boolean validCalc = sigContribOptimiser.fitToSample();
 
                     if (!validCalc) // couldn't reach the required percent for this canididate sig
                     {
@@ -1278,7 +1278,7 @@ public class BucketAnalyser {
                         continue;
                     }
 
-                    double candidateAlloc = sigOptim.getContribs()[candidateSigIndex];
+                    double candidateAlloc = sigContribOptimiser.getContribs()[candidateSigIndex];
                     allocCountTotal = candidateAlloc;
                     allocPercent = allocCountTotal / sample.getElevatedCount();
 
@@ -1308,7 +1308,7 @@ public class BucketAnalyser {
                 mBucketGroups.size(), exceededOnSoloAlloc, exceededOnUnalloc, exceededOnFit, skippedRetry);
 
         LOGGER.debug(String.format("sig-optim stats: instances(%d) avgIters(%.1f) avgImprovePerc(%.3f)",
-                sigOptim.getInstances(), sigOptim.getAvgIterations(), sigOptim.getAvgImprovePerc()));
+                sigContribOptimiser.getInstances(), sigContribOptimiser.getAvgIterations(), sigContribOptimiser.getAvgImprovePerc()));
 
         // now that all samples have been tested and allocated, force a recalc of the ratios
         // and then check for overlap with existing bucket groups
@@ -1492,7 +1492,7 @@ public class BucketAnalyser {
         // now allocate samples to this top group
         topBucketGroup.clearSamples();
 
-        SigContribOptimiser sigOptim = new SigContribOptimiser(mBucketCount, false, SAMPLE_ALLOCATED_PERCENT);
+        SigContribOptimiser sigContribOptimiser = new SigContribOptimiser(mBucketCount, false, SAMPLE_ALLOCATED_PERCENT);
         List<BucketGroup> sampleGroupList = Lists.newArrayList();
 
         List<Integer> skippedSamples = Lists.newArrayList();
@@ -1586,7 +1586,7 @@ public class BucketAnalyser {
                 */
 
                 sample.clearAllocations(true);
-                boolean fitAllocated = fitSampleWithGroups(sigOptim, sample, sampleGroupList, prevAllocPerc, reqAllocPercent, false);
+                boolean fitAllocated = fitSampleWithGroups(sigContribOptimiser, sample, sampleGroupList, prevAllocPerc, reqAllocPercent, false);
 
                 if(!fitAllocated)
                 {
@@ -2282,7 +2282,7 @@ public class BucketAnalyser {
 
         double reqAllocPercent = MIN_GROUP_ALLOC_PERCENT_LOWER;
 
-        SigContribOptimiser sigOptim = new SigContribOptimiser(mBucketCount, false, SAMPLE_ALLOCATED_PERCENT);
+        SigContribOptimiser sigContribOptimiser = new SigContribOptimiser(mBucketCount, false, SAMPLE_ALLOCATED_PERCENT);
 
         if(mConfig.UseBackgroundCounts)
         {
@@ -2374,14 +2374,14 @@ public class BucketAnalyser {
 
             if(potentialGroupList.size() > 1)
             {
-                useNewFit = fitSampleWithGroups(sigOptim, sample, potentialGroupList, prevAllocPerc, reqAllocPercent, true);
+                useNewFit = fitSampleWithGroups(sigContribOptimiser, sample, potentialGroupList, prevAllocPerc, reqAllocPercent, true);
                 boolean usePrevFit = false;
 
                 if (!useNewFit)
                 {
                     // revert back to the previous set of groups added through discovery
                     sample.clearAllocations(false);
-                    usePrevFit = fitSampleWithGroups(sigOptim, sample, prevGroupList, 0, reqAllocPercent, false);
+                    usePrevFit = fitSampleWithGroups(sigContribOptimiser, sample, prevGroupList, 0, reqAllocPercent, false);
                 }
 
                 if (!usePrevFit && !useNewFit)
@@ -2454,7 +2454,7 @@ public class BucketAnalyser {
         }
 
         LOGGER.debug(String.format("sig-optim stats: instances(%d) avgIters(%.1f) avgImprovePerc(%.3f)",
-                sigOptim.getInstances(), sigOptim.getAvgIterations(), sigOptim.getAvgImprovePerc()));
+                sigContribOptimiser.getInstances(), sigContribOptimiser.getAvgIterations(), sigContribOptimiser.getAvgImprovePerc()));
 
         // report range of group counts across the samples
         double[] groupCounts = listToArray(sampleGroupCounts);
@@ -2469,7 +2469,7 @@ public class BucketAnalyser {
         }
     }
 
-    private boolean fitSampleWithGroups(SigContribOptimiser sigOptim, SampleData sample, List<BucketGroup> bucketGroups,
+    private boolean fitSampleWithGroups(SigContribOptimiser sigContribOptim, SampleData sample, List<BucketGroup> bucketGroups,
             double prevAllocPerc, double reqAllocPerc, boolean removeAllocsOnFail)
     {
         double sampleCount = sample.getElevatedCount();
@@ -2498,19 +2498,19 @@ public class BucketAnalyser {
                 }
             }
 
-            sigOptim.initialise(
+            sigContribOptim.initialise(
                     sample.Id,
                     hasBackgroundGroup ? sample.getBucketCounts() : sample.getElevatedBucketCounts(),
-                    sample.getCountRanges(),
+                    sample.getNoiseCounts(),
                     ratiosCollection,
                     reqAllocPerc, mConfig.MinSampleAllocCount);
 
-            sigOptim.setSigIds(sigIds);
+            sigContribOptim.setSigIds(sigIds);
             // sigOptim.setLogVerbose(mConfig.logSample(sample.Id));
 
             // each sample's background sig will remain in the list even if it drops below the required threshold
-            sigOptim.setRequiredSig(backgroundGroupIndex);
-            boolean validCalc = sigOptim.fitToSample();
+            sigContribOptim.setRequiredSig(backgroundGroupIndex);
+            boolean validCalc = sigContribOptim.fitToSample();
 
             if (!validCalc)
             {
@@ -2520,14 +2520,14 @@ public class BucketAnalyser {
             }
 
             // if all ok, allocate each contribution to the sample
-            final double[] newGroupContribs = sigOptim.getContribs();
+            final double[] newGroupContribs = sigContribOptim.getContribs();
 
-            double fitAllocPerc = sigOptim.getAllocPerc();
+            double fitAllocPerc = sigContribOptim.getAllocPerc();
 
             if (fitAllocPerc < prevAllocPerc - 0.001)
             {
                 LOGGER.debug(String.format("sample(%d) fit(%.3f) sigs(%d from %d) below required(%.3f)",
-                        sample.Id, fitAllocPerc, sigOptim.contributingSigCount(), groupCount, prevAllocPerc));
+                        sample.Id, fitAllocPerc, sigContribOptim.contributingSigCount(), groupCount, prevAllocPerc));
 
                 if (removeAllocsOnFail)
                     return false;
