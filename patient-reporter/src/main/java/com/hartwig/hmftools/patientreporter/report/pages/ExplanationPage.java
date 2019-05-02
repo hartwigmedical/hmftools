@@ -41,8 +41,8 @@ public abstract class ExplanationPage {
     private static ComponentBuilder<?, ?> generalExplanationSection() {
         return toList("Details on the report in general",
                 Lists.newArrayList("The analysis is based on reference genome version GRCh37.",
-                        "Somatic (tumor derived) variation is reported. Potential variants in the tumor that also exist in "
-                                + "germline findings are not included in this report except for patients participating in WIDE study.",
+                        "Somatic (tumor derived) variation is reported. Potentially pathogenic variants in the tumor that also exist in "
+                                + "germline are not included in this report except for patients participating in WIDE study.",
                         "Transcripts used for reporting can be found on https://resources.hartwigmedicalfoundation.nl and "
                                 + "are generally the canonical transcripts as defined by Ensembl.",
                         "Variant detection in samples with lower tumor content is less sensitive. "
