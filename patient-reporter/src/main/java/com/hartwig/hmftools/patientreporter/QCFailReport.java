@@ -27,12 +27,12 @@ public abstract class QCFailReport implements PatientReport {
     @NotNull
     public abstract Optional<String> comments();
 
-    @NotNull
     @Override
+    @NotNull
     public abstract String signaturePath();
 
-    @NotNull
     @Override
+    @NotNull
     public abstract String logoRVAPath();
 }
 

@@ -22,7 +22,7 @@ public class PatientReporterTest {
         final BaseReportData baseReportData = testBaseReportData();
         final SequencedReportData reporterData = testSequencedReportData();
         final SvAnalyzer svAnalyzer = testSvAnalyzerModel();
-        final PatientReporter reporter = ImmutablePatientReporter.of(baseReportData, reporterData, svAnalyzer);
+        final PatientReporter reporter = new PatientReporter(baseReportData, reporterData, svAnalyzer);
 
         assertNotNull(reporter.run(RUN_DIRECTORY,  null));
     }

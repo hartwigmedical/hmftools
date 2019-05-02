@@ -3,6 +3,7 @@ package com.hartwig.hmftools.patientreporter.structural;
 import static com.hartwig.hmftools.patientreporter.structural.SvAnalysisDatamodelTestFactory.createTestFusionBuilder;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 import java.util.List;
 
@@ -25,6 +26,9 @@ public class ReportableGeneFusionFactoryTest {
         ReportableGeneFusion reportableFusion = reportableFusions.get(0);
         assertEquals("PRKAR2B", reportableFusion.geneStart());
         assertEquals("MET", reportableFusion.geneEnd());
-        assertEquals(1.65, reportableFusion.ploidy(), EPSILON);
+
+        Double ploidy = reportableFusion.ploidy();
+        assertNotNull(ploidy);
+        assertEquals(1.65, ploidy, EPSILON);
     }
 }

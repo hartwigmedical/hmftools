@@ -52,7 +52,7 @@ public final class ExampleAnalysisTestFactory {
 
     @NotNull
     public static AnalysedPatientReport buildCOLO829() {
-        final double impliedTumorPurity = 1D;
+        final double impliedTumorPurity = 0.98;
         final double averageTumorPloidy = 3.1;
         final int tumorMutationalLoad = 182;
         final double tumorMutationalBurden = 13.6324;
@@ -85,7 +85,6 @@ public final class ExampleAnalysisTestFactory {
                 tumorMutationalLoad,
                 tumorMutationalBurden,
                 chordAnalysis,
-                LimsGermlineReportingChoice.UNKNOWN,
                 copyNumbers,
                 fusions,
                 disruptions,
@@ -130,7 +129,6 @@ public final class ExampleAnalysisTestFactory {
                 tumorMutationalLoad,
                 tumorMutationalBurden,
                 chordAnalysis,
-                LimsGermlineReportingChoice.UNKNOWN,
                 copyNumbers,
                 fusions,
                 disruptions,
@@ -147,9 +145,9 @@ public final class ExampleAnalysisTestFactory {
                 .sampleId(sample)
                 .patientTumorLocation(ImmutablePatientTumorLocation.of("COLO829", "Skin", "Melanoma"))
                 .refBarcode("FR12123488")
-                .refArrivalDate(LocalDate.parse("01-Jan-2018", DATE_FORMATTER))
+                .refArrivalDate(LocalDate.parse("01-Jan-2019", DATE_FORMATTER))
                 .tumorBarcode("FR12345678")
-                .tumorArrivalDate(LocalDate.parse("05-Jan-2018", DATE_FORMATTER))
+                .tumorArrivalDate(LocalDate.parse("05-Jan-2019", DATE_FORMATTER))
                 .purityShallowSeq(Strings.EMPTY)
                 .pathologyTumorPercentage("80%")
                 .labProcedures("PREP013V23-QC037V20-SEQ008V25")
@@ -224,19 +222,10 @@ public final class ExampleAnalysisTestFactory {
                 .build());
 
         evidenceItems.add(onLabelBuilder.event("BRAF p.Val600Glu")
-                .drug("Dabrafenib + Vemurafenib")
-                .level(EvidenceLevel.LEVEL_B)
-                .response("Responsive")
-                .reference("variant:12")
-                .source(ActionabilitySource.CIVIC)
-                .scope(EvidenceScope.SPECIFIC)
-                .build());
-
-        evidenceItems.add(onLabelBuilder.event("BRAF p.Val600Glu")
                 .drug("RO4987655")
                 .level(EvidenceLevel.LEVEL_B)
                 .response("Responsive")
-                .reference("variant:17")
+                .reference("variant:208")
                 .source(ActionabilitySource.CIVIC)
                 .scope(EvidenceScope.BROAD)
                 .build());
@@ -251,9 +240,9 @@ public final class ExampleAnalysisTestFactory {
                 ImmutableClinicalTrial.builder().cancerType(Strings.EMPTY).isOnLabel(true).source(ActionabilitySource.ICLUSION);
 
         trials.add(iclusionBuilder.event("BRAF p.Val600Glu")
-                .scope(EvidenceScope.BROAD)
-                .acronym("ERK inhibitor in tumors with MAPK pathway alterations")
-                .reference("EXT10454 (NL57739.031.16)")
+                .scope(EvidenceScope.SPECIFIC)
+                .acronym("COWBOY")
+                .reference("EXT6687 (NL58446.091.16)")
                 .build());
         trials.add(iclusionBuilder.event("BRAF p.Val600Glu")
                 .scope(EvidenceScope.SPECIFIC)
@@ -276,14 +265,14 @@ public final class ExampleAnalysisTestFactory {
                 .reference("EXT10151 (NL59299.042.17)")
                 .build());
         trials.add(iclusionBuilder.event("BRAF p.Val600Glu")
-                .scope(EvidenceScope.BROAD)
-                .acronym("iMATRIXcobi (GO29665)")
-                .reference("EXT6769 (NL52503.078.16)")
-                .build());
-        trials.add(iclusionBuilder.event("PTEN Deletion")
                 .scope(EvidenceScope.SPECIFIC)
-                .acronym("AZD5363 (AKT inhibitor) in advanced solid malignancies")
-                .reference("EXT2552 (NL33755.031.10)")
+                .acronym("REDUCTOR")
+                .reference("EXT6690 (NL45261.031.13)")
+                .build());
+        trials.add(iclusionBuilder.event("BRAF p.Val600Glu")
+                .scope(EvidenceScope.SPECIFIC)
+                .acronym("REPOSIT")
+                .reference("EXT6699 (NL48639.031.14)")
                 .build());
 
         return trials;
@@ -308,6 +297,15 @@ public final class ExampleAnalysisTestFactory {
                 .drug("Bevacizumab")
                 .level(EvidenceLevel.LEVEL_B)
                 .response("Resistant")
+                .reference("variant:12")
+                .source(ActionabilitySource.CIVIC)
+                .scope(EvidenceScope.SPECIFIC)
+                .build());
+
+        evidenceItems.add(offLabelBuilder.event("BRAF p.Val600Glu")
+                .drug("CI-1040")
+                .level(EvidenceLevel.LEVEL_B)
+                .response("Responsive")
                 .reference("variant:12")
                 .source(ActionabilitySource.CIVIC)
                 .scope(EvidenceScope.SPECIFIC)
@@ -353,7 +351,7 @@ public final class ExampleAnalysisTestFactory {
                 .drug("Irinotecan")
                 .level(EvidenceLevel.LEVEL_B)
                 .response("Resistant")
-                .reference("variant:399")
+                .reference("variant:12")
                 .source(ActionabilitySource.CIVIC)
                 .scope(EvidenceScope.SPECIFIC)
                 .build());
@@ -373,15 +371,6 @@ public final class ExampleAnalysisTestFactory {
                 .response("Resistant")
                 .reference("BRAF:V600E")
                 .source(ActionabilitySource.CGI)
-                .scope(EvidenceScope.SPECIFIC)
-                .build());
-
-        evidenceItems.add(offLabelBuilder.event("BRAF p.Val600Glu")
-                .drug("Sorafenib")
-                .level(EvidenceLevel.LEVEL_B)
-                .response("Responsive")
-                .reference("variant:12")
-                .source(ActionabilitySource.CIVIC)
                 .scope(EvidenceScope.SPECIFIC)
                 .build());
 
@@ -581,35 +570,6 @@ public final class ExampleAnalysisTestFactory {
                 .build();
 
         return Lists.newArrayList(fusion1, fusion2);
-
-    }
-
-    @NotNull
-    private static List<GermlineVariant> createTestGermlineVariants(@NotNull PurityAdjuster purityAdjuster) {
-        List<GermlineVariant> germlineVariants = Lists.newArrayList();
-
-        int totalReads = 112;
-        int altReads = 67;
-        double adjustedCopyNumber = 3D;
-
-        double adjustedVAF =
-                purityAdjuster.purityAdjustedVAFWithHeterozygousNormal("13", adjustedCopyNumber, (double) altReads / (double) totalReads);
-
-        germlineVariants.add(ImmutableGermlineVariant.builder()
-                .passFilter(true)
-                .gene("BRCA2")
-                .hgvsCodingImpact("c.5946delT")
-                .hgvsProteinImpact("p.Ser1982fs")
-                .totalReadCount(totalReads)
-                .alleleReadCount(altReads)
-                .germlineStatus("HET")
-                .adjustedCopyNumber(adjustedCopyNumber)
-                .adjustedVAF(adjustedVAF)
-                .minorAllelePloidy(1D)
-                .biallelic(false)
-                .build());
-
-        return germlineVariants;
     }
 
     @NotNull

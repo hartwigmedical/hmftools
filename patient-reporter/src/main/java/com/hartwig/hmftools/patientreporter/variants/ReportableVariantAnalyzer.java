@@ -4,12 +4,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
+import com.hartwig.hmftools.common.lims.LimsGermlineReportingChoice;
 import com.hartwig.hmftools.common.variant.Clonality;
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
 import com.hartwig.hmftools.common.variant.Hotspot;
+import com.hartwig.hmftools.patientreporter.variants.germline.GermlineReportingModel;
 import com.hartwig.hmftools.patientreporter.variants.germline.GermlineVariant;
 
 import org.jetbrains.annotations.NotNull;
@@ -21,12 +24,12 @@ public final class ReportableVariantAnalyzer {
     }
 
     @NotNull
-    public static List<ReportableVariant> mergeSomaticAndGermlineVariants(@NotNull List<EnrichedSomaticVariant> variantsReport,
+    public static List<ReportableVariant> mergeSomaticAndGermlineVariants(@NotNull List<EnrichedSomaticVariant> somaticVariantsReport,
             @NotNull List<DriverCatalog> driverCatalog, @NotNull Map<String, DriverCategory> driverCategoryPerGene,
-            @NotNull Set<String> drupActionableGenes, List<GermlineVariant> filteredGermlineVariants,
-            @NotNull Map<String, Boolean> germlineGenesToNotifyMap) {
+            @NotNull Set<String> drupActionableGenes, @NotNull List<GermlineVariant> germlineVariantsToReport,
+            @NotNull GermlineReportingModel germlineReportingModel, @NotNull LimsGermlineReportingChoice germlineReportingChoice) {
         List<ReportableVariant> reportableVariants = Lists.newArrayList();
-        for (EnrichedSomaticVariant variant : variantsReport) {
+        for (EnrichedSomaticVariant variant : somaticVariantsReport) {
             DriverCatalog catalog = catalogEntryForVariant(driverCatalog, variant.gene());
 
             reportableVariants.add(fromSomaticVariant(variant).isDrupActionable(drupActionableGenes.contains(variant.gene()))
@@ -36,11 +39,13 @@ public final class ReportableVariantAnalyzer {
                     .build());
         }
 
-        for (GermlineVariant germlineVariant : filteredGermlineVariants) {
+        boolean wantsToBeNotified = germlineReportingChoice == LimsGermlineReportingChoice.ALL
+                || germlineReportingChoice == LimsGermlineReportingChoice.ACTIONABLE_ONLY;
+        for (GermlineVariant germlineVariant : germlineVariantsToReport) {
             reportableVariants.add(fromGermlineVariant(germlineVariant).isDrupActionable(drupActionableGenes.contains(germlineVariant.gene()))
                     .driverCategory(driverCategoryPerGene.get(germlineVariant.gene()))
                     .driverLikelihood(null)
-                    .notifyClinicalGeneticist(germlineGenesToNotifyMap.get(germlineVariant.gene()))
+                    .notifyClinicalGeneticist(wantsToBeNotified && germlineReportingModel.notifyAboutGene(germlineVariant.gene()))
                     .build());
 
         }

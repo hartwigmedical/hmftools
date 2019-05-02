@@ -21,8 +21,10 @@ public class DisruptionFileReaderTest {
 
         assertEquals(3, disruptions.size());
         assertNotNull(disruptions.get(0).ploidy());
+
         // 2nd disruption has missing ploidy
         assertNull(disruptions.get(1).ploidy());
+
         // 3rd disruption has ploidy 0.00000
         assertNull(disruptions.get(2).ploidy());
     }

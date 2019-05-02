@@ -27,18 +27,18 @@ public abstract class HospitalModel {
     protected abstract Map<String, HospitalSampleMapping> sampleHospitalMapping();
 
     @Nullable
-    public String addresseeStringForSample(@NotNull final String sample, @NotNull final String requesterName) {
+    public String addresseeStringForSample(@NotNull final String sample) {
         HospitalData hospital = findHospitalForSample(sample);
 
         if (hospital == null) {
             return null;
         }
 
-        checkAddresseeFields(sample, hospital, requesterName);
+        checkAddresseeFields(sample, hospital);
 
-        String requester = determineRequester(sample, hospital, requesterName);
+        String hospitalPI = determinePI(sample, hospital);
         String hospitalAddress = hospital.addressName() + ", " + hospital.addressZip() + " " + hospital.addressCity();
-        return requester.isEmpty() ? hospitalAddress : requester + ", " + hospitalAddress;
+        return hospitalPI.isEmpty() ? hospitalAddress : hospitalPI + ", " + hospitalAddress;
     }
 
     public int hospitalCount() {
@@ -70,13 +70,13 @@ public abstract class HospitalModel {
         } else {
             final String hospitalId = extractHospitalIdFromSample(sample);
             if (hospitalId == null) {
-                LOGGER.error("Could not extract hospital ID for sample " + sample);
+                LOGGER.warn("Could not extract hospital ID for sample " + sample);
                 return null;
             }
 
             hospital = hospitalPerId().get(hospitalId);
             if (hospital == null) {
-                LOGGER.error("Hospital model does not contain id " + hospitalId);
+                LOGGER.warn("Hospital model does not contain id " + hospitalId);
                 return null;
             }
         }
@@ -104,16 +104,15 @@ public abstract class HospitalModel {
             return sample.substring(6, 8);
         }
 
-        LOGGER.error("Sample parameter: " + sample + " is not in CPCT/DRUP/WIDE/CORE format");
+        LOGGER.warn("Sample parameter: " + sample + " is not in CPCT/DRUP/WIDE/CORE format");
         return null;
     }
 
-    private static void checkAddresseeFields(@NotNull final String sample, @NotNull final HospitalData hospital,
-            @NotNull final String requesterName) {
+    private static void checkAddresseeFields(@NotNull final String sample, @NotNull final HospitalData hospital) {
         final List<String> missingFields = Lists.newArrayList();
         LimsSampleType type = LimsSampleType.fromSampleId(sample);
 
-        if (type != LimsSampleType.CORE && determineRequester(sample, hospital, requesterName).isEmpty()) {
+        if (type != LimsSampleType.CORE && determinePI(sample, hospital).isEmpty()) {
             missingFields.add("requester");
         }
         if (hospital.addressName().isEmpty()) {
@@ -132,8 +131,7 @@ public abstract class HospitalModel {
 
     @NotNull
     @VisibleForTesting
-    static String determineRequester(@NotNull final String sample, @NotNull final HospitalData hospital,
-            @NotNull final String requesterName) {
+    static String determinePI(@NotNull final String sample, @NotNull final HospitalData hospital) {
         LimsSampleType type = LimsSampleType.fromSampleId(sample);
 
         if (type == LimsSampleType.CPCT) {
@@ -145,7 +143,7 @@ public abstract class HospitalModel {
             }
             return hospital.drupPI();
         } else if (type == LimsSampleType.WIDE) {
-            return requesterName;
+            return hospital.widePI();
         }
         return Strings.EMPTY;
     }

@@ -15,6 +15,7 @@ import com.hartwig.hmftools.common.region.GenomeRegionSelectorFactory;
 
 import org.jetbrains.annotations.NotNull;
 
+@Deprecated
 public class PurityAdjustedSomaticVariantFactory {
 
     @NotNull
@@ -62,7 +63,10 @@ public class PurityAdjustedSomaticVariantFactory {
         builder.adjustedCopyNumber(adjustedCopyNumber);
         double adjustedVAF =
                 purityAdjuster.purityAdjustedVAF(copyNumber.chromosome(), Math.max(0.001, adjustedCopyNumber), depth.alleleFrequency());
+        double ploidy = Math.max(0, adjustedVAF * adjustedCopyNumber);
+
         builder.adjustedVAF(adjustedVAF);
+        builder.ploidy(ploidy);
 
         builder.minorAllelePloidy(copyNumber.minorAllelePloidy());
     }

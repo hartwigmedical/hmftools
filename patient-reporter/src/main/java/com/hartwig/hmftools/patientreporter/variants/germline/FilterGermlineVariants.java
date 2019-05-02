@@ -6,7 +6,6 @@ import java.util.Set;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
-import com.hartwig.hmftools.common.lims.LimsGermlineReportingChoice;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
 
@@ -19,12 +18,11 @@ public final class FilterGermlineVariants {
 
     @NotNull
     public static List<GermlineVariant> filterGermlineVariantsForReporting(List<GermlineVariant> germlineVariants,
-            @NotNull Map<String, Boolean> germlineGenesReporting, @NotNull Map<String, DriverCategory> driverCategoryPerGeneMap,
+            @NotNull GermlineReportingModel germlineReportingModel, @NotNull Map<String, DriverCategory> driverCategoryPerGeneMap,
             @NotNull List<GeneCopyNumber> allGeneCopyNumbers, @NotNull List<EnrichedSomaticVariant> variantsToReport) {
         List<GermlineVariant> filteredGermlineVariant = Lists.newArrayList();
 
-        Set<String> reportingGermlineGenes = germlineGenesReporting.keySet();
-
+        Set<String> reportingGermlineGenes = germlineReportingModel.reportableGermlineGenes();
         for (GermlineVariant germlineVariant : germlineVariants) {
             assert germlineVariant.passFilter();
 

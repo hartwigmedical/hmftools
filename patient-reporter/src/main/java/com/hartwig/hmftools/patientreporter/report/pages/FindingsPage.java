@@ -81,8 +81,7 @@ public abstract class FindingsPage {
                                 col.column("Biallelic", SomaticVariantDataSource.BIALLELIC_FIELD),
                                 col.column("Driver", SomaticVariantDataSource.DRIVER_FIELD)))
                         .setDataSource(SomaticVariantDataSource.fromVariants(report.reportableVariants(),
-                                report.hasReliablePurityFit(),
-                                report.germlineReportingChoice()))
+                                report.hasReliablePurityFit()))
                         : cmp.text("None").setStyle(fontStyle().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER));
 
         ComponentBuilder<?, ?> baseReport = cmp.verticalList(cmp.text("Somatic Variants").setStyle(sectionHeaderStyle()),
@@ -94,8 +93,6 @@ public abstract class FindingsPage {
                         cmp.text(drupEligibilityAddition).setStyle(fontStyle().setFontSize(8))));
 
         // Only display notification about germline variant when patient opts in and has a notifiable germline variant.
-        boolean notifyClinicalGeneticist = report.germlineReportingChoice() == LimsGermlineReportingChoice.ALL
-                || report.germlineReportingChoice() == LimsGermlineReportingChoice.ACTIONABLE_ONLY;
         boolean hasNotifiableVariant = false;
         for (ReportableVariant reportableVariant : report.reportableVariants()) {
             if (reportableVariant.notifyClinicalGeneticist()) {
@@ -103,7 +100,7 @@ public abstract class FindingsPage {
             }
         }
 
-        if (notifyClinicalGeneticist && hasNotifiableVariant) {
+        if (hasNotifiableVariant) {
             return cmp.verticalList(baseReport,
                     cmp.verticalGap(5),
                     cmp.horizontalList(cmp.horizontalGap(10),

@@ -19,14 +19,16 @@ public final class BachelorFile {
     private static final String DELIMITER = ",";
     private static final String BACHELOR_FILE_EXTENSION = "_germline_variants.csv";
     private static final String BACHELOR_HAS_RUN_FILE = "bachelor_found_no_variants";
+    private static final String BACHELOR_HAS_FOUND_VARIANTS_FILE = "bachelor_output.csv";
 
     private BachelorFile() {
     }
 
     public static boolean hasBachelorRun(@NotNull String bachelorDirectory, @NotNull String sample) {
         if (findBachelorFilePath(bachelorDirectory, sample) == null) {
-            String bachelorHasRunPath = bachelorDirectory + File.separator + BACHELOR_HAS_RUN_FILE;
-            return Files.exists(new File(bachelorHasRunPath).toPath());
+            final String bachelorHasRunPath = bachelorDirectory + File.separator + BACHELOR_HAS_RUN_FILE;
+            final String bachelorHasFoundVariantsPath = bachelorDirectory + File.separator + BACHELOR_HAS_FOUND_VARIANTS_FILE;
+            return Files.exists(new File(bachelorHasRunPath).toPath()) || Files.exists(new File(bachelorHasFoundVariantsPath).toPath());
         }
 
         return true;
@@ -58,8 +60,7 @@ public final class BachelorFile {
         String[] values = line.split(DELIMITER);
 
         String program = values[1];
-        // TODO Lynparza can be removed once all samples are on bachelor v1.5+
-        if (!program.equalsIgnoreCase("lynparza") && !program.equalsIgnoreCase("hmf")) {
+        if (!program.equalsIgnoreCase("hmf")) {
             LOGGER.warn("Unexpected bachelor program found: " + program);
         }
 
@@ -74,7 +75,6 @@ public final class BachelorFile {
                 .hgvsProteinImpact(values[25].trim())
                 .totalReadCount(totalReadCount)
                 .alleleReadCount(altReadCount)
-                .germlineStatus(values[30].trim())
                 .adjustedVAF(Double.valueOf(values[19]))
                 .adjustedCopyNumber(Double.valueOf(values[18]))
                 .minorAllelePloidy(Double.valueOf(values[31]))
