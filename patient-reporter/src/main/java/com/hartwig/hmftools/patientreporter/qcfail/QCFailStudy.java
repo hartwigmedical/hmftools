@@ -9,7 +9,7 @@ public enum QCFailStudy {
     CPCT("CPCT", "CPCT-02"),
     DRUP("DRUP", "DRUP-01"),
     CORE("CORE", "CORE"),
-    WIDE("WIDE", "WIDE-01");
+    WIDE("WIDE", "WIDE");
 
     @NotNull
     private final String studyName;
