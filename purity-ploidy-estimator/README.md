@@ -894,6 +894,8 @@ Threads | Elapsed Time| CPU Time | Peak Mem
 
 
 ## Version History
+- 2.27 
+  - Fixed missing ploidy when loading somatics
 - 2.26
   - Support for MySQL 8
   - Added fitted segment chart
