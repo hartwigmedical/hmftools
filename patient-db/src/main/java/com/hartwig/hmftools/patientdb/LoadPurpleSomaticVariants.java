@@ -32,6 +32,7 @@ public class LoadPurpleSomaticVariants {
     private static final String DB_PASS = "db_pass";
     private static final String DB_URL = "db_url";
     private static final String REF_GENOME = "ref_genome";
+    private static final String ALIAS = "alias";
 
     public static void main(@NotNull final String[] args) throws ParseException, IOException, SQLException {
         final Options options = createBasicOptions();
@@ -50,7 +51,7 @@ public class LoadPurpleSomaticVariants {
         final List<EnrichedSomaticVariant> enrichedVariants = new RefGenomeEnrichedSomaticVariantFactory(sequenceFile).enrich(variants);
 
         LOGGER.info("Persisting to db");
-        dbAccess.writeSomaticVariants(tumorSample, enrichedVariants);
+        dbAccess.writeSomaticVariants(cmd.getOptionValue(ALIAS, tumorSample), enrichedVariants);
 
         LOGGER.info("Complete");
     }
@@ -64,6 +65,7 @@ public class LoadPurpleSomaticVariants {
         options.addOption(DB_PASS, true, "Database password.");
         options.addOption(DB_URL, true, "Database url.");
         options.addOption(REF_GENOME, true, "Path to the (indexed) ref genome fasta file.");
+        options.addOption(ALIAS, true, "Overwrite the sample name with specified alias when writing to db");
 
         return options;
     }
