@@ -34,8 +34,8 @@ public final class SomaticVariantAnalyzer {
 
     @NotNull
     public static SomaticVariantAnalysis run(@NotNull List<EnrichedSomaticVariant> variants, @NotNull Set<String> genePanel,
-            @NotNull Map<String, DriverCategory> driverCategoryPerGeneMap,
-            @NotNull ActionabilityAnalyzer actionabilityAnalyzer, @Nullable PatientTumorLocation patientTumorLocation) {
+            @NotNull Map<String, DriverCategory> driverCategoryPerGeneMap, @NotNull ActionabilityAnalyzer actionabilityAnalyzer,
+            @Nullable PatientTumorLocation patientTumorLocation) {
         double microsatelliteIndelsPerMb = MicrosatelliteAnalyzer.determineMicrosatelliteIndelsPerMb(variants);
         int tumorMutationalLoad = MutationalLoadAnalyzer.determineTumorMutationalLoad(variants);
         double tumorMutationalBurden = MutationalBurdenAnalyzer.determineTumorMutationalBurden(variants);
@@ -82,7 +82,10 @@ public final class SomaticVariantAnalyzer {
             }
 
             CodingEffect effect = variant.canonicalCodingEffect();
-            if (driverCategoryPerGeneMap.get(variant.gene()) == DriverCategory.TSG) {
+            // TODO Remove once MET exon 14 splicing is included in knowledgebase.
+            if (effect == CodingEffect.SPLICE && variant.gene().equals("MET")) {
+                return true;
+            } else if (driverCategoryPerGeneMap.get(variant.gene()) == DriverCategory.TSG) {
                 return TSG_CODING_EFFECTS_TO_REPORT.contains(effect);
             } else if (driverCategoryPerGeneMap.get(variant.gene()) == DriverCategory.ONCO) {
                 return ONCO_CODING_EFFECTS_TO_REPORT.contains(effect);
