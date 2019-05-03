@@ -82,10 +82,8 @@ public final class SomaticVariantAnalyzer {
             }
 
             CodingEffect effect = variant.canonicalCodingEffect();
-            // TODO Remove once MET exon 14 splicing is included in knowledgebase.
-            if (effect == CodingEffect.SPLICE && variant.gene().equals("MET")) {
-                return true;
-            } else if (driverCategoryPerGeneMap.get(variant.gene()) == DriverCategory.TSG) {
+            // TODO Remove specific handling for MET once knowledgebase is interpreting MET exon 14 properly.
+            if (variant.gene().equals("MET") || driverCategoryPerGeneMap.get(variant.gene()) == DriverCategory.TSG) {
                 return TSG_CODING_EFFECTS_TO_REPORT.contains(effect);
             } else if (driverCategoryPerGeneMap.get(variant.gene()) == DriverCategory.ONCO) {
                 return ONCO_CODING_EFFECTS_TO_REPORT.contains(effect);
