@@ -276,7 +276,7 @@ public class FusionTests
 
         String[] chainInfo = fields[5].split(";");
 
-        if(chainInfo.length != 4)
+        if(chainInfo.length != 5)
             return false;
 
         if(validTraversal != (chainInfo[3].equals("true")))
@@ -285,11 +285,12 @@ public class FusionTests
         String[] disruptionsUp = fields[3].split(";");
         String[] disruptionsDown = fields[4].split(";");
 
-        if(disruptionsUp.length != 6 || disruptionsDown.length != 6)
+        if(disruptionsUp.length != 7 || disruptionsDown.length != 7)
             return false;
 
-        boolean validUp = disruptionsUp[4].equals("0") && disruptionsUp[5].equals("0");
-        boolean validDown = disruptionsDown[4].equals("0") && disruptionsDown[5].equals("0");
+        // test the exons disrupted and terminated fields
+        boolean validUp = disruptionsUp[5].equals("0") && disruptionsUp[6].equals("0");
+        boolean validDown = disruptionsDown[5].equals("0") && disruptionsDown[6].equals("0");
 
         if(validEnds)
             return validUp && validDown;

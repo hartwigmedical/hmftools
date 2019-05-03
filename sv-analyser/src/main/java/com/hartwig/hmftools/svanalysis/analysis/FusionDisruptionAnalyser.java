@@ -362,6 +362,8 @@ public class FusionDisruptionAnalyser
         }
     }
 
+    // private static int MAX_CHAINED_FUSION_LENGTH = 1000000;
+
     private void findChainedFusions(final SvCluster cluster, final SvChain chain)
     {
         // look for fusions formed by breakends connected in a chain
@@ -478,15 +480,20 @@ public class FusionDisruptionAnalyser
                         // if the fusion from the upstream gene is on the positive strand, then it will have a fusion direction of +1
                         // whenever it goes through a subsequent linked pair by joining to the first (lower) breakend in the pair
                         int upGeneStrand = fusion.upstreamTrans().parent().Strand;
+                        boolean isPrecodingUpstream = fusion.upstreamTrans().preCoding();
                         boolean fusionLowerToUpper = fusion.upstreamTrans().parent().position() == lowerBreakend.position();
 
                         // check any traversed genes
                         long totalLinkLength = 0;
                         boolean validTraversal = true;
+                        boolean allTraversalAssembled = true;
 
                         for(SvLinkedPair pair : traversedPairs)
                         {
                             totalLinkLength += pair.length();
+
+                            if(pair.isInferred())
+                                allTraversalAssembled = false;
 
                             // if going lower to upper, if the orientation of the first breakend in the pair is opposite to the strand of
                             // the upstream gene, then the fusion direction for that pair is the same as a the upstream gene
@@ -502,9 +509,13 @@ public class FusionDisruptionAnalyser
                                 fusionDirection = pair.getSecondBreakend().orientation() != upGeneStrand ? upGeneStrand : -upGeneStrand;
                             }
 
-                            if(validTraversal && pairTraversesGene(pair, fusionDirection))
+                            if(validTraversal && pairTraversesGene(pair, fusionDirection, isPrecodingUpstream))
                                 validTraversal = false;
                         }
+
+                        // skip writing out implausibly long chained fusions
+                        // if(totalLinkLength > MAX_CHAINED_FUSION_LENGTH)
+                        //    continue;
 
                         String[] disruptedTranscriptsStr = { "", "" };
 
@@ -533,11 +544,12 @@ public class FusionDisruptionAnalyser
                             }
                         }
 
-                        // ClusterId,ClusterCount,ResolvedType,OverlapUp,OverlapDown,ChainInfo
                         int linksCount = lpIndex2 - lpIndex1;
 
-                        String chainInfo = String.format("%d;%d;%d;%s", chain.id(), linksCount, totalLinkLength, validTraversal);
+                        String chainInfo = String.format("%d;%d;%d;%s;%s",
+                                chain.id(), linksCount, totalLinkLength, validTraversal, allTraversalAssembled);
 
+                        // ClusterId,ClusterCount,ResolvedType,OverlapUp,OverlapDown,ChainInfo
                         String clusterChainInfo = String.format("%d,%d,%s,%s,%s,%s",
                                 cluster.id(), cluster.getSvCount(), cluster.getResolvedType(),
                                 disruptedTranscriptsStr[0], disruptedTranscriptsStr[1], chainInfo);
@@ -551,7 +563,8 @@ public class FusionDisruptionAnalyser
         }
     }
 
-    private static String NO_CHAIN_INFO = "-1;0;0;true";
+    // ChainId,ChainLinks,ChainLength,ValidTraversal,TraversalAssembled
+    private static String NO_CHAIN_INFO = "-1;0;0;true;false";
 
     private void applyGeneRestrictions(List<GeneAnnotation> genesList)
     {
@@ -626,6 +639,7 @@ public class FusionDisruptionAnalyser
                     ++clusterFacingBreakends;
             }
 
+            /*
             for(final TranscriptExonData exonData : exonDataList)
             {
                 if(nextBreakend.position() >= exonData.ExonStart && nextBreakend.position() <= exonData.ExonEnd)
@@ -634,12 +648,17 @@ public class FusionDisruptionAnalyser
                     break;
                 }
             }
+            */
         }
 
         if(facingBreakends > 0)
         {
-            return String.format("%d;%d;%d;%d;%d;%d",
-                    facingBreakends, clusterFacingBreakends, totalBreakends, minDistance, disruptedExons, 0);
+            // is any facing breakend assembled?
+            final SvLinkedPair tiLink = breakend.getSV().getLinkedPair(breakend.usesStart());
+            boolean hasAssembledLink = tiLink != null && tiLink.isAssembled();
+
+            return String.format("%d;%s;%d;%d;%d;%d;%d",
+                facingBreakends, hasAssembledLink, clusterFacingBreakends, totalBreakends, minDistance, disruptedExons, 0);
         }
         else
         {
@@ -663,6 +682,7 @@ public class FusionDisruptionAnalyser
         int disruptedExons = 0;
         boolean transcriptTerminated = false;
         long minDistance = startPair.length();
+        boolean allLinksAssembled = true;
 
         boolean isUpstream = isUpstream(transcript.parent());
         // Transcript prevTranscript = transcript;
@@ -671,15 +691,27 @@ public class FusionDisruptionAnalyser
         {
             SvLinkedPair pair = chain.getLinkedPairs().get(linkIndex);
 
+            if(pair.isInferred())
+                allLinksAssembled = false;
+
             // identify next exon after this TI
             // the breakend's transcript info cannot be used because it faces the opposite way from the fusing breakend
             SvBreakend nextBreakend = traverseUp ? pair.getSecondBreakend() : pair.getFirstBreakend();
 
-            // exit if the next breakend is now past the end of the transcript
-            if((nextBreakend.orientation() == 1 && nextBreakend.position() > transcript.TranscriptEnd)
-            || (nextBreakend.orientation() == -1 && nextBreakend.position() < transcript.TranscriptStart))
+            // exit if the next breakend is now past the end of the transcript or if the breakend is down-stream of coding
+            if(nextBreakend.orientation() == 1)
             {
-                break;
+                if(nextBreakend.position() > transcript.TranscriptEnd)
+                    break;
+                else if(!isUpstream && transcript.CodingEnd != null && nextBreakend.position() > transcript.CodingEnd)
+                    break;
+            }
+            else
+            {
+                if(nextBreakend.position() < transcript.TranscriptStart)
+                    break;
+                else if(!isUpstream && transcript.CodingStart != null && nextBreakend.position() < transcript.CodingStart)
+                    break;
             }
 
             ++totalBreakends;
@@ -758,8 +790,9 @@ public class FusionDisruptionAnalyser
 
         if(facingBreakends > 0)
         {
-            return String.format("%d;%d;%d;%d;%d;%d",
-                    facingBreakends, facingBreakends, totalBreakends, minDistance, disruptedExons, transcriptTerminated ? 1 : 0);
+            return String.format("%d;%s;%d;%d;%d;%d;%d",
+                    facingBreakends, allLinksAssembled, facingBreakends, totalBreakends,
+                    minDistance, disruptedExons, transcriptTerminated ? 1 : 0);
         }
         else
         {
@@ -767,33 +800,13 @@ public class FusionDisruptionAnalyser
         }
     }
 
-    private static String NO_DISRUPTION_INFO = "0;0;0;0;0;0";
+    // FacingBreakends,HasAssembledLink,ClusterFacingBreakends,TotalBreakends,MinDistance,DisruptedExons,Terminated
+    private static String NO_DISRUPTION_INFO = "0;false;0;0;0;0;0";
 
-    private final Transcript getNextMatchingTranscript(final SvBreakend breakend, final Transcript transcript)
-    {
-        List<GeneAnnotation> matchingGene = breakend.getOrigSV().getGenesList(breakend.usesStart())
-                .stream()
-                .filter(x -> x.GeneName.equals(transcript.parent().GeneName))
-                .collect(Collectors.toList());
-
-        if(!matchingGene.isEmpty())
-        {
-            for(Transcript trans : matchingGene.get(0).transcripts())
-            {
-                if(trans.TransId == transcript.TransId)
-                {
-                    return trans;
-                }
-            }
-        }
-
-        return null;
-    }
-
-    private boolean pairTraversesGene(SvLinkedPair pair, int fusionDirection)
+    private boolean pairTraversesGene(SvLinkedPair pair, int fusionDirection, boolean isPrecodingUpstream)
     {
         // for this pair to not affect the fusion, the section it traverses cannot cross any gene's splice acceptor
-        // with the same strand direction
+        // with the same strand direction unless that is part of a fully traversed non-coding 5' exon
 
         long lowerPos = pair.getBreakend(true).position();
         long upperPos = pair.getBreakend(false).position();
@@ -824,6 +837,15 @@ public class FusionDisruptionAnalyser
                     if((geneData.Strand == 1 && lowerPos <= exonData.ExonStart && upperPos >= exonData.ExonStart)
                     || (geneData.Strand == -1 && lowerPos <= exonData.ExonEnd && upperPos >= exonData.ExonEnd))
                     {
+                        // allow an exon to be fully traversed if the upstream transcript is pre-coding
+                        if(isPrecodingUpstream && lowerPos <= exonData.ExonStart && upperPos >= exonData.ExonEnd)
+                        {
+                            if(geneData.Strand == 1 && (exonData.CodingStart == null || upperPos < exonData.CodingStart))
+                                continue;
+                            else if(geneData.Strand == -1 && (exonData.CodingEnd == null || lowerPos > exonData.CodingEnd))
+                                continue;
+                        }
+
                         LOGGER.debug("pair({}) fusionDirection({}) traverses splice acceptor({} {}) exon(rank{} pos={})",
                                 pair.toString(), fusionDirection, geneData.GeneName, exonData.TransName,
                                 exonData.ExonRank, exonData.ExonStart, exonData.ExonEnd);
