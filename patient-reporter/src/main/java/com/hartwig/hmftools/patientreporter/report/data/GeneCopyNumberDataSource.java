@@ -40,12 +40,12 @@ public final class GeneCopyNumberDataSource {
                 COPY_NUMBER_FIELD.getName());
 
         for (GeneCopyNumber copyNumber : sort(copyNumbers)) {
+            Long reportableCopyNumber = Math.round(Math.max(0, copyNumber.minCopyNumber()));
             copyNumberDatasource.add(copyNumber.chromosome(),
                     copyNumber.chromosomeBand(),
                     copyNumber.gene(),
                     type(copyNumber),
-                    PatientReportFormat.correctValueForFitReliability(Long.toString(Math.round(copyNumber.minCopyNumber())),
-                            hasReliablePurityFit));
+                    PatientReportFormat.correctValueForFitReliability(Long.toString(reportableCopyNumber), hasReliablePurityFit));
         }
         return copyNumberDatasource;
     }
