@@ -68,10 +68,10 @@ public class SampleTests
             bucketRatios[i] = 0.25;
         }
 
-        // bucket 1 limits the others (4 x 10 out of 100), so noise is also limited to 40% of the max 20 available
+        // bucket 1 limits the others (4 x 10 out of 100), so noise is also limited to 80% of the max 20 available
         allocTotal = sample.getPotentialCounts(bucketRatios, requiredBuckets, ratioRanges, allocCounts);
-        assertEquals(18.0 + 3 * 20, allocTotal);
-        assertEquals(18.0, allocCounts[0]);
+        assertEquals(20.0 + 3 * 20, allocTotal);
+        assertEquals(20.0, allocCounts[0]);
 
         // test again with 2 buckets limited and competing for the same noise
         bucketRatios[0] = 0.2;
@@ -80,9 +80,9 @@ public class SampleTests
         bucketRatios[3] = 0.2;
 
         allocTotal = sample.getPotentialCounts(bucketRatios, requiredBuckets, ratioRanges, allocCounts);
-        assertEquals(10.0 + 20 + 10 + 2 * 15, allocTotal); // all of buckets 1 & 2, full noise, plus ratio-limited for 3 & 5
-        assertEquals(10 + 10/3.0, allocCounts[0], 0.001);
-        assertEquals(20 + 20/3.0, allocCounts[1], 0.001);
+        assertEquals(15.0 + 20 + 10 + 2 * 15, allocTotal); // all of buckets 1 & 2, full noise, plus ratio-limited for 3 & 5
+        assertEquals(10.0 + 1/3.0 * 15.0, allocCounts[0], 0.001);
+        assertEquals(20.0 + 2/3.0 * 15.0, allocCounts[1], 0.001);
 
         // finally test with ratio ranges
         for (int i = 0; i < bucketCount; ++i)

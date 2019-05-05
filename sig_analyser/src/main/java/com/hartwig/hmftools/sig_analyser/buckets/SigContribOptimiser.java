@@ -12,6 +12,7 @@ import static com.hartwig.hmftools.sig_analyser.common.DataUtils.getSortedVector
 import static com.hartwig.hmftools.sig_analyser.common.DataUtils.greaterThan;
 import static com.hartwig.hmftools.sig_analyser.common.DataUtils.initVector;
 import static com.hartwig.hmftools.sig_analyser.common.DataUtils.lessThan;
+import static com.hartwig.hmftools.sig_analyser.common.DataUtils.sizeToStr;
 import static com.hartwig.hmftools.sig_analyser.common.DataUtils.sumVector;
 import static com.hartwig.hmftools.sig_analyser.common.DataUtils.sumVectors;
 import static com.hartwig.hmftools.sig_analyser.common.DataUtils.vectorMultiply;
@@ -164,7 +165,11 @@ public class SigContribOptimiser
         mCurrentAllocNoise = new double[mBucketCount];
         mMaxRefSigReductionCounts = new double[mBucketCount];
 
-        copyVector(sample.getBucketCounts(), mRawCounts);
+        if(sample.usingElevatedForAllocation())
+            copyVector(sample.getElevatedBucketCounts(), mRawCounts);
+        else
+            copyVector(sample.getBucketCounts(), mRawCounts);
+
         copyVector(sample.getNoiseCounts(), mCountsNoise);
         // copyVector(counts, mCounts);
 
@@ -261,6 +266,7 @@ public class SigContribOptimiser
     }
 
     public final double[] getContribs() { return mContribs; }
+    public List<double[]> getSigAllocCounts() { return mSigAllocCounts; }
     public double getAllocPerc() { return mCurrentAllocPerc; }
     public boolean isValid() { return mIsValid; }
     public int getInstances() { return mInstances; }
@@ -570,6 +576,7 @@ public class SigContribOptimiser
         // test out the proposed change to find the max that can be applied
         double[] testOtherSigContribs = new double[mSigCount];
         double maxOtherSigsGain = 0;
+        int maxIterationIndex = 0;
 
         // runs 0 and 1, sort ascending then descending with total allocation top-down each time
         // runs 2 and 3, sort ascending then descending with partial allocation top-down each time
@@ -678,6 +685,7 @@ public class SigContribOptimiser
             if (sigContribsTotal > maxOtherSigsGain)
             {
                 // take the top allocation combination
+                maxIterationIndex = i;
                 maxOtherSigsGain = sigContribsTotal;
                 copyVector(testOtherSigContribs, otherSigContribGains);
 
@@ -696,6 +704,12 @@ public class SigContribOptimiser
         // check for minisule gains and loss
         if(maxOtherSigsGain < 0.001)
             return 0;
+
+        if(log())
+        {
+            LOGGER.debug("sample({}) max gain({}) for refSigLoss({}) at iterationType({})",
+                    mSampleId, sizeToStr(maxOtherSigsGain), sizeToStr(sig1ContribLoss), maxIterationIndex);
+        }
 
         return sig1ContribLoss;
     }
@@ -1138,7 +1152,7 @@ public class SigContribOptimiser
         {
             if(mUseSample)
             {
-                if (mSample.getAllocBucketCounts()[b] >= percFull * mRawCounts[b])
+                if (mRawCounts[b] > 0 && mSample.getAllocBucketCounts()[b] >= percFull * mRawCounts[b])
                     exhaustedBuckets.add(b);
             }
             else

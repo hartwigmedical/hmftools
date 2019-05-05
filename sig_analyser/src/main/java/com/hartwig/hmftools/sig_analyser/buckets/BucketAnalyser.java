@@ -1263,7 +1263,7 @@ public class BucketAnalyser {
                     sigContribOptimiser.initialise(sample.Id, sample.getElevatedBucketCounts(), sample.getNoiseCounts(), ratiosCollection,
                             reqAllocPercent, mConfig.MinSampleAllocCount);
 
-                    // sigOptim.setLogVerbose(mConfig.logSample(sampleId));
+                    sigContribOptimiser.setLogVerbose(mConfig.logSample(sampleId));
                     sigContribOptimiser.setTargetSig(candidateSigIndex);
                     sigContribOptimiser.setRequiredSig(bgGroupIndex);
 
@@ -2501,13 +2501,7 @@ public class BucketAnalyser {
             }
         }
 
-        sigContribOptim.initialise(
-                sample.Id,
-                hasBackgroundGroup ? sample.getBucketCounts() : sample.getElevatedBucketCounts(),
-                sample.getNoiseCounts(),
-                ratiosCollection,
-                reqAllocPerc, mConfig.MinSampleAllocCount);
-
+        sigContribOptim.initialise(sample, ratiosCollection, reqAllocPerc, mConfig.MinSampleAllocCount);
         sigContribOptim.setSigIds(sigIds);
         sigContribOptim.setLogVerbose(mConfig.logSample(sample.Id));
 
@@ -2526,7 +2520,6 @@ public class BucketAnalyser {
         final double[] newGroupContribs = sigContribOptim.getContribs();
 
         double fitAllocPerc = sigContribOptim.getAllocPerc();
-        List<Integer> sortedAllocIndices = getSortedVectorIndices(newGroupContribs, false);
 
         if (fitAllocPerc < prevAllocPerc - 0.001)
         {
@@ -2576,8 +2569,12 @@ public class BucketAnalyser {
         }
 
         double sampleCount = hasBackgroundGroup ? sample.getTotalCount() : sample.getElevatedCount();
+        List<double[]> sigAllocCounts = sigContribOptim.getSigAllocCounts();
+
+        List<Integer> sortedAllocIndices = getSortedVectorIndices(newGroupContribs, false);
 
         // finally allocate any group more than the min allocation percent
+        sample.clearAllocations(sample.usingElevatedForAllocation());
 
         for(Integer index : sortedAllocIndices)
         {
@@ -2609,6 +2606,9 @@ public class BucketAnalyser {
                 }
             }
 
+            final double[] allocCounts = sigAllocCounts.get(index);
+
+            /*
             double[] allocCounts = new double[mBucketCount];
 
             // override with the fitted contribution
@@ -2618,6 +2618,7 @@ public class BucketAnalyser {
                 double ratio = bucketRatios[b];
                 allocCounts[b] = fitAlloc * ratio;
             }
+            */
 
             double actualAlloc = sample.allocateBucketCounts(allocCounts, grpReqAllocPerc);
             double allocPerc = actualAlloc / sampleCount;
