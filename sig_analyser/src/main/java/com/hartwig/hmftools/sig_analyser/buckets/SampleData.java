@@ -30,9 +30,12 @@ public class SampleData
     private double[] mBucketCounts; // counts by bucket
     private double[] mElevBucketCounts; // counts of elevated buckets only
     private double[] mNoiseCounts; // permitted noise or each bucket
-    private double[] mAllocNoiseCounts; // counts allocated to noise for each bucket
+
     private double[] mAllocBucketCounts; // allocated counts for elevated buckets (excluding noise)
+    private double[] mAllocNoiseCounts; // counts allocated to noise for each bucket
     private double[] mUnallocBucketCounts; // unallocated counts for elevated buckets
+
+    private boolean mUseElevatedForAllocation; // any calculated allocations will by from elevated, not total count
     private double mAllocPercent;
     private double mPreviousAllocPerc; // to allow tracking of changes
     private double mVarTotal;
@@ -40,9 +43,8 @@ public class SampleData
     private double mElevatedTotal;
     private double mAllocTotal;
     private double mUnallocTotal;
-    private double mNoiseAllocTotal;
-    private boolean mUseElevatedForAllocation; // any calculated allocations will by from elevated, not total count
     private double mMaxNoiseTotal;
+    private double mNoiseAllocTotal;
 
     private String mCancerType;
 
@@ -245,11 +247,11 @@ public class SampleData
         if(allocCounts != null)
             initVector(allocCounts, 0);
 
-        double allocTotal = 0; // sum of the calcalated bucket allocations
+        double allocTotal = 0; // sum of the calculated bucket allocations
 
         // first extract the remaining unallocated counts per bucket
-        double minAlloc = 0;
-        double minAllocNoNoise = 0;
+        double minAlloc = -1;
+        double minAllocNoNoise = -1;
 
         for(Integer bucket : requiredBuckets)
         {
@@ -257,6 +259,8 @@ public class SampleData
 
             if(unallocCount == 0)
             {
+                /* this logic is not longer applicable since noise is more carefully managed now
+
                 if(mElevBucketCounts[bucket] > 0)
                 {
                     // if any of the required elevated buckets are already fully allocated, no others can be allocated,
@@ -264,6 +268,7 @@ public class SampleData
                     minAlloc = 0;
                     break;
                 }
+                */
 
                 // otherwise it is valid to use non-negative noise with a zero elevated count
             }
@@ -282,21 +287,21 @@ public class SampleData
             double alloc = potentialAlloc / ratio;
             double allocNoNoise = unallocCount / ratio;
 
-            if(minAlloc == 0 || alloc < minAlloc)
+            if(minAlloc == -1 || alloc < minAlloc)
                 minAlloc = alloc;
 
-            if(minAllocNoNoise == 0 || allocNoNoise < minAllocNoNoise)
+            if(minAllocNoNoise == -1 || allocNoNoise < minAllocNoNoise)
                 minAllocNoNoise = allocNoNoise;
         }
 
-        if(minAlloc == 0)
+        if(minAlloc <= 0)
             return 0;
 
         double currentNoiseTotal = useUnallocated ? mNoiseAllocTotal : 0;
 
         // noise is capped at a maximum but also limited by the proportion being allocated to this bucket group
         // eg if maxNoise = 20 but this group is only asking to alloc 50 of 100 total counts, then only 10 of noise can be allocated
-        double maxNoiseAllocation = min(mMaxNoiseTotal - currentNoiseTotal, minAllocNoNoise/countsTotal * mMaxNoiseTotal);
+        double maxNoiseAllocation = min(mMaxNoiseTotal - currentNoiseTotal, min(minAlloc/countsTotal, 1.0) * mMaxNoiseTotal);
 
         if(minAllocNoNoise >= mUnallocTotal)
         {
@@ -457,7 +462,7 @@ public class SampleData
                     double noiseAlloc = min(counts[i] - mUnallocBucketCounts[i], unallocNoise);
 
                     mNoiseAllocTotal += noiseAlloc; // eg if unalloc = 10, noise = 5, count = 20, then allocate all 5 of noise
-                    mAllocNoiseCounts[i] = noiseAlloc;
+                    mAllocNoiseCounts[i] += noiseAlloc;
                     noiseTotal += noiseAlloc;
                 }
 
@@ -499,12 +504,14 @@ public class SampleData
         copyVector(allocCounts, mAllocBucketCounts);
         copyVector(noiseCounts, mAllocNoiseCounts);
         mAllocTotal = 0;
+        mNoiseAllocTotal = 0;
 
         for(int i = 0; i < allocCounts.length; ++i)
         {
             double bucketCount = mUseElevatedForAllocation ? mElevBucketCounts[i] : mBucketCounts[i];
             mUnallocBucketCounts[i] = bucketCount - mAllocBucketCounts[i];
             mAllocTotal += mAllocBucketCounts[i];
+            mNoiseAllocTotal += mAllocNoiseCounts[i];
         }
 
         mUnallocTotal = refVarTotal - mAllocTotal;
@@ -532,6 +539,7 @@ public class SampleData
                 if(noiseAlloc >= countReduction)
                 {
                     noiseReduction = countReduction;
+                    countReduction = 0;
                 }
                 else
                 {
@@ -543,6 +551,7 @@ public class SampleData
                 {
                     mAllocNoiseCounts[i] -= noiseReduction;
                     mNoiseAllocTotal -= noiseReduction;
+                    allocReductionTotal += noiseReduction;
                 }
             }
 

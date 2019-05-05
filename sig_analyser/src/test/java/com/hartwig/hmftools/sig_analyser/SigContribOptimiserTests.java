@@ -64,6 +64,11 @@ public class SigContribOptimiserTests
         sigOptim.initialise(sample, ratiosCollection, 0.001, 0);
         boolean calcOk = sigOptim.fitToSample();
 
+        // using sample directly
+        // sample(0) totalCount(120.000 maxNs=0.000) allocated(140.000 wNs=1.167 noNs=1.000 init=0.735) underAlloc(0.000 perc=0.000) res(20.000 perc=0.167) data(mc=1.0 ls=false it=9)
+        // sample(0) sigs(3) contribs: 0 = 71.333 perc=0.594, 1 = 48.000 perc=0.400, 2 = 20.667 perc=0.172
+
+
         if (!calcOk)
             return;
 
@@ -168,7 +173,7 @@ public class SigContribOptimiserTests
     @Test
     public void testSampleFitWithNoise()
     {
-        // Configurator.setRootLevel(Level.DEBUG);
+        Configurator.setRootLevel(Level.DEBUG);
 
         int bucketCount = 5;
         int sigCount = 3;
@@ -212,8 +217,8 @@ public class SigContribOptimiserTests
         sample.setElevatedBucketCounts(counts, noiseCounts);
 
         SigContribOptimiser sigOptim = new SigContribOptimiser(bucketCount, true, 1.0);
-        sigOptim.initialise(sampleId, counts, noiseCounts, ratiosCollection, 0.001, 0);
-        // sigOptim.initialise(sample, ratiosCollection, 0.001, 0);
+        // sigOptim.initialise(sampleId, counts, noiseCounts, ratiosCollection, 0.001, 0);
+        sigOptim.initialise(sample, ratiosCollection, 0.001, 0);
         boolean calcOk = sigOptim.fitToSample();
 
         if (!calcOk)
