@@ -105,8 +105,7 @@ public class SvFusionAnalyser
         options.addOption(PROMISCUOUS_THREE_CSV, true, "Path towards a CSV containing white-listed promiscuous 3' genes.");
     }
 
-    private static int SPECIFIC_SV_ID = -1;
-    // private static int SPECIFIC_SV_ID = 15902994;
+    public final KnownFusionsModel getKnownFusionsModel() { return mKnownFusionsModel; }
 
     public final List<GeneFusion> findFusions(final List<StructuralVariantAnnotation> annotations)
     {
@@ -119,20 +118,15 @@ public class SvFusionAnalyser
 
         for (final StructuralVariantAnnotation annotation : annotations)
         {
-            if(!annotation.start().isEmpty() && annotation.start().get(0).id() == SPECIFIC_SV_ID)
-            {
-                LOGGER.debug("specific SV({})", annotation.start().get(0).id());
-            }
-
-            List<GeneFusion> svFusions = findFusions(annotation.start(), annotation.end());
-
+            List<GeneFusion> svFusions = findFusions(annotation.start(), annotation.end(), true);
             fusions.addAll(svFusions);
         }
 
         return fusions;
     }
 
-    public final List<GeneFusion> findFusions(final List<GeneAnnotation> breakendGenes1, final List<GeneAnnotation> breakendGenes2)
+    public final List<GeneFusion> findFusions(
+            final List<GeneAnnotation> breakendGenes1, final List<GeneAnnotation> breakendGenes2, boolean requirePhaseMatch)
     {
         final List<GeneFusion> potentialFusions = Lists.newArrayList();
 
@@ -158,15 +152,18 @@ public class SvFusionAnalyser
                         final Transcript upstreamTrans = startUpstream ? startTrans : endTrans;
                         final Transcript downstreamTrans = !startUpstream ? startTrans : endTrans;
 
-                        GeneFusion geneFusion = checkFusionLogic(upstreamTrans, downstreamTrans, true);
+                        GeneFusion geneFusion = checkFusionLogic(upstreamTrans, downstreamTrans, requirePhaseMatch);
 
                         if(geneFusion == null)
                             continue;
 
-                        if(mHasValidConfigData && mKnownFusionsModel != null)
+                        if(mKnownFusionsModel != null)
                         {
                             geneFusion.setPrimarySource(mKnownFusionsModel.primarySource(
                                     upstreamTrans.parent().synonyms(), downstreamTrans.parent().synonyms()));
+
+                            final String knownType = getKnownFusionType(upstreamTrans, downstreamTrans);
+                            geneFusion.setKnownFusionType(knownType);
                         }
 
                         potentialFusions.add(geneFusion);
@@ -433,7 +430,7 @@ public class SvFusionAnalyser
     private static int MAX_UPSTREAM_DISTANCE_KNOWN = 100000;
     private static int MAX_UPSTREAM_DISTANCE_UNKNOWN = 10000;
 
-    private GeneFusion determineReportableFusion(final List<GeneFusion> fusions)
+    public GeneFusion determineReportableFusion(final List<GeneFusion> fusions)
     {
         // Select either the canonical -> canonical transcript fusion
         //  then the one with the most exons where one end is canonical
@@ -446,19 +443,18 @@ public class SvFusionAnalyser
 
         for(final GeneFusion fusion : fusions)
         {
+            if(!fusion.phaseMatched())
+                continue;
+
             // first check whether a fusion is known or not - a key requirement of it being potentially reportable
             final Transcript upTrans = fusion.upstreamTrans();
             final Transcript downTrans = fusion.downstreamTrans();
 
-            final String knownType = getKnownFusionType(upTrans, downTrans);
-
-            if (knownType == REPORTABLE_TYPE_NONE)
+            if (fusion.getKnownFusionType() == REPORTABLE_TYPE_NONE)
                 continue;
 
-            fusion.setKnownFusionType(knownType);
-
             // set limits on how far upstream the breakend can be - adjusted for whether the fusions is known or not
-            int maxUpstreamDistance = knownType == REPORTABLE_TYPE_KNOWN ? MAX_UPSTREAM_DISTANCE_KNOWN : MAX_UPSTREAM_DISTANCE_UNKNOWN;
+            int maxUpstreamDistance = fusion.getKnownFusionType() == REPORTABLE_TYPE_KNOWN ? MAX_UPSTREAM_DISTANCE_KNOWN : MAX_UPSTREAM_DISTANCE_UNKNOWN;
 
             if(upTrans.getDistanceUpstream() > maxUpstreamDistance || downTrans.getDistanceUpstream() > maxUpstreamDistance)
                 continue;
@@ -559,7 +555,7 @@ public class SvFusionAnalyser
         return upstream.parent().synonyms().stream().anyMatch(downstream.parent().synonyms()::contains);
     }
 
-    public void initialiseOutputFile(final String fileName, String clusterInfoHeaders)
+    public void initialiseOutputFile(final String fileName, String annotatationHeaders)
     {
         try
         {
@@ -576,10 +572,10 @@ public class SvFusionAnalyser
 
                 mFusionWriter.write("SampleId,Reportable,KnownType,PrimarySource");
 
-                if(clusterInfoHeaders.isEmpty())
+                if(annotatationHeaders.isEmpty())
                     mFusionWriter.write(",ClusterId,ClusterCount,ClusterInfo");
                 else
-                    mFusionWriter.write(String.format(",%s", clusterInfoHeaders));
+                    mFusionWriter.write(String.format(",%s", annotatationHeaders));
 
 
                 mFusionWriter.write(",SvIdUp,ChrUp,PosUp,OrientUp,TypeUp,PloidyUp,GeneUp,ChrBandUp,TranscriptUp,StrandUp,RegionTypeUp,CodingTypeUp");

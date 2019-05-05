@@ -5,7 +5,12 @@ import static com.hartwig.hmftools.svanalysis.analyser.SvTestHelper.addTransExon
 import static com.hartwig.hmftools.svanalysis.analyser.SvTestHelper.createDel;
 import static com.hartwig.hmftools.svanalysis.analyser.SvTestHelper.createDup;
 import static com.hartwig.hmftools.svanalysis.analyser.SvTestHelper.createEnsemblGeneData;
+import static com.hartwig.hmftools.svanalysis.analysis.FusionDisruptionAnalyser.FCI_TRAV_ASSEMBLY;
+import static com.hartwig.hmftools.svanalysis.analysis.FusionDisruptionAnalyser.FCI_VALID_TRAVERSAL;
+import static com.hartwig.hmftools.svanalysis.analysis.FusionDisruptionAnalyser.FDI_DIS_EXONS;
+import static com.hartwig.hmftools.svanalysis.analysis.FusionDisruptionAnalyser.FDI_TERMINATED;
 import static com.hartwig.hmftools.svanalysis.analysis.FusionDisruptionAnalyser.PRE_GENE_BREAKEND_DISTANCE;
+import static com.hartwig.hmftools.svanalysis.analysis.FusionDisruptionAnalyser.isDisrupted;
 import static com.hartwig.hmftools.svanalysis.analysis.FusionDisruptionAnalyser.setSvGeneData;
 import static com.hartwig.hmftools.svannotation.SvGeneTranscriptCollection.PRE_GENE_PROMOTOR_DISTANCE;
 
@@ -270,27 +275,25 @@ public class FusionTests
     {
         String[] fields = fusion.getAnnotations().split(",");
 
-        // ClusterId,ClusterCount,ResolvedType,OverlapUp,OverlapDown,ChainInfo
-        if(fields.length != 6)
+        // PhaseMatched,ClusterId,ClusterCount,ResolvedType,OverlapUp,OverlapDown,ChainInfo
+        if(fields.length != 7)
             return false;
 
-        String[] chainInfo = fields[5].split(";");
+        String[] chainInfo = fields[6].split(";");
 
-        if(chainInfo.length != 5)
+        int fieldLength = FCI_TRAV_ASSEMBLY+1;
+        if(chainInfo.length != fieldLength)
             return false;
 
-        if(validTraversal != (chainInfo[3].equals("true")))
+        if(validTraversal != (chainInfo[FCI_VALID_TRAVERSAL].equals("true")))
             return false;
 
-        String[] disruptionsUp = fields[3].split(";");
-        String[] disruptionsDown = fields[4].split(";");
-
-        if(disruptionsUp.length != 7 || disruptionsDown.length != 7)
-            return false;
+        String disruptionsUp = fields[4];
+        String disruptionsDown = fields[5];
 
         // test the exons disrupted and terminated fields
-        boolean validUp = disruptionsUp[5].equals("0") && disruptionsUp[6].equals("0");
-        boolean validDown = disruptionsDown[5].equals("0") && disruptionsDown[6].equals("0");
+        boolean validUp = isDisrupted(disruptionsUp);
+        boolean validDown = isDisrupted(disruptionsDown);
 
         if(validEnds)
             return validUp && validDown;
