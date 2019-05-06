@@ -66,7 +66,7 @@ public class TumorCharacteristicsChapter implements ReportChapter {
                 "MSS", "MSI");
         satelliteChart.setEnabled(hasReliablePurityFit);
         satelliteChart.setScale(InlineBarChart.LOG10_SCALE);
-        satelliteChart.setTickMarks(new double[] {MicroSatelliteStatus.RANGE_MIN, 1E-1, 1, 10, MicroSatelliteStatus.RANGE_MAX}, doubleDecimalFormat);
+        satelliteChart.setTickMarks(new double[] {MicroSatelliteStatus.RANGE_MIN, 10, MicroSatelliteStatus.RANGE_MAX}, doubleDecimalFormat);
         satelliteChart.enableUndershoot("<" + noDecimalFormat.format(satelliteChart.getMin()));
         satelliteChart.enableOvershoot(">" + noDecimalFormat.format(satelliteChart.getMax()));
         satelliteChart.setIndicator(MicroSatelliteStatus.THRESHOLD, "Microsatellite \ninstability (" + doubleDecimalFormat.format(MicroSatelliteStatus.THRESHOLD) + ")");
