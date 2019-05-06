@@ -7,6 +7,7 @@ import java.util.Map;
 
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.io.reader.LineReader;
+import com.hartwig.hmftools.common.lims.LimsSampleType;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -29,8 +30,10 @@ public class SummaryFile {
             String[] parts = line.split(SEPARATOR);
             if (parts.length == 2) {
                 String sampleId = parts[0].trim();
-                String summaryOfSample = parts[1].trim();
-                sampleToSummaryMap.put(sampleId, summaryOfSample);
+                if (LimsSampleType.fromSampleId(sampleId).equals(LimsSampleType.WIDE)) {
+                    String summaryOfSample = parts[1].trim();
+                    sampleToSummaryMap.put(sampleId, summaryOfSample);
+                }
             } else {
                 LOGGER.warn("Suspicious line detected in summary csv: " + line);
             }
