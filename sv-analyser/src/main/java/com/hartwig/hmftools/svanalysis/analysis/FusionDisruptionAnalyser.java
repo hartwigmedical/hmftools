@@ -595,7 +595,7 @@ public class FusionDisruptionAnalyser
         chainFusions.stream().forEach(x -> x.setReportable(false));
 
         // only chained fusions with unterminated ends and valid traversal are considered as reportable
-        mFusionFinder.determineReportableFusion(validFusions);
+        mFusionFinder.setReportableGeneFusions(validFusions);
 
         for(GeneFusion fusion : chainFusions)
         {

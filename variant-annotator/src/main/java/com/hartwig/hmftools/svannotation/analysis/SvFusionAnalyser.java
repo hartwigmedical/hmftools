@@ -243,7 +243,7 @@ public class SvFusionAnalyser
     public static GeneFusion checkFusionLogic(final Transcript upstreamTrans, final Transcript downstreamTrans,
             boolean requirePhaseMatch, @Nullable List<String> invalidReasons)
     {
-        // see FV Fusions document for permitted combinations
+        // see SV Fusions document for permitted combinations
         boolean checkExactMatch = false;
 
         if(!validFusionTranscript(upstreamTrans) || !validFusionTranscript(downstreamTrans))
@@ -428,7 +428,7 @@ public class SvFusionAnalyser
         mProteinsRequiredKept.add("Bromodomain");
     }
 
-    private void setReportableGeneFusions(final List<GeneFusion> fusions)
+    public void setReportableGeneFusions(final List<GeneFusion> fusions)
     {
         if(fusions.isEmpty())
             return;
@@ -514,7 +514,7 @@ public class SvFusionAnalyser
     private static int MAX_UPSTREAM_DISTANCE_KNOWN = 100000;
     private static int MAX_UPSTREAM_DISTANCE_UNKNOWN = 10000;
 
-    public GeneFusion determineReportableFusion(final List<GeneFusion> fusions)
+    private GeneFusion determineReportableFusion(final List<GeneFusion> fusions)
     {
         // Select either the canonical -> canonical transcript fusion
         //  then the one with the most exons where one end is canonical
