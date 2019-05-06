@@ -24,6 +24,10 @@ public abstract class AnalysedPatientReport implements PatientReport {
     @NotNull
     public abstract SampleReport sampleReport();
 
+    public abstract boolean hasSummarySample();
+
+    public abstract String summarySample();
+
     public abstract double impliedPurity();
 
     public abstract boolean hasReliablePurityFit();

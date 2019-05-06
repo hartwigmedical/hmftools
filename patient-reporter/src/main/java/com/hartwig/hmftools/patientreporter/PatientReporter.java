@@ -33,6 +33,7 @@ import com.hartwig.hmftools.patientreporter.actionability.ClinicalTrialFactory;
 import com.hartwig.hmftools.patientreporter.actionability.ReportableEvidenceItemFactory;
 import com.hartwig.hmftools.patientreporter.copynumber.CopyNumberAnalysis;
 import com.hartwig.hmftools.patientreporter.copynumber.CopyNumberAnalyzer;
+import com.hartwig.hmftools.patientreporter.summary.SummaryModel;
 import com.hartwig.hmftools.patientreporter.variants.germline.FilterGermlineVariants;
 import com.hartwig.hmftools.patientreporter.variants.germline.GermlineVariant;
 import com.hartwig.hmftools.patientreporter.structural.SvAnalysis;
@@ -44,6 +45,7 @@ import com.hartwig.hmftools.patientreporter.variants.somatic.SomaticVariantAnaly
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -121,7 +123,12 @@ class PatientReporter {
 
         final List<EvidenceItem> nonTrials = ReportableEvidenceItemFactory.extractNonTrials(allEvidenceItems);
 
+        boolean hasSummaryOfSample = sequencedReportData.summaryModel().sampleIdPresentInSummaryFile(tumorSample);
+        String summarySample = hasSummaryOfSample ? sequencedReportData.summaryModel().extractSummarySampleId(tumorSample) : Strings.EMPTY;
+
         return ImmutableAnalysedPatientReport.of(sampleReport,
+                hasSummaryOfSample,
+                summarySample,
                 copyNumberAnalysis.fittedPurity().purity(),
                 copyNumberAnalysis.status() != FittedPurityStatus.NO_TUMOR,
                 copyNumberAnalysis.fittedPurity().ploidy(),

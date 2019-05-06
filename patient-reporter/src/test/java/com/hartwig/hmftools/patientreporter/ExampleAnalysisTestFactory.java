@@ -74,6 +74,8 @@ public final class ExampleAnalysisTestFactory {
         final SampleReport sampleReport = createCOLO829SampleReport();
 
         return ImmutableAnalysedPatientReport.of(sampleReport,
+                true,
+                "this is a test summary",
                 fittedPurity.purity(),
                 true,
                 fittedPurity.ploidy(),
@@ -118,6 +120,8 @@ public final class ExampleAnalysisTestFactory {
         final SampleReport sampleReport = createCOLO829SampleReport();
 
         return ImmutableAnalysedPatientReport.of(sampleReport,
+                false,
+                "this is a test",
                 fittedPurity.purity(),
                 true,
                 fittedPurity.ploidy(),

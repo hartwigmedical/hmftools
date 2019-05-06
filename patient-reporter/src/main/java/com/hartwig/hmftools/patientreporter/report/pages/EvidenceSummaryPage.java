@@ -6,6 +6,7 @@ import static com.hartwig.hmftools.patientreporter.report.Commons.fontStyle;
 import static com.hartwig.hmftools.patientreporter.report.Commons.linkStyle;
 import static com.hartwig.hmftools.patientreporter.report.Commons.monospaceBaseTable;
 import static com.hartwig.hmftools.patientreporter.report.Commons.sectionHeaderStyle;
+import static com.hartwig.hmftools.patientreporter.report.Commons.toList;
 
 import static net.sf.dynamicreports.report.builder.DynamicReports.cmp;
 import static net.sf.dynamicreports.report.builder.DynamicReports.col;
@@ -13,6 +14,7 @@ import static net.sf.dynamicreports.report.builder.DynamicReports.hyperLink;
 
 import java.util.List;
 
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.actionability.EvidenceItem;
 import com.hartwig.hmftools.patientreporter.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.report.Commons;
@@ -25,6 +27,7 @@ import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 
 import net.sf.dynamicreports.report.builder.component.ComponentBuilder;
+import net.sf.dynamicreports.report.builder.component.VerticalListBuilder;
 import net.sf.dynamicreports.report.constant.HorizontalTextAlignment;
 
 @Value.Immutable
@@ -37,15 +40,37 @@ public abstract class EvidenceSummaryPage {
 
     @NotNull
     public ComponentBuilder<?, ?> reportComponent() {
-        return cmp.verticalList(MainPageTopSection.build(Commons.TITLE_SEQUENCE, report().sampleReport()),
-                cmp.verticalGap(SECTION_VERTICAL_GAP),
-                GenomicSummarySection.build(report()),
-                cmp.verticalGap(SECTION_VERTICAL_GAP),
-                tumorTypeSpecificEvidence(report()),
-                cmp.verticalGap(SECTION_VERTICAL_GAP),
-                clinicalTrialReport(report()),
-                cmp.verticalGap(SECTION_VERTICAL_GAP),
-                offLabelClinicalEvidence(report()));
+        if (report().hasSummarySample()) {
+            return cmp.verticalList(MainSection(report()),
+                    cmp.verticalGap(SECTION_VERTICAL_GAP),
+                    summarySample(report()),
+                    cmp.verticalGap(SECTION_VERTICAL_GAP),
+                    GenomicSummarySection.build(report()),
+                    cmp.verticalGap(SECTION_VERTICAL_GAP),
+                    tumorTypeSpecificEvidence(report()),
+                    cmp.verticalGap(SECTION_VERTICAL_GAP),
+                    clinicalTrialReport(report()),
+                    cmp.verticalGap(SECTION_VERTICAL_GAP),
+                    offLabelClinicalEvidence(report()));
+        } else {
+            return cmp.verticalList(MainSection(report()),
+                    cmp.verticalGap(SECTION_VERTICAL_GAP),
+                    GenomicSummarySection.build(report()),
+                    cmp.verticalGap(SECTION_VERTICAL_GAP),
+                    tumorTypeSpecificEvidence(report()),
+                    cmp.verticalGap(SECTION_VERTICAL_GAP),
+                    clinicalTrialReport(report()),
+                    cmp.verticalGap(SECTION_VERTICAL_GAP),
+                    offLabelClinicalEvidence(report()));
+        }
+    }
+
+    private static ComponentBuilder<?,?> MainSection(@NotNull AnalysedPatientReport report) {
+        return MainPageTopSection.build(Commons.TITLE_SEQUENCE, report.sampleReport());
+    }
+
+    private static VerticalListBuilder summarySample(@NotNull AnalysedPatientReport report) {
+        return toList("Summary", Lists.newArrayList(report.summarySample()));
     }
 
     @NotNull
