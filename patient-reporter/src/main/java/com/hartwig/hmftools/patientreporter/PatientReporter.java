@@ -95,7 +95,7 @@ class PatientReporter {
         final ChordAnalysis chordAnalysis = analyzeChord(run);
 
         boolean hasSummaryOfSample = sequencedReportData.summaryModel().sampleIdPresentInSummaryFile(tumorSample);
-        String summarySample = hasSummaryOfSample ? sequencedReportData.summaryModel().extractSummarySampleId(tumorSample) : Strings.EMPTY;
+        String summarySample = sequencedReportData.summaryModel().extractSummarySampleId(tumorSample);
 
         LOGGER.info("Loading summary samples CSV");
         LOGGER.info(hasSummaryOfSample ? "Sample has summary." : "Sample has none summary.");
