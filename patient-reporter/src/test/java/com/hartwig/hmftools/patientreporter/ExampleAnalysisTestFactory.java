@@ -121,7 +121,7 @@ public final class ExampleAnalysisTestFactory {
 
         return ImmutableAnalysedPatientReport.of(sampleReport,
                 false,
-                "this is a test",
+                "this is a test summary",
                 fittedPurity.purity(),
                 true,
                 fittedPurity.ploidy(),
