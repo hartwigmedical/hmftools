@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.patientreporter.summary;
 
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -15,6 +16,11 @@ public class SummaryModel {
 
     SummaryModel(@NotNull final Map<String, String> sampleToSummaryMap) {
         this.sampleToSummaryMap = sampleToSummaryMap;
+    }
+
+    @NotNull
+    public Set<String> sizeSummarySamples() {
+        return sampleToSummaryMap.keySet();
     }
 
     public boolean sampleIdPresentInSummaryFile(@NotNull String sampleId) {

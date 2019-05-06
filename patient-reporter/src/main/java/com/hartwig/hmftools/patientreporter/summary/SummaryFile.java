@@ -30,10 +30,9 @@ public class SummaryFile {
             String[] parts = line.split(SEPARATOR);
             if (parts.length == 2) {
                 String sampleId = parts[0].trim();
-                if (LimsSampleType.fromSampleId(sampleId).equals(LimsSampleType.WIDE)) {
-                    String summaryOfSample = parts[1].trim();
-                    sampleToSummaryMap.put(sampleId, summaryOfSample);
-                }
+                String summaryOfSample = parts[1].trim();
+                sampleToSummaryMap.put(sampleId, summaryOfSample);
+
             } else {
                 LOGGER.warn("Suspicious line detected in summary csv: " + line);
             }
