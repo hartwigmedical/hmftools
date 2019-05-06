@@ -27,6 +27,7 @@ public class SummaryModel {
         return sampleToSummaryMap.keySet().contains(sampleId);
     }
 
+    @NotNull
     public String extractSummarySampleId(@NotNull String sampleId) {
         return sampleToSummaryMap.get(sampleId);
     }
