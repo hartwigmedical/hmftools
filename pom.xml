@@ -33,7 +33,6 @@
         <module>sv-graphs</module>
         <module>knowledgebase-importer</module>
         <module>sig_analyser</module>
-        <module>actionability-vs-soc</module>
         <module>vicc-knowledgebase-importer</module>
     </modules>
 
