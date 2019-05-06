@@ -80,7 +80,7 @@ public class PatientReporterApplication {
         }
 
         LOGGER.info("Running patient reporter v" + VERSION);
-        final ReportWriter reportWriter = new PDFWriter();
+        final ReportWriter reportWriter = new CFReportWriter();
 
         if (cmd.hasOption(QC_FAIL) && validInputForQCFailReport(cmd)) {
             final String sample = cmd.getOptionValue(QC_FAIL_SAMPLE);
