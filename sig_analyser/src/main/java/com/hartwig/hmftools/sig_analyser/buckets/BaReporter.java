@@ -415,14 +415,15 @@ public class BaReporter
                 }
             }
 
-            if (maxPotAlloc / sampleCount >= MIN_GROUP_ALLOC_PERCENT * 1.05 && maxPotAlloc >= mAnalyser.getMinSampleAllocCount() && maxPotAllocGroup != null)
+            if (maxPotAlloc / sampleCount >= MIN_GROUP_ALLOC_PERCENT * 1.05
+            && maxPotAlloc >= mAnalyser.getMinSampleAllocCount() && maxPotAllocGroup != null)
             {
                 LOGGER.debug(String.format("sample(%d) current alloc(%.3f of %s) missed maxAlloc(%s %.3f) with bg(%d)",
                         sample.Id, sample.getAllocPercent(), sizeToStr(sampleCount), sizeToStr(maxPotAlloc),
                         maxPotAlloc / sampleCount, maxPotAllocGroup.getId()));
             }
 
-            if (maxCss >= 0.98 && maxCssGroup != null)
+            if (sample.getAllocPercent() < (1 - MIN_GROUP_ALLOC_PERCENT) && maxCss >= 0.98 && maxCssGroup != null)
             {
                 LOGGER.debug(String.format("sample(%d) current alloc(%.3f of %s) high maxCss(%.3f) with to bg(%d)",
                         sample.Id, sample.getAllocPercent(), sizeToStr(sampleCount), maxCss, maxCssGroup.getId()));

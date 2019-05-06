@@ -214,7 +214,12 @@ public class DataUtils {
 
     public static boolean doublesEqual(double val1, double val2)
     {
-        return abs(val1-val2) < DBL_LARGE_EPSILON;
+        return doublesEqual(val1, val2, DBL_LARGE_EPSILON);
+    }
+
+    public static boolean doublesEqual(double val1, double val2, double epsilon)
+    {
+        return abs(val1-val2) < epsilon;
     }
 
     public static double DBL_LARGE_EPSILON = 1e-4;

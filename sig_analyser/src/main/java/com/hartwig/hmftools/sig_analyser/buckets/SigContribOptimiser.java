@@ -547,10 +547,16 @@ public class SigContribOptimiser
             }
 
             // remove this sig across the board from a 1-lot contrib to this exhausted bucket
+            final double[] sigAllocCounts = mSigAllocCounts.get(rs);
+            double actualSigLoss = 0;
+
             for (int b = 0; b < mBucketCount; ++b)
             {
-                mReducedRefSigCounts[b] = -sig1ContribLoss * sigData[b][rs];
+                mReducedRefSigCounts[b] = max(-sig1ContribLoss * sigData[b][rs], -sigAllocCounts[b]);
+                actualSigLoss += mReducedRefSigCounts[b];
             }
+
+            sig1ContribLoss = -actualSigLoss;
         }
 
         // now look at the potential gain to all the sigs in each bucket, having had the reduction sig's contribution removed
@@ -646,9 +652,9 @@ public class SigContribOptimiser
                     }
 
                     // and then apply them
-                    double actualAlloc = mSample.allocateBucketCounts(allocCounts, 0);
+                    double actualAlloc = mSample.allocateBucketCounts(allocCounts);
 
-                    if(!doublesEqual(actualAlloc, potentialAlloc))
+                    if(!doublesEqual(actualAlloc, potentialAlloc, 0.1))
                     {
                         LOGGER.warn(String.format("sample(%d) potentialAlloc(%.1f) != actualAlloc(%.1f)", mSampleId, potentialAlloc, actualAlloc));
                         return 0;
@@ -675,9 +681,9 @@ public class SigContribOptimiser
 
                 if (potentialAlloc > 0)
                 {
-                    double actualAlloc = mSample.allocateBucketCounts(allocCounts, 0);
+                    double actualAlloc = mSample.allocateBucketCounts(allocCounts);
 
-                    if(!doublesEqual(actualAlloc, potentialAlloc))
+                    if(!doublesEqual(actualAlloc, potentialAlloc, 0.1))
                     {
                         LOGGER.warn(String.format("sample(%d) potentialAlloc(%.1f) != actualAlloc(%.1f)", mSampleId, potentialAlloc, actualAlloc));
                         return 0;
@@ -866,21 +872,32 @@ public class SigContribOptimiser
 
         if(newCountsTotal > 0)
         {
-            allocChange = mSample.allocateBucketCounts(newCounts, 0);
+            allocChange = mSample.allocateBucketCounts(newCounts);
         }
         else
         {
             allocChange = mSample.reduceAllocCounts(newCounts);
-            allocChange *= -1;
         }
 
-        if(!doublesEqual(newCountsTotal, allocChange))
+        if(!doublesEqual(newCountsTotal, allocChange, 0.1))
         {
             LOGGER.warn(String.format("sample(%d) newCountsTotal(%.1f) != allocChange(%.1f)", mSampleId, newCountsTotal, allocChange));
+            mIsValid = false;
         }
 
         double[] sigAllocCounts = mSigAllocCounts.get(sig);
         sumVectors(newCounts, sigAllocCounts);
+
+        if(log())
+        {
+            for(int i = 0; i < sigAllocCounts.length; ++i)
+            {
+                if(sigAllocCounts[i] < 0)
+                {
+                    LOGGER.warn(String.format("sample(%d) bucket(%d) has negative count(%.1f)", mSampleId, i, sigAllocCounts[i]));
+                }
+            }
+        }
 
         mContribs[sig] += allocChange;
         mContribTotal += allocChange;
@@ -894,8 +911,11 @@ public class SigContribOptimiser
     {
         if (mZeroedSigs.contains(sig))
         {
-            LOGGER.error("sample({}) sig({}) previously zeroed", mSampleId, mSigIds[sig]);
-            mIsValid = false;
+            if(mContribs[sig] > 1)
+            {
+                LOGGER.error("sample({}) sig({}) previously zeroed", mSampleId, mSigIds[sig]);
+                mIsValid = false;
+            }
             return;
         }
 
@@ -911,7 +931,6 @@ public class SigContribOptimiser
             double reductionTotal = sumVector(sigCounts);
 
             applyContribution(sig, sigCounts, reductionTotal);
-            initVector(sigCounts, 0);
         }
         else
         {
@@ -934,8 +953,9 @@ public class SigContribOptimiser
             }
 
             mContribTotal -= mContribs[sig];
-            mContribs[sig] = 0;
         }
+
+        mContribs[sig] = 0;
 
         if (log())
             LOGGER.debug(String.format("sample(%d) sig(%d) contrib(%s) zeroed", mSampleId, mSigIds[sig], doubleToStr(sigContrib)));

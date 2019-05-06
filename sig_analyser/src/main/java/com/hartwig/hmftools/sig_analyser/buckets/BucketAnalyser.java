@@ -1263,7 +1263,7 @@ public class BucketAnalyser {
                     sigContribOptimiser.initialise(sample.Id, sample.getElevatedBucketCounts(), sample.getNoiseCounts(), ratiosCollection,
                             reqAllocPercent, mConfig.MinSampleAllocCount);
 
-                    sigContribOptimiser.setLogVerbose(mConfig.logSample(sampleId));
+                    // sigContribOptimiser.setLogVerbose(mConfig.logSample(sampleId));
                     sigContribOptimiser.setTargetSig(candidateSigIndex);
                     sigContribOptimiser.setRequiredSig(bgGroupIndex);
 
