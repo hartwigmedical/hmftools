@@ -119,11 +119,6 @@
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-shade-plugin</artifactId>
-                    <version>${maven.shade.plugin.version}</version>
-                </plugin>
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-jar-plugin</artifactId>
                     <version>${maven.jar.plugin.version}</version>
                 </plugin>
@@ -133,16 +128,8 @@
                     <version>${jaxb2.plugin.version}</version>
                 </plugin>
                 <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-surefire-plugin</artifactId>
-                    <version>${maven.surefire.plugin.version}</version>
-                    <configuration>
-                        <argLine>-Dfile.encoding=${project.build.sourceEncoding}</argLine>
-                    </configuration>
-                </plugin>
-                <plugin>
-                    <artifactId>kotlin-maven-plugin</artifactId>
                     <groupId>org.jetbrains.kotlin</groupId>
+                    <artifactId>kotlin-maven-plugin</artifactId>
                     <version>${kotlin.version}</version>
                     <configuration>
                         <args>
@@ -155,11 +142,6 @@
     </build>
     <dependencyManagement>
         <dependencies>
-            <dependency>
-                <groupId>com.hartwig</groupId>
-                <artifactId>hmf-gene-panel</artifactId>
-                <version>${hmf-gene-panel.version}</version>
-            </dependency>
             <dependency>
                 <groupId>com.hartwig</groupId>
                 <artifactId>hmf-common</artifactId>
