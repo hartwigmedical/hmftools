@@ -5,6 +5,7 @@ import java.util.Set;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 public class SummaryModel {
@@ -29,6 +30,10 @@ public class SummaryModel {
 
     @NotNull
     public String extractSummarySampleId(@NotNull String sampleId) {
-        return sampleToSummaryMap.get(sampleId);
+        boolean sampleInFile = sampleIdPresentInSummaryFile(sampleId);
+        if (!sampleInFile) {
+            LOGGER.warn("Sample contains none summary!");
+        }
+        return sampleInFile ? sampleToSummaryMap.get(sampleId) : Strings.EMPTY;
     }
 }
