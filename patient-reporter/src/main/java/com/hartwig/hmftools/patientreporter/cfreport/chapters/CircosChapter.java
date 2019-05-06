@@ -23,7 +23,6 @@ public class CircosChapter implements ReportChapter {
 
     @NotNull
     @Override
-    @NotNull
     public String getName() {
         return "CIRCOS plot";
     }

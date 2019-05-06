@@ -17,7 +17,6 @@ public class ExplanationChapter implements ReportChapter {
 
     @NotNull
     @Override
-    @NotNull
     public String getName() {
         return "Report explanation";
     }

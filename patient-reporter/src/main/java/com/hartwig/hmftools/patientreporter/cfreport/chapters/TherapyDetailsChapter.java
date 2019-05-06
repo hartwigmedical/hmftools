@@ -44,7 +44,6 @@ public class TherapyDetailsChapter implements ReportChapter {
 
     @NotNull
     @Override
-    @NotNull
     public String getName() {
         return "Therapy details";
     }

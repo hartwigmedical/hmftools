@@ -21,7 +21,6 @@ public class ReportSignature {
 
     @NotNull
     public static Div createSignatureDiv(@NotNull String rvaLogoPath, @NotNull String signaturePath) throws IOException {
-
             Div div = new Div();
             div.setKeepTogether(true);
             div.setMarginTop(80);
