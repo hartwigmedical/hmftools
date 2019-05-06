@@ -9,36 +9,35 @@ import com.itextpdf.kernel.pdf.xobject.PdfFormXObject;
 import com.itextpdf.layout.Canvas;
 import com.itextpdf.layout.element.Paragraph;
 import com.itextpdf.layout.property.TextAlignment;
+
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class Footer {
 
-    private ArrayList<PageNumberTemplate> pageNumberTemplates = new ArrayList<>();
+    private List<PageNumberTemplate> pageNumberTemplates = new ArrayList<>();
 
     public void renderFooter(PdfPage page, boolean fullWidth, @Nullable String pageNumberPrefix) {
-
         final PdfCanvas canvas = new PdfCanvas(page.getLastContentStream(), page.getResources(), page.getDocument());
 
         // Add current page number template
         int pageNumber = page.getDocument().getPageNumber(page);
         PdfFormXObject pageNumberTemplate = new PdfFormXObject(new Rectangle(0, 0, 200, 20));
-        canvas.addXObject(pageNumberTemplate,58, 20);
-         pageNumberTemplates.add(new PageNumberTemplate(pageNumber, pageNumberPrefix, pageNumberTemplate));
+        canvas.addXObject(pageNumberTemplate, 58, 20);
+        pageNumberTemplates.add(new PageNumberTemplate(pageNumber, pageNumberPrefix, pageNumberTemplate));
 
         // Draw markers
-        BaseMarker.renderMarkerGrid(fullWidth ? 5 : 3,1,156, 87, 22, 0, .2f, 0, canvas);
+        BaseMarker.renderMarkerGrid(fullWidth ? 5 : 3, 1, 156, 87, 22, 0, .2f, 0, canvas);
 
         canvas.release();
-
     }
 
     public void writeTotalPageCount(@NotNull PdfDocument document) {
-
         int totalPageCount = document.getNumberOfPages();
-        for (PageNumberTemplate tpl: pageNumberTemplates) {
+        for (PageNumberTemplate tpl : pageNumberTemplates) {
             tpl.renderPageNumber(totalPageCount, document);
         }
 
@@ -57,17 +56,14 @@ public class Footer {
         }
 
         public void renderPageNumber(int totalPageCount, @NotNull PdfDocument document) {
-
-            String displayString = ((prefix != null) ? prefix.toUpperCase() + " \u2014 " : "")
-                    + pageNumber + "/" + totalPageCount;
+            String displayString = ((prefix != null) ? prefix.toUpperCase() + " \u2014 " : "") + pageNumber + "/" + totalPageCount;
 
             Canvas canvas = new Canvas(template, document);
-            canvas.showTextAligned(new Paragraph()
-                    .add(displayString)
-                    .addStyle(ReportResources.pageNumberStyle()), 0, 0, TextAlignment.LEFT);
+            canvas.showTextAligned(new Paragraph().add(displayString).addStyle(ReportResources.pageNumberStyle()),
+                    0,
+                    0,
+                    TextAlignment.LEFT);
 
         }
-
     }
-
 }

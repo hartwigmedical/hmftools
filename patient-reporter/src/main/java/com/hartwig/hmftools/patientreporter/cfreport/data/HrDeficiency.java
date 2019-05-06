@@ -20,5 +20,4 @@ public final class HrDeficiency {
             return new DecimalFormat("#.##").format(chordHrdScore);
         }
     }
-
 }

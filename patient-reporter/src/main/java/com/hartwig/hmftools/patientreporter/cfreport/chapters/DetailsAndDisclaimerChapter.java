@@ -11,6 +11,7 @@ import com.itextpdf.io.image.ImageDataFactory;
 import com.itextpdf.layout.Document;
 import com.itextpdf.layout.element.*;
 import com.itextpdf.layout.property.UnitValue;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -41,19 +42,15 @@ public class DetailsAndDisclaimerChapter implements ReportChapter {
     public final void render(@NotNull final Document reportDocument) throws IOException {
 
         // Main content
-        Table table = new Table(UnitValue.createPercentArray(new float[] {1, 0.1f, 1}));
+        Table table = new Table(UnitValue.createPercentArray(new float[] { 1, 0.1f, 1 }));
         table.setWidth(getContentWidth());
-        table.addCell(TableUtil.getLayoutCell()
-                .add(createSampleDetailsDiv(patientReport)));
+        table.addCell(TableUtil.getLayoutCell().add(createSampleDetailsDiv(patientReport)));
         table.addCell(TableUtil.getLayoutCell()); // Spacer
-        table.addCell(TableUtil.getLayoutCell()
-                .add(createDisclaimerDiv()));
+        table.addCell(TableUtil.getLayoutCell().add(createDisclaimerDiv()));
         reportDocument.add(table);
 
         // End of report text
-        reportDocument.add(new Paragraph("— End of report —")
-                .setMarginTop(50)
-                .addStyle(ReportResources.smallBodyTextStyle()));
+        reportDocument.add(new Paragraph("— End of report —").setMarginTop(50).addStyle(ReportResources.smallBodyTextStyle()));
 
         reportDocument.add(createSignatureDiv(patientReport.logoRVAPath(), patientReport.signaturePath()).setPaddingTop(80));
 
@@ -61,30 +58,30 @@ public class DetailsAndDisclaimerChapter implements ReportChapter {
 
     @NotNull
     private static Div createSampleDetailsDiv(@NotNull final AnalysedPatientReport patientReport) {
-
         final SampleReport sampleReport = patientReport.sampleReport();
 
-        String recipient = sampleReport.recipient();
-        if (recipient == null) {
+        String addressee = sampleReport.addressee();
+        if (addressee == null) {
             LOGGER.warn("No recipient address present for sample " + sampleReport.sampleId());
-            recipient = DataUtil.NAString;
+            addressee = DataUtil.NAString;
         }
 
         Div div = new Div();
 
         // Heading
-        div.add(new Paragraph("Sample details")
-                .addStyle(ReportResources.smallBodyHeadingStyle()));
+        div.add(new Paragraph("Sample details").addStyle(ReportResources.smallBodyHeadingStyle()));
 
         // Content
         div.add(createContentParagraph("The samples have been sequenced at ", ReportResources.HARTWIG_ADDRESS));
         div.add(createContentParagraph("The samples have been analyzed by Next Generation Sequencing "));
-        div.add(createContentParagraph("This experiment is performed on the tumor sample which arrived on ", DataUtil.formatDate(sampleReport.tumorArrivalDate())));
+        div.add(createContentParagraph("This experiment is performed on the tumor sample which arrived on ",
+                DataUtil.formatDate(sampleReport.tumorArrivalDate())));
         div.add(createContentParagraph("The pathology tumor percentage for this sample is " + sampleReport.pathologyTumorPercentage()));
-        div.add(createContentParagraph("This experiment is performed on the blood sample which arrived on ", DataUtil.formatDate(sampleReport.bloodArrivalDate())));
+        div.add(createContentParagraph("This experiment is performed on the blood sample which arrived on ",
+                DataUtil.formatDate(sampleReport.refArrivalDate())));
         div.add(createContentParagraph("This experiment is performed according to lab procedures: " + sampleReport.labProcedures()));
         div.add(createContentParagraph("This report is generated and verified by: " + patientReport.user()));
-        div.add(createContentParagraph("This report is addressed at: " + recipient));
+        div.add(createContentParagraph("This report is addressed at: " + addressee));
         patientReport.comments().ifPresent(comments -> div.add(createContentParagraph("Comments: " + comments)));
 
         return div;
@@ -93,14 +90,13 @@ public class DetailsAndDisclaimerChapter implements ReportChapter {
 
     @NotNull
     private static Div createDisclaimerDiv() {
-
         Div div = new Div();
 
         // Heading
-        div.add(new Paragraph("Disclaimer")
-                .addStyle(ReportResources.smallBodyHeadingStyle()));
+        div.add(new Paragraph("Disclaimer").addStyle(ReportResources.smallBodyHeadingStyle()));
 
-        div.add(createContentParagraph("The data on which this report is based is generated from tests that are performed under ISO/ICE-17025:2005 accreditation."));
+        div.add(createContentParagraph(
+                "The data on which this report is based is generated from tests that are performed under ISO/ICE-17025:2005 accreditation."));
         div.add(createContentParagraph("The analysis done for this report has passed all internal quality controls."));
         div.add(createContentParagraph("For feedback or complaints please contact ", ReportResources.CONTACT_EMAIL_QA));
         div.add(createContentParagraph("For general questions, please contact us at ", ReportResources.CONTACT_EMAIL_GENERAL));
@@ -111,7 +107,6 @@ public class DetailsAndDisclaimerChapter implements ReportChapter {
 
     @NotNull
     private static Div createSignatureDiv(@NotNull String rvaLogoPath, @NotNull String signaturePath) throws IOException {
-
         Div div = new Div();
         div.setKeepTogether(true);
 
@@ -125,10 +120,8 @@ public class DetailsAndDisclaimerChapter implements ReportChapter {
         }
 
         // Add signature text
-        Paragraph signatureText = new Paragraph()
-                .setFont(ReportResources.getFontBold())
-                .setFontSize(10)
-                .setFontColor(ReportResources.PALETTE_BLACK);
+        Paragraph signatureText =
+                new Paragraph().setFont(ReportResources.getFontBold()).setFontSize(10).setFontColor(ReportResources.PALETTE_BLACK);
 
         signatureText.add(ReportResources.SIGNATURE_NAME + ",\n");
         signatureText.add(new Text(ReportResources.SIGNATURE_TITLE).setFont(ReportResources.getFontRegular()));
@@ -151,17 +144,12 @@ public class DetailsAndDisclaimerChapter implements ReportChapter {
 
     @NotNull
     private static Paragraph createContentParagraph(@NotNull String text) {
-        return new Paragraph(text)
-                .addStyle(ReportResources.smallBodyTextStyle())
-                .setFixedLeading(ReportResources.BODY_TEXT_LEADING);
+        return new Paragraph(text).addStyle(ReportResources.smallBodyTextStyle()).setFixedLeading(ReportResources.BODY_TEXT_LEADING);
     }
 
     @NotNull
     private static Paragraph createContentParagraph(@NotNull String regularPart, @NotNull String boldPart) {
-        return createContentParagraph(regularPart)
-                .add(new Text(boldPart)
-                        .addStyle(ReportResources.smallBodyBoldTextStyle()))
+        return createContentParagraph(regularPart).add(new Text(boldPart).addStyle(ReportResources.smallBodyBoldTextStyle()))
                 .setFixedLeading(ReportResources.BODY_TEXT_LEADING);
     }
-
 }

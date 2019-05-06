@@ -19,5 +19,4 @@ public final class MicroSatelliteStatus {
             return "Stable";
         }
     }
-
 }

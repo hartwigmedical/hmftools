@@ -6,7 +6,8 @@ import com.hartwig.hmftools.common.variant.Clonality;
 import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.patientreporter.cfreport.MathUtil;
 import com.hartwig.hmftools.patientreporter.report.data.SomaticVariantDataSource;
-import com.hartwig.hmftools.patientreporter.variants.ReportableSomaticVariant;
+import com.hartwig.hmftools.patientreporter.variants.ReportableVariant;
+
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -19,8 +20,11 @@ import static com.google.common.base.Strings.repeat;
 
 public final class SomaticVariants {
 
+    private SomaticVariants() {
+    }
+
     @NotNull
-    public static List<ReportableSomaticVariant> sort(@NotNull List<ReportableSomaticVariant> variants) {
+    public static List<ReportableVariant> sort(@NotNull List<ReportableVariant> variants) {
         return variants.stream().sorted((variant1, variant2) -> {
             Double variant1DriverLikelihood = variant1.driverLikelihood();
             Double variant2DriverLikelihood = variant2.driverLikelihood();
@@ -41,20 +45,21 @@ public final class SomaticVariants {
         }).collect(Collectors.toList());
     }
 
-    public static String getGeneDisplayString(@NotNull ReportableSomaticVariant variant) {
+    public static String getGeneDisplayString(@NotNull ReportableVariant variant) {
         return variant.isDrupActionable() ? variant.gene() + " *" : variant.gene();
     }
 
     @NotNull
-    public static String getPloidyVaf(double adjustedCopyNumber, double minorAllelePloidy, double adjustedVAF, boolean hasReliablePurityFit) {
-
+    public static String getPloidyVaf(double adjustedCopyNumber, double minorAllelePloidy, double adjustedVAF,
+            boolean hasReliablePurityFit) {
         if (!hasReliablePurityFit) {
             return DataUtil.NAString;
         }
 
-        return descriptiveBAF(adjustedCopyNumber, minorAllelePloidy) + " ("
-                + DataUtil.formatPercentage(MathUtil.mapPercentageClamped(adjustedVAF, 0, 1))
-                + ")";
+        return descriptiveBAF(adjustedCopyNumber, minorAllelePloidy) + " (" + DataUtil.formatPercentage(MathUtil.mapPercentageClamped(
+                adjustedVAF,
+                0,
+                1)) + ")";
     }
 
     @NotNull
@@ -99,9 +104,9 @@ public final class SomaticVariants {
                 return Strings.EMPTY;
         }
     }
+
     @NotNull
     public static String getClonalityString(@NotNull Clonality clonality, boolean hasReliablePurityFit) {
-
         if (!hasReliablePurityFit) {
             return DataUtil.NAString;
         }
@@ -120,7 +125,6 @@ public final class SomaticVariants {
 
     @NotNull
     public static String getBiallelicString(boolean biallelic, DriverCategory driverCategory, boolean hasReliablePurityFit) {
-
         if (!hasReliablePurityFit) {
             return DataUtil.NAString;
         }
@@ -135,7 +139,6 @@ public final class SomaticVariants {
 
     @NotNull
     public static String getDriverString(@Nullable Double driverLikelihood) {
-
         if (driverLikelihood == null) {
             return Strings.EMPTY;
         }
@@ -151,9 +154,9 @@ public final class SomaticVariants {
     }
 
     @NotNull
-    public static String[] somaticVariantsWithDriver(@NotNull List<ReportableSomaticVariant> variants) {
+    public static String[] somaticVariantsWithDriver(@NotNull List<ReportableVariant> variants) {
         final List<String> returnVariants = new ArrayList<>();
-        for (final ReportableSomaticVariant variant : SomaticVariantDataSource.sort(variants)) {
+        for (final ReportableVariant variant : SomaticVariantDataSource.sort(variants)) {
             if (SomaticVariantDataSource.driverField(variant).equals("High")) {
                 returnVariants.add(variant.gene());
             }
@@ -161,7 +164,7 @@ public final class SomaticVariants {
         return returnVariants.toArray(new String[0]);
     }
 
-    public static int countSomaticVariants(@NotNull List<ReportableSomaticVariant> variants) {
+    public static int countSomaticVariants(@NotNull List<ReportableVariant> variants) {
         return variants.size();
     }
 }

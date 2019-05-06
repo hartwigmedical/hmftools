@@ -1,8 +1,9 @@
 package com.hartwig.hmftools.patientreporter.cfreport.data;
 
-import com.hartwig.hmftools.common.copynumber.CopyNumberAlteration;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
+import com.hartwig.hmftools.patientreporter.copynumber.CopyNumberAlteration;
 import com.hartwig.hmftools.patientreporter.report.data.GeneCopyNumberDataSource;
+
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
@@ -50,11 +51,12 @@ public final class GeneCopyNumbers {
 
     @NotNull
     public static String getType(@NotNull GeneCopyNumber geneCopyNumber) {
-        if (geneCopyNumber.alteration() == CopyNumberAlteration.GAIN) {
+        CopyNumberAlteration alteration = CopyNumberAlteration.fromCopyNumber(geneCopyNumber.minCopyNumber());
+        if (alteration == CopyNumberAlteration.GAIN) {
             return "gain";
         } else {
             // At this point we only have losses and gains.
-            assert geneCopyNumber.alteration() == CopyNumberAlteration.LOSS;
+            assert alteration == CopyNumberAlteration.LOSS;
             if (geneCopyNumber.maxCopyNumber() < 0.5) {
                 return "full loss";
             } else {

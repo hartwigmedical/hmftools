@@ -11,6 +11,7 @@ import com.itextpdf.kernel.pdf.PdfDocument;
 import com.itextpdf.kernel.pdf.PdfOutline;
 import com.itextpdf.kernel.pdf.PdfPage;
 import com.itextpdf.kernel.pdf.navigation.PdfExplicitRemoteGoToDestination;
+
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -60,7 +61,6 @@ public class PageEventHandler implements IEventHandler {
 
     @Override
     public void handleEvent(Event event) {
-
         PdfDocumentEvent documentEvent = (PdfDocumentEvent) event;
         if (documentEvent.getType() == PdfDocumentEvent.START_PAGE) {
 
@@ -75,20 +75,15 @@ public class PageEventHandler implements IEventHandler {
             }
             SidePanel.renderSidePanel(page, sampleReport, fullSidebar, fullSidebarContent);
             footer.renderFooter(page, !fullSidebar, pageNumberPrefix);
-
         }
-
     }
 
     private void createChapterBookmark(PdfDocument pdf, String title) {
-
         if (outline == null) {
             outline = pdf.getOutlines(false);
         }
 
         PdfOutline chapterItem = outline.addOutline(title);
         chapterItem.addDestination(PdfExplicitRemoteGoToDestination.createFitH(pdf.getNumberOfPages(), 0));
-
     }
-
 }

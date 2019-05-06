@@ -2,6 +2,7 @@ package com.hartwig.hmftools.patientreporter.cfreport.data;
 
 import com.hartwig.hmftools.common.actionability.ClinicalTrial;
 import com.hartwig.hmftools.common.actionability.EvidenceItem;
+
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
@@ -19,9 +20,7 @@ public final class ClinicalTrials {
      */
     @NotNull
     public static List<ClinicalTrial> filter(@NotNull final List<ClinicalTrial> trials) {
-        return trials.stream()
-                .filter(trial -> trial.source().isTrialSource())
-                .collect(Collectors.toList());
+        return trials.stream().filter(trial -> trial.source().isTrialSource()).collect(Collectors.toList());
     }
 
     @NotNull
@@ -56,7 +55,6 @@ public final class ClinicalTrials {
             default:
                 return Strings.EMPTY;
         }
-
     }
 
     @NotNull
@@ -68,22 +66,15 @@ public final class ClinicalTrials {
     }
 
     public static int uniqueOnLabelEventCount(@NotNull final List<ClinicalTrial> trials) {
-        return (int) trials.stream()
-                .filter(e -> e.isOnLabel())
-                .filter(distinctByKey(e -> e.event()))
-                .count();
+        return (int) trials.stream().filter(e -> e.isOnLabel()).filter(distinctByKey(e -> e.event())).count();
     }
 
     public static int uniqueOnLabelStudies(@NotNull final List<ClinicalTrial> trials) {
-        return (int) trials.stream()
-                .filter(e -> e.isOnLabel())
-                .filter(distinctByKey(e -> e.acronym()))
-                .count();
+        return (int) trials.stream().filter(e -> e.isOnLabel()).filter(distinctByKey(e -> e.acronym())).count();
     }
 
     private static <T> Predicate<T> distinctByKey(Function<? super T, Object> keyExtractor) {
         Map<Object, Boolean> map = new ConcurrentHashMap<>();
         return t -> map.putIfAbsent(keyExtractor.apply(t), Boolean.TRUE) == null;
     }
-
 }

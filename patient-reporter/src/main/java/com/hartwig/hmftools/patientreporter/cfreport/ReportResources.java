@@ -119,7 +119,6 @@ public final class ReportResources {
         }
 
         return fontSize;
-
     }
 
     /**
@@ -298,7 +297,6 @@ public final class ReportResources {
      * @return
      */
     public static ImageData loadImageData(@NotNull String resourcePath) {
-
         try {
 
             byte[] data = loadResourceData(resourcePath);
@@ -309,12 +307,9 @@ public final class ReportResources {
             return ImageDataFactory.create(data, true);
 
         } catch (Exception e) {
-
             LOGGER.warn(e.getMessage());
             return null;
-
         }
-
     }
 
     /**

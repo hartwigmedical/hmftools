@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.patientreporter.cfreport.data;
 
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
+
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -10,7 +11,7 @@ import java.time.format.DateTimeFormatter;
 
 public final class DataUtil {
 
-   // Number formatting
+    // Number formatting
     private static final DecimalFormat PERCENTAGE_FORMAT = new DecimalFormat("#'%'");
 
     // Missing/invalid data indicators
@@ -27,5 +28,4 @@ public final class DataUtil {
         final DateTimeFormatter formatter = DateTimeFormatter.ofPattern(ReportResources.DATE_TIME_FORMAT);
         return date != null ? formatter.format(date) : "?";
     }
-
 }

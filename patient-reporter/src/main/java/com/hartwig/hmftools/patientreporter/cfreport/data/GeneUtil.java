@@ -8,18 +8,15 @@ public final class GeneUtil {
 
     @NotNull
     public static String getPloidyToCopiesString(@Nullable Double ploidy, boolean hasReliablePurityFit) {
-
         if (!hasReliablePurityFit) {
             return DataUtil.NAString;
         } else {
             return ploidy != null ? String.format("%.1f", ploidy) : Strings.EMPTY;
         }
-
     }
 
     @NotNull
     static String zeroPrefixed(@NotNull String location) {
-
         // First remove q or p arm if present.
         int armStart = location.indexOf("q");
         if (armStart < 0) {
@@ -39,5 +36,4 @@ public final class GeneUtil {
             return location;
         }
     }
-
 }

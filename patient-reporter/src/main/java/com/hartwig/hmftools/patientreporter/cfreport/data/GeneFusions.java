@@ -2,6 +2,7 @@ package com.hartwig.hmftools.patientreporter.cfreport.data;
 
 import com.hartwig.hmftools.patientreporter.report.data.GeneFusionDataSource;
 import com.hartwig.hmftools.patientreporter.structural.ReportableGeneFusion;
+
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
@@ -13,8 +14,11 @@ import static com.hartwig.hmftools.common.fusions.KnownFusionsModel.*;
 
 public final class GeneFusions {
 
+    private GeneFusions() {
+    }
+
     @NotNull
-    public  static String[] geneFusions(@NotNull final List<ReportableGeneFusion> fusions) {
+    public static String[] geneFusions(@NotNull final List<ReportableGeneFusion> fusions) {
         final List<String> returnVariants = new ArrayList<>();
         for (ReportableGeneFusion fusion : GeneFusionDataSource.sort(fusions)) {
             returnVariants.add(GeneFusionDataSource.name(fusion));
@@ -53,5 +57,4 @@ public final class GeneFusions {
                 return Strings.EMPTY;
         }
     }
-
 }

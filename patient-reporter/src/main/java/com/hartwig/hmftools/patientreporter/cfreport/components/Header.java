@@ -11,6 +11,7 @@ import com.itextpdf.kernel.pdf.xobject.PdfImageXObject;
 import com.itextpdf.layout.Canvas;
 import com.itextpdf.layout.element.Paragraph;
 import com.itextpdf.layout.element.Text;
+
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
@@ -24,7 +25,6 @@ public final class Header {
     private ArrayList<ChapterPageCounter> chapterPageCounters = new ArrayList<>();
 
     public Header() {
-
         // Attempt to load image object
         ImageData imgData = ReportResources.loadImageData(HMF_LOGO_PATH);
         if (imgData != null) {
@@ -34,7 +34,6 @@ public final class Header {
     }
 
     public void renderHeader(@NotNull String chapterTitle, boolean firstPageOfChapter, @NotNull PdfPage page) {
-
         final PdfCanvas pdfCanvas = new PdfCanvas(page.getLastContentStream(), page.getResources(), page.getDocument());
         Canvas cv = new Canvas(pdfCanvas, page.getDocument(), page.getPageSize());
 
@@ -44,21 +43,12 @@ public final class Header {
         }
 
         // Add "Hartwig Medical OncoAct"
-        cv.add(new Paragraph()
-                .add(new Text("Hartwig Medical")
-                        .setFont(ReportResources.getFontBold())
-                        .setFontSize(11)
-                        .setFontColor(ReportResources.PALETTE_BLUE))
-                .add(new Text(" Onco")
-                        .setFont(ReportResources.getFontRegular())
-                        .setFontSize(11)
-                        .setFontColor(ReportResources.PALETTE_BLUE))
-                .add(new Text("Act")
-                        .setFont(ReportResources.getFontRegular())
-                        .setFontSize(11)
-                        .setFontColor(ReportResources.PALETTE_RED))
+        cv.add(new Paragraph().add(new Text("Hartwig Medical").setFont(ReportResources.getFontBold())
+                .setFontSize(11)
+                .setFontColor(ReportResources.PALETTE_BLUE))
+                .add(new Text(" Onco").setFont(ReportResources.getFontRegular()).setFontSize(11).setFontColor(ReportResources.PALETTE_BLUE))
+                .add(new Text("Act").setFont(ReportResources.getFontRegular()).setFontSize(11).setFontColor(ReportResources.PALETTE_RED))
                 .setFixedPosition(230, 791, 300));
-
 
         if (firstPageOfChapter) {
             chapterPageCounters.add(new ChapterPageCounter(chapterTitle));
@@ -66,18 +56,16 @@ public final class Header {
 
         // Create chapter title template
         PdfFormXObject chapterTitleTemplate = new PdfFormXObject(new Rectangle(0, 0, 500, 30));
-        pdfCanvas.addXObject(chapterTitleTemplate,ReportResources.PAGE_MARGIN_LEFT, 721);
+        pdfCanvas.addXObject(chapterTitleTemplate, ReportResources.PAGE_MARGIN_LEFT, 721);
         chapterPageCounters.get(chapterPageCounters.size() - 1).addPage(chapterTitleTemplate);
 
         pdfCanvas.release();
-
     }
 
     public void writeChapterTitles(@NotNull PdfDocument document) {
-        for (ChapterPageCounter cpc: chapterPageCounters) {
-            cpc. renderChapterTitles(document);
+        for (ChapterPageCounter cpc : chapterPageCounters) {
+            cpc.renderChapterTitles(document);
         }
-
     }
 
     public static class ChapterPageCounter {
@@ -100,14 +88,11 @@ public final class Header {
             for (int i = 0; i < templates.size(); i++) {
                 PdfFormXObject tpl = templates.get(i);
 
-                String text = chapterTitle
-                        + (totalChapterPages > 1 ? " (" + (i+1) + "/" + totalChapterPages + ")" : "");
+                String text = chapterTitle + (totalChapterPages > 1 ? " (" + (i + 1) + "/" + totalChapterPages + ")" : "");
 
                 Canvas canvas = new Canvas(tpl, document);
                 canvas.add(new Paragraph(text).addStyle(ReportResources.chapterTitleStyle()));
             }
         }
-
     }
-
 }

@@ -9,6 +9,7 @@ import com.itextpdf.kernel.pdf.canvas.PdfCanvas;
 import com.itextpdf.layout.Canvas;
 import com.itextpdf.layout.element.Div;
 import com.itextpdf.layout.element.Paragraph;
+
 import org.jetbrains.annotations.NotNull;
 
 import java.time.LocalDate;
@@ -19,7 +20,6 @@ public final class SidePanel {
     private static final float CONTENT_X_START = 455;
 
     public static void renderSidePanel(PdfPage page, @NotNull final SampleReport sampleReport, boolean fullHeight, boolean fullContent) {
-
         // Draw background and markers
         final PdfCanvas canvas = new PdfCanvas(page.getLastContentStream(), page.getResources(), page.getDocument());
         final Rectangle pageSize = page.getPageSize();
@@ -36,12 +36,14 @@ public final class SidePanel {
         // Add side panel content that is only on the summary page
         if (fullHeight && fullContent) {
 
-            final String contactNames = "Dr. Nola Pluijmen"; // @TODO Replace with sampleReport.contactNames() which can be null or empty string
+            final String contactNames =
+                    "Dr. Nola Pluijmen"; // @TODO Replace with sampleReport.contactNames() which can be null or empty string
             if (contactNames != null && !contactNames.isEmpty()) {
                 cv.add(createSidePanelDiv(sideTextIndex++, "Name requestor", contactNames));
             }
 
-            final String contactEmails = "NolaPluijmen415@gmail.com"; // @TODO Replace with sampleReport.contactEmails() which can be null or empty string
+            final String contactEmails =
+                    "NolaPluijmen415@gmail.com"; // @TODO Replace with sampleReport.contactEmails() which can be null or empty string
             if (contactEmails != null && !contactEmails.isEmpty()) {
                 cv.add(createSidePanelDiv(sideTextIndex++, "Email requestor", contactEmails));
             }
@@ -61,7 +63,8 @@ public final class SidePanel {
                 cv.add(createSidePanelDiv(sideTextIndex++, "Gender", patientGender));
             }
 
-            final LocalDate patientBirthDate = LocalDate.of(1973, 10, 4); // @TODO Replace with sampleReport.patientBirthDate() which can be null
+            final LocalDate patientBirthDate =
+                    LocalDate.of(1973, 10, 4); // @TODO Replace with sampleReport.patientBirthDate() which can be null
             if (patientBirthDate != null) {
                 cv.add(createSidePanelDiv(sideTextIndex, "Birth date", DataUtil.formatDate(patientBirthDate)));
             }
@@ -80,7 +83,10 @@ public final class SidePanel {
         final float RECTANGLE_WIDTH = 170;           // Width of the blue rectangle in pt
         final float RECTANGLE_HEIGHT_SHORT = 110;    // Height of the blue rectangle in pt when not full page height
 
-        canvas.rectangle(pageSize.getWidth(), pageSize.getHeight(), -RECTANGLE_WIDTH, fullHeight ? -pageSize.getHeight() : -RECTANGLE_HEIGHT_SHORT);
+        canvas.rectangle(pageSize.getWidth(),
+                pageSize.getHeight(),
+                -RECTANGLE_WIDTH,
+                fullHeight ? -pageSize.getHeight() : -RECTANGLE_HEIGHT_SHORT);
         canvas.setFillColor(ReportResources.PALETTE_BLUE);
         canvas.fill();
 
@@ -98,24 +104,19 @@ public final class SidePanel {
 
         // Add label
         float yPos = Y_START - index * ROW_SPACING;
-        div.add(new Paragraph(label.toUpperCase())
-                .addStyle(ReportResources.sidepanelLabelStyle())
+        div.add(new Paragraph(label.toUpperCase()).addStyle(ReportResources.sidepanelLabelStyle())
                 .setFixedPosition(CONTENT_X_START, yPos, MAX_WIDTH));
-
 
         // Add value (auto resize the font if needed)
         final float valueFontSize = ReportResources.getMaxPointSizeForWidth(ReportResources.getFontBold(), 11, 6, value, MAX_WIDTH);
         yPos -= VALUE_TEXT_Y_OFFSET;
-        div.add(new Paragraph(value)
-                .addStyle(ReportResources.sidepanelValueStyle()
-                        .setFontSize(valueFontSize))
+        div.add(new Paragraph(value).addStyle(ReportResources.sidepanelValueStyle().setFontSize(valueFontSize))
                 .setHeight(15)
                 .setFixedPosition(CONTENT_X_START, yPos, MAX_WIDTH)
-                .setFixedLeading(valueFontSize)
-        );
+                .setFixedLeading(valueFontSize));
 
         return div;
 
     }
 
- }
+}

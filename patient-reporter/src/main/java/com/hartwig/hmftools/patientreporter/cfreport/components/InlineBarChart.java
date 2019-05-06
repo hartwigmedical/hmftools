@@ -11,8 +11,8 @@ import com.itextpdf.layout.renderer.IRenderer;
 
 public class InlineBarChart extends Div {
 
-    public static Scale LINEAR_SCALE = (v) -> { return v; };
-    public static Scale LOG10_SCALE = (v) -> { return Math.log10(v); };
+    public static Scale LINEAR_SCALE = (v) -> v;
+    public static Scale LOG10_SCALE = (v) -> Math.log10(v);
 
     private double value;
     private double min;

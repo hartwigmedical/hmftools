@@ -3,6 +3,7 @@ package com.hartwig.hmftools.patientreporter.cfreport.components;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
 import com.itextpdf.kernel.colors.DeviceRgb;
 import com.itextpdf.kernel.pdf.canvas.PdfCanvas;
+
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Random;
@@ -42,17 +43,18 @@ class BaseMarker {
     /**
      * Draw pattern grid of markers. PdfCanvas is *not* released after drawing
      *
-     * @param xCount                number of columns
-     * @param yCount                number of rows
-     * @param xStart                horizontal start of markers in pt
-     * @param xSpacing              horizontal offset between markers in pt
-     * @param yStart                vertical start of markers in pt
-     * @param ySpacing              vertical offset between markers in pt
-     * @param redProbability        probability of a red marker [0.0, 1.0]; higher value is more probable
-     * @param filledProbability     probability of a filled marker [0.0, 1.0]; higher value is more probable
-     * @param canvas                canvas to draw on
+     * @param xCount            number of columns
+     * @param yCount            number of rows
+     * @param xStart            horizontal start of markers in pt
+     * @param xSpacing          horizontal offset between markers in pt
+     * @param yStart            vertical start of markers in pt
+     * @param ySpacing          vertical offset between markers in pt
+     * @param redProbability    probability of a red marker [0.0, 1.0]; higher value is more probable
+     * @param filledProbability probability of a filled marker [0.0, 1.0]; higher value is more probable
+     * @param canvas            canvas to draw on
      */
-    public static void renderMarkerGrid(float xCount, float yCount, float xStart, float xSpacing, float yStart, float ySpacing, float redProbability, float filledProbability, @NotNull PdfCanvas canvas) {
+    public static void renderMarkerGrid(float xCount, float yCount, float xStart, float xSpacing, float yStart, float ySpacing,
+            float redProbability, float filledProbability, @NotNull PdfCanvas canvas) {
 
         Random r = new Random();
         for (int row = 0; row < yCount; row++) {

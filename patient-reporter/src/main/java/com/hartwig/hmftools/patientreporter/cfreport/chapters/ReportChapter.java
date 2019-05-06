@@ -9,7 +9,8 @@ import java.io.IOException;
 
 public interface ReportChapter {
 
-    @NotNull String getName();
+    @NotNull
+    String getName();
 
     default @Nullable String getPageNumberPrefix() {
         return null;
@@ -30,5 +31,4 @@ public interface ReportChapter {
     }
 
     void render(@NotNull final Document reportDocument) throws IOException;
-
 }

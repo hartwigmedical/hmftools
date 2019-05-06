@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.patientreporter.cfreport.data;
 
 import com.hartwig.hmftools.patientreporter.structural.ReportableGeneDisruption;
+
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -8,6 +9,9 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public final class GeneDisruptions {
+
+    private GeneDisruptions() {
+    }
 
     @NotNull
     public static List<ReportableGeneDisruption> sort(@NotNull final List<ReportableGeneDisruption> disruptions) {
@@ -25,13 +29,10 @@ public final class GeneDisruptions {
 
     @NotNull
     public static String getCopyNumberString(@Nullable Integer copies, boolean hasReliablePurityFit) {
-
         if (!hasReliablePurityFit || copies == null) {
             return DataUtil.NAString;
         } else {
             return String.valueOf(copies);
         }
-
     }
-
 }

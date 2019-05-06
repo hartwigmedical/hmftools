@@ -3,12 +3,12 @@ package com.hartwig.hmftools.patientreporter.cfreport.components;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
 import com.itextpdf.kernel.colors.DeviceRgb;
 import com.itextpdf.layout.element.Text;
+
 import org.jetbrains.annotations.NotNull;
 
 public class Icon {
 
     public enum IconType {
-
         // Levels
         LEVEL_A,
         LEVEL_B,
@@ -21,7 +21,6 @@ public class Icon {
 
         @NotNull
         public String getText() {
-
             switch (this) {
                 case LEVEL_A:
                     return "A";
@@ -40,7 +39,6 @@ public class Icon {
                 default:
                     return "";
             }
-
         }
 
         public DeviceRgb getDefaultColor() {
@@ -59,17 +57,12 @@ public class Icon {
                 default:
                     return ReportResources.PALETTE_LIGHT_GREY;
             }
-
         }
     }
 
-    private static final DeviceRgb[] TREATMENT_PALETTE = {
-            new DeviceRgb(110, 197, 213),
-            new DeviceRgb(237, 139, 0),
-            new DeviceRgb(209, 65, 36),
-            new DeviceRgb(0, 146, 188),
-            new DeviceRgb(120, 190, 32)
-    };
+    private static final DeviceRgb[] TREATMENT_PALETTE =
+            { new DeviceRgb(110, 197, 213), new DeviceRgb(237, 139, 0), new DeviceRgb(209, 65, 36), new DeviceRgb(0, 146, 188),
+                    new DeviceRgb(120, 190, 32) };
 
     @NotNull
     public static Text createLevelIcon(@NotNull String level) {
@@ -100,7 +93,6 @@ public class Icon {
     }
 
     public static Text createTreatmentIcon(@NotNull String treatmentName) {
-
         // Determine color by first character of name
         int charCode = !treatmentName.isEmpty() ? (int) treatmentName.charAt(0) : 0;
         int colorIndex = charCode % TREATMENT_PALETTE.length;
@@ -116,15 +108,10 @@ public class Icon {
 
     @NotNull
     private static Text createIcon(@NotNull IconType iconType, @NotNull DeviceRgb color) {
-
         if (iconType == IconType.INVALID) {
             return new Text("");
         }
 
-        return new Text(iconType.getText())
-                .setFont(ReportResources.getIconFont())
-                .setFontColor(color)
-                .setCharacterSpacing(1);
+        return new Text(iconType.getText()).setFont(ReportResources.getIconFont()).setFontColor(color).setCharacterSpacing(1);
     }
-
 }

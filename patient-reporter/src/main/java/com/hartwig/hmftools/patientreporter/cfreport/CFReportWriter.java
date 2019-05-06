@@ -11,6 +11,7 @@ import com.itextpdf.layout.Document;
 
 import com.itextpdf.layout.element.AreaBreak;
 import com.itextpdf.layout.property.AreaBreakType;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -27,32 +28,23 @@ public class CFReportWriter implements ReportWriter {
     private static final Logger LOGGER = LogManager.getLogger(CFReportWriter.class);
 
     @Override
-    public void writeAnalysedPatientReport(@NotNull final AnalysedPatientReport report, @NotNull final String outputFilePath) throws IOException {
-
-        writeReport(
-                report.sampleReport(),
-                new ReportChapter[]{
-                        new SummaryChapter(report),
-                        new TherapyDetailsChapter(report),
-                        new ActionableOrDriversChapter(report),
-                        new TumorCharacteristicsChapter(report),
-                        new CircosChapter(report),
-                        new ExplanationChapter(report),
-                        new DetailsAndDisclaimerChapter(report)
-                }, outputFilePath
-        );
+    public void writeAnalysedPatientReport(@NotNull final AnalysedPatientReport report, @NotNull final String outputFilePath)
+            throws IOException {
+        writeReport(report.sampleReport(),
+                new ReportChapter[] { new SummaryChapter(report), new TherapyDetailsChapter(report), new ActionableOrDriversChapter(report),
+                        new TumorCharacteristicsChapter(report), new CircosChapter(report), new ExplanationChapter(report),
+                        new DetailsAndDisclaimerChapter(report) },
+                outputFilePath);
 
     }
 
     @Override
     public void writeQCFailReport(@NotNull final QCFailReport report, @NotNull final String outputFilePath) throws IOException {
-        writeReport(report.sampleReport(), new ReportChapter[] {
-                new QCFailChapter(report)
-        }, outputFilePath);
+        writeReport(report.sampleReport(), new ReportChapter[] { new QCFailChapter(report) }, outputFilePath);
     }
 
-    private static void writeReport(@NotNull final SampleReport sampleReport, @NotNull ReportChapter[] chapters, @Nullable String outputFilePath) throws IOException {
-
+    private static void writeReport(@NotNull final SampleReport sampleReport, @NotNull ReportChapter[] chapters,
+            @Nullable String outputFilePath) throws IOException {
         // Initialize report with metadata
         final Document doc = initializeReport(outputFilePath);
         final PdfDocument pdfDocument = doc.getPdfDocument();
@@ -92,7 +84,6 @@ public class CFReportWriter implements ReportWriter {
         } else {
             LOGGER.info("Created patient report");
         }
-
     }
 
     /**
@@ -100,10 +91,8 @@ public class CFReportWriter implements ReportWriter {
      */
     @NotNull
     private static Document initializeReport(@Nullable final String outputFilePath) throws IOException {
-
         PdfWriter writer;
         if (outputFilePath != null) {
-
             // Prevent overwriting existing files
             if (Files.exists(new File(outputFilePath).toPath())) {
                 throw new IOException("Could not write " + outputFilePath + " as it already exists.");
@@ -113,10 +102,8 @@ public class CFReportWriter implements ReportWriter {
             writer = new PdfWriter(outputFilePath);
 
         } else {
-
             // Create in-memory writer
             writer = new PdfWriter(new ByteArrayOutputStream());
-
         }
 
         // Create PDF with metadata
@@ -133,7 +120,5 @@ public class CFReportWriter implements ReportWriter {
                 ReportResources.PAGE_MARGIN_LEFT);
 
         return document;
-
     }
-
 }

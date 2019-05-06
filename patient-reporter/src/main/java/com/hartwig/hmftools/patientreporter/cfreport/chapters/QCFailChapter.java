@@ -15,6 +15,7 @@ public class QCFailChapter implements ReportChapter {
     }
 
     @Override
+    @NotNull
     public String getName() {
         return "QC failure";
     }
@@ -28,7 +29,7 @@ public class QCFailChapter implements ReportChapter {
     }
 
     @Override
-    public void render(@NotNull Document reportDocument) throws IOException {
+    public void render(@NotNull Document reportDocument) {
         //@TODO Use content from this.report
     }
 

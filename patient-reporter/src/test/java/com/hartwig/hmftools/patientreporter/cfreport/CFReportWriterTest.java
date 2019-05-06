@@ -20,7 +20,8 @@ public class CFReportWriterTest {
         AnalysedPatientReport colo829Report = ExampleAnalysisTestFactory.buildCOLO829();
 
         CFReportWriter reportWriter = new CFReportWriter();
-        reportWriter.writeAnalysedPatientReport(colo829Report, getReportFilePath("hmf_test_sequence_report_" + String.valueOf(System.currentTimeMillis()) + ".pdf"));
+        reportWriter.writeAnalysedPatientReport(colo829Report,
+                getReportFilePath("hmf_test_sequence_report_" + String.valueOf(System.currentTimeMillis()) + ".pdf"));
     }
 
     @Test
@@ -28,7 +29,8 @@ public class CFReportWriterTest {
         AnalysedPatientReport patientReport = ExampleAnalysisTestFactory.buildAnalysisWithAllTablesFilledIn();
 
         CFReportWriter reportWriter = new CFReportWriter();
-        reportWriter.writeAnalysedPatientReport(patientReport, getReportFilePath("hmf_full_test_sequence_report_" + String.valueOf(System.currentTimeMillis()) + ".pdf"));
+        reportWriter.writeAnalysedPatientReport(patientReport,
+                getReportFilePath("hmf_full_test_sequence_report_" + String.valueOf(System.currentTimeMillis()) + ".pdf"));
     }
 
     @NotNull

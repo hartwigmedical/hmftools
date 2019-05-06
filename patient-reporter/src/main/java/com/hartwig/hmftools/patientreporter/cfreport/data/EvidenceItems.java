@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.patientreporter.cfreport.data;
 
 import com.hartwig.hmftools.common.actionability.EvidenceItem;
+
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
@@ -61,20 +62,15 @@ public final class EvidenceItems {
     }
 
     public static int uniqueEventCount(@NotNull final List<EvidenceItem> evidenceItems) {
-        return (int) evidenceItems.stream()
-                .filter(distinctByKey(e -> e.event()))
-                .count();
+        return (int) evidenceItems.stream().filter(distinctByKey(EvidenceItem::event)).count();
     }
 
     public static int uniqueTherapyCount(@NotNull final List<EvidenceItem> evidenceItems) {
-        return (int) evidenceItems.stream()
-                .filter(distinctByKey(e -> e.drug()))
-                .count();
+        return (int) evidenceItems.stream().filter(distinctByKey(EvidenceItem::drug)).count();
     }
 
-    private static <T> Predicate<T> distinctByKey(Function<? super T, Object> keyExtractor) {
+    private static <T> Predicate<T> distinctByKey(@NotNull Function<? super T, Object> keyExtractor) {
         Map<Object, Boolean> map = new ConcurrentHashMap<>();
         return t -> map.putIfAbsent(keyExtractor.apply(t), Boolean.TRUE) == null;
     }
-
 }
