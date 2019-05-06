@@ -242,7 +242,8 @@ public class SampleData
         // allow to go as high as the elevated probability range
         // if a single bucket required by the ratios has zero unallocated, then all are zeroed
         final double[] sampleCounts = useUnallocated ? mUnallocBucketCounts : (mUseElevatedForAllocation ? mElevBucketCounts : mBucketCounts);
-        double countsTotal = useUnallocated ? mUnallocTotal : (mUseElevatedForAllocation ? mElevatedTotal : mVarTotal);
+        double countsTotal = mUseElevatedForAllocation ? mElevatedTotal : mVarTotal;
+        double unallocTotal = useUnallocated ? mUnallocTotal : countsTotal;
 
         if(allocCounts != null)
             initVector(allocCounts, 0);
@@ -311,7 +312,7 @@ public class SampleData
         }
 
         // cap by the actual unallocated before working out allocation
-        minAlloc = capValue(minAlloc, 0, countsTotal + maxNoiseAllocation);
+        minAlloc = capValue(minAlloc, 0, unallocTotal + maxNoiseAllocation);
 
         // if noise needs to be allocated, do this proportionally by ratio amongst the buckets which need it
         double[] bucketWithNoiseRatios = new double[requiredBuckets.size()];
@@ -342,7 +343,7 @@ public class SampleData
 
         double noiseRatioTotal = sumVector(bucketWithNoiseRatios);
 
-        double noiseAlloc = 0;
+        double currentNoiseAlloc = 0;
         for(int i = 0; i < requiredBuckets.size(); ++i)
         {
             Integer bucket = requiredBuckets.get(i);
@@ -359,9 +360,9 @@ public class SampleData
             if(noiseRatio > 0)
                 noiseCount = min(noiseRatio / noiseRatioTotal * maxNoiseAllocation, noiseCount);
 
-            if(noiseCount + noiseAlloc > maxNoiseAllocation)
+            if(noiseCount + currentNoiseAlloc > maxNoiseAllocation)
             {
-                noiseCount = max(maxNoiseAllocation - noiseAlloc, 0);
+                noiseCount = max(maxNoiseAllocation - currentNoiseAlloc, 0);
             }
 
             if(greaterThan(allocCount, sampleCounts[bucket] + noiseCount))
@@ -374,8 +375,17 @@ public class SampleData
 
             if(noiseCount > 0 && sampleCounts[bucket] < allocCount)
             {
-                noiseAlloc += allocCount - sampleCounts[bucket];
+                currentNoiseAlloc += allocCount - sampleCounts[bucket];
             }
+        }
+
+        // avoid tiny cumulative allocations
+        if(allocTotal < 1)
+        {
+            allocTotal = 0;
+
+            if(allocCounts != null)
+                initVector(allocCounts, 0);
         }
 
         return allocTotal;
@@ -420,7 +430,7 @@ public class SampleData
 
         if(lessThan(reductionFactor, 1))
         {
-            // assumption is that the counts are in proportion (eg if generated off ratios)
+            // reduce counts proportionally since they are generated from ratios
             allocatedCount *= reductionFactor;
             vectorMultiply(counts, reductionFactor);
         }
@@ -456,6 +466,7 @@ public class SampleData
                 if(mUnallocBucketCounts[i] == 0 && maxUnallocBucketNoise == 0)
                 {
                     // neither unallocated actuals counts nor unallocated noise
+                    LOGGER.debug("sample({}) cannot alloc bucket({}) - not unalloc count or noise", Id, i);
                     counts[i] = 0;
                     continue;
                 }
@@ -477,6 +488,7 @@ public class SampleData
                 {
                     // may be an issue if more was requested than could be allocated
                     counts[i] = actualAlloc + actualNoiseAlloc;
+                    LOGGER.debug("sample({}) reducing bucket({}) since requested < unalloc + noise", Id, i);
                 }
 
                 mNoiseAllocTotal += actualNoiseAlloc;
