@@ -6,12 +6,15 @@ import com.hartwig.hmftools.patientreporter.SampleReport;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
 import com.hartwig.hmftools.patientreporter.cfreport.components.LineDivider;
 import com.hartwig.hmftools.patientreporter.cfreport.components.ReportSignature;
+import com.hartwig.hmftools.patientreporter.cfreport.components.TableUtil;
 import com.hartwig.hmftools.patientreporter.cfreport.components.TumorLocationAndTypeTable;
 import com.hartwig.hmftools.patientreporter.cfreport.data.DataUtil;
 import com.hartwig.hmftools.patientreporter.qcfail.QCFailReason;
 import com.itextpdf.layout.Document;
 import com.itextpdf.layout.element.Div;
 import com.itextpdf.layout.element.Paragraph;
+import com.itextpdf.layout.element.Table;
+import com.itextpdf.layout.property.UnitValue;
 import org.jetbrains.annotations.NotNull;
 
 public class QCFailChapter implements ReportChapter {
@@ -111,8 +114,8 @@ public class QCFailChapter implements ReportChapter {
         div.setKeepTogether(true);
 
         // Add title
-        div.add(new Paragraph(title)
-                .addStyle(ReportResources.smallBodyHeadingStyle()));
+        div.add(new Paragraph(title.toUpperCase())
+                .addStyle(ReportResources.subTextStyle()));
         div.add(new Paragraph(reason).addStyle(ReportResources.dataHighlightStyle()));
         div.add(new Paragraph(explanation)
                 .addStyle(ReportResources.bodyTextStyle())
@@ -123,8 +126,9 @@ public class QCFailChapter implements ReportChapter {
     }
 
     @NotNull
-    private Div createCoreContentBody() {
-        return createContentBody(new String[]{
+    private Table createCoreContentBody() {
+
+        return createContentTable(new String[] {
                 notSequencedText(),
                 "When possible, please resubmit using the same DVO with project name " + failReport.sampleReport().projectName() + ".",
                 "The HMF sample ID is " + failReport.sampleReport().sampleId() + " and the hospital patient ID is "
@@ -132,7 +136,8 @@ public class QCFailChapter implements ReportChapter {
                 "The project name of sample is " + failReport.sampleReport().projectName() + " and the submission ID is "
                         + failReport.sampleReport().submission(),
                 "The internal tumor barcode is " + failReport.sampleReport().barcodeTumor() + " and the internal blood barcode is "
-                        + failReport.sampleReport().barcodeReference(),
+                        + failReport.sampleReport().barcodeReference()
+        }, new String[] {
                 "The tumor percentage estimated by Pathology UMC Utrecht is " + failReport.sampleReport().pathologyTumorPercentage(),
                 shallowSeqText(),
                 sampleArrivalDateText(),
@@ -140,13 +145,14 @@ public class QCFailChapter implements ReportChapter {
                 "The contact details are : " + failReport.sampleReport().contactNames() + " (" + failReport.sampleReport().contactEmails() + ")",
                 accreditationText(),
                 questionsText()
-
         });
+
     }
 
     @NotNull
-    private Div createCPCTDRUPContentBody() {
-        return createContentBody(new String[]{
+    private Table createCPCTDRUPContentBody() {
+
+        return createContentTable(new String[] {
                 notSequencedText(),
                 "When possible, please resubmit using the same " + failReport.study().studyName() + "-number. "
                         + "In case additional tumor material cannot be provided, please be notified that the patient will not be "
@@ -154,20 +160,34 @@ public class QCFailChapter implements ReportChapter {
                 "The HMF sample ID is " + failReport.sampleReport().sampleId(),
                 "The internal tumor barcode is " + failReport.sampleReport().barcodeTumor() + " and the internal blood barcode is "
                         + failReport.sampleReport().barcodeReference(),
-                "The tumor percentage estimated by Pathology UMC Utrecht is " + failReport.sampleReport().pathologyTumorPercentage(),
+                "The tumor percentage estimated by Pathology UMC Utrecht is " + failReport.sampleReport().pathologyTumorPercentage()
+        }, new String[] {
                 shallowSeqText(),
                 sampleArrivalDateText(),
                 recipientText(),
                 accreditationText(),
                 questionsText()
         });
+
+    }
+
+    @NotNull
+    private Table createContentTable(@NotNull String[] leftCol, @NotNull String[] rightCol) {
+
+        Table table = new Table(UnitValue.createPercentArray(new float[] {1, 0.1f, 1}));
+        table.setWidth(getContentWidth());
+        table.addCell(TableUtil.getLayoutCell()
+                .add(createContentBody(leftCol)));
+        table.addCell(TableUtil.getLayoutCell()); // Spacer
+        table.addCell(TableUtil.getLayoutCell()
+                .add(createContentBody(rightCol)));
+        return table;
+
     }
 
     @NotNull
     private Div createContentBody(@NotNull String[] content) {
         Div div = new Div();
-        div.setKeepTogether(true);
-        div.setWidth(getContentWidth());
         for (String line: content) {
             div.add(createContentParagraph(line));
         }
