@@ -32,12 +32,6 @@ import org.junit.Test;
 public class FusionTests
 {
     @Test
-    public void testSimpleFusions()
-    {
-
-    }
-
-    @Test
     public void testChainedFusions()
     {
         SvTestHelper tester = new SvTestHelper();

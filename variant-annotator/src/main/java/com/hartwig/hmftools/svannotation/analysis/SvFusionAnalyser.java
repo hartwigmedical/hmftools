@@ -34,6 +34,7 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.Nullable;
 
 public class SvFusionAnalyser
 {
@@ -53,6 +54,7 @@ public class SvFusionAnalyser
 
     private final String mOutputDir;
     private BufferedWriter mFusionWriter;
+    private static boolean mLogInvalidReasons;
 
     private static final Logger LOGGER = LogManager.getLogger(SvFusionAnalyser.class);
 
@@ -69,6 +71,7 @@ public class SvFusionAnalyser
         mProteinsRequiredKept = Lists.newArrayList();
         mProteinsRequiredLost = Lists.newArrayList();
         setRequiredProteins();
+        mLogInvalidReasons = false;
 
         if(cmd != null)
         {
@@ -97,6 +100,7 @@ public class SvFusionAnalyser
     }
 
     public void setHasValidConfigData(boolean toggle) { mHasValidConfigData = toggle; }
+    public void setLogInvalidReasons(boolean toggle) { mLogInvalidReasons = toggle; }
 
     public static void addCmdLineArgs(Options options)
     {
@@ -118,15 +122,20 @@ public class SvFusionAnalyser
 
         for (final StructuralVariantAnnotation annotation : annotations)
         {
-            List<GeneFusion> svFusions = findFusions(annotation.start(), annotation.end(), true);
+            List<GeneFusion> svFusions = findFusions(annotation.start(), annotation.end(), true, null);
             fusions.addAll(svFusions);
         }
 
         return fusions;
     }
 
+    public static final String INVALID_REASON_ORIENTATION = "Orientation";
+    public static final String INVALID_REASON_PHASING = "Unphased";
+    public static final String INVALID_REASON_CODING_TYPE = "Coding";
+
     public final List<GeneFusion> findFusions(
-            final List<GeneAnnotation> breakendGenes1, final List<GeneAnnotation> breakendGenes2, boolean requirePhaseMatch)
+            final List<GeneAnnotation> breakendGenes1, final List<GeneAnnotation> breakendGenes2,
+            boolean requirePhaseMatch, @Nullable  List<String> invalidReasons)
     {
         final List<GeneFusion> potentialFusions = Lists.newArrayList();
 
@@ -143,7 +152,12 @@ public class SvFusionAnalyser
                 boolean endUpstream = isUpstream(endGene);
 
                 if (startUpstream == endUpstream)
+                {
+                    if(invalidReasons!= null && !invalidReasons.contains(INVALID_REASON_ORIENTATION))
+                        invalidReasons.add(INVALID_REASON_ORIENTATION);
+
                     continue;
+                }
 
                 for (final Transcript startTrans : startGene.transcripts())
                 {
@@ -152,7 +166,7 @@ public class SvFusionAnalyser
                         final Transcript upstreamTrans = startUpstream ? startTrans : endTrans;
                         final Transcript downstreamTrans = !startUpstream ? startTrans : endTrans;
 
-                        GeneFusion geneFusion = checkFusionLogic(upstreamTrans, downstreamTrans, requirePhaseMatch);
+                        GeneFusion geneFusion = checkFusionLogic(upstreamTrans, downstreamTrans, requirePhaseMatch, invalidReasons);
 
                         if(geneFusion == null)
                             continue;
@@ -177,6 +191,22 @@ public class SvFusionAnalyser
         return potentialFusions;
     }
 
+    private static void logInvalidReasonInfo(final String reason, final Transcript trans1, final Transcript trans2,
+            final String reasonType, @Nullable List<String> invalidReasons)
+    {
+        if(invalidReasons != null && !invalidReasons.contains(reasonType))
+            invalidReasons.add(reasonType);
+
+        if(!mLogInvalidReasons)
+            return;
+
+        if(trans2 == null)
+            LOGGER.debug("transcript({}:{}) invalid({})", trans1.geneName(), trans1.StableId, reason);
+        else
+            LOGGER.debug("transcripts({}:{} and {}:{}) invalid({})",
+                    trans1.geneName(), trans1.StableId, trans2.geneName(), trans2.StableId, reason);
+    }
+
     public static boolean validFusionTranscript(final Transcript transcript)
     {
         // check any conditions which would preclude this transcript being a part of a fusion no matter the other end
@@ -192,7 +222,6 @@ public class SvFusionAnalyser
 
             if(!transcript.isDisruptive())
                 return false;
-
         }
         else
         {
@@ -206,33 +235,62 @@ public class SvFusionAnalyser
         return true;
     }
 
-    public static GeneFusion checkFusionLogic(final Transcript upstreamTrans, final Transcript downstreamTrans, boolean requirePhaseMatch)
+    public static GeneFusion checkFusionLogic(final Transcript upstreamTrans, final Transcript downstreamTrans)
+    {
+        return checkFusionLogic(upstreamTrans, downstreamTrans, true, null);
+    }
+
+    public static GeneFusion checkFusionLogic(final Transcript upstreamTrans, final Transcript downstreamTrans,
+            boolean requirePhaseMatch, @Nullable List<String> invalidReasons)
     {
         // see FV Fusions document for permitted combinations
         boolean checkExactMatch = false;
 
         if(!validFusionTranscript(upstreamTrans) || !validFusionTranscript(downstreamTrans))
+        {
+            logInvalidReasonInfo("invalid trans", upstreamTrans, downstreamTrans, INVALID_REASON_CODING_TYPE, invalidReasons);
             return null;
+        }
 
         if(upstreamTrans.preCoding())
         {
             if(upstreamTrans.isExonic() && !downstreamTrans.isExonic())
+            {
+                logInvalidReasonInfo("precoding exonic to non-exonic", upstreamTrans, downstreamTrans,
+                        INVALID_REASON_CODING_TYPE, invalidReasons);
                 return null;
+            }
             else if(downstreamTrans.isCoding())
+            {
+                logInvalidReasonInfo("pre-coding to coding", upstreamTrans, downstreamTrans,
+                        INVALID_REASON_CODING_TYPE, invalidReasons);
                 return null;
+            }
         }
         else if(upstreamTrans.isCoding())
         {
             if(!downstreamTrans.isCoding())
+            {
+                logInvalidReasonInfo("coding to non-coding", upstreamTrans, downstreamTrans,
+                        INVALID_REASON_CODING_TYPE, invalidReasons);
                 return null;
+            }
 
             if(upstreamTrans.isExonic())
             {
                 if(!downstreamTrans.isExonic())
+                {
+                    logInvalidReasonInfo("coding exonic to non-exonic", upstreamTrans, downstreamTrans,
+                            INVALID_REASON_CODING_TYPE, invalidReasons);
                     return null;
+                }
 
                 if(upstreamTrans.parent().id() != downstreamTrans.parent().id())
+                {
+                    logInvalidReasonInfo("up coding exonic diff SV ids", upstreamTrans, downstreamTrans,
+                            INVALID_REASON_CODING_TYPE, invalidReasons);
                     return null;
+                }
 
                 // coding exon to coding exon will require phase adjustments to be exact
                 checkExactMatch = true;
@@ -241,13 +299,24 @@ public class SvFusionAnalyser
         else if(upstreamTrans.nonCoding())
         {
             if(upstreamTrans.isExonic() && !downstreamTrans.isExonic())
+            {
+                logInvalidReasonInfo("up non-coding exonic to down non-exonic", upstreamTrans, downstreamTrans,
+                        INVALID_REASON_CODING_TYPE, invalidReasons);
                 return null;
+            }
             else if(downstreamTrans.isCoding())
+            {
+                logInvalidReasonInfo("up non-coding to down-coding", upstreamTrans, downstreamTrans,
+                        INVALID_REASON_CODING_TYPE, invalidReasons);
                 return null;
+            }
         }
 
         if (!isPotentiallyRelevantFusion(upstreamTrans, downstreamTrans))
+        {
+            logInvalidReasonInfo("irrelevant fusion", upstreamTrans, downstreamTrans, INVALID_REASON_CODING_TYPE, invalidReasons);
             return null;
+        }
 
         boolean phaseMatched = false;
 
@@ -255,12 +324,21 @@ public class SvFusionAnalyser
         {
             // all fusions to downstream exons may be excluded, but for now definitely exclude those which end in the last exon
             if(downstreamTrans.isExonic() && downstreamTrans.ExonDownstream == downstreamTrans.ExonMax && !downstreamTrans.preCoding())
+            {
+                logInvalidReasonInfo("downstream last exon", upstreamTrans, downstreamTrans,
+                        INVALID_REASON_CODING_TYPE, invalidReasons);
                 return null;
+            }
         }
 
         if(checkExactMatch)
         {
             phaseMatched = exonToExonInPhase(upstreamTrans, true, downstreamTrans, false);
+
+            if(!phaseMatched)
+            {
+                logInvalidReasonInfo("exact phase match", upstreamTrans, downstreamTrans, INVALID_REASON_PHASING, invalidReasons);
+            }
 
             if(phaseMatched || !requirePhaseMatch)
             {
@@ -272,6 +350,11 @@ public class SvFusionAnalyser
             // just check for a phasing match
             phaseMatched = upstreamTrans.ExonUpstreamPhase == downstreamTrans.ExonDownstreamPhase;
 
+            if(!phaseMatched)
+            {
+                logInvalidReasonInfo("inexact unphased", upstreamTrans, downstreamTrans, INVALID_REASON_PHASING, invalidReasons);
+            }
+
             if(phaseMatched || !requirePhaseMatch)
             {
                 return new GeneFusion(upstreamTrans, downstreamTrans, phaseMatched, true);
@@ -281,7 +364,8 @@ public class SvFusionAnalyser
         return null;
     }
 
-    private static boolean exonToExonInPhase(final Transcript startTrans, boolean startUpstream, final Transcript endTrans, boolean endUpstream)
+    private static boolean exonToExonInPhase(final Transcript startTrans, boolean startUpstream,
+            final Transcript endTrans, boolean endUpstream)
     {
         // check phasing and offset since exon start or coding start
         int calcStartPhase = calcPositionPhasing(startTrans, startUpstream);
@@ -519,7 +603,7 @@ public class SvFusionAnalyser
     }
 
 
-    private String getKnownFusionType(final Transcript upTrans, final Transcript downTrans)
+    public String getKnownFusionType(final Transcript upTrans, final Transcript downTrans)
     {
         if(mHasValidConfigData && mKnownFusionsModel == null)
             return REPORTABLE_TYPE_KNOWN;

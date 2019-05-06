@@ -36,6 +36,7 @@ public class RnaFusionData
     private int mExonMaxRankDown;
 
     private boolean mViableFusion; // the pair of transcripts satisfied standard fusion rules
+    private String mKnownFusionType;
     private boolean mTransViableUp; // the transcript fell in the correct location relative to the RNA position
     private boolean mTransViableDown;
     private boolean mTransCorrectLocationUp; // the transcript fell on the correct side and orientation for the RNA position
@@ -78,6 +79,7 @@ public class RnaFusionData
         mBreakendDown = null;
 
         mViableFusion = false;
+        mKnownFusionType = "";
         mTransViableUp = false;
         mTransViableDown = false;
         mTransCorrectLocationUp = false;
@@ -133,10 +135,13 @@ public class RnaFusionData
     public final Transcript getTrans(boolean isUpstream) { return isUpstream ? mTransUp : mTransDown; }
     public final SvBreakend getBreakend(boolean isUpstream) { return isUpstream ? mBreakendUp : mBreakendDown; }
     public final boolean isTransViable(boolean isUpstream) { return isUpstream ? mTransViableUp : mTransViableDown; }
-    public final boolean isTransCorrectLocation(boolean isUpstream) { return isUpstream ? mTransCorrectLocationDown : mTransCorrectLocationDown; }
+    public final boolean isTransCorrectLocation(boolean isUpstream) { return isUpstream ? mTransCorrectLocationUp : mTransCorrectLocationDown; }
     public final int getExonsSkipped(boolean isUpstream) { return isUpstream ? mExonsSkippedUp : mExonsSkippedDown; }
 
     public boolean isViableFusion() { return mViableFusion; }
+
+    public void setKnownType(final String knownType) { mKnownFusionType = knownType; }
+    public final String getKnownType() { return mKnownFusionType; }
 
     public final String getClusterInfo(boolean isUpstream)
     {
@@ -147,7 +152,6 @@ public class RnaFusionData
     {
         return mChainInfo;
     }
-
 
     public void setFusionClusterChainInfo()
     {
