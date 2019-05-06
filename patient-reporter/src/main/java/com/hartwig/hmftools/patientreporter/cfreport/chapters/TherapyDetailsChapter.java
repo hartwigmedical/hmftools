@@ -42,6 +42,7 @@ public class TherapyDetailsChapter implements ReportChapter {
         this.patientReport = patientReport;
     }
 
+    @NotNull
     @Override
     @NotNull
     public String getName() {

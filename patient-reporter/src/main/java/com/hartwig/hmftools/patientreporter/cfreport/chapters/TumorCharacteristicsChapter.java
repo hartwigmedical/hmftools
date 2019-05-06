@@ -1,12 +1,12 @@
 package com.hartwig.hmftools.patientreporter.cfreport.chapters;
 
 import com.hartwig.hmftools.patientreporter.AnalysedPatientReport;
-import com.hartwig.hmftools.patientreporter.cfreport.data.*;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
 import com.hartwig.hmftools.patientreporter.cfreport.components.BarChart;
 import com.hartwig.hmftools.patientreporter.cfreport.components.DataLabel;
 import com.hartwig.hmftools.patientreporter.cfreport.components.InlineBarChart;
 import com.hartwig.hmftools.patientreporter.cfreport.components.TableUtil;
+import com.hartwig.hmftools.patientreporter.cfreport.data.*;
 import com.itextpdf.layout.Document;
 import com.itextpdf.layout.element.Div;
 import com.itextpdf.layout.element.Paragraph;
@@ -56,14 +56,15 @@ public class TumorCharacteristicsChapter implements ReportChapter {
 
         // Microsatellite stability
         final double microSatelliteStability = patientReport.microsatelliteIndelsPerMb();
+
         final String microSatelliteStabilityString =
-                hasReliablePurityFit ? MicroSatelliteStatus.interpretToString(microSatelliteStability, hasReliablePurityFit) + " "
+                hasReliablePurityFit ? MicroSatelliteStatus.interpretToString(microSatelliteStability) + " "
                         + new DecimalFormat("#.####").format(microSatelliteStability) : DataUtil.NAString;
         BarChart satelliteChart =
                 new BarChart(microSatelliteStability, MicroSatelliteStatus.RANGE_MIN, MicroSatelliteStatus.RANGE_MAX, "MSS", "MSI");
         satelliteChart.setEnabled(hasReliablePurityFit);
         satelliteChart.setScale(InlineBarChart.LOG10_SCALE);
-        satelliteChart.setTickMarks(new double[] { MicroSatelliteStatus.RANGE_MIN, 1E-1, 1, 10, MicroSatelliteStatus.RANGE_MAX },
+        satelliteChart.setTickMarks(new double[] { MicroSatelliteStatus.RANGE_MIN, 10, MicroSatelliteStatus.RANGE_MAX },
                 doubleDecimalFormat);
         satelliteChart.enableUndershoot("<" + noDecimalFormat.format(satelliteChart.getMin()));
         satelliteChart.enableOvershoot(">" + noDecimalFormat.format(satelliteChart.getMax()));

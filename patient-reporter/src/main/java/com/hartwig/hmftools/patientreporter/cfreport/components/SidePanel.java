@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.patientreporter.cfreport.components;
 
+import com.hartwig.hmftools.patientreporter.PatientReporterApplication;
 import com.hartwig.hmftools.patientreporter.SampleReport;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
 import com.hartwig.hmftools.patientreporter.cfreport.data.DataUtil;
@@ -18,6 +19,8 @@ public final class SidePanel {
 
     private static final float ROW_SPACING = 42;
     private static final float CONTENT_X_START = 455;
+    private static final float RECTANGLE_WIDTH = 170;           // Width of the blue rectangle in pt
+    private static final float RECTANGLE_HEIGHT_SHORT = 110;    // Height of the blue rectangle in pt when not full page height
 
     public static void renderSidePanel(PdfPage page, @NotNull final SampleReport sampleReport, boolean fullHeight, boolean fullContent) {
         // Draw background and markers
@@ -71,6 +74,15 @@ public final class SidePanel {
 
         }
 
+        // Add version number of the first page
+        if (page.getDocument().getNumberOfPages() == 1) {
+            cv.add(new Paragraph(
+                    "v" + (PatientReporterApplication.VERSION != null ? PatientReporterApplication.VERSION : "X.X")).setFixedPosition(
+                    pageSize.getWidth() - RECTANGLE_WIDTH + 4,
+                    40,
+                    30).setRotationAngle(Math.PI / 2).setFontColor(ReportResources.PALETTE_LIGHT_GREY).setFontSize(6));
+        }
+
         canvas.release();
 
     }
@@ -79,17 +91,12 @@ public final class SidePanel {
      * Draw background rectangle, either full height or only top of the page
      */
     private static void renderBackgroundRect(boolean fullHeight, @NotNull PdfCanvas canvas, @NotNull Rectangle pageSize) {
-
-        final float RECTANGLE_WIDTH = 170;           // Width of the blue rectangle in pt
-        final float RECTANGLE_HEIGHT_SHORT = 110;    // Height of the blue rectangle in pt when not full page height
-
         canvas.rectangle(pageSize.getWidth(),
                 pageSize.getHeight(),
                 -RECTANGLE_WIDTH,
                 fullHeight ? -pageSize.getHeight() : -RECTANGLE_HEIGHT_SHORT);
         canvas.setFillColor(ReportResources.PALETTE_BLUE);
         canvas.fill();
-
     }
 
     @NotNull

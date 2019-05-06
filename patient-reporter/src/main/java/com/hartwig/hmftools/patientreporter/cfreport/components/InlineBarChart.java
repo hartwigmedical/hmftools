@@ -11,8 +11,8 @@ import com.itextpdf.layout.renderer.IRenderer;
 
 public class InlineBarChart extends Div {
 
-    public static Scale LINEAR_SCALE = (v) -> v;
-    public static Scale LOG10_SCALE = (v) -> Math.log10(v);
+    private static Scale LINEAR_SCALE = (v) -> v;
+    public static Scale LOG10_SCALE = Math::log10;
 
     private double value;
     private double min;
@@ -32,11 +32,11 @@ public class InlineBarChart extends Div {
         this.scale = scale;
     }
 
-    public final double getValue() {
+    final double getValue() {
         return value;
     }
 
-    public final double getScaledValue() {
+    final double getScaledValue() {
         return getScaledValue(getValue());
     }
 
@@ -44,7 +44,7 @@ public class InlineBarChart extends Div {
         return min;
     }
 
-    public final double getScaledMin() {
+    final double getScaledMin() {
         return getScaledValue(getMin());
     }
 
@@ -52,11 +52,11 @@ public class InlineBarChart extends Div {
         return max;
     }
 
-    public final double getScaledMax() {
+    final double getScaledMax() {
         return getScaledValue(getMax());
     }
 
-    protected final double getScaledValue(double value) {
+    final double getScaledValue(double value) {
         return scale.scale(value);
     }
 
@@ -64,7 +64,7 @@ public class InlineBarChart extends Div {
         isEnabled = enabled;
     }
 
-    public boolean isEnabled() {
+    boolean isEnabled() {
         return isEnabled;
     }
 

@@ -28,7 +28,7 @@ public final class ReportResources {
     private static final Logger LOGGER = LogManager.getLogger(CFReportWriter.class);
 
     // PDF Content
-    public static final String HARTWIG_NAME = "Hartwig Medical Foundation";
+    private static final String HARTWIG_NAME = "Hartwig Medical Foundation";
     public static final String HARTWIG_ADDRESS = HARTWIG_NAME + ", Science Park 408, 1098XH Amsterdam";
     public static final String CONTACT_EMAIL_GENERAL = "info@hartwigmedicalfoundation.nl";
     public static final String CONTACT_EMAIL_QA = "qualitysystem@hartwigmedicalfoundation.nl";
@@ -58,7 +58,7 @@ public final class ReportResources {
     public static final DeviceRgb PALETTE_DARK_BLUE = new DeviceRgb(93, 85, 164);
     public static final DeviceRgb PALETTE_RED = new DeviceRgb(232, 60, 55);
     public static final DeviceRgb PALETTE_CYAN = new DeviceRgb(0, 179, 233);
-    public static final DeviceRgb PALETTE_DARK_GREY = new DeviceRgb(39, 47, 50);
+    private static final DeviceRgb PALETTE_DARK_GREY = new DeviceRgb(39, 47, 50);
     public static final DeviceRgb PALETTE_MID_GREY = new DeviceRgb(101, 106, 108);
     public static final DeviceRgb PALETTE_LIGHT_GREY = new DeviceRgb(205, 206, 207);
     public static final DeviceRgb PALETTE_PINK = new DeviceRgb(230, 21, 124);
@@ -75,8 +75,7 @@ public final class ReportResources {
 
     public static final float BODY_TEXT_LEADING = 10f;
 
-    private ReportResources() {}
-
+    @Nullable
     public static PdfFont getFontRegular() {
         if (fontProgramRegular == null) {
             fontProgramRegular = loadFontProgram(FONT_REGULAR_PATH);
@@ -84,6 +83,7 @@ public final class ReportResources {
         return createFontFromProgram(fontProgramRegular);
     }
 
+    @Nullable
     public static PdfFont getFontBold() {
         if (fontProgramBold == null) {
             fontProgramBold = loadFontProgram(FONT_BOLD_PATH);
@@ -91,6 +91,7 @@ public final class ReportResources {
         return createFontFromProgram(fontProgramBold);
     }
 
+    @Nullable
     public static PdfFont getIconFont() {
         if (iconFontProgram == null) {
             iconFontProgram = loadFontProgram(ICON_FONT_PATH);
@@ -121,10 +122,6 @@ public final class ReportResources {
         return fontSize;
     }
 
-    /**
-     * Chapter title text style
-     * @return
-     */
     public static Style chapterTitleStyle() {
         return new Style()
                 .setFont(getFontBold())
@@ -133,10 +130,6 @@ public final class ReportResources {
                 .setMarginTop(0);
     }
 
-    /**
-     * Section title text style
-     * @return
-     */
     public static Style sectionTitleStyle() {
         return new Style()
                 .setFont(getFontBold())
@@ -144,10 +137,6 @@ public final class ReportResources {
                 .setFontColor(ReportResources.PALETTE_BLUE);
     }
 
-    /**
-     * Content table header style
-     * @return
-     */
     public static Style tableHeaderStyle() {
         return new Style()
                 .setFont(getFontRegular())
@@ -156,10 +145,6 @@ public final class ReportResources {
 
     }
 
-    /**
-     * Content table body text style
-     * @return
-     */
     public static Style tableContentStyle() {
         return new Style()
                 .setFont(getFontRegular())
@@ -167,10 +152,6 @@ public final class ReportResources {
                 .setFontColor(ReportResources.PALETTE_DARK_GREY);
     }
 
-    /**
-     * Body text style for content on summary page
-     * @return
-     */
     public static Style bodyTextStyle() {
         return new Style()
                 .setFont(getFontRegular())
@@ -178,10 +159,6 @@ public final class ReportResources {
                 .setFontColor(ReportResources.PALETTE_BLACK);
     }
 
-    /**
-     * Heading style for content on "Report explanation" and "Sample details & disclaimers" page
-     * @return
-     */
     public static Style smallBodyHeadingStyle() {
         return new Style()
                 .setFont(getFontBold())
@@ -189,10 +166,6 @@ public final class ReportResources {
                 .setFontColor(ReportResources.PALETTE_BLACK);
     }
 
-    /**
-     * Body text style for content on "Report explanation" and "Sample details & disclaimers" page
-     * @return
-     */
     public static Style smallBodyTextStyle() {
         return new Style()
                 .setFont(getFontRegular())
@@ -200,10 +173,6 @@ public final class ReportResources {
                 .setFontColor(ReportResources.PALETTE_BLACK);
     }
 
-    /**
-     * Emphasized body text style for content on "Report explanation" and "Sample details & disclaimers" page
-     * @return
-     */
     public static Style smallBodyBoldTextStyle() {
         return new Style()
                 .setFont(getFontBold())
@@ -211,10 +180,6 @@ public final class ReportResources {
                 .setFontColor(ReportResources.PALETTE_BLACK);
     }
 
-    /**
-     * Text style for legends and footnotes
-     * @return
-     */
     public static Style subTextStyle() {
         return new Style()
                 .setFont(getFontRegular())
@@ -222,10 +187,6 @@ public final class ReportResources {
                 .setFontColor(ReportResources.PALETTE_BLACK);
     }
 
-    /**
-     * Text style for legends and footnotes
-     * @return
-     */
     public static Style subTextBoldStyle() {
         return new Style()
                 .setFont(getFontBold())
@@ -233,10 +194,6 @@ public final class ReportResources {
                 .setFontColor(ReportResources.PALETTE_BLACK);
     }
 
-    /**
-     * Text style for data highlight (e.g. big numbers)
-     * @return
-     */
     public static Style dataHighlightStyle() {
         return new Style()
                 .setFont(getFontBold())
@@ -244,12 +201,6 @@ public final class ReportResources {
                 .setFontColor(ReportResources.PALETTE_BLUE);
     }
 
-    /**
-     * Text style for data highlight (e.g. big numbers) when data
-     * is not available
-     *
-     * @return
-     */
     public static Style dataHighlightNaStyle() {
         return new Style()
                 .setFont(getFontBold())
@@ -257,10 +208,6 @@ public final class ReportResources {
                 .setFontColor(ReportResources.PALETTE_BLUE);
     }
 
-    /**
-     * Text style for the page numbers
-     * @return
-     */
     public static Style pageNumberStyle() {
         return new Style()
                 .setFont(getFontBold())
@@ -268,10 +215,6 @@ public final class ReportResources {
                 .setFontColor(ReportResources.PALETTE_BLUE);
     }
 
-    /**
-     * Text style for the labels in the side panel
-     * @return
-     */
     public static Style sidepanelLabelStyle() {
         return new Style()
                 .setFont(getFontBold())
@@ -279,10 +222,6 @@ public final class ReportResources {
                 .setFontColor(ReportResources.PALETTE_WHITE);
     }
 
-    /**
-     * Text style for the content in the side panel
-     * @return
-     */
     public static Style sidepanelValueStyle() {
         return new Style()
                 .setFont(getFontBold())
@@ -294,7 +233,6 @@ public final class ReportResources {
      * Load image data from resource stream. Returns null when loading fails
      *
      * @param resourcePath
-     * @return
      */
     public static ImageData loadImageData(@NotNull String resourcePath) {
         try {
@@ -316,15 +254,16 @@ public final class ReportResources {
      * Load byte array from resource
      *
      * @param resourcePath
-     * @return
      * @throws IOException
      */
-    public static byte[] loadResourceData(String resourcePath) throws IOException {
+    private static byte[] loadResourceData(String resourcePath) throws IOException {
 
         byte[] data = null;
-        InputStream is = new ReportResources().getClass().getClassLoader().getResourceAsStream(resourcePath);
-        data = new byte[is.available()];
-        is.read(data);
+        InputStream is = ClassLoader.getSystemResourceAsStream(resourcePath);
+        if (is != null) {
+            data = new byte[is.available()];
+            is.read(data);
+        }
 
         return data;
 

@@ -2,21 +2,22 @@ package com.hartwig.hmftools.patientreporter.cfreport.chapters;
 
 import com.hartwig.hmftools.patientreporter.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.SampleReport;
-import com.hartwig.hmftools.patientreporter.cfreport.data.DataUtil;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
+import com.hartwig.hmftools.patientreporter.cfreport.components.ReportSignature;
 import com.hartwig.hmftools.patientreporter.cfreport.components.TableUtil;
+import com.hartwig.hmftools.patientreporter.cfreport.data.DataUtil;
 import com.hartwig.hmftools.patientreporter.report.pages.SampleDetailsPage;
 import com.itextpdf.io.IOException;
-import com.itextpdf.io.image.ImageDataFactory;
 import com.itextpdf.layout.Document;
-import com.itextpdf.layout.element.*;
+import com.itextpdf.layout.element.Div;
+import com.itextpdf.layout.element.Paragraph;
+import com.itextpdf.layout.element.Table;
+import com.itextpdf.layout.element.Text;
 import com.itextpdf.layout.property.UnitValue;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
-
-import java.net.MalformedURLException;
 
 public class DetailsAndDisclaimerChapter implements ReportChapter {
 
@@ -40,7 +41,6 @@ public class DetailsAndDisclaimerChapter implements ReportChapter {
 
     @Override
     public final void render(@NotNull final Document reportDocument) throws IOException {
-
         // Main content
         Table table = new Table(UnitValue.createPercentArray(new float[] { 1, 0.1f, 1 }));
         table.setWidth(getContentWidth());
@@ -49,11 +49,8 @@ public class DetailsAndDisclaimerChapter implements ReportChapter {
         table.addCell(TableUtil.getLayoutCell().add(createDisclaimerDiv()));
         reportDocument.add(table);
 
-        // End of report text
-        reportDocument.add(new Paragraph("— End of report —").setMarginTop(50).addStyle(ReportResources.smallBodyTextStyle()));
-
-        reportDocument.add(createSignatureDiv(patientReport.logoRVAPath(), patientReport.signaturePath()).setPaddingTop(80));
-
+        reportDocument.add(ReportSignature.createEndOfReportIndication());
+        reportDocument.add(ReportSignature.createSignatureDiv(patientReport.logoRVAPath(), patientReport.signaturePath()));
     }
 
     @NotNull
@@ -105,42 +102,6 @@ public class DetailsAndDisclaimerChapter implements ReportChapter {
 
     }
 
-    @NotNull
-    private static Div createSignatureDiv(@NotNull String rvaLogoPath, @NotNull String signaturePath) throws IOException {
-        Div div = new Div();
-        div.setKeepTogether(true);
-
-        // Add RVA logo
-        try {
-            final Image rvaLogo = new Image(ImageDataFactory.create(rvaLogoPath));
-            rvaLogo.setMaxHeight(58);
-            div.add(rvaLogo);
-        } catch (MalformedURLException e) {
-            throw new IOException("Failed to read RVA logo image at " + rvaLogoPath);
-        }
-
-        // Add signature text
-        Paragraph signatureText =
-                new Paragraph().setFont(ReportResources.getFontBold()).setFontSize(10).setFontColor(ReportResources.PALETTE_BLACK);
-
-        signatureText.add(ReportResources.SIGNATURE_NAME + ",\n");
-        signatureText.add(new Text(ReportResources.SIGNATURE_TITLE).setFont(ReportResources.getFontRegular()));
-        div.add(signatureText);
-
-        // Add signature image
-        try {
-            final Image signatureImage = new Image(ImageDataFactory.create(signaturePath));
-            signatureImage.setMaxHeight(60);
-            signatureImage.setMarginTop(-20); // Set negative margin so the signature slightly overlaps the signature text
-            signatureImage.setMarginLeft(10);
-            div.add(signatureImage);
-        } catch (MalformedURLException e) {
-            throw new IOException("Failed to read signature image at " + signaturePath);
-        }
-
-        return div;
-
-    }
 
     @NotNull
     private static Paragraph createContentParagraph(@NotNull String text) {

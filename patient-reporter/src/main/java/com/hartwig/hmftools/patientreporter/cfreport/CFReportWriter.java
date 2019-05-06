@@ -1,22 +1,21 @@
 package com.hartwig.hmftools.patientreporter.cfreport;
 
-import com.hartwig.hmftools.patientreporter.*;
+import com.hartwig.hmftools.patientreporter.AnalysedPatientReport;
+import com.hartwig.hmftools.patientreporter.QCFailReport;
+import com.hartwig.hmftools.patientreporter.ReportWriter;
+import com.hartwig.hmftools.patientreporter.SampleReport;
 import com.hartwig.hmftools.patientreporter.cfreport.chapters.*;
-
 import com.itextpdf.kernel.events.PdfDocumentEvent;
 import com.itextpdf.kernel.geom.PageSize;
 import com.itextpdf.kernel.pdf.PdfDocument;
 import com.itextpdf.kernel.pdf.PdfWriter;
 import com.itextpdf.layout.Document;
-
 import com.itextpdf.layout.element.AreaBreak;
 import com.itextpdf.layout.property.AreaBreakType;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -27,15 +26,16 @@ public class CFReportWriter implements ReportWriter {
 
     private static final Logger LOGGER = LogManager.getLogger(CFReportWriter.class);
 
+    private boolean writeToFile = true;
+
     @Override
     public void writeAnalysedPatientReport(@NotNull final AnalysedPatientReport report, @NotNull final String outputFilePath)
             throws IOException {
         writeReport(report.sampleReport(),
                 new ReportChapter[] { new SummaryChapter(report), new TherapyDetailsChapter(report), new ActionableOrDriversChapter(report),
-                        new TumorCharacteristicsChapter(report), new CircosChapter(report), new ExplanationChapter(report),
+                        new TumorCharacteristicsChapter(report), new CircosChapter(report), new ExplanationChapter(),
                         new DetailsAndDisclaimerChapter(report) },
                 outputFilePath);
-
     }
 
     @Override
@@ -43,8 +43,12 @@ public class CFReportWriter implements ReportWriter {
         writeReport(report.sampleReport(), new ReportChapter[] { new QCFailChapter(report) }, outputFilePath);
     }
 
-    private static void writeReport(@NotNull final SampleReport sampleReport, @NotNull ReportChapter[] chapters,
-            @Nullable String outputFilePath) throws IOException {
+    public void setWriteToFile(boolean writeToFile) {
+        this.writeToFile = writeToFile;
+    }
+
+    private void writeReport(@NotNull final SampleReport sampleReport, @NotNull ReportChapter[] chapters, @NotNull String outputFilePath)
+            throws IOException {
         // Initialize report with metadata
         final Document doc = initializeReport(outputFilePath);
         final PdfDocument pdfDocument = doc.getPdfDocument();
@@ -79,7 +83,7 @@ public class CFReportWriter implements ReportWriter {
         pdfDocument.close();
 
         // Log info
-        if (outputFilePath != null) {
+        if (writeToFile) {
             LOGGER.info("Created patient report at " + outputFilePath);
         } else {
             LOGGER.info("Created patient report");
@@ -90,9 +94,9 @@ public class CFReportWriter implements ReportWriter {
      * Initialize report document with relevant metadata
      */
     @NotNull
-    private static Document initializeReport(@Nullable final String outputFilePath) throws IOException {
+    private Document initializeReport(@NotNull final String outputFilePath) throws IOException {
         PdfWriter writer;
-        if (outputFilePath != null) {
+        if (writeToFile) {
             // Prevent overwriting existing files
             if (Files.exists(new File(outputFilePath).toPath())) {
                 throw new IOException("Could not write " + outputFilePath + " as it already exists.");

@@ -49,14 +49,15 @@ public class Footer {
         private String prefix;
         private PdfFormXObject template;
 
-        public PageNumberTemplate(int pageNumber, @Nullable String prefix, @NotNull PdfFormXObject template) {
+        PageNumberTemplate(int pageNumber, @Nullable String prefix, @NotNull PdfFormXObject template) {
             this.pageNumber = pageNumber;
             this.prefix = prefix;
             this.template = template;
         }
 
-        public void renderPageNumber(int totalPageCount, @NotNull PdfDocument document) {
-            String displayString = ((prefix != null) ? prefix.toUpperCase() + " \u2014 " : "") + pageNumber + "/" + totalPageCount;
+        void renderPageNumber(int totalPageCount, @NotNull PdfDocument document) {
+            String displayString = ((prefix != null) ? prefix.toUpperCase() + " \u2014 " : "")
+                    + pageNumber + "/" + totalPageCount;
 
             Canvas canvas = new Canvas(template, document);
             canvas.showTextAligned(new Paragraph().add(displayString).addStyle(ReportResources.pageNumberStyle()),

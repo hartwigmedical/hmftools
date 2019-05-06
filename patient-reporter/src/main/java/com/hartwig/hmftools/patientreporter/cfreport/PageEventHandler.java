@@ -15,7 +15,7 @@ import com.itextpdf.kernel.pdf.navigation.PdfExplicitRemoteGoToDestination;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class PageEventHandler implements IEventHandler {
+class PageEventHandler implements IEventHandler {
 
     private SampleReport sampleReport;
 
@@ -47,7 +47,7 @@ public class PageEventHandler implements IEventHandler {
 
     public void setSidebarType(boolean full, boolean fullContent) {
         fullSidebar = full;
-        fullSidebarContent = fullSidebar ? fullContent : false;
+        fullSidebarContent = fullSidebar && fullContent;
     }
 
     public void resetChapterPageCounter() {
@@ -62,7 +62,7 @@ public class PageEventHandler implements IEventHandler {
     @Override
     public void handleEvent(Event event) {
         PdfDocumentEvent documentEvent = (PdfDocumentEvent) event;
-        if (documentEvent.getType() == PdfDocumentEvent.START_PAGE) {
+        if (documentEvent.getType().equals(PdfDocumentEvent.START_PAGE)) {
 
             final PdfPage page = documentEvent.getPage();
 

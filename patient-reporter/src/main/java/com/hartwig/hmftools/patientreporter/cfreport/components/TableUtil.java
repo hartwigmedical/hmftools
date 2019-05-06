@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.patientreporter.cfreport.components;
 
-import com.hartwig.hmftools.patientreporter.cfreport.data.DataUtil;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
+import com.hartwig.hmftools.patientreporter.cfreport.data.DataUtil;
 import com.itextpdf.layout.borders.Border;
 import com.itextpdf.layout.borders.SolidBorder;
 import com.itextpdf.layout.element.Cell;
@@ -99,7 +99,7 @@ public final class TableUtil {
      * Get a cell that implements the visual header style for the main report tables
      */
     @NotNull
-    public static Cell getHeaderCell(int colspan) {
+    private static Cell getHeaderCell(int colspan) {
         Cell c = new Cell(1, colspan);
         c.setHeight(23); // Set fixed height to create consistent spacing between table title and header
         c.setBorder(Border.NO_BORDER);
