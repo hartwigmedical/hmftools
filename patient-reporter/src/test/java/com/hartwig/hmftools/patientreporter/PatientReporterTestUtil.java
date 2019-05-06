@@ -19,6 +19,8 @@ import com.hartwig.hmftools.patientreporter.actionability.DrupActionabilityModel
 import com.hartwig.hmftools.patientreporter.actionability.DrupActionabilityModelFactory;
 import com.hartwig.hmftools.patientreporter.genepanel.GeneModel;
 import com.hartwig.hmftools.patientreporter.genepanel.GeneModelFactory;
+import com.hartwig.hmftools.patientreporter.summary.SummaryFile;
+import com.hartwig.hmftools.patientreporter.summary.SummaryModel;
 import com.hartwig.hmftools.patientreporter.variants.germline.GermlineReportingModel;
 import com.hartwig.hmftools.patientreporter.variants.germline.GermlineReportingFile;
 import com.hartwig.hmftools.patientreporter.structural.SvAnalyzer;
@@ -43,6 +45,7 @@ public final class PatientReporterTestUtil {
     private static final String DISRUPTION_FILE = Resources.getResource("test_run/svAnalysis/CPCT11111111T_disruptions.csv").getPath();
 
     private static final String GERMLINE_GENES_REPORTING_CSV = Resources.getResource("csv/germline_genes_reporting.csv").getPath();
+    private static final String SUMMARY_SAMPLES_CSV = Resources.getResource("csv/summary_samples.csv").getPath();
 
     private PatientReporterTestUtil() {
     }
@@ -76,13 +79,14 @@ public final class PatientReporterTestUtil {
             DrupActionabilityModel drupActionabilityModel = testDrupActionabilityModel();
             GeneModel geneModel = GeneModelFactory.create(drupActionabilityModel);
             GermlineReportingModel germlineReportingModel = GermlineReportingFile.buildFromCsv(GERMLINE_GENES_REPORTING_CSV);
+            SummaryModel summaryModel = SummaryFile.buildFromCsv(SUMMARY_SAMPLES_CSV);
             CompoundEnrichment compoundEnrichment = new CompoundEnrichment(HotspotEnrichment.fromHotspotsFile(HOTSPOT_TSV));
 
             return ImmutableSequencedReportData.of(geneModel,
                     testActionabilityAnalyzer(),
                     compoundEnrichment,
                     new IndexedFastaSequenceFile(new File(REF_GENOME_PATH)),
-                    TreeMultimap.create(), germlineReportingModel);
+                    TreeMultimap.create(), germlineReportingModel, summaryModel);
         } catch (IOException exception) {
             throw new IllegalStateException("Could not generate test sequenced report data: " + exception.getMessage());
         }
