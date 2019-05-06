@@ -6,13 +6,11 @@ import java.util.Map;
 
 import com.google.common.collect.Maps;
 
-import org.junit.Ignore;
 import org.junit.Test;
 
 public class SummaryModelTest {
 
     @Test
-    @Ignore
     public void sampleArePresentInSummaryFile() {
 
         Map<String, String> summaryToSampleMap = Maps.newHashMap();
@@ -24,7 +22,6 @@ public class SummaryModelTest {
     }
 
     @Test
-    @Ignore
     public void canExtractSummaryOfSample() {
         Map<String, String> summaryToSampleMap = Maps.newHashMap();
         summaryToSampleMap.put("CPCT11111111T", "this is a test summary");
