@@ -5,6 +5,7 @@ import com.hartwig.hmftools.common.actionability.ActionabilityAnalyzer;
 import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.common.variant.enrich.SomaticEnrichment;
 import com.hartwig.hmftools.patientreporter.genepanel.GeneModel;
+import com.hartwig.hmftools.patientreporter.summary.SummaryModel;
 import com.hartwig.hmftools.patientreporter.variants.germline.GermlineReportingModel;
 
 import org.immutables.value.Value;
@@ -35,5 +36,8 @@ public abstract class SequencedReportData {
 
     @NotNull
     public abstract GermlineReportingModel germlineReportingModel();
+
+    @NotNull
+    public abstract SummaryModel summaryModel();
 
 }

@@ -10,6 +10,8 @@ import com.hartwig.hmftools.patientreporter.actionability.DrupActionabilityModel
 import com.hartwig.hmftools.patientreporter.actionability.DrupActionabilityModelFactory;
 import com.hartwig.hmftools.patientreporter.genepanel.GeneModel;
 import com.hartwig.hmftools.patientreporter.genepanel.GeneModelFactory;
+import com.hartwig.hmftools.patientreporter.summary.SummaryFile;
+import com.hartwig.hmftools.patientreporter.summary.SummaryModel;
 import com.hartwig.hmftools.patientreporter.variants.germline.GermlineReportingModel;
 import com.hartwig.hmftools.patientreporter.variants.germline.GermlineReportingFile;
 
@@ -24,11 +26,13 @@ final class SequencedReportDataLoader {
 
     @NotNull
     static SequencedReportData buildFromFiles(@NotNull String knowledgebaseDir, @NotNull String drupGeneCsv, @NotNull String hotspotTsv,
-            @NotNull String fastaFileLocation, @NotNull String highConfidenceBed, @NotNull String germlineGenesCsv) throws IOException {
+            @NotNull String fastaFileLocation, @NotNull String highConfidenceBed, @NotNull String germlineGenesCsv,
+            @NotNull String summarySamplesCSV) throws IOException {
         final ActionabilityAnalyzer actionabilityAnalyzer = ActionabilityAnalyzer.fromKnowledgebase(knowledgebaseDir);
 
         final DrupActionabilityModel drupActionabilityModel = DrupActionabilityModelFactory.buildFromCsv(drupGeneCsv);
         final GermlineReportingModel germlineReportingModel = GermlineReportingFile.buildFromCsv(germlineGenesCsv);
+        final SummaryModel summaryModel = SummaryFile.buildFromCsv(summarySamplesCSV);
         final GeneModel panelGeneModel = GeneModelFactory.create(drupActionabilityModel);
 
         return ImmutableSequencedReportData.of(panelGeneModel,
@@ -36,6 +40,6 @@ final class SequencedReportDataLoader {
                 HotspotEnrichment.fromHotspotsFile(hotspotTsv),
                 new IndexedFastaSequenceFile(new File(fastaFileLocation)),
                 BEDFileLoader.fromBedFile(highConfidenceBed),
-                germlineReportingModel);
+                germlineReportingModel, summaryModel);
     }
 }
