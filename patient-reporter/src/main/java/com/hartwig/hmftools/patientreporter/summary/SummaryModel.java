@@ -16,4 +16,12 @@ public class SummaryModel {
     SummaryModel(@NotNull final Map<String, String> sampleToSummaryMap) {
         this.sampleToSummaryMap = sampleToSummaryMap;
     }
+
+    public boolean sampleIdPresentInSummaryFile(@NotNull String sampleId) {
+        return sampleToSummaryMap.keySet().contains(sampleId);
+    }
+
+    public String extractSummarySampleId(@NotNull String sampleId) {
+        return sampleToSummaryMap.get(sampleId);
+    }
 }
