@@ -46,8 +46,8 @@ public final class GeneDisruptionDataSource {
                 GENE_MAX_COPIES.getName());
 
         for (ReportableGeneDisruption disruption : sort(disruptions)) {
-            String geneMinCopies = disruption.geneMinCopies() != null ? String.valueOf(disruption.geneMinCopies()) : "N/A";
-            String geneMaxCopies = disruption.geneMaxCopies() != null ? String.valueOf(disruption.geneMaxCopies()) : "N/A";
+            String geneMinCopies = String.valueOf(disruption.geneMinCopies());
+            String geneMaxCopies = String.valueOf(disruption.geneMaxCopies());
 
             dataSource.add(disruption.location(),
                     disruption.gene(),
