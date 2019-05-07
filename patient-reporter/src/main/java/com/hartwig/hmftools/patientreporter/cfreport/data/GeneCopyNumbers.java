@@ -12,6 +12,9 @@ import java.util.stream.Collectors;
 
 public final class GeneCopyNumbers {
 
+    private GeneCopyNumbers() {
+    }
+
     @NotNull
     public static List<GeneCopyNumber> sort(@NotNull final List<GeneCopyNumber> geneCopyNumbers) {
         return geneCopyNumbers.stream().sorted((copyNumber1, copyNumber2) -> {
@@ -50,7 +53,7 @@ public final class GeneCopyNumbers {
     }
 
     @NotNull
-    public static String getType(@NotNull GeneCopyNumber geneCopyNumber) {
+    public static String type(@NotNull GeneCopyNumber geneCopyNumber) {
         CopyNumberAlteration alteration = CopyNumberAlteration.fromCopyNumber(geneCopyNumber.minCopyNumber());
         if (alteration == CopyNumberAlteration.GAIN) {
             return "gain";

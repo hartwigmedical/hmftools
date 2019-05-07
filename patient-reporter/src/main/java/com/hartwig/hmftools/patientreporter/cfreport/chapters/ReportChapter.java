@@ -8,9 +8,11 @@ import org.jetbrains.annotations.Nullable;
 public interface ReportChapter {
 
     @NotNull
-    String getName();
+    String name();
 
-    default @Nullable String getPageNumberPrefix() {
+    void render(@NotNull Document reportDocument);
+
+    default @Nullable String pageNumberPrefix() {
         return null;
     }
 
@@ -22,11 +24,9 @@ public interface ReportChapter {
         return false;
     }
 
-    default float getContentWidth() {
+    default float contentWidth() {
         return isFullWidth()
                 ? ReportResources.CONTENT_WIDTH_WIDE
                 : ReportResources.CONTENT_WIDTH_NARROW;
     }
-
-    void render(@NotNull final Document reportDocument);
 }

@@ -14,9 +14,9 @@ import java.util.stream.Collectors;
 
 public final class ClinicalTrials {
 
-    /**
-     * Get all trials from the list that are a trial source
-     */
+    private ClinicalTrials() {
+    }
+
     @NotNull
     public static List<ClinicalTrial> filter(@NotNull final List<ClinicalTrial> trials) {
         return trials.stream().filter(trial -> trial.source().isTrialSource()).collect(Collectors.toList());
@@ -43,7 +43,6 @@ public final class ClinicalTrials {
 
     @NotNull
     public static String sourceUrl(@NotNull final ClinicalTrial trial) {
-
         String source = trial.source().sourceName();
         String reference = trial.reference();
         String ext = EXTId(reference);
@@ -65,14 +64,15 @@ public final class ClinicalTrials {
     }
 
     public static int uniqueOnLabelEventCount(@NotNull final List<ClinicalTrial> trials) {
-        return (int) trials.stream().filter(e -> e.isOnLabel()).filter(distinctByKey(e -> e.event())).count();
+        return (int) trials.stream().filter(ClinicalTrial::isOnLabel).filter(distinctByKey(ClinicalTrial::event)).count();
     }
 
     public static int uniqueOnLabelStudies(@NotNull final List<ClinicalTrial> trials) {
-        return (int) trials.stream().filter(e -> e.isOnLabel()).filter(distinctByKey(e -> e.acronym())).count();
+        return (int) trials.stream().filter(ClinicalTrial::isOnLabel).filter(distinctByKey(ClinicalTrial::acronym)).count();
     }
 
-    private static <T> Predicate<T> distinctByKey(Function<? super T, Object> keyExtractor) {
+    @NotNull
+    private static <T> Predicate<T> distinctByKey(@NotNull Function<? super T, Object> keyExtractor) {
         Map<Object, Boolean> map = new ConcurrentHashMap<>();
         return t -> map.putIfAbsent(keyExtractor.apply(t), Boolean.TRUE) == null;
     }

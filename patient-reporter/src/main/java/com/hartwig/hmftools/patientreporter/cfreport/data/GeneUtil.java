@@ -6,10 +6,13 @@ import org.jetbrains.annotations.Nullable;
 
 public final class GeneUtil {
 
+    private GeneUtil() {
+    }
+
     @NotNull
-    public static String getPloidyToCopiesString(@Nullable Double ploidy, boolean hasReliablePurityFit) {
+    public static String ploidyToCopiesString(@Nullable Double ploidy, boolean hasReliablePurityFit) {
         if (!hasReliablePurityFit) {
-            return DataUtil.NAString;
+            return DataUtil.NA_STRING;
         } else {
             return ploidy != null ? String.format("%.1f", ploidy) : Strings.EMPTY;
         }

@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.patientreporter.cfreport.data;
 
+import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.actionability.EvidenceItem;
 
 import org.apache.logging.log4j.util.Strings;
@@ -14,9 +15,9 @@ import java.util.stream.Collectors;
 
 public final class EvidenceItems {
 
-    /**
-     * Get all evidence items from the list that are not a trial source or should be included in report
-     */
+    private EvidenceItems() {
+    }
+
     @NotNull
     public static List<EvidenceItem> filter(@NotNull final List<EvidenceItem> evidenceItems) {
         return evidenceItems.stream()
@@ -57,7 +58,6 @@ public final class EvidenceItems {
             default:
                 return Strings.EMPTY;
         }
-
     }
 
     public static int uniqueEventCount(@NotNull final List<EvidenceItem> evidenceItems) {
@@ -68,8 +68,9 @@ public final class EvidenceItems {
         return (int) evidenceItems.stream().filter(distinctByKey(EvidenceItem::drug)).count();
     }
 
+    @NotNull
     private static <T> Predicate<T> distinctByKey(@NotNull Function<? super T, Object> keyExtractor) {
-        Map<Object, Boolean> map = new ConcurrentHashMap<>();
+        Map<Object, Boolean> map = Maps.newConcurrentMap();
         return t -> map.putIfAbsent(keyExtractor.apply(t), Boolean.TRUE) == null;
     }
 }

@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.patientreporter.cfreport.components;
 
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
 import com.hartwig.hmftools.patientreporter.report.pages.SampleDetailsPage;
 import com.itextpdf.io.image.ImageData;
@@ -11,56 +12,55 @@ import com.itextpdf.kernel.pdf.canvas.PdfCanvas;
 import com.itextpdf.kernel.pdf.xobject.PdfFormXObject;
 import com.itextpdf.kernel.pdf.xobject.PdfImageXObject;
 import com.itextpdf.layout.Canvas;
-import com.itextpdf.layout.element.Image;
 import com.itextpdf.layout.element.Paragraph;
 import com.itextpdf.layout.element.Text;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.net.MalformedURLException;
 import java.util.ArrayList;
+import java.util.List;
 
 public final class Header {
 
     private static final Logger LOGGER = LogManager.getLogger(SampleDetailsPage.class);
 
-    private PdfImageXObject hmfLogoObj;
-
-    private ArrayList<ChapterPageCounter> chapterPageCounters = new ArrayList<>();
+    @Nullable
+    private final PdfImageXObject companyLogoObj;
+    private final List<ChapterPageCounter> chapterPageCounters = Lists.newArrayList();
 
     public Header(@NotNull String logoCompanyPath) {
+        ImageData companyLogoImage = null;
         try {
-            final ImageData companyLogoImage = ImageDataFactory.create(logoCompanyPath);
-            hmfLogoObj = new PdfImageXObject(companyLogoImage);
+            companyLogoImage = ImageDataFactory.create(logoCompanyPath);
         } catch (MalformedURLException e) {
             LOGGER.warn("Could not load company logo image from " + logoCompanyPath);
         }
+        companyLogoObj = companyLogoImage != null ? new PdfImageXObject(companyLogoImage) : null;
     }
 
     public void renderHeader(@NotNull String chapterTitle, boolean firstPageOfChapter, @NotNull PdfPage page) {
         final PdfCanvas pdfCanvas = new PdfCanvas(page.getLastContentStream(), page.getResources(), page.getDocument());
         Canvas cv = new Canvas(pdfCanvas, page.getDocument(), page.getPageSize());
 
-        // Add HMF logo image object to page
-        if (hmfLogoObj != null) {
-            pdfCanvas.addXObject(hmfLogoObj, 52, 772, 44, false);
+        if (companyLogoObj != null) {
+            pdfCanvas.addXObject(companyLogoObj, 52, 772, 44, false);
         }
 
-        // Add "Hartwig Medical OncoAct"
-        cv.add(new Paragraph().add(new Text("Hartwig Medical").setFont(ReportResources.getFontBold())
+        cv.add(new Paragraph().add(new Text("Hartwig Medical").setFont(ReportResources.fontBold())
                 .setFontSize(11)
                 .setFontColor(ReportResources.PALETTE_BLUE))
-                .add(new Text(" Onco").setFont(ReportResources.getFontRegular()).setFontSize(11).setFontColor(ReportResources.PALETTE_BLUE))
-                .add(new Text("Act").setFont(ReportResources.getFontRegular()).setFontSize(11).setFontColor(ReportResources.PALETTE_RED))
+                .add(new Text(" Onco").setFont(ReportResources.fontRegular()).setFontSize(11).setFontColor(ReportResources.PALETTE_BLUE))
+                .add(new Text("Act").setFont(ReportResources.fontRegular()).setFontSize(11).setFontColor(ReportResources.PALETTE_RED))
                 .setFixedPosition(230, 791, 300));
 
         if (firstPageOfChapter) {
             chapterPageCounters.add(new ChapterPageCounter(chapterTitle));
         }
 
-        // Create chapter title template
         PdfFormXObject chapterTitleTemplate = new PdfFormXObject(new Rectangle(0, 0, 500, 30));
         pdfCanvas.addXObject(chapterTitleTemplate, ReportResources.PAGE_MARGIN_LEFT, 721);
         chapterPageCounters.get(chapterPageCounters.size() - 1).addPage(chapterTitleTemplate);
@@ -76,10 +76,11 @@ public final class Header {
 
     static class ChapterPageCounter {
 
-        private String chapterTitle;
-        private ArrayList<PdfFormXObject> templates = new ArrayList<>();
+        @NotNull
+        private final String chapterTitle;
+        private final List<PdfFormXObject> templates = Lists.newArrayList();
 
-        ChapterPageCounter(String chapterTitle) {
+        ChapterPageCounter(@NotNull String chapterTitle) {
             this.chapterTitle = chapterTitle;
         }
 
@@ -88,7 +89,6 @@ public final class Header {
         }
 
         void renderChapterTitles(@NotNull PdfDocument document) {
-
             int totalChapterPages = templates.size();
 
             for (int i = 0; i < templates.size(); i++) {

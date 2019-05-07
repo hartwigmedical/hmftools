@@ -9,7 +9,6 @@ import org.jetbrains.annotations.NotNull;
 public class Icon {
 
     public enum IconType {
-        // Levels
         LEVEL_A,
         LEVEL_B,
         LEVEL_C,
@@ -66,8 +65,6 @@ public class Icon {
 
     @NotNull
     public static Text createLevelIcon(@NotNull String level) {
-
-        // Uppercase level
         level = level.toUpperCase();
 
         IconType iconType;
@@ -89,16 +86,14 @@ public class Icon {
         }
 
         return createIcon(iconType);
-
     }
 
+    @NotNull
     public static Text createTreatmentIcon(@NotNull String treatmentName) {
-        // Determine color by first character of name
         int charCode = !treatmentName.isEmpty() ? (int) treatmentName.charAt(0) : 0;
         int colorIndex = charCode % TREATMENT_PALETTE.length;
 
         return createIcon(IconType.TREATMENT, TREATMENT_PALETTE[colorIndex]);
-
     }
 
     @NotNull
@@ -112,6 +107,6 @@ public class Icon {
             return new Text("");
         }
 
-        return new Text(iconType.getText()).setFont(ReportResources.getIconFont()).setFontColor(color).setCharacterSpacing(1);
+        return new Text(iconType.getText()).setFont(ReportResources.iconFont()).setFontColor(color).setCharacterSpacing(1);
     }
 }

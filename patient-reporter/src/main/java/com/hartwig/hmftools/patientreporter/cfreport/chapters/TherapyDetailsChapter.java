@@ -36,6 +36,7 @@ public class TherapyDetailsChapter implements ReportChapter {
 
     private final static String TREATMENT_DELIMITER = " + ";
 
+    @NotNull
     private final AnalysedPatientReport patientReport;
 
     public TherapyDetailsChapter(@NotNull final AnalysedPatientReport patientReport) {
@@ -44,7 +45,7 @@ public class TherapyDetailsChapter implements ReportChapter {
 
     @NotNull
     @Override
-    public String getName() {
+    public String name() {
         return "Therapy details";
     }
 
@@ -56,7 +57,7 @@ public class TherapyDetailsChapter implements ReportChapter {
                 .setPadding(0)
                 .setBorder(Border.NO_BORDER));
 
-        chapterTable.addCell(new Cell().add(createClinicalTrialsTable("Clinical trials (NL)", patientReport.clinicalTrials()))
+        chapterTable.addCell(new Cell().add(createClinicalTrialsTable(patientReport.clinicalTrials()))
                 .setPadding(0)
                 .setBorder(Border.NO_BORDER));
 
@@ -64,25 +65,20 @@ public class TherapyDetailsChapter implements ReportChapter {
                 .setPadding(0)
                 .setBorder(Border.NO_BORDER));
 
-        // Add legend/footnote that will appear on each page of the chapter
         chapterTable.addFooterCell(new Cell().add(createChapterFootnote()).setPadding(0).setBorder(Border.NO_BORDER));
 
         reportDocument.add(chapterTable);
-
     }
 
     @NotNull
     private static Table createEvidenceTable(@NotNull String title, @NotNull final List<EvidenceItem> evidence) {
-        // Filter and sort evidence
         final List<EvidenceItem> filteredAndSortedEvidence = EvidenceItems.sort(EvidenceItems.filter(evidence));
-        assert (filteredAndSortedEvidence.size() == evidence.size());
+        assert filteredAndSortedEvidence.size() == evidence.size();
 
-        // Handle empty list
         if (filteredAndSortedEvidence.isEmpty()) {
             return TableUtil.createNoneReportTable(title);
         }
 
-        // Create content table
         Table contentTable = TableUtil.createReportContentTable(new float[] { COL_WIDTH_DRIVERS, COL_WIDTH_MATCH, COL_WIDTH_TREATMENT_ICONS,
                         COL_WIDTH_TREATMENT_LIST, COL_WIDTH_LEVEL, COL_WIDTH_RESPONSE_CCMO, COL_WIDTH_SOURCE },
                 new Cell[] { TableUtil.getHeaderCell("Drivers"), TableUtil.getHeaderCell("Match"), TableUtil.getHeaderCell("Treatments", 2),
@@ -100,25 +96,21 @@ public class TherapyDetailsChapter implements ReportChapter {
             contentTable.addCell(TableUtil.getContentCell(item.response()));
             contentTable.addCell(TableUtil.getContentCell(new Paragraph(item.source().sourceName()))
                     .setAction(PdfAction.createURI(EvidenceItems.sourceUrl(item))));
-
         }
 
-        // Create report table that handles page breaks
         return TableUtil.createWrappingReportTable(title, contentTable);
     }
 
     @NotNull
-    private static Table createClinicalTrialsTable(@NotNull String title, @NotNull final List<ClinicalTrial> trials) {
-        // Filter and sort trials
+    private static Table createClinicalTrialsTable(@NotNull final List<ClinicalTrial> trials) {
+        final String title = "Clinical trials (NL)";
         final List<ClinicalTrial> filteredAndSortedTrials = ClinicalTrials.sort(ClinicalTrials.filter(trials));
         assert filteredAndSortedTrials.size() == trials.size();
 
-        // Handle empty list
         if (filteredAndSortedTrials.isEmpty()) {
             return TableUtil.createNoneReportTable(title);
         }
 
-        // Create content table
         final Table contentTable =
                 TableUtil.createReportContentTable(new float[] { COL_WIDTH_DRIVERS, COL_WIDTH_MATCH, COL_WIDTH_TREATMENT_ICONS,
                                 COL_WIDTH_TREATMENT_LIST_5COL, COL_WIDTH_RESPONSE_CCMO, COL_WIDTH_SOURCE },
@@ -127,7 +119,6 @@ public class TherapyDetailsChapter implements ReportChapter {
                                 TableUtil.getHeaderCell("Source") });
 
         for (ClinicalTrial trial : filteredAndSortedTrials) {
-
             String trialName = trial.acronym();
             contentTable.addCell(TableUtil.getContentCell(trial.event()));
             contentTable.addCell(TableUtil.getContentCell(createTreatmentMatchParagraph(trial.scope() == EvidenceScope.SPECIFIC)));
@@ -137,10 +128,8 @@ public class TherapyDetailsChapter implements ReportChapter {
             contentTable.addCell(TableUtil.getContentCell(ClinicalTrials.CCMOId(trial.reference())));
             contentTable.addCell(TableUtil.getContentCell(new Paragraph(trial.source().sourceName()).setAction(PdfAction.createURI(
                     ClinicalTrials.sourceUrl(trial)))));
-
         }
 
-        // Create report table that handles page breaks
         return TableUtil.createWrappingReportTable(title, contentTable);
     }
 

@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.patientreporter.cfreport.chapters;
 
 import com.hartwig.hmftools.common.lims.LimsSampleType;
+import com.hartwig.hmftools.patientreporter.PatientReporterApplication;
 import com.hartwig.hmftools.patientreporter.QCFailReport;
 import com.hartwig.hmftools.patientreporter.SampleReport;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
@@ -24,22 +25,25 @@ public class QCFailChapter implements ReportChapter {
 
     private static final Logger LOGGER = LogManager.getLogger(QCFailChapter.class);
 
+    @NotNull
     private final QCFailReport failReport;
 
-    public QCFailChapter(QCFailReport failReport) {
+    public QCFailChapter(@NotNull QCFailReport failReport) {
         this.failReport = failReport;
     }
 
     @NotNull
     @Override
-    public String getName() {
+    public String name() {
         return failReport.reason().title();
     }
 
+    @Override
     public boolean isFullWidth() {
         return false;
     }
 
+    @Override
     public boolean hasCompleteSidebar() {
         return true;
     }
@@ -48,13 +52,12 @@ public class QCFailChapter implements ReportChapter {
     public void render(@NotNull Document reportDocument) {
         reportDocument.add(TumorLocationAndTypeTable.createTumorLocationAndType(failReport.sampleReport().primaryTumorLocationString(),
                 failReport.sampleReport().cancerSubTypeString(),
-                getContentWidth()));
-        reportDocument.add(LineDivider.createLineDivider(getContentWidth()));
+                contentWidth()));
+        reportDocument.add(LineDivider.createLineDivider(contentWidth()));
 
         reportDocument.add(createFailReasonDiv(failReport.reason(), failReport.sampleReport()));
-        reportDocument.add(LineDivider.createLineDivider(getContentWidth()).setMarginTop(10));
+        reportDocument.add(LineDivider.createLineDivider(contentWidth()).setMarginTop(10));
 
-        // Content body
         LimsSampleType type = LimsSampleType.fromSampleId(failReport.sampleReport().sampleId());
         LOGGER.info("type sample: " + type);
         switch (type) {
@@ -69,10 +72,8 @@ public class QCFailChapter implements ReportChapter {
 
         }
 
-        // End of report
         reportDocument.add(ReportSignature.createEndOfReportIndication().setMarginTop(20));
         reportDocument.add(ReportSignature.createSignatureDiv(failReport.logoRVAPath(), failReport.signaturePath()).setMarginTop(20));
-
     }
 
     @NotNull
@@ -117,17 +118,14 @@ public class QCFailChapter implements ReportChapter {
             }
         }
 
-        // Initialize div
         Div div = new Div();
         div.setKeepTogether(true);
 
-        // Add title
         div.add(new Paragraph(title.toUpperCase()).addStyle(ReportResources.subTextStyle()));
         div.add(new Paragraph(reason).addStyle(ReportResources.dataHighlightStyle()));
         div.add(new Paragraph(explanation).addStyle(ReportResources.bodyTextStyle()).setFixedLeading(ReportResources.BODY_TEXT_LEADING));
 
         return div;
-
     }
 
     @NotNull
@@ -157,7 +155,6 @@ public class QCFailChapter implements ReportChapter {
                         .pathologyTumorPercentage(), shallowSeqText(), sampleArrivalDateText(), recipientText(),
                         "The contact details are : " + failReport.sampleReport().requesterName() + " (" + failReport.sampleReport()
                                 .requesterEmail() + ")", accreditationText(), questionsText() });
-
     }
 
     @NotNull
@@ -171,19 +168,16 @@ public class QCFailChapter implements ReportChapter {
                                 + failReport.sampleReport().refBarcode(),
                         "The tumor percentage estimated by Pathology UMC Utrecht is " + failReport.sampleReport().pathologyTumorPercentage() },
                 new String[] { shallowSeqText(), sampleArrivalDateText(), recipientText(), accreditationText(), questionsText() });
-
     }
 
     @NotNull
     private Table createContentTable(@NotNull String[] leftCol, @NotNull String[] rightCol) {
-
         Table table = new Table(UnitValue.createPercentArray(new float[] { 1, 0.1f, 1 }));
-        table.setWidth(getContentWidth());
+        table.setWidth(contentWidth());
         table.addCell(TableUtil.getLayoutCell().add(createContentBody(leftCol)));
         table.addCell(TableUtil.getLayoutCell()); // Spacer
         table.addCell(TableUtil.getLayoutCell().add(createContentBody(rightCol)));
         return table;
-
     }
 
     @NotNull
@@ -233,5 +227,4 @@ public class QCFailChapter implements ReportChapter {
     private static String accreditationText() {
         return "The results on this report are based on tests that are performed under ISO/ICE-17025:2005 accreditation.";
     }
-
 }

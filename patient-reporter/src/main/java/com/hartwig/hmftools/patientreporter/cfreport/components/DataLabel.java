@@ -20,6 +20,5 @@ public final class DataLabel {
                 .setFontColor(ReportResources.PALETTE_WHITE)
                 .setBorder(new SolidBorder(ReportResources.PALETTE_BLUE, 2))
                 .setBorderRadius(new BorderRadius(3f)));
-
     }
 }

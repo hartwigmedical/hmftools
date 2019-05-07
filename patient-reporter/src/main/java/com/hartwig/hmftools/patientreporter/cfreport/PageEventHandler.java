@@ -18,10 +18,12 @@ import org.jetbrains.annotations.Nullable;
 
 class PageEventHandler implements IEventHandler {
 
-    private SampleReport sampleReport;
-
-    private Footer footer;
-    private Header header;
+    @NotNull
+    private final SampleReport sampleReport;
+    @NotNull
+    private final Footer footer;
+    @NotNull
+    private final Header header;
 
     private boolean fullSidebar;
     private boolean fullSidebarContent;
@@ -61,10 +63,9 @@ class PageEventHandler implements IEventHandler {
     }
 
     @Override
-    public void handleEvent(Event event) {
+    public void handleEvent(@NotNull Event event) {
         PdfDocumentEvent documentEvent = (PdfDocumentEvent) event;
         if (documentEvent.getType().equals(PdfDocumentEvent.START_PAGE)) {
-
             final PdfPage page = documentEvent.getPage();
 
             header.renderHeader(chapterTitle, firstPageOfChapter, page);
@@ -72,19 +73,19 @@ class PageEventHandler implements IEventHandler {
                 firstPageOfChapter = false;
 
                 createChapterBookmark(documentEvent.getDocument(), chapterTitle);
-
             }
+
             SidePanel.renderSidePanel(page, sampleReport, fullSidebar, fullSidebarContent);
             footer.renderFooter(page, !fullSidebar, pageNumberPrefix);
         }
     }
 
-    private void createChapterBookmark(PdfDocument pdf, String title) {
+    private void createChapterBookmark(@NotNull PdfDocument pdf, @NotNull String title) {
         if (outline == null) {
             outline = pdf.getOutlines(false);
         }
 
-        PdfOutline chapterItem = outline.addOutline(title);
+        final PdfOutline chapterItem = outline.addOutline(title);
         chapterItem.addDestination(PdfExplicitRemoteGoToDestination.createFitH(pdf.getNumberOfPages(), 0));
     }
 }

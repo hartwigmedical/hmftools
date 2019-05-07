@@ -38,12 +38,12 @@ public final class GeneFusions {
     }
 
     @NotNull
-    public static String getName(@NotNull final ReportableGeneFusion fusion) {
+    public static String name(@NotNull final ReportableGeneFusion fusion) {
         return fusion.geneStart() + " - " + fusion.geneEnd();
     }
 
     @NotNull
-    public static String getSourceUrl(@NotNull String sourceName) {
+    public static String sourceUrl(@NotNull String sourceName) {
         switch (sourceName) {
             case ONCOKB:
                 return "http://oncokb.org/#/";

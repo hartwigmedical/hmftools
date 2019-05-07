@@ -24,27 +24,28 @@ public class DetailsAndDisclaimerChapter implements ReportChapter {
 
     private static final Logger LOGGER = LogManager.getLogger(SampleDetailsPage.class);
 
+    @NotNull
     private final AnalysedPatientReport patientReport;
 
-    public DetailsAndDisclaimerChapter(@NotNull final AnalysedPatientReport patientReport) {
+    public DetailsAndDisclaimerChapter(@NotNull AnalysedPatientReport patientReport) {
         this.patientReport = patientReport;
     }
 
     @Override
     @NotNull
-    public String getName() {
+    public String name() {
         return "Sample details & disclaimers";
     }
 
+    @Override
     public boolean isFullWidth() {
         return false;
     }
 
     @Override
-    public final void render(@NotNull final Document reportDocument) throws IOException {
-        // Main content
+    public final void render(@NotNull Document reportDocument) throws IOException {
         Table table = new Table(UnitValue.createPercentArray(new float[] { 1, 0.1f, 1 }));
-        table.setWidth(getContentWidth());
+        table.setWidth(contentWidth());
         table.addCell(TableUtil.getLayoutCell().add(createSampleDetailsDiv(patientReport)));
         table.addCell(TableUtil.getLayoutCell()); // Spacer
         table.addCell(TableUtil.getLayoutCell().add(createDisclaimerDiv()));
@@ -62,7 +63,7 @@ public class DetailsAndDisclaimerChapter implements ReportChapter {
         String addressee = sampleReport.addressee();
         if (addressee == null) {
             LOGGER.warn("No recipient address present for sample " + sampleReport.sampleId());
-            addressee = DataUtil.NAString;
+            addressee = DataUtil.NA_STRING;
         }
 
         String sampleIdentificationLine = "The HMF sample ID is: " + patientReport.sampleReport().sampleId();
@@ -72,10 +73,8 @@ public class DetailsAndDisclaimerChapter implements ReportChapter {
 
         Div div = new Div();
 
-        // Heading
         div.add(new Paragraph("Sample details").addStyle(ReportResources.smallBodyHeadingStyle()));
 
-        // Content
         div.add(createContentParagraph("The samples have been sequenced at ", ReportResources.HARTWIG_ADDRESS));
         div.add(createContentParagraph("The samples have been analyzed by Next Generation Sequencing "));
         div.add(createContentParagraph(sampleIdentificationLine));
@@ -98,24 +97,21 @@ public class DetailsAndDisclaimerChapter implements ReportChapter {
         patientReport.comments().ifPresent(comments -> div.add(createContentParagraph("Comments: " + comments)));
 
         return div;
-
     }
 
     @NotNull
     private static Div createDisclaimerDiv() {
         Div div = new Div();
 
-        // Heading
         div.add(new Paragraph("Disclaimer").addStyle(ReportResources.smallBodyHeadingStyle()));
 
-        div.add(createContentParagraph(
-                "The data on which this report is based is generated from tests that are performed under ISO/ICE-17025:2005 accreditation."));
+        div.add(createContentParagraph("The data on which this report is based is generated "
+                + "from tests that are performed under ISO/ICE-17025:2005 accreditation."));
         div.add(createContentParagraph("The analysis done for this report has passed all internal quality controls."));
         div.add(createContentParagraph("For feedback or complaints please contact ", ReportResources.CONTACT_EMAIL_QA));
         div.add(createContentParagraph("For general questions, please contact us at ", ReportResources.CONTACT_EMAIL_GENERAL));
 
         return div;
-
     }
 
     @NotNull

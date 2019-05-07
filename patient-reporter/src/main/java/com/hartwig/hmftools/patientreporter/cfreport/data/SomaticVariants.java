@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.patientreporter.cfreport.data;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.variant.Clonality;
 import com.hartwig.hmftools.common.variant.Hotspot;
@@ -12,7 +13,6 @@ import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -45,7 +45,8 @@ public final class SomaticVariants {
         }).collect(Collectors.toList());
     }
 
-    public static String getGeneDisplayString(@NotNull ReportableVariant variant) {
+    @NotNull
+    public static String geneDisplayString(@NotNull ReportableVariant variant) {
         String geneSuffix = Strings.EMPTY;
         if (variant.isDrupActionable()) {
             geneSuffix += "*";
@@ -59,10 +60,9 @@ public final class SomaticVariants {
     }
 
     @NotNull
-    public static String getPloidyVaf(double adjustedCopyNumber, double minorAllelePloidy, double adjustedVAF,
-            boolean hasReliablePurityFit) {
+    public static String ploidyVaf(double adjustedCopyNumber, double minorAllelePloidy, double adjustedVAF, boolean hasReliablePurityFit) {
         if (!hasReliablePurityFit) {
-            return DataUtil.NAString;
+            return DataUtil.NA_STRING;
         }
 
         return descriptiveBAF(adjustedCopyNumber, minorAllelePloidy) + " (" + DataUtil.formatPercentage(MathUtil.mapPercentageClamped(
@@ -103,7 +103,7 @@ public final class SomaticVariants {
     }
 
     @NotNull
-    public static String getHotspotString(@NotNull Hotspot hotspot) {
+    public static String hotspotString(@NotNull Hotspot hotspot) {
         switch (hotspot) {
             case HOTSPOT:
                 return "Yes";
@@ -115,9 +115,9 @@ public final class SomaticVariants {
     }
 
     @NotNull
-    public static String getClonalityString(@NotNull Clonality clonality, boolean hasReliablePurityFit) {
+    public static String clonalityString(@NotNull Clonality clonality, boolean hasReliablePurityFit) {
         if (!hasReliablePurityFit) {
-            return DataUtil.NAString;
+            return DataUtil.NA_STRING;
         }
 
         switch (clonality) {
@@ -133,9 +133,9 @@ public final class SomaticVariants {
     }
 
     @NotNull
-    public static String getBiallelicString(boolean biallelic, DriverCategory driverCategory, boolean hasReliablePurityFit) {
+    public static String biallelicString(boolean biallelic, DriverCategory driverCategory, boolean hasReliablePurityFit) {
         if (!hasReliablePurityFit) {
-            return DataUtil.NAString;
+            return DataUtil.NA_STRING;
         }
 
         if (driverCategory != DriverCategory.ONCO) {
@@ -147,7 +147,7 @@ public final class SomaticVariants {
     }
 
     @NotNull
-    public static String getDriverString(@Nullable Double driverLikelihood) {
+    public static String driverString(@Nullable Double driverLikelihood) {
         if (driverLikelihood == null) {
             return Strings.EMPTY;
         }
@@ -163,8 +163,8 @@ public final class SomaticVariants {
     }
 
     @NotNull
-    public static String[] somaticVariantsWithDriver(@NotNull List<ReportableVariant> variants) {
-        final List<String> returnVariants = new ArrayList<>();
+    public static String[] variantsWithDriver(@NotNull List<ReportableVariant> variants) {
+        final List<String> returnVariants = Lists.newArrayList();
         for (final ReportableVariant variant : SomaticVariantDataSource.sort(variants)) {
             if (SomaticVariantDataSource.driverField(variant).equals("High")) {
                 returnVariants.add(variant.gene());

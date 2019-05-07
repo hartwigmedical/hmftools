@@ -32,34 +32,31 @@ public class CFReportWriterTest {
     public void canGeneratePatientReportForCOLO829() throws IOException {
         AnalysedPatientReport colo829Report = ExampleAnalysisTestFactory.buildCOLO829();
 
-        CFReportWriter writer = new CFReportWriter();
-        writer.setWriteToFile(WRITE_TO_PDF);
-        writer.writeAnalysedPatientReport(colo829Report, getReportFilePath("hmf_test_sequence_report.pdf"));
+        CFReportWriter writer = new CFReportWriter(WRITE_TO_PDF);
+        writer.writeAnalysedPatientReport(colo829Report, testReportFilePath("hmf_test_sequence_report.pdf"));
     }
 
     @Test
     public void canGeneratePatientReportForCompletelyFilledInReport() throws IOException {
         AnalysedPatientReport patientReport = ExampleAnalysisTestFactory.buildAnalysisWithAllTablesFilledIn();
 
-        CFReportWriter writer = new CFReportWriter();
-        writer.setWriteToFile(WRITE_TO_PDF);
-        writer.writeAnalysedPatientReport(patientReport, getReportFilePath("hmf_full_test_sequence_report.pdf"));
+        CFReportWriter writer = new CFReportWriter(WRITE_TO_PDF);
+        writer.writeAnalysedPatientReport(patientReport, testReportFilePath("hmf_full_test_sequence_report.pdf"));
     }
 
     @Test
     public void canGenerateLowTumorPercentageReport() throws IOException {
-        generateQCFailCPCTReport(0.1, null, QCFailReason.LOW_TUMOR_PERCENTAGE, getReportFilePath("hmf_low_tumor_percentage_report.pdf"));
+        generateQCFailCPCTReport(0.1, null, QCFailReason.LOW_TUMOR_PERCENTAGE, testReportFilePath("hmf_low_tumor_percentage_report.pdf"));
     }
 
     @Test
     public void canGenerateLowDNAYieldReport() throws IOException {
-        generateQCFailCPCTReport(0.6, null, QCFailReason.LOW_DNA_YIELD, getReportFilePath("hmf_low_dna_yield_report.pdf"));
+        generateQCFailCPCTReport(0.6, null, QCFailReason.LOW_DNA_YIELD, testReportFilePath("hmf_low_dna_yield_report.pdf"));
     }
 
     @Test
     public void canGeneratePostDNAIsolationFailReport() throws IOException {
-        generateQCFailCPCTReport(0.6, null, QCFailReason.POST_ANALYSIS_FAIL, getReportFilePath("hmf_post_dna_isolation_fail_report.pdf"));
-
+        generateQCFailCPCTReport(0.6, null, QCFailReason.POST_ANALYSIS_FAIL, testReportFilePath("hmf_post_dna_isolation_fail_report.pdf"));
     }
 
     @Test
@@ -67,7 +64,7 @@ public class CFReportWriterTest {
         generateQCFailCPCTReport(null,
                 0.15,
                 QCFailReason.SHALLOW_SEQ_LOW_PURITY,
-                getReportFilePath("hmf_low_molecular_tumor_percentage_report.pdf"));
+                testReportFilePath("hmf_low_molecular_tumor_percentage_report.pdf"));
     }
 
     private static void generateQCFailCPCTReport(@Nullable Double pathologyTumorPercentage, @Nullable Double shallowSeqPurity,
@@ -98,18 +95,16 @@ public class CFReportWriterTest {
                 testBaseReportData().logoRVAPath(),
                 testBaseReportData().logoCompanyPath());
 
-        CFReportWriter writer = new CFReportWriter();
-        writer.setWriteToFile(WRITE_TO_PDF);
+        CFReportWriter writer = new CFReportWriter(WRITE_TO_PDF);
         writer.writeQCFailReport(patientReport, filename);
     }
 
     @NotNull
-    private static String getReportFilePath(@NotNull String filename) {
+    private static String testReportFilePath(@NotNull String filename) {
         if (TIMESTAMP_FILES) {
             int extensionStart = filename.lastIndexOf('.');
             filename = filename.substring(0, extensionStart) + "_" + System.currentTimeMillis() + filename.substring(extensionStart);
         }
         return REPORT_BASE_DIR + File.separator + filename;
-
     }
 }
