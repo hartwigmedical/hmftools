@@ -39,14 +39,12 @@ public final class SidePanel {
         // Add side panel content that is only on the summary page
         if (fullHeight && fullContent) {
 
-            final String contactNames =
-                    "Dr. Nola Pluijmen"; // @TODO Replace with sampleReport.contactNames() which can be null or empty string
+            final String contactNames = sampleReport.requesterName();
             if (contactNames != null && !contactNames.isEmpty()) {
                 cv.add(createSidePanelDiv(sideTextIndex++, "Name requestor", contactNames));
             }
 
-            final String contactEmails =
-                    "NolaPluijmen415@gmail.com"; // @TODO Replace with sampleReport.contactEmails() which can be null or empty string
+            final String contactEmails = sampleReport.requesterEmail();
             if (contactEmails != null && !contactEmails.isEmpty()) {
                 cv.add(createSidePanelDiv(sideTextIndex++, "Email requestor", contactEmails));
             }
