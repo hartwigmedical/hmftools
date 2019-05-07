@@ -88,7 +88,7 @@ public class ActionableOrDriversChapter implements ReportChapter {
             contentTable.addCell(TableUtil.getContentCell(SomaticVariants.getBiallelicString(variant.biallelic(),
                     variant.driverCategory(),
                     hasReliablePurityFit)));
-            contentTable.addCell(TableUtil.getContentCell("Medium")); //SomaticVariants.getDriverString(variant.driverLikelihood())
+            contentTable.addCell(TableUtil.getContentCell(SomaticVariants.getDriverString(variant.driverLikelihood())));
         }
 
         // Add table footnotes
