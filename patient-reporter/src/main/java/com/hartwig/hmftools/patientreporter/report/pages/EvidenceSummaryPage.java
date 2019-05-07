@@ -40,7 +40,7 @@ public abstract class EvidenceSummaryPage {
 
     @NotNull
     public ComponentBuilder<?, ?> reportComponent() {
-        if (report().hasSummarySample()) {
+        if (!report().summarySample().isEmpty()) {
             return cmp.verticalList(MainSection(report()),
                     cmp.verticalGap(SECTION_VERTICAL_GAP),
                     summarySample(report()),
@@ -66,7 +66,7 @@ public abstract class EvidenceSummaryPage {
     }
 
     private static ComponentBuilder<?,?> MainSection(@NotNull AnalysedPatientReport report) {
-        return MainPageTopSection.build(Commons.TITLE_SEQUENCE, report.sampleReport());
+        return MainPageTopSection.build(Commons.TITLE_SEQUENCE, report);
     }
 
     private static VerticalListBuilder summarySample(@NotNull AnalysedPatientReport report) {

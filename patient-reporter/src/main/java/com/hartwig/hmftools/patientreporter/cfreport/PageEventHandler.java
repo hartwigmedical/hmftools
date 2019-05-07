@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.patientreporter.cfreport;
 
+import com.hartwig.hmftools.patientreporter.PatientReport;
 import com.hartwig.hmftools.patientreporter.SampleReport;
 import com.hartwig.hmftools.patientreporter.cfreport.components.Footer;
 import com.hartwig.hmftools.patientreporter.cfreport.components.Header;
@@ -31,9 +32,9 @@ class PageEventHandler implements IEventHandler {
 
     private PdfOutline outline = null;
 
-    public PageEventHandler(@NotNull final SampleReport sampleReport) {
-        this.sampleReport = sampleReport;
-        this.header = new Header();
+    PageEventHandler(@NotNull final PatientReport patientReport) {
+        this.sampleReport = patientReport.sampleReport();
+        this.header = new Header(patientReport.logoCompanyPath());
         this.footer = new Footer();
     }
 

@@ -22,4 +22,7 @@ public interface PatientReport {
 
     @NotNull
     String logoRVAPath();
+
+    @NotNull
+    String logoCompanyPath();
 }

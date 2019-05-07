@@ -7,6 +7,8 @@ import static com.hartwig.hmftools.patientreporter.report.Commons.tableHeaderSty
 
 import static net.sf.dynamicreports.report.builder.DynamicReports.cmp;
 
+import com.hartwig.hmftools.patientreporter.AnalysedPatientReport;
+import com.hartwig.hmftools.patientreporter.PatientReport;
 import com.hartwig.hmftools.patientreporter.SampleReport;
 
 import org.jetbrains.annotations.NotNull;
@@ -18,16 +20,17 @@ import net.sf.dynamicreports.report.constant.VerticalTextAlignment;
 public final class MainPageTopSection {
 
     @NotNull
-    private static final String REPORT_LOGO_PATH = "pdf/hartwig_logo.jpg";
-
-    @NotNull
-    public static ComponentBuilder<?, ?> build(@NotNull String title, @NotNull SampleReport report) {
-        return build(report.buildReportTitle(title), report.primaryTumorLocationString(), report.cancerSubTypeString());
+    public static ComponentBuilder<?, ?> build(@NotNull String title, @NotNull PatientReport report) {
+        SampleReport sampleReport = report.sampleReport();
+        return build(sampleReport.buildReportTitle(title),
+                sampleReport.primaryTumorLocationString(),
+                sampleReport.cancerSubTypeString(),
+                report.logoCompanyPath());
     }
 
     @NotNull
-    private static ComponentBuilder<?, ?> build(@NotNull String title, @NotNull String primaryTumorLocation,
-            @NotNull String cancerSubType) {
+    private static ComponentBuilder<?, ?> build(@NotNull String title, @NotNull String primaryTumorLocation, @NotNull String cancerSubType,
+            @NotNull String companyLogoPath) {
         final ComponentBuilder<?, ?> mainDiagnosisInfo =
                 cmp.horizontalList(cmp.verticalList(cmp.text("Report Date").setStyle(tableHeaderStyle().setPadding(2)),
                         cmp.currentDate().setPattern(DATE_TIME_FORMAT).setStyle(dataTableStyle().setPadding(2))),
@@ -36,7 +39,7 @@ public final class MainPageTopSection {
                         cmp.verticalList(cmp.text("Cancer Subtype").setStyle(tableHeaderStyle().setPadding(2)),
                                 cmp.text(cancerSubType).setStyle(dataTableStyle().setPadding(2))));
 
-        return cmp.verticalList(cmp.horizontalList(cmp.image(REPORT_LOGO_PATH).setWidth(42).setHeight(65),
+        return cmp.verticalList(cmp.horizontalList(cmp.image(companyLogoPath).setWidth(42).setHeight(65),
                 cmp.text(title)
                         .setStyle(fontStyle().bold().setFontSize(14).setVerticalTextAlignment(VerticalTextAlignment.MIDDLE))
                         .setHorizontalTextAlignment(HorizontalTextAlignment.CENTER),

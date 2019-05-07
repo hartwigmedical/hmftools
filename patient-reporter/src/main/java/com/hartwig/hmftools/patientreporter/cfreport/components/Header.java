@@ -1,7 +1,9 @@
 package com.hartwig.hmftools.patientreporter.cfreport.components;
 
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
+import com.hartwig.hmftools.patientreporter.report.pages.SampleDetailsPage;
 import com.itextpdf.io.image.ImageData;
+import com.itextpdf.io.image.ImageDataFactory;
 import com.itextpdf.kernel.geom.Rectangle;
 import com.itextpdf.kernel.pdf.PdfDocument;
 import com.itextpdf.kernel.pdf.PdfPage;
@@ -9,28 +11,32 @@ import com.itextpdf.kernel.pdf.canvas.PdfCanvas;
 import com.itextpdf.kernel.pdf.xobject.PdfFormXObject;
 import com.itextpdf.kernel.pdf.xobject.PdfImageXObject;
 import com.itextpdf.layout.Canvas;
+import com.itextpdf.layout.element.Image;
 import com.itextpdf.layout.element.Paragraph;
 import com.itextpdf.layout.element.Text;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
+import java.net.MalformedURLException;
 import java.util.ArrayList;
 
 public final class Header {
 
-    private static final String HMF_LOGO_PATH = "pdf/hartwig_logo.jpg";
+    private static final Logger LOGGER = LogManager.getLogger(SampleDetailsPage.class);
 
     private PdfImageXObject hmfLogoObj;
 
     private ArrayList<ChapterPageCounter> chapterPageCounters = new ArrayList<>();
 
-    public Header() {
-        // Attempt to load image object
-        ImageData imgData = ReportResources.loadImageData(HMF_LOGO_PATH);
-        if (imgData != null) {
-            hmfLogoObj = new PdfImageXObject(imgData);
+    public Header(@NotNull String logoCompanyPath) {
+        try {
+            final ImageData companyLogoImage = ImageDataFactory.create(logoCompanyPath);
+            hmfLogoObj = new PdfImageXObject(companyLogoImage);
+        } catch (MalformedURLException e) {
+            LOGGER.warn("Could not load company logo image from " + logoCompanyPath);
         }
-
     }
 
     public void renderHeader(@NotNull String chapterTitle, boolean firstPageOfChapter, @NotNull PdfPage page) {

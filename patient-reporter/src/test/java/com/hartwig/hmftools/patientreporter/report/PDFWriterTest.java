@@ -128,7 +128,8 @@ public class PDFWriterTest {
                 QCFailStudy.CPCT,
                 Optional.empty(),
                 testBaseReportData().signaturePath(),
-                testBaseReportData().logoRVAPath());
+                testBaseReportData().logoRVAPath(),
+                testBaseReportData().logoCompanyPath());
 
         return PDFWriter.generateQCFailReport(patientReport);
     }

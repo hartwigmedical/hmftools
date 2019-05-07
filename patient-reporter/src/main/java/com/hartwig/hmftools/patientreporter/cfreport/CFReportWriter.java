@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.patientreporter.cfreport;
 
 import com.hartwig.hmftools.patientreporter.AnalysedPatientReport;
+import com.hartwig.hmftools.patientreporter.PatientReport;
 import com.hartwig.hmftools.patientreporter.QCFailReport;
 import com.hartwig.hmftools.patientreporter.ReportWriter;
 import com.hartwig.hmftools.patientreporter.SampleReport;
@@ -31,7 +32,7 @@ public class CFReportWriter implements ReportWriter {
     @Override
     public void writeAnalysedPatientReport(@NotNull final AnalysedPatientReport report, @NotNull final String outputFilePath)
             throws IOException {
-        writeReport(report.sampleReport(),
+        writeReport(report,
                 new ReportChapter[] { new SummaryChapter(report), new TherapyDetailsChapter(report), new ActionableOrDriversChapter(report),
                         new TumorCharacteristicsChapter(report), new CircosChapter(report), new ExplanationChapter(),
                         new DetailsAndDisclaimerChapter(report) },
@@ -40,21 +41,21 @@ public class CFReportWriter implements ReportWriter {
 
     @Override
     public void writeQCFailReport(@NotNull final QCFailReport report, @NotNull final String outputFilePath) throws IOException {
-        writeReport(report.sampleReport(), new ReportChapter[] { new QCFailChapter(report) }, outputFilePath);
+        writeReport(report, new ReportChapter[] { new QCFailChapter(report) }, outputFilePath);
     }
 
     public void setWriteToFile(boolean writeToFile) {
         this.writeToFile = writeToFile;
     }
 
-    private void writeReport(@NotNull final SampleReport sampleReport, @NotNull ReportChapter[] chapters, @NotNull String outputFilePath)
+    private void writeReport(@NotNull final PatientReport patientReport, @NotNull ReportChapter[] chapters, @NotNull String outputFilePath)
             throws IOException {
         // Initialize report with metadata
         final Document doc = initializeReport(outputFilePath);
         final PdfDocument pdfDocument = doc.getPdfDocument();
 
         // Setup page event handling (used for automatic generation of header, side panel and footer)
-        PageEventHandler pageEventHandler = new PageEventHandler(sampleReport);
+        PageEventHandler pageEventHandler = new PageEventHandler(patientReport);
         pdfDocument.addEventHandler(PdfDocumentEvent.START_PAGE, pageEventHandler);
 
         // Write chapters to report

@@ -10,6 +10,7 @@ import static com.hartwig.hmftools.patientreporter.report.Commons.tableHeaderSty
 import static net.sf.dynamicreports.report.builder.DynamicReports.cmp;
 
 import com.hartwig.hmftools.common.lims.LimsSampleType;
+import com.hartwig.hmftools.patientreporter.PatientReport;
 import com.hartwig.hmftools.patientreporter.QCFailReport;
 import com.hartwig.hmftools.patientreporter.SampleReport;
 import com.hartwig.hmftools.patientreporter.qcfail.QCFailReason;
@@ -29,27 +30,37 @@ import net.sf.dynamicreports.report.builder.component.TextFieldBuilder;
 public abstract class QCFailPage {
 
     @NotNull
-    abstract SampleReport sampleReport();
+    abstract QCFailReport report();
 
+    @Value.Derived
     @NotNull
-    abstract String user();
+    SampleReport sampleReport() {
+        return report().sampleReport();
+    }
 
+    @Value.Derived
     @NotNull
-    abstract QCFailReason reason();
+    String user() {
+        return report().user();
+    }
 
+    @Value.Derived
     @NotNull
-    abstract QCFailStudy study();
+    QCFailReason reason() {
+        return report().reason();
+    }
 
+    @Value.Derived
     @NotNull
-    public static QCFailPage of(@NotNull QCFailReport report) {
-        return ImmutableQCFailPage.of(report.sampleReport(), report.user(), report.reason(), report.study());
+    QCFailStudy study() {
+        return report().study();
     }
 
     @NotNull
     public ComponentBuilder<?, ?> reportComponent() {
-        return cmp.verticalList(MainPageTopSection.build(reason().title(), sampleReport()),
+        return cmp.verticalList(MainPageTopSection.build(reason().title(), report()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
-                mainPageQCFailSection(sampleReport().sampleId()));
+                mainPageQCFailSection(report().sampleReport().sampleId()));
     }
 
     @NotNull

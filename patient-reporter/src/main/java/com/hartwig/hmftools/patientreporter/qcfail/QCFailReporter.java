@@ -44,6 +44,7 @@ public abstract class QCFailReporter {
                 study,
                 Optional.ofNullable(comments),
                 baseReportData().signaturePath(),
-                baseReportData().logoRVAPath());
+                baseReportData().logoRVAPath(),
+                baseReportData().logoCompanyPath());
     }
 }

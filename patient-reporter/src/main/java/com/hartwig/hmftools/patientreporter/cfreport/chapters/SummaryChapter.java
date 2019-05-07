@@ -64,14 +64,8 @@ public class SummaryChapter implements ReportChapter {
 
         // @TODO Replace this fixed text with the patientReport.summaryText method.
         // Return value from that method can be null which is gracefully handled by renderSummaryText :
-        // final String summaryContent = patientReport.summaryText();
-        final String summaryContent = "Melanoma sample with an activating BRAF mutation that is associated with "
-                + "response to BRAF-inhibitors (in combination with an MEK-inhibitor). The tumor shows a complete "
-                + "inactivation of CDKN2A, indicating potential benefit of CDK4/6 inhibitors (e.g. palbociclib). The "
-                + "observed complete loss of PTEN likely results in an activation of the PI3K-AKT-mTOR pathway and "
-                + "suggests eligibility for treatment (study) using mTOR/PI3K inhibitors. In addition, the tumor samples "
-                + "shows a high mutational burden that is associated with an increased response rate to checkpoint "
-                + "inhibitor immunotherapy.";
+
+        final String summaryContent = patientReport.summarySample();
         renderSummaryText(summaryContent, reportDocument);
 
         renderTreatmentIndications(patientReport.tumorSpecificEvidence(), patientReport.clinicalTrials(), reportDocument);
@@ -80,7 +74,7 @@ public class SummaryChapter implements ReportChapter {
     }
 
     private void renderSummaryText(@Nullable final String text, @NotNull final Document reportDocument) {
-        if (text == null) {
+        if (text == null || text.isEmpty()) {
             return;
         }
 
@@ -216,8 +210,7 @@ public class SummaryChapter implements ReportChapter {
 
         // Genes with driver variant
         final String[] driverVariantGenes = SomaticVariants.somaticVariantsWithDriver(patientReport.reportableVariants());
-        table.addCell(createMiddleAlignedCell()
-                .setVerticalAlignment(VerticalAlignment.TOP)
+        table.addCell(createMiddleAlignedCell().setVerticalAlignment(VerticalAlignment.TOP)
                 .add(new Paragraph("Genes with driver variant").addStyle(BODY_TEXT_STYLE)));
         table.addCell(createGeneListCell(driverVariantGenes));
 
@@ -231,22 +224,19 @@ public class SummaryChapter implements ReportChapter {
 
         // Copy gain genes
         final String[] copyGainGenes = GeneCopyNumbers.amplificationGenes(patientReport.geneCopyNumbers());
-        table.addCell(createMiddleAlignedCell()
-                .setVerticalAlignment(VerticalAlignment.TOP)
+        table.addCell(createMiddleAlignedCell().setVerticalAlignment(VerticalAlignment.TOP)
                 .add(new Paragraph("Genes with copy-gain").addStyle(BODY_TEXT_STYLE)));
         table.addCell(createGeneListCell(copyGainGenes));
 
         // Copy loss genes
         final String[] copyLossGenes = GeneCopyNumbers.lossGenes(patientReport.geneCopyNumbers());
-        table.addCell(createMiddleAlignedCell()
-                .setVerticalAlignment(VerticalAlignment.TOP)
+        table.addCell(createMiddleAlignedCell().setVerticalAlignment(VerticalAlignment.TOP)
                 .add(new Paragraph("Genes with copy-loss").addStyle(BODY_TEXT_STYLE)));
         table.addCell(createGeneListCell(copyLossGenes));
 
         // Gene fusions
         final String[] fusionGenes = GeneFusions.geneFusions(patientReport.geneFusions());
-        table.addCell(createMiddleAlignedCell()
-                .setVerticalAlignment(VerticalAlignment.TOP)
+        table.addCell(createMiddleAlignedCell().setVerticalAlignment(VerticalAlignment.TOP)
                 .add(new Paragraph("Gene fusions").addStyle(BODY_TEXT_STYLE)));
         table.addCell(createGeneListCell(fusionGenes));
 

@@ -95,7 +95,8 @@ public class CFReportWriterTest {
                 QCFailStudy.CPCT,
                 Optional.empty(),
                 testBaseReportData().signaturePath(),
-                testBaseReportData().logoRVAPath());
+                testBaseReportData().logoRVAPath(),
+                testBaseReportData().logoCompanyPath());
 
         CFReportWriter writer = new CFReportWriter();
         writer.setWriteToFile(WRITE_TO_PDF);
