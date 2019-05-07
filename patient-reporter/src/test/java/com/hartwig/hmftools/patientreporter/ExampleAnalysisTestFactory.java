@@ -73,9 +73,17 @@ public final class ExampleAnalysisTestFactory {
 
         final SampleReport sampleReport = createCOLO829SampleReport();
 
+        final String summaryContent = "Melanoma sample with an activating BRAF mutation that is associated with "
+                + "response to BRAF-inhibitors (in combination with an MEK-inhibitor). The tumor shows a complete "
+                + "inactivation of CDKN2A, indicating potential benefit of CDK4/6 inhibitors (e.g. palbociclib). The "
+                + "observed complete loss of PTEN likely results in an activation of the PI3K-AKT-mTOR pathway and "
+                + "suggests eligibility for treatment (study) using mTOR/PI3K inhibitors. In addition, the tumor samples "
+                + "shows a high mutational burden that is associated with an increased response rate to checkpoint "
+                + "inhibitor immunotherapy.";
+
         return ImmutableAnalysedPatientReport.of(sampleReport,
                 true,
-                "this is a test summary",
+                summaryContent,
                 fittedPurity.purity(),
                 true,
                 fittedPurity.ploidy(),
@@ -121,7 +129,7 @@ public final class ExampleAnalysisTestFactory {
 
         return ImmutableAnalysedPatientReport.of(sampleReport,
                 false,
-                "this is a test summary",
+                "",
                 fittedPurity.purity(),
                 true,
                 fittedPurity.ploidy(),
