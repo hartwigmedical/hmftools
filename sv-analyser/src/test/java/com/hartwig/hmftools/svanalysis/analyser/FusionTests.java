@@ -286,8 +286,8 @@ public class FusionTests
         String disruptionsDown = fields[5];
 
         // test the exons disrupted and terminated fields
-        boolean validUp = isDisrupted(disruptionsUp);
-        boolean validDown = isDisrupted(disruptionsDown);
+        boolean validUp = !isDisrupted(disruptionsUp);
+        boolean validDown = !isDisrupted(disruptionsDown);
 
         if(validEnds)
             return validUp && validDown;

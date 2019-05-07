@@ -101,7 +101,7 @@ public class ClusterAnnotations
             if(cluster.getChains().isEmpty())
                 continue;
 
-            isSpecificCluster(cluster);
+            // isSpecificCluster(cluster);
 
             // gather up start and end arms from each chain, to determine origin arms for the cluster
             List<String> startEndArms = Lists.newArrayList();
