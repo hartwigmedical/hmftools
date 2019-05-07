@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.patientreporter.cfreport.chapters;
 
+import com.hartwig.hmftools.common.lims.LimsSampleType;
 import com.hartwig.hmftools.patientreporter.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.SampleReport;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
@@ -56,11 +57,17 @@ public class DetailsAndDisclaimerChapter implements ReportChapter {
     @NotNull
     private static Div createSampleDetailsDiv(@NotNull final AnalysedPatientReport patientReport) {
         final SampleReport sampleReport = patientReport.sampleReport();
+        LimsSampleType type = LimsSampleType.fromSampleId(patientReport.sampleReport().sampleId());
 
         String addressee = sampleReport.addressee();
         if (addressee == null) {
             LOGGER.warn("No recipient address present for sample " + sampleReport.sampleId());
             addressee = DataUtil.NAString;
+        }
+
+        String sampleIdentificationLine = "The HMF sample ID is: " + patientReport.sampleReport().sampleId();
+        if (type == LimsSampleType.WIDE) {
+            sampleIdentificationLine += " and the tissue ID of pathology is: " + patientReport.sampleReport().hospitalPathologySampleId();
         }
 
         Div div = new Div();
@@ -71,14 +78,23 @@ public class DetailsAndDisclaimerChapter implements ReportChapter {
         // Content
         div.add(createContentParagraph("The samples have been sequenced at ", ReportResources.HARTWIG_ADDRESS));
         div.add(createContentParagraph("The samples have been analyzed by Next Generation Sequencing "));
-        div.add(createContentParagraph("This experiment is performed on the tumor sample which arrived on ",
-                DataUtil.formatDate(sampleReport.tumorArrivalDate())));
+        div.add(createContentParagraph(sampleIdentificationLine));
         div.add(createContentParagraph("The pathology tumor percentage for this sample is " + sampleReport.pathologyTumorPercentage()));
+        div.add(createContentParagraph("This experiment is performed on the tumor sample which arrived on ",
+                DataUtil.formatDate(sampleReport.tumorArrivalDate()) + " with internal tumor barcode " + sampleReport.tumorBarcode()));
         div.add(createContentParagraph("This experiment is performed on the blood sample which arrived on ",
-                DataUtil.formatDate(sampleReport.refArrivalDate())));
+                DataUtil.formatDate(sampleReport.refArrivalDate()) + " with internal blood barcode " + sampleReport.refBarcode()));
         div.add(createContentParagraph("This experiment is performed according to lab procedures: " + sampleReport.labProcedures()));
         div.add(createContentParagraph("This report is generated and verified by: " + patientReport.user()));
         div.add(createContentParagraph("This report is addressed at: " + addressee));
+
+        if (type == LimsSampleType.CORE) {
+            div.add(createContentParagraph("The hospital patient ID is: " + sampleReport.hospitalPatientId()));
+            div.add(createContentParagraph("The project name of sample is: " + sampleReport.projectName() + " and the submission ID is "
+                    + sampleReport.submissionId()));
+            div.add(createContentParagraph(
+                    "The requester is: " + sampleReport.requesterName() + " (" + sampleReport.requesterEmail() + ")"));
+        }
         patientReport.comments().ifPresent(comments -> div.add(createContentParagraph("Comments: " + comments)));
 
         return div;
@@ -101,7 +117,6 @@ public class DetailsAndDisclaimerChapter implements ReportChapter {
         return div;
 
     }
-
 
     @NotNull
     private static Paragraph createContentParagraph(@NotNull String text) {

@@ -16,9 +16,13 @@ import com.itextpdf.layout.element.Paragraph;
 import com.itextpdf.layout.element.Table;
 import com.itextpdf.layout.property.UnitValue;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 public class QCFailChapter implements ReportChapter {
+
+    private static final Logger LOGGER = LogManager.getLogger(QCFailChapter.class);
 
     private final QCFailReport failReport;
 
@@ -52,10 +56,17 @@ public class QCFailChapter implements ReportChapter {
 
         // Content body
         LimsSampleType type = LimsSampleType.fromSampleId(failReport.sampleReport().sampleId());
-        if (type == LimsSampleType.CORE) {
-            reportDocument.add(createCoreContentBody());
-        } else {
-            reportDocument.add(createCPCTDRUPContentBody());
+        LOGGER.info("type sample: " + type);
+        switch (type) {
+            case CORE:
+                reportDocument.add(createCoreContentBody());
+                break;
+            case WIDE:
+                reportDocument.add(createWIDEContentBody());
+                break;
+            default:
+                reportDocument.add(createCPCTDRUPContentBody());
+
         }
 
         // End of report
@@ -117,6 +128,19 @@ public class QCFailChapter implements ReportChapter {
 
         return div;
 
+    }
+
+    @NotNull
+    private Table createWIDEContentBody() {
+        return createContentTable(new String[] { notSequencedText(),
+                        "When possible, please resubmit using the same " + failReport.study().studyName() + "-number. "
+                                + "In case additional tumor material cannot be provided, please be notified that the patient will not be "
+                                + "evaluable for the " + failReport.study().studyCode() + " study.",
+                        "The HMF sample ID is " + failReport.sampleReport().sampleId() + "and the tissue ID of pathology is: "
+                                + failReport.sampleReport().hospitalPathologySampleId(),
+                        "The internal tumor barcode is " + failReport.sampleReport().tumorBarcode() + " and the internal blood barcode is "
+                                + failReport.sampleReport().refBarcode() },
+                new String[] { shallowSeqText(), sampleArrivalDateText(), recipientText(), accreditationText(), questionsText() });
     }
 
     @NotNull
