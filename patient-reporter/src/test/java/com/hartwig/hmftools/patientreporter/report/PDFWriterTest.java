@@ -23,6 +23,7 @@ import com.hartwig.hmftools.patientreporter.qcfail.QCFailReason;
 import com.hartwig.hmftools.patientreporter.qcfail.QCFailStudy;
 import com.hartwig.hmftools.patientreporter.report.util.PatientReportFormat;
 
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.junit.Test;
@@ -115,6 +116,9 @@ public class PDFWriterTest {
                         pathologyTumorPercentage != null ? PatientReportFormat.formatPercent(pathologyTumorPercentage) : "not determined")
                 .labProcedures("PREP013V23-QC037V20-SEQ008V25")
                 .addressee("HMF Testing Center")
+                .hospitalName(Strings.EMPTY)
+                .hospitalPIName(Strings.EMPTY)
+                .hospitalPIEmail(Strings.EMPTY)
                 .projectName("COLO-001-002")
                 .requesterName("ContactMe")
                 .requesterEmail("contact@me.com")

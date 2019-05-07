@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.patientreporter.cfreport.chapters;
 
 import com.hartwig.hmftools.common.lims.LimsSampleType;
-import com.hartwig.hmftools.patientreporter.PatientReporterApplication;
 import com.hartwig.hmftools.patientreporter.QCFailReport;
 import com.hartwig.hmftools.patientreporter.SampleReport;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
@@ -17,13 +16,9 @@ import com.itextpdf.layout.element.Paragraph;
 import com.itextpdf.layout.element.Table;
 import com.itextpdf.layout.property.UnitValue;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 public class QCFailChapter implements ReportChapter {
-
-    private static final Logger LOGGER = LogManager.getLogger(QCFailChapter.class);
 
     @NotNull
     private final QCFailReport failReport;
@@ -59,7 +54,7 @@ public class QCFailChapter implements ReportChapter {
         reportDocument.add(LineDivider.createLineDivider(contentWidth()).setMarginTop(10));
 
         LimsSampleType type = LimsSampleType.fromSampleId(failReport.sampleReport().sampleId());
-        LOGGER.info("type sample: " + type);
+
         switch (type) {
             case CORE:
                 reportDocument.add(createCoreContentBody());

@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.patientreporter.cfreport.components;
 
+import com.hartwig.hmftools.common.hospital.HospitalModel;
 import com.hartwig.hmftools.patientreporter.PatientReporterApplication;
 import com.hartwig.hmftools.patientreporter.SampleReport;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
@@ -35,17 +36,17 @@ public final class SidePanel {
         cv.add(createSidePanelDiv(sideTextIndex++, "Report date", ReportResources.REPORT_DATE));
 
         if (fullHeight && fullContent) {
-            final String contactNames = sampleReport.requesterName();
+            final String contactNames = sampleReport.hospitalPIName();
             if (!contactNames.isEmpty()) {
                 cv.add(createSidePanelDiv(sideTextIndex++, "Name requestor", contactNames));
             }
 
-            final String contactEmails = sampleReport.requesterEmail();
+            final String contactEmails = sampleReport.hospitalPIEmail();
             if (!contactEmails.isEmpty()) {
                 cv.add(createSidePanelDiv(sideTextIndex++, "Email requestor", contactEmails));
             }
 
-            final String hospitalName = "OLVG Oost"; // @TODO Replace with sampleReport.hospital() which can be null or empty string
+            final String hospitalName = sampleReport.hospitalName(); // @TODO Replace with sampleReport.hospital() which can be null or empty string
             if (hospitalName != null && !hospitalName.isEmpty()) {
                 cv.add(createSidePanelDiv(sideTextIndex++, "Hospital", hospitalName));
             }
@@ -55,16 +56,18 @@ public final class SidePanel {
                 cv.add(createSidePanelDiv(sideTextIndex++, "Hospital patient id", hospitalPatientId));
             }
 
-            final String patientGender = "Female"; // @TODO Replace with sampleReport.patientGender() which can be null or empty string
-            if (patientGender != null && !patientGender.isEmpty()) {
-                cv.add(createSidePanelDiv(sideTextIndex++, "Gender", patientGender));
-            }
-
-            final LocalDate patientBirthDate =
-                    LocalDate.of(1973, 10, 4); // @TODO Replace with sampleReport.patientBirthDate() which can be null
-            if (patientBirthDate != null) {
-                cv.add(createSidePanelDiv(sideTextIndex, "Birth date", DataUtil.formatDate(patientBirthDate)));
-            }
+            // @TODO: Decide add to report
+            //            final String patientGender = "Female"; // @TODO Replace with sampleReport.patientGender() which can be null or empty string
+//            if (patientGender != null && !patientGender.isEmpty()) {
+//                cv.add(createSidePanelDiv(sideTextIndex++, "Gender", patientGender));
+//            }
+//
+            // @TODO: Decide add to report
+            //            final LocalDate patientBirthDate =
+//                    LocalDate.of(1973, 10, 4); // @TODO Replace with sampleReport.patientBirthDate() which can be null
+//            if (patientBirthDate != null) {
+//                cv.add(createSidePanelDiv(sideTextIndex, "Birth date", DataUtil.formatDate(patientBirthDate)));
+//            }
         }
 
         if (page.getDocument().getNumberOfPages() == 1) {
