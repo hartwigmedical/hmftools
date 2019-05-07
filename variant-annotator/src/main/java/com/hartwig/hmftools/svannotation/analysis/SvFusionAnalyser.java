@@ -602,7 +602,6 @@ public class SvFusionAnalyser
         return reportableFusion;
     }
 
-
     public String getKnownFusionType(final Transcript upTrans, final Transcript downTrans)
     {
         if(mHasValidConfigData && mKnownFusionsModel == null)

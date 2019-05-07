@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.svanalysis.types;
 
+import static com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion.REPORTABLE_TYPE_NONE;
 import static com.hartwig.hmftools.svanalysis.types.SvChain.CHAIN_LENGTH;
 import static com.hartwig.hmftools.svanalysis.types.SvChain.CHAIN_LINK_COUNT;
 
@@ -36,6 +37,7 @@ public class RnaFusionData
     private int mExonMaxRankDown;
 
     private boolean mViableFusion; // the pair of transcripts satisfied standard fusion rules
+    private boolean mPhaseMatchedFusion;
     private String mKnownFusionType;
     private boolean mTransViableUp; // the transcript fell in the correct location relative to the RNA position
     private boolean mTransViableDown;
@@ -79,7 +81,8 @@ public class RnaFusionData
         mBreakendDown = null;
 
         mViableFusion = false;
-        mKnownFusionType = "";
+        mPhaseMatchedFusion = false;
+        mKnownFusionType = REPORTABLE_TYPE_NONE;
         mTransViableUp = false;
         mTransViableDown = false;
         mTransCorrectLocationUp = false;
@@ -109,7 +112,11 @@ public class RnaFusionData
     public int exonMinRankDown() { return mExonMinRankDown; }
     public int exonMaxRankDown() { return mExonMaxRankDown; }
 
-    public void setViableFusion(boolean toggle) { mViableFusion = toggle; }
+    public void setViableFusion(boolean viable, boolean phaseMatched)
+    {
+        mViableFusion = viable;
+        mPhaseMatchedFusion = phaseMatched;
+    }
 
     public void setTranscriptData(boolean isUpstream, final Transcript trans, final SvBreakend breakend,
             boolean matchedRnaBoundary, boolean correctLocation, int exonsSkipped)
@@ -139,6 +146,7 @@ public class RnaFusionData
     public final int getExonsSkipped(boolean isUpstream) { return isUpstream ? mExonsSkippedUp : mExonsSkippedDown; }
 
     public boolean isViableFusion() { return mViableFusion; }
+    public boolean isPhaseMatchedFusion() { return mPhaseMatchedFusion; }
 
     public void setKnownType(final String knownType) { mKnownFusionType = knownType; }
     public final String getKnownType() { return mKnownFusionType; }
