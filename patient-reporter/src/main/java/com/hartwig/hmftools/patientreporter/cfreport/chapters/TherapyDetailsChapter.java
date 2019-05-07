@@ -71,11 +71,8 @@ public class TherapyDetailsChapter implements ReportChapter {
     }
 
     @NotNull
-    private static Table createEvidenceTable(@NotNull String title, @NotNull final List<EvidenceItem> evidence) {
-        final List<EvidenceItem> filteredAndSortedEvidence = EvidenceItems.sort(EvidenceItems.filter(evidence));
-        assert filteredAndSortedEvidence.size() == evidence.size();
-
-        if (filteredAndSortedEvidence.isEmpty()) {
+    private static Table createEvidenceTable(@NotNull String title, @NotNull List<EvidenceItem> evidence) {
+        if (evidence.isEmpty()) {
             return TableUtil.createNoneReportTable(title);
         }
 
@@ -85,7 +82,8 @@ public class TherapyDetailsChapter implements ReportChapter {
                         TableUtil.getHeaderCell("Level of evidence"), TableUtil.getHeaderCell("Response"),
                         TableUtil.getHeaderCell("Source") });
 
-        for (EvidenceItem item : filteredAndSortedEvidence) {
+        final List<EvidenceItem> sortedEvidence = EvidenceItems.sort(evidence);
+        for (EvidenceItem item : sortedEvidence) {
             String[] treatments = item.drug().split(Pattern.quote(TREATMENT_DELIMITER));
 
             contentTable.addCell(TableUtil.getContentCell(item.event()));
@@ -104,10 +102,8 @@ public class TherapyDetailsChapter implements ReportChapter {
     @NotNull
     private static Table createClinicalTrialsTable(@NotNull final List<ClinicalTrial> trials) {
         final String title = "Clinical trials (NL)";
-        final List<ClinicalTrial> filteredAndSortedTrials = ClinicalTrials.sort(ClinicalTrials.filter(trials));
-        assert filteredAndSortedTrials.size() == trials.size();
 
-        if (filteredAndSortedTrials.isEmpty()) {
+        if (trials.isEmpty()) {
             return TableUtil.createNoneReportTable(title);
         }
 
@@ -118,7 +114,8 @@ public class TherapyDetailsChapter implements ReportChapter {
                                 TableUtil.getHeaderCell("Treatments", 2), TableUtil.getHeaderCell("CCMO"),
                                 TableUtil.getHeaderCell("Source") });
 
-        for (ClinicalTrial trial : filteredAndSortedTrials) {
+        final List<ClinicalTrial> sortedTrials = ClinicalTrials.sort(trials);
+        for (ClinicalTrial trial : sortedTrials) {
             String trialName = trial.acronym();
             contentTable.addCell(TableUtil.getContentCell(trial.event()));
             contentTable.addCell(TableUtil.getContentCell(createTreatmentMatchParagraph(trial.scope() == EvidenceScope.SPECIFIC)));

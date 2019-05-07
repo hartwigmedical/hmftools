@@ -23,6 +23,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
+import java.util.Set;
 
 public class SummaryChapter implements ReportChapter {
 
@@ -86,8 +87,8 @@ public class SummaryChapter implements ReportChapter {
         reportDocument.add(div);
     }
 
-    private void renderTreatmentIndications(@NotNull final List<EvidenceItem> tumorSpecificEvidence,
-            @NotNull final List<ClinicalTrial> trials, @NotNull Document reportDocument) {
+    private void renderTreatmentIndications(@NotNull List<EvidenceItem> tumorSpecificEvidence, @NotNull List<ClinicalTrial> trials,
+            @NotNull Document reportDocument) {
         Div div = createSectionStartDiv(contentWidth());
 
         Table table = new Table(UnitValue.createPercentArray(new float[] { 1, 1 }));
@@ -95,28 +96,27 @@ public class SummaryChapter implements ReportChapter {
         table.addCell(TableUtil.getLayoutCell().add(new Paragraph("Treatment indications").addStyle(ReportResources.sectionTitleStyle())));
 
         table.addCell(TableUtil.getLayoutCell()
-                .add(new Paragraph("Summary of number of alterations with number of treatment indication and/or clinical studies").addStyle(
+                .add(new Paragraph("Summary of alterations with number of treatment indication and/or clinical trials").addStyle(
                         ReportResources.bodyTextStyle()).setFixedLeading(ReportResources.BODY_TEXT_LEADING)));
-        table.addCell(TableUtil.getLayoutCell(1, 2).setHeight(TABLE_SPACER_HEIGHT)); // Spacer
+        table.addCell(TableUtil.getLayoutCell(1, 2).setHeight(TABLE_SPACER_HEIGHT));
 
-        int therapyGeneCount = EvidenceItems.uniqueEventCount(tumorSpecificEvidence);
+        int therapyEventCount = EvidenceItems.uniqueEventCount(tumorSpecificEvidence);
         int therapyCount = EvidenceItems.uniqueTherapyCount(tumorSpecificEvidence);
-        table.addCell(createMiddleAlignedCell().add(new Paragraph("Gene alteration(s) with therapy indication(s)")
-                .addStyle(ReportResources.bodyTextStyle())));
-        table.addCell(createTreatmentIndicationCell(therapyGeneCount, therapyCount, "treatments"));
+        table.addCell(createMiddleAlignedCell().add(new Paragraph("Gene alteration(s) with therapy indication(s)").addStyle(ReportResources.bodyTextStyle())));
+        table.addCell(createTreatmentIndicationCell(therapyEventCount, therapyCount, "treatments"));
 
-        int studyGeneCount = ClinicalTrials.uniqueOnLabelEventCount(trials);
-        int studyCount = ClinicalTrials.uniqueOnLabelStudies(trials);
-        table.addCell(createMiddleAlignedCell().add(new Paragraph("Gene alteration(s) with clinical study eligibility").addStyle(
+        int trialEventCount = ClinicalTrials.uniqueEventsCount(trials);
+        int trialCount = ClinicalTrials.uniqueTrialCount(trials);
+        table.addCell(createMiddleAlignedCell().add(new Paragraph("Gene alteration(s) with clinical trial eligibility").addStyle(
                 ReportResources.bodyTextStyle())));
-        table.addCell(createTreatmentIndicationCell(studyGeneCount, studyCount, "studies"));
+        table.addCell(createTreatmentIndicationCell(trialEventCount, trialCount, "trials"));
 
         div.add(table);
 
         reportDocument.add(div);
     }
 
-    private void renderTumorCharacteristics(@NotNull final AnalysedPatientReport patientReport, @NotNull final Document reportDocument) {
+    private void renderTumorCharacteristics(@NotNull AnalysedPatientReport patientReport, @NotNull Document reportDocument) {
         final boolean hasReliablePurityFit = patientReport.hasReliablePurityFit();
 
         Div div = createSectionStartDiv(contentWidth());
@@ -127,7 +127,7 @@ public class SummaryChapter implements ReportChapter {
                 .add(new Paragraph("Tumor characteristics summary").addStyle(ReportResources.sectionTitleStyle())));
         table.addCell(TableUtil.getLayoutCell(1, 2)
                 .add(new Paragraph("Whole genome sequencing based tumor characteristics.").addStyle(ReportResources.bodyTextStyle())));
-        table.addCell(TableUtil.getLayoutCell(1, 3).setHeight(TABLE_SPACER_HEIGHT)); // Spacer
+        table.addCell(TableUtil.getLayoutCell(1, 3).setHeight(TABLE_SPACER_HEIGHT));
 
         final double impliedPurity = patientReport.impliedPurity();
         final double impliedPurityPercentage = MathUtil.mapPercentage(impliedPurity, TumorPurity.RANGE_MIN, TumorPurity.RANGE_MAX);
@@ -155,8 +155,8 @@ public class SummaryChapter implements ReportChapter {
         reportDocument.add(div);
     }
 
-    private static void renderTumorPurity(boolean hasReliablePurityFit, @NotNull final String valueLabel, double value, double min,
-            double max, final Table table) {
+    private static void renderTumorPurity(boolean hasReliablePurityFit, @NotNull String valueLabel, double value, double min, double max,
+            @NotNull Table table) {
         final String label = "Tumor purity of biopsy";
         table.addCell(createMiddleAlignedCell().add(new Paragraph(label).addStyle(ReportResources.bodyTextStyle())));
 
@@ -178,31 +178,31 @@ public class SummaryChapter implements ReportChapter {
         table.addCell(TableUtil.getLayoutCell()
                 .add(new Paragraph("Summary on genomic alterations "
                         + "(somatic variants, copy number changes, gene disruptions and gene fusions).").addStyle(ReportResources.bodyTextStyle())));
-        table.addCell(TableUtil.getLayoutCell(1, 2).setHeight(TABLE_SPACER_HEIGHT)); // Spacer
+        table.addCell(TableUtil.getLayoutCell(1, 2).setHeight(TABLE_SPACER_HEIGHT));
 
-        final String[] driverVariantGenes = SomaticVariants.variantsWithDriver(patientReport.reportableVariants());
+        final Set<String> driverVariantGenes = SomaticVariants.driverGenesWithVariant(patientReport.reportableVariants());
         table.addCell(createMiddleAlignedCell().setVerticalAlignment(VerticalAlignment.TOP)
-                .add(new Paragraph("Genes with driver variant").addStyle(ReportResources.bodyTextStyle())));
+                .add(new Paragraph("Driver genes with variant").addStyle(ReportResources.bodyTextStyle())));
         table.addCell(createGeneListCell(driverVariantGenes));
 
-        final int reportedVariants = SomaticVariants.countSomaticVariants(patientReport.reportableVariants());
+        final int reportedVariants = SomaticVariants.countReportableVariants(patientReport.reportableVariants());
         Style reportedVariantsStyle =
                 (reportedVariants > 0) ? ReportResources.dataHighlightStyle() : ReportResources.dataHighlightNaStyle();
         table.addCell(createMiddleAlignedCell().add(new Paragraph("Nr. of reported variants").addStyle(ReportResources.bodyTextStyle())));
         table.addCell(createMiddleAlignedCell().add(createHighlightParagraph(String.valueOf(reportedVariants)).addStyle(
                 reportedVariantsStyle)));
 
-        final String[] copyGainGenes = GeneCopyNumbers.amplificationGenes(patientReport.geneCopyNumbers());
+        final Set<String> amplifiedGenes = GeneCopyNumbers.amplifiedGenes(patientReport.geneCopyNumbers());
         table.addCell(createMiddleAlignedCell().setVerticalAlignment(VerticalAlignment.TOP)
                 .add(new Paragraph("Genes with copy-gain").addStyle(ReportResources.bodyTextStyle())));
-        table.addCell(createGeneListCell(copyGainGenes));
+        table.addCell(createGeneListCell(amplifiedGenes));
 
-        final String[] copyLossGenes = GeneCopyNumbers.lossGenes(patientReport.geneCopyNumbers());
+        final Set<String> copyLossGenes = GeneCopyNumbers.lossGenes(patientReport.geneCopyNumbers());
         table.addCell(createMiddleAlignedCell().setVerticalAlignment(VerticalAlignment.TOP)
                 .add(new Paragraph("Genes with copy-loss").addStyle(ReportResources.bodyTextStyle())));
         table.addCell(createGeneListCell(copyLossGenes));
 
-        final String[] fusionGenes = GeneFusions.geneFusions(patientReport.geneFusions());
+        final Set<String> fusionGenes = GeneFusions.uniqueGeneFusions(patientReport.geneFusions());
         table.addCell(createMiddleAlignedCell().setVerticalAlignment(VerticalAlignment.TOP)
                 .add(new Paragraph("Gene fusions").addStyle(ReportResources.bodyTextStyle())));
         table.addCell(createGeneListCell(fusionGenes));
@@ -228,25 +228,25 @@ public class SummaryChapter implements ReportChapter {
     }
 
     @NotNull
-    private static Cell createGeneListCell(@NotNull String[] genes) {
-        String geneString = (genes.length > 0) ? String.join(", ", genes) : DataUtil.NONE_STRING;
+    private static Cell createGeneListCell(@NotNull Set<String> genes) {
+        String geneString = (genes.size() > 0) ? String.join(", ", genes) : DataUtil.NONE_STRING;
 
-        Style style = (genes.length > 0) ? ReportResources.dataHighlightStyle() : ReportResources.dataHighlightNaStyle();
+        Style style = (genes.size() > 0) ? ReportResources.dataHighlightStyle() : ReportResources.dataHighlightNaStyle();
 
         return createMiddleAlignedCell().add(createHighlightParagraph(geneString)).addStyle(style);
     }
 
     @NotNull
-    private static Paragraph createHighlightParagraph(String text) {
+    private static Paragraph createHighlightParagraph(@NotNull String text) {
         return new Paragraph(text).setFixedLeading(14);
     }
 
     @NotNull
-    private static Cell createTreatmentIndicationCell(int geneCount, int treatmentCount, @NotNull String treatmentsName) {
+    private static Cell createTreatmentIndicationCell(int eventCount, int treatmentCount, @NotNull String treatmentsName) {
         String treatmentText;
         Style style;
-        if (geneCount > 0) {
-            treatmentText = String.format("%d (%d %s)", geneCount, treatmentCount, treatmentsName);
+        if (eventCount > 0) {
+            treatmentText = String.format("%d (%d %s)", eventCount, treatmentCount, treatmentsName);
             style = ReportResources.dataHighlightStyle();
         } else {
             treatmentText = DataUtil.NONE_STRING;
@@ -257,8 +257,8 @@ public class SummaryChapter implements ReportChapter {
     }
 
     @NotNull
-    private static InlineBarChart createInlineBarChart(double v, double min, double max) {
-        InlineBarChart chart = new InlineBarChart(v, min, max);
+    private static InlineBarChart createInlineBarChart(double value, double min, double max) {
+        InlineBarChart chart = new InlineBarChart(value, min, max);
         chart.setWidth(41);
         chart.setHeight(6);
         return chart;

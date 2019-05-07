@@ -21,5 +21,4 @@ public class MathUtilTest {
         assertEquals(25D, MathUtil.mapPercentageClamped(1.5, 1, 3), EPSILON);
         assertEquals(0D, MathUtil.mapPercentageClamped(-1, 1, 3), EPSILON);
     }
-
 }

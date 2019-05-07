@@ -2,6 +2,7 @@ package com.hartwig.hmftools.patientreporter.cfreport.data;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.variant.Clonality;
 import com.hartwig.hmftools.common.variant.Hotspot;
@@ -14,6 +15,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import static com.google.common.base.Strings.repeat;
@@ -143,7 +145,6 @@ public final class SomaticVariants {
         } else {
             return Strings.EMPTY;
         }
-
     }
 
     @NotNull
@@ -159,21 +160,20 @@ public final class SomaticVariants {
         } else {
             return "Low";
         }
-
     }
 
     @NotNull
-    public static String[] variantsWithDriver(@NotNull List<ReportableVariant> variants) {
-        final List<String> returnVariants = Lists.newArrayList();
-        for (final ReportableVariant variant : SomaticVariantDataSource.sort(variants)) {
+    public static Set<String> driverGenesWithVariant(@NotNull List<ReportableVariant> variants) {
+        final Set<String> genes = Sets.newHashSet();
+        for (final ReportableVariant variant : variants) {
             if (SomaticVariantDataSource.driverField(variant).equals("High")) {
-                returnVariants.add(variant.gene());
+                genes.add(variant.gene());
             }
         }
-        return returnVariants.toArray(new String[0]);
+        return genes;
     }
 
-    public static int countSomaticVariants(@NotNull List<ReportableVariant> variants) {
+    public static int countReportableVariants(@NotNull List<ReportableVariant> variants) {
         return variants.size();
     }
 }
