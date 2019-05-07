@@ -2382,13 +2382,17 @@ public class BucketAnalyser {
                 {
                     // revert back to the previous set of groups added through discovery
                     sample.clearAllocations(false);
-                    usePrevFit = fitSampleWithGroups(sigContribOptimiser, sample, prevGroupList, 0, reqAllocPercent,
-                            false, prevGroupList);
-                }
 
-                if (!usePrevFit && !useNewFit)
-                {
-                    LOGGER.warn("sample({}) left unallocated", sample.Id);
+                    if(prevGroupList.size() >1)
+                    {
+                        usePrevFit = fitSampleWithGroups(sigContribOptimiser, sample, prevGroupList, 0, reqAllocPercent,
+                                false, prevGroupList);
+
+                        if (!usePrevFit)
+                        {
+                            LOGGER.warn("sample({}) left unallocated", sample.Id);
+                        }
+                    }
                 }
             }
 
