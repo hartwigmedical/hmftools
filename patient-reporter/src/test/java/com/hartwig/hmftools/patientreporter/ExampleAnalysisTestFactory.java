@@ -82,7 +82,6 @@ public final class ExampleAnalysisTestFactory {
                 + "inhibitor immunotherapy.";
 
         return ImmutableAnalysedPatientReport.of(sampleReport,
-                true,
                 summaryContent,
                 fittedPurity.purity(),
                 true,
@@ -129,7 +128,6 @@ public final class ExampleAnalysisTestFactory {
         final SampleReport sampleReport = createCOLO829SampleReport();
 
         return ImmutableAnalysedPatientReport.of(sampleReport,
-                false,
                 "",
                 fittedPurity.purity(),
                 true,
