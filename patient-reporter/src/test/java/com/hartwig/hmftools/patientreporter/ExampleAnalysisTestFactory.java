@@ -93,7 +93,8 @@ public final class ExampleAnalysisTestFactory {
                 Resources.getResource("circos/circos_example.png").getPath(),
                 Optional.of("this is a test report and is based off COLO829"),
                 baseReportData.signaturePath(),
-                baseReportData.logoRVAPath());
+                baseReportData.logoRVAPath(),
+                baseReportData.logoCompanyPath());
     }
 
     @NotNull
@@ -139,7 +140,8 @@ public final class ExampleAnalysisTestFactory {
                 Resources.getResource("circos/circos_example.png").getPath(),
                 Optional.of("this is a test report and does not relate to any real patient"),
                 baseReportData.signaturePath(),
-                baseReportData.logoRVAPath());
+                baseReportData.logoRVAPath(),
+                baseReportData.logoCompanyPath());
     }
 
     @NotNull

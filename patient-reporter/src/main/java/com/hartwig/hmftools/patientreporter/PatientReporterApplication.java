@@ -62,9 +62,10 @@ public class PatientReporterApplication {
     private static final String SUMMARY_SAMPLES_CSV = "summary_samples_csv";
 
     private static final String RVA_LOGO = "rva_logo";
+    private static final String COMPANY_LOGO = "company_logo";
     private static final String SIGNATURE = "signature";
-    private static final String COMMENTS = "comments";
 
+    private static final String COMMENTS = "comments";
     private static final String LOG_DEBUG = "log_debug";
 
     public static void main(final String... args) throws ParseException, IOException {
@@ -136,7 +137,8 @@ public class PatientReporterApplication {
                 lims,
                 hospitalModel,
                 cmd.getOptionValue(SIGNATURE),
-                cmd.getOptionValue(RVA_LOGO));
+                cmd.getOptionValue(RVA_LOGO),
+                cmd.getOptionValue(COMPANY_LOGO));
     }
 
     @NotNull
@@ -228,6 +230,7 @@ public class PatientReporterApplication {
 
         final String signaturePath = cmd.getOptionValue(SIGNATURE);
         final String rvaLogoPath = cmd.getOptionValue(RVA_LOGO);
+        final String companyLogoPath = cmd.getOptionValue(COMPANY_LOGO);
 
         if (tumorLocationCsv == null || !exists(tumorLocationCsv)) {
             LOGGER.warn(TUMOR_LOCATION_CSV + " has to be an existing file: " + tumorLocationCsv);
@@ -239,6 +242,8 @@ public class PatientReporterApplication {
             LOGGER.warn(SIGNATURE + " has to be an existing file: " + signaturePath);
         } else if (rvaLogoPath == null || !exists(rvaLogoPath)) {
             LOGGER.warn(RVA_LOGO + " has to be an existing file: " + rvaLogoPath);
+        } else if (companyLogoPath == null || !exists(companyLogoPath)) {
+            LOGGER.warn(COMPANY_LOGO + " has to be an existing file: " + companyLogoPath);
         } else {
             return true;
         }
@@ -273,7 +278,8 @@ public class PatientReporterApplication {
         options.addOption(GERMLINE_GENES_CSV, true, "Path towards a CSV containing germline genes which we want to report");
         options.addOption(SUMMARY_SAMPLES_CSV, true, "Path towards a CSV containing the summary of the samples");
         options.addOption(HOTSPOT_TSV, true, "Path towards a TSV containing known hotspot variants.");
-        options.addOption(RVA_LOGO, true, "Path towards a image file containing the logo.");
+        options.addOption(RVA_LOGO, true, "Path towards a image file containing the RVA logo.");
+        options.addOption(COMPANY_LOGO, true, "Path towards a image file containing the company logo.");
         options.addOption(SIGNATURE, true, "Path towards a image file containing the signature to be appended at the end of the report.");
         options.addOption(COMMENTS, true, "Additional comments to be added to the report, if any.");
         options.addOption(LOG_DEBUG, false, "If provided, set the log level to debug rather than default.");

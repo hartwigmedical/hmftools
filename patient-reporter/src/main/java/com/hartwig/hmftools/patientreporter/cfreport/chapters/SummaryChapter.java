@@ -216,8 +216,7 @@ public class SummaryChapter implements ReportChapter {
 
         // Genes with driver variant
         final String[] driverVariantGenes = SomaticVariants.somaticVariantsWithDriver(patientReport.reportableVariants());
-        table.addCell(createMiddleAlignedCell()
-                .setVerticalAlignment(VerticalAlignment.TOP)
+        table.addCell(createMiddleAlignedCell().setVerticalAlignment(VerticalAlignment.TOP)
                 .add(new Paragraph("Genes with driver variant").addStyle(BODY_TEXT_STYLE)));
         table.addCell(createGeneListCell(driverVariantGenes));
 
@@ -231,22 +230,19 @@ public class SummaryChapter implements ReportChapter {
 
         // Copy gain genes
         final String[] copyGainGenes = GeneCopyNumbers.amplificationGenes(patientReport.geneCopyNumbers());
-        table.addCell(createMiddleAlignedCell()
-                .setVerticalAlignment(VerticalAlignment.TOP)
+        table.addCell(createMiddleAlignedCell().setVerticalAlignment(VerticalAlignment.TOP)
                 .add(new Paragraph("Genes with copy-gain").addStyle(BODY_TEXT_STYLE)));
         table.addCell(createGeneListCell(copyGainGenes));
 
         // Copy loss genes
         final String[] copyLossGenes = GeneCopyNumbers.lossGenes(patientReport.geneCopyNumbers());
-        table.addCell(createMiddleAlignedCell()
-                .setVerticalAlignment(VerticalAlignment.TOP)
+        table.addCell(createMiddleAlignedCell().setVerticalAlignment(VerticalAlignment.TOP)
                 .add(new Paragraph("Genes with copy-loss").addStyle(BODY_TEXT_STYLE)));
         table.addCell(createGeneListCell(copyLossGenes));
 
         // Gene fusions
         final String[] fusionGenes = GeneFusions.geneFusions(patientReport.geneFusions());
-        table.addCell(createMiddleAlignedCell()
-                .setVerticalAlignment(VerticalAlignment.TOP)
+        table.addCell(createMiddleAlignedCell().setVerticalAlignment(VerticalAlignment.TOP)
                 .add(new Paragraph("Gene fusions").addStyle(BODY_TEXT_STYLE)));
         table.addCell(createGeneListCell(fusionGenes));
 

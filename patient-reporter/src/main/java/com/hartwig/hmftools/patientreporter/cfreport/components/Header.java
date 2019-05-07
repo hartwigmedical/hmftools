@@ -18,15 +18,13 @@ import java.util.ArrayList;
 
 public final class Header {
 
-    private static final String HMF_LOGO_PATH = "pdf/hartwig_logo.jpg";
-
     private PdfImageXObject hmfLogoObj;
 
     private ArrayList<ChapterPageCounter> chapterPageCounters = new ArrayList<>();
 
-    public Header() {
+    public Header(@NotNull String logoCompanyPath) {
         // Attempt to load image object
-        ImageData imgData = ReportResources.loadImageData(HMF_LOGO_PATH);
+        ImageData imgData = ReportResources.loadImageData(logoCompanyPath);
         if (imgData != null) {
             hmfLogoObj = new PdfImageXObject(imgData);
         }

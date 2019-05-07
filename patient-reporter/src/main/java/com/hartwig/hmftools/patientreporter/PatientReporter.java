@@ -149,7 +149,8 @@ class PatientReporter {
                 PatientReporterFileLoader.findCircosPlotPath(runDirectory, tumorSample),
                 Optional.ofNullable(comments),
                 baseReportData.signaturePath(),
-                baseReportData.logoRVAPath());
+                baseReportData.logoRVAPath(),
+                baseReportData.logoCompanyPath());
     }
 
     @NotNull

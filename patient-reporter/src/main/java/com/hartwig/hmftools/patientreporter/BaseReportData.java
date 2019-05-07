@@ -29,4 +29,7 @@ public abstract class BaseReportData {
 
     @NotNull
     public abstract String logoRVAPath();
+
+    @NotNull
+    public abstract String logoCompanyPath();
 }

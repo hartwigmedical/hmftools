@@ -26,6 +26,7 @@ public abstract class AnalysedPatientReport implements PatientReport {
 
     public abstract boolean hasSummarySample();
 
+    @NotNull
     public abstract String summarySample();
 
     public abstract double impliedPurity();
@@ -78,4 +79,8 @@ public abstract class AnalysedPatientReport implements PatientReport {
     @Override
     @NotNull
     public abstract String logoRVAPath();
+
+    @Override
+    @NotNull
+    public abstract String logoCompanyPath();
 }

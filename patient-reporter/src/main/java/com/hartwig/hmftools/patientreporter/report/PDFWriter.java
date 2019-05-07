@@ -17,6 +17,7 @@ import com.hartwig.hmftools.patientreporter.report.pages.ImmutableCircosPage;
 import com.hartwig.hmftools.patientreporter.report.pages.ImmutableEvidenceSummaryPage;
 import com.hartwig.hmftools.patientreporter.report.pages.ImmutableExplanationPage;
 import com.hartwig.hmftools.patientreporter.report.pages.ImmutableFindingsPage;
+import com.hartwig.hmftools.patientreporter.report.pages.ImmutableQCFailPage;
 import com.hartwig.hmftools.patientreporter.report.pages.QCFailPage;
 import com.hartwig.hmftools.patientreporter.report.pages.SampleDetailsPage;
 
@@ -74,7 +75,7 @@ public class PDFWriter implements ReportWriter {
                 .lastPageFooter(cmp.verticalList(signatureFooter(report.signaturePath()),
                         cmp.pageXslashY(),
                         cmp.text("End of report.").setStyle(stl.style().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER))))
-                .addDetail(QCFailPage.of(report).reportComponent())
+                .addDetail(ImmutableQCFailPage.of(report).reportComponent())
                 .setDataSource(singleItemDataSource);
     }
 
