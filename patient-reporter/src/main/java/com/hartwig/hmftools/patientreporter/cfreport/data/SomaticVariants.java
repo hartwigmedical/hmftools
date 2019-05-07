@@ -135,7 +135,7 @@ public final class SomaticVariants {
     }
 
     @NotNull
-    public static String biallelicString(boolean biallelic, DriverCategory driverCategory, boolean hasReliablePurityFit) {
+    public static String biallelicString(boolean biallelic, @Nullable DriverCategory driverCategory, boolean hasReliablePurityFit) {
         if (!hasReliablePurityFit) {
             return DataUtil.NA_STRING;
         }
