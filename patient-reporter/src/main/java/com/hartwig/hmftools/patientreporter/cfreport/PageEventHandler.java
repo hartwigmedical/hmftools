@@ -40,28 +40,6 @@ class PageEventHandler implements IEventHandler {
         this.footer = new Footer();
     }
 
-    public void setChapterTitle(@NotNull String chapterTitle) {
-        this.chapterTitle = chapterTitle;
-    }
-
-    public void setPageNumberPrefix(@Nullable String pageNumberPrefix) {
-        this.pageNumberPrefix = pageNumberPrefix;
-    }
-
-    public void setSidebarType(boolean full, boolean fullContent) {
-        fullSidebar = full;
-        fullSidebarContent = fullSidebar && fullContent;
-    }
-
-    public void resetChapterPageCounter() {
-        firstPageOfChapter = true;
-    }
-
-    public void writeDynamicTextParts(@NotNull PdfDocument document) {
-        header.writeChapterTitles(document);
-        footer.writeTotalPageCount(document);
-    }
-
     @Override
     public void handleEvent(@NotNull Event event) {
         PdfDocumentEvent documentEvent = (PdfDocumentEvent) event;
@@ -78,6 +56,28 @@ class PageEventHandler implements IEventHandler {
             SidePanel.renderSidePanel(page, sampleReport, fullSidebar, fullSidebarContent);
             footer.renderFooter(page, !fullSidebar, pageNumberPrefix);
         }
+    }
+
+    public void chapterTitle(@NotNull String chapterTitle) {
+        this.chapterTitle = chapterTitle;
+    }
+
+    public void pageNumberPrefix(@Nullable String pageNumberPrefix) {
+        this.pageNumberPrefix = pageNumberPrefix;
+    }
+
+    public void sidebarType(boolean full, boolean fullContent) {
+        fullSidebar = full;
+        fullSidebarContent = fullSidebar && fullContent;
+    }
+
+    public void resetChapterPageCounter() {
+        firstPageOfChapter = true;
+    }
+
+    public void writeDynamicTextParts(@NotNull PdfDocument document) {
+        header.writeChapterTitles(document);
+        footer.writeTotalPageCount(document);
     }
 
     private void createChapterBookmark(@NotNull PdfDocument pdf, @NotNull String title) {

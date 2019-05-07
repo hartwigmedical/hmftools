@@ -43,9 +43,11 @@ public class Footer {
 
     private static class PageNumberTemplate {
 
-        private int pageNumber;
-        private String prefix;
-        private PdfFormXObject template;
+        private final int pageNumber;
+        @Nullable
+        private final String prefix;
+        @NotNull
+        private final PdfFormXObject template;
 
         PageNumberTemplate(int pageNumber, @Nullable String prefix, @NotNull PdfFormXObject template) {
             this.pageNumber = pageNumber;
@@ -54,8 +56,7 @@ public class Footer {
         }
 
         void renderPageNumber(int totalPageCount, @NotNull PdfDocument document) {
-            String displayString = ((prefix != null) ? prefix.toUpperCase() + " \u2014 " : "")
-                    + pageNumber + "/" + totalPageCount;
+            String displayString = ((prefix != null) ? prefix.toUpperCase() + " \u2014 " : "") + pageNumber + "/" + totalPageCount;
 
             Canvas canvas = new Canvas(template, document);
             canvas.showTextAligned(new Paragraph().add(displayString).addStyle(ReportResources.pageNumberStyle()),
