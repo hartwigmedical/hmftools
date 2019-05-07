@@ -74,7 +74,7 @@ public class SummaryChapter implements ReportChapter {
     }
 
     private void renderSummaryText(@Nullable final String text, @NotNull final Document reportDocument) {
-        if (text == null) {
+        if (text == null || text.isEmpty()) {
             return;
         }
 

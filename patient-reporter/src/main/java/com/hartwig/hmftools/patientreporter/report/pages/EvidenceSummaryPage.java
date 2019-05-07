@@ -40,7 +40,7 @@ public abstract class EvidenceSummaryPage {
 
     @NotNull
     public ComponentBuilder<?, ?> reportComponent() {
-        if (report().hasSummarySample()) {
+        if (!report().summarySample().isEmpty()) {
             return cmp.verticalList(MainSection(report()),
                     cmp.verticalGap(SECTION_VERTICAL_GAP),
                     summarySample(report()),

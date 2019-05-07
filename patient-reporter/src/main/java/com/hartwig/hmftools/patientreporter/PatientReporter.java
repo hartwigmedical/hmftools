@@ -94,11 +94,10 @@ class PatientReporter {
         final SvAnalysis svAnalysis = analyzeStructuralVariants(copyNumberAnalysis, patientTumorLocation, svAnalyzerModel);
         final ChordAnalysis chordAnalysis = analyzeChord(run);
 
-        boolean hasSummaryOfSample = sequencedReportData.summaryModel().sampleIdPresentInSummaryFile(tumorSample);
         String summarySample = sequencedReportData.summaryModel().extractSummarySampleId(tumorSample);
 
         LOGGER.info("Loading summary samples CSV");
-        LOGGER.info(hasSummaryOfSample ? "Sample has summary." : "Sample has none summary.");
+        LOGGER.info(summarySample.isEmpty() ? "Sample has summary." : "Sample has none summary.");
 
         LOGGER.info("Printing analysis results:");
         LOGGER.info(" Somatic variants to report : " + somaticVariantAnalysis.variantsToReport().size());
@@ -130,7 +129,6 @@ class PatientReporter {
         final List<EvidenceItem> nonTrials = ReportableEvidenceItemFactory.extractNonTrials(allEvidenceItems);
 
         return ImmutableAnalysedPatientReport.of(sampleReport,
-                hasSummaryOfSample,
                 summarySample,
                 copyNumberAnalysis.fittedPurity().purity(),
                 copyNumberAnalysis.status() != FittedPurityStatus.NO_TUMOR,

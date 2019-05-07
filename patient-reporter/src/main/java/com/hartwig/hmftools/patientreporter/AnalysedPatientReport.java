@@ -24,8 +24,6 @@ public abstract class AnalysedPatientReport implements PatientReport {
     @NotNull
     public abstract SampleReport sampleReport();
 
-    public abstract boolean hasSummarySample();
-
     @NotNull
     public abstract String summarySample();
 
