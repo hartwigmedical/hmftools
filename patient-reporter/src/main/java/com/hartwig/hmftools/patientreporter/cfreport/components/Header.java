@@ -2,6 +2,7 @@ package com.hartwig.hmftools.patientreporter.cfreport.components;
 
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
 import com.itextpdf.io.image.ImageData;
+import com.itextpdf.io.image.ImageDataFactory;
 import com.itextpdf.kernel.geom.Rectangle;
 import com.itextpdf.kernel.pdf.PdfDocument;
 import com.itextpdf.kernel.pdf.PdfPage;
@@ -9,11 +10,13 @@ import com.itextpdf.kernel.pdf.canvas.PdfCanvas;
 import com.itextpdf.kernel.pdf.xobject.PdfFormXObject;
 import com.itextpdf.kernel.pdf.xobject.PdfImageXObject;
 import com.itextpdf.layout.Canvas;
+import com.itextpdf.layout.element.Image;
 import com.itextpdf.layout.element.Paragraph;
 import com.itextpdf.layout.element.Text;
 
 import org.jetbrains.annotations.NotNull;
 
+import java.net.MalformedURLException;
 import java.util.ArrayList;
 
 public final class Header {
@@ -23,7 +26,12 @@ public final class Header {
     private ArrayList<ChapterPageCounter> chapterPageCounters = new ArrayList<>();
 
     public Header(@NotNull String logoCompanyPath) {
-        // Attempt to load image object
+        try {
+            final Image companyLogoImage = new Image(ImageDataFactory.create(logoCompanyPath));
+        } catch (MalformedURLException e) {
+            // TODO
+        }
+        // TODO Replace with external company logo.
         ImageData imgData = ReportResources.loadImageData(logoCompanyPath);
         if (imgData != null) {
             hmfLogoObj = new PdfImageXObject(imgData);
