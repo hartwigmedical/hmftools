@@ -19,6 +19,7 @@ import org.jetbrains.annotations.Nullable;
              passAnnotations = { NotNull.class, Nullable.class })
 public abstract class HospitalModel {
     private static final Logger LOGGER = LogManager.getLogger(HospitalModel.class);
+    private static final String NA_STRING = "N/A";
 
     @NotNull
     abstract Map<String, HospitalData> hospitalPerId();
@@ -29,19 +30,19 @@ public abstract class HospitalModel {
     @NotNull
     public String externalHospitalName(@NotNull String sample) {
         final HospitalData hospital = findHospitalForSample(sample);
-        return hospital != null ? hospital.externalHospitalName() : "NA";
+        return hospital != null ? hospital.externalHospitalName() : NA_STRING;
     }
 
     @NotNull
     public String PIName(@NotNull String sample) {
         final HospitalData hospital = findHospitalForSample(sample);
-        return hospital == null || determinePI(sample, hospital).isEmpty() ? "NA" : determinePI(sample, hospital);
+        return hospital != null ? determinePI(sample, hospital) : NA_STRING;
     }
 
     @NotNull
     public String PIEmail(@NotNull String sample) {
         final HospitalData hospital = findHospitalForSample(sample);
-        return hospital == null || determinePIEmail(sample, hospital).isEmpty() ? "NA" : determinePIEmail(sample, hospital);
+        return hospital != null ? determinePIEmail(sample, hospital) : NA_STRING;
     }
 
     @Nullable
@@ -164,7 +165,7 @@ public abstract class HospitalModel {
         } else if (type == LimsSampleType.WIDE) {
             return hospital.widePI();
         }
-        return Strings.EMPTY;
+        return NA_STRING;
     }
 
     @NotNull
