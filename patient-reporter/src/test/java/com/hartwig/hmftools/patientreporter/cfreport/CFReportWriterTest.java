@@ -75,7 +75,7 @@ public class CFReportWriterTest {
                 .patientTumorLocation(ImmutablePatientTumorLocation.of("CPCT02991111", "Skin", "Melanoma"))
                 .refBarcode("FR12123488")
                 .tumorBarcode("FR12345678")
-                .tumorArrivalDate(LocalDate.parse("05-Jan-2018", DATE_FORMATTER))
+                .tumorArrivalDate(LocalDate.parse("05-Jan-2019", DATE_FORMATTER))
                 .purityShallowSeq(shallowSeqPurity != null ? PatientReportFormat.formatPercent(shallowSeqPurity) : "not determined")
                 .pathologyTumorPercentage(
                         pathologyTumorPercentage != null ? PatientReportFormat.formatPercent(pathologyTumorPercentage) : "not determined")
