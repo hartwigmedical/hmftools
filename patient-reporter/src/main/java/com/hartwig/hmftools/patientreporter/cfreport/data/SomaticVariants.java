@@ -47,6 +47,16 @@ public final class SomaticVariants {
         }).collect(Collectors.toList());
     }
 
+    public static boolean hasNotifiableGermlineVariant(@NotNull List<ReportableVariant> variants) {
+        for (ReportableVariant variant : variants) {
+            if (variant.notifyClinicalGeneticist()) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     @NotNull
     public static String geneDisplayString(@NotNull ReportableVariant variant) {
         String geneSuffix = Strings.EMPTY;

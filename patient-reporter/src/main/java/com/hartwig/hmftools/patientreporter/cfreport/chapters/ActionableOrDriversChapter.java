@@ -92,9 +92,12 @@ public class ActionableOrDriversChapter implements ReportChapter {
                 .add(new Paragraph("* Marked gene(s) are included in the DRUP study and indicate potential eligibility in "
                         + "DRUP. Please note that the marking is NOT based on the specific mutation reported for this sample, "
                         + "but only on a gene-level.").addStyle(ReportResources.subTextStyle())));
-        contentTable.addCell(TableUtil.getLayoutCell(1, contentTable.getNumberOfColumns())
-                .add(new Paragraph("# Marked variant(s) are also present in the germline of the patient. Referral "
-                        + "to a genetic specialist should be considered if a hereditary condition is suspected.").addStyle(ReportResources.subTextStyle())));
+
+        if (SomaticVariants.hasNotifiableGermlineVariant(reportableVariants)) {
+            contentTable.addCell(TableUtil.getLayoutCell(1, contentTable.getNumberOfColumns())
+                    .add(new Paragraph("Marked variant(s) (#) are also present in the germline of the patient. "
+                            + "Referral to a genetic specialist should be advised.").addStyle(ReportResources.subTextStyle())));
+        }
 
         return TableUtil.createWrappingReportTable(title, contentTable);
     }
