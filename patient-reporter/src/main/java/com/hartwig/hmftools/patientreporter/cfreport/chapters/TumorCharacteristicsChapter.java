@@ -62,7 +62,7 @@ public class TumorCharacteristicsChapter implements ReportChapter {
 
         final String microSatelliteStabilityString =
                 hasReliablePurityFit ? MicroSatelliteStatus.interpretToString(microSatelliteStability) + " "
-                        + new DecimalFormat("#.####").format(microSatelliteStability) : DataUtil.NA_STRING;
+                        + new DecimalFormat("#.##").format(microSatelliteStability) : DataUtil.NA_STRING;
         BarChart satelliteChart =
                 new BarChart(microSatelliteStability, MicroSatelliteStatus.RANGE_MIN, MicroSatelliteStatus.RANGE_MAX, "MSS", "MSI");
         satelliteChart.enabled(hasReliablePurityFit);

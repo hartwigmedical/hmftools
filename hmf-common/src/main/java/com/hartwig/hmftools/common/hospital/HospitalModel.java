@@ -46,7 +46,7 @@ public abstract class HospitalModel {
     }
 
     @Nullable
-    public String fullAddresseeString(@NotNull final String sample) {
+    public String fullAddresseeString(@NotNull String sample) {
         final HospitalData hospital = findHospitalForSample(sample);
 
         if (hospital == null) {
