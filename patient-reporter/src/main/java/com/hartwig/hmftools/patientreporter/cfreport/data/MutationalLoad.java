@@ -12,10 +12,8 @@ public final class MutationalLoad {
     }
 
     @NotNull
-    public static String interpretToString(final int mutationalLoad, boolean hasReliablePurityFit) {
-        if (!hasReliablePurityFit) {
-            return DataUtil.NA_STRING;
-        } else if (mutationalLoad > THRESHOLD) {
+    public static String interpretToString(final int mutationalLoad) {
+        if (mutationalLoad > THRESHOLD) {
             return "High";
         } else {
             return "Low";

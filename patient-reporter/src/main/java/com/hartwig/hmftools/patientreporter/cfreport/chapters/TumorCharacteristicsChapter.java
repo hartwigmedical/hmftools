@@ -82,9 +82,9 @@ public class TumorCharacteristicsChapter implements ReportChapter {
                 satelliteChart));
 
         final int mutationalLoad = patientReport.tumorMutationalLoad();
-        final String mutationalLoadString =
-                hasReliablePurityFit ? MutationalLoad.interpretToString(mutationalLoad, hasReliablePurityFit) + " "
-                        + noDecimalFormat.format(mutationalLoad) : DataUtil.NA_STRING;
+        final String mutationalLoadString = hasReliablePurityFit
+                ? MutationalLoad.interpretToString(mutationalLoad) + " " + noDecimalFormat.format(mutationalLoad)
+                : DataUtil.NA_STRING;
         BarChart mutationalLoadChart = new BarChart(mutationalLoad, MutationalLoad.RANGE_MIN, MutationalLoad.RANGE_MAX, "Low", "High");
         mutationalLoadChart.enabled(hasReliablePurityFit);
         mutationalLoadChart.scale(InlineBarChart.LOG10_SCALE);
