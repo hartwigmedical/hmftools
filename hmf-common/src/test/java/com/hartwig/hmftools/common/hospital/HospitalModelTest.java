@@ -32,7 +32,7 @@ public class HospitalModelTest {
     }
 
     @Test
-    public void canReadAddress() {
+    public void canReadHospitalNameAndAddress() {
         final HospitalModel hospitalModel = buildTestHospitalModel();
         final HospitalData hospital = hospitalModel.hospitalPerId("01");
         assertNotNull(hospital);
