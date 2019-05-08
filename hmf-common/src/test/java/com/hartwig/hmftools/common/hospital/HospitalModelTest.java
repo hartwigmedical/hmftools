@@ -14,7 +14,7 @@ import org.junit.Test;
 public class HospitalModelTest {
 
     @Test
-    public void canDetermineRequesterForCPCTAndDrup() {
+    public void canDeterminePIForCPCTAndDrup() {
         final HospitalModel hospitalModel = buildTestHospitalModel();
         final HospitalData hospital = hospitalModel.hospitalPerId("01");
         assertNotNull(hospital);
