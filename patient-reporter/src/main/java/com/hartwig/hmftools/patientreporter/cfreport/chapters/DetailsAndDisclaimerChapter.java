@@ -19,7 +19,6 @@ import com.itextpdf.layout.property.UnitValue;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 public class DetailsAndDisclaimerChapter implements ReportChapter {
 
@@ -48,7 +47,7 @@ public class DetailsAndDisclaimerChapter implements ReportChapter {
         Table table = new Table(UnitValue.createPercentArray(new float[] { 1, 0.1f, 1 }));
         table.setWidth(contentWidth());
         table.addCell(TableUtil.getLayoutCell().add(createSampleDetailsDiv(patientReport)));
-        table.addCell(TableUtil.getLayoutCell()); // Spacer
+        table.addCell(TableUtil.getLayoutCell());
         table.addCell(TableUtil.getLayoutCell().add(createDisclaimerDiv()));
         reportDocument.add(table);
 

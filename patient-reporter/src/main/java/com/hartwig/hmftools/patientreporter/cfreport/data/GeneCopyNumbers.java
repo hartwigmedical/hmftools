@@ -1,16 +1,14 @@
 package com.hartwig.hmftools.patientreporter.cfreport.data;
 
-import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
-import com.hartwig.hmftools.patientreporter.copynumber.CopyNumberAlteration;
-import com.hartwig.hmftools.patientreporter.report.data.GeneCopyNumberDataSource;
-
-import org.jetbrains.annotations.NotNull;
-
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+
+import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
+import com.hartwig.hmftools.patientreporter.copynumber.CopyNumberAlteration;
+
+import org.jetbrains.annotations.NotNull;
 
 public final class GeneCopyNumbers {
 
@@ -18,8 +16,8 @@ public final class GeneCopyNumbers {
     }
 
     @NotNull
-    public static List<GeneCopyNumber> sort(@NotNull final List<GeneCopyNumber> geneCopyNumbers) {
-        return geneCopyNumbers.stream().sorted((copyNumber1, copyNumber2) -> {
+    public static List<GeneCopyNumber> sort(@NotNull final List<GeneCopyNumber> reportableCopyNumbers) {
+        return reportableCopyNumbers.stream().sorted((copyNumber1, copyNumber2) -> {
             String location1 = GeneUtil.zeroPrefixed(copyNumber1.chromosome() + copyNumber1.chromosomeBand());
             String location2 = GeneUtil.zeroPrefixed(copyNumber2.chromosome() + copyNumber2.chromosomeBand());
 
@@ -32,9 +30,9 @@ public final class GeneCopyNumbers {
     }
 
     @NotNull
-    public static Set<String> amplifiedGenes(@NotNull final List<GeneCopyNumber> copyNumbers) {
+    public static Set<String> amplifiedGenes(@NotNull final List<GeneCopyNumber> reportableCopyNumbers) {
         final Set<String> genes = Sets.newHashSet();
-        for (GeneCopyNumber copyNumber : copyNumbers) {
+        for (GeneCopyNumber copyNumber : reportableCopyNumbers) {
             if (determineAlteration(copyNumber) == CopyNumberAlteration.GAIN) {
                 genes.add(copyNumber.gene());
             }
@@ -43,9 +41,9 @@ public final class GeneCopyNumbers {
     }
 
     @NotNull
-    public static Set<String> lossGenes(@NotNull List<GeneCopyNumber> copyNumbers) {
+    public static Set<String> lossGenes(@NotNull List<GeneCopyNumber> reportableCopyNumbers) {
         final Set<String> genes = Sets.newHashSet();
-        for (GeneCopyNumber copyNumber : copyNumbers) {
+        for (GeneCopyNumber copyNumber : reportableCopyNumbers) {
             if (determineAlteration(copyNumber) == CopyNumberAlteration.LOSS) {
                 genes.add(copyNumber.gene());
             }

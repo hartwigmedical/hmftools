@@ -27,9 +27,9 @@ public class ExplanationChapter implements ReportChapter {
         table.setWidth(contentWidth());
 
         table.addCell(TableUtil.getLayoutCell().add(createSectionTitle("Details on the report in general")));
-        table.addCell(TableUtil.getLayoutCell()); // Spacer
+        table.addCell(TableUtil.getLayoutCell());
         table.addCell(TableUtil.getLayoutCell().add(createSectionTitle("Details on the reported clinical evidence")));
-        table.addCell(TableUtil.getLayoutCell()); // Spacer
+        table.addCell(TableUtil.getLayoutCell());
         table.addCell(TableUtil.getLayoutCell().add(createSectionTitle("Details on reported somatic variants")));
 
         table.addCell(TableUtil.getLayoutCell()
@@ -40,7 +40,7 @@ public class ExplanationChapter implements ReportChapter {
                                 + "purity (below 20%) likelihood of failing to detect potential variants increases.",
                         "The (implied) tumor purity is the percentage of tumor cells in the biopsy based on analysis of "
                                 + "whole genome data." })));
-        table.addCell(TableUtil.getLayoutCell()); // Spacer
+        table.addCell(TableUtil.getLayoutCell());
         table.addCell(TableUtil.getLayoutCell()
                 .add(createContentDiv(new String[] {
                         "The CGI, OncoKb and CiViC knowledgebases are used to annotate variants of all types with "
@@ -50,7 +50,7 @@ public class ExplanationChapter implements ReportChapter {
                         "More information on (CGI) biomarkers can be found on https://www.cancergenomeinterpreter.org/biomarkers",
                         "Clinical trials are matched against the iClusion database (https://iclusion.org) including a "
                                 + "link to the specific trial." })));
-        table.addCell(TableUtil.getLayoutCell()); // Spacer
+        table.addCell(TableUtil.getLayoutCell());
         table.addCell(TableUtil.getLayoutCell()
                 .add(createContentDiv(new String[] {
                         "The 'Read Depth' displays the raw number of reads supporting the variant versus the total "
@@ -66,12 +66,12 @@ public class ExplanationChapter implements ReportChapter {
                                 + "variant in a gene with High driver likelihood is likely to be positively selected for "
                                 + "during the oncogenic process." })));
 
-        table.addCell(TableUtil.getLayoutCell(1, 5).setHeight(30)); // Spacer
+        table.addCell(TableUtil.getLayoutCell(1, 5).setHeight(30));
 
         table.addCell(TableUtil.getLayoutCell().add(createSectionTitle("Details on reported gene copy numbers")));
-        table.addCell(TableUtil.getLayoutCell()); // Spacer
+        table.addCell(TableUtil.getLayoutCell());
         table.addCell(TableUtil.getLayoutCell().add(createSectionTitle("Details on reported gene fusions")));
-        table.addCell(TableUtil.getLayoutCell()); // Spacer
+        table.addCell(TableUtil.getLayoutCell());
         table.addCell(TableUtil.getLayoutCell().add(createSectionTitle("Details on reported gene disruptions")));
 
         table.addCell(TableUtil.getLayoutCell()
@@ -82,12 +82,12 @@ public class ExplanationChapter implements ReportChapter {
                         "Any gene where only a part along the canonical transcript has less than 0.5 copies is reported "
                                 + "as a partial loss.",
                         "Any gene with more copies than 3 times the average tumor ploidy is reported as a gain." })));
-        table.addCell(TableUtil.getLayoutCell()); // Spacer
+        table.addCell(TableUtil.getLayoutCell());
         table.addCell(TableUtil.getLayoutCell()
                 .add(createContentDiv(new String[] { "The canonical, or otherwise longest transcript validly fused is reported.",
                         "Fusions are restricted to those in a known fusion list based on CiViC, OncoKB, CGI and COSMIC",
                         "We additionally select fusions where one partner is promiscuous in either 5' or 3' position." })));
-        table.addCell(TableUtil.getLayoutCell()); // Spacer
+        table.addCell(TableUtil.getLayoutCell());
         table.addCell(TableUtil.getLayoutCell()
                 .add(createContentDiv(new String[] {
                         "Genes are reported as being disrupted if their canonical transcript has been disrupted",

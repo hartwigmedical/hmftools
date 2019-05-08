@@ -1,12 +1,18 @@
 package com.hartwig.hmftools.patientreporter.cfreport.chapters;
 
+import java.text.DecimalFormat;
+
 import com.hartwig.hmftools.patientreporter.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
 import com.hartwig.hmftools.patientreporter.cfreport.components.BarChart;
 import com.hartwig.hmftools.patientreporter.cfreport.components.DataLabel;
 import com.hartwig.hmftools.patientreporter.cfreport.components.InlineBarChart;
 import com.hartwig.hmftools.patientreporter.cfreport.components.TableUtil;
-import com.hartwig.hmftools.patientreporter.cfreport.data.*;
+import com.hartwig.hmftools.patientreporter.cfreport.data.DataUtil;
+import com.hartwig.hmftools.patientreporter.cfreport.data.HrDeficiency;
+import com.hartwig.hmftools.patientreporter.cfreport.data.MicroSatelliteStatus;
+import com.hartwig.hmftools.patientreporter.cfreport.data.MutationalBurden;
+import com.hartwig.hmftools.patientreporter.cfreport.data.MutationalLoad;
 import com.itextpdf.layout.Document;
 import com.itextpdf.layout.element.Div;
 import com.itextpdf.layout.element.Paragraph;
@@ -14,8 +20,6 @@ import com.itextpdf.layout.element.Table;
 import com.itextpdf.layout.property.UnitValue;
 
 import org.jetbrains.annotations.NotNull;
-
-import java.text.DecimalFormat;
 
 public class TumorCharacteristicsChapter implements ReportChapter {
 
@@ -127,13 +131,13 @@ public class TumorCharacteristicsChapter implements ReportChapter {
         table.setWidth(contentWidth());
         table.addCell(TableUtil.getLayoutCell().add(DataLabel.createDataLabel(highlight)));
 
-        table.addCell(TableUtil.getLayoutCell(2, 1)); // Spacer
+        table.addCell(TableUtil.getLayoutCell(2, 1));
 
         table.addCell(TableUtil.getLayoutCell(2, 1).add(chart));
         table.addCell(TableUtil.getLayoutCell()
                 .add(new Paragraph(description).addStyle(ReportResources.bodyTextStyle())
                         .setFixedLeading(ReportResources.BODY_TEXT_LEADING)));
-        table.addCell(TableUtil.getLayoutCell(1, 3).setHeight(TABLE_SPACER_HEIGHT)); // Spacer
+        table.addCell(TableUtil.getLayoutCell(1, 3).setHeight(TABLE_SPACER_HEIGHT));
         div.add(table);
 
         return div;

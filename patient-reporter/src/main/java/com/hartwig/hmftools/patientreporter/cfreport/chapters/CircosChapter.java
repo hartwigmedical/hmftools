@@ -1,18 +1,22 @@
 package com.hartwig.hmftools.patientreporter.cfreport.chapters;
 
+import java.net.MalformedURLException;
+
 import com.hartwig.hmftools.patientreporter.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
 import com.hartwig.hmftools.patientreporter.cfreport.components.TableUtil;
 import com.itextpdf.io.IOException;
 import com.itextpdf.io.image.ImageDataFactory;
 import com.itextpdf.layout.Document;
-import com.itextpdf.layout.element.*;
+import com.itextpdf.layout.element.Div;
+import com.itextpdf.layout.element.Image;
+import com.itextpdf.layout.element.Paragraph;
+import com.itextpdf.layout.element.Table;
+import com.itextpdf.layout.element.Text;
 import com.itextpdf.layout.property.HorizontalAlignment;
 import com.itextpdf.layout.property.UnitValue;
 
 import org.jetbrains.annotations.NotNull;
-
-import java.net.MalformedURLException;
 
 public class CircosChapter implements ReportChapter {
 
@@ -59,7 +63,7 @@ public class CircosChapter implements ReportChapter {
                                         + "Nature paper that describes the use of mutational signatures. "
                                         + "INDELs are colored yellow and red for insertions and deletions respectively."))));
 
-        table.addCell(TableUtil.getLayoutCell()); // Spacer
+        table.addCell(TableUtil.getLayoutCell());
 
         table.addCell(TableUtil.getLayoutCell()
                 .add(new Div().add(createContentParagraph("The third circle",
@@ -74,7 +78,7 @@ public class CircosChapter implements ReportChapter {
                                 + "LOH event. Minor allele copy numbers above 1 (blue) indicate amplification events of both A and B "
                                 + "alleles at the indicated locations.")))));
 
-        table.addCell(TableUtil.getLayoutCell()); // Spacer
+        table.addCell(TableUtil.getLayoutCell());
 
         table.addCell(TableUtil.getLayoutCell()
                 .add(new Div().add(createContentParagraph("The innermost circle",

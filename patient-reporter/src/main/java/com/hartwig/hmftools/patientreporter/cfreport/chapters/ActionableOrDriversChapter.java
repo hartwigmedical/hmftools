@@ -1,11 +1,18 @@
 package com.hartwig.hmftools.patientreporter.cfreport.chapters;
 
+import java.util.List;
+
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.patientreporter.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
 import com.hartwig.hmftools.patientreporter.cfreport.components.InlineBarChart;
 import com.hartwig.hmftools.patientreporter.cfreport.components.TableUtil;
-import com.hartwig.hmftools.patientreporter.cfreport.data.*;
+import com.hartwig.hmftools.patientreporter.cfreport.data.DataUtil;
+import com.hartwig.hmftools.patientreporter.cfreport.data.GeneCopyNumbers;
+import com.hartwig.hmftools.patientreporter.cfreport.data.GeneDisruptions;
+import com.hartwig.hmftools.patientreporter.cfreport.data.GeneFusions;
+import com.hartwig.hmftools.patientreporter.cfreport.data.GeneUtil;
+import com.hartwig.hmftools.patientreporter.cfreport.data.SomaticVariants;
 import com.hartwig.hmftools.patientreporter.structural.ReportableGeneDisruption;
 import com.hartwig.hmftools.patientreporter.structural.ReportableGeneFusion;
 import com.hartwig.hmftools.patientreporter.variants.ReportableVariant;
@@ -19,8 +26,6 @@ import com.itextpdf.layout.property.TextAlignment;
 import com.itextpdf.layout.property.VerticalAlignment;
 
 import org.jetbrains.annotations.NotNull;
-
-import java.util.List;
 
 public class ActionableOrDriversChapter implements ReportChapter {
 
@@ -57,7 +62,7 @@ public class ActionableOrDriversChapter implements ReportChapter {
         Table contentTable = TableUtil.createReportContentTable(new float[] { 45, 75, 50, 60, 40, 60, 40, 50, 50, 35 },
                 new Cell[] { TableUtil.getHeaderCell("Gene"), TableUtil.getHeaderCell("Variant"), TableUtil.getHeaderCell("Impact"),
                         TableUtil.getHeaderCell("Read depth").setTextAlignment(TextAlignment.CENTER), TableUtil.getHeaderCell("Hotspot"),
-                        TableUtil.getHeaderCell("Ploidy (VAF)"), TableUtil.getHeaderCell(), // Spacer for graph
+                        TableUtil.getHeaderCell("Ploidy (VAF)"), TableUtil.getHeaderCell(),
                         TableUtil.getHeaderCell("Clonality"), TableUtil.getHeaderCell("Biallelic"), TableUtil.getHeaderCell("Driver") });
 
         final List<ReportableVariant> sortedVariants = SomaticVariants.sort(reportableVariants);
@@ -112,7 +117,7 @@ public class ActionableOrDriversChapter implements ReportChapter {
         Table contentTable = TableUtil.createReportContentTable(new float[] { 60, 80, 100, 80, 45, 125 },
                 new Cell[] { TableUtil.getHeaderCell("Chromosome"), TableUtil.getHeaderCell("Chromosome band"),
                         TableUtil.getHeaderCell("Gene"), TableUtil.getHeaderCell("Type"),
-                        TableUtil.getHeaderCell("Copies").setTextAlignment(TextAlignment.RIGHT), TableUtil.getHeaderCell("") // Spacer
+                        TableUtil.getHeaderCell("Copies").setTextAlignment(TextAlignment.RIGHT), TableUtil.getHeaderCell("")
                 });
 
         final List<GeneCopyNumber> sortedCopyNumbers = GeneCopyNumbers.sort(copyNumbers);
@@ -124,7 +129,7 @@ public class ActionableOrDriversChapter implements ReportChapter {
             contentTable.addCell(TableUtil.getContentCell(GeneCopyNumbers.type(copyNumber)));
             contentTable.addCell(TableUtil.getContentCell(hasReliablePurityFit ? String.valueOf(reportableCopyNumber) : DataUtil.NA_STRING)
                     .setTextAlignment(TextAlignment.RIGHT));
-            contentTable.addCell(TableUtil.getContentCell("")); // Spacer
+            contentTable.addCell(TableUtil.getContentCell(""));
         }
 
         return TableUtil.createWrappingReportTable(title, contentTable);
@@ -140,7 +145,7 @@ public class ActionableOrDriversChapter implements ReportChapter {
         Table contentTable = TableUtil.createReportContentTable(new float[] { 90, 82.5f, 82.5f, 37.5f, 37.5f, 40, 30, 100 },
                 new Cell[] { TableUtil.getHeaderCell("Fusion"), TableUtil.getHeaderCell("5' Transcript"),
                         TableUtil.getHeaderCell("3' Transcript"), TableUtil.getHeaderCell("5' End"), TableUtil.getHeaderCell("3' Start"),
-                        TableUtil.getHeaderCell("Copies").setTextAlignment(TextAlignment.RIGHT), TableUtil.getHeaderCell(""), // Spacer
+                        TableUtil.getHeaderCell("Copies").setTextAlignment(TextAlignment.RIGHT), TableUtil.getHeaderCell(""),
                         TableUtil.getHeaderCell("Source") });
 
         final List<ReportableGeneFusion> sortedFusions = GeneFusions.sort(fusions);
@@ -152,7 +157,7 @@ public class ActionableOrDriversChapter implements ReportChapter {
             contentTable.addCell(TableUtil.getContentCell(fusion.geneContextEnd()));
             contentTable.addCell(TableUtil.getContentCell(GeneUtil.ploidyToCopiesString(fusion.ploidy(), hasReliablePurityFit))
                     .setTextAlignment(TextAlignment.RIGHT));
-            contentTable.addCell(TableUtil.getContentCell("")); // Spacer
+            contentTable.addCell(TableUtil.getContentCell(""));
             contentTable.addCell(TableUtil.getContentCell(new Paragraph(fusion.source()).setAction(PdfAction.createURI(GeneFusions.sourceUrl(
                     fusion.source())))));
         }
