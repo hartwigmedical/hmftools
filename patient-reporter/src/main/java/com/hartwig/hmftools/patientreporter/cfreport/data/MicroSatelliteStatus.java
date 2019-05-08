@@ -8,9 +8,9 @@ public final class MicroSatelliteStatus {
     public static final double RANGE_MAX = 100;
     public static final double THRESHOLD = 4;
 
-    /**
-     * Interpret micro satellite indel value to be either "Stable" or "Instable"
-     */
+    private MicroSatelliteStatus() {
+    }
+
     @NotNull
     public static String interpretToString(double microSatelliteIndelsPerMb) {
         if (microSatelliteIndelsPerMb > THRESHOLD) {

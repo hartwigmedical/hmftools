@@ -20,22 +20,25 @@ import org.jetbrains.annotations.NotNull;
 
 public class QCFailChapter implements ReportChapter {
 
+    @NotNull
     private final QCFailReport failReport;
 
-    public QCFailChapter(QCFailReport failReport) {
+    public QCFailChapter(@NotNull QCFailReport failReport) {
         this.failReport = failReport;
     }
 
     @NotNull
     @Override
-    public String getName() {
+    public String name() {
         return failReport.reason().title();
     }
 
+    @Override
     public boolean isFullWidth() {
         return false;
     }
 
+    @Override
     public boolean hasCompleteSidebar() {
         return true;
     }
@@ -44,24 +47,28 @@ public class QCFailChapter implements ReportChapter {
     public void render(@NotNull Document reportDocument) {
         reportDocument.add(TumorLocationAndTypeTable.createTumorLocationAndType(failReport.sampleReport().primaryTumorLocationString(),
                 failReport.sampleReport().cancerSubTypeString(),
-                getContentWidth()));
-        reportDocument.add(LineDivider.createLineDivider(getContentWidth()));
+                contentWidth()));
+        reportDocument.add(LineDivider.createLineDivider(contentWidth()));
 
         reportDocument.add(createFailReasonDiv(failReport.reason(), failReport.sampleReport()));
-        reportDocument.add(LineDivider.createLineDivider(getContentWidth()).setMarginTop(10));
+        reportDocument.add(LineDivider.createLineDivider(contentWidth()).setMarginTop(10));
 
-        // Content body
         LimsSampleType type = LimsSampleType.fromSampleId(failReport.sampleReport().sampleId());
-        if (type == LimsSampleType.CORE) {
-            reportDocument.add(createCoreContentBody());
-        } else {
-            reportDocument.add(createCPCTDRUPContentBody());
+
+        switch (type) {
+            case CORE:
+                reportDocument.add(createCoreContentBody());
+                break;
+            case WIDE:
+                reportDocument.add(createWIDEContentBody());
+                break;
+            default:
+                reportDocument.add(createCPCTDRUPContentBody());
+
         }
 
-        // End of report
         reportDocument.add(ReportSignature.createEndOfReportIndication().setMarginTop(20));
         reportDocument.add(ReportSignature.createSignatureDiv(failReport.logoRVAPath(), failReport.signaturePath()).setMarginTop(20));
-
     }
 
     @NotNull
@@ -106,17 +113,27 @@ public class QCFailChapter implements ReportChapter {
             }
         }
 
-        // Initialize div
         Div div = new Div();
         div.setKeepTogether(true);
 
-        // Add title
         div.add(new Paragraph(title.toUpperCase()).addStyle(ReportResources.subTextStyle()));
         div.add(new Paragraph(reason).addStyle(ReportResources.dataHighlightStyle()));
         div.add(new Paragraph(explanation).addStyle(ReportResources.bodyTextStyle()).setFixedLeading(ReportResources.BODY_TEXT_LEADING));
 
         return div;
+    }
 
+    @NotNull
+    private Table createWIDEContentBody() {
+        return createContentTable(new String[] { notSequencedText(),
+                        "When possible, please resubmit using the same " + failReport.study().studyName() + "-number. "
+                                + "In case additional tumor material cannot be provided, please be notified that the patient will not be "
+                                + "evaluable for the " + failReport.study().studyCode() + " study.",
+                        "The HMF sample ID is " + failReport.sampleReport().sampleId() + "and the tissue ID of pathology is: "
+                                + failReport.sampleReport().hospitalPathologySampleId(),
+                        "The internal tumor barcode is " + failReport.sampleReport().tumorBarcode() + " and the internal blood barcode is "
+                                + failReport.sampleReport().refBarcode() },
+                new String[] { shallowSeqText(), sampleArrivalDateText(), recipientText(), accreditationText(), questionsText() });
     }
 
     @NotNull
@@ -133,7 +150,6 @@ public class QCFailChapter implements ReportChapter {
                         .pathologyTumorPercentage(), shallowSeqText(), sampleArrivalDateText(), recipientText(),
                         "The contact details are : " + failReport.sampleReport().requesterName() + " (" + failReport.sampleReport()
                                 .requesterEmail() + ")", accreditationText(), questionsText() });
-
     }
 
     @NotNull
@@ -147,19 +163,16 @@ public class QCFailChapter implements ReportChapter {
                                 + failReport.sampleReport().refBarcode(),
                         "The tumor percentage estimated by Pathology UMC Utrecht is " + failReport.sampleReport().pathologyTumorPercentage() },
                 new String[] { shallowSeqText(), sampleArrivalDateText(), recipientText(), accreditationText(), questionsText() });
-
     }
 
     @NotNull
     private Table createContentTable(@NotNull String[] leftCol, @NotNull String[] rightCol) {
-
         Table table = new Table(UnitValue.createPercentArray(new float[] { 1, 0.1f, 1 }));
-        table.setWidth(getContentWidth());
+        table.setWidth(contentWidth());
         table.addCell(TableUtil.getLayoutCell().add(createContentBody(leftCol)));
         table.addCell(TableUtil.getLayoutCell()); // Spacer
         table.addCell(TableUtil.getLayoutCell().add(createContentBody(rightCol)));
         return table;
-
     }
 
     @NotNull
@@ -209,5 +222,4 @@ public class QCFailChapter implements ReportChapter {
     private static String accreditationText() {
         return "The results on this report are based on tests that are performed under ISO/ICE-17025:2005 accreditation.";
     }
-
 }

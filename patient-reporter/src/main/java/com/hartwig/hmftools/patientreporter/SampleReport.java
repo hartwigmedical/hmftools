@@ -55,6 +55,15 @@ public abstract class SampleReport {
     public abstract String addressee();
 
     @NotNull
+    public abstract String hospitalName();
+
+    @NotNull
+    public abstract String hospitalPIName();
+
+    @NotNull
+    public abstract String hospitalPIEmail();
+
+    @NotNull
     public abstract String submissionId();
 
     @NotNull

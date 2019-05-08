@@ -17,23 +17,21 @@ public class ExplanationChapter implements ReportChapter {
 
     @NotNull
     @Override
-    public String getName() {
+    public String name() {
         return "Report explanation";
     }
 
     @Override
-    public final void render(@NotNull final Document reportDocument) {
+    public final void render(@NotNull Document reportDocument) {
         Table table = new Table(UnitValue.createPercentArray(new float[] { 10, 1, 10, 1, 10 }));
-        table.setWidth(getContentWidth());
+        table.setWidth(contentWidth());
 
-        // 1st row
         table.addCell(TableUtil.getLayoutCell().add(createSectionTitle("Details on the report in general")));
         table.addCell(TableUtil.getLayoutCell()); // Spacer
         table.addCell(TableUtil.getLayoutCell().add(createSectionTitle("Details on the reported clinical evidence")));
         table.addCell(TableUtil.getLayoutCell()); // Spacer
         table.addCell(TableUtil.getLayoutCell().add(createSectionTitle("Details on reported somatic variants")));
 
-        // 2nd row
         table.addCell(TableUtil.getLayoutCell()
                 .add(createContentDiv(new String[] { "The analysis is based on reference genome version GRCh37.",
                         "Transcripts used for reporting can be found on https://github.com/hartwigmedical and are "
@@ -68,17 +66,14 @@ public class ExplanationChapter implements ReportChapter {
                                 + "variant in a gene with High driver likelihood is likely to be positively selected for "
                                 + "during the oncogenic process." })));
 
-        // Spacer
         table.addCell(TableUtil.getLayoutCell(1, 5).setHeight(30)); // Spacer
 
-        // 3rd row
         table.addCell(TableUtil.getLayoutCell().add(createSectionTitle("Details on reported gene copy numbers")));
         table.addCell(TableUtil.getLayoutCell()); // Spacer
         table.addCell(TableUtil.getLayoutCell().add(createSectionTitle("Details on reported gene fusions")));
         table.addCell(TableUtil.getLayoutCell()); // Spacer
         table.addCell(TableUtil.getLayoutCell().add(createSectionTitle("Details on reported gene disruptions")));
 
-        // 4th row
         table.addCell(TableUtil.getLayoutCell()
                 .add(createContentDiv(new String[] { "The lowest copy number value along the exonic regions of the canonical transcript is "
                         + "determined as a measure for the gene's copy number.",
@@ -102,7 +97,6 @@ public class ExplanationChapter implements ReportChapter {
                                 + "(insertion), SGL (single) or BND (translocation)." })));
 
         reportDocument.add(table);
-
     }
 
     @NotNull

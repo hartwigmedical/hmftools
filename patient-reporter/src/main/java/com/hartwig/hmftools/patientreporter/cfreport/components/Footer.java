@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.patientreporter.cfreport.components;
 
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
 import com.itextpdf.kernel.geom.Rectangle;
 import com.itextpdf.kernel.pdf.PdfDocument;
@@ -18,18 +19,16 @@ import java.util.List;
 
 public class Footer {
 
-    private List<PageNumberTemplate> pageNumberTemplates = new ArrayList<>();
+    private final List<PageNumberTemplate> pageNumberTemplates = Lists.newArrayList();
 
-    public void renderFooter(PdfPage page, boolean fullWidth, @Nullable String pageNumberPrefix) {
+    public void renderFooter(@NotNull PdfPage page, boolean fullWidth, @Nullable String pageNumberPrefix) {
         final PdfCanvas canvas = new PdfCanvas(page.getLastContentStream(), page.getResources(), page.getDocument());
 
-        // Add current page number template
         int pageNumber = page.getDocument().getPageNumber(page);
         PdfFormXObject pageNumberTemplate = new PdfFormXObject(new Rectangle(0, 0, 200, 20));
         canvas.addXObject(pageNumberTemplate, 58, 20);
         pageNumberTemplates.add(new PageNumberTemplate(pageNumber, pageNumberPrefix, pageNumberTemplate));
 
-        // Draw markers
         BaseMarker.renderMarkerGrid(fullWidth ? 5 : 3, 1, 156, 87, 22, 0, .2f, 0, canvas);
 
         canvas.release();
@@ -40,14 +39,15 @@ public class Footer {
         for (PageNumberTemplate tpl : pageNumberTemplates) {
             tpl.renderPageNumber(totalPageCount, document);
         }
-
     }
 
     private static class PageNumberTemplate {
 
-        private int pageNumber;
-        private String prefix;
-        private PdfFormXObject template;
+        private final int pageNumber;
+        @Nullable
+        private final String prefix;
+        @NotNull
+        private final PdfFormXObject template;
 
         PageNumberTemplate(int pageNumber, @Nullable String prefix, @NotNull PdfFormXObject template) {
             this.pageNumber = pageNumber;
@@ -56,15 +56,13 @@ public class Footer {
         }
 
         void renderPageNumber(int totalPageCount, @NotNull PdfDocument document) {
-            String displayString = ((prefix != null) ? prefix.toUpperCase() + " \u2014 " : "")
-                    + pageNumber + "/" + totalPageCount;
+            String displayString = ((prefix != null) ? prefix.toUpperCase() + " \u2014 " : "") + pageNumber + "/" + totalPageCount;
 
             Canvas canvas = new Canvas(template, document);
             canvas.showTextAligned(new Paragraph().add(displayString).addStyle(ReportResources.pageNumberStyle()),
                     0,
                     0,
                     TextAlignment.LEFT);
-
         }
     }
 }

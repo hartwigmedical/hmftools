@@ -26,6 +26,44 @@ public abstract class HospitalModel {
     @NotNull
     protected abstract Map<String, HospitalSampleMapping> sampleHospitalMapping();
 
+    @NotNull
+    public HospitalData addresseeStringForSampleWithEmail(@NotNull final String sample) {
+        HospitalData hospital = findHospitalForSample(sample);
+
+        if (hospital == null) {
+            return ImmutableHospitalData.builder()
+                    .hospital(Strings.EMPTY)
+                    .cpctRecipients(Strings.EMPTY)
+                    .drupRecipients(Strings.EMPTY)
+                    .wideRecipients(Strings.EMPTY)
+                    .addressName(Strings.EMPTY)
+                    .addressZip(Strings.EMPTY)
+                    .addressCity(Strings.EMPTY)
+                    .cpctPI(Strings.EMPTY)
+                    .drupPI(Strings.EMPTY)
+                    .widePI(Strings.EMPTY)
+                    .build();
+        }
+
+        checkAddresseeFields(sample, hospital);
+        return hospital;
+    }
+
+    @NotNull
+    public String hospital(@NotNull HospitalData hospital, @NotNull String sample) {
+        return hospital.addressName().isEmpty() ? "NA" : hospital.addressName();
+    }
+
+    @NotNull
+    public String PIName(@NotNull HospitalData hospital, @NotNull String sample) {
+        return determinePI(sample, hospital).isEmpty() ? "NA" : determinePI(sample, hospital);
+    }
+
+    @NotNull
+    public String PIEmail(@NotNull HospitalData hospital, @NotNull String sample) {
+        return determinePIEmail(sample, hospital).isEmpty() ? "NA" : determinePIEmail(sample, hospital);
+    }
+
     @Nullable
     public String addresseeStringForSample(@NotNull final String sample) {
         HospitalData hospital = findHospitalForSample(sample);
@@ -144,6 +182,25 @@ public abstract class HospitalModel {
             return hospital.drupPI();
         } else if (type == LimsSampleType.WIDE) {
             return hospital.widePI();
+        }
+        return Strings.EMPTY;
+    }
+
+    @NotNull
+    @VisibleForTesting
+    static String determinePIEmail(@NotNull final String sample, @NotNull final HospitalData hospital) {
+        LimsSampleType type = LimsSampleType.fromSampleId(sample);
+
+        if (type == LimsSampleType.CPCT) {
+            return hospital.cpctRecipients().split(";")[0];
+        } else if (type == LimsSampleType.DRUP) {
+            final String drupPi = hospital.drupRecipients().split(";")[0];
+            if (drupPi.trim().equals("*")) {
+                return hospital.cpctRecipients().split(";")[0];
+            }
+            return hospital.drupRecipients().split(";")[0];
+        } else if (type == LimsSampleType.WIDE) {
+            return hospital.wideRecipients().split(";")[0];
         }
         return Strings.EMPTY;
     }

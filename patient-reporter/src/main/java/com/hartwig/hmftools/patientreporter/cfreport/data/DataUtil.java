@@ -11,12 +11,14 @@ import java.time.format.DateTimeFormatter;
 
 public final class DataUtil {
 
-    // Number formatting
+    private static final String DATE_TIME_FORMAT = "dd-MMM-yyyy";
     private static final DecimalFormat PERCENTAGE_FORMAT = new DecimalFormat("#'%'");
 
-    // Missing/invalid data indicators
-    public static final String NoneString = "NONE";
-    public static final String NAString = "N/A";
+    public static final String NONE_STRING = "NONE";
+    public static final String NA_STRING = "N/A";
+
+    private DataUtil() {
+    }
 
     @NotNull
     public static String formatPercentage(final double percentage) {
@@ -25,7 +27,7 @@ public final class DataUtil {
 
     @NotNull
     public static String formatDate(@Nullable final LocalDate date) {
-        final DateTimeFormatter formatter = DateTimeFormatter.ofPattern(ReportResources.DATE_TIME_FORMAT);
+        final DateTimeFormatter formatter = DateTimeFormatter.ofPattern(DATE_TIME_FORMAT);
         return date != null ? formatter.format(date) : "?";
     }
 }

@@ -9,13 +9,13 @@ public final class HrDeficiency {
     public static final double RANGE_MIN = 0;
     public static final double RANGE_MAX = 1;
 
-    /**
-     * Interpret HR Deficiency value
-     */
+    private HrDeficiency() {
+    }
+
     @NotNull
     public static String interpretToString(final double chordHrdScore, boolean hasReliablePurityFit) {
         if (!hasReliablePurityFit) {
-            return DataUtil.NAString;
+            return DataUtil.NA_STRING;
         } else {
             return new DecimalFormat("#.##").format(chordHrdScore);
         }

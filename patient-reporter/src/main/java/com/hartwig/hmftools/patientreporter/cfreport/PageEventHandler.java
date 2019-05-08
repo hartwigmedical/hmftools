@@ -18,10 +18,12 @@ import org.jetbrains.annotations.Nullable;
 
 class PageEventHandler implements IEventHandler {
 
-    private SampleReport sampleReport;
-
-    private Footer footer;
-    private Header header;
+    @NotNull
+    private final SampleReport sampleReport;
+    @NotNull
+    private final Footer footer;
+    @NotNull
+    private final Header header;
 
     private boolean fullSidebar;
     private boolean fullSidebarContent;
@@ -38,15 +40,33 @@ class PageEventHandler implements IEventHandler {
         this.footer = new Footer();
     }
 
-    public void setChapterTitle(@NotNull String chapterTitle) {
+    @Override
+    public void handleEvent(@NotNull Event event) {
+        PdfDocumentEvent documentEvent = (PdfDocumentEvent) event;
+        if (documentEvent.getType().equals(PdfDocumentEvent.START_PAGE)) {
+            final PdfPage page = documentEvent.getPage();
+
+            header.renderHeader(chapterTitle, firstPageOfChapter, page);
+            if (firstPageOfChapter) {
+                firstPageOfChapter = false;
+
+                createChapterBookmark(documentEvent.getDocument(), chapterTitle);
+            }
+
+            SidePanel.renderSidePanel(page, sampleReport, fullSidebar, fullSidebarContent);
+            footer.renderFooter(page, !fullSidebar, pageNumberPrefix);
+        }
+    }
+
+    public void chapterTitle(@NotNull String chapterTitle) {
         this.chapterTitle = chapterTitle;
     }
 
-    public void setPageNumberPrefix(@Nullable String pageNumberPrefix) {
+    public void pageNumberPrefix(@Nullable String pageNumberPrefix) {
         this.pageNumberPrefix = pageNumberPrefix;
     }
 
-    public void setSidebarType(boolean full, boolean fullContent) {
+    public void sidebarType(boolean full, boolean fullContent) {
         fullSidebar = full;
         fullSidebarContent = fullSidebar && fullContent;
     }
@@ -60,31 +80,12 @@ class PageEventHandler implements IEventHandler {
         footer.writeTotalPageCount(document);
     }
 
-    @Override
-    public void handleEvent(Event event) {
-        PdfDocumentEvent documentEvent = (PdfDocumentEvent) event;
-        if (documentEvent.getType().equals(PdfDocumentEvent.START_PAGE)) {
-
-            final PdfPage page = documentEvent.getPage();
-
-            header.renderHeader(chapterTitle, firstPageOfChapter, page);
-            if (firstPageOfChapter) {
-                firstPageOfChapter = false;
-
-                createChapterBookmark(documentEvent.getDocument(), chapterTitle);
-
-            }
-            SidePanel.renderSidePanel(page, sampleReport, fullSidebar, fullSidebarContent);
-            footer.renderFooter(page, !fullSidebar, pageNumberPrefix);
-        }
-    }
-
-    private void createChapterBookmark(PdfDocument pdf, String title) {
+    private void createChapterBookmark(@NotNull PdfDocument pdf, @NotNull String title) {
         if (outline == null) {
             outline = pdf.getOutlines(false);
         }
 
-        PdfOutline chapterItem = outline.addOutline(title);
+        final PdfOutline chapterItem = outline.addOutline(title);
         chapterItem.addDestination(PdfExplicitRemoteGoToDestination.createFitH(pdf.getNumberOfPages(), 0));
     }
 }

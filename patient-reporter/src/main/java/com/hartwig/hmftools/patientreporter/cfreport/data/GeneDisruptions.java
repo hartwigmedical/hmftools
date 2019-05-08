@@ -28,11 +28,7 @@ public final class GeneDisruptions {
     }
 
     @NotNull
-    public static String getCopyNumberString(@Nullable Integer copies, boolean hasReliablePurityFit) {
-        if (!hasReliablePurityFit || copies == null) {
-            return DataUtil.NAString;
-        } else {
-            return String.valueOf(copies);
-        }
+    public static String getCopyNumberString(int copies, boolean hasReliablePurityFit) {
+        return hasReliablePurityFit ? String.valueOf(copies) : DataUtil.NA_STRING;
     }
 }

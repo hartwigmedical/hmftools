@@ -9,10 +9,12 @@ import com.itextpdf.layout.renderer.DivRenderer;
 import com.itextpdf.layout.renderer.DrawContext;
 import com.itextpdf.layout.renderer.IRenderer;
 
+import org.jetbrains.annotations.NotNull;
+
 public class InlineBarChart extends Div {
 
-    private static Scale LINEAR_SCALE = (v) -> v;
-    public static Scale LOG10_SCALE = Math::log10;
+    public static final Scale LOG10_SCALE = Math::log10;
+    private static final Scale LINEAR_SCALE = (v) -> v;
 
     private double value;
     private double min;
@@ -20,6 +22,7 @@ public class InlineBarChart extends Div {
 
     private boolean isEnabled = true;
 
+    @NotNull
     private Scale scale = LINEAR_SCALE; // Default to linear scale
 
     public InlineBarChart(double value, double min, double max) {
@@ -28,39 +31,39 @@ public class InlineBarChart extends Div {
         this.max = max;
     }
 
-    public void setScale(Scale scale) {
+    public void scale(@NotNull Scale scale) {
         this.scale = scale;
     }
 
-    final double getValue() {
+    final double value() {
         return value;
     }
 
-    final double getScaledValue() {
-        return getScaledValue(getValue());
+    final double scaledValue() {
+        return scaledValue(value());
     }
 
-    public final double getMin() {
+    public final double min() {
         return min;
     }
 
-    final double getScaledMin() {
-        return getScaledValue(getMin());
+    final double scaledMin() {
+        return scaledValue(min());
     }
 
-    public final double getMax() {
+    public final double max() {
         return max;
     }
 
-    final double getScaledMax() {
-        return getScaledValue(getMax());
+    final double scaledMax() {
+        return scaledValue(max());
     }
 
-    final double getScaledValue(double value) {
+    final double scaledValue(double value) {
         return scale.scale(value);
     }
 
-    public void setEnabled(boolean enabled) {
+    public void enabled(boolean enabled) {
         isEnabled = enabled;
     }
 
@@ -75,11 +78,11 @@ public class InlineBarChart extends Div {
 
     private class BarChartRenderer extends DivRenderer {
 
-        BarChartRenderer(final InlineBarChart inlineBarChart) {
+        BarChartRenderer(@NotNull InlineBarChart inlineBarChart) {
             super(inlineBarChart);
         }
 
-        public void draw(final DrawContext drawContext) {
+        public void draw(@NotNull DrawContext drawContext) {
             final PdfCanvas canvas = drawContext.getCanvas();
 
             final Rectangle area = this.occupiedArea.getBBox();
@@ -88,28 +91,23 @@ public class InlineBarChart extends Div {
             final float width = area.getWidth();
             final float height = area.getHeight();
             final float radius = height * .5f;
-            final float filledWidth = (float) MathUtil.map(getScaledValue(), getScaledMin(), getScaledMax(), height, width);
+            final float filledWidth = (float) MathUtil.map(scaledValue(), scaledMin(), scaledMax(), height, width);
 
-            // Background
             canvas.setFillColor(ReportResources.PALETTE_LIGHT_GREY);
             canvas.roundRectangle(x, y, width, height, radius);
             canvas.fill();
 
-            // Fill
-            if (isEnabled() && getValue() > getMin()) {
+            if (isEnabled() && value() > min()) {
                 canvas.setFillColor(ReportResources.PALETTE_BLUE);
                 canvas.roundRectangle(x, y, filledWidth, height, radius);
                 canvas.fill();
             }
 
             super.draw(drawContext);
-
         }
-
     }
 
     public interface Scale {
         double scale(final double value);
     }
-
 }

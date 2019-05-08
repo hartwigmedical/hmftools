@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.patientreporter.cfreport.data;
 
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.patientreporter.report.data.GeneFusionDataSource;
 import com.hartwig.hmftools.patientreporter.structural.ReportableGeneFusion;
 
@@ -8,6 +9,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import static com.hartwig.hmftools.common.fusions.KnownFusionsModel.*;
@@ -15,15 +17,6 @@ import static com.hartwig.hmftools.common.fusions.KnownFusionsModel.*;
 public final class GeneFusions {
 
     private GeneFusions() {
-    }
-
-    @NotNull
-    public static String[] geneFusions(@NotNull final List<ReportableGeneFusion> fusions) {
-        final List<String> returnVariants = new ArrayList<>();
-        for (ReportableGeneFusion fusion : GeneFusionDataSource.sort(fusions)) {
-            returnVariants.add(GeneFusionDataSource.name(fusion));
-        }
-        return returnVariants.toArray(new String[0]);
     }
 
     @NotNull
@@ -38,12 +31,21 @@ public final class GeneFusions {
     }
 
     @NotNull
-    public static String getName(@NotNull final ReportableGeneFusion fusion) {
+    public static Set<String> uniqueGeneFusions(@NotNull final List<ReportableGeneFusion> fusions) {
+        final Set<String> genes = Sets.newHashSet();
+        for (ReportableGeneFusion fusion : fusions) {
+            genes.add(name(fusion));
+        }
+        return genes;
+    }
+
+    @NotNull
+    public static String name(@NotNull final ReportableGeneFusion fusion) {
         return fusion.geneStart() + " - " + fusion.geneEnd();
     }
 
     @NotNull
-    public static String getSourceUrl(@NotNull String sourceName) {
+    public static String sourceUrl(@NotNull String sourceName) {
         switch (sourceName) {
             case ONCOKB:
                 return "http://oncokb.org/#/";

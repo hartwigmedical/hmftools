@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.patientreporter.cfreport.components;
 
+import com.hartwig.hmftools.common.hospital.HospitalModel;
 import com.hartwig.hmftools.patientreporter.PatientReporterApplication;
 import com.hartwig.hmftools.patientreporter.SampleReport;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
@@ -19,37 +20,33 @@ public final class SidePanel {
 
     private static final float ROW_SPACING = 42;
     private static final float CONTENT_X_START = 455;
-    private static final float RECTANGLE_WIDTH = 170;           // Width of the blue rectangle in pt
-    private static final float RECTANGLE_HEIGHT_SHORT = 110;    // Height of the blue rectangle in pt when not full page height
+    private static final float RECTANGLE_WIDTH = 170;
+    private static final float RECTANGLE_HEIGHT_SHORT = 110;
 
     public static void renderSidePanel(PdfPage page, @NotNull final SampleReport sampleReport, boolean fullHeight, boolean fullContent) {
-        // Draw background and markers
         final PdfCanvas canvas = new PdfCanvas(page.getLastContentStream(), page.getResources(), page.getDocument());
         final Rectangle pageSize = page.getPageSize();
         renderBackgroundRect(fullHeight, canvas, pageSize);
         BaseMarker.renderMarkerGrid(4, (fullHeight ? 20 : 2), CONTENT_X_START, 35, 820, -ROW_SPACING, .05f, .15f, canvas);
 
-        // Add side panel content that is always on the side panel (full height or not)
         int sideTextIndex = 0;
         Canvas cv = new Canvas(canvas, page.getDocument(), page.getPageSize());
 
         cv.add(createSidePanelDiv(sideTextIndex++, "HMF sample id", sampleReport.sampleId()));
         cv.add(createSidePanelDiv(sideTextIndex++, "Report date", ReportResources.REPORT_DATE));
 
-        // Add side panel content that is only on the summary page
         if (fullHeight && fullContent) {
-
-            final String contactNames = sampleReport.requesterName();
-            if (contactNames != null && !contactNames.isEmpty()) {
+            final String contactNames = sampleReport.hospitalPIName();
+            if (!contactNames.isEmpty()) {
                 cv.add(createSidePanelDiv(sideTextIndex++, "Name requestor", contactNames));
             }
 
-            final String contactEmails = sampleReport.requesterEmail();
-            if (contactEmails != null && !contactEmails.isEmpty()) {
+            final String contactEmails = sampleReport.hospitalPIEmail();
+            if (!contactEmails.isEmpty()) {
                 cv.add(createSidePanelDiv(sideTextIndex++, "Email requestor", contactEmails));
             }
 
-            final String hospitalName = "OLVG Oost"; // @TODO Replace with sampleReport.hospital() which can be null or empty string
+            final String hospitalName = sampleReport.hospitalName(); // @TODO Replace with sampleReport.hospital() which can be null or empty string
             if (hospitalName != null && !hospitalName.isEmpty()) {
                 cv.add(createSidePanelDiv(sideTextIndex++, "Hospital", hospitalName));
             }
@@ -59,20 +56,20 @@ public final class SidePanel {
                 cv.add(createSidePanelDiv(sideTextIndex++, "Hospital patient id", hospitalPatientId));
             }
 
-            final String patientGender = "Female"; // @TODO Replace with sampleReport.patientGender() which can be null or empty string
-            if (patientGender != null && !patientGender.isEmpty()) {
-                cv.add(createSidePanelDiv(sideTextIndex++, "Gender", patientGender));
-            }
-
-            final LocalDate patientBirthDate =
-                    LocalDate.of(1973, 10, 4); // @TODO Replace with sampleReport.patientBirthDate() which can be null
-            if (patientBirthDate != null) {
-                cv.add(createSidePanelDiv(sideTextIndex, "Birth date", DataUtil.formatDate(patientBirthDate)));
-            }
-
+            // @TODO: Decide add to report
+            //            final String patientGender = "Female"; // @TODO Replace with sampleReport.patientGender() which can be null or empty string
+//            if (patientGender != null && !patientGender.isEmpty()) {
+//                cv.add(createSidePanelDiv(sideTextIndex++, "Gender", patientGender));
+//            }
+//
+            // @TODO: Decide add to report
+            //            final LocalDate patientBirthDate =
+//                    LocalDate.of(1973, 10, 4); // @TODO Replace with sampleReport.patientBirthDate() which can be null
+//            if (patientBirthDate != null) {
+//                cv.add(createSidePanelDiv(sideTextIndex, "Birth date", DataUtil.formatDate(patientBirthDate)));
+//            }
         }
 
-        // Add version number of the first page
         if (page.getDocument().getNumberOfPages() == 1) {
             cv.add(new Paragraph(
                     "v" + (PatientReporterApplication.VERSION != null ? PatientReporterApplication.VERSION : "X.X")).setFixedPosition(
@@ -82,12 +79,8 @@ public final class SidePanel {
         }
 
         canvas.release();
-
     }
 
-    /**
-     * Draw background rectangle, either full height or only top of the page
-     */
     private static void renderBackgroundRect(boolean fullHeight, @NotNull PdfCanvas canvas, @NotNull Rectangle pageSize) {
         canvas.rectangle(pageSize.getWidth(),
                 pageSize.getHeight(),
@@ -99,7 +92,6 @@ public final class SidePanel {
 
     @NotNull
     private static Div createSidePanelDiv(int index, @NotNull String label, @NotNull String value) {
-
         final float Y_START = 802;
         final float VALUE_TEXT_Y_OFFSET = 18;
         final float MAX_WIDTH = 120;
@@ -107,21 +99,17 @@ public final class SidePanel {
         Div div = new Div();
         div.setKeepTogether(true);
 
-        // Add label
         float yPos = Y_START - index * ROW_SPACING;
-        div.add(new Paragraph(label.toUpperCase()).addStyle(ReportResources.sidepanelLabelStyle())
+        div.add(new Paragraph(label.toUpperCase()).addStyle(ReportResources.sidePanelLabelStyle())
                 .setFixedPosition(CONTENT_X_START, yPos, MAX_WIDTH));
 
-        // Add value (auto resize the font if needed)
-        final float valueFontSize = ReportResources.getMaxPointSizeForWidth(ReportResources.getFontBold(), 11, 6, value, MAX_WIDTH);
+        final float valueFontSize = ReportResources.maxPointSizeForWidth(ReportResources.fontBold(), 11, 6, value, MAX_WIDTH);
         yPos -= VALUE_TEXT_Y_OFFSET;
-        div.add(new Paragraph(value).addStyle(ReportResources.sidepanelValueStyle().setFontSize(valueFontSize))
+        div.add(new Paragraph(value).addStyle(ReportResources.sidePanelValueStyle().setFontSize(valueFontSize))
                 .setHeight(15)
                 .setFixedPosition(CONTENT_X_START, yPos, MAX_WIDTH)
                 .setFixedLeading(valueFontSize));
 
         return div;
-
     }
-
 }

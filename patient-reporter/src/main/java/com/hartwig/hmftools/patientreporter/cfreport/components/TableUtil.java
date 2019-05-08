@@ -17,9 +17,9 @@ public final class TableUtil {
 
     private final static float TABLE_BOTTOM_MARGIN = 20;
 
-    /**
-     * Get a table that implements the visual style for the main report tables
-     */
+    private TableUtil() {
+    }
+
     @NotNull
     public static Table createReportContentTable(float[] columnPercentageWidths, Cell[] headerCells) {
         Table table = new Table(UnitValue.createPercentArray(columnPercentageWidths)).setWidth(ReportResources.CONTENT_WIDTH_WIDE);
@@ -30,7 +30,6 @@ public final class TableUtil {
         }
 
         return table;
-
     }
 
     @NotNull
@@ -42,27 +41,25 @@ public final class TableUtil {
         Table table = TableUtil.createReportContentTable(new float[] { 1 }, new Cell[] { headerCell });
         table.setKeepTogether(true);
         table.setMarginBottom(TABLE_BOTTOM_MARGIN);
-        table.addCell(TableUtil.getDisabledContentCell(new Paragraph(DataUtil.NoneString)));
+        table.addCell(TableUtil.getDisabledContentCell(new Paragraph(DataUtil.NONE_STRING)));
 
         return table;
     }
 
-    public static Table createWrappingReportTable(String tableTitle, Table contentTable) {
-        // Add "continues on next page" footer to the content table
+    @NotNull
+    public static Table createWrappingReportTable(@NotNull String tableTitle, @NotNull Table contentTable) {
         contentTable.addFooterCell(new Cell(1, contentTable.getNumberOfColumns()).setBorder(Border.NO_BORDER)
                 .setPaddingTop(5)
                 .setPaddingBottom(5)
                 .add(new Paragraph("The table continues on the next page".toUpperCase()).addStyle(ReportResources.subTextStyle())))
                 .setSkipLastFooter(true);
 
-        // Wrap content table with a table that shows "continued from the previous table" after page break
         Table continuedWrapTable = new Table(1).setMinWidth(contentTable.getWidth())
                 .addHeaderCell(new Cell().setBorder(Border.NO_BORDER)
                         .add(new Paragraph("Continued from the previous page".toUpperCase()).addStyle(ReportResources.subTextStyle())))
                 .setSkipFirstHeader(true)
                 .addCell(new Cell().add(contentTable).setPadding(0).setBorder(Border.NO_BORDER));
 
-        // Wrap continuedWrapTable with table that shows the table title
         return new Table(1).setMinWidth(contentTable.getWidth())
                 .setMarginBottom(TABLE_BOTTOM_MARGIN)
                 .addHeaderCell(new Cell().setBorder(Border.NO_BORDER)
@@ -71,33 +68,21 @@ public final class TableUtil {
                 .addCell(new Cell().add(continuedWrapTable).setPadding(0).setBorder(Border.NO_BORDER));
     }
 
-    /**
-     * Get a cell that implements the visual header style for the main report tables
-     */
     @NotNull
     public static Cell getHeaderCell(@NotNull String text) {
         return getHeaderCell(text, 1);
     }
 
-    /**
-     * Get a cell that implements the visual header style for the main report tables
-     */
     @NotNull
-    public static Cell getHeaderCell(@NotNull String text, int colspan) {
-        return getHeaderCell(colspan).add(new Paragraph(text.toUpperCase()));
+    public static Cell getHeaderCell(@NotNull String text, int colSpan) {
+        return getHeaderCell(colSpan).add(new Paragraph(text.toUpperCase()));
     }
 
-    /**
-     * Get a cell that implements the visual header style for the main report tables
-     */
     @NotNull
     public static Cell getHeaderCell() {
         return getHeaderCell(1);
     }
 
-    /**
-     * Get a cell that implements the visual header style for the main report tables
-     */
     @NotNull
     private static Cell getHeaderCell(int colspan) {
         Cell c = new Cell(1, colspan);
@@ -108,17 +93,11 @@ public final class TableUtil {
         return c;
     }
 
-    /**
-     * Get a cell that implements the visual content style for the main report tables
-     */
     @NotNull
     public static Cell getContentCell(@NotNull String text) {
         return getContentCell(new Paragraph(text));
     }
 
-    /**
-     * Get a cell that implements the visual content style for the main report tables
-     */
     @NotNull
     public static Cell getContentCell(@NotNull IBlockElement element) {
         Cell c = new Cell();
@@ -130,9 +109,6 @@ public final class TableUtil {
         return c;
     }
 
-    /**
-     * Get a cell that implements the visual content disabled style for the main report tables
-     */
     @NotNull
     private static Cell getDisabledContentCell(@NotNull IBlockElement element) {
         Cell c = new Cell();
@@ -144,26 +120,18 @@ public final class TableUtil {
         return c;
     }
 
-    /**
-     * Get a cell that has no borders (just for positioning elements)
-     */
     @NotNull
     public static Cell getLayoutCell() {
         return getLayoutCell(1, 1);
     }
 
-    /**
-     * Get a cell that has no borders (just for positioning elements)
-     */
     @NotNull
-    public static Cell getLayoutCell(int rowspan, int colspan) {
-
-        Cell c = new Cell(rowspan, colspan);
+    public static Cell getLayoutCell(int rowSpan, int colSpan) {
+        Cell c = new Cell(rowSpan, colSpan);
         c.setBorder(Border.NO_BORDER);
         c.setKeepTogether(true);
         c.setPadding(0);
         c.setMargin(0);
         return c;
     }
-
 }

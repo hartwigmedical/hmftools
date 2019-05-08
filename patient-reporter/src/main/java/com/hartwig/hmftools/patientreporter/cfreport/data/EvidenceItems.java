@@ -1,27 +1,18 @@
 package com.hartwig.hmftools.patientreporter.cfreport.data;
 
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.actionability.EvidenceItem;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.Function;
-import java.util.function.Predicate;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 public final class EvidenceItems {
 
-    /**
-     * Get all evidence items from the list that are not a trial source or should be included in report
-     */
-    @NotNull
-    public static List<EvidenceItem> filter(@NotNull final List<EvidenceItem> evidenceItems) {
-        return evidenceItems.stream()
-                .filter(evidenceItem -> (!evidenceItem.source().isTrialSource() && evidenceItem.level().includeInReport()))
-                .collect(Collectors.toList());
+    private EvidenceItems() {
     }
 
     @NotNull
@@ -57,19 +48,21 @@ public final class EvidenceItems {
             default:
                 return Strings.EMPTY;
         }
-
     }
 
     public static int uniqueEventCount(@NotNull final List<EvidenceItem> evidenceItems) {
-        return (int) evidenceItems.stream().filter(distinctByKey(EvidenceItem::event)).count();
+        Set<String> events = Sets.newHashSet();
+        for (EvidenceItem evidence : evidenceItems) {
+            events.add(evidence.event());
+        }
+        return events.size();
     }
 
     public static int uniqueTherapyCount(@NotNull final List<EvidenceItem> evidenceItems) {
-        return (int) evidenceItems.stream().filter(distinctByKey(EvidenceItem::drug)).count();
-    }
-
-    private static <T> Predicate<T> distinctByKey(@NotNull Function<? super T, Object> keyExtractor) {
-        Map<Object, Boolean> map = new ConcurrentHashMap<>();
-        return t -> map.putIfAbsent(keyExtractor.apply(t), Boolean.TRUE) == null;
+        Set<String> drugs = Sets.newHashSet();
+        for (EvidenceItem evidence : evidenceItems) {
+            drugs.add(evidence.drug());
+        }
+        return drugs.size();
     }
 }
