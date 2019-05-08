@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.patientreporter.cfreport.components;
 
 import com.hartwig.hmftools.common.hospital.HospitalModel;
+import com.hartwig.hmftools.common.lims.LimsSampleType;
 import com.hartwig.hmftools.patientreporter.PatientReporterApplication;
 import com.hartwig.hmftools.patientreporter.SampleReport;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
@@ -35,13 +36,15 @@ public final class SidePanel {
         cv.add(createSidePanelDiv(sideTextIndex++, "HMF sample id", sampleReport.sampleId()));
         cv.add(createSidePanelDiv(sideTextIndex++, "Report date", ReportResources.REPORT_DATE));
 
+        LimsSampleType type = LimsSampleType.fromSampleId(sampleReport.sampleId());
+
         if (fullHeight && fullContent) {
-            final String contactNames = sampleReport.hospitalPIName();
+            final String contactNames = type == LimsSampleType.CORE ? sampleReport.requesterName(): sampleReport.hospitalPIName();
             if (!contactNames.isEmpty()) {
                 cv.add(createSidePanelDiv(sideTextIndex++, "Name requestor", contactNames));
             }
 
-            final String contactEmails = sampleReport.hospitalPIEmail();
+            final String contactEmails = type == LimsSampleType.CORE ? sampleReport.requesterEmail() : sampleReport.hospitalPIEmail();
             if (!contactEmails.isEmpty()) {
                 cv.add(createSidePanelDiv(sideTextIndex++, "Email requestor", contactEmails));
             }
