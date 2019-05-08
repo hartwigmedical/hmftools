@@ -55,7 +55,7 @@ public class TumorCharacteristicsChapter implements ReportChapter {
         reportDocument.add(createCharacteristicDiv("HR-Deficiency score",
                 hrDeficiencyLabel,
                 "The HR-deficiency score is determined by CHORD, a WGS signature-based classifier comparing "
-                        + "the signature of this sample with signatures found across samples with known BRCA1/BRCA2 " + "inactivation.",
+                        + "the signature of this sample with signatures found across samples with known BRCA1/BRCA2 inactivation.",
                 hrChart));
 
         final double microSatelliteStability = patientReport.microsatelliteIndelsPerMb();

@@ -84,7 +84,7 @@ public final class SomaticVariants {
 
     @NotNull
     @VisibleForTesting
-    private static String descriptiveBAF(double adjustedCopyNumber, double minorAllelePloidy) {
+    static String descriptiveBAF(double adjustedCopyNumber, double minorAllelePloidy) {
         int totalAlleleCount = (int) Math.max(0, Math.round(adjustedCopyNumber));
         int minorAlleleCount = (int) Math.max(0, Math.round(minorAllelePloidy));
         int majorAlleleCount = Math.max(0, totalAlleleCount - minorAlleleCount);
