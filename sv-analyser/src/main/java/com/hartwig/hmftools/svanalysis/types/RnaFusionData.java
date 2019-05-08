@@ -4,6 +4,9 @@ import static com.hartwig.hmftools.common.variant.structural.annotation.GeneFusi
 import static com.hartwig.hmftools.svanalysis.types.SvChain.CHAIN_LENGTH;
 import static com.hartwig.hmftools.svanalysis.types.SvChain.CHAIN_LINK_COUNT;
 
+import java.util.List;
+
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.variant.structural.annotation.Transcript;
 
 public class RnaFusionData
@@ -24,6 +27,9 @@ public class RnaFusionData
     public final String SpliceType;
 
     public static String RNA_SPLICE_TYPE_ONLY_REF = "ONLY_REF_SPLICE";
+
+    private List<Integer> mPotentialTransUp; // IDs of transcripts with an exon matching the RNA position
+    private List<Integer> mPotentialTransDown;
 
     // annotations and matching results
 
@@ -75,6 +81,9 @@ public class RnaFusionData
         mExonMinRankDown = 0;
         mExonMaxRankDown = 0;
 
+        mPotentialTransDown = Lists.newArrayList();
+        mPotentialTransUp = Lists.newArrayList();
+
         mTransUp = null;
         mTransDown = null;
         mBreakendUp = null;
@@ -106,6 +115,11 @@ public class RnaFusionData
         mExonMaxRankDown = max;
         mExonMinRankDown = min;
     }
+
+    public void setPotentialTransUp(final List<Integer> list) { mPotentialTransUp.addAll(list); }
+    public void setPotentialTransDown(final List<Integer> list) { mPotentialTransDown.addAll(list); }
+    public final List<Integer> getPotentialTransUp() { return mPotentialTransUp; }
+    public final List<Integer> getPotentialTransDown() { return mPotentialTransDown; }
 
     public int exonMinRankUp() { return mExonMinRankUp; }
     public int exonMaxRankUp() {return mExonMaxRankUp; }

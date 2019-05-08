@@ -413,7 +413,6 @@ public class SvGeneTranscriptCollection
             }
             else
             {
-                // falls after the last exon on forward strand or before the first on reverse strand makes this position downstream
                 return null;
             }
         }
@@ -634,6 +633,36 @@ public class SvGeneTranscriptCollection
         }
 
         return exonData;
+    }
+
+    public List<Integer> getTranscriptIdsMatchingPosition(final String geneId, long position)
+    {
+        List<Integer> transIdList = Lists.newArrayList();
+
+        List<TranscriptExonData> transExonDataList = getTransExonData(geneId);
+
+        if(transExonDataList == null || transExonDataList.isEmpty())
+            return transIdList;
+
+        int teIndex = 0;
+        List<TranscriptExonData> transcriptExons = nextTranscriptExons(transExonDataList, teIndex);
+
+        while(!transcriptExons.isEmpty())
+        {
+            for(TranscriptExonData exonData : transcriptExons)
+            {
+                if(abs(exonData.ExonStart - position) <= 1 || abs(exonData.ExonEnd - position) <= 1)
+                {
+                    transIdList.add(exonData.TransId);
+                    break;
+                }
+            }
+
+            teIndex += transcriptExons.size();
+            transcriptExons = nextTranscriptExons(transExonDataList, teIndex);
+        }
+
+        return transIdList;
     }
 
     public static int PSEUDO_GENE_DATA_TRANS_ID = 0;

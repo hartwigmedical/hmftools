@@ -122,7 +122,7 @@ public class SvFusionAnalyser
 
         for (final StructuralVariantAnnotation annotation : annotations)
         {
-            List<GeneFusion> svFusions = findFusions(annotation.start(), annotation.end(), true, null);
+            List<GeneFusion> svFusions = findFusions(annotation.start(), annotation.end(), true, null, true);
             fusions.addAll(svFusions);
         }
 
@@ -135,7 +135,7 @@ public class SvFusionAnalyser
 
     public final List<GeneFusion> findFusions(
             final List<GeneAnnotation> breakendGenes1, final List<GeneAnnotation> breakendGenes2,
-            boolean requirePhaseMatch, @Nullable  List<String> invalidReasons)
+            boolean requirePhaseMatch, @Nullable  List<String> invalidReasons, boolean setReportable)
     {
         final List<GeneFusion> potentialFusions = Lists.newArrayList();
 
@@ -186,7 +186,8 @@ public class SvFusionAnalyser
             }
         }
 
-        setReportableGeneFusions(potentialFusions);
+        if(setReportable)
+            setReportableGeneFusions(potentialFusions);
 
         return potentialFusions;
     }
@@ -514,6 +515,33 @@ public class SvFusionAnalyser
     private static int MAX_UPSTREAM_DISTANCE_KNOWN = 100000;
     private static int MAX_UPSTREAM_DISTANCE_UNKNOWN = 10000;
 
+    public static boolean couldBeReportable(GeneFusion fusion)
+    {
+        if(!fusion.phaseMatched())
+            return false;
+
+        // first check whether a fusion is known or not - a key requirement of it being potentially reportable
+        if (fusion.getKnownFusionType() == REPORTABLE_TYPE_NONE)
+            return false;
+
+        // set limits on how far upstream the breakend can be - adjusted for whether the fusions is known or not
+        int maxUpstreamDistance = fusion.getKnownFusionType() == REPORTABLE_TYPE_KNOWN ? MAX_UPSTREAM_DISTANCE_KNOWN : MAX_UPSTREAM_DISTANCE_UNKNOWN;
+
+        final Transcript upTrans = fusion.upstreamTrans();
+        final Transcript downTrans = fusion.downstreamTrans();
+
+        if(upTrans.getDistanceUpstream() > maxUpstreamDistance || downTrans.getDistanceUpstream() > maxUpstreamDistance)
+            return false;
+
+        if(downTrans.bioType().equals(TRANSCRIPT_NONSENSE_MED_DECAY))
+            return false;
+
+        if(downTrans.exonDistanceUp() < 0)
+            return false;
+
+        return true;
+    }
+
     private GeneFusion determineReportableFusion(final List<GeneFusion> fusions)
     {
         // Select either the canonical -> canonical transcript fusion
@@ -527,27 +555,12 @@ public class SvFusionAnalyser
 
         for(final GeneFusion fusion : fusions)
         {
-            if(!fusion.phaseMatched())
+            if(!couldBeReportable(fusion))
                 continue;
 
             // first check whether a fusion is known or not - a key requirement of it being potentially reportable
             final Transcript upTrans = fusion.upstreamTrans();
             final Transcript downTrans = fusion.downstreamTrans();
-
-            if (fusion.getKnownFusionType() == REPORTABLE_TYPE_NONE)
-                continue;
-
-            // set limits on how far upstream the breakend can be - adjusted for whether the fusions is known or not
-            int maxUpstreamDistance = fusion.getKnownFusionType() == REPORTABLE_TYPE_KNOWN ? MAX_UPSTREAM_DISTANCE_KNOWN : MAX_UPSTREAM_DISTANCE_UNKNOWN;
-
-            if(upTrans.getDistanceUpstream() > maxUpstreamDistance || downTrans.getDistanceUpstream() > maxUpstreamDistance)
-                continue;
-
-            if(downTrans.bioType().equals(TRANSCRIPT_NONSENSE_MED_DECAY))
-                continue;
-
-            if(downTrans.exonDistanceUp() < 0)
-                continue;
 
             /* prioritisation rules:
             - take both canonical if possible

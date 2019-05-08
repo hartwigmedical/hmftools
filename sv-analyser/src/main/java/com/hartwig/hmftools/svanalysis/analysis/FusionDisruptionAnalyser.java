@@ -27,6 +27,7 @@ import static com.hartwig.hmftools.svanalysis.types.RnaFusionData.RNA_SPLICE_TYP
 import static com.hartwig.hmftools.svannotation.SvGeneTranscriptCollection.getExonRankings;
 import static com.hartwig.hmftools.svannotation.analysis.SvDisruptionAnalyser.markNonDisruptiveTranscripts;
 import static com.hartwig.hmftools.svannotation.analysis.SvFusionAnalyser.checkFusionLogic;
+import static com.hartwig.hmftools.svannotation.analysis.SvFusionAnalyser.couldBeReportable;
 import static com.hartwig.hmftools.svannotation.analysis.SvFusionAnalyser.validFusionTranscript;
 
 import java.io.BufferedReader;
@@ -189,7 +190,7 @@ public class FusionDisruptionAnalyser
     public void setHasValidConfigData(boolean toggle) { mFusionFinder.setHasValidConfigData(toggle); }
 
     public static void setSvGeneData(final List<SvVarData> svList, SvGeneTranscriptCollection geneCollection,
-            boolean applyPromotorDistance, boolean selectiveLoading)
+            boolean applyPromotorDistance, boolean selectiveLoading, boolean purgeInvalidTranscripts)
     {
         int upstreamDistance = applyPromotorDistance ? PRE_GENE_PROMOTOR_DISTANCE : 0;
 
@@ -236,19 +237,22 @@ public class FusionDisruptionAnalyser
                 {
                     gene.setSvData(var.getSvData());
 
-                    int transIndex = 0;
-                    while(transIndex < gene.transcripts().size())
+                    if(purgeInvalidTranscripts)
                     {
-                        Transcript transcript = gene.transcripts().get(transIndex);
+                        int transIndex = 0;
+                        while (transIndex < gene.transcripts().size())
+                        {
+                            Transcript transcript = gene.transcripts().get(transIndex);
 
-                        // only retain transcript which are potential fusion candidates (with exception for canonical)
-                        if(!validFusionTranscript(transcript) && !transcript.isCanonical())
-                        {
-                            gene.transcripts().remove(transIndex);
-                        }
-                        else
-                        {
-                            ++transIndex;
+                            // only retain transcript which are potential fusion candidates (with exception for canonical)
+                            if (!validFusionTranscript(transcript) && !transcript.isCanonical())
+                            {
+                                gene.transcripts().remove(transIndex);
+                            }
+                            else
+                            {
+                                ++transIndex;
+                            }
                         }
                     }
                 }
@@ -317,7 +321,7 @@ public class FusionDisruptionAnalyser
                 continue;
 
             // isSpecificSV(var);
-            mFusionFinder.setLogInvalidReasons(isSpecificSV(var));
+            // mFusionFinder.setLogInvalidReasons(isSpecificSV(var));
 
             List<GeneAnnotation> genesListStart = Lists.newArrayList(var.getGenesList(true));
             List<GeneAnnotation> genesListEnd = Lists.newArrayList(var.getGenesList(false));
@@ -328,7 +332,7 @@ public class FusionDisruptionAnalyser
             if(genesListStart.isEmpty() || genesListEnd.isEmpty())
                 continue;
 
-            List<GeneFusion> fusions = mFusionFinder.findFusions(genesListStart, genesListEnd, true, null);
+            List<GeneFusion> fusions = mFusionFinder.findFusions(genesListStart, genesListEnd, true, null, true);
 
             if (fusions.isEmpty())
                 continue;
@@ -397,8 +401,6 @@ public class FusionDisruptionAnalyser
                 continue;
 
             // now all fusions have been gathered from this chain, set the reportable one (if any)
-            chainFusions.stream().forEach(x -> x.setReportable(false));
-
             LOGGER.debug("cluster({}) found chained({} valid={}) fusions", cluster.id(), chainFusions.size(), validFusions.size());
 
             // consider fusions from amongst unique gene-pairings
@@ -549,13 +551,11 @@ public class FusionDisruptionAnalyser
                 */
 
                 // test the fusion between these 2 breakends
-                if(isRepeatedBreakendPair(lowerBreakend, upperBreakend, chainFusions))
-                    continue;
 
-                 boolean logFusionReasons = isSpecificSV(lowerBreakend.getSV()) & isSpecificSV(upperBreakend.getSV());
-                 mFusionFinder.setLogInvalidReasons(logFusionReasons);
+                 //boolean logFusionReasons = isSpecificSV(lowerBreakend.getSV()) & isSpecificSV(upperBreakend.getSV());
+                 //mFusionFinder.setLogInvalidReasons(logFusionReasons);
 
-                List<GeneFusion> fusions = mFusionFinder.findFusions(genesListLower, genesListUpper, true, null);
+                List<GeneFusion> fusions = mFusionFinder.findFusions(genesListLower, genesListUpper, true, null, false);
 
                 if(fusions.isEmpty())
                     continue;
@@ -568,7 +568,7 @@ public class FusionDisruptionAnalyser
 
                 if(mLogReportableOnly)
                 {
-                    fusions = fusions.stream().filter(x -> x.reportable()).collect(Collectors.toList());
+                    fusions = fusions.stream().filter(x -> couldBeReportable(x)).collect(Collectors.toList());
 
                     if(fusions.isEmpty())
                         continue;
@@ -583,6 +583,17 @@ public class FusionDisruptionAnalyser
                     int upGeneStrand = fusion.upstreamTrans().parent().Strand;
                     boolean isPrecodingUpstream = fusion.upstreamTrans().preCoding();
                     boolean fusionLowerToUpper = fusion.upstreamTrans().parent().position() == lowerBreakend.position();
+
+                    // specific debug
+                    /*
+                    if(isSpecificSV(lowerBreakend.getSV()) || isSpecificSV(upperBreakend.getSV()))
+                    {
+                        if (fusion.upstreamTrans().StableId.equals("ENST00000263102") && fusion.downstreamTrans().StableId.equals("ENST00000355710"))
+                        {
+                            LOGGER.debug("specific fusion");
+                        }
+                    }
+                    */
 
                     // check any traversed genes
                     long totalLinkLength = 0;
@@ -657,7 +668,10 @@ public class FusionDisruptionAnalyser
 
                     if(validTraversal && chainLengthOk && notDisrupted)
                     {
-                        validFusions.add(fusion);
+                        if(!hasIdenticalFusion(fusion, validFusions))
+                        {
+                            validFusions.add(fusion);
+                        }
                     }
                 }
             }
@@ -666,14 +680,23 @@ public class FusionDisruptionAnalyser
         mFusionFinder.setLogInvalidReasons(false);
     }
 
-    private boolean isRepeatedBreakendPair(final SvBreakend be1, final SvBreakend be2, final List<GeneFusion> fusions)
+    private boolean hasIdenticalFusion(final GeneFusion newFusion, final List<GeneFusion> fusions)
     {
         for(GeneFusion fusion : fusions)
         {
-            if(fusion.upstreamTrans().parent().id() == be1.getSV().dbId() && fusion.downstreamTrans().parent().id() == be2.getSV().dbId())
-                return true;
-            else if(fusion.upstreamTrans().parent().id() == be2.getSV().dbId() && fusion.downstreamTrans().parent().id() == be1.getSV().dbId())
-                return true;
+            if(newFusion.upstreamTrans().parent().id() != fusion.upstreamTrans().parent().id())
+                continue;
+
+            if(newFusion.downstreamTrans().parent().id() != fusion.downstreamTrans().parent().id())
+                continue;
+
+            if(!newFusion.upstreamTrans().StableId.equals(fusion.upstreamTrans().StableId))
+                continue;
+
+            if(!newFusion.downstreamTrans().StableId.equals(fusion.downstreamTrans().StableId))
+                continue;
+
+            return true;
         }
 
         return false;
@@ -953,10 +976,10 @@ public class FusionDisruptionAnalyser
                                 continue;
                         }
 
-                        /*
                         LOGGER.debug("pair({}) fusionDirection({}) traverses splice acceptor({} {}) exon(rank{} pos={})",
                                 pair.toString(), fusionDirection, geneData.GeneName, exonData.TransName,
                                 exonData.ExonRank, exonData.ExonStart, exonData.ExonEnd);
+                        /*
                         */
 
                         return true;
@@ -1040,9 +1063,9 @@ public class FusionDisruptionAnalyser
                         continue;
                 }
 
-                isSpecificSV(be1.getSV());
+                // isSpecificSV(be1.getSV());
 
-                List<GeneFusion> fusions = mFusionFinder.findFusions(genes1, genes2, true, null);
+                List<GeneFusion> fusions = mFusionFinder.findFusions(genes1, genes2, true, null, true);
 
                 if (fusions.isEmpty())
                     continue;
@@ -1147,7 +1170,7 @@ public class FusionDisruptionAnalyser
                     }
                 }
 
-                List<GeneFusion> fusions = mFusionFinder.findFusions(genes1, genes2, true, invalidReasons);
+                List<GeneFusion> fusions = mFusionFinder.findFusions(genes1, genes2, true, invalidReasons, false);
 
                 /*
                 if (!fusions.isEmpty())
@@ -1311,7 +1334,7 @@ public class FusionDisruptionAnalyser
                 if(var.isNoneSegment())
                     continue;
 
-                // isSpecificSV(var);
+                isSpecificSV(var);
 
                 // check whether breakend falls in genic region
                 List<GeneAnnotation> genesList = var.getGenesList(breakend.usesStart())
@@ -1328,18 +1351,27 @@ public class FusionDisruptionAnalyser
                 // check whether any of the breakend's transcripts falls within the nearest exon of the RNA fusion breakpoint
                 for(final Transcript trans : genesList.get(0).transcripts())
                 {
-                    if(trans.isCanonical())
+                    if(isExactRnaExon)
                     {
-                        if(correctLocation)
-                        {
-                            nearBreakends.add(breakend);
-                            nearTranscripts.add(trans);
-                        }
-                        else
-                        {
-                            genicBreakends.add(breakend);
-                            genicTranscripts.add(trans);
-                        }
+                        if(isUpstream && !rnaFusion.getPotentialTransUp().contains(trans.TransId))
+                            continue;
+                        else if(!isUpstream && !rnaFusion.getPotentialTransDown().contains(trans.TransId))
+                            continue;
+                    }
+                    else if(!trans.isCanonical())
+                    {
+                        continue;
+                    }
+
+                    if(correctLocation)
+                    {
+                        nearBreakends.add(breakend);
+                        nearTranscripts.add(trans);
+                    }
+                    else
+                    {
+                        genicBreakends.add(breakend);
+                        genicTranscripts.add(trans);
                     }
 
                     if(correctLocation && mFusionFinder.isTranscriptBreakendViableForRnaBoundary(
@@ -1347,7 +1379,6 @@ public class FusionDisruptionAnalyser
                     {
                         viableBreakends.add(breakend);
                         viableTranscripts.add(trans);
-                        break;
                     }
                 }
             }
@@ -1514,6 +1545,9 @@ public class FusionDisruptionAnalyser
     private boolean isCandidateBetter(final GeneFusion currentFusion, final SvBreakend beCurrentStart, final SvBreakend beCurrentEnd,
             final GeneFusion candidateFusion, final SvBreakend beCandidateStart, final SvBreakend beCandidateEnd, final RnaFusionData rnaFusion)
     {
+        /* fusion validity is no longer used to decide on which candidate to select since phasing and coding outcomes
+          ought not to effect RNA transcription
+           
         if(currentFusion.viable() != candidateFusion.viable())
         {
             return candidateFusion.viable();
@@ -1523,6 +1557,7 @@ public class FusionDisruptionAnalyser
         {
             return candidateFusion.phaseMatched();
         }
+        */
 
         SvVarData currentStartSV = beCurrentStart.getSV();
         SvVarData currentEndSV = beCurrentEnd.getSV();
@@ -1598,8 +1633,35 @@ public class FusionDisruptionAnalyser
         }
     }
 
-    public void setRnaFusionData(final RnaFusionData rnaFusion)
+    private void setRnaFusionData(final RnaFusionData rnaFusion)
     {
+        EnsemblGeneData geneData = mGeneTransCollection.getGeneDataByName(rnaFusion.GeneUp);
+
+        if(geneData != null)
+        {
+            if(rnaFusion.SpliceType.equals(RNA_SPLICE_TYPE_ONLY_REF))
+            {
+                List<Integer> transIdList = mGeneTransCollection.getTranscriptIdsMatchingPosition(geneData.GeneId, rnaFusion.PositionUp);
+                rnaFusion.setPotentialTransUp(transIdList);
+            }
+
+            int[] transUpExonData = mGeneTransCollection.getExonRankings(geneData.GeneId, rnaFusion.PositionUp);
+            rnaFusion.setExonUpRank(transUpExonData[EXON_RANK_MIN], transUpExonData[EXON_RANK_MAX]);
+        }
+
+        geneData = mGeneTransCollection.getGeneDataByName(rnaFusion.GeneDown);
+        if(geneData != null)
+        {
+            if(rnaFusion.SpliceType.equals(RNA_SPLICE_TYPE_ONLY_REF))
+            {
+                List<Integer> transIdList = mGeneTransCollection.getTranscriptIdsMatchingPosition(geneData.GeneId, rnaFusion.PositionDown);
+                rnaFusion.setPotentialTransDown(transIdList);
+            }
+
+            int[] transUpExonData = mGeneTransCollection.getExonRankings(geneData.GeneId, rnaFusion.PositionDown);
+            rnaFusion.setExonDownRank(transUpExonData[EXON_RANK_MIN], transUpExonData[EXON_RANK_MAX]);
+        }
+
         if(areKnownFusionGenes(rnaFusion.GeneUp, rnaFusion.GeneDown))
         {
             rnaFusion.setKnownType(REPORTABLE_TYPE_KNOWN);
