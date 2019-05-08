@@ -48,7 +48,7 @@ public class TumorCharacteristicsChapter implements ReportChapter {
 
         final double hrDeficiency = patientReport.chordAnalysis().hrdValue();
         final String hrDeficiencyLabel = hasReliablePurityFit ? HrDeficiency.interpretToString(hrDeficiency) : DataUtil.NA_STRING;
-        BarChart hrChart = new BarChart(hrDeficiency, HrDeficiency.RANGE_MIN, HrDeficiency.RANGE_MAX, "Low", "High");
+        BarChart hrChart = new BarChart(hrDeficiency, HrDeficiency.RANGE_MIN, HrDeficiency.RANGE_MAX, "Low", "High", "hrDeficiency");
         hrChart.enabled(hasReliablePurityFit);
         hrChart.setTickMarks(HrDeficiency.RANGE_MIN, HrDeficiency.RANGE_MAX, 0.1, singleDecimalFormat);
         // @TODO HR threshold to be determined: hrChart.setIndicator(0.5f, "HR-Deficient");
@@ -64,7 +64,7 @@ public class TumorCharacteristicsChapter implements ReportChapter {
                 hasReliablePurityFit ? MicroSatelliteStatus.interpretToString(microSatelliteStability) + " "
                         + new DecimalFormat("#.##").format(microSatelliteStability) : DataUtil.NA_STRING;
         BarChart satelliteChart =
-                new BarChart(microSatelliteStability, MicroSatelliteStatus.RANGE_MIN, MicroSatelliteStatus.RANGE_MAX, "MSS", "MSI");
+                new BarChart(microSatelliteStability, MicroSatelliteStatus.RANGE_MIN, MicroSatelliteStatus.RANGE_MAX, "MSS", "MSI", "microSatelliteStability");
         satelliteChart.enabled(hasReliablePurityFit);
         satelliteChart.scale(InlineBarChart.LOG10_SCALE);
         satelliteChart.setTickMarks(new double[] { MicroSatelliteStatus.RANGE_MIN, 10, MicroSatelliteStatus.RANGE_MAX },
@@ -85,7 +85,7 @@ public class TumorCharacteristicsChapter implements ReportChapter {
         final String mutationalLoadString = hasReliablePurityFit
                 ? MutationalLoad.interpretToString(mutationalLoad) + " " + noDecimalFormat.format(mutationalLoad)
                 : DataUtil.NA_STRING;
-        BarChart mutationalLoadChart = new BarChart(mutationalLoad, MutationalLoad.RANGE_MIN, MutationalLoad.RANGE_MAX, "Low", "High");
+        BarChart mutationalLoadChart = new BarChart(mutationalLoad, MutationalLoad.RANGE_MIN, MutationalLoad.RANGE_MAX, "Low", "High", "mutationalLoad");
         mutationalLoadChart.enabled(hasReliablePurityFit);
         mutationalLoadChart.scale(InlineBarChart.LOG10_SCALE);
         mutationalLoadChart.setTickMarks(new double[] { MutationalLoad.RANGE_MIN, 10, 100, MutationalLoad.RANGE_MAX }, noDecimalFormat);
@@ -105,7 +105,7 @@ public class TumorCharacteristicsChapter implements ReportChapter {
         final String mutationalBurdenString =
                 hasReliablePurityFit ? singleDecimalFormat.format(mutationalBurden) + " variants per Mb" : DataUtil.NA_STRING;
         BarChart mutationalBurdenChart =
-                new BarChart(mutationalBurden, MutationalBurden.RANGE_MIN, MutationalBurden.RANGE_MAX, "Low", "High");
+                new BarChart(mutationalBurden, MutationalBurden.RANGE_MIN, MutationalBurden.RANGE_MAX, "Low", "High", "mutationalBurden");
         mutationalBurdenChart.enabled(hasReliablePurityFit);
         mutationalBurdenChart.scale(InlineBarChart.LOG10_SCALE);
         mutationalBurdenChart.setTickMarks(new double[] { MutationalBurden.RANGE_MIN, 10, MutationalBurden.RANGE_MAX },

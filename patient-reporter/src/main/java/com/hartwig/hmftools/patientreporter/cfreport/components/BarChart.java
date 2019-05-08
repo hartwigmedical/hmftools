@@ -24,6 +24,7 @@ public class BarChart extends InlineBarChart {
 
     private String lowLabel;
     private String highLabel;
+    private String labelBar;
 
     private boolean underShootEnabled = false;
     private String undershootLabel = "";
@@ -34,11 +35,12 @@ public class BarChart extends InlineBarChart {
     private Indicator[] tickMarks = {};
     private Indicator threshold = null;
 
-    public BarChart(double value, double min, double max, @NotNull String lowLabel, @NotNull String highLabel) {
+    public BarChart(double value, double min, double max, @NotNull String lowLabel, @NotNull String highLabel, @NotNull String labelBar) {
         super(value, min, max);
         super.setHeight(HEIGHT);
         this.lowLabel = lowLabel;
         this.highLabel = highLabel;
+        this.labelBar = labelBar;
     }
 
     private void setTickMarks(@NotNull Indicator... tickMarks) {
@@ -244,7 +246,7 @@ public class BarChart extends InlineBarChart {
             canvas.fillStroke();
             canvas.setLineDash(1f);
 
-            if (filledPercentage > 0) {
+            if (filledPercentage > 0 || filledPercentage == 0 && labelBar.equals("hrDeficiency")) {
                 final float innerBarRadius = getHeightRadius(innerBoundingBox);
                 canvas.setFillColor(fillColor);
                 canvas.roundRectangle(innerBoundingBox.getX(),
