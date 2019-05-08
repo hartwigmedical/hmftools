@@ -10,7 +10,7 @@ import org.jetbrains.annotations.Nullable;
 public abstract class HospitalData {
 
     @NotNull
-    public abstract String hospital();
+    public abstract String internalHospitalName();
     
     @NotNull
     public abstract String cpctRecipients();
@@ -22,7 +22,7 @@ public abstract class HospitalData {
     public abstract String wideRecipients();
 
     @NotNull
-    public abstract String addressName();
+    public abstract String externalHospitalName();
 
     @NotNull
     public abstract String addressZip();

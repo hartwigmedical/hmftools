@@ -20,14 +20,14 @@ public final class HospitalModelFactory {
     private static final String SAMPLE_HOSPITAL_MAPPING_CSV = "sample_hospital_mapping.csv";
 
     private static final int HOSPITAL_ID_COLUMN = 0;
-    private static final int HOSPITAL_COLUMN = 1;
+    private static final int INTERNAL_HOSPITAL_NAME_COLUMN = 1;
     private static final int CPCT_PI_COLUMN = 3;
     private static final int CPCT_RECIPIENTS_COLUMN = 4;
     private static final int DRUP_PI_COLUMN = 6;
     private static final int DRUP_RECIPIENTS_COLUMN = 7;
     private static final int WIDE_PI_COLUMN = 9;
     private static final int WIDE_RECIPIENTS_COLUMN = 10;
-    private static final int ADDRESS_NAME_COLUMN = 13;
+    private static final int EXTERNAL_HOSPITAL_NAME_COLUMN = 13;
     private static final int ADDRESS_ZIP_COLUMN = 14;
     private static final int ADDRESS_CITY_COLUMN = 15;
     private static final int HOSPITAL_FIELD_COUNT = 16;
@@ -65,11 +65,11 @@ public final class HospitalModelFactory {
         for (final String line : lines) {
             final String[] parts = line.split(FIELD_SEPARATOR, HOSPITAL_FIELD_COUNT);
             if (parts.length == HOSPITAL_FIELD_COUNT) {
-                HospitalData hospital = ImmutableHospitalData.of(parts[HOSPITAL_COLUMN],
+                HospitalData hospital = ImmutableHospitalData.of(parts[INTERNAL_HOSPITAL_NAME_COLUMN],
                         parts[CPCT_RECIPIENTS_COLUMN],
                         parts[DRUP_RECIPIENTS_COLUMN],
                         parts[WIDE_RECIPIENTS_COLUMN],
-                        parts[ADDRESS_NAME_COLUMN],
+                        parts[EXTERNAL_HOSPITAL_NAME_COLUMN],
                         parts[ADDRESS_ZIP_COLUMN],
                         parts[ADDRESS_CITY_COLUMN],
                         parts[CPCT_PI_COLUMN],

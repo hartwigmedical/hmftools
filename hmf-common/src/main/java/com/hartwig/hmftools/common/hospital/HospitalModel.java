@@ -21,52 +21,32 @@ public abstract class HospitalModel {
     private static final Logger LOGGER = LogManager.getLogger(HospitalModel.class);
 
     @NotNull
-    protected abstract Map<String, HospitalData> hospitalPerId();
+    abstract Map<String, HospitalData> hospitalPerId();
 
     @NotNull
-    protected abstract Map<String, HospitalSampleMapping> sampleHospitalMapping();
+    abstract Map<String, HospitalSampleMapping> sampleHospitalMapping();
 
     @NotNull
-    public HospitalData addresseeStringForSampleWithEmail(@NotNull final String sample) {
-        HospitalData hospital = findHospitalForSample(sample);
-
-        if (hospital == null) {
-            return ImmutableHospitalData.builder()
-                    .hospital(Strings.EMPTY)
-                    .cpctRecipients(Strings.EMPTY)
-                    .drupRecipients(Strings.EMPTY)
-                    .wideRecipients(Strings.EMPTY)
-                    .addressName(Strings.EMPTY)
-                    .addressZip(Strings.EMPTY)
-                    .addressCity(Strings.EMPTY)
-                    .cpctPI(Strings.EMPTY)
-                    .drupPI(Strings.EMPTY)
-                    .widePI(Strings.EMPTY)
-                    .build();
-        }
-
-        checkAddresseeFields(sample, hospital);
-        return hospital;
+    public String externalHospitalName(@NotNull String sample) {
+        final HospitalData hospital = findHospitalForSample(sample);
+        return hospital != null ? hospital.externalHospitalName() : "NA";
     }
 
     @NotNull
-    public String hospital(@NotNull HospitalData hospital, @NotNull String sample) {
-        return hospital.addressName().isEmpty() ? "NA" : hospital.addressName();
+    public String PIName(@NotNull String sample) {
+        final HospitalData hospital = findHospitalForSample(sample);
+        return hospital == null || determinePI(sample, hospital).isEmpty() ? "NA" : determinePI(sample, hospital);
     }
 
     @NotNull
-    public String PIName(@NotNull HospitalData hospital, @NotNull String sample) {
-        return determinePI(sample, hospital).isEmpty() ? "NA" : determinePI(sample, hospital);
-    }
-
-    @NotNull
-    public String PIEmail(@NotNull HospitalData hospital, @NotNull String sample) {
-        return determinePIEmail(sample, hospital).isEmpty() ? "NA" : determinePIEmail(sample, hospital);
+    public String PIEmail(@NotNull String sample) {
+        final HospitalData hospital = findHospitalForSample(sample);
+        return hospital == null || determinePIEmail(sample, hospital).isEmpty() ? "NA" : determinePIEmail(sample, hospital);
     }
 
     @Nullable
-    public String addresseeStringForSample(@NotNull final String sample) {
-        HospitalData hospital = findHospitalForSample(sample);
+    public String fullAddresseeString(@NotNull final String sample) {
+        final HospitalData hospital = findHospitalForSample(sample);
 
         if (hospital == null) {
             return null;
@@ -75,7 +55,7 @@ public abstract class HospitalModel {
         checkAddresseeFields(sample, hospital);
 
         String hospitalPI = determinePI(sample, hospital);
-        String hospitalAddress = hospital.addressName() + ", " + hospital.addressZip() + " " + hospital.addressCity();
+        String hospitalAddress = hospital.externalHospitalName() + ", " + hospital.addressZip() + " " + hospital.addressCity();
         return hospitalPI.isEmpty() ? hospitalAddress : hospitalPI + ", " + hospitalAddress;
     }
 
@@ -99,9 +79,10 @@ public abstract class HospitalModel {
                 LOGGER.error("Cannot find sample hospital mapping for sample " + sample);
                 return null;
             } else {
-                hospital = findByHospital(hospitalSampleMapping.hospital());
+                hospital = findByHospital(hospitalSampleMapping.internalHospitalName());
                 if (hospital == null) {
-                    LOGGER.error("Cannot find hospital details for sample " + sample + " using " + hospitalSampleMapping.hospital());
+                    LOGGER.error(
+                            "Cannot find hospital details for sample " + sample + " using " + hospitalSampleMapping.internalHospitalName());
                     return null;
                 }
             }
@@ -125,7 +106,7 @@ public abstract class HospitalModel {
     @Nullable
     private HospitalData findByHospital(@NotNull String hospital) {
         for (HospitalData hospitalData : hospitalPerId().values()) {
-            if (hospitalData.hospital().equals(hospital)) {
+            if (hospitalData.internalHospitalName().equals(hospital)) {
                 return hospitalData;
             }
         }
@@ -153,7 +134,7 @@ public abstract class HospitalModel {
         if (type != LimsSampleType.CORE && determinePI(sample, hospital).isEmpty()) {
             missingFields.add("requester");
         }
-        if (hospital.addressName().isEmpty()) {
+        if (hospital.externalHospitalName().isEmpty()) {
             missingFields.add("name");
         }
         if (hospital.addressZip().isEmpty()) {

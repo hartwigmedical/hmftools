@@ -36,7 +36,7 @@ public class HospitalModelTest {
         final HospitalModel hospitalModel = buildTestHospitalModel();
         final HospitalData hospital = hospitalModel.hospitalPerId("01");
         assertNotNull(hospital);
-        assertEquals("Address", hospital.addressName());
+        assertEquals("ExtHosp1", hospital.externalHospitalName());
         assertEquals("Zip", hospital.addressZip());
         assertEquals("City", hospital.addressCity());
     }
@@ -45,13 +45,13 @@ public class HospitalModelTest {
     public void canLookupAddresseeForSample() {
         final HospitalModel hospitalModel = buildTestHospitalModel();
 
-        assertEquals("CpctPI, Address, Zip City", hospitalModel.addresseeStringForSample("CPCT02010001T"));
+        assertEquals("CpctPI, ExtHosp1, Zip City", hospitalModel.fullAddresseeString("CPCT02010001T"));
     }
 
     @Test
     public void canLookAddressForCORESample() {
         final HospitalModel hospitalModel = buildTestHospitalModel();
-        assertEquals("Address, Zip City", hospitalModel.addresseeStringForSample("CORE18001224T"));
+        assertEquals("ExtHosp1, Zip City", hospitalModel.fullAddresseeString("CORE18001224T"));
     }
 
     @NotNull
@@ -64,14 +64,14 @@ public class HospitalModelTest {
                         "CPCT Recip",
                         "DRUP Recip",
                         "WIDE Recip",
-                        "Address",
+                        "ExtHosp1",
                         "Zip",
                         "City",
                         "CpctPI",
                         "DrupPI",
                         "WidePI"));
         hospitalPerId.put("02",
-                ImmutableHospitalData.of("HOSP2", "CPCT Recip2", "*", "", "Address2", "Zip2", "City2", "CpctPI2", "*", "WidePI2"));
+                ImmutableHospitalData.of("HOSP2", "CPCT Recip2", "*", "", "ExtHosp2", "Zip2", "City2", "CpctPI2", "*", "WidePI2"));
         hospitalPerIdManual.put("CORE18001224T", ImmutableHospitalSampleMapping.of("HOSP1"));
 
         return ImmutableHospitalModel.of(hospitalPerId, hospitalPerIdManual);
