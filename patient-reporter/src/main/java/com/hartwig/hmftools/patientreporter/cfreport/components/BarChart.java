@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.patientreporter.cfreport.components;
 
+import java.text.NumberFormat;
+
 import com.hartwig.hmftools.patientreporter.cfreport.MathUtil;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
 import com.itextpdf.kernel.colors.Color;
@@ -15,8 +17,6 @@ import com.itextpdf.layout.renderer.DrawContext;
 import com.itextpdf.layout.renderer.IRenderer;
 
 import org.jetbrains.annotations.NotNull;
-
-import java.text.NumberFormat;
 
 public class BarChart extends InlineBarChart {
 
@@ -147,7 +147,6 @@ public class BarChart extends InlineBarChart {
                 cv.showTextAligned(new Paragraph(undershootLabel).addStyle(ReportResources.subTextStyle()
                         .setFontSize(6)
                         .setFontColor(labelColor)), outerBB.getLeft() + OVER_UNDER_SHOOT_LABEL_OFFSET, tickY, TextAlignment.LEFT);
-
             }
 
             if (hasOverShoot) {
@@ -168,7 +167,6 @@ public class BarChart extends InlineBarChart {
                 cv.showTextAligned(new Paragraph(overshootLabel).addStyle(ReportResources.subTextStyle()
                         .setFontSize(6)
                         .setFontColor(labelColor)), outerBB.getRight() - OVER_UNDER_SHOOT_LABEL_OFFSET, tickY, TextAlignment.RIGHT);
-
             }
 
             final float fillValue = isEnabled() ? (float) MathUtil.mapClamped(scaledValue(), scaledMin(), scaledMax(), 0, 1) : 0;
@@ -201,7 +199,6 @@ public class BarChart extends InlineBarChart {
             }
 
             if (isEnabled() && threshold != null) {
-
                 float x = (float) MathUtil.map(scaledValue(threshold.value),
                         scaledMin(),
                         scaledMax(),
@@ -245,7 +242,7 @@ public class BarChart extends InlineBarChart {
                     outerBoundingBox.getHeight(),
                     getHeightRadius(outerBoundingBox));
             canvas.fillStroke();
-            canvas.setLineDash(1f); // Reset dash
+            canvas.setLineDash(1f);
 
             if (filledPercentage > 0) {
                 final float innerBarRadius = getHeightRadius(innerBoundingBox);

@@ -169,9 +169,9 @@ public class QCFailChapter implements ReportChapter {
     private Table createContentTable(@NotNull String[] leftCol, @NotNull String[] rightCol) {
         Table table = new Table(UnitValue.createPercentArray(new float[] { 1, 0.1f, 1 }));
         table.setWidth(contentWidth());
-        table.addCell(TableUtil.getLayoutCell().add(createContentBody(leftCol)));
-        table.addCell(TableUtil.getLayoutCell()); // Spacer
-        table.addCell(TableUtil.getLayoutCell().add(createContentBody(rightCol)));
+        table.addCell(TableUtil.createLayoutCell().add(createContentBody(leftCol)));
+        table.addCell(TableUtil.createLayoutCell()); // Spacer
+        table.addCell(TableUtil.createLayoutCell().add(createContentBody(rightCol)));
         return table;
     }
 

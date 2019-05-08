@@ -12,7 +12,6 @@ import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.variant.Clonality;
 import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.patientreporter.cfreport.MathUtil;
-import com.hartwig.hmftools.patientreporter.report.data.SomaticVariantDataSource;
 import com.hartwig.hmftools.patientreporter.variants.ReportableVariant;
 
 import org.apache.logging.log4j.util.Strings;
@@ -20,6 +19,10 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public final class SomaticVariants {
+
+    private static final String DRIVER_LIKELIHOOD_HIGH = "High";
+    private static final String DRIVER_LIKELIHOOD_MEDIUM = "Medium";
+    private static final String DRIVER_LIKELIHOOD_LOW = "Low";
 
     private SomaticVariants() {
     }
@@ -165,11 +168,11 @@ public final class SomaticVariants {
         }
 
         if (driverLikelihood > 0.8) {
-            return "High";
+            return DRIVER_LIKELIHOOD_HIGH;
         } else if (driverLikelihood > 0.2) {
-            return "Medium";
+            return DRIVER_LIKELIHOOD_MEDIUM;
         } else {
-            return "Low";
+            return DRIVER_LIKELIHOOD_LOW;
         }
     }
 
@@ -177,7 +180,7 @@ public final class SomaticVariants {
     public static Set<String> driverGenesWithVariant(@NotNull List<ReportableVariant> variants) {
         final Set<String> genes = Sets.newHashSet();
         for (final ReportableVariant variant : variants) {
-            if (SomaticVariantDataSource.driverField(variant).equals("High")) {
+            if (driverString(variant.driverLikelihood()).equals(DRIVER_LIKELIHOOD_HIGH)) {
                 genes.add(variant.gene());
             }
         }

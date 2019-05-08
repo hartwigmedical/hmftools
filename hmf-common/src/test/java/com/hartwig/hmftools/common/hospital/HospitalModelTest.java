@@ -49,7 +49,7 @@ public class HospitalModelTest {
     }
 
     @Test
-    public void canLookAddressForCORESample() {
+    public void canLookupAddressForCORESample() {
         final HospitalModel hospitalModel = buildTestHospitalModel();
         assertEquals("ExtHosp1, Zip City", hospitalModel.fullAddresseeString("CORE18001224T"));
     }

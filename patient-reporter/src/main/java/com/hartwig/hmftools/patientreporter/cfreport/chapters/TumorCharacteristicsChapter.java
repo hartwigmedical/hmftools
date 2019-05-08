@@ -47,7 +47,7 @@ public class TumorCharacteristicsChapter implements ReportChapter {
         final boolean hasReliablePurityFit = patientReport.hasReliablePurityFit();
 
         final double hrDeficiency = patientReport.chordAnalysis().hrdValue();
-        final String hrDeficiencyLabel = HrDeficiency.interpretToString(hrDeficiency, hasReliablePurityFit);
+        final String hrDeficiencyLabel = hasReliablePurityFit ? HrDeficiency.interpretToString(hrDeficiency) : DataUtil.NA_STRING;
         BarChart hrChart = new BarChart(hrDeficiency, HrDeficiency.RANGE_MIN, HrDeficiency.RANGE_MAX, "Low", "High");
         hrChart.enabled(hasReliablePurityFit);
         hrChart.setTickMarks(HrDeficiency.RANGE_MIN, HrDeficiency.RANGE_MAX, 0.1, singleDecimalFormat);
@@ -129,15 +129,15 @@ public class TumorCharacteristicsChapter implements ReportChapter {
 
         Table table = new Table(UnitValue.createPercentArray(new float[] { 10, 1, 19 }));
         table.setWidth(contentWidth());
-        table.addCell(TableUtil.getLayoutCell().add(DataLabel.createDataLabel(highlight)));
+        table.addCell(TableUtil.createLayoutCell().add(DataLabel.createDataLabel(highlight)));
 
-        table.addCell(TableUtil.getLayoutCell(2, 1));
+        table.addCell(TableUtil.createLayoutCell(2, 1));
 
-        table.addCell(TableUtil.getLayoutCell(2, 1).add(chart));
-        table.addCell(TableUtil.getLayoutCell()
+        table.addCell(TableUtil.createLayoutCell(2, 1).add(chart));
+        table.addCell(TableUtil.createLayoutCell()
                 .add(new Paragraph(description).addStyle(ReportResources.bodyTextStyle())
                         .setFixedLeading(ReportResources.BODY_TEXT_LEADING)));
-        table.addCell(TableUtil.getLayoutCell(1, 3).setHeight(TABLE_SPACER_HEIGHT));
+        table.addCell(TableUtil.createLayoutCell(1, 3).setHeight(TABLE_SPACER_HEIGHT));
         div.add(table);
 
         return div;

@@ -1,11 +1,9 @@
 package com.hartwig.hmftools.patientreporter.cfreport.components;
 
-import com.hartwig.hmftools.common.hospital.HospitalModel;
 import com.hartwig.hmftools.common.lims.LimsSampleType;
 import com.hartwig.hmftools.patientreporter.PatientReporterApplication;
 import com.hartwig.hmftools.patientreporter.SampleReport;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
-import com.hartwig.hmftools.patientreporter.cfreport.data.DataUtil;
 import com.itextpdf.kernel.geom.Rectangle;
 import com.itextpdf.kernel.pdf.PdfPage;
 import com.itextpdf.kernel.pdf.canvas.PdfCanvas;
@@ -14,8 +12,6 @@ import com.itextpdf.layout.element.Div;
 import com.itextpdf.layout.element.Paragraph;
 
 import org.jetbrains.annotations.NotNull;
-
-import java.time.LocalDate;
 
 public final class SidePanel {
 
@@ -49,28 +45,15 @@ public final class SidePanel {
                 cv.add(createSidePanelDiv(sideTextIndex++, "Email requestor", contactEmails));
             }
 
-            final String hospitalName = sampleReport.hospitalName(); // @TODO Replace with sampleReport.hospital() which can be null or empty string
-            if (hospitalName != null && !hospitalName.isEmpty()) {
+            final String hospitalName = sampleReport.hospitalName();
+            if (!hospitalName.isEmpty()) {
                 cv.add(createSidePanelDiv(sideTextIndex++, "Hospital", hospitalName));
             }
 
             final String hospitalPatientId = sampleReport.hospitalPatientId();
-            if (hospitalPatientId != null && !hospitalPatientId.isEmpty()) {
+            if (!hospitalPatientId.isEmpty()) {
                 cv.add(createSidePanelDiv(sideTextIndex++, "Hospital patient id", hospitalPatientId));
             }
-
-            // @TODO: Decide add to report
-            //            final String patientGender = "Female"; // @TODO Replace with sampleReport.patientGender() which can be null or empty string
-//            if (patientGender != null && !patientGender.isEmpty()) {
-//                cv.add(createSidePanelDiv(sideTextIndex++, "Gender", patientGender));
-//            }
-//
-            // @TODO: Decide add to report
-            //            final LocalDate patientBirthDate =
-//                    LocalDate.of(1973, 10, 4); // @TODO Replace with sampleReport.patientBirthDate() which can be null
-//            if (patientBirthDate != null) {
-//                cv.add(createSidePanelDiv(sideTextIndex, "Birth date", DataUtil.formatDate(patientBirthDate)));
-//            }
         }
 
         if (page.getDocument().getNumberOfPages() == 1) {

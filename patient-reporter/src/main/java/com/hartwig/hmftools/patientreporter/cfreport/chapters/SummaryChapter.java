@@ -102,12 +102,12 @@ public class SummaryChapter implements ReportChapter {
 
         Table table = new Table(UnitValue.createPercentArray(new float[] { 1, 1 }));
         table.setWidth(contentWidth());
-        table.addCell(TableUtil.getLayoutCell().add(new Paragraph("Treatment indications").addStyle(ReportResources.sectionTitleStyle())));
+        table.addCell(TableUtil.createLayoutCell().add(new Paragraph("Treatment indications").addStyle(ReportResources.sectionTitleStyle())));
 
-        table.addCell(TableUtil.getLayoutCell()
+        table.addCell(TableUtil.createLayoutCell()
                 .add(new Paragraph("Summary of alterations with number of treatment indication and/or clinical trials").addStyle(
                         ReportResources.bodyTextStyle()).setFixedLeading(ReportResources.BODY_TEXT_LEADING)));
-        table.addCell(TableUtil.getLayoutCell(1, 2).setHeight(TABLE_SPACER_HEIGHT));
+        table.addCell(TableUtil.createLayoutCell(1, 2).setHeight(TABLE_SPACER_HEIGHT));
 
         int therapyEventCount = EvidenceItems.uniqueEventCount(tumorSpecificEvidence);
         int therapyCount = EvidenceItems.uniqueTherapyCount(tumorSpecificEvidence);
@@ -132,11 +132,11 @@ public class SummaryChapter implements ReportChapter {
 
         Table table = new Table(UnitValue.createPercentArray(new float[] { 1, .33f, .66f }));
         table.setWidth(contentWidth());
-        table.addCell(TableUtil.getLayoutCell()
+        table.addCell(TableUtil.createLayoutCell()
                 .add(new Paragraph("Tumor characteristics summary").addStyle(ReportResources.sectionTitleStyle())));
-        table.addCell(TableUtil.getLayoutCell(1, 2)
+        table.addCell(TableUtil.createLayoutCell(1, 2)
                 .add(new Paragraph("Whole genome sequencing based tumor characteristics.").addStyle(ReportResources.bodyTextStyle())));
-        table.addCell(TableUtil.getLayoutCell(1, 3).setHeight(TABLE_SPACER_HEIGHT));
+        table.addCell(TableUtil.createLayoutCell(1, 3).setHeight(TABLE_SPACER_HEIGHT));
 
         final double impliedPurity = patientReport.impliedPurity();
         final double impliedPurityPercentage = MathUtil.mapPercentage(impliedPurity, TumorPurity.RANGE_MIN, TumorPurity.RANGE_MAX);
@@ -182,12 +182,12 @@ public class SummaryChapter implements ReportChapter {
 
         final Table table = new Table(UnitValue.createPercentArray(new float[] { 1, 1 }));
         table.setWidth(contentWidth());
-        table.addCell(TableUtil.getLayoutCell()
+        table.addCell(TableUtil.createLayoutCell()
                 .add(new Paragraph("Genomic alterations \nsummary").addStyle(ReportResources.sectionTitleStyle())));
-        table.addCell(TableUtil.getLayoutCell()
+        table.addCell(TableUtil.createLayoutCell()
                 .add(new Paragraph("Summary on genomic alterations "
                         + "(somatic variants, copy number changes, gene disruptions and gene fusions).").addStyle(ReportResources.bodyTextStyle())));
-        table.addCell(TableUtil.getLayoutCell(1, 2).setHeight(TABLE_SPACER_HEIGHT));
+        table.addCell(TableUtil.createLayoutCell(1, 2).setHeight(TABLE_SPACER_HEIGHT));
 
         final Set<String> driverVariantGenes = SomaticVariants.driverGenesWithVariant(patientReport.reportableVariants());
         table.addCell(createMiddleAlignedCell().setVerticalAlignment(VerticalAlignment.TOP)
@@ -233,7 +233,7 @@ public class SummaryChapter implements ReportChapter {
 
     @NotNull
     private static Cell createMiddleAlignedCell(int colSpan) {
-        return TableUtil.getLayoutCell(1, colSpan).setVerticalAlignment(VerticalAlignment.MIDDLE);
+        return TableUtil.createLayoutCell(1, colSpan).setVerticalAlignment(VerticalAlignment.MIDDLE);
     }
 
     @NotNull

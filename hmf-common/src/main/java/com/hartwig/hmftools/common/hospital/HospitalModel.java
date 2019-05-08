@@ -164,13 +164,15 @@ public abstract class HospitalModel {
             return hospital.drupPI();
         } else if (type == LimsSampleType.WIDE) {
             return hospital.widePI();
+        } else if (type == LimsSampleType.CORE || type == LimsSampleType.COLO) {
+            return Strings.EMPTY;
         }
+
         return NA_STRING;
     }
 
     @NotNull
-    @VisibleForTesting
-    static String determinePIEmail(@NotNull final String sample, @NotNull final HospitalData hospital) {
+    private static String determinePIEmail(@NotNull final String sample, @NotNull final HospitalData hospital) {
         LimsSampleType type = LimsSampleType.fromSampleId(sample);
 
         if (type == LimsSampleType.CPCT) {

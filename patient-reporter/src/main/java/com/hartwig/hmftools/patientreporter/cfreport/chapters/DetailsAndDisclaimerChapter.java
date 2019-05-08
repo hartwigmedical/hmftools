@@ -46,9 +46,9 @@ public class DetailsAndDisclaimerChapter implements ReportChapter {
     public final void render(@NotNull Document reportDocument) throws IOException {
         Table table = new Table(UnitValue.createPercentArray(new float[] { 1, 0.1f, 1 }));
         table.setWidth(contentWidth());
-        table.addCell(TableUtil.getLayoutCell().add(createSampleDetailsDiv(patientReport)));
-        table.addCell(TableUtil.getLayoutCell());
-        table.addCell(TableUtil.getLayoutCell().add(createDisclaimerDiv()));
+        table.addCell(TableUtil.createLayoutCell().add(createSampleDetailsDiv(patientReport)));
+        table.addCell(TableUtil.createLayoutCell());
+        table.addCell(TableUtil.createLayoutCell().add(createDisclaimerDiv()));
         reportDocument.add(table);
 
         reportDocument.add(ReportSignature.createEndOfReportIndication());

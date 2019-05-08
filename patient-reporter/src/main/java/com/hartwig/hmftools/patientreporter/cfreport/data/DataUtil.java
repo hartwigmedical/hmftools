@@ -1,13 +1,11 @@
 package com.hartwig.hmftools.patientreporter.cfreport.data;
 
-import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
-
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-
 import java.text.DecimalFormat;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public final class DataUtil {
 

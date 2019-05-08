@@ -49,7 +49,7 @@ public class CircosChapter implements ReportChapter {
         Table table = new Table(UnitValue.createPercentArray(new float[] { 10, 1, 10, 1, 10 }));
         table.setWidth(contentWidth());
 
-        table.addCell(TableUtil.getLayoutCell()
+        table.addCell(TableUtil.createLayoutCell()
                 .add(new Div().add(createContentParagraph("The outer first circle",
                         " shows the chromosomes. The darker shaded areas represent large gaps in the human reference genome: "
                                 + "i.e. regions of centromeres, heterochromatin & missing short arms."))
@@ -63,9 +63,9 @@ public class CircosChapter implements ReportChapter {
                                         + "Nature paper that describes the use of mutational signatures. "
                                         + "INDELs are colored yellow and red for insertions and deletions respectively."))));
 
-        table.addCell(TableUtil.getLayoutCell());
+        table.addCell(TableUtil.createLayoutCell());
 
-        table.addCell(TableUtil.getLayoutCell()
+        table.addCell(TableUtil.createLayoutCell()
                 .add(new Div().add(createContentParagraph("The third circle",
                         " shows all observed tumor purity adjusted "
                                 + "copy number changes,including both focal and chromosomal somatic events. Copy number losses are "
@@ -78,9 +78,9 @@ public class CircosChapter implements ReportChapter {
                                 + "LOH event. Minor allele copy numbers above 1 (blue) indicate amplification events of both A and B "
                                 + "alleles at the indicated locations.")))));
 
-        table.addCell(TableUtil.getLayoutCell());
+        table.addCell(TableUtil.createLayoutCell());
 
-        table.addCell(TableUtil.getLayoutCell()
+        table.addCell(TableUtil.createLayoutCell()
                 .add(new Div().add(createContentParagraph("The innermost circle",
                         " displays the observed structural "
                                 + "variants within or between the chromosomes. Translocations are indicated in blue, deletions in "

@@ -2,7 +2,6 @@ package com.hartwig.hmftools.patientreporter.report.util;
 
 import static com.google.common.base.Strings.repeat;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.variant.AllelicDepth;
 
 import org.apache.logging.log4j.util.Strings;
@@ -56,8 +55,7 @@ public final class PatientReportFormat {
     }
 
     @NotNull
-    @VisibleForTesting
-    static String descriptiveBAF(double adjustedCopyNumber, double minorAllelePloidy) {
+    private static String descriptiveBAF(double adjustedCopyNumber, double minorAllelePloidy) {
         int totalAlleleCount = (int) Math.max(0, Math.round(adjustedCopyNumber));
         int minorAlleleCount = (int) Math.max(0, Math.round(minorAllelePloidy));
         int majorAlleleCount = Math.max(0, totalAlleleCount - minorAlleleCount);

@@ -60,10 +60,10 @@ public class ActionableOrDriversChapter implements ReportChapter {
         }
 
         Table contentTable = TableUtil.createReportContentTable(new float[] { 45, 75, 50, 60, 40, 60, 40, 50, 50, 35 },
-                new Cell[] { TableUtil.getHeaderCell("Gene"), TableUtil.getHeaderCell("Variant"), TableUtil.getHeaderCell("Impact"),
-                        TableUtil.getHeaderCell("Read depth").setTextAlignment(TextAlignment.CENTER), TableUtil.getHeaderCell("Hotspot"),
-                        TableUtil.getHeaderCell("Ploidy (VAF)"), TableUtil.getHeaderCell(),
-                        TableUtil.getHeaderCell("Clonality"), TableUtil.getHeaderCell("Biallelic"), TableUtil.getHeaderCell("Driver") });
+                new Cell[] { TableUtil.createHeaderCell("Gene"), TableUtil.createHeaderCell("Variant"), TableUtil.createHeaderCell("Impact"),
+                        TableUtil.createHeaderCell("Read depth").setTextAlignment(TextAlignment.CENTER), TableUtil.createHeaderCell("Hotspot"),
+                        TableUtil.createHeaderCell("Ploidy (VAF)"), TableUtil.createHeaderCell(),
+                        TableUtil.createHeaderCell("Clonality"), TableUtil.createHeaderCell("Biallelic"), TableUtil.createHeaderCell("Driver") });
 
         final List<ReportableVariant> sortedVariants = SomaticVariants.sort(reportableVariants);
         for (ReportableVariant variant : sortedVariants) {
@@ -72,34 +72,34 @@ public class ActionableOrDriversChapter implements ReportChapter {
             chart.setWidth(20);
             chart.setHeight(4);
 
-            contentTable.addCell(TableUtil.getContentCell(SomaticVariants.geneDisplayString(variant)));
-            contentTable.addCell(TableUtil.getContentCell(variant.hgvsCodingImpact()));
-            contentTable.addCell(TableUtil.getContentCell(variant.hgvsProteinImpact()));
-            contentTable.addCell(TableUtil.getContentCell(new Paragraph(
+            contentTable.addCell(TableUtil.createContentCell(SomaticVariants.geneDisplayString(variant)));
+            contentTable.addCell(TableUtil.createContentCell(variant.hgvsCodingImpact()));
+            contentTable.addCell(TableUtil.createContentCell(variant.hgvsProteinImpact()));
+            contentTable.addCell(TableUtil.createContentCell(new Paragraph(
                     variant.alleleReadCount() + " / ").setFont(ReportResources.fontBold())
                     .add(new Text(String.valueOf(variant.totalReadCount())).setFont(ReportResources.fontRegular()))
                     .setTextAlignment(TextAlignment.CENTER)));
-            contentTable.addCell(TableUtil.getContentCell(SomaticVariants.hotspotString(variant.hotspot())));
-            contentTable.addCell(TableUtil.getContentCell(SomaticVariants.ploidyVaf(variant.adjustedCopyNumber(),
+            contentTable.addCell(TableUtil.createContentCell(SomaticVariants.hotspotString(variant.hotspot())));
+            contentTable.addCell(TableUtil.createContentCell(SomaticVariants.ploidyVaf(variant.adjustedCopyNumber(),
                     variant.minorAllelePloidy(),
                     variant.adjustedVAF(),
                     hasReliablePurityFit)));
-            contentTable.addCell(TableUtil.getContentCell(chart).setVerticalAlignment(VerticalAlignment.MIDDLE));
-            contentTable.addCell(TableUtil.getContentCell(SomaticVariants.clonalityString(variant.clonality(), hasReliablePurityFit)));
-            contentTable.addCell(TableUtil.getContentCell(SomaticVariants.biallelicString(variant.biallelic(),
+            contentTable.addCell(TableUtil.createContentCell(chart).setVerticalAlignment(VerticalAlignment.MIDDLE));
+            contentTable.addCell(TableUtil.createContentCell(SomaticVariants.clonalityString(variant.clonality(), hasReliablePurityFit)));
+            contentTable.addCell(TableUtil.createContentCell(SomaticVariants.biallelicString(variant.biallelic(),
                     variant.driverCategory(),
                     hasReliablePurityFit)));
-            contentTable.addCell(TableUtil.getContentCell(SomaticVariants.driverString(variant.driverLikelihood())));
+            contentTable.addCell(TableUtil.createContentCell(SomaticVariants.driverString(variant.driverLikelihood())));
         }
 
-        contentTable.addCell(TableUtil.getLayoutCell(1, contentTable.getNumberOfColumns())
+        contentTable.addCell(TableUtil.createLayoutCell(1, contentTable.getNumberOfColumns())
                 .setPaddingTop(10)
                 .add(new Paragraph("* Marked gene(s) are included in the DRUP study and indicate potential eligibility in "
                         + "DRUP. Please note that the marking is NOT based on the specific mutation reported for this sample, "
                         + "but only on a gene-level.").addStyle(ReportResources.subTextStyle())));
 
         if (SomaticVariants.hasNotifiableGermlineVariant(reportableVariants)) {
-            contentTable.addCell(TableUtil.getLayoutCell(1, contentTable.getNumberOfColumns())
+            contentTable.addCell(TableUtil.createLayoutCell(1, contentTable.getNumberOfColumns())
                     .add(new Paragraph("Marked variant(s) (#) are also present in the germline of the patient. "
                             + "Referral to a genetic specialist should be advised.").addStyle(ReportResources.subTextStyle())));
         }
@@ -115,21 +115,21 @@ public class ActionableOrDriversChapter implements ReportChapter {
         }
 
         Table contentTable = TableUtil.createReportContentTable(new float[] { 60, 80, 100, 80, 45, 125 },
-                new Cell[] { TableUtil.getHeaderCell("Chromosome"), TableUtil.getHeaderCell("Chromosome band"),
-                        TableUtil.getHeaderCell("Gene"), TableUtil.getHeaderCell("Type"),
-                        TableUtil.getHeaderCell("Copies").setTextAlignment(TextAlignment.RIGHT), TableUtil.getHeaderCell("")
+                new Cell[] { TableUtil.createHeaderCell("Chromosome"), TableUtil.createHeaderCell("Chromosome band"),
+                        TableUtil.createHeaderCell("Gene"), TableUtil.createHeaderCell("Type"),
+                        TableUtil.createHeaderCell("Copies").setTextAlignment(TextAlignment.RIGHT), TableUtil.createHeaderCell("")
                 });
 
         final List<GeneCopyNumber> sortedCopyNumbers = GeneCopyNumbers.sort(copyNumbers);
         for (GeneCopyNumber copyNumber : sortedCopyNumbers) {
             Long reportableCopyNumber = Math.round(Math.max(0, copyNumber.minCopyNumber()));
-            contentTable.addCell(TableUtil.getContentCell(copyNumber.chromosome()));
-            contentTable.addCell(TableUtil.getContentCell(copyNumber.chromosomeBand()));
-            contentTable.addCell(TableUtil.getContentCell(copyNumber.gene()));
-            contentTable.addCell(TableUtil.getContentCell(GeneCopyNumbers.type(copyNumber)));
-            contentTable.addCell(TableUtil.getContentCell(hasReliablePurityFit ? String.valueOf(reportableCopyNumber) : DataUtil.NA_STRING)
+            contentTable.addCell(TableUtil.createContentCell(copyNumber.chromosome()));
+            contentTable.addCell(TableUtil.createContentCell(copyNumber.chromosomeBand()));
+            contentTable.addCell(TableUtil.createContentCell(copyNumber.gene()));
+            contentTable.addCell(TableUtil.createContentCell(GeneCopyNumbers.type(copyNumber)));
+            contentTable.addCell(TableUtil.createContentCell(hasReliablePurityFit ? String.valueOf(reportableCopyNumber) : DataUtil.NA_STRING)
                     .setTextAlignment(TextAlignment.RIGHT));
-            contentTable.addCell(TableUtil.getContentCell(""));
+            contentTable.addCell(TableUtil.createContentCell(""));
         }
 
         return TableUtil.createWrappingReportTable(title, contentTable);
@@ -143,22 +143,22 @@ public class ActionableOrDriversChapter implements ReportChapter {
         }
 
         Table contentTable = TableUtil.createReportContentTable(new float[] { 90, 82.5f, 82.5f, 37.5f, 37.5f, 40, 30, 100 },
-                new Cell[] { TableUtil.getHeaderCell("Fusion"), TableUtil.getHeaderCell("5' Transcript"),
-                        TableUtil.getHeaderCell("3' Transcript"), TableUtil.getHeaderCell("5' End"), TableUtil.getHeaderCell("3' Start"),
-                        TableUtil.getHeaderCell("Copies").setTextAlignment(TextAlignment.RIGHT), TableUtil.getHeaderCell(""),
-                        TableUtil.getHeaderCell("Source") });
+                new Cell[] { TableUtil.createHeaderCell("Fusion"), TableUtil.createHeaderCell("5' Transcript"),
+                        TableUtil.createHeaderCell("3' Transcript"), TableUtil.createHeaderCell("5' End"), TableUtil.createHeaderCell("3' Start"),
+                        TableUtil.createHeaderCell("Copies").setTextAlignment(TextAlignment.RIGHT), TableUtil.createHeaderCell(""),
+                        TableUtil.createHeaderCell("Source") });
 
         final List<ReportableGeneFusion> sortedFusions = GeneFusions.sort(fusions);
         for (ReportableGeneFusion fusion : sortedFusions) {
-            contentTable.addCell(TableUtil.getContentCell(GeneFusions.name(fusion)));
-            contentTable.addCell(TableUtil.getContentCell(fusion.geneStartTranscript()));
-            contentTable.addCell(TableUtil.getContentCell(fusion.geneEndTranscript()));
-            contentTable.addCell(TableUtil.getContentCell(fusion.geneContextStart()));
-            contentTable.addCell(TableUtil.getContentCell(fusion.geneContextEnd()));
-            contentTable.addCell(TableUtil.getContentCell(GeneUtil.ploidyToCopiesString(fusion.ploidy(), hasReliablePurityFit))
+            contentTable.addCell(TableUtil.createContentCell(GeneFusions.name(fusion)));
+            contentTable.addCell(TableUtil.createContentCell(fusion.geneStartTranscript()));
+            contentTable.addCell(TableUtil.createContentCell(fusion.geneEndTranscript()));
+            contentTable.addCell(TableUtil.createContentCell(fusion.geneContextStart()));
+            contentTable.addCell(TableUtil.createContentCell(fusion.geneContextEnd()));
+            contentTable.addCell(TableUtil.createContentCell(GeneUtil.ploidyToCopiesString(fusion.ploidy(), hasReliablePurityFit))
                     .setTextAlignment(TextAlignment.RIGHT));
-            contentTable.addCell(TableUtil.getContentCell(""));
-            contentTable.addCell(TableUtil.getContentCell(new Paragraph(fusion.source()).setAction(PdfAction.createURI(GeneFusions.sourceUrl(
+            contentTable.addCell(TableUtil.createContentCell(""));
+            contentTable.addCell(TableUtil.createContentCell(new Paragraph(fusion.source()).setAction(PdfAction.createURI(GeneFusions.sourceUrl(
                     fusion.source())))));
         }
 
@@ -173,23 +173,23 @@ public class ActionableOrDriversChapter implements ReportChapter {
         }
 
         Table contentTable = TableUtil.createReportContentTable(new float[] { 60, 80, 100, 80, 40, 65, 65 },
-                new Cell[] { TableUtil.getHeaderCell("Location"), TableUtil.getHeaderCell("Gene"),
-                        TableUtil.getHeaderCell("Disrupted range"), TableUtil.getHeaderCell("Type"),
-                        TableUtil.getHeaderCell("Copies").setTextAlignment(TextAlignment.RIGHT),
-                        TableUtil.getHeaderCell("Gene \nmin copies").setTextAlignment(TextAlignment.RIGHT),
-                        TableUtil.getHeaderCell("Gene \nmax copies").setTextAlignment(TextAlignment.RIGHT) });
+                new Cell[] { TableUtil.createHeaderCell("Location"), TableUtil.createHeaderCell("Gene"),
+                        TableUtil.createHeaderCell("Disrupted range"), TableUtil.createHeaderCell("Type"),
+                        TableUtil.createHeaderCell("Copies").setTextAlignment(TextAlignment.RIGHT),
+                        TableUtil.createHeaderCell("Gene \nmin copies").setTextAlignment(TextAlignment.RIGHT),
+                        TableUtil.createHeaderCell("Gene \nmax copies").setTextAlignment(TextAlignment.RIGHT) });
 
         final List<ReportableGeneDisruption> sortedDisruptions = GeneDisruptions.sort(disruptions);
         for (ReportableGeneDisruption disruption : sortedDisruptions) {
-            contentTable.addCell(TableUtil.getContentCell(disruption.location()));
-            contentTable.addCell(TableUtil.getContentCell(disruption.gene()));
-            contentTable.addCell(TableUtil.getContentCell(disruption.range()));
-            contentTable.addCell(TableUtil.getContentCell(disruption.type()));
-            contentTable.addCell(TableUtil.getContentCell(GeneUtil.ploidyToCopiesString(disruption.ploidy(), hasReliablePurityFit))
+            contentTable.addCell(TableUtil.createContentCell(disruption.location()));
+            contentTable.addCell(TableUtil.createContentCell(disruption.gene()));
+            contentTable.addCell(TableUtil.createContentCell(disruption.range()));
+            contentTable.addCell(TableUtil.createContentCell(disruption.type()));
+            contentTable.addCell(TableUtil.createContentCell(GeneUtil.ploidyToCopiesString(disruption.ploidy(), hasReliablePurityFit))
                     .setTextAlignment(TextAlignment.RIGHT));
-            contentTable.addCell(TableUtil.getContentCell(GeneDisruptions.getCopyNumberString(disruption.geneMinCopies(),
+            contentTable.addCell(TableUtil.createContentCell(GeneDisruptions.copyNumberString(disruption.geneMinCopies(),
                     hasReliablePurityFit)).setTextAlignment(TextAlignment.RIGHT));
-            contentTable.addCell(TableUtil.getContentCell(GeneDisruptions.getCopyNumberString(disruption.geneMaxCopies(),
+            contentTable.addCell(TableUtil.createContentCell(GeneDisruptions.copyNumberString(disruption.geneMaxCopies(),
                     hasReliablePurityFit)).setTextAlignment(TextAlignment.RIGHT));
         }
 
