@@ -30,7 +30,7 @@ public class TherapyDetailsChapter implements ReportChapter {
     private final static float COL_WIDTH_LEVEL = 42;
     private final static float COL_WIDTH_RESPONSE_CCMO = 75;
     private final static float COL_WIDTH_SOURCE = 40;
-    private final static float COL_WIDTH_TREATMENT_ICONS = 20;
+    private final static float COL_WIDTH_TREATMENT_ICONS = 25;
     private final static float COL_WIDTH_TREATMENT_LIST = 180;
     private final static float COL_WIDTH_TREATMENT_LIST_5COL = COL_WIDTH_TREATMENT_LIST + COL_WIDTH_LEVEL;
 
