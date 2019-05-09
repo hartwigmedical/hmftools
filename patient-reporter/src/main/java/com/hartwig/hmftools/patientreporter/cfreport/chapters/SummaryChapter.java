@@ -102,7 +102,8 @@ public class SummaryChapter implements ReportChapter {
 
         Table table = new Table(UnitValue.createPercentArray(new float[] { 1, 1 }));
         table.setWidth(contentWidth());
-        table.addCell(TableUtil.createLayoutCell().add(new Paragraph("Treatment indications").addStyle(ReportResources.sectionTitleStyle())));
+        table.addCell(TableUtil.createLayoutCell()
+                .add(new Paragraph("Treatment indications").addStyle(ReportResources.sectionTitleStyle())));
 
         table.addCell(TableUtil.createLayoutCell()
                 .add(new Paragraph("Summary of alterations with number of treatment indication and/or clinical trials").addStyle(
@@ -153,13 +154,16 @@ public class SummaryChapter implements ReportChapter {
         table.addCell(createMiddleAlignedCell(2).add(createHighlightParagraph(GeneUtil.ploidyToCopiesString(patientReport.averageTumorPloidy(),
                 hasReliablePurityFit)).addStyle(dataStyle)));
 
+        final String mutationalLoadString =
+                hasReliablePurityFit ? MutationalLoad.interpretToString(patientReport.tumorMutationalLoad()) : DataUtil.NA_STRING;
         table.addCell(createMiddleAlignedCell().add(new Paragraph("Tumor mutational load").addStyle(ReportResources.bodyTextStyle())));
-        table.addCell(createMiddleAlignedCell(2).add(createHighlightParagraph(MutationalLoad.interpretToString(patientReport.tumorMutationalLoad()))
-                .addStyle(dataStyle)));
+        table.addCell(createMiddleAlignedCell(2).add(createHighlightParagraph(mutationalLoadString).addStyle(dataStyle)));
 
+        final String microSatelliteStabilityString = hasReliablePurityFit
+                ? MicroSatelliteStatus.interpretToString(patientReport.microsatelliteIndelsPerMb())
+                : DataUtil.NA_STRING;
         table.addCell(createMiddleAlignedCell().add(new Paragraph("Microsatellite (in)stability").addStyle(ReportResources.bodyTextStyle())));
-        table.addCell(createMiddleAlignedCell(2).add(createHighlightParagraph(MicroSatelliteStatus.interpretToString(patientReport.microsatelliteIndelsPerMb()))
-                .addStyle(dataStyle)));
+        table.addCell(createMiddleAlignedCell(2).add(createHighlightParagraph(microSatelliteStabilityString).addStyle(dataStyle)));
         div.add(table);
         reportDocument.add(div);
     }
