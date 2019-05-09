@@ -180,16 +180,21 @@ public abstract class HospitalModel {
         LimsSampleType type = LimsSampleType.fromSampleId(sample);
 
         if (type == LimsSampleType.CPCT) {
-            return hospital.cpctRecipients().split(";")[0];
+            return extractPIEmailFromRecipientList(hospital.cpctRecipients());
         } else if (type == LimsSampleType.DRUP) {
-            final String drupPi = hospital.drupRecipients().split(";")[0];
-            if (drupPi.trim().equals("*")) {
-                return hospital.cpctRecipients().split(";")[0];
+            if (hospital.drupPI().trim().equals("*")) {
+                return extractPIEmailFromRecipientList(hospital.cpctRecipients());
             }
-            return hospital.drupRecipients().split(";")[0];
+            return extractPIEmailFromRecipientList(hospital.drupRecipients());
         } else if (type == LimsSampleType.WIDE) {
-            return hospital.wideRecipients().split(";")[0];
+            return extractPIEmailFromRecipientList(hospital.wideRecipients());
         }
         return Strings.EMPTY;
+    }
+
+    @NotNull
+    private static String extractPIEmailFromRecipientList(@NotNull String recipients) {
+        // We assume the first email in a list separated with ";" is the PI email.
+        return recipients.split(";")[0];
     }
 }
