@@ -72,9 +72,6 @@ public class SummaryChapter implements ReportChapter {
                 patientReport.sampleReport().cancerSubTypeString(),
                 contentWidth()));
 
-        // @TODO Replace this fixed text with the patientReport.summaryText method.
-        // Return value from that method can be null which is gracefully handled by renderSummaryText :
-
         final String summaryContent = patientReport.summarySample();
         renderSummaryText(summaryContent, reportDocument);
 
