@@ -501,7 +501,7 @@ public class SvSampleAnalyser {
                 mClusterFileWriter.write(",TotalLinks,AssemblyLinks,LongDelDups,UnlinkedRemotes,ShortTIRemotes,MinCopyNumber,MaxCopyNumber");
                 mClusterFileWriter.write(",SynDelDupLen,SynDelDupAvgTILen,Annotations,UnchainedSVs,AlleleValidPerc");
                 mClusterFileWriter.write(",ArmClusterCount,AcSoloSv,AcRemoteTI,AcDsb,AcMultipleDsb,AcSingleFb,AcFbTI,AcFbDSB");
-                mClusterFileWriter.write(",ArmFbPairSame,ArmFbPairOpp,ArmFbPairFacing,AcComplexFb,AcComplexLine,AcComplexOther");
+                mClusterFileWriter.write(",AcFbPairSame,AcFbPairOpp,AcFbPairFacing,AcComplexFb,AcComplexLine,AcComplexOther");
                 mClusterFileWriter.newLine();
             }
 

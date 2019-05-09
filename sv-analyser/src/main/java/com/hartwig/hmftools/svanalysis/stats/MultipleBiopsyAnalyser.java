@@ -5,7 +5,6 @@ import static java.lang.Math.abs;
 import static com.hartwig.hmftools.common.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
-import static com.hartwig.hmftools.svanalysis.SvAnalyser.DATA_OUTPUT_PATH;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.appendStr;
 import static com.hartwig.hmftools.svanalysis.types.MultiBiopsyData.MATCH_TYPE_PARTIAL;
 import static com.hartwig.hmftools.svanalysis.types.MultiBiopsyData.MATCH_TYPE_PRIVATE;
@@ -61,7 +60,7 @@ public class MultipleBiopsyAnalyser
         options.addOption(SVA_INPUT_FILE, true, "SVA SVs file");
     }
 
-    public boolean loadData(final CommandLine cmd)
+    public boolean loadData(final CommandLine cmd, final String outputDir)
     {
         if (!loadPatientSampleData(cmd.getOptionValue(PATIENT_SAMPLE_IDS_FILE)))
             return false;
@@ -69,7 +68,7 @@ public class MultipleBiopsyAnalyser
         if (!loadSampleSVData(cmd.getOptionValue(SVA_INPUT_FILE)))
             return false;
 
-        mOutputDir = cmd.getOptionValue(DATA_OUTPUT_PATH);
+        mOutputDir = outputDir;
 
         return true;
     }

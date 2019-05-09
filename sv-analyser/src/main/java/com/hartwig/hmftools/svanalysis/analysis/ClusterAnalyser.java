@@ -734,7 +734,7 @@ public class ClusterAnalyser {
         if(!mUseAllelePloidies)
             return false;
 
-        // calculate the next CN change across all breakends on an arm
+        // calculate the net CN change across all breakends on an arm
         // if it needs to be resolved prior to the telomere or centromere and another cluster
         // can help do that, then merge in that cluster
 

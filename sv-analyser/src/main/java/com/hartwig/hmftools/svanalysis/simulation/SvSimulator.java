@@ -1,9 +1,5 @@
 package com.hartwig.hmftools.svanalysis.simulation;
 
-import static com.hartwig.hmftools.svanalysis.SvAnalyser.DATA_OUTPUT_PATH;
-
-import java.util.List;
-
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
 import org.apache.logging.log4j.LogManager;
@@ -29,9 +25,9 @@ public class SvSimulator
         options.addOption(SHATTERING_ITERATIONS, true, "Sim: shattering iterations");
     }
 
-    public void loadConfig(final CommandLine cmd)
+    public void loadConfig(final CommandLine cmd, final String outputDir)
     {
-        mSimShattering.setOutputDir(cmd.getOptionValue(DATA_OUTPUT_PATH));
+        mSimShattering.setOutputDir(outputDir);
 
         int segCount = Integer.parseInt(cmd.getOptionValue(SHATTERING_SEG_COUNT, "1"));
         int iterations = Integer.parseInt(cmd.getOptionValue(SHATTERING_ITERATIONS, "1"));

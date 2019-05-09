@@ -1169,7 +1169,7 @@ public class ClusterAnnotations
             - any SVs they skip over have ploidy X times less than the DM
             - skip any groups containing SGLs/NONEs
 
-           In addition, check any loose SVs which meet the above critieria but weren't complete:
+           In addition, check any loose SVs which meet the above criteria but weren't complete:
            - eg if they contain SGLs or NONES
            - they aren't all offset on an arm
         */

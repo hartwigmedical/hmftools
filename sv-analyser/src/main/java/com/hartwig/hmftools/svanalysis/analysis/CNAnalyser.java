@@ -63,7 +63,6 @@ public class CNAnalyser {
 
     private boolean mRuntimeMode; // will retrieve all CN data as part of the standard SVA routine
     private boolean mWriteAdjustedPloidyToFile;
-    private boolean mUpdateAdjustedPloidyToDB;
     private boolean mWriteVerbosePloidyData;
     private boolean mWriteLohData;
 
@@ -84,7 +83,6 @@ public class CNAnalyser {
     public static final String SV_PLOIDY_CALC_FILE = "sv_ploidy_file";
     private static final String LOH_DATA_FILE = "loh_file";
     private static final String WRITE_PLOIDY_TO_FILE = "write_ploidy_data";
-    private static final String UPDATE_PLOIDY_TO_DB = "update_ploidy_to_db";
     private static final String WRITE_VERBOSE_PLOIDY_DATA = "verbose_ploidy_data";
 
     public static double MIN_LOH_CN = 0.5;
@@ -110,7 +108,6 @@ public class CNAnalyser {
         mWriteLohData = false;
         mWriteAdjustedPloidyToFile = false;
         mWriteVerbosePloidyData = false;
-        mUpdateAdjustedPloidyToDB = false;
 
         mRecordId = 0;
         mNoneSvId = 0;
@@ -130,7 +127,6 @@ public class CNAnalyser {
         options.addOption(SV_PLOIDY_CALC_FILE, true, "SV_PLOIDY_CALC_FILE");
         options.addOption(WRITE_PLOIDY_TO_FILE, false, "Write adjusted ploidy to CSV");
         options.addOption(WRITE_VERBOSE_PLOIDY_DATA, false, "Write all ploidy calc working data");
-        options.addOption(UPDATE_PLOIDY_TO_DB, false, "Update SV table with ploidy common");
     }
 
     public boolean loadConfig(final CommandLine cmd, final List<String> sampleIds)
@@ -164,7 +160,6 @@ public class CNAnalyser {
             mWriteLohData = true;
             mWriteAdjustedPloidyToFile = cmd.hasOption(WRITE_PLOIDY_TO_FILE);
             mWriteVerbosePloidyData = cmd.hasOption(WRITE_VERBOSE_PLOIDY_DATA);
-            mUpdateAdjustedPloidyToDB = cmd.hasOption(UPDATE_PLOIDY_TO_DB);
         }
 
         return true;
@@ -222,7 +217,7 @@ public class CNAnalyser {
 
         findLohEvents(sampleId);
 
-        if(mWriteAdjustedPloidyToFile || mUpdateAdjustedPloidyToDB || mRuntimeMode)
+        if(mWriteAdjustedPloidyToFile || mRuntimeMode)
             reaclcAdjustedPloidy(sampleId);
     }
 
@@ -1113,17 +1108,6 @@ public class CNAnalyser {
                 double[] ploidyCalcs = {ploidyEstimate, ploidyUncertainty};
                 svDataMap.put(svData.id(), ploidyCalcs);
 
-                /*
-                if(mUpdateAdjustedPloidyToDB)
-                {
-                    updatedSvDataList.add(ImmutableStructuralVariantData.builder()
-                            .from(svData)
-                            .ploidyMin(max(ploidyEstimate - ploidyUncertainty, 0))
-                            .ploidyMax(ploidyEstimate + ploidyUncertainty)
-                            .build());
-                }
-                */
-
                 if (writer != null)
                 {
                     if (!mWriteVerbosePloidyData)
@@ -1159,11 +1143,6 @@ public class CNAnalyser {
         catch (final IOException e)
         {
             LOGGER.error("error writing to ploidy recalc outputFile: {}", e.toString());
-        }
-
-        if (mUpdateAdjustedPloidyToDB)
-        {
-            //mDbAccess.updateCalculatedPloidy(updatedSvDataList);
         }
     }
 

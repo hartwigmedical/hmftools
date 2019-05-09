@@ -5,6 +5,8 @@ import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.MIN_SAMPLE_PURIT
 import static com.hartwig.hmftools.svanalysis.analysis.CNAnalyser.CN_ANALYSIS_ONLY;
 import static com.hartwig.hmftools.svanalysis.analysis.FusionDisruptionAnalyser.setSvGeneData;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.NONE_SEGMENT_INFERRED;
+import static com.hartwig.hmftools.svanalysis.types.SvaConfig.DATA_OUTPUT_PATH;
+import static com.hartwig.hmftools.svanalysis.types.SvaConfig.LOG_DEBUG;
 
 import java.sql.SQLException;
 import java.util.Arrays;
@@ -44,11 +46,8 @@ public class SvAnalyser {
 
     private static final Logger LOGGER = LogManager.getLogger(SvAnalyser.class);
 
-    public static final String SAMPLE = "sample";
-    private static final String VCF_FILE = "vcf_file";
+
     private static final String RUN_SVA = "run_sv_analysis";
-    public static final String DATA_OUTPUT_PATH = "data_output_path";
-    private static final String LOG_DEBUG = "log_debug";
     private static final String DRIVERS_CHECK = "check_drivers";
     private static final String CHECK_FUSIONS = "check_fusions";
     private static final String INCLUDE_NONE_SEGMENTS = "incl_none_segments";
@@ -70,6 +69,8 @@ public class SvAnalyser {
             Configurator.setRootLevel(Level.DEBUG);
         }
 
+        SvaConfig svaConfig = new SvaConfig(cmd);
+
         if(cmd.hasOption(STATS_ROUTINES))
         {
             StatisticRoutines statsRoutines = new StatisticRoutines();
@@ -82,7 +83,7 @@ public class SvAnalyser {
         if(cmd.hasOption(SIM_ROUTINES))
         {
             SvSimulator simulator = new SvSimulator();
-            simulator.loadConfig(cmd);
+            simulator.loadConfig(cmd, svaConfig.OutputCsvPath);
             simulator.run();
             return;
         }
@@ -91,7 +92,7 @@ public class SvAnalyser {
         {
             MultipleBiopsyAnalyser mbAnalyser = new MultipleBiopsyAnalyser();
 
-            if(mbAnalyser.loadData(cmd))
+            if(mbAnalyser.loadData(cmd, svaConfig.OutputCsvPath))
             {
                 mbAnalyser.runAnalysis();
             }
@@ -101,28 +102,21 @@ public class SvAnalyser {
 
         final DatabaseAccess dbAccess = cmd.hasOption(DB_URL) ? databaseAccess(cmd) : null;
 
-        String configSampleStr = cmd.getOptionValue(SAMPLE);
-
-        if(configSampleStr == null || configSampleStr.equals("*"))
-            configSampleStr = "";
-
         List<String> samplesList = Lists.newArrayList();
 
-        if (configSampleStr.isEmpty())
+        if (svaConfig.SampleId.isEmpty())
         {
             samplesList = getStructuralVariantSamplesList(dbAccess);
         }
-        else if (configSampleStr.contains(","))
+        else if (svaConfig.SampleId.contains(","))
         {
-            String[] tumorList = configSampleStr.split(",");
+            String[] tumorList = svaConfig.SampleId.split(",");
             samplesList = Arrays.stream(tumorList).collect(Collectors.toList());
         }
         else
         {
-            samplesList.add(configSampleStr);
+            samplesList.add(svaConfig.SampleId);
         }
-
-        SvaConfig svaConfig = new SvaConfig(cmd, configSampleStr);
 
         CNAnalyser cnAnalyser = new CNAnalyser(svaConfig.OutputCsvPath, dbAccess);
         cnAnalyser.loadConfig(cmd, samplesList);
@@ -321,14 +315,10 @@ public class SvAnalyser {
     private static Options createBasicOptions()
     {
         final Options options = new Options();
-        options.addOption(VCF_FILE, true, "Path to the vcf file.");
-        options.addOption(SAMPLE, true, "Tumor sample.");
         options.addOption(DB_USER, true, "Database user name.");
         options.addOption(DB_PASS, true, "Database password.");
         options.addOption(DB_URL, true, "Database url.");
         options.addOption(RUN_SVA, false, "Whether to run clustering logic");
-        options.addOption(DATA_OUTPUT_PATH, true, "CSV output directory");
-        options.addOption(LOG_DEBUG, false, "Sets log level to Debug, off by default");
         options.addOption(DRIVERS_CHECK, false, "Check SVs against drivers catalog");
         options.addOption(CHECK_FUSIONS, false, "Run fusion detection");
         options.addOption(INCLUDE_NONE_SEGMENTS, false, "Include copy number NONE segments in SV analysis");
@@ -336,6 +326,8 @@ public class SvAnalyser {
         options.addOption(STATS_ROUTINES, false, "Optional: calc stats routines");
         options.addOption(SIM_ROUTINES, false, "Optional: simulation routines");
         options.addOption(MULT_BIOPSY_ANALYSIS, false, "Optional: run multiple biopsy analysis");
+
+        // allow sub-components to add their specific config
         SvSimulator.addCmdLineArgs(options);
         SvaConfig.addCmdLineArgs(options);
         CNAnalyser.addCmdLineArgs(options);

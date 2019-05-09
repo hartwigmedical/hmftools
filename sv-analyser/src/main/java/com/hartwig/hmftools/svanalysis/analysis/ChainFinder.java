@@ -1430,7 +1430,7 @@ public class ChainFinder
             final List<SvBreakend> breakendList = entry.getValue();
             int breakendCount = breakendList.size();
 
-            // a multi-dim array of breakend index for this arm to A allele ploidy, B non-disrupted ploidy, and Cluster ploidy
+            // a multi-dim array of breakend index for this arm to A allele ploidy, B non-disrupted ploidy, and cluster ploidy
             double[][] allelePloidies = new double[breakendCount][AP_DATA_VALID +1];
 
             mChrAllelePloidies.put(chromosome, allelePloidies);

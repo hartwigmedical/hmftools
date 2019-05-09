@@ -836,11 +836,6 @@ public class SvClusteringMethods {
                 SvVarData var = breakend.getSV();
                 final SvCluster cluster = var.getCluster();
 
-                if(cluster == null || cluster.getSV(0) == null)
-                {
-                    LOGGER.warn("null");
-                }
-
                 // take the point of view of the cluster with the solo single
                 if(cluster.getSvCount() != 1 || cluster.getSV(0).type() != SGL || cluster.isResolved())
                     continue;
@@ -1105,28 +1100,6 @@ public class SvClusteringMethods {
         }
     }
 
-    public double chromosomeCopyNumber(final String chromosome)
-    {
-        double[] cnData = mChromosomeCopyNumberMap.get(chromosome);
-
-        // unclear but for now take the max of the three
-
-        if(cnData == null)
-            return 0;
-
-        return max(cnData[P_ARM_TELOMERE_CN], max(cnData[Q_ARM_TELOMERE_CN], cnData[CENTROMERE_CN]));
-    }
-
-    public double telomereCopyNumber(final String chromosome, final String arm)
-    {
-        double[] cnData = mChromosomeCopyNumberMap.get(chromosome);
-
-        if(cnData == null)
-            return 0;
-
-        return arm == CHROMOSOME_ARM_P ? cnData[P_ARM_TELOMERE_CN] : cnData[Q_ARM_TELOMERE_CN];
-    }
-
     public void annotateNearestSvData()
     {
         // mark each SV's nearest other SV and its relationship - neighbouring or overlapping
@@ -1257,9 +1230,6 @@ public class SvClusteringMethods {
         if(cluster.getLinkedPairs().isEmpty() || cluster.hasReplicatedSVs())
             return false;
 
-        // final SvVarData var1 = cluster.getSV(0);
-        // final SvVarData var2 = cluster.getSV(1);
-
         // first work out if there are 1 or 2 templated insertions
         SvLinkedPair linkedPair1 = cluster.getLinkedPairs().get(0);
 
@@ -1292,16 +1262,6 @@ public class SvClusteringMethods {
                 linkedPair2 = new SvLinkedPair(lowerSV, upperSV, LINK_TYPE_TI, lowerOtherBreakend.usesStart(), upperOtherBreakend.usesStart());
             }
         }
-        /*
-        else if(areLinkedSection(lowerSV, upperSV, v1OpenOnStart, v2OpenOnStart, false))
-        {
-            linkedPair2 = new SvLinkedPair(lowerSV, upperSV, LINK_TYPE_TI, v1OpenOnStart, v2OpenOnStart);
-        }
-        else if(areSectionBreak(lowerSV, upperSV, v1OpenOnStart, v2OpenOnStart))
-        {
-            linkedPair2 = new SvLinkedPair(lowerSV, upperSV, LINK_TYPE_DB, v1OpenOnStart, v2OpenOnStart);
-        }
-        */
         else
         {
             LOGGER.debug("cluster({}) ids({} & {}) neither TI nor DB", cluster.id(), lowerSV.id(), upperSV.id());
@@ -1338,9 +1298,6 @@ public class SvClusteringMethods {
         // the other breakends cannot be cross arm
         if(lowerOtherBreakend.arm() != upperOtherBreakend.arm())
             return false;
-
-        // if(otherPair.first().arm(otherPair.firstLinkOnStart()) != otherPair.second().arm(otherPair.secondLinkOnStart()))
-        //    return false;
 
         if(tiPair.isInferred() && tiTraversesComplexSVs(cluster, tiPair))
             return false;

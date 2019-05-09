@@ -1547,7 +1547,7 @@ public class FusionDisruptionAnalyser
     {
         /* fusion validity is no longer used to decide on which candidate to select since phasing and coding outcomes
           ought not to effect RNA transcription
-           
+
         if(currentFusion.viable() != candidateFusion.viable())
         {
             return candidateFusion.viable();

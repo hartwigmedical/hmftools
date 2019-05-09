@@ -576,34 +576,22 @@ public class SvCluster
 
             if(!mLongDelDups.isEmpty())
             {
-                if(!otherInfo.isEmpty())
-                    otherInfo += " ";
-
-                otherInfo += String.format("longDelDup=%d", mLongDelDups.size());
+                otherInfo = appendStr(otherInfo, String.format("longDelDup=%d", mLongDelDups.size()), ' ');
             }
 
             if(!mInversions.isEmpty())
             {
-                if(!otherInfo.isEmpty())
-                    otherInfo += " ";
-
-                otherInfo += String.format("inv=%d", mInversions.size());
+                otherInfo = appendStr(otherInfo, String.format("inv=%d", mInversions.size()), ' ');
             }
 
             if(!mShortTIRemoteSVs.isEmpty())
             {
-                if (!otherInfo.isEmpty())
-                    otherInfo += " ";
-
-                otherInfo += String.format("sti-bnd=%d", mShortTIRemoteSVs.size());
+                otherInfo = appendStr(otherInfo, String.format("sti-bnd=%d", mShortTIRemoteSVs.size()), ' ');
             }
 
             if(!mUnlinkedRemoteSVs.isEmpty())
             {
-                if (!otherInfo.isEmpty())
-                    otherInfo += " ";
-
-                otherInfo += String.format("unlnk-bnd=%d", mUnlinkedRemoteSVs.size());
+                otherInfo = appendStr(otherInfo, String.format("unlnk-bnd=%d", mUnlinkedRemoteSVs.size()), ' ');
             }
 
             LOGGER.debug(String.format("cluster(%d) complex SVs(%d rep=%d) desc(%s res=%s) arms(%d) consis(%d) chains(%d perc=%.2f) replic(%s) %s",
