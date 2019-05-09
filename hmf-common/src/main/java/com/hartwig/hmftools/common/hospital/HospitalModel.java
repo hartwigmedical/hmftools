@@ -28,18 +28,21 @@ public abstract class HospitalModel {
     abstract Map<String, HospitalSampleMapping> sampleHospitalMapping();
 
     @NotNull
+    @VisibleForTesting
     public String externalHospitalName(@NotNull String sample) {
         final HospitalData hospital = findHospitalForSample(sample);
         return hospital != null ? hospital.externalHospitalName() : NA_STRING;
     }
 
     @NotNull
+    @VisibleForTesting
     public String PIName(@NotNull String sample) {
         final HospitalData hospital = findHospitalForSample(sample);
         return hospital != null ? determinePI(sample, hospital) : NA_STRING;
     }
 
     @NotNull
+    @VisibleForTesting
     public String PIEmail(@NotNull String sample) {
         final HospitalData hospital = findHospitalForSample(sample);
         return hospital != null ? determinePIEmail(sample, hospital) : NA_STRING;
@@ -172,7 +175,8 @@ public abstract class HospitalModel {
     }
 
     @NotNull
-    private static String determinePIEmail(@NotNull final String sample, @NotNull final HospitalData hospital) {
+    @VisibleForTesting
+    static String determinePIEmail(@NotNull final String sample, @NotNull final HospitalData hospital) {
         LimsSampleType type = LimsSampleType.fromSampleId(sample);
 
         if (type == LimsSampleType.CPCT) {

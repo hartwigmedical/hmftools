@@ -14,7 +14,7 @@ import org.junit.Test;
 public class HospitalModelTest {
 
     @Test
-    public void canDeterminePIForCPCTAndDrup() {
+    public void canDeterminePIForCPCTAndDrupAndWide() {
         final HospitalModel hospitalModel = buildTestHospitalModel();
         final HospitalData hospital = hospitalModel.hospitalPerId("01");
         assertNotNull(hospital);
@@ -29,6 +29,39 @@ public class HospitalModelTest {
         assertEquals("CpctPI2", HospitalModel.determinePI("DRUP01010001", hospital2));
 
         assertNull(hospitalModel.hospitalPerId("03"));
+    }
+
+    @Test
+    public void canDetermineEmailPIForCPCTAndDrupAndWide() {
+        final HospitalModel hospitalModel = buildTestHospitalModel();
+        final HospitalData hospital = hospitalModel.hospitalPerId("01");
+        assertNotNull(hospital);
+        assertEquals("WIDE Recip", HospitalModel.determinePIEmail("WIDE01010001", hospital));
+        assertEquals("CPCT Recip", HospitalModel.determinePIEmail("CPCT02010001", hospital));
+        assertEquals("DRUP Recip", HospitalModel.determinePIEmail("DRUP01010001", hospital));
+
+        // Revert to CPCT PI with '*' for DRUP PI & recipients
+        final HospitalData hospital2 = hospitalModel.hospitalPerId("02");
+        assertNotNull(hospital2);
+        assertEquals("CPCT Recip2", HospitalModel.determinePIEmail("CPCT02010001", hospital2));
+    }
+
+    @Test
+    public void extractHospitalName() {
+        final HospitalModel hospitalModel = buildTestHospitalModel();
+        assertEquals("ExtHosp1", hospitalModel.externalHospitalName("WIDE01010001"));
+    }
+
+    @Test
+    public void extractPIName() {
+        final HospitalModel hospitalModel = buildTestHospitalModel();
+        assertEquals("WidePI", hospitalModel.PIName("WIDE01010001"));
+    }
+
+    @Test
+    public void extractPIEmail() {
+        final HospitalModel hospitalModel = buildTestHospitalModel();
+        assertEquals("WIDE Recip", hospitalModel.PIEmail("WIDE01010001"));
     }
 
     @Test
