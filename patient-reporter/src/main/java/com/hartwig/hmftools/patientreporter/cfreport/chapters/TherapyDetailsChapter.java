@@ -25,7 +25,7 @@ import org.jetbrains.annotations.NotNull;
 
 public class TherapyDetailsChapter implements ReportChapter {
 
-    private final static float COL_WIDTH_DRIVERS = 90;
+    private final static float COL_WIDTH_DRIVERS = 110;
     private final static float COL_WIDTH_MATCH = 60;
     private final static float COL_WIDTH_LEVEL = 42;
     private final static float COL_WIDTH_RESPONSE_CCMO = 75;

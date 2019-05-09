@@ -59,7 +59,7 @@ public class ActionableOrDriversChapter implements ReportChapter {
             return TableUtil.createNoneReportTable(title);
         }
 
-        Table contentTable = TableUtil.createReportContentTable(new float[] { 45, 75, 50, 60, 40, 60, 40, 50, 50, 35 },
+        Table contentTable = TableUtil.createReportContentTable(new float[] { 45, 75, 60, 60, 40, 60, 40, 50, 40, 35 },
                 new Cell[] { TableUtil.createHeaderCell("Gene"), TableUtil.createHeaderCell("Variant"), TableUtil.createHeaderCell("Impact"),
                         TableUtil.createHeaderCell("Read depth").setTextAlignment(TextAlignment.CENTER), TableUtil.createHeaderCell("Hotspot"),
                         TableUtil.createHeaderCell("Ploidy (VAF)"), TableUtil.createHeaderCell(),
