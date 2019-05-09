@@ -103,7 +103,7 @@ public class QCFailChapter implements ReportChapter {
             }
             case SHALLOW_SEQ_LOW_PURITY: {
                 title = "Notification of inadequate tumor sample";
-                reason = "Not enough tumor DNA detected by molecular T % estimate.";
+                reason = "Not enough tumor DNA detected based on molecular estimate.";
                 explanation = "For sequencing we require a minimum of 30% tumor cells.";
                 break;
             }
@@ -267,7 +267,7 @@ public class QCFailChapter implements ReportChapter {
     @NotNull
     private Paragraph shallowSeqText() {
         return createContentParagraph(
-                "The tumor percentage estimated by molecular tumor percentage is  " , failReport.sampleReport().purityShallowSeq());
+                "The tumor percentage based on molecular estimated is " , failReport.sampleReport().purityShallowSeq());
     }
 
     @NotNull
