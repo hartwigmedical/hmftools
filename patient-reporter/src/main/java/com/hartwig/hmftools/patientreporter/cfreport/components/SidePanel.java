@@ -11,6 +11,7 @@ import com.itextpdf.layout.Canvas;
 import com.itextpdf.layout.element.Div;
 import com.itextpdf.layout.element.Paragraph;
 
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 public final class SidePanel {
@@ -35,14 +36,18 @@ public final class SidePanel {
         LimsSampleType type = LimsSampleType.fromSampleId(sampleReport.sampleId());
 
         if (fullHeight && fullContent) {
-            final String contactNames = type == LimsSampleType.CORE ? sampleReport.requesterName(): sampleReport.hospitalPIName();
+            final String contactNames = type == LimsSampleType.CORE || type == LimsSampleType.WIDE
+                    ? sampleReport.requesterName()
+                    : Strings.EMPTY;
             if (!contactNames.isEmpty()) {
-                cv.add(createSidePanelDiv(sideTextIndex++, "Name requestor", contactNames));
+                cv.add(createSidePanelDiv(sideTextIndex++, "Requested by", contactNames));
             }
 
-            final String contactEmails = type == LimsSampleType.CORE ? sampleReport.requesterEmail() : sampleReport.hospitalPIEmail();
+            final String contactEmails = type == LimsSampleType.CORE || type == LimsSampleType.WIDE
+                    ? sampleReport.requesterEmail()
+                    : Strings.EMPTY;
             if (!contactEmails.isEmpty()) {
-                cv.add(createSidePanelDiv(sideTextIndex++, "Email requestor", contactEmails));
+                cv.add(createSidePanelDiv(sideTextIndex++, "Email", contactEmails));
             }
 
             final String hospitalName = sampleReport.hospitalName();

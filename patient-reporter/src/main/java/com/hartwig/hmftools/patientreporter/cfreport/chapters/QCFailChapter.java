@@ -139,11 +139,11 @@ public class QCFailChapter implements ReportChapter {
         Div divColumn1 = new Div();
         divColumn1.add(notSequencedText());
         divColumn1.add(createContentParagraph(
-                "When possible, please resubmit using the same " + failReport.study().studyName() + "-number. "
-                        + "In case additional tumor material cannot be provided, please be notified that the patient will not be "
+                "Please resubmit using the same " + failReport.study().studyName() + "-number. "
+                        + "If additional material cannot be provided the patient will not be "
                         + "evaluable for the " + failReport.study().studyCode() + " study."));
         divColumn1.add(createContentParagraphTwice(
-                "The HMF sample ID is " , failReport.sampleReport().sampleId() , "and the tissue ID of pathology is: "
+                "The HMF sample ID is " , failReport.sampleReport().sampleId() , " and the tissue ID of pathology is: "
                         , failReport.sampleReport().hospitalPathologySampleId()));
         divColumn1.add(createContentParagraphTwice(
                 "The internal tumor barcode is " , failReport.sampleReport().tumorBarcode() , " and the internal blood barcode is "
@@ -178,7 +178,7 @@ public class QCFailChapter implements ReportChapter {
         Div divColumn1 = new Div();
         divColumn1.add(notSequencedText());
         divColumn1.add(createContentParagraph(
-                "When possible, please resubmit using the same DVO with project name " + failReport.sampleReport().projectName() + "."));
+                "Please resubmit using the same DVO with project name " + failReport.sampleReport().projectName() + "."));
         divColumn1.add(createContentParagraphTwice(
                 "The HMF sample ID is " , failReport.sampleReport().sampleId() , " and the hospital patient ID is "
                         , failReport.sampleReport().hospitalPatientId()));
@@ -208,7 +208,7 @@ public class QCFailChapter implements ReportChapter {
 
     @NotNull
     private static Paragraph createContentParagraphRequest(@NotNull SampleReport sampleReport) {
-        return createContentParagraph("The contact details are : ").add(new Text(sampleReport.requesterName()).addStyle(ReportResources.smallBodyBoldTextStyle()))
+        return createContentParagraph("The requester is : ").add(new Text(sampleReport.requesterName()).addStyle(ReportResources.smallBodyBoldTextStyle()))
                 .add("(")
                 .add(new Text(sampleReport.requesterEmail()).addStyle(ReportResources.smallBodyBoldTextStyle()))
                 .add(")")
@@ -230,8 +230,8 @@ public class QCFailChapter implements ReportChapter {
         Div divColumn1 = new Div();
         divColumn1.add(notSequencedText());
         divColumn1.add(createContentParagraph(
-                "When possible, please resubmit using the same " + failReport.study().studyName() + "-number. "
-                        + "In case additional tumor material cannot be provided, please be notified that the patient will not be "
+                "Please resubmit using the same " + failReport.study().studyName() + "-number. "
+                        + "If additional material cannot be provided the patient will not be "
                         + "evaluable for the " + failReport.study().studyCode() + " study."));
         divColumn1.add(createContentParagraph("The HMF sample ID is " , failReport.sampleReport().sampleId()));
         divColumn1.add(createContentParagraphTwice(
@@ -281,15 +281,14 @@ public class QCFailChapter implements ReportChapter {
     @NotNull
     private static Paragraph notSequencedText() {
         return createContentParagraph(
-                "The received biopsies for the tumor sample for this patient were inadequate to obtain a reliable sequencing "
-                        + "result. Therefore whole genome sequencing cannot be performed, "
-                        + "unless additional fresh tumor material can be provided for a new assessment.");
+                "The received tumor biopsies were inadequate for whole genome sequencing. "
+                        + "If available new tumor material can be provided for a new assessment.");
     }
 
     @NotNull
     private Paragraph recipientText() {
         return createContentParagraph(
-                "This report is generated and verified by: " + failReport.user() + " and is addressed at " + failReport.sampleReport()
+                "This report is generated and verified by: " + failReport.user() + " and is addressed to " , failReport.sampleReport()
                         .addressee());
     }
 

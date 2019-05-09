@@ -111,7 +111,7 @@ public class TherapyDetailsChapter implements ReportChapter {
                 TableUtil.createReportContentTable(new float[] { COL_WIDTH_DRIVERS, COL_WIDTH_MATCH, COL_WIDTH_TREATMENT_ICONS,
                                 COL_WIDTH_TREATMENT_LIST_5COL, COL_WIDTH_RESPONSE_CCMO, COL_WIDTH_SOURCE },
                         new Cell[] { TableUtil.createHeaderCell("Drivers"), TableUtil.createHeaderCell("Match"),
-                                TableUtil.createHeaderCell("Treatments", 2), TableUtil.createHeaderCell("CCMO"),
+                                TableUtil.createHeaderCell("Trials", 2), TableUtil.createHeaderCell("CCMO"),
                                 TableUtil.createHeaderCell("Source") });
 
         final List<ClinicalTrial> sortedTrials = ClinicalTrials.sort(trials);
