@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.common.utils;
 
+import static java.lang.Math.floor;
+
 import java.util.List;
 
 import com.google.common.collect.Lists;
@@ -117,6 +119,15 @@ public class PerformanceCounter {
         return mTimes.isEmpty() ? 0 : mTotalTime / mTimes.size();
     }
 
+    public double getMedianTime()
+    {
+        if(mTimes.isEmpty())
+            return 0;
+
+        int medianIndex = (int)floor(mTimes.size()/2);
+        return mTimes.get(medianIndex);
+    }
+
     public void logStats() {
         logStats(false);
     }
@@ -128,8 +139,8 @@ public class PerformanceCounter {
 
         if(mTimes.size() > 1)
         {
-            LOGGER.info(String.format("PerfStats: name(%s) intervals(%d) total(%.3f) avg(%.3f) max(%.3f)",
-                    mName, getSampleCount(), getTotalTime(), getAvgTime(), getMaxTime()));
+            LOGGER.info(String.format("PerfStats: name(%s) intervals(%d) total(%.3f avg=%.3f med=%.3f max=%.3f)",
+                    mName, getSampleCount(), getTotalTime(), getAvgTime(), getMedianTime(), getMaxTime()));
         }
         else
         {
