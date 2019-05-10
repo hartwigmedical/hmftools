@@ -86,7 +86,7 @@ public class SummaryChapter implements ReportChapter {
         }
 
         Div div = createSectionStartDiv(contentWidth());
-        div.add(new Paragraph("Summary").addStyle(ReportResources.sectionTitleStyle()));
+        div.add(new Paragraph("Conclusion").addStyle(ReportResources.sectionTitleStyle()));
 
         div.add(new Paragraph(text).setWidth(contentWidth()).addStyle(ReportResources.bodyTextStyle()).setFixedLeading(11));
 
@@ -102,19 +102,16 @@ public class SummaryChapter implements ReportChapter {
         table.addCell(TableUtil.createLayoutCell()
                 .add(new Paragraph("Treatment indications").addStyle(ReportResources.sectionTitleStyle())));
 
-        table.addCell(TableUtil.createLayoutCell()
-                .add(new Paragraph("Summary of alterations with number of treatment indication and/or clinical trials").addStyle(
-                        ReportResources.bodyTextStyle()).setFixedLeading(ReportResources.BODY_TEXT_LEADING)));
         table.addCell(TableUtil.createLayoutCell(1, 2).setHeight(TABLE_SPACER_HEIGHT));
 
         int therapyEventCount = EvidenceItems.uniqueEventCount(tumorSpecificEvidence);
         int therapyCount = EvidenceItems.uniqueTherapyCount(tumorSpecificEvidence);
-        table.addCell(createMiddleAlignedCell().add(new Paragraph("Gene alteration(s) with therapy indication(s)").addStyle(ReportResources.bodyTextStyle())));
+        table.addCell(createMiddleAlignedCell().add(new Paragraph("Number of alterations with therapy indication").addStyle(ReportResources.bodyTextStyle())));
         table.addCell(createTreatmentIndicationCell(therapyEventCount, therapyCount, "treatments"));
 
         int trialEventCount = ClinicalTrials.uniqueEventsCount(trials);
         int trialCount = ClinicalTrials.uniqueTrialCount(trials);
-        table.addCell(createMiddleAlignedCell().add(new Paragraph("Gene alteration(s) with clinical trial eligibility").addStyle(
+        table.addCell(createMiddleAlignedCell().add(new Paragraph("Number of alteration with clinical trial eligibility").addStyle(
                 ReportResources.bodyTextStyle())));
         table.addCell(createTreatmentIndicationCell(trialEventCount, trialCount, "trials"));
 
@@ -132,8 +129,6 @@ public class SummaryChapter implements ReportChapter {
         table.setWidth(contentWidth());
         table.addCell(TableUtil.createLayoutCell()
                 .add(new Paragraph("Tumor characteristics").addStyle(ReportResources.sectionTitleStyle())));
-        table.addCell(TableUtil.createLayoutCell(1, 2)
-                .add(new Paragraph("Whole genome sequencing based tumor characteristics.").addStyle(ReportResources.bodyTextStyle())));
         table.addCell(TableUtil.createLayoutCell(1, 3).setHeight(TABLE_SPACER_HEIGHT));
 
         final double impliedPurity = patientReport.impliedPurity();
@@ -185,8 +180,6 @@ public class SummaryChapter implements ReportChapter {
         table.setWidth(contentWidth());
         table.addCell(TableUtil.createLayoutCell()
                 .add(new Paragraph("Genomic alterations").addStyle(ReportResources.sectionTitleStyle())));
-        table.addCell(TableUtil.createLayoutCell()
-                .add(new Paragraph("Summary of tumor specific alterations).").addStyle(ReportResources.bodyTextStyle())));
         table.addCell(TableUtil.createLayoutCell(1, 2).setHeight(TABLE_SPACER_HEIGHT));
 
         final Set<String> driverVariantGenes = SomaticVariants.driverGenesWithVariant(patientReport.reportableVariants());
