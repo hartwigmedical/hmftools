@@ -46,12 +46,16 @@ public class QCFailChapter implements ReportChapter {
 
     @Override
     public void render(@NotNull Document reportDocument) {
+        if (failReport.sampleReport().addressee() == null) {
+            throw new IllegalStateException("No recipient address present for sample " + failReport.sampleReport().sampleId());
+        }
+
         reportDocument.add(TumorLocationAndTypeTable.createTumorLocationAndType(failReport.sampleReport().primaryTumorLocationString(),
                 failReport.sampleReport().cancerSubTypeString(),
                 contentWidth()));
         reportDocument.add(LineDivider.createLineDivider(contentWidth()));
 
-        reportDocument.add(createFailReasonDiv(failReport.reason(), failReport.sampleReport()));
+        reportDocument.add(createFailReasonDiv(failReport.reason()));
         reportDocument.add(LineDivider.createLineDivider(contentWidth()).setMarginTop(10));
 
         LimsSampleType type = LimsSampleType.fromSampleId(failReport.sampleReport().sampleId());
@@ -72,11 +76,7 @@ public class QCFailChapter implements ReportChapter {
     }
 
     @NotNull
-    private static Div createFailReasonDiv(@NotNull QCFailReason failReason, @NotNull SampleReport sampleReport) {
-        if (sampleReport.addressee() == null) {
-            throw new IllegalStateException("No recipient address present for sample " + sampleReport.sampleId());
-        }
-
+    private static Div createFailReasonDiv(@NotNull QCFailReason failReason) {
         final String title;
         final String reason;
         final String explanation;
@@ -291,9 +291,7 @@ public class QCFailChapter implements ReportChapter {
     @NotNull
     private Paragraph recipientText() {
         String addressee = failReport.sampleReport().addressee();
-        if (addressee == null) {
-            throw new IllegalStateException("No addressee defined for " + failReport.sampleReport().sampleId());
-        }
+        assert addressee != null; // Has been checked prior to calling this function.
         return createContentParagraph("This report is generated and verified by: " + failReport.user() + " and is addressed to ",
                 addressee);
     }
