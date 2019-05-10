@@ -118,6 +118,7 @@ public class ChainingActualTests
         // check foldbacks
         assertEquals(var1.getFoldbackLink(true), var1.id());
         assertEquals(var3.getFoldbackLink(true), var3.id());
+        assertEquals(var4.getFoldbackLink(true), var4.id());
         assertEquals(var6.getFoldbackLink(true), var7.id());
         assertEquals(var7.getFoldbackLink(true), var6.id());
 

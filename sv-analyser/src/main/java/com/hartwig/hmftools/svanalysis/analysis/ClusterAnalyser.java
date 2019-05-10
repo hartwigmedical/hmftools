@@ -26,6 +26,7 @@ import static com.hartwig.hmftools.svanalysis.analysis.ClusterAnnotations.report
 import static com.hartwig.hmftools.svanalysis.analysis.ClusterAnnotations.runAnnotation;
 import static com.hartwig.hmftools.svanalysis.analysis.LinkFinder.MIN_TEMPLATED_INSERTION_LENGTH;
 import static com.hartwig.hmftools.svanalysis.analysis.LinkFinder.getMinTemplatedInsertionLength;
+import static com.hartwig.hmftools.svanalysis.analysis.LinkFinder.haveLinkedAssemblies;
 import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.CLUSTER_REASON_COMMON_ARMS;
 import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.CLUSTER_REASON_FOLDBACKS;
 import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.CLUSTER_REASON_LOH_CHAIN;
@@ -1234,12 +1235,69 @@ public class ClusterAnalyser {
 
             for(int i = 0; i < breakendList.size() - 1; ++i)
             {
-                final SvBreakend breakend = breakendList.get(i);
-                final SvBreakend nextBreakend = breakendList.get(i + 1);
+                SvBreakend breakend = breakendList.get(i);
+
+                if(breakend.isAssembledLink())
+                    continue;
+
+                SvBreakend nextBreakend = breakendList.get(i + 1);
 
                 SvBreakend beFront = null; // the lower position for orientation +1 and vice versa
                 SvBreakend beBack = null;
 
+                int skippedAssemblies = 0;
+
+                int j = i + 1;
+                while(j < breakendList.size())
+                {
+                    nextBreakend = breakendList.get(j);
+
+                    // first skip over an breakends in a DB with the initial breakend
+                    if(j == i + 1 && breakend.orientation() == -1 && nextBreakend.orientation() == 1
+                    && nextBreakend.position() - breakend.position() < getMinTemplatedInsertionLength(nextBreakend, breakend))
+                    {
+                        ++j;
+                        continue;
+                    }
+
+                    // check check for any assembled links in between the potential foldback breakends
+                    if(j + 1 < breakendList.size() && nextBreakend.isAssembledLink()
+                    && nextBreakend.getSV().getLinkedPair(nextBreakend.usesStart()) != null)
+                    {
+                        SvLinkedPair asmbLink = nextBreakend.getSV().getLinkedPair(nextBreakend.usesStart());
+                        SvBreakend nextNextBreakend = breakendList.get(j + 1);
+                        if(asmbLink.getOtherBreakend(nextBreakend) == nextNextBreakend)
+                        {
+                            // skip over both these assembled links
+                            j += 2;
+                            ++skippedAssemblies;
+                            continue;
+                        }
+                    }
+
+                    // check again for an overlapping DB at the outer (potential) foldback breakend
+                    if(breakend.orientation() == 1 && nextBreakend.orientation() == -1 && j < breakendList.size() - 1)
+                    {
+                        SvBreakend nextNextBreakend = breakendList.get(j + 1);
+
+                        if(nextNextBreakend.orientation() == breakend.orientation()
+                        && nextNextBreakend.position() - nextBreakend.position() < getMinTemplatedInsertionLength(nextBreakend, nextNextBreakend))
+                        {
+                            nextBreakend = nextNextBreakend;
+                        }
+                    }
+
+                    // now check for opposite orientation for the potential foldback
+                    if(nextBreakend.orientation() == breakend.orientation() && !nextBreakend.isAssembledLink())
+                    {
+                        beFront = breakend.orientation() == 1 ? breakend : nextBreakend;
+                        beBack = breakend.orientation() == 1 ? nextBreakend : breakend;
+                    }
+
+                    break;
+                }
+
+                /*
                 if(breakend.orientation() == nextBreakend.orientation())
                 {
                     beFront = breakend.orientation() == 1 ? breakend : nextBreakend;
@@ -1247,6 +1305,8 @@ public class ClusterAnalyser {
                 }
                 else if(i < breakendList.size() - 2)
                 {
+                    // skip
+
                     // check for a short overlapping deletion bridge on either breakend that would otherwise mask this foldback
                     SvBreakend postNextBreakend = breakendList.get(i + 2);
 
@@ -1266,6 +1326,9 @@ public class ClusterAnalyser {
                         }
                     }
                 }
+                */
+
+                boolean foldbackFound = false;
 
                 if(beFront != null && beBack != null)
                 {
@@ -1274,18 +1337,21 @@ public class ClusterAnalyser {
 
                     if(dbLink == null || dbLink.length() > 0)
                     {
-                        checkFoldbackBreakends(beFront, beBack);
+                        foldbackFound = checkFoldbackBreakends(beFront, beBack);
                     }
                 }
 
-                checkReplicatedBreakendFoldback(breakend);
+                if(!foldbackFound)
+                {
+                    checkReplicatedBreakendFoldback(breakend);
+                }
             }
         }
     }
 
     public static int MAX_FOLDBACK_CHAIN_LENGTH = 5000;
 
-    private void checkFoldbackBreakends(SvBreakend beStart, SvBreakend beEnd)
+    private boolean checkFoldbackBreakends(SvBreakend beStart, SvBreakend beEnd)
     {
         // SVs are marked as being in a foldback if they are consecutive breakends,
         // have the same orientation, and are either an INV or part of a chain
@@ -1296,7 +1362,7 @@ public class ClusterAnalyser {
         SvVarData varStart = beStart.getSV();
 
         if(varEnd.type() == INS || varStart.type() == INS)
-            return;
+            return false;
 
         // isSpecificSV(varStart);
 
@@ -1304,7 +1370,7 @@ public class ClusterAnalyser {
         final SvCluster cluster1 = varEnd.getCluster();
 
         if(cluster1.isResolved() && cluster1.getTypeCount(INV) == 0)
-            return;
+            return false;
 
         boolean singleSV = varEnd.equals(varStart);
 
@@ -1320,7 +1386,7 @@ public class ClusterAnalyser {
 
             // must be same cluster
             if(cluster1 != cluster2)
-                return;
+                return false;
         }
 
         boolean beEndUsesStart = beEnd.usesStart();
@@ -1344,7 +1410,7 @@ public class ClusterAnalyser {
                         ++bndLinks;
 
                     if (bndLinks == 2)
-                        return;
+                        return false;
                 }
             }
         }
@@ -1352,23 +1418,23 @@ public class ClusterAnalyser {
         {
             // must be same cluster and part of the same chain
             if(cluster1 != cluster2)
-                return;
+                return false;
 
             if(varEnd.getReplicatedCount() != varStart.getReplicatedCount())
-                return;
+                return false;
 
             final SvChain chain1 = cluster1.findChain(varEnd);
             final SvChain chain2 = cluster2.findChain(varStart);
 
             if(chain1 == null || chain2 == null || chain1 != chain2)
-                return;
+                return false;
 
             // check if a path can be walked between these 2 breakends along the chain
             // without going back through this foldback point
             int[] chainData = chain1.breakendsAreChained(varEnd, !beEndUsesStart, varStart, !beStartUsesStart);
 
             if(chainData[CHAIN_LINK_COUNT] == 0 ) // || chainData[CHAIN_LINK_COUNT] != chainData[CHAIN_ASSEMBLY_LINK_COUNT]
-                return;
+                return false;
 
             int chainLength = chainData[CHAIN_LENGTH];
 
@@ -1379,7 +1445,7 @@ public class ClusterAnalyser {
                         mSampleId, beEnd.toString(), beStart.toString(),
                         chainLength, chainData[CHAIN_LINK_COUNT], chainData[CHAIN_ASSEMBLY_LINK_COUNT]);
                 */
-                return;
+                return false;
             }
 
             chainInfo = String.format("%d;%d;%d",
@@ -1403,7 +1469,7 @@ public class ClusterAnalyser {
         }
 
         if(skipFoldback)
-            return;
+            return false;
 
         if(varEnd.getFoldbackBreakend(beEndUsesStart) != null)
         {
@@ -1430,6 +1496,8 @@ public class ClusterAnalyser {
             LOGGER.debug("cluster({}) foldback be1({}) be2({}) length({})",
                     cluster1.id(), beEnd.toString(), beStart.toString(), length);
         }
+
+        return true;
     }
 
     private void checkReplicatedBreakendFoldback(SvBreakend be)
@@ -1438,8 +1506,8 @@ public class ClusterAnalyser {
         // during a replication event and in doing so forms a foldback
         final SvVarData var = be.getSV();
 
-        if(var.getReplicatedCount() < 2)
-            return;
+        // if(var.getReplicatedCount() < 2)
+        //     return;
 
         if(!var.getAssemblyMatchType(true).equals(ASSEMBLY_MATCH_MATCHED)
         && !var.getAssemblyMatchType(false).equals(ASSEMBLY_MATCH_MATCHED))
@@ -1447,11 +1515,29 @@ public class ClusterAnalyser {
             return;
         }
 
-        // check if the replicated SV has the same linked pairing
-        // or if the variant forms both ends of the cluster's chain
+        // replication for chaining isn't done at this earlier stage any more so a simple check is made
+        SvLinkedPair remoteTiLink = var.getLinkedPair(!be.usesStart());
+
+        if(remoteTiLink != null)
+        {
+            SvBreakend remoteBreakend = var.getBreakend(!be.usesStart());
+            SvBreakend otherBreakend = remoteTiLink.getOtherBreakend(remoteBreakend);
+            SvVarData otherVar = otherBreakend.getSV();
+
+            if (haveLinkedAssemblies(var, otherVar, remoteBreakend.usesStart(), !otherBreakend.usesStart()))
+            {
+                final String chainInfo = String.format("%d;%d;%d", 1, 1, remoteTiLink.length());
+
+                var.setFoldbackLink(be.usesStart(), be, 0, chainInfo);
+
+                LOGGER.info("cluster({}) foldback translocation SV({} : {}) with own breakend({})",
+                        var.getCluster().id(), var.posId(), var.type(), be.toString());
+            }
+        }
+
+        /*
+        // check if the replicated SV has the same linked pairing or if the variant forms both ends of the cluster's chain
         final SvCluster cluster = var.getCluster();
-        if(cluster == null)
-            return;
 
         for(final SvChain chain : cluster.getChains())
         {
@@ -1470,6 +1556,7 @@ public class ClusterAnalyser {
                         cluster.id(), var.posId(), var.type(), foldbackIsStart ? "start" : "end");
             }
         }
+        */
     }
 
     private void reportOtherFeatures()
