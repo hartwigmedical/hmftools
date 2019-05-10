@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.patientreporter.cfreport.components;
 
+import java.text.NumberFormat;
+
 import com.hartwig.hmftools.patientreporter.cfreport.MathUtil;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
 import com.itextpdf.kernel.colors.Color;
@@ -16,14 +18,13 @@ import com.itextpdf.layout.renderer.IRenderer;
 
 import org.jetbrains.annotations.NotNull;
 
-import java.text.NumberFormat;
-
 public class BarChart extends InlineBarChart {
 
     private final static float HEIGHT = 45;
 
     private String lowLabel;
     private String highLabel;
+    private String labelBar;
 
     private boolean underShootEnabled = false;
     private String undershootLabel = "";
@@ -34,11 +35,12 @@ public class BarChart extends InlineBarChart {
     private Indicator[] tickMarks = {};
     private Indicator threshold = null;
 
-    public BarChart(double value, double min, double max, @NotNull String lowLabel, @NotNull String highLabel) {
+    public BarChart(double value, double min, double max, @NotNull String lowLabel, @NotNull String highLabel, @NotNull String labelBar) {
         super(value, min, max);
         super.setHeight(HEIGHT);
         this.lowLabel = lowLabel;
         this.highLabel = highLabel;
+        this.labelBar = labelBar;
     }
 
     private void setTickMarks(@NotNull Indicator... tickMarks) {
@@ -147,7 +149,6 @@ public class BarChart extends InlineBarChart {
                 cv.showTextAligned(new Paragraph(undershootLabel).addStyle(ReportResources.subTextStyle()
                         .setFontSize(6)
                         .setFontColor(labelColor)), outerBB.getLeft() + OVER_UNDER_SHOOT_LABEL_OFFSET, tickY, TextAlignment.LEFT);
-
             }
 
             if (hasOverShoot) {
@@ -168,7 +169,6 @@ public class BarChart extends InlineBarChart {
                 cv.showTextAligned(new Paragraph(overshootLabel).addStyle(ReportResources.subTextStyle()
                         .setFontSize(6)
                         .setFontColor(labelColor)), outerBB.getRight() - OVER_UNDER_SHOOT_LABEL_OFFSET, tickY, TextAlignment.RIGHT);
-
             }
 
             final float fillValue = isEnabled() ? (float) MathUtil.mapClamped(scaledValue(), scaledMin(), scaledMax(), 0, 1) : 0;
@@ -201,7 +201,6 @@ public class BarChart extends InlineBarChart {
             }
 
             if (isEnabled() && threshold != null) {
-
                 float x = (float) MathUtil.map(scaledValue(threshold.value),
                         scaledMin(),
                         scaledMax(),
@@ -245,9 +244,9 @@ public class BarChart extends InlineBarChart {
                     outerBoundingBox.getHeight(),
                     getHeightRadius(outerBoundingBox));
             canvas.fillStroke();
-            canvas.setLineDash(1f); // Reset dash
+            canvas.setLineDash(1f);
 
-            if (filledPercentage > 0) {
+            if (filledPercentage > 0 || filledPercentage == 0 && labelBar.equals("hrDeficiency")) {
                 final float innerBarRadius = getHeightRadius(innerBoundingBox);
                 canvas.setFillColor(fillColor);
                 canvas.roundRectangle(innerBoundingBox.getX(),

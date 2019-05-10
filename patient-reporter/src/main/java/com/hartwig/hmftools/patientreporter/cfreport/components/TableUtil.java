@@ -41,7 +41,7 @@ public final class TableUtil {
         Table table = TableUtil.createReportContentTable(new float[] { 1 }, new Cell[] { headerCell });
         table.setKeepTogether(true);
         table.setMarginBottom(TABLE_BOTTOM_MARGIN);
-        table.addCell(TableUtil.getDisabledContentCell(new Paragraph(DataUtil.NONE_STRING)));
+        table.addCell(TableUtil.createDisabledContentCell(new Paragraph(DataUtil.NONE_STRING)));
 
         return table;
     }
@@ -69,23 +69,23 @@ public final class TableUtil {
     }
 
     @NotNull
-    public static Cell getHeaderCell(@NotNull String text) {
-        return getHeaderCell(text, 1);
+    public static Cell createHeaderCell(@NotNull String text) {
+        return createHeaderCell(text, 1);
     }
 
     @NotNull
-    public static Cell getHeaderCell(@NotNull String text, int colSpan) {
-        return getHeaderCell(colSpan).add(new Paragraph(text.toUpperCase()));
+    public static Cell createHeaderCell(@NotNull String text, int colSpan) {
+        return createHeaderCell(colSpan).add(new Paragraph(text.toUpperCase()));
     }
 
     @NotNull
-    public static Cell getHeaderCell() {
-        return getHeaderCell(1);
+    public static Cell createHeaderCell() {
+        return createHeaderCell(1);
     }
 
     @NotNull
-    private static Cell getHeaderCell(int colspan) {
-        Cell c = new Cell(1, colspan);
+    private static Cell createHeaderCell(int colSpan) {
+        Cell c = new Cell(1, colSpan);
         c.setHeight(23); // Set fixed height to create consistent spacing between table title and header
         c.setBorder(Border.NO_BORDER);
         c.setVerticalAlignment(VerticalAlignment.BOTTOM);
@@ -94,12 +94,12 @@ public final class TableUtil {
     }
 
     @NotNull
-    public static Cell getContentCell(@NotNull String text) {
-        return getContentCell(new Paragraph(text));
+    public static Cell createContentCell(@NotNull String text) {
+        return createContentCell(new Paragraph(text));
     }
 
     @NotNull
-    public static Cell getContentCell(@NotNull IBlockElement element) {
+    public static Cell createContentCell(@NotNull IBlockElement element) {
         Cell c = new Cell();
         c.setBorder(Border.NO_BORDER);
         c.setBorderBottom(new SolidBorder(ReportResources.PALETTE_MID_GREY, 0.25f));
@@ -110,7 +110,7 @@ public final class TableUtil {
     }
 
     @NotNull
-    private static Cell getDisabledContentCell(@NotNull IBlockElement element) {
+    private static Cell createDisabledContentCell(@NotNull IBlockElement element) {
         Cell c = new Cell();
         c.setBorder(Border.NO_BORDER);
         c.setBorderBottom(new SolidBorder(ReportResources.PALETTE_LIGHT_GREY, 0.25f));
@@ -121,12 +121,12 @@ public final class TableUtil {
     }
 
     @NotNull
-    public static Cell getLayoutCell() {
-        return getLayoutCell(1, 1);
+    public static Cell createLayoutCell() {
+        return createLayoutCell(1, 1);
     }
 
     @NotNull
-    public static Cell getLayoutCell(int rowSpan, int colSpan) {
+    public static Cell createLayoutCell(int rowSpan, int colSpan) {
         Cell c = new Cell(rowSpan, colSpan);
         c.setBorder(Border.NO_BORDER);
         c.setKeepTogether(true);

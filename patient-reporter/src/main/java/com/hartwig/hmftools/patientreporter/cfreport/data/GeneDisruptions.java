@@ -1,12 +1,11 @@
 package com.hartwig.hmftools.patientreporter.cfreport.data;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 import com.hartwig.hmftools.patientreporter.structural.ReportableGeneDisruption;
 
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-
-import java.util.List;
-import java.util.stream.Collectors;
 
 public final class GeneDisruptions {
 
@@ -28,7 +27,7 @@ public final class GeneDisruptions {
     }
 
     @NotNull
-    public static String getCopyNumberString(int copies, boolean hasReliablePurityFit) {
+    public static String copyNumberString(int copies, boolean hasReliablePurityFit) {
         return hasReliablePurityFit ? String.valueOf(copies) : DataUtil.NA_STRING;
     }
 }

@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.patientreporter.cfreport.chapters;
 
+import java.util.List;
+import java.util.regex.Pattern;
+
 import com.hartwig.hmftools.common.actionability.ClinicalTrial;
 import com.hartwig.hmftools.common.actionability.EvidenceItem;
 import com.hartwig.hmftools.common.actionability.EvidenceScope;
@@ -20,17 +23,14 @@ import com.itextpdf.layout.property.VerticalAlignment;
 
 import org.jetbrains.annotations.NotNull;
 
-import java.util.List;
-import java.util.regex.Pattern;
-
 public class TherapyDetailsChapter implements ReportChapter {
 
-    private final static float COL_WIDTH_DRIVERS = 90;
+    private final static float COL_WIDTH_DRIVERS = 110;
     private final static float COL_WIDTH_MATCH = 60;
     private final static float COL_WIDTH_LEVEL = 42;
     private final static float COL_WIDTH_RESPONSE_CCMO = 75;
     private final static float COL_WIDTH_SOURCE = 40;
-    private final static float COL_WIDTH_TREATMENT_ICONS = 20;
+    private final static float COL_WIDTH_TREATMENT_ICONS = 25;
     private final static float COL_WIDTH_TREATMENT_LIST = 180;
     private final static float COL_WIDTH_TREATMENT_LIST_5COL = COL_WIDTH_TREATMENT_LIST + COL_WIDTH_LEVEL;
 
@@ -78,21 +78,21 @@ public class TherapyDetailsChapter implements ReportChapter {
 
         Table contentTable = TableUtil.createReportContentTable(new float[] { COL_WIDTH_DRIVERS, COL_WIDTH_MATCH, COL_WIDTH_TREATMENT_ICONS,
                         COL_WIDTH_TREATMENT_LIST, COL_WIDTH_LEVEL, COL_WIDTH_RESPONSE_CCMO, COL_WIDTH_SOURCE },
-                new Cell[] { TableUtil.getHeaderCell("Drivers"), TableUtil.getHeaderCell("Match"), TableUtil.getHeaderCell("Treatments", 2),
-                        TableUtil.getHeaderCell("Level of evidence"), TableUtil.getHeaderCell("Response"),
-                        TableUtil.getHeaderCell("Source") });
+                new Cell[] { TableUtil.createHeaderCell("Drivers"), TableUtil.createHeaderCell("Match"), TableUtil.createHeaderCell("Treatments", 2),
+                        TableUtil.createHeaderCell("Level of evidence"), TableUtil.createHeaderCell("Response"),
+                        TableUtil.createHeaderCell("Source") });
 
         final List<EvidenceItem> sortedEvidence = EvidenceItems.sort(evidence);
         for (EvidenceItem item : sortedEvidence) {
             String[] treatments = item.drug().split(Pattern.quote(TREATMENT_DELIMITER));
 
-            contentTable.addCell(TableUtil.getContentCell(item.event()));
-            contentTable.addCell(TableUtil.getContentCell(createTreatmentMatchParagraph(item.scope() == EvidenceScope.SPECIFIC)));
-            contentTable.addCell(TableUtil.getContentCell(createTreatmentIcons(treatments)).setVerticalAlignment(VerticalAlignment.TOP));
-            contentTable.addCell(TableUtil.getContentCell(createTreatmentList(treatments)).setVerticalAlignment(VerticalAlignment.TOP));
-            contentTable.addCell(TableUtil.getContentCell(new Paragraph(Icon.createLevelIcon(item.level().readableString()))));
-            contentTable.addCell(TableUtil.getContentCell(item.response()));
-            contentTable.addCell(TableUtil.getContentCell(new Paragraph(item.source().sourceName()))
+            contentTable.addCell(TableUtil.createContentCell(item.event()));
+            contentTable.addCell(TableUtil.createContentCell(createTreatmentMatchParagraph(item.scope() == EvidenceScope.SPECIFIC)));
+            contentTable.addCell(TableUtil.createContentCell(createTreatmentIcons(treatments)).setVerticalAlignment(VerticalAlignment.TOP));
+            contentTable.addCell(TableUtil.createContentCell(createTreatmentList(treatments)).setVerticalAlignment(VerticalAlignment.TOP));
+            contentTable.addCell(TableUtil.createContentCell(new Paragraph(Icon.createLevelIcon(item.level().readableString()))));
+            contentTable.addCell(TableUtil.createContentCell(item.response()));
+            contentTable.addCell(TableUtil.createContentCell(new Paragraph(item.source().sourceName()))
                     .setAction(PdfAction.createURI(EvidenceItems.sourceUrl(item))));
         }
 
@@ -110,20 +110,20 @@ public class TherapyDetailsChapter implements ReportChapter {
         final Table contentTable =
                 TableUtil.createReportContentTable(new float[] { COL_WIDTH_DRIVERS, COL_WIDTH_MATCH, COL_WIDTH_TREATMENT_ICONS,
                                 COL_WIDTH_TREATMENT_LIST_5COL, COL_WIDTH_RESPONSE_CCMO, COL_WIDTH_SOURCE },
-                        new Cell[] { TableUtil.getHeaderCell("Drivers"), TableUtil.getHeaderCell("Match"),
-                                TableUtil.getHeaderCell("Treatments", 2), TableUtil.getHeaderCell("CCMO"),
-                                TableUtil.getHeaderCell("Source") });
+                        new Cell[] { TableUtil.createHeaderCell("Drivers"), TableUtil.createHeaderCell("Match"),
+                                TableUtil.createHeaderCell("Trials", 2), TableUtil.createHeaderCell("CCMO"),
+                                TableUtil.createHeaderCell("Source") });
 
         final List<ClinicalTrial> sortedTrials = ClinicalTrials.sort(trials);
         for (ClinicalTrial trial : sortedTrials) {
             String trialName = trial.acronym();
-            contentTable.addCell(TableUtil.getContentCell(trial.event()));
-            contentTable.addCell(TableUtil.getContentCell(createTreatmentMatchParagraph(trial.scope() == EvidenceScope.SPECIFIC)));
-            contentTable.addCell(TableUtil.getContentCell(createTreatmentIcons(new String[] { trialName }))
+            contentTable.addCell(TableUtil.createContentCell(trial.event()));
+            contentTable.addCell(TableUtil.createContentCell(createTreatmentMatchParagraph(trial.scope() == EvidenceScope.SPECIFIC)));
+            contentTable.addCell(TableUtil.createContentCell(createTreatmentIcons(new String[] { trialName }))
                     .setVerticalAlignment(VerticalAlignment.TOP));
-            contentTable.addCell(TableUtil.getContentCell(trialName).setVerticalAlignment(VerticalAlignment.TOP));
-            contentTable.addCell(TableUtil.getContentCell(ClinicalTrials.CCMOId(trial.reference())));
-            contentTable.addCell(TableUtil.getContentCell(new Paragraph(trial.source().sourceName()).setAction(PdfAction.createURI(
+            contentTable.addCell(TableUtil.createContentCell(trialName).setVerticalAlignment(VerticalAlignment.TOP));
+            contentTable.addCell(TableUtil.createContentCell(ClinicalTrials.CCMOId(trial.reference())));
+            contentTable.addCell(TableUtil.createContentCell(new Paragraph(trial.source().sourceName()).setAction(PdfAction.createURI(
                     ClinicalTrials.sourceUrl(trial)))));
         }
 

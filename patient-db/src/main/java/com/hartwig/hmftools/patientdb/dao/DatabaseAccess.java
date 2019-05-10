@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Set;
 
 import com.hartwig.hmftools.common.actionability.EvidenceItem;
+import com.hartwig.hmftools.common.amber.AmberBAF;
 import com.hartwig.hmftools.common.chord.ChordAnalysis;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.ecrf.EcrfModel;
@@ -45,6 +46,8 @@ public class DatabaseAccess {
     @NotNull
     private final EcrfDAO ecrfDAO;
     @NotNull
+    private final AmberDAO amberDAO;
+    @NotNull
     private final DSLContext context;
     @NotNull
     private final PurityDAO purityDAO;
@@ -82,6 +85,7 @@ public class DatabaseAccess {
         this.context = DSL.using(conn, SQLDialect.MYSQL, settings(catalog));
 
         purityDAO = new PurityDAO(context);
+        amberDAO = new AmberDAO(context);
         copyNumberDAO = new CopyNumberDAO(context);
         geneCopyNumberDAO = new GeneCopyNumberDAO(context);
         somaticVariantDAO = new SomaticVariantDAO(context);
@@ -129,8 +133,7 @@ public class DatabaseAccess {
 
     public static double MIN_SAMPLE_PURITY = 0.195;
 
-    public final List<String> getSamplesPassingQC(double minPurity)
-    {
+    public final List<String> getSamplesPassingQC(double minPurity) {
         return purityDAO.getSamplesPassingQC(minPurity);
     }
 
@@ -141,6 +144,10 @@ public class DatabaseAccess {
 
     public void writeSomaticVariants(@NotNull final String sampleId, @NotNull List<EnrichedSomaticVariant> variants) {
         somaticVariantDAO.write(sampleId, variants);
+    }
+
+    public void writeAmberBAF(@NotNull final String sampleId, @NotNull final List<AmberBAF> amber) {
+        amberDAO.write(sampleId, amber);
     }
 
     @NotNull
@@ -218,7 +225,8 @@ public class DatabaseAccess {
     }
 
     @NotNull
-    public List<PurpleCopyNumber> readCopyNumberSegmentsByType(@NotNull final String sample, @NotNull final List<SegmentSupport> segmentTypes) {
+    public List<PurpleCopyNumber> readCopyNumberSegmentsByType(@NotNull final String sample,
+            @NotNull final List<SegmentSupport> segmentTypes) {
         return copyNumberDAO.readSegmentsByType(sample, segmentTypes);
     }
 
@@ -230,7 +238,7 @@ public class DatabaseAccess {
         chordDAO.writeChord(sample, chordAnalysis);
     }
 
-    public void writeClinicalEvidence (@NotNull String sample, @NotNull List<EvidenceItem> items) {
+    public void writeClinicalEvidence(@NotNull String sample, @NotNull List<EvidenceItem> items) {
         clinicalEvidenceDAO.writeClinicalEvidence(sample, items);
     }
 

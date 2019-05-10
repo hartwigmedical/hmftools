@@ -4,6 +4,7 @@ import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
 import com.itextpdf.kernel.colors.DeviceRgb;
 import com.itextpdf.layout.element.Text;
 
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 public class Icon {
@@ -19,7 +20,7 @@ public class Icon {
         INVALID;
 
         @NotNull
-        String getText() {
+        String text() {
             switch (this) {
                 case LEVEL_A:
                     return "A";
@@ -40,7 +41,7 @@ public class Icon {
             }
         }
 
-        DeviceRgb getDefaultColor() {
+        DeviceRgb defaultColor() {
             switch (this) {
                 case LEVEL_A:
                     return ReportResources.PALETTE_CYAN;
@@ -82,7 +83,7 @@ public class Icon {
                 iconType = IconType.LEVEL_D;
                 break;
             default:
-                return new Text("");
+                return new Text(Strings.EMPTY);
         }
 
         return createIcon(iconType);
@@ -98,7 +99,7 @@ public class Icon {
 
     @NotNull
     public static Text createIcon(@NotNull IconType iconType) {
-        return createIcon(iconType, iconType.getDefaultColor());
+        return createIcon(iconType, iconType.defaultColor());
     }
 
     @NotNull
@@ -107,6 +108,6 @@ public class Icon {
             return new Text("");
         }
 
-        return new Text(iconType.getText()).setFont(ReportResources.iconFont()).setFontColor(color).setCharacterSpacing(1);
+        return new Text(iconType.text()).setFont(ReportResources.iconFont()).setFontColor(color).setCharacterSpacing(1);
     }
 }

@@ -1,12 +1,18 @@
 package com.hartwig.hmftools.patientreporter.cfreport.chapters;
 
+import java.text.DecimalFormat;
+
 import com.hartwig.hmftools.patientreporter.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
 import com.hartwig.hmftools.patientreporter.cfreport.components.BarChart;
 import com.hartwig.hmftools.patientreporter.cfreport.components.DataLabel;
 import com.hartwig.hmftools.patientreporter.cfreport.components.InlineBarChart;
 import com.hartwig.hmftools.patientreporter.cfreport.components.TableUtil;
-import com.hartwig.hmftools.patientreporter.cfreport.data.*;
+import com.hartwig.hmftools.patientreporter.cfreport.data.DataUtil;
+import com.hartwig.hmftools.patientreporter.cfreport.data.HrDeficiency;
+import com.hartwig.hmftools.patientreporter.cfreport.data.MicroSatelliteStatus;
+import com.hartwig.hmftools.patientreporter.cfreport.data.MutationalBurden;
+import com.hartwig.hmftools.patientreporter.cfreport.data.MutationalLoad;
 import com.itextpdf.layout.Document;
 import com.itextpdf.layout.element.Div;
 import com.itextpdf.layout.element.Paragraph;
@@ -14,8 +20,6 @@ import com.itextpdf.layout.element.Table;
 import com.itextpdf.layout.property.UnitValue;
 
 import org.jetbrains.annotations.NotNull;
-
-import java.text.DecimalFormat;
 
 public class TumorCharacteristicsChapter implements ReportChapter {
 
@@ -43,24 +47,28 @@ public class TumorCharacteristicsChapter implements ReportChapter {
         final boolean hasReliablePurityFit = patientReport.hasReliablePurityFit();
 
         final double hrDeficiency = patientReport.chordAnalysis().hrdValue();
-        final String hrDeficiencyLabel = HrDeficiency.interpretToString(hrDeficiency, hasReliablePurityFit);
-        BarChart hrChart = new BarChart(hrDeficiency, HrDeficiency.RANGE_MIN, HrDeficiency.RANGE_MAX, "Low", "High");
+        final String hrDeficiencyLabel = hasReliablePurityFit ? HrDeficiency.interpretToString(hrDeficiency) : DataUtil.NA_STRING;
+        BarChart hrChart = new BarChart(hrDeficiency, HrDeficiency.RANGE_MIN, HrDeficiency.RANGE_MAX, "Low", "High", "hrDeficiency");
         hrChart.enabled(hasReliablePurityFit);
         hrChart.setTickMarks(HrDeficiency.RANGE_MIN, HrDeficiency.RANGE_MAX, 0.1, singleDecimalFormat);
         // @TODO HR threshold to be determined: hrChart.setIndicator(0.5f, "HR-Deficient");
         reportDocument.add(createCharacteristicDiv("HR-Deficiency score",
                 hrDeficiencyLabel,
                 "The HR-deficiency score is determined by CHORD, a WGS signature-based classifier comparing "
-                        + "the signature of this sample with signatures found across samples with known BRCA1/BRCA2 " + "inactivation.",
+                        + "the signature of this sample with signatures found across samples with known BRCA1/BRCA2 inactivation.",
                 hrChart));
 
         final double microSatelliteStability = patientReport.microsatelliteIndelsPerMb();
 
         final String microSatelliteStabilityString =
                 hasReliablePurityFit ? MicroSatelliteStatus.interpretToString(microSatelliteStability) + " "
-                        + new DecimalFormat("#.####").format(microSatelliteStability) : DataUtil.NA_STRING;
-        BarChart satelliteChart =
-                new BarChart(microSatelliteStability, MicroSatelliteStatus.RANGE_MIN, MicroSatelliteStatus.RANGE_MAX, "MSS", "MSI");
+                        + new DecimalFormat("#.##").format(microSatelliteStability) : DataUtil.NA_STRING;
+        BarChart satelliteChart = new BarChart(microSatelliteStability,
+                MicroSatelliteStatus.RANGE_MIN,
+                MicroSatelliteStatus.RANGE_MAX,
+                "MSS",
+                "MSI",
+                "microSatelliteStability");
         satelliteChart.enabled(hasReliablePurityFit);
         satelliteChart.scale(InlineBarChart.LOG10_SCALE);
         satelliteChart.setTickMarks(new double[] { MicroSatelliteStatus.RANGE_MIN, 10, MicroSatelliteStatus.RANGE_MAX },
@@ -78,10 +86,11 @@ public class TumorCharacteristicsChapter implements ReportChapter {
                 satelliteChart));
 
         final int mutationalLoad = patientReport.tumorMutationalLoad();
-        final String mutationalLoadString =
-                hasReliablePurityFit ? MutationalLoad.interpretToString(mutationalLoad, hasReliablePurityFit) + " "
-                        + noDecimalFormat.format(mutationalLoad) : DataUtil.NA_STRING;
-        BarChart mutationalLoadChart = new BarChart(mutationalLoad, MutationalLoad.RANGE_MIN, MutationalLoad.RANGE_MAX, "Low", "High");
+        final String mutationalLoadString = hasReliablePurityFit
+                ? MutationalLoad.interpretToString(mutationalLoad) + " " + noDecimalFormat.format(mutationalLoad)
+                : DataUtil.NA_STRING;
+        BarChart mutationalLoadChart =
+                new BarChart(mutationalLoad, MutationalLoad.RANGE_MIN, MutationalLoad.RANGE_MAX, "Low", "High", "mutationalLoad");
         mutationalLoadChart.enabled(hasReliablePurityFit);
         mutationalLoadChart.scale(InlineBarChart.LOG10_SCALE);
         mutationalLoadChart.setTickMarks(new double[] { MutationalLoad.RANGE_MIN, 10, 100, MutationalLoad.RANGE_MAX }, noDecimalFormat);
@@ -101,7 +110,7 @@ public class TumorCharacteristicsChapter implements ReportChapter {
         final String mutationalBurdenString =
                 hasReliablePurityFit ? singleDecimalFormat.format(mutationalBurden) + " variants per Mb" : DataUtil.NA_STRING;
         BarChart mutationalBurdenChart =
-                new BarChart(mutationalBurden, MutationalBurden.RANGE_MIN, MutationalBurden.RANGE_MAX, "Low", "High");
+                new BarChart(mutationalBurden, MutationalBurden.RANGE_MIN, MutationalBurden.RANGE_MAX, "Low", "High", "mutationalBurden");
         mutationalBurdenChart.enabled(hasReliablePurityFit);
         mutationalBurdenChart.scale(InlineBarChart.LOG10_SCALE);
         mutationalBurdenChart.setTickMarks(new double[] { MutationalBurden.RANGE_MIN, 10, MutationalBurden.RANGE_MAX },
@@ -125,15 +134,15 @@ public class TumorCharacteristicsChapter implements ReportChapter {
 
         Table table = new Table(UnitValue.createPercentArray(new float[] { 10, 1, 19 }));
         table.setWidth(contentWidth());
-        table.addCell(TableUtil.getLayoutCell().add(DataLabel.createDataLabel(highlight)));
+        table.addCell(TableUtil.createLayoutCell().add(DataLabel.createDataLabel(highlight)));
 
-        table.addCell(TableUtil.getLayoutCell(2, 1)); // Spacer
+        table.addCell(TableUtil.createLayoutCell(2, 1));
 
-        table.addCell(TableUtil.getLayoutCell(2, 1).add(chart));
-        table.addCell(TableUtil.getLayoutCell()
+        table.addCell(TableUtil.createLayoutCell(2, 1).add(chart));
+        table.addCell(TableUtil.createLayoutCell()
                 .add(new Paragraph(description).addStyle(ReportResources.bodyTextStyle())
                         .setFixedLeading(ReportResources.BODY_TEXT_LEADING)));
-        table.addCell(TableUtil.getLayoutCell(1, 3).setHeight(TABLE_SPACER_HEIGHT)); // Spacer
+        table.addCell(TableUtil.createLayoutCell(1, 3).setHeight(TABLE_SPACER_HEIGHT));
         div.add(table);
 
         return div;

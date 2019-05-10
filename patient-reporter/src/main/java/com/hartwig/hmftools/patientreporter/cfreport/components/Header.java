@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.patientreporter.cfreport.components;
 
+import java.net.MalformedURLException;
+import java.util.List;
+
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
 import com.hartwig.hmftools.patientreporter.report.pages.SampleDetailsPage;
@@ -19,10 +22,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
-import java.net.MalformedURLException;
-import java.util.ArrayList;
-import java.util.List;
 
 public final class Header {
 
@@ -74,7 +73,7 @@ public final class Header {
         }
     }
 
-    static class ChapterPageCounter {
+    private static class ChapterPageCounter {
 
         @NotNull
         private final String chapterTitle;

@@ -7,6 +7,7 @@ import com.hartwig.hmftools.patientreporter.qcfail.QCFailReason;
 import com.hartwig.hmftools.patientreporter.qcfail.QCFailStudy;
 import com.hartwig.hmftools.patientreporter.report.util.PatientReportFormat;
 
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.junit.Test;
@@ -69,25 +70,27 @@ public class CFReportWriterTest {
 
     private static void generateQCFailCPCTReport(@Nullable Double pathologyTumorPercentage, @Nullable Double shallowSeqPurity,
             @NotNull QCFailReason reason, @NotNull String filename) throws IOException {
-        SampleReport sampleReport = ImmutableSampleReport.of("CPCT02991111T",
-                ImmutablePatientTumorLocation.of("CPCT02991111", "Skin", "Melanoma"),
-                "A1",
-                LocalDate.parse("05-Jan-2018", DATE_FORMATTER),
-                "A2",
-                LocalDate.parse("01-Jan-2018", DATE_FORMATTER),
-                shallowSeqPurity != null ? PatientReportFormat.formatPercent(shallowSeqPurity) : "not determined",
-                pathologyTumorPercentage != null ? PatientReportFormat.formatPercent(pathologyTumorPercentage) : "not determined",
-                "PREP013V23-QC037V20-SEQ008V25",
-                "HMF Testing Center",
-                "",
-                "",
-                "",
-                "COLO-001-002",
-                "ContactMe",
-                "contact@me.com",
-                "ABC",
-                "123456",
-                "XX");
+        SampleReport sampleReport = ImmutableSampleReport.builder()
+                .sampleId("CPCT02991111T")
+                .patientTumorLocation(ImmutablePatientTumorLocation.of("CPCT02991111", "Skin", "Melanoma"))
+                .refBarcode("FR12123488")
+                .tumorBarcode("FR12345678")
+                .tumorArrivalDate(LocalDate.parse("05-Jan-2019", DATE_FORMATTER))
+                .purityShallowSeq(shallowSeqPurity != null ? PatientReportFormat.formatPercent(shallowSeqPurity) : "not determined")
+                .pathologyTumorPercentage(
+                        pathologyTumorPercentage != null ? PatientReportFormat.formatPercent(pathologyTumorPercentage) : "not determined")
+                .labProcedures("PREP013V23-QC037V20-SEQ008V25")
+                .addressee("HMF Testing Center")
+                .hospitalName(Strings.EMPTY)
+                .hospitalPIName(Strings.EMPTY)
+                .hospitalPIEmail(Strings.EMPTY)
+                .projectName("COLO-001-002")
+                .requesterName("ContactMe")
+                .requesterEmail("contact@me.com")
+                .submissionId("ABC")
+                .hospitalPatientId("123456")
+                .hospitalPathologySampleId("A")
+                .build();
 
         QCFailReport patientReport = ImmutableQCFailReport.of(sampleReport,
                 reason,

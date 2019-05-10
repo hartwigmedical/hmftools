@@ -23,7 +23,7 @@ public class InlineBarChart extends Div {
     private boolean isEnabled = true;
 
     @NotNull
-    private Scale scale = LINEAR_SCALE; // Default to linear scale
+    private Scale scale = LINEAR_SCALE;
 
     public InlineBarChart(double value, double min, double max) {
         this.value = value;

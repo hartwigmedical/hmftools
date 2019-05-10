@@ -36,6 +36,7 @@ public final class GeneUtil {
                 return location;
             }
         } catch (NumberFormatException exception) {
+            // No need to prefix Y/X chromosomes
             return location;
         }
     }

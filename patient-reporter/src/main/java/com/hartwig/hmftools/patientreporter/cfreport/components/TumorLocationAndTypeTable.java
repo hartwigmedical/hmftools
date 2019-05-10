@@ -17,10 +17,10 @@ public final class TumorLocationAndTypeTable {
         Table table = new Table(UnitValue.createPercentArray(new float[] { 1, 1 }));
         table.setWidth(width);
 
-        table.addCell(TableUtil.getLayoutCell().add(new Paragraph("PRIMARY TUMOR LOCATION").addStyle(ReportResources.subTextStyle())));
-        table.addCell(TableUtil.getLayoutCell().add(new Paragraph("CANCER SUBTYPE").addStyle(ReportResources.subTextStyle())));
-        table.addCell(TableUtil.getLayoutCell().add(DataLabel.createDataLabel(primaryTumorLocation)));
-        table.addCell(TableUtil.getLayoutCell().add(DataLabel.createDataLabel(cancerSubType)));
+        table.addCell(TableUtil.createLayoutCell().add(new Paragraph("PRIMARY TUMOR LOCATION").addStyle(ReportResources.subTextStyle())));
+        table.addCell(TableUtil.createLayoutCell().add(new Paragraph("CANCER SUBTYPE").addStyle(ReportResources.subTextStyle())));
+        table.addCell(TableUtil.createLayoutCell().add(DataLabel.createDataLabel(primaryTumorLocation)));
+        table.addCell(TableUtil.createLayoutCell().add(DataLabel.createDataLabel(cancerSubType)));
 
         return table;
     }

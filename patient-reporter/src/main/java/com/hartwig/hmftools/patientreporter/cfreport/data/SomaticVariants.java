@@ -1,26 +1,28 @@
 package com.hartwig.hmftools.patientreporter.cfreport.data;
 
+import static com.google.common.base.Strings.repeat;
+
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.variant.Clonality;
 import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.patientreporter.cfreport.MathUtil;
-import com.hartwig.hmftools.patientreporter.report.data.SomaticVariantDataSource;
 import com.hartwig.hmftools.patientreporter.variants.ReportableVariant;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
-
-import static com.google.common.base.Strings.repeat;
-
 public final class SomaticVariants {
+
+    private static final String DRIVER_LIKELIHOOD_HIGH = "High";
+    private static final String DRIVER_LIKELIHOOD_MEDIUM = "Medium";
+    private static final String DRIVER_LIKELIHOOD_LOW = "Low";
 
     private SomaticVariants() {
     }
@@ -39,12 +41,22 @@ public final class SomaticVariants {
             } else {
                 if (variant1.gene().equals(variant2.gene())) {
                     // sort on codon position if gene is the same
-                    return extractCodonField(variant2.hgvsCodingImpact()).compareTo(extractCodonField(variant1.hgvsCodingImpact()));
+                    return extractCodonField(variant1.hgvsCodingImpact()) - extractCodonField(variant2.hgvsCodingImpact()) < 0 ? -1 : 1;
                 } else {
                     return variant1.gene().compareTo(variant2.gene());
                 }
             }
         }).collect(Collectors.toList());
+    }
+
+    public static boolean hasNotifiableGermlineVariant(@NotNull List<ReportableVariant> variants) {
+        for (ReportableVariant variant : variants) {
+            if (variant.notifyClinicalGeneticist()) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     @NotNull
@@ -75,7 +87,7 @@ public final class SomaticVariants {
 
     @NotNull
     @VisibleForTesting
-    private static String descriptiveBAF(double adjustedCopyNumber, double minorAllelePloidy) {
+    static String descriptiveBAF(double adjustedCopyNumber, double minorAllelePloidy) {
         int totalAlleleCount = (int) Math.max(0, Math.round(adjustedCopyNumber));
         int minorAlleleCount = (int) Math.max(0, Math.round(minorAllelePloidy));
         int majorAlleleCount = Math.max(0, totalAlleleCount - minorAlleleCount);
@@ -89,19 +101,21 @@ public final class SomaticVariants {
         return count < 10 ? repeat(allele, count) : allele + "[" + count + "x]";
     }
 
-    @NotNull
-    private static String extractCodonField(@NotNull String hgvsCoding) {
-        StringBuilder stringAppend = new StringBuilder();
-        String codonSplit = hgvsCoding.substring(2);
-        String codon = "";
-        for (int i = 0; i < codonSplit.length(); i++) {
-            if (Character.isDigit(codonSplit.charAt(i))) {
-                codon = stringAppend.append(codon).append(codonSplit.charAt(i)).toString();
-            } else if (!Character.isDigit(codonSplit.charAt(i))) {
-                break;
+    @VisibleForTesting
+    static int extractCodonField(@NotNull String hgvsCoding) {
+        StringBuilder codonAppender = new StringBuilder();
+        boolean noDigitFound = true;
+        // hgvsCoding starts with "c.", we need to skip that...
+        int index = 2;
+        while (noDigitFound && index < hgvsCoding.length()) {
+            if (Character.isDigit(hgvsCoding.charAt(index))) {
+                codonAppender.append(Character.toString(hgvsCoding.charAt(index)));
+            } else {
+                noDigitFound = false;
             }
+            index++;
         }
-        return codon;
+        return Integer.valueOf(codonAppender.toString());
     }
 
     @NotNull
@@ -154,11 +168,11 @@ public final class SomaticVariants {
         }
 
         if (driverLikelihood > 0.8) {
-            return "High";
+            return DRIVER_LIKELIHOOD_HIGH;
         } else if (driverLikelihood > 0.2) {
-            return "Medium";
+            return DRIVER_LIKELIHOOD_MEDIUM;
         } else {
-            return "Low";
+            return DRIVER_LIKELIHOOD_LOW;
         }
     }
 
@@ -166,7 +180,7 @@ public final class SomaticVariants {
     public static Set<String> driverGenesWithVariant(@NotNull List<ReportableVariant> variants) {
         final Set<String> genes = Sets.newHashSet();
         for (final ReportableVariant variant : variants) {
-            if (SomaticVariantDataSource.driverField(variant).equals("High")) {
+            if (driverString(variant.driverLikelihood()).equals(DRIVER_LIKELIHOOD_HIGH)) {
                 genes.add(variant.gene());
             }
         }

@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.patientreporter.cfreport.chapters;
 
+import java.util.List;
+import java.util.Set;
+
 import com.hartwig.hmftools.common.actionability.ClinicalTrial;
 import com.hartwig.hmftools.common.actionability.EvidenceItem;
 import com.hartwig.hmftools.patientreporter.AnalysedPatientReport;
@@ -9,7 +12,16 @@ import com.hartwig.hmftools.patientreporter.cfreport.components.InlineBarChart;
 import com.hartwig.hmftools.patientreporter.cfreport.components.LineDivider;
 import com.hartwig.hmftools.patientreporter.cfreport.components.TableUtil;
 import com.hartwig.hmftools.patientreporter.cfreport.components.TumorLocationAndTypeTable;
-import com.hartwig.hmftools.patientreporter.cfreport.data.*;
+import com.hartwig.hmftools.patientreporter.cfreport.data.ClinicalTrials;
+import com.hartwig.hmftools.patientreporter.cfreport.data.DataUtil;
+import com.hartwig.hmftools.patientreporter.cfreport.data.EvidenceItems;
+import com.hartwig.hmftools.patientreporter.cfreport.data.GeneCopyNumbers;
+import com.hartwig.hmftools.patientreporter.cfreport.data.GeneFusions;
+import com.hartwig.hmftools.patientreporter.cfreport.data.GeneUtil;
+import com.hartwig.hmftools.patientreporter.cfreport.data.MicroSatelliteStatus;
+import com.hartwig.hmftools.patientreporter.cfreport.data.MutationalLoad;
+import com.hartwig.hmftools.patientreporter.cfreport.data.SomaticVariants;
+import com.hartwig.hmftools.patientreporter.cfreport.data.TumorPurity;
 import com.itextpdf.layout.Document;
 import com.itextpdf.layout.Style;
 import com.itextpdf.layout.element.Cell;
@@ -21,9 +33,6 @@ import com.itextpdf.layout.property.VerticalAlignment;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
-import java.util.List;
-import java.util.Set;
 
 public class SummaryChapter implements ReportChapter {
 
@@ -63,9 +72,6 @@ public class SummaryChapter implements ReportChapter {
                 patientReport.sampleReport().cancerSubTypeString(),
                 contentWidth()));
 
-        // @TODO Replace this fixed text with the patientReport.summaryText method.
-        // Return value from that method can be null which is gracefully handled by renderSummaryText :
-
         final String summaryContent = patientReport.summarySample();
         renderSummaryText(summaryContent, reportDocument);
 
@@ -93,12 +99,13 @@ public class SummaryChapter implements ReportChapter {
 
         Table table = new Table(UnitValue.createPercentArray(new float[] { 1, 1 }));
         table.setWidth(contentWidth());
-        table.addCell(TableUtil.getLayoutCell().add(new Paragraph("Treatment indications").addStyle(ReportResources.sectionTitleStyle())));
+        table.addCell(TableUtil.createLayoutCell()
+                .add(new Paragraph("Treatment indications").addStyle(ReportResources.sectionTitleStyle())));
 
-        table.addCell(TableUtil.getLayoutCell()
+        table.addCell(TableUtil.createLayoutCell()
                 .add(new Paragraph("Summary of alterations with number of treatment indication and/or clinical trials").addStyle(
                         ReportResources.bodyTextStyle()).setFixedLeading(ReportResources.BODY_TEXT_LEADING)));
-        table.addCell(TableUtil.getLayoutCell(1, 2).setHeight(TABLE_SPACER_HEIGHT));
+        table.addCell(TableUtil.createLayoutCell(1, 2).setHeight(TABLE_SPACER_HEIGHT));
 
         int therapyEventCount = EvidenceItems.uniqueEventCount(tumorSpecificEvidence);
         int therapyCount = EvidenceItems.uniqueTherapyCount(tumorSpecificEvidence);
@@ -123,11 +130,11 @@ public class SummaryChapter implements ReportChapter {
 
         Table table = new Table(UnitValue.createPercentArray(new float[] { 1, .33f, .66f }));
         table.setWidth(contentWidth());
-        table.addCell(TableUtil.getLayoutCell()
-                .add(new Paragraph("Tumor characteristics summary").addStyle(ReportResources.sectionTitleStyle())));
-        table.addCell(TableUtil.getLayoutCell(1, 2)
+        table.addCell(TableUtil.createLayoutCell()
+                .add(new Paragraph("Tumor characteristics").addStyle(ReportResources.sectionTitleStyle())));
+        table.addCell(TableUtil.createLayoutCell(1, 2)
                 .add(new Paragraph("Whole genome sequencing based tumor characteristics.").addStyle(ReportResources.bodyTextStyle())));
-        table.addCell(TableUtil.getLayoutCell(1, 3).setHeight(TABLE_SPACER_HEIGHT));
+        table.addCell(TableUtil.createLayoutCell(1, 3).setHeight(TABLE_SPACER_HEIGHT));
 
         final double impliedPurity = patientReport.impliedPurity();
         final double impliedPurityPercentage = MathUtil.mapPercentage(impliedPurity, TumorPurity.RANGE_MIN, TumorPurity.RANGE_MAX);
@@ -144,13 +151,16 @@ public class SummaryChapter implements ReportChapter {
         table.addCell(createMiddleAlignedCell(2).add(createHighlightParagraph(GeneUtil.ploidyToCopiesString(patientReport.averageTumorPloidy(),
                 hasReliablePurityFit)).addStyle(dataStyle)));
 
+        final String mutationalLoadString =
+                hasReliablePurityFit ? MutationalLoad.interpretToString(patientReport.tumorMutationalLoad()) : DataUtil.NA_STRING;
         table.addCell(createMiddleAlignedCell().add(new Paragraph("Tumor mutational load").addStyle(ReportResources.bodyTextStyle())));
-        table.addCell(createMiddleAlignedCell(2).add(createHighlightParagraph(MutationalLoad.interpretToString(patientReport.tumorMutationalLoad(),
-                hasReliablePurityFit)).addStyle(dataStyle)));
+        table.addCell(createMiddleAlignedCell(2).add(createHighlightParagraph(mutationalLoadString).addStyle(dataStyle)));
 
+        final String microSatelliteStabilityString = hasReliablePurityFit
+                ? MicroSatelliteStatus.interpretToString(patientReport.microsatelliteIndelsPerMb())
+                : DataUtil.NA_STRING;
         table.addCell(createMiddleAlignedCell().add(new Paragraph("Microsatellite (in)stability").addStyle(ReportResources.bodyTextStyle())));
-        table.addCell(createMiddleAlignedCell(2).add(createHighlightParagraph(MicroSatelliteStatus.interpretToString(patientReport.microsatelliteIndelsPerMb()))
-                .addStyle(dataStyle)));
+        table.addCell(createMiddleAlignedCell(2).add(createHighlightParagraph(microSatelliteStabilityString).addStyle(dataStyle)));
         div.add(table);
         reportDocument.add(div);
     }
@@ -173,22 +183,21 @@ public class SummaryChapter implements ReportChapter {
 
         final Table table = new Table(UnitValue.createPercentArray(new float[] { 1, 1 }));
         table.setWidth(contentWidth());
-        table.addCell(TableUtil.getLayoutCell()
-                .add(new Paragraph("Genomic alterations \nsummary").addStyle(ReportResources.sectionTitleStyle())));
-        table.addCell(TableUtil.getLayoutCell()
-                .add(new Paragraph("Summary on genomic alterations "
-                        + "(somatic variants, copy number changes, gene disruptions and gene fusions).").addStyle(ReportResources.bodyTextStyle())));
-        table.addCell(TableUtil.getLayoutCell(1, 2).setHeight(TABLE_SPACER_HEIGHT));
+        table.addCell(TableUtil.createLayoutCell()
+                .add(new Paragraph("Genomic alterations").addStyle(ReportResources.sectionTitleStyle())));
+        table.addCell(TableUtil.createLayoutCell()
+                .add(new Paragraph("Summary of tumor specific alterations).").addStyle(ReportResources.bodyTextStyle())));
+        table.addCell(TableUtil.createLayoutCell(1, 2).setHeight(TABLE_SPACER_HEIGHT));
 
         final Set<String> driverVariantGenes = SomaticVariants.driverGenesWithVariant(patientReport.reportableVariants());
         table.addCell(createMiddleAlignedCell().setVerticalAlignment(VerticalAlignment.TOP)
-                .add(new Paragraph("Driver genes with variant").addStyle(ReportResources.bodyTextStyle())));
+                .add(new Paragraph("Driver genes with variant(s)").addStyle(ReportResources.bodyTextStyle())));
         table.addCell(createGeneListCell(driverVariantGenes));
 
         final int reportedVariants = SomaticVariants.countReportableVariants(patientReport.reportableVariants());
         Style reportedVariantsStyle =
                 (reportedVariants > 0) ? ReportResources.dataHighlightStyle() : ReportResources.dataHighlightNaStyle();
-        table.addCell(createMiddleAlignedCell().add(new Paragraph("Nr. of reported variants").addStyle(ReportResources.bodyTextStyle())));
+        table.addCell(createMiddleAlignedCell().add(new Paragraph("Number of reported variants").addStyle(ReportResources.bodyTextStyle())));
         table.addCell(createMiddleAlignedCell().add(createHighlightParagraph(String.valueOf(reportedVariants)).addStyle(
                 reportedVariantsStyle)));
 
@@ -224,7 +233,7 @@ public class SummaryChapter implements ReportChapter {
 
     @NotNull
     private static Cell createMiddleAlignedCell(int colSpan) {
-        return TableUtil.getLayoutCell(1, colSpan).setVerticalAlignment(VerticalAlignment.MIDDLE);
+        return TableUtil.createLayoutCell(1, colSpan).setVerticalAlignment(VerticalAlignment.MIDDLE);
     }
 
     @NotNull
