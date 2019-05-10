@@ -1247,10 +1247,9 @@ public class ClusterAnalyser {
                 }
                 else if(i < breakendList.size() - 2)
                 {
-                    // there is an breakend with opposite orientation between the 2 facing ones - check if it invalidates the foldback
+                    // check for a short overlapping deletion bridge on either breakend that would otherwise mask this foldback
                     SvBreakend postNextBreakend = breakendList.get(i + 2);
 
-                    // check for a short overlapping deletion bridge on either breakend that would otherwise mask this foldback
                     if(breakend.orientation() == postNextBreakend.orientation())
                     {
                         if(postNextBreakend.orientation() == 1
@@ -1270,9 +1269,10 @@ public class ClusterAnalyser {
 
                 if(beFront != null && beBack != null)
                 {
-                    // the foldback is invalid if it has a deletion bridge (including < 30b overhang) on the front-facing breakend
+                    // the foldback is invalid if it has a deletion bridge with overhang on the front-facing breakend
                     final SvLinkedPair dbLink = beFront.getSV().getDBLink(beFront.usesStart());
-                    if(dbLink == null || dbLink.length() >= MIN_TEMPLATED_INSERTION_LENGTH)
+
+                    if(dbLink == null || dbLink.length() > 0)
                     {
                         checkFoldbackBreakends(beFront, beBack);
                     }
@@ -1367,35 +1367,24 @@ public class ClusterAnalyser {
             // without going back through this foldback point
             int[] chainData = chain1.breakendsAreChained(varEnd, !beEndUsesStart, varStart, !beStartUsesStart);
 
-            if(chainData[CHAIN_LINK_COUNT] == 0)
+            if(chainData[CHAIN_LINK_COUNT] == 0 ) // || chainData[CHAIN_LINK_COUNT] != chainData[CHAIN_ASSEMBLY_LINK_COUNT]
                 return;
 
             int chainLength = chainData[CHAIN_LENGTH];
 
             if(chainLength > MAX_FOLDBACK_CHAIN_LENGTH)
+            {
+                /*
+                LOGGER.info("sample({}) chained foldback breakends({} and {}) have long length({} links={} asmb={})",
+                        mSampleId, beEnd.toString(), beStart.toString(),
+                        chainLength, chainData[CHAIN_LINK_COUNT], chainData[CHAIN_ASSEMBLY_LINK_COUNT]);
+                */
                 return;
+            }
 
             chainInfo = String.format("%d;%d;%d",
                     chainData[CHAIN_LINK_COUNT], chainData[CHAIN_ASSEMBLY_LINK_COUNT], chainLength);
         }
-
-        // check copy numbers match
-        double cn1 = 0;
-        double cn2 = 0;
-        if((beEnd.orientation() == 1 && beEnd.position() < beStart.position()) || (beEnd.orientation() == -1 && beEnd.position() > beStart.position()))
-        {
-            // be1 is facing away from be2, so need to take its copy number on the break side
-            cn1 = varEnd.copyNumber(beEndUsesStart) - varEnd.copyNumberChange(beEndUsesStart);
-            cn2 = varStart.copyNumber(beStartUsesStart);
-        }
-        else
-        {
-            cn2 = varStart.copyNumber(beStartUsesStart) - varStart.copyNumberChange(beStartUsesStart);
-            cn1 = varEnd.copyNumber(beEndUsesStart);
-        }
-
-        if(!copyNumbersEqual(cn1, cn2))
-            return;
 
         int length = (int)abs(beEnd.position() - beStart.position());
 
@@ -1433,13 +1422,13 @@ public class ClusterAnalyser {
 
         if(varEnd.equals(varStart))
         {
-            LOGGER.debug(String.format("cluster(%s) foldback inversion SV(%s) length(%d) copyNumber(%.3f)",
-                    cluster1.id(), varEnd.posId(), length, cn1));
+            LOGGER.debug("cluster({}) foldback inversion SV({}) length({})",
+                    cluster1.id(), varEnd.posId(), length);
         }
         else
         {
-            LOGGER.debug(String.format("cluster(%s) foldback be1(%s) be2(%s) length(%d) copyNumber(%.3f)",
-                    cluster1.id(), beEnd.toString(), beStart.toString(), length, cn1));
+            LOGGER.debug("cluster({}) foldback be1({}) be2({}) length({})",
+                    cluster1.id(), beEnd.toString(), beStart.toString(), length);
         }
     }
 
@@ -1449,7 +1438,7 @@ public class ClusterAnalyser {
         // during a replication event and in doing so forms a foldback
         final SvVarData var = be.getSV();
 
-        if(var.type() != BND || var.getReplicatedCount() != 2)
+        if(var.getReplicatedCount() < 2)
             return;
 
         if(!var.getAssemblyMatchType(true).equals(ASSEMBLY_MATCH_MATCHED)
@@ -1477,8 +1466,8 @@ public class ClusterAnalyser {
 
                 var.setFoldbackLink(foldbackIsStart, var.getBreakend(foldbackIsStart), 0, chainInfo);
 
-                LOGGER.debug("cluster({}) foldback translocation SV({}) with self on {}",
-                        cluster.id(), var.posId(), foldbackIsStart ? "start" : "end");
+                LOGGER.info("cluster({}) foldback translocation SV({} : {}) with self on {}",
+                        cluster.id(), var.posId(), var.type(), foldbackIsStart ? "start" : "end");
             }
         }
     }
@@ -1488,7 +1477,7 @@ public class ClusterAnalyser {
         annotateTemplatedInsertions(mClusters, mClusteringMethods.getChrBreakendMap());
         // checkSkippedLOHEvents();
 
-        annotateFoldbacks(mClusters);
+        // annotateFoldbacks(mClusters); // unused for now
 
         if(runAnnotation(mConfig.RequiredAnnotations, DOUBLE_MINUTES))
         {

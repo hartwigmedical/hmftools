@@ -169,10 +169,6 @@ public class SvSampleAnalyser {
         mVisWriter.setSampleId(sampleId);
 
         // look-up and cache relevant CN data into each SV
-        final Map<String,double[]> svPloidyCalcDataMap = mCopyNumberAnalyser.getSampleSvPloidyCalcMap().get(mSampleId);
-        final Map<String,SvCNData[]> svIdCnDataMap = mCopyNumberAnalyser.getSvIdCnDataMap();
-        final Map<String,List<SvCNData>> chrCnDataMap = mCopyNumberAnalyser.getChrCnDataMap();
-
         setSvCopyNumberData(
                 mAllVariants,
                 mCopyNumberAnalyser.getSampleSvPloidyCalcMap().get(mSampleId),
@@ -286,7 +282,10 @@ public class SvSampleAnalyser {
         {
             SvVarData var = mAllVariants.get(currentIndex);
 
-            var.setFragileSites(mFragileSiteAnnotator.isFragileSite(var, true), mFragileSiteAnnotator.isFragileSite(var, false));
+            var.setFragileSites(
+                    mFragileSiteAnnotator.isFragileSite(var, true),
+                    mFragileSiteAnnotator.isFragileSite(var, false));
+
             var.setLineElement(mLineElementAnnotator.isLineElement(var, true), true);
             var.setLineElement(mLineElementAnnotator.isLineElement(var, false), false);
 
@@ -333,7 +332,7 @@ public class SvSampleAnalyser {
                 mSvFileWriter.write(",Homology,InexactHOStart,InexactHOEnd,InsertSeq,Imprecise,QualScore");
                 mSvFileWriter.write(",RefContextStart,RefContextEnd,InsSeqAlignments,Recovered");
 
-                mSvFileWriter.write(",FSStart,FSEnd,LEStart,LEEnd"); // ,DupBEStart,DupBEEnd
+                mSvFileWriter.write(",FSStart,FSEnd,LEStart,LEEnd");
 
                 // linked pair info
                 mSvFileWriter.write(",LnkSvStart,LnkLenStart,LnkSvEnd,LnkLenEnd");
@@ -343,7 +342,7 @@ public class SvSampleAnalyser {
                 mSvFileWriter.write(",ChainId,ChainCount,ChainIndex");
 
                 // proximity info and other link info
-                mSvFileWriter.write(",NearestLen,NearestType,DBLenStart,DBLenEnd,SynDelDupLen,SynDelDupTILen");
+                mSvFileWriter.write(",NearestLen,NearestType,DBLenStart,DBLenEnd");
 
                 // proximity info and other link info
                 mSvFileWriter.write(",FoldbackLnkStart,FoldbackLenStart,FoldbackInfoStart,FoldbackLnkEnd,FoldbackLenEnd,FoldbackInfoEnd");
@@ -449,9 +448,8 @@ public class SvSampleAnalyser {
                 int dbLenStart = var.getDBLink(true) != null ? var.getDBLink(true).length() : NO_DB_MARKER;
                 int dbLenEnd = var.getDBLink(false) != null ? var.getDBLink(false).length() : NO_DB_MARKER;
 
-                writer.write(String.format(",%d,%s,%d,%d,%d,%d",
-                        var.getNearestSvDistance(), var.getNearestSvRelation(), dbLenStart, dbLenEnd,
-                        cluster.getSynDelDupLength(), cluster.getSynDelDupTILength()));
+                writer.write(String.format(",%d,%s,%d,%d",
+                        var.getNearestSvDistance(), var.getNearestSvRelation(), dbLenStart, dbLenEnd));
 
                 writer.write(String.format(",%s,%d,%s,%s,%d,%s",
                         var.getFoldbackLink(true), var.getFoldbackLength(true), var.getFoldbackInfo(true),

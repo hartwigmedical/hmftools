@@ -648,6 +648,7 @@ public class ClusterAnnotations
     public static void annotateFoldbacks(final List<SvCluster> clusters)
     {
         // now foldbacks are known, add other annotations about them
+        // FIXME: the foldback info is not being set on both SVs for chained foldbacks, nor on the correct end
         for(final SvCluster cluster : clusters)
         {
             final Map<String, List<SvBreakend>> chrBreakendMap = cluster.getChrBreakendMap();

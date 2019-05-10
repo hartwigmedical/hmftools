@@ -1199,17 +1199,6 @@ public class SvClusteringMethods {
             {
                 syntheticLength = abs(var1.position(false) - var2.position(true));
             }
-            /*
-            else if(var1.orientation(true) == 1 && var1.position(false) < var2.position(true) + MIN_TEMPLATED_INSERTION_LENGTH)
-            {
-                // take the outermost positions for the DEL length
-                syntheticLength = abs(var2.position(false) - var1.position(true));
-            }
-            else if(var2.orientation(true) == 1 && var2.position(false) < var1.position(true) + MIN_TEMPLATED_INSERTION_LENGTH)
-            {
-                syntheticLength = abs(var1.position(false) - var2.position(true));
-            }
-            */
             else
             {
                 LOGGER.debug("cluster({}) inversion-pair no DBs or TIs", cluster.id());
