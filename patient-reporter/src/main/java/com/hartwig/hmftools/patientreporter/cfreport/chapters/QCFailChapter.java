@@ -65,11 +65,10 @@ public class QCFailChapter implements ReportChapter {
                 break;
             default:
                 reportDocument.add(createCPCTDRUPContentBody());
-
         }
 
-        reportDocument.add(ReportSignature.createEndOfReportIndication().setMarginTop(20));
         reportDocument.add(ReportSignature.createSignatureDiv(failReport.logoRVAPath(), failReport.signaturePath()).setMarginTop(20));
+        reportDocument.add(ReportSignature.createEndOfReportIndication());
     }
 
     @NotNull

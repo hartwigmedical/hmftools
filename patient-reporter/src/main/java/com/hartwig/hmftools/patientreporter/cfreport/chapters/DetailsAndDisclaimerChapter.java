@@ -53,7 +53,6 @@ public class DetailsAndDisclaimerChapter implements ReportChapter {
 
         reportDocument.add(ReportSignature.createSignatureDiv(patientReport.logoRVAPath(), patientReport.signaturePath()));
         reportDocument.add(ReportSignature.createEndOfReportIndication());
-
     }
 
     @NotNull
