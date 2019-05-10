@@ -78,9 +78,9 @@ public class TherapyDetailsChapter implements ReportChapter {
 
         Table contentTable = TableUtil.createReportContentTable(new float[] { COL_WIDTH_DRIVERS, COL_WIDTH_MATCH, COL_WIDTH_TREATMENT_ICONS,
                         COL_WIDTH_TREATMENT_LIST, COL_WIDTH_LEVEL, COL_WIDTH_RESPONSE_CCMO, COL_WIDTH_SOURCE },
-                new Cell[] { TableUtil.createHeaderCell("Drivers"), TableUtil.createHeaderCell("Match"), TableUtil.createHeaderCell("Treatments", 2),
-                        TableUtil.createHeaderCell("Level of evidence"), TableUtil.createHeaderCell("Response"),
-                        TableUtil.createHeaderCell("Source") });
+                new Cell[] { TableUtil.createHeaderCell("Drivers"), TableUtil.createHeaderCell("Match"),
+                        TableUtil.createHeaderCell("Treatments", 2), TableUtil.createHeaderCell("Level of evidence"),
+                        TableUtil.createHeaderCell("Response"), TableUtil.createHeaderCell("Source") });
 
         final List<EvidenceItem> sortedEvidence = EvidenceItems.sort(evidence);
         for (EvidenceItem item : sortedEvidence) {

@@ -129,7 +129,7 @@ public class QCFailChapter implements ReportChapter {
         Table table = new Table(UnitValue.createPercentArray(new float[] { 1, 0.1f, 1 }));
         table.setWidth(contentWidth());
         table.addCell(TableUtil.createLayoutCell().add(createWideContentBodyColumn1()));
-        table.addCell(TableUtil.createLayoutCell()); // Spacer
+        table.addCell(TableUtil.createLayoutCell());
         table.addCell(TableUtil.createLayoutCell().add(createWideContentBodyColumn2()));
         return table;
     }
@@ -168,7 +168,7 @@ public class QCFailChapter implements ReportChapter {
         Table table = new Table(UnitValue.createPercentArray(new float[] { 1, 0.1f, 1 }));
         table.setWidth(contentWidth());
         table.addCell(TableUtil.createLayoutCell().add(createCoreContentBodyColumn1()));
-        table.addCell(TableUtil.createLayoutCell()); // Spacer
+        table.addCell(TableUtil.createLayoutCell());
         table.addCell(TableUtil.createLayoutCell().add(createCoreContentBodyColumn2()));
         return table;
     }
@@ -220,7 +220,7 @@ public class QCFailChapter implements ReportChapter {
         Table table = new Table(UnitValue.createPercentArray(new float[] { 1, 0.1f, 1 }));
         table.setWidth(contentWidth());
         table.addCell(TableUtil.createLayoutCell().add(createCPCTDRUPContentBodyColumn1()));
-        table.addCell(TableUtil.createLayoutCell()); // Spacer
+        table.addCell(TableUtil.createLayoutCell());
         table.addCell(TableUtil.createLayoutCell().add(createCPCTDRUPContentBodyColumn2()));
         return table;
     }

@@ -51,7 +51,6 @@ public class TumorCharacteristicsChapter implements ReportChapter {
         BarChart hrChart = new BarChart(hrDeficiency, HrDeficiency.RANGE_MIN, HrDeficiency.RANGE_MAX, "Low", "High", "hrDeficiency");
         hrChart.enabled(hasReliablePurityFit);
         hrChart.setTickMarks(HrDeficiency.RANGE_MIN, HrDeficiency.RANGE_MAX, 0.1, singleDecimalFormat);
-        // @TODO HR threshold to be determined: hrChart.setIndicator(0.5f, "HR-Deficient");
         reportDocument.add(createCharacteristicDiv("HR-Deficiency score",
                 hrDeficiencyLabel,
                 "The HR-deficiency score is determined by CHORD, a WGS signature-based classifier comparing "
