@@ -92,7 +92,7 @@ public class TumorCharacteristicsChapter implements ReportChapter {
                 new BarChart(mutationalLoad, MutationalLoad.RANGE_MIN, MutationalLoad.RANGE_MAX, "Low", "High", "mutationalLoad");
         mutationalLoadChart.enabled(hasReliablePurityFit);
         mutationalLoadChart.scale(InlineBarChart.LOG10_SCALE);
-        mutationalLoadChart.setTickMarks(new double[] { MutationalLoad.RANGE_MIN, 10, 100, MutationalLoad.RANGE_MAX }, noDecimalFormat);
+        mutationalLoadChart.setTickMarks(new double[] { MutationalLoad.RANGE_MIN, 10, 100, 1000, MutationalLoad.RANGE_MAX }, noDecimalFormat);
         mutationalLoadChart.enableUndershoot("<" + noDecimalFormat.format(mutationalLoadChart.min()));
         mutationalLoadChart.enableOvershoot(">" + noDecimalFormat.format(mutationalLoadChart.max()));
         mutationalLoadChart.setIndicator(MutationalLoad.THRESHOLD,
