@@ -238,7 +238,8 @@ public class SvAnalyser {
                 if(ensemblDataCache != null)
                 {
                     // when matching RNA, allow all transcripts regardless of their viability for fusions
-                    setSvGeneData(svVarData, ensemblDataCache, checkFusions, isSingleSample, fusionAnalyser.getRnaSampleIds().isEmpty());
+                    boolean keepInvalidTranscripts = fusionAnalyser != null && !fusionAnalyser.getRnaSampleIds().isEmpty();
+                    setSvGeneData(svVarData, ensemblDataCache, checkFusions, isSingleSample, !keepInvalidTranscripts);
                 }
 
                 if(checkDrivers)

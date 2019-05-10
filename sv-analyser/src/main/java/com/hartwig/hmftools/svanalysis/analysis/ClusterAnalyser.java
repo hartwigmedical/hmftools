@@ -1297,37 +1297,6 @@ public class ClusterAnalyser {
                     break;
                 }
 
-                /*
-                if(breakend.orientation() == nextBreakend.orientation())
-                {
-                    beFront = breakend.orientation() == 1 ? breakend : nextBreakend;
-                    beBack = breakend.orientation() == 1 ? nextBreakend : breakend;
-                }
-                else if(i < breakendList.size() - 2)
-                {
-                    // skip
-
-                    // check for a short overlapping deletion bridge on either breakend that would otherwise mask this foldback
-                    SvBreakend postNextBreakend = breakendList.get(i + 2);
-
-                    if(breakend.orientation() == postNextBreakend.orientation())
-                    {
-                        if(postNextBreakend.orientation() == 1
-                        && postNextBreakend.position() - nextBreakend.position() < getMinTemplatedInsertionLength(nextBreakend, postNextBreakend))
-                        {
-                            beFront = breakend;
-                            beBack = postNextBreakend;
-                        }
-                        else if(postNextBreakend.orientation() == -1
-                        && nextBreakend.position() - breakend.position() < getMinTemplatedInsertionLength(breakend, nextBreakend))
-                        {
-                            beBack = breakend;
-                            beFront = postNextBreakend;
-                        }
-                    }
-                }
-                */
-
                 boolean foldbackFound = false;
 
                 if(beFront != null && beBack != null)
@@ -1530,7 +1499,7 @@ public class ClusterAnalyser {
 
                 var.setFoldbackLink(be.usesStart(), be, 0, chainInfo);
 
-                LOGGER.info("cluster({}) foldback translocation SV({} : {}) with own breakend({})",
+                LOGGER.debug("cluster({}) foldback translocation SV({} : {}) with own breakend({})",
                         var.getCluster().id(), var.posId(), var.type(), be.toString());
             }
         }
