@@ -137,9 +137,10 @@ public class QCFailChapter implements ReportChapter {
     private Div createWideContentBodyColumn1() {
         Div divColumn1 = new Div();
         divColumn1.add(notSequencedText());
-        divColumn1.add(createContentParagraph("Please resubmit using the same " + failReport.study().studyName() + "-number. "
-                + "If additional material cannot be provided the patient will not be " + "evaluable for the " + failReport.study()
-                .studyCode() + " study."));
+        divColumn1.add(createContentParagraph(
+                "If available new tumor material can be provided for a new assessment, please resubmit using the same " + failReport.study()
+                        .studyName() + "-number. " + "If additional material cannot be provided the patient will not be "
+                        + "evaluable for the " + failReport.study().studyCode() + " study."));
         divColumn1.add(createContentParagraphTwice("The HMF sample ID is ",
                 failReport.sampleReport().sampleId(),
                 " and the tissue ID of pathology is: ",
@@ -177,8 +178,8 @@ public class QCFailChapter implements ReportChapter {
     private Div createCoreContentBodyColumn1() {
         Div divColumn1 = new Div();
         divColumn1.add(notSequencedText());
-        divColumn1.add(createContentParagraph(
-                "Please resubmit using the same DVO with project name " + failReport.sampleReport().projectName() + "."));
+        divColumn1.add(createContentParagraph("If available new tumor material can be provided for a new assessment, "
+                + "please resubmit using the same DVO with project name " + failReport.sampleReport().projectName() + "."));
         divColumn1.add(createContentParagraphTwice("The HMF sample ID is ",
                 failReport.sampleReport().sampleId(),
                 " and the hospital patient ID is ",
@@ -232,9 +233,10 @@ public class QCFailChapter implements ReportChapter {
     private Div createCPCTDRUPContentBodyColumn1() {
         Div divColumn1 = new Div();
         divColumn1.add(notSequencedText());
-        divColumn1.add(createContentParagraph("Please resubmit using the same " + failReport.study().studyName() + "-number. "
-                + "If additional material cannot be provided the patient will not be " + "evaluable for the " + failReport.study()
-                .studyCode() + " study."));
+        divColumn1.add(createContentParagraph(
+                "If available new tumor material can be provided for a new assessment, please resubmit using the same " + failReport.study()
+                        .studyName() + "-number. " + "If additional material cannot be provided the patient will not be "
+                        + "evaluable for the " + failReport.study().studyCode() + " study."));
         divColumn1.add(createContentParagraph("The HMF sample ID is ", failReport.sampleReport().sampleId()));
         divColumn1.add(createContentParagraphTwice("The internal tumor barcode is ",
                 failReport.sampleReport().tumorBarcode(),
@@ -283,8 +285,7 @@ public class QCFailChapter implements ReportChapter {
 
     @NotNull
     private static Paragraph notSequencedText() {
-        return createContentParagraph("The received tumor biopsies were inadequate for whole genome sequencing. "
-                + "If available new tumor material can be provided for a new assessment.");
+        return createContentParagraph("The received tumor biopsies were inadequate for whole genome sequencing. ");
     }
 
     @NotNull
