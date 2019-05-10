@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.patientreporter.cfreport.chapters;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -183,9 +186,10 @@ public class SummaryChapter implements ReportChapter {
         table.addCell(TableUtil.createLayoutCell(1, 2).setHeight(TABLE_SPACER_HEIGHT));
 
         final Set<String> driverVariantGenes = SomaticVariants.driverGenesWithVariant(patientReport.reportableVariants());
+
         table.addCell(createMiddleAlignedCell().setVerticalAlignment(VerticalAlignment.TOP)
                 .add(new Paragraph("Driver genes with variant(s)").addStyle(ReportResources.bodyTextStyle())));
-        table.addCell(createGeneListCell(driverVariantGenes));
+        table.addCell(createGeneListCell(sortSummaryGenes(driverVariantGenes)));
 
         final int reportedVariants = SomaticVariants.countReportableVariants(patientReport.reportableVariants());
         Style reportedVariantsStyle =
@@ -212,6 +216,12 @@ public class SummaryChapter implements ReportChapter {
         div.add(table);
 
         report.add(div);
+    }
+
+    private static Set<String> sortSummaryGenes(Set<String> driverVariantGenes) {
+        List<String> numbersList = new ArrayList<>(driverVariantGenes) ;
+        Collections.sort(numbersList);
+        return new LinkedHashSet<>(numbersList);
     }
 
     @NotNull
