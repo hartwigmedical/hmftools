@@ -24,7 +24,7 @@ public class BarChart extends InlineBarChart {
 
     private final String lowLabel;
     private final String highLabel;
-    private final boolean alwaysDrawRoundedRectangle;
+    private final boolean forceMarkerInRoundedRectangle;
 
     private boolean underShootEnabled = false;
     private String undershootLabel = "";
@@ -36,12 +36,12 @@ public class BarChart extends InlineBarChart {
     private Indicator threshold = null;
 
     public BarChart(double value, double min, double max, @NotNull String lowLabel, @NotNull String highLabel,
-            boolean alwaysDrawRoundedRectangle) {
+            boolean forceMarkerInRoundedRectangle) {
         super(value, min, max);
         super.setHeight(HEIGHT);
         this.lowLabel = lowLabel;
         this.highLabel = highLabel;
-        this.alwaysDrawRoundedRectangle = alwaysDrawRoundedRectangle;
+        this.forceMarkerInRoundedRectangle = forceMarkerInRoundedRectangle;
     }
 
     private void setTickMarks(@NotNull Indicator... tickMarks) {
@@ -247,7 +247,7 @@ public class BarChart extends InlineBarChart {
             canvas.fillStroke();
             canvas.setLineDash(1f);
 
-            if (filledPercentage > 0 || alwaysDrawRoundedRectangle) {
+            if (filledPercentage > 0 || forceMarkerInRoundedRectangle) {
                 final float innerBarRadius = getHeightRadius(innerBoundingBox);
                 canvas.setFillColor(fillColor);
                 canvas.roundRectangle(innerBoundingBox.getX(),
