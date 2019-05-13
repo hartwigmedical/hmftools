@@ -1,11 +1,11 @@
 package com.hartwig.hmftools.patientreporter.cfreport.chapters;
 
-import java.util.ArrayList;
 import java.util.Collections;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.actionability.ClinicalTrial;
 import com.hartwig.hmftools.common.actionability.EvidenceItem;
 import com.hartwig.hmftools.patientreporter.AnalysedPatientReport;
@@ -181,8 +181,7 @@ public class SummaryChapter implements ReportChapter {
 
         final Table table = new Table(UnitValue.createPercentArray(new float[] { 1, 1 }));
         table.setWidth(contentWidth());
-        table.addCell(TableUtil.createLayoutCell()
-                .add(new Paragraph("Genomic alterations").addStyle(ReportResources.sectionTitleStyle())));
+        table.addCell(TableUtil.createLayoutCell().add(new Paragraph("Genomic alterations").addStyle(ReportResources.sectionTitleStyle())));
         table.addCell(TableUtil.createLayoutCell(1, 2).setHeight(TABLE_SPACER_HEIGHT));
 
         final Set<String> driverVariantGenes = SomaticVariants.driverGenesWithVariant(patientReport.reportableVariants());
@@ -218,10 +217,11 @@ public class SummaryChapter implements ReportChapter {
         report.add(div);
     }
 
-    private static Set<String> sortSummaryGenes(Set<String> driverVariantGenes) {
-        List<String> numbersList = new ArrayList<>(driverVariantGenes) ;
+    @NotNull
+    private static Set<String> sortSummaryGenes(@NotNull Set<String> driverVariantGenes) {
+        List<String> numbersList = Lists.newArrayList(driverVariantGenes);
         Collections.sort(numbersList);
-        return new LinkedHashSet<>(numbersList);
+        return Sets.newHashSet(numbersList);
     }
 
     @NotNull
