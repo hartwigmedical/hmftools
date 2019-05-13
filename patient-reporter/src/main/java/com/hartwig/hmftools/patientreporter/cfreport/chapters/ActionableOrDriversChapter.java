@@ -153,10 +153,11 @@ public class ActionableOrDriversChapter implements ReportChapter {
         final List<ReportableGeneFusion> sortedFusions = GeneFusions.sort(fusions);
         for (ReportableGeneFusion fusion : sortedFusions) {
             contentTable.addCell(TableUtil.createContentCell(GeneFusions.name(fusion)));
-            contentTable.addCell(TableUtil.createContentCell(fusion.geneStartTranscript())
-                    .addStyle(ReportResources.dataHighlightLinksStyle()));
-            contentTable.addCell(TableUtil.createContentCell(fusion.geneEndTranscript())
-                    .addStyle(ReportResources.dataHighlightLinksStyle()));
+            contentTable.addCell(TableUtil.createContentCell(new Paragraph(fusion.geneStartTranscript()))
+                    .addStyle(ReportResources.dataHighlightLinksStyle())
+                    .setAction(PdfAction.createURI(GeneFusions.transcriptUrl(fusion.geneStartTranscript()))));
+            contentTable.addCell(TableUtil.createContentCell(new Paragraph(fusion.geneEndTranscript()).addStyle(ReportResources.dataHighlightLinksStyle())
+                    .setAction(PdfAction.createURI(GeneFusions.transcriptUrl(fusion.geneEndTranscript())))));
             contentTable.addCell(TableUtil.createContentCell(fusion.geneContextStart()));
             contentTable.addCell(TableUtil.createContentCell(fusion.geneContextEnd()));
             contentTable.addCell(TableUtil.createContentCell(GeneUtil.ploidyToCopiesString(fusion.ploidy(), hasReliablePurityFit))
