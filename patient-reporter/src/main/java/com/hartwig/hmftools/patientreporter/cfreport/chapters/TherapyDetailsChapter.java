@@ -78,8 +78,8 @@ public class TherapyDetailsChapter implements ReportChapter {
 
         Table contentTable = TableUtil.createReportContentTable(new float[] { COL_WIDTH_DRIVERS, COL_WIDTH_MATCH, COL_WIDTH_TREATMENT_ICONS,
                         COL_WIDTH_TREATMENT_LIST, COL_WIDTH_LEVEL, COL_WIDTH_RESPONSE_CCMO, COL_WIDTH_SOURCE },
-                new Cell[] { TableUtil.createHeaderCell("Drivers"), TableUtil.createHeaderCell("Match"),
-                        TableUtil.createHeaderCell("Treatments", 2), TableUtil.createHeaderCell("Level of evidence"),
+                new Cell[] { TableUtil.createHeaderCell("Variant"), TableUtil.createHeaderCell("Match"),
+                        TableUtil.createHeaderCell("Treatment", 2), TableUtil.createHeaderCell("Level of evidence"),
                         TableUtil.createHeaderCell("Response"), TableUtil.createHeaderCell("Source") });
 
         final List<EvidenceItem> sortedEvidence = EvidenceItems.sort(evidence);
@@ -111,8 +111,8 @@ public class TherapyDetailsChapter implements ReportChapter {
         final Table contentTable =
                 TableUtil.createReportContentTable(new float[] { COL_WIDTH_DRIVERS, COL_WIDTH_MATCH, COL_WIDTH_TREATMENT_ICONS,
                                 COL_WIDTH_TREATMENT_LIST_5COL, COL_WIDTH_RESPONSE_CCMO, COL_WIDTH_SOURCE },
-                        new Cell[] { TableUtil.createHeaderCell("Drivers"), TableUtil.createHeaderCell("Match"),
-                                TableUtil.createHeaderCell("Trials", 2), TableUtil.createHeaderCell("CCMO"),
+                        new Cell[] { TableUtil.createHeaderCell("Variant"), TableUtil.createHeaderCell("Match"),
+                                TableUtil.createHeaderCell("Trial", 2), TableUtil.createHeaderCell("CCMO"),
                                 TableUtil.createHeaderCell("Source") });
 
         final List<ClinicalTrial> sortedTrials = ClinicalTrials.sort(trials);
