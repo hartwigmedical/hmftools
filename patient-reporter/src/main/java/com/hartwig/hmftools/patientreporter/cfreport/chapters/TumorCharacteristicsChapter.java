@@ -48,7 +48,8 @@ public class TumorCharacteristicsChapter implements ReportChapter {
 
         final double hrDeficiency = patientReport.chordAnalysis().hrdValue();
         final String hrDeficiencyLabel = hasReliablePurityFit ? HrDeficiency.interpretToString(hrDeficiency) : DataUtil.NA_STRING;
-        BarChart hrChart = new BarChart(hrDeficiency, HrDeficiency.RANGE_MIN, HrDeficiency.RANGE_MAX, "Low", "High", true);
+        Boolean markerInBar = hasReliablePurityFit;
+        BarChart hrChart = new BarChart(hrDeficiency, HrDeficiency.RANGE_MIN, HrDeficiency.RANGE_MAX, "Low", "High", markerInBar);
         hrChart.enabled(hasReliablePurityFit);
         hrChart.setTickMarks(HrDeficiency.RANGE_MIN, HrDeficiency.RANGE_MAX, 0.1, singleDecimalFormat);
         reportDocument.add(createCharacteristicDiv("HR-Deficiency score",
