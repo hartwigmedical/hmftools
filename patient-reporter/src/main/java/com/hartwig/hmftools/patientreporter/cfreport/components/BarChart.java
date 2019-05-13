@@ -4,7 +4,6 @@ import java.text.NumberFormat;
 
 import com.hartwig.hmftools.patientreporter.cfreport.MathUtil;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
-import com.hartwig.hmftools.patientreporter.cfreport.data.DataUtil;
 import com.itextpdf.kernel.colors.Color;
 import com.itextpdf.kernel.geom.Rectangle;
 import com.itextpdf.kernel.pdf.canvas.PdfCanvas;
@@ -23,9 +22,9 @@ public class BarChart extends InlineBarChart {
 
     private final static float HEIGHT = 45;
 
-    private String lowLabel;
-    private String highLabel;
-    private String labelBar;
+    private final String lowLabel;
+    private final String highLabel;
+    private final boolean alwaysDrawRoundedRectangle;
 
     private boolean underShootEnabled = false;
     private String undershootLabel = "";
@@ -36,12 +35,13 @@ public class BarChart extends InlineBarChart {
     private Indicator[] tickMarks = {};
     private Indicator threshold = null;
 
-    public BarChart(double value, double min, double max, @NotNull String lowLabel, @NotNull String highLabel, @NotNull String labelBar) {
+    public BarChart(double value, double min, double max, @NotNull String lowLabel, @NotNull String highLabel,
+            boolean alwaysDrawRoundedRectangle) {
         super(value, min, max);
         super.setHeight(HEIGHT);
         this.lowLabel = lowLabel;
         this.highLabel = highLabel;
-        this.labelBar = labelBar;
+        this.alwaysDrawRoundedRectangle = alwaysDrawRoundedRectangle;
     }
 
     private void setTickMarks(@NotNull Indicator... tickMarks) {
@@ -247,7 +247,7 @@ public class BarChart extends InlineBarChart {
             canvas.fillStroke();
             canvas.setLineDash(1f);
 
-            if (filledPercentage > 0 || !labelBar.equals(DataUtil.NA_STRING) && !labelBar.equals("")) {
+            if (filledPercentage > 0 || alwaysDrawRoundedRectangle) {
                 final float innerBarRadius = getHeightRadius(innerBoundingBox);
                 canvas.setFillColor(fillColor);
                 canvas.roundRectangle(innerBoundingBox.getX(),
