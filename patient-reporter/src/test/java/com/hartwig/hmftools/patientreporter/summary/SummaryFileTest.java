@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.patientreporter.summary;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import java.io.IOException;
 
@@ -18,5 +18,4 @@ public class SummaryFileTest {
 
         assertEquals(1, summaryModel.sizeSummarySamples().size());
     }
-
 }
