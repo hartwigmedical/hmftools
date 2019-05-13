@@ -258,7 +258,7 @@ public class SummaryChapter implements ReportChapter {
         String treatmentText;
         Style style;
         if (eventCount > 0) {
-            treatmentText = String.format("%d (%d %s)", eventCount, treatmentCount, treatmentsName);
+            treatmentText = String.format("%d | %d %s", eventCount, treatmentCount, treatmentsName);
             style = ReportResources.dataHighlightStyle();
         } else {
             treatmentText = DataUtil.NONE_STRING;
