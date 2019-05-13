@@ -92,7 +92,8 @@ public class TherapyDetailsChapter implements ReportChapter {
             contentTable.addCell(TableUtil.createContentCell(createTreatmentList(treatments)).setVerticalAlignment(VerticalAlignment.TOP));
             contentTable.addCell(TableUtil.createContentCell(new Paragraph(Icon.createLevelIcon(item.level().readableString()))));
             contentTable.addCell(TableUtil.createContentCell(item.response()));
-            contentTable.addCell(TableUtil.createContentCell(new Paragraph(item.source().sourceName()))
+            contentTable.addCell(TableUtil.createContentCell(new Paragraph(item.source()
+                    .sourceName()).addStyle(ReportResources.dataHighlightLinksStyle()))
                     .setAction(PdfAction.createURI(EvidenceItems.sourceUrl(item))));
         }
 
@@ -123,8 +124,9 @@ public class TherapyDetailsChapter implements ReportChapter {
                     .setVerticalAlignment(VerticalAlignment.TOP));
             contentTable.addCell(TableUtil.createContentCell(trialName).setVerticalAlignment(VerticalAlignment.TOP));
             contentTable.addCell(TableUtil.createContentCell(ClinicalTrials.CCMOId(trial.reference())));
-            contentTable.addCell(TableUtil.createContentCell(new Paragraph(trial.source().sourceName()).setAction(PdfAction.createURI(
-                    ClinicalTrials.sourceUrl(trial)))));
+            contentTable.addCell(TableUtil.createContentCell(new Paragraph(trial.source()
+                    .sourceName()).addStyle(ReportResources.dataHighlightLinksStyle()))
+                    .setAction(PdfAction.createURI(ClinicalTrials.sourceUrl(trial))));
         }
 
         return TableUtil.createWrappingReportTable(title, contentTable);

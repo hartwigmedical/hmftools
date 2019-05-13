@@ -153,6 +153,10 @@ public final class ReportResources {
         return new Style().setFont(fontBold()).setFontSize(11).setFontColor(ReportResources.PALETTE_WHITE);
     }
 
+    public static Style dataHighlightLinksStyle() {
+        return new Style().setFont(fontRegular()).setFontSize(8).setFontColor(ReportResources.PALETTE_BLUE);
+    }
+
     @NotNull
     private static PdfFont createFontFromProgram(@NotNull FontProgram program) {
         return PdfFontFactory.createFont(program, PdfEncodings.IDENTITY_H);

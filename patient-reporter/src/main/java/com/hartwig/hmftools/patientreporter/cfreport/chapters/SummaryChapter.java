@@ -201,17 +201,17 @@ public class SummaryChapter implements ReportChapter {
         final Set<String> amplifiedGenes = GeneCopyNumbers.amplifiedGenes(patientReport.geneCopyNumbers());
         table.addCell(createMiddleAlignedCell().setVerticalAlignment(VerticalAlignment.TOP)
                 .add(new Paragraph("Genes with copy-gain").addStyle(ReportResources.bodyTextStyle())));
-        table.addCell(createGeneListCell(amplifiedGenes));
+        table.addCell(createGeneListCell(sortSummaryGenes(amplifiedGenes)));
 
         final Set<String> copyLossGenes = GeneCopyNumbers.lossGenes(patientReport.geneCopyNumbers());
         table.addCell(createMiddleAlignedCell().setVerticalAlignment(VerticalAlignment.TOP)
                 .add(new Paragraph("Genes with copy-loss").addStyle(ReportResources.bodyTextStyle())));
-        table.addCell(createGeneListCell(copyLossGenes));
+        table.addCell(createGeneListCell(sortSummaryGenes(copyLossGenes)));
 
         final Set<String> fusionGenes = GeneFusions.uniqueGeneFusions(patientReport.geneFusions());
         table.addCell(createMiddleAlignedCell().setVerticalAlignment(VerticalAlignment.TOP)
                 .add(new Paragraph("Gene fusions").addStyle(ReportResources.bodyTextStyle())));
-        table.addCell(createGeneListCell(fusionGenes));
+        table.addCell(createGeneListCell(sortSummaryGenes(fusionGenes)));
 
         div.add(table);
 
