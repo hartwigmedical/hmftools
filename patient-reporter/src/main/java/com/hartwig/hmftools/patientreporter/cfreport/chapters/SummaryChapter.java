@@ -114,7 +114,7 @@ public class SummaryChapter implements ReportChapter {
 
         int trialEventCount = ClinicalTrials.uniqueEventsCount(trials);
         int trialCount = ClinicalTrials.uniqueTrialCount(trials);
-        table.addCell(createMiddleAlignedCell().add(new Paragraph("Number of alteration with clinical trial eligibility").addStyle(
+        table.addCell(createMiddleAlignedCell().add(new Paragraph("Number of alterations with clinical trial eligibility").addStyle(
                 ReportResources.bodyTextStyle())));
         table.addCell(createTreatmentIndicationCell(trialEventCount, trialCount, "trial(s)"));
 
