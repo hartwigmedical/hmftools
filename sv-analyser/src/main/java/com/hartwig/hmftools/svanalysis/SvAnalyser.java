@@ -102,20 +102,12 @@ public class SvAnalyser {
 
         final DatabaseAccess dbAccess = cmd.hasOption(DB_URL) ? databaseAccess(cmd) : null;
 
-        List<String> samplesList = Lists.newArrayList();
+        List<String> samplesList = svaConfig.getSampleIds();
 
-        if (svaConfig.SampleId.isEmpty())
+        if (samplesList.isEmpty())
         {
             samplesList = getStructuralVariantSamplesList(dbAccess);
-        }
-        else if (svaConfig.SampleId.contains(","))
-        {
-            String[] tumorList = svaConfig.SampleId.split(",");
-            samplesList = Arrays.stream(tumorList).collect(Collectors.toList());
-        }
-        else
-        {
-            samplesList.add(svaConfig.SampleId);
+            svaConfig.setSampleIds(samplesList);
         }
 
         CNAnalyser cnAnalyser = new CNAnalyser(svaConfig.OutputCsvPath, dbAccess);

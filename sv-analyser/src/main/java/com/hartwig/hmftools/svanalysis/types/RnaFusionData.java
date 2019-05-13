@@ -27,7 +27,9 @@ public class RnaFusionData
     public final String SpliceType;
 
     public static String RNA_SPLICE_TYPE_ONLY_REF = "ONLY_REF_SPLICE";
+    public static String RNA_SPLICE_TYPE_UNKONWN = "UNKNOWN"; // for read with a star-fusion prediction
 
+    private boolean mIsValid;
     private List<Integer> mPotentialTransUp; // IDs of transcripts with an exon matching the RNA position
     private List<Integer> mPotentialTransDown;
 
@@ -76,6 +78,7 @@ public class RnaFusionData
         SpanningFragCount = spanningFragCount;
         SpliceType = spliceType;
 
+        mIsValid = true;
         mExonMinRankUp = 0;
         mExonMaxRankUp = 0;
         mExonMinRankDown = 0;
@@ -104,22 +107,32 @@ public class RnaFusionData
         mChainInfo = "0;0";
     }
 
-    public void setExonUpRank(int min, int max)
+    public boolean isValid() { return mIsValid; }
+    public void setValid(boolean toggle) { mIsValid = toggle; }
+
+    public void setExonRank(boolean isUpstream, int min, int max)
     {
-        mExonMaxRankUp = max;
-        mExonMinRankUp = min;
+        if(isUpstream)
+        {
+            mExonMaxRankUp = max;
+            mExonMinRankUp = min;
+        }
+        else
+        {
+            mExonMaxRankDown = max;
+            mExonMinRankDown = min;
+        }
     }
 
-    public void setExonDownRank(int min, int max)
+    public void setPotentialTrans(boolean isUpstream, final List<Integer> list)
     {
-        mExonMaxRankDown = max;
-        mExonMinRankDown = min;
+        if(isUpstream)
+            mPotentialTransUp.addAll(list);
+        else
+            mPotentialTransDown.addAll(list);
     }
 
-    public void setPotentialTransUp(final List<Integer> list) { mPotentialTransUp.addAll(list); }
-    public void setPotentialTransDown(final List<Integer> list) { mPotentialTransDown.addAll(list); }
-    public final List<Integer> getPotentialTransUp() { return mPotentialTransUp; }
-    public final List<Integer> getPotentialTransDown() { return mPotentialTransDown; }
+    public final List<Integer> getPotentialTrans(boolean isUpstream) { return isUpstream ? mPotentialTransUp : mPotentialTransDown; }
 
     public int exonMinRankUp() { return mExonMinRankUp; }
     public int exonMaxRankUp() {return mExonMaxRankUp; }

@@ -15,6 +15,7 @@ import static com.hartwig.hmftools.common.variant.structural.annotation.GeneFusi
 import static com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion.REPORTABLE_TYPE_NONE;
 import static com.hartwig.hmftools.svanalysis.analysis.LinkFinder.getMinTemplatedInsertionLength;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.appendStr;
+import static com.hartwig.hmftools.svanalysis.types.RnaFusionData.RNA_SPLICE_TYPE_UNKONWN;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.isSpecificCluster;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_END;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_START;
@@ -1258,6 +1259,9 @@ public class FusionDisruptionAnalyser
         {
             setRnaFusionData(rnaFusion);
 
+            if(!rnaFusion.isValid())
+                continue;
+
             annotateRnaFusions(rnaFusion);
 
             writeRnaMatchData(mSampleId, rnaFusion);
@@ -1353,9 +1357,7 @@ public class FusionDisruptionAnalyser
                 {
                     if(isExactRnaExon)
                     {
-                        if(isUpstream && !rnaFusion.getPotentialTransUp().contains(trans.TransId))
-                            continue;
-                        else if(!isUpstream && !rnaFusion.getPotentialTransDown().contains(trans.TransId))
+                        if(!rnaFusion.getPotentialTrans(isUpstream).contains(trans.TransId))
                             continue;
                     }
                     else if(!trans.isCanonical())
@@ -1545,19 +1547,21 @@ public class FusionDisruptionAnalyser
     private boolean isCandidateBetter(final GeneFusion currentFusion, final SvBreakend beCurrentStart, final SvBreakend beCurrentEnd,
             final GeneFusion candidateFusion, final SvBreakend beCandidateStart, final SvBreakend beCandidateEnd, final RnaFusionData rnaFusion)
     {
-        /* fusion validity is no longer used to decide on which candidate to select since phasing and coding outcomes
-          ought not to effect RNA transcription
-
-        if(currentFusion.viable() != candidateFusion.viable())
+        // if all else is equal, take a viable fusion over one that isn't
+        if(beCurrentStart == beCandidateStart && beCurrentEnd == beCandidateEnd)
         {
-            return candidateFusion.viable();
-        }
+            if (currentFusion.viable() != candidateFusion.viable())
+            {
+                return candidateFusion.viable();
+            }
 
-        if(currentFusion.phaseMatched() != candidateFusion.phaseMatched())
-        {
-            return candidateFusion.phaseMatched();
+            if (currentFusion.phaseMatched() != candidateFusion.phaseMatched())
+            {
+                return candidateFusion.phaseMatched();
+            }
+
+            return false;
         }
-        */
 
         SvVarData currentStartSV = beCurrentStart.getSV();
         SvVarData currentEndSV = beCurrentEnd.getSV();
@@ -1635,31 +1639,54 @@ public class FusionDisruptionAnalyser
 
     private void setRnaFusionData(final RnaFusionData rnaFusion)
     {
-        EnsemblGeneData geneData = mGeneTransCollection.getGeneDataByName(rnaFusion.GeneUp);
-
-        if(geneData != null)
+        for(int i = 0; i <=1; ++i)
         {
-            if(rnaFusion.SpliceType.equals(RNA_SPLICE_TYPE_ONLY_REF))
+            boolean isUpstream = (i == 0);
+            final String geneName = isUpstream ? rnaFusion.GeneUp : rnaFusion.GeneDown;
+            long rnaPosition = isUpstream ? rnaFusion.PositionUp : rnaFusion.PositionDown;
+
+            EnsemblGeneData geneData = mGeneTransCollection.getGeneDataByName(geneName);
+
+            if (geneData != null)
             {
-                List<Integer> transIdList = mGeneTransCollection.getTranscriptIdsMatchingPosition(geneData.GeneId, rnaFusion.PositionUp);
-                rnaFusion.setPotentialTransUp(transIdList);
+                if (rnaFusion.SpliceType.equals(RNA_SPLICE_TYPE_UNKONWN))
+                {
+                    // check that the RNA position is within the bounds of the gene before proceeding
+                    long upPosLimit = geneData.GeneEnd;
+                    long downPosLimit = geneData.GeneStart;
+
+                    if(!isUpstream)
+                    {
+                        if(geneData.Strand == 1)
+                            downPosLimit -= PRE_GENE_PROMOTOR_DISTANCE;
+                        else
+                            upPosLimit += PRE_GENE_PROMOTOR_DISTANCE;
+                    }
+
+                    if(rnaPosition < downPosLimit || rnaPosition > upPosLimit)
+                    {
+                        LOGGER.debug("sample({}) rnaFusion({}) {} position({}) outside geneBounds({} -> {})",
+                                mSampleId, rnaFusion.Name, isUpstream ? "up" : "down", rnaPosition, downPosLimit, upPosLimit);
+                        rnaFusion.setValid(false);
+                        return;
+                    }
+                }
+
+                if (rnaFusion.SpliceType.equals(RNA_SPLICE_TYPE_ONLY_REF))
+                {
+                    List<Integer> transIdList = mGeneTransCollection.getTranscriptIdsMatchingPosition(geneData.GeneId, rnaPosition);
+                    rnaFusion.setPotentialTrans(isUpstream, transIdList);
+                }
+
+                int[] transUpExonData = mGeneTransCollection.getExonRankings(geneData.GeneId, rnaPosition);
+                rnaFusion.setExonRank(isUpstream, transUpExonData[EXON_RANK_MIN], transUpExonData[EXON_RANK_MAX]);
             }
-
-            int[] transUpExonData = mGeneTransCollection.getExonRankings(geneData.GeneId, rnaFusion.PositionUp);
-            rnaFusion.setExonUpRank(transUpExonData[EXON_RANK_MIN], transUpExonData[EXON_RANK_MAX]);
-        }
-
-        geneData = mGeneTransCollection.getGeneDataByName(rnaFusion.GeneDown);
-        if(geneData != null)
-        {
-            if(rnaFusion.SpliceType.equals(RNA_SPLICE_TYPE_ONLY_REF))
+            else
             {
-                List<Integer> transIdList = mGeneTransCollection.getTranscriptIdsMatchingPosition(geneData.GeneId, rnaFusion.PositionDown);
-                rnaFusion.setPotentialTransDown(transIdList);
+                LOGGER.warn("sample({}) rnaFusion({}) {} gene not found", mSampleId, rnaFusion.Name, isUpstream ? "up" : "down`");
+                rnaFusion.setValid(false);
+                return;
             }
-
-            int[] transUpExonData = mGeneTransCollection.getExonRankings(geneData.GeneId, rnaFusion.PositionDown);
-            rnaFusion.setExonDownRank(transUpExonData[EXON_RANK_MIN], transUpExonData[EXON_RANK_MAX]);
         }
 
         if(areKnownFusionGenes(rnaFusion.GeneUp, rnaFusion.GeneDown))

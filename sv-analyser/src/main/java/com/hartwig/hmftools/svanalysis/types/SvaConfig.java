@@ -2,10 +2,20 @@ package com.hartwig.hmftools.svanalysis.types;
 
 import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.DEFAULT_PROXIMITY_DISTANCE;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import com.google.common.collect.Lists;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class SvaConfig
 {
@@ -15,13 +25,14 @@ public class SvaConfig
     final public String FragileSiteFile;
     final public String LineElementFile;
     final public String ReplicationOriginsFile;
-    final public String SampleId;
     final public int MaxSamples;
     final public boolean WriteVisualisationData;
     final public int MaxClusterSize; // for analysis and chaining
 
     public boolean LogVerbose;
     public String RequiredAnnotations;
+
+    private List<String> mSampleIds;
 
     // config options
     public static final String DATA_OUTPUT_PATH = "data_output_path";
@@ -52,14 +63,31 @@ public class SvaConfig
 
     private static int DEFAULT_MAX_CLUSTER_SIZE = 1000;
 
+    private static final Logger LOGGER = LogManager.getLogger(SvaConfig.class);
+
     public SvaConfig(final CommandLine cmd)
     {
         String configSampleStr = cmd.getOptionValue(SAMPLE);
 
-        if(configSampleStr == null || configSampleStr.equals("*"))
-            configSampleStr = "";
+        mSampleIds = Lists.newArrayList();
 
-        SampleId = (configSampleStr == null || configSampleStr.equals("*")) ? "" : configSampleStr;
+        if(configSampleStr != null && !configSampleStr.equals("*"))
+        {
+            if (configSampleStr.contains(","))
+            {
+                String[] tumorList = configSampleStr.split(",");
+                mSampleIds = Arrays.stream(tumorList).collect(Collectors.toList());
+            }
+            else if(configSampleStr.contains(".csv"))
+            {
+                mSampleIds = loadSampleListFile(configSampleStr);
+            }
+            else
+            {
+                // assume refers to a single sample
+                mSampleIds.add(configSampleStr);
+            }
+        }
 
         String dataOutputDir = cmd.getOptionValue(DATA_OUTPUT_PATH);
         if(!dataOutputDir.endsWith(File.separator))
@@ -83,6 +111,10 @@ public class SvaConfig
         SPECIFIC_SV_ID = cmd.getOptionValue(LOG_SV_ID, "");
     }
 
+    public final List<String> getSampleIds() { return mSampleIds; }
+    public void setSampleIds(final List<String> list) { mSampleIds.addAll(list); }
+    public boolean hasMultipleSamples() { return !mSampleIds.isEmpty(); }
+
     public SvaConfig(int proximityDistance)
     {
         ProximityDistance = proximityDistance;
@@ -91,14 +123,12 @@ public class SvaConfig
         LineElementFile = "";
         ReplicationOriginsFile = "";
         RequiredAnnotations = "";
-        SampleId = "";
+        mSampleIds = Lists.newArrayList();
         MaxSamples = 0;
         LogVerbose = false;
         WriteVisualisationData = false;
         MaxClusterSize = DEFAULT_MAX_CLUSTER_SIZE;
     }
-
-    public boolean hasMultipleSamples() { return SampleId.isEmpty() || SampleId.equals("*"); }
 
     public static void addCmdLineArgs(Options options)
     {
@@ -117,4 +147,34 @@ public class SvaConfig
         options.addOption(LOG_CLUSTER_ID, true, "Optional: log specific cluster details");
         options.addOption(LOG_SV_ID, true, "Optional: log specific SV details");
     }
+
+    private List<String> loadSampleListFile(final String filename)
+    {
+        List<String> sampleIds = Lists.newArrayList();
+
+        try
+        {
+            BufferedReader fileReader = new BufferedReader(new FileReader(filename));
+
+            String line = fileReader.readLine(); // skip header
+
+            while ((line = fileReader.readLine()) != null)
+            {
+                String[] items = line.split(",");
+
+                final String sampleId = items[0];
+                sampleIds.add(sampleId);
+            }
+
+            LOGGER.info("Loaded {} specific sample IDs", sampleIds.size());
+
+        }
+        catch (IOException exception)
+        {
+            LOGGER.error("Failed to read sample list input CSV file({}): {}", filename, exception.toString());
+        }
+
+        return sampleIds;
+    }
+
 }
