@@ -247,7 +247,7 @@ public class BarChart extends InlineBarChart {
             canvas.fillStroke();
             canvas.setLineDash(1f);
 
-            if (filledPercentage > 0 || filledPercentage == 0 && !labelBar.equals(DataUtil.NA_STRING)) {
+            if (filledPercentage > 0 || filledPercentage == 0 && !labelBar.equals(DataUtil.NA_STRING) && !labelBar.equals("")) {
                 final float innerBarRadius = getHeightRadius(innerBoundingBox);
                 canvas.setFillColor(fillColor);
                 canvas.roundRectangle(innerBoundingBox.getX(),
