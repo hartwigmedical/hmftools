@@ -32,7 +32,7 @@ public class SummaryModel {
     public String extractSummarySampleId(@NotNull String sampleId) {
         boolean sampleInFile = sampleIdPresentInSummaryFile(sampleId);
         if (!sampleInFile) {
-            LOGGER.warn("Sample contains none summary!");
+            LOGGER.info("Sample contains none summary!");
         }
         return sampleInFile ? sampleToSummaryMap.get(sampleId) : Strings.EMPTY;
     }

@@ -4,6 +4,7 @@ import java.text.NumberFormat;
 
 import com.hartwig.hmftools.patientreporter.cfreport.MathUtil;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
+import com.hartwig.hmftools.patientreporter.cfreport.data.DataUtil;
 import com.itextpdf.kernel.colors.Color;
 import com.itextpdf.kernel.geom.Rectangle;
 import com.itextpdf.kernel.pdf.canvas.PdfCanvas;
@@ -246,7 +247,7 @@ public class BarChart extends InlineBarChart {
             canvas.fillStroke();
             canvas.setLineDash(1f);
 
-            if (filledPercentage > 0 || filledPercentage == 0 && labelBar.equals("hrDeficiency")) {
+            if (filledPercentage > 0 || filledPercentage == 0 && !labelBar.equals(DataUtil.NA_STRING)) {
                 final float innerBarRadius = getHeightRadius(innerBoundingBox);
                 canvas.setFillColor(fillColor);
                 canvas.roundRectangle(innerBoundingBox.getX(),
