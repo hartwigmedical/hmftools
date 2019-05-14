@@ -145,10 +145,8 @@ public class QCFailChapter implements ReportChapter {
                 failReport.sampleReport().sampleId(),
                 " and the tissue ID of pathology is: ",
                 failReport.sampleReport().hospitalPathologySampleId()));
-        divColumn1.add(createContentParagraphTwice("The internal tumor barcode is ",
-                failReport.sampleReport().tumorBarcode(),
-                " and the internal blood barcode is ",
-                failReport.sampleReport().refBarcode()));
+        divColumn1.add(tumorSampleDataText());
+        divColumn1.add(bloodSampleDataText());
         return divColumn1;
     }
 
@@ -157,7 +155,7 @@ public class QCFailChapter implements ReportChapter {
         Div divColumn2 = new Div();
 
         divColumn2.add((shallowSeqText()));
-        divColumn2.add((sampleArrivalDateText()));
+        divColumn2.add((evaluatedAddress()));
         divColumn2.add((recipientText()));
         divColumn2.add((accreditationText()));
         divColumn2.add((questionsText()));
@@ -188,10 +186,8 @@ public class QCFailChapter implements ReportChapter {
                 failReport.sampleReport().projectName(),
                 " and the submission ID is ",
                 failReport.sampleReport().submissionId()));
-        divColumn1.add(createContentParagraphTwice("The internal tumor barcode is ",
-                failReport.sampleReport().tumorBarcode(),
-                " and the internal blood barcode is ",
-                failReport.sampleReport().refBarcode()));
+        divColumn1.add(tumorSampleDataText());
+        divColumn1.add(bloodSampleDataText());
         return divColumn1;
     }
 
@@ -202,7 +198,7 @@ public class QCFailChapter implements ReportChapter {
         divColumn2.add(createContentParagraph("The tumor percentage estimated by Pathology UMC Utrecht is ",
                 failReport.sampleReport().pathologyTumorPercentage()));
         divColumn2.add((shallowSeqText()));
-        divColumn2.add((sampleArrivalDateText()));
+        divColumn2.add((evaluatedAddress()));
         divColumn2.add((recipientText()));
         divColumn2.add(createContentParagraphRequest(failReport.sampleReport()));
         divColumn2.add(accreditationText());
@@ -238,10 +234,8 @@ public class QCFailChapter implements ReportChapter {
                         .studyName() + "-number. " + "If additional material cannot be provided the patient will not be "
                         + "evaluable for the " + failReport.study().studyCode() + " study."));
         divColumn1.add(createContentParagraph("The HMF sample ID is ", failReport.sampleReport().sampleId()));
-        divColumn1.add(createContentParagraphTwice("The internal tumor barcode is ",
-                failReport.sampleReport().tumorBarcode(),
-                " and the internal blood barcode is ",
-                failReport.sampleReport().refBarcode()));
+        divColumn1.add(tumorSampleDataText());
+        divColumn1.add(bloodSampleDataText());
         divColumn1.add(createContentParagraph("The tumor percentage estimated by Pathology UMC Utrecht is ",
                 failReport.sampleReport().pathologyTumorPercentage()));
         return divColumn1;
@@ -252,7 +246,7 @@ public class QCFailChapter implements ReportChapter {
         Div divColumn2 = new Div();
 
         divColumn2.add(shallowSeqText());
-        divColumn2.add(sampleArrivalDateText());
+        divColumn2.add(evaluatedAddress());
         divColumn2.add(recipientText());
         divColumn2.add(accreditationText());
         divColumn2.add(questionsText());
@@ -276,10 +270,24 @@ public class QCFailChapter implements ReportChapter {
     }
 
     @NotNull
-    private Paragraph sampleArrivalDateText() {
-        return createContentParagraphTwice("The biopsies evaluated for this sample have arrived on ",
+    private Paragraph tumorSampleDataText() {
+        return createContentParagraphTwice("This experiment is performed on the tumor sample which arrived on ",
                 DataUtil.formatDate(failReport.sampleReport().tumorArrivalDate()),
-                " at ",
+                " with internal tumor barcode ",
+                failReport.sampleReport().tumorBarcode());
+    }
+
+    @NotNull
+    private Paragraph bloodSampleDataText() {
+        return createContentParagraphTwice("This experiment is performed on the blood sample which arrived on ",
+                DataUtil.formatDate(failReport.sampleReport().refArrivalDate()),
+                " with internal blood barcode ",
+                failReport.sampleReport().refBarcode());
+    }
+
+    @NotNull
+    private Paragraph evaluatedAddress() {
+        return createContentParagraph("The biopsies evaluated at ",
                 ReportResources.HARTWIG_ADDRESS);
     }
 
