@@ -83,7 +83,6 @@ public class DetailsAndDisclaimerChapter implements ReportChapter {
         div.add(createContentParagraph("The samples have been sequenced at ", ReportResources.HARTWIG_ADDRESS));
         div.add(createContentParagraph("The samples have been analyzed by Next Generation Sequencing "));
         div.add(sampleIdentificationLineOnReport);
-        div.add(createContentParagraph("The pathology tumor percentage for this sample is " , sampleReport.pathologyTumorPercentage()));
         div.add(createContentParagraphTwice("This experiment is performed on the tumor sample which arrived on ",
                 DataUtil.formatDate(sampleReport.tumorArrivalDate()),
                 " with internal tumor barcode ",
