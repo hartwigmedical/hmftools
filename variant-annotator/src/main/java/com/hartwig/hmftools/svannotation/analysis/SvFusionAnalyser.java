@@ -283,7 +283,7 @@ public class SvFusionAnalyser
 
             if(upstreamTrans.isExonic())
             {
-                if(!downstreamTrans.isExonic())
+                if(!downstreamTrans.isExonic() && (!allowExonSkipping || !downstreamTrans.isIntronic()))
                 {
                     logInvalidReasonInfo("coding exonic to non-exonic", upstreamTrans, downstreamTrans,
                             INVALID_REASON_CODING_TYPE, invalidReasons);
@@ -292,13 +292,13 @@ public class SvFusionAnalyser
 
                 if(upstreamTrans.parent().id() != downstreamTrans.parent().id())
                 {
-                    logInvalidReasonInfo("up coding exonic diff SV ids", upstreamTrans, downstreamTrans,
+                    logInvalidReasonInfo("up coding exonic diff SVs", upstreamTrans, downstreamTrans,
                             INVALID_REASON_CODING_TYPE, invalidReasons);
                     return null;
                 }
 
                 // coding exon to coding exon will require phase adjustments to be exact
-                checkExactMatch = true;
+                checkExactMatch = downstreamTrans.isExonic();
             }
         }
         else if(upstreamTrans.nonCoding())

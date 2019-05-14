@@ -160,7 +160,7 @@ public class SvAnalyser {
                     fusionAnalyser.initialise(cmd, svaConfig.OutputCsvPath, ensemblDataCache);
                     fusionAnalyser.setVisWriter(sampleAnalyser.getVisWriter());
 
-                    if(!fusionAnalyser.getRnaSampleIds().isEmpty() && samplesList.size() > 1)
+                    if(fusionAnalyser.hasRnaSampleData() && samplesList.size() > 1)
                     {
                         samplesList.clear();
                         samplesList.addAll(fusionAnalyser.getRnaSampleIds());
@@ -230,7 +230,7 @@ public class SvAnalyser {
                 if(ensemblDataCache != null)
                 {
                     // when matching RNA, allow all transcripts regardless of their viability for fusions
-                    boolean keepInvalidTranscripts = fusionAnalyser != null && !fusionAnalyser.getRnaSampleIds().isEmpty();
+                    boolean keepInvalidTranscripts = fusionAnalyser != null && fusionAnalyser.hasRnaSampleData();
                     setSvGeneData(svVarData, ensemblDataCache, checkFusions, isSingleSample, !keepInvalidTranscripts);
                 }
 
