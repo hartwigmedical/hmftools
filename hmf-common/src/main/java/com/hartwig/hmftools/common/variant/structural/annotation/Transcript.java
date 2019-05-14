@@ -2,6 +2,12 @@ package com.hartwig.hmftools.common.variant.structural.annotation;
 
 import static com.hartwig.hmftools.common.variant.structural.annotation.GeneAnnotation.isDownstream;
 
+import java.util.List;
+import java.util.Map;
+
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -38,9 +44,10 @@ public class Transcript {
     private String mCodingType;
     private final String mRegionType;
 
-
     private int mExonDistanceUp;
     private int mExonDistanceDown;
+
+    private Map<Integer,Integer> mAlternativePhasing;
 
     private boolean mIsDisruptive;
 
@@ -84,6 +91,7 @@ public class Transcript {
         mBioType = "";
         mExonDistanceUp = 0;
         mExonDistanceDown = 0;
+        mAlternativePhasing = Maps.newHashMap();
 
         if(totalCodingBases > STOP_CODON_LENGTH)
         {
@@ -205,6 +213,9 @@ public class Transcript {
     }
 
     public boolean isCanonical() { return mCanonical; }
+
+    public final Map<Integer,Integer> getAlternativePhasing() { return mAlternativePhasing; }
+    public void setAlternativePhasing(final Map<Integer,Integer> phasings) { mAlternativePhasing = phasings; }
 
     public void setExonDistances(int up, int down)
     {

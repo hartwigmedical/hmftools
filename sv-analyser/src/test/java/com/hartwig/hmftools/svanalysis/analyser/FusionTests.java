@@ -1,10 +1,12 @@
 package com.hartwig.hmftools.svanalysis.analyser;
 
+import static com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion.REPORTABLE_TYPE_KNOWN;
 import static com.hartwig.hmftools.svanalysis.analyser.SvTestHelper.addGeneData;
 import static com.hartwig.hmftools.svanalysis.analyser.SvTestHelper.addTransExonData;
 import static com.hartwig.hmftools.svanalysis.analyser.SvTestHelper.createDel;
 import static com.hartwig.hmftools.svanalysis.analyser.SvTestHelper.createDup;
 import static com.hartwig.hmftools.svanalysis.analyser.SvTestHelper.createEnsemblGeneData;
+import static com.hartwig.hmftools.svanalysis.analyser.SvTestHelper.createGeneAnnotation;
 import static com.hartwig.hmftools.svanalysis.analysis.FusionDisruptionAnalyser.FCI_TRAV_ASSEMBLY;
 import static com.hartwig.hmftools.svanalysis.analysis.FusionDisruptionAnalyser.FCI_VALID_TRAVERSAL;
 import static com.hartwig.hmftools.svanalysis.analysis.FusionDisruptionAnalyser.FDI_DIS_EXONS;
@@ -21,16 +23,152 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.variant.structural.annotation.EnsemblGeneData;
+import com.hartwig.hmftools.common.variant.structural.annotation.GeneAnnotation;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion;
+import com.hartwig.hmftools.common.variant.structural.annotation.Transcript;
 import com.hartwig.hmftools.common.variant.structural.annotation.TranscriptExonData;
 import com.hartwig.hmftools.svanalysis.types.SvCluster;
 import com.hartwig.hmftools.svanalysis.types.SvVarData;
 import com.hartwig.hmftools.svannotation.SvGeneTranscriptCollection;
 
+import org.jetbrains.annotations.Nullable;
 import org.junit.Test;
 
 public class FusionTests
 {
+
+    @Test
+    public void testReportableFusionComparison()
+    {
+        // test the selection and prioritisation logic from a collection of valid fusions
+        SvTestHelper tester = new SvTestHelper();
+        tester.logVerbose(true);
+
+        SvGeneTranscriptCollection geneTransCache = new SvGeneTranscriptCollection();
+
+        tester.initialiseFusions(geneTransCache);
+
+        PRE_GENE_PROMOTOR_DISTANCE = 100;
+
+        // first a gene on the forward strand
+        String geneName = "GENE1";
+        String geneId1 = "ENSG0001";
+        String chromosome = "1";
+        byte strand = 1;
+
+        // GeneAnnotation geneUp = createGeneAnnotation(0, true, geneName, geneId1, strand, chromosome, 0, 1);
+
+        List<EnsemblGeneData> geneList = Lists.newArrayList();
+        geneList.add(createEnsemblGeneData(geneId1, geneName, chromosome, 1, 100, 1000));
+
+        List<TranscriptExonData> transExonList = Lists.newArrayList();
+
+        String transName = "ENST0001";
+        int transId = 1;
+
+        long transStart = 100;
+        long transEnd = 1000;
+        long codingStart = 350;
+        long codingEnd = 950;
+
+        transExonList.add(new TranscriptExonData(geneId1, transName, transId, true, strand, transStart, transEnd,
+                100, 200, 1, -1, -1, codingStart, codingEnd, ""));
+
+        transExonList.add(new TranscriptExonData(geneId1, transName, transId, true, strand, transStart, transEnd,
+                300, 400, 2, -1, 1, codingStart, codingEnd, ""));
+
+        transExonList.add(new TranscriptExonData(geneId1, transName, transId, true, strand, transStart, transEnd,
+                500, 600, 3, 1, 2, codingStart, codingEnd, ""));
+
+        transExonList.add(new TranscriptExonData(geneId1, transName, transId, true, strand, transStart, transEnd,
+                700, 800, 4, 2, 0, codingStart, codingEnd, ""));
+
+        transExonList.add(new TranscriptExonData(geneId1, transName, transId, true, strand, transStart, transEnd,
+                900, 1000, 5, 0, -1, codingStart, codingEnd, ""));
+
+        addTransExonData(geneTransCache, geneId1, transExonList);
+
+        geneName = "GENE2";
+        String geneId2 = "ENSG0002";
+
+        // GeneAnnotation geneDown = createGeneAnnotation(0, true, geneName, geneId1, strand, chromosome, 0, -1);
+
+        geneList.add(createEnsemblGeneData(geneId2, geneName, chromosome, 1, 10000, 12000));
+
+        addGeneData(geneTransCache, chromosome, geneList);
+
+        String transName2 = "ENST0002";
+        int transId2 = 2;
+
+        transStart = 10100;
+        transEnd = 11000;
+        codingStart = 10150;
+        codingEnd = 10750;
+
+        transExonList = Lists.newArrayList();
+
+        transExonList.add(new TranscriptExonData(geneId2, transName2, transId2, true, strand, transStart, transEnd,
+                10100, 10200, 1, -1, 1, codingStart, codingEnd, ""));
+
+        transExonList.add(new TranscriptExonData(geneId2, transName2, transId2, true, strand, transStart, transEnd,
+                10300, 10400, 2, 1, 2, codingStart, codingEnd, ""));
+
+        transExonList.add(new TranscriptExonData(geneId2, transName2, transId2, true, strand, transStart, transEnd,
+                10500, 10600, 3, 2, 0, codingStart, codingEnd, ""));
+
+        transExonList.add(new TranscriptExonData(geneId2, transName2, transId2, true, strand, transStart, transEnd,
+                10700, 10800, 4, 0, -1, codingStart, codingEnd, ""));
+
+        transExonList.add(new TranscriptExonData(geneId2, transName2, transId2, true, strand, transStart, transEnd,
+                10900, 11000, 5, -1, -1, codingStart, codingEnd, ""));
+
+        addTransExonData(geneTransCache, geneId2, transExonList);
+
+        byte posOrient = 1;
+        byte negOrient = -1;
+
+        // add upstream breakends
+        List<GeneAnnotation> upGenes = Lists.newArrayList();
+        upGenes.addAll(geneTransCache.findGeneAnnotationsBySv(0, true, chromosome, 250, posOrient, PRE_GENE_PROMOTOR_DISTANCE));
+        upGenes.addAll(geneTransCache.findGeneAnnotationsBySv(1, true, chromosome, 450, posOrient, PRE_GENE_PROMOTOR_DISTANCE));
+        upGenes.addAll(geneTransCache.findGeneAnnotationsBySv(2, true, chromosome, 650, posOrient, PRE_GENE_PROMOTOR_DISTANCE));
+        upGenes.addAll(geneTransCache.findGeneAnnotationsBySv(3, true, chromosome, 850, posOrient, PRE_GENE_PROMOTOR_DISTANCE));
+        upGenes.get(0).setPositionalData(chromosome, 250, posOrient);
+        upGenes.get(1).setPositionalData(chromosome, 450, posOrient);
+        upGenes.get(2).setPositionalData(chromosome, 650, posOrient);
+        upGenes.get(3).setPositionalData(chromosome, 850, posOrient);
+
+        // add downstream breakends
+        List<GeneAnnotation> downGenes = Lists.newArrayList();
+        downGenes.addAll(geneTransCache.findGeneAnnotationsBySv(0, false, chromosome, 10250, negOrient, PRE_GENE_PROMOTOR_DISTANCE));
+        downGenes.addAll(geneTransCache.findGeneAnnotationsBySv(1, false, chromosome, 10450, negOrient, PRE_GENE_PROMOTOR_DISTANCE));
+        downGenes.addAll(geneTransCache.findGeneAnnotationsBySv(2, false, chromosome, 10650, negOrient, PRE_GENE_PROMOTOR_DISTANCE));
+        downGenes.addAll(geneTransCache.findGeneAnnotationsBySv(3, false, chromosome, 10850, negOrient, PRE_GENE_PROMOTOR_DISTANCE));
+        downGenes.get(0).setPositionalData(chromosome, 10250, negOrient);
+        downGenes.get(1).setPositionalData(chromosome, 10450, negOrient);
+        downGenes.get(2).setPositionalData(chromosome, 10650, negOrient);
+        downGenes.get(3).setPositionalData(chromosome, 10850, negOrient);
+
+        List<GeneFusion> fusions = tester.FusionAnalyser.getFusionFinder().findFusions(upGenes, downGenes, true, true, null, false);
+        fusions.forEach(x -> x.setKnownFusionType(REPORTABLE_TYPE_KNOWN));
+        tester.FusionAnalyser.getFusionFinder().setReportableGeneFusions(fusions);
+
+        assertEquals(6, fusions.size());
+        final GeneFusion fusion = fusions.get(0);
+
+        // the selected fusion is the longest for coding bases and without any exon skipping
+        assertEquals(450, fusion.upstreamTrans().parent().position());
+        assertEquals(10250, fusion.downstreamTrans().parent().position());
+        assertEquals(0, fusion.getExonsSkipped(true));
+        assertEquals(0, fusion.getExonsSkipped(false));
+        assertTrue(fusion.reportable());
+
+        for(int i = 1; i < fusions.size(); ++i)
+        {
+            assertTrue(!fusions.get(i).reportable());
+        }
+    }
+
     @Test
     public void testChainedFusions()
     {

@@ -189,6 +189,7 @@ public class FusionDisruptionAnalyser
 
     // for testing
     public void setHasValidConfigData(boolean toggle) { mFusionFinder.setHasValidConfigData(toggle); }
+    public final SvFusionAnalyser getFusionFinder() { return mFusionFinder; }
 
     public static void setSvGeneData(final List<SvVarData> svList, SvGeneTranscriptCollection geneCollection,
             boolean applyPromotorDistance, boolean selectiveLoading, boolean purgeInvalidTranscripts)
@@ -229,7 +230,7 @@ public class FusionDisruptionAnalyser
                 boolean isStart = isStart(be);
 
                 List<GeneAnnotation> genesList = geneCollection.findGeneAnnotationsBySv(
-                        var.dbId(), isStart, var.chromosome(isStart), var.position(isStart), upstreamDistance);
+                        var.dbId(), isStart, var.chromosome(isStart), var.position(isStart), var.orientation(isStart), upstreamDistance);
 
                 if (genesList.isEmpty())
                     continue;
@@ -291,7 +292,7 @@ public class FusionDisruptionAnalyser
 
         boolean checkSoloSVs = true;
         boolean checkClusters = true;
-        boolean checkKnown = true;
+        boolean checkKnown = false; // not used due to rate of false positives
 
         if(checkSoloSVs)
         {
@@ -333,7 +334,7 @@ public class FusionDisruptionAnalyser
             if(genesListStart.isEmpty() || genesListEnd.isEmpty())
                 continue;
 
-            List<GeneFusion> fusions = mFusionFinder.findFusions(genesListStart, genesListEnd, true, null, true);
+            List<GeneFusion> fusions = mFusionFinder.findFusions(genesListStart, genesListEnd, true, true, null, true);
 
             if (fusions.isEmpty())
                 continue;
@@ -556,7 +557,8 @@ public class FusionDisruptionAnalyser
                  //boolean logFusionReasons = isSpecificSV(lowerBreakend.getSV()) & isSpecificSV(upperBreakend.getSV());
                  //mFusionFinder.setLogInvalidReasons(logFusionReasons);
 
-                List<GeneFusion> fusions = mFusionFinder.findFusions(genesListLower, genesListUpper, true, null, false);
+                List<GeneFusion> fusions = mFusionFinder.findFusions(genesListLower, genesListUpper,
+                        true, true, null, false);
 
                 if(fusions.isEmpty())
                     continue;
@@ -1066,7 +1068,8 @@ public class FusionDisruptionAnalyser
 
                 // isSpecificSV(be1.getSV());
 
-                List<GeneFusion> fusions = mFusionFinder.findFusions(genes1, genes2, true, null, true);
+                List<GeneFusion> fusions = mFusionFinder.findFusions(genes1, genes2,
+                        true, true, null, true);
 
                 if (fusions.isEmpty())
                     continue;
@@ -1171,7 +1174,7 @@ public class FusionDisruptionAnalyser
                     }
                 }
 
-                List<GeneFusion> fusions = mFusionFinder.findFusions(genes1, genes2, true, invalidReasons, false);
+                List<GeneFusion> fusions = mFusionFinder.findFusions(genes1, genes2, true, true, invalidReasons, false);
 
                 /*
                 if (!fusions.isEmpty())
@@ -1413,7 +1416,7 @@ public class FusionDisruptionAnalyser
                     if(downBreakend.getSV().isNullBreakend())
                         continue;
 
-                    GeneFusion possibleFusion = checkFusionLogic(upTrans, downTrans, false, null);
+                    GeneFusion possibleFusion = checkFusionLogic(upTrans, downTrans, false, false, null);
 
                     // form one any way but mark it as not meeting standard fusion rules
                     if(possibleFusion == null)

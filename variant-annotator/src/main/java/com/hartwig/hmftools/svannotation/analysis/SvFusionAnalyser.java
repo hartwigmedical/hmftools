@@ -19,6 +19,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.fusions.KnownFusionsModel;
@@ -122,7 +123,9 @@ public class SvFusionAnalyser
 
         for (final StructuralVariantAnnotation annotation : annotations)
         {
-            List<GeneFusion> svFusions = findFusions(annotation.start(), annotation.end(), true, null, true);
+            List<GeneFusion> svFusions = findFusions(annotation.start(), annotation.end(),
+                    true, false, null, true);
+
             fusions.addAll(svFusions);
         }
 
@@ -135,7 +138,7 @@ public class SvFusionAnalyser
 
     public final List<GeneFusion> findFusions(
             final List<GeneAnnotation> breakendGenes1, final List<GeneAnnotation> breakendGenes2,
-            boolean requirePhaseMatch, @Nullable  List<String> invalidReasons, boolean setReportable)
+            boolean requirePhaseMatch, boolean allowExonSkipping, @Nullable  List<String> invalidReasons, boolean setReportable)
     {
         final List<GeneFusion> potentialFusions = Lists.newArrayList();
 
@@ -166,7 +169,8 @@ public class SvFusionAnalyser
                         final Transcript upstreamTrans = startUpstream ? startTrans : endTrans;
                         final Transcript downstreamTrans = !startUpstream ? startTrans : endTrans;
 
-                        GeneFusion geneFusion = checkFusionLogic(upstreamTrans, downstreamTrans, requirePhaseMatch, invalidReasons);
+                        GeneFusion geneFusion = checkFusionLogic(upstreamTrans, downstreamTrans, requirePhaseMatch,
+                                allowExonSkipping, invalidReasons);
 
                         if(geneFusion == null)
                             continue;
@@ -238,11 +242,11 @@ public class SvFusionAnalyser
 
     public static GeneFusion checkFusionLogic(final Transcript upstreamTrans, final Transcript downstreamTrans)
     {
-        return checkFusionLogic(upstreamTrans, downstreamTrans, true, null);
+        return checkFusionLogic(upstreamTrans, downstreamTrans, true, false, null);
     }
 
     public static GeneFusion checkFusionLogic(final Transcript upstreamTrans, final Transcript downstreamTrans,
-            boolean requirePhaseMatch, @Nullable List<String> invalidReasons)
+            boolean requirePhaseMatch, boolean allowExonSkipping, @Nullable List<String> invalidReasons)
     {
         // see SV Fusions document for permitted combinations
         boolean checkExactMatch = false;
@@ -320,6 +324,8 @@ public class SvFusionAnalyser
         }
 
         boolean phaseMatched = false;
+        int phaseExonsSkippedUp = 0;
+        int phaseExonsSkippedDown = 0;
 
         if(!checkExactMatch)
         {
@@ -351,6 +357,33 @@ public class SvFusionAnalyser
             // just check for a phasing match
             phaseMatched = upstreamTrans.ExonUpstreamPhase == downstreamTrans.ExonDownstreamPhase;
 
+            if(!phaseMatched && allowExonSkipping)
+            {
+                // check for a match within the alterative phasings from upstream and downstream of the breakend
+                for (Map.Entry<Integer, Integer> altPhasing : upstreamTrans.getAlternativePhasing().entrySet())
+                {
+                    if (altPhasing.getKey() == downstreamTrans.ExonDownstreamPhase)
+                    {
+                        phaseMatched = true;
+                        phaseExonsSkippedUp = altPhasing.getValue();
+                        break;
+                    }
+                }
+
+                if(!phaseMatched)
+                {
+                    for (Map.Entry<Integer, Integer> altPhasing : downstreamTrans.getAlternativePhasing().entrySet())
+                    {
+                        if (altPhasing.getKey() == upstreamTrans.ExonUpstreamPhase)
+                        {
+                            phaseMatched = true;
+                            phaseExonsSkippedDown = altPhasing.getValue();
+                            break;
+                        }
+                    }
+                }
+            }
+
             if(!phaseMatched)
             {
                 logInvalidReasonInfo("inexact unphased", upstreamTrans, downstreamTrans, INVALID_REASON_PHASING, invalidReasons);
@@ -358,7 +391,9 @@ public class SvFusionAnalyser
 
             if(phaseMatched || !requirePhaseMatch)
             {
-                return new GeneFusion(upstreamTrans, downstreamTrans, phaseMatched, true);
+                GeneFusion fusion = new GeneFusion(upstreamTrans, downstreamTrans, phaseMatched, true);
+                fusion.setExonsSkipped(phaseExonsSkippedUp, phaseExonsSkippedDown);
+                return fusion;
             }
         }
 
@@ -539,15 +574,15 @@ public class SvFusionAnalyser
         if(downTrans.exonDistanceUp() < 0)
             return false;
 
+        if(fusion.getKnownFusionType() != REPORTABLE_TYPE_KNOWN
+        && (fusion.getExonsSkipped(true) > 0 || fusion.getExonsSkipped(false) > 0))
+            return false;
+
         return true;
     }
 
     private GeneFusion determineReportableFusion(final List<GeneFusion> fusions)
     {
-        // Select either the canonical -> canonical transcript fusion
-        //  then the one with the most exons where one end is canonical
-        //  then the one with the most exons combined transcript
-
         GeneFusion reportableFusion = null;
 
         // form a score by allocating 0/1 or length value to each power 10 descending
@@ -563,15 +598,23 @@ public class SvFusionAnalyser
             final Transcript downTrans = fusion.downstreamTrans();
 
             /* prioritisation rules:
+            - prioritise fusions which don't skip exons
             - take both canonical if possible
             - favour 3' over 5' by canoncial, protein-coding then coding bases (or exon count if not coding)
             */
 
-            if(downTrans.isCanonical() && upTrans.isCanonical())
-                return fusion;
-
             long transScore = 0;
-            long factor = 10000000;
+            long factor = 1000000000;
+
+            if(fusion.getExonsSkipped(true) == 0 && fusion.getExonsSkipped(false) == 0)
+                transScore += factor;
+
+            factor /= 10;
+
+            if(downTrans.isCanonical() && upTrans.isCanonical())
+                transScore += factor;
+
+            factor /= 10;
 
             if(downTrans.isCanonical())
                 transScore += factor;
@@ -682,7 +725,7 @@ public class SvFusionAnalyser
                 mFusionWriter.write(",ExonDown,PhaseDown,ExonMaxDown,DisruptiveDown,ExactBaseDown,CodingBasesDown,TotalCodingDown");
                 mFusionWriter.write(",CodingStartDown,CodingEndDown,TransStartDown,TransEndDown,DistancePrevDown,CanonicalDown,BiotypeDown");
 
-                mFusionWriter.write(",ProteinsKept,ProteinsLost");
+                mFusionWriter.write(",ProteinsKept,ProteinsLost,ExonsSkippedUp,ExonsSkippedDown");
                 mFusionWriter.newLine();
             }
         }
@@ -764,6 +807,9 @@ public class SvFusionAnalyser
                             downTrans.codingStart(), downTrans.codingEnd(), downTrans.TranscriptStart, downTrans.TranscriptEnd,
                             downTrans.exonDistanceUp(), downTrans.isCanonical(), downTrans.bioType(),
                             downTrans.getProteinFeaturesKept(), downTrans.getProteinFeaturesLost()));
+
+            // move to phasing section once move to SVA fusions
+            writer.write(String.format(",%d,%d", fusion.getExonsSkipped(true), fusion.getExonsSkipped(false)));
 
             writer.newLine();
         }

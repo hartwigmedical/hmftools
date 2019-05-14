@@ -11,6 +11,8 @@ public class GeneFusion
     private boolean mIsReportable;
     private boolean mPhaseMatched;
     private boolean mViable; // passes fusion rules
+    private int mExonsSkippedUp;
+    private int mExonsSkippedDown;
     private String mKnownFusionType;
 
     private String mAnnotations;
@@ -30,6 +32,8 @@ public class GeneFusion
         mKnownFusionType = REPORTABLE_TYPE_NONE;
         mPhaseMatched = phaseMatched;
         mViable = viable;
+        mExonsSkippedUp = 0;
+        mExonsSkippedDown = 0;
     }
 
     public Transcript upstreamTrans() { return mUpstreamTrans; }
@@ -46,6 +50,13 @@ public class GeneFusion
 
     public boolean phaseMatched(){ return mPhaseMatched; }
     public boolean viable(){ return mViable; }
+    public void setExonsSkipped(int exonsUp, int exonsDown)
+    {
+        mExonsSkippedUp = exonsUp;
+        mExonsSkippedDown = exonsDown;
+    }
+
+    public int getExonsSkipped(boolean isUpstream) { return isUpstream ? mExonsSkippedUp : mExonsSkippedDown; }
 
     public boolean isExonic()
     {

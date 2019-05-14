@@ -283,6 +283,7 @@ public class StructuralVariantAnnotator
                     true,
                     var.chromosome(true),
                     var.position(true),
+                    var.orientation(true),
                     PRE_GENE_PROMOTOR_DISTANCE);
 
             if (var.end() != null)
@@ -291,6 +292,7 @@ public class StructuralVariantAnnotator
                         false,
                         var.chromosome(false),
                         var.position(false),
+                        var.orientation(false),
                         PRE_GENE_PROMOTOR_DISTANCE));
             }
 

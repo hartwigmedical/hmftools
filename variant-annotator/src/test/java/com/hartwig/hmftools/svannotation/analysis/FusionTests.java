@@ -23,6 +23,7 @@ import com.hartwig.hmftools.common.variant.structural.annotation.TranscriptExonD
 import com.hartwig.hmftools.svannotation.SvGeneTranscriptCollection;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.junit.Test;
 
 public class FusionTests
@@ -195,7 +196,6 @@ public class FusionTests
             return (int)(end - start);
         return 0;
     }
-
 
     @Test
     public void testRnaMatching()

@@ -12,6 +12,7 @@ import static com.hartwig.hmftools.common.variant.structural.annotation.EnsemblG
 import static com.hartwig.hmftools.common.variant.structural.annotation.EnsemblGeneData.GENE_PHASING_REGION_CODING_2;
 import static com.hartwig.hmftools.common.variant.structural.annotation.EnsemblGeneData.GENE_PHASING_REGION_MAX;
 import static com.hartwig.hmftools.common.variant.structural.annotation.EnsemblGeneData.phaseToRegion;
+import static com.hartwig.hmftools.common.variant.structural.annotation.GeneAnnotation.isUpstream;
 import static com.hartwig.hmftools.common.variant.structural.annotation.Transcript.TRANS_CODING_TYPE_CODING;
 import static com.hartwig.hmftools.svannotation.analysis.SvFusionAnalyser.validFusionTranscript;
 
@@ -123,7 +124,7 @@ public class SvGeneTranscriptCollection
     }
 
     public List<GeneAnnotation> findGeneAnnotationsBySv(int svId, boolean isStart, final String chromosome, long position,
-            int upstreamDistance)
+            byte orientation, int upstreamDistance)
     {
         List<GeneAnnotation> geneAnnotations = Lists.newArrayList();
 
@@ -160,6 +161,8 @@ public class SvGeneTranscriptCollection
                 if(transcript != null)
                 {
                     currentGene.addTranscript(transcript);
+
+                    setAlternativeTranscriptPhasings(transcript, transcriptExons, position, orientation);
 
                     // annotate with preceding gene info if the up distance isn't set
                     if(transcript.exonDistanceUp() == -1)
@@ -343,7 +346,8 @@ public class SvGeneTranscriptCollection
         return -1;
     }
 
-    public static Transcript extractTranscriptExonData(final List<TranscriptExonData> transcriptExons, long position, final GeneAnnotation geneAnnotation)
+    public static Transcript extractTranscriptExonData(final List<TranscriptExonData> transcriptExons, long position,
+            final GeneAnnotation geneAnnotation)
     {
         int exonMax = transcriptExons.size();
 
@@ -368,6 +372,9 @@ public class SvGeneTranscriptCollection
 
         // for reverse-strand transcripts the current exon is upstream, the previous is downstream
         // and the end-phase is taken from the upstream (current) exon, the phase from the downstream (previous) exon
+
+        // for each exon, the 'phase' is always the phase at the start of the exon regardless of strand direction,
+        // and 'end_phase' is the phase at the end of the exon, but note that 'phase' will correspond to an exon end
 
         if(position < firstExon.ExonStart)
         {
@@ -452,7 +459,9 @@ public class SvGeneTranscriptCollection
                     }
                     else
                     {
+                        // the current exon is earlier in rank
                         // the previous exon in the list has the higher rank and is dowstream
+                        // the start of the next exon (ie previous here) uses 'phase' for the downstream as normal
                         upExonRank = exonData.ExonRank;
                         upExonPhase = exonData.ExonPhaseEnd;
                         downExonRank = prevExonData.ExonRank;
@@ -633,6 +642,68 @@ public class SvGeneTranscriptCollection
         }
 
         return exonData;
+    }
+
+    public static void setAlternativeTranscriptPhasings(Transcript transcript, final List<TranscriptExonData> exonDataList,
+            long position, byte orientation)
+    {
+        // collect exon phasings before the position on the upstream and after it on the downstream
+        boolean isUpstream = (transcript.parent().Strand * orientation) > 0;
+        boolean forwardStrand = (transcript.parent().Strand == 1);
+
+        Map<Integer,Integer> alternativePhasing = Maps.newHashMap();
+
+        int transPhase = isUpstream ? transcript.ExonUpstreamPhase : transcript.ExonDownstreamPhase;
+        int transRank = isUpstream ? transcript.ExonUpstream : transcript.ExonDownstream;
+
+        for(int i = 0; i < exonDataList.size(); ++i)
+        {
+            final TranscriptExonData exonData = exonDataList.get(i);
+
+            if(isUpstream == forwardStrand)
+            {
+                if (exonData.ExonStart > position || transRank == exonData.ExonRank)
+                {
+                    break;
+                }
+            }
+            else
+            {
+                if (position > exonData.ExonEnd || transRank == exonData.ExonRank)
+                {
+                    continue;
+                }
+            }
+
+            int exonPhase = isUpstream ? exonData.ExonPhaseEnd : exonData.ExonPhase;
+            int exonsSkipped = 0;
+
+            if(isUpstream)
+            {
+                exonsSkipped = max(transRank - exonData.ExonRank, 0);
+            }
+            else
+            {
+                exonsSkipped = max(exonData.ExonRank - transRank, 0);
+            }
+
+            if(exonPhase != transPhase)
+            {
+                if(isUpstream == forwardStrand)
+                {
+                    // take the closest to the position
+                    alternativePhasing.put(exonPhase, exonsSkipped);
+                }
+                else
+                {
+                    // take the first found
+                    if(!alternativePhasing.containsKey(exonPhase))
+                        alternativePhasing.put(exonPhase, exonsSkipped);
+                }
+            }
+        }
+
+        transcript.setAlternativePhasing(alternativePhasing);
     }
 
     public List<Integer> getTranscriptIdsMatchingPosition(final String geneId, long position)
