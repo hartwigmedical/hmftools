@@ -13,6 +13,11 @@ import htsjdk.variant.vcf.VCFHeader;
 public class PurpleStructuralVariantSupplierTest {
 
     @Test
+    public void testDummySupplierInstantiatesSuccessfully() {
+        final PurpleStructuralVariantSupplier victim = new PurpleStructuralVariantSupplier();
+    }
+
+    @Test
     public void testHeaderSamplesAreNotSorted() {
         final VCFHeader outOfOrderHeader = new VCFHeader(Collections.emptySet(), Lists.newArrayList("BBBBB", "AAAAA"));
         final VCFHeader victim = PurpleStructuralVariantSupplier.generateOutputHeader("2.23", outOfOrderHeader);

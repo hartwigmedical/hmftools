@@ -1,94 +1,20 @@
 package com.hartwig.hmftools.purple.sv;
 
-import java.util.Iterator;
 import java.util.List;
-import java.util.TreeSet;
 import java.util.function.Predicate;
 
-import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
-import com.hartwig.hmftools.common.variant.structural.StructuralVariantFactory;
 
 import org.jetbrains.annotations.NotNull;
 
-import htsjdk.samtools.SAMSequenceDictionary;
 import htsjdk.variant.variantcontext.VariantContext;
-import htsjdk.variant.variantcontext.VariantContextComparator;
-import htsjdk.variant.variantcontext.filter.PassingVariantFilter;
-import htsjdk.variant.vcf.VCFHeader;
 
-public class VariantContextCollection implements Iterable<VariantContext> {
+public interface VariantContextCollection extends Iterable<VariantContext> {
 
-    private final TreeSet<VariantContext> variantContexts;
-    private final List<StructuralVariant> variants = Lists.newArrayList();
+    void add(@NotNull final VariantContext variantContext);
 
-    private boolean modified;
-
-    public VariantContextCollection(@NotNull final VCFHeader header) {
-        variantContexts = new TreeSet<>(new VCComparator(header.getSequenceDictionary()));
-    }
-
-    public VariantContextCollection(@NotNull final List<String> contigs) {
-        variantContexts = new TreeSet<>(new VCComparator(contigs));
-    }
-
-    public void add(@NotNull final VariantContext variantContext) {
-        modified = true;
-        if (variantContext.contains(variantContext)) {
-            variantContexts.remove(variantContext);
-            variantContexts.add(variantContext);
-        }
-    }
-
-    public int remove(@NotNull final Predicate<VariantContext> removePredicate) {
-        int removed = 0;
-        final Iterator<VariantContext> iterator = variantContexts.iterator();
-        while (iterator.hasNext()) {
-            final VariantContext variantContext = iterator.next();
-            if (removePredicate.test(variantContext)) {
-                iterator.remove();
-                removed++;
-                modified = true;
-            }
-        }
-        return removed;
-    }
+    int remove(@NotNull final Predicate<VariantContext> removePredicate);
 
     @NotNull
-    public List<StructuralVariant> passingVariants() {
-        if (modified) {
-            modified = false;
-            final StructuralVariantFactory factory = new StructuralVariantFactory(new PassingVariantFilter());
-            variantContexts.forEach(factory::addVariantContext);
-
-            variants.clear();
-            variants.addAll(factory.results());
-        }
-
-        return variants;
-    }
-
-    @NotNull
-    @Override
-    public Iterator<VariantContext> iterator() {
-        return variantContexts.iterator();
-    }
-
-    private class VCComparator extends VariantContextComparator {
-
-        VCComparator(final List<String> contigs) {
-            super(contigs);
-        }
-
-        VCComparator(final SAMSequenceDictionary dictionary) {
-            super(dictionary);
-        }
-
-        @Override
-        public int compare(final VariantContext firstVariantContext, final VariantContext secondVariantContext) {
-            int positionResult = super.compare(firstVariantContext, secondVariantContext);
-
-            return positionResult == 0 ? firstVariantContext.getID().compareTo(secondVariantContext.getID()) : positionResult;
-        }
-    }
+    List<StructuralVariant> passingVariants();
 }
