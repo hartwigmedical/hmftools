@@ -23,7 +23,6 @@ import com.hartwig.hmftools.common.chord.ImmutableChordAnalysis;
 import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.ecrf.projections.ImmutablePatientTumorLocation;
 import com.hartwig.hmftools.common.fusions.KnownFusionsModel;
-import com.hartwig.hmftools.common.lims.LimsGermlineReportingChoice;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.gender.Gender;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
@@ -31,14 +30,12 @@ import com.hartwig.hmftools.common.purple.purity.FittedPurity;
 import com.hartwig.hmftools.common.purple.purity.ImmutableFittedPurity;
 import com.hartwig.hmftools.common.variant.Clonality;
 import com.hartwig.hmftools.common.variant.Hotspot;
-import com.hartwig.hmftools.patientreporter.variants.germline.GermlineVariant;
 import com.hartwig.hmftools.patientreporter.structural.ImmutableReportableGeneDisruption;
 import com.hartwig.hmftools.patientreporter.structural.ImmutableReportableGeneFusion;
 import com.hartwig.hmftools.patientreporter.structural.ReportableGeneDisruption;
 import com.hartwig.hmftools.patientreporter.structural.ReportableGeneFusion;
 import com.hartwig.hmftools.patientreporter.variants.ImmutableReportableVariant;
 import com.hartwig.hmftools.patientreporter.variants.ReportableVariant;
-import com.hartwig.hmftools.patientreporter.variants.germline.ImmutableGermlineVariant;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
@@ -74,10 +71,10 @@ public final class ExampleAnalysisTestFactory {
         final SampleReport sampleReport = createCOLO829SampleReport();
 
         final String summaryContent = "Melanoma sample with an activating BRAF mutation that is associated with "
-                + "response to BRAF-inhibitors (in combination with an MEK-inhibitor). The tumor shows a complete "
+                + "response to BRAF-inhibitors (in combination with a MEK-inhibitor). The tumor shows a complete "
                 + "inactivation of CDKN2A, indicating potential benefit of CDK4/6 inhibitors (e.g. palbociclib). The "
                 + "observed complete loss of PTEN likely results in an activation of the PI3K-AKT-mTOR pathway and "
-                + "suggests eligibility for treatment (study) using mTOR/PI3K inhibitors. In addition, the tumor samples "
+                + "suggests eligibility for treatment (study) using mTOR/PI3K inhibitors. In addition, the tumor sample "
                 + "shows a high mutational burden that is associated with an increased response rate to checkpoint "
                 + "inhibitor immunotherapy.";
 

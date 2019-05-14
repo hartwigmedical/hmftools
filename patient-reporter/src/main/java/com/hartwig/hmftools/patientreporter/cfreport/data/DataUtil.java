@@ -14,6 +14,7 @@ public final class DataUtil {
 
     public static final String NONE_STRING = "NONE";
     public static final String NA_STRING = "N/A";
+    public static final String BELOW_SETECTION_STRING = "[below detection threshold]";
 
     private DataUtil() {
     }

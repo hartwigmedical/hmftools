@@ -1,8 +1,11 @@
 package com.hartwig.hmftools.patientreporter.cfreport.chapters;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.actionability.ClinicalTrial;
 import com.hartwig.hmftools.common.actionability.EvidenceItem;
 import com.hartwig.hmftools.patientreporter.AnalysedPatientReport;
@@ -86,7 +89,7 @@ public class SummaryChapter implements ReportChapter {
         }
 
         Div div = createSectionStartDiv(contentWidth());
-        div.add(new Paragraph("Summary").addStyle(ReportResources.sectionTitleStyle()));
+        div.add(new Paragraph("Conclusion").addStyle(ReportResources.sectionTitleStyle()));
 
         div.add(new Paragraph(text).setWidth(contentWidth()).addStyle(ReportResources.bodyTextStyle()).setFixedLeading(11));
 
@@ -102,21 +105,18 @@ public class SummaryChapter implements ReportChapter {
         table.addCell(TableUtil.createLayoutCell()
                 .add(new Paragraph("Treatment indications").addStyle(ReportResources.sectionTitleStyle())));
 
-        table.addCell(TableUtil.createLayoutCell()
-                .add(new Paragraph("Summary of alterations with number of treatment indication and/or clinical trials").addStyle(
-                        ReportResources.bodyTextStyle()).setFixedLeading(ReportResources.BODY_TEXT_LEADING)));
         table.addCell(TableUtil.createLayoutCell(1, 2).setHeight(TABLE_SPACER_HEIGHT));
 
         int therapyEventCount = EvidenceItems.uniqueEventCount(tumorSpecificEvidence);
         int therapyCount = EvidenceItems.uniqueTherapyCount(tumorSpecificEvidence);
-        table.addCell(createMiddleAlignedCell().add(new Paragraph("Gene alteration(s) with therapy indication(s)").addStyle(ReportResources.bodyTextStyle())));
-        table.addCell(createTreatmentIndicationCell(therapyEventCount, therapyCount, "treatments"));
+        table.addCell(createMiddleAlignedCell().add(new Paragraph("Number of alterations with therapy indication").addStyle(ReportResources.bodyTextStyle())));
+        table.addCell(createTreatmentIndicationCell(therapyEventCount, therapyCount, "treatment(s)"));
 
         int trialEventCount = ClinicalTrials.uniqueEventsCount(trials);
         int trialCount = ClinicalTrials.uniqueTrialCount(trials);
-        table.addCell(createMiddleAlignedCell().add(new Paragraph("Gene alteration(s) with clinical trial eligibility").addStyle(
+        table.addCell(createMiddleAlignedCell().add(new Paragraph("Number of alterations with clinical trial eligibility").addStyle(
                 ReportResources.bodyTextStyle())));
-        table.addCell(createTreatmentIndicationCell(trialEventCount, trialCount, "trials"));
+        table.addCell(createTreatmentIndicationCell(trialEventCount, trialCount, "trial(s)"));
 
         div.add(table);
 
@@ -132,8 +132,6 @@ public class SummaryChapter implements ReportChapter {
         table.setWidth(contentWidth());
         table.addCell(TableUtil.createLayoutCell()
                 .add(new Paragraph("Tumor characteristics").addStyle(ReportResources.sectionTitleStyle())));
-        table.addCell(TableUtil.createLayoutCell(1, 2)
-                .add(new Paragraph("Whole genome sequencing based tumor characteristics.").addStyle(ReportResources.bodyTextStyle())));
         table.addCell(TableUtil.createLayoutCell(1, 3).setHeight(TABLE_SPACER_HEIGHT));
 
         final double impliedPurity = patientReport.impliedPurity();
@@ -174,7 +172,7 @@ public class SummaryChapter implements ReportChapter {
             table.addCell(createMiddleAlignedCell().add(createHighlightParagraph(valueLabel).addStyle(ReportResources.dataHighlightStyle())));
             table.addCell(createMiddleAlignedCell().add(createInlineBarChart(value, min, max)));
         } else {
-            table.addCell(createMiddleAlignedCell(2).add(createHighlightParagraph(DataUtil.NA_STRING).addStyle(ReportResources.dataHighlightNaStyle())));
+            table.addCell(createMiddleAlignedCell(2).add(createHighlightParagraph(DataUtil.BELOW_SETECTION_STRING).addStyle(ReportResources.dataHighlightNaStyle())));
         }
     }
 
@@ -183,16 +181,14 @@ public class SummaryChapter implements ReportChapter {
 
         final Table table = new Table(UnitValue.createPercentArray(new float[] { 1, 1 }));
         table.setWidth(contentWidth());
-        table.addCell(TableUtil.createLayoutCell()
-                .add(new Paragraph("Genomic alterations").addStyle(ReportResources.sectionTitleStyle())));
-        table.addCell(TableUtil.createLayoutCell()
-                .add(new Paragraph("Summary of tumor specific alterations).").addStyle(ReportResources.bodyTextStyle())));
+        table.addCell(TableUtil.createLayoutCell().add(new Paragraph("Genomic alterations").addStyle(ReportResources.sectionTitleStyle())));
         table.addCell(TableUtil.createLayoutCell(1, 2).setHeight(TABLE_SPACER_HEIGHT));
 
         final Set<String> driverVariantGenes = SomaticVariants.driverGenesWithVariant(patientReport.reportableVariants());
+
         table.addCell(createMiddleAlignedCell().setVerticalAlignment(VerticalAlignment.TOP)
                 .add(new Paragraph("Driver genes with variant(s)").addStyle(ReportResources.bodyTextStyle())));
-        table.addCell(createGeneListCell(driverVariantGenes));
+        table.addCell(createGeneListCell(sortSummaryGenes(driverVariantGenes)));
 
         final int reportedVariants = SomaticVariants.countReportableVariants(patientReport.reportableVariants());
         Style reportedVariantsStyle =
@@ -204,21 +200,28 @@ public class SummaryChapter implements ReportChapter {
         final Set<String> amplifiedGenes = GeneCopyNumbers.amplifiedGenes(patientReport.geneCopyNumbers());
         table.addCell(createMiddleAlignedCell().setVerticalAlignment(VerticalAlignment.TOP)
                 .add(new Paragraph("Genes with copy-gain").addStyle(ReportResources.bodyTextStyle())));
-        table.addCell(createGeneListCell(amplifiedGenes));
+        table.addCell(createGeneListCell(sortSummaryGenes(amplifiedGenes)));
 
         final Set<String> copyLossGenes = GeneCopyNumbers.lossGenes(patientReport.geneCopyNumbers());
         table.addCell(createMiddleAlignedCell().setVerticalAlignment(VerticalAlignment.TOP)
                 .add(new Paragraph("Genes with copy-loss").addStyle(ReportResources.bodyTextStyle())));
-        table.addCell(createGeneListCell(copyLossGenes));
+        table.addCell(createGeneListCell(sortSummaryGenes(copyLossGenes)));
 
         final Set<String> fusionGenes = GeneFusions.uniqueGeneFusions(patientReport.geneFusions());
         table.addCell(createMiddleAlignedCell().setVerticalAlignment(VerticalAlignment.TOP)
                 .add(new Paragraph("Gene fusions").addStyle(ReportResources.bodyTextStyle())));
-        table.addCell(createGeneListCell(fusionGenes));
+        table.addCell(createGeneListCell(sortSummaryGenes(fusionGenes)));
 
         div.add(table);
 
         report.add(div);
+    }
+
+    @NotNull
+    private static Set<String> sortSummaryGenes(@NotNull Set<String> driverVariantGenes) {
+        List<String> numbersList = Lists.newArrayList(driverVariantGenes);
+        Collections.sort(numbersList);
+        return Sets.newHashSet(numbersList);
     }
 
     @NotNull
@@ -255,7 +258,7 @@ public class SummaryChapter implements ReportChapter {
         String treatmentText;
         Style style;
         if (eventCount > 0) {
-            treatmentText = String.format("%d (%d %s)", eventCount, treatmentCount, treatmentsName);
+            treatmentText = String.format("%d | %d %s", eventCount, treatmentCount, treatmentsName);
             style = ReportResources.dataHighlightStyle();
         } else {
             treatmentText = DataUtil.NONE_STRING;

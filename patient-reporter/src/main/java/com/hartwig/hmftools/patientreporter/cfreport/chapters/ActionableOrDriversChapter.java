@@ -59,11 +59,13 @@ public class ActionableOrDriversChapter implements ReportChapter {
             return TableUtil.createNoneReportTable(title);
         }
 
-        Table contentTable = TableUtil.createReportContentTable(new float[] { 55, 75, 60, 60, 40, 60, 40, 50, 40, 35 },
-                new Cell[] { TableUtil.createHeaderCell("Gene"), TableUtil.createHeaderCell("Variant"), TableUtil.createHeaderCell("Impact"),
-                        TableUtil.createHeaderCell("Read depth").setTextAlignment(TextAlignment.CENTER), TableUtil.createHeaderCell("Hotspot"),
-                        TableUtil.createHeaderCell("Ploidy (VAF)"), TableUtil.createHeaderCell(),
-                        TableUtil.createHeaderCell("Clonality"), TableUtil.createHeaderCell("Biallelic"), TableUtil.createHeaderCell("Driver") });
+        Table contentTable = TableUtil.createReportContentTable(new float[] { 70, 75, 60, 60, 40, 65, 35, 50, 45, 35 },
+                new Cell[] { TableUtil.createHeaderCell("Gene"), TableUtil.createHeaderCell("Variant"),
+                        TableUtil.createHeaderCell("Impact"),
+                        TableUtil.createHeaderCell("Read depth").setTextAlignment(TextAlignment.CENTER),
+                        TableUtil.createHeaderCell("Hotspot"), TableUtil.createHeaderCell("Ploidy (VAF)"), TableUtil.createHeaderCell(),
+                        TableUtil.createHeaderCell("Clonality"), TableUtil.createHeaderCell("Biallelic"),
+                        TableUtil.createHeaderCell("Driver") });
 
         final List<ReportableVariant> sortedVariants = SomaticVariants.sort(reportableVariants);
         for (ReportableVariant variant : sortedVariants) {
@@ -117,8 +119,7 @@ public class ActionableOrDriversChapter implements ReportChapter {
         Table contentTable = TableUtil.createReportContentTable(new float[] { 60, 80, 100, 80, 45, 125 },
                 new Cell[] { TableUtil.createHeaderCell("Chromosome"), TableUtil.createHeaderCell("Chromosome band"),
                         TableUtil.createHeaderCell("Gene"), TableUtil.createHeaderCell("Type"),
-                        TableUtil.createHeaderCell("Copies").setTextAlignment(TextAlignment.RIGHT), TableUtil.createHeaderCell("")
-                });
+                        TableUtil.createHeaderCell("Copies").setTextAlignment(TextAlignment.RIGHT), TableUtil.createHeaderCell("") });
 
         final List<GeneCopyNumber> sortedCopyNumbers = GeneCopyNumbers.sort(copyNumbers);
         for (GeneCopyNumber copyNumber : sortedCopyNumbers) {
@@ -127,8 +128,9 @@ public class ActionableOrDriversChapter implements ReportChapter {
             contentTable.addCell(TableUtil.createContentCell(copyNumber.chromosomeBand()));
             contentTable.addCell(TableUtil.createContentCell(copyNumber.gene()));
             contentTable.addCell(TableUtil.createContentCell(GeneCopyNumbers.type(copyNumber)));
-            contentTable.addCell(TableUtil.createContentCell(hasReliablePurityFit ? String.valueOf(reportableCopyNumber) : DataUtil.NA_STRING)
-                    .setTextAlignment(TextAlignment.RIGHT));
+            contentTable.addCell(TableUtil.createContentCell(hasReliablePurityFit
+                    ? String.valueOf(reportableCopyNumber)
+                    : DataUtil.NA_STRING).setTextAlignment(TextAlignment.RIGHT));
             contentTable.addCell(TableUtil.createContentCell(""));
         }
 
@@ -144,22 +146,25 @@ public class ActionableOrDriversChapter implements ReportChapter {
 
         Table contentTable = TableUtil.createReportContentTable(new float[] { 90, 82.5f, 82.5f, 37.5f, 37.5f, 40, 30, 100 },
                 new Cell[] { TableUtil.createHeaderCell("Fusion"), TableUtil.createHeaderCell("5' Transcript"),
-                        TableUtil.createHeaderCell("3' Transcript"), TableUtil.createHeaderCell("5' End"), TableUtil.createHeaderCell("3' Start"),
-                        TableUtil.createHeaderCell("Copies").setTextAlignment(TextAlignment.RIGHT), TableUtil.createHeaderCell(""),
-                        TableUtil.createHeaderCell("Source") });
+                        TableUtil.createHeaderCell("3' Transcript"), TableUtil.createHeaderCell("5' End"),
+                        TableUtil.createHeaderCell("3' Start"), TableUtil.createHeaderCell("Copies").setTextAlignment(TextAlignment.RIGHT),
+                        TableUtil.createHeaderCell(""), TableUtil.createHeaderCell("Source") });
 
         final List<ReportableGeneFusion> sortedFusions = GeneFusions.sort(fusions);
         for (ReportableGeneFusion fusion : sortedFusions) {
             contentTable.addCell(TableUtil.createContentCell(GeneFusions.name(fusion)));
-            contentTable.addCell(TableUtil.createContentCell(fusion.geneStartTranscript()));
-            contentTable.addCell(TableUtil.createContentCell(fusion.geneEndTranscript()));
+            contentTable.addCell(TableUtil.createContentCell(new Paragraph(fusion.geneStartTranscript()))
+                    .addStyle(ReportResources.dataHighlightLinksStyle())
+                    .setAction(PdfAction.createURI(GeneFusions.transcriptUrl(fusion.geneStartTranscript()))));
+            contentTable.addCell(TableUtil.createContentCell(new Paragraph(fusion.geneEndTranscript()).addStyle(ReportResources.dataHighlightLinksStyle())
+                    .setAction(PdfAction.createURI(GeneFusions.transcriptUrl(fusion.geneEndTranscript())))));
             contentTable.addCell(TableUtil.createContentCell(fusion.geneContextStart()));
             contentTable.addCell(TableUtil.createContentCell(fusion.geneContextEnd()));
             contentTable.addCell(TableUtil.createContentCell(GeneUtil.ploidyToCopiesString(fusion.ploidy(), hasReliablePurityFit))
                     .setTextAlignment(TextAlignment.RIGHT));
             contentTable.addCell(TableUtil.createContentCell(""));
-            contentTable.addCell(TableUtil.createContentCell(new Paragraph(fusion.source()).setAction(PdfAction.createURI(GeneFusions.sourceUrl(
-                    fusion.source())))));
+            contentTable.addCell(TableUtil.createContentCell(new Paragraph(fusion.source()).addStyle(ReportResources.dataHighlightLinksStyle())
+                    .setAction(PdfAction.createURI(GeneFusions.sourceUrl(fusion.source())))));
         }
 
         return TableUtil.createWrappingReportTable(title, contentTable);

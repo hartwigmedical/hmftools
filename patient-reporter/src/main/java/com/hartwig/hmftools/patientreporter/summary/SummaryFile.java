@@ -7,7 +7,6 @@ import java.util.Map;
 
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.io.reader.LineReader;
-import com.hartwig.hmftools.common.lims.LimsSampleType;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -40,5 +39,4 @@ public class SummaryFile {
 
         return new SummaryModel(sampleToSummaryMap);
     }
-
 }

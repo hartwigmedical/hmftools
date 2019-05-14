@@ -46,12 +46,16 @@ public class QCFailChapter implements ReportChapter {
 
     @Override
     public void render(@NotNull Document reportDocument) {
+        if (failReport.sampleReport().addressee() == null) {
+            throw new IllegalStateException("No recipient address present for sample " + failReport.sampleReport().sampleId());
+        }
+
         reportDocument.add(TumorLocationAndTypeTable.createTumorLocationAndType(failReport.sampleReport().primaryTumorLocationString(),
                 failReport.sampleReport().cancerSubTypeString(),
                 contentWidth()));
         reportDocument.add(LineDivider.createLineDivider(contentWidth()));
 
-        reportDocument.add(createFailReasonDiv(failReport.reason(), failReport.sampleReport()));
+        reportDocument.add(createFailReasonDiv(failReport.reason()));
         reportDocument.add(LineDivider.createLineDivider(contentWidth()).setMarginTop(10));
 
         LimsSampleType type = LimsSampleType.fromSampleId(failReport.sampleReport().sampleId());
@@ -65,19 +69,14 @@ public class QCFailChapter implements ReportChapter {
                 break;
             default:
                 reportDocument.add(createCPCTDRUPContentBody());
-
         }
 
-        reportDocument.add(ReportSignature.createEndOfReportIndication().setMarginTop(20));
         reportDocument.add(ReportSignature.createSignatureDiv(failReport.logoRVAPath(), failReport.signaturePath()).setMarginTop(20));
+        reportDocument.add(ReportSignature.createEndOfReportIndication());
     }
 
     @NotNull
-    private static Div createFailReasonDiv(@NotNull QCFailReason failReason, @NotNull SampleReport sampleReport) {
-        if (sampleReport.addressee() == null) {
-            throw new IllegalStateException("No recipient address present for sample " + sampleReport.sampleId());
-        }
-
+    private static Div createFailReasonDiv(@NotNull QCFailReason failReason) {
         final String title;
         final String reason;
         final String explanation;
@@ -129,7 +128,7 @@ public class QCFailChapter implements ReportChapter {
         Table table = new Table(UnitValue.createPercentArray(new float[] { 1, 0.1f, 1 }));
         table.setWidth(contentWidth());
         table.addCell(TableUtil.createLayoutCell().add(createWideContentBodyColumn1()));
-        table.addCell(TableUtil.createLayoutCell()); // Spacer
+        table.addCell(TableUtil.createLayoutCell());
         table.addCell(TableUtil.createLayoutCell().add(createWideContentBodyColumn2()));
         return table;
     }
@@ -139,15 +138,17 @@ public class QCFailChapter implements ReportChapter {
         Div divColumn1 = new Div();
         divColumn1.add(notSequencedText());
         divColumn1.add(createContentParagraph(
-                "Please resubmit using the same " + failReport.study().studyName() + "-number. "
-                        + "If additional material cannot be provided the patient will not be "
+                "If available new tumor material can be provided for a new assessment, please resubmit using the same " + failReport.study()
+                        .studyName() + "-number. " + "If additional material cannot be provided the patient will not be "
                         + "evaluable for the " + failReport.study().studyCode() + " study."));
-        divColumn1.add(createContentParagraphTwice(
-                "The HMF sample ID is " , failReport.sampleReport().sampleId() , " and the tissue ID of pathology is: "
-                        , failReport.sampleReport().hospitalPathologySampleId()));
-        divColumn1.add(createContentParagraphTwice(
-                "The internal tumor barcode is " , failReport.sampleReport().tumorBarcode() , " and the internal blood barcode is "
-                        , failReport.sampleReport().refBarcode()));
+        divColumn1.add(createContentParagraphTwice("The HMF sample ID is ",
+                failReport.sampleReport().sampleId(),
+                " and the tissue ID of pathology is: ",
+                failReport.sampleReport().hospitalPathologySampleId()));
+        divColumn1.add(createContentParagraphTwice("The internal tumor barcode is ",
+                failReport.sampleReport().tumorBarcode(),
+                " and the internal blood barcode is ",
+                failReport.sampleReport().refBarcode()));
         return divColumn1;
     }
 
@@ -168,7 +169,7 @@ public class QCFailChapter implements ReportChapter {
         Table table = new Table(UnitValue.createPercentArray(new float[] { 1, 0.1f, 1 }));
         table.setWidth(contentWidth());
         table.addCell(TableUtil.createLayoutCell().add(createCoreContentBodyColumn1()));
-        table.addCell(TableUtil.createLayoutCell()); // Spacer
+        table.addCell(TableUtil.createLayoutCell());
         table.addCell(TableUtil.createLayoutCell().add(createCoreContentBodyColumn2()));
         return table;
     }
@@ -177,17 +178,20 @@ public class QCFailChapter implements ReportChapter {
     private Div createCoreContentBodyColumn1() {
         Div divColumn1 = new Div();
         divColumn1.add(notSequencedText());
-        divColumn1.add(createContentParagraph(
-                "Please resubmit using the same DVO with project name " + failReport.sampleReport().projectName() + "."));
-        divColumn1.add(createContentParagraphTwice(
-                "The HMF sample ID is " , failReport.sampleReport().sampleId() , " and the hospital patient ID is "
-                        , failReport.sampleReport().hospitalPatientId()));
-        divColumn1.add(createContentParagraphTwice(
-                "The project name of sample is " , failReport.sampleReport().projectName() , " and the submission ID is "
-                        , failReport.sampleReport().submissionId()));
-        divColumn1.add(createContentParagraphTwice(
-                "The internal tumor barcode is " , failReport.sampleReport().tumorBarcode() , " and the internal blood barcode is "
-                        , failReport.sampleReport().refBarcode()));
+        divColumn1.add(createContentParagraph("If available new tumor material can be provided for a new assessment, "
+                + "please resubmit using the same DVO with project name " + failReport.sampleReport().projectName() + "."));
+        divColumn1.add(createContentParagraphTwice("The HMF sample ID is ",
+                failReport.sampleReport().sampleId(),
+                " and the hospital patient ID is ",
+                failReport.sampleReport().hospitalPatientId()));
+        divColumn1.add(createContentParagraphTwice("The project name of sample is ",
+                failReport.sampleReport().projectName(),
+                " and the submission ID is ",
+                failReport.sampleReport().submissionId()));
+        divColumn1.add(createContentParagraphTwice("The internal tumor barcode is ",
+                failReport.sampleReport().tumorBarcode(),
+                " and the internal blood barcode is ",
+                failReport.sampleReport().refBarcode()));
         return divColumn1;
     }
 
@@ -195,8 +199,8 @@ public class QCFailChapter implements ReportChapter {
     private Div createCoreContentBodyColumn2() {
         Div divColumn2 = new Div();
 
-        divColumn2.add(createContentParagraph(
-                "The tumor percentage estimated by Pathology UMC Utrecht is " , failReport.sampleReport().pathologyTumorPercentage()));
+        divColumn2.add(createContentParagraph("The tumor percentage estimated by Pathology UMC Utrecht is ",
+                failReport.sampleReport().pathologyTumorPercentage()));
         divColumn2.add((shallowSeqText()));
         divColumn2.add((sampleArrivalDateText()));
         divColumn2.add((recipientText()));
@@ -220,7 +224,7 @@ public class QCFailChapter implements ReportChapter {
         Table table = new Table(UnitValue.createPercentArray(new float[] { 1, 0.1f, 1 }));
         table.setWidth(contentWidth());
         table.addCell(TableUtil.createLayoutCell().add(createCPCTDRUPContentBodyColumn1()));
-        table.addCell(TableUtil.createLayoutCell()); // Spacer
+        table.addCell(TableUtil.createLayoutCell());
         table.addCell(TableUtil.createLayoutCell().add(createCPCTDRUPContentBodyColumn2()));
         return table;
     }
@@ -230,15 +234,16 @@ public class QCFailChapter implements ReportChapter {
         Div divColumn1 = new Div();
         divColumn1.add(notSequencedText());
         divColumn1.add(createContentParagraph(
-                "Please resubmit using the same " + failReport.study().studyName() + "-number. "
-                        + "If additional material cannot be provided the patient will not be "
+                "If available new tumor material can be provided for a new assessment, please resubmit using the same " + failReport.study()
+                        .studyName() + "-number. " + "If additional material cannot be provided the patient will not be "
                         + "evaluable for the " + failReport.study().studyCode() + " study."));
-        divColumn1.add(createContentParagraph("The HMF sample ID is " , failReport.sampleReport().sampleId()));
-        divColumn1.add(createContentParagraphTwice(
-                "The internal tumor barcode is " , failReport.sampleReport().tumorBarcode() , " and the internal blood barcode is "
-                        , failReport.sampleReport().refBarcode()));
-        divColumn1.add(createContentParagraph(
-                "The tumor percentage estimated by Pathology UMC Utrecht is " , failReport.sampleReport().pathologyTumorPercentage()));
+        divColumn1.add(createContentParagraph("The HMF sample ID is ", failReport.sampleReport().sampleId()));
+        divColumn1.add(createContentParagraphTwice("The internal tumor barcode is ",
+                failReport.sampleReport().tumorBarcode(),
+                " and the internal blood barcode is ",
+                failReport.sampleReport().refBarcode()));
+        divColumn1.add(createContentParagraph("The tumor percentage estimated by Pathology UMC Utrecht is ",
+                failReport.sampleReport().pathologyTumorPercentage()));
         return divColumn1;
     }
 
@@ -266,8 +271,8 @@ public class QCFailChapter implements ReportChapter {
 
     @NotNull
     private Paragraph shallowSeqText() {
-        return createContentParagraph(
-                "The tumor percentage based on molecular estimated is " , failReport.sampleReport().purityShallowSeq());
+        return createContentParagraph("The tumor percentage based on molecular estimation is ",
+                failReport.sampleReport().purityShallowSeq());
     }
 
     @NotNull
@@ -280,16 +285,15 @@ public class QCFailChapter implements ReportChapter {
 
     @NotNull
     private static Paragraph notSequencedText() {
-        return createContentParagraph(
-                "The received tumor biopsies were inadequate for whole genome sequencing. "
-                        + "If available new tumor material can be provided for a new assessment.");
+        return createContentParagraph("The received tumor biopsies were inadequate for whole genome sequencing. ");
     }
 
     @NotNull
     private Paragraph recipientText() {
-        return createContentParagraph(
-                "This report is generated and verified by: " + failReport.user() + " and is addressed to " , failReport.sampleReport()
-                        .addressee());
+        String addressee = failReport.sampleReport().addressee();
+        assert addressee != null; // Has been checked prior to calling this function.
+        return createContentParagraph("This report is generated and verified by: " + failReport.user() + " and is addressed to ",
+                addressee);
     }
 
     @NotNull

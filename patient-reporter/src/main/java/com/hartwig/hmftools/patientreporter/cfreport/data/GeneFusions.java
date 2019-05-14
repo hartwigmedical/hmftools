@@ -1,13 +1,11 @@
 package com.hartwig.hmftools.patientreporter.cfreport.data;
 
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.patientreporter.report.data.GeneFusionDataSource;
 import com.hartwig.hmftools.patientreporter.structural.ReportableGeneFusion;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -42,6 +40,11 @@ public final class GeneFusions {
     @NotNull
     public static String name(@NotNull final ReportableGeneFusion fusion) {
         return fusion.geneStart() + " - " + fusion.geneEnd();
+    }
+
+    @NotNull
+    public static String transcriptUrl(@NotNull final String transcriptField) {
+        return "http://grch37.ensembl.org/Homo_sapiens/Transcript/Summary?db=core;t=" + transcriptField;
     }
 
     @NotNull
