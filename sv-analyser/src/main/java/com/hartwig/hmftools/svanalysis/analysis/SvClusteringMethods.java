@@ -11,8 +11,6 @@ import static com.hartwig.hmftools.common.variant.structural.StructuralVariantTy
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INS;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INV;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
-import static com.hartwig.hmftools.svanalysis.analysis.LinkFinder.MIN_TEMPLATED_INSERTION_LENGTH;
-import static com.hartwig.hmftools.svanalysis.analysis.LinkFinder.areLinkedSection;
 import static com.hartwig.hmftools.svanalysis.analysis.LinkFinder.arePairedDeletionBridges;
 import static com.hartwig.hmftools.svanalysis.analysis.LinkFinder.areSectionBreak;
 import static com.hartwig.hmftools.svanalysis.analysis.LinkFinder.getMinTemplatedInsertionLength;
@@ -42,6 +40,11 @@ import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.LINK_TYPE_TI;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.ASSEMBLY_TYPE_EQV;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.RELATION_TYPE_NEIGHBOUR;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.RELATION_TYPE_OVERLAP;
+import static com.hartwig.hmftools.svanalysis.types.SvaConstants.LOW_CN_CHANGE_SUPPORT;
+import static com.hartwig.hmftools.svanalysis.types.SvaConstants.MAX_CLUSTER_COUNT_REPLICATION;
+import static com.hartwig.hmftools.svanalysis.types.SvaConstants.MAX_SV_REPLICATION_MULTIPLE;
+import static com.hartwig.hmftools.svanalysis.types.SvaConstants.MIN_DEL_LENGTH;
+import static com.hartwig.hmftools.svanalysis.types.SvaConstants.MIN_TEMPLATED_INSERTION_LENGTH;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -373,9 +376,6 @@ public class SvClusteringMethods {
         }
     }
 
-    public static int MAX_SV_REPLICATION_MULTIPLE = 32;
-    public static int MAX_CLUSTER_COUNT_REPLICATION = 500;
-
     public static void applyCopyNumberReplication(SvCluster cluster)
     {
         // isSpecificCluster(cluster);
@@ -439,8 +439,6 @@ public class SvClusteringMethods {
             }
         }
     }
-
-    public static double LOW_CN_CHANGE_SUPPORT = 0.5;
 
     public static boolean hasLowCNChangeSupport(final SvVarData var)
     {
@@ -894,8 +892,6 @@ public class SvClusteringMethods {
             return RESOLVED_TYPE_NONE;
         }
     }
-
-    private static int MIN_DEL_LENGTH = 32;
 
     public static String markSinglePairResolvedType(final SvVarData sgl1, final SvVarData sgl2)
     {

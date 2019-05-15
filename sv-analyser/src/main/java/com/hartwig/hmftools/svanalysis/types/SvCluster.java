@@ -8,7 +8,6 @@ import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.BND;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.typeAsInt;
-import static com.hartwig.hmftools.svanalysis.analysis.ClusterAnalyser.SHORT_TI_LENGTH;
 import static com.hartwig.hmftools.svanalysis.analysis.ClusterAnalyser.SMALL_CLUSTER_SIZE;
 import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.DEFAULT_PROXIMITY_DISTANCE;
 import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.hasLowCNChangeSupport;
@@ -26,6 +25,8 @@ import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_END;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_START;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.isStart;
 import static com.hartwig.hmftools.svanalysis.types.SvaConfig.SPECIFIC_CLUSTER_ID;
+import static com.hartwig.hmftools.svanalysis.types.SvaConstants.SHORT_TI_LENGTH;
+import static com.hartwig.hmftools.svanalysis.types.SvaConstants.SUBCLONAL_LOW_CNC_PERCENT;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
@@ -686,8 +687,6 @@ public class SvCluster
     }
 
     public boolean hasLinkingLineElements() { return mHasLinkingLineElements; }
-
-    public static double SUBCLONAL_LOW_CNC_PERCENT = 0.5;
 
     public void markSubclonal()
     {

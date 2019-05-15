@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.svanalysis.types;
 
 import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.DEFAULT_PROXIMITY_DISTANCE;
+import static com.hartwig.hmftools.svanalysis.types.SvaConstants.DEFAULT_CHAINING_SV_LIMIT;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -27,7 +28,7 @@ public class SvaConfig
     final public String ReplicationOriginsFile;
     final public int MaxSamples;
     final public boolean WriteVisualisationData;
-    final public int MaxClusterSize; // for analysis and chaining
+    final public int ChainingSvLimit; // for analysis and chaining
 
     public boolean LogVerbose;
     public String RequiredAnnotations;
@@ -40,7 +41,7 @@ public class SvaConfig
 
     // clustering analysis options
     private static final String CLUSTER_BASE_DISTANCE = "proximity_distance";
-    private static final String MAX_CLUSTER_SIZE = "max_cluster_size";
+    private static final String CHAINING_SV_LIMIT = "chaining_sv_limit";
     private static final String REQUIRED_ANNOTATIONS = "annotations";
 
     // reference files
@@ -60,8 +61,6 @@ public class SvaConfig
 
     public static int SPECIFIC_CLUSTER_ID = -1;
     public static String SPECIFIC_SV_ID = "";
-
-    private static int DEFAULT_MAX_CLUSTER_SIZE = 1000;
 
     private static final Logger LOGGER = LogManager.getLogger(SvaConfig.class);
 
@@ -105,7 +104,8 @@ public class SvaConfig
         MaxSamples = Integer.parseInt(cmd.getOptionValue(MAX_SAMPLES, "0"));
         LogVerbose = cmd.hasOption(LOG_VERBOSE);
         WriteVisualisationData = cmd.hasOption(WRITE_VISUALISATION_DATA);
-        MaxClusterSize = cmd.hasOption(MAX_CLUSTER_SIZE) ? Integer.parseInt(cmd.getOptionValue(MAX_CLUSTER_SIZE)) : DEFAULT_MAX_CLUSTER_SIZE;
+
+        ChainingSvLimit = cmd.hasOption(CHAINING_SV_LIMIT) ? Integer.parseInt(cmd.getOptionValue(CHAINING_SV_LIMIT)) : DEFAULT_CHAINING_SV_LIMIT;
 
         SPECIFIC_CLUSTER_ID = Integer.parseInt(cmd.getOptionValue(LOG_CLUSTER_ID, "-1"));
         SPECIFIC_SV_ID = cmd.getOptionValue(LOG_SV_ID, "");
@@ -127,7 +127,7 @@ public class SvaConfig
         MaxSamples = 0;
         LogVerbose = false;
         WriteVisualisationData = false;
-        MaxClusterSize = DEFAULT_MAX_CLUSTER_SIZE;
+        ChainingSvLimit = DEFAULT_CHAINING_SV_LIMIT;
     }
 
     public static void addCmdLineArgs(Options options)
@@ -141,7 +141,7 @@ public class SvaConfig
         options.addOption(MAX_SAMPLES, true, "Limit to X samples for testing");
         options.addOption(LOG_VERBOSE, false, "Log extra detail");
         options.addOption(WRITE_VISUALISATION_DATA, false, "Optional: write files for Circos");
-        options.addOption(MAX_CLUSTER_SIZE, true, "Optional: max cluster size for chaining");
+        options.addOption(CHAINING_SV_LIMIT, true, "Optional: max cluster size for chaining");
         options.addOption(REQUIRED_ANNOTATIONS, true, "Optional: string list of annotations");
         options.addOption(LOG_DEBUG, false, "Sets log level to Debug, off by default");
         options.addOption(LOG_CLUSTER_ID, true, "Optional: log specific cluster details");

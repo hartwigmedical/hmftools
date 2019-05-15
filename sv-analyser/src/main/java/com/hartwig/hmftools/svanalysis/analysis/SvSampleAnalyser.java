@@ -10,7 +10,6 @@ import static com.hartwig.hmftools.common.variant.structural.StructuralVariantTy
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INS;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INV;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
-import static com.hartwig.hmftools.svanalysis.analysis.LinkFinder.NO_DB_MARKER;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.CHROMOSOME_ARM_P;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.getChromosomalArm;
 import static com.hartwig.hmftools.svanalysis.types.SvArmCluster.ARM_CL_COMPLEX_FOLDBACK;
@@ -34,6 +33,7 @@ import static com.hartwig.hmftools.svanalysis.types.SvChain.CM_INT_TI_CN_GAIN;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_END;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_START;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.isStart;
+import static com.hartwig.hmftools.svanalysis.types.SvaConstants.NO_DB_MARKER;
 
 import java.io.BufferedWriter;
 import java.io.IOException;

@@ -53,6 +53,8 @@ import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_END;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_START;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.haveSameChrArms;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.isStart;
+import static com.hartwig.hmftools.svanalysis.types.SvaConstants.MAX_FOLDBACK_CHAIN_LENGTH;
+import static com.hartwig.hmftools.svanalysis.types.SvaConstants.MAX_FOLDBACK_NEXT_CLUSTER_DISTANCE;
 
 import java.util.List;
 import java.util.Map;
@@ -95,7 +97,6 @@ public class ClusterAnalyser {
     PerformanceCounter mPcAnnotation;
 
     public static int SMALL_CLUSTER_SIZE = 3;
-    public static int SHORT_TI_LENGTH = 1000;
 
     private static final Logger LOGGER = LogManager.getLogger(ClusterAnalyser.class);
 
@@ -393,7 +394,7 @@ public class ClusterAnalyser {
 
         // isSpecificCluster(cluster);
 
-        if(mConfig.MaxClusterSize > 0 && (cluster.getSvCount() > mConfig.MaxClusterSize || cluster.getSvCount(true) > mConfig.MaxClusterSize * 5))
+        if(mConfig.ChainingSvLimit > 0 && cluster.getSvCount(true) > mConfig.ChainingSvLimit)
         {
             LOGGER.info("cluster({}) skipping large cluster: unique({}) replicated({})",
                     cluster.id(), cluster.getSvCount(), cluster.getSvCount(true));
@@ -868,8 +869,6 @@ public class ClusterAnalyser {
         return true;
     }
 
-    private static int MAX_FOLDBACK_NEXT_CLUSTER_DISTANCE = 5000000;
-
     private boolean canMergeClustersOnFoldbacks(final SvCluster cluster1, final SvCluster cluster2)
     {
         // merge any clusters with foldbacks on the same arm
@@ -1290,8 +1289,6 @@ public class ClusterAnalyser {
             }
         }
     }
-
-    public static int MAX_FOLDBACK_CHAIN_LENGTH = 5000;
 
     private boolean checkFoldbackBreakends(SvBreakend beStart, SvBreakend beEnd)
     {

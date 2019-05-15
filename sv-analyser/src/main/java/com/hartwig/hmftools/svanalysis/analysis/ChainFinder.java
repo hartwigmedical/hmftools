@@ -104,8 +104,9 @@ public class ChainFinder
     private boolean mLogVerbose;
     private boolean mRunValidation;
     private boolean mUseAllelePloidies;
-    private int mMaxPossibleLinks;
 
+    // current unused
+    private int mMaxPossibleLinks;
     private static int DEFAULT_MAX_POSSIBLE_LINKS = 0;
 
     public ChainFinder()

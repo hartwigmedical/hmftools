@@ -15,8 +15,6 @@ import static com.hartwig.hmftools.svanalysis.analysis.CNAnalyser.CN_SEG_DATA_CN
 import static com.hartwig.hmftools.svanalysis.analysis.CNAnalyser.CN_SEG_DATA_CN_BEFORE;
 import static com.hartwig.hmftools.svanalysis.analysis.CNAnalyser.CN_SEG_DATA_MAP_AFTER;
 import static com.hartwig.hmftools.svanalysis.analysis.CNAnalyser.CN_SEG_DATA_MAP_BEFORE;
-import static com.hartwig.hmftools.svanalysis.analysis.ClusterAnalyser.SHORT_TI_LENGTH;
-import static com.hartwig.hmftools.svanalysis.analysis.LinkFinder.NO_DB_MARKER;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.CHROMOSOME_ARM_P;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.CHROMOSOME_ARM_Q;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.appendStr;
@@ -39,6 +37,8 @@ import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_END;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_START;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.isSpecificSV;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.isStart;
+import static com.hartwig.hmftools.svanalysis.types.SvaConstants.NO_DB_MARKER;
+import static com.hartwig.hmftools.svanalysis.types.SvaConstants.SHORT_TI_LENGTH;
 
 import java.util.HashMap;
 import java.util.List;
