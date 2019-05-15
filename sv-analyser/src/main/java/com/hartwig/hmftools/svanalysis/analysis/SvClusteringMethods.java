@@ -28,7 +28,6 @@ import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_DEL_
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_DUP_EXT_TI;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_DUP_INT_TI;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_LINE;
-import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_LOW_VAF;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_NONE;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_POLY_G_C;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_RECIPROCAL_TRANS;
@@ -113,8 +112,8 @@ public class SvClusteringMethods {
 
     public static boolean isFilteredResolvedType(final String resolvedType)
     {
-        return resolvedType.equals(RESOLVED_TYPE_LOW_CNC) || resolvedType.equals(RESOLVED_TYPE_LOW_VAF)
-                || resolvedType.equals(RESOLVED_TYPE_POLY_G_C) || resolvedType.equals(RESOLVED_TYPE_DUP_BE);
+        return resolvedType.equals(RESOLVED_TYPE_LOW_CNC) || resolvedType.equals(RESOLVED_TYPE_POLY_G_C)
+                || resolvedType.equals(RESOLVED_TYPE_DUP_BE);
     }
 
     public void clusterByProximity(List<SvVarData> allVariants, List<SvCluster> clusters)
@@ -536,7 +535,6 @@ public class SvClusteringMethods {
 
     private static String POLY_C_MOTIF = "CCCCCCCCCCCCCCCC";
     private static String POLY_G_MOTIF = "GGGGGGGGGGGGGGGG";
-    private static double SGL_LOW_VAF = 0.1;
 
     private String getSingleBreakendUnclusteredType(final SvVarData var)
     {
@@ -546,19 +544,10 @@ public class SvClusteringMethods {
         if(isEquivSingleBreakend(var))
             return RESOLVED_TYPE_DUP_BE;
 
-        if(isLowVafSingleBreakend(var))
-            return RESOLVED_TYPE_LOW_VAF;
-
         if(var.getSvData().insertSequence().contains(POLY_C_MOTIF) || var.getSvData().insertSequence().contains(POLY_G_MOTIF))
             return RESOLVED_TYPE_POLY_G_C;
 
         return RESOLVED_TYPE_NONE;
-    }
-
-    private boolean isLowVafSingleBreakend(final SvVarData var)
-    {
-        double vaf = var.copyNumberChange(true) / var.copyNumber(true);
-        return vaf < SGL_LOW_VAF;
     }
 
     private boolean isEquivSingleBreakend(final SvVarData var)

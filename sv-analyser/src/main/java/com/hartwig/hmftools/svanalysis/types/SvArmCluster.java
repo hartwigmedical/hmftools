@@ -2,15 +2,12 @@ package com.hartwig.hmftools.svanalysis.types;
 
 import static java.lang.Math.max;
 
-import static com.hartwig.hmftools.svanalysis.types.SvCluster.isSpecificCluster;
-
 import java.util.List;
 
 import com.google.common.collect.Lists;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.core.config.LoggerConfig;
 
 // clusters of proximate SVs on an arm
 public class SvArmCluster
@@ -26,6 +23,9 @@ public class SvArmCluster
     private double mMinCopyNumber;
     private double mMaxCopyNumber;
 
+    private int mType;
+    private int mTICount;
+
     private static final Logger LOGGER = LogManager.getLogger(SvArmCluster.class);
 
     public SvArmCluster(int id, final SvCluster cluster, final String chr, final String arm)
@@ -39,6 +39,8 @@ public class SvArmCluster
         mBreakends = Lists.newArrayList();
         mMaxCopyNumber = 0;
         mMinCopyNumber = 0;
+        mType = -1;
+        mTICount = 0;
     }
 
     public int id() { return mId; }
@@ -83,34 +85,24 @@ public class SvArmCluster
     public double getMinCopyNumber() { return mMinCopyNumber; }
     public double getMaxCopyNumber() { return mMaxCopyNumber; }
 
-    public static final int ARM_CL_SINGLE = 0;
-    public static final int ARM_CL_REMOTE_TI = 1;
+    public static final int ARM_CL_ISOLATED_BE = 0;
+    public static final int ARM_CL_TI_ONLY = 1;
     public static final int ARM_CL_DSB = 2;
-    public static final int ARM_CL_MULTIPLE_DSBS = 3;
-    public static final int ARM_CL_FOLDBACK = 4;
-    public static final int ARM_CL_FOLDBACK_DSB = 5;
-    public static final int ARM_CL_FOLDBACK_TI = 6;
-    public static final int ARM_CL_FOLDBACK_PAIR_FACING = 7;
-    public static final int ARM_CL_FOLDBACK_PAIR_OPPOSING = 8;
-    public static final int ARM_CL_FOLDBACK_PAIR_SAME = 9;
-    public static final int ARM_CL_COMPLEX_FOLDBACK = 10;
-    public static final int ARM_CL_COMPLEX_LINE = 11;
-    public static final int ARM_CL_COMPLEX_OTHER = 12;
+    public static final int ARM_CL_FOLDBACK = 3;
+    public static final int ARM_CL_FOLDBACK_DSB = 4;
+    public static final int ARM_CL_COMPLEX_FOLDBACK = 5;
+    public static final int ARM_CL_COMPLEX_LINE = 6;
+    public static final int ARM_CL_COMPLEX_OTHER = 7;
 
     public static final String typeToString(int type)
     {
         switch(type)
         {
-            case ARM_CL_SINGLE : return "SINGLE";
-            case ARM_CL_REMOTE_TI : return "REMOTE_TI";
+            case ARM_CL_ISOLATED_BE: return "ISOLATED_BE";
+            case ARM_CL_TI_ONLY: return "TI_ONLY";
             case ARM_CL_DSB : return "DSB";
-            case ARM_CL_MULTIPLE_DSBS : return "MULTIPLE_DSB";
             case ARM_CL_FOLDBACK : return "FOLDBACK";
             case ARM_CL_FOLDBACK_DSB : return "FOLDBACK_DSB";
-            case ARM_CL_FOLDBACK_TI : return "FOLDBACK_TI";
-            case ARM_CL_FOLDBACK_PAIR_SAME : return "FOLDBACK_PAIR_SAME";
-            case ARM_CL_FOLDBACK_PAIR_FACING : return "FOLDBACK_PAIR_OPP";
-            case ARM_CL_FOLDBACK_PAIR_OPPOSING : return "FOLDBACK_PAIR_FACE";
             case ARM_CL_COMPLEX_FOLDBACK : return "COMPLEX_FOLDBACK";
             case ARM_CL_COMPLEX_LINE: return "COMPLEX_LINE";
             case ARM_CL_COMPLEX_OTHER : return "COMPLEX_OTHER";
@@ -119,10 +111,19 @@ public class SvArmCluster
         return "Unknown";
     }
 
-    public int getType()
+    public int getType() { return mType; }
+    public String getTypeStr() { return typeToString(mType); }
+    public int getTICount() { return mTICount; }
+
+    public void setFeatures()
     {
+        mTICount = 0;
+
         if(mBreakends.size() == 1)
-            return ARM_CL_SINGLE;
+        {
+            mType = ARM_CL_ISOLATED_BE;
+            return;
+        }
 
         if(mBreakends.size() == 2)
         {
@@ -132,20 +133,28 @@ public class SvArmCluster
             final SvVarData var2 = be2.getSV();
 
             if(var1.getFoldbackLink(be1.usesStart()).equals(var2.id()))
-                return ARM_CL_FOLDBACK;
+            {
+                mType = ARM_CL_FOLDBACK;
+                return;
+            }
 
             if(var1 == var2)
-                return ARM_CL_SINGLE;
+            {
+                mType = ARM_CL_ISOLATED_BE;
+                return;
+            }
 
             final SvLinkedPair tiPair = var1.getLinkedPair(be1.usesStart());
 
             if(tiPair != null && tiPair == var2.getLinkedPair(be2.usesStart()))
             {
-                return ARM_CL_REMOTE_TI;
+                mType = ARM_CL_TI_ONLY;
+                mTICount = 1;
+                return;
             }
         }
 
-        // otherwise count the number of foldbacks, DSBs and consecutive BEs to determine the type
+        // otherwise count the number of foldbacks, TIs, DSBs and consecutive BEs to determine the type
         int dsbCount = 0;
         int foldbackCount = 0;
         int consecCount = 0;
@@ -186,44 +195,34 @@ public class SvArmCluster
             }
         }
 
+        mTICount = tiCount;
+
         if(suspectLine > 0)
-            return ARM_CL_COMPLEX_LINE;
+        {
+            mType = ARM_CL_COMPLEX_LINE;
+            return;
+        }
 
         // some special sub-groups
-        if(mBreakends.size() == 3 && foldbackCount == 1)
+        if(mBreakends.size() == 3 && foldbackCount == 1 && dsbCount == 1)
         {
-            if(dsbCount == 1)
-                return ARM_CL_FOLDBACK_DSB;
-
-            if(tiCount == 1)
-                return ARM_CL_FOLDBACK_TI;
-        }
-        else if(mBreakends.size() == 4 && foldbackCount == 2)
-        {
-            final SvBreakend be1 = mBreakends.get(0);
-            final SvBreakend be4 = mBreakends.get(3);
-
-            if(be1.orientation() == be4.orientation())
-            {
-                return ARM_CL_FOLDBACK_PAIR_SAME;
-            }
-            else if(be1.orientation() == -1 && be4.orientation() == 1)
-            {
-                return ARM_CL_FOLDBACK_PAIR_FACING;
-            }
-            else
-            {
-                return ARM_CL_FOLDBACK_PAIR_OPPOSING;
-            }
+            mType = ARM_CL_FOLDBACK_DSB;
+            return;
         }
 
         if(foldbackCount == 0 && consecCount == 0 && dsbCount >= mBreakends.size() / 2)
-            return mBreakends.size() == 2 ? ARM_CL_DSB : ARM_CL_MULTIPLE_DSBS;
+        {
+            mType = ARM_CL_DSB;
+        }
 
         if(foldbackCount > 0)
-            return ARM_CL_COMPLEX_FOLDBACK;
-
-        return ARM_CL_COMPLEX_OTHER;
+        {
+            mType = ARM_CL_COMPLEX_FOLDBACK;
+        }
+        else
+        {
+            mType = ARM_CL_COMPLEX_OTHER;
+        }
     }
 
     public static int[] getArmClusterData(final SvCluster cluster)
@@ -244,62 +243,6 @@ public class SvArmCluster
         {
             LOGGER.debug("cluster({}) armCluster({}) breakends({}) type({})",
                     cluster.id(), armCluster.toString(), armCluster.getBreakends().size(), typeToString(armCluster.getType()));
-        }
-    }
-
-    public static void mergeArmClusters(List<SvArmCluster> armClusters)
-    {
-        // merge if any 2 are linked by the same foldback
-        for(int i = 0; i < armClusters.size(); ++i)
-        {
-            SvArmCluster ac1 = armClusters.get(i);
-            List<SvBreakend> bl1 = ac1.getBreakends();
-
-            int j = i+1;
-            while(j < armClusters.size())
-            {
-                SvArmCluster ac2 = armClusters.get(j);
-
-                if(!ac1.chromosome().equals(ac2.chromosome()) || ac1.arm() != ac2.arm())
-                {
-                    ++j;
-                    continue;
-                }
-
-                // check for a matching foldback
-                List<SvBreakend> bl2 = ac2.getBreakends();
-
-                boolean foldbackFound = false;
-
-                for(final SvBreakend be1 : bl1)
-                {
-                    for(final SvBreakend be2 : bl2)
-                    {
-                        if(be1.getSV().getFoldbackLink(be1.usesStart()).equals(be2.getSV().id()))
-                        {
-                            foldbackFound = true;
-                            break;
-                        }
-                    }
-
-                    if(foldbackFound)
-                        break;
-                }
-
-                if(foldbackFound)
-                {
-                    for(final SvBreakend be2 : bl2)
-                    {
-                        ac1.addBreakend(be2);
-                    }
-
-                    armClusters.remove(j);
-                }
-                else
-                {
-                    ++j;
-                }
-            }
         }
     }
 }

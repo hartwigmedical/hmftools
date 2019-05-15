@@ -19,13 +19,8 @@ import static com.hartwig.hmftools.svanalysis.types.SvArmCluster.ARM_CL_COMPLEX_
 import static com.hartwig.hmftools.svanalysis.types.SvArmCluster.ARM_CL_DSB;
 import static com.hartwig.hmftools.svanalysis.types.SvArmCluster.ARM_CL_FOLDBACK;
 import static com.hartwig.hmftools.svanalysis.types.SvArmCluster.ARM_CL_FOLDBACK_DSB;
-import static com.hartwig.hmftools.svanalysis.types.SvArmCluster.ARM_CL_FOLDBACK_PAIR_FACING;
-import static com.hartwig.hmftools.svanalysis.types.SvArmCluster.ARM_CL_FOLDBACK_PAIR_OPPOSING;
-import static com.hartwig.hmftools.svanalysis.types.SvArmCluster.ARM_CL_FOLDBACK_PAIR_SAME;
-import static com.hartwig.hmftools.svanalysis.types.SvArmCluster.ARM_CL_FOLDBACK_TI;
-import static com.hartwig.hmftools.svanalysis.types.SvArmCluster.ARM_CL_MULTIPLE_DSBS;
-import static com.hartwig.hmftools.svanalysis.types.SvArmCluster.ARM_CL_REMOTE_TI;
-import static com.hartwig.hmftools.svanalysis.types.SvArmCluster.ARM_CL_SINGLE;
+import static com.hartwig.hmftools.svanalysis.types.SvArmCluster.ARM_CL_TI_ONLY;
+import static com.hartwig.hmftools.svanalysis.types.SvArmCluster.ARM_CL_ISOLATED_BE;
 import static com.hartwig.hmftools.svanalysis.types.SvArmCluster.getArmClusterData;
 import static com.hartwig.hmftools.svanalysis.types.SvChain.CM_CHAIN_ENDS_AWAY;
 import static com.hartwig.hmftools.svanalysis.types.SvChain.CM_CHAIN_ENDS_FACE;
@@ -36,11 +31,8 @@ import static com.hartwig.hmftools.svanalysis.types.SvChain.CM_OVERLAPPING_TI;
 import static com.hartwig.hmftools.svanalysis.types.SvChain.CM_SHORT_DB;
 import static com.hartwig.hmftools.svanalysis.types.SvChain.CM_INT_TI;
 import static com.hartwig.hmftools.svanalysis.types.SvChain.CM_INT_TI_CN_GAIN;
-import static com.hartwig.hmftools.svanalysis.types.SvCluster.isSpecificCluster;
-import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.LINK_TYPE_TI;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_END;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_START;
-import static com.hartwig.hmftools.svanalysis.types.SvVarData.isSpecificSV;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.isStart;
 
 import java.io.BufferedWriter;
@@ -55,6 +47,7 @@ import com.hartwig.hmftools.svanalysis.annotators.FragileSiteAnnotator;
 import com.hartwig.hmftools.svanalysis.annotators.LineElementAnnotator;
 import com.hartwig.hmftools.svanalysis.annotators.ReplicationOriginAnnotator;
 import com.hartwig.hmftools.svanalysis.annotators.VisualiserWriter;
+import com.hartwig.hmftools.svanalysis.types.SvArmCluster;
 import com.hartwig.hmftools.svanalysis.types.SvBreakend;
 import com.hartwig.hmftools.svanalysis.types.SvCNData;
 import com.hartwig.hmftools.svanalysis.types.SvChain;
@@ -347,6 +340,9 @@ public class SvSampleAnalyser {
                 // proximity info and other link info
                 mSvFileWriter.write(",FoldbackLnkStart,FoldbackLenStart,FoldbackInfoStart,FoldbackLnkEnd,FoldbackLenEnd,FoldbackInfoEnd");
 
+                // local topology from arm cluster
+                mSvFileWriter.write(",LocTopIdStart,LocTopTypeStart,LocTopTIStart,LocTopIdEnd,LocTopTypeEnd,LocTopTIEnd");
+
                 // gene & replication info
                 mSvFileWriter.write(",GeneStart,GeneEnd,RepOriginStart,RepOriginEnd");
 
@@ -455,6 +451,17 @@ public class SvSampleAnalyser {
                         var.getFoldbackLink(true), var.getFoldbackLength(true), var.getFoldbackInfo(true),
                         var.getFoldbackLink(false), var.getFoldbackLength(false), var.getFoldbackInfo(false)));
 
+                for(int be = SVI_START; be <= SVI_END; ++be)
+                {
+                    final SvArmCluster armCluster = (be == SVI_START || !var.isNullBreakend()) ?
+                            cluster.findArmCluster(var.getBreakend(isStart(be))) : null;
+
+                    if(armCluster != null)
+                        writer.write(String.format(",%d,%s,%d", armCluster.id(), armCluster.getTypeStr(), armCluster.getTICount()));
+                    else
+                        writer.write("-1,,0");
+                }
+
                 writer.write(String.format(",%s,%s,%.4f,%.4f",
                         var.getGeneInBreakend(true), var.getGeneInBreakend(false),
                         var.getReplicationOrigin(true), var.getReplicationOrigin(false)));
@@ -498,8 +505,7 @@ public class SvSampleAnalyser {
                 mClusterFileWriter.write(",IntTIs,ExtTIs,IntTIsWithGain,ExtTIsWithGain,OverlapTIs,DSBs,ShortDSBs,ChainEndsFace,ChainEndsAway");
                 mClusterFileWriter.write(",TotalLinks,AssemblyLinks,LongDelDups,UnlinkedRemotes,ShortTIRemotes,MinCopyNumber,MaxCopyNumber");
                 mClusterFileWriter.write(",SynDelDupLen,SynDelDupAvgTILen,Annotations,UnchainedSVs,AlleleValidPerc");
-                mClusterFileWriter.write(",ArmClusterCount,AcSoloSv,AcRemoteTI,AcDsb,AcMultipleDsb,AcSingleFb,AcFbTI,AcFbDSB");
-                mClusterFileWriter.write(",AcFbPairSame,AcFbPairOpp,AcFbPairFacing,AcComplexFb,AcComplexLine,AcComplexOther");
+                mClusterFileWriter.write(",ArmClusterCount,AcIsolatedBE,AcTIOnly,AcDsb,AcSingleFb,AcFbDsb,AcComplexFb,AcComplexLine,AcComplexOther");
                 mClusterFileWriter.newLine();
             }
 
@@ -547,20 +553,12 @@ public class SvSampleAnalyser {
                         cluster.getSynDelDupLength(), cluster.getSynDelDupTILength(), cluster.getAnnotations(),
                         cluster.getUnlinkedSVs().size(), cluster.getValidAllelePloidySegmentPerc()));
 
-                // ArmClusterCount,AcSoloSv,AcRemoteTI,AcDsb,AcMultipleDsb,AcSingleFb,AcFbTI,AcFbDSB
-                // ArmFbPairSame,ArmFbPairOpp,ArmFbPairFacing,AcComplexFb,AcComplexLine,AcComplexOther
-
                 final int[] armClusterData = getArmClusterData(cluster);
 
-                writer.write(String.format(",%d,%d,%d,%d,%d,%d,%d,%d",
-                        cluster.getArmClusters().size(), armClusterData[ARM_CL_SINGLE], armClusterData[ARM_CL_REMOTE_TI],
-                        armClusterData[ARM_CL_DSB], armClusterData[ARM_CL_MULTIPLE_DSBS],
-                        armClusterData[ARM_CL_FOLDBACK], armClusterData[ARM_CL_FOLDBACK_TI], armClusterData[ARM_CL_FOLDBACK_DSB]));
-
-                writer.write(String.format(",%d,%d,%d,%d,%d,%d",
-                        armClusterData[ARM_CL_FOLDBACK_PAIR_SAME], armClusterData[ARM_CL_FOLDBACK_PAIR_OPPOSING],
-                        armClusterData[ARM_CL_FOLDBACK_PAIR_FACING], armClusterData[ARM_CL_COMPLEX_FOLDBACK],
-                        armClusterData[ARM_CL_COMPLEX_LINE], armClusterData[ARM_CL_COMPLEX_OTHER]));
+                writer.write(String.format(",%d,%d,%d,%d,%d,%d,%d,%d,%d",
+                        cluster.getArmClusters().size(), armClusterData[ARM_CL_ISOLATED_BE], armClusterData[ARM_CL_TI_ONLY],
+                        armClusterData[ARM_CL_DSB], armClusterData[ARM_CL_FOLDBACK], armClusterData[ARM_CL_FOLDBACK_DSB],
+                        armClusterData[ARM_CL_COMPLEX_FOLDBACK], armClusterData[ARM_CL_COMPLEX_LINE], armClusterData[ARM_CL_COMPLEX_OTHER]));
 
                 writer.newLine();
             }

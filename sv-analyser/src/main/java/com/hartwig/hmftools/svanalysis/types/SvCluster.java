@@ -94,7 +94,6 @@ public class SvCluster
     public static String RESOLVED_TYPE_RECIPROCAL_TRANS = "RECIP_TRANS";
 
     public static String RESOLVED_TYPE_NONE = "NONE";
-    public static String RESOLVED_TYPE_LOW_VAF = "LOW_VAF";
     public static String RESOLVED_TYPE_DUP_BE = "DUP_BE";
     public static String RESOLVED_TYPE_LOW_CNC = "LOW_CNC";
     public static String RESOLVED_TYPE_POLY_G_C = "POLY_G_C";
@@ -215,7 +214,6 @@ public class SvCluster
                 mRecalcRemoteSVStatus = true;
 
             addSvToChrBreakendMap(var, mChrBreakendMap);
-            addSvToArmCluster(var);
 
             // keep track of all SVs in their respective chromosomal arms
             for (int be = SVI_START; be <= SVI_END; ++be)
@@ -297,38 +295,68 @@ public class SvCluster
 
     public final List<SvArmCluster> getArmClusters() { return mArmClusters; }
 
-    private void addSvToArmCluster(final SvVarData var)
+    public void buildArmClusters()
     {
-        for(int be = SVI_START; be <= SVI_END; ++be)
+        for(SvVarData var : mSVs)
         {
-            if(be == SVI_END && var.isNullBreakend())
-                continue;
-
-            final SvBreakend breakend = var.getBreakend(isStart(be));
-            boolean groupFound = false;
-
-            for(final SvArmCluster armCluster : mArmClusters)
+            for(int be = SVI_START; be <= SVI_END; ++be)
             {
-                if(!breakend.chromosome().equals(armCluster.chromosome()) || breakend.arm() != armCluster.arm())
+                if(be == SVI_END && var.isNullBreakend())
                     continue;
 
-                // test whether position is within range
-                if(breakend.position() >= armCluster.posStart() - DEFAULT_PROXIMITY_DISTANCE
-                && breakend.position() <= armCluster.posEnd() + DEFAULT_PROXIMITY_DISTANCE)
+                final SvBreakend breakend = var.getBreakend(isStart(be));
+
+                // ensure that a pair of foldback breakends are put into the same arm cluster
+                if(var.isFoldback() && var.getFoldbackBreakend(breakend.usesStart()) != null)
                 {
+                    SvBreakend otherFoldbackBreakend = var.getFoldbackBreakend(breakend.usesStart());
+                    SvArmCluster existingAC = findArmCluster(otherFoldbackBreakend);
+
+                    if(existingAC != null)
+                    {
+                        existingAC.addBreakend(breakend);
+                        continue;
+                    }
+                }
+
+                boolean groupFound = false;
+
+                for(final SvArmCluster armCluster : mArmClusters)
+                {
+                    if(!breakend.chromosome().equals(armCluster.chromosome()) || breakend.arm() != armCluster.arm())
+                        continue;
+
+                    // test whether position is within range
+                    if(breakend.position() >= armCluster.posStart() - DEFAULT_PROXIMITY_DISTANCE
+                    && breakend.position() <= armCluster.posEnd() + DEFAULT_PROXIMITY_DISTANCE)
+                    {
+                        armCluster.addBreakend(breakend);
+                        groupFound = true;
+                        break;
+                    }
+                }
+
+                if(!groupFound)
+                {
+                    SvArmCluster armCluster = new SvArmCluster(mArmClusters.size(), this, breakend.chromosome(), breakend.arm());
                     armCluster.addBreakend(breakend);
-                    groupFound = true;
-                    break;
+                    mArmClusters.add(armCluster);
                 }
             }
-
-            if(!groupFound)
-            {
-                SvArmCluster armCluster = new SvArmCluster(mArmClusters.size(), this, breakend.chromosome(), breakend.arm());
-                armCluster.addBreakend(breakend);
-                mArmClusters.add(armCluster);
-            }
         }
+
+        mArmClusters.forEach(x -> x.setFeatures());
+    }
+
+    public SvArmCluster findArmCluster(final SvBreakend breakend)
+    {
+        for(final SvArmCluster armCluster : mArmClusters)
+        {
+            if(armCluster.getBreakends().contains(breakend))
+                return armCluster;
+        }
+
+        return null;
     }
 
     public boolean isSyntheticSimpleType(boolean checkResolved)
