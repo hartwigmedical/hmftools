@@ -195,7 +195,7 @@ public final class ExampleAnalysisTestFactory {
 
     @NotNull
     private static SampleReport createCOLO829SampleReport() {
-        final String sample = "COLO829T";
+        final String sample = "PNT00012345T";
         return ImmutableSampleReport.builder()
                 .sampleId(sample)
                 .patientTumorLocation(ImmutablePatientTumorLocation.of("COLO829", "Skin", "Melanoma"))
