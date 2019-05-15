@@ -738,6 +738,23 @@ public class SvVarData
         return isStart ? (isPrevious ? mCnDataPrevStart : mCnDataPostStart) : (isPrevious ? mCnDataPrevEnd : mCnDataPostEnd);
     }
 
+    public boolean sglToCentromereOrTelomere()
+    {
+        if(!isNullBreakend() || isNoneSegment())
+            return false;
+
+        if(mSVData.insertSequenceRepeatClass().equals("Satellite/centr") || mSVData.insertSequenceRepeatClass().equals("Satellite/telo"))
+            return true;
+
+        if(mSVData.insertSequenceRepeatClass().equals("Simple_repeat"))
+        {
+            if (mSVData.insertSequenceRepeatType().equals("(CCCTAA)n") || mSVData.insertSequenceRepeatType().equals("(TTAGGG)n"))
+                return true;
+        }
+
+        return false;
+    }
+
     public void setCopyNumberData(boolean isStart, final SvCNData prevData, final SvCNData postData)
     {
         if(isStart)

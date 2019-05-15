@@ -16,7 +16,6 @@ import static com.hartwig.hmftools.svanalysis.analysis.ClusterAnnotations.DOUBLE
 import static com.hartwig.hmftools.svanalysis.analysis.ClusterAnnotations.FOLDBACK_MATCHES;
 import static com.hartwig.hmftools.svanalysis.analysis.ClusterAnnotations.REPLICATION_REPAIR;
 import static com.hartwig.hmftools.svanalysis.analysis.ClusterAnnotations.annotateChainedClusters;
-import static com.hartwig.hmftools.svanalysis.analysis.ClusterAnnotations.annotateFoldbacks;
 import static com.hartwig.hmftools.svanalysis.analysis.ClusterAnnotations.annotateTemplatedInsertions;
 import static com.hartwig.hmftools.svanalysis.analysis.ClusterAnnotations.calcNetCopyNumberChangeAcrossCluster;
 import static com.hartwig.hmftools.svanalysis.analysis.ClusterAnnotations.checkLooseFoldbacks;
@@ -24,7 +23,6 @@ import static com.hartwig.hmftools.svanalysis.analysis.ClusterAnnotations.findIn
 import static com.hartwig.hmftools.svanalysis.analysis.ClusterAnnotations.findPotentialDoubleMinuteClusters;
 import static com.hartwig.hmftools.svanalysis.analysis.ClusterAnnotations.reportClusterRepRepairSegments;
 import static com.hartwig.hmftools.svanalysis.analysis.ClusterAnnotations.runAnnotation;
-import static com.hartwig.hmftools.svanalysis.analysis.LinkFinder.MIN_TEMPLATED_INSERTION_LENGTH;
 import static com.hartwig.hmftools.svanalysis.analysis.LinkFinder.getMinTemplatedInsertionLength;
 import static com.hartwig.hmftools.svanalysis.analysis.LinkFinder.haveLinkedAssemblies;
 import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.CLUSTER_REASON_COMMON_ARMS;
@@ -34,6 +32,7 @@ import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.CLUST
 import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.CLUSTER_REASON_NET_ARM_END_PLOIDY;
 import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.CLUSTER_REASON_BE_PLOIDY_DROP;
 import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.applyCopyNumberReplication;
+import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.markSinglePairResolvedType;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.CHROMOSOME_ARM_P;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.CHROMOSOME_ARM_Q;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.findCentromereBreakendIndex;
@@ -42,17 +41,15 @@ import static com.hartwig.hmftools.svanalysis.types.SvArmCluster.mergeArmCluster
 import static com.hartwig.hmftools.svanalysis.types.SvChain.CHAIN_ASSEMBLY_LINK_COUNT;
 import static com.hartwig.hmftools.svanalysis.types.SvChain.CHAIN_LENGTH;
 import static com.hartwig.hmftools.svanalysis.types.SvChain.CHAIN_LINK_COUNT;
-import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_COMPLEX_CHAIN;
+import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_COMPLEX;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_LINE;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_NONE;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_SGL_PAIR_DEL;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_SGL_PAIR_DUP;
-import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_SIMPLE_CHAIN;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_SGL_PAIR_INS;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_SIMPLE_SV;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.copyNumbersEqual;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.areSpecificClusters;
-import static com.hartwig.hmftools.svanalysis.types.SvCluster.isSpecificCluster;
 import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.ASSEMBLY_MATCH_MATCHED;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_END;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_START;
@@ -220,10 +217,6 @@ public class ClusterAnalyser {
                 // any cluster with a long DEL or DUP not merged can now be marked as resolved
                 if(cluster.getSvCount() == 1 &&  cluster.getResolvedType() == RESOLVED_TYPE_SIMPLE_SV)
                     cluster.setResolved(true, RESOLVED_TYPE_SIMPLE_SV);
-
-                // mark off any fully chained simple clusters
-                if(cluster.getSvCount() == 1 &&  cluster.getResolvedType() == RESOLVED_TYPE_SIMPLE_CHAIN)
-                    cluster.setResolved(true, RESOLVED_TYPE_SIMPLE_CHAIN);
             }
 
             mergeArmClusters(cluster.getArmClusters());
@@ -387,28 +380,15 @@ public class ClusterAnalyser {
             }
             else if(cluster.getTypeCount(SGL) == 2)
             {
-                SvBreakend breakend1 = cluster.getSV(0).getBreakend(true);
-                SvBreakend breakend2 = cluster.getSV(1).getBreakend(true);
+                final SvVarData sgl1 = cluster.getSV(0);
+                final SvVarData sgl2 = cluster.getSV(1);
+                String resolvedType = markSinglePairResolvedType(sgl1, sgl2);
 
-                if(breakend1.orientation() != breakend2.orientation())
+                if(resolvedType != RESOLVED_TYPE_NONE)
                 {
-                    long length = abs(breakend1.position() - breakend2.position());
-                    int minTiLength = getMinTemplatedInsertionLength(breakend1, breakend2);
-
-                    if(length < minTiLength)
-                    {
-                        cluster.setResolved(true, RESOLVED_TYPE_SGL_PAIR_INS);
-                    }
-                    else
-                    {
-                        boolean v1First = breakend1.position() < breakend2.position();
-                        boolean v1PosOrientation = (breakend1.orientation() == 1);
-
-                        if(v1First == v1PosOrientation)
-                            cluster.setResolved(true, RESOLVED_TYPE_SGL_PAIR_DEL);
-                        else
-                            cluster.setResolved(true, RESOLVED_TYPE_SGL_PAIR_DUP);
-                    }
+                    long length = abs(sgl1.position(true) - sgl2.position(true));
+                    cluster.setResolved(true, resolvedType);
+                    cluster.setSynDelDupData(length, 0);
                 }
             }
 
@@ -417,16 +397,7 @@ public class ClusterAnalyser {
 
         // next clusters with which start and end on the same arm, have the same start and end orientation
         // and the same start and end copy number
-        if(!cluster.getChains().isEmpty())
-        {
-            // set the type but don't consider long chains resolved
-            if(cluster.getFoldbacks().isEmpty())
-                cluster.setResolved(false, RESOLVED_TYPE_SIMPLE_CHAIN);
-            else
-                cluster.setResolved(false, RESOLVED_TYPE_COMPLEX_CHAIN);
-
-            return;
-        }
+        cluster.setResolved(false, RESOLVED_TYPE_COMPLEX);
     }
 
     private boolean mergeInconsistentClusters()

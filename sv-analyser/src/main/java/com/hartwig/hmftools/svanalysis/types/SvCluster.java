@@ -90,23 +90,25 @@ public class SvCluster
     private int mOriginArms;
     private int mFragmentArms;
 
-    public static String RESOLVED_TYPE_SIMPLE_SV = "SimpleSV";
-    public static String RESOLVED_TYPE_RECIPROCAL_TRANS = "RecipTrans";
+    public static String RESOLVED_TYPE_SIMPLE_SV = "SIMPLE";
+    public static String RESOLVED_TYPE_RECIPROCAL_TRANS = "RECIP_TRANS";
 
-    public static String RESOLVED_TYPE_NONE = "None";
-    public static String RESOLVED_TYPE_LOW_QUALITY = "LowQual";
-    public static String RESOLVED_TYPE_LINE = "Line";
-    public static String RESOLVED_TYPE_DEL_INT_TI = "DEL_Int_TI";
-    public static String RESOLVED_TYPE_DEL_EXT_TI = "DEL_Ext_TI";
-    public static String RESOLVED_TYPE_DUP_INT_TI = "DUP_Int_TI";
-    public static String RESOLVED_TYPE_DUP_EXT_TI = "DUP_Ext_TI";
-    public static String RESOLVED_TYPE_SGL_PAIR_INS = "SglPair_INS";
-    public static String RESOLVED_TYPE_SGL_PAIR_DEL = "SglPair_DEL";
-    public static String RESOLVED_TYPE_SGL_PAIR_DUP = "SglPair_DUP";
-    public static String RESOLVED_TYPE_SGL_PLUS_INCONSISTENT = "SglPlusInc";
+    public static String RESOLVED_TYPE_NONE = "NONE";
+    public static String RESOLVED_TYPE_LOW_VAF = "LOW_VAF";
+    public static String RESOLVED_TYPE_DUP_BE = "DUP_BE";
+    public static String RESOLVED_TYPE_LOW_CNC = "LOW_CNC";
+    public static String RESOLVED_TYPE_POLY_G_C = "POLY_G_C";
+    public static String RESOLVED_TYPE_LINE = "LINE";
+    public static String RESOLVED_TYPE_DEL_INT_TI = "DEL_INT_TI";
+    public static String RESOLVED_TYPE_DEL_EXT_TI = "DEL_EXT_TI";
+    public static String RESOLVED_TYPE_DUP_INT_TI = "DUP_INT_TI";
+    public static String RESOLVED_TYPE_DUP_EXT_TI = "DUP_EXT_TI";
+    public static String RESOLVED_TYPE_SGL_PAIR_INS = "SGL_PAIR_INS";
+    public static String RESOLVED_TYPE_SGL_PAIR_DEL = "SGL_PAIR_DEL";
+    public static String RESOLVED_TYPE_SGL_PAIR_DUP = "SGL_PAIR_DUP";
+    public static String RESOLVED_TYPE_SGL_PLUS_INCONSISTENT = "SGL_BND_INV";
 
-    public static String RESOLVED_TYPE_SIMPLE_CHAIN = "SimpleChain";
-    public static String RESOLVED_TYPE_COMPLEX_CHAIN = "ComplexChain";
+    public static String RESOLVED_TYPE_COMPLEX = "COMPLEX";
 
     private static final Logger LOGGER = LogManager.getLogger(SvCluster.class);
 
@@ -626,9 +628,6 @@ public class SvCluster
     {
         if(!mFoldbacks.contains(var))
             mFoldbacks.add(var);
-
-        if(mResolvedType == RESOLVED_TYPE_SIMPLE_CHAIN)
-            mResolvedType = RESOLVED_TYPE_COMPLEX_CHAIN;
     }
 
     public void deregisterFoldback(final SvVarData var)

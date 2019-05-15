@@ -11,9 +11,6 @@ import static com.hartwig.hmftools.common.variant.structural.StructuralVariantTy
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INS;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INV;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
-import static com.hartwig.hmftools.svanalysis.analysis.CNAnalyser.CENTROMERE_CN;
-import static com.hartwig.hmftools.svanalysis.analysis.CNAnalyser.P_ARM_TELOMERE_CN;
-import static com.hartwig.hmftools.svanalysis.analysis.CNAnalyser.Q_ARM_TELOMERE_CN;
 import static com.hartwig.hmftools.svanalysis.analysis.LinkFinder.MIN_TEMPLATED_INSERTION_LENGTH;
 import static com.hartwig.hmftools.svanalysis.analysis.LinkFinder.areLinkedSection;
 import static com.hartwig.hmftools.svanalysis.analysis.LinkFinder.arePairedDeletionBridges;
@@ -24,41 +21,38 @@ import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.CHROMOSOME_AR
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.PERMITED_DUP_BE_DISTANCE;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.addSvToChrBreakendMap;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.copyNumbersEqual;
-import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_LOW_QUALITY;
+import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_DUP_BE;
+import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_LOW_CNC;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_DEL_EXT_TI;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_DEL_INT_TI;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_DUP_EXT_TI;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_DUP_INT_TI;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_LINE;
+import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_LOW_VAF;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_NONE;
+import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_POLY_G_C;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_RECIPROCAL_TRANS;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_SGL_PAIR_DEL;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_SGL_PAIR_DUP;
+import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_SGL_PAIR_INS;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_SGL_PLUS_INCONSISTENT;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_SIMPLE_SV;
-import static com.hartwig.hmftools.svanalysis.types.SvCluster.isSpecificCluster;
 import static com.hartwig.hmftools.svanalysis.types.SvLOH.LOH_NO_SV;
 import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.LINK_TYPE_DB;
 import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.LINK_TYPE_TI;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.ASSEMBLY_TYPE_EQV;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.RELATION_TYPE_NEIGHBOUR;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.RELATION_TYPE_OVERLAP;
-import static com.hartwig.hmftools.svanalysis.types.SvVarData.isSpecificSV;
 
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 import com.hartwig.hmftools.svanalysis.types.SvBreakend;
-import com.hartwig.hmftools.svanalysis.types.SvCNData;
 import com.hartwig.hmftools.svanalysis.types.SvCluster;
 import com.hartwig.hmftools.svanalysis.types.SvLinkedPair;
 import com.hartwig.hmftools.svanalysis.types.SvVarData;
@@ -117,6 +111,12 @@ public class SvClusteringMethods {
     public long getDelDupCutoffLength() { return mDelDupCutoffLength; }
     public int getProximityDistance() { return mProximityDistance; }
 
+    public static boolean isFilteredResolvedType(final String resolvedType)
+    {
+        return resolvedType.equals(RESOLVED_TYPE_LOW_CNC) || resolvedType.equals(RESOLVED_TYPE_LOW_VAF)
+                || resolvedType.equals(RESOLVED_TYPE_POLY_G_C) || resolvedType.equals(RESOLVED_TYPE_DUP_BE);
+    }
+
     public void clusterByProximity(List<SvVarData> allVariants, List<SvCluster> clusters)
     {
         clusterByProximity(clusters);
@@ -139,13 +139,14 @@ public class SvClusteringMethods {
 
                 // isSpecificSV(var);
 
-                if (skipClusteringSingleBreakend(var))
+                String sglExcludedReason = getSingleBreakendUnclusteredType(var);
+                if (sglExcludedReason != RESOLVED_TYPE_NONE)
                 {
                     if(var.getCluster() == null)
                     {
                         SvCluster newCluster = new SvCluster(getNextClusterId());
                         newCluster.addVariant(var);
-                        newCluster.setResolved(true, RESOLVED_TYPE_LOW_QUALITY);
+                        newCluster.setResolved(true, sglExcludedReason);
                         clusters.add(newCluster);
                     }
                     ++currentIndex;
@@ -161,14 +162,14 @@ public class SvClusteringMethods {
                     final SvVarData nextVar = nextBe.getSV();
 
                     // isSpecificSV(nextVar);
-
-                    if (skipClusteringSingleBreakend(nextVar))
+                    sglExcludedReason = getSingleBreakendUnclusteredType(nextVar);
+                    if (sglExcludedReason != RESOLVED_TYPE_NONE)
                     {
                         if(nextVar.getCluster() == null)
                         {
                             SvCluster newCluster = new SvCluster(getNextClusterId());
                             newCluster.addVariant(nextVar);
-                            newCluster.setResolved(true, RESOLVED_TYPE_LOW_QUALITY);
+                            newCluster.setResolved(true, sglExcludedReason);
                             clusters.add(newCluster);
                         }
                         continue;
@@ -413,9 +414,9 @@ public class SvClusteringMethods {
         for(SvCluster cluster : clusters)
         {
             // check for sub-clonal / low-copy-number supported variants
-            if(cluster.getSvCount() == 1 && isLowQualityVariant(cluster.getSV(0)))
+            if(cluster.getSvCount() == 1 && hasLowCNChangeSupport(cluster.getSV(0)))
             {
-                cluster.setResolved(true, RESOLVED_TYPE_LOW_QUALITY);
+                cluster.setResolved(true, RESOLVED_TYPE_LOW_CNC);
                 continue;
             }
 
@@ -522,7 +523,7 @@ public class SvClusteringMethods {
 
     public static double LOW_QUALITY_CN_CHANGE = 0.5;
 
-    public boolean isLowQualityVariant(final SvVarData var)
+    public boolean hasLowCNChangeSupport(final SvVarData var)
     {
         if(var.type() == INS)
             return false;
@@ -533,28 +534,31 @@ public class SvClusteringMethods {
             return var.copyNumberChange(true) < LOW_QUALITY_CN_CHANGE && var.copyNumberChange(false) < LOW_QUALITY_CN_CHANGE;
     }
 
-    private boolean skipClusteringSingleBreakend(final SvVarData var)
-    {
-        return isEquivSingleBreakend(var) || isLowVafSingleBreakend(var);
-    }
-
     private static String POLY_C_MOTIF = "CCCCCCCCCCCCCCCC";
     private static String POLY_G_MOTIF = "GGGGGGGGGGGGGGGG";
     private static double SGL_LOW_VAF = 0.1;
 
-    private boolean isLowVafSingleBreakend(final SvVarData var)
+    private String getSingleBreakendUnclusteredType(final SvVarData var)
     {
         if(var.type() != SGL)
-            return false;
+            return RESOLVED_TYPE_NONE;
 
-        double vaf = var.copyNumberChange(true) / var.copyNumber(true);
-        if(vaf < SGL_LOW_VAF)
-            return true;
+        if(isEquivSingleBreakend(var))
+            return RESOLVED_TYPE_DUP_BE;
+
+        if(isLowVafSingleBreakend(var))
+            return RESOLVED_TYPE_LOW_VAF;
 
         if(var.getSvData().insertSequence().contains(POLY_C_MOTIF) || var.getSvData().insertSequence().contains(POLY_G_MOTIF))
-            return true;
+            return RESOLVED_TYPE_POLY_G_C;
 
-        return false    ;
+        return RESOLVED_TYPE_NONE;
+    }
+
+    private boolean isLowVafSingleBreakend(final SvVarData var)
+    {
+        double vaf = var.copyNumberChange(true) / var.copyNumber(true);
+        return vaf < SGL_LOW_VAF;
     }
 
     private boolean isEquivSingleBreakend(final SvVarData var)
@@ -898,6 +902,7 @@ public class SvClusteringMethods {
                     otherCluster.mergeOtherCluster(cluster);
                     otherCluster.addClusterReason(CLUSTER_REASON_SOLO_SINGLE);
                     otherCluster.setResolved(true, resolvedType);
+                    otherCluster.setSynDelDupData(abs(otherVar.position(true) - var.position(true)), 0);
 
                     clusters.remove(cluster);
                     foundMerges = true;
@@ -924,34 +929,25 @@ public class SvClusteringMethods {
 
             if(otherVar.type() == SGL)
             {
+                // either both must be NONEs or one be a SGL but without centromeric or telomeric support
                 if(otherCluster.isResolved())
                     return RESOLVED_TYPE_NONE;
 
-                // to form a simple del or dup, they need to have different orientations
-                if(soloSingle.orientation(true) == otherVar.orientation(true))
+                String resolvedType = markSinglePairResolvedType(otherVar, soloSingle);
+
+                if(resolvedType == RESOLVED_TYPE_NONE)
                     return RESOLVED_TYPE_NONE;
 
-                // check copy number consistency
-                double cn1 = soloSingle.copyNumberChange(true);
-                double cn2 = otherVar.copyNumberChange(true);
+                LOGGER.debug("cluster({}) SV({}) and cluster({}) SV({}) syntheticType({})",
+                        soloSingleCluster.id(), soloSingle.posId(), otherCluster.id(), otherVar.posId(), resolvedType);
 
-                if(!copyNumbersEqual(cn1, cn2))
-                    return RESOLVED_TYPE_NONE;
-
-                boolean ssFirst = soloSingle.position(true) < otherVar.position(true);
-                boolean ssPosOrientation = soloSingle.orientation(true) == 1;
-
-                StructuralVariantType syntheticType = (ssFirst == ssPosOrientation) ? DEL : DUP;
-
-                long length = abs(soloSingle.position(true) - otherVar.position(true));
-
-                LOGGER.debug("cluster({}) SV({}) and cluster({}) SV({}) syntheticType({}) length({})",
-                        soloSingleCluster.id(), soloSingle.posId(), otherCluster.id(), otherVar.posId(), syntheticType, length);
+                String syntheticType = resolvedType == RESOLVED_TYPE_SGL_PAIR_INS ? "INS" :
+                        (resolvedType == RESOLVED_TYPE_SGL_PAIR_DUP ? "DUP" : "DEL");
 
                 soloSingle.addClusterReason(CLUSTER_REASON_SOLO_SINGLE, syntheticType.toString() + "_" + otherVar.id());
                 otherVar.addClusterReason(CLUSTER_REASON_SOLO_SINGLE, syntheticType.toString() + "_" + soloSingle.id());
 
-                return syntheticType == DUP ? RESOLVED_TYPE_SGL_PAIR_DUP : RESOLVED_TYPE_SGL_PAIR_DEL;
+                return resolvedType;
             }
             else
             {
@@ -987,6 +983,47 @@ public class SvClusteringMethods {
         else
         {
             return RESOLVED_TYPE_NONE;
+        }
+    }
+
+    public static String markSinglePairResolvedType(final SvVarData sgl1, final SvVarData sgl2)
+    {
+        if(!sgl1.isNoneSegment() && !sgl2.isNoneSegment())
+            return RESOLVED_TYPE_NONE;
+
+        if(sgl1.sglToCentromereOrTelomere() || sgl2.sglToCentromereOrTelomere())
+            return RESOLVED_TYPE_NONE;
+
+        final SvBreakend breakend1 = sgl1.getBreakend(true);
+        final SvBreakend breakend2 = sgl2.getBreakend(true);
+
+        // to form a simple del or dup, they need to have different orientations
+        if(breakend1.orientation() == breakend2.orientation())
+            return RESOLVED_TYPE_NONE;
+
+        // check copy number consistency
+        double cn1 = sgl2.copyNumberChange(true);
+        double cn2 = sgl1.copyNumberChange(true);
+
+        if(!copyNumbersEqual(cn1, cn2))
+            return RESOLVED_TYPE_NONE;
+
+        long length = abs(breakend1.position() - breakend2.position());
+        int minTiLength = getMinTemplatedInsertionLength(breakend1, breakend2);
+
+        if(length < minTiLength)
+        {
+            return RESOLVED_TYPE_SGL_PAIR_INS;
+        }
+        else
+        {
+            boolean v1First = breakend1.position() < breakend2.position();
+            boolean v1PosOrientation = (breakend1.orientation() == 1);
+
+            if(v1First == v1PosOrientation)
+                return RESOLVED_TYPE_SGL_PAIR_DEL;
+            else
+                return RESOLVED_TYPE_SGL_PAIR_DUP;
         }
     }
 
@@ -1489,7 +1526,7 @@ public class SvClusteringMethods {
             if (otherCluster.getResolvedType() == RESOLVED_TYPE_SIMPLE_SV
             || otherCluster.getResolvedType() == RESOLVED_TYPE_LINE
             || otherCluster.getResolvedType() == RESOLVED_TYPE_RECIPROCAL_TRANS
-            || otherCluster.getResolvedType() == RESOLVED_TYPE_LOW_QUALITY)
+            || isFilteredResolvedType(otherCluster.getResolvedType()))
             {
                 continue;
             }

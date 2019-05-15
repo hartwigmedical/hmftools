@@ -4,11 +4,11 @@ import static java.lang.Math.max;
 
 import static com.hartwig.hmftools.common.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.io.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.isFilteredResolvedType;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.CHROMOSOME_ARM_P;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.CHROMOSOME_ARM_Q;
 import static com.hartwig.hmftools.svanalysis.types.SvBreakend.DIRECTION_CENTROMERE;
 import static com.hartwig.hmftools.svanalysis.types.SvBreakend.DIRECTION_TELOMERE;
-import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_LOW_QUALITY;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_SIMPLE_SV;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.isSpecificCluster;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_END;
@@ -177,7 +177,7 @@ public class VisualiserWriter
             for(final SvCluster cluster : clusters)
             {
                 if(cluster.isResolved()
-                        && (cluster.getResolvedType() == RESOLVED_TYPE_SIMPLE_SV || cluster.getResolvedType() == RESOLVED_TYPE_LOW_QUALITY))
+                && (cluster.getResolvedType() == RESOLVED_TYPE_SIMPLE_SV || isFilteredResolvedType(cluster.getResolvedType())))
                 {
                     continue;
                 }
