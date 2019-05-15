@@ -334,91 +334,11 @@ public class SvClusteringMethods {
         }
     }
 
-    public boolean validateClustering(final List<SvCluster> clusters)
-    {
-        // validation that every SV was put into a cluster
-        for (final Map.Entry<String, List<SvBreakend>> entry : mChrBreakendMap.entrySet())
-        {
-            final List<SvBreakend> breakendList = entry.getValue();
-
-            for (int i = 0; i < breakendList.size(); ++i)
-            {
-                final SvBreakend breakend = breakendList.get(i);
-                SvVarData var = breakend.getSV();
-                if(var.getCluster() == null)
-                {
-                    LOGGER.error("var({}) not clustered", var.posId());
-                    return false;
-                }
-            }
-        }
-
-        // check that no 2 clusters contain the same SV
-        for(int i = 0; i < clusters.size(); ++i)
-        {
-            SvCluster cluster1 = clusters.get(i);
-            // isSpecificCluster(cluster1);
-
-            // check all SVs in this cluster reference it
-            for(SvVarData var : cluster1.getSVs())
-            {
-                if(var.getCluster() != cluster1)
-                {
-                    LOGGER.error("var({}) in cluster({}) has incorrect ref", var.posId(), cluster1.id());
-                    return false;
-                }
-            }
-
-            for(int j = i+1; j < clusters.size(); ++j)
-            {
-                SvCluster cluster2 = clusters.get(j);
-
-                for(SvVarData var : cluster1.getSVs())
-                {
-                    if(cluster2.getSVs().contains(var))
-                    {
-                        LOGGER.error("var({}) in 2 clusters({} and {})", var.posId(), cluster1.id(), cluster2.id());
-                        return false;
-                    }
-                }
-            }
-        }
-
-        return true;
-    }
-
-    public static boolean checkClusterDuplicates(List<SvCluster> clusters)
-    {
-        for(int i = 0; i < clusters.size(); ++i)
-        {
-            final SvCluster cluster1 = clusters.get(i);
-            for(int j = i + 1; j < clusters.size(); ++j)
-            {
-                final SvCluster cluster2 = clusters.get(j);
-
-                if(cluster1 == cluster2 || cluster1.id() == cluster2.id())
-                {
-                    LOGGER.error("cluster({}) exists twice in list", cluster1.id());
-                    return false;
-                }
-            }
-        }
-
-        return true;
-    }
-
     public void mergeClusters(final String sampleId, List<SvCluster> clusters)
     {
         // first apply replication rules since this can affect consistency
         for(SvCluster cluster : clusters)
         {
-            // check for sub-clonal / low-copy-number supported variants
-            if(cluster.getSvCount() == 1 && hasLowCNChangeSupport(cluster.getSV(0)))
-            {
-                cluster.setResolved(true, RESOLVED_TYPE_LOW_CNC);
-                continue;
-            }
-
             if(cluster.hasLinkingLineElements())
                 continue;
 
@@ -520,17 +440,17 @@ public class SvClusteringMethods {
         }
     }
 
-    public static double LOW_QUALITY_CN_CHANGE = 0.5;
+    public static double LOW_CN_CHANGE_SUPPORT = 0.5;
 
-    public boolean hasLowCNChangeSupport(final SvVarData var)
+    public static boolean hasLowCNChangeSupport(final SvVarData var)
     {
         if(var.type() == INS)
             return false;
 
         if(var.isNullBreakend())
-            return var.copyNumberChange(true) < LOW_QUALITY_CN_CHANGE;
+            return var.copyNumberChange(true) < LOW_CN_CHANGE_SUPPORT;
         else
-            return var.copyNumberChange(true) < LOW_QUALITY_CN_CHANGE && var.copyNumberChange(false) < LOW_QUALITY_CN_CHANGE;
+            return var.copyNumberChange(true) < LOW_CN_CHANGE_SUPPORT && var.copyNumberChange(false) < LOW_CN_CHANGE_SUPPORT;
     }
 
     private static String POLY_C_MOTIF = "CCCCCCCCCCCCCCCC";
@@ -975,11 +895,10 @@ public class SvClusteringMethods {
         }
     }
 
+    private static int MIN_DEL_LENGTH = 32;
+
     public static String markSinglePairResolvedType(final SvVarData sgl1, final SvVarData sgl2)
     {
-        if(!sgl1.isNoneSegment() && !sgl2.isNoneSegment())
-            return RESOLVED_TYPE_NONE;
-
         if(sgl1.sglToCentromereOrTelomere() || sgl2.sglToCentromereOrTelomere())
             return RESOLVED_TYPE_NONE;
 
@@ -997,22 +916,27 @@ public class SvClusteringMethods {
         if(!copyNumbersEqual(cn1, cn2))
             return RESOLVED_TYPE_NONE;
 
-        long length = abs(breakend1.position() - breakend2.position());
-        int minTiLength = getMinTemplatedInsertionLength(breakend1, breakend2);
+        boolean breakendsFace = (breakend1.position() < breakend2.position() && breakend1.orientation() == -1)
+                || (breakend2.position() < breakend1.position() && breakend2.orientation() == -1);
 
-        if(length < minTiLength)
+        long length = abs(breakend1.position() - breakend2.position());
+
+        if(breakendsFace)
         {
-            return RESOLVED_TYPE_SGL_PAIR_INS;
+            // a DUP if breakends are further than the anchor distance away, else an INS
+            int minTiLength = getMinTemplatedInsertionLength(breakend1, breakend2);
+            if(length >= minTiLength)
+                return RESOLVED_TYPE_SGL_PAIR_DUP;
+            else
+                return RESOLVED_TYPE_SGL_PAIR_INS;
         }
         else
         {
-            boolean v1First = breakend1.position() < breakend2.position();
-            boolean v1PosOrientation = (breakend1.orientation() == 1);
-
-            if(v1First == v1PosOrientation)
+            // a DEL if the breakends are further than the min DEL length, else an INS
+            if(length >= MIN_DEL_LENGTH)
                 return RESOLVED_TYPE_SGL_PAIR_DEL;
             else
-                return RESOLVED_TYPE_SGL_PAIR_DUP;
+                return RESOLVED_TYPE_SGL_PAIR_INS;
         }
     }
 
@@ -1526,4 +1450,76 @@ public class SvClusteringMethods {
         return false;
     }
 
+    public boolean validateClustering(final List<SvCluster> clusters)
+    {
+        // validation that every SV was put into a cluster
+        for (final Map.Entry<String, List<SvBreakend>> entry : mChrBreakendMap.entrySet())
+        {
+            final List<SvBreakend> breakendList = entry.getValue();
+
+            for (int i = 0; i < breakendList.size(); ++i)
+            {
+                final SvBreakend breakend = breakendList.get(i);
+                SvVarData var = breakend.getSV();
+                if(var.getCluster() == null)
+                {
+                    LOGGER.error("var({}) not clustered", var.posId());
+                    return false;
+                }
+            }
+        }
+
+        // check that no 2 clusters contain the same SV
+        for(int i = 0; i < clusters.size(); ++i)
+        {
+            SvCluster cluster1 = clusters.get(i);
+            // isSpecificCluster(cluster1);
+
+            // check all SVs in this cluster reference it
+            for(SvVarData var : cluster1.getSVs())
+            {
+                if(var.getCluster() != cluster1)
+                {
+                    LOGGER.error("var({}) in cluster({}) has incorrect ref", var.posId(), cluster1.id());
+                    return false;
+                }
+            }
+
+            for(int j = i+1; j < clusters.size(); ++j)
+            {
+                SvCluster cluster2 = clusters.get(j);
+
+                for(SvVarData var : cluster1.getSVs())
+                {
+                    if(cluster2.getSVs().contains(var))
+                    {
+                        LOGGER.error("var({}) in 2 clusters({} and {})", var.posId(), cluster1.id(), cluster2.id());
+                        return false;
+                    }
+                }
+            }
+        }
+
+        return true;
+    }
+
+    public static boolean checkClusterDuplicates(List<SvCluster> clusters)
+    {
+        for(int i = 0; i < clusters.size(); ++i)
+        {
+            final SvCluster cluster1 = clusters.get(i);
+            for(int j = i + 1; j < clusters.size(); ++j)
+            {
+                final SvCluster cluster2 = clusters.get(j);
+
+                if(cluster1 == cluster2 || cluster1.id() == cluster2.id())
+                {
+                    LOGGER.error("cluster({}) exists twice in list", cluster1.id());
+                    return false;
+                }
+            }
+        }
+
+        return true;
+    }
 }

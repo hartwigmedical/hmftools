@@ -11,6 +11,7 @@ import static com.hartwig.hmftools.common.variant.structural.StructuralVariantTy
 import static com.hartwig.hmftools.svanalysis.analysis.ClusterAnalyser.SHORT_TI_LENGTH;
 import static com.hartwig.hmftools.svanalysis.analysis.ClusterAnalyser.SMALL_CLUSTER_SIZE;
 import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.DEFAULT_PROXIMITY_DISTANCE;
+import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.hasLowCNChangeSupport;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.addSvToChrBreakendMap;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.appendStr;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.calcConsistency;
@@ -76,6 +77,7 @@ public class SvCluster
     private List<SvVarData> mLongDelDups;
     private List<SvVarData> mFoldbacks;
     private boolean mHasLinkingLineElements;
+    private boolean mIsSubclonal;
     private List<SvVarData> mInversions;
 
     // state for SVs which link different arms or chromosomes
@@ -147,6 +149,7 @@ public class SvCluster
         mShortTIRemoteSVs = Lists.newArrayList();
         mUnlinkedRemoteSVs = Lists.newArrayList();
         mRecalcRemoteSVStatus = false;
+        mIsSubclonal = false;
 
         mHasReplicatedSVs = false;
 
@@ -683,6 +686,16 @@ public class SvCluster
     }
 
     public boolean hasLinkingLineElements() { return mHasLinkingLineElements; }
+
+    public static double SUBCLONAL_LOW_CNC_PERCENT = 0.5;
+
+    public void markSubclonal()
+    {
+        long lowCNChangeSupportCount = mSVs.stream().filter(x -> hasLowCNChangeSupport(x)).count();
+        mIsSubclonal = lowCNChangeSupportCount / (double)mSVs.size() > SUBCLONAL_LOW_CNC_PERCENT;
+    }
+
+    public boolean isSubclonal() { return mIsSubclonal; }
 
     public final List<SvVarData> getUnlinkedRemoteSVs() { return mUnlinkedRemoteSVs; }
     public final List<SvVarData> getShortTIRemoteSVs() { return mShortTIRemoteSVs; }

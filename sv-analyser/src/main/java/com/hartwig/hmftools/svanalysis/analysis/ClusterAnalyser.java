@@ -32,6 +32,7 @@ import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.CLUST
 import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.CLUSTER_REASON_NET_ARM_END_PLOIDY;
 import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.CLUSTER_REASON_BE_PLOIDY_DROP;
 import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.applyCopyNumberReplication;
+import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.checkClusterDuplicates;
 import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.markSinglePairResolvedType;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.CHROMOSOME_ARM_P;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.CHROMOSOME_ARM_Q;
@@ -46,6 +47,7 @@ import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_NONE
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_SIMPLE_SV;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.copyNumbersEqual;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.areSpecificClusters;
+import static com.hartwig.hmftools.svanalysis.types.SvCluster.isSpecificCluster;
 import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.ASSEMBLY_MATCH_MATCHED;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_END;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_START;
@@ -110,8 +112,9 @@ public class ClusterAnalyser {
         mChainFinder = new ChainFinder();
         mChainFinder.setLogVerbose(mConfig.LogVerbose);
         mLinkFinder.setLogVerbose(mConfig.LogVerbose);
-        mRunValidationChecks = false;
         mUseAllelePloidies = false;
+
+        mRunValidationChecks = false; // emabled in unit tests and after changes to merging-rule flow
 
         mPcClustering = new PerformanceCounter("Clustering");
         mPcChaining = new PerformanceCounter("Chaining");
@@ -145,7 +148,7 @@ public class ClusterAnalyser {
 
     public final List<SvCluster> getClusters() { return mClusters; }
 
-    public void clusterAndAnalyse()
+    public boolean clusterAndAnalyse()
     {
         mClusters.clear();
 
@@ -154,17 +157,14 @@ public class ClusterAnalyser {
         mPcClustering.pause();
 
         // mark line clusters since these are exluded from most subsequent logic
-        for(SvCluster cluster : mClusters)
-        {
-            markLineCluster(cluster, mClusteringMethods.getProximityDistance());
-        }
+        mClusters.forEach(x -> markLineCluster(x, mClusteringMethods.getProximityDistance()));
 
         if(mRunValidationChecks)
         {
             if(!mClusteringMethods.validateClustering(mClusters))
             {
                 LOGGER.info("exiting with cluster-validation errors");
-                return;
+                return false;
             }
         }
 
@@ -177,17 +177,16 @@ public class ClusterAnalyser {
         mPcClustering.pause();
 
         // log basic clustering details
-        for(SvCluster cluster : mClusters)
-        {
-            if(cluster.getSvCount() > 1)
-                cluster.logDetails();
-        }
+        mClusters.stream().filter(x -> x.getSvCount() > 1).forEach(SvCluster::logDetails);
 
         // INVs and other SV-pairs which make foldbacks are now used in the inconsistent clustering logic
         markFoldbacks();
 
+        // subclonal clusters won't be merged any further
+        mClusters.forEach(x -> x.markSubclonal());
+
         mPcClustering.resume();
-        mergeClusters();
+        applyComplexClusteringRules();
         mPcClustering.stop();
 
         mPcChaining.resume();
@@ -196,10 +195,10 @@ public class ClusterAnalyser {
 
         if(mRunValidationChecks)
         {
-            if(!mClusteringMethods.validateClustering(mClusters) || !mClusteringMethods.checkClusterDuplicates(mClusters))
+            if(!mClusteringMethods.validateClustering(mClusters) || !checkClusterDuplicates(mClusters))
             {
-                LOGGER.info("exiting with cluster-validation errors");
-                return;
+                LOGGER.warn("exiting with cluster-validation errors");
+                return false;
             }
         }
 
@@ -215,8 +214,8 @@ public class ClusterAnalyser {
                     cluster.setResolved(true, RESOLVED_TYPE_SIMPLE_SV);
             }
 
+            isSpecificCluster(cluster);
             cluster.buildArmClusters();
-            // mergeArmClusters(cluster.getArmClusters());
 
             // if(LOGGER.isDebugEnabled())
             //     logArmClusterData(cluster);
@@ -227,8 +226,7 @@ public class ClusterAnalyser {
         reportOtherFeatures();
 
         mPcAnnotation.stop();
-
-        // validation-only: checkClusterDuplicates(mClusters);
+        return true;
     }
 
     public void findLimitedChains()
@@ -276,7 +274,10 @@ public class ClusterAnalyser {
 
             // these are either already chained or no need to chain
             if (cluster.isSimpleSingleSV() || cluster.isFullyChained() || cluster.getSvCount() < 2)
+            {
+                setClusterResolvedState(cluster);
                 continue;
+            }
 
             cluster.dissolveLinksAndChains();
 
@@ -295,23 +296,95 @@ public class ClusterAnalyser {
         }
     }
 
-    public void mergeClusters()
+    public void applyComplexClusteringRules()
     {
-        boolean foundMerges = mergeInconsistentClusters();
+        // second round of cluster merging on more complex criteria and inconsistencies:
+        // merge on foldbacks on the same arm
+        // merge on links between common arms
+        // merge if one cluster has footprints which overlap unresolved complex SVs
+        // merge clusters which resolve another's LOH DUP
+
+        long longDelDupCutoffLength = mClusteringMethods.getDelDupCutoffLength();
+
+        // first collect the clusters for which these complex rules apply
+        List<SvCluster> complexClusters = mClusters.stream()
+                .filter(x -> !x.isResolved())
+                .filter(x -> !x.isSubclonal())
+                .collect(Collectors.toList());
 
         int iterations = 1;
+        boolean foundMerges = true;
 
         while(foundMerges)
         {
-            foundMerges = mergeInconsistentClusters();
+            foundMerges = false;
+
+            int index1 = 0;
+            while(index1 < complexClusters.size())
+            {
+                SvCluster cluster1 = complexClusters.get(index1);
+
+                if(cluster1.isResolved())
+                {
+                    ++index1;
+                    continue;
+                }
+
+                int index2 = index1 + 1;
+                while(index2 < complexClusters.size())
+                {
+                    SvCluster cluster2 = complexClusters.get(index2);
+
+                    if(cluster2.isResolved())
+                    {
+                        ++index2;
+                        continue;
+                    }
+
+                    // try each merge reason in turn
+                    boolean canMergeClusters = false;
+
+                    canMergeClusters = canMergeClustersOnFoldbacks(cluster1, cluster2);
+
+                    if(!canMergeClusters)
+                        canMergeClusters = canMergeClustersOnCommonArms(cluster1, cluster2, longDelDupCutoffLength);
+
+                    if(!canMergeClusters)
+                    {
+                        ++index2;
+                        continue;
+                    }
+
+                    foundMerges = true;
+                    cluster1.mergeOtherCluster(cluster2, false);
+
+                    complexClusters.remove(index2);
+                    mClusters.remove(cluster2);
+                }
+
+                ++index1;
+            }
+
+            if(mergeTraversingClusters(complexClusters))
+                foundMerges = true;
+
+            if(mergeLOHResolvingClusters(complexClusters))
+                foundMerges = true;
+
+            if(mergePloidyResolvingClusters(complexClusters))
+                foundMerges = true;
+
+            if(mergeNetCopyNumberResolvingClusters(complexClusters))
+                foundMerges = true;
+
             ++iterations;
 
             if(iterations > 20)
             {
-                LOGGER.warn("reached {} iterations of clustering merging", iterations);
+                LOGGER.warn("sample({}) reached {} iterations of clustering merging", mSampleId, iterations);
                 break;
             }
-        }
+       }
     }
 
     private void findChains(SvCluster cluster, boolean assembledLinksOnly)
@@ -388,87 +461,15 @@ public class ClusterAnalyser {
                     cluster.setSynDelDupData(length, 0);
                 }
             }
-
-            return;
         }
 
-        // next clusters with which start and end on the same arm, have the same start and end orientation
-        // and the same start and end copy number
-        cluster.setResolved(false, RESOLVED_TYPE_COMPLEX);
-    }
-
-    private boolean mergeInconsistentClusters()
-    {
-        // second round of cluster merging on more complex criteria and inconsistencies:
-        // merge on foldbacks on the same arm
-        // merge on links between common arms
-        // merge if one cluster has footprints which overlap unresolved complex SVs
-        // merge clusters which resolve another's LOH DUP
-        boolean foundClustersToMerge = false;
-
-        long longDelDupCutoffLength = mClusteringMethods.getDelDupCutoffLength();
-
-        int index1 = 0;
-        while(index1 < mClusters.size())
+        if(cluster.getResolvedType() == RESOLVED_TYPE_NONE)
         {
-            SvCluster cluster1 = mClusters.get(index1);
-
-            if(cluster1.isResolved())
-            {
-                ++index1;
-                continue;
-            }
-
-            int index2 = index1 + 1;
-            while(index2 < mClusters.size())
-            {
-                SvCluster cluster2 = mClusters.get(index2);
-
-                if(cluster2.isResolved())
-                {
-                    ++index2;
-                    continue;
-                }
-
-                // try each merge reason in turn
-                boolean canMergeClusters = false;
-
-                canMergeClusters = canMergeClustersOnFoldbacks(cluster1, cluster2);
-
-                if(!canMergeClusters)
-                    canMergeClusters = canMergeClustersOnCommonArms(cluster1, cluster2, longDelDupCutoffLength);
-
-                if(!canMergeClusters)
-                {
-                    ++index2;
-                    continue;
-                }
-
-                foundClustersToMerge = true;
-                cluster1.mergeOtherCluster(cluster2, false);
-
-                mClusters.remove(index2);
-            }
-
-            ++index1;
+            cluster.setResolved(false, RESOLVED_TYPE_COMPLEX);
         }
-
-        if(mergeTraversingClusters())
-            foundClustersToMerge = true;
-
-        if(mergeLOHResolvingClusters())
-            foundClustersToMerge = true;
-
-        if(mergePloidyResolvingClusters())
-            foundClustersToMerge = true;
-
-        if(mergeNetCopyNumberResolvingClusters())
-            foundClustersToMerge = true;
-
-        return foundClustersToMerge;
     }
 
-    private boolean mergePloidyResolvingClusters()
+    private boolean mergePloidyResolvingClusters(List<SvCluster> clusters)
     {
         if(!mUseAllelePloidies)
             return false;
@@ -476,9 +477,9 @@ public class ClusterAnalyser {
         List<SvCluster> mergedClusters = Lists.newArrayList();
 
         int clusterIndex = 0;
-        while(clusterIndex < mClusters.size())
+        while(clusterIndex < clusters.size())
         {
-            SvCluster cluster = mClusters.get(clusterIndex);
+            SvCluster cluster = clusters.get(clusterIndex);
 
             if(mergedClusters.contains(cluster) || cluster.isResolved())
             {
@@ -585,14 +586,15 @@ public class ClusterAnalyser {
         if(mergedClusters.isEmpty())
             return false;
 
+        mergedClusters.forEach(x -> clusters.remove(x));
         mergedClusters.forEach(x -> mClusters.remove(x));
         return true;
     }
 
-    private boolean mergeLOHResolvingClusters()
+    private boolean mergeLOHResolvingClusters(List<SvCluster> clusters)
     {
         // merge clusters if one resolves another's LOH event with a DUP on one side
-        List<SvCluster> clustersWithLohEvents = mClusters.stream()
+        List<SvCluster> clustersWithLohEvents = clusters.stream()
                 .filter(x -> !x.getLohEvents().isEmpty())
                 .filter(x -> !x.hasLinkingLineElements())
                 .collect(Collectors.toList());
@@ -694,11 +696,12 @@ public class ClusterAnalyser {
         if(mergedClusters.isEmpty())
             return false;
 
+        mergedClusters.forEach(x -> clusters.remove(x));
         mergedClusters.forEach(x -> mClusters.remove(x));
         return true;
     }
 
-    private boolean mergeNetCopyNumberResolvingClusters()
+    private boolean mergeNetCopyNumberResolvingClusters(List<SvCluster> clusters)
     {
         if(!mUseAllelePloidies)
             return false;
@@ -719,9 +722,9 @@ public class ClusterAnalyser {
         List<SvCluster> mergedClusters = Lists.newArrayList();
 
         int clusterIndex = 0;
-        while(clusterIndex < mClusters.size())
+        while(clusterIndex < clusters.size())
         {
-            SvCluster cluster = mClusters.get(clusterIndex);
+            SvCluster cluster = clusters.get(clusterIndex);
 
             if(mergedClusters.contains(cluster) || cluster.isResolved())
             {
@@ -860,6 +863,7 @@ public class ClusterAnalyser {
         if(mergedClusters.isEmpty())
             return false;
 
+        mergedClusters.forEach(x -> clusters.remove(x));
         mergedClusters.forEach(x -> mClusters.remove(x));
         return true;
     }
@@ -1074,15 +1078,15 @@ public class ClusterAnalyser {
         return false;
     }
 
-    private boolean mergeTraversingClusters()
+    private boolean mergeTraversingClusters(List<SvCluster> clusters)
     {
         // merge clusters if one is straddled by opposing breakends in the other
         List<SvCluster> mergedClusters = Lists.newArrayList();
 
         int clusterIndex = 0;
-        while(clusterIndex < mClusters.size())
+        while(clusterIndex < clusters.size())
         {
-            SvCluster cluster = mClusters.get(clusterIndex);
+            SvCluster cluster = clusters.get(clusterIndex);
 
             if(mergedClusters.contains(cluster) || cluster.isResolved())
             {
@@ -1190,6 +1194,7 @@ public class ClusterAnalyser {
         if(mergedClusters.isEmpty())
             return false;
 
+        mergedClusters.forEach(x -> clusters.remove(x));
         mergedClusters.forEach(x -> mClusters.remove(x));
         return true;
     }

@@ -152,6 +152,14 @@ public class SvArmCluster
                 mTICount = 1;
                 return;
             }
+
+            final SvLinkedPair dbPair = be1.getSV().getDBLink(be1.usesStart());
+
+            if(dbPair != null && dbPair == be2.getSV().getDBLink(be2.usesStart()))
+            {
+                mType = ARM_CL_DSB;
+                return;
+            }
         }
 
         // otherwise count the number of foldbacks, TIs, DSBs and consecutive BEs to determine the type
@@ -180,7 +188,7 @@ public class SvArmCluster
 
             final SvLinkedPair tiPair = be1.getSV().getLinkedPair(be1.usesStart());
 
-            if(tiPair != null && tiPair == be2.getSV().getLinkedPair(be2.usesStart()))
+            if(tiPair != null && tiPair.hasVariant(be2.getSV()))
             {
                 ++tiCount;
             }
@@ -200,22 +208,16 @@ public class SvArmCluster
         if(suspectLine > 0)
         {
             mType = ARM_CL_COMPLEX_LINE;
-            return;
         }
-
-        // some special sub-groups
-        if(mBreakends.size() == 3 && foldbackCount == 1 && dsbCount == 1)
+        else if(mBreakends.size() == 3 && foldbackCount == 1 && dsbCount == 1)
         {
             mType = ARM_CL_FOLDBACK_DSB;
-            return;
         }
-
-        if(foldbackCount == 0 && consecCount == 0 && dsbCount >= mBreakends.size() / 2)
+        else if(foldbackCount == 0 && consecCount == 0 && dsbCount >= mBreakends.size() / 2)
         {
             mType = ARM_CL_DSB;
         }
-
-        if(foldbackCount > 0)
+        else if(foldbackCount > 0)
         {
             mType = ARM_CL_COMPLEX_FOLDBACK;
         }

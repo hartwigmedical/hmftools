@@ -113,7 +113,7 @@ public class SvaConfig
 
     public final List<String> getSampleIds() { return mSampleIds; }
     public void setSampleIds(final List<String> list) { mSampleIds.addAll(list); }
-    public boolean hasMultipleSamples() { return !mSampleIds.isEmpty(); }
+    public boolean hasMultipleSamples() { return mSampleIds.size() > 1; }
 
     public SvaConfig(int proximityDistance)
     {

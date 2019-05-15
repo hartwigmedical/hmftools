@@ -80,6 +80,8 @@ public class SvSampleAnalyser {
     private SvClusteringMethods mClusteringMethods;
     private CNAnalyser mCopyNumberAnalyser;
 
+    private boolean mIsValid;
+
     private PerformanceCounter mPcPrep;
     private PerformanceCounter mPcClusterAnalyse;
     private PerformanceCounter mPcWrite;
@@ -99,6 +101,8 @@ public class SvSampleAnalyser {
 
         mAllVariants = Lists.newArrayList();
         mCopyNumberAnalyser = null;
+
+        mIsValid = true;
 
         mSvFileWriter = null;
         mLinksFileWriter = null;
@@ -120,6 +124,7 @@ public class SvSampleAnalyser {
 
     public final List<SvVarData> getVariants() { return mAllVariants; }
     public final List<SvCluster> getClusters() { return mAnalyser.getClusters(); }
+    public boolean inValidState() { return mIsValid; }
     public final Map<String, List<SvBreakend>> getChrBreakendMap() { return mClusteringMethods.getChrBreakendMap(); }
     public final VisualiserWriter getVisWriter() { return mVisWriter; }
     public void setCopyNumberAnalyser(CNAnalyser cnAnalyser)
@@ -241,7 +246,8 @@ public class SvSampleAnalyser {
         mPcClusterAnalyse.start();
 
         mAnalyser.setSampleData(mSampleId, mAllVariants);
-        mAnalyser.clusterAndAnalyse();
+
+        mIsValid = mAnalyser.clusterAndAnalyse();
 
         mPcClusterAnalyse.stop();
     }
@@ -459,7 +465,7 @@ public class SvSampleAnalyser {
                     if(armCluster != null)
                         writer.write(String.format(",%d,%s,%d", armCluster.id(), armCluster.getTypeStr(), armCluster.getTICount()));
                     else
-                        writer.write("-1,,0");
+                        writer.write(",-1,,0");
                 }
 
                 writer.write(String.format(",%s,%s,%.4f,%.4f",
@@ -499,7 +505,7 @@ public class SvSampleAnalyser {
 
                 mClusterFileWriter = createBufferedWriter(outputFileName, false);
 
-                mClusterFileWriter.write("SampleId,ClusterId,ClusterDesc,ClusterCount,ResolvedType,FullyChained,ChainCount");
+                mClusterFileWriter.write("SampleId,ClusterId,ClusterDesc,ClusterCount,ResolvedType,Subclonal,FullyChained,ChainCount");
                 mClusterFileWriter.write(",DelCount,DupCount,InsCount,InvCount,BndCount,SglCount");
                 mClusterFileWriter.write(",ClusterReasons,Consistency,ArmCount,OriginArms,FragmentArms,IsLINE,HasReplicated,Foldbacks");
                 mClusterFileWriter.write(",IntTIs,ExtTIs,IntTIsWithGain,ExtTIsWithGain,OverlapTIs,DSBs,ShortDSBs,ChainEndsFace,ChainEndsAway");
@@ -515,9 +521,9 @@ public class SvSampleAnalyser {
             {
                 int clusterSvCount = cluster.getSvCount();
 
-                writer.write(String.format("%s,%d,%s,%d,%s,%s,%d",
+                writer.write(String.format("%s,%d,%s,%d,%s,%s,%s,%d",
                         mSampleId, cluster.id(), cluster.getDesc(), clusterSvCount, cluster.getResolvedType(),
-                        cluster.isFullyChained(), cluster.getChains().size()));
+                        cluster.isSubclonal(), cluster.isFullyChained(), cluster.getChains().size()));
 
                 writer.write(String.format(",%d,%d,%d,%d,%d,%d",
                         cluster.getTypeCount(DEL), cluster.getTypeCount(DUP), cluster.getTypeCount(INS),
