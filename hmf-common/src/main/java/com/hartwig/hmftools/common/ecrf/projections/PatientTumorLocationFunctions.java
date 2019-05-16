@@ -43,8 +43,8 @@ public final class PatientTumorLocationFunctions {
         if (sample.length() >= 12 && (type == LimsSampleType.CPCT || type == LimsSampleType.DRUP || type == LimsSampleType.WIDE
                 || type == LimsSampleType.CORE)) {
             return sample.substring(0, 12);
-        } else if (type == LimsSampleType.COLO) {
-            return sample.substring(0, 7);
+        } else if (sample.toUpperCase().startsWith("COLO829")) {
+            return "COLO829";
         }
 
         // If we want to generate a report for unknown sample type we assume patient and sample are identical.

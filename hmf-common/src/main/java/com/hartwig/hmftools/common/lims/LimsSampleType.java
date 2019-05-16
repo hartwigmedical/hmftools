@@ -7,8 +7,7 @@ public enum LimsSampleType {
     WIDE,
     CPCT,
     DRUP,
-    COLO,
-    PNT;
+    OTHER;
 
     @NotNull
     public static LimsSampleType fromSampleId(@NotNull String sampleId) {
@@ -20,10 +19,9 @@ public enum LimsSampleType {
             return CORE;
         } else if (sampleId.startsWith("DRUP")) {
             return DRUP;
-        } else if (sampleId.startsWith("COLO")) {
-            return COLO;
-        } else if (sampleId.startsWith("PNT")) { // is only used for test rapport COLO for extern uses
-            return PNT;
+        } else if (sampleId.startsWith("COLO") || sampleId.startsWith("PNT")) {
+            // PNT is only used for test rapport COLO for extern uses
+            return OTHER;
         }
 
         throw new IllegalStateException("Cannot resolve type for sampleId: " + sampleId);
