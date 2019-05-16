@@ -151,7 +151,7 @@ java -cp amber.jar com.hartwig.hmftools.amber.pileup.AmberFromPileupApplication 
 ```
 
 ## Version History
-- 2.3
+- [2.3](https://github.com/hartwigmedical/hmftools/releases/tag/amber-v2-3)
   - Gracefully handle contigs outside the ref genome. 
   - Fixed bug where TumorContamination file had two copies of tumor info rather than normal and tumor
   - CRAM support
