@@ -112,6 +112,7 @@ public class DetailsAndDisclaimerChapter implements ReportChapter {
 
         div.add(new Paragraph("Disclaimer").addStyle(ReportResources.smallBodyHeadingStyle()));
 
+        div.add(createContentParagraph("This report is based on ", ReportResources.VERSION_REPORT));
         div.add(createContentParagraph("The data on which this report is based is generated "
                 + "from tests that are performed under ISO/ICE-17025:2005 accreditation."));
         div.add(createContentParagraph("The analysis done for this report has passed all internal quality controls."));
