@@ -362,7 +362,7 @@ public class ClusterAnnotations
 
     public static void checkLooseFoldbacks(final SvCluster cluster)
     {
-        if (cluster.isResolved() || cluster.isFullyChained())
+        if (cluster.isResolved() || cluster.isFullyChained(true))
             return;
 
         final Map<String, List<SvBreakend>> chrBreakendMap = cluster.getChrBreakendMap();
@@ -431,7 +431,7 @@ public class ClusterAnnotations
             return;
 
         boolean isComplex = cluster.hasReplicatedSVs() || !cluster.getFoldbacks().isEmpty();
-        boolean isIncomplete = !cluster.isFullyChained() || cluster.getTypeCount(SGL) > 0;
+        boolean isIncomplete = !cluster.isFullyChained(false) || cluster.getTypeCount(SGL) > 0;
 
         // skip simple chained clusters
         if(cluster.getArmCount() == 1 && cluster.getSvCount() == 2)

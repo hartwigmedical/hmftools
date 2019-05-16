@@ -256,7 +256,7 @@ public class ClusterAnalyser {
             {
                 setClusterResolvedState(cluster);
 
-                if(cluster.isFullyChained() && cluster.isConsistent())
+                if(cluster.isFullyChained(true))
                 {
                     LOGGER.debug("cluster({}) simple and consistent with {} SVs", cluster.id(), cluster.getSvCount());
                 }
@@ -274,7 +274,7 @@ public class ClusterAnalyser {
                 continue;
 
             // these are either already chained or no need to chain
-            if (cluster.isSimpleSingleSV() || cluster.isFullyChained() || cluster.getSvCount() < 2)
+            if (cluster.isSimpleSingleSV() || cluster.isFullyChained(false) || cluster.getSvCount() < 2)
             {
                 setClusterResolvedState(cluster);
                 continue;
@@ -285,7 +285,7 @@ public class ClusterAnalyser {
             cluster.removeReplicatedSvs();
             applyCopyNumberReplication(cluster);
 
-            // first establish links between SVs (eg TIs and DBs)
+            // first find assembled TIs
             mLinkFinder.findLinkedPairs(cluster, false);
 
             // then look for fully-linked clusters, ie chains involving all SVs
@@ -396,8 +396,8 @@ public class ClusterAnalyser {
 
         if(mConfig.ChainingSvLimit > 0 && cluster.getSvCount(true) > mConfig.ChainingSvLimit)
         {
-            LOGGER.info("cluster({}) skipping large cluster: unique({}) replicated({})",
-                    cluster.id(), cluster.getSvCount(), cluster.getSvCount(true));
+            LOGGER.info("sample({}) skipping large cluster({}) with SV counts: unique({}) replicated({})",
+                    mSampleId, cluster.id(), cluster.getSvCount(), cluster.getSvCount(true));
             return;
         }
 

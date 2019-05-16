@@ -30,8 +30,10 @@ import static com.hartwig.hmftools.svanalysis.types.SvChain.CM_OVERLAPPING_TI;
 import static com.hartwig.hmftools.svanalysis.types.SvChain.CM_SHORT_DB;
 import static com.hartwig.hmftools.svanalysis.types.SvChain.CM_INT_TI;
 import static com.hartwig.hmftools.svanalysis.types.SvChain.CM_INT_TI_CN_GAIN;
+import static com.hartwig.hmftools.svanalysis.types.SvCluster.isSpecificCluster;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_END;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_START;
+import static com.hartwig.hmftools.svanalysis.types.SvVarData.isSpecificSV;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.isStart;
 import static com.hartwig.hmftools.svanalysis.types.SvaConstants.NO_DB_MARKER;
 
@@ -521,20 +523,33 @@ public class SvSampleAnalyser {
             {
                 int clusterSvCount = cluster.getSvCount();
 
+                // isSpecificCluster(cluster);
+
                 writer.write(String.format("%s,%d,%s,%d,%s,%s,%s,%d",
                         mSampleId, cluster.id(), cluster.getDesc(), clusterSvCount, cluster.getResolvedType(),
-                        cluster.isSubclonal(), cluster.isFullyChained(), cluster.getChains().size()));
+                        cluster.isSubclonal(), cluster.isFullyChained(false), cluster.getChains().size()));
 
                 writer.write(String.format(",%d,%d,%d,%d,%d,%d",
                         cluster.getTypeCount(DEL), cluster.getTypeCount(DUP), cluster.getTypeCount(INS),
                         cluster.getTypeCount(INV), cluster.getTypeCount(BND), cluster.getTypeCount(SGL)));
 
-                writer.write(String.format(",%s,%d,%d,%d,%d,%s,%s,%d",
+                double foldbackCount = 0;
+
+                for(final SvVarData var : cluster.getFoldbacks())
+                {
+                    // avoid double-count chained foldbacks
+                    if(var.getFoldbackBreakend(true) != null)
+                        foldbackCount += 0.5;
+                    if(var.getFoldbackBreakend(false) != null)
+                        foldbackCount += 0.5;
+                }
+
+                writer.write(String.format(",%s,%d,%d,%d,%d,%s,%s,%.0f",
                         cluster.getClusteringReasons(), cluster.getConsistencyCount(),
                         cluster.getArmCount(), cluster.getOriginArms(), cluster.getFragmentArms(),
-                        cluster.hasLinkingLineElements(), cluster.hasReplicatedSVs(), cluster.getFoldbacks().size()));
+                        cluster.hasLinkingLineElements(), cluster.hasReplicatedSVs(), foldbackCount));
 
-                // isSpecificCluster(cluster);
+                isSpecificCluster(cluster);
 
                 int[] chainData = cluster.getLinkMetrics();
 
@@ -587,7 +602,7 @@ public class SvSampleAnalyser {
 
                 mLinksFileWriter = createBufferedWriter(outputFileName, false);
 
-                mLinksFileWriter.write("SampleId,ClusterId,ClusterDesc,ClusterCount,ResolvedType,IsLINE,FullyChained");
+                mLinksFileWriter.write("SampleId,ClusterId,ClusterDesc,ClusterCount,ResolvedType,IsLINE");
                 mLinksFileWriter.write(",ChainId,ChainCount,ChainConsistent,Id1,Id2,ChrArm,IsAssembled,TILength,SynDelDupLen");
                 mLinksFileWriter.write(",NextSVDistance,TraversedSVCount,DBLenStart,DBLenEnd,OnArmOfOrigin");
                 mLinksFileWriter.write(",LocationType,OverlapCount,CopyNumberGain");
@@ -619,9 +634,9 @@ public class SvSampleAnalyser {
 
                         uniquePairs.add(pair);
 
-                        writer.write(String.format("%s,%d,%s,%d,%s,%s,%s",
+                        writer.write(String.format("%s,%d,%s,%d,%s,%s",
                             mSampleId, cluster.id(), cluster.getDesc(), clusterSvCount, cluster.getResolvedType(),
-                            cluster.hasLinkingLineElements(), cluster.isFullyChained()));
+                            cluster.hasLinkingLineElements()));
 
                         final SvBreakend beStart = pair.getBreakend(true);
                         final SvBreakend beEnd= pair.getBreakend(false);

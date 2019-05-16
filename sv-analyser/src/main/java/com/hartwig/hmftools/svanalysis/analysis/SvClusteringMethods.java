@@ -20,7 +20,6 @@ import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.PERMITED_DUP_
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.addSvToChrBreakendMap;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.copyNumbersEqual;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_DUP_BE;
-import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_LOW_CNC;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_DEL_EXT_TI;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_DEL_INT_TI;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_DUP_EXT_TI;
@@ -34,6 +33,7 @@ import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_SGL_
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_SGL_PAIR_INS;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_SGL_PLUS_INCONSISTENT;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_SIMPLE_SV;
+import static com.hartwig.hmftools.svanalysis.types.SvCluster.isSpecificCluster;
 import static com.hartwig.hmftools.svanalysis.types.SvLOH.LOH_NO_SV;
 import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.LINK_TYPE_DB;
 import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.LINK_TYPE_TI;
@@ -115,8 +115,7 @@ public class SvClusteringMethods {
 
     public static boolean isFilteredResolvedType(final String resolvedType)
     {
-        return resolvedType.equals(RESOLVED_TYPE_LOW_CNC) || resolvedType.equals(RESOLVED_TYPE_POLY_G_C)
-                || resolvedType.equals(RESOLVED_TYPE_DUP_BE);
+        return resolvedType.equals(RESOLVED_TYPE_POLY_G_C) || resolvedType.equals(RESOLVED_TYPE_DUP_BE);
     }
 
     public void clusterByProximity(List<SvVarData> allVariants, List<SvCluster> clusters)
@@ -1317,6 +1316,8 @@ public class SvClusteringMethods {
 
             Other configurations are nothing
          */
+
+        // isSpecificCluster(cluster);
 
         if(cluster.getLinkedPairs().isEmpty() && arePairedDeletionBridges(var1, var2))
         {

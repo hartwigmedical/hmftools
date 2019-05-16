@@ -98,7 +98,6 @@ public class SvCluster
 
     public static String RESOLVED_TYPE_NONE = "NONE";
     public static String RESOLVED_TYPE_DUP_BE = "DUP_BE";
-    public static String RESOLVED_TYPE_LOW_CNC = "LOW_CNC";
     public static String RESOLVED_TYPE_POLY_G_C = "POLY_G_C";
     public static String RESOLVED_TYPE_LINE = "LINE";
     public static String RESOLVED_TYPE_DEL_INT_TI = "DEL_INT_TI";
@@ -411,15 +410,18 @@ public class SvCluster
         }
     }
 
-    public boolean isFullyChained()
+    public boolean isFullyChained(boolean requireConsistency)
     {
         if(!mUnchainedSVs.isEmpty() || mChains.isEmpty())
             return false;
 
-        for (final SvChain chain : mChains)
+        if(requireConsistency)
         {
-            if (!chain.isConsistent())
-                return false;
+            for (final SvChain chain : mChains)
+            {
+                if (!chain.isConsistent())
+                    return false;
+            }
         }
 
         return true;
