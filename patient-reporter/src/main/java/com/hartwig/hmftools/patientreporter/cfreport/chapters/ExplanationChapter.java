@@ -34,8 +34,8 @@ public class ExplanationChapter implements ReportChapter {
 
         table.addCell(TableUtil.createLayoutCell()
                 .add(createContentDiv(new String[] { "The analysis is based on reference genome version GRCh37.",
-                        "Transcripts used for reporting can be found on https://github.com/hartwigmedical and are "
-                                + "generally the canonical transcripts as defined by Ensembl.",
+                        "Transcripts used for reporting can be found on https://resources.hartwigmedicalfoundation.nl in directionay "
+                                + " Patient-Reporting and are generally the canonical transcripts as defined by Ensembl.",
                         "Variant detection in samples with lower tumor content is less sensitive. In case of a low tumor "
                                 + "purity (below 20%) likelihood of failing to detect potential variants increases.",
                         "The (implied) tumor purity is the percentage of tumor cells in the biopsy based on analysis of "
