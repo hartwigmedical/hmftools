@@ -5,12 +5,12 @@ import static java.lang.Math.abs;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.BND;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INS;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
-import static com.hartwig.hmftools.svanalysis.analysis.LinkFinder.SHORT_DB_LENGTH;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.areVariantsLinkedByDistance;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.isSpecificCluster;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_END;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_START;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.isStart;
+import static com.hartwig.hmftools.svanalysis.types.SvaConstants.MIN_DEL_LENGTH;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -168,7 +168,7 @@ public class LineElementAnnotator {
                     // test for a remote SGL in a DB
                     final SvLinkedPair dbPair = var.getDBLink(!breakend.usesStart());
 
-                    if (dbPair != null && dbPair.length() <= SHORT_DB_LENGTH && dbPair.getOtherSV(var).type() == SGL
+                    if (dbPair != null && dbPair.length() <= MIN_DEL_LENGTH && dbPair.getOtherSV(var).type() == SGL
                     && dbPair.getOtherSV(var).getCluster() == cluster)
                     {
                         hasRemoteShortBndDB = true;
@@ -208,7 +208,7 @@ public class LineElementAnnotator {
                             final SvLinkedPair dbPair = nextBreakend.getSV().getDBLink(nextBreakend.usesStart());
                             final SvLinkedPair nextDbPair = prevBreakend.getSV().getDBLink(prevBreakend.usesStart());
 
-                            if (dbPair == null || dbPair != nextDbPair || dbPair.length() > SHORT_DB_LENGTH)
+                            if (dbPair == null || dbPair != nextDbPair || dbPair.length() > MIN_DEL_LENGTH)
                             {
                                 // now check the other chromosome for this BND or whether it forms a short DB
                                 final String otherChr = nextBreakend.getSV().chromosome(!nextBreakend.usesStart());
@@ -222,7 +222,7 @@ public class LineElementAnnotator {
                                 {
                                     final SvLinkedPair remoteDbPair = nextBreakend.getSV().getDBLink(!nextBreakend.usesStart());
 
-                                    if(remoteDbPair != null && remoteDbPair.length() <= SHORT_DB_LENGTH
+                                    if(remoteDbPair != null && remoteDbPair.length() <= MIN_DEL_LENGTH
                                     && remoteDbPair.getOtherSV(nextBreakend.getSV()) == prevBreakend.getSV())
                                     {
                                         linkingBnds.add(nextBreakend.getSV());

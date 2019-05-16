@@ -9,13 +9,13 @@ import static com.hartwig.hmftools.common.variant.structural.StructuralVariantTy
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DUP;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INS;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
-import static com.hartwig.hmftools.svanalysis.analysis.LinkFinder.MIN_TEMPLATED_INSERTION_LENGTH;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.appendStr;
 import static com.hartwig.hmftools.svanalysis.annotators.FragileSiteAnnotator.NO_FS;
 import static com.hartwig.hmftools.svanalysis.annotators.LineElementAnnotator.NO_LINE_ELEMENT;
 import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.ASSEMBLY_MATCH_MATCHED;
 import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.ASSEMBLY_MATCH_NONE;
 import static com.hartwig.hmftools.svanalysis.types.SvaConfig.SPECIFIC_SV_ID;
+import static com.hartwig.hmftools.svanalysis.types.SvaConstants.MIN_TEMPLATED_INSERTION_LENGTH;
 
 import java.util.List;
 
@@ -736,6 +736,23 @@ public class SvVarData
     public final SvCNData getCopyNumberData(boolean isStart, boolean isPrevious)
     {
         return isStart ? (isPrevious ? mCnDataPrevStart : mCnDataPostStart) : (isPrevious ? mCnDataPrevEnd : mCnDataPostEnd);
+    }
+
+    public boolean sglToCentromereOrTelomere()
+    {
+        if(!isNullBreakend() || isNoneSegment())
+            return false;
+
+        if(mSVData.insertSequenceRepeatClass().equals("Satellite/centr") || mSVData.insertSequenceRepeatClass().equals("Satellite/telo"))
+            return true;
+
+        if(mSVData.insertSequenceRepeatClass().equals("Simple_repeat"))
+        {
+            if (mSVData.insertSequenceRepeatType().equals("(CCCTAA)n") || mSVData.insertSequenceRepeatType().equals("(TTAGGG)n"))
+                return true;
+        }
+
+        return false;
     }
 
     public void setCopyNumberData(boolean isStart, final SvCNData prevData, final SvCNData postData)

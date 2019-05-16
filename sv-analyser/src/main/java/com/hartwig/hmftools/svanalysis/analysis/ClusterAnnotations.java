@@ -15,8 +15,6 @@ import static com.hartwig.hmftools.svanalysis.analysis.CNAnalyser.CN_SEG_DATA_CN
 import static com.hartwig.hmftools.svanalysis.analysis.CNAnalyser.CN_SEG_DATA_CN_BEFORE;
 import static com.hartwig.hmftools.svanalysis.analysis.CNAnalyser.CN_SEG_DATA_MAP_AFTER;
 import static com.hartwig.hmftools.svanalysis.analysis.CNAnalyser.CN_SEG_DATA_MAP_BEFORE;
-import static com.hartwig.hmftools.svanalysis.analysis.ClusterAnalyser.SHORT_TI_LENGTH;
-import static com.hartwig.hmftools.svanalysis.analysis.LinkFinder.NO_DB_MARKER;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.CHROMOSOME_ARM_P;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.CHROMOSOME_ARM_Q;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.appendStr;
@@ -39,6 +37,8 @@ import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_END;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_START;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.isSpecificSV;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.isStart;
+import static com.hartwig.hmftools.svanalysis.types.SvaConstants.NO_DB_MARKER;
+import static com.hartwig.hmftools.svanalysis.types.SvaConstants.SHORT_TI_LENGTH;
 
 import java.util.HashMap;
 import java.util.List;
@@ -101,7 +101,7 @@ public class ClusterAnnotations
             if(cluster.getChains().isEmpty())
                 continue;
 
-            // isSpecificCluster(cluster);
+            isSpecificCluster(cluster);
 
             // gather up start and end arms from each chain, to determine origin arms for the cluster
             List<String> startEndArms = Lists.newArrayList();
@@ -303,10 +303,10 @@ public class ClusterAnnotations
         // counting the number of non-trivial SVs traversed in the process
         int[] nextSvData = {-1, 0};
 
-        SvBreakend firstBreakend = pair.first().getBreakend(pair.firstLinkOnStart());
-        SvBreakend secondBreakend = pair.second().getBreakend(pair.secondLinkOnStart());
-        int lowerIndex = min(firstBreakend.getChrPosIndex(), secondBreakend.getChrPosIndex());
-        int upperIndex = max(firstBreakend.getChrPosIndex(), secondBreakend.getChrPosIndex());
+        SvBreakend lowerBreakend = pair.getBreakend(true);
+        SvBreakend upperBreakend = pair.getBreakend(false);
+        int lowerIndex = lowerBreakend.getChrPosIndex();
+        int upperIndex = upperBreakend.getChrPosIndex();
         int svsTraversed = 0;
 
         if(lowerIndex > 0)
@@ -362,7 +362,7 @@ public class ClusterAnnotations
 
     public static void checkLooseFoldbacks(final SvCluster cluster)
     {
-        if (cluster.isResolved() || cluster.isFullyChained())
+        if (cluster.isResolved() || cluster.isFullyChained(true))
             return;
 
         final Map<String, List<SvBreakend>> chrBreakendMap = cluster.getChrBreakendMap();
@@ -431,7 +431,7 @@ public class ClusterAnnotations
             return;
 
         boolean isComplex = cluster.hasReplicatedSVs() || !cluster.getFoldbacks().isEmpty();
-        boolean isIncomplete = !cluster.isFullyChained() || cluster.getTypeCount(SGL) > 0;
+        boolean isIncomplete = !cluster.isFullyChained(false) || cluster.getTypeCount(SGL) > 0;
 
         // skip simple chained clusters
         if(cluster.getArmCount() == 1 && cluster.getSvCount() == 2)

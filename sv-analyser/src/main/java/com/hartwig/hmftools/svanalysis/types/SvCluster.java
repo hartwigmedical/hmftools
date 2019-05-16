@@ -8,9 +8,9 @@ import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.BND;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.typeAsInt;
-import static com.hartwig.hmftools.svanalysis.analysis.ClusterAnalyser.SHORT_TI_LENGTH;
 import static com.hartwig.hmftools.svanalysis.analysis.ClusterAnalyser.SMALL_CLUSTER_SIZE;
 import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.DEFAULT_PROXIMITY_DISTANCE;
+import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.hasLowCNChangeSupport;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.addSvToChrBreakendMap;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.appendStr;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.calcConsistency;
@@ -25,6 +25,8 @@ import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_END;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_START;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.isStart;
 import static com.hartwig.hmftools.svanalysis.types.SvaConfig.SPECIFIC_CLUSTER_ID;
+import static com.hartwig.hmftools.svanalysis.types.SvaConstants.SHORT_TI_LENGTH;
+import static com.hartwig.hmftools.svanalysis.types.SvaConstants.SUBCLONAL_LOW_CNC_PERCENT;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
@@ -76,6 +78,7 @@ public class SvCluster
     private List<SvVarData> mLongDelDups;
     private List<SvVarData> mFoldbacks;
     private boolean mHasLinkingLineElements;
+    private boolean mIsSubclonal;
     private List<SvVarData> mInversions;
 
     // state for SVs which link different arms or chromosomes
@@ -90,23 +93,23 @@ public class SvCluster
     private int mOriginArms;
     private int mFragmentArms;
 
-    public static String RESOLVED_TYPE_SIMPLE_SV = "SimpleSV";
-    public static String RESOLVED_TYPE_RECIPROCAL_TRANS = "RecipTrans";
+    public static String RESOLVED_TYPE_SIMPLE_SV = "SIMPLE";
+    public static String RESOLVED_TYPE_RECIPROCAL_TRANS = "RECIP_TRANS";
 
-    public static String RESOLVED_TYPE_NONE = "None";
-    public static String RESOLVED_TYPE_LOW_QUALITY = "LowQual";
-    public static String RESOLVED_TYPE_LINE = "Line";
-    public static String RESOLVED_TYPE_DEL_INT_TI = "DEL_Int_TI";
-    public static String RESOLVED_TYPE_DEL_EXT_TI = "DEL_Ext_TI";
-    public static String RESOLVED_TYPE_DUP_INT_TI = "DUP_Int_TI";
-    public static String RESOLVED_TYPE_DUP_EXT_TI = "DUP_Ext_TI";
-    public static String RESOLVED_TYPE_SGL_PAIR_INS = "SglPair_INS";
-    public static String RESOLVED_TYPE_SGL_PAIR_DEL = "SglPair_DEL";
-    public static String RESOLVED_TYPE_SGL_PAIR_DUP = "SglPair_DUP";
-    public static String RESOLVED_TYPE_SGL_PLUS_INCONSISTENT = "SglPlusInc";
+    public static String RESOLVED_TYPE_NONE = "NONE";
+    public static String RESOLVED_TYPE_DUP_BE = "DUP_BE";
+    public static String RESOLVED_TYPE_POLY_G_C = "POLY_G_C";
+    public static String RESOLVED_TYPE_LINE = "LINE";
+    public static String RESOLVED_TYPE_DEL_INT_TI = "DEL_INT_TI";
+    public static String RESOLVED_TYPE_DEL_EXT_TI = "DEL_EXT_TI";
+    public static String RESOLVED_TYPE_DUP_INT_TI = "DUP_INT_TI";
+    public static String RESOLVED_TYPE_DUP_EXT_TI = "DUP_EXT_TI";
+    public static String RESOLVED_TYPE_SGL_PAIR_INS = "SGL_PAIR_INS";
+    public static String RESOLVED_TYPE_SGL_PAIR_DEL = "SGL_PAIR_DEL";
+    public static String RESOLVED_TYPE_SGL_PAIR_DUP = "SGL_PAIR_DUP";
+    public static String RESOLVED_TYPE_SGL_PLUS_INCONSISTENT = "SGL_BND_INV";
 
-    public static String RESOLVED_TYPE_SIMPLE_CHAIN = "SimpleChain";
-    public static String RESOLVED_TYPE_COMPLEX_CHAIN = "ComplexChain";
+    public static String RESOLVED_TYPE_COMPLEX = "COMPLEX";
 
     private static final Logger LOGGER = LogManager.getLogger(SvCluster.class);
 
@@ -146,6 +149,7 @@ public class SvCluster
         mShortTIRemoteSVs = Lists.newArrayList();
         mUnlinkedRemoteSVs = Lists.newArrayList();
         mRecalcRemoteSVStatus = false;
+        mIsSubclonal = false;
 
         mHasReplicatedSVs = false;
 
@@ -213,7 +217,6 @@ public class SvCluster
                 mRecalcRemoteSVStatus = true;
 
             addSvToChrBreakendMap(var, mChrBreakendMap);
-            addSvToArmCluster(var);
 
             // keep track of all SVs in their respective chromosomal arms
             for (int be = SVI_START; be <= SVI_END; ++be)
@@ -295,38 +298,68 @@ public class SvCluster
 
     public final List<SvArmCluster> getArmClusters() { return mArmClusters; }
 
-    private void addSvToArmCluster(final SvVarData var)
+    public void buildArmClusters()
     {
-        for(int be = SVI_START; be <= SVI_END; ++be)
+        for(SvVarData var : mSVs)
         {
-            if(be == SVI_END && var.isNullBreakend())
-                continue;
-
-            final SvBreakend breakend = var.getBreakend(isStart(be));
-            boolean groupFound = false;
-
-            for(final SvArmCluster armCluster : mArmClusters)
+            for(int be = SVI_START; be <= SVI_END; ++be)
             {
-                if(!breakend.chromosome().equals(armCluster.chromosome()) || breakend.arm() != armCluster.arm())
+                if(be == SVI_END && var.isNullBreakend())
                     continue;
 
-                // test whether position is within range
-                if(breakend.position() >= armCluster.posStart() - DEFAULT_PROXIMITY_DISTANCE
-                && breakend.position() <= armCluster.posEnd() + DEFAULT_PROXIMITY_DISTANCE)
+                final SvBreakend breakend = var.getBreakend(isStart(be));
+
+                // ensure that a pair of foldback breakends are put into the same arm cluster
+                if(var.isFoldback() && var.getFoldbackBreakend(breakend.usesStart()) != null)
                 {
+                    SvBreakend otherFoldbackBreakend = var.getFoldbackBreakend(breakend.usesStart());
+                    SvArmCluster existingAC = findArmCluster(otherFoldbackBreakend);
+
+                    if(existingAC != null)
+                    {
+                        existingAC.addBreakend(breakend);
+                        continue;
+                    }
+                }
+
+                boolean groupFound = false;
+
+                for(final SvArmCluster armCluster : mArmClusters)
+                {
+                    if(!breakend.chromosome().equals(armCluster.chromosome()) || breakend.arm() != armCluster.arm())
+                        continue;
+
+                    // test whether position is within range
+                    if(breakend.position() >= armCluster.posStart() - DEFAULT_PROXIMITY_DISTANCE
+                    && breakend.position() <= armCluster.posEnd() + DEFAULT_PROXIMITY_DISTANCE)
+                    {
+                        armCluster.addBreakend(breakend);
+                        groupFound = true;
+                        break;
+                    }
+                }
+
+                if(!groupFound)
+                {
+                    SvArmCluster armCluster = new SvArmCluster(mArmClusters.size(), this, breakend.chromosome(), breakend.arm());
                     armCluster.addBreakend(breakend);
-                    groupFound = true;
-                    break;
+                    mArmClusters.add(armCluster);
                 }
             }
-
-            if(!groupFound)
-            {
-                SvArmCluster armCluster = new SvArmCluster(mArmClusters.size(), this, breakend.chromosome(), breakend.arm());
-                armCluster.addBreakend(breakend);
-                mArmClusters.add(armCluster);
-            }
         }
+
+        mArmClusters.forEach(x -> x.setFeatures());
+    }
+
+    public SvArmCluster findArmCluster(final SvBreakend breakend)
+    {
+        for(final SvArmCluster armCluster : mArmClusters)
+        {
+            if(armCluster.getBreakends().contains(breakend))
+                return armCluster;
+        }
+
+        return null;
     }
 
     public boolean isSyntheticSimpleType(boolean checkResolved)
@@ -377,15 +410,18 @@ public class SvCluster
         }
     }
 
-    public boolean isFullyChained()
+    public boolean isFullyChained(boolean requireConsistency)
     {
         if(!mUnchainedSVs.isEmpty() || mChains.isEmpty())
             return false;
 
-        for (final SvChain chain : mChains)
+        if(requireConsistency)
         {
-            if (!chain.isConsistent())
-                return false;
+            for (final SvChain chain : mChains)
+            {
+                if (!chain.isConsistent())
+                    return false;
+            }
         }
 
         return true;
@@ -626,9 +662,6 @@ public class SvCluster
     {
         if(!mFoldbacks.contains(var))
             mFoldbacks.add(var);
-
-        if(mResolvedType == RESOLVED_TYPE_SIMPLE_CHAIN)
-            mResolvedType = RESOLVED_TYPE_COMPLEX_CHAIN;
     }
 
     public void deregisterFoldback(final SvVarData var)
@@ -656,6 +689,14 @@ public class SvCluster
     }
 
     public boolean hasLinkingLineElements() { return mHasLinkingLineElements; }
+
+    public void markSubclonal()
+    {
+        long lowCNChangeSupportCount = mSVs.stream().filter(x -> hasLowCNChangeSupport(x)).count();
+        mIsSubclonal = lowCNChangeSupportCount / (double)mSVs.size() > SUBCLONAL_LOW_CNC_PERCENT;
+    }
+
+    public boolean isSubclonal() { return mIsSubclonal; }
 
     public final List<SvVarData> getUnlinkedRemoteSVs() { return mUnlinkedRemoteSVs; }
     public final List<SvVarData> getShortTIRemoteSVs() { return mShortTIRemoteSVs; }

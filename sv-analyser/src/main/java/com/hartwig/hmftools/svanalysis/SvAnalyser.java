@@ -227,6 +227,12 @@ public class SvAnalyser {
 
                 sampleAnalyser.analyse();
 
+                if(!sampleAnalyser.inValidState())
+                {
+                    LOGGER.info("exiting after sample({}), in invalid state", sampleId);
+                    break;
+                }
+
                 if(ensemblDataCache != null)
                 {
                     // when matching RNA, allow all transcripts regardless of their viability for fusions
