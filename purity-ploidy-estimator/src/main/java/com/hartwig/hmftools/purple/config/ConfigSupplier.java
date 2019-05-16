@@ -214,7 +214,7 @@ public class ConfigSupplier {
     }
 
     @NotNull
-    public ChartConfig circosConfig() {
+    public ChartConfig chartConfig() {
         return chartConfig;
     }
 

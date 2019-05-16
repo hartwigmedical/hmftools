@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.purple;
+package com.hartwig.hmftools.purple.plot;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -43,9 +43,9 @@ import org.jetbrains.annotations.Nullable;
 
 import htsjdk.samtools.util.CollectionUtil;
 
-class GenerateCircosData {
+class CircosCharts {
 
-    private static final Logger LOGGER = LogManager.getLogger(GenerateCircosData.class);
+    private static final Logger LOGGER = LogManager.getLogger(CircosCharts.class);
 
     private static final int MAX_PLOT_POINTS = 25000;
 
@@ -57,29 +57,22 @@ class GenerateCircosData {
     private final String baseCircosReferenceSample;
     private final RefGenome refGenome;
 
-    GenerateCircosData(final ConfigSupplier configSupplier, final ExecutorService executorService) {
+    CircosCharts(final ConfigSupplier configSupplier, final ExecutorService executorService) {
         this.tumorSample = configSupplier.commonConfig().tumorSample();
         this.referenceSample = configSupplier.commonConfig().refSample();
-        this.config = configSupplier.circosConfig();
+        this.config = configSupplier.chartConfig();
         this.executorService = executorService;
         this.refGenome = configSupplier.refGenomeConfig().refRegome();
         this.baseCircosTumorSample = config.circosDirectory() + File.separator + tumorSample;
         this.baseCircosReferenceSample = config.circosDirectory() + File.separator + referenceSample;
     }
 
-    private void createDirectory(final String dir) throws IOException {
-        final File output = new File(dir);
-        if (!output.exists() && !output.mkdirs()) {
-            throw new IOException("Unable to create circos output directory " + dir);
-        }
-    }
 
     void write(@NotNull final Gender gender, @NotNull final List<PurpleCopyNumber> copyNumber,
             @NotNull final List<PurityAdjustedSomaticVariant> somaticVariants, @NotNull final List<StructuralVariant> structuralVariants,
             @NotNull final List<FittedRegion> regions, @NotNull final List<AmberBAF> bafs)
-            throws IOException, InterruptedException, ExecutionException {
-        createDirectory(config.plotDirectory());
-        createDirectory(config.circosDirectory());
+            throws IOException, ExecutionException, InterruptedException {
+
 
         writeConfig(gender);
         writeCopyNumbers(copyNumber);
