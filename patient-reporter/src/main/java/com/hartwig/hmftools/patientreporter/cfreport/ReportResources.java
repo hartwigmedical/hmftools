@@ -29,6 +29,7 @@ public final class ReportResources {
     public static final String CONTACT_EMAIL_QA = "qualitysystem@hartwigmedicalfoundation.nl";
     public static final String SIGNATURE_NAME = "Edwin Cuppen";
     public static final String SIGNATURE_TITLE = "Director " + HARTWIG_NAME;
+    public static final String VERSION_REPORT = "version " + PatientReporterApplication.VERSION;
 
     public static final String METADATA_TITLE = "HMF Sequencing Report v" + PatientReporterApplication.VERSION;
     public static final String METADATA_AUTHOR = HARTWIG_NAME;

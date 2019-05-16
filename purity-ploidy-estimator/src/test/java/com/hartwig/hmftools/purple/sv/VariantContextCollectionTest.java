@@ -26,7 +26,7 @@ public class VariantContextCollectionTest {
 
     @Test
     public void testAddSetsModifiedFlag() {
-        final VariantContextCollection victim = new VariantContextCollection(Lists.newArrayList("1"));
+        final VariantContextCollection victim = new VariantContextCollectionImpl(Lists.newArrayList("1"));
         assertEquals(0, victim.passingVariants().size());
 
         victim.add(codec.decode("1\t192614842\tgridss14_291648b\tT\tTCTCTACACAAG.\t2076.59\tPASS\tSVTYPE=BND\tGT\t./."));

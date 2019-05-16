@@ -46,6 +46,14 @@ public class CFReportWriterTest {
     }
 
     @Test
+    public void canGeneratePatientReportForBelowDetectionSamples() throws IOException {
+        AnalysedPatientReport patientReport = ExampleAnalysisTestFactory.buildAnalysisWithAllTablesForBelowDetectionLimitSamples();
+
+        CFReportWriter writer = new CFReportWriter(WRITE_TO_PDF);
+        writer.writeAnalysedPatientReport(patientReport, testReportFilePath("hmf_below_detection_limit_sequence_report.pdf"));
+    }
+
+    @Test
     public void canGenerateLowTumorPercentageReport() throws IOException {
         generateQCFailCPCTReport(0.1, null, QCFailReason.LOW_TUMOR_PERCENTAGE, testReportFilePath("hmf_low_tumor_percentage_report.pdf"));
     }
@@ -75,6 +83,7 @@ public class CFReportWriterTest {
                 .patientTumorLocation(ImmutablePatientTumorLocation.of("CPCT02991111", "Skin", "Melanoma"))
                 .refBarcode("FR12123488")
                 .tumorBarcode("FR12345678")
+                .refArrivalDate(LocalDate.parse("10-Jan-2019", DATE_FORMATTER))
                 .tumorArrivalDate(LocalDate.parse("05-Jan-2019", DATE_FORMATTER))
                 .purityShallowSeq(shallowSeqPurity != null ? PatientReportFormat.formatPercent(shallowSeqPurity) : "not determined")
                 .pathologyTumorPercentage(

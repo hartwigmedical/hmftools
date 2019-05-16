@@ -105,7 +105,7 @@ Chromosome | Position | ReferenceReadCount | TumorReadCount | ReferenceGCRatio |
 TUMOR.cobalt.ratio.pcf and REFERENCE.cobalt.ratio.pcf contain the segmented regions determined from the ratios.
 
 ## Version History
-- 1.6
+- [1.6](https://github.com/hartwigmedical/hmftools/releases/tag/cobalt-v1-6)
   - CRAM support
 - 1.5
   - Support for HG38

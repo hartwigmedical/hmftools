@@ -894,6 +894,10 @@ Threads | Elapsed Time| CPU Time | Peak Mem
 
 
 ## Version History
+- upcoming
+  - Create plot directory before writing to it
+- [2.28](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v2-28)
+  - Fixed exception when no SV vcf supplied
 - 2.27 
   - Fixed missing ploidy when loading somatics
 - 2.26

@@ -148,8 +148,54 @@ public final class ExampleAnalysisTestFactory {
     }
 
     @NotNull
+    public static AnalysedPatientReport buildAnalysisWithAllTablesForBelowDetectionLimitSamples() {
+        final double impliedTumorPurity = 1D;
+        final double averageTumorPloidy = 3.1;
+        final int tumorMutationalLoad = 182;
+        final double tumorMutationalBurden = 13.6;
+        final double microsatelliteIndelsPerMb = 0.1089;
+
+        final BaseReportData baseReportData = testBaseReportData();
+        final FittedPurity fittedPurity = createFittedPurity(impliedTumorPurity, averageTumorPloidy);
+
+        final PurityAdjuster purityAdjuster = new PurityAdjuster(Gender.MALE, fittedPurity);
+        final List<EvidenceItem> tumorLocationSpecificEvidence = createCOLO829TumorSpecificEvidence();
+        final List<ClinicalTrial> clinicalTrials = createCOLO829ClinicalTrials();
+        final List<EvidenceItem> offLabelEvidence = createCOLO829OffLabelEvidence();
+        final List<ReportableVariant> reportableVariants = createAllSomaticVariants(purityAdjuster);
+        final List<GeneCopyNumber> copyNumbers = createCOLO829CopyNumbers();
+        final List<ReportableGeneFusion> fusions = createTestFusions();
+        final ChordAnalysis chordAnalysis = createCOLO829ChordAnalysis();
+        final List<ReportableGeneDisruption> disruptions = createCOLO829Disruptions();
+
+        final SampleReport sampleReport = createCOLO829SampleReport();
+
+        return ImmutableAnalysedPatientReport.of(sampleReport,
+                "",
+                fittedPurity.purity(),
+                false,
+                fittedPurity.ploidy(),
+                tumorLocationSpecificEvidence,
+                clinicalTrials,
+                offLabelEvidence,
+                reportableVariants,
+                microsatelliteIndelsPerMb,
+                tumorMutationalLoad,
+                tumorMutationalBurden,
+                chordAnalysis,
+                copyNumbers,
+                fusions,
+                disruptions,
+                Resources.getResource("circos/circos_example.png").getPath(),
+                Optional.of("this is a test report and does not relate to any real patient"),
+                baseReportData.signaturePath(),
+                baseReportData.logoRVAPath(),
+                baseReportData.logoCompanyPath());
+    }
+
+    @NotNull
     private static SampleReport createCOLO829SampleReport() {
-        final String sample = "COLO829T";
+        final String sample = "PNT00012345T";
         return ImmutableSampleReport.builder()
                 .sampleId(sample)
                 .patientTumorLocation(ImmutablePatientTumorLocation.of("COLO829", "Skin", "Melanoma"))

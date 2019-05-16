@@ -218,10 +218,10 @@ public class SummaryChapter implements ReportChapter {
     }
 
     @NotNull
-    private static Set<String> sortSummaryGenes(@NotNull Set<String> driverVariantGenes) {
-        List<String> numbersList = Lists.newArrayList(driverVariantGenes);
-        Collections.sort(numbersList);
-        return Sets.newHashSet(numbersList);
+    public static Set<String> sortSummaryGenes(@NotNull Set<String> driverVariantGenes) {
+        List<String> genesList = Lists.newArrayList(driverVariantGenes);
+        Collections.sort(genesList);
+        return Sets.newHashSet(genesList);
     }
 
     @NotNull

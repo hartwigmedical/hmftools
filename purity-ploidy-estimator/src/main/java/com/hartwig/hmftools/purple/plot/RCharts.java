@@ -18,13 +18,13 @@ public class RCharts {
     private final CommonConfig commonConfig;
     private final ChartConfig chartConfig;
 
-    public RCharts(final ConfigSupplier configSupplier) {
+    RCharts(final ConfigSupplier configSupplier) {
         this.configSupplier = configSupplier;
         this.commonConfig = configSupplier.commonConfig();
-        this.chartConfig = configSupplier.circosConfig();
+        this.chartConfig = configSupplier.chartConfig();
     }
 
-    public void generatePlots() throws InterruptedException, IOException {
+    void generateRCharts() throws InterruptedException, IOException {
 
         int copyNumberResult = RExecutor.executeFromClasspath("r/copyNumberPlots.R",
                 commonConfig.tumorSample(),

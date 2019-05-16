@@ -33,6 +33,8 @@ import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantFactory;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 import com.hartwig.hmftools.purple.sv.VariantContextCollection;
+import com.hartwig.hmftools.purple.sv.VariantContextCollectionDummy;
+import com.hartwig.hmftools.purple.sv.VariantContextCollectionImpl;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
@@ -89,14 +91,14 @@ class PurpleStructuralVariantSupplier {
     PurpleStructuralVariantSupplier() {
         header = Optional.empty();
         outputVCF = Strings.EMPTY;
-        variants = new VariantContextCollection(Collections.emptyList());
+        variants = new VariantContextCollectionDummy();
     }
 
     PurpleStructuralVariantSupplier(@NotNull final String version, @NotNull final String templateVCF, @NotNull final String outputVCF) {
         final VCFFileReader vcfReader = new VCFFileReader(new File(templateVCF), false);
         this.outputVCF = outputVCF;
         header = Optional.of(generateOutputHeader(version, vcfReader.getFileHeader()));
-        variants = new VariantContextCollection(header.get());
+        variants = new VariantContextCollectionImpl(header.get());
 
         for (VariantContext context : vcfReader) {
             variants.add(context);
@@ -206,7 +208,7 @@ class PurpleStructuralVariantSupplier {
         final CopyNumberEnrichedStructuralVariantFactory svEnricher =
                 new CopyNumberEnrichedStructuralVariantFactory(purityAdjuster, Multimaps.fromRegions(copyNumbers));
 
-        final VariantContextCollection enrichedCollection = new VariantContextCollection(header.get());
+        final VariantContextCollectionImpl enrichedCollection = new VariantContextCollectionImpl(header.get());
         for (EnrichedStructuralVariant enrichedSV : svEnricher.enrich(svFactory.results())) {
             final VariantContext startContext = enrichedSV.startContext();
             if (startContext != null) {

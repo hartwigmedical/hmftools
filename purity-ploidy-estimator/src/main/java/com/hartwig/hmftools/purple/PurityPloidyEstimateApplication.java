@@ -51,7 +51,6 @@ import com.hartwig.hmftools.common.variant.filter.SGTFilter;
 import com.hartwig.hmftools.common.variant.recovery.RecoverStructuralVariants;
 import com.hartwig.hmftools.common.version.VersionInfo;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
-import com.hartwig.hmftools.purple.config.ChartConfig;
 import com.hartwig.hmftools.purple.config.CommonConfig;
 import com.hartwig.hmftools.purple.config.ConfigSupplier;
 import com.hartwig.hmftools.purple.config.DBConfig;
@@ -60,7 +59,7 @@ import com.hartwig.hmftools.purple.config.FittingConfig;
 import com.hartwig.hmftools.purple.config.SmoothingConfig;
 import com.hartwig.hmftools.purple.config.SomaticConfig;
 import com.hartwig.hmftools.purple.config.StructuralVariantConfig;
-import com.hartwig.hmftools.purple.plot.RCharts;
+import com.hartwig.hmftools.purple.plot.Charts;
 import com.hartwig.hmftools.purple.somatic.SomaticVCF;
 
 import org.apache.commons.cli.CommandLine;
@@ -221,19 +220,14 @@ public class PurityPloidyEstimateApplication {
                         geneCopyNumbers);
             }
 
-            final ChartConfig chartConfig = configSupplier.circosConfig();
-            if (chartConfig.enabled()) {
-                LOGGER.info("Writing charts to: {}", chartConfig.plotDirectory());
-                new RCharts(configSupplier).generatePlots();
-            }
-
-            LOGGER.info("Writing circos data to: {}", chartConfig.circosDirectory());
-            new GenerateCircosData(configSupplier, executorService).write(cobaltGender,
+            LOGGER.info("Generating charts");
+            new Charts(configSupplier, executorService).write(cobaltGender,
                     copyNumbers,
                     enrichedSomatics,
                     structuralVariants.variants(),
                     fittedRegions,
                     Lists.newArrayList(bafs.values()));
+
         } finally {
             executorService.shutdown();
         }
