@@ -96,7 +96,7 @@ public abstract class ExplanationPage {
         return toList("Details on reported gene fusions",
                 Lists.newArrayList("The canonical, or otherwise longest transcript validly fused is reported.",
                         "Fusions are restricted to those in a known fusion list based on CiViC, OncoKB, CGI and COSMIC",
-                        "We additionally select fusions where one partner is promiscuous in either 5' or 3' position."));
+                        "We additionally select fusions where one is promiscuous in either 5' or 3' position."));
     }
 
     @NotNull

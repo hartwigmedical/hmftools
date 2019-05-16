@@ -258,7 +258,7 @@ public class QCFailChapter implements ReportChapter {
 
     @NotNull
     private static Paragraph versionPatientReport() {
-        return createContentParagraph("This report is based on ", ReportResources.VERSION_REPORT);
+        return createContentParagraph("This report is based by patient reporter ", ReportResources.VERSION_REPORT);
     }
 
     @NotNull
