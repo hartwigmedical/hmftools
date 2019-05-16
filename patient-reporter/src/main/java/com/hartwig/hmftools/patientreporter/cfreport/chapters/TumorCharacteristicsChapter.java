@@ -72,7 +72,7 @@ public class TumorCharacteristicsChapter implements ReportChapter {
         satelliteChart.scale(InlineBarChart.LOG10_SCALE);
         satelliteChart.setTickMarks(new double[] { MicroSatelliteStatus.RANGE_MIN, 10, MicroSatelliteStatus.RANGE_MAX },
                 doubleDecimalFormat);
-        satelliteChart.enableUndershoot("<" + noDecimalFormat.format(satelliteChart.min()));
+        satelliteChart.enableUndershoot(noDecimalFormat.format(0));
         satelliteChart.enableOvershoot(">" + noDecimalFormat.format(satelliteChart.max()));
         satelliteChart.setIndicator(MicroSatelliteStatus.THRESHOLD,
                 "Microsatellite \ninstability (" + doubleDecimalFormat.format(MicroSatelliteStatus.THRESHOLD) + ")");
@@ -93,7 +93,7 @@ public class TumorCharacteristicsChapter implements ReportChapter {
         mutationalLoadChart.enabled(hasReliablePurityFit);
         mutationalLoadChart.scale(InlineBarChart.LOG10_SCALE);
         mutationalLoadChart.setTickMarks(new double[] { MutationalLoad.RANGE_MIN, 10, 100, MutationalLoad.RANGE_MAX }, noDecimalFormat);
-        mutationalLoadChart.enableUndershoot("<" + noDecimalFormat.format(mutationalLoadChart.min()));
+        mutationalLoadChart.enableUndershoot(noDecimalFormat.format(0));
         mutationalLoadChart.enableOvershoot(">" + noDecimalFormat.format(mutationalLoadChart.max()));
         mutationalLoadChart.setIndicator(MutationalLoad.THRESHOLD,
                 "Eligible for \nDRUP (" + noDecimalFormat.format(MutationalLoad.THRESHOLD) + ")");
@@ -114,7 +114,7 @@ public class TumorCharacteristicsChapter implements ReportChapter {
         mutationalBurdenChart.scale(InlineBarChart.LOG10_SCALE);
         mutationalBurdenChart.setTickMarks(new double[] { MutationalBurden.RANGE_MIN, 10, MutationalBurden.RANGE_MAX },
                 doubleDecimalFormat);
-        mutationalBurdenChart.enableUndershoot("<" + singleDecimalFormat.format(mutationalBurdenChart.min()));
+        mutationalBurdenChart.enableUndershoot(noDecimalFormat.format(0));
         mutationalBurdenChart.enableOvershoot(">" + singleDecimalFormat.format(mutationalBurdenChart.max()));
         reportDocument.add(createCharacteristicDiv("Tumor mutational burden",
                 mutationalBurdenString,
