@@ -59,6 +59,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.numeric.Doubles;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.utils.GenericDataLoader;
@@ -91,7 +92,7 @@ public class BucketAnalyser {
     private int mSampleCount;
     private int mActiveSampleCount; // minus the excluded samples
 
-    private Map<String, List<Double>> mBucketMediansMap; // cancer-type to median bucket ratios (ie background sigs)
+    private Map<String, double[]> mCancerTypeBucketRatiosMap; // cancer-type to median bucket ratios (ie background sigs)
     private SigMatrix mBucketProbs;
     private SigMatrix mBackgroundCounts;
     private SigMatrix mElevatedCounts; // actual - expected, capped at zero
@@ -167,7 +168,7 @@ public class BucketAnalyser {
         mBackgroundCount = 0;
         mPermittedElevRange = null;
         mPermittedBgRange = null;
-        mBucketMediansMap = null;
+        mCancerTypeBucketRatiosMap = null;
         mSampleBgAllocations = Lists.newArrayList();
 
         mSampleData = Lists.newArrayList();
@@ -606,9 +607,7 @@ public class BucketAnalyser {
 
         mTotalCount = sumVector(mSampleTotals);
 
-        mBucketMediansMap = new HashMap();
-
-        // double bucketMedRange = 0.005;
+        mCancerTypeBucketRatiosMap = Maps.newHashMap();
 
         double[][] scData = mSampleCounts.getData();
 
@@ -621,7 +620,7 @@ public class BucketAnalyser {
             // and then infer a background signature (literally bucket ratios) from those only
             int samplesIncluded = 0;
 
-            List<List<Double>> sampleBucketRatios = Lists.newArrayList();
+            List<double[]> sampleBucketRatios = Lists.newArrayList();
 
             for (int j = 0; j < sampleIds.size(); ++j)
             {
@@ -634,11 +633,11 @@ public class BucketAnalyser {
 
                 ++samplesIncluded;
 
-                List<Double> bucketRatios = Lists.newArrayList();
+                double[] bucketRatios = new double[mBucketCount];
 
                 for (int i = 0; i < mBucketCount; ++i)
                 {
-                    bucketRatios.add(scData[i][sampleId] / sampleTotal);
+                    bucketRatios[i] = scData[i][sampleId] / sampleTotal;
                 }
 
                 sampleBucketRatios.add(bucketRatios);
@@ -672,8 +671,8 @@ public class BucketAnalyser {
 
                     for (int j = 0; j < sampleBucketRatios.size(); ++j)
                     {
-                        List<Double> sampleBucketRatio = sampleBucketRatios.get(j);
-                        bucketRatios[j] = sampleBucketRatio.get(i);
+                        double[] sampleRatios = sampleBucketRatios.get(j);
+                        bucketRatios[j] = sampleRatios[i];
                     }
 
                     // sort these and then take the median
@@ -684,16 +683,8 @@ public class BucketAnalyser {
                 }
 
                 // convert to a percent
-                List<Double> medianRatios = Lists.newArrayList();
-
-                double ratioTotal = sumVector(medianBucketRatios);
-
-                for (int i = 0; i < mBucketCount; ++i)
-                {
-                    medianRatios.add(medianBucketRatios[i] / ratioTotal);
-                }
-
-                mBucketMediansMap.put(cancerType, medianRatios);
+                convertToPercentages(medianBucketRatios);
+                mCancerTypeBucketRatiosMap.put(cancerType, medianBucketRatios);
             }
         }
     }
@@ -715,13 +706,12 @@ public class BucketAnalyser {
 
         final double[][] scData = mSampleCounts.getData();
 
-        for (Map.Entry<String, List<Double>> entry : mBucketMediansMap.entrySet())
+        for (Map.Entry<String, double[]> entry : mCancerTypeBucketRatiosMap.entrySet())
         {
             final String type = entry.getKey();
             List<Integer> sampleIds = mCancerSamplesMap.get(type);
 
-            List<Double> medianRatios = entry.getValue();
-            final double[] bucketRatios = listToArray(medianRatios);
+            final double[] medianRatios = entry.getValue();
 
             for (Integer sampleId : sampleIds)
             {
@@ -729,11 +719,11 @@ public class BucketAnalyser {
 
                 for (int i = 0; i < mBucketCount; ++i)
                 {
-                    int expectedCount = (int) round(bucketRatios[i] * min(mSampleTotals[sampleId], mConfig.MutationalLoadCap));
+                    int expectedCount = (int) round(medianRatios[i] * min(mSampleTotals[sampleId], mConfig.MutationalLoadCap));
                     sampleBgCounts[i] = min(expectedCount, scData[i][sampleId]);
                 }
 
-                double optimalBgCount = calcBestFitWithinProbability(sampleId, bucketRatios, sampleBgCounts, 0.99, 0.01);
+                double optimalBgCount = calcBestFitWithinProbability(sampleId, medianRatios, sampleBgCounts, 0.99, 0.01);
                 mSampleBgAllocations.set(sampleId, optimalBgCount);
             }
         }
@@ -760,17 +750,17 @@ public class BucketAnalyser {
 
         int gridSize = mSampleCount * mBucketCount;
 
-        for(Map.Entry<String, List<Double>> entry: mBucketMediansMap.entrySet())
+        for(Map.Entry<String, double[]> entry: mCancerTypeBucketRatiosMap.entrySet())
         {
             final String type = entry.getKey();
 
-            List<Double> medianRatios = entry.getValue();
+            double[] medianRatios = entry.getValue();
 
             List<Integer> sampleIds = mCancerSamplesMap.get(type);
 
             for (int i = 0; i < mBucketCount; ++i)
             {
-                double bucketMedianRatio = medianRatios.get(i);
+                double bucketMedianRatio = medianRatios[i];
 
                 for (int samIndex = 0; samIndex < sampleIds.size(); ++samIndex)
                 {
@@ -829,7 +819,7 @@ public class BucketAnalyser {
         // if configured, switch all background counts to elevated
         if(!mConfig.UseBackgroundCounts)
         {
-            if(mBucketMediansMap.isEmpty())
+            if(mCancerTypeBucketRatiosMap.isEmpty())
             {
                 for (int i = 0; i < mBucketCount; ++i)
                 {
@@ -1045,17 +1035,15 @@ public class BucketAnalyser {
     {
         LOGGER.debug("cancerType({}) creating background groups for {} samples", cancerType, sampleIds.size());
 
-        final List<Double> medianCounts = mBucketMediansMap.get(cancerType);
+        final double[] bgBucketRatios = mCancerTypeBucketRatiosMap.get(cancerType);
 
-        if(medianCounts == null)
+        if(bgBucketRatios == null)
             return;
-
-        double[] bucketRatios = listToArray(medianCounts);
 
         List<Integer> bucketIds = Lists.newArrayList();
         for (int i = 0; i < mBucketCount; ++i)
         {
-            if(bucketRatios[i] > 0)
+            if(bgBucketRatios[i] > 0)
                 bucketIds.add(i);
         }
 
@@ -1064,7 +1052,7 @@ public class BucketAnalyser {
         bucketGroup.setCancerType(cancerType);
         bucketGroup.setGroupType(BG_TYPE_BACKGROUND);
         // bucketGroup.setTag(BG_TYPE_BACKGROUND);
-        bucketGroup.setBucketRatios(bucketRatios);
+        bucketGroup.setBucketRatios(bgBucketRatios);
 
         if(mConfig.UseRatioRanges)
         {
