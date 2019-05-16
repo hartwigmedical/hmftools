@@ -549,7 +549,7 @@ public class SvSampleAnalyser {
                         cluster.getArmCount(), cluster.getOriginArms(), cluster.getFragmentArms(),
                         cluster.hasLinkingLineElements(), cluster.hasReplicatedSVs(), foldbackCount));
 
-                isSpecificCluster(cluster);
+                // isSpecificCluster(cluster);
 
                 int[] chainData = cluster.getLinkMetrics();
 

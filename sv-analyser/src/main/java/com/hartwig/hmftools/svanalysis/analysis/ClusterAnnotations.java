@@ -101,7 +101,7 @@ public class ClusterAnnotations
             if(cluster.getChains().isEmpty())
                 continue;
 
-            // isSpecificCluster(cluster);
+            isSpecificCluster(cluster);
 
             // gather up start and end arms from each chain, to determine origin arms for the cluster
             List<String> startEndArms = Lists.newArrayList();
@@ -303,10 +303,10 @@ public class ClusterAnnotations
         // counting the number of non-trivial SVs traversed in the process
         int[] nextSvData = {-1, 0};
 
-        SvBreakend firstBreakend = pair.first().getBreakend(pair.firstLinkOnStart());
-        SvBreakend secondBreakend = pair.second().getBreakend(pair.secondLinkOnStart());
-        int lowerIndex = min(firstBreakend.getChrPosIndex(), secondBreakend.getChrPosIndex());
-        int upperIndex = max(firstBreakend.getChrPosIndex(), secondBreakend.getChrPosIndex());
+        SvBreakend lowerBreakend = pair.getBreakend(true);
+        SvBreakend upperBreakend = pair.getBreakend(false);
+        int lowerIndex = lowerBreakend.getChrPosIndex();
+        int upperIndex = upperBreakend.getChrPosIndex();
         int svsTraversed = 0;
 
         if(lowerIndex > 0)
