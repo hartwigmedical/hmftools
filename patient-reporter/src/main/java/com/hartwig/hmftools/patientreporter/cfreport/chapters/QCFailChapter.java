@@ -157,6 +157,7 @@ public class QCFailChapter implements ReportChapter {
         divColumn2.add((shallowSeqText()));
         divColumn2.add((evaluatedAddress()));
         divColumn2.add((recipientText()));
+        divColumn2.add(versionPatientReport());
         divColumn2.add((accreditationText()));
         divColumn2.add((questionsText()));
         return divColumn2;
@@ -201,6 +202,7 @@ public class QCFailChapter implements ReportChapter {
         divColumn2.add((evaluatedAddress()));
         divColumn2.add((recipientText()));
         divColumn2.add(createContentParagraphRequest(failReport.sampleReport()));
+        divColumn2.add(versionPatientReport());
         divColumn2.add(accreditationText());
         divColumn2.add(questionsText());
         return divColumn2;
@@ -248,9 +250,15 @@ public class QCFailChapter implements ReportChapter {
         divColumn2.add(shallowSeqText());
         divColumn2.add(evaluatedAddress());
         divColumn2.add(recipientText());
+        divColumn2.add(versionPatientReport());
         divColumn2.add(accreditationText());
         divColumn2.add(questionsText());
         return divColumn2;
+    }
+
+    @NotNull
+    private static Paragraph versionPatientReport() {
+        return createContentParagraph("This report is based on ", ReportResources.VERSION_REPORT);
     }
 
     @NotNull
