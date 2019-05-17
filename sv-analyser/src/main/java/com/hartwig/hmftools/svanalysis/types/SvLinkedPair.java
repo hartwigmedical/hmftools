@@ -22,8 +22,8 @@ public class SvLinkedPair {
     private int mDBLenFirst;
     private int mDBLenSecond;
     private int mTraversedSVCount;
-    private int mNextSVDistance;
-    private int mNextSVTraversedCount;
+    private int mNextSvDistance;
+    private int mNextClusteredSvDistance;
     private boolean mOnArmOfOrigin;
     private String mLocationType;
     private int mOverlapCount;
@@ -57,8 +57,8 @@ public class SvLinkedPair {
         mDBLenFirst = 0;
         mDBLenSecond = 0;
         mTraversedSVCount = 0;
-        mNextSVDistance = 0;
-        mNextSVTraversedCount = 0;
+        mNextSvDistance = 0;
+        mNextClusteredSvDistance = 0;
         mOnArmOfOrigin = false;
         mLocationType = LOCATION_TYPE_UNCLEAR;
         mOverlapCount = 0;
@@ -143,14 +143,14 @@ public class SvLinkedPair {
     public void setDBLenSecond(int length) { mDBLenSecond = length; }
     public int getDBLenSecond() { return mDBLenSecond; }
 
-    public void setNextSVData(int distance, int traversedCount)
+    public void setNextSVData(int distance, int clusterDistance)
     {
-        mNextSVDistance = distance;
-        mNextSVTraversedCount = traversedCount;
+        mNextSvDistance = distance;
+        mNextClusteredSvDistance = clusterDistance;
     }
 
-    public long getNextSVDistance() { return mNextSVDistance; }
-    public long getNextSVTraversedCount() { return mNextSVTraversedCount; }
+    public long getNextSvDistance() { return mNextSvDistance; }
+    public long getNextClusteredSvDistance() { return mNextClusteredSvDistance; }
 
     public void setOnArmOfOrigin(boolean toggle) { mOnArmOfOrigin = toggle; }
     public boolean onArmOfOrigin() { return mOnArmOfOrigin; }
@@ -169,7 +169,6 @@ public class SvLinkedPair {
 
     public void setExonMatchData(final String data) { mExonMatchData = data; }
     public final String getExonMatchData() { return mExonMatchData; }
-
 
     public boolean hasBreakend(final SvVarData var, boolean useStart, boolean allowReplicated)
     {

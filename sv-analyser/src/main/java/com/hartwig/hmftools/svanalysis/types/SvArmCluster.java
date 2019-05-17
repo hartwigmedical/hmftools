@@ -46,7 +46,8 @@ public class SvArmCluster
     public int id() { return mId; }
     public final String toString()
     {
-        return String.format("%d: %s_%s %d:%d", mId, mChromosome, mArm, mStartPos, mEndPos);
+        return String.format("%d: %s %s_%s %d:%d",
+                mId, typeToString(mType), mChromosome, mArm, mStartPos, mEndPos);
     }
 
     public final String chromosome() { return mChromosome; }
@@ -146,7 +147,7 @@ public class SvArmCluster
 
             final SvLinkedPair tiPair = var1.getLinkedPair(be1.usesStart());
 
-            if(tiPair != null && tiPair == var2.getLinkedPair(be2.usesStart()))
+            if(tiPair != null && tiPair.hasBreakend(be2, true))
             {
                 mType = ARM_CL_TI_ONLY;
                 mTICount = 1;
@@ -188,7 +189,7 @@ public class SvArmCluster
 
             final SvLinkedPair tiPair = be1.getSV().getLinkedPair(be1.usesStart());
 
-            if(tiPair != null && tiPair.hasVariant(be2.getSV()))
+            if(tiPair != null && tiPair.hasBreakend(be2, true))
             {
                 ++tiCount;
             }
@@ -204,6 +205,12 @@ public class SvArmCluster
         }
 
         mTICount = tiCount;
+
+        if(mBreakends.size() == tiCount * 2 + 1)
+        {
+            // if after removing all TIs, all that is left is a single breakend then classify it as such
+            mType = ARM_CL_ISOLATED_BE;
+        }
 
         if(suspectLine > 0)
         {

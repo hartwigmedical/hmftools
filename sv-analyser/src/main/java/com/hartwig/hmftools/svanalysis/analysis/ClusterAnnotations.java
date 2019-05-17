@@ -15,6 +15,7 @@ import static com.hartwig.hmftools.svanalysis.analysis.CNAnalyser.CN_SEG_DATA_CN
 import static com.hartwig.hmftools.svanalysis.analysis.CNAnalyser.CN_SEG_DATA_CN_BEFORE;
 import static com.hartwig.hmftools.svanalysis.analysis.CNAnalyser.CN_SEG_DATA_MAP_AFTER;
 import static com.hartwig.hmftools.svanalysis.analysis.CNAnalyser.CN_SEG_DATA_MAP_BEFORE;
+import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.isFilteredResolvedType;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.CHROMOSOME_ARM_P;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.CHROMOSOME_ARM_Q;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.appendStr;
@@ -101,7 +102,7 @@ public class ClusterAnnotations
             if(cluster.getChains().isEmpty())
                 continue;
 
-            isSpecificCluster(cluster);
+            // isSpecificCluster(cluster);
 
             // gather up start and end arms from each chain, to determine origin arms for the cluster
             List<String> startEndArms = Lists.newArrayList();
@@ -230,7 +231,7 @@ public class ClusterAnnotations
                     final List<SvBreakend> breakendList = chrBreakendMap.get(pair.chromosome());
 
                     int[] nextSVData = getNextClusterSVData(cluster, breakendList, pair);
-                    pair.setNextSVData(nextSVData[NEXT_SV_DISTANCE], nextSVData[NEXT_SV_TRAVERSED_COUNT]);
+                    pair.setNextSVData(nextSVData[NEXT_SV_DISTANCE], nextSVData[NEXT_CLUSTERED_SV_DISTANCE]);
 
                     // how many SVs are traversed by this link
                     pair.setTraversedSVCount(getTraversedSvCount(cluster, breakendList,
@@ -295,67 +296,66 @@ public class ClusterAnnotations
     }
 
     private static int NEXT_SV_DISTANCE = 0;
-    private static int NEXT_SV_TRAVERSED_COUNT = 1;
+    private static int NEXT_CLUSTERED_SV_DISTANCE = 1;
 
     private static int[] getNextClusterSVData(final SvCluster cluster, final List<SvBreakend> breakendList, final SvLinkedPair pair)
     {
         // walk forward and backwards from this pair to the closest SV in the same cluster
         // counting the number of non-trivial SVs traversed in the process
-        int[] nextSvData = {-1, 0};
+        int[] nextSvData = {-1, -1, 0};
 
         SvBreakend lowerBreakend = pair.getBreakend(true);
         SvBreakend upperBreakend = pair.getBreakend(false);
         int lowerIndex = lowerBreakend.getChrPosIndex();
         int upperIndex = upperBreakend.getChrPosIndex();
-        int svsTraversed = 0;
 
         if(lowerIndex > 0)
         {
             for(int i = lowerIndex - 1; i >= 0; --i)
             {
                 final SvBreakend breakend = breakendList.get(i);
+                int distance = (int)(lowerBreakend.position() - breakend.position());
 
                 if (breakend.getSV().getCluster() == cluster)
                 {
-                    final SvBreakend refBreakend = breakendList.get(lowerIndex);
-                    nextSvData[NEXT_SV_DISTANCE] = (int)(refBreakend.position() - breakend.position());
-                    nextSvData[NEXT_SV_TRAVERSED_COUNT] = svsTraversed;
+                    nextSvData[NEXT_CLUSTERED_SV_DISTANCE] = distance;
                     break;
                 }
-                else if(!breakend.getSV().getCluster().isResolved())
+                else if(!isFilteredResolvedType(breakend.getSV().getCluster().getResolvedType()))
                 {
-                    ++svsTraversed;
+                    if(nextSvData[NEXT_SV_DISTANCE] == -1)
+                        nextSvData[NEXT_SV_DISTANCE] = distance;
                 }
             }
         }
 
         if(upperIndex < breakendList.size() - 1)
         {
-            svsTraversed = 0;
-
             for(int i = upperIndex + 1; i < breakendList.size(); ++i)
             {
                 final SvBreakend breakend = breakendList.get(i);
 
+                int distance = (int)(breakend.position() - upperBreakend.position());
+
                 if (breakend.getSV().getCluster() == cluster)
                 {
-                    final SvBreakend refBreakend = breakendList.get(upperIndex);
-                    long distance = breakend.position() - refBreakend.position();
-
-                    if (nextSvData[NEXT_SV_DISTANCE] == -1 || distance < nextSvData[NEXT_SV_DISTANCE])
+                    if (nextSvData[NEXT_CLUSTERED_SV_DISTANCE] == -1 || distance < nextSvData[NEXT_CLUSTERED_SV_DISTANCE])
                     {
-                        nextSvData[NEXT_SV_TRAVERSED_COUNT] = svsTraversed;
-                        nextSvData[NEXT_SV_DISTANCE] = (int)distance;
+                        nextSvData[NEXT_CLUSTERED_SV_DISTANCE] = distance;
                     }
 
                     break;
                 }
-                else if(!breakend.getSV().getCluster().isResolved())
+                else if(!isFilteredResolvedType(breakend.getSV().getCluster().getResolvedType()))
                 {
-                    ++svsTraversed;
+                    if(nextSvData[NEXT_SV_DISTANCE] == -1 || distance < nextSvData[NEXT_SV_DISTANCE])
+                        nextSvData[NEXT_SV_DISTANCE] = distance;
                 }
             }
         }
+
+        if(nextSvData[NEXT_SV_DISTANCE] == -1)
+            nextSvData[NEXT_SV_DISTANCE] = nextSvData[NEXT_CLUSTERED_SV_DISTANCE];
 
         return nextSvData;
     }

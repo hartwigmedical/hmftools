@@ -7,11 +7,13 @@ import static com.hartwig.hmftools.svanalysis.analyser.SvTestHelper.createDup;
 import static com.hartwig.hmftools.svanalysis.analyser.SvTestHelper.createInv;
 import static com.hartwig.hmftools.svanalysis.analyser.SvTestHelper.createSgl;
 import static com.hartwig.hmftools.svanalysis.analyser.SvTestHelper.createSv;
+import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_COMPLEX;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_DEL_EXT_TI;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_DEL_INT_TI;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_DUP_EXT_TI;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_DUP_INT_TI;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_NONE;
+import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_RECIPROCAL_INV;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_RECIPROCAL_TRANS;
 
 import static org.junit.Assert.assertEquals;
@@ -32,7 +34,7 @@ public class SyntheticDelDupTests
 
         // create 2 INVs with varying positions to check what synthetic DEL or DUP they create
 
-        // no overlap but 2 deletion bridges
+        // no overlap but 2 deletion bridges - doesn't make anything
         SvVarData var1 = createInv(tester.nextVarId(), "1", 100, 200, 1);
         SvVarData var2 = createInv(tester.nextVarId(), "1", 300, 400, -1);
 
@@ -43,13 +45,10 @@ public class SyntheticDelDupTests
         addAndPrepareCluster(tester, cluster);
         tester.ClusteringMethods.markInversionPairTypes(cluster);
 
-        assertTrue(cluster.isResolved());
-        assertTrue(cluster.getResolvedType() == RESOLVED_TYPE_DEL_INT_TI);
-        assertEquals(cluster.getSynDelDupLength(), var2.position(false) - var1.position(true));
-        assertEquals(cluster.getSynDelDupTILength(), 0);
+        assertTrue(!cluster.isResolved());
+        assertTrue(cluster.getResolvedType() == RESOLVED_TYPE_COMPLEX);
 
         // 1 pair of overlapping breakends
-
         var1 = createInv(tester.nextVarId(), "1", 100, 300, 1);
         var2 = createInv(tester.nextVarId(), "1", 200, 400, -1);
 
@@ -65,9 +64,9 @@ public class SyntheticDelDupTests
         assertEquals(cluster.getSynDelDupLength(), var2.position(false) - var1.position(true));
         assertEquals(cluster.getSynDelDupTILength(), var1.position(false) - var2.position(true));
 
-        // test 2 DBBs but with overlapping bases less than permitted TI length
+        // test 2 DSBs but with an overlapping end less than permitted TI length
         var1 = createInv(tester.nextVarId(), "1", 100, 400, 1);
-        var2 = createInv(tester.nextVarId(), "1", 90, 395, -1);
+        var2 = createInv(tester.nextVarId(), "1", 90, 1000, -1);
 
         cluster = new SvCluster(0);
         cluster.addVariant(var1);
@@ -80,6 +79,7 @@ public class SyntheticDelDupTests
         assertTrue(cluster.getResolvedType() == RESOLVED_TYPE_DEL_INT_TI);
         assertEquals(cluster.getSynDelDupLength(), var2.position(false) - var1.position(true));
         assertEquals(cluster.getSynDelDupTILength(), var1.position(false) - var2.position(true));
+
 
         // test 2 overlapping breakends
         var1 = createInv(tester.nextVarId(), "1", 100, 400, 1);
@@ -96,6 +96,22 @@ public class SyntheticDelDupTests
         assertTrue(cluster.getResolvedType() == RESOLVED_TYPE_DEL_EXT_TI);
         assertEquals(cluster.getSynDelDupLength(), var2.position(true) - var1.position(true));
         assertEquals(cluster.getSynDelDupTILength(), var1.position(false) - var2.position(false));
+
+        // test 2 overlapping breakends but where a pair of breakend form an overlapping DB
+        var1 = createInv(tester.nextVarId(), "1", 500, 1000, 1);
+        var2 = createInv(tester.nextVarId(), "1", 480, 2000, -1);
+
+        cluster = new SvCluster(0);
+        cluster.addVariant(var1);
+        cluster.addVariant(var2);
+
+        addAndPrepareCluster(tester, cluster);
+        tester.ClusteringMethods.markInversionPairTypes(cluster);
+
+        assertTrue(cluster.isResolved());
+        assertTrue(cluster.getResolvedType() == RESOLVED_TYPE_DEL_INT_TI);
+        assertEquals(cluster.getSynDelDupLength(), var2.position(false) - var1.position(true));
+        assertEquals(cluster.getSynDelDupTILength(), var1.position(false) - var2.position(true));
 
         // 3 overlapping breakends
         var1 = createInv(tester.nextVarId(), "1", 200, 400, 1);
@@ -128,6 +144,23 @@ public class SyntheticDelDupTests
         assertTrue(cluster.getResolvedType() == RESOLVED_TYPE_DUP_INT_TI);
         assertEquals(cluster.getSynDelDupLength(), var1.position(false) - var2.position(true));
         assertEquals(cluster.getSynDelDupTILength(), var1.position(true) - var2.position(false));
+
+        // test reciprocal inversion defined as a TI greater than 50% of the synthetic length and internal to a DEL
+        var1 = createInv(tester.nextVarId(), "1", 100, 1000, 1);
+        var2 = createInv(tester.nextVarId(), "1", 90, 990, -1);
+
+        cluster = new SvCluster(0);
+        cluster.addVariant(var1);
+        cluster.addVariant(var2);
+
+        addAndPrepareCluster(tester, cluster);
+        tester.ClusteringMethods.markInversionPairTypes(cluster);
+
+        assertTrue(cluster.isResolved());
+        assertTrue(cluster.getResolvedType() == RESOLVED_TYPE_RECIPROCAL_INV);
+        assertEquals(cluster.getSynDelDupLength(), var2.position(false) - var1.position(true));
+        assertEquals(cluster.getSynDelDupTILength(), var1.position(false) - var2.position(true));
+
     }
 
     @Test
@@ -246,8 +279,8 @@ public class SyntheticDelDupTests
         var1 = createDup(tester.nextVarId(), "1", 100, 300);
         var2 = createDup(tester.nextVarId(), "1", 250, 400);
 
-        var1.getTempInsertionAssemblies(true).add("asmb1");
-        var2.getTempInsertionAssemblies(false).add("asmb1");
+        var1.getTempInsertionAssemblies(false).add("asmb1");
+        var2.getTempInsertionAssemblies(true).add("asmb1");
 
         cluster = new SvCluster(0);
         cluster.addVariant(var1);
@@ -265,8 +298,8 @@ public class SyntheticDelDupTests
         var1 = createDup(tester.nextVarId(), "1", 100, 400);
         var2 = createDup(tester.nextVarId(), "1", 250, 300);
 
-        var1.getTempInsertionAssemblies(true).add("asmb1");
-        var2.getTempInsertionAssemblies(false).add("asmb1");
+        var1.getTempInsertionAssemblies(false).add("asmb1");
+        var2.getTempInsertionAssemblies(true).add("asmb1");
 
         cluster = new SvCluster(0);
         cluster.addVariant(var1);
@@ -407,7 +440,7 @@ public class SyntheticDelDupTests
 
         tester.ClusteringMethods.markInversionPairTypes(cluster);
 
-        assertTrue(cluster.getResolvedType() == RESOLVED_TYPE_NONE);
+        assertTrue(cluster.getResolvedType() == RESOLVED_TYPE_COMPLEX);
     }
 
     private void addAndPrepareCluster(SvTestHelper tester, SvCluster cluster)

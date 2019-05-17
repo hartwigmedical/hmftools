@@ -93,10 +93,10 @@ public class SvCluster
     private int mOriginArms;
     private int mFragmentArms;
 
+    public static String RESOLVED_TYPE_NONE = "NONE";
     public static String RESOLVED_TYPE_SIMPLE_SV = "SIMPLE";
     public static String RESOLVED_TYPE_RECIPROCAL_TRANS = "RECIP_TRANS";
-
-    public static String RESOLVED_TYPE_NONE = "NONE";
+    public static String RESOLVED_TYPE_RECIPROCAL_INV = "RECIP_INV";
     public static String RESOLVED_TYPE_DUP_BE = "DUP_BE";
     public static String RESOLVED_TYPE_POLY_G_C = "POLY_G_C";
     public static String RESOLVED_TYPE_LINE = "LINE";
@@ -108,7 +108,6 @@ public class SvCluster
     public static String RESOLVED_TYPE_SGL_PAIR_DEL = "SGL_PAIR_DEL";
     public static String RESOLVED_TYPE_SGL_PAIR_DUP = "SGL_PAIR_DUP";
     public static String RESOLVED_TYPE_SGL_PLUS_INCONSISTENT = "SGL_BND_INV";
-
     public static String RESOLVED_TYPE_COMPLEX = "COMPLEX";
 
     private static final Logger LOGGER = LogManager.getLogger(SvCluster.class);

@@ -215,7 +215,7 @@ public class ClusterAnalyser {
                     cluster.setResolved(true, RESOLVED_TYPE_SIMPLE_SV);
             }
 
-            // isSpecificCluster(cluster);
+            isSpecificCluster(cluster);
             cluster.buildArmClusters();
 
             // if(LOGGER.isDebugEnabled())
@@ -441,6 +441,8 @@ public class ClusterAnalyser {
         // next simple reciprocal inversions and translocations
         if (cluster.getSvCount() == 2 && cluster.isConsistent())
         {
+            // isSpecificCluster(cluster);
+
             if(cluster.getTypeCount(BND) == 2)
             {
                 mClusteringMethods.markBndPairTypes(cluster);
