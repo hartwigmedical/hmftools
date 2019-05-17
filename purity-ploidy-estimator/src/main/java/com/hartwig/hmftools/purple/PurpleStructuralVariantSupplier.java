@@ -12,26 +12,19 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
-import java.util.function.Predicate;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.chromosome.Chromosome;
 import com.hartwig.hmftools.common.collect.Multimaps;
 import com.hartwig.hmftools.common.numeric.Doubles;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
-import com.hartwig.hmftools.common.purple.copynumber.sv.StructuralVariantLegCopyNumberChangeFactory;
-import com.hartwig.hmftools.common.purple.copynumber.sv.StructuralVariantLegPloidy;
-import com.hartwig.hmftools.common.purple.copynumber.sv.StructuralVariantLegPloidyFactory;
 import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 import com.hartwig.hmftools.common.variant.structural.CopyNumberEnrichedStructuralVariantFactory;
 import com.hartwig.hmftools.common.variant.structural.EnrichedStructuralVariant;
 import com.hartwig.hmftools.common.variant.structural.EnrichedStructuralVariantLeg;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantFactory;
-import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 import com.hartwig.hmftools.purple.sv.VariantContextCollection;
 import com.hartwig.hmftools.purple.sv.VariantContextCollectionDummy;
 import com.hartwig.hmftools.purple.sv.VariantContextCollectionImpl;
@@ -44,7 +37,6 @@ import htsjdk.tribble.index.tabix.TabixIndexCreator;
 import htsjdk.variant.variantcontext.Allele;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.variantcontext.VariantContextBuilder;
-import htsjdk.variant.variantcontext.filter.PassingVariantFilter;
 import htsjdk.variant.variantcontext.writer.Options;
 import htsjdk.variant.variantcontext.writer.VariantContextWriter;
 import htsjdk.variant.variantcontext.writer.VariantContextWriterBuilder;
@@ -58,8 +50,6 @@ import htsjdk.variant.vcf.VCFStandardHeaderLines;
 
 @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
 class PurpleStructuralVariantSupplier {
-
-    private static final double MIN_UNLINKED_SGL_VAF = 0.1;
 
     private static final String RECOVERED_DESC = "Entry has been recovered";
     private static final String RECOVERY_FILTER_DESC = "Filter before recovery";
@@ -125,33 +115,7 @@ class PurpleStructuralVariantSupplier {
         }
     }
 
-    public int removeLowVAFSingles(@NotNull final PurityAdjuster purityAdjuster, @NotNull final List<PurpleCopyNumber> copyNumbers) {
-        final ListMultimap<Chromosome, PurpleCopyNumber> copyNumberMap = Multimaps.fromRegions(copyNumbers);
 
-        final StructuralVariantLegCopyNumberChangeFactory copyNumberChangeFactory =
-                new StructuralVariantLegCopyNumberChangeFactory(purityAdjuster, Multimaps.fromRegions(copyNumbers), variants());
-
-        final StructuralVariantLegPloidyFactory<PurpleCopyNumber> ploidyFactory =
-                new StructuralVariantLegPloidyFactory<>(purityAdjuster, PurpleCopyNumber::averageTumorCopyNumber);
-
-        final Predicate<VariantContext> removePredicate = variantContext -> {
-            if (!isRecovered(variantContext)) {
-                final StructuralVariantFactory factory = new StructuralVariantFactory(new PassingVariantFilter());
-                factory.addVariantContext(variantContext);
-                final List<StructuralVariant> variants = factory.results();
-                if (!variants.isEmpty()) {
-                    final StructuralVariant variant = variants.get(0);
-                    if (variant.type() == StructuralVariantType.SGL && !isLinked(variant)) {
-                        return filter(copyNumberChangeFactory, ploidyFactory.create(variant, copyNumberMap));
-                    }
-                }
-            }
-
-            return false;
-        };
-
-        return variants.remove(removePredicate);
-    }
 
     @NotNull
     private VariantContext infer(@NotNull final PurpleCopyNumber copyNumber, @NotNull final PurpleCopyNumber prev) {
@@ -301,27 +265,6 @@ class PurpleStructuralVariantSupplier {
                 VCFHeaderLineType.Float,
                 PURPLE_CN_CHANGE_DESC));
         return outputVCFHeader;
-    }
-
-    private boolean filter(@NotNull final StructuralVariantLegCopyNumberChangeFactory changeFactory,
-            @NotNull final List<StructuralVariantLegPloidy> legs) {
-        if (!legs.isEmpty()) {
-            final StructuralVariantLegPloidy leg = legs.get(0);
-            if (!Doubles.isZero(leg.adjustedCopyNumber())) {
-                return Doubles.lessThan(changeFactory.copyNumberChange(leg) / leg.adjustedCopyNumber(), MIN_UNLINKED_SGL_VAF);
-            }
-        }
-
-        return false;
-    }
-
-    private static boolean isLinked(@NotNull final StructuralVariant variantContext) {
-        final Predicate<String> isLinkedString = linkedBy -> linkedBy != null && !linkedBy.isEmpty() && !linkedBy.equals(".");
-        return isLinkedString.test(variantContext.startLinkedBy()) || isLinkedString.test(variantContext.endLinkedBy());
-    }
-
-    private static boolean isRecovered(@NotNull VariantContext variantContext) {
-        return variantContext.hasAttribute(StructuralVariantFactory.RECOVERED);
     }
 
     private boolean enabled() {
