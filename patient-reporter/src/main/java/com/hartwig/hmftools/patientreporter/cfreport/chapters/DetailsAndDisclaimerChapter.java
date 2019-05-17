@@ -7,7 +7,6 @@ import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
 import com.hartwig.hmftools.patientreporter.cfreport.components.ReportSignature;
 import com.hartwig.hmftools.patientreporter.cfreport.components.TableUtil;
 import com.hartwig.hmftools.patientreporter.cfreport.data.DataUtil;
-import com.hartwig.hmftools.patientreporter.report.pages.SampleDetailsPage;
 import com.itextpdf.io.IOException;
 import com.itextpdf.layout.Document;
 import com.itextpdf.layout.element.Div;
@@ -22,7 +21,7 @@ import org.jetbrains.annotations.NotNull;
 
 public class DetailsAndDisclaimerChapter implements ReportChapter {
 
-    private static final Logger LOGGER = LogManager.getLogger(SampleDetailsPage.class);
+    private static final Logger LOGGER = LogManager.getLogger(DetailsAndDisclaimerChapter.class);
 
     @NotNull
     private final AnalysedPatientReport patientReport;

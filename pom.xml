@@ -56,10 +56,12 @@
         <hmf-variant-annotation.version>2.15</hmf-variant-annotation.version>
         <hmf-sv-analyser.version>1.0</hmf-sv-analyser.version>
         <hmf-sv-graphs.version>1.0</hmf-sv-graphs.version>
+        <hmf-patient-reporter.version>6.1</hmf-patient-reporter.version>
 
         <amber.version>2.3</amber.version>
         <cobalt.version>1.6</cobalt.version>
         <purple.version>2.29</purple.version>
+
 
         <immutables.version>2.4.4</immutables.version>
         <htsjdk.version>2.12.0</htsjdk.version>
@@ -71,8 +73,6 @@
         <apache.commons.math3.version>3.6</apache.commons.math3.version>
         <apache.log4j.version>2.8.1</apache.log4j.version>
         <apache.log4j.slf4j.version>2.8.1</apache.log4j.slf4j.version>
-        <dynamicreports.version>5.0.0</dynamicreports.version>
-        <jasperreports.font.version>6.0.0</jasperreports.font.version>
         <jooq.version>3.9.5</jooq.version>
         <mysqlconnector.version>8.0.11</mysqlconnector.version>
         <apache.dbcp2.version>2.1.1</apache.dbcp2.version>
@@ -237,16 +237,6 @@
                 <groupId>org.apache.logging.log4j</groupId>
                 <artifactId>log4j-slf4j-impl</artifactId>
                 <version>${apache.log4j.slf4j.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>net.sourceforge.dynamicreports</groupId>
-                <artifactId>dynamicreports-core</artifactId>
-                <version>${dynamicreports.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>net.sf.jasperreports</groupId>
-                <artifactId>jasperreports-fonts</artifactId>
-                <version>${jasperreports.font.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.jooq</groupId>
