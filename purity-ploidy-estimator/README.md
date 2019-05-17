@@ -896,6 +896,7 @@ Threads | Elapsed Time| CPU Time | Peak Mem
 ## Version History
 - upcoming
   - Create plot directory before writing to it
+  - Allow plotting of negative copy numbers
 - [2.28](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v2-28)
   - Fixed exception when no SV vcf supplied
 - 2.27 
