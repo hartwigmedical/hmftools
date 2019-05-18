@@ -28,7 +28,7 @@ import org.junit.Test;
 public class SyntheticDelDupTests
 {
     @Test
-    public void testSyntheticDelOrDupFromInvPairs()
+    public void testSyntheticDelDupFromInvPairs()
     {
         SvTestHelper tester = new SvTestHelper();
 
@@ -164,7 +164,7 @@ public class SyntheticDelDupTests
     }
 
     @Test
-    public void testSyntheticDelOrDupFromBndPairs()
+    public void testSyntheticDelDupFromBndPairs()
     {
         SvTestHelper tester = new SvTestHelper();
 
@@ -236,7 +236,7 @@ public class SyntheticDelDupTests
     }
 
     @Test
-    public void testSyntheticDelOrDupFromDelsAndDups()
+    public void testSyntheticDelDupFromDelsAndDups()
     {
         SvTestHelper tester = new SvTestHelper();
 

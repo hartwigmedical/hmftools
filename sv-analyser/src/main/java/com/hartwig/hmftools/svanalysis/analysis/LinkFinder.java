@@ -3,6 +3,7 @@ package com.hartwig.hmftools.svanalysis.analysis;
 import static java.lang.Math.abs;
 import static java.lang.Math.max;
 
+import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INS;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.copyNumbersEqual;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_END;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_START;
@@ -65,79 +66,72 @@ public class LinkFinder
 
         // isSpecificCluster(cluster);
 
-        for (int i = 0; i < cluster.getSvCount(true); ++i)
+        final Map<String,List<SvBreakend>> chrBreakendMap = cluster.getChrBreakendMap();
+
+        for (final Map.Entry<String, List<SvBreakend>> entry : chrBreakendMap.entrySet())
         {
-            SvVarData var1 = cluster.getSVs(true).get(i);
+            final List<SvBreakend> breakendList = entry.getValue();
 
-            if(var1.type() == StructuralVariantType.INS || var1.isNullBreakend())
+            if(breakendList.size() == 1)
                 continue;
 
-            // make note of SVs which line up exactly with other SVs
-            // these will be used to eliminate transitive SVs later on
-            if(var1.isDupBreakend(true) && var1.isDupBreakend(false))
+            for (int i = 0; i < breakendList.size() -1; ++i)
             {
-                continue;
-            }
+                final SvBreakend lowerBreakend = breakendList.get(i);
 
-            for(int be1 = SVI_START; be1 <= SVI_END; ++be1)
-            {
-                boolean v1Start = isStart(be1);
+                if(lowerBreakend.orientation() != -1)
+                    continue;
 
-                for (int j = i+1; j < cluster.getSvCount(true); ++j)
+                final SvVarData var1 = lowerBreakend.getSV();
+
+                if(var1.type() == INS || var1.isNullBreakend())
+                    continue;
+
+                if(var1.isDupBreakend(lowerBreakend.usesStart()))
+                    continue;
+
+                final SvVarData lowerSV = lowerBreakend.getSV();
+                for (int j = i+1; j < breakendList.size(); ++j)
                 {
-                    SvVarData var2 = cluster.getSVs(true).get(j);
+                    final SvBreakend upperBreakend = breakendList.get(j);
 
-                    if(var1.equals(var2, true))
+                    if(upperBreakend.orientation() != 1)
                         continue;
 
-                    if(var2.type() == StructuralVariantType.INS || var2.isNullBreakend())
+                    final SvVarData var2 = upperBreakend.getSV();
+
+                    if(upperBreakend.getSV() == lowerBreakend.getSV())
                         continue;
 
-                    if(var2.isDupBreakend(true) && var2.isDupBreakend(false))
+                    if(var2.type() == INS || var2.isNullBreakend())
                         continue;
 
-                    for(int be2 = SVI_START; be2 <= SVI_END; ++be2)
-                    {
-                        boolean v2Start = isStart(be2);
+                    if(var2.isDupBreakend(upperBreakend.usesStart()))
+                        continue;
 
-                        if (!haveLinkedAssemblies(var1, var2, v1Start, v2Start))
-                            continue;
+                    boolean v1Start = lowerBreakend.usesStart();
+                    boolean v2Start = upperBreakend.usesStart();
 
-                        // check a link for these SVs wasn't already created
-                        boolean v1Linked = var1.isAssemblyMatched(v1Start);
-                        boolean v2Linked = var2.isAssemblyMatched(v2Start);
-                        if(v1Linked || v2Linked)
-                        {
-                            if (v1Linked && v2Linked)
-                            {
-                                // both linked but to other variants
-                            }
-                            else if (v1Linked)
-                            {
-                                var2.setAssemblyMatchType(ASSEMBLY_MATCH_DIFF, v2Start);
-                            }
-                            else if (v2Linked)
-                            {
-                                var1.setAssemblyMatchType(ASSEMBLY_MATCH_DIFF, v1Start);
-                            }
+                    if (!haveLinkedAssemblies(var1, var2, v1Start, v2Start))
+                        continue;
 
-                            continue;
-                        }
+                    // check a link for these SVs wasn't already created
+                    if(lowerBreakend.isAssembledLink() || upperBreakend.isAssembledLink())
+                        continue;
 
-                        // form a new TI from these 2 BEs
-                        SvLinkedPair newPair = new SvLinkedPair(var1, var2, LINK_TYPE_TI, v1Start, v2Start);
-                        newPair.setIsAssembled();
-                        var1.setAssemblyMatchType(ASSEMBLY_MATCH_MATCHED, v1Start);
-                        var2.setAssemblyMatchType(ASSEMBLY_MATCH_MATCHED, v2Start);
-                        var1.setLinkedPair(newPair, v1Start);
-                        var2.setLinkedPair(newPair, v2Start);
+                    // form a new TI from these 2 BEs
+                    SvLinkedPair newPair = new SvLinkedPair(var1, var2, LINK_TYPE_TI, v1Start, v2Start);
+                    newPair.setIsAssembled();
+                    var1.setAssemblyMatchType(ASSEMBLY_MATCH_MATCHED, v1Start);
+                    var2.setAssemblyMatchType(ASSEMBLY_MATCH_MATCHED, v2Start);
+                    var1.setLinkedPair(newPair, v1Start);
+                    var2.setLinkedPair(newPair, v2Start);
 
-                        linkedPairs.add(newPair);
+                    linkedPairs.add(newPair);
 
-                        // to avoid logging unlikely long TIs
-                        LOGGER.debug("cluster({}) adding assembly linked {} pair({}) length({})",
-                                cluster.id(), newPair.linkType(), newPair.toString(), newPair.length());
-                    }
+                    // to avoid logging unlikely long TIs
+                    LOGGER.debug("cluster({}) adding assembly linked {} pair({}) length({})",
+                            cluster.id(), newPair.linkType(), newPair.toString(), newPair.length());
                 }
             }
         }
@@ -154,11 +148,6 @@ public class LinkFinder
         }
 
         return false;
-    }
-
-    public static boolean areLinkedSection(final SvVarData v1, final SvVarData v2, boolean v1Start, boolean v2Start)
-    {
-        return areLinkedSection(v1, v2, v1Start, v2Start, false);
     }
 
     public static boolean areLinkedSection(final SvVarData v1, final SvVarData v2, boolean v1Start, boolean v2Start, boolean checkCopyNumberMatch)
@@ -202,26 +191,6 @@ public class LinkFinder
         return true;
     }
 
-    public static boolean areSectionBreak(final SvVarData v1, final SvVarData v2, boolean v1Start, boolean v2Start)
-    {
-        if(!v1.chromosome(v1Start).equals(v2.chromosome(v2Start)))
-            return false;
-
-        // start apart or equal and heading same direction
-        long pos1 = v1.position(v1Start);
-        boolean headsLeft1 = (v1.orientation(v1Start) == 1);
-        long pos2 = v2.position(v2Start);
-        boolean headsLeft2 = (v2.orientation(v2Start) == 1);
-
-        if(pos1 <= pos2 && headsLeft1 && !headsLeft2)
-            return true;
-
-        if(pos2 <= pos1 && !headsLeft1 && headsLeft2)
-            return true;
-
-        return false;
-    }
-
     public List<SvLinkedPair> createInferredLinkedPairs(SvCluster cluster, List<SvVarData> svList, boolean allowSingleBEs)
     {
         List<SvLinkedPair> linkedPairs = Lists.newArrayList();
@@ -232,7 +201,7 @@ public class LinkFinder
         {
             SvVarData var1 = svList.get(i);
 
-            if(var1.type() == StructuralVariantType.INS || (var1.isNullBreakend() && !allowSingleBEs))
+            if(var1.type() == INS || (var1.isNullBreakend() && !allowSingleBEs))
                 continue;
 
             if(var1.isDupBreakend(true) && var1.isDupBreakend(false))
@@ -256,7 +225,7 @@ public class LinkFinder
                     if(var1.equals(var2, true))
                         continue;
 
-                    if(var2.type() == StructuralVariantType.INS || (var2.isNullBreakend() && !allowSingleBEs))
+                    if(var2.type() == INS || (var2.isNullBreakend() && !allowSingleBEs))
                         continue;
 
                     if(var2.isDupBreakend(true) && var2.isDupBreakend(false))
@@ -371,12 +340,19 @@ public class LinkFinder
 
                 if(breakend.orientation() == 1 && nextBreakend.orientation() == -1)
                 {
+                    // breakends face away as per a normal DB
                     SvLinkedPair dbPair = new SvLinkedPair(var1, var2, LINK_TYPE_DB, breakend.usesStart(), nextBreakend.usesStart());
                     markDeletionBridge(dbPair);
                 }
                 else if(distance < minTiLength)
                 {
-                    // will be converted into a DB
+                    // facing breakends with a distance less than the anchor distances are in fact a DB with overlap
+                    if(haveLinkedAssemblies(var1, var2, breakend.usesStart(), nextBreakend.usesStart()))
+                    {
+                        // however check that they don't have assemblies on these breakends with each other
+                        continue;
+                    }
+
                     SvLinkedPair dbPair = new SvLinkedPair(var1, var2, LINK_TYPE_TI, breakend.usesStart(), nextBreakend.usesStart());
                     markDeletionBridge(dbPair);
                 }

@@ -12,7 +12,6 @@ import static com.hartwig.hmftools.common.variant.structural.StructuralVariantTy
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INV;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.svanalysis.analysis.LinkFinder.arePairedDeletionBridges;
-import static com.hartwig.hmftools.svanalysis.analysis.LinkFinder.areSectionBreak;
 import static com.hartwig.hmftools.svanalysis.analysis.LinkFinder.getMinTemplatedInsertionLength;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.CHROMOSOME_ARM_P;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.CHROMOSOME_ARM_Q;
@@ -1199,9 +1198,6 @@ public class SvClusteringMethods {
         SvBreakend lowerBreakend = tiPair.getBreakend(true);
         SvBreakend upperBreakend = tiPair.getBreakend(false);
 
-        SvVarData lowerSV = lowerBreakend.getSV();
-        SvVarData upperSV = upperBreakend.getSV();
-
         SvBreakend otherBe1 = lowerBreakend.getOtherBreakend();
         SvBreakend otherBe2 = upperBreakend.getOtherBreakend();
 
@@ -1261,105 +1257,6 @@ public class SvClusteringMethods {
         cluster.setResolved(isResolved, resolvedType);
         cluster.setSynDelDupData(syntheticLength, tiPair.length());
 
-        /*
-        SvLinkedPair linkedPair2 = cluster.getLinkedPairs().size() == 2 ? cluster.getLinkedPairs().get(1) : null;
-
-        if(linkedPair2 != null && !linkedPair1.hasLinkClash(linkedPair2))
-        {
-            // existing second link is fine to consider
-        }
-        else if(lowerOtherBreakend.orientation() != upperOtherBreakend.orientation())
-        {
-            // convert to either a DB or a TI
-            if((lowerOtherBreakend.orientation() == 1 && lowerOtherBreakend.position() <= upperOtherBreakend.position())
-            || (upperOtherBreakend.orientation() == 1 && upperOtherBreakend.position() <= lowerOtherBreakend.position()))
-            {
-                linkedPair2 = new SvLinkedPair(lowerSV, upperSV, LINK_TYPE_DB, lowerOtherBreakend.usesStart(), upperOtherBreakend.usesStart());
-            }
-            else
-            {
-                // if this doesn't overlap enough to be a TI, it will be converted into a DB
-                linkedPair2 = new SvLinkedPair(lowerSV, upperSV, LINK_TYPE_TI, lowerOtherBreakend.usesStart(), upperOtherBreakend.usesStart());
-            }
-        }
-        else
-        {
-            LOGGER.debug("cluster({}) ids({} & {}) neither TI nor DB", cluster.id(), lowerSV.id(), upperSV.id());
-            return false;
-        }
-
-        // set the TI link to be the shorter of the 2
-        SvLinkedPair tiPair;
-        SvLinkedPair otherPair;
-
-        if(linkedPair1.linkType() == LINK_TYPE_TI && linkedPair2.linkType() == LINK_TYPE_TI)
-        {
-            tiPair = linkedPair1.length() < linkedPair2.length() ? linkedPair1 : linkedPair2;
-            otherPair = linkedPair1 == tiPair ? linkedPair2 : linkedPair1;
-        }
-        else if(linkedPair1.linkType() == LINK_TYPE_TI)
-        {
-            // take the DB for the main DEL if one exists
-            tiPair = linkedPair1;
-            otherPair = linkedPair2;
-        }
-        else if(linkedPair2.linkType() == LINK_TYPE_TI)
-        {
-            tiPair = linkedPair2;
-            otherPair = linkedPair1;
-        }
-        else
-        {
-            // 2 deletion bridges
-            tiPair = linkedPair1.length() < linkedPair2.length() ? linkedPair1 : linkedPair2;
-            otherPair = linkedPair1 == tiPair ? linkedPair2 : linkedPair1;
-        }
-
-        long lowerOtherPosLimit = otherPos1 < otherPos2 ? otherPos1 : otherPos2;
-        lowerOtherPosLimit -= MIN_TEMPLATED_INSERTION_LENGTH;
-
-        long upperOtherPosLimit = otherPos1 > otherPos2 ? otherPos1 : otherPos2;
-        upperOtherPosLimit += MIN_TEMPLATED_INSERTION_LENGTH;
-
-        if(tiPos1 >= lowerOtherPosLimit && tiPos1 <= upperOtherPosLimit && tiPos2 >= lowerOtherPosLimit && tiPos2 <= upperOtherPosLimit)
-        {
-            isTIEnclosed = true;
-        }
-
-        String resolvedType = "";
-
-        if(tiPair.linkType() == LINK_TYPE_DB && otherPair != null && otherPair.linkType() == LINK_TYPE_DB)
-        {
-            resolvedType = RESOLVED_TYPE_DEL_INT_TI;
-        }
-        else
-        {
-            if (tiPair.linkType() == LINK_TYPE_DB || otherPair.linkType() == LINK_TYPE_DB)
-            {
-                if (!isTIEnclosed)
-                {
-                    resolvedType = RESOLVED_TYPE_DEL_EXT_TI;
-                }
-                else
-                {
-                    resolvedType = RESOLVED_TYPE_DEL_INT_TI;
-                }
-            }
-            else
-            {
-                if (!isTIEnclosed)
-                {
-                    resolvedType = RESOLVED_TYPE_DUP_EXT_TI;
-                }
-                else
-                {
-                    resolvedType = RESOLVED_TYPE_DUP_INT_TI;
-                }
-            }
-        }
-
-        */
-
         return true;
     }
 
@@ -1384,14 +1281,63 @@ public class SvClusteringMethods {
 
         // isSpecificCluster(cluster);
 
-        if(cluster.getLinkedPairs().isEmpty() && arePairedDeletionBridges(var1, var2))
+        if(cluster.getLinkedPairs().isEmpty())
         {
-            cluster.setResolved(true, RESOLVED_TYPE_RECIPROCAL_TRANS);
+            if(arePairedDeletionBridges(var1, var2))
+                cluster.setResolved(true, RESOLVED_TYPE_RECIPROCAL_TRANS);
+
             return;
         }
 
         // first work out if there are 1 or 2 templated insertions
-        final SvLinkedPair lp1;
+        SvLinkedPair tiPair = cluster.getLinkedPairs().get(0);
+
+        SvBreakend lowerBreakend = tiPair.getBreakend(true);
+        SvBreakend upperBreakend = tiPair.getBreakend(false);
+
+        SvBreakend otherBe1 = lowerBreakend.getOtherBreakend();
+        SvBreakend otherBe2 = upperBreakend.getOtherBreakend();
+
+        if(otherBe1.orientation() == otherBe2.orientation())
+            return;
+
+        if(otherBe1.arm() != otherBe2.arm() || !otherBe1.chromosome().equals(otherBe2.chromosome()))
+            return;
+
+        // avoid classifying synthetics where the TI crosses other clusters due to uncertainty
+        if(tiPair.isInferred() && tiTraversesComplexSVs(cluster, tiPair))
+            return;
+
+        // if the other breakends face each other beyond the min TI length, this is a synthetic DUP
+        // otherwise it's a DEL
+        SvBreakend otherLowerBe = otherBe1.position() < otherBe2.position() ? otherBe1 : otherBe2;
+        SvBreakend otherUpperBe = otherLowerBe == otherBe1 ? otherBe2 : otherBe1;
+
+        String resolvedType = "";
+        long syntheticLength = otherUpperBe.position() - otherLowerBe.position();
+
+        if(otherLowerBe.orientation() == 1)
+        {
+            resolvedType = RESOLVED_TYPE_DEL_EXT_TI;
+        }
+        else
+        {
+            // check for the special case where the synthetic DEL has overlapping breakends as set by the minimum TI distance
+            int minTILength = getMinTemplatedInsertionLength(otherLowerBe, otherUpperBe);
+
+            if(syntheticLength < minTILength)
+            {
+                // consider this a DEL with overlap
+                resolvedType = RESOLVED_TYPE_DEL_EXT_TI;
+            }
+            else
+            {
+                resolvedType = RESOLVED_TYPE_DUP_EXT_TI;
+            }
+        }
+
+
+        /*
         if(cluster.getLinkedPairs().size() > 0 && cluster.getLinkedPairs().get(0).linkType() == LINK_TYPE_TI)
             lp1 = cluster.getLinkedPairs().get(0);
         else
@@ -1432,35 +1378,11 @@ public class SvClusteringMethods {
         boolean v1OpenOnStart = tiLinkedPair.first().equals(var1) ? tiLinkedPair.firstUnlinkedOnStart() : tiLinkedPair.secondUnlinkedOnStart();
         boolean v2OpenOnStart = tiLinkedPair.first().equals(var2) ? tiLinkedPair.firstUnlinkedOnStart() : tiLinkedPair.secondUnlinkedOnStart();
 
-        if(!var1.chromosome(v1OpenOnStart).equals(var2.chromosome(v2OpenOnStart)))
-            return;
-
-        if(var1.orientation(v1OpenOnStart) == var2.orientation(v2OpenOnStart))
-            return;
-
-        // the other breakends cannot be cross arm
-        if(var1.arm(v1OpenOnStart) != var2.arm(v2OpenOnStart))
-            return;
-
-        if(tiTraversesComplexSVs(cluster, tiLinkedPair))
-            return;
-
-        String pairDesc = "";
-
-        if(areSectionBreak(var1, var2, v1OpenOnStart, v2OpenOnStart))
-        {
-            pairDesc = RESOLVED_TYPE_DEL_EXT_TI;
-        }
-        else
-        {
-            pairDesc = RESOLVED_TYPE_DUP_EXT_TI;
-        }
-
-        long syntheticLength = abs(var1.position(v1OpenOnStart) - var2.position(v2OpenOnStart));
+        */
 
         boolean isResolved = syntheticLength < mDelDupCutoffLength;
-        cluster.setResolved(isResolved, pairDesc);
-        cluster.setSynDelDupData(syntheticLength, tiLinkedPair.length());
+        cluster.setResolved(isResolved, resolvedType);
+        cluster.setSynDelDupData(syntheticLength, tiPair.length());
     }
 
     public boolean markDelDupPairTypes(SvCluster cluster)

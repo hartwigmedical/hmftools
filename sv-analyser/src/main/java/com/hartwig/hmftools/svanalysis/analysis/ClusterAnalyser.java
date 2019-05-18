@@ -215,7 +215,7 @@ public class ClusterAnalyser {
                     cluster.setResolved(true, RESOLVED_TYPE_SIMPLE_SV);
             }
 
-            isSpecificCluster(cluster);
+            // isSpecificCluster(cluster);
             cluster.buildArmClusters();
 
             // if(LOGGER.isDebugEnabled())
