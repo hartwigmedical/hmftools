@@ -17,8 +17,8 @@ public final class ClonalityCutoffKernel {
     private static final Logger LOGGER = LogManager.getLogger(ClonalityCutoffKernel.class);
     private static final double KERNEL_BANDWIDTH = 0.05;
 
-    public static double clonalCutoff(@NotNull final List<PurityAdjustedSomaticVariant> variants) {
-        return findClonalCutoff(variants.stream().map(PurityAdjustedSomaticVariant::ploidy).collect(Collectors.toList()));
+    public static double clonalCutoff(@NotNull final List<? extends SomaticVariant> variants) {
+        return findClonalCutoff(variants.stream().map(SomaticVariant::ploidy).collect(Collectors.toList()));
     }
 
     private static double findClonalCutoff(@NotNull final List<Double> sample) {

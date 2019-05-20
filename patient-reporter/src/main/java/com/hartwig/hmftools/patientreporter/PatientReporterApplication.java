@@ -15,7 +15,6 @@ import com.hartwig.hmftools.patientreporter.cfreport.CFReportWriter;
 import com.hartwig.hmftools.patientreporter.qcfail.ImmutableQCFailReporter;
 import com.hartwig.hmftools.patientreporter.qcfail.QCFailReason;
 import com.hartwig.hmftools.patientreporter.qcfail.QCFailReporter;
-import com.hartwig.hmftools.patientreporter.report.PDFWriter;
 import com.hartwig.hmftools.patientreporter.structural.SvAnalyzer;
 
 import org.apache.commons.cli.CommandLine;
@@ -37,7 +36,7 @@ public class PatientReporterApplication {
     public static final String VERSION = PatientReporterApplication.class.getPackage().getImplementationVersion();
 
     // Uncomment this line when generating an example report using PDFWriterTest
-    //        public static final String VERSION = "6.0";
+    //        public static final String VERSION = "6.1";
 
     private static final String RUN_DIRECTORY = "run_dir";
 

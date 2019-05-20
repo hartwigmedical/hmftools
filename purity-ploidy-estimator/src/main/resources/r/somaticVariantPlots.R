@@ -47,7 +47,7 @@ somatic_ploidy_pdf <- function(somatics) {
   somatics = somatics %>%
     filter(!chromosome %in% c('MT'), filter == 'PASS') %>%
     mutate(
-      cn = round(copyNumber),
+      cn = pmax(0, round(copyNumber)),
       cn = ifelse(cn >=6, "CN6+", paste0("CN", cn)))
   
   ggplot(somatics, aes(x = ploidy)) +

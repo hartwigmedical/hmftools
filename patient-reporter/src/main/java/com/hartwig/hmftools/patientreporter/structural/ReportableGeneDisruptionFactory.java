@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.patientreporter.structural;
 
-import static com.hartwig.hmftools.patientreporter.report.util.PatientReportFormat.exonDescription;
-
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -117,6 +115,21 @@ final class ReportableGeneDisruptionFactory {
             return exonDescription(primary.exonUp(), primary.exonDown()) + " -> " + exonDescription(secondary.exonUp(),
                     secondary.exonDown());
         }
+    }
+
+    @NotNull
+    private static String exonDescription(int exonUp, int exonDown) {
+        if (exonUp > 0) {
+            if (exonUp == exonDown) {
+                return String.format("Exon %d", exonUp);
+            } else if (exonDown - exonUp == 1) {
+                return String.format("Intron %d", exonUp);
+            }
+        } else if (exonUp == 0 && (exonDown == 1 || exonDown == 2)) {
+            return "Promoter Region";
+        }
+
+        return String.format("ERROR up=%d, down=%d", exonUp, exonDown);
     }
 
     private static boolean isUpstream(@NotNull Disruption disruption) {

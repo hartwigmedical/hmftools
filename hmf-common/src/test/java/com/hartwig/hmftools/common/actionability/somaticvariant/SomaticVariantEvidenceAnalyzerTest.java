@@ -79,6 +79,7 @@ public class SomaticVariantEvidenceAnalyzerTest {
                 .minorAllelePloidy(0D)
                 .germlineStatus(GermlineStatus.UNKNOWN)
                 .ploidy(0)
+                .biallelic(false)
                 .build();
 
         assertTrue(analyzer.evidenceForSomaticVariant(variant, "Skin", cancerTypeAnalyzer).isEmpty());

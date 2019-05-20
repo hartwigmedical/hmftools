@@ -157,11 +157,8 @@ public class PurityPloidyEstimateApplication {
                     structuralVariants,
                     purityAdjuster,
                     copyNumberFactory.copyNumbers());
-            final int removedSVCount = structuralVariants.removeLowVAFSingles(purityAdjuster, copyNumberFactory.copyNumbers());
-            if (recoveredSVCount > 0 || removedSVCount > 0) {
-                LOGGER.info("Reapplying segmentation with {} recovered structural variants and after removing {} filtered variants",
-                        recoveredSVCount,
-                        removedSVCount);
+            if (recoveredSVCount > 0) {
+                LOGGER.info("Reapplying segmentation with {} recovered structural variants", recoveredSVCount);
                 final List<ObservedRegion> recoveredObservedRegions = segmentation.createSegments(structuralVariants.variants());
 
                 LOGGER.info("Recalculating copy number");
@@ -183,9 +180,6 @@ public class PurityPloidyEstimateApplication {
                     .score(bestFit.score())
                     .polyClonalProportion(polyclonalProportion(copyNumbers))
                     .build();
-
-            final List<PurityAdjustedSomaticVariant> enrichedSomatics =
-                    new PurityAdjustedSomaticVariantFactory(purityAdjuster, copyNumbers, enrichedFittedRegions).create(allSomatics);
 
             final List<GeneCopyNumber> geneCopyNumbers =
                     GeneCopyNumberFactory.geneCopyNumbers(configSupplier.refGenomeConfig().genePanel(), copyNumbers, germlineDeletions);
@@ -221,6 +215,8 @@ public class PurityPloidyEstimateApplication {
             }
 
             LOGGER.info("Generating charts");
+            final List<PurityAdjustedSomaticVariant> enrichedSomatics =
+                    new PurityAdjustedSomaticVariantFactory(purityAdjuster, copyNumbers, enrichedFittedRegions).create(allSomatics);
             new Charts(configSupplier, executorService).write(cobaltGender,
                     copyNumbers,
                     enrichedSomatics,

@@ -6,7 +6,6 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.patientreporter.PatientReporterTestFactory;
-import com.hartwig.hmftools.patientreporter.report.data.SomaticVariantDataSource;
 import com.hartwig.hmftools.patientreporter.variants.ReportableVariant;
 
 import org.junit.Test;
@@ -29,7 +28,7 @@ public class SomaticVariantsTest {
 
         List<ReportableVariant> variants = Lists.newArrayList(variant1, variant2, variant3);
 
-        List<ReportableVariant> sortedVariants = SomaticVariantDataSource.sort(variants);
+        List<ReportableVariant> sortedVariants = SomaticVariants.sort(variants);
 
         assertEquals(variant1, sortedVariants.get(0));
         assertEquals(variant3, sortedVariants.get(1));

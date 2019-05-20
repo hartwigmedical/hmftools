@@ -8,6 +8,10 @@ sample <- args[1]
 purpleDir <- args[2]
 plotDir   <- args[3]
 
+#sample = "test_T"
+#purpleDir = "~/hmf/analysis/plots/sent"
+#plotDir = "~/hmf/analysis/plots/sent/plot"
+
 purity_ploidy_range_plot <- function(range) {
 
     bestPurity = range[1, "Purity"]
@@ -62,14 +66,15 @@ fitted_segments_plot <- function(fittedSegments) {
     maxData = fittedSegments %>% filter(WeightedMajorAllelePloidyCumSumProportion <= 0.9) %>% select(majorAllelePloidy, Score)
     maxScore = ceiling(max(maxData$Score))
     minScore = floor(min(maxData$Score))
+    minMajorAllelePloidy = min(0, floor(min(maxData$majorAllelePloidy)))
     maxMajorAllelePloidy = ceiling(max(maxData$majorAllelePloidy))
     maxMinorAllelePloidy = maxMajorAllelePloidy - 1
-
+    
     p = ggplot(fittedSegments, aes(x=majorAllelePloidy,y=minorAllelePloidy)) +
         geom_point(aes(size = Weight, color = Score), alpha = 0.7) +
         xlab("Major Allele") + ylab("Minor Allele") + ggtitle("Fitted Segment Scores") +
-        scale_x_continuous(breaks = c(-200:200), limits = c(-0.1, maxMajorAllelePloidy)) +
-        scale_y_continuous(breaks = c(-200:200), limits = c(-0.1, maxMinorAllelePloidy)) +
+        scale_x_continuous(breaks = c(-200:200), limits = c(minMajorAllelePloidy, maxMajorAllelePloidy)) +
+        scale_y_continuous(breaks = c(-200:200), limits = c(0, maxMinorAllelePloidy)) +
         scale_color_gradientn(colours=c("blue","green","yellow","orange", "red"), limits = c(minScore, maxScore)) +
         theme(panel.grid.minor = element_blank(), axis.ticks = element_blank(), legend.position = "right", legend.title=element_text(size=6), legend.text=element_text(size=6)) +
         scale_size(range = c(1,9), guide = "none")
@@ -78,14 +83,19 @@ fitted_segments_plot <- function(fittedSegments) {
 
 }
 
-
-
 minor_allele_ploidy_pdf <- function(copyNumberRegions) {
     cnColours = c("#8dd3c7", "#ffffb3", "#bebada", "#fb8072", "#80b1d3", "#fdb462", "#b3de69")
     cnColours = setNames(cnColours, c("CN0", "CN1","CN2","CN3","CN4", "CN5", "CN6+"))
 
     totalBafCount = sum(copyNumberRegions$bafCount)
 
+    copyNumberRegions = copyNumberRegions %>%
+      filter(!chromosome %in% c('X','Y'), bafCount > 0) %>%
+      mutate(
+        cn = pmax(0, round(copyNumber)),
+        cn = ifelse(cn >=6, "CN6+", paste0("CN", cn)),
+        weight = bafCount/totalBafCount )
+    
     maxAllelePloidy = copyNumberRegions %>%
         mutate(bucket = ceiling(minorAllelePloidy)) %>%
         group_by(bucket) %>%
@@ -96,13 +106,6 @@ minor_allele_ploidy_pdf <- function(copyNumberRegions) {
         filter(row_number() == 1) %>%
         pull(bucket)
 
-    copyNumberRegions = copyNumberRegions %>%
-        filter(!chromosome %in% c('X','Y'), bafCount > 0) %>%
-        mutate(
-        cn = round(copyNumber),
-        cn = ifelse(cn >=6, "CN6+", paste0("CN", cn)),
-        weight = bafCount/totalBafCount )
-
     ggplot(copyNumberRegions, aes(x = minorAllelePloidy)) +
         geom_histogram(aes(weight = bafCount, fill = cn), alpha =1, binwidth = 0.1, color = "black",  position = "stack") +
         scale_x_continuous(breaks = c(0:10), limits = c(-0.1, maxAllelePloidy + 0.1)) +
@@ -111,7 +114,6 @@ minor_allele_ploidy_pdf <- function(copyNumberRegions) {
         xlab("Minor Allele Ploidy") + ylab("Baf Count") + ggtitle("Minor Allele Ploidy PDF")
 }
 
-
 copynumber_pdf <- function(copyNumberRegions) {
 
     mapColours = c("#8dd3c7", "#ffffb3", "#bebada", "#fb8072", "#80b1d3", "#fdb462")
@@ -119,6 +121,15 @@ copynumber_pdf <- function(copyNumberRegions) {
 
     totalBafCount = sum(copyNumberRegions$bafCount)
 
+    copyNumberRegions = copyNumberRegions %>%
+      filter(!chromosome %in% c('X','Y'), bafCount > 0) %>%
+      mutate(
+        map = round(minorAllelePloidy),
+        map = ifelse(map>=5, "MAP5+", paste0("MAP", map)),
+        map = paste0("MAP", round(minorAllelePloidy)),
+        chromosome = factor(chromosome, levels= c(1:22), ordered = T),
+        weight = bafCount/totalBafCount )
+    
     maxCopyNumber = copyNumberRegions %>%
         mutate(bucket = ceiling(copyNumber)) %>%
         group_by(bucket) %>%
@@ -128,25 +139,21 @@ copynumber_pdf <- function(copyNumberRegions) {
         filter(proportion > 0.9) %>%
         filter(row_number() == 1) %>%
         pull(bucket)
-
-    copyNumberRegions = copyNumberRegions %>%
-        filter(!chromosome %in% c('X','Y'), bafCount > 0) %>%
-        mutate(
-        map = round(minorAllelePloidy),
-        map = ifelse(map>=5, "MAP5+", paste0("MAP", map)),
-        map = paste0("MAP", round(minorAllelePloidy)),
-        chromosome = factor(chromosome, levels= c(1:22), ordered = T),
-        weight = bafCount/totalBafCount )
-
+    
+    minCopyNumber = floor(min(copyNumberRegions$copyNumber))
+    
     ggplot(copyNumberRegions, aes(x = copyNumber)) +
         geom_histogram(aes(weight = bafCount, fill = map), alpha = 1,  binwidth = 0.1, color = "black",  position = "stack") +
         scale_fill_manual(values = mapColours) +
-        scale_x_continuous(breaks = c(0:10), limits = c(-0.1, maxCopyNumber + 0.1)) +
+        scale_x_continuous(breaks = c((minCopyNumber - 1):(maxCopyNumber + 1)), limits = c(minCopyNumber - 0.1, maxCopyNumber + 0.1)) +
         theme(panel.grid.minor = element_blank(), axis.ticks = element_blank(), legend.title = element_blank()) +
         xlab("Copy Number") + ylab("Baf Count") + ggtitle("Copy Number PDF")
 }
 
-copyNumbers = read.table(file = paste0(purpleDir, "/", sample, ".purple.cnv"), sep = "\t", header = T, comment.char = "!") %>% select(chromosome = X.chromosome, everything())
+copyNumbers = read.table(file = paste0(purpleDir, "/", sample, ".purple.cnv"), sep = "\t", header = T, comment.char = "!") %>%
+  select(chromosome = X.chromosome, everything()) %>%
+  mutate(chromosome = gsub("chr", "", chromosome))
+
 copyNumberPDF = copynumber_pdf(copyNumbers)
 ggsave(filename = paste0(plotDir, "/", sample, ".copynumber.png"), copyNumberPDF, units = "in", height = 4, width = 4.8, scale = 1)
 
@@ -156,7 +163,6 @@ ggsave(filename = paste0(plotDir, "/", sample, ".map.png"), minorAllelePloidyPDF
 rangeDF = read.table(file = paste0(purpleDir, "/", sample, ".purple.purity.range"), sep = "\t", header = T, comment.char = "!") %>% select(Purity = X.Purity, Ploidy, Score)
 rangePlot = purity_ploidy_range_plot(rangeDF)
 ggsave(filename = paste0(plotDir, "/", sample, ".purity.range.png"), rangePlot, units = "in", height = 4, width = 4.8, scale = 1)
-
 
 fittedSegmentsDF = read.table(file = paste0(purpleDir, "/", sample, ".purple.fitted"), sep = "\t", header = T, comment.char = "!")
 fittedSegmentsPlot = fitted_segments_plot(fittedSegmentsDF)

@@ -5,7 +5,11 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.chromosome.Chromosome;
+import com.hartwig.hmftools.common.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.collect.Multimaps;
+import com.hartwig.hmftools.common.numeric.Doubles;
+import com.hartwig.hmftools.common.position.GenomePosition;
+import com.hartwig.hmftools.common.position.GenomePositions;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;
@@ -15,7 +19,10 @@ import com.hartwig.hmftools.common.region.GenomeRegionSelectorFactory;
 
 import org.jetbrains.annotations.NotNull;
 
-@Deprecated
+import htsjdk.variant.variantcontext.Genotype;
+import htsjdk.variant.variantcontext.VariantContext;
+import htsjdk.variant.variantcontext.VariantContextBuilder;
+
 public class PurityAdjustedSomaticVariantFactory {
 
     @NotNull
@@ -31,7 +38,8 @@ public class PurityAdjustedSomaticVariantFactory {
     }
 
     public PurityAdjustedSomaticVariantFactory(@NotNull PurityAdjuster purityAdjuster,
-            @NotNull final Multimap<Chromosome, PurpleCopyNumber> copyNumbers, @NotNull final Multimap<Chromosome, FittedRegion> fittedRegions) {
+            @NotNull final Multimap<Chromosome, PurpleCopyNumber> copyNumbers,
+            @NotNull final Multimap<Chromosome, FittedRegion> fittedRegions) {
         this.purityAdjuster = purityAdjuster;
         this.copyNumberSelector = GenomeRegionSelectorFactory.createImproved(copyNumbers);
         this.fittedRegionSelector = GenomeRegionSelectorFactory.createImproved(fittedRegions);
@@ -49,25 +57,45 @@ public class PurityAdjustedSomaticVariantFactory {
                     .minorAllelePloidy(0)
                     .germlineStatus(GermlineStatus.UNKNOWN);
 
-            copyNumberSelector.select(variant).ifPresent(x -> purityAdjustment(x, variant, builder));
-            fittedRegionSelector.select(variant).ifPresent(x -> builder.germlineStatus(x.status()));
+            enrich(variant, variant, builder);
             result.add(builder.build());
         }
 
         return result;
     }
 
-    private void purityAdjustment(@NotNull final PurpleCopyNumber copyNumber, @NotNull final AllelicDepth depth,
-            @NotNull final ImmutablePurityAdjustedSomaticVariantImpl.Builder builder) {
-        double adjustedCopyNumber = copyNumber.averageTumorCopyNumber();
-        builder.adjustedCopyNumber(adjustedCopyNumber);
-        double adjustedVAF =
-                purityAdjuster.purityAdjustedVAF(copyNumber.chromosome(), Math.max(0.001, adjustedCopyNumber), depth.alleleFrequency());
-        double ploidy = Math.max(0, adjustedVAF * adjustedCopyNumber);
+    @NotNull
+    public VariantContext enrich(@NotNull final String tumorSample, @NotNull final VariantContext variant) {
 
-        builder.adjustedVAF(adjustedVAF);
-        builder.ploidy(ploidy);
+        final Genotype genotype = variant.getGenotype(tumorSample);
+        if (genotype != null && genotype.hasAD() && HumanChromosome.contains(variant.getContig())) {
+            final VariantContextBuilder builder = new VariantContextBuilder(variant);
+            final GenomePosition position = GenomePositions.create(variant.getContig(), variant.getStart());
+            final AllelicDepth depth = SomaticVariantFactory.allelicDepth(genotype);
+            enrich(position, depth, PurityAdjustedSomaticVariantBuilder.fromVariantContextBuilder(builder));
+            return builder.make();
+        }
+        return variant;
+    }
 
-        builder.minorAllelePloidy(copyNumber.minorAllelePloidy());
+    public void enrich(@NotNull final GenomePosition position, @NotNull final AllelicDepth depth,
+            @NotNull final PurityAdjustedSomaticVariantBuilder builder) {
+        copyNumberSelector.select(position).ifPresent(x -> purityAdjustment(x, depth, builder));
+        fittedRegionSelector.select(position).ifPresent(x -> builder.germlineStatus(x.status()));
+    }
+
+    private PurityAdjustedSomaticVariantBuilder purityAdjustment(@NotNull final PurpleCopyNumber purpleCopyNumber,
+            @NotNull final AllelicDepth depth, @NotNull final PurityAdjustedSomaticVariantBuilder builder) {
+        double copyNumber = purpleCopyNumber.averageTumorCopyNumber();
+        double vaf = purityAdjuster.purityAdjustedVAF(purpleCopyNumber.chromosome(), Math.max(0.001, copyNumber), depth.alleleFrequency());
+        double ploidy = Math.max(0, vaf * copyNumber);
+
+        boolean biallelic = Doubles.lessOrEqual(copyNumber, 0) || Doubles.greaterOrEqual(ploidy, copyNumber - 0.5);
+
+        return builder.adjustedCopyNumber(copyNumber)
+                .adjustedVAF(vaf)
+                .ploidy(ploidy)
+                .biallelic(biallelic)
+                .minorAllelePloidy(purpleCopyNumber.minorAllelePloidy());
     }
 }

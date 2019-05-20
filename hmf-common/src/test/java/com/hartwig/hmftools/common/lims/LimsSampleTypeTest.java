@@ -13,18 +13,18 @@ public class LimsSampleTypeTest {
         assertEquals(LimsSampleType.CORE, LimsSampleType.fromSampleId("CORE0299-CPCT01T"));
     }
 
-    @Test (expected = IllegalStateException.class)
-    public void unrecognizedSampleIdGivesException() {
-        LimsSampleType.fromSampleId("Unknown");
+    @Test
+    public void unrecognizedSampleIdGivesOther() {
+        assertEquals(LimsSampleType.OTHER, LimsSampleType.fromSampleId("Unknown"));
     }
 
-    @Test (expected = IllegalStateException.class)
-    public void lowerCaseGivesException() {
-        LimsSampleType.fromSampleId("xxxdrupxxx");
+    @Test
+    public void lowerCaseGivesOther() {
+        assertEquals(LimsSampleType.OTHER, LimsSampleType.fromSampleId("xxxdrupxxx"));
     }
 
-    @Test (expected = IllegalStateException.class)
-    public void doesNotStartWithGivesException() {
-        LimsSampleType.fromSampleId("829COLO");
+    @Test
+    public void doesNotStartWithGivesOther() {
+        assertEquals(LimsSampleType.OTHER, LimsSampleType.fromSampleId("829COLO"));
     }
 }

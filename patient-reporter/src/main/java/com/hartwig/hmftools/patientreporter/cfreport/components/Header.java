@@ -5,7 +5,6 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
-import com.hartwig.hmftools.patientreporter.report.pages.SampleDetailsPage;
 import com.itextpdf.io.image.ImageData;
 import com.itextpdf.io.image.ImageDataFactory;
 import com.itextpdf.kernel.geom.Rectangle;
@@ -25,7 +24,7 @@ import org.jetbrains.annotations.Nullable;
 
 public final class Header {
 
-    private static final Logger LOGGER = LogManager.getLogger(SampleDetailsPage.class);
+    private static final Logger LOGGER = LogManager.getLogger(Header.class);
 
     @Nullable
     private final PdfImageXObject companyLogoObj;

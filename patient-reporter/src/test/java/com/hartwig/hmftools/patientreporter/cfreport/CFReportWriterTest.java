@@ -1,16 +1,6 @@
 package com.hartwig.hmftools.patientreporter.cfreport;
 
-import com.hartwig.hmftools.common.ecrf.projections.ImmutablePatientTumorLocation;
-import com.hartwig.hmftools.patientreporter.*;
-
-import com.hartwig.hmftools.patientreporter.qcfail.QCFailReason;
-import com.hartwig.hmftools.patientreporter.qcfail.QCFailStudy;
-import com.hartwig.hmftools.patientreporter.report.util.PatientReportFormat;
-
-import org.apache.logging.log4j.util.Strings;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-import org.junit.Test;
+import static com.hartwig.hmftools.patientreporter.PatientReporterTestUtil.testBaseReportData;
 
 import java.io.File;
 import java.io.IOException;
@@ -19,7 +9,20 @@ import java.time.format.DateTimeFormatter;
 import java.util.Locale;
 import java.util.Optional;
 
-import static com.hartwig.hmftools.patientreporter.PatientReporterTestUtil.testBaseReportData;
+import com.hartwig.hmftools.common.ecrf.projections.ImmutablePatientTumorLocation;
+import com.hartwig.hmftools.patientreporter.AnalysedPatientReport;
+import com.hartwig.hmftools.patientreporter.ExampleAnalysisTestFactory;
+import com.hartwig.hmftools.patientreporter.ImmutableQCFailReport;
+import com.hartwig.hmftools.patientreporter.ImmutableSampleReport;
+import com.hartwig.hmftools.patientreporter.QCFailReport;
+import com.hartwig.hmftools.patientreporter.SampleReport;
+import com.hartwig.hmftools.patientreporter.qcfail.QCFailReason;
+import com.hartwig.hmftools.patientreporter.qcfail.QCFailStudy;
+
+import org.apache.logging.log4j.util.Strings;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+import org.junit.Test;
 
 public class CFReportWriterTest {
 
@@ -55,28 +58,31 @@ public class CFReportWriterTest {
 
     @Test
     public void canGenerateLowTumorPercentageReport() throws IOException {
-        generateQCFailCPCTReport(0.1, null, QCFailReason.LOW_TUMOR_PERCENTAGE, testReportFilePath("hmf_low_tumor_percentage_report.pdf"));
+        generateQCFailCPCTReport("10%", null, QCFailReason.LOW_TUMOR_PERCENTAGE, testReportFilePath("hmf_low_tumor_percentage_report.pdf"));
     }
 
     @Test
     public void canGenerateLowDNAYieldReport() throws IOException {
-        generateQCFailCPCTReport(0.6, null, QCFailReason.LOW_DNA_YIELD, testReportFilePath("hmf_low_dna_yield_report.pdf"));
+        generateQCFailCPCTReport("60%", null, QCFailReason.LOW_DNA_YIELD, testReportFilePath("hmf_low_dna_yield_report.pdf"));
     }
 
     @Test
     public void canGeneratePostDNAIsolationFailReport() throws IOException {
-        generateQCFailCPCTReport(0.6, null, QCFailReason.POST_ANALYSIS_FAIL, testReportFilePath("hmf_post_dna_isolation_fail_report.pdf"));
+        generateQCFailCPCTReport("60%",
+                null,
+                QCFailReason.POST_ANALYSIS_FAIL,
+                testReportFilePath("hmf_post_dna_isolation_fail_report.pdf"));
     }
 
     @Test
     public void canGenerateLowMolecularTumorPercentage() throws IOException {
         generateQCFailCPCTReport(null,
-                0.15,
+                "15%",
                 QCFailReason.SHALLOW_SEQ_LOW_PURITY,
                 testReportFilePath("hmf_low_molecular_tumor_percentage_report.pdf"));
     }
 
-    private static void generateQCFailCPCTReport(@Nullable Double pathologyTumorPercentage, @Nullable Double shallowSeqPurity,
+    private static void generateQCFailCPCTReport(@Nullable String pathologyTumorPercentage, @Nullable String shallowSeqPurity,
             @NotNull QCFailReason reason, @NotNull String filename) throws IOException {
         SampleReport sampleReport = ImmutableSampleReport.builder()
                 .sampleId("CPCT02991111T")
@@ -85,9 +91,8 @@ public class CFReportWriterTest {
                 .tumorBarcode("FR12345678")
                 .refArrivalDate(LocalDate.parse("10-Jan-2019", DATE_FORMATTER))
                 .tumorArrivalDate(LocalDate.parse("05-Jan-2019", DATE_FORMATTER))
-                .purityShallowSeq(shallowSeqPurity != null ? PatientReportFormat.formatPercent(shallowSeqPurity) : "not determined")
-                .pathologyTumorPercentage(
-                        pathologyTumorPercentage != null ? PatientReportFormat.formatPercent(pathologyTumorPercentage) : "not determined")
+                .purityShallowSeq(shallowSeqPurity != null ? shallowSeqPurity : "not determined")
+                .pathologyTumorPercentage(pathologyTumorPercentage != null ? pathologyTumorPercentage : "not determined")
                 .labProcedures("PREP013V23-QC037V20-SEQ008V25")
                 .addressee("HMF Testing Center")
                 .hospitalName(Strings.EMPTY)

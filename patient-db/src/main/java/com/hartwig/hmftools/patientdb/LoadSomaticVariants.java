@@ -7,27 +7,21 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Multimap;
-import com.hartwig.hmftools.common.chromosome.Chromosome;
-import com.hartwig.hmftools.common.collect.Multimaps;
 import com.hartwig.hmftools.common.dnds.DndsDriverGeneLikelihoodSupplier;
 import com.hartwig.hmftools.common.drivercatalog.CNADrivers;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.OncoDrivers;
 import com.hartwig.hmftools.common.drivercatalog.TsgDrivers;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
-import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.gender.Gender;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
-import com.hartwig.hmftools.common.purple.region.FittedRegion;
 import com.hartwig.hmftools.common.region.BEDFileLoader;
 import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.common.variant.ClonalityCutoffKernel;
 import com.hartwig.hmftools.common.variant.ClonalityFactory;
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariantFactory;
-import com.hartwig.hmftools.common.variant.PurityAdjustedSomaticVariant;
-import com.hartwig.hmftools.common.variant.PurityAdjustedSomaticVariantFactory;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariantFactory;
 import com.hartwig.hmftools.common.variant.enrich.CompoundEnrichment;
@@ -109,21 +103,14 @@ public class LoadSomaticVariants {
                 ? new PurityAdjuster(Gender.FEMALE, 1, 1)
                 : new PurityAdjuster(purityContext.gender(), purityContext.bestFit().purity(), purityContext.bestFit().normFactor());
 
-        final Multimap<Chromosome, PurpleCopyNumber> copyNumbers = Multimaps.fromRegions(dbAccess.readCopynumbers(sample));
-        final Multimap<Chromosome, FittedRegion> copyNumberRegions = Multimaps.fromRegions(dbAccess.readCopyNumberRegions(sample));
 
-        LOGGER.info("Incorporating purple purity");
-        final PurityAdjustedSomaticVariantFactory purityAdjustmentFactory =
-                new PurityAdjustedSomaticVariantFactory(purityAdjuster, copyNumbers, copyNumberRegions);
-        final List<PurityAdjustedSomaticVariant> purityAdjustedVariants = purityAdjustmentFactory.create(variants);
-
-        final double clonalPloidy = ClonalityCutoffKernel.clonalCutoff(purityAdjustedVariants);
+        final double clonalPloidy = ClonalityCutoffKernel.clonalCutoff(variants);
 
         LOGGER.info("Enriching variants");
         final EnrichedSomaticVariantFactory enrichedSomaticVariantFactory = new EnrichedSomaticVariantFactory(highConfidenceRegions,
                 indexedFastaSequenceFile,
                 new ClonalityFactory(purityAdjuster, clonalPloidy));
-        final List<EnrichedSomaticVariant> enrichedVariants = enrichedSomaticVariantFactory.enrich(purityAdjustedVariants);
+        final List<EnrichedSomaticVariant> enrichedVariants = enrichedSomaticVariantFactory.enrich(variants);
 
         LOGGER.info("Persisting variants to database");
         dbAccess.writeSomaticVariants(sample, enrichedVariants);

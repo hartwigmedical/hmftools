@@ -10,7 +10,7 @@
 
     <artifactId>patient-reporter</artifactId>
     <packaging>jar</packaging>
-    <version>6.0</version>
+    <version>${hmf-patient-reporter.version}</version>
     <name>HMF Tools - Patient Reporter</name>
 
     <dependencies>
@@ -38,14 +38,6 @@
         <dependency>
             <groupId>org.apache.logging.log4j</groupId>
             <artifactId>log4j-slf4j-impl</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>net.sourceforge.dynamicreports</groupId>
-            <artifactId>dynamicreports-core</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>net.sf.jasperreports</groupId>
-            <artifactId>jasperreports-fonts</artifactId>
         </dependency>
         <dependency>
             <groupId>org.immutables</groupId>
