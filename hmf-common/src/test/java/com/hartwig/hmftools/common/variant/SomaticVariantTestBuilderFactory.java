@@ -37,6 +37,7 @@ public final class SomaticVariantTestBuilderFactory {
                 .minorAllelePloidy(0D)
                 .germlineStatus(GermlineStatus.UNKNOWN)
                 .ploidy(0)
+                .biallelic(false)
                 .mappability(0D);
     }
 

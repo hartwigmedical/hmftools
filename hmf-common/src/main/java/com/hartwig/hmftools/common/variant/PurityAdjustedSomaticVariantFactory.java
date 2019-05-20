@@ -7,6 +7,7 @@ import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.chromosome.Chromosome;
 import com.hartwig.hmftools.common.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.collect.Multimaps;
+import com.hartwig.hmftools.common.numeric.Doubles;
 import com.hartwig.hmftools.common.position.GenomePosition;
 import com.hartwig.hmftools.common.position.GenomePositions;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
@@ -89,9 +90,12 @@ public class PurityAdjustedSomaticVariantFactory {
         double vaf = purityAdjuster.purityAdjustedVAF(purpleCopyNumber.chromosome(), Math.max(0.001, copyNumber), depth.alleleFrequency());
         double ploidy = Math.max(0, vaf * copyNumber);
 
+        boolean biallelic = Doubles.lessOrEqual(copyNumber, 0) || Doubles.greaterOrEqual(ploidy, copyNumber - 0.5);
+
         return builder.adjustedCopyNumber(copyNumber)
                 .adjustedVAF(vaf)
                 .ploidy(ploidy)
+                .biallelic(biallelic)
                 .minorAllelePloidy(purpleCopyNumber.minorAllelePloidy());
     }
 }

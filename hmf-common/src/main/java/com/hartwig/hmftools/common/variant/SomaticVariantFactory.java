@@ -79,6 +79,7 @@ public class SomaticVariantFactory {
     public static final String PURPLE_PLOIDY_INFO = "PURPLE_PLOIDY";
     public static final String PURPLE_GERMLINE_INFO = "PURPLE_GERMLINE";
     public static final String PURPLE_MINOR_ALLELE_PLOIDY_INFO = "PURPLE_MAP";
+    public static final String PURPLE_BIALLELIC_FLAG = "BIALLELIC";
 
     static final String PASS_FILTER = "PASS";
     private static final String NEAR_INDEL_PON_FILTER = "NEAR_INDEL_PON";
@@ -184,6 +185,7 @@ public class SomaticVariantFactory {
                 .germlineStatus(GermlineStatus.valueOf(context.getAttributeAsString(PURPLE_GERMLINE_INFO, "UNKNOWN")))
                 .ploidy(context.getAttributeAsDouble(PURPLE_PLOIDY_INFO, 0))
                 .recovered(context.hasAttribute(RECOVERED_FLAG))
+                .biallelic(context.hasAttribute(PURPLE_BIALLELIC_FLAG))
                 .mappability(context.getAttributeAsDouble(MAPPABILITY_TAG, 0));
 
         attachIDAndCosmicAnnotations(builder, context, canonicalAnnotationFactory);

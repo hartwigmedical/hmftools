@@ -2,7 +2,6 @@ package com.hartwig.hmftools.patientdb.dao;
 
 import static com.hartwig.hmftools.patientdb.Config.DB_BATCH_INSERT_SIZE;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.SOMATICVARIANT;
-import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.STRUCTURALVARIANT;
 
 import java.sql.Timestamp;
 import java.util.Date;
@@ -67,8 +66,10 @@ class SomaticVariantDAO {
                     .canonicalHgvsProteinImpact(record.getValue(SOMATICVARIANT.CANONICALHGVSPROTEINIMPACT))
                     .alleleReadCount(record.getValue(SOMATICVARIANT.ALLELEREADCOUNT))
                     .totalReadCount(record.getValue(SOMATICVARIANT.TOTALREADCOUNT))
-                    .adjustedCopyNumber(record.getValue(SOMATICVARIANT.ADJUSTEDCOPYNUMBER))
+                    .adjustedCopyNumber(record.getValue(SOMATICVARIANT.COPYNUMBER))
                     .adjustedVAF(record.getValue(SOMATICVARIANT.ADJUSTEDVAF))
+                    .ploidy(record.getValue(SOMATICVARIANT.PLOIDY))
+                    .biallelic(byteToBoolean(record.getValue(SOMATICVARIANT.BIALLELIC)))
                     .highConfidenceRegion(byteToBoolean(record.getValue(SOMATICVARIANT.HIGHCONFIDENCE)))
                     .trinucleotideContext(record.getValue(SOMATICVARIANT.TRINUCLEOTIDECONTEXT))
                     .microhomology(record.getValue(SOMATICVARIANT.MICROHOMOLOGY))
@@ -118,8 +119,9 @@ class SomaticVariantDAO {
                     SOMATICVARIANT.CANONICALHGVSPROTEINIMPACT,
                     SOMATICVARIANT.ALLELEREADCOUNT,
                     SOMATICVARIANT.TOTALREADCOUNT,
-                    SOMATICVARIANT.ADJUSTEDCOPYNUMBER,
+                    SOMATICVARIANT.COPYNUMBER,
                     SOMATICVARIANT.ADJUSTEDVAF,
+                    SOMATICVARIANT.PLOIDY,
                     SOMATICVARIANT.HIGHCONFIDENCE,
                     SOMATICVARIANT.TRINUCLEOTIDECONTEXT,
                     SOMATICVARIANT.MICROHOMOLOGY,
@@ -162,6 +164,7 @@ class SomaticVariantDAO {
                 variant.totalReadCount(),
                 DatabaseUtil.decimal(variant.adjustedCopyNumber()),
                 DatabaseUtil.decimal(variant.adjustedVAF()),
+                DatabaseUtil.decimal(variant.ploidy()),
                 variant.highConfidenceRegion(),
                 variant.trinucleotideContext(),
                 variant.microhomology(),

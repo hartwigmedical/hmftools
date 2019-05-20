@@ -88,6 +88,7 @@ public final class PatientReporterTestFactory {
                 .minorAllelePloidy(0)
                 .germlineStatus(GermlineStatus.UNKNOWN)
                 .ploidy(0)
+                .biallelic(true)
                 .mappability(0);
     }
 

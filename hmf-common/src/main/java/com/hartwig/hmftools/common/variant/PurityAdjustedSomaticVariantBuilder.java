@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.common.variant;
 
 import static com.hartwig.hmftools.common.variant.SomaticVariantFactory.PURPLE_AF_INFO;
+import static com.hartwig.hmftools.common.variant.SomaticVariantFactory.PURPLE_BIALLELIC_FLAG;
 import static com.hartwig.hmftools.common.variant.SomaticVariantFactory.PURPLE_CN_INFO;
 import static com.hartwig.hmftools.common.variant.SomaticVariantFactory.PURPLE_GERMLINE_INFO;
 import static com.hartwig.hmftools.common.variant.SomaticVariantFactory.PURPLE_MINOR_ALLELE_PLOIDY_INFO;
@@ -14,20 +15,17 @@ import htsjdk.variant.variantcontext.VariantContextBuilder;
 
 public interface PurityAdjustedSomaticVariantBuilder {
 
-    @NotNull
     PurityAdjustedSomaticVariantBuilder ploidy(double ploidy);
 
-    @NotNull
     PurityAdjustedSomaticVariantBuilder adjustedCopyNumber(double copyNumber);
 
-    @NotNull
     PurityAdjustedSomaticVariantBuilder adjustedVAF(double vaf);
 
-    @NotNull
     PurityAdjustedSomaticVariantBuilder minorAllelePloidy(double map);
 
-    @NotNull
     PurityAdjustedSomaticVariantBuilder germlineStatus(@NotNull final GermlineStatus germlineStatus);
+
+    PurityAdjustedSomaticVariantBuilder biallelic(boolean biallelic);
 
     @NotNull
     static PurityAdjustedSomaticVariantBuilder fromVariantContextBuilder(@NotNull final VariantContextBuilder builder) {
@@ -59,6 +57,12 @@ public interface PurityAdjustedSomaticVariantBuilder {
             @Override
             public PurityAdjustedSomaticVariantBuilder germlineStatus(@NotNull final GermlineStatus germlineStatus) {
                 builder.attribute(PURPLE_GERMLINE_INFO, germlineStatus.toString());
+                return this;
+            }
+
+            @Override
+            public PurityAdjustedSomaticVariantBuilder biallelic(final boolean biallelic) {
+                builder.attribute(PURPLE_BIALLELIC_FLAG, biallelic);
                 return this;
             }
         };

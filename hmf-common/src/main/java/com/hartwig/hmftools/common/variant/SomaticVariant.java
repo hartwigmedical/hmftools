@@ -2,7 +2,6 @@ package com.hartwig.hmftools.common.variant;
 
 import java.util.List;
 
-import com.hartwig.hmftools.common.numeric.Doubles;
 import com.hartwig.hmftools.common.position.GenomePosition;
 import com.hartwig.hmftools.common.purple.region.GermlineStatus;
 import com.hartwig.hmftools.common.variant.cosmic.CosmicAnnotation;
@@ -105,9 +104,7 @@ public interface SomaticVariant extends GenomePosition, AllelicDepth {
 
     double ploidy();
 
-    default boolean biallelic() {
-        return Doubles.lessOrEqual(adjustedCopyNumber(), 0) || Doubles.greaterOrEqual(ploidy(), adjustedCopyNumber() - 0.5);
-    }
+    boolean biallelic();
 
     @NotNull
     GermlineStatus germlineStatus();
