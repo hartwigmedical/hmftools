@@ -186,14 +186,13 @@ public class SvCluster
         if(!var.isReplicatedSv())
         {
             mSVs.add(var);
+            mRequiresRecalc = true;
         }
 
         var.setCluster(this);
 
         mReplicatedSVs.add(var);
         mUnchainedSVs.add(var);
-
-        mRequiresRecalc = true;
 
         if(!mHasLinkingLineElements)
         {
@@ -587,7 +586,7 @@ public class SvCluster
         String typesStr = getSvTypesStr(mTypeCounts);
 
         if(mInferredSvCount > 0)
-            return typesStr + "_" + INF_SV_TYPE + "=" + typesStr;
+            return String.format("%s_%s=%d", typesStr, INF_SV_TYPE, mInferredSvCount);
         else
             return typesStr;
     }

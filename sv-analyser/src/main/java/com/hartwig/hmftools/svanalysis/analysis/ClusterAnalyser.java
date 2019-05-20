@@ -30,7 +30,6 @@ import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.CLUST
 import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.CLUSTER_REASON_LOOSE_OVERLAP;
 import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.CLUSTER_REASON_NET_ARM_END_PLOIDY;
 import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.CLUSTER_REASON_BE_PLOIDY_DROP;
-import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.applyCopyNumberReplication;
 import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.checkClusterDuplicates;
 import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.markSinglePairResolvedType;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.CHROMOSOME_ARM_P;
@@ -53,8 +52,10 @@ import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_START;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.haveSameChrArms;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.isSpecificSV;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.isStart;
+import static com.hartwig.hmftools.svanalysis.types.SvaConstants.MAX_CLUSTER_COUNT_REPLICATION;
 import static com.hartwig.hmftools.svanalysis.types.SvaConstants.MAX_FOLDBACK_CHAIN_LENGTH;
 import static com.hartwig.hmftools.svanalysis.types.SvaConstants.MAX_FOLDBACK_NEXT_CLUSTER_DISTANCE;
+import static com.hartwig.hmftools.svanalysis.types.SvaConstants.MAX_SV_REPLICATION_MULTIPLE;
 
 import java.util.List;
 import java.util.Map;
@@ -295,6 +296,72 @@ public class ClusterAnalyser {
             cluster.cacheLinkedPairs();
             setClusterResolvedState(cluster);
             cluster.logDetails();
+        }
+    }
+
+    public void applyCopyNumberReplication(SvCluster cluster)
+    {
+        // isSpecificCluster(cluster);
+
+        // use the relative copy number change to replicate some SVs within a cluster
+        if(!cluster.hasVariedCopyNumber())
+            return;
+
+        // int maxReplication = cluster.getSvCount() > MAX_CLUSTER_COUNT_REPLICATION ? 8 : MAX_SV_REPLICATION_MULTIPLE;
+        int maxReplication = MAX_SV_REPLICATION_MULTIPLE;
+
+        // first establish the lowest copy number change
+        double minCopyNumber = cluster.getMinCNChange();
+        double maxCopyNumber = cluster.getMaxCNChange();
+
+        if(minCopyNumber <= 0)
+        {
+            LOGGER.debug("cluster({}) warning: invalid CN variation(min={} max={})",
+                    cluster.id(), minCopyNumber, maxCopyNumber);
+            return;
+        }
+
+        // check for samples with a broad range of ploidies, not just concerntrated in a few SVs
+        int totalReplicationCount = 0;
+        double replicationFactor = 1;
+
+        for(SvVarData var : cluster.getSVs())
+        {
+            double calcCopyNumber = var.getRoundedCNChange();
+            int svMultiple = (int)max(round(calcCopyNumber / minCopyNumber),1);
+            totalReplicationCount += svMultiple;
+        }
+
+        if(totalReplicationCount > mConfig.ChainingSvLimit)
+        {
+            LOGGER.debug("cluster({}) totalRepCount({}) vs svCount({}) with CNChg({} vs min={}) will be scaled",
+                    cluster.id(), totalReplicationCount, cluster.getSvCount(), minCopyNumber, maxCopyNumber);
+
+            replicationFactor = mConfig.ChainingSvLimit / (double)totalReplicationCount;
+        }
+
+        // replicate the SVs which have a higher copy number than their peers
+        for(SvVarData var : cluster.getSVs())
+        {
+            double calcCopyNumber = var.getRoundedCNChange();
+
+            int svMultiple = (int)round(calcCopyNumber / minCopyNumber);
+
+            svMultiple = max((int)round(svMultiple * replicationFactor), 1);
+
+            if(svMultiple <= 1)
+                continue;
+
+            LOGGER.debug("cluster({}) replicating SV({}) {} times, copyNumChg({} vs min={})",
+                    cluster.id(), var.posId(), svMultiple, calcCopyNumber, minCopyNumber);
+
+            var.setReplicatedCount(svMultiple);
+
+            for(int j = 1; j < svMultiple; ++j)
+            {
+                SvVarData newVar = new SvVarData(var);
+                cluster.addVariant(newVar);
+            }
         }
     }
 

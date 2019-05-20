@@ -232,10 +232,12 @@ public class SvClusteringMethods {
                             if (cluster == null)
                             {
                                 nextCluster.addVariant(var);
+                                nextCluster.addClusterReason(CLUSTER_REASON_PROXIMITY);
                             }
                             else
                             {
                                 cluster.addVariant(nextVar);
+                                cluster.addClusterReason(CLUSTER_REASON_PROXIMITY);
                             }
                         }
 
@@ -366,70 +368,6 @@ public class SvClusteringMethods {
         if(clusters.size() < initClusterCount)
         {
             LOGGER.debug("reduced cluster count({} -> {}) iterations({})", initClusterCount, clusters.size(), iterations);
-        }
-    }
-
-    public static void applyCopyNumberReplication(SvCluster cluster)
-    {
-        // isSpecificCluster(cluster);
-
-        // use the relative copy number change to replicate some SVs within a cluster
-        if(!cluster.hasVariedCopyNumber())
-            return;
-
-        // avoid what will likely be balanced translocations
-        if(cluster.getSvCount() == 2 && cluster.getTypeCount(BND) == 2)
-            return;
-
-        int maxReplication = cluster.getSvCount() > MAX_CLUSTER_COUNT_REPLICATION ? 8 : MAX_SV_REPLICATION_MULTIPLE;
-
-        // first establish the lowest copy number change
-        double minCopyNumber = cluster.getMinCNChange();
-        double maxCopyNumber = cluster.getMaxCNChange();
-
-        if(minCopyNumber <= 0)
-        {
-            LOGGER.debug("cluster({}) warning: invalid CN variation(min={} max={})",
-                    cluster.id(), minCopyNumber, maxCopyNumber);
-            return;
-        }
-
-        double replicationFactor = 1;
-        if(maxCopyNumber > MAX_SV_REPLICATION_MULTIPLE * minCopyNumber)
-        {
-            LOGGER.debug("cluster({}) warning: large CN variation(min={} max={})",
-                    cluster.id(), minCopyNumber, maxCopyNumber);
-
-            // scale the replication down
-            replicationFactor = maxReplication / (maxCopyNumber / minCopyNumber);
-        }
-
-        // replicate the SVs which have a higher copy number than their peers
-        int clusterCount = cluster.getSvCount();
-
-        for(int i = 0; i < clusterCount; ++i)
-        {
-            SvVarData var = cluster.getSV(i);
-            double calcCopyNumber = var.getRoundedCNChange();
-
-            int svMultiple = (int)round(calcCopyNumber / minCopyNumber);
-
-            svMultiple = max((int)round(svMultiple * replicationFactor), 1);
-            // svMultiple = min(svMultiple, MAX_SV_REPLICATION_MULTIPLE);
-
-            if(svMultiple <= 1)
-                continue;
-
-            LOGGER.debug("cluster({}) replicating SV({}) {} times, copyNumChg({} vs min={})",
-                    cluster.id(), var.posId(), svMultiple, calcCopyNumber, minCopyNumber);
-
-            var.setReplicatedCount(svMultiple);
-
-            for(int j = 1; j < svMultiple; ++j)
-            {
-                SvVarData newVar = new SvVarData(var);
-                cluster.addVariant(newVar);
-            }
         }
     }
 
@@ -672,7 +610,6 @@ public class SvClusteringMethods {
                 cluster2Svs.addAll(cluster2.getInversions());
 
                 boolean canMergeClusters = false;
-                String clusterReason = "";
 
                 for (final SvVarData var1 : cluster1Svs)
                 {
@@ -702,7 +639,7 @@ public class SvClusteringMethods {
                 if(canMergeClusters)
                 {
                     cluster1.mergeOtherCluster(cluster2);
-                    cluster1.addClusterReason(clusterReason);
+                    cluster1.addClusterReason(CLUSTER_REASON_LONG_DEL_DUP_OR_INV);
                     clusters.remove(index2);
                 }
                 else

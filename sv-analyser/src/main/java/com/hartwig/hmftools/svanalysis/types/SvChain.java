@@ -433,52 +433,6 @@ public class SvChain {
         return linkData;
     }
 
-    public static void checkChainReplication(final SvCluster cluster)
-    {
-        if(!cluster.hasReplicatedSVs())
-            return;
-
-        // check whether any chains are identical to others using replicated SVs
-        // in which case remove the replicated SVs and chains
-        List<SvChain> chains = cluster.getChains();
-
-        int index1 = 0;
-        while(index1 < chains.size())
-        {
-            final SvChain chain1 = chains.get(index1);
-
-            for(int index2 = index1+1; index2 < chains.size(); ++index2)
-            {
-                final SvChain chain2 = chains.get(index2);
-
-                if(chain1.identicalChain(chain2))
-                {
-                    boolean allReplicatedSVs = chain2.getSvCount() == 0;
-
-                    LOGGER.debug("cluster({}) removing duplicate chain({}) vs origChain({}) all replicated({})",
-                            cluster.id(), chain2.id(), chain1.id(), allReplicatedSVs);
-
-                    // remove these replicated SVs as well as the replicated chain
-                    if(allReplicatedSVs)
-                    {
-                        for (final SvVarData var : chain2.getSvList())
-                        {
-                            cluster.removeReplicatedSv(var);
-                        }
-                    }
-
-                    chains.remove(index2);
-                    continue;
-
-                }
-
-                ++index2;
-            }
-
-            ++index1;
-        }
-    }
-
     public boolean identicalChain(final SvChain other)
     {
         // same SVs forming same links in the same order

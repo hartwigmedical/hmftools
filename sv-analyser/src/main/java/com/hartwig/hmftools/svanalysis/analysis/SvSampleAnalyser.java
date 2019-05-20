@@ -509,9 +509,9 @@ public class SvSampleAnalyser {
                 mClusterFileWriter.write(",DelCount,DupCount,InsCount,InvCount,BndCount,SglCount,InfCount");
                 mClusterFileWriter.write(",ClusterReasons,Consistency,ArmCount,OriginArms,FragmentArms,IsLINE,HasReplicated,Foldbacks");
                 mClusterFileWriter.write(",IntTIs,ExtTIs,IntTIsWithGain,ExtTIsWithGain,OverlapTIs,DSBs,ShortDSBs,ChainEndsFace,ChainEndsAway");
-                mClusterFileWriter.write(",TotalLinks,AssemblyLinks,LongDelDups,UnlinkedRemotes,ShortTIRemotes,MinCopyNumber,MaxCopyNumber");
+                mClusterFileWriter.write(",TotalLinks,AssemblyLinks,LongDelDups,UnlinkedRemotes,MinCopyNumber,MaxCopyNumber");
                 mClusterFileWriter.write(",SynDelDupLen,SynDelDupAvgTILen,Annotations,UnchainedSVs,AlleleValidPerc");
-                mClusterFileWriter.write(",ArmClusterCount,AcIsolatedBE,AcTIOnly,AcDsb,AcSingleFb,AcFbDsb,AcComplexFb,AcComplexLine,AcComplexOther");
+                mClusterFileWriter.write(",ArmClusterCount,AcTotalTIs,AcIsolatedBE,AcTIOnly,AcDsb,AcSingleFb,AcFbDsb,AcComplexFb,AcComplexLine,AcComplexOther");
                 mClusterFileWriter.newLine();
             }
 
@@ -564,19 +564,19 @@ public class SvSampleAnalyser {
                         .collect (Collectors.joining (";"));
                 */
 
-                writer.write(String.format(",%d,%d,%d,%d,%d,%.2f,%.2f",
+                writer.write(String.format(",%d,%d,%d,%d,%.2f,%.2f",
                         cluster.getLinkedPairs().size(), cluster.getAssemblyLinkedPairs().size(), cluster.getLongDelDups().size(),
-                        cluster.getUnlinkedRemoteSVs().size(), cluster.getShortTIRemoteSVs().size(),
-                        cluster.getMinCNChange(), cluster.getMaxCNChange()));
+                        cluster.getUnlinkedRemoteSVs().size(), cluster.getMinCNChange(), cluster.getMaxCNChange()));
 
                 writer.write(String.format(",%d,%d,%s,%d,%.2f",
                         cluster.getSynDelDupLength(), cluster.getSynDelDupTILength(), cluster.getAnnotations(),
                         cluster.getUnlinkedSVs().size(), cluster.getValidAllelePloidySegmentPerc()));
 
                 final int[] armClusterData = getArmClusterData(cluster);
+                int shortTIs = cluster.getArmClusters().stream().mapToInt(x -> x.getTICount()).sum();
 
-                writer.write(String.format(",%d,%d,%d,%d,%d,%d,%d,%d,%d",
-                        cluster.getArmClusters().size(), armClusterData[ARM_CL_ISOLATED_BE], armClusterData[ARM_CL_TI_ONLY],
+                writer.write(String.format(",%d,%d,%d,%d,%d,%d,%d,%d,%d,%d",
+                        cluster.getArmClusters().size(), shortTIs, armClusterData[ARM_CL_ISOLATED_BE], armClusterData[ARM_CL_TI_ONLY],
                         armClusterData[ARM_CL_DSB], armClusterData[ARM_CL_FOLDBACK], armClusterData[ARM_CL_FOLDBACK_DSB],
                         armClusterData[ARM_CL_COMPLEX_FOLDBACK], armClusterData[ARM_CL_COMPLEX_LINE], armClusterData[ARM_CL_COMPLEX_OTHER]));
 
