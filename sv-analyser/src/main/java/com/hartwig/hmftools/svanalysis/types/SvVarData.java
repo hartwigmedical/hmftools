@@ -23,7 +23,6 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantData;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneAnnotation;
-import com.hartwig.hmftools.common.variant.structural.annotation.Transcript;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -100,6 +99,7 @@ public class SvVarData
     private SvCNData mCnDataPostEnd;
 
     public static final String NONE_SEGMENT_INFERRED = "INFERRED";
+    public static final String INF_SV_TYPE = "INF";
 
     public static String ASSEMBLY_TYPE_TI = "asm";
     public static String ASSEMBLY_TYPE_EQV = "eqv";
@@ -553,10 +553,8 @@ public class SvVarData
 
     public final String typeStr()
     {
-        //if(chromosome(true).equals(chromosome(false)) && mStartArm != mEndArm )
-        //    return "CRS";
         if(isNoneSegment())
-            return "INF";
+            return INF_SV_TYPE;
         else
             return type().toString();
     }

@@ -7,6 +7,7 @@ import static java.lang.Math.abs;
 import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.BND;
+import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.typeAsInt;
 import static com.hartwig.hmftools.svanalysis.analysis.ClusterAnalyser.SMALL_CLUSTER_SIZE;
 import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.DEFAULT_PROXIMITY_DISTANCE;
@@ -21,6 +22,7 @@ import static com.hartwig.hmftools.svanalysis.types.SvChain.CM_SHORT_DB;
 import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.ASSEMBLY_MATCH_INFER_ONLY;
 import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.ASSEMBLY_MATCH_NONE;
 import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.removedLinksWithSV;
+import static com.hartwig.hmftools.svanalysis.types.SvVarData.INF_SV_TYPE;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_END;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_START;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.isStart;
@@ -78,6 +80,7 @@ public class SvCluster
     private boolean mHasLinkingLineElements;
     private boolean mIsSubclonal;
     private List<SvVarData> mInversions;
+    private int mInferredSvCount;
 
     // state for SVs which link different arms or chromosomes
     private boolean mRecalcRemoteSVStatus;
@@ -118,6 +121,7 @@ public class SvCluster
         mArmGroups = Lists.newArrayList();
         mArmClusters = Lists.newArrayList();
         mTypeCounts = new int[StructuralVariantType.values().length];
+        mInferredSvCount = 0;
 
         // annotation info
         mDesc = "";
@@ -208,7 +212,10 @@ public class SvCluster
         }
         else
         {
-            ++mTypeCounts[typeAsInt(var.type())];
+            if(var.isNoneSegment())
+                ++mInferredSvCount;
+            else
+                ++mTypeCounts[typeAsInt(var.type())];
 
             if (var.type() == BND || var.isCrossArm())
                 mRecalcRemoteSVStatus = true;
@@ -577,13 +584,23 @@ public class SvCluster
             return mSVs.get(0).typeStr();
         }
 
-        return getSvTypesStr(mTypeCounts);
+        String typesStr = getSvTypesStr(mTypeCounts);
+
+        if(mInferredSvCount > 0)
+            return typesStr + "_" + INF_SV_TYPE + "=" + typesStr;
+        else
+            return typesStr;
     }
 
     public int getTypeCount(StructuralVariantType type)
     {
-        return mTypeCounts[typeAsInt(type)];
+        if(type == SGL)
+            return mTypeCounts[typeAsInt(type)] + mInferredSvCount;
+        else
+            return mTypeCounts[typeAsInt(type)];
     }
+
+    public int getInferredTypeCount() { return mInferredSvCount; }
 
     public final List<SvVarData> getLongDelDups() { return mLongDelDups; }
     public final List<SvVarData> getFoldbacks() { return mFoldbacks; }
